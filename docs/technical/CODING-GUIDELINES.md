@@ -159,6 +159,33 @@ import { Runeword } from '../types';
 import { formatStats } from './utils';
 ```
 
+### Path Aliases
+Use path aliases instead of relative imports for cross-folder imports:
+
+| Alias | Path | Use for |
+|-------|------|---------|
+| `@/components/*` | `src/components/*` | UI components (shadcn/ui) |
+| `@/core/*` | `src/core/*` | App infrastructure |
+| `@/features/*` | `src/features/*` | Feature modules |
+| `@/utils/*` | `src/utils/*` | Shared utilities |
+| `@/lib/*` | `src/lib/*` | Third-party configs |
+| `@/data/*` | `src/data/*` | Dev HTML fixtures |
+| `@/*` | `src/*` | Any other src imports |
+
+```typescript
+// Good - use aliases for cross-folder imports
+import { Button } from '@/components/ui/button';
+import { db } from '@/core/db';
+import { useRunewordFilters } from '@/features/runewords/hooks';
+
+// Good - use relative imports within the same feature
+import { RunewordCard } from './components/RunewordCard';
+import { Runeword } from '../types';
+
+// Avoid - deep relative paths
+import { Button } from '../../../components/ui/button';
+```
+
 ## Redux
 
 ### Slice Structure
