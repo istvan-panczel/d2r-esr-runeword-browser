@@ -11,7 +11,28 @@
     "preview": "vite preview",
     "prettier:format-check": "prettier --check ./src",
     "prettier:format-fix": "prettier --write ./src",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "npm run lint && npm run build && commit-and-tag-version"
+  },
+  "commit-and-tag-version": {
+    "tagPrefix": "v",
+    "commitUrlFormat": "https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/{{hash}}",
+    "compareUrlFormat": "https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/{{previousTag}}...{{currentTag}}",
+    "issueUrlFormat": "https://github.com/istvan-panczel/d2r-esr-runeword-browser/issues/{{id}}",
+    "userUrlFormat": "https://github.com/{{user}}",
+    "types": [
+      { "type": "feat", "section": "Features" },
+      { "type": "fix", "section": "Bug Fixes" },
+      { "type": "perf", "section": "Performance" },
+      { "type": "revert", "section": "Reverts" },
+      { "type": "docs", "section": "Documentation" },
+      { "type": "style", "section": "Styles" },
+      { "type": "chore", "section": "Chores" },
+      { "type": "refactor", "section": "Refactoring" },
+      { "type": "test", "section": "Tests" },
+      { "type": "build", "section": "Build" },
+      { "type": "ci", "section": "CI" }
+    ]
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -35,6 +56,7 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "commit-and-tag-version": "^12.6.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-dom": "^2.3.13",
