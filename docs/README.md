@@ -17,6 +17,12 @@ Project overview, design decisions, and general project information.
 
 - [Contributing & Documentation Process](./CONTRIBUTING.md) - How to continue documentation sessions
 
+### Technical Documentation
+- [Tech Stack](./technical/TECH-STACK.md) - Libraries, frameworks, and tools
+- [Architecture](./technical/ARCHITECTURE.md) - Project structure and data flow
+- [UI Components](./technical/UI-COMPONENTS.md) - Component patterns and theming
+- [Coding Guidelines](./technical/CODING-GUIDELINES.md) - Conventions and standards
+
 ## Status
 
 Documentation is actively being developed. See [CONTRIBUTING.md](./CONTRIBUTING.md) for current status and next steps.

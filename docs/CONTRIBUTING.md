@@ -18,25 +18,28 @@ This project uses an iterative documentation process where:
 
 ## Topics to Cover
 
-- [ ] **Tech Stack** - Libraries, frameworks, and tools
-- [ ] **UI Components** - Component patterns, styling approach, design system
+- [x] **Tech Stack** - Libraries, frameworks, and tools
+- [x] **UI Components** - Component patterns, styling approach, design system
+- [x] **Architecture** - Project structure, data flow, state management
+- [x] **Coding Guidelines** - Conventions beyond what's in CLAUDE.md
 - [ ] **Features** - Core functionality and user-facing features
-- [ ] **Architecture** - Project structure, data flow, state management
-- [ ] **Coding Guidelines** - Conventions beyond what's in CLAUDE.md
 
 ## Current Status
 
 ### Completed
 - Initial documentation structure created
+- Tech stack documented (React 19, Vite, shadcn/ui, Redux Toolkit + Saga, Dexie.js)
+- Architecture documented (folder structure, feature modules, data flow)
+- UI component guidelines (shadcn/ui usage, theming, dark/light modes)
+- Coding guidelines (TypeScript, React, Redux conventions)
 
 ### In Progress
-- (waiting for input)
+- (ready for feature specifications)
 
 ### Pending
-- Tech stack decisions
-- UI component guidelines
-- Feature specifications
-- Architecture documentation
+- Feature specifications and user stories
+- Data model documentation (runewords, runes, etc.)
+- HTML parsing strategy details
 
 ## Documentation Guidelines
 
