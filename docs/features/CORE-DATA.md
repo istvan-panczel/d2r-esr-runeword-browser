@@ -2,50 +2,219 @@
 
 The core data feature handles parsing HTML sources, extracting game data, and storing it in IndexedDB for offline use.
 
+**Important:** All data is loaded and parsed at app startup, not when individual features are accessed. The app is only ready for use after data loading is complete.
+
 ## Data Sources
 
-| Source | URL | Data |
-|--------|-----|------|
-| Runes | [gems.htm](https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/gems.htm) | All runes with bonuses by item type |
-| Runewords | [runewords.htm](https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/runewords.htm) | Runeword definitions |
-| Version | [changelogs.html](https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/changelogs.html) | Latest ESR version for freshness check |
+Data files are bundled with the app in `public/data/`:
+
+| File | Path | Data |
+|------|------|------|
+| Socketables | `/data/gems.htm` | Gems, Runes (ESR/LoD/Kanji), Crystals |
+| Runewords | `/data/runewords.htm` | Runeword definitions |
+| Version | `/data/data-version.txt` | ESR version string for freshness check |
+
+**Original Source:** [ESR Documentation](https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/)
+
+### gems.htm Contents
+
+The gems.htm file contains **5 distinct categories** of socketable items:
+
+| Category | Items | Tiers | Level Range | Description |
+|----------|-------|-------|-------------|-------------|
+| **Gems** | 8 types | 6 tiers | 1-35 | Amethyst, Sapphire, Emerald, Ruby, Diamond, Topaz, Skull, Obsidian |
+| **ESR Runes** | ~50 runes | By color | 2-60 | I Rune → Null Rune (ESR-specific runes) |
+| **LoD Runes** | 35 runes | Sequential | 11-69 | El Rune → Zod Rune (original D2 runes) |
+| **Kanji Runes** | ~14 runes | All high-tier | 60 | Moon Rune → God Rune (thematic runes) |
+| **Crystals** | 12 types | 3 tiers | 6-42 | Shadow Quartz → Tainted Tourmaline |
+
+Each category is stored in its own Dexie table for clean separation.
+
+## App Startup Flow
+
+All data loading happens at app startup before any feature is accessible:
+
+```
+┌─────────────────────────────────────────┐
+│              App Startup                │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│  Fetch /data/data-version.txt          │
+│  (bundled version string)              │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│  Check IndexedDB for stored version     │
+└─────────────────────────────────────────┘
+                    │
+        ┌──────────┴──────────┐
+        │                     │
+        ▼                     ▼
+┌───────────────┐    ┌────────────────────┐
+│  No version   │    │  Version exists    │
+│  stored       │    │  Compare with      │
+│               │    │  bundled version   │
+└───────────────┘    └────────────────────┘
+        │                     │
+        │          ┌─────────┴─────────┐
+        │          │                   │
+        │          ▼                   ▼
+        │   ┌─────────────┐    ┌─────────────┐
+        │   │  Different  │    │    Same     │
+        │   │  version    │    │   version   │
+        │   └─────────────┘    └─────────────┘
+        │          │                   │
+        └─────┬────┘                   │
+              │                        │
+              ▼                        ▼
+┌─────────────────────┐    ┌─────────────────────┐
+│  Parse bundled HTML │    │  Use cached data    │
+│  /data/gems.htm     │    │  (app ready)        │
+│  /data/runewords.htm│    │                     │
+│  (show loading UI)  │    │                     │
+└─────────────────────┘    └─────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────┐
+│              App Ready                  │
+│   (all features can access data)        │
+└─────────────────────────────────────────┘
+```
 
 ## Parsing Order
 
+When a full parse is triggered:
+
 ```
-1. Fetch changelogs.html → Extract version (e.g., "3.9.07 - 18/12/2025")
-2. Compare with stored version
-3. If new version:
-   a. Parse gems.htm → Extract all runes
-   b. Parse runewords.htm → Extract all runewords
-   c. Normalize all affixes
-   d. Store in IndexedDB
-   e. Update stored version
+1. Read version from /data/data-version.txt
+2. Fetch and parse /data/gems.htm:
+   a. Extract Gems (8 types × 6 tiers = 48 items)
+   b. Extract ESR Runes (I Rune → Null Rune, ~50 items)
+   c. Extract LoD Runes (El Rune → Zod Rune, 35 items)
+   d. Extract Kanji Runes (Moon Rune → God Rune, ~14 items)
+   e. Extract Crystals (12 types × 3 tiers = 36 items)
+3. Fetch and parse /data/runewords.htm → Extract all runewords
+4. Normalize all affixes
+5. Store everything in IndexedDB (separate tables per category)
+6. Store version string in metadata
+7. Signal app ready
 ```
 
 ## Data Models
 
-### Rune
+All socketable items share a common bonus structure with three categories:
+- Weapons / Gloves
+- Helms / Boots
+- Armor / Shields / Belts
+
+### Gem
 
 ```typescript
-interface Rune {
+interface Gem {
   id: string;                    // Generated unique ID
-  name: string;                  // "Ka Rune", "El Rune"
-  reqLevel: number;              // From "Req Lvl: X"
-  color: string;                 // From HTML font color attribute
-  bonuses: {
-    weaponsGloves: Affix[];      // Bonuses when used in weapons/gloves
-    helmsBoots: Affix[];         // Bonuses when used in helms/boots
-    armorShieldsBelts: Affix[];  // Bonuses when used in armor/shields/belts
-  };
+  name: string;                  // "Chipped Ruby", "Perfect Sapphire"
+  type: GemType;                 // "Amethyst", "Sapphire", etc.
+  quality: GemQuality;           // "Chipped", "Flawed", etc.
+  reqLevel: number;              // Required level (1-35)
+  bonuses: SocketableBonuses;
+}
+
+type GemType = 'Amethyst' | 'Sapphire' | 'Emerald' | 'Ruby' | 'Diamond' | 'Topaz' | 'Skull' | 'Obsidian';
+type GemQuality = 'Chipped' | 'Flawed' | 'Standard' | 'Flawless' | 'Blemished' | 'Perfect';
+```
+
+**Gem Tiers (6 levels):**
+| Quality | Req Level |
+|---------|-----------|
+| Chipped | 1 |
+| Flawed | 7 |
+| Standard | 14 |
+| Flawless | 21 |
+| Blemished | 28 |
+| Perfect | 35 |
+
+### ESR Rune
+
+```typescript
+interface EsrRune {
+  id: string;                    // Generated unique ID
+  name: string;                  // "I Rune", "Ka Rune", "Null Rune"
+  tier: number;                  // Derived from color (parsed from HTML)
+  color: string;                 // HTML color attribute (determines tier)
+  reqLevel: number;              // Required level (2-60)
+  bonuses: SocketableBonuses;
 }
 ```
 
-**Parsing Notes:**
-- Rune name from text content
-- Color from `<font color="WHITE">` attribute
-- Required level from "Req Lvl: X" pattern
-- Bonuses organized in three columns by item type
+**Tier Derivation:** Parse the `color` attribute from HTML `<font color="...">` tags. Runes with the same color belong to the same tier.
+
+### LoD Rune
+
+```typescript
+interface LodRune {
+  id: string;                    // Generated unique ID
+  name: string;                  // "El Rune", "Eld Rune", ..., "Zod Rune"
+  order: number;                 // Position in sequence (1-35)
+  reqLevel: number;              // Required level (11-69)
+  bonuses: SocketableBonuses;
+}
+```
+
+**Note:** LoD runes are the original Diablo 2 runes. Order is sequential from El (1) to Zod (35).
+
+### Kanji Rune
+
+```typescript
+interface KanjiRune {
+  id: string;                    // Generated unique ID
+  name: string;                  // "Moon Rune", "Fire Rune", ..., "God Rune"
+  reqLevel: number;              // All are level 60
+  bonuses: SocketableBonuses;
+}
+```
+
+**Note:** All Kanji runes are high-level (60) and share the "+1 to All Skills" affix.
+
+### Crystal
+
+```typescript
+interface Crystal {
+  id: string;                    // Generated unique ID
+  name: string;                  // "Chipped Shadow Quartz", "Flawed Burning Sulphur"
+  type: CrystalType;             // Base crystal type
+  quality: CrystalQuality;       // "Chipped", "Flawed", or standard (no prefix)
+  color: string;                 // Each crystal type has its own color
+  reqLevel: number;              // Required level (6, 24, or 42)
+  bonuses: SocketableBonuses;
+}
+
+type CrystalType =
+  | 'Shadow Quartz' | 'Frozen Soul' | 'Bleeding Stone' | 'Burning Sulphur'
+  | 'Dark Azurite' | 'Bitter Peridot' | 'Pulsing Opal' | 'Enigmatic Cinnabar'
+  | 'Tomb Jade' | 'Solid Mercury' | 'Storm Amber' | 'Tainted Tourmaline';
+
+type CrystalQuality = 'Chipped' | 'Flawed' | 'Standard';
+```
+
+**Crystal Tiers (3 levels):**
+| Quality | Req Level |
+|---------|-----------|
+| Chipped | 6 |
+| Flawed | 24 |
+| Standard | 42 |
+
+### Shared Types
+
+```typescript
+interface SocketableBonuses {
+  weaponsGloves: Affix[];        // Bonuses when used in weapons/gloves
+  helmsBoots: Affix[];           // Bonuses when used in helms/boots
+  armorShieldsBelts: Affix[];    // Bonuses when used in armor/shields/belts
+}
+```
 
 ### Runeword
 
@@ -89,40 +258,16 @@ interface Affix {
 
 ## Data Refresh Strategy
 
-### Version Checking
+### Automatic Refresh
 
-On every app load:
-
-```
-┌─────────────────────────────────────────┐
-│           App Startup                   │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│  Fetch changelogs.html                  │
-│  Extract latest version string          │
-│  (e.g., "3.9.07 - 18/12/2025")         │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│  Read stored version from IndexedDB     │
-└─────────────────────────────────────────┘
-                    │
-        ┌──────────┴──────────┐
-        │                     │
-        ▼                     ▼
-┌───────────────┐    ┌────────────────────┐
-│  Same version │    │  Different version │
-│  Use cached   │    │  Trigger re-parse  │
-│  data         │    │  of all sources    │
-└───────────────┘    └────────────────────┘
-```
+See "App Startup Flow" above for the automatic version checking logic.
 
 ### Manual Refresh
 
-A "Refresh Data" button allows users to force re-parse regardless of version.
+A "Refresh Data" button in Settings allows users to force re-parse regardless of version. This is useful if:
+- The user suspects data corruption
+- The changelog version format changes
+- Development/debugging purposes
 
 ## Implementation Notes
 
@@ -137,14 +282,32 @@ const fontElement = runeRow.querySelector('font[color]');
 const color = fontElement?.getAttribute('color') || 'WHITE';
 ```
 
-### Development Mode
+### Bundled Data Files
 
-During development, use local HTML fixtures from `src/data/raw/`:
-- `src/data/raw/gems.htm`
-- `src/data/raw/runewords.htm`
-- `src/data/raw/changelogs.html`
+The repository includes pre-downloaded HTML data files in `public/data/`:
 
-This avoids hitting the remote server during development.
+```
+public/data/
+├── gems.htm           # Gems, runes (ESR/LoD/Kanji), crystals
+├── runewords.htm      # All runeword definitions
+└── data-version.txt   # Version string (e.g., "Eastern Sun Resurrected 3.9.08 - 18/12/2025")
+```
+
+**Update Process:**
+- These files are updated with each release
+- Download latest from the ESR documentation site
+- Update `data-version.txt` with the new version string
+
+**Usage:**
+- The app loads data from these bundled files (served from `/data/`)
+- No need to fetch from remote server
+- Ensures consistent data across all users
+- Works fully offline after initial load
+
+**Version Checking:**
+- Compare `data-version.txt` with stored version in IndexedDB
+- If different, re-parse the bundled HTML files
+- This handles app updates with new data automatically
 
 ## Feature Location
 
@@ -160,9 +323,13 @@ src/
         │   ├── dataSyncSlice.ts
         │   └── dataSyncSaga.ts
         ├── mappers/
-        │   ├── runeMapper.ts
-        │   ├── runewordMapper.ts
-        │   └── affixNormalizer.ts
+        │   ├── gemMapper.ts         # Parse gems from gems.htm
+        │   ├── esrRuneMapper.ts     # Parse ESR runes (I → Null)
+        │   ├── lodRuneMapper.ts     # Parse LoD runes (El → Zod)
+        │   ├── kanjiRuneMapper.ts   # Parse Kanji runes
+        │   ├── crystalMapper.ts     # Parse crystals
+        │   ├── runewordMapper.ts    # Parse runewords.htm
+        │   └── affixNormalizer.ts   # Normalize affix patterns
         └── types/
             └── index.ts
 ```

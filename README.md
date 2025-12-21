@@ -1,12 +1,26 @@
-# React + TypeScript + Vite
+# D2R ESR Browser
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web application for browsing Diablo 2 Resurrected [Eastern Sun Resurrected](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected) mod data.
 
-Currently, two official plugins are available:
+> **Status:** Under development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Purpose
 
-## React Compiler
+Quickly search and filter:
+- **Runewords** - Find runewords by affixes, socket count, item type, or runes used
+- **Socketables** - Browse gems, runes (ESR/LoD/Kanji), and crystals with their bonuses
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Documentation
+
+See [docs/README.md](./docs/README.md) for detailed project documentation.
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## License
+
+MIT

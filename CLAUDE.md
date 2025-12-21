@@ -6,6 +6,13 @@ This file provides guidance for Claude when working with this codebase.
 
 D2R ESR Runeword Browser - A React SPA for browsing Diablo 2 Resurrected runewords (ESR mod).
 
+## Documentation
+
+See [docs/README.md](./docs/README.md) for comprehensive project documentation including:
+- Feature specifications (Runewords, Runes, Gems, Crystals, Core Data)
+- Technical documentation (Architecture, Data Models, Navigation, UI Components)
+- Coding guidelines and conventions
+
 ## Tech Stack
 
 - **Framework**: React 19 with TypeScript + React Compiler

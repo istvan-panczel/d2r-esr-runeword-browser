@@ -32,15 +32,19 @@ This project uses an iterative documentation process where:
 - Architecture documented (folder structure, feature modules, data flow)
 - UI component guidelines (shadcn/ui usage, theming, dark/light modes)
 - Coding guidelines (TypeScript, React, Redux conventions)
-- **Core Data feature** - HTML parsing, data models, version checking
-- **Runewords feature** - Browse/filter UI, affix selector, search
-- **Data Models** - Dexie schema, TypeScript interfaces
+- **Core Data feature** - HTML parsing for all 5 categories, app startup flow, version checking
+- **Runewords feature** - Browse/filter UI, affix selector, search, rune tooltip
+- **Socketables feature** - Unified view with category checkboxes and text search
+- **Runes feature** - ESR/LoD/Kanji runes with sub-tabs, tier grouping
+- **Gems feature** - 8 gem types × 6 quality tiers, filtering
+- **Crystals feature** - 12 crystal types × 3 quality tiers
+- **Navigation** - Routing (/, /socketables, /runes, /gems, /crystals), settings drawer
+- **Data Models** - Complete Dexie schema with 8 tables (gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, affixes, metadata)
 
 ### In Progress
 - (ready for implementation)
 
 ### Pending
-- Additional features (Gems, Runes browser, etc.)
 - Implementation of documented features
 
 ## Documentation Guidelines

@@ -51,6 +51,43 @@ Displays a single runeword with all its data.
 └─────────────────────────────────────┘
 ```
 
+### RuneTooltip
+
+When hovering over a rune name in the RunewordCard, a tooltip displays detailed rune information.
+
+```
+                     ┌─────────────────────────────────────┐
+Runes: [Ta] [Ri]     │ Ta Rune                   [Tier 2] │
+         ▲           │ Req Level: 23                      │
+         │           │─────────────────────────────────────│
+         └──hover────│ Weapons/Gloves:                    │
+                     │   +15% Enhanced Damage             │
+                     │   +5 to Minimum Damage             │
+                     │─────────────────────────────────────│
+                     │ Helms/Boots:                        │
+                     │   +20 Defense                       │
+                     │   +5% Faster Hit Recovery           │
+                     │─────────────────────────────────────│
+                     │ Armor/Shields/Belts:                │
+                     │   +30 Defense                       │
+                     │   Damage Reduced by 3               │
+                     └─────────────────────────────────────┘
+```
+
+**Tooltip Contents:**
+- Rune name displayed in its color
+- Tier badge
+- Required level
+- All three bonus categories (weapons/gloves, helms/boots, armor/shields/belts)
+
+**Behavior:**
+- Triggered on hover (desktop) / tap (mobile)
+- Positioned to avoid screen edges
+- Dismisses on mouse leave / tap elsewhere
+
+**Reusability:**
+This tooltip uses the same data display as `RuneCard` from the Runes feature. Consider creating a shared `RuneInfo` component that can be used in both contexts.
+
 ### RunewordFilters
 Filter controls above the list.
 
@@ -204,7 +241,8 @@ src/features/runewords/
 │   ├── RunewordCard.tsx
 │   ├── RunewordFilters.tsx
 │   ├── AffixSelector.tsx
-│   └── RuneDisplay.tsx
+│   ├── RuneDisplay.tsx
+│   └── RuneTooltip.tsx
 ├── containers/
 │   └── RunewordListContainer.tsx
 ├── store/
