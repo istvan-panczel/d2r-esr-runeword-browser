@@ -42,6 +42,9 @@ export default defineConfig([
 
       // Prefer readonly for class members that are never reassigned
       '@typescript-eslint/prefer-readonly': 'error',
+
+      // Allow constant exports alongside components (needed for shadcn/ui)
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
 ])
