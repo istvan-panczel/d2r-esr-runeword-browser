@@ -12,7 +12,9 @@
     "prettier:format-check": "prettier --check ./src",
     "prettier:format-fix": "prettier --write ./src",
     "prepare": "husky",
-    "release": "npm run lint && npm run build && commit-and-tag-version"
+    "release": "npm run lint && npm run build && commit-and-tag-version",
+    "compiler:check": "eslint ./src --rule 'react-compiler/react-compiler: error'",
+    "compiler:health": "npx react-compiler-healthcheck@latest --verbose"
   },
   "commit-and-tag-version": {
     "tagPrefix": "v",
@@ -89,9 +91,11 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "babel-plugin-react-compiler": "^1.0.0",
     "commit-and-tag-version": "^12.6.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "eslint-plugin-react-dom": "^2.3.13",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

@@ -5,6 +5,7 @@
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | React | 19 | UI library |
+| React Compiler | Latest | Automatic memoization & optimization |
 | TypeScript | Latest | Type safety |
 | Vite | Latest | Build tool & dev server |
 
@@ -67,10 +68,33 @@ No external parsing libraries needed. DOMParser provides sufficient capability f
 
 Useful for validating data structures extracted from HTML before storing in IndexedDB.
 
+## React Compiler
+
+The project uses [React Compiler](https://react.dev/learn/react-compiler) for automatic optimization.
+
+**What it does:**
+- Automatically memoizes components and hooks at compile time
+- Eliminates the need for manual `useMemo`, `useCallback`, and `React.memo`
+- Optimizes re-renders without developer intervention
+
+**When manual optimization is still needed:**
+- Complex computations that the compiler can't analyze
+- Third-party library integration edge cases
+- Performance-critical code where you need explicit control
+
+**ESLint Integration:**
+The `eslint-plugin-react-compiler` is configured to report errors when code patterns prevent optimization.
+
+**Scripts:**
+```bash
+npm run compiler:check    # Check if compiler can optimize all components
+npm run compiler:health   # Run health check on the codebase
+```
+
 ## Development Tools
 
 Already configured in project:
-- ESLint (strict TypeScript rules)
+- ESLint (strict TypeScript rules + React Compiler rules)
 - Prettier (formatting)
 - Husky + lint-staged (pre-commit hooks)
 - commitlint (conventional commits)

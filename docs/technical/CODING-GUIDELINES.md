@@ -69,6 +69,32 @@ export type RunewordFilter = { ... };
 
 ## React Components
 
+### React Compiler - No Manual Memoization
+The project uses React Compiler for automatic optimization. **Do not use manual memoization APIs:**
+
+```typescript
+// ❌ Don't do this - React Compiler handles it automatically
+const memoizedValue = useMemo(() => expensiveCalculation(a, b), [a, b]);
+const memoizedCallback = useCallback(() => handleClick(id), [id]);
+const MemoizedComponent = React.memo(MyComponent);
+
+// ✅ Do this - write simple, readable code
+const value = expensiveCalculation(a, b);
+const handleClick = () => onClick(id);
+function MyComponent() { ... }
+```
+
+**Exceptions (when manual optimization may be needed):**
+- Complex computations the compiler can't analyze (rare)
+- Third-party library edge cases
+- Explicit performance tuning after profiling
+
+If you must use manual memoization, add a comment explaining why:
+```typescript
+// Manual memoization needed: third-party library requires stable reference
+const stableRef = useCallback(() => externalLib.doSomething(), []);
+```
+
 ### Function Components Only
 Use function components with hooks. No class components.
 

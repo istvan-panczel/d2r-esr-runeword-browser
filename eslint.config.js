@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
+import reactCompiler from 'eslint-plugin-react-compiler'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import reactX from 'eslint-plugin-react-x'
 import reactDom from 'eslint-plugin-react-dom'
@@ -21,6 +22,9 @@ export default defineConfig([
       reactDom.configs.recommended,
       eslintConfigPrettier,
     ],
+    plugins: {
+      'react-compiler': reactCompiler,
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -32,6 +36,9 @@ export default defineConfig([
     rules: {
       // React hooks - ensure all dependencies are specified
       'react-hooks/exhaustive-deps': 'error',
+
+      // React Compiler - warn when code can't be optimized
+      'react-compiler/react-compiler': 'error',
 
       // Prefer readonly for class members that are never reassigned
       '@typescript-eslint/prefer-readonly': 'error',
