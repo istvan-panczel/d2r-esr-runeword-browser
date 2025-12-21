@@ -29,5 +29,12 @@ export default defineConfig([
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: {
+      // React hooks - ensure all dependencies are specified
+      'react-hooks/exhaustive-deps': 'error',
+
+      // Prefer readonly for class members that are never reassigned
+      '@typescript-eslint/prefer-readonly': 'error',
+    },
   },
 ])

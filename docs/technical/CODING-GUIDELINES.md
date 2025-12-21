@@ -16,6 +16,31 @@ The project uses strict TypeScript. Avoid:
 - Non-null assertions (`!`) - use proper null checks
 - Type assertions (`as`) unless necessary
 
+### Prefer Readonly
+Use `readonly` wherever possible. ESLint enforces this via `@typescript-eslint/prefer-readonly`.
+
+```typescript
+// Good - class members that aren't reassigned
+class RunewordService {
+  private readonly db: AppDatabase;
+
+  constructor(db: AppDatabase) {
+    this.db = db;
+  }
+}
+
+// Good - readonly arrays and objects in types
+interface RunewordFilters {
+  readonly selectedRunes: readonly string[];
+  readonly socketCount: number | null;
+}
+
+// Good - function parameters (when possible)
+function processRunewords(runewords: readonly Runeword[]): void {
+  // ...
+}
+```
+
 ### Type Definitions
 
 ```typescript
@@ -78,6 +103,32 @@ function RunewordCard({ runeword, onSelect }: RunewordCardProps) { ... }
 
 // Avoid
 function RunewordCard(props: RunewordCardProps) { ... }
+```
+
+### Hooks Dependencies
+ESLint enforces `react-hooks/exhaustive-deps` as an error. All dependencies must be specified.
+
+```typescript
+// Good - all dependencies listed
+const filteredRunewords = useMemo(
+  () => runewords.filter((rw) => rw.sockets === socketCount),
+  [runewords, socketCount]
+);
+
+// Good - callback with proper deps
+const handleSelect = useCallback(
+  (id: string) => {
+    onSelect(id);
+    trackEvent('runeword_selected', { id });
+  },
+  [onSelect]
+);
+
+// If you need to exclude a dependency, explain why with a comment
+// eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally run only on mount
+useEffect(() => {
+  initializeData();
+}, []);
 ```
 
 ## File Organization
