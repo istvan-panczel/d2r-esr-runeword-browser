@@ -1,7 +1,7 @@
 {
   "name": "d2r-esr-runeword-browser",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,17 +21,50 @@
     "issueUrlFormat": "https://github.com/istvan-panczel/d2r-esr-runeword-browser/issues/{{id}}",
     "userUrlFormat": "https://github.com/{{user}}",
     "types": [
-      { "type": "feat", "section": "Features" },
-      { "type": "fix", "section": "Bug Fixes" },
-      { "type": "perf", "section": "Performance" },
-      { "type": "revert", "section": "Reverts" },
-      { "type": "docs", "section": "Documentation" },
-      { "type": "style", "section": "Styles" },
-      { "type": "chore", "section": "Chores" },
-      { "type": "refactor", "section": "Refactoring" },
-      { "type": "test", "section": "Tests" },
-      { "type": "build", "section": "Build" },
-      { "type": "ci", "section": "CI" }
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "perf",
+        "section": "Performance"
+      },
+      {
+        "type": "revert",
+        "section": "Reverts"
+      },
+      {
+        "type": "docs",
+        "section": "Documentation"
+      },
+      {
+        "type": "style",
+        "section": "Styles"
+      },
+      {
+        "type": "chore",
+        "section": "Chores"
+      },
+      {
+        "type": "refactor",
+        "section": "Refactoring"
+      },
+      {
+        "type": "test",
+        "section": "Tests"
+      },
+      {
+        "type": "build",
+        "section": "Build"
+      },
+      {
+        "type": "ci",
+        "section": "CI"
+      }
     ]
   },
   "lint-staged": {
