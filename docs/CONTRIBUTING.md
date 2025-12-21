@@ -22,7 +22,7 @@ This project uses an iterative documentation process where:
 - [x] **UI Components** - Component patterns, styling approach, design system
 - [x] **Architecture** - Project structure, data flow, state management
 - [x] **Coding Guidelines** - Conventions beyond what's in CLAUDE.md
-- [ ] **Features** - Core functionality and user-facing features
+- [x] **Features** - Core functionality and user-facing features
 
 ## Current Status
 
@@ -32,14 +32,16 @@ This project uses an iterative documentation process where:
 - Architecture documented (folder structure, feature modules, data flow)
 - UI component guidelines (shadcn/ui usage, theming, dark/light modes)
 - Coding guidelines (TypeScript, React, Redux conventions)
+- **Core Data feature** - HTML parsing, data models, version checking
+- **Runewords feature** - Browse/filter UI, affix selector, search
+- **Data Models** - Dexie schema, TypeScript interfaces
 
 ### In Progress
-- (ready for feature specifications)
+- (ready for implementation)
 
 ### Pending
-- Feature specifications and user stories
-- Data model documentation (runewords, runes, etc.)
-- HTML parsing strategy details
+- Additional features (Gems, Runes browser, etc.)
+- Implementation of documented features
 
 ## Documentation Guidelines
 

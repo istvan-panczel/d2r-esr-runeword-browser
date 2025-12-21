@@ -17,11 +17,16 @@ Project overview, design decisions, and general project information.
 
 - [Contributing & Documentation Process](./CONTRIBUTING.md) - How to continue documentation sessions
 
+### Feature Documentation
+- [Core Data](./features/CORE-DATA.md) - HTML parsing, data storage, version checking
+- [Runewords](./features/RUNEWORDS.md) - Browse and filter runewords (primary feature)
+
 ### Technical Documentation
 - [Tech Stack](./technical/TECH-STACK.md) - Libraries, frameworks, and tools
 - [Architecture](./technical/ARCHITECTURE.md) - Project structure and data flow
 - [UI Components](./technical/UI-COMPONENTS.md) - Component patterns and theming
 - [Coding Guidelines](./technical/CODING-GUIDELINES.md) - Conventions and standards
+- [Data Models](./technical/DATA-MODELS.md) - IndexedDB schema and TypeScript types
 
 ## Status
 
