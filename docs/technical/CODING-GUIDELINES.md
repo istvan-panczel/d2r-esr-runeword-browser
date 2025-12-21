@@ -270,6 +270,67 @@ export function* runewordsSaga() {
 }
 ```
 
+### Selectors with Reselect
+
+Use `createSelector` from reselect for memoized selectors. This prevents unnecessary re-renders when derived state hasn't changed.
+
+**Pattern:**
+1. Create a base selector for the slice state
+2. Derive all other selectors from the base selector using `createSelector`
+
+```typescript
+// features/runewords/store/selectors.ts
+import { createSelector } from 'reselect';
+import type { RootState } from '@/core/store';
+
+// Base selector for the slice state
+const selectRunewordsState = (state: RootState) => state.runewords;
+
+// Derived selectors using createSelector
+export const selectFilters = createSelector(
+  [selectRunewordsState],
+  (runewords) => runewords.filters
+);
+
+export const selectIsLoading = createSelector(
+  [selectRunewordsState],
+  (runewords) => runewords.isLoading
+);
+
+// Selectors can compose other selectors
+export const selectHasActiveFilters = createSelector(
+  [selectFilters],
+  (filters) => Object.keys(filters).length > 0
+);
+
+// Selectors with multiple inputs
+export const selectFilteredCount = createSelector(
+  [selectFilters, selectAllRunewords],
+  (filters, runewords) => applyFilters(runewords, filters).length
+);
+```
+
+**Benefits:**
+- Memoization: Selectors only recompute when their input selectors return new values
+- Composability: Build complex selectors from simpler ones
+- Testability: Pure functions that are easy to test
+- Performance: Prevents unnecessary component re-renders
+
+**Avoid:**
+```typescript
+// ❌ Don't create selectors inline in components
+const isLoading = useSelector((state) => state.runewords.isLoading);
+
+// ❌ Don't derive state without memoization
+const selectIsLoading = (state: RootState) => state.runewords.isLoading;
+
+// ✅ Do use createSelector
+const selectIsLoading = createSelector(
+  [selectRunewordsState],
+  (runewords) => runewords.isLoading
+);
+```
+
 ## Naming Conventions
 
 | Item | Convention | Example |

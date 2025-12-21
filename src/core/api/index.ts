@@ -1,0 +1,1 @@
+export { fetchGemsHtml } from './gemsApi';

@@ -27,6 +27,7 @@ shadcn/ui components are installed via CLI and customized for a Diablo 2 aesthet
 | Redux Toolkit | State management with slices |
 | Redux Saga | Side effects & async operations |
 | react-redux | React bindings for Redux |
+| reselect | Memoized selectors for derived state |
 
 **Why Redux Saga over RTK Query/Thunks:**
 - App works offline with IndexedDB, no REST APIs to call
@@ -107,7 +108,7 @@ npx shadcn@latest init
 npm install clsx tailwind-merge
 
 # State
-npm install @reduxjs/toolkit react-redux redux-saga
+npm install @reduxjs/toolkit react-redux redux-saga reselect
 
 # Database
 npm install dexie dexie-react-hooks

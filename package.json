@@ -80,15 +80,22 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
+    "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.1.18",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dexie": "^4.2.1",
+    "dexie-react-hooks": "^4.2.0",
     "lucide-react": "^0.562.0",
     "prettier": "^3.7.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-redux": "^9.2.0",
+    "redux-saga": "^1.4.2",
+    "reselect": "^5.1.1",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
