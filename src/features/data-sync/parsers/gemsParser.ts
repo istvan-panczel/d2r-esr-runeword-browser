@@ -1,10 +1,8 @@
 import type { Gem, GemType, GemQuality } from '@/core/db';
 import { parseReqLevel, parseBonuses, getInnerFontColor, getItemName } from './shared/parserUtils';
+import { GEM_TYPES, GEM_QUALITIES } from '../constants/constants.ts';
 
-const GEM_TYPES: readonly GemType[] = ['Amethyst', 'Sapphire', 'Emerald', 'Ruby', 'Diamond', 'Topaz', 'Skull', 'Obsidian'];
-const GEM_QUALITIES: readonly GemQuality[] = ['Chipped', 'Flawed', 'Standard', 'Flawless', 'Blemished', 'Perfect'];
-
-function extractGemTypeAndQuality(name: string): { type: GemType; quality: GemQuality } | null {
+export function extractGemTypeAndQuality(name: string): { type: GemType; quality: GemQuality } | null {
   for (const gemType of GEM_TYPES) {
     if (name.includes(gemType)) {
       // Check for quality prefix

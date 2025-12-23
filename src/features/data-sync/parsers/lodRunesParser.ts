@@ -1,42 +1,6 @@
 import type { LodRune } from '@/core/db';
 import { parseReqLevel, parseBonuses, hasColoredInnerFont, getItemName } from './shared/parserUtils';
-
-// Official LoD runes in sequential order (El = 1, Zod = 33)
-const LOD_RUNE_NAMES: readonly string[] = [
-  'El',
-  'Eld',
-  'Tir',
-  'Nef',
-  'Eth',
-  'Ith',
-  'Tal',
-  'Ral',
-  'Ort',
-  'Thul',
-  'Amn',
-  'Sol',
-  'Shael',
-  'Dol',
-  'Hel',
-  'Io',
-  'Lum',
-  'Ko',
-  'Fal',
-  'Lem',
-  'Pul',
-  'Um',
-  'Mal',
-  'Ist',
-  'Gul',
-  'Vex',
-  'Ohm',
-  'Lo',
-  'Sur',
-  'Ber',
-  'Jah',
-  'Cham',
-  'Zod',
-];
+import { LOD_RUNE_NAMES } from '../constants/constants.ts';
 
 /**
  * Checks if a name is a LoD rune.
@@ -51,7 +15,7 @@ export function isLodRuneName(name: string): boolean {
 /**
  * Gets the order of a LoD rune (1-based, El = 1, Zod = 33)
  */
-function getLodRuneOrder(name: string): number {
+export function getLodRuneOrder(name: string): number {
   const runeName = name.replace(' Rune', '');
   const index = LOD_RUNE_NAMES.indexOf(runeName);
   return index >= 0 ? index + 1 : 0;

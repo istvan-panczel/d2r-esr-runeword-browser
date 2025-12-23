@@ -1,22 +1,6 @@
 import type { Crystal, CrystalType, CrystalQuality } from '@/core/db';
 import { parseReqLevel, parseBonuses, getInnerFontColor, getItemName } from './shared/parserUtils';
-
-const CRYSTAL_TYPES: readonly CrystalType[] = [
-  'Shadow Quartz',
-  'Frozen Soul',
-  'Bleeding Stone',
-  'Burning Sulphur',
-  'Dark Azurite',
-  'Bitter Peridot',
-  'Pulsing Opal',
-  'Enigmatic Cinnabar',
-  'Tomb Jade',
-  'Solid Mercury',
-  'Storm Amber',
-  'Tainted Tourmaline',
-];
-
-const CRYSTAL_QUALITIES: readonly CrystalQuality[] = ['Chipped', 'Flawed', 'Standard'];
+import { CRYSTAL_TYPES, CRYSTAL_QUALITIES } from '../constants/constants.ts';
 
 /**
  * Checks if a name contains a crystal type.
@@ -28,7 +12,7 @@ export function isCrystalName(name: string): boolean {
 /**
  * Extracts crystal type and quality from a crystal name.
  */
-function extractCrystalTypeAndQuality(name: string): { type: CrystalType; quality: CrystalQuality } | null {
+export function extractCrystalTypeAndQuality(name: string): { type: CrystalType; quality: CrystalQuality } | null {
   for (const crystalType of CRYSTAL_TYPES) {
     if (name.includes(crystalType)) {
       // Check for quality prefix

@@ -3,17 +3,7 @@ import { parseReqLevel, parseBonuses, hasColoredInnerFont, getInnerFontColor, ge
 import { isGemName } from './gemsParser';
 import { isLodRuneName } from './lodRunesParser';
 import { isCrystalName } from './crystalsParser';
-
-// ESR rune colors mapped to tier numbers
-const ESR_COLOR_TO_TIER: Record<string, number> = {
-  WHITE: 1,
-  RED: 2,
-  YELLOW: 3,
-  ORANGE: 4,
-  GREEN: 5,
-  GOLD: 6,
-  PURPLE: 7,
-};
+import { ESR_COLOR_TO_TIER } from '../constants/constants.ts';
 
 /**
  * Checks if a name is an ESR rune.
