@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import type { Affix, SocketableBonuses } from '@/core/db';
 
 /**
@@ -52,7 +51,6 @@ export function parseAffixes(cell: Element): Affix[] {
     .map((line) => line.replace(/<[^>]*>/g, '').trim())
     .filter((line) => line.length > 0)
     .map((rawText) => ({
-      id: uuidv4(),
       rawText,
       pattern: rawText.replace(/[+-]?\d+/g, '#'),
       value: extractValue(rawText),

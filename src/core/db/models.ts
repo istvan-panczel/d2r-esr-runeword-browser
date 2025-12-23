@@ -1,7 +1,6 @@
 // Shared types for socketable items
 
 export interface Affix {
-  readonly id: string;
   readonly rawText: string;
   readonly pattern: string;
   readonly value: number | readonly [number, number] | null;
@@ -85,7 +84,6 @@ export interface Crystal {
 // Runeword types
 
 export interface Runeword {
-  readonly id: string;
   readonly name: string;
   readonly sockets: number;
   readonly runes: readonly string[];

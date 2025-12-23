@@ -7,21 +7,21 @@ class AppDatabase extends Dexie {
   lodRunes!: EntityTable<LodRune, 'name'>;
   kanjiRunes!: EntityTable<KanjiRune, 'name'>;
   crystals!: EntityTable<Crystal, 'name'>;
-  runewords!: EntityTable<Runeword, 'id'>;
-  affixes!: EntityTable<Affix, 'id'>;
+  runewords!: EntityTable<Runeword, 'name'>;
+  affixes!: EntityTable<Affix, 'pattern'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    this.version(2).stores({
+    this.version(3).stores({
       gems: 'name, type, quality, color',
       esrRunes: 'name, tier, color',
       lodRunes: 'name, order',
       kanjiRunes: 'name',
       crystals: 'name, type, quality, color',
-      runewords: 'id, name, sockets',
-      affixes: 'id, pattern',
+      runewords: 'name, sockets',
+      affixes: 'pattern',
       metadata: 'key',
     });
   }
