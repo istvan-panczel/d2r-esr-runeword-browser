@@ -28,7 +28,7 @@ export function SocketableCard({ socketable }: SocketableCardProps) {
         {bonuses.weaponsGloves.length > 0 && (
           <div>
             <p className="font-medium text-muted-foreground mb-1">Weapons/Gloves:</p>
-            <ul className="space-y-0.5">
+            <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.weaponsGloves.map((affix) => (
                 <li key={affix.rawText}>{affix.rawText}</li>
               ))}
@@ -40,7 +40,7 @@ export function SocketableCard({ socketable }: SocketableCardProps) {
         {bonuses.helmsBoots.length > 0 && (
           <div>
             <p className="font-medium text-muted-foreground mb-1">Helms/Boots:</p>
-            <ul className="space-y-0.5">
+            <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.helmsBoots.map((affix) => (
                 <li key={affix.rawText}>{affix.rawText}</li>
               ))}
@@ -52,7 +52,7 @@ export function SocketableCard({ socketable }: SocketableCardProps) {
         {bonuses.armorShieldsBelts.length > 0 && (
           <div>
             <p className="font-medium text-muted-foreground mb-1">Armor/Shields/Belts:</p>
-            <ul className="space-y-0.5">
+            <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.armorShieldsBelts.map((affix) => (
                 <li key={affix.rawText}>{affix.rawText}</li>
               ))}
