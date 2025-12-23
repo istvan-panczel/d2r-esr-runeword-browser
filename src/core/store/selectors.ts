@@ -2,11 +2,11 @@ import { createSelector } from 'reselect';
 import type { RootState } from './store';
 import { RequestState } from '@/core/types';
 
-// Base selector for core state
-const selectCoreState = (state: RootState) => state.core;
+// Base selector for dataSync state
+const selectDataSyncState = (state: RootState) => state.dataSync;
 
-export const selectRequestState = createSelector([selectCoreState], (core) => core.requestState);
+export const selectRequestState = createSelector([selectDataSyncState], (dataSync) => dataSync.requestState);
 
 export const selectIsLoading = createSelector([selectRequestState], (requestState) => requestState === RequestState.LOADING);
 
-export const selectError = createSelector([selectCoreState], (core) => core.error);
+export const selectError = createSelector([selectDataSyncState], (dataSync) => dataSync.error);

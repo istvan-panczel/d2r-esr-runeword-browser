@@ -1,78 +1,70 @@
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { initDataLoad, setRequestState, setError } from '@/core/store';
-import { RequestState } from '@/core/types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { fetchGemsHtml } from '@/core/api';
 import { db } from '@/core/db';
 import { parseGemsHtml, parseEsrRunesHtml, parseLodRunesHtml, parseKanjiRunesHtml, parseCrystalsHtml } from '../parsers';
+import {
+  initDataLoad,
+  fetchHtmlSuccess,
+  fetchHtmlError,
+  parseDataSuccess,
+  parseDataError,
+  storeDataSuccess,
+  storeDataError,
+} from './dataSyncSlice';
+import type { ParsedData } from '../interfaces';
 
-class DataSyncError extends Error {
-  readonly phase: 'fetch' | 'parse' | 'clear' | 'store';
-  override readonly cause?: unknown;
-
-  constructor(message: string, phase: 'fetch' | 'parse' | 'clear' | 'store', cause?: unknown) {
-    super(message);
-    this.name = 'DataSyncError';
-    this.phase = phase;
-    this.cause = cause;
+function* handleFetchHtml() {
+  try {
+    const html = (yield call(fetchGemsHtml)) as string;
+    yield put(fetchHtmlSuccess(html));
+  } catch (error) {
+    yield put(fetchHtmlError(error instanceof Error ? error.message : 'Network error'));
   }
 }
 
-function* handleDataLoad() {
+function* handleParseData(action: PayloadAction<string>) {
   try {
-    yield put(setRequestState(RequestState.LOADING));
+    const html = action.payload;
+    const gems = parseGemsHtml(html);
+    const esrRunes = parseEsrRunesHtml(html);
+    const lodRunes = parseLodRunesHtml(html);
+    const kanjiRunes = parseKanjiRunesHtml(html);
+    const crystals = parseCrystalsHtml(html);
+    yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals }));
+  } catch (error) {
+    yield put(parseDataError(error instanceof Error ? error.message : 'Parse error'));
+  }
+}
 
-    // Phase 1: Fetch HTML
-    let html: string;
-    try {
-      html = (yield call(fetchGemsHtml)) as string;
-    } catch (error) {
-      throw new DataSyncError(`Failed to fetch data: ${error instanceof Error ? error.message : 'Network error'}`, 'fetch', error);
-    }
+function* handleStoreData(action: PayloadAction<ParsedData>) {
+  try {
+    const { gems, esrRunes, lodRunes, kanjiRunes, crystals } = action.payload;
 
-    // Phase 2: Parse all data types
-    let gems, esrRunes, lodRunes, kanjiRunes, crystals;
-    try {
-      gems = parseGemsHtml(html);
-      esrRunes = parseEsrRunesHtml(html);
-      lodRunes = parseLodRunesHtml(html);
-      kanjiRunes = parseKanjiRunesHtml(html);
-      crystals = parseCrystalsHtml(html);
-    } catch (error) {
-      throw new DataSyncError(`Failed to parse data: ${error instanceof Error ? error.message : 'Parse error'}`, 'parse', error);
-    }
+    // Clear all tables
+    yield call(() => Promise.all(db.tables.map((table) => table.clear())));
 
-    // Phase 3: Clear database (only after successful fetch and parse)
-    try {
-      yield call(() => Promise.all(db.tables.map((table) => table.clear())));
-    } catch (error) {
-      throw new DataSyncError(`Failed to clear database: ${error instanceof Error ? error.message : 'Database error'}`, 'clear', error);
-    }
-
-    // Phase 4: Store all data in respective Dexie tables
-    try {
-      yield all([
-        call(() => db.gems.bulkPut(gems)),
-        call(() => db.esrRunes.bulkPut(esrRunes)),
-        call(() => db.lodRunes.bulkPut(lodRunes)),
-        call(() => db.kanjiRunes.bulkPut(kanjiRunes)),
-        call(() => db.crystals.bulkPut(crystals)),
-      ]);
-    } catch (error) {
-      throw new DataSyncError(`Failed to store data: ${error instanceof Error ? error.message : 'Database error'}`, 'store', error);
-    }
+    // Store data
+    yield all([
+      call(() => db.gems.bulkPut(gems)),
+      call(() => db.esrRunes.bulkPut(esrRunes)),
+      call(() => db.lodRunes.bulkPut(lodRunes)),
+      call(() => db.kanjiRunes.bulkPut(kanjiRunes)),
+      call(() => db.crystals.bulkPut(crystals)),
+    ]);
 
     console.log(
       `Data sync complete: ${String(gems.length)} gems, ${String(esrRunes.length)} ESR runes, ${String(lodRunes.length)} LoD runes, ${String(kanjiRunes.length)} Kanji runes, ${String(crystals.length)} crystals`
     );
 
-    yield put(setRequestState(RequestState.SUCCESS));
+    yield put(storeDataSuccess());
   } catch (error) {
-    const message = error instanceof DataSyncError ? error.message : error instanceof Error ? error.message : 'Unknown error occurred';
-    yield put(setError(message));
-    yield put(setRequestState(RequestState.ERROR));
+    yield put(storeDataError(error instanceof Error ? error.message : 'Database error'));
   }
 }
 
 export function* dataSyncSaga() {
-  yield takeLatest(initDataLoad.type, handleDataLoad);
+  yield takeLatest(initDataLoad.type, handleFetchHtml);
+  yield takeLatest(fetchHtmlSuccess.type, handleParseData);
+  yield takeLatest(parseDataSuccess.type, handleStoreData);
 }

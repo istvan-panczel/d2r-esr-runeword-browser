@@ -45,6 +45,9 @@ export default defineConfig([
 
       // Allow constant exports alongside components (needed for shadcn/ui)
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+
+      // Allow unused variables/params prefixed with underscore
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
   },
 ])
