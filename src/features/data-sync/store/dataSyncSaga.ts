@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { all, call, put, takeLatest } from 'redux-saga/effects';
 import { initDataLoad, setRequestState, setError } from '@/core/store';
 import { RequestState } from '@/core/types';
 import { fetchGemsHtml } from '@/core/api';
@@ -18,12 +18,14 @@ function* handleDataLoad() {
     const kanjiRunes = parseKanjiRunesHtml(html);
     const crystals = parseCrystalsHtml(html);
 
-    // Store all data in respective Dexie tables
-    yield call((data: typeof gems) => db.gems.bulkPut(data), gems);
-    yield call((data: typeof esrRunes) => db.esrRunes.bulkPut(data), esrRunes);
-    yield call((data: typeof lodRunes) => db.lodRunes.bulkPut(data), lodRunes);
-    yield call((data: typeof kanjiRunes) => db.kanjiRunes.bulkPut(data), kanjiRunes);
-    yield call((data: typeof crystals) => db.crystals.bulkPut(data), crystals);
+    // Store all data in respective Dexie tables (parallel writes)
+    yield all([
+      call(() => db.gems.bulkPut(gems)),
+      call(() => db.esrRunes.bulkPut(esrRunes)),
+      call(() => db.lodRunes.bulkPut(lodRunes)),
+      call(() => db.kanjiRunes.bulkPut(kanjiRunes)),
+      call(() => db.crystals.bulkPut(crystals)),
+    ]);
 
     console.log(
       `Data sync complete: ${String(gems.length)} gems, ${String(esrRunes.length)} ESR runes, ${String(lodRunes.length)} LoD runes, ${String(kanjiRunes.length)} Kanji runes, ${String(crystals.length)} crystals`
