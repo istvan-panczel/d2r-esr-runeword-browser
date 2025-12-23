@@ -1,10 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
+import { RouterProvider } from 'react-router-dom';
 import { store, registerSaga, runSagas } from '@/core/store';
 import { dataSyncSaga } from '@/features/data-sync';
+import { ThemeInitializer } from '@/features/settings';
+import { router } from '@/core/router';
 import './index.css';
-import App from './App.tsx';
 
 // Register feature sagas
 registerSaga(dataSyncSaga);
@@ -20,7 +22,8 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <ThemeInitializer />
+      <RouterProvider router={router} />
     </Provider>
   </StrictMode>
 );

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { db } from '@/core/db/db';
+import type { AffixPattern } from '@/core/db/models';
 import { parseGemsHtml } from './parsers/gemsParser';
 import { parseEsrRunesHtml } from './parsers/esrRunesParser';
 import { parseLodRunesHtml } from './parsers/lodRunesParser';
@@ -273,7 +274,7 @@ describe('Data Sync Integration', () => {
       await db.runewords.bulkPut(runewords);
 
       // Collect unique affixes (simulating what the saga does)
-      const affixMap = new Map<string, { pattern: string; valueType: string }>();
+      const affixMap = new Map<string, AffixPattern>();
 
       for (const rw of runewords) {
         for (const affix of rw.affixes) {
