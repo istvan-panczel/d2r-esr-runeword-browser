@@ -69,6 +69,26 @@ No external parsing libraries needed. DOMParser provides sufficient capability f
 
 Useful for validating data structures extracted from HTML before storing in IndexedDB.
 
+## Testing
+
+| Technology | Purpose |
+|------------|---------|
+| Vitest | Test runner and assertion library |
+| @vitest/ui | Visual UI for interactive testing |
+| @vitest/coverage-v8 | Code coverage reporting |
+| jsdom | DOM environment for browser API simulation |
+| fake-indexeddb | IndexedDB mock for database testing |
+
+**Test Scripts:**
+```bash
+npm run test             # Run tests once (CI mode)
+npm run test:watch       # Run tests in watch mode (development)
+npm run test:ui          # Open Vitest UI for interactive testing
+npm run test:coverage    # Generate code coverage report
+```
+
+See [TESTING.md](./TESTING.md) for detailed testing patterns and conventions.
+
 ## React Compiler
 
 The project uses [React Compiler](https://react.dev/learn/react-compiler) for automatic optimization.

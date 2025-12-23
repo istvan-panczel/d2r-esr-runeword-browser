@@ -30,6 +30,10 @@ npm run lint:fix         # Run ESLint with auto-fix
 npm run release          # Create a new version (runs lint + build first)
 npm run compiler:check   # Check React Compiler optimization issues
 npm run compiler:health  # Run React Compiler health check
+
+# Testing
+npm run test             # Run tests once (CI mode)
+npm run test:coverage    # Generate code coverage report
 ```
 
 ## React Compiler

@@ -40,6 +40,8 @@ This project uses an iterative documentation process where:
 - **Crystals feature** - 12 crystal types × 3 quality tiers
 - **Navigation** - Routing (/, /socketables, /runes, /gems, /crystals), settings drawer
 - **Data Models** - Complete Dexie schema with 8 tables (gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, affixes, metadata)
+- **Sagas** - Redux Saga patterns (pipeline pattern, dynamic registration, parallel operations)
+- **Testing** - Vitest setup, unit tests, integration tests, database testing patterns
 
 ### In Progress
 - (ready for implementation)

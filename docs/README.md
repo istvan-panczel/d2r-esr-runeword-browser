@@ -32,6 +32,8 @@ Project overview, design decisions, and general project information.
 - [UI Components](./technical/UI-COMPONENTS.md) - Component patterns and theming
 - [Coding Guidelines](./technical/CODING-GUIDELINES.md) - Conventions and standards
 - [Data Models](./technical/DATA-MODELS.md) - IndexedDB schema and TypeScript types
+- [Sagas](./technical/SAGAS.md) - Redux Saga patterns and architecture
+- [Testing](./technical/TESTING.md) - Testing infrastructure and patterns
 
 ## Status
 
