@@ -1,0 +1,121 @@
+import { v4 as uuidv4 } from 'uuid';
+import type { Affix, SocketableBonuses } from '@/core/db';
+
+/**
+ * Extracts required level from text containing "Req Lvl: N"
+ */
+export function parseReqLevel(text: string): number {
+  const match = /Req Lvl:\s*(\d+)/i.exec(text);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+/**
+ * Extracts numeric value from affix text.
+ * Handles ranges (e.g., "10-20") and single numbers.
+ */
+export function extractValue(text: string): number | readonly [number, number] | null {
+  // Range pattern: "Adds 10-20 Fire Damage"
+  const rangeMatch = /(\d+)-(\d+)/.exec(text);
+  if (rangeMatch) {
+    return [parseInt(rangeMatch[1], 10), parseInt(rangeMatch[2], 10)] as const;
+  }
+
+  // Single number pattern
+  const singleMatch = /[+-]?(\d+)/.exec(text);
+  if (singleMatch) {
+    return parseInt(singleMatch[1], 10);
+  }
+
+  return null;
+}
+
+/**
+ * Detects the value type of an affix based on its text.
+ */
+export function detectValueType(text: string): 'flat' | 'percent' | 'range' | 'none' {
+  if (/\d+-\d+/.test(text)) return 'range';
+  if (/%/.test(text)) return 'percent';
+  if (/[+-]?\d+/.test(text)) return 'flat';
+  return 'none';
+}
+
+/**
+ * Parses affixes from a table cell's innerHTML.
+ * Splits on <br> tags and creates Affix objects.
+ */
+export function parseAffixes(cell: Element): Affix[] {
+  const html = cell.innerHTML;
+  if (!html.trim()) return [];
+
+  return html
+    .split(/<br\s*\/?>/i)
+    .map((line) => line.replace(/<[^>]*>/g, '').trim())
+    .filter((line) => line.length > 0)
+    .map((rawText) => ({
+      id: uuidv4(),
+      rawText,
+      pattern: rawText.replace(/[+-]?\d+/g, '#'),
+      value: extractValue(rawText),
+      valueType: detectValueType(rawText),
+    }));
+}
+
+/**
+ * Parses the three bonus categories from a header row.
+ * Bonuses are in the row after the column headers row.
+ */
+export function parseBonuses(headerRow: Element): SocketableBonuses {
+  const bonusRow = headerRow.nextElementSibling?.nextElementSibling;
+  if (!bonusRow) {
+    return { weaponsGloves: [], helmsBoots: [], armorShieldsBelts: [] };
+  }
+
+  const cells = bonusRow.querySelectorAll('td');
+  const cell0 = cells[0] as Element | undefined;
+  const cell1 = cells[1] as Element | undefined;
+  const cell2 = cells[2] as Element | undefined;
+
+  return {
+    weaponsGloves: cell0 ? parseAffixes(cell0) : [],
+    helmsBoots: cell1 ? parseAffixes(cell1) : [],
+    armorShieldsBelts: cell2 ? parseAffixes(cell2) : [],
+  };
+}
+
+/**
+ * Checks if a header cell has a colored inner FONT tag.
+ * Structure: <font...><b><FONT COLOR="...">Name</FONT></b></font>
+ */
+export function hasColoredInnerFont(headerCell: Element): boolean {
+  const innerFont = headerCell.querySelector('b font[color], b FONT[color]');
+  return innerFont !== null;
+}
+
+/**
+ * Gets the color attribute from the inner FONT tag.
+ * Returns null if no colored inner font exists.
+ */
+export function getInnerFontColor(headerCell: Element): string | null {
+  const innerFont = headerCell.querySelector('b font[color], b FONT[color]');
+  return innerFont?.getAttribute('color')?.toUpperCase() ?? null;
+}
+
+/**
+ * Gets the item name from a header cell.
+ * Handles both colored inner fonts and plain text in <b> tags.
+ */
+export function getItemName(headerCell: Element): string {
+  // Try colored inner font first
+  const innerFont = headerCell.querySelector('b font[color], b FONT[color]');
+  if (innerFont?.textContent) {
+    return innerFont.textContent.trim();
+  }
+
+  // Fall back to <b> tag text content
+  const bTag = headerCell.querySelector('b');
+  if (bTag?.textContent) {
+    return bTag.textContent.trim();
+  }
+
+  return '';
+}
