@@ -7,6 +7,11 @@ export interface Affix {
   readonly valueType: 'flat' | 'percent' | 'range' | 'none';
 }
 
+export interface AffixPattern {
+  readonly pattern: string;
+  readonly valueType: 'flat' | 'percent' | 'range' | 'none';
+}
+
 export interface SocketableBonuses {
   readonly weaponsGloves: readonly Affix[];
   readonly helmsBoots: readonly Affix[];

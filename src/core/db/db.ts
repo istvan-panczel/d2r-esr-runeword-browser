@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, Affix, Metadata } from './models';
+import type { Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, AffixPattern, Metadata } from './models';
 
 class AppDatabase extends Dexie {
   gems!: EntityTable<Gem, 'name'>;
@@ -8,7 +8,7 @@ class AppDatabase extends Dexie {
   kanjiRunes!: EntityTable<KanjiRune, 'name'>;
   crystals!: EntityTable<Crystal, 'name'>;
   runewords!: EntityTable<Runeword, 'name'>;
-  affixes!: EntityTable<Affix, 'pattern'>;
+  affixes!: EntityTable<AffixPattern, 'pattern'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {

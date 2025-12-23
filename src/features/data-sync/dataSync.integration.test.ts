@@ -254,4 +254,88 @@ describe('Data Sync Integration', () => {
       }
     });
   });
+
+  describe('Affixes → IndexedDB', () => {
+    it('should extract unique affix patterns from all sources', async () => {
+      // Parse and store all data
+      const gems = parseGemsHtml(gemsHtml);
+      const esrRunes = parseEsrRunesHtml(gemsHtml);
+      const lodRunes = parseLodRunesHtml(gemsHtml);
+      const kanjiRunes = parseKanjiRunesHtml(gemsHtml);
+      const crystals = parseCrystalsHtml(gemsHtml);
+      const runewords = parseRunewordsHtml(runewordsHtml);
+
+      await db.gems.bulkPut(gems);
+      await db.esrRunes.bulkPut(esrRunes);
+      await db.lodRunes.bulkPut(lodRunes);
+      await db.kanjiRunes.bulkPut(kanjiRunes);
+      await db.crystals.bulkPut(crystals);
+      await db.runewords.bulkPut(runewords);
+
+      // Collect unique affixes (simulating what the saga does)
+      const affixMap = new Map<string, { pattern: string; valueType: string }>();
+
+      for (const rw of runewords) {
+        for (const affix of rw.affixes) {
+          if (!affixMap.has(affix.pattern)) {
+            affixMap.set(affix.pattern, { pattern: affix.pattern, valueType: affix.valueType });
+          }
+        }
+      }
+
+      const socketables = [...gems, ...esrRunes, ...lodRunes, ...kanjiRunes, ...crystals];
+      for (const item of socketables) {
+        for (const affix of [...item.bonuses.weaponsGloves, ...item.bonuses.helmsBoots, ...item.bonuses.armorShieldsBelts]) {
+          if (!affixMap.has(affix.pattern)) {
+            affixMap.set(affix.pattern, { pattern: affix.pattern, valueType: affix.valueType });
+          }
+        }
+      }
+
+      const uniqueAffixes = Array.from(affixMap.values());
+      await db.affixes.bulkPut(uniqueAffixes);
+
+      const storedAffixes = await db.affixes.toArray();
+      expect(storedAffixes.length).toBeGreaterThan(100); // Should have many unique patterns
+      expect(storedAffixes.length).toBeLessThan(2000); // But not an unreasonable amount
+    });
+
+    it('should store affixes with pattern as primary key', async () => {
+      const gems = parseGemsHtml(gemsHtml);
+      await db.gems.bulkPut(gems);
+
+      // Get a sample affix from a gem
+      const perfectRuby = gems.find((g) => g.name === 'Perfect Ruby');
+      expect(perfectRuby).toBeDefined();
+      const sampleAffix = perfectRuby!.bonuses.weaponsGloves[0];
+      expect(sampleAffix).toBeDefined();
+
+      // Store it in affixes table (only pattern + valueType)
+      await db.affixes.put({ pattern: sampleAffix.pattern, valueType: sampleAffix.valueType });
+
+      // Should be retrievable by pattern
+      const retrieved = await db.affixes.get(sampleAffix.pattern);
+      expect(retrieved).toBeDefined();
+      expect(retrieved!.valueType).toBe(sampleAffix.valueType);
+    });
+
+    it('should have valid affix properties', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      // Get sample affixes
+      const boar = runewords.find((rw) => rw.name === 'Boar');
+      expect(boar).toBeDefined();
+
+      for (const affix of boar!.affixes) {
+        await db.affixes.put({ pattern: affix.pattern, valueType: affix.valueType });
+      }
+
+      const storedAffixes = await db.affixes.toArray();
+      for (const affix of storedAffixes) {
+        expect(affix.pattern).toBeDefined();
+        expect(['flat', 'percent', 'range', 'none']).toContain(affix.valueType);
+      }
+    });
+  });
 });

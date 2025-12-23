@@ -18,8 +18,11 @@ import {
   parseDataError,
   storeDataSuccess,
   storeDataError,
+  extractAffixesSuccess,
+  extractAffixesError,
   type FetchedHtmlData,
 } from './dataSyncSlice';
+import type { AffixPattern, Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword } from '@/core/db';
 import type { ParsedData } from '../interfaces';
 
 function* handleFetchHtml() {
@@ -73,8 +76,58 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
   }
 }
 
+function collectAffixesFromSocketable(item: Gem | EsrRune | LodRune | KanjiRune | Crystal, affixMap: Map<string, AffixPattern>): void {
+  for (const affix of [...item.bonuses.weaponsGloves, ...item.bonuses.helmsBoots, ...item.bonuses.armorShieldsBelts]) {
+    if (!affixMap.has(affix.pattern)) {
+      affixMap.set(affix.pattern, { pattern: affix.pattern, valueType: affix.valueType });
+    }
+  }
+}
+
+function* handleExtractAffixes() {
+  try {
+    // Read all data from IndexedDB
+    const runewords: Runeword[] = (yield call(() => db.runewords.toArray())) as Runeword[];
+    const gems: Gem[] = (yield call(() => db.gems.toArray())) as Gem[];
+    const esrRunes: EsrRune[] = (yield call(() => db.esrRunes.toArray())) as EsrRune[];
+    const lodRunes: LodRune[] = (yield call(() => db.lodRunes.toArray())) as LodRune[];
+    const kanjiRunes: KanjiRune[] = (yield call(() => db.kanjiRunes.toArray())) as KanjiRune[];
+    const crystals: Crystal[] = (yield call(() => db.crystals.toArray())) as Crystal[];
+
+    // Collect all affixes into a Map keyed by pattern
+    const affixMap = new Map<string, AffixPattern>();
+
+    // From runewords
+    for (const rw of runewords) {
+      for (const affix of rw.affixes) {
+        if (!affixMap.has(affix.pattern)) {
+          affixMap.set(affix.pattern, { pattern: affix.pattern, valueType: affix.valueType });
+        }
+      }
+    }
+
+    // From socketables (gems, runes, crystals)
+    for (const item of gems) collectAffixesFromSocketable(item, affixMap);
+    for (const item of esrRunes) collectAffixesFromSocketable(item, affixMap);
+    for (const item of lodRunes) collectAffixesFromSocketable(item, affixMap);
+    for (const item of kanjiRunes) collectAffixesFromSocketable(item, affixMap);
+    for (const item of crystals) collectAffixesFromSocketable(item, affixMap);
+
+    // Store unique affixes
+    const uniqueAffixes = Array.from(affixMap.values());
+    yield call(() => db.affixes.bulkPut(uniqueAffixes));
+
+    console.log(`Affix extraction complete: ${String(uniqueAffixes.length)} unique patterns`);
+
+    yield put(extractAffixesSuccess());
+  } catch (error) {
+    yield put(extractAffixesError(error instanceof Error ? error.message : 'Affix extraction error'));
+  }
+}
+
 export function* dataSyncSaga() {
   yield takeLatest(initDataLoad.type, handleFetchHtml);
   yield takeLatest(fetchHtmlSuccess.type, handleParseData);
   yield takeLatest(parseDataSuccess.type, handleStoreData);
+  yield takeLatest(storeDataSuccess.type, handleExtractAffixes);
 }
