@@ -1,4 +1,4 @@
-import type { Gem, EsrRune, LodRune, KanjiRune, Crystal } from '@/core/db';
+import type { Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword } from '@/core/db';
 
 export interface ParsedData {
   readonly gems: Gem[];
@@ -6,4 +6,5 @@ export interface ParsedData {
   readonly lodRunes: LodRune[];
   readonly kanjiRunes: KanjiRune[];
   readonly crystals: Crystal[];
+  readonly runewords: Runeword[];
 }

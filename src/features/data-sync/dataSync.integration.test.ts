@@ -7,12 +7,17 @@ import { parseEsrRunesHtml } from './parsers/esrRunesParser';
 import { parseLodRunesHtml } from './parsers/lodRunesParser';
 import { parseKanjiRunesHtml } from './parsers/kanjiRunesParser';
 import { parseCrystalsHtml } from './parsers/crystalsParser';
+import { parseRunewordsHtml } from './parsers/runewordsParser';
 
 describe('Data Sync Integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../public/data/gems.htm'), 'utf-8');
+  const gemsHtml = readFileSync(resolve(__dirname, '../../../public/data/gems.htm'), 'utf-8');
+  const runewordsHtml = readFileSync(resolve(__dirname, '../../../public/data/runewords.htm'), 'utf-8');
+
+  // Keep backward compatibility with existing tests
+  const html = gemsHtml;
 
   beforeEach(async () => {
-    await Promise.all([db.gems.clear(), db.esrRunes.clear(), db.lodRunes.clear(), db.kanjiRunes.clear(), db.crystals.clear()]);
+    await Promise.all(db.tables.map((table) => table.clear()));
   });
 
   describe('Gems → IndexedDB', () => {
@@ -180,6 +185,73 @@ describe('Data Sync Integration', () => {
       chipped.forEach((c) => expect(c.reqLevel).toBe(6));
       flawed.forEach((c) => expect(c.reqLevel).toBe(24));
       standard.forEach((c) => expect(c.reqLevel).toBe(42));
+    });
+  });
+
+  describe('Runewords → IndexedDB', () => {
+    it('should parse and store runewords (approximately 280-320)', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      const storedRunewords = await db.runewords.toArray();
+      expect(storedRunewords.length).toBeGreaterThanOrEqual(280);
+      expect(storedRunewords.length).toBeLessThanOrEqual(320);
+    });
+
+    it('should store Boar with correct properties', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      const boar = await db.runewords.get('Boar');
+      expect(boar).toBeDefined();
+      expect(boar!.sockets).toBe(1);
+      expect(boar!.runes).toEqual(['I Rune']);
+      expect(boar!.allowedItems).toContain('Weapon');
+      expect(boar!.affixes.length).toBeGreaterThan(0);
+    });
+
+    it('should store Stone with correct properties', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      const stone = await db.runewords.get('Stone');
+      expect(stone).toBeDefined();
+      expect(stone!.sockets).toBe(2);
+      expect(stone!.runes).toEqual(['I Rune', 'Shi Rune']);
+      expect(stone!.affixes.length).toBeGreaterThan(0);
+    });
+
+    it('should store Airship with correct runes array', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      const airship = await db.runewords.get('Airship');
+      expect(airship).toBeDefined();
+      expect(airship!.runes).toEqual(['Hi Rune', 'Ko Rune', 'U Rune', 'Se Rune', 'N Rune']);
+      expect(airship!.sockets).toBe(5);
+    });
+
+    it('should be queryable by sockets index', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      const twoSocketRunewords = await db.runewords.where('sockets').equals(2).toArray();
+      expect(twoSocketRunewords.length).toBeGreaterThan(0);
+      twoSocketRunewords.forEach((rw) => expect(rw.sockets).toBe(2));
+    });
+
+    it('should have affixes without newlines or excessive whitespace', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      const storedRunewords = await db.runewords.toArray();
+
+      for (const runeword of storedRunewords.slice(0, 50)) {
+        for (const affix of runeword.affixes) {
+          expect(affix.rawText).not.toMatch(/\n/);
+          expect(affix.rawText).not.toMatch(/\s{2,}/);
+        }
+      }
     });
   });
 });

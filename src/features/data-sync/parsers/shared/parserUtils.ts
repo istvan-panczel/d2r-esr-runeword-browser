@@ -117,3 +117,41 @@ export function getItemName(headerCell: Element): string {
 
   return '';
 }
+
+/**
+ * Normalizes whitespace in text by collapsing multiple spaces/newlines to single space.
+ */
+function normalizeWhitespace(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Parses affixes from a runeword bonus cell, extracting ONLY
+ * the runeword bonuses (before the <br><br> separator).
+ *
+ * Runeword cells contain: [runeword bonuses]<br><br>[rune bonuses]
+ * We only want the runeword bonuses.
+ */
+export function parseRunewordAffixes(cell: Element): Affix[] {
+  const html = cell.innerHTML;
+  if (!html.trim()) return [];
+
+  // Split on double <br> (separator between runeword and rune bonuses)
+  // Handle variations: <br><br>, <br/><br/>, <br /><br />, etc.
+  const parts = html.split(/<br\s*\/?>\s*<br\s*\/?>/i);
+
+  // Take only the first part (runeword bonuses)
+  const runewordBonusesHtml = parts[0] ?? '';
+
+  return runewordBonusesHtml
+    .split(/<br\s*\/?>/i)
+    .map((line) => line.replace(/<[^>]*>/g, ''))
+    .map((line) => normalizeWhitespace(line))
+    .filter((line) => line.length > 0)
+    .map((rawText) => ({
+      rawText,
+      pattern: rawText.replace(/[+-]?\d+/g, '#'),
+      value: extractValue(rawText),
+      valueType: detectValueType(rawText),
+    }));
+}

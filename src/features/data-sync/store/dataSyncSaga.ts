@@ -1,8 +1,15 @@
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { fetchGemsHtml } from '@/core/api';
+import { fetchGemsHtml, fetchRunewordsHtml } from '@/core/api';
 import { db } from '@/core/db';
-import { parseGemsHtml, parseEsrRunesHtml, parseLodRunesHtml, parseKanjiRunesHtml, parseCrystalsHtml } from '../parsers';
+import {
+  parseGemsHtml,
+  parseEsrRunesHtml,
+  parseLodRunesHtml,
+  parseKanjiRunesHtml,
+  parseCrystalsHtml,
+  parseRunewordsHtml,
+} from '../parsers';
 import {
   initDataLoad,
   fetchHtmlSuccess,
@@ -11,27 +18,29 @@ import {
   parseDataError,
   storeDataSuccess,
   storeDataError,
+  type FetchedHtmlData,
 } from './dataSyncSlice';
 import type { ParsedData } from '../interfaces';
 
 function* handleFetchHtml() {
   try {
-    const html = (yield call(fetchGemsHtml)) as string;
-    yield put(fetchHtmlSuccess(html));
+    const [gemsHtml, runewordsHtml] = (yield all([call(fetchGemsHtml), call(fetchRunewordsHtml)])) as [string, string];
+    yield put(fetchHtmlSuccess({ gemsHtml, runewordsHtml }));
   } catch (error) {
     yield put(fetchHtmlError(error instanceof Error ? error.message : 'Network error'));
   }
 }
 
-function* handleParseData(action: PayloadAction<string>) {
+function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
   try {
-    const html = action.payload;
-    const gems = parseGemsHtml(html);
-    const esrRunes = parseEsrRunesHtml(html);
-    const lodRunes = parseLodRunesHtml(html);
-    const kanjiRunes = parseKanjiRunesHtml(html);
-    const crystals = parseCrystalsHtml(html);
-    yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals }));
+    const { gemsHtml, runewordsHtml } = action.payload;
+    const gems = parseGemsHtml(gemsHtml);
+    const esrRunes = parseEsrRunesHtml(gemsHtml);
+    const lodRunes = parseLodRunesHtml(gemsHtml);
+    const kanjiRunes = parseKanjiRunesHtml(gemsHtml);
+    const crystals = parseCrystalsHtml(gemsHtml);
+    const runewords = parseRunewordsHtml(runewordsHtml);
+    yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords }));
   } catch (error) {
     yield put(parseDataError(error instanceof Error ? error.message : 'Parse error'));
   }
@@ -39,7 +48,7 @@ function* handleParseData(action: PayloadAction<string>) {
 
 function* handleStoreData(action: PayloadAction<ParsedData>) {
   try {
-    const { gems, esrRunes, lodRunes, kanjiRunes, crystals } = action.payload;
+    const { gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords } = action.payload;
 
     // Clear all tables
     yield call(() => Promise.all(db.tables.map((table) => table.clear())));
@@ -51,10 +60,11 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       call(() => db.lodRunes.bulkPut(lodRunes)),
       call(() => db.kanjiRunes.bulkPut(kanjiRunes)),
       call(() => db.crystals.bulkPut(crystals)),
+      call(() => db.runewords.bulkPut(runewords)),
     ]);
 
     console.log(
-      `Data sync complete: ${String(gems.length)} gems, ${String(esrRunes.length)} ESR runes, ${String(lodRunes.length)} LoD runes, ${String(kanjiRunes.length)} Kanji runes, ${String(crystals.length)} crystals`
+      `Data sync complete: ${String(gems.length)} gems, ${String(esrRunes.length)} ESR runes, ${String(lodRunes.length)} LoD runes, ${String(kanjiRunes.length)} Kanji runes, ${String(crystals.length)} crystals, ${String(runewords.length)} runewords`
     );
 
     yield put(storeDataSuccess());

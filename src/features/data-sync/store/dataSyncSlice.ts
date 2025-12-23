@@ -2,6 +2,11 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { RequestState } from '@/core/types';
 import type { ParsedData } from '../interfaces';
 
+export interface FetchedHtmlData {
+  readonly gemsHtml: string;
+  readonly runewordsHtml: string;
+}
+
 interface DataSyncState {
   readonly requestState: RequestState;
   readonly error: string | null;
@@ -23,7 +28,7 @@ const dataSyncSlice = createSlice({
     },
 
     // Success actions (payloads passed to next saga, not stored in state)
-    fetchHtmlSuccess(_state, _action: PayloadAction<string>) {
+    fetchHtmlSuccess(_state, _action: PayloadAction<FetchedHtmlData>) {
       // Saga listens for this, no state change
     },
     parseDataSuccess(_state, _action: PayloadAction<ParsedData>) {
