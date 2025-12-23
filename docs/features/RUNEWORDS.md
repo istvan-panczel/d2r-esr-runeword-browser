@@ -1,237 +1,110 @@
 # Runewords Feature
 
-The primary feature of the application - browse and filter all Eastern Sun Resurrected runewords.
+The primary feature - browse and filter all Eastern Sun Resurrected runewords.
 
 ## Purpose
 
-Allow users to:
-- View all available runewords with complete data
-- Filter by various criteria (affixes, sockets, item types, runes)
-- Search by text or select specific affix patterns
-- See both runeword bonuses AND what the runes contribute
+- View all runewords with complete data
+- Filter by runes, text search, sockets, and item types
+- See runeword bonuses AND rune contributions
+- Future: Filter by specific affix patterns with minimum values
 
-## UI Components
-
-### RunewordList
-Main container displaying runewords in a grid or list layout.
+## UI Layout
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  [Filters Bar]                                              │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │ RunewordCard│  │ RunewordCard│  │ RunewordCard│  ...    │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
-│  │ RunewordCard│  │ RunewordCard│  │ RunewordCard│  ...    │
-│  └─────────────┘  └─────────────┘  └─────────────┘         │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Runewords                                                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Search: [_______________________]   Sockets: [_]   ☑W ☑A ☑S           │
+│                                                                         │
+│  Runes: [All]                                                           │
+│  ┌─ Tier 1 [☑] ─────────────────────────────────────────────────────┐  │
+│  │ ☑ I Rune  ☑ Ro Rune  ☑ Ha Rune  ☑ Ni Rune  ☑ Ho Rune  ...       │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│  ┌─ Tier 2 [☑] ─────────────────────────────────────────────────────┐  │
+│  │ ☑ To Rune  ☑ Chi Rune  ☑ Ri Rune  ...                            │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│  ... (more tiers)                                                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
+│  │ Stone    [2 Sk] │  │ Boar     [1 Sk] │  │ Airship  [5 Sk] │         │
+│  │ [Ta] [Ri]       │  │ [I]             │  │ [Hi][Ko]...     │         │
+│  │ Items: Armor    │  │ Items: Weapon   │  │ Items: Weapon   │         │
+│  │ ───────────────│  │ ────────────────│  │ ────────────────│         │
+│  │ +100 Defense   │  │ +50% Enh Damage │  │ ...             │         │
+│  │ +30 Strength   │  │ ...             │  │                 │         │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### RunewordCard
-Displays a single runeword with all its data.
+## Filters
 
-```
-┌─────────────────────────────────────┐
-│ Stone                    [2 Socket] │
-│─────────────────────────────────────│
-│ Runes: [Ta] [Ri]                    │
-│ Items: Any Armor                    │
-│─────────────────────────────────────│
-│ Runeword Bonuses:                   │
-│   +100 Defense                      │
-│   +30 to Strength                   │
-│   +80 to Life                       │
-│   Damage Reduced by 5               │
-│   Physical Resist: +10%             │
-│─────────────────────────────────────│
-│ Rune Bonuses (in Armor):            │
-│   +30 Defense                       │
-│   +5 to Mana after each Kill        │
-└─────────────────────────────────────┘
-```
+### Rune Checkbox Filter
+- All runes (ESR, LoD, Kanji) in a single tiered list
+- Rune names displayed with colors
+- **3-way tier checkbox**: all selected / some selected / none selected
+- **Global "All" toggle**: select/deselect all runes
+- All runes checked by default
+- **Logic**: Runeword hidden if ANY of its runes are unchecked (strict)
 
-### RuneTooltip
+### Text Search
+- Searches runeword name + affix text
+- Split by spaces, trimmed, AND logic (same as Socketables)
+- Example: `resist life` matches runewords with both "resist" AND "life"
 
-When hovering over a rune name in the RunewordCard, a tooltip displays detailed rune information.
+### Socket Count
+- Single-digit number input (1-6)
+- Default: empty (shows all runewords)
+- If set: only runewords with that exact socket count
 
-```
-                     ┌─────────────────────────────────────┐
-Runes: [Ta] [Ri]     │ Ta Rune                   [Tier 2] │
-         ▲           │ Req Level: 23                      │
-         │           │─────────────────────────────────────│
-         └──hover────│ Weapons/Gloves:                    │
-                     │   +15% Enhanced Damage             │
-                     │   +5 to Minimum Damage             │
-                     │─────────────────────────────────────│
-                     │ Helms/Boots:                        │
-                     │   +20 Defense                       │
-                     │   +5% Faster Hit Recovery           │
-                     │─────────────────────────────────────│
-                     │ Armor/Shields/Belts:                │
-                     │   +30 Defense                       │
-                     │   Damage Reduced by 3               │
-                     └─────────────────────────────────────┘
-```
+### Item Type
+- Checkbox group: ☑ Weapon ☑ Armor ☑ Shield
+- All checked by default
+- Runeword shown if its allowedItems matches ANY checked type
 
-**Tooltip Contents:**
-- Rune name displayed in its color
-- Tier badge
-- Required level
-- All three bonus categories (weapons/gloves, helms/boots, armor/shields/belts)
-
-**Behavior:**
-- Triggered on hover (desktop) / tap (mobile)
-- Positioned to avoid screen edges
-- Dismisses on mouse leave / tap elsewhere
-
-**Reusability:**
-This tooltip uses the same data display as `RuneCard` from the Runes feature. Consider creating a shared `RuneInfo` component that can be used in both contexts.
-
-### RunewordFilters
-Filter controls above the list.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Search: [___________________]  Sockets: [Any ▼]             │
-│                                                             │
-│ Item Type: [Any ▼]  Runes: [Select runes...]               │
-│                                                             │
-│ [Affix Selector Button]                                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### AffixSelector
-Modal or dropdown for selecting specific affix patterns.
-
-**Two Modes:**
-
-1. **Category View** - Browse by affix categories
-```
-┌─────────────────────────────────────┐
-│ Categories:                         │
-│ ├─ Defense                          │
-│ │  ├─ +# Defense                    │
-│ │  ├─ +#% Enhanced Defense          │
-│ │  └─ Damage Reduced by #           │
-│ ├─ Damage                           │
-│ │  ├─ +#% Enhanced Damage           │
-│ │  ├─ Adds #-# Fire Damage          │
-│ │  └─ ...                           │
-│ ├─ Resistances                      │
-│ │  ├─ Physical Resist: +#%          │
-│ │  ├─ All Resistances +#            │
-│ │  └─ ...                           │
-│ └─ Skills                           │
-│    └─ ...                           │
-└─────────────────────────────────────┘
-```
-
-2. **Search Mode** - Search across all patterns
-```
-┌─────────────────────────────────────┐
-│ Search: [resist_____________]       │
-│─────────────────────────────────────│
-│ Results:                            │
-│ ☐ Physical Resist: +#%              │
-│ ☐ Fire Resist +#%                   │
-│ ☐ Cold Resist +#%                   │
-│ ☐ Lightning Resist +#%              │
-│ ☐ All Resistances +#                │
-└─────────────────────────────────────┘
-```
+### Affix Pattern Filter (Future)
+- Requires populating the `affixes` table
+- Users will select patterns and set minimum values
+- Example: select "+#% Enhanced Damage" with min value 100
 
 ## Filter Capabilities
 
-| Filter | Description | Implementation |
-|--------|-------------|----------------|
-| Text Search | Free-text search across all affix text | Match against `affix.rawText` |
-| Affix Selector | Pick specific normalized patterns | Match against `affix.pattern` |
-| Socket Count | Filter by number of sockets | Exact match or range |
-| Item Type | Filter by allowed item types | Array contains match |
-| Rune Filter | Filter by which runes are used | Array intersection |
+| Filter | Description | Logic |
+|--------|-------------|-------|
+| Text Search | Search name + affix text | AND (all words must match) |
+| Rune Filter | Checkbox per rune | Hide if ANY rune unchecked |
+| Socket Count | Number input | Exact match (empty = all) |
+| Item Type | 3 checkboxes | Show if ANY type matches |
 
-## Search Scope
+## RunewordCard Display
 
-When searching/filtering, results include matches from:
+- Runeword name with socket count badge
+- Rune sequence (clickable for tooltip)
+- Allowed item types
+- Runeword bonuses (affixes)
+- Rune bonuses (what the runes contribute)
 
-1. **Runeword's own affixes** - The bonuses the runeword grants
-2. **Rune bonuses** - What the individual runes contribute
+### RuneTooltip
 
-This is important because a user searching for "defense" should see runewords where:
-- The runeword itself gives defense bonuses, OR
-- The runes used give defense bonuses
-
-## Data Flow
-
-```
-┌─────────────────────────────────────────┐
-│  User opens /runewords page             │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│  Check IndexedDB for fresh data         │
-│  (via Core Data feature)                │
-└─────────────────────────────────────────┘
-                    │
-        ┌──────────┴──────────┐
-        │                     │
-        ▼                     ▼
-┌───────────────┐    ┌────────────────────┐
-│  Data fresh   │    │  Data stale/missing│
-│               │    │  Show loading      │
-│               │    │  Trigger parse saga│
-└───────────────┘    └────────────────────┘
-        │                     │
-        └──────────┬──────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Load runewords from IndexedDB          │
-│  using useLiveQuery (reactive)          │
-└─────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Apply filters (Redux state)            │
-│  - Text search                          │
-│  - Selected affixes                     │
-│  - Socket/item type filters             │
-└─────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Display filtered RunewordCards         │
-└─────────────────────────────────────────┘
-```
+Hover/tap on a rune shows:
+- Rune name (in color) with tier badge
+- Required level
+- Bonuses for each slot type (Weapons/Gloves, Helms/Boots, Armor/Shields/Belts)
 
 ## State Management
-
-### Redux Slice
 
 ```typescript
 interface RunewordsState {
   filters: {
     searchText: string;
-    selectedAffixPatterns: string[];
     socketCount: number | null;
-    allowedItemTypes: string[];
-    selectedRunes: string[];
+    itemTypes: { weapon: boolean; armor: boolean; shield: boolean };
+    selectedRunes: Record<string, boolean>;  // rune name → checked
   };
-  affixSelectorOpen: boolean;
-  viewMode: 'grid' | 'list';
 }
 ```
 
-### Data from Dexie
-
-Runewords and runes are read directly from IndexedDB via `useLiveQuery`, not stored in Redux.
-
-```typescript
-const runewords = useLiveQuery(() => db.runewords.toArray());
-const runes = useLiveQuery(() => db.runes.toArray());
-```
+**Actions:** `setSearchText`, `setSocketCount`, `toggleItemType`, `toggleRune`, `toggleTier`, `selectAllRunes`
 
 ## Feature Location
 
@@ -240,26 +113,19 @@ src/features/runewords/
 ├── components/
 │   ├── RunewordCard.tsx
 │   ├── RunewordFilters.tsx
-│   ├── AffixSelector.tsx
-│   ├── RuneDisplay.tsx
+│   ├── RuneCheckboxGroup.tsx
 │   └── RuneTooltip.tsx
-├── containers/
-│   └── RunewordListContainer.tsx
 ├── store/
 │   └── runewordsSlice.ts
 ├── hooks/
-│   ├── useRunewordFilters.ts
-│   └── useAffixCategories.ts
-├── types/
-│   └── index.ts
+│   └── useFilteredRunewords.ts
 └── screens/
     └── RunewordsScreen.tsx
 ```
 
 ## Future Enhancements
 
+- Affix pattern selector with minimum values
 - Save filter presets
 - Compare runewords side-by-side
-- "Favorites" functionality
 - Sort options (by name, sockets, etc.)
-- Rune cost calculator (total runes needed)

@@ -20,10 +20,7 @@ Project overview, design decisions, and general project information.
 ### Feature Documentation
 - [Core Data](./features/CORE-DATA.md) - HTML parsing for all 5 categories, app startup flow
 - [Runewords](./features/RUNEWORDS.md) - Browse and filter runewords (primary feature, home page)
-- [Socketables](./features/SOCKETABLES.md) - Unified view of all socketables with filters
-- [Runes](./features/RUNES.md) - Browse ESR/LoD/Kanji runes with sub-tabs
-- [Gems](./features/GEMS.md) - Browse 8 gem types × 6 quality tiers
-- [Crystals](./features/CRYSTALS.md) - Browse 12 crystal types × 3 quality tiers
+- [Socketables](./features/SOCKETABLES.md) - Unified view of all socketables (gems, runes, crystals) with filters
 
 ### Technical Documentation
 - [Tech Stack](./technical/TECH-STACK.md) - Libraries, frameworks, and tools

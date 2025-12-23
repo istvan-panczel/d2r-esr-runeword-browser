@@ -34,11 +34,8 @@ This project uses an iterative documentation process where:
 - Coding guidelines (TypeScript, React, Redux conventions)
 - **Core Data feature** - HTML parsing for all 5 categories, app startup flow, version checking
 - **Runewords feature** - Browse/filter UI, affix selector, search, rune tooltip
-- **Socketables feature** - Unified view with category checkboxes and text search
-- **Runes feature** - ESR/LoD/Kanji runes with sub-tabs, tier grouping
-- **Gems feature** - 8 gem types × 6 quality tiers, filtering
-- **Crystals feature** - 12 crystal types × 3 quality tiers
-- **Navigation** - Routing (/, /socketables, /runes, /gems, /crystals), settings drawer
+- **Socketables feature** - Unified view with 5 category checkboxes and text search (gems, ESR/LoD/Kanji runes, crystals)
+- **Navigation** - 2-page architecture (/, /socketables), settings drawer
 - **Data Models** - Complete Dexie schema with 8 tables (gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, affixes, metadata)
 - **Sagas** - Redux Saga patterns (pipeline pattern, dynamic registration, parallel operations)
 - **Testing** - Vitest setup, unit tests, integration tests, database testing patterns
