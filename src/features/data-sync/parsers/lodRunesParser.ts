@@ -21,6 +21,23 @@ export function getLodRuneOrder(name: string): number {
   return index >= 0 ? index + 1 : 0;
 }
 
+// LoD rune tier boundaries
+const LOD_LOW_TIER_MAX_ORDER = 14; // El(1) to Dol(14)
+const LOD_MID_TIER_MAX_ORDER = 25; // Hel(15) to Gul(25)
+// High tier: Vex(26) to Zod(33)
+
+/**
+ * Gets the tier of a LoD rune based on its order.
+ * - Tier 1 (Low): El to Dol (order 1-14)
+ * - Tier 2 (Mid): Hel to Gul (order 15-25)
+ * - Tier 3 (High): Vex to Zod (order 26-33)
+ */
+export function getLodRuneTier(order: number): number {
+  if (order <= LOD_LOW_TIER_MAX_ORDER) return 1;
+  if (order <= LOD_MID_TIER_MAX_ORDER) return 2;
+  return 3;
+}
+
 export function parseLodRunesHtml(html: string): LodRune[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
@@ -49,6 +66,7 @@ export function parseLodRunesHtml(html: string): LodRune[] {
     lodRunes.push({
       name,
       order,
+      tier: getLodRuneTier(order),
       reqLevel,
       bonuses,
     });

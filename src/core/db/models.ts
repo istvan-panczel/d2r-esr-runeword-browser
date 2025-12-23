@@ -47,6 +47,7 @@ export interface EsrRune {
 export interface LodRune {
   readonly name: string;
   readonly order: number;
+  readonly tier: number; // 1=Low (El-Dol), 2=Mid (Hel-Gul), 3=High (Vex-Zod)
   readonly reqLevel: number;
   readonly bonuses: SocketableBonuses;
 }
