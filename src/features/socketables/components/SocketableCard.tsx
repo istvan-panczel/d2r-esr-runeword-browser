@@ -16,7 +16,7 @@ export function SocketableCard({ socketable }: SocketableCardProps) {
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-0">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className={cn('text-base', colorClass)}>{name}</CardTitle>
           <CategoryBadge category={category} />

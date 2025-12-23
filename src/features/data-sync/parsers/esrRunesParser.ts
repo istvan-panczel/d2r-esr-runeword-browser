@@ -1,20 +1,19 @@
 import type { EsrRune } from '@/core/db';
 import { parseReqLevel, parseBonuses, hasColoredInnerFont, getInnerFontColor, getItemName } from './shared/parserUtils';
 import { isGemName } from './gemsParser';
-import { isLodRuneName } from './lodRunesParser';
 import { isCrystalName } from './crystalsParser';
 import { ESR_COLOR_TO_TIER } from '../constants/constants.ts';
 
 /**
  * Checks if a name is an ESR rune.
  * ESR runes: have colored inner font (not BLUE), end with " Rune",
- * and are not LoD runes, gems, or crystals.
+ * and are not gems or crystals.
+ * Note: Some rune names (like "Ko") exist in both ESR and LoD - the color distinguishes them.
  */
 export function isEsrRuneName(name: string, color: string | null): boolean {
   if (!name.endsWith(' Rune')) return false;
   if (!color) return false;
   if (color === 'BLUE') return false; // Kanji runes are blue
-  if (isLodRuneName(name)) return false;
   if (isGemName(name)) return false;
   if (isCrystalName(name)) return false;
   return true;
@@ -24,6 +23,7 @@ export function parseEsrRunesHtml(html: string): EsrRune[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const esrRunes: EsrRune[] = [];
+  let order = 0;
 
   const headerCells = doc.querySelectorAll('td[colspan="3"]');
 
@@ -48,8 +48,10 @@ export function parseEsrRunesHtml(html: string): EsrRune[] {
 
     const bonuses = parseBonuses(headerRow);
 
+    order += 1;
     esrRunes.push({
       name,
+      order,
       tier,
       color: color ?? '',
       reqLevel,

@@ -36,6 +36,7 @@ export interface Gem {
 
 export interface EsrRune {
   readonly name: string;
+  readonly order: number; // Order in which rune appears in source file (1-based)
   readonly tier: number;
   readonly color: string;
   readonly reqLevel: number;
@@ -91,9 +92,11 @@ export interface Crystal {
 
 export interface Runeword {
   readonly name: string;
+  readonly variant: number; // 1, 2, 3... for multi-variant runewords
   readonly sockets: number;
   readonly runes: readonly string[];
   readonly allowedItems: readonly string[];
+  readonly excludedItems: readonly string[]; // Items excluded from this variant
   readonly affixes: readonly Affix[];
 }
 

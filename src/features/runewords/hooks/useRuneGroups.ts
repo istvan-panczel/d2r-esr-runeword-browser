@@ -6,14 +6,14 @@ import type { RuneGroup } from '../types';
 export function useRuneGroups(): readonly RuneGroup[] | undefined {
   return useLiveQuery(async () => {
     const [esrRunes, lodRunes, kanjiRunes] = await Promise.all([
-      db.esrRunes.orderBy('tier').toArray(),
+      db.esrRunes.orderBy('order').toArray(),
       db.lodRunes.orderBy('order').toArray(),
       db.kanjiRunes.toArray(),
     ]);
 
     const groups: RuneGroup[] = [];
 
-    // ESR Runes grouped by tier (1-7)
+    // ESR Runes grouped by tier (1-7), preserving order within each tier
     for (let tier = 1; tier <= 7; tier++) {
       const tierRunes = esrRunes.filter((r) => r.tier === tier).map((r) => r.name);
       if (tierRunes.length > 0) {

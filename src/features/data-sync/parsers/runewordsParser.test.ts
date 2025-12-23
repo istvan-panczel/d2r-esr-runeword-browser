@@ -130,22 +130,38 @@ describe('extractRunes', () => {
 describe('extractAllowedItems', () => {
   it('should extract single item type', () => {
     const cell = createElementFromHtml('<td>Weapon<br></td>');
-    expect(extractAllowedItems(cell)).toEqual(['Weapon']);
+    expect(extractAllowedItems(cell)).toEqual({ allowedItems: ['Weapon'], excludedItems: [] });
   });
 
   it('should extract multiple item types', () => {
     const cell = createElementFromHtml('<td>Body Armor<br>Any Shield<br></td>');
-    expect(extractAllowedItems(cell)).toEqual(['Body Armor', 'Any Shield']);
+    expect(extractAllowedItems(cell)).toEqual({ allowedItems: ['Body Armor', 'Any Shield'], excludedItems: [] });
   });
 
   it('should filter empty strings', () => {
     const cell = createElementFromHtml('<td>Weapon<br><br>Missile<br></td>');
-    expect(extractAllowedItems(cell)).toEqual(['Weapon', 'Missile']);
+    expect(extractAllowedItems(cell)).toEqual({ allowedItems: ['Weapon', 'Missile'], excludedItems: [] });
   });
 
   it('should strip font tags', () => {
     const cell = createElementFromHtml('<td><font size="-1">Helm<br>Gloves<br></font></td>');
-    expect(extractAllowedItems(cell)).toEqual(['Helm', 'Gloves']);
+    expect(extractAllowedItems(cell)).toEqual({ allowedItems: ['Helm', 'Gloves'], excludedItems: [] });
+  });
+
+  it('should extract excluded items', () => {
+    const cell = createElementFromHtml('<td><font size="-1">Staff<br><br>Excluded:<br>Orb<br>Sorceress Mana Blade<br></font></td>');
+    expect(extractAllowedItems(cell)).toEqual({
+      allowedItems: ['Staff'],
+      excludedItems: ['Orb', 'Sorceress Mana Blade'],
+    });
+  });
+
+  it('should handle excluded with multiple allowed items', () => {
+    const cell = createElementFromHtml('<td>2H Swing Weapon<br><br>Excluded:<br>Hammer<br>Polearm<br>Spear<br></td>');
+    expect(extractAllowedItems(cell)).toEqual({
+      allowedItems: ['2H Swing Weapon'],
+      excludedItems: ['Hammer', 'Polearm', 'Spear'],
+    });
   });
 });
 
@@ -212,26 +228,27 @@ describe('extractAffixes', () => {
 describe('parseRunewordsHtml integration', () => {
   const html = readFileSync(resolve(__dirname, '../../../../public/data/runewords.htm'), 'utf-8');
 
-  it('should parse runewords (approximately 280-320 unique)', () => {
+  it('should parse all runeword rows (approximately 380-400)', () => {
     const runewords = parseRunewordsHtml(html);
-    expect(runewords.length).toBeGreaterThanOrEqual(280);
-    expect(runewords.length).toBeLessThanOrEqual(320);
+    expect(runewords.length).toBeGreaterThanOrEqual(380);
+    expect(runewords.length).toBeLessThanOrEqual(400);
   });
 
   it('should parse Boar runeword correctly', () => {
     const runewords = parseRunewordsHtml(html);
-    const boar = runewords.find((r) => r.name === 'Boar');
+    const boar = runewords.find((r) => r.name === 'Boar' && r.variant === 1);
 
     expect(boar).toBeDefined();
     expect(boar!.sockets).toBe(1);
     expect(boar!.runes).toEqual(['I Rune']);
     expect(boar!.allowedItems).toContain('Weapon');
+    expect(boar!.excludedItems).toEqual([]);
     expect(boar!.affixes.length).toBeGreaterThan(0);
   });
 
   it('should parse Stone runeword correctly', () => {
     const runewords = parseRunewordsHtml(html);
-    const stone = runewords.find((r) => r.name === 'Stone');
+    const stone = runewords.find((r) => r.name === 'Stone' && r.variant === 1);
 
     expect(stone).toBeDefined();
     expect(stone!.sockets).toBe(2);
@@ -241,20 +258,43 @@ describe('parseRunewordsHtml integration', () => {
 
   it('should parse Airship runeword with correct runes', () => {
     const runewords = parseRunewordsHtml(html);
-    const airship = runewords.find((r) => r.name === 'Airship');
+    const airship = runewords.find((r) => r.name === 'Airship' && r.variant === 1);
 
     expect(airship).toBeDefined();
     expect(airship!.runes).toEqual(['Hi Rune', 'Ko Rune', 'U Rune', 'Se Rune', 'N Rune']);
     expect(airship!.sockets).toBe(5);
   });
 
-  it('should merge duplicate runeword entries with different allowed items', () => {
+  it('should keep multi-variant runewords as separate entries', () => {
     const runewords = parseRunewordsHtml(html);
-    const stone = runewords.find((r) => r.name === 'Stone');
+    const feminineVariants = runewords.filter((r) => r.name === 'Feminine');
 
-    expect(stone).toBeDefined();
-    // Stone should have merged allowedItems from multiple entries
-    expect(stone!.allowedItems.length).toBeGreaterThanOrEqual(1);
+    // Feminine has 3 variants
+    expect(feminineVariants.length).toBe(3);
+    expect(feminineVariants.map((v) => v.variant).sort()).toEqual([1, 2, 3]);
+
+    // Each variant should have different allowed items
+    const variant1 = feminineVariants.find((v) => v.variant === 1)!;
+    const variant2 = feminineVariants.find((v) => v.variant === 2)!;
+    const variant3 = feminineVariants.find((v) => v.variant === 3)!;
+
+    expect(variant1.allowedItems).toContain('Staff');
+    expect(variant1.excludedItems.length).toBeGreaterThan(0);
+    expect(variant2.allowedItems).toContain('Missile Weapon');
+    expect(variant3.allowedItems).toContain('Assassin 2H Katana');
+  });
+
+  it('should parse excluded items correctly', () => {
+    const runewords = parseRunewordsHtml(html);
+    const withExcluded = runewords.filter((r) => r.excludedItems.length > 0);
+
+    // There should be several runewords with excluded items
+    expect(withExcluded.length).toBeGreaterThan(0);
+
+    // Check Feminine variant 1 specifically
+    const feminine1 = runewords.find((r) => r.name === 'Feminine' && r.variant === 1)!;
+    expect(feminine1.excludedItems).toContain('Orb');
+    expect(feminine1.excludedItems).toContain('Sorceress Mana Blade');
   });
 
   it('should have normalized whitespace in affixes', () => {
@@ -292,7 +332,7 @@ describe('parseRunewordsHtml integration', () => {
 
   it('should not include rune bonuses in runeword affixes', () => {
     const runewords = parseRunewordsHtml(html);
-    const boar = runewords.find((r) => r.name === 'Boar');
+    const boar = runewords.find((r) => r.name === 'Boar' && r.variant === 1);
 
     // Boar uses I Rune which gives +15% Enhanced Damage as rune bonus
     // The runeword itself should not include this as it's after the separator
@@ -301,6 +341,22 @@ describe('parseRunewordsHtml integration', () => {
 
     // Check that runeword affixes are present
     expect(affixTexts.some((t) => t.includes('Minimum Damage') || t.includes('Maximum Damage'))).toBe(true);
+  });
+
+  it('should assign variant numbers to all runewords', () => {
+    const runewords = parseRunewordsHtml(html);
+
+    for (const runeword of runewords) {
+      expect(runeword.variant).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('should include excludedItems field on all runewords', () => {
+    const runewords = parseRunewordsHtml(html);
+
+    for (const runeword of runewords) {
+      expect(Array.isArray(runeword.excludedItems)).toBe(true);
+    }
   });
 
   it('should have valid socket counts', () => {

@@ -52,12 +52,12 @@ describe('Data Sync Integration', () => {
   });
 
   describe('ESR Runes → IndexedDB', () => {
-    it('should parse and store all 46 ESR runes', async () => {
+    it('should parse and store all 47 ESR runes', async () => {
       const esrRunes = parseEsrRunesHtml(html);
       await db.esrRunes.bulkPut(esrRunes);
 
       const storedRunes = await db.esrRunes.toArray();
-      expect(storedRunes).toHaveLength(46);
+      expect(storedRunes).toHaveLength(47);
     });
 
     it('should store I Rune with correct properties', async () => {
@@ -190,24 +190,26 @@ describe('Data Sync Integration', () => {
   });
 
   describe('Runewords → IndexedDB', () => {
-    it('should parse and store runewords (approximately 280-320)', async () => {
+    it('should parse and store runewords (approximately 380-400)', async () => {
       const runewords = parseRunewordsHtml(runewordsHtml);
       await db.runewords.bulkPut(runewords);
 
       const storedRunewords = await db.runewords.toArray();
-      expect(storedRunewords.length).toBeGreaterThanOrEqual(280);
-      expect(storedRunewords.length).toBeLessThanOrEqual(320);
+      expect(storedRunewords.length).toBeGreaterThanOrEqual(380);
+      expect(storedRunewords.length).toBeLessThanOrEqual(400);
     });
 
     it('should store Boar with correct properties', async () => {
       const runewords = parseRunewordsHtml(runewordsHtml);
       await db.runewords.bulkPut(runewords);
 
-      const boar = await db.runewords.get('Boar');
+      // Composite key: [name, variant]
+      const boar = await db.runewords.get(['Boar', 1]);
       expect(boar).toBeDefined();
       expect(boar!.sockets).toBe(1);
       expect(boar!.runes).toEqual(['I Rune']);
       expect(boar!.allowedItems).toContain('Weapon');
+      expect(boar!.excludedItems).toEqual([]);
       expect(boar!.affixes.length).toBeGreaterThan(0);
     });
 
@@ -215,7 +217,8 @@ describe('Data Sync Integration', () => {
       const runewords = parseRunewordsHtml(runewordsHtml);
       await db.runewords.bulkPut(runewords);
 
-      const stone = await db.runewords.get('Stone');
+      // Composite key: [name, variant]
+      const stone = await db.runewords.get(['Stone', 1]);
       expect(stone).toBeDefined();
       expect(stone!.sockets).toBe(2);
       expect(stone!.runes).toEqual(['I Rune', 'Shi Rune']);
@@ -226,10 +229,28 @@ describe('Data Sync Integration', () => {
       const runewords = parseRunewordsHtml(runewordsHtml);
       await db.runewords.bulkPut(runewords);
 
-      const airship = await db.runewords.get('Airship');
+      // Composite key: [name, variant]
+      const airship = await db.runewords.get(['Airship', 1]);
       expect(airship).toBeDefined();
       expect(airship!.runes).toEqual(['Hi Rune', 'Ko Rune', 'U Rune', 'Se Rune', 'N Rune']);
       expect(airship!.sockets).toBe(5);
+    });
+
+    it('should store multi-variant runewords separately', async () => {
+      const runewords = parseRunewordsHtml(runewordsHtml);
+      await db.runewords.bulkPut(runewords);
+
+      // Feminine has 3 variants
+      const feminine1 = await db.runewords.get(['Feminine', 1]);
+      const feminine2 = await db.runewords.get(['Feminine', 2]);
+      const feminine3 = await db.runewords.get(['Feminine', 3]);
+
+      expect(feminine1).toBeDefined();
+      expect(feminine2).toBeDefined();
+      expect(feminine3).toBeDefined();
+
+      // First variant has excluded items
+      expect(feminine1!.excludedItems.length).toBeGreaterThan(0);
     });
 
     it('should be queryable by sockets index', async () => {
@@ -325,7 +346,7 @@ describe('Data Sync Integration', () => {
       await db.runewords.bulkPut(runewords);
 
       // Get sample affixes
-      const boar = runewords.find((rw) => rw.name === 'Boar');
+      const boar = runewords.find((rw) => rw.name === 'Boar' && rw.variant === 1);
       expect(boar).toBeDefined();
 
       for (const affix of boar!.affixes) {

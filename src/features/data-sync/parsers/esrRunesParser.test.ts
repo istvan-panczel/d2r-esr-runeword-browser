@@ -15,9 +15,12 @@ describe('isEsrRuneName', () => {
     expect(isEsrRuneName('Fire Rune', 'BLUE')).toBe(false);
   });
 
-  it('should return false for LoD runes', () => {
-    expect(isEsrRuneName('El Rune', 'WHITE')).toBe(false);
-    expect(isEsrRuneName('Zod Rune', 'WHITE')).toBe(false);
+  it('should return true for runes with color even if name matches LoD (e.g. Ko)', () => {
+    // Ko Rune exists in both ESR and LoD - distinguished by color in HTML
+    // LoD Ko has no color, ESR Ko has YELLOW color
+    expect(isEsrRuneName('Ko Rune', 'YELLOW')).toBe(true);
+    // LoD runes in reality have no color (null), which returns false
+    expect(isEsrRuneName('El Rune', null)).toBe(false);
   });
 
   it('should return false for null color', () => {

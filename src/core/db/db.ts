@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type EntityTable, type Table } from 'dexie';
 import type { Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, AffixPattern, Metadata } from './models';
 
 class AppDatabase extends Dexie {
@@ -7,20 +7,20 @@ class AppDatabase extends Dexie {
   lodRunes!: EntityTable<LodRune, 'name'>;
   kanjiRunes!: EntityTable<KanjiRune, 'name'>;
   crystals!: EntityTable<Crystal, 'name'>;
-  runewords!: EntityTable<Runeword, 'name'>;
+  runewords!: Table<Runeword, [string, number]>; // Compound key: [name, variant]
   affixes!: EntityTable<AffixPattern, 'pattern'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    this.version(3).stores({
+    this.version(5).stores({
       gems: 'name, type, quality, color',
-      esrRunes: 'name, tier, color',
+      esrRunes: 'name, order, tier, color',
       lodRunes: 'name, order',
       kanjiRunes: 'name',
       crystals: 'name, type, quality, color',
-      runewords: 'name, sockets',
+      runewords: '[name+variant], name, sockets',
       affixes: 'pattern',
       metadata: 'key',
     });

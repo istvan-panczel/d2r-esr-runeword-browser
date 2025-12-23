@@ -8,11 +8,11 @@ interface RunewordCardProps {
 }
 
 export function RunewordCard({ runeword }: RunewordCardProps) {
-  const { name, sockets, runes, allowedItems, affixes } = runeword;
+  const { name, sockets, runes, allowedItems, excludedItems, affixes } = runeword;
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-0">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base text-[#908858]">{name}</CardTitle>
           <Badge variant="secondary">{sockets} Socket</Badge>
@@ -31,6 +31,7 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
         <div>
           <p className="font-medium text-muted-foreground mb-1">Items:</p>
           <p className="text-xs">{allowedItems.join(', ')}</p>
+          {excludedItems.length > 0 && <p className="text-xs text-muted-foreground mt-1">Excluded: {excludedItems.join(', ')}</p>}
         </div>
 
         {/* Affixes */}
@@ -38,8 +39,8 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
           <div>
             <p className="font-medium text-muted-foreground mb-1">Bonuses:</p>
             <ul className="space-y-0.5 text-xs">
-              {affixes.map((affix) => (
-                <li key={affix.rawText}>{affix.rawText}</li>
+              {affixes.map((affix, index) => (
+                <li key={`${String(index)}-${affix.rawText}`}>{affix.rawText}</li>
               ))}
             </ul>
           </div>

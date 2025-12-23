@@ -3,10 +3,17 @@ import { parseRunewordAffixes } from './shared/parserUtils';
 
 interface RawRuneword {
   name: string;
+  variant: number;
   sockets: number;
   runes: string[];
   allowedItems: string[];
+  excludedItems: string[];
   affixes: Affix[];
+}
+
+interface AllowedItemsResult {
+  allowedItems: string[];
+  excludedItems: string[];
 }
 
 /**
@@ -55,15 +62,27 @@ export function extractRunes(cell: Element): string[] {
 }
 
 /**
- * Extracts allowed items from the third column.
+ * Extracts allowed items and excluded items from the third column.
  * Items are plain text separated by <br>
+ * Format: "Staff<br><br>Excluded:<br>Orb<br>Sorceress Mana Blade<br>"
  */
-export function extractAllowedItems(cell: Element): string[] {
+export function extractAllowedItems(cell: Element): AllowedItemsResult {
   const html = cell.innerHTML;
-  return html
+  const items = html
     .split(/<br\s*\/?>/i)
     .map((item) => item.replace(/<[^>]*>/g, '').trim())
     .filter((item) => item.length > 0);
+
+  const excludedIndex = items.findIndex((item) => item === 'Excluded:');
+
+  if (excludedIndex === -1) {
+    return { allowedItems: items, excludedItems: [] };
+  }
+
+  return {
+    allowedItems: items.slice(0, excludedIndex),
+    excludedItems: items.slice(excludedIndex + 1),
+  };
 }
 
 /**
@@ -87,42 +106,14 @@ export function extractAffixes(cells: NodeListOf<Element>): Affix[] {
 }
 
 /**
- * Merges duplicate runeword entries by combining allowedItems.
- * Runewords with the same name but different allowed items should be merged.
- */
-function mergeRunewords(rawRunewords: RawRuneword[]): Runeword[] {
-  const runewordMap = new Map<string, RawRuneword>();
-
-  for (const rw of rawRunewords) {
-    const existing = runewordMap.get(rw.name);
-
-    if (existing) {
-      // Merge allowedItems (avoid duplicates)
-      const mergedItems = [...new Set([...existing.allowedItems, ...rw.allowedItems])];
-      existing.allowedItems = mergedItems;
-      // Keep existing affixes (they should be the same for same runeword)
-    } else {
-      runewordMap.set(rw.name, { ...rw });
-    }
-  }
-
-  // Convert to readonly Runeword type
-  return Array.from(runewordMap.values()).map((rw) => ({
-    name: rw.name,
-    sockets: rw.sockets,
-    runes: rw.runes as readonly string[],
-    allowedItems: rw.allowedItems as readonly string[],
-    affixes: rw.affixes as readonly Affix[],
-  }));
-}
-
-/**
  * Parses runewords from runewords.htm HTML.
+ * Each row becomes a separate runeword entry with its variant number.
  */
 export function parseRunewordsHtml(html: string): Runeword[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const rawRunewords: RawRuneword[] = [];
+  const variantCounters = new Map<string, number>();
 
   const rows = doc.querySelectorAll('tr.recipeRow');
 
@@ -138,23 +129,37 @@ export function parseRunewordsHtml(html: string): Runeword[] {
     const name = extractName(nameCell);
     if (!name) continue;
 
+    // Assign variant number (incrementing per runeword name)
+    const variantNum = (variantCounters.get(name) ?? 0) + 1;
+    variantCounters.set(name, variantNum);
+
     const sockets = extractSockets(nameCell);
     const runes = extractRunes(ingredientsCell);
-    const allowedItems = extractAllowedItems(allowedItemsCell);
+    const { allowedItems, excludedItems } = extractAllowedItems(allowedItemsCell);
     const affixes = extractAffixes(cells);
 
     rawRunewords.push({
       name,
+      variant: variantNum,
       sockets,
       runes,
       allowedItems,
+      excludedItems,
       affixes,
     });
   }
 
-  // Merge duplicates
-  const runewords = mergeRunewords(rawRunewords);
+  // Convert to readonly Runeword type
+  const runewords: Runeword[] = rawRunewords.map((rw) => ({
+    name: rw.name,
+    variant: rw.variant,
+    sockets: rw.sockets,
+    runes: rw.runes as readonly string[],
+    allowedItems: rw.allowedItems as readonly string[],
+    excludedItems: rw.excludedItems as readonly string[],
+    affixes: rw.affixes as readonly Affix[],
+  }));
 
-  console.log(`Parsed ${String(runewords.length)} runewords (from ${String(rawRunewords.length)} rows)`);
+  console.log(`Parsed ${String(runewords.length)} runewords`);
   return runewords;
 }
