@@ -2,6 +2,61 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.1...v0.0.2) (2025-12-24)
+
+
+### Features
+
+* add errorhandling if the user deletes the DB ([80b4025](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/80b4025a7080fe134949e9cb361278fa907c2938))
+* add gems parser POC from local htm ([5945baa](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5945baac9926079cd26212c3288a203a44dac706))
+* add runeword parsing ([d3bb64a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d3bb64ace7a83498fa179789ac18432511387045))
+* add runewords page ([354ec29](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/354ec2971b24b740211635bab275351483e5e565))
+* add shadcn ui with the default theme to the project ([0a50f9e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0a50f9ec6a8aa3c5dc7b884125b7e65c558ceb84))
+* add the actual data fetching with version based cache ([6afd1c9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6afd1c95535d1961e6f4a24f0b3a07742a8c5f1a))
+* add the app base and the socketables screen ([f9946ff](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f9946ffb38c81123e8141c0bbc4a8c88fe343745))
+* add the functionality to extract the affixes into a separate table ([a3fcf7c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a3fcf7cdbfebfce7ab9f6fce7ec6b2f856c91d86))
+* add the rest of gems.htm parser - it jsut works for now ([312e259](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/312e259ccee7470c18b7f75539317ffc5f0b54df))
+* small UI facelift ([98bd5ac](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/98bd5acfb23b4e881112ec70d194f8fc48c511ec))
+
+
+### Bug Fixes
+
+* fix bugs and bugs and even more bugs ([e1782dd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e1782dd231cdac8ac9cb3fe6fdc6083b426bf461))
+* fix more bugs, show and search in rune bonuses ([a7c7e0b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a7c7e0ba672c905ce02772f77662b23d64b30b50))
+* fix more issues with oarsing lod runewords ([4c6552e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4c6552eb1e596f855980e130407a7dcd38875f90))
+
+
+### Documentation
+
+* add core data and runewords feature documentations for the project ([d86de26](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d86de264a4bdb44ec43855e17d0854dd53953bd1))
+* add docs for sagas and testing ([fdf1c22](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fdf1c2254e4ec9489e9409184d7e30f642fd58f6))
+* add first technical documentations for the project ([3e73c2e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3e73c2ec862a0042d7b7230f9615852da6412ff2))
+* Add MIT License to the project ([36f3ee8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/36f3ee8b392a8cdac30be222e7d7c032b816725e))
+* init brainstorming with Claude ([9796613](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9796613563ddb48e29d7d7dd2fcd0dc21b43a168))
+* update the feature documentations after re-thinking the functionalities ([edfba25](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/edfba2573fb65b02e4c031196af482675e87dfa3))
+* wrap up the documentation before creating POCs for parsing and Dexie ([ea69699](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ea69699c7d6eba45785f1d24ca5246a2219248bc))
+
+
+### Chores
+
+* add path aliases for import paths ([8a4342e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8a4342e5a94079ad4f96c20380004032e1cfcbda))
+* add to eslint to prefer readonly and to explicitly check for hook dependencies ([abfa92f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/abfa92f879ab05046c85bf3d31bbd88641ff706d))
+* enable React Compiler in the project ([4665fdf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4665fdf10e720f41340c37b4769557dbec954e8f))
+* init CLAUDE ([02920fd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/02920fd0ee1a9dbf28ff7f87869aebce82971ffa))
+
+
+### Refactoring
+
+* remove unnecessary IDs from the modals and better error handling ([f7baaae](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f7baaaec6d373e83df40d9f2e0f75e74f6409f7b))
+* separate smaller saga functions for data sync ([e1ebec9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e1ebec972a38ca381d80aab04245c9f609c9122e))
+* use parallel bulk writes for the gems.htm parsing results ([2c7d31c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2c7d31c4c5e10783c0b7cd6be5413f3c560b85bf))
+
+
+### Tests
+
+* introduce integration testing to the project ([7f6dc1e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7f6dc1e486c7a53eff095878a93c3878c273b62b))
+* introduce unit testing to the project ([e632f3b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e632f3b19544b470d59e761046ebeb069105bbd3))
+
 ## 0.0.1 (2025-12-21)
 
 
