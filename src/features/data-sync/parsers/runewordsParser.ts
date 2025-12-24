@@ -41,20 +41,49 @@ export function extractSockets(cell: Element): number {
 
 /**
  * Extracts rune names from the ingredients cell.
- * Runes are in <FONT COLOR="...">X Rune</FONT> tags separated by <br>
- * We skip wrapper font tags (those that contain child FONT elements).
+ *
+ * Two formats exist:
+ * 1. ESR format: Each rune is in its own <FONT COLOR="...">X Rune</FONT> tag
+ * 2. LoD format: Runes are plain text separated by <br> inside a wrapper font
+ *
+ * We first try to extract from nested FONT tags (ESR format).
+ * If that yields no results, we fall back to parsing br-separated text (LoD format).
+ * Normalizes whitespace to handle rune names split across lines in HTML.
  */
 export function extractRunes(cell: Element): string[] {
   const fontTags = cell.querySelectorAll('FONT[color], font[color]');
   const runes: string[] = [];
 
   for (const tag of fontTags) {
-    // Skip wrapper elements that contain child FONT tags
+    // Skip wrapper elements that contain child FONT tags (ESR format)
     if (tag.querySelector('FONT, font')) continue;
 
-    const runeName = tag.textContent;
-    if (runeName && runeName.trim().endsWith(' Rune')) {
-      runes.push(runeName.trim());
+    // Check if this is a wrapper with br-separated runes (LoD format)
+    // by looking for <br> in innerHTML
+    const innerHTML = tag.innerHTML;
+    if (innerHTML.includes('<br>') || innerHTML.includes('<BR>')) {
+      // LoD format: split by <br> and extract rune names
+      const parts = innerHTML.split(/<br\s*\/?>/i);
+      for (const part of parts) {
+        // Strip any remaining HTML tags and normalize whitespace
+        const text = part
+          .replace(/<[^>]*>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (text.endsWith(' Rune')) {
+          runes.push(text);
+        }
+      }
+    } else {
+      // ESR format: single rune in this FONT tag
+      const rawText = tag.textContent;
+      if (!rawText) continue;
+
+      // Normalize whitespace (handles rune names split across lines like "Ist\n  Rune")
+      const runeName = rawText.replace(/\s+/g, ' ').trim();
+      if (runeName.endsWith(' Rune')) {
+        runes.push(runeName);
+      }
     }
   }
 

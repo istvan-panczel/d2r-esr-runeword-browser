@@ -51,12 +51,48 @@ function matchesItemTypes(runeword: Runeword, selectedItemTypes: Record<string, 
   return runeword.allowedItems.some((item) => selectedItemTypes[item]);
 }
 
-function matchesRunes(runeword: Runeword, selectedRunes: Record<string, boolean>): boolean {
+type RuneCategoryMap = Map<string, string[]>;
+
+/**
+ * Build a map from rune name to its categories.
+ * A rune can exist in multiple categories (e.g., Ko Rune in both ESR and LoD).
+ */
+function buildRuneCategoryMap(
+  esrRunes: readonly EsrRune[],
+  lodRunes: readonly LodRune[],
+  kanjiRunes: readonly KanjiRune[]
+): RuneCategoryMap {
+  const map = new Map<string, string[]>();
+
+  for (const rune of esrRunes) {
+    const existing = map.get(rune.name) ?? [];
+    existing.push('esrRunes');
+    map.set(rune.name, existing);
+  }
+  for (const rune of lodRunes) {
+    const existing = map.get(rune.name) ?? [];
+    existing.push('lodRunes');
+    map.set(rune.name, existing);
+  }
+  for (const rune of kanjiRunes) {
+    const existing = map.get(rune.name) ?? [];
+    existing.push('kanjiRunes');
+    map.set(rune.name, existing);
+  }
+
+  return map;
+}
+
+function matchesRunes(runeword: Runeword, selectedRunes: Record<string, boolean>, runeCategoryMap: RuneCategoryMap): boolean {
   // If no runes are initialized yet, show all
   if (Object.keys(selectedRunes).length === 0) return true;
 
-  // Hide runeword if ANY of its runes are unchecked (strict filter)
-  return runeword.runes.every((rune) => selectedRunes[rune]);
+  // Hide runeword if ANY of its runes are unchecked in ALL of their categories
+  return runeword.runes.every((rune) => {
+    const categories = runeCategoryMap.get(rune) ?? [];
+    // Rune matches if it's selected in at least one of its categories
+    return categories.some((category) => selectedRunes[`${category}:${rune}`]);
+  });
 }
 
 /**
@@ -137,6 +173,7 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
   const { runewords, esrRunes, lodRunes, kanjiRunes } = data;
   const priorityMap = buildRunePriorityMap(esrRunes, kanjiRunes, lodRunes);
   const runeBonusMap = buildRuneBonusMap(esrRunes, lodRunes, kanjiRunes);
+  const runeCategoryMap = buildRuneCategoryMap(esrRunes, lodRunes, kanjiRunes);
 
   const searchTerms = searchText
     .trim()
@@ -148,7 +185,7 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
     if (!matchesSearch(runeword, searchTerms, runeBonusMap)) return false;
     if (!matchesSockets(runeword, socketCount)) return false;
     if (!matchesItemTypes(runeword, selectedItemTypes)) return false;
-    if (!matchesRunes(runeword, selectedRunes)) return false;
+    if (!matchesRunes(runeword, selectedRunes, runeCategoryMap)) return false;
     return true;
   });
 

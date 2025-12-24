@@ -11,14 +11,15 @@ export function useInitializeFilters(): void {
   const selectedRunes = useSelector(selectSelectedRunes);
   const selectedItemTypes = useSelector(selectSelectedItemTypes);
 
-  // Initialize runes (all selected by default)
+  // Initialize runes (all selected by default) - using compound keys with category
   useEffect(() => {
     if (!runeGroups || Object.keys(selectedRunes).length > 0) return;
 
     const allRunes: Record<string, boolean> = {};
     for (const group of runeGroups) {
       for (const rune of group.runes) {
-        allRunes[rune] = true;
+        const key = `${group.category}:${rune}`;
+        allRunes[key] = true;
       }
     }
     dispatch(setAllRunes(allRunes));

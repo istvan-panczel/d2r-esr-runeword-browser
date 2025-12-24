@@ -30,8 +30,8 @@ function getGroupTextColor(group: RuneGroup): string {
 
 type TierState = 'all' | 'some' | 'none';
 
-function getTierState(runes: readonly string[], selectedRunes: Record<string, boolean>): TierState {
-  const selectedCount = runes.filter((r) => selectedRunes[r]).length;
+function getTierState(runes: readonly string[], category: string, selectedRunes: Record<string, boolean>): TierState {
+  const selectedCount = runes.filter((r) => selectedRunes[`${category}:${r}`]).length;
   if (selectedCount === 0) return 'none';
   if (selectedCount === runes.length) return 'all';
   return 'some';
@@ -45,12 +45,12 @@ function RuneGroupSection({ group }: RuneGroupSectionProps) {
   const dispatch = useDispatch();
   const selectedRunes = useSelector(selectSelectedRunes);
 
-  const tierState = getTierState(group.runes, selectedRunes);
+  const tierState = getTierState(group.runes, group.category, selectedRunes);
   const textColorClass = getGroupTextColor(group);
 
   const handleTierToggle = () => {
     const newSelected = tierState !== 'all';
-    dispatch(toggleRuneGroup({ runes: group.runes, selected: newSelected }));
+    dispatch(toggleRuneGroup({ runes: group.runes, category: group.category, selected: newSelected }));
   };
 
   return (
@@ -65,17 +65,20 @@ function RuneGroupSection({ group }: RuneGroupSectionProps) {
       </label>
 
       {/* Individual rune checkboxes */}
-      {group.runes.map((rune) => (
-        <label key={rune} className="flex items-center gap-1 cursor-pointer">
-          <Checkbox
-            checked={selectedRunes[rune] ?? true}
-            onCheckedChange={() => {
-              dispatch(toggleRune(rune));
-            }}
-          />
-          <span className={`text-sm ${textColorClass}`}>{rune.replace(' Rune', '')}</span>
-        </label>
-      ))}
+      {group.runes.map((rune) => {
+        const key = `${group.category}:${rune}`;
+        return (
+          <label key={key} className="flex items-center gap-1 cursor-pointer">
+            <Checkbox
+              checked={selectedRunes[key] ?? true}
+              onCheckedChange={() => {
+                dispatch(toggleRune({ rune, category: group.category }));
+              }}
+            />
+            <span className={`text-sm ${textColorClass}`}>{rune.replace(' Rune', '')}</span>
+          </label>
+        );
+      })}
     </div>
   );
 }

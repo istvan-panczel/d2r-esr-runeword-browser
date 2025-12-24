@@ -377,4 +377,29 @@ describe('parseRunewordsHtml integration', () => {
       }
     }
   });
+
+  it('should parse Call to Arms (LoD runeword) with 5 separate runes', () => {
+    const runewords = parseRunewordsHtml(html);
+    const callToArms = runewords.find((r) => r.name === 'Call to Arms');
+
+    expect(callToArms).toBeDefined();
+    expect(callToArms!.sockets).toBe(5);
+    expect(callToArms!.runes).toHaveLength(5);
+    expect(callToArms!.runes).toEqual(['Amn Rune', 'Ral Rune', 'Mal Rune', 'Ist Rune', 'Ohm Rune']);
+  });
+
+  it('should parse LoD runewords with plain text runes separated by br', () => {
+    const runewords = parseRunewordsHtml(html);
+
+    // Call to Arms is a LoD runeword with plain text runes separated by <br>
+    const callToArms = runewords.find((r) => r.name === 'Call to Arms');
+
+    expect(callToArms).toBeDefined();
+    expect(callToArms!.runes.length).toBe(5);
+    for (const rune of callToArms!.runes) {
+      expect(rune.endsWith(' Rune')).toBe(true);
+      expect(rune).not.toContain('<br>');
+      expect(rune).not.toContain('\n');
+    }
+  });
 });

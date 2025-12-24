@@ -43,9 +43,10 @@ const runewordsSlice = createSlice({
         state.selectedItemTypes[key] = false;
       }
     },
-    toggleRune(state, action: PayloadAction<string>) {
-      const rune = action.payload;
-      state.selectedRunes[rune] = !state.selectedRunes[rune];
+    toggleRune(state, action: PayloadAction<{ rune: string; category: string }>) {
+      const { rune, category } = action.payload;
+      const key = `${category}:${rune}`;
+      state.selectedRunes[key] = !state.selectedRunes[key];
     },
     setAllRunes(state, action: PayloadAction<Record<string, boolean>>) {
       state.selectedRunes = action.payload;
@@ -60,10 +61,11 @@ const runewordsSlice = createSlice({
         state.selectedRunes[key] = false;
       }
     },
-    toggleRuneGroup(state, action: PayloadAction<{ runes: readonly string[]; selected: boolean }>) {
-      const { runes, selected } = action.payload;
+    toggleRuneGroup(state, action: PayloadAction<{ runes: readonly string[]; category: string; selected: boolean }>) {
+      const { runes, category, selected } = action.payload;
       for (const rune of runes) {
-        state.selectedRunes[rune] = selected;
+        const key = `${category}:${rune}`;
+        state.selectedRunes[key] = selected;
       }
     },
   },
