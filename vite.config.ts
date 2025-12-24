@@ -5,6 +5,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/d2r-esr-runeword-browser/' : '/',
   plugins: [
     react({
       babel: {
