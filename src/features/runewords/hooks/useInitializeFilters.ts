@@ -13,7 +13,10 @@ export function useInitializeFilters(): void {
 
   // Initialize runes (all selected by default) - using compound keys with category
   useEffect(() => {
-    if (!runeGroups || Object.keys(selectedRunes).length > 0) return;
+    // Skip if data not loaded yet or empty (prevents infinite loop when DB is empty)
+    if (!runeGroups || runeGroups.length === 0) return;
+    // Skip if already initialized
+    if (Object.keys(selectedRunes).length > 0) return;
 
     const allRunes: Record<string, boolean> = {};
     for (const group of runeGroups) {
@@ -27,7 +30,10 @@ export function useInitializeFilters(): void {
 
   // Initialize item types (all selected by default)
   useEffect(() => {
-    if (!itemTypes || Object.keys(selectedItemTypes).length > 0) return;
+    // Skip if data not loaded yet or empty (prevents infinite loop when DB is empty)
+    if (!itemTypes || itemTypes.length === 0) return;
+    // Skip if already initialized
+    if (Object.keys(selectedItemTypes).length > 0) return;
 
     const allTypes: Record<string, boolean> = {};
     for (const type of itemTypes) {
