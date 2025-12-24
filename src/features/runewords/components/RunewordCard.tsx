@@ -1,6 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RuneBadge } from './RuneBadge';
+import { useRuneBonuses } from '../hooks/useRuneBonuses';
+import { getRelevantCategories, CATEGORY_LABELS, type BonusCategory } from '../utils/itemCategoryMapping';
 import type { Runeword } from '@/core/db/models';
 
 interface RunewordCardProps {
@@ -9,6 +11,17 @@ interface RunewordCardProps {
 
 export function RunewordCard({ runeword }: RunewordCardProps) {
   const { name, sockets, runes, allowedItems, excludedItems, affixes } = runeword;
+  const runeBonuses = useRuneBonuses(runes);
+  const relevantCategories = getRelevantCategories(allowedItems);
+
+  // Get bonuses for a specific category
+  const getBonusesForCategory = (category: BonusCategory): readonly string[] => {
+    if (!runeBonuses) return [];
+    return runeBonuses[category];
+  };
+
+  // Check if we have any rune bonuses to show
+  const hasRuneBonuses = runeBonuses && relevantCategories.some((cat) => runeBonuses[cat].length > 0);
 
   return (
     <Card className="h-full">
@@ -34,7 +47,7 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
           {excludedItems.length > 0 && <p className="text-sm text-muted-foreground mt-1">Excluded: {excludedItems.join(', ')}</p>}
         </div>
 
-        {/* Affixes */}
+        {/* Runeword Affixes */}
         {affixes.length > 0 && (
           <div className="text-center">
             <p className="font-medium text-muted-foreground mb-1">Bonuses:</p>
@@ -43,6 +56,39 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
                 <li key={`${String(index)}-${affix.rawText}`}>{affix.rawText}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Rune Bonuses */}
+        {hasRuneBonuses && (
+          <div className="border-t pt-3">
+            <p className="font-medium text-muted-foreground mb-2 text-center">Rune Bonuses:</p>
+            {relevantCategories.length === 1 ? (
+              // Single category - centered list
+              <ul className="space-y-0.5 text-[#8080E6] text-center">
+                {getBonusesForCategory(relevantCategories[0]).map((bonus, index) => (
+                  <li key={`${String(index)}-${bonus}`}>{bonus}</li>
+                ))}
+              </ul>
+            ) : (
+              // Multiple categories - 2-column grid
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {relevantCategories.map((category) => {
+                  const bonuses = getBonusesForCategory(category);
+                  if (bonuses.length === 0) return null;
+                  return (
+                    <div key={category}>
+                      <p className="font-medium text-muted-foreground text-xs mb-1">{CATEGORY_LABELS[category]}:</p>
+                      <ul className="space-y-0.5 text-[#8080E6] text-xs">
+                        {bonuses.map((bonus, index) => (
+                          <li key={`${String(index)}-${bonus}`}>{bonus}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

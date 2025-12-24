@@ -1,14 +1,39 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useSelector } from 'react-redux';
 import { db } from '@/core/db';
-import type { Runeword, EsrRune, LodRune, KanjiRune } from '@/core/db/models';
+import type { Runeword, EsrRune, LodRune, KanjiRune, SocketableBonuses } from '@/core/db/models';
 import { selectSearchText, selectSocketCount, selectSelectedItemTypes, selectSelectedRunes } from '../store/runewordsSlice';
+import { getRelevantCategories } from '../utils/itemCategoryMapping';
 
-function matchesSearch(runeword: Runeword, searchTerms: readonly string[]): boolean {
+type RuneBonusMap = Map<string, SocketableBonuses>;
+
+/**
+ * Build searchable text from rune bonuses for a runeword.
+ */
+function getRuneBonusesText(runeword: Runeword, runeBonusMap: RuneBonusMap): string {
+  const relevantCategories = getRelevantCategories(runeword.allowedItems);
+  const bonusTexts: string[] = [];
+
+  for (const runeName of runeword.runes) {
+    const bonuses = runeBonusMap.get(runeName);
+    if (bonuses) {
+      for (const category of relevantCategories) {
+        for (const affix of bonuses[category]) {
+          bonusTexts.push(affix.rawText);
+        }
+      }
+    }
+  }
+
+  return bonusTexts.join(' ');
+}
+
+function matchesSearch(runeword: Runeword, searchTerms: readonly string[], runeBonusMap: RuneBonusMap): boolean {
   if (searchTerms.length === 0) return true;
 
   const affixText = runeword.affixes.map((a) => a.rawText).join(' ');
-  const searchableText = `${runeword.name} ${affixText}`.toLowerCase();
+  const runeBonusText = getRuneBonusesText(runeword, runeBonusMap);
+  const searchableText = `${runeword.name} ${affixText} ${runeBonusText}`.toLowerCase();
 
   return searchTerms.every((term) => searchableText.includes(term));
 }
@@ -72,6 +97,25 @@ function getRunewordSortKey(runeword: Runeword, priorityMap: Map<string, number>
   return Math.max(...runeword.runes.map((r) => priorityMap.get(r) ?? 0));
 }
 
+/**
+ * Build a map of rune names to their bonuses for search.
+ */
+function buildRuneBonusMap(esrRunes: readonly EsrRune[], lodRunes: readonly LodRune[], kanjiRunes: readonly KanjiRune[]): RuneBonusMap {
+  const map = new Map<string, SocketableBonuses>();
+
+  for (const rune of esrRunes) {
+    map.set(rune.name, rune.bonuses);
+  }
+  for (const rune of lodRunes) {
+    map.set(rune.name, rune.bonuses);
+  }
+  for (const rune of kanjiRunes) {
+    map.set(rune.name, rune.bonuses);
+  }
+
+  return map;
+}
+
 export function useFilteredRunewords(): readonly Runeword[] | undefined {
   const searchText = useSelector(selectSearchText);
   const socketCount = useSelector(selectSocketCount);
@@ -92,6 +136,7 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
 
   const { runewords, esrRunes, lodRunes, kanjiRunes } = data;
   const priorityMap = buildRunePriorityMap(esrRunes, kanjiRunes, lodRunes);
+  const runeBonusMap = buildRuneBonusMap(esrRunes, lodRunes, kanjiRunes);
 
   const searchTerms = searchText
     .trim()
@@ -100,7 +145,7 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
     .filter((term) => term.length > 0);
 
   const filtered = runewords.filter((runeword) => {
-    if (!matchesSearch(runeword, searchTerms)) return false;
+    if (!matchesSearch(runeword, searchTerms, runeBonusMap)) return false;
     if (!matchesSockets(runeword, socketCount)) return false;
     if (!matchesItemTypes(runeword, selectedItemTypes)) return false;
     if (!matchesRunes(runeword, selectedRunes)) return false;
