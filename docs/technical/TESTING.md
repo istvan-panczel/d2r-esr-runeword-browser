@@ -17,9 +17,12 @@ The project uses [Vitest](https://vitest.dev/) with native ESM support and Vite 
 ## Commands
 
 ```bash
+npm run test:fixtures    # Fetch test fixtures (required once after checkout)
 npm run test             # Run tests once (CI mode)
 npm run test:coverage    # Generate coverage report
 ```
+
+> **Important:** After cloning the repository, run `npm run test:fixtures` at least once to download the HTML fixture files needed for integration tests. These files are not committed to the repository.
 
 ## Configuration
 
@@ -64,10 +67,21 @@ beforeEach(async () => {
 
 ### Fixture-Based Testing
 
-Load real HTML files for realistic parser testing:
+Integration tests use real HTML files fetched from the ESR documentation site. These files are stored in `test-fixtures/` (gitignored).
 
+**Setup (required once after checkout):**
+```bash
+npm run test:fixtures
+```
+
+This downloads:
+- `gems.htm` - Socketables data (gems, runes, crystals)
+- `runewords.htm` - Runeword definitions
+- `changelogs.html` - Version information
+
+**Loading fixtures in tests:**
 ```typescript
-const html = readFileSync(resolve(__dirname, '../../../public/data/gems.htm'), 'utf-8');
+const html = readFileSync(resolve(__dirname, '../../../test-fixtures/gems.htm'), 'utf-8');
 ```
 
 ### Async Testing

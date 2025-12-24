@@ -11,8 +11,8 @@ import { parseCrystalsHtml } from './parsers/crystalsParser';
 import { parseRunewordsHtml } from './parsers/runewordsParser';
 
 describe('Data Sync Integration', () => {
-  const gemsHtml = readFileSync(resolve(__dirname, '../../../public/data/gems.htm'), 'utf-8');
-  const runewordsHtml = readFileSync(resolve(__dirname, '../../../public/data/runewords.htm'), 'utf-8');
+  const gemsHtml = readFileSync(resolve(__dirname, '../../../test-fixtures/gems.htm'), 'utf-8');
+  const runewordsHtml = readFileSync(resolve(__dirname, '../../../test-fixtures/runewords.htm'), 'utf-8');
 
   // Keep backward compatibility with existing tests
   const html = gemsHtml;

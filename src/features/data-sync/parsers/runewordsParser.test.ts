@@ -226,7 +226,7 @@ describe('extractAffixes', () => {
 });
 
 describe('parseRunewordsHtml integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../../public/data/runewords.htm'), 'utf-8');
+  const html = readFileSync(resolve(__dirname, '../../../../test-fixtures/runewords.htm'), 'utf-8');
 
   it('should parse all runeword rows (approximately 380-400)', () => {
     const runewords = parseRunewordsHtml(html);

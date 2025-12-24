@@ -52,7 +52,7 @@ describe('extractGemTypeAndQuality', () => {
 });
 
 describe('parseGemsHtml integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../../public/data/gems.htm'), 'utf-8');
+  const html = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
   it('should parse exactly 48 gems (8 types x 6 qualities)', () => {
     const gems = parseGemsHtml(html);

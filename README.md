@@ -21,6 +21,13 @@ npm install
 npm run dev
 ```
 
+## Testing
+
+```bash
+npm run test:fixtures    # Fetch test fixtures (required once after checkout)
+npm run test             # Run tests
+```
+
 ## License
 
 MIT

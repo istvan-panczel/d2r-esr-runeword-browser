@@ -33,7 +33,7 @@ describe('isEsrRuneName', () => {
 });
 
 describe('parseEsrRunesHtml integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../../public/data/gems.htm'), 'utf-8');
+  const html = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
   it('should parse ESR runes (approximately 47)', () => {
     const esrRunes = parseEsrRunesHtml(html);

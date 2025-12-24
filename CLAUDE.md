@@ -32,6 +32,7 @@ npm run compiler:check   # Check React Compiler optimization issues
 npm run compiler:health  # Run React Compiler health check
 
 # Testing
+npm run test:fixtures    # Fetch test fixtures (required once after checkout)
 npm run test             # Run tests once (CI mode)
 npm run test:coverage    # Generate code coverage report
 ```

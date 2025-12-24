@@ -22,7 +22,7 @@ describe('isKanjiRuneName', () => {
 });
 
 describe('parseKanjiRunesHtml integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../../public/data/gems.htm'), 'utf-8');
+  const html = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
   it('should parse Kanji runes (approximately 11-14)', () => {
     const kanjiRunes = parseKanjiRunesHtml(html);

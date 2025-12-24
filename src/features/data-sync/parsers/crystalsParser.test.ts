@@ -48,7 +48,7 @@ describe('extractCrystalTypeAndQuality', () => {
 });
 
 describe('parseCrystalsHtml integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../../public/data/gems.htm'), 'utf-8');
+  const html = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
   it('should parse exactly 36 crystals (12 types x 3 qualities)', () => {
     const crystals = parseCrystalsHtml(html);

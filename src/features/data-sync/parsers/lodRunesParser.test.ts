@@ -43,7 +43,7 @@ describe('getLodRuneOrder', () => {
 });
 
 describe('parseLodRunesHtml integration', () => {
-  const html = readFileSync(resolve(__dirname, '../../../../public/data/gems.htm'), 'utf-8');
+  const html = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
   it('should parse exactly 33 LoD runes (El to Zod)', () => {
     const lodRunes = parseLodRunesHtml(html);
