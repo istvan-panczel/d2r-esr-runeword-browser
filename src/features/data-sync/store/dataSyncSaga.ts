@@ -1,6 +1,6 @@
 import { all, call, put, takeLatest } from 'redux-saga/effects';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { fetchGemsHtml, fetchRunewordsHtml } from '@/core/api';
+import { fetchGemsHtml, fetchRunewordsHtml, fetchLatestVersion, type ChangelogVersion } from '@/core/api';
 import { db } from '@/core/db';
 import {
   parseGemsHtml,
@@ -11,6 +11,9 @@ import {
   parseRunewordsHtml,
 } from '../parsers';
 import {
+  startupCheck,
+  startupUseCached,
+  setNetworkWarning,
   initDataLoad,
   fetchHtmlSuccess,
   fetchHtmlError,
@@ -20,17 +23,33 @@ import {
   storeDataError,
   extractAffixesSuccess,
   extractAffixesError,
+  fatalError,
   type FetchedHtmlData,
 } from './dataSyncSlice';
+import { handleStartupCheck } from './startupSaga';
 import type { AffixPattern, Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword } from '@/core/db';
 import type { ParsedData } from '../interfaces';
 
-function* handleFetchHtml() {
+function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>) {
   try {
     const [gemsHtml, runewordsHtml] = (yield all([call(fetchGemsHtml), call(fetchRunewordsHtml)])) as [string, string];
     yield put(fetchHtmlSuccess({ gemsHtml, runewordsHtml }));
   } catch (error) {
-    yield put(fetchHtmlError(error instanceof Error ? error.message : 'Network error'));
+    // Check if we have cached data to fall back to
+    const count: number = (yield call(() => db.runewords.count())) as number;
+
+    if (count > 0 && !action.payload?.force) {
+      // Not a force refresh and we have cached data - use it
+      yield put(setNetworkWarning('Unable to fetch latest data. Using cached version.'));
+      yield put(startupUseCached());
+    } else {
+      // Force refresh or no cached data - report error
+      yield put(fetchHtmlError(error instanceof Error ? error.message : 'Network error'));
+
+      if (count === 0) {
+        yield put(fatalError('Unable to load data. Please check your internet connection and try again.'));
+      }
+    }
   }
 }
 
@@ -65,6 +84,15 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       call(() => db.crystals.bulkPut(crystals)),
       call(() => db.runewords.bulkPut(runewords)),
     ]);
+
+    // Store metadata (version and timestamp)
+    try {
+      const versionInfo: ChangelogVersion = (yield call(fetchLatestVersion)) as ChangelogVersion;
+      yield call(() => db.metadata.put({ key: 'esrVersion', value: versionInfo.version }));
+    } catch {
+      // If we can't get version info, just continue
+    }
+    yield call(() => db.metadata.put({ key: 'lastUpdated', value: new Date().toISOString() }));
 
     console.log(
       `Data sync complete: ${String(gems.length)} gems, ${String(esrRunes.length)} ESR runes, ${String(lodRunes.length)} LoD runes, ${String(kanjiRunes.length)} Kanji runes, ${String(crystals.length)} crystals, ${String(runewords.length)} runewords`
@@ -126,6 +154,7 @@ function* handleExtractAffixes() {
 }
 
 export function* dataSyncSaga() {
+  yield takeLatest(startupCheck.type, handleStartupCheck);
   yield takeLatest(initDataLoad.type, handleFetchHtml);
   yield takeLatest(fetchHtmlSuccess.type, handleParseData);
   yield takeLatest(parseDataSuccess.type, handleStoreData);

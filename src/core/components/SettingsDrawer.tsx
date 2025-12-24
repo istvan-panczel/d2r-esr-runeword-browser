@@ -7,10 +7,16 @@ import { Slider } from '@/components/ui/slider';
 import { Spinner } from '@/components/ui/spinner';
 import { db } from '@/core/db';
 import { selectIsDrawerOpen, closeDrawer, setTheme, selectTheme, setTextSize, selectTextSize, type TextSize } from '@/features/settings';
-import { initDataLoad, selectIsLoading } from '@/core/store';
+import { initDataLoad, selectIsLoading, selectNetworkWarning, selectIsUsingCachedData } from '@/core/store';
 
 const TEXT_SIZE_LABELS = ['Small', 'Normal', 'Large', 'Extra Large'] as const;
 const TEXT_SIZE_VALUES: TextSize[] = ['small', 'normal', 'large', 'extralarge'];
+
+function formatLastUpdated(isoString: string | undefined): string {
+  if (!isoString) return 'Never';
+  const date = new Date(isoString);
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+}
 
 export function SettingsDrawer() {
   const dispatch = useDispatch();
@@ -18,6 +24,8 @@ export function SettingsDrawer() {
   const theme = useSelector(selectTheme);
   const textSize = useSelector(selectTextSize);
   const isLoading = useSelector(selectIsLoading);
+  const networkWarning = useSelector(selectNetworkWarning);
+  const isUsingCachedData = useSelector(selectIsUsingCachedData);
 
   const textSizeIndex = TEXT_SIZE_VALUES.indexOf(textSize);
 
@@ -29,7 +37,7 @@ export function SettingsDrawer() {
 
   const lastUpdated = useLiveQuery(async () => {
     const meta = await db.metadata.get('lastUpdated');
-    return meta?.value ?? 'Never';
+    return formatLastUpdated(meta?.value);
   });
 
   const handleThemeChange = (newTheme: 'dark' | 'light') => {
@@ -53,6 +61,13 @@ export function SettingsDrawer() {
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
+          {/* Network Warning */}
+          {networkWarning ? (
+            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+              <p className="text-sm text-yellow-500">{networkWarning}</p>
+            </div>
+          ) : null}
+
           {/* Theme Section */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Theme</Label>
@@ -94,16 +109,18 @@ export function SettingsDrawer() {
           {/* Data Section */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Data</Label>
-            <Button onClick={() => dispatch(initDataLoad())} disabled={isLoading} className="w-full">
+            <Button onClick={() => dispatch(initDataLoad({ force: true }))} disabled={isLoading} className="w-full">
               {isLoading ? <Spinner className="mr-2" /> : null}
-              {isLoading ? 'Refreshing...' : 'Refresh Data'}
+              {isLoading ? 'Refreshing...' : 'Force Refresh Data'}
             </Button>
+            <p className="text-xs text-muted-foreground">Re-downloads all data from ESR documentation.</p>
           </div>
 
           {/* Info Section */}
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Version: {version}</p>
+            <p>ESR Version: {version}</p>
             <p>Last updated: {lastUpdated}</p>
+            {isUsingCachedData ? <p className="text-yellow-500">Using cached data</p> : null}
           </div>
         </div>
       </SheetContent>

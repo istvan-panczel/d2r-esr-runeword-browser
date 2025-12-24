@@ -10,21 +10,47 @@ export interface FetchedHtmlData {
 interface DataSyncState {
   readonly requestState: RequestState;
   readonly error: string | null;
+  readonly isInitialized: boolean;
+  readonly isUsingCachedData: boolean;
+  readonly networkWarning: string | null;
 }
 
 const initialState: DataSyncState = {
   requestState: RequestState.IDLE,
   error: null,
+  isInitialized: false,
+  isUsingCachedData: false,
+  networkWarning: null,
 };
 
 const dataSyncSlice = createSlice({
   name: 'dataSync',
   initialState,
   reducers: {
-    // Trigger action
-    initDataLoad(state) {
+    // Startup actions
+    startupCheck(state) {
       state.requestState = RequestState.LOADING;
       state.error = null;
+      state.networkWarning = null;
+    },
+    startupUseCached(state) {
+      state.requestState = RequestState.SUCCESS;
+      state.isInitialized = true;
+      state.isUsingCachedData = true;
+    },
+    startupNeedsFetch(state) {
+      // Keep loading state, will transition to fetch
+      state.isUsingCachedData = false;
+    },
+    setNetworkWarning(state, action: PayloadAction<string>) {
+      state.networkWarning = action.payload;
+    },
+
+    // Manual refresh trigger (force bypasses version check)
+    initDataLoad(state, _action: PayloadAction<{ force?: boolean } | undefined>) {
+      state.requestState = RequestState.LOADING;
+      state.error = null;
+      state.networkWarning = null;
     },
 
     // Success actions (payloads passed to next saga, not stored in state)
@@ -39,6 +65,8 @@ const dataSyncSlice = createSlice({
     },
     extractAffixesSuccess(state) {
       state.requestState = RequestState.SUCCESS;
+      state.isInitialized = true;
+      state.isUsingCachedData = false;
     },
 
     // Error actions
@@ -58,10 +86,19 @@ const dataSyncSlice = createSlice({
       state.requestState = RequestState.ERROR;
       state.error = `Failed to extract affixes: ${action.payload}`;
     },
+    fatalError(state, action: PayloadAction<string>) {
+      state.requestState = RequestState.ERROR;
+      state.error = action.payload;
+      state.isInitialized = false;
+    },
   },
 });
 
 export const {
+  startupCheck,
+  startupUseCached,
+  startupNeedsFetch,
+  setNetworkWarning,
   initDataLoad,
   fetchHtmlSuccess,
   fetchHtmlError,
@@ -71,6 +108,7 @@ export const {
   storeDataError,
   extractAffixesSuccess,
   extractAffixesError,
+  fatalError,
 } = dataSyncSlice.actions;
 
 export default dataSyncSlice.reducer;

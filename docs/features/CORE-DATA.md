@@ -6,15 +6,17 @@ The core data feature handles parsing HTML sources, extracting game data, and st
 
 ## Data Sources
 
-Data files are bundled with the app in `public/data/`:
+Data is fetched from the official ESR documentation site:
 
-| File | Path | Data |
-|------|------|------|
-| Socketables | `/data/gems.htm` | Gems, Runes (ESR/LoD/Kanji), Crystals |
-| Runewords | `/data/runewords.htm` | Runeword definitions |
-| Version | `/data/data-version.txt` | ESR version string for freshness check |
+| Data | URL |
+|------|-----|
+| Changelog | `https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/changelogs.html` |
+| Socketables | `https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/gems.htm` |
+| Runewords | `https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/runewords.htm` |
 
-**Original Source:** [ESR Documentation](https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/)
+**Version Checking:** The version is extracted from the changelog page using the pattern: `Eastern Sun Resurrected X.Y.ZZ - DD/MM/YYYY`
+
+**Local Files (for testing):** Local copies are kept in `public/data/` for integration testing purposes only.
 
 ### gems.htm Contents
 
@@ -32,75 +34,82 @@ Each category is stored in its own Dexie table for clean separation.
 
 ## App Startup Flow
 
-All data loading happens at app startup before any feature is accessible:
+All data loading happens at app startup before any feature is accessible. The app checks the remote changelog for version updates:
 
 ```
 ┌─────────────────────────────────────────┐
 │              App Startup                │
+│          (show loading UI)              │
 └─────────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────┐
-│  Fetch /data/data-version.txt          │
-│  (bundled version string)              │
+│  Check IndexedDB for cached data        │
+│  and stored version                     │
 └─────────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────┐
-│  Check IndexedDB for stored version     │
+│  Fetch changelog from remote server     │
+│  (extract latest version)               │
 └─────────────────────────────────────────┘
                     │
         ┌──────────┴──────────┐
         │                     │
         ▼                     ▼
 ┌───────────────┐    ┌────────────────────┐
-│  No version   │    │  Version exists    │
-│  stored       │    │  Compare with      │
-│               │    │  bundled version   │
+│  Network      │    │  Success           │
+│  failure      │    │                    │
 └───────────────┘    └────────────────────┘
         │                     │
-        │          ┌─────────┴─────────┐
-        │          │                   │
-        │          ▼                   ▼
-        │   ┌─────────────┐    ┌─────────────┐
-        │   │  Different  │    │    Same     │
-        │   │  version    │    │   version   │
-        │   └─────────────┘    └─────────────┘
-        │          │                   │
-        └─────┬────┘                   │
-              │                        │
-              ▼                        ▼
-┌─────────────────────┐    ┌─────────────────────┐
-│  Parse bundled HTML │    │  Use cached data    │
-│  /data/gems.htm     │    │  (app ready)        │
-│  /data/runewords.htm│    │                     │
-│  (show loading UI)  │    │                     │
-└─────────────────────┘    └─────────────────────┘
-              │
-              ▼
+        ▼                     ▼
+┌───────────────┐    ┌────────────────────┐
+│ Has cached    │    │ Compare versions   │
+│ data?         │    │                    │
+└───────────────┘    └────────────────────┘
+    │       │             │           │
+   Yes      No        Different     Same
+    │       │             │           │
+    ▼       ▼             ▼           ▼
+┌───────┐ ┌───────┐  ┌───────────┐  ┌───────────┐
+│ Use   │ │ Fatal │  │  Fetch    │  │ Use       │
+│cached │ │ error │  │  remote   │  │ cached    │
+│+ warn │ │ retry │  │  data     │  │ data      │
+└───────┘ └───────┘  └───────────┘  └───────────┘
+    │                      │              │
+    └──────────┬───────────┴──────────────┘
+               ▼
 ┌─────────────────────────────────────────┐
 │              App Ready                  │
 │   (all features can access data)        │
 └─────────────────────────────────────────┘
 ```
 
+### Network Error Handling
+
+| Scenario | Cached Data? | Behavior |
+|----------|--------------|----------|
+| Network error | Yes | Show warning, use cached data |
+| Network error | No | Show fatal error with retry button |
+| Version matches | Yes | Use cached data immediately |
+| Version differs | Yes/No | Fetch fresh data from remote |
+
 ## Parsing Order
 
 When a full parse is triggered:
 
 ```
-1. Read version from /data/data-version.txt
-2. Fetch and parse /data/gems.htm:
+1. Fetch gems.htm from remote server:
    a. Extract Gems (8 types × 6 tiers = 48 items)
    b. Extract ESR Runes (I Rune → Null Rune, ~50 items)
    c. Extract LoD Runes (El Rune → Zod Rune, 35 items)
    d. Extract Kanji Runes (Moon Rune → God Rune, ~14 items)
    e. Extract Crystals (12 types × 3 tiers = 36 items)
-3. Fetch and parse /data/runewords.htm → Extract all runewords
-4. Normalize all affixes
-5. Store everything in IndexedDB (separate tables per category)
-6. Store version string in metadata
-7. Signal app ready
+2. Fetch and parse runewords.htm from remote server
+3. Normalize all affixes
+4. Store everything in IndexedDB (separate tables per category)
+5. Store version string and timestamp in metadata
+6. Signal app ready
 ```
 
 ## Data Models
@@ -260,14 +269,25 @@ interface Affix {
 
 ### Automatic Refresh
 
-See "App Startup Flow" above for the automatic version checking logic.
+On app startup, the app automatically:
+1. Fetches the changelog to get the latest version
+2. Compares with the stored version in IndexedDB
+3. Re-fetches data only if versions differ
+
+This ensures users always have the latest data while minimizing unnecessary network requests.
 
 ### Manual Refresh
 
-A "Refresh Data" button in Settings allows users to force re-parse regardless of version. This is useful if:
+A "Force Refresh Data" button in Settings allows users to bypass version checking and always re-fetch. This is useful if:
 - The user suspects data corruption
 - The changelog version format changes
 - Development/debugging purposes
+
+### Offline Support
+
+The app uses IndexedDB as a client-side cache:
+- If network is unavailable but cached data exists, a warning is shown and cached data is used
+- If network is unavailable and no cached data exists, a fatal error is shown with a retry button
 
 ## Implementation Notes
 
@@ -282,54 +302,47 @@ const fontElement = runeRow.querySelector('font[color]');
 const color = fontElement?.getAttribute('color') || 'WHITE';
 ```
 
-### Bundled Data Files
+### Local Data Files (Testing Only)
 
-The repository includes pre-downloaded HTML data files in `public/data/`:
+The repository includes pre-downloaded HTML data files in `public/data/` for integration testing:
 
 ```
 public/data/
 ├── gems.htm           # Gems, runes (ESR/LoD/Kanji), crystals
 ├── runewords.htm      # All runeword definitions
-└── data-version.txt   # Version string (e.g., "Eastern Sun Resurrected 3.9.08 - 18/12/2025")
+└── data-version.txt   # Version string for test reference
 ```
 
-**Update Process:**
-- These files are updated with each release
-- Download latest from the ESR documentation site
-- Update `data-version.txt` with the new version string
-
-**Usage:**
-- The app loads data from these bundled files (served from `/data/`)
-- No need to fetch from remote server
-- Ensures consistent data across all users
-- Works fully offline after initial load
-
-**Version Checking:**
-- Compare `data-version.txt` with stored version in IndexedDB
-- If different, re-parse the bundled HTML files
-- This handles app updates with new data automatically
+**Note:** These files are NOT used by the production app. The app fetches data from the remote ESR documentation site.
 
 ## Feature Location
 
 ```
 src/
 ├── core/
-│   └── db/
-│       ├── index.ts          # Dexie database instance
-│       └── models/           # Type definitions
+│   ├── api/
+│   │   ├── remoteConfig.ts      # Remote URLs configuration
+│   │   ├── changelogApi.ts      # Fetch and parse version from changelog
+│   │   ├── gemsApi.ts           # Fetch gems.htm from remote
+│   │   └── runewordsApi.ts      # Fetch runewords.htm from remote
+│   ├── db/
+│   │   ├── index.ts             # Dexie database instance
+│   │   └── models/              # Type definitions
+│   └── utils/
+│       └── versionUtils.ts      # Version comparison utilities
 └── features/
-    └── data-sync/            # Data parsing feature
+    └── data-sync/               # Data parsing feature
         ├── store/
-        │   ├── dataSyncSlice.ts
-        │   └── dataSyncSaga.ts
-        ├── mappers/
-        │   ├── gemMapper.ts         # Parse gems from gems.htm
-        │   ├── esrRuneMapper.ts     # Parse ESR runes (I → Null)
-        │   ├── lodRuneMapper.ts     # Parse LoD runes (El → Zod)
-        │   ├── kanjiRuneMapper.ts   # Parse Kanji runes
-        │   ├── crystalMapper.ts     # Parse crystals
-        │   ├── runewordMapper.ts    # Parse runewords.htm
-        │   └── affixNormalizer.ts   # Normalize affix patterns
+        │   ├── dataSyncSlice.ts # State management with startup/error states
+        │   ├── dataSyncSaga.ts  # Main saga orchestration
+        │   └── startupSaga.ts   # Startup version checking logic
+        ├── parsers/
+        │   ├── gemsParser.ts          # Parse gems from gems.htm
+        │   ├── esrRunesParser.ts      # Parse ESR runes
+        │   ├── lodRunesParser.ts      # Parse LoD runes
+        │   ├── kanjiRunesParser.ts    # Parse Kanji runes
+        │   ├── crystalsParser.ts      # Parse crystals
+        │   └── runewordsParser.ts     # Parse runewords.htm
         └── types/
             └── index.ts
 ```

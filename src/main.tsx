@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { RouterProvider } from 'react-router-dom';
-import { store, registerSaga, runSagas } from '@/core/store';
+import { store, registerSaga, runSagas, startupCheck } from '@/core/store';
 import { dataSyncSaga } from '@/features/data-sync';
 import { ThemeInitializer } from '@/features/settings';
 import { router } from '@/core/router';
@@ -13,6 +13,9 @@ registerSaga(dataSyncSaga);
 
 // Run all registered sagas
 runSagas();
+
+// Trigger startup data check
+store.dispatch(startupCheck());
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

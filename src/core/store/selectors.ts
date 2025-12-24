@@ -10,3 +10,9 @@ export const selectRequestState = createSelector([selectDataSyncState], (dataSyn
 export const selectIsLoading = createSelector([selectRequestState], (requestState) => requestState === RequestState.LOADING);
 
 export const selectError = createSelector([selectDataSyncState], (dataSync) => dataSync.error);
+
+export const selectIsInitialized = createSelector([selectDataSyncState], (dataSync) => dataSync.isInitialized);
+
+export const selectIsUsingCachedData = createSelector([selectDataSyncState], (dataSync) => dataSync.isUsingCachedData);
+
+export const selectNetworkWarning = createSelector([selectDataSyncState], (dataSync) => dataSync.networkWarning);
