@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.4...v0.0.5) (2025-12-24)
+
+
+### Features
+
+* renaem and trigger github actions ([f88bacf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f88bacf7c8bcd9682e8f2f741d88aeda54a28922))
+
 ## [0.0.4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.3...v0.0.4) (2025-12-24)
 
 
