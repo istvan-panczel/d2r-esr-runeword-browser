@@ -23,7 +23,7 @@ export function Header() {
     <header className="border-b bg-card">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <span className="text-lg font-bold">D2R ESR Runeword Browser</span>
+          <span className="text-lg font-bold">D2R ESR</span>
           <nav className="flex gap-1">
             <NavLink to="/" className={navLinkClass} end>
               Runewords
