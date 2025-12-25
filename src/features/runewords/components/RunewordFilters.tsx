@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
@@ -66,15 +65,22 @@ export function RunewordFilters() {
     }
   };
 
+  const handleClearSockets = () => {
+    dispatch(setSocketCount(null));
+  };
+
   const allRunesSelected = Object.keys(selectedRunes).length > 0 && Object.values(selectedRunes).every(Boolean);
   const noRunesSelected = Object.keys(selectedRunes).length > 0 && Object.values(selectedRunes).every((v) => !v);
 
   return (
     <div className="space-y-4 mb-6">
       {/* Search and Socket row */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap items-end gap-4">
         {/* Search input */}
-        <div className="flex-1 min-w-64 max-w-md">
+        <div className="flex-1 min-w-64 max-w-md space-y-1">
+          <p className="text-xs text-muted-foreground">
+            Search by words or use <code className="bg-muted px-1 rounded">"quotes"</code> for exact phrases.
+          </p>
           <Label htmlFor="search" className="sr-only">
             Search
           </Label>
@@ -85,6 +91,10 @@ export function RunewordFilters() {
               placeholder="Search name or affixes..."
               value={localSearchText}
               onChange={handleSearchChange}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
             {localSearchText && (
               <InputGroupAddon align="inline-end">
@@ -97,11 +107,30 @@ export function RunewordFilters() {
         </div>
 
         {/* Socket count */}
-        <div className="w-24">
+        <div className="w-32 space-y-1">
+          <p className="text-xs text-muted-foreground">Filter by # of sockets.</p>
           <Label htmlFor="sockets" className="sr-only">
             Sockets
           </Label>
-          <Input id="sockets" type="number" min={1} max={6} placeholder="Sockets" value={socketCount ?? ''} onChange={handleSocketChange} />
+          <InputGroup>
+            <InputGroupInput
+              id="sockets"
+              type="number"
+              min={1}
+              max={6}
+              placeholder="Sockets"
+              value={socketCount ?? ''}
+              onChange={handleSocketChange}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            {socketCount !== null && (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton variant="ghost" size="icon-xs" onClick={handleClearSockets} aria-label="Clear sockets">
+                  <X className="size-4" />
+                </InputGroupButton>
+              </InputGroupAddon>
+            )}
+          </InputGroup>
         </div>
       </div>
 
