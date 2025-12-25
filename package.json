@@ -12,7 +12,7 @@
     "prettier:format-check": "prettier --check ./src",
     "prettier:format-fix": "prettier --write ./src",
     "prepare": "husky",
-    "release": "npm run lint && npm run build && commit-and-tag-version",
+    "release": "npm run lint && npm run build && commit-and-tag-version -a",
     "compiler:check": "eslint ./src --rule 'react-compiler/react-compiler: error'",
     "compiler:health": "npx react-compiler-healthcheck@latest --verbose",
     "test": "vitest run",
