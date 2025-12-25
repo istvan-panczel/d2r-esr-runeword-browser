@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.5...v0.0.6) (2025-12-25)
+
+
+### Features
+
+* add better ways to filter, and some descriptions for the user ([93dc78a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/93dc78ac4f85bc252c21b3a3b58ad138c4e45fdd))
+
+
+### Chores
+
+* add version tag, script to check socketables, some SEO ([acec140](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/acec14038bc0e57fcd119c93a35e6624864b4414))
+
+
+### Tests
+
+* extra integration test to verify socketables completedness ([beff389](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/beff389f21f3c99afd4dd62f9389a22d10d87f85))
+
 ## [0.0.5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.4...v0.0.5) (2025-12-24)
 
 
