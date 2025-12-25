@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { RuneCheckboxGroup } from './RuneCheckboxGroup';
 import { ItemTypeFilter } from './ItemTypeFilter';
 import {
@@ -132,6 +133,9 @@ export function RunewordFilters() {
             )}
           </InputGroup>
         </div>
+
+        {/* Copy Link button */}
+        <CopyLinkButton />
       </div>
 
       {/* Item Type Filter */}

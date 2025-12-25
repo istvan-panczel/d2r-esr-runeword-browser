@@ -1,9 +1,11 @@
 import { SocketableFilters } from '../components/SocketableFilters';
 import { SocketableCard } from '../components/SocketableCard';
 import { useFilteredSocketables } from '../hooks/useFilteredSocketables';
+import { useUrlSync } from '../hooks/useUrlSync';
 import { Spinner } from '@/components/ui/spinner';
 
 export function SocketablesScreen() {
+  useUrlSync();
   const socketables = useFilteredSocketables();
 
   // Loading state

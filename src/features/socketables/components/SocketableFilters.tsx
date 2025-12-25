@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { CopyLinkButton } from '@/components/CopyLinkButton';
 import {
   toggleCategory,
   setSearchText,
@@ -87,6 +88,7 @@ export function SocketableFilters() {
         <Button variant="outline" size="sm" onClick={handleSelectAll} disabled={allSelected}>
           All
         </Button>
+        <CopyLinkButton />
       </div>
 
       {/* Search input */}

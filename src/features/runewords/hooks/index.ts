@@ -1,4 +1,4 @@
 export { useRuneGroups } from './useRuneGroups';
 export { useAvailableItemTypes } from './useAvailableItemTypes';
 export { useFilteredRunewords } from './useFilteredRunewords';
-export { useInitializeFilters } from './useInitializeFilters';
+export { useUrlSync } from './useUrlSync';

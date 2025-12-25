@@ -46,10 +46,21 @@ const socketablesSlice = createSlice({
         crystals: true,
       };
     },
+    initializeFromUrl(
+      state,
+      action: PayloadAction<{
+        searchText?: string;
+        enabledCategories?: EnabledCategories;
+      }>
+    ) {
+      const { searchText, enabledCategories } = action.payload;
+      if (searchText !== undefined) state.searchText = searchText;
+      if (enabledCategories !== undefined) state.enabledCategories = enabledCategories;
+    },
   },
 });
 
-export const { toggleCategory, setSearchText, selectAllCategories } = socketablesSlice.actions;
+export const { toggleCategory, setSearchText, selectAllCategories, initializeFromUrl } = socketablesSlice.actions;
 export default socketablesSlice.reducer;
 
 // Selectors

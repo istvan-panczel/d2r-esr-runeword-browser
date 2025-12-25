@@ -1,11 +1,11 @@
 import { RunewordFilters } from '../components/RunewordFilters';
 import { RunewordCard } from '../components/RunewordCard';
 import { useFilteredRunewords } from '../hooks/useFilteredRunewords';
-import { useInitializeFilters } from '../hooks/useInitializeFilters';
+import { useUrlSync } from '../hooks/useUrlSync';
 import { Spinner } from '@/components/ui/spinner';
 
 export function RunewordsScreen() {
-  useInitializeFilters();
+  useUrlSync();
   const runewords = useFilteredRunewords();
 
   // Loading state
