@@ -6,7 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Spinner } from '@/components/ui/spinner';
 import { db } from '@/core/db';
-import { selectIsDrawerOpen, closeDrawer, setTheme, selectTheme, setTextSize, selectTextSize, type TextSize } from '@/features/settings';
+import {
+  selectIsDrawerOpen,
+  closeDrawer,
+  setTheme,
+  selectTheme,
+  setTextSize,
+  selectTextSize,
+  setUseDiabloFont,
+  selectUseDiabloFont,
+  type TextSize,
+} from '@/features/settings';
 import { initDataLoad, selectIsLoading, selectNetworkWarning, selectIsUsingCachedData } from '@/core/store';
 import appVersion from '@/assets/version.json';
 
@@ -25,6 +35,7 @@ export function SettingsDrawer() {
   const isOpen = useSelector(selectIsDrawerOpen);
   const theme = useSelector(selectTheme);
   const textSize = useSelector(selectTextSize);
+  const useDiabloFont = useSelector(selectUseDiabloFont);
   const isLoading = useSelector(selectIsLoading);
   const networkWarning = useSelector(selectNetworkWarning);
   const isUsingCachedData = useSelector(selectIsUsingCachedData);
@@ -99,6 +110,22 @@ export function SettingsDrawer() {
                 <span>Light</span>
               </label>
             </div>
+          </div>
+
+          {/* Font Section */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Font</Label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useDiabloFont}
+                onChange={(e) => {
+                  dispatch(setUseDiabloFont(e.target.checked));
+                }}
+                className="accent-primary"
+              />
+              <span>Use Diablo 2 style font</span>
+            </label>
           </div>
 
           {/* Text Size Section */}

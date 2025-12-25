@@ -10,6 +10,7 @@ export { TEXT_SIZE_MAP };
 interface SettingsState {
   readonly theme: Theme;
   readonly textSize: TextSize;
+  readonly useDiabloFont: boolean;
   readonly isDrawerOpen: boolean;
 }
 
@@ -28,9 +29,15 @@ const getInitialTextSize = (): TextSize => {
   return 'normal';
 };
 
+const getInitialDiabloFont = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('useDiabloFont') === 'true';
+};
+
 const initialState: SettingsState = {
   theme: getInitialTheme(),
   textSize: getInitialTextSize(),
+  useDiabloFont: getInitialDiabloFont(),
   isDrawerOpen: false,
 };
 
@@ -48,6 +55,11 @@ const settingsSlice = createSlice({
       localStorage.setItem('textSize', action.payload);
       document.documentElement.style.fontSize = `${String(TEXT_SIZE_MAP[action.payload])}px`;
     },
+    setUseDiabloFont(state, action: PayloadAction<boolean>) {
+      state.useDiabloFont = action.payload;
+      localStorage.setItem('useDiabloFont', String(action.payload));
+      document.documentElement.classList.toggle('diablo-font', action.payload);
+    },
     openDrawer(state) {
       state.isDrawerOpen = true;
     },
@@ -57,7 +69,7 @@ const settingsSlice = createSlice({
   },
 });
 
-export const { setTheme, setTextSize, openDrawer, closeDrawer } = settingsSlice.actions;
+export const { setTheme, setTextSize, setUseDiabloFont, openDrawer, closeDrawer } = settingsSlice.actions;
 export default settingsSlice.reducer;
 
 // Selectors
@@ -66,5 +78,7 @@ const selectSettingsState = (state: RootState) => state.settings;
 export const selectTheme = createSelector([selectSettingsState], (settings) => settings.theme);
 
 export const selectTextSize = createSelector([selectSettingsState], (settings) => settings.textSize);
+
+export const selectUseDiabloFont = createSelector([selectSettingsState], (settings) => settings.useDiabloFont);
 
 export const selectIsDrawerOpen = createSelector([selectSettingsState], (settings) => settings.isDrawerOpen);
