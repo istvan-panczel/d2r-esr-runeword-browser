@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { db } from '@/core/db';
 import { selectEnabledCategories, selectSearchText } from '../store/socketablesSlice';
 import type { UnifiedSocketable, SocketableCategory } from '../types';
-import type { SocketableBonuses } from '@/core/db/models';
+import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
+import { matchesSearch } from '../utils/filteringHelpers';
 
 // Category sort order (fixed display order)
 const CATEGORY_ORDER: Record<SocketableCategory, number> = {
@@ -30,23 +31,6 @@ const CRYSTAL_QUALITY_ORDER: Record<string, number> = {
   Flawed: 1,
   Standard: 2,
 };
-
-// Convert bonus affixes to searchable text
-function bonusesToSearchText(bonuses: SocketableBonuses): string {
-  const allAffixes = [...bonuses.weaponsGloves, ...bonuses.helmsBoots, ...bonuses.armorShieldsBelts];
-  return allAffixes
-    .map((a) => a.rawText)
-    .join(' ')
-    .toLowerCase();
-}
-
-// Check if item matches search terms (AND logic)
-function matchesSearch(item: UnifiedSocketable, searchTerms: readonly string[]): boolean {
-  if (searchTerms.length === 0) return true;
-
-  const searchableText = `${item.name} ${bonusesToSearchText(item.bonuses)}`.toLowerCase();
-  return searchTerms.every((term) => searchableText.includes(term));
-}
 
 export function useFilteredSocketables(): readonly UnifiedSocketable[] | undefined {
   const enabledCategories = useSelector(selectEnabledCategories);
@@ -146,11 +130,7 @@ export function useFilteredSocketables(): readonly UnifiedSocketable[] | undefin
   // Apply filters (done outside useLiveQuery to use Redux state)
   if (!allSocketables) return undefined;
 
-  const searchTerms = searchText
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((term) => term.length > 0);
+  const searchTerms = parseSearchTerms(searchText);
 
   return allSocketables.filter((item) => {
     // Check category filter

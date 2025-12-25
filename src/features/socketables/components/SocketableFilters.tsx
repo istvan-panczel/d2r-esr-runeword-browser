@@ -92,7 +92,10 @@ export function SocketableFilters() {
       </div>
 
       {/* Search input */}
-      <div className="max-w-md">
+      <div className="max-w-md space-y-1">
+        <p className="text-xs text-muted-foreground">
+          Search by words or use <code className="bg-muted px-1 rounded">"quotes"</code> for exact phrases.
+        </p>
         <Label htmlFor="search" className="sr-only">
           Search
         </Label>
