@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://istvan-panczel.github.io/d2r-esr-runeword-browser/sitemap.xml

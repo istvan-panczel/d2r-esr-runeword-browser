@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { db } from '@/core/db';
 import { selectIsDrawerOpen, closeDrawer, setTheme, selectTheme, setTextSize, selectTextSize, type TextSize } from '@/features/settings';
 import { initDataLoad, selectIsLoading, selectNetworkWarning, selectIsUsingCachedData } from '@/core/store';
+import appVersion from '@/assets/version.json';
 
 const TEXT_SIZE_LABELS = ['Small', 'Normal', 'Large', 'Extra Large'] as const;
 const TEXT_SIZE_VALUES: TextSize[] = ['small', 'normal', 'large', 'extralarge'];
@@ -15,6 +16,7 @@ const TEXT_SIZE_VALUES: TextSize[] = ['small', 'normal', 'large', 'extralarge'];
 function formatLastUpdated(isoString: string | undefined): string {
   if (!isoString) return 'Never';
   const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return 'Never';
   return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
 }
 
@@ -118,6 +120,7 @@ export function SettingsDrawer() {
 
           {/* Info Section */}
           <div className="space-y-2 text-sm text-muted-foreground">
+            <p>App Version: {appVersion.version}</p>
             <p>ESR Version: {version}</p>
             <p>Last updated: {lastUpdated}</p>
             {isUsingCachedData ? <p className="text-yellow-500">Using cached data</p> : null}

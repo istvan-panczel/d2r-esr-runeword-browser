@@ -19,9 +19,14 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "test:fixtures": "node scripts/fetch-test-fixtures.js"
+    "test:fixtures": "node scripts/fetch-test-fixtures.js",
+    "socketables:names": "node scripts/extract-socketable-names.js",
+    "version:extract": "node scripts/extract-version.js"
   },
   "commit-and-tag-version": {
+    "scripts": {
+      "postbump": "npm run version:extract && git add src/assets/version.json"
+    },
     "tagPrefix": "v",
     "commitUrlFormat": "https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/{{hash}}",
     "compareUrlFormat": "https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/{{previousTag}}...{{currentTag}}",
