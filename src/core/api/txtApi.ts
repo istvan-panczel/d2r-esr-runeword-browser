@@ -1,7 +1,8 @@
 import type { TxtFilesData } from '@/core/db';
 
 // Base URL for TXT files in public folder
-const TXT_BASE_URL = '/txt';
+// Uses Vite's BASE_URL to handle different base paths (dev vs production)
+const TXT_BASE_URL = `${import.meta.env.BASE_URL}txt`;
 
 /**
  * Fetch a single TXT file from the assets folder
