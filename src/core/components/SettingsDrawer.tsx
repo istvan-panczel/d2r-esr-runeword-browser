@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Spinner } from '@/components/ui/spinner';
-import { db } from '@/core/db';
+import { db, txtDb } from '@/core/db';
 import {
   selectIsDrawerOpen,
   closeDrawer,
@@ -17,6 +17,7 @@ import {
   selectUseDiabloFont,
   type TextSize,
 } from '@/features/settings';
+import { initTxtDataLoad, selectTxtDataIsLoading, selectTxtDataIsInitialized } from '@/features/txt-data';
 import { initDataLoad, selectIsLoading, selectNetworkWarning, selectIsUsingCachedData } from '@/core/store';
 import appVersion from '@/assets/version.json';
 
@@ -39,6 +40,8 @@ export function SettingsDrawer() {
   const isLoading = useSelector(selectIsLoading);
   const networkWarning = useSelector(selectNetworkWarning);
   const isUsingCachedData = useSelector(selectIsUsingCachedData);
+  const isTxtDataLoading = useSelector(selectTxtDataIsLoading);
+  const isTxtDataInitialized = useSelector(selectTxtDataIsInitialized);
 
   const textSizeIndex = TEXT_SIZE_VALUES.indexOf(textSize);
 
@@ -50,6 +53,11 @@ export function SettingsDrawer() {
 
   const lastUpdated = useLiveQuery(async () => {
     const meta = await db.metadata.get('lastUpdated');
+    return formatLastUpdated(meta?.value);
+  });
+
+  const txtDataLastUpdated = useLiveQuery(async () => {
+    const meta = await txtDb.metadata.get('lastUpdated');
     return formatLastUpdated(meta?.value);
   });
 
@@ -143,6 +151,20 @@ export function SettingsDrawer() {
               {isLoading ? 'Refreshing...' : 'Force Refresh Data'}
             </Button>
             <p className="text-xs text-muted-foreground">Re-downloads all data from ESR documentation.</p>
+          </div>
+
+          {/* TXT Data Section */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">TXT Data (Experimental)</Label>
+            <Button onClick={() => dispatch(initTxtDataLoad({ force: true }))} disabled={isTxtDataLoading} className="w-full">
+              {isTxtDataLoading ? <Spinner className="mr-2" /> : null}
+              {isTxtDataLoading ? 'Parsing...' : isTxtDataInitialized ? 'Refresh TXT Data' : 'Parse TXT Files'}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {isTxtDataInitialized
+                ? `Last parsed: ${txtDataLastUpdated ?? 'Unknown'}`
+                : 'Parses original D2R TXT files for extended data.'}
+            </p>
           </div>
 
           {/* Info Section */}

@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
       '@/lib': path.resolve(__dirname, './src/lib'),
       '@/data': path.resolve(__dirname, './src/data'),
       '@': path.resolve(__dirname, './src'),
+      '@public': path.resolve(__dirname, './public'),
     },
   },
   esbuild: {

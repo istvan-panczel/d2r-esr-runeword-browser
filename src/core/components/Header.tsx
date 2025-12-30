@@ -31,6 +31,9 @@ export function Header() {
             <NavLink to="/socketables" className={navLinkClass}>
               Socketables
             </NavLink>
+            <NavLink to="/uniques" className={navLinkClass}>
+              Uniques
+            </NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-1">

@@ -5,20 +5,28 @@ import { SettingsDrawer } from '@/core/components/SettingsDrawer';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { selectIsInitialized, selectError, startupCheck } from '@/core/store';
+import { selectTxtDataIsInitialized, startupTxtCheck } from '@/features/txt-data';
 
 export function AppLayout() {
   const dispatch = useDispatch();
-  const isInitialized = useSelector(selectIsInitialized);
+  const isHtmInitialized = useSelector(selectIsInitialized);
+  const isTxtInitialized = useSelector(selectTxtDataIsInitialized);
+  const isInitialized = isHtmInitialized && isTxtInitialized;
   const error = useSelector(selectError);
 
   // Fatal error state - error occurred and app is not initialized
   if (error && !isInitialized) {
+    const handleRetry = () => {
+      dispatch(startupCheck());
+      dispatch(startupTxtCheck());
+    };
+
     return (
       <div className="min-h-svh flex flex-col items-center justify-center p-4">
         <div className="text-center max-w-md">
           <h1 className="text-xl font-bold text-destructive mb-4">Unable to Load</h1>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => dispatch(startupCheck())} variant="outline">
+          <Button onClick={handleRetry} variant="outline">
             Try Again
           </Button>
         </div>

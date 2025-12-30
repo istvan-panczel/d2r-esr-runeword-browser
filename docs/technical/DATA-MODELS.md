@@ -397,3 +397,301 @@ this.version(2).stores({
 ```
 
 Always increment version and provide upgrade path for existing data.
+
+---
+
+## TXT Database Schema (Experimental)
+
+A separate IndexedDB database for TXT-based data parsing. This database will eventually replace the HTM-based database above.
+
+### Database Instance
+
+```typescript
+// src/core/db/txtDb.ts
+import Dexie, { type EntityTable } from 'dexie';
+
+class TxtDatabase extends Dexie {
+  properties!: EntityTable<TxtPropertyDef, 'code'>;
+  socketables!: EntityTable<TxtSocketable, 'code'>;
+  runewords!: EntityTable<TxtRuneword, 'id'>;
+  uniqueItems!: EntityTable<TxtUniqueItem, 'id'>;
+  sets!: EntityTable<TxtSet, 'index'>;
+  setItems!: EntityTable<TxtSetItem, 'id'>;
+  metadata!: EntityTable<TxtMetadata, 'key'>;
+
+  constructor() {
+    super('d2r-esr-txt-data');
+
+    this.version(1).stores({
+      properties: '&code',
+      socketables: '&code, name',
+      runewords: '&id, displayName',
+      uniqueItems: '&id, index, itemCode, enabled',
+      sets: '&index, name',
+      setItems: '&id, index, setName, itemCode',
+      metadata: '&key',
+    });
+  }
+}
+
+export const txtDb = new TxtDatabase();
+```
+
+### TXT Table Definitions
+
+#### properties
+
+Stores property code definitions for tooltip translation.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| code | string | Primary | Property code ("str", "dmg%") |
+| tooltip | string | No | Human-readable format ("+# to Strength") |
+| parameter | string | No | Parameter label |
+
+#### socketables
+
+Stores gems and runes from gems.txt.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| code | string | Primary | Gem/rune code ("gcv", "r01") |
+| name | string | Yes | Display name ("Chipped Amethyst", "El Rune") |
+| letter | string | No | Single character identifier |
+| weaponMods | TxtSocketableMod[] | No | Weapon socket bonuses |
+| helmMods | TxtSocketableMod[] | No | Helm/boot socket bonuses |
+| shieldMods | TxtSocketableMod[] | No | Shield/armor socket bonuses |
+
+#### runewords
+
+Stores runewords AND gemwords from runes.txt.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| id | string | Primary | Internal ID ("Runeword1") |
+| displayName | string | Yes | Display name ("Spirit", "Holy") |
+| complete | boolean | No | Whether enabled |
+| itemTypes | string[] | No | Allowed item type codes |
+| excludeTypes | string[] | No | Excluded item type codes |
+| runes | TxtRuneRef[] | No | Required socketables (code + resolved name) |
+| properties | TxtProperty[] | No | Runeword properties |
+
+**Note**: Gemwords share this table. They can be identified by their `runes` array containing gem codes instead of rune codes.
+
+#### uniqueItems
+
+Stores unique item definitions from uniqueitems.txt.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| id | number | Primary | Unique numeric ID |
+| index | string | Yes | Display name |
+| version | number | No | Game version |
+| enabled | boolean | Yes | Whether active |
+| level | number | No | Item level |
+| levelReq | number | No | Level requirement |
+| itemCode | string | Yes | Base item code |
+| properties | TxtProperty[] | No | Item properties |
+
+#### sets
+
+Stores set definitions from sets.txt.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| index | string | Primary | Set index |
+| name | string | Yes | Set name |
+| version | number | No | Game version |
+| partialBonuses | TxtPartialBonus[] | No | 2-5 item bonuses |
+| fullSetBonuses | TxtProperty[] | No | Complete set bonuses |
+
+#### setItems
+
+Stores set item components from setitems.txt.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| id | number | Primary | Unique numeric ID |
+| index | string | Yes | Display name |
+| setName | string | Yes | Parent set name |
+| itemCode | string | Yes | Base item code |
+| level | number | No | Item level |
+| levelReq | number | No | Level requirement |
+| properties | TxtProperty[] | No | Base properties |
+| partialBonuses | TxtSetItemBonus[] | No | Per-slot bonuses |
+
+#### metadata
+
+Key-value store for TXT data metadata.
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| key | string | Primary | Metadata key |
+| value | string | No | Metadata value |
+
+**Used Keys:**
+- `lastUpdated` - ISO timestamp of last parse
+
+### TXT TypeScript Interfaces
+
+```typescript
+// src/core/db/txtModels.ts
+
+// Shared property structure
+export interface TxtProperty {
+  readonly code: string;
+  readonly param: string;
+  readonly min: number;
+  readonly max: number;
+}
+
+// Property definition (from properties.txt)
+export interface TxtPropertyDef {
+  readonly code: string;
+  readonly tooltip: string;
+  readonly parameter: string;
+}
+
+// Socketable mod (weapon/helm/shield bonuses)
+export interface TxtSocketableMod {
+  readonly code: string;
+  readonly param: string;
+  readonly min: number;
+  readonly max: number;
+}
+
+// Socketable (gem or rune)
+export interface TxtSocketable {
+  readonly name: string;
+  readonly code: string;
+  readonly letter: string;
+  readonly weaponMods: readonly TxtSocketableMod[];
+  readonly helmMods: readonly TxtSocketableMod[];
+  readonly shieldMods: readonly TxtSocketableMod[];
+}
+
+// Rune reference in runewords (resolved)
+export interface TxtRuneRef {
+  readonly code: string;   // Gem code from gems.txt
+  readonly name: string;   // Resolved display name
+}
+
+// Runeword (also used for gemwords)
+export interface TxtRuneword {
+  readonly id: string;
+  readonly displayName: string;
+  readonly complete: boolean;
+  readonly itemTypes: readonly string[];
+  readonly excludeTypes: readonly string[];
+  readonly runes: readonly TxtRuneRef[];
+  readonly properties: readonly TxtProperty[];
+}
+
+// Unique item
+export interface TxtUniqueItem {
+  readonly id: number;
+  readonly index: string;
+  readonly version: number;
+  readonly enabled: boolean;
+  readonly level: number;
+  readonly levelReq: number;
+  readonly itemCode: string;
+  readonly properties: readonly TxtProperty[];
+}
+
+// Partial set bonus (2-5 items equipped)
+export interface TxtPartialBonus {
+  readonly itemCount: number;
+  readonly properties: readonly TxtProperty[];
+}
+
+// Set definition
+export interface TxtSet {
+  readonly index: string;
+  readonly name: string;
+  readonly version: number;
+  readonly partialBonuses: readonly TxtPartialBonus[];
+  readonly fullSetBonuses: readonly TxtProperty[];
+}
+
+// Set item partial bonus
+export interface TxtSetItemBonus {
+  readonly slot: string;
+  readonly properties: readonly TxtProperty[];
+}
+
+// Set item
+export interface TxtSetItem {
+  readonly id: number;
+  readonly index: string;
+  readonly setName: string;
+  readonly itemCode: string;
+  readonly level: number;
+  readonly levelReq: number;
+  readonly properties: readonly TxtProperty[];
+  readonly partialBonuses: readonly TxtSetItemBonus[];
+}
+
+// Metadata
+export interface TxtMetadata {
+  readonly key: string;
+  readonly value: string;
+}
+```
+
+### TXT Querying Examples
+
+#### Get all socketables
+
+```typescript
+const socketables = await txtDb.socketables.toArray();
+```
+
+#### Find socketable by code
+
+```typescript
+const elRune = await txtDb.socketables.get('r01');
+// { code: 'r01', name: 'El Rune', ... }
+```
+
+#### Get enabled runewords
+
+```typescript
+const runewords = await txtDb.runewords
+  .filter(rw => rw.complete)
+  .toArray();
+```
+
+#### Get unique items by base type
+
+```typescript
+const charms = await txtDb.uniqueItems
+  .where('itemCode')
+  .startsWith('cm')
+  .toArray();
+```
+
+#### Get all items in a set
+
+```typescript
+const setItems = await txtDb.setItems
+  .where('setName')
+  .equals("Autolycus' Magic Tools")
+  .toArray();
+```
+
+#### Reactive query with useLiveQuery
+
+```typescript
+function UniqueItemList() {
+  const items = useLiveQuery(() =>
+    txtDb.uniqueItems
+      .where('enabled')
+      .equals(1)
+      .toArray()
+  );
+
+  if (!items) return <Loading />;
+  return items.map(item => <ItemCard key={item.id} item={item} />);
+}
+```

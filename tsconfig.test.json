@@ -33,7 +33,8 @@
       "@/utils/*": ["src/utils/*"],
       "@/lib/*": ["src/lib/*"],
       "@/data/*": ["src/data/*"],
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@public/*": ["public/*"]
     }
   },
   "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.mock.ts", "src/**/*.mock.tsx", "src/test", "vitest.config.ts"]

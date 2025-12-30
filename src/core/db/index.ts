@@ -15,3 +15,24 @@ export type {
   Runeword,
   Metadata,
 } from './models';
+
+// TXT data database and models
+export { txtDb } from './txtDb';
+export type {
+  TxtProperty,
+  TxtSocketableMod,
+  TxtPropertyDef,
+  TxtSocketable,
+  TxtRuneRef,
+  TxtRuneword,
+  TxtUniqueItem,
+  TxtPartialBonus,
+  TxtSet,
+  TxtSetItemBonus,
+  TxtSetItem,
+  TxtItemType,
+  TxtItemTypeDef,
+  TxtMetadata,
+  TxtFilesData,
+  ParsedTxtData,
+} from './txtModels';

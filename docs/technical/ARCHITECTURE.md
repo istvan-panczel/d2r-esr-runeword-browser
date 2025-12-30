@@ -15,8 +15,14 @@ src/
 │   │   ├── index.ts            # Store configuration
 │   │   └── rootSaga.ts         # Root saga
 │   ├── db/                     # Dexie database setup
-│   │   ├── index.ts            # Database instance
-│   │   └── models/             # Table type definitions
+│   │   ├── index.ts            # Database instances (db + txtDb)
+│   │   ├── models/             # HTM data type definitions
+│   │   ├── txtDb.ts            # TXT database instance
+│   │   └── txtModels.ts        # TXT data type definitions
+│   ├── api/                    # Data fetching
+│   │   └── txtApi.ts           # Fetch TXT files via HTTP
+│   ├── utils/
+│   │   └── tsvParser.ts        # Generic TSV parser
 │   ├── providers/              # React context providers
 │   │   └── AppProviders.tsx    # Combines all providers
 │   ├── router/                 # Router configuration
@@ -43,9 +49,14 @@ src/
 │   ├── cn.ts                   # className utility (clsx + tailwind-merge)
 │   └── ...
 │
-├── data/
-│   └── raw/                    # Dev HTML fixtures
-│       └── runewords.htm       # Local copy for development
+├── public/
+│   └── txt/                    # TXT game data files (TSV format)
+│       ├── properties.txt      # Property code translations
+│       ├── gems.txt            # Socketable definitions
+│       ├── runes.txt           # Runeword definitions
+│       ├── uniqueitems.txt     # Unique item definitions
+│       ├── sets.txt            # Set definitions
+│       └── setitems.txt        # Set item definitions
 │
 ├── lib/                        # Third-party library configurations
 │   └── utils.ts                # shadcn/ui utility (generated)
@@ -93,6 +104,10 @@ features/runewords/
 
 ## Data Flow
 
+The app has two data systems running in parallel during the transition period.
+
+### HTM-Based Data Flow (Current - will be deprecated)
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        App Startup                          │
@@ -100,7 +115,7 @@ features/runewords/
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  1. Check IndexedDB for existing data                       │
+│  1. Check IndexedDB (d2r-esr-runewords) for existing data   │
 │     - If data exists & fresh → skip parsing                 │
 │     - If no data or stale → trigger parsing saga            │
 └─────────────────────────────────────────────────────────────┘
@@ -108,8 +123,7 @@ features/runewords/
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  2. Redux Saga: Fetch & Parse HTML                          │
-│     - Dev: Load from src/data/raw/                          │
-│     - Prod: Fetch from remote URLs                          │
+│     - Prod: Fetch from ESR documentation site               │
 │     - Parse with DOMParser                                  │
 │     - Transform via mappers                                 │
 └─────────────────────────────────────────────────────────────┘
@@ -117,8 +131,9 @@ features/runewords/
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  3. Store in IndexedDB via Dexie                            │
-│     - Structured data models                                │
-│     - Indexed for fast queries                              │
+│     - Database: d2r-esr-runewords                           │
+│     - Tables: gems, esrRunes, lodRunes, kanjiRunes,         │
+│       crystals, runewords, affixes, metadata                │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -128,6 +143,54 @@ features/runewords/
 │     - Components stay in sync automatically                 │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### TXT-Based Data Flow (Experimental - will replace HTM)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│            User clicks "Parse TXT Files" in Settings        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  1. Check IndexedDB (d2r-esr-txt-data) for cached data      │
+│     - If force refresh → clear and re-fetch                 │
+│     - If cached → use existing data                         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  2. Redux Saga: Fetch & Parse TXT (TSV format)              │
+│     - Fetch 6 TXT files via HTTP from public/txt/           │
+│     - Parse with tsvParser utility                          │
+│     - Resolve property codes to tooltips                    │
+│     - Resolve rune codes to names                           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  3. Store in IndexedDB via Dexie                            │
+│     - Database: d2r-esr-txt-data                            │
+│     - Tables: properties, socketables, runewords,           │
+│       uniqueItems, sets, setItems, metadata                 │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  4. UI reads from txtDb                                     │
+│     - useLiveQuery for reactive updates                     │
+│     - PropertyTranslator for code → text conversion         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Two Databases
+
+| Database | Purpose | Trigger |
+|----------|---------|---------|
+| `d2r-esr-runewords` | HTM-based data (socketables, runewords) | App startup |
+| `d2r-esr-txt-data` | TXT-based data (all items including unique/sets) | Manual button |
+
+Both databases coexist during development. Once TXT-based features are complete, HTM parsing will be removed.
 
 ## Core vs Features vs Utils
 

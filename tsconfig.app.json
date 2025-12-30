@@ -33,7 +33,8 @@
       "@/utils/*": ["src/utils/*"],
       "@/lib/*": ["src/lib/*"],
       "@/data/*": ["src/data/*"],
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@public/*": ["public/*"]
     }
   },
   "include": ["src"],

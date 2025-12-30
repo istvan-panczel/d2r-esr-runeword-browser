@@ -346,3 +346,165 @@ src/
         └── types/
             └── index.ts
 ```
+
+---
+
+## TXT-Based Data System (Experimental)
+
+A new data parsing system is being developed to replace HTM parsing. It uses original D2R game data files in TSV format, providing access to more complete data including unique items, sets, and gemwords.
+
+### Why TXT-Based Data?
+
+| Aspect | HTM-based | TXT-based |
+|--------|-----------|-----------|
+| **Source** | ESR documentation site | D2R game files |
+| **Format** | HTML tables | TSV (Tab-Separated Values) |
+| **Runewords** | ~386 | ~997 (includes gemwords) |
+| **Unique Items** | ❌ Not available | ✅ 1134 items |
+| **Sets** | ❌ Not available | ✅ 70 sets, 245 items |
+| **Properties** | Embedded in affixes | 251 with tooltips |
+| **Reliability** | Depends on remote site | Local files |
+
+### TXT Files Used
+
+Located in `public/txt/` (served via HTTP):
+
+| File | Purpose | Records |
+|------|---------|---------|
+| `properties.txt` | Property code → tooltip mapping | 251 |
+| `gems.txt` | Socketable definitions (gems, runes) | 178 |
+| `runes.txt` | Runeword/Gemword definitions | 997 |
+| `uniqueitems.txt` | Unique item definitions | 1134 |
+| `sets.txt` | Set definitions | 70 |
+| `setitems.txt` | Set item components | 245 |
+| `weapons.txt` | Base weapons (item code → type mapping) | ~500 |
+| `armor.txt` | Base armor (item code → type mapping) | ~300 |
+| `misc.txt` | Misc items (item code → type mapping) | ~400 |
+| `itemtypes.txt` | Item type hierarchy | ~180 |
+| `cubemain.txt` | Cube recipes (Ancient Coupon detection) | ~1500 |
+
+### Database
+
+The TXT-based system uses a separate IndexedDB database:
+
+- **Database name**: `d2r-esr-txt-data`
+- **Instance**: `src/core/db/txtDb.ts`
+
+This keeps TXT data isolated from HTM data during the transition period.
+
+### Data Loading
+
+Unlike HTM data which loads at app startup, TXT data is loaded on-demand:
+
+1. User clicks "Parse TXT Files" button in Settings
+2. Saga fetches TXT files via HTTP from `public/txt/`
+3. Parsers convert TSV to structured data
+4. Data is stored in `d2r-esr-txt-data` IndexedDB
+5. Subsequent visits use cached data (unless force refresh)
+
+### Key Data Types
+
+#### TxtRuneword / Gemword
+
+```typescript
+interface TxtRuneword {
+  id: string;              // "Runeword1", "Runeword123"
+  displayName: string;     // "Holy", "Spirit"
+  complete: boolean;       // Whether enabled
+  itemTypes: string[];     // Allowed item type codes
+  excludeTypes: string[];  // Excluded item type codes
+  runes: TxtRuneRef[];     // Socketable references (runes OR gems)
+  properties: TxtProperty[];
+}
+
+interface TxtRuneRef {
+  code: string;   // Gem code from gems.txt (e.g., "r01", "gcw")
+  name: string;   // Resolved name (e.g., "El Rune", "Chipped Diamond")
+}
+```
+
+**Note**: Gemwords are runewords that use gems instead of runes. They share the same data structure but can be identified by their `runes` array containing gem codes (e.g., "gcv" for Chipped Amethyst) rather than rune codes.
+
+#### TxtUniqueItem
+
+```typescript
+interface TxtUniqueItem {
+  id: number;              // Unique numeric ID
+  index: string;           // Display name
+  version: number;
+  enabled: boolean;
+  level: number;
+  levelReq: number;
+  itemCode: string;        // Base item code
+  itemName: string;        // Base item display name
+  properties: TxtProperty[];
+  isAncientCoupon: boolean; // True if obtained via Ancient Coupon (not droppable)
+}
+```
+
+#### TxtProperty
+
+```typescript
+interface TxtProperty {
+  code: string;   // Property code (e.g., "str", "dmg%")
+  param: string;  // Parameter (skill name, etc.)
+  min: number;
+  max: number;
+}
+```
+
+### Property Translation
+
+The `PropertyTranslator` class converts property codes to human-readable text:
+
+```typescript
+const translator = createPropertyTranslator(properties);
+
+// Input: { code: "str", param: "", min: 10, max: 15 }
+// Output: { text: "+10-15 to Strength", ... }
+
+// Input: { code: "oskill", param: "Teleport", min: 1, max: 1 }
+// Output: { text: "+1 to Teleport", ... }
+```
+
+### Feature Location
+
+```
+src/
+├── core/
+│   ├── api/
+│   │   └── txtApi.ts           # Fetch TXT files via HTTP
+│   ├── db/
+│   │   ├── txtDb.ts            # TXT database instance
+│   │   └── txtModels.ts        # TXT data type definitions
+│   └── utils/
+│       └── tsvParser.ts        # Generic TSV parser
+└── features/
+    └── txt-data/               # TXT data feature
+        ├── store/
+        │   ├── txtDataSlice.ts # State management
+        │   └── txtDataSaga.ts  # Data loading orchestration
+        ├── parsers/
+        │   ├── propertiesParser.ts   # Parse properties.txt
+        │   ├── socketablesParser.ts  # Parse gems.txt
+        │   ├── runewordsParser.ts    # Parse runes.txt
+        │   ├── uniqueItemsParser.ts  # Parse uniqueitems.txt
+        │   ├── setsParser.ts         # Parse sets.txt
+        │   └── setItemsParser.ts     # Parse setitems.txt
+        ├── utils/
+        │   └── propertyTranslator.ts # Code → text translation
+        └── index.ts
+```
+
+### Roadmap
+
+The TXT-based system will eventually replace HTM parsing:
+
+1. **Unique Items** - New feature with TXT data
+2. **Sets & Set Items** - New feature with TXT data
+3. **Gemwords** - New feature (subset of runewords using gems)
+4. **Socketables** - Re-implement with TXT data
+5. **Runewords** - Re-implement with TXT data
+6. **Deprecate HTM** - Remove HTM-based parsing and `data-sync` feature
+
+See [TXT Files Reference](../data/TXT-FILES-REFERENCE.md) for detailed file format documentation.

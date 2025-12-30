@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/core/layouts/AppLayout';
 import { SocketablesScreen } from '@/features/socketables';
 import { RunewordsScreen } from '@/features/runewords';
+import { UniqueItemsScreen } from '@/features/unique-items';
 
 export const router = createBrowserRouter(
   [
@@ -11,6 +12,7 @@ export const router = createBrowserRouter(
       children: [
         { index: true, element: <RunewordsScreen /> },
         { path: 'socketables', element: <SocketablesScreen /> },
+        { path: 'uniques', element: <UniqueItemsScreen /> },
       ],
     },
   ],

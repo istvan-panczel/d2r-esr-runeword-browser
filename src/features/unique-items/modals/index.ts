@@ -1,0 +1,1 @@
+export { UniqueItemDetailModal } from './UniqueItemDetailModal';

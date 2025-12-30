@@ -1,0 +1,9 @@
+export { parsePropertiesTxt, buildPropertyMap } from './propertiesParser';
+export { parseSocketablesTxt, buildCodeToNameMap } from './socketablesParser';
+export { parseRunewordsTxt } from './runewordsParser';
+export { parseUniqueItemsTxt } from './uniqueItemsParser';
+export { parseSetsTxt } from './setsParser';
+export { parseSetItemsTxt } from './setItemsParser';
+export { parseItemTypesTxt } from './itemTypesParser';
+export { parseItemTypeDefsTxt } from './itemTypeDefsParser';
+export { parseAncientCouponItems } from './cubemainParser';
