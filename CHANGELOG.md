@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.9...v0.1.0) (2025-12-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* add txt based parsing and the Uniques page
+
+### Features
+
+* add txt based parsing and the Uniques page ([4209258](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/420925819d9b2f70f318ca16dcc2e87cea295617))
+
+
+### Chores
+
+* update plugins ([c4054db](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c4054db2b4eb674435c4effd1771535dc9da23c4))
+
 ## [0.0.9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.0.8...v0.0.9) (2025-12-25)
 
 
