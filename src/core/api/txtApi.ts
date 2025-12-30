@@ -21,7 +21,7 @@ export async function fetchTxtFile(filename: string): Promise<string> {
  * Fetch all required TXT files in parallel
  */
 export async function fetchAllTxtFiles(): Promise<TxtFilesData> {
-  const [properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain] = await Promise.all([
+  const [properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain, skills] = await Promise.all([
     fetchTxtFile('properties.txt'),
     fetchTxtFile('gems.txt'),
     fetchTxtFile('runes.txt'),
@@ -33,6 +33,7 @@ export async function fetchAllTxtFiles(): Promise<TxtFilesData> {
     fetchTxtFile('misc.txt'),
     fetchTxtFile('itemtypes.txt'),
     fetchTxtFile('cubemain.txt'),
+    fetchTxtFile('skills.txt'),
   ]);
 
   return {
@@ -47,5 +48,6 @@ export async function fetchAllTxtFiles(): Promise<TxtFilesData> {
     misc,
     itemTypes,
     cubemain,
+    skills,
   };
 }

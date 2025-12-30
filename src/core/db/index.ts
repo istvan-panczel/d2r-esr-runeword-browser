@@ -32,6 +32,8 @@ export type {
   TxtSetItem,
   TxtItemType,
   TxtItemTypeDef,
+  TxtSkill,
+  CharClassCode,
   TxtMetadata,
   TxtFilesData,
   ParsedTxtData,

@@ -254,7 +254,7 @@ describe('TXT Data Integration', () => {
         max: 20,
       });
 
-      expect(translated.text).toContain('10-20');
+      expect(translated.text).toContain('(10 to 20)');
       expect(translated.text).toContain('Strength');
     });
 

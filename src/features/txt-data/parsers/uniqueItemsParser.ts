@@ -1,5 +1,5 @@
 import { parseTsv, parseNumber, parseBoolean, type TsvRow } from '@/core/utils';
-import type { TxtUniqueItem, TxtProperty, TxtPropertyDef } from '@/core/db';
+import type { TxtUniqueItem, TxtProperty, TxtPropertyDef, TxtSkill } from '@/core/db';
 import { createPropertyTranslator } from '../utils/propertyTranslator';
 
 /** Item codes to exclude from parsing (ore = Uni Ore, ast = Ascendancy Stone) */
@@ -14,16 +14,18 @@ const EXCLUDED_PROPERTY_CODES = new Set(['tinkerflag', 'tinkerflag2']);
  * @param content - Raw content from uniqueitems.txt
  * @param ancientCouponItems - Set of item names that are obtained via Ancient Coupons
  * @param propertyDefs - Property definitions for pre-translating properties (optional)
+ * @param skills - Skill definitions for class name lookup in translations (optional)
  * @returns Array of unique item definitions
  */
 export function parseUniqueItemsTxt(
   content: string,
   ancientCouponItems?: Set<string>,
-  propertyDefs?: readonly TxtPropertyDef[]
+  propertyDefs?: readonly TxtPropertyDef[],
+  skills?: readonly TxtSkill[]
 ): TxtUniqueItem[] {
   const rows = parseTsv(content);
   const couponSet = ancientCouponItems ?? new Set<string>();
-  const translator = propertyDefs ? createPropertyTranslator(propertyDefs) : null;
+  const translator = propertyDefs ? createPropertyTranslator(propertyDefs, skills) : null;
 
   return rows
     .filter((row) => row.index && row['*ID'])

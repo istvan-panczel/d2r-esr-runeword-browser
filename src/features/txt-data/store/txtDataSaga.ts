@@ -13,6 +13,7 @@ import {
   parseItemTypesTxt,
   parseItemTypeDefsTxt,
   parseAncientCouponItems,
+  parseSkillsTxt,
 } from '../parsers';
 import {
   startupTxtCheck,
@@ -95,7 +96,7 @@ function* handleInitTxtDataLoad(action: PayloadAction<{ force?: boolean } | unde
  */
 function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
   try {
-    const { properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain } = action.payload;
+    const { properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain, skills } = action.payload;
 
     console.log('[TXT] Parsing TXT files...', {
       propertiesLength: properties.length,
@@ -109,6 +110,7 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
       miscLength: misc.length,
       itemTypesLength: itemTypes.length,
       cubemainLength: cubemain.length,
+      skillsLength: skills.length,
     });
 
     // Parse properties first (needed for lookups, but we store raw data)
@@ -128,8 +130,12 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
     const ancientCouponItems = parseAncientCouponItems(cubemain);
     console.log('[TXT] Parsed Ancient Coupon items:', ancientCouponItems.size);
 
+    // Parse skills (for skill-to-class mapping) - needed before unique items
+    const parsedSkills = parseSkillsTxt(skills);
+    console.log('[TXT] Parsed skills:', parsedSkills.length);
+
     // Parse unique items with Ancient Coupon detection and pre-resolved properties
-    const parsedUniqueItems = parseUniqueItemsTxt(uniqueItems, ancientCouponItems, parsedProperties);
+    const parsedUniqueItems = parseUniqueItemsTxt(uniqueItems, ancientCouponItems, parsedProperties, parsedSkills);
     console.log('[TXT] Parsed uniqueItems:', parsedUniqueItems.length);
 
     // Parse sets
@@ -157,6 +163,7 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
       setItems: parsedSetItems,
       itemTypes: parsedItemTypes,
       itemTypeDefs: parsedItemTypeDefs,
+      skills: parsedSkills,
     };
 
     yield put(parseTxtDataSuccess(parsedData));
@@ -171,7 +178,7 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
  */
 function* handleStoreTxtData(action: PayloadAction<ParsedTxtData>) {
   try {
-    const { properties, socketables, runewords, uniqueItems, sets, setItems, itemTypes, itemTypeDefs } = action.payload;
+    const { properties, socketables, runewords, uniqueItems, sets, setItems, itemTypes, itemTypeDefs, skills } = action.payload;
 
     console.log('[TXT] Storing data to IndexedDB...', {
       properties: properties.length,
@@ -182,6 +189,7 @@ function* handleStoreTxtData(action: PayloadAction<ParsedTxtData>) {
       setItems: setItems.length,
       itemTypes: itemTypes.length,
       itemTypeDefs: itemTypeDefs.length,
+      skills: skills.length,
     });
 
     // Clear all tables
@@ -205,6 +213,8 @@ function* handleStoreTxtData(action: PayloadAction<ParsedTxtData>) {
     console.log('[TXT] Stored itemTypes');
     yield call(() => txtDb.itemTypeDefs.bulkPut([...itemTypeDefs]));
     console.log('[TXT] Stored itemTypeDefs');
+    yield call(() => txtDb.skills.bulkPut([...skills]));
+    console.log('[TXT] Stored skills');
 
     // Store metadata
     yield call(() =>

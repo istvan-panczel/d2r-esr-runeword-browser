@@ -190,7 +190,7 @@ Test Item\t1\t100\t1\t10\t8\tring\tRing\tstr\t\t5\t10\tres-fire\t\t15\t15`;
 
       expect(result[0].properties).toHaveLength(2);
       expect(result[0].resolvedProperties).toHaveLength(2);
-      expect(result[0].resolvedProperties[0]).toBe('+5-10 to Strength');
+      expect(result[0].resolvedProperties[0]).toBe('+(5 to 10) to Strength');
       expect(result[0].resolvedProperties[1]).toBe('Fire Resist +15%');
     });
 
@@ -203,7 +203,7 @@ Test Item\t1\t100\t1\t10\t8\tring\tRing\tstrpercent\t\t10\t20\tvitpercent\t\t15\
       const result = parseUniqueItemsTxt(content, undefined, propertyDefs);
 
       expect(result[0].resolvedProperties).toHaveLength(2);
-      expect(result[0].resolvedProperties[0]).toBe('+10-20% Bonus to Strength');
+      expect(result[0].resolvedProperties[0]).toBe('+(10 to 20)% Bonus to Strength');
       expect(result[0].resolvedProperties[1]).toBe('+15% Bonus to Vitality');
     });
   });

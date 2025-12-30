@@ -154,6 +154,24 @@ export interface TxtSetItem {
 }
 
 // ============================================================================
+// Skills (skills.txt)
+// ============================================================================
+
+/**
+ * Character class identifiers as used in skills.txt
+ */
+export type CharClassCode = 'ama' | 'sor' | 'nec' | 'pal' | 'bar' | 'dru' | 'ass' | '';
+
+/**
+ * Skill definition from skills.txt
+ * Used to resolve skill names to their owning class
+ */
+export interface TxtSkill {
+  readonly skill: string; // Skill name (primary key)
+  readonly charClass: CharClassCode; // Class abbreviation
+}
+
+// ============================================================================
 // Metadata
 // ============================================================================
 
@@ -211,6 +229,7 @@ export interface TxtFilesData {
   readonly misc: string;
   readonly itemTypes: string; // itemtypes.txt content
   readonly cubemain: string; // cubemain.txt content (for Ancient Coupon detection)
+  readonly skills: string; // skills.txt content (for skill-to-class mapping)
 }
 
 /**
@@ -225,4 +244,5 @@ export interface ParsedTxtData {
   readonly setItems: readonly TxtSetItem[];
   readonly itemTypes: readonly TxtItemType[];
   readonly itemTypeDefs: readonly TxtItemTypeDef[];
+  readonly skills: readonly TxtSkill[];
 }

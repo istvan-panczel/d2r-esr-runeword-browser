@@ -9,6 +9,7 @@ import type {
   TxtMetadata,
   TxtItemType,
   TxtItemTypeDef,
+  TxtSkill,
 } from './txtModels';
 
 /**
@@ -24,6 +25,7 @@ class TxtDatabase extends Dexie {
   setItems!: EntityTable<TxtSetItem, 'id'>;
   itemTypes!: EntityTable<TxtItemType, 'code'>;
   itemTypeDefs!: EntityTable<TxtItemTypeDef, 'code'>;
+  skills!: EntityTable<TxtSkill, 'skill'>;
   metadata!: EntityTable<TxtMetadata, 'key'>;
 
   constructor() {
@@ -60,6 +62,11 @@ class TxtDatabase extends Dexie {
     this.version(3).stores({
       // Item type definitions (from itemtypes.txt)
       itemTypeDefs: 'code, storePage',
+    });
+
+    this.version(4).stores({
+      // Skills (from skills.txt) - for skill-to-class mapping
+      skills: 'skill, charClass',
     });
   }
 }
