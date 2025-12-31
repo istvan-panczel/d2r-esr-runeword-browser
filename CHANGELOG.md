@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.2...v0.1.3) (2025-12-31)
+
+
+### Features
+
+* add item tiers, search help, header links, and improved logging ([12f59d4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/12f59d4c8a3355f93bf5a3d47b472bb8476f00ea))
+
 ## [0.1.2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.1...v0.1.2) (2025-12-30)
 
 
