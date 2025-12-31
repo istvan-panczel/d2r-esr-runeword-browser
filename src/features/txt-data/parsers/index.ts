@@ -8,3 +8,4 @@ export { parseItemTypesTxt } from './itemTypesParser';
 export { parseItemTypeDefsTxt } from './itemTypeDefsParser';
 export { parseAncientCouponItems } from './cubemainParser';
 export { parseSkillsTxt, buildSkillClassMap, getCharClassName, CHAR_CLASS_NAMES } from './skillsParser';
+export { parseMonstatsTxt, buildMonsterNameMap } from './monstatsParser';

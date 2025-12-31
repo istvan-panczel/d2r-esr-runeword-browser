@@ -6,6 +6,7 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
+import { SearchHelpButton } from '@/components/SearchHelpButton';
 import {
   toggleCategory,
   setSearchText,
@@ -93,9 +94,12 @@ export function SocketableFilters() {
 
       {/* Search input */}
       <div className="max-w-md space-y-1">
-        <p className="text-xs text-muted-foreground">
-          Search by words or use <code className="bg-muted px-1 rounded">"quotes"</code> for exact phrases.
-        </p>
+        <div className="flex items-center gap-1">
+          <p className="text-xs text-muted-foreground">
+            Search by words or <code className="bg-muted px-1 rounded">"exact phrases"</code>
+          </p>
+          <SearchHelpButton />
+        </div>
         <Label htmlFor="search" className="sr-only">
           Search
         </Label>

@@ -45,7 +45,7 @@ The project uses React Compiler for automatic memoization. Do NOT use manual `us
 
 - Prettier handles formatting (single quotes, 140 print width, trailing commas)
 - ESLint uses `strictTypeChecked` - avoid `!` non-null assertions, use proper null checks
-- Console logs are stripped from production builds automatically
+- Console logs are kept in production builds (users can see parsing progress)
 
 ## Git Conventions
 

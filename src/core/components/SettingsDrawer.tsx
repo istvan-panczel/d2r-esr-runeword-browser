@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -79,6 +79,7 @@ export function SettingsDrawer() {
       <SheetContent className="p-6">
         <SheetHeader>
           <SheetTitle>Settings</SheetTitle>
+          <SheetDescription>Configure app preferences and manage data</SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">

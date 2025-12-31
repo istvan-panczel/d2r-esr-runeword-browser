@@ -98,6 +98,7 @@ export interface TxtUniqueItem {
   readonly levelReq: number;
   readonly itemCode: string;
   readonly itemName: string;
+  readonly itemTier: ItemTier; // Item tier (norm, exc, elite)
   readonly properties: readonly TxtProperty[];
   readonly resolvedProperties: readonly string[]; // Pre-translated property text for display
   readonly isAncientCoupon: boolean; // True if item is obtained via Ancient Coupon (not droppable)
@@ -172,6 +173,19 @@ export interface TxtSkill {
 }
 
 // ============================================================================
+// Monsters (monstats.txt)
+// ============================================================================
+
+/**
+ * Monster definition from monstats.txt
+ * Used to resolve monster IDs to display names (e.g., for reanimate property)
+ */
+export interface TxtMonster {
+  readonly hcIdx: number; // Monster numeric ID (primary key)
+  readonly nameStr: string; // Display name
+}
+
+// ============================================================================
 // Metadata
 // ============================================================================
 
@@ -188,6 +202,14 @@ export interface TxtMetadata {
 // ============================================================================
 
 /**
+ * Item tier (normal, exceptional, elite)
+ * - norm: Normal base items
+ * - exc: Exceptional base items (uber in game files)
+ * - elite: Elite base items (ultra in game files)
+ */
+export type ItemTier = 'norm' | 'exc' | 'elite' | '';
+
+/**
  * Item type mapping from item code to type code
  * Used to categorize unique items by their base item type
  * Parsed from weapons.txt, armor.txt, misc.txt
@@ -196,6 +218,7 @@ export interface TxtItemType {
   readonly code: string; // Item code (e.g., "amf" for Matriarchal Javelin)
   readonly type: string; // Item type code (e.g., "ajav" for Amazon Javelin)
   readonly name: string; // Display name (e.g., "Matriarchal Javelin")
+  readonly tier: ItemTier; // Item tier (norm, exc, elite)
 }
 
 /**
@@ -230,6 +253,7 @@ export interface TxtFilesData {
   readonly itemTypes: string; // itemtypes.txt content
   readonly cubemain: string; // cubemain.txt content (for Ancient Coupon detection)
   readonly skills: string; // skills.txt content (for skill-to-class mapping)
+  readonly monstats: string; // monstats.txt content (for monster name lookup)
 }
 
 /**
@@ -245,4 +269,5 @@ export interface ParsedTxtData {
   readonly itemTypes: readonly TxtItemType[];
   readonly itemTypeDefs: readonly TxtItemTypeDef[];
   readonly skills: readonly TxtSkill[];
+  readonly monsters: readonly TxtMonster[];
 }

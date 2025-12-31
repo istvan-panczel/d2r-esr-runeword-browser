@@ -1,5 +1,6 @@
-import type { TxtPropertyDef, TxtProperty, TxtSkill, CharClassCode } from '@/core/db';
+import type { TxtPropertyDef, TxtProperty, TxtSkill, TxtMonster, CharClassCode } from '@/core/db';
 import { getSkillTabInfo } from './skillTabs';
+import { getMythicalDescription, getSpecialDescription, isMythicalDescProperty, isSpecialDescProperty } from './mythicalDescriptions';
 
 /**
  * Character class code to display name mapping
@@ -40,12 +41,37 @@ const FALLBACK_TOOLTIPS: ReadonlyMap<string, string> = new Map([
   ['lifesteal', '+#% Life stolen per hit'],
   // Maximum resistances (res-all-max has no tooltip in properties.txt)
   ['res-all-max', '+#% to All Maximum Resistances'],
+  // Skill cooldown reduction
+  ['item-skill-cooldown', '+#% Skill Cooldown Reduction'],
+  // Ignore resistance properties (boolean flags, no # placeholder needed)
+  ['ignore-demon-resist', 'Attacks Ignore All Resistances of Demons'],
+  ['ignore-undead-resist', 'Attacks Ignore All Resistances of Undead'],
+  ['ignore-beast-resist', 'Attacks Ignore All Resistances of Beasts'],
+  // Summon passive bonuses
+  ['passive-summ-elemental-resist', '+#% to Summon Resistances'],
+  ['passive-summ-phys-resist', '+#% to Summon Physical and Magic Resists'],
+  ['passive-summ-life', '+#% to Summon Life'],
+  ['passive-summ-limit', '+# to Non-Unique Summons Limit'],
+  // Magic skill damage bonus
+  ['extra-mag2', '+#% to Magic Skill Damage'],
+  // Physical/wind skill damage bonus
+  ['extra-wind', '+#% to Physical Skill Damage'],
 ]);
 
 /**
  * Property codes that need special translation logic
  */
-const SPECIAL_PROPERTY_CODES = new Set(['skilltab', 'red-dmg%', 'dmg-pois', 'oskill', 'skill', 'manasteal', 'lifesteal', 'skill-rand']);
+const SPECIAL_PROPERTY_CODES = new Set([
+  'skilltab',
+  'red-dmg%',
+  'dmg-pois',
+  'oskill',
+  'skill',
+  'manasteal',
+  'lifesteal',
+  'skill-rand',
+  'reanimate',
+]);
 
 /**
  * Per-level property codes (Based on Character Level)
@@ -71,6 +97,7 @@ export interface TranslatedProperty {
   readonly param: string;
   readonly min: number;
   readonly max: number;
+  readonly isSpecial?: boolean; // True for mythical descriptions (yellow text)
 }
 
 /**
@@ -79,10 +106,12 @@ export interface TranslatedProperty {
 export class PropertyTranslator {
   private readonly propertyMap: Map<string, TxtPropertyDef>;
   private readonly skillClassMap: Map<string, CharClassCode>;
+  private readonly monsterNameMap: Map<number, string>;
 
-  constructor(properties: readonly TxtPropertyDef[], skills?: readonly TxtSkill[]) {
+  constructor(properties: readonly TxtPropertyDef[], skills?: readonly TxtSkill[], monsters?: readonly TxtMonster[]) {
     this.propertyMap = new Map(properties.map((p) => [p.code, p]));
     this.skillClassMap = new Map(skills?.filter((s) => s.charClass).map((s) => [s.skill, s.charClass]) ?? []);
+    this.monsterNameMap = new Map(monsters?.map((m) => [m.hcIdx, m.nameStr]) ?? []);
   }
 
   /**
@@ -133,9 +162,28 @@ export class PropertyTranslator {
 
   /**
    * Translate multiple properties
+   * Mythical description properties are expanded into multiple lines
+   * Special description properties are rendered as yellow/special text
    */
   translateAll(props: readonly TxtProperty[]): TranslatedProperty[] {
-    return props.map((p) => this.translate(p));
+    const result: TranslatedProperty[] = [];
+
+    for (const prop of props) {
+      // Check if this is a mythical description property (uses hcIdx lookup)
+      if (isMythicalDescProperty(prop.code)) {
+        const mythicalProps = this.translateMythicalDesc(prop);
+        result.push(...mythicalProps);
+      }
+      // Check if this is a special description property (direct code lookup)
+      else if (isSpecialDescProperty(prop.code)) {
+        const specialProp = this.translateSpecialDesc(prop);
+        result.push(specialProp);
+      } else {
+        result.push(this.translate(prop));
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -159,6 +207,8 @@ export class PropertyTranslator {
         return this.translateLifeSteal(prop);
       case 'skill-rand':
         return this.translateSkillRand(prop);
+      case 'reanimate':
+        return this.translateReanimate(prop);
       default:
         return null;
     }
@@ -270,6 +320,69 @@ export class PropertyTranslator {
   private translateSkillRand(prop: TxtProperty): string {
     const skillLevel = prop.param ? parseInt(prop.param, 10) : 0;
     return `+${String(skillLevel)} to Random Class Skill (Specific Class Only)`;
+  }
+
+  /**
+   * Translate reanimate property with monster name lookup
+   * Format: reanimate with param=monster hcIdx, min/max=percentage chance
+   * Output: "(min to max)% Reanimate as: MonsterName"
+   */
+  private translateReanimate(prop: TxtProperty): string {
+    const monsterId = prop.param ? parseInt(prop.param, 10) : 0;
+    const monsterName = this.monsterNameMap.get(monsterId) ?? `Monster ${String(monsterId)}`;
+    const valueStr = this.formatValueRange(prop.min, prop.max);
+    return `${valueStr}% Reanimate as: ${monsterName}`;
+  }
+
+  /**
+   * Translate special description property
+   * These are boolean flags that display as yellow/special text
+   */
+  private translateSpecialDesc(prop: TxtProperty): TranslatedProperty {
+    const description = getSpecialDescription(prop.code);
+
+    return {
+      text: description ?? `${prop.code}: ${String(prop.min)}`,
+      rawCode: prop.code,
+      param: prop.param,
+      min: prop.min,
+      max: prop.max,
+      isSpecial: true,
+    };
+  }
+
+  /**
+   * Translate mythical description property
+   * These expand into multiple lines of special (yellow) text
+   * param contains the monster hcIdx that references the description
+   */
+  private translateMythicalDesc(prop: TxtProperty): TranslatedProperty[] {
+    const descId = prop.param ? parseInt(prop.param, 10) : 0;
+    const mythicalDesc = getMythicalDescription(descId);
+
+    if (mythicalDesc) {
+      // Return each line as a separate special property
+      return mythicalDesc.lines.map((line) => ({
+        text: line,
+        rawCode: prop.code,
+        param: prop.param,
+        min: prop.min,
+        max: prop.max,
+        isSpecial: true,
+      }));
+    }
+
+    // Fallback: show raw format if no description found
+    return [
+      {
+        text: `${prop.code} ${prop.param}: ${String(prop.min)}`,
+        rawCode: prop.code,
+        param: prop.param,
+        min: prop.min,
+        max: prop.max,
+        isSpecial: true,
+      },
+    ];
   }
 
   /**
@@ -391,7 +504,12 @@ export class PropertyTranslator {
  * Create a property translator from property definitions
  * @param properties Property definitions from properties.txt
  * @param skills Optional skill definitions from skills.txt (for class name lookup)
+ * @param monsters Optional monster definitions from monstats.txt (for reanimate property)
  */
-export function createPropertyTranslator(properties: readonly TxtPropertyDef[], skills?: readonly TxtSkill[]): PropertyTranslator {
-  return new PropertyTranslator(properties, skills);
+export function createPropertyTranslator(
+  properties: readonly TxtPropertyDef[],
+  skills?: readonly TxtSkill[],
+  monsters?: readonly TxtMonster[]
+): PropertyTranslator {
+  return new PropertyTranslator(properties, skills, monsters);
 }

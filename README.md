@@ -2,6 +2,8 @@
 
 A web application for browsing Diablo 2 Resurrected [Eastern Sun Resurrected](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected) mod data.
 
+**Live App:** https://istvan-panczel.github.io/d2r-esr-runeword-browser/
+
 > **Status:** Under development
 
 ## Purpose

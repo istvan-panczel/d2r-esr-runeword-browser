@@ -17,6 +17,14 @@ function* checkCachedData(): Generator<unknown, CachedDataCheck, unknown> {
   // Get stored version
   const versionMeta = (yield call(() => db.metadata.get('esrVersion'))) as Metadata | undefined;
 
+  // Get last updated timestamp for logging
+  const lastUpdatedMeta = (yield call(() => db.metadata.get('lastUpdated'))) as Metadata | undefined;
+
+  console.log('[HTML] Cache check - runewords count:', count, 'stored version:', versionMeta?.value ?? 'none');
+  if (lastUpdatedMeta) {
+    console.log('[HTML] Last updated:', lastUpdatedMeta.value);
+  }
+
   return {
     hasData: count > 0,
     storedVersion: versionMeta?.value ?? null,
@@ -25,6 +33,8 @@ function* checkCachedData(): Generator<unknown, CachedDataCheck, unknown> {
 
 export function* handleStartupCheck() {
   try {
+    console.log('[HTML] Startup check initiated');
+
     // Step 1: Check what we have cached
     const cached: CachedDataCheck = (yield call(checkCachedData)) as CachedDataCheck;
 
@@ -32,16 +42,21 @@ export function* handleStartupCheck() {
     let remoteVersion: ChangelogVersion | null = null;
 
     try {
+      console.log('[HTML] Fetching remote version from changelog...');
       remoteVersion = (yield call(fetchLatestVersion)) as ChangelogVersion;
+      console.log('[HTML] Remote ESR version:', remoteVersion.version);
     } catch {
       // Network error during version check
+      console.log('[HTML] Network error during version check');
       if (cached.hasData) {
         // We have cached data, use it with a warning
+        console.log('[HTML] Using cached data (network unavailable)');
         yield put(setNetworkWarning('Unable to check for updates. Using cached data.'));
         yield put(startupUseCached());
         return;
       } else {
         // No cached data and no network - fatal error
+        console.log('[HTML] Fatal: No cached data and no network');
         yield put(fatalError('Unable to load data. Please check your internet connection and try again.'));
         return;
       }
@@ -49,17 +64,21 @@ export function* handleStartupCheck() {
 
     // Step 3: Compare versions
     const needsFetch = isVersionDifferent(cached.storedVersion, remoteVersion.version);
+    console.log('[HTML] Startup check - stored:', cached.storedVersion, 'remote:', remoteVersion.version, 'needsFetch:', needsFetch);
 
     if (!needsFetch && cached.hasData) {
       // Version matches and we have data - use cached
+      console.log('[HTML] Using cached data - version matches');
       yield put(startupUseCached());
       return;
     }
 
     // Step 4: Need to fetch - trigger the data load saga
+    console.log('[HTML] Version mismatch or no data - triggering fetch');
     yield put(startupNeedsFetch());
     yield put(initDataLoad({ force: false }));
   } catch (error) {
+    console.error('[HTML] Startup error:', error);
     yield put(fatalError(error instanceof Error ? error.message : 'Startup error'));
   }
 }

@@ -31,6 +31,7 @@ export function UniqueItemDetailModal({ item, open, onOpenChange }: UniqueItemDe
               <DataRow label="Level" value={item.level} />
               <DataRow label="Level Req" value={item.levelReq} />
               <DataRow label="Item Code" value={item.itemCode} />
+              <DataRow label="Item Tier" value={item.itemTier || 'N/A'} />
               <DataRow label="Enabled" value={item.enabled ? 'true' : 'false'} />
               <DataRow label="Ancient Coupon" value={item.isAncientCoupon ? 'true' : 'false'} />
             </div>

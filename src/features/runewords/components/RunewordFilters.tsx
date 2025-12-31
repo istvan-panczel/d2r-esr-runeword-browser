@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
+import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { RuneCheckboxGroup } from './RuneCheckboxGroup';
 import { ItemTypeFilter } from './ItemTypeFilter';
 import {
@@ -79,9 +80,12 @@ export function RunewordFilters() {
       <div className="flex flex-wrap items-end gap-4">
         {/* Search input */}
         <div className="flex-1 min-w-64 max-w-md space-y-1">
-          <p className="text-xs text-muted-foreground">
-            Search by words or use <code className="bg-muted px-1 rounded">"quotes"</code> for exact phrases.
-          </p>
+          <div className="flex items-center gap-1">
+            <p className="text-xs text-muted-foreground">
+              Search by words or <code className="bg-muted px-1 rounded">"exact phrases"</code>
+            </p>
+            <SearchHelpButton />
+          </div>
           <Label htmlFor="search" className="sr-only">
             Search
           </Label>

@@ -7,7 +7,7 @@ interface UniqueItemCardProps {
 }
 
 export function UniqueItemCard({ item, onItemClick }: UniqueItemCardProps) {
-  const { index, itemName, level, levelReq, translatedProperties, isAncientCoupon } = item;
+  const { index, itemName, itemCode, itemTier, level, levelReq, translatedProperties, isAncientCoupon } = item;
 
   const handleTitleClick = () => {
     onItemClick?.(item);
@@ -19,7 +19,9 @@ export function UniqueItemCard({ item, onItemClick }: UniqueItemCardProps) {
         <CardTitle className="text-lg text-amber-700 dark:text-amber-400 cursor-pointer hover:underline" onClick={handleTitleClick}>
           {index}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">{itemName}</p>
+        <p className="text-sm text-muted-foreground">
+          {itemName} ({itemCode}){itemTier ? ` [${itemTier}]` : ''}
+        </p>
         {isAncientCoupon && <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Ancient Coupon Unique</p>}
       </CardHeader>
 

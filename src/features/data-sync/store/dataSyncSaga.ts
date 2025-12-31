@@ -32,18 +32,26 @@ import type { ParsedData } from '../interfaces';
 
 function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>) {
   try {
+    console.log('[HTML] Fetching HTML files...', { force: action.payload?.force ?? false });
     const [gemsHtml, runewordsHtml] = (yield all([call(fetchGemsHtml), call(fetchRunewordsHtml)])) as [string, string];
+    console.log('[HTML] Fetched HTML files', {
+      gemsHtmlLength: gemsHtml.length,
+      runewordsHtmlLength: runewordsHtml.length,
+    });
     yield put(fetchHtmlSuccess({ gemsHtml, runewordsHtml }));
   } catch (error) {
+    console.error('[HTML] Fetch error:', error);
     // Check if we have cached data to fall back to
     const count: number = (yield call(() => db.runewords.count())) as number;
 
     if (count > 0 && !action.payload?.force) {
       // Not a force refresh and we have cached data - use it
+      console.log('[HTML] Using cached data (fetch failed, have', count, 'runewords cached)');
       yield put(setNetworkWarning('Unable to fetch latest data. Using cached version.'));
       yield put(startupUseCached());
     } else {
       // Force refresh or no cached data - report error
+      console.log('[HTML] Fatal: fetch failed with no cached data');
       yield put(fetchHtmlError(error instanceof Error ? error.message : 'Network error'));
 
       if (count === 0) {
@@ -55,15 +63,23 @@ function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>
 
 function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
   try {
+    console.log('[HTML] Parsing HTML data...');
     const { gemsHtml, runewordsHtml } = action.payload;
     const gems = parseGemsHtml(gemsHtml);
+    console.log('[HTML] Parsed gems:', gems.length);
     const esrRunes = parseEsrRunesHtml(gemsHtml);
+    console.log('[HTML] Parsed ESR runes:', esrRunes.length);
     const lodRunes = parseLodRunesHtml(gemsHtml);
+    console.log('[HTML] Parsed LoD runes:', lodRunes.length);
     const kanjiRunes = parseKanjiRunesHtml(gemsHtml);
+    console.log('[HTML] Parsed Kanji runes:', kanjiRunes.length);
     const crystals = parseCrystalsHtml(gemsHtml);
+    console.log('[HTML] Parsed crystals:', crystals.length);
     const runewords = parseRunewordsHtml(runewordsHtml);
+    console.log('[HTML] Parsed runewords:', runewords.length);
     yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords }));
   } catch (error) {
+    console.error('[HTML] Parse error:', error);
     yield put(parseDataError(error instanceof Error ? error.message : 'Parse error'));
   }
 }
@@ -72,8 +88,11 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
   try {
     const { gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords } = action.payload;
 
+    console.log('[HTML] Storing data to IndexedDB...');
+
     // Clear all tables
     yield call(() => Promise.all(db.tables.map((table) => table.clear())));
+    console.log('[HTML] Cleared all tables');
 
     // Store data
     yield all([
@@ -84,22 +103,33 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       call(() => db.crystals.bulkPut(crystals)),
       call(() => db.runewords.bulkPut(runewords)),
     ]);
+    console.log('[HTML] Stored all data tables');
 
     // Store metadata (version and timestamp)
+    let storedVersion = 'unknown';
     try {
       const versionInfo: ChangelogVersion = (yield call(fetchLatestVersion)) as ChangelogVersion;
       yield call(() => db.metadata.put({ key: 'esrVersion', value: versionInfo.version }));
+      storedVersion = versionInfo.version;
     } catch {
       // If we can't get version info, just continue
+      console.log('[HTML] Could not fetch version info for metadata');
     }
     yield call(() => db.metadata.put({ key: 'lastUpdated', value: new Date().toISOString() }));
+    console.log('[HTML] Stored metadata with ESR version:', storedVersion);
 
-    console.log(
-      `Data sync complete: ${String(gems.length)} gems, ${String(esrRunes.length)} ESR runes, ${String(lodRunes.length)} LoD runes, ${String(kanjiRunes.length)} Kanji runes, ${String(crystals.length)} crystals, ${String(runewords.length)} runewords`
-    );
+    console.log('[HTML] Store complete:', {
+      gems: gems.length,
+      esrRunes: esrRunes.length,
+      lodRunes: lodRunes.length,
+      kanjiRunes: kanjiRunes.length,
+      crystals: crystals.length,
+      runewords: runewords.length,
+    });
 
     yield put(storeDataSuccess());
   } catch (error) {
+    console.error('[HTML] Store error:', error);
     yield put(storeDataError(error instanceof Error ? error.message : 'Database error'));
   }
 }
@@ -114,6 +144,8 @@ function collectAffixesFromSocketable(item: Gem | EsrRune | LodRune | KanjiRune 
 
 function* handleExtractAffixes() {
   try {
+    console.log('[HTML] Extracting affixes...');
+
     // Read all data from IndexedDB
     const runewords: Runeword[] = (yield call(() => db.runewords.toArray())) as Runeword[];
     const gems: Gem[] = (yield call(() => db.gems.toArray())) as Gem[];
@@ -145,10 +177,12 @@ function* handleExtractAffixes() {
     const uniqueAffixes = Array.from(affixMap.values());
     yield call(() => db.affixes.bulkPut(uniqueAffixes));
 
-    console.log(`Affix extraction complete: ${String(uniqueAffixes.length)} unique patterns`);
+    console.log('[HTML] Affix extraction complete:', uniqueAffixes.length, 'unique patterns');
+    console.log('[HTML] Data sync complete!');
 
     yield put(extractAffixesSuccess());
   } catch (error) {
+    console.error('[HTML] Affix extraction error:', error);
     yield put(extractAffixesError(error instanceof Error ? error.message : 'Affix extraction error'));
   }
 }

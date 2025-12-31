@@ -14,6 +14,7 @@ import {
   parseItemTypeDefsTxt,
   parseAncientCouponItems,
   parseSkillsTxt,
+  parseMonstatsTxt,
 } from '../parsers';
 import {
   startupTxtCheck,
@@ -96,7 +97,8 @@ function* handleInitTxtDataLoad(action: PayloadAction<{ force?: boolean } | unde
  */
 function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
   try {
-    const { properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain, skills } = action.payload;
+    const { properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain, skills, monstats } =
+      action.payload;
 
     console.log('[TXT] Parsing TXT files...', {
       propertiesLength: properties.length,
@@ -111,6 +113,7 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
       itemTypesLength: itemTypes.length,
       cubemainLength: cubemain.length,
       skillsLength: skills.length,
+      monstatsLength: monstats.length,
     });
 
     // Parse properties first (needed for lookups, but we store raw data)
@@ -134,8 +137,23 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
     const parsedSkills = parseSkillsTxt(skills);
     console.log('[TXT] Parsed skills:', parsedSkills.length);
 
-    // Parse unique items with Ancient Coupon detection and pre-resolved properties
-    const parsedUniqueItems = parseUniqueItemsTxt(uniqueItems, ancientCouponItems, parsedProperties, parsedSkills);
+    // Parse monsters (for reanimate property translation) - needed before unique items
+    const parsedMonsters = parseMonstatsTxt(monstats);
+    console.log('[TXT] Parsed monsters:', parsedMonsters.length);
+
+    // Parse item types (for unique item categorization and tier lookup) - needed before unique items
+    const parsedItemTypes = parseItemTypesTxt(weapons, armor, misc);
+    console.log('[TXT] Parsed itemTypes:', parsedItemTypes.length);
+
+    // Parse unique items with Ancient Coupon detection, pre-resolved properties, and item tier
+    const parsedUniqueItems = parseUniqueItemsTxt(
+      uniqueItems,
+      ancientCouponItems,
+      parsedProperties,
+      parsedSkills,
+      parsedMonsters,
+      parsedItemTypes
+    );
     console.log('[TXT] Parsed uniqueItems:', parsedUniqueItems.length);
 
     // Parse sets
@@ -145,10 +163,6 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
     // Parse set items
     const parsedSetItems = parseSetItemsTxt(setItems);
     console.log('[TXT] Parsed setItems:', parsedSetItems.length);
-
-    // Parse item types (for unique item categorization - maps item code to type code)
-    const parsedItemTypes = parseItemTypesTxt(weapons, armor, misc);
-    console.log('[TXT] Parsed itemTypes:', parsedItemTypes.length);
 
     // Parse item type definitions (from itemtypes.txt - defines type hierarchy)
     const parsedItemTypeDefs = parseItemTypeDefsTxt(itemTypes);
@@ -164,6 +178,7 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
       itemTypes: parsedItemTypes,
       itemTypeDefs: parsedItemTypeDefs,
       skills: parsedSkills,
+      monsters: parsedMonsters,
     };
 
     yield put(parseTxtDataSuccess(parsedData));
@@ -178,7 +193,7 @@ function* handleParseTxtData(action: PayloadAction<TxtFilesData>) {
  */
 function* handleStoreTxtData(action: PayloadAction<ParsedTxtData>) {
   try {
-    const { properties, socketables, runewords, uniqueItems, sets, setItems, itemTypes, itemTypeDefs, skills } = action.payload;
+    const { properties, socketables, runewords, uniqueItems, sets, setItems, itemTypes, itemTypeDefs, skills, monsters } = action.payload;
 
     console.log('[TXT] Storing data to IndexedDB...', {
       properties: properties.length,
@@ -190,6 +205,7 @@ function* handleStoreTxtData(action: PayloadAction<ParsedTxtData>) {
       itemTypes: itemTypes.length,
       itemTypeDefs: itemTypeDefs.length,
       skills: skills.length,
+      monsters: monsters.length,
     });
 
     // Clear all tables
@@ -215,6 +231,8 @@ function* handleStoreTxtData(action: PayloadAction<ParsedTxtData>) {
     console.log('[TXT] Stored itemTypeDefs');
     yield call(() => txtDb.skills.bulkPut([...skills]));
     console.log('[TXT] Stored skills');
+    yield call(() => txtDb.monsters.bulkPut([...monsters]));
+    console.log('[TXT] Stored monsters');
 
     // Store metadata
     yield call(() =>

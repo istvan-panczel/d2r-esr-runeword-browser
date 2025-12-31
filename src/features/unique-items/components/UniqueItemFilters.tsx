@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { ItemTypeFilter } from './ItemTypeFilter';
 import { setSearchText, selectSearchText } from '../store';
 
@@ -47,9 +48,12 @@ export function UniqueItemFilters() {
       <div className="flex flex-wrap items-end gap-4">
         {/* Search input */}
         <div className="flex-1 min-w-64 max-w-md space-y-1">
-          <p className="text-xs text-muted-foreground">
-            Search by words or use <code className="bg-muted px-1 rounded">"quotes"</code> for exact phrases.
-          </p>
+          <div className="flex items-center gap-1">
+            <p className="text-xs text-muted-foreground">
+              Search by words or <code className="bg-muted px-1 rounded">"exact phrases"</code>
+            </p>
+            <SearchHelpButton />
+          </div>
           <Label htmlFor="unique-search" className="sr-only">
             Search
           </Label>

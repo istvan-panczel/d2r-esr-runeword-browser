@@ -26,7 +26,8 @@ export default defineConfig(({ mode }) => ({
       '@public': path.resolve(__dirname, './public'),
     },
   },
-  esbuild: {
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
-  },
+  // Keep console.logs in production so users can see parsing progress
+  // esbuild: {
+  //   drop: mode === 'production' ? ['console', 'debugger'] : [],
+  // },
 }))

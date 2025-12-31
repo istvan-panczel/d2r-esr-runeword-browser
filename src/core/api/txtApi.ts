@@ -21,20 +21,22 @@ export async function fetchTxtFile(filename: string): Promise<string> {
  * Fetch all required TXT files in parallel
  */
 export async function fetchAllTxtFiles(): Promise<TxtFilesData> {
-  const [properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain, skills] = await Promise.all([
-    fetchTxtFile('properties.txt'),
-    fetchTxtFile('gems.txt'),
-    fetchTxtFile('runes.txt'),
-    fetchTxtFile('uniqueitems.txt'),
-    fetchTxtFile('sets.txt'),
-    fetchTxtFile('setitems.txt'),
-    fetchTxtFile('weapons.txt'),
-    fetchTxtFile('armor.txt'),
-    fetchTxtFile('misc.txt'),
-    fetchTxtFile('itemtypes.txt'),
-    fetchTxtFile('cubemain.txt'),
-    fetchTxtFile('skills.txt'),
-  ]);
+  const [properties, gems, runes, uniqueItems, sets, setItems, weapons, armor, misc, itemTypes, cubemain, skills, monstats] =
+    await Promise.all([
+      fetchTxtFile('properties.txt'),
+      fetchTxtFile('gems.txt'),
+      fetchTxtFile('runes.txt'),
+      fetchTxtFile('uniqueitems.txt'),
+      fetchTxtFile('sets.txt'),
+      fetchTxtFile('setitems.txt'),
+      fetchTxtFile('weapons.txt'),
+      fetchTxtFile('armor.txt'),
+      fetchTxtFile('misc.txt'),
+      fetchTxtFile('itemtypes.txt'),
+      fetchTxtFile('cubemain.txt'),
+      fetchTxtFile('skills.txt'),
+      fetchTxtFile('monstats.txt'),
+    ]);
 
   return {
     properties,
@@ -49,5 +51,6 @@ export async function fetchAllTxtFiles(): Promise<TxtFilesData> {
     itemTypes,
     cubemain,
     skills,
+    monstats,
   };
 }
