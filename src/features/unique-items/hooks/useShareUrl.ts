@@ -1,9 +1,10 @@
 import { useSelector } from 'react-redux';
-import { selectSearchText, selectSelectedTypeCodesRaw } from '../store/uniqueItemsSlice';
+import { selectSearchText, selectSelectedTypeCodesRaw, selectIncludeCouponItems } from '../store/uniqueItemsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
   TYPES: 'types',
+  COUPON: 'coupon',
 } as const;
 
 /**
@@ -13,6 +14,7 @@ const URL_PARAM_KEYS = {
 export function useShareUrl(): () => string {
   const searchText = useSelector(selectSearchText);
   const selectedTypeCodes = useSelector(selectSelectedTypeCodesRaw);
+  const includeCouponItems = useSelector(selectIncludeCouponItems);
 
   return () => {
     const params = new URLSearchParams();
@@ -26,6 +28,11 @@ export function useShareUrl(): () => string {
     // Also skip if it's the special "__none__" marker
     if (selectedTypeCodes.length > 0 && selectedTypeCodes[0] !== '__none__') {
       params.set(URL_PARAM_KEYS.TYPES, selectedTypeCodes.join(','));
+    }
+
+    // Coupon: only add if excluding coupon items (default is true/include)
+    if (!includeCouponItems) {
+      params.set(URL_PARAM_KEYS.COUPON, '0');
     }
 
     const base = `${window.location.origin}${import.meta.env.BASE_URL}uniques`;

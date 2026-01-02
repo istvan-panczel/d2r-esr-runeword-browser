@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useSelector } from 'react-redux';
 import { txtDb } from '@/core/db';
 import type { DisplayUniqueItem } from '../types';
-import { selectSearchText, selectSelectedTypeCodes } from '../store';
+import { selectSearchText, selectSelectedTypeCodes, selectIncludeCouponItems } from '../store';
 import { getItemTypeFromCode, type ItemTypeDefInfo } from '../utils/itemTypeMapping';
 import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
 
@@ -16,6 +16,7 @@ import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
 export function useFilteredUniqueItems(): readonly DisplayUniqueItem[] | undefined {
   const searchText = useSelector(selectSearchText);
   const selectedTypeCodes = useSelector(selectSelectedTypeCodes);
+  const includeCouponItems = useSelector(selectIncludeCouponItems);
 
   // Load items, item type mappings, and item type definitions together
   const data = useLiveQuery(async () => {
@@ -77,6 +78,7 @@ export function useFilteredUniqueItems(): readonly DisplayUniqueItem[] | undefin
         })),
       };
     })
+    .filter((item) => includeCouponItems || !item.isAncientCoupon)
     .filter((item) => matchesTypeCode(item.typeCode, selectedTypeCodes))
     .filter((item) => matchesSearch(item, searchTerms));
 

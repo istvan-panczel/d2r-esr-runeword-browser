@@ -1,7 +1,15 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { toggleGroup, selectAllTypes, deselectAllTypes, selectSelectedTypeCodesRaw, selectIsAllTypesSelected } from '../store';
+import {
+  toggleGroup,
+  selectAllTypes,
+  deselectAllTypes,
+  selectSelectedTypeCodesRaw,
+  selectIsAllTypesSelected,
+  selectIncludeCouponItems,
+  setIncludeCouponItems,
+} from '../store';
 import { useItemTypeFilters, getAllTypeCodesFromGroups } from '../hooks';
 import type { FilterGroup } from '../types';
 
@@ -113,6 +121,7 @@ export function ItemTypeFilter() {
   const filterGroups = useItemTypeFilters();
   const isAllSelected = useSelector(selectIsAllTypesSelected);
   const selectedTypeCodes = useSelector(selectSelectedTypeCodesRaw);
+  const includeCouponItems = useSelector(selectIncludeCouponItems);
 
   // Loading state
   if (!filterGroups) {
@@ -132,6 +141,15 @@ export function ItemTypeFilter() {
         <Button variant="outline" size="sm" onClick={() => dispatch(deselectAllTypes())} disabled={noneSelected}>
           None
         </Button>
+        <label className="flex items-center gap-1.5 cursor-pointer ml-2">
+          <Checkbox
+            checked={includeCouponItems}
+            onCheckedChange={(checked) => {
+              dispatch(setIncludeCouponItems(checked === true));
+            }}
+          />
+          <span className="text-sm">Include Coupon Items</span>
+        </label>
       </div>
       <div className="space-y-3">
         {filterGroups.map((group) => (

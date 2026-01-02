@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setSearchText, setSelectedTypeCodes } from '../store/uniqueItemsSlice';
+import { setSearchText, setSelectedTypeCodes, setIncludeCouponItems } from '../store/uniqueItemsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
   TYPES: 'types',
+  COUPON: 'coupon',
 } as const;
 
 /**
@@ -27,8 +28,9 @@ export function useUrlInitialize(): void {
 
     const urlSearch = searchParams.get(URL_PARAM_KEYS.SEARCH);
     const urlTypes = searchParams.get(URL_PARAM_KEYS.TYPES);
+    const urlCoupon = searchParams.get(URL_PARAM_KEYS.COUPON);
 
-    const hasUrlParams = urlSearch !== null || urlTypes !== null;
+    const hasUrlParams = urlSearch !== null || urlTypes !== null || urlCoupon !== null;
 
     if (hasUrlParams) {
       if (urlSearch !== null) {
@@ -40,6 +42,11 @@ export function useUrlInitialize(): void {
         if (typeCodes.length > 0) {
           dispatch(setSelectedTypeCodes(typeCodes));
         }
+      }
+
+      // Coupon: '0' means exclude coupon items, anything else or missing means include
+      if (urlCoupon === '0') {
+        dispatch(setIncludeCouponItems(false));
       }
 
       // Clean the URL after initialization

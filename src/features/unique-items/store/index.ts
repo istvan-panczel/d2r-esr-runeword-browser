@@ -6,8 +6,10 @@ export {
   selectAllTypes,
   deselectAllTypes,
   setSelectedTypeCodes,
+  setIncludeCouponItems,
   selectSearchText,
   selectSelectedTypeCodes,
   selectSelectedTypeCodesRaw,
   selectIsAllTypesSelected,
+  selectIncludeCouponItems,
 } from './uniqueItemsSlice';

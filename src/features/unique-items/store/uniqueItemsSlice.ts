@@ -10,11 +10,13 @@ import type { RootState } from '@/core/store/store';
 interface UniqueItemsState {
   readonly searchText: string;
   readonly selectedTypeCodes: readonly string[];
+  readonly includeCouponItems: boolean;
 }
 
 const initialState: UniqueItemsState = {
   searchText: '',
   selectedTypeCodes: [], // Empty = all selected
+  includeCouponItems: true, // Include Ancient Coupon items by default
 };
 
 const uniqueItemsSlice = createSlice({
@@ -107,10 +109,16 @@ const uniqueItemsSlice = createSlice({
     setSelectedTypeCodes(state, action: PayloadAction<readonly string[]>) {
       state.selectedTypeCodes = [...action.payload];
     },
+    /**
+     * Toggle inclusion of Ancient Coupon items
+     */
+    setIncludeCouponItems(state, action: PayloadAction<boolean>) {
+      state.includeCouponItems = action.payload;
+    },
   },
 });
 
-export const { setSearchText, toggleTypeCode, toggleGroup, selectAllTypes, deselectAllTypes, setSelectedTypeCodes } =
+export const { setSearchText, toggleTypeCode, toggleGroup, selectAllTypes, deselectAllTypes, setSelectedTypeCodes, setIncludeCouponItems } =
   uniqueItemsSlice.actions;
 export default uniqueItemsSlice.reducer;
 
@@ -143,3 +151,8 @@ export const selectSelectedTypeCodes = createSelector([selectSelectedTypeCodesRa
  * Check if all types are selected (empty array state)
  */
 export const selectIsAllTypesSelected = createSelector([selectSelectedTypeCodesRaw], (selectedTypeCodes) => selectedTypeCodes.length === 0);
+
+/**
+ * Get the include coupon items setting
+ */
+export const selectIncludeCouponItems = createSelector([selectUniqueItemsState], (uniqueItems) => uniqueItems.includeCouponItems);
