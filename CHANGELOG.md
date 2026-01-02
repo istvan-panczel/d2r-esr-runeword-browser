@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.3...v0.1.4) (2026-01-02)
+
+
+### Bug Fixes
+
+* fix 404 redirect issues for SPAs on Github Pages ([3e33663](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3e336638486966675f03d312ba12f2ad12a93814))
+
 ## [0.1.3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.2...v0.1.3) (2025-12-31)
 
 
