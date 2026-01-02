@@ -8,6 +8,7 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { RuneCheckboxGroup } from './RuneCheckboxGroup';
 import { ItemTypeFilter } from './ItemTypeFilter';
+import { useShareUrl } from '../hooks/useShareUrl';
 import {
   setSearchText,
   setSocketCount,
@@ -25,6 +26,7 @@ export function RunewordFilters() {
   const searchText = useSelector(selectSearchText);
   const socketCount = useSelector(selectSocketCount);
   const selectedRunes = useSelector(selectSelectedRunes);
+  const getShareUrl = useShareUrl();
 
   const [localSearchText, setLocalSearchText] = useState(searchText);
 
@@ -139,7 +141,7 @@ export function RunewordFilters() {
         </div>
 
         {/* Copy Link button */}
-        <CopyLinkButton />
+        <CopyLinkButton getShareUrl={getShareUrl} />
       </div>
 
       {/* Item Type Filter */}

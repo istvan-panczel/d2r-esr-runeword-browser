@@ -3,10 +3,12 @@ import { UniqueItemFilters } from '../components/UniqueItemFilters';
 import { UniqueItemCard } from '../components/UniqueItemCard';
 import { UniqueItemDetailModal } from '../modals';
 import { useFilteredUniqueItems } from '../hooks/useFilteredUniqueItems';
+import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { Spinner } from '@/components/ui/spinner';
 import type { DisplayUniqueItem } from '../types';
 
 export function UniqueItemsScreen() {
+  useUrlInitialize();
   const items = useFilteredUniqueItems();
   const [selectedItem, setSelectedItem] = useState<DisplayUniqueItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

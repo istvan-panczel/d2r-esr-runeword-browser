@@ -1,27 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { initializeFromUrl, selectSearchText, selectEnabledCategories, type EnabledCategories } from '../store/socketablesSlice';
+import { useDispatch } from 'react-redux';
+import { initializeFromUrl, type EnabledCategories } from '../store/socketablesSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
   CATEGORIES: 'categories',
 } as const;
 
-const ALL_CATEGORIES: (keyof EnabledCategories)[] = ['gems', 'esrRunes', 'lodRunes', 'kanjiRunes', 'crystals'];
-
 /**
- * Synchronizes socketables filter state with URL query parameters.
- * - On mount: parses URL params and initializes Redux state
- * - On state change: updates URL params (using replace to avoid history pollution)
+ * Initializes socketables filter state from URL query parameters (one-time on mount).
+ * After initialization, cleans the URL to keep it tidy while browsing.
+ * Use useShareUrl() to generate shareable URLs with current filter state.
  */
-export function useUrlSync(): void {
+export function useUrlInitialize(): void {
   const dispatch = useDispatch();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Current Redux state
-  const searchText = useSelector(selectSearchText);
-  const enabledCategories = useSelector(selectEnabledCategories);
+  const [searchParams] = useSearchParams();
 
   // Track initialization state
   const initializedRef = useRef(false);
@@ -53,30 +47,10 @@ export function useUrlSync(): void {
           enabledCategories: decodedCategories,
         })
       );
+
+      // Clean the URL after initialization
+      window.history.replaceState({}, '', window.location.pathname);
     }
     // If no URL params, keep the default state from the slice (all categories enabled)
   }, [searchParams, dispatch]);
-
-  // Redux → URL (on state change)
-  useEffect(() => {
-    if (!initializedRef.current) return;
-
-    const newParams = new URLSearchParams();
-
-    // Search: add if not empty
-    if (searchText) {
-      newParams.set(URL_PARAM_KEYS.SEARCH, searchText);
-    }
-
-    // Categories: only add if NOT all enabled
-    const allEnabled = ALL_CATEGORIES.every((cat) => enabledCategories[cat]);
-    if (!allEnabled) {
-      const enabledList = ALL_CATEGORIES.filter((cat) => enabledCategories[cat]);
-      if (enabledList.length > 0) {
-        newParams.set(URL_PARAM_KEYS.CATEGORIES, enabledList.join(','));
-      }
-    }
-
-    setSearchParams(newParams, { replace: true });
-  }, [searchText, enabledCategories, setSearchParams]);
 }

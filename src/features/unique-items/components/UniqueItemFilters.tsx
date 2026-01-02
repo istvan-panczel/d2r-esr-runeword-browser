@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { ItemTypeFilter } from './ItemTypeFilter';
+import { useShareUrl } from '../hooks/useShareUrl';
 import { setSearchText, selectSearchText } from '../store';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -12,6 +14,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function UniqueItemFilters() {
   const dispatch = useDispatch();
   const searchText = useSelector(selectSearchText);
+  const getShareUrl = useShareUrl();
 
   const [localSearchText, setLocalSearchText] = useState(searchText);
 
@@ -78,6 +81,9 @@ export function UniqueItemFilters() {
             )}
           </InputGroup>
         </div>
+
+        {/* Copy Link button */}
+        <CopyLinkButton getShareUrl={getShareUrl} />
       </div>
 
       {/* Item Type Filter */}

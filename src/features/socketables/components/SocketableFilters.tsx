@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
+import { useShareUrl } from '../hooks/useShareUrl';
 import {
   toggleCategory,
   setSearchText,
@@ -30,6 +31,7 @@ export function SocketableFilters() {
   const dispatch = useDispatch();
   const enabledCategories = useSelector(selectEnabledCategories);
   const searchText = useSelector(selectSearchText);
+  const getShareUrl = useShareUrl();
 
   // Local state for immediate input feedback
   const [localSearchText, setLocalSearchText] = useState(searchText);
@@ -89,7 +91,7 @@ export function SocketableFilters() {
         <Button variant="outline" size="sm" onClick={handleSelectAll} disabled={allSelected}>
           All
         </Button>
-        <CopyLinkButton />
+        <CopyLinkButton getShareUrl={getShareUrl} />
       </div>
 
       {/* Search input */}

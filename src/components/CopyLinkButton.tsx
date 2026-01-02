@@ -2,11 +2,17 @@ import { useState } from 'react';
 import { Link, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function CopyLinkButton() {
+interface CopyLinkButtonProps {
+  /** Optional function to generate a custom share URL. Falls back to window.location.href */
+  getShareUrl?: () => string;
+}
+
+export function CopyLinkButton({ getShareUrl }: CopyLinkButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href).then(
+    const url = getShareUrl ? getShareUrl() : window.location.href;
+    navigator.clipboard.writeText(url).then(
       () => {
         setCopied(true);
         setTimeout(() => {
