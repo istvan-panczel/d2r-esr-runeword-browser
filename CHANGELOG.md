@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.5...v0.1.6) (2026-01-02)
+
+
+### Features
+
+* add checkbox to include coupon items for uniques page ([34950f5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/34950f564abbba8bcf01161e340fa4a65e8e7745))
+
 ## [0.1.5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.4...v0.1.5) (2026-01-02)
 
 
