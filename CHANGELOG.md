@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.4...v0.1.5) (2026-01-02)
+
+
+### Bug Fixes
+
+* fixup the sharable link generation for all pages ([7e39e23](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7e39e2325550c28568c8f20ce7a1370c80fdd34b))
+
 ## [0.1.4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.3...v0.1.4) (2026-01-02)
 
 
