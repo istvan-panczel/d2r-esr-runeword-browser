@@ -9,6 +9,7 @@ import {
   parseKanjiRunesHtml,
   parseCrystalsHtml,
   parseRunewordsHtml,
+  type RunePointsLookup,
 } from '../parsers';
 import {
   startupCheck,
@@ -75,7 +76,22 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     console.log('[HTML] Parsed Kanji runes:', kanjiRunes.length);
     const crystals = parseCrystalsHtml(gemsHtml);
     console.log('[HTML] Parsed crystals:', crystals.length);
-    const runewords = parseRunewordsHtml(runewordsHtml);
+
+    // Build rune points lookup for runeword tier point calculation
+    const runePointsLookup: RunePointsLookup = new Map();
+    for (const rune of esrRunes) {
+      if (rune.points !== undefined) {
+        runePointsLookup.set(rune.name, { points: rune.points, tier: rune.tier, category: 'esrRunes' });
+      }
+    }
+    for (const rune of lodRunes) {
+      if (rune.points !== undefined) {
+        runePointsLookup.set(rune.name, { points: rune.points, tier: rune.tier, category: 'lodRunes' });
+      }
+    }
+    console.log('[HTML] Built rune points lookup with', runePointsLookup.size, 'entries');
+
+    const runewords = parseRunewordsHtml(runewordsHtml, runePointsLookup);
     console.log('[HTML] Parsed runewords:', runewords.length);
     yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords }));
   } catch (error) {

@@ -1,5 +1,5 @@
 import type { EsrRune } from '@/core/db';
-import { parseReqLevel, parseBonuses, hasColoredInnerFont, getInnerFontColor, getItemName } from './shared/parserUtils';
+import { parseReqLevel, parseBonuses, hasColoredInnerFont, getInnerFontColor, getItemName, normalizeRuneName } from './shared/parserUtils';
 import { isGemName } from './gemsParser';
 import { isCrystalName } from './crystalsParser';
 import { ESR_COLOR_TO_TIER } from '../constants/constants.ts';
@@ -34,8 +34,11 @@ export function parseEsrRunesHtml(html: string): EsrRune[] {
     // ESR runes must have colored inner font
     if (!hasColoredInnerFont(headerCell)) continue;
 
-    const name = getItemName(headerCell);
-    if (!name) continue;
+    const rawName = getItemName(headerCell);
+    if (!rawName) continue;
+
+    // Normalize name to strip "(X points)" suffix if present
+    const { name, points } = normalizeRuneName(rawName);
 
     const color = getInnerFontColor(headerCell);
     if (!isEsrRuneName(name, color)) continue;
@@ -55,6 +58,7 @@ export function parseEsrRunesHtml(html: string): EsrRune[] {
       tier,
       color: color ?? '',
       reqLevel,
+      points,
       bonuses,
     });
   }

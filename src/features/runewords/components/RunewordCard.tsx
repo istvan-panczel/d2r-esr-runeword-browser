@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RuneBadge } from './RuneBadge';
+import { RunewordPointsDisplay } from './RunewordPointsDisplay';
 import { useRuneBonuses } from '../hooks/useRuneBonuses';
 import { getRelevantCategories, CATEGORY_LABELS, type BonusCategory } from '../utils/itemCategoryMapping';
 import type { Runeword } from '@/core/db/models';
@@ -10,7 +11,7 @@ interface RunewordCardProps {
 }
 
 export function RunewordCard({ runeword }: RunewordCardProps) {
-  const { name, sockets, runes, allowedItems, excludedItems, affixes } = runeword;
+  const { name, sockets, runes, allowedItems, excludedItems, affixes, tierPointTotals } = runeword;
   const runeBonuses = useRuneBonuses(runes);
   const relevantCategories = getRelevantCategories(allowedItems);
 
@@ -39,6 +40,9 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
             <RuneBadge key={`${rune}-${String(index)}`} runeName={rune} />
           ))}
         </div>
+
+        {/* Tier point totals - check with 'in' for backwards compatibility with old cached data */}
+        {'tierPointTotals' in runeword && tierPointTotals.length > 0 && <RunewordPointsDisplay tierTotals={tierPointTotals} />}
 
         {/* Allowed items */}
         <div>

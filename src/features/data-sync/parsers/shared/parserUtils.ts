@@ -1,5 +1,27 @@
 import type { Affix, SocketableBonuses } from '@/core/db';
 
+export interface NormalizedRuneName {
+  name: string;
+  points?: number;
+}
+
+/**
+ * Normalizes a rune name by stripping "(X points)" suffix if present.
+ * Returns the clean name and extracted points value.
+ *
+ * Examples:
+ *   "I Rune (1 points)" -> { name: "I Rune", points: 1 }
+ *   "I Rune"            -> { name: "I Rune", points: undefined }
+ *   "Ru Rune"           -> { name: "Ru Rune", points: undefined }
+ */
+export function normalizeRuneName(rawName: string): NormalizedRuneName {
+  const match = /^(.+?)\s*\((\d+)\s*points?\)$/i.exec(rawName.trim());
+  if (match) {
+    return { name: match[1].trim(), points: parseInt(match[2], 10) };
+  }
+  return { name: rawName.trim(), points: undefined };
+}
+
 /**
  * Extracts required level from text containing "Req Lvl: N"
  */

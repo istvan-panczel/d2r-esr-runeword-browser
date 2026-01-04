@@ -2,24 +2,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRuneGroups } from '../hooks/useRuneGroups';
 import { toggleRune, toggleRuneGroup, selectSelectedRunes } from '../store/runewordsSlice';
+import { ESR_TIER_TEXT_COLORS, CATEGORY_TEXT_COLORS } from '../constants/tierColors';
 import type { RuneGroup } from '../types';
-
-// Text colors for ESR tiers (mapped by tier number)
-const ESR_TIER_TEXT_COLORS: Record<number, string> = {
-  1: 'text-slate-600 dark:text-slate-300', // WHITE
-  2: 'text-red-600 dark:text-red-400', // RED
-  3: 'text-yellow-600 dark:text-yellow-400', // YELLOW
-  4: 'text-orange-600 dark:text-orange-400', // ORANGE
-  5: 'text-green-600 dark:text-green-400', // GREEN
-  6: 'text-amber-600 dark:text-amber-400', // GOLD
-  7: 'text-purple-600 dark:text-purple-400', // PURPLE
-};
-
-// Text colors for other rune categories
-const CATEGORY_TEXT_COLORS: Record<string, string> = {
-  lodRunes: 'text-amber-600 dark:text-amber-400',
-  kanjiRunes: 'text-blue-600 dark:text-blue-400',
-};
 
 function getGroupTextColor(group: RuneGroup): string {
   if (group.category === 'esrRunes' && group.tier !== null) {

@@ -40,6 +40,7 @@ export interface EsrRune {
   readonly tier: number;
   readonly color: string;
   readonly reqLevel: number;
+  readonly points?: number; // Rune points from "(X points)" suffix in HTML
   readonly bonuses: SocketableBonuses;
 }
 
@@ -50,6 +51,7 @@ export interface LodRune {
   readonly order: number;
   readonly tier: number; // 1=Low (El-Dol), 2=Mid (Hel-Gul), 3=High (Vex-Zod)
   readonly reqLevel: number;
+  readonly points?: number; // Rune points from "(X points)" suffix in HTML
   readonly bonuses: SocketableBonuses;
 }
 
@@ -90,6 +92,14 @@ export interface Crystal {
 
 // Runeword types
 
+export type RuneCategory = 'esrRunes' | 'lodRunes';
+
+export interface TierPointTotal {
+  readonly tier: number;
+  readonly category: RuneCategory;
+  readonly totalPoints: number;
+}
+
 export interface Runeword {
   readonly name: string;
   readonly variant: number; // 1, 2, 3... for multi-variant runewords
@@ -98,6 +108,7 @@ export interface Runeword {
   readonly allowedItems: readonly string[];
   readonly excludedItems: readonly string[]; // Items excluded from this variant
   readonly affixes: readonly Affix[];
+  readonly tierPointTotals: readonly TierPointTotal[]; // Pre-calculated tier point totals
 }
 
 // Metadata

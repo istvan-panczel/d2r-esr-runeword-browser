@@ -1,5 +1,13 @@
-import type { Runeword, Affix } from '@/core/db';
+import type { Runeword, Affix, TierPointTotal, RuneCategory } from '@/core/db';
 import { parseRunewordAffixes } from './shared/parserUtils';
+
+export interface RunePointInfo {
+  points: number;
+  tier: number;
+  category: RuneCategory;
+}
+
+export type RunePointsLookup = Map<string, RunePointInfo>;
 
 interface RawRuneword {
   name: string;
@@ -9,6 +17,7 @@ interface RawRuneword {
   allowedItems: string[];
   excludedItems: string[];
   affixes: Affix[];
+  tierPointTotals: TierPointTotal[];
 }
 
 interface AllowedItemsResult {
@@ -134,11 +143,49 @@ export function extractAffixes(cells: NodeListOf<Element>): Affix[] {
   return [];
 }
 
+interface TierPointEntry {
+  tier: number;
+  category: RuneCategory;
+  totalPoints: number;
+}
+
+/**
+ * Calculates tier point totals from a list of rune names.
+ * Groups points by (category, tier) and sums them.
+ */
+export function calculateTierPointTotals(runes: string[], runePointsLookup: RunePointsLookup): TierPointTotal[] {
+  // Map of "category:tier" -> total points
+  const totals = new Map<string, TierPointEntry>();
+
+  for (const runeName of runes) {
+    const info = runePointsLookup.get(runeName);
+    if (!info) continue; // Skip unknown runes (e.g., Kanji runes don't have points)
+
+    const key = `${info.category}:${String(info.tier)}`;
+    const existing = totals.get(key);
+    if (existing) {
+      existing.totalPoints += info.points;
+    } else {
+      totals.set(key, { tier: info.tier, category: info.category, totalPoints: info.points });
+    }
+  }
+
+  // Convert to array and sort by category then tier
+  return Array.from(totals.values()).sort((a: TierPointEntry, b: TierPointEntry) => {
+    if (a.category !== b.category) {
+      return a.category.localeCompare(b.category);
+    }
+    return a.tier - b.tier;
+  });
+}
+
 /**
  * Parses runewords from runewords.htm HTML.
  * Each row becomes a separate runeword entry with its variant number.
+ * @param html The runewords.htm HTML content
+ * @param runePointsLookup Optional lookup map for calculating tier point totals
  */
-export function parseRunewordsHtml(html: string): Runeword[] {
+export function parseRunewordsHtml(html: string, runePointsLookup?: RunePointsLookup): Runeword[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const rawRunewords: RawRuneword[] = [];
@@ -167,6 +214,9 @@ export function parseRunewordsHtml(html: string): Runeword[] {
     const { allowedItems, excludedItems } = extractAllowedItems(allowedItemsCell);
     const affixes = extractAffixes(cells);
 
+    // Calculate tier point totals if lookup is provided
+    const tierPointTotals = runePointsLookup ? calculateTierPointTotals(runes, runePointsLookup) : [];
+
     rawRunewords.push({
       name,
       variant: variantNum,
@@ -175,6 +225,7 @@ export function parseRunewordsHtml(html: string): Runeword[] {
       allowedItems,
       excludedItems,
       affixes,
+      tierPointTotals,
     });
   }
 
@@ -187,6 +238,7 @@ export function parseRunewordsHtml(html: string): Runeword[] {
     allowedItems: rw.allowedItems as readonly string[],
     excludedItems: rw.excludedItems as readonly string[],
     affixes: rw.affixes as readonly Affix[],
+    tierPointTotals: rw.tierPointTotals as readonly TierPointTotal[],
   }));
 
   console.log(`Parsed ${String(runewords.length)} runewords`);

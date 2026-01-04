@@ -8,6 +8,7 @@ import {
   hasColoredInnerFont,
   getInnerFontColor,
   getItemName,
+  normalizeRuneName,
 } from './parserUtils';
 
 describe('parseReqLevel', () => {
@@ -232,5 +233,33 @@ describe('parseBonuses', () => {
     expect(bonuses.helmsBoots[0].rawText).toBe('+5 Defense');
     expect(bonuses.armorShieldsBelts).toHaveLength(1);
     expect(bonuses.armorShieldsBelts[0].rawText).toBe('+3% Block');
+  });
+});
+
+describe('normalizeRuneName', () => {
+  it('should strip "(X points)" suffix and extract points', () => {
+    expect(normalizeRuneName('I Rune (1 points)')).toEqual({ name: 'I Rune', points: 1 });
+    expect(normalizeRuneName('El Rune (1 points)')).toEqual({ name: 'El Rune', points: 1 });
+    expect(normalizeRuneName('Zod Rune (128 points)')).toEqual({ name: 'Zod Rune', points: 128 });
+  });
+
+  it('should handle "(X point)" singular form', () => {
+    expect(normalizeRuneName('I Rune (1 point)')).toEqual({ name: 'I Rune', points: 1 });
+  });
+
+  it('should return undefined points when no suffix present', () => {
+    expect(normalizeRuneName('I Rune')).toEqual({ name: 'I Rune', points: undefined });
+    expect(normalizeRuneName('Ru Rune')).toEqual({ name: 'Ru Rune', points: undefined });
+    expect(normalizeRuneName('Moon Rune')).toEqual({ name: 'Moon Rune', points: undefined });
+  });
+
+  it('should trim whitespace', () => {
+    expect(normalizeRuneName('  I Rune (1 points)  ')).toEqual({ name: 'I Rune', points: 1 });
+    expect(normalizeRuneName('  El Rune  ')).toEqual({ name: 'El Rune', points: undefined });
+  });
+
+  it('should handle case variations in "points"', () => {
+    expect(normalizeRuneName('I Rune (1 POINTS)')).toEqual({ name: 'I Rune', points: 1 });
+    expect(normalizeRuneName('I Rune (1 Points)')).toEqual({ name: 'I Rune', points: 1 });
   });
 });

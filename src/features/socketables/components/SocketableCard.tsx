@@ -9,7 +9,7 @@ interface SocketableCardProps {
 }
 
 export function SocketableCard({ socketable }: SocketableCardProps) {
-  const { name, category, color, reqLevel, bonuses } = socketable;
+  const { name, category, color, reqLevel, bonuses, points } = socketable;
 
   // Get theme-aware color class for the name
   const colorClass = getSocketableColorClass(color, category);
@@ -18,7 +18,10 @@ export function SocketableCard({ socketable }: SocketableCardProps) {
     <Card className="h-full">
       <CardHeader className="pb-0">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className={cn('text-base', colorClass)}>{name}</CardTitle>
+          <CardTitle className={cn('text-base', colorClass)}>
+            {name}
+            {points !== undefined && <span className="text-muted-foreground font-normal"> ({points} pts)</span>}
+          </CardTitle>
           <CategoryBadge category={category} />
         </div>
         <p className="text-sm text-muted-foreground">Req Level: {reqLevel}</p>

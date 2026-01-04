@@ -1,4 +1,4 @@
-import { getItemName, getInnerFontColor, hasColoredInnerFont } from './parserUtils';
+import { getItemName, getInnerFontColor, hasColoredInnerFont, normalizeRuneName } from './parserUtils';
 
 export interface ExtractedSocketable {
   readonly name: string;
@@ -25,8 +25,11 @@ export function extractAllSocketableNames(html: string): ExtractedSocketable[] {
   const headerCells = doc.querySelectorAll('td[colspan="3"]');
 
   for (const headerCell of headerCells) {
-    const name = getItemName(headerCell);
-    if (!name) continue;
+    const rawName = getItemName(headerCell);
+    if (!rawName) continue;
+
+    // Normalize name to strip "(X points)" suffix if present
+    const { name } = normalizeRuneName(rawName);
 
     // Determine color
     let color: string | null = null;

@@ -77,6 +77,7 @@ export function useFilteredSocketables(): readonly UnifiedSocketable[] | undefin
           reqLevel: rune.reqLevel,
           bonuses: rune.bonuses,
           sortOrder: CATEGORY_ORDER.esrRunes * 1000 + index,
+          points: rune.points,
         });
       });
 
@@ -91,6 +92,7 @@ export function useFilteredSocketables(): readonly UnifiedSocketable[] | undefin
           reqLevel: rune.reqLevel,
           bonuses: rune.bonuses,
           sortOrder: CATEGORY_ORDER.lodRunes * 1000 + index,
+          points: rune.points,
         });
       });
 

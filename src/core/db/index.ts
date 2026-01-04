@@ -13,6 +13,8 @@ export type {
   CrystalType,
   CrystalQuality,
   Runeword,
+  RuneCategory,
+  TierPointTotal,
   Metadata,
 } from './models';
 

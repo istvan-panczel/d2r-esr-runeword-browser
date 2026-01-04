@@ -14,7 +14,7 @@ class AppDatabase extends Dexie {
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    this.version(5).stores({
+    this.version(7).stores({
       gems: 'name, type, quality, color',
       esrRunes: 'name, order, tier, color',
       lodRunes: 'name, order',

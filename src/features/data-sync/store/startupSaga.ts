@@ -1,6 +1,6 @@
 import { call, put } from 'redux-saga/effects';
 import { db } from '@/core/db';
-import type { Metadata } from '@/core/db';
+import type { Metadata, Runeword } from '@/core/db';
 import { fetchLatestVersion, type ChangelogVersion } from '@/core/api';
 import { isVersionDifferent } from '@/core/utils';
 import { startupUseCached, startupNeedsFetch, setNetworkWarning, fatalError, initDataLoad } from './dataSyncSlice';
@@ -29,6 +29,23 @@ function* checkCachedData(): Generator<unknown, CachedDataCheck, unknown> {
     hasData: count > 0,
     storedVersion: versionMeta?.value ?? null,
   };
+}
+
+/**
+ * Checks if cached runewords need migration for tierPointTotals.
+ * Returns true if any runeword is missing the tierPointTotals field.
+ */
+function* checkNeedsTierPointsMigration(): Generator<unknown, boolean, unknown> {
+  // Sample one runeword to check if it has tierPointTotals
+  const runewords: Runeword[] = (yield call(() => db.runewords.limit(1).toArray())) as Runeword[];
+
+  if (runewords.length === 0) {
+    return false; // No data, no migration needed
+  }
+
+  // Check if tierPointTotals field exists (old cached data may not have it)
+  // Use 'in' operator to avoid TypeScript's strict type checking
+  return !('tierPointTotals' in runewords[0]);
 }
 
 export function* handleStartupCheck() {
@@ -67,6 +84,16 @@ export function* handleStartupCheck() {
     console.log('[HTML] Startup check - stored:', cached.storedVersion, 'remote:', remoteVersion.version, 'needsFetch:', needsFetch);
 
     if (!needsFetch && cached.hasData) {
+      // Check if we need to migrate for tierPointTotals
+      const needsMigration: boolean = (yield call(checkNeedsTierPointsMigration)) as boolean;
+
+      if (needsMigration) {
+        console.log('[HTML] Migration needed: runewords missing tierPointTotals, refetching...');
+        yield put(startupNeedsFetch());
+        yield put(initDataLoad({ force: false }));
+        return;
+      }
+
       // Version matches and we have data - use cached
       console.log('[HTML] Using cached data - version matches');
       yield put(startupUseCached());

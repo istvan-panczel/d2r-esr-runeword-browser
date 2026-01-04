@@ -1,5 +1,5 @@
 import type { LodRune } from '@/core/db';
-import { parseReqLevel, parseBonuses, hasColoredInnerFont, getItemName } from './shared/parserUtils';
+import { parseReqLevel, parseBonuses, hasColoredInnerFont, getItemName, normalizeRuneName } from './shared/parserUtils';
 import { LOD_RUNE_NAMES } from '../constants/constants.ts';
 
 /**
@@ -52,8 +52,12 @@ export function parseLodRunesHtml(html: string): LodRune[] {
     // LoD runes do NOT have colored inner font (plain text in <b> tag)
     if (hasColoredInnerFont(headerCell)) continue;
 
-    const name = getItemName(headerCell);
-    if (!name || !isLodRuneName(name)) continue;
+    const rawName = getItemName(headerCell);
+    if (!rawName) continue;
+
+    // Normalize name to strip "(X points)" suffix if present
+    const { name, points } = normalizeRuneName(rawName);
+    if (!isLodRuneName(name)) continue;
 
     const order = getLodRuneOrder(name);
     if (order === 0) continue;
@@ -68,6 +72,7 @@ export function parseLodRunesHtml(html: string): LodRune[] {
       order,
       tier: getLodRuneTier(order),
       reqLevel,
+      points,
       bonuses,
     });
   }

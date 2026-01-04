@@ -44,6 +44,7 @@ function createRuneword(overrides: Partial<Runeword> = {}): Runeword {
     allowedItems: ['All Weapons'],
     excludedItems: [],
     affixes: [],
+    tierPointTotals: [],
     ...overrides,
   };
 }
