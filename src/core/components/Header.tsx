@@ -1,12 +1,20 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Settings, Sun, Moon, ExternalLink } from 'lucide-react';
+import { Settings, Sun, Moon, ExternalLink, Menu } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { openDrawer, selectTheme, setTheme } from '@/features/settings';
 
 const ESR_DOCS_URL = 'https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/';
 const GITHUB_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser';
+
+const NAV_ITEMS = [
+  { to: '/', label: 'Runewords', end: true },
+  { to: '/socketables', label: 'Socketables', end: false },
+  { to: '/uniques', label: 'Uniques', end: false },
+] as const;
 
 /** GitHub icon (lucide Github is deprecated, using simple-icons SVG path) */
 function GitHubIcon({ className }: { readonly className?: string }) {
@@ -20,6 +28,7 @@ function GitHubIcon({ className }: { readonly className?: string }) {
 export function Header() {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleThemeToggle = () => {
     dispatch(setTheme(theme === 'dark' ? 'light' : 'dark'));
@@ -31,21 +40,34 @@ export function Header() {
       isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
     );
 
+  const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'block px-4 py-3 text-base font-medium rounded-md transition-colors',
+      isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+    );
+
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => {
+              setMobileMenuOpen(true);
+            }}
+            aria-label="Open navigation menu"
+          >
+            <Menu className="size-5" />
+          </Button>
           <span className="text-lg font-bold">D2R ESR</span>
-          <nav className="flex gap-1">
-            <NavLink to="/" className={navLinkClass} end>
-              Runewords
-            </NavLink>
-            <NavLink to="/socketables" className={navLinkClass}>
-              Socketables
-            </NavLink>
-            <NavLink to="/uniques" className={navLinkClass}>
-              Uniques
-            </NavLink>
+          <nav className="hidden md:flex gap-1">
+            {NAV_ITEMS.map((item) => (
+              <NavLink key={item.to} to={item.to} className={navLinkClass} end={item.end}>
+                {item.label}
+              </NavLink>
+            ))}
             <a
               href={ESR_DOCS_URL}
               target="_blank"
@@ -71,6 +93,37 @@ export function Header() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile navigation menu */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-72">
+          <SheetHeader>
+            <SheetTitle>Navigation</SheetTitle>
+          </SheetHeader>
+          <nav className="mt-6 flex flex-col gap-1">
+            {NAV_ITEMS.map((item) => (
+              <SheetClose key={item.to} asChild>
+                <NavLink to={item.to} className={mobileNavLinkClass} end={item.end}>
+                  {item.label}
+                </NavLink>
+              </SheetClose>
+            ))}
+            <SheetClose asChild>
+              <a
+                href={ESR_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-4 py-3 text-base font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <span className="inline-flex items-center gap-1">
+                  ESR Documentation
+                  <ExternalLink className="size-3" />
+                </span>
+              </a>
+            </SheetClose>
+          </nav>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }
