@@ -12,28 +12,42 @@ import { useShareUrl } from '../hooks/useShareUrl';
 import {
   setSearchText,
   setSocketCount,
+  setMaxReqLevel,
   selectSearchText,
   selectSocketCount,
+  selectMaxReqLevel,
   selectAllRunes,
   deselectAllRunes,
   selectSelectedRunes,
 } from '../store/runewordsSlice';
 
 const SEARCH_DEBOUNCE_MS = 300;
+const INPUT_DEBOUNCE_MS = 300;
 
 export function RunewordFilters() {
   const dispatch = useDispatch();
   const searchText = useSelector(selectSearchText);
   const socketCount = useSelector(selectSocketCount);
+  const maxReqLevel = useSelector(selectMaxReqLevel);
   const selectedRunes = useSelector(selectSelectedRunes);
   const getShareUrl = useShareUrl();
 
   const [localSearchText, setLocalSearchText] = useState(searchText);
+  const [localSocketCount, setLocalSocketCount] = useState(socketCount);
+  const [localMaxReqLevel, setLocalMaxReqLevel] = useState(maxReqLevel);
 
   // Sync local state when Redux state changes externally
   useEffect(() => {
     setLocalSearchText(searchText);
   }, [searchText]);
+
+  useEffect(() => {
+    setLocalSocketCount(socketCount);
+  }, [socketCount]);
+
+  useEffect(() => {
+    setLocalMaxReqLevel(maxReqLevel);
+  }, [maxReqLevel]);
 
   // Debounce dispatch to Redux
   useEffect(() => {
@@ -48,6 +62,30 @@ export function RunewordFilters() {
     };
   }, [localSearchText, searchText, dispatch]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSocketCount !== socketCount) {
+        dispatch(setSocketCount(localSocketCount));
+      }
+    }, INPUT_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [localSocketCount, socketCount, dispatch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localMaxReqLevel !== maxReqLevel) {
+        dispatch(setMaxReqLevel(localMaxReqLevel));
+      }
+    }, INPUT_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [localMaxReqLevel, maxReqLevel, dispatch]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearchText(e.target.value);
   };
@@ -60,17 +98,35 @@ export function RunewordFilters() {
   const handleSocketChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value === '') {
-      dispatch(setSocketCount(null));
+      setLocalSocketCount(null);
     } else {
       const num = parseInt(value, 10);
       if (num >= 1 && num <= 6) {
-        dispatch(setSocketCount(num));
+        setLocalSocketCount(num);
       }
     }
   };
 
   const handleClearSockets = () => {
+    setLocalSocketCount(null);
     dispatch(setSocketCount(null));
+  };
+
+  const handleMaxReqLevelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setLocalMaxReqLevel(null);
+    } else {
+      const num = parseInt(value, 10);
+      if (num >= 1 && num <= 999) {
+        setLocalMaxReqLevel(num);
+      }
+    }
+  };
+
+  const handleClearMaxReqLevel = () => {
+    setLocalMaxReqLevel(null);
+    dispatch(setMaxReqLevel(null));
   };
 
   const allRunesSelected = Object.keys(selectedRunes).length > 0 && Object.values(selectedRunes).every(Boolean);
@@ -126,13 +182,41 @@ export function RunewordFilters() {
               min={1}
               max={6}
               placeholder="Sockets"
-              value={socketCount ?? ''}
+              value={localSocketCount ?? ''}
               onChange={handleSocketChange}
               className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
-            {socketCount !== null && (
+            {localSocketCount !== null && (
               <InputGroupAddon align="inline-end">
                 <InputGroupButton variant="ghost" size="icon-xs" onClick={handleClearSockets} aria-label="Clear sockets">
+                  <X className="size-4" />
+                </InputGroupButton>
+              </InputGroupAddon>
+            )}
+          </InputGroup>
+        </div>
+
+        {/* Max Required Level */}
+        <div className="w-32 space-y-1">
+          <p className="text-xs text-muted-foreground">Max required level.</p>
+          <Label htmlFor="maxReqLevel" className="sr-only">
+            Max Req Level
+          </Label>
+          <InputGroup>
+            <InputGroupInput
+              id="maxReqLevel"
+              type="number"
+              min={1}
+              max={999}
+              placeholder="Max Req Lvl"
+              value={localMaxReqLevel ?? ''}
+              onChange={handleMaxReqLevelChange}
+              autoComplete="off"
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            {localMaxReqLevel !== null && (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton variant="ghost" size="icon-xs" onClick={handleClearMaxReqLevel} aria-label="Clear max req level">
                   <X className="size-4" />
                 </InputGroupButton>
               </InputGroupAddon>

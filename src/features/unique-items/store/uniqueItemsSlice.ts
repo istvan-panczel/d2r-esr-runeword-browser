@@ -9,12 +9,14 @@ import type { RootState } from '@/core/store/store';
  */
 interface UniqueItemsState {
   readonly searchText: string;
+  readonly maxReqLevel: number | null;
   readonly selectedTypeCodes: readonly string[];
   readonly includeCouponItems: boolean;
 }
 
 const initialState: UniqueItemsState = {
   searchText: '',
+  maxReqLevel: null,
   selectedTypeCodes: [], // Empty = all selected
   includeCouponItems: true, // Include Ancient Coupon items by default
 };
@@ -25,6 +27,9 @@ const uniqueItemsSlice = createSlice({
   reducers: {
     setSearchText(state, action: PayloadAction<string>) {
       state.searchText = action.payload;
+    },
+    setMaxReqLevel(state, action: PayloadAction<number | null>) {
+      state.maxReqLevel = action.payload;
     },
     /**
      * Toggle a single type code selection
@@ -118,14 +123,24 @@ const uniqueItemsSlice = createSlice({
   },
 });
 
-export const { setSearchText, toggleTypeCode, toggleGroup, selectAllTypes, deselectAllTypes, setSelectedTypeCodes, setIncludeCouponItems } =
-  uniqueItemsSlice.actions;
+export const {
+  setSearchText,
+  setMaxReqLevel,
+  toggleTypeCode,
+  toggleGroup,
+  selectAllTypes,
+  deselectAllTypes,
+  setSelectedTypeCodes,
+  setIncludeCouponItems,
+} = uniqueItemsSlice.actions;
 export default uniqueItemsSlice.reducer;
 
 // Selectors
 const selectUniqueItemsState = (state: RootState) => state.uniqueItems;
 
 export const selectSearchText = createSelector([selectUniqueItemsState], (uniqueItems) => uniqueItems.searchText);
+
+export const selectMaxReqLevel = createSelector([selectUniqueItemsState], (uniqueItems) => uniqueItems.maxReqLevel);
 
 /**
  * Get the raw selected type codes array

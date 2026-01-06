@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setSearchText, setSelectedTypeCodes, setIncludeCouponItems } from '../store/uniqueItemsSlice';
+import { setSearchText, setMaxReqLevel, setSelectedTypeCodes, setIncludeCouponItems } from '../store/uniqueItemsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
+  MAXLVL: 'maxlvl',
   TYPES: 'types',
   COUPON: 'coupon',
 } as const;
@@ -27,14 +28,22 @@ export function useUrlInitialize(): void {
     initializedRef.current = true;
 
     const urlSearch = searchParams.get(URL_PARAM_KEYS.SEARCH);
+    const urlMaxLvl = searchParams.get(URL_PARAM_KEYS.MAXLVL);
     const urlTypes = searchParams.get(URL_PARAM_KEYS.TYPES);
     const urlCoupon = searchParams.get(URL_PARAM_KEYS.COUPON);
 
-    const hasUrlParams = urlSearch !== null || urlTypes !== null || urlCoupon !== null;
+    const hasUrlParams = urlSearch !== null || urlMaxLvl !== null || urlTypes !== null || urlCoupon !== null;
 
     if (hasUrlParams) {
       if (urlSearch !== null) {
         dispatch(setSearchText(urlSearch));
+      }
+
+      if (urlMaxLvl !== null) {
+        const parsed = parseInt(urlMaxLvl, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 999) {
+          dispatch(setMaxReqLevel(parsed));
+        }
       }
 
       if (urlTypes !== null) {

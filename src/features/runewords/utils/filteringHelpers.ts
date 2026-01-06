@@ -82,6 +82,17 @@ export function matchesSockets(runeword: Runeword, socketCount: number | null): 
 }
 
 /**
+ * Check if a runeword matches the max required level filter.
+ * Returns true if runeword's reqLevel is at or below the filter value.
+ */
+export function matchesMaxReqLevel(runeword: Runeword, maxReqLevel: number | null): boolean {
+  if (maxReqLevel === null) return true;
+  // Handle backwards compatibility for runewords without reqLevel field
+  if (!('reqLevel' in runeword)) return true;
+  return runeword.reqLevel <= maxReqLevel;
+}
+
+/**
  * Check if a runeword matches the item type filter.
  */
 export function matchesItemTypes(runeword: Runeword, selectedItemTypes: Record<string, boolean>): boolean {

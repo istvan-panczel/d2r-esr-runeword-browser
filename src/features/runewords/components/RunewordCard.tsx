@@ -12,6 +12,8 @@ interface RunewordCardProps {
 
 export function RunewordCard({ runeword }: RunewordCardProps) {
   const { name, sockets, runes, allowedItems, excludedItems, affixes, tierPointTotals } = runeword;
+  // Handle backwards compatibility for cached runewords without reqLevel
+  const reqLevel = 'reqLevel' in runeword ? runeword.reqLevel : undefined;
   const runeBonuses = useRuneBonuses(runes);
   const relevantCategories = getRelevantCategories(allowedItems);
 
@@ -29,7 +31,10 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
       <CardHeader className="pb-0">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg text-amber-700 dark:text-amber-400">{name}</CardTitle>
-          <Badge variant="secondary">{sockets} Socket</Badge>
+          <div className="flex gap-1">
+            <Badge variant="secondary">{sockets} Socket</Badge>
+            {reqLevel !== undefined && <Badge variant="outline">Lvl {reqLevel}</Badge>}
+          </div>
         </div>
       </CardHeader>
 

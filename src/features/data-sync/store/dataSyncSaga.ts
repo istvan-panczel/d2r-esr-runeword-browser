@@ -10,6 +10,8 @@ import {
   parseCrystalsHtml,
   parseRunewordsHtml,
   type RunePointsLookup,
+  type RuneReqLevelLookup,
+  type RunePriorityLookup,
 } from '../parsers';
 import {
   startupCheck,
@@ -91,7 +93,34 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     }
     console.log('[HTML] Built rune points lookup with', runePointsLookup.size, 'entries');
 
-    const runewords = parseRunewordsHtml(runewordsHtml, runePointsLookup);
+    // Build rune required level lookup for runeword reqLevel calculation
+    const runeReqLevelLookup: RuneReqLevelLookup = new Map();
+    for (const rune of esrRunes) {
+      runeReqLevelLookup.set(rune.name, rune.reqLevel);
+    }
+    for (const rune of lodRunes) {
+      runeReqLevelLookup.set(rune.name, rune.reqLevel);
+    }
+    for (const rune of kanjiRunes) {
+      runeReqLevelLookup.set(rune.name, rune.reqLevel);
+    }
+    console.log('[HTML] Built rune reqLevel lookup with', runeReqLevelLookup.size, 'entries');
+
+    // Build rune priority lookup for runeword sortKey calculation
+    // Priority: ESR (100-700 by tier) → Kanji (800) → LoD (901-933 by order)
+    const runePriorityLookup: RunePriorityLookup = new Map();
+    for (const rune of esrRunes) {
+      runePriorityLookup.set(rune.name, rune.tier * 100);
+    }
+    for (const rune of kanjiRunes) {
+      runePriorityLookup.set(rune.name, 800);
+    }
+    for (const rune of lodRunes) {
+      runePriorityLookup.set(rune.name, 900 + rune.order);
+    }
+    console.log('[HTML] Built rune priority lookup with', runePriorityLookup.size, 'entries');
+
+    const runewords = parseRunewordsHtml(runewordsHtml, runePointsLookup, runeReqLevelLookup, runePriorityLookup);
     console.log('[HTML] Parsed runewords:', runewords.length);
     yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords }));
   } catch (error) {

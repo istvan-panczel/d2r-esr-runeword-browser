@@ -5,6 +5,7 @@ import type { RootState } from '@/core/store/store';
 interface RunewordsState {
   readonly searchText: string;
   readonly socketCount: number | null;
+  readonly maxReqLevel: number | null;
   readonly selectedItemTypes: Record<string, boolean>;
   readonly selectedRunes: Record<string, boolean>;
 }
@@ -12,6 +13,7 @@ interface RunewordsState {
 const initialState: RunewordsState = {
   searchText: '',
   socketCount: null,
+  maxReqLevel: null,
   selectedItemTypes: {},
   selectedRunes: {},
 };
@@ -25,6 +27,9 @@ const runewordsSlice = createSlice({
     },
     setSocketCount(state, action: PayloadAction<number | null>) {
       state.socketCount = action.payload;
+    },
+    setMaxReqLevel(state, action: PayloadAction<number | null>) {
+      state.maxReqLevel = action.payload;
     },
     toggleItemType(state, action: PayloadAction<string>) {
       const itemType = action.payload;
@@ -74,6 +79,7 @@ const runewordsSlice = createSlice({
 export const {
   setSearchText,
   setSocketCount,
+  setMaxReqLevel,
   toggleItemType,
   setAllItemTypes,
   selectAllItemTypes,
@@ -93,6 +99,8 @@ const selectRunewordsState = (state: RootState) => state.runewords;
 export const selectSearchText = createSelector([selectRunewordsState], (runewords) => runewords.searchText);
 
 export const selectSocketCount = createSelector([selectRunewordsState], (runewords) => runewords.socketCount);
+
+export const selectMaxReqLevel = createSelector([selectRunewordsState], (runewords) => runewords.maxReqLevel);
 
 export const selectSelectedItemTypes = createSelector([selectRunewordsState], (runewords) => runewords.selectedItemTypes);
 

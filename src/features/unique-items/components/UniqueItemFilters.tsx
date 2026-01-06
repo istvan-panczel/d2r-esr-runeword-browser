@@ -7,21 +7,28 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { ItemTypeFilter } from './ItemTypeFilter';
 import { useShareUrl } from '../hooks/useShareUrl';
-import { setSearchText, selectSearchText } from '../store';
+import { setSearchText, setMaxReqLevel, selectSearchText, selectMaxReqLevel } from '../store';
 
 const SEARCH_DEBOUNCE_MS = 300;
+const INPUT_DEBOUNCE_MS = 300;
 
 export function UniqueItemFilters() {
   const dispatch = useDispatch();
   const searchText = useSelector(selectSearchText);
+  const maxReqLevel = useSelector(selectMaxReqLevel);
   const getShareUrl = useShareUrl();
 
   const [localSearchText, setLocalSearchText] = useState(searchText);
+  const [localMaxReqLevel, setLocalMaxReqLevel] = useState(maxReqLevel);
 
   // Sync local state when Redux state changes externally
   useEffect(() => {
     setLocalSearchText(searchText);
   }, [searchText]);
+
+  useEffect(() => {
+    setLocalMaxReqLevel(maxReqLevel);
+  }, [maxReqLevel]);
 
   // Debounce dispatch to Redux
   useEffect(() => {
@@ -36,6 +43,18 @@ export function UniqueItemFilters() {
     };
   }, [localSearchText, searchText, dispatch]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localMaxReqLevel !== maxReqLevel) {
+        dispatch(setMaxReqLevel(localMaxReqLevel));
+      }
+    }, INPUT_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [localMaxReqLevel, maxReqLevel, dispatch]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearchText(e.target.value);
   };
@@ -43,6 +62,23 @@ export function UniqueItemFilters() {
   const handleClearSearch = () => {
     setLocalSearchText('');
     dispatch(setSearchText(''));
+  };
+
+  const handleMaxReqLevelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setLocalMaxReqLevel(null);
+    } else {
+      const num = parseInt(value, 10);
+      if (num >= 1 && num <= 999) {
+        setLocalMaxReqLevel(num);
+      }
+    }
+  };
+
+  const handleClearMaxReqLevel = () => {
+    setLocalMaxReqLevel(null);
+    dispatch(setMaxReqLevel(null));
   };
 
   return (
@@ -75,6 +111,34 @@ export function UniqueItemFilters() {
             {localSearchText && (
               <InputGroupAddon align="inline-end">
                 <InputGroupButton variant="ghost" size="icon-xs" onClick={handleClearSearch} aria-label="Clear search">
+                  <X className="size-4" />
+                </InputGroupButton>
+              </InputGroupAddon>
+            )}
+          </InputGroup>
+        </div>
+
+        {/* Max Required Level */}
+        <div className="w-32 space-y-1">
+          <p className="text-xs text-muted-foreground">Max required level.</p>
+          <Label htmlFor="unique-maxReqLevel" className="sr-only">
+            Max Req Level
+          </Label>
+          <InputGroup>
+            <InputGroupInput
+              id="unique-maxReqLevel"
+              type="number"
+              min={1}
+              max={999}
+              placeholder="Max Req Lvl"
+              value={localMaxReqLevel ?? ''}
+              onChange={handleMaxReqLevelChange}
+              autoComplete="off"
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            {localMaxReqLevel !== null && (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton variant="ghost" size="icon-xs" onClick={handleClearMaxReqLevel} aria-label="Clear max req level">
                   <X className="size-4" />
                 </InputGroupButton>
               </InputGroupAddon>

@@ -104,6 +104,8 @@ export interface Runeword {
   readonly name: string;
   readonly variant: number; // 1, 2, 3... for multi-variant runewords
   readonly sockets: number;
+  readonly reqLevel: number; // Highest required level among all runes
+  readonly sortKey: number; // Pre-calculated sort key: ESR/Kanji (0-9999) or LoD (10000+) + reqLevel
   readonly runes: readonly string[];
   readonly allowedItems: readonly string[];
   readonly excludedItems: readonly string[]; // Items excluded from this variant

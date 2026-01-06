@@ -1,7 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { extractName, extractSockets, extractRunes, extractAllowedItems, extractAffixes, parseRunewordsHtml } from './runewordsParser';
+import {
+  extractName,
+  extractSockets,
+  extractRunes,
+  extractAllowedItems,
+  extractAffixes,
+  parseRunewordsHtml,
+  calculateReqLevel,
+  calculateSortKey,
+  calculateTierPointTotals,
+  type RuneReqLevelLookup,
+  type RunePointsLookup,
+  type RunePriorityLookup,
+} from './runewordsParser';
 
 // Helper to create a DOM element from HTML string
 function createElementFromHtml(html: string): Element {
@@ -222,6 +235,191 @@ describe('extractAffixes', () => {
     expect(affixes[0].rawText).toBe('+2% Enhanced Maximum Damage (Based on Character Level)');
     // Note: +2 becomes # (the + is part of the number pattern)
     expect(affixes[0].pattern).toBe('#% Enhanced Maximum Damage (Based on Character Level)');
+  });
+});
+
+describe('calculateReqLevel', () => {
+  it('should return 0 for empty runes array', () => {
+    const lookup: RuneReqLevelLookup = new Map();
+    expect(calculateReqLevel([], lookup)).toBe(0);
+  });
+
+  it('should return 0 for runes not in lookup', () => {
+    const lookup: RuneReqLevelLookup = new Map();
+    expect(calculateReqLevel(['Unknown Rune'], lookup)).toBe(0);
+  });
+
+  it('should return the reqLevel for a single rune', () => {
+    const lookup: RuneReqLevelLookup = new Map([['I Rune', 2]]);
+    expect(calculateReqLevel(['I Rune'], lookup)).toBe(2);
+  });
+
+  it('should return the max reqLevel from multiple runes', () => {
+    const lookup: RuneReqLevelLookup = new Map([
+      ['I Rune', 2],
+      ['Shi Rune', 4],
+      ['Chi Rune', 6],
+    ]);
+    expect(calculateReqLevel(['I Rune', 'Shi Rune', 'Chi Rune'], lookup)).toBe(6);
+  });
+
+  it('should handle mix of known and unknown runes', () => {
+    const lookup: RuneReqLevelLookup = new Map([
+      ['I Rune', 2],
+      ['Chi Rune', 6],
+    ]);
+    expect(calculateReqLevel(['I Rune', 'Unknown Rune', 'Chi Rune'], lookup)).toBe(6);
+  });
+
+  it('should return max when first rune has highest level', () => {
+    const lookup: RuneReqLevelLookup = new Map([
+      ['El Rune', 11],
+      ['Zod Rune', 69],
+    ]);
+    expect(calculateReqLevel(['Zod Rune', 'El Rune'], lookup)).toBe(69);
+  });
+});
+
+describe('calculateSortKey', () => {
+  it('should return reqLevel for ESR runes (priority < 900)', () => {
+    const lookup: RunePriorityLookup = new Map([
+      ['I Rune', 100], // ESR tier 1
+      ['Shi Rune', 100], // ESR tier 1
+    ]);
+    expect(calculateSortKey(['I Rune', 'Shi Rune'], 4, lookup)).toBe(4);
+  });
+
+  it('should return reqLevel for Kanji runes (priority 800)', () => {
+    const lookup: RunePriorityLookup = new Map([
+      ['Moon Rune', 800], // Kanji
+    ]);
+    expect(calculateSortKey(['Moon Rune'], 60, lookup)).toBe(60);
+  });
+
+  it('should return 10000 + reqLevel for LoD runes (priority >= 900)', () => {
+    const lookup: RunePriorityLookup = new Map([
+      ['El Rune', 901], // LoD order 1
+      ['Zod Rune', 933], // LoD order 33
+    ]);
+    expect(calculateSortKey(['El Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
+  });
+
+  it('should use highest priority to determine category', () => {
+    // Mixed ESR and LoD - highest priority (LoD) determines category
+    const lookup: RunePriorityLookup = new Map([
+      ['I Rune', 100], // ESR tier 1
+      ['Zod Rune', 933], // LoD order 33
+    ]);
+    expect(calculateSortKey(['I Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
+  });
+
+  it('should return reqLevel when priority is exactly 899 (ESR)', () => {
+    const lookup: RunePriorityLookup = new Map([['High Rune', 899]]);
+    expect(calculateSortKey(['High Rune'], 50, lookup)).toBe(50);
+  });
+
+  it('should return 10000 + reqLevel when priority is exactly 900 (LoD)', () => {
+    const lookup: RunePriorityLookup = new Map([['Border Rune', 900]]);
+    expect(calculateSortKey(['Border Rune'], 50, lookup)).toBe(10050);
+  });
+
+  it('should return reqLevel for empty runes array', () => {
+    const lookup: RunePriorityLookup = new Map();
+    expect(calculateSortKey([], 30, lookup)).toBe(30);
+  });
+
+  it('should return reqLevel for unknown runes (not in lookup)', () => {
+    const lookup: RunePriorityLookup = new Map();
+    expect(calculateSortKey(['Unknown Rune'], 25, lookup)).toBe(25);
+  });
+});
+
+describe('calculateTierPointTotals', () => {
+  it('should return empty array for empty runes array', () => {
+    const lookup: RunePointsLookup = new Map();
+    expect(calculateTierPointTotals([], lookup)).toEqual([]);
+  });
+
+  it('should return empty array for runes not in lookup', () => {
+    const lookup: RunePointsLookup = new Map();
+    expect(calculateTierPointTotals(['Unknown Rune'], lookup)).toEqual([]);
+  });
+
+  it('should calculate points for a single ESR rune', () => {
+    const lookup: RunePointsLookup = new Map([['I Rune', { points: 1, tier: 1, category: 'esrRunes' }]]);
+    const result = calculateTierPointTotals(['I Rune'], lookup);
+    expect(result).toEqual([{ tier: 1, category: 'esrRunes', totalPoints: 1 }]);
+  });
+
+  it('should calculate points for a single LoD rune', () => {
+    const lookup: RunePointsLookup = new Map([['El Rune', { points: 1, tier: 1, category: 'lodRunes' }]]);
+    const result = calculateTierPointTotals(['El Rune'], lookup);
+    expect(result).toEqual([{ tier: 1, category: 'lodRunes', totalPoints: 1 }]);
+  });
+
+  it('should sum points for multiple runes in the same tier and category', () => {
+    const lookup: RunePointsLookup = new Map([
+      ['I Rune', { points: 1, tier: 1, category: 'esrRunes' }],
+      ['Shi Rune', { points: 2, tier: 1, category: 'esrRunes' }],
+    ]);
+    const result = calculateTierPointTotals(['I Rune', 'Shi Rune'], lookup);
+    expect(result).toEqual([{ tier: 1, category: 'esrRunes', totalPoints: 3 }]);
+  });
+
+  it('should separate points by tier within same category', () => {
+    const lookup: RunePointsLookup = new Map([
+      ['I Rune', { points: 1, tier: 1, category: 'esrRunes' }],
+      ['Chi Rune', { points: 5, tier: 2, category: 'esrRunes' }],
+    ]);
+    const result = calculateTierPointTotals(['I Rune', 'Chi Rune'], lookup);
+    expect(result).toEqual([
+      { tier: 1, category: 'esrRunes', totalPoints: 1 },
+      { tier: 2, category: 'esrRunes', totalPoints: 5 },
+    ]);
+  });
+
+  it('should separate points by category', () => {
+    const lookup: RunePointsLookup = new Map([
+      ['I Rune', { points: 1, tier: 1, category: 'esrRunes' }],
+      ['El Rune', { points: 1, tier: 1, category: 'lodRunes' }],
+    ]);
+    const result = calculateTierPointTotals(['I Rune', 'El Rune'], lookup);
+    // Should be sorted by category (esrRunes before lodRunes alphabetically)
+    expect(result).toEqual([
+      { tier: 1, category: 'esrRunes', totalPoints: 1 },
+      { tier: 1, category: 'lodRunes', totalPoints: 1 },
+    ]);
+  });
+
+  it('should handle mix of known and unknown runes', () => {
+    const lookup: RunePointsLookup = new Map([['I Rune', { points: 1, tier: 1, category: 'esrRunes' }]]);
+    const result = calculateTierPointTotals(['I Rune', 'Unknown Rune', 'Moon Rune'], lookup);
+    // Unknown and Kanji runes are skipped
+    expect(result).toEqual([{ tier: 1, category: 'esrRunes', totalPoints: 1 }]);
+  });
+
+  it('should sort results by category then tier', () => {
+    const lookup: RunePointsLookup = new Map([
+      ['Zod Rune', { points: 50, tier: 3, category: 'lodRunes' }],
+      ['I Rune', { points: 1, tier: 1, category: 'esrRunes' }],
+      ['El Rune', { points: 1, tier: 1, category: 'lodRunes' }],
+      ['Chi Rune', { points: 5, tier: 2, category: 'esrRunes' }],
+    ]);
+    const result = calculateTierPointTotals(['Zod Rune', 'I Rune', 'El Rune', 'Chi Rune'], lookup);
+    // esrRunes comes before lodRunes, then sorted by tier within each category
+    expect(result).toEqual([
+      { tier: 1, category: 'esrRunes', totalPoints: 1 },
+      { tier: 2, category: 'esrRunes', totalPoints: 5 },
+      { tier: 1, category: 'lodRunes', totalPoints: 1 },
+      { tier: 3, category: 'lodRunes', totalPoints: 50 },
+    ]);
+  });
+
+  it('should sum duplicate runes correctly', () => {
+    const lookup: RunePointsLookup = new Map([['I Rune', { points: 1, tier: 1, category: 'esrRunes' }]]);
+    // Runeword with same rune used multiple times
+    const result = calculateTierPointTotals(['I Rune', 'I Rune', 'I Rune'], lookup);
+    expect(result).toEqual([{ tier: 1, category: 'esrRunes', totalPoints: 3 }]);
   });
 });
 

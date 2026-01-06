@@ -48,6 +48,38 @@ function* checkNeedsTierPointsMigration(): Generator<unknown, boolean, unknown> 
   return !('tierPointTotals' in runewords[0]);
 }
 
+/**
+ * Checks if cached runewords need migration for reqLevel.
+ * Returns true if any runeword is missing the reqLevel field.
+ */
+function* checkNeedsReqLevelMigration(): Generator<unknown, boolean, unknown> {
+  // Sample one runeword to check if it has reqLevel
+  const runewords: Runeword[] = (yield call(() => db.runewords.limit(1).toArray())) as Runeword[];
+
+  if (runewords.length === 0) {
+    return false; // No data, no migration needed
+  }
+
+  // Check if reqLevel field exists (old cached data may not have it)
+  return !('reqLevel' in runewords[0]);
+}
+
+/**
+ * Checks if cached runewords need migration for sortKey.
+ * Returns true if any runeword is missing the sortKey field.
+ */
+function* checkNeedsSortKeyMigration(): Generator<unknown, boolean, unknown> {
+  // Sample one runeword to check if it has sortKey
+  const runewords: Runeword[] = (yield call(() => db.runewords.limit(1).toArray())) as Runeword[];
+
+  if (runewords.length === 0) {
+    return false; // No data, no migration needed
+  }
+
+  // Check if sortKey field exists (old cached data may not have it)
+  return !('sortKey' in runewords[0]);
+}
+
 export function* handleStartupCheck() {
   try {
     console.log('[HTML] Startup check initiated');
@@ -85,10 +117,30 @@ export function* handleStartupCheck() {
 
     if (!needsFetch && cached.hasData) {
       // Check if we need to migrate for tierPointTotals
-      const needsMigration: boolean = (yield call(checkNeedsTierPointsMigration)) as boolean;
+      const needsTierPointsMigration: boolean = (yield call(checkNeedsTierPointsMigration)) as boolean;
 
-      if (needsMigration) {
+      if (needsTierPointsMigration) {
         console.log('[HTML] Migration needed: runewords missing tierPointTotals, refetching...');
+        yield put(startupNeedsFetch());
+        yield put(initDataLoad({ force: false }));
+        return;
+      }
+
+      // Check if we need to migrate for reqLevel
+      const needsReqLevelMigration: boolean = (yield call(checkNeedsReqLevelMigration)) as boolean;
+
+      if (needsReqLevelMigration) {
+        console.log('[HTML] Migration needed: runewords missing reqLevel, refetching...');
+        yield put(startupNeedsFetch());
+        yield put(initDataLoad({ force: false }));
+        return;
+      }
+
+      // Check if we need to migrate for sortKey
+      const needsSortKeyMigration: boolean = (yield call(checkNeedsSortKeyMigration)) as boolean;
+
+      if (needsSortKeyMigration) {
+        console.log('[HTML] Migration needed: runewords missing sortKey, refetching...');
         yield put(startupNeedsFetch());
         yield put(initDataLoad({ force: false }));
         return;

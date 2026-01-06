@@ -3,4 +3,11 @@ export { parseEsrRunesHtml } from './esrRunesParser';
 export { parseLodRunesHtml } from './lodRunesParser';
 export { parseKanjiRunesHtml } from './kanjiRunesParser';
 export { parseCrystalsHtml } from './crystalsParser';
-export { parseRunewordsHtml, type RunePointsLookup, type RunePointInfo } from './runewordsParser';
+export {
+  parseRunewordsHtml,
+  calculateSortKey,
+  type RunePointsLookup,
+  type RunePointInfo,
+  type RuneReqLevelLookup,
+  type RunePriorityLookup,
+} from './runewordsParser';

@@ -1,8 +1,9 @@
 import { useSelector } from 'react-redux';
-import { selectSearchText, selectSelectedTypeCodesRaw, selectIncludeCouponItems } from '../store/uniqueItemsSlice';
+import { selectSearchText, selectMaxReqLevel, selectSelectedTypeCodesRaw, selectIncludeCouponItems } from '../store/uniqueItemsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
+  MAXLVL: 'maxlvl',
   TYPES: 'types',
   COUPON: 'coupon',
 } as const;
@@ -13,6 +14,7 @@ const URL_PARAM_KEYS = {
  */
 export function useShareUrl(): () => string {
   const searchText = useSelector(selectSearchText);
+  const maxReqLevel = useSelector(selectMaxReqLevel);
   const selectedTypeCodes = useSelector(selectSelectedTypeCodesRaw);
   const includeCouponItems = useSelector(selectIncludeCouponItems);
 
@@ -22,6 +24,11 @@ export function useShareUrl(): () => string {
     // Search: add if not empty
     if (searchText) {
       params.set(URL_PARAM_KEYS.SEARCH, searchText);
+    }
+
+    // Max required level: add if set
+    if (maxReqLevel !== null) {
+      params.set(URL_PARAM_KEYS.MAXLVL, String(maxReqLevel));
     }
 
     // Types: only add if NOT all selected (empty array = all selected)

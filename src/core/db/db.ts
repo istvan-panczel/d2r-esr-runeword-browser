@@ -14,13 +14,13 @@ class AppDatabase extends Dexie {
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    this.version(7).stores({
+    this.version(9).stores({
       gems: 'name, type, quality, color',
       esrRunes: 'name, order, tier, color',
       lodRunes: 'name, order',
       kanjiRunes: 'name',
       crystals: 'name, type, quality, color',
-      runewords: '[name+variant], name, sockets',
+      runewords: '[name+variant], name, sockets, reqLevel, sortKey',
       affixes: 'pattern',
       metadata: 'key',
     });

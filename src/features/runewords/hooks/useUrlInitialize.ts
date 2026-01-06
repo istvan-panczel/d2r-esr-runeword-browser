@@ -3,11 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useRuneGroups } from './useRuneGroups';
 import { useAvailableItemTypes } from './useAvailableItemTypes';
-import { setSearchText, setSocketCount, setAllRunes, setAllItemTypes } from '../store/runewordsSlice';
+import { setSearchText, setSocketCount, setMaxReqLevel, setAllRunes, setAllItemTypes } from '../store/runewordsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
   SOCKETS: 'sockets',
+  MAXLVL: 'maxlvl',
   ITEMS: 'items',
   RUNES: 'runes',
 } as const;
@@ -49,10 +50,11 @@ export function useUrlInitialize(): void {
     // Parse URL params
     const urlSearch = searchParams.get(URL_PARAM_KEYS.SEARCH);
     const urlSockets = searchParams.get(URL_PARAM_KEYS.SOCKETS);
+    const urlMaxLvl = searchParams.get(URL_PARAM_KEYS.MAXLVL);
     const urlItems = searchParams.get(URL_PARAM_KEYS.ITEMS);
     const urlRunes = searchParams.get(URL_PARAM_KEYS.RUNES);
 
-    const hasUrlParams = urlSearch !== null || urlSockets !== null || urlItems !== null || urlRunes !== null;
+    const hasUrlParams = urlSearch !== null || urlSockets !== null || urlMaxLvl !== null || urlItems !== null || urlRunes !== null;
 
     if (hasUrlParams) {
       // Initialize from URL params
@@ -64,6 +66,13 @@ export function useUrlInitialize(): void {
         const parsed = parseInt(urlSockets, 10);
         if (!isNaN(parsed) && parsed >= 1 && parsed <= 6) {
           dispatch(setSocketCount(parsed));
+        }
+      }
+
+      if (urlMaxLvl !== null) {
+        const parsed = parseInt(urlMaxLvl, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 999) {
+          dispatch(setMaxReqLevel(parsed));
         }
       }
 

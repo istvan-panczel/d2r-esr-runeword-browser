@@ -4,6 +4,7 @@ import {
   parseSearchTerms,
   matchesSearch,
   matchesSockets,
+  matchesMaxReqLevel,
   matchesItemTypes,
   matchesRunes,
   buildRuneCategoryMap,
@@ -40,6 +41,8 @@ function createRuneword(overrides: Partial<Runeword> = {}): Runeword {
     name: 'Test Runeword',
     variant: 1,
     sockets: 3,
+    reqLevel: 11,
+    sortKey: 11, // ESR/Kanji runeword, sortKey = reqLevel
     runes: ['El Rune', 'Eld Rune', 'Tir Rune'],
     allowedItems: ['All Weapons'],
     excludedItems: [],
@@ -134,6 +137,57 @@ describe('matchesSockets', () => {
   it('should return false when socket count does not match', () => {
     const runeword = createRuneword({ sockets: 3 });
     expect(matchesSockets(runeword, 4)).toBe(false);
+  });
+});
+
+describe('matchesMaxReqLevel', () => {
+  it('should return true when maxReqLevel is null', () => {
+    const runeword = createRuneword({ reqLevel: 50 });
+    expect(matchesMaxReqLevel(runeword, null)).toBe(true);
+  });
+
+  it('should return true when runeword reqLevel is below maxReqLevel', () => {
+    const runeword = createRuneword({ reqLevel: 30 });
+    expect(matchesMaxReqLevel(runeword, 50)).toBe(true);
+  });
+
+  it('should return true when runeword reqLevel equals maxReqLevel', () => {
+    const runeword = createRuneword({ reqLevel: 50 });
+    expect(matchesMaxReqLevel(runeword, 50)).toBe(true);
+  });
+
+  it('should return false when runeword reqLevel is above maxReqLevel', () => {
+    const runeword = createRuneword({ reqLevel: 60 });
+    expect(matchesMaxReqLevel(runeword, 50)).toBe(false);
+  });
+
+  it('should return true for runeword with reqLevel 0', () => {
+    const runeword = createRuneword({ reqLevel: 0 });
+    expect(matchesMaxReqLevel(runeword, 10)).toBe(true);
+  });
+
+  it('should handle edge case of maxReqLevel 1', () => {
+    const lowLevelRuneword = createRuneword({ reqLevel: 1 });
+    const midLevelRuneword = createRuneword({ reqLevel: 2 });
+    expect(matchesMaxReqLevel(lowLevelRuneword, 1)).toBe(true);
+    expect(matchesMaxReqLevel(midLevelRuneword, 1)).toBe(false);
+  });
+
+  it('should handle backwards compatibility for runewords without reqLevel field', () => {
+    // Create a runeword object without reqLevel (simulating old cached data)
+    const oldRuneword = {
+      name: 'Old Runeword',
+      variant: 1,
+      sockets: 3,
+      runes: ['El Rune', 'Eld Rune', 'Tir Rune'],
+      allowedItems: ['All Weapons'],
+      excludedItems: [],
+      affixes: [],
+      tierPointTotals: [],
+    } as unknown as Runeword;
+
+    // Should return true even with a filter set (don't hide old data)
+    expect(matchesMaxReqLevel(oldRuneword, 50)).toBe(true);
   });
 });
 

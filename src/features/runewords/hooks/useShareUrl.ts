@@ -1,9 +1,16 @@
 import { useSelector } from 'react-redux';
-import { selectSearchText, selectSocketCount, selectSelectedItemTypes, selectSelectedRunes } from '../store/runewordsSlice';
+import {
+  selectSearchText,
+  selectSocketCount,
+  selectMaxReqLevel,
+  selectSelectedItemTypes,
+  selectSelectedRunes,
+} from '../store/runewordsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
   SOCKETS: 'sockets',
+  MAXLVL: 'maxlvl',
   ITEMS: 'items',
   RUNES: 'runes',
 } as const;
@@ -15,6 +22,7 @@ const URL_PARAM_KEYS = {
 export function useShareUrl(): () => string {
   const searchText = useSelector(selectSearchText);
   const socketCount = useSelector(selectSocketCount);
+  const maxReqLevel = useSelector(selectMaxReqLevel);
   const selectedItemTypes = useSelector(selectSelectedItemTypes);
   const selectedRunes = useSelector(selectSelectedRunes);
 
@@ -29,6 +37,11 @@ export function useShareUrl(): () => string {
     // Sockets: add if set
     if (socketCount !== null) {
       params.set(URL_PARAM_KEYS.SOCKETS, String(socketCount));
+    }
+
+    // Max required level: add if set
+    if (maxReqLevel !== null) {
+      params.set(URL_PARAM_KEYS.MAXLVL, String(maxReqLevel));
     }
 
     // Items: only add if NOT all selected

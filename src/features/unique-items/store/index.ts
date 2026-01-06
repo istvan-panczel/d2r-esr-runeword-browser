@@ -1,6 +1,7 @@
 export {
   default as uniqueItemsReducer,
   setSearchText,
+  setMaxReqLevel,
   toggleTypeCode,
   toggleGroup,
   selectAllTypes,
@@ -8,6 +9,7 @@ export {
   setSelectedTypeCodes,
   setIncludeCouponItems,
   selectSearchText,
+  selectMaxReqLevel,
   selectSelectedTypeCodes,
   selectSelectedTypeCodesRaw,
   selectIsAllTypesSelected,

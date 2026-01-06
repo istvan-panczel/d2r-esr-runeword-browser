@@ -9,10 +9,23 @@ export interface RunePointInfo {
 
 export type RunePointsLookup = Map<string, RunePointInfo>;
 
+// Maps rune name to its required level
+export type RuneReqLevelLookup = Map<string, number>;
+
+// Maps rune name to its priority for sorting (ESR: 100-700, Kanji: 800, LoD: 901-933)
+export type RunePriorityLookup = Map<string, number>;
+
+// Threshold for LoD runewords (priority >= 900 means LoD)
+const LOD_PRIORITY_THRESHOLD = 900;
+// Offset added to LoD runewords to sort them after ESR/Kanji
+const LOD_SORT_KEY_OFFSET = 10000;
+
 interface RawRuneword {
   name: string;
   variant: number;
   sockets: number;
+  reqLevel: number;
+  sortKey: number;
   runes: string[];
   allowedItems: string[];
   excludedItems: string[];
@@ -180,12 +193,54 @@ export function calculateTierPointTotals(runes: string[], runePointsLookup: Rune
 }
 
 /**
+ * Calculates the required level for a runeword.
+ * Returns the highest required level among all runes in the runeword.
+ */
+export function calculateReqLevel(runes: string[], runeReqLevelLookup: RuneReqLevelLookup): number {
+  let maxReqLevel = 0;
+  for (const runeName of runes) {
+    const reqLevel = runeReqLevelLookup.get(runeName);
+    if (reqLevel !== undefined && reqLevel > maxReqLevel) {
+      maxReqLevel = reqLevel;
+    }
+  }
+  return maxReqLevel;
+}
+
+/**
+ * Calculates the sort key for a runeword.
+ * ESR/Kanji runewords: reqLevel (0-9999)
+ * LoD runewords: 10000 + reqLevel (10000+)
+ *
+ * A runeword is considered LoD if its highest-priority rune has priority >= 900.
+ */
+export function calculateSortKey(runes: string[], reqLevel: number, runePriorityLookup: RunePriorityLookup): number {
+  let maxPriority = 0;
+  for (const runeName of runes) {
+    const priority = runePriorityLookup.get(runeName);
+    if (priority !== undefined && priority > maxPriority) {
+      maxPriority = priority;
+    }
+  }
+
+  const isLodRuneword = maxPriority >= LOD_PRIORITY_THRESHOLD;
+  return isLodRuneword ? LOD_SORT_KEY_OFFSET + reqLevel : reqLevel;
+}
+
+/**
  * Parses runewords from runewords.htm HTML.
  * Each row becomes a separate runeword entry with its variant number.
  * @param html The runewords.htm HTML content
  * @param runePointsLookup Optional lookup map for calculating tier point totals
+ * @param runeReqLevelLookup Optional lookup map for calculating required level
+ * @param runePriorityLookup Optional lookup map for calculating sort key
  */
-export function parseRunewordsHtml(html: string, runePointsLookup?: RunePointsLookup): Runeword[] {
+export function parseRunewordsHtml(
+  html: string,
+  runePointsLookup?: RunePointsLookup,
+  runeReqLevelLookup?: RuneReqLevelLookup,
+  runePriorityLookup?: RunePriorityLookup
+): Runeword[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   const rawRunewords: RawRuneword[] = [];
@@ -217,10 +272,18 @@ export function parseRunewordsHtml(html: string, runePointsLookup?: RunePointsLo
     // Calculate tier point totals if lookup is provided
     const tierPointTotals = runePointsLookup ? calculateTierPointTotals(runes, runePointsLookup) : [];
 
+    // Calculate required level (highest reqLevel among all runes)
+    const reqLevel = runeReqLevelLookup ? calculateReqLevel(runes, runeReqLevelLookup) : 0;
+
+    // Calculate sort key (ESR/Kanji: 0-9999, LoD: 10000+)
+    const sortKey = runePriorityLookup ? calculateSortKey(runes, reqLevel, runePriorityLookup) : reqLevel;
+
     rawRunewords.push({
       name,
       variant: variantNum,
       sockets,
+      reqLevel,
+      sortKey,
       runes,
       allowedItems,
       excludedItems,
@@ -234,6 +297,8 @@ export function parseRunewordsHtml(html: string, runePointsLookup?: RunePointsLo
     name: rw.name,
     variant: rw.variant,
     sockets: rw.sockets,
+    reqLevel: rw.reqLevel,
+    sortKey: rw.sortKey,
     runes: rw.runes as readonly string[],
     allowedItems: rw.allowedItems as readonly string[],
     excludedItems: rw.excludedItems as readonly string[],

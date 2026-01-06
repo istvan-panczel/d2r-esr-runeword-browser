@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useSelector } from 'react-redux';
 import { txtDb } from '@/core/db';
 import type { DisplayUniqueItem } from '../types';
-import { selectSearchText, selectSelectedTypeCodes, selectIncludeCouponItems } from '../store';
+import { selectSearchText, selectMaxReqLevel, selectSelectedTypeCodes, selectIncludeCouponItems } from '../store';
 import { getItemTypeFromCode, type ItemTypeDefInfo } from '../utils/itemTypeMapping';
 import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
 
@@ -15,6 +15,7 @@ import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
  */
 export function useFilteredUniqueItems(): readonly DisplayUniqueItem[] | undefined {
   const searchText = useSelector(selectSearchText);
+  const maxReqLevel = useSelector(selectMaxReqLevel);
   const selectedTypeCodes = useSelector(selectSelectedTypeCodes);
   const includeCouponItems = useSelector(selectIncludeCouponItems);
 
@@ -79,6 +80,7 @@ export function useFilteredUniqueItems(): readonly DisplayUniqueItem[] | undefin
       };
     })
     .filter((item) => includeCouponItems || !item.isAncientCoupon)
+    .filter((item) => maxReqLevel === null || item.levelReq <= maxReqLevel)
     .filter((item) => matchesTypeCode(item.typeCode, selectedTypeCodes))
     .filter((item) => matchesSearch(item, searchTerms));
 
