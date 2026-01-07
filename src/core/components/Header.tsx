@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Settings, Sun, Moon, ExternalLink, Menu } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { openDrawer, selectTheme, setTheme } from '@/features/settings';
 
@@ -28,10 +28,19 @@ function GitHubIcon({ className }: { readonly className?: string }) {
 export function Header() {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleThemeToggle = () => {
     dispatch(setTheme(theme === 'dark' ? 'light' : 'dark'));
+  };
+
+  const handleMobileNavClick = (to: string) => {
+    setMobileMenuOpen(false);
+    setTimeout(() => {
+      void navigate(to);
+    }, 300);
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -42,7 +51,7 @@ export function Header() {
 
   const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'block px-4 py-3 text-base font-medium rounded-md transition-colors',
+      'block w-full text-left px-4 py-3 text-base font-medium rounded-md transition-colors',
       isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
     );
 
@@ -96,31 +105,35 @@ export function Header() {
 
       {/* Mobile navigation menu */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="w-72">
+        <SheetContent side="left" className="w-72" aria-describedby={undefined}>
           <SheetHeader>
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
-          <nav className="mt-6 flex flex-col gap-1">
+          <nav className="mt-0 px-4 pb-2 flex flex-col gap-1">
             {NAV_ITEMS.map((item) => (
-              <SheetClose key={item.to} asChild>
-                <NavLink to={item.to} className={mobileNavLinkClass} end={item.end}>
-                  {item.label}
-                </NavLink>
-              </SheetClose>
-            ))}
-            <SheetClose asChild>
-              <a
-                href={ESR_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block px-4 py-3 text-base font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground"
+              <button
+                key={item.to}
+                onClick={() => {
+                  handleMobileNavClick(item.to);
+                }}
+                className={mobileNavLinkClass({
+                  isActive: item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
+                })}
               >
-                <span className="inline-flex items-center gap-1">
-                  ESR Documentation
-                  <ExternalLink className="size-3" />
-                </span>
-              </a>
-            </SheetClose>
+                {item.label}
+              </button>
+            ))}
+            <a
+              href={ESR_DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-4 py-3 text-base font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <span className="inline-flex items-center gap-1">
+                ESR Documentation
+                <ExternalLink className="size-3" />
+              </span>
+            </a>
           </nav>
         </SheetContent>
       </Sheet>
