@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.10](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.9...v0.1.10) (2026-01-07)
+
+
+### Bug Fixes
+
+* fix the Drawers in mobile view (scrollbar, lagging) ([f116ce2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f116ce201c8d534b6d298945e1cc03091ce5416e))
+
 ## [0.1.9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.8...v0.1.9) (2026-01-06)
 
 
