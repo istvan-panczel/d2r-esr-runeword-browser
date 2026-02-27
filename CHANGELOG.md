@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.11](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.10...v0.1.11) (2026-02-27)
+
+
+### Features
+
+* add tier points filter, fix rune classification bugs, and UI improvements ([4412ca4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4412ca4a9fbfe2effb06467a04c3aa0d21e3fbe2)), closes [#908858](https://github.com/istvan-panczel/d2r-esr-runeword-browser/issues/908858)
+
 ## [0.1.10](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.9...v0.1.10) (2026-01-07)
 
 
