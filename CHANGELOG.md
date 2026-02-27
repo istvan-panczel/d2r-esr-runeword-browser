@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.12](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.11...v0.1.12) (2026-02-27)
+
+
+### Features
+
+* add data re-parse on app version change even if there are no changelog changes ([e2423c9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e2423c9b22dd2275264318f241451ee6a0526b2c))
+
 ## [0.1.11](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.10...v0.1.11) (2026-02-27)
 
 
