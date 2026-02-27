@@ -5,9 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
+import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { RuneCheckboxGroup } from './RuneCheckboxGroup';
 import { ItemTypeFilter } from './ItemTypeFilter';
+import { TierPointsFilter } from './TierPointsFilter';
 import { useShareUrl } from '../hooks/useShareUrl';
 import {
   setSearchText,
@@ -225,11 +227,20 @@ export function RunewordFilters() {
         </div>
 
         {/* Copy Link button */}
-        <CopyLinkButton getShareUrl={getShareUrl} />
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <p className="text-xs text-muted-foreground">Share your current filters.</p>
+            <CopyLinkHelpButton />
+          </div>
+          <CopyLinkButton getShareUrl={getShareUrl} />
+        </div>
       </div>
 
       {/* Item Type Filter */}
       <ItemTypeFilter />
+
+      {/* Tier Points Filter */}
+      <TierPointsFilter />
 
       {/* Rune Filter with All/None toggles */}
       <div className="space-y-2">

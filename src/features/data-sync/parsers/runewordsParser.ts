@@ -15,8 +15,6 @@ export type RuneReqLevelLookup = Map<string, number>;
 // Maps rune name to its priority for sorting (ESR: 100-700, Kanji: 800, LoD: 901-933)
 export type RunePriorityLookup = Map<string, number>;
 
-// Threshold for LoD runewords (priority >= 900 means LoD)
-const LOD_PRIORITY_THRESHOLD = 900;
 // Offset added to LoD runewords to sort them after ESR/Kanji
 const LOD_SORT_KEY_OFFSET = 10000;
 
@@ -121,7 +119,12 @@ export function extractAllowedItems(cell: Element): AllowedItemsResult {
   const html = cell.innerHTML;
   const items = html
     .split(/<br\s*\/?>/i)
-    .map((item) => item.replace(/<[^>]*>/g, '').trim())
+    .map((item) =>
+      item
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    )
     .filter((item) => item.length > 0);
 
   const excludedIndex = items.findIndex((item) => item === 'Excluded:');
@@ -165,13 +168,19 @@ interface TierPointEntry {
 /**
  * Calculates tier point totals from a list of rune names.
  * Groups points by (category, tier) and sums them.
+ *
+ * For shared runes (e.g. Ko exists in both ESR and LoD), uses isLod to pick
+ * the correct category via category-prefixed keys ("lodRunes:Ko Rune").
  */
-export function calculateTierPointTotals(runes: string[], runePointsLookup: RunePointsLookup): TierPointTotal[] {
+export function calculateTierPointTotals(runes: string[], runePointsLookup: RunePointsLookup, isLod?: boolean): TierPointTotal[] {
   // Map of "category:tier" -> total points
   const totals = new Map<string, TierPointEntry>();
 
+  const preferredCategory = isLod ? 'lodRunes' : 'esrRunes';
+
   for (const runeName of runes) {
-    const info = runePointsLookup.get(runeName);
+    // Try category-specific key first to resolve shared runes correctly
+    const info = runePointsLookup.get(`${preferredCategory}:${runeName}`) ?? runePointsLookup.get(runeName);
     if (!info) continue; // Skip unknown runes (e.g., Kanji runes don't have points)
 
     const key = `${info.category}:${String(info.tier)}`;
@@ -212,19 +221,31 @@ export function calculateReqLevel(runes: string[], runeReqLevelLookup: RuneReqLe
  * ESR/Kanji runewords: reqLevel (0-9999)
  * LoD runewords: 10000 + reqLevel (10000+)
  *
- * A runeword is considered LoD if its highest-priority rune has priority >= 900.
+ * A runeword is LoD if it contains at least one rune that is exclusively LoD
+ * (exists in LoD but not in ESR/Kanji). Shared runes like Ko (both ESR and LoD)
+ * do not by themselves make a runeword LoD.
+ *
+ * The lookup contains category-prefixed keys ("lodRunes:Ko Rune", "esrRunes:Ko Rune")
+ * to distinguish shared runes.
  */
 export function calculateSortKey(runes: string[], reqLevel: number, runePriorityLookup: RunePriorityLookup): number {
-  let maxPriority = 0;
+  let hasLodExclusiveRune = false;
+
   for (const runeName of runes) {
-    const priority = runePriorityLookup.get(runeName);
-    if (priority !== undefined && priority > maxPriority) {
-      maxPriority = priority;
+    const lodPriority = runePriorityLookup.get(`lodRunes:${runeName}`);
+    if (lodPriority === undefined) continue; // Not a LoD rune at all
+
+    // It's a LoD rune — check if it also exists in ESR or Kanji
+    const esrPriority = runePriorityLookup.get(`esrRunes:${runeName}`);
+    const kanjiPriority = runePriorityLookup.get(`kanjiRunes:${runeName}`);
+    if (esrPriority === undefined && kanjiPriority === undefined) {
+      // Exclusively LoD — this makes the runeword LoD
+      hasLodExclusiveRune = true;
+      break;
     }
   }
 
-  const isLodRuneword = maxPriority >= LOD_PRIORITY_THRESHOLD;
-  return isLodRuneword ? LOD_SORT_KEY_OFFSET + reqLevel : reqLevel;
+  return hasLodExclusiveRune ? LOD_SORT_KEY_OFFSET + reqLevel : reqLevel;
 }
 
 /**
@@ -269,14 +290,16 @@ export function parseRunewordsHtml(
     const { allowedItems, excludedItems } = extractAllowedItems(allowedItemsCell);
     const affixes = extractAffixes(cells);
 
-    // Calculate tier point totals if lookup is provided
-    const tierPointTotals = runePointsLookup ? calculateTierPointTotals(runes, runePointsLookup) : [];
-
     // Calculate required level (highest reqLevel among all runes)
     const reqLevel = runeReqLevelLookup ? calculateReqLevel(runes, runeReqLevelLookup) : 0;
 
     // Calculate sort key (ESR/Kanji: 0-9999, LoD: 10000+)
     const sortKey = runePriorityLookup ? calculateSortKey(runes, reqLevel, runePriorityLookup) : reqLevel;
+
+    // Calculate tier point totals if lookup is provided.
+    // Pass isLod so shared runes (e.g. Ko) resolve to the correct category.
+    const isLod = sortKey >= LOD_SORT_KEY_OFFSET;
+    const tierPointTotals = runePointsLookup ? calculateTierPointTotals(runes, runePointsLookup, isLod) : [];
 
     rawRunewords.push({
       name,

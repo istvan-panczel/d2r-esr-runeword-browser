@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { isLodRuneName, getLodRuneOrder, parseLodRunesHtml } from './lodRunesParser';
+import { isLodRuneName, getLodRuneOrder, getLodRuneTier, parseLodRunesHtml } from './lodRunesParser';
 
 describe('isLodRuneName', () => {
   it('should return true for LoD rune names', () => {
@@ -39,6 +39,23 @@ describe('getLodRuneOrder', () => {
   it('should return 0 for invalid runes', () => {
     expect(getLodRuneOrder('I Rune')).toBe(0);
     expect(getLodRuneOrder('Invalid')).toBe(0);
+  });
+});
+
+describe('getLodRuneTier', () => {
+  it('should return tier 1 (Low) for El(1) to Amn(11)', () => {
+    expect(getLodRuneTier(1)).toBe(1); // El
+    expect(getLodRuneTier(11)).toBe(1); // Amn (boundary)
+  });
+
+  it('should return tier 2 (Mid) for Sol(12) to Um(22)', () => {
+    expect(getLodRuneTier(12)).toBe(2); // Sol (boundary)
+    expect(getLodRuneTier(22)).toBe(2); // Um (boundary)
+  });
+
+  it('should return tier 3 (High) for Mal(23) to Zod(33)', () => {
+    expect(getLodRuneTier(23)).toBe(3); // Mal (boundary)
+    expect(getLodRuneTier(33)).toBe(3); // Zod
   });
 });
 
@@ -87,5 +104,25 @@ describe('parseLodRunesHtml integration', () => {
       expect(rune.bonuses.helmsBoots.length).toBeGreaterThan(0);
       expect(rune.bonuses.armorShieldsBelts.length).toBeGreaterThan(0);
     }
+  });
+
+  it('should assign correct tiers with new boundaries', () => {
+    const lodRunes = parseLodRunesHtml(html);
+
+    // Amn (order 11) should be Low (tier 1)
+    const amn = lodRunes.find((r) => r.name === 'Amn Rune')!;
+    expect(amn.tier).toBe(1);
+
+    // Sol (order 12) should be Mid (tier 2)
+    const sol = lodRunes.find((r) => r.name === 'Sol Rune')!;
+    expect(sol.tier).toBe(2);
+
+    // Um (order 22) should be Mid (tier 2)
+    const um = lodRunes.find((r) => r.name === 'Um Rune')!;
+    expect(um.tier).toBe(2);
+
+    // Mal (order 23) should be High (tier 3)
+    const mal = lodRunes.find((r) => r.name === 'Mal Rune')!;
+    expect(mal.tier).toBe(3);
   });
 });

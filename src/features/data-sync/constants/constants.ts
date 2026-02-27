@@ -44,9 +44,9 @@ export const LOD_RUNE_NAMES: readonly string[] = [
 
 // LoD rune tier labels
 export const LOD_TIER_LABELS: Record<number, string> = {
-  1: 'Low', // El-Dol (order 1-14)
-  2: 'Mid', // Hel-Gul (order 15-25)
-  3: 'High', // Vex-Zod (order 26-33)
+  1: 'Low', // El-Amn (order 1-11)
+  2: 'Mid', // Sol-Um (order 12-22)
+  3: 'High', // Mal-Zod (order 23-33)
 };
 
 // ESR rune constants - Colors mapped to tier numbers

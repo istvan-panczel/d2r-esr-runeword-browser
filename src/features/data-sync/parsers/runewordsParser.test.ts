@@ -15,6 +15,10 @@ import {
   type RunePointsLookup,
   type RunePriorityLookup,
 } from './runewordsParser';
+import { parseEsrRunesHtml } from './esrRunesParser';
+import { parseLodRunesHtml } from './lodRunesParser';
+import { parseKanjiRunesHtml } from './kanjiRunesParser';
+import { DEFAULT_ESR_RUNE_POINTS, DEFAULT_LOD_RUNE_POINTS } from '../constants/defaultRunePoints';
 
 // Helper to create a DOM element from HTML string
 function createElementFromHtml(html: string): Element {
@@ -176,6 +180,16 @@ describe('extractAllowedItems', () => {
       excludedItems: ['Hammer', 'Polearm', 'Spear'],
     });
   });
+
+  it('should collapse internal whitespace in item names split across lines', () => {
+    const cell = createElementFromHtml(
+      '<td><font size="-1">Staff<br><br>Excluded:<br>Orb<br>Sorceress Mana\n                            Blade<br></font></td>'
+    );
+    expect(extractAllowedItems(cell)).toEqual({
+      allowedItems: ['Staff'],
+      excludedItems: ['Orb', 'Sorceress Mana Blade'],
+    });
+  });
 });
 
 describe('extractAffixes', () => {
@@ -281,46 +295,53 @@ describe('calculateReqLevel', () => {
 });
 
 describe('calculateSortKey', () => {
-  it('should return reqLevel for ESR runes (priority < 900)', () => {
+  it('should return reqLevel for ESR-only runes', () => {
     const lookup: RunePriorityLookup = new Map([
-      ['I Rune', 100], // ESR tier 1
-      ['Shi Rune', 100], // ESR tier 1
+      ['esrRunes:I Rune', 100],
+      ['esrRunes:Shi Rune', 100],
     ]);
     expect(calculateSortKey(['I Rune', 'Shi Rune'], 4, lookup)).toBe(4);
   });
 
-  it('should return reqLevel for Kanji runes (priority 800)', () => {
-    const lookup: RunePriorityLookup = new Map([
-      ['Moon Rune', 800], // Kanji
-    ]);
+  it('should return reqLevel for Kanji-only runes', () => {
+    const lookup: RunePriorityLookup = new Map([['kanjiRunes:Moon Rune', 800]]);
     expect(calculateSortKey(['Moon Rune'], 60, lookup)).toBe(60);
   });
 
-  it('should return 10000 + reqLevel for LoD runes (priority >= 900)', () => {
+  it('should return 10000 + reqLevel for LoD-exclusive runes', () => {
+    // El and Zod only exist in LoD (no esrRunes or kanjiRunes keys)
     const lookup: RunePriorityLookup = new Map([
-      ['El Rune', 901], // LoD order 1
-      ['Zod Rune', 933], // LoD order 33
+      ['lodRunes:El Rune', 901],
+      ['lodRunes:Zod Rune', 933],
     ]);
     expect(calculateSortKey(['El Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
   });
 
-  it('should use highest priority to determine category', () => {
-    // Mixed ESR and LoD - highest priority (LoD) determines category
+  it('should return reqLevel for shared rune (Ko) that exists in both ESR and LoD', () => {
+    // Ko exists in both ESR and LoD — not LoD-exclusive, so ESR classification
     const lookup: RunePriorityLookup = new Map([
-      ['I Rune', 100], // ESR tier 1
-      ['Zod Rune', 933], // LoD order 33
+      ['esrRunes:Ko Rune', 300],
+      ['lodRunes:Ko Rune', 918],
     ]);
-    expect(calculateSortKey(['I Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
+    expect(calculateSortKey(['Ko Rune'], 30, lookup)).toBe(30);
   });
 
-  it('should return reqLevel when priority is exactly 899 (ESR)', () => {
-    const lookup: RunePriorityLookup = new Map([['High Rune', 899]]);
-    expect(calculateSortKey(['High Rune'], 50, lookup)).toBe(50);
+  it('should classify as LoD when at least one rune is LoD-exclusive', () => {
+    // Zod is LoD-exclusive (no ESR or Kanji entry), Ko is shared
+    const lookup: RunePriorityLookup = new Map([
+      ['esrRunes:Ko Rune', 300],
+      ['lodRunes:Ko Rune', 918],
+      ['lodRunes:Zod Rune', 933],
+    ]);
+    expect(calculateSortKey(['Ko Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
   });
 
-  it('should return 10000 + reqLevel when priority is exactly 900 (LoD)', () => {
-    const lookup: RunePriorityLookup = new Map([['Border Rune', 900]]);
-    expect(calculateSortKey(['Border Rune'], 50, lookup)).toBe(10050);
+  it('should return reqLevel for ESR + Kanji mix', () => {
+    const lookup: RunePriorityLookup = new Map([
+      ['esrRunes:Ko Rune', 300],
+      ['kanjiRunes:Moon Rune', 800],
+    ]);
+    expect(calculateSortKey(['Ko Rune', 'Moon Rune'], 60, lookup)).toBe(60);
   });
 
   it('should return reqLevel for empty runes array', () => {
@@ -598,6 +619,143 @@ describe('parseRunewordsHtml integration', () => {
       expect(rune.endsWith(' Rune')).toBe(true);
       expect(rune).not.toContain('<br>');
       expect(rune).not.toContain('\n');
+    }
+  });
+});
+
+describe('runeword category classification integration', () => {
+  const runewordsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/runewords.htm'), 'utf-8');
+  const gemsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
+
+  // Parse all rune types to build name sets and lookups
+  const esrRunes = parseEsrRunesHtml(gemsHtml);
+  const lodRunes = parseLodRunesHtml(gemsHtml);
+  const kanjiRunes = parseKanjiRunesHtml(gemsHtml);
+
+  const esrRuneNames = new Set(esrRunes.map((r) => r.name));
+  const lodRuneNames = new Set(lodRunes.map((r) => r.name));
+  const kanjiRuneNames = new Set(kanjiRunes.map((r) => r.name));
+
+  // Build lookups same as dataSyncSaga does
+  const runePointsLookup: RunePointsLookup = new Map();
+  for (const rune of esrRunes) {
+    const info =
+      rune.points !== undefined
+        ? { points: rune.points, tier: rune.tier, category: 'esrRunes' as const }
+        : rune.name in DEFAULT_ESR_RUNE_POINTS
+          ? { points: DEFAULT_ESR_RUNE_POINTS[rune.name], tier: rune.tier, category: 'esrRunes' as const }
+          : null;
+    if (info) {
+      runePointsLookup.set(rune.name, info);
+      runePointsLookup.set(`esrRunes:${rune.name}`, info);
+    }
+  }
+  for (const rune of lodRunes) {
+    const info =
+      rune.points !== undefined
+        ? { points: rune.points, tier: rune.tier, category: 'lodRunes' as const }
+        : rune.name in DEFAULT_LOD_RUNE_POINTS
+          ? { points: DEFAULT_LOD_RUNE_POINTS[rune.name], tier: rune.tier, category: 'lodRunes' as const }
+          : null;
+    if (info) {
+      runePointsLookup.set(rune.name, info);
+      runePointsLookup.set(`lodRunes:${rune.name}`, info);
+    }
+  }
+
+  const runeReqLevelLookup: RuneReqLevelLookup = new Map();
+  for (const rune of esrRunes) runeReqLevelLookup.set(rune.name, rune.reqLevel);
+  for (const rune of lodRunes) runeReqLevelLookup.set(rune.name, rune.reqLevel);
+  for (const rune of kanjiRunes) runeReqLevelLookup.set(rune.name, rune.reqLevel);
+
+  const runePriorityLookup: RunePriorityLookup = new Map();
+  for (const rune of esrRunes) {
+    runePriorityLookup.set(rune.name, rune.tier * 100);
+    runePriorityLookup.set(`esrRunes:${rune.name}`, rune.tier * 100);
+  }
+  for (const rune of kanjiRunes) {
+    runePriorityLookup.set(rune.name, 800);
+    runePriorityLookup.set(`kanjiRunes:${rune.name}`, 800);
+  }
+  for (const rune of lodRunes) {
+    runePriorityLookup.set(rune.name, 900 + rune.order);
+    runePriorityLookup.set(`lodRunes:${rune.name}`, 900 + rune.order);
+  }
+
+  const runewords = parseRunewordsHtml(runewordsHtml, runePointsLookup, runeReqLevelLookup, runePriorityLookup);
+
+  it('should parse runewords with full lookups', () => {
+    expect(runewords.length).toBeGreaterThanOrEqual(380);
+  });
+
+  it('should never mix LoD-exclusive runes with ESR runes in a single runeword', () => {
+    for (const rw of runewords) {
+      const hasEsrOnlyRune = rw.runes.some((r) => esrRuneNames.has(r) && !lodRuneNames.has(r));
+      const hasLodExclusiveRune = rw.runes.some((r) => lodRuneNames.has(r) && !esrRuneNames.has(r) && !kanjiRuneNames.has(r));
+
+      expect(
+        hasEsrOnlyRune && hasLodExclusiveRune,
+        `${rw.name} v${String(rw.variant)} mixes ESR-only and LoD-exclusive runes: ${rw.runes.join(', ')}`
+      ).toBe(false);
+    }
+  });
+
+  it('should never mix LoD-exclusive runes with Kanji runes in a single runeword', () => {
+    for (const rw of runewords) {
+      const hasKanjiRune = rw.runes.some((r) => kanjiRuneNames.has(r));
+      const hasLodExclusiveRune = rw.runes.some((r) => lodRuneNames.has(r) && !esrRuneNames.has(r) && !kanjiRuneNames.has(r));
+
+      expect(
+        hasKanjiRune && hasLodExclusiveRune,
+        `${rw.name} v${String(rw.variant)} mixes Kanji and LoD-exclusive runes: ${rw.runes.join(', ')}`
+      ).toBe(false);
+    }
+  });
+
+  it('should classify LoD runewords (sortKey >= 10000) only when they have LoD-exclusive runes', () => {
+    for (const rw of runewords) {
+      const hasLodExclusiveRune = rw.runes.some((r) => lodRuneNames.has(r) && !esrRuneNames.has(r) && !kanjiRuneNames.has(r));
+      const isLod = rw.sortKey >= 10000;
+
+      expect(
+        isLod,
+        `${rw.name} v${String(rw.variant)} sortKey=${String(rw.sortKey)} but hasLodExclusiveRune=${String(hasLodExclusiveRune)}`
+      ).toBe(hasLodExclusiveRune);
+    }
+  });
+
+  it('should classify Gold Scarab (Ko, Metal, Mu, Shi) as ESR, not LoD', () => {
+    const goldScarab = runewords.find((r) => r.name === 'Gold Scarab');
+    expect(goldScarab).toBeDefined();
+    expect(goldScarab!.sortKey).toBeLessThan(10000);
+  });
+
+  it('should classify Call to Arms as LoD', () => {
+    const cta = runewords.find((r) => r.name === 'Call to Arms');
+    expect(cta).toBeDefined();
+    expect(cta!.sortKey).toBeGreaterThanOrEqual(10000);
+  });
+
+  it('should have consistent tierPointTotals categories with sortKey classification', () => {
+    for (const rw of runewords) {
+      const isLod = rw.sortKey >= 10000;
+
+      for (const tpt of rw.tierPointTotals) {
+        if (isLod) {
+          expect(tpt.category, `LoD runeword ${rw.name} v${String(rw.variant)} has non-LoD tier points`).toBe('lodRunes');
+        } else {
+          expect(tpt.category, `ESR runeword ${rw.name} v${String(rw.variant)} has LoD tier points`).not.toBe('lodRunes');
+        }
+      }
+    }
+  });
+
+  it('should have every rune in a runeword be recognized as ESR, LoD, or Kanji', () => {
+    for (const rw of runewords) {
+      for (const rune of rw.runes) {
+        const isKnown = esrRuneNames.has(rune) || lodRuneNames.has(rune) || kanjiRuneNames.has(rune);
+        expect(isKnown, `${rw.name} v${String(rw.variant)} has unknown rune: ${rune}`).toBe(true);
+      }
     }
   });
 });

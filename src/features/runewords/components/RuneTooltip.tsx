@@ -7,6 +7,8 @@ import type { SocketableBonuses } from '@/core/db/models';
 interface RuneTooltipProps {
   readonly runeName: string;
   readonly children: ReactNode;
+  /** Whether this rune belongs to a LoD runeword (affects lookup order for shared runes like Ko) */
+  readonly isLod?: boolean;
 }
 
 interface RuneData {
@@ -18,18 +20,28 @@ interface RuneData {
   color?: string;
 }
 
-export function RuneTooltip({ runeName, children }: RuneTooltipProps) {
+export function RuneTooltip({ runeName, children, isLod }: RuneTooltipProps) {
+  // For LoD runewords, check LoD first to resolve shared runes (e.g. Ko) correctly.
   const runeData = useLiveQuery(async (): Promise<RuneData | null> => {
-    // Try ESR runes first
+    if (isLod) {
+      const lodRune = await db.lodRunes.get(runeName);
+      if (lodRune) {
+        return { ...lodRune, category: 'lodRunes' };
+      }
+    }
+
+    // Try ESR runes
     const esrRune = await db.esrRunes.get(runeName);
     if (esrRune) {
       return { ...esrRune, category: 'esrRunes' };
     }
 
-    // Try LoD runes
-    const lodRune = await db.lodRunes.get(runeName);
-    if (lodRune) {
-      return { ...lodRune, category: 'lodRunes' };
+    // Try LoD runes (fallback when not isLod)
+    if (!isLod) {
+      const lodRune = await db.lodRunes.get(runeName);
+      if (lodRune) {
+        return { ...lodRune, category: 'lodRunes' };
+      }
     }
 
     // Try Kanji runes
@@ -39,7 +51,7 @@ export function RuneTooltip({ runeName, children }: RuneTooltipProps) {
     }
 
     return null;
-  }, [runeName]);
+  }, [runeName, isLod]);
 
   if (!runeData) {
     return <>{children}</>;

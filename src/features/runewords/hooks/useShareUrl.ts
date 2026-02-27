@@ -5,6 +5,7 @@ import {
   selectMaxReqLevel,
   selectSelectedItemTypes,
   selectSelectedRunes,
+  selectMaxTierPoints,
 } from '../store/runewordsSlice';
 
 const URL_PARAM_KEYS = {
@@ -13,6 +14,7 @@ const URL_PARAM_KEYS = {
   MAXLVL: 'maxlvl',
   ITEMS: 'items',
   RUNES: 'runes',
+  TIERPTS: 'tierpts',
 } as const;
 
 /**
@@ -25,6 +27,7 @@ export function useShareUrl(): () => string {
   const maxReqLevel = useSelector(selectMaxReqLevel);
   const selectedItemTypes = useSelector(selectSelectedItemTypes);
   const selectedRunes = useSelector(selectSelectedRunes);
+  const maxTierPoints = useSelector(selectMaxTierPoints);
 
   return () => {
     const params = new URLSearchParams();
@@ -66,6 +69,14 @@ export function useShareUrl(): () => string {
           params.set(URL_PARAM_KEYS.RUNES, selectedRuneKeys.join(','));
         }
       }
+    }
+
+    // Tier points: serialize non-null entries as "esrRunes:1=64,lodRunes:2=128"
+    const tierPtsEntries = Object.entries(maxTierPoints)
+      .filter(([, v]) => v !== null)
+      .map(([k, v]) => `${k}=${String(v)}`);
+    if (tierPtsEntries.length > 0) {
+      params.set(URL_PARAM_KEYS.TIERPTS, tierPtsEntries.join(','));
     }
 
     const base = `${window.location.origin}${import.meta.env.BASE_URL}`;

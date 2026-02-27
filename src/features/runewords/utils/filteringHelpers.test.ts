@@ -7,6 +7,7 @@ import {
   matchesMaxReqLevel,
   matchesItemTypes,
   matchesRunes,
+  matchesTierPoints,
   buildRuneCategoryMap,
   buildRunePriorityMap,
   buildRuneBonusMap,
@@ -476,5 +477,70 @@ describe('matchesSearch', () => {
       allowedItems: ['All Weapons'],
     });
     expect(matchesSearch(runeword, ['fire damage'], runeBonusMap)).toBe(true);
+  });
+});
+
+describe('matchesTierPoints', () => {
+  it('should return true when maxTierPoints is empty', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 1, category: 'esrRunes', totalPoints: 100 }],
+    });
+    expect(matchesTierPoints(runeword, {})).toBe(true);
+  });
+
+  it('should return true when all tier limits are null', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 1, category: 'esrRunes', totalPoints: 100 }],
+    });
+    expect(matchesTierPoints(runeword, { 'esrRunes:1': null })).toBe(true);
+  });
+
+  it('should return true when tier points are within limit', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 1, category: 'esrRunes', totalPoints: 50 }],
+    });
+    expect(matchesTierPoints(runeword, { 'esrRunes:1': 64 })).toBe(true);
+  });
+
+  it('should return true when tier points equal limit', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 1, category: 'esrRunes', totalPoints: 64 }],
+    });
+    expect(matchesTierPoints(runeword, { 'esrRunes:1': 64 })).toBe(true);
+  });
+
+  it('should return false when tier points exceed limit', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 1, category: 'esrRunes', totalPoints: 100 }],
+    });
+    expect(matchesTierPoints(runeword, { 'esrRunes:1': 64 })).toBe(false);
+  });
+
+  it('should return true when runeword has no runes from the filtered tier', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 1, category: 'esrRunes', totalPoints: 100 }],
+    });
+    expect(matchesTierPoints(runeword, { 'esrRunes:2': 10 })).toBe(true);
+  });
+
+  it('should handle multiple tier filters', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [
+        { tier: 1, category: 'esrRunes', totalPoints: 30 },
+        { tier: 2, category: 'esrRunes', totalPoints: 50 },
+      ],
+    });
+    // Both within limit
+    expect(matchesTierPoints(runeword, { 'esrRunes:1': 64, 'esrRunes:2': 64 })).toBe(true);
+    // One exceeds limit
+    expect(matchesTierPoints(runeword, { 'esrRunes:1': 64, 'esrRunes:2': 40 })).toBe(false);
+  });
+
+  it('should handle LoD tier filters', () => {
+    const runeword = createRuneword({
+      tierPointTotals: [{ tier: 2, category: 'lodRunes', totalPoints: 128 }],
+    });
+    expect(matchesTierPoints(runeword, { 'lodRunes:2': 256 })).toBe(true);
+    expect(matchesTierPoints(runeword, { 'lodRunes:2': 64 })).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import {
   selectMaxReqLevel,
   selectSelectedItemTypes,
   selectSelectedRunes,
+  selectMaxTierPoints,
 } from '../store/runewordsSlice';
 import {
   parseSearchTerms,
@@ -16,6 +17,7 @@ import {
   matchesMaxReqLevel,
   matchesItemTypes,
   matchesRunes,
+  matchesTierPoints,
   buildRuneCategoryMap,
   buildRuneBonusMap,
 } from '../utils/filteringHelpers';
@@ -26,6 +28,7 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
   const maxReqLevel = useSelector(selectMaxReqLevel);
   const selectedItemTypes = useSelector(selectSelectedItemTypes);
   const selectedRunes = useSelector(selectSelectedRunes);
+  const maxTierPoints = useSelector(selectMaxTierPoints);
 
   // Fetch runewords pre-sorted by sortKey from IndexedDB (ESR/Kanji first by reqLevel, then LoD by reqLevel)
   const data = useLiveQuery(async () => {
@@ -53,6 +56,7 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
     if (!matchesMaxReqLevel(runeword, maxReqLevel)) return false;
     if (!matchesItemTypes(runeword, selectedItemTypes)) return false;
     if (!matchesRunes(runeword, selectedRunes, runeCategoryMap)) return false;
+    if (!matchesTierPoints(runeword, maxTierPoints)) return false;
     return true;
   });
 }

@@ -150,6 +150,30 @@ export function matchesRunes(runeword: Runeword, selectedRunes: Record<string, b
 }
 
 /**
+ * Check if a runeword matches the tier points filter.
+ * For each tier with a non-null max, the runeword's tier point total for that
+ * (category, tier) must not exceed the max. If the runeword has no runes from
+ * that tier, it passes.
+ */
+export function matchesTierPoints(runeword: Runeword, maxTierPoints: Record<string, number | null>): boolean {
+  for (const [tierKey, maxValue] of Object.entries(maxTierPoints)) {
+    if (maxValue === null) continue;
+
+    // tierKey format: "esrRunes:1" or "lodRunes:2"
+    const separatorIndex = tierKey.indexOf(':');
+    if (separatorIndex === -1) continue;
+    const category = tierKey.substring(0, separatorIndex);
+    const tier = parseInt(tierKey.substring(separatorIndex + 1), 10);
+
+    const entry = runeword.tierPointTotals.find((t) => t.category === category && t.tier === tier);
+    if (entry && entry.totalPoints > maxValue) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Build a priority map for sorting runewords by their highest rune.
  * Priority order: ESR (tier 1-7) → Kanji → LoD (order 1-33)
  * Lower priority = appears first in the list

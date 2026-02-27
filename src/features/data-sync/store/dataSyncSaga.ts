@@ -13,6 +13,7 @@ import {
   type RuneReqLevelLookup,
   type RunePriorityLookup,
 } from '../parsers';
+import { DEFAULT_ESR_RUNE_POINTS, DEFAULT_LOD_RUNE_POINTS } from '../constants/defaultRunePoints';
 import {
   startupCheck,
   startupUseCached,
@@ -79,16 +80,40 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     const crystals = parseCrystalsHtml(gemsHtml);
     console.log('[HTML] Parsed crystals:', crystals.length);
 
-    // Build rune points lookup for runeword tier point calculation
+    // Build rune points lookup for runeword tier point calculation.
+    // Stores both plain keys ("Ko Rune") and category-prefixed keys ("esrRunes:Ko Rune")
+    // so that shared runes (e.g. Ko exists in both ESR and LoD) can be resolved correctly.
     const runePointsLookup: RunePointsLookup = new Map();
     for (const rune of esrRunes) {
-      if (rune.points !== undefined) {
-        runePointsLookup.set(rune.name, { points: rune.points, tier: rune.tier, category: 'esrRunes' });
+      const info =
+        rune.points !== undefined
+          ? { points: rune.points, tier: rune.tier, category: 'esrRunes' as const }
+          : rune.name in DEFAULT_ESR_RUNE_POINTS
+            ? (() => {
+                const defaultPoints = DEFAULT_ESR_RUNE_POINTS[rune.name];
+                console.warn(`[HTML] Warning: ${rune.name} missing points in docs, using default (${String(defaultPoints)} points)`);
+                return { points: defaultPoints, tier: rune.tier, category: 'esrRunes' as const };
+              })()
+            : null;
+      if (info) {
+        runePointsLookup.set(rune.name, info);
+        runePointsLookup.set(`esrRunes:${rune.name}`, info);
       }
     }
     for (const rune of lodRunes) {
-      if (rune.points !== undefined) {
-        runePointsLookup.set(rune.name, { points: rune.points, tier: rune.tier, category: 'lodRunes' });
+      const info =
+        rune.points !== undefined
+          ? { points: rune.points, tier: rune.tier, category: 'lodRunes' as const }
+          : rune.name in DEFAULT_LOD_RUNE_POINTS
+            ? (() => {
+                const defaultPoints = DEFAULT_LOD_RUNE_POINTS[rune.name];
+                console.warn(`[HTML] Warning: ${rune.name} missing points in docs, using default (${String(defaultPoints)} points)`);
+                return { points: defaultPoints, tier: rune.tier, category: 'lodRunes' as const };
+              })()
+            : null;
+      if (info) {
+        runePointsLookup.set(rune.name, info);
+        runePointsLookup.set(`lodRunes:${rune.name}`, info);
       }
     }
     console.log('[HTML] Built rune points lookup with', runePointsLookup.size, 'entries');
@@ -106,17 +131,22 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     }
     console.log('[HTML] Built rune reqLevel lookup with', runeReqLevelLookup.size, 'entries');
 
-    // Build rune priority lookup for runeword sortKey calculation
+    // Build rune priority lookup for runeword sortKey calculation.
     // Priority: ESR (100-700 by tier) → Kanji (800) → LoD (901-933 by order)
+    // Stores both plain keys and category-prefixed keys so shared runes (e.g. Ko)
+    // can be resolved correctly when determining if a runeword is LoD or ESR.
     const runePriorityLookup: RunePriorityLookup = new Map();
     for (const rune of esrRunes) {
       runePriorityLookup.set(rune.name, rune.tier * 100);
+      runePriorityLookup.set(`esrRunes:${rune.name}`, rune.tier * 100);
     }
     for (const rune of kanjiRunes) {
       runePriorityLookup.set(rune.name, 800);
+      runePriorityLookup.set(`kanjiRunes:${rune.name}`, 800);
     }
     for (const rune of lodRunes) {
       runePriorityLookup.set(rune.name, 900 + rune.order);
+      runePriorityLookup.set(`lodRunes:${rune.name}`, 900 + rune.order);
     }
     console.log('[HTML] Built rune priority lookup with', runePriorityLookup.size, 'entries');
 

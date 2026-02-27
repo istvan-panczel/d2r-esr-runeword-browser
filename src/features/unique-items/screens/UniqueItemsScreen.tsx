@@ -30,6 +30,10 @@ export function UniqueItemsScreen() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Unique Items</h1>
+      <div className="mb-4 rounded-md border border-amber-500/50 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+        <strong>Note:</strong> Unique items data is parsed from game TXT files, not the official ESR documentation. Some items or stats may
+        not be fully up-to-date.
+      </div>
       <UniqueItemFilters />
 
       {items.length === 0 ? (

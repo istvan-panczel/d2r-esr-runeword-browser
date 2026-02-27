@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useRuneGroups } from './useRuneGroups';
 import { useAvailableItemTypes } from './useAvailableItemTypes';
-import { setSearchText, setSocketCount, setMaxReqLevel, setAllRunes, setAllItemTypes } from '../store/runewordsSlice';
+import { setSearchText, setSocketCount, setMaxReqLevel, setAllRunes, setAllItemTypes, setMaxTierPoints } from '../store/runewordsSlice';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
@@ -11,6 +11,7 @@ const URL_PARAM_KEYS = {
   MAXLVL: 'maxlvl',
   ITEMS: 'items',
   RUNES: 'runes',
+  TIERPTS: 'tierpts',
 } as const;
 
 /**
@@ -53,8 +54,10 @@ export function useUrlInitialize(): void {
     const urlMaxLvl = searchParams.get(URL_PARAM_KEYS.MAXLVL);
     const urlItems = searchParams.get(URL_PARAM_KEYS.ITEMS);
     const urlRunes = searchParams.get(URL_PARAM_KEYS.RUNES);
+    const urlTierPts = searchParams.get(URL_PARAM_KEYS.TIERPTS);
 
-    const hasUrlParams = urlSearch !== null || urlSockets !== null || urlMaxLvl !== null || urlItems !== null || urlRunes !== null;
+    const hasUrlParams =
+      urlSearch !== null || urlSockets !== null || urlMaxLvl !== null || urlItems !== null || urlRunes !== null || urlTierPts !== null;
 
     if (hasUrlParams) {
       // Initialize from URL params
@@ -91,6 +94,19 @@ export function useUrlInitialize(): void {
         decodedRunes[key] = urlRuneSet ? urlRuneSet.has(key) : true;
       }
       dispatch(setAllRunes(decodedRunes));
+
+      // Tier points: parse "esrRunes:1=64,lodRunes:2=128" format
+      if (urlTierPts) {
+        for (const entry of urlTierPts.split(',')) {
+          const eqIndex = entry.indexOf('=');
+          if (eqIndex === -1) continue;
+          const tierKey = entry.substring(0, eqIndex);
+          const value = parseInt(entry.substring(eqIndex + 1), 10);
+          if (!isNaN(value) && value >= 0) {
+            dispatch(setMaxTierPoints({ tierKey, value }));
+          }
+        }
+      }
 
       // Clean the URL after initialization
       window.history.replaceState({}, '', window.location.pathname);

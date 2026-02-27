@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { openDrawer, selectTheme, setTheme } from '@/features/settings';
 
 const ESR_DOCS_URL = 'https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/';
+const CHANGELOG_URL = 'https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs/changelogs.html';
 const GITHUB_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser';
 
 const NAV_ITEMS = [
@@ -86,6 +87,15 @@ export function Header() {
               ESR Documentation
               <ExternalLink className="size-3" />
             </a>
+            <a
+              href={CHANGELOG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+            >
+              Changelog
+              <ExternalLink className="size-3" />
+            </a>
           </nav>
         </div>
         <div className="flex items-center gap-1">
@@ -131,6 +141,17 @@ export function Header() {
             >
               <span className="inline-flex items-center gap-1">
                 ESR Documentation
+                <ExternalLink className="size-3" />
+              </span>
+            </a>
+            <a
+              href={CHANGELOG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-4 py-3 text-base font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <span className="inline-flex items-center gap-1">
+                Changelog
                 <ExternalLink className="size-3" />
               </span>
             </a>

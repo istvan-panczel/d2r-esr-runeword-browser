@@ -8,6 +8,7 @@ interface RunewordsState {
   readonly maxReqLevel: number | null;
   readonly selectedItemTypes: Record<string, boolean>;
   readonly selectedRunes: Record<string, boolean>;
+  readonly maxTierPoints: Record<string, number | null>;
 }
 
 const initialState: RunewordsState = {
@@ -16,6 +17,7 @@ const initialState: RunewordsState = {
   maxReqLevel: null,
   selectedItemTypes: {},
   selectedRunes: {},
+  maxTierPoints: {},
 };
 
 const runewordsSlice = createSlice({
@@ -73,6 +75,12 @@ const runewordsSlice = createSlice({
         state.selectedRunes[key] = selected;
       }
     },
+    setMaxTierPoints(state, action: PayloadAction<{ tierKey: string; value: number | null }>) {
+      state.maxTierPoints[action.payload.tierKey] = action.payload.value;
+    },
+    clearAllTierPoints(state) {
+      state.maxTierPoints = {};
+    },
   },
 });
 
@@ -89,6 +97,8 @@ export const {
   selectAllRunes,
   deselectAllRunes,
   toggleRuneGroup,
+  setMaxTierPoints,
+  clearAllTierPoints,
 } = runewordsSlice.actions;
 
 export default runewordsSlice.reducer;
@@ -105,3 +115,5 @@ export const selectMaxReqLevel = createSelector([selectRunewordsState], (runewor
 export const selectSelectedItemTypes = createSelector([selectRunewordsState], (runewords) => runewords.selectedItemTypes);
 
 export const selectSelectedRunes = createSelector([selectRunewordsState], (runewords) => runewords.selectedRunes);
+
+export const selectMaxTierPoints = createSelector([selectRunewordsState], (runewords) => runewords.maxTierPoints);

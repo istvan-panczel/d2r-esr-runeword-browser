@@ -10,10 +10,14 @@ interface RunewordCardProps {
   readonly runeword: Runeword;
 }
 
+// sortKey >= 10000 means LoD runeword (see runewordsParser.ts LOD_SORT_KEY_OFFSET)
+const LOD_SORT_KEY_OFFSET = 10000;
+
 export function RunewordCard({ runeword }: RunewordCardProps) {
   const { name, sockets, runes, allowedItems, excludedItems, affixes, tierPointTotals } = runeword;
   // Handle backwards compatibility for cached runewords without reqLevel
   const reqLevel = 'reqLevel' in runeword ? runeword.reqLevel : undefined;
+  const isLod = 'sortKey' in runeword && runeword.sortKey >= LOD_SORT_KEY_OFFSET;
   const runeBonuses = useRuneBonuses(runes);
   const relevantCategories = getRelevantCategories(allowedItems);
 
@@ -42,7 +46,7 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
         {/* Rune sequence */}
         <div className="flex flex-wrap gap-1">
           {runes.map((rune, index) => (
-            <RuneBadge key={`${rune}-${String(index)}`} runeName={rune} />
+            <RuneBadge key={`${rune}-${String(index)}`} runeName={rune} isLod={isLod} />
           ))}
         </div>
 
