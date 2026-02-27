@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.14](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.13...v0.1.14) (2026-02-27)
+
+
+### Features
+
+* add categories for item types ([1f3be96](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1f3be96450e4b063d24147ee4eb00150e17a0337))
+
 ## [0.1.13](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.12...v0.1.13) (2026-02-27)
 
 
