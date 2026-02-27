@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.13](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.12...v0.1.13) (2026-02-27)
+
+
+### Features
+
+* update colors for rune texts and badges ([817dc53](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/817dc53991ca6ee39d7ab2a561afedbec57c64ba))
+
 ## [0.1.12](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.11...v0.1.12) (2026-02-27)
 
 
