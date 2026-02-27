@@ -2,6 +2,7 @@ import { all, call, put, takeLatest } from 'redux-saga/effects';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { fetchGemsHtml, fetchRunewordsHtml, fetchLatestVersion, type ChangelogVersion } from '@/core/api';
 import { db } from '@/core/db';
+import appVersion from '@/assets/version.json';
 import {
   parseGemsHtml,
   parseEsrRunesHtml,
@@ -191,7 +192,8 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       console.log('[HTML] Could not fetch version info for metadata');
     }
     yield call(() => db.metadata.put({ key: 'lastUpdated', value: new Date().toISOString() }));
-    console.log('[HTML] Stored metadata with ESR version:', storedVersion);
+    yield call(() => db.metadata.put({ key: 'appVersion', value: appVersion.version }));
+    console.log('[HTML] Stored metadata with ESR version:', storedVersion, 'app version:', appVersion.version);
 
     console.log('[HTML] Store complete:', {
       gems: gems.length,

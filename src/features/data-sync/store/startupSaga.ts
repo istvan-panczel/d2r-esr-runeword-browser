@@ -4,6 +4,7 @@ import type { Metadata, Runeword } from '@/core/db';
 import { fetchLatestVersion, type ChangelogVersion } from '@/core/api';
 import { isVersionDifferent } from '@/core/utils';
 import { startupUseCached, startupNeedsFetch, setNetworkWarning, fatalError, initDataLoad } from './dataSyncSlice';
+import appVersion from '@/assets/version.json';
 
 interface CachedDataCheck {
   hasData: boolean;
@@ -141,6 +142,17 @@ export function* handleStartupCheck() {
 
       if (needsSortKeyMigration) {
         console.log('[HTML] Migration needed: runewords missing sortKey, refetching...');
+        yield put(startupNeedsFetch());
+        yield put(initDataLoad({ force: false }));
+        return;
+      }
+
+      // Check if app version changed (catches data logic fixes like sortKey algorithm changes)
+      const storedAppVersion = (yield call(() => db.metadata.get('appVersion'))) as Metadata | undefined;
+      const currentVersion = appVersion.version;
+
+      if (!storedAppVersion || storedAppVersion.value !== currentVersion) {
+        console.log('[HTML] App version changed:', storedAppVersion?.value, '→', currentVersion, '- refetching...');
         yield put(startupNeedsFetch());
         yield put(initDataLoad({ force: false }));
         return;
