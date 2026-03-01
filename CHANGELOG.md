@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.14...v1.0.0) (2026-03-01)
+
+
+### Features
+
+* add per-column runeword bonuses, split cards, and comprehensive integration test ([076edc3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/076edc35747679468e4f876e323b5558a3e3dd07))
+
 ## [0.1.14](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v0.1.13...v0.1.14) (2026-02-27)
 
 
