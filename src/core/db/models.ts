@@ -109,7 +109,8 @@ export interface Runeword {
   readonly runes: readonly string[];
   readonly allowedItems: readonly string[];
   readonly excludedItems: readonly string[]; // Items excluded from this variant
-  readonly affixes: readonly Affix[];
+  readonly affixes: readonly Affix[]; // Runeword bonuses from first non-empty column (backward compat)
+  readonly columnAffixes: SocketableBonuses; // Per-column runeword bonuses (weapon/helm/armor)
   readonly tierPointTotals: readonly TierPointTotal[]; // Pre-calculated tier point totals
 }
 

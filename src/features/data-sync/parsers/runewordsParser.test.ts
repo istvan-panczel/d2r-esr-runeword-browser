@@ -205,7 +205,7 @@ describe('extractAffixes', () => {
       </tr>
     `);
     const cells = row.querySelectorAll('td');
-    const affixes = extractAffixes(cells);
+    const { affixes } = extractAffixes(cells);
 
     expect(affixes).toHaveLength(2);
     expect(affixes[0].rawText).toBe('+100 Defense');
@@ -224,7 +224,7 @@ describe('extractAffixes', () => {
       </tr>
     `);
     const cells = row.querySelectorAll('td');
-    const affixes = extractAffixes(cells);
+    const { affixes } = extractAffixes(cells);
 
     expect(affixes).toHaveLength(1);
     expect(affixes[0].rawText).toBe('+50 Defense');
@@ -243,12 +243,38 @@ describe('extractAffixes', () => {
       </tr>
     `);
     const cells = row.querySelectorAll('td');
-    const affixes = extractAffixes(cells);
+    const { affixes } = extractAffixes(cells);
 
     expect(affixes).toHaveLength(1);
     expect(affixes[0].rawText).toBe('+2% Enhanced Maximum Damage (Based on Character Level)');
     // Note: +2 becomes # (the + is part of the number pattern)
     expect(affixes[0].pattern).toBe('#% Enhanced Maximum Damage (Based on Character Level)');
+  });
+
+  it('should extract per-column affixes', () => {
+    const row = createTableRowFromHtml(`
+      <tr>
+        <td>Name</td>
+        <td>Runes</td>
+        <td>Items</td>
+        <td><font color="8080E6">+100 Defense <br><br>Rune bonus<br></font></td>
+        <td><font color="8080E6">+50 to Mana <br><br>Rune bonus<br></font></td>
+        <td></td>
+      </tr>
+    `);
+    const cells = row.querySelectorAll('td');
+    const { affixes, columnAffixes } = extractAffixes(cells);
+
+    // Legacy affixes = first non-empty column (weapon)
+    expect(affixes).toHaveLength(1);
+    expect(affixes[0].rawText).toBe('+100 Defense');
+
+    // Per-column affixes
+    expect(columnAffixes.weaponsGloves).toHaveLength(1);
+    expect(columnAffixes.weaponsGloves[0].rawText).toBe('+100 Defense');
+    expect(columnAffixes.helmsBoots).toHaveLength(1);
+    expect(columnAffixes.helmsBoots[0].rawText).toBe('+50 to Mana');
+    expect(columnAffixes.armorShieldsBelts).toHaveLength(0);
   });
 });
 

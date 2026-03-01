@@ -1,13 +1,15 @@
 export type BonusCategory = 'weaponsGloves' | 'helmsBoots' | 'armorShieldsBelts';
 
-// Keywords to match item types to categories (case-insensitive)
+// Keywords to match item types to bonus columns (case-insensitive).
+// Matches runewords.htm column headers:
+//   Col 4: "Weapons / Gloves"
+//   Col 5: "Helms / Boots / Staves / Orbs / Wands" (also used by Charms)
+//   Col 6: "Armor / Shields / Belts"
 const CATEGORY_KEYWORDS: Record<BonusCategory, readonly string[]> = {
   weaponsGloves: [
     'weapon',
     'glove',
-    'staff',
     'missile',
-    'orb',
     'hammer',
     'polearm',
     'spear',
@@ -21,24 +23,28 @@ const CATEGORY_KEYWORDS: Record<BonusCategory, readonly string[]> = {
     'bow',
     'crossbow',
     'javelin',
-    'wand',
     'scepter',
+    'club',
+    'knife',
+    'shuriken',
+    'blunt',
+    'hand to hand',
   ],
-  helmsBoots: ['helm', 'boot', 'circlet', 'cap', 'mask', 'crown'],
-  armorShieldsBelts: ['armor', 'shield', 'belt', 'plate'],
+  helmsBoots: ['helm', 'boot', 'circlet', 'cap', 'mask', 'crown', 'staff', 'orb', 'wand', 'charm', 'pelt'],
+  armorShieldsBelts: ['armor', 'shield', 'belt', 'plate', 'paladin item'],
 };
 
-// Display labels for each category
+// Fallback display labels for each category (used when dynamic labels can't be generated)
 export const CATEGORY_LABELS: Record<BonusCategory, string> = {
   weaponsGloves: 'Weapons/Gloves',
-  helmsBoots: 'Helms/Boots',
+  helmsBoots: 'Helms/Boots/Staves/Orbs/Wands',
   armorShieldsBelts: 'Armor/Shields/Belts',
 };
 
 /**
  * Determines which bonus category an item type belongs to.
  */
-function getItemCategory(itemType: string): BonusCategory | null {
+export function getItemCategory(itemType: string): BonusCategory | null {
   const lowerItem = itemType.toLowerCase();
 
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS) as [BonusCategory, readonly string[]][]) {
@@ -67,4 +73,14 @@ export function getRelevantCategories(allowedItems: readonly string[]): BonusCat
   // Return in consistent order
   const order: BonusCategory[] = ['weaponsGloves', 'helmsBoots', 'armorShieldsBelts'];
   return order.filter((cat) => categories.has(cat));
+}
+
+/**
+ * Generates a dynamic label for a category based on which allowed items map to it.
+ * E.g., for Machine (Weapon, Charm) → weaponsGloves: "Weapon", helmsBoots: "Charm"
+ * Falls back to CATEGORY_LABELS if no items match.
+ */
+export function getCategoryLabel(allowedItems: readonly string[], category: BonusCategory): string {
+  const matchingItems = allowedItems.filter((item) => getItemCategory(item) === category);
+  return matchingItems.length > 0 ? matchingItems.join('/') : CATEGORY_LABELS[category];
 }

@@ -1,5 +1,5 @@
 import type { Runeword, EsrRune, LodRune, KanjiRune, SocketableBonuses } from '@/core/db/models';
-import { getRelevantCategories } from './itemCategoryMapping';
+import { getRelevantCategories, getItemCategory } from './itemCategoryMapping';
 
 export type RuneBonusMap = Map<string, SocketableBonuses>;
 export type RuneCategoryMap = Map<string, string[]>;
@@ -66,7 +66,11 @@ export function getRuneBonusesText(runeword: Runeword, runeBonusMap: RuneBonusMa
 export function matchesSearch(runeword: Runeword, searchTerms: readonly string[], runeBonusMap: RuneBonusMap): boolean {
   if (searchTerms.length === 0) return true;
 
-  const affixText = runeword.affixes.map((a) => a.rawText).join(' ');
+  // Search all column affixes to catch column-specific bonuses, fall back to legacy affixes if columns are empty
+  const { weaponsGloves, helmsBoots, armorShieldsBelts } = runeword.columnAffixes;
+  const allColumnAffixes = [...weaponsGloves, ...helmsBoots, ...armorShieldsBelts];
+  const affixText =
+    allColumnAffixes.length > 0 ? allColumnAffixes.map((a) => a.rawText).join(' ') : runeword.affixes.map((a) => a.rawText).join(' ');
   const runeBonusText = getRuneBonusesText(runeword, runeBonusMap);
   const searchableText = `${runeword.name} ${affixText} ${runeBonusText}`.toLowerCase();
 
@@ -232,4 +236,53 @@ export function buildRuneBonusMap(
   }
 
   return map;
+}
+
+/**
+ * Expands runewords with differing column bonuses into separate entries per item category.
+ * E.g., Machine (Weapon, Charm) with different bonuses → two entries: Machine (Weapon) and Machine (Charm).
+ * Only splits when runeword bonuses differ; rune bonuses naturally differ per item type.
+ */
+export function expandRunewordsByColumn(runewords: readonly Runeword[]): readonly Runeword[] {
+  const result: Runeword[] = [];
+
+  for (const rw of runewords) {
+    const categories = getRelevantCategories(rw.allowedItems);
+
+    if (categories.length <= 1) {
+      result.push(rw);
+      continue;
+    }
+
+    // Check if runeword bonuses differ across relevant categories
+    const firstCol = rw.columnAffixes[categories[0]];
+    const hasDifferences = categories.some((cat) => {
+      const col = rw.columnAffixes[cat];
+      if (col.length !== firstCol.length) return true;
+      return col.some((affix, i) => affix.rawText !== firstCol[i].rawText);
+    });
+
+    if (!hasDifferences) {
+      result.push(rw);
+      continue;
+    }
+
+    // Split into separate entries per category
+    for (const category of categories) {
+      const itemsInCategory = rw.allowedItems.filter((item) => getItemCategory(item) === category);
+      const excludedInCategory = rw.excludedItems.filter((item) => getItemCategory(item) === category);
+      const affixes = rw.columnAffixes[category];
+
+      if (itemsInCategory.length === 0) continue;
+
+      result.push({
+        ...rw,
+        allowedItems: itemsInCategory as readonly string[],
+        excludedItems: excludedInCategory as readonly string[],
+        affixes,
+      });
+    }
+  }
+
+  return result;
 }

@@ -20,6 +20,7 @@ import {
   matchesTierPoints,
   buildRuneCategoryMap,
   buildRuneBonusMap,
+  expandRunewordsByColumn,
 } from '../utils/filteringHelpers';
 
 export function useFilteredRunewords(): readonly Runeword[] | undefined {
@@ -47,10 +48,13 @@ export function useFilteredRunewords(): readonly Runeword[] | undefined {
   const runeBonusMap = buildRuneBonusMap(esrRunes, lodRunes, kanjiRunes);
   const runeCategoryMap = buildRuneCategoryMap(esrRunes, lodRunes, kanjiRunes);
 
+  // Expand runewords with different column bonuses into separate entries per item category
+  const expandedRunewords = expandRunewordsByColumn(runewords);
+
   const searchTerms = parseSearchTerms(searchText);
 
   // Filter preserves the pre-sorted order from IndexedDB
-  return runewords.filter((runeword) => {
+  return expandedRunewords.filter((runeword) => {
     if (!matchesSearch(runeword, searchTerms, runeBonusMap)) return false;
     if (!matchesSockets(runeword, socketCount)) return false;
     if (!matchesMaxReqLevel(runeword, maxReqLevel)) return false;

@@ -27,7 +27,7 @@ export function RunewordsScreen() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {runewords.map((runeword) => (
-            <RunewordCard key={`${runeword.name}-${String(runeword.variant)}`} runeword={runeword} />
+            <RunewordCard key={`${runeword.name}-${String(runeword.variant)}-${runeword.allowedItems.join(',')}`} runeword={runeword} />
           ))}
         </div>
       )}

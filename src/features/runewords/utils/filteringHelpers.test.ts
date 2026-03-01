@@ -13,6 +13,7 @@ import {
   buildRuneBonusMap,
   getRunewordSortKey,
   getRuneBonusesText,
+  expandRunewordsByColumn,
   type RuneBonusMap,
   type RuneCategoryMap,
 } from './filteringHelpers';
@@ -48,6 +49,7 @@ function createRuneword(overrides: Partial<Runeword> = {}): Runeword {
     allowedItems: ['All Weapons'],
     excludedItems: [],
     affixes: [],
+    columnAffixes: createEmptyBonuses(),
     tierPointTotals: [],
     ...overrides,
   };
@@ -542,5 +544,120 @@ describe('matchesTierPoints', () => {
     });
     expect(matchesTierPoints(runeword, { 'lodRunes:2': 256 })).toBe(true);
     expect(matchesTierPoints(runeword, { 'lodRunes:2': 64 })).toBe(false);
+  });
+});
+
+describe('expandRunewordsByColumn', () => {
+  it('should not split runewords with a single category', () => {
+    const runeword = createRuneword({ allowedItems: ['Melee Weapon'] });
+    const result = expandRunewordsByColumn([runeword]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBe(runeword);
+  });
+
+  it('should not split runewords with identical column bonuses', () => {
+    const sharedAffixes = [createAffix('+50 to Strength')];
+    const runeword = createRuneword({
+      allowedItems: ['Weapon', 'Charm'],
+      columnAffixes: {
+        weaponsGloves: sharedAffixes,
+        helmsBoots: sharedAffixes,
+        armorShieldsBelts: [],
+      },
+    });
+    const result = expandRunewordsByColumn([runeword]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBe(runeword);
+  });
+
+  it('should split runewords with different column bonuses into separate entries', () => {
+    const weaponAffixes = [createAffix('+100% Enhanced Damage')];
+    const charmAffixes = [createAffix('+50 to Strength')];
+    const runeword = createRuneword({
+      name: 'Machine',
+      allowedItems: ['Weapon', 'Charm'],
+      affixes: weaponAffixes,
+      columnAffixes: {
+        weaponsGloves: weaponAffixes,
+        helmsBoots: charmAffixes,
+        armorShieldsBelts: [],
+      },
+    });
+
+    const result = expandRunewordsByColumn([runeword]);
+    expect(result).toHaveLength(2);
+
+    // First entry: Weapon
+    expect(result[0].name).toBe('Machine');
+    expect(result[0].allowedItems).toEqual(['Weapon']);
+    expect(result[0].affixes).toEqual(weaponAffixes);
+
+    // Second entry: Charm
+    expect(result[1].name).toBe('Machine');
+    expect(result[1].allowedItems).toEqual(['Charm']);
+    expect(result[1].affixes).toEqual(charmAffixes);
+  });
+
+  it('should preserve non-split runewords alongside split ones', () => {
+    const simple = createRuneword({ name: 'Simple', allowedItems: ['Sword'] });
+    const complex = createRuneword({
+      name: 'Complex',
+      allowedItems: ['Weapon', 'Charm'],
+      columnAffixes: {
+        weaponsGloves: [createAffix('Bonus A')],
+        helmsBoots: [createAffix('Bonus B')],
+        armorShieldsBelts: [],
+      },
+    });
+
+    const result = expandRunewordsByColumn([simple, complex]);
+    expect(result).toHaveLength(3);
+    expect(result[0]).toBe(simple);
+    expect(result[1].allowedItems).toEqual(['Weapon']);
+    expect(result[2].allowedItems).toEqual(['Charm']);
+  });
+
+  it('should handle split with excluded items', () => {
+    const runeword = createRuneword({
+      allowedItems: ['Staff', 'Weapon'],
+      excludedItems: ['Orb'],
+      columnAffixes: {
+        weaponsGloves: [createAffix('Bonus A')],
+        helmsBoots: [createAffix('Bonus B')],
+        armorShieldsBelts: [],
+      },
+    });
+
+    const result = expandRunewordsByColumn([runeword]);
+    expect(result).toHaveLength(2);
+    // Weapon entry has no excluded items (Orb is helmsBoots category)
+    expect(result[0].allowedItems).toEqual(['Weapon']);
+    expect(result[0].excludedItems).toEqual([]);
+    // Staff entry gets the Orb exclusion (both are helmsBoots)
+    expect(result[1].allowedItems).toEqual(['Staff']);
+    expect(result[1].excludedItems).toEqual(['Orb']);
+  });
+
+  it('should keep shared fields unchanged in split entries', () => {
+    const runeword = createRuneword({
+      name: 'Machine',
+      variant: 1,
+      sockets: 3,
+      runes: ['Ki Rune', 'Ka Rune', 'I Rune'],
+      allowedItems: ['Weapon', 'Charm'],
+      columnAffixes: {
+        weaponsGloves: [createAffix('Bonus A')],
+        helmsBoots: [createAffix('Bonus B')],
+        armorShieldsBelts: [],
+      },
+    });
+
+    const result = expandRunewordsByColumn([runeword]);
+    for (const entry of result) {
+      expect(entry.name).toBe('Machine');
+      expect(entry.variant).toBe(1);
+      expect(entry.sockets).toBe(3);
+      expect(entry.runes).toEqual(['Ki Rune', 'Ka Rune', 'I Rune']);
+    }
   });
 });

@@ -70,7 +70,9 @@ export function parseAffixes(cell: Element): Affix[] {
 
   return html
     .split(/<br\s*\/?>/i)
-    .map((line) => line.replace(/<[^>]*>/g, '').trim())
+    .map((line) => line.replace(/<[^>]*>/g, ''))
+    .map((line) => decodeHtmlEntities(line))
+    .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .map((rawText) => ({
       rawText,
@@ -148,6 +150,19 @@ function normalizeWhitespace(text: string): string {
 }
 
 /**
+ * Decodes common HTML entities that remain after stripping HTML tags from innerHTML.
+ * When using innerHTML to split on <br> tags, entities like &amp; stay encoded.
+ */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+/**
  * Parses affixes from a runeword bonus cell, extracting ONLY
  * the runeword bonuses (before the <br><br> separator).
  *
@@ -168,6 +183,7 @@ export function parseRunewordAffixes(cell: Element): Affix[] {
   return runewordBonusesHtml
     .split(/<br\s*\/?>/i)
     .map((line) => line.replace(/<[^>]*>/g, ''))
+    .map((line) => decodeHtmlEntities(line))
     .map((line) => normalizeWhitespace(line))
     .filter((line) => line.length > 0)
     .map((rawText) => ({

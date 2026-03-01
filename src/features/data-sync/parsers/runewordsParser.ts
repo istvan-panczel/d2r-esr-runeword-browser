@@ -1,4 +1,4 @@
-import type { Runeword, Affix, TierPointTotal, RuneCategory } from '@/core/db';
+import type { Runeword, Affix, SocketableBonuses, TierPointTotal, RuneCategory } from '@/core/db';
 import { parseRunewordAffixes } from './shared/parserUtils';
 
 export interface RunePointInfo {
@@ -28,6 +28,7 @@ interface RawRuneword {
   allowedItems: string[];
   excludedItems: string[];
   affixes: Affix[];
+  columnAffixes: SocketableBonuses;
   tierPointTotals: TierPointTotal[];
 }
 
@@ -139,24 +140,34 @@ export function extractAllowedItems(cell: Element): AllowedItemsResult {
   };
 }
 
+interface ExtractedAffixes {
+  affixes: Affix[];
+  columnAffixes: SocketableBonuses;
+}
+
 /**
- * Finds the first non-empty bonus cell and extracts runeword affixes.
+ * Extracts runeword affixes from all 3 bonus columns (weapon/helm/armor).
  * Columns 4-6 contain bonuses for different item types.
- * We take the first cell that has actual bonuses (before <br><br>).
- * Expects cells to have at least 6 elements (indices 0-5).
+ *
+ * Returns both the legacy `affixes` (first non-empty column, for backward compat)
+ * and `columnAffixes` with all 3 columns separately.
+ *
+ * Most runewords have identical bonuses across columns, but 9 runewords
+ * have item-type-specific bonuses (e.g., Machine, Lightning, Gluttony).
  */
-export function extractAffixes(cells: NodeListOf<Element>): Affix[] {
+export function extractAffixes(cells: NodeListOf<Element>): ExtractedAffixes {
   // Cells 3, 4, 5 are columns 4-6 (0-indexed)
-  const bonusCells = [cells[3], cells[4], cells[5]];
+  const weaponsGloves = parseRunewordAffixes(cells[3]);
+  const helmsBoots = parseRunewordAffixes(cells[4]);
+  const armorShieldsBelts = parseRunewordAffixes(cells[5]);
 
-  for (const cell of bonusCells) {
-    const affixes = parseRunewordAffixes(cell);
-    if (affixes.length > 0) {
-      return affixes;
-    }
-  }
+  // Legacy: first non-empty column
+  const affixes = weaponsGloves.length > 0 ? weaponsGloves : helmsBoots.length > 0 ? helmsBoots : armorShieldsBelts;
 
-  return [];
+  return {
+    affixes,
+    columnAffixes: { weaponsGloves, helmsBoots, armorShieldsBelts },
+  };
 }
 
 interface TierPointEntry {
@@ -288,7 +299,7 @@ export function parseRunewordsHtml(
     const sockets = extractSockets(nameCell);
     const runes = extractRunes(ingredientsCell);
     const { allowedItems, excludedItems } = extractAllowedItems(allowedItemsCell);
-    const affixes = extractAffixes(cells);
+    const { affixes, columnAffixes } = extractAffixes(cells);
 
     // Calculate required level (highest reqLevel among all runes)
     const reqLevel = runeReqLevelLookup ? calculateReqLevel(runes, runeReqLevelLookup) : 0;
@@ -311,6 +322,7 @@ export function parseRunewordsHtml(
       allowedItems,
       excludedItems,
       affixes,
+      columnAffixes,
       tierPointTotals,
     });
   }
@@ -326,6 +338,7 @@ export function parseRunewordsHtml(
     allowedItems: rw.allowedItems as readonly string[],
     excludedItems: rw.excludedItems as readonly string[],
     affixes: rw.affixes as readonly Affix[],
+    columnAffixes: rw.columnAffixes,
     tierPointTotals: rw.tierPointTotals as readonly TierPointTotal[],
   }));
 

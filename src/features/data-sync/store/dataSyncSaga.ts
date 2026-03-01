@@ -234,9 +234,10 @@ function* handleExtractAffixes() {
     // Collect all affixes into a Map keyed by pattern
     const affixMap = new Map<string, AffixPattern>();
 
-    // From runewords
+    // From runewords (all columns to catch column-specific bonuses)
     for (const rw of runewords) {
-      for (const affix of rw.affixes) {
+      const { weaponsGloves, helmsBoots, armorShieldsBelts } = rw.columnAffixes;
+      for (const affix of [...weaponsGloves, ...helmsBoots, ...armorShieldsBelts]) {
         if (!affixMap.has(affix.pattern)) {
           affixMap.set(affix.pattern, { pattern: affix.pattern, valueType: affix.valueType });
         }
