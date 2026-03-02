@@ -19,7 +19,7 @@ export function RunewordsScreen() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Runewords</h1>
+      <h1 className="text-2xl font-bold mb-4">Runewords ({runewords.length})</h1>
       <RunewordFilters />
 
       <p className="text-sm text-muted-foreground mb-4">Showing {runewords.length} runewords</p>
