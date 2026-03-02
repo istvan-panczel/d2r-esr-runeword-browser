@@ -36,6 +36,8 @@ export function UniqueItemsScreen() {
       </div>
       <UniqueItemFilters />
 
+      <p className="text-sm text-muted-foreground mb-4">Showing {items.length} unique items</p>
+
       {items.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
           No unique items found. Try adjusting your filters or load TXT data first from Settings.

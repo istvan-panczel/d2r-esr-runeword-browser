@@ -22,6 +22,8 @@ export function RunewordsScreen() {
       <h1 className="text-2xl font-bold mb-4">Runewords</h1>
       <RunewordFilters />
 
+      <p className="text-sm text-muted-foreground mb-4">Showing {runewords.length} runewords</p>
+
       {runewords.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">No runewords found. Try adjusting your filters or load data first.</p>
       ) : (
