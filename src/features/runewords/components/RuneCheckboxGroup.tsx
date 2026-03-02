@@ -23,9 +23,11 @@ function getTierState(runes: readonly string[], category: string, selectedRunes:
 
 interface RuneGroupSectionProps {
   readonly group: RuneGroup;
+  readonly labelClassName?: string;
+  readonly runeClassName?: string;
 }
 
-function RuneGroupSection({ group }: RuneGroupSectionProps) {
+function RuneGroupSection({ group, labelClassName, runeClassName }: RuneGroupSectionProps) {
   const dispatch = useDispatch();
   const selectedRunes = useSelector(selectSelectedRunes);
 
@@ -40,7 +42,7 @@ function RuneGroupSection({ group }: RuneGroupSectionProps) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       {/* Tier header with 3-way checkbox */}
-      <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
+      <label className={`flex items-center gap-1.5 cursor-pointer shrink-0 ${labelClassName ?? ''}`}>
         <Checkbox
           checked={tierState === 'all' ? true : tierState === 'some' ? 'indeterminate' : false}
           onCheckedChange={handleTierToggle}
@@ -52,7 +54,7 @@ function RuneGroupSection({ group }: RuneGroupSectionProps) {
       {group.runes.map((rune) => {
         const key = `${group.category}:${rune}`;
         return (
-          <label key={key} className="flex items-center gap-1 cursor-pointer">
+          <label key={key} className={`flex items-center gap-1 cursor-pointer ${runeClassName ?? ''}`}>
             <Checkbox
               checked={selectedRunes[key] ?? true}
               onCheckedChange={() => {
@@ -73,22 +75,40 @@ export function RuneCheckboxGroup() {
   if (!runeGroups) return null;
 
   const esrGroups = runeGroups.filter((g) => g.category === 'esrRunes');
-  const otherGroups = runeGroups.filter((g) => g.category !== 'esrRunes');
+  const lodGroups = runeGroups.filter((g) => g.category === 'lodRunes');
+  const kanjiGroups = runeGroups.filter((g) => g.category === 'kanjiRunes');
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-4">
       {/* Left column: ESR Runes */}
       <div className="space-y-1.5">
         {esrGroups.map((group) => (
-          <RuneGroupSection key={`${group.category}-${String(group.tier)}`} group={group} />
+          <RuneGroupSection
+            key={`${group.category}-${String(group.tier)}`}
+            group={group}
+            labelClassName="md:min-w-24"
+            runeClassName="md:min-w-11"
+          />
         ))}
       </div>
 
       {/* Right column: LoD + Kanji Runes */}
-      <div className="space-y-1.5">
-        {otherGroups.map((group) => (
-          <RuneGroupSection key={`${group.category}-${String(group.tier)}`} group={group} />
-        ))}
+      <div>
+        <div className="space-y-1.5">
+          {lodGroups.map((group) => (
+            <RuneGroupSection
+              key={`${group.category}-${String(group.tier)}`}
+              group={group}
+              labelClassName="md:min-w-22"
+              runeClassName="md:min-w-14"
+            />
+          ))}
+        </div>
+        <div className="space-y-1.5 mt-4">
+          {kanjiGroups.map((group) => (
+            <RuneGroupSection key={`${group.category}-${String(group.tier)}`} group={group} />
+          ))}
+        </div>
       </div>
     </div>
   );

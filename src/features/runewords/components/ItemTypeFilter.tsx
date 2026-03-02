@@ -38,7 +38,7 @@ function ItemGroupSection({ group }: ItemGroupSectionProps) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       {/* Group header with 3-way checkbox */}
-      <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
+      <label className="flex items-center gap-1.5 cursor-pointer shrink-0 md:min-w-32">
         <Checkbox
           checked={groupState === 'all' ? true : groupState === 'some' ? 'indeterminate' : false}
           onCheckedChange={handleGroupToggle}
