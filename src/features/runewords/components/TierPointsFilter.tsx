@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
-import { setMaxTierPoints, selectMaxTierPoints } from '../store/runewordsSlice';
+import { setMaxTierPoints, selectMaxTierPoints, clearAllTierPoints } from '../store/runewordsSlice';
 import { getTierTextColor } from '../constants/tierColors';
 import type { RuneCategory } from '@/core/db';
 
@@ -96,9 +96,27 @@ function TierPointInput({ config }: { readonly config: TierKeyConfig }) {
 }
 
 export function TierPointsFilter() {
+  const dispatch = useDispatch();
+  const maxTierPoints = useSelector(selectMaxTierPoints);
+  const hasAnyValue = Object.values(maxTierPoints).some((v) => v !== null);
+
+  const handleClearAll = () => {
+    dispatch(clearAllTierPoints());
+  };
+
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted-foreground">Max tier points (leave empty for no limit).</p>
+      <p className="text-xs text-muted-foreground">
+        Max tier points (leave empty for no limit).
+        <button
+          type="button"
+          onClick={handleClearAll}
+          disabled={!hasAnyValue}
+          className="ml-2 text-xs text-primary hover:underline disabled:text-muted-foreground/50 disabled:no-underline disabled:cursor-default"
+        >
+          Clear all
+        </button>
+      </p>
       <div className="flex flex-wrap gap-2">
         {TIER_KEYS.map((config) => (
           <TierPointInput key={config.key} config={config} />
