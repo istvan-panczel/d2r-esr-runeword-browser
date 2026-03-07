@@ -1,5 +1,5 @@
-// Base URL for ESR documentation (proxied via Cloudflare Worker to work around HTTP-only source)
-export const ESR_BASE_URL = 'https://esr-proxy.istvan-panczel-work.workers.dev';
+// Base URL for ESR documentation
+export const ESR_BASE_URL = 'https://easternsunresurrected.com';
 
 // Remote data URLs
 export const REMOTE_URLS = {
