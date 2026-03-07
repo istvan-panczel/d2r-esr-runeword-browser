@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = join(__dirname, '..', 'test-fixtures');
 
-const ESR_BASE_URL = 'https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs';
+const ESR_BASE_URL = 'http://easternsunresurrected.com';
 
 const FILES = [
   { url: `${ESR_BASE_URL}/gems.htm`, name: 'gems.htm' },

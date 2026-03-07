@@ -1,5 +1,5 @@
-// Base URL for ESR documentation
-export const ESR_BASE_URL = 'https://celestialrayone.github.io/Eastern_Sun_Resurrected/docs';
+// Base URL for ESR documentation (proxied via Cloudflare Worker to work around HTTP-only source)
+export const ESR_BASE_URL = 'https://esr-proxy.istvan-panczel-work.workers.dev';
 
 // Remote data URLs
 export const REMOTE_URLS = {
