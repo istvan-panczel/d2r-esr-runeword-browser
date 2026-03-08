@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.7.0...v1.7.1) (2026-03-08)
+
+
+### Chores
+
+* add Cloudflare analytics for network debug ([0c54c12](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0c54c12f2447268e1cfba923838f7a14844be597))
+
 ## [1.7.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.6.0...v1.7.0) (2026-03-07)
 
 
