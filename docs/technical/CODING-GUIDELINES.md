@@ -132,30 +132,17 @@ function RunewordCard(props: RunewordCardProps) { ... }
 ```
 
 ### Hooks Dependencies
-ESLint enforces `react-hooks/exhaustive-deps` as an error. All dependencies must be specified.
+ESLint enforces `react-hooks/exhaustive-deps` as an error. All dependencies must be specified for hooks like `useEffect`.
 
 ```typescript
-// Good - all dependencies listed
-const filteredRunewords = useMemo(
-  () => runewords.filter((rw) => rw.sockets === socketCount),
-  [runewords, socketCount]
-);
-
-// Good - callback with proper deps
-const handleSelect = useCallback(
-  (id: string) => {
-    onSelect(id);
-    trackEvent('runeword_selected', { id });
-  },
-  [onSelect]
-);
-
 // If you need to exclude a dependency, explain why with a comment
 // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally run only on mount
 useEffect(() => {
   initializeData();
 }, []);
 ```
+
+Note: With React Compiler handling memoization automatically, `useMemo` and `useCallback` should generally not be used (see React Compiler section above).
 
 ## File Organization
 
@@ -190,13 +177,8 @@ Use path aliases instead of relative imports for cross-folder imports:
 
 | Alias | Path | Use for |
 |-------|------|---------|
-| `@/components/*` | `src/components/*` | UI components (shadcn/ui) |
-| `@/core/*` | `src/core/*` | App infrastructure |
-| `@/features/*` | `src/features/*` | Feature modules |
-| `@/utils/*` | `src/utils/*` | Shared utilities |
-| `@/lib/*` | `src/lib/*` | Third-party configs |
-| `@/data/*` | `src/data/*` | Dev HTML fixtures |
-| `@/*` | `src/*` | Any other src imports |
+| `@/*` | `src/*` | All src imports (components, core, features, etc.) |
+| `@public/*` | `public/*` | Public assets |
 
 ```typescript
 // Good - use aliases for cross-folder imports

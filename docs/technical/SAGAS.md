@@ -13,8 +13,7 @@ Sagas are registered dynamically to avoid circular dependencies between core and
 ```
 rootSaga (core/store/rootSaga.ts)
     │
-    ├── dataSyncSaga (data-sync feature)
-    └── [future feature sagas]
+    └── dataSyncSaga (data-sync feature)
 ```
 
 - `registerSaga(saga)` - Register a feature saga before app starts
@@ -29,25 +28,35 @@ Each feature exports a main saga combining all watchers in `features/[feature]/s
 
 ### Pipeline Pattern
 
-Process data through multiple stages, each triggering the next via dispatched actions:
+The primary data-sync saga uses this pattern. Each stage dispatches a success action that triggers the next:
 
 ```
-initDataLoad → handleFetchHtml → fetchHtmlSuccess
-                                       ↓
-                               handleParseData → parseDataSuccess
-                                                       ↓
-                                               handleStoreData → storeDataSuccess
+startupCheck → startupNeedsFetch / startupUseCached
+                      ↓
+              initDataLoad → fetchHtmlSuccess
+                                    ↓
+                             parseDataSuccess
+                                    ↓
+                             storeDataSuccess
+                                    ↓
+                         extractAffixesSuccess → App Ready
 ```
 
-**Benefits:** Clear separation, independent error handling, UI can react to intermediate states.
+**Benefits:** Clear separation, independent error handling per stage, UI can react to intermediate states (loading, parsing, storing).
 
 ### Parallel Operations
 
 Use `all()` for independent operations (multiple fetches, database writes):
 
 ```typescript
-const [a, b] = yield all([call(fetchA), call(fetchB)]);
-yield all([call(() => db.tableA.bulkPut(a)), call(() => db.tableB.bulkPut(b))]);
+// Fetch all HTML files in parallel
+const [gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml] = yield all([
+  call(fetchGemsHtml),
+  call(fetchRunewordsHtml),
+  call(fetchUniqueWeaponsHtml),
+  call(fetchUniqueArmorsHtml),
+  call(fetchUniqueOthersHtml),
+]);
 ```
 
 ### Error Handling

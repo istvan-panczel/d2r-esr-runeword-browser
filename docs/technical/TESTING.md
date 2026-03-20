@@ -78,6 +78,9 @@ This downloads:
 - `gems.htm` - Socketables data (gems, runes, crystals)
 - `runewords.htm` - Runeword definitions
 - `changelogs.html` - Version information
+- `unique_weapons.htm` - Unique weapon items
+- `unique_armors.htm` - Unique armor items
+- `unique_others.htm` - Unique other items (rings, amulets, charms, jewels)
 
 **Loading fixtures in tests:**
 ```typescript

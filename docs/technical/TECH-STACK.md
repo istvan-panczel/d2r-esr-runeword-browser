@@ -6,15 +6,18 @@
 |------------|---------|---------|
 | React | 19 | UI library |
 | React Compiler | Latest | Automatic memoization & optimization |
-| TypeScript | Latest | Type safety |
-| Vite | Latest | Build tool & dev server |
+| TypeScript | 5.9 | Type safety |
+| Vite | 7 | Build tool & dev server |
 
 ## UI & Styling
 
 | Technology | Purpose |
 |------------|---------|
 | shadcn/ui | Base component library (copy-paste approach) |
-| Tailwind CSS | Utility-first CSS framework |
+| Tailwind CSS 4 | Utility-first CSS framework (with @tailwindcss/vite plugin) |
+| Radix UI | Accessible primitives (checkbox, dialog, label, popover, slider, slot) |
+| Lucide React | Icon library |
+| Class Variance Authority | Component variant management |
 | clsx | Conditional className construction |
 | tailwind-merge | Merge Tailwind classes without conflicts |
 
@@ -39,7 +42,7 @@ shadcn/ui components are installed via CLI and customized for a Diablo 2 aesthet
 | Technology | Purpose |
 |------------|---------|
 | Dexie.js | IndexedDB wrapper for local database |
-| dexie-react-hooks | React hooks for reactive queries |
+| dexie-react-hooks | React hooks for reactive queries (useLiveQuery) |
 
 **Data Flow:**
 1. Parse remote HTML files (or local dev fixtures)
@@ -57,23 +60,15 @@ No external parsing libraries needed. DOMParser provides sufficient capability f
 
 ## Routing
 
-| Technology | Purpose |
-|------------|---------|
-| react-router-dom | Client-side routing (v7 recommended) |
-
-## Validation (Recommended)
-
-| Technology | Purpose |
-|------------|---------|
-| zod | Runtime validation of parsed data |
-
-Useful for validating data structures extracted from HTML before storing in IndexedDB.
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| react-router-dom | 7 | Client-side routing with createBrowserRouter |
 
 ## Testing
 
 | Technology | Purpose |
 |------------|---------|
-| Vitest | Test runner and assertion library |
+| Vitest 4 | Test runner and assertion library |
 | @vitest/ui | Visual UI for interactive testing |
 | @vitest/coverage-v8 | Code coverage reporting |
 | jsdom | DOM environment for browser API simulation |
@@ -119,23 +114,4 @@ Already configured in project:
 - Prettier (formatting)
 - Husky + lint-staged (pre-commit hooks)
 - commitlint (conventional commits)
-
-## Package Installation Commands
-
-```bash
-# UI
-npx shadcn@latest init
-npm install clsx tailwind-merge
-
-# State
-npm install @reduxjs/toolkit react-redux redux-saga reselect
-
-# Database
-npm install dexie dexie-react-hooks
-
-# Routing
-npm install react-router-dom
-
-# Validation (optional)
-npm install zod
-```
+- commit-and-tag-version (semantic versioning)

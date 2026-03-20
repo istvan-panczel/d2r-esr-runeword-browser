@@ -8,12 +8,13 @@ Documentation for routing, layout, and navigation patterns.
 |------|--------|-------------|
 | `/` | RunewordsScreen | Home page - browse and filter runewords |
 | `/socketables` | SocketablesScreen | All socketables with category filters & search |
+| `/uniques` | HtmUniqueItemsScreen | Unique items with category & coupon filters |
 
 ## App Shell Layout
 
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│  D2R ESR             [Runewords] [Socketables]                     [⚙]│
+│  D2R ESR       [Runewords] [Socketables] [Uniques]               [⚙]│
 ├───────────────────────────────────────────────────────────────────────┤
 │                                                                       │
 │                         Main Content Area                             │
@@ -25,13 +26,13 @@ Documentation for routing, layout, and navigation patterns.
 ### Header Components
 
 - **Logo/Title**: "D2R ESR" or similar branding
-- **Navigation Links**: Runewords, Socketables
-- **Settings Button**: Cog icon (⚙) in top-right corner
+- **Navigation Links**: Runewords, Socketables, Uniques
+- **Settings Button**: Cog icon in top-right corner
 
 ### Navigation Style
 
 - Active route highlighted in nav
-- Mobile: Consider collapsible menu if needed
+- Mobile: Sheet-based slide-out menu
 
 ## Settings Drawer
 
@@ -47,6 +48,11 @@ Opens from the right side when the cog icon is clicked.
 │    (dimmed/inactive)        │  ○ Dark (default)             │
 │                             │  ○ Light                      │
 │                             │─────────────────────────────── │
+│                             │  Text Size                    │
+│                             │  [sm] [normal] [lg] [xl]      │
+│                             │─────────────────────────────── │
+│                             │  ☐ Diablo Font                │
+│                             │─────────────────────────────── │
 │                             │  Data                         │
 │                             │  [Refresh Data]               │
 │                             │                               │
@@ -58,13 +64,15 @@ Opens from the right side when the cog icon is clicked.
 ### Drawer Behavior
 
 - **Trigger**: Click settings cog icon
-- **Position**: Slides in from right (~300-400px on desktop)
+- **Position**: Slides in from right
 - **Overlay**: Main content dimmed but visible
 - **Close**: X button or click outside
 
 ### Settings Contents
 
 - **Theme Toggle**: Dark (default) / Light, persisted in localStorage
+- **Text Size**: sm / normal / lg / xl, persisted in localStorage
+- **Diablo Font**: Toggle for thematic font rendering, persisted in localStorage
 - **Refresh Data**: Force re-fetch and parse all data
 - **Version display**: Current ESR version from metadata
 - **Last updated**: Timestamp of last successful parse
@@ -75,26 +83,38 @@ Opens from the right side when the cog icon is clicked.
 
 ```typescript
 // src/core/router/index.tsx
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <AppLayout />,
+      children: [
+        { index: true, element: <RunewordsScreen /> },
+        { path: 'socketables', element: <SocketablesScreen /> },
+        { path: 'uniques', element: <HtmUniqueItemsScreen /> },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <AppLayout />,
-    children: [
-      { index: true, element: <RunewordsScreen /> },
-      { path: 'socketables', element: <SocketablesScreen /> },
-    ],
-  },
-]);
+    basename: import.meta.env.BASE_URL,
+  }
+);
 ```
+
+Uses `createBrowserRouter` (not hash-based) with `basename` set from Vite's `BASE_URL` for GitHub Pages compatibility.
 
 ### Settings State
 
 ```typescript
 interface SettingsState {
-  theme: 'dark' | 'light';
-  isDrawerOpen: boolean;
+  readonly theme: Theme;           // 'dark' | 'light'
+  readonly textSize: TextSize;     // 'sm' | 'normal' | 'lg' | 'xl'
+  readonly useDiabloFont: boolean;
+  readonly isDrawerOpen: boolean;
 }
 ```
+
+All settings (except `isDrawerOpen`) are persisted to localStorage and restored on startup.
 
 ## Feature Location
 
@@ -109,8 +129,15 @@ src/core/
     └── SettingsDrawer.tsx  # Settings slide-out panel
 
 src/features/settings/
+├── components/
+│   └── ThemeInitializer.tsx  # Apply theme on initial render
+├── constants/
+│   ├── textSize.ts           # Text size pixel mappings
+│   └── types.ts              # Theme, TextSize types
+├── hooks/
+│   └── useTheme.ts           # Theme toggle hook
 └── store/
-    └── settingsSlice.ts    # Theme and settings state
+    └── settingsSlice.ts      # Theme, text size, font, drawer state
 ```
 
 ## Accessibility

@@ -9,8 +9,9 @@ A web application for browsing Diablo 2 Resurrected [Eastern Sun Resurrected](ht
 ## Purpose
 
 Quickly search and filter:
-- **Runewords** - Find runewords by affixes, socket count, item type, or runes used
+- **Runewords** - Find runewords by affixes, socket count, item type, runes, required level, or tier points
 - **Socketables** - Browse gems, runes (ESR/LoD/Kanji), and crystals with their bonuses
+- **Unique Items** - Browse unique weapons, armors, and other items with category filters
 
 ## Documentation
 

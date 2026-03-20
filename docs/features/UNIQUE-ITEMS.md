@@ -4,276 +4,154 @@ Browse and filter unique items from the D2R ESR mod.
 
 ## Overview
 
-The Unique Items feature displays all unique items parsed from `uniqueitems.txt`. Items are categorized by type (weapons, armors, other) and can be filtered using checkboxes. The categorization system is fully data-driven from the TXT files.
+The Unique Items feature displays all unique items parsed from three HTM pages on the ESR documentation site: `unique_weapons.htm`, `unique_armors.htm`, and `unique_others.htm`. Items are categorized by their parsed category and grouped into filter groups for the UI.
 
 ## Data Flow
 
 ```
-uniqueitems.txt → TxtUniqueItem → DisplayUniqueItem → UI
-       ↓
-  itemtypes.txt → TxtItemTypeDef → FilterGroup/FilterItemType → Checkboxes
-       ↓
-weapons/armor/misc.txt → TxtItemType (code → type mapping)
+unique_weapons.htm ─┐
+unique_armors.htm  ─┼─→ htmUniqueItemsParser → HtmUniqueItem[] → IndexedDB → UI
+unique_others.htm  ─┘
 ```
 
-## Item Type System
+Each HTML page contains tables of unique items organized by category headers. The parser extracts item name, base item, category, level, properties, and coupon status.
 
-### Three-Level Hierarchy
-
-1. **Item Code** (`itemCode`): The specific base item code (e.g., `ktr` for Katar, `am1` for Stag Bow)
-2. **Type Code** (`typeCode`): The item type category (e.g., `h2h1` for Hand to Hand 1, `abow` for Amazon Bow)
-3. **Store Page** (`storePage`): Top-level grouping (e.g., `weap`, `armo`, `misc`)
-
-### Data Sources
-
-| File | Purpose | Key Columns |
-|------|---------|-------------|
-| `uniqueitems.txt` | Unique item definitions | `index`, `code`, `lvl req`, `prop1-12` |
-| `weapons.txt` / `armor.txt` / `misc.txt` | Item code → type code mapping | `code`, `type` |
-| `itemtypes.txt` | Type code definitions and hierarchy | `Code`, `ItemType`, `Equiv1`, `Equiv2`, `StorePage` |
-
-### Type Hierarchy Example
-
-```
-itemtypes.txt hierarchy for Assassin claws:
-
-mele (Melee)
-  └── h2h (Hand to Hand) - storePage: weap
-       └── claw (Claw) - storePage: weap
-            ├── h2h1 (Hand to Hand 1) - storePage: weap
-            └── h2h2 (Hand to Hand 2) - storePage: weap
-
-Items in weapons.txt use h2h1 or h2h2 as their type:
-- Katar (ktr) → h2h1
-- Quhab (9ar) → h2h1
-- Hand Scythe (9cs) → h2h2
-- Greater Claws (9lw) → h2h2
-```
-
-## Filter Consolidation
-
-The filter system consolidates related types to reduce checkbox clutter and provide a better UX.
-
-### Consolidation Rules
-
-1. **Only show types with items**: Types that have no unique items are hidden from filters
-2. **Parent-based consolidation**: Child types sharing a common parent are consolidated under that parent
-3. **Name-based consolidation**: Types with identical display names are merged (e.g., `abow` and `pbow` both named "Amazon Bow")
-
-### Consolidation Algorithm
+## Data Model
 
 ```typescript
-function findConsolidationParent(typeCode, typeDefsMap, usedTypeCodes):
-  1. Get the type's parent from equiv1
-  2. If parent exists, has a storePage, and is NOT directly used by items:
-     - Return parent as consolidation target
-  3. Otherwise, recursively check grandparent
-  4. If no suitable parent found, return null (type stands alone)
-```
+type HtmUniqueItemPage = 'weapons' | 'armors' | 'other';
 
-### Examples
-
-| Child Types | Parent | Display Name | Items Using |
-|-------------|--------|--------------|-------------|
-| `h2h1`, `h2h2` | `claw` | "Claw" | Katar, Hand Scythe, etc. |
-| `abow`, `pbow` | (same name) | "Amazon Bow" | Stag Bow, Precision Bow, etc. |
-| `swor` | (none) | "Sword" | Long Sword, Crystal Sword, etc. |
-
-### Why Parent Consolidation?
-
-Without consolidation, users would see:
-- "Hand to Hand 1" (7 items)
-- "Hand to Hand 2" (14 items)
-- "Hand to Hand" (0 items - abstract)
-- "Claw" (0 items - abstract)
-
-With consolidation:
-- "Claw" (21 items) ← h2h1 + h2h2 merged under parent
-
-## Data Models
-
-### FilterGroup
-
-```typescript
-interface FilterGroup {
-  readonly id: string;      // 'weapons', 'armors', 'other', 'mythical'
-  readonly label: string;   // 'Weapons', 'Armors', 'Other', 'Mythical'
-  readonly itemTypes: readonly FilterItemType[];
+interface HtmUniqueItem {
+  readonly id?: number;           // Auto-increment primary key
+  readonly name: string;          // "Titan's Revenge", "Windforce"
+  readonly baseItem: string;      // "Ceremonial Javelin", "Hydra Bow"
+  readonly baseItemCode: string;  // Item code for resolution
+  readonly page: HtmUniqueItemPage; // Which page it came from
+  readonly category: string;      // "Amazon Javelin", "Bow", etc.
+  readonly itemLevel: number;     // Item level
+  readonly reqLevel: number;      // Required level
+  readonly properties: readonly string[]; // Human-readable property strings
+  readonly isAncientCoupon: boolean; // True if coupon-only item
+  readonly gambleItem: string;    // Gamble item identifier
 }
 ```
 
-### FilterItemType
+## Category System
+
+### Filter Groups
+
+Categories are organized into groups defined in `src/features/htm-unique-items/constants/htmCategoryGroups.ts`:
+
+| Group | Label | Example Categories |
+|-------|-------|--------------------|
+| `missile-weapons` | Missile Weapons | Bow, Crossbow, Javelin, Throwing Knife, etc. |
+| `class-weapons` | Class Specific | Amazon Bow, Assassin 2H Katana, Orb, etc. |
+| `weapons` | Weapons | Axe, Sword, Mace, Polearm, Staff, etc. |
+| `armors` | Armors | Belt, Body Armor, Boots, Helm, Shield, etc. |
+| `class-armors` | Class Specific | Auric Shields, Pelt, Spirit Crown, etc. |
+| `rings` | Rings | Ring, Ama Ring, Bar Ring, Coupon Rings, etc. |
+| `amulets` | Amulets | Amulet, Ama Amulet, Coupon Amulets, etc. |
+| `charms` | Charms | Grand Charm, Large Charm, Odd Charm, Small Charm |
+| `jewels` | Jewels | Jewel |
+
+Any new category not in the known list is placed in a "New" group so that newly added categories are never silently hidden.
 
 ```typescript
-interface FilterItemType {
-  readonly code: string;           // Primary type code (e.g., 'claw')
-  readonly label: string;          // Display label (e.g., 'Claw')
-  readonly childCodes: readonly string[];  // All codes this filter matches ['h2h1', 'h2h2']
+interface HtmFilterGroup {
+  readonly id: string;           // 'weapons', 'rings', etc.
+  readonly label: string;        // 'Weapons', 'Rings', etc.
+  readonly categories: readonly string[];
 }
 ```
 
-### DisplayUniqueItem
+## Filters
 
-```typescript
-interface DisplayUniqueItem extends TxtUniqueItem {
-  readonly group: ItemGroup;        // 'weapons' | 'armors' | 'other' | 'mythical'
-  readonly typeCode: string;        // Leaf type code (e.g., 'h2h1')
-  readonly typeLabel: string;       // Display label (e.g., 'Hand to Hand 1')
-  readonly translatedProperties: readonly TranslatedProperty[];
-  // Inherited from TxtUniqueItem:
-  readonly isAncientCoupon: boolean; // True if obtained via Ancient Coupon
-}
-```
+### Text Search
+- Searches item name, base item, category, and properties
+- AND logic: all words must match
+- Supports quoted phrases: `"exact phrase"`
 
-## Special Cases
+### Max Required Level
+- Number input to cap the required level of shown items
 
-### Mythical Items
+### Category Filters
+- Grouped checkboxes organized by filter groups
+- Group-level toggle (all/none within a group)
+- "All" / "None" buttons for selecting/deselecting all categories
+- `__none__` sentinel value represents "no categories selected"
 
-Items with names starting with "Mythical" are detected by name prefix and categorized as `mythical` group, regardless of their actual item type. This is because mythical items span multiple item types.
-
-```typescript
-if (itemName.toLowerCase().startsWith('mythical')) {
-  return { group: 'mythical', typeCode: 'mythical', label: 'Mythical' };
-}
-```
-
-### Weapon Type Overrides
-
-Some item types have `storePage: misc` in the game data but are logically weapons (throwables). These are overridden to appear in the Weapons group:
-
-| Code | Name | Original storePage |
-|------|------|--------------------|
-| `tkni` | Throwing Knife | misc |
-| `taxe` | Throwing Axe | misc |
-| `jave` | Javelin | misc |
-| `ajav` | Amazon Javelin | misc |
-| `bjav` | Barbarian Javs | misc |
-
-### Excluded Items
-
-Certain item types are excluded from parsing:
-
-| Code | Name | Reason |
-|------|------|--------|
-| `ore` | Uni Ore | Crafting material, not equippable |
-| `ast` | Ascendancy Stone | Special charm items, not traditional uniques |
-
-### Excluded Properties
-
-Internal properties are filtered from display:
-
-| Code | Reason |
-|------|--------|
-| `tinkerflag` | Internal game flag |
-| `tinkerflag2` | Internal game flag |
-
-### Ancient Coupon Detection
-
-Some unique items cannot be obtained as drops - they are created using Ancient Coupons via the Horadric Cube. These items are identified by parsing `cubemain.txt` and matching the output item names.
-
-**Data Flow:**
-1. `cubemain.txt` is fetched and parsed at TXT data load time
-2. Coupon recipes (rows starting with "Coupon") are extracted
-3. The `output` column contains the unique item name
-4. Each unique item is marked with `isAncientCoupon: true` if its name matches
-
-**Examples:**
-| Item | isAncientCoupon | Reason |
-|------|-----------------|--------|
-| Titan's Revenge | false | Regular drop |
-| Titan's Revenge_lod | true | Coupon version (LoD recreation) |
-| Thunderstroke | true | Only from coupon |
-| Windforce | true | Only from coupon |
-
-**UI Display:**
-Ancient Coupon items show "Ancient Coupon Unique" text in purple below the item name on the card.
+### Ancient Coupon Toggle
+- `includeCouponItems` (default: true)
+- When disabled, hides items marked as `isAncientCoupon: true`
 
 ## Redux State
 
 ```typescript
-interface UniqueItemsState {
+interface HtmUniqueItemsState {
   readonly searchText: string;
-  readonly selectedTypeCodes: readonly string[];  // Empty = all selected
+  readonly maxReqLevel: number | null;
+  readonly selectedCategories: readonly string[];  // Empty = all selected
+  readonly includeCouponItems: boolean;
 }
 ```
 
 ### Selection Logic
 
-- Empty array (`[]`) = all types selected (show everything)
-- `['__none__']` = no types selected (show nothing)
-- `['h2h1', 'h2h2', 'swor']` = only show items with these type codes
+- Empty array (`[]`) = all categories selected (show everything)
+- `['__none__']` = no categories selected (show nothing)
+- `['Bow', 'Sword', 'Ring']` = only show items in these categories
 
-When a consolidated filter is toggled, ALL of its `childCodes` are added/removed from selection.
+**Actions:** `setSearchText`, `setMaxReqLevel`, `toggleCategory`, `toggleGroup`, `selectAllCategories`, `deselectAllCategories`, `setIncludeCouponItems`
+
+## Ancient Coupon Detection
+
+Some unique items cannot be obtained as drops - they are created using Ancient Coupons via the Horadric Cube. These are identified during parsing and marked with `isAncientCoupon: true`.
+
+**UI Display:** Ancient Coupon items show a distinct visual indicator on the card.
 
 ## Hooks
 
-### useItemTypeFilters
+### useCategoryFilters
 
-Returns filter groups built dynamically from IndexedDB:
-
-```typescript
-function useItemTypeFilters(): readonly FilterGroup[] | undefined
-```
-
-1. Queries unique items to find used type codes
-2. Queries itemTypeDefs for type hierarchy
-3. Consolidates types by parent
-4. Returns structured FilterGroup array
-
-### useFilteredUniqueItems
-
-Returns filtered and sorted unique items:
+Builds filter groups from the available categories in IndexedDB:
 
 ```typescript
-function useFilteredUniqueItems(): readonly DisplayUniqueItem[] | undefined
+function useCategoryFilters(): readonly HtmFilterGroup[] | undefined
 ```
 
-1. Loads items, type mappings, and type definitions from IndexedDB
-2. Maps each item to its type using `getItemTypeFromCode()`
-3. Filters by selected type codes and search text
-4. Sorts by level requirement, then name
+### useFilteredHtmUniqueItems
+
+Returns filtered and sorted unique items based on current Redux state:
+
+```typescript
+function useFilteredHtmUniqueItems(): readonly HtmUniqueItem[] | undefined
+```
+
+### useShareUrl / useUrlInitialize
+
+Generate shareable URLs with current filter state and initialize filters from URL parameters.
 
 ## File Structure
 
 ```
-src/features/unique-items/
+src/features/htm-unique-items/
 ├── components/
-│   ├── ItemTypeFilter.tsx      # Checkbox filter UI
-│   └── UniqueItemCard.tsx      # Item display card
+│   ├── HtmCategoryFilter.tsx        # Grouped checkbox filter UI
+│   ├── HtmUniqueItemCard.tsx        # Item display card
+│   └── HtmUniqueItemFilters.tsx     # All filter controls
+├── constants/
+│   └── htmCategoryGroups.ts         # Category → group mapping
 ├── hooks/
-│   ├── useItemTypeFilters.ts   # Build filter groups from DB
-│   ├── useFilteredUniqueItems.ts  # Filter and sort items
-│   └── usePropertyTranslator.ts   # Property translation
+│   ├── index.ts
+│   ├── useCategoryFilters.ts        # Build filter groups from DB
+│   ├── useFilteredHtmUniqueItems.ts # Filter and sort items
+│   ├── useShareUrl.ts               # Generate shareable URL
+│   └── useUrlInitialize.ts          # Init filters from URL
+├── screens/
+│   └── HtmUniqueItemsScreen.tsx     # Main screen component
 ├── store/
-│   └── uniqueItemsSlice.ts     # Redux state and actions
-├── utils/
-│   └── itemTypeMapping.ts      # Type lookup and categorization
+│   └── htmUniqueItemsSlice.ts       # Redux state and actions
 ├── types/
-│   └── index.ts                # TypeScript interfaces
-└── screens/
-    └── UniqueItemsScreen.tsx   # Main screen component
+│   └── index.ts                     # HtmFilterGroup interface
+└── index.ts
 ```
-
-## UI Components
-
-### Filter Section
-
-```
-Item Types: [All] [None]
-
-Weapons: ☑ Amazon Bow  ☑ Amazon Javelin  ☑ Axe  ☑ Claw  ...
-
-Armors:  ☑ Belt  ☑ Boots  ☑ Circlet  ☑ Gloves  ...
-
-Other:   ☑ Amulet  ☑ Grand Charm  ☑ Large Charm  ...
-
-Mythical: ☑ Mythical
-```
-
-### Group Checkbox States
-
-| State | Visual | Meaning |
-|-------|--------|---------|
-| All | ☑ | All types in group are selected |
-| Some | ☐̲ (indeterminate) | Some types in group are selected |
-| None | ☐ | No types in group are selected |

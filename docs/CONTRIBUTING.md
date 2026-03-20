@@ -28,23 +28,18 @@ This project uses an iterative documentation process where:
 
 ### Completed
 - Initial documentation structure created
-- Tech stack documented (React 19, Vite, shadcn/ui, Redux Toolkit + Saga, Dexie.js)
-- Architecture documented (folder structure, feature modules, data flow)
-- UI component guidelines (shadcn/ui usage, theming, dark/light modes)
+- Tech stack documented (React 19, Vite 7, shadcn/ui, Redux Toolkit + Saga, Dexie.js)
+- Architecture documented (folder structure, feature modules, single HTM-based data flow)
+- UI component guidelines (shadcn/ui usage, theming, dark/light modes, text size, Diablo font)
 - Coding guidelines (TypeScript, React, Redux conventions)
-- **Core Data feature** - HTML parsing for all 5 categories, app startup flow, version checking
-- **Runewords feature** - Browse/filter UI, affix selector, search, rune tooltip
-- **Socketables feature** - Unified view with 5 category checkboxes and text search (gems, ESR/LoD/Kanji runes, crystals)
-- **Navigation** - 2-page architecture (/, /socketables), settings drawer
-- **Data Models** - Complete Dexie schema with 8 tables (gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, affixes, metadata)
+- **Core Data feature** - HTM parsing for socketables, runewords, and unique items; app startup flow; version checking
+- **Runewords feature** - Filters (runes, sockets, item types, req level, tier points), gems/jewels support, per-column bonuses, share URLs
+- **Socketables feature** - 5 category checkboxes, text search, only highest quality filter, share URLs
+- **Unique Items feature** - HTM-based parsing from 3 pages, category groups, coupon detection, share URLs
+- **Navigation** - 3-page architecture (/, /socketables, /uniques), settings drawer with theme, text size, Diablo font
+- **Data Models** - Single Dexie database (d2r-esr-runeword-browser) with 9 tables
 - **Sagas** - Redux Saga patterns (pipeline pattern, dynamic registration, parallel operations)
-- **Testing** - Vitest setup, unit tests, integration tests, database testing patterns
-
-### In Progress
-- (ready for implementation)
-
-### Pending
-- Implementation of documented features
+- **Testing** - Vitest setup, unit tests, integration tests, database testing patterns, 6 fixture files
 
 ## Documentation Guidelines
 

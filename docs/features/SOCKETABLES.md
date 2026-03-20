@@ -6,8 +6,9 @@ Unified view of all socketable items (gems, runes, crystals) with filtering.
 
 - View all socketable items in one place
 - Filter by category via checkboxes
+- Filter by quality (only highest tier)
 - Search across name and bonus text
-- Compare socketables across categories
+- Share filtered views via URL
 
 ## Data Sources
 
@@ -21,27 +22,6 @@ Unified view of all socketable items (gems, runes, crystals) with filtering.
 
 **Total:** ~177 socketable items
 
-## UI Layout
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Socketables                                                │
-├─────────────────────────────────────────────────────────────┤
-│  ☑ Gems ☑ ESR Runes ☑ LoD Runes ☑ Kanji ☑ Crystals [All]   │
-│  Search: [_______________________________]                  │
-├─────────────────────────────────────────────────────────────┤
-│  ┌──────────────────┐  ┌──────────────────┐                 │
-│  │ Perfect Ruby     │  │ Ka Rune    [ESR] │                 │
-│  │ Req Level: 35    │  │ Req Level: 1     │                 │
-│  │ ─────────────────│  │ ─────────────────│                 │
-│  │ Weapons/Gloves:  │  │ Weapons/Gloves:  │                 │
-│  │  +40% Enh Damage │  │  +5 to Dexterity │                 │
-│  │ Helms/Boots:     │  │ ...              │                 │
-│  │  +38 to Life     │  │                  │                 │
-│  └──────────────────┘  └──────────────────┘                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
 ## Filter Controls
 
 ### Checkbox Group
@@ -50,11 +30,21 @@ Unified view of all socketable items (gems, runes, crystals) with filtering.
 - "All" button resets all checkboxes to checked
 - Toggling updates results immediately
 
+### Only Highest Quality
+- Toggle to show only the highest tier of each gem/crystal type
+- Default: **true** (shows only Perfect gems and Standard crystals)
+- When disabled, shows all quality tiers (Chipped through Perfect for gems, Chipped through Standard for crystals)
+- Does not affect runes (runes have no quality tiers)
+
 ### Text Search
 - Searches against item **name** and **bonus text**
 - Input is split by spaces, trimmed
 - All words must match (AND logic)
+- Supports quoted phrases: `"exact phrase"`
 - Example: `resist life` matches items containing both "resist" AND "life"
+
+### Item Count
+Item count is displayed in the page title showing the number of visible items.
 
 ## Display
 
@@ -68,48 +58,54 @@ Each socketable displays:
   - Helms/Boots
   - Armor/Shields/Belts
 
-### Category Badges
-
-| Category | Badge | Color |
-|----------|-------|-------|
-| Gems | Gem | Purple |
-| ESR Runes | ESR | Gold |
-| LoD Runes | LoD | Silver |
-| Kanji Runes | Kanji | Red |
-| Crystals | Crystal | Teal |
-
 ### Order
-Fixed order: items displayed by category (Gems → ESR → LoD → Kanji → Crystals), then by tier/name within category. No user sorting options.
+Fixed order: items displayed by category (Gems -> ESR -> LoD -> Kanji -> Crystals), then by tier/name within category. No user sorting options.
 
 ## State Management
 
 ```typescript
 interface SocketablesState {
-  enabledCategories: {
-    gems: boolean;
-    esrRunes: boolean;
-    lodRunes: boolean;
-    kanjiRunes: boolean;
-    crystals: boolean;
-  };
-  searchText: string;
+  readonly enabledCategories: EnabledCategories;
+  readonly searchText: string;
+  readonly onlyHighestQuality: boolean;
+}
+
+interface EnabledCategories {
+  readonly gems: boolean;
+  readonly esrRunes: boolean;
+  readonly lodRunes: boolean;
+  readonly kanjiRunes: boolean;
+  readonly crystals: boolean;
 }
 ```
 
-**Actions:** `toggleCategory`, `setSearchText`, `selectAll`
+**Actions:** `toggleCategory`, `setSearchText`, `toggleOnlyHighestQuality`, `selectAllCategories`, `initializeFromUrl`
+
+## Hooks
+
+- `useFilteredSocketables()` - Category + quality + search filtering
+- `useShareUrl()` - Generates shareable URLs with current filter state
+- `useUrlInitialize()` - Initializes filters from URL params, cleans URL after load
 
 ## Feature Location
 
 ```
 src/features/socketables/
 ├── components/
+│   ├── CategoryBadge.tsx
 │   ├── SocketableCard.tsx
-│   ├── SocketableFilters.tsx
-│   └── CategoryBadge.tsx
+│   └── SocketableFilters.tsx
+├── hooks/
+│   ├── useFilteredSocketables.ts
+│   ├── useShareUrl.ts
+│   └── useUrlInitialize.ts
+├── screens/
+│   └── SocketablesScreen.tsx
 ├── store/
 │   └── socketablesSlice.ts
-├── hooks/
-│   └── useFilteredSocketables.ts
-└── screens/
-    └── SocketablesScreen.tsx
+├── types/
+│   └── index.ts
+└── utils/
+    ├── filteringHelpers.ts
+    └── socketableColors.ts
 ```
