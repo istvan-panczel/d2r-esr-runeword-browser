@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.7.1...v1.8.0) (2026-03-20)
+
+
+### Features
+
+* add support for Mythical uniques ([16aaf68](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/16aaf68f68b0ef9aed47831af77ff63e56487272))
+
+
+### Documentation
+
+* update the docs to represent the current implementation ([3cbe711](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3cbe7115c2e7ea62b77a7e843ad62db2921315c3))
+
 ## [1.7.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.7.0...v1.7.1) (2026-03-08)
 
 
