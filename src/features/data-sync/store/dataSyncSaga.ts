@@ -6,6 +6,7 @@ import {
   fetchUniqueWeaponsHtml,
   fetchUniqueArmorsHtml,
   fetchUniqueOthersHtml,
+  fetchUniqueMythicalsHtml,
   fetchLatestVersion,
   type ChangelogVersion,
 } from '@/core/api';
@@ -19,6 +20,7 @@ import {
   parseCrystalsHtml,
   parseRunewordsHtml,
   parseHtmUniqueItems,
+  parseMythicalUniques,
   type RunePointsLookup,
   type RuneReqLevelLookup,
   type RunePriorityLookup,
@@ -48,21 +50,23 @@ import type { ParsedData } from '../interfaces';
 function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>) {
   try {
     console.log('[HTML] Fetching HTML files...', { force: action.payload?.force ?? false });
-    const [gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml] = (yield all([
+    const [gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml, mythicalsHtml] = (yield all([
       call(fetchGemsHtml),
       call(fetchRunewordsHtml),
       call(fetchUniqueWeaponsHtml),
       call(fetchUniqueArmorsHtml),
       call(fetchUniqueOthersHtml),
-    ])) as [string, string, string, string, string];
+      call(fetchUniqueMythicalsHtml),
+    ])) as [string, string, string, string, string, string];
     console.log('[HTML] Fetched HTML files', {
       gemsHtmlLength: gemsHtml.length,
       runewordsHtmlLength: runewordsHtml.length,
       uniqueWeaponsHtmlLength: uniqueWeaponsHtml.length,
       uniqueArmorsHtmlLength: uniqueArmorsHtml.length,
       uniqueOthersHtmlLength: uniqueOthersHtml.length,
+      mythicalsHtmlLength: mythicalsHtml.length,
     });
-    yield put(fetchHtmlSuccess({ gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml }));
+    yield put(fetchHtmlSuccess({ gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml, mythicalsHtml }));
   } catch (error) {
     console.error('[HTML] Fetch error:', error);
     // Check if we have cached data to fall back to
@@ -88,7 +92,7 @@ function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>
 function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
   try {
     console.log('[HTML] Parsing HTML data...');
-    const { gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml } = action.payload;
+    const { gemsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml, mythicalsHtml } = action.payload;
     const gems = parseGemsHtml(gemsHtml);
     console.log('[HTML] Parsed gems:', gems.length);
     const esrRunes = parseEsrRunesHtml(gemsHtml);
@@ -189,7 +193,10 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     const htmUniqueItems = [...htmUniqueWeapons, ...htmUniqueArmors, ...htmUniqueOthers];
     console.log('[HTML] Parsed HTM unique items total:', htmUniqueItems.length);
 
-    yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, htmUniqueItems }));
+    const mythicalUniques = parseMythicalUniques(mythicalsHtml);
+    console.log('[HTML] Parsed mythical uniques:', mythicalUniques.length);
+
+    yield put(parseDataSuccess({ gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, htmUniqueItems, mythicalUniques }));
   } catch (error) {
     console.error('[HTML] Parse error:', error);
     yield put(parseDataError(error instanceof Error ? error.message : 'Parse error'));
@@ -198,7 +205,7 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
 
 function* handleStoreData(action: PayloadAction<ParsedData>) {
   try {
-    const { gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, htmUniqueItems } = action.payload;
+    const { gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, htmUniqueItems, mythicalUniques } = action.payload;
 
     console.log('[HTML] Storing data to IndexedDB...');
 
@@ -215,6 +222,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       call(() => db.crystals.bulkPut(crystals)),
       call(() => db.runewords.bulkPut(runewords)),
       call(() => db.htmUniqueItems.bulkPut(htmUniqueItems)),
+      call(() => db.mythicalUniques.bulkPut(mythicalUniques)),
     ]);
     console.log('[HTML] Stored all data tables');
 
@@ -240,6 +248,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       crystals: crystals.length,
       runewords: runewords.length,
       htmUniqueItems: htmUniqueItems.length,
+      mythicalUniques: mythicalUniques.length,
     });
 
     yield put(storeDataSuccess());

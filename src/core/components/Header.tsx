@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Runewords', end: true },
   { to: '/socketables', label: 'Socketables', end: false },
   { to: '/uniques', label: 'Uniques', end: false },
+  { to: '/mythicals', label: 'Mythicals', end: false },
 ] as const;
 
 /** GitHub icon (lucide Github is deprecated, using simple-icons SVG path) */

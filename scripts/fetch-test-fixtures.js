@@ -16,6 +16,7 @@ const FILES = [
   { url: `${ESR_BASE_URL}/unique_weapons.htm`, name: 'unique_weapons.htm' },
   { url: `${ESR_BASE_URL}/unique_armors.htm`, name: 'unique_armors.htm' },
   { url: `${ESR_BASE_URL}/unique_others.htm`, name: 'unique_others.htm' },
+  { url: `${ESR_BASE_URL}/unique_mythicals.htm`, name: 'unique_mythicals.htm' },
 ];
 
 async function fetchFile(file) {

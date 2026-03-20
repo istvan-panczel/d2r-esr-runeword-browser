@@ -17,5 +17,6 @@ export type {
   TierPointTotal,
   HtmUniqueItem,
   HtmUniqueItemPage,
+  MythicalUnique,
   Metadata,
 } from './models';

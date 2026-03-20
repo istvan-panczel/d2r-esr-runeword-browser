@@ -135,6 +135,22 @@ export interface HtmUniqueItem {
   readonly gambleItem: string;
 }
 
+// Mythical Unique Items
+
+export interface MythicalUnique {
+  readonly id?: number;
+  readonly name: string;
+  readonly baseItem: string;
+  readonly baseItemLink: string;
+  readonly category: string;
+  readonly itemLevel: number;
+  readonly reqLevel: number;
+  readonly properties: readonly string[];
+  readonly specialProperties: readonly string[];
+  readonly notes: readonly string[];
+  readonly imageUrl: string;
+}
+
 // Metadata
 
 export interface Metadata {

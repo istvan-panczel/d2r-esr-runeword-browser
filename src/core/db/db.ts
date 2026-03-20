@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable, type Table } from 'dexie';
-import type { Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, AffixPattern, HtmUniqueItem, Metadata } from './models';
+import type { Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, AffixPattern, HtmUniqueItem, MythicalUnique, Metadata } from './models';
 
 class AppDatabase extends Dexie {
   gems!: EntityTable<Gem, 'name'>;
@@ -10,12 +10,13 @@ class AppDatabase extends Dexie {
   runewords!: Table<Runeword, [string, number]>; // Compound key: [name, variant]
   affixes!: EntityTable<AffixPattern, 'pattern'>;
   htmUniqueItems!: EntityTable<HtmUniqueItem, 'id'>;
+  mythicalUniques!: EntityTable<MythicalUnique, 'id'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    this.version(10).stores({
+    this.version(11).stores({
       gems: 'name, type, quality, color',
       esrRunes: 'name, order, tier, color',
       lodRunes: 'name, order',
@@ -24,6 +25,7 @@ class AppDatabase extends Dexie {
       runewords: '[name+variant], name, sockets, reqLevel, sortKey',
       affixes: 'pattern',
       htmUniqueItems: '++id, name, page, category, reqLevel',
+      mythicalUniques: '++id, name, category, reqLevel',
       metadata: 'key',
     });
   }

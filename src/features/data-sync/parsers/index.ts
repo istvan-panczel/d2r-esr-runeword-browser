@@ -13,3 +13,4 @@ export {
   type GemReqLevelLookup,
 } from './runewordsParser';
 export { parseHtmUniqueItems } from './htmUniqueItemsParser';
+export { parseMythicalUniques } from './mythicalUniquesParser';

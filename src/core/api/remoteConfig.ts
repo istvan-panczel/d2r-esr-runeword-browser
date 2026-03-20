@@ -9,4 +9,5 @@ export const REMOTE_URLS = {
   uniqueWeapons: `${ESR_BASE_URL}/unique_weapons.htm`,
   uniqueArmors: `${ESR_BASE_URL}/unique_armors.htm`,
   uniqueOthers: `${ESR_BASE_URL}/unique_others.htm`,
+  uniqueMythicals: `${ESR_BASE_URL}/unique_mythicals.htm`,
 } as const;
