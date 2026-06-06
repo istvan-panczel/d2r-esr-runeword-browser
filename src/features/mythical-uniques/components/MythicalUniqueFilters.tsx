@@ -10,6 +10,7 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { db } from '@/core/db';
 import { useShareUrl } from '../hooks/useShareUrl';
+import { NO_CATEGORIES_MARKER } from '@/core/constants/categoryFilter';
 import {
   setSearchText,
   toggleCategory,
@@ -72,7 +73,7 @@ export function MythicalUniqueFilters() {
     dispatch(toggleCategory({ category, allCategories: availableCategories }));
   };
 
-  const isNoneSelected = selectedCategories.has('__none__');
+  const isNoneSelected = selectedCategories.has(NO_CATEGORIES_MARKER);
 
   const isCategorySelected = (category: string): boolean => {
     if (selectedCategories.has('__all__')) return true;

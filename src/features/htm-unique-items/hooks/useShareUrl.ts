@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { selectSearchText, selectMaxReqLevel, selectSelectedCategoriesRaw, selectIncludeCouponItems } from '../store';
+import { NO_CATEGORIES_MARKER } from '@/core/constants/categoryFilter';
 
 const URL_PARAM_KEYS = {
   SEARCH: 'search',
@@ -28,7 +29,7 @@ export function useShareUrl(): () => string {
       params.set(URL_PARAM_KEYS.MAXLVL, String(maxReqLevel));
     }
 
-    if (selectedCategories.length > 0 && selectedCategories[0] !== '__none__') {
+    if (selectedCategories.length > 0 && selectedCategories[0] !== NO_CATEGORIES_MARKER) {
       params.set(URL_PARAM_KEYS.CATS, selectedCategories.join(','));
     }
 

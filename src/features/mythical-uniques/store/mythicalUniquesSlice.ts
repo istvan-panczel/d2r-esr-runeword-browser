@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import type { RootState } from '@/core/store/store';
+import { NO_CATEGORIES_MARKER } from '@/core/constants/categoryFilter';
 
 /**
  * State for mythical uniques feature.
@@ -52,7 +53,7 @@ const mythicalUniquesSlice = createSlice({
       state.selectedCategories = [];
     },
     deselectAllCategories(state) {
-      state.selectedCategories = ['__none__'];
+      state.selectedCategories = [NO_CATEGORIES_MARKER];
     },
     setSelectedCategories(state, action: PayloadAction<readonly string[]>) {
       state.selectedCategories = [...action.payload];

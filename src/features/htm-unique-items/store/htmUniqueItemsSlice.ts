@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import type { RootState } from '@/core/store/store';
+import { NO_CATEGORIES_MARKER } from '@/core/constants/categoryFilter';
 
 /**
  * State for HTM unique items feature
@@ -65,7 +66,7 @@ const htmUniqueItemsSlice = createSlice({
       }>
     ) {
       const { groupCategories, selected, allCategories } = action.payload;
-      const isNoneMarker = state.selectedCategories.length === 1 && state.selectedCategories[0] === '__none__';
+      const isNoneMarker = state.selectedCategories.length === 1 && state.selectedCategories[0] === NO_CATEGORIES_MARKER;
       const currentSet = new Set(state.selectedCategories.length === 0 ? allCategories : isNoneMarker ? [] : state.selectedCategories);
 
       if (selected) {
@@ -81,7 +82,7 @@ const htmUniqueItemsSlice = createSlice({
       if (currentSet.size === allCategories.length) {
         state.selectedCategories = [];
       } else if (currentSet.size === 0) {
-        state.selectedCategories = ['__none__'];
+        state.selectedCategories = [NO_CATEGORIES_MARKER];
       } else {
         state.selectedCategories = Array.from(currentSet);
       }
@@ -90,7 +91,7 @@ const htmUniqueItemsSlice = createSlice({
       state.selectedCategories = [];
     },
     deselectAllCategories(state) {
-      state.selectedCategories = ['__none__'];
+      state.selectedCategories = [NO_CATEGORIES_MARKER];
     },
     setSelectedCategories(state, action: PayloadAction<readonly string[]>) {
       state.selectedCategories = [...action.payload];

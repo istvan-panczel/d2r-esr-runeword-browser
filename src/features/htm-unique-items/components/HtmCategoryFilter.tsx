@@ -12,6 +12,7 @@ import {
 } from '../store';
 import { useCategoryFilters, getAllCategoriesFromGroups } from '../hooks';
 import type { HtmFilterGroup } from '../types';
+import { NO_CATEGORIES_MARKER } from '@/core/constants/categoryFilter';
 
 type GroupState = 'all' | 'some' | 'none';
 
@@ -104,7 +105,7 @@ export function HtmCategoryFilter() {
   }
 
   const allCategories = getAllCategoriesFromGroups(filterGroups);
-  const noneSelected = selectedCategories.includes('__none__');
+  const noneSelected = selectedCategories.includes(NO_CATEGORIES_MARKER);
 
   return (
     <div className="space-y-2">
