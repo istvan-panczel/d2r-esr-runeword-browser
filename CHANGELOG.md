@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.10.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.10.0...v1.10.1) (2026-06-06)
+
+
+### Bug Fixes
+
+* **data-sync:** make store step transactional and reuse fetched ESR version ([0a59e58](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0a59e58eec5190be5b5683409635d7c8d9f089d4))
+* **store:** start sagas registered after middleware startup ([84f81f3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/84f81f373c23ce124af4fba711beaabcabfd4231))
+
+
+### Documentation
+
+* disclose Cloudflare Web Analytics in privacy policy plan ([6a06a17](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6a06a17bc56d5260509f152109a1e8fc21ae8905))
+
+
+### Chores
+
+* add .env.example template and justify slider useMemo ([7d5d7d8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7d5d7d813474e09e07453e8ff439db105011f828))
+* bump in-range dependencies ([3a111ad](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3a111ad2deda6b86b3c7ff096765ca773fd8dda0))
+
+
+### Refactoring
+
+* **core:** extract useDebouncedFilterValue hook ([790bc81](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/790bc810359a4c1e53ed7c48c3202473f4c5fd8f))
+* **core:** use NavLinks in mobile nav instead of delayed navigation ([4e2e78f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4e2e78feb0bc5b0dbc49a860151a44f6a71a5510))
+* **data-sync:** unify cache completeness checks ([96625a3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/96625a388efa3fe1f10957a1d461e20b0058fa5e))
+* replace '__none__' magic string with named sentinel constant ([549b581](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/549b581a523a4ba0435f66b3bbdc50707b237407))
+
+
+### Tests
+
+* **data-sync:** cover transactional store step at saga level ([3680d7b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3680d7b56d1687607dc1035b92e982c02fd6566e))
+
 ## [1.10.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.9.2...v1.10.0) (2026-06-06)
 
 
