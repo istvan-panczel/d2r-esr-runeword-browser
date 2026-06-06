@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Settings, Sun, Moon, ExternalLink, Menu } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
@@ -32,19 +32,14 @@ function GitHubIcon({ className }: { readonly className?: string }) {
 export function Header() {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
-  const navigate = useNavigate();
-  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleThemeToggle = () => {
     dispatch(setTheme(theme === 'dark' ? 'light' : 'dark'));
   };
 
-  const handleMobileNavClick = (to: string) => {
+  const handleMobileNavClick = () => {
     setMobileMenuOpen(false);
-    setTimeout(() => {
-      void navigate(to);
-    }, 300);
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -124,17 +119,9 @@ export function Header() {
           </SheetHeader>
           <nav className="mt-0 px-4 pb-2 flex flex-col gap-1">
             {NAV_ITEMS.map((item) => (
-              <button
-                key={item.to}
-                onClick={() => {
-                  handleMobileNavClick(item.to);
-                }}
-                className={mobileNavLinkClass({
-                  isActive: item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
-                })}
-              >
+              <NavLink key={item.to} to={item.to} end={item.end} className={mobileNavLinkClass} onClick={handleMobileNavClick}>
                 {item.label}
-              </button>
+              </NavLink>
             ))}
             <a
               href={ESR_DOCS_URL}
