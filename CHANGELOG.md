@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.10.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.9.2...v1.10.0) (2026-06-06)
+
+
+### Features
+
+* add gemwords, favourites, and lazy routes to the project with some perf improvements in css ([9ba9d7b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9ba9d7b86cc202146694c2774e4a8153eed81b59))
+
 ## [1.9.2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.9.1...v1.9.2) (2026-05-27)
 
 
