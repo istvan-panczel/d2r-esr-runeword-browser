@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
+# Manual deploys only: push to master never auto-deploys.
+# Trigger via the Actions tab ("Run workflow") after cutting a release.
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
 
 permissions:
