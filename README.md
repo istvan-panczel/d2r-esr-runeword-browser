@@ -1,36 +1,51 @@
 # D2R ESR Browser
 
-A web application for browsing Diablo 2 Resurrected [Eastern Sun Resurrected](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected) mod data.
+Browse and search [Eastern Sun Resurrected](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected) (ESR) mod data for Diablo 2 Resurrected.
 
-**Live App:** https://istvan-panczel.github.io/d2r-esr-runeword-browser/
+**▶ Open the app: https://istvan-panczel.github.io/d2r-esr-runeword-browser/**
 
-> **Status:** Under development
+## Features
 
-## Purpose
+- **Runewords** — search by name or affixes; filter by runes, socket count, item type, required level, and max tier points
+- **Gemwords** — the same filtering for gem-based recipes
+- **Socketables** — gems, ESR/LoD/Kanji runes, and crystals with all their bonuses
+- **Uniques** — unique weapons, armors, and other items with category filters
+- **Mythicals** — mythical unique items
+- **Ascendancies** — all 15 ascendancies with their tier bonuses
 
-Quickly search and filter:
-- **Runewords** - Find runewords by affixes, socket count, item type, runes, required level, or tier points
-- **Socketables** - Browse gems, runes (ESR/LoD/Kanji), and crystals with their bonuses
-- **Unique Items** - Browse unique weapons, armors, and other items with category filters
+Plus:
 
-## Documentation
+- Favourite your runeword and gemword recipes
+- Shareable URLs — copy a link to your exact filter setup
+- Works offline after the first load (data is cached locally)
+- Dark/light theme, optional Diablo font, adjustable text size
 
-See [docs/README.md](./docs/README.md) for detailed project documentation.
+## How it works
+
+There is no backend. The app fetches the official ESR documentation pages from [easternsunresurrected.com](https://easternsunresurrected.com/), parses them directly in your browser, and stores the data in IndexedDB. On startup it checks the ESR changelog and automatically refreshes the data when a new ESR version is released.
 
 ## Development
 
+Requires Node 22 (see `.nvmrc`).
+
 ```bash
 npm install
-npm run dev
+npm run dev              # start dev server
+npm run build            # typecheck + production build
+npm run test:fixtures    # fetch test fixtures (once, after checkout)
+npm run test             # run tests
 ```
 
-## Testing
+See [docs/README.md](./docs/README.md) for full project documentation and [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) for contribution guidelines.
 
-```bash
-npm run test:fixtures    # Fetch test fixtures (required once after checkout)
-npm run test             # Run tests
-```
+Built with React 19 (+ React Compiler), TypeScript, Vite, Redux Toolkit + Redux Saga, Dexie (IndexedDB), Tailwind CSS 4, and shadcn/ui.
+
+## Eastern Sun Resurrected
+
+- [ESR mod on GitHub](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected) by CelestialRayOne
+- [ESR documentation](https://easternsunresurrected.com/) — the data source for this app
+- [ESR changelogs](https://easternsunresurrected.com/changelogs.html)
 
 ## License
 
-MIT
+[MIT](./LICENSE)
