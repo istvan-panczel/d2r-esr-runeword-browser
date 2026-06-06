@@ -13,7 +13,7 @@ src/
 ├── core/                       # App infrastructure
 │   ├── store/                  # Redux store setup
 │   │   ├── store.ts            # Store configuration
-│   │   └── rootSaga.ts         # Root saga (dynamic registration)
+│   │   └── sagaRegistry.ts     # Saga registry (dynamic registration, supports lazy-loaded sagas)
 │   ├── db/                     # Dexie database setup
 │   │   ├── db.ts               # Database instance (d2r-esr-runeword-browser)
 │   │   └── models.ts           # Type definitions for all entities

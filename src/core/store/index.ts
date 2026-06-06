@@ -1,6 +1,6 @@
 export { default as store, runSagas } from './store';
 export type { RootState, AppDispatch } from './store';
-export { registerSaga } from './rootSaga';
+export { registerSaga } from './sagaRegistry';
 export { fatalError, initDataLoad, startupCheck } from '@/features/data-sync/store';
 export {
   selectRequestState,

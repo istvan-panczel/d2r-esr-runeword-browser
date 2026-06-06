@@ -11,13 +11,13 @@ The project uses Redux Saga for side effects: async workflows, cancellation supp
 Sagas are registered dynamically to avoid circular dependencies between core and features:
 
 ```
-rootSaga (core/store/rootSaga.ts)
+sagaRegistry (core/store/sagaRegistry.ts)
     │
     └── dataSyncSaga (data-sync feature)
 ```
 
-- `registerSaga(saga)` - Register a feature saga before app starts
-- `runSagas()` - Start saga middleware after all registrations
+- `registerSaga(saga)` - Register a feature saga; queued before startup, started immediately after (each saga starts exactly once)
+- `runSagas()` - Start saga middleware and run all queued sagas; sagas registered later (lazy-loaded chunks) start on registration
 - Feature sagas are registered in `main.tsx` inside `startDataSync()`, which dynamically imports the data-sync module after the React root renders (keeps the heavy saga/parser code out of the entry chunk; guarded by `src/mainStartup.test.ts`)
 
 ### Feature Saga Structure
@@ -110,7 +110,7 @@ yield call(() => db.table.bulkPut(items));
 
 1. Create `features/[feature]/store/[feature]Saga.ts` with worker and watcher sagas
 2. Export from `features/[feature]/store/index.ts`
-3. Register in `main.tsx` inside `startDataSync()`: `registerSaga(featureSaga)` — import the feature dynamically (`await import(...)`) so it stays out of the entry chunk, and register before the `runSagas()` call
+3. Register with `registerSaga(featureSaga)` — import the feature dynamically (`await import(...)`) so it stays out of the entry chunk. Registration order relative to `runSagas()` no longer matters: sagas registered after startup start immediately (see `core/store/sagaRegistry.ts`)
 
 ---
 

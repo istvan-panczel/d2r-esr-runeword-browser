@@ -9,7 +9,7 @@ import gemwordsReducer from '@/features/gemwords/store/gemwordsSlice';
 import htmUniqueItemsReducer from '@/features/htm-unique-items/store/htmUniqueItemsSlice';
 import mythicalUniquesReducer from '@/features/mythical-uniques/store/mythicalUniquesSlice';
 import ascendanciesReducer from '@/features/ascendancies/store/ascendanciesSlice';
-import { rootSaga } from './rootSaga';
+import { startSagas } from './sagaRegistry';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -29,7 +29,7 @@ const store = configureStore({
 });
 
 export function runSagas() {
-  sagaMiddleware.run(rootSaga);
+  startSagas((saga) => sagaMiddleware.run(saga));
 }
 
 export default store;
