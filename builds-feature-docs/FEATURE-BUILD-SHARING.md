@@ -949,11 +949,11 @@ The app includes a Privacy Policy (`PRIVACY_POLICY.md`) that is:
 - Why it is collected (to provide the build sharing feature)
 - Where it is stored (Supabase, region specified)
 - What is publicly visible (display name with discriminator and public builds only — never email)
-- Third-party processors (Supabase, Discord for OAuth)
+- Third-party processors (Supabase, Discord for OAuth, Cloudflare for anonymous traffic analytics)
 - User rights under GDPR (access, export, deletion)
 - How to request data access/export/deletion (account settings + contact email)
 - Data retention policy (data kept until account deletion)
-- No analytics, no ads, no data selling
+- Anonymous, cookieless traffic analytics via Cloudflare Web Analytics (no personal data, no cross-site tracking, no fingerprinting); no ads, no data selling
 
 ### Data Export
 
