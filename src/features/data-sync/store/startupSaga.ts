@@ -4,6 +4,7 @@ import type { Metadata } from '@/core/db';
 import { fetchLatestVersion, type ChangelogVersion } from '@/core/api';
 import { isVersionDifferent } from '@/core/utils';
 import { startupUseCached, startupNeedsFetch, setNetworkWarning, fatalError, initDataLoad } from './dataSyncSlice';
+import { checkCacheCompleteness, hasAnyCachedData, type CacheCompleteness } from './cacheStatus';
 import appVersion from '@/assets/version.json';
 
 interface CachedDataCheck {
@@ -12,8 +13,8 @@ interface CachedDataCheck {
 }
 
 function* checkCachedData(): Generator<unknown, CachedDataCheck, unknown> {
-  // Check if we have any runewords in the DB (primary indicator of data presence)
-  const count: number = (yield call(() => db.runewords.count())) as number;
+  // Check if we have any cached data at all (primary indicator of data presence)
+  const hasData: boolean = (yield call(hasAnyCachedData)) as boolean;
 
   // Get stored version
   const versionMeta = (yield call(() => db.metadata.get('esrVersion'))) as Metadata | undefined;
@@ -21,13 +22,13 @@ function* checkCachedData(): Generator<unknown, CachedDataCheck, unknown> {
   // Get last updated timestamp for logging
   const lastUpdatedMeta = (yield call(() => db.metadata.get('lastUpdated'))) as Metadata | undefined;
 
-  console.log('[HTML] Cache check - runewords count:', count, 'stored version:', versionMeta?.value ?? 'none');
+  console.log('[HTML] Cache check - has data:', hasData, 'stored version:', versionMeta?.value ?? 'none');
   if (lastUpdatedMeta) {
     console.log('[HTML] Last updated:', lastUpdatedMeta.value);
   }
 
   return {
-    hasData: count > 0,
+    hasData,
     storedVersion: versionMeta?.value ?? null,
   };
 }
@@ -68,41 +69,12 @@ export function* handleStartupCheck() {
     console.log('[HTML] Startup check - stored:', cached.storedVersion, 'remote:', remoteVersion.version, 'needsFetch:', needsFetch);
 
     if (!needsFetch && cached.hasData) {
-      // Check if htmUniqueItems table is empty (new table migration)
-      const htmUniqueItemsCount: number = (yield call(() => db.htmUniqueItems.count())) as number;
+      // Table-level migration: if any required table is empty (added in a
+      // newer app version), refetch once to populate it
+      const completeness: CacheCompleteness = (yield call(checkCacheCompleteness)) as CacheCompleteness;
 
-      if (htmUniqueItemsCount === 0) {
-        console.log('[HTML] Migration needed: htmUniqueItems table empty, refetching...');
-        yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
-        return;
-      }
-
-      // Check if gemwords table is empty (new table migration)
-      const gemwordsCount: number = (yield call(() => db.gemwords.count())) as number;
-
-      if (gemwordsCount === 0) {
-        console.log('[HTML] Migration needed: gemwords table empty, refetching...');
-        yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
-        return;
-      }
-
-      // Check if mythicalUniques table is empty (new table migration)
-      const mythicalUniquesCount: number = (yield call(() => db.mythicalUniques.count())) as number;
-
-      if (mythicalUniquesCount === 0) {
-        console.log('[HTML] Migration needed: mythicalUniques table empty, refetching...');
-        yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
-        return;
-      }
-
-      // Check if ascendancies table is empty (new table migration)
-      const ascendanciesCount: number = (yield call(() => db.ascendancies.count())) as number;
-
-      if (ascendanciesCount === 0) {
-        console.log('[HTML] Migration needed: ascendancies table empty, refetching...');
+      if (!completeness.isComplete) {
+        console.log(`[HTML] Migration needed: ${completeness.emptyTable ?? 'unknown'} table empty, refetching...`);
         yield put(startupNeedsFetch());
         yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
         return;

@@ -49,6 +49,7 @@ import {
   type InitDataLoadPayload,
 } from './dataSyncSlice';
 import { handleStartupCheck } from './startupSaga';
+import { hasAnyCachedData } from './cacheStatus';
 import type { AffixPattern, Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, Gemword } from '@/core/db';
 import type { ParsedData } from '../interfaces';
 
@@ -92,11 +93,11 @@ function* handleFetchHtml(action: PayloadAction<InitDataLoadPayload | undefined>
   } catch (error) {
     console.error('[HTML] Fetch error:', error);
     // Check if we have cached data to fall back to
-    const count: number = (yield call(() => db.runewords.count())) as number;
+    const hasCache: boolean = (yield call(hasAnyCachedData)) as boolean;
 
-    if (count > 0 && !action.payload?.force) {
+    if (hasCache && !action.payload?.force) {
       // Not a force refresh and we have cached data - use it
-      console.log('[HTML] Using cached data (fetch failed, have', count, 'runewords cached)');
+      console.log('[HTML] Using cached data (fetch failed)');
       yield put(setNetworkWarning('Unable to fetch latest data. Using cached version.'));
       yield put(startupUseCached());
     } else {
@@ -104,7 +105,7 @@ function* handleFetchHtml(action: PayloadAction<InitDataLoadPayload | undefined>
       console.log('[HTML] Fatal: fetch failed with no cached data');
       yield put(fetchHtmlError(error instanceof Error ? error.message : 'Network error'));
 
-      if (count === 0) {
+      if (!hasCache) {
         yield put(fatalError('Unable to load data. Please check your internet connection and try again.'));
       }
     }
