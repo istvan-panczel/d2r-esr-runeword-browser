@@ -4,6 +4,8 @@ import * as SliderPrimitive from '@radix-ui/react-slider';
 import { cn } from '@/lib/utils';
 
 function Slider({ className, defaultValue, value, min = 0, max = 100, ...props }: React.ComponentProps<typeof SliderPrimitive.Root>) {
+  // Manual useMemo kept as-is from the stock shadcn/ui slider; redundant under
+  // React Compiler but harmless, and staying unmodified eases future shadcn syncs.
   const _values = React.useMemo(
     () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
     [value, defaultValue, min, max]
