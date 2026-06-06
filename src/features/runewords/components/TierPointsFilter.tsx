@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
+import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { setMaxTierPoints, selectMaxTierPoints, clearAllTierPoints } from '../store/runewordsSlice';
 import { getTierTextColor } from '../constants/tierColors';
@@ -32,27 +32,11 @@ function TierPointInput({ config }: { readonly config: TierKeyConfig }) {
   const dispatch = useDispatch();
   const maxTierPoints = useSelector(selectMaxTierPoints);
   const reduxValue = maxTierPoints[config.key] ?? null;
-  const [localValue, setLocalValue] = useState(reduxValue);
-
-  // Sync local state when Redux state changes externally (adjust during render)
-  const [prevReduxValue, setPrevReduxValue] = useState(reduxValue);
-  if (reduxValue !== prevReduxValue) {
-    setPrevReduxValue(reduxValue);
-    setLocalValue(reduxValue);
-  }
-
-  // Debounce dispatch to Redux
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localValue !== reduxValue) {
-        dispatch(setMaxTierPoints({ tierKey: config.key, value: localValue }));
-      }
-    }, INPUT_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [localValue, reduxValue, config.key, dispatch]);
+  const [localValue, setLocalValue, commitValue] = useDebouncedFilterValue(
+    reduxValue,
+    (value) => dispatch(setMaxTierPoints({ tierKey: config.key, value })),
+    INPUT_DEBOUNCE_MS
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -67,8 +51,7 @@ function TierPointInput({ config }: { readonly config: TierKeyConfig }) {
   };
 
   const handleClear = () => {
-    setLocalValue(null);
-    dispatch(setMaxTierPoints({ tierKey: config.key, value: null }));
+    commitValue(null);
   };
 
   const colorClass = getTierTextColor(config.tier, config.category);

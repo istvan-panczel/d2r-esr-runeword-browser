@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
@@ -34,73 +34,28 @@ export function RunewordFilters() {
   const selectedRunes = useSelector(selectSelectedRunes);
   const getShareUrl = useShareUrl();
 
-  const [localSearchText, setLocalSearchText] = useState(searchText);
-  const [localSocketCount, setLocalSocketCount] = useState(socketCount);
-  const [localMaxReqLevel, setLocalMaxReqLevel] = useState(maxReqLevel);
-
-  // Sync local state when Redux state changes externally (adjust during render)
-  const [prevSearchText, setPrevSearchText] = useState(searchText);
-  if (searchText !== prevSearchText) {
-    setPrevSearchText(searchText);
-    setLocalSearchText(searchText);
-  }
-
-  const [prevSocketCount, setPrevSocketCount] = useState(socketCount);
-  if (socketCount !== prevSocketCount) {
-    setPrevSocketCount(socketCount);
-    setLocalSocketCount(socketCount);
-  }
-
-  const [prevMaxReqLevel, setPrevMaxReqLevel] = useState(maxReqLevel);
-  if (maxReqLevel !== prevMaxReqLevel) {
-    setPrevMaxReqLevel(maxReqLevel);
-    setLocalMaxReqLevel(maxReqLevel);
-  }
-
-  // Debounce dispatch to Redux
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localSearchText !== searchText) {
-        dispatch(setSearchText(localSearchText));
-      }
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [localSearchText, searchText, dispatch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localSocketCount !== socketCount) {
-        dispatch(setSocketCount(localSocketCount));
-      }
-    }, INPUT_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [localSocketCount, socketCount, dispatch]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localMaxReqLevel !== maxReqLevel) {
-        dispatch(setMaxReqLevel(localMaxReqLevel));
-      }
-    }, INPUT_DEBOUNCE_MS);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [localMaxReqLevel, maxReqLevel, dispatch]);
+  const [localSearchText, setLocalSearchText, commitSearchText] = useDebouncedFilterValue(
+    searchText,
+    (value) => dispatch(setSearchText(value)),
+    SEARCH_DEBOUNCE_MS
+  );
+  const [localSocketCount, setLocalSocketCount, commitSocketCount] = useDebouncedFilterValue(
+    socketCount,
+    (value) => dispatch(setSocketCount(value)),
+    INPUT_DEBOUNCE_MS
+  );
+  const [localMaxReqLevel, setLocalMaxReqLevel, commitMaxReqLevel] = useDebouncedFilterValue(
+    maxReqLevel,
+    (value) => dispatch(setMaxReqLevel(value)),
+    INPUT_DEBOUNCE_MS
+  );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalSearchText(e.target.value);
   };
 
   const handleClearSearch = () => {
-    setLocalSearchText('');
-    dispatch(setSearchText(''));
+    commitSearchText('');
   };
 
   const handleSocketChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,8 +71,7 @@ export function RunewordFilters() {
   };
 
   const handleClearSockets = () => {
-    setLocalSocketCount(null);
-    dispatch(setSocketCount(null));
+    commitSocketCount(null);
   };
 
   const handleMaxReqLevelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,8 +87,7 @@ export function RunewordFilters() {
   };
 
   const handleClearMaxReqLevel = () => {
-    setLocalMaxReqLevel(null);
-    dispatch(setMaxReqLevel(null));
+    commitMaxReqLevel(null);
   };
 
   const allRunesSelected = Object.keys(selectedRunes).length > 0 && Object.values(selectedRunes).every(Boolean);
