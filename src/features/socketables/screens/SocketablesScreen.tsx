@@ -28,7 +28,9 @@ export function SocketablesScreen() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {socketables.map((socketable) => (
-            <SocketableCard key={`${socketable.category}-${socketable.name}`} socketable={socketable} />
+            <div key={`${socketable.category}-${socketable.name}`} className="card-visibility-auto">
+              <SocketableCard socketable={socketable} />
+            </div>
           ))}
         </div>
       )}

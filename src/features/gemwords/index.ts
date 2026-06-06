@@ -1,0 +1,1 @@
+export { GemwordsScreen } from './screens';

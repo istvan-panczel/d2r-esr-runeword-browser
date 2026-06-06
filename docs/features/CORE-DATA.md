@@ -13,6 +13,7 @@ Data is fetched from the ESR documentation site:
 | Changelog | `https://easternsunresurrected.com/changelogs.html` |
 | Socketables | `https://easternsunresurrected.com/gems.htm` |
 | Runewords | `https://easternsunresurrected.com/runewords.htm` |
+| Gemwords | `https://easternsunresurrected.com/gemwords.htm` |
 | Unique Weapons | `https://easternsunresurrected.com/unique_weapons.htm` |
 | Unique Armors | `https://easternsunresurrected.com/unique_armors.htm` |
 | Unique Others | `https://easternsunresurrected.com/unique_others.htm` |
@@ -37,7 +38,7 @@ Each category is stored in its own Dexie table for clean separation.
 
 ## App Startup Flow
 
-All data loading happens at app startup before any feature is accessible. The data sync saga orchestrates the flow:
+All data loading happens at app startup before any feature is accessible. The data sync module itself is loaded dynamically: `main.tsx` renders the app shell (loading UI) first, then `startDataSync()` imports the data-sync feature, registers its saga, and dispatches `startupCheck` — so the heavy parsing code downloads in parallel with the first paint instead of blocking it (guarded by `src/mainStartup.test.ts`). The data sync saga orchestrates the flow:
 
 ```
 ┌─────────────────────────────────────────┐

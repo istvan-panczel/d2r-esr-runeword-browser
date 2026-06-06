@@ -13,6 +13,7 @@ const GITHUB_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Runewords', end: true },
+  { to: '/gemwords', label: 'Gemwords', end: false },
   { to: '/socketables', label: 'Socketables', end: false },
   { to: '/uniques', label: 'Uniques', end: false },
   { to: '/mythicals', label: 'Mythicals', end: false },

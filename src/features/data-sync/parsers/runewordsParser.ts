@@ -1,5 +1,5 @@
 import type { Runeword, Affix, SocketableBonuses, TierPointTotal, RuneCategory } from '@/core/db';
-import { parseRunewordAffixes } from './shared/parserUtils';
+import { parseRecipeAffixes } from './shared/parserUtils';
 import { isGemName } from './gemsParser';
 
 export interface RunePointInfo {
@@ -187,9 +187,9 @@ interface ExtractedAffixes {
  */
 export function extractAffixes(cells: NodeListOf<Element>): ExtractedAffixes {
   // Cells 3, 4, 5 are columns 4-6 (0-indexed)
-  const weaponsGloves = parseRunewordAffixes(cells[3]);
-  const helmsBoots = parseRunewordAffixes(cells[4]);
-  const armorShieldsBelts = parseRunewordAffixes(cells[5]);
+  const weaponsGloves = parseRecipeAffixes(cells[3]);
+  const helmsBoots = parseRecipeAffixes(cells[4]);
+  const armorShieldsBelts = parseRecipeAffixes(cells[5]);
 
   // Legacy: first non-empty column
   const affixes = weaponsGloves.length > 0 ? weaponsGloves : helmsBoots.length > 0 ? helmsBoots : armorShieldsBelts;

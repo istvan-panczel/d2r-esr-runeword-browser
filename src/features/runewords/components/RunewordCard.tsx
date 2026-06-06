@@ -1,21 +1,26 @@
+import { Star } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { RuneBadge } from './RuneBadge';
-import { GemBadge } from './GemBadge';
+import { GemBadge } from '@/core/components/GemBadge';
 import { RunewordPointsDisplay } from './RunewordPointsDisplay';
 import { useRuneBonuses } from '../hooks/useRuneBonuses';
-import { getRelevantCategories, getCategoryLabel, type BonusCategory } from '../utils/itemCategoryMapping';
+import { getRelevantCategories, getCategoryLabel, type BonusCategory } from '@/core/utils/itemCategoryMapping';
 import { isGemName } from '@/features/data-sync/parsers/gemsParser';
+import { cn } from '@/lib/utils';
 import type { Runeword } from '@/core/db/models';
 
 interface RunewordCardProps {
   readonly runeword: Runeword;
+  readonly isFavorite?: boolean;
+  readonly onToggleFavorite?: (runeword: Runeword) => void;
 }
 
 // sortKey >= 10000 means LoD runeword (see runewordsParser.ts LOD_SORT_KEY_OFFSET)
 const LOD_SORT_KEY_OFFSET = 10000;
 
-export function RunewordCard({ runeword }: RunewordCardProps) {
+export function RunewordCard({ runeword, isFavorite = false, onToggleFavorite }: RunewordCardProps) {
   const { name, sockets, runes, allowedItems, excludedItems, affixes, tierPointTotals } = runeword;
   // Handle backwards compatibility for cached runewords without reqLevel
   const reqLevel = 'reqLevel' in runeword ? runeword.reqLevel : undefined;
@@ -52,7 +57,22 @@ export function RunewordCard({ runeword }: RunewordCardProps) {
       <CardHeader className="pb-0">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg text-amber-700 dark:text-amber-400">{name}</CardTitle>
-          <div className="flex gap-1">
+          <div className="flex shrink-0 items-center gap-1">
+            {onToggleFavorite && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-pressed={isFavorite}
+                aria-label={isFavorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
+                title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                onClick={() => {
+                  onToggleFavorite(runeword);
+                }}
+              >
+                <Star className={cn('size-4', isFavorite && 'fill-amber-400 text-amber-500')} />
+              </Button>
+            )}
             <Badge variant="secondary">{sockets} Socket</Badge>
             {reqLevel !== undefined && <Badge variant="outline">Lvl {reqLevel}</Badge>}
           </div>

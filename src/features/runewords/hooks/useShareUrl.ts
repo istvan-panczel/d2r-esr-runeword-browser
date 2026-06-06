@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { FILTER_URL_PARAM_KEYS, appendCommonFilterParams, appendSelectionParam, buildShareUrl } from '@/core/utils/filterUrlParams';
 import {
   selectSearchText,
   selectSocketCount,
@@ -7,15 +8,6 @@ import {
   selectSelectedRunes,
   selectMaxTierPoints,
 } from '../store/runewordsSlice';
-
-const URL_PARAM_KEYS = {
-  SEARCH: 'search',
-  SOCKETS: 'sockets',
-  MAXLVL: 'maxlvl',
-  ITEMS: 'items',
-  RUNES: 'runes',
-  TIERPTS: 'tierpts',
-} as const;
 
 /**
  * Returns a function that generates a shareable URL with current filter state.
@@ -31,55 +23,17 @@ export function useShareUrl(): () => string {
 
   return () => {
     const params = new URLSearchParams();
-
-    // Search: add if not empty
-    if (searchText) {
-      params.set(URL_PARAM_KEYS.SEARCH, searchText);
-    }
-
-    // Sockets: add if set
-    if (socketCount !== null) {
-      params.set(URL_PARAM_KEYS.SOCKETS, String(socketCount));
-    }
-
-    // Max required level: add if set
-    if (maxReqLevel !== null) {
-      params.set(URL_PARAM_KEYS.MAXLVL, String(maxReqLevel));
-    }
-
-    // Items: only add if NOT all selected
-    const itemKeys = Object.keys(selectedItemTypes);
-    if (itemKeys.length > 0) {
-      const allItemsSelected = Object.values(selectedItemTypes).every(Boolean);
-      if (!allItemsSelected) {
-        const selectedItems = itemKeys.filter((k) => selectedItemTypes[k]);
-        if (selectedItems.length > 0) {
-          params.set(URL_PARAM_KEYS.ITEMS, selectedItems.join(','));
-        }
-      }
-    }
-
-    // Runes: only add if NOT all selected
-    const runeKeys = Object.keys(selectedRunes);
-    if (runeKeys.length > 0) {
-      const allRunesSelected = Object.values(selectedRunes).every(Boolean);
-      if (!allRunesSelected) {
-        const selectedRuneKeys = runeKeys.filter((k) => selectedRunes[k]);
-        if (selectedRuneKeys.length > 0) {
-          params.set(URL_PARAM_KEYS.RUNES, selectedRuneKeys.join(','));
-        }
-      }
-    }
+    appendCommonFilterParams(params, { searchText, socketCount, maxReqLevel, selectedItemTypes });
+    appendSelectionParam(params, FILTER_URL_PARAM_KEYS.RUNES, selectedRunes);
 
     // Tier points: serialize non-null entries as "esrRunes:1=64,lodRunes:2=128"
     const tierPtsEntries = Object.entries(maxTierPoints)
-      .filter(([, v]) => v !== null)
-      .map(([k, v]) => `${k}=${String(v)}`);
+      .filter(([, value]) => value !== null)
+      .map(([key, value]) => `${key}=${String(value)}`);
     if (tierPtsEntries.length > 0) {
-      params.set(URL_PARAM_KEYS.TIERPTS, tierPtsEntries.join(','));
+      params.set(FILTER_URL_PARAM_KEYS.TIERPTS, tierPtsEntries.join(','));
     }
 
-    const base = `${window.location.origin}${import.meta.env.BASE_URL}`;
-    return params.toString() ? `${base}?${params.toString()}` : base;
+    return buildShareUrl('', params);
   };
 }

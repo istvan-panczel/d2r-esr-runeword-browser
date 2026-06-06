@@ -163,13 +163,14 @@ export function decodeHtmlEntities(text: string): string {
 }
 
 /**
- * Parses affixes from a runeword bonus cell, extracting ONLY
- * the runeword bonuses (before the <br><br> separator).
+ * Parses affixes from a recipe (runeword/gemword) bonus cell, extracting ONLY
+ * the recipe's own bonuses (before the <br><br> separator).
  *
- * Runeword cells contain: [runeword bonuses]<br><br>[rune bonuses]
- * We only want the runeword bonuses.
+ * Recipe cells contain: [recipe bonuses]<br><br>[ingredient bonuses]
+ * (rune bonuses for runewords, gem bonuses for gemwords).
+ * We only want the recipe bonuses.
  */
-export function parseRunewordAffixes(cell: Element): Affix[] {
+export function parseRecipeAffixes(cell: Element): Affix[] {
   const html = cell.innerHTML;
   if (!html.trim()) return [];
 

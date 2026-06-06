@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
+import { createItemTypeFilterSelectors, itemTypeFilterInitialState, itemTypeFilterReducers } from '@/core/store/itemTypeFilter';
 import type { RootState } from '@/core/store/store';
 
 interface RunewordsState {
@@ -12,10 +13,7 @@ interface RunewordsState {
 }
 
 const initialState: RunewordsState = {
-  searchText: '',
-  socketCount: null,
-  maxReqLevel: null,
-  selectedItemTypes: {},
+  ...itemTypeFilterInitialState,
   selectedRunes: {},
   maxTierPoints: {},
 };
@@ -24,32 +22,7 @@ const runewordsSlice = createSlice({
   name: 'runewords',
   initialState,
   reducers: {
-    setSearchText(state, action: PayloadAction<string>) {
-      state.searchText = action.payload;
-    },
-    setSocketCount(state, action: PayloadAction<number | null>) {
-      state.socketCount = action.payload;
-    },
-    setMaxReqLevel(state, action: PayloadAction<number | null>) {
-      state.maxReqLevel = action.payload;
-    },
-    toggleItemType(state, action: PayloadAction<string>) {
-      const itemType = action.payload;
-      state.selectedItemTypes[itemType] = !state.selectedItemTypes[itemType];
-    },
-    setAllItemTypes(state, action: PayloadAction<Record<string, boolean>>) {
-      state.selectedItemTypes = action.payload;
-    },
-    selectAllItemTypes(state) {
-      for (const key of Object.keys(state.selectedItemTypes)) {
-        state.selectedItemTypes[key] = true;
-      }
-    },
-    deselectAllItemTypes(state) {
-      for (const key of Object.keys(state.selectedItemTypes)) {
-        state.selectedItemTypes[key] = false;
-      }
-    },
+    ...itemTypeFilterReducers,
     toggleRune(state, action: PayloadAction<{ rune: string; category: string }>) {
       const { rune, category } = action.payload;
       const key = `${category}:${rune}`;
@@ -77,12 +50,6 @@ const runewordsSlice = createSlice({
     },
     setMaxTierPoints(state, action: PayloadAction<{ tierKey: string; value: number | null }>) {
       state.maxTierPoints[action.payload.tierKey] = action.payload.value;
-    },
-    toggleItemTypeGroup(state, action: PayloadAction<{ itemTypes: readonly string[]; selected: boolean }>) {
-      const { itemTypes, selected } = action.payload;
-      for (const itemType of itemTypes) {
-        state.selectedItemTypes[itemType] = selected;
-      }
     },
     clearAllTierPoints(state) {
       state.maxTierPoints = {};
@@ -113,13 +80,8 @@ export default runewordsSlice.reducer;
 // Selectors
 const selectRunewordsState = (state: RootState) => state.runewords;
 
-export const selectSearchText = createSelector([selectRunewordsState], (runewords) => runewords.searchText);
-
-export const selectSocketCount = createSelector([selectRunewordsState], (runewords) => runewords.socketCount);
-
-export const selectMaxReqLevel = createSelector([selectRunewordsState], (runewords) => runewords.maxReqLevel);
-
-export const selectSelectedItemTypes = createSelector([selectRunewordsState], (runewords) => runewords.selectedItemTypes);
+export const { selectSearchText, selectSocketCount, selectMaxReqLevel, selectSelectedItemTypes } =
+  createItemTypeFilterSelectors(selectRunewordsState);
 
 export const selectSelectedRunes = createSelector([selectRunewordsState], (runewords) => runewords.selectedRunes);
 

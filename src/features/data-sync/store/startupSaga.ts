@@ -78,6 +78,16 @@ export function* handleStartupCheck() {
         return;
       }
 
+      // Check if gemwords table is empty (new table migration)
+      const gemwordsCount: number = (yield call(() => db.gemwords.count())) as number;
+
+      if (gemwordsCount === 0) {
+        console.log('[HTML] Migration needed: gemwords table empty, refetching...');
+        yield put(startupNeedsFetch());
+        yield put(initDataLoad({ force: false }));
+        return;
+      }
+
       // Check if mythicalUniques table is empty (new table migration)
       const mythicalUniquesCount: number = (yield call(() => db.mythicalUniques.count())) as number;
 

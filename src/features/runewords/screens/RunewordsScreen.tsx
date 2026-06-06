@@ -4,10 +4,14 @@ import { useFilteredRunewords } from '../hooks/useFilteredRunewords';
 import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { Spinner } from '@/components/ui/spinner';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
+import { FavoritesToggleButton } from '@/core/components/FavoritesToggleButton';
+import { useRecipeFavorites } from '@/core/hooks/useRecipeFavorites';
+import type { Runeword } from '@/core/db/models';
 
 export function RunewordsScreen() {
   useUrlInitialize();
   const runewords = useFilteredRunewords();
+  const favorites = useRecipeFavorites<Runeword>('runeword');
 
   // Loading state
   if (runewords === undefined) {
@@ -18,19 +22,34 @@ export function RunewordsScreen() {
     );
   }
 
+  const filteredRunewords = favorites.filterRecipes(runewords);
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Runewords ({runewords.length})</h1>
+      <h1 className="text-2xl font-bold mb-4">Runewords ({filteredRunewords.length})</h1>
       <RunewordFilters />
 
-      <p className="text-sm text-muted-foreground mb-4">Showing {runewords.length} runewords</p>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Showing {filteredRunewords.length} runewords</p>
+        <FavoritesToggleButton
+          favoriteCount={favorites.favoriteCount}
+          showFavoritesOnly={favorites.showFavoritesOnly}
+          onToggle={favorites.toggleShowFavoritesOnly}
+        />
+      </div>
 
-      {runewords.length === 0 ? (
-        <p className="text-muted-foreground py-8 text-center">No runewords found. Try adjusting your filters or load data first.</p>
+      {filteredRunewords.length === 0 ? (
+        <p className="text-muted-foreground py-8 text-center">
+          {favorites.showFavoritesOnly
+            ? 'No favorite runewords to show. Star some runewords or turn off "Favorites only".'
+            : 'No runewords found. Try adjusting your filters or load data first.'}
+        </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {runewords.map((runeword) => (
-            <RunewordCard key={`${runeword.name}-${String(runeword.variant)}-${runeword.allowedItems.join(',')}`} runeword={runeword} />
+          {filteredRunewords.map((runeword) => (
+            <div key={`${runeword.name}-${String(runeword.variant)}-${runeword.allowedItems.join(',')}`} className="card-visibility-auto">
+              <RunewordCard runeword={runeword} isFavorite={favorites.isFavorite(runeword)} onToggleFavorite={favorites.toggleFavorite} />
+            </div>
           ))}
         </div>
       )}

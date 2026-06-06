@@ -35,7 +35,7 @@ import { parseKanjiRunesHtml } from './kanjiRunesParser';
 import { parseGemsHtml, isGemName } from './gemsParser';
 import { extractValue, detectValueType } from './shared/parserUtils';
 import { DEFAULT_ESR_RUNE_POINTS, DEFAULT_LOD_RUNE_POINTS } from '../constants/defaultRunePoints';
-import { getRelevantCategories, getItemCategory } from '@/features/runewords/utils/itemCategoryMapping';
+import { getRelevantCategories, getItemCategory } from '@/core/utils/itemCategoryMapping';
 import { expandRunewordsByColumn } from '@/features/runewords/utils/filteringHelpers';
 import type { EsrRune, LodRune, KanjiRune, Runeword } from '@/core/db/models';
 

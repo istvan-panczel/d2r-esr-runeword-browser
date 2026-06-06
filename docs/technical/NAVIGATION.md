@@ -83,15 +83,29 @@ Opens from the right side when the cog icon is clicked.
 
 ```typescript
 // src/core/router/index.tsx
+const RunewordsScreen = lazy(async () => {
+  const module = await import('@/features/runewords');
+  return { default: module.RunewordsScreen };
+});
+// ... one lazy() wrapper per screen
+
+function routeElement(Screen: LazyExoticComponent<ComponentType>) {
+  return (
+    <Suspense fallback={routeLoadingFallback}>
+      <Screen />
+    </Suspense>
+  );
+}
+
 export const router = createBrowserRouter(
   [
     {
       path: '/',
       element: <AppLayout />,
       children: [
-        { index: true, element: <RunewordsScreen /> },
-        { path: 'socketables', element: <SocketablesScreen /> },
-        { path: 'uniques', element: <HtmUniqueItemsScreen /> },
+        { index: true, element: routeElement(RunewordsScreen) },
+        { path: 'socketables', element: routeElement(SocketablesScreen) },
+        { path: 'uniques', element: routeElement(HtmUniqueItemsScreen) },
       ],
     },
   ],
@@ -102,6 +116,8 @@ export const router = createBrowserRouter(
 ```
 
 Uses `createBrowserRouter` (not hash-based) with `basename` set from Vite's `BASE_URL` for GitHub Pages compatibility.
+
+**Code splitting**: Every route screen is lazy-loaded with `React.lazy()` + `<Suspense>` so each screen lands in its own chunk instead of the entry bundle. The guard test `src/core/router/routeCodeSplitting.test.ts` fails if a screen is ever statically imported into the router again.
 
 ### Settings State
 

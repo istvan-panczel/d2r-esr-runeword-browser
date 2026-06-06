@@ -4,6 +4,7 @@ import type { ParsedData } from '../interfaces';
 
 export interface FetchedHtmlData {
   readonly gemsHtml: string;
+  readonly gemwordsHtml: string;
   readonly runewordsHtml: string;
   readonly uniqueWeaponsHtml: string;
   readonly uniqueArmorsHtml: string;

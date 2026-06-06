@@ -1,20 +1,21 @@
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { Header } from '@/core/components/Header';
 import { SettingsDrawer } from '@/core/components/SettingsDrawer';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { selectIsInitialized, selectError, startupCheck } from '@/core/store';
+import { selectIsInitialized, selectError } from '@/core/store';
+import { startDataSync } from '@/core/startup';
 
 export function AppLayout() {
-  const dispatch = useDispatch();
   const isInitialized = useSelector(selectIsInitialized);
   const error = useSelector(selectError);
 
   // Fatal error state - error occurred and app is not initialized
   if (error && !isInitialized) {
     const handleRetry = () => {
-      dispatch(startupCheck());
+      // Retries the data-sync chunk import if it never loaded, then re-runs the startup check
+      void startDataSync();
     };
 
     return (

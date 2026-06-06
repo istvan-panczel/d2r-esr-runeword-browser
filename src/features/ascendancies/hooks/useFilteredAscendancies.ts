@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { db } from '@/core/db';
 import type { Ascendancy } from '@/core/db';
 import { selectSearchText } from '../store';
-import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
+import { parseSearchTerms } from '@/core/utils/searchTerms';
 import { matchesSearch } from '../utils/filteringHelpers';
 
 /**

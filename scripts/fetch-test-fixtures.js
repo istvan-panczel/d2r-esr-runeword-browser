@@ -11,6 +11,7 @@ const ESR_BASE_URL = 'https://easternsunresurrected.com';
 
 const FILES = [
   { url: `${ESR_BASE_URL}/gems.htm`, name: 'gems.htm' },
+  { url: `${ESR_BASE_URL}/gemwords.htm`, name: 'gemwords.htm' },
   { url: `${ESR_BASE_URL}/runewords.htm`, name: 'runewords.htm' },
   { url: `${ESR_BASE_URL}/changelogs.html`, name: 'changelogs.html' },
   { url: `${ESR_BASE_URL}/unique_weapons.htm`, name: 'unique_weapons.htm' },

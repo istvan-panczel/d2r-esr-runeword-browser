@@ -10,8 +10,8 @@ import {
   selectSelectedRunes,
   selectMaxTierPoints,
 } from '../store/runewordsSlice';
+import { parseSearchTerms } from '@/core/utils/searchTerms';
 import {
-  parseSearchTerms,
   matchesSearch,
   matchesSockets,
   matchesMaxReqLevel,

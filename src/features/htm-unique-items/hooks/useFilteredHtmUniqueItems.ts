@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { db } from '@/core/db';
 import type { HtmUniqueItem } from '@/core/db';
 import { selectSearchText, selectMaxReqLevel, selectSelectedCategories, selectIncludeCouponItems } from '../store';
-import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
+import { parseSearchTerms } from '@/core/utils/searchTerms';
 
 /**
  * Hook to get filtered and sorted HTM unique items.

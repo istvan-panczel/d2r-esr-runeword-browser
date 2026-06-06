@@ -13,6 +13,7 @@ export type {
   CrystalType,
   CrystalQuality,
   Runeword,
+  Gemword,
   RuneCategory,
   TierPointTotal,
   HtmUniqueItem,

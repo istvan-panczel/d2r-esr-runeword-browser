@@ -12,6 +12,7 @@ export {
   type RunePriorityLookup,
   type GemReqLevelLookup,
 } from './runewordsParser';
+export { parseGemwordsHtml, calculateGemwordReqLevel, extractGemwordIngredients } from './gemwordsParser';
 export { parseHtmUniqueItems } from './htmUniqueItemsParser';
 export { parseMythicalUniques } from './mythicalUniquesParser';
 export { parseAscendancies } from './ascendanciesParser';

@@ -1,18 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import {
+  FILTER_URL_PARAM_KEYS,
+  MAX_REQ_LEVEL_RANGE,
+  SOCKET_COUNT_RANGE,
+  clearUrlSearchParams,
+  decodeSelectionParam,
+  parseBoundedIntParam,
+} from '@/core/utils/filterUrlParams';
 import { useRuneGroups } from './useRuneGroups';
 import { useAvailableItemTypes } from './useAvailableItemTypes';
 import { setSearchText, setSocketCount, setMaxReqLevel, setAllRunes, setAllItemTypes, setMaxTierPoints } from '../store/runewordsSlice';
-
-const URL_PARAM_KEYS = {
-  SEARCH: 'search',
-  SOCKETS: 'sockets',
-  MAXLVL: 'maxlvl',
-  ITEMS: 'items',
-  RUNES: 'runes',
-  TIERPTS: 'tierpts',
-} as const;
 
 /**
  * Initializes runeword filter state from URL query parameters (one-time on mount).
@@ -49,12 +48,12 @@ export function useUrlInitialize(): void {
     }
 
     // Parse URL params
-    const urlSearch = searchParams.get(URL_PARAM_KEYS.SEARCH);
-    const urlSockets = searchParams.get(URL_PARAM_KEYS.SOCKETS);
-    const urlMaxLvl = searchParams.get(URL_PARAM_KEYS.MAXLVL);
-    const urlItems = searchParams.get(URL_PARAM_KEYS.ITEMS);
-    const urlRunes = searchParams.get(URL_PARAM_KEYS.RUNES);
-    const urlTierPts = searchParams.get(URL_PARAM_KEYS.TIERPTS);
+    const urlSearch = searchParams.get(FILTER_URL_PARAM_KEYS.SEARCH);
+    const urlSockets = searchParams.get(FILTER_URL_PARAM_KEYS.SOCKETS);
+    const urlMaxLvl = searchParams.get(FILTER_URL_PARAM_KEYS.MAXLVL);
+    const urlItems = searchParams.get(FILTER_URL_PARAM_KEYS.ITEMS);
+    const urlRunes = searchParams.get(FILTER_URL_PARAM_KEYS.RUNES);
+    const urlTierPts = searchParams.get(FILTER_URL_PARAM_KEYS.TIERPTS);
 
     const hasUrlParams =
       urlSearch !== null || urlSockets !== null || urlMaxLvl !== null || urlItems !== null || urlRunes !== null || urlTierPts !== null;
@@ -65,35 +64,19 @@ export function useUrlInitialize(): void {
         dispatch(setSearchText(urlSearch));
       }
 
-      if (urlSockets !== null) {
-        const parsed = parseInt(urlSockets, 10);
-        if (!isNaN(parsed) && parsed >= 1 && parsed <= 6) {
-          dispatch(setSocketCount(parsed));
-        }
+      const socketCount = parseBoundedIntParam(urlSockets, SOCKET_COUNT_RANGE);
+      if (socketCount !== null) {
+        dispatch(setSocketCount(socketCount));
       }
 
-      if (urlMaxLvl !== null) {
-        const parsed = parseInt(urlMaxLvl, 10);
-        if (!isNaN(parsed) && parsed >= 1 && parsed <= 999) {
-          dispatch(setMaxReqLevel(parsed));
-        }
+      const maxReqLevel = parseBoundedIntParam(urlMaxLvl, MAX_REQ_LEVEL_RANGE);
+      if (maxReqLevel !== null) {
+        dispatch(setMaxReqLevel(maxReqLevel));
       }
 
-      // Item types: if param exists, only those items are selected; otherwise all selected
-      const urlItemSet = urlItems ? new Set(urlItems.split(',')) : null;
-      const decodedItemTypes: Record<string, boolean> = {};
-      for (const type of itemTypes) {
-        decodedItemTypes[type] = urlItemSet ? urlItemSet.has(type) : true;
-      }
-      dispatch(setAllItemTypes(decodedItemTypes));
-
-      // Runes: if param exists, only those runes are selected; otherwise all selected
-      const urlRuneSet = urlRunes ? new Set(urlRunes.split(',')) : null;
-      const decodedRunes: Record<string, boolean> = {};
-      for (const key of allRuneKeys) {
-        decodedRunes[key] = urlRuneSet ? urlRuneSet.has(key) : true;
-      }
-      dispatch(setAllRunes(decodedRunes));
+      // Item types / runes: if param exists, only those are selected; otherwise all selected
+      dispatch(setAllItemTypes(decodeSelectionParam(itemTypes, urlItems)));
+      dispatch(setAllRunes(decodeSelectionParam(allRuneKeys, urlRunes)));
 
       // Tier points: parse "esrRunes:1=64,lodRunes:2=128" format
       if (urlTierPts) {
@@ -109,20 +92,11 @@ export function useUrlInitialize(): void {
       }
 
       // Clean the URL after initialization
-      window.history.replaceState({}, '', window.location.pathname);
+      clearUrlSearchParams();
     } else {
       // No URL params - initialize with defaults (all selected)
-      const allItemTypes: Record<string, boolean> = {};
-      for (const type of itemTypes) {
-        allItemTypes[type] = true;
-      }
-      dispatch(setAllItemTypes(allItemTypes));
-
-      const allRunes: Record<string, boolean> = {};
-      for (const key of allRuneKeys) {
-        allRunes[key] = true;
-      }
-      dispatch(setAllRunes(allRunes));
+      dispatch(setAllItemTypes(decodeSelectionParam(itemTypes, null)));
+      dispatch(setAllRunes(decodeSelectionParam(allRuneKeys, null)));
     }
   }, [runeGroups, itemTypes, searchParams, dispatch]);
 }

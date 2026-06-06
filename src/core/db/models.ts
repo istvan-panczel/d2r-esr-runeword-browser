@@ -117,6 +117,22 @@ export interface Runeword {
   readonly jewelInfo?: string; // Optional jewel info for Kanji runewords, e.g. "(0-3) Jewels"
 }
 
+// Gemword types
+
+export interface Gemword {
+  readonly name: string;
+  readonly variant: number; // 1, 2, 3... for multi-variant gemwords
+  readonly sockets: number;
+  readonly reqLevel: number; // Highest required level among the recipe's gems
+  readonly sortKey: number; // Pre-calculated sort key (= reqLevel, gems have no tier points)
+  readonly gems: readonly string[]; // Gem names in the recipe
+  readonly ingredients: readonly string[]; // Same as gems, kept for model symmetry with Runeword
+  readonly allowedItems: readonly string[];
+  readonly affixes: readonly Affix[]; // Gemword bonuses from first non-empty column (backward compat)
+  readonly columnAffixes: SocketableBonuses; // Per-column gemword bonuses (weapon/helm/armor)
+  readonly jewelInfo?: string; // Optional jewel requirement, e.g. "Jewel" (America, Canada, China)
+}
+
 // HTM Unique Items
 
 export type HtmUniqueItemPage = 'weapons' | 'armors' | 'other';

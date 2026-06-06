@@ -15,22 +15,28 @@ class AppDatabase extends Dexie {
   kanjiRunes!: EntityTable<KanjiRune, 'name'>;
   crystals!: EntityTable<Crystal, 'name'>;
   runewords!: Table<Runeword, [string, number]>;  // Compound key: [name, variant]
+  gemwords!: Table<Gemword, [string, number]>;    // Compound key: [name, variant]
   affixes!: EntityTable<AffixPattern, 'pattern'>;
   htmUniqueItems!: EntityTable<HtmUniqueItem, 'id'>;
+  mythicalUniques!: EntityTable<MythicalUnique, 'id'>;
+  ascendancies!: EntityTable<Ascendancy, 'name'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    this.version(10).stores({
+    this.version(13).stores({
       gems: 'name, type, quality, color',
       esrRunes: 'name, order, tier, color',
       lodRunes: 'name, order',
       kanjiRunes: 'name',
       crystals: 'name, type, quality, color',
       runewords: '[name+variant], name, sockets, reqLevel, sortKey',
+      gemwords: '[name+variant], name, sockets, reqLevel, sortKey',
       affixes: 'pattern',
       htmUniqueItems: '++id, name, page, category, reqLevel',
+      mythicalUniques: '++id, name, category, reqLevel',
+      ascendancies: 'name',
       metadata: 'key',
     });
   }
@@ -125,6 +131,25 @@ Stores all runeword definitions.
 | columnAffixes | SocketableBonuses | No | Per-column bonuses (weapon/helm/armor) |
 | tierPointTotals | TierPointTotal[] | No | Pre-calculated tier point totals |
 | jewelInfo | string? | No | Jewel info for Kanji runewords |
+
+### gemwords
+
+Stores all gemword definitions (gem-based socket recipes, analogous to runewords).
+
+| Column | Type | Index | Description |
+|--------|------|-------|-------------|
+| [name+variant] | [string, number] | Compound PK | Primary key |
+| name | string | Yes | "Holy", "Razor" |
+| variant | number | (part of PK) | 1, 2, 3... for multi-variant gemwords |
+| sockets | number | Yes | Socket count required |
+| reqLevel | number | Yes | Highest req level among the recipe's gems |
+| sortKey | number | Yes | Pre-calculated sort key (= reqLevel) |
+| gems | string[] | No | Gem names in recipe |
+| ingredients | string[] | No | Same as gems (model symmetry with Runeword) |
+| allowedItems | string[] | No | "Body Armor", "Any Shield" |
+| affixes | Affix[] | No | Backward compat: first non-empty column |
+| columnAffixes | SocketableBonuses | No | Per-column bonuses (weapon/helm/armor) |
+| jewelInfo | string? | No | Optional jewel requirement, e.g. "Jewel" (America, Canada, China) |
 
 ### affixes
 

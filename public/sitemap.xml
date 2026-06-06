@@ -6,7 +6,27 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/gemwords</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/socketables</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/uniques</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/mythicals</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/ascendancies</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

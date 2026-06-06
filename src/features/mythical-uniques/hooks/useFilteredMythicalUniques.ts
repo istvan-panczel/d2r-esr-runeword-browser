@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { db } from '@/core/db';
 import type { MythicalUnique } from '@/core/db';
 import { selectSearchText, selectSelectedCategories } from '../store';
-import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
+import { parseSearchTerms } from '@/core/utils/searchTerms';
 
 /**
  * Hook to get filtered and sorted mythical unique items.

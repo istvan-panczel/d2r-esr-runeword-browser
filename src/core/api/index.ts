@@ -1,4 +1,5 @@
 export { fetchGemsHtml } from './gemsApi';
+export { fetchGemwordsHtml } from './gemwordsApi';
 export { fetchRunewordsHtml } from './runewordsApi';
 export { fetchUniqueWeaponsHtml, fetchUniqueArmorsHtml, fetchUniqueOthersHtml } from './htmUniqueItemsApi';
 export { fetchUniqueMythicalsHtml } from './mythicalUniquesApi';

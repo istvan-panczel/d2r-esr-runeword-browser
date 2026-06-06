@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { db } from '@/core/db';
 import { selectEnabledCategories, selectSearchText, selectOnlyHighestQuality } from '../store/socketablesSlice';
 import type { UnifiedSocketable, SocketableCategory } from '../types';
-import { parseSearchTerms } from '@/features/runewords/utils/filteringHelpers';
+import { parseSearchTerms } from '@/core/utils/searchTerms';
 import { matchesSearch } from '../utils/filteringHelpers';
 
 // Category sort order (fixed display order)

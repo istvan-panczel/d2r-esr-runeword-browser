@@ -135,3 +135,11 @@
     font-family: 'AvQest', serif;
   }
 }
+
+/* Skips layout/paint for off-screen cards in long lists; the browser renders
+   them just-in-time as they approach the viewport. `auto 24rem` is the
+   placeholder height estimate until the browser learns each card's real size. */
+@utility card-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 24rem;
+}

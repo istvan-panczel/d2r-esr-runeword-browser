@@ -5,6 +5,7 @@ import dataSyncReducer from '@/features/data-sync/store/dataSyncSlice';
 import settingsReducer from '@/features/settings/store/settingsSlice';
 import socketablesReducer from '@/features/socketables/store/socketablesSlice';
 import runewordsReducer from '@/features/runewords/store/runewordsSlice';
+import gemwordsReducer from '@/features/gemwords/store/gemwordsSlice';
 import htmUniqueItemsReducer from '@/features/htm-unique-items/store/htmUniqueItemsSlice';
 import mythicalUniquesReducer from '@/features/mythical-uniques/store/mythicalUniquesSlice';
 import ascendanciesReducer from '@/features/ascendancies/store/ascendanciesSlice';
@@ -19,6 +20,7 @@ const store = configureStore({
     settings: settingsReducer,
     socketables: socketablesReducer,
     runewords: runewordsReducer,
+    gemwords: gemwordsReducer,
     htmUniqueItems: htmUniqueItemsReducer,
     mythicalUniques: mythicalUniquesReducer,
     ascendancies: ascendanciesReducer,

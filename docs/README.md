@@ -45,6 +45,7 @@ The app uses a single HTM-based data system. All data is fetched from the ESR do
 |------|--------|
 | Socketables (gems, runes, crystals) | `gems.htm` |
 | Runewords | `runewords.htm` |
+| Gemwords | `gemwords.htm` |
 | Unique Weapons | `unique_weapons.htm` |
 | Unique Armors | `unique_armors.htm` |
 | Unique Others | `unique_others.htm` |
@@ -55,6 +56,7 @@ The app uses a single HTM-based data system. All data is fetched from the ESR do
 | Feature | Route | Description |
 |---------|-------|-------------|
 | Runewords | `/` | ~386 runewords with filters for runes, sockets, item types, tier points, req level |
+| Gemwords | `/gemwords` | ~590 gem-based socket recipes with filters for gems, sockets, item types, req level |
 | Socketables | `/socketables` | ~177 socketable items across 5 categories |
 | Unique Items | `/uniques` | Unique weapons, armors, and other items with category filters |
 

@@ -25,13 +25,14 @@ src/
 │   │   └── htmUniqueItemsApi.ts # Fetch unique_*.htm pages
 │   ├── types/                  # Shared types (RequestState enum)
 │   ├── router/                 # Router configuration
-│   │   └── index.tsx           # Route definitions
+│   │   └── index.tsx           # Route definitions (screens lazy-loaded per route)
 │   └── layouts/                # App layouts
 │       └── AppLayout.tsx
 │
 ├── features/                   # Feature modules
 │   ├── data-sync/              # Data fetching, parsing, and storage
 │   ├── runewords/              # Runeword browsing and filtering
+│   ├── gemwords/               # Gemword browsing and filtering
 │   ├── socketables/            # Socketable browsing and filtering
 │   ├── htm-unique-items/       # Unique item browsing and filtering
 │   └── settings/               # Theme, text size, Diablo font
@@ -86,7 +87,7 @@ The app uses a single HTM-based data system. All data is fetched from the ESR do
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  2. Redux Saga: Fetch & Parse HTML                          │
-│     - Fetch 5 HTML files from easternsunresurrected.com     │
+│     - Fetch 8 HTML files from easternsunresurrected.com     │
 │     - Parse with DOMParser                                  │
 │     - Transform into structured models                      │
 └─────────────────────────────────────────────────────────────┘
@@ -94,9 +95,11 @@ The app uses a single HTM-based data system. All data is fetched from the ESR do
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  3. Store in IndexedDB via Dexie                            │
-│     - Database: d2r-esr-runeword-browser (version 10)       │
+│     - Database: d2r-esr-runeword-browser (version 13)       │
 │     - Tables: gems, esrRunes, lodRunes, kanjiRunes,         │
-│       crystals, runewords, affixes, htmUniqueItems, metadata│
+│       crystals, runewords, gemwords, affixes,               │
+│       htmUniqueItems, mythicalUniques, ascendancies,        │
+│       metadata                                              │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
