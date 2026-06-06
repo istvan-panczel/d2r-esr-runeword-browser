@@ -46,12 +46,13 @@ import {
   extractAffixesError,
   fatalError,
   type FetchedHtmlData,
+  type InitDataLoadPayload,
 } from './dataSyncSlice';
 import { handleStartupCheck } from './startupSaga';
 import type { AffixPattern, Gem, EsrRune, LodRune, KanjiRune, Crystal, Runeword, Gemword } from '@/core/db';
 import type { ParsedData } from '../interfaces';
 
-function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>) {
+function* handleFetchHtml(action: PayloadAction<InitDataLoadPayload | undefined>) {
   try {
     console.log('[HTML] Fetching HTML files...', { force: action.payload?.force ?? false });
     const [gemsHtml, gemwordsHtml, runewordsHtml, uniqueWeaponsHtml, uniqueArmorsHtml, uniqueOthersHtml, mythicalsHtml, ascendanciesHtml] =
@@ -85,6 +86,7 @@ function* handleFetchHtml(action: PayloadAction<{ force?: boolean } | undefined>
         uniqueOthersHtml,
         mythicalsHtml,
         ascendanciesHtml,
+        esrVersion: action.payload?.esrVersion,
       })
     );
   } catch (error) {
@@ -243,6 +245,7 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
         htmUniqueItems,
         mythicalUniques,
         ascendancies,
+        esrVersion: action.payload.esrVersion,
       })
     );
   } catch (error) {
@@ -256,40 +259,47 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
     const { gems, esrRunes, lodRunes, kanjiRunes, crystals, runewords, gemwords, htmUniqueItems, mythicalUniques, ascendancies } =
       action.payload;
 
+    // Resolve the ESR version to store: reuse the version already fetched during
+    // the startup check; on force refresh (no version in the payload) fetch it now.
+    let esrVersion: string | null = action.payload.esrVersion ?? null;
+    if (esrVersion === null) {
+      try {
+        const versionInfo: ChangelogVersion = (yield call(fetchLatestVersion)) as ChangelogVersion;
+        esrVersion = versionInfo.version;
+      } catch {
+        // If we can't get version info, just continue; without the esrVersion
+        // metadata the next startup check will refetch everything.
+        console.log('[HTML] Could not fetch version info for metadata');
+      }
+    }
+
     console.log('[HTML] Storing data to IndexedDB...');
 
-    // Clear all tables
-    yield call(() => Promise.all(db.tables.map((table) => table.clear())));
-    console.log('[HTML] Cleared all tables');
-
-    // Store data
-    yield all([
-      call(() => db.gems.bulkPut(gems)),
-      call(() => db.esrRunes.bulkPut(esrRunes)),
-      call(() => db.lodRunes.bulkPut(lodRunes)),
-      call(() => db.kanjiRunes.bulkPut(kanjiRunes)),
-      call(() => db.crystals.bulkPut(crystals)),
-      call(() => db.runewords.bulkPut(runewords)),
-      call(() => db.gemwords.bulkPut(gemwords)),
-      call(() => db.htmUniqueItems.bulkPut(htmUniqueItems)),
-      call(() => db.mythicalUniques.bulkPut(mythicalUniques)),
-      call(() => db.ascendancies.bulkPut(ascendancies)),
-    ]);
-    console.log('[HTML] Stored all data tables');
-
-    // Store metadata (version and timestamp)
-    let storedVersion = 'unknown';
-    try {
-      const versionInfo: ChangelogVersion = (yield call(fetchLatestVersion)) as ChangelogVersion;
-      yield call(() => db.metadata.put({ key: 'esrVersion', value: versionInfo.version }));
-      storedVersion = versionInfo.version;
-    } catch {
-      // If we can't get version info, just continue
-      console.log('[HTML] Could not fetch version info for metadata');
-    }
-    yield call(() => db.metadata.put({ key: 'lastUpdated', value: new Date().toISOString() }));
-    yield call(() => db.metadata.put({ key: 'appVersion', value: appVersion.version }));
-    console.log('[HTML] Stored metadata with ESR version:', storedVersion, 'app version:', appVersion.version);
+    // Clear and rewrite everything in a single transaction so an interrupted
+    // store (tab closed, crash) never leaves partially written data behind
+    yield call(() =>
+      db.transaction('rw', db.tables, async () => {
+        await Promise.all(db.tables.map((table) => table.clear()));
+        await Promise.all([
+          db.gems.bulkPut(gems),
+          db.esrRunes.bulkPut(esrRunes),
+          db.lodRunes.bulkPut(lodRunes),
+          db.kanjiRunes.bulkPut(kanjiRunes),
+          db.crystals.bulkPut(crystals),
+          db.runewords.bulkPut(runewords),
+          db.gemwords.bulkPut(gemwords),
+          db.htmUniqueItems.bulkPut(htmUniqueItems),
+          db.mythicalUniques.bulkPut(mythicalUniques),
+          db.ascendancies.bulkPut(ascendancies),
+        ]);
+        if (esrVersion !== null) {
+          await db.metadata.put({ key: 'esrVersion', value: esrVersion });
+        }
+        await db.metadata.put({ key: 'lastUpdated', value: new Date().toISOString() });
+        await db.metadata.put({ key: 'appVersion', value: appVersion.version });
+      })
+    );
+    console.log('[HTML] Stored metadata with ESR version:', esrVersion ?? 'unknown', 'app version:', appVersion.version);
 
     console.log('[HTML] Store complete:', {
       gems: gems.length,

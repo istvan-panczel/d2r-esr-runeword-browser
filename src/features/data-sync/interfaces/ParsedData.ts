@@ -11,4 +11,6 @@ export interface ParsedData {
   readonly htmUniqueItems: HtmUniqueItem[];
   readonly mythicalUniques: MythicalUnique[];
   readonly ascendancies: Ascendancy[];
+  /** Remote ESR version fetched during the startup check; absent on force refresh. */
+  readonly esrVersion?: string;
 }

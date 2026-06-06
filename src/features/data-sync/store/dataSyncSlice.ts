@@ -2,6 +2,12 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { RequestState } from '@/core/types';
 import type { ParsedData } from '../interfaces';
 
+export interface InitDataLoadPayload {
+  readonly force?: boolean;
+  /** Remote ESR version already fetched during the startup check; absent on force refresh. */
+  readonly esrVersion?: string;
+}
+
 export interface FetchedHtmlData {
   readonly gemsHtml: string;
   readonly gemwordsHtml: string;
@@ -11,6 +17,8 @@ export interface FetchedHtmlData {
   readonly uniqueOthersHtml: string;
   readonly mythicalsHtml: string;
   readonly ascendanciesHtml: string;
+  /** Remote ESR version fetched during the startup check; absent on force refresh. */
+  readonly esrVersion?: string;
 }
 
 interface DataSyncState {
@@ -53,7 +61,7 @@ const dataSyncSlice = createSlice({
     },
 
     // Manual refresh trigger (force bypasses version check)
-    initDataLoad(state, _action: PayloadAction<{ force?: boolean } | undefined>) {
+    initDataLoad(state, _action: PayloadAction<InitDataLoadPayload | undefined>) {
       state.requestState = RequestState.LOADING;
       state.error = null;
       state.networkWarning = null;

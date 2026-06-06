@@ -74,7 +74,7 @@ export function* handleStartupCheck() {
       if (htmUniqueItemsCount === 0) {
         console.log('[HTML] Migration needed: htmUniqueItems table empty, refetching...');
         yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false }));
+        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
         return;
       }
 
@@ -84,7 +84,7 @@ export function* handleStartupCheck() {
       if (gemwordsCount === 0) {
         console.log('[HTML] Migration needed: gemwords table empty, refetching...');
         yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false }));
+        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
         return;
       }
 
@@ -94,7 +94,7 @@ export function* handleStartupCheck() {
       if (mythicalUniquesCount === 0) {
         console.log('[HTML] Migration needed: mythicalUniques table empty, refetching...');
         yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false }));
+        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
         return;
       }
 
@@ -104,7 +104,7 @@ export function* handleStartupCheck() {
       if (ascendanciesCount === 0) {
         console.log('[HTML] Migration needed: ascendancies table empty, refetching...');
         yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false }));
+        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
         return;
       }
 
@@ -115,7 +115,7 @@ export function* handleStartupCheck() {
       if (!storedAppVersion || storedAppVersion.value !== currentVersion) {
         console.log('[HTML] App version changed:', storedAppVersion?.value, '→', currentVersion, '- refetching...');
         yield put(startupNeedsFetch());
-        yield put(initDataLoad({ force: false }));
+        yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
         return;
       }
 
@@ -128,7 +128,7 @@ export function* handleStartupCheck() {
     // Step 4: Need to fetch - trigger the data load saga
     console.log('[HTML] Version mismatch or no data - triggering fetch');
     yield put(startupNeedsFetch());
-    yield put(initDataLoad({ force: false }));
+    yield put(initDataLoad({ force: false, esrVersion: remoteVersion.version }));
   } catch (error) {
     console.error('[HTML] Startup error:', error);
     yield put(fatalError(error instanceof Error ? error.message : 'Startup error'));
