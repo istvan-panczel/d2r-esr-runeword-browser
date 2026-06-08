@@ -38,6 +38,10 @@ npm run test             # run tests
 
 See [docs/README.md](./docs/README.md) for full project documentation and [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) for contribution guidelines.
 
+## Privacy
+
+The build-sharing feature stores account and build data on Supabase (EU). See the [Privacy Policy](./PRIVACY_POLICY.md) for what is collected and how to request access or deletion.
+
 Built with React 19 (+ React Compiler), TypeScript, Vite, Redux Toolkit + Redux Saga, Dexie (IndexedDB), Tailwind CSS 4, and shadcn/ui.
 
 ## Eastern Sun Resurrected

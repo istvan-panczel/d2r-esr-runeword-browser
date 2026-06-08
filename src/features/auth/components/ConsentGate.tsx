@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { acceptConsentRequested, selectAuthIsBusy, selectDisplayName } from '../store';
 import { DISPLAY_NAME_MAX_LENGTH } from '../utils/profile';
 
-// The privacy policy is hosted in the GitHub repo. NOTE: the file currently lives at
-// builds-feature-docs/PRIVACY_POLICY.md and must be moved to the repo root (and this URL
-// confirmed) before the public launch.
+// The privacy policy lives at the repo root (PRIVACY_POLICY.md). This links to it on the
+// default branch; the link resolves once the build-sharing branch is merged to master.
 const PRIVACY_POLICY_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser/blob/master/PRIVACY_POLICY.md';
 
 /**
