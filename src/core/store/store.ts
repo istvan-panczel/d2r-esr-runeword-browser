@@ -9,6 +9,8 @@ import gemwordsReducer from '@/features/gemwords/store/gemwordsSlice';
 import htmUniqueItemsReducer from '@/features/htm-unique-items/store/htmUniqueItemsSlice';
 import mythicalUniquesReducer from '@/features/mythical-uniques/store/mythicalUniquesSlice';
 import ascendanciesReducer from '@/features/ascendancies/store/ascendanciesSlice';
+import authReducer from '@/features/auth/store/authSlice';
+import buildsReducer from '@/features/builds/store/buildsSlice';
 import { startSagas } from './sagaRegistry';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -24,6 +26,8 @@ const store = configureStore({
     htmUniqueItems: htmUniqueItemsReducer,
     mythicalUniques: mythicalUniquesReducer,
     ascendancies: ascendanciesReducer,
+    auth: authReducer,
+    builds: buildsReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware),
 });

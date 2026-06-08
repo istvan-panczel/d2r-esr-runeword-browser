@@ -6,10 +6,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { selectIsInitialized, selectError } from '@/core/store';
 import { startDataSync } from '@/core/startup';
+import { AuthOverlays, selectAuthIsConfigured } from '@/features/auth';
 
 export function AppLayout() {
   const isInitialized = useSelector(selectIsInitialized);
   const error = useSelector(selectError);
+  const isSupabaseEnabled = useSelector(selectAuthIsConfigured);
 
   // Fatal error state - error occurred and app is not initialized
   if (error && !isInitialized) {
@@ -42,12 +44,13 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-svh flex flex-col">
+    <div className="min-h-svh flex flex-col overflow-x-clip">
       <Header />
       <main className="flex-1 container mx-auto p-4">
         <Outlet />
       </main>
       <SettingsDrawer />
+      {isSupabaseEnabled && <AuthOverlays />}
     </div>
   );
 }

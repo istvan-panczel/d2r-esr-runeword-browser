@@ -204,7 +204,7 @@ The database stores **typed item references** with full item snapshots. Each equ
 
 #### Item Reference Types
 
-There are four types of item references:
+There are five types of item references:
 
 **Unique item** — references a unique item from `htmUniqueItems` by its auto-increment ID, includes a full snapshot of the item's stats at the time the build was created/edited:
 ```json
@@ -262,6 +262,28 @@ Snapshot fields for mythicals: `name`, `baseItem`, `category`, `reqLevel`, `prop
 ```
 
 Snapshot stores all three bonus columns from `columnAffixes`. Each column's affixes are stored as `rawText` strings extracted from the `Affix` objects. The display logic picks the correct column based on which equipment slot the runeword occupies (e.g., armor slot → `armorShieldsBelts`). Storing all three columns ensures snapshots survive slot changes during edits.
+
+**Gemword** — references a gemword by its compound key (`name` + `variant`), includes a full snapshot. Gemwords were added to the app (post-initial-design) and behave like runewords but use gems instead of runes:
+```json
+{
+  "type": "gemword",
+  "name": "Glow",
+  "variant": 1,
+  "snapshot": {
+    "sockets": 2,
+    "gems": ["Perfect Ruby", "Perfect Ruby"],
+    "allowedItems": ["Helm"],
+    "columnAffixes": {
+      "weaponsGloves": ["..."],
+      "helmsBoots": ["..."],
+      "armorShieldsBelts": ["..."]
+    },
+    "reqLevel": 20
+  }
+}
+```
+
+Gemword snapshots store all three bonus columns (same as runewords) as `rawText` strings; the display picks the column for the equipment slot. Gemwords have no `runes` field — the recipe is in `gems`.
 
 **Freetext** — user-typed name for items not in the database (rares, crafted, magic items). No snapshot:
 ```json
@@ -611,12 +633,13 @@ On small screens (below `md` breakpoint), the equipment grid stacks to a **verti
 
 ### Item Selection
 
-Each equipment slot uses an **inline autocomplete** picker. Clicking a slot turns it into a search input. The user types to search the app's existing local item database (**unique items**, **mythical uniques**, and **runewords**). If the desired item isn't found, the user can type a custom name for rares, crafted, or magic items (stored as freetext).
+Each equipment slot uses an **inline autocomplete** picker. Clicking a slot turns it into a search input. The user types to search the app's existing local item database (**unique items**, **mythical uniques**, **runewords**, and **gemwords**). If the desired item isn't found, the user can type a custom name for rares, crafted, or magic items (stored as freetext).
 
-**Autocomplete result presentation:** Results are **grouped by type** using `cmdk` Command component's native group support. Three sections appear in order:
+**Autocomplete result presentation:** Results are **grouped by type** using `cmdk` Command component's native group support. Four sections appear in order:
 1. **Unique Items** — from `htmUniqueItems`
 2. **Mythical Uniques** — from `mythicalUniques`
 3. **Runewords** — from `runewords`
+4. **Gemwords** — from `gemwords`
 
 Only groups with matches are shown. Empty groups are hidden.
 
@@ -640,6 +663,7 @@ When a user selects an item from the autocomplete:
 - **Unique item**: The reference stores the item's `id` (auto-increment PK from `htmUniqueItems`) and a full snapshot of its current stats
 - **Mythical unique**: The reference stores the item's `id` (from `mythicalUniques`) and a full snapshot — same display structure as regular uniques
 - **Runeword**: The reference stores the runeword's `name` and `variant` (compound key) and a full snapshot of its current stats
+- **Gemword**: The reference stores the gemword's `name` and `variant` (compound key) and a full snapshot — same structure as runewords, with a `gems` recipe instead of `runes`
 - **Freetext**: If the user's input doesn't match any item, it's stored as a freetext entry with just the typed name
 
 ### Form Layout
@@ -807,7 +831,7 @@ The project uses **shadcn/ui** patterns (Radix UI primitives + Tailwind CSS + CV
 - Install: `npx shadcn@latest add select`
 
 **Command (Combobox)** — inline autocomplete item picker
-- Used for: equipment slot pickers on create/edit form. Searches local item database (uniques, mythical uniques, and runewords) with freetext fallback for custom item names.
+- Used for: equipment slot pickers on create/edit form. Searches local item database (uniques, mythical uniques, runewords, and gemwords) with freetext fallback for custom item names.
 - Dependencies: `cmdk` + existing Popover (combined into "Combobox" pattern per shadcn/ui docs)
 - Install: `npx shadcn@latest add command`
 - Note: Most complex new component. Each equipment slot in the grid becomes a Popover+Command combobox.
@@ -1045,6 +1069,28 @@ Requires `.env.local` with DEV service role key (see above). The service role ke
 - **Beta release**: The builds menu item is hidden initially behind a feature check. Enable for internal testing on PROD, then release as an experimental/beta feature
 - **User expectations**: Users are informed the feature is in beta — expect possible bugs
 - **Iterative refinement**: UI polish, edge cases, and additional features (comments, tags, etc.) come after the core feature is stable
+
+## Development Notes (changes during implementation)
+
+These were decided or discovered while building the feature, amending the original design:
+
+- **Gemwords added as a fifth item type.** Gemwords were introduced to the app after this spec was first written, so they are included everywhere runewords are (build_data reference type, autocomplete group, snapshot). See the gemword sections above.
+- **PostgREST embed needs a FK hint.** Because `likes` references both `builds` and `profiles`, PostgREST finds two `builds`↔`profiles` relationships and a bare `profiles(...)` embed errors with PGRST201. All build queries embed the author as `profiles!builds_user_id_fkey(...)`.
+- **Bad build ids resolve to "not found".** `build.id` is a `uuid`; a malformed id in a URL makes PostgREST error on the cast rather than return zero rows. The detail fetch validates the id is a UUID first and shows "Build not found" for malformed (and valid-but-missing) ids.
+- **Unsaved-changes guard covers in-app navigation too.** Beyond the `beforeunload` prompt, the create/edit form uses React Router's `useBlocker` to confirm before client-side navigation (nav links, back button). The blocker reads its enabled flag from a ref so a post-save programmatic navigate is not blocked.
+- **Incremental build of the create form.** The create form shipped first as basic info (name/description/class — empty builds are allowed per spec), then the equipment editor was layered on slot by slot. Empty/partial `build_data` is valid.
+- **Supabase SDK is lazily loaded.** A lightweight `config` module exposes `isSupabaseConfigured` for the eager app shell; the SDK client lives in a separate module imported only by the (lazy) auth/builds sagas, keeping `@supabase/supabase-js` out of the main bundle.
+- **Consent gate keeps the trigger-assigned discriminator.** The display-name-change discriminator regeneration (with collision retry) is implemented as part of profile editing, not the consent gate.
+- **Discriminator regeneration is client-side.** Renaming via the profile-edit dialog generates a fresh random discriminator (1000–9999) in the auth saga and retries on the `(display_name, discriminator)` unique violation (PostgREST code `23505`), up to 10 attempts before surfacing an error. No extra DB function/migration is needed — the existing per-row UPDATE policy covers it.
+- **Author profile page reuses the builds list machinery.** `/user/:userId` reads the public `profiles` row (UUID-guarded like build ids) plus that author's builds via the same `BUILDS_SELECT` embed and keyset cursor (newest-first only — no sort toggle), with infinite scroll. Its state lives alongside the builds slice (`authorProfile` + `authorBuilds`), separate from the main listing state. After an owner rename, the page refetches so the header and cards reflect the new tag.
+- **Profile editing scope.** The "Edit Profile" dialog currently changes the display name only (avatar comes from Discord; magic-link users keep the initials fallback). The account-deletion link described for this dialog ships with the account-deletion phase.
+- **Per-item ESR diff badges.** On the detail page each item's stored snapshot is re-resolved against the viewer's current local data (`utils/itemDiff.ts`: `resolveCurrentRef` + an order-independent `deepEqual` so Postgres jsonb key reordering isn't a false diff). Item stats are shown from **current** data; a changed item gets an amber "Stats updated" toggle that reveals the snapshot saved with the build, and an item missing from local data falls back to the saved snapshot with a "may no longer exist in the current ESR version" note. Diffs are computed via `useLiveQuery` (so they react to local data loading) and only surfaced once `esrVersion` is present, to avoid flagging everything as missing before local data finishes loading. `refreshBuildData` now shares `resolveCurrentRef`.
+- **Reused the rich browse-page item cards.** Equipped items render with the same `HtmUniqueItemCard` / `MythicalUniqueCard` / `RunewordCard` / `GemwordCard` (colours, affixes, rune/gem badges, socketable bonuses) used on the browse pages — same pattern as `AscendancyCard`. Those cards need the full local-DB record (far more than the saved snapshot), so `utils/resolveItem.ts` resolves each slot's ref against current local data and a new `BuildItemCard` renders the matching card via `useLiveQuery`; it falls back to the saved-snapshot text (`ItemRefDisplay`) for freetext, items missing from the current ESR data, or while data loads. Used on the detail page (read-only) and as the live preview under each picker in the create/edit form. The per-item version-diff badge and "saved snapshot" reveal are kept on top of the rich card. The four cards are now exported from their feature barrels (plus `useGemBonusMap`).
+- **JSON export on the detail page.** Any viewer can download a build as a raw `.json` via an "Export" button that opens a modal (explains it's a plain snapshot for safekeeping, not an import format) with Download/Close. The file wraps the full build record under a small provenance header (`exportedAt`, app name, source URL); filename is a slug of the name + short id (`utils/buildExport.ts`, client-side Blob download — no backend). Re-import is out of scope.
+- **Per-item crafting/corruption notes.** ESR items are heavily modifiable (rune-forging, D-Stone crafting, beneficial corruption), so each equipped slot (Player Gear, Weapon Swap, Mercenary) has an optional free-text note (max 500 chars) shown under the item — e.g. "D-Stone until very fast attack speed". Stored in `build_data` as per-slot maps parallel to the item maps (`itemNotes`/`weaponSwapNotes`/`mercenaryNotes`), so notes survive the on-edit snapshot refresh and persist when the item in a slot is swapped; emptying a slot clears its note. No migration (lives in the JSONB). Editable textarea in the form (under the slot's item), read-only block on the detail page.
+- **Liked indicator on build cards.** Cards show a filled heart (in the same muted color as the count, via `fill-current`) when the signed-in viewer has liked that build, so the listing and author-profile pages reveal which builds you've liked. After each page loads, the saga runs one `likes` query (`select('build_id').eq('user_id', viewer).in('build_id', pageIds)`) and stores the matches in the slice (`likedBuildIds` for the main list, `authorLikedBuildIds` for profiles; replaced on a fresh fetch, unioned on load-more). Display-only — liking still happens on the detail page; the lists self-refresh on mount so the state stays current.
+- **Account deletion is manual for now.** Automated erasure (Edge Function / `security definer` RPC) is not built yet. The Edit Profile dialog has a "Delete account" link that opens an info view explaining automatic deletion isn't available and linking to a GitHub issue (`/issues/new`) so the developer can erase the account (profile + builds + likes via the existing `ON DELETE CASCADE`) manually. The automated flow and the privacy policy's "right to erasure" wording (which still describes immediate self-service deletion) are reconciled in a later phase.
+- **Privacy policy location.** `PRIVACY_POLICY.md` currently lives in `builds-feature-docs/`; it must be moved to the repo root and the consent-gate link confirmed before public launch.
 
 ## Out of Scope (For Now)
 

@@ -34,6 +34,31 @@ const AscendanciesScreen = lazy(async () => {
   return { default: module.AscendanciesScreen };
 });
 
+const BuildsScreen = lazy(async () => {
+  const module = await import('@/features/builds');
+  return { default: module.BuildsScreen };
+});
+
+const CreateBuildScreen = lazy(async () => {
+  const module = await import('@/features/builds');
+  return { default: module.CreateBuildScreen };
+});
+
+const EditBuildScreen = lazy(async () => {
+  const module = await import('@/features/builds');
+  return { default: module.EditBuildScreen };
+});
+
+const BuildDetailScreen = lazy(async () => {
+  const module = await import('@/features/builds');
+  return { default: module.BuildDetailScreen };
+});
+
+const UserProfileScreen = lazy(async () => {
+  const module = await import('@/features/builds');
+  return { default: module.UserProfileScreen };
+});
+
 const routeLoadingFallback = (
   <div className="flex min-h-80 flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
     <Spinner className="size-8" />
@@ -62,6 +87,11 @@ export const router = createBrowserRouter(
         { path: 'uniques', element: routeElement(HtmUniqueItemsScreen) },
         { path: 'mythicals', element: routeElement(MythicalUniquesScreen) },
         { path: 'ascendancies', element: routeElement(AscendanciesScreen) },
+        { path: 'builds', element: routeElement(BuildsScreen) },
+        { path: 'builds/new', element: routeElement(CreateBuildScreen) },
+        { path: 'builds/:buildId/edit', element: routeElement(EditBuildScreen) },
+        { path: 'build/:buildId', element: routeElement(BuildDetailScreen) },
+        { path: 'user/:userId', element: routeElement(UserProfileScreen) },
       ],
     },
   ],

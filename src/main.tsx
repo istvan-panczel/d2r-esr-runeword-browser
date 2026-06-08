@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { RouterProvider } from 'react-router-dom';
 import { store } from '@/core/store';
-import { startDataSync } from '@/core/startup';
+import { startDataSync, startAuth, startBuilds } from '@/core/startup';
 import { ThemeInitializer } from '@/features/settings';
+import { Toaster } from '@/components/ui/sonner';
 import { router } from '@/core/router';
 import './index.css';
 
@@ -39,8 +40,11 @@ createRoot(rootElement).render(
     <Provider store={store}>
       <ThemeInitializer />
       <RouterProvider router={router} />
+      <Toaster position="bottom-right" richColors />
     </Provider>
   </StrictMode>
 );
 
 void startDataSync();
+void startAuth();
+void startBuilds();

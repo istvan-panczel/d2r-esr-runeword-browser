@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { openDrawer, selectTheme, setTheme } from '@/features/settings';
+import { AuthControls, selectAuthIsConfigured } from '@/features/auth';
 
 const ESR_DOCS_URL = 'https://easternsunresurrected.com/';
 const CHANGELOG_URL = 'https://easternsunresurrected.com/changelogs.html';
@@ -32,7 +33,11 @@ function GitHubIcon({ className }: { readonly className?: string }) {
 export function Header() {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
+  const isSupabaseEnabled = useSelector(selectAuthIsConfigured);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // "Builds" is the last content nav item, shown only when the backend is configured.
+  const navItems = isSupabaseEnabled ? [...NAV_ITEMS, { to: '/builds', label: 'Builds', end: false }] : NAV_ITEMS;
 
   const handleThemeToggle = () => {
     dispatch(setTheme(theme === 'dark' ? 'light' : 'dark'));
@@ -71,7 +76,7 @@ export function Header() {
           </Button>
           <span className="text-lg font-bold">D2R ESR</span>
           <nav className="hidden md:flex gap-1">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} className={navLinkClass} end={item.end}>
                 {item.label}
               </NavLink>
@@ -105,6 +110,7 @@ export function Header() {
               <GitHubIcon className="size-5" />
             </a>
           </Button>
+          <AuthControls />
           <Button variant="ghost" size="icon" onClick={() => dispatch(openDrawer())} aria-label="Open settings">
             <Settings className="size-5" />
           </Button>
@@ -118,7 +124,7 @@ export function Header() {
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
           <nav className="mt-0 px-4 pb-2 flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={mobileNavLinkClass} onClick={handleMobileNavClick}>
                 {item.label}
               </NavLink>
@@ -145,6 +151,11 @@ export function Header() {
                 <ExternalLink className="size-3" />
               </span>
             </a>
+            {isSupabaseEnabled && (
+              <div className="mt-2 border-t px-1 pt-3">
+                <AuthControls />
+              </div>
+            )}
           </nav>
         </SheetContent>
       </Sheet>
