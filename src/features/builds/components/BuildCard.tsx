@@ -18,7 +18,11 @@ interface BuildCardProps {
 
 export function BuildCard({ build, currentEsrVersion, liked = false }: BuildCardProps) {
   const author = build.profiles;
-  const versionMismatch = build.esr_version !== null && currentEsrVersion !== null && build.esr_version !== currentEsrVersion;
+  // Use the build's most recent ESR version (last edit, else creation) so the badge
+  // matches the detail page's "effective version" notion: a build edited onto the
+  // current version isn't flagged as outdated.
+  const effectiveVersion = build.esr_version_updated ?? build.esr_version;
+  const versionMismatch = effectiveVersion !== null && currentEsrVersion !== null && effectiveVersion !== currentEsrVersion;
   const style = classStyle(build.class);
 
   return (
@@ -61,7 +65,7 @@ export function BuildCard({ build, currentEsrVersion, liked = false }: BuildCard
           className={versionMismatch ? 'border-amber-500 text-amber-600 dark:text-amber-400' : undefined}
           title={versionMismatch ? 'Created on a different ESR version than yours' : undefined}
         >
-          ESR {build.esr_version ?? 'Unknown'}
+          ESR {effectiveVersion ?? 'Unknown'}
         </Badge>
       </div>
     </Card>

@@ -74,6 +74,9 @@ function* loadUserFavorites(userId: string) {
     const remoteIds = (data ?? []).map((row) => row.item_id);
     const mergedIds = (yield call(migrateLegacyFavorites, userId, remoteIds)) as readonly string[];
     yield put(favoritesLoadSucceeded(mergedIds));
+    // The migration uploaded new favourites (mergedIds grew), so the public counts
+    // changed server-side via the trigger — refresh them so the badges aren't stale.
+    if (mergedIds.length > remoteIds.length) yield call(loadCounts);
   } catch {
     yield put(favoritesLoadFailed());
   }
@@ -90,8 +93,18 @@ function* handleAuthChanged(action: PayloadAction<{ user: AuthUser | null }>) {
 
 // The reducer has already applied the optimistic flip, so selectFavoriteItemIdSet
 // reflects the desired end state: present -> insert the favourite, absent -> delete it.
-function* handleToggleFavorite(action: PayloadAction<string>) {
+// `inFlight` (one Set per saga run) guards against a stray duplicate dispatch for the
+// same id racing a second network op against the first.
+function* handleToggleFavorite(inFlight: Set<string>, action: PayloadAction<string>) {
   const itemId = action.payload;
+  if (inFlight.has(itemId)) {
+    // A toggle for this id is already in flight (the button disables on pending, so
+    // this is a stray duplicate). Undo its optimistic flip and skip the racing write,
+    // keeping the UI and DB consistent with the first toggle.
+    yield put(toggleFavoriteReverted(itemId));
+    return;
+  }
+
   const userId = (yield select(selectAuthUserId)) as string | null;
   if (userId === null) {
     // Should not happen (the UI prompts sign-in instead of dispatching), but if it
@@ -103,6 +116,7 @@ function* handleToggleFavorite(action: PayloadAction<string>) {
   const favoriteIdSet = (yield select(selectFavoriteItemIdSet)) as Set<string>;
   const nowFavorite = favoriteIdSet.has(itemId);
 
+  inFlight.add(itemId);
   try {
     const client = requireSupabase();
     if (nowFavorite) {
@@ -120,12 +134,16 @@ function* handleToggleFavorite(action: PayloadAction<string>) {
   } catch {
     yield put(toggleFavoriteReverted(itemId));
     yield call(toast.error, 'Could not update your favourite. Please try again.');
+  } finally {
+    inFlight.delete(itemId);
   }
 }
 
 export function* favoritesSaga() {
+  // One Set per saga run (not module-global) tracks in-flight toggles by item id.
+  const inFlight = new Set<string>();
   // Arm the watchers before the initial loads so a sign-in that lands mid-load isn't missed.
-  yield takeEvery(toggleFavoriteRequested.type, handleToggleFavorite);
+  yield takeEvery(toggleFavoriteRequested.type, handleToggleFavorite, inFlight);
   yield takeLatest(authStateChanged.type, handleAuthChanged);
 
   // Public counts load for everyone; the user's own favourites load if a session

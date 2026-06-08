@@ -5,7 +5,7 @@ import { db } from '@/core/db';
 import type { Metadata } from '@/core/db';
 import { requireSupabase } from '@/core/supabase';
 import type { Json, Profile } from '@/core/supabase/types';
-import { selectAuthUserId } from '@/features/auth/store/authSlice';
+import { authStateChanged, selectAuthUserId, type AuthUser } from '@/features/auth/store/authSlice';
 import { BUILDS_PAGE_SIZE } from '../constants';
 import type { BuildData } from '../buildData';
 import type { BuildSortMode, BuildWithAuthor } from '../types';
@@ -334,6 +334,15 @@ function* handleFetchAuthorProfile(action: PayloadAction<string>) {
   }
 }
 
+// On sign-out the "My Builds" toggle is hidden, but its flag lives in the slice and
+// would otherwise persist — leaving the list stuck on an empty My-Builds view with
+// no visible control to clear it. Reset it (which refetches via handleFilterChanged).
+function* handleAuthChangedForBuilds(action: PayloadAction<{ user: AuthUser | null }>) {
+  if (action.payload.user !== null) return;
+  const myBuildsOnly = (yield select(selectBuildsMyBuildsOnly)) as boolean;
+  if (myBuildsOnly) yield put(setMyBuildsOnly(false));
+}
+
 function* handleFetchMoreAuthorBuilds() {
   const profile = (yield select(selectAuthorProfile)) as Profile | null;
   if (profile === null) return;
@@ -355,4 +364,5 @@ export function* buildsSaga() {
   yield takeLatest(deleteBuildRequested.type, handleDeleteBuild);
   yield takeLatest(fetchAuthorProfileRequested.type, handleFetchAuthorProfile);
   yield takeLatest(fetchMoreAuthorBuildsRequested.type, handleFetchMoreAuthorBuilds);
+  yield takeLatest(authStateChanged.type, handleAuthChangedForBuilds);
 }

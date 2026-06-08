@@ -36,6 +36,8 @@ export function useUnsavedChangesPrompt(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     const handler = (event: BeforeUnloadEvent) => {
+      // preventDefault() is the modern, spec-compliant way to trigger the native
+      // prompt and is honoured by all current browsers; returnValue is deprecated.
       event.preventDefault();
     };
     window.addEventListener('beforeunload', handler);

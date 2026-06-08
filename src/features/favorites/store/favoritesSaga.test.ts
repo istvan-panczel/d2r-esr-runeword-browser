@@ -155,6 +155,25 @@ describe('favoritesSaga', () => {
     expect(mocks.builder.insert).toHaveBeenCalledWith({ user_id: 'u1', item_id: 'runeword:Spirit:1' });
   });
 
+  it('ignores a duplicate in-flight toggle for the same item', async () => {
+    const store = setupStore();
+    await vi.waitFor(() => {
+      expect(store.getState().favorites.countsStatus).toBe(RequestState.SUCCESS);
+    });
+    await signIn(store);
+
+    // Two dispatches before the first write settles (a stray duplicate). The first
+    // wins; the duplicate is undone and never fires a second network write.
+    store.dispatch(toggleFavoriteRequested('runeword:Spirit:1'));
+    store.dispatch(toggleFavoriteRequested('runeword:Spirit:1'));
+
+    await vi.waitFor(() => {
+      expect(store.getState().favorites.pendingItemIds).toHaveLength(0);
+    });
+    expect(store.getState().favorites.favoriteItemIds).toContain('runeword:Spirit:1');
+    expect(mocks.builder.insert).toHaveBeenCalledTimes(1);
+  });
+
   it('reverts the optimistic favourite when the write fails', async () => {
     const store = setupStore();
     await vi.waitFor(() => {

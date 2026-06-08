@@ -126,6 +126,9 @@ export function EditBuildScreen() {
     <div className="mx-auto max-w-7xl">
       <PageHeader title="Edit Build" />
       <BuildForm
+        // Remount per build so the form's initial state can't carry over from a
+        // previously-edited build if the route changes without an unmount.
+        key={build.id}
         initialValues={initialValues}
         submitLabel="Save Changes"
         saving={updateStatus === RequestState.LOADING}

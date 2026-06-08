@@ -58,6 +58,7 @@ import buildsReducer, {
   fetchBuildsRequested,
   fetchMoreAuthorBuildsRequested,
   setClassFilter,
+  setMyBuildsOnly,
   toggleLikeRequested,
   updateBuildRequested,
 } from './buildsSlice';
@@ -325,6 +326,22 @@ describe('buildsSaga', () => {
 
     await vi.waitFor(() => {
       expect(store.getState().builds.authorNotFound).toBe(true);
+    });
+  });
+
+  it('resets the My Builds filter on sign-out so the list cannot get stuck', async () => {
+    mocks.state.listResult = { data: [makeRow('a')], error: null };
+    const store = setupStore();
+    store.dispatch(authStateChanged({ user: { id: 'u1', email: null } }));
+    store.dispatch(setMyBuildsOnly(true));
+    await vi.waitFor(() => {
+      expect(store.getState().builds.myBuildsOnly).toBe(true);
+    });
+
+    store.dispatch(authStateChanged({ user: null }));
+
+    await vi.waitFor(() => {
+      expect(store.getState().builds.myBuildsOnly).toBe(false);
     });
   });
 
