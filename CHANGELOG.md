@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.10.1...v1.11.0) (2026-06-08)
+
+
+### Features
+
+* build sharing with Supabase backend ([2831af0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2831af0ae1b92b293c23f247f1b2511e463ca1d8))
+* **favorites:** move runeword/gemword/unique favourites to Supabase ([64e5f4c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/64e5f4ce5030f8e52b7927bf6c58ae58819283b9))
+* **nav:** collapse overflowing header links into a More menu ([8ad048b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8ad048bd35b271f3f5398bc2d4f6f989b4b62dd5))
+* **uniques:** add favourites to the Unique Items page ([a7b1778](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a7b1778b720ba572c00b231a1bc9cd14568a1727))
+
+
+### Bug Fixes
+
+* harden Supabase write access and address build-sharing review findings ([60e2bf1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/60e2bf183ac4eabd09b462884c4d3d73df80e35c))
+* **spa:** harden GitHub Pages deep-link fallback ([88d0826](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/88d082658e0638eb4b8660ff6b543dd39150459e))
+
+
+### Documentation
+
+* **privacy:** add privacy policy ([cdefe1b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cdefe1bb68c3fc62665fef280ce26a9391c9bc0f))
+* rewrite README for released app ([9a8654a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9a8654afa7c422c0de1b1d26410f573eca141063))
+
+
+### CI
+
+* deploy only via manual workflow_dispatch ([29f720f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/29f720fe88618e13e5ad0cd80646b7f265b65411))
+
 ## [1.10.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.10.0...v1.10.1) (2026-06-06)
 
 
