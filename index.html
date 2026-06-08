@@ -49,14 +49,20 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- GitHub Pages SPA redirect handler - restores path from 404.html redirect -->
-    <!-- Source: https://github.com/orgs/community/discussions/55673 -->
+    <!-- GitHub Pages SPA redirect handler: restores the deep-link path stashed by 404.html.
+         Runs as a classic inline script (before the deferred module below), so the URL is
+         corrected before React Router reads window.location.
+         Source: https://github.com/orgs/community/discussions/55673 -->
     <script>
       (function () {
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect !== location.href) {
-          history.replaceState(null, null, redirect);
+        try {
+          var redirect = sessionStorage.redirect;
+          delete sessionStorage.redirect;
+          if (redirect && redirect !== location.href) {
+            history.replaceState(null, null, redirect);
+          }
+        } catch (e) {
+          // Storage blocked: nothing to restore; the app loads at the root.
         }
       })();
     </script>

@@ -4,9 +4,16 @@
     <meta charset="UTF-8" />
     <title>Redirecting...</title>
     <script>
-      // GitHub Pages SPA redirect - stores full URL and redirects to root
+      // GitHub Pages SPA fallback: Pages serves this 404.html for any unknown path
+      // (e.g. a hard refresh / shared link to /build/:id, /user/:id) with the original
+      // URL kept in the address bar. Stash it, then bounce to the app root; index.html
+      // restores the path before React Router boots.
       // Source: https://github.com/orgs/community/discussions/55673
-      sessionStorage.redirect = location.href;
+      try {
+        sessionStorage.redirect = location.href;
+      } catch (e) {
+        // Storage blocked (rare privacy modes): fall through to the root redirect.
+      }
     </script>
     <meta http-equiv="refresh" content="0;URL='/d2r-esr-runeword-browser/'" />
   </head>
