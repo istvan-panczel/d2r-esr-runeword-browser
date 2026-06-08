@@ -1,16 +1,13 @@
+import { filterByFavoriteId } from './favorites';
+
+// Generic toggle, re-exported under the recipe name kept by existing callers/tests.
+export { toggleFavoriteId as toggleRecipeFavoriteId } from './favorites';
+
 export type RecipeFavoriteKind = 'runeword' | 'gemword';
 
 export interface RecipeFavoriteEntry {
   readonly name: string;
   readonly variant: number;
-}
-
-export function isStringArray(value: unknown): value is readonly string[] {
-  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-}
-
-export function isBoolean(value: unknown): value is boolean {
-  return typeof value === 'boolean';
 }
 
 export function buildRecipeFavoriteId(kind: RecipeFavoriteKind, recipe: RecipeFavoriteEntry): string {
@@ -20,19 +17,10 @@ export function buildRecipeFavoriteId(kind: RecipeFavoriteKind, recipe: RecipeFa
   return [kind, recipe.name, String(recipe.variant)].join(':');
 }
 
-export function toggleRecipeFavoriteId(favoriteId: string, favoriteIds: readonly string[]): readonly string[] {
-  if (favoriteIds.includes(favoriteId)) {
-    return favoriteIds.filter((entry) => entry !== favoriteId);
-  }
-
-  return [...favoriteIds, favoriteId];
-}
-
 export function filterFavoriteRecipes<T extends RecipeFavoriteEntry>(
   recipes: readonly T[],
   kind: RecipeFavoriteKind,
   favoriteIds: readonly string[]
 ): readonly T[] {
-  const favoriteIdSet = new Set(favoriteIds);
-  return recipes.filter((recipe) => favoriteIdSet.has(buildRecipeFavoriteId(kind, recipe)));
+  return filterByFavoriteId(recipes, (recipe) => buildRecipeFavoriteId(kind, recipe), favoriteIds);
 }
