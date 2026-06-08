@@ -4,6 +4,7 @@ import { isSupabaseConfigured } from '@/core/supabase/config';
 let sagasRegistered = false;
 let authSagaRegistered = false;
 let buildsSagaRegistered = false;
+let favoritesSagaRegistered = false;
 
 function getStartupErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
@@ -73,5 +74,24 @@ export async function startBuilds(): Promise<void> {
     buildsSagaRegistered = true;
   } catch (error) {
     console.error('[Startup] Failed to load builds module', error);
+  }
+}
+
+/**
+ * Loads the favourites module dynamically and starts its saga (public per-item
+ * counts for everyone; the signed-in user's own favourites + a one-time
+ * localStorage migration once authenticated). No-op when Supabase is not
+ * configured. Safe to call repeatedly — the saga registry never starts a saga twice.
+ */
+export async function startFavorites(): Promise<void> {
+  if (!isSupabaseConfigured || favoritesSagaRegistered) return;
+
+  try {
+    const { favoritesSaga } = await import('@/features/favorites/store/favoritesSaga');
+    registerSaga(favoritesSaga);
+    runSagas();
+    favoritesSagaRegistered = true;
+  } catch (error) {
+    console.error('[Startup] Failed to load favorites module', error);
   }
 }

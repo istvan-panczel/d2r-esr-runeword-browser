@@ -118,6 +118,20 @@ And under **Database → Functions**, verify these functions exist:
 - `handle_new_user`
 - `handle_likes_change`
 
+### Apply the Favourites Migration (002)
+
+Adds Supabase-backed item favourites (runewords / gemwords / uniques) and a public per-item favourite count.
+
+1. Open `supabase/migrations/002_favorites.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+
+After running, verify under **Table Editor**:
+- `favorites`
+- `favorite_counts`
+
+And under **Database → Functions**:
+- `handle_favorites_change`
+
 ### Future Migrations
 
 When new migration files are added to `supabase/migrations/`:

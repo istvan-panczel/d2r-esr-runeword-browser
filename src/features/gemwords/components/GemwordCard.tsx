@@ -1,21 +1,28 @@
-import { Star } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { GemBadge } from '@/core/components/GemBadge';
+import { FavoriteButton } from '@/core/components/FavoriteButton';
 import { aggregateGemBonuses, type GemBonusMap } from '../hooks/useGemBonuses';
 import { getRelevantCategories, getCategoryLabel, type BonusCategory } from '@/core/utils/itemCategoryMapping';
-import { cn } from '@/lib/utils';
 import type { Gemword } from '@/core/db/models';
 
 interface GemwordCardProps {
   readonly gemword: Gemword;
   readonly gemBonusMap?: GemBonusMap;
   readonly isFavorite?: boolean;
+  readonly favoriteCount?: number;
+  readonly favoritePending?: boolean;
   readonly onToggleFavorite?: (gemword: Gemword) => void;
 }
 
-export function GemwordCard({ gemword, gemBonusMap, isFavorite = false, onToggleFavorite }: GemwordCardProps) {
+export function GemwordCard({
+  gemword,
+  gemBonusMap,
+  isFavorite = false,
+  favoriteCount = 0,
+  favoritePending = false,
+  onToggleFavorite,
+}: GemwordCardProps) {
   const { name, sockets, reqLevel, gems, allowedItems, affixes, jewelInfo } = gemword;
   const gemBonuses = gemBonusMap ? aggregateGemBonuses(gems, gemBonusMap) : undefined;
   const relevantCategories = getRelevantCategories(allowedItems);
@@ -45,19 +52,15 @@ export function GemwordCard({ gemword, gemBonusMap, isFavorite = false, onToggle
           <CardTitle className="min-w-0 text-lg text-amber-700 dark:text-amber-400">{name}</CardTitle>
           <div className="flex shrink-0 items-center gap-1">
             {onToggleFavorite && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-pressed={isFavorite}
-                aria-label={isFavorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
-                title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                onClick={() => {
+              <FavoriteButton
+                isFavorite={isFavorite}
+                count={favoriteCount}
+                pending={favoritePending}
+                label={name}
+                onToggle={() => {
                   onToggleFavorite(gemword);
                 }}
-              >
-                <Star className={cn('size-4', isFavorite && 'fill-amber-400 text-amber-500')} />
-              </Button>
+              />
             )}
             <Badge variant="secondary">{sockets} Socket</Badge>
             <Badge variant="outline">Lvl {reqLevel}</Badge>

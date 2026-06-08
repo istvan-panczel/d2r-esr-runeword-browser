@@ -1,19 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { filterByFavoriteId, isBoolean, isStringArray, toggleFavoriteId } from './favorites';
+import { filterByFavoriteId, isBoolean, isStringArray } from './favorites';
 
 describe('generic favorite helpers', () => {
-  it('toggles an id without duplicating entries', () => {
-    expect(toggleFavoriteId('a', [])).toEqual(['a']);
-    expect(toggleFavoriteId('a', ['a'])).toEqual([]);
-    expect(toggleFavoriteId('b', ['a'])).toEqual(['a', 'b']);
-  });
-
-  it('does not mutate the input array when toggling', () => {
-    const original = ['a'];
-    toggleFavoriteId('b', original);
-    expect(original).toEqual(['a']);
-  });
-
   it('filters items to those whose derived id is favorited', () => {
     const items = [
       { name: 'Keep', code: 'kp' },

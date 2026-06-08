@@ -91,6 +91,40 @@ export interface Database {
         };
         Relationships: [];
       };
+      favorites: {
+        Row: {
+          user_id: string;
+          // Stable client-built item id, e.g. 'runeword:Spirit:1' / 'htmUnique:Nagelring:rin'.
+          item_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          item_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          item_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      favorite_counts: {
+        Row: {
+          item_id: string;
+          count: number;
+        };
+        Insert: {
+          item_id: string;
+          count?: number;
+        };
+        Update: {
+          item_id?: string;
+          count?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: Record<never, never>;
@@ -108,3 +142,7 @@ export type BuildInsert = Database['public']['Tables']['builds']['Insert'];
 export type BuildUpdate = Database['public']['Tables']['builds']['Update'];
 
 export type Like = Database['public']['Tables']['likes']['Row'];
+
+export type Favorite = Database['public']['Tables']['favorites']['Row'];
+export type FavoriteInsert = Database['public']['Tables']['favorites']['Insert'];
+export type FavoriteCount = Database['public']['Tables']['favorite_counts']['Row'];

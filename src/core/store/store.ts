@@ -11,6 +11,7 @@ import mythicalUniquesReducer from '@/features/mythical-uniques/store/mythicalUn
 import ascendanciesReducer from '@/features/ascendancies/store/ascendanciesSlice';
 import authReducer from '@/features/auth/store/authSlice';
 import buildsReducer from '@/features/builds/store/buildsSlice';
+import favoritesReducer from '@/features/favorites/store/favoritesSlice';
 import { startSagas } from './sagaRegistry';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -28,6 +29,7 @@ const store = configureStore({
     ascendancies: ascendanciesReducer,
     auth: authReducer,
     builds: buildsReducer,
+    favorites: favoritesReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware),
 });

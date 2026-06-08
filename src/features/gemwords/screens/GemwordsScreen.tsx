@@ -6,14 +6,21 @@ import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { Spinner } from '@/components/ui/spinner';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FavoritesToggleButton } from '@/core/components/FavoritesToggleButton';
-import { useRecipeFavorites } from '@/core/hooks/useRecipeFavorites';
+import { useItemFavorites } from '@/features/favorites';
+import { buildRecipeFavoriteId } from '@/core/utils/recipeFavorites';
 import type { Gemword } from '@/core/db/models';
+
+const getGemwordFavoriteId = (gemword: Gemword) => buildRecipeFavoriteId('gemword', gemword);
 
 export function GemwordsScreen() {
   useUrlInitialize();
   const gemwords = useFilteredGemwords();
   const gemBonusMap = useGemBonusMap();
-  const favorites = useRecipeFavorites<Gemword>('gemword');
+  const favorites = useItemFavorites<Gemword>({
+    getId: getGemwordFavoriteId,
+    kindPrefix: 'gemword:',
+    filterStorageKey: 'd2r-esr.gemwords.favoritesOnly.v1',
+  });
 
   // Loading state
   if (gemwords === undefined) {
@@ -24,7 +31,7 @@ export function GemwordsScreen() {
     );
   }
 
-  const filteredGemwords = favorites.filterRecipes(gemwords);
+  const filteredGemwords = favorites.filterItems(gemwords);
 
   return (
     <div>
@@ -33,16 +40,18 @@ export function GemwordsScreen() {
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Showing {filteredGemwords.length} gemwords</p>
-        <FavoritesToggleButton
-          favoriteCount={favorites.favoriteCount}
-          showFavoritesOnly={favorites.showFavoritesOnly}
-          onToggle={favorites.toggleShowFavoritesOnly}
-        />
+        {favorites.isAuthenticated && (
+          <FavoritesToggleButton
+            favoriteCount={favorites.favoriteCount}
+            showFavoritesOnly={favorites.showFavoritesOnly}
+            onToggle={favorites.toggleShowFavoritesOnly}
+          />
+        )}
       </div>
 
       {filteredGemwords.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          {favorites.showFavoritesOnly
+          {favorites.showFavoritesOnly && favorites.isAuthenticated
             ? 'No favorite gemwords to show. Star some gemwords or turn off "Favorites only".'
             : 'No gemwords found. Try adjusting your filters or load data first.'}
         </p>
@@ -54,7 +63,9 @@ export function GemwordsScreen() {
                 gemword={gemword}
                 gemBonusMap={gemBonusMap}
                 isFavorite={favorites.isFavorite(gemword)}
-                onToggleFavorite={favorites.toggleFavorite}
+                favoriteCount={favorites.count(gemword)}
+                favoritePending={favorites.isPending(gemword)}
+                onToggleFavorite={favorites.toggle}
               />
             </div>
           ))}

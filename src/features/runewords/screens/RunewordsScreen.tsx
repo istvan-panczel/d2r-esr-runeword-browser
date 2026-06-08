@@ -5,13 +5,20 @@ import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { Spinner } from '@/components/ui/spinner';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FavoritesToggleButton } from '@/core/components/FavoritesToggleButton';
-import { useRecipeFavorites } from '@/core/hooks/useRecipeFavorites';
+import { useItemFavorites } from '@/features/favorites';
+import { buildRecipeFavoriteId } from '@/core/utils/recipeFavorites';
 import type { Runeword } from '@/core/db/models';
+
+const getRunewordFavoriteId = (runeword: Runeword) => buildRecipeFavoriteId('runeword', runeword);
 
 export function RunewordsScreen() {
   useUrlInitialize();
   const runewords = useFilteredRunewords();
-  const favorites = useRecipeFavorites<Runeword>('runeword');
+  const favorites = useItemFavorites<Runeword>({
+    getId: getRunewordFavoriteId,
+    kindPrefix: 'runeword:',
+    filterStorageKey: 'd2r-esr.runewords.favoritesOnly.v1',
+  });
 
   // Loading state
   if (runewords === undefined) {
@@ -22,7 +29,7 @@ export function RunewordsScreen() {
     );
   }
 
-  const filteredRunewords = favorites.filterRecipes(runewords);
+  const filteredRunewords = favorites.filterItems(runewords);
 
   return (
     <div>
@@ -31,16 +38,18 @@ export function RunewordsScreen() {
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Showing {filteredRunewords.length} runewords</p>
-        <FavoritesToggleButton
-          favoriteCount={favorites.favoriteCount}
-          showFavoritesOnly={favorites.showFavoritesOnly}
-          onToggle={favorites.toggleShowFavoritesOnly}
-        />
+        {favorites.isAuthenticated && (
+          <FavoritesToggleButton
+            favoriteCount={favorites.favoriteCount}
+            showFavoritesOnly={favorites.showFavoritesOnly}
+            onToggle={favorites.toggleShowFavoritesOnly}
+          />
+        )}
       </div>
 
       {filteredRunewords.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">
-          {favorites.showFavoritesOnly
+          {favorites.showFavoritesOnly && favorites.isAuthenticated
             ? 'No favorite runewords to show. Star some runewords or turn off "Favorites only".'
             : 'No runewords found. Try adjusting your filters or load data first.'}
         </p>
@@ -48,7 +57,13 @@ export function RunewordsScreen() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRunewords.map((runeword) => (
             <div key={`${runeword.name}-${String(runeword.variant)}-${runeword.allowedItems.join(',')}`} className="card-visibility-auto">
-              <RunewordCard runeword={runeword} isFavorite={favorites.isFavorite(runeword)} onToggleFavorite={favorites.toggleFavorite} />
+              <RunewordCard
+                runeword={runeword}
+                isFavorite={favorites.isFavorite(runeword)}
+                favoriteCount={favorites.count(runeword)}
+                favoritePending={favorites.isPending(runeword)}
+                onToggleFavorite={favorites.toggle}
+              />
             </div>
           ))}
         </div>

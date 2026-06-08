@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HTM_UNIQUE_ITEM_FAVORITE_KEYS, buildHtmUniqueItemFavoriteId } from './htmUniqueItemFavorites';
+import { buildHtmUniqueItemFavoriteId } from './htmUniqueItemFavorites';
 
 describe('htm unique item favorite helpers', () => {
   it('builds ids from name and base item code', () => {
@@ -18,10 +18,5 @@ describe('htm unique item favorite helpers', () => {
     const ring = buildHtmUniqueItemFavoriteId({ name: 'Nagelring', baseItemCode: 'rin' });
     const other = buildHtmUniqueItemFavoriteId({ name: 'Nagelring', baseItemCode: 'zzz' });
     expect(ring).not.toBe(other);
-  });
-
-  it('uses dedicated storage keys distinct from recipe favourites', () => {
-    expect(HTM_UNIQUE_ITEM_FAVORITE_KEYS.favoriteIds).toBe('d2r-esr.htmUniqueItems.favorites.v1');
-    expect(HTM_UNIQUE_ITEM_FAVORITE_KEYS.showOnly).toBe('d2r-esr.htmUniqueItems.showFavoritesOnly.v1');
   });
 });
