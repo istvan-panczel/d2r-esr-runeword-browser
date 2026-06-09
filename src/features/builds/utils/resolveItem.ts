@@ -1,6 +1,7 @@
 import { db } from '@/core/db';
 import type { Gemword, HtmUniqueItem, MythicalUnique, Runeword } from '@/core/db';
 import type { ItemRef } from '../buildData';
+import { findMythicalRecord, findUniqueRecord } from './itemLookup';
 
 /** The full local-DB object behind an item reference, tagged by type. */
 export type ResolvedFullItem =
@@ -31,11 +32,11 @@ export function itemRefKey(ref: ItemRef): string {
 export async function resolveFullItem(ref: ItemRef): Promise<ResolvedFullItem | null> {
   switch (ref.type) {
     case 'unique': {
-      const item = await db.htmUniqueItems.get(ref.id);
+      const item = await findUniqueRecord(ref);
       return item ? { kind: 'unique', item } : null;
     }
     case 'mythical': {
-      const item = await db.mythicalUniques.get(ref.id);
+      const item = await findMythicalRecord(ref);
       return item ? { kind: 'mythical', item } : null;
     }
     case 'runeword': {

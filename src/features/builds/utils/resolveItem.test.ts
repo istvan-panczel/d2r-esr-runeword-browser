@@ -56,8 +56,9 @@ describe('itemRefKey', () => {
 });
 
 describe('resolveFullItem', () => {
-  it('resolves a unique by id', async () => {
-    const id = await db.htmUniqueItems.add({
+  async function addHarlequinCrest(id?: number): Promise<void> {
+    await db.htmUniqueItems.add({
+      ...(id === undefined ? {} : { id }),
       name: 'Harlequin Crest',
       baseItem: 'Shako',
       baseItemCode: 'uap',
@@ -69,9 +70,13 @@ describe('resolveFullItem', () => {
       isAncientCoupon: false,
       gambleItem: '',
     });
+  }
+
+  it('resolves a unique by its stable snapshot name', async () => {
+    await addHarlequinCrest();
     const ref: ItemRef = {
       type: 'unique',
-      id: id as number,
+      id: 1,
       snapshot: { name: 'Harlequin Crest', baseItem: 'Shako', category: 'Helm', reqLevel: 62, properties: ['+2 to All Skills'] },
     };
 
@@ -81,6 +86,21 @@ describe('resolveFullItem', () => {
       expect(resolved.item.name).toBe('Harlequin Crest');
       expect(resolved.item.baseItemCode).toBe('uap');
     }
+  });
+
+  it('resolves a unique by name even when the stored id is stale (post re-parse)', async () => {
+    // A data re-parse reassigns auto-increment ids, so the build's stored id no
+    // longer matches any row; resolution must fall back to the stable snapshot name.
+    await addHarlequinCrest(7);
+    const ref: ItemRef = {
+      type: 'unique',
+      id: 987654, // stale id that no longer exists after the re-parse
+      snapshot: { name: 'Harlequin Crest', baseItem: 'Shako', category: 'Helm', reqLevel: 62, properties: ['+2 to All Skills'] },
+    };
+
+    const resolved = await resolveFullItem(ref);
+    expect(resolved?.kind).toBe('unique');
+    if (resolved?.kind === 'unique') expect(resolved.item.baseItemCode).toBe('uap');
   });
 
   it('resolves a runeword by name and variant', async () => {

@@ -1,6 +1,7 @@
 import { db } from '@/core/db';
 import type { BuildData, EquipmentSlot, ItemRef, WeaponSwapSlot } from '../buildData';
 import { gemwordToRef, mythicalToRef, runewordToRef, uniqueToRef } from './buildSnapshot';
+import { findMythicalRecord, findUniqueRecord } from './itemLookup';
 
 /**
  * - `unchanged`: the stored snapshot matches the current local data.
@@ -31,11 +32,11 @@ export interface BuildItemDiffs {
 export async function resolveCurrentRef(ref: ItemRef): Promise<ItemRef | null> {
   switch (ref.type) {
     case 'unique': {
-      const item = await db.htmUniqueItems.get(ref.id);
+      const item = await findUniqueRecord(ref);
       return item ? uniqueToRef(item) : null;
     }
     case 'mythical': {
-      const item = await db.mythicalUniques.get(ref.id);
+      const item = await findMythicalRecord(ref);
       return item ? mythicalToRef(item) : null;
     }
     case 'runeword': {

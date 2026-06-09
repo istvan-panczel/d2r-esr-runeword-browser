@@ -102,6 +102,16 @@ describe('computeBuildItemDiffs', () => {
     expect(diffs.items.helmet?.current).toBeNull();
   });
 
+  it('resolves a unique by name even when the stored id is stale (post re-parse)', async () => {
+    // The item exists locally under a freshly-assigned id; the build kept an old id.
+    // Resolution by stable name must still find it, so it diffs instead of going missing.
+    await addUnique(['+2 to All Skills (current)']);
+    const buildData: BuildData = { items: { helmet: uniqueRef(987654, ['+2 to All Skills (current)']) } };
+
+    const diffs = await computeBuildItemDiffs(buildData);
+    expect(diffs.items.helmet?.status).toBe('unchanged');
+  });
+
   it('reports no change when the snapshot matches current data', async () => {
     const id = await addUnique(['+2 to All Skills (current)']);
     const buildData: BuildData = { items: { helmet: uniqueRef(id, ['+2 to All Skills (current)']) } };
