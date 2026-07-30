@@ -51,7 +51,7 @@ function matchesSearch(item: HtmUniqueItem, searchTerms: readonly string[]): boo
   if (searchTerms.length === 0) return true;
 
   const propertyText = item.properties.join(' ');
-  const searchableText = `${item.name} ${item.baseItem} ${item.category} ${propertyText}`.toLowerCase();
+  const searchableText = `${item.name} ${item.baseItem} ${item.category} ${propertyText} ${item.notes}`.toLowerCase();
 
   return searchTerms.every((term) => searchableText.includes(term));
 }

@@ -78,6 +78,7 @@ describe('computeBuildItemDiffs', () => {
       properties: [...properties],
       isAncientCoupon: false,
       gambleItem: '',
+      notes: '',
     });
     return id as number;
   }

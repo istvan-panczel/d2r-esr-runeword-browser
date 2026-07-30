@@ -65,6 +65,7 @@ export function runewordToRef(item: Runeword): RunewordItemRef {
     variant: item.variant,
     snapshot: {
       sockets: item.sockets,
+      ...(item.socketsMax !== undefined && { socketsMax: item.socketsMax }),
       runes: item.runes,
       gems: item.gems,
       allowedItems: item.allowedItems,

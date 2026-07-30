@@ -23,6 +23,7 @@ interface RawRuneword {
   name: string;
   variant: number;
   sockets: number;
+  socketsMax?: number;
   reqLevel: number;
   sortKey: number;
   runes: string[];
@@ -53,15 +54,43 @@ export function extractName(cell: Element): string {
   return '';
 }
 
+export interface ExtractedSockets {
+  sockets: number;
+  socketsMax?: number;
+}
+
 /**
- * Extracts socket count from the first column cell.
- * Format: (N Socket)
+ * Extracts the socket count from the first column cell.
+ *
+ * Two formats exist:
+ * 1. Fixed: `(N Socket)` — the recipe always uses exactly N sockets.
+ * 2. Range: `(N-M Socket)` — the recipe accepts optional jewels on top of its runes
+ *    (see `jewelInfo`), so the item may have between N and M sockets.
+ *
+ * `sockets` is always the base/minimum count (equal to the number of listed runes/gems);
+ * `socketsMax` is only set when the source shows a range.
+ */
+export function extractSocketRange(cell: Element): ExtractedSockets {
+  const text = cell.textContent;
+  if (!text) return { sockets: 0 };
+
+  const rangeMatch = /\((\d+)\s*-\s*(\d+)\s*Socket\)/i.exec(text);
+  if (rangeMatch) {
+    const sockets = parseInt(rangeMatch[1], 10);
+    const max = parseInt(rangeMatch[2], 10);
+    return max > sockets ? { sockets, socketsMax: max } : { sockets };
+  }
+
+  const match = /\((\d+)\s*Socket\)/i.exec(text);
+  return match ? { sockets: parseInt(match[1], 10) } : { sockets: 0 };
+}
+
+/**
+ * Extracts the base socket count from the first column cell.
+ * @see extractSocketRange for the full extraction including the optional maximum.
  */
 export function extractSockets(cell: Element): number {
-  const text = cell.textContent;
-  if (!text) return 0;
-  const match = /\((\d+)\s*Socket\)/i.exec(text);
-  return match ? parseInt(match[1], 10) : 0;
+  return extractSocketRange(cell).sockets;
 }
 
 export interface ExtractedIngredients {
@@ -344,7 +373,7 @@ export function parseRunewordsHtml(
     const variantNum = (variantCounters.get(name) ?? 0) + 1;
     variantCounters.set(name, variantNum);
 
-    const sockets = extractSockets(nameCell);
+    const { sockets, socketsMax } = extractSocketRange(nameCell);
     const { runes, gems, ingredients, jewelInfo } = extractIngredients(ingredientsCell);
     const { allowedItems, excludedItems } = extractAllowedItems(allowedItemsCell);
     const { affixes, columnAffixes } = extractAffixes(cells);
@@ -364,6 +393,7 @@ export function parseRunewordsHtml(
       name,
       variant: variantNum,
       sockets,
+      socketsMax,
       reqLevel,
       sortKey,
       runes,
@@ -393,6 +423,7 @@ export function parseRunewordsHtml(
     affixes: rw.affixes,
     columnAffixes: rw.columnAffixes,
     tierPointTotals: rw.tierPointTotals,
+    ...(rw.socketsMax !== undefined && { socketsMax: rw.socketsMax }),
     ...(rw.jewelInfo !== undefined && { jewelInfo: rw.jewelInfo }),
   }));
 

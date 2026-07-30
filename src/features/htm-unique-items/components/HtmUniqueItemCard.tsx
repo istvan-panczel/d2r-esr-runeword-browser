@@ -64,6 +64,9 @@ export function HtmUniqueItemCard({
             </ul>
           </div>
         )}
+
+        {/* Notes (rare annotation from the source "Notes" column) */}
+        {item.notes && <p className="border-t pt-2 text-center text-sm text-muted-foreground">{item.notes}</p>}
       </CardContent>
     </Card>
   );

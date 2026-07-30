@@ -21,6 +21,7 @@ The primary feature - browse and filter all Eastern Sun Resurrected runewords.
 - Single-digit number input (1-6)
 - Default: empty (shows all runewords)
 - If set: only runewords with that exact socket count
+- Matches the base `sockets` count; recipes with optional jewels (shown as "2-3 Socket") match their base count
 
 ### Max Required Level
 - Number input to cap the required level of shown runewords
@@ -59,7 +60,8 @@ interface TierPointTotal {
 interface Runeword {
   readonly name: string;
   readonly variant: number;                     // 1, 2, 3... for multi-variant runewords
-  readonly sockets: number;
+  readonly sockets: number;                     // Base/minimum socket count (= number of ingredients)
+  readonly socketsMax?: number;                 // Only set when the source shows a range, e.g. "(2-3 Socket)"
   readonly reqLevel: number;                    // Highest required level among all runes and gems
   readonly sortKey: number;                     // Pre-calculated sort key
   readonly runes: readonly string[];            // Rune names in order
@@ -70,7 +72,7 @@ interface Runeword {
   readonly affixes: readonly Affix[];           // Backward compat: bonuses from first non-empty column
   readonly columnAffixes: SocketableBonuses;    // Per-column bonuses (weapon/helm/armor)
   readonly tierPointTotals: readonly TierPointTotal[];
-  readonly jewelInfo?: string;                  // Optional jewel info for Kanji runewords
+  readonly jewelInfo?: string;                  // Optional jewel info, e.g. "(0-3) Jewels"
 }
 ```
 
@@ -80,7 +82,10 @@ interface Runeword {
 - **ingredients**: The original order of runes + gems interleaved in the recipe
 - **columnAffixes**: Per-column bonuses displayed as split cards (weapon/helm/armor)
 - **sortKey**: Pre-calculated for sorting: ESR/Kanji (0-9999) or LoD (10000+) combined with reqLevel
-- **jewelInfo**: e.g. "(0-3) Jewels" for Kanji runewords
+- **jewelInfo**: e.g. "(0-3) Jewels" — recipes that accept optional jewels on top of their runes
+- **socketsMax**: Set only for those jewel-accepting recipes, which the source shows as a range,
+  e.g. Void `(2-3 Socket)`. `sockets` stays the base count so socket filtering is unaffected;
+  the card shows "2-3 Socket".
 
 ## RunewordCard Display
 

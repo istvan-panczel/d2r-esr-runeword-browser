@@ -210,6 +210,53 @@ describe('Ancient Coupon items', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SECTION 7b: Notes column (added by ESR 3.12)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Notes column', () => {
+  const allItems = [...weapons, ...armors, ...others];
+  const withNotes = allItems.filter((item) => item.notes !== '');
+
+  it('every item should have a string notes field', () => {
+    for (const item of allItems) {
+      expect(typeof item.notes, `${item.name}: notes is not a string`).toBe('string');
+    }
+  });
+
+  it('should extract notes for a known annotated item', () => {
+    const item = weapons.find((w) => w.name === 'Barbaric Devastator');
+    expect(item).toBeDefined();
+    expect(item?.notes).toBe('Blessed Edge Variant');
+  });
+
+  it('should find several "... Variant" notes', () => {
+    const variants = withNotes.filter((item) => item.notes.endsWith('Variant'));
+    expect(variants.length).toBeGreaterThanOrEqual(5);
+    console.log('[Test] Items with notes:', withNotes.length, '| variant notes:', variants.length);
+  });
+
+  it('the vast majority of items should have empty notes', () => {
+    expect(withNotes.length / allItems.length).toBeLessThan(0.1);
+    expect(withNotes.length).toBeGreaterThan(0);
+  });
+
+  it('items without a note should have notes === "" (not undefined)', () => {
+    const item = weapons.find((w) => w.name === "Krok's Basher");
+    expect(item).toBeDefined();
+    expect(item?.notes).toBe('');
+  });
+
+  it('no note should contain HTML tags, entities, double spaces or edge whitespace', () => {
+    for (const item of withNotes) {
+      expect(item.notes, `${item.name}: note contains HTML tags`).not.toMatch(/<[^>]*>/);
+      expect(item.notes, `${item.name}: note contains HTML entity`).not.toMatch(/&amp;|&lt;|&gt;|&quot;|&nbsp;/);
+      expect(item.notes, `${item.name}: note has double space`).not.toMatch(/\s{2,}/);
+      expect(item.notes, `${item.name}: note has edge whitespace`).toBe(item.notes.trim());
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // SECTION 8: Known item verification
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -226,6 +273,7 @@ describe('Known items', () => {
     expect(item!.properties.length).toBeGreaterThan(0);
     expect(item!.isAncientCoupon).toBe(false);
     expect(item!.gambleItem).toBe('Hand Axe');
+    expect(item!.notes).toBe('');
   });
 
   it('should parse The Gnasher (ancient coupon weapon)', () => {
@@ -247,6 +295,7 @@ describe('Data snapshot counts', () => {
     const total = allItems.length;
     const couponCount = allItems.filter((i) => i.isAncientCoupon).length;
     const withGamble = allItems.filter((i) => i.gambleItem).length;
+    const withNotes = allItems.filter((i) => i.notes).length;
     const allCategories = new Set(allItems.map((i) => i.category));
 
     console.log('[Test] HTM Unique Items snapshot:', {
@@ -256,11 +305,13 @@ describe('Data snapshot counts', () => {
       others: others.length,
       couponItems: couponCount,
       withGamble,
+      withNotes,
       categories: allCategories.size,
     });
 
     expect(total).toBeGreaterThanOrEqual(700);
     expect(couponCount).toBeGreaterThan(0);
+    expect(withNotes).toBeGreaterThan(0);
     expect(allCategories.size).toBeGreaterThanOrEqual(20);
   });
 });
@@ -300,6 +351,43 @@ describe('Edge cases', () => {
       </table>`;
     const items = parseHtmUniqueItems(html, 'armors');
     expect(items).toHaveLength(0);
+  });
+
+  it('should parse the 4-column (ESR 3.12+) layout and capture the note', () => {
+    const html = `
+      <table>
+        <tr><td colspan="4" bgcolor="#402040"><b>TestCategory</b></td></tr>
+        <tr><td>Name</td><td>Stats</td><td>Properties</td><td>Notes</td></tr>
+        <tr>
+          <td><b>Valid Item<br>Base (code)</b></td>
+          <td>Item Level: 10<br>Required Level: 5</td>
+          <td>+1 to All Skills</td>
+          <td><font face=arial>  Blessed   Edge <br> Variant  </font></td>
+        </tr>
+        <tr>
+          <td><b>Plain Item<br>Base (code)</b></td>
+          <td>Item Level: 10<br>Required Level: 5</td>
+          <td>+1 to All Skills</td>
+          <td><font face=arial>
+          </font></td>
+        </tr>
+      </table>`;
+    const items = parseHtmUniqueItems(html, 'weapons');
+    expect(items).toHaveLength(2);
+    expect(items[0].notes).toBe('Blessed Edge Variant');
+    expect(items[1].notes).toBe('');
+  });
+
+  it('should still parse the legacy 3-column layout with empty notes', () => {
+    const html = `
+      <table>
+        <tr><td colspan="3" bgcolor="#402040"><b>TestCategory</b></td></tr>
+        <tr><td>Name</td><td>Stats</td><td>Properties</td></tr>
+        <tr><td><b>Legacy Item<br>Base (code)</b></td><td>Item Level: 10<br>Required Level: 5</td><td>+1 to All Skills</td></tr>
+      </table>`;
+    const items = parseHtmUniqueItems(html, 'weapons');
+    expect(items).toHaveLength(1);
+    expect(items[0].notes).toBe('');
   });
 
   it('should default levels to 0 for non-numeric values', () => {

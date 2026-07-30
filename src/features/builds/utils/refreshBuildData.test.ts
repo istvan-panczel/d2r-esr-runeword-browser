@@ -20,6 +20,7 @@ describe('refreshBuildData', () => {
       properties: ['+2 to All Skills (current)'],
       isAncientCoupon: false,
       gambleItem: '',
+      notes: '',
     });
 
     const buildData: BuildData = {

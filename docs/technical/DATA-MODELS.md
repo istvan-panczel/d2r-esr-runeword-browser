@@ -119,7 +119,8 @@ Stores all runeword definitions.
 | [name+variant] | [string, number] | Compound PK | Primary key |
 | name | string | Yes | "Stone", "Spirit" |
 | variant | number | (part of PK) | 1, 2, 3... for multi-variant runewords |
-| sockets | number | Yes | Socket count required |
+| sockets | number | Yes | Base/minimum socket count (= number of ingredients) |
+| socketsMax | number? | No | Only when the source shows a range, e.g. "(2-3 Socket)" for optional jewels |
 | reqLevel | number | Yes | Highest req level among ingredients |
 | sortKey | number | Yes | Pre-calculated sort key |
 | runes | string[] | No | Rune names in order |
@@ -130,7 +131,7 @@ Stores all runeword definitions.
 | affixes | Affix[] | No | Backward compat: first non-empty column |
 | columnAffixes | SocketableBonuses | No | Per-column bonuses (weapon/helm/armor) |
 | tierPointTotals | TierPointTotal[] | No | Pre-calculated tier point totals |
-| jewelInfo | string? | No | Jewel info for Kanji runewords |
+| jewelInfo | string? | No | Optional jewel info, e.g. "(0-3) Jewels" |
 
 ### gemwords
 
@@ -232,6 +233,7 @@ interface Runeword {
   readonly name: string;
   readonly variant: number;
   readonly sockets: number;
+  readonly socketsMax?: number;
   readonly reqLevel: number;
   readonly sortKey: number;
   readonly runes: readonly string[];

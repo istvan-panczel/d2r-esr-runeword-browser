@@ -20,6 +20,9 @@ export interface UniqueSnapshot {
 
 export interface RunewordSnapshot {
   readonly sockets: number;
+  // Optional: only present for recipes the ESR site shows as a socket range, e.g. "(2-3 Socket)".
+  // Absent on builds saved before 3.12 data, so readers must treat it as optional.
+  readonly socketsMax?: number;
   readonly runes: readonly string[];
   readonly gems: readonly string[];
   readonly allowedItems: readonly string[];

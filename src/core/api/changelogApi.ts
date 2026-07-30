@@ -1,13 +1,14 @@
 import { REMOTE_URLS } from './remoteConfig';
 
 export interface ChangelogVersion {
-  readonly version: string; // "3.9.09"
+  readonly version: string; // "3.12" or "3.9.09"
   readonly fullString: string; // "Eastern Sun Resurrected 3.9.09 - 22/12/2025"
   readonly date: string; // "22/12/2025"
 }
 
-// Regex pattern to match version string
-const VERSION_PATTERN = /Eastern\s+Sun\s+Resurrected\s+(\d+\.\d+\.\d+)\s+-\s+(\d{2}\/\d{2}\/\d{4})/;
+// Regex pattern to match version string.
+// The patch component is optional: releases are published as either "3.11.09" or "3.12".
+const VERSION_PATTERN = /Eastern\s+Sun\s+Resurrected\s+(\d+\.\d+(?:\.\d+)?)\s+-\s+(\d{2}\/\d{2}\/\d{4})/;
 
 export async function fetchLatestVersion(): Promise<ChangelogVersion> {
   const response = await fetch(REMOTE_URLS.changelog);
@@ -25,7 +26,8 @@ export async function fetchLatestVersion(): Promise<ChangelogVersion> {
 
   return {
     version: match[1],
-    fullString: match[0],
+    // The heading is wrapped across lines in the source HTML — collapse it to one line
+    fullString: match[0].replace(/\s+/g, ' '),
     date: match[2],
   };
 }

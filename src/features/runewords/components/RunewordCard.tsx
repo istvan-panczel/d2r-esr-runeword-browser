@@ -33,6 +33,9 @@ export function RunewordCard({
   const isLod = 'sortKey' in runeword && runeword.sortKey >= LOD_SORT_KEY_OFFSET;
   const gems = 'gems' in runeword ? runeword.gems : undefined;
   const jewelInfo = 'jewelInfo' in runeword ? runeword.jewelInfo : undefined;
+  // Recipes with optional jewels show a socket range on the ESR site, e.g. "(2-3 Socket)"
+  const socketsMax = 'socketsMax' in runeword ? runeword.socketsMax : undefined;
+  const socketLabel = socketsMax === undefined ? String(sockets) : `${String(sockets)}-${String(socketsMax)}`;
   const ingredientsList = 'ingredients' in runeword && runeword.ingredients.length > 0 ? runeword.ingredients : runes;
   const runeBonuses = useRuneBonuses(runes, gems);
   const relevantCategories = getRelevantCategories(allowedItems);
@@ -75,7 +78,7 @@ export function RunewordCard({
                 }}
               />
             )}
-            <Badge variant="secondary">{sockets} Socket</Badge>
+            <Badge variant="secondary">{socketLabel} Socket</Badge>
             {reqLevel !== undefined && <Badge variant="outline">Lvl {reqLevel}</Badge>}
           </div>
         </div>

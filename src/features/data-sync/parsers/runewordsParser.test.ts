@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import {
   extractName,
   extractSockets,
+  extractSocketRange,
   extractRunes,
   extractIngredients,
   extractAllowedItems,
@@ -86,6 +87,55 @@ describe('extractSockets', () => {
   it('should return 0 if no socket count found', () => {
     const cell = createElementFromHtml('<td>No sockets here</td>');
     expect(extractSockets(cell)).toBe(0);
+  });
+
+  it('should return the minimum of a socket range', () => {
+    const cell = createElementFromHtml(`
+      <td>
+        <font color="#908858"><b>Void</b></font><br><br>(2-3 Socket)<br><br>
+      </td>
+    `);
+    expect(extractSockets(cell)).toBe(2);
+  });
+});
+
+describe('extractSocketRange', () => {
+  it('should return only sockets for a fixed socket count', () => {
+    const cell = createElementFromHtml(`
+      <td>
+        <font color="#908858"><b>Stone</b></font><br><br>(2 Socket)<br><br>
+      </td>
+    `);
+    expect(extractSocketRange(cell)).toEqual({ sockets: 2 });
+  });
+
+  it('should return sockets and socketsMax for a range', () => {
+    const cell = createElementFromHtml(`
+      <td>
+        <font color="#908858"><b>Void</b></font><br><br>(2-3 Socket)<br><br>
+      </td>
+    `);
+    expect(extractSocketRange(cell)).toEqual({ sockets: 2, socketsMax: 3 });
+  });
+
+  it('should handle wide ranges', () => {
+    const cell = createElementFromHtml('<td>(2-6 Socket)</td>');
+    expect(extractSocketRange(cell)).toEqual({ sockets: 2, socketsMax: 6 });
+  });
+
+  it('should tolerate whitespace around the range separator', () => {
+    const cell = createElementFromHtml('<td>(3 - 6 Socket)</td>');
+    expect(extractSocketRange(cell)).toEqual({ sockets: 3, socketsMax: 6 });
+  });
+
+  it('should omit socketsMax when the range bounds are equal', () => {
+    const cell = createElementFromHtml('<td>(4-4 Socket)</td>');
+    expect(extractSocketRange(cell)).toEqual({ sockets: 4 });
+  });
+
+  it('should return 0 sockets when no socket count is found', () => {
+    const cell = createElementFromHtml('<td>No sockets here</td>');
+    expect(extractSocketRange(cell)).toEqual({ sockets: 0 });
   });
 });
 
@@ -712,6 +762,41 @@ describe('parseRunewordsHtml integration', () => {
       expect(runeword.sockets).toBeGreaterThanOrEqual(1);
       expect(runeword.sockets).toBeLessThanOrEqual(6);
     }
+  });
+
+  it('should set socketsMax only for runewords shown with a socket range', () => {
+    const runewords = parseRunewordsHtml(html);
+    const withRange = runewords.filter((rw) => rw.socketsMax !== undefined);
+
+    // Recipes accepting optional jewels are displayed as "(N-M Socket)" by the ESR site
+    expect(withRange.length).toBeGreaterThan(0);
+    for (const rw of withRange) {
+      expect(rw.socketsMax, `${rw.name} v${String(rw.variant)}: socketsMax`).toBeGreaterThan(rw.sockets);
+      expect(rw.socketsMax, `${rw.name} v${String(rw.variant)}: socketsMax`).toBeLessThanOrEqual(6);
+      // Only jewel-accepting recipes have a range
+      expect(rw.jewelInfo, `${rw.name} v${String(rw.variant)}: jewelInfo`).toBeDefined();
+    }
+  });
+
+  it('should parse Void with a socket range and optional jewels', () => {
+    const runewords = parseRunewordsHtml(html);
+    const voidRw = runewords.find((r) => r.name === 'Void' && r.variant === 1);
+
+    expect(voidRw).toBeDefined();
+    // Base sockets = number of runes; the extra socket comes from the optional jewel
+    expect(voidRw!.sockets).toBe(2);
+    expect(voidRw!.ingredients).toHaveLength(2);
+    expect(voidRw!.socketsMax).toBe(3);
+    expect(voidRw!.jewelInfo).toBe('(0-1) Jewels');
+  });
+
+  it('should not set socketsMax for fixed-socket runewords', () => {
+    const runewords = parseRunewordsHtml(html);
+    const stone = runewords.find((r) => r.name === 'Stone' && r.variant === 1);
+
+    expect(stone).toBeDefined();
+    expect(stone!.socketsMax).toBeUndefined();
+    expect('socketsMax' in stone!).toBe(false);
   });
 
   it('should have all rune names ending with " Rune"', () => {

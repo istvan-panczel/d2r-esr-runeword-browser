@@ -103,7 +103,8 @@ export interface TierPointTotal {
 export interface Runeword {
   readonly name: string;
   readonly variant: number; // 1, 2, 3... for multi-variant runewords
-  readonly sockets: number;
+  readonly sockets: number; // Base/minimum socket count (= number of listed runes/gems)
+  readonly socketsMax?: number; // Only set when the source shows a range, e.g. "(2-3 Socket)" for recipes taking optional jewels
   readonly reqLevel: number; // Highest required level among all runes and gems
   readonly sortKey: number; // Pre-calculated sort key: ESR/Kanji (0-9999) or LoD (10000+) + reqLevel
   readonly runes: readonly string[];
@@ -149,6 +150,7 @@ export interface HtmUniqueItem {
   readonly properties: readonly string[];
   readonly isAncientCoupon: boolean;
   readonly gambleItem: string;
+  readonly notes: string; // "Notes" column (ESR 3.12+), e.g. "Blessed Edge Variant"; empty for most items
 }
 
 // Mythical Unique Items

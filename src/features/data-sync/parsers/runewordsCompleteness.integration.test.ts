@@ -142,9 +142,31 @@ function rawExtractName(cell: Element): string {
   return b?.textContent?.trim() ?? '';
 }
 
-function rawExtractSockets(cell: Element): number {
+interface RawSockets {
+  sockets: number;
+  socketsMax?: number;
+}
+
+/**
+ * Sockets are shown either as "(N Socket)" or, for recipes accepting optional jewels,
+ * as a range "(N-M Socket)". `sockets` is always the base/minimum count.
+ */
+function rawExtractSockets(cell: Element): RawSockets {
   const text = cell.textContent ?? '';
+  const range = /\((\d+)\s*-\s*(\d+)\s*Socket\)/i.exec(text);
+  if (range) {
+    const sockets = parseInt(range[1], 10);
+    const max = parseInt(range[2], 10);
+    return max > sockets ? { sockets, socketsMax: max } : { sockets };
+  }
   const m = /\((\d+)\s*Socket\)/i.exec(text);
+  return m ? { sockets: parseInt(m[1], 10) } : { sockets: 0 };
+}
+
+/** Max number of optional jewels from a "(0-N) Jewels" string, or 0 when absent. */
+function maxJewelsFrom(jewelInfo: string | undefined): number {
+  if (jewelInfo === undefined) return 0;
+  const m = /\(\d+-(\d+)\)/.exec(jewelInfo);
   return m ? parseInt(m[1], 10) : 0;
 }
 
@@ -271,7 +293,11 @@ describe('Per-runeword completeness check (every runeword vs HTML source)', () =
       });
 
       it('sockets', () => {
-        expect(parsedRunewords[i].sockets).toBe(rawSockets);
+        expect(parsedRunewords[i].sockets).toBe(rawSockets.sockets);
+      });
+
+      it('socketsMax', () => {
+        expect(parsedRunewords[i].socketsMax).toBe(rawSockets.socketsMax);
       });
 
       it('runes', () => {
@@ -545,7 +571,8 @@ describe('Affix structure correctness (all columns)', () => {
 
 describe('HTML entity decoding', () => {
   it('should decode &amp; to & in "Pierce Flesh & Bone" affixes', () => {
-    const affectedNames = ['Sincerity', 'Maniac', 'Discipline', 'White', 'Moonlight', 'Terminate', 'Passion'];
+    // ESR 3.12 reworked several affix lists — only these runewords still grant "Pierce Flesh & Bone".
+    const affectedNames = ['Maniac', 'White'];
     for (const name of affectedNames) {
       const rw = parsedRunewords.find((r) => r.name === name);
       expect(rw, `${name} not found`).toBeDefined();
@@ -586,34 +613,28 @@ describe('Column differences and display expansion', () => {
 
   const rwsWithDiffs = findRunewordsWithColumnDifferences();
 
-  it('should detect runewords with column-specific bonuses', () => {
-    expect(rwsWithDiffs.length).toBeGreaterThanOrEqual(9);
+  // ESR 3.12 normalized runeword bonuses across the item-type columns, so no runeword in the
+  // current data has column-specific bonuses and the expansion feature is effectively dormant.
+  // The splitting mechanism itself is covered synthetically in
+  // src/features/runewords/utils/filteringHelpers.test.ts — these tests only assert that real
+  // data still flows through it unharmed, and will pick up column differences if ESR reintroduces them.
+  it('should report how many runewords have column-specific bonuses', () => {
+    expect(rwsWithDiffs.length).toBeGreaterThanOrEqual(0);
+    console.log(`[Test] Runewords with column differences: ${String(rwsWithDiffs.length)}`);
   });
 
-  it('known runewords should be in the column differences list', () => {
-    const knownNames = ['Machine', 'Lightning', 'Gluttony', 'Venom', 'Plague', 'Breath of the Dying', 'Obsession', 'Might of the Earth'];
-    for (const name of knownNames) {
-      expect(
-        rwsWithDiffs.some((rw) => rw.name === name),
-        `Expected ${name} to have column differences`
-      ).toBe(true);
+  it('runewords with column differences should have 2+ relevant categories', () => {
+    for (const rw of rwsWithDiffs) {
+      const categories = getRelevantCategories(rw.allowedItems);
+      expect(categories.length, `${rw.name} v${String(rw.variant)}`).toBeGreaterThan(1);
     }
-  });
-
-  it('Machine should have different weapon vs charm bonuses', () => {
-    const machine = parsedRunewords.find((rw) => rw.name === 'Machine');
-    expect(machine).toBeDefined();
-    const { weaponsGloves, helmsBoots } = machine!.columnAffixes;
-    expect(weaponsGloves.length).toBeGreaterThan(0);
-    expect(helmsBoots.length).toBeGreaterThan(0);
-    expect(weaponsGloves.map((a) => a.rawText)).not.toEqual(helmsBoots.map((a) => a.rawText));
   });
 
   describe('expandRunewordsByColumn with real parsed data', () => {
     const expanded = expandRunewordsByColumn(parsedRunewords);
 
-    it('should produce more entries than input (splitting column-different runewords)', () => {
-      expect(expanded.length).toBeGreaterThan(parsedRunewords.length);
+    it('should never drop entries (splits column-different runewords, passes the rest through)', () => {
+      expect(expanded.length).toBeGreaterThanOrEqual(parsedRunewords.length);
     });
 
     it('split entries should have single-category allowedItems', () => {
@@ -660,18 +681,13 @@ describe('Column differences and display expansion', () => {
       }
     });
 
-    it('Machine should expand into exactly 2 entries (Weapon, Charm)', () => {
-      const machineEntries = expanded.filter((rw) => rw.name === 'Machine');
-      expect(machineEntries.length).toBe(2);
-
-      // One should have weapon items, the other charm
-      const categories = machineEntries.map((rw) => getRelevantCategories(rw.allowedItems));
-      expect(categories).toContainEqual(['weaponsGloves']);
-      expect(categories).toContainEqual(['helmsBoots']);
-
-      // Each should have different affixes
-      const affixTexts = machineEntries.map((rw) => rw.affixes.map((a) => a.rawText));
-      expect(affixTexts[0]).not.toEqual(affixTexts[1]);
+    it('every runeword with column differences should be split per category', () => {
+      for (const rw of rwsWithDiffs) {
+        const entries = expanded.filter((e) => e.name === rw.name && e.variant === rw.variant);
+        const categories = getRelevantCategories(rw.allowedItems);
+        expect(entries.length, `${rw.name} v${String(rw.variant)}: expanded entries`).toBeGreaterThan(1);
+        expect(entries.length, `${rw.name} v${String(rw.variant)}: expanded entries`).toBeLessThanOrEqual(categories.length);
+      }
     });
   });
 });
@@ -904,12 +920,38 @@ describe('Data quality invariants', () => {
     }
   });
 
-  it('runewords with jewelInfo should contain at least one Kanji rune', () => {
-    const withJewels = parsedRunewords.filter((rw) => rw.jewelInfo);
+  // Until ESR 3.12 only Kanji runewords accepted jewels; since 3.12 regular runewords
+  // (e.g. Void) do too, so the invariant is now about the socket range instead.
+  it('runewords with jewelInfo should have a well-formed jewel count and a matching socket range', () => {
+    const withJewels = parsedRunewords.filter((rw) => rw.jewelInfo !== undefined);
     expect(withJewels.length).toBeGreaterThan(0);
     for (const rw of withJewels) {
-      const hasKanjiRune = rw.runes.some((r) => kanjiRuneNames.has(r));
-      expect(hasKanjiRune, `${rw.name} v${String(rw.variant)} has jewelInfo but no Kanji rune`).toBe(true);
+      const label = `${rw.name} v${String(rw.variant)}`;
+      expect(rw.jewelInfo, `${label}: jewelInfo format`).toMatch(/^\(\d+(-\d+)?\) Jewels?$/);
+
+      const maxJewels = maxJewelsFrom(rw.jewelInfo);
+      expect(maxJewels, `${label}: max jewels`).toBeGreaterThan(0);
+      // Optional jewels widen the socket count: base sockets (the listed runes) + max jewels
+      expect(rw.socketsMax, `${label}: socketsMax`).toBe(rw.sockets + maxJewels);
+    }
+  });
+
+  it('runewords with a socket range should accept optional jewels', () => {
+    const withRange = parsedRunewords.filter((rw) => rw.socketsMax !== undefined);
+    expect(withRange.length).toBeGreaterThan(0);
+    for (const rw of withRange) {
+      const label = `${rw.name} v${String(rw.variant)}`;
+      expect(rw.jewelInfo, `${label}: socket range without jewelInfo`).toBeDefined();
+      expect(rw.socketsMax, `${label}: socketsMax`).toBeGreaterThan(rw.sockets);
+      expect(rw.socketsMax, `${label}: socketsMax`).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it('runewords without jewelInfo should have a fixed socket count', () => {
+    for (const rw of parsedRunewords) {
+      if (rw.jewelInfo === undefined) {
+        expect(rw.socketsMax, `${rw.name} v${String(rw.variant)}: unexpected socket range`).toBeUndefined();
+      }
     }
   });
 
@@ -950,6 +992,8 @@ describe('Data snapshot counts (detect ESR version changes)', () => {
     }).length;
     const withExcludedItems = parsedRunewords.filter((rw) => rw.excludedItems.length > 0).length;
     const charmRunewords = parsedRunewords.filter((rw) => rw.allowedItems.some((item) => item.toLowerCase().includes('charm'))).length;
+    const withSocketRange = parsedRunewords.filter((rw) => rw.socketsMax !== undefined).length;
+    const withJewels = parsedRunewords.filter((rw) => rw.jewelInfo !== undefined).length;
 
     // If any of these change, it likely means an ESR update modified the runewords data.
     // Update the expected values and verify the changes are correct.
@@ -957,9 +1001,13 @@ describe('Data snapshot counts (detect ESR version changes)', () => {
     expect(esrRunewordCount, 'ESR runewords').toBeGreaterThan(0);
     expect(lodRunewordCount, 'LoD runewords').toBeGreaterThan(0);
     expect(uniqueNames, 'unique runeword names').toBeGreaterThanOrEqual(200);
-    expect(withColumnDiffs, 'runewords with column differences').toBeGreaterThanOrEqual(9);
+    // ESR 3.12 normalized bonuses across item-type columns — currently 0, tracked in case they return
+    expect(withColumnDiffs, 'runewords with column differences').toBeGreaterThanOrEqual(0);
     expect(withExcludedItems, 'runewords with excluded items').toBeGreaterThan(0);
     expect(charmRunewords, 'charm runewords').toBeGreaterThanOrEqual(30);
+    // Recipes accepting optional jewels are shown as "(N-M Socket)" — 12 as of 3.12
+    expect(withSocketRange, 'runewords with a socket range').toBeGreaterThanOrEqual(12);
+    expect(withJewels, 'runewords with jewelInfo').toBe(withSocketRange);
 
     // Log counts for debugging when an ESR update changes things
     console.log('[Test] Data snapshot:', {
@@ -970,6 +1018,8 @@ describe('Data snapshot counts (detect ESR version changes)', () => {
       withColumnDiffs,
       withExcludedItems,
       charmRunewords,
+      withSocketRange,
+      withJewels,
       esrRunesParsed: esrRunes.length,
       lodRunesParsed: lodRunes.length,
       kanjiRunesParsed: kanjiRunes.length,

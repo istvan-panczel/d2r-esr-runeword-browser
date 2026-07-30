@@ -69,6 +69,7 @@ describe('resolveFullItem', () => {
       properties: ['+2 to All Skills'],
       isAncientCoupon: false,
       gambleItem: '',
+      notes: '',
     });
   }
 

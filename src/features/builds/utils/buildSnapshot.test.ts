@@ -34,6 +34,7 @@ function makeUnique(): HtmUniqueItem {
     properties: ['+2 to All Skills'],
     isAncientCoupon: false,
     gambleItem: '',
+    notes: '',
   };
 }
 

@@ -131,6 +131,19 @@ describe('Known item verification from DB', () => {
     expect(item.baseItemCode).toBe('hax');
     expect(item.itemLevel).toBe(4);
     expect(item.reqLevel).toBe(5);
+    expect(item.notes).toBe('');
+  });
+
+  it('should round-trip the notes field through IndexedDB', async () => {
+    const items = await testDb.htmUniqueItems.where('name').equals('Barbaric Devastator').toArray();
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.map((i) => i.notes)).toContain('Blessed Edge Variant');
+
+    const stored = await testDb.htmUniqueItems.toArray();
+    const withNotes = stored.filter((i) => i.notes !== '');
+    expect(withNotes.length).toBeGreaterThan(0);
+    // Notes are a rare annotation — the overwhelming majority of items have none
+    expect(withNotes.length / stored.length).toBeLessThan(0.1);
   });
 
   it('should have items from all 3 pages in DB', async () => {

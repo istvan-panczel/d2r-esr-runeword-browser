@@ -14,7 +14,20 @@ unique_armors.htm  ─┼─→ htmUniqueItemsParser → HtmUniqueItem[] → Ind
 unique_others.htm  ─┘
 ```
 
-Each HTML page contains tables of unique items organized by category headers. The parser extracts item name, base item, category, level, properties, and coupon status.
+Each HTML page contains tables of unique items organized by category headers. The parser extracts item name, base item, category, level, properties, notes, and coupon status.
+
+### Source HTML structure
+
+All three pages share the same table layout:
+
+- Each category starts with `<a name="CategoryName">` followed by a `<table>`.
+- Category header row: `<td colspan="4" bgcolor="#402040"><b>CategoryName</b></td>`.
+- Column header row: `Name | Stats | Properties | Notes`.
+- Data rows have 4 cells: name cell | stats cell | properties cell | notes cell.
+
+The **Notes** column was introduced in ESR 3.12; before that the tables had 3 columns and the
+category header used `colspan="3"`. The parser accepts both layouts (it matches category headers with
+`colspan` 3 **or** 4), and items parsed from the legacy 3-column layout get an empty `notes` value.
 
 ## Data Model
 
@@ -33,8 +46,12 @@ interface HtmUniqueItem {
   readonly properties: readonly string[]; // Human-readable property strings
   readonly isAncientCoupon: boolean; // True if coupon-only item
   readonly gambleItem: string;    // Gamble item identifier
+  readonly notes: string;         // "Notes" column (ESR 3.12+), e.g. "Blessed Edge Variant"; '' for most items
 }
 ```
+
+`notes` is not indexed, so adding it did not require a Dexie schema version bump. It is empty for the
+vast majority of items (16 of ~1031 items carry a note in ESR 3.12) and is only rendered when non-empty.
 
 ## Category System
 
@@ -67,7 +84,7 @@ interface HtmFilterGroup {
 ## Filters
 
 ### Text Search
-- Searches item name, base item, category, and properties
+- Searches item name, base item, category, properties, and notes
 - AND logic: all words must match
 - Supports quoted phrases: `"exact phrase"`
 

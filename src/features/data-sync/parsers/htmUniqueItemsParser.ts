@@ -6,9 +6,13 @@ import { decodeHtmlEntities } from './shared/parserUtils';
  *
  * HTML structure (all 3 pages use identical format):
  * - Each category: <a name="CategoryName"> + <table>
- * - Category header row: <td colspan="3" bgcolor="#402040"><b>CategoryName</b></td>
- * - Column headers row: Name | Stats | Properties
- * - Data rows (3 cells): name cell | stats cell | properties cell
+ * - Category header row: <td colspan="4" bgcolor="#402040"><b>CategoryName</b></td>
+ * - Column headers row: Name | Stats | Properties | Notes
+ * - Data rows (4 cells): name cell | stats cell | properties cell | notes cell
+ *
+ * The "Notes" column was added in ESR 3.12; before that the tables had 3 columns
+ * and the category header used colspan="3". Both layouts are still accepted — with
+ * the 3-column layout every item simply gets an empty `notes` value.
  */
 export function parseHtmUniqueItems(html: string, page: HtmUniqueItemPage): HtmUniqueItem[] {
   const parser = new DOMParser();
@@ -16,8 +20,9 @@ export function parseHtmUniqueItems(html: string, page: HtmUniqueItemPage): HtmU
 
   const items: HtmUniqueItem[] = [];
 
-  // Find all category header cells: td with colspan="3" and bgcolor="#402040"
-  const headerCells = doc.querySelectorAll('td[colspan="3"][bgcolor="#402040"]');
+  // Find all category header cells: td with bgcolor="#402040" spanning the whole table
+  // (colspan="4" since ESR 3.12, colspan="3" on older pages without the Notes column)
+  const headerCells = doc.querySelectorAll('td[colspan="3"][bgcolor="#402040"], td[colspan="4"][bgcolor="#402040"]');
 
   for (const headerCell of headerCells) {
     const bTag = headerCell.querySelector('b');
@@ -40,6 +45,8 @@ export function parseHtmUniqueItems(html: string, page: HtmUniqueItemPage): HtmU
       const nameCell = cells[0];
       const statsCell = cells[1];
       const propsCell = cells[2];
+      // Notes column only exists since ESR 3.12
+      const notesCell = cells.length > 3 ? cells[3] : undefined;
 
       // Parse name cell
       const { name, baseItem, baseItemCode, isAncientCoupon, gambleItem } = parseNameCell(nameCell);
@@ -50,6 +57,9 @@ export function parseHtmUniqueItems(html: string, page: HtmUniqueItemPage): HtmU
 
       // Parse properties cell
       const properties = parsePropertiesCell(propsCell);
+
+      // Parse notes cell (usually empty)
+      const notes = notesCell ? parseNotesCell(notesCell) : '';
 
       items.push({
         name,
@@ -62,6 +72,7 @@ export function parseHtmUniqueItems(html: string, page: HtmUniqueItemPage): HtmU
         properties,
         isAncientCoupon,
         gambleItem,
+        notes,
       });
     }
   }
@@ -153,6 +164,19 @@ function parseStatsCell(cell: Element): ParsedStatsCell {
     itemLevel: itemLevelMatch ? parseInt(itemLevelMatch[1], 10) : 0,
     reqLevel: reqLevelMatch ? parseInt(reqLevelMatch[1], 10) : 0,
   };
+}
+
+/**
+ * Parses the "Notes" cell (ESR 3.12+). Usually empty; a handful of items carry a short
+ * annotation such as "Blessed Edge Variant". Multi-line notes are joined with a space.
+ */
+function parseNotesCell(cell: Element): string {
+  const html = cell.innerHTML;
+  if (!html.trim()) return '';
+
+  return decodeHtmlEntities(html.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, ''))
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function parsePropertiesCell(cell: Element): string[] {
