@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.11.1...v1.11.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* adapt parsers to ESR 3.12 HTML format changes ([29e6bc0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/29e6bc0e75f7ca5106c6724589a3e8441802318d))
+
 ## [1.11.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.11.0...v1.11.1) (2026-06-09)
 
 
