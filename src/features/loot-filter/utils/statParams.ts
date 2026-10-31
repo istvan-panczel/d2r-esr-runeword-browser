@@ -5,11 +5,22 @@
  */
 import type { ClassInfo, LootFilterDataBundle, LootFilterSkill, TypesBundle } from '@/features/game-data/engine/schema';
 import { CLASS_CODES } from '@/features/game-data/engine/schema';
-import { decodeSkillLevelLayer, decodeTabLayer, statLayerKind, type StatLayerKind } from '@/features/game-data/engine/statLayers';
+import {
+  decodeSkillLevelLayer,
+  decodeTabLayer,
+  skillLevelLayer,
+  statLayerKind,
+  tabLayer,
+  type StatLayerKind,
+} from '@/features/game-data/engine/statLayers';
+import type { StatCheck } from '../engine/types';
+import { searchText, type PickerOption } from './pickerSearch';
 
 export interface StatParamData {
   /** Layer kind of each layered stat, by itemstatcost id */
   readonly kinds: ReadonlyMap<number, StatLayerKind>;
+  /** itemstatcost name of each layered stat, by id */
+  readonly names: ReadonlyMap<number, string>;
   readonly skills: ReadonlyMap<number, LootFilterSkill>;
   /** Names more than one skill has (a class skill and its item copy): shown with the id */
   readonly duplicateNames: ReadonlySet<string>;
@@ -21,6 +32,7 @@ export interface StatParamData {
 
 export const EMPTY_STAT_PARAMS: StatParamData = {
   kinds: new Map(),
+  names: new Map(),
   skills: new Map(),
   duplicateNames: new Set(),
   classes: [],
@@ -29,9 +41,12 @@ export const EMPTY_STAT_PARAMS: StatParamData = {
 
 export function buildStatParamData(data: LootFilterDataBundle, types: TypesBundle): StatParamData {
   const kinds = new Map<number, StatLayerKind>();
+  const names = new Map<number, string>();
   for (const stat of data.stats) {
     const kind = statLayerKind(stat.name);
-    if (kind !== undefined) kinds.set(stat.id, kind);
+    if (kind === undefined) continue;
+    kinds.set(stat.id, kind);
+    names.set(stat.id, stat.name);
   }
   const skills = data.skills ?? [];
   const seen = new Set<string>();
@@ -43,6 +58,7 @@ export function buildStatParamData(data: LootFilterDataBundle, types: TypesBundl
   const byCode = new Map(types.classes.map((info) => [info.code, info]));
   return {
     kinds,
+    names,
     skills: new Map(skills.map((skill) => [skill.id, skill])),
     duplicateNames,
     classes: CLASS_CODES.map((code) => byCode.get(code)),
@@ -89,4 +105,110 @@ export function statParamLabel(kind: StatLayerKind, param: number, d: StatParamD
       return layer === undefined || skill === undefined ? undefined : `${skill} lvl ${String(layer.level)}`;
     }
   }
+}
+
+/** Under a charged skill row: how its value is stored (`chargedValue` in statLayers.ts). */
+export const CHARGED_VALUE_HINT =
+  'Value = max charges × 256 + charges left (5/5 = 1285): ≥ 1 = has the charges, ≥ 1280 = at least 5 max charges.';
+
+/** Whether two stats' params mean the same thing (a row keeps its param when its stat changes to such a stat). */
+export function sameParamEncoding(a: StatLayerKind | undefined, b: StatLayerKind | undefined): boolean {
+  const encoding = (kind: StatLayerKind | undefined) => (kind === 'charged' ? 'event' : kind);
+  return encoding(a) === encoding(b);
+}
+
+// --- Picker options ---
+
+/** Every class's three tabs, grouped by class: value = the layer (`class << 3 | tab`). */
+export function tabOptions(d: StatParamData): PickerOption[] {
+  return d.classes.flatMap((info, cls) =>
+    info === undefined
+      ? []
+      : info.tabs.flatMap((tab, index) => {
+          const layer = tabLayer(cls, index);
+          if (layer === undefined) return [];
+          const value = String(layer);
+          return [{ key: value, value, label: tab, detail: value, group: info.name, search: searchText(tab, info.name, info.code, layer) }];
+        })
+  );
+}
+
+/** The classes: value = the class id. */
+export function classOptions(d: StatParamData): PickerOption[] {
+  return d.classes.flatMap((info, cls) => {
+    if (info === undefined) return [];
+    const value = String(cls);
+    return [{ key: value, value, label: info.name, detail: value, search: searchText(info.name, info.code, cls) }];
+  });
+}
+
+/** The skill ids the game data puts on items for a stat (`knownLayers`; event and charged layers decoded), ascending. */
+function knownSkills(statId: number | undefined, kind: StatLayerKind, d: StatParamData): number[] {
+  const layers = statId === undefined ? undefined : d.knownLayers.get(statId);
+  if (layers === undefined) return [];
+  if (kind === 'skill') return [...layers];
+  return [...new Set(layers.flatMap((layer) => decodeSkillLevelLayer(layer)?.skill ?? []))];
+}
+
+/** The levels the game data puts on items for the stat and skill (event and charged stats), ascending. */
+export function knownLevels(statId: number | undefined, skillId: number, d: StatParamData): number[] {
+  const layers = statId === undefined ? undefined : d.knownLayers.get(statId);
+  return (layers ?? []).flatMap((layer) => {
+    const decoded = decodeSkillLevelLayer(layer);
+    return decoded?.skill === skillId ? [decoded.level] : [];
+  });
+}
+
+/**
+ * "Any known level": one check per level the game data puts on items for the skill, each with that exact param and
+ * the check's op and value; empty when the skill has no known level.
+ */
+export function anyKnownLevelChecks(check: StatCheck, statId: number | undefined, skillId: number, d: StatParamData): StatCheck[] {
+  return knownLevels(statId, skillId, d).flatMap((level) => {
+    const param = skillLevelLayer(skillId, level);
+    return param === undefined ? [] : [{ ...check, param }];
+  });
+}
+
+const ON_ITEMS = 'On items';
+const OTHER_SKILLS = 'Other skills';
+
+// Skill lists per data object and stat (743 options each; rebuilt only when the bundles change).
+const skillOptionCache = new WeakMap<StatParamData, Map<string, PickerOption[]>>();
+
+/**
+ * The skills for a skill, event or charged stat: value = the skill id. "On items" first (the skills the game data puts
+ * on items for that stat, with their known levels), then the class skills by class, then "Other skills".
+ * `item_singleskill` (+N to one class skill) lists only class skills besides the known ones.
+ */
+export function skillOptions(statId: number | undefined, kind: StatLayerKind, d: StatParamData): PickerOption[] {
+  const cacheKey = `${String(statId)}|${kind}`;
+  const cache = skillOptionCache.get(d) ?? new Map<string, PickerOption[]>();
+  skillOptionCache.set(d, cache);
+  const cached = cache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const known = new Set(knownSkills(statId, kind, d));
+  const classOnly = statId !== undefined && d.names.get(statId) === 'item_singleskill';
+  const classIndex = (skill: LootFilterSkill) => (skill.cls === undefined ? CLASS_CODES.length : CLASS_CODES.indexOf(skill.cls));
+  const option = (skill: LootFilterSkill, group: string): PickerOption => {
+    const value = String(skill.id);
+    const cls = className(skill.cls, d);
+    const levels = kind === 'event' || kind === 'charged' ? knownLevels(statId, skill.id, d) : [];
+    const detail = [`#${value}`, cls, levels.length > 0 ? `lvl ${levels.join(', ')}` : undefined].filter((part) => part !== undefined);
+    return { key: value, value, label: skill.name, detail: detail.join(' · '), group, search: searchText(skill.name, skill.id, cls) };
+  };
+  const byName = (a: LootFilterSkill, b: LootFilterSkill) => a.name.localeCompare(b.name) || a.id - b.id;
+  const skills = [...d.skills.values()];
+  const onItems = skills
+    .filter((skill) => known.has(skill.id))
+    .sort(byName)
+    .map((skill) => option(skill, ON_ITEMS));
+  const rest = skills
+    .filter((skill) => !known.has(skill.id) && (!classOnly || skill.cls !== undefined))
+    .sort((a, b) => classIndex(a) - classIndex(b) || byName(a, b))
+    .map((skill) => option(skill, className(skill.cls, d) ?? OTHER_SKILLS));
+  const options = [...onItems, ...rest];
+  cache.set(cacheKey, options);
+  return options;
 }

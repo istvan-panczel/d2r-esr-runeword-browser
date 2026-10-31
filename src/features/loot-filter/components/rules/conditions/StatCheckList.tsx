@@ -6,18 +6,21 @@ import { STAT_OPS, type StatCheck, type StatOp } from '../../../engine/types';
 import type { LootFilterData } from '../../../hooks/useLootFilterData';
 import {
   DEFAULT_STAT_OP,
+  expandsAcrossLevels,
   newStatCheck,
   removeStatCheck,
   replaceStatCheck,
+  replaceStatCheckWithMany,
   setStatOp,
   setStatParam,
   setStatValue,
 } from '../../../utils/statChecks';
-import { NumberInput } from '../../NumberInput';
+import { anyKnownLevelChecks, CHARGED_VALUE_HINT, sameParamEncoding, statParamKind } from '../../../utils/statParams';
 import { StatPicker } from '../../pickers';
 import { AffixBrowserDialog, type AffixBrowserMode } from '../../pickers/AffixBrowserDialog';
 import { focusAfterRemoval } from '../../pickers/focusAfterRemoval';
 import { RequiredNumberInput } from './RequiredNumberInput';
+import { StatParamField } from './StatParamField';
 
 function toOp(value: string): StatOp | undefined {
   return STAT_OPS.find((op) => op === value);
@@ -27,13 +30,19 @@ interface StatCheckRowProps {
   readonly id: string;
   readonly data: LootFilterData;
   readonly check: StatCheck;
+  /** The row is in an any-of list (for "Any known level"). */
+  readonly anyOf: boolean;
   readonly onChange: (check: StatCheck) => void;
+  /** Replaces the row with several (one per known level). */
+  readonly onReplace: (checks: readonly StatCheck[]) => void;
   readonly onRemove: () => void;
 }
 
-function StatCheckRow({ id, data, check, onChange, onRemove }: StatCheckRowProps) {
+function StatCheckRow({ id, data, check, anyOf, onChange, onReplace, onRemove }: StatCheckRowProps) {
   const op = check.op ?? DEFAULT_STAT_OP;
   const { value } = check;
+  const kind = statParamKind(check.stat, data.params);
+  const negative = op === '<' || op === '<=' || op === '!=';
   return (
     <li className="flex flex-wrap items-center gap-1.5">
       <StatPicker
@@ -42,18 +51,24 @@ function StatCheckRow({ id, data, check, onChange, onRemove }: StatCheckRowProps
         value={check.stat}
         className="w-full sm:w-56"
         onChange={(stat) => {
-          onChange({ ...check, stat });
+          // A param of another kind (a skill id on a tab stat) would name something else: drop it.
+          const next = { ...check, stat };
+          onChange(sameParamEncoding(kind, statParamKind(stat, data.params)) ? next : setStatParam(next, undefined));
         }}
       />
-      <NumberInput
-        aria-label="Param"
-        integer
-        className="h-8 w-20"
-        placeholder="param"
-        value={check.param}
-        onCommit={(param) => {
-          // An emptied param removes it, so the field and the model agree.
+      <StatParamField
+        data={data}
+        stat={check.stat}
+        param={check.param}
+        onChange={(param) => {
           onChange(setStatParam(check, param));
+        }}
+        anyKnownLevel={{
+          allowed: expandsAcrossLevels(check, anyOf),
+          hint: negative ? 'for a <, <= or != check only in an all-of list' : 'only in an any-of list; a rule has one any-of list',
+          onPick: (skillId) => {
+            onReplace(anyKnownLevelChecks(check, data.lookup.statId(check.stat), skillId, data.params));
+          },
         }}
       />
       <Select
@@ -99,6 +114,7 @@ function StatCheckRow({ id, data, check, onChange, onRemove }: StatCheckRowProps
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Remove stat check" data-remove onClick={onRemove}>
         <X />
       </Button>
+      {kind === 'charged' && <p className="basis-full text-xs text-muted-foreground">{CHARGED_VALUE_HINT}</p>}
     </li>
   );
 }
@@ -111,10 +127,12 @@ interface StatCheckListProps {
   readonly onChange: (value: readonly StatCheck[] | undefined) => void;
   /** Shows "Browse affixes…" next to the add control (item stat lists). */
   readonly affixBrowser?: AffixBrowserMode;
+  /** An any-of list (`itemStatsAnyOf`, `playerStatsAnyOf`): where "Any known level" of a `>=` check is offered. */
+  readonly anyOf?: boolean;
 }
 
 /** Rows of stat, optional param, op and value (two values for `between`); a row is added by picking its stat. */
-export function StatCheckList({ id, data, value, onChange, affixBrowser }: StatCheckListProps) {
+export function StatCheckList({ id, data, value, onChange, affixBrowser, anyOf = false }: StatCheckListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Set when a stat is picked, so the popover's close moves focus to the new row.
   const addedRef = useRef(false);
@@ -131,8 +149,12 @@ export function StatCheckList({ id, data, value, onChange, affixBrowser }: StatC
               id={index === 0 ? id : `${id}-${String(index)}`}
               data={data}
               check={check}
+              anyOf={anyOf}
               onChange={(next) => {
                 onChange(replaceStatCheck(checks, index, next));
+              }}
+              onReplace={(many) => {
+                onChange(replaceStatCheckWithMany(checks, index, many));
               }}
               onRemove={() => {
                 onChange(removeStatCheck(checks, index));

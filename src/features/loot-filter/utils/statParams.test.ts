@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { buildStatParamData, className, EMPTY_STAT_PARAMS, skillLabel, statParamKind, statParamLabel } from './statParams';
+import { filterPickerOptions } from './pickerSearch';
+import {
+  anyKnownLevelChecks,
+  buildStatParamData,
+  className,
+  classOptions,
+  EMPTY_STAT_PARAMS,
+  knownLevels,
+  sameParamEncoding,
+  skillLabel,
+  skillOptions,
+  statParamKind,
+  statParamLabel,
+  tabOptions,
+} from './statParams';
 import { TEST_DATA, TEST_TYPES } from './testLookup.mock';
 
 const params = buildStatParamData(TEST_DATA, TEST_TYPES);
@@ -45,5 +59,78 @@ describe('statParamLabel', () => {
     // Level 0
     expect(statParamLabel('event', 472 << 6, params)).toBeUndefined();
     expect(statParamLabel('skill', 47, EMPTY_STAT_PARAMS)).toBeUndefined();
+  });
+});
+
+describe('picker options', () => {
+  it('lists every tab by class with the layer as value, found by class or tab name', () => {
+    const tabs = tabOptions(params);
+    expect(tabs.map((option) => option.value)).toEqual(['0', '1', '2', '8', '9', '10', '48', '49', '50']);
+    expect(tabs.find((option) => option.value === '50')).toMatchObject({ label: 'Martial Arts', group: 'Assassin', detail: '50' });
+    expect(filterPickerOptions(tabs, 'martial').matches.map((option) => option.value)).toEqual(['50']);
+    expect(filterPickerOptions(tabs, 'assassin').matches).toHaveLength(3);
+    expect(tabOptions(EMPTY_STAT_PARAMS)).toEqual([]);
+  });
+
+  it('lists the classes by class id', () => {
+    expect(classOptions(params).map((option) => [option.value, option.label])).toEqual([
+      ['0', 'Amazon'],
+      ['1', 'Sorceress'],
+      ['6', 'Assassin'],
+    ]);
+  });
+
+  it('lists the skills on items first, then by class, then the others', () => {
+    const options = skillOptions(97, 'skill', params);
+    expect(options.map((option) => [option.value, option.group])).toEqual([
+      ['166', 'Sorceress'],
+      ['47', 'Sorceress'],
+      ['36', 'Sorceress'],
+      ['472', 'Sorceress'],
+      ['258', 'Assassin'],
+      ['124', 'Other skills'],
+      ['500', 'Other skills'],
+    ]);
+    const single = skillOptions(107, 'skill', params);
+    // item_singleskill: the known ones first, then class skills only
+    expect(single.map((option) => [option.value, option.group])).toEqual([
+      ['47', 'On items'],
+      ['258', 'On items'],
+      ['166', 'Sorceress'],
+      ['36', 'Sorceress'],
+      ['472', 'Sorceress'],
+    ]);
+    expect(single[0]).toMatchObject({ label: 'Fire Ball', detail: '#47 · Sorceress' });
+    expect(filterPickerOptions(single, 'assassin').matches.map((option) => option.value)).toEqual(['258']);
+  });
+
+  it('shows the known levels of event skills on items', () => {
+    const options = skillOptions(198, 'event', params);
+    expect(options.slice(0, 2).map((option) => [option.label, option.group, option.detail])).toEqual([
+      ['Fire Bolt', 'On items', '#36 · Sorceress · lvl 3'],
+      ['Orb of Winter', 'On items', '#472 · Sorceress · lvl 13, 25'],
+    ]);
+    expect(filterPickerOptions(options, 'orb of winter').matches.map((option) => option.value)).toEqual(['472']);
+  });
+});
+
+describe('known levels', () => {
+  it('decodes the levels of a skill and writes one check per level', () => {
+    expect(knownLevels(198, 472, params)).toEqual([13, 25]);
+    expect(knownLevels(198, 47, params)).toEqual([]);
+    expect(knownLevels(undefined, 472, params)).toEqual([]);
+    const check = { stat: 'item_skillonhit', param: (472 << 6) | 13, op: '>=', value: 1 } as const;
+    expect(anyKnownLevelChecks(check, 198, 472, params)).toEqual([
+      { ...check, param: (472 << 6) | 13 },
+      { ...check, param: (472 << 6) | 25 },
+    ]);
+  });
+
+  it('keeps a param across stats of the same encoding only', () => {
+    expect(sameParamEncoding('event', 'charged')).toBe(true);
+    expect(sameParamEncoding('skill', 'skill')).toBe(true);
+    expect(sameParamEncoding(undefined, undefined)).toBe(true);
+    expect(sameParamEncoding('tab', 'class')).toBe(false);
+    expect(sameParamEncoding('skill', undefined)).toBe(false);
   });
 });

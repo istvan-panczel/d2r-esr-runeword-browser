@@ -322,6 +322,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
                   value={rule[field.key]}
                   onChange={(value) => patch({ [field.key]: value })}
                   affixBrowser={field.key === 'itemStats' ? 'all' : field.key === 'itemStatsAnyOf' ? 'any' : undefined}
+                  anyOf={field.key === 'itemStatsAnyOf' || field.key === 'playerStatsAnyOf'}
                 />
               </ConditionField>
             ))}

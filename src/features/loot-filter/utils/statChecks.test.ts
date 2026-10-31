@@ -1,5 +1,6 @@
 import {
   exceptionOf,
+  expandsAcrossLevels,
   formatStatCheck,
   invertStatCheck,
   newExceptionCheck,
@@ -9,6 +10,7 @@ import {
   parseStatInput,
   removeStatCheck,
   replaceStatCheck,
+  replaceStatCheckWithMany,
   setStatOp,
   setStatParam,
   setStatValue,
@@ -64,6 +66,25 @@ describe('stat check helpers', () => {
     expect(formatStatCheck({ stat: 107, param: 166, value: 1 }, TEST_LOOKUP)).toBe('item_singleskill[Chain Lightning #166] ≥1');
     expect(formatStatCheck({ stat: 188, param: 21, value: 1 }, TEST_LOOKUP)).toBe('item_addskill_tab[21] ≥1');
     expect(formatStatCheck({ stat: 'item_addskill_tab', param: 50, value: 1 }, EMPTY_LOOKUP)).toBe('item_addskill_tab[50] ≥1');
+  });
+});
+
+describe('any known level', () => {
+  const a = { stat: 'a', value: 1 };
+  const b = { stat: 'b', value: 1 };
+  it('replaces one row with several in its place', () => {
+    const levels = [
+      { stat: 'x', param: 1, value: 1 },
+      { stat: 'x', param: 2, value: 1 },
+    ];
+    expect(replaceStatCheckWithMany([a, { stat: 'x', value: 1 }, b], 1, levels)).toEqual([a, ...levels, b]);
+  });
+
+  it('expands a presence check in an any-of list and an exception check in an all-of list', () => {
+    expect(expandsAcrossLevels({ stat: 'x', value: 1 }, true)).toBe(true);
+    expect(expandsAcrossLevels({ stat: 'x', op: 'between', value: [1, 2] }, false)).toBe(false);
+    expect(expandsAcrossLevels({ stat: 'x', op: '<', value: 1 }, false)).toBe(true);
+    expect(expandsAcrossLevels({ stat: 'x', op: '!=', value: 1 }, true)).toBe(false);
   });
 });
 

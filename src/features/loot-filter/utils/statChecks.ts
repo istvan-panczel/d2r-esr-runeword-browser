@@ -41,6 +41,21 @@ export function replaceStatCheck(list: readonly StatCheck[], index: number, chec
   return list.map((current, position) => (position === index ? check : current));
 }
 
+/** Replaces the row at `index` with `checks` in its place ("Any known level": one check per level). */
+export function replaceStatCheckWithMany(list: readonly StatCheck[], index: number, checks: readonly StatCheck[]): readonly StatCheck[] {
+  return [...list.slice(0, index), ...checks, ...list.slice(index + 1)];
+}
+
+/**
+ * Where "Any known level" (one check per level) means what the row means: a presence-like check (`>=`, `>`, `==`,
+ * `between`) holds at any level only in an any-of list; a `<`, `<=` or `!=` check (an exception on a hide rule: none of
+ * the levels) only in an all-of list.
+ */
+export function expandsAcrossLevels(check: StatCheck, anyOf: boolean): boolean {
+  const negative = check.op === '<' || check.op === '<=' || check.op === '!=';
+  return negative ? !anyOf : anyOf;
+}
+
 /** Removes the row at `index`; an emptied list is `undefined` (the key goes away). */
 export function removeStatCheck(list: readonly StatCheck[], index: number): readonly StatCheck[] | undefined {
   const next = list.filter((_, position) => position !== index);

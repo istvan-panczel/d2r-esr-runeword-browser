@@ -1,9 +1,11 @@
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
+import { CHARGED_VALUE_HINT, sameParamEncoding, statParamKind } from '../../utils/statParams';
 import { newStatRow, type StatRow } from '../../utils/testItemForm';
 import { NumberInput } from '../NumberInput';
 import { StatPicker } from '../pickers';
+import { StatParamField } from '../rules/conditions/StatParamField';
 
 interface StatRowsEditorProps {
   readonly data: LootFilterData;
@@ -21,50 +23,53 @@ export function StatRowsEditor({ data, idPrefix, rows, onChange, addLabel }: Sta
 
   return (
     <div className="flex flex-col gap-1.5">
-      {rows.map((row, index) => (
-        <div key={row.key} className="flex flex-wrap items-center gap-1.5">
-          <StatPicker
-            data={data}
-            id={`${idPrefix}-${String(index)}-stat`}
-            value={row.stat}
-            onChange={(stat) => {
-              update(row.key, { stat });
-            }}
-            className="min-w-0 flex-1 basis-40"
-          />
-          <NumberInput
-            integer
-            aria-label="Param"
-            placeholder="param"
-            className="h-8 w-20"
-            value={row.param}
-            onCommit={(param) => {
-              update(row.key, { param });
-            }}
-          />
-          <NumberInput
-            aria-label="Value"
-            placeholder="value"
-            className="h-8 w-24"
-            value={row.value}
-            onCommit={(value) => {
-              update(row.key, { value });
-            }}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="size-8"
-            aria-label="Remove the stat"
-            onClick={() => {
-              onChange(rows.filter((candidate) => candidate.key !== row.key));
-            }}
-          >
-            <X />
-          </Button>
-        </div>
-      ))}
+      {rows.map((row, index) => {
+        const kind = row.stat === undefined ? undefined : statParamKind(row.stat, data.params);
+        return (
+          <div key={row.key} className="flex flex-wrap items-center gap-1.5">
+            <StatPicker
+              data={data}
+              id={`${idPrefix}-${String(index)}-stat`}
+              value={row.stat}
+              onChange={(stat) => {
+                // A param of another kind would name something else: drop it.
+                update(row.key, sameParamEncoding(kind, statParamKind(stat, data.params)) ? { stat } : { stat, param: undefined });
+              }}
+              className="min-w-0 flex-1 basis-40"
+            />
+            <StatParamField
+              data={data}
+              stat={row.stat}
+              param={row.param}
+              onChange={(param) => {
+                update(row.key, { param });
+              }}
+            />
+            <NumberInput
+              aria-label="Value"
+              placeholder="value"
+              className="h-8 w-24"
+              value={row.value}
+              onCommit={(value) => {
+                update(row.key, { value });
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="size-8"
+              aria-label="Remove the stat"
+              onClick={() => {
+                onChange(rows.filter((candidate) => candidate.key !== row.key));
+              }}
+            >
+              <X />
+            </Button>
+            {kind === 'charged' && <p className="basis-full text-xs text-muted-foreground">{CHARGED_VALUE_HINT}</p>}
+          </div>
+        );
+      })}
       <Button
         type="button"
         variant="outline"
