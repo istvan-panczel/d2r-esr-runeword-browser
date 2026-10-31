@@ -280,6 +280,11 @@ export interface LootFilterUniqueOrSet {
   set?: string;
   /** `disabled` = 1 (the game never creates the row); omitted otherwise */
   disabled?: true;
+  /**
+   * Uniques only: a coupon unique, the output of an enabled Ancient Coupon cube recipe that never rolls as a drop
+   * (`rarity` 0); omitted otherwise. ESR 3.2.24: 382 rows (#699–1069 without Annihilus #1059, #1377–1388).
+   */
+  coupon?: true;
 }
 
 export interface LootFilterDataBundle {

@@ -27,7 +27,8 @@ import {
  * side by side as Normal | Exceptional | Elite columns and the mythical ones below; the Sets tab with one block per set.
  * Rows with the same name and base are one cell (Ember of Creation: 230 rows on one base); the selection holds row ids
  * as strings. Unique and set item ids share one id space (a rule's `uniqueOrSetIds` matches either table), so both tabs
- * edit one selection and `ambiguousIds` lists the ticked ids both tables have.
+ * edit one selection and `ambiguousIds` lists the ticked ids both tables have. Coupon uniques (cubed from Ancient
+ * Coupons, never dropped) are not listed; like any id the browser does not list, a filter's coupon id survives Apply.
  */
 
 export const DISABLED_HINT = 'disabled in the game files';
@@ -61,6 +62,8 @@ export interface UniqueBrowserModel {
   readonly codes: readonly string[];
   /** The ids in both tables, with the unique's and the set item's names. */
   readonly shared: ReadonlyMap<string, SharedId>;
+  /** How many coupon uniques the Uniques tab leaves out. */
+  readonly couponCount: number;
 }
 
 // --- Cells ---
@@ -298,9 +301,11 @@ export function buildUniqueBrowserModel(
   // accessories, its other misc bases are all "normal" (no tier family).
   const mythicalBases = new Set(bases.filter((base) => base.tier === 'mythical').map((base) => base.code));
   const tierOf: TierOf = (code) => tiers[code] ?? (mythicalBases.has(code) ? 'mythical' : undefined);
-  const uniques = buildUniqueTabs(lootfilter.uniques, items, types, bases, tierOf);
+  const listedUniques = lootfilter.uniques.filter((entry) => entry.coupon !== true);
+  const uniques = buildUniqueTabs(listedUniques, items, types, bases, tierOf);
   const sets = buildSetTab(lootfilter.sets, items, tierOf);
 
+  // Every unique, coupon ones too: a set item's id still matches the coupon unique with that id.
   const uniqueNames = new Map(lootfilter.uniques.map((entry) => [String(entry.id), entry.name]));
   const shared = new Map<string, SharedId>();
   for (const entry of lootfilter.sets) {
@@ -308,7 +313,13 @@ export function buildUniqueBrowserModel(
     const unique = uniqueNames.get(id);
     if (unique !== undefined) shared.set(id, { id, unique, set: entry.name });
   }
-  return { uniques, sets, codes: [...new Set([...uniques.codes, ...sets.codes])], shared };
+  return {
+    uniques,
+    sets,
+    codes: [...new Set([...uniques.codes, ...sets.codes])],
+    shared,
+    couponCount: lootfilter.uniques.length - listedUniques.length,
+  };
 }
 
 // --- The shared id space ---

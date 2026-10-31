@@ -132,6 +132,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       setitems: rowTable('setitems'),
       treasureclassex: table('treasureclassex'),
       gems: table('gems'),
+      cubemain: table('cubemain'),
     },
     strings
   );
@@ -295,6 +296,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       lootFilterSounds: lootfilter.bundle.sounds.length,
       lootFilterUniques: lootfilter.bundle.uniques.length,
       lootFilterSets: lootfilter.bundle.sets.length,
+      lootFilterCouponUniques: lootfilter.bundle.uniques.filter((unique) => unique.coupon === true).length,
       enhanceCorruptionSlots: corruptionSlots.length,
       enhanceCorruptionOutcomes: corruptionOutcomes.length,
       enhanceAnointmentOutcomes: anointmentOutcomes.length - countPool('charm') - countPool('vessel'),

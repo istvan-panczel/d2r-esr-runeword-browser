@@ -3,6 +3,7 @@
  * items. See docs/features/GAME-DATA.md "Sources" for the rules and their limitations.
  */
 import type { ItemSource, SourceKind, SourceLabel, SourcesBundle } from '../engine/schema.ts';
+import { ancientCouponCodes, cubeInputRefs, CUBE_OUTPUTS } from './coupons.ts';
 import { resolveName } from './itemNames.ts';
 import { optNum, optStr } from './model.ts';
 import { readBossSetUniqueDrops } from './pluginUniques.ts';
@@ -56,11 +57,6 @@ const DROP_RANDOM_TEXT = 'Drops (random)';
 /** Misc types that are never interesting as a source (potions, scrolls, tomes, keys, gold, ammo) */
 const NOISE_TYPES = new Set(['hpot', 'mpot', 'rpot', 'spot', 'apot', 'wpot', 'scro', 'book', 'key', 'gold', 'tpot', 'bowq', 'xboq']);
 
-/** cubemain.txt has `input 1` … `input 7` */
-const CUBE_INPUT_COUNT = 7;
-const CUBE_INPUTS = Array.from({ length: CUBE_INPUT_COUNT }, (_, i) => `input ${String(i + 1)}`);
-const CUBE_OUTPUTS = ['output', 'output b', 'output c'];
-
 interface BaseRow {
   kind: 'weapon' | 'armor' | 'misc';
   row: TsvRow;
@@ -105,7 +101,7 @@ function indexCube(cubemain: TsvTable, couponCodes: ReadonlySet<string>): CubeIn
   const inputs = new Set<string>();
   for (const row of cubemain.rows) {
     if (row.num('enabled') !== 1) continue;
-    const rowInputs = CUBE_INPUTS.filter((column) => row.has(column)).map((column) => refOf(row.str(column)));
+    const rowInputs = cubeInputRefs(row);
     for (const input of rowInputs) inputs.add(input);
     const coupon = rowInputs.some((input) => couponCodes.has(input));
     for (const column of CUBE_OUTPUTS) {
@@ -217,9 +213,7 @@ export function buildSourcesBundle(
 ): SourcesBuildResult {
   const warnings: string[] = [];
 
-  // Ancient Coupons ("Coupon nor Armor 1", …); the Wild Card is a coupon-shaped joker also used for gem recipes
-  const isCoupon = (name: string) => name.startsWith('Coupon ') && !name.includes('Wild Card');
-  const couponCodes = new Set(tables.misc.rows.filter((row) => isCoupon(row.str('name'))).map((row) => row.str('code')));
+  const couponCodes = ancientCouponCodes(tables.misc);
   const ctx: SourceContext = {
     bases: indexBases(tables),
     cube: indexCube(tables.cubemain, couponCodes),

@@ -133,6 +133,12 @@ function UniqueSetBrowserForm({ model, values, onApply, onCancel }: FormProps) {
         )}
       </div>
       <div className="space-y-2 border-t px-4 py-3 sm:px-6">
+        {tab === 'uniques' && model.couponCount > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {model.couponCount} coupon uniques are not listed: they are cubed from Ancient Coupons and never drop. Add one by name or id
+            with “Add unique or set item”; ids already in the rule stay on Apply.
+          </p>
+        )}
         <SharedIdWarning shared={ambiguousIds(draft, model.shared, quality)} />
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onCancel}>

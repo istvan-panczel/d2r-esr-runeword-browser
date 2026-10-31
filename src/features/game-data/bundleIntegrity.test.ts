@@ -289,6 +289,11 @@ describe('committed game-data bundles', () => {
     expect(manifest.counts.lootFilterSounds).toBe(lootfilter.sounds.length);
     expect(manifest.counts.lootFilterUniques).toBe(lootfilter.uniques.length);
     expect(manifest.counts.lootFilterSets).toBe(lootfilter.sets.length);
+    // Coupon uniques: hundreds of cube-only rows (ESR 3.2.24: 382), never a disabled row
+    const coupons = lootfilter.uniques.filter((unique) => unique.coupon === true);
+    expect(manifest.counts.lootFilterCouponUniques).toBe(coupons.length);
+    expect(coupons.length).toBeGreaterThan(300);
+    expect(coupons.some((unique) => unique.disabled === true)).toBe(false);
     expect(lootfilter.stats.length).toBeGreaterThan(0);
     expect(lootfilter.areas.length).toBeGreaterThan(0);
     expect(lootfilter.sounds.length).toBeGreaterThan(0);

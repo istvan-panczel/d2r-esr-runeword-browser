@@ -63,6 +63,7 @@ const { bundle, warnings } = buildLootFilterBundle(
       ['name', 'code'],
       ['El Rune', 'r01'],
     ]),
+    cubemain: table([['enabled', 'input 1', 'output']]),
   },
   strings
 );
@@ -129,6 +130,7 @@ describe('buildLootFilterBundle tiers', () => {
       setitems: rowTable([['index', 'item']]),
       treasureclassex: table([['Treasure Class', 'Item1']]),
       gems: table([['name', 'code']]),
+      cubemain: table([['enabled', 'input 1', 'output']]),
     },
     new Map()
   );
@@ -204,6 +206,7 @@ describe('buildLootFilterBundle drops', () => {
         ['name', 'code'],
         ['Fu Rune', 'r32'],
       ]),
+      cubemain: table([['enabled', 'input 1', 'output']]),
     },
     new Map()
   );
@@ -229,5 +232,65 @@ describe('buildLootFilterBundle drops', () => {
 
   it('marks a spawnable rune without a gems.txt row as never dropping (an unused row)', () => {
     expect(dropsOf('r48')).toBe(false);
+  });
+});
+
+describe('buildLootFilterBundle coupon uniques', () => {
+  const { bundle: cubed, warnings: couponWarnings } = buildLootFilterBundle(
+    {
+      weapons: table([ITEM_COLUMNS, ['Hand Axe', 'hax', 'hax', 'axe', '', '1']]),
+      armor: table([ITEM_COLUMNS, ['Cap', 'cap', 'cap', 'helm', '', '1']]),
+      misc: table([
+        ITEM_COLUMNS,
+        ['Coupon nor Armor 1', '01c', '01c', 'coup', '', '0'],
+        ['Coupon Wild Card', 'wcd', 'wcd', 'coup', '', '0'],
+      ]),
+      itemstatcost: rowTable([['Stat']]),
+      levels: table([['Name', 'Id', 'Act', 'LevelName']]),
+      sounds: rowTable([['Sound']]),
+      uniqueitems: rowTable([
+        ['index', 'code', 'rarity'],
+        ['Cap Drop', 'cap', '1'],
+        ['Cap Coupon', 'cap', '0'],
+        ['Axe Coupon', 'hax', '0'],
+        ['Annihilus', 'hax', '0'],
+        ['Wild Axe', 'hax', '0'],
+        ['Rolling Axe', 'hax', '3'],
+        ['Off Axe', 'hax', '0'],
+        ['Axe Coupon', 'hax', '0'],
+      ]),
+      setitems: rowTable([['index', 'item']]),
+      treasureclassex: table([['Treasure Class', 'Item1']]),
+      gems: table([['name', 'code']]),
+      cubemain: table([
+        ['enabled', 'input 1', 'input 2', 'output', 'output b'],
+        ['1', '01c', 'cap', 'Cap Coupon', ''],
+        ['1', '"01c,qty=3"', '', 'Axe Coupon', ''],
+        ['1', 'wcd', '', 'Wild Axe', ''],
+        ['1', '01c', 'Rolling Axe', 'Rolling Axe', ''],
+        ['1', '01c', '', '', 'Rolling Axe'],
+        ['0', '01c', '', 'Off Axe', ''],
+        ['1', 'Annihilus', 'cap', 'useitem', ''],
+      ]),
+    },
+    new Map()
+  );
+  const couponIds = cubed.uniques.filter((unique) => unique.coupon === true).map((unique) => unique.id);
+
+  it('marks the first row a coupon recipe outputs by index, and only uniques that never roll as a drop', () => {
+    expect(couponIds).toEqual([1, 2]);
+    expect(cubed.uniques[1]).toEqual({ id: 1, name: 'Cap Coupon', code: 'cap', reqLvl: 0, coupon: true });
+    expect(cubed.uniques[0]).not.toHaveProperty('coupon');
+    expect(cubed.sets).toEqual([]);
+  });
+
+  it('leaves out Wild Card, disabled-recipe and rarity-0 rows no coupon makes, and warns about the doubtful ones', () => {
+    expect(couponIds).not.toContain(3); // Annihilus: rarity 0, no coupon recipe
+    expect(couponIds).not.toContain(4); // Wild Card is no Ancient Coupon
+    expect(couponIds).not.toContain(6); // the recipe is disabled
+    expect(couponWarnings).toEqual([
+      'lootfilter: unique 5 (Rolling Axe) is cubed from an Ancient Coupon but has rarity 3; not marked coupon',
+      'lootfilter: unique 7 repeats the coupon unique index "Axe Coupon"; only the first row counts as a coupon unique',
+    ]);
   });
 });

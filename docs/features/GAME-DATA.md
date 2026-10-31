@@ -235,6 +235,15 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   share one name, and `disabled: true` when the `disabled` column is 1 (omitted otherwise; ESR 3.2.24: 7 uniques,
   The Perfect Cello #0 and the six Rupture charms #690–695, and no set item). Adding these fields did not bump
   `GAME_DATA_SCHEMA`.
+- `coupon: true` on a unique (omitted otherwise) marks a coupon unique: the row an enabled cubemain recipe with an
+  Ancient Coupon input (`build/coupons.ts`: a misc row named `Coupon …` but not the Wild Card, shared with the sources
+  bundle) outputs. The output names the unique by `index`, resolved per row to the first row with that index (a
+  later duplicate is warned about), and a row that rolls as a drop (`rarity` > 0) is not marked (warned about). ESR
+  3.2.24: 382 rows (#699–1069 and #1377–1388), all with `rarity` 0. The other three enabled `rarity` 0 rows are no
+  coupon uniques: Annihilus #1059 (inside the coupon block, no coupon recipe makes it; it drops from the `ROP (H)`
+  treasure class, Diablo Clone), Gheed's Fortune #1118 and Voidforge #1389. The HTM pages also call Annihilus an
+  "Ancient Coupon Unique", hence UNIQUE-ITEMS.md's 383 "Coupon only" against 382 here.
+  `counts.lootFilterCouponUniques` holds the count. The loot-filter unique browser leaves these rows out.
 
 Counts: `counts.lootFilterItems`, `lootFilterStats`, `lootFilterAreas`, `lootFilterSounds`, `lootFilterUniques`,
 `lootFilterSets` (ESR 3.2.12: 2292 / 923 / 215 / 12103 / 1390 / 270). Adding the file did not bump

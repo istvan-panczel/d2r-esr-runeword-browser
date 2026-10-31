@@ -121,12 +121,15 @@ const LOOTFILTER: Pick<LootFilterDataBundle, 'items' | 'uniques' | 'sets'> = {
     row(10, 'Ring of Myth', 'mri', 95),
     row(11, 'Deviant Cell', 'cm4', 50),
     row(12, 'Axe of Fechmar', 'hax', 5),
+    row(13, 'Coupon Bonnet', 'cap', 3, { coupon: true }),
+    row(14, 'Coupon Halo', 'rin', 12, { coupon: true }),
   ],
   sets: [
     row(1, "Sigon's Visor", 'cap', 6, { set: "Sigon's Complete Steel" }),
     row(2, "Sigon's Shelter", 'xap', 6, { set: "Sigon's Complete Steel" }),
     row(20, 'Lone Axe', 'hax', 30, { set: 'Solo' }),
     row(3, 'Angelic Halo', 'rin', 12, { set: 'Angelic Raiment' }),
+    row(14, 'Halo Set Piece', 'rin', 12, { set: 'Angelic Raiment' }),
   ],
 };
 
@@ -209,16 +212,39 @@ describe('buildUniqueBrowserModel: sets', () => {
     const blocks = typesOf(MODEL.sets);
     expect(blocks.map((block) => [block.name, names(block.items)])).toEqual([
       ["Sigon's Complete Steel", ["Sigon's Visor", "Sigon's Shelter"]],
-      ['Angelic Raiment', ['Angelic Halo']],
+      ['Angelic Raiment', ['Angelic Halo', 'Halo Set Piece']],
       ['Solo', ['Lone Axe']],
     ]);
     expect(blocks[0]?.tag).toBe('');
     expect(blocks[0]?.items.map((cell) => cell.column?.key)).toEqual(['normal', 'exceptional']);
-    expect(MODEL.sets.codes).toEqual(['1', '2', '3', '20']);
+    expect(MODEL.sets.codes).toEqual(['1', '2', '3', '14', '20']);
   });
 
   it('lists every id once across both tabs, uniques first', () => {
-    expect(MODEL.codes).toEqual(['12', '1', '8', '2', '6', '7', '9', '10', '11', '3', '4', '5', '20']);
+    expect(MODEL.codes).toEqual(['12', '1', '8', '2', '6', '7', '9', '10', '11', '3', '4', '5', '14', '20']);
+  });
+});
+
+describe('buildUniqueBrowserModel: coupon uniques', () => {
+  it('leaves coupon uniques out of the Uniques tab and counts them', () => {
+    expect(() => findCell(MODEL.uniques, 'Coupon Bonnet')).toThrow();
+    expect(() => findCell(MODEL.uniques, 'Coupon Halo')).toThrow();
+    expect(MODEL.uniques.codes).not.toContain('13');
+    expect(MODEL.codes).not.toContain('13');
+    expect(MODEL.couponCount).toBe(2);
+  });
+
+  it('keeps a set item that shares its id with a coupon unique, and warns about the shared id', () => {
+    expect(MODEL.codes).toContain('14');
+    expect(MODEL.shared.get('14')).toEqual({ id: '14', unique: 'Coupon Halo', set: 'Halo Set Piece' });
+  });
+
+  it('keeps a coupon unique id the filter already has on Apply', () => {
+    const values = ['13', '1'];
+    const draft = initialBrowserSelection(values, MODEL.codes);
+    expect([...draft]).toEqual(['1']);
+    expect(applyBrowserSelection(values, MODEL.codes, toggleCodes(draft, ['1'], false))).toEqual(['13']);
+    expect(applyBrowserSelection(values, MODEL.codes, toggleCodes(draft, ['12'], true))).toEqual(['13', '1', '12']);
   });
 });
 
@@ -234,13 +260,13 @@ describe('search', () => {
     expect(search(MODEL.uniques, 'helm mythical')).toEqual(['7']);
     expect(search(MODEL.uniques, '12')).toEqual(['12']);
     expect(search(MODEL.sets, 'complete visor')).toEqual(['1']);
-    expect(search(MODEL.sets, 'raiment')).toEqual(['3']);
+    expect(search(MODEL.sets, 'raiment')).toEqual(['3', '14']);
   });
 });
 
 describe('the shared id space', () => {
   it('knows the ids both tables have', () => {
-    expect([...MODEL.shared.keys()]).toEqual(['1', '2', '3']);
+    expect([...MODEL.shared.keys()]).toEqual(['1', '2', '3', '14']);
     expect(MODEL.shared.get('1')).toEqual({ id: '1', unique: "Biggin's Bonnet", set: "Sigon's Visor" });
   });
 
@@ -288,10 +314,14 @@ describe('the unique and set model on the shipped bundles', () => {
   const model = getUniqueBrowserModel(lootfilter, types, bases, tiers);
   const cells = typesOf(model.uniques).flatMap((t) => [...t.items, ...t.extras]);
 
-  it('lists every unique and set row once, merging Ember of Creation and Ore, with the disabled rows greyed', () => {
+  it('lists every unique but the coupon ones and every set row once, merging Ember of Creation and Ore, with the disabled rows greyed', () => {
     const listedIds = cells.flatMap((cell) => cell.codes ?? []);
     expect(new Set(listedIds).size).toBe(listedIds.length);
-    expect(listedIds.length).toBe(lootfilter.uniques.length);
+    const coupons = lootfilter.uniques.filter((entry) => entry.coupon === true);
+    expect(model.couponCount).toBe(coupons.length);
+    expect(coupons.length).toBeGreaterThan(300);
+    expect(listedIds.length).toBe(lootfilter.uniques.length - coupons.length);
+    expect(listedIds.some((id) => coupons.some((entry) => String(entry.id) === id))).toBe(false);
     const merged = new Map(cells.filter((cell) => (cell.codes?.length ?? 1) > 1).map((cell) => [cell.name, cell.codes?.length]));
     expect(merged.get('Ember of Creation')).toBe(230);
     expect(merged.get('Ore')).toBe(16);

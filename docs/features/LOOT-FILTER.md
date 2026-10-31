@@ -356,9 +356,15 @@ The item browser's sibling ("Browse uniques and sets", same size and behaviour) 
 item browser), one draft of row ids (strings in the draft, numbers in the rule), one search box, one "N selected"
 counter and one Apply / Cancel.
 
-- **Data**: `bases.json`, `types.json`, `lootfilter.json` (`uniques` / `sets` with `reqLvl`, `set` and `disabled`, see
-  GAME-DATA.md) and `tiers.json`, loaded when the dialog opens; the model is built once per bundle set
+- **Data**: `bases.json`, `types.json`, `lootfilter.json` (`uniques` / `sets` with `reqLvl`, `set`, `disabled` and
+  `coupon`, see GAME-DATA.md) and `tiers.json`, loaded when the dialog opens; the model is built once per bundle set
   (`getUniqueBrowserModel`). Uniques on non-spawnable shadow bases (about 400) are listed like the others.
+- **Coupon uniques are not listed** (`coupon: true` rows, ESR 3.2.24: 382, #699–1069 without Annihilus #1059 and
+  #1377–1388): they are cubed from three Ancient Coupons and never drop, so they only clutter the tables. The Uniques
+  tab's footer says so ("382 coupon uniques are not listed: they are cubed from Ancient Coupons and never drop. Add one
+  by name or id with "Add unique or set item"; ids already in the rule stay on Apply"); the picker still offers them.
+  A coupon id already in the rule is not in the browser's codes, so Apply keeps it like any unlisted id. The shared-id
+  warning still knows coupon uniques (a set item's id also matches the coupon unique with that id; none in 3.2.24).
 - **Cells**: name, base code (tag), then base name · `Lvl N` (required level) · `#id`. Rows of one table with the same
   name, base and disabled flag are one cell that selects all their ids (ESR 3.2.24: Ember of Creation ×230 on the
   Mythical Jewel, Ore ×16, Lich King's Essence ×6, The Ties That Bind ×7, two ×3); a cell of more than 10 rows shows the

@@ -1,5 +1,6 @@
 import type { LootFilterDataBundle, LootFilterItem, LootFilterUniqueOrSet } from '../engine/schema.ts';
 import type { BuildResult } from './bundleTypes.ts';
+import { ancientCouponCodes, couponCubeOutputs } from './coupons.ts';
 import { readUniqueOrSetRows, resolveName } from './itemNames.ts';
 import { optStr } from './model.ts';
 import { distinctFamilyTier } from './tiers.ts';
@@ -21,6 +22,7 @@ export interface LootFilterTables {
   setitems: TsvTable;
   treasureclassex: TsvTable;
   gems: TsvTable;
+  cubemain: TsvTable;
 }
 
 /** treasureclassex.txt has `Item1` … `Item10` */
@@ -106,9 +108,15 @@ function readItemRows(tables: LootFilterTables, warnings: string[], strings: Rea
 
 /**
  * Rows with a base code, numbered by their 0-based data-row index (marker rows count but are not listed), with the
- * `lvl req` column, the `disabled` flag (only when set) and, for set items, the set's display name (`set` column).
+ * `lvl req` column, the `disabled` flag (only when set), the `coupon` flag (ids in `couponIds`) and, for set items,
+ * the set's display name (`set` column).
  */
-function lootFilterRows(table: TsvTable, codeColumn: 'code' | 'item', strings: ReadonlyMap<string, string>): LootFilterUniqueOrSet[] {
+function lootFilterRows(
+  table: TsvTable,
+  codeColumn: 'code' | 'item',
+  strings: ReadonlyMap<string, string>,
+  couponIds: ReadonlySet<number> = new Set()
+): LootFilterUniqueOrSet[] {
   return readUniqueOrSetRows(table, codeColumn, strings).map(({ id, name, code, disabled }) => {
     const row = table.rows.at(id);
     const setId = codeColumn === 'item' && row?.has('set') === true ? row.str('set') : '';
@@ -119,8 +127,41 @@ function lootFilterRows(table: TsvTable, codeColumn: 'code' | 'item', strings: R
       reqLvl: row?.has('lvl req') === true ? row.num('lvl req') : 0,
       ...(setId === '' ? {} : { set: resolveName(strings, setId, setId) }),
       ...(disabled ? { disabled: true as const } : {}),
+      ...(couponIds.has(id) ? { coupon: true as const } : {}),
     };
   });
+}
+
+/**
+ * Row ids of the coupon uniques: the uniqueitems.txt row an enabled Ancient Coupon cube recipe outputs. A cube output
+ * names the unique by its `index`, which resolves to the first row with that index (a later duplicate is warned
+ * about). A row that rolls as a random drop (`rarity` above 0) is no coupon unique even if a coupon recipe makes it
+ * (warned about; none in ESR 3.2.24, where every coupon unique has `rarity` 0). Rows with `rarity` 0 that no coupon
+ * makes (Annihilus, Gheed's Fortune, Voidforge in ESR 3.2.24) are not coupon uniques either.
+ */
+function couponUniqueIds(tables: LootFilterTables, warnings: string[]): Set<number> {
+  const outputs = couponCubeOutputs(tables.cubemain, ancientCouponCodes(tables.misc));
+  const ids = new Set<number>();
+  const seen = new Set<string>();
+  tables.uniqueitems.rows.forEach((row, id) => {
+    const index = row.str('index');
+    if (index === '' || row.str('code') === '' || !outputs.has(index)) return;
+    if (seen.has(index)) {
+      warnings.push(
+        `lootfilter: unique ${String(id)} repeats the coupon unique index "${index}"; only the first row counts as a coupon unique`
+      );
+      return;
+    }
+    seen.add(index);
+    if (row.has('rarity') && row.num('rarity') > 0) {
+      warnings.push(
+        `lootfilter: unique ${String(id)} (${index}) is cubed from an Ancient Coupon but has rarity ${row.str('rarity')}; not marked coupon`
+      );
+      return;
+    }
+    ids.add(id);
+  });
+  return ids;
 }
 
 export function buildLootFilterBundle(tables: LootFilterTables, strings: ReadonlyMap<string, string>): BuildResult<LootFilterDataBundle> {
@@ -142,7 +183,7 @@ export function buildLootFilterBundle(tables: LootFilterTables, strings: Readonl
 
   const sounds = tables.sounds.rows.map((row) => row.str('Sound'));
 
-  const uniques = lootFilterRows(tables.uniqueitems, 'code', strings);
+  const uniques = lootFilterRows(tables.uniqueitems, 'code', strings, couponUniqueIds(tables, warnings));
   const sets = lootFilterRows(tables.setitems, 'item', strings);
   const codes = new Set(items.map((item) => item.code));
   for (const [label, entries] of [
