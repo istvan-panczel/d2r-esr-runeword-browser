@@ -153,19 +153,19 @@ export function affixKindCounts(affixes: readonly AffixBrowserAffix[]): string {
 // --- Selection ---
 
 /**
- * The id a check's stat (an itemstatcost name or id) has in the browser; undefined when it does not list it. In the
- * inverted (exception) mode only exception checks (`<`, `<=`, `!=`, see `exceptionOf`) count; plain checks on the
- * same stat are left alone.
+ * The id a check's stat (an itemstatcost name or id) has in the browser; undefined when it does not list it. Each mode
+ * owns its own checks: the inverted (exception) mode only exception checks (`<`, `<=`, `!=`, see `exceptionOf`), the
+ * plain mode every other check, so neither shows the other's checks as ticked nor removes them on Apply.
  */
 function listedId(check: StatCheck, model: AffixBrowserModel, inverted: boolean): number | undefined {
-  if (inverted && exceptionOf(check) === undefined) return undefined;
+  if (inverted !== (exceptionOf(check) !== undefined)) return undefined;
   if (typeof check.stat === 'number') return model.rows.some((row) => row.id === check.stat) ? check.stat : undefined;
   return model.ids.get(check.stat);
 }
 
 /**
- * The draft: the listed stats that already have a check in the list (any op, value or param); `inverted`: the listed
- * stats with an exception check.
+ * The draft: the listed stats that already have a check in the list (any value or param; a `<`, `<=` or `!=` check is
+ * an exception and counts only when `inverted`).
  */
 export function initialAffixSelection(checks: readonly StatCheck[] | undefined, model: AffixBrowserModel, inverted = false): Set<number> {
   const selected = new Set<number>();

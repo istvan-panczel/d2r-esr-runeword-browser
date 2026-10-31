@@ -159,6 +159,19 @@ describe('selection', () => {
     expect(applyAffixSelection(undefined, model, new Set([0]), true)).toEqual([{ stat: 'strength', op: '<', value: 1 }]);
   });
 
+  it('in the plain mode leaves exception checks alone: not ticked, not removed', () => {
+    const mixed: StatCheck[] = [
+      { stat: 'item_maxdamage_percent', op: '<', value: 1 },
+      { stat: 'tohit', op: '>=', value: 5 },
+    ];
+    expect([...initialAffixSelection(mixed, model)]).toEqual([19]);
+    expect(applyAffixSelection(mixed, model, new Set())).toEqual([{ stat: 'item_maxdamage_percent', op: '<', value: 1 }]);
+    expect(applyAffixSelection(mixed, model, new Set([19, 17]))).toEqual([
+      ...mixed,
+      { stat: 'item_maxdamage_percent', op: '>=', value: 1 },
+    ]);
+  });
+
   it('returns the same list when nothing changes and undefined when emptied', () => {
     expect(applyAffixSelection(checks, model, new Set([17, 93]))).toBe(checks);
     expect(applyAffixSelection(undefined, model, new Set())).toBeUndefined();

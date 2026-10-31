@@ -445,7 +445,8 @@ focus returns to the button).
   work on jewels and charms."); see "Known plugin limits".
 - **Search**: every whitespace term must match the label, the stat name, an affix name, or (digits) the stat id.
 - **Apply** (`applyAffixSelection`): the draft starts with the listed stats that already have a check in that list
-  (by name or id, any op, value or param). Apply keeps checks on stats the dialog does not list and on stats still
+  (by name or id, any value or param; `<`, `<=` and `!=` checks are exceptions, which only the inverted mode below
+  owns, so the plain mode neither ticks nor removes them). Apply keeps checks on stats the dialog does not list and on stats still
   ticked (unchanged), removes checks on listed stats that were unticked, and appends `{ "stat": <name>, "op": ">=",
 "value": 1 }` (a presence check, by name as the stat picker writes it; the user sets the number afterwards) for each
   newly ticked stat in display order; an emptied list removes the key, and nothing is dispatched when nothing changes.
