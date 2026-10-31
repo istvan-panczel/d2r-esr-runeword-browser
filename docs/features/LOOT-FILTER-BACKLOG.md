@@ -33,10 +33,11 @@ Skills). The validator warns about every such check and the Test tab lists the a
 tab shows what a missing param reads. When answered: set `OMITTED_PARAM`, update the "Verify in game" entry, and drop
 or reword the warning.
 
-Related: Sully's template (v0.6.3) checks stat 188 with params 1 to 21, the properties.txt tab numbers (`class × 3 +
-tab`), where the game stores `class << 3 | tab` (Assassin Martial Arts = 50, not 20), so 14 of those params name no
-tab and the others name a different one; the validator says so ("21 looks like the properties.txt tab number:
-Warlock Demon Skills is param 56"). Tell Sully once the in-game test confirms which numbering the plugin reads.
+Related: Sully's template (v0.6.7, rules 31 to 33) checks stat 188 with params 1 to 21, the properties.txt tab
+numbers (`class × 3 + tab`), where the game stores `class << 3 | tab` (Assassin Martial Arts = 50, not 20). If the
+plugin reads the game's numbering, 13 of those params (3–7, 11–15, 19–21) name no tab and 6 (8–10, 16–18) name a
+different one; the validator says so once per list, as a likely mismatch. The same in-game test answers this:
+`{stat:188,50}` vs `{stat:188,20}` on an item with +skills to Martial Arts. Tell Sully once confirmed.
 
 ## Announced format changes to watch
 

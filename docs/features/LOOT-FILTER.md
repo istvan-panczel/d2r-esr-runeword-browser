@@ -113,29 +113,25 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
   `STAT_LAYER_KINDS` in `game-data/engine/statLayers.ts`, see GAME-DATA.md "Stat layers"): an error for a `param` that
-  is not a whole number from 0 to 65535; warnings for a skill, skill tab, class, event or charged stat without
-  `param` (at `<list>/<n>`: "has one entry per skill tab; without "param" this check is taken to hold when any skill
-  tab passes (not verified in game: the plugin may read only param 0)", worded from `OMITTED_PARAM`; it also fires
-  for a hide rule's exceptions, and for an exception that is not the opposite of a presence check (`< 3`, `!= 2`) it
-  adds that an exception without param is not the opposite check when the item has several entries: one entry that
-  fails it hides the item), a tab param that names no tab (`class << 3 | tab`, tab 0 to 2; a param up to 23 is named
-  as a properties.txt tab number: "21 looks like the properties.txt tab number: Warlock Demon Skills is param 56"), an
-  event or charged param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a
-  presence check (`>= 1`, `> 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is
-  `max charges << 8 | charges left`, 5/5 = 1285). Sully's template (v0.6.3) gets 42 of these against the ESR 3.2.24
-  data: its +3/4/5 skill tab rules check stat 188 without param and with params 1 to 21, the properties.txt tab
-  numbers, 14 of which name no layer (see the backlog).
-
-### Disabled rules (`disabledRules`)
-
-The format has no enable flag (an unknown rule key is ignored and the rule stays active), so the editor writes a
-switched-off rule to a sibling top-level list the plugin ignores ("unknown setting, ignored", one log line):
-
-```json
-"rules": [ …the enabled rules… ],
-"disabledRules": [ { "at": 0, "rule": { "itemCodes": ["r01"], "hide": true } }, { "at": 5, "rule": { … } } ]
-```
-
+  is not a whole number from 0; a warning above 65535 (a stat's layer is assumed to be 16 bits in memory, so the check
+  likely never matches); warnings for a skill, skill tab, class, event or charged stat without `param` (at
+  `<list>/<n>`: "has one entry per skill tab; without "param" this check is taken to hold when any skill tab passes
+  (not verified in game: the plugin may read only param 0)", worded from `OMITTED_PARAM`; it also fires for a hide
+  rule's exceptions, and for an exception that is not the opposite of a presence check it adds "an item hides as soon
+  as one skill tab is below 3, even if another skill tab has 3 or more"), an event or charged param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`, `> 0`, or their
+  exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 = 1285).
+  - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50); properties.txt
+    numbers them `class × 3 + tab` (Martial Arts = 20). Which one the plugin compares `param` with is not confirmed in
+    game, so the warnings say "likely". A list with several tab params up to 23, at least one of which names no tab,
+    gets one warning at the list (`<list>`, `propertiesTabNumbers`): "These skill tab params (1–21) look like
+    properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab …, and the tab names
+    shown for these params follow that; if the plugin reads params that way, 13 of these checks match no tab and 6
+    match a different tab than their number suggests. Not confirmed in game yet" (params 0 to 2 are the same tab in
+    both). A single tab param that names no tab gets its own warning at `<list>/<n>/param`, naming the tab it would be
+    as a properties.txt number ("as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon Skills, which
+    the game numbers 56"). Sully's template (v0.6.7) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+    skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
+    warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
   after `rules`. A filter without disabled rules has no `disabledRules` key, so existing files serialize as before. To
   enable a rule by hand, cut the inner object back into `rules`.

@@ -11,8 +11,9 @@
  * - skill (`item_singleskill`, `item_nonclassskill`, `item_aura` and their `_display` companions; funcs 12/22/24): the
  *   skills.txt row index (= the `*Id` column).
  * - event (skill on hit / attack / kill / death / level up / getting hit / cast / taking damage, `Encode` 2, func 11)
- *   and charged (`item_charged_skill`, `Encode` 3, func 19): `skill << 6 | level`, level 1-63. A stat param is 16
- *   bits, so skill ids above 1023 do not fit (ESR saves 18 param bits, but `(1555 << 6) | 1` is already 99521).
+ *   and charged (`item_charged_skill`, `Encode` 3, func 19): `skill << 6 | level`, level 1-63. In memory a stat is
+ *   assumed to be `layer << 16 | stat id` (D2's 32-bit stat id), so a layer is 16 bits and skill ids above 1023 do not
+ *   fit (`(1555 << 6) | 1` is already 99521). The save-file param bits are another limit (ESR saves 18 for these).
  * - charged value: `max charges << 8 | charges left` (5/5 charges = 1285).
  */
 import { CLASS_CODES } from './schema.ts';
@@ -49,7 +50,7 @@ export function statLayerKind(name: string): StatLayerKind | undefined {
   return Object.hasOwn(STAT_LAYER_KINDS, name) ? STAT_LAYER_KINDS[name] : undefined;
 }
 
-/** A stat param is 16 bits */
+/** A stat's layer (param) is assumed to be 16 bits in memory (`layer << 16 | stat id`) */
 export const MAX_STAT_PARAM = 0xffff;
 /** Highest skill id of an event / charged layer (10 bits) */
 export const MAX_LAYER_SKILL = 1023;

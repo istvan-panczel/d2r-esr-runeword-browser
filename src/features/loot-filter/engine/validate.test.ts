@@ -3,6 +3,8 @@ import { resolve } from 'path';
 import { parseLootFilter } from './parse.ts';
 import type { Diagnostic, LootFilter, LootFilterReference, LootFilterRule, StatCheck } from './types.ts';
 import { validateLootFilter } from './validate.ts';
+import { buildLootFilterReference } from './reference.ts';
+import type { LootFilterDataBundle, TypesBundle } from '../../game-data/engine/schema.ts';
 
 const base: LootFilter = {
   formatVersion: 1,
@@ -64,10 +66,26 @@ describe('validateLootFilter', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const diagnostics = validateLootFilter(parseLootFilter(source).filter);
     expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    // It has no warnings either without a reference. Against the real game-data reference (ESR 3.2.24, Sully v0.6.3) it
-    // gets 42 param warnings: its +3/4/5 skill tab rules write stat 188 without param and with the properties.txt tab
-    // numbers 1 to 21, of which 14 name no skill tab layer (`class << 3 | tab`).
+    // It has no warnings either without a reference (stat 188 is written by id).
     expect(diagnostics).toEqual([]);
+  });
+
+  it('warns once per list about Sully’s skill tab params against the real game data', () => {
+    const json = (file: string) => JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data', file), 'utf-8')) as unknown;
+    const real = buildLootFilterReference(json('lootfilter.json') as LootFilterDataBundle, json('types.json') as TypesBundle);
+    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    const diagnostics = validateLootFilter(parseLootFilter(source).filter, real);
+    // The +3/4/5 skill tab rules (Sully v0.6.7) check stat 188 without param and with params 1 to 21, the properties.txt
+    // tab numbers: one list warning each (13 name no tab as the game numbers them), plus the paramless check.
+    expect(diagnostics.map((d) => [d.severity, d.path])).toEqual(
+      [31, 32, 33].flatMap((rule) => [
+        ['warning', `rules/${String(rule)}/itemStatsAnyOf`],
+        ['warning', `rules/${String(rule)}/itemStatsAnyOf/0`],
+      ])
+    );
+    expect(diagnostics[0].message).toMatch(
+      /^These skill tab params \(1–21\) look like properties\.txt tab numbers .* 13 of these checks match no tab and 6 match a different tab/
+    );
   });
 
   it('accepts a plain valid rule', () => {
@@ -202,12 +220,15 @@ describe('validateLootFilter', () => {
   describe('stat params', () => {
     const tab = (check: Partial<StatCheck>): StatCheck => ({ stat: 'item_addskill_tab', value: 1, ...check });
 
-    it('needs a whole param from 0 to 65535', () => {
+    it('needs a whole param from 0, and warns above 65535', () => {
       expect(messages({ itemStats: [{ stat: 'item_numsockets', param: 1.5, value: 1 }], hide: true })).toEqual([
-        'rules/0/itemStats/0/param: "param" 1.5 is not a whole number from 0 to 65535',
+        'rules/0/itemStats/0/param: "param" 1.5 is not a whole number from 0',
       ]);
-      expect(checkRule({ playerStats: [tab({ param: 70000 })], hide: true }, reference)).toEqual([
-        ['error', 'rules/0/playerStats/0/param'],
+      expect(checkRule({ itemStats: [{ stat: 'item_numsockets', param: -1, value: 1 }], hide: true })).toEqual([
+        ['error', 'rules/0/itemStats/0/param'],
+      ]);
+      expect(messages({ playerStats: [tab({ param: 70000 })], hide: true })).toEqual([
+        'rules/0/playerStats/0/param: "param" 70000 is above 65535: a stat\'s layer is assumed to be 16 bits in memory, so this check likely never matches',
       ]);
     });
 
@@ -229,19 +250,35 @@ describe('validateLootFilter', () => {
       ]);
       const atLeast3 = messages({ itemStatsAnyOf: [tab({ op: '<', value: 3 })], hide: true });
       expect(atLeast3).toEqual([
-        expect.stringMatching(/An exception without param is not the opposite check when the item has several entries/),
+        expect.stringMatching(
+          /An exception without param is not the opposite check when the item has several entries: an item hides as soon as one skill tab is below 3, even if another skill tab has 3 or more$/
+        ),
       ]);
+      expect(messages({ itemStats: [tab({ op: '<=', value: 2 })], hide: true })[0]).toMatch(
+        /one skill tab is at most 2, even if another skill tab has more than 2$/
+      );
       // Not an exception: the rule does not hide
       expect(messages({ itemStats: [tab({ op: '<', value: 3 })], namePrefix: 'x' })[0]).not.toMatch(/exception/);
     });
 
-    it('names the layer of a properties.txt tab number', () => {
+    it('names the layer of a single properties.txt tab number', () => {
       expect(messages({ itemStats: [tab({ param: 21 })], hide: true })).toEqual([
-        'rules/0/itemStats/0/param: "param" 21 names no skill tab (class × 8 + tab 0 to 2); 21 looks like the properties.txt tab number: Warlock Demon Skills is param 56',
+        'rules/0/itemStats/0/param: "param" 21 names no skill tab as the game numbers them (class × 8 + tab 0 to 2); as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon Skills, which the game numbers 56. Not confirmed in game yet',
       ]);
       expect(messages({ itemStats: [tab({ param: 99 })], hide: true })).toEqual([
-        'rules/0/itemStats/0/param: "param" 99 names no skill tab (class × 8 + tab 0 to 2)',
+        'rules/0/itemStats/0/param: "param" 99 names no skill tab as the game numbers them (class × 8 + tab 0 to 2)',
       ]);
+      // A decodable tab next to it: still one check of its own
+      expect(messages({ itemStats: [tab({ param: 50 }), tab({ param: 99 })], hide: true })).toHaveLength(1);
+    });
+
+    it('warns once per list about several properties.txt tab numbers', () => {
+      const list = [1, 8, 20, 50].map((param) => tab({ param }));
+      expect(messages({ itemStatsAnyOf: list, hide: true })).toEqual([
+        'rules/0/itemStatsAnyOf: These skill tab params (1–20) look like properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab (Assassin Martial Arts = 50, Warlock Demon Skills = 56), and the tab names shown for these params follow that; if the plugin reads params that way, 1 of these checks matches no tab and 1 matches a different tab than their number suggests. Not confirmed in game yet',
+      ]);
+      // All of them decode: no warning
+      expect(messages({ itemStatsAnyOf: [1, 8].map((param) => tab({ param })), hide: true })).toEqual([]);
     });
 
     it('warns about event and charged params without a skill or level', () => {

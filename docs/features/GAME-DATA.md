@@ -281,7 +281,8 @@ unused `war-tab-rand`), func 21 class (`val`), func 36 random class (every class
 skill" range 418–697 of The Stone of Jordan, Robes of Power, Skin of the Vipermagi and Ormus' Robes is left out without
 a warning), func 11 / 19 event / charged (`skill << 6 | max`). The `_display` and `_hidden` companions are skipped.
 
-A stat param is 16 bits, so an event or charged layer cannot name a skill id above 1023. ESR saves 18 param bits for
+In memory a stat is assumed to be `layer << 16 | stat id` (D2's 32-bit stat id), so a param is 16 bits and an event or
+charged layer cannot name a skill id above 1023 (the save-file param bits are a separate limit). ESR saves 18 param bits for
 these stats and gives several hidden procs (Iris of End Times, Icing Death, Delirium, Doombringer, …) skill ids
 1526–1557; whether the game or the loot-filter plugin can read such a layer is not verified. The generator warns for
 the visible ones and skips them.

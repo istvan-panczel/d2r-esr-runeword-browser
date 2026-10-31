@@ -183,10 +183,60 @@ const omittedParamMessage = (stat: string, noun: string): string =>
     ? `"${stat}" has one entry per ${noun}; without "param" this check is taken to hold when any ${noun} passes (not verified in game: the plugin may read only param 0). Pick a ${noun} to check one`
     : `"${stat}" has one entry per ${noun}; without "param" the plugin reads only the entry with param 0. Pick a ${noun} to check one`;
 
+/** "below 3" / "3 or more" for an exception's op and value (what fails it, what passes it). */
+function exceptionWords(check: StatCheck): readonly [fails: string, passes: string] {
+  const value = typeof check.value === 'number' ? String(check.value) : '';
+  switch (check.op) {
+    case '<=':
+      return [`at most ${value}`, `more than ${value}`];
+    case '!=':
+      return [`not ${value}`, value];
+    default:
+      return [`below ${value}`, `${value} or more`];
+  }
+}
+
+/** The stat's itemstatcost name (by name, or by id through the reference) and its layer kind. */
+function layerOf(check: StatCheck, reference: LootFilterReference | undefined): { name: string; kind: StatLayerKind } | undefined {
+  const name = typeof check.stat === 'number' ? reference?.statNamesById.get(check.stat) : check.stat;
+  const kind = name === undefined ? undefined : statLayerKind(name);
+  return name === undefined || kind === undefined ? undefined : { name, kind };
+}
+
+/** properties.txt numbers the 24 skill tabs 0 to 23 (`class × 3 + tab`). */
+const MAX_PROPERTIES_TAB = 23;
+
 /**
- * Param checks of one stat check: a param is a whole number from 0 to 65535; a layered stat (skill, skill tab, class,
- * event, charged; `STAT_LAYER_KINDS`) needs one, a tab param must decode (21 is the properties.txt number of the
- * layer 56), an event / charged param is `skill << 6 | level`, and a charged value is `max << 8 | charges`.
+ * The skill tab params of a list that look like properties.txt tab numbers (`class × 3 + tab`, 0 to 23) where the game
+ * stores `class << 3 | tab`: several tab params up to 23, at least one of which names no tab. Their indexes, so the
+ * per-check warning leaves them to the one list warning.
+ */
+function propertiesTabNumbers(checks: readonly StatCheck[], reference: LootFilterReference | undefined): Set<number> {
+  const indexes = checks.flatMap((check, index) =>
+    layerOf(check, reference)?.kind === 'tab' && check.param !== undefined && check.param <= MAX_PROPERTIES_TAB ? [index] : []
+  );
+  const undecodable = indexes.some((index) => decodeTabLayer(checks[index].param ?? 0) === undefined);
+  return new Set(indexes.length >= 2 && undecodable ? indexes : []);
+}
+
+/** The one list warning for `propertiesTabNumbers`. Not confirmed in game: the plugin may read params either way. */
+function propertiesTabMessage(params: readonly number[]): string {
+  const low = Math.min(...params);
+  const high = Math.max(...params);
+  const none = params.filter((param) => decodeTabLayer(param) === undefined).length;
+  // 0 to 2 (Amazon) are the same tab in both numberings
+  const other = params.filter((param) => param >= 3 && decodeTabLayer(param) !== undefined).length;
+  const range = low === high ? String(low) : `${String(low)}–${String(high)}`;
+  const verb = (count: number) => (count === 1 ? 'matches' : 'match');
+  const others = other === 0 ? '' : ` and ${String(other)} ${verb(other)} a different tab than their number suggests`;
+  return `These skill tab params (${range}) look like properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab (Assassin Martial Arts = 50, Warlock Demon Skills = 56), and the tab names shown for these params follow that; if the plugin reads params that way, ${String(none)} of these checks ${verb(none)} no tab${others}. Not confirmed in game yet`;
+}
+
+/**
+ * Param checks of one stat check: a param is a whole number from 0 (above 65535 it likely never matches); a layered
+ * stat (skill, skill tab, class, event, charged; `STAT_LAYER_KINDS`) needs one, a tab param should decode (unless the
+ * list's warning about properties.txt tab numbers covers it, `inTabList`), an event / charged param is
+ * `skill << 6 | level`, and a charged value is `max << 8 | charges`.
  * `exception`: the check is a hide rule's exception (`<`, `<=`, `!=` in an item stat list of a rule that hides).
  */
 function checkStatParam(
@@ -194,31 +244,45 @@ function checkStatParam(
   path: string,
   check: StatCheck,
   reference: LootFilterReference | undefined,
-  exception: boolean
+  exception: boolean,
+  inTabList: boolean
 ): void {
   const { param } = check;
-  if (param !== undefined && (!Number.isInteger(param) || param < 0 || param > MAX_STAT_PARAM)) {
-    report('error', `${path}/param`, `"param" ${String(param)} is not a whole number from 0 to ${String(MAX_STAT_PARAM)}`);
+  if (param !== undefined && (!Number.isInteger(param) || param < 0)) {
+    report('error', `${path}/param`, `"param" ${String(param)} is not a whole number from 0`);
     return;
   }
-  const name = typeof check.stat === 'number' ? reference?.statNamesById.get(check.stat) : check.stat;
-  const kind = name === undefined ? undefined : statLayerKind(name);
-  if (name === undefined || kind === undefined) return;
+  if (param !== undefined && param > MAX_STAT_PARAM) {
+    report(
+      'warning',
+      `${path}/param`,
+      `"param" ${String(param)} is above ${String(MAX_STAT_PARAM)}: a stat's layer is assumed to be 16 bits in memory, so this check likely never matches`
+    );
+    return;
+  }
+  const layered = layerOf(check, reference);
+  if (layered === undefined) return;
+  const { name, kind } = layered;
   const noun = LAYER_NOUNS[kind];
   if (param === undefined) {
+    const [fails, passes] = exceptionWords(check);
     const note =
       OMITTED_PARAM === 'anyLayer' && exception && !isPresenceCheck(check)
-        ? '. An exception without param is not the opposite check when the item has several entries: one entry that fails it is enough to hide the item'
+        ? `. An exception without param is not the opposite check when the item has several entries: an item hides as soon as one ${noun} is ${fails}, even if another ${noun} has ${passes}`
         : '';
     report('warning', path, `${omittedParamMessage(name, noun)}${note}`);
-  } else if (kind === 'tab' && decodeTabLayer(param) === undefined) {
+  } else if (kind === 'tab' && !inTabList && decodeTabLayer(param) === undefined) {
     const layer = skillTabLayer(param);
     const tabName = layer === undefined ? undefined : reference?.skillTabNames.get(layer);
     const hint =
       layer === undefined
         ? ''
-        : `; ${String(param)} looks like the properties.txt tab number: ${tabName ?? 'that tab'} is param ${String(layer)}`;
-    report('warning', `${path}/param`, `"param" ${String(param)} names no skill tab (class × 8 + tab 0 to 2)${hint}`);
+        : `; as a properties.txt tab number (class × 3 + tab) ${String(param)} is ${tabName ?? 'a tab'}, which the game numbers ${String(layer)}. Not confirmed in game yet`;
+    report(
+      'warning',
+      `${path}/param`,
+      `"param" ${String(param)} names no skill tab as the game numbers them (class × 8 + tab 0 to 2)${hint}`
+    );
   } else if (kind === 'event' || kind === 'charged') {
     if (param < 64) {
       report(
@@ -247,6 +311,10 @@ function checkStats(
   rule?: LootFilterRule,
   exceptions = false
 ): void {
+  const tabNumbers = propertiesTabNumbers(checks ?? [], reference);
+  if (tabNumbers.size > 0) {
+    report('warning', key, propertiesTabMessage([...tabNumbers].map((index) => checks?.[index]?.param ?? 0)));
+  }
   checks?.forEach((check, index) => {
     const path = `${key}/${String(index)}`;
     if (check.op !== undefined && !(STAT_OPS as readonly string[]).includes(check.op)) {
@@ -264,7 +332,14 @@ function checkStats(
     // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
     const quirk = rule === undefined ? undefined : statQuirk(check.stat);
     if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
-    checkStatParam(report, path, check, reference, exceptions && check.op !== undefined && EXCEPTION_OPS.includes(check.op));
+    checkStatParam(
+      report,
+      path,
+      check,
+      reference,
+      exceptions && check.op !== undefined && EXCEPTION_OPS.includes(check.op),
+      tabNumbers.has(index)
+    );
     if (!reference) return;
     if (typeof check.stat === 'number') {
       if (reference.statIds.size > 0 && !reference.statIds.has(check.stat)) {
