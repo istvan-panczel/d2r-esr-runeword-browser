@@ -28,6 +28,7 @@ import {
   expandRunewordsByColumn,
   compareRunewordsByLevel,
 } from '../utils/filteringHelpers';
+import { foldJewelVariants } from '../utils/foldJewelVariants';
 
 /**
  * All runewords in screen order (see compareRunewordsByLevel). Sorted here rather than by a Dexie index:
@@ -58,12 +59,13 @@ export function useFilteredRunewords(lookup: SocketableLookup | undefined): read
   const gemBonusMap = buildGemBonusMap(lookup.gems.values());
   const runeCategoryMap = buildRuneCategoryMap(lookup.esrRunes.values(), lookup.lodRunes.values(), lookup.kanjiRunes.values());
 
-  // Expand runewords with different column bonuses into separate entries per item category
-  const expandedRunewords = expandRunewordsByColumn(runewords);
+  // One entry per jewel recipe content (ESR lists a row per jewel count), then one per item category where the
+  // column bonuses differ
+  const expandedRunewords = expandRunewordsByColumn(foldJewelVariants(runewords));
 
   const searchTerms = parseSearchTerms(searchText);
 
-  // Column expansion, exact-name focus and filtering all preserve the query's order
+  // Jewel folding, column expansion, exact-name focus and filtering all preserve the query's order
   return applyExactNameFocus(expandedRunewords, exactName, (list) =>
     list.filter((runeword) => {
       if (!matchesSearch(runeword, searchTerms, runeBonusMap, gemBonusMap)) return false;

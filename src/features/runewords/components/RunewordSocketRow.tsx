@@ -25,9 +25,9 @@ interface RunewordSocketRowProps {
 }
 
 /**
- * The runeword's sockets as the item shows them: one per ingredient with its HD icon (click / tap opens the same
- * popover as its badge; no hover title, details come from the popover only), then the required jewel sockets (empty)
- * and the optional ones up to `socketsMax` (dimmed, dashed outline); jewel sockets are not interactive. An icon that is
+ * The runeword's sockets as the item shows them: the required jewel sockets (empty) and the optional ones up to
+ * `socketsMax` (dimmed, dashed outline; jewel sockets are not interactive), then one per ingredient with its HD icon
+ * (click / tap opens the same popover as its badge; no hover title, details come from the popover only). An icon that is
  * missing or fails to load leaves the empty socket; the circles keep their size meanwhile.
  */
 export function RunewordSocketRow({ runeword, isLod }: RunewordSocketRowProps) {

@@ -12,23 +12,32 @@ export type SocketSlot = { readonly kind: 'rune' | 'gem'; readonly name: string 
 export type SocketSlotSource = Pick<Runeword, 'sockets' | 'runes'> & Partial<Pick<Runeword, 'ingredients' | 'socketsMax'>>;
 
 /**
- * The sockets of a runeword, left to right: its ingredients in recipe order (runes and gems interleaved), then the
- * required jewel slots, then the optional ones.
+ * The sockets of a runeword, left to right: the required jewel slots, then the optional ones, then its ingredients in
+ * recipe order (runes and gems interleaved). Jewels come first because ESR's runes.txt rows put them first
+ * (`jew jew r93 r33 r43`); the site lists the jewels first too.
  *
  * Counts come from the socket numbers, not the `jewelInfo` text: the parser keeps `sockets` = ingredients + required
  * jewels (the ESR 3.2 per-count rows list their jewels as plain "Jewel" lines, e.g. Moonlight 4 sockets = 3 runes +
  * "(1) Jewel"), and `socketsMax` is set only on the ranged "(N-M Socket)" rows with "(0-K) Jewels", where
- * M − N = K optional slots. So required = sockets − ingredients, optional = socketsMax − sockets (each at least 0).
+ * M − N = K optional slots (on the list, `foldJewelVariants` merges the rows into such ranges, e.g. Tourbillion
+ * "5-6 Socket" with "(1-2) Jewels"). So required = sockets − ingredients, optional = socketsMax − sockets (each at
+ * least 0).
  */
 export function buildSocketSlots(runeword: SocketSlotSource): SocketSlot[] {
   const ingredients = runeword.ingredients !== undefined && runeword.ingredients.length > 0 ? runeword.ingredients : runeword.runes;
-  const slots: SocketSlot[] = ingredients.map((name) => ({ kind: isGemName(name) ? 'gem' : 'rune', name }));
   const required = Math.max(0, runeword.sockets - ingredients.length);
   const optional =
     runeword.socketsMax === undefined ? 0 : Math.max(0, runeword.socketsMax - Math.max(runeword.sockets, ingredients.length));
-  for (let index = 0; index < required; index++) slots.push({ kind: 'jewel', optional: false });
-  for (let index = 0; index < optional; index++) slots.push({ kind: 'jewel', optional: true });
-  return slots;
+  return [
+    ...Array.from({ length: required }, (): SocketSlot => ({ kind: 'jewel', optional: false })),
+    ...Array.from({ length: optional }, (): SocketSlot => ({ kind: 'jewel', optional: true })),
+    ...ingredients.map((name): SocketSlot => ({ kind: isGemName(name) ? 'gem' : 'rune', name })),
+  ];
+}
+
+/** Whether the recipe takes jewels at all (required or optional): the card then shows the Mythical Jewel note. */
+export function hasJewelSlots(runeword: SocketSlotSource): boolean {
+  return buildSocketSlots(runeword).some((slot) => slot.kind === 'jewel');
 }
 
 /**

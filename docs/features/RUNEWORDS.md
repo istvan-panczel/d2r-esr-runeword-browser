@@ -17,6 +17,33 @@ The order comes from `compareRunewordsByLevel` (`utils/filteringHelpers.ts`), ap
 hook's query (`queryRunewordsInDisplayOrder`) rather than by a Dexie index, because IndexedDB
 compares names by code unit (the source's lowercase "hand of Justice" would land after "Pride").
 
+## Jewel Recipes (folded on the list)
+
+The game has no optional sockets, so ESR adds one runes.txt row per jewel count, jewels first and either plain
+Jewels (`jew`) or Mythical Jewels (`mjw`), never mixed. Dragon Master: `r93 r33 r43`, `jew r93 r33 r43`,
+`jew jew …`, `jew jew jew …`, then the same three with `mjw`. The site (our source) shows a range row
+("(3-6 Socket)", "(0-3) Jewels", the no-jewel recipe) followed by one row per jewel count ("(4 Socket)" with a
+"Jewel" line, "(5 Socket)" with two, …); it lists no `mjw` rows. The parser and the database keep every row (builds and
+guide refs, favourites and the Best Base finder use `[name, variant]`).
+
+The Runewords list folds them (`foldJewelVariants`, `utils/foldJewelVariants.ts`, in `useFilteredRunewords` on the
+sorted rows, before the column expansion and the filters; order kept): rows of the same runeword with the same content
+(runes, gems, ingredients, allowed / excluded items, affixes, column affixes; everything except `variant`, `sockets`,
+`socketsMax`, `jewelInfo`) become one entry. It is the lowest variant (so the favourite id stays), with the socket range
+min `sockets` … max covered count of the group and a regenerated `jewelInfo` in the parser's formats (`formatJewelInfo`:
+"(0-3) Jewels", "(1-2) Jewels", "(1) Jewel"). A range row only covers the counts no per-count row of its recipe lists,
+so its own `socketsMax` does not leak into an entry those rows are not part of. ESR 3.2.24 fixture: 409 rows → 386
+entries; most jewel runewords become one card (Dragon Master, Moonlight, Storm Earth and Fire 3-6 "(0-3) Jewels";
+Gold Scarab 4-6; Sunlight 3-4; Might of the Earth and Work of God 5-6). Two differ by jewel count:
+
+- **Tourbillion**: "4 Socket" without jewels (Bleed 250-500) and "5-6 Socket" "(1-2) Jewels" (Inner Sight on hit
+  instead)
+- **Wooden Colossus**: "5 Socket" (+300 Strength) and "6 Socket" "(1) Jewel" (+150 Strength)
+
+Shinigami's rows differ by item type (two-handed vs other melee), not by jewel count: two cards, each "2-6 Socket"
+"(0-4) Jewels". The socket filter reads the folded range (a 5-socket filter finds Dragon Master and Tourbillion 5-6).
+Cards with any jewel socket add a muted line: "Jewels or Mythical Jewels (not mixed); jewels go in the first sockets."
+
 ## Filters
 
 ### Text Search
@@ -118,7 +145,8 @@ interface Runeword {
   reads it from the legacy sort key (`runewordIsLod`).
 - **jewelInfo**: e.g. "(0-3) Jewels" — recipes that accept optional jewels on top of their runes.
   Since ESR 3.2 the source also lists each socket count of such a recipe as its own row with plain
-  "Jewel" lines; those rows get e.g. "(2) Jewels" and `sockets` = runes + gems + jewels.
+  "Jewel" lines; those rows get e.g. "(2) Jewels" and `sockets` = runes + gems + jewels. The database keeps
+  the rows as the site lists them; the list folds them (see [Jewel Recipes](#jewel-recipes-folded-on-the-list)).
 - **socketsMax**: Set only for the optional-jewel recipes, which the source shows as a range,
   e.g. Moonlight `(3-6 Socket)`. `sockets` stays the base count; the socket filter matches when
   its range overlaps `[sockets, socketsMax]` and the card shows "3-6 Socket".
@@ -130,24 +158,26 @@ interface Runeword {
 - **Socket row** (`RunewordSocketRow`, above the badges; on every `RunewordCard`, so also on the runeword cards the
   Builds and Guide pages embed): one round dark socket per socket of the item (36 px, the row adds about 42 px to the
   card), from `buildSocketSlots(runeword)` (`utils/socketSlots.ts`):
-  - the ingredients in recipe order (runes and gems interleaved) with their 30 px HD icon (`ItemIcon`); runes through
-    `runeIconRef` (the rune as `resolveRune` picks it for the card's `isLod`, so Ko gets the LoD art in a LoD
+  - first the required jewel sockets (empty, with the filled sockets' ring), then the optional ones (dimmed, dashed
+    outline), as runes.txt and the site put the jewels first; the row is as long as the (maximum) socket count. No
+    jewel art yet (plain jewels use the itemtypes InvGfx invjw1–6, which the icon extraction does not cover). Counts
+    come from the numbers, not the `jewelInfo` text: required = `sockets − ingredients`, optional =
+    `socketsMax − sockets` (Moonlight `3-6`: 3 optional + 3 runes; Tourbillion's folded `5-6`: 1 required + 1
+    optional + 4 runes). The fixture test checks every row gets `socketsMax ?? sockets` slots and that the counts
+    agree with every `jewelInfo` text
+  - then the ingredients in recipe order (runes and gems interleaved) with their 30 px HD icon (`ItemIcon`); runes
+    through `runeIconRef` (the rune as `resolveRune` picks it for the card's `isLod`, so Ko gets the LoD art in a LoD
     runeword); a click / tap opens the same popover as the badge (`RuneTooltip` / `GemTooltip`), `aria-label` = name,
     no hover `title` (details come from the popover only, like the badges)
-  - then the required jewel sockets (empty, with the filled sockets' ring), then the optional ones (dimmed, dashed
-    outline), so the row is as long as the (maximum) socket count. No jewel art yet (plain jewels use the itemtypes
-    InvGfx invjw1–6, which the icon extraction does not cover). Counts come from the numbers, not the `jewelInfo`
-    text: required = `sockets − ingredients`, optional = `socketsMax − sockets` (Moonlight `3-6`: 3 runes + 3
-    optional; its `4 Socket` row: 3 runes + 1 required). The fixture test checks every runeword gets
-    `socketsMax ?? sockets` slots and that the counts agree with every `jewelInfo` text
   - jewel sockets are not interactive (`role="img"`, `aria-label` "Jewel socket" / "Optional jewel socket"); while
     icons.json loads (`useItemIcons`, one shared load) and for a missing icon a socket stays an empty circle of the
     same size
-- Rune and gem badge sequence (tier / gem coloured, with tooltips), plus the jewel info badge
+- Badge sequence: the jewel info badge first (as the site lists it), then the rune and gem badges (tier / gem
+  coloured, with tooltips)
+- On cards with jewel sockets (`hasJewelSlots`): the muted Mythical Jewel note (see [Jewel Recipes](#jewel-recipes-folded-on-the-list))
 - Allowed item types
 - **Per-column bonuses** (split card layout): Shows bonuses specific to weapon/helm/armor columns
 - Tier point totals per category
-- Optional jewel info
 
 ## State Management
 
@@ -167,7 +197,7 @@ interface RunewordsState {
 
 ## Hooks
 
-- `useFilteredRunewords()` - Applies all filters (search, sockets, req level, item types, runes, tier points) to the list in screen order (see [List Order](#list-order))
+- `useFilteredRunewords()` - Folds the per-jewel-count rows (`foldJewelVariants`), then applies all filters (search, sockets, req level, item types, runes, tier points) to the list in screen order (see [List Order](#list-order))
 - `useRuneGroups()` - Groups runes by category/tier for the filter UI
 - `useSocketableLookup()` (`src/core/hooks/useSocketableLookup.ts`) - Rune/gem lookup (built by `src/core/utils/socketableLookup.ts`) used for badges, tooltips and bonuses; `RunewordsScreen` loads it once (`useSocketableLookupQuery`) and provides it via `SocketableLookupContext`
 - `useAvailableItemTypes()` - Lists valid item types from DB (thin wrapper over `src/core/hooks/useAvailableItemTypes.ts`)
@@ -203,7 +233,8 @@ src/features/runewords/
 │   └── index.ts
 └── utils/
     ├── filteringHelpers.ts
-    └── socketSlots.ts           # buildSocketSlots, runeIconRef
+    ├── foldJewelVariants.ts     # one list entry per jewel recipe content
+    └── socketSlots.ts           # buildSocketSlots, hasJewelSlots, runeIconRef
 ```
 
 Shared with gemwords (in `src/core/`): `components/RecipeCommonFilters.tsx` (search, sockets, req level, item types via `ItemTypeFilter.tsx`), `components/RecipeBonuses.tsx`, `components/GemBadge.tsx` / `GemTooltip.tsx`, `constants/itemTypeCategories.ts`, `utils/itemCategoryMapping.ts`, `utils/columnAffixes.ts`.

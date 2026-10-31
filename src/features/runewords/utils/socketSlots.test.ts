@@ -6,7 +6,7 @@ import { buildSocketableLookup } from '@/core/utils/socketableLookup';
 import { parseRunewordsHtml } from '@/features/data-sync/parsers/runewordsParser';
 import type { IconsBundle } from '@/features/game-data/engine/schema';
 import { buildItemIconIndex, findItemIcon } from '@/features/game-data/hooks/useItemIcons';
-import { buildSocketSlots, runeIconRef, type SocketSlot } from './socketSlots';
+import { buildSocketSlots, hasJewelSlots, runeIconRef, type SocketSlot } from './socketSlots';
 
 const RUNEWORDS = resolve(__dirname, '../../../../test-fixtures/runewords.htm');
 const ICONS = resolve(__dirname, '../../../../public/game-data/icons.json');
@@ -35,25 +35,40 @@ describe('buildSocketSlots', () => {
     expect(buildSocketSlots({ sockets: 2, runes: ['El Rune', 'Eld Rune'], ingredients: [] })).toHaveLength(2);
   });
 
-  it('adds required jewel slots up to the socket count', () => {
-    const slots = buildSocketSlots({ sockets: 5, runes: ['A', 'B', 'C'].map((r) => `${r} Rune`) });
-    expect(slots.slice(3)).toEqual([jewel(false), jewel(false)]);
+  it('puts the required jewel slots first, up to the socket count', () => {
+    const slots = buildSocketSlots({ sockets: 5, runes: ['El Rune', 'Eld Rune', 'Tir Rune'] });
+    expect(slots).toEqual([
+      jewel(false),
+      jewel(false),
+      { kind: 'rune', name: 'El Rune' },
+      { kind: 'rune', name: 'Eld Rune' },
+      { kind: 'rune', name: 'Tir Rune' },
+    ]);
   });
 
-  it('adds optional jewel slots up to socketsMax', () => {
+  it('adds optional jewel slots up to socketsMax, before the runes', () => {
     const slots = buildSocketSlots({ sockets: 3, socketsMax: 6, runes: ['El Rune', 'Eld Rune', 'Tir Rune'] });
     expect(slots).toHaveLength(6);
-    expect(slots.slice(3)).toEqual([jewel(true), jewel(true), jewel(true)]);
+    expect(slots.slice(0, 3)).toEqual([jewel(true), jewel(true), jewel(true)]);
+    expect(slots[3]).toEqual({ kind: 'rune', name: 'El Rune' });
   });
 
   it('puts required jewels before optional ones and never goes negative', () => {
-    expect(buildSocketSlots({ sockets: 3, socketsMax: 5, runes: ['El Rune', 'Eld Rune'] }).slice(2)).toEqual([
+    expect(buildSocketSlots({ sockets: 3, socketsMax: 5, runes: ['El Rune', 'Eld Rune'] })).toEqual([
       jewel(false),
       jewel(true),
       jewel(true),
+      { kind: 'rune', name: 'El Rune' },
+      { kind: 'rune', name: 'Eld Rune' },
     ]);
     // Malformed counts (fewer sockets than ingredients) add no jewel slots
     expect(buildSocketSlots({ sockets: 1, socketsMax: 2, runes: ['El Rune', 'Eld Rune'] })).toHaveLength(2);
+  });
+
+  it('tells whether a recipe takes jewels', () => {
+    expect(hasJewelSlots({ sockets: 2, runes: ['El Rune', 'Eld Rune'] })).toBe(false);
+    expect(hasJewelSlots({ sockets: 3, runes: ['El Rune', 'Eld Rune'] })).toBe(true);
+    expect(hasJewelSlots({ sockets: 2, socketsMax: 3, runes: ['El Rune', 'Eld Rune'] })).toBe(true);
   });
 
   describe.skipIf(!existsSync(RUNEWORDS))('with the runewords.htm fixture', () => {
