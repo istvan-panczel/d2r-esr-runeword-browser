@@ -13,7 +13,10 @@
  * - `replaceName`, `namePrefix` and `nameSuffix` are each "later wins" on their own, not as one name.
  * - `notify: true` prints the drop line unless the rule's effective actions (style included) have a chatMessage.
  * - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
- * - A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0.
+ * - A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0
+ *   (`OMITTED_PARAM` = 'anyLayer', `OMITTED_PARAM_ASSUMPTION`). For the layered stats (skill, skill tab, class, event,
+ *   charged: one entry per skill / tab / class) the plugin may instead read only the param-0 entry ('layerZero'); asked
+ *   on Discord 2026-10-31, see LOOT-FILTER-BACKLOG.md.
  *   A stat the item or player lacks is one entry of value 0 (verified in game for item stats, 2026-10: a hide rule
  *   with `item_demondamage_percent < 1` hid the magic items without demon damage).
  * - `{stat:ID}` without PARAM shows the first entry of that stat; ID may also be an itemstatcost name.
@@ -159,8 +162,34 @@ function resolvePlaceholderStatId(stat: string, statIds: ReadonlyMap<string, num
   return /^\d+$/.test(stat) ? Number(stat) : statIds.get(stat);
 }
 
+/**
+ * How the plugin reads a stat check without `param` (not verified in game): every entry of the stat (`anyLayer`: any
+ * skill, skill tab or class of a layered stat) or only the entry with param 0 (`layerZero`).
+ */
+export type OmittedParamMode = 'anyLayer' | 'layerZero';
+
+/** The evaluator's (and the validator's) assumption until the in-game test answers. */
+export const OMITTED_PARAM: OmittedParamMode = 'anyLayer';
+
+const OMITTED_PARAM_TEXT: Readonly<Record<OmittedParamMode, string>> = {
+  anyLayer:
+    'A stat check without param holds when any entry of that stat passes (for a skill, skill tab or class stat: any skill, tab or class); an entry without param has param 0.',
+  layerZero:
+    'A stat check without param reads only the entry with param 0 (for a skill, skill tab or class stat: one skill, tab or class); an entry without param has param 0.',
+};
+
+/** `OMITTED_PARAM` in plain words, for the Test tab's assumptions. */
+export const OMITTED_PARAM_ASSUMPTION = OMITTED_PARAM_TEXT[OMITTED_PARAM];
+
+/** The param a check compares: its own; without one every entry (`anyLayer`, undefined) or the param-0 entry (`layerZero`). */
+export function checkedLayer(param: number | undefined, mode: OmittedParamMode = OMITTED_PARAM): number | undefined {
+  if (param !== undefined) return param;
+  return mode === 'layerZero' ? 0 : undefined;
+}
+
 /** The values a stat check compares: every entry of that stat (and param), or a single 0 when there is none. */
-function statValues(entries: readonly ItemStatEntry[], stat: number, param: number | undefined): readonly number[] {
+function statValues(entries: readonly ItemStatEntry[], stat: number, checkParam: number | undefined): readonly number[] {
+  const param = checkedLayer(checkParam);
   const values = entries
     .filter((entry) => entry.stat === stat && (param === undefined || (entry.param ?? 0) === param))
     .map((entry) => entry.value);

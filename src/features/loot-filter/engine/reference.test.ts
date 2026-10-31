@@ -47,6 +47,21 @@ describe('buildLootFilterReference', () => {
     expect([...reference.soundNames]).toEqual(['cursor_pass', 'item_rune']);
     expect(reference.soundRowCount).toBe(3);
     expect([...reference.uniqueOrSetIds].sort()).toEqual([0, 2]);
+    expect([...reference.statNamesById]).toEqual([
+      [0, 'strength'],
+      [1, 'energy'],
+    ]);
+  });
+
+  it('names the skill tab layers by class id and tab', () => {
+    const classes = [
+      { code: 'ass', name: 'Assassin', tabs: ['Traps', 'Shadow Disciplines', 'Martial Arts'] },
+      { code: 'war', name: 'Warlock', tabs: ['Demon Skills', 'Eldritch Skills', 'Chaos Skills'] },
+    ] as const;
+    const reference = buildLootFilterReference(data, { types: [], classes: classes.map((info) => ({ ...info, tabs: [...info.tabs] })) });
+    expect(reference.skillTabNames.get(50)).toBe('Assassin Martial Arts');
+    expect(reference.skillTabNames.get(56)).toBe('Warlock Demon Skills');
+    expect(reference.skillTabNames.size).toBe(6);
   });
 
   it('maps item codes to the ancestors of their type and type2', () => {

@@ -255,6 +255,10 @@ export interface LootFilterReference {
   readonly itemTypes: ReadonlySet<string>;
   readonly statNames: ReadonlySet<string>;
   readonly statIds: ReadonlySet<number>;
+  /** Stat id → itemstatcost name (to know a layered stat written by id). */
+  readonly statNamesById: ReadonlyMap<number, string>;
+  /** Skill tab layer (`class << 3 | tab`) → "Assassin Martial Arts", for the param warnings. */
+  readonly skillTabNames: ReadonlyMap<number, string>;
   readonly areaIds: ReadonlySet<number>;
   readonly soundNames: ReadonlySet<string>;
   /** Number of rows in sounds.txt (a `sound` row number must be below it). */

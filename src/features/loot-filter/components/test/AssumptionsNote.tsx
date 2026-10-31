@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import { OMITTED_PARAM_ASSUMPTION } from '../../engine/evaluate';
 
 /** The full list: the "Verify in game" section of docs/features/LOOT-FILTER.md. */
 const FULL_LIST_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser/blob/master/docs/features/LOOT-FILTER.md#verify-in-game';
@@ -11,7 +12,7 @@ const ASSUMPTIONS: readonly string[] = [
   'Replace name, name prefix and name suffix are each taken from the last rule that sets it, independently of each other.',
   'Notify prints the drop line unless the rule (or its style) has its own chat message.',
   "{name} is always the game's name of the item, never the name a rule changed, also in the drop line.",
-  'A stat check without param holds when any entry of that stat passes; an entry without param has param 0. (Verified: a stat the item lacks counts as 0.)',
+  `${OMITTED_PARAM_ASSUMPTION} (Verified: a stat the item lacks counts as 0.)`,
   '{stat:ID} without a param shows the first entry of that stat; ID may also be a stat name.',
   '{ethereal} becomes "Ethereal" for ethereal items and nothing otherwise.',
   '"Hide unmatched items" hides an item on the ground that no rule applied to.',

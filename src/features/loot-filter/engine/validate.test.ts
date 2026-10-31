@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { parseLootFilter } from './parse.ts';
-import type { Diagnostic, LootFilter, LootFilterReference, LootFilterRule } from './types.ts';
+import type { Diagnostic, LootFilter, LootFilterReference, LootFilterRule, StatCheck } from './types.ts';
 import { validateLootFilter } from './validate.ts';
 
 const base: LootFilter = {
@@ -24,8 +24,18 @@ function checkRule(rule: LootFilterRule, reference?: LootFilterReference): [stri
 const reference: LootFilterReference = {
   itemCodes: new Set(['r01', 'hax', 'cap', 'dbl']),
   itemTypes: new Set(['rune', 'misc', 'weap', 'axe', 'club', 'blun', 'helm', 'armo']),
-  statNames: new Set(['item_numsockets']),
-  statIds: new Set([194]),
+  statNames: new Set(['item_numsockets', 'item_addskill_tab', 'item_skillonhit', 'item_charged_skill']),
+  statIds: new Set([194, 188, 198, 204]),
+  statNamesById: new Map([
+    [194, 'item_numsockets'],
+    [188, 'item_addskill_tab'],
+    [198, 'item_skillonhit'],
+    [204, 'item_charged_skill'],
+  ]),
+  skillTabNames: new Map([
+    [50, 'Assassin Martial Arts'],
+    [56, 'Warlock Demon Skills'],
+  ]),
   areaIds: new Set([1, 2]),
   soundNames: new Set(['item_rune']),
   soundRowCount: 100,
@@ -54,7 +64,9 @@ describe('validateLootFilter', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const diagnostics = validateLootFilter(parseLootFilter(source).filter);
     expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    // It has no warnings either (also none against the real game-data reference when last checked).
+    // It has no warnings either without a reference. Against the real game-data reference (ESR 3.2.24, Sully v0.6.3) it
+    // gets 42 param warnings: its +3/4/5 skill tab rules write stat 188 without param and with the properties.txt tab
+    // numbers 1 to 21, of which 14 name no skill tab layer (`class << 3 | tab`).
     expect(diagnostics).toEqual([]);
   });
 
@@ -185,6 +197,70 @@ describe('validateLootFilter', () => {
     const diagnostics = validateLootFilter({ ...base, rules: [{ itemStats: [{ stat: '194', value: 1 }], hide: true }] }, reference);
     expect(diagnostics).toEqual([expect.objectContaining({ severity: 'warning', path: 'rules/0/itemStats/0/stat' })]);
     expect(diagnostics[0].message).toMatch(/as a number/);
+  });
+
+  describe('stat params', () => {
+    const tab = (check: Partial<StatCheck>): StatCheck => ({ stat: 'item_addskill_tab', value: 1, ...check });
+
+    it('needs a whole param from 0 to 65535', () => {
+      expect(messages({ itemStats: [{ stat: 'item_numsockets', param: 1.5, value: 1 }], hide: true })).toEqual([
+        'rules/0/itemStats/0/param: "param" 1.5 is not a whole number from 0 to 65535',
+      ]);
+      expect(checkRule({ playerStats: [tab({ param: 70000 })], hide: true }, reference)).toEqual([
+        ['error', 'rules/0/playerStats/0/param'],
+      ]);
+    });
+
+    it('warns about a layered stat without param, by name without a reference and by id with one', () => {
+      expect(messages({ itemStats: [tab({})], hide: true }, null)).toEqual([
+        'rules/0/itemStats/0: "item_addskill_tab" has one entry per skill tab; without "param" this check is taken to hold when any skill tab passes (not verified in game: the plugin may read only param 0). Pick a skill tab to check one',
+      ]);
+      expect(checkRule({ playerStatsAnyOf: [{ stat: 198, value: 1 }], hide: true }, reference)).toEqual([
+        ['warning', 'rules/0/playerStatsAnyOf/0'],
+      ]);
+      expect(checkRule({ itemStats: [{ stat: 198, value: 1 }], hide: true })).toEqual([]);
+      expect(checkRule({ itemStats: [tab({ param: 50 })], hide: true }, reference)).toEqual([]);
+    });
+
+    it('warns about exceptions without param too, and says when they are not the opposite check', () => {
+      const exception = messages({ itemStats: [tab({ op: '<', value: 1 })], hide: true });
+      expect(exception).toEqual([
+        expect.stringMatching(/^rules\/0\/itemStats\/0: "item_addskill_tab" has one entry per skill tab; .*check one$/),
+      ]);
+      const atLeast3 = messages({ itemStatsAnyOf: [tab({ op: '<', value: 3 })], hide: true });
+      expect(atLeast3).toEqual([
+        expect.stringMatching(/An exception without param is not the opposite check when the item has several entries/),
+      ]);
+      // Not an exception: the rule does not hide
+      expect(messages({ itemStats: [tab({ op: '<', value: 3 })], namePrefix: 'x' })[0]).not.toMatch(/exception/);
+    });
+
+    it('names the layer of a properties.txt tab number', () => {
+      expect(messages({ itemStats: [tab({ param: 21 })], hide: true })).toEqual([
+        'rules/0/itemStats/0/param: "param" 21 names no skill tab (class × 8 + tab 0 to 2); 21 looks like the properties.txt tab number: Warlock Demon Skills is param 56',
+      ]);
+      expect(messages({ itemStats: [tab({ param: 99 })], hide: true })).toEqual([
+        'rules/0/itemStats/0/param: "param" 99 names no skill tab (class × 8 + tab 0 to 2)',
+      ]);
+    });
+
+    it('warns about event and charged params without a skill or level', () => {
+      const onHit = (param: number): StatCheck => ({ stat: 'item_skillonhit', param, value: 1 });
+      expect(messages({ itemStats: [onHit(25)], hide: true })).toEqual([
+        expect.stringMatching(/^rules\/0\/itemStats\/0\/param: "param" 25 names skill 0/),
+      ]);
+      expect(messages({ itemStats: [onHit(472 << 6)], hide: true })).toEqual([expect.stringMatching(/names level 0/)]);
+      expect(messages({ itemStats: [onHit((472 << 6) | 25)], hide: true })).toEqual([]);
+    });
+
+    it('warns about a charged value that is neither presence nor a multiple of 256', () => {
+      const charged = (check: Partial<StatCheck>): StatCheck => ({ stat: 204, param: (472 << 6) | 25, value: 1, ...check });
+      const flagged = (check: Partial<StatCheck>) => checkRule({ itemStats: [charged(check)], hide: true }, reference);
+      for (const ok of [{}, { op: '>', value: 0 }, { op: '<', value: 1 }, { value: 1280 }, { op: '<', value: 2560 }] as const)
+        expect(flagged(ok)).toEqual([]);
+      expect(flagged({ value: 5 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
+      expect(flagged({ op: '==', value: 1285 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
+    });
   });
 
   describe('stats the plugin reads as 0', () => {
