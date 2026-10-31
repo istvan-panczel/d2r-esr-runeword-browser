@@ -102,10 +102,9 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   …" the listed other conditions, as the plugin warns; without other conditions the older "needs itemCodes or
   itemTypes" message), and with `quality` ("also hides every other quality of these items (uniques included)"); both
   skip rules with passthrough keys. An empty list in any list condition (`itemCodes: []`, `activeInLevels: []`, …):
-  the plugin logs "the list is empty" and what it does then is not known. Once per filter with disabled rules, a
-  root warning at `disabledRules` ("N disabled rules are stored in "disabledRules"; the game ignores that key and logs
-  one "unknown setting" line"; the diagnostics model has no info severity). Disabled rules are validated like the
-  others but do not count for "hides every ground item".
+  the plugin logs "the list is empty" and what it does then is not known. Disabled rules are validated like the
+  others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
+  Enabled checkbox's hint says the game ignores the key).
 
 ### Disabled rules (`disabledRules`)
 

@@ -335,18 +335,13 @@ describe('hideIfOtherConditionsFail, empty lists and disabled rules', () => {
     ]);
   });
 
-  it('notes disabled rules once, still checks them under their file path and skips them for "hides every ground item"', () => {
+  it('checks disabled rules under their file path and skips them for "hides every ground item"', () => {
     const later: LootFilterRule = { itemCodes: ['r01'], namePrefix: 'x' };
     const diagnostics = validateLootFilter({
       ...base,
       rules: [{ hide: true, disabled: true }, { hide: true }, later, { ...later, useStyle: 'Missing', disabled: true }],
     });
     expect(diagnostics.map((d) => [d.path, d.rule, d.message])).toEqual([
-      [
-        'disabledRules',
-        undefined,
-        '2 disabled rules are stored in "disabledRules"; the game ignores that key and logs one "unknown setting" line',
-      ],
       ['rules/0/hide', 1, 'Hides every ground item; the rule after it never runs for ground items'],
       ['disabledRules/1/rule/useStyle', 3, 'There is no style named "Missing"'],
     ]);

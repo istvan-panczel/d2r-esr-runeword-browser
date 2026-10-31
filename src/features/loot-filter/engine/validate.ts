@@ -440,14 +440,6 @@ export function validateLootFilter(filter: LootFilter, reference?: LootFilterRef
   }
 
   const disabledCount = filter.rules.filter((rule) => rule.disabled === true).length;
-  if (disabledCount > 0) {
-    top(
-      'warning',
-      'disabledRules',
-      `${disabledCount === 1 ? '1 disabled rule is' : `${String(disabledCount)} disabled rules are`} stored in "disabledRules"; the game ignores that key and logs one "unknown setting" line`
-    );
-  }
-
   const paths = ruleFilePaths(filter.rules);
   let enabledAfter = filter.rules.length - disabledCount;
   filter.rules.forEach((rule, index) => {

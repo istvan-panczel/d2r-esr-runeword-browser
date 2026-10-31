@@ -472,12 +472,10 @@ describe('selectDiagnostics', () => {
     const off = reducer(opened, setRuleDisabled({ index: 0, disabled: true }));
     expect(selectDiagnostics({ lootFilter: off })).toEqual([
       expect.objectContaining({ severity: 'error', rule: 2, path: 'rules/1/quality' }),
-      expect.objectContaining({ severity: 'warning', path: 'disabledRules' }),
     ]);
     const both = reducer(off, setRuleDisabled({ index: 2, disabled: true }));
     expect(selectDiagnostics({ lootFilter: both })).toEqual([
       expect.objectContaining({ severity: 'error', rule: 2, path: 'disabledRules/1/rule/quality' }),
-      expect.objectContaining({ severity: 'warning', path: 'disabledRules' }),
     ]);
   });
 
