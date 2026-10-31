@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.44.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.43.0...v1.44.0) (2026-10-31)
+
+### Features
+
+* **game-data:** skills and known layers in lootfilter.json, layers in affixes.json ([45ecfdd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/45ecfddbb2228f7f938975619eb9c937a3917883))
+* **game-data:** stat layer codec ([fd4d4aa](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fd4d4aaa257bc064fe0cce0bbd989d8409ad355d))
+* **loot-filter:** param warnings and the omitted-param switch ([7e72e03](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7e72e037b24ccafa7e019c15c127d38bc098cbe9))
+* **loot-filter:** pick params in the affix browser ([c102d6c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c102d6cc724d1949e09b17d12ada17d33e9c8d6a))
+* **loot-filter:** skill, tab and class labels in summaries and search ([7f73aff](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7f73affedba28385e63b43299f251b56d55e92e5))
+* **loot-filter:** skill, tab and class pickers on stat rows and in the Test tab ([1158320](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1158320420a602f5d3bd910b027fed470db8a969))
+
+### Bug Fixes
+
+* **game-data:** func 10 skill tab from the slot val ([6147871](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6147871df307e1c1895c8f36690f0e81073fe785))
+* **game-data:** set bonuses as sources of the loot filter's known layers ([8c6fe48](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8c6fe48bae115c3e747547428f6e932479cf02ac))
+* **loot-filter:** keep class skills grouped by class in the skill stat pickers ([575c156](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/575c156e8d379ef75c84b4bdd08007a0683a52bf))
+* **loot-filter:** let a picked stat param be removed again ([4df0454](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4df045483fc86ec7513bb62fdf917613ab698228))
+* **loot-filter:** one likely-mismatch warning per list of properties.txt tab numbers ([c70cf7d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c70cf7de328e74adfed6d407eab1c9f655829203))
+* **loot-filter:** show every picked param in the affix browser ([7752d19](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7752d19953d97c3f67546b9c5193deff88d91a97))
+
+### Documentation
+
+* **loot-filter:** record the formula and show preview with the open questions ([7173054](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/717305424718138d9a58895b0c4f52a6920fe2c7))
+* **loot-filter:** skill, tab and class params ([e23c8fd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e23c8fd6d8bb29146589a74c799b95327b909f3a))
+
+### Chores
+
+* **loot-filter:** refresh the template to sully's qol filter v0.6.7 ([eebd0e7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/eebd0e770eca2359e2410b9e4e5fa06506142e4d))
+
 ## [1.43.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.42.1...v1.43.0) (2026-10-31)
 
 ### Features
