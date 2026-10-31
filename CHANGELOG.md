@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.45.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.44.0...v1.45.0) (2026-10-31)
+
+### Features
+
+* **runewords:** order runewords by required level ([2aadf60](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2aadf60eface927217f966553bb2cb89abebe3af))
+
 ## [1.44.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.43.0...v1.44.0) (2026-10-31)
 
 ### Features
