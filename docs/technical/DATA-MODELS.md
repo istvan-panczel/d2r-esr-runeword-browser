@@ -122,7 +122,8 @@ Stores all runeword definitions.
 | sockets         | number            | Yes          | Base/minimum socket count (= ingredients + required jewels)                    |
 | socketsMax      | number?           | No           | Only when the source shows a range, e.g. "(2-3 Socket)" for optional jewels    |
 | reqLevel        | number            | Yes          | Highest req level among ingredients                                            |
-| sortKey         | number            | Yes          | Pre-calculated sort key                                                        |
+| sortKey         | number            | Yes          | = reqLevel (legacy cached rows: LoD = 10000 + reqLevel); the list sorts in JS  |
+| isLod           | boolean           | No           | Has a LoD-exclusive rune (Ko alone does not count); absent on old cached rows  |
 | runes           | string[]          | No           | Rune names in order                                                            |
 | gems            | string[]          | No           | Gem names in recipe                                                            |
 | ingredients     | string[]          | No           | All items in original order                                                    |
@@ -227,6 +228,7 @@ interface Runeword {
   readonly socketsMax?: number;
   readonly reqLevel: number;
   readonly sortKey: number;
+  readonly isLod: boolean;
   readonly runes: readonly string[];
   readonly gems: readonly string[];
   readonly ingredients: readonly string[];

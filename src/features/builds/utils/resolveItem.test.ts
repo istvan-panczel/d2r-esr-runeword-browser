@@ -25,6 +25,7 @@ function makeRuneword(): Runeword {
     sockets: 3,
     reqLevel: 65,
     sortKey: 0,
+    isLod: false,
     runes: ['Jah', 'Ith', 'Ber'],
     gems: [],
     ingredients: ['Jah', 'Ith', 'Ber'],

@@ -46,6 +46,7 @@ function makeRuneword(overrides: Partial<Runeword> = {}): Runeword {
     sockets: 4,
     reqLevel: 25,
     sortKey: 0,
+    isLod: false,
     runes: ['Tal Rune', 'Thul Rune', 'Ort Rune', 'Amn Rune'],
     gems: [],
     ingredients: ['Tal Rune', 'Thul Rune', 'Ort Rune', 'Amn Rune'],

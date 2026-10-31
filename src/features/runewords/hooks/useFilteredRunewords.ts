@@ -26,7 +26,18 @@ import {
   buildRuneBonusMap,
   buildGemBonusMap,
   expandRunewordsByColumn,
+  compareRunewordsByLevel,
 } from '../utils/filteringHelpers';
+
+/**
+ * All runewords in screen order (see compareRunewordsByLevel). Sorted here rather than by a Dexie index:
+ * IndexedDB compares names by code unit, which would put e.g. "hand of Justice" after "Pride". Uses
+ * `reqLevel`, not `sortKey`, so old cached rows with the legacy LoD sort key (10000+) sort the same way.
+ */
+export async function queryRunewordsInDisplayOrder(): Promise<Runeword[]> {
+  const runewords = await db.runewords.toArray();
+  return runewords.sort(compareRunewordsByLevel);
+}
 
 /** `lookup` is the screen-level rune/gem lookup (see useSocketableLookupQuery), reused for search and rune filters. */
 export function useFilteredRunewords(lookup: SocketableLookup | undefined): readonly Runeword[] | undefined {
@@ -39,8 +50,7 @@ export function useFilteredRunewords(lookup: SocketableLookup | undefined): read
   const maxTierPoints = useSelector(selectMaxTierPoints);
   const exactName = useSelector(selectExactName);
 
-  // Fetch runewords pre-sorted by sortKey from IndexedDB (ESR/Kanji first by reqLevel, then LoD by reqLevel)
-  const runewords = useLiveQuery(() => db.runewords.orderBy('sortKey').toArray(), []);
+  const runewords = useLiveQuery(queryRunewordsInDisplayOrder, []);
 
   if (!runewords || !lookup) return undefined;
 
@@ -53,7 +63,7 @@ export function useFilteredRunewords(lookup: SocketableLookup | undefined): read
 
   const searchTerms = parseSearchTerms(searchText);
 
-  // Filter preserves the pre-sorted order from IndexedDB
+  // Column expansion, exact-name focus and filtering all preserve the query's order
   return applyExactNameFocus(expandedRunewords, exactName, (list) =>
     list.filter((runeword) => {
       if (!matchesSearch(runeword, searchTerms, runeBonusMap, gemBonusMap)) return false;

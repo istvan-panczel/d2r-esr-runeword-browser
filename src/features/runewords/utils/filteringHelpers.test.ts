@@ -11,6 +11,7 @@ import {
   buildRuneBonusMap,
   getRuneBonusesText,
   expandRunewordsByColumn,
+  compareRunewordsByLevel,
   type RuneBonusMap,
   type RuneCategoryMap,
 } from './filteringHelpers';
@@ -41,7 +42,8 @@ function createRuneword(overrides: Partial<Runeword> = {}): Runeword {
     variant: 1,
     sockets: 3,
     reqLevel: 11,
-    sortKey: 11, // ESR/Kanji runeword, sortKey = reqLevel
+    sortKey: 11, // sortKey = reqLevel
+    isLod: false,
     runes: ['El Rune', 'Eld Rune', 'Tir Rune'],
     gems: [],
     ingredients: ['El Rune', 'Eld Rune', 'Tir Rune'],
@@ -641,5 +643,39 @@ describe('expandRunewordsByColumn', () => {
       expect(entry.sockets).toBe(3);
       expect(entry.runes).toEqual(['Ki Rune', 'Ka Rune', 'I Rune']);
     }
+  });
+});
+
+describe('compareRunewordsByLevel', () => {
+  const order = (runewords: Runeword[]) => [...runewords].sort(compareRunewordsByLevel).map((rw) => `${rw.name} v${String(rw.variant)}`);
+
+  it('should order by required level, mixing ESR, Kanji and LoD runewords', () => {
+    const runewords = [
+      createRuneword({ name: 'Call to Arms', reqLevel: 57, sortKey: 57, isLod: true }),
+      createRuneword({ name: 'Stone', reqLevel: 4, sortKey: 4 }),
+      createRuneword({ name: 'Steel', reqLevel: 13, sortKey: 13, isLod: true }),
+      createRuneword({ name: 'Moon Song', reqLevel: 60, sortKey: 60 }),
+      createRuneword({ name: 'Serpent', reqLevel: 13, sortKey: 13 }),
+    ];
+    expect(order(runewords)).toEqual(['Stone v1', 'Serpent v1', 'Steel v1', 'Call to Arms v1', 'Moon Song v1']);
+  });
+
+  it('should break level ties by name A-Z regardless of LoD, then by variant', () => {
+    const runewords = [
+      createRuneword({ name: 'Nadir', reqLevel: 13, isLod: true }),
+      createRuneword({ name: 'Serpent', reqLevel: 13, variant: 2 }),
+      createRuneword({ name: 'Hades', reqLevel: 13 }),
+      createRuneword({ name: 'Serpent', reqLevel: 13, variant: 1 }),
+    ];
+    expect(order(runewords)).toEqual(['Hades v1', 'Nadir v1', 'Serpent v1', 'Serpent v2']);
+  });
+
+  it('should compare names case-insensitively (the source has a lowercase "hand of Justice")', () => {
+    const runewords = [
+      createRuneword({ name: 'Pride', reqLevel: 67, isLod: true }),
+      createRuneword({ name: 'hand of Justice', reqLevel: 67, isLod: true }),
+      createRuneword({ name: 'Metamorphosis', reqLevel: 67, isLod: true }),
+    ];
+    expect(order(runewords)).toEqual(['hand of Justice v1', 'Metamorphosis v1', 'Pride v1']);
   });
 });

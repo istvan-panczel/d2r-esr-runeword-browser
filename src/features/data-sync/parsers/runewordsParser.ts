@@ -13,11 +13,19 @@ export type RunePointsLookup = Map<string, RunePointInfo>;
 // Maps rune name to its required level
 export type RuneReqLevelLookup = Map<string, number>;
 
-// Maps rune name to its priority for sorting (ESR: 100-700, Kanji: 800, LoD: 901-933)
+// Maps rune name to its priority (ESR: 100-700, Kanji: 800, LoD: 901-933); used to tell LoD runewords apart
 export type RunePriorityLookup = Map<string, number>;
 
-// Offset added to LoD runewords to sort them after ESR/Kanji
-export const LOD_SORT_KEY_OFFSET = 10000;
+/**
+ * Legacy: before `Runeword.isLod` existed, LoD runewords were stored with `sortKey = 10000 + reqLevel`
+ * (so they sorted after ESR/Kanji). Only used to read the LoD flag from such old cached rows.
+ */
+const LEGACY_LOD_SORT_KEY_OFFSET = 10000;
+
+/** The runeword's LoD flag; old cached rows have no `isLod` and carry it in the legacy sort key instead. */
+export function runewordIsLod(runeword: { readonly isLod?: boolean; readonly sortKey?: number }): boolean {
+  return runeword.isLod ?? (runeword.sortKey ?? 0) >= LEGACY_LOD_SORT_KEY_OFFSET;
+}
 
 interface RawRuneword {
   name: string;
@@ -26,6 +34,7 @@ interface RawRuneword {
   socketsMax?: number;
   reqLevel: number;
   sortKey: number;
+  isLod: boolean;
   runes: string[];
   gems: string[];
   ingredients: string[];
@@ -318,9 +327,7 @@ export function calculateReqLevel(
 }
 
 /**
- * Calculates the sort key for a runeword.
- * ESR/Kanji runewords: reqLevel (0-9999)
- * LoD runewords: 10000 + reqLevel (10000+)
+ * Tells whether a runeword is a LoD runeword.
  *
  * A runeword is LoD if it contains at least one rune that is exclusively LoD
  * (exists in LoD but not in ESR/Kanji). Shared runes like Ko (both ESR and LoD)
@@ -329,24 +336,14 @@ export function calculateReqLevel(
  * The lookup contains category-prefixed keys ("lodRunes:Ko Rune", "esrRunes:Ko Rune")
  * to distinguish shared runes.
  */
-export function calculateSortKey(runes: string[], reqLevel: number, runePriorityLookup: RunePriorityLookup): number {
-  let hasLodExclusiveRune = false;
-
-  for (const runeName of runes) {
-    const lodPriority = runePriorityLookup.get(`lodRunes:${runeName}`);
-    if (lodPriority === undefined) continue; // Not a LoD rune at all
-
-    // It's a LoD rune — check if it also exists in ESR or Kanji
-    const esrPriority = runePriorityLookup.get(`esrRunes:${runeName}`);
-    const kanjiPriority = runePriorityLookup.get(`kanjiRunes:${runeName}`);
-    if (esrPriority === undefined && kanjiPriority === undefined) {
-      // Exclusively LoD — this makes the runeword LoD
-      hasLodExclusiveRune = true;
-      break;
-    }
-  }
-
-  return hasLodExclusiveRune ? LOD_SORT_KEY_OFFSET + reqLevel : reqLevel;
+export function isLodRuneword(runes: readonly string[], runePriorityLookup: RunePriorityLookup): boolean {
+  return runes.some(
+    (runeName) =>
+      // A LoD rune that exists neither in ESR nor in Kanji
+      runePriorityLookup.has(`lodRunes:${runeName}`) &&
+      !runePriorityLookup.has(`esrRunes:${runeName}`) &&
+      !runePriorityLookup.has(`kanjiRunes:${runeName}`)
+  );
 }
 
 /**
@@ -355,7 +352,7 @@ export function calculateSortKey(runes: string[], reqLevel: number, runePriority
  * @param html The runewords.htm HTML content
  * @param runePointsLookup Optional lookup map for calculating tier point totals
  * @param runeReqLevelLookup Optional lookup map for calculating required level
- * @param runePriorityLookup Optional lookup map for calculating sort key
+ * @param runePriorityLookup Optional lookup map for telling LoD runewords apart (isLod)
  * @param gemReqLevelLookup Optional lookup map for gem required levels
  */
 export function parseRunewordsHtml(
@@ -396,12 +393,11 @@ export function parseRunewordsHtml(
     // Calculate required level (highest reqLevel among all runes and gems)
     const reqLevel = runeReqLevelLookup ? calculateReqLevel(runes, runeReqLevelLookup, gems, gemReqLevelLookup) : 0;
 
-    // Calculate sort key (ESR/Kanji: 0-9999, LoD: 10000+)
-    const sortKey = runePriorityLookup ? calculateSortKey(runes, reqLevel, runePriorityLookup) : reqLevel;
+    // LoD runewords (with a LoD-exclusive rune) are listed among the others; the flag picks the rune variant
+    const isLod = runePriorityLookup ? isLodRuneword(runes, runePriorityLookup) : false;
 
     // Calculate tier point totals if lookup is provided.
     // Pass isLod so shared runes (e.g. Ko) resolve to the correct category.
-    const isLod = sortKey >= LOD_SORT_KEY_OFFSET;
     const tierPointTotals = runePointsLookup ? calculateTierPointTotals(runes, runePointsLookup, isLod) : [];
 
     rawRunewords.push({
@@ -410,7 +406,9 @@ export function parseRunewordsHtml(
       sockets,
       socketsMax,
       reqLevel,
-      sortKey,
+      // One list for ESR, Kanji and LoD: by required level (ties: name, then variant)
+      sortKey: reqLevel,
+      isLod,
       runes,
       gems,
       ingredients,
@@ -430,6 +428,7 @@ export function parseRunewordsHtml(
     sockets: rw.sockets,
     reqLevel: rw.reqLevel,
     sortKey: rw.sortKey,
+    isLod: rw.isLod,
     runes: rw.runes,
     gems: rw.gems,
     ingredients: rw.ingredients,

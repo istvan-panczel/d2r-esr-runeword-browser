@@ -2,7 +2,7 @@
  * Comprehensive integration test — the source of truth for runeword data parsing.
  *
  * This test verifies EVERY runeword parsed by our pipeline matches the original HTML
- * source, and that all calculated fields (reqLevel, sortKey, tierPointTotals) are correct.
+ * source, and that all calculated fields (reqLevel, sortKey, isLod, tierPointTotals) are correct.
  *
  * It replicates the full data sync pipeline from dataSyncSaga:
  * 1. Parse rune data from gems.htm (ESR, LoD, Kanji)
@@ -15,7 +15,7 @@
  * - Data changes from ESR version updates
  * - HTML entity encoding issues
  * - Column mapping correctness (weapon/helm/armor)
- * - Calculated field correctness (reqLevel, sortKey, tierPointTotals)
+ * - Calculated field correctness (reqLevel, sortKey, isLod, tierPointTotals)
  * - Display expansion logic (expandRunewordsByColumn)
  * - Item category mapping completeness
  */
@@ -393,10 +393,10 @@ describe('Per-runeword completeness check (every runeword vs HTML source)', () =
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 2: Calculated fields (reqLevel, sortKey, tierPointTotals)
+// SECTION 2: Calculated fields (reqLevel, sortKey, isLod, tierPointTotals)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('Calculated fields (reqLevel, sortKey, tierPointTotals)', () => {
+describe('Calculated fields (reqLevel, sortKey, isLod, tierPointTotals)', () => {
   describe('reqLevel', () => {
     it('every runeword should have a non-negative reqLevel', () => {
       for (const rw of parsedRunewords) {
@@ -427,23 +427,15 @@ describe('Calculated fields (reqLevel, sortKey, tierPointTotals)', () => {
     });
   });
 
-  describe('sortKey', () => {
-    it('ESR/Kanji runewords should have sortKey < 10000', () => {
-      const esrRunewords = parsedRunewords.filter((rw) => rw.sortKey < 10000);
-      for (const rw of esrRunewords) {
+  describe('sortKey and isLod', () => {
+    it('every runeword (ESR, Kanji and LoD) should have sortKey = reqLevel', () => {
+      for (const rw of parsedRunewords) {
         expect(rw.sortKey, `${rw.name} v${String(rw.variant)}`).toBe(rw.reqLevel);
       }
     });
 
-    it('LoD runewords should have sortKey >= 10000', () => {
-      const lodRunewords = parsedRunewords.filter((rw) => rw.sortKey >= 10000);
-      for (const rw of lodRunewords) {
-        expect(rw.sortKey, `${rw.name} v${String(rw.variant)}`).toBe(10000 + rw.reqLevel);
-      }
-    });
-
     it('LoD runewords should contain at least one LoD-exclusive rune', () => {
-      const lodRunewords = parsedRunewords.filter((rw) => rw.sortKey >= 10000);
+      const lodRunewords = parsedRunewords.filter((rw) => rw.isLod);
       for (const rw of lodRunewords) {
         const hasLodExclusive = rw.runes.some((rune) => lodRuneNames.has(rune) && !esrRuneNames.has(rune) && !kanjiRuneNames.has(rune));
         expect(hasLodExclusive, `${rw.name} v${String(rw.variant)}: marked LoD but no LoD-exclusive rune`).toBe(true);
@@ -451,7 +443,7 @@ describe('Calculated fields (reqLevel, sortKey, tierPointTotals)', () => {
     });
 
     it('ESR/Kanji runewords should NOT contain any LoD-exclusive rune', () => {
-      const esrRunewords = parsedRunewords.filter((rw) => rw.sortKey < 10000);
+      const esrRunewords = parsedRunewords.filter((rw) => !rw.isLod);
       for (const rw of esrRunewords) {
         const lodExclusiveRunes = rw.runes.filter((rune) => lodRuneNames.has(rune) && !esrRuneNames.has(rune) && !kanjiRuneNames.has(rune));
         expect(
@@ -462,8 +454,8 @@ describe('Calculated fields (reqLevel, sortKey, tierPointTotals)', () => {
     });
 
     it('should have both ESR and LoD runewords', () => {
-      const esrCount = parsedRunewords.filter((rw) => rw.sortKey < 10000).length;
-      const lodCount = parsedRunewords.filter((rw) => rw.sortKey >= 10000).length;
+      const esrCount = parsedRunewords.filter((rw) => !rw.isLod).length;
+      const lodCount = parsedRunewords.filter((rw) => rw.isLod).length;
       expect(esrCount).toBeGreaterThan(0);
       expect(lodCount).toBeGreaterThan(0);
     });
@@ -504,8 +496,7 @@ describe('Calculated fields (reqLevel, sortKey, tierPointTotals)', () => {
     it('tierPointTotals should match independently calculated values', () => {
       for (const rw of parsedRunewords) {
         // Independently recalculate
-        const isLod = rw.sortKey >= 10000;
-        const preferredCategory = isLod ? 'lodRunes' : 'esrRunes';
+        const preferredCategory = rw.isLod ? 'lodRunes' : 'esrRunes';
         const expectedTotals = new Map<string, { tier: number; category: string; totalPoints: number }>();
 
         for (const runeName of rw.runes) {
@@ -1045,8 +1036,8 @@ describe('Data snapshot counts (detect ESR version changes)', () => {
     // These are informational — when an ESR update adds/removes runewords,
     // update these counts to document the change.
     const totalRunewords = parsedRunewords.length;
-    const esrRunewordCount = parsedRunewords.filter((rw) => rw.sortKey < 10000).length;
-    const lodRunewordCount = parsedRunewords.filter((rw) => rw.sortKey >= 10000).length;
+    const esrRunewordCount = parsedRunewords.filter((rw) => !rw.isLod).length;
+    const lodRunewordCount = parsedRunewords.filter((rw) => rw.isLod).length;
     const uniqueNames = new Set(parsedRunewords.map((rw) => rw.name)).size;
     const withColumnDiffs = parsedRunewords.filter((rw) => {
       const { weaponsGloves, helmsBoots, armorShieldsBelts } = rw.columnAffixes;

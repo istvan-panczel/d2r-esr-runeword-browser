@@ -12,7 +12,7 @@ import { aggregateBonusTexts, resolveRune } from '@/core/utils/socketableLookup'
 import { RecipeAffixes, SocketableBonusesSection } from '@/core/components/RecipeBonuses';
 import { getRelevantCategories } from '@/core/utils/itemCategoryMapping';
 import { isGemName } from '@/features/data-sync/parsers/gemsParser';
-import { LOD_SORT_KEY_OFFSET } from '@/features/data-sync/parsers/runewordsParser';
+import { runewordIsLod } from '@/features/data-sync/parsers/runewordsParser';
 import type { Runeword } from '@/core/db/models';
 
 /** Best Base finder link (game-data feature; plain path so the runewords chunk does not import it). */
@@ -47,7 +47,7 @@ function RunewordCardContent({
   const { name, sockets, runes, allowedItems, excludedItems, affixes, tierPointTotals } = runeword;
   // Handle backwards compatibility for cached runewords without reqLevel
   const reqLevel = 'reqLevel' in runeword ? runeword.reqLevel : undefined;
-  const isLod = 'sortKey' in runeword && runeword.sortKey >= LOD_SORT_KEY_OFFSET;
+  const isLod = runewordIsLod(runeword);
   const gems = 'gems' in runeword ? runeword.gems : undefined;
   const jewelInfo = 'jewelInfo' in runeword ? runeword.jewelInfo : undefined;
   // Recipes with optional jewels show a socket range on the ESR site, e.g. "(2-3 Socket)"

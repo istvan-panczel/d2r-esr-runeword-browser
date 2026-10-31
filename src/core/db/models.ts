@@ -113,7 +113,8 @@ export interface Runeword {
   readonly sockets: number; // Base/minimum socket count (= listed runes/gems + required jewels)
   readonly socketsMax?: number; // Only set when the source shows a range, e.g. "(2-3 Socket)" for recipes taking optional jewels
   readonly reqLevel: number; // Highest required level among all runes and gems
-  readonly sortKey: number; // Pre-calculated sort key: ESR/Kanji (0-9999) or LoD (10000+) + reqLevel
+  readonly sortKey: number; // Pre-calculated sort key (= reqLevel); legacy cached rows: LoD = 10000 + reqLevel
+  readonly isLod: boolean; // Has a LoD-exclusive rune (shared runes like Ko alone do not count); absent on old cached rows
   readonly runes: readonly string[];
   readonly gems: readonly string[]; // Gem names in the recipe (e.g. ["Perfect Topaz", "Perfect Topaz"])
   readonly ingredients: readonly string[]; // All items in original order (runes + gems interleaved)
