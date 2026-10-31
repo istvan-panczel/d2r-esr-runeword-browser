@@ -11,7 +11,8 @@ import {
   extractAffixes,
   parseRunewordsHtml,
   calculateReqLevel,
-  calculateSortKey,
+  isLodRuneword,
+  runewordIsLod,
   calculateTierPointTotals,
   type RuneReqLevelLookup,
   type RunePointsLookup,
@@ -487,64 +488,75 @@ describe('calculateReqLevel', () => {
   });
 });
 
-describe('calculateSortKey', () => {
-  it('should return reqLevel for ESR-only runes', () => {
+describe('isLodRuneword', () => {
+  it('should be false for ESR-only runes', () => {
     const lookup: RunePriorityLookup = new Map([
       ['esrRunes:I Rune', 100],
       ['esrRunes:Shi Rune', 100],
     ]);
-    expect(calculateSortKey(['I Rune', 'Shi Rune'], 4, lookup)).toBe(4);
+    expect(isLodRuneword(['I Rune', 'Shi Rune'], lookup)).toBe(false);
   });
 
-  it('should return reqLevel for Kanji-only runes', () => {
+  it('should be false for Kanji-only runes', () => {
     const lookup: RunePriorityLookup = new Map([['kanjiRunes:Moon Rune', 800]]);
-    expect(calculateSortKey(['Moon Rune'], 60, lookup)).toBe(60);
+    expect(isLodRuneword(['Moon Rune'], lookup)).toBe(false);
   });
 
-  it('should return 10000 + reqLevel for LoD-exclusive runes', () => {
+  it('should be true for LoD-exclusive runes', () => {
     // El and Zod only exist in LoD (no esrRunes or kanjiRunes keys)
     const lookup: RunePriorityLookup = new Map([
       ['lodRunes:El Rune', 901],
       ['lodRunes:Zod Rune', 933],
     ]);
-    expect(calculateSortKey(['El Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
+    expect(isLodRuneword(['El Rune', 'Zod Rune'], lookup)).toBe(true);
   });
 
-  it('should return reqLevel for shared rune (Ko) that exists in both ESR and LoD', () => {
+  it('should be false for shared rune (Ko) that exists in both ESR and LoD', () => {
     // Ko exists in both ESR and LoD — not LoD-exclusive, so ESR classification
     const lookup: RunePriorityLookup = new Map([
       ['esrRunes:Ko Rune', 300],
       ['lodRunes:Ko Rune', 918],
     ]);
-    expect(calculateSortKey(['Ko Rune'], 30, lookup)).toBe(30);
+    expect(isLodRuneword(['Ko Rune'], lookup)).toBe(false);
   });
 
-  it('should classify as LoD when at least one rune is LoD-exclusive', () => {
+  it('should be true when at least one rune is LoD-exclusive', () => {
     // Zod is LoD-exclusive (no ESR or Kanji entry), Ko is shared
     const lookup: RunePriorityLookup = new Map([
       ['esrRunes:Ko Rune', 300],
       ['lodRunes:Ko Rune', 918],
       ['lodRunes:Zod Rune', 933],
     ]);
-    expect(calculateSortKey(['Ko Rune', 'Zod Rune'], 69, lookup)).toBe(10069);
+    expect(isLodRuneword(['Ko Rune', 'Zod Rune'], lookup)).toBe(true);
   });
 
-  it('should return reqLevel for ESR + Kanji mix', () => {
+  it('should be false for ESR + Kanji mix', () => {
     const lookup: RunePriorityLookup = new Map([
       ['esrRunes:Ko Rune', 300],
       ['kanjiRunes:Moon Rune', 800],
     ]);
-    expect(calculateSortKey(['Ko Rune', 'Moon Rune'], 60, lookup)).toBe(60);
+    expect(isLodRuneword(['Ko Rune', 'Moon Rune'], lookup)).toBe(false);
   });
 
-  it('should return reqLevel for empty runes array', () => {
-    const lookup: RunePriorityLookup = new Map();
-    expect(calculateSortKey([], 30, lookup)).toBe(30);
+  it('should be false for empty runes array', () => {
+    expect(isLodRuneword([], new Map())).toBe(false);
   });
 
-  it('should return reqLevel for unknown runes (not in lookup)', () => {
-    const lookup: RunePriorityLookup = new Map();
-    expect(calculateSortKey(['Unknown Rune'], 25, lookup)).toBe(25);
+  it('should be false for unknown runes (not in lookup)', () => {
+    expect(isLodRuneword(['Unknown Rune'], new Map())).toBe(false);
+  });
+});
+
+describe('runewordIsLod', () => {
+  it('should use the stored isLod flag', () => {
+    expect(runewordIsLod({ isLod: true, sortKey: 69 })).toBe(true);
+    expect(runewordIsLod({ isLod: false, sortKey: 10069 })).toBe(false);
+  });
+
+  it('should read the legacy LoD sort key from old cached rows without isLod', () => {
+    expect(runewordIsLod({ sortKey: 10069 })).toBe(true);
+    expect(runewordIsLod({ sortKey: 69 })).toBe(false);
+    expect(runewordIsLod({})).toBe(false);
   });
 });
 
@@ -966,14 +978,13 @@ describe('runeword category classification integration', () => {
     }
   });
 
-  it('should classify LoD runewords (sortKey >= 10000) only when they have LoD-exclusive runes', () => {
+  it('should classify LoD runewords (isLod) only when they have LoD-exclusive runes', () => {
     for (const rw of runewords) {
       const hasLodExclusiveRune = rw.runes.some((r) => lodRuneNames.has(r) && !esrRuneNames.has(r) && !kanjiRuneNames.has(r));
-      const isLod = rw.sortKey >= 10000;
 
       expect(
-        isLod,
-        `${rw.name} v${String(rw.variant)} sortKey=${String(rw.sortKey)} but hasLodExclusiveRune=${String(hasLodExclusiveRune)}`
+        rw.isLod,
+        `${rw.name} v${String(rw.variant)} isLod=${String(rw.isLod)} but hasLodExclusiveRune=${String(hasLodExclusiveRune)}`
       ).toBe(hasLodExclusiveRune);
     }
   });
@@ -981,21 +992,20 @@ describe('runeword category classification integration', () => {
   it('should classify Gold Scarab (Ko, Metal, Mu, Shi) as ESR, not LoD', () => {
     const goldScarab = runewords.find((r) => r.name === 'Gold Scarab');
     expect(goldScarab).toBeDefined();
-    expect(goldScarab!.sortKey).toBeLessThan(10000);
+    expect(goldScarab!.isLod).toBe(false);
   });
 
   it('should classify Call to Arms as LoD', () => {
     const cta = runewords.find((r) => r.name === 'Call to Arms');
     expect(cta).toBeDefined();
-    expect(cta!.sortKey).toBeGreaterThanOrEqual(10000);
+    expect(cta!.isLod).toBe(true);
+    expect(cta!.sortKey).toBe(cta!.reqLevel);
   });
 
-  it('should have consistent tierPointTotals categories with sortKey classification', () => {
+  it('should have consistent tierPointTotals categories with the isLod classification', () => {
     for (const rw of runewords) {
-      const isLod = rw.sortKey >= 10000;
-
       for (const tpt of rw.tierPointTotals) {
-        if (isLod) {
+        if (rw.isLod) {
           expect(tpt.category, `LoD runeword ${rw.name} v${String(rw.variant)} has non-LoD tier points`).toBe('lodRunes');
         } else {
           expect(tpt.category, `ESR runeword ${rw.name} v${String(rw.variant)} has LoD tier points`).not.toBe('lodRunes');

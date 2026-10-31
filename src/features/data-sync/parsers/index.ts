@@ -5,7 +5,7 @@ export { parseKanjiRunesHtml } from './kanjiRunesParser';
 export { parseCrystalsHtml } from './crystalsParser';
 export {
   parseRunewordsHtml,
-  calculateSortKey,
+  isLodRuneword,
   type RunePointsLookup,
   type RunePointInfo,
   type RuneReqLevelLookup,

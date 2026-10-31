@@ -227,7 +227,7 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     }
     console.log('[HTML] Built rune reqLevel lookup with', runeReqLevelLookup.size, 'entries');
 
-    // Build rune priority lookup for runeword sortKey calculation.
+    // Build rune priority lookup for the runeword LoD flag (isLod).
     // Priority: ESR (100-700 by tier) → Kanji (800) → LoD (901-933 by order)
     // Stores both plain keys and category-prefixed keys so shared runes (e.g. Ko)
     // can be resolved correctly when determining if a runeword is LoD or ESR.

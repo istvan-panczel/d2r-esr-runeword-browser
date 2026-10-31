@@ -219,6 +219,17 @@ export function buildRuneBonusMap(esrRunes: Iterable<EsrRune>, lodRunes: Iterabl
 }
 
 /**
+ * Screen order of the runewords list: one list for ESR, Kanji and LoD by required level, ties by name
+ * A→Z (case-insensitive, so the source's lowercase "hand of Justice" sorts under H), then variant.
+ */
+export function compareRunewordsByLevel(
+  a: Pick<Runeword, 'reqLevel' | 'name' | 'variant'>,
+  b: Pick<Runeword, 'reqLevel' | 'name' | 'variant'>
+): number {
+  return a.reqLevel - b.reqLevel || a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) || a.variant - b.variant;
+}
+
+/**
  * Expands runewords with differing column bonuses into separate entries per item category.
  * E.g., Machine (Weapon, Charm) with different bonuses → two entries: Machine (Weapon) and Machine (Charm).
  * Only splits when runeword bonuses differ; rune bonuses naturally differ per item type.

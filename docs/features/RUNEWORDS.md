@@ -9,6 +9,14 @@ The primary feature - browse and filter all Eastern Sun Resurrected runewords.
 - See runeword bonuses (per-column: weapon/helm/armor) AND rune contributions
 - Share filtered views via URL
 
+## List Order
+
+One list for ESR, Kanji and LoD runewords: ascending required level, ties by name A→Z
+(case-insensitive, regardless of ESR/Kanji/LoD), then variant. There is no sort control.
+The order comes from `compareRunewordsByLevel` (`utils/filteringHelpers.ts`), applied in the
+hook's query (`queryRunewordsInDisplayOrder`) rather than by a Dexie index, because IndexedDB
+compares names by code unit (the source's lowercase "hand of Justice" would land after "Pride").
+
 ## Filters
 
 ### Text Search
@@ -81,7 +89,8 @@ interface Runeword {
   readonly sockets: number; // Base/minimum socket count (= ingredients + required jewels)
   readonly socketsMax?: number; // Only set when the source shows a range, e.g. "(2-3 Socket)"
   readonly reqLevel: number; // Highest required level among all runes and gems
-  readonly sortKey: number; // Pre-calculated sort key
+  readonly sortKey: number; // = reqLevel (old cached rows: LoD = 10000 + reqLevel)
+  readonly isLod: boolean; // Has a LoD-exclusive rune
   readonly runes: readonly string[]; // Rune names in order
   readonly gems: readonly string[]; // Gem names (e.g. ["Perfect Topaz"])
   readonly ingredients: readonly string[]; // All items in original order (runes + gems interleaved)
@@ -100,7 +109,13 @@ interface Runeword {
 - **gems**: Runewords can require gems in addition to runes (added in v1.4.0)
 - **ingredients**: The original order of runes + gems interleaved in the recipe
 - **columnAffixes**: Per-column bonuses displayed as split cards (weapon/helm/armor)
-- **sortKey**: Pre-calculated for sorting: ESR/Kanji (0-9999) or LoD (10000+) combined with reqLevel
+- **sortKey**: `= reqLevel` for every runeword (same as gemwords). Up to v1.44.0 LoD runewords
+  stored `10000 + reqLevel` so they sorted after ESR/Kanji; the list now sorts by `reqLevel`, so
+  rows still cached in that format sort the same way.
+- **isLod**: `true` when the recipe has a LoD-exclusive rune (`isLodRuneword` in the parser). Shared
+  runes like Ko (in both ESR and LoD) do not count on their own. Picks which rune variant the card
+  shows (badges, rune bonuses) and the tier-point category. Old cached rows lack it; the card then
+  reads it from the legacy sort key (`runewordIsLod`).
 - **jewelInfo**: e.g. "(0-3) Jewels" — recipes that accept optional jewels on top of their runes.
   Since ESR 3.2 the source also lists each socket count of such a recipe as its own row with plain
   "Jewel" lines; those rows get e.g. "(2) Jewels" and `sockets` = runes + gems + jewels.
@@ -136,7 +151,7 @@ interface RunewordsState {
 
 ## Hooks
 
-- `useFilteredRunewords()` - Applies all filters (search, sockets, req level, item types, runes, tier points)
+- `useFilteredRunewords()` - Applies all filters (search, sockets, req level, item types, runes, tier points) to the list in screen order (see [List Order](#list-order))
 - `useRuneGroups()` - Groups runes by category/tier for the filter UI
 - `useSocketableLookup()` (`src/core/hooks/useSocketableLookup.ts`) - Rune/gem lookup (built by `src/core/utils/socketableLookup.ts`) used for badges, tooltips and bonuses; `RunewordsScreen` loads it once (`useSocketableLookupQuery`) and provides it via `SocketableLookupContext`
 - `useAvailableItemTypes()` - Lists valid item types from DB (thin wrapper over `src/core/hooks/useAvailableItemTypes.ts`)
