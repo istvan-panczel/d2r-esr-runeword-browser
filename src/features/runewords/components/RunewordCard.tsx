@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { RuneBadge } from './RuneBadge';
 import { GemBadge } from '@/core/components/GemBadge';
 import { RunewordPointsDisplay } from './RunewordPointsDisplay';
+import { RunewordSocketRow } from './RunewordSocketRow';
 import { FavoriteButton } from '@/core/components/FavoriteButton';
 import { SocketableLookupScope } from '@/core/components/SocketableLookupScope';
 import { useSocketableLookup } from '@/core/hooks/useSocketableLookup';
@@ -98,16 +99,21 @@ function RunewordCardContent({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Ingredient sequence (runes + gems in original order) */}
-        <div className="flex flex-wrap gap-1">
-          {ingredientsList.map((item, index) =>
-            isGemName(item) ? (
-              <GemBadge key={`${item}-${String(index)}`} gemName={item} />
-            ) : (
-              <RuneBadge key={`${item}-${String(index)}`} runeName={item} isLod={isLod} />
-            )
-          )}
-          {jewelInfo && <Badge variant="outline">{jewelInfo}</Badge>}
+        <div className="space-y-1.5">
+          {/* Sockets with the ingredient icons, then the required and optional jewel sockets */}
+          <RunewordSocketRow runeword={runeword} isLod={isLod} />
+
+          {/* Ingredient sequence (runes + gems in original order) */}
+          <div className="flex flex-wrap gap-1">
+            {ingredientsList.map((item, index) =>
+              isGemName(item) ? (
+                <GemBadge key={`${item}-${String(index)}`} gemName={item} />
+              ) : (
+                <RuneBadge key={`${item}-${String(index)}`} runeName={item} isLod={isLod} />
+              )
+            )}
+            {jewelInfo && <Badge variant="outline">{jewelInfo}</Badge>}
+          </div>
         </div>
 
         {/* Tier point totals - check with 'in' for backwards compatibility with old cached data */}

@@ -51,7 +51,7 @@ compares names by code unit (the source's lowercase "hand of Justice" would land
 ### Rune Checkbox Filter
 
 - All runes (ESR, LoD, Kanji) in a tiered list
-- Rune names displayed with colors
+- Rune names displayed with colors (no icons; those are on the cards' socket row)
 - **3-way tier checkbox**: all selected / some selected / none selected
 - **Group toggle** (`toggleRuneGroup`): select/deselect all runes in a tier
 - **Global "All" toggle**: select/deselect all runes
@@ -127,7 +127,23 @@ interface Runeword {
 
 - Runeword name with socket count badge
 - Item count displayed in page title
-- Rune and gem sequence (with tooltips for hover info)
+- **Socket row** (`RunewordSocketRow`, above the badges; on every `RunewordCard`, so also on the runeword cards the
+  Builds and Guide pages embed): one round dark socket per socket of the item (36 px, the row adds about 42 px to the
+  card), from `buildSocketSlots(runeword)` (`utils/socketSlots.ts`):
+  - the ingredients in recipe order (runes and gems interleaved) with their 30 px HD icon (`ItemIcon`); runes through
+    `runeIconRef` (the rune as `resolveRune` picks it for the card's `isLod`, so Ko gets the LoD art in a LoD
+    runeword); a click / tap opens the same popover as the badge (`RuneTooltip` / `GemTooltip`), `aria-label` = name,
+    no hover `title` (details come from the popover only, like the badges)
+  - then the required jewel sockets (empty, with the filled sockets' ring), then the optional ones (dimmed, dashed
+    outline), so the row is as long as the (maximum) socket count. No jewel art yet (plain jewels use the itemtypes
+    InvGfx invjw1–6, which the icon extraction does not cover). Counts come from the numbers, not the `jewelInfo`
+    text: required = `sockets − ingredients`, optional = `socketsMax − sockets` (Moonlight `3-6`: 3 runes + 3
+    optional; its `4 Socket` row: 3 runes + 1 required). The fixture test checks every runeword gets
+    `socketsMax ?? sockets` slots and that the counts agree with every `jewelInfo` text
+  - jewel sockets are not interactive (`role="img"`, `aria-label` "Jewel socket" / "Optional jewel socket"); while
+    icons.json loads (`useItemIcons`, one shared load) and for a missing icon a socket stays an empty circle of the
+    same size
+- Rune and gem badge sequence (tier / gem coloured, with tooltips), plus the jewel info badge
 - Allowed item types
 - **Per-column bonuses** (split card layout): Shows bonuses specific to weapon/helm/armor columns
 - Tier point totals per category
@@ -168,6 +184,7 @@ src/features/runewords/
 │   ├── RuneTooltip.tsx          # Rune hover tooltip
 │   ├── RunewordCard.tsx         # Main runeword card display
 │   ├── RunewordFilters.tsx      # All filter controls
+│   ├── RunewordSocketRow.tsx    # Socket row with rune / gem icons and jewel sockets
 │   ├── RunewordPointsDisplay.tsx # Tier point totals display
 │   └── TierPointsFilter.tsx     # Tier points filter controls
 ├── constants/
@@ -185,7 +202,8 @@ src/features/runewords/
 ├── types/
 │   └── index.ts
 └── utils/
-    └── filteringHelpers.ts
+    ├── filteringHelpers.ts
+    └── socketSlots.ts           # buildSocketSlots, runeIconRef
 ```
 
 Shared with gemwords (in `src/core/`): `components/RecipeCommonFilters.tsx` (search, sockets, req level, item types via `ItemTypeFilter.tsx`), `components/RecipeBonuses.tsx`, `components/GemBadge.tsx` / `GemTooltip.tsx`, `constants/itemTypeCategories.ts`, `utils/itemCategoryMapping.ts`, `utils/columnAffixes.ts`.
