@@ -4,9 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { EvaluationResult, RuleTrace as RuleTraceEntry } from '../../engine/evaluate';
+import { effectiveActions } from '../../engine/actions';
 import type { LootFilter } from '../../engine/types';
 import type { LootFilterLookup } from '../../utils/lookup';
 import { ruleSummary } from '../../utils/ruleSummary';
+import { readsExceptions } from '../../utils/statChecks';
 
 const OUTCOMES: Readonly<Record<RuleTraceEntry['outcome'], { readonly label: string; readonly className: string }>> = {
   applied: { label: 'applied', className: 'border-emerald-600/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' },
@@ -68,7 +70,7 @@ export function RuleTrace({ filter, result, lookup, onShowRule }: RuleTraceProps
           {shown.map((entry) => {
             const rule = filter.rules.at(entry.index);
             const outcome = OUTCOMES[entry.outcome];
-            const summary = rule === undefined ? '' : ruleSummary(rule, lookup);
+            const summary = rule === undefined ? '' : ruleSummary(rule, lookup, readsExceptions(effectiveActions(rule, filter)));
             return (
               <li key={entry.index}>
                 <button

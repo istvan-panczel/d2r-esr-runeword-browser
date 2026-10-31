@@ -10,6 +10,7 @@ import type { Diagnostic, LootFilter, LootFilterRule, RuleActions } from '../../
 import type { LootFilterData } from '../../hooks/useLootFilterData';
 import { patchRule, setRuleDisabled } from '../../store/lootFilterSlice';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, QUALITY_SCALE } from '../../utils/matchValues';
+import { readsExceptions } from '../../utils/statChecks';
 import type { ShallowPatch } from '../../utils/patch';
 import { ActionsEditor } from '../actions/ActionsEditor';
 import { AreaPicker, ItemPicker, ItemTypePicker, UniqueOrSetPicker } from '../pickers';
@@ -162,7 +163,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   const dispatch = useDispatch();
   const patch = (value: ShallowPatch<LootFilterRule>) => dispatch(patchRule({ index, patch: value }));
   const passthroughKeys = Object.keys(rule.passthrough ?? {});
-  const hides = effectiveActions(rule, filter).hide === true;
+  const actions = effectiveActions(rule, filter);
+  const hides = actions.hide === true;
   const invalid = (key: string) => passthroughKeys.includes(key);
 
   const listField = (field: ListField) => (
@@ -297,7 +299,13 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
                 hint="The hide skips items with these stats. Each one is written as its opposite check (≥ 1 becomes < 1): “any of these” into Item stats, all of; “all of these” into Item stats, any of. A range (between) has no single opposite, so it cannot be an exception."
                 className="sm:col-span-2"
               >
-                <ExceptionsControl id={fieldId('exceptions')} data={data} rule={rule} onChange={(key, value) => patch({ [key]: value })} />
+                <ExceptionsControl
+                  id={fieldId('exceptions')}
+                  data={data}
+                  rule={rule}
+                  keepsItems={readsExceptions(actions)}
+                  onChange={(key, value) => patch({ [key]: value })}
+                />
               </ConditionField>
             )}
             {STAT_FIELDS.map((field) => (

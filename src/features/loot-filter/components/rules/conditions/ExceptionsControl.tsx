@@ -17,6 +17,8 @@ interface ExceptionsControlProps {
   readonly id: string;
   readonly data: LootFilterData;
   readonly rule: StatLists;
+  /** `readsExceptions` of the rule's effective actions: false with `hideIfOtherConditionsFail`, which keeps nothing. */
+  readonly keepsItems: boolean;
   /** The changed list (`itemStats` or `itemStatsAnyOf`); an emptied list is `undefined`. */
   readonly onChange: (key: keyof StatLists, value: readonly StatCheck[] | undefined) => void;
 }
@@ -27,7 +29,7 @@ interface ExceptionsControlProps {
  * `itemStatsAnyOf` (keep only items with all of them), where it is edited like any other check. The line below reads
  * the exceptions back from the `<`, `<=` and `!=` checks of those lists (`ruleExceptions`).
  */
-export function ExceptionsControl({ id, data, rule, onChange }: ExceptionsControlProps) {
+export function ExceptionsControl({ id, data, rule, keepsItems, onChange }: ExceptionsControlProps) {
   const [mode, setMode] = useState<ExceptionMode>('any');
   const target = EXCEPTION_LIST[mode];
   const exceptions = ruleExceptions(rule);
@@ -59,12 +61,20 @@ export function ExceptionsControl({ id, data, rule, onChange }: ExceptionsContro
           }}
         />
       </div>
-      <p className="text-xs text-muted-foreground">
-        {kept.length === 0 ? 'No exceptions: every item the rule matches is hidden.' : `Kept: ${kept.join('; or ')}.`}
-      </p>
-      {mode === 'all' && exceptions.mixedAll && (
+      {keepsItems ? (
+        <p className="text-xs text-muted-foreground">
+          {kept.length === 0 ? 'No exceptions: every item the rule matches is hidden.' : `Kept: ${kept.join('; or ')}.`}
+        </p>
+      ) : (
         <p className="text-xs text-amber-700 dark:text-amber-400">
-          Item stats, any of already has other checks: an exception added there only keeps items that also fail those.
+          With “hide if other conditions fail” these exceptions keep nothing: items without the stat fail the rule and are hidden anyway.
+          Turn it off to use exceptions.
+        </p>
+      )}
+      {exceptions.mixedAll && (
+        <p className="text-xs text-amber-700 dark:text-amber-400">
+          Item stats, any of mixes exceptions with other checks, so its exceptions are not listed above: an exception there only keeps items
+          that also fail those checks.
         </p>
       )}
     </div>

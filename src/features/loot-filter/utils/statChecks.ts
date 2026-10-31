@@ -1,5 +1,5 @@
 /** Helpers for the rule editor's stat check rows (`itemStats`, `itemStatsAnyOf`, `playerStats`, `playerStatsAnyOf`). */
-import type { LootFilterRule, StatCheck, StatOp } from '../engine/types';
+import type { LootFilterRule, RuleActions, StatCheck, StatOp } from '../engine/types';
 import type { LootFilterLookup } from './lookup';
 
 export const DEFAULT_STAT_OP: StatOp = '>=';
@@ -66,6 +66,15 @@ export function invertStatCheck(check: StatCheck): StatCheck | undefined {
   const op = check.op ?? DEFAULT_STAT_OP;
   if (op === 'between' || typeof check.value !== 'number') return undefined;
   return { ...check, op: INVERTED_OPS[op] };
+}
+
+/**
+ * Whether a rule's `<`, `<=` and `!=` item stat checks read as exceptions, from its effective actions (style
+ * included): it hides, and not with `hideIfOtherConditionsFail`, which hides an item failing the check through the
+ * gate anyway, so an exception there keeps nothing.
+ */
+export function readsExceptions(actions: Pick<RuleActions, 'hide' | 'hideIfOtherConditionsFail'>): boolean {
+  return actions.hide === true && actions.hideIfOtherConditionsFail !== true;
 }
 
 /** The ops an exception is written with: the opposites of `>=`, `>` and `==`. */

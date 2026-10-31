@@ -271,9 +271,13 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   "Keep items with all of these" → `itemStatsAnyOf` (one failing exception hides it). "Add exception" (a stat picker)
   appends `{ stat, op: "<", value: 1 }`; "Browse affixes for exceptions…" opens the affix browser in its inverted
   mode on the same list. The checks are then edited in the lists like any other (set the value there). Below, a
-  "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." line reads the exceptions back (`ruleExceptions`); in
-  the all-of mode a note warns when `itemStatsAnyOf` also holds plain checks (an exception there then only keeps items
-  that also fail them). The item stat lists' hints add "On a hide rule, the <, <= and != checks are its exceptions".
+  "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." line reads the exceptions back (`ruleExceptions`). An
+  amber note (in either mode) says when `itemStatsAnyOf` mixes exceptions with plain checks: its exceptions are then
+  left out of the "Kept" line, and one there only keeps items that also fail the plain checks. When the effective
+  actions also have `hideIfOtherConditionsFail`, exceptions keep nothing (an item without the stat fails the rule
+  and the gate hides it), so the "Kept" line gives way to an amber note ("With "hide if other conditions fail" these
+  exceptions keep nothing … Turn it off to use exceptions."); `readsExceptions(actions)` in `utils/statChecks.ts`
+  decides, for the control and the rule summary. The item stat lists' hints add "On a hide rule, the <, <= and != checks are its exceptions".
   - _Why no list of its own_: the file stores only plain checks, and on a hide rule every check of `itemStats` is
     exactly "except items with its opposite", so an exception list that took the checks out of `itemStats` would
     either show the user's `item_numsockets >= 1` ("hide socketed items") as "except item_numsockets < 1" or guess
@@ -281,8 +285,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
     truth, nothing reordered), and only the `<`, `<=` and `!=` ops, the ones the control writes from `>=`, `>` and
     `==`, are read back as exceptions (`exceptionOf`), in the "Kept:" line and in the rule summary (`ruleSummary`: a
     hide rule's `item_demondamage_percent < 1` reads "unless item_demondamage_percent ≥1"; several in `itemStats`
-    join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed `itemStatsAnyOf` stays "any of …"). The
-    summary looks at the rule's own `hide`, the control at the effective one (a style can hide).
+    join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed `itemStatsAnyOf` stays "any of …"). Both the
+    summary and the control use the effective actions (a style can hide): the Rules tab and the Test tab's trace pass
+    `readsExceptions(effectiveActions(rule, filter))` to `ruleSummary`, whose default reads the rule's own actions.
 - **Pickers** (`components/pickers/index.ts`): `MultiPicker` / `SinglePicker` (Popover + cmdk with our own filter,
   `utils/pickerSearch.ts`: every term in name or code/id, exact and prefix matches first, at most 200 shown with "type
   to narrow"; Enter picks the highlighted option; the "Add code …" entry for typed values comes last) and the wrappers

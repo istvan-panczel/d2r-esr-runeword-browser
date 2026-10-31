@@ -3,7 +3,7 @@ import type { FilterText, ItemLocation, LootFilterRule, StatCheck } from '../eng
 import { resolveText, splitColorRuns } from '../engine/text';
 import type { LootFilterLookup } from './lookup';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, formatNamedMatch, formatNumberMatch, QUALITY_SCALE } from './matchValues';
-import { exceptionOf, formatStatCheck, ruleExceptions } from './statChecks';
+import { exceptionOf, formatStatCheck, readsExceptions, ruleExceptions } from './statChecks';
 
 /** How many names a list shows before "+N". */
 const LIST_PREVIEW = 2;
@@ -49,14 +49,14 @@ function unlessPart(exceptions: readonly StatCheck[], joiner: string, lookup: Lo
  * The item stat parts. On a hide rule a `<`, `<=` or `!=` check reads as an exception (`X < 1` → "unless X ≥1"): in
  * `itemStats` one is enough to keep the item, in `itemStatsAnyOf` (when every check there is one) all are needed.
  */
-function itemStatParts(rule: LootFilterRule, lookup: LootFilterLookup): (string | undefined)[] {
-  if (rule.hide !== true) return [statPart('', rule.itemStats, lookup), statPart('any of ', rule.itemStatsAnyOf, lookup)];
-  const exceptions = ruleExceptions(rule);
+function itemStatParts(rule: LootFilterRule, lookup: LootFilterLookup, exceptions: boolean): (string | undefined)[] {
+  if (!exceptions) return [statPart('', rule.itemStats, lookup), statPart('any of ', rule.itemStatsAnyOf, lookup)];
+  const found = ruleExceptions(rule);
   const plain = (rule.itemStats ?? []).filter((check) => exceptionOf(check) === undefined);
   return [
     statPart('', plain, lookup),
-    unlessPart(exceptions.any, ' or ', lookup),
-    exceptions.all.length > 0 ? unlessPart(exceptions.all, ' and ', lookup) : statPart('any of ', rule.itemStatsAnyOf, lookup),
+    unlessPart(found.any, ' or ', lookup),
+    found.all.length > 0 ? unlessPart(found.all, ' and ', lookup) : statPart('any of ', rule.itemStatsAnyOf, lookup),
   ];
 }
 
@@ -64,8 +64,12 @@ function count(n: number, one: string, many: string): string {
   return `${String(n)} ${n === 1 ? one : many}`;
 }
 
-/** The rule's conditions in a few words: items, types, uniques, then quality, tier, sockets…; `any item` without any. */
-export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLookup): string {
+/**
+ * The rule's conditions in a few words: items, types, uniques, then quality, tier, sockets…; `any item` without any.
+ * `exceptions`: whether a `<`, `<=` or `!=` item stat check reads as "unless …" (`readsExceptions` of the rule's
+ * effective actions; callers with the filter pass it so a style's `hide` counts, the default looks at the rule's own).
+ */
+export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLookup, exceptions = readsExceptions(rule)): string {
   const itemName = (code: string) => lookup.itemName(code) ?? code;
   const typeName = (code: string) => lookup.typeName(code) ?? code;
   const uniqueName = (id: number) => lookup.uniqueOrSetName(id) ?? `#${String(id)}`;
@@ -87,7 +91,7 @@ export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLoo
     rule.itemLevel === undefined ? undefined : `ilvl ${formatNumberMatch(rule.itemLevel)}`,
     rule.sockets === undefined ? undefined : `${formatNumberMatch(rule.sockets)} sockets`,
     rule.maxSockets === undefined ? undefined : `${formatNumberMatch(rule.maxSockets)} max sockets`,
-    ...itemStatParts(rule, lookup),
+    ...itemStatParts(rule, lookup, exceptions),
     statPart('character ', rule.playerStats, lookup),
     statPart('character any of ', rule.playerStatsAnyOf, lookup),
     rule.difficulty === undefined ? undefined : formatNamedMatch(rule.difficulty, DIFFICULTY_SCALE),
@@ -121,9 +125,9 @@ export function ruleActionHint(rule: LootFilterRule): string | undefined {
 }
 
 /** `Zod Rune, Cham Rune +2 · unique · 3 sockets · → style Mythical` */
-export function ruleSummary(rule: LootFilterRule, lookup: LootFilterLookup): string {
+export function ruleSummary(rule: LootFilterRule, lookup: LootFilterLookup, exceptions = readsExceptions(rule)): string {
   const action = ruleActionHint(rule);
-  const conditions = ruleConditionSummary(rule, lookup);
+  const conditions = ruleConditionSummary(rule, lookup, exceptions);
   return action === undefined ? conditions : `${conditions} · ${action}`;
 }
 

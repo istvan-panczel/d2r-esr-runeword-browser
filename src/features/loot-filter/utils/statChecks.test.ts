@@ -4,6 +4,7 @@ import {
   invertStatCheck,
   newExceptionCheck,
   newStatCheck,
+  readsExceptions,
   ruleExceptions,
   parseStatInput,
   removeStatCheck,
@@ -106,5 +107,13 @@ describe('exceptions on hide rules', () => {
     });
     expect(ruleExceptions({ itemStatsAnyOf: [plain, newExceptionCheck('a')] })).toEqual({ any: [], all: [], mixedAll: true });
     expect(ruleExceptions({})).toEqual({ any: [], all: [], mixedAll: false });
+  });
+
+  it('reads exceptions only on rules that hide without "hide if other conditions fail"', () => {
+    expect(readsExceptions({ hide: true })).toBe(true);
+    expect(readsExceptions({ hide: true, hideIfOtherConditionsFail: false })).toBe(true);
+    expect(readsExceptions({ hide: true, hideIfOtherConditionsFail: true })).toBe(false);
+    expect(readsExceptions({ hideIfOtherConditionsFail: true })).toBe(false);
+    expect(readsExceptions({})).toBe(false);
   });
 });

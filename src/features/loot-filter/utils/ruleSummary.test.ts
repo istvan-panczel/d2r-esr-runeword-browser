@@ -70,6 +70,14 @@ describe('ruleSummary', () => {
       'any of item_demondamage_percent <1 +1 · hide'
     );
     expect(ruleSummary({ itemStats: [demon], namePrefix: 'x' }, TEST_LOOKUP)).toBe('item_demondamage_percent <1 · prefix “x”');
+    // With "hide if other conditions fail" an exception keeps nothing, so the check reads plainly.
+    expect(ruleSummary({ itemStats: [demon], hide: true, hideIfOtherConditionsFail: true }, TEST_LOOKUP)).toBe(
+      'item_demondamage_percent <1 · hide'
+    );
+    // A style that hides: the caller passes the effective reading.
+    expect(ruleSummary({ itemStats: [demon], useStyle: 'Hidden' }, TEST_LOOKUP, true)).toBe(
+      'unless item_demondamage_percent ≥1 · → style Hidden'
+    );
   });
 
   it('says "any item" for a rule without conditions', () => {

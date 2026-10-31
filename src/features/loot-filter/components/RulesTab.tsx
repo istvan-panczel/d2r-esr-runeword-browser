@@ -4,10 +4,12 @@ import { ListPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { effectiveActions } from '../engine/actions';
 import type { Diagnostic, DiagnosticSeverity, LootFilter } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
 import { addRule, duplicateRule, moveRule, removeRule, selectRule, setRuleDisabled } from '../store/lootFilterSlice';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
+import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
 import { RuleList, type RuleListEntry } from './rules/RuleList';
@@ -39,7 +41,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const all: RuleListEntry[] = filter.rules.map((rule, index) => ({
     index,
     rule,
-    summary: ruleSummary(rule, data.lookup),
+    summary: ruleSummary(rule, data.lookup, readsExceptions(effectiveActions(rule, filter))),
     severity: severities.get(index),
   }));
   const searching = query.trim() !== '';
