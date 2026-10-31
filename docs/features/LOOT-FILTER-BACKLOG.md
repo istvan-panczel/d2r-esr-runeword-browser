@@ -23,6 +23,21 @@ condition ("empty list: the game logs 'the list is empty'…", done) and the UI 
 Still open from round 2: the plugin's `tier` for rings, amulets, charms and jewels. `debug_log = true` prints
 `tier %d` per item in `d2rloader\logs\celestialrayone.loot-filter.log`.
 
+### Stat checks without param on layered stats
+
+The skill, skill tab, class, event and charged stats keep one entry per skill, tab or class (the param). Our evaluator
+reads a check without `param` as "any entry passes" (`OMITTED_PARAM = 'anyLayer'` in `engine/evaluate.ts`); the
+plugin may instead read only the param-0 entry (`'layerZero'`: for `item_addskill_tab` that is Amazon Bow and Crossbow
+Skills). The validator warns about every such check and the Test tab lists the assumption. Asked on Discord on
+2026-10-31 with a test: a rule with `namePrefix` `"{stat:188} / {stat:188,8}"` on an item with +skills to a non-zero
+tab shows what a missing param reads. When answered: set `OMITTED_PARAM`, update the "Verify in game" entry, and drop
+or reword the warning.
+
+Related: Sully's template (v0.6.3) checks stat 188 with params 1 to 21, the properties.txt tab numbers (`class × 3 +
+tab`), where the game stores `class << 3 | tab` (Assassin Martial Arts = 50, not 20), so 14 of those params name no
+tab and the others name a different one; the validator says so ("21 looks like the properties.txt tab number:
+Warlock Demon Skills is param 56"). Tell Sully once the in-game test confirms which numbering the plugin reads.
+
 ## Announced format changes to watch
 
 ### Stat formulas (announced 2026-10-26, not released)

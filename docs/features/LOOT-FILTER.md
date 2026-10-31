@@ -91,7 +91,9 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   The validator's reference holds Sets and Maps, so it stays out of Redux: `useLootFilterReference()` loads the `lootfilter` and
   `types` game-data bundles and passes the reference to the selector (module-level cache keeps its identity stable).
   Besides the known codes, types, stats, areas, sounds and unique/set ids it has `itemCodeTypes` (code → the union of
-  the ancestors of its `type` and `type2`) and `typeAncestors` (type → ancestors, itself included).
+  the ancestors of its `type` and `type2`), `typeAncestors` (type → ancestors, itself included), `statNamesById` (to
+  know a layered stat written by id) and `skillTabNames` (tab layer → "Assassin Martial Arts", from types.json
+  `classes`).
 - "Never matches" warnings (`engine/validate.ts`, per rule): no listed item code (of those the bundle knows) is of a
   listed item type; every item code, unique/set id or area is also in its except list; every listed item type falls
   under an excepted type, or every known listed code is of one; `uniqueOrSetIds` with a `quality` (one, list or range)
@@ -109,6 +111,20 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   an item (a jewel or charm rule), never for the character stat lists. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
+- Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
+  `STAT_LAYER_KINDS` in `game-data/engine/statLayers.ts`, see GAME-DATA.md "Stat layers"): an error for a `param` that
+  is not a whole number from 0 to 65535; warnings for a skill, skill tab, class, event or charged stat without
+  `param` (at `<list>/<n>`: "has one entry per skill tab; without "param" this check is taken to hold when any skill
+  tab passes (not verified in game: the plugin may read only param 0)", worded from `OMITTED_PARAM`; it also fires
+  for a hide rule's exceptions, and for an exception that is not the opposite of a presence check (`< 3`, `!= 2`) it
+  adds that an exception without param is not the opposite check when the item has several entries: one entry that
+  fails it hides the item), a tab param that names no tab (`class << 3 | tab`, tab 0 to 2; a param up to 23 is named
+  as a properties.txt tab number: "21 looks like the properties.txt tab number: Warlock Demon Skills is param 56"), an
+  event or charged param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a
+  presence check (`>= 1`, `> 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is
+  `max charges << 8 | charges left`, 5/5 = 1285). Sully's template (v0.6.3) gets 42 of these against the ESR 3.2.24
+  data: its +3/4/5 skill tab rules check stat 188 without param and with params 1 to 21, the properties.txt tab
+  numbers, 14 of which name no layer (see the backlog).
 
 ### Disabled rules (`disabledRules`)
 
@@ -209,7 +225,7 @@ tab's item form (not saved).
 | Styles   | Style list (name, action count, "used by N rules"), Add style, rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor. Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | JSON     | The serialized file in a textarea: Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Only the `//` comment lines at the top of the file are kept: comments between rules are not shown here (the text is the serialized model) and are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules). |
-| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 Settings changes dispatch the slice reducers directly; the only local state is what a half-typed number needs
 (`NumberInput`: a text input with a numeric keyboard that commits only valid numbers, so "-" or "1." is kept as typed
@@ -224,7 +240,8 @@ Two panes from `lg` up (list left, sticky; editor right), stacked below (list ca
 rule scrolls the editor into view).
 
 - **Toolbar**: search box (every term must appear in `ruleSearchText`: summary, codes and their names, types, unique/set
-  and area names, stat names, comment, style, name changes and chat lines), **Add rule** (an empty rule after the
+  and area names, stat names and the names of their params (skill, tab, class), comment, style, name changes and chat
+  lines), **Add rule** (an empty rule after the
   selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
   The search text includes `disabled` for a disabled rule, so searching "disabled" lists them.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
@@ -255,8 +272,8 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   "+N more"); named matches (`quality`, `baseTier`, `difficulty`): any / one / several / range, picks stored as names,
   file numbers kept until that part changes (`utils/matchValues.ts`); number matches (`itemLevel`, `sockets`,
   `maxSockets`): any / exactly / list (`1, 2, 3`) / range (min only or max only allowed); flags any / yes / no; stat
-  check rows: stat picker, optional param, op (`>=` for new rows), value, two values for `between`
-  (`utils/statChecks.ts`). The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
+  check rows: stat picker, param, op (`>=` for new rows), value, two values for `between`
+  (`utils/statChecks.ts`); the param is described under "Stat params" below. The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
   `itemStatsAnyOf`: the item on the ground) and "Character stats, all of" / "Character stats, any of" (`playerStats`,
   `playerStatsAnyOf`: your character, not the item), because users mistook "Item stats, any of" for the player list;
   the rule summary prefixes character checks with `character` (`character any of strength <10`), the Test tab says
@@ -271,8 +288,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   `>=`↔`<`, `>`↔`<=`, `==`↔`!=`; `between` has no single opposite, which the hint says) into an item stat list:
   "Keep items with any of these" → `itemStats` (every check must hold to hide, so one exception keeps the item),
   "Keep items with all of these" → `itemStatsAnyOf` (one failing exception hides it). "Add exception" (a stat picker)
-  appends `{ stat, op: "<", value: 1 }`; "Browse affixes for exceptions…" opens the affix browser in its inverted
-  mode on the same list. The checks are then edited in the lists like any other (set the value there). Below, a
+  appends `{ stat, op: "<", value: 1 }` (for a skill, tab or class stat the new row in that list then gets its param
+  from the row's param picker, and the validator warns while it has none); "Browse affixes for exceptions…" opens the
+  affix browser in its inverted mode on the same list. The checks are then edited in the lists like any other (set the value there). Below, a
   "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." line reads the exceptions back (`ruleExceptions`). An
   amber note (in either mode) says when `itemStatsAnyOf` mixes exceptions with plain checks: its exceptions are then
   left out of the "Kept" line, and one there only keeps items that also fail the plain checks. When the effective
@@ -290,6 +308,37 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
     join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed `itemStatsAnyOf` stays "any of …"). Both the
     summary and the control use the effective actions (a style can hide): the Rules tab and the Test tab's trace pass
     `readsExceptions(effectiveActions(rule, filter))` to `ruleSummary`, whose default reads the rule's own actions.
+- **Stat params** (`conditions/StatParamField.tsx`, `utils/statParams.ts`). The skill, skill tab, class, event and
+  charged stats keep one entry per skill, tab or class, told apart by `param` (encodings in
+  `game-data/engine/statLayers.ts`), so the param field picks it by name: a skill tab picker (24 tabs grouped by
+  class, value `class << 3 | tab`: "Martial Arts (Assassin)" = 50; the search also matches the class name and code),
+  a class picker (class id, ama 0 … war 7), a skill picker for `item_singleskill`, `item_nonclassskill` and
+  `item_aura` ("On items" first: the skills the game data puts on items for that stat, from lootfilter.json
+  `knownLayers`; then the class skills by class, then "Other skills"; detail `#id · class`; `item_singleskill` lists
+  class skills only), and for the event stats (chance to cast on hit, attack, kill, death, level up, getting hit,
+  casting, taking damage) and `item_charged_skill` a skill picker plus a level select (`skill << 6 | level`): the
+  levels the game data puts on items for that skill (the "On items" options list them: "#472 · Sorceress · lvl 15,
+  20, 30, 60"), "Other level…" (a 1–63 field), and "Any known level (N)", which replaces the row with one check per
+  known level (`anyKnownLevelChecks`, `replaceStatCheckWithMany`). Picking a skill keeps the level when the skill
+  has it (or has no known level), else takes its lowest known level, 1 without one. The triggers show the name and
+  the raw param muted; typed digits are taken as a raw param ("Use param 50", "Use skill id 1200"), and a param that
+  does not decode (level 0) stays a number field. Without the bundles the pickers take typed numbers only. Changing
+  a row's stat to one whose param means something else drops the param (`sameParamEncoding`; event and charged
+  share theirs). Charged rows say "Value = max charges × 256 + charges left (5/5 = 1285): ≥ 1 = has the charges, ≥
+  1280 = at least 5 max charges." (no charges control: decided against for now).
+  - _Any known level_: one check per level is "the skill at any of these levels" only for a `>=`, `>`, `==` or
+    `between` check in an any-of list, and for a `<`, `<=` or `!=` check (on a hide rule an exception: "none of the
+    levels") in an all-of list (`expandsAcrossLevels`); elsewhere the option is shown disabled with the reason ("only
+    in an any-of list; a rule has one any-of list" / "for a <, <= or != check only in an all-of list"). There is no
+    "move to the any-of list" button and no collapsed display of the expanded rows (kept simple).
+  - Names (`statParamLabel`, `LootFilterLookup.statParamLabel`): "Martial Arts (Assassin)", "Sorceress", "Fire
+    Ball", "Orb of Winter lvl 25"; a skill name that several skills share (23 in ESR 3.2.24, a class skill and its
+    item copy) carries the id ("Chain Lightning #124"). `formatStatCheck` uses them, so the rule summary, the
+    "unless" part and the Except control's "Kept:" line read `item_addskill_tab[Martial Arts (Assassin)] ≥1`; an
+    unknown or undecodable param stays a number.
+  - Data: everything comes from lootfilter.json (`stats`, `skills`, `knownLayers`) and types.json (`classes[].tabs`,
+    tab index = layer & 7); the loot filter never loads skills.json. `buildStatParamData` runs once per bundle pair
+    in `useLootFilterData` (`LootFilterData.params`); the skill option lists are cached per stat.
 - **Pickers** (`components/pickers/index.ts`): `MultiPicker` / `SinglePicker` (Popover + cmdk with our own filter,
   `utils/pickerSearch.ts`: every term in name or code/id, exact and prefix matches first, at most 200 shown with "type
   to narrow"; Enter picks the highlighted option; the "Add code …" entry for typed values comes last) and the wrappers
@@ -315,9 +364,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   also has a "Browse items…" button after "Add item" that opens the item browser below; `UniqueOrSetPicker` (unique or
   set items and their except list, not the Test tab's single unique/set picker) has a "Browse uniques and sets…"
   button that opens the unique and set browser.
-- **Data**: `useLootFilterData()` → `{ status, data, types, lookup, options }`; `lookup` (`utils/lookup.ts`) has `item`,
-  `itemName`, `itemType`, `typeName`, `statName`, `statId`, `areaName`, `uniqueOrSetName` (all `undefined` for unknown
-  keys or missing data); the lookup and option lists are built once per loaded bundle pair (module cache). An item
+- **Data**: `useLootFilterData()` → `{ status, data, types, lookup, options, params, reference }`; `lookup`
+  (`utils/lookup.ts`) has `item`, `itemName`, `itemType`, `typeName`, `statName`, `statId`, `statParamLabel`,
+  `areaName`, `uniqueOrSetName` (all `undefined` for unknown keys or missing data); the lookup and option lists are built once per loaded bundle pair (module cache). An item
   option's type search leaves out the `merc` type: ESR names that mercenary-equipment umbrella type "Helm" and makes it
   a parent of gloves, boots, belts and more, so `helm` would list them all.
 
@@ -450,13 +499,31 @@ focus returns to the button).
 - **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows (and a durability row, if one were
   listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats); should still
   work on jewels and charms."); see "Known plugin limits".
-- **Search**: every whitespace term must match the label, the stat name, an affix name, or (digits) the stat id.
+- **Search**: every whitespace term must match the label, the stat name, an affix name, a param name (below), or
+  (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its name or param
+  names and every term is there or in the row's label or stat name.
+- **Skill, tab and class params** (`Affix.layers` of affixes.json, named through `LootFilterData.params`): a layered
+  row (`layerKind`; the skill, skill tab, class, event and charged stats whose affixes name params) lists the union
+  of its affixes' params, and each affix names its own in brackets ("Apprentice's [Demon Skills (Warlock)]": ESR
+  reuses the Necromancer prefix names for the Warlock tabs; "of Bone Wave [lvl 15, 25, 35]" for an event affix named
+  after its skill, "Skillful [280 skills]" past three). Param names are part of the row's search, so "martial",
+  "demon" or "orb of winter" find Skill Tab Levels and the chance-to-cast rows. A ticked layered row shows its params
+  as toggle chips (`aria-pressed`): the ones the search names (`matchingParams`: like the affix emphasis, over the
+  param's name and the names of the affixes writing it) plus the picked ones, else all of them. Ticking a row
+  pre-ticks the params the search names, its only param, or none; where several picks would all be needed (the
+  all-of list, "keep items with all of these") only the first named one. A line under the chips says what is
+  picked ("This list needs every check, so an item needs all 2 of these" in those two modes). Apply waits ("Pick a
+  skill tab for Skill Tab Levels (or untick it).") while a ticked layered row has neither a picked param nor a check
+  without param (`rowsMissingParams`).
 - **Apply** (`applyAffixSelection`): the draft starts with the listed stats that already have a check in that list
   (by name or id, any value or param; `<`, `<=` and `!=` checks are exceptions, which only the inverted mode below
   owns, so the plain mode neither ticks nor removes them). Apply keeps checks on stats the dialog does not list and on stats still
   ticked (unchanged), removes checks on listed stats that were unticked, and appends `{ "stat": <name>, "op": ">=",
 "value": 1 }` (a presence check, by name as the stat picker writes it; the user sets the number afterwards) for each
   newly ticked stat in display order; an emptied list removes the key, and nothing is dispatched when nothing changes.
+  A layered row writes one check per picked param instead (`initialAffixParams` starts from the params already
+  checked): a check whose param was unpicked goes, a check without param stays, each newly picked param appends
+  `{ stat, op: ">=", value: 1, param }` (`< 1` in the inverted mode), by row then param.
 - **Any-of note**: opened from `itemStatsAnyOf`, the footer says "An item matches when ANY ticked stat is present; a
   hybrid affix gives all its stats, tick them in the all-of list to require both."
 - **Inverted mode** (`except-any` / `except-all`, from "Except items with…"): only the exception checks (`<`, `<=`,
@@ -529,7 +596,8 @@ tab switches; it is not saved.
   another item resets it), location,
   item level, sockets, max sockets, identified / ethereal / runeword / fully socketed, a unique or set item (picking one
   switches to its base and name, and sets the quality to unique or set unless the user chose a quality) and item stat
-  rows (stat, optional param, value; incomplete rows are ignored).
+  rows (stat, param, value; incomplete rows are ignored; the param is the rule rows' `StatParamField` without "Any
+  known level", and charged rows show the same value hint).
 - **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
   filter level (the filter's levels, default marked) and more character stat rows.
 - **Conversion** (`utils/testItemForm.ts`): `toTestItem(form, lookup)` (type ancestors from the `types` bundle via the
@@ -575,6 +643,13 @@ research doc and the Test tab's note link here.
 - `notify: true` prints the drop line unless the rule's effective actions (style included) have a `chatMessage`.
 - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
 - A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0.
+  For the layered stats (skill, skill tab, class, event, charged) the plugin may instead read only the param-0 entry;
+  the evaluator's `OMITTED_PARAM` switch (`'anyLayer'` now, `'layerZero'` the other reading, `checkedLayer`) changes
+  the evaluator, the validator's wording and the Test tab's assumption together. Asked on Discord 2026-10-31 (see the
+  backlog).
+- The stat params are the engine's layers (`class << 3 | tab` for `item_addskill_tab`, `skill << 6 | level` for the
+  event and charged stats, `game-data/engine/statLayers.ts`), as the game stores them on an item; that the plugin
+  compares `param` with exactly these is assumed (Sully's template writes properties.txt tab numbers instead).
 - **Verified in game (2026-10):** a missing stat compares as 0. A hide rule on magic items with
   `item_demondamage_percent < 1` hid every magic item without demon damage and kept those with it, so "Except items
   with…" (a `< 1` check) works.

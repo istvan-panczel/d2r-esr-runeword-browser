@@ -253,7 +253,8 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   `counts.lootFilterCouponUniques` holds the count. The loot-filter unique browser leaves these rows out.
 
 - `skills` (optional; `build/bundleLootFilterSkills.ts`): `{ id, name, cls? }` by id, for the skill pickers, so the
-  loot filter does not load skills.json. Every class tree skill (a class `charclass` and a skilldesc `SkillPage` 1-3,
+  loot filter does not load skills.json (it reads these, `knownLayers` and types.json `classes` through
+  `src/features/loot-filter/utils/statParams.ts`; see LOOT-FILTER.md "Stat params"). Every class tree skill (a class `charclass` and a skilldesc `SkillPage` 1-3,
   the 280 skills of skills.json) plus every skill a `knownLayers` param names; `id` = skills.txt row index (equal to
   the `*Id` column in ESR 3.2.24), `name` = skilldesc `str name` through the strings, else the `skill` column, `cls`
   only for class skills. ESR 3.2.24: 743 skills (463 without a class: item skills and procs; 23 names occur twice,
