@@ -203,7 +203,7 @@ tab's item form (not saved).
 | Styles   | Style list (name, action count, "used by N rules"), Add style, rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor. Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | JSON     | The serialized file in a textarea: Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Only the `//` comment lines at the top of the file are kept: comments between rules are not shown here (the text is the serialized model) and are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules). |
-| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, player level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 Settings changes dispatch the slice reducers directly; the only local state is what a half-typed number needs
 (`NumberInput`: a text input with a numeric keyboard that commits only valid numbers, so "-" or "1." is kept as typed
@@ -247,8 +247,12 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   file numbers kept until that part changes (`utils/matchValues.ts`); number matches (`itemLevel`, `sockets`,
   `maxSockets`): any / exactly / list (`1, 2, 3`) / range (min only or max only allowed); flags any / yes / no; stat
   check rows: stat picker, optional param, op (`>=` for new rows), value, two values for `between`
-  (`utils/statChecks.ts`); the two item stat lists (`itemStats`, `itemStatsAnyOf`) also have "Browse affixes…" after
-  "Add stat check" (the affix browser below), and a line under the Stats section says the game checks item stats, not
+  (`utils/statChecks.ts`). The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
+  `itemStatsAnyOf`: the item on the ground) and "Character stats, all of" / "Character stats, any of" (`playerStats`,
+  `playerStatsAnyOf`: your character, not the item), because users mistook "Item stats, any of" for the player list;
+  the rule summary prefixes character checks with `character` (`character any of strength <10`), the Test tab says
+  "Character level" and "More character stats". The two item stat lists also have "Browse affixes…" after "Add stat
+  check" (the affix browser below), and a line under the Stats section says the game checks item stats, not
   affix names; `location` checkboxes (none = on the ground); `activeInLevels`: "Every level" or a tick per
   filter level, unknown ids listed with a remove button. Unticking every level writes `activeInLevels: []` (the
   validator warns about the empty list); ticking "Every level" removes the key.
@@ -464,7 +468,7 @@ sound has no preview (it plays from the game files).
 
 Runs the engine's `evaluateFilter` against an item the user describes. Two columns from `lg` up (form left, result
 right, sticky), stacked below. The form is local state (`TestItemForm`, start value `defaultTestItem()`: no item, Rogue
-Encampment, normal difficulty, player level 1, the filter's default level), held by the editor screen so it survives
+Encampment, normal difficulty, character level 1, the filter's default level), held by the editor screen so it survives
 tab switches; it is not saved.
 
 - **Presets**: Zod rune on the ground (`r83`), Unique bow, 2 sockets (`m01`, unique), Gold pile 1500 (`gld` with
@@ -479,8 +483,8 @@ tab switches; it is not saved.
   item level, sockets, max sockets, identified / ethereal / runeword / fully socketed, a unique or set item (picking one
   switches to its base and name, and sets the quality to unique or set unless the user chose a quality) and item stat
   rows (stat, optional param, value; incomplete rows are ignored).
-- **Context**: difficulty, player level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
-  filter level (the filter's levels, default marked) and more player stat rows.
+- **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
+  filter level (the filter's levels, default marked) and more character stat rows.
 - **Conversion** (`utils/testItemForm.ts`): `toTestItem(form, lookup)` (type ancestors from the `types` bundle via the
   lookup, `typeAncestorsOf`: the union of the item type's ancestors and, while the type is the base's own, its `type2`'s;
   without the data only the typed type), `toTestContext(form, filter, lookup)` (stat ids by name from the lookup), `applyPreset`, `withItem`, `withUniqueOrSet`. The unique/set picker uses the option keys

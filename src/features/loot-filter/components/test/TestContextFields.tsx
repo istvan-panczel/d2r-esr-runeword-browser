@@ -49,7 +49,7 @@ export function TestContextFields({ data, filter, form, onChange }: TestContextF
             </SelectContent>
           </Select>
         </Field>
-        <Field id={`${ID}-player-level`} label="Player level (stat 12)" dense>
+        <Field id={`${ID}-player-level`} label="Character level (stat 12)" dense>
           <NumberInput
             id={`${ID}-player-level`}
             integer
@@ -115,7 +115,7 @@ export function TestContextFields({ data, filter, form, onChange }: TestContextF
       </Field>
 
       <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium">More player stats</span>
+        <span className="text-xs font-medium">More character stats</span>
         <StatRowsEditor
           data={data}
           idPrefix={`${ID}-player-stat`}
@@ -123,7 +123,7 @@ export function TestContextFields({ data, filter, form, onChange }: TestContextF
           onChange={(playerStats) => {
             update({ playerStats });
           }}
-          addLabel="Add player stat"
+          addLabel="Add character stat"
         />
       </div>
     </div>

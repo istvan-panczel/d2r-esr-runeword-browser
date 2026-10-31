@@ -64,8 +64,8 @@ export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLoo
     rule.maxSockets === undefined ? undefined : `${formatNumberMatch(rule.maxSockets)} max sockets`,
     statPart('', rule.itemStats, lookup),
     statPart('any of ', rule.itemStatsAnyOf, lookup),
-    statPart('player ', rule.playerStats, lookup),
-    statPart('player any of ', rule.playerStatsAnyOf, lookup),
+    statPart('character ', rule.playerStats, lookup),
+    statPart('character any of ', rule.playerStatsAnyOf, lookup),
     rule.difficulty === undefined ? undefined : formatNamedMatch(rule.difficulty, DIFFICULTY_SCALE),
     rule.areas && rule.areas.length > 0
       ? rule.areas.length <= LIST_PREVIEW

@@ -37,7 +37,7 @@ describe('ruleSummary', () => {
     } as const;
     expect(ruleSummary(rule, TEST_LOOKUP)).toBe(
       "Axe · Harlequin Crest / Civerb's Ward · not Hand Axe · elite tier · eth · unidentified · ilvl 85, 86 · item_numsockets ≥2 · " +
-        'player any of strength <10 +1 · ≥nightmare · in Rogue Encampment · not in 3 areas'
+        'character any of strength <10 +1 · ≥nightmare · in Rogue Encampment · not in 3 areas'
     );
   });
 

@@ -114,10 +114,22 @@ const NUMBER_FIELDS: readonly (FieldText & { readonly key: 'itemLevel' | 'socket
 ];
 
 const STAT_FIELDS: readonly (FieldText & { readonly key: 'itemStats' | 'itemStatsAnyOf' | 'playerStats' | 'playerStatsAnyOf' })[] = [
-  { key: 'itemStats', label: 'Item stats', hint: 'All of these hold for the item.' },
-  { key: 'itemStatsAnyOf', label: 'Item stats, any of', hint: 'At least one of these holds for the item.' },
-  { key: 'playerStats', label: 'Player stats', hint: 'All of these hold for your character (e.g. level).' },
-  { key: 'playerStatsAnyOf', label: 'Player stats, any of', hint: 'At least one of these holds for your character.' },
+  {
+    key: 'itemStats',
+    label: 'Item stats, all of',
+    hint: 'Every check must hold for the item on the ground (Enhanced Damage, Life Leech…).',
+  },
+  { key: 'itemStatsAnyOf', label: 'Item stats, any of', hint: 'At least one check must hold for the item on the ground.' },
+  {
+    key: 'playerStats',
+    label: 'Character stats, all of',
+    hint: 'Checks your character, not the item (character level, gold…). Every check must hold.',
+  },
+  {
+    key: 'playerStatsAnyOf',
+    label: 'Character stats, any of',
+    hint: 'Checks your character, not the item. At least one check must hold.',
+  },
 ];
 
 const FLAGS = [
