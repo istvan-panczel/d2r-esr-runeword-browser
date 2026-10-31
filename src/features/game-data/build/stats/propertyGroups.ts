@@ -36,7 +36,9 @@ export interface ResolvedMods {
 
 const MAX_DEPTH = 5;
 
-function entryParams(parMin: string, parMax: string): string[] {
+/** The params of a group entry: one per number of a numeric ParMin < ParMax range (`skilltab` 21-23), else ParMin */
+
+export function entryParams(parMin: string, parMax: string): string[] {
   if (/^\d+$/.test(parMin) && /^\d+$/.test(parMax) && Number(parMax) > Number(parMin)) {
     const params: string[] = [];
     for (let p = Number(parMin); p <= Number(parMax); p++) params.push(String(p));

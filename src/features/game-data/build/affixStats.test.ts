@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createAffixStatResolver, isTechnicalStat, labelFromDescription, propertyStats, statLabel } from './affixStats.ts';
+import { createPropertyLayerResolver } from './bundleLootFilterSkills.ts';
+import { createSkillLookup } from './stats/skills.ts';
 import { TEST_STRINGS, testStatIndex, testTables } from './stats/testContext.mock.ts';
 
 const { properties } = testTables();
@@ -85,5 +87,29 @@ describe('createAffixStatResolver', () => {
     ]);
     expect(resolver.listed().map((stat) => stat.name)).toEqual(['strength', 'energy', 'dexterity', 'vitality', 'item_aura']);
     expect(resolver.listed().find((stat) => stat.name === 'item_aura')?.label).toBe('Aura When Equipped');
+  });
+
+  it('lists the params of the layered stats it keeps, by stat then param, and none without a layer resolver', () => {
+    const tables = testTables();
+    const layers = createPropertyLayerResolver(properties, index, createSkillLookup(tables, TEST_STRINGS).skillId);
+    const resolver = createAffixStatResolver(properties, index, TEST_STRINGS, layers);
+    const id = (name: string) => index.get(name)?.id ?? -1;
+    const mods = [
+      { prop: 'oskill', param: 'Teleport', min: 1, max: 1 },
+      { prop: 'sor', param: null, min: 1, max: 1 },
+      { prop: 'skilltab', param: '4', min: 1, max: 1 },
+      { prop: 'oskill', param: 'Teleport', min: 2, max: 2 },
+      { prop: 'hit-skill', param: 'Fire Bolt', min: 5, max: 3 },
+      { prop: 'str', param: null, min: 5, max: 5 },
+    ];
+    expect(resolver.layersOf(mods)).toEqual(
+      [
+        { stat: id('item_nonclassskill'), param: 3 },
+        { stat: id('item_addclassskills'), param: 1 },
+        { stat: id('item_addskill_tab'), param: 9 },
+        { stat: id('item_skillonhit'), param: 2 * 64 + 3 },
+      ].sort((a, b) => a.stat - b.stat)
+    );
+    expect(createAffixStatResolver(properties, index, TEST_STRINGS).layersOf(mods)).toEqual([]);
   });
 });

@@ -13,8 +13,12 @@
  * 11 (skill on event), 12 (random skill), 14 (sockets), 15/16/17 (stat = min / max / param), 19 (charges),
  * 21 (class skills, param = class), 22/24 (stat with a param layer: auras, oskills). Any other func, or one of the
  * stat-less funcs above with a blank stat that is not listed, leaves the property unmapped (one warning per property).
+ *
+ * `layersOf` adds the params of the layered stats (skill tab, class, skill, event, charged) through the
+ * `createPropertyLayerResolver` of build/bundleLootFilterSkills.ts, for `Affix.layers`.
  */
-import type { AffixStat } from '../engine/schema.ts';
+import type { AffixStat, StatParam } from '../engine/schema.ts';
+import type { PropertyLayerResolver } from './bundleLootFilterSkills.ts';
 import type { PropertyDef } from './stats/tables.ts';
 import type { TsvTable } from './tsv.ts';
 
@@ -128,15 +132,38 @@ function disambiguate(stats: readonly AffixStat[]): AffixStat[] {
 export interface AffixStatResolver {
   /** The distinct non-technical stat ids the mods write, ascending. */
   statsOf(mods: readonly { readonly prop: string }[]): number[];
+  /** The params of the layered stats among `statsOf(mods)`, by stat then param (none without a layer resolver). */
+  layersOf(mods: readonly AffixLayerMod[]): StatParam[];
   /** Every stat `statsOf` returned so far, by id. */
   listed(): AffixStat[];
   warnings(): string[];
 }
 
+/** Distinct params, by stat then param */
+function sortedLayers(layers: readonly StatParam[]): StatParam[] {
+  const seen = new Set<string>();
+  return layers
+    .filter((layer) => {
+      const key = `${String(layer.stat)}:${String(layer.param)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => a.stat - b.stat || a.param - b.param);
+}
+
+export interface AffixLayerMod {
+  readonly prop: string;
+  readonly param: string | null;
+  readonly min: number;
+  readonly max: number;
+}
+
 export function createAffixStatResolver(
   properties: ReadonlyMap<string, PropertyDef>,
   index: StatIndex,
-  strings: ReadonlyMap<string, string>
+  strings: ReadonlyMap<string, string>,
+  layers?: PropertyLayerResolver
 ): AffixStatResolver {
   const warnings = new Set<string>();
   const byProp = new Map<string, number[]>();
@@ -166,8 +193,18 @@ export function createAffixStatResolver(
     return ids;
   };
 
+  const statsOf = (mods: readonly { readonly prop: string }[]) =>
+    [...new Set(mods.flatMap((mod) => resolveProp(mod.prop)))].sort((a, b) => a - b);
+  const layersOf = (mods: readonly AffixLayerMod[]): StatParam[] => {
+    if (layers === undefined) return [];
+    const ids = new Set(statsOf(mods));
+    const params = mods.flatMap((mod) => layers({ code: mod.prop, param: mod.param, min: mod.min, max: mod.max }).layers);
+    return sortedLayers(params.filter((layer) => ids.has(layer.stat)));
+  };
+
   return {
-    statsOf: (mods) => [...new Set(mods.flatMap((mod) => resolveProp(mod.prop)))].sort((a, b) => a - b),
+    statsOf,
+    layersOf,
     listed: () => disambiguate([...seen.values()].sort((a, b) => a.id - b.id)),
     warnings: () => [...warnings],
   };

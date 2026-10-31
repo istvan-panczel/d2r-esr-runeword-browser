@@ -24,6 +24,7 @@ import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
 import { buildCubeNames, modRendererFor, readCube, readCubeItem } from './cube/cubeRows.ts';
 import { buildLootFilterBundle } from './bundleLootFilter.ts';
+import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources } from './bundleLootFilterSkills.ts';
 import { buildRunewordsBundle } from './bundleRunewords.ts';
 import { buildSetsBundle } from './bundleSets.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
@@ -39,6 +40,7 @@ import type { ModsRenderer } from './bundleRunewords.ts';
 import type { EnhanceContext } from './bundleEnhance.ts';
 import type { PropertyDef } from './stats/tables.ts';
 import { createStatRenderer, readStatTables } from './stats/statRenderer.ts';
+import { createSkillLookup } from './stats/skills.ts';
 import { buildStringTable } from './strings.ts';
 import { parseTsv, type TsvTable } from './tsv.ts';
 
@@ -95,9 +97,14 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     ...readAffixes(table('magicsuffix'), 's'),
     ...readAffixes(table('automagic'), 'a'),
   ];
+  // Skill, tab and class params of the layered stats (affixes.json `layers`, lootfilter.json `knownLayers`)
+  const skillLookup = createSkillLookup(statTables, strings);
+  const statIndex = readStatIndex(rowTable('itemstatcost'));
+  const layers = createPropertyLayerResolver(statTables.properties, statIndex, (param) => skillLookup.skillId(param));
   const affixes = buildAffixesBundle(affixRows, types.bundle, strings, renderMods, {
     properties: statTables.properties,
-    stats: readStatIndex(rowTable('itemstatcost')),
+    stats: statIndex,
+    layers,
   });
   const basesBundle = attachAutomods(bases.bundle, affixes.bundle.affixes);
   const countAffixes = (kind: string) => affixes.bundle.affixes.filter((affix) => affix.kind === kind).length;
@@ -120,6 +127,34 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   );
   const countSources = (item: string) => sourceItems.bundle.items.filter((source) => source.item === item).length;
 
+  const lootFilterSkills = buildLootFilterSkills({
+    skills: table('skills'),
+    skilldesc: table('skilldesc'),
+    itemstatcost: rowTable('itemstatcost'),
+    lookup: skillLookup,
+    layers,
+    sources: [
+      ...affixes.bundle.affixes.map((affix) => ({
+        label: `affix ${affix.kind}${String(affix.id)}`,
+        mods: affix.mods.map((mod) => ({ code: mod.prop, param: mod.param, min: mod.min, max: mod.max })),
+      })),
+      ...readGrantSources({
+        uniqueitems: table('uniqueitems'),
+        setitems: table('setitems'),
+        runes: readRuneRecipes(table('runes')),
+        strings,
+        isRune: (code) => runeCodes.has(code),
+      }).map((source) => ({ label: `${source.kind} ${source.name}`, mods: [...source.mods, ...(source.partialMods ?? [])] })),
+      ...readCube(table('cubemain')).map((row) => ({
+        label: `cubemain line ${String(row.line)}`,
+        mods: row.outputs.flatMap((output) =>
+          output.mods.map((mod) => ({ code: mod.mod, param: mod.param === '' ? null : mod.param, min: mod.min, max: mod.max }))
+        ),
+      })),
+      ...propertyGroupSources(statTables.groups),
+    ],
+  });
+
   const lootfilter = buildLootFilterBundle(
     {
       weapons: table('weapons'),
@@ -134,7 +169,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       gems: table('gems'),
       cubemain: table('cubemain'),
     },
-    strings
+    strings,
+    lootFilterSkills.bundle
   );
 
   const enhance = buildEnhanceBundle(
@@ -297,6 +333,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       lootFilterUniques: lootfilter.bundle.uniques.length,
       lootFilterSets: lootfilter.bundle.sets.length,
       lootFilterCouponUniques: lootfilter.bundle.uniques.filter((unique) => unique.coupon === true).length,
+      lootFilterSkills: lootFilterSkills.bundle.skills.length,
+      lootFilterKnownLayers: lootFilterSkills.bundle.knownLayers.reduce((sum, entry) => sum + entry.layers.length, 0),
       enhanceCorruptionSlots: corruptionSlots.length,
       enhanceCorruptionOutcomes: corruptionOutcomes.length,
       enhanceAnointmentOutcomes: anointmentOutcomes.length - countPool('charm') - countPool('vessel'),
@@ -361,6 +399,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...affixes.warnings,
       ...sourceItems.warnings,
       ...lootfilter.warnings,
+      ...lootFilterSkills.warnings,
       ...enhance.warnings,
       ...cube.warnings,
       ...materials.warnings,

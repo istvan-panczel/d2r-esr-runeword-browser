@@ -1,5 +1,6 @@
 import { isClassCode, type Affix, type AffixesBundle, type ClassCode, type TypesBundle } from '../engine/schema.ts';
 import { createAffixStatResolver, type StatIndex } from './affixStats.ts';
+import type { PropertyLayerResolver } from './bundleLootFilterSkills.ts';
 import type { ModsRenderer } from './bundleRunewords.ts';
 import type { PropertyDef } from './stats/tables.ts';
 import type { AffixRow } from './model.ts';
@@ -17,6 +18,8 @@ export interface AffixesBuildResult {
 export interface AffixStatTables {
   properties: ReadonlyMap<string, PropertyDef>;
   stats: StatIndex;
+  /** Fills `Affix.layers`; without it no affix has layers */
+  layers?: PropertyLayerResolver;
 }
 
 /** automagic.txt uses "null" as the name of nameless automods; automods never show a name in game. */
@@ -35,7 +38,7 @@ export function buildAffixesBundle(
   statTables: AffixStatTables
 ): AffixesBuildResult {
   const warnings = new Set<string>();
-  const statResolver = createAffixStatResolver(statTables.properties, statTables.stats, strings);
+  const statResolver = createAffixStatResolver(statTables.properties, statTables.stats, strings, statTables.layers);
   const typeCodes = new Set(typesBundle.types.map((type) => type.code));
   const nextId = { p: 0, s: 0, a: 0 };
   const affixes: Affix[] = [];
@@ -69,6 +72,7 @@ export function buildAffixesBundle(
     }
 
     const mods = row.mods.map((mod) => ({ prop: mod.code, param: mod.param, min: mod.min, max: mod.max }));
+    const layers = statResolver.layersOf(mods);
     affixes.push({
       id,
       kind: row.kind,
@@ -86,6 +90,7 @@ export function buildAffixesBundle(
       etypes: row.etypes,
       mods,
       stats: statResolver.statsOf(mods),
+      ...(layers.length === 0 ? {} : { layers }),
       text: rendered.lines,
     });
   }

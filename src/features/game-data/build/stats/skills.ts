@@ -25,6 +25,8 @@ export interface ClassText {
 
 export interface SkillLookup {
   skill(param: string): SkillInfo | null;
+  /** skills.txt row index (= `*Id`) of a skill name or numeric id param; null when no row matches */
+  skillId(param: string): number | null;
   classText(index: number): ClassText | null;
   classIndex(code: string): number | null;
 }
@@ -45,12 +47,17 @@ export function createSkillLookup(tables: StatTables, strings: ReadonlyMap<strin
     if (!byLowerName.has(row.name.toLowerCase())) byLowerName.set(row.name.toLowerCase(), i);
   });
 
+  const skillId = (param: string): number | null => {
+    const index = /^\d+$/.test(param) ? Number(param) : (byName.get(param) ?? byLowerName.get(param.toLowerCase()));
+    return index !== undefined && index < tables.skills.length ? index : null;
+  };
+
   const cache = new Map<string, SkillInfo | null>();
   const skill = (param: string): SkillInfo | null => {
     const cached = cache.get(param);
     if (cached !== undefined) return cached;
-    const index = /^\d+$/.test(param) ? Number(param) : (byName.get(param) ?? byLowerName.get(param.toLowerCase()));
-    const row = index === undefined ? undefined : tables.skills.at(index);
+    const index = skillId(param);
+    const row = index === null ? undefined : tables.skills.at(index);
     let info: SkillInfo | null = null;
     if (row !== undefined) {
       const nameKey = tables.skillDescNames.get(row.skilldesc);
@@ -72,5 +79,5 @@ export function createSkillLookup(tables: StatTables, strings: ReadonlyMap<strin
     };
   };
 
-  return { skill, classText, classIndex: (code) => classByCode.get(code) ?? null };
+  return { skill, skillId, classText, classIndex: (code) => classByCode.get(code) ?? null };
 }

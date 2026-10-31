@@ -195,7 +195,18 @@ export interface Affix {
    * jewel flag, `_display` companions) are left out. Empty for an affix that writes none (e.g. only `ethereal`).
    */
   stats: number[];
+  /**
+   * The params of the layered `stats` (skill tab, class, skill, event and charged stats; see engine/statLayers.ts),
+   * by stat then param; omitted when none.
+   */
+  layers?: StatParam[];
   text: string[];
+}
+
+/** One param of a layered itemstatcost stat */
+export interface StatParam {
+  stat: number;
+  param: number;
 }
 
 export interface AffixMod {
@@ -298,6 +309,26 @@ export interface LootFilterDataBundle {
   sounds: string[];
   uniques: LootFilterUniqueOrSet[];
   sets: LootFilterUniqueOrSet[];
+  /** Skills for the skill pickers: every class tree skill plus every skill a `knownLayers` param names, by id */
+  skills?: LootFilterSkill[];
+  /** Params the game data puts on items, per layered stat (skill, event and charged stats; see engine/statLayers.ts) */
+  knownLayers?: LootFilterKnownLayers[];
+}
+
+export interface LootFilterSkill {
+  /** skills.txt row index (= `*Id`) */
+  id: number;
+  /** skilldesc `str name` through the strings, else the skills.txt `skill` column */
+  name: string;
+  /** Owning class; omitted for non-class skills */
+  cls?: ClassCode;
+}
+
+export interface LootFilterKnownLayers {
+  /** itemstatcost id */
+  stat: number;
+  /** Distinct params, ascending: the skill id (skill stats) or `skill << 6 | level` (event and charged stats) */
+  layers: number[];
 }
 
 /** Item quality qualifiers of cubemain inputs (`weap,uni`), in display order */

@@ -58,9 +58,9 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `types.json`        | 44 KB / 5 KB                                                                   |
 | `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB) |
 | `runewords.json`    | 197 KB / 28 KB                                                                 |
-| `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB)                       |
+| `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72) |
 | `sources.json`      | 298 KB / 29 KB                                                                 |
-| `lootfilter.json`   | ESR 3.2.24: 771 KB / 103 KB (744 / 100 before reqLvl, set, disabled)           |
+| `lootfilter.json`   | ESR 3.2.24: 819 KB / 116 KB (771 / 103 before skills, knownLayers)             |
 | `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                     |
 | `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                     |
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                     |
@@ -142,6 +142,13 @@ a few overrides for per-class or format-only strings (`item_addclassskills` → 
 `item_nonclassskill`, `item_numsockets`, the `*length` stats…), " (per level)" for `perlevel` stats, " %" for the
 `_percent` one of two stats with one label (Fire Absorb), else the stat name. Stat ids are itemstatcost row numbers (the
 same ids as `lootfilter.json` `stats`).
+
+`layers` (optional, omitted when empty): the params of the affix's layered stats, `{ stat, param }` by stat then param,
+resolved by `createPropertyLayerResolver` (see "Stat layers" under "Loot filter data"); only stats in `stats`, so the
+`_display` / `_hidden` companions never appear. ESR 3.2.24: 968 affixes, mostly `item_singleskill` (the Skillful
+prefixes: 35 random skill ids each), `item_addskill_tab` and the event stats. ESR reuses the Necromancer prefix names
+for the Warlock tabs ("Apprentice's" p892 = +1-2 to Demon Skills, stat 188 param 56), so the params tell them apart.
+Adding the field did not bump `GAME_DATA_SCHEMA`.
 
 ### Sources
 
@@ -245,9 +252,48 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   "Ancient Coupon Unique", hence UNIQUE-ITEMS.md's 383 "Coupon only" against 382 here.
   `counts.lootFilterCouponUniques` holds the count. The loot-filter unique browser leaves these rows out.
 
+- `skills` (optional; `build/bundleLootFilterSkills.ts`): `{ id, name, cls? }` by id, for the skill pickers, so the
+  loot filter does not load skills.json. Every class tree skill (a class `charclass` and a skilldesc `SkillPage` 1-3,
+  the 280 skills of skills.json) plus every skill a `knownLayers` param names; `id` = skills.txt row index (equal to
+  the `*Id` column in ESR 3.2.24), `name` = skilldesc `str name` through the strings, else the `skill` column, `cls`
+  only for class skills. ESR 3.2.24: 743 skills (463 without a class: item skills and procs; 23 names occur twice,
+  e.g. a class skill and its item copy, so pickers show the id).
+- `knownLayers` (optional): `{ stat, layers }` per skill stat (`item_nonclassskill` 97, `item_singleskill` 107,
+  `item_aura` 151) and event / charged stat, the distinct params the game data puts on items, ascending (skill ids
+  for skill stats, `skill << 6 | level` for the others). Sources: the affixes of affixes.json, uniques (not disabled),
+  set items (own and partial bonuses), runes.txt recipes, cube outputs and every propertygroups.txt entry (a numeric
+  ParMin–ParMax range = one entry per param). Tab and class stats are left out (every tab and class is listed anyway).
+  ESR 3.2.24: 11 stats, 2762 params, at most 30 levels per stat and skill; 59004 is the highest.
+
+#### Stat layers
+
+The params ("layers") of the skill, skill tab, class, event and charged stats are encoded once, in
+`src/features/game-data/engine/statLayers.ts` (`STAT_LAYER_KINDS`, `skillTabLayer`, `decodeTabLayer`,
+`skillLevelLayer`, `decodeSkillLevelLayer`, `chargedValue`; shared by the generator and the app). In short: tab =
+`class << 3 | tab` (properties.txt numbers the tabs `class × 3 + tab`, so Assassin Martial Arts 20 → 50, Warlock Demon
+Skills 21 → 56); class = class id (ama 0 … war 7, the properties.txt `val`); skill = skills.txt row index; event and
+charged = `skill << 6 | level`; charged value = `max charges << 8 | charges left`. `createPropertyLayerResolver`
+(`build/bundleLootFilterSkills.ts`) maps a property to its layers: func 10 tab (param, else the slot `val`, as ESR's
+unused `war-tab-rand`), func 21 class (`val`), func 36 random class (every class id of min–max: Hellfire Torch), func
+22/24 skill (param), func 12 random skill (every id of min–max when the range spans at most 64 ids; the "any class
+skill" range 418–697 of The Stone of Jordan, Robes of Power, Skin of the Vipermagi and Ormus' Robes is left out without
+a warning), func 11 / 19 event / charged (`skill << 6 | max`). The `_display` and `_hidden` companions are skipped.
+
+A stat param is 16 bits, so an event or charged layer cannot name a skill id above 1023. ESR saves 18 param bits for
+these stats and gives several hidden procs (Iris of End Times, Icing Death, Delirium, Doombringer, …) skill ids
+1526–1557; whether the game or the loot-filter plugin can read such a layer is not verified. The generator warns for
+the visible ones and skips them.
+
+Build warnings (`lootfilter skills: <source>: "<property>" <param>: …`): an unknown skill (ESR 3.2.24: Ember of
+Creation's oskill "Axe Swarm", also a skilldetails warning), a level outside 1–63 (the Fortune runeword's level 0 Time
+Lapse on getting hit), a skill id above 1023 (the Airship runeword's Long Shot 1555, propertygroup
+`nature-rule-full-set` att-skill 1541), a func the resolver does not read on a layered stat, and an itemstatcost row
+with `Encode` 2/3 or descfunc 13/14/15/16/24/27/28 that is missing from `STAT_LAYER_KINDS` (none in ESR 3.2.24).
+
 Counts: `counts.lootFilterItems`, `lootFilterStats`, `lootFilterAreas`, `lootFilterSounds`, `lootFilterUniques`,
-`lootFilterSets` (ESR 3.2.12: 2292 / 923 / 215 / 12103 / 1390 / 270). Adding the file did not bump
-`GAME_DATA_SCHEMA`: older clients ignore files they do not load.
+`lootFilterSets` (ESR 3.2.12: 2292 / 923 / 215 / 12103 / 1390 / 270), `lootFilterSkills`, `lootFilterKnownLayers`
+(params summed over the stats; ESR 3.2.24: 743 / 2762). Adding the file did not bump `GAME_DATA_SCHEMA`: older
+clients ignore files they do not load; neither did adding `skills` and `knownLayers`.
 
 ### Enhance
 
@@ -1352,11 +1398,11 @@ scripts/generate-item-icons.ts           CLI: item icons (sharp WebP encoding, f
 scripts/generate-skill-icons.ts          CLI: skill icons (cels of the HD skill icon sheets, see SKILLS.md)
 src/features/game-data/
   engine/      runtime + build time: schema.ts, itemTypes.ts, sockets.ts, matchRunewords.ts, bestBase.ts,
-               affixEligibility.ts
+               affixEligibility.ts, statLayers.ts
   engine/browser/loadGameData.ts         browser-only loader (fetch, import.meta.env)
   build/       build only: tsv.ts, strings.ts, model.ts, esrSources.ts, bundleTypes.ts, bundleBases.ts,
                bundleRunewords.ts, bundleAffixes.ts, bundleSources.ts (+ treasureClasses.ts, pluginUniques.ts,
-               itemNames.ts), bundleLootFilter.ts, bundleEnhance.ts, bundleCube.ts, bundleMaterials.ts, bundleSets.ts,
+               itemNames.ts), bundleLootFilter.ts (+ bundleLootFilterSkills.ts), bundleEnhance.ts, bundleCube.ts, bundleMaterials.ts, bundleSets.ts,
                bundleSkills.ts, bundleSkillDetails.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts, itemIcons.ts,
                generateBundles.ts,
                writeBundle.ts
@@ -1475,10 +1521,12 @@ utils/sets.ts                          URL state, options, order, search / focus
   automod eligibility and attachment on inline TSV), `build/bundleRunewords.test.ts`, `build/bundleAffixes.test.ts`,
   `build/bundleSources.test.ts` (each label rule on inline TSV; with the ESR clone, the verified examples Pelta Lunata,
   Krok's Basher, Mephisto's Will, Frostmourne, Annihilus, Hellfire Torch, Kill Ledger, Orb of Anointment, Forging Hammer),
-  `build/stats/*.test.ts` (sprintf, expandProperty, descfunc, renderLines, propertyGroups), `build/bundleAreas.test.ts`
+  `build/stats/*.test.ts` (sprintf, expandProperty, descfunc, renderLines, propertyGroups),
+  `build/bundleLootFilterSkills.test.ts` (layer resolver per func, property group entries, skills list, known layers,
+  warnings, `skillId`), `build/affixStats.test.ts` (stats, labels, layers), `build/bundleAreas.test.ts`
   (left-out rows, MonLvlEx / density / unique packs per difficulty, towns and areas without monsters, name fallback,
   map tier / zone / boss, connections to left-out rows, tier ladder / LevelGroup / unknown Vis warnings)
-- Engine: `engine/itemTypes.test.ts`, `engine/sockets.test.ts`, `engine/matchRunewords.test.ts`,
+- Engine: `engine/itemTypes.test.ts`, `engine/sockets.test.ts`, `engine/matchRunewords.test.ts`, `engine/statLayers.test.ts`,
   `engine/bestBase.test.ts`, `engine/affixEligibility.test.ts`, `engine/browser/loadGameData.test.ts`
 - UI: `store/gameDataSlice.test.ts`, `store/bestBaseState.test.ts`, `utils/filterBases.test.ts`,
   `utils/typeTree.test.ts`, `utils/bestBaseResults.test.ts`, `utils/filterAffixes.test.ts`, `store/affixFilters.test.ts`,
@@ -1494,7 +1542,9 @@ utils/sets.ts                          URL state, options, order, search / focus
   for crafting.json: one skill forging per class on every slot, all-skills, the 7 stat forgings (Chipped Amethyst
   checked), 60 rune forgings (46 ES + 14 Kanji), 8 amulet-only aura forgings, Dragon Stone weapon steps, 8 gem melds;
   for areas.json: unique ids, resolvable connections, 5 tiers × 4 zones on the level ladder, the unique map, the five
-  towns with a waypoint and no level).
+  towns with a waypoint and no level; for the lootfilter.json skills: every skills.json tree skill with its class, 472
+  = Orb of Winter, tab layer 50 = Assassin Martial Arts, every known layer ≤ 65535 and naming a listed skill, every
+  affix layer on one of the affix's stats and decodable).
   When the
   ESR clone is present it also regenerates the bundles in memory, checks they equal the committed files, and compares
   base names with the clone's `docs/weapons.htm` / `docs/armors.htm` (≥ 95 % overlap; misses are printed).

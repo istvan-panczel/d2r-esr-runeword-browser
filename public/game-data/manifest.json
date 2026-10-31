@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-10-31T10:37:15.993Z",
+  "generatedAt": "2026-10-31T11:08:41.050Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -18,16 +18,16 @@
       "bytes": 201515
     },
     "affixes": {
-      "hash": "78d01e2272af3545e5ddc89dd8d26fae7a927786863a9039486deb8db0645cbd",
-      "bytes": 872009
+      "hash": "cb680cb92a16b5da0f00a7eceb06c871c556cb2f9a12d2ea501b672624ce3913",
+      "bytes": 915608
     },
     "sources": {
       "hash": "76c930caea0f9d2a96828c384e71fae56b6a0b29bbb1b9af9ae7095de0c9943d",
       "bytes": 305793
     },
     "lootfilter": {
-      "hash": "83cc947d0eb4cd453939ef6bd693a86c9f89ac2952b593e3f1e57d580a4e84c4",
-      "bytes": 794376
+      "hash": "64a72e90d88f66f316c92a59c6fc9b2a390c31b7cb6de30b424e12191c2154c1",
+      "bytes": 843959
     },
     "enhance": {
       "hash": "cfc51920fb2bf6bfee53e3c96d4fd70b78414a529448b17d1ec9d81aba1bda6e",
@@ -103,6 +103,8 @@
     "lootFilterUniques": 1390,
     "lootFilterSets": 270,
     "lootFilterCouponUniques": 382,
+    "lootFilterSkills": 743,
+    "lootFilterKnownLayers": 2762,
     "enhanceCorruptionSlots": 11,
     "enhanceCorruptionOutcomes": 272,
     "enhanceAnointmentOutcomes": 790,
@@ -185,6 +187,10 @@
     "affixes: p910 \"Apprentice's\" references unknown item type \"voib\"",
     "affixes: p911 \"Death Master's\" references unknown item type \"voib\"",
     "affixes: p918 \"Death Master's\" references unknown item type \"voib\"",
+    "lootfilter skills: unique Ember of Creation: \"oskill\" Axe Swarm: unknown skill \"Axe Swarm\"",
+    "lootfilter skills: runeword Fortune: \"gethit-skill\" Time Lapse: level 0 outside 1-63",
+    "lootfilter skills: runeword Airship: \"hit-skill\" Long Shot: skill id 1555 above 1023 does not fit a stat param (skill << 6 | level)",
+    "lootfilter skills: propertygroup nature-rule-full-set: \"att-skill\" 1541: skill id 1541 above 1023 does not fit a stat param (skill << 6 | level)",
     "skilldetails: unknown skill in oskill \"Axe Swarm\" (Ember of Creation)",
     "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients"
   ]

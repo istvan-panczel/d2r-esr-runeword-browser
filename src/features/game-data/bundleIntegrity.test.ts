@@ -8,7 +8,9 @@ import { readEsrSources } from './build/esrSources.ts';
 import { generateBundles } from './build/generateBundles.ts';
 import { COLORMAP_FILES, TINT_COLORS, untintedFile } from './build/itemTint.ts';
 import { serializeBundle } from './build/writeBundle.ts';
+import { decodeSkillLevelLayer, decodeTabLayer, MAX_STAT_PARAM, statLayerKind } from './engine/statLayers.ts';
 import {
+  CLASS_CODES,
   GAME_DATA_SCHEMA,
   type AffixesBundle,
   type AreasBundle,
@@ -332,6 +334,63 @@ describe('committed game-data bundles', () => {
       0, 690, 691, 692, 693, 694, 695,
     ]);
     expect(lootfilter.sets.some((entry) => entry.disabled === true)).toBe(false);
+  });
+
+  it('contain the loot-filter skills and known layers, which decode to listed skills (ESR 3.2.24)', () => {
+    const { skills: filterSkills = [], knownLayers = [] } = lootfilter;
+    expect(manifest.counts.lootFilterSkills).toBe(filterSkills.length);
+    expect(manifest.counts.lootFilterKnownLayers).toBe(knownLayers.reduce((sum, entry) => sum + entry.layers.length, 0));
+    const skillById = new Map(filterSkills.map((skill) => [skill.id, skill]));
+    expect(skillById.size).toBe(filterSkills.length);
+    expect(filterSkills.every((skill, i) => i === 0 || skill.id > (filterSkills[i - 1]?.id ?? -1))).toBe(true);
+    // Every class tree skill of skills.json is listed, with its class
+    const treeSkills = skills.classes.flatMap((cls) => cls.tabs.flatMap((tab) => tab.skills.map((skill) => [cls.code, skill.name])));
+    expect(
+      filterSkills
+        .filter((skill) => skill.cls !== undefined)
+        .map((skill) => [skill.cls, skill.name])
+        .sort()
+    ).toEqual(treeSkills.sort());
+    expect(skillById.get(472)).toEqual({ id: 472, name: 'Orb of Winter', cls: 'sor' });
+
+    // Tab layer 50 = Assassin Martial Arts (properties.txt tab 20); class layers are the types.json class order
+    const tab = decodeTabLayer(50);
+    expect(tab).toEqual({ cls: 6, tab: 2 });
+    expect([typeClasses[tab?.cls ?? -1]?.code, typeClasses[tab?.cls ?? -1]?.tabs[tab?.tab ?? -1]]).toEqual(['ass', 'Martial Arts']);
+    expect(classCodes).toEqual([...CLASS_CODES]);
+
+    const statName = (id: number) => lootfilter.stats[id]?.name ?? '';
+    for (const { stat, layers } of knownLayers) {
+      const kind = statLayerKind(statName(stat));
+      expect(['skill', 'event', 'charged'], statName(stat)).toContain(kind);
+      expect(layers.every((layer, i) => i === 0 || layer > (layers[i - 1] ?? -1))).toBe(true);
+      for (const layer of layers) {
+        expect(layer, statName(stat)).toBeLessThanOrEqual(MAX_STAT_PARAM);
+        const skill = kind === 'skill' ? layer : decodeSkillLevelLayer(layer)?.skill;
+        expect(skillById.has(skill ?? -1), `${statName(stat)} ${String(layer)}`).toBe(true);
+      }
+    }
+    // Level 60 Orb of Winter on hit (skill 472 << 6 | 60) is on items; so are charges and auras
+    const known = (name: string) => knownLayers.find((entry) => statName(entry.stat) === name)?.layers ?? [];
+    expect(decodeSkillLevelLayer(30268)).toEqual({ skill: 472, level: 60 });
+    expect(known('item_skillonhit')).toContain(30268);
+    expect(known('item_charged_skill').length).toBeGreaterThan(0);
+    expect(known('item_aura').length).toBeGreaterThan(0);
+
+    // affixes.json layers: only of the affix's stats, sorted, decodable
+    const knownSet = new Map(knownLayers.map((entry) => [entry.stat, new Set(entry.layers)]));
+    const affixLayers = affixes.flatMap((affix) => (affix.layers ?? []).map((layer) => ({ affix, ...layer })));
+    expect(affixLayers.length).toBeGreaterThan(0);
+    for (const { affix, stat, param } of affixLayers) {
+      const label = `${affix.kind}${String(affix.id)} ${statName(stat)} ${String(param)}`;
+      expect(affix.stats, label).toContain(stat);
+      const kind = statLayerKind(statName(stat));
+      if (kind === 'tab') expect(decodeTabLayer(param), label).toBeDefined();
+      else if (kind === 'class') expect(param, label).toBeLessThan(CLASS_CODES.length);
+      else expect(knownSet.get(stat)?.has(param), label).toBe(true);
+    }
+    // ESR's Warlock tab prefixes reuse the Necromancer names: "Apprentice's" p892 = +1-2 to Demon Skills (layer 56)
+    expect(affixes.find((affix) => affix.kind === 'p' && affix.id === 892)?.layers).toContainEqual({ stat: 188, param: 56 });
   });
 
   it('contain the corruption outcomes per slot with the computed rates (ESR 3.2.24)', () => {

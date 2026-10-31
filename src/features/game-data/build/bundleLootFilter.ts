@@ -164,7 +164,12 @@ function couponUniqueIds(tables: LootFilterTables, warnings: string[]): Set<numb
   return ids;
 }
 
-export function buildLootFilterBundle(tables: LootFilterTables, strings: ReadonlyMap<string, string>): BuildResult<LootFilterDataBundle> {
+export function buildLootFilterBundle(
+  tables: LootFilterTables,
+  strings: ReadonlyMap<string, string>,
+  /** The skill pickers' data (build/bundleLootFilterSkills.ts), appended to the bundle */
+  skillData: Pick<LootFilterDataBundle, 'skills' | 'knownLayers'> = {}
+): BuildResult<LootFilterDataBundle> {
   const warnings: string[] = [];
   const items = readItemRows(tables, warnings, strings);
 
@@ -196,5 +201,5 @@ export function buildLootFilterBundle(tables: LootFilterTables, strings: Readonl
     }
   }
 
-  return { bundle: { items, stats, areas, sounds, uniques, sets }, warnings };
+  return { bundle: { items, stats, areas, sounds, uniques, sets, ...skillData }, warnings };
 }
