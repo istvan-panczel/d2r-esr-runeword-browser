@@ -1,7 +1,7 @@
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
-import { CHARGED_VALUE_HINT, sameParamEncoding, statParamKind } from '../../utils/statParams';
+import { CHARGED_VALUE_HINT, noParamEntryHint, sameParamEncoding, statParamKind } from '../../utils/statParams';
 import { newStatRow, type StatRow } from '../../utils/testItemForm';
 import { NumberInput } from '../NumberInput';
 import { StatPicker } from '../pickers';
@@ -67,6 +67,9 @@ export function StatRowsEditor({ data, idPrefix, rows, onChange, addLabel }: Sta
               <X />
             </Button>
             {kind === 'charged' && <p className="basis-full text-xs text-muted-foreground">{CHARGED_VALUE_HINT}</p>}
+            {kind !== undefined && row.param === undefined && (
+              <p className="basis-full text-xs text-muted-foreground">{noParamEntryHint(kind, data.params)}</p>
+            )}
           </div>
         );
       })}

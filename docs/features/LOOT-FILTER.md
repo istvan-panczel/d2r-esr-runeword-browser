@@ -315,7 +315,7 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   casting, taking damage) and `item_charged_skill` a skill picker plus a level select (`skill << 6 | level`): the
   levels the game data puts on items for that skill (the "On items" options list them: "#472 · Sorceress · lvl 15,
   20, 30, 60"), "Other level…" (a 1–63 field), and "Any known level (N)", which replaces the row with one check per
-  known level (`anyKnownLevelChecks`, `replaceStatCheckWithMany`). Picking a skill keeps the level when the skill
+  known level (`anyKnownLevelChecks`, `replaceStatCheckWithMany`). The level field shows while the level is not a known one or after "Other level…" for that skill (a skill change hides it again). Once a param is set, each picker starts with "No param", which removes it (the level select goes with it). Picking a skill keeps the level when the skill
   has it (or has no known level), else takes its lowest known level, 1 without one. The triggers show the name and
   the raw param muted; typed digits are taken as a raw param ("Use param 50", "Use skill id 1200"), and a param that
   does not decode (level 0) stays a number field. Without the bundles the pickers take typed numbers only. Changing
@@ -593,7 +593,8 @@ tab switches; it is not saved.
   item level, sockets, max sockets, identified / ethereal / runeword / fully socketed, a unique or set item (picking one
   switches to its base and name, and sets the quality to unique or set unless the user chose a quality) and item stat
   rows (stat, param, value; incomplete rows are ignored; the param is the rule rows' `StatParamField` without "Any
-  known level", and charged rows show the same value hint).
+  known level", and charged rows show the same value hint; a layered row without param says the test takes the entry
+  as param 0, as the evaluator does).
 - **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
   filter level (the filter's levels, default marked) and more character stat rows.
 - **Conversion** (`utils/testItemForm.ts`): `toTestItem(form, lookup)` (type ancestors from the `types` bundle via the

@@ -111,6 +111,23 @@ export function statParamLabel(kind: StatLayerKind, param: number, d: StatParamD
 export const CHARGED_VALUE_HINT =
   'Value = max charges × 256 + charges left (5/5 = 1285): ≥ 1 = has the charges, ≥ 1280 = at least 5 max charges.';
 
+const ENTRY_NOUNS: Readonly<Record<StatLayerKind, string>> = {
+  tab: 'skill tab',
+  class: 'class',
+  skill: 'skill',
+  event: 'skill and level',
+  charged: 'skill and level',
+};
+
+/**
+ * Under a Test tab stat row of a layered stat without param: the evaluator takes an item entry without param as
+ * param 0 (`entry.param ?? 0` in engine/evaluate.ts).
+ */
+export function noParamEntryHint(kind: StatLayerKind, d: StatParamData): string {
+  const label = statParamLabel(kind, 0, d);
+  return `No param: the test takes this entry as param 0${label === undefined ? '' : ` (${label})`}. Pick the ${ENTRY_NOUNS[kind]} the item has.`;
+}
+
 /** Whether two stats' params mean the same thing (a row keeps its param when its stat changes to such a stat). */
 export function sameParamEncoding(a: StatLayerKind | undefined, b: StatLayerKind | undefined): boolean {
   const encoding = (kind: StatLayerKind | undefined) => (kind === 'charged' ? 'event' : kind);

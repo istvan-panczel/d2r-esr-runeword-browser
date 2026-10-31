@@ -9,6 +9,8 @@ import {
   type StatLayerKind,
 } from '@/features/game-data/engine/statLayers';
 import type { LootFilterData } from '../../../hooks/useLootFilterData';
+import { OMITTED_PARAM } from '../../../engine/evaluate';
+import type { PickerOption } from '../../../utils/pickerSearch';
 import type { PickerCustom } from '../../pickers/PickerList';
 import { SinglePicker } from '../../pickers';
 import { classOptions, knownLevels, skillLabel, skillOptions, statParamKind, statParamLabel, tabOptions } from '../../../utils/statParams';
@@ -48,6 +50,18 @@ const SEARCH_PLACEHOLDERS: Readonly<Record<'tab' | 'class' | 'skill', string>> =
   skill: 'Skill name, class or id…',
 };
 
+const NO_PARAM = 'none';
+
+/**
+ * "No param" at the top of a picker that has a param, so it can be removed again (the check then reads every entry, or
+ * only param 0, per `OMITTED_PARAM`; the validator warns either way).
+ */
+function withNoParam(options: readonly PickerOption[], param: number | undefined): readonly PickerOption[] {
+  if (param === undefined) return options;
+  const detail = OMITTED_PARAM === 'anyLayer' ? 'checks every entry (not verified in game)' : 'checks the param 0 entry only';
+  return [{ key: NO_PARAM, value: NO_PARAM, label: 'No param', detail, search: 'no param none clear' }, ...options];
+}
+
 /** Typed digits as a raw param (an unknown skill id, a layer the data does not name). */
 const customParam =
   (max: number, what: string): PickerCustom =>
@@ -83,7 +97,9 @@ function SkillLevelField({
   onChange,
   anyKnownLevel,
 }: Omit<StatParamFieldProps, 'stat'> & { readonly statId: number | undefined; readonly kind: 'event' | 'charged' }) {
-  const [otherLevel, setOtherLevel] = useState(false);
+  // The skill "Other level…" was picked for: rows are keyed by position, so a skill change (or the row above going)
+  // does not carry it over.
+  const [otherLevelOf, setOtherLevelOf] = useState<number | null>(null);
   const decoded = param === undefined ? undefined : decodeSkillLevelLayer(param);
   if (param !== undefined && decoded === undefined) {
     // Level 0 or out of range: the raw number, so it can be fixed (the validator says what is wrong).
@@ -103,10 +119,11 @@ function SkillLevelField({
     <>
       <SinglePicker
         aria-label="Skill"
-        options={skillOptions(statId, kind, data.params)}
+        options={withNoParam(skillOptions(statId, kind, data.params), param)}
         value={decoded === undefined ? undefined : String(decoded.skill)}
         onChange={(picked) => {
-          pickSkill(Number(picked));
+          if (picked === NO_PARAM) onChange(undefined);
+          else pickSkill(Number(picked));
         }}
         describe={(value) => {
           const label = skillLabel(Number(value), data.params);
@@ -121,9 +138,13 @@ function SkillLevelField({
         <Select
           value={String(decoded.level)}
           onValueChange={(next) => {
-            if (next === 'other') setOtherLevel(true);
-            else if (next === 'any') anyKnownLevel?.onPick(decoded.skill);
-            else onChange(skillLevelLayer(decoded.skill, Number(next)));
+            if (next === 'other') {
+              setOtherLevelOf(decoded.skill);
+            } else {
+              setOtherLevelOf(null);
+              if (next === 'any') anyKnownLevel?.onPick(decoded.skill);
+              else onChange(skillLevelLayer(decoded.skill, Number(next)));
+            }
           }}
         >
           <SelectTrigger size="sm" aria-label="Skill level" className="w-28">
@@ -138,13 +159,13 @@ function SkillLevelField({
             <SelectItem value="other">Other level…</SelectItem>
             {anyKnownLevel !== undefined && known.length > 1 && (
               <SelectItem value="any" disabled={!anyKnownLevel.allowed}>
-                Any known level ({known.length}){!anyKnownLevel.allowed && <span className="text-xs">{anyKnownLevel.hint}</span>}
+                Any known level ({known.length}) {!anyKnownLevel.allowed && <span className="text-xs">({anyKnownLevel.hint})</span>}
               </SelectItem>
             )}
           </SelectContent>
         </Select>
       )}
-      {decoded !== undefined && (otherLevel || !known.includes(decoded.level)) && (
+      {decoded !== undefined && (otherLevelOf === decoded.skill || !known.includes(decoded.level)) && (
         <NumberInput
           aria-label="Level"
           integer
@@ -179,10 +200,10 @@ export function StatParamField({ data, stat, param, onChange, anyKnownLevel }: S
   return (
     <SinglePicker
       aria-label={kind === 'tab' ? 'Skill tab' : kind === 'class' ? 'Class' : 'Skill'}
-      options={options}
+      options={withNoParam(options, param)}
       value={param === undefined ? undefined : String(param)}
       onChange={(picked) => {
-        onChange(Number(picked));
+        onChange(picked === NO_PARAM ? undefined : Number(picked));
       }}
       describe={(value) => {
         const label = statParamLabel(kind, Number(value), data.params);

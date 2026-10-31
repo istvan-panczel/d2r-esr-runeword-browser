@@ -7,6 +7,7 @@ import {
   classOptions,
   EMPTY_STAT_PARAMS,
   knownLevels,
+  noParamEntryHint,
   sameParamEncoding,
   skillLabel,
   skillOptions,
@@ -132,5 +133,16 @@ describe('known levels', () => {
     expect(sameParamEncoding(undefined, undefined)).toBe(true);
     expect(sameParamEncoding('tab', 'class')).toBe(false);
     expect(sameParamEncoding('skill', undefined)).toBe(false);
+  });
+});
+
+describe('noParamEntryHint', () => {
+  it('says a Test tab entry without param is param 0', () => {
+    expect(noParamEntryHint('tab', params)).toBe(
+      'No param: the test takes this entry as param 0 (Bow and Crossbow Skills (Amazon)). Pick the skill tab the item has.'
+    );
+    expect(noParamEntryHint('event', params)).toBe(
+      'No param: the test takes this entry as param 0. Pick the skill and level the item has.'
+    );
   });
 });
