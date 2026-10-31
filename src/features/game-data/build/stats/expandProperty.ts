@@ -3,7 +3,7 @@
  * `func1-7` / `stat1-7` / `val1-7`. Property funcs (vanilla semantics, verified against ESR data):
  *
  *  1/2/8/13  stat = min–max            3  same value as the previous slot      5/6  min / max damage = min–max
- *  7         enhanced min + max damage 10 skill tab (param = tab 0–23)         11  event skill (min = chance, max = level)
+ *  7         enhanced min + max damage 10 skill tab (param, else val: 0–23)    11  event skill (min = chance, max = level)
  *  12        random skill (param = level, min–max = skill id range)           14  sockets
  *  15 / 16   stat = min / stat = max   17 stat = param (per-level stats, lengths)
  *  19        charges (min = charges, max = level)                           20  indestructible       21  class skills (val = class)
@@ -95,6 +95,9 @@ export function expandProperty(mod: ModInput, ctx: ExpandContext): ExpandResult 
         push('item_mindamage_percent', mod.min, mod.max);
         break;
       case 10:
+        // ESR `war-tab-rand` has no param and names its tabs (21-23) in val1-3
+        push(slot.stat, mod.min, mod.max, param === '' ? String(slot.val) : param);
+        break;
       case 11:
       case 19:
         push(slot.stat, mod.min, mod.max);

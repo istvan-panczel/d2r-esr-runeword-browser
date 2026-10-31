@@ -150,6 +150,7 @@ const TABLES: Record<StatTableName, string> = {
     prop('ac%', [2, 'item_armor_percent']),
     prop('dur%', [13, 'item_maxdurability_percent']),
     prop('skilltab', [10, 'item_addskill_tab']),
+    prop('war-tab-rand', [10, 'item_addskill_tab', 0, 21], [10, 'item_addskill_tab', 0, 22], [10, 'item_addskill_tab', 0, 23]),
     prop('hit-skill', [11, 'item_skillonhit']),
     prop('skill-rand', [12, 'item_singleskill']),
     prop('sock', [14, 'item_numsockets']),

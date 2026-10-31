@@ -51,6 +51,15 @@ describe('expandProperty', () => {
     ]);
   });
 
+  it('func 10 without a param takes the tab from `val` (war-tab-rand)', () => {
+    expect(stats(mod('war-tab-rand', 1, 1))).toEqual([
+      ['item_addskill_tab', '21', 1, 1],
+      ['item_addskill_tab', '22', 1, 1],
+      ['item_addskill_tab', '23', 1, 1],
+    ]);
+    expect(stats(mod('skilltab', 2, 2, '20'))).toEqual([['item_addskill_tab', '20', 2, 2]]);
+  });
+
   it('func 21: class skills with the class from `val`; func 20 indestructible', () => {
     expect(stats(mod('sor', 1, 1))).toEqual([['item_addclassskills', '1', 1, 1]]);
     expect(stats(mod('indestruct', 1, 1))).toEqual([['item_indesctructible', '', 1, 1]]);
