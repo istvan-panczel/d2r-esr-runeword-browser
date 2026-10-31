@@ -1,13 +1,23 @@
 /**
  * The affix browser's model: one row per item stat some affix writes, with the affixes that write it, so a filter author
- * who thinks in affix names ("Cruel", "of Mastery") finds the stat the plugin checks. Built from affixes.json (`stats`).
+ * who thinks in affix names ("Cruel", "of Mastery") finds the stat the plugin checks. Built from affixes.json (`stats`,
+ * and `layers` for the params of the skill, skill tab, class, event and charged stats, named through `StatParamData`).
  */
 import type { Affix, AffixesBundle } from '@/features/game-data/engine/schema';
+import { statLayerKind, type StatLayerKind } from '@/features/game-data/engine/statLayers';
 import { statQuirk } from '../engine/statQuirks';
 import type { StatCheck } from '../engine/types';
 import { exceptionOf, newExceptionCheck, newStatCheck } from './statChecks';
+import { EMPTY_STAT_PARAMS, statParamLabel, type StatParamData } from './statParams';
 
 export type AffixKind = 'prefix' | 'suffix' | 'automagic';
+
+/** One param of a layered stat (a skill tab, class, skill, or skill and level) */
+export interface AffixBrowserParam {
+  readonly param: number;
+  /** "Martial Arts (Assassin)", "Orb of Winter lvl 15"; "param N" when the data does not name it */
+  readonly label: string;
+}
 
 export interface AffixBrowserAffix {
   /** '' for a nameless automod */
@@ -17,6 +27,8 @@ export interface AffixBrowserAffix {
   readonly lvl: number;
   /** Labels of the other stats the affix writes (a hybrid), by label */
   readonly hybridWith: readonly string[];
+  /** The params it writes for the row's stat (a layered stat), by param; the union over the merged rows */
+  readonly params?: readonly AffixBrowserParam[];
 }
 
 export interface AffixBrowserRow {
@@ -26,10 +38,13 @@ export interface AffixBrowserRow {
   readonly label: string;
   /** By level, then name */
   readonly affixes: readonly AffixBrowserAffix[];
-  /** Lower-case label, name and affix names */
+  /** Lower-case label, name, affix names and param labels */
   readonly search: string;
   /** Why the plugin may read the stat as 0 on some items (`STAT_QUIRKS`) */
   readonly note?: string;
+  /** A layered stat whose affixes name params: a tick needs a param (the union of the affixes' params, by param) */
+  readonly layerKind?: StatLayerKind;
+  readonly params?: readonly AffixBrowserParam[];
 }
 
 export interface AffixBrowserModel {
@@ -52,7 +67,15 @@ const ED_LABEL = 'Enhanced Damage';
 
 const byLabel = (a: { readonly label: string }, b: { readonly label: string }) => a.label.localeCompare(b.label);
 
-export function buildAffixBrowserModel(bundle: AffixesBundle): AffixBrowserModel {
+const byParam = (a: AffixBrowserParam, b: AffixBrowserParam) => a.param - b.param;
+
+/** The union of two param lists, by param */
+function mergeParams(a: readonly AffixBrowserParam[], b: readonly AffixBrowserParam[]): AffixBrowserParam[] {
+  const params = new Map([...a, ...b].map((entry) => [entry.param, entry]));
+  return [...params.values()].sort(byParam);
+}
+
+export function buildAffixBrowserModel(bundle: AffixesBundle, params: StatParamData = EMPTY_STAT_PARAMS): AffixBrowserModel {
   const stats = new Map(bundle.stats.map((stat) => [stat.id, stat]));
   const edMax = bundle.stats.find((stat) => stat.name === ED_MAX)?.id;
   const edMin = bundle.stats.find((stat) => stat.name === ED_MIN)?.id;
@@ -63,6 +86,12 @@ export function buildAffixBrowserModel(bundle: AffixesBundle): AffixBrowserModel
   for (const affix of bundle.affixes) if (shownStats(affix).length < affix.stats.length) edMerged = true;
   const labelOf = (id: number) => (edMerged && id === edMax ? ED_LABEL : (stats.get(id)?.label ?? `Stat ${String(id)}`));
 
+  const kindOf = (id: number) => statLayerKind(stats.get(id)?.name ?? '');
+  const paramOf = (kind: StatLayerKind, param: number): AffixBrowserParam => ({
+    param,
+    label: statParamLabel(kind, param, params) ?? `param ${String(param)}`,
+  });
+
   // stat id → affix key → affix (one entry per name, kind and stat set: ESR repeats rows per item type / level band)
   const byStat = new Map<number, Map<string, AffixBrowserAffix>>();
   for (const affix of bundle.affixes) {
@@ -72,11 +101,22 @@ export function buildAffixBrowserModel(bundle: AffixesBundle): AffixBrowserModel
         .filter((other) => other !== id)
         .map(labelOf)
         .sort((a, b) => a.localeCompare(b));
-      const entry: AffixBrowserAffix = { name: affix.name, kind: KINDS[affix.kind], lvl: affix.lvl, hybridWith };
+      const kind = kindOf(id);
+      const layers =
+        kind === undefined ? [] : (affix.layers ?? []).filter((layer) => layer.stat === id).map((layer) => paramOf(kind, layer.param));
+      const entry: AffixBrowserAffix = {
+        name: affix.name,
+        kind: KINDS[affix.kind],
+        lvl: affix.lvl,
+        hybridWith,
+        ...(layers.length === 0 ? {} : { params: layers.sort(byParam) }),
+      };
       const key = `${entry.kind}|${entry.name}|${hybridWith.join('|')}`;
       const entries = byStat.get(id) ?? new Map<string, AffixBrowserAffix>();
       const known = entries.get(key);
-      if (known === undefined || entry.lvl < known.lvl) entries.set(key, entry);
+      const merged = known === undefined ? entry : { ...(entry.lvl < known.lvl ? entry : known) };
+      const union = mergeParams(known?.params ?? [], entry.params ?? []);
+      entries.set(key, union.length === 0 ? merged : { ...merged, params: union });
       byStat.set(id, entries);
     }
   }
@@ -85,19 +125,29 @@ export function buildAffixBrowserModel(bundle: AffixesBundle): AffixBrowserModel
     const name = stats.get(id)?.name ?? String(id);
     const label = labelOf(id);
     const affixes = [...entries.values()].sort((a, b) => a.lvl - b.lvl || a.name.localeCompare(b.name));
-    const search = [label, name, ...affixes.map((affix) => affix.name)].join('\n').toLowerCase();
+    const rowParams = affixes.reduce<AffixBrowserParam[]>((all, affix) => mergeParams(all, affix.params ?? []), []);
+    const search = [label, name, ...affixes.map((affix) => affix.name), ...rowParams.map((entry) => entry.label)].join('\n').toLowerCase();
     const note = statQuirk(id)?.note;
-    return { id, name, label, affixes, search, ...(note === undefined ? {} : { note }) };
+    const layerKind = kindOf(id);
+    return {
+      id,
+      name,
+      label,
+      affixes,
+      search,
+      ...(note === undefined ? {} : { note }),
+      ...(layerKind === undefined || rowParams.length === 0 ? {} : { layerKind, params: rowParams }),
+    };
   });
   rows.sort((a, b) => byLabel(a, b) || a.id - b.id);
   return { rows, ids: new Map(rows.map((row) => [row.name, row.id])) };
 }
 
-// One model per loaded bundle (bundles are cached for the page's lifetime).
-let cached: { bundle: AffixesBundle; model: AffixBrowserModel } | null = null;
+// One model per loaded bundle and param names (both are cached for the page's lifetime).
+let cached: { bundle: AffixesBundle; params: StatParamData; model: AffixBrowserModel } | null = null;
 
-export function getAffixBrowserModel(bundle: AffixesBundle): AffixBrowserModel {
-  if (cached?.bundle !== bundle) cached = { bundle, model: buildAffixBrowserModel(bundle) };
+export function getAffixBrowserModel(bundle: AffixesBundle, params: StatParamData): AffixBrowserModel {
+  if (cached?.bundle !== bundle || cached.params !== params) cached = { bundle, params, model: buildAffixBrowserModel(bundle, params) };
   return cached.model;
 }
 
@@ -117,10 +167,37 @@ export function filterAffixBrowser(rows: readonly AffixBrowserRow[], query: stri
   return rows.filter((row) => terms.every((term) => termMatches(row, term)));
 }
 
-/** Whether a term of `query` is part of the affix's name (for marking the affixes a search found). */
-export function affixMatches(affix: AffixBrowserAffix, query: string): boolean {
-  const name = affix.name.toLowerCase();
-  return name !== '' && searchTerms(query).some((term) => name.includes(term));
+/** Every term is in the row's label or stat name or in `own`, and at least one is in `own`. */
+function namesOwnText(own: string, row: Pick<AffixBrowserRow, 'label' | 'name'> | undefined, terms: readonly string[]): boolean {
+  const text = own.toLowerCase();
+  const base = row === undefined ? '' : `${row.label}\n${row.name}`.toLowerCase();
+  return terms.some((term) => text.includes(term)) && terms.every((term) => text.includes(term) || base.includes(term));
+}
+
+/**
+ * Whether the search names the affix (for marking the affixes a search found): its name and param labels hold at least
+ * one term, and every term is in them or in the row's label or stat name (`row`; without it, in the affix alone).
+ */
+export function affixMatches(affix: AffixBrowserAffix, query: string, row?: Pick<AffixBrowserRow, 'label' | 'name'>): boolean {
+  const terms = searchTerms(query);
+  if (terms.length === 0 || affix.name === '') return false;
+  return namesOwnText([affix.name, ...(affix.params ?? []).map((entry) => entry.label)].join('\n'), row, terms);
+}
+
+/**
+ * The row's params a search names: every term is in the row's label or stat name or in the param's own text (its label
+ * and the names of the affixes writing it), and at least one term is in the param's text ("martial" → Martial Arts,
+ * "chance orb winter" → the Orb of Winter levels). Empty for an empty query or when no param is named.
+ */
+export function matchingParams(row: AffixBrowserRow, query: string): number[] {
+  const terms = searchTerms(query);
+  if (terms.length === 0 || row.params === undefined) return [];
+  return row.params
+    .filter((entry) => {
+      const writers = row.affixes.filter((affix) => affix.params?.some((p) => p.param === entry.param)).map((affix) => affix.name);
+      return namesOwnText([entry.label, ...writers].join('\n'), row, terms);
+    })
+    .map((entry) => entry.param);
 }
 
 // --- Display ---
@@ -131,11 +208,52 @@ const KIND_NOUNS: Readonly<Record<AffixKind, readonly [string, string]>> = {
   automagic: ['automod', 'automods'],
 };
 
-/** "Cruel", "of Mastery (+Increased Attack Speed)", "Sharp (automod, +Attack Rating)", "unnamed automod". */
-export function affixText(affix: AffixBrowserAffix): string {
-  if (affix.name === '') return affix.hybridWith.length === 0 ? 'unnamed automod' : `unnamed automod (+${affix.hybridWith.join(', +')})`;
+/** Affix params named in its text; more are counted ("[35 skills]"). */
+const NAMED_PARAMS = 3;
+
+const PARAM_NOUNS: Readonly<Record<StatLayerKind, string>> = {
+  tab: 'tabs',
+  class: 'classes',
+  skill: 'skills',
+  event: 'skills',
+  charged: 'skills',
+};
+
+/**
+ * Event and charged params by skill, levels joined: "Bone Wave lvl 15, 25, 35"; just "lvl 15, 25, 35" when the affix is
+ * named after the skill ("of Bone Wave").
+ */
+function skillLevelTexts(params: readonly AffixBrowserParam[], affixName: string): string[] {
+  const bySkill = new Map<number, AffixBrowserParam[]>();
+  for (const entry of params) bySkill.set(entry.param >> 6, [...(bySkill.get(entry.param >> 6) ?? []), entry]);
+  return [...bySkill.values()].map((entries) => {
+    const levels = entries.map((entry) => String(entry.param & 63));
+    const name = /^(.*) lvl \d+$/.exec(entries[0].label)?.[1];
+    if (name === undefined) return entries.map((entry) => entry.label).join(', ');
+    const named = bySkill.size === 1 && affixName.toLowerCase().includes(name.toLowerCase());
+    return `${named ? '' : `${name} `}lvl ${levels.join(', ')}`;
+  });
+}
+
+/**
+ * "Cruel", "of Mastery (+Increased Attack Speed)", "Sharp (automod, +Attack Rating)", "unnamed automod"; a layered
+ * stat's params follow in brackets ("Apprentice's [Demon Skills (Warlock)]", "Skillful [35 skills]"), since ESR reuses
+ * affix names across classes.
+ */
+export function affixText(affix: AffixBrowserAffix, layerKind?: StatLayerKind): string {
+  const params = affix.params ?? [];
+  const texts = layerKind === 'event' || layerKind === 'charged' ? skillLevelTexts(params, affix.name) : params.map((entry) => entry.label);
+  const named =
+    texts.length === 0
+      ? ''
+      : texts.length <= NAMED_PARAMS || layerKind === undefined
+        ? ` [${texts.join(', ')}]`
+        : ` [${String(texts.length)} ${PARAM_NOUNS[layerKind]}]`;
+  if (affix.name === '') {
+    return affix.hybridWith.length === 0 ? `unnamed automod${named}` : `unnamed automod${named} (+${affix.hybridWith.join(', +')})`;
+  }
   const tags = [...(affix.kind === 'automagic' ? ['automod'] : []), ...affix.hybridWith.map((label) => `+${label}`)];
-  return tags.length === 0 ? affix.name : `${affix.name} (${tags.join(', ')})`;
+  return tags.length === 0 ? `${affix.name}${named}` : `${affix.name}${named} (${tags.join(', ')})`;
 }
 
 /** "21 prefixes, 1 suffix" (prefixes, suffixes, automods; kinds without affixes left out). */
@@ -176,27 +294,92 @@ export function initialAffixSelection(checks: readonly StatCheck[] | undefined, 
   return selected;
 }
 
+/** Picked params per layered stat id (the browser's param chips). */
+export type AffixParamSelection = ReadonlyMap<number, ReadonlySet<number>>;
+
+/**
+ * The params already checked per listed layered stat (checks of the mode, as in `initialAffixSelection`); every layered
+ * row with a check gets an entry, an empty one when its checks have no param.
+ */
+export function initialAffixParams(
+  checks: readonly StatCheck[] | undefined,
+  model: AffixBrowserModel,
+  inverted = false
+): Map<number, Set<number>> {
+  const layered = new Set(model.rows.filter((row) => row.layerKind !== undefined).map((row) => row.id));
+  const params = new Map<number, Set<number>>();
+  for (const check of checks ?? []) {
+    const id = listedId(check, model, inverted);
+    if (id === undefined || !layered.has(id)) continue;
+    const set = params.get(id) ?? new Set<number>();
+    if (check.param !== undefined) set.add(check.param);
+    params.set(id, set);
+  }
+  return params;
+}
+
+/**
+ * The ticked layered rows Apply cannot write: no param picked and no paramless check of the mode to keep. Apply waits
+ * until each has a param (or is unticked).
+ */
+export function rowsMissingParams(
+  checks: readonly StatCheck[] | undefined,
+  model: AffixBrowserModel,
+  draft: ReadonlySet<number>,
+  params: AffixParamSelection,
+  inverted = false
+): AffixBrowserRow[] {
+  const paramless = new Set(
+    (checks ?? []).flatMap((check) => {
+      const id = check.param === undefined ? listedId(check, model, inverted) : undefined;
+      return id === undefined ? [] : [id];
+    })
+  );
+  return model.rows.filter(
+    (row) => row.layerKind !== undefined && draft.has(row.id) && (params.get(row.id)?.size ?? 0) === 0 && !paramless.has(row.id)
+  );
+}
+
 /**
  * The list after Apply: checks on stats the browser does not list, and on ticked stats, stay as they are; checks on
  * listed stats that were unticked go; each newly ticked stat appends a presence check (`>= 1`, by name) in display order.
  * `inverted` (the "Except items with…" mode of a hide rule): only exception checks are the browser's, and a new tick
- * appends the opposite of presence (`< 1`). An emptied list is `undefined`. Returns the same array when nothing changes.
+ * appends the opposite of presence (`< 1`). `params` (layered rows with an entry): one check per picked param; a check
+ * whose param was unpicked goes, a check without param stays. An emptied list is `undefined`. Returns the same array
+ * when nothing changes.
  */
 export function applyAffixSelection(
   checks: readonly StatCheck[] | undefined,
   model: AffixBrowserModel,
   draft: ReadonlySet<number>,
-  inverted = false
+  inverted = false,
+  params: AffixParamSelection = new Map()
 ): readonly StatCheck[] | undefined {
   const current = checks ?? [];
   const kept = current.filter((check) => {
     const id = listedId(check, model, inverted);
-    return id === undefined || draft.has(id);
+    if (id === undefined) return true;
+    if (!draft.has(id)) return false;
+    const picked = params.get(id);
+    return picked === undefined || check.param === undefined || picked.has(check.param);
   });
   const present = initialAffixSelection(kept, model, inverted);
+  const keptParams = initialAffixParams(kept, model, inverted);
+  const newCheck = (row: AffixBrowserRow, param?: number): StatCheck => {
+    const check = inverted ? newExceptionCheck(row.name) : newStatCheck(row.name);
+    return param === undefined ? check : { ...check, param };
+  };
   const added = model.rows
-    .filter((row) => draft.has(row.id) && !present.has(row.id))
-    .map((row) => (inverted ? newExceptionCheck(row.name) : newStatCheck(row.name)));
+    .filter((row) => draft.has(row.id))
+    .flatMap((row) => {
+      const picked = params.get(row.id);
+      if (picked === undefined) return present.has(row.id) ? [] : [newCheck(row)];
+      const have = keptParams.get(row.id) ?? new Set<number>();
+      return [...picked]
+        .filter((param) => !have.has(param))
+        .sort((a, b) => a - b)
+        .map((param) => newCheck(row, param));
+    });
   if (added.length === 0 && kept.length === current.length) return checks;
   const next = [...kept, ...added];
   return next.length === 0 ? undefined : next;

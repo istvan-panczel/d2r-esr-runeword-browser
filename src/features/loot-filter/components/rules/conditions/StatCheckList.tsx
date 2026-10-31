@@ -186,7 +186,7 @@ export function StatCheckList({ id, data, value, onChange, affixBrowser, anyOf =
               ?.focus();
           }}
         />
-        {affixBrowser !== undefined && <AffixBrowserDialog mode={affixBrowser} value={value} onChange={onChange} />}
+        {affixBrowser !== undefined && <AffixBrowserDialog data={data} mode={affixBrowser} value={value} onChange={onChange} />}
       </div>
     </div>
   );

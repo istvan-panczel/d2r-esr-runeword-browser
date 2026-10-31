@@ -54,6 +54,7 @@ export function ExceptionsControl({ id, data, rule, keepsItems, onChange }: Exce
           }}
         />
         <AffixBrowserDialog
+          data={data}
           mode={mode === 'any' ? 'except-any' : 'except-all'}
           value={rule[target]}
           onChange={(value) => {

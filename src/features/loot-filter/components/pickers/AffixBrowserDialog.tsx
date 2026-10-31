@@ -8,6 +8,7 @@ import { GameDataLoading } from '@/features/game-data/components/GameDataLoading
 import { useGameData } from '@/features/game-data/hooks/useGameData';
 import { cn } from '@/lib/utils';
 import type { StatCheck } from '../../engine/types';
+import type { LootFilterData } from '../../hooks/useLootFilterData';
 import {
   affixKindCounts,
   affixMatches,
@@ -15,7 +16,10 @@ import {
   applyAffixSelection,
   filterAffixBrowser,
   getAffixBrowserModel,
+  initialAffixParams,
   initialAffixSelection,
+  matchingParams,
+  rowsMissingParams,
   type AffixBrowserModel,
   type AffixBrowserRow,
 } from '../../utils/affixBrowser';
@@ -33,6 +37,16 @@ export type AffixBrowserMode = 'all' | 'any' | 'except-any' | 'except-all';
 
 const isInverted = (mode: AffixBrowserMode) => mode === 'except-any' || mode === 'except-all';
 
+/**
+ * Whether several params of one stat mean "any of them" in the mode's list: presence checks in the any-of list, or
+ * exceptions (`< 1`) in the all-of list. In the other two an item needs all of them, so a search does not pre-tick
+ * more than one.
+ */
+const paramsAreAlternatives = (mode: AffixBrowserMode) => mode === 'any' || mode === 'except-any';
+
+/** What a layered row's param is, for "Pick a … for …". */
+const PARAM_WHAT = { tab: 'skill tab', class: 'class', skill: 'skill', event: 'skill and level', charged: 'skill and level' } as const;
+
 const FOOTER_NOTES: Readonly<Record<AffixBrowserMode, string | undefined>> = {
   all: undefined,
   any: 'An item matches when ANY ticked stat is present; a hybrid affix gives all its stats, tick them in the all-of list to require both.',
@@ -47,11 +61,59 @@ interface AffixStatRowProps {
   readonly checked: boolean;
   readonly onToggle: (on: boolean) => void;
   readonly query: string;
+  /** Picked params of a ticked layered row */
+  readonly params: ReadonlySet<number>;
+  readonly onToggleParam: (param: number, on: boolean) => void;
+  /** Several picked params need all of them on the item (all-of list) */
+  readonly paramsNeedAll: boolean;
 }
 
-function AffixStatRow({ row, checked, onToggle, query }: AffixStatRowProps) {
+/** A ticked layered row's params as toggle chips: the ones the search names (plus the picked ones), else all. */
+function ParamChips({ row, query, params, onToggleParam, paramsNeedAll }: Omit<AffixStatRowProps, 'checked' | 'onToggle'>) {
+  const named = new Set(matchingParams(row, query));
+  const shown = (row.params ?? []).filter((entry) => named.size === 0 || named.has(entry.param) || params.has(entry.param));
+  const what = row.layerKind === undefined ? 'param' : PARAM_WHAT[row.layerKind];
+  return (
+    <div className="mt-1 pl-6">
+      <div className="flex max-h-40 flex-wrap gap-1 overflow-y-auto" role="group" aria-label={`${row.label}: pick the ${what}`}>
+        {shown.map((entry) => {
+          const on = params.has(entry.param);
+          return (
+            <button
+              key={entry.param}
+              type="button"
+              aria-pressed={on}
+              title={`param ${String(entry.param)}`}
+              className={cn(
+                'rounded-full border px-2 py-0.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                on ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-accent'
+              )}
+              onClick={() => {
+                onToggleParam(entry.param, !on);
+              }}
+            >
+              {entry.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-0.5 text-xs text-muted-foreground">
+        {params.size === 0
+          ? `Pick the ${what}: the game checks this stat per ${what}.`
+          : paramsNeedAll && params.size > 1
+            ? `This list needs every check, so an item needs all ${String(params.size)} of these.`
+            : `${String(params.size)} picked: one check each.`}
+        {named.size > 0 &&
+          shown.length < (row.params?.length ?? 0) &&
+          ` Showing the ones the search names (${String(shown.length)} of ${String(row.params?.length ?? 0)}).`}
+      </p>
+    </div>
+  );
+}
+
+function AffixStatRow({ row, checked, onToggle, query, params, onToggleParam, paramsNeedAll }: AffixStatRowProps) {
   const [expanded, setExpanded] = useState(false);
-  const matched = row.affixes.map((affix) => query.trim() !== '' && affixMatches(affix, query));
+  const matched = row.affixes.map((affix) => affixMatches(affix, query, row));
   // A search that found an affix past the first few shows the whole list, so the match is visible.
   const open = expanded || matched.slice(SHOWN_AFFIXES).some(Boolean);
   const shown = open ? row.affixes : row.affixes.slice(0, SHOWN_AFFIXES);
@@ -75,7 +137,7 @@ function AffixStatRow({ row, checked, onToggle, query }: AffixStatRowProps) {
         {shown.map((affix, index) => (
           <span key={`${affix.kind}|${affix.name}|${affix.hybridWith.join('|')}`}>
             {index > 0 && ', '}
-            <span className={cn(matched[index] && 'font-medium text-foreground')}>{affixText(affix)}</span>
+            <span className={cn(matched[index] && 'font-medium text-foreground')}>{affixText(affix, row.layerKind)}</span>
           </span>
         ))}
         {!open && hidden > 0 && '…'} ({affixKindCounts(row.affixes)})
@@ -94,6 +156,9 @@ function AffixStatRow({ row, checked, onToggle, query }: AffixStatRowProps) {
           </Button>
         )}
       </p>
+      {checked && row.layerKind !== undefined && (
+        <ParamChips row={row} query={query} params={params} onToggleParam={onToggleParam} paramsNeedAll={paramsNeedAll} />
+      )}
     </li>
   );
 }
@@ -106,19 +171,38 @@ interface AffixBrowserFormProps {
   readonly onCancel: () => void;
 }
 
+const NO_PARAMS: ReadonlySet<number> = new Set();
+
 function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowserFormProps) {
   const inverted = isInverted(mode);
   const footerNote = FOOTER_NOTES[mode];
   const [draft, setDraft] = useState(() => initialAffixSelection(value, model, inverted));
+  const [params, setParams] = useState<ReadonlyMap<number, ReadonlySet<number>>>(() => initialAffixParams(value, model, inverted));
   const [query, setQuery] = useState('');
   const rows = filterAffixBrowser(model.rows, query);
+  const missing = rowsMissingParams(value, model, draft, params, inverted);
 
-  const toggle = (id: number, on: boolean) => {
+  const toggle = (row: AffixBrowserRow, on: boolean) => {
     setDraft((current) => {
       const next = new Set(current);
-      if (on) next.add(id);
-      else next.delete(id);
+      if (on) next.add(row.id);
+      else next.delete(row.id);
       return next;
+    });
+    if (on && row.params !== undefined && (params.get(row.id)?.size ?? 0) === 0) {
+      // Pre-tick what the search names (one only where several would all be needed), or a row's only param.
+      const named = matchingParams(row, query);
+      const picked = row.params.length === 1 ? [row.params[0].param] : paramsAreAlternatives(mode) ? named : named.slice(0, 1);
+      setParams((current) => new Map(current).set(row.id, new Set(picked)));
+    }
+  };
+
+  const toggleParam = (id: number, param: number, on: boolean) => {
+    setParams((current) => {
+      const set = new Set(current.get(id));
+      if (on) set.add(param);
+      else set.delete(param);
+      return new Map(current).set(id, set);
     });
   };
 
@@ -151,22 +235,39 @@ function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowse
                 checked={draft.has(row.id)}
                 query={query}
                 onToggle={(on) => {
-                  toggle(row.id, on);
+                  toggle(row, on);
                 }}
+                params={params.get(row.id) ?? NO_PARAMS}
+                onToggleParam={(param, on) => {
+                  toggleParam(row.id, param, on);
+                }}
+                paramsNeedAll={!paramsAreAlternatives(mode)}
               />
             ))}
           </ul>
         )}
       </div>
       <DialogFooter className="items-center border-t px-4 py-3 sm:px-6">
-        {footerNote !== undefined && <p className="mr-auto text-xs text-muted-foreground">{footerNote}</p>}
+        <div className="mr-auto space-y-0.5">
+          {missing.length > 0 && (
+            <p className="text-xs text-amber-700 dark:text-amber-400" id="affix-browser-missing">
+              {missing
+                .map((row) => `Pick a ${row.layerKind === undefined ? 'param' : PARAM_WHAT[row.layerKind]} for ${row.label}`)
+                .join('; ')}{' '}
+              (or untick it).
+            </p>
+          )}
+          {footerNote !== undefined && <p className="text-xs text-muted-foreground">{footerNote}</p>}
+        </div>
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           type="button"
+          disabled={missing.length > 0}
+          aria-describedby={missing.length > 0 ? 'affix-browser-missing' : undefined}
           onClick={() => {
-            onApply(applyAffixSelection(value, model, draft, inverted));
+            onApply(applyAffixSelection(value, model, draft, inverted, params));
           }}
         >
           Apply
@@ -176,7 +277,7 @@ function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowse
   );
 }
 
-function AffixBrowserBody(props: Omit<AffixBrowserFormProps, 'model'>) {
+function AffixBrowserBody({ data, ...props }: Omit<AffixBrowserFormProps, 'model'> & { readonly data: LootFilterData }) {
   const gameData = useGameData(BUNDLES);
   if (gameData.status === 'loading') return <GameDataLoading />;
   if (gameData.status === 'error') {
@@ -186,10 +287,12 @@ function AffixBrowserBody(props: Omit<AffixBrowserFormProps, 'model'>) {
       </div>
     );
   }
-  return <AffixBrowserForm model={getAffixBrowserModel(gameData.data.affixes)} {...props} />;
+  return <AffixBrowserForm model={getAffixBrowserModel(gameData.data.affixes, data.params)} {...props} />;
 }
 
 interface AffixBrowserDialogProps {
+  /** The loot filter bundles, for the names of skill, tab and class params */
+  readonly data: LootFilterData;
   readonly mode: AffixBrowserMode;
   readonly value: StatChecks;
   /** Called only when Apply changes the list. */
@@ -201,7 +304,7 @@ interface AffixBrowserDialogProps {
  * starts from the stats that already have a check; Apply keeps those checks as they are, removes unticked ones and
  * appends `>= 1` checks for new ticks (see `applyAffixSelection`).
  */
-export function AffixBrowserDialog({ mode, value, onChange }: AffixBrowserDialogProps) {
+export function AffixBrowserDialog({ data, mode, value, onChange }: AffixBrowserDialogProps) {
   const [open, setOpen] = useState(false);
   const inverted = isInverted(mode);
   return (
@@ -217,12 +320,13 @@ export function AffixBrowserDialog({ mode, value, onChange }: AffixBrowserDialog
           <DialogTitle>{inverted ? 'Browse affixes: except items with…' : 'Browse affixes'}</DialogTitle>
           <DialogDescription>
             {inverted
-              ? 'The game checks item stats, not affix names. Tick the stats whose items this hide rule should keep, then Apply: each one is written as the opposite check, “less than 1”; set the number afterwards. Prefix and suffix values add up on one item.'
-              : 'The game checks item stats, not affix names. Find an affix (Cruel, of Mastery…), tick the stat it gives, then Apply: new checks are “at least 1”; set the number afterwards. Prefix and suffix values add up on one item.'}
+              ? 'The game checks item stats, not affix names. Tick the stats whose items this hide rule should keep, then Apply: each one is written as the opposite check, “less than 1”; set the number afterwards. Prefix and suffix values add up on one item. Skill, skill tab and class stats get one check per skill, tab or class picked under the ticked row.'
+              : 'The game checks item stats, not affix names. Find an affix (Cruel, of Mastery…), tick the stat it gives, then Apply: new checks are “at least 1”; set the number afterwards. Prefix and suffix values add up on one item. Skill, skill tab and class stats get one check per skill, tab or class picked under the ticked row.'}
           </DialogDescription>
         </DialogHeader>
         {/* The content unmounts on close, so every opening starts a fresh draft from the list. */}
         <AffixBrowserBody
+          data={data}
           mode={mode}
           value={value}
           onApply={(next) => {

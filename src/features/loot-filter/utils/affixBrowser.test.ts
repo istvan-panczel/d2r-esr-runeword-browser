@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { Affix, AffixesBundle } from '@/features/game-data/engine/schema';
+import type { Affix, AffixesBundle, LootFilterDataBundle, StatParam, TypesBundle } from '@/features/game-data/engine/schema';
 import type { StatCheck } from '../engine/types';
 import {
   affixKindCounts,
@@ -10,8 +10,13 @@ import {
   applyAffixSelection,
   buildAffixBrowserModel,
   filterAffixBrowser,
+  initialAffixParams,
   initialAffixSelection,
+  matchingParams,
+  rowsMissingParams,
 } from './affixBrowser';
+import { buildStatParamData } from './statParams';
+import { TEST_DATA, TEST_TYPES } from './testLookup.mock';
 
 let nextId = 0;
 function affix(kind: Affix['kind'], name: string, lvl: number, stats: number[]): Affix {
@@ -78,9 +83,9 @@ describe('buildAffixBrowserModel', () => {
       { name: 'Cruel', kind: 'prefix', lvl: 40, hybridWith: [] },
       { name: 'of Mastery', kind: 'suffix', lvl: 50, hybridWith: ['Increased Attack Speed'] },
     ]);
-    expect(row(93)?.affixes.map(affixText)).toEqual(['of Haste', 'of Mastery (+Enhanced Damage)']);
-    expect(row(0)?.affixes.map(affixText)).toEqual(['of Strength', 'unnamed automod']);
-    expect(row(19)?.affixes.map(affixText)).toEqual(['Bronze (+Enhanced Damage)', 'Sharp (automod, +Enhanced Damage)']);
+    expect(row(93)?.affixes.map((entry) => affixText(entry))).toEqual(['of Haste', 'of Mastery (+Enhanced Damage)']);
+    expect(row(0)?.affixes.map((entry) => affixText(entry))).toEqual(['of Strength', 'unnamed automod']);
+    expect(row(19)?.affixes.map((entry) => affixText(entry))).toEqual(['Bronze (+Enhanced Damage)', 'Sharp (automod, +Enhanced Damage)']);
   });
 
   it('keeps the min stat as its own row when an affix writes it without the max stat', () => {
@@ -179,9 +184,121 @@ describe('selection', () => {
   });
 });
 
+describe('layered stats', () => {
+  const layered = (kind: Affix['kind'], name: string, lvl: number, layers: StatParam[]): Affix => ({
+    ...affix(kind, name, lvl, [...new Set(layers.map((layer) => layer.stat))]),
+    layers,
+  });
+  const tab = (param: number): StatParam => ({ stat: 188, param });
+  const orb = (level: number): StatParam => ({ stat: 198, param: (472 << 6) | level });
+  const LAYERED: AffixesBundle = {
+    stats: [
+      { id: 0, name: 'strength', label: 'Strength' },
+      { id: 188, name: 'item_addskill_tab', label: 'Skill Tab Levels' },
+      { id: 198, name: 'item_skillonhit', label: 'Chance to Cast on Striking' },
+    ],
+    affixes: [
+      layered('p', 'Shogukusha’s', 10, [tab(50)]),
+      layered('p', 'Arcing', 20, [tab(9)]),
+      layered('p', 'Arcing', 30, [tab(10)]),
+      layered('p', 'Lettered', 5, [tab(0), tab(1), tab(2), tab(8)]),
+      layered('s', 'of Frost', 12, [orb(13)]),
+      layered('s', 'of Winter', 40, [orb(25)]),
+      affix('s', 'of Strength', 3, [0]),
+    ],
+  };
+  const params = buildStatParamData(TEST_DATA, TEST_TYPES);
+  const lmodel = buildAffixBrowserModel(LAYERED, params);
+  const lrow = (id: number) => lmodel.rows.find((candidate) => candidate.id === id);
+  const tabRow = lrow(188);
+  const orbRow = lrow(198);
+
+  it('names the params of layered rows and their affixes, merging rows of one name', () => {
+    expect(tabRow?.layerKind).toBe('tab');
+    expect(tabRow?.params?.map((entry) => entry.label)).toEqual([
+      'Bow and Crossbow Skills (Amazon)',
+      'Passive and Magic Skills (Amazon)',
+      'Javelin and Spear Skills (Amazon)',
+      'Fire Skills (Sorceress)',
+      'Lightning Skills (Sorceress)',
+      'Cold Skills (Sorceress)',
+      'Martial Arts (Assassin)',
+    ]);
+    const arcing = tabRow?.affixes.find((entry) => entry.name === 'Arcing');
+    expect(arcing).toMatchObject({ lvl: 20, params: [{ param: 9 }, { param: 10 }] });
+    expect(arcing === undefined ? '' : affixText(arcing, 'tab')).toBe('Arcing [Lightning Skills (Sorceress), Cold Skills (Sorceress)]');
+    const lettered = tabRow?.affixes.find((entry) => entry.name === 'Lettered');
+    expect(lettered === undefined ? '' : affixText(lettered, 'tab')).toBe('Lettered [4 tabs]');
+    expect(lrow(0)?.layerKind).toBeUndefined();
+    // Without the loot filter data a param is only a number
+    expect(buildAffixBrowserModel(LAYERED).rows.find((candidate) => candidate.id === 188)?.params?.[0].label).toBe('param 0');
+  });
+
+  it('finds layered rows and their params by tab and skill name', () => {
+    const ids = (query: string) => filterAffixBrowser(lmodel.rows, query).map((candidate) => candidate.id);
+    expect(ids('martial')).toEqual([188]);
+    expect(ids('orb of winter')).toEqual([198]);
+    expect(tabRow === undefined ? [] : matchingParams(tabRow, 'martial')).toEqual([50]);
+    expect(tabRow === undefined ? [] : matchingParams(tabRow, 'skill tab sorceress')).toEqual([8, 9, 10]);
+    expect(tabRow === undefined ? [] : matchingParams(tabRow, 'arcing')).toEqual([9, 10]);
+    expect(tabRow === undefined ? [] : matchingParams(tabRow, 'tab levels')).toEqual([]);
+    expect(orbRow === undefined ? [] : matchingParams(orbRow, 'chance orb winter')).toEqual([(472 << 6) | 13, (472 << 6) | 25]);
+    const frost = orbRow?.affixes.find((entry) => entry.name === 'of Frost');
+    expect(frost !== undefined && affixMatches(frost, 'orb')).toBe(true);
+    // Every term must be in the affix or the row: "of" alone in a name does not mark "of Strength" for "orb of winter"
+    const strength = lrow(0)?.affixes[0];
+    expect(strength !== undefined && affixMatches(strength, 'orb of winter', lrow(0))).toBe(false);
+    expect(frost !== undefined && affixMatches(frost, 'chance orb', orbRow)).toBe(true);
+    expect(frost === undefined ? '' : affixText(frost, 'event')).toBe('of Frost [Orb of Winter lvl 13]');
+    expect(affixText({ name: 'of Orb of Winter', kind: 'suffix', lvl: 1, hybridWith: [], params: orbRow?.params }, 'event')).toBe(
+      'of Orb of Winter [lvl 13, 25]'
+    );
+  });
+
+  it('writes one check per picked param, keeping paramless checks', () => {
+    const mt = (param: number) => ({ stat: 'item_addskill_tab', op: '>=', value: 1, param }) as const;
+    const existing: StatCheck[] = [
+      { stat: 188, param: 9, value: 3 },
+      { stat: 'item_addskill_tab', value: 1 },
+      { stat: 'strength', value: 5 },
+    ];
+    expect(initialAffixParams(existing, lmodel)).toEqual(new Map([[188, new Set([9])]]));
+    // Unpicking 9 removes its check, picking 50 and 0 adds them by param; the paramless check stays.
+    expect(applyAffixSelection(existing, lmodel, new Set([188, 0]), false, new Map([[188, new Set([50, 0])]]))).toEqual([
+      { stat: 'item_addskill_tab', value: 1 },
+      { stat: 'strength', value: 5 },
+      mt(0),
+      mt(50),
+    ]);
+    expect(applyAffixSelection(undefined, lmodel, new Set([198]), false, new Map([[198, new Set([(472 << 6) | 25])]]))).toEqual([
+      { stat: 'item_skillonhit', op: '>=', value: 1, param: (472 << 6) | 25 },
+    ]);
+  });
+
+  it('writes “< 1” exceptions per param in the inverted mode', () => {
+    const hide: StatCheck[] = [{ stat: 188, param: 50, op: '>=', value: 3 }];
+    expect(initialAffixParams(hide, lmodel, true).size).toBe(0);
+    expect(applyAffixSelection(hide, lmodel, new Set([188]), true, new Map([[188, new Set([50])]]))).toEqual([
+      ...hide,
+      { stat: 'item_addskill_tab', op: '<', value: 1, param: 50 },
+    ]);
+  });
+
+  it('waits for a param on a ticked layered row without a paramless check', () => {
+    const none = new Map<number, Set<number>>();
+    expect(rowsMissingParams(undefined, lmodel, new Set([188, 0]), none).map((candidate) => candidate.id)).toEqual([188]);
+    expect(rowsMissingParams(undefined, lmodel, new Set([188]), new Map([[188, new Set([50])]]))).toEqual([]);
+    expect(rowsMissingParams([{ stat: 188, value: 1 }], lmodel, new Set([188]), none)).toEqual([]);
+    // The paramless check is a plain one: the inverted mode does not own it
+    expect(rowsMissingParams([{ stat: 188, value: 1 }], lmodel, new Set([188]), none, true)).toHaveLength(1);
+  });
+});
+
 describe('the generated affixes.json', () => {
   const bundle = JSON.parse(readFileSync(resolve(process.cwd(), 'public/game-data/affixes.json'), 'utf8')) as AffixesBundle;
-  const real = buildAffixBrowserModel(bundle);
+  const lootfilter = JSON.parse(readFileSync(resolve(process.cwd(), 'public/game-data/lootfilter.json'), 'utf8')) as LootFilterDataBundle;
+  const types = JSON.parse(readFileSync(resolve(process.cwd(), 'public/game-data/types.json'), 'utf8')) as TypesBundle;
+  const real = buildAffixBrowserModel(bundle, buildStatParamData(lootfilter, types));
 
   it('lists the enhanced damage prefixes and hybrids on one row', () => {
     const ed = real.rows.find((candidate) => candidate.name === 'item_maxdamage_percent');
@@ -199,5 +316,19 @@ describe('the generated affixes.json', () => {
 
   it('never lists technical stats', () => {
     expect(real.rows.filter((candidate) => /tinkerflag|jewelflag|_display$/.test(candidate.name))).toEqual([]);
+  });
+
+  it('finds the skill tab and chance-to-cast rows by tab and skill name', () => {
+    const names = (query: string) => filterAffixBrowser(real.rows, query).map((candidate) => candidate.name);
+    expect(names('martial')).toContain('item_addskill_tab');
+    expect(names('demon')).toContain('item_addskill_tab');
+    // ESR 3.2.24: the "of Orb of Winter" suffixes cast it on casting a skill
+    expect(names('orb of winter')).toContain('item_skilloncast');
+    const tabs = real.rows.find((candidate) => candidate.name === 'item_addskill_tab');
+    expect(tabs === undefined ? [] : matchingParams(tabs, 'martial')).toEqual([50]);
+    expect(tabs === undefined ? [] : matchingParams(tabs, 'demon')).toEqual([56]);
+    // ESR reuses the Necromancer prefix names for the Warlock tabs; the params tell them apart
+    const apprentice = tabs?.affixes.filter((entry) => entry.name === "Apprentice's").map((entry) => affixText(entry, 'tab'));
+    expect(apprentice?.some((text) => text.includes('Demon Skills (Warlock)'))).toBe(true);
   });
 });
