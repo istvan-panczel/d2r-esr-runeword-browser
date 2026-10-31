@@ -26,6 +26,11 @@ export function HowRulesCombine() {
           is no &quot;show&quot; action, so an earlier rule cannot protect an item from a later hide.
         </li>
         <li>
+          <span className="font-medium text-foreground">Tip:</span> hiding is the only way to filter, and anything a hide rule matches is
+          gone, with what earlier rules gave it (label, sound, chat line). Prefer several narrow hide rules (one item type and quality each)
+          over one broad rule, and try the broad ones on a few items in the Test tab.
+        </li>
+        <li>
           To hide most of a group but keep exceptions, put the exceptions into the hide rule as negated conditions. &quot;Hide caps, except
           rare, set, unique or socketed ones&quot; is one rule: item codes <code className={CODE}>cap</code>, quality inferior, normal,
           superior, magic, sockets exactly 0, hide. The except lists, quality lists and flags are the negations you have.

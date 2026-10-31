@@ -237,7 +237,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
 - **Editor** (`RuleEditor`, remounted per rule): "Rule N" (with a "disabled" badge), an **Enabled** checkbox (hint:
   kept in the file under `disabledRules`, which the game ignores; the repo has no Switch component), the `comment` field, the rule's diagnostics (paths relative to
   the rule), a collapsed "How rules combine (AND, OR, hide)" note (`HowRulesCombine`: conditions AND, list values OR,
-  codes and types both checked, top to bottom with hide stopping and no "show", exceptions written as negated
+  codes and types both checked, top to bottom with hide stopping and no "show", a "Tip:" that hiding is the only way
+  to filter and takes the earlier rules' label, sound and chat line with it, so several narrow hide rules (one item
+  type and quality each) beat one broad one, to be tried in the Test tab, exceptions written as negated
   conditions in the hide rule, `hideIfOtherConditionsFail` the other way round, and that it counts every other
   condition, quality included, so "weapon + magic + stat + hide if fail" also hides uniques and rares; the stat
   under "Except items with…" in a plain hide rule (written as `< 1`) keeps only the ones with the stat, since a
