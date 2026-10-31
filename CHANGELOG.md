@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.46.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.45.0...v1.46.0) (2026-10-31)
+
+### Features
+
+* **runewords:** fold per-jewel-count rows, put jewels first, add a Mythical Jewel note ([5b06fdd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5b06fdd8a6a8749d5855d7e32dfeba9c59247de1))
+* **runewords:** merge the rune icon socket row and jewel row folding (feat/runeword-card-icons) ([f79a0ad](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f79a0ad98fec29855f113d2b0ff50302da2856b2))
+* **runewords:** show rune and gem icons in a socket row on runeword cards ([2b49c77](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2b49c77f566401930f25e1e455e583cf42f19169))
+
 ## [1.45.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.44.0...v1.45.0) (2026-10-31)
 
 ### Features
