@@ -92,7 +92,7 @@ clone at `../Eastern_Sun_Resurrected`) into JSON committed under `public/game-da
 `materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `crafting.json`, `tiers.json`, `areas.json`; `skills.json` feeds the Skills page
 and the builds feature, `crafting.json` the builds feature only), plus item icons from the mod's HD sprites, with the
 vanilla D2R art extracted from a game install as the fallback (`npm run game-data:icons`: `icons.json` + `icons/*.webp`:
-bases, uniques, set items and socketables, shown on the Bases, Sets, Unique Items and Socketables pages and in builds),
+bases, uniques, set items and socketables, shown on the Bases, Sets, Unique Items and Socketables pages, in builds and in the runeword cards' socket row),
 and skill icons cropped from the mod's HD skill icon sheets (`icons/skills/*.webp`, `npm run game-data:skill-icons`).
 The browser fetches these lazily;
 they never go through the HTM parsers or IndexedDB. The game-file version is `metadata.modVersion` of the cloned

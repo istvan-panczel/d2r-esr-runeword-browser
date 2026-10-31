@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { RuneBadge } from './RuneBadge';
 import { GemBadge } from '@/core/components/GemBadge';
 import { RunewordPointsDisplay } from './RunewordPointsDisplay';
+import { RunewordSocketRow } from './RunewordSocketRow';
+import { hasJewelSlots } from '../utils/socketSlots';
 import { FavoriteButton } from '@/core/components/FavoriteButton';
 import { SocketableLookupScope } from '@/core/components/SocketableLookupScope';
 import { useSocketableLookup } from '@/core/hooks/useSocketableLookup';
@@ -98,16 +100,26 @@ function RunewordCardContent({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Ingredient sequence (runes + gems in original order) */}
-        <div className="flex flex-wrap gap-1">
-          {ingredientsList.map((item, index) =>
-            isGemName(item) ? (
-              <GemBadge key={`${item}-${String(index)}`} gemName={item} />
-            ) : (
-              <RuneBadge key={`${item}-${String(index)}`} runeName={item} isLod={isLod} />
-            )
+        <div className="space-y-1.5">
+          {/* Required and optional jewel sockets, then the sockets with the ingredient icons */}
+          <RunewordSocketRow runeword={runeword} isLod={isLod} />
+
+          {/* Jewels first (as in the sockets and on the site), then the runes + gems in original order */}
+          <div className="flex flex-wrap gap-1">
+            {jewelInfo && <Badge variant="outline">{jewelInfo}</Badge>}
+            {ingredientsList.map((item, index) =>
+              isGemName(item) ? (
+                <GemBadge key={`${item}-${String(index)}`} gemName={item} />
+              ) : (
+                <RuneBadge key={`${item}-${String(index)}`} runeName={item} isLod={isLod} />
+              )
+            )}
+          </div>
+
+          {/* ESR has a runes.txt row per jewel count, each with plain Jewels (jew) and with Mythical Jewels (mjw) */}
+          {hasJewelSlots(runeword) && (
+            <p className="text-xs text-muted-foreground">Jewels or Mythical Jewels (not mixed); jewels go in the first sockets.</p>
           )}
-          {jewelInfo && <Badge variant="outline">{jewelInfo}</Badge>}
         </div>
 
         {/* Tier point totals - check with 'in' for backwards compatibility with old cached data */}

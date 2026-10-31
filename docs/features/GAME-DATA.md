@@ -771,7 +771,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   parenthetical (the mythicals page lists "Tathamet's Awakening (Fire Variant)" and its siblings), then the optional base
   `code`. `{ kind: 'misc', name, code? }` looks up `name#code` when a code is given, then the plain name (a trailing
   parenthetical dropped; the socketable parsers already strip the rune "(N points)" suffix); a split name without a
-  matching code finds nothing. The Socketables page builds the ref with `socketableIconRef`
+  matching code finds nothing. The Socketables page and the runeword cards build the ref with `socketableIconRef`
   (`src/features/socketables/utils/socketableIcon.ts`): the name, plus a code from `SHARED_NAME_CODES` for the names
   two categories share (Ko Rune: `esrRunes` → r19, `lodRunes` → r68). `components/ItemIcon.tsx` (`item`, `size`, `className`) reserves a `size` × `size` box while icons.json
   loads, so names do not shift when it arrives; once loaded (or after a failed load, `useItemIcons().failed`) an item
@@ -790,8 +790,11 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   (all 41 currently have one, which already shows the same art); builds: the set item card (48 px), the unique /
   mythical cards (the browse cards above), the snapshot fallback (`ItemRefDisplay`, 32 px for unique / mythical / set)
   and the runeword's chosen base in the choices box (24 px); Socketables page cards (44 px, muted box, before the name
-  and the level line). Not on the Runewords page (too crowded), and the builds' socket fillers stay names (jewels have
-  no misc icon yet, and a filler name alone cannot tell the two Ko Runes apart).
+  and the level line); runeword cards: the socket row only (30 px icons in 36 px socket circles, on the Runewords page
+  and the runeword cards the Guide and Builds embed; the rune filter has no icons), runes through `socketableIconRef`
+  with the category the card resolves (`runeIconRef` in `features/runewords/utils/socketSlots.ts`, Ko by the
+  runeword); jewel sockets stay empty (no jewel art yet). The builds' socket fillers stay names (jewels have no misc
+  icon yet, and a filler name alone cannot tell the two Ko Runes apart).
 - **Credits**: the home footer credits the item art to Blizzard Entertainment and the ESR team (used with permission).
 
 Next steps (not built): more misc items (jewels, charms; widen `MISC_ICON_TYPES`); icon tiles in the pickers
