@@ -190,13 +190,16 @@ export function anyKnownLevelChecks(check: StatCheck, statId: number | undefined
 const ON_ITEMS = 'On items';
 const OTHER_SKILLS = 'Other skills';
 
-// Skill lists per data object and stat (743 options each; rebuilt only when the bundles change).
+// Skill lists per data object and stat (752 options each; rebuilt only when the bundles change).
 const skillOptionCache = new WeakMap<StatParamData, Map<string, PickerOption[]>>();
 
 /**
- * The skills for a skill, event or charged stat: value = the skill id. "On items" first (the skills the game data puts
- * on items for that stat, with their known levels), then the class skills by class, then "Other skills".
- * `item_singleskill` (+N to one class skill) lists only class skills besides the known ones.
+ * The skills for a skill, event or charged stat: value = the skill id.
+ * - Event and charged stats: "On items" first (the skills the game data puts on items for that stat, with their known
+ *   levels), then the class skills by class, then "Other skills".
+ * - Skill stats: the game data puts nearly every class skill on items for them (all 280 for `item_singleskill`), so the
+ *   class skills stay grouped by class with "on items" in the detail; only the other skills are split into "On items"
+ *   and "Other skills". `item_singleskill` (+N to one class skill) lists only class skills besides the known ones.
  */
 export function skillOptions(statId: number | undefined, kind: StatLayerKind, d: StatParamData): PickerOption[] {
   const cacheKey = `${String(statId)}|${kind}`;
@@ -212,20 +215,34 @@ export function skillOptions(statId: number | undefined, kind: StatLayerKind, d:
     const value = String(skill.id);
     const cls = className(skill.cls, d);
     const levels = kind === 'event' || kind === 'charged' ? knownLevels(statId, skill.id, d) : [];
-    const detail = [`#${value}`, cls, levels.length > 0 ? `lvl ${levels.join(', ')}` : undefined].filter((part) => part !== undefined);
+    const onItems = kind === 'skill' && known.has(skill.id) && skill.cls !== undefined ? 'on items' : undefined;
+    const detail = [`#${value}`, cls, levels.length > 0 ? `lvl ${levels.join(', ')}` : undefined, onItems].filter(
+      (part) => part !== undefined
+    );
     return { key: value, value, label: skill.name, detail: detail.join(' · '), group, search: searchText(skill.name, skill.id, cls) };
   };
   const byName = (a: LootFilterSkill, b: LootFilterSkill) => a.name.localeCompare(b.name) || a.id - b.id;
   const skills = [...d.skills.values()];
-  const onItems = skills
-    .filter((skill) => known.has(skill.id))
-    .sort(byName)
-    .map((skill) => option(skill, ON_ITEMS));
-  const rest = skills
-    .filter((skill) => !known.has(skill.id) && (!classOnly || skill.cls !== undefined))
-    .sort((a, b) => classIndex(a) - classIndex(b) || byName(a, b))
-    .map((skill) => option(skill, className(skill.cls, d) ?? OTHER_SKILLS));
-  const options = [...onItems, ...rest];
+  const byClass = (a: LootFilterSkill, b: LootFilterSkill) => classIndex(a) - classIndex(b) || byName(a, b);
+  const groupOf = (skill: LootFilterSkill) => className(skill.cls, d) ?? OTHER_SKILLS;
+  const listed = skills.filter((skill) => known.has(skill.id) || !classOnly || skill.cls !== undefined);
+  const options =
+    kind === 'skill'
+      ? [
+          ...listed.filter((skill) => skill.cls !== undefined).sort(byClass),
+          ...listed.filter((skill) => skill.cls === undefined && known.has(skill.id)).sort(byName),
+          ...listed.filter((skill) => skill.cls === undefined && !known.has(skill.id)).sort(byName),
+        ].map((skill) => option(skill, skill.cls === undefined && known.has(skill.id) ? ON_ITEMS : groupOf(skill)))
+      : [
+          ...listed
+            .filter((skill) => known.has(skill.id))
+            .sort(byName)
+            .map((skill) => option(skill, ON_ITEMS)),
+          ...listed
+            .filter((skill) => !known.has(skill.id))
+            .sort(byClass)
+            .map((skill) => option(skill, groupOf(skill))),
+        ];
   cache.set(cacheKey, options);
   return options;
 }

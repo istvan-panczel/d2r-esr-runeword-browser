@@ -81,9 +81,9 @@ describe('picker options', () => {
     ]);
   });
 
-  it('lists the skills on items first, then by class, then the others', () => {
-    const options = skillOptions(97, 'skill', params);
-    expect(options.map((option) => [option.value, option.group])).toEqual([
+  it('keeps class skills by class for skill stats, with "on items" in the detail', () => {
+    // 97: nothing known in the test data; class skills by class, then the others
+    expect(skillOptions(97, 'skill', params).map((option) => [option.value, option.group])).toEqual([
       ['166', 'Sorceress'],
       ['47', 'Sorceress'],
       ['36', 'Sorceress'],
@@ -93,16 +93,26 @@ describe('picker options', () => {
       ['500', 'Other skills'],
     ]);
     const single = skillOptions(107, 'skill', params);
-    // item_singleskill: the known ones first, then class skills only
+    // item_singleskill: class skills only, the known ones marked
     expect(single.map((option) => [option.value, option.group])).toEqual([
-      ['47', 'On items'],
-      ['258', 'On items'],
       ['166', 'Sorceress'],
+      ['47', 'Sorceress'],
       ['36', 'Sorceress'],
       ['472', 'Sorceress'],
+      ['258', 'Assassin'],
     ]);
-    expect(single[0]).toMatchObject({ label: 'Fire Ball', detail: '#47 · Sorceress' });
+    expect(single[1]).toMatchObject({ label: 'Fire Ball', detail: '#47 · Sorceress · on items' });
     expect(filterPickerOptions(single, 'assassin').matches.map((option) => option.value)).toEqual(['258']);
+    // A non-class skill on items gets its own group
+    const withNova = buildStatParamData({ ...TEST_DATA, knownLayers: [{ stat: 97, layers: [500] }] }, TEST_TYPES);
+    expect(
+      skillOptions(97, 'skill', withNova)
+        .slice(-2)
+        .map((option) => [option.value, option.group])
+    ).toEqual([
+      ['500', 'On items'],
+      ['124', 'Other skills'],
+    ]);
   });
 
   it('shows the known levels of event skills on items', () => {

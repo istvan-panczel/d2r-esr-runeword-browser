@@ -309,11 +309,13 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   `game-data/engine/statLayers.ts`), so the param field picks it by name: a skill tab picker (24 tabs grouped by
   class, value `class << 3 | tab`: "Martial Arts (Assassin)" = 50; the search also matches the class name and code),
   a class picker (class id, ama 0 … war 7), a skill picker for `item_singleskill`, `item_nonclassskill` and
-  `item_aura` ("On items" first: the skills the game data puts on items for that stat, from lootfilter.json
-  `knownLayers`; then the class skills by class, then "Other skills"; detail `#id · class`; `item_singleskill` lists
-  class skills only), and for the event stats (chance to cast on hit, attack, kill, death, level up, getting hit,
+  `item_aura` (the class skills by class, then "On items": the non-class skills the game data puts on items for that
+  stat, from lootfilter.json `knownLayers`, then "Other skills"; detail `#id · class`, plus "on items" for a known
+  class skill; the data puts nearly every class skill on items for these stats, all 280 for `item_singleskill`, so an
+  "On items" group first would swallow the class groups; `item_singleskill` lists class skills only), and for the
+  event stats (chance to cast on hit, attack, kill, death, level up, getting hit,
   casting, taking damage) and `item_charged_skill` a skill picker plus a level select (`skill << 6 | level`): the
-  levels the game data puts on items for that skill (the "On items" options list them: "#472 · Sorceress · lvl 15,
+  levels the game data puts on items for that skill (the skill picker lists the skills on items first here, with their levels: "#472 · Sorceress · lvl 15,
   20, 30, 60"), "Other level…" (a 1–63 field), and "Any known level (N)", which replaces the row with one check per
   known level (`anyKnownLevelChecks`, `replaceStatCheckWithMany`). The level field shows while the level is not a known one or after "Other level…" for that skill (a skill change hides it again). Once a param is set, each picker starts with "No param", which removes it (the level select goes with it). Picking a skill keeps the level when the skill
   has it (or has no known level), else takes its lowest known level, 1 without one. The triggers show the name and
