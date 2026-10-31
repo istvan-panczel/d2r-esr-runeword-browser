@@ -1,5 +1,5 @@
 /** Helpers for the rule editor's stat check rows (`itemStats`, `itemStatsAnyOf`, `playerStats`, `playerStatsAnyOf`). */
-import type { StatCheck, StatOp } from '../engine/types';
+import type { LootFilterRule, StatCheck, StatOp } from '../engine/types';
 import type { LootFilterLookup } from './lookup';
 
 export const DEFAULT_STAT_OP: StatOp = '>=';
@@ -45,6 +45,77 @@ export function replaceStatCheck(list: readonly StatCheck[], index: number, chec
 export function removeStatCheck(list: readonly StatCheck[], index: number): readonly StatCheck[] | undefined {
   const next = list.filter((_, position) => position !== index);
   return next.length === 0 ? undefined : next;
+}
+
+// --- Exceptions on hide rules ---
+
+const INVERTED_OPS: Readonly<Record<Exclude<StatOp, 'between'>, StatOp>> = {
+  '>=': '<',
+  '>': '<=',
+  '==': '!=',
+  '!=': '==',
+  '<': '>=',
+  '<=': '>',
+};
+
+/**
+ * The opposite check (`X >= 1` → `X < 1`, `>`↔`<=`, `==`↔`!=`); undefined for `between`, which has no single
+ * opposite check (an item outside a range is below it or above it).
+ */
+export function invertStatCheck(check: StatCheck): StatCheck | undefined {
+  const op = check.op ?? DEFAULT_STAT_OP;
+  if (op === 'between' || typeof check.value !== 'number') return undefined;
+  return { ...check, op: INVERTED_OPS[op] };
+}
+
+/** The ops an exception is written with: the opposites of `>=`, `>` and `==`. */
+const EXCEPTION_OPS: readonly StatOp[] = ['<', '<=', '!='];
+
+/**
+ * On a hide rule, the exception a stored check stands for (`X < 1` → "unless X ≥ 1"): the opposite of a `<`, `<=` or
+ * `!=` check, the ops the "Except items with…" control writes. Other checks read as plain conditions (undefined).
+ */
+export function exceptionOf(check: StatCheck): StatCheck | undefined {
+  return check.op !== undefined && EXCEPTION_OPS.includes(check.op) ? invertStatCheck(check) : undefined;
+}
+
+/** The stored check of a new exception "items with the stat ≥ 1": `{ stat, op: '<', value: 1 }`. */
+export function newExceptionCheck(stat: string | number): StatCheck {
+  return { stat, op: '<', value: 1 };
+}
+
+/** Where an exception goes: `any` keeps items with any exception (`itemStats`), `all` only those with all (`itemStatsAnyOf`). */
+export type ExceptionMode = 'any' | 'all';
+
+export const EXCEPTION_LIST: Readonly<Record<ExceptionMode, 'itemStats' | 'itemStatsAnyOf'>> = {
+  any: 'itemStats',
+  all: 'itemStatsAnyOf',
+};
+
+/**
+ * What a hide rule's stat checks keep out of the hide, read back from the stored lists: `any` = the exceptions in
+ * `itemStats` (one is enough to keep an item, since every check there must hold to hide it); `all` = the exceptions in
+ * `itemStatsAnyOf` when every check there reads as one (an item is kept only when it has all of them), else empty;
+ * `mixedAll` = `itemStatsAnyOf` also has plain checks, so exceptions added there are ORed with them.
+ */
+export interface RuleExceptions {
+  readonly any: readonly StatCheck[];
+  readonly all: readonly StatCheck[];
+  readonly mixedAll: boolean;
+}
+
+function exceptionsIn(checks: readonly StatCheck[] | undefined): StatCheck[] {
+  return (checks ?? []).flatMap((check) => {
+    const exception = exceptionOf(check);
+    return exception === undefined ? [] : [exception];
+  });
+}
+
+export function ruleExceptions(rule: Pick<LootFilterRule, 'itemStats' | 'itemStatsAnyOf'>): RuleExceptions {
+  const anyOf = rule.itemStatsAnyOf ?? [];
+  const all = exceptionsIn(anyOf);
+  const pure = all.length === anyOf.length;
+  return { any: exceptionsIn(rule.itemStats), all: pure ? all : [], mixedAll: !pure && anyOf.length > 0 };
 }
 
 /** `item_numsockets ≥2`, `strength[1] 5–10` (between), `#96 >0` (an unknown id), `? ≥1` (no stat yet). */

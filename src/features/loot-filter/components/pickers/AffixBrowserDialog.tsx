@@ -25,8 +25,20 @@ const BUNDLES = ['affixes'] as const;
 /** Affix names shown before "+N more". */
 const SHOWN_AFFIXES = 8;
 
-/** Which stat list the browser edits: `itemStats` (all of) or `itemStatsAnyOf` (any of). */
-export type AffixBrowserMode = 'all' | 'any';
+/**
+ * Which stat list the browser edits and how: `itemStats` (all of) or `itemStatsAnyOf` (any of) with presence checks,
+ * or a hide rule's exceptions with inverted checks (`except-any` into `itemStats`, `except-all` into `itemStatsAnyOf`).
+ */
+export type AffixBrowserMode = 'all' | 'any' | 'except-any' | 'except-all';
+
+const isInverted = (mode: AffixBrowserMode) => mode === 'except-any' || mode === 'except-all';
+
+const FOOTER_NOTES: Readonly<Record<AffixBrowserMode, string | undefined>> = {
+  all: undefined,
+  any: 'An item matches when ANY ticked stat is present; a hybrid affix gives all its stats, tick them in the all-of list to require both.',
+  'except-any': 'Ticked stats are written as “less than 1” checks into Item stats, all of: the rule hides only items with none of them.',
+  'except-all': 'Ticked stats are written as “less than 1” checks into Item stats, any of: the rule keeps only items with all of them.',
+};
 
 type StatChecks = readonly StatCheck[] | undefined;
 
@@ -95,7 +107,9 @@ interface AffixBrowserFormProps {
 }
 
 function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowserFormProps) {
-  const [draft, setDraft] = useState(() => initialAffixSelection(value, model));
+  const inverted = isInverted(mode);
+  const footerNote = FOOTER_NOTES[mode];
+  const [draft, setDraft] = useState(() => initialAffixSelection(value, model, inverted));
   const [query, setQuery] = useState('');
   const rows = filterAffixBrowser(model.rows, query);
 
@@ -145,19 +159,14 @@ function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowse
         )}
       </div>
       <DialogFooter className="items-center border-t px-4 py-3 sm:px-6">
-        {mode === 'any' && (
-          <p className="mr-auto text-xs text-muted-foreground">
-            An item matches when ANY ticked stat is present; a hybrid affix gives all its stats, tick them in the all-of list to require
-            both.
-          </p>
-        )}
+        {footerNote !== undefined && <p className="mr-auto text-xs text-muted-foreground">{footerNote}</p>}
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
         <Button
           type="button"
           onClick={() => {
-            onApply(applyAffixSelection(value, model, draft));
+            onApply(applyAffixSelection(value, model, draft, inverted));
           }}
         >
           Apply
@@ -194,20 +203,22 @@ interface AffixBrowserDialogProps {
  */
 export function AffixBrowserDialog({ mode, value, onChange }: AffixBrowserDialogProps) {
   const [open, setOpen] = useState(false);
+  const inverted = isInverted(mode);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm" className="h-7 px-2 text-xs">
           <ListChecks className="size-3.5" aria-hidden />
-          Browse affixes…
+          {inverted ? 'Browse affixes for exceptions…' : 'Browse affixes…'}
         </Button>
       </DialogTrigger>
       <DialogContent className="flex max-h-[85vh] flex-col gap-0 p-0 sm:max-w-5xl">
         <DialogHeader className="px-4 pt-4 pb-3 pr-12 sm:px-6 sm:pr-12">
-          <DialogTitle>Browse affixes</DialogTitle>
+          <DialogTitle>{inverted ? 'Browse affixes: except items with…' : 'Browse affixes'}</DialogTitle>
           <DialogDescription>
-            The game checks item stats, not affix names. Find an affix (Cruel, of Mastery…), tick the stat it gives, then Apply: new checks
-            are “at least 1”; set the number afterwards. Prefix and suffix values add up on one item.
+            {inverted
+              ? 'The game checks item stats, not affix names. Tick the stats whose items this hide rule should keep, then Apply: each one is written as the opposite check, “less than 1”; set the number afterwards. Prefix and suffix values add up on one item.'
+              : 'The game checks item stats, not affix names. Find an affix (Cruel, of Mastery…), tick the stat it gives, then Apply: new checks are “at least 1”; set the number afterwards. Prefix and suffix values add up on one item.'}
           </DialogDescription>
         </DialogHeader>
         {/* The content unmounts on close, so every opening starts a fresh draft from the list. */}

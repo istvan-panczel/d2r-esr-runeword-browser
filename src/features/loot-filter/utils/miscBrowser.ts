@@ -123,9 +123,12 @@ export function buildMiscBrowserModel(
   const candidates = lootfilterItems.filter((item) => item.kind === 'misc' && item.drops && !baseCodes.has(item.code));
 
   const containers = containerTypes(candidates);
-  const excluded = [...containers].map(
-    ([code, typeItems]): ExcludedMiscType => ({ code, name: typeName(code), itemName: typeItems[0]?.name ?? '', count: typeItems.length })
-  );
+  const excluded = [...containers].map(([code, typeItems]): ExcludedMiscType => ({
+    code,
+    name: typeName(code),
+    itemName: typeItems[0]?.name ?? '',
+    count: typeItems.length,
+  }));
   const listed = candidates.filter((item) => !containers.has(item.type));
   const ladder = buildLadder(listed, typeByCode);
 

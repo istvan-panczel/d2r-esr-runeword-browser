@@ -5,7 +5,7 @@
 import type { Affix, AffixesBundle } from '@/features/game-data/engine/schema';
 import { statQuirk } from '../engine/statQuirks';
 import type { StatCheck } from '../engine/types';
-import { newStatCheck } from './statChecks';
+import { exceptionOf, newExceptionCheck, newStatCheck } from './statChecks';
 
 export type AffixKind = 'prefix' | 'suffix' | 'automagic';
 
@@ -152,17 +152,25 @@ export function affixKindCounts(affixes: readonly AffixBrowserAffix[]): string {
 
 // --- Selection ---
 
-/** The id a check's stat (an itemstatcost name or id) has in the browser; undefined when it does not list it. */
-function listedId(check: StatCheck, model: AffixBrowserModel): number | undefined {
+/**
+ * The id a check's stat (an itemstatcost name or id) has in the browser; undefined when it does not list it. In the
+ * inverted (exception) mode only exception checks (`<`, `<=`, `!=`, see `exceptionOf`) count; plain checks on the
+ * same stat are left alone.
+ */
+function listedId(check: StatCheck, model: AffixBrowserModel, inverted: boolean): number | undefined {
+  if (inverted && exceptionOf(check) === undefined) return undefined;
   if (typeof check.stat === 'number') return model.rows.some((row) => row.id === check.stat) ? check.stat : undefined;
   return model.ids.get(check.stat);
 }
 
-/** The draft: the listed stats that already have a check in the list (any op, value or param). */
-export function initialAffixSelection(checks: readonly StatCheck[] | undefined, model: AffixBrowserModel): Set<number> {
+/**
+ * The draft: the listed stats that already have a check in the list (any op, value or param); `inverted`: the listed
+ * stats with an exception check.
+ */
+export function initialAffixSelection(checks: readonly StatCheck[] | undefined, model: AffixBrowserModel, inverted = false): Set<number> {
   const selected = new Set<number>();
   for (const check of checks ?? []) {
-    const id = listedId(check, model);
+    const id = listedId(check, model, inverted);
     if (id !== undefined) selected.add(id);
   }
   return selected;
@@ -171,20 +179,24 @@ export function initialAffixSelection(checks: readonly StatCheck[] | undefined, 
 /**
  * The list after Apply: checks on stats the browser does not list, and on ticked stats, stay as they are; checks on
  * listed stats that were unticked go; each newly ticked stat appends a presence check (`>= 1`, by name) in display order.
- * An emptied list is `undefined`. Returns the same array when nothing changes.
+ * `inverted` (the "Except items with…" mode of a hide rule): only exception checks are the browser's, and a new tick
+ * appends the opposite of presence (`< 1`). An emptied list is `undefined`. Returns the same array when nothing changes.
  */
 export function applyAffixSelection(
   checks: readonly StatCheck[] | undefined,
   model: AffixBrowserModel,
-  draft: ReadonlySet<number>
+  draft: ReadonlySet<number>,
+  inverted = false
 ): readonly StatCheck[] | undefined {
   const current = checks ?? [];
   const kept = current.filter((check) => {
-    const id = listedId(check, model);
+    const id = listedId(check, model, inverted);
     return id === undefined || draft.has(id);
   });
-  const present = initialAffixSelection(kept, model);
-  const added = model.rows.filter((row) => draft.has(row.id) && !present.has(row.id)).map((row) => newStatCheck(row.name));
+  const present = initialAffixSelection(kept, model, inverted);
+  const added = model.rows
+    .filter((row) => draft.has(row.id) && !present.has(row.id))
+    .map((row) => (inverted ? newExceptionCheck(row.name) : newStatCheck(row.name)));
   if (added.length === 0 && kept.length === current.length) return checks;
   const next = [...kept, ...added];
   return next.length === 0 ? undefined : next;

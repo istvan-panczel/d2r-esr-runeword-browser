@@ -1,6 +1,10 @@
 import {
+  exceptionOf,
   formatStatCheck,
+  invertStatCheck,
+  newExceptionCheck,
   newStatCheck,
+  ruleExceptions,
   parseStatInput,
   removeStatCheck,
   replaceStatCheck,
@@ -48,5 +52,59 @@ describe('stat check helpers', () => {
     expect(formatStatCheck({ stat: 194, value: 2 }, EMPTY_LOOKUP)).toBe('#194 ≥2');
     expect(formatStatCheck({ stat: 'strength', param: 1, op: 'between', value: [5, 10] }, TEST_LOOKUP)).toBe('strength[1] 5–10');
     expect(formatStatCheck({ stat: '', op: '==', value: 0 }, TEST_LOOKUP)).toBe('? ==0');
+  });
+});
+
+describe('exceptions on hide rules', () => {
+  it('inverts every op but between, keeping stat and param', () => {
+    const pairs = [
+      ['>=', '<'],
+      ['>', '<='],
+      ['==', '!='],
+      ['!=', '=='],
+      ['<', '>='],
+      ['<=', '>'],
+    ] as const;
+    for (const [op, inverse] of pairs) {
+      expect(invertStatCheck({ stat: 'strength', param: 2, op, value: 5 })).toEqual({ stat: 'strength', param: 2, op: inverse, value: 5 });
+    }
+    expect(invertStatCheck({ stat: 0, value: 1 })).toEqual({ stat: 0, op: '<', value: 1 });
+    expect(invertStatCheck({ stat: 0, op: 'between', value: [1, 5] })).toBeUndefined();
+  });
+
+  it('round-trips: inverting twice gives the check back (with an explicit op)', () => {
+    const check = { stat: 'item_demondamage_percent', op: '>=', value: 1 } as const;
+    const inverted = invertStatCheck(check);
+    expect(inverted).toEqual(newExceptionCheck('item_demondamage_percent'));
+    expect(inverted === undefined ? undefined : invertStatCheck(inverted)).toEqual(check);
+  });
+
+  it('reads <, <= and != checks as exceptions, the others as plain conditions', () => {
+    expect(exceptionOf({ stat: 0, op: '<', value: 1 })).toEqual({ stat: 0, op: '>=', value: 1 });
+    expect(exceptionOf({ stat: 0, op: '<=', value: 4 })).toEqual({ stat: 0, op: '>', value: 4 });
+    expect(exceptionOf({ stat: 0, op: '!=', value: 3 })).toEqual({ stat: 0, op: '==', value: 3 });
+    for (const op of ['>=', '>', '==', 'between'] as const) {
+      expect(exceptionOf({ stat: 0, op, value: op === 'between' ? [1, 2] : 1 })).toBeUndefined();
+    }
+    expect(exceptionOf({ stat: 0, value: 1 })).toBeUndefined();
+  });
+
+  it('collects a hide rule’s exceptions: any from itemStats, all from itemStatsAnyOf only when every check there is one', () => {
+    const plain = { stat: 'item_numsockets', op: '>=', value: 1 } as const;
+    expect(
+      ruleExceptions({
+        itemStats: [plain, newExceptionCheck('item_demondamage_percent')],
+        itemStatsAnyOf: [newExceptionCheck('a'), { stat: 'b', op: '<=', value: 2 }],
+      })
+    ).toEqual({
+      any: [{ stat: 'item_demondamage_percent', op: '>=', value: 1 }],
+      all: [
+        { stat: 'a', op: '>=', value: 1 },
+        { stat: 'b', op: '>', value: 2 },
+      ],
+      mixedAll: false,
+    });
+    expect(ruleExceptions({ itemStatsAnyOf: [plain, newExceptionCheck('a')] })).toEqual({ any: [], all: [], mixedAll: true });
+    expect(ruleExceptions({})).toEqual({ any: [], all: [], mixedAll: false });
   });
 });

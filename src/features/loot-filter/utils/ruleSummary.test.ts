@@ -48,6 +48,30 @@ describe('ruleSummary', () => {
     expect(ruleSummary({ excludeUniqueOrSetIds: [0, 9] }, TEST_LOOKUP)).toBe('not The Gnasher, #9');
   });
 
+  it('reads a hide rule’s <, <= and != item stat checks as exceptions', () => {
+    const demon = { stat: 'item_demondamage_percent', op: '<', value: 1 } as const;
+    expect(ruleSummary({ itemTypes: ['axe'], quality: 'magic', itemStats: [demon], hide: true }, TEST_LOOKUP)).toBe(
+      'Axe · magic · unless item_demondamage_percent ≥1 · hide'
+    );
+    expect(
+      ruleSummary(
+        {
+          itemStats: [{ stat: 194, value: 2 }, demon, { stat: 'a', op: '<=', value: 5 }, { stat: 'b', op: '!=', value: 0 }],
+          hide: true,
+        },
+        TEST_LOOKUP
+      )
+    ).toBe('item_numsockets ≥2 · unless item_demondamage_percent ≥1 or a >5 +1 · hide');
+    expect(ruleSummary({ itemStatsAnyOf: [demon, { stat: 'a', op: '<', value: 3 }], hide: true }, TEST_LOOKUP)).toBe(
+      'unless item_demondamage_percent ≥1 and a ≥3 · hide'
+    );
+    // A mixed any-of list and rules that do not hide read as plain checks.
+    expect(ruleSummary({ itemStatsAnyOf: [demon, { stat: 'a', value: 3 }], hide: true }, TEST_LOOKUP)).toBe(
+      'any of item_demondamage_percent <1 +1 · hide'
+    );
+    expect(ruleSummary({ itemStats: [demon], namePrefix: 'x' }, TEST_LOOKUP)).toBe('item_demondamage_percent <1 · prefix “x”');
+  });
+
   it('says "any item" for a rule without conditions', () => {
     expect(ruleSummary({}, TEST_LOOKUP)).toBe('any item');
     expect(ruleSummary({ comment: 'note' }, TEST_LOOKUP)).toBe('any item');

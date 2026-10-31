@@ -142,6 +142,23 @@ describe('selection', () => {
     ]);
   });
 
+  it('in the inverted (exception) mode owns only the exception checks and appends “< 1” checks', () => {
+    const hide: StatCheck[] = [
+      { stat: 'item_maxdamage_percent', op: '>=', value: 100 },
+      { stat: 'tohit', op: '<', value: 1 },
+      { stat: 93, op: '<=', value: 4 },
+    ];
+    expect([...initialAffixSelection(hide, model, true)].sort((a, b) => a - b)).toEqual([19, 93]);
+    // Unticking Attack Rating removes its exception, ticking Enhanced Damage adds one beside the plain >= 100 check.
+    expect(applyAffixSelection(hide, model, new Set([93, 17]), true)).toEqual([
+      { stat: 'item_maxdamage_percent', op: '>=', value: 100 },
+      { stat: 93, op: '<=', value: 4 },
+      { stat: 'item_maxdamage_percent', op: '<', value: 1 },
+    ]);
+    expect(applyAffixSelection(hide, model, new Set([19, 93]), true)).toBe(hide);
+    expect(applyAffixSelection(undefined, model, new Set([0]), true)).toEqual([{ stat: 'strength', op: '<', value: 1 }]);
+  });
+
   it('returns the same list when nothing changes and undefined when emptied', () => {
     expect(applyAffixSelection(checks, model, new Set([17, 93]))).toBe(checks);
     expect(applyAffixSelection(undefined, model, new Set())).toBeUndefined();

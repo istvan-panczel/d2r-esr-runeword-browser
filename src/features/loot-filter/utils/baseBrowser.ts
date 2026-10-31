@@ -52,33 +52,31 @@ export function buildBaseBrowserModel(bases: readonly BaseItem[], types: readonl
   const toItem = (base: BaseItem) => toBrowserItem(base, typeByCode);
 
   const codes: string[] = [];
-  const groups = buildBaseFamilies(bases, types).map(
-    (group): BrowserGroup => ({
-      label: group.label,
-      types: group.types.map((type): BrowserType => {
-        const tiered = type.rows.some((row) => row.cells.exceptional !== null || row.cells.elite !== null);
-        const browserType: BrowserType = tiered
-          ? {
-              ...emptyType(type.code, type.name),
-              layout: 'grid',
-              columns: BASE_COLUMNS,
-              rows: type.rows.map((row) => ({
-                key: row.key,
-                cells: FAMILY_TIERS.map((tier) => row.cells[tier] && toItem(row.cells[tier])),
-              })),
-              extras: type.mythical.map(toItem),
-              extrasColumn: TIER_COLUMN.mythical,
-            }
-          : {
-              ...emptyType(type.code, type.name),
-              layout: 'list',
-              items: [...type.rows.map(familyHead), ...type.mythical].sort(byQlvl).map(toItem),
-            };
-        codes.push(...displayCodes(browserType));
-        return browserType;
-      }),
-    })
-  );
+  const groups = buildBaseFamilies(bases, types).map((group): BrowserGroup => ({
+    label: group.label,
+    types: group.types.map((type): BrowserType => {
+      const tiered = type.rows.some((row) => row.cells.exceptional !== null || row.cells.elite !== null);
+      const browserType: BrowserType = tiered
+        ? {
+            ...emptyType(type.code, type.name),
+            layout: 'grid',
+            columns: BASE_COLUMNS,
+            rows: type.rows.map((row) => ({
+              key: row.key,
+              cells: FAMILY_TIERS.map((tier) => row.cells[tier] && toItem(row.cells[tier])),
+            })),
+            extras: type.mythical.map(toItem),
+            extrasColumn: TIER_COLUMN.mythical,
+          }
+        : {
+            ...emptyType(type.code, type.name),
+            layout: 'list',
+            items: [...type.rows.map(familyHead), ...type.mythical].sort(byQlvl).map(toItem),
+          };
+      codes.push(...displayCodes(browserType));
+      return browserType;
+    }),
+  }));
   return { groups, codes };
 }
 

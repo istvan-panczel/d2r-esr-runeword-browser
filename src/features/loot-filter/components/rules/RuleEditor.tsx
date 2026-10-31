@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { effectiveActions } from '../../engine/actions';
 import { ACTION_KEYS } from '../../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterRule, RuleActions } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
@@ -13,6 +14,7 @@ import type { ShallowPatch } from '../../utils/patch';
 import { ActionsEditor } from '../actions/ActionsEditor';
 import { AreaPicker, ItemPicker, ItemTypePicker, UniqueOrSetPicker } from '../pickers';
 import { ConditionField, ConditionSection } from './conditions/ConditionField';
+import { ExceptionsControl } from './conditions/ExceptionsControl';
 import { LevelsControl } from './conditions/LevelsControl';
 import { LocationControl } from './conditions/LocationControl';
 import { NamedMatchControl } from './conditions/NamedMatchControl';
@@ -132,6 +134,9 @@ const STAT_FIELDS: readonly (FieldText & { readonly key: 'itemStats' | 'itemStat
   },
 ];
 
+/** On a hide rule the item stat lists also hold its exceptions (`ExceptionsControl`). */
+const HIDE_RULE_STAT_HINT = ' On a hide rule, the <, <= and != checks are its exceptions (above).';
+
 const FLAGS = [
   { key: 'isEthereal', label: 'Ethereal' },
   { key: 'isRuneword', label: 'Runeword' },
@@ -157,6 +162,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   const dispatch = useDispatch();
   const patch = (value: ShallowPatch<LootFilterRule>) => dispatch(patchRule({ index, patch: value }));
   const passthroughKeys = Object.keys(rule.passthrough ?? {});
+  const hides = effectiveActions(rule, filter).hide === true;
   const invalid = (key: string) => passthroughKeys.includes(key);
 
   const listField = (field: ListField) => (
@@ -284,8 +290,24 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
           </ConditionSection>
 
           <ConditionSection title="Stats">
+            {hides && (
+              <ConditionField
+                id={fieldId('exceptions')}
+                label="Except items with…"
+                hint="The hide skips items with these stats. Each one is written as its opposite check (≥ 1 becomes < 1): “any of these” into Item stats, all of; “all of these” into Item stats, any of. A range (between) has no single opposite, so it cannot be an exception."
+                className="sm:col-span-2"
+              >
+                <ExceptionsControl id={fieldId('exceptions')} data={data} rule={rule} onChange={(key, value) => patch({ [key]: value })} />
+              </ConditionField>
+            )}
             {STAT_FIELDS.map((field) => (
-              <ConditionField key={field.key} id={fieldId(field.key)} label={field.label} hint={field.hint} invalid={invalid(field.key)}>
+              <ConditionField
+                key={field.key}
+                id={fieldId(field.key)}
+                label={field.label}
+                hint={hides && field.key.startsWith('item') ? field.hint + HIDE_RULE_STAT_HINT : field.hint}
+                invalid={invalid(field.key)}
+              >
                 <StatCheckList
                   id={fieldId(field.key)}
                   data={data}

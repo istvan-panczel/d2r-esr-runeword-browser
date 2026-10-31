@@ -10,35 +10,6 @@ own log strings.
 
 ## Waiting for an in-game check
 
-### "Except items with…" control on hide rules
-
-**Request.** "Hide all magic weapons except those with Demon Damage." The user wrote `itemTypes: weap`, `quality:
-magic`, a stat check and `hideIfOtherConditionsFail`, which also hides uniques and rares: the hide-if-fail gate is only
-codes, types and location, every other condition (quality included) failing hides the item (guide, "How rules match";
-the plugin even warns "without itemCodes this hides every ground item that fails the rule").
-
-**Encoding that works in our evaluator.** A plain hide rule with the stat negated:
-
-```json
-{ "itemTypes": ["weap"], "quality": "magic", "itemStats": [{ "stat": "item_demondamage_percent", "op": "<", "value": 1 }], "hide": true }
-```
-
-Several exceptions: more checks in `itemStats` (hide unless demon OR enhanced damage); a hybrid that must have both
-stats: the inverted checks in `itemStatsAnyOf`. `between` cannot be inverted in one check.
-
-**Why it waits.** It relies on "a stat the item lacks compares as 0", an assumption in the "Verify in game" list of
-LOOT-FILTER.md. If the plugin instead fails the check on a missing stat, these rules hide nothing (fail open).
-**Test filter** for a volunteer: one rule `{ "itemTypes": ["weap"], "quality": "magic", "itemStats": [{ "stat":
-"item_demondamage_percent", "op": "<", "value": 1 }], "hide": true }`; drop or find a magic weapon without demon
-damage: hidden means the assumption holds.
-
-**Design when verified.** Stats section of a hide rule gets an "Except items with…" list: pick stat, op, value; the
-editor writes the inverted check (`>=`→`<`, `>`→`<=`, `==`→`!=`, `!=`→`==`) into `itemStats` ("except items with any
-of") or `itemStatsAnyOf` ("except items with all of"); `ruleSummary` renders `< 1` on a hide rule as "unless X ≥ 1";
-the affix browser's Apply offers the same inverted mode. Files: `components/rules/RuleEditor.tsx`,
-`conditions/StatCheckList.tsx`, `utils/statChecks.ts` (an `invertStatCheck` helper), `utils/ruleSummary.ts`,
-`HowRulesCombine.tsx`. Effort S–M.
-
 ### Empty condition lists (`activeInLevels: []`)
 
 The level checkboxes write `activeInLevels: []` when every level is unticked ("no level" badge); our evaluator treats

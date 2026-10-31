@@ -240,8 +240,8 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   codes and types both checked, top to bottom with hide stopping and no "show", exceptions written as negated
   conditions in the hide rule, `hideIfOtherConditionsFail` the other way round, and that it counts every other
   condition, quality included, so "weapon + magic + stat + hide if fail" also hides uniques and rares; the stat
-  negated to `< 1` in a plain hide rule keeps only the ones with the stat, relying on the missing-stat-is-0
-  assumption; a "Test tab" link sets `?tab=test`),
+  under "Except items with…" in a plain hide rule (written as `< 1`) keeps only the ones with the stat, since a
+  missing stat counts as 0 (verified in game); a "Test tab" link sets `?tab=test`),
   then the conditions in sections (Which items, Item properties, Stats, Where and when) and an Actions card
   with `ActionsEditor owner="rule"`. Every change dispatches `patchRule`; an emptied list removes its key. A condition
   whose file value had the wrong shape (kept in `passthrough`) gets a note; every passthrough key is listed read-only in
@@ -260,6 +260,26 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   affix names; `location` checkboxes (none = on the ground); `activeInLevels`: "Every level" or a tick per
   filter level, unknown ids listed with a remove button. Unticking every level writes `activeInLevels: []` (the
   validator warns about the empty list); ticking "Every level" removes the key.
+- **Except items with…** (`conditions/ExceptionsControl.tsx`, hide rules only: own or style `hide`, first field of
+  the Stats section). Request: "hide all magic weapons except those with Demon Damage". The format has no exception
+  key, so the control is an input helper that writes the opposite check (`invertStatCheck` in `utils/statChecks.ts`:
+  `>=`↔`<`, `>`↔`<=`, `==`↔`!=`; `between` has no single opposite, which the hint says) into an item stat list:
+  "Keep items with any of these" → `itemStats` (every check must hold to hide, so one exception keeps the item),
+  "Keep items with all of these" → `itemStatsAnyOf` (one failing exception hides it). "Add exception" (a stat picker)
+  appends `{ stat, op: "<", value: 1 }`; "Browse affixes for exceptions…" opens the affix browser in its inverted
+  mode on the same list. The checks are then edited in the lists like any other (set the value there). Below, a
+  "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." line reads the exceptions back (`ruleExceptions`); in
+  the all-of mode a note warns when `itemStatsAnyOf` also holds plain checks (an exception there then only keeps items
+  that also fail them). The item stat lists' hints add "On a hide rule, the <, <= and != checks are its exceptions".
+  - _Why no list of its own_: the file stores only plain checks, and on a hide rule every check of `itemStats` is
+    exactly "except items with its opposite", so an exception list that took the checks out of `itemStats` would
+    either show the user's `item_numsockets >= 1` ("hide socketed items") as "except item_numsockets < 1" or guess
+    by op which checks were meant as exceptions. The checks therefore stay where the file has them (one source of
+    truth, nothing reordered), and only the `<`, `<=` and `!=` ops, the ones the control writes from `>=`, `>` and
+    `==`, are read back as exceptions (`exceptionOf`), in the "Kept:" line and in the rule summary (`ruleSummary`: a
+    hide rule's `item_demondamage_percent < 1` reads "unless item_demondamage_percent ≥1"; several in `itemStats`
+    join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed `itemStatsAnyOf` stays "any of …"). The
+    summary looks at the rule's own `hide`, the control at the effective one (a style can hide).
 - **Pickers** (`components/pickers/index.ts`): `MultiPicker` / `SinglePicker` (Popover + cmdk with our own filter,
   `utils/pickerSearch.ts`: every term in name or code/id, exact and prefix matches first, at most 200 shown with "type
   to narrow"; Enter picks the highlighted option; the "Add code …" entry for typed values comes last) and the wrappers
@@ -428,7 +448,10 @@ focus returns to the button).
   newly ticked stat in display order; an emptied list removes the key, and nothing is dispatched when nothing changes.
 - **Any-of note**: opened from `itemStatsAnyOf`, the footer says "An item matches when ANY ticked stat is present; a
   hybrid affix gives all its stats, tick them in the all-of list to require both."
-- Not built: an "Except" (inverted) mode, deferred in the backlog.
+- **Inverted mode** (`except-any` / `except-all`, from "Except items with…"): only the exception checks (`<`, `<=`,
+  `!=`) of the list are the browser's, so the draft starts from them and plain checks on the same stat are kept; a new
+  tick appends `{ stat, op: "<", value: 1 }`. The title says "Browse affixes: except items with…" and the footer
+  where the ticks go ("…the rule hides only items with none of them" / "…keeps only items with all of them").
 
 ## Actions editor (`components/actions/`)
 
@@ -540,8 +563,10 @@ research doc and the Test tab's note link here.
 - `replaceName`, `namePrefix` and `nameSuffix` are each "later wins" on their own.
 - `notify: true` prints the drop line unless the rule's effective actions (style included) have a `chatMessage`.
 - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
-- A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0; a
-  missing stat is one entry of value 0.
+- A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0.
+- **Verified in game (2026-10):** a missing stat compares as 0. A hide rule on magic items with
+  `item_demondamage_percent < 1` hid every magic item without demon damage and kept those with it, so "Except items
+  with…" (a `< 1` check) works.
 - `{stat:ID}` without a param shows the first entry of that stat; ID may also be an itemstatcost name.
 - `{ethereal}` expands to `Ethereal` for ethereal items and to nothing otherwise.
 - `hideUnmatchedItems` hides an on-ground item no rule applied to.

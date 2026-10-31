@@ -13,8 +13,9 @@
  * - `replaceName`, `namePrefix` and `nameSuffix` are each "later wins" on their own, not as one name.
  * - `notify: true` prints the drop line unless the rule's effective actions (style included) have a chatMessage.
  * - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
- * - A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0;
- *   a stat the item or player lacks is one entry of value 0.
+ * - A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0.
+ *   A stat the item or player lacks is one entry of value 0 (verified in game for item stats, 2026-10: a hide rule
+ *   with `item_demondamage_percent < 1` hid the magic items without demon damage).
  * - `{stat:ID}` without PARAM shows the first entry of that stat; ID may also be an itemstatcost name.
  * - `{ethereal}` expands to `Ethereal` for ethereal items and to an empty string otherwise.
  * - `hideUnmatchedItems` hides an on-ground item no rule applied to (`hiddenBy` stays null).

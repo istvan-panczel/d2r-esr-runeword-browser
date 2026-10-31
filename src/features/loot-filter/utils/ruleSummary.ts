@@ -3,7 +3,7 @@ import type { FilterText, ItemLocation, LootFilterRule, StatCheck } from '../eng
 import { resolveText, splitColorRuns } from '../engine/text';
 import type { LootFilterLookup } from './lookup';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, formatNamedMatch, formatNumberMatch, QUALITY_SCALE } from './matchValues';
-import { formatStatCheck } from './statChecks';
+import { exceptionOf, formatStatCheck, ruleExceptions } from './statChecks';
 
 /** How many names a list shows before "+N". */
 const LIST_PREVIEW = 2;
@@ -35,6 +35,31 @@ function statPart(label: string, checks: readonly StatCheck[] | undefined, looku
   return checks.length === 1 ? `${label}${first}` : `${label}${first} +${String(checks.length - 1)}`;
 }
 
+/** `unless A ≥1 or B ≥1 +1`: a hide rule's exceptions (`joiner` " or " for itemStats, " and " for itemStatsAnyOf). */
+function unlessPart(exceptions: readonly StatCheck[], joiner: string, lookup: LootFilterLookup): string | undefined {
+  if (exceptions.length === 0) return undefined;
+  const shown = exceptions
+    .slice(0, LIST_PREVIEW)
+    .map((check) => formatStatCheck(check, lookup))
+    .join(joiner);
+  return exceptions.length > LIST_PREVIEW ? `unless ${shown} +${String(exceptions.length - LIST_PREVIEW)}` : `unless ${shown}`;
+}
+
+/**
+ * The item stat parts. On a hide rule a `<`, `<=` or `!=` check reads as an exception (`X < 1` → "unless X ≥1"): in
+ * `itemStats` one is enough to keep the item, in `itemStatsAnyOf` (when every check there is one) all are needed.
+ */
+function itemStatParts(rule: LootFilterRule, lookup: LootFilterLookup): (string | undefined)[] {
+  if (rule.hide !== true) return [statPart('', rule.itemStats, lookup), statPart('any of ', rule.itemStatsAnyOf, lookup)];
+  const exceptions = ruleExceptions(rule);
+  const plain = (rule.itemStats ?? []).filter((check) => exceptionOf(check) === undefined);
+  return [
+    statPart('', plain, lookup),
+    unlessPart(exceptions.any, ' or ', lookup),
+    exceptions.all.length > 0 ? unlessPart(exceptions.all, ' and ', lookup) : statPart('any of ', rule.itemStatsAnyOf, lookup),
+  ];
+}
+
 function count(n: number, one: string, many: string): string {
   return `${String(n)} ${n === 1 ? one : many}`;
 }
@@ -62,8 +87,7 @@ export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLoo
     rule.itemLevel === undefined ? undefined : `ilvl ${formatNumberMatch(rule.itemLevel)}`,
     rule.sockets === undefined ? undefined : `${formatNumberMatch(rule.sockets)} sockets`,
     rule.maxSockets === undefined ? undefined : `${formatNumberMatch(rule.maxSockets)} max sockets`,
-    statPart('', rule.itemStats, lookup),
-    statPart('any of ', rule.itemStatsAnyOf, lookup),
+    ...itemStatParts(rule, lookup),
     statPart('character ', rule.playerStats, lookup),
     statPart('character any of ', rule.playerStatsAnyOf, lookup),
     rule.difficulty === undefined ? undefined : formatNamedMatch(rule.difficulty, DIFFICULTY_SCALE),
