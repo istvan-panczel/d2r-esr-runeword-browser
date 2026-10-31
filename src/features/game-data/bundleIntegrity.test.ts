@@ -375,6 +375,8 @@ describe('committed game-data bundles', () => {
     expect(decodeSkillLevelLayer(30268)).toEqual({ skill: 472, level: 60 });
     expect(known('item_skillonhit')).toContain(30268);
     expect(known('item_charged_skill').length).toBeGreaterThan(0);
+    // sets.txt set bonuses count too: Waves of Ascension's Bone Wave level 30 on hit (496 << 6 | 30)
+    expect(known('item_skillonhit')).toContain(31774);
     expect(known('item_aura').length).toBeGreaterThan(0);
 
     // affixes.json layers: only of the affix's stats, sorted, decodable

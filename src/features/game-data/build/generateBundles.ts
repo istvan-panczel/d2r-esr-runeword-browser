@@ -24,7 +24,7 @@ import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
 import { buildCubeNames, modRendererFor, readCube, readCubeItem } from './cube/cubeRows.ts';
 import { buildLootFilterBundle } from './bundleLootFilter.ts';
-import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources } from './bundleLootFilterSkills.ts';
+import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources, setBonusSources } from './bundleLootFilterSkills.ts';
 import { buildRunewordsBundle } from './bundleRunewords.ts';
 import { buildSetsBundle } from './bundleSets.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
@@ -151,6 +151,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
           output.mods.map((mod) => ({ code: mod.mod, param: mod.param === '' ? null : mod.param, min: mod.min, max: mod.max }))
         ),
       })),
+      ...setBonusSources(table('sets')),
       ...propertyGroupSources(statTables.groups),
     ],
   });

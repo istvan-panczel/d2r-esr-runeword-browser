@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-10-31T11:08:41.050Z",
+  "generatedAt": "2026-10-31T11:51:59.355Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -26,8 +26,8 @@
       "bytes": 305793
     },
     "lootfilter": {
-      "hash": "64a72e90d88f66f316c92a59c6fc9b2a390c31b7cb6de30b424e12191c2154c1",
-      "bytes": 843959
+      "hash": "792836478e09f17b85072da8d55c9b215f563bfbba6fe3bfcb374eabd44b6c32",
+      "bytes": 844502
     },
     "enhance": {
       "hash": "cfc51920fb2bf6bfee53e3c96d4fd70b78414a529448b17d1ec9d81aba1bda6e",
@@ -103,8 +103,8 @@
     "lootFilterUniques": 1390,
     "lootFilterSets": 270,
     "lootFilterCouponUniques": 382,
-    "lootFilterSkills": 743,
-    "lootFilterKnownLayers": 2762,
+    "lootFilterSkills": 752,
+    "lootFilterKnownLayers": 2790,
     "enhanceCorruptionSlots": 11,
     "enhanceCorruptionOutcomes": 272,
     "enhanceAnointmentOutcomes": 790,

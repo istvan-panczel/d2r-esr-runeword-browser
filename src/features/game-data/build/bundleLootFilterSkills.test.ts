@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { readStatIndex } from './affixStats.ts';
-import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources, type LayerSource } from './bundleLootFilterSkills.ts';
+import {
+  buildLootFilterSkills,
+  createPropertyLayerResolver,
+  propertyGroupSources,
+  setBonusSources,
+  type LayerSource,
+} from './bundleLootFilterSkills.ts';
 import type { ModInput } from './stats/expandProperty.ts';
 import { createSkillLookup } from './stats/skills.ts';
 import type { PropertyDef, PropertyGroupDef } from './stats/tables.ts';
@@ -125,6 +131,35 @@ describe('propertyGroupSources', () => {
         label: 'propertygroup tabs',
         mods: [mod('skilltab', 1, 2, '21'), mod('skilltab', 1, 2, '22'), mod('skilltab', 1, 2, '23'), mod('str', 5, 5)],
       },
+    ]);
+  });
+});
+
+describe('setBonusSources', () => {
+  it('reads the partial and full set bonuses of every set but the retired ones', () => {
+    const sets = table([
+      [
+        'index',
+        'PCode2a',
+        'PParam2a',
+        'PMin2a',
+        'PMax2a',
+        'PCode3b',
+        'PParam3b',
+        'PMin3b',
+        'PMax3b',
+        'FCode1',
+        'FParam1',
+        'FMin1',
+        'FMax1',
+      ],
+      ['Waves', 'hit-skill', 'Bone Wave', '5', '30', '', '', '', '', 'str', '', '10', '10'],
+      ['Old_old', 'oskill', 'Teleport', '1', '1', '', '', '', '', '', '', '', ''],
+      ['Bare', '', '', '', '', 'oskill', 'Fire Bolt', '2', '2', '', '', '', ''],
+    ]);
+    expect(setBonusSources(sets)).toEqual([
+      { label: 'set bonus Waves', mods: [mod('hit-skill', 5, 30, 'Bone Wave'), mod('str', 10, 10)] },
+      { label: 'set bonus Bare', mods: [mod('oskill', 2, 2, 'Fire Bolt')] },
     ]);
   });
 });

@@ -60,7 +60,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `runewords.json`    | 197 KB / 28 KB                                                                 |
 | `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72) |
 | `sources.json`      | 298 KB / 29 KB                                                                 |
-| `lootfilter.json`   | ESR 3.2.24: 819 KB / 116 KB (771 / 103 before skills, knownLayers)             |
+| `lootfilter.json`   | ESR 3.2.24: 825 KB / 112 KB (771 / 103 before skills, knownLayers)             |
 | `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                     |
 | `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                     |
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                     |
@@ -257,14 +257,15 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   `src/features/loot-filter/utils/statParams.ts`; see LOOT-FILTER.md "Stat params"). Every class tree skill (a class `charclass` and a skilldesc `SkillPage` 1-3,
   the 280 skills of skills.json) plus every skill a `knownLayers` param names; `id` = skills.txt row index (equal to
   the `*Id` column in ESR 3.2.24), `name` = skilldesc `str name` through the strings, else the `skill` column, `cls`
-  only for class skills. ESR 3.2.24: 743 skills (463 without a class: item skills and procs; 23 names occur twice,
+  only for class skills. ESR 3.2.24: 752 skills (472 without a class: item skills and procs; 25 names occur twice,
   e.g. a class skill and its item copy, so pickers show the id).
 - `knownLayers` (optional): `{ stat, layers }` per skill stat (`item_nonclassskill` 97, `item_singleskill` 107,
   `item_aura` 151) and event / charged stat, the distinct params the game data puts on items, ascending (skill ids
   for skill stats, `skill << 6 | level` for the others). Sources: the affixes of affixes.json, uniques (not disabled),
-  set items (own and partial bonuses), runes.txt recipes, cube outputs and every propertygroups.txt entry (a numeric
+  set items (own and partial bonuses), sets.txt set bonuses (PCode2a–5b, FCode1–8; not the retired `_old` sets),
+  runes.txt recipes, cube outputs and every propertygroups.txt entry (a numeric
   ParMin–ParMax range = one entry per param). Tab and class stats are left out (every tab and class is listed anyway).
-  ESR 3.2.24: 11 stats, 2762 params, at most 30 levels per stat and skill; 59004 is the highest.
+  ESR 3.2.24: 11 stats, 2790 params, at most 30 levels per stat and skill; 59004 is the highest.
 
 #### Stat layers
 
@@ -293,7 +294,7 @@ with `Encode` 2/3 or descfunc 13/14/15/16/24/27/28 that is missing from `STAT_LA
 
 Counts: `counts.lootFilterItems`, `lootFilterStats`, `lootFilterAreas`, `lootFilterSounds`, `lootFilterUniques`,
 `lootFilterSets` (ESR 3.2.12: 2292 / 923 / 215 / 12103 / 1390 / 270), `lootFilterSkills`, `lootFilterKnownLayers`
-(params summed over the stats; ESR 3.2.24: 743 / 2762). Adding the file did not bump `GAME_DATA_SCHEMA`: older
+(params summed over the stats; ESR 3.2.24: 752 / 2790). Adding the file did not bump `GAME_DATA_SCHEMA`: older
 clients ignore files they do not load; neither did adding `skills` and `knownLayers`.
 
 ### Enhance

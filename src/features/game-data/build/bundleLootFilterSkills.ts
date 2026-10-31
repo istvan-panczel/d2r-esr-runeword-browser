@@ -9,8 +9,9 @@
  *   Jordan and three more uniques is left out without a warning: it would list every class skill as "on items");
  *   func 11 event / func 19 charged → `skill << 6 | max` (max = level). The `_display` / `_hidden` companions
  *   (`isTechnicalStat`) are skipped: ESR's hidden procs use skill ids above 1023, and no picker offers them.
- * - Sources: magic affixes, uniques, set items (own and partial bonuses), runes.txt recipes, cube outputs and every
- *   propertygroups.txt entry (a ParMin–ParMax range is one entry per param).
+ * - Sources: magic affixes, uniques, set items (own and partial bonuses), sets.txt set bonuses (PCode2a-5b,
+ *   FCode1-8; retired `_old` sets left out), runes.txt recipes, cube outputs and every propertygroups.txt entry (a
+ *   ParMin–ParMax range is one entry per param).
  * - `knownLayers`: per skill, event and charged stat the distinct params of all sources. `skills`: the class tree
  *   skills (a class `charclass` and skilldesc `SkillPage` 1-3) plus every skill a known layer names; name via the stat
  *   renderer's skill lookup.
@@ -121,6 +122,28 @@ export function createPropertyLayerResolver(
 export interface LayerSource {
   label: string;
   mods: readonly ModInput[];
+}
+
+/** Retired sets kept in sets.txt under a suffixed index (as in bundleSets.ts) */
+const OLD_SET_SUFFIX = '_old';
+
+/** The set-wide bonuses of every sets.txt row: partial (PCode2a-5b) and full set (FCode1-8) */
+export function setBonusSources(sets: TsvTable): LayerSource[] {
+  const columns = [
+    ...[2, 3, 4, 5].flatMap((n) => ['a', 'b'].map((part) => ['PCode', 'PParam', 'PMin', 'PMax'].map((col) => `${col}${String(n)}${part}`))),
+    ...Array.from({ length: 8 }, (_, i) => ['FCode', 'FParam', 'FMin', 'FMax'].map((col) => `${col}${String(i + 1)}`)),
+  ];
+  return sets.rows.flatMap((row) => {
+    const index = row.str('index');
+    if (index === '' || index.endsWith(OLD_SET_SUFFIX)) return [];
+    const mods = columns.flatMap(([code, param, min, max]) => {
+      const prop = row.has(code) ? row.str(code) : '';
+      if (prop === '') return [];
+      const value = row.str(param);
+      return [{ code: prop, param: value === '' ? null : value, min: row.num(min), max: row.num(max) }];
+    });
+    return [{ label: `set bonus ${index}`, mods }];
+  });
 }
 
 /** Every propertygroups.txt entry as a mod, one per param of a ParMin–ParMax range */

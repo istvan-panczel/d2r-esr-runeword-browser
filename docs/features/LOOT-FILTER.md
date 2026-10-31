@@ -332,7 +332,7 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
     in an any-of list; a rule has one any-of list" / "for a <, <= or != check only in an all-of list"). There is no
     "move to the any-of list" button and no collapsed display of the expanded rows (kept simple).
   - Names (`statParamLabel`, `LootFilterLookup.statParamLabel`): "Martial Arts (Assassin)", "Sorceress", "Fire
-    Ball", "Orb of Winter lvl 25"; a skill name that several skills share (23 in ESR 3.2.24, a class skill and its
+    Ball", "Orb of Winter lvl 25"; a skill name that several skills share (25 in ESR 3.2.24, a class skill and its
     item copy) carries the id ("Chain Lightning #124"). `formatStatCheck` uses them, so the rule summary, the
     "unless" part and the Except control's "Kept:" line read `item_addskill_tab[Martial Arts (Assassin)] ≥1`; an
     unknown or undecodable param stays a number.
