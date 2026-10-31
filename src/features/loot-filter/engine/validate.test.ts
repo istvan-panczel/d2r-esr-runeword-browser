@@ -201,7 +201,7 @@ describe('validateLootFilter', () => {
 
     it('warns about Enhanced Damage (17 and 18, by name or id) in the item stat lists', () => {
       expect(quirks({ itemTypes: ['weap'], itemStats: [ed('item_maxdamage_percent')], hide: true })).toEqual([
-        "rules/0/itemStats/0/stat: The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it works on jewels and charms). Reported to the mod author.",
+        "rules/0/itemStats/0/stat: The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it should still work on jewels and charms). Reported to the mod author.",
       ]);
       expect(quirks({ itemStatsAnyOf: [ed(18), ed('item_numsockets'), ed(17)], hide: true }).map((m) => m.split(':')[0])).toEqual([
         'rules/0/itemStatsAnyOf/0/stat',

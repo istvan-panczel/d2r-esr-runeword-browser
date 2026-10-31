@@ -21,8 +21,8 @@ export interface StatQuirk {
 }
 
 const ED_MESSAGE =
-  "The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it works on jewels and charms). Reported to the mod author.";
-const ED_NOTE = 'Reads 0 on weapons (the game keeps it off their stats); works on jewels and charms.';
+  "The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it should still work on jewels and charms). Reported to the mod author.";
+const ED_NOTE = 'Reads 0 on weapons (the game keeps it off their stats); should still work on jewels and charms.';
 
 export const STAT_QUIRKS: readonly StatQuirk[] = [
   {
