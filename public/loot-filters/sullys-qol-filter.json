@@ -6,8 +6,8 @@
   "formatVersion": 1,
   "title": "Sully's QoL Filter",
   "author": "Sully",
-  "version": "0.6.3",
-  "description": "Sully's D2RLAN QoL filter - Full conversion in progress.",
+  "version": "0.6.7",
+  "description": "Sully's D2RLAN QoL filter - PoE themed drop labels, sounds, mini-map icons.",
   "updateUrl": "https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json",
   "filterLevels": [
     {"id": 1, "name": "Leveling"},
@@ -183,6 +183,10 @@
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 127, "op": ">=", "value": 1}],
+      "chatMessage": "ÿc1*ÿc2*ÿc3 ÿc4+1 All Skills Base ÿc1*ÿc2*ÿc3",
+      "sound": "other.mp3",
+      "labelBorder": {"color": [255, 0, 0, 255], "width": 1},
+      "icon": {"iconName": "goldstar", "iconSize": 40},
       "nameSuffix": "ÿc1[{stat:127} All Skills]"
     },
     {
@@ -302,6 +306,12 @@
       "hide": true
     },
     {
+      "itemCodes": ["mp1","hp1"],
+      "playerStats": [{"stat": 12, "op": ">=", "value": 12}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "hide": true
+    },
+    {
       "itemCodes": ["gld"],
       "itemStats": [{"stat": 14, "op": "<=", "value": 499}],
       "playerStats": [{"stat": 12, "op": ">=", "value": 60}],
@@ -323,7 +333,7 @@
       "hide": true
     },
     {"itemCodes": ["gld"], "replaceName": "ÿc0$$"},
-    {"itemCodes": ["vps", "yps", "gpm", "opm", "wms", "tbk", "ibk", "tsc", "isc", "hp1", "mp1"], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
+    {"itemCodes": ["vps", "yps", "gpm", "opm", "wms", "tbk", "ibk", "tsc", "isc"], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
     {"quality": "inferior", "playerStats": [{"stat": 12, "op": ">=", "value": 10}], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
     {
       "itemTypes": ["weap", "armo"],
@@ -457,6 +467,7 @@
     {"quality": "set", "baseTier": {"max": 1}, "excludeAreas": [1, 40, 75, 103, 109], "activeInLevels": [3], "hide": true},
     {
       "itemTypes": ["armo"],
+      "itemStats": [{"stat": 127, "op": "<", "value": 1}],
       "quality": "superior",
       "baseTier": {"max": 0},
       "excludeItemCodes": [
@@ -468,6 +479,7 @@
     },
     {
       "itemTypes": ["weap"],
+      "itemStats": [{"stat": 127, "op": "<", "value": 1}],
       "quality": "superior",
       "baseTier": {"max": 1},
       "excludeItemCodes": [
@@ -566,6 +578,7 @@
         "m60", "m61", "d33", "g33", "gpl", "gpm", "gps", "hdm", "hfh", "hst", "leg", "msf", "opl", "opm", "ops",
         "qf1", "qf2"
       ],
+      "itemStats": [{"stat": 127, "op": "<", "value": 1}],
       "quality": {"max": "superior"},
       "excludeAreas": [1, 40, 75, 103, 109],
       "activeInLevels": [4],
@@ -1175,5 +1188,6 @@
       "useStyle": "MapTier5"
     },
     {"itemCodes": ["z99"], "replaceName": "ÿc6The Hidden Vault", "chatMessage": "Unique Map: ÿc0The Hidden Vault", "useStyle": "MapTier5"}
+
   ]
 }

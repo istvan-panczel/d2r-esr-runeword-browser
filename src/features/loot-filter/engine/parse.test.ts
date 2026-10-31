@@ -14,7 +14,7 @@ describe('parseLootFilter on Sully’s filter', () => {
 
   it('reads it without errors, keeping order', () => {
     expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(filter.rules).toHaveLength(221);
+    expect(filter.rules).toHaveLength(222);
     expect(Object.keys(filter.styles ?? {})).toEqual([
       'Mythical',
       'Jackpot',

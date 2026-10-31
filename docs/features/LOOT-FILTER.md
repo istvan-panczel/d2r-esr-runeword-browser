@@ -161,13 +161,15 @@ Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip downlo
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
   entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.6.3 from github.com/Thisisnotsully/QoL-Filter, verbatim (221 rules, 12 styles, 4
+  is `Sullys-QoL-Filter.json` v0.6.7 from github.com/Thisisnotsully/QoL-Filter, verbatim (222 rules, 12 styles, 4
   levels, `soundVolume` 25, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
   3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
   fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
-  (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25. The
+  (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25; v0.6.7 (2026-10-31) adds a +1 All Skills base highlight (chat
+  line, `other.mp3`, red border, `goldstar` icon), hides minor potions (`mp1`/`hp1`) from character level 12 outside
+  town, and adds `item_allskills < 1` exceptions (stat 127) to three hide rules. The
   `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
-  `utils/template.ts`): "Sully's QoL filter v0.6.3, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  `utils/template.ts`): "Sully's QoL filter v0.6.7, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
