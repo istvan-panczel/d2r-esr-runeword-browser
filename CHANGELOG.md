@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.43.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.42.1...v1.43.0) (2026-10-31)
+
+### Features
+
+* **loot-filter:** add a hide-only tip to "How rules combine" ([ad98e02](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ad98e025d56bcc61cb7767607404960f457e42d4))
+* **loot-filter:** add an "Except items with…" control to hide rules ([5ee9237](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5ee923739eb18b3cc1447d44d89e4f0689969d0d))
+* **loot-filter:** label the stat lists as item and character stats, all of / any of ([a720f13](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a720f1357322cde8921e2d05111c94852aff46de))
+* **loot-filter:** leave coupon uniques out of the unique and set browser ([b65d275](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b65d2752aac2ebb68928bb4b18409bd6ceaa9a1a))
+* **loot-filter:** warn about item stats the plugin reads as 0 ([8a326b8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8a326b8f16de7541bbe696eed6d2775ecb23bc25))
+
+### Bug Fixes
+
+* **loot-filter:** drop the filter-wide disabled-rules warning ([e04f78a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e04f78ab171b0ed9c9e0a2e540b89c3951375b8c))
+* **loot-filter:** keep exception checks out of the plain affix browser ([ab85692](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ab8569280ad3022bc31b1bcdd4f984361575bb49))
+* **loot-filter:** keep the hide-only tip to what the guide states ([0351d5e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0351d5e856953684964701a862b8c644103c0848))
+* **loot-filter:** read exceptions only where they keep items ([9aa2261](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9aa2261a80ba7ea88b5b5cb41cb04718a559dc01))
+* **loot-filter:** say Enhanced Damage should still work on jewels and charms ([2f0c140](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2f0c1405ff39d8a0589dc876d89874179fc3f22b))
+
 ## [1.42.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.42.0...v1.42.1) (2026-10-27)
 
 ### Chores
