@@ -20,6 +20,7 @@ import {
   initialAffixSelection,
   matchingParams,
   rowsMissingParams,
+  shownParams,
   type AffixBrowserModel,
   type AffixBrowserRow,
 } from '../../utils/affixBrowser';
@@ -44,6 +45,14 @@ const isInverted = (mode: AffixBrowserMode) => mode === 'except-any' || mode ===
  */
 const paramsAreAlternatives = (mode: AffixBrowserMode) => mode === 'any' || mode === 'except-any';
 
+/** Under the level chips of an event or charged row where several picks would all be needed. */
+const ANY_LEVEL_HINTS: Readonly<Record<AffixBrowserMode, string | undefined>> = {
+  all: 'For any of these levels, use the any-of list (Item stats, any of).',
+  any: undefined,
+  'except-any': undefined,
+  'except-all': 'For any of these levels, use “Keep items with any of these”.',
+};
+
 /** What a layered row's param is, for "Pick a … for …". */
 const PARAM_WHAT = { tab: 'skill tab', class: 'class', skill: 'skill', event: 'skill and level', charged: 'skill and level' } as const;
 
@@ -66,12 +75,24 @@ interface AffixStatRowProps {
   readonly onToggleParam: (param: number, on: boolean) => void;
   /** Several picked params need all of them on the item (all-of list) */
   readonly paramsNeedAll: boolean;
+  /** Where "any of these levels" goes instead (an event or charged row in a list that needs all of them) */
+  readonly anyLevelHint?: string;
+  readonly model: AffixBrowserModel;
 }
 
 /** A ticked layered row's params as toggle chips: the ones the search names (plus the picked ones), else all. */
-function ParamChips({ row, query, params, onToggleParam, paramsNeedAll }: Omit<AffixStatRowProps, 'checked' | 'onToggle'>) {
+function ParamChips({
+  row,
+  query,
+  params,
+  onToggleParam,
+  paramsNeedAll,
+  anyLevelHint,
+  model,
+}: Omit<AffixStatRowProps, 'checked' | 'onToggle'>) {
   const named = new Set(matchingParams(row, query));
-  const shown = (row.params ?? []).filter((entry) => named.size === 0 || named.has(entry.param) || params.has(entry.param));
+  const shown = shownParams(row, query, params, model);
+  const levels = row.layerKind === 'event' || row.layerKind === 'charged';
   const what = row.layerKind === undefined ? 'param' : PARAM_WHAT[row.layerKind];
   return (
     <div className="mt-1 pl-6">
@@ -103,6 +124,7 @@ function ParamChips({ row, query, params, onToggleParam, paramsNeedAll }: Omit<A
           : paramsNeedAll && params.size > 1
             ? `This list needs every check, so an item needs all ${String(params.size)} of these.`
             : `${String(params.size)} picked: one check each.`}
+        {levels && anyLevelHint !== undefined && ` ${anyLevelHint}`}
         {named.size > 0 &&
           shown.length < (row.params?.length ?? 0) &&
           ` Showing the ones the search names (${String(shown.length)} of ${String(row.params?.length ?? 0)}).`}
@@ -111,7 +133,7 @@ function ParamChips({ row, query, params, onToggleParam, paramsNeedAll }: Omit<A
   );
 }
 
-function AffixStatRow({ row, checked, onToggle, query, params, onToggleParam, paramsNeedAll }: AffixStatRowProps) {
+function AffixStatRow({ row, checked, onToggle, query, params, onToggleParam, paramsNeedAll, anyLevelHint, model }: AffixStatRowProps) {
   const [expanded, setExpanded] = useState(false);
   const matched = row.affixes.map((affix) => affixMatches(affix, query, row));
   // A search that found an affix past the first few shows the whole list, so the match is visible.
@@ -157,7 +179,15 @@ function AffixStatRow({ row, checked, onToggle, query, params, onToggleParam, pa
         )}
       </p>
       {checked && row.layerKind !== undefined && (
-        <ParamChips row={row} query={query} params={params} onToggleParam={onToggleParam} paramsNeedAll={paramsNeedAll} />
+        <ParamChips
+          row={row}
+          query={query}
+          params={params}
+          onToggleParam={onToggleParam}
+          paramsNeedAll={paramsNeedAll}
+          anyLevelHint={anyLevelHint}
+          model={model}
+        />
       )}
     </li>
   );
@@ -242,6 +272,8 @@ function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowse
                   toggleParam(row.id, param, on);
                 }}
                 paramsNeedAll={!paramsAreAlternatives(mode)}
+                anyLevelHint={ANY_LEVEL_HINTS[mode]}
+                model={model}
               />
             ))}
           </ul>

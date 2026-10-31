@@ -14,6 +14,7 @@ import {
   initialAffixSelection,
   matchingParams,
   rowsMissingParams,
+  shownParams,
 } from './affixBrowser';
 import { buildStatParamData } from './statParams';
 import { TEST_DATA, TEST_TYPES } from './testLookup.mock';
@@ -253,6 +254,15 @@ describe('layered stats', () => {
     expect(affixText({ name: 'of Orb of Winter', kind: 'suffix', lvl: 1, hybridWith: [], params: orbRow?.params }, 'event')).toBe(
       'of Orb of Winter [lvl 13, 25]'
     );
+  });
+
+  it('shows the named and picked params as chips, also picked ones no affix writes', () => {
+    const chips = (query: string, picked: number[]) =>
+      tabRow === undefined ? [] : shownParams(tabRow, query, new Set(picked), lmodel).map((entry) => entry.label);
+    expect(chips('', [])).toHaveLength(7);
+    expect(chips('martial', [9])).toEqual(['Lightning Skills (Sorceress)', 'Martial Arts (Assassin)']);
+    // 49 (Assassin Shadow Disciplines) and 99 (no tab) are on no affix: still shown while picked
+    expect(chips('martial', [49, 99])).toEqual(['Shadow Disciplines (Assassin)', 'Martial Arts (Assassin)', 'param 99']);
   });
 
   it('writes one check per picked param, keeping paramless checks', () => {

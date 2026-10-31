@@ -52,6 +52,8 @@ export interface AffixBrowserModel {
   readonly rows: readonly AffixBrowserRow[];
   /** itemstatcost name → id, for every listed stat */
   readonly ids: ReadonlyMap<string, number>;
+  /** A param of a layered row by name ("param N" when the data does not name it), also one no affix writes */
+  readonly paramOf: (row: AffixBrowserRow, param: number) => AffixBrowserParam;
 }
 
 const KINDS: Readonly<Record<Affix['kind'], AffixKind>> = { p: 'prefix', s: 'suffix', a: 'automagic' };
@@ -140,7 +142,11 @@ export function buildAffixBrowserModel(bundle: AffixesBundle, params: StatParamD
     };
   });
   rows.sort((a, b) => byLabel(a, b) || a.id - b.id);
-  return { rows, ids: new Map(rows.map((row) => [row.name, row.id])) };
+  return {
+    rows,
+    ids: new Map(rows.map((row) => [row.name, row.id])),
+    paramOf: (row, param) => (row.layerKind === undefined ? { param, label: `param ${String(param)}` } : paramOf(row.layerKind, param)),
+  };
 }
 
 // One model per loaded bundle and param names (both are cached for the page's lifetime).
@@ -207,6 +213,24 @@ const KIND_NOUNS: Readonly<Record<AffixKind, readonly [string, string]>> = {
   suffix: ['suffix', 'suffixes'],
   automagic: ['automod', 'automods'],
 };
+
+/**
+ * The param chips of a ticked layered row: the params the search names plus the picked ones, else all of the row's;
+ * picked params no affix writes (a check the list already had) come too, so they can be seen and unpicked.
+ */
+export function shownParams(
+  row: AffixBrowserRow,
+  query: string,
+  picked: ReadonlySet<number>,
+  model: Pick<AffixBrowserModel, 'paramOf'>
+): AffixBrowserParam[] {
+  const named = new Set(matchingParams(row, query));
+  const rowParams = row.params ?? [];
+  const listed = new Set(rowParams.map((entry) => entry.param));
+  const extra = [...picked].filter((param) => !listed.has(param)).map((param) => model.paramOf(row, param));
+  const shown = rowParams.filter((entry) => named.size === 0 || named.has(entry.param) || picked.has(entry.param));
+  return [...shown, ...extra].sort(byParam);
+}
 
 /** Affix params named in its text; more are counted ("[35 skills]"). */
 const NAMED_PARAMS = 3;

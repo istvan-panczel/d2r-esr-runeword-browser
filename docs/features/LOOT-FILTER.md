@@ -507,10 +507,14 @@ focus returns to the button).
   after its skill, "Skillful [280 skills]" past three). Param names are part of the row's search, so "martial",
   "demon" or "orb of winter" find Skill Tab Levels and the chance-to-cast rows. A ticked layered row shows its params
   as toggle chips (`aria-pressed`): the ones the search names (`matchingParams`: like the affix emphasis, over the
-  param's name and the names of the affixes writing it) plus the picked ones, else all of them. Ticking a row
+  param's name and the names of the affixes writing it) plus the picked ones, else all of them; a picked param no
+  affix writes (a check the list already had) is shown too, by name or "param N", so it can be unpicked
+  (`shownParams`). Ticking a row
   pre-ticks the params the search names, its only param, or none; where several picks would all be needed (the
   all-of list, "keep items with all of these") only the first named one. A line under the chips says what is
-  picked ("This list needs every check, so an item needs all 2 of these" in those two modes). Apply waits ("Pick a
+  picked ("This list needs every check, so an item needs all 2 of these" in those two modes; an event or charged row
+  there adds "For any of these levels, use the any-of list (Item stats, any of)." or "… use “Keep items with any of
+  these”."). Apply waits ("Pick a
   skill tab for Skill Tab Levels (or untick it).") while a ticked layered row has neither a picked param nor a check
   without param (`rowsMissingParams`).
 - **Apply** (`applyAffixSelection`): the draft starts with the listed stats that already have a check in that list
