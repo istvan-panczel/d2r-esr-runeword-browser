@@ -54,6 +54,17 @@ describe('stat check helpers', () => {
     expect(formatStatCheck({ stat: 'strength', param: 1, op: 'between', value: [5, 10] }, TEST_LOOKUP)).toBe('strength[1] 5–10');
     expect(formatStatCheck({ stat: '', op: '==', value: 0 }, TEST_LOOKUP)).toBe('? ==0');
   });
+
+  it('names the param of a layered stat when the data does', () => {
+    expect(formatStatCheck({ stat: 'item_addskill_tab', param: 50, value: 1 }, TEST_LOOKUP)).toBe(
+      'item_addskill_tab[Martial Arts (Assassin)] ≥1'
+    );
+    expect(formatStatCheck({ stat: 198, param: 30221, value: 1 }, TEST_LOOKUP)).toBe('item_skillonhit[Orb of Winter lvl 13] ≥1');
+    // Duplicate skill names carry the id; an unknown or undecodable param stays a number
+    expect(formatStatCheck({ stat: 107, param: 166, value: 1 }, TEST_LOOKUP)).toBe('item_singleskill[Chain Lightning #166] ≥1');
+    expect(formatStatCheck({ stat: 188, param: 21, value: 1 }, TEST_LOOKUP)).toBe('item_addskill_tab[21] ≥1');
+    expect(formatStatCheck({ stat: 'item_addskill_tab', param: 50, value: 1 }, EMPTY_LOOKUP)).toBe('item_addskill_tab[50] ≥1');
+  });
 });
 
 describe('exceptions on hide rules', () => {

@@ -29,6 +29,11 @@ export const TEST_DATA: LootFilterDataBundle = {
     { id: 0, name: 'strength' },
     { id: 194, name: 'item_numsockets' },
     { id: 300, name: '' },
+    { id: 83, name: 'item_addclassskills' },
+    { id: 107, name: 'item_singleskill' },
+    { id: 188, name: 'item_addskill_tab' },
+    { id: 198, name: 'item_skillonhit' },
+    { id: 204, name: 'item_charged_skill' },
   ],
   areas: [
     { id: 1, name: 'Rogue Encampment', act: 0 },
@@ -41,11 +46,29 @@ export const TEST_DATA: LootFilterDataBundle = {
     { id: 5, name: 'Harlequin Crest', code: 'uap', reqLvl: 1 },
   ],
   sets: [{ id: 5, name: "Civerb's Ward", code: 'lrg', reqLvl: 1 }],
+  skills: [
+    { id: 36, name: 'Fire Bolt', cls: 'sor' },
+    { id: 47, name: 'Fire Ball', cls: 'sor' },
+    { id: 124, name: 'Chain Lightning' },
+    { id: 166, name: 'Chain Lightning', cls: 'sor' },
+    { id: 258, name: 'Tiger Strike', cls: 'ass' },
+    { id: 472, name: 'Orb of Winter', cls: 'sor' },
+    { id: 500, name: 'Nova Proc' },
+  ],
+  knownLayers: [
+    { stat: 107, layers: [47, 258] },
+    // Orb of Winter lvl 13 and 25 (472 << 6 = 30208), Fire Bolt lvl 3 (36 << 6 = 2304)
+    { stat: 198, layers: [2307, 30221, 30233] },
+  ],
 };
 
 export const TEST_TYPES: TypesBundle = {
   types: [type('rune', 'Rune', ['misc']), type('axe', 'Axe', ['weap']), type('weap', 'Weapon'), type('misc', 'Miscellaneous')],
-  classes: [],
+  classes: [
+    { code: 'ama', name: 'Amazon', tabs: ['Bow and Crossbow Skills', 'Passive and Magic Skills', 'Javelin and Spear Skills'] },
+    { code: 'sor', name: 'Sorceress', tabs: ['Fire Skills', 'Lightning Skills', 'Cold Skills'] },
+    { code: 'ass', name: 'Assassin', tabs: ['Traps', 'Shadow Disciplines', 'Martial Arts'] },
+  ],
 };
 
 export const TEST_LOOKUP = buildLookup(TEST_DATA, TEST_TYPES);

@@ -131,7 +131,10 @@ export function ruleSummary(rule: LootFilterRule, lookup: LootFilterLookup, exce
   return action === undefined ? conditions : `${conditions} · ${action}`;
 }
 
-/** Lowercase text the rule list's search box matches: codes, names, types, ids, comment, style, name changes, chat. */
+/**
+ * Lowercase text the rule list's search box matches: codes, names, types, ids, stats with their param names (skill, tab,
+ * class), comment, style, name changes, chat.
+ */
 export function ruleSearchText(rule: LootFilterRule, lookup: LootFilterLookup, summary = ruleSummary(rule, lookup)): string {
   const parts: (string | undefined)[] = [
     summary,
@@ -147,8 +150,11 @@ export function ruleSearchText(rule: LootFilterRule, lookup: LootFilterLookup, s
     ...[...(rule.itemTypes ?? []), ...(rule.excludeItemTypes ?? [])].flatMap((code) => [code, lookup.typeName(code)]),
     ...[...(rule.uniqueOrSetIds ?? []), ...(rule.excludeUniqueOrSetIds ?? [])].flatMap((id) => [String(id), lookup.uniqueOrSetName(id)]),
     ...[...(rule.areas ?? []), ...(rule.excludeAreas ?? [])].map((id) => lookup.areaName(id)),
-    ...[...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? []), ...(rule.playerStats ?? []), ...(rule.playerStatsAnyOf ?? [])].map(
-      (check) => (typeof check.stat === 'number' ? lookup.statName(check.stat) : check.stat)
+    ...[...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? []), ...(rule.playerStats ?? []), ...(rule.playerStatsAnyOf ?? [])].flatMap(
+      (check) => [
+        typeof check.stat === 'number' ? lookup.statName(check.stat) : check.stat,
+        check.param === undefined ? undefined : lookup.statParamLabel(check.stat, check.param),
+      ]
     ),
   ];
   return parts

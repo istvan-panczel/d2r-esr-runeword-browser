@@ -127,11 +127,14 @@ export function ruleExceptions(rule: Pick<LootFilterRule, 'itemStats' | 'itemSta
   return { any: exceptionsIn(rule.itemStats), all: pure ? all : [], mixedAll: !pure && anyOf.length > 0 };
 }
 
-/** `item_numsockets ≥2`, `strength[1] 5–10` (between), `#96 >0` (an unknown id), `? ≥1` (no stat yet). */
+/**
+ * `item_numsockets ≥2`, `strength[1] 5–10` (between), `#96 >0` (an unknown id), `? ≥1` (no stat yet); a layered stat's
+ * param by name when the data has it: `item_addskill_tab[Martial Arts (Assassin)] ≥1`.
+ */
 export function formatStatCheck(check: StatCheck, lookup: LootFilterLookup): string {
   const stat =
     typeof check.stat === 'number' ? (lookup.statName(check.stat) ?? `#${String(check.stat)}`) : check.stat === '' ? '?' : check.stat;
-  const param = check.param === undefined ? '' : `[${String(check.param)}]`;
+  const param = check.param === undefined ? '' : `[${lookup.statParamLabel(check.stat, check.param) ?? String(check.param)}]`;
   const op = check.op ?? DEFAULT_STAT_OP;
   const value = typeof check.value === 'number' ? String(check.value) : `${String(check.value[0])}–${String(check.value[1])}`;
   const shownOp = op === '>=' ? '≥' : op === '<=' ? '≤' : op === 'between' ? '' : op;

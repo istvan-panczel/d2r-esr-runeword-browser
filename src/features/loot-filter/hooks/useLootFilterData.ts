@@ -10,6 +10,7 @@ import {
   type LootFilterLookup,
   type LootFilterPickerOptions,
 } from '../utils/lookup';
+import { buildStatParamData, EMPTY_STAT_PARAMS, type StatParamData } from '../utils/statParams';
 
 export interface LootFilterData {
   readonly status: GameDataStatus;
@@ -19,13 +20,22 @@ export interface LootFilterData {
   readonly lookup: LootFilterLookup;
   /** The pickers' option lists; empty until the bundles are in (the pickers then take typed codes and ids). */
   readonly options: LootFilterPickerOptions;
+  /** Skills, classes, tabs and known params of the layered stats; empty until the bundles are in. */
+  readonly params: StatParamData;
   /** The validator's game-data lookups; the empty reference (no reference checks) until the bundles are in or on error. */
   readonly reference: LootFilterReference;
 }
 
 const BUNDLES = ['lootfilter', 'types'] as const;
 
-const EMPTY = { data: null, types: null, lookup: EMPTY_LOOKUP, options: EMPTY_PICKER_OPTIONS, reference: EMPTY_LOOT_FILTER_REFERENCE };
+const EMPTY = {
+  data: null,
+  types: null,
+  lookup: EMPTY_LOOKUP,
+  options: EMPTY_PICKER_OPTIONS,
+  params: EMPTY_STAT_PARAMS,
+  reference: EMPTY_LOOT_FILTER_REFERENCE,
+};
 const LOADING: LootFilterData = { status: 'loading', ...EMPTY };
 const ERROR: LootFilterData = { status: 'error', ...EMPTY };
 
@@ -36,12 +46,14 @@ let cached: LootFilterData | null = null;
 
 function ready(data: LootFilterDataBundle, types: TypesBundle): LootFilterData {
   if (cached?.data !== data || cached.types !== types) {
+    const params = buildStatParamData(data, types);
     cached = {
       status: 'ready',
       data,
       types,
-      lookup: buildLookup(data, types),
+      lookup: buildLookup(data, types, params),
       options: buildPickerOptions(data, types),
+      params,
       reference: buildLootFilterReference(data, types),
     };
   }

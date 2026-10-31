@@ -19,7 +19,22 @@ describe('buildLookup', () => {
     expect(TEST_LOOKUP.uniqueOrSetName(9)).toBeUndefined();
   });
 
+  it('names the params of layered stats by name or id', () => {
+    expect(TEST_LOOKUP.statParamLabel('item_addskill_tab', 50)).toBe('Martial Arts (Assassin)');
+    expect(TEST_LOOKUP.statParamLabel(188, 10)).toBe('Cold Skills (Sorceress)');
+    expect(TEST_LOOKUP.statParamLabel(83, 1)).toBe('Sorceress');
+    expect(TEST_LOOKUP.statParamLabel(107, 47)).toBe('Fire Ball');
+    expect(TEST_LOOKUP.statParamLabel('item_skillonhit', 30233)).toBe('Orb of Winter lvl 25');
+    expect(TEST_LOOKUP.statParamLabel(204, 2307)).toBe('Fire Bolt lvl 3');
+    // Not layered, not decodable, unknown skill
+    expect(TEST_LOOKUP.statParamLabel('strength', 1)).toBeUndefined();
+    expect(TEST_LOOKUP.statParamLabel(188, 21)).toBeUndefined();
+    expect(TEST_LOOKUP.statParamLabel(107, 9999)).toBeUndefined();
+    expect(TEST_LOOKUP.statParamLabel(198, 30208)).toBeUndefined();
+  });
+
   it('has an empty variant that knows nothing', () => {
+    expect(EMPTY_LOOKUP.statParamLabel('item_addskill_tab', 50)).toBeUndefined();
     expect(EMPTY_LOOKUP.itemName('r33')).toBeUndefined();
     expect(EMPTY_LOOKUP.uniqueOrSetName(5)).toBeUndefined();
   });
@@ -138,7 +153,15 @@ describe('buildPickerOptions', () => {
   });
 
   it('drops nameless stats and groups areas by act', () => {
-    expect(options.stats.map((option) => option.value)).toEqual(['strength', 'item_numsockets']);
+    expect(options.stats.map((option) => option.value)).toEqual([
+      'strength',
+      'item_numsockets',
+      'item_addclassskills',
+      'item_singleskill',
+      'item_addskill_tab',
+      'item_skillonhit',
+      'item_charged_skill',
+    ]);
     expect(options.areas.map((option) => [option.value, option.group])).toEqual([
       ['1', 'Act 1'],
       ['2', 'Act 1'],

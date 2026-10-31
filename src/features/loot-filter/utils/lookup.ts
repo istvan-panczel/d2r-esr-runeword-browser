@@ -1,6 +1,7 @@
 /** Name lookups and picker options built from the `lootfilter` and `types` game-data bundles. */
 import type { ItemTypeInfo, LootFilterDataBundle, LootFilterItem, TypesBundle } from '@/features/game-data/engine/schema';
 import { searchText, type PickerOption } from './pickerSearch';
+import { buildStatParamData, statParamKind, statParamLabel, type StatParamData } from './statParams';
 
 /** Game-data names for codes and ids; every lookup returns `undefined` when the data is missing or the key unknown. */
 export interface LootFilterLookup {
@@ -14,6 +15,8 @@ export interface LootFilterLookup {
   readonly statId: (stat: string | number) => number | undefined;
   /** itemstatcost name → id (the evaluator's context takes it as is); empty without the data. */
   readonly statIds: ReadonlyMap<string, number>;
+  /** The param's name for a layered stat (`item_addskill_tab` 50 → "Martial Arts (Assassin)"); see `statParamLabel`. */
+  readonly statParamLabel: (stat: string | number, param: number) => string | undefined;
   readonly areaName: (id: number) => string | undefined;
   /** The unique's and/or the set item's name for the row id ("Unique / Set" when both tables have that row). */
   readonly uniqueOrSetName: (id: number) => string | undefined;
@@ -29,11 +32,16 @@ export const EMPTY_LOOKUP: LootFilterLookup = {
   statName: none,
   statId: none,
   statIds: new Map(),
+  statParamLabel: none,
   areaName: none,
   uniqueOrSetName: none,
 };
 
-export function buildLookup(data: LootFilterDataBundle, types: TypesBundle): LootFilterLookup {
+export function buildLookup(
+  data: LootFilterDataBundle,
+  types: TypesBundle,
+  params: StatParamData = buildStatParamData(data, types)
+): LootFilterLookup {
   const items = new Map(data.items.map((item) => [item.code, item]));
   const itemTypes = new Map(types.types.map((type) => [type.code, type]));
   const statById = new Map(data.stats.map((stat) => [stat.id, stat.name]));
@@ -55,6 +63,10 @@ export function buildLookup(data: LootFilterDataBundle, types: TypesBundle): Loo
       return statByName.get(stat);
     },
     statIds: statByName,
+    statParamLabel: (stat, param) => {
+      const kind = statParamKind(stat, params);
+      return kind === undefined ? undefined : statParamLabel(kind, param, params);
+    },
     areaName: (id) => areas.get(id),
     uniqueOrSetName: (id) => {
       const names = [uniques.get(id), sets.get(id)].filter((name) => name !== undefined && name !== '');

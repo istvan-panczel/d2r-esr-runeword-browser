@@ -81,6 +81,9 @@ describe('ruleSummary', () => {
   });
 
   it('says "any item" for a rule without conditions', () => {
+    expect(ruleSummary({ itemStats: [{ stat: 'item_addskill_tab', param: 50, op: '<', value: 1 }], hide: true }, TEST_LOOKUP)).toBe(
+      'unless item_addskill_tab[Martial Arts (Assassin)] ≥1 · hide'
+    );
     expect(ruleSummary({}, TEST_LOOKUP)).toBe('any item');
     expect(ruleSummary({ comment: 'note' }, TEST_LOOKUP)).toBe('any item');
   });
@@ -109,6 +112,19 @@ describe('ruleSearchText', () => {
       TEST_LOOKUP
     );
     for (const term of ['r33', 'zod rune', 'high runes', 'jackpot', 'item_numsockets', 'lut gholein']) expect(text).toContain(term);
+  });
+
+  it('holds the names of layered stat params', () => {
+    const text = ruleSearchText(
+      {
+        itemStats: [
+          { stat: 188, param: 50, value: 1 },
+          { stat: 'item_skillonhit', param: 30233, value: 1 },
+        ],
+      },
+      TEST_LOOKUP
+    );
+    for (const term of ['martial arts (assassin)', 'orb of winter lvl 25', 'item_addskill_tab']) expect(text).toContain(term);
   });
 
   it('reuses a given summary', () => {
