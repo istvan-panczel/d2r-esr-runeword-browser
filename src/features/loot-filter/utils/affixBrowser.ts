@@ -3,6 +3,7 @@
  * who thinks in affix names ("Cruel", "of Mastery") finds the stat the plugin checks. Built from affixes.json (`stats`).
  */
 import type { Affix, AffixesBundle } from '@/features/game-data/engine/schema';
+import { statQuirk } from '../engine/statQuirks';
 import type { StatCheck } from '../engine/types';
 import { newStatCheck } from './statChecks';
 
@@ -27,6 +28,8 @@ export interface AffixBrowserRow {
   readonly affixes: readonly AffixBrowserAffix[];
   /** Lower-case label, name and affix names */
   readonly search: string;
+  /** Why the plugin may read the stat as 0 on some items (`STAT_QUIRKS`) */
+  readonly note?: string;
 }
 
 export interface AffixBrowserModel {
@@ -83,7 +86,8 @@ export function buildAffixBrowserModel(bundle: AffixesBundle): AffixBrowserModel
     const label = labelOf(id);
     const affixes = [...entries.values()].sort((a, b) => a.lvl - b.lvl || a.name.localeCompare(b.name));
     const search = [label, name, ...affixes.map((affix) => affix.name)].join('\n').toLowerCase();
-    return { id, name, label, affixes, search };
+    const note = statQuirk(id)?.note;
+    return { id, name, label, affixes, search, ...(note === undefined ? {} : { note }) };
   });
   rows.sort((a, b) => byLabel(a, b) || a.id - b.id);
   return { rows, ids: new Map(rows.map((row) => [row.name, row.id])) };

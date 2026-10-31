@@ -187,6 +187,53 @@ describe('validateLootFilter', () => {
     expect(diagnostics[0].message).toMatch(/as a number/);
   });
 
+  describe('stats the plugin reads as 0', () => {
+    const quirkReference: LootFilterReference = {
+      ...reference,
+      itemCodes: new Set([...reference.itemCodes, 'jew', 'cm1']),
+      itemTypes: new Set([...reference.itemTypes, 'jewl', 'char', 'scha']),
+      statNames: new Set([...reference.statNames, 'item_maxdamage_percent', 'item_armor_percent', 'item_maxdurability_percent']),
+      statIds: new Set([...reference.statIds, 16, 17, 18, 75]),
+      itemCodeTypes: new Map([...reference.itemCodeTypes, ['jew', new Set(['jewl', 'misc'])], ['cm1', new Set(['scha', 'char', 'misc'])]]),
+    };
+    const quirks = (rule: LootFilterRule, ref: LootFilterReference | null = quirkReference) => messages(rule, ref);
+    const ed = (stat: string | number) => ({ stat, value: 1 });
+
+    it('warns about Enhanced Damage (17 and 18, by name or id) in the item stat lists', () => {
+      expect(quirks({ itemTypes: ['weap'], itemStats: [ed('item_maxdamage_percent')], hide: true })).toEqual([
+        "rules/0/itemStats/0/stat: The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it works on jewels and charms). Reported to the mod author.",
+      ]);
+      expect(quirks({ itemStatsAnyOf: [ed(18), ed('item_numsockets'), ed(17)], hide: true }).map((m) => m.split(':')[0])).toEqual([
+        'rules/0/itemStatsAnyOf/0/stat',
+        'rules/0/itemStatsAnyOf/2/stat',
+      ]);
+    });
+
+    it('warns about Enhanced Defense on armour and durability on weapons and armour', () => {
+      expect(quirks({ itemCodes: ['cap'], itemStats: [ed(16)], hide: true })).toEqual([
+        expect.stringMatching(/^rules\/0\/itemStats\/0\/stat: The game keeps Enhanced Defense off .* very likely reads 0/),
+      ]);
+      expect(quirks({ itemCodes: ['hax'], itemStats: [ed('item_maxdurability_percent')], hide: true })).toEqual([
+        expect.stringMatching(/likely reads 0 here on weapons and armour/),
+      ]);
+      expect(quirks({ itemCodes: ['hax'], itemStats: [ed(16)], hide: true })).toEqual([]);
+    });
+
+    it('stays quiet when the rule’s codes and types leave out the affected items', () => {
+      expect(quirks({ itemTypes: ['jewl', 'char'], itemStats: [ed(17)], hide: true })).toEqual([]);
+      expect(quirks({ itemCodes: ['jew', 'cm1'], itemStats: [ed(17)], hide: true })).toEqual([]);
+      expect(quirks({ itemTypes: ['axe'], excludeItemCodes: ['hax', 'dbl'], itemStats: [ed(17)], hide: true })).toEqual([]);
+      expect(quirks({ excludeItemTypes: ['weap'], itemStats: [ed(17)], hide: true })).toEqual([]);
+      expect(quirks({ itemCodes: ['jew', 'hax'], itemStats: [ed(17)], hide: true })).toHaveLength(1);
+    });
+
+    it('warns without item data or for an unknown code, and never in the character stat lists', () => {
+      expect(quirks({ itemTypes: ['jewl'], itemStats: [ed(17)], hide: true }, null)).toHaveLength(1);
+      expect(quirks({ itemCodes: ['jew', 'zzz'], itemStats: [ed(17)], hide: true }).filter((m) => m.includes('Enhanced'))).toHaveLength(1);
+      expect(quirks({ playerStats: [ed(17)], playerStatsAnyOf: [ed(16)], hide: true })).toEqual([]);
+    });
+  });
+
   it('checks names against the reference only when it has them', () => {
     const rule: LootFilterRule = {
       itemCodes: ['r01', 'zzz'],

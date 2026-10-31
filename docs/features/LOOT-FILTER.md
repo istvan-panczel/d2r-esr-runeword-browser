@@ -102,7 +102,11 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   …" the listed other conditions, as the plugin warns; without other conditions the older "needs itemCodes or
   itemTypes" message), and with `quality` ("also hides every other quality of these items (uniques included)"); both
   skip rules with passthrough keys. An empty list in any list condition (`itemCodes: []`, `activeInLevels: []`, …):
-  the plugin logs "the list is empty" and what it does then is not known. Disabled rules are validated like the
+  the plugin logs "the list is empty" and what it does then is not known. A check in `itemStats` / `itemStatsAnyOf`
+  (by name or id) on a stat the plugin reads as 0 on some items (`engine/statQuirks.ts`, see "Known plugin limits"):
+  Enhanced Damage (17, 18) on weapons, Enhanced Defense (16) on armour, Increased Maximum Durability (75) on weapons
+  and armour, at `<list>/<n>/stat`; skipped when the bundle shows the rule's item codes and types cannot match such
+  an item (a jewel or charm rule), never for the character stat lists. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 
@@ -413,6 +417,9 @@ focus returns to the button).
 - **Enhanced damage**: `dmg%` writes both `item_maxdamage_percent` (17) and `item_mindamage_percent` (18). The browser
   shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.2.24), so
   a tick writes one check on `item_maxdamage_percent`; an affix writing only one of them would keep it as its own row.
+- **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows (and a durability row, if one were
+  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats); works on
+  jewels and charms."); see "Known plugin limits".
 - **Search**: every whitespace term must match the label, the stat name, an affix name, or (digits) the stat id.
 - **Apply** (`applyAffixSelection`): the draft starts with the listed stats that already have a check in that list
   (by name or id, any op, value or param). Apply keeps checks on stats the dialog does not list and on stats still
@@ -556,6 +563,18 @@ research doc and the Test tab's note link here.
   its `normcode`, `ubercode` and `ultracode` are its own code) matches no `baseTier` condition, and `{baseTier}` is
   empty for it. A reported in-game test only shows that a ring is neither normal nor exceptional for the plugin. Verify
   with `debug_log = true`: the plugin's log line prints `tier %d` for each item.
+
+### Known plugin limits
+
+- **Percent stats of a base stat read 0 on items with that base stat.** The game never writes an op-13 stat (a
+  percentage of a base stat) into an item's full stat list when the item has the matching base stat (D2MOO
+  `D2StatList`; ESR's own enhanced-damage-fix plugin describes the same rule), and the plugin reads the full list.
+  Verified in game: a magic Cruel weapon with +214% Enhanced Damage fails `item_maxdamage_percent >= 1` and matches
+  `< 1`. So `item_maxdamage_percent` (17) and `item_mindamage_percent` (18) read 0 on weapons; `item_armor_percent`
+  (16) very likely reads 0 on armour with defense; `item_maxdurability_percent` (75) likely reads 0 on items with
+  durability. On jewels and charms (no base damage or defense) Enhanced Damage still reads. The validator warns about
+  such checks and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
+  still matches). Listed for the mod author in the backlog.
 
 ### Troubleshooting in game
 

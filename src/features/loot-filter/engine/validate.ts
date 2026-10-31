@@ -6,6 +6,7 @@
 import { effectiveActions } from './actions.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
+import { statQuirk, type StatQuirk } from './statQuirks.ts';
 import {
   BASE_TIERS,
   DIFFICULTIES,
@@ -125,11 +126,30 @@ function checkColor(report: Report, key: string, color: LabelColor | undefined, 
   });
 }
 
+/**
+ * Whether the rule's item codes and types can match an item the quirk affects (of one of its `affects` types). Without
+ * item data, or with an item code the data lacks, it can.
+ */
+function mayHitQuirk(rule: LootFilterRule, quirk: StatQuirk, reference: LootFilterReference | undefined): boolean {
+  if (!reference || reference.itemCodeTypes.size === 0) return true;
+  const { itemCodes, itemTypes, excludeItemCodes, excludeItemTypes } = rule;
+  if (itemCodes?.some((code) => !reference.itemCodeTypes.has(code)) === true) return true;
+  for (const [code, types] of reference.itemCodeTypes) {
+    if (!quirk.affects.some((type) => types.has(type))) continue;
+    if (itemCodes !== undefined && itemCodes.length > 0 && !itemCodes.includes(code)) continue;
+    if (itemTypes !== undefined && itemTypes.length > 0 && !itemTypes.some((type) => types.has(type))) continue;
+    if (excludeItemCodes?.includes(code) === true || excludeItemTypes?.some((type) => types.has(type)) === true) continue;
+    return true;
+  }
+  return false;
+}
+
 function checkStats(
   report: Report,
   key: string,
   checks: readonly StatCheck[] | undefined,
-  reference: LootFilterReference | undefined
+  reference: LootFilterReference | undefined,
+  rule?: LootFilterRule
 ): void {
   checks?.forEach((check, index) => {
     const path = `${key}/${String(index)}`;
@@ -145,6 +165,9 @@ function checkStats(
       report('error', `${path}/stat`, 'Pick a stat');
       return;
     }
+    // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
+    const quirk = rule === undefined ? undefined : statQuirk(check.stat);
+    if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
     if (!reference) return;
     if (typeof check.stat === 'number') {
       if (reference.statIds.size > 0 && !reference.statIds.has(check.stat)) {
@@ -390,8 +413,8 @@ function checkRule(
     else if (!levelIds.has(id)) report('error', `activeInLevels/${String(index)}`, `There is no filter level with id ${String(id)}`);
   });
 
-  for (const key of ['itemStats', 'itemStatsAnyOf', 'playerStats', 'playerStatsAnyOf'] as const)
-    checkStats(report, key, rule[key], reference);
+  for (const key of ['itemStats', 'itemStatsAnyOf'] as const) checkStats(report, key, rule[key], reference, rule);
+  for (const key of ['playerStats', 'playerStatsAnyOf'] as const) checkStats(report, key, rule[key], reference);
 
   if (rule.location !== undefined && !rule.location.includes('onGround')) {
     const actions = effectiveActions(rule, filter);

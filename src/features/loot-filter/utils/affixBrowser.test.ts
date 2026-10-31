@@ -87,6 +87,13 @@ describe('buildAffixBrowserModel', () => {
     const odd = buildAffixBrowserModel({ ...BUNDLE, affixes: [affix('p', 'Odd', 1, [18])] });
     expect(odd.rows.map((candidate) => [candidate.id, candidate.label])).toEqual([[18, 'Enhanced Minimum Damage']]);
   });
+
+  it('notes the stats the plugin reads as 0 on some items, and only those', () => {
+    expect(row(17)?.note).toMatch(/^Reads 0 on weapons/);
+    expect(row(19)).not.toHaveProperty('note');
+    const odd = buildAffixBrowserModel({ ...BUNDLE, affixes: [affix('p', 'Odd', 1, [18])] });
+    expect(odd.rows[0]?.note).toMatch(/^Reads 0 on weapons/);
+  });
 });
 
 describe('filterAffixBrowser', () => {
@@ -153,6 +160,11 @@ describe('the generated affixes.json', () => {
     expect(names).toEqual(expect.arrayContaining(['Jagged', 'Deadly', 'Cruel']));
     expect(ed?.affixes.some((entry) => entry.hybridWith.includes('Increased Attack Speed'))).toBe(true);
     expect(real.rows.some((candidate) => candidate.name === 'item_mindamage_percent')).toBe(false);
+  });
+
+  it('notes Enhanced Damage and Enhanced Defense', () => {
+    expect(real.rows.find((candidate) => candidate.name === 'item_maxdamage_percent')?.note).toMatch(/weapons/);
+    expect(real.rows.find((candidate) => candidate.name === 'item_armor_percent')?.note).toMatch(/armour/);
   });
 
   it('never lists technical stats', () => {

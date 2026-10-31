@@ -58,6 +58,7 @@ function AffixStatRow({ row, checked, onToggle, query }: AffixStatRowProps) {
         <span className="text-sm font-medium">{row.label}</span>
         <span className="truncate font-mono text-xs text-muted-foreground">{row.name}</span>
       </label>
+      {row.note !== undefined && <p className="pl-6 text-xs text-amber-700 dark:text-amber-400">{row.note}</p>}
       <p className="pl-6 text-xs text-muted-foreground">
         {shown.map((affix, index) => (
           <span key={`${affix.kind}|${affix.name}|${affix.hybridWith.join('|')}`}>
