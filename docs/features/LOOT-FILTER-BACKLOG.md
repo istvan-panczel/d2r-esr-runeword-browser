@@ -41,14 +41,37 @@ different one; the validator says so once per list, as a likely mismatch. The sa
 
 ## Announced format changes to watch
 
-### Stat formulas (announced 2026-10-26, not released)
+### Formula condition and a show action (previewed 2026-10-31, not released)
 
-The mod author announced "mathematical formulas support for stats": rules will filter by stat values through
-formulas, which "will not work on unidentified items". No guide, schema or plugin update exists yet (ESR 3.2.24 plugin
-1.5.3, guide PDF unchanged). When it ships: read the new guide, extend `StatCheck` (today `value` is a number or
-`[low, high]`; a formula is presumably a string) so the parser does not move such checks to `passthrough` with an error,
-show them read-only or with a text field, and make the evaluator report "formula: not evaluated" instead of guessing.
-Until then a filter with formulas opens with a wrong-shape diagnostic on that condition and the Test tab ignores it.
+The mod author announced "mathematical formulas support for stats" on 2026-10-26, and on 2026-10-31 (via Sully, with a
+guide excerpt) previewed the declaration: `{ "itemTypes": ["ring"], "formula": "(stat('item_fastercastrate')>=10)",
+"show": true }`. Nothing has shipped: ESR 3.2.24's plugin (1.5.3) has no `formula`, `statMax` or `show` strings.
+
+- `formula`: a condition that holds when the expression is not 0, "written like a txt calc and checked when the filter
+  loads". Parts: `stat('name')` (itemstatcost `Stat` or row number), `stat('name', param)` (a number or a skills.txt
+  skill name such as `'Teleport'`), `playerStat('name')` / `playerStat('name', param)`, `statMax('name')` /
+  `statSum('name')` (highest value / total over every param of the item's stat), `+ - * /` on whole numbers (division
+  rounds toward 0, division by 0 gives 0), `== != < <= > >=` (1 or 0), `&& || !`, `a ? b : c`. Formulas "will not work
+  on unidentified items". The author calls the separate-op `itemStats` declaration "very ugly", so the stat lists may be
+  replaced rather than extended.
+- `show: true`: a new action. Everything that explains the hide-only model (How rules combine tip, Except control,
+  `hideIfOtherConditionsFail` notes) must be revisited once its semantics are known.
+
+Today the editor keeps both keys as written with an "Unknown key" warning (correct for plugin 1.5.3, which ignores
+them too), flags such a rule as "no actions", and the Test tab ignores the formula.
+
+**Questions sent on Discord (2026-10-31), waiting for answers:** (1) do `itemStats`/`itemStatsAnyOf`/`playerStats`/
+`playerStatsAnyOf` keep working; (2) how `show` combines with `hide`, later hides and `hideIfOtherConditionsFail`;
+(3) what `stat('item_skillonattack', 'Skill')` / `item_charged_skill` match (any level?) and return (charges or the
+packed value); (4) whether `stat('item_addskill_tab', N)` takes the game layer (class × 8 + tab) or the properties.txt
+number, and whether tab names work; (5) whether `stat()` reads fix the Enhanced Damage issue (Known plugin limits);
+(6) an updated guide and a release date.
+
+**Plan when it ships:** parse `formula` (a small expression parser) for validation (unknown stat or skill names, syntax)
+and Test tab evaluation; a formula field with the stat/skill/tab pickers inserting `stat('…', 'Skill')` text and
+`statMax` for "any tab"; a `show` action; rework the hide-only explanations; decide with the answers whether the stat
+lists stay or become a formula builder. The skill data (`lootfilter.json` `skills`, `knownLayers`) and the pickers of
+the skill-param release are reused.
 
 ## Needs the plugin or the mod (requests for the mod author)
 
