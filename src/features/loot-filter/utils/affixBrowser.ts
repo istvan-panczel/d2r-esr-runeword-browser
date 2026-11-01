@@ -4,11 +4,11 @@
  * and `layers` for the params of the skill, skill tab, class, event and charged stats, named through `StatParamData`).
  */
 import type { Affix, AffixesBundle } from '@/features/game-data/engine/schema';
-import { statLayerKind, type StatLayerKind } from '@/features/game-data/engine/statLayers';
+import { decodeSkillLevelLayer, statLayerKind, type StatLayerKind } from '@/features/game-data/engine/statLayers';
 import { statQuirk } from '../engine/statQuirks';
 import type { StatCheck } from '../engine/types';
 import { exceptionOf, newExceptionCheck, newStatCheck } from './statChecks';
-import { EMPTY_STAT_PARAMS, statParamLabel, type StatParamData } from './statParams';
+import { className, EMPTY_STAT_PARAMS, statParamLabel, type StatParamData } from './statParams';
 
 export type AffixKind = 'prefix' | 'suffix' | 'automagic';
 
@@ -17,6 +17,8 @@ export interface AffixBrowserParam {
   readonly param: number;
   /** "Martial Arts (Assassin)", "Orb of Winter lvl 15"; "param N" when the data does not name it */
   readonly label: string;
+  /** The class of a skill, event or charged param's skill ("Sorceress"), for the chip search; tab labels name it already */
+  readonly className?: string;
 }
 
 export interface AffixBrowserAffix {
@@ -71,6 +73,12 @@ const byLabel = (a: { readonly label: string }, b: { readonly label: string }) =
 
 const byParam = (a: AffixBrowserParam, b: AffixBrowserParam) => a.param - b.param;
 
+/** The class name of a skill, event or charged param's skill; undefined for a non-class skill or another kind. */
+function paramClassName(kind: StatLayerKind, param: number, d: StatParamData): string | undefined {
+  const skill = kind === 'skill' ? param : kind === 'event' || kind === 'charged' ? decodeSkillLevelLayer(param)?.skill : undefined;
+  return skill === undefined ? undefined : className(d.skills.get(skill)?.cls, d);
+}
+
 /** The union of two param lists, by param */
 function mergeParams(a: readonly AffixBrowserParam[], b: readonly AffixBrowserParam[]): AffixBrowserParam[] {
   const params = new Map([...a, ...b].map((entry) => [entry.param, entry]));
@@ -89,10 +97,11 @@ export function buildAffixBrowserModel(bundle: AffixesBundle, params: StatParamD
   const labelOf = (id: number) => (edMerged && id === edMax ? ED_LABEL : (stats.get(id)?.label ?? `Stat ${String(id)}`));
 
   const kindOf = (id: number) => statLayerKind(stats.get(id)?.name ?? '');
-  const paramOf = (kind: StatLayerKind, param: number): AffixBrowserParam => ({
-    param,
-    label: statParamLabel(kind, param, params) ?? `param ${String(param)}`,
-  });
+  const paramOf = (kind: StatLayerKind, param: number): AffixBrowserParam => {
+    const label = statParamLabel(kind, param, params) ?? `param ${String(param)}`;
+    const cls = paramClassName(kind, param, params);
+    return cls === undefined ? { param, label } : { param, label, className: cls };
+  };
 
   // stat id → affix key → affix (one entry per name, kind and stat set: ESR repeats rows per item type / level band)
   const byStat = new Map<number, Map<string, AffixBrowserAffix>>();
@@ -199,11 +208,34 @@ export function matchingParams(row: AffixBrowserRow, query: string): number[] {
   const terms = searchTerms(query);
   if (terms.length === 0 || row.params === undefined) return [];
   return row.params
-    .filter((entry) => {
-      const writers = row.affixes.filter((affix) => affix.params?.some((p) => p.param === entry.param)).map((affix) => affix.name);
-      return namesOwnText([entry.label, ...writers].join('\n'), row, terms);
-    })
+    .filter((entry) => namesOwnText([entry.label, ...writerNames(row, entry.param)].join('\n'), row, terms))
     .map((entry) => entry.param);
+}
+
+/** The names of the row's affixes that write the param. */
+function writerNames(row: AffixBrowserRow, param: number): string[] {
+  return row.affixes.filter((affix) => affix.params?.some((entry) => entry.param === param)).map((affix) => affix.name);
+}
+
+/**
+ * The params ticking a layered row picks: its only param, or the one param the search names; none when the search names
+ * several. A broad search names many: "skill" names all 280 params of Single Class Skill, since the "Skillful" prefix
+ * writes every one of them, and picking them all unasked turned the user's clicks on two chips into un-picks.
+ */
+export function autoPickedParams(row: AffixBrowserRow, query: string): number[] {
+  const params = row.params ?? [];
+  if (params.length === 1) return [params[0].param];
+  const named = matchingParams(row, query);
+  return named.length === 1 ? named : [];
+}
+
+/**
+ * Whether every term of the chip search is in the param's label, its skill's class name or the names of the affixes
+ * writing it, or (digits) is the param itself.
+ */
+function chipSearchMatches(row: AffixBrowserRow, entry: AffixBrowserParam, terms: readonly string[]): boolean {
+  const text = [entry.label, entry.className ?? '', ...writerNames(row, entry.param)].join('\n').toLowerCase();
+  return terms.every((term) => text.includes(term) || (/^\d+$/.test(term) && Number(term) === entry.param));
 }
 
 // --- Display ---
@@ -215,21 +247,31 @@ const KIND_NOUNS: Readonly<Record<AffixKind, readonly [string, string]>> = {
 };
 
 /**
- * The param chips of a ticked layered row: the params the search names plus the picked ones, else all of the row's;
- * picked params no affix writes (a check the list already had) come too, so they can be seen and unpicked.
+ * The param chips of a ticked layered row, by param. With a chip search (`chipQuery`, the row's own search box): every
+ * param of the row matching all its terms (`chipSearchMatches`), whatever the main search names, picked or not.
+ * Without one: the params the main search names plus the picked ones, else all of the row's. Picked params no affix
+ * writes (a check the list already had) come too, so they can be seen and unpicked.
  */
 export function shownParams(
   row: AffixBrowserRow,
   query: string,
   picked: ReadonlySet<number>,
-  model: Pick<AffixBrowserModel, 'paramOf'>
+  model: Pick<AffixBrowserModel, 'paramOf'>,
+  chipQuery = ''
 ): AffixBrowserParam[] {
-  const named = new Set(matchingParams(row, query));
   const rowParams = row.params ?? [];
   const listed = new Set(rowParams.map((entry) => entry.param));
   const extra = [...picked].filter((param) => !listed.has(param)).map((param) => model.paramOf(row, param));
+  const chipTerms = searchTerms(chipQuery);
+  if (chipTerms.length > 0) return [...rowParams, ...extra].filter((entry) => chipSearchMatches(row, entry, chipTerms)).sort(byParam);
+  const named = new Set(matchingParams(row, query));
   const shown = rowParams.filter((entry) => named.size === 0 || named.has(entry.param) || picked.has(entry.param));
   return [...shown, ...extra].sort(byParam);
+}
+
+/** "Select all shown": the picks plus every shown chip. */
+export function pickShownParams(picked: ReadonlySet<number>, shown: readonly AffixBrowserParam[]): Set<number> {
+  return new Set([...picked, ...shown.map((entry) => entry.param)]);
 }
 
 /** Affix params named in its text; more are counted ("[35 skills]"). */

@@ -510,12 +510,19 @@ focus returns to the button).
   as toggle chips (`aria-pressed`): the ones the search names (`matchingParams`: like the affix emphasis, over the
   param's name and the names of the affixes writing it) plus the picked ones, else all of them; a picked param no
   affix writes (a check the list already had) is shown too, by name or "param N", so it can be unpicked
-  (`shownParams`). Ticking a row
-  pre-ticks the params the search names, its only param, or none; where several picks would all be needed (the
-  all-of list, "keep items with all of these") only the first named one. A line under the chips says what is
-  picked ("This list needs every check, so an item needs all 2 of these" in those two modes; an event or charged row
-  there adds "For any of these levels, use the any-of list (Item stats, any of)." or "… use “Keep items with any of
-  these”."). Apply waits ("Pick a
+  (`shownParams`). A row with more than 12 params gets its own search box above the chips ("Skill, class or
+  affix…"): while it holds text, the chips are every param of the row whose name, skill class (`className`: a skill,
+  event or charged param's skill's class; tab names already say the class) or writing affix names hold every term,
+  or whose param is the typed number, independent of the main search and of what is picked ("Showing 31 of 280.").
+  Above the chips (rows with more than one param): "Select all shown (N)" picks every shown chip (`pickShownParams`),
+  offered only where several picks mean "any of them" (the any-of list and "keep items with any of these",
+  `paramsAreAlternatives`), and "Clear" removes every pick of the row. Ticking a row pre-picks its only param or the
+  one param the main search names (`autoPickedParams`), else nothing: a broad search names many ("skill" names all
+  280 params of Single Class Skill, since the "Skillful" prefix writes each of them), and pre-picking all of them made
+  a user's clicks on two chips un-pick them. A line under the chips says what is
+  picked ("2 picked: one check each."; "This list needs every check, so an item needs all 2 of these" in the all-of
+  modes; an event or charged row there adds "For any of these levels, use the any-of list (Item stats, any of)." or
+  "… use “Keep items with any of these”."). Apply waits ("Pick a
   skill tab for Skill Tab Levels (or untick it).") while a ticked layered row has neither a picked param nor a check
   without param (`rowsMissingParams`).
 - **Apply** (`applyAffixSelection`): the draft starts with the listed stats that already have a check in that list

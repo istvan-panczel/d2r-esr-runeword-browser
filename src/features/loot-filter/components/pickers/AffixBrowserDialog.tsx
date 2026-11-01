@@ -14,11 +14,13 @@ import {
   affixMatches,
   affixText,
   applyAffixSelection,
+  autoPickedParams,
   filterAffixBrowser,
   getAffixBrowserModel,
   initialAffixParams,
   initialAffixSelection,
   matchingParams,
+  pickShownParams,
   rowsMissingParams,
   shownParams,
   type AffixBrowserModel,
@@ -40,8 +42,8 @@ const isInverted = (mode: AffixBrowserMode) => mode === 'except-any' || mode ===
 
 /**
  * Whether several params of one stat mean "any of them" in the mode's list: presence checks in the any-of list, or
- * exceptions (`< 1`) in the all-of list. In the other two an item needs all of them, so a search does not pre-tick
- * more than one.
+ * exceptions (`< 1`) in the all-of list. In the other two an item needs all of them, so the chips offer no
+ * "Select all shown" there.
  */
 const paramsAreAlternatives = (mode: AffixBrowserMode) => mode === 'any' || mode === 'except-any';
 
@@ -55,6 +57,21 @@ const ANY_LEVEL_HINTS: Readonly<Record<AffixBrowserMode, string | undefined>> = 
 
 /** What a layered row's param is, for "Pick a … for …". */
 const PARAM_WHAT = { tab: 'skill tab', class: 'class', skill: 'skill', event: 'skill and level', charged: 'skill and level' } as const;
+
+/** A layered row with more params than this gets a search box over its chips. */
+const CHIP_SEARCH_ABOVE = 12;
+
+/** The chip search's placeholder per layer kind (it matches the name, the skill's class and the writing affixes). */
+const CHIP_SEARCH_PLACEHOLDERS = {
+  tab: 'Tab, class or affix…',
+  class: 'Class or affix…',
+  skill: 'Skill, class or affix…',
+  event: 'Skill, level, class or affix…',
+  charged: 'Skill, level, class or affix…',
+} as const;
+
+/** The chips, for the chip search's label. */
+const PARAM_NOUNS = { tab: 'skill tabs', class: 'classes', skill: 'skills', event: 'skill levels', charged: 'skill levels' } as const;
 
 const FOOTER_NOTES: Readonly<Record<AffixBrowserMode, string | undefined>> = {
   all: undefined,
@@ -72,7 +89,7 @@ interface AffixStatRowProps {
   readonly query: string;
   /** Picked params of a ticked layered row */
   readonly params: ReadonlySet<number>;
-  readonly onToggleParam: (param: number, on: boolean) => void;
+  readonly onParamsChange: (params: ReadonlySet<number>) => void;
   /** Several picked params need all of them on the item (all-of list) */
   readonly paramsNeedAll: boolean;
   /** Where "any of these levels" goes instead (an event or charged row in a list that needs all of them) */
@@ -80,22 +97,74 @@ interface AffixStatRowProps {
   readonly model: AffixBrowserModel;
 }
 
-/** A ticked layered row's params as toggle chips: the ones the search names (plus the picked ones), else all. */
+/**
+ * A ticked layered row's params as toggle chips: the ones the main search names (plus the picked ones), else all; rows
+ * with many params get their own search box over all of the row's params (`shownParams`). "Select all shown" (only
+ * where several picks mean "any of them") picks every shown chip, "Clear" every pick of the row.
+ */
 function ParamChips({
   row,
   query,
   params,
-  onToggleParam,
+  onParamsChange,
   paramsNeedAll,
   anyLevelHint,
   model,
 }: Omit<AffixStatRowProps, 'checked' | 'onToggle'>) {
+  const [chipQuery, setChipQuery] = useState('');
+  const kind = row.layerKind ?? 'skill';
+  const total = row.params?.length ?? 0;
+  const searchable = total > CHIP_SEARCH_ABOVE;
+  const searching = searchable && chipQuery.trim() !== '';
   const named = new Set(matchingParams(row, query));
-  const shown = shownParams(row, query, params, model);
+  const shown = shownParams(row, query, params, model, searchable ? chipQuery : '');
   const levels = row.layerKind === 'event' || row.layerKind === 'charged';
   const what = row.layerKind === undefined ? 'param' : PARAM_WHAT[row.layerKind];
+  const allShownPicked = shown.every((entry) => params.has(entry.param));
   return (
     <div className="mt-1 pl-6">
+      {(total > 1 || params.size > 1) && (
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          {searchable && (
+            <Input
+              type="search"
+              value={chipQuery}
+              onChange={(event) => {
+                setChipQuery(event.target.value);
+              }}
+              placeholder={CHIP_SEARCH_PLACEHOLDERS[kind]}
+              aria-label={`Filter the ${PARAM_NOUNS[kind]} of ${row.label}`}
+              className="h-7 w-56 min-w-0 text-xs"
+            />
+          )}
+          {!paramsNeedAll && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              disabled={allShownPicked}
+              onClick={() => {
+                onParamsChange(pickShownParams(params, shown));
+              }}
+            >
+              Select all shown ({shown.length})
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={params.size === 0}
+            onClick={() => {
+              onParamsChange(new Set());
+            }}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
       <div className="flex max-h-40 flex-wrap gap-1 overflow-y-auto" role="group" aria-label={`${row.label}: pick the ${what}`}>
         {shown.map((entry) => {
           const on = params.has(entry.param);
@@ -104,36 +173,44 @@ function ParamChips({
               key={entry.param}
               type="button"
               aria-pressed={on}
-              title={`param ${String(entry.param)}`}
+              title={[`param ${String(entry.param)}`, entry.className].filter(Boolean).join(' · ')}
               className={cn(
                 'rounded-full border px-2 py-0.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 on ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-accent'
               )}
               onClick={() => {
-                onToggleParam(entry.param, !on);
+                const next = new Set(params);
+                if (on) next.delete(entry.param);
+                else next.add(entry.param);
+                onParamsChange(next);
               }}
             >
               {entry.label}
             </button>
           );
         })}
+        {shown.length === 0 && (
+          <span className="text-xs text-muted-foreground">
+            No {PARAM_NOUNS[kind]} match “{chipQuery.trim()}”.
+          </span>
+        )}
       </div>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+      <p className="mt-0.5 text-xs text-muted-foreground" aria-live="polite">
         {params.size === 0
           ? `Pick the ${what}: the game checks this stat per ${what}.`
           : paramsNeedAll && params.size > 1
             ? `This list needs every check, so an item needs all ${String(params.size)} of these.`
             : `${String(params.size)} picked: one check each.`}
         {levels && anyLevelHint !== undefined && ` ${anyLevelHint}`}
-        {named.size > 0 &&
-          shown.length < (row.params?.length ?? 0) &&
-          ` Showing the ones the search names (${String(shown.length)} of ${String(row.params?.length ?? 0)}).`}
+        {searching
+          ? ` Showing ${String(shown.length)} of ${String(total)}.`
+          : named.size > 0 && shown.length < total && ` Showing the ones the search names (${String(shown.length)} of ${String(total)}).`}
       </p>
     </div>
   );
 }
 
-function AffixStatRow({ row, checked, onToggle, query, params, onToggleParam, paramsNeedAll, anyLevelHint, model }: AffixStatRowProps) {
+function AffixStatRow({ row, checked, onToggle, query, params, onParamsChange, paramsNeedAll, anyLevelHint, model }: AffixStatRowProps) {
   const [expanded, setExpanded] = useState(false);
   const matched = row.affixes.map((affix) => affixMatches(affix, query, row));
   // A search that found an affix past the first few shows the whole list, so the match is visible.
@@ -183,7 +260,7 @@ function AffixStatRow({ row, checked, onToggle, query, params, onToggleParam, pa
           row={row}
           query={query}
           params={params}
-          onToggleParam={onToggleParam}
+          onParamsChange={onParamsChange}
           paramsNeedAll={paramsNeedAll}
           anyLevelHint={anyLevelHint}
           model={model}
@@ -220,20 +297,13 @@ function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowse
       return next;
     });
     if (on && row.params !== undefined && (params.get(row.id)?.size ?? 0) === 0) {
-      // Pre-tick what the search names (one only where several would all be needed), or a row's only param.
-      const named = matchingParams(row, query);
-      const picked = row.params.length === 1 ? [row.params[0].param] : paramsAreAlternatives(mode) ? named : named.slice(0, 1);
-      setParams((current) => new Map(current).set(row.id, new Set(picked)));
+      // Pre-pick a row's only param or the one param the search names; nothing when the search names several.
+      setParams((current) => new Map(current).set(row.id, new Set(autoPickedParams(row, query))));
     }
   };
 
-  const toggleParam = (id: number, param: number, on: boolean) => {
-    setParams((current) => {
-      const set = new Set(current.get(id));
-      if (on) set.add(param);
-      else set.delete(param);
-      return new Map(current).set(id, set);
-    });
+  const setRowParams = (id: number, next: ReadonlySet<number>) => {
+    setParams((current) => new Map(current).set(id, next));
   };
 
   return (
@@ -268,8 +338,8 @@ function AffixBrowserForm({ model, mode, value, onApply, onCancel }: AffixBrowse
                   toggle(row, on);
                 }}
                 params={params.get(row.id) ?? NO_PARAMS}
-                onToggleParam={(param, on) => {
-                  toggleParam(row.id, param, on);
+                onParamsChange={(next) => {
+                  setRowParams(row.id, next);
                 }}
                 paramsNeedAll={!paramsAreAlternatives(mode)}
                 anyLevelHint={ANY_LEVEL_HINTS[mode]}
@@ -334,7 +404,9 @@ interface AffixBrowserDialogProps {
 /**
  * "Browse affixes…": the item stats magic affixes write, each with the affixes that write it, as checkboxes. The draft
  * starts from the stats that already have a check; Apply keeps those checks as they are, removes unticked ones and
- * appends `>= 1` checks for new ticks (see `applyAffixSelection`).
+ * appends `>= 1` checks for new ticks (see `applyAffixSelection`). A ticked skill, skill tab or class row writes one
+ * check per param picked in its chips (`ParamChips`); ticking it pre-picks only its single param or the one param the
+ * search names (`autoPickedParams`).
  */
 export function AffixBrowserDialog({ data, mode, value, onChange }: AffixBrowserDialogProps) {
   const [open, setOpen] = useState(false);
