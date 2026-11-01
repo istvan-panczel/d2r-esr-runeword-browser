@@ -213,19 +213,22 @@ describe('stat checks', () => {
     expect(applies({ itemStats: [{ stat: 14, op: '>=', value: 1 }] }, sockets)).toBe(false);
   });
 
-  it('filters by param, or takes any entry without one', () => {
+  it('filters by param, or reads only the param-0 entry without one (verified in game)', () => {
     expect(applies({ itemStats: [{ stat: 188, param: 2, value: 3 }] }, sockets)).toBe(true);
     expect(applies({ itemStats: [{ stat: 188, param: 5, value: 3 }] }, sockets)).toBe(false);
-    expect(applies({ itemStats: [{ stat: 188, value: 3 }] }, sockets)).toBe(true);
+    // The item's 188 entries are at params 2 and 5: without param the check reads param 0, a missing entry = 0
+    expect(applies({ itemStats: [{ stat: 188, value: 1 }] }, sockets)).toBe(false);
+    expect(applies({ itemStats: [{ stat: 188, op: '<', value: 1 }] }, sockets)).toBe(true);
+    expect(applies({ itemStats: [{ stat: 188, value: 1 }] }, makeItem({ stats: [{ stat: 188, value: 2 }] }))).toBe(true);
     expect(applies({ itemStats: [{ stat: 188, param: 7, op: '==', value: 0 }] }, sockets)).toBe(true);
   });
 
-  it('reads every entry or only param 0 for a check without param, per the omitted-param mode', () => {
-    expect(OMITTED_PARAM).toBe('anyLayer');
+  it('reads only param 0 for a check without param, per the omitted-param mode', () => {
+    expect(OMITTED_PARAM).toBe('layerZero');
     expect(checkedLayer(50)).toBe(50);
-    expect(checkedLayer(undefined)).toBeUndefined();
-    expect(checkedLayer(undefined, 'layerZero')).toBe(0);
-    expect(checkedLayer(50, 'layerZero')).toBe(50);
+    expect(checkedLayer(undefined)).toBe(0);
+    expect(checkedLayer(undefined, 'anyLayer')).toBeUndefined();
+    expect(checkedLayer(50, 'anyLayer')).toBe(50);
   });
 
   it('needs all of itemStats but any of itemStatsAnyOf', () => {
@@ -486,6 +489,9 @@ describe('expandPlaceholders', () => {
   it('expands item and player stats, with params and names', () => {
     expect(expand('{stat:96}% FRW')).toBe('20% FRW');
     expect(expand('{stat:188,3}/{stat:188,4}/{stat:999}')).toBe('2/0/0');
+    // Without a param only the param-0 entry is read (verified in game: Tab {stat:188} / {stat:188,8} showed 0 / 4)
+    const fireTab = makeItem({ stats: [{ stat: 188, param: 8, value: 4 }] });
+    expect(expandPlaceholders('{stat:188} / {stat:188,8}', fireTab, context, filter)).toBe('0 / 4');
     expect(expand('{playerStat:12} {playerStat:level}')).toBe('90 90');
   });
 

@@ -115,21 +115,22 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `STAT_LAYER_KINDS` in `game-data/engine/statLayers.ts`, see GAME-DATA.md "Stat layers"): an error for a `param` that
   is not a whole number from 0; a warning above 65535 (a stat's layer is assumed to be 16 bits in memory, so the check
   likely never matches); warnings for a skill, skill tab, class, event or charged stat without `param` (at
-  `<list>/<n>`: "has one entry per skill tab; without "param" this check is taken to hold when any skill tab passes
-  (not verified in game: the plugin may read only param 0)", worded from `OMITTED_PARAM`; it also fires for a hide
-  rule's exceptions, and for an exception that is not the opposite of a presence check it adds "an item hides as soon
-  as one skill tab is below 3, even if another skill tab has 3 or more"), an event or charged param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`, `> 0`, or their
-  exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 = 1285).
-  - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50); properties.txt
-    numbers them `class × 3 + tab` (Martial Arts = 20). Which one the plugin compares `param` with is not confirmed in
-    game, so the warnings say "likely". A list with several tab params up to 23, at least one of which names no tab,
-    gets one warning at the list (`<list>`, `propertiesTabNumbers`): "These skill tab params (1–21) look like
-    properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab …, and the tab names
-    shown for these params follow that; if the plugin reads params that way, 13 of these checks match no tab and 6
-    match a different tab than their number suggests. Not confirmed in game yet" (params 0 to 2 are the same tab in
-    both). A single tab param that names no tab gets its own warning at `<list>/<n>/param`, naming the tab it would be
-    as a properties.txt number ("as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon Skills, which
-    the game numbers 56"). Sully's template (v0.6.7) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+  `<list>/<n>`, also for a hide rule's exceptions: "has one entry per skill tab; without "param" the plugin reads only
+  the entry with param 0 (verified in game), not any skill tab. Pick a skill tab to check one"), an event or charged
+  param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`,
+  `> 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 =
+  1285).
+  - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50) and the plugin
+    compares `param` with that (verified in game on 2026-11-01: +4 to Fire Skills, Sorceress, showed in
+    `{stat:188,8}`); properties.txt numbers them `class × 3 + tab` (Martial Arts = 20, Fire Skills = 3). The warnings
+    stay warnings. A list with several tab params up to 23, at least one of which names no tab, gets one warning at
+    the list (`<list>`, `propertiesTabNumbers`): "These skill tab params (1–21) look like properties.txt tab numbers
+    (class × 3 + tab). The game itself numbers tabs class × 8 + tab …, and so does the plugin (verified in game): 13
+    of these checks match no tab and 6 match a different tab than their number suggests" (params 0 to 2 are the same
+    tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
+    tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
+    would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
+    Skills, which is param 56"). Sully's template (v0.6.7) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -617,7 +618,9 @@ tab switches; it is not saved.
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
-  full list ("Verify in game" below), plus the note that `{string:KEY}` is shown as written.
+  full list ("Verify in game" below), a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
+  check or `{stat:ID}` without param reads only the param-0 entry), plus the note that `{string:KEY}` is shown as
+  written.
 - While the bundles load (or when they fail) a hint says that typed codes work but item-type conditions only see the
   typed type.
 
@@ -645,18 +648,23 @@ research doc and the Test tab's note link here.
 - `replaceName`, `namePrefix` and `nameSuffix` are each "later wins" on their own.
 - `notify: true` prints the drop line unless the rule's effective actions (style included) have a `chatMessage`.
 - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
-- A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0.
-  For the layered stats (skill, skill tab, class, event, charged) the plugin may instead read only the param-0 entry;
-  the evaluator's `OMITTED_PARAM` switch (`'anyLayer'` now, `'layerZero'` the other reading, `checkedLayer`) changes
-  the evaluator, the validator's wording and the Test tab's assumption together. Asked on Discord 2026-10-31 (see the
-  backlog).
-- The stat params are the engine's layers (`class << 3 | tab` for `item_addskill_tab`, `skill << 6 | level` for the
-  event and charged stats, `game-data/engine/statLayers.ts`), as the game stores them on an item; that the plugin
-  compares `param` with exactly these is assumed (Sully's template writes properties.txt tab numbers instead).
+- The event and charged params are assumed to be the engine's layers too (`skill << 6 | level`,
+  `game-data/engine/statLayers.ts`), as for the skill tabs (verified, below).
 - **Verified in game (2026-10):** a missing stat compares as 0. A hide rule on magic items with
   `item_demondamage_percent < 1` hid every magic item without demon damage and kept those with it, so "Except items
   with…" (a `< 1` check) works.
-- `{stat:ID}` without a param shows the first entry of that stat; ID may also be an itemstatcost name.
+- **Verified in game (2026-11-01, plugin 1.5.3)**, with a rule on magic and rare items whose `namePrefix` was
+  `[ED {stat:17} | Def {stat:16} | Leech {stat:60} | Tab {stat:188} / {stat:188,8}] `:
+  - An Elder Cane of Teleportation with +4 to Fire Skills (Sorceress Only) showed `Tab 0 / 4`. So the plugin numbers
+    skill tabs as the game stores them, `class × 8 + tab` (Sorceress = class 1, Fire = tab 0 → 8; the properties.txt
+    number would be 3), and a stat check or `{stat:ID}` without `param` reads only the param-0 entry, not any entry.
+    The evaluator's `OMITTED_PARAM` is `'layerZero'` (`checkedLayer`; the `'anyLayer'` reading is kept as a mode for
+    the unit tests only), for checks and placeholders; the validator warns about every layered check without param,
+    and the Test tab lists both under "Verified in game".
+  - A Godly Body Shield (+201–300% Enhanced Defense) showed `Def 0`: `item_armor_percent` reads 0 on armour. A rare
+    jewel with Enhanced Damage showed `ED 58`, its value: Enhanced Damage on jewels reads correctly (see "Known plugin
+    limits").
+- In `{stat:ID}`, ID may also be an itemstatcost name.
 - `{ethereal}` expands to `Ethereal` for ethereal items and to nothing otherwise.
 - `hideUnmatchedItems` hides an on-ground item no rule applied to.
 - Colour codes `ÿcN` to `ÿcV` use preview approximations (the guide gives no RGB for them).

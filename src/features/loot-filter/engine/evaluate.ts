@@ -13,18 +13,18 @@
  * - `replaceName`, `namePrefix` and `nameSuffix` are each "later wins" on their own, not as one name.
  * - `notify: true` prints the drop line unless the rule's effective actions (style included) have a chatMessage.
  * - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
- * - A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0
- *   (`OMITTED_PARAM` = 'anyLayer', `OMITTED_PARAM_ASSUMPTION`). For the layered stats (skill, skill tab, class, event,
- *   charged: one entry per skill / tab / class) the plugin may instead read only the param-0 entry ('layerZero'); asked
- *   on Discord 2026-10-31, see LOOT-FILTER-BACKLOG.md.
- *   A stat the item or player lacks is one entry of value 0 (verified in game for item stats, 2026-10: a hide rule
+ * - A stat the item or player lacks is one entry of value 0 (verified in game for item stats, 2026-10: a hide rule
  *   with `item_demondamage_percent < 1` hid the magic items without demon damage).
- * - `{stat:ID}` without PARAM shows the first entry of that stat; ID may also be an itemstatcost name.
  * - `{ethereal}` expands to `Ethereal` for ethereal items and to an empty string otherwise.
  * - `hideUnmatchedItems` hides an on-ground item no rule applied to (`hiddenBy` stays null).
  * - An item without a normal/exceptional/elite family (rings, amulets, charms, jewels, arrows, ESR mythical bases;
  *   `baseTier: null`) matches no `baseTier` condition, and `{baseTier}` expands to an empty string for it. The plugin's
  *   tier for such items is unknown (its `debug_log` line prints `tier %d` per item).
+ *
+ * Verified in game (2026-11-01, plugin 1.5.3): a stat check or `{stat:ID}` without `param` reads only the entry with
+ * param 0, not any entry (`OMITTED_PARAM` = 'layerZero'): `{stat:188}` showed 0 on an item whose only skill tab entry
+ * is Fire Skills (Sorceress, param 8), while `{stat:188,8}` showed 4. An entry without param has param 0. ID may also
+ * be an itemstatcost name.
  */
 
 import type {
@@ -163,23 +163,17 @@ function resolvePlaceholderStatId(stat: string, statIds: ReadonlyMap<string, num
 }
 
 /**
- * How the plugin reads a stat check without `param` (not verified in game): every entry of the stat (`anyLayer`: any
- * skill, skill tab or class of a layered stat) or only the entry with param 0 (`layerZero`).
+ * How the plugin reads a stat check without `param`: every entry of the stat (`anyLayer`: any skill, skill tab or class
+ * of a layered stat) or only the entry with param 0 (`layerZero`).
  */
 export type OmittedParamMode = 'anyLayer' | 'layerZero';
 
-/** The evaluator's (and the validator's) assumption until the in-game test answers. */
-export const OMITTED_PARAM: OmittedParamMode = 'anyLayer';
+/** Verified in game (2026-11-01): a check without param reads only the param-0 entry (see the header). */
+export const OMITTED_PARAM: OmittedParamMode = 'layerZero';
 
-const OMITTED_PARAM_TEXT: Readonly<Record<OmittedParamMode, string>> = {
-  anyLayer:
-    'A stat check without param holds when any entry of that stat passes (for a skill, skill tab or class stat: any skill, tab or class); an entry without param has param 0.',
-  layerZero:
-    'A stat check without param reads only the entry with param 0 (for a skill, skill tab or class stat: one skill, tab or class); an entry without param has param 0.',
-};
-
-/** `OMITTED_PARAM` in plain words, for the Test tab's assumptions. */
-export const OMITTED_PARAM_ASSUMPTION = OMITTED_PARAM_TEXT[OMITTED_PARAM];
+/** `OMITTED_PARAM` in plain words, for the Test tab's verified notes. */
+export const OMITTED_PARAM_RULE =
+  'A stat check (or {stat:ID}) without param reads only the entry with param 0: for a skill, skill tab or class stat that is one skill, tab or class, not any of them; an entry without param has param 0.';
 
 /** The param a check compares: its own; without one every entry (`anyLayer`, undefined) or the param-0 entry (`layerZero`). */
 export function checkedLayer(param: number | undefined, mode: OmittedParamMode = OMITTED_PARAM): number | undefined {
@@ -294,7 +288,8 @@ function statPlaceholder(args: string, entries: readonly ItemStatEntry[], statId
   const rawParam = comma < 0 ? '' : args.slice(comma + 1).trim();
   const param = rawParam === '' ? undefined : Number(rawParam);
   if (param !== undefined && Number.isNaN(param)) return undefined;
-  const entry = entries.find((candidate) => candidate.stat === id && (param === undefined || (candidate.param ?? 0) === param));
+  const layer = checkedLayer(param);
+  const entry = entries.find((candidate) => candidate.stat === id && (layer === undefined || (candidate.param ?? 0) === layer));
   return String(entry?.value ?? 0);
 }
 
