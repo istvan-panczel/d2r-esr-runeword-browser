@@ -496,8 +496,8 @@ focus returns to the button).
   shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.2.24), so
   a tick writes one check on `item_maxdamage_percent`; an affix writing only one of them would keep it as its own row.
 - **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows (and a durability row, if one were
-  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats); should still
-  work on jewels and charms."); see "Known plugin limits".
+  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats; confirmed in
+  game); works on jewels and charms (confirmed on a jewel)."); see "Known plugin limits".
 - **Search**: every whitespace term must match the label, the stat name, an affix name, a param name (below), or
   (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its name or param
   names and every term is there or in the row's label or stat name.
@@ -693,8 +693,10 @@ research doc and the Test tab's note link here.
   `D2StatList`; ESR's own enhanced-damage-fix plugin describes the same rule), and the plugin reads the full list.
   Verified in game: a magic Cruel weapon with +214% Enhanced Damage fails `item_maxdamage_percent >= 1` and matches
   `< 1`. So `item_maxdamage_percent` (17) and `item_mindamage_percent` (18) read 0 on weapons; `item_armor_percent`
-  (16) very likely reads 0 on armour with defense; `item_maxdurability_percent` (75) likely reads 0 on items with
-  durability. On jewels and charms (no base damage or defense) Enhanced Damage should still read (not verified). The validator warns about
+  (16) reads 0 on armour with defense (verified in game on 2026-11-01: a Godly Body Shield with +201–300% showed 0);
+  `item_maxdurability_percent` (75) likely reads 0 on items with durability (the same mechanism, not tested). On
+  jewels (no base damage or defense) Enhanced Damage reads correctly (verified: a rare jewel showed 58), and charms
+  should behave the same. The validator warns about
   such checks and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
   still matches). Listed for the mod author in the backlog.
 

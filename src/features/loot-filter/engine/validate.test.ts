@@ -304,7 +304,7 @@ describe('validateLootFilter', () => {
 
     it('warns about Enhanced Damage (17 and 18, by name or id) in the item stat lists', () => {
       expect(quirks({ itemTypes: ['weap'], itemStats: [ed('item_maxdamage_percent')], hide: true })).toEqual([
-        "rules/0/itemStats/0/stat: The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it should still work on jewels and charms). Reported to the mod author.",
+        "rules/0/itemStats/0/stat: The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (confirmed in game); on jewels and charms it reads correctly (confirmed on a jewel). Reported to the mod author.",
       ]);
       expect(quirks({ itemStatsAnyOf: [ed(18), ed('item_numsockets'), ed(17)], hide: true }).map((m) => m.split(':')[0])).toEqual([
         'rules/0/itemStatsAnyOf/0/stat',
@@ -314,7 +314,7 @@ describe('validateLootFilter', () => {
 
     it('warns about Enhanced Defense on armour and durability on weapons and armour', () => {
       expect(quirks({ itemCodes: ['cap'], itemStats: [ed(16)], hide: true })).toEqual([
-        expect.stringMatching(/^rules\/0\/itemStats\/0\/stat: The game keeps Enhanced Defense off .* very likely reads 0/),
+        expect.stringMatching(/^rules\/0\/itemStats\/0\/stat: The game keeps Enhanced Defense off .* reads 0 .*confirmed in game/),
       ]);
       expect(quirks({ itemCodes: ['hax'], itemStats: [ed('item_maxdurability_percent')], hide: true })).toEqual([
         expect.stringMatching(/likely reads 0 here on weapons and armour/),

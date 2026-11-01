@@ -94,8 +94,9 @@ Collected to forward together once the current implementation round is done.
 - **Enhanced Damage / Defense read as 0.** The plugin reads an item's full stat list, where the game never writes an
   op-13 stat (a percentage of a base stat) when the item has the base stat, so `item_maxdamage_percent` (17) and
   `item_mindamage_percent` (18) read 0 on weapons (user-confirmed: a magic Cruel weapon with +214% fails `>= 1` and
-  matches `< 1`), `item_armor_percent` (16) very likely on armour and `item_maxdurability_percent` (75) likely on
-  items with durability. Ask for these stats to be read from the item's own stat list (or for a computed "enhanced
+  matches `< 1`) and `item_armor_percent` (16) on armour (confirmed in game 2026-11-01: a Godly Body Shield with
+  +201–300% showed 0), while Enhanced Damage on a jewel reads correctly (confirmed: 58);
+  `item_maxdurability_percent` (75) likely reads 0 on items with durability (not tested). Ask for these stats to be read from the item's own stat list (or for a computed "enhanced
   damage" value). The editor warns about such checks meanwhile (LOOT-FILTER.md "Known plugin limits").
 - **Unidentified items.** Whether the plugin sees stats and `uniqueOrSetId` of unidentified ground items decides how
   far stat and unique/set conditions reach for rares and uniques on the ground.
