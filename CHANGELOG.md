@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.46.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.46.0...v1.46.1) (2026-11-01)
+
+### Bug Fixes
+
+* **loot-filter:** merge the in-game test answers and the param picking fix ([579cf32](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/579cf326df9cbac7535d8247319ad35405f3c215))
+* **loot-filter:** read a stat check without param as param 0, as verified in game ([919993e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/919993e1db4807a9e98efc6887a4303c6ec4a5f4))
+* **loot-filter:** state the confirmed Enhanced Damage and Defense plugin limits ([6a93d92](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6a93d922c3979fd5521ea64d2575af8f6471219c))
+* **loot-filter:** stop the affix browser pre-picking every param a broad search names ([afb5c2a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/afb5c2a9a8231ce3290095c8ac981c89723ac19f))
+
 ## [1.46.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.45.0...v1.46.0) (2026-10-31)
 
 ### Features
