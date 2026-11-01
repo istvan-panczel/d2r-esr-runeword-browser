@@ -23,21 +23,17 @@ condition ("empty list: the game logs 'the list is empty'…", done) and the UI 
 Still open from round 2: the plugin's `tier` for rings, amulets, charms and jewels. `debug_log = true` prints
 `tier %d` per item in `d2rloader\logs\celestialrayone.loot-filter.log`.
 
-### Stat checks without param on layered stats
+## Answered in game
 
-The skill, skill tab, class, event and charged stats keep one entry per skill, tab or class (the param). Our evaluator
-reads a check without `param` as "any entry passes" (`OMITTED_PARAM = 'anyLayer'` in `engine/evaluate.ts`); the
-plugin may instead read only the param-0 entry (`'layerZero'`: for `item_addskill_tab` that is Amazon Bow and Crossbow
-Skills). The validator warns about every such check and the Test tab lists the assumption. Asked on Discord on
-2026-10-31 with a test: a rule with `namePrefix` `"{stat:188} / {stat:188,8}"` on an item with +skills to a non-zero
-tab shows what a missing param reads. When answered: set `OMITTED_PARAM`, update the "Verify in game" entry, and drop
-or reword the warning.
+### Stat checks without param, and skill tab numbering (answered 2026-11-01)
 
-Related: Sully's template (v0.6.7, rules 31 to 33) checks stat 188 with params 1 to 21, the properties.txt tab
-numbers (`class × 3 + tab`), where the game stores `class << 3 | tab` (Assassin Martial Arts = 50, not 20). If the
-plugin reads the game's numbering, 13 of those params (3–7, 11–15, 19–21) name no tab and 6 (8–10, 16–18) name a
-different one; the validator says so once per list, as a likely mismatch. The same in-game test answers this:
-`{stat:188,50}` vs `{stat:188,20}` on an item with +skills to Martial Arts. Tell Sully once confirmed.
+A power user's test rule (`namePrefix` `"[… | Tab {stat:188} / {stat:188,8}] "`) on an item with +4 to Fire Skills
+(Sorceress Only) showed `Tab 0 / 4`: a check without `param` reads only the param-0 entry (`OMITTED_PARAM =
+'layerZero'` now; validator, "No param" option and Test tab say so firmly), and the plugin numbers skill tabs
+`class × 8 + tab` (8 = Sorceress Fire; properties.txt would say 3). Still to do outside this app: tell Sully that his
+template's three +3/4/5 skill tab rules (v0.6.7, rules 31 to 33) check properties.txt tab numbers 1 to 21, of which 13
+(3–7, 11–15, 19–21) name no tab and 6 (8–10, 16–18) a different one, and that their paramless check reads only Amazon
+Bow and Crossbow Skills. See LOOT-FILTER.md "Verify in game".
 
 ## Announced format changes to watch
 
@@ -98,8 +94,9 @@ Collected to forward together once the current implementation round is done.
 - **Enhanced Damage / Defense read as 0.** The plugin reads an item's full stat list, where the game never writes an
   op-13 stat (a percentage of a base stat) when the item has the base stat, so `item_maxdamage_percent` (17) and
   `item_mindamage_percent` (18) read 0 on weapons (user-confirmed: a magic Cruel weapon with +214% fails `>= 1` and
-  matches `< 1`), `item_armor_percent` (16) very likely on armour and `item_maxdurability_percent` (75) likely on
-  items with durability. Ask for these stats to be read from the item's own stat list (or for a computed "enhanced
+  matches `< 1`) and `item_armor_percent` (16) on armour (confirmed in game 2026-11-01: a Godly Body Shield with
+  +201–300% showed 0), while Enhanced Damage on a jewel reads correctly (confirmed: 58);
+  `item_maxdurability_percent` (75) likely reads 0 on items with durability (not tested). Ask for these stats to be read from the item's own stat list (or for a computed "enhanced
   damage" value). The editor warns about such checks meanwhile (LOOT-FILTER.md "Known plugin limits").
 - **Unidentified items.** Whether the plugin sees stats and `uniqueOrSetId` of unidentified ground items decides how
   far stat and unique/set conditions reach for rares and uniques on the ground.

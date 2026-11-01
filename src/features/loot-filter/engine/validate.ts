@@ -5,7 +5,6 @@
  */
 import { decodeTabLayer, MAX_STAT_PARAM, skillTabLayer, statLayerKind, type StatLayerKind } from '../../game-data/engine/statLayers.ts';
 import { effectiveActions } from './actions.ts';
-import { OMITTED_PARAM } from './evaluate.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
 import { statQuirk, type StatQuirk } from './statQuirks.ts';
@@ -155,13 +154,7 @@ const LAYER_NOUNS: Readonly<Record<StatLayerKind, string>> = {
   charged: 'skill and level',
 };
 
-/** The ops a hide rule's exception is written with (see `exceptionOf` in utils/statChecks.ts). */
-const EXCEPTION_OPS: readonly string[] = ['<', '<=', '!='];
-
-/**
- * Whether a check reads "the stat is there" (`>= 1`, `> 0`), or a hide rule's exception of it (`< 1`, `<= 0`): with
- * those, a check without param on a stat with several entries still is the opposite of its exception.
- */
+/** Whether a check reads "the stat is there" (`>= 1`, `> 0`), or a hide rule's exception of it (`< 1`, `<= 0`). */
 function isPresenceCheck(check: StatCheck): boolean {
   if (typeof check.value !== 'number') return false;
   const op = check.op ?? '>=';
@@ -178,23 +171,9 @@ function isChargedValueCheck(check: StatCheck): boolean {
   return isPresenceCheck(check) || ((op === '>=' || op === '<') && check.value % 256 === 0);
 }
 
+/** Verified in game (2026-11-01): without param the plugin reads only the param-0 entry (`OMITTED_PARAM` in evaluate.ts). */
 const omittedParamMessage = (stat: string, noun: string): string =>
-  OMITTED_PARAM === 'anyLayer'
-    ? `"${stat}" has one entry per ${noun}; without "param" this check is taken to hold when any ${noun} passes (not verified in game: the plugin may read only param 0). Pick a ${noun} to check one`
-    : `"${stat}" has one entry per ${noun}; without "param" the plugin reads only the entry with param 0. Pick a ${noun} to check one`;
-
-/** "below 3" / "3 or more" for an exception's op and value (what fails it, what passes it). */
-function exceptionWords(check: StatCheck): readonly [fails: string, passes: string] {
-  const value = typeof check.value === 'number' ? String(check.value) : '';
-  switch (check.op) {
-    case '<=':
-      return [`at most ${value}`, `more than ${value}`];
-    case '!=':
-      return [`not ${value}`, value];
-    default:
-      return [`below ${value}`, `${value} or more`];
-  }
-}
+  `"${stat}" has one entry per ${noun}; without "param" the plugin reads only the entry with param 0 (verified in game), not any ${noun}. Pick a ${noun} to check one`;
 
 /** The stat's itemstatcost name (by name, or by id through the reference) and its layer kind. */
 function layerOf(check: StatCheck, reference: LootFilterReference | undefined): { name: string; kind: StatLayerKind } | undefined {
@@ -219,7 +198,7 @@ function propertiesTabNumbers(checks: readonly StatCheck[], reference: LootFilte
   return new Set(indexes.length >= 2 && undecodable ? indexes : []);
 }
 
-/** The one list warning for `propertiesTabNumbers`. Not confirmed in game: the plugin may read params either way. */
+/** The one list warning for `propertiesTabNumbers`. Verified in game (2026-11-01): the plugin reads class × 8 + tab. */
 function propertiesTabMessage(params: readonly number[]): string {
   const low = Math.min(...params);
   const high = Math.max(...params);
@@ -229,7 +208,7 @@ function propertiesTabMessage(params: readonly number[]): string {
   const range = low === high ? String(low) : `${String(low)}–${String(high)}`;
   const verb = (count: number) => (count === 1 ? 'matches' : 'match');
   const others = other === 0 ? '' : ` and ${String(other)} ${verb(other)} a different tab than their number suggests`;
-  return `These skill tab params (${range}) look like properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab (Assassin Martial Arts = 50, Warlock Demon Skills = 56), and the tab names shown for these params follow that; if the plugin reads params that way, ${String(none)} of these checks ${verb(none)} no tab${others}. Not confirmed in game yet`;
+  return `These skill tab params (${range}) look like properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab (Assassin Martial Arts = 50, Warlock Demon Skills = 56), and so does the plugin (verified in game): ${String(none)} of these checks ${verb(none)} no tab${others}`;
 }
 
 /**
@@ -237,14 +216,12 @@ function propertiesTabMessage(params: readonly number[]): string {
  * stat (skill, skill tab, class, event, charged; `STAT_LAYER_KINDS`) needs one, a tab param should decode (unless the
  * list's warning about properties.txt tab numbers covers it, `inTabList`), an event / charged param is
  * `skill << 6 | level`, and a charged value is `max << 8 | charges`.
- * `exception`: the check is a hide rule's exception (`<`, `<=`, `!=` in an item stat list of a rule that hides).
  */
 function checkStatParam(
   report: Report,
   path: string,
   check: StatCheck,
   reference: LootFilterReference | undefined,
-  exception: boolean,
   inTabList: boolean
 ): void {
   const { param } = check;
@@ -265,23 +242,18 @@ function checkStatParam(
   const { name, kind } = layered;
   const noun = LAYER_NOUNS[kind];
   if (param === undefined) {
-    const [fails, passes] = exceptionWords(check);
-    const note =
-      OMITTED_PARAM === 'anyLayer' && exception && !isPresenceCheck(check)
-        ? `. An exception without param is not the opposite check when the item has several entries: an item hides as soon as one ${noun} is ${fails}, even if another ${noun} has ${passes}`
-        : '';
-    report('warning', path, `${omittedParamMessage(name, noun)}${note}`);
+    report('warning', path, omittedParamMessage(name, noun));
   } else if (kind === 'tab' && !inTabList && decodeTabLayer(param) === undefined) {
     const layer = skillTabLayer(param);
     const tabName = layer === undefined ? undefined : reference?.skillTabNames.get(layer);
     const hint =
       layer === undefined
         ? ''
-        : `; as a properties.txt tab number (class × 3 + tab) ${String(param)} is ${tabName ?? 'a tab'}, which the game numbers ${String(layer)}. Not confirmed in game yet`;
+        : `; as a properties.txt tab number (class × 3 + tab) ${String(param)} is ${tabName ?? 'a tab'}, which is param ${String(layer)}`;
     report(
       'warning',
       `${path}/param`,
-      `"param" ${String(param)} names no skill tab as the game numbers them (class × 8 + tab 0 to 2)${hint}`
+      `"param" ${String(param)} names no skill tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)${hint}`
     );
   } else if (kind === 'event' || kind === 'charged') {
     if (param < 64) {
@@ -308,8 +280,7 @@ function checkStats(
   key: string,
   checks: readonly StatCheck[] | undefined,
   reference: LootFilterReference | undefined,
-  rule?: LootFilterRule,
-  exceptions = false
+  rule?: LootFilterRule
 ): void {
   const tabNumbers = propertiesTabNumbers(checks ?? [], reference);
   if (tabNumbers.size > 0) {
@@ -332,14 +303,7 @@ function checkStats(
     // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
     const quirk = rule === undefined ? undefined : statQuirk(check.stat);
     if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
-    checkStatParam(
-      report,
-      path,
-      check,
-      reference,
-      exceptions && check.op !== undefined && EXCEPTION_OPS.includes(check.op),
-      tabNumbers.has(index)
-    );
+    checkStatParam(report, path, check, reference, tabNumbers.has(index));
     if (!reference) return;
     if (typeof check.stat === 'number') {
       if (reference.statIds.size > 0 && !reference.statIds.has(check.stat)) {
@@ -585,10 +549,7 @@ function checkRule(
     else if (!levelIds.has(id)) report('error', `activeInLevels/${String(index)}`, `There is no filter level with id ${String(id)}`);
   });
 
-  // A hide rule's `<`, `<=` and `!=` item stat checks are its exceptions (`readsExceptions` in utils/statChecks.ts).
-  const ruleActions = effectiveActions(rule, filter);
-  const exceptions = ruleActions.hide === true && ruleActions.hideIfOtherConditionsFail !== true;
-  for (const key of ['itemStats', 'itemStatsAnyOf'] as const) checkStats(report, key, rule[key], reference, rule, exceptions);
+  for (const key of ['itemStats', 'itemStatsAnyOf'] as const) checkStats(report, key, rule[key], reference, rule);
   for (const key of ['playerStats', 'playerStatsAnyOf'] as const) checkStats(report, key, rule[key], reference);
 
   if (rule.location !== undefined && !rule.location.includes('onGround')) {

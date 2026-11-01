@@ -1,9 +1,11 @@
 /**
  * Item stats the loot filter plugin reads as 0 on some items. The game never writes an op-13 stat (a percentage of a
  * base stat) into an item's full stat list when the item has that base stat (D2MOO `D2StatList`; ESR's own
- * enhanced-damage-fix plugin describes the same rule), and the plugin reads the full list. Verified in game for
- * Enhanced Damage on weapons (a magic Cruel weapon with +214% fails `>= 1` and matches `< 1`); Enhanced Defense on
- * armour and Increased Maximum Durability follow from the same rule.
+ * enhanced-damage-fix plugin describes the same rule), and the plugin reads the full list. Verified in game (plugin
+ * 1.5.3): Enhanced Damage reads 0 on weapons (a magic Cruel weapon with +214% fails `>= 1` and matches `< 1`) and
+ * Enhanced Defense reads 0 on armour (a Godly Body Shield with +201–300% showed `{stat:16}` = 0, 2026-11-01), while
+ * Enhanced Damage on a jewel reads correctly (a rare jewel showed `{stat:17}` = 58). Increased Maximum Durability
+ * follows from the same rule but is not tested.
  */
 import type { StatCheck } from './types.ts';
 
@@ -21,8 +23,9 @@ export interface StatQuirk {
 }
 
 const ED_MESSAGE =
-  "The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (it should still work on jewels and charms). Reported to the mod author.";
-const ED_NOTE = 'Reads 0 on weapons (the game keeps it off their stats); should still work on jewels and charms.';
+  "The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (confirmed in game); on jewels and charms it reads correctly (confirmed on a jewel). Reported to the mod author.";
+const ED_NOTE =
+  'Reads 0 on weapons (the game keeps it off their stats; confirmed in game); works on jewels and charms (confirmed on a jewel).';
 
 export const STAT_QUIRKS: readonly StatQuirk[] = [
   {
@@ -30,8 +33,8 @@ export const STAT_QUIRKS: readonly StatQuirk[] = [
     name: 'item_armor_percent',
     affects: ['armo'],
     message:
-      'The game keeps Enhanced Defense off the stats of armour with defense, so the plugin very likely reads 0 here on armour, helms and shields (it should work on jewels and charms). Reported to the mod author.',
-    note: 'Very likely reads 0 on armour (the game keeps it off their stats); should work on jewels and charms.',
+      'The game keeps Enhanced Defense off the stats of armour with defense, so the plugin reads 0 here on armour, helms and shields (confirmed in game). Reported to the mod author.',
+    note: 'Reads 0 on armour (the game keeps it off their stats; confirmed in game).',
   },
   { id: 17, name: 'item_maxdamage_percent', affects: ['weap'], message: ED_MESSAGE, note: ED_NOTE },
   { id: 18, name: 'item_mindamage_percent', affects: ['weap'], message: ED_MESSAGE, note: ED_NOTE },
@@ -40,8 +43,8 @@ export const STAT_QUIRKS: readonly StatQuirk[] = [
     name: 'item_maxdurability_percent',
     affects: ['weap', 'armo'],
     message:
-      'The game likely keeps Increased Maximum Durability off the stats of items with durability, so the plugin likely reads 0 here on weapons and armour. Reported to the mod author.',
-    note: 'Likely reads 0 on weapons and armour (the game keeps it off their stats).',
+      'The game likely keeps Increased Maximum Durability off the stats of items with durability (the same rule as Enhanced Damage and Defense, not tested in game), so the plugin likely reads 0 here on weapons and armour. Reported to the mod author.',
+    note: 'Likely reads 0 on weapons and armour (the same rule as Enhanced Damage; not tested in game).',
   },
 ];
 

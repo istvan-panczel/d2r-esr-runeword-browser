@@ -115,21 +115,22 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `STAT_LAYER_KINDS` in `game-data/engine/statLayers.ts`, see GAME-DATA.md "Stat layers"): an error for a `param` that
   is not a whole number from 0; a warning above 65535 (a stat's layer is assumed to be 16 bits in memory, so the check
   likely never matches); warnings for a skill, skill tab, class, event or charged stat without `param` (at
-  `<list>/<n>`: "has one entry per skill tab; without "param" this check is taken to hold when any skill tab passes
-  (not verified in game: the plugin may read only param 0)", worded from `OMITTED_PARAM`; it also fires for a hide
-  rule's exceptions, and for an exception that is not the opposite of a presence check it adds "an item hides as soon
-  as one skill tab is below 3, even if another skill tab has 3 or more"), an event or charged param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`, `> 0`, or their
-  exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 = 1285).
-  - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50); properties.txt
-    numbers them `class × 3 + tab` (Martial Arts = 20). Which one the plugin compares `param` with is not confirmed in
-    game, so the warnings say "likely". A list with several tab params up to 23, at least one of which names no tab,
-    gets one warning at the list (`<list>`, `propertiesTabNumbers`): "These skill tab params (1–21) look like
-    properties.txt tab numbers (class × 3 + tab). The game itself numbers tabs class × 8 + tab …, and the tab names
-    shown for these params follow that; if the plugin reads params that way, 13 of these checks match no tab and 6
-    match a different tab than their number suggests. Not confirmed in game yet" (params 0 to 2 are the same tab in
-    both). A single tab param that names no tab gets its own warning at `<list>/<n>/param`, naming the tab it would be
-    as a properties.txt number ("as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon Skills, which
-    the game numbers 56"). Sully's template (v0.6.7) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+  `<list>/<n>`, also for a hide rule's exceptions: "has one entry per skill tab; without "param" the plugin reads only
+  the entry with param 0 (verified in game), not any skill tab. Pick a skill tab to check one"), an event or charged
+  param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`,
+  `> 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 =
+  1285).
+  - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50) and the plugin
+    compares `param` with that (verified in game on 2026-11-01: +4 to Fire Skills, Sorceress, showed in
+    `{stat:188,8}`); properties.txt numbers them `class × 3 + tab` (Martial Arts = 20, Fire Skills = 3). The warnings
+    stay warnings. A list with several tab params up to 23, at least one of which names no tab, gets one warning at
+    the list (`<list>`, `propertiesTabNumbers`): "These skill tab params (1–21) look like properties.txt tab numbers
+    (class × 3 + tab). The game itself numbers tabs class × 8 + tab …, and so does the plugin (verified in game): 13
+    of these checks match no tab and 6 match a different tab than their number suggests" (params 0 to 2 are the same
+    tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
+    tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
+    would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
+    Skills, which is param 56"). Sully's template (v0.6.7) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -495,8 +496,8 @@ focus returns to the button).
   shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.2.24), so
   a tick writes one check on `item_maxdamage_percent`; an affix writing only one of them would keep it as its own row.
 - **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows (and a durability row, if one were
-  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats); should still
-  work on jewels and charms."); see "Known plugin limits".
+  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats; confirmed in
+  game); works on jewels and charms (confirmed on a jewel)."); see "Known plugin limits".
 - **Search**: every whitespace term must match the label, the stat name, an affix name, a param name (below), or
   (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its name or param
   names and every term is there or in the row's label or stat name.
@@ -509,12 +510,19 @@ focus returns to the button).
   as toggle chips (`aria-pressed`): the ones the search names (`matchingParams`: like the affix emphasis, over the
   param's name and the names of the affixes writing it) plus the picked ones, else all of them; a picked param no
   affix writes (a check the list already had) is shown too, by name or "param N", so it can be unpicked
-  (`shownParams`). Ticking a row
-  pre-ticks the params the search names, its only param, or none; where several picks would all be needed (the
-  all-of list, "keep items with all of these") only the first named one. A line under the chips says what is
-  picked ("This list needs every check, so an item needs all 2 of these" in those two modes; an event or charged row
-  there adds "For any of these levels, use the any-of list (Item stats, any of)." or "… use “Keep items with any of
-  these”."). Apply waits ("Pick a
+  (`shownParams`). A row with more than 12 params gets its own search box above the chips ("Skill, class or
+  affix…"): while it holds text, the chips are every param of the row whose name, skill class (`className`: a skill,
+  event or charged param's skill's class; tab names already say the class) or writing affix names hold every term,
+  or whose param is the typed number, independent of the main search and of what is picked ("Showing 31 of 280.").
+  Above the chips (rows with more than one param): "Select all shown (N)" picks every shown chip (`pickShownParams`),
+  offered only where several picks mean "any of them" (the any-of list and "keep items with any of these",
+  `paramsAreAlternatives`), and "Clear" removes every pick of the row. Ticking a row pre-picks its only param or the
+  one param the main search names (`autoPickedParams`), else nothing: a broad search names many ("skill" names all
+  280 params of Single Class Skill, since the "Skillful" prefix writes each of them), and pre-picking all of them made
+  a user's clicks on two chips un-pick them. A line under the chips says what is
+  picked ("2 picked: one check each."; "This list needs every check, so an item needs all 2 of these" in the all-of
+  modes; an event or charged row there adds "For any of these levels, use the any-of list (Item stats, any of)." or
+  "… use “Keep items with any of these”."). Apply waits ("Pick a
   skill tab for Skill Tab Levels (or untick it).") while a ticked layered row has neither a picked param nor a check
   without param (`rowsMissingParams`).
 - **Apply** (`applyAffixSelection`): the draft starts with the listed stats that already have a check in that list
@@ -617,7 +625,9 @@ tab switches; it is not saved.
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
-  full list ("Verify in game" below), plus the note that `{string:KEY}` is shown as written.
+  full list ("Verify in game" below), a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
+  check or `{stat:ID}` without param reads only the param-0 entry), plus the note that `{string:KEY}` is shown as
+  written.
 - While the bundles load (or when they fail) a hint says that typed codes work but item-type conditions only see the
   typed type.
 
@@ -645,18 +655,23 @@ research doc and the Test tab's note link here.
 - `replaceName`, `namePrefix` and `nameSuffix` are each "later wins" on their own.
 - `notify: true` prints the drop line unless the rule's effective actions (style included) have a `chatMessage`.
 - `{name}` in every text, the drop line included, is the game's name, not the filter's changed name.
-- A stat check without `param` holds when any entry of that stat satisfies it; an entry without param has param 0.
-  For the layered stats (skill, skill tab, class, event, charged) the plugin may instead read only the param-0 entry;
-  the evaluator's `OMITTED_PARAM` switch (`'anyLayer'` now, `'layerZero'` the other reading, `checkedLayer`) changes
-  the evaluator, the validator's wording and the Test tab's assumption together. Asked on Discord 2026-10-31 (see the
-  backlog).
-- The stat params are the engine's layers (`class << 3 | tab` for `item_addskill_tab`, `skill << 6 | level` for the
-  event and charged stats, `game-data/engine/statLayers.ts`), as the game stores them on an item; that the plugin
-  compares `param` with exactly these is assumed (Sully's template writes properties.txt tab numbers instead).
+- The event and charged params are assumed to be the engine's layers too (`skill << 6 | level`,
+  `game-data/engine/statLayers.ts`), as for the skill tabs (verified, below).
 - **Verified in game (2026-10):** a missing stat compares as 0. A hide rule on magic items with
   `item_demondamage_percent < 1` hid every magic item without demon damage and kept those with it, so "Except items
   with…" (a `< 1` check) works.
-- `{stat:ID}` without a param shows the first entry of that stat; ID may also be an itemstatcost name.
+- **Verified in game (2026-11-01, plugin 1.5.3)**, with a rule on magic and rare items whose `namePrefix` was
+  `[ED {stat:17} | Def {stat:16} | Leech {stat:60} | Tab {stat:188} / {stat:188,8}] `:
+  - An Elder Cane of Teleportation with +4 to Fire Skills (Sorceress Only) showed `Tab 0 / 4`. So the plugin numbers
+    skill tabs as the game stores them, `class × 8 + tab` (Sorceress = class 1, Fire = tab 0 → 8; the properties.txt
+    number would be 3), and a stat check or `{stat:ID}` without `param` reads only the param-0 entry, not any entry.
+    The evaluator's `OMITTED_PARAM` is `'layerZero'` (`checkedLayer`; the `'anyLayer'` reading is kept as a mode for
+    the unit tests only), for checks and placeholders; the validator warns about every layered check without param,
+    and the Test tab lists both under "Verified in game".
+  - A Godly Body Shield (+201–300% Enhanced Defense) showed `Def 0`: `item_armor_percent` reads 0 on armour. A rare
+    jewel with Enhanced Damage showed `ED 58`, its value: Enhanced Damage on jewels reads correctly (see "Known plugin
+    limits").
+- In `{stat:ID}`, ID may also be an itemstatcost name.
 - `{ethereal}` expands to `Ethereal` for ethereal items and to nothing otherwise.
 - `hideUnmatchedItems` hides an on-ground item no rule applied to.
 - Colour codes `ÿcN` to `ÿcV` use preview approximations (the guide gives no RGB for them).
@@ -685,8 +700,10 @@ research doc and the Test tab's note link here.
   `D2StatList`; ESR's own enhanced-damage-fix plugin describes the same rule), and the plugin reads the full list.
   Verified in game: a magic Cruel weapon with +214% Enhanced Damage fails `item_maxdamage_percent >= 1` and matches
   `< 1`. So `item_maxdamage_percent` (17) and `item_mindamage_percent` (18) read 0 on weapons; `item_armor_percent`
-  (16) very likely reads 0 on armour with defense; `item_maxdurability_percent` (75) likely reads 0 on items with
-  durability. On jewels and charms (no base damage or defense) Enhanced Damage should still read (not verified). The validator warns about
+  (16) reads 0 on armour with defense (verified in game on 2026-11-01: a Godly Body Shield with +201–300% showed 0);
+  `item_maxdurability_percent` (75) likely reads 0 on items with durability (the same mechanism, not tested). On
+  jewels (no base damage or defense) Enhanced Damage reads correctly (verified: a rare jewel showed 58), and charms
+  should behave the same. The validator warns about
   such checks and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
   still matches). Listed for the mod author in the backlog.
 

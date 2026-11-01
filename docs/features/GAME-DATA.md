@@ -274,7 +274,9 @@ The params ("layers") of the skill, skill tab, class, event and charged stats ar
 `skillLevelLayer`, `decodeSkillLevelLayer`, `chargedValue`; shared by the generator and the app). In short: tab =
 `class << 3 | tab` (properties.txt numbers the tabs `class × 3 + tab`, so Assassin Martial Arts 20 → 50, Warlock Demon
 Skills 21 → 56); class = class id (ama 0 … war 7, the properties.txt `val`); skill = skills.txt row index; event and
-charged = `skill << 6 | level`; charged value = `max charges << 8 | charges left`. `createPropertyLayerResolver`
+charged = `skill << 6 | level`; charged value = `max charges << 8 | charges left`. The loot-filter plugin reads tab
+params the same way (verified in game on 2026-11-01: an item with +4 to Fire Skills, Sorceress, showed 4 for
+`{stat:188,8}`; properties.txt numbering would be 3). `createPropertyLayerResolver`
 (`build/bundleLootFilterSkills.ts`) maps a property to its layers: func 10 tab (param, else the slot `val`, as ESR's
 unused `war-tab-rand`), func 21 class (`val`), func 36 random class (every class id of min–max: Hellfire Torch), func
 22/24 skill (param), func 12 random skill (every id of min–max when the range spans at most 64 ids; the "any class

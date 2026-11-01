@@ -9,7 +9,6 @@ import {
   type StatLayerKind,
 } from '@/features/game-data/engine/statLayers';
 import type { LootFilterData } from '../../../hooks/useLootFilterData';
-import { OMITTED_PARAM } from '../../../engine/evaluate';
 import type { PickerOption } from '../../../utils/pickerSearch';
 import type { PickerCustom } from '../../pickers/PickerList';
 import { SinglePicker } from '../../pickers';
@@ -53,13 +52,15 @@ const SEARCH_PLACEHOLDERS: Readonly<Record<'tab' | 'class' | 'skill', string>> =
 const NO_PARAM = 'none';
 
 /**
- * "No param" at the top of a picker that has a param, so it can be removed again (the check then reads every entry, or
- * only param 0, per `OMITTED_PARAM`; the validator warns either way).
+ * "No param" at the top of a picker that has a param, so it can be removed again (the check then reads only the param-0
+ * entry, verified in game; the validator warns).
  */
 function withNoParam(options: readonly PickerOption[], param: number | undefined): readonly PickerOption[] {
   if (param === undefined) return options;
-  const detail = OMITTED_PARAM === 'anyLayer' ? 'checks every entry (not verified in game)' : 'checks the param 0 entry only';
-  return [{ key: NO_PARAM, value: NO_PARAM, label: 'No param', detail, search: 'no param none clear' }, ...options];
+  return [
+    { key: NO_PARAM, value: NO_PARAM, label: 'No param', detail: 'checks the param 0 entry only', search: 'no param none clear' },
+    ...options,
+  ];
 }
 
 /** Typed digits as a raw param (an unknown skill id, a layer the data does not name). */

@@ -8,11 +8,13 @@ import {
   affixMatches,
   affixText,
   applyAffixSelection,
+  autoPickedParams,
   buildAffixBrowserModel,
   filterAffixBrowser,
   initialAffixParams,
   initialAffixSelection,
   matchingParams,
+  pickShownParams,
   rowsMissingParams,
   shownParams,
 } from './affixBrowser';
@@ -265,6 +267,43 @@ describe('layered stats', () => {
     expect(chips('martial', [49, 99])).toEqual(['Shadow Disciplines (Assassin)', 'Martial Arts (Assassin)', 'param 99']);
   });
 
+  it('pre-picks only a row’s single param or the one param the search names', () => {
+    const auto = (query: string) => (tabRow === undefined ? [] : autoPickedParams(tabRow, query));
+    expect(auto('martial')).toEqual([50]);
+    // Several named (three Sorceress tabs, the two "Arcing" tabs) or none: nothing is picked
+    expect(auto('skill tab sorceress')).toEqual([]);
+    expect(auto('arcing')).toEqual([]);
+    expect(auto('')).toEqual([]);
+    const single = tabRow === undefined ? undefined : { ...tabRow, params: tabRow.params?.slice(0, 1) };
+    expect(single === undefined ? [] : autoPickedParams(single, 'arcing')).toEqual([0]);
+  });
+
+  it('searches every param of the row with the chip search, by name, class, writing affix or param', () => {
+    const chips = (chipQuery: string, picked: number[] = [], query = 'martial') =>
+      tabRow === undefined ? [] : shownParams(tabRow, query, new Set(picked), lmodel, chipQuery).map((entry) => entry.label);
+    // Independent of the main search ("martial" names only Martial Arts)
+    expect(chips('sorceress')).toEqual(['Fire Skills (Sorceress)', 'Lightning Skills (Sorceress)', 'Cold Skills (Sorceress)']);
+    expect(chips('fire')).toEqual(['Fire Skills (Sorceress)']);
+    expect(chips('arcing')).toEqual(['Lightning Skills (Sorceress)', 'Cold Skills (Sorceress)']);
+    expect(chips('50')).toEqual(['Martial Arts (Assassin)']);
+    // A picked param that does not match is not shown; one no affix writes is, when it matches
+    expect(chips('fire', [50])).toEqual(['Fire Skills (Sorceress)']);
+    expect(chips('shadow', [49])).toEqual(['Shadow Disciplines (Assassin)']);
+    expect(chips('nothing')).toEqual([]);
+    // A whitespace-only chip search is no search
+    expect(chips('  ', [], '')).toHaveLength(7);
+    // Skill params carry their class: "sorceress" finds the Orb of Winter levels
+    expect(orbRow?.params?.map((entry) => entry.className)).toEqual(['Sorceress', 'Sorceress']);
+    expect(orbRow === undefined ? [] : shownParams(orbRow, '', new Set(), lmodel, 'sorceress 25').map((entry) => entry.label)).toEqual([
+      'Orb of Winter lvl 25',
+    ]);
+  });
+
+  it('adds every shown chip to the picks', () => {
+    const shown = tabRow === undefined ? [] : shownParams(tabRow, '', new Set(), lmodel, 'sorceress');
+    expect(pickShownParams(new Set([50]), shown)).toEqual(new Set([50, 8, 9, 10]));
+  });
+
   it('writes one check per picked param, keeping paramless checks', () => {
     const mt = (param: number) => ({ stat: 'item_addskill_tab', op: '>=', value: 1, param }) as const;
     const existing: StatCheck[] = [
@@ -338,7 +377,24 @@ describe('the generated affixes.json', () => {
     expect(tabs === undefined ? [] : matchingParams(tabs, 'martial')).toEqual([50]);
     expect(tabs === undefined ? [] : matchingParams(tabs, 'demon')).toEqual([56]);
     // ESR reuses the Necromancer prefix names for the Warlock tabs; the params tell them apart
+    expect(tabs === undefined ? [] : autoPickedParams(tabs, 'skill')).toEqual([]);
     const apprentice = tabs?.affixes.filter((entry) => entry.name === "Apprentice's").map((entry) => affixText(entry, 'tab'));
     expect(apprentice?.some((text) => text.includes('Demon Skills (Warlock)'))).toBe(true);
+  });
+
+  it('pre-picks nothing when a broad search names every class skill (the "Skillful" prefix writes all of them)', () => {
+    const single = real.rows.find((candidate) => candidate.name === 'item_singleskill');
+    if (single === undefined) throw new Error('no item_singleskill row');
+    expect(matchingParams(single, 'skill').length).toBe(single.params?.length);
+    expect(autoPickedParams(single, 'skill')).toEqual([]);
+    expect(autoPickedParams(single, 'single class skill')).toEqual([]);
+    const teleport = autoPickedParams(single, 'teleport');
+    expect(teleport).toHaveLength(1);
+    // The chip search finds Teleport among all 280, and a class's skills by the class name
+    const chip = (chipQuery: string) => shownParams(single, 'skill', new Set(), real, chipQuery);
+    expect(chip('teleport').map((entry) => entry.param)).toEqual(teleport);
+    const sorceress = chip('sorceress');
+    expect(sorceress.length).toBeGreaterThan(20);
+    expect(sorceress.every((entry) => entry.className === 'Sorceress')).toBe(true);
   });
 });

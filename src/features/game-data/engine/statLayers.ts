@@ -1,6 +1,7 @@
 /**
  * Stat params ("layers") of the itemstatcost stats that carry a skill, skill tab or class in their param, as the game
- * stores them on an item and as the loot-filter plugin reads them (`stat: 188, param: 50`). Verified against ESR 3.2.24
+ * stores them on an item and as the loot-filter plugin reads them (`stat: 188, param: 50`; for skill tabs verified in
+ * game on 2026-11-01: +4 to Fire Skills (Sorceress) showed in `{stat:188,8}`). Verified against ESR 3.2.24
  * (properties.txt funcs, itemstatcost `Encode` / `descfunc` / `Save Param Bits`, skills.txt, charstats.txt):
  *
  * - tab (`item_addskill_tab`, func 10, descfunc 14): `class << 3 | tab`, tab 0-2 in charstats StrSkillTab1-3 order
