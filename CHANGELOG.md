@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.48.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.47.0...v1.48.0) (2026-11-02)
+
+### Features
+
+* **builds:** list the author's loot filters on the profile page ([3e12376](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3e12376b66b602089f2ec9e7a8ee567ff8a4ed5e))
+* **home:** add a latest loot filters block after latest builds ([752d2e8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/752d2e8518c4e4b9bed016b5878568668088a1d9))
+* **loot-filter:** accept a single-number activeInLevels with a warning ([3efa757](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3efa757b57cc490ca0ed45b16b26f1e2ff8b45a9))
+* **loot-filter:** add a commented example filter for new users ([0ff8c60](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0ff8c6097852cab7f8f0fd7c638f321553e1e843))
+* **loot-filter:** add draft, saved and sully editor routes with save, sandbox and update banners ([0bd36ff](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0bd36ff9c3e63b5261fdc465bb4c4e126c040acf))
+* **loot-filter:** add the editor target and the draft model for sharing ([e2e71fa](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e2e71faa11302c3eee8d28a3a7e4473897c44d23))
+* **loot-filter:** add the save, details and source fetch sagas for shared filters ([943539c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/943539c8386766fabad61c21bd08269735beef4a))
+* **loot-filter:** add the Shared and My filters tabs to the library ([db48d2d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/db48d2d6dbfcad5cf512ac503a3b99faff07a422))
+* **loot-filter:** add the sharing query module, row types and save-time metadata reader ([e5964b6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e5964b6659b1fa02c1d984c88130a152dcbe14dd))
+* **loot-filter:** add the sharing slice and saga for lists, detail, likes, downloads and delete ([f0dd816](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f0dd81661438a064702e625be21e5875264c5f15))
+* **loot-filter:** add the template and plugin version constants for sharing ([3c46591](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3c4659117696c91cbe3eebe439344e37f0687689))
+* **loot-filter:** bundle the example filter as a second starter template ([5cabd9e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5cabd9e207575aab246b561d6f31b5047075b71e))
+* **loot-filter:** download a shared filter from its card in the sharing saga ([0495619](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/04956191854d35b0079ceb3d0daa33cf969b2e43))
+* **loot-filter:** drop the under development notice from the loot filter pages ([c3d4777](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c3d47772d1b54cce6f044796bc599977578f9726))
+* **loot-filter:** merge loot filter sharing, drafts, the example filter and smaller icons ([d4aecae](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d4aecae9dc650068541ed863c2eaf7e24252923f))
+* **loot-filter:** plan loot filter sharing, add the 005 migration and its types ([fb4c0d0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fb4c0d08b165ae52ed8015f394d5bd9335ee18cc))
+* **loot-filter:** start the sharing saga before the loot filter and profile routes mount ([e086917](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e086917bd57748c283d0400e770605eebc1fe2c6))
+
+### Bug Fixes
+
+* **loot-filter:** open My filters for local drafts and keep ownerless drafts reachable ([9915059](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/991505908cc7d2873738ae7bfd4c24b9d323d754))
+* **loot-filter:** protect unsaved drafts, private filters and sandbox edits in the editor ([db45e28](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/db45e285afa511e362e055d7efd2ddc8b55206a4))
+* **loot-filter:** put the save status before the editor target and say when nothing changed ([0008dbc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0008dbc1f76947e855ceb00f3a37093884aaa787))
+* **loot-filter:** save copies of deleted sources and keep based_on columns within limits ([017839c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/017839cb20a168dba726e14ba77a80cc150cfca9))
+* **supabase:** apply the 005 review: downloads index, initplan-safe policies, private-safe cap ([b13ebde](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b13ebde47b45d646fbdfb720fd47558cc6765c78))
+
+### Performance
+
+* **loot-filter:** shrink the bundled minimap icons to 128 px ([a587514](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a5875148884f00423e5bce30af9970f1fceb9e6f))
+
+### Documentation
+
+* cover saved loot filters, their likes and download counts in the privacy policy ([26421b3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/26421b3c545804202448e5d0be8af0c338240f94))
+* **loot-filter:** describe the draft model and the editor target ([d101ae6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d101ae6148e56ea7225c0222f1b15e7472b7bd90))
+* **loot-filter:** describe the library tabs, cards, profile and home blocks ([94fdef3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/94fdef3791a93f6d07da12947b03e7502f2a8924))
+* **loot-filter:** document the editor routes, save flow, sandbox and update banners ([48679d9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/48679d9685a97ca89f1ad9edfba7b377121ce94b))
+* **loot-filter:** document the review fixes to saving, updates and the library tab ([092396c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/092396c96178d41f9a8582ff8b8772607d163288))
+
+### Refactoring
+
+* **supabase:** move the keyset cursor and uuid helpers to core for reuse ([0da513f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0da513f6a3725c9d29bcb505441ca392019edb87))
+
+### Tests
+
+* **loot-filter:** add an API-level check script for the 005 loot filter migration ([1143599](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1143599e7b9f2c23be799d97ca83290ad189cd6b))
+
 ## [1.47.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.46.1...v1.47.0) (2026-11-02)
 
 ### Features
