@@ -8,6 +8,7 @@ import { effectiveActions } from './actions.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
 import { statQuirk, type StatQuirk } from './statQuirks.ts';
+import { statScale, statScaleMessage } from './statScale.ts';
 import {
   BASE_TIERS,
   DIFFICULTIES,
@@ -303,6 +304,10 @@ function checkStats(
     // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
     const quirk = rule === undefined ? undefined : statQuirk(check.stat);
     if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
+    // Every list: Life, Mana and Stamina are stored ×256 and the per-level stats in eighths (not verified in game). A
+    // presence check (`>= 1`, `< 1`…) holds either way, so only a check whose number matters gets the warning.
+    const scale = statScale(check.stat);
+    if (scale !== undefined && !isPresenceCheck(check)) report('warning', `${path}/value`, statScaleMessage(scale, check.value));
     checkStatParam(report, path, check, reference, tabNumbers.has(index));
     if (!reference) return;
     if (typeof check.stat === 'number') {

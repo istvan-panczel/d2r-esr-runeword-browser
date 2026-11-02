@@ -31,7 +31,8 @@ export function ConditionField({ id, label, hint, invalid = false, className, ch
       {invalid && (
         <p className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
           <TriangleAlert className="size-3" aria-hidden />
-          The file&apos;s value has the wrong shape; it is kept until you set this field (see the JSON tab).
+          The file&apos;s value has the wrong shape, so the plugin most likely switches the whole rule off (not verified; the Test tab skips
+          it). It is kept until you set this field (see the JSON tab).
         </p>
       )}
       {hint !== undefined && (

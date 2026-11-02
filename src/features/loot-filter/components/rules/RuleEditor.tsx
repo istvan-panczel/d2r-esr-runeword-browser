@@ -1,6 +1,9 @@
 import { useDispatch } from 'react-redux';
+import { ScanSearch } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +11,8 @@ import { effectiveActions } from '../../engine/actions';
 import { ACTION_KEYS } from '../../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterRule, RuleActions } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
-import { patchRule, setRuleDisabled } from '../../store/lootFilterSlice';
+import { addRule, patchRule, setRuleDisabled } from '../../store/lootFilterSlice';
+import { inGameCheckRule, isInGameCheckRule, REPORT_STAT_URL } from '../../utils/inGameCheck';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, QUALITY_SCALE } from '../../utils/matchValues';
 import { readsExceptions } from '../../utils/statChecks';
 import type { ShallowPatch } from '../../utils/patch';
@@ -149,6 +153,7 @@ const COMMENT_ID = fieldId('comment');
 const COMMENT_HINT_ID = `${COMMENT_ID}-hint`;
 const ENABLED_ID = 'loot-filter-rule-enabled';
 const ENABLED_HINT_ID = `${ENABLED_ID}-hint`;
+const CHECK_HINT_ID = 'loot-filter-rule-check-hint';
 
 interface RuleEditorProps {
   readonly filter: LootFilter;
@@ -166,6 +171,13 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   const actions = effectiveActions(rule, filter);
   const hides = actions.hide === true;
   const invalid = (key: string) => passthroughKeys.includes(key);
+  const check = inGameCheckRule(filter, index, data.lookup);
+  const isCheck = isInGameCheckRule(rule);
+  const addCheck = () => {
+    if (!check.ok) return;
+    dispatch(addRule({ rule: check.rule, at: index }));
+    toast.success(`Added rule ${String(index + 1)}: an in-game check for this rule (now rule ${String(index + 2)})`);
+  };
 
   const listField = (field: ListField) => (
     <ConditionField key={field.key} id={fieldId(field.key)} label={field.label} hint={field.hint} invalid={invalid(field.key)}>
@@ -198,7 +210,41 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
                 disabled
               </Badge>
             )}
+            {isCheck && (
+              <Badge variant="outline" className="font-normal">
+                in-game check
+              </Badge>
+            )}
           </CardTitle>
+          <CardDescription id={CHECK_HINT_ID} className="text-xs">
+            {isCheck ? (
+              "An in-game check: it prints what the plugin reads for the next rule's stats in front of the item name. Compare the numbers with the tooltip, then delete this rule."
+            ) : check.ok ? (
+              <>
+                Check in game adds a rule above this one that prints what the plugin reads for this rule&apos;s stats in front of the item
+                name. If a number differs from the tooltip, the plugin reads that stat differently;{' '}
+                <a
+                  href={REPORT_STAT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  tell us
+                </a>
+                .
+              </>
+            ) : (
+              check.reason
+            )}
+          </CardDescription>
+          {!isCheck && (
+            <CardAction>
+              <Button type="button" variant="outline" size="sm" disabled={!check.ok} aria-describedby={CHECK_HINT_ID} onClick={addCheck}>
+                <ScanSearch />
+                Check in game
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col gap-1.5">

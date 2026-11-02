@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DiagnosticSeverity, LootFilterRule } from '../../engine/types';
+import { isInGameCheckRule } from '../../utils/inGameCheck';
 import { levelsBadge, locationBadge } from '../../utils/ruleSummary';
 
 export interface RuleRowProps {
@@ -46,7 +47,9 @@ export function RuleRow({
   const levels = levelsBadge(rule.activeInLevels);
   const location = locationBadge(rule.location);
   const number = String(index + 1);
-  const hasBadges = disabled || rule.hide === true || rule.useStyle !== undefined || levels !== undefined || location !== undefined;
+  const isCheck = isInGameCheckRule(rule);
+  const hasBadges =
+    disabled || isCheck || rule.hide === true || rule.useStyle !== undefined || levels !== undefined || location !== undefined;
 
   return (
     <li
@@ -92,6 +95,15 @@ export function RuleRow({
                   title="Kept in the file under disabledRules, which the game ignores"
                 >
                   disabled
+                </Badge>
+              )}
+              {isCheck && (
+                <Badge
+                  variant="outline"
+                  className="border-sky-600/50 px-1.5 py-0 text-[0.7rem] text-sky-700 dark:text-sky-300"
+                  title="Prints what the plugin reads for the next rule's stats; delete it after testing"
+                >
+                  in-game check
                 </Badge>
               )}
               {rule.hide === true && (

@@ -337,6 +337,43 @@ describe('validateLootFilter', () => {
     });
   });
 
+  describe('stats the game stores scaled (not verified in game)', () => {
+    const scaled = (rule: LootFilterRule) => messages(rule, null);
+
+    it('warns about Life, Mana and Stamina (×256) in every stat list, by name or id', () => {
+      expect(scaled({ itemStats: [{ stat: 'maxhp', value: 40 }], hide: true })).toEqual([
+        'rules/0/itemStats/0/value: The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this rule to see what the plugin reads.',
+      ]);
+      expect(
+        scaled({ itemStatsAnyOf: [{ stat: 9, value: 20 }], playerStats: [{ stat: 'hitpoints', op: '<', value: 100 }], namePrefix: 'x' })
+      ).toEqual([
+        expect.stringMatching(/^rules\/0\/itemStatsAnyOf\/0\/value: .*\+20 Mana may read as 5120/),
+        expect.stringMatching(/^rules\/0\/playerStats\/0\/value: .*\+100 Life/),
+      ]);
+    });
+
+    it('warns about per-level stats (eighths), and Life per level as both', () => {
+      expect(scaled({ itemStats: [{ stat: 'item_strength_perlevel', value: 2 }], hide: true })).toEqual([
+        expect.stringMatching(/item_strength_perlevel" in eighths per character level .* \+2 Strength per level may read as 16\./),
+      ]);
+      expect(scaled({ itemStats: [{ stat: 216, value: 3 }], hide: true })).toEqual([expect.stringMatching(/may read as 6144/)]);
+      expect(scaled({ itemStats: [{ stat: 'strength', value: 40 }], hide: true })).toEqual([]);
+    });
+
+    it('stays quiet on presence checks, whose result does not depend on the scale', () => {
+      // Sully's rules 29 and 30 check stats 218 and 219 for >= 1 (and print {stat:218}/8 in the name).
+      expect(
+        scaled({
+          itemStats: [
+            { stat: 218, value: 1 },
+            { stat: 'maxhp', op: '<', value: 1 },
+          ],
+          hide: true,
+        })
+      ).toEqual([]);
+    });
+  });
+
   it('checks names against the reference only when it has them', () => {
     const rule: LootFilterRule = {
       itemCodes: ['r01', 'zzz'],

@@ -108,7 +108,16 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   (by name or id) on a stat the plugin reads as 0 on some items (`engine/statQuirks.ts`, see "Known plugin limits"):
   Enhanced Damage (17, 18) on weapons, Enhanced Defense (16) on armour, Increased Maximum Durability (75) on weapons
   and armour, at `<list>/<n>/stat`; skipped when the bundle shows the rule's item codes and types cannot match such
-  an item (a jewel or charm rule), never for the character stat lists. Disabled rules are validated like the
+  an item (a jewel or charm rule), never for the character stat lists. A check (any of the four stat lists, by name or
+  id) on a stat the game stores scaled (`engine/statScale.ts`, from itemstatcost.txt): Life, Mana and Stamina
+  (`hitpoints`, `maxhp`, `mana`, `maxmana`, `stamina`, `maxstamina`, ids 6 to 11, `ValShift` 8) are stored ×256, the
+  per-level stats (214–233, 238–240, 242, 244, 247, 250, 365: `op` 2, 4 or 5 with `op param` 3 on `level`) in eighths
+  per character level, and Life, Mana and Stamina per level (216, 217, 242) both; whether the plugin compares the
+  stored or the shown value is not verified, so the warning (at `<list>/<n>/value`) gives the stored number of the
+  check ("The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this
+  rule…"). A presence check (`>= 1`, `< 1`, …) holds either way and gets none, so Sully's template (rules 29 and 30,
+  stats 218 and 219 `>= 1`) stays clean; those rules print `{stat:218}/8` in the name, which suggests Sully sees the
+  stored eighths in game. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
@@ -146,7 +155,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `disabledRules/<n>/rule` (n counts disabled rules), from `ruleFilePaths` in `engine/parse.ts`; the diagnostic's
   `rule` is the index in the full list, which the Rules tab and the JSON tab's "Rule N" links use. `RuleDiagnostics`
   strips either prefix.
-- The evaluator skips a disabled rule with the trace outcome `disabled` (it never applies or hides).
+- The evaluator skips a disabled rule with the trace outcome `disabled` (it never applies or hides), and a rule with a
+  wrong-shaped key with `wrongShape` (see "Wrong-shaped rules" under Test tab).
 
 `lootFilterSaga` (registered by `src/features/loot-filter/index.ts` when the route chunk first loads):
 
@@ -187,9 +197,10 @@ Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip downlo
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
   and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
   `"activeInLevels": 4`, a number where the format wants a list, so the editor reports one error ("expected a list of
-  numbers", the plugin's own message for it) and keeps the value in `passthrough`; the Test tab then treats the rule as
-  active at every level and hides Ancient Scrolls at levels 1 to 3 too. What the plugin does with it is not verified
-  (its messages suggest a wrong-shaped condition switches the rule off, so Ancient Scrolls would not hide at level 4).
+  numbers", the plugin's own message for it) and keeps the value in `passthrough`. The guide says a rule with an error
+  is switched off, so the Test tab skips the rule ("skipped: wrong shape", see "Wrong-shaped rules" under Test tab) and
+  Ancient Scrolls are not hidden at level 4 there. What the plugin does with it is not verified (a question for the
+  power user in the backlog).
   The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
   `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
@@ -272,8 +283,35 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   missing stat counts as 0 (verified in game); a "Test tab" link sets `?tab=test`),
   then the conditions in sections (Which items, Item properties, Stats, Where and when) and an Actions card
   with `ActionsEditor owner="rule"`. Every change dispatches `patchRule`; an emptied list removes its key. A condition
-  whose file value had the wrong shape (kept in `passthrough`) gets a note; every passthrough key is listed read-only in
-  a collapsed "Advanced / passthrough" block.
+  whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
+  rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
+  passthrough" block.
+- **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). A power user verifies
+  what the plugin reads by printing it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
+  how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected
+  rule (so the rule becomes N + 1) and selects it; a toast says so. The test rule (`inGameCheckRule`):
+  - copies every condition of the rule except the four stat lists (codes, types, quality, tier, flags, ids, location,
+    difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not, and no action (no
+    `hide`, `hideIfOtherConditionsFail`, style, sound…);
+  - prints each stat the four lists check (exceptions included), once per stat and param, in list order:
+    `Label {stat:ID}`, `Label:param {stat:ID,param}` for a check with a param, `Char Label {playerStat:ID}` for a
+    character stat (`checkedStats`, `checkText`): `[ED {stat:17} | Tab:8 {stat:188,8}] `. Labels are short
+    (`SHORT_LABELS`: ED, Def%, FCR, MF, Tab, Sock…; other stats their name without `item_`, `#ID` for an id without
+    data); ids come from the bundle, a name the bundle does not know stays a name. The guide documents no length
+    limit for names;
+  - Name parts are "later wins", so the text goes into the first of `namePrefix`, `nameSuffix` that the rule's
+    effective actions (style included) leave free, else into a `chatMessage` `{name} [ … ]` (chat lines add up).
+  - _Why before the rule_: a rule after it would never run for items the rule hides; before it, the test rule has no
+    `hide`, so it changes nothing but the name (a unit test runs the evaluator with and without it). Trade-offs, said
+    in the docs here and in the hint: a later matching rule that sets the same name part replaces the text, and an
+    item the rule (or an earlier rule) hides shows no label; disable a hide rule while testing to see every item.
+  - has the comment "In-game check for rule N + 1 (the rule below): compare these numbers with the item tooltip, then
+    delete this rule. ED = item_maxdamage_percent (17); Tab:8 = item_addskill_tab (188) param 8 Fire Skills
+    (Sorceress)" (`IN_GAME_CHECK_MARK`), so searching "in-game check" lists every test rule; such a rule's row and
+    editor carry an "in-game check" badge (`isInGameCheckRule`) and the editor explains it instead of the button.
+  - A rule without stat checks gets a disabled button and the reason under the title ("This rule checks no stats; …").
+    Otherwise the line under the title explains the button and ends "If a number differs from the tooltip, the plugin
+    reads that stat differently; tell us" (a new GitHub issue, `REPORT_STAT_URL`).
 - **Controls**: item, type, unique/set and area pickers (chips with name + code/id; more than 12 chips collapse behind
   "+N more"); named matches (`quality`, `baseTier`, `difficulty`): any / one / several / range, picks stored as names,
   file numbers kept until that part changes (`utils/matchValues.ts`); number matches (`itemLevel`, `sockets`,
@@ -633,10 +671,24 @@ tab switches; it is not saved.
   the failed condition keys as chips. Skipped and disabled rules are hidden unless "Show skipped rules (N skipped, M
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
+- **Wrong-shaped rules**: a rule with a known key (condition or action) whose file value had the wrong shape (kept in
+  `passthrough` with a parse error, `wrongShapedKeys` in `engine/evaluate.ts`; e.g. `"activeInLevels": 4`) is skipped
+  with the outcome `wrongShape`: it never applies or hides, not even with `hideIfOtherConditionsFail`. The guide says
+  "a rule with an error is switched off and logged", and the plugin's message for such a value is an error; not
+  verified in game. Unknown keys sit in `passthrough` too but do not switch a rule off (the plugin logs "unknown
+  setting, ignored"; a future `formula` key stays ignored as before). The trace badge reads "skipped: wrong shape"
+  (amber) with the line "activeInLevels has the wrong shape; the plugin most likely ignores this rule (not
+  verified)." and the failed conditions of the rest of the rule; the row is shown without "Show skipped rules" when
+  the rest of the rule holds (it would have applied or hidden), and counted as "N wrong shape" in that checkbox's
+  label. The validator's semantic errors (an `activeInLevels` id with no level, an unknown quality number) do not skip
+  a rule: whether the plugin treats them as errors is not known.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
-  full list ("Verify in game" below), a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
-  check or `{stat:ID}` without param reads only the param-0 entry), plus the note that `{string:KEY}` is shown as
-  written.
+  full list ("Verify in game" below); a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
+  check or `{stat:ID}` without param reads only the param-0 entry; skill tabs are numbered class × 8 + tab; Enhanced
+  Damage reads 0 on weapons and Enhanced Defense on armour, Enhanced Damage on a jewel correctly); a "Not yet verified"
+  part (Life, Mana and Stamina ×256; per-level stats in eighths; wrong-shaped rules skipped); how to use Check in game
+  ("If a number differs from the tooltip, the plugin reads that stat differently; tell us"); and the note that
+  `{string:KEY}` is shown as written.
 - While the bundles load (or when they fail) a hint says that typed codes work but item-type conditions only see the
   typed type.
 
@@ -693,6 +745,12 @@ research doc and the Test tab's note link here.
   not yet seen in a game log); the rules in it never run.
 - An empty condition list (`activeInLevels: []`, …) logs "the list is empty"; whether the plugin then drops the key or
   switches the rule off is not known (our evaluator: an empty `activeInLevels` is never active).
+- A rule with a wrong-shaped condition or action (`"activeInLevels": 4`) is switched off (the guide: "a rule with an
+  error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both. To verify
+  with Sully's v0.6.11: are Ancient Scrolls hidden at filter level 4 (backlog)?
+- Stats stored scaled (`engine/statScale.ts`): whether the plugin compares and prints the stored value (Life ×256,
+  per-level stats in eighths) or the tooltip's. The validator warns about such checks; Check in game shows it
+  (`{stat:7}` on a +40 Life item: 40 or 10240?). Sully's `{stat:218}/8` labels suggest the stored value.
 - `uniqueOrSetIds` are 0-based row numbers of uniqueitems.txt / setitems.txt (equal to `*ID` in ESR 3.2.12).
 - A numeric `sound` is a 0-based data row of sounds.txt (`*Index` is unreliable: it repeats for the Leoric taunt rows).
 - An item with a `type2` counts as both types for item-type conditions (the Test tab and the never-matches warnings use
