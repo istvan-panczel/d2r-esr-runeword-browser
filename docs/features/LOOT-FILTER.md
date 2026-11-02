@@ -45,8 +45,12 @@ them and the launcher now pulls curated filters live from their creators' GitHub
 (`LootFilters/sources.json`), so players only get such files with a live filter. The app bundles the files of Sully's
 QoL filter (github.com/Thisisnotsully/QoL-Filter, the filter every player gets that way), copied from his repository:
 the nine mp3s in `public/loot-filters/sounds/` and twelve icons in `public/loot-filters/icons/` (`charm`, `cube`, `gem`,
-`gem2`, `gemP`, `goldstar`, `map`, `Myth`, `redD`, `rune`, `scroll`, `star`; 512 px squares, `rune` 1080 px,
-`goldstar` 200 px), plus the mod's `goldstar.lowend.sprite`. **Download .zip with sounds and icons** puts the filter
+`gem2`, `gemP`, `goldstar`, `map`, `Myth`, `redD`, `rune`, `scroll`, `star`), plus the mod's `goldstar.lowend.sprite`
+(100 px). The icons are shrunk to 128 px squares (2026-11, owner decision): his files are 512 px (`rune` 1080 px,
+`goldstar` 200 px) of raw RGBA, 1 to 4.7 MB each (about 16 MB in all), but filters draw them at 27 to 50 minimap
+pixels; at 128 px each is 64 KB (0.9 MB in all), still 2.5 times the largest size used, and a pre-shrunk icon avoids the
+jagged edges of a huge texture drawn small. Lanczos on premultiplied alpha, same names (a .zip unzipped into
+`LootFilters\` replaces Sully's originals there; his filter works the same with them). **Download .zip with sounds and icons** puts the filter
 and the bundled files it references into one archive to unzip into `LootFilters\` (see Library screen).
 
 Troubleshooting (also in the library how-to): if a sound or icon does not work, check the `sounds`/`icons` folders next
