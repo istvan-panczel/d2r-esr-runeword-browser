@@ -120,6 +120,26 @@ describe('filterAffixBrowser', () => {
     expect(jagged !== undefined && affixMatches(jagged, 'jag')).toBe(true);
     expect(jagged !== undefined && affixMatches(jagged, 'cruel')).toBe(false);
   });
+
+  it('matches the text of an affix writing several stats in one line, not the per-stat lines of a hybrid', () => {
+    const texts = buildAffixBrowserModel({
+      ...BUNDLE,
+      affixes: [
+        { ...affix('s', 'of the Sky', 20, [0, 19]), text: ['+(10 to 15) to Everything'] },
+        { ...affix('p', 'Sharp', 12, [17, 18, 19]), text: ['+(10 to 20)% Enhanced Damage', '+(10 to 20) to Attack Rating'] },
+        { ...affix('s', 'of Haste', 8, [93]), text: ['+10% Increased Attack Speed', 'Knockback'] },
+      ],
+    });
+    const found = (query: string) => filterAffixBrowser(texts.rows, query).map((candidate) => candidate.id);
+    expect(found('everything')).toEqual([19, 0]);
+    expect(found('knockback')).toEqual([93]);
+    // Sharp's "Attack Rating" line does not find its Enhanced Damage row
+    expect(found('to attack rating')).toEqual([19]);
+    const strength = texts.rows.find((candidate) => candidate.id === 0);
+    const sky = strength?.affixes[0];
+    expect(sky?.text).toEqual(['+(10 to 15) to Everything']);
+    expect(sky !== undefined && strength !== undefined && affixMatches(sky, 'everything', strength)).toBe(true);
+  });
 });
 
 describe('affixKindCounts', () => {
@@ -380,6 +400,23 @@ describe('the generated affixes.json', () => {
     expect(tabs === undefined ? [] : autoPickedParams(tabs, 'skill')).toEqual([]);
     const apprentice = tabs?.affixes.filter((entry) => entry.name === "Apprentice's").map((entry) => affixText(entry, 'tab'));
     expect(apprentice?.some((text) => text.includes('Demon Skills (Warlock)'))).toBe(true);
+  });
+
+  it('finds the flat and the percent attributes by the affix text "all attributes", the percent ones labelled so', () => {
+    const found = filterAffixBrowser(real.rows, 'all attributes');
+    expect(found.map((candidate) => candidate.id)).toEqual(expect.arrayContaining([0, 1, 2, 3, 255, 256, 257, 258]));
+    const label = (id: number) => real.rows.find((candidate) => candidate.id === id)?.label;
+    expect([0, 255].map(label)).toEqual(['Strength', 'Bonus to Strength %']);
+    expect([3, 258].map(label)).toEqual(['Vitality', 'Bonus to Energy %']);
+    // "of the Sky" (+X to All Attributes) is marked on the Strength row, "of All Attributes" on the percent row
+    const strength = found.find((candidate) => candidate.id === 0);
+    const marked = strength?.affixes.filter((entry) => affixMatches(entry, 'all attributes', strength)).map((entry) => entry.name);
+    expect(marked).toEqual(expect.arrayContaining(['of the Sky', 'of the Zodiac']));
+    expect(marked).not.toContain('of All Attributes');
+    const percent = found.find((candidate) => candidate.id === 255);
+    expect(percent?.affixes.filter((entry) => affixMatches(entry, 'all attributes', percent)).map((entry) => entry.name)).toContain(
+      'of All Attributes'
+    );
   });
 
   it('pre-picks nothing when a broad search names every class skill (the "Skillful" prefix writes all of them)', () => {

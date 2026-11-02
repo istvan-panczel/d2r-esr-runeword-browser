@@ -31,6 +31,12 @@ export interface AffixBrowserAffix {
   readonly hybridWith: readonly string[];
   /** The params it writes for the row's stat (a layered stat), by param; the union over the merged rows */
   readonly params?: readonly AffixBrowserParam[];
+  /**
+   * Its text lines that describe the row's stat ("+(10 to 15) to All Attributes"), distinct over the merged rows: every
+   * line of an affix writing only this stat or with a single line; none for a hybrid with a line per stat, whose lines
+   * cannot be told apart. Searched, never used to pick params.
+   */
+  readonly text?: readonly string[];
 }
 
 export interface AffixBrowserRow {
@@ -40,7 +46,7 @@ export interface AffixBrowserRow {
   readonly label: string;
   /** By level, then name */
   readonly affixes: readonly AffixBrowserAffix[];
-  /** Lower-case label, name, affix names and param labels */
+  /** Lower-case label, name, affix names, affix text lines and param labels */
   readonly search: string;
   /** Why the plugin may read the stat as 0 on some items (`STAT_QUIRKS`) */
   readonly note?: string;
@@ -115,6 +121,7 @@ export function buildAffixBrowserModel(bundle: AffixesBundle, params: StatParamD
       const kind = kindOf(id);
       const layers =
         kind === undefined ? [] : (affix.layers ?? []).filter((layer) => layer.stat === id).map((layer) => paramOf(kind, layer.param));
+      const text = hybridWith.length === 0 || affix.text.length === 1 ? affix.text : [];
       const entry: AffixBrowserAffix = {
         name: affix.name,
         kind: KINDS[affix.kind],
@@ -127,7 +134,12 @@ export function buildAffixBrowserModel(bundle: AffixesBundle, params: StatParamD
       const known = entries.get(key);
       const merged = known === undefined ? entry : { ...(entry.lvl < known.lvl ? entry : known) };
       const union = mergeParams(known?.params ?? [], entry.params ?? []);
-      entries.set(key, union.length === 0 ? merged : { ...merged, params: union });
+      const lines = [...new Set([...(known?.text ?? []), ...text])];
+      entries.set(key, {
+        ...merged,
+        ...(union.length === 0 ? {} : { params: union }),
+        ...(lines.length === 0 ? {} : { text: lines }),
+      });
       byStat.set(id, entries);
     }
   }
@@ -137,7 +149,14 @@ export function buildAffixBrowserModel(bundle: AffixesBundle, params: StatParamD
     const label = labelOf(id);
     const affixes = [...entries.values()].sort((a, b) => a.lvl - b.lvl || a.name.localeCompare(b.name));
     const rowParams = affixes.reduce<AffixBrowserParam[]>((all, affix) => mergeParams(all, affix.params ?? []), []);
-    const search = [label, name, ...affixes.map((affix) => affix.name), ...rowParams.map((entry) => entry.label)].join('\n').toLowerCase();
+    const search = [
+      label,
+      name,
+      ...affixes.flatMap((affix) => [affix.name, ...(affix.text ?? [])]),
+      ...rowParams.map((entry) => entry.label),
+    ]
+      .join('\n')
+      .toLowerCase();
     const note = statQuirk(id)?.note;
     const layerKind = kindOf(id);
     return {
@@ -172,7 +191,7 @@ function searchTerms(query: string): string[] {
   return query.toLowerCase().split(/\s+/).filter(Boolean);
 }
 
-/** A term matches the label, the stat name, an affix name, or (all digits) the stat id. */
+/** A term matches the label, the stat name, an affix name or text line, a param label, or (all digits) the stat id. */
 const termMatches = (row: AffixBrowserRow, term: string) => row.search.includes(term) || (/^\d+$/.test(term) && Number(term) === row.id);
 
 /** The rows matching every whitespace-separated term of `query`; an empty query returns them all. */
@@ -190,13 +209,14 @@ function namesOwnText(own: string, row: Pick<AffixBrowserRow, 'label' | 'name'> 
 }
 
 /**
- * Whether the search names the affix (for marking the affixes a search found): its name and param labels hold at least
- * one term, and every term is in them or in the row's label or stat name (`row`; without it, in the affix alone).
+ * Whether the search names the affix (for marking the affixes a search found): its name, text lines and param labels
+ * hold at least one term, and every term is in them or in the row's label or stat name (`row`; without it, in the
+ * affix alone). "all attributes" names "of the Sky" ("+(10 to 15) to All Attributes") on the Strength row.
  */
 export function affixMatches(affix: AffixBrowserAffix, query: string, row?: Pick<AffixBrowserRow, 'label' | 'name'>): boolean {
   const terms = searchTerms(query);
   if (terms.length === 0 || affix.name === '') return false;
-  return namesOwnText([affix.name, ...(affix.params ?? []).map((entry) => entry.label)].join('\n'), row, terms);
+  return namesOwnText([affix.name, ...(affix.text ?? []), ...(affix.params ?? []).map((entry) => entry.label)].join('\n'), row, terms);
 }
 
 /**

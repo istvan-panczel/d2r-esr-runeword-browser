@@ -236,7 +236,9 @@ function AffixStatRow({ row, checked, onToggle, query, params, onParamsChange, p
         {shown.map((affix, index) => (
           <span key={`${affix.kind}|${affix.name}|${affix.hybridWith.join('|')}`}>
             {index > 0 && ', '}
-            <span className={cn(matched[index] && 'font-medium text-foreground')}>{affixText(affix, row.layerKind)}</span>
+            <span className={cn(matched[index] && 'font-medium text-foreground')} title={affix.text?.join('\n')}>
+              {affixText(affix, row.layerKind)}
+            </span>
           </span>
         ))}
         {!open && hidden > 0 && '…'} ({affixKindCounts(row.affixes)})

@@ -171,7 +171,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       cubemain: table('cubemain'),
     },
     strings,
-    lootFilterSkills.bundle
+    lootFilterSkills.bundle,
+    affixes.bundle.stats
   );
 
   const enhance = buildEnhanceBundle(

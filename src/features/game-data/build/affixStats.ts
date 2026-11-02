@@ -120,13 +120,36 @@ export function statLabel(name: string, index: StatIndex, strings: ReadonlyMap<s
   return name.includes('perlevel') ? `${base} (per level)` : base;
 }
 
-/** Two stats with one label ("Fire Absorb"): the `_percent` one gets " %". */
-function disambiguate(stats: readonly AffixStat[]): AffixStat[] {
-  const counts = new Map<string, number>();
-  for (const stat of stats) counts.set(stat.label, (counts.get(stat.label) ?? 0) + 1);
-  return stats.map((stat) =>
-    (counts.get(stat.label) ?? 0) > 1 && stat.name.endsWith('_percent') ? { ...stat, label: `${stat.label} %` } : stat
-  );
+/** Whether the stat's description shows a percent sign ("%+d%% Bonus to Strength", "Fire Absorb %+d%%"). */
+export function describesPercent(name: string, index: StatIndex, strings: ReadonlyMap<string, string>): boolean {
+  const key = index.get(name)?.descstrpos ?? '';
+  return key !== '' && (strings.get(key) ?? '').includes('%%');
+}
+
+/** A stat with its `statLabel` and whether its description shows a percent (`describesPercent`). */
+export interface LabelledStat {
+  readonly id: number;
+  readonly name: string;
+  readonly label: string;
+  readonly percent: boolean;
+}
+
+const PER_LEVEL = ' (per level)';
+
+/**
+ * Marks the percent twin of a flat stat with " %": a stat whose description shows a percent and whose label is, or
+ * ends with, the label of a stat whose description does not ("Bonus to Strength %" next to "Strength", "Increase
+ * Maximum Life %" next to "Life", "Fire Absorb %" next to "Fire Absorb"). A " (per level)" suffix is set aside for the
+ * comparison and stays last. Percent stats without a flat twin ("Faster Cast Rate") keep their label.
+ */
+export function markPercentLabels(stats: readonly LabelledStat[]): AffixStat[] {
+  const base = (label: string) => (label.endsWith(PER_LEVEL) ? label.slice(0, -PER_LEVEL.length) : label);
+  const flat = [...new Set(stats.filter((stat) => !stat.percent && stat.label !== stat.name).map((stat) => base(stat.label)))];
+  return stats.map(({ id, name, label, percent }) => {
+    const text = base(label);
+    const twin = percent && flat.some((other) => text === other || text.endsWith(` ${other}`));
+    return { id, name, label: twin ? `${text} %${label.slice(text.length)}` : label };
+  });
 }
 
 export interface AffixStatResolver {
@@ -167,7 +190,7 @@ export function createAffixStatResolver(
 ): AffixStatResolver {
   const warnings = new Set<string>();
   const byProp = new Map<string, number[]>();
-  const seen = new Map<number, AffixStat>();
+  const seen = new Map<number, LabelledStat>();
 
   const resolveProp = (prop: string): number[] => {
     const cached = byProp.get(prop);
@@ -186,7 +209,14 @@ export function createAffixStatResolver(
           continue;
         }
         ids.push(entry.id);
-        if (!seen.has(entry.id)) seen.set(entry.id, { id: entry.id, name, label: statLabel(name, index, strings) });
+        if (!seen.has(entry.id)) {
+          seen.set(entry.id, {
+            id: entry.id,
+            name,
+            label: statLabel(name, index, strings),
+            percent: describesPercent(name, index, strings),
+          });
+        }
       }
     }
     byProp.set(prop, ids);
@@ -205,7 +235,7 @@ export function createAffixStatResolver(
   return {
     statsOf,
     layersOf,
-    listed: () => disambiguate([...seen.values()].sort((a, b) => a.id - b.id)),
+    listed: () => markPercentLabels([...seen.values()].sort((a, b) => a.id - b.id)),
     warnings: () => [...warnings],
   };
 }

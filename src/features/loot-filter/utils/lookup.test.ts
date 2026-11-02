@@ -169,6 +169,29 @@ describe('buildPickerOptions', () => {
     ]);
   });
 
+  it('shows and searches a stat by its in-game label, telling the flat stat from the percent one', () => {
+    const labelled = buildPickerOptions(
+      {
+        ...TEST_DATA,
+        stats: [
+          { id: 0, name: 'strength', label: 'Strength' },
+          { id: 255, name: 'strengthpercent', label: 'Bonus to Strength %' },
+          { id: 105, name: 'item_fastercastrate', label: 'Faster Cast Rate' },
+          { id: 194, name: 'item_numsockets' },
+        ],
+      },
+      TEST_TYPES
+    );
+    expect(labelled.stats.map((option) => option.detail)).toEqual([
+      'Strength · 0',
+      'Bonus to Strength % · 255',
+      'Faster Cast Rate · 105',
+      '194',
+    ]);
+    expect(filterPickerOptions(labelled.stats, 'strength').matches.map((option) => option.value)).toEqual(['strength', 'strengthpercent']);
+    expect(filterPickerOptions(labelled.stats, 'faster cast').matches.map((option) => option.value)).toEqual(['item_fastercastrate']);
+  });
+
   it('keeps uniques and sets apart even when they share an id', () => {
     const fives = options.uniquesAndSets.filter((option) => option.value === '5');
     expect(fives.map((option) => [option.key, option.group, option.detail])).toEqual([
