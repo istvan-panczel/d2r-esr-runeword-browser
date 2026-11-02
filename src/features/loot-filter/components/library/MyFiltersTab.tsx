@@ -33,21 +33,25 @@ interface MyFiltersTabProps {
   readonly sharingEnabled: boolean;
   /** The signed-in user, or null. */
   readonly viewerId: string | null;
+  /** The sign-in state is not known yet: the drafts show, the "Sign in to save" prompt waits. */
+  readonly authPending?: boolean;
 }
 
 /** My filters: New / Upload / Start from Sully's, the viewer's saved filters, then the drafts in this browser. */
-export function MyFiltersTab({ sharingEnabled, viewerId }: MyFiltersTabProps) {
+export function MyFiltersTab({ sharingEnabled, viewerId, authPending = false }: MyFiltersTabProps) {
   const dispatch = useDispatch();
   const hydrated = useSelector(selectLibraryHydrated);
   const drafts = useSelector((state: RootState) => selectVisibleDrafts(state, viewerId));
   const signedIn = viewerId !== null;
   const showSaved = sharingEnabled && signedIn;
+  // Only drafts that record their owner open through the saved filter (`draftLinks`); the rest open on their own route.
+  const editedSavedIds = drafts.map((draft) => (draft.entry.savedOwnerId === undefined ? undefined : draft.entry.savedId));
 
   return (
     <div className="space-y-6">
       <StartFilterActions ready={hydrated} />
 
-      {sharingEnabled && !signedIn && (
+      {sharingEnabled && !signedIn && !authPending && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/40 p-4 text-sm">
           <p className="text-muted-foreground">
             <span className="font-medium text-foreground">Sign in to save your filters</span> to your account, share them or keep them
@@ -60,7 +64,7 @@ export function MyFiltersTab({ sharingEnabled, viewerId }: MyFiltersTabProps) {
         </div>
       )}
 
-      {showSaved && <SavedFilters viewerId={viewerId} drafts={drafts.map((draft) => draft.entry.savedId)} />}
+      {showSaved && <SavedFilters viewerId={viewerId} drafts={editedSavedIds} />}
 
       <section className="space-y-3">
         {showSaved && (

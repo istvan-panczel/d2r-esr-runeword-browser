@@ -26,30 +26,45 @@ describe('draftLinks', () => {
   });
 
   it('opens the edits of a saved filter through the saved filter', () => {
-    expect(draftLinks({ id: 'local-1', savedId: A }, false)).toEqual({
+    expect(draftLinks({ id: 'local-1', savedId: A, savedOwnerId: 'owner' }, false)).toEqual({
       open: `/loot-filters/${A}`,
       save: `/loot-filters/${A}?save=1`,
     });
   });
 
   it('keeps such a draft on the draft route while it needs a sign-in', () => {
-    expect(draftLinks({ id: 'local-1', savedId: A }, true).open).toBe('/loot-filters/draft/local-1');
+    expect(draftLinks({ id: 'local-1', savedId: A, savedOwnerId: 'owner' }, true).open).toBe('/loot-filters/draft/local-1');
+  });
+
+  it('opens a draft that does not record its owner on its own route (the saved route would not find it)', () => {
+    expect(draftLinks({ id: 'local-1', savedId: A }, false)).toEqual({
+      open: '/loot-filters/draft/local-1',
+      save: '/loot-filters/draft/local-1?save=1',
+    });
   });
 });
 
 describe('resolveLibraryTab', () => {
+  const context = { authKnown: true, signedIn: false, libraryHydrated: true, hasLocalDrafts: false };
+
   it('follows ?tab= when it names a tab', () => {
-    expect(resolveLibraryTab('shared', true, true)).toBe('shared');
-    expect(resolveLibraryTab('mine', false, false)).toBe('mine');
+    expect(resolveLibraryTab('shared', { ...context, signedIn: true })).toBe('shared');
+    expect(resolveLibraryTab('mine', { ...context, authKnown: false })).toBe('mine');
   });
 
-  it('defaults to My filters signed in and Shared signed out', () => {
-    expect(resolveLibraryTab(null, true, true)).toBe('mine');
-    expect(resolveLibraryTab('bogus', true, false)).toBe('shared');
+  it('defaults to My filters signed in and Shared signed out without drafts', () => {
+    expect(resolveLibraryTab(null, { ...context, signedIn: true })).toBe('mine');
+    expect(resolveLibraryTab('bogus', context)).toBe('shared');
   });
 
-  it('waits for the sign-in state before choosing a default', () => {
-    expect(resolveLibraryTab(null, false, false)).toBeNull();
+  it('signed out with drafts in this browser: My filters, even before the sign-in state is known', () => {
+    expect(resolveLibraryTab(null, { ...context, hasLocalDrafts: true })).toBe('mine');
+    expect(resolveLibraryTab(null, { ...context, hasLocalDrafts: true, authKnown: false })).toBe('mine');
+  });
+
+  it('waits for the library and the sign-in state before choosing Shared', () => {
+    expect(resolveLibraryTab(null, { ...context, authKnown: false })).toBeNull();
+    expect(resolveLibraryTab(null, { ...context, libraryHydrated: false })).toBeNull();
   });
 });
 

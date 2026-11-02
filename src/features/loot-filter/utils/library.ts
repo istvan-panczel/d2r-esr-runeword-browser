@@ -28,10 +28,15 @@ export const SHARED_TAB_PATH = '/loot-filters?tab=shared';
 /**
  * Where a draft's Open and Save go. A draft of a saved filter opens through the saved filter (its header knows the
  * saved name, Discard changes and Details) unless it needs a sign-in first: signed out, the saved route would show the
- * public filter instead of the edits, so it opens as a plain draft.
+ * public filter instead of the edits, so it opens as a plain draft. So does a draft that does not record its owner
+ * (`savedOwnerId` missing or dropped as malformed): the saved route only finds the drafts of its owner.
  */
-export function draftLinks(entry: Pick<LootFilterEntry, 'id' | 'savedId'>, needsSignIn: boolean): { open: string; save: string } {
-  const open = entry.savedId !== undefined && !needsSignIn ? savedFilterPath(entry.savedId) : draftPath(entry.id);
+export function draftLinks(
+  entry: Pick<LootFilterEntry, 'id' | 'savedId' | 'savedOwnerId'>,
+  needsSignIn: boolean
+): { open: string; save: string } {
+  const { savedId } = entry;
+  const open = savedId !== undefined && entry.savedOwnerId !== undefined && !needsSignIn ? savedFilterPath(savedId) : draftPath(entry.id);
   return { open, save: withSave(open) };
 }
 
@@ -39,14 +44,28 @@ export function draftLinks(entry: Pick<LootFilterEntry, 'id' | 'savedId'>, needs
 
 export type LibraryTab = 'shared' | 'mine';
 
+export interface LibraryTabContext {
+  /** The sign-in state is known (or the screen stopped waiting for it). */
+  readonly authKnown: boolean;
+  readonly signedIn: boolean;
+  /** The library has been read from localStorage. */
+  readonly libraryHydrated: boolean;
+  /** Drafts in this browser that the library lists (signed out: all of them). */
+  readonly hasLocalDrafts: boolean;
+}
+
 /**
- * The library tab: `?tab=` when it names one, else My filters when signed in and Shared when signed out; null while
- * the sign-in state is still unknown (so the page does not flash the wrong tab).
+ * The library tab: `?tab=` when it names one, else My filters when signed in or when this browser has drafts (a
+ * returning visitor who is signed out must see their filters, not think they are gone), Shared otherwise. Drafts open
+ * My filters even before the sign-in state is known; without them it is null (a spinner) until it is, so the page does
+ * not flash the wrong tab.
  */
-export function resolveLibraryTab(raw: string | null, authInitialized: boolean, signedIn: boolean): LibraryTab | null {
+export function resolveLibraryTab(raw: string | null, context: LibraryTabContext): LibraryTab | null {
   if (raw === 'shared' || raw === 'mine') return raw;
-  if (!authInitialized) return null;
-  return signedIn ? 'mine' : 'shared';
+  if (context.signedIn) return 'mine';
+  if (!context.libraryHydrated) return null;
+  if (context.hasLocalDrafts) return 'mine';
+  return context.authKnown ? 'shared' : null;
 }
 
 // --- Card text ---

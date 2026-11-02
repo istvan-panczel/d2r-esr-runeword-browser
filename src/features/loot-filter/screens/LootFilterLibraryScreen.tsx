@@ -1,21 +1,45 @@
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { Globe, UserRound } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { RootState } from '@/core/store';
 import { selectAuthInitialized, selectAuthIsConfigured, selectAuthUserId } from '@/features/auth';
 import { MyFiltersTab } from '../components/library/MyFiltersTab';
 import { SharedFiltersTab } from '../components/library/SharedFiltersTab';
+import { selectLibraryHydrated, selectVisibleDrafts } from '../store/selectors';
 import { resolveLibraryTab, type LibraryTab } from '../utils/library';
 
 const CODE = 'rounded bg-muted px-1 py-0.5 text-xs';
+
+/** How long the library waits for the sign-in state before treating the visitor as signed out. */
+const AUTH_WAIT_MS = 4000;
 
 export function LootFilterLibraryScreen() {
   const sharingEnabled = useSelector(selectAuthIsConfigured);
   const authInitialized = useSelector(selectAuthInitialized);
   const viewerId = useSelector(selectAuthUserId);
+  const libraryHydrated = useSelector(selectLibraryHydrated);
+  const hasLocalDrafts = useSelector((state: RootState) => selectVisibleDrafts(state, viewerId).length > 0);
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = resolveLibraryTab(searchParams.get('tab'), authInitialized, viewerId !== null);
+  // The local drafts never wait on the sign-in state: if it does not arrive, the page goes on as signed out.
+  const [authWaitOver, setAuthWaitOver] = useState(false);
+  useEffect(() => {
+    if (authInitialized) return;
+    const timer = window.setTimeout(() => {
+      setAuthWaitOver(true);
+    }, AUTH_WAIT_MS);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [authInitialized]);
+  const tab = resolveLibraryTab(searchParams.get('tab'), {
+    authKnown: authInitialized || authWaitOver,
+    signedIn: viewerId !== null,
+    libraryHydrated,
+    hasLocalDrafts,
+  });
 
   const setTab = (next: LibraryTab) => {
     setSearchParams(
@@ -94,7 +118,7 @@ export function LootFilterLibraryScreen() {
             <SharedFiltersTab />
           </TabsContent>
           <TabsContent value="mine">
-            <MyFiltersTab sharingEnabled viewerId={viewerId} />
+            <MyFiltersTab sharingEnabled viewerId={viewerId} authPending={!authInitialized} />
           </TabsContent>
         </Tabs>
       )}
