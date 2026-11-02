@@ -114,6 +114,14 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   trailing commas are blanked to spaces, so `JSON.parse` offsets are the source's; when the engine's message has no
   position (V8's `Unexpected token ']'`) a small strict scanner finds it, so a syntax error carries its line and column.
   The serializer always writes strict JSON.
+- **A single-number level** (`"activeInLevels": 4`): the format wants a list, but the plugin accepts one number (Sully's
+  Ancient Scroll hide rule works in game), so the parser reads it as `[4]` with a warning at the key ("A single number
+  works in game; [4] is the documented form."), not an error. Any other wrong shape (`"4"`, an object) stays a
+  wrong-shaped key in `passthrough` with an error. The rule keeps the editor-only `activeInLevelsNumber: 4` (never a
+  key in the file), and the serializer writes `4` back while the levels are still exactly `[4]`, so a rule the user did
+  not touch is downloaded as it was (the key moves to its canonical place, before the actions); once the levels are
+  edited the list is written and the warning goes away. The validator checks the number like a list entry (an unknown
+  level is an error at `activeInLevels`).
 - **Text notes** (`textNotes` in `engine/parse.ts`, returned by `parseLootFilter` as `notes`, apart from `diagnostics`):
   root-path warnings about the text itself, one per kind: "Trailing commas were accepted (first at line N); the game
   reads them, but downloads are written without them", "Block comments (/\* _/) were accepted (first at line N); …
@@ -302,11 +310,10 @@ New filter dialog ("A blank filter with no rules. …") say the same in short.
   jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
   and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
-  `"activeInLevels": 4`, a number where the format wants a list, so the editor reports one error ("expected a list of
-  numbers", the plugin's own message for it) and keeps the value in `passthrough`. The guide says a rule with an error
-  is switched off, so the Test tab skips the rule ("skipped: wrong shape", see "Wrong-shaped rules" under Test tab) and
-  Ancient Scrolls are not hidden at level 4 there. What the plugin does with it is not verified (a question for the
-  power user in the backlog).
+  `"activeInLevels": 4`, a number where the format wants a list. Sully confirmed the rule works in game, so the editor
+  reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
+  single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
+  Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
   The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
   `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
@@ -510,7 +517,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
     editor explains it instead of the button.
   - A rule without stat checks gets a disabled button and the reason under the title ("This rule checks no stats; …").
     So does a rule with wrong-shaped keys (`wrongShapedKeys`, `wrongShapeReason`: "This rule has a wrong-shaped key
-    (activeInLevels); fix it first."): the copy would leave those keys out and apply while the rule itself is skipped.
+    (sockets); fix it first."): the copy would leave those keys out and apply while the rule itself is skipped. A
+    single-number `"activeInLevels": 4` is not wrong-shaped: the button works and the test rule keeps the level (as
+    `[4]`).
     Otherwise the line under the title explains the button and ends "If a number differs from the tooltip, the plugin
     reads that stat differently; tell us" (a new GitHub issue, `REPORT_STAT_URL`).
 - **Controls**: item, type, unique/set and area pickers (chips with name + code/id; more than 12 chips collapse behind
@@ -908,7 +917,7 @@ tab switches; it is not saved.
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
 - **Wrong-shaped rules**: a rule with a known key (condition or action) whose file value had the wrong shape (kept in
-  `passthrough` with a parse error, `wrongShapedKeys` in `engine/evaluate.ts`; e.g. `"activeInLevels": 4`) is skipped
+  `passthrough` with a parse error, `wrongShapedKeys` in `engine/evaluate.ts`; e.g. `"sockets": "2"`) is skipped
   with the outcome `wrongShape`: it never applies or hides, not even with `hideIfOtherConditionsFail`. The guide says
   "a rule with an error is switched off and logged", and the plugin's message for such a value is an error; not
   verified in game. Unknown keys sit in `passthrough` too but do not switch a rule off (the plugin logs "unknown
@@ -918,7 +927,8 @@ tab switches; it is not saved.
   verified)." and the failed conditions of the rest of the rule; the row is shown without "Show skipped rules" when
   the rest of the rule holds (it would have applied or hidden), and counted as "N wrong shape" in that checkbox's
   label. The validator's semantic errors (an `activeInLevels` id with no level, an unknown quality number) do not skip
-  a rule: whether the plugin treats them as errors is not known.
+  a rule: whether the plugin treats them as errors is not known. A single-number `"activeInLevels": 4` is not
+  wrong-shaped (it reads as `[4]`, see "A single-number level"), so Sully's Ancient Scroll hide rule applies at level 4.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
   full list ("Verify in game" below); a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
   check or `{stat:ID}` without param reads only the param-0 entry; skill tabs are numbered class × 8 + tab; Enhanced
@@ -983,9 +993,11 @@ research doc and the Test tab's note link here.
   not yet seen in a game log); the rules in it never run.
 - An empty condition list (`activeInLevels: []`, …) logs "the list is empty"; whether the plugin then drops the key or
   switches the rule off is not known (our evaluator: an empty `activeInLevels` is never active).
-- A rule with a wrong-shaped condition or action (`"activeInLevels": 4`) is switched off (the guide: "a rule with an
-  error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both. To verify
-  with Sully's v0.6.11: are Ancient Scrolls hidden at filter level 4 (backlog)?
+- A rule with a wrong-shaped condition or action (`"sockets": "2"`) is switched off (the guide: "a rule with an
+  error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both.
+- `"activeInLevels": 4` (one number instead of a list) works in game (Sully, 2026-11: his Ancient Scroll hide rule
+  hides them at level 4). We read it as `[4]`; still to check: are the scrolls shown at levels 1 to 3, i.e. the plugin
+  reads `[4]` rather than ignoring the key (backlog)?
 - Stats stored scaled (`engine/statScale.ts`): whether the plugin compares and prints the stored value (Life ×256,
   per-level stats in eighths) or the tooltip's. The validator warns about such checks; Check in game shows it
   (`{stat:7}` on a +40 Life item: 40 or 10240?). Sully's `{stat:218}/8` labels suggest the stored value.

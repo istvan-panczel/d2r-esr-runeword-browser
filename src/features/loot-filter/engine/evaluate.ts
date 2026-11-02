@@ -21,9 +21,12 @@
  *   `baseTier: null`) matches no `baseTier` condition, and `{baseTier}` expands to an empty string for it. The plugin's
  *   tier for such items is unknown (its `debug_log` line prints `tier %d` per item).
  *
- * - A rule with a wrong-shaped known key (the parser kept it in `passthrough` with an error, e.g. `"activeInLevels": 4`)
+ * - A rule with a wrong-shaped known key (the parser kept it in `passthrough` with an error, e.g. `"sockets": "2"`)
  *   is switched off: the guide says "a rule with an error is switched off and logged", and the plugin's message for
  *   such a value is an error. Unknown keys do not switch a rule off (the plugin logs "unknown setting, ignored").
+ * - `"activeInLevels": 4` (a single number) is not wrong-shaped: the parser reads it as `[4]` with a warning, because the
+ *   rule works in game (Sully, 2026-11). Whether the plugin reads it as `[4]` or ignores the key (active at every level)
+ *   is not checked; the test reads it as `[4]`.
  *
  * Verified in game (2026-11-01, plugin 1.5.3): a stat check or `{stat:ID}` without `param` reads only the entry with
  * param 0, not any entry (`OMITTED_PARAM` = 'layerZero'): `{stat:188}` showed 0 on an item whose only skill tab entry
