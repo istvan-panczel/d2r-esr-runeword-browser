@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { ListPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { effectiveActions } from '../engine/actions';
-import type { Diagnostic, DiagnosticSeverity, LootFilter } from '../engine/types';
+import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
 import { addRule, duplicateRule, moveRule, removeRule, selectRule, setRuleDisabled } from '../store/lootFilterSlice';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
+import { ExampleRules } from './rules/ExampleRules';
 import { RuleList, type RuleListEntry } from './rules/RuleList';
 
 /** Below this width the list and the editor are stacked. */
@@ -66,9 +68,9 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = (rule?: LootFilterRule) => {
     setQuery('');
-    dispatch(addRule({ at: selectedRule === null ? undefined : selectedRule + 1 }));
+    dispatch(addRule({ rule, at: selectedRule === null ? undefined : selectedRule + 1 }));
   };
 
   return (
@@ -92,7 +94,13 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
                 }}
               />
             </div>
-            <Button type="button" size="sm" onClick={handleAdd}>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                handleAdd();
+              }}
+            >
               <ListPlus />
               Add rule
             </Button>
@@ -101,9 +109,16 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             {all.length} {all.length === 1 ? 'rule' : 'rules'}
             {countNotes.length > 0 && ` (${countNotes.join(', ')})`}
           </p>
+          <ExampleRules onAdd={handleAdd} />
         </div>
         {all.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">No rules yet. Rules run top to bottom; add the first one.</p>
+          <p className="p-4 text-sm text-muted-foreground">
+            No rules yet. Rules run top to bottom; add the first one, or one of the example rules above. Most players start from{' '}
+            <Link to="/loot-filters" className="underline underline-offset-2 hover:text-foreground">
+              Sully&apos;s QoL filter
+            </Link>{' '}
+            instead and adapt it.
+          </p>
         ) : entries.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">No rule matches the search.</p>
         ) : (
