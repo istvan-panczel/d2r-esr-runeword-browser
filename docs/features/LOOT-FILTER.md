@@ -17,9 +17,11 @@ answers), §5 and §5.1 (owner decisions).
 | `/loot-filters/draft/:draftId` | LootFilterEditorScreen  | A draft in this browser (a new filter, or unsaved edits of a saved one); unknown id: not found                                                             |
 | `/loot-filters/:id`            | LootFilterEditorScreen  | A saved filter: its owner edits it, anyone else gets the sandbox; a local draft id redirects to the draft route (old links); not found / load error states |
 | `/loot-filters/sully`          | LootFilterEditorScreen  | The sandbox on the bundled Sully filter                                                                                                                    |
+| `/loot-filters/example`        | LootFilterEditorScreen  | The sandbox on the bundled example filter                                                                                                                  |
 
-The three editor routes share one screen component (the param names tell them apart: `editorRouteOf` in
-`utils/editorRoute.ts`), so Save and Copy to my filters replace the route without remounting the editor. All take
+The editor routes share one screen component (the param names, or the path of a template sandbox, tell them apart:
+`editorRouteOf(params, pathname)` in `utils/editorRoute.ts` gives `draft`, `saved` or `{ kind: 'template', template }`),
+so Save and Copy to my filters replace the route without remounting the editor. All take
 `?tab=rules|styles|settings|json|test` (default `rules`); `?save=1` on a draft or saved route opens the Save dialog
 (the library's draft cards use it; it is dropped from the URL when the dialog closes or the save moves the route).
 
@@ -59,11 +61,13 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 - **Drafts** (sharing, see [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md)):
   the library is the draft store. Optional entry fields `savedId`, `savedOwnerId`, `savedRevision` (a draft holding the
   unsaved edits of a saved filter, and the revision it started from) and
-  `basedOn { id?, revision?, template?, version?, label }` (a copy of a shared filter, or Start from Sully's:
-  `{ template: 'sullys-qol', version: TEMPLATE_VERSION, label }`). The guard checks only the required fields, so
-  older tabs still read the library;
+  `basedOn { id?, revision?, template?, version?, label }` (a copy of a shared filter, or a start from a bundled
+  template: `{ template: 'sullys-qol' | 'example', version, label: '<name> v<version>' }`, `templateBasedOn(id)`). The
+  guard checks only the required fields, so older tabs still read the library;
   `readLibrary` drops a malformed optional field (`normalizeEntry`) instead of rejecting the library. Old `template`
-  entries without `basedOn` get it from the file's `version` (`entryBasedOn` in `utils/basedOn.ts`).
+  entries without `basedOn` (written when only Sully's was bundled) get it from the file (`entryBasedOn` /
+  `inferTemplateBasedOn` in `utils/basedOn.ts`): Sully's when its `title` is "Sully's QoL Filter" or its `author`
+  "Sully", the example when its `title` is the example's, else none; at the file's `version` when it looks like one.
 - **`text` is the source of truth**: the filter file exactly as it will be downloaded. An upload is stored verbatim
   until the first edit; the editor's model is parsed from `text` when the filter opens and serialized back after edits.
 - A stored value that fails the type guard (corrupt, or written by a newer version) is copied once to
@@ -243,10 +247,12 @@ tabs: the page is the My filters content without the saved section (the drafts, 
 
 **Shared** (`SharedFiltersTab`):
 
-- A pinned card for the bundled Sully's QoL filter first (`SullyFilterCard`): name, "by Sully", `TEMPLATE_VERSION`,
-  rule count and level names from `filterMetadata` on the bundled file (fetched once per page load by
-  `loadTemplateText`, shared with Start from Sully's), **Open** (`/loot-filters/sully`, the sandbox), **Download** (the
-  same menu as a draft's, with the zip) and **Start from it** (the template start below).
+- A pinned card per bundled template first, Sully's QoL filter then the example filter (`BundledTemplateCard`, one per
+  `BUNDLED_TEMPLATE_LIST` entry): name, its summary, "by <author>", its version, rule count and level names from
+  `filterMetadata` on the bundled file (fetched once per page load by `loadTemplateText(id)`, shared with its start
+  button), **Open** (its `sandboxPath`: `/loot-filters/sully` or `/loot-filters/example`), **Download** (the same menu
+  as a draft's, with the zip) and **Start from it** (the template start below; every start button waits while one
+  loads).
 - Search by name (debounced 300 ms like the builds list, server-side `ilike`) and sort **Newest** / **Most liked** /
   **Most downloaded** (`SharedFiltersToolbar`, the sharing slice's `searchText` / `sortMode`; a change refetches).
 - The public filters, 50 per page, infinite scroll (the builds' `useInfiniteScroll`, paused while a page loads and
@@ -271,7 +277,8 @@ tabs: the page is the My filters content without the saved section (the drafts, 
   first, private ones included) as shared filter cards with badges: **Unsaved changes** (a visible draft has its
   `savedId`), **Update available** (`filterUpdateStatus`: a copy whose source has a newer revision, from one
   `fetchSourceRevisionsRequested` with every `based_on_id`, the source's change note in the tooltip; a filter started
-  from the template with `based_on_version` below `TEMPLATE_VERSION`) and **Original no longer shared** (the source is
+  from a bundled template with `based_on_version` below that template's bundled version, an unknown
+  `based_on_template` never) and **Original no longer shared** (the source is
   private or deleted; a deleted source has cleared `based_on_id`, the label stays).
 - **Unsaved in this browser** (the heading only when signed in): `selectVisibleDrafts(state, viewerId)` as draft cards
   (`LibraryEntryCard`, newest first): name, title/author and rule count, last update, "Based on …", an **Unsaved
@@ -285,10 +292,12 @@ tabs: the page is the My filters content without the saved section (the drafts, 
 
 The how-to above the tabs covers the launcher import, the `sounds`/`icons` folders, the zip download and the
 troubleshooting line from "Using a filter in the game". The start buttons (My filters tab) come in this order: **Start from Sully's QoL filter** (the primary button),
-**Upload**, **New filter** (outline). A "Tip:" line under them says most players start from Sully's filter or upload
-one someone shared and change what they need; a new filter starts blank (no rules, so every item shows as the game
-shows it) and is for authors who know the format; the Rules tab has example rules either way. The empty state and the
-New filter dialog ("A blank filter with no rules. …") say the same in short.
+**Start from the example**, **Upload**, **New filter** (outline). A "Tip:" line under them says most players start
+from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
+work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
+blank (no rules, so every item shows as the game shows it) and is for authors who know the format; the Rules tab has
+example rules either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank
+filter with no rules. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
@@ -317,13 +326,29 @@ New filter dialog ("A blank filter with no rules. …") say the same in short.
   reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
   single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
   Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
-  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
-  `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
+  in `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
-- New filter, Upload and Start from Sully's add a draft and open it on `/loot-filters/draft/:id`
-  (`hooks/useStartFilter.ts`). Empty state ("No filters yet") when there are no drafts and nothing is saved.
+- **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
+  named "Example filter (with explanations)" (the file's title) with
+  `basedOn { template: 'example', version: '1.0.0', label: 'Example filter (with explanations) v1.0.0' }`. Our own
+  file (author "D2R ESR Runeword Browser"): 21 commented rules over two levels, Leveling (1) and Strict (2), with a
+  header comment on how rules run; it uses Sully's bundled sounds and icons. `exampleFilter.test.ts` parses, validates
+  and evaluates it. Credit line: "Example filter v1.0.0, written for this site to show how rules work; it uses sounds
+  and icons from Sully".
+- **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
+  (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
+  order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `version`, `file`,
+  `sandboxPath`, `startLabel`, `summary` (card text) and `credit`; `template.test.ts` checks name, author and version
+  against each bundled file, so bumping a file means bumping its entry. `bundledTemplate(id)` looks one up (null for
+  any other text), `fetchTemplateText(id)` / `loadTemplateText(id)` (cached per id per page load) read its file,
+  `useTemplateText(id)` wraps that for the cards, and `templateBasedOn(id, version?)` / `templateStartInput(id, text)`
+  (`utils/basedOn.ts`) build what a start records. Adding a template is a file, a registry entry and a route line.
+- New filter, Upload and the template starts add a draft and open it on `/loot-filters/draft/:id`
+  (`hooks/useStartFilter.ts`: `startFromTemplate(id)`, `loadingTemplate` is the id loading or null). Empty state ("No
+  filters yet") when there are no drafts and nothing is saved.
 - **Download** (`components/FilterDownloadMenu.tsx`, shared with the editor header): a plain button saving
   `<slug of name>.json` when the filter references no bundled sound or icon (or is not valid JSON); otherwise a menu with
   **Download .json** and **Download .zip with sounds and icons**, plus the hint "Unzip into your LootFilters folder" and,
@@ -362,7 +387,10 @@ Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-
 store at that moment so a target that already matches (the same filter after Save or Copy moved the route) is left
 alone: the draft route dispatches `open(id)`; the saved route redirects a local draft id to `/loot-filters/draft/:id`,
 else clears the sharing detail and dispatches `fetchSharedFilterRequested(id)` (without Supabase it only shows "not
-found"); the Sully route fetches the bundled template and dispatches `openSandbox` with `templateBasedOn()`. A second
+found"); a template route (`/loot-filters/sully`, `/loot-filters/example`) fetches that bundled file and dispatches
+`openSandbox` with `templateBasedOn(id)` (a failed fetch shows "Could not load <name>" with Try again, only on that
+template's route). A sandbox without a saved filter matches the template route its `basedOn.template` names (Sully's
+when it names none). A second
 effect waits for the auth state and the fetched row, then dispatches `openSaved({ row, viewerId, authorLabel })`
 (`authorLabel` "Name#1234"); `targetMatchesRoute` also checks the kind, so signing in or out on a saved route reopens
 it as the owner's filter or the sandbox. A change of viewer refetches the row (a private filter that was "not found"
@@ -417,7 +445,8 @@ A `loot_filter_limit` error reads "You have 50 loot filters; delete one to save 
 writes name / description / is_private at once (no revision bump) and dispatches `savedFilterRenamed`;
 `fetchSourceFilterRequested(id)` loads a copy's source with its file into `sourceFilter`.
 
-**Sandbox** (someone else's filter, a signed-out visitor, or Sully): a banner "You are viewing X by Name#1234 — changes
+**Sandbox** (someone else's filter, a signed-out visitor, or a bundled template, which reads "You are viewing <name>
+v<version>"): a banner "You are viewing X by Name#1234 — changes
 are not saved. Copy to my filters to keep them." with **Copy to my filters** (signed out with Supabase: the sign-in
 dialog; without Supabase it copies directly), **Like** (shared filters; signed out: sign-in), **Undo my changes** when
 edited, the author's profile link, the description, "Based on …" and the latest change note. Copy dispatches
@@ -434,7 +463,9 @@ filter** (`takeUpdate` new, then the new draft's route). A never-saved draft is 
 only Add as a new filter (the banner says why, and the reducer refuses `replace` there). Either action applies only
 while the filter it was clicked on is still open (the template is fetched first). A missing source, or a saved copy
 that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
-`TEMPLATE_VERSION` (or of unknown version) offers the same two actions with the bundled file.
+that template's bundled version (or of unknown version) reads "<name> v<version> is bundled now; this filter started
+from v…" and offers the same two actions with that template's bundled file (`{ kind: 'template', template,
+fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

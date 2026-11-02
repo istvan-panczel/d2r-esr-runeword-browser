@@ -14,11 +14,11 @@ import {
 import { discardChanges } from '../../store/lootFilterSlice';
 import type { EditorTarget } from '../../store/types';
 import { authorLabelOf } from '../../utils/editorRoute';
-import { TEMPLATE_NAME, TEMPLATE_VERSION } from '../../utils/template';
+import { SULLYS_QOL_TEMPLATE, bundledTemplate } from '../../utils/template';
 
 interface SandboxBannerProps {
   readonly target: Extract<EditorTarget, { kind: 'sandbox' }>;
-  /** The shared filter shown (null for Sully's template, or while it loads). */
+  /** The shared filter shown (null for a bundled template, or while it loads). */
   readonly detail: SharedFilterDetail | null;
   /** Edited since it opened. */
   readonly dirty: boolean;
@@ -26,7 +26,7 @@ interface SandboxBannerProps {
 }
 
 /**
- * The sandbox: someone else's filter (or Sully's bundled one) on a temporary copy. Says that nothing is saved and
+ * The sandbox: someone else's filter (or a bundled template) on a temporary copy. Says that nothing is saved and
  * offers Copy to my filters, Like (shared filters), the author, what it is based on and its latest change note.
  */
 export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerProps) {
@@ -35,6 +35,7 @@ export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerPr
   const liked = useSelector(selectSharedFilterDetailLiked);
   const pending = useSelector(selectLikePendingFilterIdSet);
   const author = detail?.profiles ?? null;
+  const template = bundledTemplate(target.basedOn?.template) ?? SULLYS_QOL_TEMPLATE;
 
   const handleLike = () => {
     if (detail === null) return;
@@ -53,7 +54,7 @@ export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerPr
           You are viewing{' '}
           {target.savedId === null ? (
             <span className="font-semibold">
-              {TEMPLATE_NAME} v{TEMPLATE_VERSION}
+              {template.name} v{template.version}
             </span>
           ) : (
             <>

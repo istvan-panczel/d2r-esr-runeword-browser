@@ -6,22 +6,22 @@ Status: planning (branch `feat/loot-filter-sharing`). Builds on the build sharin
 
 ## Owner decisions (2026-11-02)
 
-| Topic                    | Decision                                                                                                                                                                                                 |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Where filters live       | Saved filters live in Supabase. A filter is public unless the owner ticks **Private** (then only the owner sees it).                                                                                     |
-| Saving                   | Only an explicit **Save** writes to Supabase. Starting, uploading, copying and editing stay in a browser backup (drafts) until Save, so nothing half-finished is shared by accident.                     |
-| Drafts                   | The current localStorage library becomes the draft store: new unsaved filters, unsaved edits of saved filters, and the filters users already have in their browser (each saved or discarded one by one). |
-| Signed-out visitors      | Browse, open (sandbox) and download public filters, and create / upload / edit drafts as today. Save, Like and Copy to my filters ask them to sign in.                                                   |
-| Default visibility       | Public, copies too. Copies are labelled "based on X".                                                                                                                                                    |
-| Copies                   | A copy stays linked to its source; when the source changes the copy shows **Update available**. Filters started from Sully's bundled template do the same when we bundle a newer Sully version.          |
-| Viewing others' filters  | **Sandbox**: the full editor on a temporary copy (tweak, Test tab, download the tweaked file); nothing is written anywhere; a banner offers **Copy to my filters** to keep the changes.                  |
-| List contents            | Name, description, author, the ESR / plugin / filter versions it was created with, rule count, levels (when it has them), likes, downloads; Open or Download straight from the card.                     |
-| Social                   | Likes (like builds), a download count, the author's filters on `/user/:userId`, a "Latest loot filters" block on the home page.                                                                          |
-| What changed             | Saving a public filter's content takes an optional short note; copies show it in their Update available banner, the filter's card / header shows the latest one.                                         |
-| Sully's filter           | The Shared tab starts with a pinned card for the bundled Sully's QoL filter (version, rule count, Open / Download / Start from it).                                                                      |
-| `updateUrl`              | Not tied to sharing. A shared filter's `updateUrl` is left as the author wrote it.                                                                                                                       |
-| Limits                   | File up to 512 KB, up to 50 filters per user (private ones included), name 1–100 characters, description up to 2000, change note up to 200.                                                              |
-| "Under development" note | Removed from the loot filter pages: the editor is usable.                                                                                                                                                |
+| Topic                    | Decision                                                                                                                                                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Where filters live       | Saved filters live in Supabase. A filter is public unless the owner ticks **Private** (then only the owner sees it).                                                                                             |
+| Saving                   | Only an explicit **Save** writes to Supabase. Starting, uploading, copying and editing stay in a browser backup (drafts) until Save, so nothing half-finished is shared by accident.                             |
+| Drafts                   | The current localStorage library becomes the draft store: new unsaved filters, unsaved edits of saved filters, and the filters users already have in their browser (each saved or discarded one by one).         |
+| Signed-out visitors      | Browse, open (sandbox) and download public filters, and create / upload / edit drafts as today. Save, Like and Copy to my filters ask them to sign in.                                                           |
+| Default visibility       | Public, copies too. Copies are labelled "based on X".                                                                                                                                                            |
+| Copies                   | A copy stays linked to its source; when the source changes the copy shows **Update available**. Filters started from a bundled template (Sully's, the example) do the same when we bundle a newer version of it. |
+| Viewing others' filters  | **Sandbox**: the full editor on a temporary copy (tweak, Test tab, download the tweaked file); nothing is written anywhere; a banner offers **Copy to my filters** to keep the changes.                          |
+| List contents            | Name, description, author, the ESR / plugin / filter versions it was created with, rule count, levels (when it has them), likes, downloads; Open or Download straight from the card.                             |
+| Social                   | Likes (like builds), a download count, the author's filters on `/user/:userId`, a "Latest loot filters" block on the home page.                                                                                  |
+| What changed             | Saving a public filter's content takes an optional short note; copies show it in their Update available banner, the filter's card / header shows the latest one.                                                 |
+| Bundled templates        | The Shared tab starts with pinned cards for the bundled Sully's QoL filter and the commented example filter (version, rule count, Open / Download / Start from it); each has a sandbox route.                    |
+| `updateUrl`              | Not tied to sharing. A shared filter's `updateUrl` is left as the author wrote it.                                                                                                                               |
+| Limits                   | File up to 512 KB, up to 50 filters per user (private ones included), name 1–100 characters, description up to 2000, change note up to 200.                                                                      |
+| "Under development" note | Removed from the loot filter pages: the editor is usable.                                                                                                                                                        |
 
 Defaults chosen while planning:
 
@@ -33,8 +33,8 @@ Defaults chosen while planning:
   `revision` only moves on content changes, so a rename or Private toggle from another tab is last-write-wins.
 - **Download count**: Download clicks, signed in or not, the author's own included. A rough number.
 - **Plugin version**: a `LOOT_FILTER_PLUGIN_VERSION` constant (currently `1.5.3`), bumped when the editor targets a new
-  plugin. Sully's template version: a `TEMPLATE_VERSION` constant next to `TEMPLATE_CREDIT` (checked by a test against
-  the bundled file).
+  plugin. Template versions: each bundled template's `version` in the `BUNDLED_TEMPLATES` registry
+  (`utils/template.ts`, next to its credit line; a test checks each against its bundled file).
 - **Without Supabase env vars** (forks, tests): drafts and the sandbox work; Save, the Shared tab, likes and profile
   blocks are hidden with a note.
 - **"Most downloaded"** sort is offered, with its own cursor index like "Most liked".
@@ -61,7 +61,7 @@ Applied by hand in the Supabase SQL editor, DEV first, then PROD (same as 001–
 | `change_note`                                   | `text` null    | The latest "what changed" note (≤ 200 characters); cleared by a content save without one.                                  |
 | `based_on_id`                                   | `uuid` null    | The shared filter this one was copied from; `references loot_filters(id) on delete set null`. Set on insert only.          |
 | `based_on_revision`                             | `integer` null | The source's revision the copy has (moves when the user takes an update).                                                  |
-| `based_on_template`, `based_on_version`         | `text` null    | For a filter started from a bundled template: `'sullys-qol'` and its `version` (e.g. `0.6.11`).                            |
+| `based_on_template`, `based_on_version`         | `text` null    | For a filter started from a bundled template: `'sullys-qol'` or `'example'` and its `version` (e.g. `0.6.11`).             |
 | `based_on_label`                                | `text` null    | "Sully's QoL Filter v0.6.11" / "X by Y#1234", kept for the label when the source is deleted or private (≤ 200 characters). |
 | `revision`                                      | `integer`      | Default 1; bumped by the trigger when `content` changes. Clients cannot write it.                                          |
 | `likes_count`, `download_count`                 | `integer`      | Default 0; maintained by a trigger / an RPC only.                                                                          |
@@ -108,7 +108,7 @@ Today the editor only edits library entries. It gets an explicit target:
 type EditorTarget =
   | { kind: 'draft'; entryId: string } // a new, never-saved filter (or an old local one)
   | { kind: 'saved'; savedId: string; revision: number; ownerId: string; baseText: string; baseCanonical: string }
-  | { kind: 'sandbox'; savedId: string | null; baseText: string }; // someone else's filter, or Sully's template
+  | { kind: 'sandbox'; savedId: string | null; baseText: string }; // someone else's filter, or a bundled template
 ```
 
 - **Draft**: as today; the debounced flush writes the entry.
@@ -134,7 +134,7 @@ interface LootFilterEntry {
 }
 ```
 
-- A **new** draft (New, Upload, Start from Sully's, Copy) has no `savedId`. Its first Save inserts the row, removes the
+- A **new** draft (New, Upload, Start from Sully's or the example, Copy) has no `savedId`. Its first Save inserts the row, removes the
   draft, and switches the editor target to `saved` without remounting (route replaced, tabs and Test form kept).
 - **Save** first flushes the pending debounce and sends that exact text; on success the draft is removed only if its
   text still equals what was sent, and the target's base becomes the new content and revision in the same reducer.
@@ -152,10 +152,11 @@ interface LootFilterEntry {
 ### Copies and updates
 
 - **Copy to my filters** sets `basedOn` only when the source is public and someone else's (plain copy otherwise, so a
-  private name never leaks into a public label). Start from Sully's sets `template` / `version`.
+  private name never leaks into a public label). Start from a bundled template sets `template` (`'sullys-qol'` /
+  `'example'`) / `version`.
 - **Update available**: My filters runs one query `select id, revision, change_note from loot_filters where id in
 (based_on ids)`; a missing id means "The original is no longer shared" (deleted or private; the copy keeps working and
-  keeps its label). Template-based filters compare with `TEMPLATE_VERSION`.
+  keeps its label). Template-based filters compare with their template's bundled version.
 - The banner shows the source's change note and offers **Replace with the latest** (loads it as unsaved changes and
   records the new `based_on_revision` / `based_on_version` in the draft so Save writes them; confirms first when a draft
   already exists; saved filters only, Discard changes goes back to the saved version) and **Add as a new filter** (the
@@ -165,12 +166,13 @@ interface LootFilterEntry {
 
 ### Routes
 
-| Route                     | Screen                                                                                                     |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `/loot-filters`           | Tabs **Shared** (pinned Sully card, then the public list) and **My filters** (saved filters, then drafts). |
-| `/loot-filters/:id`       | A saved filter: the editor for its owner, the sandbox for everyone else. A local draft id redirects.       |
-| `/loot-filters/draft/:id` | A draft.                                                                                                   |
-| `/loot-filters/sully`     | The sandbox on the bundled Sully filter (from the pinned card).                                            |
+| Route                     | Screen                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `/loot-filters`           | Tabs **Shared** (pinned Sully and example cards, then the public list) and **My filters** (saved filters, then drafts). |
+| `/loot-filters/:id`       | A saved filter: the editor for its owner, the sandbox for everyone else. A local draft id redirects.                    |
+| `/loot-filters/draft/:id` | A draft.                                                                                                                |
+| `/loot-filters/sully`     | The sandbox on the bundled Sully filter (from the pinned card).                                                         |
+| `/loot-filters/example`   | The sandbox on the bundled example filter (from its pinned card).                                                       |
 
 Local ids and row ids are both UUIDs, so `/loot-filters/:id` looks in the hydrated library first, then fetches the
 row. Old bookmarks to a draft stop working after its first Save.
@@ -184,8 +186,8 @@ row. Old bookmarks to a draft stop working after its first Save.
   change note, Private badge (own only); **Open** and **Download**.
 - **My filters** tab (default when signed in, and signed out when this browser has drafts, so a returning visitor
   never thinks their filters are gone; the drafts never wait on the sign-in state): the user's saved filters (badges: Private, Unsaved changes, Update
-  available), then "Unsaved in this browser" with the drafts (Save / Discard). New / Upload / Start from Sully's live
-  here. Signed out: the drafts with "Sign in to save".
+  available), then "Unsaved in this browser" with the drafts (Save / Discard). New / Upload / Start from Sully's / Start from
+  the example live here. Signed out: the drafts with "Sign in to save".
 
 ### Editor header
 

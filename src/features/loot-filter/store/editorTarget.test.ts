@@ -132,7 +132,7 @@ describe('openSaved', () => {
   it('keeps the based_on columns on the saved target, and gives template-based content no text notes', () => {
     const template = row({ based_on_template: 'sullys-qol', based_on_version: '0.6.11', based_on_label: "Sully's QoL Filter v0.6.11" });
     const state = savedState([], { row: template });
-    expect(state.editor.target).toMatchObject({ basedOn: templateBasedOn('0.6.11') });
+    expect(state.editor.target).toMatchObject({ basedOn: templateBasedOn('sullys-qol', '0.6.11') });
     expect(state.editor.textNotes).toEqual([]);
   });
 
@@ -209,7 +209,7 @@ describe('sandbox', () => {
 
   it('openSandbox opens a text that is not saved anywhere', () => {
     const text = serializeLootFilter(FILTER);
-    const state = run(initialState, hydrate([]), at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn() })));
+    const state = run(initialState, hydrate([]), at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn('sullys-qol') })));
     expect(state.editor.target).toEqual({
       kind: 'sandbox',
       savedId: null,
@@ -217,7 +217,7 @@ describe('sandbox', () => {
       ownerId: null,
       name: "Sully's",
       baseText: text,
-      basedOn: templateBasedOn(),
+      basedOn: templateBasedOn('sullys-qol'),
     } satisfies EditorTarget);
     expect(state.editor.filter?.rules).toHaveLength(2);
   });
@@ -261,8 +261,19 @@ describe('copyToMyFilters', () => {
     expect(fromPrivate.library.entries[0]).not.toHaveProperty('basedOn');
 
     const text = serializeLootFilter(FILTER);
-    const fromTemplate = run(initialState, at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn() })), at(copyToMyFilters()));
-    expect(fromTemplate.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn() });
+    const fromTemplate = run(
+      initialState,
+      at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn('sullys-qol') })),
+      at(copyToMyFilters())
+    );
+    expect(fromTemplate.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn('sullys-qol') });
+
+    const fromExample = run(
+      initialState,
+      at(openSandbox({ text, name: 'Example', basedOn: templateBasedOn('example') })),
+      at(copyToMyFilters())
+    );
+    expect(fromExample.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn('example') });
   });
 
   it('is a no-op outside the sandbox', () => {
@@ -446,7 +457,13 @@ describe('takeUpdate', () => {
 
 describe('draft fields in library reducers', () => {
   it('duplicate copies neither the saved filter nor basedOn', () => {
-    const draft = entry('d', { savedId: 'row-1', savedOwnerId: OWNER, savedRevision: 2, basedOn: templateBasedOn(), source: 'template' });
+    const draft = entry('d', {
+      savedId: 'row-1',
+      savedOwnerId: OWNER,
+      savedRevision: 2,
+      basedOn: templateBasedOn('sullys-qol'),
+      source: 'template',
+    });
     const state = run(initialState, hydrate([draft]), { type: duplicate.type, payload: { id: 'd', newId: 'c', now: LATER } });
     expect(entryById(state, 'c')).toEqual({
       id: 'c',
@@ -465,8 +482,8 @@ describe('draft fields in library reducers', () => {
   });
 
   it("importText records Start from Sully's basedOn", () => {
-    const action = importText({ name: "Sully's", text: '{}', source: 'template', basedOn: templateBasedOn() });
-    expect(reducer(initialState, action).library.entries[0].basedOn).toEqual(templateBasedOn());
+    const action = importText({ name: "Sully's", text: '{}', source: 'template', basedOn: templateBasedOn('sullys-qol') });
+    expect(reducer(initialState, action).library.entries[0].basedOn).toEqual(templateBasedOn('sullys-qol'));
   });
 
   it('replaceFilter works on a saved target', () => {
@@ -480,10 +497,12 @@ describe('selectors', () => {
   it('selectSaveRequest: an old template draft infers basedOn; a draft of a saved filter opened as a draft updates it', () => {
     const old = run(
       initialState,
-      hydrate([entry('t', { source: 'template', text: '{"formatVersion": 1, "version": "0.6.2", "rules": []}' })]),
+      hydrate([
+        entry('t', { source: 'template', text: '{"formatVersion": 1, "title": "Sully\'s QoL Filter", "version": "0.6.2", "rules": []}' }),
+      ]),
       at(open('t'))
     );
-    expect(selectSaveRequest(wrap(old))?.basedOn).toEqual(templateBasedOn('0.6.2'));
+    expect(selectSaveRequest(wrap(old))?.basedOn).toEqual(templateBasedOn('sullys-qol', '0.6.2'));
 
     const local = run(initialState, hydrate([entry('d', { savedId: 'row-1', savedOwnerId: OWNER, savedRevision: 2 })]), at(open('d')));
     expect(selectSaveRequest(wrap(local))).toMatchObject({ kind: 'update', savedId: 'row-1', expectedRevision: 2, entryId: 'd' });

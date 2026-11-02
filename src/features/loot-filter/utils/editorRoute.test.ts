@@ -11,7 +11,7 @@ import {
   sourceUpdateOf,
   targetMatchesRoute,
 } from './editorRoute';
-import { TEMPLATE_VERSION } from './template';
+import { SULLYS_QOL_TEMPLATE } from './template';
 
 const saved: EditorTarget = {
   kind: 'saved',
@@ -33,19 +33,28 @@ const sandbox: EditorTarget = {
   baseText: '{}',
   basedOn: null,
 };
-const sully: EditorTarget = { kind: 'sandbox', savedId: null, revision: null, ownerId: null, name: 'Sully', baseText: '{}', basedOn: null };
+const templateSandbox = { kind: 'sandbox', savedId: null, revision: null, ownerId: null, baseText: '{}' } as const;
+const sully: EditorTarget = { ...templateSandbox, name: 'Sully', basedOn: templateBasedOn('sullys-qol') };
+const example: EditorTarget = { ...templateSandbox, name: 'Example', basedOn: templateBasedOn('example') };
+/** A template sandbox that records no template: Sully's, as before there were two. */
+const unnamed: EditorTarget = { ...templateSandbox, name: 'Sully', basedOn: null };
 
 describe('editorRouteOf / editorPathOf', () => {
-  it('reads the route from the params', () => {
-    expect(editorRouteOf({ draftId: 'd' })).toEqual({ kind: 'draft', id: 'd' });
-    expect(editorRouteOf({ id: 'r' })).toEqual({ kind: 'saved', id: 'r' });
-    expect(editorRouteOf({})).toEqual({ kind: 'sully' });
+  it('reads the route from the params, a template sandbox from its path', () => {
+    expect(editorRouteOf({ draftId: 'd' }, '/loot-filters/draft/d')).toEqual({ kind: 'draft', id: 'd' });
+    expect(editorRouteOf({ id: 'r' }, '/loot-filters/r')).toEqual({ kind: 'saved', id: 'r' });
+    expect(editorRouteOf({}, '/loot-filters/sully')).toEqual({ kind: 'template', template: 'sullys-qol' });
+    expect(editorRouteOf({}, '/loot-filters/example/')).toEqual({ kind: 'template', template: 'example' });
+    expect(editorRouteOf({})).toEqual({ kind: 'template', template: 'sullys-qol' });
   });
 
   it('builds the path of a target', () => {
     expect(editorPathOf({ kind: 'draft', entryId: 'd' })).toBe('/loot-filters/draft/d');
     expect(editorPathOf(saved)).toBe('/loot-filters/row-1');
+    expect(editorPathOf(sandbox)).toBe('/loot-filters/row-1');
     expect(editorPathOf(sully)).toBe('/loot-filters/sully');
+    expect(editorPathOf(example)).toBe('/loot-filters/example');
+    expect(editorPathOf(unnamed)).toBe('/loot-filters/sully');
   });
 });
 
@@ -67,9 +76,16 @@ describe('targetMatchesRoute', () => {
     expect(targetMatchesRoute(saved, { kind: 'saved', id: 'row-2' }, 'me')).toBe(false);
   });
 
-  it('matches Sully only with the template sandbox', () => {
-    expect(targetMatchesRoute(sully, { kind: 'sully' }, null)).toBe(true);
-    expect(targetMatchesRoute(sandbox, { kind: 'sully' }, null)).toBe(false);
+  it("matches a template route only with that template's sandbox", () => {
+    const sullyRoute = { kind: 'template', template: 'sullys-qol' } as const;
+    const exampleRoute = { kind: 'template', template: 'example' } as const;
+    expect(targetMatchesRoute(sully, sullyRoute, null)).toBe(true);
+    expect(targetMatchesRoute(unnamed, sullyRoute, null)).toBe(true);
+    expect(targetMatchesRoute(example, exampleRoute, null)).toBe(true);
+    expect(targetMatchesRoute(sully, exampleRoute, null)).toBe(false);
+    expect(targetMatchesRoute(example, sullyRoute, null)).toBe(false);
+    expect(targetMatchesRoute(sandbox, sullyRoute, null)).toBe(false);
+    expect(targetMatchesRoute({ kind: 'draft', entryId: 'd' }, exampleRoute, null)).toBe(false);
   });
 });
 
@@ -99,7 +115,7 @@ describe('keepsOwnerSandbox', () => {
     expect(keepsOwnerSandbox(sandbox, true, route, null)).toBe(false);
     expect(keepsOwnerSandbox(sandbox, true, { kind: 'saved', id: 'row-2' }, 'me')).toBe(false);
     expect(keepsOwnerSandbox(saved, true, route, 'me')).toBe(false);
-    expect(keepsOwnerSandbox(sully, true, { kind: 'sully' }, 'me')).toBe(false);
+    expect(keepsOwnerSandbox(sully, true, { kind: 'template', template: 'sullys-qol' }, 'me')).toBe(false);
   });
 });
 
@@ -148,9 +164,20 @@ describe('sourceUpdateOf', () => {
   });
 
   it('compares a template-based filter with the bundled version', () => {
-    expect(sourceUpdateOf(templateBasedOn(TEMPLATE_VERSION), {})).toEqual({ kind: 'none' });
-    expect(sourceUpdateOf(templateBasedOn('0.5.0'), {})).toEqual({ kind: 'template', fromVersion: '0.5.0' });
-    expect(sourceUpdateOf(templateBasedOn('99.0.0'), {})).toEqual({ kind: 'none' });
-    expect(sourceUpdateOf(templateBasedOn(null), {})).toEqual({ kind: 'template', fromVersion: null });
+    const sullyUpdate = { kind: 'template', template: 'sullys-qol' } as const;
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', SULLYS_QOL_TEMPLATE.version), {})).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.5.0'), {})).toEqual({ ...sullyUpdate, fromVersion: '0.5.0' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '99.0.0'), {})).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', null), {})).toEqual({ ...sullyUpdate, fromVersion: null });
+  });
+
+  it('compares an example-based filter with the bundled example, not with Sully', () => {
+    const exampleUpdate = { kind: 'template', template: 'example' } as const;
+    expect(sourceUpdateOf(templateBasedOn('example'), {})).toEqual({ kind: 'none' });
+    // Older than the bundled example (1.0.0), though newer than Sully's version.
+    expect(sourceUpdateOf(templateBasedOn('example', '0.9.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.9.0' });
+    expect(sourceUpdateOf(templateBasedOn('example', '0.6.12'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.6.12' });
+    expect(sourceUpdateOf(templateBasedOn('example', null), {})).toEqual({ ...exampleUpdate, fromVersion: null });
+    expect(sourceUpdateOf({ template: 'retired', version: '0.1', label: 'Old' }, {})).toEqual({ kind: 'none' });
   });
 });

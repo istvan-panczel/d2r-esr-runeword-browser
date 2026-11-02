@@ -15,7 +15,7 @@ import { selectEditorTarget } from '../../store/selectors';
 import type { LootFilterBasedOn } from '../../store/types';
 import { sharedBasedOn, templateBasedOn } from '../../utils/basedOn';
 import { authorLabelOf, isSameEditorFilter, sourceUpdateOf } from '../../utils/editorRoute';
-import { TEMPLATE_NAME, TEMPLATE_VERSION, fetchTemplateText } from '../../utils/template';
+import { BUNDLED_TEMPLATES, fetchTemplateText } from '../../utils/template';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 
 interface UpdateBannerProps {
@@ -32,7 +32,7 @@ interface UpdateBannerProps {
 
 /**
  * "Update available" for a copy whose source has a newer revision (looked up when the filter opens), or a filter
- * started from an older bundled Sully template: Replace with the latest (as unsaved changes; saved filters only) or Add
+ * started from an older version of a bundled template (Sully's, the example): Replace with the latest (as unsaved changes; saved filters only) or Add
  * as a new filter. A source that was deleted or made private reads "no longer shared" (dismissable).
  */
 export function UpdateBanner({ basedOn, hasUnsavedChanges, replaceable }: UpdateBannerProps) {
@@ -102,15 +102,17 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges, replaceable }: Update
     if (update.kind === 'template') {
       setLoadingTemplate(true);
       try {
-        text = await fetchTemplateText();
+        text = await fetchTemplateText(update.template);
       } catch (error) {
-        console.error('[Loot filters] Could not load the template', error);
-        toast.error(`Could not load ${TEMPLATE_NAME}`, { description: error instanceof Error ? error.message : undefined });
+        console.error(`[Loot filters] Could not load the template ${update.template}`, error);
+        toast.error(`Could not load ${BUNDLED_TEMPLATES[update.template].name}`, {
+          description: error instanceof Error ? error.message : undefined,
+        });
         return;
       } finally {
         setLoadingTemplate(false);
       }
-      next = templateBasedOn();
+      next = templateBasedOn(update.template);
     } else {
       if (sourceDetail === null) return;
       text = sourceDetail.content;
@@ -142,7 +144,7 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges, replaceable }: Update
             <span className="font-semibold">Update available.</span>{' '}
             {update.kind === 'shared'
               ? `“${update.name}”, the filter this one is based on, has a newer version.`
-              : `${TEMPLATE_NAME} v${TEMPLATE_VERSION} is bundled now; this filter started from ${update.fromVersion === null ? 'an older version' : `v${update.fromVersion}`}.`}
+              : `${BUNDLED_TEMPLATES[update.template].name} v${BUNDLED_TEMPLATES[update.template].version} is bundled now; this filter started from ${update.fromVersion === null ? 'an older version' : `v${update.fromVersion}`}.`}
           </p>
           {!replaceable && (
             <p className="text-muted-foreground">

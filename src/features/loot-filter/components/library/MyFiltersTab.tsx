@@ -37,7 +37,7 @@ interface MyFiltersTabProps {
   readonly authPending?: boolean;
 }
 
-/** My filters: New / Upload / Start from Sully's, the viewer's saved filters, then the drafts in this browser. */
+/** My filters: Start from a bundled template / Upload / New, the viewer's saved filters, then the drafts in this browser. */
 export function MyFiltersTab({ sharingEnabled, viewerId, authPending = false }: MyFiltersTabProps) {
   const dispatch = useDispatch();
   const hydrated = useSelector(selectLibraryHydrated);
@@ -86,7 +86,8 @@ export function MyFiltersTab({ sharingEnabled, viewerId, authPending = false }: 
                 <Filter className="size-8 text-muted-foreground" aria-hidden />
                 <p className="font-medium">No filters yet</p>
                 <p className="text-sm text-muted-foreground">
-                  Begin from Sully&apos;s QoL filter (recommended), upload one you already have, or start a blank filter.
+                  Begin from Sully&apos;s QoL filter (recommended) or the example (to learn how rules work), upload one you already have, or
+                  start a blank filter.
                 </p>
               </CardContent>
             </Card>

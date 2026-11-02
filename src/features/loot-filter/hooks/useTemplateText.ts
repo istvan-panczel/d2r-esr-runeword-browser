@@ -1,28 +1,28 @@
 import { useEffect, useState } from 'react';
-import { loadTemplateText } from '../utils/template';
+import { loadTemplateText, type BundledTemplateId } from '../utils/template';
 
 export type TemplateTextState =
   { readonly status: 'loading' } | { readonly status: 'ready'; readonly text: string } | { readonly status: 'error' };
 
-/** The bundled template's text, fetched on mount (once per page load, shared with Start from Sully's). */
-export function useTemplateText(): TemplateTextState {
-  const [state, setState] = useState<TemplateTextState>({ status: 'loading' });
+/** A bundled template's text, fetched on mount (once per page load, shared with its start button). */
+export function useTemplateText(id: BundledTemplateId): TemplateTextState {
+  const [loaded, setLoaded] = useState<{ readonly id: BundledTemplateId; readonly state: TemplateTextState } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    loadTemplateText().then(
+    loadTemplateText(id).then(
       (text) => {
-        if (!cancelled) setState({ status: 'ready', text });
+        if (!cancelled) setLoaded({ id, state: { status: 'ready', text } });
       },
       (error: unknown) => {
-        console.error('[Loot filters] Could not load the template', error);
-        if (!cancelled) setState({ status: 'error' });
+        console.error(`[Loot filters] Could not load the template ${id}`, error);
+        if (!cancelled) setLoaded({ id, state: { status: 'error' } });
       }
     );
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [id]);
 
-  return state;
+  return loaded?.id === id ? loaded.state : { status: 'loading' };
 }

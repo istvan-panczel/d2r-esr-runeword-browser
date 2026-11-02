@@ -80,7 +80,7 @@ import type { EditorTarget } from '../store/types';
 import { templateBasedOn } from '../utils/basedOn';
 import { authorLabelOf, editorRouteOf, keepsOwnerSandbox, saveDialogDetailsOf, targetMatchesRoute } from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
-import { TEMPLATE_NAME, fetchTemplateText } from '../utils/template';
+import { BUNDLED_TEMPLATES, fetchTemplateText, type BundledTemplateId } from '../utils/template';
 import { defaultTestItem } from '../utils/testItemForm';
 
 /** A JSON-tab draft and the editing session it belongs to (opening another filter starts a new session). */
@@ -95,7 +95,8 @@ type SaveFlow = 'closed' | 'dialog' | 'direct';
 /** Identifies the open filter for the editing session: changes when another filter opens (or the open one moves). */
 function filterKeyOf(target: EditorTarget | null): string | null {
   if (target === null) return null;
-  return target.kind === 'draft' ? `draft:${target.entryId}` : `${target.kind}:${target.savedId ?? 'sully'}`;
+  if (target.kind === 'draft') return `draft:${target.entryId}`;
+  return `${target.kind}:${target.savedId ?? `template:${target.basedOn?.template ?? ''}`}`;
 }
 
 /** `search` without `?save=1` (the Save dialog opener), as a `to.search` value. */
@@ -154,15 +155,16 @@ function MessageCard({ title, description, children }: MessageCardProps) {
 /**
  * The filter editor on its three routes: `/loot-filters/draft/:draftId` (a draft in this browser), `/loot-filters/:id`
  * (a saved filter: its owner edits it, anyone else gets the sandbox; a local draft id redirects to the draft route) and
- * `/loot-filters/sully` (the sandbox on the bundled Sully filter). The routes share this component, so moving from a
+ * `/loot-filters/sully` and `/loot-filters/example` (the sandboxes on the bundled templates). The routes share this component, so moving from a
  * draft's route to its saved route after Save (or from the sandbox to the new draft after Copy to my filters) keeps the
  * screen mounted: tabs, the selected rule, the Test form and unapplied JSON text stay.
  */
 export function LootFilterEditorScreen() {
-  const route = editorRouteOf(useParams());
-  const routeKind = route.kind;
-  const routeId = route.kind === 'sully' ? null : route.id;
   const location = useLocation();
+  const route = editorRouteOf(useParams(), location.pathname);
+  const routeKind = route.kind;
+  const routeId = route.kind === 'template' ? null : route.id;
+  const routeTemplate = route.kind === 'template' ? route.template : null;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch();
@@ -194,8 +196,9 @@ export function LootFilterEditorScreen() {
   const [tab, setTab] = useEditorTab();
 
   const [copiedDraftId, setCopiedDraftId] = useState<string | null>(null);
-  const [sullyError, setSullyError] = useState<string | null>(null);
-  const [sullyAttempt, setSullyAttempt] = useState(0);
+  // A failed fetch of a bundled template's file (the template it was for, so another template's route does not show it).
+  const [templateError, setTemplateError] = useState<{ readonly template: BundledTemplateId; readonly message: string } | null>(null);
+  const [templateAttempt, setTemplateAttempt] = useState(0);
   const [saveFlow, setSaveFlow] = useState<SaveFlow>('closed');
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirm, setConfirm] = useState<'discard' | 'delete' | null>(null);
@@ -263,22 +266,25 @@ export function LootFilterEditorScreen() {
       dispatch(fetchSharedFilterRequested(routeId));
       return;
     }
-    if (current?.kind === 'sandbox' && current.savedId === null) return;
+    if (routeTemplate === null) return;
+    if (targetMatchesRoute(current, { kind: 'template', template: routeTemplate }, null)) return;
     dispatch(resetSaveStatus());
     let cancelled = false;
-    fetchTemplateText().then(
+    fetchTemplateText(routeTemplate).then(
       (text) => {
-        if (!cancelled) dispatch(openSandbox({ text, name: TEMPLATE_NAME, basedOn: templateBasedOn() }));
+        if (cancelled) return;
+        const { name } = BUNDLED_TEMPLATES[routeTemplate];
+        dispatch(openSandbox({ text, name, basedOn: templateBasedOn(routeTemplate) }));
       },
       (error: unknown) => {
-        console.error('[Loot filters] Could not load the template', error);
-        if (!cancelled) setSullyError(error instanceof Error ? error.message : String(error));
+        console.error(`[Loot filters] Could not load the template ${routeTemplate}`, error);
+        if (!cancelled) setTemplateError({ template: routeTemplate, message: error instanceof Error ? error.message : String(error) });
       }
     );
     return () => {
       cancelled = true;
     };
-  }, [dispatch, navigate, store, hydrated, routeKind, routeId, location.search, sullyAttempt]);
+  }, [dispatch, navigate, store, hydrated, routeKind, routeId, routeTemplate, location.search, templateAttempt]);
 
   // The viewer changed (signed in, out or as someone else): a private filter's row depends on who asks, so a saved
   // route fetches its row again (a private filter that was "not found" signed out loads once its owner signs in).
@@ -410,13 +416,13 @@ export function LootFilterEditorScreen() {
         );
       }
     }
-    if (route.kind === 'sully' && sullyError !== null) {
+    if (route.kind === 'template' && templateError?.template === route.template) {
       return (
-        <MessageCard title={`Could not load ${TEMPLATE_NAME}`} description={sullyError}>
+        <MessageCard title={`Could not load ${BUNDLED_TEMPLATES[route.template].name}`} description={templateError.message}>
           <Button
             onClick={() => {
-              setSullyError(null);
-              setSullyAttempt((attempt) => attempt + 1);
+              setTemplateError(null);
+              setTemplateAttempt((attempt) => attempt + 1);
             }}
           >
             Try again

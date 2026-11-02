@@ -167,7 +167,7 @@ describe('pure checks', () => {
     expect(basedOnMoved(shared, shared)).toBe(false);
     expect(basedOnMoved({ ...shared, revision: 3 }, shared)).toBe(true);
     expect(basedOnMoved(shared, undefined)).toBe(true);
-    expect(basedOnMoved(templateBasedOn('0.7.0'), templateBasedOn('0.6.11'))).toBe(true);
+    expect(basedOnMoved(templateBasedOn('sullys-qol', '0.7.0'), templateBasedOn('sullys-qol', '0.6.11'))).toBe(true);
   });
 
   it('insertBasedOnColumns drops the id of a source the lookup found gone, keeping the rest', () => {
@@ -254,7 +254,7 @@ describe('saveFilterRequested: gating', () => {
 describe('saveFilterRequested: insert', () => {
   it('inserts a new draft with its details, metadata and versions; the editor moves to the saved row', async () => {
     const store = signedInStore();
-    const draftId = openNewDraft(store, TEXT, templateBasedOn('0.6.11'));
+    const draftId = openNewDraft(store, TEXT, templateBasedOn('sullys-qol', '0.6.11'));
     mocks.state.insertResult = {
       data: makeDetailRow(A, { user_id: VIEWER_ID, content: TEXT, name: 'Saved', is_private: true }),
       error: null,

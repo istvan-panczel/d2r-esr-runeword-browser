@@ -16,15 +16,16 @@ import {
   selectSharedFiltersLoading,
   selectSharedFiltersLoadingMore,
 } from '../../sharing';
+import { BUNDLED_TEMPLATE_LIST } from '../../utils/template';
+import { BundledTemplateCard } from './BundledTemplateCard';
 import { SharedFilterCard } from './SharedFilterCard';
 import { SharedFilterCardSkeleton } from './SharedFilterCardSkeleton';
 import { SharedFiltersToolbar } from './SharedFiltersToolbar';
-import { SullyFilterCard } from './SullyFilterCard';
 
 const SKELETON_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6'];
 const GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
 
-/** The Shared tab: the pinned Sully card, then the public filters (search, sort, infinite scroll). */
+/** The Shared tab: the pinned bundled templates (Sully's, the example), then the public filters (search, sort, infinite scroll). */
 export function SharedFiltersTab() {
   const dispatch = useDispatch();
   const filters = useSelector(selectSharedFilters);
@@ -52,7 +53,15 @@ export function SharedFiltersTab() {
   return (
     <div className="space-y-4">
       <div className={GRID}>
-        <SullyFilterCard onStart={() => void startFromTemplate()} starting={loadingTemplate} />
+        {BUNDLED_TEMPLATE_LIST.map((template) => (
+          <BundledTemplateCard
+            key={template.id}
+            template={template}
+            onStart={() => void startFromTemplate(template.id)}
+            starting={loadingTemplate === template.id}
+            disabled={loadingTemplate !== null}
+          />
+        ))}
       </div>
 
       <SharedFiltersToolbar />

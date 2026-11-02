@@ -232,10 +232,12 @@ export const router = createBrowserRouter(
           element: routeElement(LootFilterLayout),
           children: [
             { index: true, element: routeElement(LootFilterLibraryScreen) },
-            // One screen for the three editor routes (the param names tell them apart), so moving from a draft's
-            // route to its saved route after Save keeps the editor mounted. Static segments rank above ':id'.
+            // One screen for the editor routes (the param names, or the path of a bundled template's sandbox, tell
+            // them apart), so moving from a draft's route to its saved route after Save keeps the editor mounted.
+            // Static segments rank above ':id'.
             { path: 'draft/:draftId', element: routeElement(LootFilterEditorScreen) },
             { path: 'sully', element: routeElement(LootFilterEditorScreen) },
+            { path: 'example', element: routeElement(LootFilterEditorScreen) },
             { path: ':id', element: routeElement(LootFilterEditorScreen) },
           ],
         },

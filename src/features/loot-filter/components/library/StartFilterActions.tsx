@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
-import { FilePlus2, Sparkles, Upload } from 'lucide-react';
+import { FilePlus2, GraduationCap, Sparkles, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useStartFilter } from '../../hooks/useStartFilter';
-import { TEMPLATE_CREDIT } from '../../utils/template';
+import { BUNDLED_TEMPLATE_LIST } from '../../utils/template';
 import { NameDialog } from '../NameDialog';
 
 interface StartFilterActionsProps {
@@ -11,7 +11,10 @@ interface StartFilterActionsProps {
   readonly ready: boolean;
 }
 
-/** New / Upload / Start from Sully's (each makes a draft and opens it), with the tip on where to start. */
+/**
+ * Start from Sully's (the primary button) / Start from the example / Upload / New (each makes a draft and opens it),
+ * with the tip on where to start and the templates' credits.
+ */
 export function StartFilterActions({ ready }: StartFilterActionsProps) {
   const { createNew, upload, startFromTemplate, loadingTemplate } = useStartFilter();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -20,10 +23,17 @@ export function StartFilterActions({ ready }: StartFilterActionsProps) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => void startFromTemplate()} disabled={!ready || loadingTemplate}>
-          {loadingTemplate ? <Spinner /> : <Sparkles />}
-          Start from Sully&apos;s QoL filter
-        </Button>
+        {BUNDLED_TEMPLATE_LIST.map((template, index) => (
+          <Button
+            key={template.id}
+            variant={index === 0 ? 'default' : 'outline'}
+            onClick={() => void startFromTemplate(template.id)}
+            disabled={!ready || loadingTemplate !== null}
+          >
+            {loadingTemplate === template.id ? <Spinner /> : index === 0 ? <Sparkles /> : <GraduationCap />}
+            {template.startLabel}
+          </Button>
+        ))}
         <Button variant="outline" onClick={() => fileInput.current?.click()} disabled={!ready}>
           <Upload />
           Upload
@@ -51,11 +61,16 @@ export function StartFilterActions({ ready }: StartFilterActionsProps) {
         />
       </div>
       <p className="max-w-3xl text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">Tip:</span> most players start from Sully&apos;s QoL filter, or upload a filter
-        someone shared, and change what they need. A new filter starts blank, with no rules, so every item shows as the game shows it; start
+        <span className="font-medium text-foreground">Tip:</span> most players start from Sully&apos;s QoL filter for a full filter, or
+        upload a filter someone shared, and change what they need. To learn how rules work, start from the example: a small filter whose
+        every rule explains itself in its comment. A new filter starts blank, with no rules, so every item shows as the game shows it; start
         there only if you know the format. The Rules tab has example rules to add either way.
       </p>
-      <p className="text-xs text-muted-foreground">{TEMPLATE_CREDIT}.</p>
+      <div className="space-y-0.5 text-xs text-muted-foreground">
+        {BUNDLED_TEMPLATE_LIST.map((template) => (
+          <p key={template.id}>{template.credit}.</p>
+        ))}
+      </div>
 
       <NameDialog
         open={newOpen}

@@ -1,7 +1,8 @@
 import type { LootFilterInsert, LootFilterRow } from '@/core/supabase/types';
 import { parseLootFilter } from '../engine/parse';
 import type { LootFilterBasedOn, LootFilterEntry } from '../store/types';
-import { TEMPLATE_ID, TEMPLATE_NAME, TEMPLATE_VERSION } from './template';
+import { checkFilterText } from './readFilterText';
+import { BUNDLED_TEMPLATES, EXAMPLE_TEMPLATE, SULLYS_QOL_TEMPLATE, type BundledTemplateId } from './template';
 
 type BasedOnColumns = Pick<
   LootFilterInsert,
@@ -21,11 +22,10 @@ function clip(text: string, max: number): string {
   return characters.length <= max ? text : characters.slice(0, max).join('');
 }
 
-/** `basedOn` of a filter started from the bundled template at `version` (default: the bundled one; null: unknown). */
-export function templateBasedOn(version: string | null = TEMPLATE_VERSION): LootFilterBasedOn {
-  return version === null
-    ? { template: TEMPLATE_ID, label: TEMPLATE_NAME }
-    : { template: TEMPLATE_ID, version, label: `${TEMPLATE_NAME} v${version}` };
+/** `basedOn` of a filter started from a bundled template at `version` (default: the bundled one; null: unknown). */
+export function templateBasedOn(id: BundledTemplateId, version: string | null = BUNDLED_TEMPLATES[id].version): LootFilterBasedOn {
+  const { name } = BUNDLED_TEMPLATES[id];
+  return version === null ? { template: id, label: name } : { template: id, version, label: `${name} v${version}` };
 }
 
 /**
@@ -38,18 +38,51 @@ export function templateVersionOf(version: string | undefined): string | null {
   return trimmed.replace(/^v/i, '');
 }
 
+/** Folds case and outer spaces for comparing a file's title or author. */
+function fold(text: string | undefined): string {
+  return text?.trim().toLowerCase() ?? '';
+}
+
+/** The bundled template a file is, by its `title` (or Sully's `author`); null when it names none of them. */
+function templateOfFile(title: string | undefined, author: string | undefined): BundledTemplateId | null {
+  if (fold(title) === fold(SULLYS_QOL_TEMPLATE.name) || fold(author) === fold(SULLYS_QOL_TEMPLATE.author)) return SULLYS_QOL_TEMPLATE.id;
+  if (fold(title) === fold(EXAMPLE_TEMPLATE.name)) return EXAMPLE_TEMPLATE.id;
+  return null;
+}
+
 /**
- * `basedOn` for an old `source: 'template'` draft written before drafts recorded it: the template at the file's own
- * `version` when that looks like a template version (else of unknown version, as when the text cannot be read).
+ * `basedOn` for an old `source: 'template'` draft written before drafts recorded it (only Sully's filter was bundled
+ * then): the template the file names (Sully's by its title or author, the example by its title; null for neither or
+ * when the text cannot be read), at the file's own `version` when that looks like a template version (else of unknown
+ * version).
  */
-export function inferTemplateBasedOn(text: string): LootFilterBasedOn {
-  let version: string | undefined;
+export function inferTemplateBasedOn(text: string): LootFilterBasedOn | null {
+  let file: { readonly title?: string; readonly author?: string; readonly version?: string };
   try {
-    version = parseLootFilter(text).filter.version;
+    file = parseLootFilter(text).filter;
   } catch {
-    version = undefined;
+    return null;
   }
-  return templateBasedOn(templateVersionOf(version));
+  const id = templateOfFile(file.title, file.author);
+  return id === null ? null : templateBasedOn(id, templateVersionOf(file.version));
+}
+
+/** What Start from a bundled template adds to the library (`importText`'s input). */
+export interface TemplateStartInput {
+  readonly name: string;
+  readonly text: string;
+  readonly source: 'template';
+  readonly basedOn: LootFilterBasedOn;
+}
+
+/**
+ * The draft that Start from a bundled template adds: named after the template, recording it at its bundled version.
+ * Throws when the fetched `text` cannot be read as a filter (a broken deploy or an HTML error page).
+ */
+export function templateStartInput(id: BundledTemplateId, text: string): TemplateStartInput {
+  const check = checkFilterText(text);
+  if (!check.ok) throw new Error(check.message);
+  return { name: BUNDLED_TEMPLATES[id].name, text, source: 'template', basedOn: templateBasedOn(id) };
 }
 
 /** A draft's `basedOn`, inferred for old template drafts that do not record one. */

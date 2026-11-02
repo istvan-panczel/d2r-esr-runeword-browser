@@ -11,7 +11,7 @@ import {
   sourceIdsOf,
   updatedOnLine,
 } from './library';
-import { TEMPLATE_ID } from './template';
+import { EXAMPLE_TEMPLATE, SULLYS_QOL_TEMPLATE } from './template';
 
 const A = filterId(1);
 const B = filterId(2);
@@ -144,11 +144,24 @@ describe('filterUpdateStatus', () => {
   });
 
   it('compares a template-based filter with the bundled template version', () => {
-    const fromTemplate = makeSummary(A, { based_on_template: TEMPLATE_ID, based_on_version: '0.6.9', based_on_label: 'Sully' });
-    expect(filterUpdateStatus(fromTemplate, {}, '0.6.11')).toEqual({ kind: 'update', note: null });
-    expect(filterUpdateStatus({ ...fromTemplate, based_on_version: '0.6.11' }, {}, '0.6.11')).toBeNull();
-    expect(filterUpdateStatus({ ...fromTemplate, based_on_version: null }, {}, '0.6.11')).toBeNull();
-    expect(filterUpdateStatus({ ...fromTemplate, based_on_template: 'other' }, {}, '0.6.11')).toBeNull();
+    const versions = { 'sullys-qol': { version: '0.6.11' }, example: { version: '1.2.0' } };
+    const fromTemplate = makeSummary(A, { based_on_template: 'sullys-qol', based_on_version: '0.6.9', based_on_label: 'Sully' });
+    expect(filterUpdateStatus(fromTemplate, {}, versions)).toEqual({ kind: 'update', note: null });
+    expect(filterUpdateStatus({ ...fromTemplate, based_on_version: '0.6.11' }, {}, versions)).toBeNull();
+    expect(filterUpdateStatus({ ...fromTemplate, based_on_version: null }, {}, versions)).toBeNull();
+    expect(filterUpdateStatus({ ...fromTemplate, based_on_template: 'other' }, {}, versions)).toBeNull();
+    // The bundled versions by default.
+    expect(filterUpdateStatus({ ...fromTemplate, based_on_version: SULLYS_QOL_TEMPLATE.version }, {})).toBeNull();
+  });
+
+  it('compares an example-based filter with the bundled example version, not with Sully', () => {
+    const versions = { 'sullys-qol': { version: '0.6.11' }, example: { version: '1.2.0' } };
+    const fromExample = makeSummary(A, { based_on_template: 'example', based_on_version: '1.0.0', based_on_label: 'Example v1.0.0' });
+    expect(filterUpdateStatus(fromExample, {}, versions)).toEqual({ kind: 'update', note: null });
+    expect(filterUpdateStatus({ ...fromExample, based_on_version: '1.2.0' }, {}, versions)).toBeNull();
+    expect(filterUpdateStatus({ ...fromExample, based_on_version: '1.10.0' }, {}, versions)).toBeNull();
+    expect(filterUpdateStatus({ ...fromExample, based_on_version: EXAMPLE_TEMPLATE.version }, {})).toBeNull();
+    expect(filterUpdateStatus({ ...fromExample, based_on_version: '0.9.0' }, {})).toEqual({ kind: 'update', note: null });
   });
 });
 
