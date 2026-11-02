@@ -99,7 +99,16 @@ export function LootFilterLibraryScreen() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button onClick={() => void handleTemplate()} disabled={!hydrated || loadingTemplate}>
+            {loadingTemplate ? <Spinner /> : <Sparkles />}
+            Start from Sully&apos;s QoL filter
+          </Button>
+          <Button variant="outline" onClick={() => fileInput.current?.click()} disabled={!hydrated}>
+            <Upload />
+            Upload
+          </Button>
           <Button
+            variant="outline"
             onClick={() => {
               setNameDialog({ kind: 'new' });
             }}
@@ -107,14 +116,6 @@ export function LootFilterLibraryScreen() {
           >
             <FilePlus2 />
             New filter
-          </Button>
-          <Button variant="outline" onClick={() => fileInput.current?.click()} disabled={!hydrated}>
-            <Upload />
-            Upload
-          </Button>
-          <Button variant="outline" onClick={() => void handleTemplate()} disabled={!hydrated || loadingTemplate}>
-            {loadingTemplate ? <Spinner /> : <Sparkles />}
-            Start from Sully&apos;s QoL filter
           </Button>
           <input
             ref={fileInput}
@@ -128,6 +129,11 @@ export function LootFilterLibraryScreen() {
             }}
           />
         </div>
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Tip:</span> most players start from Sully&apos;s QoL filter, or upload a filter
+          someone shared, and change what they need. A new filter starts blank, with no rules, so every item shows as the game shows it;
+          start there only if you know the format. The Rules tab has example rules to add either way.
+        </p>
         <p className="text-xs text-muted-foreground">{TEMPLATE_CREDIT}.</p>
       </div>
 
@@ -141,7 +147,7 @@ export function LootFilterLibraryScreen() {
             <Filter className="size-8 text-muted-foreground" aria-hidden />
             <p className="font-medium">No filters yet</p>
             <p className="text-sm text-muted-foreground">
-              Start a new filter, upload one you already have, or begin from Sully&apos;s QoL filter.
+              Begin from Sully&apos;s QoL filter (recommended), upload one you already have, or start a blank filter.
             </p>
           </CardContent>
         </Card>
@@ -171,7 +177,9 @@ export function LootFilterLibraryScreen() {
         }}
         title={nameDialog?.kind === 'rename' ? 'Rename filter' : 'New filter'}
         description={
-          nameDialog?.kind === 'rename' ? undefined : "It also becomes the filter's title (Settings tab), which the launcher shows."
+          nameDialog?.kind === 'rename'
+            ? undefined
+            : "A blank filter with no rules. The name also becomes the filter's title (Settings tab), which the launcher shows."
         }
         initialName={nameDialog?.kind === 'rename' ? nameDialog.entry.name : 'My filter'}
         submitLabel={nameDialog?.kind === 'rename' ? 'Rename' : 'Create'}

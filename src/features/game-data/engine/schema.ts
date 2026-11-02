@@ -301,8 +301,11 @@ export interface LootFilterUniqueOrSet {
 export interface LootFilterDataBundle {
   /** Every weapons/armor/misc row with a code, first row per code */
   items: LootFilterItem[];
-  /** Every itemstatcost.txt row: id = row number (= `*ID`), name = `Stat` */
-  stats: { id: number; name: string }[];
+  /**
+   * Every itemstatcost.txt row: id = row number (= `*ID`), name = `Stat`; label = the affix browser's label
+   * (affixes.json `stats[].label`, "Bonus to Strength %"), omitted when it would be the name
+   */
+  stats: { id: number; name: string; label?: string }[];
   /** Every levels.txt row with an `Id`; act is the 0-based `Act` column */
   areas: { id: number; name: string; act: number }[];
   /** sounds.txt `Sound` by row number (`sounds[row]`; row 0 is the blank "none" row) */

@@ -170,8 +170,9 @@ export function buildPickerOptions(data: LootFilterDataBundle, types: TypesBundl
         key: stat.name,
         value: stat.name,
         label: stat.name,
-        detail: String(stat.id),
-        search: searchText(stat.name, stat.id),
+        // The in-game wording ("Bonus to Strength %" next to "Strength"), so a search for it finds the stat
+        detail: stat.label === undefined ? String(stat.id) : `${stat.label} · ${String(stat.id)}`,
+        search: searchText(stat.name, stat.id, stat.label),
       })),
     areas: [...data.areas]
       .sort((a, b) => a.act - b.act || a.id - b.id)

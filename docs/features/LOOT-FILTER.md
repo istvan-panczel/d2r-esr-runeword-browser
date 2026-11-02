@@ -179,7 +179,11 @@ chunk (about 6.5 KB gzip); a documented exception, see [SAGAS.md](../technical/S
 ## Library screen
 
 Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip download, the troubleshooting line from
-"Using a filter in the game"), and:
+"Using a filter in the game"), and the buttons in this order: **Start from Sully's QoL filter** (the primary button),
+**Upload**, **New filter** (outline). A "Tip:" line under them says most players start from Sully's filter or upload
+one someone shared and change what they need; a new filter starts blank (no rules, so every item shows as the game
+shows it) and is for authors who know the format; the Rules tab has example rules either way. The empty state and the
+New filter dialog ("A blank filter with no rules. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
@@ -268,7 +272,22 @@ rule scrolls the editor into view).
   and area names, stat names and the names of their params (skill, tab, class), comment, style, name changes and chat
   lines), **Add rule** (an empty rule after the
   selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
-  The search text includes `disabled` for a disabled rule, so searching "disabled" lists them.
+  The search text includes `disabled` for a disabled rule, so searching "disabled" lists them. An empty rule list says
+  "No rules yet. …" and points to the example rules and to Sully's QoL filter (a link to the library).
+- **Example rules** (`rules/ExampleRules.tsx`, `utils/exampleRules.ts`): a collapsed box under the toolbar. Its intro
+  says most players start from Sully's filter (or a shared one) and adapt it, where an example goes (after the
+  selected rule, else at the end) and how rules run (top to bottom, every matching rule applies, later labels win, a
+  matching hide rule hides the item and stops). Then one card per example (title, what it does and why it is built
+  that way, **Add this rule**, which adds it like Add rule and selects it): hide magic and rare weapons except those
+  with +All Skills, Faster Cast Rate or Increased Attack Speed (`< 1` exceptions in `itemStats`); rings and amulets
+  with 10% Faster Cast Rate and 10% Magic Find (all of); small charms with Magic Find or Faster Hit Recovery (any of);
+  Ist to Zod runes (`r74`–`r83`) with `tink.mp3`, the `rune` icon and a border (bundled files, so the .zip download
+  carries them); hide inferior weapons and armour (a narrow hide rule); normal or superior swords with exactly 4
+  sockets (`sockets` vs `maxSockets`); The Oculus by unique id (418, the dropped row, and 973, the Ancient Coupon row,
+  with quality unique since set ids overlap). Each rule has a `comment` starting "Example:". None checks Enhanced
+  Damage or Defense (see "Known plugin limits"). `exampleRules.test.ts` writes and reads every example, validates it
+  against the real game data with no diagnostic, checks the bundled sound and icon names and the ids, and runs the
+  hide, all-of and any-of examples through the evaluator.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
 Mythical`: items/types/uniques by name when the bundles are in, codes otherwise, then quality, tier, flags, item level,
   sockets, stats, difficulty, areas, and the main action: `hide`, `→ style X`, the stripped replaceName/prefix/suffix or
@@ -325,7 +344,10 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   file numbers kept until that part changes (`utils/matchValues.ts`); number matches (`itemLevel`, `sockets`,
   `maxSockets`): any / exactly / list (`1, 2, 3`) / range (min only or max only allowed); flags any / yes / no; stat
   check rows: stat picker, param, op (`>=` for new rows), value, two values for `between`
-  (`utils/statChecks.ts`); the param is described under "Stat params" below. The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
+  (`utils/statChecks.ts`); the param is described under "Stat params" below. The stat picker lists itemstatcost names
+  with the in-game label and id as detail ("strengthpercent · Bonus to Strength % · 255", lootfilter.json
+  `stats[].label`) and searches the label too, so "strength" shows the flat and the percent stat apart and "faster
+  cast" finds `item_fastercastrate`. The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
   `itemStatsAnyOf`: the item on the ground) and "Character stats, all of" / "Character stats, any of" (`playerStats`,
   `playerStatsAnyOf`: your character, not the item), because users mistook "Item stats, any of" for the player list;
   the rule summary prefixes character checks with `character` (`character any of strength <10`), the Test tab says
@@ -572,9 +594,20 @@ focus returns to the button).
   in red, text-sm, medium weight, headline first ("Currently only works on jewels and charms (reads 0 on weapons).
   Reads 0 on weapons (the game keeps it off their stats; confirmed in game); works on jewels and charms (confirmed on
   a jewel)."); a durability row, if one were listed, keeps the amber note (untested); see "Known plugin limits".
-- **Search**: every whitespace term must match the label, the stat name, an affix name, a param name (below), or
-  (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its name or param
-  names and every term is there or in the row's label or stat name.
+- **Search**: every whitespace term must match the label, the stat name, an affix name, an affix text line, a param
+  name (below), or (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its
+  name, text lines or param names and every term is there or in the row's label or stat name. The text lines matter
+  because ESR names affixes after themes: the flat "+X to All Attributes" suffixes are "of the Sky / Stars / Heavens /
+  Zodiac" (stats 0–3), while the suffix named "of All Attributes" writes the percent stats 255–258. Searching "all
+  attributes" by name alone found only the percent rows, and a user ticked "Bonus to Strength" for +Strength; now it
+  lists Strength, Energy, Dexterity, Vitality and the four "Bonus to … %" rows. An affix's text lines count for a row
+  when the affix writes only that stat or has a single line ("+(10 to 15) to All Attributes" describes all four
+  stats); a hybrid with one line per stat ("Sharp": Enhanced Damage and Attack Rating) adds none, so "attack rating"
+  does not list its Enhanced Damage row. The lines are the affix's tooltip in the list. They are never used to name
+  params (`matchingParams`, `autoPickedParams` and the chip search still read param and affix names only), so a broad
+  search does not pre-pick more.
+- **Labels**: from affixes.json `stats[].label`; the percent twin of a flat stat ends in " %" ("Bonus to Strength %"
+  next to "Strength", "Increase Maximum Life %" next to "Life"; GAME-DATA.md "Affixes" has the rule and the list).
 - **Skill, tab and class params** (`Affix.layers` of affixes.json, named through `LootFilterData.params`): a layered
   row (`layerKind`; the skill, skill tab, class, event and charged stats whose affixes name params) lists the union
   of its affixes' params, and each affix names its own in brackets ("Apprentice's [Demon Skills (Warlock)]": ESR
