@@ -5,6 +5,7 @@ let sagasRegistered = false;
 let authSagaRegistered = false;
 let buildsSagaRegistered = false;
 let favoritesSagaRegistered = false;
+let lootFilterSharingSagaRegistered = false;
 
 function getStartupErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
@@ -93,5 +94,23 @@ export async function startFavorites(): Promise<void> {
     favoritesSagaRegistered = true;
   } catch (error) {
     console.error('[Startup] Failed to load favorites module', error);
+  }
+}
+
+/**
+ * Loads the loot filter sharing module dynamically and starts its saga (shared list, My filters, detail, likes,
+ * downloads, author filters, sources of copies). No-op when Supabase is not configured. Safe to call repeatedly — the
+ * saga registry never starts a saga twice.
+ */
+export async function startLootFilterSharing(): Promise<void> {
+  if (!isSupabaseConfigured || lootFilterSharingSagaRegistered) return;
+
+  try {
+    const { lootFilterSharingSaga } = await import('@/features/loot-filter/sharing/sharingSaga');
+    registerSaga(lootFilterSharingSaga);
+    runSagas();
+    lootFilterSharingSagaRegistered = true;
+  } catch (error) {
+    console.error('[Startup] Failed to load loot filter sharing module', error);
   }
 }

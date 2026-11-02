@@ -97,4 +97,12 @@ describe('loadAfter', () => {
     expect(source).toContain(`loadAfter(() => ${builds}, startBuilds)`);
     expect(source.split(builds)).toHaveLength(2); // the only import of the builds feature is the guarded one
   });
+
+  it('is used by every loot filter route so they wait for startLootFilterSharing()', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/core/router/index.tsx'), 'utf8');
+    const lootFilter = "import('@/features/loot-filter')";
+
+    expect(source).toContain(`loadAfter(() => ${lootFilter}, startLootFilterSharing)`);
+    expect(source.split(lootFilter)).toHaveLength(2);
+  });
 });
