@@ -4,7 +4,8 @@
  * is his `Sullys-QoL-Filter.json` verbatim (v0.6.2 fixed the `9pm` typo and the trailing comma we had patched in
  * v0.6.1, v0.6.3 adds a 500k+ gold stack rule, v0.6.7 a +1 all skills base highlight and "except +all skills" hide rules, v0.6.9 to
  * v0.6.11 hide Ancient Scrolls at level 4, add Mythical Jewels to the rare jewel rule and fix ancient coupon tier lists;
- * its `"activeInLevels": 4` is a number, not a list, so the editor reports one error; strict JSON apart from the `//` comments). Up to ESR 3.2.21
+ * its `"activeInLevels": 4` is a number, not a list, which works in game, so the editor reads it as `[4]` with one warning;
+ * strict JSON apart from the `//` comments). Up to ESR 3.2.21
  * the mod shipped an earlier conversion of the same filter as `LootFilters/esr-default-filter.json`.
  */
 export const TEMPLATE_NAME = "Sully's QoL Filter";

@@ -119,6 +119,11 @@ describe('validateLootFilter', () => {
     ]);
     const noLevels = validateLootFilter({ formatVersion: 1, rules: [{ hide: true, activeInLevels: [1] }], leadingComments: [] });
     expect(noLevels.map((d) => d.path)).toEqual(['rules/0/activeInLevels/0']);
+    // A level written as a single number ("activeInLevels": 5) is checked like a list entry, at the key itself.
+    const bare = validateLootFilter({ ...base, rules: [{ hide: true, activeInLevels: [5], activeInLevelsNumber: 5 }] });
+    expect(bare.map((d) => [d.severity, d.path, d.message])).toEqual([
+      ['error', 'rules/0/activeInLevels', 'There is no filter level with id 5'],
+    ]);
   });
 
   it('reports unknown named values', () => {

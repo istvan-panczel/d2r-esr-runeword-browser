@@ -13,14 +13,21 @@ const errors = (value: unknown) => parse(value).diagnostics.filter((d) => d.seve
 describe('parseLootFilter on Sully’s filter', () => {
   const { filter, diagnostics } = parseLootFilter(SULLY);
 
-  it('reads it with one error, keeping order', () => {
-    // v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4` (a number, not a list); it stays in passthrough,
-    // and the Test tab skips the rule (the plugin most likely switches it off).
-    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([
-      { severity: 'error', message: '"activeInLevels": expected a list of numbers', path: 'rules/98/activeInLevels', rule: 98 },
+  it('reads it without errors, keeping order', () => {
+    // v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4` (a number, not a list), which works in game: it is
+    // read as [4] with a warning, and the number is kept for writing it back.
+    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
+    expect(diagnostics.filter((d) => d.path.includes('activeInLevels'))).toEqual([
+      {
+        severity: 'warning',
+        message: 'A single number works in game; [4] is the documented form.',
+        path: 'rules/98/activeInLevels',
+        rule: 98,
+      },
     ]);
-    expect(filter.rules[98]?.passthrough).toEqual({ activeInLevels: 4 });
-    expect(filter.rules.flatMap((rule, index) => (wrongShapedKeys(rule).length > 0 ? [index] : []))).toEqual([98]);
+    expect(filter.rules[98]).toMatchObject({ activeInLevels: [4], activeInLevelsNumber: 4, hide: true });
+    expect(filter.rules[98]?.passthrough).toBeUndefined();
+    expect(filter.rules.flatMap((rule, index) => (wrongShapedKeys(rule).length > 0 ? [index] : []))).toEqual([]);
     expect(filter.rules).toHaveLength(223);
     expect(Object.keys(filter.styles ?? {})).toEqual([
       'Mythical',
@@ -165,6 +172,29 @@ describe('parseLootFilter', () => {
       ['error', 'rules/1/location', 1],
       ['error', 'rules/1/labelBackground', 1],
     ]);
+  });
+
+  it('reads a single-number activeInLevels as a one-level list with a warning', () => {
+    const { filter, diagnostics } = parse({ formatVersion: 1, rules: [{ itemCodes: ['r01'], activeInLevels: 7, hide: true }] });
+    expect(filter.rules[0]).toEqual({ itemCodes: ['r01'], activeInLevels: [7], activeInLevelsNumber: 7, hide: true });
+    expect(wrongShapedKeys(filter.rules[0] ?? {})).toEqual([]);
+    expect(diagnostics).toEqual([
+      {
+        severity: 'warning',
+        message: 'A single number works in game; [7] is the documented form.',
+        path: 'rules/0/activeInLevels',
+        rule: 0,
+      },
+    ]);
+  });
+
+  it('keeps other wrong shapes of activeInLevels in passthrough with an error', () => {
+    for (const levels of ['4', { id: 4 }, ['4']]) {
+      const { filter, diagnostics } = parse({ formatVersion: 1, rules: [{ activeInLevels: levels, hide: true }] });
+      expect(filter.rules[0]).toEqual({ hide: true, passthrough: { activeInLevels: levels } });
+      expect(wrongShapedKeys(filter.rules[0] ?? {})).toEqual(['activeInLevels']);
+      expect(diagnostics.map((d) => [d.severity, d.path])).toEqual([['error', 'rules/0/activeInLevels']]);
+    }
   });
 
   it('reads per-language texts and rejects unknown languages', () => {

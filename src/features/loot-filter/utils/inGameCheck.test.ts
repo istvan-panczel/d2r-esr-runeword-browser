@@ -1,4 +1,5 @@
 import { evaluateFilter, type TestItem } from '../engine/evaluate';
+import { parseLootFilter } from '../engine/parse';
 import type { LootFilter, LootFilterRule } from '../engine/types';
 import {
   checkedStats,
@@ -99,12 +100,25 @@ describe('inGameCheckRule', () => {
   });
 
   it('refuses a rule with wrong-shaped keys, which the copy would leave out', () => {
-    const wrong: LootFilterRule = { ...source, passthrough: { activeInLevels: 4 } };
-    expect(inGameCheckRule(filterOf([wrong]), 0, TEST_LOOKUP)).toEqual({ ok: false, reason: wrongShapeReason(['activeInLevels']) });
+    const wrong: LootFilterRule = { ...source, passthrough: { sockets: 'two' } };
+    expect(inGameCheckRule(filterOf([wrong]), 0, TEST_LOOKUP)).toEqual({ ok: false, reason: wrongShapeReason(['sockets']) });
     expect(wrongShapeReason(['activeInLevels'])).toBe('This rule has a wrong-shaped key (activeInLevels); fix it first.');
     expect(wrongShapeReason(['sockets', 'sound'])).toBe('This rule has wrong-shaped keys (sockets, sound); fix it first.');
     // A wrong-shaped comment does not count (the plugin ignores comments), nor does an unknown key.
     expect(inGameCheckRule(filterOf([{ ...source, passthrough: { comment: 1, formula: 'x' } }]), 0, TEST_LOOKUP).ok).toBe(true);
+  });
+
+  it('accepts a rule whose file wrote a single-number activeInLevels, keeping the level', () => {
+    const { filter } = parseLootFilter(
+      JSON.stringify({
+        formatVersion: 1,
+        filterLevels: [{ id: 4, name: 'Maps' }],
+        rules: [{ itemTypes: ['weap'], activeInLevels: 4, itemStats: [{ stat: 'item_maxdamage_percent', op: '<', value: 1 }], hide: true }],
+      })
+    );
+    const result = inGameCheckRule(filter, 0, TEST_LOOKUP);
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.rule.activeInLevels).toEqual([4]);
   });
 
   it('changes nothing but the name when inserted before its rule', () => {
