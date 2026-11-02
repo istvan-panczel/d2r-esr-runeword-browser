@@ -1,6 +1,6 @@
 import { readPersistentJson, writePersistentJson, type PersistentStorage } from '@/core/hooks/usePersistentState';
 import { isPlainObject } from '../engine/parse';
-import type { LootFilterEntry } from './types';
+import type { LootFilterBasedOn, LootFilterEntry } from './types';
 
 export const LIBRARY_STORAGE_KEY = 'loot-filters/library';
 /** Where an unreadable stored library is copied once before the app starts writing a fresh one. */
@@ -14,6 +14,11 @@ export interface StoredLibrary {
 
 const SOURCES: readonly string[] = ['blank', 'upload', 'template'];
 
+/**
+ * Checks the required fields only. The optional ones (`savedId`, `savedOwnerId`, `savedRevision`, `basedOn`) never
+ * reject an entry: {@link normalizeEntry} drops a malformed one. Older app versions check the same required fields, so
+ * they keep reading a library that has the optional ones.
+ */
 export function isLootFilterEntry(value: unknown): value is LootFilterEntry {
   return (
     isPlainObject(value) &&
@@ -30,6 +35,55 @@ export function isLootFilterEntry(value: unknown): value is LootFilterEntry {
   );
 }
 
+type OptionalKey = 'savedId' | 'savedOwnerId' | 'savedRevision' | 'basedOn';
+
+const isId = (value: unknown): value is string => typeof value === 'string' && value !== '';
+const isRevision = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 1;
+
+/** `basedOn` with malformed optional keys dropped; undefined when it is not an object with a string `label`. */
+function normalizeBasedOn(value: unknown): LootFilterBasedOn | undefined {
+  if (!isPlainObject(value) || typeof value.label !== 'string') return undefined;
+  return {
+    ...(isId(value.id) ? { id: value.id } : {}),
+    ...(isRevision(value.revision) ? { revision: value.revision } : {}),
+    ...(isId(value.template) ? { template: value.template } : {}),
+    ...(isId(value.version) ? { version: value.version } : {}),
+    label: value.label,
+  };
+}
+
+function isWellFormedBasedOn(value: unknown): boolean {
+  return (
+    isPlainObject(value) &&
+    typeof value.label === 'string' &&
+    (value.id === undefined || isId(value.id)) &&
+    (value.revision === undefined || isRevision(value.revision)) &&
+    (value.template === undefined || isId(value.template)) &&
+    (value.version === undefined || isId(value.version))
+  );
+}
+
+/** The entry with malformed optional fields dropped; the same object when they are all fine (or absent). */
+export function normalizeEntry(entry: LootFilterEntry): LootFilterEntry {
+  // Typed as stored data: the fields may hold anything another version (or a hand edit) wrote.
+  const { savedId, savedOwnerId, savedRevision, basedOn, ...rest } = entry as Omit<LootFilterEntry, OptionalKey> &
+    Readonly<Record<OptionalKey, unknown>>;
+  const fine =
+    (savedId === undefined || isId(savedId)) &&
+    (savedOwnerId === undefined || isId(savedOwnerId)) &&
+    (savedRevision === undefined || isRevision(savedRevision)) &&
+    (basedOn === undefined || isWellFormedBasedOn(basedOn));
+  if (fine) return entry;
+  const normalizedBasedOn = normalizeBasedOn(basedOn);
+  return {
+    ...rest,
+    ...(isId(savedId) ? { savedId } : {}),
+    ...(isId(savedOwnerId) ? { savedOwnerId } : {}),
+    ...(isRevision(savedRevision) ? { savedRevision } : {}),
+    ...(normalizedBasedOn ? { basedOn: normalizedBasedOn } : {}),
+  };
+}
+
 export function isStoredLibrary(value: unknown): value is StoredLibrary {
   if (!isPlainObject(value) || value.version !== LIBRARY_STORAGE_VERSION || !Array.isArray(value.entries)) return false;
   const entries: readonly unknown[] = value.entries;
@@ -42,12 +96,13 @@ export function isStoredLibrary(value: unknown): value is StoredLibrary {
 }
 
 /**
- * The stored library's entries; empty when nothing is stored. A stored value that fails the guard (corrupt, or
- * written by a newer app version) is copied to {@link LIBRARY_BACKUP_STORAGE_KEY} so the next save cannot destroy it.
+ * The stored library's entries (malformed optional fields dropped); empty when nothing is stored. A stored value that
+ * fails the guard (corrupt, or written by a newer app version) is copied to {@link LIBRARY_BACKUP_STORAGE_KEY} so the
+ * next save cannot destroy it.
  */
 export function readLibrary(storage: PersistentStorage | null): readonly LootFilterEntry[] {
   const stored = readPersistentJson<StoredLibrary | null>(storage, LIBRARY_STORAGE_KEY, null, isStoredLibrary);
-  if (stored) return stored.entries;
+  if (stored) return stored.entries.map(normalizeEntry);
   if (storage === null) return [];
   try {
     const raw = storage.getItem(LIBRARY_STORAGE_KEY);
