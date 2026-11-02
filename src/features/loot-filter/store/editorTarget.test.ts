@@ -399,7 +399,7 @@ describe('takeUpdate', () => {
     expect(selectSaveRequest(wrap(state))).toMatchObject({ kind: 'update', text: LATEST, basedOn: BASED_ON, expectedRevision: 3 });
   });
 
-  it('replace updates an existing draft (and a draft target), keeping its revision', () => {
+  it('replace updates an existing draft (and a draft target of a saved filter), keeping its revision', () => {
     const draft = entry('d1', { savedId: 'row-1', savedOwnerId: OWNER, savedRevision: 2 });
     const saved = run(savedState([draft]), {
       type: takeUpdate.type,
@@ -407,12 +407,33 @@ describe('takeUpdate', () => {
     });
     expect(saved.library.entries).toEqual([{ ...draft, text: LATEST, basedOn: BASED_ON, updatedAt: LATER }]);
 
-    const local = run(initialState, hydrate([entry('d')]), at(open('d')), {
+    const local = run(initialState, hydrate([draft]), at(open('d1')), {
       type: takeUpdate.type,
       payload: { text: LATEST, basedOn: BASED_ON, mode: 'replace', id: 'n', now: LATER },
     });
-    expect(local.library.entries[0]).toMatchObject({ id: 'd', text: LATEST, basedOn: BASED_ON });
+    expect(local.library.entries[0]).toMatchObject({ id: 'd1', text: LATEST, basedOn: BASED_ON, savedId: 'row-1', savedRevision: 2 });
     expect(local.editor.filter?.title).toBe('Latest');
+  });
+
+  it('replace refuses a never-saved draft (its only copy); new still adds the latest beside it', () => {
+    const only = entry('d', {
+      source: 'template',
+      basedOn: { template: 'sullys-qol', version: '0.6.3', label: "Sully's QoL Filter v0.6.3" },
+    });
+    const opened = run(initialState, hydrate([only]), at(open('d')));
+    const replaced = reducer(opened, {
+      type: takeUpdate.type,
+      payload: { text: LATEST, basedOn: BASED_ON, mode: 'replace', id: 'n', now: LATER },
+    });
+    expect(replaced).toBe(opened);
+    expect(replaced.library.entries).toEqual([only]);
+
+    const added = reducer(opened, {
+      type: takeUpdate.type,
+      payload: { text: LATEST, basedOn: BASED_ON, mode: 'new', id: 'n', now: LATER },
+    });
+    expect(added.library.entries.map((item) => item.id)).toEqual(['d', 'n']);
+    expect(added.library.entries[0]).toBe(only);
   });
 
   it('replace is a no-op in the sandbox', () => {

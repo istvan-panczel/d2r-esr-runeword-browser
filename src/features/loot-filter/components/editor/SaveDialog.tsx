@@ -19,17 +19,21 @@ import {
   selectSaveFilterError,
   selectSaveFilterStatus,
   type SaveFilterMode,
-  type SharedFilterDetails,
 } from '../../sharing';
 import type { DiagnosticCounts } from '../../store/selectors';
+import type { SaveDialogDetails } from '../../utils/editorRoute';
 
 interface SaveDialogProps {
   readonly open: boolean;
   readonly onClose: () => void;
   /** `insert`: the first save of a new draft (name, description, Private); `update`: a saved filter's changes. */
   readonly kind: 'insert' | 'update';
-  /** The draft's name (insert) or the saved filter's details (update; Save as a new filter reuses them). */
-  readonly details: SharedFilterDetails;
+  /**
+   * The draft's name (insert) or the saved filter's details (update; Save as a new filter reuses them). `isPrivate` is
+   * null while a saved filter's privacy is unknown: no "What changed" note is asked and Save as a new filter starts
+   * private.
+   */
+  readonly details: SaveDialogDetails;
   readonly counts: DiagnosticCounts;
   /** The JSON tab has text that was not applied: Save stores the model without it. */
   readonly jsonUnapplied: boolean;
@@ -66,17 +70,18 @@ function SaveForm({ kind, details, counts, jsonUnapplied, onClose }: Omit<SaveDi
   const conflict = useSelector(selectSaveFilterConflict);
   const [name, setName] = useState(details.name);
   const [description, setDescription] = useState(details.description);
-  const [isPrivate, setIsPrivate] = useState(details.isPrivate);
+  const insert = kind === 'insert';
+  // Insert: public unless ticked. Save as a new filter (after a conflict): the saved filter's privacy, private when unknown.
+  const [isPrivate, setIsPrivate] = useState(details.isPrivate ?? !insert);
   const [note, setNote] = useState('');
 
   const saving = status === RequestState.LOADING;
-  const insert = kind === 'insert';
-  const askNote = !insert && !details.isPrivate;
+  const askNote = !insert && details.isPrivate === false;
   const problems = countsText(counts);
 
   const save = (mode: SaveFilterMode) => {
     if (mode === 'asNew') {
-      dispatch(saveFilterRequested({ mode, details }));
+      dispatch(saveFilterRequested({ mode, details: { name: details.name, description: details.description, isPrivate } }));
     } else if (insert) {
       dispatch(saveFilterRequested({ mode, details: { name, description, isPrivate } }));
     } else {
@@ -124,9 +129,11 @@ function SaveForm({ kind, details, counts, jsonUnapplied, onClose }: Omit<SaveDi
         <DialogDescription>
           {insert
             ? 'A saved filter is public unless you tick Private: everyone can open, download and copy it.'
-            : details.isPrivate
-              ? 'Only you can see this filter.'
-              : 'Everyone sees the new version; copies of it get "Update available".'}
+            : details.isPrivate === null
+              ? 'Saves your changes to the saved filter.'
+              : details.isPrivate
+                ? 'Only you can see this filter.'
+                : 'Everyone sees the new version; copies of it get "Update available".'}
         </DialogDescription>
       </DialogHeader>
 
@@ -160,20 +167,16 @@ function SaveForm({ kind, details, counts, jsonUnapplied, onClose }: Omit<SaveDi
               }}
             />
           </div>
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="save-filter-private"
-              checked={isPrivate}
-              disabled={saving}
-              onCheckedChange={(checked) => {
-                setIsPrivate(checked === true);
-              }}
-            />
-            <Label htmlFor="save-filter-private" className="text-sm font-normal leading-snug">
-              Private: only you can see it (you can change this later in Details)
-            </Label>
-          </div>
+          <PrivateCheckbox checked={isPrivate} disabled={saving} onChange={setIsPrivate}>
+            Private: only you can see it (you can change this later in Details)
+          </PrivateCheckbox>
         </>
+      )}
+
+      {!insert && conflict !== null && (
+        <PrivateCheckbox checked={isPrivate} disabled={saving} onChange={setIsPrivate}>
+          Save as a new filter: Private (only you can see the new filter)
+        </PrivateCheckbox>
       )}
 
       {askNote && (
@@ -248,5 +251,30 @@ function SaveForm({ kind, details, counts, jsonUnapplied, onClose }: Omit<SaveDi
         )}
       </DialogFooter>
     </form>
+  );
+}
+
+interface PrivateCheckboxProps {
+  readonly checked: boolean;
+  readonly disabled: boolean;
+  readonly onChange: (checked: boolean) => void;
+  readonly children: React.ReactNode;
+}
+
+function PrivateCheckbox({ checked, disabled, onChange, children }: PrivateCheckboxProps) {
+  return (
+    <div className="flex items-start gap-2">
+      <Checkbox
+        id="save-filter-private"
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={(next) => {
+          onChange(next === true);
+        }}
+      />
+      <Label htmlFor="save-filter-private" className="text-sm font-normal leading-snug">
+        {children}
+      </Label>
+    </div>
   );
 }

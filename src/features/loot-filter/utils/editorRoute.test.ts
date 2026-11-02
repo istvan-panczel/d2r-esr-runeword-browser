@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { EditorTarget } from '../store/types';
 import { templateBasedOn } from './basedOn';
-import { authorLabelOf, editorPathOf, editorRouteOf, sourceUpdateOf, targetMatchesRoute } from './editorRoute';
+import {
+  authorLabelOf,
+  editorPathOf,
+  editorRouteOf,
+  isSameEditorFilter,
+  keepsOwnerSandbox,
+  saveDialogDetailsOf,
+  sourceUpdateOf,
+  targetMatchesRoute,
+} from './editorRoute';
 import { TEMPLATE_VERSION } from './template';
 
 const saved: EditorTarget = {
@@ -64,6 +73,49 @@ describe('targetMatchesRoute', () => {
   });
 });
 
+describe('isSameEditorFilter', () => {
+  it('is the same draft, or the same saved filter in the same kind of target', () => {
+    expect(isSameEditorFilter({ kind: 'draft', entryId: 'd' }, { kind: 'draft', entryId: 'd' })).toBe(true);
+    expect(isSameEditorFilter({ kind: 'draft', entryId: 'd' }, { kind: 'draft', entryId: 'e' })).toBe(false);
+    expect(isSameEditorFilter(saved, { ...saved, draftId: 'other', revision: 3 })).toBe(true);
+    expect(isSameEditorFilter(saved, { ...saved, savedId: 'row-2' })).toBe(false);
+    expect(isSameEditorFilter(saved, sandbox)).toBe(false);
+    expect(isSameEditorFilter({ kind: 'draft', entryId: 'row-1' }, saved)).toBe(false);
+    expect(isSameEditorFilter(saved, null)).toBe(false);
+    expect(isSameEditorFilter(null, null)).toBe(false);
+  });
+});
+
+describe('keepsOwnerSandbox', () => {
+  const route = { kind: 'saved', id: 'row-1' } as const;
+
+  it("keeps the owner's sandbox while it has edits", () => {
+    expect(keepsOwnerSandbox(sandbox, true, route, 'me')).toBe(true);
+  });
+
+  it('switches without edits, for someone else, signed out, on another route or another target', () => {
+    expect(keepsOwnerSandbox(sandbox, false, route, 'me')).toBe(false);
+    expect(keepsOwnerSandbox(sandbox, true, route, 'someone')).toBe(false);
+    expect(keepsOwnerSandbox(sandbox, true, route, null)).toBe(false);
+    expect(keepsOwnerSandbox(sandbox, true, { kind: 'saved', id: 'row-2' }, 'me')).toBe(false);
+    expect(keepsOwnerSandbox(saved, true, route, 'me')).toBe(false);
+    expect(keepsOwnerSandbox(sully, true, { kind: 'sully' }, 'me')).toBe(false);
+  });
+});
+
+describe('saveDialogDetailsOf', () => {
+  it('starts a new draft public, a saved filter from its row, and leaves an unknown privacy unknown', () => {
+    expect(saveDialogDetailsOf('Mine', true, null)).toEqual({ name: 'Mine', description: '', isPrivate: false });
+    expect(saveDialogDetailsOf('Mine', false, { description: 'About', is_private: true })).toEqual({
+      name: 'Mine',
+      description: 'About',
+      isPrivate: true,
+    });
+    expect(saveDialogDetailsOf('Mine', false, { description: null, is_private: false }).isPrivate).toBe(false);
+    expect(saveDialogDetailsOf('Mine', false, null)).toEqual({ name: 'Mine', description: '', isPrivate: null });
+  });
+});
+
 describe('authorLabelOf', () => {
   it('formats the tag', () => {
     expect(authorLabelOf({ display_name: 'Hero', discriminator: 4242, avatar_url: null })).toBe('Hero#4242');
@@ -89,6 +141,10 @@ describe('sourceUpdateOf', () => {
       name: 'X',
     });
     expect(sourceUpdateOf(basedOn, { src: null })).toEqual({ kind: 'gone', id: 'src' });
+  });
+
+  it('reads a saved copy that lost its based_on_id (source deleted) as gone, like the library', () => {
+    expect(sourceUpdateOf({ revision: 2, label: 'X by Y#1' }, {})).toEqual({ kind: 'gone', id: null });
   });
 
   it('compares a template-based filter with the bundled version', () => {

@@ -1,5 +1,5 @@
 import { compareVersions } from '@/core/utils/versionUtils';
-import type { SharedFilterAuthor, SourceRevision } from '../sharing/types';
+import type { SharedFilterAuthor, SharedFilterSummary, SourceRevision } from '../sharing/types';
 import type { EditorTarget, LootFilterBasedOn } from '../store/types';
 import { TEMPLATE_ID, TEMPLATE_VERSION } from './template';
 
@@ -33,6 +33,55 @@ export function targetMatchesRoute(target: EditorTarget | null, route: EditorRou
   return owner === (target.kind === 'saved');
 }
 
+/**
+ * Whether two targets are the same open filter (the same draft, or the same saved / shared filter in the same kind of
+ * target): an action started on `before` (a fetch awaited) only applies while `now` is still that filter.
+ */
+export function isSameEditorFilter(before: EditorTarget | null, now: EditorTarget | null): boolean {
+  if (before === null || now === null) return false;
+  if (before.kind === 'draft' || now.kind === 'draft') {
+    return before.kind === 'draft' && now.kind === 'draft' && before.entryId === now.entryId;
+  }
+  return before.kind === now.kind && before.savedId === now.savedId;
+}
+
+/**
+ * The viewer just signed in as the owner of the filter open in the sandbox, which has edits: the editor keeps the
+ * sandbox (and offers the switch to the editable version) instead of reopening it as the owner's filter, which would
+ * drop those edits. A sandbox without edits switches by itself.
+ */
+export function keepsOwnerSandbox(target: EditorTarget | null, dirty: boolean, route: EditorRoute, viewerId: string | null): boolean {
+  return (
+    target?.kind === 'sandbox' &&
+    dirty &&
+    route.kind === 'saved' &&
+    target.savedId === route.id &&
+    viewerId !== null &&
+    target.ownerId === viewerId
+  );
+}
+
+/** What the Save dialog starts from: the name, description and Private of the filter; `isPrivate` null when unknown. */
+export interface SaveDialogDetails {
+  readonly name: string;
+  readonly description: string;
+  readonly isPrivate: boolean | null;
+}
+
+/**
+ * The Save dialog's details: a new draft starts public with no description; a saved filter (or a draft of one) takes
+ * them from its row (`saved`: the loaded detail or the My filters entry), and its privacy is unknown (null) until that
+ * row is known, so nothing defaults it to public.
+ */
+export function saveDialogDetailsOf(
+  name: string,
+  newDraft: boolean,
+  saved: Pick<SharedFilterSummary, 'description' | 'is_private'> | null
+): SaveDialogDetails {
+  if (newDraft) return { name, description: '', isPrivate: false };
+  return { name, description: saved?.description ?? '', isPrivate: saved?.is_private ?? null };
+}
+
 /** "Name#1234", as authors are shown everywhere. */
 export function authorLabelOf(author: SharedFilterAuthor | null): string {
   return author === null ? 'Unknown author' : `${author.display_name}#${String(author.discriminator)}`;
@@ -46,13 +95,14 @@ export type SourceUpdate =
   | { readonly kind: 'shared'; readonly id: string; readonly revision: number; readonly changeNote: string | null; readonly name: string }
   /** The bundled template is newer than the one the filter started from. */
   | { readonly kind: 'template'; readonly fromVersion: string | null }
-  /** The shared source was deleted or made private. */
-  | { readonly kind: 'gone'; readonly id: string };
+  /** The shared source was deleted or made private (`id` null: deleted, the saved copy lost its `based_on_id`). */
+  | { readonly kind: 'gone'; readonly id: string | null };
 
 /**
  * Compares a filter's `basedOn` with what is known about its source: `revisions` from the source lookup (null: no longer
  * shared, absent: not looked up), the bundled template's version for template-based filters (an unknown version counts
- * as older).
+ * as older). A copy with a label but neither a source id nor a template lost its source (`on delete set null`), as
+ * `filterUpdateStatus` reads it in the library.
  */
 export function sourceUpdateOf(
   basedOn: LootFilterBasedOn | null,
@@ -66,6 +116,7 @@ export function sourceUpdateOf(
     if (source.revision <= (basedOn.revision ?? 0)) return { kind: 'none' };
     return { kind: 'shared', id: source.id, revision: source.revision, changeNote: source.change_note, name: source.name };
   }
+  if (basedOn.template === undefined) return { kind: 'gone', id: null };
   if (basedOn.template === TEMPLATE_ID) {
     const version = basedOn.version ?? null;
     return version === null || compareVersions(version, TEMPLATE_VERSION) < 0

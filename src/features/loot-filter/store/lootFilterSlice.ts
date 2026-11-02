@@ -569,9 +569,10 @@ const lootFilterSlice = createSlice({
 
     /**
      * Update available: `new` adds the source's latest text as a new draft (editor untouched). `replace` loads it into the
-     * open draft or saved filter as unsaved changes, written to the draft right away together with the new `basedOn`
-     * (so a later Save writes `based_on_revision` / `based_on_version`); the edits it replaces are dropped (the UI asks
-     * first). `replace` is a no-op in the sandbox or with nothing open.
+     * open saved filter (or a draft of one) as unsaved changes, written to the draft right away together with the new
+     * `basedOn` (so a later Save writes `based_on_revision` / `based_on_version`); the edits it replaces are dropped (the
+     * UI asks first) and Discard changes goes back to the saved version. `replace` is a no-op in the sandbox, with nothing
+     * open, and on a never-saved draft: that draft is the only copy of its filter, so the UI offers only `new` there.
      */
     takeUpdate: {
       reducer(state, action: PayloadAction<TakeUpdatePayload>): State {
@@ -586,6 +587,7 @@ const lootFilterSlice = createSlice({
         if (target === null || target.kind === 'sandbox') return state;
         let written: State;
         if (target.kind === 'draft') {
+          if (findEntry(state, target.entryId)?.savedId === undefined) return state;
           written = updateEntry(state, target.entryId, (entry) => ({ ...entry, text, basedOn, updatedAt: now }));
         } else if (findEntry(state, target.draftId)) {
           written = updateEntry(state, target.draftId, (entry) => ({ ...entry, text, basedOn, updatedAt: now }));

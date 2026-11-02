@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Info, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { isSupabaseConfigured } from '@/core/supabase/config';
+import type { RootState } from '@/core/store';
 import { RequestState } from '@/core/types';
 import { selectAuthUserId } from '@/features/auth';
 import { fetchSourceFilterRequested, fetchSourceRevisionsRequested, selectSourceFilter, selectSourceRevisions } from '../../sharing';
 import { takeUpdate } from '../../store/lootFilterSlice';
+import { selectEditorTarget } from '../../store/selectors';
 import type { LootFilterBasedOn } from '../../store/types';
 import { sharedBasedOn, templateBasedOn } from '../../utils/basedOn';
-import { authorLabelOf, sourceUpdateOf } from '../../utils/editorRoute';
+import { authorLabelOf, isSameEditorFilter, sourceUpdateOf } from '../../utils/editorRoute';
 import { TEMPLATE_NAME, TEMPLATE_VERSION, fetchTemplateText } from '../../utils/template';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 
@@ -21,15 +23,21 @@ interface UpdateBannerProps {
   readonly basedOn: LootFilterBasedOn | null;
   /** Replace with the latest would drop unsaved changes: ask first. */
   readonly hasUnsavedChanges: boolean;
+  /**
+   * Whether Replace with the latest is offered: a saved filter (or a draft of one), which Discard changes can take back
+   * to the saved version. A never-saved draft is the only copy of its filter, so it only gets Add as a new filter.
+   */
+  readonly replaceable: boolean;
 }
 
 /**
  * "Update available" for a copy whose source has a newer revision (looked up when the filter opens), or a filter
- * started from an older bundled Sully template: Replace with the latest (as unsaved changes) or Add as a new filter.
- * A source that was deleted or made private reads "no longer shared" (dismissable).
+ * started from an older bundled Sully template: Replace with the latest (as unsaved changes; saved filters only) or Add
+ * as a new filter. A source that was deleted or made private reads "no longer shared" (dismissable).
  */
-export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) {
+export function UpdateBanner({ basedOn, hasUnsavedChanges, replaceable }: UpdateBannerProps) {
   const dispatch = useDispatch();
+  const store = useStore<RootState>();
   const navigate = useNavigate();
   const viewerId = useSelector(selectAuthUserId);
   const revisions = useSelector(selectSourceRevisions);
@@ -58,7 +66,8 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) 
   if (update.kind === 'none') return null;
 
   if (update.kind === 'gone') {
-    if (dismissed === update.id) return null;
+    const dismissKey = update.id ?? basedOn?.label ?? '';
+    if (dismissed === dismissKey) return null;
     return (
       <div role="note" className="flex items-start gap-2 rounded-md border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
         <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -71,7 +80,7 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) 
           size="icon-sm"
           aria-label="Dismiss"
           onClick={() => {
-            setDismissed(update.id);
+            setDismissed(dismissKey);
           }}
         >
           <X />
@@ -86,6 +95,8 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) 
   const ready = update.kind === 'template' || sourceDetail !== null;
 
   const take = async (mode: 'replace' | 'new') => {
+    // The filter this click was made on: another one may be open by the time the template has loaded.
+    const startedOn = selectEditorTarget(store.getState());
     let text: string;
     let next: LootFilterBasedOn;
     if (update.kind === 'template') {
@@ -105,12 +116,15 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) 
       text = sourceDetail.content;
       next = sharedBasedOn(sourceDetail, authorLabelOf(sourceDetail.profiles));
     }
-    const action = dispatch(takeUpdate({ text, basedOn: next, mode }));
-    if (mode === 'new') {
+    if (!isSameEditorFilter(startedOn, selectEditorTarget(store.getState()))) return;
+    const action = dispatch(takeUpdate({ text, basedOn: next, mode: replaceable ? mode : 'new' }));
+    if (mode === 'new' || !replaceable) {
       void navigate(`/loot-filters/draft/${action.payload.id}`);
-      toast.success('Added the latest version as a new filter');
+      toast.success('Added the latest version as a new filter', { description: 'The filter you had open stays as it is.' });
     } else {
-      toast.success('Loaded the latest version', { description: 'Save to keep it, or Discard changes to go back.' });
+      toast.success('Loaded the latest version', {
+        description: 'Save to keep it, or Discard changes to go back to the saved version.',
+      });
     }
   };
 
@@ -130,6 +144,11 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) 
               ? `“${update.name}”, the filter this one is based on, has a newer version.`
               : `${TEMPLATE_NAME} v${TEMPLATE_VERSION} is bundled now; this filter started from ${update.fromVersion === null ? 'an older version' : `v${update.fromVersion}`}.`}
           </p>
+          {!replaceable && (
+            <p className="text-muted-foreground">
+              This filter was never saved, so the latest version is added as a new filter beside it: yours stays as it is.
+            </p>
+          )}
           {update.kind === 'shared' && update.changeNote !== null && (
             <p className="text-muted-foreground">
               What changed: <span className="italic">{update.changeNote}</span>
@@ -141,19 +160,22 @@ export function UpdateBanner({ basedOn, hasUnsavedChanges }: UpdateBannerProps) 
         </div>
       </div>
       <div className="flex flex-wrap gap-2 pl-6">
-        <Button size="sm" variant="outline" disabled={!ready || busy} onClick={handleReplace}>
-          {busy && <Spinner />}
-          Replace with the latest
-        </Button>
+        {replaceable && (
+          <Button size="sm" variant="outline" disabled={!ready || busy} onClick={handleReplace}>
+            {busy && <Spinner />}
+            Replace with the latest
+          </Button>
+        )}
         <Button size="sm" variant="outline" disabled={!ready || busy} onClick={() => void take('new')}>
+          {busy && !replaceable && <Spinner />}
           Add as a new filter
         </Button>
       </div>
       <ConfirmDeleteDialog
         open={confirmReplace}
         name={null}
-        title="Replace your changes?"
-        description="The latest version replaces this filter's text as unsaved changes; your current edits are dropped. Save afterwards to keep it."
+        title="Replace your unsaved changes?"
+        description="The latest version replaces your unsaved changes to this filter, which are dropped. Save afterwards to keep the latest version; Discard changes goes back to the saved version, not to these edits."
         confirmLabel="Replace"
         onCancel={() => {
           setConfirmReplace(false);

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, FileWarning, Heart, Download as DownloadIcon, Lock, Save, Settings2, Trash2, Undo2 } from 'lucide-react';
+import { ArrowLeft, FileWarning, Heart, Download as DownloadIcon, Lock, Pencil, Save, Settings2, Trash2, Undo2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +35,7 @@ import {
   deleteSharedFilterRequested,
   detailToRow,
   downloadCounted,
+  fetchMyFiltersRequested,
   fetchSharedFilterRequested,
   resetDeleteSharedFilterStatus,
   resetFilterDetailsStatus,
@@ -42,6 +43,8 @@ import {
   saveFilterRequested,
   selectDeleteSharedFilterStatus,
   selectFilterDetailsStatus,
+  selectMyFilters,
+  selectMyFiltersStatus,
   selectSaveFilterStatus,
   selectSavedFilterId,
   selectSharedFilterDetail,
@@ -75,7 +78,7 @@ import {
 } from '../store/selectors';
 import type { EditorTarget } from '../store/types';
 import { templateBasedOn } from '../utils/basedOn';
-import { authorLabelOf, editorRouteOf, targetMatchesRoute } from '../utils/editorRoute';
+import { authorLabelOf, editorRouteOf, keepsOwnerSandbox, saveDialogDetailsOf, targetMatchesRoute } from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
 import { TEMPLATE_NAME, fetchTemplateText } from '../utils/template';
 import { defaultTestItem } from '../utils/testItemForm';
@@ -184,6 +187,8 @@ export function LootFilterEditorScreen() {
   const savedFilterId = useSelector(selectSavedFilterId);
   const deleteStatus = useSelector(selectDeleteSharedFilterStatus);
   const detailsStatus = useSelector(selectFilterDetailsStatus);
+  const myFilters = useSelector(selectMyFilters);
+  const myFiltersStatus = useSelector(selectMyFiltersStatus);
   const { reference } = useLootFilterReference();
   const diagnostics = useSelector((state: RootState) => selectDiagnostics(state, reference));
   const [tab, setTab] = useEditorTab();
@@ -238,7 +243,15 @@ export function LootFilterEditorScreen() {
       return;
     }
     if (routeKind === 'saved' && routeId !== null) {
-      if (current !== null && current.kind !== 'draft' && current.savedId === routeId) return;
+      if (current !== null && current.kind !== 'draft' && current.savedId === routeId) {
+        // Still this filter (Save or Copy moved the route, or only `?tab=` changed): fetch its row only when it is
+        // missing (cleared, or another filter's), so Details, Private and the change note come back.
+        const loaded = selectSharedFilterDetail(state)?.id === routeId;
+        const status = selectSharedFilterDetailStatus(state);
+        if (!isSupabaseConfigured || loaded || status === RequestState.LOADING || selectSharedFilterDetailNotFound(state)) return;
+        dispatch(fetchSharedFilterRequested(routeId));
+        return;
+      }
       dispatch(resetSaveStatus());
       // Local drafts and saved rows both have uuids: an old `/loot-filters/:id` link to a draft goes to its route.
       if (selectLibraryEntry(state, routeId)) {
@@ -267,15 +280,43 @@ export function LootFilterEditorScreen() {
     };
   }, [dispatch, navigate, store, hydrated, routeKind, routeId, location.search, sullyAttempt]);
 
+  // The viewer changed (signed in, out or as someone else): a private filter's row depends on who asks, so a saved
+  // route fetches its row again (a private filter that was "not found" signed out loads once its owner signs in).
+  const viewerSeen = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (!authInitialized) return;
+    const previous = viewerSeen.current;
+    viewerSeen.current = viewerId;
+    if (previous === undefined || previous === viewerId) return;
+    if (!hydrated || !isSupabaseConfigured || routeKind !== 'saved' || routeId === null) return;
+    if (selectLibraryEntry(store.getState(), routeId)) return;
+    dispatch(fetchSharedFilterRequested(routeId));
+  }, [dispatch, store, hydrated, authInitialized, viewerId, routeKind, routeId]);
+
   // A saved filter's row has arrived (or the viewer changed): open it for its owner, as the sandbox for anyone else.
+  // The owner signing in on their own filter's sandbox with edits keeps the sandbox (a banner offers the switch); once
+  // it has no edits (undone), it switches by itself.
+  const editorDirty = editor.dirty;
   useEffect(() => {
     if (routeKind !== 'saved' || routeId === null || !authInitialized) return;
     const state = store.getState();
     const row = selectSharedFilterDetail(state);
     if (selectSharedFilterDetailStatus(state) !== RequestState.SUCCESS || row === null || row.id !== routeId) return;
-    if (targetMatchesRoute(selectEditorTarget(state), { kind: 'saved', id: routeId }, viewerId)) return;
+    const current = selectEditorTarget(state);
+    const savedRoute = { kind: 'saved', id: routeId } as const;
+    if (targetMatchesRoute(current, savedRoute, viewerId)) return;
+    if (keepsOwnerSandbox(current, selectEditor(state).dirty, savedRoute, viewerId)) return;
     dispatch(openSaved({ row: detailToRow(row), viewerId, authorLabel: authorLabelOf(row.profiles) }));
-  }, [dispatch, store, routeKind, routeId, authInitialized, viewerId, detail, detailStatus]);
+  }, [dispatch, store, routeKind, routeId, authInitialized, viewerId, detail, detailStatus, editorDirty]);
+
+  // A draft of a saved filter on its own route: its privacy comes from My filters (fetched here when not loaded yet),
+  // so the Save dialog never treats a private filter as public.
+  const draftSavedId = draftEntry?.savedId ?? null;
+  useEffect(() => {
+    if (!isSupabaseConfigured || draftSavedId === null || viewerId === null || myFiltersStatus !== RequestState.IDLE) return;
+    if (selectSharedFilterDetail(store.getState())?.id === draftSavedId) return;
+    dispatch(fetchMyFiltersRequested());
+  }, [dispatch, store, draftSavedId, viewerId, myFiltersStatus]);
 
   // After Save the open filter is the saved row: replace the draft's (or the previous row's) route with its own.
   useEffect(() => {
@@ -327,7 +368,9 @@ export function LootFilterEditorScreen() {
 
   useSandboxLeavePrompt(target?.kind === 'sandbox' && editor.dirty);
 
-  const showEditor = target !== null && (targetMatchesRoute(target, route, viewerId) || switching);
+  // The owner signed in on their own filter's sandbox with edits: the sandbox stays until they switch or copy.
+  const ownerSandbox = keepsOwnerSandbox(target, editor.dirty, route, viewerId);
+  const showEditor = target !== null && (targetMatchesRoute(target, route, viewerId) || switching || ownerSandbox);
   if (!showEditor) {
     if (!hydrated) return <CenteredSpinner />;
     if (route.kind === 'draft' && routeEntry === undefined) {
@@ -394,6 +437,11 @@ export function LootFilterEditorScreen() {
   const canSave = isSupabaseConfigured && target.kind !== 'sandbox';
   const isOwnerSaved = target.kind === 'saved';
   const countedId = isSupabaseConfigured && target.kind !== 'draft' ? target.savedId : null;
+  // The saved filter a saved target or a draft of one edits: its loaded row, else its My filters entry (privacy).
+  const savedId = target.kind === 'draft' ? draftOfSaved : target.savedId;
+  const savedSummary =
+    row ?? (savedId === null ? null : (myFilters.find((item) => item.id === savedId) ?? (detail?.id === savedId ? detail : null)));
+  const saveDetails = saveDialogDetailsOf(name, newDraft, target.kind === 'sandbox' ? null : savedSummary);
 
   // The stored text keeps the file's comments and formatting; it is re-serialized only while edits are not yet saved.
   const downloadText = () => (editor.dirty && filter !== null ? serializeLootFilter(filter) : text);
@@ -427,7 +475,7 @@ export function LootFilterEditorScreen() {
     }
     dispatch(resetSaveStatus());
     // A private filter's later saves need nothing from the dialog; it opens only to show a failure.
-    if (isOwnerSaved && row?.is_private === true && !jsonUnapplied) {
+    if (!newDraft && saveDetails.isPrivate === true && !jsonUnapplied) {
       setSaveFlow('direct');
       dispatch(saveFilterRequested({ mode: 'normal' }));
     } else {
@@ -446,6 +494,11 @@ export function LootFilterEditorScreen() {
     toast.success('Copied to your filters', {
       description: isSupabaseConfigured ? 'It stays in this browser until you save it.' : undefined,
     });
+  };
+
+  const handleOpenEditable = () => {
+    if (row === null) return;
+    dispatch(openSaved({ row: detailToRow(row), viewerId, authorLabel: authorLabelOf(row.profiles) }));
   };
 
   const handleDiscard = () => {
@@ -542,6 +595,18 @@ export function LootFilterEditorScreen() {
     <div>
       <div className="mb-4 space-y-3 border-b pb-3">
         <BackToLibrary />
+        {ownerSandbox && (
+          <div role="note" className="space-y-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
+            <p>
+              <span className="font-semibold">This is your filter.</span> You signed in while trying changes here, and they are not saved.{' '}
+              <span className="font-medium">Copy to my filters</span> keeps them as a new filter; opening the editable version drops them.
+            </p>
+            <Button size="sm" variant="outline" disabled={row === null} onClick={handleOpenEditable}>
+              <Pencil />
+              Open the editable version
+            </Button>
+          </div>
+        )}
         {target.kind === 'sandbox' && <SandboxBanner target={target} detail={row} dirty={editor.dirty} onCopy={handleCopy} />}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 space-y-1">
@@ -655,7 +720,7 @@ export function LootFilterEditorScreen() {
         {!isSupabaseConfigured && target.kind !== 'sandbox' && (
           <p className="text-xs text-muted-foreground">Saving and sharing are off in this build: filters stay in this browser.</p>
         )}
-        {target.kind !== 'sandbox' && <UpdateBanner basedOn={basedOn} hasUnsavedChanges={hasUnsavedChanges} />}
+        {target.kind !== 'sandbox' && <UpdateBanner basedOn={basedOn} hasUnsavedChanges={hasUnsavedChanges} replaceable={!newDraft} />}
         <div role="tablist" className="flex flex-wrap gap-1" aria-label="Filter editor tabs">
           {EDITOR_TABS.map((item) => (
             <button
@@ -684,11 +749,7 @@ export function LootFilterEditorScreen() {
           open={saveDialogOpen}
           onClose={closeSaveDialog}
           kind={newDraft ? 'insert' : 'update'}
-          details={
-            newDraft
-              ? { name, description: '', isPrivate: false }
-              : { name, description: row?.description ?? '', isPrivate: row?.is_private ?? false }
-          }
+          details={saveDetails}
           counts={countDiagnostics(diagnostics)}
           jsonUnapplied={jsonUnapplied}
         />
