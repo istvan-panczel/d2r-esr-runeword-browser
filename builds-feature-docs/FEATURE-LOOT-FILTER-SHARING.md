@@ -145,7 +145,8 @@ interface LootFilterEntry {
 - `duplicate` copies neither `savedId*` nor `basedOn`.
 - Drafts with a `savedOwnerId` other than the signed-in user are hidden (kept in storage); signed out, they show under
   "Sign in to save".
-- Old `source: 'template'` entries infer `basedOn` from the file's `version`.
+- Old `source: 'template'` entries infer `basedOn` from the file's `version` when it looks like a template version
+  (dotted numbers, at most 50 characters; else of unknown version). `basedOnColumns` clips the label to 200.
 - localStorage holds about 5 MB: roughly ten very large drafts. The existing "storage full" toast covers it.
 
 ### Copies and updates
@@ -157,7 +158,10 @@ interface LootFilterEntry {
   keeps its label). Template-based filters compare with `TEMPLATE_VERSION`.
 - The banner shows the source's change note and offers **Replace with the latest** (loads it as unsaved changes and
   records the new `based_on_revision` / `based_on_version` in the draft so Save writes them; confirms first when a draft
-  already exists) and **Add as a new filter**.
+  already exists; saved filters only, Discard changes goes back to the saved version) and **Add as a new filter** (the
+  only action on a never-saved draft: it is the only copy of that filter).
+- A copy whose source was deleted before its first save inserts without `based_on_id` (left out when the lookup found
+  the source gone, else a retry after the `23503` foreign key error), keeping the label: "no longer shared".
 
 ### Routes
 
@@ -178,7 +182,8 @@ row. Old bookmarks to a draft stop working after its first Save.
 - Card: name, 2-line description, author (avatar + `name#1234`, links to `/user/:userId`), "Created on ESR x · plugin y
   · filter v z" (and "updated on …" when re-saved), rule count, level names, likes, downloads, "based on X", the latest
   change note, Private badge (own only); **Open** and **Download**.
-- **My filters** tab (default when signed in): the user's saved filters (badges: Private, Unsaved changes, Update
+- **My filters** tab (default when signed in, and signed out when this browser has drafts, so a returning visitor
+  never thinks their filters are gone; the drafts never wait on the sign-in state): the user's saved filters (badges: Private, Unsaved changes, Update
   available), then "Unsaved in this browser" with the drafts (Save / Discard). New / Upload / Start from Sully's live
   here. Signed out: the drafts with "Sign in to save".
 

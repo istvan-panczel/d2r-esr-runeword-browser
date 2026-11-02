@@ -226,8 +226,10 @@ chunk (about 6.5 KB gzip); a documented exception, see [SAGAS.md](../technical/S
 ## Library screen
 
 `screens/LootFilterLibraryScreen.tsx`, `components/library/`. Title and a short how-to, then two tabs (shadcn Tabs,
-`?tab=shared|mine`; without the parameter **My filters** when signed in, **Shared** when signed out, a spinner while
-the sign-in state is unknown; `resolveLibraryTab` in `utils/library.ts`). Without the Supabase env vars there are no
+`?tab=shared|mine`; without the parameter **My filters** when signed in or when this browser has drafts (a returning
+signed-out visitor sees their filters at once, even before the sign-in state is known), else **Shared**; without drafts
+a spinner while the sign-in state is unknown, for at most 4 seconds, then it goes on as signed out; `resolveLibraryTab`
+in `utils/library.ts`). While the sign-in state is unknown My filters holds back its "Sign in to save" prompt. Without the Supabase env vars there are no
 tabs: the page is the My filters content without the saved section (the drafts, as before sharing) with the note
 "Sharing is off in this build of the site".
 
@@ -269,7 +271,8 @@ tabs: the page is the My filters content without the saved section (the drafts, 
   Save dialog), Download, Duplicate, Rename (not on the edits of a saved filter: its name is a server field) and
   **Discard** (confirmed: "Discard draft?" for a new filter, "Discard changes?" for the edits of a saved one). A new
   draft opens on `/loot-filters/draft/:id`, the edits of a saved filter on `/loot-filters/:savedId` (`draftLinks`);
-  signed out, those (`needsSignIn`) open as plain drafts and Save reads **Sign in to save**. Without Supabase the card
+  signed out, those (`needsSignIn`) open as plain drafts and Save reads **Sign in to save**; so does a draft that does
+  not record its owner (`savedOwnerId` missing or dropped), which the saved route would not find. Without Supabase the card
   has no Save and says Delete.
 
 The how-to above the tabs covers the launcher import, the `sounds`/`icons` folders, the zip download and the
@@ -355,7 +358,11 @@ else clears the sharing detail and dispatches `fetchSharedFilterRequested(id)` (
 found"); the Sully route fetches the bundled template and dispatches `openSandbox` with `templateBasedOn()`. A second
 effect waits for the auth state and the fetched row, then dispatches `openSaved({ row, viewerId, authorLabel })`
 (`authorLabel` "Name#1234"); `targetMatchesRoute` also checks the kind, so signing in or out on a saved route reopens
-it as the owner's filter or the sandbox. A missing row shows "Filter not found" (with a link to a local draft of that
+it as the owner's filter or the sandbox. A change of viewer refetches the row (a private filter that was "not found"
+signed out loads once its owner signs in), and a route whose target already matches fetches the row when it is
+missing. The owner signing in on their own filter's sandbox with edits keeps the sandbox (`keepsOwnerSandbox`): a note
+offers **Open the editable version** (dropping those edits) beside Copy to my filters; without edits it switches by
+itself. A missing row shows "Filter not found" (with a link to a local draft of that
 saved filter when there is one), a failed fetch "Could not load the filter" with Try again. Unmounting dispatches
 `close()` and `resetSaveStatus()`.
 
@@ -371,10 +378,12 @@ build".
 
 **Save dialog** (`components/editor/SaveDialog.tsx`): the first save of a new draft asks for the name (prefilled),
 an optional description and Private (unticked: public by default); a later save of a public filter asks for an optional
-"What changed" note (up to 200 characters, shown to copies); a private filter saves at once without the dialog (it
+"What changed" note (up to 200 characters, shown to copies; a draft of a saved filter on its own route reads the
+privacy from My filters, fetched when needed, and while it is unknown no note is asked); a private filter saves at once without the dialog (it
 opens only to show a failure). The dialog shows the validator's counts ("N errors, M warnings: you can still save"),
 warns when the JSON tab has unapplied text, and shows the save's error; on a conflict it offers **Overwrite** (row
-changed elsewhere) and **Save as a new filter** (always; the only choice when the row is gone or not the user's).
+changed elsewhere) and **Save as a new filter** (always; the only choice when the row is gone or not the user's) with a
+Private checkbox (the saved filter's privacy; ticked when unknown).
 Signed out it says "Sign in to save" with a Sign in button.
 
 **Save saga** (`sharing/saveSaga.ts`, forked from `lootFilterSharingSaga`): `saveFilterRequested({ details?, changeNote?,
@@ -386,7 +395,9 @@ mode: 'normal' | 'overwrite' | 'asNew' })` (`takeLeading`):
    errors and warnings do not block);
 4. insert (a new draft, or `asNew`): name, description, Private, the file metadata (`filterMetadata`), `esr_version`
    from `db.metadata` `esrVersion`, `plugin_version` = `LOOT_FILTER_PLUGIN_VERSION`, `based_on_*` from the draft's
-   `basedOn` (`basedOnColumns`), `change_note` null; `.insert(...).select(detail).single()`;
+   `basedOn` (`basedOnColumns`: label clipped to 200 characters, a version over 50 left out), `change_note` null;
+   `.insert(...).select(detail).single()`. A `based_on_id` the source lookup found gone is left out, and a foreign key
+   error (`23503`: the source was deleted) retries once without it, keeping the label;
 5. update: content, metadata, `esr_version_updated`, `plugin_version_updated`, `change_note` (the note or null), and
    `based_on_revision` / `based_on_version` / `based_on_label` when the draft's `basedOn` moved (`basedOnMoved`); a
    compare-and-swap `.eq('id').eq('revision', expected)` unless `overwrite`. No row back: a lookup decides `changed`
@@ -411,8 +422,11 @@ edited, the author's profile link, the description, "Based on …" and the lates
 `basedOn.id` it dispatches `fetchSourceRevisionsRequested([id])` on open; `sourceUpdateOf` reads the result: a higher
 revision shows the source's name and change note, prefetches its file (`fetchSourceFilterRequested`) and offers
 **Replace with the latest** (`takeUpdate` replace, as unsaved changes with the new `basedOn`; asks first when there are
-unsaved changes, which a draft always has) and **Add as a new filter** (`takeUpdate` new, then the new draft's route); a
-missing source reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
+unsaved changes, which a draft always has; Discard changes then goes back to the saved version) and **Add as a new
+filter** (`takeUpdate` new, then the new draft's route). A never-saved draft is the only copy of its filter, so it gets
+only Add as a new filter (the banner says why, and the reducer refuses `replace` there). Either action applies only
+while the filter it was clicked on is still open (the template is fetched first). A missing source, or a saved copy
+that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
 `TEMPLATE_VERSION` (or of unknown version) offers the same two actions with the bundled file.
 
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
