@@ -111,3 +111,9 @@ export function toSharedFilterSummary(row: SharedFilterListRow): SharedFilterSum
 export function toSharedFilterDetail(row: SharedFilterDetailRow): SharedFilterDetail {
   return { ...row, levels: readLevels(row.levels) };
 }
+
+/** The table row of a fetched filter (without the embedded author), as the editor's `openSaved` / `saveSucceeded` take it. */
+export function detailToRow(detail: SharedFilterDetail): LootFilterRow {
+  const { profiles: _profiles, levels, ...row } = detail;
+  return { ...row, levels: levels === null ? null : levels.map((level): Json => ({ id: level.id, name: level.name })) };
+}

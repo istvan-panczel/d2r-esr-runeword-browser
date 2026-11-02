@@ -16,6 +16,13 @@ import sharingReducer, {
   fetchSharedFiltersRequested,
   fetchSharedFiltersSuccess,
   fetchSourceRevisionsSuccess,
+  fetchSourceFilterRequested,
+  fetchSourceFilterSucceeded,
+  resetSaveStatus,
+  saveFilterFailed,
+  saveFilterRequested,
+  saveFilterSucceeded,
+  updateFilterDetailsSucceeded,
   selectSharedFilterDetailLiked,
   selectVisibleFilterIds,
   sharedFilterLikesLoaded,
@@ -244,5 +251,54 @@ describe('lootFilterSharing slice', () => {
     store.dispatch(fetchLatestFiltersSuccess([makeSummary(A)]));
     store.dispatch(fetchSharedFilterSuccess(makeDetail(C)));
     expect(selectVisibleFilterIds(root(store))).toEqual([A, B, C]);
+  });
+});
+
+describe('lootFilterSharing slice: saves and details', () => {
+  it('a new public filter heads the newest-first lists, My filters and becomes the detail', () => {
+    const store = signedInStore();
+    store.dispatch(fetchSharedFiltersSuccess({ items: [makeSummary(B)], cursor: null, hasMore: false, append: false }));
+    store.dispatch(fetchLatestFiltersSuccess([makeSummary(B), makeSummary(C)]));
+    store.dispatch(fetchMyFiltersSuccess({ userId: VIEWER_ID, items: [makeSummary(C, { user_id: VIEWER_ID })] }));
+    store.dispatch(saveFilterRequested({ mode: 'normal' }));
+    expect(sharing(store).save.status).toBe(RequestState.LOADING);
+
+    store.dispatch(saveFilterSucceeded({ row: makeDetail(A, { user_id: VIEWER_ID }), inserted: true }));
+    expect(sharing(store).shared.items.map((item) => item.id)).toEqual([A, B]);
+    expect(sharing(store).latest.map((item) => item.id)).toEqual([A, B, C]);
+    expect(sharing(store).myFilters.map((item) => item.id)).toEqual([A, C]);
+    // Lists never hold the file.
+    expect(sharing(store).myFilters[0]).not.toHaveProperty('content');
+    expect(sharing(store).detail?.id).toBe(A);
+    expect(sharing(store).save).toMatchObject({ status: RequestState.SUCCESS, savedId: A });
+  });
+
+  it('an update replaces the row in place; going private removes it from the public lists', () => {
+    const store = signedInStore();
+    store.dispatch(fetchSharedFiltersSuccess({ items: [makeSummary(B), makeSummary(A)], cursor: null, hasMore: false, append: false }));
+    store.dispatch(fetchSharedFilterSuccess(makeDetail(A, { user_id: VIEWER_ID })));
+    store.dispatch(updateFilterDetailsSucceeded(makeSummary(A, { user_id: VIEWER_ID, name: 'Renamed' })));
+    expect(sharing(store).shared.items.map((item) => item.name)).toEqual([`Filter ${B}`, 'Renamed']);
+    // The detail keeps its file.
+    expect(sharing(store).detail).toMatchObject({ name: 'Renamed', content: makeDetail(A).content });
+
+    store.dispatch(updateFilterDetailsSucceeded(makeSummary(A, { user_id: VIEWER_ID, is_private: true })));
+    expect(sharing(store).shared.items.map((item) => item.id)).toEqual([B]);
+    expect(sharing(store).myFilters.map((item) => item.id)).toEqual([A]);
+  });
+
+  it('a failed save keeps its conflict until reset', () => {
+    const store = signedInStore();
+    store.dispatch(saveFilterFailed({ error: 'changed', conflict: 'changed' }));
+    expect(sharing(store).save).toMatchObject({ status: RequestState.ERROR, conflict: 'changed' });
+    store.dispatch(resetSaveStatus());
+    expect(sharing(store).save).toMatchObject({ status: RequestState.IDLE, conflict: null, error: null });
+  });
+
+  it('ignores a source fetch answer for another id', () => {
+    const store = setupStore();
+    store.dispatch(fetchSourceFilterRequested(A));
+    store.dispatch(fetchSourceFilterSucceeded(makeDetail(B)));
+    expect(sharing(store).sourceFilter).toMatchObject({ id: A, status: RequestState.LOADING, detail: null });
   });
 });

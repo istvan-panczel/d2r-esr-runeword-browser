@@ -493,8 +493,10 @@ const lootFilterSlice = createSlice({
         if (remaining) next = updateEntry(state, remaining.id, () => remaining);
         else if (draft) next = removeEntry(state, draft.id);
         const target = next.editor.target;
+        // Save as a new filter from a saved one sends the saved target's draft: the editor moves to the new row.
         const onThisFilter =
-          (target?.kind === 'draft' && target.entryId === entryId) || (target?.kind === 'saved' && target.savedId === row.id);
+          (target?.kind === 'draft' && target.entryId === entryId) ||
+          (target?.kind === 'saved' && (target.savedId === row.id || target.draftId === entryId));
         if (!onThisFilter) return next;
         const saved: EditorTarget = {
           kind: 'saved',
@@ -510,6 +512,21 @@ const lootFilterSlice = createSlice({
         return withEditor(next, { target: saved });
       },
       prepare: (input: SaveSucceededInput) => stamp({ ...input, draftId: newEntryId() }),
+    },
+
+    /**
+     * A saved filter's name changed on the server (the Details dialog): the open target and the drafts of that filter
+     * take it (a draft created later for it gets the new name too).
+     */
+    savedFilterRenamed(state, action: PayloadAction<{ readonly savedId: string; readonly name: string }>): State {
+      const { savedId, name } = action.payload;
+      const target = state.editor.target;
+      const renamedTarget = target !== null && target.kind !== 'draft' && target.savedId === savedId && target.name !== name;
+      const entries = state.library.entries.map((entry) => (entry.savedId === savedId && entry.name !== name ? { ...entry, name } : entry));
+      const changed = entries.some((entry, index) => entry !== state.library.entries[index]);
+      if (!renamedTarget && !changed) return state;
+      const withNames = changed ? withEntries(state, entries) : state;
+      return renamedTarget ? withEditor(withNames, { target: { ...target, name } }) : withNames;
     },
 
     /**
@@ -805,6 +822,7 @@ export const {
   openSandbox,
   close,
   saveSucceeded,
+  savedFilterRenamed,
   discardChanges,
   copyToMyFilters,
   takeUpdate,
