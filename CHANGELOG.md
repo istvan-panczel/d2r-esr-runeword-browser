@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.47.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.46.1...v1.47.0) (2026-11-02)
+
+### Features
+
+* **loot-filter:** add check in game, scaled stat warnings and skip wrong-shaped rules ([58fab67](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/58fab67f25810574801d806f297bb8d320e5479f))
+* **loot-filter:** add example rules and point new users to Sully's filter ([69c8c3e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/69c8c3e05f53b0695fd77d6f29c2e5f49f4052cf))
+* **loot-filter:** let "except items with" own its rows and flag stat quirks in red ([e7dd53c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e7dd53c6903cb19bf24b28e504977072cde632cd))
+* **loot-filter:** merge round 6 except rows, in-game check, examples and sully v0.6.11 ([092e2d2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/092e2d2e0240171d892ef576f57d52cae54052be))
+* **loot-filter:** merge the affix text search, example rules and new user tips ([293181c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/293181c3bf54d19c74e71c034bc8d68a2e320041))
+* **loot-filter:** merge the in-game check helper and scaled stat warnings ([7e93f5d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7e93f5d1dfc1b42a60362b298d63fab1431ef7d3))
+
+### Bug Fixes
+
+* **loot-filter:** find stats by affix text and mark percent attribute stats ([0ca9115](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0ca9115a04663d070764b5999da2934c6e7563c9))
+* **loot-filter:** tighten the in-game check, wrong-shape skip and scaled stat warnings ([2c623e1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2c623e1af82f57813bc6d20f59e9b7c5ae669ee5))
+
+### Documentation
+
+* **loot-filter:** plan filter sharing and an LLM prompt start in the backlog ([129abbe](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/129abbefdcd020ed98abbfb6a611267403cdcaa6))
+
+### Chores
+
+* **loot-filter:** refresh the template to sully's qol filter v0.6.11 ([3b1335b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3b1335b1fa2266db28647b8edc62029ef02e9c56))
+
 ## [1.46.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.46.0...v1.46.1) (2026-11-01)
 
 ### Bug Fixes
