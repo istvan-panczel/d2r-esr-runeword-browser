@@ -32,6 +32,8 @@ import { HowRulesCombine } from './HowRulesCombine';
 import { RuleDiagnostics } from './RuleDiagnostics';
 
 export const RULE_EDITOR_ID = 'loot-filter-rule-editor';
+/** The editor's title ("Rule N"), focusable from script: focus lands there after Check in game swaps the editor. */
+const RULE_TITLE_ID = 'loot-filter-rule-title';
 
 /** The rule's action keys (what `ActionsEditor` edits). */
 function pickActions(rule: LootFilterRule): RuleActions {
@@ -214,6 +216,11 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
     if (!check.ok) return;
     dispatch(addRule({ rule: check.rule, at: index }));
     toast.success(`Added rule ${String(index + 1)}: an in-game check for this rule (now rule ${String(index + 2)})`);
+    // The test rule is selected and its editor has no Check button, so focus would fall to <body>: move it to the new
+    // editor's title once it is rendered.
+    requestAnimationFrame(() => {
+      document.getElementById(RULE_TITLE_ID)?.focus();
+    });
   };
 
   const listField = (field: ListField) => (
@@ -271,7 +278,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
     <div id={RULE_EDITOR_ID} className="scroll-mt-4 space-y-4">
       <Card className="gap-4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle id={RULE_TITLE_ID} tabIndex={-1} className="flex items-center gap-2 outline-none">
             Rule {index + 1}
             {rule.disabled === true && (
               <Badge variant="outline" className="border-dashed font-normal text-muted-foreground">

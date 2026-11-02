@@ -617,6 +617,13 @@ describe('wrong-shaped rules', () => {
     expect(wrongShapedKeys({ passthrough: { activeInLevels: 4, show: true, sound: [1] } })).toEqual(['activeInLevels', 'sound']);
     expect(wrongShapedKeys({ itemCodes: ['r33'] })).toEqual([]);
   });
+
+  it('does not skip a rule for a wrong-shaped comment (the plugin ignores comments)', () => {
+    const rule = { itemCodes: ['r33'], namePrefix: 'X ', passthrough: { comment: 42 } };
+    expect(wrongShapedKeys(rule)).toEqual([]);
+    const result = evaluateFilter(makeFilter([rule]), makeItem(), makeContext());
+    expect(result.trace).toEqual([expect.objectContaining({ index: 0, outcome: 'applied' })]);
+  });
 });
 
 describe('disabled rules', () => {

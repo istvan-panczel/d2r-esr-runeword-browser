@@ -143,8 +143,10 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
       <div className="min-w-0">
         {selectedRule !== null && rule !== undefined ? (
           <RuleEditor
-            // A new editor per rule: local field state (half-typed numbers) must not leak into the next rule.
-            key={selectedRule}
+            // A new editor per rule: local field state (half-typed numbers) must not leak into the next rule. Rules have
+            // no ids, so the rule count joins the index: a rule added or removed above (Check in game puts its test rule
+            // at the selected index) changes which rule sits there.
+            key={`${String(selectedRule)}/${String(filter.rules.length)}`}
             filter={filter}
             index={selectedRule}
             rule={rule}

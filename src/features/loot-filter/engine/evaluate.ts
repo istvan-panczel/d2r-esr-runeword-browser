@@ -285,11 +285,13 @@ function failedConditions(rule: LootFilterRule, item: TestItem, context: TestCon
   return failed;
 }
 
-const KNOWN_RULE_KEYS: ReadonlySet<string> = new Set<string>([...CONDITION_KEYS, ...ACTION_KEYS]);
+/** Every known key but `comment`: the guide says the plugin ignores it ("notes for the author"), whatever its shape. */
+const KNOWN_RULE_KEYS: ReadonlySet<string> = new Set<string>([...CONDITION_KEYS, ...ACTION_KEYS].filter((key) => key !== 'comment'));
 
 /**
  * The rule's known keys (conditions and actions) whose file value had the wrong shape: the parser keeps them in
- * `passthrough` with an error. Unknown keys sit there too but are not returned (the plugin ignores them).
+ * `passthrough` with an error. Unknown keys sit there too but are not returned (the plugin ignores them), nor is a
+ * wrong-shaped `comment` (ignored too).
  */
 export function wrongShapedKeys(rule: LootFilterRule): readonly string[] {
   return Object.keys(rule.passthrough ?? {}).filter((key) => KNOWN_RULE_KEYS.has(key));

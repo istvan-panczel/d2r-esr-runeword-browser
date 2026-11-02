@@ -123,7 +123,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   per character level, and Life, Mana and Stamina per level (216, 217, 242) both; whether the plugin compares the
   stored or the shown value is not verified, so the warning (at `<list>/<n>/value`) gives the stored number of the
   check ("The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this
-  rule…"). A presence check (`>= 1`, `< 1`, …) holds either way and gets none, so Sully's template (rules 29 and 30,
+  rule…"). A presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) holds either way and
+  gets none, so Sully's template (rules 29 and 30,
   stats 218 and 219 `>= 1`) stays clean; those rules print `{stat:218}/8` in the name, which suggests Sully sees the
   stored eighths in game. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
@@ -135,8 +136,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `<list>/<n>`, also for a hide rule's exceptions: "has one entry per skill tab; without "param" the plugin reads only
   the entry with param 0 (verified in game), not any skill tab. Pick a skill tab to check one"), an event or charged
   param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`,
-  `> 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 =
-  1285).
+  `> 0`, `!= 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is
+  `max charges << 8 | charges left`, 5/5 = 1285).
   - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50) and the plugin
     compares `param` with that (verified in game on 2026-11-01: +4 to Fire Skills, Sorceress, showed in
     `{stat:188,8}`); properties.txt numbers them `class × 3 + tab` (Martial Arts = 20, Fire Skills = 3). The warnings
@@ -316,7 +317,10 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
 - **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). A power user verifies
   what the plugin reads by printing it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
   how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected
-  rule (so the rule becomes N + 1) and selects it; a toast says so. The test rule (`inGameCheckRule`):
+  rule (so the rule becomes N + 1) and selects it; a toast says so, and keyboard focus moves to the new editor's title
+  ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
+  index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
+  test rule (`inGameCheckRule`):
   - copies every condition of the rule except the four stat lists (codes, types, quality, tier, flags, ids, location,
     difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not, and no action (no
     `hide`, `hideIfOtherConditionsFail`, style, sound…);
@@ -332,11 +336,15 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
     `hide`, so it changes nothing but the name (a unit test runs the evaluator with and without it). Trade-offs, said
     in the docs here and in the hint: a later matching rule that sets the same name part replaces the text, and an
     item the rule (or an earlier rule) hides shows no label; disable a hide rule while testing to see every item.
-  - has the comment "In-game check for rule N + 1 (the rule below): compare these numbers with the item tooltip, then
-    delete this rule. ED = item_maxdamage_percent (17); Tab:8 = item_addskill_tab (188) param 8 Fire Skills
-    (Sorceress)" (`IN_GAME_CHECK_MARK`), so searching "in-game check" lists every test rule; such a rule's row and
-    editor carry an "in-game check" badge (`isInGameCheckRule`) and the editor explains it instead of the button.
+  - has the comment "In-game check for the rule below: compare these numbers with the item tooltip, then delete this
+    rule. ED = item_maxdamage_percent (17); Tab:8 = item_addskill_tab (188) param 8 Fire Skills (Sorceress)"
+    (`IN_GAME_CHECK_MARK`; no rule number, which would go stale when rules move), so searching "in-game check" lists
+    every test rule; such a rule's row and editor carry an "in-game check" badge (`isInGameCheckRule`, by the comment's
+    start, so test rules from the earlier "In-game check for rule N + 1 (the rule below)" wording count too) and the
+    editor explains it instead of the button.
   - A rule without stat checks gets a disabled button and the reason under the title ("This rule checks no stats; …").
+    So does a rule with wrong-shaped keys (`wrongShapedKeys`, `wrongShapeReason`: "This rule has a wrong-shaped key
+    (activeInLevels); fix it first."): the copy would leave those keys out and apply while the rule itself is skipped.
     Otherwise the line under the title explains the button and ends "If a number differs from the tooltip, the plugin
     reads that stat differently; tell us" (a new GitHub issue, `REPORT_STAT_URL`).
 - **Controls**: item, type, unique/set and area pickers (chips with name + code/id; more than 12 chips collapse behind
@@ -738,7 +746,8 @@ tab switches; it is not saved.
   with the outcome `wrongShape`: it never applies or hides, not even with `hideIfOtherConditionsFail`. The guide says
   "a rule with an error is switched off and logged", and the plugin's message for such a value is an error; not
   verified in game. Unknown keys sit in `passthrough` too but do not switch a rule off (the plugin logs "unknown
-  setting, ignored"; a future `formula` key stays ignored as before). The trace badge reads "skipped: wrong shape"
+  setting, ignored"; a future `formula` key stays ignored as before), and neither does a wrong-shaped `comment` (the
+  guide: "Ignored; notes for the author"). The trace badge reads "skipped: wrong shape"
   (amber) with the line "activeInLevels has the wrong shape; the plugin most likely ignores this rule (not
   verified)." and the failed conditions of the rest of the rule; the row is shown without "Show skipped rules" when
   the rest of the rule holds (it would have applied or hidden), and counted as "N wrong shape" in that checkbox's

@@ -10,6 +10,7 @@
  * replaces it, and an item the rule (or an earlier rule) hides shows no label at all.
  */
 import { effectiveActions } from '../engine/actions';
+import { wrongShapedKeys } from '../engine/evaluate';
 import { CONDITION_KEYS } from '../engine/parse';
 import type { LootFilter, LootFilterRule, RuleConditions, StatCheck } from '../engine/types';
 import type { LootFilterLookup } from './lookup';
@@ -18,7 +19,7 @@ import type { LootFilterLookup } from './lookup';
 export const REPORT_STAT_URL =
   'https://github.com/istvan-panczel/d2r-esr-runeword-browser/issues/new?title=Loot%20filter%3A%20stat%20reads%20differently%20in%20game';
 
-/** Every test rule's comment starts with this, so the rule search finds them all. */
+/** Every test rule's comment starts with this, so the rule search finds them all (and `isInGameCheckRule` spots them). */
 export const IN_GAME_CHECK_MARK = 'In-game check';
 
 /** The stat lists a test rule leaves out; their stats are what it prints. */
@@ -141,13 +142,24 @@ export type InGameCheckResult =
 export const NO_STATS_REASON = 'This rule checks no stats; the check prints the values of the stats a rule checks.';
 
 /**
+ * Why a rule with wrong-shaped keys gets no test rule: the copy would leave them out and apply while the plugin (and
+ * the Test tab) most likely switches the rule itself off.
+ */
+export function wrongShapeReason(keys: readonly string[]): string {
+  return `This rule has ${keys.length === 1 ? 'a wrong-shaped key' : 'wrong-shaped keys'} (${keys.join(', ')}); fix it first.`;
+}
+
+/**
  * The test rule for the rule at `index` (it goes at `index`, so the rule moves to `index + 1`): the rule's conditions
  * without the stat lists, the printed values (`checkText`) in the first name part the rule leaves free, and a comment
- * that starts with `IN_GAME_CHECK_MARK`, names the rule and spells out the labels.
+ * that starts with `IN_GAME_CHECK_MARK` and spells out the labels. The comment says "the rule below" rather than a rule
+ * number, which would go stale when rules move. A rule with wrong-shaped keys gets none (`wrongShapeReason`).
  */
 export function inGameCheckRule(filter: LootFilter, index: number, lookup: LootFilterLookup): InGameCheckResult {
   const source = filter.rules.at(index);
   if (source === undefined) return { ok: false, reason: 'No such rule.' };
+  const wrongShaped = wrongShapedKeys(source);
+  if (wrongShaped.length > 0) return { ok: false, reason: wrongShapeReason(wrongShaped) };
   const stats = checkedStats(source, lookup);
   if (stats.length === 0) return { ok: false, reason: NO_STATS_REASON };
 
@@ -162,14 +174,14 @@ export function inGameCheckRule(filter: LootFilter, index: number, lookup: LootF
   const field = actions.namePrefix === undefined ? 'namePrefix' : actions.nameSuffix === undefined ? 'nameSuffix' : 'chatMessage';
   const printed = field === 'namePrefix' ? `${text} ` : field === 'nameSuffix' ? ` ${text}` : `{name} ${text}`;
   const labels = stats.map((stat) => `${stat.label} = ${stat.description}`).join('; ');
-  const comment = `${IN_GAME_CHECK_MARK} for rule ${String(index + 2)} (the rule below): compare these numbers with the item tooltip, then delete this rule. ${labels}`;
+  const comment = `${IN_GAME_CHECK_MARK} for the rule below: compare these numbers with the item tooltip, then delete this rule. ${labels}`;
 
   // CONDITION_KEYS are the rule's condition keys, copied with their own values: the record is a RuleConditions.
   const rule = { ...(conditions as RuleConditions), [field]: printed, comment } satisfies LootFilterRule;
   return { ok: true, rule, field };
 }
 
-/** Whether the rule is a "Check in game" test rule (by its comment). */
+/** Whether the rule is a "Check in game" test rule (by its comment's start, which older wordings share). */
 export function isInGameCheckRule(rule: LootFilterRule): boolean {
   return rule.comment?.startsWith(IN_GAME_CHECK_MARK) === true;
 }

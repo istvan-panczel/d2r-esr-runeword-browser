@@ -1,6 +1,14 @@
 import { evaluateFilter, type TestItem } from '../engine/evaluate';
 import type { LootFilter, LootFilterRule } from '../engine/types';
-import { checkedStats, checkText, IN_GAME_CHECK_MARK, inGameCheckRule, isInGameCheckRule, NO_STATS_REASON } from './inGameCheck';
+import {
+  checkedStats,
+  checkText,
+  IN_GAME_CHECK_MARK,
+  inGameCheckRule,
+  isInGameCheckRule,
+  NO_STATS_REASON,
+  wrongShapeReason,
+} from './inGameCheck';
 import { EMPTY_LOOKUP } from './lookup';
 import { TEST_LOOKUP } from './testLookup.mock';
 
@@ -67,10 +75,12 @@ describe('inGameCheckRule', () => {
       location: ['onGround', 'stored'],
       activeInLevels: [1, 2],
       namePrefix: '[ED {stat:item_maxdamage_percent}] ',
-      comment: `${IN_GAME_CHECK_MARK} for rule 3 (the rule below): compare these numbers with the item tooltip, then delete this rule. ED = item_maxdamage_percent`,
+      comment: `${IN_GAME_CHECK_MARK} for the rule below: compare these numbers with the item tooltip, then delete this rule. ED = item_maxdamage_percent`,
     });
     expect(isInGameCheckRule(result.rule)).toBe(true);
     expect(isInGameCheckRule(source)).toBe(false);
+    // Test rules made before the wording dropped the rule number are still recognised.
+    expect(isInGameCheckRule({ comment: 'In-game check for rule 3 (the rule below): compare these numbers' })).toBe(true);
   });
 
   it('uses the suffix when the rule or its style sets a prefix, and a chat line when it sets both', () => {
@@ -86,6 +96,15 @@ describe('inGameCheckRule', () => {
   it('refuses a rule without stat checks', () => {
     expect(inGameCheckRule(filterOf([{ itemCodes: ['r33'], hide: true }]), 0, TEST_LOOKUP)).toEqual({ ok: false, reason: NO_STATS_REASON });
     expect(inGameCheckRule(filterOf([]), 0, TEST_LOOKUP).ok).toBe(false);
+  });
+
+  it('refuses a rule with wrong-shaped keys, which the copy would leave out', () => {
+    const wrong: LootFilterRule = { ...source, passthrough: { activeInLevels: 4 } };
+    expect(inGameCheckRule(filterOf([wrong]), 0, TEST_LOOKUP)).toEqual({ ok: false, reason: wrongShapeReason(['activeInLevels']) });
+    expect(wrongShapeReason(['activeInLevels'])).toBe('This rule has a wrong-shaped key (activeInLevels); fix it first.');
+    expect(wrongShapeReason(['sockets', 'sound'])).toBe('This rule has wrong-shaped keys (sockets, sound); fix it first.');
+    // A wrong-shaped comment does not count (the plugin ignores comments), nor does an unknown key.
+    expect(inGameCheckRule(filterOf([{ ...source, passthrough: { comment: 1, formula: 'x' } }]), 0, TEST_LOOKUP).ok).toBe(true);
   });
 
   it('changes nothing but the name when inserted before its rule', () => {

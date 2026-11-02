@@ -155,11 +155,18 @@ const LAYER_NOUNS: Readonly<Record<StatLayerKind, string>> = {
   charged: 'skill and level',
 };
 
-/** Whether a check reads "the stat is there" (`>= 1`, `> 0`), or a hide rule's exception of it (`< 1`, `<= 0`). */
+/**
+ * Whether a check reads "the stat is there" (`>= 1`, `> 0`, `!= 0`), or a hide rule's exception of it (`< 1`, `<= 0`,
+ * `== 0`).
+ */
 function isPresenceCheck(check: StatCheck): boolean {
   if (typeof check.value !== 'number') return false;
   const op = check.op ?? '>=';
-  return ((op === '>=' || op === '<') && check.value <= 1) || ((op === '>' || op === '<=') && check.value <= 0);
+  return (
+    ((op === '>=' || op === '<') && check.value <= 1) ||
+    ((op === '>' || op === '<=') && check.value <= 0) ||
+    ((op === '==' || op === '!=') && check.value === 0)
+  );
 }
 
 /**

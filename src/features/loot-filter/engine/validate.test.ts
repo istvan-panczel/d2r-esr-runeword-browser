@@ -371,6 +371,19 @@ describe('validateLootFilter', () => {
           hide: true,
         })
       ).toEqual([]);
+      // `!= 0` / `== 0` (and `> 0` / `<= 0`) read "there" / "not there" too.
+      expect(
+        scaled({
+          itemStats: [
+            { stat: 'maxhp', op: '!=', value: 0 },
+            { stat: 'maxmana', op: '==', value: 0 },
+            { stat: 7, op: '>', value: 0 },
+            { stat: 9, op: '<=', value: 0 },
+          ],
+          namePrefix: 'x',
+        })
+      ).toEqual([]);
+      expect(scaled({ itemStats: [{ stat: 'maxhp', op: '==', value: 40 }], namePrefix: 'x' })).toHaveLength(1);
     });
   });
 
