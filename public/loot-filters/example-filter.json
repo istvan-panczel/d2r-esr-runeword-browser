@@ -1,0 +1,199 @@
+// Example filter (with explanations), from the D2R ESR Runeword Browser. Use it as it is, or copy rules into your own.
+// How to read it:
+// - Rules run from top to bottom. Every rule whose conditions all hold applies to the item.
+// - "hide": true hides the item's ground label and stops: no rule after it runs for that item, and the
+//   highlights of the rules above it are gone too. So each hide rule carries its own exceptions, written
+//   as opposite checks: "item_allskills" "<" 1 means "only items without + to All Skills are hidden".
+// - Later rules win for the name, background, border, minimap icon and droplight; chat lines and sounds add up.
+// - Two levels: Leveling (id 1) shows more, Strict (id 2) hides more. "activeInLevels": [2] makes a rule
+//   work at Strict only; a rule without it works at every level. Bind the Next Filter Level key under
+//   Options > Controls > Loot Filter to switch in game, and Show Hidden Items to see hidden labels again.
+// - Each rule's "comment" says what it does and what to change. The editor keeps them (and these lines).
+// - tink.mp3, mid.mp3, unique.mp3 and the rune, goldstar, star and gem icons are files: download the filter
+//   as .zip with sounds and icons and unzip it into your LootFilters folder. Icons and droplights need HD graphics.
+{
+  "formatVersion": 1,
+  "title": "Example filter (with explanations)",
+  "author": "D2R ESR Runeword Browser",
+  "version": "1.0.0",
+  "description": "A small filter to learn from: highlights runes, uniques, sets and jewellery, hides junk, and hides white, magic, rare, unique and set items with exceptions. Leveling shows more, Strict hides more.",
+  "filterLevels": [
+    {"id": 1, "name": "Leveling"},
+    {"id": 2, "name": "Strict"}
+  ],
+  "defaultLevel": 1,
+  "soundVolume": 50,
+  "notifications": {"dropFormat": "ÿc4Drop: {qualityColor}{name}"},
+  "styles": {
+    "Valuable": {
+      "sound": "tink.mp3",
+      "labelBackground": [255, 255, 255, 255],
+      "labelBorder": {"color": [255, 0, 0, 255], "width": 2},
+      "icon": {"iconName": "goldstar", "iconSize": 40},
+      "droplight": {"color": [255, 128, 0]}
+    },
+    "Good": {"sound": "mid.mp3", "labelBorder": {"color": [255, 168, 0, 255], "width": 1}}
+  },
+  "rules": [
+    {
+      "comment": "High runes, Vex to Zod. The Valuable style adds tink.mp3, a white label with a red border, an orange droplight (light pillar) and a minimap icon; this rule swaps the style's gold star for the rune icon (a rule's own actions win over its style's) and prints a chat line. Add r84 to r97 for ESR's kanji runes.",
+      "itemCodes": ["r76", "r77", "r78", "r79", "r80", "r81", "r82", "r83"],
+      "useStyle": "Valuable",
+      "icon": {"iconName": "rune", "iconSize": 50},
+      "chatMessage": "ÿc8High rune: ÿc0{name}"
+    },
+    {
+      "comment": "Mal, Ist and Gul. The Good style adds mid.mp3 and an orange border; this rule adds a smaller rune icon. Move a rune code between this rule and the one above to make it louder or quieter.",
+      "itemCodes": ["r73", "r74", "r75"],
+      "useStyle": "Good",
+      "icon": {"iconName": "rune", "iconSize": 30}
+    },
+    {
+      "comment": "Magic and rare weapons and armour with + to All Skills: the Good style and a red tag after the name ({stat:127} is the item's All Skills value). The magic and rare hide rules below keep these items with an exception.",
+      "itemTypes": ["weap", "armo"],
+      "quality": ["magic", "rare"],
+      "itemStats": [{"stat": "item_allskills", "op": ">=", "value": 1}],
+      "useStyle": "Good",
+      "nameSuffix": " ÿc1[+{stat:127} skills]"
+    },
+    {
+      "comment": "Every unique: prints the drop line set under notifications, plays unique.mp3, a gold border, a gold droplight and a gold star on the minimap. At Strict a hide rule further down hides normal-tier uniques again: a later hide wins.",
+      "quality": "unique",
+      "notify": true,
+      "sound": "unique.mp3",
+      "labelBorder": {"color": [199, 179, 119, 255], "width": 2},
+      "icon": {"iconName": "goldstar", "iconSize": 30},
+      "droplight": {"color": [199, 179, 119]}
+    },
+    {
+      "comment": "Every set item: the drop line, unique.mp3, a green border and a star on the minimap. At Strict a hide rule further down hides normal-tier set items again.",
+      "quality": "set",
+      "notify": true,
+      "sound": "unique.mp3",
+      "labelBorder": {"color": [0, 252, 0, 255], "width": 2},
+      "icon": {"iconName": "star", "iconSize": 30}
+    },
+    {
+      "comment": "Rare rings, amulets, charms, jewels and circlets: a yellow border, a gem icon on the minimap and a chat line. Several item types in one list mean any of them. The rare hide rule below leaves these types alone.",
+      "itemTypes": ["ring", "amul", "char", "jewl", "circ"],
+      "quality": "rare",
+      "labelBorder": {"color": [255, 255, 100, 255], "width": 1},
+      "icon": {"iconName": "gem", "iconSize": 25},
+      "chatMessage": "ÿc9Rare: {name}"
+    },
+    {
+      "comment": "Magic jewels and charms: a blue border, so they stand out from the blue weapons the Strict level hides. Charm (char) covers small, large and grand charms.",
+      "itemTypes": ["jewl", "char"],
+      "quality": "magic",
+      "labelBorder": {"color": [110, 110, 255, 255], "width": 1}
+    },
+    {
+      "comment": "Runeword bases: white and superior (grey) weapons and armour with 3 or more sockets get a white border and the socket count after the name ({sockets}). The white hide rules below hide only 0 to 2 sockets, so these stay. Change 3 to 4 for 4+ sockets only.",
+      "itemTypes": ["weap", "armo"],
+      "quality": ["normal", "superior"],
+      "sockets": {"min": 3},
+      "labelBorder": {"color": [240, 240, 240, 255], "width": 1},
+      "nameSuffix": " [{sockets} sockets]"
+    },
+    {
+      "comment": "Hides cracked, damaged, crude and low quality (inferior) weapons and armour at every level: there is no activeInLevels, so the rule works at both levels.",
+      "itemTypes": ["weap", "armo"],
+      "quality": "inferior",
+      "hide": true
+    },
+    {
+      "comment": "Hides stamina, antidote and thawing potions at every level. One item type covers every item of that type; itemCodes would list single items instead.",
+      "itemTypes": ["spot", "apot", "wpot"],
+      "hide": true
+    },
+    {
+      "comment": "Hides plain arrows and bolts (normal and superior: a range of qualities) at every level; magic, rare and unique quivers still show. Delete this rule if you play a bow or crossbow character.",
+      "itemTypes": ["bowq", "xboq"],
+      "quality": {"max": "superior"},
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides minor and light healing and mana potions (hp1, hp2, mp1, mp2). At Leveling they still show. Add hp3 and mp3 to hide more.",
+      "itemCodes": ["hp1", "hp2", "mp1", "mp2"],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides every chipped gem with one item type, gem0 (gem1 is flawed, gem2 normal). Chipped gems still show at Leveling.",
+      "itemTypes": ["gem0"],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides Town Portal and Identify scrolls; carry the tomes instead.",
+      "itemCodes": ["tsc", "isc"],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides gold piles under 500 (the gold stat is the size of the pile). Change 500 to the smallest pile you still want to see.",
+      "itemCodes": ["gld"],
+      "itemStats": [{"stat": "gold", "op": "<", "value": 500}],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "White weapons and armour without sockets, hidden once your character is level 12 or higher (playerStats checks your character, not the item). Exceptions: ethereal items (isEthereal false), superior items (only quality normal is hidden), the quest items in excludeItemCodes and the five towns (excludeAreas), so items you drop in town stay visible.",
+      "itemTypes": ["weap", "armo"],
+      "excludeItemCodes": ["leg", "hdm", "hfh", "hst", "msf", "g33", "d33", "qf1", "qf2"],
+      "quality": "normal",
+      "sockets": 0,
+      "isEthereal": false,
+      "playerStats": [{"stat": "level", "op": ">=", "value": 12}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: white weapons and armour with 0 to 2 sockets are hidden at any character level; 3+ socket bases and ethereal ones still show. Change the max to 3 to keep only 4+ socket bases. ESR's mythical bases (m01 to m61) are weapons too: add their codes to excludeItemCodes to keep white ones.",
+      "itemTypes": ["weap", "armo"],
+      "excludeItemCodes": ["leg", "hdm", "hfh", "hst", "msf", "g33", "d33", "qf1", "qf2"],
+      "quality": "normal",
+      "sockets": {"max": 2},
+      "isEthereal": false,
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides magic (blue) weapons and armour, except circlets (excludeItemTypes) and items with + to All Skills or 20% Faster Cast Rate or more. Every stat check must hold to hide, so one exception is enough to keep an item. Magic rings, amulets, jewels and charms are not weapons or armour, so they always show.",
+      "itemTypes": ["weap", "armo"],
+      "excludeItemTypes": ["circ"],
+      "quality": "magic",
+      "itemStats": [{"stat": "item_allskills", "op": "<", "value": 1}, {"stat": "item_fastercastrate", "op": "<", "value": 20}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides rare weapons and armour, except circlets, gloves, boots and belts and items with + to All Skills. Rare rings, amulets, charms and jewels are not weapons or armour, so they always show.",
+      "itemTypes": ["weap", "armo"],
+      "excludeItemTypes": ["circ", "glov", "boot", "belt"],
+      "quality": "rare",
+      "itemStats": [{"stat": "item_allskills", "op": "<", "value": 1}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides uniques on normal-tier bases (the low ones). Exceptional and elite uniques still show. Rings, amulets, charms, jewels and ESR's mythical uniques have no base tier, so baseTier never matches them and they always show. Write [\"normal\", \"exceptional\"] to hide more.",
+      "quality": "unique",
+      "baseTier": "normal",
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Strict only: hides set items on normal-tier bases; exceptional and elite set items, and set rings and amulets, still show. Delete this rule if you collect sets.",
+      "quality": "set",
+      "baseTier": "normal",
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    }
+  ]
+}
