@@ -503,7 +503,7 @@ describe('expandPlaceholders', () => {
 
 describe("Sully's QoL filter", () => {
   // Read through the parser, as the app does: v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4`, which the
-  // parser keeps in `passthrough` (with an error) instead of handing a number to the evaluator.
+  // parser reads as [4] (with a warning) instead of handing a number to the evaluator.
   const source = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
   const sully = parseLootFilter(source).filter;
   const hell = makeContext({ filterLevel: 3, area: 2, playerStats: [{ stat: 12, value: 92 }] });
@@ -563,23 +563,22 @@ describe("Sully's QoL filter", () => {
     expect(evaluateFilter(sully, gold(1500), { ...hell, area: 1 }).name).toBe('ÿc0$$');
   });
 
-  it('skips the Ancient Scroll hide rule (98), whose "activeInLevels": 4 has the wrong shape', () => {
-    // Sully v0.6.9 to v0.6.11 write a number where the format wants a list; the plugin most likely switches the rule off.
+  it('hides Ancient Scrolls at level 4 only: rule 98\'s "activeInLevels": 4 reads as [4]', () => {
+    // Sully v0.6.9 to v0.6.11 write a number where the format wants a list; it works in game (Sully, 2026-11).
     const scroll = makeItem({ code: '01b', typeAncestors: ['misc'], name: 'Ancient Scroll' });
-    expect(wrongShapedKeys(sully.rules[98] ?? {})).toEqual(['activeInLevels']);
+    expect(wrongShapedKeys(sully.rules[98] ?? {})).toEqual([]);
     const maps = evaluateFilter(sully, scroll, { ...hell, filterLevel: 4 });
-    expect(maps.hidden).toBe(false);
-    expect(maps.trace.find((entry) => entry.index === 98)).toEqual({
-      index: 98,
-      outcome: 'wrongShape',
-      failed: [],
-      actions: {},
-      wrongShaped: ['activeInLevels'],
-    });
-    // At levels 1 to 3 the gong highlight (rule 99) applies, as before.
-    const strict = evaluateFilter(sully, scroll, hell);
-    expect(strict.hidden).toBe(false);
-    expect(strict.name).toBe('ÿc6Ancient Scroll');
+    expect(maps.hidden).toBe(true);
+    expect(maps.hiddenBy).toBe(98);
+    // At levels 1 to 3 rule 98 is inactive and the gong highlight (rule 99) applies.
+    for (const filterLevel of [1, 2, 3]) {
+      const shown = evaluateFilter(sully, scroll, { ...hell, filterLevel });
+      expect(shown.hidden).toBe(false);
+      expect(shown.trace.find((entry) => entry.index === 98)).toEqual(
+        expect.objectContaining({ outcome: 'skipped', failed: ['activeInLevels'] })
+      );
+      expect(shown.name).toBe('ÿc6Ancient Scroll');
+    }
   });
 
   it('labels a mythical unique with the Mythical style', () => {

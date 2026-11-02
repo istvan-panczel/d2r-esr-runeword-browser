@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** 2026-10-26
+**Last updated:** 2026-11-02
 
 This privacy policy explains what data I collect, why I collect it, and how you can control it. I've kept it short and written in plain language because I believe you shouldn't need a lawyer to understand how your data is handled.
 
@@ -22,12 +22,14 @@ Because the project is MIT-licensed, other people can run their own copies (fork
 
 - **If you sign in with Discord:** I receive your Discord user ID, username, and avatar URL from Discord's OAuth service. I do not receive your Discord password or access to your Discord messages.
 - **If you sign in with email magic link:** I store the email address you provide.
-- **Display name:** You choose a public display name during registration. It is shown to other users next to your builds — together with your Discord avatar if you signed in with Discord.
+- **Display name:** You choose a public display name during registration. It is shown to other users next to your builds and loot filters — together with your Discord avatar if you signed in with Discord.
 
 ### When you use the app
 
 - **Builds:** The character builds you create (item/runeword selections, build name, description, character class).
-- **Likes:** Which builds you have liked.
+- **Loot filters:** The loot filters you save (the filter file, its name and description, whether it is private, the versions it was made with, which filter it was copied from, and the short "what changed" note you may add when you update it).
+- **Likes:** Which builds and loot filters you have liked.
+- **Download counts:** How many times each saved loot filter was downloaded. This is a single number per filter; it does not record who downloaded it.
 - **Favourites:** Which items (runewords, uniques, etc.) you have marked as favourites.
 - **Timestamp of your privacy policy acceptance.**
 
@@ -41,24 +43,28 @@ I use [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) to s
 - I do not serve advertisements.
 - I do not collect your IP address, precise location, or individual device information for my own purposes. Cloudflare Web Analytics only gives me aggregated country, browser and device-type counts.
 - I do not use cookies for tracking. The app only uses session tokens necessary for authentication.
+- Loot filters you have not saved (drafts) stay in your browser's local storage and are never sent to me. Only the **Save** button sends a filter to the server.
 
 ## Why I Collect This Data
 
-Account data serves one purpose: to let you save your builds, share them with the community, and browse/like other players' builds. The anonymous traffic statistics only tell me how much the app is used and which pages are popular. There is no other use.
+Account data serves one purpose: to let you save your builds and loot filters, share them with the community, and browse/like other players' builds and filters. The anonymous traffic statistics only tell me how much the app is used and which pages are popular. There is no other use.
 
-| Data               | Purpose                                       |
-| ------------------ | --------------------------------------------- |
-| Email / Discord ID | To authenticate your account                  |
-| Display name       | To show who created a build                   |
-| Build data         | To save and share your builds                 |
-| Likes              | To rank popular builds in the community       |
-| Traffic statistics | To see how much the app is used, in aggregate |
+| Data               | Purpose                                        |
+| ------------------ | ---------------------------------------------- |
+| Email / Discord ID | To authenticate your account                   |
+| Display name       | To show who created a build or loot filter     |
+| Build data         | To save and share your builds                  |
+| Loot filters       | To save your filters and share the public ones |
+| Likes              | To rank popular builds and loot filters        |
+| Download counts    | To rank loot filters by downloads              |
+| Traffic statistics | To see how much the app is used, in aggregate  |
 
 ## What Is Publicly Visible
 
-- Your **display name**, your **Discord avatar** (if you signed in with Discord) and your **public builds** are visible to all users (including unauthenticated visitors).
+- Your **display name**, your **Discord avatar** (if you signed in with Discord), your **public builds** and your **public loot filters** (with their description, change note, like and download counts) are visible to all users (including unauthenticated visitors), who can also download those filters.
+- Loot filters you mark **Private** are visible only to you. Likes stay attached to a filter you make private and count again if you make it public again.
 - Your **email address** is **never** visible to other users. It is stored in a separate, protected authentication system.
-- Your **likes** and **favourites**: the app itself only shows totals (like counts on builds, favourite counts on items). However, the underlying records — which builds you liked and which items you favourited, linked to your account ID — are technically readable by anyone through the app's public API.
+- Your **likes** and **favourites**: the app itself only shows totals (like counts on builds and loot filters, favourite counts on items). However, the underlying records — which builds and public loot filters you liked and which items you favourited, linked to your account ID — are technically readable by anyone through the app's public API.
 
 ## Where Your Data Is Stored
 
@@ -72,7 +78,7 @@ I use the following third-party services that may process your data:
 
 | Service    | Purpose                                      | Data shared                                                         |
 | ---------- | -------------------------------------------- | ------------------------------------------------------------------- |
-| Supabase   | Database, auth, API hosting                  | All account and build data                                          |
+| Supabase   | Database, auth, API hosting                  | All account, build and loot filter data                             |
 | Discord    | OAuth sign-in (if chosen)                    | Discord user ID, username, avatar                                   |
 | Cloudflare | Anonymous traffic statistics (Web Analytics) | Page views, referrer, country, browser and device type (no cookies) |
 
@@ -86,15 +92,15 @@ Under the General Data Protection Regulation (GDPR), you have the following righ
 
 ### Right to access
 
-You can request a copy of all data I hold about you. Contact me at the email above, or view your data directly in the app (your profile, your builds, your likes).
+You can request a copy of all data I hold about you. Contact me at the email above, or view your data directly in the app (your profile, your builds, your loot filters, your likes).
 
 ### Right to rectification
 
-You can update your display name at any time in the app's settings.
+You can update your display name at any time in the app's settings, and rename, edit, make private or delete your loot filters in the loot filter editor.
 
 ### Right to erasure (right to be forgotten)
 
-You can request deletion of your entire account and all associated data — your profile, all your builds, all your likes, and your authentication record. Automatic in-app deletion is not yet available, so you can request erasure in either of these ways:
+You can request deletion of your entire account and all associated data — your profile, all your builds, all your loot filters (public and private, with their change notes and download counts), all your likes, and your authentication record. Copies other players made of your public loot filters are theirs and stay; they keep only the "based on" label with your filter's name and your display name. Automatic in-app deletion is not yet available, so you can request erasure in either of these ways:
 
 - **Open an issue** on the GitHub repository: [github.com/istvan-panczel/d2r-esr-runeword-browser/issues](https://github.com/istvan-panczel/d2r-esr-runeword-browser/issues/new), or
 - **Email** me at mirages_armful_2l@icloud.com.
@@ -116,7 +122,7 @@ If you have concerns about how your data is being processed, contact me at the e
 ## Data Retention
 
 - Your data is kept for as long as your account exists.
-- When you request account deletion, all associated data (profile, builds, likes) is permanently deleted once I process the request.
+- When you request account deletion, all associated data (profile, builds, loot filters, likes) is permanently deleted once I process the request.
 - I do not keep backups of deleted account data.
 
 ## Children's Privacy

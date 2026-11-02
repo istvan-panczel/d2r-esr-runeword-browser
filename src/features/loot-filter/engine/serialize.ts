@@ -11,6 +11,8 @@
  * - enabled rules go to `rules`; disabled ones (`LootFilterRule.disabled`) to a `disabledRules` list after it,
  *   `{ "at": <index in the full rule list>, "rule": {…} }` in ascending `at`, which the plugin ignores; without
  *   disabled rules no `disabledRules` key is written.
+ * - a rule whose file wrote `"activeInLevels": 4` keeps the bare number while its levels are still `[4]`
+ *   (`LootFilterRule.activeInLevelsNumber`); edited levels are written as a list.
  * Comments between rules in the source are not kept.
  */
 import { ACTION_KEYS, CONDITION_KEYS, TOP_LEVEL_KEYS, isPlainObject } from './parse.ts';
@@ -38,11 +40,18 @@ function plainActions(source: LootFilterStyle | LootFilterRule, out: PlainObject
   }
 }
 
+/** The file wrote `activeInLevels` as a single number and the levels are still just that number. */
+export function isUntouchedLevelNumber(rule: LootFilterRule): boolean {
+  const levels = rule.activeInLevels;
+  return rule.activeInLevelsNumber !== undefined && levels?.length === 1 && levels[0] === rule.activeInLevelsNumber;
+}
+
 function plainRule(rule: LootFilterRule): PlainObject {
   const out: PlainObject = {};
   for (const key of CONDITION_KEYS) {
     if (rule[key] !== undefined) out[key] = rule[key];
   }
+  if (isUntouchedLevelNumber(rule)) out.activeInLevels = rule.activeInLevelsNumber;
   plainActions(rule, out);
   addPassthrough(out, rule.passthrough);
   return out;

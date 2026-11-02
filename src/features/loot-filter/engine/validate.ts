@@ -7,6 +7,7 @@ import { decodeTabLayer, MAX_STAT_PARAM, skillTabLayer, statLayerKind, type Stat
 import { effectiveActions } from './actions.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
+import { isUntouchedLevelNumber } from './serialize.ts';
 import { statQuirk, type StatQuirk } from './statQuirks.ts';
 import { statScale, statScaleMessage } from './statScale.ts';
 import {
@@ -555,10 +556,12 @@ function checkRule(
   checkNumberMatch(report, 'sockets', rule.sockets, 0, 99);
   checkNumberMatch(report, 'maxSockets', rule.maxSockets, 0, 99);
 
+  // A level written as a single number (`"activeInLevels": 4`) has no list entry in the file to point at.
+  const bareLevel = isUntouchedLevelNumber(rule);
   rule.activeInLevels?.forEach((id, index) => {
-    if (!levelIds)
-      report('error', `activeInLevels/${String(index)}`, `Level ${String(id)} does not exist: the filter has no "filterLevels"`);
-    else if (!levelIds.has(id)) report('error', `activeInLevels/${String(index)}`, `There is no filter level with id ${String(id)}`);
+    const path = bareLevel ? 'activeInLevels' : `activeInLevels/${String(index)}`;
+    if (!levelIds) report('error', path, `Level ${String(id)} does not exist: the filter has no "filterLevels"`);
+    else if (!levelIds.has(id)) report('error', path, `There is no filter level with id ${String(id)}`);
   });
 
   for (const key of ['itemStats', 'itemStatsAnyOf'] as const) checkStats(report, key, rule[key], reference, rule);

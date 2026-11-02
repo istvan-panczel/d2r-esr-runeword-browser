@@ -2,7 +2,8 @@
  * Persistence for the loot filter library:
  * - at start, reads `loot-filters/library` from localStorage and dispatches `hydrate`;
  * - after editor edits settle (debounced), dispatches `editorFlushed`, which serializes the model into its entry;
- * - after every library change (including that flush, `open` and `close`, which also flush), writes the library.
+ * - after every library change (including that flush, `flushNow`, and the opens and `close`, which also flush), writes
+ *   the library.
  * A refused write (quota) shows one toast until a write succeeds again; editing keeps working in memory.
  */
 import { isAnyOf } from '@reduxjs/toolkit';
@@ -14,14 +15,19 @@ import { readLibrary, writeLibrary } from './libraryStorage';
 import {
   addRule,
   close,
+  copyToMyFilters,
   createBlank,
+  discardChanges,
   duplicate,
   duplicateRule,
   editorFlushed,
+  flushNow,
   hydrate,
   importText,
   moveRule,
   open,
+  openSaved,
+  openSandbox,
   patchRule,
   removeRule,
   remove,
@@ -30,12 +36,15 @@ import {
   renameStyle,
   replaceFilter,
   renumberLevel,
+  saveSucceeded,
+  savedFilterRenamed,
   setFilterLevels,
   setHeader,
   setNotifications,
   setQualityColors,
   setRuleDisabled,
   setStyle,
+  takeUpdate,
   updateRule,
 } from './lootFilterSlice';
 import type { LootFilterEntry, LootFilterState } from './types';
@@ -64,7 +73,24 @@ const isEditorMutation = isAnyOf(
 );
 
 /** Actions that can change `library.entries`. */
-const isLibraryChange = isAnyOf(createBlank, importText, duplicate, rename, remove, editorFlushed, open, close);
+const isLibraryChange = isAnyOf(
+  createBlank,
+  importText,
+  duplicate,
+  rename,
+  remove,
+  editorFlushed,
+  flushNow,
+  open,
+  openSaved,
+  openSandbox,
+  close,
+  saveSucceeded,
+  savedFilterRenamed,
+  discardChanges,
+  copyToMyFilters,
+  takeUpdate
+);
 
 export interface LootFilterSagaOptions {
   readonly storage: PersistentStorage | null;

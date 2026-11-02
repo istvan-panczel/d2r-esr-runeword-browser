@@ -31,7 +31,8 @@ const VERIFIED: readonly string[] = [
 const NOT_VERIFIED: readonly string[] = [
   'Life, Mana and Stamina are stored ×256 in the game (+40 Life = 10240): whether the plugin reads 40 or 10240 is not known.',
   'Per-level stats (Strength per level…) are stored in eighths per character level (+1 per level = 8; Life and Mana per level also ×256): whether the plugin reads the stored or the shown value is not known.',
-  'A rule with a wrong-shaped condition or action (e.g. "activeInLevels": 4 instead of [4]) is most likely switched off by the plugin, so the test skips it.',
+  'A rule with a wrong-shaped condition or action (e.g. "sockets": "2" instead of 2) is most likely switched off by the plugin, so the test skips it.',
+  '"activeInLevels": 4 (a number instead of [4]) works in game; the test reads it as [4], but whether the plugin also leaves the rule off at the other levels is not known.',
 ];
 
 /** A collapsed list of what the test assumes and should be checked in game. */

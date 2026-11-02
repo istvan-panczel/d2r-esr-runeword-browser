@@ -1,20 +1,31 @@
 # Loot Filter (editor for ESR's loot filter plugin)
 
-A browser-only editor for the JSON loot filter files that ESR's loot filter plugin reads (since ESR 3.2.09). Filters
-are kept in the browser's localStorage and downloaded as files for the ESR launcher. Format reference:
+An editor for the JSON loot filter files that ESR's loot filter plugin reads (since ESR 3.2.09). Filters are drafts in
+the browser's localStorage until the user saves them to their account (Supabase; public unless marked private, see
+[FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md)), and are downloaded as
+files for the ESR launcher. Format reference:
 [ESR-LOOT-FILTER-GUIDE.md](../../builds-feature-docs/loot-filter/ESR-LOOT-FILTER-GUIDE.md). Research and owner
 decisions: [FEATURE-LOOT-FILTER-RESEARCH.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-RESEARCH.md) §4.1 (the format
 answers), §5 and §5.1 (owner decisions).
 
 ## Routes
 
-| Path                | Screen                  | Notes                                                                                           |
-| ------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
-| `/loot-filters`     | LootFilterLayout        | Frame for both pages: an "Under development" notice (like the guide's "Experimental" one)       |
-| `/loot-filters`     | LootFilterLibraryScreen | The library: New filter, Upload, Start from Sully's QoL filter; one card per filter             |
-| `/loot-filters/:id` | LootFilterEditorScreen  | The editor; `?tab=rules\|styles\|settings\|json\|test` (default `rules`); unknown id: not found |
+| Path                           | Screen                  | Notes                                                                                                                                                      |
+| ------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/loot-filters`                | LootFilterLayout        | Frame for every loot filter page (the page width only)                                                                                                     |
+| `/loot-filters`                | LootFilterLibraryScreen | The library: tabs Shared and My filters (`?tab=shared\|mine`), see Library screen                                                                          |
+| `/loot-filters/draft/:draftId` | LootFilterEditorScreen  | A draft in this browser (a new filter, or unsaved edits of a saved one); unknown id: not found                                                             |
+| `/loot-filters/:id`            | LootFilterEditorScreen  | A saved filter: its owner edits it, anyone else gets the sandbox; a local draft id redirects to the draft route (old links); not found / load error states |
+| `/loot-filters/sully`          | LootFilterEditorScreen  | The sandbox on the bundled Sully filter                                                                                                                    |
+| `/loot-filters/example`        | LootFilterEditorScreen  | The sandbox on the bundled example filter                                                                                                                  |
 
-Both routes skip the HTM "Loading data..." gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`, see
+The editor routes share one screen component (the param names, or the path of a template sandbox, tell them apart:
+`editorRouteOf(params, pathname)` in `utils/editorRoute.ts` gives `draft`, `saved` or `{ kind: 'template', template }`),
+so Save and Copy to my filters replace the route without remounting the editor. All take
+`?tab=rules|styles|settings|json|test` (default `rules`); `?save=1` on a draft or saved route opens the Save dialog
+(the library's draft cards use it; it is dropped from the URL when the dialog closes or the save moves the route).
+
+The loot filter routes skip the HTM "Loading data..." gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`, see
 [NAVIGATION.md](../technical/NAVIGATION.md#startup-loading-gate)): they need only the game-data bundles, the assets in
 `public/loot-filters/` and localStorage. Header entry: "Loot Filters", after "Game Data".
 
@@ -34,8 +45,12 @@ them and the launcher now pulls curated filters live from their creators' GitHub
 (`LootFilters/sources.json`), so players only get such files with a live filter. The app bundles the files of Sully's
 QoL filter (github.com/Thisisnotsully/QoL-Filter, the filter every player gets that way), copied from his repository:
 the nine mp3s in `public/loot-filters/sounds/` and twelve icons in `public/loot-filters/icons/` (`charm`, `cube`, `gem`,
-`gem2`, `gemP`, `goldstar`, `map`, `Myth`, `redD`, `rune`, `scroll`, `star`; 512 px squares, `rune` 1080 px,
-`goldstar` 200 px), plus the mod's `goldstar.lowend.sprite`. **Download .zip with sounds and icons** puts the filter
+`gem2`, `gemP`, `goldstar`, `map`, `Myth`, `redD`, `rune`, `scroll`, `star`), plus the mod's `goldstar.lowend.sprite`
+(100 px). The icons are shrunk to 128 px squares (2026-11, owner decision): his files are 512 px (`rune` 1080 px,
+`goldstar` 200 px) of raw RGBA, 1 to 4.7 MB each (about 16 MB in all), but filters draw them at 27 to 50 minimap
+pixels; at 128 px each is 64 KB (0.9 MB in all), still 2.5 times the largest size used, and a pre-shrunk icon avoids the
+jagged edges of a huge texture drawn small. Lanczos on premultiplied alpha, same names (a .zip unzipped into
+`LootFilters\` replaces Sully's originals there; his filter works the same with them). **Download .zip with sounds and icons** puts the filter
 and the bundled files it references into one archive to unzip into `LootFilters\` (see Library screen).
 
 Troubleshooting (also in the library how-to): if a sound or icon does not work, check the `sounds`/`icons` folders next
@@ -47,6 +62,16 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 - **Key** `loot-filters/library` in localStorage, value `{ "version": 1, "entries": [...] }`.
 - **Entry** `{ id, name, source: 'blank' | 'upload' | 'template', createdAt, updatedAt, text }`; times are epoch ms,
   ids come from `crypto.randomUUID` (with a fallback). `name` is the library name, not the file's `title`.
+- **Drafts** (sharing, see [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md)):
+  the library is the draft store. Optional entry fields `savedId`, `savedOwnerId`, `savedRevision` (a draft holding the
+  unsaved edits of a saved filter, and the revision it started from) and
+  `basedOn { id?, revision?, template?, version?, label }` (a copy of a shared filter, or a start from a bundled
+  template: `{ template: 'sullys-qol' | 'example', version, label: '<name> v<version>' }`, `templateBasedOn(id)`). The
+  guard checks only the required fields, so older tabs still read the library;
+  `readLibrary` drops a malformed optional field (`normalizeEntry`) instead of rejecting the library. Old `template`
+  entries without `basedOn` (written when only Sully's was bundled) get it from the file (`entryBasedOn` /
+  `inferTemplateBasedOn` in `utils/basedOn.ts`): Sully's when its `title` is "Sully's QoL Filter" or its `author`
+  "Sully", the example when its `title` is the example's, else none; at the file's `version` when it looks like one.
 - **`text` is the source of truth**: the filter file exactly as it will be downloaded. An upload is stored verbatim
   until the first edit; the editor's model is parsed from `text` when the filter opens and serialized back after edits.
 - A stored value that fails the type guard (corrupt, or written by a newer version) is copied once to
@@ -60,10 +85,32 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 
 `lootFilter` slice, registered in `core/store/store.ts`:
 
-- `library`: `{ hydrated, entries }`. Reducers: `hydrate(entries)`, `createBlank(name)`, `importText({ name, text, source })`,
-  `duplicate(id)`, `rename({ id, name })`, `remove(id)`, `editorFlushed()`.
-- `editor`: `{ id, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (parses the text; a JSONC
-  syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
+- `library`: `{ hydrated, entries }`. Reducers: `hydrate(entries)`, `createBlank(name)`,
+  `importText({ name, text, source, basedOn? })`, `duplicate(id)` (the copy keeps neither `saved*` nor `basedOn`),
+  `rename({ id, name })`, `remove(id)`,
+  `editorFlushed()`, `flushNow()` (the same flush, sent by Save before it reads the text).
+- `editor.target` (`EditorTarget`) says what is open: `draft { entryId }` (a library entry; the flush writes it),
+  `saved { savedId, revision, ownerId, name, baseText, baseCanonical, draftId, basedOn }` (the owner's saved filter:
+  the flush creates the draft `draftId` on the first edit, updates it, and removes it when the model serializes to
+  `baseCanonical = serialize(parse(baseText))` again; null when the content cannot be read) or
+  `sandbox { savedId | null, revision, ownerId, name, baseText, basedOn }` (someone else's filter or the bundled template: editable, never
+  written; `dirty` then means "edited since opened"). A flush writes only while `dirty`, and Save and Discard leave it
+  false, so the 400 ms debounced flush pending from the last edit cannot re-create a draft they removed.
+- Sharing reducers: `openSaved({ row, viewerId, authorLabel })` (owner → `saved`, on their newest draft of it if any;
+  anyone else → `sandbox`, whose `basedOn` is "name by author" for a public row, none for a private one),
+  `openSandbox({ text, name, basedOn })`, `saveSucceeded({ sentText, row, entryId })` (removes the draft if it still
+  has the sent text, else re-bases it on the new revision; the target becomes or stays `saved` with the new base, model
+  and selection kept), `discardChanges()` (saved: removes the draft and re-parses the content; sandbox: back to the
+  original), `copyToMyFilters()` (sandbox → a new draft with the sandbox's `basedOn`, the editor switches to it;
+  `payload.id` is the new id), `takeUpdate({ text, basedOn, mode: 'replace' | 'new', name? })` (replace writes the
+  draft right away with the new `basedOn`; new adds a draft), `savedFilterRenamed({ savedId, name })` (the Details
+  dialog renamed it on the server: the open target and that filter's drafts take the name). `saveSucceeded` also moves
+  a `saved` target whose draft was sent (Save as a new filter) to the new row.
+- Selectors for the editor: `selectEditorText`, `selectEditorName`, `selectHasUnsavedChanges`, `selectSaveRequest`
+  (what Save sends, read after `flushNow`), `selectEditorBasedOn` (the draft's `basedOn`, else the saved row's; what
+  the Update available banner compares), `selectVisibleDrafts(viewerId)`.
+- `editor`: `{ target, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (a `draft`
+  target; parses the text; a JSONC syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
   `setNotifications(patch)`, `setQualityColors(patch)`, `addRule({ rule?, at? })`, `updateRule({ index, rule })`,
   `patchRule({ index, patch })`, `setRuleDisabled({ index, disabled })` (see "Disabled rules"), `removeRule(index)`,
   `moveRule({ from, to })` and `duplicateRule(index)` (both keep the `disabled` flag with the rule), `selectRule(index)`,
@@ -75,6 +122,14 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   trailing commas are blanked to spaces, so `JSON.parse` offsets are the source's; when the engine's message has no
   position (V8's `Unexpected token ']'`) a small strict scanner finds it, so a syntax error carries its line and column.
   The serializer always writes strict JSON.
+- **A single-number level** (`"activeInLevels": 4`): the format wants a list, but the plugin accepts one number (Sully's
+  Ancient Scroll hide rule works in game), so the parser reads it as `[4]` with a warning at the key ("A single number
+  works in game; [4] is the documented form."), not an error. Any other wrong shape (`"4"`, an object) stays a
+  wrong-shaped key in `passthrough` with an error. The rule keeps the editor-only `activeInLevelsNumber: 4` (never a
+  key in the file), and the serializer writes `4` back while the levels are still exactly `[4]`, so a rule the user did
+  not touch is downloaded as it was (the key moves to its canonical place, before the actions); once the levels are
+  edited the list is written and the warning goes away. The validator checks the number like a list entry (an unknown
+  level is an error at `activeInLevels`).
 - **Text notes** (`textNotes` in `engine/parse.ts`, returned by `parseLootFilter` as `notes`, apart from `diagnostics`):
   root-path warnings about the text itself, one per kind: "Trailing commas were accepted (first at line N); the game
   reads them, but downloads are written without them", "Block comments (/\* _/) were accepted (first at line N); …
@@ -86,6 +141,12 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `passthrough` (so a wrong-shaped original does not reappear on download). `setNotifications` and `setQualityColors`
   drop the whole object when it ends up empty.
 - Ids and timestamps come from `prepare` callbacks, so every reducer is a pure function of (state, payload).
+- Sharing selectors: `selectEditorTarget`, `selectEditorText` / `selectEditorName` (the open filter's stored text and
+  name, whatever the target), `selectHasUnsavedChanges` (draft: always; saved: a draft or pending edits; sandbox:
+  edited), `selectSaveRequest` (after `flushNow`:
+  `{ kind: 'insert' | 'update', text, name, entryId, savedId, expectedRevision, basedOn }`, null with nothing to save
+  or in the sandbox), `selectVisibleDrafts(state, viewerId)`
+  (signed in: drafts of another account hidden; signed out: all, `needsSignIn` on those of a saved filter).
 - Selectors: `selectLibraryEntries`, `selectLibraryEntry(state, id)`, `selectEditor`, `selectEditorFilter`,
   `selectDiagnostics(state, reference?)` (the text notes, then the model's shape diagnostics re-read through `readLootFilter(toPlainJson(filter))`, then `validateLootFilter`; the stored parse diagnostics are used only when the text is not valid JSON).
   The validator's reference holds Sets and Maps, so it stays out of Redux: `useLootFilterReference()` loads the `lootfilter` and
@@ -171,7 +232,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 
 1. reads the library and dispatches `hydrate`;
 2. 400 ms after the last editor edit dispatches `editorFlushed`, which serializes the model into the entry's `text`;
-   `open`/`close` flush synchronously, and the editor screen dispatches `editorFlushed` on `pagehide`/`beforeunload`;
+   `open`/`openSaved`/`openSandbox`/`close`/`flushNow` flush synchronously, and the editor screen dispatches
+   `editorFlushed` on `pagehide`/`beforeunload`;
 3. after every library change writes the library to localStorage.
 
 The reducer is registered statically, and the slice imports the engine's parser and serializer, so they are in the entry
@@ -179,12 +241,67 @@ chunk (about 6.5 KB gzip); a documented exception, see [SAGAS.md](../technical/S
 
 ## Library screen
 
-Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip download, the troubleshooting line from
-"Using a filter in the game"), and the buttons in this order: **Start from Sully's QoL filter** (the primary button),
-**Upload**, **New filter** (outline). A "Tip:" line under them says most players start from Sully's filter or upload
-one someone shared and change what they need; a new filter starts blank (no rules, so every item shows as the game
-shows it) and is for authors who know the format; the Rules tab has example rules either way. The empty state and the
-New filter dialog ("A blank filter with no rules. …") say the same in short.
+`screens/LootFilterLibraryScreen.tsx`, `components/library/`. Title and a short how-to, then two tabs (shadcn Tabs,
+`?tab=shared|mine`; without the parameter **My filters** when signed in or when this browser has drafts (a returning
+signed-out visitor sees their filters at once, even before the sign-in state is known), else **Shared**; without drafts
+a spinner while the sign-in state is unknown, for at most 4 seconds, then it goes on as signed out; `resolveLibraryTab`
+in `utils/library.ts`). While the sign-in state is unknown My filters holds back its "Sign in to save" prompt. Without the Supabase env vars there are no
+tabs: the page is the My filters content without the saved section (the drafts, as before sharing) with the note
+"Sharing is off in this build of the site".
+
+**Shared** (`SharedFiltersTab`):
+
+- A pinned card per bundled template first, Sully's QoL filter then the example filter (`BundledTemplateCard`, one per
+  `BUNDLED_TEMPLATE_LIST` entry): name, its summary, "by <author>", its version, rule count and level names from
+  `filterMetadata` on the bundled file (fetched once per page load by `loadTemplateText(id)`, shared with its start
+  button), **Open** (its `sandboxPath`: `/loot-filters/sully` or `/loot-filters/example`), **Download** (the same menu
+  as a draft's, with the zip) and **Start from it** (the template start below; every start button waits while one
+  loads).
+- Search by name (debounced 300 ms like the builds list, server-side `ilike`) and sort **Newest** / **Most liked** /
+  **Most downloaded** (`SharedFiltersToolbar`, the sharing slice's `searchText` / `sortMode`; a change refetches).
+- The public filters, 50 per page, infinite scroll (the builds' `useInfiniteScroll`, paused while a page loads and
+  after a failed page; the builds' `LoadMoreError` retries), skeleton cards while the first page loads, "temporarily
+  unavailable" with Try again when it fails, "No shared filters match your search." / "No shared filters yet."
+- **Shared filter card** (`SharedFilterCard`, also on My filters, `/user/:userId` and the home page): name (link to
+  `/loot-filters/:id`), the description clamped to two lines, the author's avatar and `name#1234` (link to the
+  profile), created date, rule count and level names, "Created on ESR x · plugin y · filter v z", "Updated on ESR … ·
+  plugin …" after a content save, "Based on <label>", "Latest change: <note>", a Private badge (only owners see
+  private filters), the like button (signed out: opens the sign-in dialog; a private filter shows the count only) and
+  the download count, **Open** and **Download**. A card does not hold the file (lists never select `content`), so
+  Download dispatches `downloadSharedFilterRequested(id)`: the sharing saga fetches `id, name, content`, saves the zip
+  with the bundled sounds and icons when the filter uses any, else the `.json` (`downloadFilter` in
+  `utils/download.ts`), then `downloadCounted(id)`; the button shows a spinner meanwhile
+  (`selectDownloadingFilterIdSet`). A filter that is gone by then gives "This loot filter is no longer shared."
+
+**My filters** (`MyFiltersTab`):
+
+- The start buttons and the tip (below), signed in or not.
+- Signed out: "Sign in to save your filters" with a Sign in button; the drafts below stay editable.
+- Signed in: **Saved filters**, "N of 50 saved", the viewer's filters (`fetchMyFiltersRequested`, newest change
+  first, private ones included) as shared filter cards with badges: **Unsaved changes** (a visible draft has its
+  `savedId`), **Update available** (`filterUpdateStatus`: a copy whose source has a newer revision, from one
+  `fetchSourceRevisionsRequested` with every `based_on_id`, the source's change note in the tooltip; a filter started
+  from a bundled template with `based_on_version` below that template's bundled version, an unknown
+  `based_on_template` never) and **Original no longer shared** (the source is
+  private or deleted; a deleted source has cleared `based_on_id`, the label stays).
+- **Unsaved in this browser** (the heading only when signed in): `selectVisibleDrafts(state, viewerId)` as draft cards
+  (`LibraryEntryCard`, newest first): name, title/author and rule count, last update, "Based on …", an **Unsaved
+  changes** badge on the edits of a saved filter; **Open**, **Save** (`?save=1` on the editor route, which opens the
+  Save dialog), Download, Duplicate, Rename (not on the edits of a saved filter: its name is a server field) and
+  **Discard** (confirmed: "Discard draft?" for a new filter, "Discard changes?" for the edits of a saved one). A new
+  draft opens on `/loot-filters/draft/:id`, the edits of a saved filter on `/loot-filters/:savedId` (`draftLinks`);
+  signed out, those (`needsSignIn`) open as plain drafts and Save reads **Sign in to save**; so does a draft that does
+  not record its owner (`savedOwnerId` missing or dropped), which the saved route would not find. Without Supabase the card
+  has no Save and says Delete.
+
+The how-to above the tabs covers the launcher import, the `sounds`/`icons` folders, the zip download and the
+troubleshooting line from "Using a filter in the game". The start buttons (My filters tab) come in this order: **Start from Sully's QoL filter** (the primary button),
+**Start from the example**, **Upload**, **New filter** (outline). A "Tip:" line under them says most players start
+from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
+work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
+blank (no rules, so every item shows as the game shows it) and is for authors who know the format; the Rules tab has
+example rules either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank
+filter with no rules. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
@@ -209,18 +326,33 @@ New filter dialog ("A blank filter with no rules. …") say the same in short.
   jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
   and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
-  `"activeInLevels": 4`, a number where the format wants a list, so the editor reports one error ("expected a list of
-  numbers", the plugin's own message for it) and keeps the value in `passthrough`. The guide says a rule with an error
-  is switched off, so the Test tab skips the rule ("skipped: wrong shape", see "Wrong-shaped rules" under Test tab) and
-  Ancient Scrolls are not hidden at level 4 there. What the plugin does with it is not verified (a question for the
-  power user in the backlog).
-  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
-  `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  `"activeInLevels": 4`, a number where the format wants a list. Sully confirmed the rule works in game, so the editor
+  reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
+  single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
+  Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
+  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
+  in `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
-- One card per entry (newest first): name, title/author and rule count (a quick JSON read of the text, cached), last
-  update, and Open, Download, Duplicate, Rename, Delete (with a confirm dialog). Empty state when the library is empty.
+- **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
+  named "Example filter (with explanations)" (the file's title) with
+  `basedOn { template: 'example', version: '1.0.0', label: 'Example filter (with explanations) v1.0.0' }`. Our own
+  file (author "D2R ESR Runeword Browser"): 21 commented rules over two levels, Leveling (1) and Strict (2), with a
+  header comment on how rules run; it uses Sully's bundled sounds and icons. `exampleFilter.test.ts` parses, validates
+  and evaluates it. Credit line: "Example filter v1.0.0, written for this site to show how rules work; it uses sounds
+  and icons from Sully".
+- **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
+  (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
+  order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `version`, `file`,
+  `sandboxPath`, `startLabel`, `summary` (card text) and `credit`; `template.test.ts` checks name, author and version
+  against each bundled file, so bumping a file means bumping its entry. `bundledTemplate(id)` looks one up (null for
+  any other text), `fetchTemplateText(id)` / `loadTemplateText(id)` (cached per id per page load) read its file,
+  `useTemplateText(id)` wraps that for the cards, and `templateBasedOn(id, version?)` / `templateStartInput(id, text)`
+  (`utils/basedOn.ts`) build what a start records. Adding a template is a file, a registry entry and a route line.
+- New filter, Upload and the template starts add a draft and open it on `/loot-filters/draft/:id`
+  (`hooks/useStartFilter.ts`: `startFromTemplate(id)`, `loadingTemplate` is the id loading or null). Empty state ("No
+  filters yet") when there are no drafts and nothing is saved.
 - **Download** (`components/FilterDownloadMenu.tsx`, shared with the editor header): a plain button saving
   `<slug of name>.json` when the filter references no bundled sound or icon (or is not valid JSON); otherwise a menu with
   **Download .json** and **Download .zip with sounds and icons**, plus the hint "Unzip into your LootFilters folder" and,
@@ -235,7 +367,8 @@ New filter dialog ("A blank filter with no rules. …") say the same in short.
 
 ## Editor screen
 
-Header row: back link, the filter name (pencil to rename inline; Enter or Escape returns the focus to the pencil), a
+Header row: back link, the filter name (a new draft: pencil to rename inline, Enter or Escape returns the focus to the
+pencil; a saved filter is renamed through Details), the status line (see "Saving and sharing in the editor"), a
 problems chip ("N errors / M warnings", also announced to screen readers through a polite live region) and
 **Download**. Clicking the chip opens the JSON tab and bumps a counter the screen passes to `JsonTab`
 (`scrollToProblems`); `JsonTab` scrolls to the problems list in an effect once it has rendered (the tab switch runs in a
@@ -246,8 +379,97 @@ also offers the zip, with the files the current model references. When the store
 JSON tab recovers the filter.
 
 The tabs are a `role="tablist"` of buttons that set `?tab=`; each tab unmounts when another is shown, so the state that
-must outlive a switch lives in the screen: the JSON tab's unapplied draft (reset when another filter opens) and the Test
-tab's item form (not saved).
+must outlive a switch lives in the screen: the JSON tab's unapplied draft (kept per editing session: a new session
+starts when another filter opens, not when Save or Copy to my filters moves the open filter to its new route) and the
+Test tab's item form (not saved).
+
+### Saving and sharing in the editor
+
+Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md).
+
+**Opening** (`LootFilterEditorScreen`): once the library is hydrated, an effect opens what the route shows, reading the
+store at that moment so a target that already matches (the same filter after Save or Copy moved the route) is left
+alone: the draft route dispatches `open(id)`; the saved route redirects a local draft id to `/loot-filters/draft/:id`,
+else clears the sharing detail and dispatches `fetchSharedFilterRequested(id)` (without Supabase it only shows "not
+found"); a template route (`/loot-filters/sully`, `/loot-filters/example`) fetches that bundled file and dispatches
+`openSandbox` with `templateBasedOn(id)` (a failed fetch shows "Could not load <name>" with Try again, only on that
+template's route). A sandbox without a saved filter matches the template route its `basedOn.template` names (Sully's
+when it names none). A second
+effect waits for the auth state and the fetched row, then dispatches `openSaved({ row, viewerId, authorLabel })`
+(`authorLabel` "Name#1234"); `targetMatchesRoute` also checks the kind, so signing in or out on a saved route reopens
+it as the owner's filter or the sandbox. A change of viewer refetches the row (a private filter that was "not found"
+signed out loads once its owner signs in), and a route whose target already matches fetches the row when it is
+missing. The owner signing in on their own filter's sandbox with edits keeps the sandbox (`keepsOwnerSandbox`): a note
+offers **Open the editable version** (dropping those edits) beside Copy to my filters; without edits it switches by
+itself. A missing row shows "Filter not found" (with a link to a local draft of that
+saved filter when there is one), a failed fetch "Could not load the filter" with Try again. Unmounting dispatches
+`close()` and `resetSaveStatus()`.
+
+**Header** for a draft or the owner's saved filter: Private badge, the status ("Saving…", "Not saved yet: kept in this
+browser" for a new draft, "Unsaved changes" / "Saved"), likes and downloads (saved), "Based on X", the latest change
+note; **Save** (primary; disabled without unsaved changes; signed out it opens the sign-in dialog), **Discard changes**
+(saved filter with a draft, confirmed: `discardChanges()`; a draft of a saved filter opened on its own route is
+removed and the saved filter opens), **Details** (saved: name, description, Private, `updateFilterDetailsRequested`),
+Download (a saved row's download dispatches `downloadCounted`), and **Delete** (saved, confirmed: "no longer shared;
+copies other players made keep working"; on success the draft is discarded and the route goes to `/loot-filters`).
+Without the Supabase env vars Save, Details and Delete are hidden and a line says "Saving and sharing are off in this
+build".
+
+**Save dialog** (`components/editor/SaveDialog.tsx`): the first save of a new draft asks for the name (prefilled),
+an optional description and Private (unticked: public by default); a later save of a public filter asks for an optional
+"What changed" note (up to 200 characters, shown to copies; a draft of a saved filter on its own route reads the
+privacy from My filters, fetched when needed, and while it is unknown no note is asked); a private filter saves at once without the dialog (it
+opens only to show a failure). The dialog shows the validator's counts ("N errors, M warnings: you can still save"),
+warns when the JSON tab has unapplied text, and shows the save's error; on a conflict it offers **Overwrite** (row
+changed elsewhere) and **Save as a new filter** (always; the only choice when the row is gone or not the user's) with a
+Private checkbox (the saved filter's privacy; ticked when unknown).
+Signed out it says "Sign in to save" with a Sign in button.
+
+**Save saga** (`sharing/saveSaga.ts`, forked from `lootFilterSharingSaga`): `saveFilterRequested({ details?, changeNote?,
+mode: 'normal' | 'overwrite' | 'asNew' })` (`takeLeading`):
+
+1. signed out → `openSignInDialog()`; privacy policy not accepted → an error;
+2. `flushNow()`, then `selectSaveRequest` (null → "No changes to save");
+3. `checkSaveText`: at most 512 KB, readable by the lenient parser, a filter object with `formatVersion` 1 (validator
+   errors and warnings do not block);
+4. insert (a new draft, or `asNew`): name, description, Private, the file metadata (`filterMetadata`), `esr_version`
+   from `db.metadata` `esrVersion`, `plugin_version` = `LOOT_FILTER_PLUGIN_VERSION`, `based_on_*` from the draft's
+   `basedOn` (`basedOnColumns`: label clipped to 200 characters, a version over 50 left out), `change_note` null;
+   `.insert(...).select(detail).single()`. A `based_on_id` the source lookup found gone is left out, and a foreign key
+   error (`23503`: the source was deleted) retries once without it, keeping the label;
+5. update: content, metadata, `esr_version_updated`, `plugin_version_updated`, `change_note` (the note or null), and
+   `based_on_revision` / `based_on_version` / `based_on_label` when the draft's `basedOn` moved (`basedOnMoved`); a
+   compare-and-swap `.eq('id').eq('revision', expected)` unless `overwrite`. No row back: a lookup decides `changed`
+   (still the user's) or `gone`;
+6. success: `saveFilterSucceeded({ row, inserted })` (detail, My filters, the newest-first lists) and then
+   `saveSucceeded` (the editor target becomes the saved row). The screen sees "target is the row just saved" and
+   replaces the route with `/loot-filters/:savedId` (dropping `?save=1`), keeping the screen mounted.
+
+A `loot_filter_limit` error reads "You have 50 loot filters; delete one to save another." `updateFilterDetailsRequested`
+writes name / description / is_private at once (no revision bump) and dispatches `savedFilterRenamed`;
+`fetchSourceFilterRequested(id)` loads a copy's source with its file into `sourceFilter`.
+
+**Sandbox** (someone else's filter, a signed-out visitor, or a bundled template, which reads "You are viewing <name>
+v<version>"): a banner "You are viewing X by Name#1234 — changes
+are not saved. Copy to my filters to keep them." with **Copy to my filters** (signed out with Supabase: the sign-in
+dialog; without Supabase it copies directly), **Like** (shared filters; signed out: sign-in), **Undo my changes** when
+edited, the author's profile link, the description, "Based on …" and the latest change note. Copy dispatches
+`copyToMyFilters()` and replaces the route with `/loot-filters/draft/<payload.id>`. Leaving an edited sandbox asks once
+(`hooks/useSandboxLeavePrompt.ts`: a router blocker that reads the store when it fires, so Copy is never blocked, and
+`beforeunload`); confirming drops the sandbox edits so a redirect afterwards does not ask again.
+
+**Update available** (`components/editor/UpdateBanner.tsx`, drafts and the owner's saved filters): with a shared
+`basedOn.id` it dispatches `fetchSourceRevisionsRequested([id])` on open; `sourceUpdateOf` reads the result: a higher
+revision shows the source's name and change note, prefetches its file (`fetchSourceFilterRequested`) and offers
+**Replace with the latest** (`takeUpdate` replace, as unsaved changes with the new `basedOn`; asks first when there are
+unsaved changes, which a draft always has; Discard changes then goes back to the saved version) and **Add as a new
+filter** (`takeUpdate` new, then the new draft's route). A never-saved draft is the only copy of its filter, so it gets
+only Add as a new filter (the banner says why, and the reducer refuses `replace` there). Either action applies only
+while the filter it was clicked on is still open (the template is fetched first). A missing source, or a saved copy
+that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
+that template's bundled version (or of unknown version) reads "<name> v<version> is bundled now; this filter started
+from v…" and offers the same two actions with that template's bundled file (`{ kind: 'template', template,
+fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -344,7 +566,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
     editor explains it instead of the button.
   - A rule without stat checks gets a disabled button and the reason under the title ("This rule checks no stats; …").
     So does a rule with wrong-shaped keys (`wrongShapedKeys`, `wrongShapeReason`: "This rule has a wrong-shaped key
-    (activeInLevels); fix it first."): the copy would leave those keys out and apply while the rule itself is skipped.
+    (sockets); fix it first."): the copy would leave those keys out and apply while the rule itself is skipped. A
+    single-number `"activeInLevels": 4` is not wrong-shaped: the button works and the test rule keeps the level (as
+    `[4]`).
     Otherwise the line under the title explains the button and ends "If a number differs from the tooltip, the plugin
     reads that stat differently; tell us" (a new GitHub issue, `REPORT_STAT_URL`).
 - **Controls**: item, type, unique/set and area pickers (chips with name + code/id; more than 12 chips collapse behind
@@ -742,7 +966,7 @@ tab switches; it is not saved.
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
 - **Wrong-shaped rules**: a rule with a known key (condition or action) whose file value had the wrong shape (kept in
-  `passthrough` with a parse error, `wrongShapedKeys` in `engine/evaluate.ts`; e.g. `"activeInLevels": 4`) is skipped
+  `passthrough` with a parse error, `wrongShapedKeys` in `engine/evaluate.ts`; e.g. `"sockets": "2"`) is skipped
   with the outcome `wrongShape`: it never applies or hides, not even with `hideIfOtherConditionsFail`. The guide says
   "a rule with an error is switched off and logged", and the plugin's message for such a value is an error; not
   verified in game. Unknown keys sit in `passthrough` too but do not switch a rule off (the plugin logs "unknown
@@ -752,7 +976,8 @@ tab switches; it is not saved.
   verified)." and the failed conditions of the rest of the rule; the row is shown without "Show skipped rules" when
   the rest of the rule holds (it would have applied or hidden), and counted as "N wrong shape" in that checkbox's
   label. The validator's semantic errors (an `activeInLevels` id with no level, an unknown quality number) do not skip
-  a rule: whether the plugin treats them as errors is not known.
+  a rule: whether the plugin treats them as errors is not known. A single-number `"activeInLevels": 4` is not
+  wrong-shaped (it reads as `[4]`, see "A single-number level"), so Sully's Ancient Scroll hide rule applies at level 4.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
   full list ("Verify in game" below); a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
   check or `{stat:ID}` without param reads only the param-0 entry; skill tabs are numbered class × 8 + tab; Enhanced
@@ -772,6 +997,7 @@ tab switches; it is not saved.
 | 3     | Library, routes, editor shell and state, Settings tab, JSON tab                               | done                                                      |
 | 4     | Rule builder with pickers, style editor, label preview                                        | done (rule builder, actions editor, Styles tab, previews) |
 | 5     | Test-item tab with a rule trace                                                               | done                                                      |
+| 6     | Sharing: saved filters in Supabase, library tabs, profile and home blocks                     | built (FEATURE-LOOT-FILTER-SHARING.md)                    |
 
 ## Verify in game
 
@@ -816,9 +1042,11 @@ research doc and the Test tab's note link here.
   not yet seen in a game log); the rules in it never run.
 - An empty condition list (`activeInLevels: []`, …) logs "the list is empty"; whether the plugin then drops the key or
   switches the rule off is not known (our evaluator: an empty `activeInLevels` is never active).
-- A rule with a wrong-shaped condition or action (`"activeInLevels": 4`) is switched off (the guide: "a rule with an
-  error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both. To verify
-  with Sully's v0.6.11: are Ancient Scrolls hidden at filter level 4 (backlog)?
+- A rule with a wrong-shaped condition or action (`"sockets": "2"`) is switched off (the guide: "a rule with an
+  error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both.
+- `"activeInLevels": 4` (one number instead of a list) works in game (Sully, 2026-11: his Ancient Scroll hide rule
+  hides them at level 4). We read it as `[4]`; still to check: are the scrolls shown at levels 1 to 3, i.e. the plugin
+  reads `[4]` rather than ignoring the key (backlog)?
 - Stats stored scaled (`engine/statScale.ts`): whether the plugin compares and prints the stored value (Life ×256,
   per-level stats in eighths) or the tooltip's. The validator warns about such checks; Check in game shows it
   (`{stat:7}` on a +40 Life item: 40 or 10240?). Sully's `{stat:218}/8` labels suggest the stored value.

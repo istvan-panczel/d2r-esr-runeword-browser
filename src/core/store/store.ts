@@ -14,6 +14,7 @@ import buildsReducer from '@/features/builds/store/buildsSlice';
 import favoritesReducer from '@/features/favorites/store/favoritesSlice';
 import gameDataReducer from '@/features/game-data/store/gameDataSlice';
 import lootFilterReducer from '@/features/loot-filter/store/lootFilterSlice';
+import lootFilterSharingReducer from '@/features/loot-filter/sharing/sharingSlice';
 import { startSagas } from './sagaRegistry';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -34,6 +35,7 @@ const store = configureStore({
     favorites: favoritesReducer,
     gameData: gameDataReducer,
     lootFilter: lootFilterReducer,
+    lootFilterSharing: lootFilterSharingReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware),
 });

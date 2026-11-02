@@ -35,7 +35,8 @@
     "guide:check": "node scripts/generate-guide.ts --check",
     "guide:watch": "node scripts/generate-guide.ts --watch",
     "guide:verify": "node scripts/generate-guide.ts verify",
-    "guide:report": "node scripts/generate-guide.ts report"
+    "guide:report": "node scripts/generate-guide.ts report",
+    "check:loot-filter-sharing": "node scripts/check-loot-filter-sharing.ts"
   },
   "commit-and-tag-version": {
     "scripts": {

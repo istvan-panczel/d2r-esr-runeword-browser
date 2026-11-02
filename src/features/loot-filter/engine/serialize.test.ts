@@ -85,6 +85,28 @@ describe('serializeLootFilter', () => {
     expect(Object.keys((plain.rules as Record<string, unknown>[])[0] ?? {})).toEqual(['hide', 'sockets', 'future']);
   });
 
+  it('writes a single-number activeInLevels back as a number until the levels change', () => {
+    const text = [
+      '{',
+      '  "formatVersion": 1,',
+      '  "filterLevels": [',
+      '    {"id": 4, "name": "Maps"}',
+      '  ],',
+      '  "rules": [',
+      '    {"itemCodes": ["01b"], "activeInLevels": 4, "hide": true}',
+      '  ]',
+      '}',
+      '',
+    ].join('\n');
+    const { filter } = parseLootFilter(text);
+    expect(serializeLootFilter(filter)).toBe(text);
+    const rule = filter.rules[0] ?? {};
+    const edited = (activeInLevels: readonly number[]) => toPlainJson({ ...filter, rules: [{ ...rule, activeInLevels }] }).rules;
+    expect(edited([4, 5])).toEqual([{ itemCodes: ['01b'], activeInLevels: [4, 5], hide: true }]);
+    expect(edited([5])).toEqual([{ itemCodes: ['01b'], activeInLevels: [5], hide: true }]);
+    expect(toPlainJson({ ...filter, rules: [{ ...rule, activeInLevels: undefined }] }).rules).toEqual([{ itemCodes: ['01b'], hide: true }]);
+  });
+
   it('lays Sully’s filter out like the source, apart from key order and wrapped stat lists', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const text = serializeLootFilter(parseLootFilter(source).filter);
@@ -92,6 +114,9 @@ describe('serializeLootFilter', () => {
     expect(text.startsWith("// Sully's QoL Filter")).toBe(true);
     // Sully writes some one-line rules and styles longer than the serializer's line width (12 of 113 when last checked).
     expect(Math.abs(oneLineRules(text) - oneLineRules(source))).toBeLessThanOrEqual(15);
+    // The Ancient Scroll hide rule keeps its single-number `"activeInLevels": 4`, now in canonical key order.
+    expect(text).toMatch(/\n {6}"activeInLevels": 4,\n {6}"hide": true\n/);
+    expect(text.split('"activeInLevels": 4').length - 1).toBe(source.split('"activeInLevels": 4').length - 1);
   });
 
   it('writes disabled rules to disabledRules after rules, with their index in the full list', () => {

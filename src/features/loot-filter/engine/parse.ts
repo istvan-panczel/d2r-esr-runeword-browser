@@ -10,6 +10,8 @@
  *   value wrong-shaped, so it is carried through untouched in `passthrough`.
  * - Colours must be lists of 3 or 4 numbers (droplight: 3); their 0–255 range is the validator's job.
  * - A wrong-shaped value goes to `passthrough` with an `error`; an unknown key with a `warning`.
+ * - One exception: `activeInLevels` given as a single number (`4`, which the plugin accepts) is read as `[4]` with a
+ *   `warning`; the rule's `activeInLevelsNumber` keeps the number so the serializer writes it back unchanged.
  * - `rules` (or `styles`) holding a non-object entry is wrong-shaped as a whole: `rules` is then `[]`
  *   and the original list stays in the top-level `passthrough`.
  * - `disabledRules` (the editor's own key, ignored by the plugin) is a list of `{ "at": <index>, "rule": {…} }`: each
@@ -478,7 +480,14 @@ function parseRule(context: Context, raw: Readonly<Record<string, unknown>>, ind
   const owner: Owner = { path, rule: index };
   const rule: { -readonly [K in keyof LootFilterRule]?: LootFilterRule[K] } = {};
   const passthrough: Record<string, unknown> = {};
-  readFields<RuleConditions>(context, owner, raw, CONDITION_READERS, rule, passthrough);
+  // `"activeInLevels": 4` works in game: read it as `[4]`, warn, and remember the number so it is written back as is.
+  const levelNumber = isFiniteNumber(raw.activeInLevels) ? raw.activeInLevels : undefined;
+  if (levelNumber !== undefined) {
+    rule.activeInLevelsNumber = levelNumber;
+    report(context, owner, 'warning', 'activeInLevels', `A single number works in game; [${String(levelNumber)}] is the documented form.`);
+  }
+  const fields = levelNumber === undefined ? raw : { ...raw, activeInLevels: [levelNumber] };
+  readFields<RuleConditions>(context, owner, fields, CONDITION_READERS, rule, passthrough);
   readFields<RuleActions>(context, owner, raw, ACTION_READERS, rule, passthrough);
   collectUnknown(context, owner, raw, [...CONDITION_KEYS, ...ACTION_KEYS], passthrough);
   const ordered = inFileOrder(raw, passthrough);

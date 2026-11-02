@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { db } from '@/core/db';
 import { ProfileEditDialog, avatarInitials, formatProfileTag, selectAuthUserId } from '@/features/auth';
+import { AuthorFiltersSection } from '@/features/loot-filter/components/library/AuthorFiltersSection';
 import { BuildCard } from '../components/BuildCard';
 import { BuildCardSkeleton } from '../components/BuildCardSkeleton';
 import { LoadMoreError } from '../components/LoadMoreError';
@@ -176,6 +177,8 @@ export function UserProfileScreen() {
           </>
         )}
       </section>
+
+      <AuthorFiltersSection userId={profile.id} isOwner={isOwner} />
 
       {isOwner && (
         <ProfileEditDialog

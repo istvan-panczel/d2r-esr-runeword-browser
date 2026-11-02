@@ -5,7 +5,20 @@ import type { PersistentStorage } from '@/core/hooks/usePersistentState';
 import { parseLootFilter } from '../engine/parse';
 import { LIBRARY_STORAGE_KEY } from './libraryStorage';
 import { EDITOR_FLUSH_DELAY_MS, createLootFilterSaga } from './lootFilterSaga';
-import reducer, { close, createBlank, open, rename, selectRule, setHeader } from './lootFilterSlice';
+import reducer, {
+  close,
+  createBlank,
+  discardChanges,
+  flushNow,
+  open,
+  openSaved,
+  rename,
+  saveSucceeded,
+  selectRule,
+  setHeader,
+} from './lootFilterSlice';
+import { selectSaveRequest } from './selectors';
+import { lootFilterRow } from './testRow.mock';
 import type { LootFilterEntry } from './types';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
@@ -153,5 +166,99 @@ describe('lootFilterSaga', () => {
     storage.full = true;
     store.dispatch(createBlank('D'));
     expect(onSaveFailed).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('lootFilterSaga with a saved filter', () => {
+  const OWNER = 'owner-1';
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** What the save saga will do: flush, read the request, then report the row the server returned. */
+  function save(store: ReturnType<typeof setup>['store'], revision: number) {
+    store.dispatch(flushNow());
+    const request = selectSaveRequest(store.getState());
+    if (request === null) throw new Error('nothing to save');
+    store.dispatch(
+      saveSucceeded({ sentText: request.text, row: lootFilterRow({ content: request.text, revision }), entryId: request.entryId })
+    );
+    return request;
+  }
+
+  it('the debounced flush pending when Save ran does not re-create the removed draft', async () => {
+    const storage = testStorage();
+    const { store } = setup(storage);
+    store.dispatch(openSaved({ row: lootFilterRow(), viewerId: OWNER, authorLabel: 'Owner#1' }));
+    store.dispatch(setHeader({ title: 'Edited' }));
+    save(store, 4);
+    expect(store.getState().lootFilter.library.entries).toEqual([]);
+    expect(storedEntries(storage)).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS * 2);
+    expect(store.getState().lootFilter.library.entries).toEqual([]);
+    expect(storedEntries(storage)).toEqual([]);
+    expect(store.getState().lootFilter.editor.target).toMatchObject({ kind: 'saved', revision: 4 });
+  });
+
+  it('edits made while saving flush into a draft of the new revision', async () => {
+    const storage = testStorage();
+    const { store } = setup(storage);
+    store.dispatch(openSaved({ row: lootFilterRow(), viewerId: OWNER, authorLabel: 'Owner#1' }));
+    store.dispatch(setHeader({ title: 'Sent' }));
+    store.dispatch(flushNow());
+    const request = selectSaveRequest(store.getState());
+    if (request === null) throw new Error('nothing to save');
+    store.dispatch(setHeader({ title: 'While saving' }));
+    store.dispatch(
+      saveSucceeded({ sentText: request.text, row: lootFilterRow({ content: request.text, revision: 4 }), entryId: request.entryId })
+    );
+    expect(storedEntries(storage)).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS);
+    const [draft] = storedEntries(storage);
+    expect(draft).toMatchObject({ savedId: 'row-1', savedOwnerId: OWNER, savedRevision: 4 });
+    expect(parseLootFilter(draft.text).filter.title).toBe('While saving');
+  });
+
+  it('Discard changes wins over the pending debounced flush', async () => {
+    const storage = testStorage();
+    const { store } = setup(storage);
+    store.dispatch(openSaved({ row: lootFilterRow(), viewerId: OWNER, authorLabel: 'Owner#1' }));
+    store.dispatch(setHeader({ title: 'First' }));
+    store.dispatch(flushNow());
+    expect(storedEntries(storage)).toHaveLength(1);
+    store.dispatch(setHeader({ title: 'Second' }));
+    store.dispatch(discardChanges());
+    expect(storedEntries(storage)).toEqual([]);
+
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS * 2);
+    expect(storedEntries(storage)).toEqual([]);
+    expect(store.getState().lootFilter.editor.filter?.title).toBe('Shared');
+  });
+
+  it('a first save of a new draft removes it from storage', () => {
+    const storage = testStorage([STORED]);
+    const { store } = setup(storage);
+    store.dispatch(open('stored'));
+    store.dispatch(setHeader({ author: 'Me' }));
+    const request = save(store, 1);
+    expect(request.kind).toBe('insert');
+    expect(storedEntries(storage)).toEqual([]);
+  });
+
+  it('the sandbox never writes the library', async () => {
+    const storage = testStorage([STORED]);
+    const { store } = setup(storage);
+    store.dispatch(openSaved({ row: lootFilterRow(), viewerId: 'someone-else', authorLabel: 'Owner#1' }));
+    store.dispatch(setHeader({ title: 'Tweaked' }));
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS * 2);
+    store.dispatch(close());
+    expect(storage.setItem).not.toHaveBeenCalled();
   });
 });

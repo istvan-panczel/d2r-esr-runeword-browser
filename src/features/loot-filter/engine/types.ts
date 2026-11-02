@@ -189,6 +189,13 @@ export interface LootFilterRule extends RuleConditions, RuleActions {
    * top-level `disabledRules` list (`{ "at": <index in the full rule list>, "rule": {…} }`) that the plugin ignores.
    */
   readonly disabled?: true;
+  /**
+   * Editor-only, never a key inside the rule: the file wrote `activeInLevels` as a single number (`"activeInLevels": 4`,
+   * which the plugin accepts) rather than a list; the model holds `[4]`. While `activeInLevels` is still exactly
+   * `[activeInLevelsNumber]` the serializer writes the number back, so a rule the user did not touch is written
+   * unchanged; once the levels are edited the list form is written.
+   */
+  readonly activeInLevelsNumber?: number;
 }
 
 /** A named set of actions that rules pull in with `useStyle`. Styles hold actions only. */

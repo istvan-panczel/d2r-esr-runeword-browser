@@ -18,14 +18,16 @@ the key (rule active at every level) or switches the rule off. Until known, the 
 condition ("empty list: the game logs 'the list is empty'…", done) and the UI keeps writing `activeInLevels: []`
 ("Every level" removes the key). Verify with a one-rule filter and `lootfilter` in the console.
 
-### Rules with a wrong-shaped condition (Sully's `"activeInLevels": 4`)
+### A single-number level (Sully's `"activeInLevels": 4`)
 
-Question for the power user: **with Sully's v0.6.11, are Ancient Scrolls (`01b`–`50b`) hidden at filter level 4
-(Uber-Strict - Maps+)?** Rule 98 hides them but writes `"activeInLevels": 4` instead of `[4]`. The guide says a rule
-with an error is switched off, so the Test tab now skips such a rule ("skipped: wrong shape") and shows the scrolls at
-level 4. If they are hidden in game, the plugin reads a single number as a one-entry list, and the evaluator should
-read it that way (and the parser accept it); if they show, it confirms the skip. `lootfilter` in the console should
-list the rule's error either way.
+Question for the power user: **with Sully's v0.6.11, are Ancient Scrolls (`01b`–`50b`) still shown at filter levels
+1 to 3?** Rule 98 hides them with `"activeInLevels": 4` instead of `[4]`. Sully says the rule works in game (the
+scrolls are hidden at level 4), so the editor now reads a single number as a one-level list with a warning ("A single
+number works in game; [4] is the documented form.") and the Test tab hides them at level 4 only. What is left: if the
+plugin read `4` as `[4]`, the scrolls show (gong highlight) at levels 1 to 3; if they are hidden there too, the plugin
+ignores the key (rule active at every level), and the warning should say so ("the plugin ignores a single number; the
+rule runs at every level") and the evaluator should drop the key instead. `lootfilter` in the console should list the
+rule without an error either way.
 
 ### Life, Mana and per-level stats: stored or shown value
 
@@ -54,7 +56,8 @@ Amazon tabs (plugin 0–2) or Sorceress tabs (plugin 8–10), and both ranges ar
 11–15, 19–21) name no tab and the paramless check repeats param 0, so the minimal lists are `[0, 1, 2]` and
 `[8, 9, 10]`; the same pattern for Paladin, Barbarian, Druid, Assassin or Warlock items (plugin 24 and up) would
 never match. See LOOT-FILTER.md "Verify in game". The owner told Sully on 2026-11-02 that v0.6.9's Ancient Scroll
-hide rule (rule 98) should write `"activeInLevels": [4]` instead of `4`.
+hide rule (rule 98) should write `"activeInLevels": [4]` instead of `4`; Sully answered that the rule works in game,
+so the editor accepts the number with a warning (see "A single-number level" above).
 
 ## Announced format changes to watch
 
@@ -124,18 +127,18 @@ Collected to forward together once the current implementation round is done.
 
 ## Planned features on top of the loot filter
 
-Owner requests (2026-11), to start once the editor is mostly done and verified in game. Not built yet.
+Owner requests (2026-11), to start once the editor is mostly done and verified in game. Sharing is built; the rest is
+not built yet.
 
 ### Loot filter sharing (Supabase)
 
-Share filters the way builds are shared ([FEATURE-BUILD-SHARING.md](../../builds-feature-docs/FEATURE-BUILD-SHARING.md),
-`supabase/migrations/`): a signed-in user publishes a library entry, everyone can browse, open and copy published
-filters into their own (local) library, likes or favourites and counts as for builds. Likely shape: a new migration
-with a `loot_filters` table (owner, name, description, the filter text as stored, ESR and plugin version, timestamps),
-RLS like `builds` (public read, owner write), and a saga next to the library one. Open points: publish the raw text
-(comments kept) or the serialized model; whether the bundled sounds and icons a filter uses are enough, or users need
-to upload their own files (storage); updating a published filter in place versus versions; whether `updateUrl` could
-point at the published copy so the launcher pulls updates.
+Built (2026-11): saved filters in Supabase (migration `005_loot_filters.sql`), public unless marked private, drafts in
+the browser until Save, the sandbox for others' filters, copies with "Update available", likes and download counts,
+the library's Shared and My filters tabs, the author's filters on `/user/:userId` and "Latest loot filters" on the home
+page. Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md);
+the screens: [LOOT-FILTER.md](./LOOT-FILTER.md) (Library screen). Decided: the content is saved verbatim (comments
+kept), only the bundled sounds and icons ship (no uploads), a filter is updated in place (a `revision` per content
+save, a change note), and `updateUrl` is left as the author wrote it.
 
 ### LLM prompt start
 

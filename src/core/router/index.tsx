@@ -5,7 +5,7 @@ import { AppLayout } from '@/core/layouts/AppLayout';
 import { RouteErrorScreen } from './RouteErrorScreen';
 import { NotFoundScreen } from './NotFoundScreen';
 import { Spinner } from '@/components/ui/spinner';
-import { startBuilds } from '@/core/startup';
+import { startBuilds, startLootFilterSharing } from '@/core/startup';
 import { loadAfter } from './loadAfter';
 import { HomeRoute } from './HomeRoute';
 
@@ -94,8 +94,9 @@ const BuildDetailScreen = lazy(async () => {
   return { default: module.BuildDetailScreen };
 });
 
+// The profile also lists the author's loot filters, so it waits for the sharing saga too.
 const UserProfileScreen = lazy(async () => {
-  const module = await loadBuildsFeature();
+  const [module] = await Promise.all([loadBuildsFeature(), startLootFilterSharing()]);
   return { default: module.UserProfileScreen };
 });
 
@@ -150,18 +151,22 @@ const GameDataSetsScreen = lazy(async () => {
   return { default: module.SetsScreen };
 });
 
+// The loot filter screens dispatch sharing requests (Shared tab, saved filters) on mount, so they wait for the sharing
+// saga like the builds screens wait for theirs. Resolves at once without Supabase: drafts work without a backend.
+const loadLootFilterFeature = () => loadAfter(() => import('@/features/loot-filter'), startLootFilterSharing);
+
 const LootFilterLayout = lazy(async () => {
-  const module = await import('@/features/loot-filter');
+  const module = await loadLootFilterFeature();
   return { default: module.LootFilterLayout };
 });
 
 const LootFilterLibraryScreen = lazy(async () => {
-  const module = await import('@/features/loot-filter');
+  const module = await loadLootFilterFeature();
   return { default: module.LootFilterLibraryScreen };
 });
 
 const LootFilterEditorScreen = lazy(async () => {
-  const module = await import('@/features/loot-filter');
+  const module = await loadLootFilterFeature();
   return { default: module.LootFilterEditorScreen };
 });
 
@@ -227,6 +232,12 @@ export const router = createBrowserRouter(
           element: routeElement(LootFilterLayout),
           children: [
             { index: true, element: routeElement(LootFilterLibraryScreen) },
+            // One screen for the editor routes (the param names, or the path of a bundled template's sandbox, tell
+            // them apart), so moving from a draft's route to its saved route after Save keeps the editor mounted.
+            // Static segments rank above ':id'.
+            { path: 'draft/:draftId', element: routeElement(LootFilterEditorScreen) },
+            { path: 'sully', element: routeElement(LootFilterEditorScreen) },
+            { path: 'example', element: routeElement(LootFilterEditorScreen) },
             { path: ':id', element: routeElement(LootFilterEditorScreen) },
           ],
         },
