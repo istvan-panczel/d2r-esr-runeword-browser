@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { effectiveActions } from '../../engine/actions';
 import { ACTION_KEYS } from '../../engine/parse';
-import type { Diagnostic, LootFilter, LootFilterRule, RuleActions } from '../../engine/types';
+import type { Diagnostic, LootFilter, LootFilterRule, RuleActions, StatCheck } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
 import { patchRule, setRuleDisabled } from '../../store/lootFilterSlice';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, QUALITY_SCALE } from '../../utils/matchValues';
-import { readsExceptions } from '../../utils/statChecks';
+import { isExceptionCheck, PLAIN_HIDE_ROW_OPS, plainCheckCount, readsExceptions, ruleStatQuirk } from '../../utils/statChecks';
 import type { ShallowPatch } from '../../utils/patch';
 import { ActionsEditor } from '../actions/ActionsEditor';
 import { AreaPicker, ItemPicker, ItemTypePicker, UniqueOrSetPicker } from '../pickers';
@@ -135,8 +137,16 @@ const STAT_FIELDS: readonly (FieldText & { readonly key: 'itemStats' | 'itemStat
   },
 ];
 
-/** On a hide rule the item stat lists also hold its exceptions (`ExceptionsControl`). */
-const HIDE_RULE_STAT_HINT = ' On a hide rule, the <, <= and != checks are its exceptions (above).';
+/** The item stat lists on a hide rule (inside "Advanced"): what a plain check does there. */
+const HIDE_RULE_STAT_HINTS: Readonly<Record<'itemStats' | 'itemStatsAnyOf', string>> = {
+  itemStats: 'Every check must hold: the rule hides only items with all of these.',
+  itemStatsAnyOf: 'At least one check must hold: the rule hides only items with one of these.',
+};
+
+const EXCEPTIONS_HINT =
+  'The hide skips items with these stats. The file has no exception key: each one is stored as its opposite check (≥ 1 as < 1) in Item stats, all of (“any of these”) or Item stats, any of (“all of these”); switching moves them. A range (between) has no single opposite. Turning Hide off leaves them as plain < 1 conditions.';
+
+const isPlainCheck = (check: StatCheck) => !isExceptionCheck(check);
 
 const FLAGS = [
   { key: 'isEthereal', label: 'Ethereal' },
@@ -149,6 +159,33 @@ const COMMENT_ID = fieldId('comment');
 const COMMENT_HINT_ID = `${COMMENT_ID}-hint`;
 const ENABLED_ID = 'loot-filter-rule-enabled';
 const ENABLED_HINT_ID = `${ENABLED_ID}-hint`;
+
+/**
+ * A hide rule's plain item stat checks ("hide only items with these stats"), collapsed: its `<`, `<=` and `!=` checks
+ * are exceptions, which "Except items with…" lists. Open at first when it holds plain checks.
+ */
+function AdvancedItemStats({ initiallyOpen, children }: { readonly initiallyOpen: boolean; readonly children: React.ReactNode }) {
+  const [open, setOpen] = useState(initiallyOpen);
+  return (
+    <details
+      className="group rounded-md border px-3 py-2 sm:col-span-2"
+      open={open}
+      onToggle={(event) => {
+        setOpen(event.currentTarget.open);
+      }}
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-1 text-sm font-medium [&::-webkit-details-marker]:hidden">
+        <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />
+        Advanced: hide only items with these stats
+      </summary>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Plain checks narrow what the rule hides. The exceptions above are stored in these lists too, as their opposite (&lt; 1), but are
+        edited only there.
+      </p>
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">{children}</div>
+    </details>
+  );
+}
 
 interface RuleEditorProps {
   readonly filter: LootFilter;
@@ -186,6 +223,37 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
       )}
     </ConditionField>
   );
+
+  const itemStatFields = STAT_FIELDS.filter((field) => field.key === 'itemStats' || field.key === 'itemStatsAnyOf');
+  const playerStatFields = STAT_FIELDS.filter((field) => field.key === 'playerStats' || field.key === 'playerStatsAnyOf');
+  const statField = (field: (typeof STAT_FIELDS)[number]) => {
+    const hideHint = field.key === 'itemStats' || field.key === 'itemStatsAnyOf' ? HIDE_RULE_STAT_HINTS[field.key] : undefined;
+    const item = hideHint !== undefined;
+    // On a hide rule the item lists leave out the exceptions (edited under "Except items with…") and offer no affix
+    // browser, whose presence checks were easy to add there by mistake.
+    const plainOnly = hides && item;
+    return (
+      <ConditionField
+        key={field.key}
+        id={fieldId(field.key)}
+        label={field.label}
+        hint={plainOnly ? hideHint : field.hint}
+        invalid={invalid(field.key)}
+      >
+        <StatCheckList
+          id={fieldId(field.key)}
+          data={data}
+          value={rule[field.key]}
+          onChange={(value) => patch({ [field.key]: value })}
+          affixBrowser={plainOnly ? undefined : field.key === 'itemStats' ? 'all' : field.key === 'itemStatsAnyOf' ? 'any' : undefined}
+          anyOf={field.key === 'itemStatsAnyOf' || field.key === 'playerStatsAnyOf'}
+          shows={plainOnly ? isPlainCheck : undefined}
+          ops={plainOnly ? PLAIN_HIDE_ROW_OPS : undefined}
+          quirkOf={item ? (check) => ruleStatQuirk(check, rule, data.reference) : undefined}
+        />
+      </ConditionField>
+    );
+  };
 
   return (
     <div id={RULE_EDITOR_ID} className="scroll-mt-4 space-y-4">
@@ -293,39 +361,28 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
 
           <ConditionSection title="Stats">
             {hides && (
-              <ConditionField
-                id={fieldId('exceptions')}
-                label="Except items with…"
-                hint="The hide skips items with these stats. Each one is written as its opposite check (≥ 1 becomes < 1): “any of these” into Item stats, all of; “all of these” into Item stats, any of. A range (between) has no single opposite, so it cannot be an exception."
-                className="sm:col-span-2"
-              >
+              <ConditionField id={fieldId('exceptions')} label="Except items with…" hint={EXCEPTIONS_HINT} className="sm:col-span-2">
                 <ExceptionsControl
                   id={fieldId('exceptions')}
                   data={data}
                   rule={rule}
                   keepsItems={readsExceptions(actions)}
-                  onChange={(key, value) => patch({ [key]: value })}
+                  onChange={(value) => patch(value)}
                 />
               </ConditionField>
             )}
-            {STAT_FIELDS.map((field) => (
-              <ConditionField
-                key={field.key}
-                id={fieldId(field.key)}
-                label={field.label}
-                hint={hides && field.key.startsWith('item') ? field.hint + HIDE_RULE_STAT_HINT : field.hint}
-                invalid={invalid(field.key)}
-              >
-                <StatCheckList
-                  id={fieldId(field.key)}
-                  data={data}
-                  value={rule[field.key]}
-                  onChange={(value) => patch({ [field.key]: value })}
-                  affixBrowser={field.key === 'itemStats' ? 'all' : field.key === 'itemStatsAnyOf' ? 'any' : undefined}
-                  anyOf={field.key === 'itemStatsAnyOf' || field.key === 'playerStatsAnyOf'}
-                />
-              </ConditionField>
-            ))}
+            {hides && (
+              <AdvancedItemStats initiallyOpen={plainCheckCount(rule.itemStats) + plainCheckCount(rule.itemStatsAnyOf) > 0}>
+                {itemStatFields.map(statField)}
+              </AdvancedItemStats>
+            )}
+            {(hides ? playerStatFields : STAT_FIELDS).map(statField)}
+            {!hides && [...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? [])].some(isExceptionCheck) && (
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                This rule does not hide, so its &lt;, &lt;= and != item stat checks are plain conditions (items without the stat), not
+                exceptions.
+              </p>
+            )}
             <p className="text-xs text-muted-foreground sm:col-span-2">
               The game checks item stats, not affix names; Browse affixes finds the stat behind an affix (prefix + suffix values add up).
             </p>

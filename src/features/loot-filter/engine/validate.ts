@@ -131,7 +131,7 @@ function checkColor(report: Report, key: string, color: LabelColor | undefined, 
  * Whether the rule's item codes and types can match an item the quirk affects (of one of its `affects` types). Without
  * item data, or with an item code the data lacks, it can.
  */
-function mayHitQuirk(rule: LootFilterRule, quirk: StatQuirk, reference: LootFilterReference | undefined): boolean {
+export function mayHitQuirk(rule: LootFilterRule, quirk: StatQuirk, reference: LootFilterReference | undefined): boolean {
   if (!reference || reference.itemCodeTypes.size === 0) return true;
   const { itemCodes, itemTypes, excludeItemCodes, excludeItemTypes } = rule;
   if (itemCodes?.some((code) => !reference.itemCodeTypes.has(code)) === true) return true;

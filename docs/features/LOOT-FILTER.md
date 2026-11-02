@@ -108,7 +108,14 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   (by name or id) on a stat the plugin reads as 0 on some items (`engine/statQuirks.ts`, see "Known plugin limits"):
   Enhanced Damage (17, 18) on weapons, Enhanced Defense (16) on armour, Increased Maximum Durability (75) on weapons
   and armour, at `<list>/<n>/stat`; skipped when the bundle shows the rule's item codes and types cannot match such
-  an item (a jewel or charm rule), never for the character stat lists. Disabled rules are validated like the
+  an item (a jewel or charm rule), never for the character stat lists. Each quirk also has a short `headline`
+  ("Currently only works on jewels and charms (reads 0 on weapons)"; "Does not work on armour, helms and shields
+  (reads 0)"; durability, untested: "May not work on weapons and armour (likely reads 0; not tested)") and a
+  `confirmed` flag. The rule editor shows the headline under the stat check row (item stat rows and exception rows)
+  in red, text-sm, medium weight (amber for the untested durability one) when `ruleStatQuirk` (`utils/statChecks.ts`,
+  the validator's exported `mayHitQuirk`, so only when the rule's codes and types can match an affected item; always
+  without item data) says so; `RuleDiagnostics` puts the headline in red before a confirmed quirk's warning
+  (`quirkOfMessage`) and colours its icon red. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
@@ -284,36 +291,54 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   `playerStatsAnyOf`: your character, not the item), because users mistook "Item stats, any of" for the player list;
   the rule summary prefixes character checks with `character` (`character any of strength <10`), the Test tab says
   "Character level" and "More character stats". The two item stat lists also have "Browse affixes…" after "Add stat
-  check" (the affix browser below), and a line under the Stats section says the game checks item stats, not
-  affix names; `location` checkboxes (none = on the ground); `activeInLevels`: "Every level" or a tick per
+  check" (the affix browser below; not on a hide rule, see "Except items with…"), and a line under the Stats section
+  says the game checks item stats, not affix names; `location` checkboxes (none = on the ground); `activeInLevels`: "Every level" or a tick per
   filter level, unknown ids listed with a remove button. Unticking every level writes `activeInLevels: []` (the
   validator warns about the empty list); ticking "Every level" removes the key.
 - **Except items with…** (`conditions/ExceptionsControl.tsx`, hide rules only: own or style `hide`, first field of
   the Stats section). Request: "hide all magic weapons except those with Demon Damage". The format has no exception
-  key, so the control is an input helper that writes the opposite check (`invertStatCheck` in `utils/statChecks.ts`:
-  `>=`↔`<`, `>`↔`<=`, `==`↔`!=`; `between` has no single opposite, which the hint says) into an item stat list:
-  "Keep items with any of these" → `itemStats` (every check must hold to hide, so one exception keeps the item),
-  "Keep items with all of these" → `itemStatsAnyOf` (one failing exception hides it). "Add exception" (a stat picker)
-  appends `{ stat, op: "<", value: 1 }` (for a skill, tab or class stat the new row in that list then gets its param
-  from the row's param picker, and the validator warns while it has none); "Browse affixes for exceptions…" opens the
-  affix browser in its inverted mode on the same list. The checks are then edited in the lists like any other (set the value there). Below, a
-  "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." line reads the exceptions back (`ruleExceptions`). An
-  amber note (in either mode) says when `itemStatsAnyOf` mixes exceptions with plain checks: its exceptions are then
-  left out of the "Kept" line, and one there only keeps items that also fail the plain checks. When the effective
-  actions also have `hideIfOtherConditionsFail`, exceptions keep nothing (an item without the stat fails the rule
-  and the gate hides it), so the "Kept" line gives way to an amber note ("With "hide if other conditions fail" these
-  exceptions keep nothing … Turn it off to use exceptions."); `readsExceptions(actions)` in `utils/statChecks.ts`
-  decides, for the control and the rule summary. The item stat lists' hints add "On a hide rule, the <, <= and != checks are its exceptions".
-  - _Why no list of its own_: the file stores only plain checks, and on a hide rule every check of `itemStats` is
-    exactly "except items with its opposite", so an exception list that took the checks out of `itemStats` would
-    either show the user's `item_numsockets >= 1` ("hide socketed items") as "except item_numsockets < 1" or guess
-    by op which checks were meant as exceptions. The checks therefore stay where the file has them (one source of
-    truth, nothing reordered), and only the `<`, `<=` and `!=` ops, the ones the control writes from `>=`, `>` and
-    `==`, are read back as exceptions (`exceptionOf`), in the "Kept:" line and in the rule summary (`ruleSummary`: a
-    hide rule's `item_demondamage_percent < 1` reads "unless item_demondamage_percent ≥1"; several in `itemStats`
-    join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed `itemStatsAnyOf` stays "any of …"). Both the
-    summary and the control use the effective actions (a style can hide): the Rules tab and the Test tab's trace pass
-    `readsExceptions(effectiveActions(rule, filter))` to `ruleSummary`, whose default reads the rule's own actions.
+  key, so an exception is stored as its opposite check (`invertStatCheck` in `utils/statChecks.ts`: `>=`↔`<`,
+  `>`↔`<=`, `==`↔`!=`; `between` has no single opposite) in an item stat list: "Keep items with any of these" →
+  `itemStats` (every check must hold to hide, so one exception keeps the item), "Keep items with all of these" →
+  `itemStatsAnyOf` (one failing exception hides it). The control **owns those rows** (decided after a power user's
+  feedback, 2026-11: switching the mode did not move existing exceptions, they showed negated in the regular lists,
+  the exceptions' Browse affixes saw only one side, and the regular Browse affixes added `>= 1` checks on hide rules):
+  - The `<`, `<=` and `!=` checks of both lists (`isExceptionCheck`, `exceptionOf`) are listed here as `StatCheckRow`s
+    in their natural form: the row shows `invertStatCheck(stored)` and writes back `storedException(edited)`, edits go
+    to the row's index in the full list (`statCheckRows`). Ops offered: `>=`, `>`, `==` (`EXCEPTION_ROW_OPS`); the
+    param field, value and remove ("Remove exception") work as in the other lists. "Any known level" stays where it
+    was valid (one exception per level is "keep items with the skill at any of these levels" only in `itemStats`):
+    the row passes `anyOf` = "any of these" mode, so the option is offered there and disabled in the "all of these"
+    mode ("only with “Keep items with any of these”").
+  - The mode is where the exceptions are (`exceptionPlacement`: `any`, `all`, `both` or none); with none, the toggle
+    only picks where new ones go (component state, starting from the file). Switching moves every exception of the
+    other list to the end of the picked one, in order (`moveExceptions`; the other list keeps its plain checks, an
+    emptied list is removed), so only one side holds them. "Add exception" appends `{ stat, op: "<", value: 1 }` and
+    "Browse affixes for exceptions…" (the affix browser's inverted mode) edits the side holding them.
+  - Edge cases: a hand-written file with exceptions in both lists shows both groups, labelled ("… (stored in Item
+    stats, all of)"), with no mode pressed, an amber note, and no add controls until a mode is picked, which gathers
+    them all into that list. When `itemStatsAnyOf` holds plain checks, "Keep items with all of these" is disabled
+    with a line saying why (exceptions there would be ORed with the plain checks), unless the exceptions are already
+    there (then the amber note says they are ORed and not in "Kept", and "any of these" moves them out). With
+    `hideIfOtherConditionsFail` in the effective actions, exceptions keep nothing, so the "Kept" line gives way to an
+    amber note ("With "hide if other conditions fail" these exceptions keep nothing … Turn it off to use
+    exceptions."); `readsExceptions(actions)` decides, for the control and the rule summary.
+  - Below the rows, "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." reads the exceptions back
+    (`ruleExceptions`). The field hint says how they are stored, that switching moves them and that turning Hide off
+    leaves them as plain `< 1` conditions; a non-hide rule holding `<`, `<=` or `!=` item stat checks gets a line in
+    its Stats section that they are plain conditions there.
+  - **Advanced box**: on a hide rule the regular `itemStats` / `itemStatsAnyOf` lists sit in a collapsed
+    "Advanced: hide only items with these stats" `<details>` (open at first when they hold plain checks), show only
+    the plain checks (`StatCheckList`'s `shows`, indices mapped back to the full list), offer the ops `>=`, `>`, `==`,
+    `between` (`PLAIN_HIDE_ROW_OPS`, so a row cannot turn into an exception) and have no Browse affixes (the plain
+    "Add stat check" stays). Their hints say what a plain check does there. Player stat lists and non-hide rules are
+    unchanged.
+  - The file format and the stored checks do not change; nothing is rewritten unless the user edits. The rule
+    summary still reads a hide rule's `item_demondamage_percent < 1` as "unless item_demondamage_percent ≥1"
+    (`ruleSummary`: several in `itemStats` join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed
+    `itemStatsAnyOf` stays "any of …"). Both the summary and the control use the effective actions (a style can
+    hide): the Rules tab and the Test tab's trace pass `readsExceptions(effectiveActions(rule, filter))` to
+    `ruleSummary`, whose default reads the rule's own actions.
 - **Stat params** (`conditions/StatParamField.tsx`, `utils/statParams.ts`). The skill, skill tab, class, event and
   charged stats keep one entry per skill, tab or class, told apart by `param` (encodings in
   `game-data/engine/statLayers.ts`), so the param field picks it by name: a skill tab picker (24 tabs grouped by
@@ -504,9 +529,10 @@ focus returns to the button).
 - **Enhanced damage**: `dmg%` writes both `item_maxdamage_percent` (17) and `item_mindamage_percent` (18). The browser
   shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.2.24), so
   a tick writes one check on `item_maxdamage_percent`; an affix writing only one of them would keep it as its own row.
-- **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows (and a durability row, if one were
-  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats; confirmed in
-  game); works on jewels and charms (confirmed on a jewel)."); see "Known plugin limits".
+- **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows carry their quirk from `STAT_QUIRKS`
+  in red, text-sm, medium weight, headline first ("Currently only works on jewels and charms (reads 0 on weapons).
+  Reads 0 on weapons (the game keeps it off their stats; confirmed in game); works on jewels and charms (confirmed on
+  a jewel)."); a durability row, if one were listed, keeps the amber note (untested); see "Known plugin limits".
 - **Search**: every whitespace term must match the label, the stat name, an affix name, a param name (below), or
   (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its name or param
   names and every term is there or in the row's label or stat name.
@@ -548,7 +574,9 @@ focus returns to the button).
 - **Inverted mode** (`except-any` / `except-all`, from "Except items with…"): only the exception checks (`<`, `<=`,
   `!=`) of the list are the browser's, so the draft starts from them and plain checks on the same stat are kept; a new
   tick appends `{ stat, op: "<", value: 1 }`. The title says "Browse affixes: except items with…" and the footer
-  where the ticks go ("…the rule hides only items with none of them" / "…keeps only items with all of them").
+  where the ticks go ("…the rule hides only items with none of them" / "…keeps only items with all of them"). The
+  Except control opens it on the one list holding the exceptions (switching its mode moves them), so every exception
+  shows ticked.
 
 ## Actions editor (`components/actions/`)
 
@@ -713,7 +741,7 @@ research doc and the Test tab's note link here.
   `item_maxdurability_percent` (75) likely reads 0 on items with durability (the same mechanism, not tested). On
   jewels (no base damage or defense) Enhanced Damage reads correctly (verified: a rare jewel showed 58), and charms
   should behave the same. The validator warns about
-  such checks and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
+  such checks, the rule editor shows the red headline under the row and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
   still matches). Listed for the mod author in the backlog.
 
 ### Troubleshooting in game

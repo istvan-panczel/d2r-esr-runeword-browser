@@ -1,5 +1,7 @@
 /** Helpers for the rule editor's stat check rows (`itemStats`, `itemStatsAnyOf`, `playerStats`, `playerStatsAnyOf`). */
-import type { LootFilterRule, RuleActions, StatCheck, StatOp } from '../engine/types';
+import { statQuirk, type StatQuirk } from '../engine/statQuirks';
+import type { LootFilterReference, LootFilterRule, RuleActions, StatCheck, StatOp } from '../engine/types';
+import { mayHitQuirk } from '../engine/validate';
 import type { LootFilterLookup } from './lookup';
 
 export const DEFAULT_STAT_OP: StatOp = '>=';
@@ -140,6 +142,76 @@ export function ruleExceptions(rule: Pick<LootFilterRule, 'itemStats' | 'itemSta
   const all = exceptionsIn(anyOf);
   const pure = all.length === anyOf.length;
   return { any: exceptionsIn(rule.itemStats), all: pure ? all : [], mixedAll: !pure && anyOf.length > 0 };
+}
+
+/** Whether a stored check reads as an exception on a hide rule (`<`, `<=` or `!=`, see `exceptionOf`). */
+export function isExceptionCheck(check: StatCheck): boolean {
+  return exceptionOf(check) !== undefined;
+}
+
+/** The ops an exception row offers, in its natural form: their opposites (`<`, `<=`, `!=`) are what the file stores. */
+export const EXCEPTION_ROW_OPS: readonly StatOp[] = ['>=', '>', '=='];
+
+/** The ops a hide rule's plain item stat rows offer: the others would turn the row into an exception. */
+export const PLAIN_HIDE_ROW_OPS: readonly StatOp[] = ['>=', '>', '==', 'between'];
+
+/** An exception row as edited (`Teleport ≥ 1`) → the check the file stores (`Teleport < 1`). */
+export function storedException(shown: StatCheck): StatCheck {
+  return invertStatCheck(shown) ?? shown;
+}
+
+/** A row of a list shown filtered: the check and its position in the full list (where its edits go). */
+export interface StatCheckRowRef {
+  readonly check: StatCheck;
+  readonly index: number;
+}
+
+/** The rows of `list` that `shows` keeps, each with its index in the full list. */
+export function statCheckRows(list: readonly StatCheck[] | undefined, shows: (check: StatCheck) => boolean): StatCheckRowRef[] {
+  return (list ?? []).flatMap((check, index) => (shows(check) ? [{ check, index }] : []));
+}
+
+type ItemStatLists = Pick<LootFilterRule, 'itemStats' | 'itemStatsAnyOf'>;
+
+/** A change to the item stat lists (a key set to `undefined` is removed). */
+export type ItemStatListsPatch = Partial<Record<keyof ItemStatLists, readonly StatCheck[] | undefined>>;
+
+/**
+ * Where a hide rule's exceptions are: `any` (only in `itemStats`), `all` (only in `itemStatsAnyOf`), `both` (a
+ * hand-written file with exceptions in both lists), or undefined (none yet).
+ */
+export function exceptionPlacement(rule: ItemStatLists): ExceptionMode | 'both' | undefined {
+  const inAll = rule.itemStats?.some(isExceptionCheck) === true;
+  const inAnyOf = rule.itemStatsAnyOf?.some(isExceptionCheck) === true;
+  return inAll && inAnyOf ? 'both' : inAll ? 'any' : inAnyOf ? 'all' : undefined;
+}
+
+/** How many plain (non-exception) checks a list holds. */
+export function plainCheckCount(list: readonly StatCheck[] | undefined): number {
+  return (list ?? []).filter((check) => !isExceptionCheck(check)).length;
+}
+
+/**
+ * Switching "Keep items with any / all of these": every exception of the other list moves to the end of the mode's
+ * list (in order), the other list keeps its plain checks (an emptied list is removed). Empty when nothing moves.
+ */
+export function moveExceptions(rule: ItemStatLists, to: ExceptionMode): ItemStatListsPatch {
+  const target = EXCEPTION_LIST[to];
+  const source = EXCEPTION_LIST[to === 'any' ? 'all' : 'any'];
+  const from = rule[source] ?? [];
+  const moving = from.filter(isExceptionCheck);
+  if (moving.length === 0) return {};
+  const staying = from.filter((check) => !isExceptionCheck(check));
+  return { [source]: staying.length === 0 ? undefined : staying, [target]: [...(rule[target] ?? []), ...moving] };
+}
+
+/**
+ * The stat's plugin quirk (`STAT_QUIRKS`) when the rule's item codes and types can match an affected item (the
+ * validator's `mayHitQuirk`; without item data, always).
+ */
+export function ruleStatQuirk(check: StatCheck, rule: LootFilterRule, reference: LootFilterReference | undefined): StatQuirk | undefined {
+  const quirk = statQuirk(check.stat);
+  return quirk !== undefined && mayHitQuirk(rule, quirk, reference) ? quirk : undefined;
 }
 
 /**

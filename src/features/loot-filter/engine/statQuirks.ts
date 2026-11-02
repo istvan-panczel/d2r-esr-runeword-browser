@@ -16,12 +16,17 @@ export interface StatQuirk {
   readonly name: string;
   /** Item types (with descendants) whose items read 0: `weap`, `armo` */
   readonly affects: readonly string[];
+  /** Seen in game (shown in red) or only inferred (shown in amber) */
+  readonly confirmed: boolean;
+  /** The short warning shown under a stat check row and in the affix browser and rule problems */
+  readonly headline: string;
   /** The validator's warning */
   readonly message: string;
   /** The affix browser's short note */
   readonly note: string;
 }
 
+const ED_HEADLINE = 'Currently only works on jewels and charms (reads 0 on weapons)';
 const ED_MESSAGE =
   "The game keeps Enhanced Damage off a weapon's stats, so the plugin reads 0 here on weapons (confirmed in game); on jewels and charms it reads correctly (confirmed on a jewel). Reported to the mod author.";
 const ED_NOTE =
@@ -32,16 +37,20 @@ export const STAT_QUIRKS: readonly StatQuirk[] = [
     id: 16,
     name: 'item_armor_percent',
     affects: ['armo'],
+    confirmed: true,
+    headline: 'Does not work on armour, helms and shields (reads 0)',
     message:
       'The game keeps Enhanced Defense off the stats of armour with defense, so the plugin reads 0 here on armour, helms and shields (confirmed in game). Reported to the mod author.',
     note: 'Reads 0 on armour (the game keeps it off their stats; confirmed in game).',
   },
-  { id: 17, name: 'item_maxdamage_percent', affects: ['weap'], message: ED_MESSAGE, note: ED_NOTE },
-  { id: 18, name: 'item_mindamage_percent', affects: ['weap'], message: ED_MESSAGE, note: ED_NOTE },
+  { id: 17, name: 'item_maxdamage_percent', affects: ['weap'], confirmed: true, headline: ED_HEADLINE, message: ED_MESSAGE, note: ED_NOTE },
+  { id: 18, name: 'item_mindamage_percent', affects: ['weap'], confirmed: true, headline: ED_HEADLINE, message: ED_MESSAGE, note: ED_NOTE },
   {
     id: 75,
     name: 'item_maxdurability_percent',
     affects: ['weap', 'armo'],
+    confirmed: false,
+    headline: 'May not work on weapons and armour (likely reads 0; not tested)',
     message:
       'The game likely keeps Increased Maximum Durability off the stats of items with durability (the same rule as Enhanced Damage and Defense, not tested in game), so the plugin likely reads 0 here on weapons and armour. Reported to the mod author.',
     note: 'Likely reads 0 on weapons and armour (the same rule as Enhanced Damage; not tested in game).',
@@ -51,4 +60,9 @@ export const STAT_QUIRKS: readonly StatQuirk[] = [
 /** The quirk of a check's stat (an itemstatcost name or id), if it has one. */
 export function statQuirk(stat: StatCheck['stat']): StatQuirk | undefined {
   return STAT_QUIRKS.find((quirk) => (typeof stat === 'number' ? quirk.id === stat : quirk.name === stat));
+}
+
+/** The quirk a validator warning is about (its message is the quirk's `message`), for the rule problems list. */
+export function quirkOfMessage(message: string): StatQuirk | undefined {
+  return STAT_QUIRKS.find((quirk) => quirk.message === message);
 }
