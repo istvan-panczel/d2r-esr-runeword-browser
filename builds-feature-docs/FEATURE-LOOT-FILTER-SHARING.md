@@ -37,7 +37,7 @@ Defaults chosen while planning:
   the bundled file).
 - **Without Supabase env vars** (forks, tests): drafts and the sandbox work; Save, the Shared tab, likes and profile
   blocks are hidden with a note.
-- **"Most downloaded"** sort is offered; no dedicated index (a few thousand rows sort fine).
+- **"Most downloaded"** sort is offered, with its own cursor index like "Most liked".
 
 ## Data model: `supabase/migrations/005_loot_filters.sql`
 
@@ -67,7 +67,8 @@ Applied by hand in the Supabase SQL editor, DEV first, then PROD (same as 001–
 | `likes_count`, `download_count`                 | `integer`      | Default 0; maintained by a trigger / an RPC only.                                                                          |
 | `created_at`, `updated_at`                      | `timestamptz`  | `updated_at` is set by the trigger only when the filter itself changes (not on likes or downloads, unlike `builds`).       |
 
-Indexes: `(created_at desc, id desc)`, `(likes_count desc, created_at desc, id desc)`, `(user_id)`.
+Indexes: `(created_at desc, id desc)`, `(likes_count desc, created_at desc, id desc)`,
+`(download_count desc, created_at desc, id desc)`, `(user_id)`, `(based_on_id)`.
 
 Triggers and functions:
 

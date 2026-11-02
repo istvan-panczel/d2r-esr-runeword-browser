@@ -115,6 +115,9 @@ create index loot_filters_created_at_id_idx on public.loot_filters (created_at d
 -- Cursor pagination — "Most liked": (likes_count desc, created_at desc, id desc).
 create index loot_filters_likes_created_id_idx on public.loot_filters (likes_count desc, created_at desc, id desc);
 
+-- Cursor pagination — "Most downloaded": (download_count desc, created_at desc, id desc).
+create index loot_filters_downloads_created_id_idx on public.loot_filters (download_count desc, created_at desc, id desc);
+
 -- "My filters" and the profile page.
 create index loot_filters_user_id_idx on public.loot_filters (user_id);
 
@@ -166,8 +169,10 @@ end;
 $$;
 
 -- At most 50 filters per user (private ones included). SECURITY DEFINER so the
--- count sees every row of the user regardless of RLS. Two concurrent inserts at
--- 49 may both pass; acceptable at this scale.
+-- count sees every row of the user regardless of RLS. It runs before the RLS
+-- WITH CHECK, so a row for another user is left to RLS (which rejects it) rather
+-- than counted: the error must not reveal how many filters someone else has.
+-- The advisory lock serialises one user's concurrent inserts at 49.
 create or replace function public.loot_filters_cap()
 returns trigger
 language plpgsql
@@ -175,6 +180,10 @@ security definer
 set search_path = ''
 as $$
 begin
+  if new.user_id is distinct from auth.uid() then
+    return new;
+  end if;
+  perform pg_advisory_xact_lock(hashtext('loot_filters_cap:' || new.user_id::text));
   if (select count(*) from public.loot_filters where user_id = new.user_id) >= 50 then
     raise exception 'loot_filter_limit: a user may have at most 50 loot filters'
       using errcode = 'P0001';
@@ -247,20 +256,20 @@ alter table public.loot_filter_likes enable row level security;
 -- Public filters for everyone; private ones for their owner only.
 create policy "Public loot filters are viewable by everyone"
   on public.loot_filters for select
-  using (not is_private or auth.uid() = user_id);
+  using (not is_private or (select auth.uid()) = user_id);
 
 create policy "Users can insert own loot filters"
   on public.loot_filters for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can update own loot filters"
   on public.loot_filters for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can delete own loot filters"
   on public.loot_filters for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- loot_filter_likes --------------------------------------------------
 -- A like is visible when its filter is (RLS on the subquery hides private
@@ -268,19 +277,19 @@ create policy "Users can delete own loot filters"
 -- filter goes private and count again when it is public again.
 create policy "Loot filter likes are viewable with their filter"
   on public.loot_filter_likes for select
-  using (exists (select 1 from public.loot_filters f where f.id = filter_id));
+  using (exists (select 1 from public.loot_filters f where f.id = loot_filter_likes.filter_id));
 
 -- Like as yourself, and only a public filter.
 create policy "Users can like public loot filters"
   on public.loot_filter_likes for insert
   with check (
-    auth.uid() = user_id
-    and exists (select 1 from public.loot_filters f where f.id = filter_id and not f.is_private)
+    (select auth.uid()) = user_id
+    and exists (select 1 from public.loot_filters f where f.id = loot_filter_likes.filter_id and not f.is_private)
   );
 
 create policy "Users can delete own loot filter likes"
   on public.loot_filter_likes for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- =====================================================================
 -- 6. GRANTS
@@ -315,8 +324,9 @@ grant update (
 revoke insert, update on public.loot_filter_likes from anon, authenticated;
 grant insert (filter_id, user_id) on public.loot_filter_likes to authenticated;
 
--- The download counter RPC, for signed-in users and visitors. Functions are
--- executable by PUBLIC by default; make the intended callers explicit. (The
--- trigger functions return `trigger` and cannot be called through the API.)
+-- The download counter RPC, for signed-in users and visitors. (Supabase's
+-- default privileges already grant EXECUTE to anon and authenticated; this makes
+-- the intended callers explicit. The trigger functions return `trigger` and
+-- cannot be called through the API.)
 revoke execute on function public.increment_loot_filter_download(uuid) from public;
 grant execute on function public.increment_loot_filter_download(uuid) to anon, authenticated;
