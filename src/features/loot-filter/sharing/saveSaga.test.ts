@@ -59,7 +59,7 @@ vi.mock('@/core/db', () => ({
 }));
 
 vi.mock('sonner', () => ({
-  toast: { error: vi.fn(), success: vi.fn() },
+  toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() },
 }));
 
 import { RequestState } from '@/core/types';

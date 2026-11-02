@@ -128,9 +128,10 @@ function metadataColumns(text: string) {
 }
 
 function* finishSave(request: LootFilterSaveRequest, row: SharedFilterDetail, inserted: boolean) {
-  // The editor first (its target becomes the saved row), then the lists and the detail.
-  yield put(saveSucceeded({ sentText: request.text, row: detailToRow(row), entryId: request.entryId }));
+  // The save status and detail first, then the editor target: the editor screen reads "the target is the row just
+  // saved" as the open filter moving to its new route (not another filter being opened).
   yield put(saveFilterSucceeded({ row, inserted }));
+  yield put(saveSucceeded({ sentText: request.text, row: detailToRow(row), entryId: request.entryId }));
   yield call(toast.success, inserted ? 'Loot filter saved.' : 'Changes saved.');
 }
 
@@ -242,6 +243,7 @@ export function* handleSaveFilter(action: PayloadAction<SaveFilterRequest>) {
   const request = (yield select(selectSaveRequest)) as LootFilterSaveRequest | null;
   if (request === null) {
     yield put(saveFilterCancelled());
+    yield call(toast.info, 'No changes to save.');
     return;
   }
   const problem = checkSaveText(request.text);
