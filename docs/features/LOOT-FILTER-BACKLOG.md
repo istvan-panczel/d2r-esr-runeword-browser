@@ -124,18 +124,18 @@ Collected to forward together once the current implementation round is done.
 
 ## Planned features on top of the loot filter
 
-Owner requests (2026-11), to start once the editor is mostly done and verified in game. Not built yet.
+Owner requests (2026-11), to start once the editor is mostly done and verified in game. Sharing is built; the rest is
+not built yet.
 
 ### Loot filter sharing (Supabase)
 
-Share filters the way builds are shared ([FEATURE-BUILD-SHARING.md](../../builds-feature-docs/FEATURE-BUILD-SHARING.md),
-`supabase/migrations/`): a signed-in user publishes a library entry, everyone can browse, open and copy published
-filters into their own (local) library, likes or favourites and counts as for builds. Likely shape: a new migration
-with a `loot_filters` table (owner, name, description, the filter text as stored, ESR and plugin version, timestamps),
-RLS like `builds` (public read, owner write), and a saga next to the library one. Open points: publish the raw text
-(comments kept) or the serialized model; whether the bundled sounds and icons a filter uses are enough, or users need
-to upload their own files (storage); updating a published filter in place versus versions; whether `updateUrl` could
-point at the published copy so the launcher pulls updates.
+Built (2026-11): saved filters in Supabase (migration `005_loot_filters.sql`), public unless marked private, drafts in
+the browser until Save, the sandbox for others' filters, copies with "Update available", likes and download counts,
+the library's Shared and My filters tabs, the author's filters on `/user/:userId` and "Latest loot filters" on the home
+page. Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md);
+the screens: [LOOT-FILTER.md](./LOOT-FILTER.md) (Library screen). Decided: the content is saved verbatim (comments
+kept), only the bundled sounds and icons ship (no uploads), a filter is updated in place (a `revision` per content
+save, a change note), and `updateUrl` is left as the author wrote it.
 
 ### LLM prompt start
 

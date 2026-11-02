@@ -132,6 +132,44 @@ After running, verify under **Table Editor**:
 And under **Database → Functions**:
 - `handle_favorites_change`
 
+### Apply the Loot Filter Sharing Migration (005)
+
+Adds saved loot filters (public unless private), their likes and a download counter
+([FEATURE-LOOT-FILTER-SHARING.md](./FEATURE-LOOT-FILTER-SHARING.md)). Migrations 003 and 004 come first.
+
+1. Open `supabase/migrations/005_loot_filters.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+
+After running, verify under **Table Editor**:
+- `loot_filters`
+- `loot_filter_likes`
+
+And under **Database → Functions**:
+- `loot_filters_before_update`, `loot_filters_cap`, `handle_loot_filter_likes_change`
+- `increment_loot_filter_download`
+
+Then check the RLS policies, column grants, triggers and the download RPC against DEV through the API, as the app
+talks to it:
+
+```bash
+npm run check:loot-filter-sharing
+```
+
+It needs two password test users in the DEV project (**Authentication → Users → Add user → Create new user**, with
+**Auto Confirm User** ticked; the sign-up trigger gives each a profile) and their credentials in `.env.local`:
+
+```
+DEV_TEST_USER_A_EMAIL=...
+DEV_TEST_USER_A_PASSWORD=...
+DEV_TEST_USER_B_EMAIL=...
+DEV_TEST_USER_B_PASSWORD=...
+```
+
+The script reads the DEV URL and anon key from `.env.development`, refuses to run against PROD (it compares with
+the `.env.production` URL and `PROD_SUPABASE_URL` from `.env.local`), prints only check names and PASS/FAIL, and deletes every loot filter
+of the two test users before and after the run. It never touches users or profiles. Run it against DEV only, before
+applying 005 to PROD.
+
 ### Future Migrations
 
 When new migration files are added to `supabase/migrations/`:
@@ -169,6 +207,12 @@ DEV_SUPABASE_URL=https://[DEV_PROJECT_REF].supabase.co
 DEV_SUPABASE_SERVICE_ROLE_KEY=[DEV_SERVICE_ROLE_KEY]
 PROD_SUPABASE_URL=https://[PROD_PROJECT_REF].supabase.co
 PROD_SUPABASE_ANON_KEY=[PROD_ANON_KEY]
+
+# Used by scripts/check-loot-filter-sharing.ts (DEV password test users, see migration 005)
+DEV_TEST_USER_A_EMAIL=[EMAIL]
+DEV_TEST_USER_A_PASSWORD=[PASSWORD]
+DEV_TEST_USER_B_EMAIL=[EMAIL]
+DEV_TEST_USER_B_PASSWORD=[PASSWORD]
 ```
 
 **Security note:** `.env.local` is already gitignored by the `*.local` pattern in `.gitignore`. The service role key must never be committed or exposed to the browser.
@@ -179,7 +223,7 @@ PROD_SUPABASE_ANON_KEY=[PROD_ANON_KEY]
 |------|-----------|-----|
 | `.env.development` | Yes | Contains only public anon key (safe, exposed in browser bundle anyway) |
 | `.env.production` | Yes | Same — public anon key only |
-| `.env.local` | No (gitignored) | Contains service role key (secret) |
+| `.env.local` | No (gitignored) | Contains service role key and test user passwords (secret) |
 
 ## Step 7: Verify Setup
 

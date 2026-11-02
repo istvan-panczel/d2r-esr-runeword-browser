@@ -1,7 +1,9 @@
 # Loot Filter (editor for ESR's loot filter plugin)
 
-A browser-only editor for the JSON loot filter files that ESR's loot filter plugin reads (since ESR 3.2.09). Filters
-are kept in the browser's localStorage and downloaded as files for the ESR launcher. Format reference:
+An editor for the JSON loot filter files that ESR's loot filter plugin reads (since ESR 3.2.09). Filters are drafts in
+the browser's localStorage until the user saves them to their account (Supabase; public unless marked private, see
+[FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md)), and are downloaded as
+files for the ESR launcher. Format reference:
 [ESR-LOOT-FILTER-GUIDE.md](../../builds-feature-docs/loot-filter/ESR-LOOT-FILTER-GUIDE.md). Research and owner
 decisions: [FEATURE-LOOT-FILTER-RESEARCH.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-RESEARCH.md) §4.1 (the format
 answers), §5 and §5.1 (owner decisions).
@@ -10,8 +12,8 @@ answers), §5 and §5.1 (owner decisions).
 
 | Path                | Screen                  | Notes                                                                                           |
 | ------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
-| `/loot-filters`     | LootFilterLayout        | Frame for both pages: an "Under development" notice (like the guide's "Experimental" one)       |
-| `/loot-filters`     | LootFilterLibraryScreen | The library: New filter, Upload, Start from Sully's QoL filter; one card per filter             |
+| `/loot-filters`     | LootFilterLayout        | Frame for every loot filter page (the page width only)                                          |
+| `/loot-filters`     | LootFilterLibraryScreen | The library: tabs Shared and My filters (`?tab=shared\|mine`), see Library screen               |
 | `/loot-filters/:id` | LootFilterEditorScreen  | The editor; `?tab=rules\|styles\|settings\|json\|test` (default `rules`); unknown id: not found |
 
 Both routes skip the HTM "Loading data..." gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`, see
@@ -211,8 +213,55 @@ chunk (about 6.5 KB gzip); a documented exception, see [SAGAS.md](../technical/S
 
 ## Library screen
 
-Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip download, the troubleshooting line from
-"Using a filter in the game"), and the buttons in this order: **Start from Sully's QoL filter** (the primary button),
+`screens/LootFilterLibraryScreen.tsx`, `components/library/`. Title and a short how-to, then two tabs (shadcn Tabs,
+`?tab=shared|mine`; without the parameter **My filters** when signed in, **Shared** when signed out, a spinner while
+the sign-in state is unknown; `resolveLibraryTab` in `utils/library.ts`). Without the Supabase env vars there are no
+tabs: the page is the My filters content without the saved section (the drafts, as before sharing) with the note
+"Sharing is off in this build of the site".
+
+**Shared** (`SharedFiltersTab`):
+
+- A pinned card for the bundled Sully's QoL filter first (`SullyFilterCard`): name, "by Sully", `TEMPLATE_VERSION`,
+  rule count and level names from `filterMetadata` on the bundled file (fetched once per page load by
+  `loadTemplateText`, shared with Start from Sully's), **Open** (`/loot-filters/sully`, the sandbox), **Download** (the
+  same menu as a draft's, with the zip) and **Start from it** (the template start below).
+- Search by name (debounced 300 ms like the builds list, server-side `ilike`) and sort **Newest** / **Most liked** /
+  **Most downloaded** (`SharedFiltersToolbar`, the sharing slice's `searchText` / `sortMode`; a change refetches).
+- The public filters, 50 per page, infinite scroll (the builds' `useInfiniteScroll`, paused while a page loads and
+  after a failed page; the builds' `LoadMoreError` retries), skeleton cards while the first page loads, "temporarily
+  unavailable" with Try again when it fails, "No shared filters match your search." / "No shared filters yet."
+- **Shared filter card** (`SharedFilterCard`, also on My filters, `/user/:userId` and the home page): name (link to
+  `/loot-filters/:id`), the description clamped to two lines, the author's avatar and `name#1234` (link to the
+  profile), created date, rule count and level names, "Created on ESR x · plugin y · filter v z", "Updated on ESR … ·
+  plugin …" after a content save, "Based on <label>", "Latest change: <note>", a Private badge (only owners see
+  private filters), the like button (signed out: opens the sign-in dialog; a private filter shows the count only) and
+  the download count, **Open** and **Download**. A card does not hold the file (lists never select `content`), so
+  Download dispatches `downloadSharedFilterRequested(id)`: the sharing saga fetches `id, name, content`, saves the zip
+  with the bundled sounds and icons when the filter uses any, else the `.json` (`downloadFilter` in
+  `utils/download.ts`), then `downloadCounted(id)`; the button shows a spinner meanwhile
+  (`selectDownloadingFilterIdSet`). A filter that is gone by then gives "This loot filter is no longer shared."
+
+**My filters** (`MyFiltersTab`):
+
+- The start buttons and the tip (below), signed in or not.
+- Signed out: "Sign in to save your filters" with a Sign in button; the drafts below stay editable.
+- Signed in: **Saved filters**, "N of 50 saved", the viewer's filters (`fetchMyFiltersRequested`, newest change
+  first, private ones included) as shared filter cards with badges: **Unsaved changes** (a visible draft has its
+  `savedId`), **Update available** (`filterUpdateStatus`: a copy whose source has a newer revision, from one
+  `fetchSourceRevisionsRequested` with every `based_on_id`, the source's change note in the tooltip; a filter started
+  from the template with `based_on_version` below `TEMPLATE_VERSION`) and **Original no longer shared** (the source is
+  private or deleted; a deleted source has cleared `based_on_id`, the label stays).
+- **Unsaved in this browser** (the heading only when signed in): `selectVisibleDrafts(state, viewerId)` as draft cards
+  (`LibraryEntryCard`, newest first): name, title/author and rule count, last update, "Based on …", an **Unsaved
+  changes** badge on the edits of a saved filter; **Open**, **Save** (`?save=1` on the editor route, which opens the
+  Save dialog), Download, Duplicate, Rename (not on the edits of a saved filter: its name is a server field) and
+  **Discard** (confirmed: "Discard draft?" for a new filter, "Discard changes?" for the edits of a saved one). A new
+  draft opens on `/loot-filters/draft/:id`, the edits of a saved filter on `/loot-filters/:savedId` (`draftLinks`);
+  signed out, those (`needsSignIn`) open as plain drafts and Save reads **Sign in to save**. Without Supabase the card
+  has no Save and says Delete.
+
+The how-to above the tabs covers the launcher import, the `sounds`/`icons` folders, the zip download and the
+troubleshooting line from "Using a filter in the game". The start buttons (My filters tab) come in this order: **Start from Sully's QoL filter** (the primary button),
 **Upload**, **New filter** (outline). A "Tip:" line under them says most players start from Sully's filter or upload
 one someone shared and change what they need; a new filter starts blank (no rules, so every item shows as the game
 shows it) and is for authors who know the format; the Rules tab has example rules either way. The empty state and the
@@ -251,8 +300,8 @@ New filter dialog ("A blank filter with no rules. …") say the same in short.
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
-- One card per entry (newest first): name, title/author and rule count (a quick JSON read of the text, cached), last
-  update, and Open, Download, Duplicate, Rename, Delete (with a confirm dialog). Empty state when the library is empty.
+- New filter, Upload and Start from Sully's add a draft and open it on `/loot-filters/draft/:id`
+  (`hooks/useStartFilter.ts`). Empty state ("No filters yet") when there are no drafts and nothing is saved.
 - **Download** (`components/FilterDownloadMenu.tsx`, shared with the editor header): a plain button saving
   `<slug of name>.json` when the filter references no bundled sound or icon (or is not valid JSON); otherwise a menu with
   **Download .json** and **Download .zip with sounds and icons**, plus the hint "Unzip into your LootFilters folder" and,
@@ -804,6 +853,7 @@ tab switches; it is not saved.
 | 3     | Library, routes, editor shell and state, Settings tab, JSON tab                               | done                                                      |
 | 4     | Rule builder with pickers, style editor, label preview                                        | done (rule builder, actions editor, Styles tab, previews) |
 | 5     | Test-item tab with a rule trace                                                               | done                                                      |
+| 6     | Sharing: saved filters in Supabase, library tabs, profile and home blocks                     | built (FEATURE-LOOT-FILTER-SHARING.md)                    |
 
 ## Verify in game
 
