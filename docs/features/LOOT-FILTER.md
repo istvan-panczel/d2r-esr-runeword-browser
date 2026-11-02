@@ -47,6 +47,14 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 - **Key** `loot-filters/library` in localStorage, value `{ "version": 1, "entries": [...] }`.
 - **Entry** `{ id, name, source: 'blank' | 'upload' | 'template', createdAt, updatedAt, text }`; times are epoch ms,
   ids come from `crypto.randomUUID` (with a fallback). `name` is the library name, not the file's `title`.
+- **Drafts** (sharing, see [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md)):
+  the library is the draft store. Optional entry fields `savedId`, `savedOwnerId`, `savedRevision` (a draft holding the
+  unsaved edits of a saved filter, and the revision it started from) and
+  `basedOn { id?, revision?, template?, version?, label }` (a copy of a shared filter, or Start from Sully's:
+  `{ template: 'sullys-qol', version: TEMPLATE_VERSION, label }`). The guard checks only the required fields, so
+  older tabs still read the library;
+  `readLibrary` drops a malformed optional field (`normalizeEntry`) instead of rejecting the library. Old `template`
+  entries without `basedOn` get it from the file's `version` (`entryBasedOn` in `utils/basedOn.ts`).
 - **`text` is the source of truth**: the filter file exactly as it will be downloaded. An upload is stored verbatim
   until the first edit; the editor's model is parsed from `text` when the filter opens and serialized back after edits.
 - A stored value that fails the type guard (corrupt, or written by a newer version) is copied once to
@@ -60,10 +68,27 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 
 `lootFilter` slice, registered in `core/store/store.ts`:
 
-- `library`: `{ hydrated, entries }`. Reducers: `hydrate(entries)`, `createBlank(name)`, `importText({ name, text, source })`,
-  `duplicate(id)`, `rename({ id, name })`, `remove(id)`, `editorFlushed()`.
-- `editor`: `{ id, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (parses the text; a JSONC
-  syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
+- `library`: `{ hydrated, entries }`. Reducers: `hydrate(entries)`, `createBlank(name)`,
+  `importText({ name, text, source, basedOn? })`, `duplicate(id)` (the copy keeps neither `saved*` nor `basedOn`),
+  `rename({ id, name })`, `remove(id)`,
+  `editorFlushed()`, `flushNow()` (the same flush, sent by Save before it reads the text).
+- `editor.target` (`EditorTarget`) says what is open: `draft { entryId }` (a library entry; the flush writes it),
+  `saved { savedId, revision, ownerId, name, baseText, baseCanonical, draftId, basedOn }` (the owner's saved filter:
+  the flush creates the draft `draftId` on the first edit, updates it, and removes it when the model serializes to
+  `baseCanonical = serialize(parse(baseText))` again; null when the content cannot be read) or
+  `sandbox { savedId | null, revision, ownerId, name, baseText, basedOn }` (someone else's filter or the bundled template: editable, never
+  written; `dirty` then means "edited since opened"). A flush writes only while `dirty`, and Save and Discard leave it
+  false, so the 400 ms debounced flush pending from the last edit cannot re-create a draft they removed.
+- Sharing reducers: `openSaved({ row, viewerId, authorLabel })` (owner → `saved`, on their newest draft of it if any;
+  anyone else → `sandbox`, whose `basedOn` is "name by author" for a public row, none for a private one),
+  `openSandbox({ text, name, basedOn })`, `saveSucceeded({ sentText, row, entryId })` (removes the draft if it still
+  has the sent text, else re-bases it on the new revision; the target becomes or stays `saved` with the new base, model
+  and selection kept), `discardChanges()` (saved: removes the draft and re-parses the content; sandbox: back to the
+  original), `copyToMyFilters()` (sandbox → a new draft with the sandbox's `basedOn`, the editor switches to it;
+  `payload.id` is the new id), `takeUpdate({ text, basedOn, mode: 'replace' | 'new', name? })` (replace writes the
+  draft right away with the new `basedOn`; new adds a draft).
+- `editor`: `{ target, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (a `draft`
+  target; parses the text; a JSONC syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
   `setNotifications(patch)`, `setQualityColors(patch)`, `addRule({ rule?, at? })`, `updateRule({ index, rule })`,
   `patchRule({ index, patch })`, `setRuleDisabled({ index, disabled })` (see "Disabled rules"), `removeRule(index)`,
   `moveRule({ from, to })` and `duplicateRule(index)` (both keep the `disabled` flag with the rule), `selectRule(index)`,
@@ -86,6 +111,12 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `passthrough` (so a wrong-shaped original does not reappear on download). `setNotifications` and `setQualityColors`
   drop the whole object when it ends up empty.
 - Ids and timestamps come from `prepare` callbacks, so every reducer is a pure function of (state, payload).
+- Sharing selectors: `selectEditorTarget`, `selectEditorText` / `selectEditorName` (the open filter's stored text and
+  name, whatever the target), `selectHasUnsavedChanges` (draft: always; saved: a draft or pending edits; sandbox:
+  edited), `selectSaveRequest` (after `flushNow`:
+  `{ kind: 'insert' | 'update', text, name, entryId, savedId, expectedRevision, basedOn }`, null with nothing to save
+  or in the sandbox), `selectVisibleDrafts(state, viewerId)`
+  (signed in: drafts of another account hidden; signed out: all, `needsSignIn` on those of a saved filter).
 - Selectors: `selectLibraryEntries`, `selectLibraryEntry(state, id)`, `selectEditor`, `selectEditorFilter`,
   `selectDiagnostics(state, reference?)` (the text notes, then the model's shape diagnostics re-read through `readLootFilter(toPlainJson(filter))`, then `validateLootFilter`; the stored parse diagnostics are used only when the text is not valid JSON).
   The validator's reference holds Sets and Maps, so it stays out of Redux: `useLootFilterReference()` loads the `lootfilter` and
@@ -171,7 +202,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 
 1. reads the library and dispatches `hydrate`;
 2. 400 ms after the last editor edit dispatches `editorFlushed`, which serializes the model into the entry's `text`;
-   `open`/`close` flush synchronously, and the editor screen dispatches `editorFlushed` on `pagehide`/`beforeunload`;
+   `open`/`openSaved`/`openSandbox`/`close`/`flushNow` flush synchronously, and the editor screen dispatches
+   `editorFlushed` on `pagehide`/`beforeunload`;
 3. after every library change writes the library to localStorage.
 
 The reducer is registered statically, and the slice imports the engine's parser and serializer, so they are in the entry
