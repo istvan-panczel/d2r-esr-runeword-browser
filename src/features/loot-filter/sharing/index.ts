@@ -76,13 +76,45 @@ export {
   selectLatestFiltersStatus,
   selectSourceRevisions,
   selectSourceRevisionsStatus,
+  saveFilterRequested,
+  saveFilterSucceeded,
+  saveFilterFailed,
+  saveFilterCancelled,
+  resetSaveStatus,
+  updateFilterDetailsRequested,
+  updateFilterDetailsSucceeded,
+  updateFilterDetailsFailed,
+  resetFilterDetailsStatus,
+  fetchSourceFilterRequested,
+  fetchSourceFilterSucceeded,
+  fetchSourceFilterFailed,
+  selectSaveFilterStatus,
+  selectSaveFilterError,
+  selectSaveFilterConflict,
+  selectSavedFilterId,
+  selectFilterDetailsStatus,
+  selectFilterDetailsError,
+  selectSourceFilter,
   type FilterPagePayload,
   type LikesLoadedPayload,
   type SourceRevisionsPayload,
+  type SaveConflict,
+  type SaveFilterMode,
+  type SaveFilterRequest,
+  type SharedFilterDetails,
+  type UpdateFilterDetailsRequest,
 } from './sharingSlice';
 export { filterMetadata, type FilterMetadata } from './filterMetadata';
-export { isUuid, type SharedFilterCursor } from './sharingQuery';
-export { LATEST_FILTERS_COUNT, MY_FILTERS_LIMIT, SHARED_FILTERS_PAGE_SIZE } from './constants';
+export { detailToRow, isUuid, type SharedFilterCursor } from './sharingQuery';
+export {
+  CHANGE_NOTE_MAX_LENGTH,
+  FILTER_CONTENT_MAX_BYTES,
+  FILTER_DESCRIPTION_MAX_LENGTH,
+  FILTER_NAME_MAX_LENGTH,
+  LATEST_FILTERS_COUNT,
+  MY_FILTERS_LIMIT,
+  SHARED_FILTERS_PAGE_SIZE,
+} from './constants';
 export type {
   SharedFilterAuthor,
   SharedFilterDetail,

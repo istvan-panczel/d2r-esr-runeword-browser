@@ -22,17 +22,20 @@ interface FilterDownloadMenuProps {
   readonly getText: () => string;
   readonly assets: ReferencedAssets;
   readonly variant?: 'default' | 'outline';
+  /** Called when a download starts (the shared download count). */
+  readonly onDownload?: () => void;
 }
 
 /**
  * Download: the filter file alone, or (when the filter uses bundled sounds or icons) a zip with the filter and
  * its `sounds`/`icons` folders, since the launcher's Import copies only the filter file.
  */
-export function FilterDownloadMenu({ name, getText, assets, variant = 'default' }: FilterDownloadMenuProps) {
+export function FilterDownloadMenu({ name, getText, assets, variant = 'default', onDownload }: FilterDownloadMenuProps) {
   const [zipping, setZipping] = useState(false);
 
   const downloadJson = () => {
     downloadTextFile(filterFileName(name), getText());
+    onDownload?.();
   };
 
   if (assets.bundled.length === 0) {
@@ -48,6 +51,7 @@ export function FilterDownloadMenu({ name, getText, assets, variant = 'default' 
     setZipping(true);
     try {
       await downloadFilterZip(name, getText(), assets.bundled);
+      onDownload?.();
     } catch (error) {
       console.error('[Loot filters] Could not build the zip', error);
       toast.error('Could not download the sounds and icons', {

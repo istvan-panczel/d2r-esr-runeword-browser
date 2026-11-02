@@ -1,10 +1,11 @@
-import { call, fork, put, select, take, takeEvery, takeLatest } from 'redux-saga/effects';
+import { call, fork, put, select, take, takeEvery, takeLatest, takeLeading } from 'redux-saga/effects';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { toast } from 'sonner';
 import { requireSupabase } from '@/core/supabase';
 import { authStateChanged, selectAuthUserId, type AuthUser } from '@/features/auth/store/authSlice';
 import { downloadFilter } from '../utils/download';
 import { LATEST_FILTERS_COUNT, MY_FILTERS_LIMIT, SHARED_FILTERS_PAGE_SIZE } from './constants';
+import { handleFetchSourceFilter, handleSaveFilter, handleUpdateFilterDetails } from './saveSaga';
 import {
   SHARED_FILTER_DETAIL_SELECT,
   SHARED_FILTER_LIST_SELECT,
@@ -50,6 +51,9 @@ import {
   fetchSourceRevisionsFailure,
   fetchSourceRevisionsRequested,
   fetchSourceRevisionsSuccess,
+  fetchSourceFilterRequested,
+  saveFilterRequested,
+  updateFilterDetailsRequested,
   selectAuthorFiltersAuthorId,
   selectAuthorFiltersCursor,
   selectLikedFilterIds,
@@ -441,4 +445,8 @@ export function* lootFilterSharingSaga() {
   yield takeLatest(fetchSourceRevisionsRequested.type, handleFetchSourceRevisions);
   yield fork(watchViewer);
   yield takeEvery(downloadSharedFilterRequested.type, handleDownloadShared);
+  // The editor's writes (saveSaga.ts). Save ignores a second click while one is in flight.
+  yield takeLeading(saveFilterRequested.type, handleSaveFilter);
+  yield takeLatest(updateFilterDetailsRequested.type, handleUpdateFilterDetails);
+  yield takeLatest(fetchSourceFilterRequested.type, handleFetchSourceFilter);
 }

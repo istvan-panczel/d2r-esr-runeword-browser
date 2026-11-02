@@ -4,6 +4,7 @@ import { RequestState } from '@/core/types';
 import type { RootState } from '@/core/store/store';
 import { authStateChanged } from '@/features/auth/store/authSlice';
 import type { SharedFilterCursor } from './sharingQuery';
+import { LATEST_FILTERS_COUNT } from './constants';
 import type { SharedFilterDetail, SharedFilterSort, SharedFilterSummary, SourceRevision } from './types';
 
 /** A cursor-paged list (the Shared tab, an author's filters). */
@@ -40,6 +41,55 @@ export interface SourceRevisionsPayload {
   readonly requestedIds: readonly string[];
   /** The sources the viewer may still see; a requested id without a row is no longer shared (deleted or private). */
   readonly rows: readonly SourceRevision[];
+}
+
+/** How Save writes: `normal` (insert, or a compare-and-swap update), `overwrite` (update without it), `asNew` (insert). */
+export type SaveFilterMode = 'normal' | 'overwrite' | 'asNew';
+
+/** The server fields of a saved filter (the Save dialog's first save, the Details dialog). */
+export interface SharedFilterDetails {
+  readonly name: string;
+  readonly description: string;
+  readonly isPrivate: boolean;
+}
+
+export interface SaveFilterRequest {
+  /** An insert's name, description and Private (default: the draft's name, no description, public). */
+  readonly details?: SharedFilterDetails;
+  /** "What changed" (a later save of a public filter); empty or absent clears the row's note. */
+  readonly changeNote?: string;
+  readonly mode: SaveFilterMode;
+}
+
+/** Why Save could not write: the row changed elsewhere (`changed`), or it is gone / not the viewer's (`gone`). */
+export type SaveConflict = 'changed' | 'gone';
+
+export interface SaveFilterSucceededPayload {
+  /** The row as the server returned it. */
+  readonly row: SharedFilterDetail;
+  /** A new row (first save, or Save as a new filter). */
+  readonly inserted: boolean;
+}
+
+interface SaveState {
+  readonly status: RequestState;
+  readonly error: string | null;
+  readonly conflict: SaveConflict | null;
+  /** The saved filter's id after a successful save (the editor replaces its route with it). */
+  readonly savedId: string | null;
+}
+
+export interface UpdateFilterDetailsRequest extends SharedFilterDetails {
+  readonly id: string;
+}
+
+/** A source of a copy, fetched with its file for "Replace with the latest" / "Add as a new filter". */
+interface SourceFilterState {
+  readonly id: string | null;
+  readonly status: RequestState;
+  readonly detail: SharedFilterDetail | null;
+  /** The source cannot be seen any more (deleted or private). */
+  readonly notFound: boolean;
 }
 
 interface LootFilterSharingState {
@@ -84,7 +134,15 @@ interface LootFilterSharingState {
 
   /** Filter ids whose file a card is fetching for a download (one-click Download on the cards). */
   readonly downloadingIds: readonly string[];
+  // The editor: Save, the Details dialog and the source of a copy.
+  readonly save: SaveState;
+  readonly detailsStatus: RequestState;
+  readonly detailsError: string | null;
+  readonly sourceFilter: SourceFilterState;
 }
+
+const idleSave: SaveState = { status: RequestState.IDLE, error: null, conflict: null, savedId: null };
+const idleSourceFilter: SourceFilterState = { id: null, status: RequestState.IDLE, detail: null, notFound: false };
 
 const emptyPaged: PagedFilters = {
   items: [],
@@ -117,6 +175,10 @@ const initialState: LootFilterSharingState = {
   sourceRevisions: {},
   sourceRevisionsStatus: RequestState.IDLE,
   downloadingIds: [],
+  save: idleSave,
+  detailsStatus: RequestState.IDLE,
+  detailsError: null,
+  sourceFilter: idleSourceFilter,
 };
 
 type Draft = { -readonly [K in keyof LootFilterSharingState]: LootFilterSharingState[K] };
@@ -181,6 +243,47 @@ function removeEverywhere(state: Draft, id: string): void {
   }
   // A copy of it now reads "no longer shared".
   if (id in state.sourceRevisions) state.sourceRevisions = { ...state.sourceRevisions, [id]: null };
+}
+
+/** A row without its file (what the lists hold). */
+function toSummary(row: SharedFilterSummary | SharedFilterDetail): SharedFilterSummary {
+  if (!('content' in row)) return row;
+  const { content: _content, ...summary } = row;
+  return summary;
+}
+
+/**
+ * Puts a saved or re-detailed filter wherever it belongs: replaced where it is listed (removed from the public lists when
+ * it went private), moved to the top of My filters (newest change first), and, when `inserted`, added to the top of the
+ * newest-first lists it would appear in. The detail is updated in place (keeping its file when `row` has none).
+ */
+function upsertFilter(state: Draft, row: SharedFilterSummary | SharedFilterDetail, inserted: boolean): void {
+  const summary = toSummary(row);
+  const replace = (items: readonly SharedFilterSummary[]) => items.map((item) => (item.id === summary.id ? summary : item));
+  const without = (items: readonly SharedFilterSummary[]) => items.filter((item) => item.id !== summary.id);
+  const listed = (items: readonly SharedFilterSummary[]) => items.some((item) => item.id === summary.id);
+
+  if (summary.user_id === state.viewerId) state.myFilters = [summary, ...without(state.myFilters)];
+
+  const shared = state.shared;
+  if (summary.is_private) {
+    state.shared = { ...shared, items: without(shared.items) };
+  } else if (listed(shared.items)) {
+    state.shared = { ...shared, items: replace(shared.items) };
+  } else if (inserted && state.sortMode === 'newest' && state.searchText.trim() === '' && shared.status === RequestState.SUCCESS) {
+    state.shared = { ...shared, items: [summary, ...shared.items] };
+  }
+
+  const author = state.author;
+  if (listed(author.items)) state.author = { ...author, items: replace(author.items) };
+  else if (inserted && state.authorId === summary.user_id) state.author = { ...author, items: [summary, ...author.items] };
+
+  if (summary.is_private) state.latest = without(state.latest);
+  else if (listed(state.latest)) state.latest = replace(state.latest);
+  else if (inserted && state.latestStatus === RequestState.SUCCESS)
+    state.latest = [summary, ...state.latest].slice(0, LATEST_FILTERS_COUNT);
+
+  if (state.detail?.id === summary.id) state.detail = { ...state.detail, ...row };
 }
 
 /** Flips the viewer's like on `id` and moves its count with it (the optimistic step and its revert are the same). */
@@ -363,6 +466,64 @@ const lootFilterSharingSlice = createSlice({
     downloadSharedFilterSettled(state, action: PayloadAction<string>) {
       state.downloadingIds = state.downloadingIds.filter((id) => id !== action.payload);
     },
+
+    // --- Save (the editor; the saga flushes the draft, validates and writes) ---
+    saveFilterRequested(state, _action: PayloadAction<SaveFilterRequest>) {
+      state.save = { ...idleSave, status: RequestState.LOADING };
+    },
+    /** The row was written; it becomes the detail (the editor shows it) and is put into the lists. */
+    saveFilterSucceeded(state, action: PayloadAction<SaveFilterSucceededPayload>) {
+      const { row, inserted } = action.payload;
+      upsertFilter(state, row, inserted);
+      state.detail = row;
+      state.detailStatus = RequestState.SUCCESS;
+      state.detailNotFound = false;
+      state.save = { ...idleSave, status: RequestState.SUCCESS, savedId: row.id };
+    },
+    saveFilterFailed(state, action: PayloadAction<{ readonly error: string; readonly conflict?: SaveConflict }>) {
+      state.save = { ...idleSave, status: RequestState.ERROR, error: action.payload.error, conflict: action.payload.conflict ?? null };
+    },
+    /** Nothing was written and nothing went wrong: nothing to save, or the sign-in dialog was opened instead. */
+    saveFilterCancelled(state) {
+      state.save = idleSave;
+    },
+    resetSaveStatus(state) {
+      state.save = idleSave;
+    },
+
+    // --- Details dialog (name, description, Private: written at once, no draft) ---
+    updateFilterDetailsRequested(state, _action: PayloadAction<UpdateFilterDetailsRequest>) {
+      state.detailsStatus = RequestState.LOADING;
+      state.detailsError = null;
+    },
+    updateFilterDetailsSucceeded(state, action: PayloadAction<SharedFilterSummary>) {
+      upsertFilter(state, action.payload, false);
+      state.detailsStatus = RequestState.SUCCESS;
+    },
+    updateFilterDetailsFailed(state, action: PayloadAction<string>) {
+      state.detailsStatus = RequestState.ERROR;
+      state.detailsError = action.payload;
+    },
+    resetFilterDetailsStatus(state) {
+      state.detailsStatus = RequestState.IDLE;
+      state.detailsError = null;
+    },
+
+    // --- The source of a copy, with its file ("Replace with the latest", "Add as a new filter") ---
+    fetchSourceFilterRequested(state, action: PayloadAction<string>) {
+      state.sourceFilter = { ...idleSourceFilter, id: action.payload, status: RequestState.LOADING };
+    },
+    fetchSourceFilterSucceeded(state, action: PayloadAction<SharedFilterDetail>) {
+      if (action.payload.id !== state.sourceFilter.id) return;
+      state.sourceFilter = { ...idleSourceFilter, id: action.payload.id, status: RequestState.SUCCESS, detail: action.payload };
+    },
+    fetchSourceFilterFailed(state, action: PayloadAction<{ readonly id: string; readonly notFound: boolean }>) {
+      const { id, notFound } = action.payload;
+      if (id !== state.sourceFilter.id) return;
+      state.sourceFilter = { ...idleSourceFilter, id, status: RequestState.ERROR, notFound };
+      // A source that cannot be fetched any more reads "no longer shared" from now on.
+      if (notFound) state.sourceRevisions = { ...state.sourceRevisions, [id]: null };
+    },
   },
   extraReducers: (builder) => {
     // Sign-out or a different account: drop what belonged to the previous viewer. Auth fires on every token refresh
@@ -431,6 +592,18 @@ export const {
   fetchSourceRevisionsFailure,
   downloadSharedFilterRequested,
   downloadSharedFilterSettled,
+  saveFilterRequested,
+  saveFilterSucceeded,
+  saveFilterFailed,
+  saveFilterCancelled,
+  resetSaveStatus,
+  updateFilterDetailsRequested,
+  updateFilterDetailsSucceeded,
+  updateFilterDetailsFailed,
+  resetFilterDetailsStatus,
+  fetchSourceFilterRequested,
+  fetchSourceFilterSucceeded,
+  fetchSourceFilterFailed,
 } = lootFilterSharingSlice.actions;
 
 export default lootFilterSharingSlice.reducer;
@@ -491,6 +664,15 @@ export const selectLatestFiltersStatus = createSelector([selectSharingState], (s
 
 export const selectSourceRevisions = createSelector([selectSharingState], (s) => s.sourceRevisions);
 export const selectSourceRevisionsStatus = createSelector([selectSharingState], (s) => s.sourceRevisionsStatus);
+
+const selectSave = createSelector([selectSharingState], (s) => s.save);
+export const selectSaveFilterStatus = createSelector([selectSave], (save) => save.status);
+export const selectSaveFilterError = createSelector([selectSave], (save) => save.error);
+export const selectSaveFilterConflict = createSelector([selectSave], (save) => save.conflict);
+export const selectSavedFilterId = createSelector([selectSave], (save) => save.savedId);
+export const selectFilterDetailsStatus = createSelector([selectSharingState], (s) => s.detailsStatus);
+export const selectFilterDetailsError = createSelector([selectSharingState], (s) => s.detailsError);
+export const selectSourceFilter = createSelector([selectSharingState], (s) => s.sourceFilter);
 
 /** The ids of every filter on screen (lists and detail), for refreshing the viewer's likes after a sign-in. */
 export const selectVisibleFilterIds = createSelector([selectSharingState], (s) => [

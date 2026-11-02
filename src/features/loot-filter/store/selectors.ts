@@ -95,6 +95,23 @@ export const selectSaveRequest = createSelector(
   }
 );
 
+/**
+ * What the open filter is based on (the Update available banner): a draft's `basedOn` (inferred for old template
+ * drafts); for a saved filter its draft's (moved on by Replace with the latest), else the saved row's; the sandbox's
+ * would-be copy label. Memoized: the inference builds a new object.
+ */
+export const selectEditorBasedOn = createSelector(
+  [selectEditorTarget, selectLibraryEntries],
+  (target, entries): LootFilterBasedOn | null => {
+    if (target === null) return null;
+    if (target.kind === 'sandbox') return target.basedOn;
+    const entryId = target.kind === 'draft' ? target.entryId : target.draftId;
+    const entry = entries.find((candidate) => candidate.id === entryId);
+    const fromEntry = entry ? entryBasedOn(entry) : null;
+    return fromEntry ?? (target.kind === 'saved' ? target.basedOn : null);
+  }
+);
+
 export interface VisibleDraft {
   readonly entry: LootFilterEntry;
   /**

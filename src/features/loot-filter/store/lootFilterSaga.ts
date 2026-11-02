@@ -37,6 +37,7 @@ import {
   replaceFilter,
   renumberLevel,
   saveSucceeded,
+  savedFilterRenamed,
   setFilterLevels,
   setHeader,
   setNotifications,
@@ -85,6 +86,7 @@ const isLibraryChange = isAnyOf(
   openSandbox,
   close,
   saveSucceeded,
+  savedFilterRenamed,
   discardChanges,
   copyToMyFilters,
   takeUpdate

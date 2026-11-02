@@ -10,13 +10,20 @@ answers), §5 and §5.1 (owner decisions).
 
 ## Routes
 
-| Path                | Screen                  | Notes                                                                                           |
-| ------------------- | ----------------------- | ----------------------------------------------------------------------------------------------- |
-| `/loot-filters`     | LootFilterLayout        | Frame for every loot filter page (the page width only)                                          |
-| `/loot-filters`     | LootFilterLibraryScreen | The library: tabs Shared and My filters (`?tab=shared\|mine`), see Library screen               |
-| `/loot-filters/:id` | LootFilterEditorScreen  | The editor; `?tab=rules\|styles\|settings\|json\|test` (default `rules`); unknown id: not found |
+| Path                           | Screen                  | Notes                                                                                                                                                      |
+| ------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/loot-filters`                | LootFilterLayout        | Frame for every loot filter page (the page width only)                                                                                                     |
+| `/loot-filters`                | LootFilterLibraryScreen | The library: tabs Shared and My filters (`?tab=shared\|mine`), see Library screen                                                                          |
+| `/loot-filters/draft/:draftId` | LootFilterEditorScreen  | A draft in this browser (a new filter, or unsaved edits of a saved one); unknown id: not found                                                             |
+| `/loot-filters/:id`            | LootFilterEditorScreen  | A saved filter: its owner edits it, anyone else gets the sandbox; a local draft id redirects to the draft route (old links); not found / load error states |
+| `/loot-filters/sully`          | LootFilterEditorScreen  | The sandbox on the bundled Sully filter                                                                                                                    |
 
-Both routes skip the HTM "Loading data..." gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`, see
+The three editor routes share one screen component (the param names tell them apart: `editorRouteOf` in
+`utils/editorRoute.ts`), so Save and Copy to my filters replace the route without remounting the editor. All take
+`?tab=rules|styles|settings|json|test` (default `rules`); `?save=1` on a draft or saved route opens the Save dialog
+(the library's draft cards use it; it is dropped from the URL when the dialog closes or the save moves the route).
+
+The loot filter routes skip the HTM "Loading data..." gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`, see
 [NAVIGATION.md](../technical/NAVIGATION.md#startup-loading-gate)): they need only the game-data bundles, the assets in
 `public/loot-filters/` and localStorage. Header entry: "Loot Filters", after "Game Data".
 
@@ -88,7 +95,12 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   and selection kept), `discardChanges()` (saved: removes the draft and re-parses the content; sandbox: back to the
   original), `copyToMyFilters()` (sandbox → a new draft with the sandbox's `basedOn`, the editor switches to it;
   `payload.id` is the new id), `takeUpdate({ text, basedOn, mode: 'replace' | 'new', name? })` (replace writes the
-  draft right away with the new `basedOn`; new adds a draft).
+  draft right away with the new `basedOn`; new adds a draft), `savedFilterRenamed({ savedId, name })` (the Details
+  dialog renamed it on the server: the open target and that filter's drafts take the name). `saveSucceeded` also moves
+  a `saved` target whose draft was sent (Save as a new filter) to the new row.
+- Selectors for the editor: `selectEditorText`, `selectEditorName`, `selectHasUnsavedChanges`, `selectSaveRequest`
+  (what Save sends, read after `flushNow`), `selectEditorBasedOn` (the draft's `basedOn`, else the saved row's; what
+  the Update available banner compares), `selectVisibleDrafts(viewerId)`.
 - `editor`: `{ target, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (a `draft`
   target; parses the text; a JSONC syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
   `setNotifications(patch)`, `setQualityColors(patch)`, `addRule({ rule?, at? })`, `updateRule({ index, rule })`,
@@ -316,7 +328,8 @@ New filter dialog ("A blank filter with no rules. …") say the same in short.
 
 ## Editor screen
 
-Header row: back link, the filter name (pencil to rename inline; Enter or Escape returns the focus to the pencil), a
+Header row: back link, the filter name (a new draft: pencil to rename inline, Enter or Escape returns the focus to the
+pencil; a saved filter is renamed through Details), the status line (see "Saving and sharing in the editor"), a
 problems chip ("N errors / M warnings", also announced to screen readers through a polite live region) and
 **Download**. Clicking the chip opens the JSON tab and bumps a counter the screen passes to `JsonTab`
 (`scrollToProblems`); `JsonTab` scrolls to the problems list in an effect once it has rendered (the tab switch runs in a
@@ -327,8 +340,80 @@ also offers the zip, with the files the current model references. When the store
 JSON tab recovers the filter.
 
 The tabs are a `role="tablist"` of buttons that set `?tab=`; each tab unmounts when another is shown, so the state that
-must outlive a switch lives in the screen: the JSON tab's unapplied draft (reset when another filter opens) and the Test
-tab's item form (not saved).
+must outlive a switch lives in the screen: the JSON tab's unapplied draft (kept per editing session: a new session
+starts when another filter opens, not when Save or Copy to my filters moves the open filter to its new route) and the
+Test tab's item form (not saved).
+
+### Saving and sharing in the editor
+
+Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md).
+
+**Opening** (`LootFilterEditorScreen`): once the library is hydrated, an effect opens what the route shows, reading the
+store at that moment so a target that already matches (the same filter after Save or Copy moved the route) is left
+alone: the draft route dispatches `open(id)`; the saved route redirects a local draft id to `/loot-filters/draft/:id`,
+else clears the sharing detail and dispatches `fetchSharedFilterRequested(id)` (without Supabase it only shows "not
+found"); the Sully route fetches the bundled template and dispatches `openSandbox` with `templateBasedOn()`. A second
+effect waits for the auth state and the fetched row, then dispatches `openSaved({ row, viewerId, authorLabel })`
+(`authorLabel` "Name#1234"); `targetMatchesRoute` also checks the kind, so signing in or out on a saved route reopens
+it as the owner's filter or the sandbox. A missing row shows "Filter not found" (with a link to a local draft of that
+saved filter when there is one), a failed fetch "Could not load the filter" with Try again. Unmounting dispatches
+`close()` and `resetSaveStatus()`.
+
+**Header** for a draft or the owner's saved filter: Private badge, the status ("Saving…", "Not saved yet: kept in this
+browser" for a new draft, "Unsaved changes" / "Saved"), likes and downloads (saved), "Based on X", the latest change
+note; **Save** (primary; disabled without unsaved changes; signed out it opens the sign-in dialog), **Discard changes**
+(saved filter with a draft, confirmed: `discardChanges()`; a draft of a saved filter opened on its own route is
+removed and the saved filter opens), **Details** (saved: name, description, Private, `updateFilterDetailsRequested`),
+Download (a saved row's download dispatches `downloadCounted`), and **Delete** (saved, confirmed: "no longer shared;
+copies other players made keep working"; on success the draft is discarded and the route goes to `/loot-filters`).
+Without the Supabase env vars Save, Details and Delete are hidden and a line says "Saving and sharing are off in this
+build".
+
+**Save dialog** (`components/editor/SaveDialog.tsx`): the first save of a new draft asks for the name (prefilled),
+an optional description and Private (unticked: public by default); a later save of a public filter asks for an optional
+"What changed" note (up to 200 characters, shown to copies); a private filter saves at once without the dialog (it
+opens only to show a failure). The dialog shows the validator's counts ("N errors, M warnings: you can still save"),
+warns when the JSON tab has unapplied text, and shows the save's error; on a conflict it offers **Overwrite** (row
+changed elsewhere) and **Save as a new filter** (always; the only choice when the row is gone or not the user's).
+Signed out it says "Sign in to save" with a Sign in button.
+
+**Save saga** (`sharing/saveSaga.ts`, forked from `lootFilterSharingSaga`): `saveFilterRequested({ details?, changeNote?,
+mode: 'normal' | 'overwrite' | 'asNew' })` (`takeLeading`):
+
+1. signed out → `openSignInDialog()`; privacy policy not accepted → an error;
+2. `flushNow()`, then `selectSaveRequest` (null → "No changes to save");
+3. `checkSaveText`: at most 512 KB, readable by the lenient parser, a filter object with `formatVersion` 1 (validator
+   errors and warnings do not block);
+4. insert (a new draft, or `asNew`): name, description, Private, the file metadata (`filterMetadata`), `esr_version`
+   from `db.metadata` `esrVersion`, `plugin_version` = `LOOT_FILTER_PLUGIN_VERSION`, `based_on_*` from the draft's
+   `basedOn` (`basedOnColumns`), `change_note` null; `.insert(...).select(detail).single()`;
+5. update: content, metadata, `esr_version_updated`, `plugin_version_updated`, `change_note` (the note or null), and
+   `based_on_revision` / `based_on_version` / `based_on_label` when the draft's `basedOn` moved (`basedOnMoved`); a
+   compare-and-swap `.eq('id').eq('revision', expected)` unless `overwrite`. No row back: a lookup decides `changed`
+   (still the user's) or `gone`;
+6. success: `saveFilterSucceeded({ row, inserted })` (detail, My filters, the newest-first lists) and then
+   `saveSucceeded` (the editor target becomes the saved row). The screen sees "target is the row just saved" and
+   replaces the route with `/loot-filters/:savedId` (dropping `?save=1`), keeping the screen mounted.
+
+A `loot_filter_limit` error reads "You have 50 loot filters; delete one to save another." `updateFilterDetailsRequested`
+writes name / description / is_private at once (no revision bump) and dispatches `savedFilterRenamed`;
+`fetchSourceFilterRequested(id)` loads a copy's source with its file into `sourceFilter`.
+
+**Sandbox** (someone else's filter, a signed-out visitor, or Sully): a banner "You are viewing X by Name#1234 — changes
+are not saved. Copy to my filters to keep them." with **Copy to my filters** (signed out with Supabase: the sign-in
+dialog; without Supabase it copies directly), **Like** (shared filters; signed out: sign-in), **Undo my changes** when
+edited, the author's profile link, the description, "Based on …" and the latest change note. Copy dispatches
+`copyToMyFilters()` and replaces the route with `/loot-filters/draft/<payload.id>`. Leaving an edited sandbox asks once
+(`hooks/useSandboxLeavePrompt.ts`: a router blocker that reads the store when it fires, so Copy is never blocked, and
+`beforeunload`); confirming drops the sandbox edits so a redirect afterwards does not ask again.
+
+**Update available** (`components/editor/UpdateBanner.tsx`, drafts and the owner's saved filters): with a shared
+`basedOn.id` it dispatches `fetchSourceRevisionsRequested([id])` on open; `sourceUpdateOf` reads the result: a higher
+revision shows the source's name and change note, prefetches its file (`fetchSourceFilterRequested`) and offers
+**Replace with the latest** (`takeUpdate` replace, as unsaved changes with the new `basedOn`; asks first when there are
+unsaved changes, which a draft always has) and **Add as a new filter** (`takeUpdate` new, then the new draft's route); a
+missing source reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
+`TEMPLATE_VERSION` (or of unknown version) offers the same two actions with the bundled file.
 
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
