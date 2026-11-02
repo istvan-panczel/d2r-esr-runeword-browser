@@ -15,10 +15,20 @@ interface ConfirmDeleteDialogProps {
   readonly title?: string;
   /** Default: the library entry text ("removed from this browser…"). */
   readonly description?: React.ReactNode;
+  /** Default "Delete". */
+  readonly confirmLabel?: string;
 }
 
 /** Asks before deleting something (a library entry by default). */
-export function ConfirmDeleteDialog({ open, name, onCancel, onConfirm, title = 'Delete filter?', description }: ConfirmDeleteDialogProps) {
+export function ConfirmDeleteDialog({
+  open,
+  name,
+  onCancel,
+  onConfirm,
+  title = 'Delete filter?',
+  description,
+  confirmLabel = 'Delete',
+}: ConfirmDeleteDialogProps) {
   return (
     <Dialog
       open={open ?? name !== null}
@@ -39,7 +49,7 @@ export function ConfirmDeleteDialog({ open, name, onCancel, onConfirm, title = '
             Cancel
           </Button>
           <Button type="button" variant="destructive" onClick={onConfirm}>
-            Delete
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -28,3 +28,17 @@ export async function fetchTemplateText(): Promise<string> {
   if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
   return response.text();
 }
+
+let templateText: Promise<string> | null = null;
+
+/**
+ * The bundled template's text, fetched once per page load (the library's pinned card and Start from Sully's share it);
+ * a failed fetch is forgotten so the next call retries.
+ */
+export function loadTemplateText(): Promise<string> {
+  templateText ??= fetchTemplateText().catch((error: unknown) => {
+    templateText = null;
+    throw error;
+  });
+  return templateText;
+}
