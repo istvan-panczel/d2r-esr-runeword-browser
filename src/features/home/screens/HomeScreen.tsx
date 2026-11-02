@@ -7,6 +7,7 @@ import { HomeHero } from '../components/HomeHero';
 import { HomeSections } from '../components/HomeSections';
 import { HomeStartHere } from '../components/HomeStartHere';
 import { LatestBuilds } from '../components/LatestBuilds';
+import { LatestLootFilters } from '../components/LatestLootFilters';
 
 /**
  * Home page (`/`): what the site offers. Renders without the startup loading gate (see staticBundleRoutes.ts); the
@@ -20,6 +21,7 @@ export function HomeScreen() {
       <HomeHero />
       <HomeSections />
       {isSupabaseEnabled && <LatestBuilds />}
+      {isSupabaseEnabled && <LatestLootFilters />}
       <HomeStartHere />
       <HomeOfficialLinks />
       <HomeCommunityTools />
