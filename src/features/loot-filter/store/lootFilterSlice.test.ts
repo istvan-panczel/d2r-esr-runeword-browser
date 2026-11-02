@@ -156,7 +156,7 @@ describe('library reducers', () => {
   it('remove keeps the editor when another entry is removed', () => {
     const base = run(openState(), { type: importText.type, payload: { id: 'two', name: 'Two', text: '{}', source: 'upload', now: NOW } });
     const state = reducer(base, remove('two'));
-    expect(state.editor.id).toBe('one');
+    expect(state.editor.target).toEqual({ kind: 'draft', entryId: 'one' });
     expect(state.library.entries.map((e) => e.id)).toEqual(['one']);
   });
 
@@ -176,7 +176,12 @@ describe('library reducers', () => {
 describe('open and close', () => {
   it('open parses the entry text', () => {
     const state = openState();
-    expect(state.editor).toMatchObject({ id: 'one', selectedRule: null, dirty: false, parseDiagnostics: [] });
+    expect(state.editor).toMatchObject({
+      target: { kind: 'draft', entryId: 'one' },
+      selectedRule: null,
+      dirty: false,
+      parseDiagnostics: [],
+    });
     expect(comments(state)).toEqual(['a', 'b', 'c', 'd']);
   });
 
@@ -193,7 +198,7 @@ describe('open and close', () => {
       type: open.type,
       payload: { id: 'bad', now: NOW },
     });
-    expect(state.editor.id).toBe('bad');
+    expect(state.editor.target).toEqual({ kind: 'draft', entryId: 'bad' });
     expect(state.editor.filter).toBeNull();
     expect(state.editor.parseDiagnostics).toHaveLength(1);
     expect(state.editor.parseDiagnostics[0]).toMatchObject({ severity: 'error', path: '' });
@@ -202,14 +207,14 @@ describe('open and close', () => {
 
   it('open of an unknown id records the id with no model', () => {
     const state = reducer(initialState, { type: open.type, payload: { id: 'nope', now: NOW } });
-    expect(state.editor).toEqual({ ...EMPTY_EDITOR, id: 'nope' });
+    expect(state.editor).toEqual({ ...EMPTY_EDITOR, target: { kind: 'draft', entryId: 'nope' } });
   });
 
   it('open flushes the previously open, dirty filter', () => {
     const two = { type: importText.type, payload: { id: 'two', name: 'Two', text: entry('two').text, source: 'upload', now: NOW } };
     const base = run(openState(), two, setHeader({ title: 'Kept' }));
     const state = reducer(base, { type: open.type, payload: { id: 'two', now: LATER } });
-    expect(state.editor.id).toBe('two');
+    expect(state.editor.target).toEqual({ kind: 'draft', entryId: 'two' });
     const one = state.library.entries.find((candidate) => candidate.id === 'one');
     expect(one && parseLootFilter(one.text).filter.title).toBe('Kept');
   });

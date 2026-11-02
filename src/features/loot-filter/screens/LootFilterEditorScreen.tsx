@@ -20,7 +20,7 @@ import { TestTab } from '../components/TestTab';
 import { EDITOR_TABS, useEditorTab, type EditorTab } from '../hooks/useEditorTab';
 import { useLootFilterReference } from '../hooks/useLootFilterReference';
 import { close, editorFlushed, open, rename, selectRule } from '../store/lootFilterSlice';
-import { selectDiagnostics, selectEditor, selectLibraryEntry, selectLibraryHydrated } from '../store/selectors';
+import { selectDiagnostics, selectEditor, selectEditorText, selectLibraryEntry, selectLibraryHydrated } from '../store/selectors';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
 import { defaultTestItem } from '../utils/testItemForm';
 
@@ -36,6 +36,8 @@ export function LootFilterEditorScreen() {
   const hydrated = useSelector(selectLibraryHydrated);
   const entry = useSelector((state: RootState) => selectLibraryEntry(state, id));
   const editor = useSelector(selectEditor);
+  // The open draft's stored text (the target's text: the entry's for this route's draft target).
+  const storedText = useSelector(selectEditorText);
   const { reference } = useLootFilterReference();
   const diagnostics = useSelector((state: RootState) => selectDiagnostics(state, reference));
   const [tab, setTab] = useEditorTab();
@@ -70,7 +72,7 @@ export function LootFilterEditorScreen() {
 
   // Unapplied JSON text lives only in this component: ask before the page unloads with it.
   const editorFilter = editor.filter;
-  const entryText = entry?.text;
+  const entryText = storedText ?? entry?.text;
   useEffect(() => {
     if (jsonDraft === null) return;
     const warn = (event: BeforeUnloadEvent) => {
@@ -83,7 +85,8 @@ export function LootFilterEditorScreen() {
     };
   }, [jsonDraft, editorFilter, entryText]);
 
-  if (!hydrated || (entryExists && editor.id !== id)) {
+  const target = editor.target;
+  if (!hydrated || (entryExists && (target?.kind !== 'draft' || target.entryId !== id))) {
     return (
       <div className="flex justify-center py-12">
         <Spinner className="size-8" />
@@ -113,8 +116,9 @@ export function LootFilterEditorScreen() {
   const filter = editor.filter;
 
   // The stored text keeps the file's comments and formatting; it is re-serialized only while edits are not yet saved.
-  const downloadText = () => (editor.dirty && filter !== null ? serializeLootFilter(filter) : entry.text);
-  const assets = filter === null ? referencedAssetsOfText(entry.text) : collectReferencedAssets(filter);
+  const text = storedText ?? entry.text;
+  const downloadText = () => (editor.dirty && filter !== null ? serializeLootFilter(filter) : text);
+  const assets = filter === null ? referencedAssetsOfText(text) : collectReferencedAssets(filter);
 
   const showDiagnostics = () => {
     setTab('json');
@@ -137,7 +141,7 @@ export function LootFilterEditorScreen() {
       return (
         <JsonTab
           filter={filter}
-          entryText={entry.text}
+          entryText={text}
           diagnostics={diagnostics}
           onShowRule={showRule}
           draft={jsonDraft}

@@ -12,6 +12,7 @@ import { NameDialog } from '../components/NameDialog';
 import { createBlank, duplicate, importText, remove, rename } from '../store/lootFilterSlice';
 import { selectLibraryEntries, selectLibraryHydrated } from '../store/selectors';
 import type { LootFilterEntry } from '../store/types';
+import { templateBasedOn } from '../utils/basedOn';
 import { checkFilterText, fileBaseName, importDescription } from '../utils/readFilterText';
 import { TEMPLATE_CREDIT, TEMPLATE_NAME, fetchTemplateText } from '../utils/template';
 
@@ -62,7 +63,7 @@ export function LootFilterLibraryScreen() {
       const text = await fetchTemplateText();
       const check = checkFilterText(text);
       if (!check.ok) throw new Error(check.message);
-      const action = importText({ name: TEMPLATE_NAME, text, source: 'template' });
+      const action = importText({ name: TEMPLATE_NAME, text, source: 'template', basedOn: templateBasedOn() });
       dispatch(action);
       void navigate(`/loot-filters/${action.payload.id}`);
     } catch (error) {
