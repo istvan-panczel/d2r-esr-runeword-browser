@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { checkedLayer, evaluateFilter, expandPlaceholders, OMITTED_PARAM } from './evaluate';
+import { checkedLayer, evaluateFilter, expandPlaceholders, OMITTED_PARAM, wrongShapedKeys } from './evaluate';
+import { parseLootFilter } from './parse';
 import type { TestContext, TestItem } from './evaluate';
 import type { LootFilter, LootFilterRule, LootFilterStyle } from './types';
 
@@ -501,14 +502,10 @@ describe('expandPlaceholders', () => {
 });
 
 describe("Sully's QoL filter", () => {
+  // Read through the parser, as the app does: v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4`, which the
+  // parser keeps in `passthrough` (with an error) instead of handing a number to the evaluator.
   const source = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
-  // Strip the `//` comment lines (leading and between rules) and parse the rest; no `//` appears inside strings.
-  const json = source
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('//'))
-    .join('\n');
-  const parsed: unknown = JSON.parse(json);
-  const sully = { ...(parsed as Omit<LootFilter, 'leadingComments'>), leadingComments: [] };
+  const sully = parseLootFilter(source).filter;
   const hell = makeContext({ filterLevel: 3, area: 2, playerStats: [{ stat: 12, value: 92 }] });
   const appliedNames = (items: TestItem, context: TestContext): readonly number[] =>
     evaluateFilter(sully, items, context)
@@ -566,6 +563,25 @@ describe("Sully's QoL filter", () => {
     expect(evaluateFilter(sully, gold(1500), { ...hell, area: 1 }).name).toBe('ÿc0$$');
   });
 
+  it('skips the Ancient Scroll hide rule (98), whose "activeInLevels": 4 has the wrong shape', () => {
+    // Sully v0.6.9 to v0.6.11 write a number where the format wants a list; the plugin most likely switches the rule off.
+    const scroll = makeItem({ code: '01b', typeAncestors: ['misc'], name: 'Ancient Scroll' });
+    expect(wrongShapedKeys(sully.rules[98] ?? {})).toEqual(['activeInLevels']);
+    const maps = evaluateFilter(sully, scroll, { ...hell, filterLevel: 4 });
+    expect(maps.hidden).toBe(false);
+    expect(maps.trace.find((entry) => entry.index === 98)).toEqual({
+      index: 98,
+      outcome: 'wrongShape',
+      failed: [],
+      actions: {},
+      wrongShaped: ['activeInLevels'],
+    });
+    // At levels 1 to 3 the gong highlight (rule 99) applies, as before.
+    const strict = evaluateFilter(sully, scroll, hell);
+    expect(strict.hidden).toBe(false);
+    expect(strict.name).toBe('ÿc6Ancient Scroll');
+  });
+
   it('labels a mythical unique with the Mythical style', () => {
     const bow = makeItem({ code: 'm01', typeAncestors: ['bow', 'miss', 'weap'], quality: 7, baseTier: 2, name: 'Some Unique', sockets: 2 });
     const result = evaluateFilter(sully, bow, hell);
@@ -575,6 +591,38 @@ describe("Sully's QoL filter", () => {
     expect(result.labelBorder).toEqual({ color: [240, 0, 0, 230], width: 2 });
     // The rule writes `myth`; the bundled file is Myth.sprite (the plugin's file names are case-insensitive).
     expect(result.icon).toEqual({ iconName: 'myth', iconSize: 50 });
+  });
+});
+
+describe('wrong-shaped rules', () => {
+  it('skips a rule with a wrong-shaped condition or action, but not one with an unknown key', () => {
+    const filter = makeFilter([
+      { itemCodes: ['r33'], hide: true, passthrough: { activeInLevels: 4 } },
+      { itemCodes: ['r33'], hideIfOtherConditionsFail: true, quality: 'unique', passthrough: { labelBackground: [1, 2] } },
+      { itemCodes: ['r32'], namePrefix: 'Y ', passthrough: { sockets: 'two' } },
+      { itemCodes: ['r33'], namePrefix: 'X ', passthrough: { formula: "stat('x')" } },
+    ]);
+    const result = evaluateFilter(filter, makeItem(), makeContext());
+    expect(result.trace).toEqual([
+      { index: 0, outcome: 'wrongShape', failed: [], actions: {}, wrongShaped: ['activeInLevels'] },
+      { index: 1, outcome: 'wrongShape', failed: ['quality'], actions: {}, wrongShaped: ['labelBackground'] },
+      { index: 2, outcome: 'wrongShape', failed: ['itemCodes'], actions: {}, wrongShaped: ['sockets'] },
+      expect.objectContaining({ index: 3, outcome: 'applied' }),
+    ]);
+    expect(result.hidden).toBe(false);
+    expect(result.name).toBe('X Zod Rune');
+  });
+
+  it('lists only known keys as wrong-shaped', () => {
+    expect(wrongShapedKeys({ passthrough: { activeInLevels: 4, show: true, sound: [1] } })).toEqual(['activeInLevels', 'sound']);
+    expect(wrongShapedKeys({ itemCodes: ['r33'] })).toEqual([]);
+  });
+
+  it('does not skip a rule for a wrong-shaped comment (the plugin ignores comments)', () => {
+    const rule = { itemCodes: ['r33'], namePrefix: 'X ', passthrough: { comment: 42 } };
+    expect(wrongShapedKeys(rule)).toEqual([]);
+    const result = evaluateFilter(makeFilter([rule]), makeItem(), makeContext());
+    expect(result.trace).toEqual([expect.objectContaining({ index: 0, outcome: 'applied' })]);
   });
 });
 

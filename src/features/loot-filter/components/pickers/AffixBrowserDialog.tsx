@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ListChecks } from 'lucide-react';
+import { ListChecks, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
 import { cn } from '@/lib/utils';
+import { statQuirk } from '../../engine/statQuirks';
 import type { StatCheck } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
 import {
@@ -210,6 +211,20 @@ function ParamChips({
   );
 }
 
+/** A stat the plugin reads as 0 on some items: a confirmed one in red with its headline, an untested one in amber. */
+function QuirkNote({ id, note }: { readonly id: number; readonly note: string }) {
+  const quirk = statQuirk(id);
+  if (quirk?.confirmed !== true) return <p className="pl-6 text-xs text-amber-700 dark:text-amber-400">{note}</p>;
+  return (
+    <p className="flex items-start gap-1 pl-6 text-sm font-medium text-destructive">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>
+        {quirk.headline}. <span className="text-xs font-normal">{note}</span>
+      </span>
+    </p>
+  );
+}
+
 function AffixStatRow({ row, checked, onToggle, query, params, onParamsChange, paramsNeedAll, anyLevelHint, model }: AffixStatRowProps) {
   const [expanded, setExpanded] = useState(false);
   const matched = row.affixes.map((affix) => affixMatches(affix, query, row));
@@ -231,12 +246,14 @@ function AffixStatRow({ row, checked, onToggle, query, params, onParamsChange, p
         <span className="text-sm font-medium">{row.label}</span>
         <span className="truncate font-mono text-xs text-muted-foreground">{row.name}</span>
       </label>
-      {row.note !== undefined && <p className="pl-6 text-xs text-amber-700 dark:text-amber-400">{row.note}</p>}
+      {row.note !== undefined && <QuirkNote id={row.id} note={row.note} />}
       <p className="pl-6 text-xs text-muted-foreground">
         {shown.map((affix, index) => (
           <span key={`${affix.kind}|${affix.name}|${affix.hybridWith.join('|')}`}>
             {index > 0 && ', '}
-            <span className={cn(matched[index] && 'font-medium text-foreground')}>{affixText(affix, row.layerKind)}</span>
+            <span className={cn(matched[index] && 'font-medium text-foreground')} title={affix.text?.join('\n')}>
+              {affixText(affix, row.layerKind)}
+            </span>
           </span>
         ))}
         {!open && hidden > 0 && '…'} ({affixKindCounts(row.affixes)})

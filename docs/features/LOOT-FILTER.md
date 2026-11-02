@@ -108,7 +108,25 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   (by name or id) on a stat the plugin reads as 0 on some items (`engine/statQuirks.ts`, see "Known plugin limits"):
   Enhanced Damage (17, 18) on weapons, Enhanced Defense (16) on armour, Increased Maximum Durability (75) on weapons
   and armour, at `<list>/<n>/stat`; skipped when the bundle shows the rule's item codes and types cannot match such
-  an item (a jewel or charm rule), never for the character stat lists. Disabled rules are validated like the
+  an item (a jewel or charm rule), never for the character stat lists. Each quirk also has a short `headline`
+  ("Currently only works on jewels and charms (reads 0 on weapons)"; "Does not work on armour, helms and shields
+  (reads 0)"; durability, untested: "May not work on weapons and armour (likely reads 0; not tested)") and a
+  `confirmed` flag. The rule editor shows the headline under the stat check row (item stat rows and exception rows)
+  in red, text-sm, medium weight (amber for the untested durability one) when `ruleStatQuirk` (`utils/statChecks.ts`,
+  the validator's exported `mayHitQuirk`, so only when the rule's codes and types can match an affected item; always
+  without item data) says so; `RuleDiagnostics` puts the headline in red before a confirmed quirk's warning
+  (`quirkOfMessage`) and colours its icon red.
+  A check (any of the four stat lists, by name or
+  id) on a stat the game stores scaled (`engine/statScale.ts`, from itemstatcost.txt): Life, Mana and Stamina
+  (`hitpoints`, `maxhp`, `mana`, `maxmana`, `stamina`, `maxstamina`, ids 6 to 11, `ValShift` 8) are stored ×256, the
+  per-level stats (214–233, 238–240, 242, 244, 247, 250, 365: `op` 2, 4 or 5 with `op param` 3 on `level`) in eighths
+  per character level, and Life, Mana and Stamina per level (216, 217, 242) both; whether the plugin compares the
+  stored or the shown value is not verified, so the warning (at `<list>/<n>/value`) gives the stored number of the
+  check ("The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this
+  rule…"). A presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) holds either way and
+  gets none, so Sully's template (rules 29 and 30,
+  stats 218 and 219 `>= 1`) stays clean; those rules print `{stat:218}/8` in the name, which suggests Sully sees the
+  stored eighths in game. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
@@ -118,8 +136,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `<list>/<n>`, also for a hide rule's exceptions: "has one entry per skill tab; without "param" the plugin reads only
   the entry with param 0 (verified in game), not any skill tab. Pick a skill tab to check one"), an event or charged
   param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`,
-  `> 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is `max charges << 8 | charges left`, 5/5 =
-  1285).
+  `> 0`, `!= 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is
+  `max charges << 8 | charges left`, 5/5 = 1285).
   - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50) and the plugin
     compares `param` with that (verified in game on 2026-11-01: +4 to Fire Skills, Sorceress, showed in
     `{stat:188,8}`); properties.txt numbers them `class × 3 + tab` (Martial Arts = 20, Fire Skills = 3). The warnings
@@ -130,7 +148,7 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.6.7) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+    Skills, which is param 56"). Sully's template (v0.6.11) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -146,7 +164,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `disabledRules/<n>/rule` (n counts disabled rules), from `ruleFilePaths` in `engine/parse.ts`; the diagnostic's
   `rule` is the index in the full list, which the Rules tab and the JSON tab's "Rule N" links use. `RuleDiagnostics`
   strips either prefix.
-- The evaluator skips a disabled rule with the trace outcome `disabled` (it never applies or hides).
+- The evaluator skips a disabled rule with the trace outcome `disabled` (it never applies or hides), and a rule with a
+  wrong-shaped key with `wrongShape` (see "Wrong-shaped rules" under Test tab).
 
 `lootFilterSaga` (registered by `src/features/loot-filter/index.ts` when the route chunk first loads):
 
@@ -161,7 +180,11 @@ chunk (about 6.5 KB gzip); a documented exception, see [SAGAS.md](../technical/S
 ## Library screen
 
 Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip download, the troubleshooting line from
-"Using a filter in the game"), and:
+"Using a filter in the game"), and the buttons in this order: **Start from Sully's QoL filter** (the primary button),
+**Upload**, **New filter** (outline). A "Tip:" line under them says most players start from Sully's filter or upload
+one someone shared and change what they need; a new filter starts blank (no rules, so every item shows as the game
+shows it) and is for authors who know the format; the Rules tab has example rules either way. The empty state and the
+New filter dialog ("A blank filter with no rules. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
@@ -174,15 +197,25 @@ Title, a short how-to (launcher import, `sounds`/`icons` folders, the zip downlo
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
   entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.6.7 from github.com/Thisisnotsully/QoL-Filter, verbatim (222 rules, 12 styles, 4
+  is `Sullys-QoL-Filter.json` v0.6.11 from github.com/Thisisnotsully/QoL-Filter, verbatim (223 rules, 12 styles, 4
   levels, `soundVolume` 25, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
   3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
   fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
   (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25; v0.6.7 (2026-10-31) adds a +1 All Skills base highlight (chat
   line, `other.mp3`, red border, `goldstar` icon), hides minor potions (`mp1`/`hp1`) from character level 12 outside
-  town, and adds `item_allskills < 1` exceptions (stat 127) to three hide rules. The
-  `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
-  `utils/template.ts`): "Sully's QoL filter v0.6.7, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  town, and adds `item_allskills < 1` exceptions (stat 127) to three hide rules; v0.6.9 to v0.6.11 (2026-10-31 to
+  11-01; there is no v0.6.8) add an "Ancient Scroll tiering" hide rule for the Ancient Scrolls `01b` to `50b` at level
+  4 (Uber-Strict - Maps+) and limit their gong highlight to levels 1 to 3, add the Mythical Jewel (`mjw`) to the rare
+  jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
+  and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
+  and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
+  `"activeInLevels": 4`, a number where the format wants a list, so the editor reports one error ("expected a list of
+  numbers", the plugin's own message for it) and keeps the value in `passthrough`. The guide says a rule with an error
+  is switched off, so the Test tab skips the rule ("skipped: wrong shape", see "Wrong-shaped rules" under Test tab) and
+  Ancient Scrolls are not hidden at level 4 there. What the plugin does with it is not verified (a question for the
+  power user in the backlog).
+  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`TEMPLATE_CREDIT` in
+  `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
@@ -240,7 +273,22 @@ rule scrolls the editor into view).
   and area names, stat names and the names of their params (skill, tab, class), comment, style, name changes and chat
   lines), **Add rule** (an empty rule after the
   selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
-  The search text includes `disabled` for a disabled rule, so searching "disabled" lists them.
+  The search text includes `disabled` for a disabled rule, so searching "disabled" lists them. An empty rule list says
+  "No rules yet. …" and points to the example rules and to Sully's QoL filter (a link to the library).
+- **Example rules** (`rules/ExampleRules.tsx`, `utils/exampleRules.ts`): a collapsed box under the toolbar. Its intro
+  says most players start from Sully's filter (or a shared one) and adapt it, where an example goes (after the
+  selected rule, else at the end) and how rules run (top to bottom, every matching rule applies, later labels win, a
+  matching hide rule hides the item and stops). Then one card per example (title, what it does and why it is built
+  that way, **Add this rule**, which adds it like Add rule and selects it): hide magic and rare weapons except those
+  with +All Skills, Faster Cast Rate or Increased Attack Speed (`< 1` exceptions in `itemStats`); rings and amulets
+  with 10% Faster Cast Rate and 10% Magic Find (all of); small charms with Magic Find or Faster Hit Recovery (any of);
+  Ist to Zod runes (`r74`–`r83`) with `tink.mp3`, the `rune` icon and a border (bundled files, so the .zip download
+  carries them); hide inferior weapons and armour (a narrow hide rule); normal or superior swords with exactly 4
+  sockets (`sockets` vs `maxSockets`); The Oculus by unique id (418, the dropped row, and 973, the Ancient Coupon row,
+  with quality unique since set ids overlap). Each rule has a `comment` starting "Example:". None checks Enhanced
+  Damage or Defense (see "Known plugin limits"). `exampleRules.test.ts` writes and reads every example, validates it
+  against the real game data with no diagnostic, checks the bundled sound and icon names and the ids, and runs the
+  hide, all-of and any-of examples through the evaluator.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
 Mythical`: items/types/uniques by name when the bundles are in, codes otherwise, then quality, tier, flags, item level,
   sockets, stats, difficulty, areas, and the main action: `hide`, `→ style X`, the stripped replaceName/prefix/suffix or
@@ -263,48 +311,103 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   missing stat counts as 0 (verified in game); a "Test tab" link sets `?tab=test`),
   then the conditions in sections (Which items, Item properties, Stats, Where and when) and an Actions card
   with `ActionsEditor owner="rule"`. Every change dispatches `patchRule`; an emptied list removes its key. A condition
-  whose file value had the wrong shape (kept in `passthrough`) gets a note; every passthrough key is listed read-only in
-  a collapsed "Advanced / passthrough" block.
+  whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
+  rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
+  passthrough" block.
+- **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). A power user verifies
+  what the plugin reads by printing it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
+  how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected
+  rule (so the rule becomes N + 1) and selects it; a toast says so, and keyboard focus moves to the new editor's title
+  ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
+  index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
+  test rule (`inGameCheckRule`):
+  - copies every condition of the rule except the four stat lists (codes, types, quality, tier, flags, ids, location,
+    difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not, and no action (no
+    `hide`, `hideIfOtherConditionsFail`, style, sound…);
+  - prints each stat the four lists check (exceptions included), once per stat and param, in list order:
+    `Label {stat:ID}`, `Label:param {stat:ID,param}` for a check with a param, `Char Label {playerStat:ID}` for a
+    character stat (`checkedStats`, `checkText`): `[ED {stat:17} | Tab:8 {stat:188,8}] `. Labels are short
+    (`SHORT_LABELS`: ED, Def%, FCR, MF, Tab, Sock…; other stats their name without `item_`, `#ID` for an id without
+    data); ids come from the bundle, a name the bundle does not know stays a name. The guide documents no length
+    limit for names;
+  - Name parts are "later wins", so the text goes into the first of `namePrefix`, `nameSuffix` that the rule's
+    effective actions (style included) leave free, else into a `chatMessage` `{name} [ … ]` (chat lines add up).
+  - _Why before the rule_: a rule after it would never run for items the rule hides; before it, the test rule has no
+    `hide`, so it changes nothing but the name (a unit test runs the evaluator with and without it). Trade-offs, said
+    in the docs here and in the hint: a later matching rule that sets the same name part replaces the text, and an
+    item the rule (or an earlier rule) hides shows no label; disable a hide rule while testing to see every item.
+  - has the comment "In-game check for the rule below: compare these numbers with the item tooltip, then delete this
+    rule. ED = item_maxdamage_percent (17); Tab:8 = item_addskill_tab (188) param 8 Fire Skills (Sorceress)"
+    (`IN_GAME_CHECK_MARK`; no rule number, which would go stale when rules move), so searching "in-game check" lists
+    every test rule; such a rule's row and editor carry an "in-game check" badge (`isInGameCheckRule`, by the comment's
+    start, so test rules from the earlier "In-game check for rule N + 1 (the rule below)" wording count too) and the
+    editor explains it instead of the button.
+  - A rule without stat checks gets a disabled button and the reason under the title ("This rule checks no stats; …").
+    So does a rule with wrong-shaped keys (`wrongShapedKeys`, `wrongShapeReason`: "This rule has a wrong-shaped key
+    (activeInLevels); fix it first."): the copy would leave those keys out and apply while the rule itself is skipped.
+    Otherwise the line under the title explains the button and ends "If a number differs from the tooltip, the plugin
+    reads that stat differently; tell us" (a new GitHub issue, `REPORT_STAT_URL`).
 - **Controls**: item, type, unique/set and area pickers (chips with name + code/id; more than 12 chips collapse behind
   "+N more"); named matches (`quality`, `baseTier`, `difficulty`): any / one / several / range, picks stored as names,
   file numbers kept until that part changes (`utils/matchValues.ts`); number matches (`itemLevel`, `sockets`,
   `maxSockets`): any / exactly / list (`1, 2, 3`) / range (min only or max only allowed); flags any / yes / no; stat
   check rows: stat picker, param, op (`>=` for new rows), value, two values for `between`
-  (`utils/statChecks.ts`); the param is described under "Stat params" below. The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
+  (`utils/statChecks.ts`); the param is described under "Stat params" below. The stat picker lists itemstatcost names
+  with the in-game label and id as detail ("strengthpercent · Bonus to Strength % · 255", lootfilter.json
+  `stats[].label`) and searches the label too, so "strength" shows the flat and the percent stat apart and "faster
+  cast" finds `item_fastercastrate`. The four stat lists are labelled "Item stats, all of" / "Item stats, any of" (`itemStats`,
   `itemStatsAnyOf`: the item on the ground) and "Character stats, all of" / "Character stats, any of" (`playerStats`,
   `playerStatsAnyOf`: your character, not the item), because users mistook "Item stats, any of" for the player list;
   the rule summary prefixes character checks with `character` (`character any of strength <10`), the Test tab says
   "Character level" and "More character stats". The two item stat lists also have "Browse affixes…" after "Add stat
-  check" (the affix browser below), and a line under the Stats section says the game checks item stats, not
-  affix names; `location` checkboxes (none = on the ground); `activeInLevels`: "Every level" or a tick per
+  check" (the affix browser below; not on a hide rule, see "Except items with…"), and a line under the Stats section
+  says the game checks item stats, not affix names; `location` checkboxes (none = on the ground); `activeInLevels`: "Every level" or a tick per
   filter level, unknown ids listed with a remove button. Unticking every level writes `activeInLevels: []` (the
   validator warns about the empty list); ticking "Every level" removes the key.
 - **Except items with…** (`conditions/ExceptionsControl.tsx`, hide rules only: own or style `hide`, first field of
   the Stats section). Request: "hide all magic weapons except those with Demon Damage". The format has no exception
-  key, so the control is an input helper that writes the opposite check (`invertStatCheck` in `utils/statChecks.ts`:
-  `>=`↔`<`, `>`↔`<=`, `==`↔`!=`; `between` has no single opposite, which the hint says) into an item stat list:
-  "Keep items with any of these" → `itemStats` (every check must hold to hide, so one exception keeps the item),
-  "Keep items with all of these" → `itemStatsAnyOf` (one failing exception hides it). "Add exception" (a stat picker)
-  appends `{ stat, op: "<", value: 1 }` (for a skill, tab or class stat the new row in that list then gets its param
-  from the row's param picker, and the validator warns while it has none); "Browse affixes for exceptions…" opens the
-  affix browser in its inverted mode on the same list. The checks are then edited in the lists like any other (set the value there). Below, a
-  "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." line reads the exceptions back (`ruleExceptions`). An
-  amber note (in either mode) says when `itemStatsAnyOf` mixes exceptions with plain checks: its exceptions are then
-  left out of the "Kept" line, and one there only keeps items that also fail the plain checks. When the effective
-  actions also have `hideIfOtherConditionsFail`, exceptions keep nothing (an item without the stat fails the rule
-  and the gate hides it), so the "Kept" line gives way to an amber note ("With "hide if other conditions fail" these
-  exceptions keep nothing … Turn it off to use exceptions."); `readsExceptions(actions)` in `utils/statChecks.ts`
-  decides, for the control and the rule summary. The item stat lists' hints add "On a hide rule, the <, <= and != checks are its exceptions".
-  - _Why no list of its own_: the file stores only plain checks, and on a hide rule every check of `itemStats` is
-    exactly "except items with its opposite", so an exception list that took the checks out of `itemStats` would
-    either show the user's `item_numsockets >= 1` ("hide socketed items") as "except item_numsockets < 1" or guess
-    by op which checks were meant as exceptions. The checks therefore stay where the file has them (one source of
-    truth, nothing reordered), and only the `<`, `<=` and `!=` ops, the ones the control writes from `>=`, `>` and
-    `==`, are read back as exceptions (`exceptionOf`), in the "Kept:" line and in the rule summary (`ruleSummary`: a
-    hide rule's `item_demondamage_percent < 1` reads "unless item_demondamage_percent ≥1"; several in `itemStats`
-    join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed `itemStatsAnyOf` stays "any of …"). Both the
-    summary and the control use the effective actions (a style can hide): the Rules tab and the Test tab's trace pass
-    `readsExceptions(effectiveActions(rule, filter))` to `ruleSummary`, whose default reads the rule's own actions.
+  key, so an exception is stored as its opposite check (`invertStatCheck` in `utils/statChecks.ts`: `>=`↔`<`,
+  `>`↔`<=`, `==`↔`!=`; `between` has no single opposite) in an item stat list: "Keep items with any of these" →
+  `itemStats` (every check must hold to hide, so one exception keeps the item), "Keep items with all of these" →
+  `itemStatsAnyOf` (one failing exception hides it). The control **owns those rows** (decided after a power user's
+  feedback, 2026-11: switching the mode did not move existing exceptions, they showed negated in the regular lists,
+  the exceptions' Browse affixes saw only one side, and the regular Browse affixes added `>= 1` checks on hide rules):
+  - The `<`, `<=` and `!=` checks of both lists (`isExceptionCheck`, `exceptionOf`) are listed here as `StatCheckRow`s
+    in their natural form: the row shows `invertStatCheck(stored)` and writes back `storedException(edited)`, edits go
+    to the row's index in the full list (`statCheckRows`). Ops offered: `>=`, `>`, `==` (`EXCEPTION_ROW_OPS`); the
+    param field, value and remove ("Remove exception") work as in the other lists. "Any known level" stays where it
+    was valid (one exception per level is "keep items with the skill at any of these levels" only in `itemStats`):
+    the row passes `anyOf` = "any of these" mode, so the option is offered there and disabled in the "all of these"
+    mode ("only with “Keep items with any of these”").
+  - The mode is where the exceptions are (`exceptionPlacement`: `any`, `all`, `both` or none); with none, the toggle
+    only picks where new ones go (component state, starting from the file). Switching moves every exception of the
+    other list to the end of the picked one, in order (`moveExceptions`; the other list keeps its plain checks, an
+    emptied list is removed), so only one side holds them. "Add exception" appends `{ stat, op: "<", value: 1 }` and
+    "Browse affixes for exceptions…" (the affix browser's inverted mode) edits the side holding them.
+  - Edge cases: a hand-written file with exceptions in both lists shows both groups, labelled ("… (stored in Item
+    stats, all of)"), with no mode pressed, an amber note, and no add controls until a mode is picked, which gathers
+    them all into that list. When `itemStatsAnyOf` holds plain checks, "Keep items with all of these" is disabled
+    with a line saying why (exceptions there would be ORed with the plain checks), unless the exceptions are already
+    there (then the amber note says they are ORed and not in "Kept", and "any of these" moves them out). With
+    `hideIfOtherConditionsFail` in the effective actions, exceptions keep nothing, so the "Kept" line gives way to an
+    amber note ("With "hide if other conditions fail" these exceptions keep nothing … Turn it off to use
+    exceptions."); `readsExceptions(actions)` decides, for the control and the rule summary.
+  - Below the rows, "Kept: items with A ≥1 or B ≥1; or items with C ≥1 and D ≥1." reads the exceptions back
+    (`ruleExceptions`). The field hint says how they are stored, that switching moves them and that turning Hide off
+    leaves them as plain `< 1` conditions; a non-hide rule holding `<`, `<=` or `!=` item stat checks gets a line in
+    its Stats section that they are plain conditions there.
+  - **Advanced box**: on a hide rule the regular `itemStats` / `itemStatsAnyOf` lists sit in a collapsed
+    "Advanced: hide only items with these stats" `<details>` (open at first when they hold plain checks), show only
+    the plain checks (`StatCheckList`'s `shows`, indices mapped back to the full list), offer the ops `>=`, `>`, `==`,
+    `between` (`PLAIN_HIDE_ROW_OPS`, so a row cannot turn into an exception) and have no Browse affixes (the plain
+    "Add stat check" stays). Their hints say what a plain check does there. Player stat lists and non-hide rules are
+    unchanged.
+  - The file format and the stored checks do not change; nothing is rewritten unless the user edits. The rule
+    summary still reads a hide rule's `item_demondamage_percent < 1` as "unless item_demondamage_percent ≥1"
+    (`ruleSummary`: several in `itemStats` join with "or", an all-exception `itemStatsAnyOf` with "and", a mixed
+    `itemStatsAnyOf` stays "any of …"). Both the summary and the control use the effective actions (a style can
+    hide): the Rules tab and the Test tab's trace pass `readsExceptions(effectiveActions(rule, filter))` to
+    `ruleSummary`, whose default reads the rule's own actions.
 - **Stat params** (`conditions/StatParamField.tsx`, `utils/statParams.ts`). The skill, skill tab, class, event and
   charged stats keep one entry per skill, tab or class, told apart by `param` (encodings in
   `game-data/engine/statLayers.ts`), so the param field picks it by name: a skill tab picker (24 tabs grouped by
@@ -495,12 +598,24 @@ focus returns to the button).
 - **Enhanced damage**: `dmg%` writes both `item_maxdamage_percent` (17) and `item_mindamage_percent` (18). The browser
   shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.2.24), so
   a tick writes one check on `item_maxdamage_percent`; an affix writing only one of them would keep it as its own row.
-- **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows (and a durability row, if one were
-  listed) carry an amber note from `STAT_QUIRKS` ("Reads 0 on weapons (the game keeps it off their stats; confirmed in
-  game); works on jewels and charms (confirmed on a jewel)."); see "Known plugin limits".
-- **Search**: every whitespace term must match the label, the stat name, an affix name, a param name (below), or
-  (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its name or param
-  names and every term is there or in the row's label or stat name.
+- **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows carry their quirk from `STAT_QUIRKS`
+  in red, text-sm, medium weight, headline first ("Currently only works on jewels and charms (reads 0 on weapons).
+  Reads 0 on weapons (the game keeps it off their stats; confirmed in game); works on jewels and charms (confirmed on
+  a jewel)."); a durability row, if one were listed, keeps the amber note (untested); see "Known plugin limits".
+- **Search**: every whitespace term must match the label, the stat name, an affix name, an affix text line, a param
+  name (below), or (digits) the stat id. An affix is emphasised when the search names it: at least one term is in its
+  name, text lines or param names and every term is there or in the row's label or stat name. The text lines matter
+  because ESR names affixes after themes: the flat "+X to All Attributes" suffixes are "of the Sky / Stars / Heavens /
+  Zodiac" (stats 0–3), while the suffix named "of All Attributes" writes the percent stats 255–258. Searching "all
+  attributes" by name alone found only the percent rows, and a user ticked "Bonus to Strength" for +Strength; now it
+  lists Strength, Energy, Dexterity, Vitality and the four "Bonus to … %" rows. An affix's text lines count for a row
+  when the affix writes only that stat or has a single line ("+(10 to 15) to All Attributes" describes all four
+  stats); a hybrid with one line per stat ("Sharp": Enhanced Damage and Attack Rating) adds none, so "attack rating"
+  does not list its Enhanced Damage row. The lines are the affix's tooltip in the list. They are never used to name
+  params (`matchingParams`, `autoPickedParams` and the chip search still read param and affix names only), so a broad
+  search does not pre-pick more.
+- **Labels**: from affixes.json `stats[].label`; the percent twin of a flat stat ends in " %" ("Bonus to Strength %"
+  next to "Strength", "Increase Maximum Life %" next to "Life"; GAME-DATA.md "Affixes" has the rule and the list).
 - **Skill, tab and class params** (`Affix.layers` of affixes.json, named through `LootFilterData.params`): a layered
   row (`layerKind`; the skill, skill tab, class, event and charged stats whose affixes name params) lists the union
   of its affixes' params, and each affix names its own in brackets ("Apprentice's [Demon Skills (Warlock)]": ESR
@@ -539,7 +654,9 @@ focus returns to the button).
 - **Inverted mode** (`except-any` / `except-all`, from "Except items with…"): only the exception checks (`<`, `<=`,
   `!=`) of the list are the browser's, so the draft starts from them and plain checks on the same stat are kept; a new
   tick appends `{ stat, op: "<", value: 1 }`. The title says "Browse affixes: except items with…" and the footer
-  where the ticks go ("…the rule hides only items with none of them" / "…keeps only items with all of them").
+  where the ticks go ("…the rule hides only items with none of them" / "…keeps only items with all of them"). The
+  Except control opens it on the one list holding the exceptions (switching its mode moves them), so every exception
+  shows ticked.
 
 ## Actions editor (`components/actions/`)
 
@@ -624,10 +741,25 @@ tab switches; it is not saved.
   the failed condition keys as chips. Skipped and disabled rules are hidden unless "Show skipped rules (N skipped, M
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
+- **Wrong-shaped rules**: a rule with a known key (condition or action) whose file value had the wrong shape (kept in
+  `passthrough` with a parse error, `wrongShapedKeys` in `engine/evaluate.ts`; e.g. `"activeInLevels": 4`) is skipped
+  with the outcome `wrongShape`: it never applies or hides, not even with `hideIfOtherConditionsFail`. The guide says
+  "a rule with an error is switched off and logged", and the plugin's message for such a value is an error; not
+  verified in game. Unknown keys sit in `passthrough` too but do not switch a rule off (the plugin logs "unknown
+  setting, ignored"; a future `formula` key stays ignored as before), and neither does a wrong-shaped `comment` (the
+  guide: "Ignored; notes for the author"). The trace badge reads "skipped: wrong shape"
+  (amber) with the line "activeInLevels has the wrong shape; the plugin most likely ignores this rule (not
+  verified)." and the failed conditions of the rest of the rule; the row is shown without "Show skipped rules" when
+  the rest of the rule holds (it would have applied or hidden), and counted as "N wrong shape" in that checkbox's
+  label. The validator's semantic errors (an `activeInLevels` id with no level, an unknown quality number) do not skip
+  a rule: whether the plugin treats them as errors is not known.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
-  full list ("Verify in game" below), a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
-  check or `{stat:ID}` without param reads only the param-0 entry), plus the note that `{string:KEY}` is shown as
-  written.
+  full list ("Verify in game" below); a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
+  check or `{stat:ID}` without param reads only the param-0 entry; skill tabs are numbered class × 8 + tab; Enhanced
+  Damage reads 0 on weapons and Enhanced Defense on armour, Enhanced Damage on a jewel correctly); a "Not yet verified"
+  part (Life, Mana and Stamina ×256; per-level stats in eighths; wrong-shaped rules skipped); how to use Check in game
+  ("If a number differs from the tooltip, the plugin reads that stat differently; tell us"); and the note that
+  `{string:KEY}` is shown as written.
 - While the bundles load (or when they fail) a hint says that typed codes work but item-type conditions only see the
   typed type.
 
@@ -684,6 +816,12 @@ research doc and the Test tab's note link here.
   not yet seen in a game log); the rules in it never run.
 - An empty condition list (`activeInLevels: []`, …) logs "the list is empty"; whether the plugin then drops the key or
   switches the rule off is not known (our evaluator: an empty `activeInLevels` is never active).
+- A rule with a wrong-shaped condition or action (`"activeInLevels": 4`) is switched off (the guide: "a rule with an
+  error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both. To verify
+  with Sully's v0.6.11: are Ancient Scrolls hidden at filter level 4 (backlog)?
+- Stats stored scaled (`engine/statScale.ts`): whether the plugin compares and prints the stored value (Life ×256,
+  per-level stats in eighths) or the tooltip's. The validator warns about such checks; Check in game shows it
+  (`{stat:7}` on a +40 Life item: 40 or 10240?). Sully's `{stat:218}/8` labels suggest the stored value.
 - `uniqueOrSetIds` are 0-based row numbers of uniqueitems.txt / setitems.txt (equal to `*ID` in ESR 3.2.12).
 - A numeric `sound` is a 0-based data row of sounds.txt (`*Index` is unreliable: it repeats for the Leoric taunt rows).
 - An item with a `type2` counts as both types for item-type conditions (the Test tab and the never-matches warnings use
@@ -704,7 +842,7 @@ research doc and the Test tab's note link here.
   `item_maxdurability_percent` (75) likely reads 0 on items with durability (the same mechanism, not tested). On
   jewels (no base damage or defense) Enhanced Damage reads correctly (verified: a rare jewel showed 58), and charms
   should behave the same. The validator warns about
-  such checks and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
+  such checks, the rule editor shows the red headline under the row and the affix browser notes them; the Test tab's evaluator does not model it (a test weapon with stat 17
   still matches). Listed for the mod author in the backlog.
 
 ### Troubleshooting in game

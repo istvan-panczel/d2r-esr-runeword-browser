@@ -60,7 +60,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `runewords.json`    | 197 KB / 28 KB                                                                 |
 | `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72) |
 | `sources.json`      | 298 KB / 29 KB                                                                 |
-| `lootfilter.json`   | ESR 3.2.24: 825 KB / 112 KB (771 / 103 before skills, knownLayers)             |
+| `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills) |
 | `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                     |
 | `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                     |
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                     |
@@ -139,9 +139,15 @@ ESR technical stats are left out: names containing `tinkerflag`, `item_jewelflag
 / `_hidden` / `_cap` companions (the real stat, e.g. `item_aura`, is kept). `label` is the stat's `descstrpos` string
 without format tokens, signs, a leading "to" or a trailing "by"/"of" ("+%d%% Enhanced Damage" → "Enhanced Damage"),
 a few overrides for per-class or format-only strings (`item_addclassskills` → "Class Skill Levels", `item_aura`,
-`item_nonclassskill`, `item_numsockets`, the `*length` stats…), " (per level)" for `perlevel` stats, " %" for the
-`_percent` one of two stats with one label (Fire Absorb), else the stat name. Stat ids are itemstatcost row numbers (the
-same ids as `lootfilter.json` `stats`).
+`item_nonclassskill`, `item_numsockets`, the `*length` stats…), " (per level)" for `perlevel` stats, else the stat
+name. A percent twin of a flat stat gets " %" (`markPercentLabels`): a stat whose `descstrpos` string shows a percent
+(`%%`) and whose label is, or ends with, the label of a listed stat whose string does not, comparing without
+" (per level)", which stays last. ESR 3.2.24: "Bonus to Strength %" / Dexterity / Vitality / Energy (255–258, the
+"of All Attributes" suffixes, next to the flat 0–3), "Increase Maximum Life %" / "Mana %", "Enhanced Defense %",
+"Bonus to Attack Rating %" (and its per-level stat), "Regenerate Mana %", "Physical Damage Leeched as Life %" /
+"Mana %", "Damage Taken Goes To Mana %", "Target Defense %" and, as before, the "Fire / Lightning / Cold Absorb %"
+stats. Percent stats without a flat twin (Faster Cast Rate, the resists) keep their label. Stat ids are itemstatcost
+row numbers (the same ids as `lootfilter.json` `stats`, which carries these labels too).
 
 `layers` (optional, omitted when empty): the params of the affix's layered stats, `{ stat, param }` by stat then param,
 resolved by `createPropertyLayerResolver` (see "Stat layers" under "Loot filter data"); only stats in `stats`, so the
@@ -225,7 +231,9 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   332 other spawnable misc rows are named by none (cube results, engine drops such as the essences), so spawnable
   stays enough for those.
 - `stats`: every `itemstatcost.txt` row, `id` = 0-based row number (equal to the `*ID` comment column in ESR 3.2.12),
-  `name` = `Stat`.
+  `name` = `Stat`, and `label` = the affixes.json label ("Bonus to Strength %") for the 144 stats an affix writes whose
+  label is not just the name. Other stats get none: many ESR rows have descriptions unrelated to the stat (placeholder
+  rows describing set bonuses, control stats named "Enemy Cold Resist"). The stat picker shows and searches the label.
 - `areas`: every `levels.txt` row with an `Id` (the `Expansion` marker has none); name = `LevelName` through the string
   table, else the raw `LevelName`, else `Name`; `act` is the 0-based `Act` column. Two rows share a name with their
   neighbour because ESR's `LevelName` keys say so (Jail Level 3 → "Jail Level 2", Catacombs Level 4 → "Catacombs

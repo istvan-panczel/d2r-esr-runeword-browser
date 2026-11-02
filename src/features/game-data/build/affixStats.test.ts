@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createAffixStatResolver, isTechnicalStat, labelFromDescription, propertyStats, statLabel } from './affixStats.ts';
+import {
+  createAffixStatResolver,
+  isTechnicalStat,
+  labelFromDescription,
+  markPercentLabels,
+  propertyStats,
+  statLabel,
+} from './affixStats.ts';
 import { createPropertyLayerResolver } from './bundleLootFilterSkills.ts';
 import { createSkillLookup } from './stats/skills.ts';
 import { TEST_STRINGS, testStatIndex, testTables } from './stats/testContext.mock.ts';
@@ -59,6 +66,54 @@ describe('labelFromDescription', () => {
     expect(labelFromDescription('%d%% Chance to cast level %d %s on striking')).toBe('Chance to cast on striking');
     expect(labelFromDescription('ÿc3Tinkering Points: %d')).toBe('Tinkering Points');
     expect(labelFromDescription('%s')).toBe('');
+  });
+});
+
+describe('markPercentLabels', () => {
+  const stat = (id: number, name: string, label: string, percent: boolean) => ({ id, name, label, percent });
+
+  it('marks the percent twin of a flat stat, keeping a per-level suffix last', () => {
+    const labels = markPercentLabels([
+      stat(0, 'strength', 'Strength', false),
+      stat(7, 'maxhp', 'Life', false),
+      stat(76, 'item_maxhp_percent', 'Increase Maximum Life', true),
+      stat(143, 'item_absorbfire', 'Fire Absorb', false),
+      stat(142, 'item_absorbfire_percent', 'Fire Absorb', true),
+      stat(224, 'item_tohit_perlevel', 'Attack Rating (per level)', false),
+      stat(225, 'item_tohitpercent_perlevel', 'Bonus to Attack Rating (per level)', true),
+      stat(255, 'strengthpercent', 'Bonus to Strength', true),
+    ]).map((entry) => entry.label);
+    expect(labels).toEqual([
+      'Strength',
+      'Life',
+      'Increase Maximum Life %',
+      'Fire Absorb',
+      'Fire Absorb %',
+      'Attack Rating (per level)',
+      'Bonus to Attack Rating % (per level)',
+      'Bonus to Strength %',
+    ]);
+  });
+
+  it('leaves percent stats without a flat twin, partial words and nameless labels alone', () => {
+    const labels = markPercentLabels([
+      stat(105, 'item_fastercastrate', 'Faster Cast Rate', true),
+      stat(39, 'fireresist', 'Fire Resist', true),
+      stat(40, 'maxfireresist', 'Maximum Fire Resist', true),
+      stat(9, 'maxmana', 'Mana', false),
+      stat(500, 'x_percent', 'Superman', true),
+      stat(501, 'item_elemskill', 'item_elemskill', false),
+      stat(502, 'item_elemskill_percent', 'Bonus item_elemskill', true),
+    ]).map((entry) => entry.label);
+    expect(labels).toEqual([
+      'Faster Cast Rate',
+      'Fire Resist',
+      'Maximum Fire Resist',
+      'Mana',
+      'Superman',
+      'item_elemskill',
+      'Bonus item_elemskill',
+    ]);
   });
 });
 

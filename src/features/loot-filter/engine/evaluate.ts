@@ -21,6 +21,10 @@
  *   `baseTier: null`) matches no `baseTier` condition, and `{baseTier}` expands to an empty string for it. The plugin's
  *   tier for such items is unknown (its `debug_log` line prints `tier %d` per item).
  *
+ * - A rule with a wrong-shaped known key (the parser kept it in `passthrough` with an error, e.g. `"activeInLevels": 4`)
+ *   is switched off: the guide says "a rule with an error is switched off and logged", and the plugin's message for
+ *   such a value is an error. Unknown keys do not switch a rule off (the plugin logs "unknown setting, ignored").
+ *
  * Verified in game (2026-11-01, plugin 1.5.3): a stat check or `{stat:ID}` without `param` reads only the entry with
  * param 0, not any entry (`OMITTED_PARAM` = 'layerZero'): `{stat:188}` showed 0 on an item whose only skill tab entry
  * is Fire Skills (Sorceress, param 8), while `{stat:188,8}` showed 4. An entry without param has param 0. ID may also
@@ -46,6 +50,7 @@ import type {
 } from './types.ts';
 import { BASE_TIERS, DEFAULT_LABEL_BACKGROUND_ALPHA, DIFFICULTIES, QUALITIES } from './types.ts';
 import { effectiveActions } from './actions.ts';
+import { ACTION_KEYS, CONDITION_KEYS } from './parse.ts';
 import { DEFAULT_QUALITY_COLORS } from './colors.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { resolveText } from './text.ts';
@@ -92,12 +97,21 @@ export interface TestContext {
 
 export interface RuleTrace {
   readonly index: number;
-  /** `disabled`: the rule is switched off in the editor (written to `disabledRules`), so the game never sees it. */
-  readonly outcome: 'applied' | 'skipped' | 'disabled' | 'hidden' | 'hiddenByOtherConditions';
-  /** Condition keys that did not hold; empty when applied or disabled. */
+  /**
+   * `disabled`: the rule is switched off in the editor (written to `disabledRules`), so the game never sees it.
+   * `wrongShape`: a known key of the rule has the wrong shape (`wrongShapedKeys`), so the plugin most likely switches
+   * the rule off (not verified).
+   */
+  readonly outcome: 'applied' | 'skipped' | 'disabled' | 'wrongShape' | 'hidden' | 'hiddenByOtherConditions';
+  /**
+   * Condition keys that did not hold; empty when applied or disabled. For `wrongShape`, the ones of the rest of the
+   * rule (so the trace can tell whether the rule would have matched).
+   */
   readonly failed: readonly string[];
   /** The style's actions with the rule's own on top; empty when skipped. */
   readonly actions: RuleActions;
+  /** `wrongShape` only: the wrong-shaped keys. */
+  readonly wrongShaped?: readonly string[];
 }
 
 export interface EvaluatedSound {
@@ -271,6 +285,18 @@ function failedConditions(rule: LootFilterRule, item: TestItem, context: TestCon
   return failed;
 }
 
+/** Every known key but `comment`: the guide says the plugin ignores it ("notes for the author"), whatever its shape. */
+const KNOWN_RULE_KEYS: ReadonlySet<string> = new Set<string>([...CONDITION_KEYS, ...ACTION_KEYS].filter((key) => key !== 'comment'));
+
+/**
+ * The rule's known keys (conditions and actions) whose file value had the wrong shape: the parser keeps them in
+ * `passthrough` with an error. Unknown keys sit there too but are not returned (the plugin ignores them), nor is a
+ * wrong-shaped `comment` (ignored too).
+ */
+export function wrongShapedKeys(rule: LootFilterRule): readonly string[] {
+  return Object.keys(rule.passthrough ?? {}).filter((key) => KNOWN_RULE_KEYS.has(key));
+}
+
 // ---------------------------------------------------------------------------
 // Placeholders
 // ---------------------------------------------------------------------------
@@ -358,6 +384,11 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       continue;
     }
     const failed = failedConditions(rule, item, context);
+    const wrongShaped = wrongShapedKeys(rule);
+    if (wrongShaped.length > 0) {
+      trace.push({ index, outcome: 'wrongShape', failed, actions: {}, wrongShaped });
+      continue;
+    }
     if (failed.length > 0) {
       const actions = effectiveActions(rule, filter);
       const gateHolds = failed.every((key) => !GATE_KEYS.has(key)) && !failed.includes('activeInLevels');

@@ -1,4 +1,4 @@
-import type { LootFilterDataBundle, LootFilterItem, LootFilterUniqueOrSet } from '../engine/schema.ts';
+import type { AffixStat, LootFilterDataBundle, LootFilterItem, LootFilterUniqueOrSet } from '../engine/schema.ts';
 import type { BuildResult } from './bundleTypes.ts';
 import { ancientCouponCodes, couponCubeOutputs } from './coupons.ts';
 import { readUniqueOrSetRows, resolveName } from './itemNames.ts';
@@ -164,16 +164,31 @@ function couponUniqueIds(tables: LootFilterTables, warnings: string[]): Set<numb
   return ids;
 }
 
+/**
+ * Every itemstatcost row by row number, with the affix browser's label (affixes.json `stats`) when an affix writes the
+ * stat and the label is not just the stat name. Stats no affix writes get none: many ESR rows describe unrelated text.
+ */
+function lootFilterStats(itemstatcost: TsvTable, affixStats: readonly AffixStat[]): LootFilterDataBundle['stats'] {
+  const labels = new Map(affixStats.map((stat) => [stat.id, stat.label]));
+  return itemstatcost.rows.map((row, id) => {
+    const name = row.str('Stat');
+    const label = labels.get(id);
+    return label === undefined || label === name ? { id, name } : { id, name, label };
+  });
+}
+
 export function buildLootFilterBundle(
   tables: LootFilterTables,
   strings: ReadonlyMap<string, string>,
   /** The skill pickers' data (build/bundleLootFilterSkills.ts), appended to the bundle */
-  skillData: Pick<LootFilterDataBundle, 'skills' | 'knownLayers'> = {}
+  skillData: Pick<LootFilterDataBundle, 'skills' | 'knownLayers'> = {},
+  /** The stats affixes write, with the affix browser's labels (affixes.json `stats`), for the stat labels */
+  affixStats: readonly AffixStat[] = []
 ): BuildResult<LootFilterDataBundle> {
   const warnings: string[] = [];
   const items = readItemRows(tables, warnings, strings);
 
-  const stats = tables.itemstatcost.rows.map((row, id) => ({ id, name: row.str('Stat') }));
+  const stats = lootFilterStats(tables.itemstatcost, affixStats);
 
   const areas: LootFilterDataBundle['areas'] = [];
   for (const row of tables.levels.rows) {

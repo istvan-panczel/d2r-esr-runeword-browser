@@ -3,10 +3,14 @@ import { cn } from '@/lib/utils';
 export interface SegmentedOption<T extends string> {
   readonly value: T;
   readonly label: string;
+  /** Not pickable now; `title` says why. */
+  readonly disabled?: boolean;
+  readonly title?: string;
 }
 
 interface SegmentedControlProps<T extends string> {
-  readonly value: T;
+  /** undefined: none pressed. */
+  readonly value: T | undefined;
   readonly options: readonly SegmentedOption<T>[];
   readonly onChange: (value: T) => void;
   readonly 'aria-label': string;
@@ -28,8 +32,10 @@ export function SegmentedControl<T extends string>({
           key={option.value}
           type="button"
           aria-pressed={option.value === value}
+          disabled={option.disabled}
+          title={option.title}
           className={cn(
-            'rounded-sm px-2 py-0.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+            'rounded-sm px-2 py-0.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
             option.value === value ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
           )}
           onClick={() => {

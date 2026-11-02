@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { wrongShapedKeys } from './evaluate.ts';
 import { parseJsonc } from './jsonc.ts';
 import { parseLootFilter, readLootFilter } from './parse.ts';
 import { serializeLootFilter, toPlainJson } from './serialize.ts';
@@ -12,9 +13,15 @@ const errors = (value: unknown) => parse(value).diagnostics.filter((d) => d.seve
 describe('parseLootFilter on Sully’s filter', () => {
   const { filter, diagnostics } = parseLootFilter(SULLY);
 
-  it('reads it without errors, keeping order', () => {
-    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(filter.rules).toHaveLength(222);
+  it('reads it with one error, keeping order', () => {
+    // v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4` (a number, not a list); it stays in passthrough,
+    // and the Test tab skips the rule (the plugin most likely switches it off).
+    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([
+      { severity: 'error', message: '"activeInLevels": expected a list of numbers', path: 'rules/98/activeInLevels', rule: 98 },
+    ]);
+    expect(filter.rules[98]?.passthrough).toEqual({ activeInLevels: 4 });
+    expect(filter.rules.flatMap((rule, index) => (wrongShapedKeys(rule).length > 0 ? [index] : []))).toEqual([98]);
+    expect(filter.rules).toHaveLength(223);
     expect(Object.keys(filter.styles ?? {})).toEqual([
       'Mythical',
       'Jackpot',
@@ -130,6 +137,8 @@ describe('parseLootFilter', () => {
     const { filter, diagnostics } = parse({ formatVersion: 1, extra: { a: 1 }, rules: [{ itemCodes: ['r01'], hide: true, future: 3 }] });
     expect(filter.passthrough).toEqual({ extra: { a: 1 } });
     expect(filter.rules[0]).toEqual({ itemCodes: ['r01'], hide: true, passthrough: { future: 3 } });
+    // An unknown key does not switch the rule off (the plugin logs "unknown setting, ignored").
+    expect(wrongShapedKeys(filter.rules[0] ?? {})).toEqual([]);
     expect(diagnostics).toEqual([
       expect.objectContaining({ severity: 'warning', path: 'extra' }),
       expect.objectContaining({ severity: 'warning', path: 'rules/0/future', rule: 0 }),
@@ -147,6 +156,8 @@ describe('parseLootFilter', () => {
     expect(filter.rules[1]).toEqual({
       passthrough: { sockets: 'two', itemStats: [{ stat: 'x', value: 1, extra: true }], labelBackground: [1, 2], location: ['inTown'] },
     });
+    // Each rule error is a wrong-shaped key, which switches the rule off in the Test tab.
+    expect(wrongShapedKeys(filter.rules[1] ?? {})).toEqual(['sockets', 'itemStats', 'labelBackground', 'location']);
     expect(diagnostics.map((d) => [d.severity, d.path, d.rule])).toEqual([
       ['error', 'title', undefined],
       ['error', 'rules/1/sockets', 1],

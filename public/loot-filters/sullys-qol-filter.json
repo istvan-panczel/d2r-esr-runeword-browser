@@ -6,7 +6,7 @@
   "formatVersion": 1,
   "title": "Sully's QoL Filter",
   "author": "Sully",
-  "version": "0.6.7",
+  "version": "0.6.11",
   "description": "Sully's D2RLAN QoL filter - PoE themed drop labels, sounds, mini-map icons.",
   "updateUrl": "https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json",
   "filterLevels": [
@@ -128,7 +128,7 @@
     },
     {
       "itemCodes": [
-        "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "14d", "15d", "16d",
+        "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "13d", "14d", "15d", "16d",
         "17d", "18d", "19d", "20d", "21d", "22d", "23d", "24d", "25d", "26d", "27d", "28d", "29d", "30d", "31d",
         "32d", "33d", "34d", "35d", "36d", "37d", "38d", "39d", "40d", "41d", "42d", "43d", "44d", "45d", "46d",
         "47d", "48d", "49d", "50d", "01g", "02g", "03g", "04g", "05g", "06g", "07g", "08g", "09g", "10g", "11g",
@@ -144,7 +144,7 @@
     },
     {
       "itemCodes": [
-        "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13d", "13e", "14e", "15e", "16e", "18e",
+        "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "15e", "16e", "17e", "18e",
         "19e", "20e", "21e", "22e", "23e", "24e", "25e", "26e", "27e", "28e", "29e", "30e", "31e", "32e", "33e",
         "34e", "35e", "36e", "37e", "38e", "39e", "01h", "02k", "03h", "04h", "05h", "06h", "07h", "08h", "09h",
         "10h", "11h", "12k", "13h", "14h", "15h", "16h", "17h", "18h", "19h", "20h", "21h", "22k", "23h", "24h",
@@ -639,7 +639,7 @@
     },
     {
       "itemCodes": [
-        "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "14d", "15d", "16d",
+        "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "13d", "14d", "15d", "16d",
         "17d", "18d", "19d", "20d", "21d", "22d", "23d", "24d", "25d", "26d", "27d", "28d", "29d", "30d", "31d",
         "32d", "33d", "34d", "35d", "36d", "37d", "38d", "39d", "40d", "41d", "42d", "43d", "44d", "45d", "46d",
         "47d", "48d", "49d", "50d", "01g", "02g", "03g", "04g", "05g", "06g", "07g", "08g", "09g", "10g", "11g",
@@ -673,7 +673,7 @@
 
     // Jewels, potions and special items
     {
-      "itemCodes": ["jew"],
+      "itemCodes": ["jew","mjw"],
       "quality": "rare",
       "replaceName": "ÿc9{name}",
       "chatMessage": "ÿc9** Rare Jewel **",
@@ -747,13 +747,21 @@
       "useStyle": "GoldPlate",
       "icon": {"iconName": "redD", "iconSize": 27}
     },
+    //Ancient Scroll tiering
+    {
+      "itemCodes": ["01b","02b","03b","04b","05b","06b","07b","08b","09b","10b","11b","12b","13b","14b","15b","16b","17b","18b","19b","20b","21b","22b","23b","24b","25b","26b","27b","28b","29b","30b","31b","32b","33b","34b","35b","36b","37b","38b","39b","40b","41b","42b","43b","44b","45b","46b","47b","48b","49b","50b"],
+      "activeInLevels": 4,
+      "hide": true
+    },
     {
       "itemCodes": ["01b","02b","03b","04b","05b","06b","07b","08b","09b","10b","11b","12b","13b","14b","15b","16b","17b","18b","19b","20b","21b","22b","23b","24b","25b","26b","27b","28b","29b","30b","31b","32b","33b","34b","35b","36b","37b","38b","39b","40b","41b","42b","43b","44b","45b","46b","47b","48b","49b","50b"],
       "replaceName": "ÿc6Ancient Scroll",
       "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc4 Ancient Scroll ÿc1*ÿc2*ÿc3*",
       "sound": "gong.mp3",
-      "useStyle": "GoldPlate"
+      "useStyle": "GoldPlate",
+      "activeInLevels": [1, 2, 3]
     },
+    //Legendary Materials
     {"itemCodes": ["um8"], "replaceName": "ÿcPLilith's Crystallized Tear", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
     {"itemCodes": ["um9"], "replaceName": "ÿcPTyrael's Eternal Feather", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
     {"itemCodes": ["u17"], "replaceName": "ÿcPLucion's Essence", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
@@ -948,7 +956,7 @@
     },
     {
       "itemCodes": [
-        "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "14d", "15d", "16d",
+        "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "13d", "14d", "15d", "16d",
         "17d", "18d", "19d", "20d", "21d", "22d", "23d", "24d", "25d", "26d", "27d", "28d", "29d", "30d", "31d",
         "32d", "33d", "34d", "35d", "36d", "37d", "38d", "39d", "40d", "41d", "42d", "43d", "44d", "45d", "46d",
         "47d", "48d", "49d", "50d", "01g", "02g", "03g", "04g", "05g", "06g", "07g", "08g", "09g", "10g", "11g",
@@ -964,7 +972,7 @@
     },
     {
       "itemCodes": [
-        "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "14e", "15e", "16e", "18e",
+        "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "15e", "16e","17e", "18e",
         "19e", "20e", "21e", "22e", "23e", "24e", "25e", "26e", "27e", "28e", "29e", "30e", "31e", "32e", "33e",
         "34e", "35e", "36e", "37e", "38e", "39e", "01h", "02k", "03h", "04h", "05h", "06h", "07h", "08h", "09h",
         "10h", "11h", "12k", "13h", "14h", "15h", "16h", "17h", "18h", "19h", "20h", "21h", "22k", "23h", "24h",
@@ -980,7 +988,7 @@
     },
     {
       "itemCodes": [
-        "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "14e", "15e", "16e", "18e",
+        "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "15e", "16e","17e", "18e",
         "19e", "20e", "21e", "22e", "23e", "24e", "25e", "26e", "27e", "28e", "29e", "30e", "31e", "32e", "33e",
         "34e", "35e", "36e", "37e", "38e", "39e", "01h", "02k", "03h", "04h", "05h", "06h", "07h", "08h", "09h",
         "10h", "11h", "12k", "13h", "14h", "15h", "16h", "17h", "18h", "19h", "20h", "21h", "22k", "23h", "24h",
@@ -993,7 +1001,7 @@
       "labelBorder": {"color": [255, 165, 0, 255], "width": 1}
     },
     {
-      "itemCodes": ["03j", "46h", "41e", "03e", "17e", "40e", "06e", "43e"],
+      "itemCodes": ["03j", "46h", "41e", "03e", "40e", "06e", "43e", "14e"],
       "chatMessage": "ÿc1High Tier Unique Coupon: {name}",
       "useStyle": "Valuable",
       "icon": {"iconName": "scroll", "iconSize": 40}

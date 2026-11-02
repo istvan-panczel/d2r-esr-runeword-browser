@@ -75,7 +75,7 @@ describe('validateLootFilter', () => {
     const real = buildLootFilterReference(json('lootfilter.json') as LootFilterDataBundle, json('types.json') as TypesBundle);
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const diagnostics = validateLootFilter(parseLootFilter(source).filter, real);
-    // The +3/4/5 skill tab rules (Sully v0.6.7) check stat 188 without param and with params 1 to 21, the properties.txt
+    // The +3/4/5 skill tab rules (Sully v0.6.7 to v0.6.11) check stat 188 without param and with params 1 to 21, the properties.txt
     // tab numbers: one list warning each (13 name no tab as the game numbers them), plus the paramless check.
     expect(diagnostics.map((d) => [d.severity, d.path])).toEqual(
       [31, 32, 33].flatMap((rule) => [
@@ -334,6 +334,56 @@ describe('validateLootFilter', () => {
       expect(quirks({ itemTypes: ['jewl'], itemStats: [ed(17)], hide: true }, null)).toHaveLength(1);
       expect(quirks({ itemCodes: ['jew', 'zzz'], itemStats: [ed(17)], hide: true }).filter((m) => m.includes('Enhanced'))).toHaveLength(1);
       expect(quirks({ playerStats: [ed(17)], playerStatsAnyOf: [ed(16)], hide: true })).toEqual([]);
+    });
+  });
+
+  describe('stats the game stores scaled (not verified in game)', () => {
+    const scaled = (rule: LootFilterRule) => messages(rule, null);
+
+    it('warns about Life, Mana and Stamina (×256) in every stat list, by name or id', () => {
+      expect(scaled({ itemStats: [{ stat: 'maxhp', value: 40 }], hide: true })).toEqual([
+        'rules/0/itemStats/0/value: The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this rule to see what the plugin reads.',
+      ]);
+      expect(
+        scaled({ itemStatsAnyOf: [{ stat: 9, value: 20 }], playerStats: [{ stat: 'hitpoints', op: '<', value: 100 }], namePrefix: 'x' })
+      ).toEqual([
+        expect.stringMatching(/^rules\/0\/itemStatsAnyOf\/0\/value: .*\+20 Mana may read as 5120/),
+        expect.stringMatching(/^rules\/0\/playerStats\/0\/value: .*\+100 Life/),
+      ]);
+    });
+
+    it('warns about per-level stats (eighths), and Life per level as both', () => {
+      expect(scaled({ itemStats: [{ stat: 'item_strength_perlevel', value: 2 }], hide: true })).toEqual([
+        expect.stringMatching(/item_strength_perlevel" in eighths per character level .* \+2 Strength per level may read as 16\./),
+      ]);
+      expect(scaled({ itemStats: [{ stat: 216, value: 3 }], hide: true })).toEqual([expect.stringMatching(/may read as 6144/)]);
+      expect(scaled({ itemStats: [{ stat: 'strength', value: 40 }], hide: true })).toEqual([]);
+    });
+
+    it('stays quiet on presence checks, whose result does not depend on the scale', () => {
+      // Sully's rules 29 and 30 check stats 218 and 219 for >= 1 (and print {stat:218}/8 in the name).
+      expect(
+        scaled({
+          itemStats: [
+            { stat: 218, value: 1 },
+            { stat: 'maxhp', op: '<', value: 1 },
+          ],
+          hide: true,
+        })
+      ).toEqual([]);
+      // `!= 0` / `== 0` (and `> 0` / `<= 0`) read "there" / "not there" too.
+      expect(
+        scaled({
+          itemStats: [
+            { stat: 'maxhp', op: '!=', value: 0 },
+            { stat: 'maxmana', op: '==', value: 0 },
+            { stat: 7, op: '>', value: 0 },
+            { stat: 9, op: '<=', value: 0 },
+          ],
+          namePrefix: 'x',
+        })
+      ).toEqual([]);
+      expect(scaled({ itemStats: [{ stat: 'maxhp', op: '==', value: 40 }], namePrefix: 'x' })).toHaveLength(1);
     });
   });
 

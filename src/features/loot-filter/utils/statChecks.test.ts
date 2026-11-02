@@ -1,6 +1,16 @@
+import { EMPTY_LOOT_FILTER_REFERENCE } from '../engine/reference';
+import type { LootFilterReference, StatCheck } from '../engine/types';
 import {
+  EXCEPTION_ROW_OPS,
   exceptionOf,
+  exceptionPlacement,
   expandsAcrossLevels,
+  isExceptionCheck,
+  moveExceptions,
+  plainCheckCount,
+  ruleStatQuirk,
+  statCheckRows,
+  storedException,
   formatStatCheck,
   invertStatCheck,
   newExceptionCheck,
@@ -147,5 +157,114 @@ describe('exceptions on hide rules', () => {
     expect(readsExceptions({ hide: true, hideIfOtherConditionsFail: true })).toBe(false);
     expect(readsExceptions({ hideIfOtherConditionsFail: true })).toBe(false);
     expect(readsExceptions({})).toBe(false);
+  });
+});
+
+describe('the Except control owns a hide rule’s exception rows', () => {
+  const plain = { stat: 'item_numsockets', op: '>=', value: 1 } as const;
+  const teleport = newExceptionCheck('item_singleskill');
+  const demon = newExceptionCheck('item_demondamage_percent');
+
+  it('tells exception checks from plain ones', () => {
+    expect(isExceptionCheck(teleport)).toBe(true);
+    expect(isExceptionCheck({ stat: 0, op: '!=', value: 3 })).toBe(true);
+    expect(isExceptionCheck(plain)).toBe(false);
+    expect(isExceptionCheck({ stat: 0, value: 1 })).toBe(false);
+    expect(plainCheckCount([plain, teleport, { stat: 0, op: 'between', value: [1, 2] }])).toBe(2);
+    expect(plainCheckCount(undefined)).toBe(0);
+  });
+
+  it('shows an exception in its natural form and stores the opposite of every row op', () => {
+    expect(invertStatCheck(teleport)).toEqual({ stat: 'item_singleskill', op: '>=', value: 1 });
+    for (const op of EXCEPTION_ROW_OPS) {
+      const shown: StatCheck = { stat: 'x', param: 54, op, value: 3 };
+      const stored = storedException(shown);
+      expect(isExceptionCheck(stored)).toBe(true);
+      expect(invertStatCheck(stored)).toEqual(shown);
+    }
+    // A shown row without op is `>= 1`
+    expect(storedException({ stat: 'x', value: 1 })).toEqual({ stat: 'x', op: '<', value: 1 });
+  });
+
+  it('maps the shown rows back to their place in the full list', () => {
+    const list = [plain, teleport, { stat: 'b', op: '>', value: 2 } as const, demon];
+    expect(statCheckRows(list, isExceptionCheck)).toEqual([
+      { check: teleport, index: 1 },
+      { check: demon, index: 3 },
+    ]);
+    const plainRows = statCheckRows(list, (check) => !isExceptionCheck(check));
+    expect(plainRows.map((row) => row.index)).toEqual([0, 2]);
+    // Editing the second shown exception (in natural form) changes only its own place
+    const [, second] = statCheckRows(list, isExceptionCheck);
+    expect(replaceStatCheck(list, second.index, storedException({ stat: 'item_demondamage_percent', op: '>=', value: 5 }))).toEqual([
+      plain,
+      teleport,
+      list[2],
+      { stat: 'item_demondamage_percent', op: '<', value: 5 },
+    ]);
+    expect(removeStatCheck(list, plainRows[1].index)).toEqual([plain, teleport, demon]);
+    expect(statCheckRows(undefined, isExceptionCheck)).toEqual([]);
+  });
+
+  it('reads the mode from where the exceptions are', () => {
+    expect(exceptionPlacement({})).toBeUndefined();
+    expect(exceptionPlacement({ itemStats: [plain], itemStatsAnyOf: [plain] })).toBeUndefined();
+    expect(exceptionPlacement({ itemStats: [plain, teleport] })).toBe('any');
+    expect(exceptionPlacement({ itemStats: [plain], itemStatsAnyOf: [teleport] })).toBe('all');
+    expect(exceptionPlacement({ itemStats: [demon], itemStatsAnyOf: [teleport] })).toBe('both');
+  });
+
+  it('moves every exception to the other list in order, leaving the plain checks', () => {
+    expect(moveExceptions({ itemStats: [teleport, plain, demon] }, 'all')).toEqual({
+      itemStats: [plain],
+      itemStatsAnyOf: [teleport, demon],
+    });
+    expect(moveExceptions({ itemStats: [teleport, demon] }, 'all')).toEqual({ itemStats: undefined, itemStatsAnyOf: [teleport, demon] });
+    expect(moveExceptions({ itemStats: [plain], itemStatsAnyOf: [demon, teleport] }, 'any')).toEqual({
+      itemStats: [plain, demon, teleport],
+      itemStatsAnyOf: undefined,
+    });
+  });
+
+  it('gathers exceptions from both lists into the picked one', () => {
+    expect(moveExceptions({ itemStats: [demon], itemStatsAnyOf: [teleport] }, 'any')).toEqual({
+      itemStats: [demon, teleport],
+      itemStatsAnyOf: undefined,
+    });
+    expect(moveExceptions({ itemStats: [demon], itemStatsAnyOf: [teleport] }, 'all')).toEqual({
+      itemStats: undefined,
+      itemStatsAnyOf: [teleport, demon],
+    });
+  });
+
+  it('changes nothing when there is nothing to move', () => {
+    expect(moveExceptions({}, 'all')).toEqual({});
+    expect(moveExceptions({ itemStats: [plain], itemStatsAnyOf: [teleport] }, 'all')).toEqual({});
+    expect(moveExceptions({ itemStats: [teleport] }, 'any')).toEqual({});
+  });
+});
+
+describe('stat quirks on a rule', () => {
+  const reference: LootFilterReference = {
+    ...EMPTY_LOOT_FILTER_REFERENCE,
+    itemCodeTypes: new Map([
+      ['hax', new Set(['axe', 'weap'])],
+      ['jew', new Set(['jewl', 'misc'])],
+    ]),
+  };
+  const ed = { stat: 'item_maxdamage_percent', value: 1 };
+
+  it('shows a quirk only when the rule can match an affected item', () => {
+    expect(ruleStatQuirk(ed, { itemTypes: ['weap'] }, reference)?.headline).toBe(
+      'Currently only works on jewels and charms (reads 0 on weapons)'
+    );
+    expect(ruleStatQuirk({ stat: 17, value: 1 }, {}, reference)?.confirmed).toBe(true);
+    expect(ruleStatQuirk(ed, { itemCodes: ['jew'] }, reference)).toBeUndefined();
+    expect(ruleStatQuirk({ stat: 'item_numsockets', value: 1 }, {}, reference)).toBeUndefined();
+  });
+
+  it('shows it always without item data, softer for the untested durability quirk', () => {
+    expect(ruleStatQuirk(ed, { itemCodes: ['jew'] }, EMPTY_LOOT_FILTER_REFERENCE)).toBeDefined();
+    expect(ruleStatQuirk({ stat: 75, value: 1 }, {}, undefined)?.confirmed).toBe(false);
   });
 });

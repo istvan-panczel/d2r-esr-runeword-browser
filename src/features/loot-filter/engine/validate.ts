@@ -8,6 +8,7 @@ import { effectiveActions } from './actions.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
 import { statQuirk, type StatQuirk } from './statQuirks.ts';
+import { statScale, statScaleMessage } from './statScale.ts';
 import {
   BASE_TIERS,
   DIFFICULTIES,
@@ -131,7 +132,7 @@ function checkColor(report: Report, key: string, color: LabelColor | undefined, 
  * Whether the rule's item codes and types can match an item the quirk affects (of one of its `affects` types). Without
  * item data, or with an item code the data lacks, it can.
  */
-function mayHitQuirk(rule: LootFilterRule, quirk: StatQuirk, reference: LootFilterReference | undefined): boolean {
+export function mayHitQuirk(rule: LootFilterRule, quirk: StatQuirk, reference: LootFilterReference | undefined): boolean {
   if (!reference || reference.itemCodeTypes.size === 0) return true;
   const { itemCodes, itemTypes, excludeItemCodes, excludeItemTypes } = rule;
   if (itemCodes?.some((code) => !reference.itemCodeTypes.has(code)) === true) return true;
@@ -154,11 +155,18 @@ const LAYER_NOUNS: Readonly<Record<StatLayerKind, string>> = {
   charged: 'skill and level',
 };
 
-/** Whether a check reads "the stat is there" (`>= 1`, `> 0`), or a hide rule's exception of it (`< 1`, `<= 0`). */
+/**
+ * Whether a check reads "the stat is there" (`>= 1`, `> 0`, `!= 0`), or a hide rule's exception of it (`< 1`, `<= 0`,
+ * `== 0`).
+ */
 function isPresenceCheck(check: StatCheck): boolean {
   if (typeof check.value !== 'number') return false;
   const op = check.op ?? '>=';
-  return ((op === '>=' || op === '<') && check.value <= 1) || ((op === '>' || op === '<=') && check.value <= 0);
+  return (
+    ((op === '>=' || op === '<') && check.value <= 1) ||
+    ((op === '>' || op === '<=') && check.value <= 0) ||
+    ((op === '==' || op === '!=') && check.value === 0)
+  );
 }
 
 /**
@@ -303,6 +311,10 @@ function checkStats(
     // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
     const quirk = rule === undefined ? undefined : statQuirk(check.stat);
     if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
+    // Every list: Life, Mana and Stamina are stored ×256 and the per-level stats in eighths (not verified in game). A
+    // presence check (`>= 1`, `< 1`…) holds either way, so only a check whose number matters gets the warning.
+    const scale = statScale(check.stat);
+    if (scale !== undefined && !isPresenceCheck(check)) report('warning', `${path}/value`, statScaleMessage(scale, check.value));
     checkStatParam(report, path, check, reference, tabNumbers.has(index));
     if (!reference) return;
     if (typeof check.stat === 'number') {

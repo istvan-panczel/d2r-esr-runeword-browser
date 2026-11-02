@@ -33,6 +33,8 @@ const { bundle, warnings } = buildLootFilterBundle(
       ['Stat', '*ID'],
       ['strength', '0'],
       ['energy', '1'],
+      ['strengthpercent', '2'],
+      ['item_fastercastrate', '3'],
     ]),
     levels: table([
       ['Name', 'Id', 'Act', 'LevelName'],
@@ -65,7 +67,13 @@ const { bundle, warnings } = buildLootFilterBundle(
     ]),
     cubemain: table([['enabled', 'input 1', 'output']]),
   },
-  strings
+  strings,
+  {},
+  [
+    { id: 0, name: 'strength', label: 'Strength' },
+    { id: 2, name: 'strengthpercent', label: 'Bonus to Strength %' },
+    { id: 3, name: 'item_fastercastrate', label: 'item_fastercastrate' },
+  ]
 );
 
 describe('buildLootFilterBundle', () => {
@@ -79,10 +87,12 @@ describe('buildLootFilterBundle', () => {
     expect(warnings).toContain('lootfilter: duplicate item code "hax" (Dup Axe); kept the first row');
   });
 
-  it('numbers stats and sounds by row and names areas through the string table', () => {
+  it('numbers stats and sounds by row (with the affix labels unless a label is the name) and names areas', () => {
     expect(bundle.stats).toEqual([
-      { id: 0, name: 'strength' },
+      { id: 0, name: 'strength', label: 'Strength' },
       { id: 1, name: 'energy' },
+      { id: 2, name: 'strengthpercent', label: 'Bonus to Strength %' },
+      { id: 3, name: 'item_fastercastrate' },
     ]);
     expect(bundle.sounds).toEqual(['', 'cursor_pass', 'item_rune']);
     expect(bundle.areas).toEqual([

@@ -18,6 +18,24 @@ the key (rule active at every level) or switches the rule off. Until known, the 
 condition ("empty list: the game logs 'the list is empty'…", done) and the UI keeps writing `activeInLevels: []`
 ("Every level" removes the key). Verify with a one-rule filter and `lootfilter` in the console.
 
+### Rules with a wrong-shaped condition (Sully's `"activeInLevels": 4`)
+
+Question for the power user: **with Sully's v0.6.11, are Ancient Scrolls (`01b`–`50b`) hidden at filter level 4
+(Uber-Strict - Maps+)?** Rule 98 hides them but writes `"activeInLevels": 4` instead of `[4]`. The guide says a rule
+with an error is switched off, so the Test tab now skips such a rule ("skipped: wrong shape") and shows the scrolls at
+level 4. If they are hidden in game, the plugin reads a single number as a one-entry list, and the evaluator should
+read it that way (and the parser accept it); if they show, it confirms the skip. `lootfilter` in the console should
+list the rule's error either way.
+
+### Life, Mana and per-level stats: stored or shown value
+
+Question for the power user: **does `{stat:7}` show 40 or 10240 on a +40 Life item?** (Use "Check in game" on a rule
+that checks `maxhp`, or a `namePrefix` `"[Life {stat:7} | Mana {stat:9} | Str/lvl {stat:220}] "`.) The game stores
+Life, Mana and Stamina ×256 (`ValShift` 8) and the per-level stats in eighths per character level; the validator warns
+about every such check that is not a presence check (`engine/statScale.ts`). With the answer: drop the warnings for
+what reads as shown, or turn them into firm "write ×256" hints (and maybe let the stat row take the shown number).
+Sully's rules 29 and 30 print `{stat:218}/8`, which suggests the stored eighths for the per-level stats.
+
 ### Plugin tier of tier-less items
 
 Still open from round 2: the plugin's `tier` for rings, amulets, charms and jewels. `debug_log = true` prints
@@ -30,10 +48,13 @@ Still open from round 2: the plugin's `tier` for rings, amulets, charms and jewe
 A power user's test rule (`namePrefix` `"[… | Tab {stat:188} / {stat:188,8}] "`) on an item with +4 to Fire Skills
 (Sorceress Only) showed `Tab 0 / 4`: a check without `param` reads only the param-0 entry (`OMITTED_PARAM =
 'layerZero'` now; validator, "No param" option and Test tab say so firmly), and the plugin numbers skill tabs
-`class × 8 + tab` (8 = Sorceress Fire; properties.txt would say 3). Still to do outside this app: tell Sully that his
-template's three +3/4/5 skill tab rules (v0.6.7, rules 31 to 33) check properties.txt tab numbers 1 to 21, of which 13
-(3–7, 11–15, 19–21) name no tab and 6 (8–10, 16–18) a different one, and that their paramless check reads only Amazon
-Bow and Crossbow Skills. See LOOT-FILTER.md "Verify in game".
+`class × 8 + tab` (8 = Sorceress Fire; properties.txt would say 3). Still to do outside this app: tell Sully that his template's three +3/4/5 skill tab rules (v0.6.7 to v0.6.11, rules
+31 to 33, 0-based) list params 0 to 21 in properties.txt numbering. They work in game by chance: the items roll only
+Amazon tabs (plugin 0–2) or Sorceress tabs (plugin 8–10), and both ranges are in the list. 13 of the numbers (3–7,
+11–15, 19–21) name no tab and the paramless check repeats param 0, so the minimal lists are `[0, 1, 2]` and
+`[8, 9, 10]`; the same pattern for Paladin, Barbarian, Druid, Assassin or Warlock items (plugin 24 and up) would
+never match. See LOOT-FILTER.md "Verify in game". The owner told Sully on 2026-11-02 that v0.6.9's Ancient Scroll
+hide rule (rule 98) should write `"activeInLevels": [4]` instead of `4`.
 
 ## Announced format changes to watch
 
@@ -100,6 +121,39 @@ Collected to forward together once the current implementation round is done.
   damage" value). The editor warns about such checks meanwhile (LOOT-FILTER.md "Known plugin limits").
 - **Unidentified items.** Whether the plugin sees stats and `uniqueOrSetId` of unidentified ground items decides how
   far stat and unique/set conditions reach for rares and uniques on the ground.
+
+## Planned features on top of the loot filter
+
+Owner requests (2026-11), to start once the editor is mostly done and verified in game. Not built yet.
+
+### Loot filter sharing (Supabase)
+
+Share filters the way builds are shared ([FEATURE-BUILD-SHARING.md](../../builds-feature-docs/FEATURE-BUILD-SHARING.md),
+`supabase/migrations/`): a signed-in user publishes a library entry, everyone can browse, open and copy published
+filters into their own (local) library, likes or favourites and counts as for builds. Likely shape: a new migration
+with a `loot_filters` table (owner, name, description, the filter text as stored, ESR and plugin version, timestamps),
+RLS like `builds` (public read, owner write), and a saga next to the library one. Open points: publish the raw text
+(comments kept) or the serialized model; whether the bundled sounds and icons a filter uses are enough, or users need
+to upload their own files (storage); updating a published filter in place versus versions; whether `updateUrl` could
+point at the published copy so the launcher pulls updates.
+
+### LLM prompt start
+
+A "Start with an LLM" button opens a textarea where the user describes what they want from the filter ("show runes
+from Ist up with a sound, hide magic weapons without +skills, …"). The app builds one prompt to paste into an LLM of the
+user's choice: the request, the filter format (keys, value shapes, how conditions and rules combine, hide and
+exceptions as `< 1` checks), the plugin's conditions and actions, the game data the rules need (item codes and names,
+item types, stat names with labels and which need a param, unique and set ids, bundled sounds and icons) in a compact
+form, and the known plugin limits (Enhanced Damage/Defense read 0, params read as param 0 when omitted). The user
+imports the LLM's answer like an upload and fixes what the validator reports. Open points:
+
+- Prompt size: the full code and stat lists are large (lootfilter.json is ~830 KB), so pick what to include from the
+  request (keyword match against item, type and stat names) or send only the common subsets, and say how to look up
+  the rest.
+- Validating and importing the answer: strip prose and code fences, read it with the lenient reader, show the
+  validator's problems before saving; maybe a second prompt that feeds the problems back.
+- Keeping the format text in sync with the editor: generate it from the same sources (types, validator messages,
+  `STAT_QUIRKS`, the example rules) rather than a hand-written copy.
 
 ## Decided against or parked
 
