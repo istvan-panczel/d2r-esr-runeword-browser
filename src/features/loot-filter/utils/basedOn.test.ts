@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { LootFilterEntry } from '../store/types';
-import { basedOnColumns, basedOnFromRow, entryBasedOn, inferTemplateBasedOn, sharedBasedOn, templateBasedOn } from './basedOn';
+import {
+  basedOnColumns,
+  basedOnFromRow,
+  entryBasedOn,
+  inferTemplateBasedOn,
+  sharedBasedOn,
+  templateBasedOn,
+  templateVersionOf,
+} from './basedOn';
 import { TEMPLATE_ID, TEMPLATE_NAME, TEMPLATE_VERSION } from './template';
 
 const ENTRY: LootFilterEntry = { id: 'a', name: 'A', source: 'template', createdAt: 1, updatedAt: 1, text: '{"version": "0.5.0"}' };
@@ -18,6 +26,19 @@ describe('template basedOn', () => {
     expect(inferTemplateBasedOn('// c\n{"formatVersion": 1, "version": "0.6.2", "rules": []}')).toEqual(templateBasedOn('0.6.2'));
     expect(inferTemplateBasedOn('{"formatVersion": 1, "rules": []}')).toEqual({ template: TEMPLATE_ID, label: TEMPLATE_NAME });
     expect(inferTemplateBasedOn('{ not json')).toEqual({ template: TEMPLATE_ID, label: TEMPLATE_NAME });
+  });
+
+  it('takes the file version only when it looks like a template version', () => {
+    const unknown = { template: TEMPLATE_ID, label: TEMPLATE_NAME };
+    const withVersion = (version: string) => `{"formatVersion": 1, "version": ${JSON.stringify(version)}, "rules": []}`;
+    expect(inferTemplateBasedOn(withVersion('v0.6.3'))).toEqual(templateBasedOn('0.6.3'));
+    expect(inferTemplateBasedOn(withVersion(' 1.2 '))).toEqual(templateBasedOn('1.2'));
+    expect(inferTemplateBasedOn(withVersion('my edit of Sully, second try'))).toEqual(unknown);
+    expect(inferTemplateBasedOn(withVersion(`0.${'1'.repeat(60)}`))).toEqual(unknown);
+    expect(inferTemplateBasedOn(withVersion('1.2.3.4.5'))).toEqual(unknown);
+    expect(templateVersionOf('0.6.11')).toBe('0.6.11');
+    expect(templateVersionOf(undefined)).toBeNull();
+    expect(templateVersionOf('')).toBeNull();
   });
 
   it('entryBasedOn prefers the recorded value and infers only for template drafts', () => {
@@ -46,6 +67,17 @@ describe('row mapping', () => {
     expect(basedOnColumns(null)).toEqual(NONE);
     const template = templateBasedOn();
     expect(basedOnFromRow(basedOnColumns(template))).toEqual(template);
+  });
+
+  it('keeps the columns within their limits', () => {
+    const columns = basedOnColumns({ id: 'src', revision: 2, version: 'x'.repeat(51), label: `${'é'.repeat(150)}${'😀'.repeat(100)}` });
+    expect(columns.based_on_version).toBeNull();
+    expect(Array.from(columns.based_on_label ?? '')).toHaveLength(200);
+    expect(columns.based_on_label?.endsWith('😀')).toBe(true);
+    expect(basedOnColumns({ template: TEMPLATE_ID, version: '0.6.11', label: 'Short' })).toMatchObject({
+      based_on_version: '0.6.11',
+      based_on_label: 'Short',
+    });
   });
 
   it('labels a shared copy "name by author"', () => {

@@ -8,12 +8,13 @@ interface Result {
 }
 
 // Mock Supabase client: a chainable builder per from(table) that logs its calls. An insert ends with single()
-// (`insertResult`), an update is awaited after select() (`updateResult`), maybeSingle() is the conflict lookup and the
+// (`insertQueue` first, one result per insert, then `insertResult`), an update is awaited after select() (`updateResult`), maybeSingle() is the conflict lookup and the
 // source fetch (`lookupResult`). Anything else awaited resolves to an empty list.
 const mocks = vi.hoisted(() => {
   type Call = { table: string; method: string; args: unknown[] };
   const state = {
     insertResult: { data: null, error: null } as Result,
+    insertQueue: [] as Result[],
     updateResult: { data: [], error: null } as Result,
     lookupResult: { data: null, error: null } as Result,
     calls: [] as Call[],
@@ -31,7 +32,7 @@ const mocks = vi.hoisted(() => {
     }
     builder.single = () => {
       state.calls.push({ table, method: 'single', args: [] });
-      return Promise.resolve(state.insertResult);
+      return Promise.resolve(state.insertQueue.shift() ?? state.insertResult);
     };
     builder.maybeSingle = () => {
       state.calls.push({ table, method: 'maybeSingle', args: [] });
@@ -69,8 +70,21 @@ import lootFilterReducer, { importText, open, openSaved, setHeader } from '../st
 import { LOOT_FILTER_PLUGIN_VERSION } from '../utils/template';
 import { templateBasedOn } from '../utils/basedOn';
 import { lootFilterSharingSaga } from './sharingSaga';
-import sharingReducer, { fetchSourceFilterRequested, saveFilterRequested, updateFilterDetailsRequested } from './sharingSlice';
-import { LOOT_FILTER_LIMIT_MESSAGE, SAVE_CONFLICT_MESSAGES, basedOnMoved, checkDetails, checkSaveText, saveErrorMessage } from './saveSaga';
+import sharingReducer, {
+  fetchSourceFilterRequested,
+  fetchSourceRevisionsSuccess,
+  saveFilterRequested,
+  updateFilterDetailsRequested,
+} from './sharingSlice';
+import {
+  LOOT_FILTER_LIMIT_MESSAGE,
+  SAVE_CONFLICT_MESSAGES,
+  basedOnMoved,
+  checkDetails,
+  checkSaveText,
+  insertBasedOnColumns,
+  saveErrorMessage,
+} from './saveSaga';
 import { SHARED_FILTER_DETAIL_SELECT } from './sharingQuery';
 import { OTHER_USER_ID, VIEWER_ID, filterId, makeDetail, makeDetailRow } from './sharing.mock';
 import { detailToRow } from './sharingQuery';
@@ -122,6 +136,7 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.state.insertResult = { data: null, error: null };
+  mocks.state.insertQueue = [];
   mocks.state.updateResult = { data: [], error: null };
   mocks.state.lookupResult = { data: null, error: null };
   mocks.state.calls = [];
@@ -153,6 +168,20 @@ describe('pure checks', () => {
     expect(basedOnMoved({ ...shared, revision: 3 }, shared)).toBe(true);
     expect(basedOnMoved(shared, undefined)).toBe(true);
     expect(basedOnMoved(templateBasedOn('0.7.0'), templateBasedOn('0.6.11'))).toBe(true);
+  });
+
+  it('insertBasedOnColumns drops the id of a source the lookup found gone, keeping the rest', () => {
+    const shared = { id: B, revision: 2, label: 'X by Y#1' };
+    expect(insertBasedOnColumns(shared, {})).toMatchObject({ based_on_id: B, based_on_revision: 2, based_on_label: 'X by Y#1' });
+    expect(insertBasedOnColumns(shared, { [B]: { id: B, revision: 3, change_note: null, name: 'X' } }).based_on_id).toBe(B);
+    expect(insertBasedOnColumns(shared, { [B]: null })).toEqual({
+      based_on_id: null,
+      based_on_revision: 2,
+      based_on_template: null,
+      based_on_version: null,
+      based_on_label: 'X by Y#1',
+    });
+    expect(insertBasedOnColumns(null, { [B]: null }).based_on_id).toBeNull();
   });
 
   it('saveErrorMessage turns the cap trigger into the 50-filter message', () => {
@@ -272,6 +301,47 @@ describe('saveFilterRequested: insert', () => {
     await settle();
     const [[inserted]] = callsOf('insert') as [[Record<string, unknown>]];
     expect(inserted).toMatchObject({ name: 'My draft', description: null, is_private: false });
+  });
+
+  it('a copy whose source was deleted: retries once without based_on_id and keeps the label', async () => {
+    const store = signedInStore();
+    const basedOn = { id: B, revision: 2, label: 'Source by Hero#4242' };
+    const action = store.dispatch(importText({ name: 'Copy', text: TEXT, source: 'upload', basedOn }));
+    store.dispatch(open(action.payload.id));
+    mocks.state.insertQueue = [
+      { data: null, error: { message: 'insert or update on table "loot_filters" violates foreign key constraint', code: '23503' } },
+      { data: makeDetailRow(A, { user_id: VIEWER_ID, content: TEXT, based_on_label: basedOn.label, based_on_revision: 2 }), error: null },
+    ];
+    store.dispatch(saveFilterRequested({ mode: 'normal' }));
+    await settle();
+    const inserts = callsOf('insert') as [Record<string, unknown>][];
+    expect(inserts.map(([row]) => row.based_on_id)).toEqual([B, null]);
+    expect(inserts[1][0]).toMatchObject({ based_on_revision: 2, based_on_label: basedOn.label });
+    expect(save(store)).toMatchObject({ status: RequestState.SUCCESS, savedId: A });
+  });
+
+  it('a copy whose source the lookup found gone is inserted without based_on_id at once', async () => {
+    const store = signedInStore();
+    store.dispatch(fetchSourceRevisionsSuccess({ viewerId: VIEWER_ID, requestedIds: [B], rows: [] }));
+    const action = store.dispatch(importText({ name: 'Copy', text: TEXT, source: 'upload', basedOn: { id: B, revision: 2, label: 'S' } }));
+    store.dispatch(open(action.payload.id));
+    mocks.state.insertResult = { data: makeDetailRow(A, { user_id: VIEWER_ID, content: TEXT }), error: null };
+    store.dispatch(saveFilterRequested({ mode: 'normal' }));
+    await settle();
+    const inserts = callsOf('insert') as [Record<string, unknown>][];
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0][0]).toMatchObject({ based_on_id: null, based_on_label: 'S', based_on_revision: 2 });
+  });
+
+  it('another insert error is not retried', async () => {
+    const store = signedInStore();
+    openNewDraft(store);
+    mocks.state.insertResult = { data: null, error: { message: 'boom', code: '23503' } };
+    store.dispatch(saveFilterRequested({ mode: 'normal' }));
+    await settle();
+    // No based_on_id to drop: one attempt, the error shown.
+    expect(callsOf('insert')).toHaveLength(1);
+    expect(save(store)).toMatchObject({ status: RequestState.ERROR, error: 'Could not save the filter: boom' });
   });
 
   it('the 50-filter cap reads as its own message', async () => {

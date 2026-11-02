@@ -36,6 +36,7 @@ import {
   saveFilterCancelled,
   saveFilterFailed,
   saveFilterSucceeded,
+  selectSourceRevisions,
   updateFilterDetailsFailed,
   updateFilterDetailsSucceeded,
   type SaveConflict,
@@ -43,12 +44,15 @@ import {
   type SharedFilterDetails,
   type UpdateFilterDetailsRequest,
 } from './sharingSlice';
-import type { SharedFilterDetail } from './types';
+import type { SharedFilterDetail, SourceRevision } from './types';
 
 interface QueryError {
   readonly message: string;
   readonly code?: string;
 }
+
+/** Postgres `foreign_key_violation`: here, a `based_on_id` whose row was deleted. */
+const FOREIGN_KEY_VIOLATION = '23503';
 
 export const LOOT_FILTER_LIMIT_MESSAGE = 'You have 50 loot filters; delete one to save another.';
 export const CONSENT_REQUIRED_MESSAGE = 'Accept the privacy policy first (it opens after signing in).';
@@ -135,6 +139,19 @@ function* finishSave(request: LootFilterSaveRequest, row: SharedFilterDetail, in
   yield call(toast.success, inserted ? 'Loot filter saved.' : 'Changes saved.');
 }
 
+/**
+ * The `based_on_*` columns an insert writes: the draft's `basedOn`, without `based_on_id` when the source lookup found
+ * the source gone (deleted or private now): a deleted id would fail the foreign key. The label, revision and version
+ * stay, so the copy reads "The original is no longer shared".
+ */
+export function insertBasedOnColumns(
+  basedOn: LootFilterBasedOn | null,
+  sourceRevisions: Readonly<Record<string, SourceRevision | null>>
+): ReturnType<typeof basedOnColumns> {
+  const columns = basedOnColumns(basedOn);
+  return columns.based_on_id !== null && sourceRevisions[columns.based_on_id] === null ? { ...columns, based_on_id: null } : columns;
+}
+
 function* insertFilter(request: LootFilterSaveRequest, userId: string, details: SharedFilterDetails | undefined) {
   const fields = details ?? { name: request.name, description: '', isPrivate: false };
   const problem = checkDetails(fields);
@@ -143,6 +160,8 @@ function* insertFilter(request: LootFilterSaveRequest, userId: string, details: 
     return;
   }
   const esrVersion = (yield call(readEsrVersion)) as string | null;
+  const sourceRevisions = (yield select(selectSourceRevisions)) as Readonly<Record<string, SourceRevision | null>>;
+  const basedOn = insertBasedOnColumns(request.basedOn, sourceRevisions);
   const row: LootFilterInsert = {
     user_id: userId,
     name: fields.name.trim(),
@@ -154,13 +173,17 @@ function* insertFilter(request: LootFilterSaveRequest, userId: string, details: 
     plugin_version: LOOT_FILTER_PLUGIN_VERSION,
     change_note: null,
     // The store records `basedOn` only for someone else's public filter or the bundled template.
-    ...basedOnColumns(request.basedOn),
+    ...basedOn,
   };
   const client = requireSupabase();
-  const { data, error } = (yield call(() => client.from('loot_filters').insert(row).select(SHARED_FILTER_DETAIL_SELECT).single())) as {
-    data: SharedFilterDetailRow | null;
-    error: QueryError | null;
-  };
+  const insert = (values: LootFilterInsert) => client.from('loot_filters').insert(values).select(SHARED_FILTER_DETAIL_SELECT).single();
+  type InsertResult = { data: SharedFilterDetailRow | null; error: QueryError | null };
+  let { data, error } = (yield call(insert, row)) as InsertResult;
+  // The source was deleted since it was looked up (or never was): save the copy without the link, once.
+  if (error?.code === FOREIGN_KEY_VIOLATION && basedOn.based_on_id !== null) {
+    console.warn('[LootFilterSharing] The original filter no longer exists; saving the copy without its link');
+    ({ data, error } = (yield call(insert, { ...row, based_on_id: null })) as InsertResult);
+  }
   if (error) throw new Error(error.message);
   if (data === null) throw new Error('The server returned no row.');
   yield call(finishSave, request, toSharedFilterDetail(data), true);
@@ -183,6 +206,7 @@ function* updateFilter(
   // The saved filter's own `based_on_*`, when the editor is on it; unknown (a draft opened on its own) otherwise.
   const previousBasedOn = target?.kind === 'saved' && target.savedId === savedId ? target.basedOn : undefined;
   const moved = basedOnMoved(request.basedOn, previousBasedOn);
+  const columns = basedOnColumns(request.basedOn);
   const update: LootFilterUpdate = {
     content: request.text,
     ...metadataColumns(request.text),
@@ -191,9 +215,9 @@ function* updateFilter(
     change_note: note,
     ...(moved && request.basedOn !== null
       ? {
-          based_on_revision: request.basedOn.revision ?? null,
-          based_on_version: request.basedOn.version ?? null,
-          based_on_label: request.basedOn.label,
+          based_on_revision: columns.based_on_revision,
+          based_on_version: columns.based_on_version,
+          based_on_label: columns.based_on_label,
         }
       : {}),
   };
