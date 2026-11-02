@@ -75,7 +75,7 @@ describe('validateLootFilter', () => {
     const real = buildLootFilterReference(json('lootfilter.json') as LootFilterDataBundle, json('types.json') as TypesBundle);
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const diagnostics = validateLootFilter(parseLootFilter(source).filter, real);
-    // The +3/4/5 skill tab rules (Sully v0.6.7) check stat 188 without param and with params 1 to 21, the properties.txt
+    // The +3/4/5 skill tab rules (Sully v0.6.7 to v0.6.11) check stat 188 without param and with params 1 to 21, the properties.txt
     // tab numbers: one list warning each (13 name no tab as the game numbers them), plus the paramless check.
     expect(diagnostics.map((d) => [d.severity, d.path])).toEqual(
       [31, 32, 33].flatMap((rule) => [

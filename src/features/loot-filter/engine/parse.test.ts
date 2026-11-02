@@ -12,9 +12,13 @@ const errors = (value: unknown) => parse(value).diagnostics.filter((d) => d.seve
 describe('parseLootFilter on Sully’s filter', () => {
   const { filter, diagnostics } = parseLootFilter(SULLY);
 
-  it('reads it without errors, keeping order', () => {
-    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(filter.rules).toHaveLength(222);
+  it('reads it with one error, keeping order', () => {
+    // v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4` (a number, not a list); it stays in passthrough.
+    expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([
+      { severity: 'error', message: '"activeInLevels": expected a list of numbers', path: 'rules/98/activeInLevels', rule: 98 },
+    ]);
+    expect(filter.rules[98]?.passthrough).toEqual({ activeInLevels: 4 });
+    expect(filter.rules).toHaveLength(223);
     expect(Object.keys(filter.styles ?? {})).toEqual([
       'Mythical',
       'Jackpot',

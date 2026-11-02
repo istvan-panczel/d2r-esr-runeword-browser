@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { checkedLayer, evaluateFilter, expandPlaceholders, OMITTED_PARAM } from './evaluate';
+import { parseLootFilter } from './parse';
 import type { TestContext, TestItem } from './evaluate';
 import type { LootFilter, LootFilterRule, LootFilterStyle } from './types';
 
@@ -501,14 +502,10 @@ describe('expandPlaceholders', () => {
 });
 
 describe("Sully's QoL filter", () => {
+  // Read through the parser, as the app does: v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4`, which the
+  // parser keeps in `passthrough` (with an error) instead of handing a number to the evaluator.
   const source = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
-  // Strip the `//` comment lines (leading and between rules) and parse the rest; no `//` appears inside strings.
-  const json = source
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('//'))
-    .join('\n');
-  const parsed: unknown = JSON.parse(json);
-  const sully = { ...(parsed as Omit<LootFilter, 'leadingComments'>), leadingComments: [] };
+  const sully = parseLootFilter(source).filter;
   const hell = makeContext({ filterLevel: 3, area: 2, playerStats: [{ stat: 12, value: 92 }] });
   const appliedNames = (items: TestItem, context: TestContext): readonly number[] =>
     evaluateFilter(sully, items, context)

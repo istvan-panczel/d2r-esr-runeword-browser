@@ -31,9 +31,11 @@ A power user's test rule (`namePrefix` `"[… | Tab {stat:188} / {stat:188,8}] "
 (Sorceress Only) showed `Tab 0 / 4`: a check without `param` reads only the param-0 entry (`OMITTED_PARAM =
 'layerZero'` now; validator, "No param" option and Test tab say so firmly), and the plugin numbers skill tabs
 `class × 8 + tab` (8 = Sorceress Fire; properties.txt would say 3). Still to do outside this app: tell Sully that his
-template's three +3/4/5 skill tab rules (v0.6.7, rules 31 to 33) check properties.txt tab numbers 1 to 21, of which 13
+template's three +3/4/5 skill tab rules (v0.6.7 to v0.6.11, rules 31 to 33) check properties.txt tab numbers 1 to 21, of which 13
 (3–7, 11–15, 19–21) name no tab and 6 (8–10, 16–18) a different one, and that their paramless check reads only Amazon
-Bow and Crossbow Skills. See LOOT-FILTER.md "Verify in game".
+Bow and Crossbow Skills. See LOOT-FILTER.md "Verify in game". Also tell him that v0.6.9's Ancient Scroll hide rule
+(rule 98) writes `"activeInLevels": 4` where the plugin expects a list (`[4]`); the plugin's "expected a list of
+numbers" message suggests it switches the rule off.
 
 ## Announced format changes to watch
 
