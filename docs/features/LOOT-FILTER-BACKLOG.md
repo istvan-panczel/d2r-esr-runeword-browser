@@ -18,6 +18,24 @@ the key (rule active at every level) or switches the rule off. Until known, the 
 condition ("empty list: the game logs 'the list is empty'…", done) and the UI keeps writing `activeInLevels: []`
 ("Every level" removes the key). Verify with a one-rule filter and `lootfilter` in the console.
 
+### Rules with a wrong-shaped condition (Sully's `"activeInLevels": 4`)
+
+Question for the power user: **with Sully's v0.6.11, are Ancient Scrolls (`01b`–`50b`) hidden at filter level 4
+(Uber-Strict - Maps+)?** Rule 98 hides them but writes `"activeInLevels": 4` instead of `[4]`. The guide says a rule
+with an error is switched off, so the Test tab now skips such a rule ("skipped: wrong shape") and shows the scrolls at
+level 4. If they are hidden in game, the plugin reads a single number as a one-entry list, and the evaluator should
+read it that way (and the parser accept it); if they show, it confirms the skip. `lootfilter` in the console should
+list the rule's error either way.
+
+### Life, Mana and per-level stats: stored or shown value
+
+Question for the power user: **does `{stat:7}` show 40 or 10240 on a +40 Life item?** (Use "Check in game" on a rule
+that checks `maxhp`, or a `namePrefix` `"[Life {stat:7} | Mana {stat:9} | Str/lvl {stat:220}] "`.) The game stores
+Life, Mana and Stamina ×256 (`ValShift` 8) and the per-level stats in eighths per character level; the validator warns
+about every such check that is not a presence check (`engine/statScale.ts`). With the answer: drop the warnings for
+what reads as shown, or turn them into firm "write ×256" hints (and maybe let the stat row take the shown number).
+Sully's rules 29 and 30 print `{stat:218}/8`, which suggests the stored eighths for the per-level stats.
+
 ### Plugin tier of tier-less items
 
 Still open from round 2: the plugin's `tier` for rings, amulets, charms and jewels. `debug_log = true` prints

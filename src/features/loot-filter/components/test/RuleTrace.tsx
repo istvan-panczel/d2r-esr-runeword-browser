@@ -19,10 +19,24 @@ const OUTCOMES: Readonly<Record<RuleTraceEntry['outcome'], { readonly label: str
   },
   skipped: { label: 'skipped', className: 'border-border bg-muted text-muted-foreground' },
   disabled: { label: 'disabled', className: 'border-dashed border-border bg-muted text-muted-foreground' },
+  wrongShape: {
+    label: 'skipped: wrong shape',
+    className: 'border-amber-600/40 bg-amber-500/15 text-amber-800 dark:text-amber-300',
+  },
 };
 
-/** Rules that did nothing; listed only with "Show skipped rules". */
-const isQuiet = (entry: RuleTraceEntry): boolean => entry.outcome === 'skipped' || entry.outcome === 'disabled';
+/**
+ * Rules that did nothing; listed only with "Show skipped rules". A rule skipped for its wrong shape is listed when the
+ * rest of it holds (it would have applied or hidden).
+ */
+const isQuiet = (entry: RuleTraceEntry): boolean =>
+  entry.outcome === 'skipped' || entry.outcome === 'disabled' || (entry.outcome === 'wrongShape' && entry.failed.length > 0);
+
+/** "activeInLevels has", "activeInLevels and sound have". */
+function wrongShapeText(keys: readonly string[]): string {
+  const names = keys.length === 1 ? keys[0] : `${keys.slice(0, -1).join(', ')} and ${keys.at(-1) ?? ''}`;
+  return `${names} ${keys.length === 1 ? 'has' : 'have'} the wrong shape; the plugin most likely ignores this rule (not verified).`;
+}
 
 interface RuleTraceProps {
   readonly filter: LootFilter;
@@ -39,7 +53,14 @@ export function RuleTrace({ filter, result, lookup, onShowRule }: RuleTraceProps
   const [showSkipped, setShowSkipped] = useState(false);
   const skipped = result.trace.filter((entry) => entry.outcome === 'skipped').length;
   const disabled = result.trace.filter((entry) => entry.outcome === 'disabled').length;
-  const quietText = `${String(skipped)} skipped${disabled > 0 ? `, ${String(disabled)} disabled` : ''}`;
+  const wrongShape = result.trace.filter((entry) => entry.outcome === 'wrongShape').length;
+  const quietText = [
+    `${String(skipped)} skipped`,
+    disabled > 0 ? `${String(disabled)} disabled` : undefined,
+    wrongShape > 0 ? `${String(wrongShape)} wrong shape` : undefined,
+  ]
+    .filter((part) => part !== undefined)
+    .join(', ');
   const shown = showSkipped ? result.trace : result.trace.filter((entry) => !isQuiet(entry));
   const stoppedAt = result.hiddenBy;
   const notRun = stoppedAt === null ? 0 : filter.rules.length - stoppedAt - 1;
@@ -102,6 +123,9 @@ export function RuleTrace({ filter, result, lookup, onShowRule }: RuleTraceProps
                         {summary}
                       </span>
                     </span>
+                    {entry.wrongShaped !== undefined && entry.wrongShaped.length > 0 && (
+                      <span className="text-xs text-amber-800 dark:text-amber-300">{wrongShapeText(entry.wrongShaped)}</span>
+                    )}
                     {entry.failed.length > 0 && (
                       <span className="flex flex-wrap items-center gap-1">
                         <span className="text-[0.7rem] text-muted-foreground">failed:</span>

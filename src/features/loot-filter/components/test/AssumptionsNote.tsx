@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import { OMITTED_PARAM_RULE } from '../../engine/evaluate';
+import { REPORT_STAT_URL } from '../../utils/inGameCheck';
 
 /** The full list: the "Verify in game" section of docs/features/LOOT-FILTER.md. */
 const FULL_LIST_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser/blob/master/docs/features/LOOT-FILTER.md#verify-in-game';
@@ -18,8 +19,20 @@ const ASSUMPTIONS: readonly string[] = [
   'Items without a normal/exceptional/elite family (rings, amulets, charms, jewels, arrows, mythical bases) match no base-tier condition.',
 ];
 
-/** What an in-game test confirmed (engine/evaluate.ts header), so the test models it as the plugin does. */
-const VERIFIED: readonly string[] = ['A stat the item lacks counts as 0.', OMITTED_PARAM_RULE];
+/** What an in-game test confirmed (engine/evaluate.ts header, engine/statQuirks.ts). */
+const VERIFIED: readonly string[] = [
+  'A stat the item lacks counts as 0.',
+  OMITTED_PARAM_RULE,
+  'Skill tab params are numbered class × 8 + tab, as the game stores them (Sorceress Fire Skills = 8).',
+  'Enhanced Damage reads 0 on weapons and Enhanced Defense reads 0 on armour (the test here does not model that); Enhanced Damage on a jewel reads correctly.',
+];
+
+/** Stat readings nobody has checked in game yet; each is a validator warning too. */
+const NOT_VERIFIED: readonly string[] = [
+  'Life, Mana and Stamina are stored ×256 in the game (+40 Life = 10240): whether the plugin reads 40 or 10240 is not known.',
+  'Per-level stats (Strength per level…) are stored in eighths per character level (+1 per level = 8; Life and Mana per level also ×256): whether the plugin reads the stored or the shown value is not known.',
+  'A rule with a wrong-shaped condition or action (e.g. "activeInLevels": 4 instead of [4]) is most likely switched off by the plugin, so the test skips it.',
+];
 
 /** A collapsed list of what the test assumes and should be checked in game. */
 export function AssumptionsNote() {
@@ -40,6 +53,21 @@ export function AssumptionsNote() {
           <li key={fact}>{fact}</li>
         ))}
       </ul>
+      <p className="mt-2 text-xs font-medium">Not yet verified</p>
+      <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+        {NOT_VERIFIED.map((fact) => (
+          <li key={fact}>{fact}</li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs text-muted-foreground">
+        To see what the plugin reads, use <span className="font-medium text-foreground">Check in game</span> on a rule (Rules tab): it adds
+        a rule that prints the values of the rule&apos;s stats in front of the item name. If a number differs from the tooltip, the plugin
+        reads that stat differently;{' '}
+        <a href={REPORT_STAT_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+          tell us
+        </a>
+        .
+      </p>
       <p className="mt-2 text-xs text-muted-foreground">
         {'{string:KEY}'} (a game string) is shown as written here; the game replaces it with the string&apos;s text.
       </p>
