@@ -81,6 +81,9 @@ interface LootFilterSharingState {
   /** Sources of copies, by id: a revision, null when the source is no longer shared, absent when not looked up. */
   readonly sourceRevisions: Readonly<Record<string, SourceRevision | null>>;
   readonly sourceRevisionsStatus: RequestState;
+
+  /** Filter ids whose file a card is fetching for a download (one-click Download on the cards). */
+  readonly downloadingIds: readonly string[];
 }
 
 const emptyPaged: PagedFilters = {
@@ -113,6 +116,7 @@ const initialState: LootFilterSharingState = {
   latestStatus: RequestState.IDLE,
   sourceRevisions: {},
   sourceRevisionsStatus: RequestState.IDLE,
+  downloadingIds: [],
 };
 
 type Draft = { -readonly [K in keyof LootFilterSharingState]: LootFilterSharingState[K] };
@@ -351,6 +355,14 @@ const lootFilterSharingSlice = createSlice({
     fetchSourceRevisionsFailure(state) {
       state.sourceRevisionsStatus = RequestState.ERROR;
     },
+
+    // --- Download from a card (the saga fetches the file, saves it and counts it) ---
+    downloadSharedFilterRequested(state, action: PayloadAction<string>) {
+      if (!state.downloadingIds.includes(action.payload)) state.downloadingIds = [...state.downloadingIds, action.payload];
+    },
+    downloadSharedFilterSettled(state, action: PayloadAction<string>) {
+      state.downloadingIds = state.downloadingIds.filter((id) => id !== action.payload);
+    },
   },
   extraReducers: (builder) => {
     // Sign-out or a different account: drop what belonged to the previous viewer. Auth fires on every token refresh
@@ -417,6 +429,8 @@ export const {
   fetchSourceRevisionsRequested,
   fetchSourceRevisionsSuccess,
   fetchSourceRevisionsFailure,
+  downloadSharedFilterRequested,
+  downloadSharedFilterSettled,
 } = lootFilterSharingSlice.actions;
 
 export default lootFilterSharingSlice.reducer;
@@ -482,3 +496,6 @@ export const selectSourceRevisionsStatus = createSelector([selectSharingState], 
 export const selectVisibleFilterIds = createSelector([selectSharingState], (s) => [
   ...new Set([...s.shared.items, ...s.author.items, ...s.latest, ...(s.detail === null ? [] : [s.detail])].map((item) => item.id)),
 ]);
+
+export const selectDownloadingFilterIds = createSelector([selectSharingState], (s) => s.downloadingIds);
+export const selectDownloadingFilterIdSet = createSelector([selectDownloadingFilterIds], (ids) => new Set(ids));

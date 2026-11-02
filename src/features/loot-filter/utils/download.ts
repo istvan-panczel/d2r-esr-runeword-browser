@@ -1,5 +1,5 @@
-import { downloadBlob, slugify } from '@/utils/download';
-import type { BundledAssetFile } from './referencedAssets';
+import { downloadBlob, downloadTextFile, slugify } from '@/utils/download';
+import { referencedAssetsOfText, type BundledAssetFile } from './referencedAssets';
 import { buildZip } from './zip';
 
 export { downloadTextFile } from '@/utils/download';
@@ -31,4 +31,19 @@ export async function downloadFilterZip(name: string, text: string, assets: read
   const files = await Promise.all(assets.map(async (file) => ({ path: file.path, data: await fetchBytes(file) })));
   const zip = buildZip([{ path: filterFileName(name), data: new TextEncoder().encode(text) }, ...files]);
   downloadBlob(filterZipFileName(name), new Blob([zip], { type: 'application/zip' }));
+}
+
+/**
+ * The one-click download of a filter file (library cards, where the file is fetched on click): the zip with its bundled
+ * sounds and icons when it uses any (the launcher's Import copies only the filter file), else the .json alone.
+ * Resolves to what was saved.
+ */
+export async function downloadFilter(name: string, text: string): Promise<'json' | 'zip'> {
+  const { bundled } = referencedAssetsOfText(text);
+  if (bundled.length === 0) {
+    downloadTextFile(filterFileName(name), text);
+    return 'json';
+  }
+  await downloadFilterZip(name, text, bundled);
+  return 'zip';
 }

@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { toast } from 'sonner';
 import { requireSupabase } from '@/core/supabase';
 import { authStateChanged, selectAuthUserId, type AuthUser } from '@/features/auth/store/authSlice';
+import { downloadFilter } from '../utils/download';
 import { LATEST_FILTERS_COUNT, MY_FILTERS_LIMIT, SHARED_FILTERS_PAGE_SIZE } from './constants';
 import {
   SHARED_FILTER_DETAIL_SELECT,
@@ -24,6 +25,8 @@ import {
   deleteSharedFilterRequested,
   deleteSharedFilterSucceeded,
   downloadCounted,
+  downloadSharedFilterRequested,
+  downloadSharedFilterSettled,
   fetchAuthorFiltersFailure,
   fetchAuthorFiltersRequested,
   fetchAuthorFiltersSuccess,
@@ -377,6 +380,37 @@ function* handleFetchSourceRevisions(action: PayloadAction<readonly string[]>) {
   }
 }
 
+// --- Download from a card ---
+
+/** What a card download fetches: the file and the name its file name comes from. */
+export const DOWNLOAD_SELECT = 'id, name, content';
+
+// The cards do not hold the file (lists never select `content`), so a card's Download fetches it, saves it as the
+// editor's download menu would (the zip when it uses bundled sounds or icons), then counts it.
+function* handleDownloadShared(action: PayloadAction<string>) {
+  const id = action.payload;
+  try {
+    if (!isUuid(id)) throw new Error(`Not a saved filter id: ${id}`);
+    const client = requireSupabase();
+    const { data, error } = (yield call(() => client.from('loot_filters').select(DOWNLOAD_SELECT).eq('id', id).maybeSingle())) as {
+      data: { id: string; name: string; content: string } | null;
+      error: QueryError | null;
+    };
+    if (error) throw new Error(error.message);
+    if (data === null) {
+      yield call(toast.error, 'This loot filter is no longer shared.');
+      return;
+    }
+    yield call(downloadFilter, data.name, data.content);
+    yield put(downloadCounted(id));
+  } catch (error) {
+    console.error('[LootFilterSharing] Could not download the filter', error);
+    yield call(toast.error, 'Could not download the loot filter. Please try again.');
+  } finally {
+    yield put(downloadSharedFilterSettled(id));
+  }
+}
+
 // --- Auth ---
 
 // The reducer has already reset the per-user state on a user change; after a sign-in (or account switch), look up the
@@ -406,4 +440,5 @@ export function* lootFilterSharingSaga() {
   yield takeLatest(fetchLatestFiltersRequested.type, handleFetchLatest);
   yield takeLatest(fetchSourceRevisionsRequested.type, handleFetchSourceRevisions);
   yield fork(watchViewer);
+  yield takeEvery(downloadSharedFilterRequested.type, handleDownloadShared);
 }
