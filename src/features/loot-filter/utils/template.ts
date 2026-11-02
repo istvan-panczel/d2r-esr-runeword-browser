@@ -8,8 +8,13 @@
  * the mod shipped an earlier conversion of the same filter as `LootFilters/esr-default-filter.json`.
  */
 export const TEMPLATE_NAME = "Sully's QoL Filter";
-export const TEMPLATE_CREDIT =
-  "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully";
+/** The bundled template's `version` (checked against the file by a test); filters started from it record it in `basedOn`. */
+export const TEMPLATE_VERSION = '0.6.11';
+/** The `basedOn.template` (and `based_on_template` column) value of filters started from the bundled template. */
+export const TEMPLATE_ID = 'sullys-qol';
+export const TEMPLATE_CREDIT = `Sully's QoL filter v${TEMPLATE_VERSION}, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully`;
+/** The ESR loot filter plugin version the editor targets; shared filters record it. Bump when the editor follows a new plugin. */
+export const LOOT_FILTER_PLUGIN_VERSION = '1.5.3';
 export const TEMPLATE_FILE = 'sullys-qol-filter.json';
 
 /** A file under `public/loot-filters/` (the template, bundled sounds and icons). */
