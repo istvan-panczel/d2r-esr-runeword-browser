@@ -3,8 +3,8 @@
  * two names, a magic item's prefix + base + suffix, "Superior" / inferior prefixes, the personalized owner.
  *
  * CONTRACT (docs/features/STASH-ITEMS.md "Contracts"): the All items page workstream owns this file. The signature is
- * fixed; the first version below gives sensible fallbacks (the base name where a name table is missing), so it works
- * with the placeholder text context and lights up when itemtext.json's name tables arrive.
+ * fixed; names fall back to the base name where a name table is missing, so it works with the placeholder text context
+ * and lights up when itemtext.json's name tables arrive.
  */
 import type { StashItem } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
@@ -39,4 +39,13 @@ export function itemDisplayName(item: StashItem, catalog: StashCatalog, text: It
     name = base;
   }
   return item.personalizedName === null ? name : `${item.personalizedName}'s ${name}`;
+}
+
+/**
+ * The stack size of a quantity item (arrows, bolts, keys, tomes, throwing weapons): "×350"; null for other items. Kept
+ * apart from the name, so the name stays what the in-game stash search finds.
+ */
+export function itemQuantityLabel(item: Pick<StashItem, 'quantity' | 'stackSize'>): string | null {
+  const count = item.quantity ?? item.stackSize;
+  return count === null ? null : `×${String(count)}`;
 }
