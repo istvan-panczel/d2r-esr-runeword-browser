@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StashBundle } from '@/features/game-data/engine/schema';
 import type { StashFile, StashItem, StashSection, StashTabType } from '../parser/types';
+import { buildItemTypeIndex, normaliseTypeWord, typeCodesOfTerm } from './itemTypes';
 import {
   collectCoupons,
   couponPages,
@@ -24,6 +25,7 @@ const BUNDLE: Pick<StashBundle, 'coupons' | 'couponTiers'> = {
       name: 'Ancient Coupon (Buckler, Pelta Lunata)',
       type: 'cpn1',
       unique: { id: 793, name: 'Pelta Lunata' },
+      base: { code: 'buc', name: 'Buckler', type: 'shie' },
       qty: 3,
       withWildCards: { qty: 2, wildCards: 1 },
     },
@@ -48,8 +50,8 @@ const BUNDLE: Pick<StashBundle, 'coupons' | 'couponTiers'> = {
     { code: '99j', name: 'Ancient Coupon (Wild Card)', type: 'coup', wildCard: true },
   ],
   couponTiers: [
-    { type: 'cpn1', label: 'Normal', wildCardFrom: 8 },
-    { type: 'cpn3', label: 'Elite', wildCardFrom: 2 },
+    { type: 'cpn1', name: 'Coupon norm', tier: 'normal', wildCardFrom: 8 },
+    { type: 'cpn3', name: 'Coupon elite', tier: null, wildCardFrom: 2 },
   ],
 };
 
@@ -109,9 +111,12 @@ describe('collectCoupons', () => {
 
   it('lists only the coupon codes the stash holds, with counts, crafts and status', () => {
     expect(rows.map((row) => row.code).sort()).toEqual(['01c', '01e', '02c', '03c']);
-    expect(rowOf(rows, '01c')).toMatchObject({ have: 6, need: 3, crafts: 2, status: 'ready', tierLabel: 'Normal' });
+    expect(rowOf(rows, '01c')).toMatchObject({ have: 6, need: 3, crafts: 2, status: 'ready', tier: 'normal', tierLabel: 'Normal' });
     expect(rowOf(rows, '02c')).toMatchObject({ have: 2, crafts: 0, status: 'wildcards' });
-    expect(rowOf(rows, '01e')).toMatchObject({ have: 2, status: 'almost', tierLabel: 'Elite' });
+    // A tier without a base tier in the data is labelled with its itemtypes name
+    expect(rowOf(rows, '01e')).toMatchObject({ have: 2, status: 'almost', tier: null, tierLabel: 'Coupon elite' });
+    expect(rowOf(rows, '01c').base).toEqual({ code: 'buc', name: 'Buckler', type: 'shie' });
+    expect(rowOf(rows, '02c')).toMatchObject({ base: null, baseTypeName: null, typeCodes: [] });
   });
 
   it('sorts each coupon’s locations by page, row, column, the materials tab included', () => {
@@ -241,12 +246,103 @@ describe('coupon filters and sorting', () => {
 
 describe('coupons URL state', () => {
   it('round-trips the state and drops defaults', () => {
-    const state = { search: 'bonnet', status: 'wildcards', tier: 'cpn1', page: 3, sort: 'have', dir: 'desc' } as const;
+    const state = { search: 'bonnet', status: 'wildcards', tier: 'cpn1', page: 3, sort: 'have', dir: 'desc', details: true } as const;
     expect(readCouponsState(encodeCouponsState(state))).toEqual(state);
     expect(encodeCouponsState(DEFAULT_COUPONS_STATE).toString()).toBe('');
   });
 
   it('ignores invalid values', () => {
-    expect(readCouponsState(new URLSearchParams('status=nope&page=0&sort=x&dir=up'))).toEqual(DEFAULT_COUPONS_STATE);
+    expect(readCouponsState(new URLSearchParams('status=nope&page=0&sort=x&dir=up&details=yes'))).toEqual(DEFAULT_COUPONS_STATE);
+  });
+});
+
+describe('item type search', () => {
+  const TYPES = buildItemTypeIndex([
+    { code: 'armo', name: 'Any Armor', ancestors: ['armo'] },
+    { code: 'merc', name: 'Helm (merc)', ancestors: ['merc'] },
+    { code: 'belt', name: 'Belt', ancestors: ['belt', 'armo', 'merc'] },
+    { code: 'tors', name: 'Armor', ancestors: ['tors', 'armo'] },
+    { code: 'ring', name: 'Ring', ancestors: ['ring', 'misc', 'merc'] },
+    { code: 'helm', name: 'Helm', ancestors: ['helm', 'armo', 'merc'] },
+    { code: 'boot', name: 'Boots', ancestors: ['boot', 'armo', 'merc'] },
+    { code: 'shld', name: 'Any Shield', ancestors: ['shld', 'armo', 'seco'] },
+    { code: 'shie', name: 'Shield', ancestors: ['shie', 'shld', 'armo', 'seco'] },
+    { code: 'grim', name: 'Grimoire', ancestors: ['grim', 'shld', 'armo', 'seco', 'clas', 'warl'] },
+  ]);
+  const coupon = (code: string, unique: string, base: string, baseName: string, type: string) => ({
+    code,
+    name: `Ancient Coupon (${baseName}, ${unique})`,
+    type: 'cpn1',
+    unique: { id: 1, name: unique },
+    base: { code: base, name: baseName, type },
+    qty: 3,
+  });
+  const bundle: Pick<StashBundle, 'coupons' | 'couponTiers'> = {
+    coupons: [
+      coupon('a1', 'Lenymo', '3lb', 'Sash', 'belt'),
+      coupon('a2', "Verdungo's Hearty Cord", 'umc', 'Mithril Coil', 'belt'),
+      coupon('a3', 'Darkglow', 'rng', 'Ring Mail', 'tors'),
+      coupon('a4', 'Nagelring', 'rin', 'Ring', 'ring'),
+      coupon('a5', "Biggin's Bonnet", 'cap', 'Cap', 'helm'),
+      coupon('a6', 'Hotspur', 'lbt', 'Boots', 'boot'),
+      coupon('a7', 'Umbral Disk', 'sml', 'Small Shield', 'shie'),
+      coupon('a8', 'Measured Wrath', 'w1a', 'Burnt Text', 'grim'),
+    ],
+    couponTiers: [{ type: 'cpn1', name: 'Coupon norm', tier: 'normal', wildCardFrom: 8 }],
+  };
+  const stash = stashOf([
+    section(
+      0,
+      bundle.coupons.map((entry, i) => item(entry.code, i, 0))
+    ),
+  ]);
+  const { rows } = collectCoupons(stash, bundle, TYPES);
+  const search = (text: string) =>
+    filterCouponRows(rows, { ...DEFAULT_COUPONS_STATE, search: text }, TYPES)
+      .map((row) => row.code)
+      .sort();
+
+  it('gives each row its base type name and type chain', () => {
+    expect(rowOf(rows, 'a1')).toMatchObject({ baseTypeName: 'Belt', typeCodes: ['belt', 'armo', 'merc'] });
+  });
+
+  it('finds every base of a type, whatever its name, and only those', () => {
+    expect(search('belt')).toEqual(['a1', 'a2']);
+    expect(search('Belts')).toEqual(['a1', 'a2']);
+    // "ring" is the Ring type, not the Ring Mail armor; "helm" is not the merc type the boots and belts descend from
+    expect(search('ring')).toEqual(['a4']);
+    expect(search('helm')).toEqual(['a5']);
+    expect(search('boot')).toEqual(['a6']);
+    expect(search('armor')).toEqual(['a3']);
+  });
+
+  it('maps everyday words onto ESR type names', () => {
+    expect(search('helmet')).toEqual(['a5']);
+    // every shield, the class ones included
+    expect(search('shield')).toEqual(['a7', 'a8']);
+  });
+
+  it('matches other words as text: base names, coupon names, uniques', () => {
+    expect(search('sash')).toEqual(['a1']);
+    expect(search('coil')).toEqual(['a2']);
+    expect(search('"ring mail"')).toEqual(['a3']);
+    expect(search('belt lenymo')).toEqual(['a1']);
+    expect(search('belt hotspur')).toEqual([]);
+  });
+
+  it('searches as text only without types.json', () => {
+    expect(
+      filterCouponRows(rows, { ...DEFAULT_COUPONS_STATE, search: 'ring' })
+        .map((row) => row.code)
+        .sort()
+    ).toEqual(['a3', 'a4']);
+  });
+
+  it('normalises type words and resolves only type names', () => {
+    expect(normaliseTypeWord(' Boots ')).toBe('boot');
+    expect(normaliseTypeWord('Glass')).toBe('glass');
+    expect(typeCodesOfTerm('rings', TYPES)).toEqual(['ring']);
+    expect(typeCodesOfTerm('sash', TYPES)).toBeNull();
+    expect(typeCodesOfTerm('helm (merc)', TYPES)).toEqual(['merc']);
   });
 });

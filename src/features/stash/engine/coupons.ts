@@ -4,8 +4,10 @@
  */
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
 import { parseSearchTerms } from '@/core/utils/searchTerms';
-import type { StashBundle, StashCouponUnique } from '@/features/game-data/engine/schema';
+import { BASE_TIER_LABELS, type BaseTier } from '@/features/game-data/constants/bases';
+import type { StashBundle, StashCouponBase, StashCouponUnique } from '@/features/game-data/engine/schema';
 import type { StashFile, StashTabType } from '../parser/types';
+import { typeAncestors, typeCodesOfTerm, type ItemTypeIndex } from './itemTypes';
 
 /** Where one coupon (or one stack of them) lies */
 export interface CouponLocation {
@@ -35,10 +37,18 @@ export interface CouponRow {
   readonly code: string;
   /** "Ancient Coupon (Buckler, Pelta Lunata)" */
   readonly name: string;
-  /** Coupon item type (cpn1 …) */
-  readonly tier: string;
+  /** Coupon item type (cpn1 …): the tier filter value */
+  readonly couponType: string;
+  /** Base tier of the coupon type's uniques; null when it has none (the label is then the itemtypes name) */
+  readonly tier: BaseTier | null;
   readonly tierLabel: string;
   readonly unique: StashCouponUnique;
+  /** The unique's base item; null when stash.json does not know it */
+  readonly base: StashCouponBase | null;
+  /** Display name of the base's item type ("Belt"); null when unknown */
+  readonly baseTypeName: string | null;
+  /** The base's item type and its ancestors (types.json), for the item type search */
+  readonly typeCodes: readonly string[];
   /** Coupons the recipe takes */
   readonly need: number;
   /** Coupons of this code in the stash */
@@ -98,10 +108,13 @@ function readyWithWildCards(have: number, need: number, recipe: CouponRow['withW
   return have < need && recipe !== null && recipe.suspect !== true && have >= recipe.qty && wildCards >= recipe.wildCards;
 }
 
-/** Every coupon code the stash holds at least one of, with its recipe; the Wild Cards are counted for the summary. */
-export function collectCoupons(stash: StashFile, bundle: CouponBundle): CouponCollection {
+/**
+ * Every coupon code the stash holds at least one of, with its recipe; the Wild Cards are counted for the summary.
+ * `types` (types.json) gives each row its base type chain for the item type search.
+ */
+export function collectCoupons(stash: StashFile, bundle: CouponBundle, types: ItemTypeIndex | null = null): CouponCollection {
   const coupons = new Map(bundle.coupons.map((coupon) => [coupon.code, coupon]));
-  const tierLabels = new Map(bundle.couponTiers.map((tier) => [tier.type, tier.label]));
+  const tiers = new Map(bundle.couponTiers.map((tier) => [tier.type, tier]));
   const found = new Map<string, { count: number; locations: CouponLocation[] }>();
   for (const section of stash.sections) {
     for (const item of section.items) {
@@ -130,9 +143,13 @@ export function collectCoupons(stash: StashFile, bundle: CouponBundle): CouponCo
     rows.push({
       code,
       name: coupon.name,
-      tier: coupon.type,
-      tierLabel: tierLabels.get(coupon.type) ?? coupon.type,
+      couponType: coupon.type,
+      tier: tiers.get(coupon.type)?.tier ?? null,
+      tierLabel: couponTierLabel(tiers.get(coupon.type) ?? { type: coupon.type, name: coupon.type, tier: null }),
       unique: coupon.unique,
+      base: coupon.base ?? null,
+      baseTypeName: coupon.base === undefined ? null : (types?.byCode.get(coupon.base.type)?.name ?? null),
+      typeCodes: coupon.base === undefined || types === null ? [] : typeAncestors(coupon.base.type, types),
       need: coupon.qty,
       have: count,
       crafts,
@@ -155,6 +172,11 @@ export function collectCoupons(stash: StashFile, bundle: CouponBundle): CouponCo
     },
     wildCardLocations: (wildCardEntry?.locations ?? []).sort(byLocation),
   };
+}
+
+/** "Normal" / "Exceptional" / "Elite" from the data's base tier, else the itemtypes.txt name */
+export function couponTierLabel(tier: Pick<StashBundle['couponTiers'][number], 'type' | 'name' | 'tier'>): string {
+  return tier.tier === null ? tier.name : BASE_TIER_LABELS[tier.tier];
 }
 
 /** The in-game page of a stash section (1-based), null for the materials tab */
@@ -193,11 +215,29 @@ export interface CouponsState {
   readonly page: number | null;
   readonly sort: CouponSortKey;
   readonly dir: SortDir;
+  /** "Show all item information": each row shows the unique's full description (cards instead of the table) */
+  readonly details: boolean;
 }
 
-export const DEFAULT_COUPONS_STATE: CouponsState = { search: '', status: 'all', tier: null, page: null, sort: 'status', dir: 'asc' };
+export const DEFAULT_COUPONS_STATE: CouponsState = {
+  search: '',
+  status: 'all',
+  tier: null,
+  page: null,
+  sort: 'status',
+  dir: 'asc',
+  details: false,
+};
 
-const KEYS = { SEARCH: FILTER_URL_PARAM_KEYS.SEARCH, STATUS: 'status', TIER: 'tier', PAGE: 'page', SORT: 'sort', DIR: 'dir' } as const;
+const KEYS = {
+  SEARCH: FILTER_URL_PARAM_KEYS.SEARCH,
+  STATUS: 'status',
+  TIER: 'tier',
+  PAGE: 'page',
+  SORT: 'sort',
+  DIR: 'dir',
+  DETAILS: 'details',
+} as const;
 const STATUS_FILTERS: readonly CouponStatusFilter[] = ['all', ...COUPON_STATUSES];
 /** Stash sections 0–999 are pages */
 const MAX_PAGE = 1000;
@@ -205,6 +245,7 @@ const MAX_PAGE = 1000;
 const isOneOf = <T extends string>(values: readonly T[], value: string | null): value is T => values.some((entry) => entry === value);
 
 export const isCouponStatusFilter = (value: string): value is CouponStatusFilter => isOneOf(STATUS_FILTERS, value);
+export const isCouponSortKey = (value: string): value is CouponSortKey => isOneOf(COUPON_SORT_KEYS, value);
 
 export function readCouponsState(params: URLSearchParams): CouponsState {
   const status = params.get(KEYS.STATUS);
@@ -218,6 +259,7 @@ export function readCouponsState(params: URLSearchParams): CouponsState {
     page: Number.isInteger(page) && page >= 1 && page <= MAX_PAGE ? page : null,
     sort: isOneOf(COUPON_SORT_KEYS, sort) ? sort : DEFAULT_COUPONS_STATE.sort,
     dir: params.get(KEYS.DIR) === 'desc' ? 'desc' : 'asc',
+    details: params.get(KEYS.DETAILS) === '1',
   };
 }
 
@@ -231,19 +273,30 @@ export function encodeCouponsState(state: CouponsState): URLSearchParams {
     params.set(KEYS.SORT, state.sort);
     params.set(KEYS.DIR, state.dir);
   }
+  if (state.details) params.set(KEYS.DETAILS, '1');
   return params;
 }
 
-/** The rows matching the search (coupon name, unique name, code), status, tier and page filters. */
-export function filterCouponRows(rows: readonly CouponRow[], state: Omit<CouponsState, 'sort' | 'dir'>): CouponRow[] {
-  const terms = parseSearchTerms(state.search);
+/**
+ * The rows matching the search, status, tier and page filters. A search word that names an item type ("belt",
+ * "helmet", "rings"; see itemTypes.ts) matches by the base's type chain only, so "ring" finds rings but not Ring Mail;
+ * any other word matches the coupon name, unique, code, base name or base type name as text ("sash" → the Sash only).
+ */
+export function filterCouponRows(
+  rows: readonly CouponRow[],
+  state: Pick<CouponsState, 'search' | 'status' | 'tier' | 'page'>,
+  types: ItemTypeIndex | null = null
+): CouponRow[] {
+  const terms = parseSearchTerms(state.search).map((term) => ({ term, typeCodes: types === null ? null : typeCodesOfTerm(term, types) }));
   return rows.filter((row) => {
     if (state.status !== 'all' && row.status !== state.status) return false;
-    if (state.tier !== null && row.tier !== state.tier) return false;
+    if (state.tier !== null && row.couponType !== state.tier) return false;
     if (state.page !== null && !row.locations.some((location) => pageOf(location) === state.page)) return false;
     if (terms.length === 0) return true;
-    const haystack = [row.name, row.unique.name, row.code].join('\n').toLowerCase();
-    return terms.every((term) => haystack.includes(term));
+    const haystack = [row.name, row.unique.name, row.code, row.base?.name ?? '', row.baseTypeName ?? ''].join('\n').toLowerCase();
+    return terms.every(({ term, typeCodes }) =>
+      typeCodes === null ? haystack.includes(term) : typeCodes.some((code) => row.typeCodes.includes(code))
+    );
   });
 }
 
@@ -261,7 +314,7 @@ const COMPARE: Readonly<Record<CouponSortKey, (a: CouponRow, b: CouponRow) => nu
   status: (a, b) => statusRank(a) - statusRank(b) || b.have - a.have,
   coupon: (a, b) => a.name.localeCompare(b.name),
   unique: (a, b) => a.unique.name.localeCompare(b.unique.name),
-  tier: (a, b) => a.tier.localeCompare(b.tier),
+  tier: (a, b) => a.couponType.localeCompare(b.couponType),
   have: (a, b) => a.have - b.have || a.crafts - b.crafts,
   location: compareFirstLocations,
 };

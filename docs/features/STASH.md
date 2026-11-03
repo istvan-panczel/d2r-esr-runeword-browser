@@ -88,15 +88,15 @@ the summary, and the blank coupons (`96j`–`98j`, no recipe) are left out.
 
 Per row (`CouponTable`):
 
-| Column          | Contents                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Unique          | icon (the unique's art from `icons.json`; coupons have no art of their own), link to `/uniques?name=<name>`, copy-name button |
-| Status          | Ready (have ≥ need), Ready with Wild Cards, 1 short, or — (`status`: `ready` / `wildcards` / `almost` / `other`)              |
-| Have / need     | "2 / 3"; with have ≥ need also "2 crafts, 1 left over"                                                                        |
-| With Wild Cards | the alternative recipe, "2 + 1 Wild Card" (coupons + Wild Cards); a `suspect` recipe gets a "looks broken" warning            |
-| Coupon          | the coupon's display name and code                                                                                            |
-| Tier            | Normal / Exceptional / Elite (`couponTiers`)                                                                                  |
-| Where           | every location, "Page N · row R, col C" (1-based: page = section + 1, row = y + 1, col = x + 1); just "Materials tab" there   |
+| Column          | Contents                                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unique          | icon (the unique's art from `icons.json`; coupons have no art of their own), link to `/uniques?name=<name>`, copy-name button; under it the base and its item type ("Sash · Belt") |
+| Status          | Ready (have ≥ need), Ready with Wild Cards, 1 short, or — (`status`: `ready` / `wildcards` / `almost` / `other`)                                                                   |
+| Have / need     | "2 / 3"; with have ≥ need also "2 crafts, 1 left over"                                                                                                                             |
+| With Wild Cards | the alternative recipe, "2 + 1 Wild Card" (coupons + Wild Cards); a `suspect` recipe gets a "looks broken" warning                                                                 |
+| Coupon          | the coupon's display name and code                                                                                                                                                 |
+| Tier            | the shared `TierBadge` of the coupon type's base tier (`couponTiers[].tier`, from the bases' tier families; the itemtypes name as text without one)                                |
+| Where           | every location, "Page N · row R, col C" (1-based: page = section + 1, row = y + 1, col = x + 1); just "Materials tab" there                                                        |
 
 - **Need** comes from the data (`qty` of the coupon-only recipe, 3 for every ESR 3.2.24 coupon), never a constant.
 - **Crafts** = ⌊have / need⌋. **Ready with Wild Cards**: no craft with coupons alone, but have ≥ the alternative's
@@ -112,14 +112,32 @@ Per row (`CouponTable`):
 
 Filters (always open; state in the URL, `readCouponsState` / `encodeCouponsState`):
 
-| Param    | Values                                                    | Default  |
-| -------- | --------------------------------------------------------- | -------- |
-| `search` | words or `"exact phrases"` over coupon name, unique, code | none     |
-| `status` | `ready`, `wildcards`, `almost` (need − 1), `other`        | all      |
-| `tier`   | coupon type (`cpn1`, `cpn2`, `cpn3`)                      | all      |
-| `page`   | an in-game page (1-based) holding one of the coupons      | all      |
-| `sort`   | `status`, `coupon`, `unique`, `tier`, `have`, `location`  | `status` |
-| `dir`    | `asc`, `desc` (written with `sort`)                       | `asc`    |
+| Param     | Values                                                            | Default  |
+| --------- | ----------------------------------------------------------------- | -------- |
+| `search`  | words or `"exact phrases"`: unique, coupon, code, base, item type | none     |
+| `status`  | `ready`, `wildcards`, `almost` (need − 1), `other`                | all      |
+| `tier`    | coupon type (`cpn1`, `cpn2`, `cpn3`)                              | all      |
+| `page`    | an in-game page (1-based) holding one of the coupons              | all      |
+| `sort`    | `status`, `coupon`, `unique`, `tier`, `have`, `location`          | `status` |
+| `dir`     | `asc`, `desc` (written with `sort`)                               | `asc`    |
+| `details` | `1`: "Show all item information" (cards instead of the table)     | off      |
+
+**Item type search** (`engine/itemTypes.ts`): a word that names an ESR item type matches by the base's type chain
+(types.json ancestors), not as text, so "belt" lists every belt coupon (Sash, Light Belt, Mithril Coil, …), "ring"
+finds rings but not Ring Mail, and "helm" is the Helm type, not ESR's merc type ("Helm (merc)") that belts and boots
+also descend from. Names match case-insensitively with a plural "s" dropped ("Rings", "boot", "gloves"); a few
+everyday words map onto ESR names: helmet → Helm, armour / "body armor" → Armor (body armor), shield → Any Shield (the
+class shields too), dagger → Knife, claw / katar → Hand to Hand. Any other word matches as text over the unique, the
+coupon name, the code, the base name and the type name ("sash" finds the Sash and the Demonhide Sash). The coupons page
+loads types.json (5 KB gzipped) for this.
+
+**Show all item information** (`details=1`, like the Bases page's `view`): the table becomes a card grid (one column
+on phones), each card the coupon facts (unique link + copy, status, have / need, Wild Card recipe, coupon, tier,
+locations) above the unique's Uniques page card (`HtmUniqueItemCard`, with its source line and tier badge). A sort
+select replaces the column headers. The cards read the HTM unique items from IndexedDB (`hooks/useUniqueDetails.ts`):
+the stash routes render before the HTM data sync, so a card shows "Loading the item details" until the sync stores
+them (live query), "unavailable" when the sync failed or stored nothing, and a note when the docs list no unique of
+that name. A name the docs list twice (the two Azurewraths) is told apart by the base code (`engine/uniqueDetails.ts`).
 
 The default sort is ready first, then ready with Wild Cards, one short, the rest, each by count descending; every sort
 breaks ties by unique name. Clicking a column header sorts by it (counts start high to low, names A to Z), clicking
@@ -151,6 +169,9 @@ ESR saves through D2RLoader's "extended" save format (`[d2rcore.save_format] mod
 
 - `engine/coupons.test.ts`: aggregation (counts, crafts, status, Wild Card readiness, stacks, locations and their
   format), the summary, search / status / tier / page filters, every sort, the URL state.
+- `engine/coupons.test.ts` also covers the item type search (type words, aliases, the merc Helm, text fallback) and
+  `engine/uniqueDetails.test.ts` the docs item lookup; the fixture test checks "belt" against every belt coupon and
+  "sash" against the two sashes.
 - `engine/readStash.test.ts`: the upload checks and the error mapping (legacy, not a stash, parse details).
 - `db/stashDb.test.ts`: save / load / clear round trip (fake-indexeddb).
 - `engine/coupons.fixture.integration.test.ts`: the owner's real stash yields 541 coupons of 217 codes. Skipped without
