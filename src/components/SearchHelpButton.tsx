@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { HelpCircle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,8 @@ interface SearchExample {
 
 interface SearchHelpButtonProps {
   readonly examples?: readonly SearchExample[];
+  /** Page-specific sections between the exact phrase and the examples sections */
+  readonly children?: ReactNode;
 }
 
 const DEFAULT_EXAMPLES: readonly SearchExample[] = [
@@ -21,7 +24,7 @@ const DEFAULT_EXAMPLES: readonly SearchExample[] = [
 /**
  * A help button that shows search syntax explanation in a popover
  */
-export function SearchHelpButton({ examples = DEFAULT_EXAMPLES }: SearchHelpButtonProps) {
+export function SearchHelpButton({ examples = DEFAULT_EXAMPLES, children }: SearchHelpButtonProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -44,6 +47,8 @@ export function SearchHelpButton({ examples = DEFAULT_EXAMPLES }: SearchHelpButt
               Use <code className="bg-muted px-1 rounded">"quotes"</code> to search for exact phrases.
             </p>
           </div>
+
+          {children}
 
           <div>
             <h4 className="font-medium mb-1">Examples</h4>

@@ -38,6 +38,7 @@ import { useStash } from '../hooks/useStash';
 import { useStashTypes } from '../hooks/useStashTypes';
 import { useUrlState } from '../hooks/useUrlState';
 import type { StashFile } from '../parser/types';
+import { STASH_SEARCH_HELP } from '../components/shared/stashSearchHelp';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const ALL = 'all';
@@ -127,6 +128,7 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
           }}
           placeholder="Search unique, coupon, code or item type (e.g. belt)..."
           hint="Search the unique, coupon, code or item type (belt, helm, ring…);"
+          help={STASH_SEARCH_HELP}
         />
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">Status</p>

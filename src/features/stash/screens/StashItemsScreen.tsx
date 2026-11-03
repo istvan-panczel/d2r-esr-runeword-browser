@@ -60,6 +60,7 @@ import { useStash } from '../hooks/useStash';
 import { useStashTypes } from '../hooks/useStashTypes';
 import { useUrlState, type UrlState } from '../hooks/useUrlState';
 import type { StashFile } from '../parser/types';
+import { STASH_SEARCH_HELP } from '../components/shared/stashSearchHelp';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const ALL = 'all';
@@ -177,6 +178,7 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
           }}
           placeholder="Search name, base, type, stat text (e.g. faster cast rate)..."
           hint="Search the name, base, item type (belt, ring…), quality, code, socketed items and stat text;"
+          help={STASH_SEARCH_HELP}
         />
         <ItemFilters rows={rows} state={state} update={update} />
         <StatConditions
