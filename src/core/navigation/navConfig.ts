@@ -225,6 +225,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         label: 'Ancient Coupons',
         description: 'Your coupons, the uniques they make and where they are',
       },
+      {
+        key: 'stash-items',
+        to: '/stash/items',
+        label: 'All Items',
+        description: 'Every item on your stash pages: search names and stats, filter and sort',
+      },
     ],
   },
   {

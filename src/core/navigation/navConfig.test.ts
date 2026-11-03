@@ -71,6 +71,8 @@ describe('navConfig', () => {
     expect(isNavItemActive('/stash/coupons', overview)).toBe(false);
     expect(isNavItemActive('/stash/coupons', coupons)).toBe(true);
     expect(isNavGroupActive('/stash/coupons', stash)).toBe(true);
+    expect(stash.items.map((item) => item.to)).toEqual(['/stash', '/stash/coupons', '/stash/items']);
+    expect(isNavItemActive('/stash/items', overview)).toBe(false);
   });
 
   describe('OFFICIAL_LINKS', () => {

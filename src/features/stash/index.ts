@@ -2,3 +2,4 @@
 export { StashLayout } from './screens/StashLayout';
 export { StashHomeScreen } from './screens/StashHomeScreen';
 export { StashCouponsScreen } from './screens/StashCouponsScreen';
+export { StashItemsScreen } from './screens/StashItemsScreen';
