@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { STASH_FILE_NAME, type StashLoadError } from '../engine/readStash';
@@ -8,6 +9,8 @@ interface StashLoadErrorPanelProps {
   /** File name, for an error of a remembered file */
   readonly fileName?: string;
   readonly onDismiss?: () => void;
+  /** Shown under the message, e.g. "Forget stored file" */
+  readonly action?: ReactNode;
 }
 
 const TITLES: Readonly<Record<StashLoadError['kind'], string>> = {
@@ -70,7 +73,7 @@ function ParseDetails({ details }: { readonly details: StashParseErrorDetails })
 }
 
 /** A failed upload or remembered file: what went wrong, what to do, and the parser's position for a parse error. */
-export function StashLoadErrorPanel({ error, fileName, onDismiss }: StashLoadErrorPanelProps) {
+export function StashLoadErrorPanel({ error, fileName, onDismiss, action }: StashLoadErrorPanelProps) {
   return (
     <div role="alert" className="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
       <div className="flex items-start gap-2">
@@ -90,6 +93,7 @@ export function StashLoadErrorPanel({ error, fileName, onDismiss }: StashLoadErr
         )}
       </div>
       {error.kind === 'parse' && <ParseDetails details={error.details} />}
+      {action !== undefined && <div className="pl-6">{action}</div>}
     </div>
   );
 }

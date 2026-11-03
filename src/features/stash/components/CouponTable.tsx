@@ -1,14 +1,16 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, TriangleAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import {
+  COUPON_STATUS_LABELS,
   formatHaveNeed,
   formatLocation,
   initialSortDir,
   uniquePageUrl,
   type CouponRow,
   type CouponSortKey,
+  type CouponStatus,
   type SortDir,
 } from '../engine/coupons';
 import { CopyTextButton } from './CopyTextButton';
@@ -25,21 +27,15 @@ const CELL_CLASS = 'border-t px-2 py-1.5 align-top';
 /** The Unique column stays visible while the table scrolls sideways on phones */
 const STICKY_CLASS = 'sticky left-0 z-10 bg-card';
 
-const STATUS_BADGES = {
-  ready: { label: 'Ready', className: 'border-emerald-600/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' },
-  wildCards: { label: 'Ready with Wild Cards', className: 'border-sky-600/40 bg-sky-500/15 text-sky-800 dark:text-sky-300' },
+const STATUS_BADGES: Readonly<Record<CouponStatus, { label: string; className: string } | null>> = {
+  ready: { label: COUPON_STATUS_LABELS.ready, className: 'border-emerald-600/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' },
+  wildcards: { label: COUPON_STATUS_LABELS.wildcards, className: 'border-sky-600/40 bg-sky-500/15 text-sky-800 dark:text-sky-300' },
   almost: { label: '1 short', className: 'border-amber-600/40 bg-amber-500/15 text-amber-800 dark:text-amber-300' },
-} as const;
+  other: null,
+};
 
 function StatusBadge({ row }: { readonly row: CouponRow }) {
-  const badge =
-    row.status === 'ready'
-      ? STATUS_BADGES.ready
-      : row.readyWithWildCards
-        ? STATUS_BADGES.wildCards
-        : row.status === 'almost'
-          ? STATUS_BADGES.almost
-          : null;
+  const badge = STATUS_BADGES[row.status];
   if (badge === null) return <span className="text-muted-foreground">—</span>;
   return (
     <span className={cn('inline-block rounded-full border px-2 py-0.5 text-xs whitespace-nowrap', badge.className)}>{badge.label}</span>
@@ -86,10 +82,20 @@ function crafts(row: CouponRow): string | null {
   return `${String(row.crafts)} craft${row.crafts === 1 ? '' : 's'}${spare > 0 ? `, ${String(spare)} left over` : ''}`;
 }
 
-function wildCardRecipe(row: CouponRow): string {
-  if (row.withWildCards === null) return '—';
-  const { qty, wildCards } = row.withWildCards;
-  return `${String(qty)} + ${String(wildCards)} Wild Card${wildCards === 1 ? '' : 's'}`;
+function WildCardRecipe({ recipe }: { readonly recipe: CouponRow['withWildCards'] }) {
+  if (recipe === null) return <>—</>;
+  const { qty, wildCards, suspect } = recipe;
+  return (
+    <>
+      {qty} + {wildCards} Wild Card{wildCards === 1 ? '' : 's'}
+      {suspect === true && (
+        <span className="mt-0.5 flex items-start gap-1 text-xs whitespace-normal text-amber-700 dark:text-amber-400">
+          <TriangleAlert className="mt-0.5 size-3 shrink-0" aria-hidden />
+          This recipe looks broken in ESR&apos;s data (its item count is wrong); it may not work.
+        </span>
+      )}
+    </>
+  );
 }
 
 /** The owned coupons: the unique each makes (link + copy for the in-game stash search), count, recipes, locations. */
@@ -133,7 +139,9 @@ export function CouponTable({ rows, sort, dir, onSort }: CouponTableProps) {
                 <span className="font-medium tabular-nums">{formatHaveNeed(row)}</span>
                 {crafts(row) !== null && <span className="block text-xs text-muted-foreground">{crafts(row)}</span>}
               </td>
-              <td className={`${CELL_CLASS} whitespace-nowrap text-muted-foreground`}>{wildCardRecipe(row)}</td>
+              <td className={`${CELL_CLASS} max-w-[12rem] whitespace-nowrap text-muted-foreground`}>
+                <WildCardRecipe recipe={row.withWildCards} />
+              </td>
               <td className={`${CELL_CLASS} min-w-[14rem]`}>
                 <span>{row.name}</span>
                 <span className="block font-mono text-xs text-muted-foreground">{row.code}</span>

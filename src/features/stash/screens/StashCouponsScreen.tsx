@@ -11,6 +11,8 @@ import { CouponTable } from '../components/CouponTable';
 import { StashGate } from '../components/StashGate';
 import {
   collectCoupons,
+  COUPON_STATUS_LABELS,
+  COUPON_STATUSES,
   couponPages,
   encodeCouponsState,
   filterCouponRows,
@@ -61,10 +63,8 @@ function CouponsBrowser({ stash, bundle }: CouponsBrowserProps) {
   const countOf = (status: CouponStatusFilter) => (status === ALL ? rows.length : rows.filter((row) => row.status === status).length);
   const statusOptions = [
     { value: ALL, label: 'All', count: countOf(ALL) },
-    { value: 'ready', label: 'Ready', count: countOf('ready') },
-    { value: 'almost', label: 'Almost (1 short)', count: countOf('almost') },
-    { value: 'other', label: 'Other', count: countOf('other') },
-  ] as const;
+    ...COUPON_STATUSES.map((status) => ({ value: status, label: COUPON_STATUS_LABELS[status], count: countOf(status) })),
+  ];
   const tierOptions = [
     { value: ALL, label: 'All' },
     ...tiers.map((tier) => ({ value: tier.type, label: tier.label, count: rows.filter((row) => row.tier === tier.type).length })),
@@ -214,7 +214,7 @@ function WildCardNote({ summary, tiers, locations }: WildCardNoteProps) {
         You have {summary.wildCards} Coupon Wild Card{summary.wildCards === 1 ? '' : 's'}
         {locations.length > 0 && <> ({locations.map(formatLocation).join('; ')})</>}.{' '}
         {summary.readyWithWildCards > 0 &&
-          `${String(summary.readyWithWildCards)} more unique${summary.readyWithWildCards === 1 ? ' is' : 's are'} ready with them (each on its own; they share the Wild Cards). `}
+          `${String(summary.readyWithWildCards)} more unique${summary.readyWithWildCards === 1 ? ' is' : 's are'} ready with them (each on its own; they share the Wild Cards; a recipe flagged as broken never counts). `}
         {makers.length > 0 && `The cube makes one Wild Card from ${makers.join(', ').replace(/, ([^,]*)$/, ' or $1')} coupons of any kind.`}
       </p>
     </div>

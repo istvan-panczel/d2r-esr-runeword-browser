@@ -40,8 +40,10 @@ waiting for the HTM data sync.
   - unsupported: no `0xAA55AA55` section header, the legacy stash (save version below 100), a retail D2R stash, an
     unknown D2RLoader format revision (`UnsupportedStashError.reason`);
   - parse error (`StashParseError`): the message plus a **Details** block with the section (and its page / tab), the
-    item's place in the section list, the socket path, the item code when it was read and the bit offsets;
-  - a remembered file that no longer parses (e.g. after a parser change) shows the same panel above the upload card;
+    item's place in the section list, the socket path, the item code when it was read and the bit offsets (a section
+    too short for its item list or Chronicle header is one too, not a generic error);
+  - a remembered file that no longer parses (e.g. after a parser change), or an IndexedDB read failure, shows the same
+    panel above the upload card, with **Forget stored file** (the file bar's Clear exists only for a loaded stash);
   - the browser refusing IndexedDB (private window): the stash still loads, with a "Not remembered" notice.
 - The file bar shows the file name, when the game last saved it (`File.lastModified`), when it was uploaded, and how
   many pages hold items.
@@ -80,26 +82,29 @@ then the file bar and `children(stash, file)`.
 ## Ancient Coupons page
 
 `engine/coupons.ts` (`collectCoupons`) walks every stash section's items (pages and the materials tab; socketed items
-are never coupons) and groups the ones whose code is a `stash.json` coupon. A page item counts 1; a materials-tab stack
-counts its stack size. Rows exist only for codes the stash holds at least one of; the Wild Card (`99j`) is counted for
+are never coupons) and groups the ones whose code is a `stash.json` coupon. A page item counts 1 (stackable codes such
+as the Wild Card carry `stackSize` 0 on a page); a materials-tab stack counts its `stackSize`. Rows exist only for codes the stash holds at least one of; the Wild Card (`99j`) is counted for
 the summary, and the blank coupons (`96j`–`98j`, no recipe) are left out.
 
 Per row (`CouponTable`):
 
-| Column          | Contents                                                                                                                         |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Unique          | icon (the unique's art from `icons.json`; coupons have no art of their own), link to `/uniques?name=<name>`, copy-name button    |
-| Status          | Ready (have ≥ need), Ready with Wild Cards, 1 short, or —                                                                        |
-| Have / need     | "2 / 3"; with have ≥ need also "2 crafts, 1 left over"                                                                           |
-| With Wild Cards | the alternative recipe, "2 + 1 Wild Card" (coupons + Wild Cards)                                                                 |
-| Coupon          | the coupon's display name and code                                                                                               |
-| Tier            | Normal / Exceptional / Elite (`couponTiers`)                                                                                     |
-| Where           | every location, "Page N · row R, col C" (1-based: page = section + 1, row = y + 1, col = x + 1; the materials tab has no number) |
+| Column          | Contents                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Unique          | icon (the unique's art from `icons.json`; coupons have no art of their own), link to `/uniques?name=<name>`, copy-name button |
+| Status          | Ready (have ≥ need), Ready with Wild Cards, 1 short, or — (`status`: `ready` / `wildcards` / `almost` / `other`)              |
+| Have / need     | "2 / 3"; with have ≥ need also "2 crafts, 1 left over"                                                                        |
+| With Wild Cards | the alternative recipe, "2 + 1 Wild Card" (coupons + Wild Cards); a `suspect` recipe gets a "looks broken" warning            |
+| Coupon          | the coupon's display name and code                                                                                            |
+| Tier            | Normal / Exceptional / Elite (`couponTiers`)                                                                                  |
+| Where           | every location, "Page N · row R, col C" (1-based: page = section + 1, row = y + 1, col = x + 1); just "Materials tab" there   |
 
 - **Need** comes from the data (`qty` of the coupon-only recipe, 3 for every ESR 3.2.24 coupon), never a constant.
 - **Crafts** = ⌊have / need⌋. **Ready with Wild Cards**: no craft with coupons alone, but have ≥ the alternative's
-  coupons and the stash has at least its Wild Cards. Each row is judged on its own; rows marked this way share the
-  same Wild Cards.
+  coupons and the stash has at least its Wild Cards, and the recipe is not `suspect` (stash.json flags a row whose
+  `numinputs` differs from its item count: ESR 3.2.24's `06j`). Each row is judged on its own; rows marked this way
+  share the same Wild Cards.
+- **Materials tab**: its items have no grid cell; their x / y mostly spell the stack count (x + 16 · y equals
+  `stackSize` for 229 of 253 items in the fixture, and is 1–9 lower for the rest), so only the tab is shown.
 - **Summary**: kinds of coupon owned, coupons in total, uniques craftable now (with the craft total), Wild Cards owned
   (with their locations), and the Wild Card recipe per tier from the data ("8 Normal, 4 Exceptional or 2 Elite coupons
   of any kind").
@@ -110,7 +115,7 @@ Filters (always open; state in the URL, `readCouponsState` / `encodeCouponsState
 | Param    | Values                                                    | Default  |
 | -------- | --------------------------------------------------------- | -------- |
 | `search` | words or `"exact phrases"` over coupon name, unique, code | none     |
-| `status` | `ready`, `almost` (need − 1), `other`                     | all      |
+| `status` | `ready`, `wildcards`, `almost` (need − 1), `other`        | all      |
 | `tier`   | coupon type (`cpn1`, `cpn2`, `cpn3`)                      | all      |
 | `page`   | an in-game page (1-based) holding one of the coupons      | all      |
 | `sort`   | `status`, `coupon`, `unique`, `tier`, `have`, `location`  | `status` |
@@ -157,7 +162,10 @@ ESR saves through D2RLoader's "extended" save format (`[d2rcore.save_format] mod
 ## Open questions (verify in game)
 
 - `06j` (Bul-Kathos' Wedding Band): its Wild Card recipe has `numinputs` 4 for 2 coupons + 4 Wild Cards (a build
-  warning); the recipe may not work.
+  warning, `suspect` in stash.json, never "Ready with Wild Cards"); the recipe may not work.
+- Materials-tab counts: the page uses `stackSize`. Where it differs from x + 16 · y (fixture: Heart `hrt` 211 vs 210,
+  Sol `sol` 74 vs 73, `ddd` 136 vs 133, `rvl` 96 vs 87) `stackSize` is always the larger; check which one the game shows
+  (only matters for coupons kept in the materials tab, none in the fixture).
 - `24f` (Crystal Sword Azurewrath, uniqueitems `Azurewrath_old`) has no string; the page names it "Azurewrath" after
   its coupon. Check what the in-game stash search finds.
 - Whether the in-game shared stash search matches the unique's name the copy button copies (a coupon's item name is

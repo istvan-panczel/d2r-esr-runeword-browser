@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { DevNotice } from '@/core/components/DevNotice';
 import { Spinner } from '@/components/ui/spinner';
-import { TriangleAlert } from 'lucide-react';
+import { Trash2, TriangleAlert } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { StashFileMeta } from '../db/stashDb';
 import { useStash } from '../hooks/useStash';
 import type { StashFile } from '../parser/types';
@@ -16,10 +17,11 @@ interface StashGateProps {
 
 /**
  * The frame of every My Stash page: the upload card until a stash is loaded, then the file bar and the page. A failed
- * upload is shown above either one; the stash loaded before it stays.
+ * upload is shown above either one; the stash loaded before it stays. A remembered file that fails to load can be
+ * forgotten from its error panel (the file bar with Clear exists only for a loaded stash).
  */
 export function StashGate({ children }: StashGateProps) {
-  const { state, uploadError, storageWarning, dismissUploadError } = useStash();
+  const { state, uploadError, storageWarning, dismissUploadError, clear } = useStash();
 
   if (state.status === 'loading') {
     return (
@@ -38,7 +40,25 @@ export function StashGate({ children }: StashGateProps) {
           {storageWarning}
         </DevNotice>
       )}
-      {state.status === 'error' && <StashLoadErrorPanel error={state.error} fileName={state.file?.name} />}
+      {state.status === 'error' && (
+        <StashLoadErrorPanel
+          error={state.error}
+          fileName={state.file?.name}
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void clear();
+              }}
+            >
+              <Trash2 className="size-4" />
+              Forget stored file
+            </Button>
+          }
+        />
+      )}
       {state.status === 'ready' ? (
         <>
           <StashFileBar file={state.file} stash={state.stash} />

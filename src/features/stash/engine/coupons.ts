@@ -16,8 +16,20 @@ export interface CouponLocation {
   readonly y: number;
 }
 
-/** have ≥ need: craftable now; need − 1: one coupon short; other: the rest */
-export type CouponStatus = 'ready' | 'almost' | 'other';
+/**
+ * ready: have ≥ need; wildcards: not ready, but the Wild Card recipe works with the stash's Wild Cards; almost: one
+ * coupon short (need − 1); other: the rest. In this order on the page (badge, status filter, default sort).
+ */
+export const COUPON_STATUSES = ['ready', 'wildcards', 'almost', 'other'] as const;
+export type CouponStatus = (typeof COUPON_STATUSES)[number];
+
+/** Status filter and badge labels */
+export const COUPON_STATUS_LABELS: Readonly<Record<CouponStatus, string>> = {
+  ready: 'Ready',
+  wildcards: 'Ready with Wild Cards',
+  almost: 'Almost (1 short)',
+  other: 'Other',
+};
 
 export interface CouponRow {
   readonly code: string;
@@ -34,10 +46,8 @@ export interface CouponRow {
   /** How many times the coupon-only recipe can be cubed */
   readonly crafts: number;
   readonly status: CouponStatus;
-  /** The coupon + Wild Card recipe, when there is one */
-  readonly withWildCards: { readonly qty: number; readonly wildCards: number } | null;
-  /** Not craftable with coupons alone, but with the Wild Card recipe and the Wild Cards in the stash */
-  readonly readyWithWildCards: boolean;
+  /** The coupon + Wild Card recipe, when there is one; `suspect` when its numinputs looks wrong (never counted as ready) */
+  readonly withWildCards: { readonly qty: number; readonly wildCards: number; readonly suspect?: true } | null;
   /** Sorted by page, then row, then column */
   readonly locations: readonly CouponLocation[];
 }
@@ -52,6 +62,7 @@ export interface CouponSummary {
   /** Crafts of all rows together */
   readonly crafts: number;
   readonly wildCards: number;
+  /** Rows with status `wildcards` */
   readonly readyWithWildCards: number;
   /** Blank coupons (no recipe of their own), not in the rows */
   readonly blanks: number;
@@ -66,14 +77,25 @@ export interface CouponCollection {
 
 type CouponBundle = Pick<StashBundle, 'coupons' | 'couponTiers'>;
 
-/** A stack's count: the materials tab stores stacks, a page item is one coupon. */
-const itemCount = (item: { readonly stackSize: number | null; readonly quantity: number | null }) => item.stackSize ?? item.quantity ?? 1;
+/**
+ * How many coupons an item is: the materials tab stores one stack per code with its count in `stackSize`; a page item
+ * is one coupon (stackable codes such as the Wild Card carry `stackSize` 0 on a page).
+ */
+export function itemCount(tabType: StashTabType, item: { readonly stackSize: number | null }): number {
+  return tabType !== 'normal' && item.stackSize !== null && item.stackSize > 0 ? item.stackSize : 1;
+}
 
 const byLocation = (a: CouponLocation, b: CouponLocation) => a.section - b.section || a.y - b.y || a.x - b.x;
 
-export function couponStatus(have: number, need: number): CouponStatus {
+export function couponStatus(have: number, need: number, readyWithWildCards = false): CouponStatus {
   if (have >= need) return 'ready';
+  if (readyWithWildCards) return 'wildcards';
   return have === need - 1 ? 'almost' : 'other';
+}
+
+/** The Wild Card recipe works now: no craft with coupons alone, enough coupons and Wild Cards, a sound recipe row. */
+function readyWithWildCards(have: number, need: number, recipe: CouponRow['withWildCards'], wildCards: number): boolean {
+  return have < need && recipe !== null && recipe.suspect !== true && have >= recipe.qty && wildCards >= recipe.wildCards;
 }
 
 /** Every coupon code the stash holds at least one of, with its recipe; the Wild Cards are counted for the summary. */
@@ -85,13 +107,14 @@ export function collectCoupons(stash: StashFile, bundle: CouponBundle): CouponCo
     for (const item of section.items) {
       if (!coupons.has(item.code)) continue;
       const entry = found.get(item.code) ?? { count: 0, locations: [] };
-      entry.count += itemCount(item);
+      entry.count += itemCount(section.tabType, item);
       entry.locations.push({ section: section.index, tabType: section.tabType, x: item.x, y: item.y });
       found.set(item.code, entry);
     }
   }
 
-  const wildCardEntry = [...found].find(([code]) => coupons.get(code)?.wildCard === true)?.[1];
+  const wildCardCode = bundle.coupons.find((coupon) => coupon.wildCard === true)?.code;
+  const wildCardEntry = wildCardCode === undefined ? undefined : found.get(wildCardCode);
   const wildCards = wildCardEntry?.count ?? 0;
   const rows: CouponRow[] = [];
   let blanks = 0;
@@ -113,9 +136,8 @@ export function collectCoupons(stash: StashFile, bundle: CouponBundle): CouponCo
       need: coupon.qty,
       have: count,
       crafts,
-      status: couponStatus(count, coupon.qty),
+      status: couponStatus(count, coupon.qty, readyWithWildCards(count, coupon.qty, withWildCards, wildCards)),
       withWildCards,
-      readyWithWildCards: crafts === 0 && withWildCards !== null && count >= withWildCards.qty && wildCards >= withWildCards.wildCards,
       locations: locations.sort(byLocation),
     });
   }
@@ -128,7 +150,7 @@ export function collectCoupons(stash: StashFile, bundle: CouponBundle): CouponCo
       craftable: rows.filter((row) => row.crafts > 0).length,
       crafts: rows.reduce((sum, row) => sum + row.crafts, 0),
       wildCards,
-      readyWithWildCards: rows.filter((row) => row.readyWithWildCards).length,
+      readyWithWildCards: rows.filter((row) => row.status === 'wildcards').length,
       blanks,
     },
     wildCardLocations: (wildCardEntry?.locations ?? []).sort(byLocation),
@@ -140,11 +162,14 @@ export function pageOf(location: Pick<CouponLocation, 'section' | 'tabType'>): n
   return location.tabType === 'normal' ? location.section + 1 : null;
 }
 
-/** "Page 3 · row 2, col 15" (1-based); the materials tab has no page number */
+/**
+ * "Page 3 · row 2, col 15" (1-based). The materials tab is just "Materials tab": its items have no grid cell (their
+ * x / y mostly spell the stack count, x + 16 · y).
+ */
 export function formatLocation(location: CouponLocation): string {
   const page = pageOf(location);
-  const tab = page === null ? 'Materials tab' : `Page ${String(page)}`;
-  return `${tab} · row ${String(location.y + 1)}, col ${String(location.x + 1)}`;
+  if (page === null) return 'Materials tab';
+  return `Page ${String(page)} · row ${String(location.y + 1)}, col ${String(location.x + 1)}`;
 }
 
 /** "2 / 3"; with spare coupons the crafts are shown by the page */
@@ -173,7 +198,7 @@ export interface CouponsState {
 export const DEFAULT_COUPONS_STATE: CouponsState = { search: '', status: 'all', tier: null, page: null, sort: 'status', dir: 'asc' };
 
 const KEYS = { SEARCH: FILTER_URL_PARAM_KEYS.SEARCH, STATUS: 'status', TIER: 'tier', PAGE: 'page', SORT: 'sort', DIR: 'dir' } as const;
-const STATUS_FILTERS: readonly CouponStatusFilter[] = ['all', 'ready', 'almost', 'other'];
+const STATUS_FILTERS: readonly CouponStatusFilter[] = ['all', ...COUPON_STATUSES];
 /** Stash sections 0–999 are pages */
 const MAX_PAGE = 1000;
 
@@ -223,11 +248,7 @@ export function filterCouponRows(rows: readonly CouponRow[], state: Omit<Coupons
 }
 
 /** Ready first, then ready with Wild Cards, one short, the rest */
-const statusRank = (row: CouponRow) => {
-  if (row.status === 'ready') return 0;
-  if (row.readyWithWildCards) return 1;
-  return row.status === 'almost' ? 2 : 3;
-};
+const statusRank = (row: CouponRow) => COUPON_STATUSES.indexOf(row.status);
 
 /** By first location; a row without one (never built) sorts last */
 const compareFirstLocations = (a: CouponRow, b: CouponRow) => {

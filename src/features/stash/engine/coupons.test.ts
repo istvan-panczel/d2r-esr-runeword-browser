@@ -10,6 +10,7 @@ import {
   filterCouponRows,
   formatHaveNeed,
   formatLocation,
+  itemCount,
   readCouponsState,
   sortCouponRows,
   uniquePageUrl,
@@ -109,7 +110,7 @@ describe('collectCoupons', () => {
   it('lists only the coupon codes the stash holds, with counts, crafts and status', () => {
     expect(rows.map((row) => row.code).sort()).toEqual(['01c', '01e', '02c', '03c']);
     expect(rowOf(rows, '01c')).toMatchObject({ have: 6, need: 3, crafts: 2, status: 'ready', tierLabel: 'Normal' });
-    expect(rowOf(rows, '02c')).toMatchObject({ have: 2, crafts: 0, status: 'almost' });
+    expect(rowOf(rows, '02c')).toMatchObject({ have: 2, crafts: 0, status: 'wildcards' });
     expect(rowOf(rows, '01e')).toMatchObject({ have: 2, status: 'almost', tierLabel: 'Elite' });
   });
 
@@ -122,20 +123,41 @@ describe('collectCoupons', () => {
       'Page 3 · row 10, col 10',
       'Page 3 · row 13, col 16',
     ]);
-    expect(rowOf(rows, '02c').locations.map(formatLocation)).toEqual(['Page 1 · row 1, col 2', 'Materials tab · row 1, col 1']);
+    expect(rowOf(rows, '02c').locations.map(formatLocation)).toEqual(['Page 1 · row 1, col 2', 'Materials tab']);
   });
 
   it('marks a row ready with Wild Cards only when the stash has enough of them', () => {
     // 2 Biggin's Bonnet coupons + 1 Wild Card: yes; 2 Measured Wrath + 4 Wild Cards: only 1 owned; Hotspur: no alternative
-    expect(rowOf(rows, '02c').readyWithWildCards).toBe(true);
-    expect(rowOf(rows, '01e').readyWithWildCards).toBe(false);
-    expect(rowOf(rows, '03c').readyWithWildCards).toBe(false);
-    expect(rowOf(rows, '01c').readyWithWildCards).toBe(false);
+    expect(rowOf(rows, '02c').status).toBe('wildcards');
+    expect(rowOf(rows, '01e').status).toBe('almost');
+    expect(rowOf(rows, '03c').status).toBe('almost');
+    expect(rowOf(rows, '01c').status).toBe('ready');
+  });
+
+  it('never counts a suspect Wild Card recipe as ready', () => {
+    const bundle = {
+      ...BUNDLE,
+      coupons: BUNDLE.coupons.map((coupon) =>
+        coupon.code === '02c' ? { ...coupon, withWildCards: { qty: 2, wildCards: 1, suspect: true as const } } : coupon
+      ),
+    };
+    const { rows: suspectRows, summary: suspectSummary } = collectCoupons(STASH, bundle);
+    expect(rowOf(suspectRows, '02c')).toMatchObject({ status: 'almost', withWildCards: { suspect: true } });
+    expect(suspectSummary.readyWithWildCards).toBe(0);
   });
 
   it('summarises the owned coupons, leaving the Wild Card and the blank coupons out of the rows', () => {
     expect(summary).toEqual({ distinct: 4, total: 12, craftable: 1, crafts: 2, wildCards: 1, readyWithWildCards: 1, blanks: 1 });
     expect(wildCardLocations.map(formatLocation)).toEqual(['Page 4 · row 8, col 8']);
+  });
+
+  it('counts a page item as one coupon even when it carries stack size 0 (stackable codes like the Wild Card)', () => {
+    const paged = collectCoupons(stashOf([section(0, [item('99j', 0, 0, 0), item('99j', 1, 0, 0), item('01c', 2, 0, 0)])]), BUNDLE);
+    expect(paged.summary.wildCards).toBe(2);
+    expect(rowOf(paged.rows, '01c').have).toBe(1);
+    expect(itemCount('normal', { stackSize: 0 })).toBe(1);
+    expect(itemCount('advanced', { stackSize: 0 })).toBe(1);
+    expect(itemCount('advanced', { stackSize: 12 })).toBe(12);
   });
 
   it('counts a materials-tab stack by its stack size', () => {
@@ -154,6 +176,12 @@ describe('collectCoupons', () => {
 describe('coupon formatting', () => {
   it('derives the status from have and need', () => {
     expect([couponStatus(4, 3), couponStatus(3, 3), couponStatus(2, 3), couponStatus(1, 3)]).toEqual(['ready', 'ready', 'almost', 'other']);
+    expect([couponStatus(3, 3, true), couponStatus(2, 3, true), couponStatus(1, 3, true)]).toEqual(['ready', 'wildcards', 'wildcards']);
+  });
+
+  it('formats a page cell 1-based and the materials tab without a cell', () => {
+    expect(formatLocation({ section: 9, tabType: 'normal', x: 15, y: 0 })).toBe('Page 10 · row 1, col 16');
+    expect(formatLocation({ section: 1000, tabType: 'advanced', x: 9, y: 4 })).toBe('Materials tab');
   });
 
   it('formats have / need', () => {
@@ -182,7 +210,9 @@ describe('coupon filters and sorting', () => {
 
   it('filters by status, tier and page', () => {
     expect(filter({ status: 'ready' })).toEqual(['01c']);
-    expect(filter({ status: 'almost' })).toEqual(['01e', '02c', '03c']);
+    expect(filter({ status: 'wildcards' })).toEqual(['02c']);
+    expect(filter({ status: 'almost' })).toEqual(['01e', '03c']);
+    expect(filter({ status: 'other' })).toEqual([]);
     expect(filter({ tier: 'cpn3' })).toEqual(['01e']);
     expect(filter({ page: 1 })).toEqual(['01c', '02c']);
     expect(filter({ page: 4 })).toEqual(['03c']);
@@ -211,7 +241,7 @@ describe('coupon filters and sorting', () => {
 
 describe('coupons URL state', () => {
   it('round-trips the state and drops defaults', () => {
-    const state = { search: 'bonnet', status: 'ready', tier: 'cpn1', page: 3, sort: 'have', dir: 'desc' } as const;
+    const state = { search: 'bonnet', status: 'wildcards', tier: 'cpn1', page: 3, sort: 'have', dir: 'desc' } as const;
     expect(readCouponsState(encodeCouponsState(state))).toEqual(state);
     expect(encodeCouponsState(DEFAULT_COUPONS_STATE).toString()).toBe('');
   });
