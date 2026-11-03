@@ -820,11 +820,12 @@ describe('committed game-data bundles', () => {
     ]);
     expect(itemText.lowQuality).toEqual(['Crude', 'Cracked', 'Damaged', 'Low Quality']);
     expect(itemText.superior).toBe('Superior');
-    // skills: every loot-filter skill (class trees and every skill a property names), with the class index
-    expect(itemText.skills.map((skill) => skill.id)).toEqual((lootfilter.skills ?? []).map((skill) => skill.id));
-    expect(itemText.skills.filter((skill) => skill.cls !== undefined)).toHaveLength(
-      (lootfilter.skills ?? []).filter((skill) => skill.cls !== undefined).length
-    );
+    // skills: every loot-filter skill (class trees and every skill a property names) with the class index, plus the
+    // skill ids above 1023 the loot filter leaves out (Long Shot 1555, Delirium Proc 1557)
+    const textSkills = new Map(itemText.skills.map((skill) => [skill.id, skill]));
+    expect((lootfilter.skills ?? []).filter((skill) => textSkills.get(skill.id)?.name !== skill.name)).toEqual([]);
+    expect(itemText.skills.map((skill) => skill.id)).toEqual([...textSkills.keys()].sort((a, b) => a - b));
+    expect([textSkills.get(1555)?.name, textSkills.get(1557)?.name]).toEqual(['Long Shot', 'Delirium Proc']);
     expect(itemText.classes.map((cls) => cls.name.slice(0, 3).toLowerCase())).toEqual([...CLASS_CODES]);
     expect(itemText.monsters.filter((name) => name !== null)).toHaveLength(manifest.counts.itemTextMonsters ?? -1);
     // lazy and small: fetched only by /stash/items

@@ -43,6 +43,7 @@ const STATS: Record<number, ItemTextStatDef> = {
   21: { stat: 'mindamage', descpriority: 127, descfunc: 19, descstrpos: 'ModStr1g' },
   22: { stat: 'maxdamage', descpriority: 126, descfunc: 19, descstrpos: 'ModStr1f' },
   23: { stat: 'secondary_mindamage', descpriority: 124, descfunc: 19, descstrpos: 'ModStr1g' },
+  24: { stat: 'secondary_maxdamage', descpriority: 123, descfunc: 19, descstrpos: 'ModStr1f' },
   31: { stat: 'armorclass', descpriority: 71, descfunc: 19, descstrpos: 'ModStr1i' },
   39: { stat: 'fireresist', descpriority: 36, descfunc: 19, descstrpos: 'ModStr1j', ...dgrp(2, 'strModAllResistances') },
   41: { stat: 'lightresist', descpriority: 38, descfunc: 19, descstrpos: 'ModStr1l', ...dgrp(2, 'strModAllResistances') },
@@ -53,6 +54,8 @@ const STATS: Record<number, ItemTextStatDef> = {
   54: { stat: 'coldmindam', descpriority: 96, descfunc: 19, descstrpos: 'ModStr1t' },
   55: { stat: 'coldmaxdam', descpriority: 95, descfunc: 19, descstrpos: 'ModStr1s' },
   56: { stat: 'coldlength' },
+  52: { stat: 'magicmindam', descpriority: 104, descfunc: 19, descstrpos: 'strModMagicDamageMin', ...dgrp(15, 'strModMagicDamage') },
+  53: { stat: 'magicmaxdam', descpriority: 103, descfunc: 19, descstrpos: 'strModMagicDamageMax', ...dgrp(15, 'strModMagicDamage') },
   57: { stat: 'poisonmindam', descpriority: 92, descfunc: 19, descstrpos: 'ModStr4i' },
   58: { stat: 'poisonmaxdam', descpriority: 91, descfunc: 19, descstrpos: 'ModStr4h' },
   59: { stat: 'poisonlength' },
@@ -112,6 +115,10 @@ const STRINGS: Record<string, string> = {
   strModFireDamageRange: 'Adds %d-%d Fire Damage to Attacks',
   strModMinDamageRange: 'Adds %d-%d Damage to Attacks',
   strModPoisonDamageRange: 'Adds %d-%d Poison Damage to Attacks over %d seconds',
+  strModMagicDamage: '%+d Magic Damage to Attacks',
+  strModMagicDamageMin: '%+d Minimum Magic Damage to Attacks',
+  strModMagicDamageMax: '%+d Maximum Magic Damage to Attacks',
+  strModMagicDamageRange: 'Adds %d-%d Magic Damage to Attacks',
 };
 
 const cls = (name: string, tabs: [string, string, string]) => ({
@@ -128,6 +135,8 @@ const BUNDLE: ItemTextBundle = {
     { id: 9, name: 'Critical Strike', cls: 0 },
     { id: 36, name: 'Fire Bolt', cls: 1 },
     { id: 54, name: 'Teleport', cls: 1 },
+    { id: 1555, name: 'Long Shot' },
+    { id: 1557, name: 'Delirium Proc' },
   ],
   classes: [
     cls('Amazon', ['%+d to Bow and Crossbow Skills', '%+d to Passive and Magic Skills', '%+d to Javelin and Spear Skills']),
@@ -187,9 +196,11 @@ describe('renderItemText from saved stats', () => {
     expect(lines(s(17, 100), s(18, 100))).toEqual(['+100% Enhanced Damage']);
   });
 
-  it('drops the secondary (two-hand) damage that repeats the primary', () => {
+  it('folds the secondary (two-hand) damage into min / max damage, once per stat list', () => {
+    // a list with both stores one property twice
     expect(lines(s(21, 10), s(23, 10))).toEqual(['+10 to Minimum Damage to Attacks']);
-    expect(lines(s(23, 10))).toEqual(['+10 to Minimum Damage to Attacks']);
+    // a two-hander stores it as secondary only
+    expect(lines(s(23, 10), s(24, 20))).toEqual(['+10 to Minimum Damage to Attacks', '+20 to Maximum Damage to Attacks']);
   });
 
   it('unpacks event skills, charges, skill tabs, class skills and single skills', () => {
@@ -203,6 +214,9 @@ describe('renderItemText from saved stats', () => {
     expect(lines(s(107, 3, 9))).toEqual(['+3 to Critical Strike (Amazon Only)']);
     // random class skills keep other bits above the 16-bit layer
     expect(lines(s(107, 2, 0x277c0000 | 36))).toEqual(['+2 to Fire Bolt (Sorceress Only)']);
+    // event and charged params use all their bits: skill ids above 1023
+    expect(lines(s(198, 5, (1555 << 6) | 20))).toEqual(['5% Chance to Cast Level 20 Long Shot on Striking']);
+    expect(lines(s(204, (5 << 8) | 5, (1557 << 6) | 1))).toEqual(['Level 1 Delirium Proc (5/5 Charges)']);
   });
 
   it('writes per-level stats as fractions, hides descfunc 0 stats, keeps multi-line texts and unknown stats visible', () => {
@@ -292,6 +306,24 @@ describe('statValues', () => {
       value: 7,
     });
     expect(value(list, 's204.54')).toMatchObject({ label: 'Level # Teleport (Charges)', value: 3 });
+    const high = values(s(198, 5, (1555 << 6) | 20), s(204, (5 << 8) | 5, (1557 << 6) | 1));
+    expect(value(high, 's198.1555')).toMatchObject({ param: 1555, paramLabel: 'Long Shot', value: 20 });
+    expect(value(high, 's204.1557')).toMatchObject({ param: 1557, paramLabel: 'Delirium Proc', value: 1 });
+  });
+
+  it("adds a socketed jewel's max damage to a two-hander's secondary max damage, also in g.dmg-phys", () => {
+    const item = makeItem('cap', { stats: [s(23, 10), s(24, 20)], socketed: [makeItem('jew', { stats: [s(22, 5)] })] });
+    const list = statValues(item, ctx);
+    expect(value(list, 's21')?.value).toBe(10);
+    expect(value(list, 's22')?.value).toBe(25);
+    expect(value(list, 's23')).toBeUndefined();
+    expect(value(list, 'g.dmg-phys')).toMatchObject({ label: 'Adds #-# Damage to Attacks', value: 25, range: { min: 10, max: 25 } });
+  });
+
+  it('has no dgrp entry that repeats a damage range (magic damage: g.dmg-magic only)', () => {
+    const list = values(s(52, 5), s(53, 9));
+    expect(list.map((entry) => entry.key)).toEqual(['s52', 's53', 'g.dmg-magic']);
+    expect(value(list, 'g.dmg-magic')).toMatchObject({ label: 'Adds #-# Magic Damage to Attacks', range: { min: 5, max: 9 } });
   });
 
   it('adds group entries when every member is there: dgrp sets (smallest value), damage ranges, enhanced damage', () => {

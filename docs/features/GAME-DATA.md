@@ -73,7 +73,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                                  |
 | `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                                  |
 | `stash.json`        | ESR 3.2.24: 437 KB / 71 KB (143 KB / 21 KB before the All items names; 88 KB / 14 KB before the coupon recipes and bases) |
-| `itemtext.json`     | ESR 3.2.24: 212 KB / 38 KB (monsters, i.e. ESR's mythical description texts: 14 KB of the gzip)                           |
+| `itemtext.json`     | ESR 3.2.24: 218 KB / 39 KB (monsters, i.e. ESR's mythical description texts: 14 KB of the gzip)                           |
 | `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                                         |
 
 ### Bases and types
@@ -649,8 +649,10 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `strings`: the texts of every description key of those stats, renderLines' own keys (damage ranges, enhanced
   damage) and the physical / magic range labels of the stat filters. ESR 3.2.24 references four keys no string table
   has (`MaxMagDmgPerLvl`, `ModStr3kSum`, `ModStr3u2`, `ModStrMagMastery`; warnings), drawn as the key.
-- `skills`: `{ id, name, cls? }` for the lootfilter.json skills (every class tree skill and every skill a game-data
-  property names) plus every class skill; `classes`: the charstats.txt class strings (all skills, tabs, "(X Only)").
+- `skills`: `{ id, name, cls? }` for the lootfilter.json skills (the class trees and the skills a property names),
+  every class skill, and every skill a skill / event / charged property or a random class skill range names, read from
+  the property lists directly: lootfilter.json leaves out ids above 1023 (the plugin's layer encoding cannot hold them),
+  a save stores them (Long Shot 1555, Delirium Proc 1557); `classes`: the charstats.txt class strings (all skills, tabs, "(X Only)").
 - `monsters`: monstats.txt `NameStr` texts by monster id (the row without the Expansion row, = `hcIdx`), only for the
   ids a descfunc 23 property names (ESR's mythical descriptions, reanimate), collected from the same property lists as
   the loot-filter skills (affixes, uniques, set items, runewords, cube outputs, set bonuses, property groups); null
@@ -665,7 +667,7 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `setBonusPieces`: set items whose aprop groups are not 2, 3, 4… pieces, by setitems.txt row: the pieces of each
   bonus list a save stores (the k-th list is the k-th non-empty group). ESR 3.2.24: one (row 17: 2, 4).
 
-Counts (ESR 3.2.24): `itemTextStats` 666, `itemTextStrings` 388, `itemTextSkills` 752, `itemTextMonsters` 393,
+Counts (ESR 3.2.24): `itemTextStats` 666, `itemTextStrings` 388, `itemTextSkills` 897, `itemTextMonsters` 393,
 `itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
 
 ### Skills

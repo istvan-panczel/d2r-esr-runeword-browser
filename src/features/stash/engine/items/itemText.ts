@@ -12,7 +12,7 @@ import type { ItemTextBundle } from '@/features/game-data/engine/schema';
 import { renderLines } from '@/features/game-data/engine/stats/renderLines';
 import type { StashItem, StashStat } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
-import { createTextData, STAT_ID, toEntries, type TextData } from './textData';
+import { createTextData, foldSecondary, STAT_ID, toEntries, type TextData } from './textData';
 import { itemStatValues } from './statValues';
 
 /** Affix and rare names by the ids a save stores (`StashItem.prefixIds` …); null for 0 or an unknown id */
@@ -136,9 +136,14 @@ export function createItemTextContext(bundle: ItemTextBundle | null, catalog: St
   return ctx;
 }
 
-/** The stats that count for an item's tooltip totals: its own, its runeword's and those of the jewels in its sockets */
+/**
+ * The stats that count for an item's tooltip totals: its own, its runeword's and those of the jewels in its sockets,
+ * each list with its two-hand damage folded into min / max damage (textData.ts `foldSecondary`)
+ */
 export function totalStats(item: StashItem): StashStat[] {
-  return [...item.stats, ...item.runewordStats, ...item.socketed.filter((child) => !child.compact).flatMap((child) => child.stats)];
+  return [item.stats, item.runewordStats, ...item.socketed.filter((child) => !child.compact).map((child) => child.stats)].flatMap(
+    foldSecondary
+  );
 }
 
 function sumOf(stats: readonly StashStat[], id: number): number {
@@ -156,6 +161,8 @@ function baseLines(item: StashItem, withStats: boolean): string[] {
     const defense = Math.floor((item.defense * (100 + sumOf(stats, STAT_ID.armorPercent))) / 100) + sumOf(stats, STAT_ID.armorClass);
     lines.push(`Defense: ${String(defense)}`);
   }
+  // Max durability as saved: whether the tooltip adds item_maxdurability_percent (op 13) is unverified (no fixture
+  // item has it), so it is not applied
   if (item.maxDurability !== null) {
     lines.push(
       item.maxDurability === 0 ? 'Indestructible' : `Durability: ${String(item.durability ?? 0)} of ${String(item.maxDurability)}`

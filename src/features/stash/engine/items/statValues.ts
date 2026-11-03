@@ -203,15 +203,12 @@ function poisonTotal(statId: number, raw: number, accs: ReadonlyMap<string, Acc>
 
 /** The stat values of a list of saved stats (an item's own + runeword + socketed jewel stats). */
 export function itemStatValues(stats: readonly StashStat[], data: TextData): StatValue[] {
-  const present = new Set(stats.map((stat) => stat.id));
   const accs = new Map<string, Acc>();
   // lengths (coldlength, poisonlength) are hidden, but poison totals need them
   const lengths = new Map<string, Acc>();
   for (const stat of stats) {
     const def = data.defs[stat.id];
     if (def === undefined) continue;
-    if (stat.id === STAT_ID.secondaryMinDamage && present.has(STAT_ID.minDamage)) continue;
-    if (stat.id === STAT_ID.secondaryMaxDamage && present.has(STAT_ID.maxDamage)) continue;
     if (def.descfunc === 0) {
       if (def.stat.endsWith('length')) {
         const key = `s${String(stat.id)}`;
@@ -264,6 +261,9 @@ export function itemStatValues(stats: readonly StashStat[], data: TextData): Sta
   const single = (id: number) => values.get(`s${String(id)}`);
 
   for (const set of data.dgrpSets) {
+    // ESR's magic damage dgrp (strModMagicDamage) is the magic min / max pair: g.dmg-magic covers it
+    if (DAMAGE_GROUPS.some((damage) => set.members.length === 2 && set.members.includes(damage.min) && set.members.includes(damage.max)))
+      continue;
     const members = set.members.flatMap((id) => {
       const member = single(id);
       return member === undefined ? [] : [member];

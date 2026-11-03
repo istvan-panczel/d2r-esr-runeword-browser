@@ -80,7 +80,10 @@ export interface StashItem {
   qualityVariant: number | null;
   /** Variable graphics index (rings, amulets, charms, jewels …), null when the item has none */
   gfx: number | null;
-  /** Armor class as saved minus Save Add (the base defense the item rolled, before its +defense stats); null for non-armor */
+  /**
+   * Armor class as saved minus Save Add: the base defense the item rolled, ethereal ×1.5 already included, before its
+   * enhanced defense % and + defense stats; null for non-armor
+   */
   defense: number | null;
   /** Current durability; null without (non-gear, or an indestructible item: max durability 0) */
   durability: number | null;

@@ -16,6 +16,7 @@
  */
 import type { ItemTextBundle, ItemTextStatDef } from '../engine/schema.ts';
 import { RENDER_LINES_STRINGS } from '../engine/stats/renderLines.ts';
+import { statLayerKind } from '../engine/statLayers.ts';
 import type { BuildResult } from './bundleTypes.ts';
 import { createSkillLookup } from './stats/skills.ts';
 import type { StatTables } from './stats/tables.ts';
@@ -38,13 +39,13 @@ export interface ItemTextInput {
   setitems: TsvTable;
   /** build/stats/statRenderer.ts `readStatTables` (monstats without its Expansion row: the row is the monster id) */
   statTables: StatTables;
-  /**
-   * The skill ids a saved stat can name besides the class skills: every skill a property names (lootfilter.json
-   * `skills`)
-   */
+  /** Skill ids to list besides the class skills and the skills `mods` name (lootfilter.json `skills`: the class trees) */
   skillIds: Iterable<number>;
-  /** Every property list the game data puts on items: the monster params of descfunc 23 stats are collected from it */
-  mods: readonly ItemTextMod[];
+  /**
+   * Every property list the game data puts on items: the skills of the skill / event / charged stats and the monster
+   * params of descfunc 23 stats are collected from it
+   */
+  mods: readonly (ItemTextMod & { min?: number; max?: number })[];
 }
 
 /** Vanilla raresuffix.txt `name` keys in file order: rare name ids 1-155 */
@@ -152,6 +153,21 @@ export function buildItemTextBundle(input: ItemTextInput, strings: ReadonlyMap<s
   input.statTables.skills.forEach((row, id) => {
     if (row.charclass !== '' && lookup.classIndex(row.charclass) !== null) ids.add(id);
   });
+  // The skills a property puts on items, by name or id: lootfilter.json leaves out ids above 1023 (the plugin's
+  // layer encoding cannot hold them), but a save stores them (event / charged params are `skill << 6 | level` in 32
+  // bits: Long Shot 1555, Delirium Proc 1557)
+  for (const mod of input.mods) {
+    for (const slot of input.statTables.properties.get(mod.code)?.slots ?? []) {
+      const kind = statLayerKind(slot.stat);
+      if (slot.func === 12 && mod.min !== undefined && mod.max !== undefined) {
+        // random class skill: min-max is the skill id range
+        for (let id = mod.min; id <= mod.max && id - mod.min < 400; id++) ids.add(id);
+      } else if ((kind === 'skill' || kind === 'event' || kind === 'charged') && mod.param !== null) {
+        const id = lookup.skillId(mod.param);
+        if (id !== null) ids.add(id);
+      }
+    }
+  }
   const skills = [...ids]
     .sort((a, b) => a - b)
     .flatMap((id) => {

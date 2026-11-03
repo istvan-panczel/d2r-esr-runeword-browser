@@ -4,7 +4,8 @@
  *
  * Saved stats differ from the generator's property entries (game-data/build/stats/expandProperty.ts):
  *
- * - event skills (descfunc 15): param `skill << 6 | level`, value = chance → entry { param: skill, min: chance, max: level }
+ * - event skills (descfunc 15): param `skill << 6 | level` (the full saved param: skill ids go above 1023, Long
+ *   Shot 1555), value = chance → entry { param: skill, min: chance, max: level }
  * - charges (descfunc 24): param `skill << 6 | level`, value `max << 8 | charges` → a pre-rendered "(charges/max Charges)"
  *   line (the renderer writes charges/charges for game data)
  * - skill tabs (descfunc 14): param `class << 3 | tab` → the properties.txt tab number `class * 3 + tab`
@@ -14,8 +15,10 @@
  *   `2^op param` fraction (the renderer divides)
  * - `coldlength` is left out: the tooltip writes "Adds 10-20 Cold Damage" without the duration (the generator's docs
  *   style appends one)
- * - `secondary_mindamage` / `secondary_maxdamage` repeat `mindamage` / `maxdamage` (two-hand damage of the same
- *   property): dropped when the primary stat is there, like the game's tooltip
+ * - `secondary_mindamage` / `secondary_maxdamage` (two-hand damage): a two-hander stores its + min / max damage
+ *   there instead of in `mindamage` / `maxdamage`; a list with both stores the same property twice. `foldSecondary`
+ *   turns the secondary stat into the primary one when the list lacks it and drops it otherwise, per stat list, so a
+ *   socketed jewel's `maxdamage` adds up with a two-hander's `secondary_maxdamage`
  */
 import type { ItemTextBundle } from '@/features/game-data/engine/schema';
 import { sprintf } from '@/features/game-data/engine/stats/sprintf';
@@ -148,10 +151,26 @@ export function layerOf(param: number): number {
   return param & 0xffff;
 }
 
-/** Event / charged param → skill id + level */
+/**
+ * Event / charged param (`skill << 6 | level`) → skill id + level, from the full saved param: ESR saves skill ids above
+ * 1023 (Delirium's `item_skillonattack_hidden` 0x18541 = Delirium Proc 1557, level 1), which do not fit a 16-bit layer
+ */
 export function skillLevel(param: number): { skill: number; level: number } {
-  const layer = layerOf(param);
-  return { skill: layer >> 6, level: layer & 63 };
+  return { skill: param >>> 6, level: param & 63 };
+}
+
+/** One stat list with `secondary_mindamage` / `maxdamage` folded into `mindamage` / `maxdamage` (see the header) */
+export function foldSecondary(stats: readonly StashStat[]): StashStat[] {
+  const present = new Set(stats.map((stat) => stat.id));
+  const primary = new Map<number, number>([
+    [STAT_ID.secondaryMinDamage, STAT_ID.minDamage],
+    [STAT_ID.secondaryMaxDamage, STAT_ID.maxDamage],
+  ]);
+  return stats.flatMap((stat) => {
+    const id = primary.get(stat.id);
+    if (id === undefined) return [stat];
+    return present.has(id) ? [] : [{ ...stat, id }];
+  });
 }
 
 /** Saved skill tab param (`class << 3 | tab`) → the properties.txt tab number the renderer reads (`class * 3 + tab`) */
@@ -178,16 +197,13 @@ export function chargesText(stat: StashStat, def: StatDef, data: TextData): stri
  * `unknownStatText`).
  */
 export function toEntries(stats: readonly StashStat[], data: TextData): StatEntry[] {
-  const present = new Set(stats.map((stat) => stat.id));
   const entries: StatEntry[] = [];
-  for (const stat of stats) {
+  for (const stat of foldSecondary(stats)) {
     const def = data.defs[stat.id];
     if (def === undefined) {
       entries.push({ stat: '', param: '', min: 0, max: 0, text: unknownStatText(stat) });
       continue;
     }
-    if (stat.id === STAT_ID.secondaryMinDamage && present.has(STAT_ID.minDamage)) continue;
-    if (stat.id === STAT_ID.secondaryMaxDamage && present.has(STAT_ID.maxDamage)) continue;
     if (stat.id === STAT_ID.coldLength) continue;
     switch (def.descfunc) {
       case 15: {
