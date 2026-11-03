@@ -9,6 +9,7 @@ import {
   STASH_ITEM_FLAGS,
   type StashBundle,
   type StashCoupon,
+  type StashCouponBase,
   type StashCouponTier,
   type StashCouponUnique,
   type StashItemInfo,
@@ -17,6 +18,7 @@ import {
 import type { BuildResult } from './bundleTypes.ts';
 import { isAncientCouponName, readCouponRecipes } from './coupons.ts';
 import { resolveName } from './itemNames.ts';
+import { gearTier, type FamilyTier } from './tiers.ts';
 import type { TsvTable } from './tsv.ts';
 
 export interface StashInput {
@@ -35,28 +37,19 @@ export interface StashInput {
 /** inventory.txt row of the shared stash page (the expansion "Big Bank"; "Bank Page 1" is the classic one) */
 const STASH_PAGE_ROW = 'Big Bank Page 1';
 const WILD_CARD_NAME = 'Coupon Wild Card';
-/** itemtypes.txt names the coupon types "Coupon norm", "Coupon excep", "Coupon elite" */
-const TIER_LABELS: Readonly<Record<string, string>> = { norm: 'Normal', excep: 'Exceptional', elite: 'Elite' };
-
-function tierLabel(itemTypeName: string): string {
-  const suffix = itemTypeName
-    .replace(/^Coupon\s+/i, '')
-    .trim()
-    .toLowerCase();
-  return TIER_LABELS[suffix] ?? itemTypeName;
-}
-
 /**
  * The first uniqueitems.txt row of each `index` with a base code (what a cube output ref resolves to); `named` is false
  * when the string table has no name for the index (the name is then the index itself).
  */
-function uniquesByIndex(uniqueitems: TsvTable, strings: ReadonlyMap<string, string>): Map<string, StashCouponUnique & { named: boolean }> {
-  const byIndex = new Map<string, StashCouponUnique & { named: boolean }>();
+type UniqueRef = StashCouponUnique & { named: boolean; code: string };
+
+function uniquesByIndex(uniqueitems: TsvTable, strings: ReadonlyMap<string, string>): Map<string, UniqueRef> {
+  const byIndex = new Map<string, UniqueRef>();
   uniqueitems.rows.forEach((row, id) => {
     const index = row.str('index');
     if (index === '' || row.str('code') === '' || byIndex.has(index)) return;
     const name = resolveName(strings, index, '');
-    byIndex.set(index, { id, name: name === '' ? index : name, named: name !== '' });
+    byIndex.set(index, { id, name: name === '' ? index : name, named: name !== '', code: row.str('code') });
   });
   return byIndex;
 }
@@ -66,6 +59,18 @@ export function uniqueNameOfCoupon(couponName: string): string | null {
   const inner = /\(([^()]*)\)\s*$/.exec(couponName)?.[1];
   const name = inner?.split(',').at(-1)?.trim() ?? '';
   return name === '' ? null : name;
+}
+
+/** The most frequent value (the first one on a tie), null for none. */
+function mostCommon<T>(values: readonly T[]): T | null {
+  const counts = new Map<T, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  let best: T | null = null;
+  let bestCount = 0;
+  for (const [value, count] of counts) {
+    if (count > bestCount) [best, bestCount] = [value, count];
+  }
+  return best;
 }
 
 /** Every type code that is `root` or descends from it through Equiv1 / Equiv2. */
@@ -108,6 +113,8 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
   // Like the game, only the `type` column decides (not `type2`)
   const items: StashItemInfo[] = [];
   const seen = new Set<string>();
+  /** Base name, type and tier by code, for the coupon uniques' bases */
+  const bases = new Map<string, StashCouponBase & { tier: FamilyTier | undefined }>();
   for (const table of [input.weapons, input.armor, input.misc]) {
     for (const row of table.rows) {
       const code = row.str('code');
@@ -123,6 +130,14 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
       if (kinds.scroll.has(type) || kinds.book.has(type)) flags |= STASH_ITEM_FLAGS.scrollOrBook;
       if (row.num('quest') !== 0 && row.has('questdiffcheck') && row.num('questdiffcheck') !== 0) flags |= STASH_ITEM_FLAGS.questDifficulty;
       items.push([code, flags, row.num('invwidth'), row.num('invheight')]);
+      const tier =
+        table === input.misc ? undefined : gearTier(code, row.str('normcode'), row.str('ubercode'), row.str('ultracode'), row.num('level'));
+      bases.set(code, {
+        code,
+        name: resolveName(strings, row.str('namestr'), row.str('name')),
+        type,
+        tier: tier === 'mythical' ? undefined : tier,
+      });
     }
   }
 
@@ -161,6 +176,9 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
             `stash: unique "${unique.name}" (row ${String(unique.id)}) has no string; named "${fallback}" after coupon ${code}`
           );
         coupon.unique = { id: unique.id, name: fallback ?? unique.name };
+        const base = bases.get(unique.code);
+        if (base === undefined) warnings.push(`stash: coupon ${code} unique "${unique.name}" has unknown base "${unique.code}"`);
+        else coupon.base = { code: base.code, name: base.name, type: base.type };
         coupon.qty = recipe.qty;
         const alternative =
           codeRecipes.find((other) => other.wildCards > 0 && other.output === recipe.output) ??
@@ -184,11 +202,16 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
   }
 
   const typeNames = new Map(input.itemtypes.rows.map((row) => [row.str('Code'), row.str('ItemType')]));
-  const couponTiers: StashCouponTier[] = [...couponTypes].sort().map((type) => ({
-    type,
-    label: tierLabel(typeNames.get(type) ?? type),
-    wildCardFrom: recipes.wildCardFrom.get(type) ?? null,
-  }));
+  const couponTiers: StashCouponTier[] = [...couponTypes].sort().map((type) => {
+    const baseTiers = coupons.flatMap((coupon) => {
+      const tier = coupon.type === type && coupon.base !== undefined ? bases.get(coupon.base.code)?.tier : undefined;
+      return tier === undefined ? [] : [{ code: coupon.code, tier }];
+    });
+    const tier = mostCommon(baseTiers.map((entry) => entry.tier));
+    const others = baseTiers.filter((entry) => entry.tier !== tier).map((entry) => `${entry.code} (${entry.tier})`);
+    if (others.length > 0) warnings.push(`stash: ${type} coupons whose base is not ${String(tier)}: ${others.join(', ')}`);
+    return { type, name: typeNames.get(type) ?? type, tier, wildCardFrom: recipes.wildCardFrom.get(type) ?? null };
+  });
 
   const page = input.inventory.rows.find((row) => row.str('class') === STASH_PAGE_ROW);
   if (page === undefined) warnings.push(`stash: inventory.txt has no "${STASH_PAGE_ROW}" row; the grid defaults to 16 × 13`);

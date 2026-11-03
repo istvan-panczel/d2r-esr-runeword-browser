@@ -71,7 +71,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                       |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                       |
 | `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                       |
-| `stash.json`        | ESR 3.2.24: 122 KB / 18 KB (88 KB / 14 KB before the coupon recipes)           |
+| `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (88 KB / 14 KB before the coupon recipes and bases) |
 | `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)              |
 
 ### Bases and types
@@ -594,12 +594,18 @@ without length prefixes, so the parser needs every width:
   Azurewrath of coupon `24f`), is named after the unique in its coupon's name, with a warning) and gives `qty`; a row with the same code plus Wild Cards (`"01c,qty=2"` +
   `99j` / `"99j,qty=2"` / `"99j,qty=4"`) gives `withWildCards: { qty, wildCards }`, plus `suspect: true` when the row's
   `numinputs` differs from its item count (the game would most likely never match it). Rerolls (a `rnd` input) and rows
-  whose output is an input are skipped. The three blank coupons (`96j`–`98j`) have no recipe and no `unique`.
-- `couponTiers`: one entry per coupon type (`cpn1`, `cpn2`, `cpn3`), labelled from the itemtypes.txt name ("Coupon
-  norm" → Normal, "excep" → Exceptional, "elite" → Elite) with `wildCardFrom`, the coupons of that tier (any codes)
-  the cube turns into one Wild Card (8 / 4 / 2).
+  whose output is an input are skipped. The three blank coupons (`96j`–`98j`) have no recipe and no `unique`. With
+  `unique` comes `base: { code, name, type }`: the unique's base item (uniqueitems.txt `code`), its string-table name
+  and its weapons / armor / misc `type`; the page resolves the type's name and ancestors from types.json (the item
+  type search: "belt" finds the Sash and the Mithril Coil).
+- `couponTiers`: one entry per coupon type (`cpn1`, `cpn2`, `cpn3`) with its itemtypes.txt `name` ("Coupon norm"),
+  `tier`, the most common base tier of the uniques its coupons make (the tiers.json rule, `gearTier`: normal /
+  exceptional / elite, null for a type whose bases have none), and `wildCardFrom`, the coupons of that tier (any
+  codes) the cube turns into one Wild Card (8 / 4 / 2). ESR 3.2.24: one elite coupon is on an exceptional base, `44e`
+  Measured Wrath (Burnt Text), the same coupon that takes 2 Wild Cards instead of 4 (a warning).
 
-Warnings: no Wild Card row, a coupon with two coupon-only recipes, an output that is no unique, and a recipe whose
+Warnings: no Wild Card row, a coupon with two coupon-only recipes, an output that is no unique, an unknown base, a coupon
+whose base tier differs from its type's, and a recipe whose
 `numinputs` differs from its item count (ESR 3.2.24: `06j`, Bul-Kathos' Wedding Band, line 8194: `numinputs` 4 for 2
 coupons + 4 Wild Cards, so the Wild Card recipe may not work in game).
 

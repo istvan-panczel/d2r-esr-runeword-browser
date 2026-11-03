@@ -6,7 +6,20 @@ import { parseTsv } from './tsv.ts';
 
 const tsv = (rows: string[][]) => parseTsv(rows.map((row) => row.join('\t')).join('\n'), 'test', { keepExpansionRows: true });
 
-const ITEM_HEADER = ['name', 'namestr', 'code', 'type', 'invwidth', 'invheight', 'quest', 'questdiffcheck'];
+const ITEM_HEADER = [
+  'name',
+  'namestr',
+  'code',
+  'type',
+  'invwidth',
+  'invheight',
+  'quest',
+  'questdiffcheck',
+  'normcode',
+  'ubercode',
+  'ultracode',
+  'level',
+];
 
 describe('buildStashBundle', () => {
   const { bundle, warnings } = buildStashBundle(
@@ -33,8 +46,12 @@ describe('buildStashBundle', () => {
         ['Coupon norm', 'cpn1', 'coup', ''],
         ['Coupon elite', 'cpn3', 'coup', ''],
       ]),
-      weapons: tsv([ITEM_HEADER, ['Short Bow', 'sbw', 'sbw', 'bow', '2', '3', '0', '0']]),
-      armor: tsv([ITEM_HEADER, ['Cap', 'cap', 'cap', 'helm', '2', '2', '0', '0']]),
+      weapons: tsv([
+        ITEM_HEADER,
+        ['Short Bow', 'sbw', 'sbw', 'bow', '2', '3', '0', '0'],
+        ['Crystal Sword', 'crs', 'crs', 'swor', '2', '3', '0', '0', 'crs', 'dcs', 'frs', '11'],
+      ]),
+      armor: tsv([ITEM_HEADER, ['Cap', 'cap', 'cap', 'helm', '2', '2', '0', '0', 'cap', 'xap', 'uap', '1']]),
       misc: tsv([
         ITEM_HEADER,
         ['Small Charm', 'cm1', 'cm1', 'scha', '1', '1', '0', '0'],
@@ -106,6 +123,7 @@ describe('buildStashBundle', () => {
         name: "Ancient Coupon (Cap, Biggin's Bonnet)",
         type: 'cpn1',
         unique: { id: 1, name: "Biggin's Bonnet" },
+        base: { code: 'cap', name: 'Cap', type: 'helm' },
         qty: 3,
         withWildCards: { qty: 2, wildCards: 1 },
       },
@@ -114,6 +132,7 @@ describe('buildStashBundle', () => {
         name: 'Ancient Coupon (Crystal Sword, Azurewrath)',
         type: 'cpn1',
         unique: { id: 3, name: 'Azurewrath' },
+        base: { code: 'crs', name: 'Crystal Sword', type: 'swor' },
         qty: 3,
         withWildCards: { qty: 2, wildCards: 4, suspect: true },
       },
@@ -124,10 +143,11 @@ describe('buildStashBundle', () => {
     expect(bundle.grid).toEqual({ width: 16, height: 13 });
   });
 
-  it('labels the coupon tiers and reads how many coupons of a tier make a Wild Card', () => {
+  it('gives each coupon tier the base tier of its uniques and how many coupons of it make a Wild Card', () => {
+    // cpn1: Cap and Crystal Sword are Normal bases; cpn3 makes no unique with a tiered base here
     expect(bundle.couponTiers).toEqual([
-      { type: 'cpn1', label: 'Normal', wildCardFrom: 8 },
-      { type: 'cpn3', label: 'Elite', wildCardFrom: 2 },
+      { type: 'cpn1', name: 'Coupon norm', tier: 'normal', wildCardFrom: 8 },
+      { type: 'cpn3', name: 'Coupon elite', tier: null, wildCardFrom: 2 },
     ]);
   });
 

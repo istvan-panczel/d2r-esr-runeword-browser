@@ -1030,6 +1030,8 @@ export interface StashCoupon {
   wildCard?: true;
   /** The coupon unique its cube recipe makes; absent for the Wild Card and the blank coupons (no recipe) */
   unique?: StashCouponUnique;
+  /** The unique's base item (uniqueitems.txt `code`); set with `unique` when the code is a known item */
+  base?: StashCouponBase;
   /** Coupons of this code the recipe takes ("01c,qty=3" → 3); set with `unique` */
   qty?: number;
   /** The alternative recipe: fewer coupons of this code plus Coupon Wild Cards ("02c,qty=2" + "99j,qty=2") */
@@ -1048,12 +1050,26 @@ export interface StashCouponUnique {
   name: string;
 }
 
+export interface StashCouponBase {
+  /** Item code ("vbl") */
+  code: string;
+  /** String-table name ("Light Belt") */
+  name: string;
+  /** Item type code (`type` column, "belt"); its names and ancestors are in types.json */
+  type: string;
+}
+
 /** A coupon tier: the misc.txt item type of its coupons (itemtypes.txt "Coupon norm" …) */
 export interface StashCouponTier {
   /** Item type code (cpn1, cpn2, cpn3) */
   type: string;
-  /** Normal, Exceptional, Elite (from the itemtypes.txt name; the raw name when it is not one of these) */
-  label: string;
+  /** itemtypes.txt name ("Coupon norm"), the label when `tier` is null */
+  name: string;
+  /**
+   * The base tier of the uniques this type's coupons make (weapons.txt / armor.txt tier families, as in tiers.json): the
+   * most common one, null when none of the bases has a tier (rings, amulets)
+   */
+  tier: 'normal' | 'exceptional' | 'elite' | null;
   /** Coupons of this tier (any codes) the cube turns into one Wild Card; null when no recipe does */
   wildCardFrom: number | null;
 }
