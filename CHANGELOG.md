@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.50.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.49.0...v1.50.0) (2026-11-03)
+
+### Features
+
+* **game-data:** add item, unique, set item and runeword names to stash.json ([3166bfc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3166bfce6469414d0870432186e7368cadcf0f62))
+* **game-data:** add the lazy itemtext.json bundle for the stash item text ([400bf21](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/400bf21d8c480f759dbf014555dae76a5bbd2350))
+* **stash:** add socket filler bonuses, weapon damage and requirement lines ([bc513ef](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bc513efd8468888ed737cfa69c7b300dcdfed5cd))
+* **stash:** add the All Items page with table, tooltip cards, filters and stat filters ([fa818b7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fa818b758ac2c1c31421f384e0a849b6e13f72b8))
+* **stash:** add the All Items route stub, nav entry and the contracts doc ([29891e6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/29891e6a42aaef5e9c482cc14b61371f9bf2d2a8))
+* **stash:** add the All Items rows, search, stat conditions, filters and sort ([7e4afb2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7e4afb210f6e09fbddd907b0fe8e5d45b428d388))
+* **stash:** add the shared stash engine and the item text contracts ([9f9c56e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9f9c56eb24c269b8c3243e101685344f6e06dada))
+* **stash:** explain the stash search in its help popover ([b8fd4aa](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b8fd4aa64100ec6c85c5a50a57aabb78da88d1d4))
+* **stash:** give coupons their own Coupon quality filter on All Items ([cd7b8ab](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cd7b8abf1c810c6e4909ee4304ad997b2dc25349))
+* **stash:** keep the affixes, rare names, quality variant, defense and durability of items ([60251c6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/60251c619b0ffbeb2a1663507313db241aa29129))
+* **stash:** merge the All Items page ([c287868](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c287868417a33d635268ca03a02454fe84a8bee6))
+* **stash:** merge the All Items page with names, stat text, stat filters and the Coupon filter ([07a23bb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/07a23bbf129d8164d87168fb26505cedbe8ab2e5))
+* **stash:** merge the stat text runtime and itemtext.json ([814ace6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/814ace6636900e2d5c2c4bb0edef33f0568c4fd4))
+* **stash:** render stash item text and stat values from saved stats ([88bec3f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/88bec3f9a75d7bc270c6e391e18b21264f04a8a5))
+
+### Bug Fixes
+
+* **stash:** correct required level rows and throw damage of the item text ([a2ec437](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a2ec43771e708a318f9643d50b818c11e5e5212d))
+* **stash:** let item type words match names, and tidy the All Items stat labels ([88049b5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/88049b54ef79919b1417c509d57c3e6eaa091ace))
+* **stash:** merge the All Items page review fixes ([a483878](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a483878dc3afba61abba154978ce5d55e6e8842c))
+* **stash:** read event / charged skills above id 1023 and fold two-hand damage ([0ac20c9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0ac20c978ba5ec1cb44f8255aec1417878ebe9df))
+
+### Performance
+
+* **stash:** move the item names to the lazy stashnames.json ([63872f7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/63872f7008627eb63e884e4454e2f77d29234a50))
+
+### Documentation
+
+* **stash:** add the All items roadmap ([4b18055](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4b18055e1d1a5a08b6fc7eec15e413d6a303ed70))
+* **stash:** document the All Items page ([76ba8fb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/76ba8fb6f54e9af4333e519ea27ddae15fb7eb2b))
+
+### Refactoring
+
+* **game-data:** move the stat text renderer to engine/stats ([03a8e2b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/03a8e2b025bfa9eb652d640800f4ec41c078c672))
+* **stash:** extract the shared stash page UI and hooks from the coupons page ([fa7f20d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fa7f20da20f9c997621c3758808c87c5cf92fd53))
+
 ## [1.49.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.48.0...v1.49.0) (2026-11-03)
 
 ### Features
