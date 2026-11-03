@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-03T20:48:44.256Z",
+  "generatedAt": "2026-11-03T21:34:47.843Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -66,8 +66,12 @@
       "bytes": 35601
     },
     "stash": {
-      "hash": "be598aff265ddaa455e32be03fc6b31b61430e78c9d4a975896c98e2094cfe9f",
-      "bytes": 447407
+      "hash": "78d2c66b2c981d84eceda74f67c723541f8fc18ec6766688e57d55eef074509e",
+      "bytes": 447627
+    },
+    "itemtext": {
+      "hash": "82fe375cddf5540b9a665eaf60ce4755070f777c1d3945dd9e0ca1e67169b414",
+      "bytes": 217033
     },
     "icons": {
       "hash": "4e7f8851b9c5666541718f175833d9b7a790f05e60cca77795809ebbf6c64656",
@@ -181,6 +185,14 @@
     "stashSetItems": 270,
     "stashRunewords": 391,
     "stashGemwords": 9,
+    "itemTextStats": 666,
+    "itemTextStrings": 388,
+    "itemTextSkills": 752,
+    "itemTextMonsters": 393,
+    "itemTextMagicPrefixes": 920,
+    "itemTextMagicSuffixes": 1597,
+    "itemTextAutoAffixes": 126,
+    "itemTextRareNames": 201,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
@@ -208,6 +220,10 @@
     "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients",
     "stash: unique \"Azurewrath_old\" (row 728) has no string; named \"Azurewrath\" after coupon 24f",
     "stash: coupon 06j recipe (cubemain line 8194) has numinputs 4 for 6 items",
-    "stash: cpn3 coupons whose base is not elite: 44e (exceptional)"
+    "stash: cpn3 coupons whose base is not elite: 44e (exceptional)",
+    "itemtext: string \"MaxMagDmgPerLvl\" (stat description) not found",
+    "itemtext: string \"ModStr3kSum\" (stat description) not found",
+    "itemtext: string \"ModStr3u2\" (stat description) not found",
+    "itemtext: string \"ModStrMagMastery\" (stat description) not found"
   ]
 }

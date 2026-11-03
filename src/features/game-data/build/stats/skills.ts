@@ -5,31 +5,10 @@
  *   propertygroups. Display name = skilldesc `str name` → strings, falling back to the `skill` column.
  * - Classes are the charstats.txt rows in order (0 Amazon … 7 Warlock); class code = first three letters, lowercased.
  */
+import type { ClassText, SkillInfo, SkillLookup } from '../../engine/stats/types.ts';
 import type { StatTables } from './tables.ts';
 
-export interface SkillInfo {
-  name: string;
-  /** charstats row index of the owning class, null for non-class skills */
-  cls: number | null;
-}
-
-export interface ClassText {
-  name: string;
-  /** "%+d to Amazon Skill Levels" */
-  allSkills: string;
-  /** "%+d to Bow and Crossbow Skills", … in StrSkillTab1-3 order */
-  tabs: [string, string, string];
-  /** "(Amazon Only)" */
-  only: string;
-}
-
-export interface SkillLookup {
-  skill(param: string): SkillInfo | null;
-  /** skills.txt row index (= `*Id`) of a skill name or numeric id param; null when no row matches */
-  skillId(param: string): number | null;
-  classText(index: number): ClassText | null;
-  classIndex(code: string): number | null;
-}
+export type { ClassText, SkillInfo, SkillLookup };
 
 export function classCodeOf(name: string): string {
   return name.slice(0, 3).toLowerCase();

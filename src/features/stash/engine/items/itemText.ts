@@ -1,16 +1,19 @@
 /**
  * The text of a stash item: its tooltip lines (grouped like the game's tooltip), the displayed value of every stat for
  * the stat filters, and the affix / rare name tables for item names. Built from itemtext.json (lazy, /stash/items only)
- * and the stash catalog.
+ * and the stash catalog; the lines come from the generator's stat renderer (game-data/engine/stats) fed with the saved
+ * stats (textData.ts).
  *
- * CONTRACT (docs/features/STASH-ITEMS.md "Contracts"): the stat text workstream owns this file and implements the
- * functions; the All items page codes against these signatures only. Until itemtext.json exists,
- * `createItemTextContext(null, catalog)` gives a context whose name tables return null, whose `renderItemText` has
- * only the base lines, and whose `statValues` is empty, so the page works with base names and no stat text.
+ * CONTRACT (docs/features/STASH-ITEMS.md "Contracts"): the stat text workstream owns this file; the All items page
+ * codes against these signatures only. `createItemTextContext(null, catalog)` gives the placeholder context (no
+ * itemtext.json yet): name tables return null, `renderItemText` has only the base lines, `statValues` is empty.
  */
 import type { ItemTextBundle } from '@/features/game-data/engine/schema';
-import type { StashItem } from '../../parser/types';
+import { renderLines } from '@/features/game-data/engine/stats/renderLines';
+import type { StashItem, StashStat } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
+import { createTextData, STAT_ID, toEntries, type TextData } from './textData';
+import { itemStatValues } from './statValues';
 
 /** Affix and rare names by the ids a save stores (`StashItem.prefixIds` …); null for 0 or an unknown id */
 export interface ItemNameTables {
@@ -105,11 +108,19 @@ const NO_NAMES: ItemNameTables = {
   superior: 'Superior',
 };
 
+/** The renderer data of each real context (the context's fields are the contract; the data stays internal) */
+const textData = new WeakMap<ItemTextContext, TextData>();
+
+/** The renderer data of a context; null for the placeholder */
+export function textDataOf(ctx: ItemTextContext): TextData | null {
+  return textData.get(ctx) ?? null;
+}
+
 /** The text context of a loaded itemtext.json; `null` gives the placeholder context (base lines and names only). */
 export function createItemTextContext(bundle: ItemTextBundle | null, catalog: StashCatalog): ItemTextContext {
   if (bundle === null) return { catalog, names: NO_NAMES, hasText: false };
   const byId = (names: readonly (string | null)[]) => (id: number) => (id > 0 ? (names[id] ?? null) : null);
-  return {
+  const ctx: ItemTextContext = {
     catalog,
     hasText: true,
     names: {
@@ -121,12 +132,30 @@ export function createItemTextContext(bundle: ItemTextBundle | null, catalog: St
       superior: bundle.superior,
     },
   };
+  textData.set(ctx, createTextData(bundle));
+  return ctx;
 }
 
-/** The base lines every context can write: defense, durability, sockets, ethereal (placeholder wording). */
-function baseLines(item: StashItem): string[] {
+/** The stats that count for an item's tooltip totals: its own, its runeword's and those of the jewels in its sockets */
+export function totalStats(item: StashItem): StashStat[] {
+  return [...item.stats, ...item.runewordStats, ...item.socketed.filter((child) => !child.compact).flatMap((child) => child.stats)];
+}
+
+function sumOf(stats: readonly StashStat[], id: number): number {
+  return stats.reduce((sum, stat) => (stat.id === id ? sum + stat.value : sum), 0);
+}
+
+/**
+ * The base lines. With the item text, Defense is the tooltip's: the saved base defense with the item's enhanced
+ * defense % and + defense (own, runeword and socketed jewel stats; not per-level defense).
+ */
+function baseLines(item: StashItem, withStats: boolean): string[] {
   const lines: string[] = [];
-  if (item.defense !== null) lines.push(`Defense: ${String(item.defense)}`);
+  if (item.defense !== null) {
+    const stats = withStats ? totalStats(item) : [];
+    const defense = Math.floor((item.defense * (100 + sumOf(stats, STAT_ID.armorPercent))) / 100) + sumOf(stats, STAT_ID.armorClass);
+    lines.push(`Defense: ${String(defense)}`);
+  }
   if (item.maxDurability !== null) {
     lines.push(
       item.maxDurability === 0 ? 'Indestructible' : `Durability: ${String(item.durability ?? 0)} of ${String(item.maxDurability)}`
@@ -138,18 +167,43 @@ function baseLines(item: StashItem): string[] {
   return lines;
 }
 
-/** STUB (stat text workstream): the tooltip lines of an item; the placeholder has the base lines only. */
-export function renderItemText(item: StashItem, _ctx: ItemTextContext): ItemTextGroups {
+/** The display lines of a stat list (game order: summed, damage pairs and dgrp sets merged, by descpriority) */
+export function statLines(stats: readonly StashStat[], data: TextData): string[] {
+  return stats.length === 0 ? [] : renderLines(toEntries(stats, data), data.render);
+}
+
+/** The items of the set worn for each set bonus list of a set item (2, 3, … unless itemtext.json says otherwise) */
+function bonusPieces(item: StashItem, data: TextData): (index: number) => number | null {
+  if (item.setId === null) return () => null;
+  const pieces = data.bundle.setBonusPieces?.[String(item.setId)];
+  return (index) => (pieces === undefined ? index + 2 : (pieces[index] ?? null));
+}
+
+/** The tooltip lines of an item; the placeholder context has the base lines only. */
+export function renderItemText(item: StashItem, ctx: ItemTextContext): ItemTextGroups {
+  const data = textDataOf(ctx);
+  if (data === null) {
+    return {
+      base: baseLines(item, false),
+      stats: [],
+      runeword: [],
+      setBonuses: [],
+      socketed: item.socketed.map((child) => ({ item: child, lines: [] })),
+    };
+  }
+  const pieces = bonusPieces(item, data);
   return {
-    base: baseLines(item),
-    stats: [],
-    runeword: [],
-    setBonuses: [],
-    socketed: item.socketed.map((child) => ({ item: child, lines: [] })),
+    base: baseLines(item, true),
+    stats: statLines(item.stats, data),
+    runeword: statLines(item.runewordStats, data),
+    setBonuses: item.setBonusStats.map((stats, index) => ({ pieces: pieces(index), lines: statLines(stats, data) })),
+    // runes and gems are compact items: their bonuses come from gems.txt, not from saved stats (shown by name only)
+    socketed: item.socketed.map((child) => ({ item: child, lines: child.compact ? [] : statLines(child.stats, data) })),
   };
 }
 
-/** STUB (stat text workstream): the displayed value of every filterable stat of an item; the placeholder has none. */
-export function statValues(_item: StashItem, _ctx: ItemTextContext): StatValue[] {
-  return [];
+/** The displayed value of every filterable stat of an item (rules: `StatValue`); the placeholder has none. */
+export function statValues(item: StashItem, ctx: ItemTextContext): StatValue[] {
+  const data = textDataOf(ctx);
+  return data === null ? [] : itemStatValues(totalStats(item), data);
 }

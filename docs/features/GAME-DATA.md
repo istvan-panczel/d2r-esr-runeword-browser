@@ -29,26 +29,27 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                | Contents                                                                                                                                                  |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                               |
-| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                          |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                  |
-| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                       |
-| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                   |
-| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                  |
-| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                        |
-| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                     |
-| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                             |
-| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                           |
-| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                              |
-| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                    |
-| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                           |
-| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                          |
-| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                          |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")                          |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; item, unique, set and runeword names (see "Stash") |
-| `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                          |
+| File                | Contents                                                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                 |
+| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                            |
+| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                    |
+| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                         |
+| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                     |
+| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                    |
+| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                          |
+| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                       |
+| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                               |
+| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                             |
+| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                |
+| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                      |
+| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                             |
+| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                            |
+| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                            |
+| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")                            |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; item, unique, set and runeword names (see "Stash")   |
+| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text") |
+| `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                            |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -72,6 +73,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                                  |
 | `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                                  |
 | `stash.json`        | ESR 3.2.24: 437 KB / 71 KB (143 KB / 21 KB before the All items names; 88 KB / 14 KB before the coupon recipes and bases) |
+| `itemtext.json`     | ESR 3.2.24: 212 KB / 38 KB (monsters, i.e. ESR's mythical description texts: 14 KB of the gzip)                           |
 | `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                                         |
 
 ### Bases and types
@@ -624,9 +626,47 @@ whose base tier differs from its type's, and a recipe whose
 `numinputs` differs from its item count (ESR 3.2.24: `06j`, Bul-Kathos' Wedding Band, line 8194: `numinputs` 4 for 2
 coupons + 4 Wild Cards, so the Wild Card recipe may not work in game).
 
+Base names: ESR abbreviates potion and scroll names for the belt (`hp1` "\*HP1", `wms` "\*Thaw", `tsc` "+TP"); a name
+starting with `*` or `+` reads as the misc.txt `name` column ("Minor Healing Potion"), as the cube names do
+(`cube/cubeRows.ts`). 17 codes in ESR 3.2.24 (hp1–hp5, mp1–mp5, vps, yps, rvs, rvl, wms, tsc, isc; `hp5` keeps ESR's
+"Supeer Healing Potion"). lootfilter.json keeps the in-game abbreviations (what a filter author sees on the ground).
+
 Counts (ESR 3.2.24): `stashItemCodes` 2309, `stashSavedStats` 666, `stashCoupons` 385, `stashCouponRecipes` 382,
 `stashCouponWildCardRecipes` 382, `stashUniques` 1390, `stashSetItems` 270, `stashRunewords` 391, `stashGemwords` 9. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
 `44e` Measured Wrath, takes 2).
+
+### Item text
+
+`itemtext.json` (`ItemTextBundle`, built by `build/bundleItemText.ts`) is what the My Stash All items page
+([STASH-ITEMS.md](./STASH-ITEMS.md)) needs to write an item's tooltip lines and name from its saved stats. Only that page
+loads it (`useItemText`). The browser side (`src/features/stash/engine/items/itemText.ts`) renders with the generator's
+own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
+
+- `stats`: by stat id (itemstatcost.txt row), the display columns (`StatDef`) of every stat a save can hold (Save Bits >
+  0, the same rows as stash.json `stats`), null for the others. Blank / zero columns are left out, and `descstrneg` /
+  `dgrpstrneg` when equal to the positive string (the renderer falls back to it). ValShift is not needed: a save stores
+  the unshifted value (+52 life is saved as 52).
+- `strings`: the texts of every description key of those stats, renderLines' own keys (damage ranges, enhanced
+  damage) and the physical / magic range labels of the stat filters. ESR 3.2.24 references four keys no string table
+  has (`MaxMagDmgPerLvl`, `ModStr3kSum`, `ModStr3u2`, `ModStrMagMastery`; warnings), drawn as the key.
+- `skills`: `{ id, name, cls? }` for the lootfilter.json skills (every class tree skill and every skill a game-data
+  property names) plus every class skill; `classes`: the charstats.txt class strings (all skills, tabs, "(X Only)").
+- `monsters`: monstats.txt `NameStr` texts by monster id (the row without the Expansion row, = `hcIdx`), only for the
+  ids a descfunc 23 property names (ESR's mythical descriptions, reanimate), collected from the same property lists as
+  the loot-filter skills (affixes, uniques, set items, runewords, cube outputs, set bonuses, property groups); null
+  elsewhere. `monTypes`: montype.txt `strplur` texts (descfunc 22).
+- `magicPrefixes` / `magicSuffixes` / `autoAffixes`: names by the 1-based id a save stores (index 0 null; affixes.json
+  ids are the same rows, 0-based), the string or else the raw name like affixes.json, null for blank / "null" rows.
+- `rareNames`: the combined vanilla rare name table, index 0 null, 1–155 raresuffix.txt, 156–201 rareprefix.txt. ESR
+  ships neither table (the game falls back to the vanilla ones), so the key order is a generator constant
+  (`RARE_SUFFIX_KEYS`, `RARE_PREFIX_KEYS`, from the vanilla D2R files); every key resolves in ESR's strings. Fixture:
+  first names 156–201, second names 1–155.
+- `lowQuality` (vanilla lowqualityitems.txt: Crude, Cracked, Damaged, Low Quality), `superior` (`Hiquality`).
+- `setBonusPieces`: set items whose aprop groups are not 2, 3, 4… pieces, by setitems.txt row: the pieces of each
+  bonus list a save stores (the k-th list is the k-th non-empty group). ESR 3.2.24: one (row 17: 2, 4).
+
+Counts (ESR 3.2.24): `itemTextStats` 666, `itemTextStrings` 388, `itemTextSkills` 752, `itemTextMonsters` 393,
+`itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
 
 ### Skills
 
@@ -1403,7 +1443,8 @@ first), then str + dex; armor by max defense, then block, then str; accessories 
 
 ## Stat renderer
 
-The renderer lives in `build/stats/` and runs at build time only:
+The property side lives in `build/stats/` (build time only); the pure text side (`descfunc`, `renderLines`, `sprintf`
+and their types) in `engine/stats/`, shared with the browser (the My Stash item text, which renders saved stats):
 
 | Module              | Role                                                                                                                           |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -1478,7 +1519,8 @@ src/features/game-data/
                generateBundles.ts,
                writeBundle.ts
   build/cube/  cubemain rows and texts shared with the guide: cubeRows.ts, cubeText.ts, cubeFamilies.ts, cubeCatalog.ts
-  build/stats/ stat renderer (see "Stat renderer")
+  build/stats/ stat renderer, property side (see "Stat renderer")
+  engine/stats/ stat renderer, text side: descfunc.ts, renderLines.ts, sprintf.ts, types.ts (also used in the browser)
 ```
 
 `engine/` and `build/` are shared with the Node script, so they use relative imports ending in `.ts`, no `@/` aliases,
@@ -1592,7 +1634,7 @@ utils/sets.ts                          URL state, options, order, search / focus
   automod eligibility and attachment on inline TSV), `build/bundleRunewords.test.ts`, `build/bundleAffixes.test.ts`,
   `build/bundleSources.test.ts` (each label rule on inline TSV; with the ESR clone, the verified examples Pelta Lunata,
   Krok's Basher, Mephisto's Will, Frostmourne, Annihilus, Hellfire Torch, Kill Ledger, Orb of Anointment, Forging Hammer),
-  `build/stats/*.test.ts` (sprintf, expandProperty, descfunc, renderLines, propertyGroups),
+  `build/stats/*.test.ts` (expandProperty, renderLines, propertyGroups), `engine/stats/*.test.ts` (sprintf, descfunc),
   `build/bundleLootFilterSkills.test.ts` (layer resolver per func, property group entries, skills list, known layers,
   warnings, `skillId`), `build/affixStats.test.ts` (stats, labels, layers), `build/bundleAreas.test.ts`
   (left-out rows, MonLvlEx / density / unique packs per difficulty, towns and areas without monsters, name fallback,

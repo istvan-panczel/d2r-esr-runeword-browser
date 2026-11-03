@@ -58,6 +58,7 @@ describe('buildStashBundle', () => {
         ['Ear', 'ear', 'ear', 'play', '1', '1', '0', '0'],
         ['Heart', 'hrt', 'hrt', 'body', '1', '1', '0', '0'],
         ['Tome', 'tbk', 'tbk', 'book', '1', '2', '0', '0'],
+        ['Minor Healing Potion', 'hp1', 'hp1', 'hpot', '1', '1', '0', '0'],
         ['Key to Hell', 'qky', 'qky', 'ques', '1', '1', '1', '1'],
         ['Coupon nor Armor 1', '01c', '01c', 'cpn1', '1', '1', '0', '0'],
         ['Coupon nor Weapon 24', '24f', '24f', 'cpn1', '1', '1', '0', '0'],
@@ -119,6 +120,7 @@ describe('buildStashBundle', () => {
       ["Civerb's Ward", "Civerb's Ward"],
       ['Runeword584', 'Cow'],
       ['Holy', 'Holy'],
+      ['hp1', '*HP1'],
     ]),
     new Map([
       ['Runeword584', 63086],
@@ -189,6 +191,8 @@ describe('buildStashBundle', () => {
   it('gives every item code its name, types and tier', () => {
     expect(bundle.bases.find((base) => base.code === 'cap')).toEqual({ code: 'cap', name: 'Cap', type: 'helm', tier: 'normal' });
     expect(bundle.bases.find((base) => base.code === 'cm1')).toEqual({ code: 'cm1', name: 'Small Charm', type: 'scha' });
+    // ESR's belt abbreviation ("*HP1") reads as the full `name` column
+    expect(bundle.bases.find((base) => base.code === 'hp1')?.name).toBe('Minor Healing Potion');
     expect(bundle.bases.map((base) => base.code)).toEqual(bundle.items.map(([code]) => code));
   });
 

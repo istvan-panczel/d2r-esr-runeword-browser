@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { renderStat, type DescContext } from './descfunc.ts';
-import type { StatEntry } from './expandProperty.ts';
-import { createSkillLookup } from './skills.ts';
-import type { StatDef } from './tables.ts';
-import { TEST_STRINGS, testTables } from './testContext.mock.ts';
+import { createSkillLookup } from '../../build/stats/skills.ts';
+import { TEST_STRINGS, testTables } from '../../build/stats/testContext.mock.ts';
+import type { StatDef, StatEntry } from './types.ts';
 
 const tables = testTables();
 const strings = new Map([

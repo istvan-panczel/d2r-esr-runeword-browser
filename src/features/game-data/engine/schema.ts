@@ -2,6 +2,8 @@
  * Shape of the static game-data bundles under `public/game-data/`.
  * Bump GAME_DATA_SCHEMA whenever a bundle shape changes incompatibly.
  */
+import type { ClassText, StatDef } from './stats/types.ts';
+
 export const GAME_DATA_SCHEMA = 1;
 
 export type ClassCode = 'ama' | 'sor' | 'nec' | 'pal' | 'bar' | 'dru' | 'ass' | 'war';
@@ -22,6 +24,7 @@ export type GameDataFile =
   | 'tiers'
   | 'areas'
   | 'stash'
+  | 'itemtext'
   | 'icons';
 
 export interface GameDataManifest {
@@ -1167,57 +1170,58 @@ export interface StashBundle {
 }
 
 // --- itemtext.json ------------------------------------------------------------------------------------------------
-// DRAFT (contract with the stat text workstream, docs/features/STASH-ITEMS.md "Contracts"): the shape is owned by the
-// generator of itemtext.json and may change; only src/features/stash/engine/items/itemText.ts reads it. Pages use the
-// functions there (renderItemText, statValues, the name tables), never these fields directly.
-
-/** A stat's display definition (itemstatcost.txt), by stat id */
-export interface ItemTextStatDef {
-  /** itemstatcost `Stat` ("item_fastercastrate") */
-  stat: string;
-  op: number;
-  opParam: number;
-  /** itemstatcost `ValShift`: the saved value is shifted right by this many bits before display (life, mana, stamina) */
-  valShift: number;
-  descpriority: number;
-  descfunc: number;
-  descval: number;
-  /** String-table keys (texts in `strings`) */
-  descstrpos: string;
-  descstrneg: string;
-  descstr2: string;
-  dgrp: number;
-  dgrpfunc: number;
-  dgrpval: number;
-  dgrpstrpos: string;
-  dgrpstrneg: string;
-  dgrpstr2: string;
-}
+// Read only by src/features/stash/engine/items/itemText.ts (renderItemText, statValues, the name tables); pages use
+// those functions, never these fields.
 
 /**
- * itemtext.json: what the All items page needs to write an item's tooltip text and name. Loaded lazily, only on
- * /stash/items.
+ * A stat's display columns (itemstatcost.txt), by stat id: what engine/stats/descfunc.ts and renderLines.ts read
+ * (`StatDef`), with the blank / zero columns left out, and `descstrneg` / `dgrpstrneg` left out when they equal the
+ * positive string. ValShift is not needed: a save stores the unshifted value (+52 life is saved as 52).
+ */
+export type ItemTextStatDef = Pick<StatDef, 'stat'> & Partial<Omit<StatDef, 'stat'>>;
+
+/**
+ * itemtext.json: what the All items page needs to write an item's tooltip text and name from its saved stats. Loaded
+ * lazily, only on /stash/items (build/bundleItemText.ts).
  */
 export interface ItemTextBundle {
-  /** By stat id (itemstatcost.txt row, Expansion rows counted); null for stats never shown */
+  /**
+   * By stat id (itemstatcost.txt row, Expansion rows counted): the stats a save can hold (Save Bits > 0), null for the
+   * others. A stat with descfunc 0 is hidden (its line, if any, comes from a dgrp or a `_display` companion).
+   */
   stats: (ItemTextStatDef | null)[];
-  /** The string-table texts the stat descriptions and names use, by key (colour codes stripped) */
+  /** The string-table texts the stat descriptions and renderLines read, by key (colour codes stripped) */
   strings: Record<string, string>;
-  /** By skills.txt row (the skill id a stat param stores): display name and owning class (charstats row), null when unused */
-  skills: ({ name: string; cls: number | null } | null)[];
+  /**
+   * The skills a saved stat can name (class skills and every skill a game-data property names), by id ascending:
+   * skills.txt row (the skill id a stat param stores), display name, owning class (charstats row; absent for others)
+   */
+  skills: { id: number; name: string; cls?: number }[];
   /** charstats.txt rows in order (0 Amazon … 7 Warlock): the class name and its skill strings */
-  classes: { name: string; allSkills: string; tabs: [string, string, string]; only: string }[];
-  /** monstats.txt display names by row (descfunc 23), montype.txt plurals by row (descfunc 22) */
-  monsters: string[];
-  monTypes: string[];
-  /** Names by the 1-based ids a save stores (index 0 unused, null): magicprefix.txt, magicsuffix.txt, automagic.txt */
+  classes: ClassText[];
+  /**
+   * monstats.txt `NameStr` texts by monster id (the row without the Expansion row, = `hcIdx`), only for the ids a
+   * descfunc 23 property names (ESR's mythical descriptions, reanimate); null for the others
+   */
+  monsters: (string | null)[];
+  /** montype.txt `strplur` texts by row (descfunc 22) */
+  monTypes: (string | null)[];
+  /** Names by the 1-based ids a save stores (index 0 null): magicprefix.txt, magicsuffix.txt, automagic.txt */
   magicPrefixes: (string | null)[];
   magicSuffixes: (string | null)[];
   autoAffixes: (string | null)[];
-  /** The combined rare name table by id (index 0 unused): the suffix block (1–155), then the prefixes (156 on) */
+  /**
+   * The combined vanilla rare name table by id (index 0 null): raresuffix.txt (1–155), then rareprefix.txt (156–201).
+   * ESR ships neither table; the keys are a generator constant, the texts ESR's.
+   */
   rareNames: (string | null)[];
-  /** Inferior name prefixes by quality variant ("Crude", "Cracked", "Damaged", "Low Quality") */
+  /** Inferior name prefixes by quality variant (vanilla lowqualityitems.txt: Crude, Cracked, Damaged, Low Quality) */
   lowQuality: string[];
   /** The superior name prefix ("Superior") */
   superior: string;
+  /**
+   * Set items whose bonus lists are not the plain 2, 3, 4… pieces, by setitems.txt row: the pieces worn for each of the
+   * item's bonus lists, in order (the k-th list a save stores is the k-th non-empty aprop group)
+   */
+  setBonusPieces?: Record<string, number[]>;
 }

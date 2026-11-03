@@ -16,6 +16,7 @@ import {
   type GameDataFile,
   type GameDataManifest,
   type IconsBundle,
+  type ItemTextBundle,
   type LootFilterDataBundle,
   type MaterialsBundle,
   type SetsBundle,
@@ -45,6 +46,7 @@ export interface GameDataBundles {
   tiers: TiersBundle;
   areas: AreasBundle;
   stash: StashBundle;
+  itemtext: ItemTextBundle;
   icons: IconsBundle;
 }
 

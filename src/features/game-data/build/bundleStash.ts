@@ -152,7 +152,10 @@ export function buildStashBundle(
       items.push([code, flags, row.num('invwidth'), row.num('invheight')]);
       const tier =
         table === input.misc ? undefined : gearTier(code, row.str('normcode'), row.str('ubercode'), row.str('ultracode'), row.num('level'));
-      const name = resolveName(strings, row.str('namestr'), row.str('name'));
+      // ESR abbreviates potion and scroll names for the belt ("*HP1", "*Thaw", "+TP"): the `name` column reads in
+      // full (as the cube names do, cube/cubeRows.ts)
+      const shown = resolveName(strings, row.str('namestr'), row.str('name'));
+      const name = /^[*+]/.test(shown) && row.str('name') !== '' ? row.str('name') : shown;
       bases.set(code, { code, name, type, tier: tier === 'mythical' ? undefined : tier });
       const type2 = row.has('type2') ? row.str('type2') : '';
       baseInfo.push({ code, name, type, ...(type2 === '' ? {} : { type2 }), ...(tier === undefined ? {} : { tier }) });

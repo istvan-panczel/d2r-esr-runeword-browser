@@ -103,6 +103,7 @@ function main(): void {
     tiers: serializeBundle(generated.tiers),
     areas: serializeBundle(generated.areas),
     stash: serializeBundle(generated.stash),
+    itemtext: serializeBundle(generated.itemtext),
   };
   const icons = readIcons();
   const manifest = buildManifest({
