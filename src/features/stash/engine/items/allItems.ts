@@ -78,6 +78,7 @@ export const ITEM_KIND_LABELS: Readonly<Record<StashItemKind, string>> = {
   superior: 'Superior',
   inferior: 'Inferior',
   normal: 'Normal',
+  coupon: 'Coupon',
   simple: 'Simple',
 };
 

@@ -88,6 +88,21 @@ describe('describeStashItem', () => {
     expect(describeStashItem(makeItem('cm1', { runewordId: 10910 }), catalog).runeword).toMatchObject({ gemword: true });
   });
 
+  it('describes Ancient Coupons, the Wild Card and blank coupons as coupons, not normal items', () => {
+    const withCoupons = stashCatalog(
+      makeBundle({
+        ...BUNDLE,
+        coupons: [
+          { code: '02c', name: "Ancient Coupon (Cap, Biggin's Bonnet)", type: 'cpn1' },
+          { code: '99j', name: 'Coupon Wild Card', type: 'coup', wildCard: true },
+        ],
+      })
+    );
+    expect(describeStashItem(makeItem('02c'), withCoupons).kind).toBe('coupon');
+    expect(describeStashItem(makeItem('99j', { compact: true, quality: null }), withCoupons).kind).toBe('coupon');
+    expect(describeStashItem(makeItem('cap'), withCoupons).kind).toBe('normal');
+  });
+
   it('describes compact items as simple and misc items with the misc icon', () => {
     expect(describeStashItem(makeItem('r01', { compact: true, quality: null }), catalog)).toMatchObject({
       kind: 'simple',

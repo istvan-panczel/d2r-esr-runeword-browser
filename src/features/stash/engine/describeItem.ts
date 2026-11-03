@@ -19,7 +19,8 @@ import type { StashCatalog } from './catalog';
 /**
  * unique / set / rare / crafted / tempered / magic / superior / inferior / normal: the item's quality; `runeword` beats
  * the quality (a runeword is a normal or superior item; charm gemwords too); `simple`: a compact item (runes, gems,
- * potions, keys …: no quality, level or stats)
+ * potions, keys …: no quality, level or stats); `coupon`: an Ancient Coupon, the Wild Card or a blank coupon (normal
+ * items by quality, told apart by describeStashItem through the catalog)
  */
 export const STASH_ITEM_KINDS = [
   'unique',
@@ -32,6 +33,7 @@ export const STASH_ITEM_KINDS = [
   'superior',
   'inferior',
   'normal',
+  'coupon',
   'simple',
 ] as const;
 export type StashItemKind = (typeof STASH_ITEM_KINDS)[number];
@@ -102,6 +104,12 @@ export function stashItemKind(item: StashItem): StashItemKind {
   return item.quality;
 }
 
+/** Coupons are normal-quality items; the catalog knows their codes */
+function couponAwareKind(item: StashItem, catalog: StashCatalog): StashItemKind {
+  const kind = stashItemKind(item);
+  return (kind === 'normal' || kind === 'simple') && catalog.coupon(item.code) !== undefined ? 'coupon' : kind;
+}
+
 function iconOf(item: StashItem, description: Omit<StashItemDescription, 'icon'>): ItemIconRef {
   if (description.unique !== null) return { kind: 'unique', name: description.unique.name, code: item.code };
   if (description.setItem !== null) return { kind: 'set', name: description.setItem.name, code: item.code };
@@ -114,7 +122,7 @@ export function describeStashItem(item: StashItem, catalog: StashCatalog): Stash
   const typeChain = catalog.typeChain(item.code);
   const setItem = item.quality === 'set' && item.setId !== null ? (catalog.setItem(item.setId) ?? null) : null;
   const description: Omit<StashItemDescription, 'icon'> = {
-    kind: stashItemKind(item),
+    kind: couponAwareKind(item, catalog),
     quality: item.quality,
     code: item.code,
     base,

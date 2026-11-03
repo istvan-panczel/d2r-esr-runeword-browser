@@ -18,6 +18,7 @@ const KIND_NAME_CLASS: Readonly<Record<StashItemKind, string>> = {
   superior: 'text-foreground decoration-foreground/30',
   inferior: 'text-muted-foreground decoration-muted-foreground/30',
   normal: 'text-foreground decoration-foreground/30',
+  coupon: 'text-foreground decoration-foreground/30',
   simple: 'text-foreground decoration-foreground/30',
 };
 

@@ -53,7 +53,8 @@ type); "Heart of Jewels" finds the unique (first, in stash order; Wraith Heart, 
 fields are searchable before the stat text loads.
 
 **Filters** (pills with the count of every value present; the filter panel is always open): quality (`kind`:
-Unique, Set, Runeword & gemword, Rare, Crafted, Tempered, Magic, Superior, Inferior, Normal, Simple), category
+Unique, Set, Runeword & gemword, Rare, Crafted, Tempered, Magic, Superior, Inferior, Normal, Coupon, Simple; Coupon =
+Ancient Coupons, the Wild Card and blank coupons, which are normal items by quality), category
 (weapons, armor, rings & amulets, charms, jewels, other), tier (Normal … Mythical, No tier), ethereal (yes / no),
 sockets (socketed, empty sockets, no sockets, runewords & gemwords), stash page. "Reset filters" keeps the view (table / cards).
 
