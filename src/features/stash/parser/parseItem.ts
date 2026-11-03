@@ -154,28 +154,32 @@ function skipRealmData(reader: BitReader): void {
   if (reader.readBool()) reader.skip(4 * 32);
 }
 
-/** Quality-specific fields; returns the unique / set id. */
-function readQualityData(reading: Reading, quality: ItemQuality, def: StashItemDef): number | null {
+/** Quality-specific fields, stored on the item; returns the unique / set id. */
+function readQualityData(reading: Reading, quality: ItemQuality, def: StashItemDef, item: StashItem): number | null {
   const { reader, layout } = reading;
   switch (quality) {
     case 'inferior':
     case 'superior':
-      reader.skip(3);
+      item.qualityVariant = reader.read(3);
       return null;
     case 'magic':
-      reader.skip(2 * layout.affixBits);
+      item.prefixIds = [reader.read(layout.affixBits)];
+      item.suffixIds = [reader.read(layout.affixBits)];
       return null;
     case 'set':
     case 'unique':
       return reader.read(layout.setUniqueBits);
     case 'rare':
     case 'crafted':
-      reader.skip(2 * layout.rareNameBits);
-      // Three prefix and three suffix slots, each a presence flag + id
-      for (let slot = 0; slot < 6; slot++) if (reader.readBool()) reader.skip(layout.affixBits);
+      item.rareNameIds = [reader.read(layout.rareNameBits), reader.read(layout.rareNameBits)];
+      // Three slots, each a prefix then a suffix: a presence flag + id
+      for (let slot = 0; slot < 3; slot++) {
+        item.prefixIds.push(reader.readBool() ? reader.read(layout.affixBits) : 0);
+        item.suffixIds.push(reader.readBool() ? reader.read(layout.affixBits) : 0);
+      }
       return null;
     case 'tempered':
-      reader.skip(2 * layout.rareNameBits);
+      item.rareNameIds = [reader.read(layout.rareNameBits), reader.read(layout.rareNameBits)];
       return null;
     case 'normal':
       if (def.charm) {
@@ -259,9 +263,9 @@ function readFields(reading: Reading, item: StashItem): ItemFields {
   const quality = QUALITY_BY_ID[qualityId];
   if (quality === undefined) throw new Error(`invalid quality ${String(qualityId)}`);
   item.quality = quality;
-  if (reader.readBool()) reader.skip(3); // variable graphics
-  if (reader.readBool()) reader.skip(layout.autoAffixBits);
-  const fileIndex = readQualityData(reading, quality, known);
+  if (reader.readBool()) item.gfx = reader.read(3);
+  if (reader.readBool()) item.autoAffixId = reader.read(layout.autoAffixBits);
+  const fileIndex = readQualityData(reading, quality, known, item);
   if (quality === 'unique') item.uniqueId = fileIndex;
   if (quality === 'set') item.setId = fileIndex;
   if ((flags & ITEM_FLAG.runeword) !== 0) item.runewordId = reader.read(layout.runewordBits);
@@ -269,14 +273,14 @@ function readFields(reading: Reading, item: StashItem): ItemFields {
     reader.skip(3 + 7);
     readName(reader);
   } else if ((flags & ITEM_FLAG.personalized) !== 0) {
-    readName(reader);
+    item.personalizedName = readName(reader);
   }
   skipRealmData(reader);
 
-  if (known.armor) readStatValue(reader, data, STAT.armorClass);
+  if (known.armor) item.defense = readStatValue(reader, data, STAT.armorClass);
   if (known.armor || known.weapon) {
-    const maxDurability = readStatValue(reader, data, STAT.maxDurability);
-    if (maxDurability > 0) readStatValue(reader, data, STAT.durability);
+    item.maxDurability = readStatValue(reader, data, STAT.maxDurability);
+    if (item.maxDurability > 0) item.durability = readStatValue(reader, data, STAT.durability);
   } else if (known.gold) {
     readGold(reader);
   }
@@ -308,7 +312,8 @@ function readGold(reader: BitReader): void {
   reader.skip(1); // player gold flag (save version > 96)
 }
 
-function emptyItem(context: ItemContext, bitOffset: number): StashItem {
+/** An item with every field at its "not read" value (the parser fills it in; tests build items from it). */
+export function emptyItem(context: ItemContext, bitOffset: number): StashItem {
   return {
     section: context.section,
     index: context.index,
@@ -328,6 +333,16 @@ function emptyItem(context: ItemContext, bitOffset: number): StashItem {
     uniqueId: null,
     setId: null,
     runewordId: null,
+    prefixIds: [],
+    suffixIds: [],
+    rareNameIds: null,
+    autoAffixId: null,
+    qualityVariant: null,
+    gfx: null,
+    defense: null,
+    durability: null,
+    maxDurability: null,
+    personalizedName: null,
     quantity: null,
     stackSize: null,
     sockets: null,

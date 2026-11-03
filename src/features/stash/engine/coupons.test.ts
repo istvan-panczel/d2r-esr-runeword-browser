@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StashBundle } from '@/features/game-data/engine/schema';
 import type { StashFile, StashItem, StashSection, StashTabType } from '../parser/types';
+import { makeItem } from '../testing/stashMocks.mock';
 import { buildItemTypeIndex, normaliseTypeWord, typeCodesOfTerm } from './itemTypes';
 import {
   collectCoupons,
@@ -56,33 +57,7 @@ const BUNDLE: Pick<StashBundle, 'coupons' | 'couponTiers'> = {
 };
 
 function item(code: string, x: number, y: number, stackSize: number | null = null): StashItem {
-  return {
-    section: 0,
-    index: 0,
-    bitOffset: 0,
-    flags: 0,
-    mode: 0,
-    x,
-    y,
-    width: 1,
-    height: 1,
-    code,
-    compact: false,
-    identified: true,
-    ethereal: false,
-    quality: 'normal',
-    level: 1,
-    uniqueId: null,
-    setId: null,
-    runewordId: null,
-    quantity: null,
-    stackSize,
-    sockets: null,
-    socketed: [],
-    stats: [],
-    setBonusStats: [],
-    runewordStats: [],
-  };
+  return makeItem(code, { x, y, stackSize });
 }
 
 function section(index: number, items: StashItem[], tabType: StashTabType = 'normal'): StashSection {
