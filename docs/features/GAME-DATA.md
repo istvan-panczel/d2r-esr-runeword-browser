@@ -674,7 +674,9 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `setBonusPieces`: set items whose aprop groups are not 2, 3, 4… pieces, by setitems.txt row: the pieces of each
   bonus list a save stores (the k-th list is the k-th non-empty group). ESR 3.2.24: one (row 17: 2, 4).
 - `bases` (`build/itemTextBases.ts`): per item code with any of them, `d1` / `d2` / `dt` (one-hand, two-hand, throw
-  damage as the tooltip shows them: one-hand unless two-handed only, two-hand when two-handed or one-or-two-handed),
+  damage as the tooltip shows them: one-hand unless two-handed only, two-hand when two-handed or one-or-two-handed,
+  throw only for throwable item types, itemtypes.txt `Throwable` through the Equiv chain: ESR fills `maxmisdam` on 16
+  wands, orbs and claws),
   `str` / `dex` / `lvl` requirements and `gem`, the `gemapplytype` when not 0 (1 = gems give their helm column, 2 =
   their shield column; ESR sets it per item: body armor and belts 2, boots 1, gloves 0, wands and caster staves 1).
 - `socketables`: per gems.txt code (gems, runes …) its weapon / helm / shield columns as saved stats

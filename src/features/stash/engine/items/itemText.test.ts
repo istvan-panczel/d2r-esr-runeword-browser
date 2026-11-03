@@ -157,6 +157,7 @@ const BUNDLE: ItemTextBundle = {
     gix: { d2: [10, 40], str: 80 },
     r01: { lvl: 11 },
     r02: { lvl: 13 },
+    jav: { d1: [6, 14], dt: [6, 22], dex: 20 },
   },
   socketables: {
     // a rune: +ED in weapons, +strength in helms (gem apply type 1), +dexterity in shields
@@ -170,7 +171,7 @@ const BUNDLE: ItemTextBundle = {
     ],
     r02: [[[105, 0, 10]], [[105, 0, 10]], [[105, 0, 10]]],
   },
-  levels: { uniques: [0, 0, 40], setItems: [], magicPrefixes: [0, 20], magicSuffixes: [0, 0, 30], autoAffixes: [] },
+  levels: { uniques: [40, 0, 40], setItems: [3], magicPrefixes: [0, 20], magicSuffixes: [0, 0, 30], autoAffixes: [] },
 };
 
 const ctx = createItemTextContext(BUNDLE, catalog);
@@ -430,6 +431,12 @@ describe('socket fillers, damage and requirements', () => {
     const list = statValues(giant, ctx);
     expect(value(list, 'b.dmg2')).toMatchObject({ label: 'Two-Hand Damage: # to #', value: 55, range: { min: 10, max: 55 } });
     expect(value(list, 'b.reqstr')).toMatchObject({ label: 'Required Strength: #', value: 64 });
+    // throwing weapons: Throw Damage above One-Hand Damage, as in D2's tooltip
+    expect(renderItemText(makeItem('jav'), ctx).base).toEqual([
+      'Throw Damage: 6 to 22',
+      'One-Hand Damage: 6 to 14',
+      'Required Dexterity: 20',
+    ]);
     // a max below the min reads min + 1
     expect(renderItemText(makeItem('lsd', { stats: [s(21, 30)] }), ctx).base[0]).toBe('One-Hand Damage: 33 to 34');
   });
@@ -441,8 +448,31 @@ describe('socket fillers, damage and requirements', () => {
     expect(level({ quality: 'magic', prefixIds: [1], suffixIds: [2] })).toBe(30);
     expect(level({ socketed: [rune('r02')] })).toBe(13);
     expect(level({ stats: [s(92, 5)] })).toBe(8);
-    // crafted: + 10 + 3 per affix
+    // unique / set item ids are 0-based rows: id 0 is a real row
+    expect(level({ quality: 'unique', uniqueId: 0 })).toBe(40);
+    expect(value(statValues(makeItem('amu', { quality: 'set', setId: 0 }), ctx), 'b.reqlvl')?.value).toBe(3);
+    // crafted: the affix level + 10 + 3 per affix, then the sockets
     expect(level({ quality: 'crafted', prefixIds: [1, 0, 0], suffixIds: [0, 0, 0] })).toBe(33);
+    expect(level({ quality: 'crafted', prefixIds: [1, 0, 0], suffixIds: [0, 0, 0], socketed: [rune('r02')] })).toBe(33);
+    expect(
+      value(
+        statValues(
+          makeItem('amu', {
+            quality: 'crafted',
+            prefixIds: [1, 0, 0],
+            suffixIds: [0, 0, 0],
+            socketed: [makeItem('jew', { level: 1, quality: 'magic', prefixIds: [1] })],
+          }),
+          ctx
+        ),
+        'b.reqlvl'
+      )?.value
+    ).toBe(33);
+    // a socketed jewel's + required level counts once, on the jewel
+    const jewel = makeItem('jew', { stats: [s(92, 5)], quality: 'magic', prefixIds: [1] });
+    expect(level({ socketed: [jewel] })).toBe(25);
+    expect(level({ stats: [s(92, 2)], socketed: [jewel] })).toBe(25);
+    expect(level({ stats: [s(92, 30)], socketed: [jewel] })).toBe(33);
     expect(value(statValues(makeItem('cap', { defense: 10, stats: [s(31, 5)] }), ctx), 'b.def')?.value).toBe(15);
   });
 });

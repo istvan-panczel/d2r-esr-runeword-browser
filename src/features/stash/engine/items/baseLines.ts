@@ -11,7 +11,8 @@
  *   character and is left out.
  * - **Requirements**: strength / dexterity = base × (100 + requirements %) / 100, −10 when ethereal; level = the highest
  *   of the base, the unique / set item, the magic / rare affixes, the automagic affix and the socketed items, + the
- *   item's "required level" stat; crafted items + 10 + 3 per affix (D2's rule, unverified in ESR).
+ *   item's "required level" stat; crafted items: the affix level + 10 + 3 per affix (D2's rule, unverified in ESR).
+ *   Not applied: inferior items' damage / defense penalty (unverified, none in the fixture).
  */
 import type { ItemTextBase, ItemTextSavedStat } from '@/features/game-data/engine/schema';
 import type { StashItem, StashStat } from '../../parser/types';
@@ -47,24 +48,30 @@ function sumOf(stats: readonly StashStat[], id: number): number {
   return stats.reduce((sum, stat) => (stat.id === id ? sum + stat.value : sum), 0);
 }
 
-/** The required level of an item from its own data (base, unique / set item, affixes, sockets) */
-export function requiredLevel(item: StashItem, data: TextData, stats: readonly StashStat[]): number {
+/**
+ * The required level of an item: its own (the highest of the base, the unique / set item and the affixes; a crafted
+ * item's affix level + 10 + 3 per affix; + its own `item_levelreq` stats) against those of its socketed items (each
+ * with its own `item_levelreq`, counted once)
+ */
+export function requiredLevel(item: StashItem, data: TextData): number {
   const { bases, levels } = data.bundle;
-  const at = (list: readonly number[], id: number | null) => (id === null || id === 0 ? 0 : (list[id] ?? 0));
-  const affixes = [
-    ...item.prefixIds.map((id) => at(levels.magicPrefixes, id)),
-    ...item.suffixIds.map((id) => at(levels.magicSuffixes, id)),
-  ];
-  let level = Math.max(
-    baseOf(bases, item.code)?.lvl ?? 0,
-    item.quality === 'unique' ? at(levels.uniques, item.uniqueId) : 0,
-    item.quality === 'set' ? at(levels.setItems, item.setId) : 0,
-    at(levels.autoAffixes, item.autoAffixId),
-    ...affixes,
-    ...item.socketed.map((child) => requiredLevel(child, data, child.stats))
+  // unique / set item ids are 0-based rows (0 = Autolycus' Robes, The Perfect Cello); affix ids are 1-based, 0 = none
+  const row = (list: readonly number[], id: number | null) => (id === null ? 0 : (list[id] ?? 0));
+  const affix = (list: readonly number[], id: number | null) => (id === null || id === 0 ? 0 : (list[id] ?? 0));
+  let affixLevel = Math.max(
+    affix(levels.autoAffixes, item.autoAffixId),
+    ...item.prefixIds.map((id) => affix(levels.magicPrefixes, id)),
+    ...item.suffixIds.map((id) => affix(levels.magicSuffixes, id))
   );
-  if (item.quality === 'crafted') level += 10 + 3 * [...item.prefixIds, ...item.suffixIds].filter((id) => id !== 0).length;
-  return Math.min(MAX_LEVEL, level + sumOf(stats, LEVEL_REQ));
+  if (item.quality === 'crafted') affixLevel += 10 + 3 * [...item.prefixIds, ...item.suffixIds].filter((id) => id !== 0).length;
+  const own =
+    Math.max(
+      baseOf(bases, item.code)?.lvl ?? 0,
+      item.quality === 'unique' ? row(levels.uniques, item.uniqueId) : 0,
+      item.quality === 'set' ? row(levels.setItems, item.setId) : 0,
+      affixLevel
+    ) + sumOf([...item.stats, ...item.runewordStats], LEVEL_REQ);
+  return Math.min(MAX_LEVEL, Math.max(own, ...item.socketed.map((child) => requiredLevel(child, data))));
 }
 
 interface BaseText {
@@ -103,9 +110,10 @@ export function baseText(item: StashItem, data: TextData | null): BaseText {
       lines.push(`${label}: ${String(min)} to ${String(max)}`);
       values.push(value(key, `${label}: # to #`, max, { min, max }));
     };
+    // D2's tooltip writes the throw damage above the one-hand damage
+    damage(base.dt, 'b.dmgthrow', 'Throw Damage');
     damage(base.d1, 'b.dmg1', 'One-Hand Damage');
     damage(base.d2, 'b.dmg2', 'Two-Hand Damage');
-    damage(base.dt, 'b.dmgthrow', 'Throw Damage');
   }
 
   if (item.defense !== null) {
@@ -130,7 +138,7 @@ export function baseText(item: StashItem, data: TextData | null): BaseText {
     };
     const dex = requirement(base?.dex);
     const str = requirement(base?.str);
-    const level = requiredLevel(item, data, stats);
+    const level = requiredLevel(item, data);
     if (dex > 0) {
       lines.push(`Required Dexterity: ${String(dex)}`);
       values.push(value('b.reqdex', 'Required Dexterity: #', dex));

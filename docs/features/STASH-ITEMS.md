@@ -138,16 +138,17 @@ fed by `items/textData.ts` (saved stats → renderer entries) and `items/statVal
   under the socketed item and count in the stat values, also on runeword and gemword items: the game applies the stats
   of every socketed item (a runeword's total is its own stats plus its runes' bonuses; gemwords the same). A gems.txt
   random pool would have no saved roll (none in ESR 3.2.24). Jewels give their saved stats.
-- **Base lines** (tooltip order): One-Hand / Two-Hand / Throw Damage (weapons.txt `mindam` / `2handmindam` /
-  `minmisdam` by the one- / two-handed flags; ×1.5 when ethereal, × (100 + enhanced min / max damage %) / 100, + min /
+- **Base lines** (tooltip order): Throw / One-Hand / Two-Hand Damage (weapons.txt `minmisdam` for throwable item
+  types only, itemtypes.txt `Throwable`, as ESR fills `maxmisdam` on some wands, orbs and claws; `mindam` / `2handmindam`
+  by the one- / two-handed flags; ×1.5 when ethereal, × (100 + enhanced min / max damage %) / 100, + min /
   max damage, a max at or below the min reads min + 1; the + damage of all lines is the folded min / max damage, so the
   hidden throw damage stats are not read; per-level damage is left out, it needs the character level), Defense (saved
   base defense, ethereal included, × (100 + enhanced defense %) / 100 + defense; not per-level defense), Durability /
   Indestructible (max durability as saved: whether the tooltip adds `item_maxdurability_percent`, op 13, is
   unverified, no fixture item has it), Quantity, Required Dexterity / Strength (base × (100 + requirements %) / 100,
   −10 when ethereal), Required Level (the highest of the base, the unique / set item `lvl req`, the magic / rare /
-  automagic affixes' `levelreq` and the socketed items, + `item_levelreq`; crafted items + 10 + 3 per affix, D2's rule,
-  not in the fixture; class-specific affix levels are not read), Ethereal, Socketed (N). All of the own, runeword and
+  automagic affixes' `levelreq` (a crafted item's affix level + 10 + 3 per affix, D2's rule, not in the fixture), + the
+  item's own `item_levelreq`, against each socketed item's own required level (its `item_levelreq` counted once); class-specific affix levels are not read), Ethereal, Socketed (N). All of the own, runeword and
   socket stats count.
 - **Base values**: `b.dmg1` / `b.dmg2` / `b.dmgthrow` (range, value = max), `b.def`, `b.reqdex`, `b.reqstr`,
   `b.reqlvl` (`statId` null, labels "Required Level: #" …), so "Required Level ≤ 60" can be filtered.
@@ -161,7 +162,8 @@ fed by `items/textData.ts` (saved stats → renderer entries) and `items/statVal
   `g.ed`); all match `^[A-Za-z0-9.-]+$`. Labels have one `#` (two for a range: min, max); a per-level label leaves out
   "(Based on Character Level)" (`perLevel` says it). Event skills and charges: value = skill level, the highest when a
   skill repeats. Text-only lines (mythical descriptions, descfunc 23 without a value) have no entry.
-- **Approximated / not shown**: per-level damage and defense in the base lines, max durability %, crafted required
+- **Approximated / not shown**: per-level damage and defense in the base lines, inferior items' damage / defense
+  penalty (unverified, none in the fixture), max durability %, crafted required
   level (D2's rule), class-specific affix required levels, smite / kick damage; set-wide bonuses (sets.json).
 - **Fixture** (`itemText.fixture.integration.test.ts`, 2189 page items): no unknown stat or unresolved string; owned
   uniques' lines match the docs pages (unique_*.htm, numbers masked) at 98.8 % (4013 / 4062; the rest: rolled min / max

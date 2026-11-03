@@ -840,6 +840,11 @@ describe('committed game-data bundles', () => {
     expect(itemText.bases.tgl).toMatchObject({ str: 45 });
     expect(itemText.bases.tgl?.gem).toBeUndefined();
     expect(itemText.bases.gsd).toMatchObject({ d1: [12, 20], d2: [25, 42], str: 100, dex: 60 });
+    // throw damage only on throwable types (ESR fills maxmisdam on wands, orbs, claws …)
+    expect(
+      ['7gi', '7ma', '7cr', '6l7', '6sw', 'ob1', 'ob2', '0yw', 'm23'].filter((code) => itemText.bases[code]?.dt !== undefined)
+    ).toEqual([]);
+    expect(itemText.bases.jav?.dt).toBeDefined();
     expect(Object.keys(itemText.socketables).length).toBeGreaterThan(170);
     expect(Object.values(itemText.socketables).filter((columns) => columns.every((column) => column.length === 0))).toEqual([]);
     expect(itemText.levels.uniques.length).toBeGreaterThan(1000);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildItemTextBundle, RARE_PREFIX_KEYS, RARE_SUFFIX_KEYS, statStringKeys } from './bundleItemText.ts';
+import { throwableTypes } from './itemTextBases.ts';
 import { TEST_STRINGS, testTables } from './stats/testContext.mock.ts';
 import { parseTsv } from './tsv.ts';
 
@@ -9,9 +10,19 @@ const STAT_HEADER = ['Stat', 'Save Bits', 'op', 'op param', 'descpriority', 'des
 const DGRP_HEADER = ['dgrp', 'dgrpfunc', 'dgrpstrpos', 'dgrpstrneg', 'dgrpval', 'dgrpstr2'];
 
 const BASES = {
+  itemtypes: tsv([
+    ['ItemType', 'Code', 'Equiv1', 'Equiv2', 'Throwable'],
+    ['Weapon', 'weap', '', '', '0'],
+    ['Throwing Weapon', 'thro', 'weap', '', '1'],
+    ['Combo Weapon', 'comb', 'thro', '', '1'],
+    ['Throwing Knife', 'tkni', 'comb', '', '1'],
+    ['Sword', 'swor', 'weap', '', '0'],
+    ['Wand', 'wand', 'weap', '', '0'],
+  ]),
   weapons: tsv([
     [
       'code',
+      'type',
       'mindam',
       'maxdam',
       '1or2handed',
@@ -25,11 +36,12 @@ const BASES = {
       'levelreq',
       'gemapplytype',
     ],
-    ['ssd', '2', '7', '0', '0', '', '', '', '', '', '', '', '0'],
-    ['bsd', '7', '14', '1', '0', '13', '30', '', '', '47', '', '', '0'],
-    ['2hs', '', '', '0', '1', '8', '17', '', '', '35', '27', '', '0'],
-    ['tkf', '2', '3', '0', '0', '', '', '4', '9', '', '21', '', '0'],
-    ['wnd', '2', '4', '0', '0', '', '', '', '', '', '', '', '1'],
+    ['ssd', 'swor', '2', '7', '0', '0', '', '', '', '', '', '', '', '0'],
+    ['bsd', 'swor', '7', '14', '1', '0', '13', '30', '', '', '47', '', '', '0'],
+    ['2hs', 'swor', '', '', '0', '1', '8', '17', '', '', '35', '27', '', '0'],
+    ['tkf', 'tkni', '2', '3', '0', '0', '', '', '4', '9', '', '21', '', '0'],
+    // ESR fills maxmisdam on some wands: not throwable, so no throw damage
+    ['wnd', 'wand', '2', '4', '0', '0', '', '', '', '63', '', '', '', '1'],
   ]),
   armor: tsv([
     ['code', 'reqstr', 'levelreq', 'gemapplytype'],
@@ -234,6 +246,7 @@ describe('buildItemTextBundle', () => {
     expect(bases['2hs']).toEqual({ d2: [8, 17], str: 35, dex: 27 });
     expect(bases.tkf).toEqual({ d1: [2, 3], dt: [4, 9], dex: 21 });
     expect(bases.wnd).toEqual({ d1: [2, 4], gem: 1 });
+    expect([...throwableTypes(BASES.itemtypes)].sort()).toEqual(['comb', 'thro', 'tkni']);
     expect(bases.uap).toEqual({ str: 50, lvl: 62, gem: 1 });
     expect(bases.r01).toEqual({ lvl: 11 });
     expect(bases.elx).toBeUndefined();

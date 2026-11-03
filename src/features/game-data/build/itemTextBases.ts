@@ -18,6 +18,8 @@ import type { PropertyGroupDef } from './stats/tables.ts';
 import type { TsvRow, TsvTable } from './tsv.ts';
 
 export interface ItemTextBasesInput {
+  /** Throw damage only for codes whose type chain is `Throwable` (ESR fills maxmisdam on wands, orbs, claws …) */
+  itemtypes: TsvTable;
   weapons: TsvTable;
   armor: TsvTable;
   misc: TsvTable;
@@ -46,7 +48,26 @@ function range(row: TsvRow, min: string, max: string): [number, number] | undefi
   return lo > 0 || hi > 0 ? [lo, hi] : undefined;
 }
 
-function baseOf(row: TsvRow, kind: 'weapon' | 'armor' | 'misc'): ItemTextBase {
+/** The item type codes that are throwable themselves or through an Equiv ancestor (itemtypes.txt `Throwable`) */
+export function throwableTypes(itemtypes: TsvTable): Set<string> {
+  const rows = new Map(itemtypes.rows.map((row) => [row.str('Code'), row]));
+  const memo = new Map<string, boolean>();
+  const throwable = (code: string, seen: ReadonlySet<string>): boolean => {
+    const known = memo.get(code);
+    if (known !== undefined) return known;
+    const row = rows.get(code);
+    if (row === undefined || seen.has(code)) return false;
+    const next = new Set([...seen, code]);
+    const result =
+      (row.has('Throwable') && row.num('Throwable') === 1) ||
+      [row.str('Equiv1'), row.str('Equiv2')].some((parent) => parent !== '' && throwable(parent, next));
+    memo.set(code, result);
+    return result;
+  };
+  return new Set([...rows.keys()].filter((code) => code !== '' && throwable(code, new Set())));
+}
+
+function baseOf(row: TsvRow, kind: 'weapon' | 'armor' | 'misc', throwable: ReadonlySet<string>): ItemTextBase {
   const base: ItemTextBase = {};
   if (kind === 'weapon') {
     const twoHanded = row.num('2handed') === 1;
@@ -56,7 +77,8 @@ function baseOf(row: TsvRow, kind: 'weapon' | 'armor' | 'misc'): ItemTextBase {
     const thrown = range(row, 'minmisdam', 'maxmisdam');
     if (one !== undefined && (!twoHanded || either)) base.d1 = one;
     if (two !== undefined && (twoHanded || either)) base.d2 = two;
-    if (thrown !== undefined) base.dt = thrown;
+    const types = [row.str('type'), row.has('type2') ? row.str('type2') : ''];
+    if (thrown !== undefined && types.some((type) => throwable.has(type))) base.dt = thrown;
   }
   if (row.has('reqstr') && row.num('reqstr') > 0) base.str = row.num('reqstr');
   if (row.has('reqdex') && row.num('reqdex') > 0) base.dex = row.num('reqdex');
@@ -68,6 +90,7 @@ function baseOf(row: TsvRow, kind: 'weapon' | 'armor' | 'misc'): ItemTextBase {
 export function buildItemTextBases(input: ItemTextBasesInput): ItemTextBasesResult {
   const warnings = new Set<string>();
 
+  const throwable = throwableTypes(input.itemtypes);
   const bases: Record<string, ItemTextBase> = {};
   for (const [table, kind] of [
     [input.weapons, 'weapon'],
@@ -77,7 +100,7 @@ export function buildItemTextBases(input: ItemTextBasesInput): ItemTextBasesResu
     for (const row of table.rows) {
       const code = row.str('code');
       if (code === '' || code in bases) continue;
-      const base = baseOf(row, kind);
+      const base = baseOf(row, kind, throwable);
       if (Object.keys(base).length > 0) bases[code] = base;
     }
   }
