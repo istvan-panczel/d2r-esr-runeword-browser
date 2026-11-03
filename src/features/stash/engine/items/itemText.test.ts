@@ -151,12 +151,32 @@ const BUNDLE: ItemTextBundle = {
   lowQuality: ['Crude', 'Cracked'],
   superior: 'Superior',
   setBonusPieces: { '7': [3, 5] },
+  bases: {
+    cap: { lvl: 3, gem: 1 },
+    lsd: { d1: [3, 19], str: 55, dex: 39, lvl: 12 },
+    gix: { d2: [10, 40], str: 80 },
+    r01: { lvl: 11 },
+    r02: { lvl: 13 },
+  },
+  socketables: {
+    // a rune: +ED in weapons, +strength in helms (gem apply type 1), +dexterity in shields
+    r01: [
+      [
+        [17, 0, 15],
+        [18, 0, 15],
+      ],
+      [[0, 0, 7]],
+      [[2, 0, 4]],
+    ],
+    r02: [[[105, 0, 10]], [[105, 0, 10]], [[105, 0, 10]]],
+  },
+  levels: { uniques: [0, 0, 40], setItems: [], magicPrefixes: [0, 20], magicSuffixes: [0, 0, 30], autoAffixes: [] },
 };
 
 const ctx = createItemTextContext(BUNDLE, catalog);
 const s = (id: number, value: number, param = 0): StashStat => ({ id, param, value });
 const lines = (...stats: StashStat[]) => renderItemText(makeItem('cap', { stats }), ctx).stats;
-const values = (...stats: StashStat[]) => statValues(makeItem('cap', { stats }), ctx);
+const values = (...stats: StashStat[]) => statValues(makeItem('amu', { stats }), ctx);
 const value = (list: readonly StatValue[], key: string) => list.find((entry) => entry.key === key);
 
 describe('item text names', () => {
@@ -226,7 +246,7 @@ describe('renderItemText from saved stats', () => {
     expect(lines(s(399, 4, 2))).toEqual(['Unknown stat 399 (2): 4']);
   });
 
-  it('groups own, runeword, set bonus and socketed lines; runes and gems have none', () => {
+  it('groups own, runeword, set bonus and socketed lines; runes give their gems.txt column', () => {
     const jewel = makeItem('jew', { stats: [s(0, 5)] });
     const rune = makeItem('r01', { compact: true, quality: null });
     const item = makeItem('cap', {
@@ -239,7 +259,7 @@ describe('renderItemText from saved stats', () => {
       socketed: [jewel, rune],
     });
     const groups = renderItemText(item, ctx);
-    expect(groups.base).toEqual(['Defense: 20']);
+    expect(groups.base).toEqual(['Defense: 20', 'Required Level: 11']);
     expect(groups.stats).toEqual(['+50% Enhanced Defense', '+5 Defense']);
     expect(groups.runeword).toEqual(['+10% Faster Cast Rate']);
     expect(groups.setBonuses).toEqual([
@@ -248,7 +268,7 @@ describe('renderItemText from saved stats', () => {
     ]);
     expect(groups.socketed).toEqual([
       { item: jewel, lines: ['+5 to Strength'] },
-      { item: rune, lines: [] },
+      { item: rune, lines: ['+7 to Strength'] },
     ]);
     // the socketed entries are the item's own socketed objects
     expect(groups.socketed[0]?.item).toBe(item.socketed[0]);
@@ -369,5 +389,60 @@ describe('statValues', () => {
     ]);
     const all = values(s(107, 3, 9), s(198, 10, (36 << 6) | 5), s(39, 1), s(41, 1), s(43, 1), s(45, 1), s(48, 1), s(49, 2));
     for (const entry of all) expect(entry.key).toMatch(/^[A-Za-z0-9.-]+$/);
+  });
+});
+
+describe('socket fillers, damage and requirements', () => {
+  const rune = (code: string) => makeItem(code, { compact: true, quality: null });
+
+  it("gives a rune's gems.txt column by the parent's gem apply type, on runeword items too, and sums it", () => {
+    const sword = makeItem('lsd', { runewordId: 1, runewordStats: [s(105, 20)], socketed: [rune('r01'), rune('r02')] });
+    const groups = renderItemText(sword, ctx);
+    expect(groups.socketed.map((entry) => entry.lines)).toEqual([['+15% Enhanced Damage'], ['+10% Faster Cast Rate']]);
+    const list = statValues(sword, ctx);
+    expect(value(list, 's105')?.value).toBe(30);
+    expect(value(list, 'g.ed')?.value).toBe(15);
+    // helm column (cap: gem apply type 1), weapon column for a code without a type
+    expect(statValues(makeItem('cap', { socketed: [rune('r01')] }), ctx).find((entry) => entry.key === 's0')?.value).toBe(7);
+    expect(renderItemText(makeItem('amu', { socketed: [rune('r01')] }), ctx).socketed[0]?.lines).toEqual(['+15% Enhanced Damage']);
+  });
+
+  it('writes weapon damage with ethereal, enhanced damage and + damage, in tooltip order with the requirements', () => {
+    const sword = makeItem('lsd', { stats: [s(17, 100), s(18, 50), s(21, 2), s(22, 5)], maxDurability: 44, durability: 40 });
+    expect(renderItemText(sword, ctx).base).toEqual([
+      'One-Hand Damage: 6 to 43',
+      'Durability: 40 of 44',
+      'Required Dexterity: 39',
+      'Required Strength: 55',
+      'Required Level: 12',
+    ]);
+    // ethereal: base ×1.5, requirements −10
+    expect(renderItemText(makeItem('lsd', { ethereal: true }), ctx).base).toEqual([
+      'One-Hand Damage: 4 to 28',
+      'Required Dexterity: 29',
+      'Required Strength: 45',
+      'Required Level: 12',
+      'Ethereal (Cannot be Repaired)',
+    ]);
+    // two-hand only, a socketed jewel's + max damage on a two-hander's secondary damage, requirements −20%
+    const giant = makeItem('gix', { stats: [s(24, 10), s(91, -20)], socketed: [makeItem('jew', { stats: [s(22, 5)] })] });
+    expect(renderItemText(giant, ctx).base).toEqual(['Two-Hand Damage: 10 to 55', 'Required Strength: 64']);
+    const list = statValues(giant, ctx);
+    expect(value(list, 'b.dmg2')).toMatchObject({ label: 'Two-Hand Damage: # to #', value: 55, range: { min: 10, max: 55 } });
+    expect(value(list, 'b.reqstr')).toMatchObject({ label: 'Required Strength: #', value: 64 });
+    // a max below the min reads min + 1
+    expect(renderItemText(makeItem('lsd', { stats: [s(21, 30)] }), ctx).base[0]).toBe('One-Hand Damage: 33 to 34');
+  });
+
+  it('takes the highest required level of the base, unique, affixes and sockets, plus crafted and + level stats', () => {
+    const level = (item: Parameters<typeof makeItem>[1]) => value(statValues(makeItem('cap', item), ctx), 'b.reqlvl')?.value;
+    expect(level({})).toBe(3);
+    expect(level({ quality: 'unique', uniqueId: 2 })).toBe(40);
+    expect(level({ quality: 'magic', prefixIds: [1], suffixIds: [2] })).toBe(30);
+    expect(level({ socketed: [rune('r02')] })).toBe(13);
+    expect(level({ stats: [s(92, 5)] })).toBe(8);
+    // crafted: + 10 + 3 per affix
+    expect(level({ quality: 'crafted', prefixIds: [1, 0, 0], suffixIds: [0, 0, 0] })).toBe(33);
+    expect(value(statValues(makeItem('cap', { defense: 10, stats: [s(31, 5)] }), ctx), 'b.def')?.value).toBe(15);
   });
 });

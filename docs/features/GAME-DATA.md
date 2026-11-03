@@ -75,7 +75,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                        |
 | `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes) |
 | `stashnames.json`   | ESR 3.2.24: 294 KB / 49 KB                                                                                      |
-| `itemtext.json`     | ESR 3.2.24: 218 KB / 39 KB (monsters, i.e. ESR's mythical description texts: 14 KB of the gzip)                 |
+| `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
 | `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                               |
 
 ### Bases and types
@@ -673,6 +673,15 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `lowQuality` (vanilla lowqualityitems.txt: Crude, Cracked, Damaged, Low Quality), `superior` (`Hiquality`).
 - `setBonusPieces`: set items whose aprop groups are not 2, 3, 4… pieces, by setitems.txt row: the pieces of each
   bonus list a save stores (the k-th list is the k-th non-empty group). ESR 3.2.24: one (row 17: 2, 4).
+- `bases` (`build/itemTextBases.ts`): per item code with any of them, `d1` / `d2` / `dt` (one-hand, two-hand, throw
+  damage as the tooltip shows them: one-hand unless two-handed only, two-hand when two-handed or one-or-two-handed),
+  `str` / `dex` / `lvl` requirements and `gem`, the `gemapplytype` when not 0 (1 = gems give their helm column, 2 =
+  their shield column; ESR sets it per item: body armor and belts 2, boots 1, gloves 0, wands and caster staves 1).
+- `socketables`: per gems.txt code (gems, runes …) its weapon / helm / shield columns as saved stats
+  (`[stat id, param, value]`, the layered stats packed like a save), property groups resolved (ESR's gem columns
+  name groups such as `chipped-amethyst-weap`).
+- `levels`: required levels by the ids a save stores: uniqueitems / setitems `lvl req`, magicprefix / magicsuffix /
+  automagic `levelreq` (1-based like the names).
 
 Counts (ESR 3.2.24): `itemTextStats` 666, `itemTextStrings` 388, `itemTextSkills` 897, `itemTextMonsters` 393,
 `itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.

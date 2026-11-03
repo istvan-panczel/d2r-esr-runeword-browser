@@ -836,7 +836,14 @@ describe('committed game-data bundles', () => {
     expect(itemText.classes.map((cls) => cls.name.slice(0, 3).toLowerCase())).toEqual([...CLASS_CODES]);
     expect(itemText.monsters.filter((name) => name !== null)).toHaveLength(manifest.counts.itemTextMonsters ?? -1);
     // lazy and small: fetched only by /stash/items
-    expect(manifest.files.itemtext?.bytes).toBeLessThan(260_000);
+    // base data, socket fillers and required levels (ESR 3.2.24): gloves take the weapon column of the N Rune
+    expect(itemText.bases.tgl).toMatchObject({ str: 45 });
+    expect(itemText.bases.tgl?.gem).toBeUndefined();
+    expect(itemText.bases.gsd).toMatchObject({ d1: [12, 20], d2: [25, 42], str: 100, dex: 60 });
+    expect(Object.keys(itemText.socketables).length).toBeGreaterThan(170);
+    expect(Object.values(itemText.socketables).filter((columns) => columns.every((column) => column.length === 0))).toEqual([]);
+    expect(itemText.levels.uniques.length).toBeGreaterThan(1000);
+    expect(manifest.files.itemtext?.bytes).toBeLessThan(520_000);
   });
 
   it('resolve the merc/helm name collision and class-only bases', () => {

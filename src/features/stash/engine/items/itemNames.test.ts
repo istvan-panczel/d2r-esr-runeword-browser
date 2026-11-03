@@ -46,6 +46,9 @@ function emptyText(): ItemTextBundle {
     rareNames: [],
     lowQuality: [],
     superior: 'Superior',
+    bases: {},
+    socketables: {},
+    levels: { uniques: [], setItems: [], magicPrefixes: [], magicSuffixes: [], autoAffixes: [] },
   };
 }
 

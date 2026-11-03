@@ -1233,4 +1233,38 @@ export interface ItemTextBundle {
    * item's bonus lists, in order (the k-th list a save stores is the k-th non-empty aprop group)
    */
   setBonusPieces?: Record<string, number[]>;
+  /** Item codes with base tooltip data (weapons.txt damage, requirements, gem apply type); absent = none */
+  bases: Record<string, ItemTextBase>;
+  /**
+   * Socket fillers by code (gems.txt: gems, runes …): the stats they give in an item of gem apply type 0 (weapon), 1
+   * (helm column) and 2 (shield column), in the form a save stores them
+   */
+  socketables: Record<string, [ItemTextSavedStat[], ItemTextSavedStat[], ItemTextSavedStat[]]>;
+  /** Required levels by the ids a save stores (0 = none): uniqueitems / setitems `lvl req`, magic affix `levelreq` (index 0 unused) */
+  levels: {
+    uniques: number[];
+    setItems: number[];
+    magicPrefixes: number[];
+    magicSuffixes: number[];
+    autoAffixes: number[];
+  };
+}
+
+/** A stat as a save stores it: [itemstatcost id, param (event / charged `skill << 6 | level`, tab `class << 3 | tab`), value] */
+export type ItemTextSavedStat = [number, number, number];
+
+/** A base's tooltip data (weapons.txt / armor.txt / misc.txt); fields without a value are left out */
+export interface ItemTextBase {
+  /** One-hand damage min, max (`mindam` / `maxdam`; not on two-handed-only weapons) */
+  d1?: [number, number];
+  /** Two-hand damage min, max (`2handmindam` / `2handmaxdam`; two-handed or one-or-two-handed weapons) */
+  d2?: [number, number];
+  /** Throw damage min, max (`minmisdam` / `maxmisdam`) */
+  dt?: [number, number];
+  /** Required strength / dexterity / level */
+  str?: number;
+  dex?: number;
+  lvl?: number;
+  /** `gemapplytype` when not 0: 1 = socketed gems give their helm column, 2 = their shield column */
+  gem?: number;
 }

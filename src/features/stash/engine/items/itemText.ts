@@ -12,7 +12,8 @@ import type { ItemTextBundle } from '@/features/game-data/engine/schema';
 import { renderLines } from '@/features/game-data/engine/stats/renderLines';
 import type { StashItem, StashStat } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
-import { createTextData, foldSecondary, STAT_ID, toEntries, type TextData } from './textData';
+import { baseText, socketStats, totalStats } from './baseLines';
+import { createTextData, toEntries, type TextData } from './textData';
 import { itemStatValues } from './statValues';
 
 /** Affix and rare names by the ids a save stores (`StashItem.prefixIds` …); null for 0 or an unknown id */
@@ -136,44 +137,6 @@ export function createItemTextContext(bundle: ItemTextBundle | null, catalog: St
   return ctx;
 }
 
-/**
- * The stats that count for an item's tooltip totals: its own, its runeword's and those of the jewels in its sockets,
- * each list with its two-hand damage folded into min / max damage (textData.ts `foldSecondary`)
- */
-export function totalStats(item: StashItem): StashStat[] {
-  return [item.stats, item.runewordStats, ...item.socketed.filter((child) => !child.compact).map((child) => child.stats)].flatMap(
-    foldSecondary
-  );
-}
-
-function sumOf(stats: readonly StashStat[], id: number): number {
-  return stats.reduce((sum, stat) => (stat.id === id ? sum + stat.value : sum), 0);
-}
-
-/**
- * The base lines. With the item text, Defense is the tooltip's: the saved base defense with the item's enhanced
- * defense % and + defense (own, runeword and socketed jewel stats; not per-level defense).
- */
-function baseLines(item: StashItem, withStats: boolean): string[] {
-  const lines: string[] = [];
-  if (item.defense !== null) {
-    const stats = withStats ? totalStats(item) : [];
-    const defense = Math.floor((item.defense * (100 + sumOf(stats, STAT_ID.armorPercent))) / 100) + sumOf(stats, STAT_ID.armorClass);
-    lines.push(`Defense: ${String(defense)}`);
-  }
-  // Max durability as saved: whether the tooltip adds item_maxdurability_percent (op 13) is unverified (no fixture
-  // item has it), so it is not applied
-  if (item.maxDurability !== null) {
-    lines.push(
-      item.maxDurability === 0 ? 'Indestructible' : `Durability: ${String(item.durability ?? 0)} of ${String(item.maxDurability)}`
-    );
-  }
-  if (item.quantity !== null) lines.push(`Quantity: ${String(item.quantity)}`);
-  if (item.ethereal) lines.push('Ethereal (Cannot be Repaired)');
-  if (item.sockets !== null) lines.push(`Socketed (${String(item.sockets)})`);
-  return lines;
-}
-
 /** The display lines of a stat list (game order: summed, damage pairs and dgrp sets merged, by descpriority) */
 export function statLines(stats: readonly StashStat[], data: TextData): string[] {
   return stats.length === 0 ? [] : renderLines(toEntries(stats, data), data.render);
@@ -191,7 +154,7 @@ export function renderItemText(item: StashItem, ctx: ItemTextContext): ItemTextG
   const data = textDataOf(ctx);
   if (data === null) {
     return {
-      base: baseLines(item, false),
+      base: baseText(item, null).lines,
       stats: [],
       runeword: [],
       setBonuses: [],
@@ -200,17 +163,17 @@ export function renderItemText(item: StashItem, ctx: ItemTextContext): ItemTextG
   }
   const pieces = bonusPieces(item, data);
   return {
-    base: baseLines(item, true),
+    base: baseText(item, data).lines,
     stats: statLines(item.stats, data),
     runeword: statLines(item.runewordStats, data),
     setBonuses: item.setBonusStats.map((stats, index) => ({ pieces: pieces(index), lines: statLines(stats, data) })),
-    // runes and gems are compact items: their bonuses come from gems.txt, not from saved stats (shown by name only)
-    socketed: item.socketed.map((child) => ({ item: child, lines: child.compact ? [] : statLines(child.stats, data) })),
+    // runes and gems: their gems.txt column for this item's gem apply type; jewels: their saved stats
+    socketed: item.socketed.map((child) => ({ item: child, lines: statLines(socketStats(child, item, data), data) })),
   };
 }
 
 /** The displayed value of every filterable stat of an item (rules: `StatValue`); the placeholder has none. */
 export function statValues(item: StashItem, ctx: ItemTextContext): StatValue[] {
   const data = textDataOf(ctx);
-  return data === null ? [] : itemStatValues(totalStats(item), data);
+  return data === null ? [] : [...baseText(item, data).values, ...itemStatValues(totalStats(item, data), data)];
 }

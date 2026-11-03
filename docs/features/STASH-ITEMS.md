@@ -130,27 +130,45 @@ fed by `items/textData.ts` (saved stats → renderer entries) and `items/statVal
   both stores one property twice (the secondary copy is dropped); so a socketed jewel's max damage adds up with a
   two-hander's, in `s22` and `g.dmg-phys`. Multi-line texts (ESR's mythical
   descriptions) are several lines. A stat itemtext.json lacks reads "Unknown stat N: V" (none in the fixture).
-- **Base lines**: Defense is the tooltip's (saved base defense × (100 + enhanced defense %) / 100 + defense, over own,
-  runeword and socketed jewel stats, not per-level defense), then Durability / Indestructible (max durability as
-  saved: whether the tooltip adds `item_maxdurability_percent`, op 13, is unverified, no fixture item has it), Quantity, Ethereal,
-  Socketed (N). No weapon damage or requirement lines yet (not in the owner's list; base damage would need bases.json).
+- **Socket fillers** (`items/baseLines.ts`): runes, gems and the other gems.txt codes (compact items, no saved stats)
+  give the gems.txt column of the parent's gem apply type (weapons.txt / armor.txt / misc.txt `gemapplytype`: 0 weapon,
+  1 helm, 2 shield; ESR's docs call the columns "Weapons / Gloves", "Helms / Boots", "Armor / Shields / Belts"; e.g.
+  Darkflight Hand's N Rune is "-25% Target Defense", not the "Regenerate Mana +40%" of helms and armor). They are shown
+  under the socketed item and count in the stat values, also on runeword and gemword items: the game applies the stats
+  of every socketed item (a runeword's total is its own stats plus its runes' bonuses; gemwords the same). A gems.txt
+  random pool would have no saved roll (none in ESR 3.2.24). Jewels give their saved stats.
+- **Base lines** (tooltip order): One-Hand / Two-Hand / Throw Damage (weapons.txt `mindam` / `2handmindam` /
+  `minmisdam` by the one- / two-handed flags; ×1.5 when ethereal, × (100 + enhanced min / max damage %) / 100, + min /
+  max damage, a max at or below the min reads min + 1; the + damage of all lines is the folded min / max damage, so the
+  hidden throw damage stats are not read; per-level damage is left out, it needs the character level), Defense (saved
+  base defense, ethereal included, × (100 + enhanced defense %) / 100 + defense; not per-level defense), Durability /
+  Indestructible (max durability as saved: whether the tooltip adds `item_maxdurability_percent`, op 13, is
+  unverified, no fixture item has it), Quantity, Required Dexterity / Strength (base × (100 + requirements %) / 100,
+  −10 when ethereal), Required Level (the highest of the base, the unique / set item `lvl req`, the magic / rare /
+  automagic affixes' `levelreq` and the socketed items, + `item_levelreq`; crafted items + 10 + 3 per affix, D2's rule,
+  not in the fixture; class-specific affix levels are not read), Ethereal, Socketed (N). All of the own, runeword and
+  socket stats count.
+- **Base values**: `b.dmg1` / `b.dmg2` / `b.dmgthrow` (range, value = max), `b.def`, `b.reqdex`, `b.reqstr`,
+  `b.reqlvl` (`statId` null, labels "Required Level: #" …), so "Required Level ≤ 60" can be filtered.
 - **Groups**: `stats` = the item's own list, `runeword` = the runeword list, `setBonuses` = one per saved bonus list with
   its pieces (2, 3, … or itemtext.json `setBonusPieces`), `socketed` = the item's own socketed objects (same identity)
-  with no lines for runes and gems (compact items) and the stats of jewels.
-- **Stat values** (`statValues`, contract rules above): one entry per key, summed over own + runeword + socketed jewel
-  stats. Keys: `s<id>`, `s<id>.<param>` (param = class for 13, packed tab for 14, skill for 15 / 16 / 24 / 27 / 28,
+  with the lines of what each one gives (socket fillers: their gems.txt column; jewels: their stats).
+- **Stat values** (`statValues`, contract rules above): one entry per key, summed over own + runeword + socket stats
+  (jewels and socket fillers). Keys: `s<id>`, `s<id>.<param>` (param = class for 13, packed tab for 14, skill for 15 / 16 / 24 / 27 / 28,
   monster type for 22), `g.<name>` (`allres`, `allattr`, the other dgrp sets by their dgrpstrpos key, e.g.
   `g.allspeeds`, `g.minelementaldamage`, except ESR's magic damage dgrp, which `g.dmg-magic` covers; `g.dmg-phys` / `-magic` / `-fire` / `-light` / `-cold` / `-pois` with `range`;
   `g.ed`); all match `^[A-Za-z0-9.-]+$`. Labels have one `#` (two for a range: min, max); a per-level label leaves out
   "(Based on Character Level)" (`perLevel` says it). Event skills and charges: value = skill level, the highest when a
   skill repeats. Text-only lines (mythical descriptions, descfunc 23 without a value) have no entry.
-- **Known gaps (v1)**: socketed runes' and gems' bonuses are neither rendered nor summed (they come from gems.txt, not
-  from saved stats; the item shows their names); weapon damage and requirement lines; set-wide bonuses (sets.json).
+- **Approximated / not shown**: per-level damage and defense in the base lines, max durability %, crafted required
+  level (D2's rule), class-specific affix required levels, smite / kick damage; set-wide bonuses (sets.json).
 - **Fixture** (`itemText.fixture.integration.test.ts`, 2189 page items): no unknown stat or unresolved string; owned
   uniques' lines match the docs pages (unique_*.htm, numbers masked) at 98.8 % (4013 / 4062; the rest: rolled min / max
   ranges the docs write as two lines, dgrp sets with unequal values, "Freezes target" without "+1", random class skills
   the docs name generically, repair wording); runeword lines match runewords.json 9 / 9; set items match sets.json
-  99.8 % (own lines), 100 % (bonus lines and their pieces). Rendering the whole stash (lines + stat values): ~90 ms.
+  99.8 % (own lines), 100 % (bonus lines and their pieces); owned uniques' Required Level matches the docs pages 455 /
+  455; every socket filler has lines. The docs pages list no damage, so damage is checked by the unit tests only.
+  Rendering the whole stash (lines + stat values): ~100 ms.
 - `types.json`: item type names and ancestors (item type search, category).
 
 ## Parser fields

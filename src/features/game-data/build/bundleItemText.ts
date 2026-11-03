@@ -18,6 +18,7 @@ import type { ItemTextBundle, ItemTextStatDef } from '../engine/schema.ts';
 import { RENDER_LINES_STRINGS } from '../engine/stats/renderLines.ts';
 import { statLayerKind } from '../engine/statLayers.ts';
 import type { BuildResult } from './bundleTypes.ts';
+import { buildItemTextBases, type ItemTextBasesInput } from './itemTextBases.ts';
 import { createSkillLookup } from './stats/skills.ts';
 import type { StatTables } from './stats/tables.ts';
 import type { TsvTable } from './tsv.ts';
@@ -46,6 +47,8 @@ export interface ItemTextInput {
    * params of descfunc 23 stats are collected from it
    */
   mods: readonly (ItemTextMod & { min?: number; max?: number })[];
+  /** Base damage / requirements, socket fillers and required levels (build/itemTextBases.ts) */
+  bases: Omit<ItemTextBasesInput, 'statIds' | 'expand' | 'groups' | 'magicprefix' | 'magicsuffix' | 'automagic' | 'setitems'>;
 }
 
 /** Vanilla raresuffix.txt `name` keys in file order: rare name ids 1-155 */
@@ -218,6 +221,23 @@ export function buildItemTextBundle(input: ItemTextInput, strings: ReadonlyMap<s
     if (pieces.some((count, i) => count !== i + 2)) setBonusPieces[String(id)] = pieces;
   });
 
+  const statIds = new Map<string, number>();
+  input.itemstatcost.rows.forEach((row, id) => {
+    const name = row.str('Stat');
+    if (name !== '' && !statIds.has(name)) statIds.set(name, id);
+  });
+  const baseParts = buildItemTextBases({
+    ...input.bases,
+    magicprefix: input.magicprefix,
+    magicsuffix: input.magicsuffix,
+    automagic: input.automagic,
+    setitems: input.setitems,
+    statIds,
+    expand: { properties: input.statTables.properties, strings, skills: lookup },
+    groups: input.statTables.groups,
+  });
+  warnings.push(...baseParts.warnings);
+
   return {
     bundle: {
       stats,
@@ -233,6 +253,9 @@ export function buildItemTextBundle(input: ItemTextInput, strings: ReadonlyMap<s
       lowQuality: LOW_QUALITY_KEYS.map((key) => text(key) ?? key),
       superior: text(SUPERIOR_KEY) ?? 'Superior',
       setBonusPieces,
+      bases: baseParts.bases,
+      socketables: baseParts.socketables,
+      levels: baseParts.levels,
     },
     warnings,
   };

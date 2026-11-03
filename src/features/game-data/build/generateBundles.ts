@@ -330,6 +330,13 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       statTables,
       skillIds: lootFilterSkills.bundle.skills.map((skill) => skill.id),
       mods: modSources.flatMap((source) => source.mods),
+      bases: {
+        weapons: table('weapons'),
+        armor: table('armor'),
+        misc: table('misc'),
+        gems: table('gems'),
+        uniqueitems: rowTable('uniqueitems'),
+      },
     },
     strings
   );

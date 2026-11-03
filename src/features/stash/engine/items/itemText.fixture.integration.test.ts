@@ -244,4 +244,46 @@ describeWithFixture('item text of the stash fixture', (fixture) => {
     expect(share(counts.bonus)).toBeGreaterThanOrEqual(95);
     expect(share(counts.pieces)).toBe(100);
   });
+
+  it.skipIf(!hasDocs)("gives the uniques the docs pages' required level, and socket fillers their gems.txt column", () => {
+    const { stash, catalog, ctx } = load();
+    const docs = UNIQUE_PAGES.flatMap(([file, page]) =>
+      parseHtmUniqueItems(readFileSync(resolve(ROOT, 'test-fixtures', file), 'utf-8'), page)
+    );
+    let total = 0;
+    let matched = 0;
+    const mismatches: string[] = [];
+    for (const { item } of walkStashItems(stash, { socketed: true })) {
+      if (item.quality !== 'unique' || item.uniqueId === null) continue;
+      const name = catalog.unique(item.uniqueId)?.name ?? '';
+      const entry = docs.find((doc) => doc.name === name && doc.baseItemCode === item.code) ?? docs.find((doc) => doc.name === name);
+      if (entry === undefined) continue;
+      const level = statValues(item, ctx).find((value) => value.key === 'b.reqlvl')?.value ?? 0;
+      total++;
+      if (level === entry.reqLevel) matched++;
+      else
+        mismatches.push(
+          `${name} (${item.code}${item.socketed.length > 0 ? ', socketed' : ''}): ${String(level)} vs docs ${String(entry.reqLevel)}`
+        );
+    }
+    const share = (matched / Math.max(1, total)) * 100;
+    console.log(
+      `Required level vs unique docs: ${String(matched)} of ${String(total)} (${share.toFixed(1)} %)\n${mismatches
+        .slice(0, 30)
+        .map((line) => `  ${line}`)
+        .join('\n')}`
+    );
+    expect(share).toBeGreaterThanOrEqual(95);
+
+    // gloves take the weapon column (ESR: "Weapons / Gloves"), a runeword's runes their own bonuses
+    const rendered = walkStashItems(stash, { socketed: false }).map(({ item }) => ({ item, groups: renderItemText(item, ctx) }));
+    const darkflight = rendered.find(({ item }) => item.uniqueId !== null && catalog.unique(item.uniqueId)?.name === 'Darkflight Hand');
+    expect(darkflight?.groups.socketed.map((entry) => [entry.item.code, entry.lines])).toEqual([['r05', ['-25% Target Defense']]]);
+    const cow = rendered.find(({ item }) => item.runewordId !== null && catalog.runeword(item.runewordId)?.name === 'Cow');
+    expect(cow?.groups.socketed.flatMap((entry) => entry.lines)).toContain('+75% Damage to Undead');
+    // every socket filler of the fixture has its gems.txt stats
+    const fillers = rendered.flatMap(({ groups }) => groups.socketed.filter((entry) => entry.item.compact));
+    expect(fillers.length).toBeGreaterThan(5);
+    expect(fillers.filter((entry) => entry.lines.length === 0).map((entry) => entry.item.code)).toEqual([]);
+  });
 });

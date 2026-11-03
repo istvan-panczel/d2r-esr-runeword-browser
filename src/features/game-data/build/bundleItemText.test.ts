@@ -8,6 +8,95 @@ const tsv = (rows: string[][]) => parseTsv(rows.map((row) => row.join('\t')).joi
 const STAT_HEADER = ['Stat', 'Save Bits', 'op', 'op param', 'descpriority', 'descfunc', 'descval', 'descstrpos', 'descstrneg', 'descstr2'];
 const DGRP_HEADER = ['dgrp', 'dgrpfunc', 'dgrpstrpos', 'dgrpstrneg', 'dgrpval', 'dgrpstr2'];
 
+const BASES = {
+  weapons: tsv([
+    [
+      'code',
+      'mindam',
+      'maxdam',
+      '1or2handed',
+      '2handed',
+      '2handmindam',
+      '2handmaxdam',
+      'minmisdam',
+      'maxmisdam',
+      'reqstr',
+      'reqdex',
+      'levelreq',
+      'gemapplytype',
+    ],
+    ['ssd', '2', '7', '0', '0', '', '', '', '', '', '', '', '0'],
+    ['bsd', '7', '14', '1', '0', '13', '30', '', '', '47', '', '', '0'],
+    ['2hs', '', '', '0', '1', '8', '17', '', '', '35', '27', '', '0'],
+    ['tkf', '2', '3', '0', '0', '', '', '4', '9', '', '21', '', '0'],
+    ['wnd', '2', '4', '0', '0', '', '', '', '', '', '', '', '1'],
+  ]),
+  armor: tsv([
+    ['code', 'reqstr', 'levelreq', 'gemapplytype'],
+    ['cap', '', '', '1'],
+    ['uap', '50', '62', '1'],
+  ]),
+  misc: tsv([
+    ['code', 'levelreq', 'gemapplytype'],
+    ['r01', '11', '0'],
+    ['elx', '', '0'],
+  ]),
+  gems: tsv([
+    [
+      'name',
+      'code',
+      ...['weapon', 'helm', 'shield'].flatMap((column) =>
+        [1, 2, 3].flatMap((i) => ['Code', 'Param', 'Min', 'Max'].map((part) => `${column}Mod${String(i)}${part}`))
+      ),
+    ],
+    [
+      'El Rune',
+      'r01',
+      'str',
+      '',
+      '5',
+      '5',
+      'hit-skill',
+      'Fire Bolt',
+      '10',
+      '3',
+      '',
+      '',
+      '',
+      '',
+      'dex',
+      '',
+      '2',
+      '2',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'each',
+      '',
+      '1',
+      '1',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ],
+  ]),
+  uniqueitems: tsv([
+    ['index', 'lvl req'],
+    ['A', '5'],
+    ['B', ''],
+  ]),
+};
+
 function build(strings: ReadonlyMap<string, string> = TEST_STRINGS) {
   return buildItemTextBundle(
     {
@@ -19,6 +108,9 @@ function build(strings: ReadonlyMap<string, string> = TEST_STRINGS) {
         ['item_mythicaldesc', '12', '', '', '330', '23', '', 'mythicalitemdesc', '', '', '', '', '', ''],
         ['item_missingdesc', '7', '', '', '1', '19', '', 'NoSuchKey', '', '', '', '', '', ''],
         ['coldlength', '16', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['dexterity', '14', '', '', '65', '19', '', 'ModStr1b', '', '', '', '', '', ''],
+        ['item_skillonhit', '16', '', '', '160', '15', '', 'ItemExpansiveChanc1', '', '', '', '', '', ''],
+        ['fireresist', '12', '', '', '36', '19', '', 'ModStr1j', '', '', '', '', '', ''],
       ]),
       magicprefix: tsv([
         ['Name', 'version'],
@@ -36,6 +128,7 @@ function build(strings: ReadonlyMap<string, string> = TEST_STRINGS) {
       ]),
       statTables: testTables(),
       skillIds: [0],
+      bases: BASES,
       mods: [
         { code: 'mythicaldesc', param: '2' },
         { code: 'mythicaldesc', param: 'skeleton1' },
@@ -49,7 +142,7 @@ function build(strings: ReadonlyMap<string, string> = TEST_STRINGS) {
 describe('buildItemTextBundle', () => {
   it('keeps the display columns of the saved stats only, without blank or default columns', () => {
     const { bundle } = build();
-    expect(bundle.stats).toHaveLength(6);
+    expect(bundle.stats).toHaveLength(9);
     expect(bundle.stats[0]).toEqual({
       stat: 'strength',
       descpriority: 67,
@@ -131,5 +224,43 @@ describe('buildItemTextBundle', () => {
 
   it('lists set bonus pieces only for set items whose bonus groups are not 2, 3, 4…', () => {
     expect(build().bundle.setBonusPieces).toEqual({ '1': [3, 5] });
+  });
+
+  it('writes the base damage, requirements and gem apply types as the tooltip shows them', () => {
+    const { bases } = build().bundle;
+    expect(bases.ssd).toEqual({ d1: [2, 7] });
+    expect(bases.bsd).toEqual({ d1: [7, 14], d2: [13, 30], str: 47 });
+    // two-handed only: no one-hand line
+    expect(bases['2hs']).toEqual({ d2: [8, 17], str: 35, dex: 27 });
+    expect(bases.tkf).toEqual({ d1: [2, 3], dt: [4, 9], dex: 21 });
+    expect(bases.wnd).toEqual({ d1: [2, 4], gem: 1 });
+    expect(bases.uap).toEqual({ str: 50, lvl: 62, gem: 1 });
+    expect(bases.r01).toEqual({ lvl: 11 });
+    expect(bases.elx).toBeUndefined();
+  });
+
+  it('writes the socket fillers per gems.txt column as saved stats, property groups resolved', () => {
+    const { bundle, warnings } = build();
+    // weapon: str 5 + hit-skill Fire Bolt (skill 2) 10% level 3 → param skill << 6 | level, value = chance
+    // helm: dex 2; shield: the "each" group = str 3 + fire resist 10
+    expect(bundle.socketables.r01).toEqual([
+      [
+        [0, 0, 5],
+        [7, (2 << 6) | 3, 10],
+      ],
+      [[6, 0, 2]],
+      [
+        [0, 0, 3],
+        [8, 0, 10],
+      ],
+    ]);
+    expect(warnings.filter((warning) => warning.includes('gems'))).toEqual([]);
+  });
+
+  it('lists the required levels by the ids a save stores', () => {
+    const { levels } = build().bundle;
+    expect(levels.uniques).toEqual([5, 0]);
+    // 1-based affix ids; the mock tables have no levelreq column
+    expect(levels.magicPrefixes).toEqual([0, 0, 0, 0, 0]);
   });
 });
