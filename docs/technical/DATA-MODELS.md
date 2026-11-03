@@ -341,6 +341,15 @@ function EsrRuneList() {
 }
 ```
 
+## Stash Database
+
+The uploaded shared stash (My Stash pages) lives in a second Dexie database, `d2r-esr-stash`
+(`src/features/stash/db/stashDb.ts`), not in the cache database above: that one is cleared on every HTM data sync and
+deleted when it cannot be upgraded, while the stash file is user data. One table, `files` (key `key`), holds one
+record (`key: 'last'`): the raw file bytes (`ArrayBuffer`) with `name`, `size`, `lastModified` and `uploadedAt`. The
+bytes are re-parsed on every visit, so parser fixes and new game data apply without a re-upload. "Clear" deletes the
+record. See [STASH.md](../features/STASH.md).
+
 ## Game Data Bundles
 
 The Game Data pages do not use Dexie. Their data is static JSON under `public/game-data/`, typed in

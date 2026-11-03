@@ -26,6 +26,7 @@ Architecture decisions, coding guidelines, tech stack documentation, and impleme
 - [Skills](./features/SKILLS.md) - Class skill trees and item-granted skills from the game files: descriptions, synergies, the items that grant each skill (`/skills`)
 - [Loot Filter](./features/LOOT-FILTER.md) - Loot filter editor for ESR's loot filter plugin: shared and saved filters (Supabase), browser drafts, rule builder with game-data pickers, styles, label/sound/icon previews, JSON tab, test-item tab, download for the launcher
 - [Loot Filter backlog](./features/LOOT-FILTER-BACKLOG.md) - Deferred loot filter requests: what waits for an in-game check, what needs the plugin or the mod, what was decided against
+- [My Stash](./features/STASH.md) - Upload the ESR shared stash (.d2i), parsed and remembered in the browser only; Ancient Coupons page (`/stash`, `/stash/coupons`)
 - [Guide](./features/GUIDE.md) - New-player guide: markdown notes compiled into a static bundle, journey spine, data directives, staleness tracking
 
 ### Technical Documentation
@@ -79,6 +80,7 @@ The app uses a single HTM-based data system. All data is fetched from the ESR do
 | Game Data: Item Types | `/game-data/types`                                                                     | Item type (Equiv) tree with socket caps; `?type=<code>` focuses a node                                                                                                                                                                |
 | Game Data: Areas      | `/game-data/areas`                                                                     | Every area from levels.txt by act, then the endgame maps by tier and zone: monster level, density and unique packs per difficulty, waypoint, boss, connections; search, min / max monster level                                       |
 | Loot Filters          | `/loot-filters`, `/loot-filters/:id`, `/loot-filters/draft/:id`, `/loot-filters/sully` | Loot filter editor for ESR's loot filter plugin: library (Shared / My filters), rule builder, styles, JSON and test tabs, download for the launcher; saving and sharing need Supabase ([LOOT-FILTER.md](./features/LOOT-FILTER.md))   |
+| My Stash              | `/stash`, `/stash/coupons`                                                             | Upload the shared stash (.d2i), parsed in the browser and remembered in IndexedDB; the Ancient Coupons you own with the uniques they make, have / need, Wild Card recipe and locations ([STASH.md](./features/STASH.md))              |
 | Builds                | `/builds`, `/builds/new`, `/builds/:buildId/edit`, `/build/:buildId`, `/user/:userId`  | Shared builds; needs the optional Supabase backend (`src/features/builds/`, `src/features/auth/`)                                                                                                                                     |
 | Not found             | `*`                                                                                    | Catch-all 404 screen                                                                                                                                                                                                                  |
 
@@ -89,7 +91,7 @@ Favourites for runewords, gemwords, and unique items (sign-in required, synced t
 A second, build-time data source: `npm run game-data:generate` converts the ESR repo's txt game tables (from a local
 clone at `../Eastern_Sun_Resurrected`) into JSON committed under `public/game-data/` (`manifest.json`, `types.json`,
 `bases.json`, `runewords.json`, `affixes.json`, `sources.json`, `lootfilter.json`, `enhance.json`, `cube.json`,
-`materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `crafting.json`, `tiers.json`, `areas.json`; `skills.json` feeds the Skills page
+`materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `crafting.json`, `tiers.json`, `areas.json`, `stash.json`; `skills.json` feeds the Skills page
 and the builds feature, `crafting.json` the builds feature only), plus item icons from the mod's HD sprites, with the
 vanilla D2R art extracted from a game install as the fallback (`npm run game-data:icons`: `icons.json` + `icons/*.webp`:
 bases, uniques, set items and socketables, shown on the Bases, Sets, Unique Items and Socketables pages, in builds and in the runeword cards' socket row),

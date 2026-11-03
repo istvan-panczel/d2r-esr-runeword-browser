@@ -35,6 +35,9 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/loot-filters`         | LootFilterLayout        | Loot filter frame: an "Under development" notice above every loot-filter page, then the child route           |                                                                                                        |
 | `/loot-filters` (index) | LootFilterLibraryScreen | Loot filter library: new, upload, Sully's QoL filter template, download (.json or .zip)                       |                                                                                                        |
 | `/loot-filters/:id`     | LootFilterEditorScreen  | Loot filter editor; unknown id shows "Filter not found"                                                       | `tab=rules\|styles\|settings\|json\|test`                                                              |
+| `/stash`                | StashLayout             | My Stash frame: Overview / Ancient Coupons tabs, shared upload state ([STASH](../features/STASH.md))          |                                                                                                        |
+| `/stash` (index)        | StashHomeScreen         | Upload (or the loaded file) and the stash pages with a one-line summary each                                  |                                                                                                        |
+| `/stash/coupons`        | StashCouponsScreen      | Ancient Coupons in the uploaded stash: unique, have / need, Wild Card recipe, where                           | `search`, `status`, `tier`, `page`, `sort`, `dir` (kept in the URL)                                    |
 | `/builds`               | BuildsScreen            | Shared builds list (Supabase only)                                                                            |                                                                                                        |
 | `/builds/new`           | CreateBuildScreen       | Create a build (sign-in required)                                                                             |                                                                                                        |
 | `/builds/:buildId/edit` | EditBuildScreen         | Edit an own build                                                                                             |                                                                                                        |
@@ -136,6 +139,8 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 - `/game-data/enhance`, `/game-data/cube`, `/game-data/materials`, `/game-data/sets` and `/game-data/areas`: only
   `enhance.json` / `cube.json` / `materials.json` / `sets.json` / `areas.json` (+ the guide bundle, or sources.json for Sets) (the other Game Data pages stay behind the gate: Best Base matches the HTM
   runewords), see [GAME-DATA.md](../features/GAME-DATA.md).
+- `/stash`: the My Stash pages read `stash.json` and the uploaded file (IndexedDB `d2r-esr-stash`), see
+  [STASH.md](../features/STASH.md).
 
 ### Header Components
 
@@ -148,13 +153,14 @@ cards render from the same config (group `description`, link `homeLinks`):
 | Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                           |
 | Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/game-data/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Bases (`/game-data/bases`), Materials (`/game-data/materials`), Areas (`/game-data/areas`) |
 | Tools ▾    | group | Best Base (`/game-data/best-base`), Affixes (`/game-data/affixes`), Item Types (`/game-data/types`), Enhance (`/game-data/enhance`), Cube Recipes (`/game-data/cube`), Loot Filters (`/loot-filters`)                    |
+| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`)                                                                                                                            |
 | Guide      | link  | `/guide`                                                                                                                                                                                                                 |
 | Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                            |
 
 - **Brand**: "D2R ESR", a link to `/` (the home page).
 - **Desktop (md and up)**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
   each dropdown opens under its own trigger). Each group trigger opens a list of label + description links. Active state:
-  an item is active when the path equals its `to` or starts with `to/` (no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). Active links
+  an item is active when the path equals its `to` or starts with `to/` (only the former for an `exact` item; no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). Active links
   get `aria-current="page"`. Keyboard (Radix): triggers are in the tab order, Enter/Space/ArrowDown opens, arrows and
   Tab move through the items, Escape closes; choosing a link closes the menu.
 - **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Drop Finder, Frame Table, Changelog, ESR Discord, ESR on GitHub,
