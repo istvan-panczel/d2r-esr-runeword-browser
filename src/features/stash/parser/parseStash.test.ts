@@ -85,6 +85,27 @@ describe('parseStash', () => {
     expect(() => parseStash(section(0x63, 0, itemList([])), data)).toThrow(UnsupportedStashError);
   });
 
+  it.each([
+    ['a page', 0, 2, 'an item list header'],
+    ['a Chronicle tab', 2, 6, 'the Chronicle header'],
+  ])('reports %s too short for its header with the section, not a RangeError', (_label, tabType, bodyBytes, what) => {
+    // Two sections, so the short one is not at the end of the file: its reads would run into the next section
+    const file = concat(
+      section(ESR_EXTENDED_VERSION, 0, itemList([])),
+      section(ESR_EXTENDED_VERSION, tabType, new Uint8Array(bodyBytes)),
+      section(ESR_EXTENDED_VERSION, 0, itemList([]))
+    );
+    let error: unknown;
+    try {
+      parseStash(file, data);
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(StashParseError);
+    expect((error as StashParseError).details.section).toBe(1);
+    expect((error as StashParseError).message).toContain(`too few for ${what}`);
+  });
+
   it('reports a section whose items do not end at the section end', () => {
     const body = concat(itemList([{ code: '01c' }]), new Uint8Array(3));
     let error: unknown;

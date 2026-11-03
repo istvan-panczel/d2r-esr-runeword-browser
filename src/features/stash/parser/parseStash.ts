@@ -24,6 +24,10 @@ export const ESR_EXTENDED_VERSION = 0x44520005;
 const LOADER_VERSION_TAG = 0x4452;
 const ITEM_LIST_MAGIC = 0x4d4a; // "JM"
 const CHRONICLE_MAGIC = 0xc0eaedc0;
+/** "JM" + u16 item count */
+const ITEM_LIST_HEADER_BYTES = 4;
+/** Magic + u16 version + u16 set / unique / runeword counts + reserved bytes; the counts end at byte 12 */
+const CHRONICLE_HEADER_BYTES = 12;
 const TAB_TYPES: readonly StashTabType[] = ['normal', 'advanced', 'chronicle'];
 
 export type StashKind = 'esr-extended' | 'legacy' | 'retail' | 'loader-unknown' | 'not-a-stash';
@@ -70,9 +74,11 @@ function readItemList(
   view: DataView,
   section: number,
   start: number,
+  sectionEnd: number,
   data: StashData,
   layout: ItemLayout
 ): { items: StashItem[]; end: number } {
+  assertBodyFits(section, start, ITEM_LIST_HEADER_BYTES, sectionEnd, 'an item list header');
   if (view.getUint16(start, true) !== ITEM_LIST_MAGIC) {
     throw new StashParseError('item list does not start with "JM"', sectionDetails(section, start));
   }
@@ -102,7 +108,18 @@ function sectionDetails(section: number | null, byte: number) {
   return { section, item: null, path: null, code: null, itemBitOffset: null, bitOffset: byte * 8 };
 }
 
-function readChronicle(view: DataView, section: number, start: number): StashSection['chronicle'] {
+/** A section body shorter than the header it must start with (the DataView reads would throw a RangeError). */
+function assertBodyFits(section: number, start: number, bytes: number, sectionEnd: number, what: string): void {
+  if (start + bytes > sectionEnd) {
+    throw new StashParseError(
+      `the section body has ${String(sectionEnd - start)} bytes, too few for ${what} (${String(bytes)} bytes)`,
+      sectionDetails(section, start)
+    );
+  }
+}
+
+function readChronicle(view: DataView, section: number, start: number, sectionEnd: number): StashSection['chronicle'] {
+  assertBodyFits(section, start, CHRONICLE_HEADER_BYTES, sectionEnd, 'the Chronicle header');
   if (view.getUint32(start, true) !== CHRONICLE_MAGIC) {
     throw new StashParseError(`chronicle tab does not start with ${hex(CHRONICLE_MAGIC)}`, sectionDetails(section, start));
   }
@@ -146,9 +163,9 @@ export function parseStash(bytes: Uint8Array, data: StashData, layout: ItemLayou
     };
     const body = offset + SECTION_HEADER_BYTES;
     if (tabType === 'chronicle') {
-      section.chronicle = readChronicle(view, index, body);
+      section.chronicle = readChronicle(view, index, body, offset + byteSize);
     } else {
-      const { items, end } = readItemList(bytes, view, index, body, data, layout);
+      const { items, end } = readItemList(bytes, view, index, body, offset + byteSize, data, layout);
       if (end !== offset + byteSize) {
         throw new StashParseError(
           `the ${String(items.length)} items end at byte ${String(end)}, the section at ${String(offset + byteSize)}`,
