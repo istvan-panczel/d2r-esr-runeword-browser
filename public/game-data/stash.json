@@ -3410,7 +3410,7 @@
     {"code":"21f","name":"Ancient Coupon (Trident, Razortine)","type":"cpn1","unique":{"id":743,"name":"Razortine"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
     {"code":"22f","name":"Ancient Coupon (Falchion, Gleamscythe)","type":"cpn1","unique":{"id":727,"name":"Gleamscythe"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
     {"code":"23f","name":"Ancient Coupon (Hunter's Bow, Witherstring)","type":"cpn1","unique":{"id":759,"name":"Witherstring"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
-    {"code":"24f","name":"Ancient Coupon (Crystal Sword, Azurewrath)","type":"cpn1","unique":{"id":728,"name":"Azurewrath_old"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
+    {"code":"24f","name":"Ancient Coupon (Crystal Sword, Azurewrath)","type":"cpn1","unique":{"id":728,"name":"Azurewrath"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
     {"code":"25f","name":"Ancient Coupon (Voulge, Steelgoad)","type":"cpn1","unique":{"id":748,"name":"Steelgoad"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
     {"code":"26f","name":"Ancient Coupon (Broad Axe, Goreshovel)","type":"cpn1","unique":{"id":705,"name":"Goreshovel"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
     {"code":"27f","name":"Ancient Coupon (Yew Wand, Maelstrom)","type":"cpn1","unique":{"id":710,"name":"Maelstrom"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},

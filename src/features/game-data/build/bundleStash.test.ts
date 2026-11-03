@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { STASH_ITEM_FLAGS } from '../engine/schema.ts';
-import { buildStashBundle } from './bundleStash.ts';
+import { buildStashBundle, uniqueNameOfCoupon } from './bundleStash.ts';
 import { readCouponRecipes } from './coupons.ts';
 import { parseTsv } from './tsv.ts';
 
@@ -43,6 +43,7 @@ describe('buildStashBundle', () => {
         ['Tome', 'tbk', 'tbk', 'book', '1', '2', '0', '0'],
         ['Key to Hell', 'qky', 'qky', 'ques', '1', '1', '1', '1'],
         ['Coupon nor Armor 1', '01c', '01c', 'cpn1', '1', '1', '0', '0'],
+        ['Coupon nor Weapon 24', '24f', '24f', 'cpn1', '1', '1', '0', '0'],
         ['Coupon eli Armor 1', '01e', '01e', 'cpn3', '1', '1', '0', '0'],
         ['Coupon Blank nor', '96j', '96j', 'cpn1', '1', '1', '0', '0'],
         ['Coupon Wild Card', '99j', '99j', 'coup', '1', '1', '0', '0'],
@@ -57,6 +58,7 @@ describe('buildStashBundle', () => {
         ['description', 'enabled', 'numinputs', 'input 1', 'input 2', 'input 3', 'output'],
         ['Coupon', '1', '3', '"01c,qty=3"', '', '', 'War Bonnet'],
         ['Coupon', '1', '3', '"01c,qty=2"', '99j', '', 'War Bonnet'],
+        ['Coupon', '1', '3', '"24f,qty=3"', '', '', 'Azurewrath_old'],
         ['Coupon', '1', '3', '"01e,qty=3"', '', '', 'Unknown Unique'],
         ['Coupon', '0', '3', '"01e,qty=3"', '', '', 'Disabled Unique'],
         ['Coupon', '1', '8', '"cpn1,qty=8"', '', '', '99j'],
@@ -70,11 +72,13 @@ describe('buildStashBundle', () => {
         ['Expansion', ''],
         ['War Bonnet', 'cap'],
         ['War Bonnet', 'cap'],
+        ['Azurewrath_old', 'crs'],
       ]),
     },
     new Map([
       ['01c', "(Cap, Biggin's Bonnet)\nAncient Coupon"],
       ['War Bonnet', "Biggin's Bonnet"],
+      ['24f', '(Crystal Sword, Azurewrath)\nAncient Coupon'],
     ])
   );
 
@@ -104,6 +108,13 @@ describe('buildStashBundle', () => {
         qty: 3,
         withWildCards: { qty: 2, wildCards: 1 },
       },
+      {
+        code: '24f',
+        name: 'Ancient Coupon (Crystal Sword, Azurewrath)',
+        type: 'cpn1',
+        unique: { id: 3, name: 'Azurewrath' },
+        qty: 3,
+      },
       { code: '01e', name: 'Coupon eli Armor 1', type: 'cpn3' },
       { code: '96j', name: 'Coupon Blank nor', type: 'cpn1' },
       { code: '99j', name: 'Coupon Wild Card', type: 'coup', wildCard: true },
@@ -118,8 +129,17 @@ describe('buildStashBundle', () => {
     ]);
   });
 
-  it('warns about a coupon recipe whose output is no unique', () => {
-    expect(warnings).toEqual(['stash: coupon 01e makes "Unknown Unique" (cubemain line 4), which is no unique']);
+  it('names a unique without a string after its coupon, and warns about an output that is no unique', () => {
+    expect(warnings).toEqual([
+      'stash: unique "Azurewrath_old" (row 3) has no string; named "Azurewrath" after coupon 24f',
+      'stash: coupon 01e makes "Unknown Unique" (cubemain line 5), which is no unique',
+    ]);
+  });
+
+  it('reads the unique name out of a coupon name', () => {
+    expect(uniqueNameOfCoupon('Ancient Coupon (Crystal Sword, Azurewrath)')).toBe('Azurewrath');
+    expect(uniqueNameOfCoupon("Ancient Coupon Ring VI (Bul-Kathos' Wedding Band)")).toBe("Bul-Kathos' Wedding Band");
+    expect(uniqueNameOfCoupon('Coupon nor Armor 1')).toBeNull();
   });
 });
 

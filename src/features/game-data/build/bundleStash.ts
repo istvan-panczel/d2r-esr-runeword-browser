@@ -46,15 +46,26 @@ function tierLabel(itemTypeName: string): string {
   return TIER_LABELS[suffix] ?? itemTypeName;
 }
 
-/** The first uniqueitems.txt row of each `index` with a base code (what a cube output ref resolves to). */
-function uniquesByIndex(uniqueitems: TsvTable, strings: ReadonlyMap<string, string>): Map<string, StashCouponUnique> {
-  const byIndex = new Map<string, StashCouponUnique>();
+/**
+ * The first uniqueitems.txt row of each `index` with a base code (what a cube output ref resolves to); `named` is false
+ * when the string table has no name for the index (the name is then the index itself).
+ */
+function uniquesByIndex(uniqueitems: TsvTable, strings: ReadonlyMap<string, string>): Map<string, StashCouponUnique & { named: boolean }> {
+  const byIndex = new Map<string, StashCouponUnique & { named: boolean }>();
   uniqueitems.rows.forEach((row, id) => {
     const index = row.str('index');
     if (index === '' || row.str('code') === '' || byIndex.has(index)) return;
-    byIndex.set(index, { id, name: resolveName(strings, index, index) });
+    const name = resolveName(strings, index, '');
+    byIndex.set(index, { id, name: name === '' ? index : name, named: name !== '' });
   });
   return byIndex;
+}
+
+/** The unique a coupon's own name gives: "Ancient Coupon (Crystal Sword, Azurewrath)" → "Azurewrath"; null without one. */
+export function uniqueNameOfCoupon(couponName: string): string | null {
+  const inner = /\(([^()]*)\)\s*$/.exec(couponName)?.[1];
+  const name = inner?.split(',').at(-1)?.trim() ?? '';
+  return name === '' ? null : name;
 }
 
 /** Every type code that is `root` or descends from it through Equiv1 / Equiv2. */
@@ -143,7 +154,13 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
         warnings.push(`stash: coupon ${code} makes "${recipe.output}" (cubemain line ${String(recipe.line)}), which is no unique`);
       }
       if (recipe !== undefined && unique !== undefined) {
-        coupon.unique = unique;
+        // A unique without a string (ESR 3.2.24: "Azurewrath_old", the Crystal Sword Azurewrath) is named after the coupon
+        const fallback = unique.named ? null : uniqueNameOfCoupon(coupon.name);
+        if (fallback !== null)
+          warnings.push(
+            `stash: unique "${unique.name}" (row ${String(unique.id)}) has no string; named "${fallback}" after coupon ${code}`
+          );
+        coupon.unique = { id: unique.id, name: fallback ?? unique.name };
         coupon.qty = recipe.qty;
         const alternative =
           codeRecipes.find((other) => other.wildCards > 0 && other.output === recipe.output) ??

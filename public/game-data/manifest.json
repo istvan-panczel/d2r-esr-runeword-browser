@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-03T12:51:40.978Z",
+  "generatedAt": "2026-11-03T13:04:15.437Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -66,8 +66,8 @@
       "bytes": 35601
     },
     "stash": {
-      "hash": "60c9cdb3823256f4bcdf52351cf62a629584ebbcbaa775cb1051a7707f16e6ab",
-      "bytes": 124555
+      "hash": "d099260322ee2043241a37a8156c6963e3111e0ae26241378fe17042ce87045c",
+      "bytes": 124551
     },
     "icons": {
       "hash": "4e7f8851b9c5666541718f175833d9b7a790f05e60cca77795809ebbf6c64656",
@@ -202,6 +202,7 @@
     "lootfilter skills: propertygroup nature-rule-full-set: \"att-skill\" 1541: skill id 1541 above 1023 does not fit a stat param (skill << 6 | level)",
     "skilldetails: unknown skill in oskill \"Axe Swarm\" (Ember of Creation)",
     "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients",
+    "stash: unique \"Azurewrath_old\" (row 728) has no string; named \"Azurewrath\" after coupon 24f",
     "stash: coupon 06j recipe (cubemain line 8194) has numinputs 4 for 6 items"
   ]
 }
