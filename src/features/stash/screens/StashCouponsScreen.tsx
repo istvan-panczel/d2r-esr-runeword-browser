@@ -1,20 +1,18 @@
-import { useSearchParams } from 'react-router-dom';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
-import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { EnhanceSearch, Pills } from '@/features/game-data/components/EnhanceParts';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
-import type { ItemTypeInfo, StashBundle, StashCouponTier } from '@/features/game-data/engine/schema';
-import { useGameData } from '@/features/game-data/hooks/useGameData';
+import type { StashBundle, StashCouponTier } from '@/features/game-data/engine/schema';
 import { CouponCards } from '../components/CouponCards';
 import { CouponTable } from '../components/CouponTable';
+import { EmptyResults } from '../components/shared/EmptyResults';
+import { PageSelect } from '../components/shared/PageSelect';
+import { SortSelect } from '../components/shared/SortSelect';
+import { SummaryChips as SharedSummaryChips } from '../components/shared/SummaryChips';
 import { StashGate } from '../components/StashGate';
 import {
   collectCoupons,
@@ -27,24 +25,22 @@ import {
   encodeCouponsState,
   filterCouponRows,
   formatLocation,
-  isCouponSortKey,
   isCouponStatusFilter,
   readCouponsState,
   sortCouponRows,
   type CouponSortKey,
   type CouponStatusFilter,
   type CouponSummary,
-  type CouponsState,
   type CouponLocation,
 } from '../engine/coupons';
-import { buildItemTypeIndex, type ItemTypeIndex } from '../engine/itemTypes';
+import type { ItemTypeIndex } from '../engine/itemTypes';
 import { useStash } from '../hooks/useStash';
+import { useStashTypes } from '../hooks/useStashTypes';
+import { useUrlState } from '../hooks/useUrlState';
 import type { StashFile } from '../parser/types';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const ALL = 'all';
-/** types.json: the item type names and ancestors of the item type search (5 KB gzipped) */
-const TYPES_FILES = ['types'] as const;
 
 const SORT_LABELS: Readonly<Record<CouponSortKey, string>> = {
   status: 'Status',
@@ -55,22 +51,15 @@ const SORT_LABELS: Readonly<Record<CouponSortKey, string>> = {
   location: 'Where',
 };
 
-// One index per loaded types.json (the loader caches the bundle for the page lifetime)
-let typeIndexCache: { types: readonly ItemTypeInfo[]; index: ItemTypeIndex } | null = null;
-function itemTypeIndex(types: readonly ItemTypeInfo[]): ItemTypeIndex {
-  if (typeIndexCache?.types !== types) typeIndexCache = { types, index: buildItemTypeIndex(types) };
-  return typeIndexCache.index;
-}
-
 export function StashCouponsScreen() {
   const { bundle } = useStash();
-  const gameData = useGameData(TYPES_FILES);
+  const types = useStashTypes();
   return (
     <StashGate>
       {(stash) => {
-        if (gameData.status === 'loading') return <GameDataLoading />;
-        if (gameData.status === 'error') return <GameDataError error={gameData.error} onRetry={gameData.retry} />;
-        return <CouponsBrowser stash={stash} bundle={bundle} types={itemTypeIndex(gameData.data.types.types)} />;
+        if (types.status === 'loading') return <GameDataLoading />;
+        if (types.status === 'error') return <GameDataError error={types.error} onRetry={types.retry} />;
+        return <CouponsBrowser stash={stash} bundle={bundle} types={types.types} />;
       }}
     </StashGate>
   );
@@ -84,11 +73,7 @@ interface CouponsBrowserProps {
 
 /** The page state lives in the URL (search, status, tier, page, sort, details), so the back button keeps it. */
 function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const state = readCouponsState(searchParams);
-  const update = (patch: Partial<CouponsState>, replace = true) => {
-    setSearchParams(encodeCouponsState({ ...state, ...patch }), { replace });
-  };
+  const { state, update, set } = useUrlState(readCouponsState, encodeCouponsState);
   const [search, setSearch, commitSearch] = useDebouncedFilterValue(
     state.search,
     (value) => {
@@ -116,7 +101,7 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
   ];
   const reset = () => {
     commitSearch('');
-    setSearchParams(encodeCouponsState({ ...DEFAULT_COUPONS_STATE, details: state.details }), { replace: false });
+    set({ ...DEFAULT_COUPONS_STATE, details: state.details });
   };
 
   if (rows.length === 0) {
@@ -166,29 +151,14 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
               }}
             />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="stash-coupons-page" className="text-xs font-normal text-muted-foreground">
-              Stash page
-            </Label>
-            <Select
-              value={state.page === null ? ALL : String(state.page)}
-              onValueChange={(value) => {
-                update({ page: value === ALL ? null : Number(value) }, false);
-              }}
-            >
-              <SelectTrigger id="stash-coupons-page" size="sm" className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All pages</SelectItem>
-                {pages.map((page) => (
-                  <SelectItem key={page} value={String(page)}>
-                    Page {page}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <PageSelect
+            id="stash-coupons-page"
+            pages={pages}
+            value={state.page}
+            onChange={(page) => {
+              update({ page }, false);
+            }}
+          />
           <label className="flex h-8 cursor-pointer items-center gap-2">
             <Checkbox
               checked={state.details}
@@ -205,7 +175,10 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
         summary={`Showing ${String(shown.length)} of ${String(rows.length)} coupons you own`}
         actions={
           state.details && (
-            <CardSort
+            <SortSelect
+              id="stash-coupons-sort"
+              keys={COUPON_SORT_KEYS}
+              labels={SORT_LABELS}
               sort={state.sort}
               dir={state.dir}
               onChange={(sort, dir) => {
@@ -217,16 +190,7 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
       />
 
       {shown.length === 0 ? (
-        <div className="space-y-1 py-6 text-center text-sm text-muted-foreground">
-          <p>No coupon matches.</p>
-          <button
-            type="button"
-            className="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
-            onClick={reset}
-          >
-            Show every coupon you own
-          </button>
-        </div>
+        <EmptyResults message="No coupon matches." resetLabel="Show every coupon you own" onReset={reset} />
       ) : state.details ? (
         <CouponCards rows={shown} />
       ) : (
@@ -248,23 +212,16 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
   );
 }
 
-function Chip({ value, label }: { readonly value: number; readonly label: string }) {
-  return (
-    <li className="rounded-lg border bg-card px-3 py-2 shadow-sm">
-      <span className="block text-lg font-semibold tabular-nums">{value}</span>
-      <span className="block text-xs text-muted-foreground">{label}</span>
-    </li>
-  );
-}
-
 function SummaryChips({ summary }: { readonly summary: CouponSummary }) {
   return (
-    <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Summary">
-      <Chip value={summary.distinct} label="kinds of coupon owned" />
-      <Chip value={summary.total} label="coupons in total" />
-      <Chip value={summary.craftable} label={`uniques craftable now (${String(summary.crafts)} crafts)`} />
-      <Chip value={summary.wildCards} label="Wild Cards" />
-    </ul>
+    <SharedSummaryChips
+      chips={[
+        { value: summary.distinct, label: 'kinds of coupon owned' },
+        { value: summary.total, label: 'coupons in total' },
+        { value: summary.craftable, label: `uniques craftable now (${String(summary.crafts)} crafts)` },
+        { value: summary.wildCards, label: 'Wild Cards' },
+      ]}
+    />
   );
 }
 
@@ -286,51 +243,6 @@ function WildCardNote({ summary, tiers, locations }: WildCardNoteProps) {
           `${String(summary.readyWithWildCards)} more unique${summary.readyWithWildCards === 1 ? ' is' : 's are'} ready with them (each on its own; they share the Wild Cards; a recipe flagged as broken never counts). `}
         {makers.length > 0 && `The cube makes one Wild Card from ${makers.join(', ').replace(/, ([^,]*)$/, ' or $1')} coupons of any kind.`}
       </p>
-    </div>
-  );
-}
-
-interface CardSortProps {
-  readonly sort: CouponSortKey;
-  readonly dir: CouponsState['dir'];
-  readonly onChange: (sort: CouponSortKey, dir: CouponsState['dir']) => void;
-}
-
-/** The card view has no column headers: sort key + direction (the same state the table headers set) */
-function CardSort({ sort, dir, onChange }: CardSortProps) {
-  return (
-    <div className="flex items-center gap-1">
-      <Label htmlFor="stash-coupons-sort" className="text-xs font-normal text-muted-foreground">
-        Sort by
-      </Label>
-      <Select
-        value={sort}
-        onValueChange={(value) => {
-          if (isCouponSortKey(value)) onChange(value, dir);
-        }}
-      >
-        <SelectTrigger id="stash-coupons-sort" size="sm" className="w-32">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {COUPON_SORT_KEYS.map((key) => (
-            <SelectItem key={key} value={key}>
-              {SORT_LABELS[key]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => {
-          onChange(sort, dir === 'asc' ? 'desc' : 'asc');
-        }}
-        aria-label={dir === 'asc' ? 'Sorted ascending, switch to descending' : 'Sorted descending, switch to ascending'}
-        title={dir === 'asc' ? 'Ascending' : 'Descending'}
-      >
-        {dir === 'asc' ? <ArrowUpNarrowWide className="size-4" /> : <ArrowDownWideNarrow className="size-4" />}
-      </Button>
     </div>
   );
 }
