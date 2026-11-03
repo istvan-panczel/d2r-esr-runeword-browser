@@ -10,28 +10,17 @@
  *  22 / 24   stat with param layer (skill, montype, monster, …) = min–max    23  ethereal
  *  18 (by time), 25, 36 and anything else → fallback text + warning.
  */
-import { formatValue, sprintf } from './sprintf.ts';
-import type { SkillLookup } from './skills.ts';
+import { formatValue, sprintf } from '../../engine/stats/sprintf.ts';
+import type { SkillLookup, StatEntry } from '../../engine/stats/types.ts';
 import type { PropertyDef } from './tables.ts';
+
+export type { StatEntry };
 
 export interface ModInput {
   code: string;
   param: string | null;
   min: number;
   max: number;
-}
-
-/**
- * One stat produced by a property. `min`/`max` is the value range, except for event skills (min = chance,
- * max = level) and charges (min = charges, max = level). `text` entries are pre-rendered (sockets, random skill,
- * fallbacks); their sort priority comes from `stat` when it exists in itemstatcost.
- */
-export interface StatEntry {
-  stat: string;
-  param: string;
-  min: number;
-  max: number;
-  text?: string;
 }
 
 export interface ExpandContext {

@@ -1403,7 +1403,8 @@ first), then str + dex; armor by max defense, then block, then str; accessories 
 
 ## Stat renderer
 
-The renderer lives in `build/stats/` and runs at build time only:
+The property side lives in `build/stats/` (build time only); the pure text side (`descfunc`, `renderLines`, `sprintf`
+and their types) in `engine/stats/`, shared with the browser (the My Stash item text, which renders saved stats):
 
 | Module              | Role                                                                                                                           |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -1478,7 +1479,8 @@ src/features/game-data/
                generateBundles.ts,
                writeBundle.ts
   build/cube/  cubemain rows and texts shared with the guide: cubeRows.ts, cubeText.ts, cubeFamilies.ts, cubeCatalog.ts
-  build/stats/ stat renderer (see "Stat renderer")
+  build/stats/ stat renderer, property side (see "Stat renderer")
+  engine/stats/ stat renderer, text side: descfunc.ts, renderLines.ts, sprintf.ts, types.ts (also used in the browser)
 ```
 
 `engine/` and `build/` are shared with the Node script, so they use relative imports ending in `.ts`, no `@/` aliases,
@@ -1592,7 +1594,7 @@ utils/sets.ts                          URL state, options, order, search / focus
   automod eligibility and attachment on inline TSV), `build/bundleRunewords.test.ts`, `build/bundleAffixes.test.ts`,
   `build/bundleSources.test.ts` (each label rule on inline TSV; with the ESR clone, the verified examples Pelta Lunata,
   Krok's Basher, Mephisto's Will, Frostmourne, Annihilus, Hellfire Torch, Kill Ledger, Orb of Anointment, Forging Hammer),
-  `build/stats/*.test.ts` (sprintf, expandProperty, descfunc, renderLines, propertyGroups),
+  `build/stats/*.test.ts` (expandProperty, renderLines, propertyGroups), `engine/stats/*.test.ts` (sprintf, descfunc),
   `build/bundleLootFilterSkills.test.ts` (layer resolver per func, property group entries, skills list, known layers,
   warnings, `skillId`), `build/affixStats.test.ts` (stats, labels, layers), `build/bundleAreas.test.ts`
   (left-out rows, MonLvlEx / density / unique packs per difficulty, towns and areas without monsters, name fallback,

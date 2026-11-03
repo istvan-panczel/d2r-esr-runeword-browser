@@ -13,10 +13,8 @@
  * "(Based on Character Level)", as on the ESR docs pages. Strings with `\n` are drawn bottom-up by the game, so
  * their lines are reversed. A result of [] means the stat is not displayed (descfunc 0).
  */
-import type { StatEntry } from './expandProperty.ts';
-import type { SkillLookup } from './skills.ts';
 import { formatSigned, formatValue, hasFormat, sprintf, type Range, type SprintfArg } from './sprintf.ts';
-import type { StatDef } from './tables.ts';
+import type { SkillLookup, StatDef, StatEntry } from './types.ts';
 
 export interface DescContext {
   strings: ReadonlyMap<string, string>;

@@ -28,7 +28,7 @@ import type {
 } from '../engine/schema.ts';
 import { resolveName } from './itemNames.ts';
 import { readMods, type PropertyMod, type RuneRecipeRow } from './model.ts';
-import { sprintf, type SprintfArg } from './stats/sprintf.ts';
+import { sprintf, type SprintfArg } from '../engine/stats/sprintf.ts';
 import type { TsvRow, TsvTable } from './tsv.ts';
 
 export const GRANT_PROPERTIES: readonly SkillGrantHow[] = [

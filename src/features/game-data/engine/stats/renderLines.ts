@@ -10,9 +10,8 @@
  * 4. sort by `descpriority`, highest first (stable)
  */
 import { renderStat, statValue, type DescContext } from './descfunc.ts';
-import type { StatEntry } from './expandProperty.ts';
 import { formatSigned, sprintf, type Range } from './sprintf.ts';
-import type { StatDef } from './tables.ts';
+import type { StatDef, StatEntry } from './types.ts';
 
 export interface RenderContext extends DescContext {
   stats: ReadonlyMap<string, StatDef>;
