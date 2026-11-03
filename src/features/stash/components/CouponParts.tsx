@@ -1,24 +1,22 @@
 /* eslint-disable react-refresh/only-export-components -- small row parts shared by the coupon table and the detail cards */
 import { TriangleAlert } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { TierBadge } from '@/features/game-data/components/TierBadge';
-import { COUPON_STATUS_LABELS, formatLocation, uniquePageUrl, type CouponRow, type CouponStatus } from '../engine/coupons';
-import { CopyTextButton } from './CopyTextButton';
+import { COUPON_STATUS_LABELS, uniquePageUrl, type CouponRow, type CouponStatus } from '../engine/coupons';
+import { LocationList as SharedLocationList } from './shared/LocationList';
+import { NameLink } from './shared/NameLink';
+import { ToneBadge, type BadgeTone } from './shared/ToneBadge';
 
-const STATUS_BADGES: Readonly<Record<CouponStatus, { label: string; className: string } | null>> = {
-  ready: { label: COUPON_STATUS_LABELS.ready, className: 'border-emerald-600/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' },
-  wildcards: { label: COUPON_STATUS_LABELS.wildcards, className: 'border-sky-600/40 bg-sky-500/15 text-sky-800 dark:text-sky-300' },
-  almost: { label: '1 short', className: 'border-amber-600/40 bg-amber-500/15 text-amber-800 dark:text-amber-300' },
+const STATUS_BADGES: Readonly<Record<CouponStatus, { label: string; tone: BadgeTone } | null>> = {
+  ready: { label: COUPON_STATUS_LABELS.ready, tone: 'success' },
+  wildcards: { label: COUPON_STATUS_LABELS.wildcards, tone: 'info' },
+  almost: { label: '1 short', tone: 'warning' },
   other: null,
 };
 
 export function StatusBadge({ row }: { readonly row: CouponRow }) {
   const badge = STATUS_BADGES[row.status];
   if (badge === null) return <span className="text-muted-foreground">—</span>;
-  return (
-    <span className={cn('inline-block rounded-full border px-2 py-0.5 text-xs whitespace-nowrap', badge.className)}>{badge.label}</span>
-  );
+  return <ToneBadge label={badge.label} tone={badge.tone} />;
 }
 
 /** "2 crafts, 1 left over"; null without a craft */
@@ -46,17 +44,7 @@ export function WildCardRecipe({ recipe }: { readonly recipe: CouponRow['withWil
 
 /** The unique's name as a link to its Uniques page card, plus the copy button for the in-game stash search */
 export function UniqueLink({ row }: { readonly row: CouponRow }) {
-  return (
-    <span className="inline-flex min-w-0 items-center gap-1">
-      <Link
-        to={uniquePageUrl(row.unique.name)}
-        className="min-w-0 font-medium text-amber-700 underline decoration-amber-700/30 underline-offset-2 hover:decoration-amber-700 dark:text-amber-400 dark:decoration-amber-400/30"
-      >
-        {row.unique.name}
-      </Link>
-      <CopyTextButton text={row.unique.name} label={`Copy "${row.unique.name}" for the in-game stash search`} />
-    </span>
-  );
+  return <NameLink name={row.unique.name} to={uniquePageUrl(row.unique.name)} />;
 }
 
 /** "Sash · Belt": the base and its item type, so an item type search match is visible */
@@ -77,13 +65,5 @@ export function CouponTierBadge({ row }: { readonly row: CouponRow }) {
 }
 
 export function LocationList({ row, className }: { readonly row: CouponRow; readonly className?: string }) {
-  return (
-    <ul className={cn('space-y-0.5', className)}>
-      {row.locations.map((location) => (
-        <li key={`${String(location.section)}:${String(location.x)}:${String(location.y)}`} className="whitespace-nowrap tabular-nums">
-          {formatLocation(location)}
-        </li>
-      ))}
-    </ul>
-  );
+  return <SharedLocationList locations={row.locations} className={className} />;
 }

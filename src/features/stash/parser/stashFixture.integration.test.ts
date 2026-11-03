@@ -7,7 +7,8 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
-import type { StashBundle } from '../../game-data/engine/schema.ts';
+import { parseTsv, type TsvTable } from '../../game-data/build/tsv.ts';
+import type { StashBundle, StashNamesBundle } from '../../game-data/engine/schema.ts';
 import { UnsupportedStashError } from './errors.ts';
 import { parseStash, SECTION_HEADER_BYTES } from './parseStash.ts';
 import { createStashData } from './stashData.ts';
@@ -17,6 +18,12 @@ const FIXTURE_DIR = resolve(__dirname, '../../../../test-fixtures/stash');
 const MODERN = resolve(FIXTURE_DIR, 'ModernSharedStashSoftCoreV2.d2i');
 const LEGACY = resolve(FIXTURE_DIR, 'SharedStashSoftCoreV2.d2i');
 const BUNDLE = resolve(__dirname, '../../../../public/game-data/stash.json');
+const EXCEL = resolve(
+  __dirname,
+  '../../../../',
+  process.env.ESR_SOURCE_DIR ?? '../Eastern_Sun_Resurrected',
+  'Eastern_Sun_Resurrected.mpq/data/global/excel'
+);
 
 const readBytes = (path: string) => new Uint8Array(readFileSync(path));
 
@@ -84,6 +91,89 @@ describe.skipIf(!existsSync(MODERN) || !existsSync(BUNDLE))('ESR Modern shared s
     for (const item of found) expect([item.width, item.height]).toEqual([1, 1]);
   });
 });
+
+describe.skipIf(!existsSync(MODERN) || !existsSync(BUNDLE) || !existsSync(EXCEL))(
+  'ESR Modern shared stash fixture vs the ESR tables',
+  () => {
+    const bundle = JSON.parse(readFileSync(BUNDLE, 'utf-8')) as StashBundle;
+    const stash = parseStash(readBytes(MODERN), createStashData(bundle));
+    const flat = (items: readonly StashItem[]): StashItem[] => items.flatMap((item) => [item, ...flat(item.socketed)]);
+    const items = flat(stash.sections.flatMap((section) => section.items));
+    const table = (name: string) => parseTsv(readFileSync(resolve(EXCEL, `${name}.txt`), 'utf-8'), name, { keepExpansionRows: true });
+    const statIds = new Map(table('itemstatcost').rows.map((row, id) => [row.str('Stat'), id]));
+    const propertyStats = new Map(
+      table('properties').rows.map((row) => [
+        row.str('code'),
+        [1, 2, 3, 4, 5, 6, 7].flatMap((i) => statIds.get(row.str(`stat${String(i)}`)) ?? []),
+      ])
+    );
+    /** The stat ids an affix row's mods write; [] when a mod's property picks its stats itself (damage funcs …) */
+    const affixStats = (rows: TsvTable, id: number): number[] | null => {
+      const row = rows.rows.at(id - 1);
+      if (row === undefined) return null;
+      return [1, 2, 3].flatMap((i) => propertyStats.get(row.str(`mod${String(i)}code`)) ?? []);
+    };
+    const prefixes = table('magicprefix');
+    const suffixes = table('magicsuffix');
+
+    it('reads magic and rare affix ids as 1-based magicprefix / magicsuffix rows that match the item stats', () => {
+      let checked = 0;
+      let matched = 0;
+      for (const item of items.filter((entry) => entry.quality === 'magic' || entry.quality === 'rare')) {
+        for (const [rows, ids] of [
+          [prefixes, item.prefixIds],
+          [suffixes, item.suffixIds],
+        ] as const) {
+          for (const id of ids.filter((entry) => entry !== 0)) {
+            const stats = affixStats(rows, id);
+            expect(stats, `${item.code} affix ${String(id)}`).not.toBeNull();
+            if (stats === null || stats.length === 0) continue;
+            checked++;
+            if (stats.some((stat) => item.stats.some((own) => own.id === stat))) matched++;
+          }
+        }
+      }
+      console.log(`Stash fixture: ${String(matched)} of ${String(checked)} magic / rare affixes found in the item stats`);
+      expect(checked).toBeGreaterThan(100);
+      expect(matched / checked).toBeGreaterThan(0.95);
+    });
+
+    it('reads rare names as a prefix-block id then a suffix-block id, and auto affixes as automagic rows', () => {
+      const rares = items.filter((item) => item.quality === 'rare');
+      expect(rares.length).toBeGreaterThan(0);
+      // The combined vanilla rare name table: 155 suffixes (1-155), then the prefixes (156 on)
+      for (const item of rares) {
+        const [first, second] = item.rareNameIds ?? [0, 0];
+        expect(first, item.code).toBeGreaterThanOrEqual(156);
+        expect(second, item.code).toBeGreaterThanOrEqual(1);
+        expect(second, item.code).toBeLessThanOrEqual(155);
+        expect(item.prefixIds).toHaveLength(3);
+        expect(item.suffixIds).toHaveLength(3);
+      }
+      const automagic = table('automagic');
+      for (const item of items.filter((entry) => entry.autoAffixId !== null)) {
+        expect(automagic.rows.at((item.autoAffixId ?? 0) - 1), `${item.code} auto affix ${String(item.autoAffixId)}`).toBeDefined();
+      }
+    });
+
+    it('reads defense, durability and the runeword ids of the fixture', () => {
+      const armor = items.filter((item) => item.defense !== null);
+      expect(armor.length).toBeGreaterThan(0);
+      for (const item of armor) {
+        expect(item.defense, item.code).toBeGreaterThanOrEqual(0);
+        expect(item.maxDurability, item.code).not.toBeNull();
+      }
+      for (const item of items.filter((entry) => entry.durability !== null)) {
+        expect(item.durability ?? 0, item.code).toBeLessThanOrEqual(item.maxDurability ?? 0);
+      }
+      const names = JSON.parse(readFileSync(BUNDLE.replace('stash.json', 'stashnames.json'), 'utf-8')) as StashNamesBundle;
+      const runewordIds = new Set(names.runewords.map((entry) => entry.id));
+      const runewords = items.filter((item) => item.runewordId !== null);
+      expect(runewords.length).toBeGreaterThan(0);
+      expect(runewords.filter((item) => !runewordIds.has(item.runewordId ?? -1)).map((item) => item.runewordId)).toEqual([]);
+    });
+  }
+);
 
 describe.skipIf(!existsSync(LEGACY) || !existsSync(BUNDLE))('ESR legacy shared stash fixture', () => {
   it('is rejected as the legacy stash', () => {

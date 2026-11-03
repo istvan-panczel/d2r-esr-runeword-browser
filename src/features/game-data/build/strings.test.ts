@@ -57,6 +57,16 @@ describe('buildStringTable', () => {
     expect(warnings).toHaveLength(1);
   });
 
+  it('keeps the numeric id of the entry each key resolved to', () => {
+    const { ids } = buildStringTable([
+      { name: 'item-names.json', text: '[{"id":5,"Key":"dup","enUS":"Names"},{"id":6,"Key":"own","enUS":"Own"}]' },
+      { name: 'item-runes.json', text: '[{"id":63086,"Key":"dup","enUS":"Cow"},{"Key":"noId","enUS":"x"}]' },
+    ]);
+    expect(ids.get('dup')).toBe(63086);
+    expect(ids.get('own')).toBe(6);
+    expect(ids.has('noId')).toBe(false);
+  });
+
   it('skips malformed entries', () => {
     const { strings } = buildStringTable([{ name: 'x.json', text: '[{"Key":"a"},null,{"Key":"b","enUS":"B"}]' }]);
     expect([...strings.keys()]).toEqual(['b']);

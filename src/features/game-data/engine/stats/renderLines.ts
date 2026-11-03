@@ -10,15 +10,14 @@
  * 4. sort by `descpriority`, highest first (stable)
  */
 import { renderStat, statValue, type DescContext } from './descfunc.ts';
-import type { StatEntry } from './expandProperty.ts';
 import { formatSigned, sprintf, type Range } from './sprintf.ts';
-import type { StatDef } from './tables.ts';
+import type { StatDef, StatEntry } from './types.ts';
 
 export interface RenderContext extends DescContext {
   stats: ReadonlyMap<string, StatDef>;
 }
 
-interface DamagePair {
+export interface DamagePair {
   min: string;
   max: string;
   /** Length stat in frames (25 per second) */
@@ -30,13 +29,17 @@ interface DamagePair {
   durationSuffix?: boolean;
 }
 
-const DAMAGE_PAIRS: readonly DamagePair[] = [
+/** The fixed-value damage pairs merged into one line ("Adds 10-20 Fire Damage") */
+export const DAMAGE_PAIRS: readonly DamagePair[] = [
   { min: 'firemindam', max: 'firemaxdam', rangeKey: 'strModFireDamageRange' },
   { min: 'lightmindam', max: 'lightmaxdam', rangeKey: 'strModLightningDamageRange' },
   { min: 'coldmindam', max: 'coldmaxdam', length: 'coldlength', rangeKey: 'strModColdDamageRange', durationSuffix: true },
   { min: 'poisonmindam', max: 'poisonmaxdam', length: 'poisonlength', rangeKey: 'strModPoisonDamageRange', perFrame: true },
   { min: 'bleedmindam', max: 'bleedmaxdam', length: 'bleedlength', rangeKey: 'strModBleedDamageRange' },
 ];
+
+/** The string-table keys renderLines reads itself (besides the stat descriptions) */
+export const RENDER_LINES_STRINGS: readonly string[] = [...DAMAGE_PAIRS.map((pair) => pair.rangeKey), 'strModEnhancedDamage'];
 
 interface Line {
   priority: number;
@@ -52,7 +55,7 @@ function single(value: Range): number | Range {
 }
 
 /** "Adds %d-%d Fire Damage"; min == max reads "Adds 75 Fire Damage" (as on the ESR docs pages). Fixed values only. */
-function damageLine(pair: DamagePair, min: number, max: number, length: number | null, ctx: RenderContext): string {
+export function damageLine(pair: DamagePair, min: number, max: number, length: number | null, ctx: RenderContext): string {
   const format = ctx.strings.get(pair.rangeKey) ?? `${pair.min} %d-%d`;
   const total = (value: number) => (pair.perFrame === true && length !== null ? Math.round((value * length) / 256) : value);
   const lo = total(min);

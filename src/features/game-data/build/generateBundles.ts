@@ -5,6 +5,7 @@ import type {
   CraftingBundle,
   CubeBundle,
   EnhanceBundle,
+  ItemTextBundle,
   LootFilterDataBundle,
   MaterialsBundle,
   SetsBundle,
@@ -12,6 +13,7 @@ import type {
   SkillsBundle,
   SourcesBundle,
   StashBundle,
+  StashNamesBundle,
   TiersBundle,
   TxtRunewordsBundle,
   TypesBundle,
@@ -30,6 +32,7 @@ import { buildRunewordsBundle } from './bundleRunewords.ts';
 import { buildSetsBundle } from './bundleSets.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
 import { buildStashBundle } from './bundleStash.ts';
+import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
 import { buildCraftingBundle } from './bundleCrafting.ts';
 import { buildSourcesBundle } from './bundleSources.ts';
@@ -65,6 +68,10 @@ export interface GeneratedBundles {
   areas: AreasBundle;
   // stash.json
   stash: StashBundle;
+  // stashnames.json
+  stashnames: StashNamesBundle;
+  // itemtext.json
+  itemtext: ItemTextBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -74,7 +81,7 @@ export interface GeneratedBundles {
 
 /** Builds all bundles from the raw clone sources (no I/O). */
 export function generateBundles(sources: EsrSources): GeneratedBundles {
-  const { strings, warnings: stringWarnings } = buildStringTable(sources.strings);
+  const { strings, ids: stringIds, warnings: stringWarnings } = buildStringTable(sources.strings);
   const table = (name: keyof EsrSources['tables']) => parseTsv(sources.tables[name], `${name}.txt`);
 
   const typeRows = readItemTypes(table('itemtypes'));
@@ -131,33 +138,36 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   );
   const countSources = (item: string) => sourceItems.bundle.items.filter((source) => source.item === item).length;
 
+  // Every property list the game data puts on items (affixes, uniques, set items, runewords, cube outputs, set bonuses,
+  // property groups): the params of the layered stats (lootfilter.json) and of the monster stats (itemtext.json)
+  const modSources = [
+    ...affixes.bundle.affixes.map((affix) => ({
+      label: `affix ${affix.kind}${String(affix.id)}`,
+      mods: affix.mods.map((mod) => ({ code: mod.prop, param: mod.param, min: mod.min, max: mod.max })),
+    })),
+    ...readGrantSources({
+      uniqueitems: table('uniqueitems'),
+      setitems: table('setitems'),
+      runes: readRuneRecipes(table('runes')),
+      strings,
+      isRune: (code) => runeCodes.has(code),
+    }).map((source) => ({ label: `${source.kind} ${source.name}`, mods: [...source.mods, ...(source.partialMods ?? [])] })),
+    ...readCube(table('cubemain')).map((row) => ({
+      label: `cubemain line ${String(row.line)}`,
+      mods: row.outputs.flatMap((output) =>
+        output.mods.map((mod) => ({ code: mod.mod, param: mod.param === '' ? null : mod.param, min: mod.min, max: mod.max }))
+      ),
+    })),
+    ...setBonusSources(table('sets')),
+    ...propertyGroupSources(statTables.groups),
+  ];
   const lootFilterSkills = buildLootFilterSkills({
     skills: table('skills'),
     skilldesc: table('skilldesc'),
     itemstatcost: rowTable('itemstatcost'),
     lookup: skillLookup,
     layers,
-    sources: [
-      ...affixes.bundle.affixes.map((affix) => ({
-        label: `affix ${affix.kind}${String(affix.id)}`,
-        mods: affix.mods.map((mod) => ({ code: mod.prop, param: mod.param, min: mod.min, max: mod.max })),
-      })),
-      ...readGrantSources({
-        uniqueitems: table('uniqueitems'),
-        setitems: table('setitems'),
-        runes: readRuneRecipes(table('runes')),
-        strings,
-        isRune: (code) => runeCodes.has(code),
-      }).map((source) => ({ label: `${source.kind} ${source.name}`, mods: [...source.mods, ...(source.partialMods ?? [])] })),
-      ...readCube(table('cubemain')).map((row) => ({
-        label: `cubemain line ${String(row.line)}`,
-        mods: row.outputs.flatMap((output) =>
-          output.mods.map((mod) => ({ code: mod.mod, param: mod.param === '' ? null : mod.param, min: mod.min, max: mod.max }))
-        ),
-      })),
-      ...setBonusSources(table('sets')),
-      ...propertyGroupSources(statTables.groups),
-    ],
+    sources: modSources,
   });
 
   const lootfilter = buildLootFilterBundle(
@@ -300,10 +310,38 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       inventory: table('inventory'),
       cubemain: table('cubemain'),
       uniqueitems: rowTable('uniqueitems'),
+      setitems: rowTable('setitems'),
+      sets: table('sets'),
+      runes: table('runes'),
+    },
+    strings,
+    stringIds
+  );
+  // --- end stash.json ---
+
+  // --- itemtext.json ---
+  const itemText = buildItemTextBundle(
+    {
+      itemstatcost: rowTable('itemstatcost'),
+      magicprefix: rowTable('magicprefix'),
+      magicsuffix: rowTable('magicsuffix'),
+      automagic: rowTable('automagic'),
+      setitems: rowTable('setitems'),
+      statTables,
+      skillIds: lootFilterSkills.bundle.skills.map((skill) => skill.id),
+      mods: modSources.flatMap((source) => source.mods),
+      bases: {
+        itemtypes,
+        weapons: table('weapons'),
+        armor: table('armor'),
+        misc: table('misc'),
+        gems: table('gems'),
+        uniqueitems: rowTable('uniqueitems'),
+      },
     },
     strings
   );
-  // --- end stash.json ---
+  // --- end itemtext.json ---
 
   const countKind = (kind: string) => bases.bundle.bases.filter((base) => base.kind === kind).length;
   return {
@@ -323,6 +361,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     tiers: tiers.bundle,
     areas: areas.bundle,
     stash: stash.bundle,
+    stashnames: stash.names,
+    itemtext: itemText.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -418,6 +458,18 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       stashCoupons: stash.bundle.coupons.filter((coupon) => coupon.wildCard !== true).length,
       stashCouponRecipes: stash.bundle.coupons.filter((coupon) => coupon.unique !== undefined).length,
       stashCouponWildCardRecipes: stash.bundle.coupons.filter((coupon) => coupon.withWildCards !== undefined).length,
+      stashUniques: stash.names.uniques.length,
+      stashSetItems: stash.names.setItems.length,
+      stashRunewords: stash.names.runewords.filter((entry) => entry.gemword !== true).length,
+      stashGemwords: stash.names.runewords.filter((entry) => entry.gemword === true).length,
+      itemTextStats: itemText.bundle.stats.filter((stat) => stat !== null).length,
+      itemTextStrings: Object.keys(itemText.bundle.strings).length,
+      itemTextSkills: itemText.bundle.skills.length,
+      itemTextMonsters: itemText.bundle.monsters.filter((name) => name !== null).length,
+      itemTextMagicPrefixes: itemText.bundle.magicPrefixes.filter((name) => name !== null).length,
+      itemTextMagicSuffixes: itemText.bundle.magicSuffixes.filter((name) => name !== null).length,
+      itemTextAutoAffixes: itemText.bundle.autoAffixes.filter((name) => name !== null).length,
+      itemTextRareNames: itemText.bundle.rareNames.filter((name) => name !== null).length,
     },
     warnings: [
       ...types.warnings,
@@ -438,6 +490,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...tiers.warnings,
       ...areas.warnings,
       ...stash.warnings,
+      ...itemText.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

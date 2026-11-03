@@ -25,6 +25,7 @@ describe('isStaticBundlePath', () => {
     '/game-data/sets',
     '/stash',
     '/stash/coupons',
+    '/stash/items',
   ])('matches the prefix route %s', (pathname) => {
     expect(isStaticBundlePath(pathname)).toBe(true);
   });

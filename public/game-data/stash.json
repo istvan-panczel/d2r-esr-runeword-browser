@@ -3634,5 +3634,16 @@
     {"type":"cpn1","name":"Coupon norm","tier":"normal","wildCardFrom":8},
     {"type":"cpn2","name":"Coupon excep","tier":"exceptional","wildCardFrom":4},
     {"type":"cpn3","name":"Coupon elite","tier":"elite","wildCardFrom":2}
+  ],
+  "gemwords": [
+    1742,
+    1829,
+    10910,
+    20709,
+    20787,
+    20913,
+    41020,
+    41021,
+    41022
   ]
 }

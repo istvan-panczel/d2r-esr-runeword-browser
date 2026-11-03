@@ -2,7 +2,10 @@
  * Typed rows of the tables the stat renderer reads: properties, itemstatcost, propertygroups, skills, skilldesc,
  * charstats (string keys), monstats and montype. Row index = game id (Expansion marker rows are already dropped).
  */
+import type { StatDef } from '../../engine/stats/types.ts';
 import type { TsvTable } from '../tsv.ts';
+
+export type { StatDef };
 
 export interface PropertySlot {
   func: number;
@@ -15,24 +18,6 @@ export interface PropertySlot {
 export interface PropertyDef {
   code: string;
   slots: PropertySlot[];
-}
-
-export interface StatDef {
-  stat: string;
-  op: number;
-  opParam: number;
-  descpriority: number;
-  descfunc: number;
-  descval: number;
-  descstrpos: string;
-  descstrneg: string;
-  descstr2: string;
-  dgrp: number;
-  dgrpfunc: number;
-  dgrpval: number;
-  dgrpstrpos: string;
-  dgrpstrneg: string;
-  dgrpstr2: string;
 }
 
 export interface PropertyGroupEntry {

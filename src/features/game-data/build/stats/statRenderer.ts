@@ -3,7 +3,7 @@
  * Lookups are built once per `createStatRenderer` call (once per generation).
  */
 import { parseTsv } from '../tsv.ts';
-import { renderLines, type RenderContext } from './renderLines.ts';
+import { renderLines, type RenderContext } from '../../engine/stats/renderLines.ts';
 import { expandProperty, type ExpandContext, type ModInput, type StatEntry } from './expandProperty.ts';
 import { formatChance, poolHeader, resolveGroups, type Pool } from './propertyGroups.ts';
 import { createSkillLookup } from './skills.ts';
@@ -28,14 +28,7 @@ export interface StatRenderer {
 }
 
 export type StatTableName =
-  | 'properties'
-  | 'itemstatcost'
-  | 'propertygroups'
-  | 'skills'
-  | 'skilldesc'
-  | 'charstats'
-  | 'monstats'
-  | 'montype';
+  'properties' | 'itemstatcost' | 'propertygroups' | 'skills' | 'skilldesc' | 'charstats' | 'monstats' | 'montype';
 
 export const STAT_TABLES: readonly StatTableName[] = [
   'properties',

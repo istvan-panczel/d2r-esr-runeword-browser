@@ -122,17 +122,15 @@ export function buildSkillsBundle(input: SkillsInput): SkillsBuildResult {
           skills: skills
             .filter((skill) => skill.page === page)
             .sort((a, b) => a.row - b.row || a.col - b.col)
-            .map(
-              (skill): SkillInfo => ({
-                id: skill.id,
-                name: skill.name,
-                row: skill.row,
-                col: skill.col,
-                reqLevel: skill.reqLevel,
-                maxLevel: skill.maxLevel,
-                reqSkills: skill.reqSkills,
-              })
-            ),
+            .map((skill): SkillInfo => ({
+              id: skill.id,
+              name: skill.name,
+              row: skill.row,
+              col: skill.col,
+              reqLevel: skill.reqLevel,
+              maxLevel: skill.maxLevel,
+              reqSkills: skill.reqSkills,
+            })),
         };
       }),
     };

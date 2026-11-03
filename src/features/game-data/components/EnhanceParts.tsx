@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
@@ -59,6 +60,8 @@ interface EnhanceSearchProps {
   readonly id?: string;
   /** Screen-reader label of the input (default "Search") */
   readonly label?: string;
+  /** The help popover's examples and extra sections (default: the generic search help) */
+  readonly help?: { readonly examples?: readonly { readonly query: string; readonly description: string }[]; readonly notes?: ReactNode };
 }
 
 export function EnhanceSearch({
@@ -69,6 +72,7 @@ export function EnhanceSearch({
   hint = 'Search the bonus text;',
   id = 'enhance-search',
   label = 'Search',
+  help,
 }: EnhanceSearchProps) {
   return (
     <div className="w-full max-w-md space-y-1">
@@ -76,7 +80,7 @@ export function EnhanceSearch({
         <p className="text-xs text-muted-foreground">
           {hint} <code className="rounded bg-muted px-1">"exact phrases"</code>
         </p>
-        <SearchHelpButton />
+        <SearchHelpButton examples={help?.examples}>{help?.notes}</SearchHelpButton>
       </div>
       <Label htmlFor={id} className="sr-only">
         {label}

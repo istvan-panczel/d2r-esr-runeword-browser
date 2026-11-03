@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-03T13:38:37.421Z",
+  "generatedAt": "2026-11-03T23:12:39.804Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -66,8 +66,16 @@
       "bytes": 35601
     },
     "stash": {
-      "hash": "1809ccd6dc816b52604a37d010389874d2a5c4968b94df6742177ee3199b143f",
-      "bytes": 146095
+      "hash": "eb05ad3d17c8bf0ad93566d06e5361887048c86595e314f4c96246f00565ebde",
+      "bytes": 146212
+    },
+    "stashnames": {
+      "hash": "ee3faa9c06cb5613a4f49a22fefe830662916726d54c4807c6f2da753610254a",
+      "bytes": 301535
+    },
+    "itemtext": {
+      "hash": "ec4bc6eb2769317685bdb64eae2baab13ef9f13880e772af10c9b3ed4df38a56",
+      "bytes": 495103
     },
     "icons": {
       "hash": "4e7f8851b9c5666541718f175833d9b7a790f05e60cca77795809ebbf6c64656",
@@ -177,6 +185,18 @@
     "stashCoupons": 385,
     "stashCouponRecipes": 382,
     "stashCouponWildCardRecipes": 382,
+    "stashUniques": 1390,
+    "stashSetItems": 270,
+    "stashRunewords": 391,
+    "stashGemwords": 9,
+    "itemTextStats": 666,
+    "itemTextStrings": 388,
+    "itemTextSkills": 897,
+    "itemTextMonsters": 393,
+    "itemTextMagicPrefixes": 920,
+    "itemTextMagicSuffixes": 1597,
+    "itemTextAutoAffixes": 126,
+    "itemTextRareNames": 201,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
@@ -204,6 +224,10 @@
     "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients",
     "stash: unique \"Azurewrath_old\" (row 728) has no string; named \"Azurewrath\" after coupon 24f",
     "stash: coupon 06j recipe (cubemain line 8194) has numinputs 4 for 6 items",
-    "stash: cpn3 coupons whose base is not elite: 44e (exceptional)"
+    "stash: cpn3 coupons whose base is not elite: 44e (exceptional)",
+    "itemtext: string \"MaxMagDmgPerLvl\" (stat description) not found",
+    "itemtext: string \"ModStr3kSum\" (stat description) not found",
+    "itemtext: string \"ModStr3u2\" (stat description) not found",
+    "itemtext: string \"ModStrMagMastery\" (stat description) not found"
   ]
 }

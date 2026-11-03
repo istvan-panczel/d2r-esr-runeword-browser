@@ -2,7 +2,8 @@
 
 The player uploads their ESR shared stash file and the app reads it in the browser. The first page is **Ancient
 Coupons**: the coupons the stash holds, the unique each makes, how many are needed, the Wild Card alternative and where
-every coupon lies. More stash pages can be added on the same upload (see "Adding a stash page").
+every coupon lies. **All Items** (in progress, [STASH-ITEMS.md](./STASH-ITEMS.md)) lists every item on the stash pages.
+More stash pages can be added on the same upload (see "Adding a stash page").
 
 Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/`, `screens/`). Data: `stash.json`
 ([GAME-DATA.md → Stash](./GAME-DATA.md#stash)).
@@ -18,14 +19,15 @@ Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/
 
 ## Routes
 
-| Route            | Screen               | Contents                                                                                     |
-| ---------------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| `/stash`         | `StashLayout`        | Title, Overview / Ancient Coupons tabs, loads `stash.json`, provides the shared upload state |
-| `/stash` (index) | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each  |
-| `/stash/coupons` | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded               |
+| Route            | Screen               | Contents                                                                                    |
+| ---------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `/stash`         | `StashLayout`        | Title, Overview / Ancient Coupons / All Items tabs, loads `stash.json`, shared upload state |
+| `/stash` (index) | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each |
+| `/stash/coupons` | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded              |
+| `/stash/items`   | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md))               |
 
-Header: the **My Stash** group (`navConfig.ts`): Overview (`/stash`, `exact`, so it is not highlighted on
-`/stash/coupons`) and Ancient Coupons. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without
+Header: the **My Stash** group (`navConfig.ts`): Overview (`/stash`, `exact`, so it is not highlighted on its
+sub-pages), Ancient Coupons and All Items. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without
 waiting for the HTM data sync.
 
 ## Upload
@@ -75,14 +77,17 @@ then the file bar and `children(stash, file)`.
 ### Adding a stash page
 
 1. A screen under `screens/` that renders `<StashGate>{(stash) => …}</StashGate>`; its logic in `engine/` (pure,
-   tested against a hand-built `StashFile` and, skipped without it, the fixture).
+   tested against a hand-built `StashFile` and, skipped without it, the fixture). Build on the shared engine
+   (`catalog.ts`, `describeItem.ts`, `walk.ts`, `locations.ts`, `search.ts`, `urlState.ts`), the shared UI in
+   `components/shared/` and the hooks `useStashTypes` / `useUrlState`; test helpers in `testing/` (`makeItem`,
+   `makeStash`, `makeBundle`, `describeWithFixture`). See [STASH-ITEMS.md → Engine](./STASH-ITEMS.md#engine-shared-srcfeaturesstashengine).
 2. A route child of `stash` in `src/core/router/index.tsx`, an entry in `screens/stashPages.ts` (layout tab + overview
    card) and in the My Stash nav group.
 
 ## Ancient Coupons page
 
-`engine/coupons.ts` (`collectCoupons`) walks every stash section's items (pages and the materials tab; socketed items
-are never coupons) and groups the ones whose code is a `stash.json` coupon. A page item counts 1 (stackable codes such
+`engine/coupons.ts` (`collectCoupons`) walks every stash section's items (`walkStashItems` with `tabs: 'all'`: pages and
+the materials tab; socketed items are never coupons) and groups the ones whose code is a `stash.json` coupon. A page item counts 1 (stackable codes such
 as the Wild Card carry `stackSize` 0 on a page); a materials-tab stack counts its `stackSize`. Rows exist only for codes the stash holds at least one of; the Wild Card (`99j`) is counted for
 the summary, and the blank coupons (`96j`–`98j`, no recipe) are left out.
 
@@ -122,9 +127,9 @@ Filters (always open; state in the URL, `readCouponsState` / `encodeCouponsState
 | `dir`     | `asc`, `desc` (written with `sort`)                               | `asc`    |
 | `details` | `1`: "Show all item information" (cards instead of the table)     | off      |
 
-**Item type search** (`engine/itemTypes.ts`): a word that names an ESR item type matches by the base's type chain
-(types.json ancestors), not as text, so "belt" lists every belt coupon (Sash, Light Belt, Mithril Coil, …), "ring"
-finds rings but not Ring Mail, and "helm" is the Helm type, not ESR's merc type ("Helm (merc)") that belts and boots
+**Item type search** (`engine/itemTypes.ts`, shared with All Items through `engine/search.ts`): a word that names an ESR item type matches by the base's type chain
+(types.json ancestors), or as a word of the unique's name (not of the coupon, base or type names), so "belt" lists every
+belt coupon (Sash, Light Belt, Mithril Coil, …), "ring" finds rings (and a unique named "… Ring") but not Ring Mail, and "helm" is the Helm type, not ESR's merc type ("Helm (merc)") that belts and boots
 also descend from. Names match case-insensitively with a plural "s" dropped ("Rings", "boot", "gloves"); a few
 everyday words map onto ESR names: helmet → Helm, armour / "body armor" → Armor (body armor), shield → Any Shield (the
 class shields too), dagger → Knife, claw / katar → Hand to Hand. Any other word matches as text over the unique, the
@@ -169,6 +174,9 @@ ESR saves through D2RLoader's "extended" save format (`[d2rcore.save_format] mod
 
 - `engine/coupons.test.ts`: aggregation (counts, crafts, status, Wild Card readiness, stacks, locations and their
   format), the summary, search / status / tier / page filters, every sort, the URL state.
+- `engine/locations.test.ts`, `search.test.ts`, `urlState.test.ts`, `walk.test.ts`, `describeItem.test.ts` (with the
+  catalog): the shared engine; `describeItem.fixture.integration.test.ts`: every fixture item resolves against
+  stash.json.
 - `engine/coupons.test.ts` also covers the item type search (type words, aliases, the merc Helm, text fallback) and
   `engine/uniqueDetails.test.ts` the docs item lookup; the fixture test checks "belt" against every belt coupon and
   "sash" against the two sashes.

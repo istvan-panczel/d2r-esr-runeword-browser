@@ -22,7 +22,7 @@ const ITEM_HEADER = [
 ];
 
 describe('buildStashBundle', () => {
-  const { bundle, warnings } = buildStashBundle(
+  const { bundle, names, warnings } = buildStashBundle(
     {
       itemstatcost: tsv([
         ['Stat', 'Save Bits', 'Save Add', 'Save Param Bits'],
@@ -58,6 +58,7 @@ describe('buildStashBundle', () => {
         ['Ear', 'ear', 'ear', 'play', '1', '1', '0', '0'],
         ['Heart', 'hrt', 'hrt', 'body', '1', '1', '0', '0'],
         ['Tome', 'tbk', 'tbk', 'book', '1', '2', '0', '0'],
+        ['Minor Healing Potion', 'hp1', 'hp1', 'hpot', '1', '1', '0', '0'],
         ['Key to Hell', 'qky', 'qky', 'ques', '1', '1', '1', '1'],
         ['Coupon nor Armor 1', '01c', '01c', 'cpn1', '1', '1', '0', '0'],
         ['Coupon nor Weapon 24', '24f', '24f', 'cpn1', '1', '1', '0', '0'],
@@ -91,12 +92,39 @@ describe('buildStashBundle', () => {
         ['War Bonnet', 'cap'],
         ['War Bonnet', 'cap'],
         ['Azurewrath_old', 'crs'],
+        ['Header row', ''],
+        ['Raw Index', 'sbw'],
+      ]),
+      setitems: tsv([
+        ['index', 'set', 'item'],
+        ["Civerb's Ward", "Civerb's Vestments", 'cap'],
+        ['Expansion', '', ''],
+        ['Old Piece', 'Retired_old', 'sbw'],
+      ]),
+      sets: tsv([
+        ['index', 'name'],
+        ["Civerb's Vestments", "Civerb's Vestments"],
+      ]),
+      runes: tsv([
+        ['Name', '*Rune Name'],
+        ['Runeword584', 'Cow'],
+        ['Runeword584', 'Cow'],
+        ['Holy', 'Holy'],
+        ['Runeword9', 'No id'],
       ]),
     },
     new Map([
       ['01c', "(Cap, Biggin's Bonnet)\nAncient Coupon"],
       ['War Bonnet', "Biggin's Bonnet"],
       ['24f', '(Crystal Sword, Azurewrath)\nAncient Coupon'],
+      ["Civerb's Ward", "Civerb's Ward"],
+      ['Runeword584', 'Cow'],
+      ['Holy', 'Holy'],
+      ['hp1', '*HP1'],
+    ]),
+    new Map([
+      ['Runeword584', 63086],
+      ['Holy', 10910],
     ])
   );
 
@@ -156,6 +184,39 @@ describe('buildStashBundle', () => {
       'stash: unique "Azurewrath_old" (row 3) has no string; named "Azurewrath" after coupon 24f',
       'stash: coupon 24f recipe (cubemain line 5) has numinputs 4 for 6 items',
       'stash: coupon 01e makes "Unknown Unique" (cubemain line 6), which is no unique',
+      'stash: runes.txt key "Runeword9" has no string-table id; items of it show no runeword name',
+    ]);
+  });
+
+  it('gives every item code its name, types and tier', () => {
+    expect(names.bases.find((base) => base.code === 'cap')).toEqual({ code: 'cap', name: 'Cap', type: 'helm', tier: 'normal' });
+    expect(names.bases.find((base) => base.code === 'cm1')).toEqual({ code: 'cm1', name: 'Small Charm', type: 'scha' });
+    // ESR's belt abbreviation ("*HP1") reads as the full `name` column
+    expect(names.bases.find((base) => base.code === 'hp1')?.name).toBe('Minor Healing Potion');
+    expect(names.bases.map((base) => base.code)).toEqual(bundle.items.map(([code]) => code));
+  });
+
+  it('names the uniques by row, with the coupon that makes them and the unnamed flag', () => {
+    expect(names.uniques).toEqual([
+      { id: 1, name: "Biggin's Bonnet", code: 'cap', coupon: '01c' },
+      { id: 2, name: "Biggin's Bonnet", code: 'cap' },
+      { id: 3, name: 'Azurewrath', code: 'crs', coupon: '24f', unnamed: true },
+      { id: 5, name: 'Raw Index', code: 'sbw', unnamed: true },
+    ]);
+  });
+
+  it('names the set items by row with their set, and the sets', () => {
+    expect(names.setItems).toEqual([
+      { id: 0, name: "Civerb's Ward", code: 'cap', set: "Civerb's Vestments" },
+      { id: 2, name: 'Old Piece', code: 'sbw', set: 'Retired_old' },
+    ]);
+    expect(names.sets).toEqual([{ id: "Civerb's Vestments", name: "Civerb's Vestments" }]);
+  });
+
+  it('names the runewords and gemwords by the string id of their runes.txt key', () => {
+    expect(names.runewords).toEqual([
+      { id: 10910, key: 'Holy', name: 'Holy', gemword: true },
+      { id: 63086, key: 'Runeword584', name: 'Cow' },
     ]);
   });
 

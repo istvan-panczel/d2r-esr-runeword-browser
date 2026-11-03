@@ -85,6 +85,57 @@ describe('readItem (ESR extended layout)', () => {
     expect(reader.position).toBe(bytes.length * 8);
   });
 
+  const readOne = (item: TestItem) => readItem(new BitReader(bytesOf(item)), data, { section: 0, index: 0 });
+
+  it('keeps the magic affix ids, the auto affix and the variable graphics', () => {
+    const ring = readOne({ code: 'jew', quality: 4, prefixes: [419], suffixes: [0], autoAffix: 37, gfx: 5 });
+    expect(ring).toMatchObject({ quality: 'magic', prefixIds: [419], suffixIds: [0], autoAffixId: 37, gfx: 5, rareNameIds: null });
+    expect(readOne({ code: 'jew' })).toMatchObject({ prefixIds: [], suffixIds: [], autoAffixId: null, gfx: null, qualityVariant: null });
+  });
+
+  it('keeps the rare name ids and the three prefix and suffix slots, empty slots as 0', () => {
+    const rare = readOne({ code: 'xtp', quality: 6, rareNames: [120, 77_001], prefixes: [12, 0, 900], suffixes: [0, 1500, 3] });
+    expect(rare).toMatchObject({ quality: 'rare', rareNameIds: [120, 77_001], prefixIds: [12, 0, 900], suffixIds: [0, 1500, 3] });
+    const crafted = readOne({ code: 'xtp', quality: 8, rareNames: [5, 6], prefixes: [1], suffixes: [] });
+    expect(crafted).toMatchObject({ quality: 'crafted', rareNameIds: [5, 6], prefixIds: [1, 0, 0], suffixIds: [0, 0, 0] });
+    expect(readOne({ code: 'xtp', quality: 9, rareNames: [7, 8] })).toMatchObject({
+      quality: 'tempered',
+      rareNameIds: [7, 8],
+      prefixIds: [],
+    });
+  });
+
+  it('keeps the superior / inferior variant', () => {
+    expect(readOne({ code: 'sbw', quality: 3, qualityVariant: 4 })).toMatchObject({ quality: 'superior', qualityVariant: 4 });
+    expect(readOne({ code: 'sbw', quality: 1, qualityVariant: 2 })).toMatchObject({ quality: 'inferior', qualityVariant: 2 });
+  });
+
+  it('keeps defense (minus Save Add) and durability; an indestructible item has no current durability', () => {
+    expect(readOne({ code: 'xtp', defense: 345, maxDurability: 60, durability: 42 })).toMatchObject({
+      defense: 345,
+      maxDurability: 60,
+      durability: 42,
+    });
+    expect(readOne({ code: 'sbw', maxDurability: 0 })).toMatchObject({ defense: null, maxDurability: 0, durability: null });
+    expect(readOne({ code: 'jew' })).toMatchObject({ defense: null, maxDurability: null, durability: null });
+  });
+
+  it('keeps the personalized name, the runeword id and the runeword stats', () => {
+    const item = readOne({
+      code: 'xtp',
+      sockets: 2,
+      personalized: 'Mefi',
+      runeword: { id: 63086, stats: [{ id: 107, param: 54, value: 2 }] },
+      stats: [
+        { id: 17, value: 30 },
+        { id: 18, value: 30 },
+      ],
+    });
+    expect(item).toMatchObject({ personalizedName: 'Mefi', runewordId: 63086, sockets: 2 });
+    expect(item.runewordStats).toEqual([{ id: 107, param: 54, value: 2 }]);
+    expect(item.stats).toHaveLength(2);
+  });
+
   it('reports the item offset, the failing bit and the code when the bits make no sense', () => {
     // Stat 5 has no Save Bits in this data, so the list cannot be walked
     const writer = new BitWriter().write(0, 8);

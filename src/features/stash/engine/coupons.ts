@@ -3,20 +3,20 @@
  * page's filters, sorting and URL state. See docs/features/STASH.md "Ancient Coupons".
  */
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
-import { parseSearchTerms } from '@/core/utils/searchTerms';
 import { BASE_TIER_LABELS, type BaseTier } from '@/features/game-data/constants/bases';
 import type { StashBundle, StashCouponBase, StashCouponUnique } from '@/features/game-data/engine/schema';
 import type { StashFile, StashTabType } from '../parser/types';
-import { typeAncestors, typeCodesOfTerm, type ItemTypeIndex } from './itemTypes';
+import { typeAncestors, type ItemTypeIndex } from './itemTypes';
+import { compareLocations, pageOf, pagesOf, type StashLocation } from './locations';
+import { matchesItemSearch, parseItemSearch, searchText, withoutBaseName } from './search';
+import { isOneOf, readEnum, readFlag, readPage, readSortDir, readText, setParam, setSort, type SortDir } from './urlState';
+import { walkStashItems } from './walk';
+
+export { formatLocation, pageOf } from './locations';
+export type { SortDir } from './urlState';
 
 /** Where one coupon (or one stack of them) lies */
-export interface CouponLocation {
-  /** Stash section, 0-based */
-  readonly section: number;
-  readonly tabType: StashTabType;
-  readonly x: number;
-  readonly y: number;
-}
+export type CouponLocation = StashLocation;
 
 /**
  * ready: have ≥ need; wildcards: not ready, but the Wild Card recipe works with the stash's Wild Cards; almost: one
@@ -95,7 +95,7 @@ export function itemCount(tabType: StashTabType, item: { readonly stackSize: num
   return tabType !== 'normal' && item.stackSize !== null && item.stackSize > 0 ? item.stackSize : 1;
 }
 
-const byLocation = (a: CouponLocation, b: CouponLocation) => a.section - b.section || a.y - b.y || a.x - b.x;
+const byLocation = compareLocations;
 
 export function couponStatus(have: number, need: number, readyWithWildCards = false): CouponStatus {
   if (have >= need) return 'ready';
@@ -116,14 +116,13 @@ export function collectCoupons(stash: StashFile, bundle: CouponBundle, types: It
   const coupons = new Map(bundle.coupons.map((coupon) => [coupon.code, coupon]));
   const tiers = new Map(bundle.couponTiers.map((tier) => [tier.type, tier]));
   const found = new Map<string, { count: number; locations: CouponLocation[] }>();
-  for (const section of stash.sections) {
-    for (const item of section.items) {
-      if (!coupons.has(item.code)) continue;
-      const entry = found.get(item.code) ?? { count: 0, locations: [] };
-      entry.count += itemCount(section.tabType, item);
-      entry.locations.push({ section: section.index, tabType: section.tabType, x: item.x, y: item.y });
-      found.set(item.code, entry);
-    }
+  // Pages and the materials tab; socketed items are never coupons
+  for (const { item, location } of walkStashItems(stash, { tabs: 'all' })) {
+    if (!coupons.has(item.code)) continue;
+    const entry = found.get(item.code) ?? { count: 0, locations: [] };
+    entry.count += itemCount(location.tabType, item);
+    entry.locations.push(location);
+    found.set(item.code, entry);
   }
 
   const wildCardCode = bundle.coupons.find((coupon) => coupon.wildCard === true)?.code;
@@ -179,21 +178,6 @@ export function couponTierLabel(tier: Pick<StashBundle['couponTiers'][number], '
   return tier.tier === null ? tier.name : BASE_TIER_LABELS[tier.tier];
 }
 
-/** The in-game page of a stash section (1-based), null for the materials tab */
-export function pageOf(location: Pick<CouponLocation, 'section' | 'tabType'>): number | null {
-  return location.tabType === 'normal' ? location.section + 1 : null;
-}
-
-/**
- * "Page 3 · row 2, col 15" (1-based). The materials tab is just "Materials tab": its items have no grid cell (their
- * x / y mostly spell the stack count, x + 16 · y).
- */
-export function formatLocation(location: CouponLocation): string {
-  const page = pageOf(location);
-  if (page === null) return 'Materials tab';
-  return `Page ${String(page)} · row ${String(location.y + 1)}, col ${String(location.x + 1)}`;
-}
-
 /** "2 / 3"; with spare coupons the crafts are shown by the page */
 export function formatHaveNeed(row: Pick<CouponRow, 'have' | 'need'>): string {
   return `${String(row.have)} / ${String(row.need)}`;
@@ -203,7 +187,6 @@ export function formatHaveNeed(row: Pick<CouponRow, 'have' | 'need'>): string {
 
 export const COUPON_SORT_KEYS = ['status', 'coupon', 'unique', 'tier', 'have', 'location'] as const;
 export type CouponSortKey = (typeof COUPON_SORT_KEYS)[number];
-export type SortDir = 'asc' | 'desc';
 export type CouponStatusFilter = CouponStatus | 'all';
 
 export interface CouponsState {
@@ -239,64 +222,54 @@ const KEYS = {
   DETAILS: 'details',
 } as const;
 const STATUS_FILTERS: readonly CouponStatusFilter[] = ['all', ...COUPON_STATUSES];
-/** Stash sections 0–999 are pages */
-const MAX_PAGE = 1000;
-
-const isOneOf = <T extends string>(values: readonly T[], value: string | null): value is T => values.some((entry) => entry === value);
 
 export const isCouponStatusFilter = (value: string): value is CouponStatusFilter => isOneOf(STATUS_FILTERS, value);
 export const isCouponSortKey = (value: string): value is CouponSortKey => isOneOf(COUPON_SORT_KEYS, value);
 
 export function readCouponsState(params: URLSearchParams): CouponsState {
-  const status = params.get(KEYS.STATUS);
-  const sort = params.get(KEYS.SORT);
-  const page = Number(params.get(KEYS.PAGE));
-  const tier = params.get(KEYS.TIER);
   return {
     search: params.get(KEYS.SEARCH) ?? '',
-    status: isOneOf(STATUS_FILTERS, status) ? status : DEFAULT_COUPONS_STATE.status,
-    tier: tier === null || tier === '' ? null : tier,
-    page: Number.isInteger(page) && page >= 1 && page <= MAX_PAGE ? page : null,
-    sort: isOneOf(COUPON_SORT_KEYS, sort) ? sort : DEFAULT_COUPONS_STATE.sort,
-    dir: params.get(KEYS.DIR) === 'desc' ? 'desc' : 'asc',
-    details: params.get(KEYS.DETAILS) === '1',
+    status: readEnum(params, KEYS.STATUS, STATUS_FILTERS, DEFAULT_COUPONS_STATE.status),
+    tier: readText(params, KEYS.TIER),
+    page: readPage(params, KEYS.PAGE),
+    sort: readEnum(params, KEYS.SORT, COUPON_SORT_KEYS, DEFAULT_COUPONS_STATE.sort),
+    dir: readSortDir(params, KEYS.DIR),
+    details: readFlag(params, KEYS.DETAILS),
   };
 }
 
 export function encodeCouponsState(state: CouponsState): URLSearchParams {
   const params = new URLSearchParams();
-  if (state.search.trim() !== '') params.set(KEYS.SEARCH, state.search.trim());
+  setParam(params, KEYS.SEARCH, state.search.trim());
   if (state.status !== 'all') params.set(KEYS.STATUS, state.status);
-  if (state.tier !== null) params.set(KEYS.TIER, state.tier);
-  if (state.page !== null) params.set(KEYS.PAGE, String(state.page));
-  if (state.sort !== DEFAULT_COUPONS_STATE.sort || state.dir !== DEFAULT_COUPONS_STATE.dir) {
-    params.set(KEYS.SORT, state.sort);
-    params.set(KEYS.DIR, state.dir);
-  }
-  if (state.details) params.set(KEYS.DETAILS, '1');
+  setParam(params, KEYS.TIER, state.tier);
+  setParam(params, KEYS.PAGE, state.page);
+  setSort(params, { sort: KEYS.SORT, dir: KEYS.DIR }, state, DEFAULT_COUPONS_STATE);
+  setParam(params, KEYS.DETAILS, state.details);
   return params;
 }
 
 /**
  * The rows matching the search, status, tier and page filters. A search word that names an item type ("belt",
- * "helmet", "rings"; see itemTypes.ts) matches by the base's type chain only, so "ring" finds rings but not Ring Mail;
- * any other word matches the coupon name, unique, code, base name or base type name as text ("sash" → the Sash only).
+ * "helmet", "rings", "orb"; see itemTypes.ts) matches by the base's type chain or as a word of the unique's name, so
+ * "ring" finds rings (and a unique named "… Ring") but not Ring Mail, and "orb" finds Milabrega's Orb; any other word
+ * matches the coupon name, unique, code, base name or base type name as text ("sash" → the Sash only).
  */
 export function filterCouponRows(
   rows: readonly CouponRow[],
   state: Pick<CouponsState, 'search' | 'status' | 'tier' | 'page'>,
   types: ItemTypeIndex | null = null
 ): CouponRow[] {
-  const terms = parseSearchTerms(state.search).map((term) => ({ term, typeCodes: types === null ? null : typeCodesOfTerm(term, types) }));
+  const terms = parseItemSearch(state.search, types);
   return rows.filter((row) => {
     if (state.status !== 'all' && row.status !== state.status) return false;
     if (state.tier !== null && row.couponType !== state.tier) return false;
     if (state.page !== null && !row.locations.some((location) => pageOf(location) === state.page)) return false;
     if (terms.length === 0) return true;
-    const haystack = [row.name, row.unique.name, row.code, row.base?.name ?? '', row.baseTypeName ?? ''].join('\n').toLowerCase();
-    return terms.every(({ term, typeCodes }) =>
-      typeCodes === null ? haystack.includes(term) : typeCodes.some((code) => row.typeCodes.includes(code))
-    );
+    const text = searchText([row.name, row.unique.name, row.code, row.base?.name, row.baseTypeName]);
+    // A type word also matches a word of the unique's name (Milabrega's Orb), not of the coupon or base names
+    const typeWordText = searchText([withoutBaseName(row.unique.name, row.base?.name)]);
+    return matchesItemSearch(terms, { text, typeCodes: row.typeCodes, typeWordText });
   });
 }
 
@@ -332,8 +305,7 @@ export function initialSortDir(sort: CouponSortKey): SortDir {
 
 /** The in-game pages the rows' coupons are on, ascending (the materials tab has none) */
 export function couponPages(rows: readonly CouponRow[]): number[] {
-  const pages = new Set(rows.flatMap((row) => row.locations.map(pageOf).filter((page) => page !== null)));
-  return [...pages].sort((a, b) => a - b);
+  return pagesOf(rows.flatMap((row) => row.locations));
 }
 
 /** The page of a unique (exact-name focus, like the other `?name=` links) */

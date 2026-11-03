@@ -22,12 +22,15 @@ import {
   type EnhanceBundle,
   type GameDataManifest,
   type IconsBundle,
+  type ItemTextBundle,
   type LootFilterDataBundle,
   type MaterialsBundle,
   type SetsBundle,
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
+  type StashBundle,
+  type StashNamesBundle,
   type TiersBundle,
   type TxtRunewordsBundle,
   type TypesBundle,
@@ -57,6 +60,8 @@ const craftingText = readText('crafting');
 const tiersText = readText('tiers');
 const areasText = readText('areas');
 const stashText = readText('stash');
+const stashNamesText = readText('stashnames');
+const itemTextText = readText('itemtext');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const { bases, automods: baseAutomods = [] } = JSON.parse(basesText) as BasesBundle;
@@ -73,6 +78,9 @@ const skillDetails = JSON.parse(skillDetailsText) as SkillDetailsBundle;
 const crafting = JSON.parse(craftingText) as CraftingBundle;
 const { codes: tierCodes } = JSON.parse(tiersText) as TiersBundle;
 const { areas } = JSON.parse(areasText) as AreasBundle;
+const stash = JSON.parse(stashText) as StashBundle;
+const stashNames = JSON.parse(stashNamesText) as StashNamesBundle;
+const itemText = JSON.parse(itemTextText) as ItemTextBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -97,6 +105,8 @@ describe('committed game-data bundles', () => {
       ['tiers', tiersText],
       ['areas', areasText],
       ['stash', stashText],
+      ['stashnames', stashNamesText],
+      ['itemtext', itemTextText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -766,6 +776,81 @@ describe('committed game-data bundles', () => {
     expect([...uniqueCodes].filter((code) => tierOf.has(code))).toHaveLength(963);
   });
 
+  it('name every stash item code, unique, set item and runeword by the ids a save stores (ESR 3.2.24)', () => {
+    expect(stashNames.bases.map((base) => base.code)).toEqual(stash.items.map(([code]) => code));
+    expect(manifest.counts.stashItemCodes).toBe(stashNames.bases.length);
+    const typeCodes = new Set(types.map((type) => type.code));
+    expect(stashNames.bases.filter((base) => !typeCodes.has(base.type)).map((base) => base.code)).toEqual([]);
+    // Same rows and names as the loot filter data, except the coupon-named Azurewrath_old
+    const lootUniques = new Map(lootfilter.uniques.map((unique) => [unique.id, unique]));
+    expect(stashNames.uniques).toHaveLength(manifest.counts.stashUniques ?? -1);
+    expect(stashNames.uniques.filter((unique) => lootUniques.get(unique.id)?.name !== unique.name && unique.unnamed !== true)).toEqual([]);
+    expect(stashNames.uniques.filter((unique) => unique.coupon !== undefined)).toHaveLength(manifest.counts.stashCouponRecipes ?? -1);
+    const lootSets = new Map(lootfilter.sets.map((item) => [item.id, item]));
+    expect(stashNames.setItems.filter((item) => lootSets.get(item.id)?.name !== item.name)).toEqual([]);
+    const setIds = new Set(stashNames.sets.map((set) => set.id));
+    // Only items of retired sets name a set sets.txt lacks
+    expect(stashNames.setItems.filter((item) => !setIds.has(item.set) && !item.set.endsWith('_old'))).toEqual([]);
+    // Every runewords.json runeword has its name under the string id; the ids are distinct
+    const runewordNames = new Map(stashNames.runewords.map((entry) => [entry.key, entry.name]));
+    expect(runewords.filter((runeword) => runewordNames.get(runeword.key) !== runeword.name).map((runeword) => runeword.key)).toEqual([]);
+    expect(new Set(stashNames.runewords.map((entry) => entry.id)).size).toBe(stashNames.runewords.length);
+    expect(stashNames.runewords.find((entry) => entry.id === 63086)).toMatchObject({ key: 'Runeword584', name: 'Cow' });
+    expect(stashNames.runewords.filter((entry) => entry.gemword === true)).toHaveLength(9);
+    expect(stash.gemwords).toEqual(stashNames.runewords.filter((entry) => entry.gemword === true).map((entry) => entry.id));
+    // the coupons and home pages load stash.json only: no names in it
+    expect(Object.keys(stash)).toEqual(['grid', 'stats', 'items', 'coupons', 'couponTiers', 'gemwords']);
+  });
+
+  it('give the stash item text every saved stat, its strings and the name tables by the ids a save stores (ESR 3.2.24)', () => {
+    // every stat a save can hold (stash.json: Save Bits > 0) has its display columns, and only those
+    expect(itemText.stats.map((def) => def !== null)).toEqual(stash.stats.map((entry) => entry !== null));
+    // the strings closure: every description key is there, except the ESR keys no string table has
+    const missing = new Set(['MaxMagDmgPerLvl', 'ModStr3kSum', 'ModStr3u2', 'ModStrMagMastery']);
+    const keys = itemText.stats.flatMap((def) =>
+      def === null ? [] : [def.descstrpos, def.descstrneg, def.descstr2, def.dgrpstrpos, def.dgrpstrneg, def.dgrpstr2]
+    );
+    expect(keys.filter((key) => key !== undefined && key !== '' && !(key in itemText.strings) && !missing.has(key))).toEqual([]);
+    for (const key of missing) expect(itemText.strings[key]).toBeUndefined();
+    // magic names: 1-based (affixes.json ids are 0-based rows), the same text as affixes.json where it has one
+    const tables = { p: itemText.magicPrefixes, s: itemText.magicSuffixes, a: itemText.autoAffixes };
+    expect(affixes.filter((affix) => affix.name !== '' && tables[affix.kind][affix.id + 1] !== affix.name)).toEqual([]);
+    expect(tables.p[0]).toBeNull();
+    // the vanilla rare name table: suffixes 1-155, prefixes 156-201, all resolved
+    expect(itemText.rareNames).toHaveLength(202);
+    expect(itemText.rareNames.slice(1).filter((name) => name === null)).toEqual([]);
+    expect([itemText.rareNames[1], itemText.rareNames[155], itemText.rareNames[156], itemText.rareNames[201]]).toEqual([
+      'Bite',
+      'Flange',
+      'Beast',
+      'Corruption',
+    ]);
+    expect(itemText.lowQuality).toEqual(['Crude', 'Cracked', 'Damaged', 'Low Quality']);
+    expect(itemText.superior).toBe('Superior');
+    // skills: every loot-filter skill (class trees and every skill a property names) with the class index, plus the
+    // skill ids above 1023 the loot filter leaves out (Long Shot 1555, Delirium Proc 1557)
+    const textSkills = new Map(itemText.skills.map((skill) => [skill.id, skill]));
+    expect((lootfilter.skills ?? []).filter((skill) => textSkills.get(skill.id)?.name !== skill.name)).toEqual([]);
+    expect(itemText.skills.map((skill) => skill.id)).toEqual([...textSkills.keys()].sort((a, b) => a - b));
+    expect([textSkills.get(1555)?.name, textSkills.get(1557)?.name]).toEqual(['Long Shot', 'Delirium Proc']);
+    expect(itemText.classes.map((cls) => cls.name.slice(0, 3).toLowerCase())).toEqual([...CLASS_CODES]);
+    expect(itemText.monsters.filter((name) => name !== null)).toHaveLength(manifest.counts.itemTextMonsters ?? -1);
+    // lazy and small: fetched only by /stash/items
+    // base data, socket fillers and required levels (ESR 3.2.24): gloves take the weapon column of the N Rune
+    expect(itemText.bases.tgl).toMatchObject({ str: 45 });
+    expect(itemText.bases.tgl?.gem).toBeUndefined();
+    expect(itemText.bases.gsd).toMatchObject({ d1: [12, 20], d2: [25, 42], str: 100, dex: 60 });
+    // throw damage only on throwable types (ESR fills maxmisdam on wands, orbs, claws …)
+    expect(
+      ['7gi', '7ma', '7cr', '6l7', '6sw', 'ob1', 'ob2', '0yw', 'm23'].filter((code) => itemText.bases[code]?.dt !== undefined)
+    ).toEqual([]);
+    expect(itemText.bases.jav?.dt).toBeDefined();
+    expect(Object.keys(itemText.socketables).length).toBeGreaterThan(170);
+    expect(Object.values(itemText.socketables).filter((columns) => columns.every((column) => column.length === 0))).toEqual([]);
+    expect(itemText.levels.uniques.length).toBeGreaterThan(1000);
+    expect(manifest.files.itemtext?.bytes).toBeLessThan(520_000);
+  });
+
   it('resolve the merc/helm name collision and class-only bases', () => {
     expect(types.find((type) => type.code === 'merc')?.name).toBe('Helm (merc)');
     expect(types.find((type) => type.code === 'helm')?.name).toBe('Helm');
@@ -820,6 +905,8 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.tiers)).toBe(tiersText);
     expect(serializeBundle(generated.areas)).toBe(areasText);
     expect(serializeBundle(generated.stash)).toBe(stashText);
+    expect(serializeBundle(generated.stashnames)).toBe(stashNamesText);
+    expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
   });
 
   it('numbers uniques, sets, stats and sounds like the *ID / *Index comment columns where those are consistent', () => {

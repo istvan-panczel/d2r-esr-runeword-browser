@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { collectCoupons } from '../engine/coupons';
+import { itemsSummary } from '../engine/items/allItems';
 import { StashGate } from '../components/StashGate';
 import { useStash } from '../hooks/useStash';
 import { STASH_PAGES } from './stashPages';
@@ -9,9 +10,15 @@ import { STASH_PAGES } from './stashPages';
 export function StashHomeScreen() {
   const { state, bundle } = useStash();
   const coupons = state.status === 'ready' ? collectCoupons(state.stash, bundle).summary : null;
+  const items = state.status === 'ready' ? itemsSummary(state.stash, bundle) : null;
   const summaryOf = (to: string): string | null => {
-    if (to !== '/stash/coupons' || coupons === null) return null;
-    return `${String(coupons.total)} coupons of ${String(coupons.distinct)} kinds; ${String(coupons.craftable)} uniques craftable now`;
+    if (to === '/stash/coupons' && coupons !== null) {
+      return `${String(coupons.total)} coupons of ${String(coupons.distinct)} kinds; ${String(coupons.craftable)} uniques craftable now`;
+    }
+    if (to === '/stash/items' && items !== null) {
+      return `${String(items.total)} items: ${String(items.uniques)} uniques, ${String(items.sets)} set items, ${String(items.runewords)} runewords, ${String(items.gemwords)} gemwords`;
+    }
+    return null;
   };
 
   return (

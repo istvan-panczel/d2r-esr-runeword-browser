@@ -1,8 +1,8 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { formatHaveNeed, initialSortDir, type CouponRow, type CouponSortKey, type SortDir } from '../engine/coupons';
 import { BaseLine, CouponTierBadge, craftsText, LocationList, StatusBadge, UniqueLink, WildCardRecipe } from './CouponParts';
+import { SORT_HEAD_CLASS as HEAD_CLASS } from './shared/classes';
+import { SortHeader as SharedSortHeader } from './shared/SortHeader';
 
 interface CouponTableProps {
   readonly rows: readonly CouponRow[];
@@ -11,7 +11,6 @@ interface CouponTableProps {
   readonly onSort: (sort: CouponSortKey, dir: SortDir) => void;
 }
 
-const HEAD_CLASS = 'px-2 py-1.5 text-left font-medium whitespace-nowrap';
 const CELL_CLASS = 'border-t px-2 py-1.5 align-top';
 /** The Unique column stays visible while the table scrolls sideways on phones */
 const STICKY_CLASS = 'sticky left-0 z-10 bg-card';
@@ -26,28 +25,8 @@ interface SortHeaderProps {
   readonly title?: string;
 }
 
-function SortHeader({ label, column, sort, dir, onSort, className, title }: SortHeaderProps) {
-  const active = sort === column;
-  const Icon = active ? (dir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
-  return (
-    <th
-      scope="col"
-      className={cn(HEAD_CLASS, className)}
-      aria-sort={active ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}
-      title={title}
-    >
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 hover:text-foreground"
-        onClick={() => {
-          onSort(column, active ? (dir === 'asc' ? 'desc' : 'asc') : initialSortDir(column));
-        }}
-      >
-        {label}
-        <Icon className={cn('size-3', !active && 'opacity-40')} aria-hidden />
-      </button>
-    </th>
-  );
+function SortHeader(props: SortHeaderProps) {
+  return <SharedSortHeader {...props} initialDir={initialSortDir} />;
 }
 
 /** The owned coupons: the unique each makes (link + copy for the in-game stash search), count, recipes, locations. */

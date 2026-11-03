@@ -57,8 +57,40 @@ export interface StashItem {
   uniqueId: number | null;
   /** setitems.txt row (set quality) */
   setId: number | null;
-  /** Raw runeword field (runeword flag) */
+  /**
+   * Raw runeword field (runeword flag): the string-table id of the runes.txt `Name` key (stash.json `runewords`), for
+   * runewords and charm gemwords alike
+   */
   runewordId: number | null;
+  /**
+   * Magic prefix ids, raw: magicprefix.txt rows counted from 1 (Expansion marker rows included), 0 = none. Magic items
+   * have one entry, rare and crafted items three (one per slot, 0 for an empty slot); [] for other qualities.
+   */
+  prefixIds: number[];
+  /** Magic suffix ids (magicsuffix.txt, 1-based, 0 = none), like `prefixIds` */
+  suffixIds: number[];
+  /**
+   * Rare / crafted / tempered name ids [first, second] (the combined vanilla rare name table: the suffix block first,
+   * then the prefixes); null for other qualities
+   */
+  rareNameIds: [number, number] | null;
+  /** automagic.txt id (1-based, like the magic affixes), null when the item has none */
+  autoAffixId: number | null;
+  /** Inferior: lowqualityitems row (Crude, Cracked, …); superior: qualityitems row; null for other qualities */
+  qualityVariant: number | null;
+  /** Variable graphics index (rings, amulets, charms, jewels …), null when the item has none */
+  gfx: number | null;
+  /**
+   * Armor class as saved minus Save Add: the base defense the item rolled, ethereal ×1.5 already included, before its
+   * enhanced defense % and + defense stats; null for non-armor
+   */
+  defense: number | null;
+  /** Current durability; null without (non-gear, or an indestructible item: max durability 0) */
+  durability: number | null;
+  /** Max durability; null for non-gear (0 for an indestructible item) */
+  maxDurability: number | null;
+  /** The personalized name (Anya's quest), null when not personalized */
+  personalizedName: string | null;
   /** Stack quantity (arrows, bolts, keys, tomes …) */
   quantity: number | null;
   /** Stack size in the advanced (materials) stash tab */

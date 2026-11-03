@@ -2,6 +2,8 @@
  * Shape of the static game-data bundles under `public/game-data/`.
  * Bump GAME_DATA_SCHEMA whenever a bundle shape changes incompatibly.
  */
+import type { ClassText, StatDef } from './stats/types.ts';
+
 export const GAME_DATA_SCHEMA = 1;
 
 export type ClassCode = 'ama' | 'sor' | 'nec' | 'pal' | 'bar' | 'dru' | 'ass' | 'war';
@@ -22,6 +24,8 @@ export type GameDataFile =
   | 'tiers'
   | 'areas'
   | 'stash'
+  | 'stashnames'
+  | 'itemtext'
   | 'icons';
 
 export interface GameDataManifest {
@@ -1074,10 +1078,73 @@ export interface StashCouponTier {
   wildCardFrom: number | null;
 }
 
+/** What the stash pages show for an item code (weapons.txt, armor.txt, misc.txt; the first row of a code wins) */
+export interface StashBaseInfo {
+  code: string;
+  /** String-table name ("Light Belt") */
+  name: string;
+  /** Item type code (`type`); its names and ancestors are in types.json */
+  type: string;
+  /** `type2`, when set */
+  type2?: string;
+  /** The tiers.json base tier of a weapons.txt / armor.txt row (gearTier); absent for misc items and tierless gear */
+  tier?: BaseItem['tier'];
+}
+
+/** A uniqueitems.txt row with a base code, by the row number a unique item stores in a save */
+export interface StashUniqueInfo {
+  /** uniqueitems.txt row (Expansion marker rows counted, like the game) */
+  id: number;
+  /** String-table display name of `index`; see `unnamed` */
+  name: string;
+  /** Base item code */
+  code: string;
+  /**
+   * The Ancient Coupon whose cube recipe makes this row (coupon uniques drop only from coupons). Only the first row
+   * of an `index` (what a cube output resolves to) carries it.
+   */
+  coupon?: string;
+  /**
+   * The string table has no name for `index`: `name` is the coupon's unique name when a coupon makes the row
+   * ("Azurewrath" for `Azurewrath_old`), else the raw index
+   */
+  unnamed?: true;
+}
+
+/** A setitems.txt row with a base code, by the row number a set item stores in a save */
+export interface StashSetItemInfo {
+  /** setitems.txt row (Expansion marker rows counted, like the game) */
+  id: number;
+  name: string;
+  /** Base item code (`item`) */
+  code: string;
+  /** sets.txt `index` of its set (sets.json `SetInfo.id`; may name a set sets.txt lacks, e.g. an `_old` one) */
+  set: string;
+}
+
+/** A sets.txt row */
+export interface StashSetInfo {
+  /** `index` (sets.json `SetInfo.id`) */
+  id: string;
+  name: string;
+}
+
+/** A runes.txt `Name` key: what an item's runeword field stores (the key's string-table id) */
+export interface StashRunewordInfo {
+  /** The numeric string-table `id` of the key (63086 = Runeword584 "Cow"); the value of the item's runeword field */
+  id: number;
+  /** runes.txt `Name` ("Runeword584", "Holy"); runewords.json `TxtRuneword.key` for the runewords */
+  key: string;
+  /** String-table text of the key ("Cow"), the key itself without one */
+  name: string;
+  /** A charm gemword (a runes.txt key not named `Runeword…`, e.g. "Holy", "Rainbow"); not in runewords.json */
+  gemword?: true;
+}
+
 /**
  * stash.json: the game data the shared stash (.d2i) parser needs to walk the item bits (src/features/stash/parser):
  * stat widths, per-code item kinds and sizes, the stash page grid, and the Ancient Coupons with the uniques their cube
- * recipes make (the My Stash coupons page).
+ * recipes make (the My Stash coupons page). Loaded by every My Stash page; the names are in stashnames.json.
  */
 export interface StashBundle {
   /** Shared stash page grid (inventory.txt "Big Bank Page 1") */
@@ -1090,4 +1157,114 @@ export interface StashBundle {
   coupons: StashCoupon[];
   /** The coupon item types, by code */
   couponTiers: StashCouponTier[];
+  /** The runeword field values of the charm gemwords (stashnames.json `runewords` with `gemword`), for the counts */
+  gemwords: number[];
+}
+
+/**
+ * stashnames.json: for the All items page (lazy, loaded by that page only), the names, types and tiers of every item
+ * code, and the unique, set item and runeword names by the ids a save stores.
+ */
+export interface StashNamesBundle {
+  /** Every code of stash.json `items`, in the same order */
+  bases: StashBaseInfo[];
+  /** By id ascending; rows without a base code left out */
+  uniques: StashUniqueInfo[];
+  /** By id ascending; rows without a base code left out */
+  setItems: StashSetItemInfo[];
+  /** sets.txt order */
+  sets: StashSetInfo[];
+  /** One entry per runes.txt `Name` key, by id ascending; keys without a string-table id left out (warned about) */
+  runewords: StashRunewordInfo[];
+}
+
+// --- itemtext.json ------------------------------------------------------------------------------------------------
+// Read only by src/features/stash/engine/items/itemText.ts (renderItemText, statValues, the name tables); pages use
+// those functions, never these fields.
+
+/**
+ * A stat's display columns (itemstatcost.txt), by stat id: what engine/stats/descfunc.ts and renderLines.ts read
+ * (`StatDef`), with the blank / zero columns left out, and `descstrneg` / `dgrpstrneg` left out when they equal the
+ * positive string. ValShift is not needed: a save stores the unshifted value (+52 life is saved as 52).
+ */
+export type ItemTextStatDef = Pick<StatDef, 'stat'> & Partial<Omit<StatDef, 'stat'>>;
+
+/**
+ * itemtext.json: what the All items page needs to write an item's tooltip text and name from its saved stats. Loaded
+ * lazily, only on /stash/items (build/bundleItemText.ts).
+ */
+export interface ItemTextBundle {
+  /**
+   * By stat id (itemstatcost.txt row, Expansion rows counted): the stats a save can hold (Save Bits > 0), null for the
+   * others. A stat with descfunc 0 is hidden (its line, if any, comes from a dgrp or a `_display` companion).
+   */
+  stats: (ItemTextStatDef | null)[];
+  /** The string-table texts the stat descriptions and renderLines read, by key (colour codes stripped) */
+  strings: Record<string, string>;
+  /**
+   * The skills a saved stat can name (class skills and every skill a game-data property names), by id ascending:
+   * skills.txt row (the skill id a stat param stores), display name, owning class (charstats row; absent for others)
+   */
+  skills: { id: number; name: string; cls?: number }[];
+  /** charstats.txt rows in order (0 Amazon … 7 Warlock): the class name and its skill strings */
+  classes: ClassText[];
+  /**
+   * monstats.txt `NameStr` texts by monster id (the row without the Expansion row, = `hcIdx`), only for the ids a
+   * descfunc 23 property names (ESR's mythical descriptions, reanimate); null for the others
+   */
+  monsters: (string | null)[];
+  /** montype.txt `strplur` texts by row (descfunc 22) */
+  monTypes: (string | null)[];
+  /** Names by the 1-based ids a save stores (index 0 null): magicprefix.txt, magicsuffix.txt, automagic.txt */
+  magicPrefixes: (string | null)[];
+  magicSuffixes: (string | null)[];
+  autoAffixes: (string | null)[];
+  /**
+   * The combined vanilla rare name table by id (index 0 null): raresuffix.txt (1–155), then rareprefix.txt (156–201).
+   * ESR ships neither table; the keys are a generator constant, the texts ESR's.
+   */
+  rareNames: (string | null)[];
+  /** Inferior name prefixes by quality variant (vanilla lowqualityitems.txt: Crude, Cracked, Damaged, Low Quality) */
+  lowQuality: string[];
+  /** The superior name prefix ("Superior") */
+  superior: string;
+  /**
+   * Set items whose bonus lists are not the plain 2, 3, 4… pieces, by setitems.txt row: the pieces worn for each of the
+   * item's bonus lists, in order (the k-th list a save stores is the k-th non-empty aprop group)
+   */
+  setBonusPieces?: Record<string, number[]>;
+  /** Item codes with base tooltip data (weapons.txt damage, requirements, gem apply type); absent = none */
+  bases: Record<string, ItemTextBase>;
+  /**
+   * Socket fillers by code (gems.txt: gems, runes …): the stats they give in an item of gem apply type 0 (weapon), 1
+   * (helm column) and 2 (shield column), in the form a save stores them
+   */
+  socketables: Record<string, [ItemTextSavedStat[], ItemTextSavedStat[], ItemTextSavedStat[]]>;
+  /** Required levels by the ids a save stores (0 = none): uniqueitems / setitems `lvl req`, magic affix `levelreq` (index 0 unused) */
+  levels: {
+    uniques: number[];
+    setItems: number[];
+    magicPrefixes: number[];
+    magicSuffixes: number[];
+    autoAffixes: number[];
+  };
+}
+
+/** A stat as a save stores it: [itemstatcost id, param (event / charged `skill << 6 | level`, tab `class << 3 | tab`), value] */
+export type ItemTextSavedStat = [number, number, number];
+
+/** A base's tooltip data (weapons.txt / armor.txt / misc.txt); fields without a value are left out */
+export interface ItemTextBase {
+  /** One-hand damage min, max (`mindam` / `maxdam`; not on two-handed-only weapons) */
+  d1?: [number, number];
+  /** Two-hand damage min, max (`2handmindam` / `2handmaxdam`; two-handed or one-or-two-handed weapons) */
+  d2?: [number, number];
+  /** Throw damage min, max (`minmisdam` / `maxmisdam`) */
+  dt?: [number, number];
+  /** Required strength / dexterity / level */
+  str?: number;
+  dex?: number;
+  lvl?: number;
+  /** `gemapplytype` when not 0: 1 = socketed gems give their helm column, 2 = their shield column */
+  gem?: number;
 }
