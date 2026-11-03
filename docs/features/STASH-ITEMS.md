@@ -17,8 +17,50 @@ _To be written with the page (workstream B): columns, details view, search, stat
 - `stash.json` (built by `build/bundleStash.ts`, [GAME-DATA.md → Stash](./GAME-DATA.md#stash)): `bases` (name, `type`
   / `type2`, tier per code), `uniques` / `setItems` by the row a save stores (coupon / unnamed flags, set index),
   `sets`, `runewords` by the string-table id an item's runeword field holds (gemwords flagged).
-- `itemtext.json` (workstream A, lazy, this page only): stat definitions, strings, skill / class / monster names, the
-  magic / automagic / rare name tables. Shape: `ItemTextBundle` in `engine/schema.ts` (draft, owned by A).
+- `stash.json` base names: ESR's belt abbreviations ("\*HP1", "\*Thaw", "+TP") read as the misc.txt `name` column
+  ("Minor Healing Potion"; 17 potion / scroll codes).
+- `itemtext.json` (built by `build/bundleItemText.ts`, lazy, this page only, ESR 3.2.24: 212 KB / 38 KB gzip): the
+  display columns of every saved stat, their strings, skill / class / monster names, the magic / automagic / rare name
+  tables, set bonus pieces. Shape: `ItemTextBundle` in `engine/schema.ts`
+  ([GAME-DATA.md → Item text](./GAME-DATA.md#item-text)).
+- `types.json`: item type names and ancestors (item type search, category).
+
+## Text
+
+`items/itemText.ts` renders with the generator's renderer (`game-data/engine/stats`: descfunc, renderLines, sprintf),
+fed by `items/textData.ts` (saved stats → renderer entries) and `items/statValues.ts` (the stat filter values).
+
+- **Saved stats**: values are raw (a save stores the unshifted value; per-level stats keep their `2^op param`
+  fraction). Params are 16-bit layers: ESR saves 32-bit params and random class skills (`randclassskill`) leave bits
+  above the skill id (`item_singleskill` 0x277C0164 = skill 356), so only the low 16 bits count. Event skills
+  (descfunc 15): `skill << 6 | level`, value = chance; charges (24): the same param, value `max << 8 | charges`
+  ("Level 3 Teleport (8/10 Charges)"); skill tabs (14): `class << 3 | tab`.
+- **Lines** like the game's tooltip and the generator: identical stats summed, fixed damage pairs merged ("Adds 20-45
+  Fire Damage to Attacks"; cold without its duration, poison as totals over its length), equal enhanced min / max
+  damage merged, dgrp sets collapsed only when all members are equal ("All Resists +19"), a class skill + oskill of the
+  same skill as "(All Classes)", descfunc 0 hidden, sorted by descpriority. `secondary_mindamage` / `maxdamage` (the
+  two-hand copy of the same property) are dropped when the primary stat is there. Multi-line texts (ESR's mythical
+  descriptions) are several lines. A stat itemtext.json lacks reads "Unknown stat N: V" (none in the fixture).
+- **Base lines**: Defense is the tooltip's (saved base defense × (100 + enhanced defense %) / 100 + defense, over own,
+  runeword and socketed jewel stats, not per-level defense), then Durability / Indestructible, Quantity, Ethereal,
+  Socketed (N). No weapon damage or requirement lines yet (not in the owner's list; base damage would need bases.json).
+- **Groups**: `stats` = the item's own list, `runeword` = the runeword list, `setBonuses` = one per saved bonus list with
+  its pieces (2, 3, … or itemtext.json `setBonusPieces`), `socketed` = the item's own socketed objects (same identity)
+  with no lines for runes and gems (compact items) and the stats of jewels.
+- **Stat values** (`statValues`, contract rules above): one entry per key, summed over own + runeword + socketed jewel
+  stats. Keys: `s<id>`, `s<id>.<param>` (param = class for 13, packed tab for 14, skill for 15 / 16 / 24 / 27 / 28,
+  monster type for 22), `g.<name>` (`allres`, `allattr`, the other dgrp sets by their dgrpstrpos key, e.g.
+  `g.allspeeds`, `g.minelementaldamage`; `g.dmg-phys` / `-magic` / `-fire` / `-light` / `-cold` / `-pois` with `range`;
+  `g.ed`); all match `^[A-Za-z0-9.-]+$`. Labels have one `#` (two for a range: min, max); a per-level label leaves out
+  "(Based on Character Level)" (`perLevel` says it). Event skills and charges: value = skill level, the highest when a
+  skill repeats. Text-only lines (mythical descriptions, descfunc 23 without a value) have no entry.
+- **Known gaps (v1)**: socketed runes' and gems' bonuses are neither rendered nor summed (they come from gems.txt, not
+  from saved stats; the item shows their names); weapon damage and requirement lines; set-wide bonuses (sets.json).
+- **Fixture** (`itemText.fixture.integration.test.ts`, 2189 page items): no unknown stat or unresolved string; owned
+  uniques' lines match the docs pages (unique_*.htm, numbers masked) at 98.8 % (4013 / 4062; the rest: rolled min / max
+  ranges the docs write as two lines, dgrp sets with unequal values, "Freezes target" without "+1", random class skills
+  the docs name generically, repair wording); runeword lines match runewords.json 9 / 9; set items match sets.json
+  99.8 % (own lines), 100 % (bonus lines and their pieces). Rendering the whole stash (lines + stat values): ~90 ms.
 - `types.json`: item type names and ancestors (item type search, category).
 
 ## Parser fields
@@ -74,7 +116,7 @@ stash.json) are not changed by either side without a note in the merge.
 ### Text context (A)
 
 ```ts
-// hooks/useItemText.ts: loads itemtext.json (lazy) and builds the context; STUB: always ready with the placeholder
+// hooks/useItemText.ts: loads itemtext.json (lazy) and builds the context (one object per bundle + catalog)
 export type ItemTextState =
   | { readonly status: 'loading'; readonly text: null }
   | { readonly status: 'ready'; readonly text: ItemTextContext }
@@ -147,7 +189,9 @@ Rules A guarantees:
 - **Groups**: `g.<name>` entries besides their members, present when every member is: `g.allres` (fire, cold,
   lightning, poison resistance; value = the smallest), `g.allattr` (str, dex, vit, energy), the dgrp sets in general,
   and the damage pairs (`g.dmg-fire` … with `range`). So "All Resistances ≥ 15" and "Fire Resistance ≥ 30" both work.
-- **Event skills** (chance to cast): `value` is the skill level; charges: the skill level. The label stays generic.
+- **Event skills** (chance to cast): `value` is the skill level; charges: the skill level. The label stays generic
+  ("Chance to Cast Level # Fire Bolt on Striking", "Level # Teleport (Charges)"); the key's param is the skill id.
+- **Per level**: `perLevel` entries' labels leave out "(Based on Character Level)"; `value` is the per-level amount.
 - **Stability**: the same stat on two items has the same key and label; keys are only a function of stat id, param and
   group name.
 
