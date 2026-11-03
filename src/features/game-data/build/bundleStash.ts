@@ -3,21 +3,28 @@
  * no length prefix, so every field of every item has to be read: the stat widths (itemstatcost.txt), which codes are
  * armor / weapons / charms / … (the item tables + the itemtypes.txt hierarchy), the inventory size of each code and the
  * stash page grid (inventory.txt). The Ancient Coupons are listed with their names and cube recipes (cubemain.txt:
- * how many coupons, or fewer coupons plus Wild Cards, make which unique) for the My Stash coupons page.
+ * how many coupons, or fewer coupons plus Wild Cards, make which unique) for the My Stash coupons page. For the All
+ * items page: every code's name, type and tier, and the unique, set item and runeword names by the ids a save stores
+ * (uniqueitems.txt / setitems.txt rows; the string-table id of the runes.txt `Name` key).
  */
 import {
   STASH_ITEM_FLAGS,
+  type StashBaseInfo,
   type StashBundle,
   type StashCoupon,
   type StashCouponBase,
   type StashCouponTier,
   type StashCouponUnique,
   type StashItemInfo,
+  type StashRunewordInfo,
+  type StashSetInfo,
+  type StashSetItemInfo,
   type StashStatInfo,
+  type StashUniqueInfo,
 } from '../engine/schema.ts';
 import type { BuildResult } from './bundleTypes.ts';
 import { isAncientCouponName, readCouponRecipes } from './coupons.ts';
-import { resolveName } from './itemNames.ts';
+import { readUniqueOrSetRows, resolveName } from './itemNames.ts';
 import { gearTier, type FamilyTier } from './tiers.ts';
 import type { TsvTable } from './tsv.ts';
 
@@ -32,7 +39,14 @@ export interface StashInput {
   cubemain: TsvTable;
   /** Parsed with `keepExpansionRows`: the row number is the unique id a save stores */
   uniqueitems: TsvTable;
+  /** Parsed with `keepExpansionRows`: the row number is the set item id a save stores */
+  setitems: TsvTable;
+  sets: TsvTable;
+  runes: TsvTable;
 }
+
+/** runes.txt keys of the runewords; the other keys are charm gemwords (bundleRunewords.ts RUNEWORD_KEY) */
+const RUNEWORD_KEY = /^Runeword/;
 
 /** inventory.txt row of the shared stash page (the expansion "Big Bank"; "Bank Page 1" is the classic one) */
 const STASH_PAGE_ROW = 'Big Bank Page 1';
@@ -86,7 +100,12 @@ function descendantsOf(root: string, parents: ReadonlyMap<string, readonly strin
   return result;
 }
 
-export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string, string>): BuildResult<StashBundle> {
+export function buildStashBundle(
+  input: StashInput,
+  strings: ReadonlyMap<string, string>,
+  /** String-table ids by key (strings.ts `ids`): an item's runeword field is the id of its runes.txt key */
+  stringIds: ReadonlyMap<string, number>
+): BuildResult<StashBundle> {
   const warnings: string[] = [];
 
   const stats: (StashStatInfo | null)[] = input.itemstatcost.rows.map((row) => {
@@ -115,6 +134,7 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
   const seen = new Set<string>();
   /** Base name, type and tier by code, for the coupon uniques' bases */
   const bases = new Map<string, StashCouponBase & { tier: FamilyTier | undefined }>();
+  const baseInfo: StashBaseInfo[] = [];
   for (const table of [input.weapons, input.armor, input.misc]) {
     for (const row of table.rows) {
       const code = row.str('code');
@@ -132,12 +152,10 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
       items.push([code, flags, row.num('invwidth'), row.num('invheight')]);
       const tier =
         table === input.misc ? undefined : gearTier(code, row.str('normcode'), row.str('ubercode'), row.str('ultracode'), row.num('level'));
-      bases.set(code, {
-        code,
-        name: resolveName(strings, row.str('namestr'), row.str('name')),
-        type,
-        tier: tier === 'mythical' ? undefined : tier,
-      });
+      const name = resolveName(strings, row.str('namestr'), row.str('name'));
+      bases.set(code, { code, name, type, tier: tier === 'mythical' ? undefined : tier });
+      const type2 = row.has('type2') ? row.str('type2') : '';
+      baseInfo.push({ code, name, type, ...(type2 === '' ? {} : { type2 }), ...(tier === undefined ? {} : { tier }) });
     }
   }
 
@@ -217,5 +235,70 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
   if (page === undefined) warnings.push(`stash: inventory.txt has no "${STASH_PAGE_ROW}" row; the grid defaults to 16 × 13`);
   const grid = page === undefined ? { width: 16, height: 13 } : { width: page.num('gridX'), height: page.num('gridY') };
 
-  return { bundle: { grid, stats, items, coupons, couponTiers }, warnings };
+  const named = { uniques: uniqueNames(input.uniqueitems, strings, coupons), ...setNames(input, strings) };
+  const runewords = runewordNames(input.runes, strings, stringIds, warnings);
+  return { bundle: { grid, stats, items, coupons, couponTiers, bases: baseInfo, ...named, runewords }, warnings };
+}
+
+/**
+ * Every uniqueitems.txt row with a base code. A row whose index has no string is named after its coupon (as on the
+ * coupons page) or keeps the index; the first row of a coupon's unique index carries the coupon code.
+ */
+function uniqueNames(uniqueitems: TsvTable, strings: ReadonlyMap<string, string>, coupons: readonly StashCoupon[]): StashUniqueInfo[] {
+  const byId = new Map(coupons.flatMap((coupon) => (coupon.unique === undefined ? [] : [[coupon.unique.id, coupon] as const])));
+  return readUniqueOrSetRows(uniqueitems, 'code', strings).map((row) => {
+    const coupon = byId.get(row.id);
+    const unnamed = resolveName(strings, row.index, '') === '';
+    return {
+      id: row.id,
+      name: unnamed && coupon?.unique !== undefined ? coupon.unique.name : row.name,
+      code: row.code,
+      ...(coupon === undefined ? {} : { coupon: coupon.code }),
+      ...(unnamed ? { unnamed: true as const } : {}),
+    };
+  });
+}
+
+function setNames(input: StashInput, strings: ReadonlyMap<string, string>): { setItems: StashSetItemInfo[]; sets: StashSetInfo[] } {
+  const setOf = new Map<number, string>();
+  input.setitems.rows.forEach((row, id) => setOf.set(id, row.str('set')));
+  const setItems = readUniqueOrSetRows(input.setitems, 'item', strings).map((row) => ({
+    id: row.id,
+    name: row.name,
+    code: row.code,
+    set: setOf.get(row.id) ?? '',
+  }));
+  const sets = input.sets.rows.flatMap((row) => {
+    const id = row.str('index');
+    return id === '' ? [] : [{ id, name: resolveName(strings, row.str('name'), id) }];
+  });
+  return { setItems, sets };
+}
+
+/** One entry per runes.txt key (runewords and charm gemwords), by its string-table id */
+function runewordNames(
+  runes: TsvTable,
+  strings: ReadonlyMap<string, string>,
+  stringIds: ReadonlyMap<string, number>,
+  warnings: string[]
+): StashRunewordInfo[] {
+  const byKey = new Map<string, StashRunewordInfo>();
+  for (const row of runes.rows) {
+    const key = row.str('Name');
+    if (key === '' || byKey.has(key)) continue;
+    const id = stringIds.get(key);
+    if (id === undefined) {
+      warnings.push(`stash: runes.txt key "${key}" has no string-table id; items of it show no runeword name`);
+      continue;
+    }
+    byKey.set(key, { id, key, name: resolveName(strings, key, key), ...(RUNEWORD_KEY.test(key) ? {} : { gemword: true as const }) });
+  }
+  const entries = [...byKey.values()].sort((a, b) => a.id - b.id);
+  const keyOfId = new Map<number, string>();
+  for (const entry of entries) {
+    const other = keyOfId.get(entry.id);
+    if (other !== undefined) warnings.push(`stash: runes.txt keys "${other}" and "${entry.key}" share the string id ${String(entry.id)}`);
+    keyOfId.set(entry.id, entry.key);
+  }
+  return entries;
 }

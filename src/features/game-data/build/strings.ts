@@ -13,6 +13,11 @@ export interface StringsFile {
 
 export interface StringTable {
   readonly strings: ReadonlyMap<string, string>;
+  /**
+   * The numeric `id` of the entry each key resolved to (the winning file's). Saves store some names by this id: the
+   * runeword field of an item is the id of its runes.txt `Name` key.
+   */
+  readonly ids: ReadonlyMap<string, number>;
   readonly warnings: readonly string[];
 }
 
@@ -46,30 +51,33 @@ export function sortStringFiles<T extends { readonly name: string }>(files: read
   return [...files].sort((a, b) => priorityOf(a.name) - priorityOf(b.name) || a.name.localeCompare(b.name));
 }
 
-function readEntries(file: StringsFile): { key: string; enUS: string }[] {
+function readEntries(file: StringsFile): { key: string; enUS: string; id: number | null }[] {
   const parsed: unknown = JSON.parse(file.text.replace(/^\uFEFF/, ''));
   if (!Array.isArray(parsed)) throw new Error(`${file.name}: expected a JSON array`);
-  const entries: { key: string; enUS: string }[] = [];
+  const entries: { key: string; enUS: string; id: number | null }[] = [];
   for (const item of parsed as unknown[]) {
     if (typeof item !== 'object' || item === null) continue;
     const key: unknown = (item as Record<string, unknown>).Key;
     const enUS: unknown = (item as Record<string, unknown>).enUS;
+    const id: unknown = (item as Record<string, unknown>).id;
     if (typeof key !== 'string' || typeof enUS !== 'string') continue;
-    entries.push({ key, enUS: stripColorCodes(enUS) });
+    entries.push({ key, enUS: stripColorCodes(enUS), id: typeof id === 'number' && Number.isInteger(id) ? id : null });
   }
   return entries;
 }
 
 export function buildStringTable(files: readonly StringsFile[]): StringTable {
   const strings = new Map<string, string>();
+  const ids = new Map<string, number>();
   const source = new Map<string, string>();
   const warnings: string[] = [];
 
   for (const file of sortStringFiles(files)) {
-    for (const { key, enUS } of readEntries(file)) {
+    for (const { key, enUS, id } of readEntries(file)) {
       const existing = strings.get(key);
       if (existing === undefined) {
         strings.set(key, enUS);
+        if (id !== null) ids.set(key, id);
         source.set(key, file.name);
       } else if (existing !== enUS) {
         warnings.push(
@@ -79,5 +87,5 @@ export function buildStringTable(files: readonly StringsFile[]): StringTable {
     }
   }
 
-  return { strings, warnings };
+  return { strings, ids, warnings };
 }

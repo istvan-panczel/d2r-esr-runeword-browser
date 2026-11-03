@@ -29,50 +29,50 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                | Contents                                                                                                                           |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                        |
-| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names   |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                           |
-| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                |
-| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                            |
-| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                           |
-| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data") |
-| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                              |
-| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                      |
-| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")    |
-| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                       |
-| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")             |
-| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))    |
-| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                   |
-| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")   |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")   |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes (see "Stash")                |
-| `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")   |
+| File                | Contents                                                                                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                               |
+| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                          |
+| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                  |
+| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                       |
+| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                   |
+| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                  |
+| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                        |
+| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                     |
+| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                             |
+| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                           |
+| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                              |
+| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                    |
+| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                           |
+| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                          |
+| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                          |
+| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")                          |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; item, unique, set and runeword names (see "Stash") |
+| `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                          |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
 (`GAME_DATA_SCHEMA`); bump it whenever a bundle shape changes incompatibly.
 
-| Bundle              | ESR 3.2.12 size (raw / gzip)                                                   |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `types.json`        | 44 KB / 5 KB                                                                   |
-| `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB) |
-| `runewords.json`    | 197 KB / 28 KB                                                                 |
-| `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72) |
-| `sources.json`      | 298 KB / 29 KB                                                                 |
-| `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills) |
-| `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                     |
-| `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                     |
-| `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                     |
-| `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                     |
-| `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                       |
-| `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)         |
-| `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                       |
-| `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                       |
-| `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                       |
-| `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (88 KB / 14 KB before the coupon recipes and bases) |
-| `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)              |
+| Bundle              | ESR 3.2.12 size (raw / gzip)                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `types.json`        | 44 KB / 5 KB                                                                                                              |
+| `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB)                                            |
+| `runewords.json`    | 197 KB / 28 KB                                                                                                            |
+| `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72)                                            |
+| `sources.json`      | 298 KB / 29 KB                                                                                                            |
+| `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills)                                            |
+| `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                                                                |
+| `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                                                                |
+| `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                                |
+| `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                                |
+| `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                                  |
+| `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                                    |
+| `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                                  |
+| `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                                  |
+| `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                                  |
+| `stash.json`        | ESR 3.2.24: 437 KB / 71 KB (143 KB / 21 KB before the All items names; 88 KB / 14 KB before the coupon recipes and bases) |
+| `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                                         |
 
 ### Bases and types
 
@@ -603,6 +603,21 @@ without length prefixes, so the parser needs every width:
   exceptional / elite, null for a type whose bases have none), and `wildCardFrom`, the coupons of that tier (any
   codes) the cube turns into one Wild Card (8 / 4 / 2). ESR 3.2.24: one elite coupon is on an exceptional base, `44e`
   Measured Wrath (Burnt Text), the same coupon that takes 2 Wild Cards instead of 4 (a warning).
+- `bases`: for every code of `items`, in the same order, `{ code, name, type, type2?, tier? }`: the string-table name,
+  the `type` / `type2` item types (their names and ancestors are in types.json) and the tiers.json tier of a weapons /
+  armor row (`gearTier`: normal / exceptional / elite / mythical; none for misc items and tierless gear).
+- `uniques`: every uniqueitems.txt row with a base code, by the row number a save stores (Expansion rows counted):
+  `{ id, name, code, coupon?, unnamed? }`. `coupon` is the Ancient Coupon whose recipe makes the row (382 in ESR
+  3.2.24, the first row of each output `index`); `unnamed` marks an index without a string (the name is then the
+  coupon's unique name, `Azurewrath_old` → "Azurewrath", else the raw index, e.g. the disabled `The Perfect Cello`).
+- `setItems`: every setitems.txt row with a base code, by row number: `{ id, name, code, set }`, `set` being the
+  sets.txt `index` (sets.json `SetInfo.id`; an `_old` set may be missing from sets.txt). `sets`: every sets.txt row,
+  `{ id: index, name }`.
+- `runewords`: one entry per runes.txt `Name` key, `{ id, key, name, gemword? }`. An item's 16-bit runeword field holds
+  the numeric string-table `id` of its key (strings.ts keeps the `id` of the entry each key resolved to): 63086 =
+  `Runeword584` "Cow", 10910 = Holy. Keys not named `Runeword…` are the charm gemwords (`gemword: true`, 9 in ESR
+  3.2.24; not in runewords.json). A key without a string id is left out with a warning; two keys sharing an id warn
+  too.
 
 Warnings: no Wild Card row, a coupon with two coupon-only recipes, an output that is no unique, an unknown base, a coupon
 whose base tier differs from its type's, and a recipe whose
@@ -610,7 +625,7 @@ whose base tier differs from its type's, and a recipe whose
 coupons + 4 Wild Cards, so the Wild Card recipe may not work in game).
 
 Counts (ESR 3.2.24): `stashItemCodes` 2309, `stashSavedStats` 666, `stashCoupons` 385, `stashCouponRecipes` 382,
-`stashCouponWildCardRecipes` 382. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
+`stashCouponWildCardRecipes` 382, `stashUniques` 1390, `stashSetItems` 270, `stashRunewords` 391, `stashGemwords` 9. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
 `44e` Measured Wrath, takes 2).
 
 ### Skills

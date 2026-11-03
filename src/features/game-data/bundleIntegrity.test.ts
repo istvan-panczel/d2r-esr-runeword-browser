@@ -28,6 +28,7 @@ import {
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
+  type StashBundle,
   type TiersBundle,
   type TxtRunewordsBundle,
   type TypesBundle,
@@ -73,6 +74,7 @@ const skillDetails = JSON.parse(skillDetailsText) as SkillDetailsBundle;
 const crafting = JSON.parse(craftingText) as CraftingBundle;
 const { codes: tierCodes } = JSON.parse(tiersText) as TiersBundle;
 const { areas } = JSON.parse(areasText) as AreasBundle;
+const stash = JSON.parse(stashText) as StashBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -764,6 +766,29 @@ describe('committed game-data bundles', () => {
     expect(setCodes.filter((code) => tierOf.has(code))).toHaveLength(246);
     const uniqueCodes = new Set(lootfilter.uniques.map((unique) => unique.code));
     expect([...uniqueCodes].filter((code) => tierOf.has(code))).toHaveLength(963);
+  });
+
+  it('name every stash item code, unique, set item and runeword by the ids a save stores (ESR 3.2.24)', () => {
+    expect(stash.bases.map((base) => base.code)).toEqual(stash.items.map(([code]) => code));
+    expect(manifest.counts.stashItemCodes).toBe(stash.bases.length);
+    const typeCodes = new Set(types.map((type) => type.code));
+    expect(stash.bases.filter((base) => !typeCodes.has(base.type)).map((base) => base.code)).toEqual([]);
+    // Same rows and names as the loot filter data, except the coupon-named Azurewrath_old
+    const lootUniques = new Map(lootfilter.uniques.map((unique) => [unique.id, unique]));
+    expect(stash.uniques).toHaveLength(manifest.counts.stashUniques ?? -1);
+    expect(stash.uniques.filter((unique) => lootUniques.get(unique.id)?.name !== unique.name && unique.unnamed !== true)).toEqual([]);
+    expect(stash.uniques.filter((unique) => unique.coupon !== undefined)).toHaveLength(manifest.counts.stashCouponRecipes ?? -1);
+    const lootSets = new Map(lootfilter.sets.map((item) => [item.id, item]));
+    expect(stash.setItems.filter((item) => lootSets.get(item.id)?.name !== item.name)).toEqual([]);
+    const setIds = new Set(stash.sets.map((set) => set.id));
+    // Only items of retired sets name a set sets.txt lacks
+    expect(stash.setItems.filter((item) => !setIds.has(item.set) && !item.set.endsWith('_old'))).toEqual([]);
+    // Every runewords.json runeword has its name under the string id; the ids are distinct
+    const runewordNames = new Map(stash.runewords.map((entry) => [entry.key, entry.name]));
+    expect(runewords.filter((runeword) => runewordNames.get(runeword.key) !== runeword.name).map((runeword) => runeword.key)).toEqual([]);
+    expect(new Set(stash.runewords.map((entry) => entry.id)).size).toBe(stash.runewords.length);
+    expect(stash.runewords.find((entry) => entry.id === 63086)).toMatchObject({ key: 'Runeword584', name: 'Cow' });
+    expect(stash.runewords.filter((entry) => entry.gemword === true)).toHaveLength(9);
   });
 
   it('resolve the merc/helm name collision and class-only bases', () => {

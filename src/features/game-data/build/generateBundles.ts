@@ -74,7 +74,7 @@ export interface GeneratedBundles {
 
 /** Builds all bundles from the raw clone sources (no I/O). */
 export function generateBundles(sources: EsrSources): GeneratedBundles {
-  const { strings, warnings: stringWarnings } = buildStringTable(sources.strings);
+  const { strings, ids: stringIds, warnings: stringWarnings } = buildStringTable(sources.strings);
   const table = (name: keyof EsrSources['tables']) => parseTsv(sources.tables[name], `${name}.txt`);
 
   const typeRows = readItemTypes(table('itemtypes'));
@@ -300,8 +300,12 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       inventory: table('inventory'),
       cubemain: table('cubemain'),
       uniqueitems: rowTable('uniqueitems'),
+      setitems: rowTable('setitems'),
+      sets: table('sets'),
+      runes: table('runes'),
     },
-    strings
+    strings,
+    stringIds
   );
   // --- end stash.json ---
 
@@ -418,6 +422,10 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       stashCoupons: stash.bundle.coupons.filter((coupon) => coupon.wildCard !== true).length,
       stashCouponRecipes: stash.bundle.coupons.filter((coupon) => coupon.unique !== undefined).length,
       stashCouponWildCardRecipes: stash.bundle.coupons.filter((coupon) => coupon.withWildCards !== undefined).length,
+      stashUniques: stash.bundle.uniques.length,
+      stashSetItems: stash.bundle.setItems.length,
+      stashRunewords: stash.bundle.runewords.filter((entry) => entry.gemword !== true).length,
+      stashGemwords: stash.bundle.runewords.filter((entry) => entry.gemword === true).length,
     },
     warnings: [
       ...types.warnings,
