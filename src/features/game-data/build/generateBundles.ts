@@ -298,6 +298,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       armor: table('armor'),
       misc: table('misc'),
       inventory: table('inventory'),
+      cubemain: table('cubemain'),
+      uniqueitems: rowTable('uniqueitems'),
     },
     strings
   );
@@ -414,6 +416,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       stashItemCodes: stash.bundle.items.length,
       stashSavedStats: stash.bundle.stats.filter((stat) => stat !== null).length,
       stashCoupons: stash.bundle.coupons.filter((coupon) => coupon.wildCard !== true).length,
+      stashCouponRecipes: stash.bundle.coupons.filter((coupon) => coupon.unique !== undefined).length,
+      stashCouponWildCardRecipes: stash.bundle.coupons.filter((coupon) => coupon.withWildCards !== undefined).length,
     },
     warnings: [
       ...types.warnings,

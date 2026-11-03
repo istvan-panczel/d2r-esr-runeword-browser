@@ -2,11 +2,20 @@
  * stash.json: what the shared stash (.d2i) parser (src/features/stash/parser) needs to walk the item bits. Items have
  * no length prefix, so every field of every item has to be read: the stat widths (itemstatcost.txt), which codes are
  * armor / weapons / charms / … (the item tables + the itemtypes.txt hierarchy), the inventory size of each code and the
- * stash page grid (inventory.txt). The Ancient Coupons are listed with their names for the coupon finder.
+ * stash page grid (inventory.txt). The Ancient Coupons are listed with their names and cube recipes (cubemain.txt:
+ * how many coupons, or fewer coupons plus Wild Cards, make which unique) for the My Stash coupons page.
  */
-import { STASH_ITEM_FLAGS, type StashBundle, type StashCoupon, type StashItemInfo, type StashStatInfo } from '../engine/schema.ts';
+import {
+  STASH_ITEM_FLAGS,
+  type StashBundle,
+  type StashCoupon,
+  type StashCouponTier,
+  type StashCouponUnique,
+  type StashItemInfo,
+  type StashStatInfo,
+} from '../engine/schema.ts';
 import type { BuildResult } from './bundleTypes.ts';
-import { isAncientCouponName } from './coupons.ts';
+import { isAncientCouponName, readCouponRecipes } from './coupons.ts';
 import { resolveName } from './itemNames.ts';
 import type { TsvTable } from './tsv.ts';
 
@@ -18,11 +27,35 @@ export interface StashInput {
   armor: TsvTable;
   misc: TsvTable;
   inventory: TsvTable;
+  cubemain: TsvTable;
+  /** Parsed with `keepExpansionRows`: the row number is the unique id a save stores */
+  uniqueitems: TsvTable;
 }
 
 /** inventory.txt row of the shared stash page (the expansion "Big Bank"; "Bank Page 1" is the classic one) */
 const STASH_PAGE_ROW = 'Big Bank Page 1';
 const WILD_CARD_NAME = 'Coupon Wild Card';
+/** itemtypes.txt names the coupon types "Coupon norm", "Coupon excep", "Coupon elite" */
+const TIER_LABELS: Readonly<Record<string, string>> = { norm: 'Normal', excep: 'Exceptional', elite: 'Elite' };
+
+function tierLabel(itemTypeName: string): string {
+  const suffix = itemTypeName
+    .replace(/^Coupon\s+/i, '')
+    .trim()
+    .toLowerCase();
+  return TIER_LABELS[suffix] ?? itemTypeName;
+}
+
+/** The first uniqueitems.txt row of each `index` with a base code (what a cube output ref resolves to). */
+function uniquesByIndex(uniqueitems: TsvTable, strings: ReadonlyMap<string, string>): Map<string, StashCouponUnique> {
+  const byIndex = new Map<string, StashCouponUnique>();
+  uniqueitems.rows.forEach((row, id) => {
+    const index = row.str('index');
+    if (index === '' || row.str('code') === '' || byIndex.has(index)) return;
+    byIndex.set(index, { id, name: resolveName(strings, index, index) });
+  });
+  return byIndex;
+}
 
 /** Every type code that is `root` or descends from it through Equiv1 / Equiv2. */
 function descendantsOf(root: string, parents: ReadonlyMap<string, readonly string[]>): Set<string> {
@@ -82,19 +115,63 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
     }
   }
 
+  const couponRows = input.misc.rows.filter((row) => {
+    const name = row.str('name');
+    return row.str('code') !== '' && (isAncientCouponName(name) || name === WILD_CARD_NAME);
+  });
+  const wildCardCode = couponRows.find((row) => row.str('name') === WILD_CARD_NAME)?.str('code') ?? '';
+  if (wildCardCode === '') warnings.push(`stash: misc.txt has no "${WILD_CARD_NAME}" row; no Wild Card recipes`);
+  const ancientRows = couponRows.filter((row) => row.str('name') !== WILD_CARD_NAME);
+  const couponTypes = new Set(ancientRows.map((row) => row.str('type')));
+  const recipes = readCouponRecipes(input.cubemain, new Set(ancientRows.map((row) => row.str('code'))), couponTypes, wildCardCode);
+  const uniques = uniquesByIndex(input.uniqueitems, strings);
+
   const coupons: StashCoupon[] = [];
-  for (const row of input.misc.rows) {
+  for (const row of couponRows) {
     const name = row.str('name');
     const code = row.str('code');
-    if (code === '' || !(isAncientCouponName(name) || name === WILD_CARD_NAME)) continue;
     const coupon: StashCoupon = { code, name: resolveName(strings, row.str('namestr'), name), type: row.str('type') };
-    if (name === WILD_CARD_NAME) coupon.wildCard = true;
+    if (name === WILD_CARD_NAME) {
+      coupon.wildCard = true;
+    } else {
+      const codeRecipes = recipes.byCode.get(code) ?? [];
+      const plain = codeRecipes.filter((recipe) => recipe.wildCards === 0);
+      const recipe = plain.at(0);
+      if (plain.length > 1) warnings.push(`stash: coupon ${code} has ${String(plain.length)} coupon-only recipes; the first one counts`);
+      const unique = recipe === undefined ? undefined : uniques.get(recipe.output);
+      if (recipe !== undefined && unique === undefined) {
+        warnings.push(`stash: coupon ${code} makes "${recipe.output}" (cubemain line ${String(recipe.line)}), which is no unique`);
+      }
+      if (recipe !== undefined && unique !== undefined) {
+        coupon.unique = unique;
+        coupon.qty = recipe.qty;
+        const alternative =
+          codeRecipes.find((other) => other.wildCards > 0 && other.output === recipe.output) ??
+          codeRecipes.find((other) => other.wildCards > 0);
+        if (alternative !== undefined) coupon.withWildCards = { qty: alternative.qty, wildCards: alternative.wildCards };
+        for (const used of [recipe, alternative]) {
+          if (used !== undefined && used.numInputs !== used.qty + used.wildCards) {
+            warnings.push(
+              `stash: coupon ${code} recipe (cubemain line ${String(used.line)}) has numinputs ${String(used.numInputs)} for ` +
+                `${String(used.qty + used.wildCards)} items`
+            );
+          }
+        }
+      }
+    }
     coupons.push(coupon);
   }
+
+  const typeNames = new Map(input.itemtypes.rows.map((row) => [row.str('Code'), row.str('ItemType')]));
+  const couponTiers: StashCouponTier[] = [...couponTypes].sort().map((type) => ({
+    type,
+    label: tierLabel(typeNames.get(type) ?? type),
+    wildCardFrom: recipes.wildCardFrom.get(type) ?? null,
+  }));
 
   const page = input.inventory.rows.find((row) => row.str('class') === STASH_PAGE_ROW);
   if (page === undefined) warnings.push(`stash: inventory.txt has no "${STASH_PAGE_ROW}" row; the grid defaults to 16 × 13`);
   const grid = page === undefined ? { width: 16, height: 13 } : { width: page.num('gridX'), height: page.num('gridY') };
 
-  return { bundle: { grid, stats, items, coupons }, warnings };
+  return { bundle: { grid, stats, items, coupons, couponTiers }, warnings };
 }

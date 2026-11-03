@@ -47,6 +47,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                   |
 | `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")   |
 | `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")   |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes (see "Stash")                |
 | `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")   |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
@@ -70,6 +71,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                       |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                       |
 | `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                       |
+| `stash.json`        | ESR 3.2.24: 122 KB / 18 KB (88 KB / 14 KB before the coupon recipes)           |
 | `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)              |
 
 ### Bases and types
@@ -572,6 +574,36 @@ Counts (ESR 3.2.24): `areas` 197, `areasMaps` 57 (tier 1: 7, 2: 9, 3: 15, 4: 8, 
 `areasUniqueMaps` 1, `areasWithoutMonsters` 10 (5 towns + 5), `areasWithWaypoint` 39, `areasHiddenPrepZones` 17,
 `areasHiddenOther` 1, `areasUniquesMinsThenMaxes` 61. levels.txt is also read by bundleLootFilter.ts (lootfilter areas) and generateBundles.ts (the cube's
 level names); those reads were left as they were.
+
+### Stash
+
+`stash.json` (`StashBundle`, built by `build/bundleStash.ts`) feeds the shared stash parser
+(`src/features/stash/parser/`) and the My Stash pages ([STASH.md](./STASH.md)). A save stores items as a bit stream
+without length prefixes, so the parser needs every width:
+
+- `stats`: by itemstatcost.txt row (row-numbered, the stat id): `[Save Bits, Save Add, has Save Param Bits]`, `null`
+  when the stat is never saved (Save Bits 0).
+- `items`: `[code, STASH_ITEM_FLAGS, invwidth, invheight]` for every weapons / armor / misc code (first row of a code
+  wins); the flags say which optional fields the item carries (armor, weapon, gold, charm, monster part, scroll /
+  tome, quest difficulty), from the `type` column through the itemtypes.txt Equiv hierarchy.
+- `grid`: the shared stash page (inventory.txt "Big Bank Page 1": 16 × 13).
+- `coupons`: every misc.txt "Coupon …" row (385 Ancient Coupons + the Wild Card `99j`) with its string-table name and
+  type. `build/coupons.ts` (`readCouponRecipes`) reads their enabled cubemain.txt recipes: a row whose inputs are one
+  coupon code (`"01c,qty=3"`) makes `unique` (`{ id, name }`: the first uniqueitems.txt row of the output `index`,
+  row-numbered, and its display name) and gives `qty`; a row with the same code plus Wild Cards (`"01c,qty=2"` +
+  `99j` / `"99j,qty=2"` / `"99j,qty=4"`) gives `withWildCards: { qty, wildCards }`. Rerolls (a `rnd` input) and rows
+  whose output is an input are skipped. The three blank coupons (`96j`–`98j`) have no recipe and no `unique`.
+- `couponTiers`: one entry per coupon type (`cpn1`, `cpn2`, `cpn3`), labelled from the itemtypes.txt name ("Coupon
+  norm" → Normal, "excep" → Exceptional, "elite" → Elite) with `wildCardFrom`, the coupons of that tier (any codes)
+  the cube turns into one Wild Card (8 / 4 / 2).
+
+Warnings: no Wild Card row, a coupon with two coupon-only recipes, an output that is no unique, and a recipe whose
+`numinputs` differs from its item count (ESR 3.2.24: `06j`, Bul-Kathos' Wedding Band, line 8194: `numinputs` 4 for 2
+coupons + 4 Wild Cards, so the Wild Card recipe may not work in game).
+
+Counts (ESR 3.2.24): `stashItemCodes` 2309, `stashSavedStats` 666, `stashCoupons` 385, `stashCouponRecipes` 382,
+`stashCouponWildCardRecipes` 382. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
+`44e` Measured Wrath, takes 2).
 
 ### Skills
 

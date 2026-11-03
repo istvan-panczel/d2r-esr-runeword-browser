@@ -1028,11 +1028,35 @@ export interface StashCoupon {
   type: string;
   /** The Coupon Wild Card (99j): a joker, not an Ancient Coupon */
   wildCard?: true;
+  /** The coupon unique its cube recipe makes; absent for the Wild Card and the blank coupons (no recipe) */
+  unique?: StashCouponUnique;
+  /** Coupons of this code the recipe takes ("01c,qty=3" → 3); set with `unique` */
+  qty?: number;
+  /** The alternative recipe: fewer coupons of this code plus Coupon Wild Cards ("02c,qty=2" + "99j,qty=2") */
+  withWildCards?: { qty: number; wildCards: number };
+}
+
+export interface StashCouponUnique {
+  /** uniqueitems.txt row (the id a unique item stores in a save) */
+  id: number;
+  /** String-table display name of the cube output's uniqueitems.txt `index` ("War Bonnet" → "Biggin's Bonnet") */
+  name: string;
+}
+
+/** A coupon tier: the misc.txt item type of its coupons (itemtypes.txt "Coupon norm" …) */
+export interface StashCouponTier {
+  /** Item type code (cpn1, cpn2, cpn3) */
+  type: string;
+  /** Normal, Exceptional, Elite (from the itemtypes.txt name; the raw name when it is not one of these) */
+  label: string;
+  /** Coupons of this tier (any codes) the cube turns into one Wild Card; null when no recipe does */
+  wildCardFrom: number | null;
 }
 
 /**
  * stash.json: the game data the shared stash (.d2i) parser needs to walk the item bits (src/features/stash/parser):
- * stat widths, per-code item kinds and sizes, the stash page grid, and the Ancient Coupons it reports.
+ * stat widths, per-code item kinds and sizes, the stash page grid, and the Ancient Coupons with the uniques their cube
+ * recipes make (the My Stash coupons page).
  */
 export interface StashBundle {
   /** Shared stash page grid (inventory.txt "Big Bank Page 1") */
@@ -1040,6 +1064,8 @@ export interface StashBundle {
   /** By itemstatcost.txt row (the stat id); null when Save Bits is 0 (never saved on items) */
   stats: (StashStatInfo | null)[];
   items: StashItemInfo[];
-  /** misc.txt rows named "Coupon …": the Ancient Coupons, plus the Wild Card */
+  /** misc.txt rows named "Coupon …": the Ancient Coupons, plus the Wild Card, with their cube recipes */
   coupons: StashCoupon[];
+  /** The coupon item types, by code */
+  couponTiers: StashCouponTier[];
 }

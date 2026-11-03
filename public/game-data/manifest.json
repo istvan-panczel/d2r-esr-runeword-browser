@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-03T12:33:54.351Z",
+  "generatedAt": "2026-11-03T12:51:40.978Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -66,8 +66,8 @@
       "bytes": 35601
     },
     "stash": {
-      "hash": "6ad0fece683f868f509409dac7ced6fd7a3eaf716c934b40aa06c789b2f69754",
-      "bytes": 89738
+      "hash": "60c9cdb3823256f4bcdf52351cf62a629584ebbcbaa775cb1051a7707f16e6ab",
+      "bytes": 124555
     },
     "icons": {
       "hash": "4e7f8851b9c5666541718f175833d9b7a790f05e60cca77795809ebbf6c64656",
@@ -175,6 +175,8 @@
     "stashItemCodes": 2309,
     "stashSavedStats": 666,
     "stashCoupons": 385,
+    "stashCouponRecipes": 382,
+    "stashCouponWildCardRecipes": 382,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
@@ -199,6 +201,7 @@
     "lootfilter skills: runeword Airship: \"hit-skill\" Long Shot: skill id 1555 above 1023 does not fit a stat param (skill << 6 | level)",
     "lootfilter skills: propertygroup nature-rule-full-set: \"att-skill\" 1541: skill id 1541 above 1023 does not fit a stat param (skill << 6 | level)",
     "skilldetails: unknown skill in oskill \"Axe Swarm\" (Ember of Creation)",
-    "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients"
+    "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients",
+    "stash: coupon 06j recipe (cubemain line 8194) has numinputs 4 for 6 items"
   ]
 }
