@@ -15,6 +15,7 @@ const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/game-data/materials',
   '/game-data/sets',
   '/game-data/areas',
+  '/stash',
 ];
 
 export function isStaticBundlePath(pathname: string): boolean {

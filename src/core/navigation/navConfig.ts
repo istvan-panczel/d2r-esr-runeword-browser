@@ -123,6 +123,8 @@ export interface NavItem {
   readonly label: string;
   /** One line shown under the label in the desktop dropdown (and the home card of a plain link). */
   readonly description: string;
+  /** Active only on its own path, not on its child paths (an overview whose sibling pages live under it). */
+  readonly exact?: boolean;
 }
 
 /** A page chip on a home section card. */
@@ -205,6 +207,27 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     ],
   },
   {
+    kind: 'group',
+    key: 'stash',
+    label: 'My Stash',
+    description: 'Upload your shared stash (it stays in your browser) and see what is in it',
+    items: [
+      {
+        key: 'stash-overview',
+        to: '/stash',
+        label: 'Overview',
+        description: 'Upload your shared stash; it is read in your browser only',
+        exact: true,
+      },
+      {
+        key: 'stash-coupons',
+        to: '/stash/coupons',
+        label: 'Ancient Coupons',
+        description: 'Your coupons, the uniques they make and where they are',
+      },
+    ],
+  },
+  {
     kind: 'link',
     item: { key: 'guide', to: '/guide', label: 'Guide', description: 'New-player guide: what ESR changes and where to go next' },
     homeLinks: [
@@ -230,7 +253,7 @@ export function getAllNavItems(entries: readonly NavEntry[] = NAV_ENTRIES): read
 }
 
 export function isNavItemActive(pathname: string, item: NavItem): boolean {
-  return pathname === item.to || pathname.startsWith(`${item.to}/`);
+  return pathname === item.to || (item.exact !== true && pathname.startsWith(`${item.to}/`));
 }
 
 export function isNavGroupActive(pathname: string, group: NavGroup): boolean {

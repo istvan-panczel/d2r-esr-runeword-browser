@@ -14,6 +14,7 @@ const routeScreenImports = [
   '@/features/game-data',
   '@/features/guide',
   '@/features/loot-filter',
+  '@/features/stash',
 ] as const;
 
 function readRouterSource(): string {
