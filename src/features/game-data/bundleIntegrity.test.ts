@@ -22,6 +22,7 @@ import {
   type EnhanceBundle,
   type GameDataManifest,
   type IconsBundle,
+  type ItemTextBundle,
   type LootFilterDataBundle,
   type MaterialsBundle,
   type SetsBundle,
@@ -58,6 +59,7 @@ const craftingText = readText('crafting');
 const tiersText = readText('tiers');
 const areasText = readText('areas');
 const stashText = readText('stash');
+const itemTextText = readText('itemtext');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const { bases, automods: baseAutomods = [] } = JSON.parse(basesText) as BasesBundle;
@@ -75,6 +77,7 @@ const crafting = JSON.parse(craftingText) as CraftingBundle;
 const { codes: tierCodes } = JSON.parse(tiersText) as TiersBundle;
 const { areas } = JSON.parse(areasText) as AreasBundle;
 const stash = JSON.parse(stashText) as StashBundle;
+const itemText = JSON.parse(itemTextText) as ItemTextBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -99,6 +102,7 @@ describe('committed game-data bundles', () => {
       ['tiers', tiersText],
       ['areas', areasText],
       ['stash', stashText],
+      ['itemtext', itemTextText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -791,6 +795,42 @@ describe('committed game-data bundles', () => {
     expect(stash.runewords.filter((entry) => entry.gemword === true)).toHaveLength(9);
   });
 
+  it('give the stash item text every saved stat, its strings and the name tables by the ids a save stores (ESR 3.2.24)', () => {
+    // every stat a save can hold (stash.json: Save Bits > 0) has its display columns, and only those
+    expect(itemText.stats.map((def) => def !== null)).toEqual(stash.stats.map((entry) => entry !== null));
+    // the strings closure: every description key is there, except the ESR keys no string table has
+    const missing = new Set(['MaxMagDmgPerLvl', 'ModStr3kSum', 'ModStr3u2', 'ModStrMagMastery']);
+    const keys = itemText.stats.flatMap((def) =>
+      def === null ? [] : [def.descstrpos, def.descstrneg, def.descstr2, def.dgrpstrpos, def.dgrpstrneg, def.dgrpstr2]
+    );
+    expect(keys.filter((key) => key !== undefined && key !== '' && !(key in itemText.strings) && !missing.has(key))).toEqual([]);
+    for (const key of missing) expect(itemText.strings[key]).toBeUndefined();
+    // magic names: 1-based (affixes.json ids are 0-based rows), the same text as affixes.json where it has one
+    const tables = { p: itemText.magicPrefixes, s: itemText.magicSuffixes, a: itemText.autoAffixes };
+    expect(affixes.filter((affix) => affix.name !== '' && tables[affix.kind][affix.id + 1] !== affix.name)).toEqual([]);
+    expect(tables.p[0]).toBeNull();
+    // the vanilla rare name table: suffixes 1-155, prefixes 156-201, all resolved
+    expect(itemText.rareNames).toHaveLength(202);
+    expect(itemText.rareNames.slice(1).filter((name) => name === null)).toEqual([]);
+    expect([itemText.rareNames[1], itemText.rareNames[155], itemText.rareNames[156], itemText.rareNames[201]]).toEqual([
+      'Bite',
+      'Flange',
+      'Beast',
+      'Corruption',
+    ]);
+    expect(itemText.lowQuality).toEqual(['Crude', 'Cracked', 'Damaged', 'Low Quality']);
+    expect(itemText.superior).toBe('Superior');
+    // skills: every loot-filter skill (class trees and every skill a property names), with the class index
+    expect(itemText.skills.map((skill) => skill.id)).toEqual((lootfilter.skills ?? []).map((skill) => skill.id));
+    expect(itemText.skills.filter((skill) => skill.cls !== undefined)).toHaveLength(
+      (lootfilter.skills ?? []).filter((skill) => skill.cls !== undefined).length
+    );
+    expect(itemText.classes.map((cls) => cls.name.slice(0, 3).toLowerCase())).toEqual([...CLASS_CODES]);
+    expect(itemText.monsters.filter((name) => name !== null)).toHaveLength(manifest.counts.itemTextMonsters ?? -1);
+    // lazy and small: fetched only by /stash/items
+    expect(manifest.files.itemtext?.bytes).toBeLessThan(260_000);
+  });
+
   it('resolve the merc/helm name collision and class-only bases', () => {
     expect(types.find((type) => type.code === 'merc')?.name).toBe('Helm (merc)');
     expect(types.find((type) => type.code === 'helm')?.name).toBe('Helm');
@@ -845,6 +885,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.tiers)).toBe(tiersText);
     expect(serializeBundle(generated.areas)).toBe(areasText);
     expect(serializeBundle(generated.stash)).toBe(stashText);
+    expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
   });
 
   it('numbers uniques, sets, stats and sounds like the *ID / *Index comment columns where those are consistent', () => {
