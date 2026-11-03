@@ -24,10 +24,6 @@ export class BitReader {
     return this.#position;
   }
 
-  set position(bit: number) {
-    this.#position = bit;
-  }
-
   get bitLength(): number {
     return this.#bytes.length * 8;
   }

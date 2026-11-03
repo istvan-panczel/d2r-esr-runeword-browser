@@ -16,8 +16,7 @@ describe('BitReader', () => {
   it('reads full 32-bit values as unsigned numbers', () => {
     const reader = new BitReader(new Uint8Array([0x55, 0xaa, 0x55, 0xaa, 0xff]));
     expect(reader.read(32)).toBe(0xaa55aa55);
-    reader.position = 4;
-    expect(reader.read(32)).toBe(0xfaa55aa5);
+    expect(new BitReader(new Uint8Array([0x55, 0xaa, 0x55, 0xaa, 0xff]), 4).read(32)).toBe(0xfaa55aa5);
   });
 
   it('round-trips values written by the test BitWriter', () => {
@@ -39,9 +38,9 @@ describe('BitReader', () => {
     const reader = new BitReader(new Uint8Array(4), 8);
     reader.alignToByte();
     expect(reader.position).toBe(8);
-    reader.position = 9;
-    reader.alignToByte();
-    expect(reader.position).toBe(16);
+    const inside = new BitReader(new Uint8Array(4), 9);
+    inside.alignToByte();
+    expect(inside.position).toBe(16);
   });
 
   it('throws at the end of the data', () => {
