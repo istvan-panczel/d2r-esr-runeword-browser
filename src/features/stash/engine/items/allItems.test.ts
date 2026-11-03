@@ -13,6 +13,7 @@ import {
   hasItemFilters,
   initialItemSortDir,
   itemPages,
+  itemPageUrl,
   itemRows,
   itemsSummary,
   kindLabel,
@@ -20,7 +21,7 @@ import {
   parseStatCondition,
   readItemsState,
   sortItemRows,
-  statName,
+  fillStatLabel,
   statOptions,
   type ItemRow,
   type ItemSortKey,
@@ -170,6 +171,18 @@ describe('item rows', () => {
     expect(rows.map(kindLabel)).toEqual(['Unique', 'Set', 'Rare', 'Runeword', 'Normal', 'Magic', 'Gemword']);
   });
 
+  it('links uniques, set items, runewords and gemwords to their pages', () => {
+    expect(rows.map(itemPageUrl)).toEqual([
+      '/uniques?name=Harlequin+Crest',
+      '/game-data/sets?name=Civerb%27s+Ward',
+      null,
+      '/runewords?name=Spirit',
+      null,
+      null,
+      '/gemwords?name=Holy',
+    ]);
+  });
+
   it('builds once per stash, catalog and text context', () => {
     expect(itemRows(stash, catalog, null)).toBe(itemRows(stash, catalog, null));
     expect(itemRows(stash, catalog, text)).not.toBe(itemRows(stash, catalog, null));
@@ -266,8 +279,11 @@ describe('stat conditions', () => {
   });
 
   it('writes labels and values for display', () => {
-    expect(statName('+#% Faster Cast Rate')).toBe('+% Faster Cast Rate');
-    expect(statName('Adds #-# Fire Damage')).toBe('Adds - Fire Damage');
+    expect(fillStatLabel('+#% Faster Cast Rate', { value: 20 })).toBe('+20% Faster Cast Rate');
+    expect(fillStatLabel('Adds #-# Fire Damage', { value: 20, range: { min: 10, max: 20 } })).toBe('Adds 10-20 Fire Damage');
+    expect(fillStatLabel('+# Fire Damage', { value: 20, range: { min: 10, max: 20 } })).toBe('+10-20 Fire Damage');
+    expect(fillStatLabel('+# to Life', { value: 1.5, perLevel: true })).toBe('+1.5 to Life (per character level)');
+    expect(fillStatLabel('Cannot Be Frozen', { value: 1 })).toBe('Cannot Be Frozen: 1');
     expect(formatStatValue({ value: 20 })).toBe('20');
     expect(formatStatValue({ value: 20, range: { min: 10, max: 20 } })).toBe('10-20');
     expect(formatStatValue({ value: 0.375, perLevel: true })).toBe('0.38 per level');

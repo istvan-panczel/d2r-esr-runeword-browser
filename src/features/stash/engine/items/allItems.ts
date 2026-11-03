@@ -5,6 +5,7 @@
  * docs/features/STASH-ITEMS.md "Page".
  */
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
+import { NAME_FOCUS_PAGES } from '@/features/guide/engine/linkSchemes';
 import { BASE_TIER_LABELS, BASE_TIERS, type BaseTier } from '@/features/game-data/constants/bases';
 import type { StashFile, StashItem } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
@@ -88,6 +89,21 @@ export const ITEM_CATEGORY_LABELS: Readonly<Record<ItemCategory, string>> = {
 /** "Runeword", or "Gemword" for a charm gemword */
 export function kindLabel(row: Pick<ItemRow, 'info'>): string {
   return row.info.kind === 'runeword' && row.info.runeword?.gemword === true ? 'Gemword' : ITEM_KIND_LABELS[row.info.kind];
+}
+
+const SETS_PAGE = '/game-data/sets';
+
+/**
+ * The app page of a row's unique, set item, runeword or gemword (the exact-name focus, `?name=`); null for other
+ * items. Personalized items link by the plain name.
+ */
+export function itemPageUrl(row: Pick<ItemRow, 'info'>): string | null {
+  const { unique, setItem, runeword } = row.info;
+  const link = (path: string, name: string) => `${path}?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.NAME]: name }).toString()}`;
+  if (unique !== null) return link(NAME_FOCUS_PAGES.unique, unique.name);
+  if (setItem !== null) return link(SETS_PAGE, setItem.name);
+  if (runeword !== null) return link(runeword.gemword === true ? NAME_FOCUS_PAGES.gw : NAME_FOCUS_PAGES.rw, runeword.name);
+  return null;
 }
 
 const allLines = (text: ItemTextGroups): string[] => [
@@ -264,12 +280,21 @@ export function statOptions(rows: readonly Pick<ItemRow, 'stats'>[]): StatOption
   );
 }
 
-/** A stat label without the `#` placeholder ("+#% Faster Cast Rate" → "+% Faster Cast Rate"), for picker and chips */
-export function statName(label: string): string {
-  return label
-    .replace(/#/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+/**
+ * A stat label with an item's value in place of `#` ("+#% Faster Cast Rate" → "+20% Faster Cast Rate"): a range fills
+ * two `#` with its ends (one `#` gets "10-20"); a per-level value says so.
+ */
+export function fillStatLabel(label: string, stat: Pick<StatValue, 'value' | 'range' | 'perLevel'>): string {
+  const number = (value: number) => String(Math.round(value * 100) / 100);
+  const marks = label.split('#').length - 1;
+  let text: string;
+  if (marks === 0) text = `${label}: ${formatStatValue({ value: stat.value, range: stat.range })}`;
+  else if (stat.range !== undefined && marks >= 2) {
+    const ends = [number(stat.range.min), number(stat.range.max)];
+    let at = 0;
+    text = label.replace(/#/g, () => ends[Math.min(at++, 1)] ?? '');
+  } else text = label.replace(/#/g, formatStatValue({ value: stat.value, range: stat.range }));
+  return stat.perLevel === true ? `${text} (per character level)` : text;
 }
 
 /** A displayed value: "20", "10-20" for a range, "1.5 per level" */
