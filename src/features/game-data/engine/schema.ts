@@ -1165,3 +1165,59 @@ export interface StashBundle {
   /** One entry per runes.txt `Name` key, by id ascending; keys without a string-table id left out (warned about) */
   runewords: StashRunewordInfo[];
 }
+
+// --- itemtext.json ------------------------------------------------------------------------------------------------
+// DRAFT (contract with the stat text workstream, docs/features/STASH-ITEMS.md "Contracts"): the shape is owned by the
+// generator of itemtext.json and may change; only src/features/stash/engine/items/itemText.ts reads it. Pages use the
+// functions there (renderItemText, statValues, the name tables), never these fields directly.
+
+/** A stat's display definition (itemstatcost.txt), by stat id */
+export interface ItemTextStatDef {
+  /** itemstatcost `Stat` ("item_fastercastrate") */
+  stat: string;
+  op: number;
+  opParam: number;
+  /** itemstatcost `ValShift`: the saved value is shifted right by this many bits before display (life, mana, stamina) */
+  valShift: number;
+  descpriority: number;
+  descfunc: number;
+  descval: number;
+  /** String-table keys (texts in `strings`) */
+  descstrpos: string;
+  descstrneg: string;
+  descstr2: string;
+  dgrp: number;
+  dgrpfunc: number;
+  dgrpval: number;
+  dgrpstrpos: string;
+  dgrpstrneg: string;
+  dgrpstr2: string;
+}
+
+/**
+ * itemtext.json: what the All items page needs to write an item's tooltip text and name. Loaded lazily, only on
+ * /stash/items.
+ */
+export interface ItemTextBundle {
+  /** By stat id (itemstatcost.txt row, Expansion rows counted); null for stats never shown */
+  stats: (ItemTextStatDef | null)[];
+  /** The string-table texts the stat descriptions and names use, by key (colour codes stripped) */
+  strings: Record<string, string>;
+  /** By skills.txt row (the skill id a stat param stores): display name and owning class (charstats row), null when unused */
+  skills: ({ name: string; cls: number | null } | null)[];
+  /** charstats.txt rows in order (0 Amazon … 7 Warlock): the class name and its skill strings */
+  classes: { name: string; allSkills: string; tabs: [string, string, string]; only: string }[];
+  /** monstats.txt display names by row (descfunc 23), montype.txt plurals by row (descfunc 22) */
+  monsters: string[];
+  monTypes: string[];
+  /** Names by the 1-based ids a save stores (index 0 unused, null): magicprefix.txt, magicsuffix.txt, automagic.txt */
+  magicPrefixes: (string | null)[];
+  magicSuffixes: (string | null)[];
+  autoAffixes: (string | null)[];
+  /** The combined rare name table by id (index 0 unused): the suffix block (1–155), then the prefixes (156 on) */
+  rareNames: (string | null)[];
+  /** Inferior name prefixes by quality variant ("Crude", "Cracked", "Damaged", "Low Quality") */
+  lowQuality: string[];
+  /** The superior name prefix ("Superior") */
+  superior: string;
+}

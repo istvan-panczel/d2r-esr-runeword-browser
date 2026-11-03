@@ -18,7 +18,8 @@ const MISC_CODE_SEPARATOR = '#';
 
 /**
  * What an icon is looked up by. Mythical uniques are `unique`; `code` is the base fallback for an unknown name. A misc
- * item (gem, rune, crystal) is looked up by name; `code` picks the row when the name's rows have different art.
+ * item (gem, rune, crystal) is looked up by name; `code` picks the row when the name's rows have different art, and is
+ * the base fallback (rings, charms, jewels … are bases by code).
  */
 export type ItemIconRef =
   | { readonly kind: 'base'; readonly code: string }
@@ -59,7 +60,8 @@ export function findItemIcon(index: ItemIconIndex, ref: ItemIconRef): ItemIconIn
   if (ref.kind === 'misc') {
     const name = normaliseItemName(withoutVariantSuffix(ref.name));
     const qualified = ref.code === undefined ? undefined : index.misc.get(`${name}${MISC_CODE_SEPARATOR}${ref.code.toLowerCase()}`);
-    return qualified ?? index.misc.get(name);
+    // Rings, amulets, charms, jewels and quivers are bases (by code), not misc names
+    return qualified ?? index.misc.get(name) ?? (ref.code === undefined ? undefined : index.bases.get(ref.code));
   }
   const names = ref.kind === 'unique' ? index.uniques : index.sets;
   const own = names.get(normaliseItemName(ref.name)) ?? names.get(normaliseItemName(withoutVariantSuffix(ref.name)));

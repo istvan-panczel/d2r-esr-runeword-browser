@@ -36,6 +36,8 @@ describe('item icon lookup', () => {
     expect(findItemIcon(index, { kind: 'misc', name: 'Ko Rune', code: 'r01' })).toBeUndefined();
     expect(findItemIcon(index, { kind: 'misc', name: 'El Rune (12 points)' })).toBe(axe);
     expect(findItemIcon(index, { kind: 'misc', name: 'The Gnasher' })).toBeUndefined();
+    // A name without misc art falls back to the base art of the code (rings, charms, jewels)
+    expect(findItemIcon(index, { kind: 'misc', name: 'Small Charm', code: 'hax' })).toBe(axe);
     // An icons.json without the misc section
     expect(findItemIcon(buildItemIconIndex({ bases: {}, uniques: {}, sets: {} }), { kind: 'misc', name: 'El Rune' })).toBeUndefined();
   });
