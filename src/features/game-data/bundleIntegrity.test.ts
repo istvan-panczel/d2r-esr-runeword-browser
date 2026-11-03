@@ -30,6 +30,7 @@ import {
   type SkillsBundle,
   type SourcesBundle,
   type StashBundle,
+  type StashNamesBundle,
   type TiersBundle,
   type TxtRunewordsBundle,
   type TypesBundle,
@@ -59,6 +60,7 @@ const craftingText = readText('crafting');
 const tiersText = readText('tiers');
 const areasText = readText('areas');
 const stashText = readText('stash');
+const stashNamesText = readText('stashnames');
 const itemTextText = readText('itemtext');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
@@ -77,6 +79,7 @@ const crafting = JSON.parse(craftingText) as CraftingBundle;
 const { codes: tierCodes } = JSON.parse(tiersText) as TiersBundle;
 const { areas } = JSON.parse(areasText) as AreasBundle;
 const stash = JSON.parse(stashText) as StashBundle;
+const stashNames = JSON.parse(stashNamesText) as StashNamesBundle;
 const itemText = JSON.parse(itemTextText) as ItemTextBundle;
 
 describe('committed game-data bundles', () => {
@@ -102,6 +105,7 @@ describe('committed game-data bundles', () => {
       ['tiers', tiersText],
       ['areas', areasText],
       ['stash', stashText],
+      ['stashnames', stashNamesText],
       ['itemtext', itemTextText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
@@ -773,26 +777,29 @@ describe('committed game-data bundles', () => {
   });
 
   it('name every stash item code, unique, set item and runeword by the ids a save stores (ESR 3.2.24)', () => {
-    expect(stash.bases.map((base) => base.code)).toEqual(stash.items.map(([code]) => code));
-    expect(manifest.counts.stashItemCodes).toBe(stash.bases.length);
+    expect(stashNames.bases.map((base) => base.code)).toEqual(stash.items.map(([code]) => code));
+    expect(manifest.counts.stashItemCodes).toBe(stashNames.bases.length);
     const typeCodes = new Set(types.map((type) => type.code));
-    expect(stash.bases.filter((base) => !typeCodes.has(base.type)).map((base) => base.code)).toEqual([]);
+    expect(stashNames.bases.filter((base) => !typeCodes.has(base.type)).map((base) => base.code)).toEqual([]);
     // Same rows and names as the loot filter data, except the coupon-named Azurewrath_old
     const lootUniques = new Map(lootfilter.uniques.map((unique) => [unique.id, unique]));
-    expect(stash.uniques).toHaveLength(manifest.counts.stashUniques ?? -1);
-    expect(stash.uniques.filter((unique) => lootUniques.get(unique.id)?.name !== unique.name && unique.unnamed !== true)).toEqual([]);
-    expect(stash.uniques.filter((unique) => unique.coupon !== undefined)).toHaveLength(manifest.counts.stashCouponRecipes ?? -1);
+    expect(stashNames.uniques).toHaveLength(manifest.counts.stashUniques ?? -1);
+    expect(stashNames.uniques.filter((unique) => lootUniques.get(unique.id)?.name !== unique.name && unique.unnamed !== true)).toEqual([]);
+    expect(stashNames.uniques.filter((unique) => unique.coupon !== undefined)).toHaveLength(manifest.counts.stashCouponRecipes ?? -1);
     const lootSets = new Map(lootfilter.sets.map((item) => [item.id, item]));
-    expect(stash.setItems.filter((item) => lootSets.get(item.id)?.name !== item.name)).toEqual([]);
-    const setIds = new Set(stash.sets.map((set) => set.id));
+    expect(stashNames.setItems.filter((item) => lootSets.get(item.id)?.name !== item.name)).toEqual([]);
+    const setIds = new Set(stashNames.sets.map((set) => set.id));
     // Only items of retired sets name a set sets.txt lacks
-    expect(stash.setItems.filter((item) => !setIds.has(item.set) && !item.set.endsWith('_old'))).toEqual([]);
+    expect(stashNames.setItems.filter((item) => !setIds.has(item.set) && !item.set.endsWith('_old'))).toEqual([]);
     // Every runewords.json runeword has its name under the string id; the ids are distinct
-    const runewordNames = new Map(stash.runewords.map((entry) => [entry.key, entry.name]));
+    const runewordNames = new Map(stashNames.runewords.map((entry) => [entry.key, entry.name]));
     expect(runewords.filter((runeword) => runewordNames.get(runeword.key) !== runeword.name).map((runeword) => runeword.key)).toEqual([]);
-    expect(new Set(stash.runewords.map((entry) => entry.id)).size).toBe(stash.runewords.length);
-    expect(stash.runewords.find((entry) => entry.id === 63086)).toMatchObject({ key: 'Runeword584', name: 'Cow' });
-    expect(stash.runewords.filter((entry) => entry.gemword === true)).toHaveLength(9);
+    expect(new Set(stashNames.runewords.map((entry) => entry.id)).size).toBe(stashNames.runewords.length);
+    expect(stashNames.runewords.find((entry) => entry.id === 63086)).toMatchObject({ key: 'Runeword584', name: 'Cow' });
+    expect(stashNames.runewords.filter((entry) => entry.gemword === true)).toHaveLength(9);
+    expect(stash.gemwords).toEqual(stashNames.runewords.filter((entry) => entry.gemword === true).map((entry) => entry.id));
+    // the coupons and home pages load stash.json only: no names in it
+    expect(Object.keys(stash)).toEqual(['grid', 'stats', 'items', 'coupons', 'couponTiers', 'gemwords']);
   });
 
   it('give the stash item text every saved stat, its strings and the name tables by the ids a save stores (ESR 3.2.24)', () => {
@@ -886,6 +893,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.tiers)).toBe(tiersText);
     expect(serializeBundle(generated.areas)).toBe(areasText);
     expect(serializeBundle(generated.stash)).toBe(stashText);
+    expect(serializeBundle(generated.stashnames)).toBe(stashNamesText);
     expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
   });
 

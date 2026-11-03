@@ -9,6 +9,7 @@ import { NAME_FOCUS_PAGES } from '@/features/guide/engine/linkSchemes';
 import { BASE_TIER_LABELS, BASE_TIERS, type BaseTier } from '@/features/game-data/constants/bases';
 import type { StashFile, StashItem } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
+import type { StashBundle } from '@/features/game-data/engine/schema';
 import {
   describeStashItem,
   ITEM_CATEGORIES,
@@ -16,6 +17,7 @@ import {
   type ItemCategory,
   type StashItemDescription,
   type StashItemKind,
+  stashItemKind,
 } from '../describeItem';
 import type { ItemTypeIndex } from '../itemTypes';
 import { compareLocations, pageOf, pagesOf, type StashLocation } from '../locations';
@@ -203,12 +205,18 @@ export interface ItemsSummary {
   readonly socketed: number;
 }
 
-/** The counts of the page's summary chips and the My Stash home card (no item text needed) */
-export function itemsSummary(stash: StashFile, catalog: StashCatalog): ItemsSummary {
+/**
+ * The counts of the page's summary chips and the My Stash home card: no item text and no stashnames.json needed
+ * (gemwords by stash.json `gemwords`)
+ */
+export function itemsSummary(stash: StashFile, bundle: Pick<StashBundle, 'gemwords'>): ItemsSummary {
   const walked = walkStashItems(stash, { tabs: 'pages' });
-  const described = walked.map(({ item }) => describeStashItem(item, catalog));
-  const count = (kind: StashItemKind) => described.filter((entry) => entry.kind === kind).length;
-  const gemwords = described.filter((entry) => entry.kind === 'runeword' && entry.runeword?.gemword === true).length;
+  const kinds = walked.map(({ item }) => stashItemKind(item));
+  const count = (kind: StashItemKind) => kinds.filter((entry) => entry === kind).length;
+  const gemwordIds = new Set(bundle.gemwords);
+  const gemwords = walked.filter(
+    ({ item }, i) => kinds[i] === 'runeword' && item.runewordId !== null && gemwordIds.has(item.runewordId)
+  ).length;
   return {
     total: walked.length,
     uniques: count('unique'),

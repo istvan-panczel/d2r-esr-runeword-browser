@@ -47,7 +47,8 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                            |
 | `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                            |
 | `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")                            |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; item, unique, set and runeword names (see "Stash")   |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                            |
+| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                   |
 | `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text") |
 | `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                            |
 
@@ -55,26 +56,27 @@ Arrays are written one element per line so diffs stay readable. Bundle URLs carr
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
 (`GAME_DATA_SCHEMA`); bump it whenever a bundle shape changes incompatibly.
 
-| Bundle              | ESR 3.2.12 size (raw / gzip)                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `types.json`        | 44 KB / 5 KB                                                                                                              |
-| `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB)                                            |
-| `runewords.json`    | 197 KB / 28 KB                                                                                                            |
-| `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72)                                            |
-| `sources.json`      | 298 KB / 29 KB                                                                                                            |
-| `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills)                                            |
-| `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                                                                |
-| `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                                                                |
-| `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                                |
-| `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                                |
-| `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                                  |
-| `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                                    |
-| `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                                  |
-| `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                                  |
-| `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                                  |
-| `stash.json`        | ESR 3.2.24: 437 KB / 71 KB (143 KB / 21 KB before the All items names; 88 KB / 14 KB before the coupon recipes and bases) |
-| `itemtext.json`     | ESR 3.2.24: 218 KB / 39 KB (monsters, i.e. ESR's mythical description texts: 14 KB of the gzip)                           |
-| `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                                         |
+| Bundle              | ESR 3.2.12 size (raw / gzip)                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `types.json`        | 44 KB / 5 KB                                                                                                    |
+| `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB)                                  |
+| `runewords.json`    | 197 KB / 28 KB                                                                                                  |
+| `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72)                                  |
+| `sources.json`      | 298 KB / 29 KB                                                                                                  |
+| `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills)                                  |
+| `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                                                      |
+| `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                                                      |
+| `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                      |
+| `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
+| `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
+| `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
+| `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                        |
+| `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
+| `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                        |
+| `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes) |
+| `stashnames.json`   | ESR 3.2.24: 294 KB / 49 KB                                                                                      |
+| `itemtext.json`     | ESR 3.2.24: 218 KB / 39 KB (monsters, i.e. ESR's mythical description texts: 14 KB of the gzip)                 |
+| `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                               |
 
 ### Bases and types
 
@@ -605,7 +607,12 @@ without length prefixes, so the parser needs every width:
   exceptional / elite, null for a type whose bases have none), and `wildCardFrom`, the coupons of that tier (any
   codes) the cube turns into one Wild Card (8 / 4 / 2). ESR 3.2.24: one elite coupon is on an exceptional base, `44e`
   Measured Wrath (Burnt Text), the same coupon that takes 2 Wild Cards instead of 4 (a warning).
-- `bases`: for every code of `items`, in the same order, `{ code, name, type, type2?, tier? }`: the string-table name,
+- `gemwords`: the runeword field values of the charm gemwords (the counts of the home card need no names).
+
+`stashnames.json` (`StashNamesBundle`, the same generator) holds the names, loaded by the All items page only, so the
+Overview and Ancient Coupons pages load the small stash.json alone:
+
+- `bases`: for every code of stash.json `items`, in the same order, `{ code, name, type, type2?, tier? }`: the string-table name,
   the `type` / `type2` item types (their names and ancestors are in types.json) and the tiers.json tier of a weapons /
   armor row (`gearTier`: normal / exceptional / elite / mythical; none for misc items and tierless gear).
 - `uniques`: every uniqueitems.txt row with a base code, by the row number a save stores (Expansion rows counted):

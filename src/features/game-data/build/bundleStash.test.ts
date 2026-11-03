@@ -22,7 +22,7 @@ const ITEM_HEADER = [
 ];
 
 describe('buildStashBundle', () => {
-  const { bundle, warnings } = buildStashBundle(
+  const { bundle, names, warnings } = buildStashBundle(
     {
       itemstatcost: tsv([
         ['Stat', 'Save Bits', 'Save Add', 'Save Param Bits'],
@@ -189,15 +189,15 @@ describe('buildStashBundle', () => {
   });
 
   it('gives every item code its name, types and tier', () => {
-    expect(bundle.bases.find((base) => base.code === 'cap')).toEqual({ code: 'cap', name: 'Cap', type: 'helm', tier: 'normal' });
-    expect(bundle.bases.find((base) => base.code === 'cm1')).toEqual({ code: 'cm1', name: 'Small Charm', type: 'scha' });
+    expect(names.bases.find((base) => base.code === 'cap')).toEqual({ code: 'cap', name: 'Cap', type: 'helm', tier: 'normal' });
+    expect(names.bases.find((base) => base.code === 'cm1')).toEqual({ code: 'cm1', name: 'Small Charm', type: 'scha' });
     // ESR's belt abbreviation ("*HP1") reads as the full `name` column
-    expect(bundle.bases.find((base) => base.code === 'hp1')?.name).toBe('Minor Healing Potion');
-    expect(bundle.bases.map((base) => base.code)).toEqual(bundle.items.map(([code]) => code));
+    expect(names.bases.find((base) => base.code === 'hp1')?.name).toBe('Minor Healing Potion');
+    expect(names.bases.map((base) => base.code)).toEqual(bundle.items.map(([code]) => code));
   });
 
   it('names the uniques by row, with the coupon that makes them and the unnamed flag', () => {
-    expect(bundle.uniques).toEqual([
+    expect(names.uniques).toEqual([
       { id: 1, name: "Biggin's Bonnet", code: 'cap', coupon: '01c' },
       { id: 2, name: "Biggin's Bonnet", code: 'cap' },
       { id: 3, name: 'Azurewrath', code: 'crs', coupon: '24f', unnamed: true },
@@ -206,15 +206,15 @@ describe('buildStashBundle', () => {
   });
 
   it('names the set items by row with their set, and the sets', () => {
-    expect(bundle.setItems).toEqual([
+    expect(names.setItems).toEqual([
       { id: 0, name: "Civerb's Ward", code: 'cap', set: "Civerb's Vestments" },
       { id: 2, name: 'Old Piece', code: 'sbw', set: 'Retired_old' },
     ]);
-    expect(bundle.sets).toEqual([{ id: "Civerb's Vestments", name: "Civerb's Vestments" }]);
+    expect(names.sets).toEqual([{ id: "Civerb's Vestments", name: "Civerb's Vestments" }]);
   });
 
   it('names the runewords and gemwords by the string id of their runes.txt key', () => {
-    expect(bundle.runewords).toEqual([
+    expect(names.runewords).toEqual([
       { id: 10910, key: 'Holy', name: 'Holy', gemword: true },
       { id: 63086, key: 'Runeword584', name: 'Cow' },
     ]);

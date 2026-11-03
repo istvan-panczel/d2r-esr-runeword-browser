@@ -1,6 +1,5 @@
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { stashCatalog } from '../engine/catalog';
 import { collectCoupons } from '../engine/coupons';
 import { itemsSummary } from '../engine/items/allItems';
 import { StashGate } from '../components/StashGate';
@@ -11,7 +10,7 @@ import { STASH_PAGES } from './stashPages';
 export function StashHomeScreen() {
   const { state, bundle } = useStash();
   const coupons = state.status === 'ready' ? collectCoupons(state.stash, bundle).summary : null;
-  const items = state.status === 'ready' ? itemsSummary(state.stash, stashCatalog(bundle)) : null;
+  const items = state.status === 'ready' ? itemsSummary(state.stash, bundle) : null;
   const summaryOf = (to: string): string | null => {
     if (to === '/stash/coupons' && coupons !== null) {
       return `${String(coupons.total)} coupons of ${String(coupons.distinct)} kinds; ${String(coupons.craftable)} uniques craftable now`;

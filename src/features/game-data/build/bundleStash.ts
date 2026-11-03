@@ -16,6 +16,7 @@ import {
   type StashCouponTier,
   type StashCouponUnique,
   type StashItemInfo,
+  type StashNamesBundle,
   type StashRunewordInfo,
   type StashSetInfo,
   type StashSetItemInfo,
@@ -105,7 +106,7 @@ export function buildStashBundle(
   strings: ReadonlyMap<string, string>,
   /** String-table ids by key (strings.ts `ids`): an item's runeword field is the id of its runes.txt key */
   stringIds: ReadonlyMap<string, number>
-): BuildResult<StashBundle> {
+): BuildResult<StashBundle> & { names: StashNamesBundle } {
   const warnings: string[] = [];
 
   const stats: (StashStatInfo | null)[] = input.itemstatcost.rows.map((row) => {
@@ -240,7 +241,8 @@ export function buildStashBundle(
 
   const named = { uniques: uniqueNames(input.uniqueitems, strings, coupons), ...setNames(input, strings) };
   const runewords = runewordNames(input.runes, strings, stringIds, warnings);
-  return { bundle: { grid, stats, items, coupons, couponTiers, bases: baseInfo, ...named, runewords }, warnings };
+  const gemwords = runewords.flatMap((entry) => (entry.gemword === true ? [entry.id] : []));
+  return { bundle: { grid, stats, items, coupons, couponTiers, gemwords }, names: { bases: baseInfo, ...named, runewords }, warnings };
 }
 
 /**

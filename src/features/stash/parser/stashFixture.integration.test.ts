@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { parseTsv, type TsvTable } from '../../game-data/build/tsv.ts';
-import type { StashBundle } from '../../game-data/engine/schema.ts';
+import type { StashBundle, StashNamesBundle } from '../../game-data/engine/schema.ts';
 import { UnsupportedStashError } from './errors.ts';
 import { parseStash, SECTION_HEADER_BYTES } from './parseStash.ts';
 import { createStashData } from './stashData.ts';
@@ -166,7 +166,8 @@ describe.skipIf(!existsSync(MODERN) || !existsSync(BUNDLE) || !existsSync(EXCEL)
       for (const item of items.filter((entry) => entry.durability !== null)) {
         expect(item.durability ?? 0, item.code).toBeLessThanOrEqual(item.maxDurability ?? 0);
       }
-      const runewordIds = new Set(bundle.runewords.map((entry) => entry.id));
+      const names = JSON.parse(readFileSync(BUNDLE.replace('stash.json', 'stashnames.json'), 'utf-8')) as StashNamesBundle;
+      const runewordIds = new Set(names.runewords.map((entry) => entry.id));
       const runewords = items.filter((item) => item.runewordId !== null);
       expect(runewords.length).toBeGreaterThan(0);
       expect(runewords.filter((item) => !runewordIds.has(item.runewordId ?? -1)).map((item) => item.runewordId)).toEqual([]);

@@ -1,12 +1,13 @@
 /**
- * Lookups into stash.json (and types.json) by the ids a save stores: the base of an item code, the uniqueitems.txt /
- * setitems.txt row of a unique / set item, the sets, and the runes.txt key of a runeword field. One catalog per loaded
- * bundle (and types index): `stashCatalog` caches it, so pages and engines can call it freely.
+ * Lookups into stash.json + stashnames.json (and types.json) by the ids a save stores: the base of an item code, the
+ * uniqueitems.txt / setitems.txt row of a unique / set item, the sets, and the runes.txt key of a runeword field. One
+ * catalog per loaded bundle pair (and types index): `stashCatalog` caches it, so pages and engines can call it freely.
  */
 import type {
   StashBaseInfo,
   StashBundle,
   StashCoupon,
+  StashNamesBundle,
   StashRunewordInfo,
   StashSetInfo,
   StashSetItemInfo,
@@ -14,8 +15,22 @@ import type {
 } from '@/features/game-data/engine/schema';
 import { typeAncestors, type ItemTypeIndex } from './itemTypes';
 
+/** stash.json with the names of stashnames.json (`withNames`) */
+export type CatalogBundle = StashBundle & StashNamesBundle;
+
+const merged = new WeakMap<StashBundle, WeakMap<StashNamesBundle, CatalogBundle>>();
+
+/** stash.json and stashnames.json as one object, the same object for the same pair (so the catalog cache holds) */
+export function withNames(bundle: StashBundle, names: StashNamesBundle): CatalogBundle {
+  let byNames = merged.get(bundle);
+  if (byNames === undefined) merged.set(bundle, (byNames = new WeakMap()));
+  let both = byNames.get(names);
+  if (both === undefined) byNames.set(names, (both = { ...bundle, ...names }));
+  return both;
+}
+
 export interface StashCatalog {
-  readonly bundle: StashBundle;
+  readonly bundle: CatalogBundle;
   /** types.json names and ancestors; null when the page did not load types.json */
   readonly types: ItemTypeIndex | null;
   base(code: string): StashBaseInfo | undefined;
@@ -40,7 +55,7 @@ export interface StashCatalog {
   flags(code: string): number;
 }
 
-function createCatalog(bundle: StashBundle, types: ItemTypeIndex | null): StashCatalog {
+function createCatalog(bundle: CatalogBundle, types: ItemTypeIndex | null): StashCatalog {
   const bases = new Map(bundle.bases.map((base) => [base.code, base]));
   const uniques = new Map(bundle.uniques.map((unique) => [unique.id, unique]));
   const setItems = new Map(bundle.setItems.map((item) => [item.id, item]));
@@ -76,10 +91,10 @@ function createCatalog(bundle: StashBundle, types: ItemTypeIndex | null): StashC
 }
 
 // The last catalogs built, per bundle (a page has one stash.json and one types index loaded at a time)
-const cache = new WeakMap<StashBundle, { types: ItemTypeIndex | null; catalog: StashCatalog }[]>();
+const cache = new WeakMap<CatalogBundle, { types: ItemTypeIndex | null; catalog: StashCatalog }[]>();
 
 /** The catalog of a bundle and types index, built once per pair. */
-export function stashCatalog(bundle: StashBundle, types: ItemTypeIndex | null = null): StashCatalog {
+export function stashCatalog(bundle: CatalogBundle, types: ItemTypeIndex | null = null): StashCatalog {
   const entries = cache.get(bundle) ?? [];
   const hit = entries.find((entry) => entry.types === types);
   if (hit !== undefined) return hit.catalog;

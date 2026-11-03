@@ -11,7 +11,7 @@ import { BASE_TIER_LABELS, BASE_TIERS } from '@/features/game-data/constants/bas
 import { EnhanceSearch, Pills, type PillOption } from '@/features/game-data/components/EnhanceParts';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
-import type { StashBundle } from '@/features/game-data/engine/schema';
+import { useGameData } from '@/features/game-data/hooks/useGameData';
 import { ItemCards } from '../components/items/ItemCards';
 import { ItemTable } from '../components/items/ItemTable';
 import { StatConditions } from '../components/items/StatConditions';
@@ -21,7 +21,7 @@ import { ShowMoreList } from '../components/shared/ShowMoreList';
 import { SortSelect } from '../components/shared/SortSelect';
 import { SummaryChips } from '../components/shared/SummaryChips';
 import { StashGate } from '../components/StashGate';
-import { stashCatalog, type StashCatalog } from '../engine/catalog';
+import { stashCatalog, withNames, type CatalogBundle, type StashCatalog } from '../engine/catalog';
 import { ITEM_CATEGORIES, STASH_ITEM_KINDS, type StashItemKind } from '../engine/describeItem';
 import {
   countBy,
@@ -94,20 +94,25 @@ const TIER_VALUES: readonly Exclude<TierFilter, 'all'>[] = [...BASE_TIERS, 'none
 export function StashItemsScreen() {
   const { bundle } = useStash();
   const types = useStashTypes();
+  // the names of every code, unique, set item and runeword: loaded by this page only
+  const names = useGameData(NAMES_FILES);
   return (
     <StashGate>
       {(stash) => {
-        if (types.status === 'loading') return <GameDataLoading />;
+        if (types.status === 'loading' || names.status === 'loading') return <GameDataLoading />;
         if (types.status === 'error') return <GameDataError error={types.error} onRetry={types.retry} />;
-        return <ItemsBrowser stash={stash} bundle={bundle} types={types.types} />;
+        if (names.status === 'error') return <GameDataError error={names.error} onRetry={names.retry} />;
+        return <ItemsBrowser stash={stash} bundle={withNames(bundle, names.data.stashnames)} types={types.types} />;
       }}
     </StashGate>
   );
 }
 
+const NAMES_FILES = ['stashnames'] as const;
+
 interface ItemsBrowserProps {
   readonly stash: StashFile;
-  readonly bundle: StashBundle;
+  readonly bundle: CatalogBundle;
   readonly types: ItemTypeIndex;
 }
 
@@ -247,7 +252,7 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
 }
 
 function ItemsSummaryChips({ stash, catalog }: { readonly stash: StashFile; readonly catalog: StashCatalog }) {
-  const summary = itemsSummary(stash, catalog);
+  const summary = itemsSummary(stash, catalog.bundle);
   return (
     <SummaryChips
       chips={[

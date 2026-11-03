@@ -13,6 +13,7 @@ import type {
   SkillsBundle,
   SourcesBundle,
   StashBundle,
+  StashNamesBundle,
   TiersBundle,
   TxtRunewordsBundle,
   TypesBundle,
@@ -67,6 +68,8 @@ export interface GeneratedBundles {
   areas: AreasBundle;
   // stash.json
   stash: StashBundle;
+  // stashnames.json
+  stashnames: StashNamesBundle;
   // itemtext.json
   itemtext: ItemTextBundle;
   counts: Record<string, number>;
@@ -350,6 +353,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     tiers: tiers.bundle,
     areas: areas.bundle,
     stash: stash.bundle,
+    stashnames: stash.names,
     itemtext: itemText.bundle,
     counts: {
       types: types.bundle.types.length,
@@ -446,10 +450,10 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       stashCoupons: stash.bundle.coupons.filter((coupon) => coupon.wildCard !== true).length,
       stashCouponRecipes: stash.bundle.coupons.filter((coupon) => coupon.unique !== undefined).length,
       stashCouponWildCardRecipes: stash.bundle.coupons.filter((coupon) => coupon.withWildCards !== undefined).length,
-      stashUniques: stash.bundle.uniques.length,
-      stashSetItems: stash.bundle.setItems.length,
-      stashRunewords: stash.bundle.runewords.filter((entry) => entry.gemword !== true).length,
-      stashGemwords: stash.bundle.runewords.filter((entry) => entry.gemword === true).length,
+      stashUniques: stash.names.uniques.length,
+      stashSetItems: stash.names.setItems.length,
+      stashRunewords: stash.names.runewords.filter((entry) => entry.gemword !== true).length,
+      stashGemwords: stash.names.runewords.filter((entry) => entry.gemword === true).length,
       itemTextStats: itemText.bundle.stats.filter((stat) => stat !== null).length,
       itemTextStrings: Object.keys(itemText.bundle.strings).length,
       itemTextSkills: itemText.bundle.skills.length,

@@ -95,7 +95,8 @@ export function itemCategory(
   return CATEGORY_TYPES.find(([, types]) => types.some((type) => chain.includes(type)))?.[0] ?? 'other';
 }
 
-function kindOf(item: StashItem): StashItemKind {
+/** The item's kind from its own fields (no game data needed) */
+export function stashItemKind(item: StashItem): StashItemKind {
   if (item.compact || item.quality === null) return 'simple';
   if (item.runewordId !== null && item.quality !== 'unique' && item.quality !== 'set') return 'runeword';
   return item.quality;
@@ -113,7 +114,7 @@ export function describeStashItem(item: StashItem, catalog: StashCatalog): Stash
   const typeChain = catalog.typeChain(item.code);
   const setItem = item.quality === 'set' && item.setId !== null ? (catalog.setItem(item.setId) ?? null) : null;
   const description: Omit<StashItemDescription, 'icon'> = {
-    kind: kindOf(item),
+    kind: stashItemKind(item),
     quality: item.quality,
     code: item.code,
     base,

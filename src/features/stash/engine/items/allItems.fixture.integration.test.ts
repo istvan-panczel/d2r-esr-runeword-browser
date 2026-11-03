@@ -35,7 +35,7 @@ describeWithFixture('the All items rows of the stash fixture', (fixture) => {
     const rowItems = new Set(rows.map((row) => row.item));
     expect(socketed.filter(({ item }) => rowItems.has(item))).toEqual([]);
     expect(rows.reduce((sum, row) => sum + row.socketed.length, 0)).toBe(rows.reduce((sum, row) => sum + row.item.socketed.length, 0));
-    expect(itemsSummary(stash, catalog).total).toBe(rows.length);
+    expect(itemsSummary(stash, catalog.bundle).total).toBe(rows.length);
     expect(rows.every((row) => row.name !== '')).toBe(true);
   });
 

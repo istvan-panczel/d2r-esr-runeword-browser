@@ -24,6 +24,7 @@ export type GameDataFile =
   | 'tiers'
   | 'areas'
   | 'stash'
+  | 'stashnames'
   | 'itemtext'
   | 'icons';
 
@@ -1143,8 +1144,7 @@ export interface StashRunewordInfo {
 /**
  * stash.json: the game data the shared stash (.d2i) parser needs to walk the item bits (src/features/stash/parser):
  * stat widths, per-code item kinds and sizes, the stash page grid, and the Ancient Coupons with the uniques their cube
- * recipes make (the My Stash coupons page). For the All items page: the names, types and tiers of every item code,
- * and the unique, set item and runeword names by the ids a save stores.
+ * recipes make (the My Stash coupons page). Loaded by every My Stash page; the names are in stashnames.json.
  */
 export interface StashBundle {
   /** Shared stash page grid (inventory.txt "Big Bank Page 1") */
@@ -1157,7 +1157,16 @@ export interface StashBundle {
   coupons: StashCoupon[];
   /** The coupon item types, by code */
   couponTiers: StashCouponTier[];
-  /** Every code of `items`, in the same order */
+  /** The runeword field values of the charm gemwords (stashnames.json `runewords` with `gemword`), for the counts */
+  gemwords: number[];
+}
+
+/**
+ * stashnames.json: for the All items page (lazy, loaded by that page only), the names, types and tiers of every item
+ * code, and the unique, set item and runeword names by the ids a save stores.
+ */
+export interface StashNamesBundle {
+  /** Every code of stash.json `items`, in the same order */
   bases: StashBaseInfo[];
   /** By id ascending; rows without a base code left out */
   uniques: StashUniqueInfo[];

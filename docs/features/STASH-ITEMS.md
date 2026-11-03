@@ -20,7 +20,7 @@ lower-cased search text. Rows are built once per stash, catalog and text context
 stash), so typing in the search only filters. Fixture: 2189 rows (16 socketed items inside them), built in < 10 ms
 without stat text.
 
-**Names** (`itemDisplayName`, `engine/items/itemNames.ts`): unique / set item / runeword (gemword) name from stash.json,
+**Names** (`itemDisplayName`, `engine/items/itemNames.ts`): unique / set item / runeword (gemword) name from stashnames.json,
 rare / crafted / tempered "first second", magic "prefix base suffix", "Superior X", inferior "Cracked X", personalized
 "Name's X"; the base name wherever a name table has no entry (and while the text context is the placeholder).
 `itemQuantityLabel` ("×350", nothing for a count of 0 such as the Dragon Stones' saved stack size) is shown next to the
@@ -98,10 +98,12 @@ count, sockets inside parents, search basics).
 
 ## Data
 
-- `stash.json` (built by `build/bundleStash.ts`, [GAME-DATA.md → Stash](./GAME-DATA.md#stash)): `bases` (name, `type`
-  / `type2`, tier per code), `uniques` / `setItems` by the row a save stores (coupon / unnamed flags, set index),
-  `sets`, `runewords` by the string-table id an item's runeword field holds (gemwords flagged).
-- `stash.json` base names: ESR's belt abbreviations ("\*HP1", "\*Thaw", "+TP") read as the misc.txt `name` column
+- `stashnames.json` (built by `build/bundleStash.ts` with stash.json, [GAME-DATA.md → Stash](./GAME-DATA.md#stash);
+  lazy, this page only, ESR 3.2.24: 294 KB / 49 KB gzip): `bases` (name, `type` / `type2`, tier per code), `uniques` /
+  `setItems` by the row a save stores (coupon / unnamed flags, set index), `sets`, `runewords` by the string-table id
+  an item's runeword field holds (gemwords flagged). The page joins it to stash.json (`withNames`, one object per pair)
+  for the catalog; the summary counts (page chips, home card) need stash.json only (`gemwords`).
+- Base names: ESR's belt abbreviations ("\*HP1", "\*Thaw", "+TP") read as the misc.txt `name` column
   ("Minor Healing Potion"; 17 potion / scroll codes).
 - `itemtext.json` (built by `build/bundleItemText.ts`, lazy, this page only, ESR 3.2.24: 218 KB / 39 KB gzip): the
   display columns of every saved stat, their strings, skill / class / monster names, the magic / automagic / rare name
@@ -290,7 +292,7 @@ Rules A guarantees:
 export function itemDisplayName(item: StashItem, catalog: StashCatalog, text?: ItemTextContext | null): string;
 ```
 
-Unique / set item / runeword names from stash.json (always); rare "first second", magic "prefix base suffix",
+Unique / set item / runeword names from stashnames.json (always); rare "first second", magic "prefix base suffix",
 "Superior X", inferior "Cracked X", personalized "Name's X" from the name tables, each falling back to the base name
 while `text` is null or the placeholder. B may extend it (stack sizes, gemword wording) without changing the signature.
 

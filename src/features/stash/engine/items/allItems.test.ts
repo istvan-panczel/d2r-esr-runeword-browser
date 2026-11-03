@@ -62,6 +62,7 @@ const catalog = stashCatalog(
       { id: 100, key: 'Runeword1', name: 'Spirit' },
       { id: 200, key: 'Holy', name: 'Holy', gemword: true },
     ],
+    gemwords: [200],
   }),
   TYPES
 );
@@ -193,7 +194,7 @@ describe('item rows', () => {
   });
 
   it('counts the summary without the item text', () => {
-    expect(itemsSummary(stash, catalog)).toEqual({ total: 7, uniques: 1, sets: 1, runewords: 1, gemwords: 1, socketed: 2 });
+    expect(itemsSummary(stash, catalog.bundle)).toEqual({ total: 7, uniques: 1, sets: 1, runewords: 1, gemwords: 1, socketed: 2 });
   });
 });
 
