@@ -42,6 +42,8 @@ const TABLES = [
   'gems',
   // skills.json
   'experience',
+  // stash.json (the stash page grid)
+  'inventory',
 ] as const;
 export type EsrTableName = (typeof TABLES)[number];
 

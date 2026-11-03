@@ -22,6 +22,7 @@ import {
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
+  type StashBundle,
   type TiersBundle,
   type TxtRunewordsBundle,
   type TypesBundle,
@@ -43,6 +44,7 @@ export interface GameDataBundles {
   crafting: CraftingBundle;
   tiers: TiersBundle;
   areas: AreasBundle;
+  stash: StashBundle;
   icons: IconsBundle;
 }
 

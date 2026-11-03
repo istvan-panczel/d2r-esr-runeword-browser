@@ -56,6 +56,7 @@ const skillDetailsText = readText('skilldetails');
 const craftingText = readText('crafting');
 const tiersText = readText('tiers');
 const areasText = readText('areas');
+const stashText = readText('stash');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const { bases, automods: baseAutomods = [] } = JSON.parse(basesText) as BasesBundle;
@@ -95,6 +96,7 @@ describe('committed game-data bundles', () => {
       ['crafting', craftingText],
       ['tiers', tiersText],
       ['areas', areasText],
+      ['stash', stashText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -817,6 +819,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.crafting)).toBe(craftingText);
     expect(serializeBundle(generated.tiers)).toBe(tiersText);
     expect(serializeBundle(generated.areas)).toBe(areasText);
+    expect(serializeBundle(generated.stash)).toBe(stashText);
   });
 
   it('numbers uniques, sets, stats and sounds like the *ID / *Index comment columns where those are consistent', () => {

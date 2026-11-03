@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-02T16:59:07.271Z",
+  "generatedAt": "2026-11-03T12:33:54.351Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -64,6 +64,10 @@
     "areas": {
       "hash": "3aa47efd671e2371747427257e4847372a9a3f5d8d41e01bc61d37e3c5f46822",
       "bytes": 35601
+    },
+    "stash": {
+      "hash": "6ad0fece683f868f509409dac7ced6fd7a3eaf716c934b40aa06c789b2f69754",
+      "bytes": 89738
     },
     "icons": {
       "hash": "4e7f8851b9c5666541718f175833d9b7a790f05e60cca77795809ebbf6c64656",
@@ -168,6 +172,9 @@
     "areasHiddenPrepZones": 17,
     "areasHiddenOther": 1,
     "areasUniquesMinsThenMaxes": 61,
+    "stashItemCodes": 2309,
+    "stashSavedStats": 666,
+    "stashCoupons": 385,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
