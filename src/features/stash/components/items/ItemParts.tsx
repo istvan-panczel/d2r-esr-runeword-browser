@@ -28,7 +28,7 @@ export function BaseTypeLine({ row }: { readonly row: ItemRow }) {
   return <span className="block text-xs font-normal break-words text-muted-foreground">{baseTypeText(row)}</span>;
 }
 
-/** "2/3 sockets: Ber Rune, Jewel" in two lines; null without sockets */
+/** "2/3 filled: Ber Rune, Jewel" ("3 sockets", "2 sockets, empty"); a dash (compact: nothing) without sockets */
 export function SocketsInfo({ row, compact = false }: { readonly row: ItemRow; readonly compact?: boolean }) {
   const sockets = row.item.sockets ?? 0;
   if (sockets === 0) return compact ? null : <span className="text-muted-foreground">—</span>;
@@ -36,7 +36,9 @@ export function SocketsInfo({ row, compact = false }: { readonly row: ItemRow; r
   return (
     <span className="min-w-0">
       <span className="tabular-nums whitespace-nowrap">
-        {filled === sockets ? `${String(sockets)} socket${sockets === 1 ? '' : 's'}` : `${String(filled)}/${String(sockets)} filled`}
+        {filled === sockets || filled === 0
+          ? `${String(sockets)} socket${sockets === 1 ? '' : 's'}${filled === 0 ? ', empty' : ''}`
+          : `${String(filled)}/${String(sockets)} filled`}
       </span>
       {filled > 0 && (
         <span className={compact ? undefined : 'block text-xs text-muted-foreground'}>

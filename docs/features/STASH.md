@@ -19,12 +19,12 @@ Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/
 
 ## Routes
 
-| Route            | Screen               | Contents                                                                                     |
-| ---------------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| `/stash`         | `StashLayout`        | Title, Overview / Ancient Coupons / All Items tabs, loads `stash.json`, shared upload state  |
-| `/stash` (index) | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each  |
-| `/stash/coupons` | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded               |
-| `/stash/items`   | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md)); a stub so far |
+| Route            | Screen               | Contents                                                                                    |
+| ---------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `/stash`         | `StashLayout`        | Title, Overview / Ancient Coupons / All Items tabs, loads `stash.json`, shared upload state |
+| `/stash` (index) | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each |
+| `/stash/coupons` | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded              |
+| `/stash/items`   | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md))               |
 
 Header: the **My Stash** group (`navConfig.ts`): Overview (`/stash`, `exact`, so it is not highlighted on its
 sub-pages), Ancient Coupons and All Items. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without

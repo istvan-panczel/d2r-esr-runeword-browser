@@ -154,6 +154,7 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
       <TextStatus state={textState} note={note} />
 
       <FilterPanel
+        title="Find items"
         actions={
           hasItemFilters(state) ? (
             <Button variant="ghost" size="sm" onClick={reset}>
