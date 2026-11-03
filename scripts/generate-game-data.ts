@@ -102,6 +102,7 @@ function main(): void {
     crafting: serializeBundle(generated.crafting),
     tiers: serializeBundle(generated.tiers),
     areas: serializeBundle(generated.areas),
+    stash: serializeBundle(generated.stash),
   };
   const icons = readIcons();
   const manifest = buildManifest({

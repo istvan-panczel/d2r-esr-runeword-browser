@@ -21,6 +21,7 @@ export type GameDataFile =
   | 'crafting'
   | 'tiers'
   | 'areas'
+  | 'stash'
   | 'icons';
 
 export interface GameDataManifest {
@@ -991,4 +992,102 @@ export interface Area {
   connections: number[];
   /** `PreventTownPortal` */
   preventTownPortal?: true;
+}
+
+// --- stash.json ---------------------------------------------------------------------------------------------------
+
+/** Bits of `StashItemInfo[1]`: what the save parser needs to know about an item code to walk its bits */
+export const STASH_ITEM_FLAGS = {
+  /** Descends from `armo`: defense + durability follow the realm data */
+  armor: 1,
+  /** Descends from `weap`: durability follows the realm data */
+  weapon: 2,
+  /** Descends from `gold` */
+  gold: 4,
+  /** Descends from `char`: a normal-quality charm stores one affix */
+  charm: 8,
+  /** Descends from `body` but not `play`: a normal-quality monster part stores its monster row */
+  bodyPart: 16,
+  /** Descends from `scro` or `book`: a normal-quality scroll or tome stores its spell */
+  scrollOrBook: 32,
+  /** `quest` and `questdiffcheck`: a compact quest item stores the difficulty it was found in */
+  questDifficulty: 64,
+} as const;
+
+/** [code, STASH_ITEM_FLAGS bits, invwidth, invheight] (weapons.txt, armor.txt, misc.txt; the first row of a code wins) */
+export type StashItemInfo = [string, number, number, number];
+
+/** [Save Bits, Save Add, 1 when Save Param Bits > 0 else 0] */
+export type StashStatInfo = [number, number, number];
+
+export interface StashCoupon {
+  code: string;
+  /** String-table name ("Ancient Coupon (Buckler, Pelta Lunata)") */
+  name: string;
+  /** misc.txt `type` (cpn1, cpn2, cpn3; coup for the Wild Card) */
+  type: string;
+  /** The Coupon Wild Card (99j): a joker, not an Ancient Coupon */
+  wildCard?: true;
+  /** The coupon unique its cube recipe makes; absent for the Wild Card and the blank coupons (no recipe) */
+  unique?: StashCouponUnique;
+  /** The unique's base item (uniqueitems.txt `code`); set with `unique` when the code is a known item */
+  base?: StashCouponBase;
+  /** Coupons of this code the recipe takes ("01c,qty=3" → 3); set with `unique` */
+  qty?: number;
+  /** The alternative recipe: fewer coupons of this code plus Coupon Wild Cards ("02c,qty=2" + "99j,qty=2") */
+  withWildCards?: {
+    qty: number;
+    wildCards: number;
+    /** The row's `numinputs` differs from its item count (ESR 3.2.24: 06j), so the recipe likely does not work */
+    suspect?: true;
+  };
+}
+
+export interface StashCouponUnique {
+  /** uniqueitems.txt row (the id a unique item stores in a save) */
+  id: number;
+  /** String-table display name of the cube output's uniqueitems.txt `index` ("War Bonnet" → "Biggin's Bonnet") */
+  name: string;
+}
+
+export interface StashCouponBase {
+  /** Item code ("vbl") */
+  code: string;
+  /** String-table name ("Light Belt") */
+  name: string;
+  /** Item type code (`type` column, "belt"); its names and ancestors are in types.json */
+  type: string;
+}
+
+/** A coupon tier: the misc.txt item type of its coupons (itemtypes.txt "Coupon norm" …) */
+export interface StashCouponTier {
+  /** Item type code (cpn1, cpn2, cpn3) */
+  type: string;
+  /** itemtypes.txt name ("Coupon norm"), the label when `tier` is null */
+  name: string;
+  /**
+   * The base tier of the uniques this type's coupons make (weapons.txt / armor.txt tier families, as in tiers.json): the
+   * most common one, null when none of the bases has a tier (rings, amulets)
+   */
+  tier: 'normal' | 'exceptional' | 'elite' | null;
+  /** Coupons of this tier (any codes) the cube turns into one Wild Card; null when no recipe does */
+  wildCardFrom: number | null;
+}
+
+/**
+ * stash.json: the game data the shared stash (.d2i) parser needs to walk the item bits (src/features/stash/parser):
+ * stat widths, per-code item kinds and sizes, the stash page grid, and the Ancient Coupons with the uniques their cube
+ * recipes make (the My Stash coupons page).
+ */
+export interface StashBundle {
+  /** Shared stash page grid (inventory.txt "Big Bank Page 1") */
+  /** Not read by the pages yet: kept (with the item sizes) for a future stash grid view */
+  grid: { width: number; height: number };
+  /** By itemstatcost.txt row (the stat id); null when Save Bits is 0 (never saved on items) */
+  stats: (StashStatInfo | null)[];
+  items: StashItemInfo[];
+  /** misc.txt rows named "Coupon …": the Ancient Coupons, plus the Wild Card, with their cube recipes */
+  coupons: StashCoupon[];
+  /** The coupon item types, by code */
+  couponTiers: StashCouponTier[];
 }

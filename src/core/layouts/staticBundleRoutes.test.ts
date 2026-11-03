@@ -23,6 +23,8 @@ describe('isStaticBundlePath', () => {
     '/game-data/cube',
     '/game-data/materials',
     '/game-data/sets',
+    '/stash',
+    '/stash/coupons',
   ])('matches the prefix route %s', (pathname) => {
     expect(isStaticBundlePath(pathname)).toBe(true);
   });

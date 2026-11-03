@@ -63,6 +63,16 @@ describe('navConfig', () => {
     expect(isNavItemActive('/loot-filtersx', tools.items[3])).toBe(false);
   });
 
+  it('keeps an exact item (the stash overview) inactive on its sibling pages below it', () => {
+    const stash = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'stash');
+    if (!stash) throw new Error('missing group');
+    const [overview, coupons] = stash.items;
+    expect(isNavItemActive('/stash', overview)).toBe(true);
+    expect(isNavItemActive('/stash/coupons', overview)).toBe(false);
+    expect(isNavItemActive('/stash/coupons', coupons)).toBe(true);
+    expect(isNavGroupActive('/stash/coupons', stash)).toBe(true);
+  });
+
   describe('OFFICIAL_LINKS', () => {
     it('has unique keys and labels', () => {
       expect(new Set(OFFICIAL_LINKS.map((l) => l.key)).size).toBe(OFFICIAL_LINKS.length);

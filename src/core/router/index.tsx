@@ -170,6 +170,21 @@ const LootFilterEditorScreen = lazy(async () => {
   return { default: module.LootFilterEditorScreen };
 });
 
+const StashLayout = lazy(async () => {
+  const module = await import('@/features/stash');
+  return { default: module.StashLayout };
+});
+
+const StashHomeScreen = lazy(async () => {
+  const module = await import('@/features/stash');
+  return { default: module.StashHomeScreen };
+});
+
+const StashCouponsScreen = lazy(async () => {
+  const module = await import('@/features/stash');
+  return { default: module.StashCouponsScreen };
+});
+
 const routeLoadingFallback = (
   <div className="flex min-h-80 flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
     <Spinner className="size-8" />
@@ -239,6 +254,14 @@ export const router = createBrowserRouter(
             { path: 'sully', element: routeElement(LootFilterEditorScreen) },
             { path: 'example', element: routeElement(LootFilterEditorScreen) },
             { path: ':id', element: routeElement(LootFilterEditorScreen) },
+          ],
+        },
+        {
+          path: 'stash',
+          element: routeElement(StashLayout),
+          children: [
+            { index: true, element: routeElement(StashHomeScreen) },
+            { path: 'coupons', element: routeElement(StashCouponsScreen) },
           ],
         },
         { path: 'builds', element: routeElement(BuildsScreen) },

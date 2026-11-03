@@ -11,6 +11,7 @@ import type {
   SkillDetailsBundle,
   SkillsBundle,
   SourcesBundle,
+  StashBundle,
   TiersBundle,
   TxtRunewordsBundle,
   TypesBundle,
@@ -28,6 +29,7 @@ import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSource
 import { buildRunewordsBundle } from './bundleRunewords.ts';
 import { buildSetsBundle } from './bundleSets.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
+import { buildStashBundle } from './bundleStash.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
 import { buildCraftingBundle } from './bundleCrafting.ts';
 import { buildSourcesBundle } from './bundleSources.ts';
@@ -61,6 +63,8 @@ export interface GeneratedBundles {
   tiers: TiersBundle;
   // areas.json
   areas: AreasBundle;
+  // stash.json
+  stash: StashBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -285,6 +289,22 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   };
   // --- end areas.json ---
 
+  // --- stash.json ---
+  const stash = buildStashBundle(
+    {
+      itemstatcost: rowTable('itemstatcost'),
+      itemtypes,
+      weapons: table('weapons'),
+      armor: table('armor'),
+      misc: table('misc'),
+      inventory: table('inventory'),
+      cubemain: table('cubemain'),
+      uniqueitems: rowTable('uniqueitems'),
+    },
+    strings
+  );
+  // --- end stash.json ---
+
   const countKind = (kind: string) => bases.bundle.bases.filter((base) => base.kind === kind).length;
   return {
     types: types.bundle,
@@ -302,6 +322,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     crafting: crafting.bundle,
     tiers: tiers.bundle,
     areas: areas.bundle,
+    stash: stash.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -392,6 +413,11 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       tierCodesElite: countTier('elite'),
       tierCodesMythical: countTier('mythical'),
       ...areaCounts,
+      stashItemCodes: stash.bundle.items.length,
+      stashSavedStats: stash.bundle.stats.filter((stat) => stat !== null).length,
+      stashCoupons: stash.bundle.coupons.filter((coupon) => coupon.wildCard !== true).length,
+      stashCouponRecipes: stash.bundle.coupons.filter((coupon) => coupon.unique !== undefined).length,
+      stashCouponWildCardRecipes: stash.bundle.coupons.filter((coupon) => coupon.withWildCards !== undefined).length,
     },
     warnings: [
       ...types.warnings,
@@ -411,6 +437,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...crafting.warnings,
       ...tiers.warnings,
       ...areas.warnings,
+      ...stash.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };
