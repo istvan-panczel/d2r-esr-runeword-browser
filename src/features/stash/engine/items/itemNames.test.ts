@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ItemTextBundle } from '@/features/game-data/engine/schema';
 import { makeBundle, makeItem } from '../../testing/stashMocks.mock';
 import { stashCatalog } from '../catalog';
+import { describeStashItem } from '../describeItem';
 import { itemDisplayName, itemQuantityLabel } from './itemNames';
 import { createItemTextContext } from './itemText';
 
@@ -90,6 +91,12 @@ describe('itemDisplayName', () => {
     );
   });
 
+  it('takes the description from the caller', () => {
+    const item = makeItem('cap', { quality: 'unique', uniqueId: 770 });
+    const described = describeStashItem(item, catalog);
+    expect(itemDisplayName(item, catalog, null, { ...described, unique: { id: 1, name: 'Other', code: 'cap' } })).toBe('Other');
+  });
+
   it('keeps the base for unknown ids and missing variants', () => {
     expect(itemDisplayName(makeItem('cap', { quality: 'unique', uniqueId: 9999 }), catalog, text)).toBe('Cap');
     expect(itemDisplayName(makeItem('cap', { quality: 'set', setId: 9999 }), catalog, text)).toBe('Cap');
@@ -105,5 +112,6 @@ describe('itemDisplayName', () => {
     expect(itemQuantityLabel(makeItem('aqv', { quantity: 350 }))).toBe('×350');
     expect(itemQuantityLabel(makeItem('aqv', { stackSize: 12 }))).toBe('×12');
     expect(itemQuantityLabel(makeItem('cap'))).toBeNull();
+    expect(itemQuantityLabel(makeItem('ppp', { compact: true, stackSize: 0 }))).toBeNull();
   });
 });

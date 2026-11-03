@@ -23,14 +23,17 @@ without stat text.
 **Names** (`itemDisplayName`, `engine/items/itemNames.ts`): unique / set item / runeword (gemword) name from stash.json,
 rare / crafted / tempered "first second", magic "prefix base suffix", "Superior X", inferior "Cracked X", personalized
 "Name's X"; the base name wherever a name table has no entry (and while the text context is the placeholder).
-`itemQuantityLabel` ("×350") is shown next to the name of stacks, kept out of the name so the copy button copies what the
-in-game stash search finds.
+`itemQuantityLabel` ("×350", nothing for a count of 0 such as the Dragon Stones' saved stack size) is shown next to the
+name of stacks in the table, kept out of the name so the copy button copies what the in-game stash search finds; the
+cards show the tooltip's "Quantity: N" line instead.
 
 **Table** (default): icon (`ItemIcon`), name in its quality colour (`itemClasses.ts`: the app's unique amber, set green,
 runeword yellow, gemword sky, magic blue; rare dark yellow, crafted / tempered orange, inferior muted) as a link to the
 unique / set / runeword / gemword page (`?name=`) plus the copy button, base · type, quality, tier badge, item level,
 ethereal, sockets ("3 sockets", "1/2 filled", "2 sockets, empty") with the socketed names, location. A **Stats** column
-appears with stat conditions or a stat sort: the row's value of each in the stat's label ("+20% Faster Cast Rate").
+appears with stat conditions or a stat sort: the row's value of each in the stat's label (`fillStatLabel`: "+20% Faster
+Cast Rate"; a negative value replaces the `+`, "-20% Increased Attack Speed"; a label without `#` is a flag shown as is
+for ±1, "Indestructible", else "Tinkering Points: 30"; per-level values add "(per character level)").
 Below `md` the extra columns become lines under the name (quality · ilvl, tier, ethereal, sockets, stats, location):
 no sideways scrolling on phones. 100 rows, then "Show more".
 
@@ -39,26 +42,33 @@ name, base · type, set name, then the `ItemTextGroups` top to bottom: base line
 "Socketed with" (runes / gems by name, jewels with their lines), set bonuses (green, "(N items)"); footer quality, item
 level, tier, ethereal, location. While the stat text is loading or missing the cards show the base lines only.
 
-**Search** (debounced, `search`): words and "quoted phrases", every term must match (`engine/search.ts`). An item type
-word (belt, helm, ring…) matches by the type chain; any other term as text in: name, base, type name, quality label,
-tier label, code, set name, "ethereal", socketed names and every tooltip line (base, stats, runeword, set bonuses,
-socketed jewel lines). Names and item fields are searchable before the stat text loads.
+**Search** (debounced, `search`): words and "quoted phrases", every term must match (`engine/search.ts`). Any term
+matches as text in: name, base, type name, quality label, tier label, code, set name, "ethereal", socketed names and
+every tooltip line (base, stats, runeword, set bonuses, socketed jewel lines). An item type word (belt, helm, ring,
+rune, orb, jewel…) matches by the type chain **or** as a word (at a word start, so "ring" is not in "Tinkering") of the
+row's text without its own base and type fields (`typeWordText`: the name with the base name cut out, set name,
+socketed names, tooltip lines). So "ring" finds rings and anything named or socketed with "… Ring …" but not a plain
+Ring Mail; "rune" / "Ru Rune" / "topaz" find what is socketed with them; "Milabrega's Orb" finds the set item (Orb is a
+type); "Heart of Jewels" finds the unique (first, in stash order; Wraith Heart, a jewel, matches too). Names and item
+fields are searchable before the stat text loads.
 
 **Filters** (pills with the count of every value present; the filter panel is always open): quality (`kind`:
-Unique, Set, Runeword incl. gemwords, Rare, Crafted, Tempered, Magic, Superior, Inferior, Normal, Simple), category
+Unique, Set, Runeword & gemword, Rare, Crafted, Tempered, Magic, Superior, Inferior, Normal, Simple), category
 (weapons, armor, rings & amulets, charms, jewels, other), tier (Normal … Mythical, No tier), ethereal (yes / no),
-sockets (socketed, empty sockets, no sockets, runewords), stash page. "Reset filters" keeps the view (table / cards).
+sockets (socketed, empty sockets, no sockets, runewords & gemwords), stash page. "Reset filters" keeps the view (table / cards).
 
 **Stat filters** (`StatConditions`): "Add a stat filter" picks a key from the stats present in the uploaded stash
 (`statOptions`: distinct `StatValue` keys with their item count and value span, sorted by the label's words; skill /
 class params are keys of their own, the picker searches label, stat label and param name) and adds `stat ≥ smallest
-value`. Each condition row: label, ≥ / ≤, value, sort by this stat, remove. Conditions combine with AND; an item
+value`. A per-level key reads "… (per level)" (`statKeyLabel`: "+# to Strength" vs "+# to Strength (per level)"), and
+labels that still collide get "(stat N)" or "(group)". Each condition row: label, ≥ / ≤, value, sort by this stat,
+remove; adding, removing and ≥ / ≤ are history entries, value edits replace the current one. Conditions combine with AND; an item
 without the stat fails (`matchesCondition`). While the stat text is loading or missing the conditions stay in the URL
 but are not applied (they would hide every item), and the page says so.
 
 **Sort**: Where (default: page, row, column), name, quality (unique → simple), item level (high first), and a stat
-(high first; items without the stat last in both directions). Column headers and the "Sort by" select; the stat sort
-from a condition row or the "Sort by a stat" picker.
+(high first; items without the stat last in both directions). Column headers and the "Sort by" select (a stat by its
+title, `statTitle`: "Faster Cast Rate"); the stat sort from a condition row or the "Sort by a stat" picker.
 
 **URL params** (defaults are not written, invalid values fall back to them):
 
@@ -79,7 +89,8 @@ from a condition row or the "Sort by a stat" picker.
 **Text states** (`useItemText`): loading → a spinner note, names and item fields searchable; error → a note with Retry;
 ready without text (the placeholder) → a note; ready with text → stat lines, stat search and stat filters.
 
-**Home card** (`StashHomeScreen`): "N items: U uniques, S set items, R runewords" (`itemsSummary`, no item text).
+**Home card** (`StashHomeScreen`): "N items: U uniques, S set items, R runewords, G gemwords" (`itemsSummary`, no item text; the
+page's chip reads "R + G runewords + gemwords").
 
 Tests: `allItems.test.ts` (rows, names in rows, every filter, conditions, picker options, sort, URL round trip, with a
 fake text engine), `itemNames.test.ts` (every quality and its fallbacks), `allItems.fixture.integration.test.ts` (row

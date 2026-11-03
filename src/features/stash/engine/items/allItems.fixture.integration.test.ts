@@ -64,6 +64,12 @@ describeWithFixture('the All items rows of the stash fixture', (fixture) => {
     expect(search(code).length).toBeGreaterThan(0);
     expect(search('zzzz-no-such-item')).toEqual([]);
 
+    // A type word matches the type chain or a word of the name / socketed names, not the row's own base or type
+    expect(search("Milabrega's Orb").map((row) => row.name)).toEqual(["Milabrega's Orb"]);
+    expect(search('Ru Rune').map((row) => row.name)).toContain('Richesdotcom');
+    expect(search('Heart of Jewels')[0]?.name).toBe('Heart of Jewels');
+    expect(search('ring').filter((row) => !row.info.typeChain.includes('ring') && row.name === row.info.baseName)).toEqual([]);
+
     // Stash order is the location order of the default sort
     expect(sortItemRows(rows, 'location', 'asc').map((row) => row.page)).toEqual(rows.map((row) => row.page).sort((a, b) => a - b));
   });

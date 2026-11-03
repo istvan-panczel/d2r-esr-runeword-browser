@@ -13,7 +13,8 @@ interface StatConditionsProps {
   readonly options: readonly StatOption[];
   /** The stat the list is sorted by; null when it is not sorted by a stat */
   readonly sortStat: string | null;
-  readonly onChange: (conditions: readonly StatCondition[]) => void;
+  /** `replace`: a value edit (one history entry per condition, not per keystroke); adding, removing, ≥ / ≤ push one */
+  readonly onChange: (conditions: readonly StatCondition[], replace: boolean) => void;
   readonly onSortStat: (key: string | null) => void;
   /** The stat text is loading or missing: the conditions are kept (URL) but not applied */
   readonly unavailable: boolean;
@@ -38,8 +39,11 @@ function comboOptions(options: readonly StatOption[]): ComboOption[] {
 export function StatConditions({ conditions, options, sortStat, onChange, onSortStat, unavailable }: StatConditionsProps) {
   const byKey = new Map(options.map((option) => [option.key, option]));
   const combo = comboOptions(options);
-  const replace = (index: number, condition: StatCondition) => {
-    onChange(conditions.map((entry, at) => (at === index ? condition : entry)));
+  const replace = (index: number, condition: StatCondition, inPlace: boolean) => {
+    onChange(
+      conditions.map((entry, at) => (at === index ? condition : entry)),
+      inPlace
+    );
   };
 
   return (
@@ -60,11 +64,14 @@ export function StatConditions({ conditions, options, sortStat, onChange, onSort
               option={byKey.get(condition.key) ?? null}
               sorted={sortStat === condition.key}
               disabled={unavailable}
-              onChange={(next) => {
-                replace(index, next);
+              onChange={(next, inPlace) => {
+                replace(index, next, inPlace);
               }}
               onRemove={() => {
-                onChange(conditions.filter((_, at) => at !== index));
+                onChange(
+                  conditions.filter((_, at) => at !== index),
+                  false
+                );
               }}
               onSort={() => {
                 onSortStat(sortStat === condition.key ? null : condition.key);
@@ -82,7 +89,7 @@ export function StatConditions({ conditions, options, sortStat, onChange, onSort
           searchPlaceholder="Search stats: faster cast, resist, fire ball…"
           onSelect={(key) => {
             const option = byKey.get(key);
-            onChange([...conditions, { key, op: 'min', value: option?.min ?? 1 }]);
+            onChange([...conditions, { key, op: 'min', value: option?.min ?? 1 }], false);
           }}
           className="w-full sm:w-80"
         />
@@ -116,7 +123,7 @@ interface ConditionRowProps {
   readonly option: StatOption | null;
   readonly sorted: boolean;
   readonly disabled: boolean;
-  readonly onChange: (condition: StatCondition) => void;
+  readonly onChange: (condition: StatCondition, replace: boolean) => void;
   readonly onRemove: () => void;
   readonly onSort: () => void;
 }
@@ -141,7 +148,7 @@ function ConditionRow({ condition, option, sorted, disabled, onChange, onRemove,
         value={condition.op}
         onValueChange={(value) => {
           const op = STAT_OPS.find((entry) => entry === value);
-          if (op !== undefined) onChange({ ...condition, op });
+          if (op !== undefined) onChange({ ...condition, op }, false);
         }}
       >
         <SelectTrigger size="sm" className="w-16" aria-label={`Compare ${label}`}>
@@ -159,7 +166,7 @@ function ConditionRow({ condition, option, sorted, disabled, onChange, onRemove,
         value={condition.value}
         label={`${label} value`}
         onChange={(value) => {
-          onChange({ ...condition, value });
+          onChange({ ...condition, value }, true);
         }}
       />
       <Button

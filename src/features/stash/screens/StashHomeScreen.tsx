@@ -17,7 +17,7 @@ export function StashHomeScreen() {
       return `${String(coupons.total)} coupons of ${String(coupons.distinct)} kinds; ${String(coupons.craftable)} uniques craftable now`;
     }
     if (to === '/stash/items' && items !== null) {
-      return `${String(items.total)} items: ${String(items.uniques)} uniques, ${String(items.sets)} set items, ${String(items.runewords)} runewords`;
+      return `${String(items.total)} items: ${String(items.uniques)} uniques, ${String(items.sets)} set items, ${String(items.runewords)} runewords, ${String(items.gemwords)} gemwords`;
     }
     return null;
   };

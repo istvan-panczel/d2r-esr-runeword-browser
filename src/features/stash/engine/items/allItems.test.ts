@@ -22,6 +22,7 @@ import {
   readItemsState,
   sortItemRows,
   fillStatLabel,
+  statTitle,
   statOptions,
   type ItemRow,
   type ItemSortKey,
@@ -192,7 +193,7 @@ describe('item rows', () => {
   });
 
   it('counts the summary without the item text', () => {
-    expect(itemsSummary(stash, catalog)).toEqual({ total: 7, uniques: 1, sets: 1, runewords: 2, socketed: 2 });
+    expect(itemsSummary(stash, catalog)).toEqual({ total: 7, uniques: 1, sets: 1, runewords: 1, gemwords: 1, socketed: 2 });
   });
 });
 
@@ -206,6 +207,10 @@ describe('item search', () => {
     expect(filter({ search: 'lsd' })).toEqual(['Spirit']);
     expect(filter({ search: 'vestments' })).toEqual(["Civerb's Ward"]);
     expect(filter({ search: 'ber' })).toEqual(['Spirit']);
+    // a type word also finds a word of the name or of a socketed item, never the row's own base / type
+    expect(filter({ search: 'rune' })).toEqual(['Spirit']);
+    expect(filter({ search: 'ber rune' })).toEqual(['Spirit']);
+    expect(filter({ search: 'jewel' })).toEqual(['Ring Mail']);
     expect(filter({ search: 'elite' })).toEqual(['Harlequin Crest']);
     expect(filter({ search: 'ethereal' })).toEqual(['Ring Mail']);
   });
@@ -278,12 +283,55 @@ describe('stat conditions', () => {
     expect(statOptions([])).toEqual([]);
   });
 
+  it('tells per-level stats and remaining label twins apart', () => {
+    const value = (key: string, statId: number | null, label: string, perLevel?: true): StatValue => ({
+      key,
+      statKey: key,
+      statId,
+      param: null,
+      label,
+      statLabel: label,
+      paramLabel: null,
+      value: 1,
+      ...(perLevel === undefined ? {} : { perLevel }),
+    });
+    const stats = [
+      value('s0', 0, '+# to Strength'),
+      value('s220', 220, '+# to Strength', true),
+      value('s22', 22, '+# to Maximum Damage'),
+      value('s24', 24, '+# to Maximum Damage'),
+      value('s338', 338, '+#% Dodge Chance'),
+      value('g.dodge', null, '+#% Dodge Chance'),
+    ];
+    const options = statOptions([{ stats: new Map(stats.map((stat) => [stat.key, stat])) }]);
+    expect(options.map(({ key, label, perLevel }) => [key, label, perLevel])).toEqual([
+      ['g.dodge', '+#% Dodge Chance (group)', false],
+      ['s338', '+#% Dodge Chance (stat 338)', false],
+      ['s22', '+# to Maximum Damage (stat 22)', false],
+      ['s24', '+# to Maximum Damage (stat 24)', false],
+      ['s0', '+# to Strength', false],
+      ['s220', '+# to Strength (per level)', true],
+    ]);
+  });
+
   it('writes labels and values for display', () => {
     expect(fillStatLabel('+#% Faster Cast Rate', { value: 20 })).toBe('+20% Faster Cast Rate');
     expect(fillStatLabel('Adds #-# Fire Damage', { value: 20, range: { min: 10, max: 20 } })).toBe('Adds 10-20 Fire Damage');
     expect(fillStatLabel('+# Fire Damage', { value: 20, range: { min: 10, max: 20 } })).toBe('+10-20 Fire Damage');
     expect(fillStatLabel('+# to Life', { value: 1.5, perLevel: true })).toBe('+1.5 to Life (per character level)');
-    expect(fillStatLabel('Cannot Be Frozen', { value: 1 })).toBe('Cannot Be Frozen: 1');
+    expect(fillStatLabel('Cannot Be Frozen', { value: 1 })).toBe('Cannot Be Frozen');
+    expect(fillStatLabel('Corrupted', { value: -1 })).toBe('Corrupted');
+    expect(fillStatLabel('Tinkering Points', { value: 30 })).toBe('Tinkering Points: 30');
+    expect(fillStatLabel('+#% Increased Attack Speed', { value: -20 })).toBe('-20% Increased Attack Speed');
+    expect(fillStatLabel('Requirements +#%', { value: -100 })).toBe('Requirements -100%');
+    expect(fillStatLabel('Lightning Resist +#%', { value: 40 })).toBe('Lightning Resist +40%');
+    expect(fillStatLabel('Adds #-# Damage', { value: 5, range: { min: -2, max: 5 } })).toBe('Adds -2-5 Damage');
+    expect(statTitle('+#% Faster Cast Rate')).toBe('Faster Cast Rate');
+    expect(statTitle('Fire Resist +#%')).toBe('Fire Resist');
+    expect(statTitle('+# to Fire Ball (Sorceress Only)')).toBe('Fire Ball (Sorceress Only)');
+    expect(statTitle('Adds #-# Fire Damage')).toBe('Adds Fire Damage');
+    expect(statTitle('+# to Strength (per level)')).toBe('Strength (per level)');
+    expect(statTitle('Indestructible')).toBe('Indestructible');
     expect(formatStatValue({ value: 20 })).toBe('20');
     expect(formatStatValue({ value: 20, range: { min: 10, max: 20 } })).toBe('10-20');
     expect(formatStatValue({ value: 0.375, perLevel: true })).toBe('0.38 per level');

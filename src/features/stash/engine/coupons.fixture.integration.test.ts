@@ -46,6 +46,7 @@ describe.skipIf(!existsSync(MODERN) || !existsSync(BUNDLE) || !existsSync(TYPES)
     console.log(`Stash fixture belt coupons: ${found.map((row) => `${row.unique.name} (${row.base?.name ?? '?'})`).join(', ')}`);
     expect(belts.length).toBeGreaterThan(0);
     expect(found.map((row) => row.code).sort()).toEqual(belts.map((row) => row.code).sort());
+    expect(found).toHaveLength(8);
     expect(found.some((row) => !(row.base?.name ?? '').toLowerCase().includes('belt'))).toBe(true);
     // "sash" is no type name, so it matches as text: the Sash and the Demonhide Sash, not the other belts
     const sashes = search('sash');

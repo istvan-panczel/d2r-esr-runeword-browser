@@ -5,9 +5,12 @@ import { NameLink } from '../shared/NameLink';
 import { ToneBadge } from '../shared/ToneBadge';
 import { itemNameClass } from './itemClasses';
 
-/** The item's name in its quality colour (a link for uniques, set items, runewords), the copy button and a stack size */
-export function ItemName({ row }: { readonly row: ItemRow }) {
-  const quantity = itemQuantityLabel(row.item);
+/**
+ * The item's name in its quality colour (a link for uniques, set items, runewords), the copy button and the stack size
+ * (`quantity`, default on; the tooltip cards have it as their "Quantity" line instead)
+ */
+export function ItemName({ row, quantity: showQuantity = true }: { readonly row: ItemRow; readonly quantity?: boolean }) {
+  const quantity = showQuantity ? itemQuantityLabel(row.item) : null;
   return (
     <span className="inline-flex min-w-0 flex-wrap items-center gap-x-1.5">
       <NameLink name={row.name} to={itemPageUrl(row)} className={itemNameClass(row)} />
