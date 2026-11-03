@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.49.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.48.0...v1.49.0) (2026-11-03)
+
+### Features
+
+* **game-data:** add coupon bases and base tiers to stash.json ([b62380d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b62380df4a6718d14b57000029138833a1bd9718))
+* **game-data:** add stash.json for the shared stash parser ([fcd0140](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fcd014034367bf8b72f46d3a760e6ad011d5f1e1))
+* **game-data:** add the Ancient Coupon recipes to stash.json ([e54ec3e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e54ec3efe6f4e92e888b41dda0144bf885effbc1))
+* **stash:** add item type search, full item details and tier badges to the coupons page ([95aff26](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/95aff266d9912ebc194b076fffe522d18caa80fe))
+* **stash:** add the My Stash pages with an Ancient Coupons table ([1e884ab](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1e884ab2dd1ac14d0ee183c443b059407b637047))
+* **stash:** merge the My Stash section with the Ancient Coupons page and the shared stash parser ([b95c311](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b95c311babd619fefc3a958aec5514f5fbb150b1))
+* **stash:** parse the ESR Modern shared stash (.d2i) ([0414ab6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0414ab63b66fecb4686e816d1a893ba362041536))
+
+### Bug Fixes
+
+* **game-data:** flag a coupon Wild Card recipe with a wrong numinputs ([8620541](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8620541f8fb6e7cdbe66179129bcd15c453268ef))
+* **game-data:** name a coupon unique without a string after its coupon ([2c7ff28](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2c7ff28d06069a562a5cea3616e935204c4e5963))
+* **stash:** fix coupon counts, materials locations, statuses and uploads ([34c79b4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/34c79b4bf64660741e81dbaa0f065bdd15faa11a))
+* **stash:** report a section too short for its header as a parse error ([a78ee79](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a78ee790db7f20aa2a1166e106e5a6f6141e5154))
+
+### Documentation
+
+* **stash:** document the My Stash feature and the stash file format ([1fa05bf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1fa05bf7d96447c440d01bb54e8cad96b630f559))
+
+### Refactoring
+
+* **stash:** drop the unused BitReader position setter ([4cdb93c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4cdb93ce64e8ddda3858dd66cfb3d9ca4938cd1a))
+
 ## [1.48.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.47.0...v1.48.0) (2026-11-02)
 
 ### Features
