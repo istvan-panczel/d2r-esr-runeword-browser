@@ -19,7 +19,7 @@ import {
 } from '../describeItem';
 import type { ItemTypeIndex } from '../itemTypes';
 import { compareLocations, pageOf, pagesOf, type StashLocation } from '../locations';
-import { matchesItemSearch, parseItemSearch, searchText } from '../search';
+import { matchesItemSearch, parseItemSearch, searchText, withoutBaseName } from '../search';
 import { isOneOf, readEnum, readFlag, readPage, readSortDir, readText, setParam, type SortDir } from '../urlState';
 import { walkStashItems } from '../walk';
 import { itemDisplayName } from './itemNames';
@@ -53,6 +53,8 @@ export interface ItemRow {
   readonly stats: ReadonlyMap<string, StatValue>;
   /** Lower-cased search text: name, base, type, quality, code, set, socketed names, every tooltip line */
   readonly search: string;
+  /** `search` without the base and type fields (the base name cut out of the name): what a type word also matches */
+  readonly typeWordText: string;
 }
 
 /** The item text functions a row build uses; tests swap in fakes (the real ones are workstream A's) */
@@ -116,7 +118,7 @@ const allLines = (text: ItemTextGroups): string[] => [
 
 function buildRow(item: StashItem, location: StashLocation, catalog: StashCatalog, ctx: ItemTextContext, engine: ItemTextEngine): ItemRow {
   const info = describeStashItem(item, catalog);
-  const name = itemDisplayName(item, catalog, ctx);
+  const name = itemDisplayName(item, catalog, ctx, info);
   const text = engine.render(item, ctx);
   const linesOf = new Map(text.socketed.map((entry) => [entry.item, entry.lines]));
   const socketed = item.socketed.map((child) => ({
@@ -127,6 +129,9 @@ function buildRow(item: StashItem, location: StashLocation, catalog: StashCatalo
   const stats = new Map<string, StatValue>();
   for (const value of engine.stats(item, ctx)) if (!stats.has(value.key)) stats.set(value.key, value);
   const row = { info };
+  const lines = allLines(text);
+  // What a type word may also match as a word: everything but the base and type fields ("ring" ≠ a plain Ring Mail)
+  const named = [info.set?.name, ...socketed.map((entry) => entry.name), ...lines];
   const search = searchText([
     name,
     info.baseName,
@@ -134,11 +139,10 @@ function buildRow(item: StashItem, location: StashLocation, catalog: StashCatalo
     kindLabel(row),
     info.tier === null ? null : BASE_TIER_LABELS[info.tier],
     info.code,
-    info.set?.name,
     item.ethereal ? 'ethereal' : null,
-    ...socketed.map((entry) => entry.name),
-    ...allLines(text),
+    ...named,
   ]);
+  const typeWordText = searchText([withoutBaseName(name, info.baseName), ...named]);
   return {
     key: `${String(location.section)}:${String(item.index)}`,
     item,
@@ -150,6 +154,7 @@ function buildRow(item: StashItem, location: StashLocation, catalog: StashCatalo
     text,
     stats,
     search,
+    typeWordText,
   };
 }
 
@@ -191,7 +196,9 @@ export interface ItemsSummary {
   readonly total: number;
   readonly uniques: number;
   readonly sets: number;
+  /** Runewords, charm gemwords apart */
   readonly runewords: number;
+  readonly gemwords: number;
   /** Items sitting in sockets (not rows of their own) */
   readonly socketed: number;
 }
@@ -199,13 +206,15 @@ export interface ItemsSummary {
 /** The counts of the page's summary chips and the My Stash home card (no item text needed) */
 export function itemsSummary(stash: StashFile, catalog: StashCatalog): ItemsSummary {
   const walked = walkStashItems(stash, { tabs: 'pages' });
-  const kinds = walked.map(({ item }) => describeStashItem(item, catalog).kind);
-  const count = (kind: StashItemKind) => kinds.filter((entry) => entry === kind).length;
+  const described = walked.map(({ item }) => describeStashItem(item, catalog));
+  const count = (kind: StashItemKind) => described.filter((entry) => entry.kind === kind).length;
+  const gemwords = described.filter((entry) => entry.kind === 'runeword' && entry.runeword?.gemword === true).length;
   return {
     total: walked.length,
     uniques: count('unique'),
     sets: count('set'),
-    runewords: count('runeword'),
+    runewords: count('runeword') - gemwords,
+    gemwords,
     socketed: walked.reduce((sum, { item }) => sum + item.socketed.length, 0),
   };
 }
@@ -238,9 +247,15 @@ export function matchesConditions(row: Pick<ItemRow, 'stats'>, conditions: reado
 export interface StatOption {
   readonly key: string;
   readonly statKey: string;
+  /**
+   * The picker label: the key's label with `#`, "(per level)" for a per-level stat, and, when two keys would still read
+   * the same, "(stat N)" / "(group)" ("+#% Dodge Chance (group)")
+   */
   readonly label: string;
   readonly statLabel: string;
   readonly paramLabel: string | null;
+  readonly statId: number | null;
+  readonly perLevel: boolean;
   readonly count: number;
   readonly min: number;
   readonly max: number;
@@ -249,7 +264,15 @@ export interface StatOption {
 /** A label's sort text: without the leading signs and placeholders ("+#% Faster Cast Rate" → "Faster Cast Rate") */
 const labelSortText = (label: string) => label.replace(/^[^A-Za-z[]+/, '');
 
-/** The distinct stat keys of the rows, by stat label (its words, signs and `#` skipped), then param label */
+/** "+# to Strength" / "+# to Strength (per level)": a per-level stat and its plain one read apart */
+export function statKeyLabel(stat: Pick<StatValue, 'label' | 'perLevel'>): string {
+  return stat.perLevel === true ? `${stat.label} (per level)` : stat.label;
+}
+
+/**
+ * The distinct stat keys of the rows, by stat label (its words, signs and `#` skipped), then param label. Labels that
+ * still collide (two stat ids folding to one text, a group and a stat of the same name) get the stat id / "group".
+ */
 export function statOptions(rows: readonly Pick<ItemRow, 'stats'>[]): StatOption[] {
   const options = new Map<string, StatOption>();
   for (const row of rows) {
@@ -261,9 +284,11 @@ export function statOptions(rows: readonly Pick<ItemRow, 'stats'>[]): StatOption
           ? {
               key: stat.key,
               statKey: stat.statKey,
-              label: stat.label,
+              label: statKeyLabel(stat),
               statLabel: stat.statLabel,
               paramLabel: stat.paramLabel,
+              statId: stat.statId,
+              perLevel: stat.perLevel === true,
               count: 1,
               min: stat.value,
               max: stat.value,
@@ -272,35 +297,62 @@ export function statOptions(rows: readonly Pick<ItemRow, 'stats'>[]): StatOption
       );
     }
   }
-  return [...options.values()].sort(
-    (a, b) =>
-      labelSortText(a.statLabel).localeCompare(labelSortText(b.statLabel)) ||
-      (a.paramLabel ?? '').localeCompare(b.paramLabel ?? '') ||
-      a.key.localeCompare(b.key)
-  );
+  const byLabel = new Map<string, number>();
+  for (const option of options.values()) byLabel.set(option.label, (byLabel.get(option.label) ?? 0) + 1);
+  return [...options.values()]
+    .map((option) =>
+      (byLabel.get(option.label) ?? 0) < 2
+        ? option
+        : { ...option, label: `${option.label} (${option.statId === null ? 'group' : `stat ${String(option.statId)}`})` }
+    )
+    .sort(
+      (a, b) =>
+        labelSortText(a.statLabel).localeCompare(labelSortText(b.statLabel)) ||
+        (a.paramLabel ?? '').localeCompare(b.paramLabel ?? '') ||
+        Number(a.perLevel) - Number(b.perLevel) ||
+        a.key.localeCompare(b.key)
+    );
+}
+
+/** A label as a title, without the value placeholders: "+#% Faster Cast Rate" → "Faster Cast Rate" (sort select) */
+export function statTitle(label: string): string {
+  const text = label
+    .replace(/[+-]?#(\s*(-|to)\s*[+-]?#)?%?/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .replace(/^(to|of)\s+/i, '');
+  return text === '' ? label : text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const roundNumber = (value: number) => String(Math.round(value * 100) / 100);
+
+/** Each `#` (with the `+` before it) as the next value: "+#" with -20 is "-20", not "+-20" */
+function fillMarks(label: string, values: readonly string[]): string {
+  let at = 0;
+  return label.replace(/\+?#/g, (mark) => {
+    const value = values[Math.min(at++, values.length - 1)] ?? '';
+    return mark.startsWith('+') && !value.startsWith('-') ? `+${value}` : value;
+  });
 }
 
 /**
- * A stat label with an item's value in place of `#` ("+#% Faster Cast Rate" → "+20% Faster Cast Rate"): a range fills
- * two `#` with its ends (one `#` gets "10-20"); a per-level value says so.
+ * A stat label with an item's value in place of `#` ("+#% Faster Cast Rate" → "+20% Faster Cast Rate"; "+#" with a
+ * negative value → "-20"): a range fills two `#` with its ends (one `#` gets "10-20"); a per-level value says so. A
+ * label without `#` is a flag ("Indestructible", "Corrupted") when its value is ±1, else "Label: value".
  */
 export function fillStatLabel(label: string, stat: Pick<StatValue, 'value' | 'range' | 'perLevel'>): string {
-  const number = (value: number) => String(Math.round(value * 100) / 100);
   const marks = label.split('#').length - 1;
+  const value = formatStatValue({ value: stat.value, range: stat.range });
   let text: string;
-  if (marks === 0) text = `${label}: ${formatStatValue({ value: stat.value, range: stat.range })}`;
-  else if (stat.range !== undefined && marks >= 2) {
-    const ends = [number(stat.range.min), number(stat.range.max)];
-    let at = 0;
-    text = label.replace(/#/g, () => ends[Math.min(at++, 1)] ?? '');
-  } else text = label.replace(/#/g, formatStatValue({ value: stat.value, range: stat.range }));
+  if (marks === 0) text = stat.range === undefined && Math.abs(stat.value) === 1 ? label : `${label}: ${value}`;
+  else if (stat.range !== undefined && marks >= 2) text = fillMarks(label, [roundNumber(stat.range.min), roundNumber(stat.range.max)]);
+  else text = fillMarks(label, [value]);
   return stat.perLevel === true ? `${text} (per character level)` : text;
 }
 
 /** A displayed value: "20", "10-20" for a range, "1.5 per level" */
 export function formatStatValue(stat: Pick<StatValue, 'value' | 'range' | 'perLevel'>): string {
-  const number = (value: number) => String(Math.round(value * 100) / 100);
-  const text = stat.range === undefined ? number(stat.value) : `${number(stat.range.min)}-${number(stat.range.max)}`;
+  const text = stat.range === undefined ? roundNumber(stat.value) : `${roundNumber(stat.range.min)}-${roundNumber(stat.range.max)}`;
   return stat.perLevel === true ? `${text} per level` : text;
 }
 
@@ -312,7 +364,7 @@ export type ItemSortKey = (typeof ITEM_SORT_KEYS)[number];
 export const ETHEREAL_FILTERS = ['all', 'yes', 'no'] as const;
 export type EtherealFilter = (typeof ETHEREAL_FILTERS)[number];
 
-/** socketed: has sockets; open: has an empty socket; none: no sockets; runeword: a runeword (or gemword) */
+/** socketed: has sockets; open: has an empty socket; none: no sockets; runeword: a runeword or a charm gemword */
 export const SOCKET_FILTERS = ['all', 'socketed', 'open', 'none', 'runeword'] as const;
 export type SocketFilter = (typeof SOCKET_FILTERS)[number];
 
@@ -475,7 +527,7 @@ export function filterItemRows(rows: readonly ItemRow[], state: ItemFilter, type
     (row) =>
       matchesFields(row, state) &&
       matchesConditions(row, state.stats) &&
-      matchesItemSearch(terms, { text: row.search, typeCodes: row.info.typeChain })
+      matchesItemSearch(terms, { text: row.search, typeCodes: row.info.typeChain, typeWordText: row.typeWordText })
   );
 }
 

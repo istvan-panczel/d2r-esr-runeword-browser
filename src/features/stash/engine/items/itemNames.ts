@@ -8,17 +8,22 @@
  */
 import type { StashItem } from '../../parser/types';
 import type { StashCatalog } from '../catalog';
-import { describeStashItem } from '../describeItem';
+import { describeStashItem, type StashItemDescription } from '../describeItem';
 import type { ItemTextContext } from './itemText';
 
 const join = (...parts: (string | null)[]) => parts.filter((part) => part !== null && part !== '').join(' ');
 
 /**
  * The item's name (one line). Without `text` (or with the placeholder context) affix and rare names fall back to the
- * base name; unique, set item and runeword names come from stash.json and are always there.
+ * base name; unique, set item and runeword names come from stash.json and are always there. `described` skips the
+ * description when the caller has it already.
  */
-export function itemDisplayName(item: StashItem, catalog: StashCatalog, text: ItemTextContext | null = null): string {
-  const described = describeStashItem(item, catalog);
+export function itemDisplayName(
+  item: StashItem,
+  catalog: StashCatalog,
+  text: ItemTextContext | null = null,
+  described: StashItemDescription = describeStashItem(item, catalog)
+): string {
   const names = text?.names ?? null;
   const base = described.baseName;
   let name: string;
@@ -42,10 +47,11 @@ export function itemDisplayName(item: StashItem, catalog: StashCatalog, text: It
 }
 
 /**
- * The stack size of a quantity item (arrows, bolts, keys, tomes, throwing weapons): "×350"; null for other items. Kept
- * apart from the name, so the name stays what the in-game stash search finds.
+ * The stack size of a quantity item (arrows, bolts, keys, tomes, throwing weapons): "×350"; null for other items and a
+ * count of 0. Kept apart from the name, so the name stays what the in-game stash search finds.
  */
 export function itemQuantityLabel(item: Pick<StashItem, 'quantity' | 'stackSize'>): string | null {
   const count = item.quantity ?? item.stackSize;
-  return count === null ? null : `×${String(count)}`;
+  // Compact stackables on a page (Dragon Stones …) save a stack size of 0: no count to show
+  return count === null || count <= 0 ? null : `×${String(count)}`;
 }

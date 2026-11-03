@@ -13,7 +13,7 @@ import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import type { StashBundle } from '@/features/game-data/engine/schema';
 import { ItemCards } from '../components/items/ItemCards';
-import { ItemTable, type ShownStat } from '../components/items/ItemTable';
+import { ItemTable } from '../components/items/ItemTable';
 import { StatConditions } from '../components/items/StatConditions';
 import { EmptyResults } from '../components/shared/EmptyResults';
 import { PageSelect } from '../components/shared/PageSelect';
@@ -22,7 +22,7 @@ import { SortSelect } from '../components/shared/SortSelect';
 import { SummaryChips } from '../components/shared/SummaryChips';
 import { StashGate } from '../components/StashGate';
 import { stashCatalog, type StashCatalog } from '../engine/catalog';
-import { ITEM_CATEGORIES, STASH_ITEM_KINDS } from '../engine/describeItem';
+import { ITEM_CATEGORIES, STASH_ITEM_KINDS, type StashItemKind } from '../engine/describeItem';
 import {
   countBy,
   DEFAULT_ITEMS_STATE,
@@ -46,6 +46,7 @@ import {
   SOCKET_FILTERS,
   sortItemRows,
   statOptions,
+  statTitle,
   type EtherealFilter,
   type ItemRow,
   type ItemSortKey,
@@ -72,7 +73,7 @@ const SOCKET_LABELS: Readonly<Record<SocketFilter, string>> = {
   socketed: 'Socketed',
   open: 'Empty sockets',
   none: 'No sockets',
-  runeword: 'Runewords',
+  runeword: 'Runewords & gemwords',
 };
 const SORT_LABELS: Readonly<Record<Exclude<ItemSortKey, 'stat'>, string>> = {
   location: 'Where',
@@ -80,6 +81,8 @@ const SORT_LABELS: Readonly<Record<Exclude<ItemSortKey, 'stat'>, string>> = {
   quality: 'Quality',
   ilvl: 'Item level',
 };
+/** The quality pills: the kind labels, with the runeword pill naming the gemwords it holds */
+const QUALITY_LABELS: Readonly<Record<StashItemKind, string>> = { ...ITEM_KIND_LABELS, runeword: 'Runeword & gemword' };
 const BASE_SORT_KEYS: readonly string[] = Object.keys(SORT_LABELS);
 const TIER_VALUES: readonly Exclude<TierFilter, 'all'>[] = [...BASE_TIERS, 'none'];
 
@@ -135,11 +138,13 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
   const shown = sortItemRows(filterItemRows(rows, filters, types), state.sort, state.dir, state.sortStat);
   const optionByKey = new Map(options.map((option) => [option.key, option]));
   const sortStat = state.sort === 'stat' ? state.sortStat : null;
-  const shownStats: ShownStat[] = [
-    ...new Set([...state.stats.map((condition) => condition.key), ...(sortStat === null ? [] : [sortStat])]),
-  ].map((key) => ({ key, label: optionByKey.get(key)?.label ?? key }));
+  const shownStats = [...new Set([...state.stats.map((condition) => condition.key), ...(sortStat === null ? [] : [sortStat])])];
   const sortKeys = sortStat === null ? BASE_SORT_KEYS : [...BASE_SORT_KEYS, 'stat'];
-  const sortLabels: Readonly<Record<string, string>> = { ...SORT_LABELS, stat: optionByKey.get(sortStat ?? '')?.label ?? 'Stat' };
+  const sortStatOption = optionByKey.get(sortStat ?? '');
+  const sortLabels: Readonly<Record<string, string>> = {
+    ...SORT_LABELS,
+    stat: sortStatOption === undefined ? 'Stat' : statTitle(sortStatOption.label),
+  };
 
   const reset = () => {
     commitSearch('');
@@ -179,8 +184,8 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
           options={options}
           sortStat={sortStat}
           unavailable={note !== null}
-          onChange={(stats) => {
-            update({ stats }, false);
+          onChange={(stats, replace) => {
+            update({ stats }, replace);
           }}
           onSortStat={(key) => {
             update(key === null ? { sort: 'location', sortStat: null, dir: 'asc' } : { sort: 'stat', sortStat: key, dir: 'desc' });
@@ -247,7 +252,7 @@ function ItemsSummaryChips({ stash, catalog }: { readonly stash: StashFile; read
         { value: summary.total, label: 'items on your stash pages' },
         { value: summary.uniques, label: 'uniques' },
         { value: summary.sets, label: 'set items' },
-        { value: summary.runewords, label: 'runewords and gemwords' },
+        { value: `${String(summary.runewords)} + ${String(summary.gemwords)}`, label: 'runewords + gemwords' },
       ]}
     />
   );
@@ -296,7 +301,7 @@ function ItemFilters({ rows, state, update }: ItemFiltersProps) {
     all,
     ...pillOptions(
       STASH_ITEM_KINDS,
-      ITEM_KIND_LABELS,
+      QUALITY_LABELS,
       countBy(rows, (row) => row.info.kind),
       state.quality
     ),

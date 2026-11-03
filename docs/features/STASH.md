@@ -128,8 +128,8 @@ Filters (always open; state in the URL, `readCouponsState` / `encodeCouponsState
 | `details` | `1`: "Show all item information" (cards instead of the table)     | off      |
 
 **Item type search** (`engine/itemTypes.ts`, shared with All Items through `engine/search.ts`): a word that names an ESR item type matches by the base's type chain
-(types.json ancestors), not as text, so "belt" lists every belt coupon (Sash, Light Belt, Mithril Coil, …), "ring"
-finds rings but not Ring Mail, and "helm" is the Helm type, not ESR's merc type ("Helm (merc)") that belts and boots
+(types.json ancestors), or as a word of the unique's name (not of the coupon, base or type names), so "belt" lists every
+belt coupon (Sash, Light Belt, Mithril Coil, …), "ring" finds rings (and a unique named "… Ring") but not Ring Mail, and "helm" is the Helm type, not ESR's merc type ("Helm (merc)") that belts and boots
 also descend from. Names match case-insensitively with a plural "s" dropped ("Rings", "boot", "gloves"); a few
 everyday words map onto ESR names: helmet → Helm, armour / "body armor" → Armor (body armor), shield → Any Shield (the
 class shields too), dagger → Knife, claw / katar → Hand to Hand. Any other word matches as text over the unique, the

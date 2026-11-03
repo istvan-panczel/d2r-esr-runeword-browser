@@ -7,19 +7,13 @@ import { SortHeader as SharedSortHeader } from '../shared/SortHeader';
 import { BaseTypeLine, EtherealBadge, ItemName, KindText, SocketsInfo } from './ItemParts';
 import { STAT_LINE_CLASS } from './itemClasses';
 
-/** A stat shown in its own column: the stat conditions' and the stat sort's keys */
-export interface ShownStat {
-  readonly key: string;
-  /** The key's label ("+#% Faster Cast Rate"); the key itself when the stash has no item with it */
-  readonly label: string;
-}
-
 interface ItemTableProps {
   readonly rows: readonly ItemRow[];
   readonly sort: ItemSortKey;
   readonly dir: SortDir;
   readonly onSort: (sort: ItemSortKey, dir: SortDir) => void;
-  readonly shownStats: readonly ShownStat[];
+  /** The stat keys shown in their own column: the stat conditions' and the stat sort's */
+  readonly shownStats: readonly string[];
 }
 
 const CELL_CLASS = 'border-t px-2 py-1.5 align-top';
@@ -48,12 +42,12 @@ function StatValues({
   className,
 }: {
   readonly row: ItemRow;
-  readonly shownStats: readonly ShownStat[];
+  readonly shownStats: readonly string[];
   readonly className?: string;
 }) {
-  const values = shownStats.flatMap((shown) => {
-    const stat = row.stats.get(shown.key);
-    return stat === undefined ? [] : [{ key: shown.key, line: fillStatLabel(shown.label, stat) }];
+  const values = shownStats.flatMap((key) => {
+    const stat = row.stats.get(key);
+    return stat === undefined ? [] : [{ key, line: fillStatLabel(stat.label, stat) }];
   });
   if (values.length === 0) return <span className="text-muted-foreground">—</span>;
   return (
@@ -138,7 +132,7 @@ export function ItemTable({ rows, sort, dir, onSort, shownStats }: ItemTableProp
 }
 
 /** The columns a phone does not show, as lines under the name */
-function PhoneFacts({ row, shownStats }: { readonly row: ItemRow; readonly shownStats: readonly ShownStat[] }) {
+function PhoneFacts({ row, shownStats }: { readonly row: ItemRow; readonly shownStats: readonly string[] }) {
   const facts = [kindLabel(row), row.item.level === null ? null : `ilvl ${String(row.item.level)}`].filter((fact) => fact !== null);
   return (
     <div className="mt-1 space-y-0.5 text-xs font-normal text-muted-foreground md:hidden">
@@ -152,7 +146,7 @@ function PhoneFacts({ row, shownStats }: { readonly row: ItemRow; readonly shown
           <SocketsInfo row={row} compact />
         </div>
       )}
-      {shownStats.some((shown) => row.stats.has(shown.key)) && <StatValues row={row} shownStats={shownStats} className="text-foreground" />}
+      {shownStats.some((key) => row.stats.has(key)) && <StatValues row={row} shownStats={shownStats} className="text-foreground" />}
       <div className="tabular-nums">{formatLocation(row.location)}</div>
     </div>
   );

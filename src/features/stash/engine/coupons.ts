@@ -8,7 +8,7 @@ import type { StashBundle, StashCouponBase, StashCouponUnique } from '@/features
 import type { StashFile, StashTabType } from '../parser/types';
 import { typeAncestors, type ItemTypeIndex } from './itemTypes';
 import { compareLocations, pageOf, pagesOf, type StashLocation } from './locations';
-import { matchesItemSearch, parseItemSearch, searchText } from './search';
+import { matchesItemSearch, parseItemSearch, searchText, withoutBaseName } from './search';
 import { isOneOf, readEnum, readFlag, readPage, readSortDir, readText, setParam, setSort, type SortDir } from './urlState';
 import { walkStashItems } from './walk';
 
@@ -251,8 +251,9 @@ export function encodeCouponsState(state: CouponsState): URLSearchParams {
 
 /**
  * The rows matching the search, status, tier and page filters. A search word that names an item type ("belt",
- * "helmet", "rings"; see itemTypes.ts) matches by the base's type chain only, so "ring" finds rings but not Ring Mail;
- * any other word matches the coupon name, unique, code, base name or base type name as text ("sash" → the Sash only).
+ * "helmet", "rings", "orb"; see itemTypes.ts) matches by the base's type chain or as a word of the unique's name, so
+ * "ring" finds rings (and a unique named "… Ring") but not Ring Mail, and "orb" finds Milabrega's Orb; any other word
+ * matches the coupon name, unique, code, base name or base type name as text ("sash" → the Sash only).
  */
 export function filterCouponRows(
   rows: readonly CouponRow[],
@@ -266,7 +267,9 @@ export function filterCouponRows(
     if (state.page !== null && !row.locations.some((location) => pageOf(location) === state.page)) return false;
     if (terms.length === 0) return true;
     const text = searchText([row.name, row.unique.name, row.code, row.base?.name, row.baseTypeName]);
-    return matchesItemSearch(terms, { text, typeCodes: row.typeCodes });
+    // A type word also matches a word of the unique's name (Milabrega's Orb), not of the coupon or base names
+    const typeWordText = searchText([withoutBaseName(row.unique.name, row.base?.name)]);
+    return matchesItemSearch(terms, { text, typeCodes: row.typeCodes, typeWordText });
   });
 }
 

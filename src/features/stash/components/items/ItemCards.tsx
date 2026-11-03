@@ -45,7 +45,7 @@ function ItemCard({ row }: { readonly row: ItemRow }) {
     <article className="flex h-full flex-col gap-2 rounded-xl border bg-card p-3 text-center text-sm shadow-sm">
       <header className="flex flex-col items-center gap-1">
         <ItemIcon item={row.info.icon} size={48} />
-        <ItemName row={row} />
+        <ItemName row={row} quantity={false} />
         <span className="text-xs text-muted-foreground">{baseTypeText(row)}</span>
         {row.info.set !== null && <span className={cn('text-xs', SET_LINE_CLASS)}>{row.info.set.name}</span>}
       </header>
