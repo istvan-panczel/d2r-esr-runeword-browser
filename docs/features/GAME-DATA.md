@@ -592,7 +592,8 @@ without length prefixes, so the parser needs every width:
   coupon code (`"01c,qty=3"`) makes `unique` (`{ id, name }`: the first uniqueitems.txt row of the output `index`,
   row-numbered, and its display name; a unique without a string, ESR 3.2.24's `Azurewrath_old` (the Crystal Sword
   Azurewrath of coupon `24f`), is named after the unique in its coupon's name, with a warning) and gives `qty`; a row with the same code plus Wild Cards (`"01c,qty=2"` +
-  `99j` / `"99j,qty=2"` / `"99j,qty=4"`) gives `withWildCards: { qty, wildCards }`. Rerolls (a `rnd` input) and rows
+  `99j` / `"99j,qty=2"` / `"99j,qty=4"`) gives `withWildCards: { qty, wildCards }`, plus `suspect: true` when the row's
+  `numinputs` differs from its item count (the game would most likely never match it). Rerolls (a `rnd` input) and rows
   whose output is an input are skipped. The three blank coupons (`96j`–`98j`) have no recipe and no `unique`.
 - `couponTiers`: one entry per coupon type (`cpn1`, `cpn2`, `cpn3`), labelled from the itemtypes.txt name ("Coupon
   norm" → Normal, "excep" → Exceptional, "elite" → Elite) with `wildCardFrom`, the coupons of that tier (any codes)

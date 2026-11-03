@@ -1033,7 +1033,12 @@ export interface StashCoupon {
   /** Coupons of this code the recipe takes ("01c,qty=3" → 3); set with `unique` */
   qty?: number;
   /** The alternative recipe: fewer coupons of this code plus Coupon Wild Cards ("02c,qty=2" + "99j,qty=2") */
-  withWildCards?: { qty: number; wildCards: number };
+  withWildCards?: {
+    qty: number;
+    wildCards: number;
+    /** The row's `numinputs` differs from its item count (ESR 3.2.24: 06j), so the recipe likely does not work */
+    suspect?: true;
+  };
 }
 
 export interface StashCouponUnique {
@@ -1060,6 +1065,7 @@ export interface StashCouponTier {
  */
 export interface StashBundle {
   /** Shared stash page grid (inventory.txt "Big Bank Page 1") */
+  /** Not read by the pages yet: kept (with the item sizes) for a future stash grid view */
   grid: { width: number; height: number };
   /** By itemstatcost.txt row (the stat id); null when Save Bits is 0 (never saved on items) */
   stats: (StashStatInfo | null)[];

@@ -59,6 +59,7 @@ describe('buildStashBundle', () => {
         ['Coupon', '1', '3', '"01c,qty=3"', '', '', 'War Bonnet'],
         ['Coupon', '1', '3', '"01c,qty=2"', '99j', '', 'War Bonnet'],
         ['Coupon', '1', '3', '"24f,qty=3"', '', '', 'Azurewrath_old'],
+        ['Coupon', '1', '4', '"24f,qty=2"', '"99j,qty=4"', '', 'Azurewrath_old'],
         ['Coupon', '1', '3', '"01e,qty=3"', '', '', 'Unknown Unique'],
         ['Coupon', '0', '3', '"01e,qty=3"', '', '', 'Disabled Unique'],
         ['Coupon', '1', '8', '"cpn1,qty=8"', '', '', '99j'],
@@ -114,6 +115,7 @@ describe('buildStashBundle', () => {
         type: 'cpn1',
         unique: { id: 3, name: 'Azurewrath' },
         qty: 3,
+        withWildCards: { qty: 2, wildCards: 4, suspect: true },
       },
       { code: '01e', name: 'Coupon eli Armor 1', type: 'cpn3' },
       { code: '96j', name: 'Coupon Blank nor', type: 'cpn1' },
@@ -129,10 +131,11 @@ describe('buildStashBundle', () => {
     ]);
   });
 
-  it('names a unique without a string after its coupon, and warns about an output that is no unique', () => {
+  it('names a unique without a string after its coupon, flags a Wild Card recipe with a wrong numinputs, warns about an output that is no unique', () => {
     expect(warnings).toEqual([
       'stash: unique "Azurewrath_old" (row 3) has no string; named "Azurewrath" after coupon 24f',
-      'stash: coupon 01e makes "Unknown Unique" (cubemain line 5), which is no unique',
+      'stash: coupon 24f recipe (cubemain line 5) has numinputs 4 for 6 items',
+      'stash: coupon 01e makes "Unknown Unique" (cubemain line 6), which is no unique',
     ]);
   });
 

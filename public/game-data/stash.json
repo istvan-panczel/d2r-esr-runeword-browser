@@ -3618,7 +3618,7 @@
     {"code":"03j","name":"Ancient Coupon Ring III (The Stone of Jordan)","type":"cpn1","unique":{"id":821,"name":"The Stone of Jordan"},"qty":3,"withWildCards":{"qty":2,"wildCards":1}},
     {"code":"04j","name":"Ancient Coupon Ring IV (Dwarf Star)","type":"cpn2","unique":{"id":964,"name":"Dwarf Star"},"qty":3,"withWildCards":{"qty":2,"wildCards":2}},
     {"code":"05j","name":"Ancient Coupon Ring V (Raven Frost)","type":"cpn2","unique":{"id":965,"name":"Raven Frost"},"qty":3,"withWildCards":{"qty":2,"wildCards":2}},
-    {"code":"06j","name":"Ancient Coupon Ring VI (Bul-Kathos' Wedding Band)","type":"cpn3","unique":{"id":958,"name":"Bul-Kathos' Wedding Band"},"qty":3,"withWildCards":{"qty":2,"wildCards":4}},
+    {"code":"06j","name":"Ancient Coupon Ring VI (Bul-Kathos' Wedding Band)","type":"cpn3","unique":{"id":958,"name":"Bul-Kathos' Wedding Band"},"qty":3,"withWildCards":{"qty":2,"wildCards":4,"suspect":true}},
     {"code":"07j","name":"Ancient Coupon Ring VII (Carrion Wind)","type":"cpn3","unique":{"id":1056,"name":"Carrion Wind"},"qty":3,"withWildCards":{"qty":2,"wildCards":4}},
     {"code":"08j","name":"Ancient Coupon Ring VIII (Nature's Peace)","type":"cpn3","unique":{"id":988,"name":"Nature's Peace"},"qty":3,"withWildCards":{"qty":2,"wildCards":4}},
     {"code":"09j","name":"Ancient Coupon Ring IX (Wisp Projector)","type":"cpn3","unique":{"id":1004,"name":"Wisp Projector"},"qty":3,"withWildCards":{"qty":2,"wildCards":4}},

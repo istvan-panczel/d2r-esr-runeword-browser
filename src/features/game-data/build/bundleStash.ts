@@ -165,7 +165,11 @@ export function buildStashBundle(input: StashInput, strings: ReadonlyMap<string,
         const alternative =
           codeRecipes.find((other) => other.wildCards > 0 && other.output === recipe.output) ??
           codeRecipes.find((other) => other.wildCards > 0);
-        if (alternative !== undefined) coupon.withWildCards = { qty: alternative.qty, wildCards: alternative.wildCards };
+        if (alternative !== undefined) {
+          coupon.withWildCards = { qty: alternative.qty, wildCards: alternative.wildCards };
+          // The game matches numinputs against the cube's item count, so such a row most likely never fires
+          if (alternative.numInputs !== alternative.qty + alternative.wildCards) coupon.withWildCards.suspect = true;
+        }
         for (const used of [recipe, alternative]) {
           if (used !== undefined && used.numInputs !== used.qty + used.wildCards) {
             warnings.push(
