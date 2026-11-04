@@ -1,15 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { Check, ClipboardCopy, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { selectTheme } from '@/features/settings';
 import { JsoncSyntaxError } from '../engine/jsonc';
+import { locateJsoncPath } from '../engine/jsoncLocate';
+import { jsoncErrorOffset } from '../engine/jsoncProblem';
 import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
 import type { Diagnostic, LootFilter } from '../engine/types';
 import { replaceFilter } from '../store/lootFilterSlice';
 import { DIAGNOSTICS_LIST_ID, DiagnosticsList } from './DiagnosticsList';
+import type { JsonCodeEditorHandle } from './json-editor/JsonCodeEditor';
+
+// CodeMirror is a chunk of its own: only this tab loads it.
+const JsonCodeEditor = lazy(() => import('./json-editor/JsonCodeEditor'));
 
 interface JsonTabProps {
   /** The open model; null when the entry's text is not valid JSON (then the draft starts from `entryText`). */
@@ -35,15 +41,13 @@ interface SyntaxProblem {
   readonly message: string;
 }
 
-/** 0-based offset of a 1-based line and column. */
-function offsetOf(text: string, line: number, column: number): number {
-  let offset = 0;
-  for (let current = 1; current < line; current++) {
-    const next = text.indexOf('\n', offset);
-    if (next === -1) return text.length;
-    offset = next + 1;
-  }
-  return Math.min(offset + column - 1, text.length);
+/** Holds the editor's place (same size and frame) while its chunk loads. */
+function EditorPlaceholder() {
+  return (
+    <div className="flex h-[60vh] min-h-64 items-center justify-center rounded-md border border-input text-sm text-muted-foreground">
+      Loading editor…
+    </div>
+  );
 }
 
 /**
@@ -61,7 +65,8 @@ export function JsonTab({
   onScrolledToProblems,
 }: JsonTabProps) {
   const dispatch = useDispatch();
-  const textarea = useRef<HTMLTextAreaElement>(null);
+  const editor = useRef<JsonCodeEditorHandle>(null);
+  const theme = useSelector(selectTheme);
   const modelText = filter === null ? entryText : serializeLootFilter(filter);
   const [problem, setProblem] = useState<SyntaxProblem | null>(null);
 
@@ -87,14 +92,9 @@ export function JsonTab({
       toast.success('Applied', { description: notes.length === 0 ? undefined : notes.map((note) => `${note.message}.`).join(' ') });
     } catch (error) {
       if (error instanceof JsoncSyntaxError) {
-        const { line, column } = error;
         setProblem({ message: error.message });
-        const element = textarea.current;
-        if (element && line !== undefined && column !== undefined) {
-          const offset = offsetOf(text, line, column);
-          element.focus();
-          element.setSelectionRange(offset, Math.min(offset + 1, text.length));
-        }
+        const offset = jsoncErrorOffset(text, error);
+        if (offset !== undefined) editor.current?.select(offset, offset + 1);
       } else {
         setProblem({ message: error instanceof Error ? error.message : String(error) });
       }
@@ -104,6 +104,13 @@ export function JsonTab({
   const handleRevert = () => {
     onDraftChange(null);
     setProblem(null);
+  };
+
+  const handleShowInJson = (diagnostic: Diagnostic) => {
+    // The current text (the draft, when there is one): the path may sit elsewhere than in the model's text, or be gone.
+    const range = locateJsoncPath(text, diagnostic.path);
+    if (range) editor.current?.select(range.from, range.to);
+    else toast.info('Not found in the current text');
   };
 
   const handleCopy = () => {
@@ -137,33 +144,34 @@ export function JsonTab({
             drops this text and loads them.
           </p>
         )}
-        <Textarea
-          ref={textarea}
-          value={text}
-          onChange={(event) => {
-            const next = event.target.value;
-            // Typed back to where it started: the text follows the model again (as before the first keystroke).
-            onDraftChange(next === base ? null : { base, text: next });
-          }}
-          spellCheck={false}
-          autoCapitalize="off"
-          autoCorrect="off"
-          aria-label="Filter file (JSON)"
-          aria-invalid={problem !== null}
-          className="h-[60vh] min-h-64 resize-y font-mono text-xs leading-relaxed [field-sizing:fixed] md:text-xs"
-        />
+        <Suspense fallback={<EditorPlaceholder />}>
+          <JsonCodeEditor
+            ref={editor}
+            value={text}
+            onChange={(next) => {
+              // The live marker in the editor takes over from the failed Apply's message.
+              setProblem(null);
+              // Typed back to where it started: the text follows the model again (as before the first keystroke).
+              onDraftChange(next === base ? null : { base, text: next });
+            }}
+            dark={theme === 'dark'}
+            ariaLabel="Filter file (JSON)"
+            invalid={problem !== null}
+          />
+        </Suspense>
         {problem !== null && (
           <p role="alert" className="text-sm text-destructive">
-            {problem.message}
+            Not applied: {problem.message}
           </p>
         )}
         <p className="text-xs text-muted-foreground">
           Apply reads the text like an upload. Only the <code>{'//'}</code> comment lines at the top of the file are kept; comments between
-          rules are not shown here and are dropped by Apply and by any edit in the other tabs.
+          rules are not shown here and are dropped by Apply and by any edit in the other tabs. Syntax errors are underlined as you type; the
+          coloured chips at the left show each rule&apos;s and style&apos;s label look (hover for details); Ctrl/Cmd+F searches.
         </p>
       </div>
 
-      <DiagnosticsList diagnostics={diagnostics} onShowRule={onShowRule} />
+      <DiagnosticsList diagnostics={diagnostics} onShowRule={onShowRule} onShowInJson={handleShowInJson} />
     </div>
   );
 }
