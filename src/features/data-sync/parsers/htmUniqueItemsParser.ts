@@ -1,5 +1,6 @@
 import type { HtmUniqueItem, HtmUniqueItemPage } from '@/core/db';
 import { decodeHtmlEntities, extractCellLines, mergeWrappedCellLines } from './shared/parserUtils';
+import { stripHtmlTags } from '@/lib/html';
 
 /**
  * Parses HTM unique items from ESR documentation HTML pages.
@@ -106,19 +107,11 @@ function parseNameCell(cell: Element): ParsedNameCell {
   const parts = bHtml.split(/<br\s*\/?>/i);
 
   // First part: item name
-  result.name = parts[0]
-    .replace(/<[^>]*>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  result.name = stripHtmlTags(parts[0]).replace(/\s+/g, ' ').trim();
 
   // Second part: base item (may be in an <a> tag or plain text)
   if (parts.length > 1) {
-    const baseText = parts
-      .slice(1)
-      .join(' ')
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const baseText = stripHtmlTags(parts.slice(1).join(' ')).replace(/\s+/g, ' ').trim();
 
     // Extract base item name and code from "Base Item (code)" format
     const codeMatch = /^(.+?)\s*\((\w+)\)\s*$/.exec(baseText);
@@ -174,7 +167,7 @@ function parseNotesCell(cell: Element): string {
   const html = cell.innerHTML;
   if (!html.trim()) return '';
 
-  return decodeHtmlEntities(html.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, ''))
+  return decodeHtmlEntities(stripHtmlTags(html.replace(/<br\s*\/?>/gi, ' ')))
     .replace(/\s+/g, ' ')
     .trim();
 }

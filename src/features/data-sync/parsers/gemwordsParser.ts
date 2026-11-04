@@ -2,6 +2,7 @@ import type { Affix, ColumnBonusPools, Gemword, SocketableBonuses } from '@/core
 import { extractName, extractSockets, extractAllowedItems, type GemReqLevelLookup } from './runewordsParser';
 import { isGemName } from './gemsParser';
 import { parseRecipeAffixes, parseRecipeBonusPools } from './shared/parserUtils';
+import { stripHtmlTags } from '@/lib/html';
 
 interface ExtractedGemwordAffixes {
   readonly affixes: Affix[];
@@ -17,12 +18,7 @@ export interface ExtractedGemwordIngredients {
 function extractGemwordIngredients(cell: Element): ExtractedGemwordIngredients {
   const lines = cell.innerHTML
     .split(/<br\s*\/?>/i)
-    .map((line) =>
-      line
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-    )
+    .map((line) => stripHtmlTags(line).replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0);
 
   // Some gemword recipes also require a jewel, listed as a plain "Jewel" line
