@@ -25,7 +25,7 @@ describe('gameDataSlice character + best base', () => {
   it('merges, clamps and persists the character', () => {
     let state = reducer(initial, updateCharacter({ cls: 'pal', level: 150 }));
     state = reducer(state, updateCharacter({ str: -5, dex: 77.6 }));
-    expect(state.character).toEqual({ cls: 'pal', level: 99, str: 0, dex: 78 });
+    expect(state.character).toEqual({ cls: 'pal', level: 110, str: 0, dex: 78 });
     expect(JSON.parse(localStorage.getItem(CHARACTER_STORAGE_KEY) ?? 'null')).toEqual(state.character);
   });
 
@@ -74,7 +74,7 @@ describe('best base URL params', () => {
   });
 
   it('defaults the variant to 1 and drops invalid values', () => {
-    const params = new URLSearchParams('rw=Spirit&v=x&cls=none&lvl=100&str=-1&dex=abc');
+    const params = new URLSearchParams('rw=Spirit&v=x&cls=none&lvl=111&str=-1&dex=abc');
     expect(decodeBestBaseParams(params)).toEqual({ selected: { name: 'Spirit', variant: 1 }, character: {} });
     expect(decodeBestBaseParams(new URLSearchParams('lvl=30'))).toEqual({ selected: null, character: { level: 30 } });
     expect(hasBestBaseParams(new URLSearchParams('search=x'))).toBe(false);

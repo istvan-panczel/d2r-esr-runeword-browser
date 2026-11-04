@@ -177,7 +177,7 @@ const gameDataSlice = createSlice({
     setBaseView(state, action: PayloadAction<BaseView>) {
       state.bases.view = action.payload;
     },
-    /** Merges, clamps and persists the character (level 1–99, str/dex 0–999). */
+    /** Merges, clamps and persists the character (level 1–110, str/dex 0–999). */
     updateCharacter(state, action: PayloadAction<Partial<Character>>) {
       state.character = patchCharacter(state.character, action.payload);
       writePersistentJson(browserStorage(), CHARACTER_STORAGE_KEY, state.character);

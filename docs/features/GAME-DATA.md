@@ -1215,7 +1215,7 @@ recipes therefore show up as "unmatched txt".
 
 Top row: a cmdk **runeword picker** (`components/ComboPicker.tsx`, every query term must appear in name, recipe or
 allowed items; variant number shown for multi-variant names; first 100 hits) and the Copy Link button. Second row: the
-**character form** (`components/CharacterForm.tsx`): class (Any + the 8 classes from `types.json`), level 1–99,
+**character form** (`components/CharacterForm.tsx`): class (Any + the 8 classes from `types.json`), level 1–110 (the ESR cap, `maxLevel` of skills.json),
 Strength and Dexterity 0–999, and the toggles "Include bases I can't use yet" and "Ethereal (estimate)".
 
 For the selected runeword the page shows the name, socket badge, recipe and allowed/excluded items, a "Game files:
@@ -1253,7 +1253,7 @@ character, the rest is kept.
 | `rw`  | selected.name    | HTM runeword name                     |
 | `v`   | selected.variant | number (default 1)                    |
 | `cls` | character.cls    | `any` or a class code (`ama` … `war`) |
-| `lvl` | character.level  | 1–99                                  |
+| `lvl` | character.level  | 1–110                                 |
 | `str` | character.str    | 0–999                                 |
 | `dex` | character.dex    | 0–999                                 |
 

@@ -19,6 +19,7 @@ import { PAIRED_STATS, STAT } from '@/features/stash/parser/parseItem';
 import { LEVEL_REQ, REQ_PERCENT } from '@/features/stash/engine/items/baseLines';
 import { DAMAGE_GROUPS } from '@/features/stash/engine/items/statValues';
 import { STAT_ID } from '@/features/stash/engine/items/textData';
+import { CHARACTER_LEVEL_RANGE } from './store/character';
 
 const OUTPUT_DIR = resolve(__dirname, '../../../public/game-data');
 
@@ -157,5 +158,13 @@ describe('loot filter stat constants', () => {
       .map((row) => row.id);
     const scaled = STAT_SCALES.filter((scale) => scale.kind !== 'shift').map((scale) => scale.id);
     expect(perLevel.sort((a, b) => a - b)).toEqual(scaled.sort((a, b) => a - b));
+  });
+});
+
+describe('character level cap', () => {
+  const skills = readBundle<{ maxLevel: number }>('skills');
+
+  it('Best Base allows the same level cap as the game files', () => {
+    expect(CHARACTER_LEVEL_RANGE.max).toBe(skills.maxLevel);
   });
 });
