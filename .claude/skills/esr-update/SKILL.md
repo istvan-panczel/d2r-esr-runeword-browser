@@ -220,8 +220,7 @@ commit attribution rules; pre-commit hooks run Prettier/ESLint. Never push.
   `skilldetails.json`, `tiers.json` and icon indexes with a fresh build from the clone): if the release diff explains the
   new count, propose updating the expected numbers (and the counts in the docs: `grep -rln '3\.2\.<old>' docs` lists
   the pages that quote the old version's numbers — `GAME-DATA.md`, `LOOT-FILTER.md`, `SKILLS.md`, `UNIQUE-ITEMS.md`,
-  `CORE-DATA.md`, `technical/DATA-MODELS.md`, `technical/NAVIGATION.md` at 3.2.24; the `docs/research` pages are
-  historical and stay); otherwise investigate. Besides the counts, the test pins loot-filter rows (`r48` never drops,
+  `CORE-DATA.md`, `technical/DATA-MODELS.md`, `technical/NAVIGATION.md` at 3.2.24); otherwise investigate. Besides the counts, the test pins loot-filter rows (`r48` never drops,
   disabled unique ids 0 and 690–695), the areas shape (4 zones per tier, the 100–108 ladder, The Hidden Vault, the
   five towns) and the cube family list (every family keeps at least one row): see step 3.3 for what each means. A mismatch between committed and regenerated skill icons or item icons
   means a generator was not rerun: `npm run game-data:icons` (needs the vanilla art folder) and

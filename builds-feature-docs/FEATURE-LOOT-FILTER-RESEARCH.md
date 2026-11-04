@@ -3,8 +3,8 @@
 Status: **building** (unblocked 2026-10-11 by the author's guide, section 4). Branch `feat/loot-filter`.
 ESR at the time of research: 3.2.12 (loot filters exist since 3.2.09).
 
-> **2026-10-11:** the mod author supplied the "ESR Loot Filter Guide" (PDF and Markdown copy in
-> `builds-feature-docs/loot-filter/`), an updated `sullys-qol.json` (302 rules, 12 named styles), the sound files and
+> **2026-10-11:** the mod author supplied the "ESR Loot Filter Guide" ([PDF in the ESR repository](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/blob/main/LootFilters/ESR%20Loot%20Filter%20Guide.pdf),
+> Markdown copy in `builds-feature-docs/loot-filter/`), an updated `sullys-qol.json` (302 rules, 12 named styles), the sound files and
 > the `goldstar` minimap sprite. The guide is the authoritative schema and supersedes sections 2.3, 3 and 3.1 below,
 > which are kept as history. Section 4 records which questions it answers; section 5 holds the updated decisions.
 
