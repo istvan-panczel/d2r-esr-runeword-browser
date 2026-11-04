@@ -128,7 +128,7 @@ export function BaseFamilyTable({ view, onSelect }: BaseFamilyTableProps) {
             </tr>
             <tr>
               <td colSpan={span} className="border-t px-2 py-2">
-                <ul className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                <ul className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
                   {loners.map(({ base, typeName }) => (
                     <li key={base.code} className="flex min-w-0 items-start gap-2">
                       <ItemIcon item={{ kind: 'base', code: base.code }} size={32} />

@@ -17,6 +17,9 @@ import {
   selectTextSize,
   setUseDiabloFont,
   selectUseDiabloFont,
+  setPageWidth,
+  selectPageWidth,
+  PAGE_WIDTH_OPTIONS,
   type TextSize,
 } from '@/features/settings';
 import { initDataLoad, selectIsLoading, selectNetworkWarning, selectIsUsingCachedData } from '@/core/store';
@@ -39,6 +42,7 @@ export function SettingsDrawer() {
   const theme = useSelector(selectTheme);
   const textSize = useSelector(selectTextSize);
   const useDiabloFont = useSelector(selectUseDiabloFont);
+  const pageWidth = useSelector(selectPageWidth);
   const isLoading = useSelector(selectIsLoading);
   const networkWarning = useSelector(selectNetworkWarning);
   const isUsingCachedData = useSelector(selectIsUsingCachedData);
@@ -144,6 +148,32 @@ export function SettingsDrawer() {
             />
             <p className="text-sm text-muted-foreground text-center">{TEXT_SIZE_LABELS[textSizeIndex]}</p>
           </div>
+
+          {/* Page Width Section (also the header's width menu, md and up) */}
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium leading-none">Page width</legend>
+            <div className="space-y-2">
+              {PAGE_WIDTH_OPTIONS.map((option) => (
+                <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="pageWidth"
+                    checked={pageWidth === option.value}
+                    onChange={() => {
+                      dispatch(setPageWidth(option.value));
+                    }}
+                    className="accent-primary"
+                  />
+                  <span>
+                    {option.label}
+                    {option.value === 'standard' && ' (default)'}
+                    <span className="text-muted-foreground"> · {option.description}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">How wide the pages may grow on large monitors.</p>
+          </fieldset>
 
           {/* Data Section */}
           <div className="space-y-3">

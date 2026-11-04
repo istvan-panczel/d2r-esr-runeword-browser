@@ -16,7 +16,7 @@ interface ItemCardsProps {
  */
 export function ItemCards({ rows }: ItemCardsProps) {
   return (
-    <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
       {rows.map((row) => (
         <li key={row.key}>
           <ItemCard row={row} />

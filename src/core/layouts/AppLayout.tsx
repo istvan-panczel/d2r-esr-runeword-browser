@@ -4,9 +4,12 @@ import { Header } from '@/core/components/Header';
 import { SettingsDrawer } from '@/core/components/SettingsDrawer';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
+import { APP_FRAME_CLASS } from '@/components/pageWidthClasses';
+import { cn } from '@/lib/utils';
 import { selectIsInitialized, selectError } from '@/core/store';
 import { startDataSync } from '@/core/startup';
 import { AuthOverlays, selectAuthIsConfigured } from '@/features/auth';
+import { selectPageWidth } from '@/features/settings';
 // Static-bundle routes (the home page, guide, loot filters, enhance) skip both startup gates below.
 import { isStaticBundlePath } from './staticBundleRoutes';
 
@@ -14,6 +17,7 @@ export function AppLayout() {
   const isInitialized = useSelector(selectIsInitialized);
   const error = useSelector(selectError);
   const isSupabaseEnabled = useSelector(selectAuthIsConfigured);
+  const pageWidth = useSelector(selectPageWidth);
   const { pathname } = useLocation();
   const skipsStartupGate = isStaticBundlePath(pathname);
 
@@ -50,7 +54,8 @@ export function AppLayout() {
   return (
     <div className="min-h-svh flex flex-col overflow-x-clip">
       <Header />
-      <main className="flex-1 container mx-auto p-4">
+      {/* The frame width follows the Page width setting (the pages inside set their own width, see PageShell). */}
+      <main className={cn('flex-1 p-4', APP_FRAME_CLASS[pageWidth])}>
         <Outlet />
       </main>
       <SettingsDrawer />

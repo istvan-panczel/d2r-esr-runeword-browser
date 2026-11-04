@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { PageShell } from '@/components/PageShell';
 import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -100,7 +101,7 @@ export function UserProfileScreen() {
       );
     }
     return (
-      <div className="mx-auto max-w-7xl">
+      <PageShell>
         <div className="flex items-center gap-4">
           <Skeleton className="size-16 rounded-full" />
           <div className="flex flex-col gap-2">
@@ -108,19 +109,19 @@ export function UserProfileScreen() {
             <Skeleton className="h-4 w-32" />
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
           {SKELETON_KEYS.map((key) => (
             <BuildCardSkeleton key={key} />
           ))}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   const isOwner = currentUserId !== null && currentUserId === profile.id;
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <PageShell>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Avatar className="size-16">
@@ -161,7 +162,7 @@ export function UserProfileScreen() {
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
               {builds.map((build) => (
                 <BuildCard key={build.id} build={build} currentEsrVersion={currentEsrVersion} liked={likedBuildIds.has(build.id)} />
               ))}
@@ -190,6 +191,6 @@ export function UserProfileScreen() {
           }}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

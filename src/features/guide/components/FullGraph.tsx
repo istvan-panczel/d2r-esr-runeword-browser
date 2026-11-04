@@ -17,6 +17,14 @@ import { GUIDE_PROSE_FONT } from './styles';
 
 /** Height / width of the graph panel. */
 const ASPECT = 0.6;
+/**
+ * The graph is never taller than the window minus this much (rem: about the header, the guide banner and the title),
+ * so a Wide or Full page on a large monitor does not get a graph taller than the screen (width × 0.6 is about 2000 px
+ * on a 3440 px window). It is never capped below MIN_CAP_REM either: that is the height of the Standard page's graph
+ * (80rem × 0.6), which stays as it was.
+ */
+const VIEWPORT_MARGIN_REM = 15;
+const MIN_CAP_REM = 48;
 /** Label size in rem (matches LABEL_CLASS) */
 const LABEL_REM = 0.75;
 // paint-order: a background-coloured halo keeps labels legible where they cross an edge (same as the local graph).
@@ -195,7 +203,7 @@ export function FullGraph({ order, visited, className }: FullGraphProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   // Measured panel width and label size in px; null until measured (the panel is display:none below lg, so phones
   // never run the layout).
-  const [box, setBox] = useState<{ width: number; fontSize: number } | null>(null);
+  const [box, setBox] = useState<{ width: number; fontSize: number; maxHeight: number } | null>(null);
   const [active, setActive] = useState<string | null>(null);
 
   // Same approach as the local graph: the SVG is drawn 1:1 in CSS pixels, so rem labels render at their real size.
@@ -206,17 +214,28 @@ export function FullGraph({ order, visited, className }: FullGraphProps) {
       const rootPx = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const width = Math.round(panel.clientWidth);
       const fontSize = rootPx * LABEL_REM;
-      if (width > 0) setBox((current) => (current?.width === width && current.fontSize === fontSize ? current : { width, fontSize }));
+      const maxHeight = Math.round(Math.max(MIN_CAP_REM * rootPx, window.innerHeight - VIEWPORT_MARGIN_REM * rootPx));
+      if (width > 0)
+        setBox((current) =>
+          current?.width === width && current.fontSize === fontSize && current.maxHeight === maxHeight
+            ? current
+            : { width, fontSize, maxHeight }
+        );
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(panel);
+    // The cap follows the window height, which the panel's own size does not reflect
+    window.addEventListener('resize', measure);
     return () => {
       observer.disconnect();
+      window.removeEventListener('resize', measure);
     };
   }, []);
 
-  const height = box === null ? 0 : Math.round(box.width * ASPECT);
+  const naturalHeight = box === null ? 0 : Math.round(box.width * ASPECT);
+  const capped = box !== null && naturalHeight > box.maxHeight;
+  const height = box === null ? 0 : Math.min(naturalHeight, box.maxHeight);
   const graph = box === null ? null : layoutFullGraph(bundle, { width: box.width, height, fontSize: box.fontSize });
   const bySlug = new Map(graph?.nodes.map((node) => [node.slug, node]));
   const rank = new Map(order.map((slug, index) => [slug, index]));
@@ -231,7 +250,8 @@ export function FullGraph({ order, visited, className }: FullGraphProps) {
 
   return (
     <section aria-label="Map of every guide note" className={cn('space-y-2', className)}>
-      <div ref={panelRef} className="rounded-lg border bg-card" style={{ aspectRatio: `1 / ${String(ASPECT)}` }}>
+      {/* Capped: the SVG (viewBox width × capped height) sets the panel height instead of the aspect ratio */}
+      <div ref={panelRef} className="rounded-lg border bg-card" style={capped ? undefined : { aspectRatio: `1 / ${String(ASPECT)}` }}>
         {graph !== null && box !== null && (
           <svg
             viewBox={`0 0 ${String(box.width)} ${String(height)}`}

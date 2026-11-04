@@ -275,7 +275,13 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   };
 
   return (
-    <div id={RULE_EDITOR_ID} className="scroll-mt-4 space-y-4">
+    // From @10xl/page (Full pages of 2400 px and up) the conditions and the actions sit side by side: "if this, then
+    // that" reads left to right and the editor needs half the scrolling. Below it the actions card stays under the
+    // conditions (Standard pages never reach @8xl). ActionsEditor picks its tile columns for both cases.
+    <div
+      id={RULE_EDITOR_ID}
+      className="scroll-mt-4 space-y-4 @10xl/page:grid @10xl/page:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @10xl/page:items-start @10xl/page:gap-4 @10xl/page:space-y-0"
+    >
       <Card className="gap-4">
         <CardHeader>
           <CardTitle id={RULE_TITLE_ID} tabIndex={-1} className="flex items-center gap-2 outline-none">
@@ -291,7 +297,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
               </Badge>
             )}
           </CardTitle>
-          <CardDescription id={CHECK_HINT_ID} className="text-xs">
+          <CardDescription id={CHECK_HINT_ID} className="text-xs @8xl/page:max-w-4xl">
             {isCheck ? (
               "An in-game check: it prints what the plugin reads for the next rule's stats in front of the item name. Compare the numbers with the tooltip, then delete this rule."
             ) : check.ok ? (
@@ -322,36 +328,39 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
           )}
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5">
-              <Checkbox
-                id={ENABLED_ID}
-                aria-describedby={ENABLED_HINT_ID}
-                checked={rule.disabled !== true}
-                onCheckedChange={(checked) => dispatch(setRuleDisabled({ index, disabled: checked !== true }))}
-              />
-              <Label htmlFor={ENABLED_ID} className="font-normal">
-                Enabled
-              </Label>
+          {/* Side by side on wide pages, in line with the two-column condition grids below. */}
+          <div className="space-y-6 @8xl/page:grid @8xl/page:grid-cols-2 @8xl/page:items-start @8xl/page:gap-4 @8xl/page:space-y-0">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id={ENABLED_ID}
+                  aria-describedby={ENABLED_HINT_ID}
+                  checked={rule.disabled !== true}
+                  onCheckedChange={(checked) => dispatch(setRuleDisabled({ index, disabled: checked !== true }))}
+                />
+                <Label htmlFor={ENABLED_ID} className="font-normal">
+                  Enabled
+                </Label>
+              </div>
+              <p id={ENABLED_HINT_ID} className="text-xs text-muted-foreground">
+                {rule.disabled === true
+                  ? 'Disabled: kept in the file under disabledRules, which the game ignores. The Test tab skips it.'
+                  : 'Untick to switch the rule off without deleting it: it is kept in the file under disabledRules, which the game ignores.'}
+              </p>
             </div>
-            <p id={ENABLED_HINT_ID} className="text-xs text-muted-foreground">
-              {rule.disabled === true
-                ? 'Disabled: kept in the file under disabledRules, which the game ignores. The Test tab skips it.'
-                : 'Untick to switch the rule off without deleting it: it is kept in the file under disabledRules, which the game ignores.'}
-            </p>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={COMMENT_ID}>Comment</Label>
-            <Input
-              id={COMMENT_ID}
-              aria-describedby={COMMENT_HINT_ID}
-              value={rule.comment ?? ''}
-              onChange={(event) => patch({ comment: event.target.value === '' ? undefined : event.target.value })}
-            />
-            <p id={COMMENT_HINT_ID} className="text-xs text-muted-foreground">
-              A note for yourself; the plugin ignores it.
-            </p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={COMMENT_ID}>Comment</Label>
+              <Input
+                id={COMMENT_ID}
+                aria-describedby={COMMENT_HINT_ID}
+                value={rule.comment ?? ''}
+                onChange={(event) => patch({ comment: event.target.value === '' ? undefined : event.target.value })}
+              />
+              <p id={COMMENT_HINT_ID} className="text-xs text-muted-foreground">
+                A note for yourself; the plugin ignores it.
+              </p>
+            </div>
           </div>
 
           <RuleDiagnostics diagnostics={diagnostics} />
@@ -360,7 +369,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
 
           <ConditionSection title="Which items">{ITEM_LIST_FIELDS.map(listField)}</ConditionSection>
 
-          <ConditionSection title="Item properties">
+          {/* Short controls (segmented choices, number boxes): three per row on wide pages instead of two stretched ones. */}
+          <ConditionSection title="Item properties" className="@8xl/page:grid-cols-3">
             <ConditionField
               id={fieldId('quality')}
               label="Quality"
@@ -441,7 +451,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
             </p>
           </ConditionSection>
 
-          <ConditionSection title="Where and when">
+          <ConditionSection title="Where and when" className="@8xl/page:grid-cols-3">
             {AREA_FIELDS.map(listField)}
             <ConditionField
               id={fieldId('location')}

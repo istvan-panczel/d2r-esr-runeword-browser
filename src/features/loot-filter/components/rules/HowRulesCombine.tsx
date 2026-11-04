@@ -12,7 +12,7 @@ export function HowRulesCombine() {
         <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />
         How rules combine (AND, OR, hide)
       </summary>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground @8xl/page:max-w-4xl">
         <li>
           Every condition in a rule must hold (AND). Inside one list any value matches (OR): item codes{' '}
           <code className={CODE}>cap, skp</code> means either.

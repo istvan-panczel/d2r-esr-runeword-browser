@@ -53,7 +53,7 @@ src/
 │   ├── auth/                   # Supabase sign-in (optional backend)
 │   ├── builds/                 # Shared builds (optional backend)
 │   ├── favorites/              # Recipe favourites synced to Supabase
-│   └── settings/               # Theme, text size, Diablo font
+│   └── settings/               # Theme, text size, Diablo font, page width
 │
 ├── lib/                        # Third-party library configurations
 │   └── utils.ts                # shadcn/ui utility (cn())

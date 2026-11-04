@@ -186,7 +186,8 @@ function SetsBrowser({ bundle }: { readonly bundle: SetsBundle }) {
           }}
         />
       ) : (
-        <div className="space-y-4">
+        // One set per row on the Standard page; two from 1920 px, three from 2880 px (Wide and Full page widths)
+        <div className="space-y-4 @9xl/page:grid @9xl/page:grid-cols-2 @9xl/page:items-start @9xl/page:gap-4 @9xl/page:space-y-0 @11xl/page:grid-cols-3">
           {shown.map((view) => (
             <SetCard key={view.set.id} set={view.set} highlighted={view.highlighted} sources={sources} tiers={tiers} />
           ))}

@@ -5,6 +5,7 @@ import { ListPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { effectiveActions } from '../engine/actions';
 import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
@@ -74,7 +75,15 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   };
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+    // Wide and Full pages (`/page` container steps, see PageShell): the list grows (its summaries truncate less) and the
+    // editor gets the rest, which RuleEditor fills with more columns. Standard pages never reach @8xl.
+    <div
+      className={cn(
+        'grid items-start gap-4 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]',
+        '@8xl/page:grid-cols-[minmax(0,28rem)_minmax(0,1fr)] @9xl/page:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]',
+        '@10xl/page:grid-cols-[minmax(0,36rem)_minmax(0,1fr)] @11xl/page:grid-cols-[minmax(0,40rem)_minmax(0,1fr)]'
+      )}
+    >
       <section
         aria-label="Rule list"
         className="flex min-w-0 flex-col rounded-xl border bg-card lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]"

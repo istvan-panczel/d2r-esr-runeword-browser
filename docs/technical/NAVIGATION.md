@@ -117,7 +117,7 @@ The page skips the startup loading gate (exact match on `/`, see below), so it r
 
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│ D2R ESR  Recipes▾ Database▾ Tools▾ Guide Builds [📖] [☀] [GH] [⚙] │
+│ D2R ESR  Recipes▾ Database▾ Tools▾ Guide Builds [📖][↔][☀][GH][⚙] │
 ├───────────────────────────────────────────────────────────────────────┤
 │                                                                       │
 │                         Main Content Area                             │
@@ -125,6 +125,12 @@ The page skips the startup loading gate (exact match on `/`, see below), so it r
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
 ```
+
+The header row and `<main>` share one frame width, `APP_FRAME_CLASS` in `src/components/pageWidthClasses.ts`,
+picked by the Page width setting: Standard keeps Tailwind's `container` (the look from before the setting: the
+header spans the 1536 px container, the 1280 px pages sit centred inside it), Wide is the 1920 px page plus the
+gutters and Full is the whole window, so in Wide and Full the header edges line up with the page. `PageShell` sets the
+page width inside the frame (see [UI-COMPONENTS.md](./UI-COMPONENTS.md#pageshell)).
 
 ### Startup loading gate
 
@@ -168,7 +174,9 @@ cards render from the same config (group `description`, link `homeLinks`):
   Tab move through the items, Escape closes; choosing a link closes the menu.
 - **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
   Frame Table, Patch notes, Changelog, Releases, ESR Discord, ESR on GitHub, then a "Community tools" label with ESR Wiki Overlay, ESR Docs,
-  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), theme toggle, GitHub link,
+  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), the page width menu (↔ `MoveHorizontal` icon, md and up,
+  `PageWidthMenu.tsx`: a radio list Standard 1280 px / Wide 1920 px / Full screen, the same setting as the Settings
+  drawer), theme toggle, GitHub link,
   `AuthControls` (Sign In / user menu, Supabase only), settings cog.
 - **Mobile (below md)**: hamburger opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
   the group of the current route starts open, Guide and Builds are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
@@ -240,6 +248,11 @@ Opens from the right side when the cog icon is clicked.
 │                             │  ○───●───○───○  (slider)      │
 │                             │         Normal                │
 │                             │─────────────────────────────── │
+│                             │  Page width                   │
+│                             │  ○ Standard (default) · 1280 px│
+│                             │  ○ Wide · 1920 px             │
+│                             │  ○ Full · Full screen         │
+│                             │─────────────────────────────── │
 │                             │  Data                         │
 │                             │  [Force Refresh Data]         │
 │                             │                               │
@@ -267,6 +280,10 @@ Opens from the right side when the cog icon is clicked.
 - **Theme Toggle**: Dark (default) / Light, persisted in localStorage
 - **Text Size**: 4-step slider (small / normal / large / extralarge), persisted in localStorage
 - **Diablo Font**: Toggle for thematic font rendering, persisted in localStorage
+- **Page width**: Standard (default, 1280 px pages) / Wide (1920 px) / Full (the whole window minus the side gutters),
+  persisted in localStorage (`pageWidth`, an unknown value reads as Standard). Also in the header's ↔ menu (md and
+  up). It widens the `PageShell` `wide` pages and the header row; the guide spine's reading column, the guide note and
+  the home page keep their widths
 - **Refresh Data**: Force re-fetch and parse all data
 - **Version display**: App version, game-file ESR version (manifest, generated date) and the docs data line
   ("Docs data: ESR … (site updated …)", left out until known)
@@ -352,11 +369,14 @@ interface SettingsState {
   readonly theme: Theme; // 'dark' | 'light'
   readonly textSize: TextSize; // 'small' | 'normal' | 'large' | 'extralarge'
   readonly useDiabloFont: boolean;
+  readonly pageWidth: PageWidthMode; // 'standard' | 'wide' | 'full'
   readonly isDrawerOpen: boolean;
 }
 ```
 
 All settings (except `isDrawerOpen`) are persisted to localStorage and restored on startup. An inline script in `index.html` applies the stored theme, Diablo font class, and text size to `<html>` before first paint (avoids a flash of the default theme); `ThemeInitializer` then keeps them in sync with the Redux state.
+The page width needs no pre-paint step: the slice reads it synchronously into its initial state and the layout
+components (`AppLayout`, `Header`, `PageShell`) apply it on their first render.
 
 ## Feature Location
 
@@ -373,6 +393,7 @@ src/core/
 │   └── navConfig.test.ts   # Paths exist in the router, unique labels
 └── components/
     ├── Header.tsx          # Top navigation bar (NavigationMenu groups, mobile accordion)
+    ├── PageWidthMenu.tsx   # Header quick control for the Page width setting (md and up)
     ├── navTabClasses.ts    # Shared nav link / sub-tab classes
     └── SettingsDrawer.tsx  # Settings slide-out panel
 
@@ -381,11 +402,12 @@ src/features/settings/
 │   └── ThemeInitializer.tsx  # Apply theme on initial render
 ├── constants/
 │   ├── textSize.ts           # Text size pixel mappings
-│   └── types.ts              # Theme, TextSize types
+│   ├── pageWidth.ts          # Page width modes, labels, storage key, validator
+│   └── types.ts              # Theme, TextSize, PageWidthMode types
 ├── hooks/
 │   └── useTheme.ts           # useThemeSync / useTextSizeSync / useDiabloFontSync (apply settings to <html>)
 └── store/
-    └── settingsSlice.ts      # Theme, text size, font, drawer state
+    └── settingsSlice.ts      # Theme, text size, font, page width, drawer state
 ```
 
 ## Accessibility

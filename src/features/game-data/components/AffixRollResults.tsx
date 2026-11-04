@@ -5,6 +5,15 @@ import { filterRollable, formatWeight, groupRollable } from '../utils/filterAffi
 import { AffixCard } from './AffixCard';
 import { AffixList } from './AffixList';
 
+/**
+ * One affix group: its heading and cards, stacked (the Standard page); pages wider than that put the cards side by
+ * side, two or three per row in a half-width section (prefixes, suffixes), four to seven in the full-width automods.
+ */
+const GROUP_CLASS = {
+  half: 'space-y-2 @8xl/page:grid @8xl/page:grid-cols-2 @8xl/page:gap-2 @8xl/page:space-y-0 @10xl/page:grid-cols-3',
+  full: 'space-y-2 @8xl/page:grid @8xl/page:grid-cols-4 @8xl/page:gap-2 @8xl/page:space-y-0 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7',
+} as const;
+
 interface AffixRollResultsProps {
   readonly base: BaseItem;
   readonly eligible: EligibleAffixes;
@@ -30,7 +39,7 @@ export function AffixRollResults({ base, eligible, filters, typeNames, className
         (base.autoGroup === null ? (
           <p className="text-sm text-muted-foreground">{base.name} has no automod pool.</p>
         ) : (
-          <RollSection title={`Automods (group ${String(base.autoGroup)})`} rollable={eligible.automagic} {...sectionProps} />
+          <RollSection title={`Automods (group ${String(base.autoGroup)})`} rollable={eligible.automagic} width="full" {...sectionProps} />
         ))}
     </div>
   );
@@ -42,9 +51,11 @@ interface RollSectionProps {
   readonly filters: AffixFilters;
   readonly typeNames: ReadonlyMap<string, string>;
   readonly classNames: ReadonlyMap<string, string>;
+  /** Half the page (prefixes, suffixes side by side) or all of it (automods): how many cards fit per row */
+  readonly width?: keyof typeof GROUP_CLASS;
 }
 
-function RollSection({ title, rollable, filters, typeNames, classNames }: RollSectionProps) {
+function RollSection({ title, rollable, filters, typeNames, classNames, width = 'half' }: RollSectionProps) {
   const shown = filterRollable(rollable, filters);
 
   return (
@@ -66,8 +77,8 @@ function RollSection({ title, rollable, filters, typeNames, classNames }: RollSe
           items={shown}
           render={(visible) =>
             groupRollable(visible).map((group) => (
-              <div key={group.group} className="space-y-2">
-                <h3 className="text-xs font-medium text-muted-foreground">
+              <div key={group.group} className={GROUP_CLASS[width]}>
+                <h3 className="text-xs font-medium text-muted-foreground @8xl/page:col-span-full">
                   Group {group.group} · {formatWeight(group.weight)} · one affix per group
                 </h3>
                 {group.affixes.map(({ affix, weight }) => (

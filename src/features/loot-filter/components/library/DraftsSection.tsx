@@ -43,7 +43,7 @@ export function DraftsSection({ drafts, sharingEnabled, signedIn }: DraftsSectio
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
         {sorted.map((draft) => {
           const { entry } = draft;
           const links = draftLinks(entry, draft.needsSignIn);

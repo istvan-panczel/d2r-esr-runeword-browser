@@ -149,7 +149,7 @@ function BaseList({ bases, renderBase }: BaseListProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7 gap-4">
         {visible.map((base) => (
           <div key={base.code} className="card-visibility-auto">
             {renderBase(base)}

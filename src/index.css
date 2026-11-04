@@ -13,6 +13,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Page widths beyond Tailwind's 7xl (80rem = 1280 px, the Standard page). Each one is a `max-w-*` size and a container
+ * query step (`@8xl/page:grid-cols-4`) for the content of `PageShell`, which is the `page` container. How pages use
+ * them: src/components/PageShell.tsx.
+ */
+@theme {
+  --container-8xl: 96rem; /* 1536 px: 4 result cards */
+  --container-9xl: 120rem; /* 1920 px: the Wide page width, 5 cards */
+  --container-10xl: 150rem; /* 2400 px: 6 cards */
+  --container-11xl: 180rem; /* 2880 px: 7 cards */
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

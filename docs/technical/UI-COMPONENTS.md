@@ -49,6 +49,7 @@ Location: `src/components/`
 Reusable components used across features:
 
 - `PageShell.tsx` - Page width + title row (see [Page pattern](#page-pattern))
+- `pageWidthClasses.ts` - The Page width setting's classes: app frame, `PageShell` `wide` width (see [`PageShell`](#pageshell))
 - `PageHeader.tsx` - The title row itself: title (+ count), actions, meta line, tab row
 - `FilterPanel.tsx` - Card surface around a page's filter controls
 - `FilterGroup.tsx` - `FilterGroup` (one labelled checkbox row), `FilterGroupList`, `FilterGroupHeader`
@@ -84,13 +85,43 @@ PageShell            one centred width + the title row
 </PageShell>
 ```
 
-- `width`: `wide` (default, `max-w-7xl` = 1280 px, centred) or `narrow` (`max-w-2xl`, the guide spine's reading column).
-  `wide` was chosen because it is the width Builds already used, it fits three result cards per row at 1280 px (at a
-  1280 px window it is the same as the old full container) and it stops the card grids from stretching edge to edge on
-  large monitors. The home page keeps its own `max-w-5xl` landing column and is the reference for the card look.
+- `width`: `wide` (default, centred) or `narrow` (`max-w-2xl`, the guide spine's reading column, the same in every
+  Page width mode). `wide` follows the **Page width** setting (Settings drawer + the header's ↔ menu, see
+  [NAVIGATION.md](./NAVIGATION.md#settings-contents)); the classes live in `src/components/pageWidthClasses.ts`:
+
+  | Mode               | `PageShell` `wide`              | App frame (header row + `<main>`)                 |
+  | ------------------ | ------------------------------- | ------------------------------------------------- |
+  | Standard (default) | `max-w-7xl` = 1280 px           | Tailwind `container` (stepped, 1536 px at `2xl`)  |
+  | Wide               | `max-w-9xl` = 1920 px           | `max-w-[122rem]` = the 1920 px page + the gutters |
+  | Full               | `max-w-none` (the gutters only) | `w-full`                                          |
+
+  Standard is the look from before the setting: the header row still spans the 1536 px container while the pages sit
+  centred at 1280 px inside it. In Wide and Full the header's logo and icons line up with the page edges. Widths are
+  rem based (they grow with the Text size setting; px figures are at 16 px). The standard `wide` width was chosen
+  because it is the width Builds already used, it fits three result cards per row at 1280 px and it stops the card grids
+  from stretching edge to edge on large monitors. The home page keeps its own `max-w-5xl` landing column in every mode
+  and is the reference for the card look.
+
+- **Container queries**: the shell is the `page` size container (`@container/page`), so content can follow the page's
+  real width instead of the viewport. Steps (`src/index.css` `@theme`, also usable as `max-w-*`): Tailwind's `@3xl`
+  768 px, `@5xl` 1024 px, `@7xl` 1280 px, plus `@8xl` 1536 px (4 cards), `@9xl` 1920 px (5), `@10xl` 2400 px (6),
+  `@11xl` 2880 px (7). Keep a grid's viewport classes (the Standard layout) and add columns from `@8xl/page:` up
+  (`grid sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5`): a Standard page is never wider
+  than 1280 px, so it never matches them. Always name the container (`/page`); a bare `@8xl:` queries the nearest
+  container of any kind (shadcn's `CardHeader` is one). `container-type: inline-size` leaves `position: fixed`
+  (`ScrollToTopButton`, the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
+  (Enhance outcomes, cube rows, materials) use CSS columns instead: `ROW_LIST_COLUMNS` in
+  `src/features/game-data/components/rowListColumns.ts`.
+- Screens that set their own frame: the home page (`max-w-5xl`), the guide note (`max-w-2xl`, `lg:max-w-7xl` in every
+  mode: a reading column plus the graph aside), the guide map (`max-w-2xl`, from `lg` the setting via
+  `PAGE_WIDE_LG_CLASS`) and the build detail with the player sidebar (Standard: breaks out of the container to a 1920 px
+  cap; Wide and Full: fills the app frame, so it lines up with the header, and is itself the `page` container: from
+  `@10xl` a weapon swap sits beside the player gear, and without one the gear column stops at 120rem). The user profile
+  uses a width-only `PageShell`. The guide map graph is never taller than the window minus 15rem (never capped below
+  48rem, the Standard graph height), so a Full page does not get a graph taller than the screen.
 - `title` omitted: the shell only sets the width. Layout routes use this (`GuideLayout`, `LootFilterLayout`) and their
   children render their own headers (the loot filter editor's inline-editable name, the guide note's breadcrumb card).
-  Nested shells are harmless (the same `mx-auto max-w-*`).
+  Nested shells are harmless (the same `mx-auto max-w-*`; `/page` container queries resolve to the innermost one).
 - `count` renders as "Title (N)" inside the `h1`, so the accessible name stays "Runewords (409)".
 - `actions` sit right of the title and wrap under it on phones (Builds: "Create Build"; Guide: the map link).
 - `meta` is a muted line under the title; `nav` is a tab row with a hairline under it (`GameDataLayout`).

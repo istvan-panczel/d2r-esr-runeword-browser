@@ -179,7 +179,7 @@ function ItemSkills({
         Skills no class has in its tree, granted by uniques, set items and runewords (procs, item-only spells, ESR's elemental surges and
         masteries). Many have no description text in the game files.
       </p>
-      <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-8">
+      <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-8 @8xl/page:grid-cols-10 @9xl/page:grid-cols-12 @10xl/page:grid-cols-14 @11xl/page:grid-cols-16">
         {view.itemSkills.map((skill) => {
           const variant = disambiguation(skill, duplicates);
           const count = grantCount(skill.grantedBy?.length ?? 0);
@@ -217,7 +217,7 @@ function SearchResults({
       <p className="px-1 text-xs text-muted-foreground">
         {String(results.length)} skill{results.length === 1 ? '' : 's'} found
       </p>
-      <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-8">
+      <div className="grid grid-cols-3 gap-1 sm:grid-cols-5 md:grid-cols-6 xl:grid-cols-8 @8xl/page:grid-cols-10 @9xl/page:grid-cols-12 @10xl/page:grid-cols-14 @11xl/page:grid-cols-16">
         {results.map((skill) => (
           <SkillTile
             key={skill.id}
