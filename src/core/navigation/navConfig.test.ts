@@ -97,6 +97,8 @@ describe('navConfig', () => {
       expect(tool.href.startsWith('https://')).toBe(true);
       if (tool.sourceUrl !== undefined) expect(tool.sourceUrl.startsWith('https://')).toBe(true);
       expect(tool.description.trim()).not.toBe('');
+      expect(tool.features.length).toBeGreaterThan(0);
+      expect(new Set(tool.features).size).toBe(tool.features.length);
     });
 
     it('gives archives no source link', () => {

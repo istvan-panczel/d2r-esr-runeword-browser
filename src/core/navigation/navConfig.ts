@@ -8,15 +8,21 @@ import { DROP_FINDER_URL, officialDocsUrl } from '@/features/guide/engine/linkSc
  */
 
 export const ESR_DOCS_URL = 'https://easternsunresurrected.com/';
+export const ESR_INSTALL_GUIDE_URL = officialDocsUrl('installation_guide.html');
+/** The target of the official site's "Documentation" nav link (the cube recipe page, whose nav reaches every table). */
+export const ESR_DOCUMENTATION_URL = officialDocsUrl('Eastern Sun Resurrected Cube Recipes.html');
+/** The official changelog page; it stops at 3.2.02 (August 2026), later notes are in the repo's patchnotes/ folder. */
 export const ESR_CHANGELOG_URL = 'https://easternsunresurrected.com/changelogs.html';
 export const GITHUB_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser';
 /** The privacy policy lives at the repo root (PRIVACY_POLICY.md); linked from the sign-in consent gate and the home footer. */
 export const PRIVACY_POLICY_URL = `${GITHUB_URL}/blob/master/PRIVACY_POLICY.md`;
 export const DISCORD_URL = 'https://discord.com/invite/XfFmAYZAbA';
 export const ESR_REPO_URL = `https://github.com/${ESR_REPO_SLUG}`;
+export const ESR_PATCH_NOTES_URL = `${ESR_REPO_URL}/tree/main/patchnotes`;
+export const ESR_RELEASES_URL = `${ESR_REPO_URL}/releases`;
 /** The official Drop Finder; defined with the guide's link schemes (shared with the Node guide generator). */
 export { DROP_FINDER_URL };
-/** The official Frame Table (IAS and FCR breakpoints); not linked from the official site's own navigation. */
+/** The official Frame Table (IAS and FCR breakpoints); the docs pages link it as "IAS Calculator", the site's home page does not. */
 export const FRAME_TABLE_URL = officialDocsUrl('ias-calculator.html');
 
 /** An official ESR link, listed in the header's external-links menu and on the home page. */
@@ -32,31 +38,60 @@ export const OFFICIAL_LINKS: readonly OfficialLink[] = [
     key: 'esr-site',
     label: 'Official site',
     href: ESR_DOCS_URL,
-    description: "The mod's home page: downloads, documentation and news from the mod author.",
+    description: "The mod's home page: feature overview, installation guide and documentation, in 13 languages.",
+  },
+  {
+    key: 'install-guide',
+    label: 'Installation Guide',
+    href: ESR_INSTALL_GUIDE_URL,
+    description: 'How to install and update ESR: download the official launcher and press Install / Update.',
+  },
+  {
+    key: 'documentation',
+    label: 'Documentation',
+    href: ESR_DOCUMENTATION_URL,
+    description: 'The official tables: items, affixes, uniques, sets, runewords, cube recipes and the endgame systems.',
   },
   {
     key: 'drop-finder',
     label: 'Drop Finder',
     href: DROP_FINDER_URL,
-    description: 'The official tool for where every item, rune and material drops.',
+    description: 'Per-kill drop chances by zone and monster, or which monsters drop an item, rune, unique or set.',
   },
   {
     key: 'frame-table',
     label: 'Frame Table',
     href: FRAME_TABLE_URL,
-    description: 'Attack and cast speed breakpoints (IAS and FCR) per class, form, skill and weapon.',
+    description: 'Attack and cast speed breakpoints (IAS and FCR) per class, shapeshift form, skill and weapon.',
   },
-  { key: 'changelog', label: 'Changelog', href: ESR_CHANGELOG_URL, description: 'Release notes for every ESR version.' },
+  {
+    key: 'patch-notes',
+    label: 'Patch notes',
+    href: ESR_PATCH_NOTES_URL,
+    description: 'Patch notes of the recent releases, from 3.2.04 on, in the ESR GitHub repository.',
+  },
+  {
+    key: 'changelog',
+    label: 'Changelog',
+    href: ESR_CHANGELOG_URL,
+    description: 'The full release history from 1.02 up to 3.2.02 (August 2026); later releases are in the patch notes.',
+  },
+  {
+    key: 'releases',
+    label: 'Releases',
+    href: ESR_RELEASES_URL,
+    description: 'Every ESR release on GitHub, with the launcher (ESRLauncher.exe) download.',
+  },
   { key: 'discord', label: 'ESR Discord', href: DISCORD_URL, description: 'The community server: announcements, help and bug reports.' },
   {
     key: 'esr-repo',
     label: 'ESR on GitHub',
     href: ESR_REPO_URL,
-    description: "The mod's source repository, including the game data files and docs.",
+    description: "The mod's source repository: the game data files, patch notes and the launcher releases.",
   },
 ];
 
-/** A fan-made ESR tool, listed on the home page and in the header's external-links menu. */
+/** An ESR tool made outside this site (mostly by other players), listed on the home page and in the header's external-links menu. */
 export interface CommunityTool {
   readonly key: string;
   readonly label: string;
@@ -65,7 +100,10 @@ export interface CommunityTool {
   /** The project's source repository, when it is public and differs from `href`. */
   readonly sourceUrl?: string;
   readonly kind: 'web' | 'in-game' | 'archive';
+  /** One sentence: what the tool is. */
   readonly description: string;
+  /** What it offers, as short labels (most useful first); shown as a dot-separated line on the home card. */
+  readonly features: readonly string[];
   readonly caveat?: string;
 }
 
@@ -83,8 +121,17 @@ export const COMMUNITY_TOOLS: readonly CommunityTool[] = [
     href: 'https://github.com/Thisisnotsully/ESR-Wiki-Overlay/releases/latest',
     sourceUrl: 'https://github.com/Thisisnotsully/ESR-Wiki-Overlay',
     kind: 'in-game',
-    description: 'In-game wiki and Horadric Cube recipe overlay, loaded as a D2RLoader plugin.',
-    caveat: 'Windows download; needs D2RLoader.',
+    description: 'In-game ESR wiki and Horadric Cube recipe browser, opened from the pause menu or the cube.',
+    features: [
+      'Cube recipes',
+      'Runewords and uniques',
+      'Bases and affixes',
+      'IAS calculator',
+      'Endgame systems',
+      '13 languages',
+      'Controller support',
+    ],
+    caveat: 'Windows only: a D2RLoader plugin (ESR ships the loader). Its tabs refresh from the official site.',
   },
   {
     key: 'esr-docs',
@@ -93,18 +140,31 @@ export const COMMUNITY_TOOLS: readonly CommunityTool[] = [
     href: 'https://dotsyzygy.github.io/esr-docs/',
     sourceUrl: 'https://github.com/dotsyzygy/esr-docs',
     kind: 'web',
-    description: 'Searchable cube recipe reference, rebuilt automatically from the latest ESR game files.',
-    caveat: 'Tracks the ESR GitHub main branch, so it can run ahead of the released version.',
+    description: 'Reference pages rebuilt automatically from the ESR game files, plus a skill planner and a save viewer.',
+    features: ['Cube recipes', 'Skill calculator', 'Skill planner', 'Character save viewer', 'Terror zones', 'Vessel of Souls'],
+    caveat: 'Built from the ESR GitHub main branch, so it can be ahead of the latest release.',
   },
   {
     key: 'esr-tools',
     label: 'ESR Tools',
     author: 'DoubleEclipse',
-    href: 'https://doubleeclipse.github.io/esr-tools',
+    href: 'https://doubleeclipse.github.io/esr-tools/',
     sourceUrl: 'https://github.com/DoubleEclipse/doubleeclipse.github.io',
     kind: 'web',
-    description: 'Item database, cube recipe search, life calculator, area levels and materials finder.',
-    caveat: 'Some tools were last updated in early 2026.',
+    description: 'Item and cube recipe search over the official docs, plus a life calculator, area levels and organ drops.',
+    features: ['Item search', 'Cube recipe search', 'Area levels', 'Life calculator', 'Organ drop finder'],
+    caveat: 'Area, drop and life data are from older ESR versions (3.9 and 3.10), without the Warlock.',
+  },
+  {
+    key: 'ias-calculator',
+    label: 'ESR IAS Calculator',
+    author: 'CelestialRayOne (mod author)',
+    href: 'https://celestialrayone.github.io/ESR_IAS_Calculator/',
+    sourceUrl: 'https://github.com/CelestialRayOne/ESR_IAS_Calculator',
+    kind: 'web',
+    description: 'Interactive attack speed calculator: enter your weapon, IAS and auras to see your breakpoint.',
+    features: ['IAS breakpoints', 'Wereforms', 'Mercenaries', 'Speed skills and slows', 'Shareable link'],
+    caveat: 'Last updated for ESR 3.0, without the Warlock; the official Frame Table is current.',
   },
   {
     key: 'unofficial-wiki',
@@ -112,8 +172,9 @@ export const COMMUNITY_TOOLS: readonly CommunityTool[] = [
     author: 'DoubleEclipse (archive)',
     href: 'https://doubleeclipse.github.io/esr-tools/unofficial-wiki/',
     kind: 'archive',
-    description: 'Archived snapshot of the community Fandom wiki front page from June 2026.',
-    caveat: 'May be outdated.',
+    description: 'Saved copy (June 2026) of the community Fandom wiki, whose front page holds the whole wiki.',
+    features: ["Beginner's guide", 'Game mechanics', 'Breakpoints', 'Endgame', 'Author Q&A'],
+    caveat: 'Mostly written for older ESR versions (3.9 and 3.10).',
   },
 ];
 

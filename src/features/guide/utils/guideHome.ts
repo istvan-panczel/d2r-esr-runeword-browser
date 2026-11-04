@@ -87,9 +87,13 @@ export const OFFICIAL_REFERENCES: readonly OfficialReference[] = [
   {
     label: 'Frame Table',
     file: 'ias-calculator.html',
-    description: 'Attack and cast speed breakpoints (IAS and FCR) per class, form, skill and weapon.',
+    description: 'Attack and cast speed breakpoints (IAS and FCR) per class, shapeshift form, skill and weapon.',
   },
-  { label: 'Changelog', file: 'changelogs.html', description: 'Release notes for every ESR version.' },
+  {
+    label: 'Changelog',
+    file: 'changelogs.html',
+    description: 'Release history up to 3.2.02 (August 2026); later patch notes are on the ESR GitHub.',
+  },
 ];
 
 export function officialReferenceHref(reference: OfficialReference): string {
