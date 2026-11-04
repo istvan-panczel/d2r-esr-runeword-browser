@@ -9,7 +9,7 @@ export const ESR_METADATA_FILE = 'd2rloader/metadata.json';
 /** D2RLoader plugin config naming uniques dropped by boss sets (Hellfire Torch, …); optional */
 export const ESR_BOSS_SET_UNIQUE_DROP_FILE = 'd2rloader/config/celestialrayone.boss-set-unique-drop.toml';
 
-const TABLES = [
+export const TABLES = [
   'itemtypes',
   'weapons',
   'armor',

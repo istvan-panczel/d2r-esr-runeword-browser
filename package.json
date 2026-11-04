@@ -31,6 +31,8 @@
     "game-data:skill-icons": "node scripts/generate-skill-icons.ts",
     "game-data:update": "node scripts/update-game-data.ts",
     "esr:diff": "node scripts/esr-release-diff.ts",
+    "esr:review": "node scripts/esr-update-review.ts",
+    "esr:user-data": "node scripts/check-user-data.ts",
     "guide:generate": "node scripts/generate-guide.ts",
     "guide:check": "node scripts/generate-guide.ts --check",
     "guide:watch": "node scripts/generate-guide.ts --watch",

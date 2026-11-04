@@ -85,7 +85,7 @@ function killCheckNames(rows: readonly CubeRow[], killCheck: number | null): Map
 }
 
 /** cubemain `op` → comparison of the `param` stat with `value` (the ops the cube conditions use; others unknown) */
-const STAT_OPS: Readonly<Partial<Record<number, string>>> = { 3: '≥', 15: '≥', 16: '≤', 17: '≠', 18: '=' };
+export const STAT_OPS: Readonly<Partial<Record<number, string>>> = { 3: '≥', 15: '≥', 16: '≤', 17: '≠', 18: '=' };
 
 /** Readable names of the stats the listed rows check, for the generic "{name} {op} {value}" wording */
 const STAT_LABELS: Readonly<Partial<Record<string, string>>> = {

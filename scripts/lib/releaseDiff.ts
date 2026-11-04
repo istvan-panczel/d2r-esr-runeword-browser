@@ -2,8 +2,11 @@
  * Pure parsing, diffing and formatting helpers for scripts/esr-release-diff.ts (what changed in the ESR repository
  * between two revisions). The CLI does the git calls; everything here works on strings.
  */
-import { ESR_EXCEL_DIR, ESR_STRINGS_DIR } from '../../src/features/game-data/build/esrSources.ts';
+import { ESR_EXCEL_DIR, ESR_STRINGS_DIR, TABLES as GENERATOR_TABLES } from '../../src/features/game-data/build/esrSources.ts';
+import { STAT_TABLES } from '../../src/features/game-data/build/stats/statRenderer.ts';
+import { GUIDE_TABLES } from '../../src/features/guide/build/esrGuideSources.ts';
 import { stripHtmlTags } from '../../src/lib/html.ts';
+import { formatLauncherVersions, type LauncherVersions } from './launcherInfo.ts';
 
 /** How many keys/strings the text output lists per file before "… and N more". */
 export const LIST_LIMIT = 20;
@@ -45,7 +48,15 @@ export interface FileChange {
   removed: number | null;
 }
 
-export type SectionName = 'patchNotes' | 'changelog' | 'tables' | 'tablesBase' | 'strings' | 'docs' | 'launcher' | 'other';
+export type SectionName = 'patchNotes' | 'changelog' | 'tables' | 'tablesBase' | 'strings' | 'docs' | 'launcher' | 'lootFilters' | 'other';
+
+/** Tables the app's generators read (game data, guide, stat renderer): changes there reach the bundles. */
+export const APP_TABLES: ReadonlySet<string> = new Set<string>([...GENERATOR_TABLES, ...GUIDE_TABLES, ...STAT_TABLES]);
+
+/** `…/excel/skills.txt` → whether a generator reads it */
+export function isAppTable(path: string): boolean {
+  return APP_TABLES.has((path.split('/').pop() ?? path).replace(/\.txt$/i, ''));
+}
 
 export function classifyPath(path: string): SectionName {
   if (path.startsWith('patchnotes/')) return 'patchNotes';
@@ -55,6 +66,7 @@ export function classifyPath(path: string): SectionName {
   if (path.startsWith(`${ESR_STRINGS_DIR}/`) && path.endsWith('.json')) return 'strings';
   if (path.startsWith('docs/')) return 'docs';
   if (path.startsWith('d2rloader/')) return 'launcher';
+  if (path.startsWith('LootFilters/')) return 'lootFilters';
   return 'other';
 }
 
@@ -131,6 +143,8 @@ export interface TableDiff {
   removedColumns: string[];
   /** Same column names, different order */
   columnsReordered: boolean;
+  /** A generator of the app reads this table (APP_TABLES) */
+  readByApp: boolean;
 }
 
 function splitLines(text: string): string[] {
@@ -181,6 +195,7 @@ export function diffTsv(path: string, status: string, before: string, after: str
     addedColumns,
     removedColumns,
     columnsReordered: before !== '' && after !== '' && sameSet && columnsBefore.join('\t') !== columnsAfter.join('\t'),
+    readByApp: isAppTable(path),
   };
 }
 
@@ -289,6 +304,10 @@ export interface ReleaseDiff {
   strings: StringsDiff[];
   docs: DocChange[];
   launcher: LauncherChange[];
+  /** LootFilters/: the live filter repositories (sources.json) and any filter files the mod ships */
+  lootFilters: LauncherChange[];
+  /** Launcher versions at both revisions (metadata.json, d2rloader.toml, the loot filter DLL); null when not read */
+  launcherVersions: { before: LauncherVersions; after: LauncherVersions } | null;
   other: FileChange[];
 }
 
@@ -335,6 +354,7 @@ export function isEmptyDiff(diff: ReleaseDiff): boolean {
     diff.strings.length === 0 &&
     diff.docs.length === 0 &&
     diff.launcher.length === 0 &&
+    diff.lootFilters.length === 0 &&
     diff.other.length === 0
   );
 }
@@ -342,7 +362,7 @@ export function isEmptyDiff(diff: ReleaseDiff): boolean {
 function formatTable(table: TableDiff): string[] {
   const name = table.path.split('/').pop() ?? table.path;
   const out = [
-    `${name} [${table.status}]: rows ${String(table.rowsBefore)} → ${String(table.rowsAfter)}` +
+    `${name} [${table.status}]${table.readByApp ? ' (read by the app)' : ''}: rows ${String(table.rowsBefore)} → ${String(table.rowsAfter)}` +
       ` (+${String(table.added)} added, -${String(table.removed)} removed, ~${String(table.changed)} changed)`,
   ];
   if (table.addedColumns.length > 0) out.push(`    columns added: ${table.addedColumns.join(', ')}`);
@@ -371,13 +391,88 @@ function formatLines(change: FileChange): string {
   return change.added === null || change.removed === null ? 'binary' : `+${String(change.added)} -${String(change.removed)} lines`;
 }
 
+/** `docs/deDE/runewords.htm` → `deDE`; the pages at the docs/ root are the English ones (`enUS`). */
+const LOCALE_DIR = /^docs\/([a-z]{2}[A-Z]{2})\/(.+)$/;
+
+export interface DocPageGroup {
+  /** The English path (`docs/<page>`) the locale copies mirror */
+  path: string;
+  status: string;
+  kind: DocKind;
+  /** enUS first, then the locale folders in path order */
+  locales: string[];
+  /** Byte change of the enUS copy, else of the first locale */
+  bytesBefore: number | null;
+  bytesAfter: number | null;
+}
+
+/** Each docs page once with the locales it changed in (same status), in first-seen order. */
+export function groupDocsByLocale(docs: readonly DocChange[]): DocPageGroup[] {
+  const groups = new Map<string, DocPageGroup>();
+  for (const doc of docs) {
+    const match = LOCALE_DIR.exec(doc.path);
+    const locale = match ? match[1] : 'enUS';
+    const path = match ? `docs/${match[2]}` : doc.path;
+    const key = `${doc.status}|${path}`;
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, {
+        path,
+        status: doc.status,
+        kind: doc.kind,
+        locales: [locale],
+        bytesBefore: doc.bytesBefore,
+        bytesAfter: doc.bytesAfter,
+      });
+      continue;
+    }
+    if (locale === 'enUS') {
+      group.locales.unshift(locale);
+      group.bytesBefore = doc.bytesBefore;
+      group.bytesAfter = doc.bytesAfter;
+    } else group.locales.push(locale);
+  }
+  return [...groups.values()];
+}
+
+/** Filter files (`*.json` other than sources.json) added and removed under LootFilters/. */
+export function lootFilterFiles(changes: readonly FileChange[]): { added: string[]; removed: string[] } {
+  const filters = changes.filter((change) => /\.json$/i.test(change.path) && !/\/sources\.json$/i.test(change.path));
+  const name = (change: FileChange) => change.path.replace(/^LootFilters\//, '');
+  return {
+    added: filters.filter((change) => change.status === 'A').map(name),
+    removed: filters.filter((change) => change.status === 'D').map(name),
+  };
+}
+
+function plural(n: number, word: string): string {
+  return `${String(n)} ${word}${n === 1 ? '' : 's'}`;
+}
+
+/** One line counting each section, e.g. "4 patch notes, 23 tables (12 read by the app), …". */
+export function summaryLine(diff: ReleaseDiff): string {
+  const appTables = diff.tables.filter((table) => table.readByApp).length;
+  return [
+    plural(diff.patchNotes.length, 'patch note'),
+    `${plural(diff.tables.length, 'table')} (${String(appTables)} read by the app)`,
+    plural(diff.strings.length, 'strings file'),
+    plural(groupDocsByLocale(diff.docs).length, 'docs page'),
+    plural(diff.launcher.length, 'launcher file'),
+    plural(diff.lootFilters.length, 'LootFilters file'),
+    plural(diff.other.length, 'other file'),
+  ].join(', ');
+}
+
 /** The human-readable report, one string per line. */
 export function formatReleaseDiff(diff: ReleaseDiff): string[] {
   const out = [`From: ${describeRevision(diff.from)}`, `To:   ${describeRevision(diff.to)}`];
+  if (diff.launcherVersions !== null)
+    out.push(`Launcher versions: ${formatLauncherVersions(diff.launcherVersions.before, diff.launcherVersions.after)}`);
   if (isEmptyDiff(diff)) {
     out.push('', `No changes between ${diff.from.commit.slice(0, 8)} and ${diff.to.commit.slice(0, 8)}.`);
     return out;
   }
+  out.push(`Summary: ${summaryLine(diff)}`);
 
   heading(out, '1. Patch notes (patchnotes/)');
   if (diff.patchNotes.length === 0) out.push('(no changes)');
@@ -389,7 +484,7 @@ export function formatReleaseDiff(diff: ReleaseDiff): string[] {
   }
 
   heading(out, '2. Changelog page (docs/changelogs.html)');
-  if (diff.changelog === null) out.push('(unchanged)');
+  if (diff.changelog === null) out.push('(unchanged; the page has no new headings since 3.2.02, see the patch notes)');
   else if (diff.changelog.length === 0) out.push('Changed, but no new entries were recognised.');
   for (const entry of diff.changelog ?? []) out.push(`${entry.version} (${entry.date}): ${entry.label} → ${entry.href}`);
 
@@ -405,10 +500,13 @@ export function formatReleaseDiff(diff: ReleaseDiff): string[] {
 
   heading(out, '5. Official docs pages (docs/)');
   if (diff.docs.length === 0) out.push('(no changes)');
-  for (const doc of diff.docs) {
-    const delta = doc.bytesBefore !== null && doc.bytesAfter !== null ? `${signed(doc.bytesAfter - doc.bytesBefore)} bytes` : '';
-    const size = doc.status === 'A' ? `${String(doc.bytesAfter ?? 0)} bytes` : doc.status === 'D' ? 'deleted' : delta;
-    out.push(`[${doc.status}] ${doc.path} (${size}) ${doc.kind === 'hand-written' ? '[HAND-WRITTEN]' : `[${doc.kind}]`}`);
+  for (const page of groupDocsByLocale(diff.docs)) {
+    const delta = page.bytesBefore !== null && page.bytesAfter !== null ? `${signed(page.bytesAfter - page.bytesBefore)} bytes` : '';
+    const size = page.status === 'A' ? `${String(page.bytesAfter ?? 0)} bytes` : page.status === 'D' ? 'deleted' : delta;
+    const shown = page.locales.length > 4 ? [...page.locales.slice(0, 3), '…'] : page.locales;
+    const locales =
+      page.locales.length === 1 && page.locales[0] === 'enUS' ? '' : ` (${shown.join(', ')} ${plural(page.locales.length, 'locale')})`;
+    out.push(`[${page.status}] ${page.path} (${size}) ${page.kind === 'hand-written' ? '[HAND-WRITTEN]' : `[${page.kind}]`}${locales}`);
   }
 
   heading(out, '6. Launcher configs (d2rloader/)');
@@ -418,7 +516,17 @@ export function formatReleaseDiff(diff: ReleaseDiff): string[] {
     if (change.diff !== null) out.push(...indent(change.diff), '');
   }
 
-  heading(out, '7. Everything else');
+  heading(out, '7. Loot filters (LootFilters/)');
+  if (diff.lootFilters.length === 0) out.push('(no changes)');
+  const filters = lootFilterFiles(diff.lootFilters);
+  if (filters.added.length > 0) out.push(`filters added: ${filters.added.join(', ')}`);
+  if (filters.removed.length > 0) out.push(`filters removed: ${filters.removed.join(', ')}`);
+  for (const change of diff.lootFilters) {
+    out.push(`[${change.status}] ${change.path} (${formatLines(change)})`);
+    if (change.diff !== null) out.push(...indent(change.diff), '');
+  }
+
+  heading(out, '8. Everything else');
   if (diff.other.length === 0) out.push('(no changes)');
   for (const change of diff.other) out.push(`[${change.status}] ${change.path} (${formatLines(change)})`);
   return out;

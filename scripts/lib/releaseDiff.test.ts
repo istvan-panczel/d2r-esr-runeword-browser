@@ -6,7 +6,10 @@ import {
   diffTsv,
   docKind,
   formatReleaseDiff,
+  groupDocsByLocale,
+  isAppTable,
   listWithMore,
+  lootFilterFiles,
   newChangelogEntries,
   parseChangelogEntries,
   parseChanges,
@@ -33,6 +36,7 @@ describe('releaseDiff', () => {
     expect(classifyPath(`${STRINGS}/skills.json`)).toBe('strings');
     expect(classifyPath('docs/runewords.htm')).toBe('docs');
     expect(classifyPath('d2rloader/metadata.json')).toBe('launcher');
+    expect(classifyPath('LootFilters/sources.json')).toBe('lootFilters');
     expect(classifyPath('Eastern_Sun_Resurrected.mpq/data/hd/items/uniques.json')).toBe('other');
   });
 
@@ -76,7 +80,9 @@ describe('releaseDiff', () => {
       addedColumns: ['new'],
       removedColumns: [],
       columnsReordered: false,
+      readByApp: false,
     });
+    expect(diffTsv(`${EXCEL}/uniqueitems.txt`, 'M', 'a\n', 'a\n').readByApp).toBe(true);
     expect(diffTsv('t.txt', 'M', 'a\tb\nx\t1\n', 'b\ta\n1\tx\n').columnsReordered).toBe(true);
     expect(diffTsv('t.txt', 'A', '', 'a\nx\n')).toMatchObject({ rowsBefore: 0, rowsAfter: 1, added: 1, addedColumns: [] });
   });
@@ -115,6 +121,44 @@ describe('releaseDiff', () => {
     expect(docKind('docs/images/x.png')).toBe('asset');
   });
 
+  it('knows the tables the generators read', () => {
+    expect(isAppTable(`${EXCEL}/cubemain.txt`)).toBe(true);
+    expect(isAppTable(`${EXCEL}/difficultylevels.txt`)).toBe(true);
+    expect(isAppTable(`${EXCEL}/monai.txt`)).toBe(false);
+  });
+
+  it('lists each docs page once with its locales', () => {
+    const doc = (path: string, bytesBefore: number, bytesAfter: number) => ({
+      path,
+      status: 'M',
+      kind: 'generated' as const,
+      bytesBefore,
+      bytesAfter,
+    });
+    expect(
+      groupDocsByLocale([
+        doc('docs/deDE/runewords.htm', 5, 6),
+        doc('docs/runewords.htm', 10, 8),
+        doc('docs/frFR/runewords.htm', 5, 6),
+        doc('docs/gems.htm', 1, 2),
+      ])
+    ).toEqual([
+      { path: 'docs/runewords.htm', status: 'M', kind: 'generated', locales: ['enUS', 'deDE', 'frFR'], bytesBefore: 10, bytesAfter: 8 },
+      { path: 'docs/gems.htm', status: 'M', kind: 'generated', locales: ['enUS'], bytesBefore: 1, bytesAfter: 2 },
+    ]);
+  });
+
+  it('names the loot filters added and removed', () => {
+    expect(
+      lootFilterFiles([
+        { status: 'D', path: 'LootFilters/esr-default-filter.json', added: 0, removed: 9 },
+        { status: 'A', path: 'LootFilters/sources.json', added: 26, removed: 0 },
+        { status: 'A', path: 'LootFilters/new.json', added: 3, removed: 0 },
+        { status: 'D', path: 'LootFilters/sounds/gong.mp3', added: null, removed: null },
+      ])
+    ).toEqual({ added: ['new.json'], removed: ['esr-default-filter.json'] });
+  });
+
   it('caps and compacts lists', () => {
     expect(listWithMore(['a', 'b', 'c'], 2)).toBe('a, b, … and 1 more');
     expect(listWithMore(['a'], 2)).toBe('a');
@@ -132,6 +176,8 @@ describe('releaseDiff', () => {
     strings: [],
     docs: [],
     launcher: [],
+    lootFilters: [],
+    launcherVersions: null,
     other: [],
   };
 
@@ -154,9 +200,11 @@ describe('releaseDiff', () => {
       strings: [diffStrings(`${STRINGS}/skills.json`, 'M', '[{"Key":"k","enUS":"old"}]', '[{"Key":"k","enUS":"new"}]')],
       docs: [{ path: 'docs/vessel_of_souls.htm', status: 'M', kind: 'hand-written', bytesBefore: 100, bytesAfter: 90 }],
       launcher: [{ status: 'A', path: 'd2rloader/plugins/x.dll', added: null, removed: null, diff: null }],
+      lootFilters: [{ status: 'D', path: 'LootFilters/old.json', added: 0, removed: 3, diff: null }],
       other: [{ status: 'M', path: 'data/hd/items/uniques.json', added: 2, removed: 1 }],
     });
     expect(lines.slice(2)).toEqual([
+      'Summary: 1 patch note, 1 table (1 read by the app), 1 strings file, 1 docs page, 1 launcher file, 1 LootFilters file, 1 other file',
       '',
       '=== 1. Patch notes (patchnotes/) ===',
       '',
@@ -172,7 +220,7 @@ describe('releaseDiff', () => {
       '',
       '=== 3. Game tables (excel/*.txt) ===',
       '',
-      'skills.txt [M]: rows 1 → 1 (+1 added, -1 removed, ~0 changed)',
+      'skills.txt [M] (read by the app): rows 1 → 1 (+1 added, -1 removed, ~0 changed)',
       '    added rows: Warpath',
       '    removed rows: Axe Swarm',
       '(1 changed files under excel/base/ ignored: duplicate of excel/)',
@@ -190,9 +238,32 @@ describe('releaseDiff', () => {
       '',
       '[A] d2rloader/plugins/x.dll (binary)',
       '',
-      '=== 7. Everything else ===',
+      '=== 7. Loot filters (LootFilters/) ===',
+      '',
+      'filters removed: old.json',
+      '[D] LootFilters/old.json (+0 -3 lines)',
+      '',
+      '=== 8. Everything else ===',
       '',
       '[M] data/hd/items/uniques.json (+2 -1 lines)',
     ]);
+  });
+
+  it('prints the launcher versions under the revisions', () => {
+    const versions = {
+      modVersion: '3.2.20',
+      loaderVersion: '1.3.1',
+      gameVersion: '3.3.0',
+      gameBuild: '93847',
+      saveFormatMode: 'extended',
+      lootFilterPlugin: '1.5.1',
+    };
+    const lines = formatReleaseDiff({
+      ...empty,
+      launcherVersions: { before: versions, after: { ...versions, modVersion: '3.2.24', lootFilterPlugin: '1.5.3' } },
+    });
+    expect(lines[2]).toBe(
+      'Launcher versions: metadata.modVersion 3.2.20 → 3.2.24, d2rloader.version 1.3.1, bins.gameVersion 3.3.0, bins.gameBuild 93847, save_format mode extended, loot filter plugin 1.5.1 → 1.5.3'
+    );
   });
 });
