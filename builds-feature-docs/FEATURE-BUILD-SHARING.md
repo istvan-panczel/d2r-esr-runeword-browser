@@ -379,6 +379,41 @@ type CraftAnnotation =
 - The free-text `skills` field stays as it is, for explanations; both are shown.
 - `refreshBuildData` spreads `...buildData`, so the snapshot refresh on save leaves both fields untouched; the JSON export includes them as stored. The form omits `level` when blank and `skillPoints` when empty. Builds without them read and render as before; `build_data` is JSONB, so **no migration** is needed.
 
+#### Variants
+
+A build can hold up to 10 variants (e.g. "Budget", "Endgame", "MF"). Everything except the build name, description and class (the `builds` columns) belongs to a variant: the three gear sections with their notes, crafts and alternatives, charms, ascendancy, skills, level and skill points. `VariantData` in `buildData.ts` is that per-variant shape; `BuildData` adds one key to it:
+
+```ts
+interface BuildData extends VariantData {
+  readonly variants?: readonly VariantData[]; // the second to last variant, at most VARIANTS_MAX - 1 (9)
+}
+```
+
+- **The top level is the first variant.** The existing top-level keys keep holding it, and the extra variants go in `variants[]` in the same shape. Old clients ignore unknown keys, so they render the first variant; no existing row changes and nothing is stored twice. Nesting is one level only: a `variants` key inside an entry is never read.
+- **`variantName` / `variantNote` (optional)** on each variant, top level included. Named so they cannot be confused with the `builds.name` column. Without a name the label is "Default" for the first variant and "Variant N" for the others (`variantLabel`). Trimmed; blank is dropped; over-long text is sliced to 50 / 500 characters.
+- **Packing** (`utils/buildVariants.ts`): the form edits a flat list; `packVariants` writes `list[0]` to the top level and the rest to `variants` (omitted when there are none), so reordering costs nothing. A single variant named "Default" loses the name, and `fromVariantDraft` keeps the key order of the earlier form, so a single-variant build without alternatives saves exactly as before variants. `unpackVariants` is the inverse; `variantAt` is a clamped lookup.
+- **Limits** (`asBuildData` → `asVariantData` per variant, `asVariantList`): non-object entries of `variants` are dropped and at most 9 kept; each entry is validated like the top level.
+
+#### Alternative items
+
+Each slot of the player gear, the weapon swap and the mercenary gear can list up to 10 alternative items besides its main item, in three per-slot maps parallel to the item maps:
+
+```ts
+interface ItemAlternative {
+  readonly ref: ItemRef; // any of the six item reference types, with its own `base` / `socketed`
+  readonly note?: string;
+  readonly crafts?: readonly CraftAnnotation[];
+}
+// itemAlternatives / mercenaryAlternatives: EquipmentSlot → ItemAlternative[]; weaponSwapAlternatives: WeaponSwapSlot → ItemAlternative[]
+```
+
+- **The main item stays where it was**, in `items` / `weaponSwap` / `mercenary` with the slot-keyed notes and crafts, so old clients keep the main item, its note and its crafts. The list order is the display order.
+- **Why wrapped, not extra keys on the ref:** rebuilding a ref (`withAuthorChoices` in the snapshot refresh) would strip unknown keys, and each alternative needs its own note and crafts while the slot-keyed ones belong to the main item.
+- **No alternatives without a main item.** On save (`normalizeSlotAlternatives` inside `packVariants`), a slot with alternatives but no main item promotes its first alternative, note and crafts included; empty lists and maps are dropped.
+- **Limits** (`asItemAlternative`, `alternativesSection`): an entry whose `ref` is malformed is dropped, the ref is sanitised like a main item (`base` / `socketed` rules), the note is trimmed (the form caps it at 500 characters like slot notes), crafts follow the crafting limits; at most 10 entries per slot; empty slots are dropped. Slot keys are not validated (same as the item maps).
+- The snapshot refresh on save (`refreshVariant`) and the version diff (`computeVariantItemDiffs`) cover every alternative of every variant; `npm run esr:user-data` scans them too.
+- Builds without variants or alternatives read and render as before; `build_data` is JSONB, so **no data migration** is needed (migration 006 only adds the size cap, see the size estimate below).
+
 #### Full `build_data` Example
 
 ```json
@@ -456,9 +491,38 @@ type CraftAnnotation =
   "ascendancy": "Battlemage",
   "skills": "20 Blessed Hammer, 20 Vigor, 20 Blessed Aim, 20 Concentration, 1pt Holy Shield, rest into Holy Bolt",
   "level": 95,
-  "skillPoints": { "Summon Goatman": 20, "Demonic Mastery": 1 }
+  "skillPoints": { "Summon Goatman": 20, "Demonic Mastery": 1 },
+  "itemAlternatives": {
+    "shield": [
+      {
+        "ref": {
+          "type": "runeword",
+          "name": "Spirit",
+          "variant": 1,
+          "snapshot": { "...": "..." },
+          "base": { "code": "kit", "name": "Kite Shield" }
+        },
+        "note": "Until Herald of Zakarum drops"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variantName": "Budget",
+      "variantNote": "Early hell, before Enigma",
+      "items": {
+        "armor": { "type": "runeword", "name": "Smoke", "variant": 1, "snapshot": { "...": "..." } },
+        "weapon": { "type": "freetext", "name": "Crafted caster sword" }
+      },
+      "charms": ["Small charms of vita"],
+      "skills": "Max Blessed Hammer and Concentration first",
+      "level": 75
+    }
+  ]
 }
 ```
+
+The top level here is the first variant, labelled "Default" (no `variantName`); `variants[0]` is the second. Its shield slot shows Herald of Zakarum with Spirit as an alternative.
 
 **Slot summary:**
 
@@ -469,8 +533,15 @@ type CraftAnnotation =
 - **Ascendancy**: Single ascendancy name (optional)
 - **Skills**: Freetext description of skill allocation (optional)
 - **Level / skill tree**: Character level and skill id → points (optional, see "Level and skill tree")
+- **Alternatives**: up to 10 per slot in all 22 slots (optional, see "Alternative items")
+- **Variants**: all of the above per variant, up to 10 per build (optional, see "Variants")
 
-**Size estimate:** Each build is ~20-50 KB with full snapshots for all 22 equipment slots. Well within Supabase free tier limits.
+**Size estimate:** A single-variant build is ~20-50 KB with full snapshots for all 22 equipment slots (the largest PROD build was ~15 KB on 2026-11-04). At the caps (10 variants × 22 slots × 11 items, ~2,400 snapshots) a build could reach several MB, so a byte cap is the real limit:
+
+- **App: 1 MiB** (`BUILD_DATA_MAX_BYTES`, UTF-8 bytes of `JSON.stringify(build_data)`, `utils/buildSize.ts`). The saga checks it before calling Supabase: create measures the payload, update the refreshed snapshots that get stored. Over the cap the save fails with a toast ("This build is too large to save (N KB, limit 1024 KB). Remove some alternatives or variants.") and the form keeps its data.
+- **DB: 2 MiB** (`006_build_data_size.sql`): `builds_build_data_size` checks `octet_length(build_data::text) <= 2097152`, and `builds_build_data_object` requires a JSON object. `jsonb::text` adds a space after every `:` and `,`, so the same data measures larger there; the DB cap is a backstop above the app cap, not the limit users hit. Additive; existing rows pass. Applied manually (see `SUPABASE-SETUP.md`).
+
+Typical builds with a few variants stay far below the cap and well within the Supabase free tier; the cap bounds a single runaway build, it is not a per-build budget.
 
 ### Database Trigger: Auto-Create Profile on Signup
 
@@ -710,10 +781,13 @@ The shareable page for a single build. The URL itself (`/build/:buildId`) is the
 
 - **Header**: Build name, character class, author display name with discriminator (links to `/user/:userId`), created/updated date, like / copy link / export / owner actions
 - **Description**: Optional freetext notes/guide from the author (above the tabs)
+- **Variant selector** (`components/VariantSelector.tsx`, only when the build has more than one variant): a segmented row of the variant labels between the description and the tabs, scrolling sideways when they don't fit, with the shown variant's note under it (muted, line breaks kept). Everything below it (tabs, gear, skills, charms, ascendancy, diffs) shows that variant (`components/VariantDetail.tsx`, keyed by the variant index so swapped-in alternatives and "Show all" reset on a switch; the chosen tab is kept, falling back to Player). A single-variant build without alternatives looks exactly as before variants.
+  - **URL**: the shown variant is `?variant=N` (1-based, `utils/variantParam.ts`), set with `replace` so switching adds no history entries; the first variant has no parameter, and a missing, malformed or out-of-range value shows the first. The copy-link button therefore shares the shown variant.
+  - The version diffs are computed for the shown variant only (main items and alternatives); the crafting and skill bundles load when any variant needs them, so a switch never shows them loading.
 - **Tabs** (shadcn `Tabs`, UI state only, default **Player**):
   - **Player**: Player Gear grid (see layout below), Weapon Swap (secondary weapon and shield), and beside them on wide screens **Charms** (list of charm names) and **Ascendancy** (name with its tier bonuses from the viewer's local parsed data)
   - **Skills**: "Level N" (when set), the freetext skill description and the skill tree allocation (when `skillPoints` has entries). The tree is read-only and looks like the Skills page (`components/SkillTreeDisplay.tsx` → `BuildSkillTrees`): a "N points spent" header, then the class's three tab cards with the in-game 6 × 3 icon tiles, side by side from `lg` with the selected skill's detail card as a sticky right column; below `lg` one tab at a time behind tab pills, the card under the trees (a tap scrolls to it). Tab titles and pills carry the tab's points ("Demon · 21"). An allocated skill's tile has a corner badge with its points (amber above the skill's max level); skills without points are dimmed like in game. Clicking a tile selects it (ring, amber prerequisites, sky-blue unlocked skills — the Skills page's marks; local state, not the URL) and the detail card shows a "Points: n/20" counter above the skill's description, synergies, requirements and granting items. Ids outside the class tree are listed under the trees as "Other skills: Name (n), …". `skills.json` + `skilldetails.json` are loaded once per screen (`hooks/useSkillTree.ts`), only when the build has `skillPoints`; if they fail to load (or have no tree for the class) the allocation is shown as a raw "Skill name: n" list so the data is never hidden. Hidden when the build has no skills text, no level and no skill points.
-  - **Mercenary**: Mercenary Gear, same equipment grid layout. Hidden when the build has no merc gear and no merc notes.
+  - **Mercenary**: Mercenary Gear, same equipment grid layout. Hidden when the shown variant has no merc gear, merc alternatives, notes or crafting annotations.
   - The tab bar itself is hidden when Player is the only tab. The chosen tab is not persisted; if it isn't available for the build being shown, Player is used.
 - Per-slot crafting/corruption notes and the "Stats updated" diff badge stay on each slot card inside the tabs.
 - Per-slot crafting annotations render under each item card (player gear, weapon swap and mercenary) as a "Crafting:" box listing each annotation's title with its bonus lines in muted text. The screen loads `crafting.json` + `enhance.json` once, only when the build has annotations; stale ids and a failed load are handled as described under "Crafting annotations". The Mercenary tab also shows when only merc crafting annotations exist.
@@ -741,6 +815,10 @@ Equipment slots are displayed in a visual grid mimicking D2's character equipmen
 - **Empty slots**: Always shown in the grid with a placeholder (e.g., "---"). Keeps layout consistent and shows what's intentionally unequipped.
 - **Item stats**: Each filled slot shows the item name and its bonuses (runeword bonuses, unique item stats — same depth as existing runewords/uniques screens). No individual rune bonus breakdown for runewords.
 - **Set items**: The slot card shows the green item name, "Set: <set name>" (links to `/game-data/sets?name=<item name>`, which focuses the set and highlights the item), base · category · Req Lvl, the item's own lines, then its own partial bonuses as "2 items" / "3 items" groups, marked active or inactive from the number of pieces of that set worn in the same section.
+- **Alternative items** (`components/SlotAlternativesView.tsx`, view only, never saved): a slot with alternatives gets a footer with two small buttons.
+  - **"+N alternatives"** opens a popover listing "Main" and "Alt 1…N", each with the item name and the first line of its note, a check mark on the shown one. Picking an entry swaps it into the slot: the card, note, crafting box and "Stats updated" badge are the alternative's own (`utils/displayedSection.ts`), and a swapped-in item starts with its saved snapshot hidden. The label row then shows "Alt i/N" and a "Back to main" button.
+  - **"Show all"** (per slot) stacks every alternative under the main item as "Alternative i of N" cells, each with its own card, diff badge, crafts and note; the label row says "Main", the slot goes back to its main item and the popover button hides until "Show less".
+  - **Set bonuses follow the shown item**: the swapped section feeds the grid, the set piece counts on the cards and the "Set bonuses" block alike. Under "Show all", a set alternative's card marks its partial groups as if it were worn in that slot (player and mercenary gear).
 - **Set bonuses**: Under the player gear grid (Player tab) and under the mercenary grid (Mercenary tab), a "Set bonuses" block lists every set with at least one equipped piece: "<set name> — N of M pieces" (or "Full set"), the active set-wide partial groups, the full-set lines when complete, the active per-item bonuses, and a muted "Needs N pieces" line for the next inactive group. Pieces are counted per section (`utils/setBonuses.ts`): the player's main gear only (the weapon swap is never mixed in) and the mercenary's gear separately; a duplicated item counts once. The block loads `sets.json` only when the section has a set item; while it loads, or if it fails, the block still shows the piece counts and item bonuses without the set-wide lines.
 - **Freetext items**: Display just the typed name (no stats to look up).
 
@@ -762,7 +840,7 @@ On small screens (below `md` breakpoint), the equipment grid stacks to a **verti
 ### Interactions
 
 - **Like button**: Requires login. Toggles like/unlike. Shows current like count. Logged-out users see an inline popover prompting sign-in.
-- **Share**: The page URL is the share link. A copy-link button for convenience.
+- **Share**: The page URL is the share link (with `?variant=N` when a later variant is shown). A copy-link button for convenience.
 - **Edit / Delete**: Visible only to the build's author. Edit navigates to `/builds/:buildId/edit`. Delete requires confirmation.
 
 ## Build Creation & Editing
@@ -865,27 +943,43 @@ On the detail page the item card is followed by a small box with "Base: …" (re
 
 ### Form Layout
 
-All sections visible on one scrollable page (no wizard, no collapsible sections):
+All sections visible on one scrollable page (no wizard, no collapsible sections). The form state is one draft per variant (`utils/variantDrafts.ts`: `variantDraftsReducer`, `toVariantDraft` / `fromVariantDraft`, `draftsToBuildData`); only the active variant's editor (`components/VariantEditor.tsx`) is mounted, and all slot pickers share one item scan (`hooks/useEquipmentPickerData.ts` context).
 
-1. **Basic Info**
+1. **Basic Info** (shared by all variants)
    - Build name (required)
-   - Description / notes (optional, freetext)
    - Character class (required, dropdown)
+   - Description / notes (optional, freetext)
 
-2. **Player Gear** — Equipment grid with 10 inline autocomplete slot pickers (same grid layout as the detail page)
+2. **Variants** (`components/VariantToolbar.tsx`, always shown, also with a single "Default" variant): "Everything below belongs to the selected variant. The build name, class and description are shared."
+   - A tab per variant (scrolling sideways), an **Add variant** button (disabled at 10) and a "⋯" menu for the active variant: **Move left**, **Move right**, **Delete variant** (disabled with one variant; a confirm dialog says the variant and everything in it is removed when you save).
+   - **Variant name** (placeholder "Default" / "Variant N", max 50) and **Variant note** (optional, max 500) of the active variant.
+   - **Add variant** (`components/AddVariantDialog.tsx`): a name (suggested "Variant N", the first number no tab uses) and **Start from**: "Copy of <variant>" for any variant (the active one preselected; a deep copy, alternatives and charms included) or **Empty**. The new variant is appended and selected.
+   - A tab whose level is invalid gets a red dot; Save is disabled and the footer says "Invalid level in <variant names>".
+   - Switching variants is navigation: it never marks the form changed. Every edit inside a variant does.
 
-3. **Weapon Swap** — 2 slots (weapon2, shield2) with inline pickers
+The sections below are per variant:
 
-4. **Mercenary Gear** — Equipment grid with 10 slots (same UI as player gear)
-
-5. **Charms** — Named list. User adds charm entries one at a time (e.g., "Annihilus", "9x Java GCs"). Free-form text per entry. "+ Add charm" button.
-
-6. **Ascendancy** — Dropdown of all 15 available ascendancies (optional). Not filtered by class selection.
-
-7. **Skills** — Freetext area for describing skill allocation, then the level and skill tree block (`components/SkillTreeEditor.tsx`):
+3. **Skills** — Freetext area for describing skill allocation, then the level and skill tree block (`components/SkillTreeEditor.tsx`):
    - **Level**: number input (1..`maxLevel` from `skills.json`, 110 as fallback); blank = unset. An out-of-range or non-integer value shows a "1–110" hint and disables Save.
    - **Skill tree**: "Pick a class to allocate skill points." until a class is chosen; a skeleton line while `skills.json` + `skilldetails.json` load; "Skill tree unavailable" if they fail (the freetext still works). With a class: a "N points spent" header (every stored point) and the same tree layout as the detail page (`BuildSkillTrees`, remounted on a class change): the three tab cards of 6 × 3 icon tiles (each title and tab pill shows its points when > 0), side by side from `lg` with a sticky right column, one tab at a time behind pills below that. Tiles carry no buttons: clicking one selects it (ring + prerequisite / unlocked marks, as on the Skills page) and the right column shows its detail card with the point controls right under the header: "− n/20 + Set to 20 0". − is disabled at 0, + at 99 (not at the skill's max level), "Set to 20" sets the skill straight to its max level and "0" clears it; a count above the max level is amber (in the counter and the tile's corner badge). No level or prerequisite rule is enforced. While nothing is selected the column shows "Pick a skill to allocate points." (from `lg`). The controls are disabled while saving. "Reset points" (shown when the class has points) clears this class's points. After a class change, ids outside the new tree raise "N points belong to another class" with a "Clear them" button.
    - Below `lg` the detail card sits under the trees and a tap scrolls to it; at phone width each tab keeps its 3 columns of tiles.
+
+4. **Player Gear** — Equipment grid with 10 inline autocomplete slot pickers (same grid layout as the detail page)
+
+5. **Weapon Swap** — 2 slots (weapon2, shield2) with inline pickers
+
+6. **Mercenary Gear** — Equipment grid with 10 slots (same UI as player gear)
+
+7. **Charms** — Named list. User adds charm entries one at a time (e.g., "Annihilus", "9x Java GCs"). Free-form text per entry. "+ Add charm" button.
+
+8. **Ascendancy** — Dropdown of all 15 available ascendancies (optional). Not filtered by class selection.
+
+**Alternatives** (`components/SlotAlternativesEditor.tsx`): under each filled slot of the three gear sections, an "Alternatives (n/10)" box with **Add alternative** (needs a main item; disabled at 10).
+
+- Each alternative is a compact row ("1. Shako" plus a note excerpt) with **Edit**, **Move up**, **Move down**, **Make main** and **Remove**. The stored order is the order of the detail page's popover.
+- **Edit** expands one row at a time to the main item's editor stack: slot picker, base and socket fillers, item card preview, crafting, note (max 500). Clearing an alternative's item clears its note and crafts; alternatives left without an item are dropped on save.
+- **Make main** swaps the alternative with the main item, notes and crafts included.
+- **Clearing the main item promotes the first alternative** that has an item (with its note and crafts); without one the slot empties.
 
 ### Save
 
@@ -897,7 +991,8 @@ On save, the app automatically:
 
 - Sets `esr_version` to the current ESR version from local IndexedDB metadata (on create)
 - Sets `esr_version_updated` to the current ESR version (on edit)
-- Captures full item snapshots for all referenced items (unique/mythical/set/runeword/gemword) at the current point in time
+- Captures full item snapshots for all referenced items (unique/mythical/set/runeword/gemword) at the current point in time, in every variant and every alternative
+- Packs the drafts into the stored shape (`packVariants`: first variant at the top level, the rest in `variants`) and refuses a build over 1 MiB with an error toast (see the size estimate)
 
 ### Expected Scale
 
@@ -908,6 +1003,7 @@ On save, the app automatically:
 - Users can edit their own builds at any time
 - Editing updates the existing record in place (no versioning or edit history)
 - Item snapshots are refreshed on each edit to reflect the current ESR data
+- The form opens on the first variant (`buildFormValuesFromBuild` unpacks the stored variants); variants can be added, renamed, given a note, reordered and deleted, as long as one remains
 
 ### Unsaved Changes
 
@@ -922,15 +1018,21 @@ Browser `beforeunload` prompt when navigating away from the create/edit form wit
 
 ### Field Limits
 
-| Field                    | Required        | Min | Max                                              |
-| ------------------------ | --------------- | --- | ------------------------------------------------ |
-| Build name               | Yes             | 1   | 100 characters                                   |
-| Description              | No              | —   | 2000 characters                                  |
-| Skills freetext          | No              | —   | 2000 characters                                  |
-| Level                    | No              | 1   | 110 (integer)                                    |
-| Skill points (per skill) | No              | 1   | 99 (integer; at most 60 skills, ids ≤ 100 chars) |
-| Charm entry              | Yes (per entry) | 1   | 100 characters                                   |
-| Display name             | Yes             | 1   | 50 characters                                    |
+| Field                    | Required         | Min | Max                                              |
+| ------------------------ | ---------------- | --- | ------------------------------------------------ |
+| Build name               | Yes              | 1   | 100 characters                                   |
+| Description              | No               | —   | 2000 characters                                  |
+| Skills freetext          | No               | —   | 2000 characters                                  |
+| Level                    | No               | 1   | 110 (integer)                                    |
+| Skill points (per skill) | No               | 1   | 99 (integer; at most 60 skills, ids ≤ 100 chars) |
+| Charm entry              | Yes (per entry)  | 1   | 100 characters                                   |
+| Variants per build       | Yes (at least 1) | 1   | 10                                               |
+| Variant name             | No               | —   | 50 characters (blank → "Default" / "Variant N")  |
+| Variant note             | No               | —   | 500 characters                                   |
+| Alternatives per slot    | No               | —   | 10                                               |
+| Item / alternative note  | No               | —   | 500 characters                                   |
+| `build_data` size        | —                | —   | 1 MiB app (`JSON.stringify` bytes), 2 MiB DB     |
+| Display name             | Yes              | 1   | 50 characters                                    |
 
 ### Display Name Validation
 
@@ -1309,8 +1411,12 @@ These were decided or discovered while building the feature, amending the origin
 - **Privacy policy location.** `PRIVACY_POLICY.md` now lives at the repo root (moved from `builds-feature-docs/`); the consent gate links to it on the default branch (`.../blob/master/PRIVACY_POLICY.md`), which resolves once this branch merges to `master`.
 - **Write-access hardening (migration 003).** RLS restricts which rows a client may write, but not which columns. `003_harden_write_access.sql` adds column-scoped INSERT/UPDATE grants so clients cannot write trigger-managed/immutable columns (`builds.likes_count`/`created_at`/`id`/`user_id`/`esr_version`; `profiles.avatar_url`/timestamps), and clamps the OAuth-derived `display_name` in `handle_new_user()` to the 1–50 char constraint. GDPR consent stays client-side-enforced by design (the consent gate), not in RLS.
 - **Set items as a sixth item type.** Once the `sets.json` game-data bundle existed (Sets page), set items became pickable (`SetItemRef`, see the item reference types above). Unlike the other types they resolve from a fetched static bundle rather than IndexedDB, so `utils/setItems.ts` wraps the load for Dexie `liveQuery` queriers, and a failed load keeps the stored ref (diff `unchanged`, refresh keeps the snapshot) instead of reporting the item as missing. Rich cards come from `SetItemBuildCard`; the per-section "Set bonuses" block comes from `utils/setBonuses.ts` + `SetBonusesBlock`.
+- **Build variants and alternative items.** A build holds up to 10 variants and each slot up to 10 alternatives (see "Variants" and "Alternative items" above). The stored shape keeps the first variant and the main items where they always were, so old clients render the first variant with its main items and no existing row changes. Migration 006 adds the 2 MiB / JSON-object checks on `build_data` behind the app's 1 MiB save cap. The detail page's alternative swap is view only. The build list cards show no variant count (the list query skips `build_data`, and a badge would need a generated column).
+- **Accepted stale-client risk.** A tab opened before the variants deploy still runs the old form. If it saves a build that already has variants or alternatives, the old `asBuildData` drops `variants` and the alternative maps: the first variant with its main items, notes and crafts survives, the rest is lost. With ~20 users and manual deploys the window is narrow, and the `vite:preloadError` auto-reload (`src/main.tsx`) moves a stale tab forward once it loads a new chunk, so there is no code mitigation (a DB trigger refusing to drop `variants` would be over-engineering); the release notes ask to reload open tabs before editing builds. Creating a build from a stale tab is unaffected.
 
 ## Out of Scope (For Now)
+
+Build variants (above) are alternative setups of one build, not edit history: editing still overwrites the build in place, and "Build versioning / edit history" below stays out of scope.
 
 - Comments on builds
 - Build versioning / edit history
