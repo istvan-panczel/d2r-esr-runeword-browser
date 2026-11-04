@@ -7,6 +7,7 @@ import type { CraftAnnotation, EquipmentSlot, ItemRef, WeaponSwapSlot } from '..
 import type { CraftDataState } from '../hooks/useCraftData';
 import type { ItemDiff } from '../utils/itemDiff';
 import { socketedOf } from '../utils/itemChoices';
+import { itemRefKey } from '../utils/resolveItem';
 import { BuildItemCard } from './BuildItemCard';
 import { CraftsDisplay } from './CraftsDisplay';
 import { CraftsEditor } from './CraftsEditor';
@@ -64,6 +65,13 @@ export function SlotCell({
   labelExtra,
 }: SlotCellProps) {
   const [showOriginal, setShowOriginal] = useState(false);
+  // A different item in the cell (an alternative swapped in on the detail page) starts with its saved snapshot hidden.
+  const shownKey = item === null ? '' : itemRefKey(item);
+  const [prevShownKey, setPrevShownKey] = useState(shownKey);
+  if (prevShownKey !== shownKey) {
+    setPrevShownKey(shownKey);
+    setShowOriginal(false);
+  }
 
   if (onChange !== undefined) {
     return (
