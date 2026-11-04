@@ -1,0 +1,2 @@
+# Reviewed false positives (gitleaks fingerprints). A game string key in the deleted dpdns research notes:
+0264e6e5ccc41d9e2e69c64d629146c08e990424:docs/research/dpdns-site/05-data-pipeline-and-i18n.md:generic-api-key:54

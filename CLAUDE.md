@@ -66,7 +66,7 @@ The project uses React Compiler for automatic memoization. Do NOT use manual `us
   - `chore:` maintenance tasks
   - `refactor:` code restructuring
   - `docs:` documentation
-- **Pre-commit hooks**: Prettier and ESLint run automatically on staged files
+- **Pre-commit hooks** (`.husky/pre-commit`): `scripts/check-staged-files.sh` rejects env files (other than the three committed ones), save/stash files, logs and files over 2 MB outside `public/game-data/`; lint-staged runs Prettier and ESLint, plus `scripts/check-metadata.sh` (exiftool) on images and PDFs; gitleaks scans the staged changes (`.gitleaks.toml` allows the publishable Supabase keys and the Cloudflare beacon token). The exiftool and gitleaks checks are skipped with a message when the tools are not installed (`brew install gitleaks exiftool`)
 - **Commit messages**: Validated by commitlint
 
 ## Versioning

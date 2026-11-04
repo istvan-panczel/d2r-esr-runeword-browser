@@ -26,3 +26,12 @@ coverage
 *.sw?
 
 temp-txt
+
+# Secrets and local tool state (never commit)
+.env
+*.pem
+*.key
+.claude/settings.local.json
+.claude/worktrees/
+supabase/.temp/
+supabase/.branches/

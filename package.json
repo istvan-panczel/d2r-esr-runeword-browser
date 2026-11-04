@@ -105,6 +105,9 @@
     "scripts/**/*.ts": [
       "prettier --write",
       "eslint --fix"
+    ],
+    "*.{png,jpg,jpeg,webp,pdf}": [
+      "sh scripts/check-metadata.sh"
     ]
   },
   "dependencies": {
