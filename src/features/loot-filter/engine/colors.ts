@@ -1,5 +1,5 @@
 /** The `ÿc` colour codes from the guide's "Color codes" pages, and the game's label colour per quality. */
-import type { QualityName } from './types.ts';
+import type { LabelColor, QualityName } from './types.ts';
 
 export interface ColorCode {
   /** The character after `ÿc`. */
@@ -78,6 +78,12 @@ export function findColorCode(colorCode: string): ColorCode | undefined {
 /** The RGB of a code given as `'4'` or `'ÿc4'`, or undefined for an unknown code. */
 export function colorCodeRgb(colorCode: string): readonly [number, number, number] | undefined {
   return findColorCode(colorCode)?.rgb;
+}
+
+/** A label colour as CSS, as the game draws it: the colour's own alpha, else `defaultAlpha` (0 to 255). */
+export function labelRgba(color: LabelColor, defaultAlpha: number): string {
+  const alpha = (color.length === 4 ? color[3] : defaultAlpha) / 255;
+  return `rgba(${String(color[0])}, ${String(color[1])}, ${String(color[2])}, ${String(alpha)})`;
 }
 
 /** The label colour code the game uses per quality, as the full `ÿcX` string (the form `qualityColors` takes). */

@@ -20,6 +20,7 @@
 | Class Variance Authority | Component variant management                                           |
 | clsx                     | Conditional className construction                                     |
 | tailwind-merge           | Merge Tailwind classes without conflicts                               |
+| CodeMirror 6             | Loot filter JSON editor (lazy chunk); VS Code themes from @uiw         |
 
 shadcn/ui components are installed via CLI and customized for a Diablo 2 aesthetic.
 

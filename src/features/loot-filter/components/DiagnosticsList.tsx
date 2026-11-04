@@ -13,10 +13,15 @@ interface DiagnosticsListProps {
   readonly diagnostics: readonly Diagnostic[];
   /** Selects the rule and switches to the Rules tab. */
   readonly onShowRule: (index: number) => void;
+  /** When given, problems with a path also get a "Show in JSON" button (the JSON tab selects the path in its text). */
+  readonly onShowInJson?: (diagnostic: Diagnostic) => void;
 }
 
-/** Every problem with the filter: severity, path and message; rule problems link to their rule. Errors come first. */
-export function DiagnosticsList({ diagnostics, onShowRule }: DiagnosticsListProps) {
+/**
+ * Every problem with the filter: severity, path and message; rule problems link to their rule, and with `onShowInJson`
+ * a problem with a path links to its place in the text. Errors come first.
+ */
+export function DiagnosticsList({ diagnostics, onShowRule, onShowInJson }: DiagnosticsListProps) {
   const [showAll, setShowAll] = useState(false);
   const sorted = [...diagnostics].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1));
   const rows = showAll ? sorted : sorted.slice(0, INITIAL_ROWS);
@@ -52,17 +57,33 @@ export function DiagnosticsList({ diagnostics, onShowRule }: DiagnosticsListProp
                   <p className="break-words">{diagnostic.message}</p>
                   {diagnostic.path !== '' && <code className="break-all text-xs text-muted-foreground">{diagnostic.path}</code>}
                 </div>
-                {diagnostic.rule !== undefined && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-auto self-start p-0"
-                    onClick={() => {
-                      if (diagnostic.rule !== undefined) onShowRule(diagnostic.rule);
-                    }}
-                  >
-                    Rule {diagnostic.rule + 1}
-                  </Button>
+                {(diagnostic.rule !== undefined || (onShowInJson && diagnostic.path !== '')) && (
+                  <div className="flex shrink-0 gap-3 self-start">
+                    {diagnostic.rule !== undefined && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0"
+                        onClick={() => {
+                          if (diagnostic.rule !== undefined) onShowRule(diagnostic.rule);
+                        }}
+                      >
+                        Rule {diagnostic.rule + 1}
+                      </Button>
+                    )}
+                    {onShowInJson && diagnostic.path !== '' && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0"
+                        onClick={() => {
+                          onShowInJson(diagnostic);
+                        }}
+                      >
+                        Show in JSON
+                      </Button>
+                    )}
+                  </div>
                 )}
               </li>
             ))}

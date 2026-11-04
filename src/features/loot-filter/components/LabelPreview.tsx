@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { colorCodeRgb } from '../engine/colors';
+import { colorCodeRgb, labelRgba } from '../engine/colors';
 import { splitColorRuns } from '../engine/text';
 import { DEFAULT_LABEL_BACKGROUND_ALPHA, type LabelBorder, type LabelColor } from '../engine/types';
 
@@ -14,11 +14,6 @@ interface LabelPreviewProps {
   readonly className?: string;
 }
 
-function rgba(color: LabelColor, defaultAlpha: number): string {
-  const alpha = (color.length === 4 ? color[3] : defaultAlpha) / 255;
-  return `rgba(${String(color[0])}, ${String(color[1])}, ${String(color[2])}, ${String(alpha)})`;
-}
-
 function textColor(code: string | null, defaultColor: string): string {
   const rgb = colorCodeRgb(code ?? defaultColor) ?? [255, 255, 255];
   return `rgb(${String(rgb[0])}, ${String(rgb[1])}, ${String(rgb[2])})`;
@@ -31,8 +26,8 @@ function textColor(code: string | null, defaultColor: string): string {
 export function LabelPreview({ text, background, border, defaultColor = '=', className }: LabelPreviewProps) {
   const segments = splitColorRuns(text);
   const style = {
-    backgroundColor: background ? rgba(background, DEFAULT_LABEL_BACKGROUND_ALPHA) : undefined,
-    borderColor: border ? rgba(border.color, 255) : undefined,
+    backgroundColor: background ? labelRgba(background, DEFAULT_LABEL_BACKGROUND_ALPHA) : undefined,
+    borderColor: border ? labelRgba(border.color, 255) : undefined,
     borderWidth: border ? `${String(Math.max(0, border.width))}px` : undefined,
     borderStyle: border ? 'solid' : undefined,
   };
