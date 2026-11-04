@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { TriangleAlert } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,6 +7,7 @@ import type { CraftAnnotation, EquipmentSlot, ItemRef, WeaponSwapSlot } from '..
 import type { CraftDataState } from '../hooks/useCraftData';
 import type { ItemDiff } from '../utils/itemDiff';
 import { socketedOf } from '../utils/itemChoices';
+import { itemRefKey } from '../utils/resolveItem';
 import { BuildItemCard } from './BuildItemCard';
 import { CraftsDisplay } from './CraftsDisplay';
 import { CraftsEditor } from './CraftsEditor';
@@ -38,6 +39,10 @@ interface SlotCellProps {
   readonly onCraftsChange?: (crafts: readonly CraftAnnotation[]) => void;
   /** The crafting / enhance bundles, loaded once per screen. */
   readonly craftData?: CraftDataState;
+  /** Extra content at the bottom of the cell in both modes (the slot's alternative items). */
+  readonly footer?: ReactNode;
+  /** Read-only only: extra content at the end of the label row (e.g. which alternative is shown). */
+  readonly labelExtra?: ReactNode;
 }
 
 const NO_CRAFT_DATA: CraftDataState = { status: 'idle', lookups: undefined };
@@ -56,8 +61,17 @@ export function SlotCell({
   crafts = [],
   onCraftsChange,
   craftData = NO_CRAFT_DATA,
+  footer,
+  labelExtra,
 }: SlotCellProps) {
   const [showOriginal, setShowOriginal] = useState(false);
+  // A different item in the cell (an alternative swapped in on the detail page) starts with its saved snapshot hidden.
+  const shownKey = item === null ? '' : itemRefKey(item);
+  const [prevShownKey, setPrevShownKey] = useState(shownKey);
+  if (prevShownKey !== shownKey) {
+    setPrevShownKey(shownKey);
+    setShowOriginal(false);
+  }
 
   if (onChange !== undefined) {
     return (
@@ -81,6 +95,7 @@ export function SlotCell({
             }}
           />
         )}
+        {footer}
       </div>
     );
   }
@@ -102,6 +117,7 @@ export function SlotCell({
             </span>
           )}
         </p>
+        {labelExtra}
         {status === 'changed' && (
           <button
             type="button"
@@ -148,6 +164,8 @@ export function SlotCell({
           <p className="whitespace-pre-wrap text-xs">{noteText}</p>
         </div>
       )}
+
+      {footer}
     </div>
   );
 }

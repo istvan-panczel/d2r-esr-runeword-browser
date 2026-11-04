@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { asBuildData, asCraftAnnotation, asLevel, asSkillPoints, isItemRef } from './buildData';
+import {
+  alternativesSection,
+  asBuildData,
+  asCraftAnnotation,
+  asItemAlternative,
+  asLevel,
+  asSkillPoints,
+  asVariantData,
+  asVariantList,
+  isItemRef,
+} from './buildData';
 
 const columnAffixes = { weaponsGloves: ['+1 skills'], helmsBoots: [], armorShieldsBelts: [] };
 
@@ -324,5 +334,153 @@ describe('asBuildData with level and skill points', () => {
   it('keeps at most 60 entries', () => {
     const many = Object.fromEntries(Array.from({ length: 70 }, (_, index) => [`skill ${String(index)}`, 1]));
     expect(Object.keys(asSkillPoints(many) ?? {})).toHaveLength(60);
+  });
+});
+
+describe('asItemAlternative', () => {
+  it('keeps a valid ref with its note and crafts', () => {
+    const crafts = [{ kind: 'meld', material: 'grb', uses: 2 }];
+    expect(asItemAlternative({ ref: unique, note: '  for MF  ', crafts })).toEqual({ ref: unique, note: 'for MF', crafts });
+    expect(asItemAlternative({ ref: freetext })).toEqual({ ref: freetext });
+  });
+
+  it('drops a blank note, malformed crafts and unknown keys but keeps the alternative', () => {
+    expect(asItemAlternative({ ref: unique, note: '   ', crafts: [{ kind: 'bogus' }], extra: 1 })).toEqual({ ref: unique });
+    expect(asItemAlternative({ ref: unique, note: 5, crafts: 'x' })).toEqual({ ref: unique });
+  });
+
+  it('cleans the ref author choices like a main item', () => {
+    const alternative = asItemAlternative({ ref: { ...runeword, base: { code: 'xtp' }, socketed: [' Ber Rune ', ''] } });
+    expect(alternative?.ref).toEqual({ ...runeword, socketed: ['Ber Rune'] });
+  });
+
+  it('rejects entries without a valid ref', () => {
+    expect([null, 'x', [unique], unique, { ref: { type: 'unique', id: 1 } }, { note: 'x' }].map(asItemAlternative)).toEqual(
+      Array.from({ length: 6 }, () => undefined)
+    );
+  });
+});
+
+describe('alternativesSection', () => {
+  it('keeps valid alternatives per slot and drops malformed entries and empty slots', () => {
+    const section = alternativesSection({
+      helmet: [{ ref: unique }, { ref: 'bad' }, null, { ref: freetext, note: 'budget' }],
+      armor: [{ ref: null }],
+      gloves: [],
+      boots: 'not a list',
+    });
+    expect(section).toEqual({ helmet: [{ ref: unique }, { ref: freetext, note: 'budget' }] });
+  });
+
+  it('keeps at most ten alternatives per slot', () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({ ref: { type: 'freetext', name: `Item ${String(index)}` } }));
+    expect(alternativesSection({ ring1: many })?.ring1).toHaveLength(10);
+  });
+
+  it('is undefined for a non-object', () => {
+    expect(alternativesSection(undefined)).toBeUndefined();
+    expect(alternativesSection([{ ref: unique }])).toBeUndefined();
+  });
+});
+
+describe('asVariantData', () => {
+  it('reads all three alternative maps', () => {
+    const data = asVariantData({
+      itemAlternatives: { helmet: [{ ref: unique }] },
+      weaponSwapAlternatives: { weapon2: [{ ref: freetext }] },
+      mercenaryAlternatives: { armor: [{ ref: runeword, crafts: [{ kind: 'forge', forge: 'rune', key: 'r19' }] }] },
+    });
+    expect(data.itemAlternatives).toEqual({ helmet: [{ ref: unique }] });
+    expect(data.weaponSwapAlternatives).toEqual({ weapon2: [{ ref: freetext }] });
+    expect(data.mercenaryAlternatives).toEqual({ armor: [{ ref: runeword, crafts: [{ kind: 'forge', forge: 'rune', key: 'r19' }] }] });
+  });
+
+  it('trims the variant name and note, drops blank or non-string ones and caps their length', () => {
+    expect(asVariantData({ variantName: '  MF  ', variantNote: ' Hell farming ' })).toMatchObject({
+      variantName: 'MF',
+      variantNote: 'Hell farming',
+    });
+    const blank = asVariantData({ variantName: '   ', variantNote: 3 });
+    expect(blank.variantName).toBeUndefined();
+    expect(blank.variantNote).toBeUndefined();
+    const long = asVariantData({ variantName: 'n'.repeat(80), variantNote: 'x'.repeat(700) });
+    expect(long.variantName).toHaveLength(50);
+    expect(long.variantNote).toHaveLength(500);
+    // Capped by code points, so an emoji at the cut is kept whole (Postgres jsonb rejects lone surrogates).
+    const emoji = asVariantData({ variantName: `${'n'.repeat(49)}🔥🔥` });
+    expect(emoji.variantName).toBe(`${'n'.repeat(49)}🔥`);
+  });
+
+  it('never reads a variants key', () => {
+    expect(asVariantData({ variants: [{ skills: 'x' }] })).not.toHaveProperty('variants');
+  });
+});
+
+describe('asVariantList', () => {
+  it('parses each entry like the top level and drops non-objects', () => {
+    const list = asVariantList([{ items: { helmet: unique, armor: 'bad' }, variantName: 'Budget' }, null, 'x', [], {}]);
+    expect(list).toHaveLength(2);
+    expect(list?.[0].items).toEqual({ helmet: unique });
+    expect(list?.[0].variantName).toBe('Budget');
+  });
+
+  it('keeps at most nine extra variants', () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({ variantName: `V${String(index)}` }));
+    expect(asVariantList(many)?.map((variant) => variant.variantName)).toEqual(['V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8']);
+  });
+
+  it('is undefined when absent, not an array or empty', () => {
+    expect(asVariantList(undefined)).toBeUndefined();
+    expect(asVariantList({ 0: {} })).toBeUndefined();
+    expect(asVariantList([])).toBeUndefined();
+    expect(asVariantList([null])).toBeUndefined();
+  });
+});
+
+describe('asBuildData with variants and alternatives', () => {
+  const withVariants = {
+    ...FULL_EXAMPLE,
+    itemAlternatives: { helmet: [{ ref: freetext, note: 'Budget helm' }] },
+    variantName: 'Endgame',
+    variantNote: 'Needs Enigma',
+    variants: [
+      {
+        items: { armor: runeword },
+        mercenaryAlternatives: { armor: [{ ref: unique, crafts: [{ kind: 'meld', material: 'grb', uses: 1 }] }] },
+        variantName: 'Starter',
+        skills: '20 Zeal',
+      },
+    ],
+  };
+
+  it('round-trips the full example with variants and alternatives unchanged', () => {
+    const data = asBuildData(structuredClone(withVariants));
+    expect(JSON.parse(JSON.stringify(data))).toEqual(withVariants);
+  });
+
+  it('reads a build without variants exactly as before', () => {
+    const data = asBuildData(structuredClone(FULL_EXAMPLE));
+    expect(data.variants).toBeUndefined();
+    expect(data.itemAlternatives).toBeUndefined();
+    expect(data.variantName).toBeUndefined();
+    expect(JSON.stringify(data)).toBe(JSON.stringify(FULL_EXAMPLE));
+  });
+
+  it('ignores a variants key nested inside a variant', () => {
+    const data = asBuildData({ variants: [{ skills: 'A', variants: [{ skills: 'B' }] }] });
+    expect(data.variants).toHaveLength(1);
+    expect(data.variants?.[0]).not.toHaveProperty('variants');
+    expect(data.variants?.[0].skills).toBe('A');
+  });
+
+  it('keeps at most nine extra variants', () => {
+    const data = asBuildData({ variants: Array.from({ length: 15 }, () => ({ skills: 'x' })) });
+    expect(data.variants).toHaveLength(9);
+  });
+
+  it('drops a malformed alternative but keeps the variant and the build', () => {
+    const data = asBuildData({ items: { helmet: unique }, itemAlternatives: { helmet: [{ ref: { type: 'bogus' } }, { ref: freetext }] } });
+    expect(data.items).toEqual({ helmet: unique });
+    expect(data.itemAlternatives).toEqual({ helmet: [{ ref: freetext }] });
   });
 });

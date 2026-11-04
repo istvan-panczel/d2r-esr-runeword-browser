@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CraftAnnotation, EquipmentSlot, ItemRef } from '../buildData';
 import type { CraftDataState } from '../hooks/useCraftData';
 import type { ItemDiff } from '../utils/itemDiff';
@@ -53,6 +54,10 @@ interface EquipmentGridProps {
   readonly onCraftsChange?: (slot: EquipmentSlot, crafts: readonly CraftAnnotation[]) => void;
   /** The crafting / enhance bundles, loaded once by the screen. */
   readonly craftData?: CraftDataState;
+  /** Extra content at the bottom of a slot's cell (its alternative items). */
+  readonly renderSlotFooter?: (slot: EquipmentSlot) => ReactNode;
+  /** Read-only only: extra content at the end of a slot's label row. */
+  readonly renderSlotLabelExtra?: (slot: EquipmentSlot) => ReactNode;
 }
 
 export function EquipmentGrid({
@@ -65,6 +70,8 @@ export function EquipmentGrid({
   crafts,
   onCraftsChange,
   craftData,
+  renderSlotFooter,
+  renderSlotLabelExtra,
 }: EquipmentGridProps) {
   // Set pieces worn in this section only (a grid is one section: player gear or merc gear).
   const pieceCounts = setPieceCounts(items);
@@ -86,6 +93,8 @@ export function EquipmentGrid({
             note={notes?.[slot]}
             crafts={crafts?.[slot]}
             craftData={craftData}
+            footer={renderSlotFooter?.(slot)}
+            labelExtra={renderSlotLabelExtra?.(slot)}
             onChange={
               onChange === undefined
                 ? undefined

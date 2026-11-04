@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft, Calendar, Heart, MoreVertical, Pencil, Trash2 } from 'lucide-react';
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -24,19 +23,15 @@ import { db } from '@/core/db';
 import { RequestState } from '@/core/types';
 import { avatarInitials, formatProfileTag, openSignInDialog, selectAuthUserId, selectIsAuthenticated } from '@/features/auth';
 import { selectPageWidth } from '@/features/settings';
-import { asBuildData, type EquipmentSlot, type ItemRef, type WeaponSwapSlot } from '../buildData';
-import { compactItems } from '../utils/buildSnapshot';
-import { hasCrafts } from '../utils/crafts';
+import { asBuildData } from '../buildData';
 import { useCraftData } from '../hooks/useCraftData';
 import { useSkillTree } from '../hooks/useSkillTree';
 import { hasSkillPoints } from '../utils/skillTree';
-import { SkillTreeDisplay } from '../components/SkillTreeDisplay';
-import { computeBuildItemDiffs } from '../utils/itemDiff';
-import { hasSetItems } from '../utils/setBonuses';
-import { SetBonusesBlock } from '../components/SetBonusesBlock';
-import { EquipmentGrid } from '../components/EquipmentGrid';
-import { WeaponSwapGrid } from '../components/WeaponSwapGrid';
-import { AscendancyDisplay } from '../components/AscendancyDisplay';
+import { unpackVariants, variantAt, variantHasCrafts, variantLabel } from '../utils/buildVariants';
+import { computeVariantItemDiffs } from '../utils/itemDiff';
+import { VARIANT_PARAM, variantIndexFromParam, variantParamValue, withVariantParam } from '../utils/variantParam';
+import { VariantDetail, type DetailTab } from '../components/VariantDetail';
+import { SingleVariantHeader, VariantSelector } from '../components/VariantSelector';
 import { ExportBuildButton } from '../components/ExportBuildButton';
 import {
   clearDetail,
@@ -52,26 +47,6 @@ import {
 } from '../store';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-
-type DetailTab = 'player' | 'skills' | 'mercenary';
-
-const hasText = (value: string | null | undefined): boolean => value !== null && value !== undefined && value.trim().length > 0;
-
-/*
- * The Player tab on pages of 2400 px and up (Wide and Full page widths; the `page` container is set below only for
- * them). With player gear and a weapon swap, the swap sits beside the gear: five equal slot columns use the width.
- * Without one of them the three paperdoll columns would stretch across an ultrawide window, so the gear column stops
- * at 120rem (the charms + ascendancy aside stays right next to it) and the rest of the row stays empty.
- */
-const GEAR_SIDE_BY_SIDE_CLASS =
-  'flex flex-col gap-6 @10xl/page:grid @10xl/page:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @10xl/page:items-start';
-const PLAYER_TAB_CLASS = {
-  aside: {
-    fill: 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]',
-    capped: 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] @10xl/page:grid-cols-[minmax(0,120rem)_24rem]',
-  },
-  noAside: { fill: 'flex flex-col gap-6', capped: 'flex flex-col gap-6 @10xl/page:max-w-[120rem]' },
-} as const;
 
 export function BuildDetailScreen() {
   const { buildId } = useParams();
@@ -92,25 +67,40 @@ export function BuildDetailScreen() {
   const esrVersionMeta = useLiveQuery(() => db.metadata.get('esrVersion'));
   const currentEsrVersion = esrVersionMeta?.value ?? null;
 
-  // Per-item ESR diff: re-resolve every referenced item against current local data.
-  // Re-runs when the local item tables change (Dexie liveQuery) or the build changes.
-  const itemDiffs = useLiveQuery(
-    () => (build !== null ? computeBuildItemDiffs(asBuildData(build.build_data)) : Promise.resolve(undefined)),
-    [build?.build_data]
-  );
+  // The shown variant is `?variant=N` (1-based) so a copied link opens it; a bad value shows the first.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const variantList = build !== null ? unpackVariants(asBuildData(build.build_data)) : [];
+  const variantIndex = variantIndexFromParam(searchParams.get(VARIANT_PARAM), variantList.length);
+  const selectVariant = (index: number) => {
+    setSearchParams(
+      (previous) => {
+        const params = new URLSearchParams(previous);
+        const value = variantParamValue(index);
+        if (value === null) params.delete(VARIANT_PARAM);
+        else params.set(VARIANT_PARAM, value);
+        return params;
+      },
+      { replace: true }
+    );
+  };
 
-  // Parsed again below for rendering; here only to decide whether the crafting bundles are needed.
-  const detailData = build !== null ? asBuildData(build.build_data) : null;
-  const craftData = useCraftData(
-    detailData !== null &&
-      (hasCrafts(detailData.itemCrafts) || hasCrafts(detailData.weaponSwapCrafts) || hasCrafts(detailData.mercenaryCrafts))
-  );
+  // Per-item ESR diff of the shown variant: re-resolve every referenced item (main and alternatives) against
+  // current local data. Re-runs when the local item tables change (Dexie liveQuery), the build or the variant changes.
+  // Tagged with the variant index so a previous variant's result is never shown on the next one.
+  const variantDiffs = useLiveQuery(async () => {
+    if (build === null) return undefined;
+    const diffs = await computeVariantItemDiffs(variantAt(asBuildData(build.build_data), variantIndex));
+    return { index: variantIndex, diffs };
+  }, [build?.build_data, variantIndex]);
+
+  // The crafting and skill bundles load when any variant needs them, so a variant switch never shows them loading.
+  const craftData = useCraftData(variantList.some(variantHasCrafts));
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  // UI-only tab choice; falls back to Player when the chosen tab isn't available for this build.
+  // UI-only tab choice; falls back to Player when the chosen tab isn't available for the shown variant.
   const [tab, setTab] = useState<DetailTab>('player');
   // skills.json + skilldetails.json are only fetched when the build has a skill allocation to draw.
-  const skillData = useSkillTree(detailData !== null && hasSkillPoints(detailData.skillPoints));
+  const skillData = useSkillTree(variantList.some((variant) => hasSkillPoints(variant.skillPoints)));
 
   useEffect(() => {
     if (buildId === undefined) return;
@@ -179,34 +169,14 @@ export function BuildDetailScreen() {
   const effectiveVersion = updatedVersion ?? build.esr_version;
   const versionMismatch = effectiveVersion !== null && currentEsrVersion !== null && effectiveVersion !== currentEsrVersion;
   const hasDescription = build.description !== null && build.description.trim().length > 0;
-  const buildData = asBuildData(build.build_data);
+  const variant = variantList[variantIndex];
   // Only surface diff badges once local data is loaded (esrVersion present); before
-  // that, computeBuildItemDiffs would report every item as "missing".
-  const diffsReady = currentEsrVersion !== null ? itemDiffs : undefined;
-  const playerItems: Partial<Record<EquipmentSlot, ItemRef | null>> = buildData.items ?? {};
-  const swapItems: Partial<Record<WeaponSwapSlot, ItemRef | null>> = buildData.weaponSwap ?? {};
-  const mercItems: Partial<Record<EquipmentSlot, ItemRef | null>> = buildData.mercenary ?? {};
-  const hasPlayerGear = Object.keys(compactItems(playerItems)).length > 0;
-  const hasSwap = Object.keys(compactItems(swapItems)).length > 0;
-  const hasMerc = Object.keys(compactItems(mercItems)).length > 0;
-  const hasMercNotes = Object.values(buildData.mercenaryNotes ?? {}).some(hasText) || hasCrafts(buildData.mercenaryCrafts);
-  const charms = buildData.charms ?? [];
-  const ascendancyName = buildData.ascendancy ?? null;
-  const skills = buildData.skills ?? null;
-  const level = buildData.level ?? null;
-  const skillPoints = buildData.skillPoints;
-  const hasSkillText = hasText(skills);
-  const hasSkills = hasSkillText || level !== null || hasSkillPoints(skillPoints);
-  // Charms + ascendancy sit beside the player gear on wide screens.
-  const hasPlayerAside = charms.length > 0 || ascendancyName !== null;
+  // that, computeVariantItemDiffs would report every item as "missing".
+  const diffsReady = currentEsrVersion !== null && variantDiffs?.index === variantIndex ? variantDiffs.diffs : undefined;
+  // Charms + ascendancy sit beside the player gear on wide screens, so the Standard page breaks out for them. Any
+  // variant with them does it, so a variant switch never changes the page frame.
+  const hasPlayerAside = variantList.some((entry) => (entry.charms?.length ?? 0) > 0 || (entry.ascendancy ?? null) !== null);
   const breakout = hasPlayerAside && pageWidth === 'standard';
-  const gearSideBySide = hasPlayerGear && hasSwap;
-  const availableTabs: readonly DetailTab[] = [
-    'player',
-    ...(hasSkills ? (['skills'] as const) : []),
-    ...(hasMerc || hasMercNotes ? (['mercenary'] as const) : []),
-  ];
-  const activeTab: DetailTab = availableTabs.includes(tab) ? tab : 'player';
   const esrLabel = `ESR ${effectiveVersion ?? 'Unknown'}`;
 
   return (
@@ -282,7 +252,7 @@ export function BuildDetailScreen() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link to={`/builds/${build.id}/edit`}>
+                      <Link to={withVariantParam(`/builds/${build.id}/edit`, variantIndex)}>
                         <Pencil className="size-4" />
                         Edit
                       </Link>
@@ -317,125 +287,28 @@ export function BuildDetailScreen() {
           </section>
         )}
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => {
-            setTab(value as DetailTab);
-          }}
-          className="gap-4"
-        >
-          {availableTabs.length > 1 && (
-            <TabsList className="w-full sm:w-fit">
-              <TabsTrigger value="player" className="sm:px-4">
-                Player
-              </TabsTrigger>
-              {hasSkills && (
-                <TabsTrigger value="skills" className="sm:px-4">
-                  Skills
-                </TabsTrigger>
-              )}
-              {(hasMerc || hasMercNotes) && (
-                <TabsTrigger value="mercenary" className="sm:px-4">
-                  Mercenary
-                </TabsTrigger>
-              )}
-            </TabsList>
-          )}
+        {variantList.length > 1 ? (
+          <VariantSelector
+            labels={variantList.map((entry, index) => variantLabel(entry, index))}
+            activeIndex={variantIndex}
+            onSelect={selectVariant}
+            note={variant.variantNote}
+          />
+        ) : (
+          <SingleVariantHeader name={variant.variantName} note={variant.variantNote} />
+        )}
 
-          <TabsContent value="player">
-            <div className={PLAYER_TAB_CLASS[hasPlayerAside ? 'aside' : 'noAside'][gearSideBySide ? 'fill' : 'capped']}>
-              <section>
-                <SectionHeader title="Equipment" />
-                {hasPlayerGear || hasSwap ? (
-                  <div className={gearSideBySide ? GEAR_SIDE_BY_SIDE_CLASS : 'flex flex-col gap-6'}>
-                    {hasPlayerGear && (
-                      <div>
-                        <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Player Gear</h3>
-                        <EquipmentGrid
-                          items={playerItems}
-                          diffs={diffsReady?.items}
-                          notes={buildData.itemNotes}
-                          crafts={buildData.itemCrafts}
-                          craftData={craftData}
-                        />
-                        {hasSetItems(playerItems) && <SetBonusesBlock items={playerItems} />}
-                      </div>
-                    )}
-                    {hasSwap && (
-                      <div>
-                        <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Weapon Swap</h3>
-                        <WeaponSwapGrid
-                          items={swapItems}
-                          diffs={diffsReady?.weaponSwap}
-                          notes={buildData.weaponSwapNotes}
-                          crafts={buildData.weaponSwapCrafts}
-                          craftData={craftData}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {hasMerc ? 'No player gear has been added to this build yet.' : 'No gear has been added to this build yet.'}
-                  </p>
-                )}
-              </section>
-
-              {hasPlayerAside && (
-                <aside className="flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start">
-                  {charms.length > 0 && (
-                    <section>
-                      <SectionHeader title="Charms" />
-                      <div className="flex flex-wrap gap-2">
-                        {charms.map((charm, index) => (
-                          <Badge key={`${String(index)}-${charm}`} variant="secondary">
-                            {charm}
-                          </Badge>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                  {ascendancyName !== null && (
-                    <section>
-                      <SectionHeader title="Ascendancy" />
-                      <AscendancyDisplay name={ascendancyName} />
-                    </section>
-                  )}
-                </aside>
-              )}
-            </div>
-          </TabsContent>
-
-          {hasSkills && (
-            <TabsContent value="skills">
-              <section className="flex flex-col gap-4">
-                <SectionHeader title="Skills" />
-                {level !== null && <p className="text-sm font-medium">Level {level}</p>}
-                {hasSkillText && <p className="whitespace-pre-wrap text-sm">{skills}</p>}
-                {hasSkillPoints(skillPoints) && (
-                  <SkillTreeDisplay characterClass={build.class} skillPoints={skillPoints} skillData={skillData} />
-                )}
-              </section>
-            </TabsContent>
-          )}
-
-          {(hasMerc || hasMercNotes) && (
-            <TabsContent value="mercenary">
-              <section>
-                <SectionHeader title="Mercenary Gear" />
-                <EquipmentGrid
-                  items={mercItems}
-                  diffs={diffsReady?.mercenary}
-                  notes={buildData.mercenaryNotes}
-                  crafts={buildData.mercenaryCrafts}
-                  craftData={craftData}
-                />
-                {hasSetItems(mercItems) && <SetBonusesBlock items={mercItems} />}
-              </section>
-            </TabsContent>
-          )}
-        </Tabs>
+        <VariantDetail
+          key={variantIndex}
+          variant={variant}
+          multiVariant={variantList.length > 1}
+          characterClass={build.class}
+          diffs={diffsReady}
+          craftData={craftData}
+          skillData={skillData}
+          tab={tab}
+          onTabChange={setTab}
+        />
 
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-sm">

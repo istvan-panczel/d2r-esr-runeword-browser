@@ -8,6 +8,8 @@
  * - builds `build_data` (src/features/builds/buildData.ts): unique / mythical by snapshot name, runeword / gemword by
  *   [name, variant], set items by name, the runeword base by bases.json code, skillPoints by skills.json id, crafts by
  *   `slot:roll` / `kind:key` / `kind:material:switchItem` (src/features/builds/utils/crafts.ts), class, ascendancy;
+ *   in every build variant (the top level is variant 1, `variants[i]` the others, one level deep) and for the
+ *   alternative items of each slot (`itemAlternatives` / `weaponSwapAlternatives` / `mercenaryAlternatives`: ref + crafts);
  * - loot filters: the filter file, through the loot filter validator (item codes and types, stat names and ids, area
  *   ids, unique/set ids, sound rows) plus the skill ids of skill-layered stat checks.
  */
@@ -142,6 +144,35 @@ export function checkFavorite(itemId: string, data: CurrentData): RowCheck {
 
 const SLOT_MAPS = ['items', 'weaponSwap', 'mercenary'] as const;
 const CRAFT_MAPS = ['itemCrafts', 'weaponSwapCrafts', 'mercenaryCrafts'] as const;
+const ALT_MAPS = ['itemAlternatives', 'weaponSwapAlternatives', 'mercenaryAlternatives'] as const;
+
+/**
+ * Calls `visit` for each variant of a build: the top level (prefix `''`) and every record in `variants` (prefix
+ * `variants[i].`). A `variants` key inside a variant is ignored, as the app does.
+ */
+function forEachVariant(buildData: UnknownRecord, visit: (variant: UnknownRecord, prefix: string) => void): void {
+  visit(buildData, '');
+  if (!Array.isArray(buildData.variants)) return;
+  buildData.variants.forEach((variant: unknown, index) => {
+    if (isRecord(variant)) visit(variant, `variants[${String(index)}].`);
+  });
+}
+
+/** Every alternative entry of one variant: `{ path: 'itemAlternatives.ring1[2]', alt }`; malformed entries skipped. */
+function alternatives(variant: UnknownRecord): { path: string; alt: UnknownRecord }[] {
+  const entries: { path: string; alt: UnknownRecord }[] = [];
+  for (const map of ALT_MAPS) {
+    const slots = variant[map];
+    if (!isRecord(slots)) continue;
+    for (const [slot, list] of Object.entries(slots)) {
+      if (!Array.isArray(list)) continue;
+      list.forEach((alt: unknown, index) => {
+        if (isRecord(alt)) entries.push({ path: `${map}.${slot}[${String(index)}]`, alt });
+      });
+    }
+  }
+  return entries;
+}
 
 function checkItemRef(collector: Collector, ref: string, value: unknown, data: CurrentData): void {
   if (!isRecord(value)) return;
@@ -216,41 +247,55 @@ function craftReason(craft: UnknownRecord, data: CurrentData): { label: string; 
   }
 }
 
-/** Checks one public build (`class` column + `build_data`). */
+function checkCrafts(collector: Collector, path: string, list: unknown, data: CurrentData): void {
+  if (!Array.isArray(list)) return;
+  for (const craft of list) {
+    const result = isRecord(craft) ? craftReason(craft, data) : undefined;
+    if (result !== undefined) collector.add('craft', `${path} ${result.label}`, result.reason);
+  }
+}
+
+/** The ref of a variant-level reference (skill id, ascendancy): bare on the top level, `variants[i] <ref>` otherwise. */
+const variantRef = (prefix: string, ref: string): string => (prefix === '' ? ref : `${prefix.slice(0, -1)} ${ref}`);
+
+function checkVariant(collector: Collector, variant: UnknownRecord, prefix: string, data: CurrentData): void {
+  for (const map of SLOT_MAPS) {
+    const slots = variant[map];
+    if (!isRecord(slots)) continue;
+    for (const [slot, value] of Object.entries(slots)) checkItemRef(collector, `${prefix}${map}.${slot}`, value, data);
+  }
+  for (const { path, alt } of alternatives(variant)) {
+    checkItemRef(collector, `${prefix}${path}`, alt.ref, data);
+    checkCrafts(collector, `${prefix}${path}`, alt.crafts, data);
+  }
+  for (const map of CRAFT_MAPS) {
+    const slots = variant[map];
+    if (!isRecord(slots)) continue;
+    for (const [slot, list] of Object.entries(slots)) checkCrafts(collector, `${prefix}${map}.${slot}`, list, data);
+  }
+  if (isRecord(variant.skillPoints)) {
+    for (const id of Object.keys(variant.skillPoints))
+      collector.add('skill', variantRef(prefix, id), data.skillIds.has(id) ? null : 'not a skills.json skill id');
+  }
+  const ascendancy = asString(variant.ascendancy);
+  if (ascendancy !== undefined && ascendancy !== '') {
+    collector.add(
+      'ascendancy',
+      variantRef(prefix, ascendancy),
+      data.htm === null ? undefined : data.htm.ascendancies.has(ascendancy) ? null : 'not on ascendancies.htm'
+    );
+  }
+}
+
+/** Checks one public build (`class` column + `build_data`, every variant). */
 export function checkBuild(cls: unknown, buildData: unknown, data: CurrentData): RowCheck {
   const collector = new Collector();
   const className = asString(cls);
   if (className !== undefined) collector.add('class', className, data.classes.has(className) ? null : 'not a skills.json class');
   if (!isRecord(buildData)) return collector.result();
-
-  for (const map of SLOT_MAPS) {
-    const slots = buildData[map];
-    if (!isRecord(slots)) continue;
-    for (const [slot, value] of Object.entries(slots)) checkItemRef(collector, `${map}.${slot}`, value, data);
-  }
-  for (const map of CRAFT_MAPS) {
-    const slots = buildData[map];
-    if (!isRecord(slots)) continue;
-    for (const [slot, list] of Object.entries(slots)) {
-      if (!Array.isArray(list)) continue;
-      for (const craft of list) {
-        const result = isRecord(craft) ? craftReason(craft, data) : undefined;
-        if (result !== undefined) collector.add('craft', `${map}.${slot} ${result.label}`, result.reason);
-      }
-    }
-  }
-  if (isRecord(buildData.skillPoints)) {
-    for (const id of Object.keys(buildData.skillPoints))
-      collector.add('skill', id, data.skillIds.has(id) ? null : 'not a skills.json skill id');
-  }
-  const ascendancy = asString(buildData.ascendancy);
-  if (ascendancy !== undefined && ascendancy !== '') {
-    collector.add(
-      'ascendancy',
-      ascendancy,
-      data.htm === null ? undefined : data.htm.ascendancies.has(ascendancy) ? null : 'not on ascendancies.htm'
-    );
-  }
+  forEachVariant(buildData, (variant, prefix) => {
+    checkVariant(collector, variant, prefix, data);
+  });
   return collector.result();
 }
 
@@ -367,22 +412,28 @@ export function reviewMentions(review: ReviewJson, keys: Iterable<string>): Map<
   return mentions;
 }
 
-/** The recipe and unique keys a build references, in the favourites' id format (for reviewMentions). */
+/**
+ * The recipe keys a build references, in the favourites' id format (for reviewMentions): every variant, main items and
+ * alternatives, deduplicated.
+ */
 export function buildRecipeKeys(buildData: unknown): string[] {
   if (!isRecord(buildData)) return [];
-  const keys: string[] = [];
-  for (const map of SLOT_MAPS) {
-    const slots = buildData[map];
-    if (!isRecord(slots)) continue;
-    for (const value of Object.values(slots)) {
-      if (!isRecord(value)) continue;
-      const type = asString(value.type);
-      const name = asString(value.name);
-      const variant = asNumber(value.variant);
-      if ((type === 'runeword' || type === 'gemword') && name !== undefined && variant !== undefined) {
-        keys.push(`${type}:${name}:${String(variant)}`);
-      }
+  const keys = new Set<string>();
+  const add = (value: unknown): void => {
+    if (!isRecord(value)) return;
+    const type = asString(value.type);
+    const name = asString(value.name);
+    const variant = asNumber(value.variant);
+    if ((type === 'runeword' || type === 'gemword') && name !== undefined && variant !== undefined) {
+      keys.add(`${type}:${name}:${String(variant)}`);
     }
-  }
-  return keys;
+  };
+  forEachVariant(buildData, (variant) => {
+    for (const map of SLOT_MAPS) {
+      const slots = variant[map];
+      if (isRecord(slots)) Object.values(slots).forEach(add);
+    }
+    for (const { alt } of alternatives(variant)) add(alt.ref);
+  });
+  return [...keys];
 }

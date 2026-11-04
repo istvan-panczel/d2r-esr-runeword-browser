@@ -6,8 +6,7 @@ import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { ItemRef } from '../buildData';
-import { useEquipmentItems } from '../hooks/useEquipmentItems';
-import { useSetItems } from '../hooks/useSetItems';
+import { useEquipmentPickerData, useEquipmentPickerDataQuery, type EquipmentPickerData } from '../hooks/useEquipmentPickerData';
 import { freetextRef, gemwordToRef, itemRefName, mythicalToRef, runewordToRef, setItemToRef, uniqueToRef } from '../utils/buildSnapshot';
 import { itemFitsSlot, type PickerSlot } from '../utils/slotFit';
 import { mythicalVariantHints, uniqueVariantHints } from '../utils/variantHints';
@@ -30,13 +29,29 @@ interface EquipmentSlotPickerProps {
  * freetext fallback for items not in the database. Results are limited to items
  * that fit the slot (see utils/slotFit); "Show all items" lifts the limit.
  */
-export function EquipmentSlotPicker({ label, slot, value, onChange, disabled }: EquipmentSlotPickerProps) {
+export function EquipmentSlotPicker(props: EquipmentSlotPickerProps) {
+  // The build form provides the data once for all its pickers; without a provider the picker loads its own.
+  const shared = useEquipmentPickerData();
+  if (shared !== null) return <SlotPicker {...props} data={shared} />;
+  return <OwnDataSlotPicker {...props} />;
+}
+
+function OwnDataSlotPicker(props: EquipmentSlotPickerProps) {
+  const data = useEquipmentPickerDataQuery();
+  return <SlotPicker {...props} data={data} />;
+}
+
+interface SlotPickerProps extends EquipmentSlotPickerProps {
+  readonly data: EquipmentPickerData;
+}
+
+function SlotPicker({ label, slot, value, onChange, disabled, data }: SlotPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
-  const items = useEquipmentItems();
+  const items = data.items;
   // Loaded separately from the local DB; until it arrives (or if it fails) the group is just empty.
-  const setItems = useSetItems() ?? [];
+  const setItems = data.setItems ?? [];
 
   const q = query.trim().toLowerCase();
   const showResults = q.length > 0 && items !== undefined;

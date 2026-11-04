@@ -9,6 +9,7 @@ import { authStateChanged, selectAuthUserId, type AuthUser } from '@/features/au
 import { BUILDS_PAGE_SIZE, RECENT_BUILDS_COUNT } from '../constants';
 import type { BuildData } from '../buildData';
 import type { BuildListItem, BuildSortMode, BuildWithAuthor } from '../types';
+import { buildDataTooLargeMessage } from '../utils/buildSize';
 import { refreshBuildData } from '../utils/refreshBuildData';
 import { buildCursorOrFilter, isUuid, type BuildListCursor } from './buildsQuery';
 import {
@@ -169,8 +170,11 @@ function* handleCreateBuild(action: PayloadAction<CreateBuildPayload>) {
     const userId = (yield select(selectAuthUserId)) as string | null;
     if (userId === null) throw new Error('You must be signed in to create a build.');
 
-    const esrMeta = (yield call(() => db.metadata.get('esrVersion'))) as Metadata | undefined;
     const { name, description, class: characterClass, buildData } = action.payload;
+    // Checked before Supabase: the catch below toasts the message and flags the failure.
+    const tooLarge = buildDataTooLargeMessage(buildData);
+    if (tooLarge !== null) throw new Error(tooLarge);
+    const esrMeta = (yield call(() => db.metadata.get('esrVersion'))) as Metadata | undefined;
     const trimmedDescription = description.trim();
 
     const { data, error } = (yield call(() =>
@@ -208,6 +212,9 @@ function* handleUpdateBuild(action: PayloadAction<UpdateBuildPayload>) {
     const trimmedDescription = description.trim();
     // Refresh all item snapshots to the current local ESR data on edit.
     const refreshed = (yield call(refreshBuildData, buildData)) as BuildData;
+    // The refreshed snapshots are what gets stored, so they are what is measured.
+    const tooLarge = buildDataTooLargeMessage(refreshed);
+    if (tooLarge !== null) throw new Error(tooLarge);
 
     const { error } = (yield call(() =>
       client

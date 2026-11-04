@@ -195,6 +195,22 @@ the `.env.production` URL and `PROD_SUPABASE_URL` from `.env.local`), prints onl
 of the two test users before and after the run. It never touches users or profiles. Run it against DEV only, before
 applying 005 to PROD.
 
+### Apply the Build Data Size Migration (006)
+
+Adds two check constraints on `builds.build_data`: at most 2 MiB as `jsonb::text`, and a JSON object. Build variants
+and alternative items make builds larger; the app caps a save at 1 MiB of `JSON.stringify` bytes, so the DB limit is a
+backstop. No data changes. Existing rows pass (the largest PROD build was ~15 KB on 2026-11-04), so it is safe to apply
+to PROD before deploying the build variants release.
+
+1. Open `supabase/migrations/006_build_data_size.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+
+After running, verify under **Database → Tables → builds → Constraints** (or with
+`select conname from pg_constraint where conrelid = 'public.builds'::regclass;`):
+
+- `builds_build_data_size`
+- `builds_build_data_object`
+
 ### Future Migrations
 
 When new migration files are added to `supabase/migrations/`:

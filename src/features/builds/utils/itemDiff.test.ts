@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db';
 import type { BuildData, ItemRef } from '../buildData';
-import { computeBuildItemDiffs, diffRef, refSnapshotsEqual } from './itemDiff';
+import { computeBuildItemDiffs, computeVariantItemDiffs, diffRef, refSnapshotsEqual } from './itemDiff';
 
 afterEach(async () => {
   await db.htmUniqueItems.clear();
@@ -294,5 +294,55 @@ describe('computeBuildItemDiffs with same-name variants', () => {
     const weapon = diffs.items.weapon;
     expect(weapon?.status).toBe('changed');
     if (weapon?.current?.type === 'unique') expect(weapon.current.snapshot.properties).toContain('+(2 to 6) To Broadhead');
+  });
+});
+
+describe('computeVariantItemDiffs', () => {
+  const gone: ItemRef = {
+    type: 'unique',
+    id: 99999,
+    snapshot: { name: 'Removed Item', baseItem: 'X', category: 'Helm', reqLevel: 1, properties: ['kept'] },
+  };
+
+  async function addShako(properties: readonly string[]): Promise<number> {
+    const id = await db.htmUniqueItems.add({
+      name: 'Harlequin Crest',
+      baseItem: 'Shako',
+      baseItemCode: 'uap',
+      page: 'armors',
+      category: 'Helm',
+      itemLevel: 69,
+      reqLevel: 62,
+      properties: [...properties],
+      isAncientCoupon: false,
+      gambleItem: '',
+      notes: '',
+    });
+    return id as number;
+  }
+
+  it('diffs the main items like computeBuildItemDiffs and every alternative, index-aligned', async () => {
+    const id = await addShako(['current']);
+    const freetext: ItemRef = { type: 'freetext', name: 'Circlet' };
+    const diffs = await computeVariantItemDiffs({
+      items: { helmet: uniqueRef(id, ['current']) },
+      itemAlternatives: { helmet: [{ ref: uniqueRef(id, ['STALE']) }, { ref: gone }, { ref: freetext }] },
+      weaponSwapAlternatives: { weapon2: [{ ref: uniqueRef(id, ['current']) }] },
+      mercenaryAlternatives: { helmet: [{ ref: gone, note: 'n' }] },
+    });
+    expect(diffs.items.helmet?.status).toBe('unchanged');
+    expect(diffs.alternatives.items.helmet?.map((diff) => diff.status)).toEqual(['changed', 'missing', 'unchanged']);
+    expect(diffs.alternatives.items.helmet?.[1].stored).toBe(gone);
+    expect(diffs.alternatives.weaponSwap.weapon2?.map((diff) => diff.status)).toEqual(['unchanged']);
+    expect(diffs.alternatives.mercenary.helmet?.map((diff) => diff.status)).toEqual(['missing']);
+  });
+
+  it('returns empty alternative maps for a variant without alternatives', async () => {
+    const diffs = await computeVariantItemDiffs({
+      items: { gloves: { type: 'freetext', name: 'GG rare gloves' } },
+      itemAlternatives: { ring1: [] },
+    });
+    expect(diffs.items.gloves?.status).toBe('unchanged');
+    expect(diffs.alternatives).toEqual({ items: {}, weaponSwap: {}, mercenary: {} });
   });
 });

@@ -41,7 +41,9 @@ possibly the Cube and Enhance pages (`/game-data/cube`, `/game-data/enhance`). V
 Show a build's equipment as a paperdoll with item art, and its charms as an inventory grid with the real charm sizes
 (1×1, 1×2, 1×3). Today the build page has a text slot layout (`EquipmentGrid`) and charms are free-text entries
 (`CharmsEditor`), so the grid also needs structured charm entries (an additive optional field on `build_data`, as for
-the earlier build model changes). Inventory sizes are in the game files (`invwidth` / `invheight`).
+the earlier build model changes). `build_data` now holds up to 10 variants (`variants[]`) and per-slot alternative
+items, so the paperdoll and charm grid work per variant and must show the item swapped into each slot. Inventory sizes
+are in the game files (`invwidth` / `invheight`).
 
 Touches: `src/features/builds/` (`buildData`, `BuildForm`, `EquipmentGrid`, `CharmsEditor`, the build detail tabs),
 the item icons, and `builds-feature-docs/FEATURE-BUILD-SHARING.md`. Value is low for the effort.

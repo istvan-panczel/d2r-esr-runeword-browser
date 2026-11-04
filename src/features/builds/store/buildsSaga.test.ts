@@ -74,7 +74,7 @@ import buildsReducer, {
 } from './buildsSlice';
 import authReducer, { authStateChanged } from '@/features/auth/store/authSlice';
 import { RequestState } from '@/core/types';
-import { BUILDS_PAGE_SIZE, RECENT_BUILDS_COUNT } from '../constants';
+import { BUILD_DATA_MAX_BYTES, BUILDS_PAGE_SIZE, RECENT_BUILDS_COUNT } from '../constants';
 
 function makeRow(id: string): BuildWithAuthor {
   return {
@@ -220,6 +220,22 @@ describe('buildsSaga', () => {
     });
   });
 
+  it('refuses to create a build over the size cap without calling Supabase', async () => {
+    const { toast } = await import('sonner');
+    const store = setupStore();
+    store.dispatch(authStateChanged({ user: { id: 'u1', email: null } }));
+
+    const buildData = { skills: 'x'.repeat(BUILD_DATA_MAX_BYTES) };
+    store.dispatch(createBuildRequested({ name: 'Huge', description: '', class: 'Paladin', buildData }));
+
+    await vi.waitFor(() => {
+      expect(store.getState().builds.createStatus).toBe(RequestState.ERROR);
+    });
+    expect(store.getState().builds.error).toMatch(/^This build is too large to save \(1025 KB, limit 1024 KB\)/);
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Remove some alternatives or variants.'));
+    expect(mocks.builder.insert).not.toHaveBeenCalled();
+  });
+
   it('loads a build by id', async () => {
     const validId = '11111111-1111-4111-8111-111111111111';
     (mocks.builder.maybeSingle as Mock).mockResolvedValue({ data: makeRow(validId), error: null });
@@ -308,6 +324,20 @@ describe('buildsSaga', () => {
       expect(store.getState().builds.updateStatus).toBe(RequestState.SUCCESS);
     });
     expect(mocks.builder.update).toHaveBeenCalledWith(expect.objectContaining({ name: 'Updated' }));
+  });
+
+  it('refuses to update a build whose refreshed data is over the size cap without calling Supabase', async () => {
+    const { toast } = await import('sonner');
+    const store = setupStore();
+
+    const buildData = { items: { gloves: { type: 'freetext', name: 'x'.repeat(BUILD_DATA_MAX_BYTES) } } } as const;
+    store.dispatch(updateBuildRequested({ id: 'b1', name: 'Huge', description: '', class: 'Paladin', buildData }));
+
+    await vi.waitFor(() => {
+      expect(store.getState().builds.updateStatus).toBe(RequestState.ERROR);
+    });
+    expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/^This build is too large to save/));
+    expect(mocks.builder.update).not.toHaveBeenCalled();
   });
 
   it('loads an author profile and their first page of builds', async () => {

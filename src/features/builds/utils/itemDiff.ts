@@ -1,7 +1,7 @@
 import { db } from '@/core/db';
 import type { SetsBundle } from '@/features/game-data/engine/schema';
 import type {
-  BuildData,
+  AlternativesMap,
   ColumnAffixesSnapshot,
   EquipmentSlot,
   GemwordSnapshot,
@@ -10,6 +10,7 @@ import type {
   SetItemRef,
   SetItemSnapshot,
   UniqueSnapshot,
+  VariantData,
   WeaponSwapSlot,
 } from '../buildData';
 import { supportsSocketed } from '../buildData';
@@ -38,6 +39,15 @@ export interface BuildItemDiffs {
   readonly weaponSwap: Partial<Record<WeaponSwapSlot, ItemDiff>>;
   readonly mercenary: Partial<Record<EquipmentSlot, ItemDiff>>;
 }
+
+/** Per-slot diffs of the alternatives, index-aligned with the stored alternative lists. */
+export interface AlternativeItemDiffs {
+  readonly items: Partial<Record<EquipmentSlot, readonly ItemDiff[]>>;
+  readonly weaponSwap: Partial<Record<WeaponSwapSlot, readonly ItemDiff[]>>;
+  readonly mercenary: Partial<Record<EquipmentSlot, readonly ItemDiff[]>>;
+}
+
+export type VariantItemDiffs = BuildItemDiffs & { readonly alternatives: AlternativeItemDiffs };
 
 /**
  * Copies the author's choices (`base`, `socketed`) from the stored ref onto a freshly
@@ -237,12 +247,41 @@ async function diffSection<K extends string>(
   return result;
 }
 
-/** Diffs every referenced item in a build against the viewer's current local data. */
-export async function computeBuildItemDiffs(buildData: BuildData): Promise<BuildItemDiffs> {
+/** Diffs every main item of a build (its top-level variant) or of one variant against the viewer's current local data. */
+export async function computeBuildItemDiffs(buildData: VariantData): Promise<BuildItemDiffs> {
   const [items, weaponSwap, mercenary] = await Promise.all([
     diffSection<EquipmentSlot>(buildData.items),
     diffSection<WeaponSwapSlot>(buildData.weaponSwap),
     diffSection<EquipmentSlot>(buildData.mercenary),
   ]);
   return { items, weaponSwap, mercenary };
+}
+
+async function diffAlternatives<K extends string>(
+  section: AlternativesMap<K> | undefined
+): Promise<Partial<Record<K, readonly ItemDiff[]>>> {
+  const result: Partial<Record<K, readonly ItemDiff[]>> = {};
+  if (section === undefined) return result;
+  const entries = await Promise.all(
+    (Object.keys(section) as K[]).map(async (slot) => {
+      const list = section[slot] ?? [];
+      const diffs = await Promise.all(list.map(async ({ ref }) => diffRef(ref, await resolveCurrentRef(ref))));
+      return [slot, diffs] as const;
+    })
+  );
+  for (const [slot, diffs] of entries) {
+    if (diffs.length > 0) result[slot] = diffs;
+  }
+  return result;
+}
+
+/** Diffs every referenced item of one variant, main items and alternatives, against the viewer's current local data. */
+export async function computeVariantItemDiffs(variant: VariantData): Promise<VariantItemDiffs> {
+  const [main, items, weaponSwap, mercenary] = await Promise.all([
+    computeBuildItemDiffs(variant),
+    diffAlternatives<EquipmentSlot>(variant.itemAlternatives),
+    diffAlternatives<WeaponSwapSlot>(variant.weaponSwapAlternatives),
+    diffAlternatives<EquipmentSlot>(variant.mercenaryAlternatives),
+  ]);
+  return { ...main, alternatives: { items, weaponSwap, mercenary } };
 }

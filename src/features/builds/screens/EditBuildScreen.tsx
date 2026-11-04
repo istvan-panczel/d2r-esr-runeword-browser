@@ -1,13 +1,11 @@
-import { useEffect } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/PageShell';
 import { Spinner } from '@/components/ui/spinner';
 import { RequestState } from '@/core/types';
 import { selectAuthInitialized, selectAuthUserId, selectIsAuthenticated } from '@/features/auth';
-import { asBuildData } from '../buildData';
-import type { CharacterClass } from '../constants';
 import {
   clearDetail,
   fetchBuildRequested,
@@ -19,7 +17,9 @@ import {
   updateBuildRequested,
 } from '../store';
 import { BuildForm } from '../components/BuildForm';
-import type { BuildFormSubmit, BuildFormValues } from '../components/buildFormModel';
+import type { BuildFormSubmit } from '../components/buildFormModel';
+import { buildFormValuesFromBuild } from '../utils/variantDrafts';
+import { VARIANT_PARAM, variantIndexFromParam, withVariantParam } from '../utils/variantParam';
 
 export function EditBuildScreen() {
   const { buildId } = useParams();
@@ -33,6 +33,9 @@ export function EditBuildScreen() {
   const detailStatus = useSelector(selectDetailStatus);
   const notFound = useSelector(selectDetailNotFound);
   const updateStatus = useSelector(selectUpdateBuildStatus);
+  // The detail page's `?variant=N` opens the form on that variant; after saving, the page opens the one shown then.
+  const [searchParams] = useSearchParams();
+  const [savedVariant, setSavedVariant] = useState(0);
 
   useEffect(() => {
     dispatch(resetUpdateStatus());
@@ -48,9 +51,9 @@ export function EditBuildScreen() {
 
   useEffect(() => {
     if (updateStatus === RequestState.SUCCESS && buildId !== undefined) {
-      void navigate(`/build/${buildId}`, { replace: true });
+      void navigate(withVariantParam(`/build/${buildId}`, savedVariant), { replace: true });
     }
-  }, [updateStatus, navigate, buildId]);
+  }, [updateStatus, navigate, buildId, savedVariant]);
 
   if (!initialized) {
     return (
@@ -94,28 +97,11 @@ export function EditBuildScreen() {
     return <Navigate to={`/build/${build.id}`} replace />;
   }
 
-  const buildData = asBuildData(build.build_data);
-  const initialValues: BuildFormValues = {
-    name: build.name,
-    description: build.description ?? '',
-    characterClass: build.class as CharacterClass,
-    items: buildData.items ?? {},
-    weaponSwap: buildData.weaponSwap ?? {},
-    mercenary: buildData.mercenary ?? {},
-    itemNotes: buildData.itemNotes ?? {},
-    weaponSwapNotes: buildData.weaponSwapNotes ?? {},
-    mercenaryNotes: buildData.mercenaryNotes ?? {},
-    itemCrafts: buildData.itemCrafts ?? {},
-    weaponSwapCrafts: buildData.weaponSwapCrafts ?? {},
-    mercenaryCrafts: buildData.mercenaryCrafts ?? {},
-    charms: buildData.charms ?? [],
-    ascendancy: buildData.ascendancy ?? null,
-    skills: buildData.skills ?? '',
-    level: buildData.level ?? null,
-    skillPoints: buildData.skillPoints ?? {},
-  };
+  const initialValues = buildFormValuesFromBuild(build);
+  const initialVariant = variantIndexFromParam(searchParams.get(VARIANT_PARAM), initialValues.variants.length);
 
   const handleSubmit = (payload: BuildFormSubmit) => {
+    setSavedVariant(payload.activeVariant);
     dispatch(
       updateBuildRequested({
         id: buildId,
@@ -134,12 +120,13 @@ export function EditBuildScreen() {
         // previously-edited build if the route changes without an unmount.
         key={build.id}
         initialValues={initialValues}
+        initialVariant={initialVariant}
         submitLabel="Save Changes"
         saving={updateStatus === RequestState.LOADING}
         saved={updateStatus === RequestState.SUCCESS}
         onSubmit={handleSubmit}
         onCancel={() => {
-          void navigate(`/build/${build.id}`);
+          void navigate(withVariantParam(`/build/${build.id}`, initialVariant));
         }}
       />
     </PageShell>

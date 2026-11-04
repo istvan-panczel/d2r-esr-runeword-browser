@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CraftAnnotation, ItemRef, WeaponSwapSlot } from '../buildData';
 import type { CraftDataState } from '../hooks/useCraftData';
 import type { ItemDiff } from '../utils/itemDiff';
@@ -22,6 +23,10 @@ interface WeaponSwapGridProps {
   readonly onCraftsChange?: (slot: WeaponSwapSlot, crafts: readonly CraftAnnotation[]) => void;
   /** The crafting / enhance bundles, loaded once by the screen. */
   readonly craftData?: CraftDataState;
+  /** Extra content at the bottom of a slot's cell (its alternative items). */
+  readonly renderSlotFooter?: (slot: WeaponSwapSlot) => ReactNode;
+  /** Read-only only: extra content at the end of a slot's label row. */
+  readonly renderSlotLabelExtra?: (slot: WeaponSwapSlot) => ReactNode;
 }
 
 export function WeaponSwapGrid({
@@ -34,6 +39,8 @@ export function WeaponSwapGrid({
   crafts,
   onCraftsChange,
   craftData,
+  renderSlotFooter,
+  renderSlotLabelExtra,
 }: WeaponSwapGridProps) {
   return (
     <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
@@ -48,6 +55,8 @@ export function WeaponSwapGrid({
           note={notes?.[slot]}
           crafts={crafts?.[slot]}
           craftData={craftData}
+          footer={renderSlotFooter?.(slot)}
+          labelExtra={renderSlotLabelExtra?.(slot)}
           onChange={
             onChange === undefined
               ? undefined
