@@ -8,7 +8,9 @@ How to set up, change, test and release the D2R ESR Runeword Browser. Project ov
 - **Node 24** (the version in `.nvmrc`; `package.json` `engines` allows `>=24 <25`). With nvm: `nvm use`.
 - **npm** (the one that comes with Node 24, or npm 12). `.npmrc` sets `allow-remote=all`: npm 12 defaults to `none`,
   which breaks dry runs and lockfile-only resolves on one fallback tarball. The lockfile's integrity hashes still pin
-  every package.
+  every package. It also sets `min-release-age=7`: npm only installs versions published more than 7 days ago, a
+  cooldown against compromised releases. For an urgent security fix, read its diff, add a
+  `min-release-age-exclude[]=<package>` line, update, then remove the line again.
 - Optional, for the game-data workflow: a clone of the ESR repo next to this one (see below).
 - Optional, for the pre-commit checks: `brew install gitleaks exiftool`.
 
