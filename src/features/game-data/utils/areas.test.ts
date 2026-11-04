@@ -3,7 +3,7 @@ import type { Area } from '../engine/schema';
 import { buildAreaSections, encodeAreasState, filterAreas, matchesLevel, readAreasState } from './areas';
 
 function area(id: number, name: string, extra: Partial<Area> = {}): Area {
-  return { id, name, act: 0, waypoint: false, level: null, density: null, uniques: null, connections: [], ...extra };
+  return { id, name, act: 0, waypoint: false, level: null, density: null, uniques: null, connections: [], terrain: 'outdoor', ...extra };
 }
 
 const AREAS: Area[] = [

@@ -3,7 +3,8 @@
  * Extracts item icons from HD item sprites into public/game-data/icons/*.webp and public/game-data/icons.json (file and
  * size by base code, unique name, set item name and misc item name). Scope: the codes of the committed bases.json, every
  * uniqueitems.txt and setitems.txt row with a base (own art from hd/items/uniques.json / sets.json, else the base's art)
- * and the committed lootfilter.json misc items whose type descends from MISC_ICON_TYPES (types.json; the socket fillers).
+ * the committed lootfilter.json misc items whose type descends from MISC_ICON_TYPES (types.json; the socket fillers)
+ * and the quest items of misc/weapons/armor.txt (a `quest` number or a QUEST_ICON_TYPES type; by code).
  *
  *   node scripts/generate-item-icons.ts [--esr <dir>] [--vanilla <dir>] [--check]
  *
@@ -39,6 +40,8 @@ import {
   fitInside,
   type MiscIconStats,
   MISC_ICON_TYPES,
+  QUEST_ICON_TYPES,
+  type QuestIconStats,
   type NamedIconStats,
   listFilesRecursive,
   opaqueBounds,
@@ -46,7 +49,9 @@ import {
   parseItemAssets,
   parseNamedArt,
   planItemIcons,
+  readItemNames,
   selectMiscIconRows,
+  selectQuestIconCodes,
   VANILLA_BUILD_CONFIG_FILE,
   VANILLA_HD_ITEM_SPRITES_DIR,
   VANILLA_HD_ITEMS_FILE,
@@ -220,12 +225,14 @@ async function main(): Promise<void> {
   const uniques = readUniqueOrSetRows(table('uniqueitems'), 'code', strings);
   const sets = readUniqueOrSetRows(table('setitems'), 'item', strings);
   const invTrans = readInvTrans([table('weapons'), table('armor'), table('misc')]);
+  const quest = selectQuestIconCodes([table('misc'), table('weapons'), table('armor')]);
   const index = buildSpriteIndex(listFilesRecursive(spritesDir));
   const plan = planItemIcons({
     codes,
     uniques,
     sets,
     misc,
+    quest,
     assets,
     uniqueArt: uniqueArt.art,
     setArt: setArt.art,
@@ -274,6 +281,7 @@ async function main(): Promise<void> {
     ...(vanilla === null ? {} : { vanilla: { rootHash: vanilla.rootHash, extractedAt: vanilla.extractedAt } }),
     plan,
     tints: tintPlan,
+    itemNames: readItemNames([table('misc'), table('weapons'), table('armor')], strings),
     images,
     extension: EXTENSION,
   });
@@ -289,10 +297,12 @@ async function main(): Promise<void> {
     )
   );
   const usedFiles = new Set(
-    [bundle.bases, bundle.uniques, bundle.sets, bundle.misc].flatMap((section) => Object.values(section).map((icon) => icon.file))
+    [bundle.bases, bundle.uniques, bundle.sets, bundle.misc, bundle.quest].flatMap((section) =>
+      Object.values(section).map((icon) => icon.file)
+    )
   );
   const unusedFiles = [...files.keys()].filter((name) => !usedFiles.has(name));
-  const failedEntries = [plan.bases, plan.uniques, plan.sets, plan.misc].reduce(
+  const failedEntries = [plan.bases, plan.uniques, plan.sets, plan.misc, plan.quest].reduce(
     (sum, map) => sum + [...map.values()].filter((slug) => !images.has(slug)).length,
     0
   );
@@ -313,6 +323,7 @@ async function main(): Promise<void> {
   printNamed('uniques (uniqueitems.txt rows with a base, by name)', uniques.length, plan.uniqueStats, uniqueArt.duplicates);
   printNamed('set items (setitems.txt rows, by name)', sets.length, plan.setStats, setArt.duplicates);
   printMisc(misc.length, plan.miscStats);
+  printQuest(plan.questStats);
   console.log(
     `  icons written (distinct assets): ${String(files.size)} (${String(vanillaFileCount)} from vanilla art), ${(totalBytes / 1024).toFixed(1)} KB`
   );
@@ -418,6 +429,15 @@ function printMisc(rows: number, stats: MiscIconStats): void {
   );
   if (stats.noneNames.length > 0) console.log(`    without art: ${stats.noneNames.join(', ')}`);
   if (stats.splitNames.length > 0) console.log(`    keyed per code (rows with different art): ${stats.splitNames.join(', ')}`);
+}
+
+function printQuest(stats: QuestIconStats): void {
+  const withArt = stats.requested - stats.missing.length;
+  console.log(`  quest items (a quest number or types ${QUEST_ICON_TYPES.join(', ')}, by code): ${String(stats.requested)} codes`);
+  console.log(
+    `    ${String(withArt - stats.vanilla)} from ESR art, ${String(stats.vanilla)} from vanilla art, ` +
+      `${String(stats.missing.length)} without art${listCodes(stats.missing)}`
+  );
 }
 
 function printTints(label: string, stats: TintStats): void {

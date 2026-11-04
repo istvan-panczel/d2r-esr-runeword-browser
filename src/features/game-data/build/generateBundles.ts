@@ -284,7 +284,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   const countTier = (tier: string) => tierCodes.filter((value) => value === tier).length;
 
   // --- areas.json ---
-  const areas = buildAreasBundle({ levelsText: sources.tables.levels, strings });
+  const areas = buildAreasBundle({ levelsText: sources.tables.levels, cubemainText: sources.tables.cubemain, strings });
   const countAreas = (pick: (area: AreasBundle['areas'][number]) => boolean) => areas.bundle.areas.filter(pick).length;
   const areaCounts = {
     areas: areas.bundle.areas.length,
@@ -294,7 +294,10 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     areasWithoutMonsters: countAreas((area) => area.level === null),
     areasWithWaypoint: countAreas((area) => area.waypoint),
     areasHiddenPrepZones: areas.hidden.prepZones,
+    areasHiddenRemoved: areas.hidden.removed,
     areasHiddenOther: areas.hidden.other,
+    areasOneWayVis: areas.oneWayVis,
+    areasWithMapItem: countAreas((area) => area.mapItem !== undefined),
     areasUniquesMinsThenMaxes: areas.uniquesMinsThenMaxes,
   };
   // --- end areas.json ---

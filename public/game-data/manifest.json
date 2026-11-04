@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-03T23:12:39.804Z",
+  "generatedAt": "2026-11-04T22:34:23.846Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -62,8 +62,8 @@
       "bytes": 23850
     },
     "areas": {
-      "hash": "3aa47efd671e2371747427257e4847372a9a3f5d8d41e01bc61d37e3c5f46822",
-      "bytes": 35601
+      "hash": "f0224f8e2c237444f898659662f5360c88a580581f547c2fef6507c070e140cc",
+      "bytes": 39562
     },
     "stash": {
       "hash": "eb05ad3d17c8bf0ad93566d06e5361887048c86595e314f4c96246f00565ebde",
@@ -78,8 +78,8 @@
       "bytes": 495103
     },
     "icons": {
-      "hash": "4e7f8851b9c5666541718f175833d9b7a790f05e60cca77795809ebbf6c64656",
-      "bytes": 309933
+      "hash": "104a73e60c06a6099e2b60e80f492ea6ea94955d9cba9deb93d5bc25c916bb08",
+      "bytes": 321246
     }
   },
   "counts": {
@@ -171,15 +171,18 @@
     "tierCodesExceptional": 331,
     "tierCodesElite": 354,
     "tierCodesMythical": 61,
-    "areas": 197,
-    "areasMaps": 57,
+    "areas": 193,
+    "areasMaps": 55,
     "areasMapZones": 20,
     "areasUniqueMaps": 1,
-    "areasWithoutMonsters": 10,
-    "areasWithWaypoint": 39,
-    "areasHiddenPrepZones": 17,
+    "areasWithoutMonsters": 8,
+    "areasWithWaypoint": 38,
+    "areasHiddenPrepZones": 19,
+    "areasHiddenRemoved": 2,
     "areasHiddenOther": 1,
-    "areasUniquesMinsThenMaxes": 61,
+    "areasOneWayVis": 2,
+    "areasWithMapItem": 21,
+    "areasUniquesMinsThenMaxes": 59,
     "stashItemCodes": 2309,
     "stashSavedStats": 666,
     "stashCoupons": 385,
@@ -201,8 +204,9 @@
     "uniqueIcons": 1114,
     "setIcons": 270,
     "miscIcons": 178,
-    "vanillaIcons": 900,
-    "vanillaIconFiles": 204,
+    "questIcons": 77,
+    "vanillaIcons": 931,
+    "vanillaIconFiles": 232,
     "tintedIcons": 869,
     "tintedIconFiles": 692
   },

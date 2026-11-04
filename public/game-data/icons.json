@@ -6,6 +6,7 @@
     "extractedAt": "2026-10-25",
     "files": [
       "amulet_amulet3.webp",
+      "amulet_viper_amulet.webp",
       "armor_ancient_armor.webp",
       "armor_breast_plate.webp",
       "armor_chain_mail.webp",
@@ -26,6 +27,9 @@
       "belt_heavy_belt.webp",
       "belt_light_belt.webp",
       "belt_sash_l.webp",
+      "body_part_brain.webp",
+      "body_part_eye.webp",
+      "body_part_heart.webp",
       "boot_heavy_boots.webp",
       "boot_leather_boots.webp",
       "bow_composite_bow.webp",
@@ -58,6 +62,7 @@
       "club_felloak.webp",
       "club_spiked_club.webp",
       "club_stoutnail.webp",
+      "club_wirts_leg.webp",
       "gem_amethyst.webp",
       "gem_chipped_amethyst.webp",
       "gem_chipped_diamond.webp",
@@ -107,6 +112,8 @@
       "h2h_shadowkiller.webp",
       "hammer_bonesob.webp",
       "hammer_great_maul.webp",
+      "hammer_hellforge_hammer.webp",
+      "hammer_horadric_malus.webp",
       "hammer_the_gavel_of_pain.webp",
       "helmet_avenger_guard.webp",
       "helmet_bone_helm.webp",
@@ -125,9 +132,13 @@
       "javelin_short_spear.webp",
       "knife_balanced_knife.webp",
       "knife_banes_spire.webp",
+      "knife_decoy_dagger.webp",
+      "knife_gidbinn.webp",
       "knife_kriss.webp",
       "knife_the_jade_tan_do.webp",
       "knife_warshrike.webp",
+      "mace_khalim_flail.webp",
+      "mace_super_khalim_flail.webp",
       "orb_clasped_orb.webp",
       "orb_dragon_stone.webp",
       "orb_eagle_orb.webp",
@@ -141,11 +152,25 @@
       "polearm_athenas_wrath.webp",
       "polearm_voulge.webp",
       "potion_choking_gas_potion.webp",
+      "potion_elixir.webp",
       "potion_exploding_potion.webp",
       "potion_fulminating_potion.webp",
       "potion_oil_potion.webp",
       "potion_rancid_gas_potion.webp",
       "potion_strangling_gas_potion.webp",
+      "quest_bark_scroll.webp",
+      "quest_book_of_skill.webp",
+      "quest_burning_essence_of_terror.webp",
+      "quest_charged_essense_of_hatred.webp",
+      "quest_festering_essence_of_destruction.webp",
+      "quest_gold_bird.webp",
+      "quest_horadric_cube.webp",
+      "quest_jade_figurine.webp",
+      "quest_lam_esens_tome.webp",
+      "quest_mephisto_soul_stone.webp",
+      "quest_scroll_of_horadric_quest_info.webp",
+      "quest_scroll_of_self_resurrect.webp",
+      "quest_twisted_essence_of_suffering.webp",
       "ring_ring4.webp",
       "rune_amn_rune.webp",
       "rune_ber_rune.webp",
@@ -180,6 +205,7 @@
       "rune_vex_rune.webp",
       "rune_zod_rune.webp",
       "scepter_scepter.webp",
+      "scroll_deciphered_bark_scroll.webp",
       "shield_buckler.webp",
       "shield_bverrit_keep.webp",
       "shield_gothic_shield.webp",
@@ -193,10 +219,12 @@
       "shield_tower_shield.webp",
       "staff_battle_staff.webp",
       "staff_gnarled_staff.webp",
+      "staff_horadric_staff.webp",
       "staff_lazarus_spire.webp",
       "staff_long_staff.webp",
       "staff_short_staff.webp",
       "staff_skullcollector.webp",
+      "staff_staff_of_the_kings.webp",
       "staff_war_staff.webp",
       "sword_bastard_sword.webp",
       "sword_blood_crescent.webp",
@@ -14768,6 +14796,470 @@
       "file": "gem_flawed_tourmaline.webp",
       "w": 55,
       "h": 74
+    }
+  },
+  "quest": {
+    "vip": {
+      "file": "amulet_viper_amulet.webp",
+      "w": 81,
+      "h": 95,
+      "name": "Top of the Horadric Staff"
+    },
+    "bks": {
+      "file": "quest_bark_scroll.webp",
+      "w": 128,
+      "h": 125,
+      "name": "Scroll of Inifuss"
+    },
+    "bkd": {
+      "file": "scroll_deciphered_bark_scroll.webp",
+      "w": 128,
+      "h": 125,
+      "name": "Key to the Cairn Stones"
+    },
+    "luv": {
+      "file": "key_mephisto_key.webp",
+      "w": 64,
+      "h": 128,
+      "name": "The Black Tower Key"
+    },
+    "xyz": {
+      "file": "quest_scroll_of_self_resurrect.webp",
+      "w": 69,
+      "h": 89,
+      "name": "Potion of Life"
+    },
+    "j34": {
+      "file": "quest_jade_figurine.webp",
+      "w": 69,
+      "h": 128,
+      "name": "A Jade Figurine"
+    },
+    "g34": {
+      "file": "quest_gold_bird.webp",
+      "w": 64,
+      "h": 128,
+      "name": "The Golden Bird"
+    },
+    "bbb": {
+      "file": "quest_lam_esens_tome.webp",
+      "w": 123,
+      "h": 128,
+      "name": "Lam Esen's Tome"
+    },
+    "box": {
+      "file": "quest_horadric_cube.webp",
+      "w": 128,
+      "h": 117,
+      "name": "Horadric Cube"
+    },
+    "tr1": {
+      "file": "quest_scroll_of_horadric_quest_info.webp",
+      "w": 112,
+      "h": 128,
+      "name": "Horadric Scroll"
+    },
+    "mss": {
+      "file": "quest_mephisto_soul_stone.webp",
+      "w": 62,
+      "h": 91,
+      "name": "Mephisto's Soulstone"
+    },
+    "ass": {
+      "file": "quest_book_of_skill.webp",
+      "w": 128,
+      "h": 123,
+      "name": "Book of Skill"
+    },
+    "qey": {
+      "file": "body_part_eye.webp",
+      "w": 76,
+      "h": 90,
+      "name": "Khalim's Eye"
+    },
+    "qhr": {
+      "file": "body_part_heart.webp",
+      "w": 72,
+      "h": 87,
+      "name": "Khalim's Heart"
+    },
+    "qbr": {
+      "file": "body_part_brain.webp",
+      "w": 88,
+      "h": 73,
+      "name": "Khalim's Brain"
+    },
+    "ice": {
+      "file": "quest_scroll_of_self_resurrect.webp",
+      "w": 69,
+      "h": 89,
+      "name": "Malah's Potion"
+    },
+    "tr2": {
+      "file": "quest_bark_scroll.webp",
+      "w": 128,
+      "h": 125,
+      "name": "Scroll of Resistance"
+    },
+    "pk1": {
+      "file": "key_key_of_terror.webp",
+      "w": 70,
+      "h": 128,
+      "name": "Key of Terror"
+    },
+    "pk2": {
+      "file": "key_key_of_hate.webp",
+      "w": 70,
+      "h": 128,
+      "name": "Key of Hate"
+    },
+    "pk3": {
+      "file": "key_key_of_destruction.webp",
+      "w": 70,
+      "h": 128,
+      "name": "Key of Destruction"
+    },
+    "dhn": {
+      "file": "body_part_diablos_horn.webp",
+      "w": 97,
+      "h": 98,
+      "name": "Diablo's Horn"
+    },
+    "bey": {
+      "file": "body_part_baals_eye.webp",
+      "w": 97,
+      "h": 95,
+      "name": "Baal's Eye"
+    },
+    "mbr": {
+      "file": "body_part_mephistos_brain.webp",
+      "w": 97,
+      "h": 83,
+      "name": "Mephisto's Brain"
+    },
+    "tes": {
+      "file": "quest_twisted_essence_of_suffering.webp",
+      "w": 97,
+      "h": 93,
+      "name": "Twisted Essence of Suffering"
+    },
+    "ceh": {
+      "file": "quest_charged_essense_of_hatred.webp",
+      "w": 95,
+      "h": 90,
+      "name": "Charged Essence of Hatred"
+    },
+    "bet": {
+      "file": "quest_burning_essence_of_terror.webp",
+      "w": 95,
+      "h": 91,
+      "name": "Burning Essence of Terror"
+    },
+    "fed": {
+      "file": "quest_festering_essence_of_destruction.webp",
+      "w": 95,
+      "h": 88,
+      "name": "Festering Essence of Destruction"
+    },
+    "std": {
+      "file": "body_part_standard_of_heroes.webp",
+      "w": 66,
+      "h": 93,
+      "name": "Standard of Heroes"
+    },
+    "elk": {
+      "file": "potion_elixir.webp",
+      "w": 85,
+      "h": 93,
+      "name": "Elixir of Skill"
+    },
+    "el2": {
+      "file": "potion_elixir.webp",
+      "w": 85,
+      "h": 93,
+      "name": "Elixir of Skill"
+    },
+    "ht1": {
+      "file": "body_part_diablos_enhanced_horn.webp",
+      "w": 98,
+      "h": 98,
+      "name": "Diablo's Enhanced Horn"
+    },
+    "ht2": {
+      "file": "body_part_baals_enhanced_eye.webp",
+      "w": 97,
+      "h": 95,
+      "name": "Baal's Enhanced Eye"
+    },
+    "ht3": {
+      "file": "body_part_mephistos_enhanced_brain.webp",
+      "w": 97,
+      "h": 83,
+      "name": "Mephisto's Enhanced Brain"
+    },
+    "z01": {
+      "file": "quest_map_cellarofpain.webp",
+      "w": 97,
+      "h": 97,
+      "name": "Cellar of Pain (Tier 1)"
+    },
+    "z02": {
+      "file": "quest_map_chasmofhorrors.webp",
+      "w": 95,
+      "h": 98,
+      "name": "Chasm of Horrors (Tier 1)"
+    },
+    "z03": {
+      "file": "quest_map_cryptofdamnation.webp",
+      "w": 96,
+      "h": 96,
+      "name": "Crypt of Damnation (Tier 1)"
+    },
+    "z04": {
+      "file": "quest_map_necropolis.webp",
+      "w": 96,
+      "h": 97,
+      "name": "Necropolis (Tier 1)"
+    },
+    "z05": {
+      "file": "quest_map_ancienttomb.webp",
+      "w": 97,
+      "h": 98,
+      "name": "Ancient Tomb (Tier 2)"
+    },
+    "z06": {
+      "file": "quest_map_chaosrift.webp",
+      "w": 97,
+      "h": 97,
+      "name": "Chaos Rift (Tier 2)"
+    },
+    "z07": {
+      "file": "quest_map_infestedlair.webp",
+      "w": 95,
+      "h": 97,
+      "name": "Infested Lair (Tier 2)"
+    },
+    "z08": {
+      "file": "quest_map_labyrinthofsuffering.webp",
+      "w": 97,
+      "h": 97,
+      "name": "Labyrinth of Suffering (Tier 2)"
+    },
+    "z09": {
+      "file": "quest_map_decayingdepths.webp",
+      "w": 96,
+      "h": 97,
+      "name": "Decaying Depths (Tier 3)"
+    },
+    "z10": {
+      "file": "quest_map_endlessabyss.webp",
+      "w": 96,
+      "h": 97,
+      "name": "Endless Abyss (Tier 3)"
+    },
+    "z11": {
+      "file": "quest_map_frozenwastes.webp",
+      "w": 98,
+      "h": 98,
+      "name": "Frozen Wastes (Tier 3)"
+    },
+    "z12": {
+      "file": "quest_map_twistedmaze.webp",
+      "w": 95,
+      "h": 98,
+      "name": "Twisted Maze (Tier 3)"
+    },
+    "z13": {
+      "file": "quest_map_cursedossuary.webp",
+      "w": 96,
+      "h": 98,
+      "name": "Cursed Ossuary (Tier 4)"
+    },
+    "z14": {
+      "file": "quest_map_infernalnexus.webp",
+      "w": 97,
+      "h": 97,
+      "name": "Infernal Nexus (Tier 4)"
+    },
+    "z15": {
+      "file": "quest_map_reliquaryofsouls.webp",
+      "w": 96,
+      "h": 98,
+      "name": "Reliquary of Souls (Tier 4)"
+    },
+    "z16": {
+      "file": "quest_map_shrineofdestruction.webp",
+      "w": 96,
+      "h": 98,
+      "name": "Shrine of Destruction (Tier 4)"
+    },
+    "z17": {
+      "file": "quest_map_eyeofthestorm.webp",
+      "w": 98,
+      "h": 98,
+      "name": "The Eye of the Storm (Tier 5)"
+    },
+    "z18": {
+      "file": "quest_map_icecrowncitadel.webp",
+      "w": 98,
+      "h": 96,
+      "name": "The Icecrown Citadel (Tier 5)"
+    },
+    "um1": {
+      "file": "body_part_diablos_demonic_horn.webp",
+      "w": 98,
+      "h": 98,
+      "name": "Diablo's Demonic Horn"
+    },
+    "um2": {
+      "file": "body_part_baals_demonic_eye.webp",
+      "w": 97,
+      "h": 94,
+      "name": "Baal's Demonic Eye"
+    },
+    "um3": {
+      "file": "body_part_mephistos_demonic_brain.webp",
+      "w": 97,
+      "h": 83,
+      "name": "Mephisto's Demonic Brain"
+    },
+    "um4": {
+      "file": "body_part_broken_hourglass_shard_1.webp",
+      "w": 77,
+      "h": 69,
+      "name": "Broken hourglass shard"
+    },
+    "um5": {
+      "file": "body_part_broken_hourglass_shard_2.webp",
+      "w": 67,
+      "h": 81,
+      "name": "Broken hourglass shard"
+    },
+    "um6": {
+      "file": "body_part_broken_hourglass.webp",
+      "w": 69,
+      "h": 128,
+      "name": "Broken hourglass"
+    },
+    "um7": {
+      "file": "body_part_orb_of_anointment.webp",
+      "w": 98,
+      "h": 91,
+      "name": "Orb of Anointment"
+    },
+    "u10": {
+      "file": "quest_pandemonium_key_set.webp",
+      "w": 94,
+      "h": 93,
+      "name": "Pandemonium Key Set"
+    },
+    "ast": {
+      "file": "charm_ascendancy_stone.webp",
+      "w": 89,
+      "h": 91,
+      "name": "Ascendancy Stone"
+    },
+    "led": {
+      "file": "charm_kill_ledger.webp",
+      "w": 91,
+      "h": 90,
+      "name": "Kill Ledger"
+    },
+    "z19": {
+      "file": "quest_map_thesanctumofthedead.webp",
+      "w": 97,
+      "h": 97,
+      "name": "The Sanctum of the Dead (Tier 5)"
+    },
+    "z20": {
+      "file": "quest_map_thereliquaryoffalselight.webp",
+      "w": 98,
+      "h": 97,
+      "name": "The Reliquary of False Light (Tier 5)"
+    },
+    "u17": {
+      "file": "quest_lucion_essence.webp",
+      "w": 97,
+      "h": 96,
+      "name": "Lucion's Essence"
+    },
+    "u18": {
+      "file": "quest_lucion_fiery_relic.webp",
+      "w": 90,
+      "h": 79,
+      "name": "Lucion's Relic of Sanctification"
+    },
+    "u19": {
+      "file": "quest_primordial_soulstone.webp",
+      "w": 125,
+      "h": 128,
+      "name": "Primordial Soulstone"
+    },
+    "u22": {
+      "file": "quest_weapons_crate.webp",
+      "w": 128,
+      "h": 128,
+      "name": "Weapons Crate"
+    },
+    "z99": {
+      "file": "quest_map_goblinrealm.webp",
+      "w": 98,
+      "h": 98,
+      "name": "The Hidden Vault"
+    },
+    "d33": {
+      "file": "knife_decoy_dagger.webp",
+      "w": 55,
+      "h": 128,
+      "name": "Decoy Gidbinn"
+    },
+    "g33": {
+      "file": "knife_gidbinn.webp",
+      "w": 54,
+      "h": 128,
+      "name": "The Gidbinn"
+    },
+    "leg": {
+      "file": "club_wirts_leg.webp",
+      "w": 50,
+      "h": 128,
+      "name": "Wirt's Leg"
+    },
+    "hdm": {
+      "file": "hammer_horadric_malus.webp",
+      "w": 83,
+      "h": 128,
+      "name": "Horadric Malus"
+    },
+    "hfh": {
+      "file": "hammer_hellforge_hammer.webp",
+      "w": 78,
+      "h": 128,
+      "name": "Hell Forge Hammer"
+    },
+    "hst": {
+      "file": "staff_horadric_staff.webp",
+      "w": 32,
+      "h": 128,
+      "name": "Horadric Staff"
+    },
+    "msf": {
+      "file": "staff_staff_of_the_kings.webp",
+      "w": 37,
+      "h": 128,
+      "name": "Shaft of the Horadric Staff"
+    },
+    "qf1": {
+      "file": "mace_khalim_flail.webp",
+      "w": 85,
+      "h": 128,
+      "name": "Khalim's Flail"
+    },
+    "qf2": {
+      "file": "mace_super_khalim_flail.webp",
+      "w": 89,
+      "h": 128,
+      "name": "Khalim's Will"
     }
   }
 }

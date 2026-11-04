@@ -931,6 +931,16 @@ export interface IconsBundle {
    * `items[].name`); a name whose rows have different art (ESR's and the LoD Ko Rune) is keyed `name#code` per row.
    */
   misc: Record<string, ItemIconInfo>;
+  /**
+   * Quest items by item code (misc / weapons / armor.txt rows with a `quest` number or typed `ques` / `mmap`: the
+   * campaign quest items, portal keys, organs, essences and endgame map items). Codes without art have no entry.
+   */
+  quest: Record<string, QuestIconInfo>;
+}
+
+/** A `quest` entry: the icon and the item's display name (as stashnames.json `bases` names it: `vip` "Top of the Horadric Staff") */
+export interface QuestIconInfo extends ItemIconInfo {
+  name: string;
 }
 
 export interface IconsVanillaSource {
@@ -996,7 +1006,19 @@ export interface Area {
   connections: number[];
   /** `PreventTownPortal` */
   preventTownPortal?: true;
+  /** Kind of area, from `LevelType` (vanilla lvltypes ids) split by the `*IsInside` comment column */
+  terrain: AreaTerrain;
+  /** `Teleport`: 0 → 'off' (no teleport at all), 2 → 'restricted'; the default 1 is left out */
+  teleport?: 'off' | 'restricted';
+  /** `QuestFlagEx` (else `QuestFlag`): the quest that must be done before the area can be entered; labelled in the UI */
+  questGate?: number;
+  /** Item code of the endgame map item whose cube portal (cubemain `Red Portal,lvl=`) leads into this map's entry level */
+  mapItem?: string;
+  /** The level name ends in ESR's " (Endgame Zone)" (an ESR special zone; the suffix stays in `name`) */
+  endgameZone?: true;
 }
+
+export type AreaTerrain = 'town' | 'outdoor' | 'tower' | 'cave' | 'tomb' | 'dungeon' | 'temple' | 'special';
 
 // --- stash.json ---------------------------------------------------------------------------------------------------
 

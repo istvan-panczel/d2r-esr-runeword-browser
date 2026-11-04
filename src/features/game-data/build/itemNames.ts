@@ -20,6 +20,16 @@ export function resolveName(strings: ReadonlyMap<string, string>, key: string, f
   return text === '' ? fallback : text;
 }
 
+/**
+ * Display name of a weapons / armor / misc.txt row (`namestr`, else `name`), as stashnames.json `bases` lists it. ESR
+ * abbreviates potion and scroll names for the belt ("*HP1", "*Thaw", "+TP"): the `name` column reads in full then (as
+ * the cube names do, cube/cubeRows.ts).
+ */
+export function itemRowName(strings: ReadonlyMap<string, string>, namestr: string, name: string): string {
+  const shown = resolveName(strings, namestr, name);
+  return /^[*+]/.test(shown) && name !== '' ? name : shown;
+}
+
 /** A uniqueitems.txt / setitems.txt row with a base code: its `index` key and the string-resolved display name. */
 export interface UniqueOrSetRow {
   /** 0-based data-row number (row-numbered when the table was parsed with `keepExpansionRows`) */

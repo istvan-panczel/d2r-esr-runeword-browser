@@ -46,11 +46,11 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                             |
 | `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                            |
 | `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                            |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, connections, map tiers (see "Areas")                            |
+| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")         |
 | `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                            |
 | `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                   |
 | `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text") |
-| `icons.json`        | item icon index (base code / unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                            |
+| `icons.json`        | item icon index (base / quest item code, unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -72,11 +72,11 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
 | `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                        |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
-| `areas.json`        | ESR 3.2.24: 35 KB / 5 KB                                                                                        |
+| `areas.json`        | ESR 3.2.24: 39 KB / 5 KB                                                                                        |
 | `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes) |
 | `stashnames.json`   | ESR 3.2.24: 294 KB / 49 KB                                                                                      |
 | `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
-| `icons.json`        | ESR 3.2.24: 303 KB / 36 KB (+ `icons/`: 1,361 WebP files, 5.3 MB)                                               |
+| `icons.json`        | ESR 3.2.24: 318 KB / 39 KB (+ `icons/`: 1,434 WebP files, 5.7 MB)                                               |
 
 ### Bases and types
 
@@ -547,11 +547,12 @@ Counts: `tierCodes` 1067 (`tierCodesNormal` 321, `tierCodesExceptional` 331, `ti
 
 ### Areas
 
-`areas.json` (`AreasBundle`, built by `build/bundleAreas.ts` from the raw levels.txt text) is `{ areas: Area[] }` in
-levels.txt row order, for the Areas page. Per area: `id` (`Id`), `name` (`LevelName` through the string table, else
-`Name` without its "Act N - " prefix: only id 137 ColossalSummit lacks a string), `act` (0-based), `waypoint`
-(`Waypoint` ≠ 255), `level` / `density` (`[n, nm, h]`), `uniques` (`[[min, max] × 3]`), `connections` (ids) and, when
-set, `group`, `tier`, `uniqueMap`, `boss`, `preventTownPortal`.
+`areas.json` (`AreasBundle`, built by `build/bundleAreas.ts` from the raw levels.txt and cubemain.txt text) is
+`{ areas: Area[] }` in levels.txt row order, for the Areas page and the campaign map. Per area: `id` (`Id`), `name`
+(`LevelName` through the string table, else `Name` without its "Act N - " prefix: only id 137 ColossalSummit lacks a
+string), `act` (0-based), `waypoint` (`Waypoint` ≠ 255, never on a map row), `level` / `density` (`[n, nm, h]`),
+`uniques` (`[[min, max] × 3]`), `connections` (ids), `terrain` and, when set, `group`, `tier`, `uniqueMap`, `boss`,
+`mapItem`, `preventTownPortal`, `teleport`, `questGate`, `endgameZone`.
 
 - **Monster level** is `MonLvlEx`, `MonLvlEx(N)`, `MonLvlEx(H)` (the expansion level the game uses; `MonLvl*` is the
   classic one, lower in Nightmare / Hell, e.g. Blood Moor 1 / 26 / 51 vs 2 / 38 / 68). `null` in towns (no
@@ -568,16 +569,50 @@ set, `group`, `tier`, `uniqueMap`, `boss`, `preventTownPortal`.
   levels each, 4 zones per tier). "Unique Map - Goblin Realm" (id 213, The Hidden Vault) has `uniqueMap` and group
   "Goblin Realm", no tier. `boss` is the `*Map Boss` comment column (read from the raw text: the TSV parser drops
   comment columns). Build warnings (manifest): a tier whose level is not the fixed ladder 100 / 102 / 104 / 106 / 108
-  (`mapTierLevel`), a `LevelGroup` tier that differs from the `Name` tier, a `Vis*` naming an unknown level.
-- **Left out**: the null row (id 0), the Expansion marker (dropped by the parser) and the map entrances (`Name` contains
-  "Prep Zone": 17 rows). Towns, boss arenas and id 214 (a second Naraku Level 2 row) stay.
-- **Connections**: `Vis0`–`Vis7`, 0, the area itself, repeats and left-out rows dropped; the page resolves the names
-  from the same bundle.
+  (`mapTierLevel`), a `LevelGroup` tier that differs from the `Name` tier, a `Vis*` naming an unknown level, a header
+  without the `*Map Boss` or `*IsInside` column (read as empty: no map bosses, every outdoor-type level outdoor).
+- **Map items**: `mapItem` is the item code (z01 … z20, z99) whose cubemain recipe outputs `Red Portal,lvl=N`, put on
+  the level the portal enters: the map entrance N's first Vis target (Chasm of Horrors Level 1, Infernal Nexus 212, The
+  Icecrown Citadel 201, …), or N itself when it is listed (Cursed Ossuary 191 and The Hidden Vault 213 have no entrance
+  row). One map item per zone (21 in 3.2.24: 20 tier zones and the unique map); a portal that leads to no listed level
+  and two items entering the same level are warnings.
+- **Waypoint**: a map row's `Waypoint` slot is a copy from the row it was made from (the in-game waypoint menu has act
+  tabs only), so map rows never have one (Twisted Maze 164 has slot 26, Durance of Hate Level 2's). Act rows keep
+  theirs, ESR's own changes included (Moo Moo Farm has slot 6, vanilla's Jail Level 1 slot).
+- **Terrain**: `LevelType` (the vanilla lvltypes.txt ids, stable across releases) through `TERRAIN_BY_LEVEL_TYPE`,
+  split by the `*IsInside` comment column (read from the raw text like `*Map Boss`): town 1 / 12 / 20 / 26 / 29;
+  outdoor 2, 5, 6, 11, 16, 21, 22, 27, 28, 30, 31, 35 outside; tower 2 inside (the Forgotten Tower); cave 3 / 18 / 23
+  / 33; tomb 4 / 10 / 17; dungeon 7 / 8 / 13 / 14 / 15 / 24 / 25; temple 9 / 32 / 34 and 22 / 31 inside (the Kurast
+  temples, the Durance, the Dimensional Gate); special 19 (Arcane Sanctuary). An unknown type is a warning and reads as
+  dungeon inside, outdoor outside. 3.2.24: town 5, outdoor 46, cave 32, tomb 34, tower 1, dungeon 37, temple 37,
+  special 1.
+- **Teleport** (`Teleport`): 0 → `'off'` (Frozen Wastes North / South 180 / 181 and The Crepuscular Basilica 206, the
+  map arenas of the endgame page's "Disrupt" aura), 2 → `'restricted'` (Duriel's Lair 73); the default 1 is left out.
+  The Maps page's "no teleport" list (Flayer Jungle L5 …) is not in the tables (they have 1).
+- **Quest gate**: `questGate` = `QuestFlagEx`, else `QuestFlag`, when non-zero (the quest that must be done to enter;
+  the UI labels the number): 11 Tainted Sun (Harem, Palace Cellar, Arcane, Underground Maze), 13 The Summoner (Canyon,
+  Tal Rasha's Tombs, Duriel's Lair), 18 Khalim's Will (Durance), 39 Rite of Passage (Worldstone Keep, Throne), 40 game
+  completed (Moo Moo Farm; its classic `QuestFlag` is 26).
+- **Endgame zones**: `endgameZone: true` when the name ends in " (Endgame Zone)" (15 ESR special zones in 3.2.24; the
+  suffix stays in `name`).
+- **Left out** (`hidden`): the null row (id 0, `other`), the Expansion marker (dropped by the parser), the map entrances
+  (`prepZones`: `Name` contains "Prep Zone", or a tier map row without monsters: The Icecrown Citadel 200 and The Sanctum
+  of the Dead 204 lack the suffix; 19 rows) and the levels ESR removed (`removed`: `REMOVED_LEVELS`, Jail Level 2 30 and
+  Catacombs Level 3 36: no row links to them and rows 31 / 37 took over their names; the official Maps page lists three
+  Jail and three Catacombs levels). A warning fires when a removed id gains an incoming Vis link or its row disappears.
+  Towns, boss arenas and id 214 (a second Naraku Level 2 row) stay.
+- **Connections**: `Vis0`–`Vis7`, 0, the area itself and repeats dropped, kept only when **both rows list each other**
+  (ESR's copied rows keep stale Vis entries) and the target is listed; the page resolves the names from the same bundle.
+  `oneWayVis` (`areasOneWayVis`) counts the one-way links dropped: 2 in 3.2.24, both in `EXPECTED_ONE_WAY_VIS` (Matron's
+  Den 133 → Burial Grounds 17, Crypt of Damnation 143 → the Necropolis entrance 144); any other one-way link is dropped
+  with a warning. Outdoor borders, quest and red portals and act travel are not in any table (the campaign map curates
+  them).
 
-Counts (ESR 3.2.24): `areas` 197, `areasMaps` 57 (tier 1: 7, 2: 9, 3: 15, 4: 8, 5: 18), `areasMapZones` 20,
-`areasUniqueMaps` 1, `areasWithoutMonsters` 10 (5 towns + 5), `areasWithWaypoint` 39, `areasHiddenPrepZones` 17,
-`areasHiddenOther` 1, `areasUniquesMinsThenMaxes` 61. levels.txt is also read by bundleLootFilter.ts (lootfilter areas) and generateBundles.ts (the cube's
-level names); those reads were left as they were.
+Counts (ESR 3.2.24): `areas` 193, `areasMaps` 55 (tier 1: 7, 2: 9, 3: 15, 4: 8, 5: 16), `areasMapZones` 20,
+`areasUniqueMaps` 1, `areasWithoutMonsters` 8 (5 towns, Forgotten Tower, Harem Level 1, Dimensional Gate),
+`areasWithWaypoint` 38, `areasHiddenPrepZones` 19, `areasHiddenRemoved` 2, `areasHiddenOther` 1, `areasOneWayVis` 2,
+`areasWithMapItem` 21, `areasUniquesMinsThenMaxes` 59. levels.txt is also read by bundleLootFilter.ts (lootfilter
+areas, every row) and generateBundles.ts (the cube's level names); those reads were left as they were.
 
 ### Stash
 
@@ -818,6 +853,15 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   Counts (3.2.24): 179 rows → 177 names, 110 from ESR art, 67 from vanilla art (the LoD runes and the vanilla gems), 0
   without art; 178 entries, 177 new files (Perfect Diamond's file was already there: the Jewel bases use that art; +0.42 MB), icons.json +19 KB.
   No colour transforms (misc rows have `InvTrans` 0).
+- **Quest items** (by code, for the campaign map): `selectQuestIconCodes` takes the misc / weapons / armor.txt rows
+  with a `quest` number (the campaign quest items: Horadric Staff and its parts, Khalim's organs and flails, The Gidbinn,
+  Horadric Malus, Hellforge Hammer, Wirt's Leg, Lam Esen's Tome, Malah's potion, the scrolls, …, plus ESR's quest-flagged
+  Ascendancy Stone, Kill Ledger and Primordial Soulstone) or a `QUEST_ICON_TYPES` type (`ques`: the portal keys,
+  organs, essences, Standard of Heroes and ESR's other quest-typed items; `mmap`: the endgame map items, areas.json
+  `mapItem`). Each code gets its items.json art (mod first, vanilla fallback, as for bases), keyed by code, with the
+  item's display name (`readItemNames`: `namestr`, else `name`, the way stashnames.json `bases` names a code; the
+  campaign map shows it without loading stashnames.json). Counts (3.2.24): 78 codes, 46 from ESR art, 31 from vanilla art (the vanilla quest
+  items), 1 without art (ek2, no items.json entry); 77 entries, 73 new files (+0.32 MB), icons.json +8 KB.
 - **Scope and counts** (ESR 3.2.24, vanilla root `06a0ca43…` extracted 2026-10-25; the generator prints them per
   section): bases: 653 codes, 356 from ESR art, 297 from vanilla art (Jewel, Boots, Leather Armor, Short Spear, …),
   0 without art. Uniques: 1,390 rows → 1,114 names; 695 from ESR art, 419 from vanilla art, 0 without art (392 own art,
@@ -865,15 +909,15 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   `root` line of `steam-build.config`, which identifies the game build and has no readable version number;
   `extractedAt` = that file's modification date, YYYY-MM-DD; `files` = the sorted icon files made from vanilla
   sprites), `bases: { [code]: info }`, `uniques: { [name]: info }`, `sets: { [name]: info }`,
-  `misc: { [name or name#code]: info }`, `info` =
+  `misc: { [name or name#code]: info }`, `quest: { [code]: info & { name } }`, `info` =
   `{ file, w, h, tint? }`, only entries with an image). Unique names are the lootfilter.json
   `uniques[].name` (mythicals included), set item names the sets.json `items[].name`, misc names the lootfilter.json
   `items[].name`. Stale `.webp` files in `icons/`
   are deleted.
 - **Manifest**: `generate-game-data.ts` does not build icons.json; it lists the committed file in the manifest as is
-  (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178), plus `vanillaIcons` = entries
-  (all sections) pointing at a vanilla file, recoloured ones through their untinted file (900), `vanillaIconFiles`
-  (204), `tintedIcons` (869) and
+  (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178) / `questIcons` (77), plus
+  `vanillaIcons` = entries (all sections) pointing at a vanilla file, recoloured ones through their untinted file (931),
+  `vanillaIconFiles` (232), `tintedIcons` (869) and
   `tintedIconFiles` (692)) so `loadGameDataFile('icons')` works like every other
   bundle. Hence `game-data:icons` runs the icon generator, then `generate-game-data.ts`; `game-data:update` runs
   generate → icons → generate (the icons follow the fresh bases.json).
@@ -894,7 +938,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   null while loading or after a failed load (a warning, no error card). `findItemIcon` takes a ref
   `{ kind: 'base', code }` or `{ kind: 'unique' | 'set', name, code? }`: the name, then the name without a trailing
   parenthetical (the mythicals page lists "Tathamet's Awakening (Fire Variant)" and its siblings), then the optional base
-  `code`. `{ kind: 'misc', name, code? }` looks up `name#code` when a code is given, then the plain name (a trailing
+  `code`. `{ kind: 'quest', code }` looks up the quest section by code. `{ kind: 'misc', name, code? }` looks up `name#code` when a code is given, then the plain name (a trailing
   parenthetical dropped; the socketable parsers already strip the rune "(N points)" suffix); a split name without a
   matching code finds nothing. The Socketables page and the runeword cards build the ref with `socketableIconRef`
   (`src/features/socketables/utils/socketableIcon.ts`): the name, plus a code from `SHARED_NAME_CODES` for the names
@@ -1701,7 +1745,9 @@ utils/sets.ts                          URL state, options, order, search / focus
   `build/bundleLootFilterSkills.test.ts` (layer resolver per func, property group entries, skills list, known layers,
   warnings, `skillId`), `build/affixStats.test.ts` (stats, labels, layers), `build/bundleAreas.test.ts`
   (left-out rows, MonLvlEx / density / unique packs per difficulty, towns and areas without monsters, name fallback,
-  map tier / zone / boss, connections to left-out rows, tier ladder / LevelGroup / unknown Vis warnings)
+  map tier / zone / boss, map items on the entry level, no waypoint on map rows, mutual links only, terrain / teleport /
+  quest gate / endgame zone, removed and unnamed-entrance rows, tier ladder / LevelGroup / unknown Vis / LevelType /
+  one-way link warnings)
 - Engine: `engine/itemTypes.test.ts`, `engine/sockets.test.ts`, `engine/matchRunewords.test.ts`, `engine/statLayers.test.ts`,
   `engine/bestBase.test.ts`, `engine/affixEligibility.test.ts`, `engine/browser/loadGameData.test.ts`
 - UI: `store/gameDataSlice.test.ts`, `store/bestBaseState.test.ts`, `utils/filterBases.test.ts`,
@@ -1717,8 +1763,9 @@ utils/sets.ts                          URL state, options, order, search / focus
   tabs, 280 skills, level cap 110, unique cells, required skills within the class, the Warlock tabs and Summon Tainted;
   for crafting.json: one skill forging per class on every slot, all-skills, the 7 stat forgings (Chipped Amethyst
   checked), 60 rune forgings (46 ES + 14 Kanji), 8 amulet-only aura forgings, Dragon Stone weapon steps, 8 gem melds;
-  for areas.json: unique ids, resolvable connections, 5 tiers × 4 zones on the level ladder, the unique map, the five
-  towns with a waypoint and no level; for the lootfilter.json skills: every skills.json tree skill with its class, 472
+  for areas.json: unique ids, resolvable and mutual connections, 5 tiers × 4 zones on the level ladder, the unique map,
+  the five towns with a waypoint, no level and town terrain, no removed level, one map item per zone (each with a
+  quest icon), no waypoint on map rows; for the lootfilter.json skills: every skills.json tree skill with its class, 472
   = Orb of Winter, tab layer 50 = Assassin Martial Arts, every known layer ≤ 65535 and naming a listed skill, every
   affix layer on one of the affix's stats and decodable).
   When the

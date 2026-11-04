@@ -4,11 +4,13 @@ describe('item icon lookup', () => {
   const axe = { file: 'axe_hand_axe.webp', w: 58, h: 128 };
   const gnasher = { file: 'axe_the_gnasher.webp', w: 60, h: 120 };
   const ward = { file: 'shield_ward.webp', w: 90, h: 100 };
+  const viper = { ...ward, name: 'Top of the Horadric Staff' };
   const index = buildItemIconIndex({
     bases: { hax: axe },
     uniques: { 'The Gnasher': gnasher, "Tathamet's Awakening": axe },
     sets: { "Civerb's Ward": ward },
     misc: { 'El Rune': axe, 'Ko Rune#r19': gnasher, 'Ko Rune#r68': ward },
+    quest: { vip: viper },
   });
 
   it('finds bases by code and named items by normalised name', () => {
@@ -40,5 +42,12 @@ describe('item icon lookup', () => {
     expect(findItemIcon(index, { kind: 'misc', name: 'Small Charm', code: 'hax' })).toBe(axe);
     // An icons.json without the misc section
     expect(findItemIcon(buildItemIconIndex({ bases: {}, uniques: {}, sets: {} }), { kind: 'misc', name: 'El Rune' })).toBeUndefined();
+  });
+
+  it('finds quest items by code only', () => {
+    expect(findItemIcon(index, { kind: 'quest', code: 'vip' })).toBe(viper);
+    expect(index.quest.get('vip')?.name).toBe('Top of the Horadric Staff');
+    expect(findItemIcon(index, { kind: 'quest', code: 'hax' })).toBeUndefined();
+    expect(findItemIcon(buildItemIconIndex({ bases: {}, uniques: {}, sets: {} }), { kind: 'quest', code: 'vip' })).toBeUndefined();
   });
 });

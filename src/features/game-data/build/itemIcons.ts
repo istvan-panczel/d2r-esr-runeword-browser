@@ -10,12 +10,14 @@
  * - items whose asset is not in the clone use vanilla D2R art: the same asset path in the vanilla folder (same layout,
  *   `data/hd/...` instead of `Eastern_Sun_Resurrected.mpq/data/hd/...`). The clone's sprite wins when it ships one;
  *   the vanilla items.json / uniques.json / sets.json fill in codes and keys the mod's files do not list;
- * - misc items in scope (`MISC_ICON_TYPES`: the socket fillers) get their code's art, keyed by display name.
+ * - misc items in scope (`MISC_ICON_TYPES`: the socket fillers) get their code's art, keyed by display name;
+ * - quest items (`selectQuestIconCodes`) get their code's art, keyed by code.
  */
 import { readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import type { IconsBundle, ItemIconInfo, LootFilterItem } from '../engine/schema.ts';
-import type { UniqueOrSetRow } from './itemNames.ts';
+import type { IconsBundle, ItemIconInfo, LootFilterItem, QuestIconInfo } from '../engine/schema.ts';
+import { itemRowName, type UniqueOrSetRow } from './itemNames.ts';
+import type { TsvTable } from './tsv.ts';
 import { type TintRef, untintedFile } from './itemTint.ts';
 
 export const ESR_HD_ITEMS_FILE = 'Eastern_Sun_Resurrected.mpq/data/hd/items/items.json';
@@ -225,6 +227,9 @@ export interface IconPlan {
   readonly bases: ReadonlyMap<string, string>;
   /** Of `bases`: codes whose art comes from the vanilla folder */
   readonly basesFromVanilla: number;
+  /** Quest item code (`selectQuestIconCodes`) → asset slug, for codes with art in a source */
+  readonly quest: ReadonlyMap<string, string>;
+  readonly questStats: QuestIconStats;
   /** Unique display name → asset slug (own art, else the base's) */
   readonly uniques: ReadonlyMap<string, string>;
   /** Set item display name → asset slug */
@@ -258,6 +263,8 @@ export interface IconPlanInput {
   readonly setArt: ReadonlyMap<string, string>;
   /** Misc rows in the icon scope (`selectMiscIconRows`); omitted → no misc section */
   readonly misc?: readonly MiscIconRow[];
+  /** Quest item codes (`selectQuestIconCodes`); omitted → no quest section entries */
+  readonly quest?: readonly string[];
   readonly index: SpriteIndex;
   /** The vanilla art folder: its sprites and json maps, used where the clone's lack an asset, code or key */
   readonly vanilla?: VanillaArt;
@@ -319,6 +326,53 @@ export function selectMiscIconRows(
     .map((item) => ({ code: item.code, name: item.name, enabled: item.spawnable }));
 }
 
+/**
+ * itemtypes.txt codes whose misc / weapons / armor.txt rows get an icon in the `quest` section besides the rows with a
+ * `quest` number (the campaign quest items): `ques` (also the portal keys, organs, essences and other quest-typed
+ * items without a quest number) and `mmap` (the endgame map items, areas.json `mapItem`).
+ */
+export const QUEST_ICON_TYPES: readonly string[] = ['ques', 'mmap'];
+
+/** Item codes of the quest icon scope: rows with a `quest` number or a QUEST_ICON_TYPES `type`, in table then row order. */
+export function selectQuestIconCodes(tables: readonly TsvTable[], types: readonly string[] = QUEST_ICON_TYPES): string[] {
+  const codes = new Set<string>();
+  for (const table of tables) {
+    for (const row of table.rows) {
+      const code = row.has('code') ? row.str('code') : '';
+      if (code === '') continue;
+      const quest = row.has('quest') ? row.num('quest') : 0;
+      const typed = ['type', 'type2'].some((column) => row.has(column) && types.includes(row.str(column)));
+      if (quest > 0 || typed) codes.add(code);
+    }
+  }
+  return [...codes];
+}
+
+/**
+ * Display names of item codes (the first misc / weapons / armor.txt row of a code), as stashnames.json `bases` names
+ * them: the `quest` section carries them so a page that shows quest items needs no stashnames.json.
+ */
+export function readItemNames(tables: readonly TsvTable[], strings: ReadonlyMap<string, string>): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const table of tables) {
+    for (const row of table.rows) {
+      const code = row.has('code') ? row.str('code') : '';
+      if (code === '' || names.has(code)) continue;
+      names.set(code, itemRowName(strings, row.has('namestr') ? row.str('namestr') : '', row.has('name') ? row.str('name') : ''));
+    }
+  }
+  return names;
+}
+
+/** How the quest items of a plan got their icon (per code). */
+export interface QuestIconStats {
+  readonly requested: number;
+  /** Of the codes with an icon: art from the vanilla folder */
+  readonly vanilla: number;
+  /** Codes without an items.json entry or whose asset is in no source */
+  readonly missing: readonly string[];
+}
+
 /** How the misc items of a plan got their icon (counted per distinct display name). */
 export interface MiscIconStats {
   /** Distinct display names */
@@ -355,25 +409,31 @@ export function planItemIcons(input: IconPlanInput): IconPlan {
     return slug;
   };
 
-  const bases = new Map<string, string>();
-  const missingEntry: string[] = [];
-  const missingArt: string[] = [];
-  let basesFromVanilla = 0;
-  for (const code of input.codes) {
-    if (bases.has(code) || missingEntry.includes(code) || missingArt.includes(code)) continue;
-    const asset = assets.get(code);
-    if (asset === undefined) {
-      missingEntry.push(code);
-      continue;
+  /** Item codes → their items.json art */
+  const planCodes = (codes: readonly string[]) => {
+    const byCode = new Map<string, string>();
+    const missingEntry: string[] = [];
+    const missingArt: string[] = [];
+    let fromVanilla = 0;
+    for (const code of codes) {
+      if (byCode.has(code) || missingEntry.includes(code) || missingArt.includes(code)) continue;
+      const asset = assets.get(code);
+      if (asset === undefined) {
+        missingEntry.push(code);
+        continue;
+      }
+      const sprite = resolve(asset);
+      if (sprite === null) {
+        missingArt.push(code);
+        continue;
+      }
+      if (sprite.source === 'vanilla') fromVanilla++;
+      byCode.set(code, addSprite(asset, sprite));
     }
-    const sprite = resolve(asset);
-    if (sprite === null) {
-      missingArt.push(code);
-      continue;
-    }
-    if (sprite.source === 'vanilla') basesFromVanilla++;
-    bases.set(code, addSprite(asset, sprite));
-  }
+    return { byCode, missingEntry, missingArt, fromVanilla };
+  };
+  const { byCode: bases, missingEntry, missingArt, fromVanilla: basesFromVanilla } = planCodes(input.codes);
+  const quest = planCodes(input.quest ?? []);
 
   /*
    * One icon per display name. Enabled rows come first; a later row replaces an earlier one with the same name only
@@ -493,6 +553,12 @@ export function planItemIcons(input: IconPlanInput): IconPlan {
   return {
     bases,
     basesFromVanilla,
+    quest: quest.byCode,
+    questStats: {
+      requested: new Set(input.quest ?? []).size,
+      vanilla: quest.fromVanilla,
+      missing: [...quest.missingEntry, ...quest.missingArt],
+    },
     uniques: uniques.byName,
     sets: sets.byName,
     uniqueChoices: uniques.choices,
@@ -563,9 +629,11 @@ export function buildIconsBundle(input: {
   esrVersion: string;
   esrTag: string | null;
   vanilla?: { rootHash: string; extractedAt: string };
-  plan: Pick<IconPlan, 'bases' | 'uniques' | 'sets' | 'sprites'> & Partial<Pick<IconPlan, 'misc'>>;
+  plan: Pick<IconPlan, 'bases' | 'uniques' | 'sets' | 'sprites'> & Partial<Pick<IconPlan, 'misc' | 'quest'>>;
   /** Recoloured variants by unique / set item name (`planTints`); their images are in `images` under the variant slug */
   tints?: { uniques: ReadonlyMap<string, TintRef>; sets: ReadonlyMap<string, TintRef> };
+  /** Display names by item code (`readItemNames`) for the `quest` entries; a code without one is named by its code */
+  itemNames?: ReadonlyMap<string, string>;
   images: ReadonlyMap<string, { width: number; height: number }>;
   extension: string;
 }): IconsBundle {
@@ -601,6 +669,12 @@ export function buildIconsBundle(input: {
     uniques: section(input.plan.uniques, input.tints?.uniques),
     sets: section(input.plan.sets, input.tints?.sets),
     misc: section(input.plan.misc ?? new Map()),
+    quest: Object.fromEntries(
+      Object.entries(section(input.plan.quest ?? new Map())).map(([code, icon]): [string, QuestIconInfo] => [
+        code,
+        { ...icon, name: input.itemNames?.get(code) ?? code },
+      ])
+    ),
   };
 }
 
@@ -616,9 +690,11 @@ export function compareWithoutVanilla(committed: IconsBundle, esrOnly: IconsBund
   if (committed.esrVersion !== esrOnly.esrVersion) problems.push(`esrVersion ${committed.esrVersion} ≠ ${esrOnly.esrVersion}`);
   if (committed.esrTag !== esrOnly.esrTag) problems.push(`esrTag ${String(committed.esrTag)} ≠ ${String(esrOnly.esrTag)}`);
   const vanillaFiles = new Set(committed.vanilla?.files ?? []);
-  const same = (a: ItemIconInfo, b: ItemIconInfo) => a.file === b.file && a.w === b.w && a.h === b.h;
+  // The quest entries' names come from the clone's tables, so they must match as well
+  type Entry = ItemIconInfo & { name?: string };
+  const same = (a: Entry, b: Entry) => a.file === b.file && a.w === b.w && a.h === b.h && a.name === b.name;
   const describe = (icon: ItemIconInfo) => `${icon.file} ${String(icon.w)}×${String(icon.h)}`;
-  for (const section of ['bases', 'uniques', 'sets', 'misc'] as const) {
+  for (const section of ['bases', 'uniques', 'sets', 'misc', 'quest'] as const) {
     const old = committed[section];
     const fresh = esrOnly[section];
     for (const [key, committedIcon] of Object.entries(old)) {

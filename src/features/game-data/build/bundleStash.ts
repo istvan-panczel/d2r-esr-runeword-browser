@@ -25,7 +25,7 @@ import {
 } from '../engine/schema.ts';
 import type { BuildResult } from './bundleTypes.ts';
 import { isAncientCouponName, readCouponRecipes } from './coupons.ts';
-import { readUniqueOrSetRows, resolveName } from './itemNames.ts';
+import { itemRowName, readUniqueOrSetRows, resolveName } from './itemNames.ts';
 import { gearTier, type FamilyTier } from './tiers.ts';
 import type { TsvTable } from './tsv.ts';
 
@@ -153,10 +153,7 @@ export function buildStashBundle(
       items.push([code, flags, row.num('invwidth'), row.num('invheight')]);
       const tier =
         table === input.misc ? undefined : gearTier(code, row.str('normcode'), row.str('ubercode'), row.str('ultracode'), row.num('level'));
-      // ESR abbreviates potion and scroll names for the belt ("*HP1", "*Thaw", "+TP"): the `name` column reads in
-      // full (as the cube names do, cube/cubeRows.ts)
-      const shown = resolveName(strings, row.str('namestr'), row.str('name'));
-      const name = /^[*+]/.test(shown) && row.str('name') !== '' ? row.str('name') : shown;
+      const name = itemRowName(strings, row.str('namestr'), row.str('name'));
       bases.set(code, { code, name, type, tier: tier === 'mythical' ? undefined : tier });
       const type2 = row.has('type2') ? row.str('type2') : '';
       baseInfo.push({ code, name, type, ...(type2 === '' ? {} : { type2 }), ...(tier === undefined ? {} : { tier }) });

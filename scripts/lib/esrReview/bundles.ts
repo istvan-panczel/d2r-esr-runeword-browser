@@ -84,7 +84,7 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     vesselRecipes: list((entry) => `tier ${field(entry, 'tier')}: ${codes(entry.materials)}`),
     vesselTransforms: list((entry) => `${codes(entry.materials)} → ${field(entry, 'output', 'code')}`),
   },
-  'icons.json': { esrVersion: VALUE, esrTag: VALUE, vanilla: VALUE, bases: MAP, uniques: MAP, sets: MAP, misc: MAP },
+  'icons.json': { esrVersion: VALUE, esrTag: VALUE, vanilla: VALUE, bases: MAP, uniques: MAP, sets: MAP, misc: MAP, quest: MAP },
   'itemtext.json': {
     stats: list((entry, index) => `${String(index)} ${field(entry, 'stat')}`),
     strings: MAP,

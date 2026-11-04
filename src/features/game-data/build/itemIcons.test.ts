@@ -19,11 +19,15 @@ import {
   parseNamedArt,
   MISC_ICON_TYPES,
   planItemIcons,
+  QUEST_ICON_TYPES,
   resolveArt,
   resolveSprite,
   selectMiscIconRows,
+  readItemNames,
+  selectQuestIconCodes,
 } from './itemIcons.ts';
 import type { IconsBundle, LootFilterItem } from '../engine/schema.ts';
+import { parseTsv } from './tsv.ts';
 import { serializeBundle } from './writeBundle.ts';
 
 describe('parseItemAssets', () => {
@@ -471,6 +475,80 @@ describe('misc item art (socket fillers)', () => {
   });
 });
 
+describe('quest item art', () => {
+  const table = (rows: string[][]) => parseTsv(rows.map((cells) => cells.join('\t')).join('\n'), 'items.txt');
+
+  it('selects the rows with a quest number or a quest icon type, by code, without repeats', () => {
+    expect(QUEST_ICON_TYPES).toEqual(['ques', 'mmap']);
+    const misc = table([
+      ['name', 'code', 'type', 'type2', 'quest'],
+      ['viper amulet', 'vip', 'vamu', '', '10'],
+      ['Key of Terror', 'pk1', 'ques', '', ''],
+      ['Tier 1 Map', 'z01', 'mmap', '', ''],
+      ['Ring', 'rin', 'ring', '', '0'],
+      ['Odd', 'odd', 'misc', 'ques', ''],
+      ['Repeat', 'vip', 'ques', '', ''],
+      ['Blank', '', 'ques', '', ''],
+    ]);
+    // weapons.txt-like table without type2
+    const weapons = table([
+      ['name', 'code', 'type', 'quest'],
+      ['Horadric Staff', 'hst', 'staf', '10'],
+      ['Hand Axe', 'hax', 'axe', ''],
+    ]);
+    expect(selectQuestIconCodes([misc, weapons])).toEqual(['vip', 'pk1', 'z01', 'odd', 'hst']);
+  });
+
+  it('names item codes by their first row, as stashnames.json does (namestr, else name; belt abbreviations in full)', () => {
+    const misc = table([
+      ['name', 'code', 'namestr'],
+      ['viper amulet', 'vip', 'vip'],
+      ['Thawing Potion', 'wms', 'wms'],
+      ['No String', 'nos', 'missing'],
+      ['Repeat', 'vip', 'other'],
+    ]);
+    const strings = new Map([
+      ['vip', 'Top of the Horadric Staff'],
+      ['wms', '*Thaw'],
+      ['other', 'Other'],
+    ]);
+    expect([...readItemNames([misc], strings)]).toEqual([
+      ['vip', 'Top of the Horadric Staff'],
+      ['wms', 'Thawing Potion'],
+      ['nos', 'No String'],
+    ]);
+  });
+
+  it("keys the code's art by code and lists the codes without art", () => {
+    const plan = planItemIcons({
+      codes: ['hax'],
+      uniques: [],
+      sets: [],
+      quest: ['vip', 'hst', 'nop', 'gone', 'vip'],
+      assets: new Map([
+        ['hax', 'axe/hand_axe'],
+        ['vip', 'amulet/viper_amulet'],
+        ['nop', 'quest/missing'],
+      ]),
+      uniqueArt: new Map(),
+      setArt: new Map(),
+      index: buildSpriteIndex(['weapon/axe/hand_axe.sprite', 'misc/amulet/viper_amulet.sprite']),
+      vanilla: {
+        index: buildSpriteIndex(['weapon/staff/horadric_staff.sprite']),
+        assets: new Map([['hst', 'staff/horadric_staff']]),
+        uniqueArt: new Map(),
+        setArt: new Map(),
+      },
+    });
+    expect([...plan.quest]).toEqual([
+      ['vip', 'amulet_viper_amulet'],
+      ['hst', 'staff_horadric_staff'],
+    ]);
+    expect([...plan.bases]).toEqual([['hax', 'axe_hand_axe']]);
+    expect(plan.questStats).toEqual({ requested: 4, vanilla: 1, missing: ['gone', 'nop'] });
+  });
+});
+
 describe('compareWithoutVanilla', () => {
   const axe = { file: 'axe_hand_axe.webp', w: 58, h: 128 };
   const boots = { file: 'boot_boots.webp', w: 100, h: 90 };
@@ -482,6 +560,7 @@ describe('compareWithoutVanilla', () => {
     uniques: { Plain: boots, Gnasher: axe },
     sets: {},
     misc: { 'El Rune': axe },
+    quest: { vip: { ...axe, name: 'Top of the Horadric Staff' } },
   };
   const esrOnly: IconsBundle = {
     esrVersion: '3.2.24',
@@ -490,6 +569,7 @@ describe('compareWithoutVanilla', () => {
     uniques: { Plain: axe, Gnasher: axe },
     sets: {},
     misc: { 'El Rune': axe },
+    quest: { vip: { ...axe, name: 'Top of the Horadric Staff' } },
   };
 
   it('accepts the committed vanilla-derived entries and matching clone-derived ones', () => {
@@ -504,6 +584,7 @@ describe('compareWithoutVanilla', () => {
       uniques: { Plain: axe },
       sets: {},
       misc: { 'El Rune': boots },
+      quest: {},
     };
     expect(compareWithoutVanilla(committed, fresh)).toEqual([
       'esrVersion 3.2.24 ≠ 3.2.25',
@@ -513,6 +594,7 @@ describe('compareWithoutVanilla', () => {
       'bases/new: missing',
       "uniques/Gnasher: not produced by the clone's art",
       'misc/El Rune: axe_hand_axe.webp 58×128 ≠ boot_boots.webp 100×90',
+      "quest/vip: not produced by the clone's art",
     ]);
   });
 
@@ -582,8 +664,13 @@ describe('buildIconsBundle', () => {
           ['Ko Rune#r19', 'axe_the_gnasher'],
           ['Moon Rune', 'rune_moon_rune'],
         ]),
+        quest: new Map([
+          ['vip', 'axe_the_gnasher'],
+          ['hst', 'rune_moon_rune'],
+        ]),
         sprites: new Map(),
       },
+      itemNames: new Map([['vip', 'Top of the Horadric Staff']]),
       images: new Map([
         ['axe_hand_axe', { width: 58, height: 128 }],
         ['axe_the_gnasher', { width: 60, height: 120 }],
@@ -606,6 +693,7 @@ describe('buildIconsBundle', () => {
         'El Rune': { file: 'axe_hand_axe.webp', w: 58, h: 128 },
         'Ko Rune#r19': { file: 'axe_the_gnasher.webp', w: 60, h: 120 },
       },
+      quest: { vip: { file: 'axe_the_gnasher.webp', w: 60, h: 120, name: 'Top of the Horadric Staff' } },
     });
     expect(Object.keys(JSON.parse(serializeBundle(bundle)) as object)).toEqual([
       'esrVersion',
@@ -614,6 +702,7 @@ describe('buildIconsBundle', () => {
       'uniques',
       'sets',
       'misc',
+      'quest',
     ]);
   });
 
@@ -674,9 +763,10 @@ describe('buildIconsBundle', () => {
     const bundle = buildIconsBundle({ esrVersion: '3.2.24', esrTag: null, vanilla, plan, images, extension: 'webp' });
     // helmet_cap failed to decode: neither an entry nor a listed file
     expect(bundle.vanilla).toEqual({ ...vanilla, files: ['boot_boots.webp'] });
-    expect(Object.keys(bundle)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc']);
-    // No misc rows planned: an empty section
+    expect(Object.keys(bundle)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest']);
+    // No misc rows or quest codes planned: empty sections
     expect(bundle.misc).toEqual({});
+    expect(bundle.quest).toEqual({});
     const esrOnly = buildIconsBundle({
       esrVersion: '3.2.24',
       esrTag: null,

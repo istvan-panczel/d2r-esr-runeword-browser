@@ -5,6 +5,7 @@ import { resolve } from 'path';
 import { EXTRA_FAMILIES } from './build/cube/cubeCatalog.ts';
 import { CUBE_FAMILIES } from './build/cube/cubeFamilies.ts';
 import { readEsrSources } from './build/esrSources.ts';
+import { REMOVED_LEVELS } from './build/bundleAreas.ts';
 import { generateBundles } from './build/generateBundles.ts';
 import { COLORMAP_FILES, TINT_COLORS, untintedFile } from './build/itemTint.ts';
 import { serializeBundle } from './build/writeBundle.ts';
@@ -119,17 +120,42 @@ describe('committed game-data bundles', () => {
     expect(manifest.files.icons?.hash).toBe(createHash('sha256').update(iconsText, 'utf8').digest('hex'));
     const icons = JSON.parse(iconsText) as IconsBundle;
     expect(icons.esrVersion).toBe(manifest.esrVersion);
-    expect(Object.keys(icons)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc']);
+    expect(Object.keys(icons)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest']);
     expect(manifest.counts.itemIcons).toBe(Object.keys(icons.bases).length);
     expect(manifest.counts.uniqueIcons).toBe(Object.keys(icons.uniques).length);
     expect(manifest.counts.setIcons).toBe(Object.keys(icons.sets).length);
     expect(manifest.counts.miscIcons).toBe(Object.keys(icons.misc).length);
+    expect(manifest.counts.questIcons).toBe(Object.keys(icons.quest).length);
     // With the vanilla art as the second source almost every item has an icon (ESR 3.2.24: all of them)
     expect(Object.keys(icons.bases).length).toBeGreaterThan(640);
     expect(Object.keys(icons.uniques).length).toBeGreaterThan(1100);
     expect(Object.keys(icons.sets).length).toBeGreaterThan(260);
     // Socket fillers (gems, runes, crystals; ESR 3.2.24: 177 names, Ko Rune keyed per code)
     expect(Object.keys(icons.misc).length).toBeGreaterThan(170);
+    // Quest items, portal keys, organs and map items by code (ESR 3.2.24: 77), every areas.json map item among them
+    expect(Object.keys(icons.quest).length).toBeGreaterThan(70);
+    for (const code of [
+      'vip',
+      'msf',
+      'hst',
+      'qf1',
+      'qf2',
+      'qey',
+      'qhr',
+      'qbr',
+      'g33',
+      'hfh',
+      'hdm',
+      'box',
+      'bbb',
+      'bks',
+      'mss',
+      'ice',
+      'leg',
+      'pk1',
+    ])
+      expect(icons.quest[code], code).toBeDefined();
+    for (const area of areas) if (area.mapItem !== undefined) expect(icons.quest[area.mapItem], area.mapItem).toBeDefined();
 
     // Vanilla provenance: the Steam build's root hash, the extraction date and the files made from vanilla sprites
     const vanilla = icons.vanilla;
@@ -140,14 +166,16 @@ describe('committed game-data bundles', () => {
     expect(vanillaFiles).toEqual([...new Set(vanillaFiles)].sort());
     for (const file of vanillaFiles) expect(existsSync(resolve(OUTPUT_DIR, 'icons', file)), file).toBe(true);
     expect(manifest.counts.vanillaIconFiles).toBe(vanillaFiles.length);
-    const entries = [icons.bases, icons.uniques, icons.sets, icons.misc].flatMap((section) => Object.values(section));
+    const entries = [icons.bases, icons.uniques, icons.sets, icons.misc, icons.quest].flatMap((section) => Object.values(section));
     // A vanilla file is used directly or through a recoloured variant made from it
     const usedFiles = new Set(entries.map((icon) => untintedFile(icon.file)));
     for (const file of vanillaFiles) expect(usedFiles.has(file), file).toBe(true);
     expect(manifest.counts.vanillaIcons).toBe(entries.filter((icon) => vanillaFiles.includes(untintedFile(icon.file))).length);
 
     // Inventory colour transforms: only unique / set entries, file named after the untinted file, map and colour
-    expect([icons.bases, icons.misc].flatMap((section) => Object.values(section)).some((icon) => icon.tint !== undefined)).toBe(false);
+    expect(
+      [icons.bases, icons.misc, icons.quest].flatMap((section) => Object.values(section)).some((icon) => icon.tint !== undefined)
+    ).toBe(false);
     const tinted = [icons.uniques, icons.sets].flatMap((section) => Object.values(section)).filter((icon) => icon.tint !== undefined);
     for (const icon of tinted) {
       const tint = icon.tint ?? { map: '', color: '' };
@@ -978,10 +1006,33 @@ describe('committed areas bundle', () => {
     expect(areas.filter((area) => area.uniqueMap === true).map((area) => area.name)).toEqual(['The Hidden Vault']);
   });
 
-  it('keeps the towns (waypoint, no level) and no map entrance', () => {
+  it('keeps the towns (waypoint, no level) and no map entrance or removed level', () => {
     const towns = ['Rogue Encampment', 'Lut Gholein', 'Kurast Docks', 'The Pandemonium Fortress', 'Harrogath'];
-    for (const name of towns) expect(areas.find((area) => area.name === name)).toMatchObject({ waypoint: true, level: null });
+    for (const name of towns)
+      expect(areas.find((area) => area.name === name)).toMatchObject({ waypoint: true, level: null, terrain: 'town' });
+    expect(areas.filter((area) => area.terrain === 'town')).toHaveLength(towns.length);
     expect(byId.has(0)).toBe(false);
     expect(byId.get(2)?.name).toBe('Blood Moor');
+    for (const id of REMOVED_LEVELS) expect(byId.has(id), String(id)).toBe(false);
+    expect(manifest.counts.areasHiddenRemoved).toBe(REMOVED_LEVELS.length);
+    // The rows that took over the removed levels' names are the only ones left with them
+    for (const name of ['Jail Level 2', 'Catacombs Level 3'])
+      expect(
+        areas.filter((area) => area.name === name),
+        name
+      ).toHaveLength(1);
+  });
+
+  it('links two areas only both ways, and enters every map zone through one map item, without a waypoint', () => {
+    for (const area of areas)
+      for (const id of area.connections) expect(byId.get(id)?.connections, `${area.name} → ${String(id)}`).toContain(area.id);
+    const maps = areas.filter((area) => area.tier !== undefined || area.uniqueMap === true);
+    expect(maps.some((area) => area.waypoint)).toBe(false);
+    const zones = new Set(maps.map((area) => area.group));
+    const entries = maps.filter((area) => area.mapItem !== undefined);
+    expect(new Set(entries.map((area) => area.group))).toEqual(zones);
+    expect(entries).toHaveLength(zones.size);
+    expect(new Set(entries.map((area) => area.mapItem)).size).toBe(entries.length);
+    expect(manifest.counts.areasWithMapItem).toBe(entries.length);
   });
 });
