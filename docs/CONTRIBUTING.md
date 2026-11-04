@@ -72,7 +72,8 @@ which git ignores. `.env.example` lists every variable. Setup of the Supabase pr
 - TypeScript with ESLint `strictTypeChecked`: no `!` non-null assertions, use real null checks.
 - React 19 with the React Compiler: do not add `useMemo`, `useCallback` or `React.memo` by hand unless the compiler
   cannot cover the case, and then say why in a comment.
-- Prettier formats everything (single quotes, 140 print width, trailing commas).
+- Prettier formats everything (single quotes, 140 print width, trailing commas) except what `.prettierignore` lists: the
+  generated bundles, the byte-exact loot filter templates and CHANGELOG.md. `npm run prettier:format-check` checks it all.
 - More conventions: [Coding Guidelines](./technical/CODING-GUIDELINES.md), [Testing](./technical/TESTING.md).
 
 ## Commits
@@ -85,7 +86,7 @@ The `pre-commit` hook runs:
 
 - a staged-file check that refuses save and stash files, logs, env files other than the three committed ones, and
   files over 2 MB outside `public/game-data/`;
-- lint-staged: Prettier and ESLint on the staged source files;
+- lint-staged: Prettier on every staged text file, ESLint on TypeScript;
 - a gitleaks secret scan of the staged changes;
 - an exiftool check that staged images and PDFs carry no identifying metadata (GPS position, author, owner).
 

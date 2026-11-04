@@ -9,13 +9,13 @@ git tag. The browser never parses txt files and never touches Dexie for this dat
 
 Pages (all under one nav entry, "Game Data", with sub-tabs):
 
-| Route | Tab | Purpose |
-|---|---|---|
-| `/game-data` | — | redirects to `bases` |
-| `/game-data/bases` | Bases | Browse spawnable base items (weapons, armor, equippable accessories) with tier, stats, requirements, socket caps |
-| `/game-data/best-base` | Best Base | Pick a runeword + character (class, level, str, dex) → ranked eligible bases |
-| `/game-data/affixes` | Affixes | Browse magic prefixes/suffixes/automods; "what can roll" on a base at an item level |
-| `/game-data/types` | Item Types | Item type hierarchy (Equiv graph) + socket cap table |
+| Route                  | Tab        | Purpose                                                                                                          |
+| ---------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| `/game-data`           | —          | redirects to `bases`                                                                                             |
+| `/game-data/bases`     | Bases      | Browse spawnable base items (weapons, armor, equippable accessories) with tier, stats, requirements, socket caps |
+| `/game-data/best-base` | Best Base  | Pick a runeword + character (class, level, str, dex) → ranked eligible bases                                     |
+| `/game-data/affixes`   | Affixes    | Browse magic prefixes/suffixes/automods; "what can roll" on a base at an item level                              |
+| `/game-data/types`     | Item Types | Item type hierarchy (Equiv graph) + socket cap table                                                             |
 
 Owner decisions (2026-10-09): build-time JSON; all four pages; real descfunc stat renderer (at build time); character
 inputs are a local form persisted in localStorage (no builds/Supabase tie-in); uniques/sets/gemwords/runeword lists stay on
@@ -92,17 +92,17 @@ public/game-data/{manifest,types,bases,runewords,affixes}.json   committed outpu
 One JSON per area, loaded lazily by the pages that need it. Arrays are written one element per line (readable diffs).
 Stable key order. The manifest holds a sha256 per file for cache-busting.
 
-| File | Contents | Est. raw / gzip |
-|---|---|---|
-| `manifest.json` | schema, esrVersion, esrTag, esrCommit, generatedAt, per-file hash+bytes, counts, warnings | ~1 KB |
-| `types.json` | item types + classes | ~25 KB / 4 KB |
-| `bases.json` | 624 weapons/armor + ~15 accessories | ~180 KB / 20 KB |
-| `runewords.json` | txt runeword rows | ~80 KB / 10 KB |
-| `affixes.json` | 2,643 affixes with rendered text | ~550 KB / 40 KB |
+| File             | Contents                                                                                  | Est. raw / gzip |
+| ---------------- | ----------------------------------------------------------------------------------------- | --------------- |
+| `manifest.json`  | schema, esrVersion, esrTag, esrCommit, generatedAt, per-file hash+bytes, counts, warnings | ~1 KB           |
+| `types.json`     | item types + classes                                                                      | ~25 KB / 4 KB   |
+| `bases.json`     | 624 weapons/armor + ~15 accessories                                                       | ~180 KB / 20 KB |
+| `runewords.json` | txt runeword rows                                                                         | ~80 KB / 10 KB  |
+| `affixes.json`   | 2,643 affixes with rendered text                                                          | ~550 KB / 40 KB |
 
-Loader: `fetch(\`${import.meta.env.BASE_URL}game-data/${file}.json?v=${hash}\`)` with a module-level cached Promise per
-file; manifest fetched with `cache: 'no-cache'`; a failed request clears its cache entry so Retry works. Hook
-`useGameData(files)` returns `{ status, data, error }`. Loading shows the route Spinner; errors show a Card with Retry. If
+Loader: `fetch(\`${import.meta.env.BASE_URL}game-data/${file}.json?v=${hash}\`)`with a module-level cached Promise per
+file; manifest fetched with`cache: 'no-cache'`; a failed request clears its cache entry so Retry works. Hook
+`useGameData(files)`returns`{ status, data, error }`. Loading shows the route Spinner; errors show a Card with Retry. If
 `manifest.schema !== GAME_DATA_SCHEMA`, show "Game data out of date, reload". Not a Vite JSON import (huge literal types).
 
 ### Redux
@@ -129,45 +129,117 @@ type ClassCode = 'ama' | 'sor' | 'nec' | 'pal' | 'bar' | 'dru' | 'ass' | 'war';
 type GameDataFile = 'types' | 'bases' | 'runewords' | 'affixes';
 
 interface GameDataManifest {
-  schema: number; esrVersion: string; esrTag: string | null; esrCommit: string; generatedAt: string;
+  schema: number;
+  esrVersion: string;
+  esrTag: string | null;
+  esrCommit: string;
+  generatedAt: string;
   files: Partial<Record<GameDataFile, { hash: string; bytes: number }>>;
-  counts: Record<string, number>; warnings: string[];
+  counts: Record<string, number>;
+  warnings: string[];
 }
-interface TypesBundle { types: ItemTypeInfo[]; classes: ClassInfo[] }
+interface TypesBundle {
+  types: ItemTypeInfo[];
+  classes: ClassInfo[];
+}
 interface ItemTypeInfo {
-  code: string; name: string; parents: string[]; ancestors: string[]; // ancestors includes self
-  sockets: [number, number, number]; thresholds: [number, number];
-  cls: ClassCode | null; ui: string | null; rwCats: string[];
-  magic: boolean; rare: boolean; normal: boolean; bodyLoc: string | null;
+  code: string;
+  name: string;
+  parents: string[];
+  ancestors: string[]; // ancestors includes self
+  sockets: [number, number, number];
+  thresholds: [number, number];
+  cls: ClassCode | null;
+  ui: string | null;
+  rwCats: string[];
+  magic: boolean;
+  rare: boolean;
+  normal: boolean;
+  bodyLoc: string | null;
 }
-interface ClassInfo { code: ClassCode; name: string; tabs: [string, string, string] }
-interface BasesBundle { bases: BaseItem[] }
+interface ClassInfo {
+  code: ClassCode;
+  name: string;
+  tabs: [string, string, string];
+}
+interface BasesBundle {
+  bases: BaseItem[];
+}
 interface BaseItem {
-  code: string; name: string; kind: 'weapon' | 'armor' | 'misc'; type: string; type2: string | null;
-  ancestors: string[];                         // union over type + type2
-  tier: 'normal' | 'exceptional' | 'elite' | 'mythical'; family: [string, string, string]; // norm/uber/ultra codes
-  qlvl: number; reqLvl: number; reqStr: number; reqDex: number; gemSockets: number;
-  socketCaps: [number, number, number];        // min(gemSockets, own-type MaxSockets1/2/3)
-  dmg1: [number, number] | null; dmg2: [number, number] | null; throwDmg: [number, number] | null;
-  speed: number; strBonus: number; dexBonus: number; def: [number, number] | null; block: number | null;
-  durability: number; indestructible: boolean; magicLvl: number; autoGroup: number | null; cls: ClassCode | null;
+  code: string;
+  name: string;
+  kind: 'weapon' | 'armor' | 'misc';
+  type: string;
+  type2: string | null;
+  ancestors: string[]; // union over type + type2
+  tier: 'normal' | 'exceptional' | 'elite' | 'mythical';
+  family: [string, string, string]; // norm/uber/ultra codes
+  qlvl: number;
+  reqLvl: number;
+  reqStr: number;
+  reqDex: number;
+  gemSockets: number;
+  socketCaps: [number, number, number]; // min(gemSockets, own-type MaxSockets1/2/3)
+  dmg1: [number, number] | null;
+  dmg2: [number, number] | null;
+  throwDmg: [number, number] | null;
+  speed: number;
+  strBonus: number;
+  dexBonus: number;
+  def: [number, number] | null;
+  block: number | null;
+  durability: number;
+  indestructible: boolean;
+  magicLvl: number;
+  autoGroup: number | null;
+  cls: ClassCode | null;
   inv: [number, number];
 }
 // Phase 2
-interface TxtRunewordsBundle { runewords: TxtRuneword[] }
-interface TxtRuneword { key: string; name: string; rows: TxtRunewordRow[] }       // key = 'Runeword871'
+interface TxtRunewordsBundle {
+  runewords: TxtRuneword[];
+}
+interface TxtRuneword {
+  key: string;
+  name: string;
+  rows: TxtRunewordRow[];
+} // key = 'Runeword871'
 interface TxtRunewordRow {
-  ingredients: string[]; codes: string[]; jewels: number;   // ingredients = display names, jew/mjw removed and counted
-  sockets: number; itypes: string[]; etypes: string[]; reqLvl: number;            // reqLvl = max ingredient levelreq
+  ingredients: string[];
+  codes: string[];
+  jewels: number; // ingredients = display names, jew/mjw removed and counted
+  sockets: number;
+  itypes: string[];
+  etypes: string[];
+  reqLvl: number; // reqLvl = max ingredient levelreq
 }
 // Phase 3
-interface AffixesBundle { affixes: Affix[] }
-interface Affix {
-  id: number; kind: 'p' | 's' | 'a'; name: string; lvl: number; maxLvl: number; reqLvl: number;
-  cls: ClassCode | null; clsReqLvl: number; freq: number; group: number; rare: boolean;
-  itypes: string[]; etypes: string[]; mods: AffixMod[]; text: string[];
+interface AffixesBundle {
+  affixes: Affix[];
 }
-interface AffixMod { prop: string; param: string | null; min: number; max: number }
+interface Affix {
+  id: number;
+  kind: 'p' | 's' | 'a';
+  name: string;
+  lvl: number;
+  maxLvl: number;
+  reqLvl: number;
+  cls: ClassCode | null;
+  clsReqLvl: number;
+  freq: number;
+  group: number;
+  rare: boolean;
+  itypes: string[];
+  etypes: string[];
+  mods: AffixMod[];
+  text: string[];
+}
+interface AffixMod {
+  prop: string;
+  param: string | null;
+  min: number;
+  max: number;
+}
 ```
 
 ## Algorithms
@@ -217,6 +289,7 @@ interface AffixMod { prop: string; param: string | null; min: number; max: numbe
 ## Phases (each leaves lint + build green and is independently committable)
 
 ### Phase 0 — converter, shared model, manifest, tests (no UI)
+
 `scripts/generate-game-data.ts` (`--esr <dir>` | `ESR_SOURCE_DIR` | default `../Eastern_Sun_Resurrected`; `--check`
 regenerates in memory and exits 1 if committed files are stale; warns on dirty clone; `generatedAt` only changes when a
 content hash changes). npm: `game-data:generate`, `game-data:check`. Build modules: `tsv.ts`, `strings.ts`, `model.ts`,
@@ -227,18 +300,21 @@ JSON: 369 weapons / 255 armors, every type/ancestor exists, hashes match), clone
 `describe.skipIf(!existsSync(ESR_DIR))`.
 
 ### Phase 1 — Bases browser + Item Types page
+
 Layout, slice, loader hook, banner, error card, `BasesScreen` (search over name/type/code; kind, tier, type tree, min
 sockets, max req level, class-only; sort by name/qlvl/reqLvl/dmg/def/speed; row shows dmg 1H/2H/throw, def, block, reqs,
 speed, socket caps per band, family N/X/E links, automod badge; "Show more" ×100 if needed), `ItemTypesScreen` (collapsible
 Equiv tree, per-type details, flat socket-cap table, `?type=` focus). Tests: `filterBases`, `gameDataSlice`.
 
 ### Phase 2 — Best Base finder + character settings
+
 `runewords.json` via `build/bundleRunewords.ts`; `engine/matchRunewords.ts`, `engine/bestBase.ts`; `BestBaseScreen` with
 character form (class incl. "Any", level 1–99, str/dex 1–999; URL params override and persist); link from `RunewordCard`
 ("Best base" icon → `/game-data/best-base?rw=<name>&v=<variant>`). Tests: `bestBase`, `matchRunewords`,
 `runewordMatching.integration` (skips without fixture).
 
 ### Phase 3 — Stat renderer + Affixes page + what-can-roll
+
 `build/stats/{sprintf,expandProperty,descfunc,renderLines,propertyGroups}.ts`; `affixes.json`; `engine/affixEligibility.ts`;
 `AffixesScreen` (search names + text; kind, rare-only, level range; base picker + ilvl slider → what-can-roll mode; grouped
 by `group`; "Show more" ×200); "What can roll" link on each base row. Tests: `sprintf`, `descfunc` (one case per descfunc
@@ -246,10 +322,12 @@ in use), `expandProperty`, `dgrp`, `affixEligibility`, plus the renderer **oracl
 runewords and diff against HTM affix text, report identical-line % and assert a floor.
 
 ### Documentation (per phase)
+
 New `docs/features/GAME-DATA.md`; update `docs/README.md` (second data system + routes), `ARCHITECTURE.md`,
 `DATA-MODELS.md`, `NAVIGATION.md`, `TESTING.md`, `TECH-STACK.md`, and `CLAUDE.md` commands.
 
 ## Open assumptions (to confirm during implementation)
+
 1. Duplicate string key policy (checked by Phase 0 name comparison + Phase 3 oracle).
 2. descfunc 12, propertygroups PickMode, property funcs 2/24/25/36 semantics (vanilla memory).
 3. Whether affix itype matching also walks `type2`, and whether `classspecific` applies only to class bases.
