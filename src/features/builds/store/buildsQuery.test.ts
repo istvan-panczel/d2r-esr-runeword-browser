@@ -21,7 +21,7 @@ describe('buildCursorOrFilter', () => {
 
 describe('isUuid', () => {
   it('accepts a valid uuid', () => {
-    expect(isUuid('dccfffc5-feca-40d2-b2c7-96c6a97decc3')).toBe(true);
+    expect(isUuid('12345678-90ab-4cde-8f01-234567890abc')).toBe(true);
   });
 
   it('rejects non-uuids', () => {
