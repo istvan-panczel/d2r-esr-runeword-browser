@@ -36,7 +36,7 @@ interface Labels {
   paramLabel: string | null;
 }
 
-interface DamageGroup {
+export interface DamageGroup {
   name: string;
   min: number;
   max: number;
@@ -47,7 +47,7 @@ interface DamageGroup {
 }
 
 /** Saved min / max damage pairs → `g.dmg-<name>` (value = max, `range`) */
-const DAMAGE_GROUPS: readonly DamageGroup[] = [
+export const DAMAGE_GROUPS: readonly DamageGroup[] = [
   { name: 'phys', min: STAT_ID.minDamage, max: STAT_ID.maxDamage, rangeKey: 'strModMinDamageRange' },
   { name: 'magic', min: 52, max: 53, rangeKey: 'strModMagicDamageRange' },
   { name: 'fire', min: 48, max: 49, pair: DAMAGE_PAIRS.find((pair) => pair.min === 'firemindam') },

@@ -19,8 +19,8 @@ import type { StashItem, StashStat } from '../../parser/types';
 import type { StatValue } from './itemText';
 import { foldSecondary, STAT_ID, type TextData } from './textData';
 
-const REQ_PERCENT = 91;
-const LEVEL_REQ = 92;
+export const REQ_PERCENT = 91;
+export const LEVEL_REQ = 92;
 const MAX_LEVEL = 99;
 
 /** A code's base data; undefined for a code without any (the record only lists codes with data) */

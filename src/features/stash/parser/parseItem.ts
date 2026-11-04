@@ -63,7 +63,7 @@ export const ITEM_FLAG = {
 } as const;
 
 /** itemstatcost.txt rows the item header reads directly (the same in vanilla and ESR) */
-const STAT = { armorClass: 31, durability: 72, maxDurability: 73, numSockets: 194, questDifficulty: 356 } as const;
+export const STAT = { armorClass: 31, durability: 72, maxDurability: 73, numSockets: 194, questDifficulty: 356 } as const;
 
 /**
  * Stats followed by their partner stats without ids of their own (engine-hardcoded, as in d2s-rs `paired_stats`):

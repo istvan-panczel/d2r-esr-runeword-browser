@@ -78,6 +78,15 @@ function withS2(line: string, s2: string): string {
   return s2 === '' ? line : `${line} ${s2}`;
 }
 
+/**
+ * The descfuncs renderStat knows: 0 (hidden) and the cases of its switch. Any other descfunc falls through to the
+ * `default` branch (a plain signed number) without a warning; runtimeConstants.test.ts checks that itemtext.json uses
+ * only these. Keep in sync with the switch.
+ */
+export const HANDLED_DESCFUNCS: ReadonlySet<number> = new Set([
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 27, 28,
+]);
+
 export function renderStat(entry: StatEntry, def: StatDef, ctx: DescContext): string[] {
   if (def.descfunc === 0) return [];
   const value = statValue(entry, def);
