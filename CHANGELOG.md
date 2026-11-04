@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.53.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.52.0...v1.53.0) (2026-11-04)
+
+### Features
+
+* **builds:** data model for build variants and alternative items ([6faaf89](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6faaf895987d4227ca5d41142df5ecd6987d868c))
+* **builds:** edit build variants and alternative items ([9f8ef24](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9f8ef244b3b4046797fed58687d2cbfe7d024884))
+* **builds:** merge build variants and alternative items ([b082c9a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b082c9aa2f4d0e5340ecb586a0e2fc50356c8c3d))
+* **builds:** show build variants and swap alternative items on the detail page ([d9289da](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d9289dab35d3cfd2ca59efef55ab776316d24617))
+
+### Bug Fixes
+
+* **builds:** review fixes for build variants ([ac8a4b2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ac8a4b2665963b9e30ae7b770d010989fd99f066))
+
+### Documentation
+
+* **builds:** document build variants and alternative items ([5b486f4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5b486f4e099245f82ac24cbdbafc891f92d696b4))
+
+### Refactoring
+
+* **builds:** footer and label slots on equipment cells ([dff7978](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/dff7978afefff266fdbb4d8881f0d13d8f7b9c25))
+
 ## [1.52.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.51.0...v1.52.0) (2026-11-04)
 
 ### Features
