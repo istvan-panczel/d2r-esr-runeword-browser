@@ -383,6 +383,27 @@ must outlive a switch lives in the screen: the JSON tab's unapplied draft (kept 
 starts when another filter opens, not when Save or Copy to my filters moves the open filter to its new route) and the
 Test tab's item form (not saved).
 
+### Wide and Full pages
+
+The editor and the library follow the Page width setting through the `page` container of `LootFilterLayout`'s
+`PageShell` (steps and rule: [UI-COMPONENTS.md](../technical/UI-COMPONENTS.md#pageshell)). Every change is an
+`@8xl/page:` class or higher, so the Standard page (never wider than 1280 px) keeps its layout; checked by comparing
+every element box of each tab at 1280, 1920 and 3440 px before and after (only one new, same-size wrapper box). Text
+blocks keep a reading width (`@8xl/page:max-w-4xl` on the rule's check hint, How rules combine and the JSON tab's help).
+
+| Tab      | `@8xl` (1536 px)                                                                                                                                                               | `@9xl` (1920 px, the Wide page)                           | `@10xl` (2400 px)                                                 | `@11xl` (2880 px) |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------- | ----------------- |
+| Library  | 4 cards per row (bundled templates, shared, saved, drafts; also the profile's loot filters)                                                                                    | 5                                                         | 6                                                                 | 7                 |
+| Rules    | list 28rem (24rem below); Enabled and Comment side by side; Item properties and Where and when 3 fields per row (Which items and Stats keep their include / except pairs in 2) | list 32rem                                                | list 36rem; conditions card and actions card side by side (3 : 2) | list 40rem        |
+| Actions  | each section a bordered tile in a grid (rule: 2 tiles per row under the conditions; style: 2)                                                                                  | style: 3                                                  | rule: 1 (beside the conditions); style: 4                         | rule: 2; style: 5 |
+| Styles   | list 20rem                                                                                                                                                                     |                                                           | list 22rem                                                        |                   |
+| Settings | the cards in 2 columns (rows as high as their tallest card), Quality colours over 2 columns with 5 selects per row                                                             |                                                           | 3 columns                                                         |                   |
+| JSON     |                                                                                                                                                                                | problems list (32rem) beside the editor                   | problems list 40rem                                               |                   |
+| Test     |                                                                                                                                                                                | Item, Context and Result in three columns (Result sticky) |                                                                   |                   |
+
+The actions tiles stay about 480 px or wider (`TILE_COLUMNS` in `ActionsEditor.tsx`): narrower tiles squeeze the
+Prefix / Suffix boxes, which is why the rule's actions drop to one tile while they sit beside the conditions at `@10xl`.
+
 ### Saving and sharing in the editor
 
 Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-docs/FEATURE-LOOT-FILTER-SHARING.md).
@@ -489,7 +510,8 @@ can edit them.
 ## Rules tab (`components/RulesTab.tsx`, `components/rules/`, `components/pickers/`)
 
 Two panes from `lg` up (list left, sticky; editor right), stacked below (list capped at 45vh, then the editor; picking a
-rule scrolls the editor into view).
+rule scrolls the editor into view). Wide and Full pages widen the list and give the editor more columns (see
+[Wide and Full pages](#wide-and-full-pages)).
 
 - **Toolbar**: search box (every term must appear in `ruleSearchText`: summary, codes and their names, types, unique/set
   and area names, stat names and the names of their params (skill, tab, class), comment, style, name changes and chat
@@ -966,7 +988,7 @@ sound has no preview (it plays from the game files).
 ## Test tab (`components/TestTab.tsx`, `components/test/`, `utils/testItemForm.ts`)
 
 Runs the engine's `evaluateFilter` against an item the user describes. Two columns from `lg` up (form left, result
-right, sticky), stacked below. The form is local state (`TestItemForm`, start value `defaultTestItem()`: no item, Rogue
+right, sticky), stacked below; three (Item, Context, Result) on pages of 1920 px and up. The form is local state (`TestItemForm`, start value `defaultTestItem()`: no item, Rogue
 Encampment, normal difficulty, character level 1, the filter's default level), held by the editor screen so it survives
 tab switches; it is not saved.
 

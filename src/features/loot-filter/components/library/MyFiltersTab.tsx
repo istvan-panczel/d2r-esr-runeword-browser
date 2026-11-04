@@ -25,7 +25,9 @@ import { SharedFilterCard } from './SharedFilterCard';
 import { SharedFilterCardSkeleton } from './SharedFilterCardSkeleton';
 import { StartFilterActions } from './StartFilterActions';
 
-const GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3';
+/** Three cards per row on Standard pages; Wide and Full pages add one per step of the `page` container (see PageShell). */
+const GRID =
+  'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7';
 const SKELETON_KEYS = ['s1', 's2', 's3'];
 
 interface MyFiltersTabProps {

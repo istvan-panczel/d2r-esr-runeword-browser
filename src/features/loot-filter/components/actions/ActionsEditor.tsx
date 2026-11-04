@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { resolveText } from '../../engine/text';
 import type { LootFilter, RuleActions } from '../../engine/types';
 import { effectiveActions, findStyle, previewLabelText } from '../../utils/effectiveActions';
@@ -29,6 +30,20 @@ export interface ActionsEditorProps {
 const DEFAULT_DROP_FORMAT = '{qualityColor}{name}';
 
 /**
+ * Tile columns on wide pages (`/page` container steps, see PageShell): from @8xl every section is a bordered tile and
+ * the tiles fill a grid, a tile row as high as its tallest tile. Standard pages never reach @8xl, so they keep the one
+ * column of ruled sections. Tiles stay about 480 px or wider (narrower ones squeeze the Prefix / Suffix boxes):
+ *
+ * - `rule`: the actions card is under the conditions up to @10xl (editor about 1070 to 1870 px wide: two tiles),
+ *   beside them from @10xl (about 700 px at 2400: one tile; 1100 px from 2880: two), see RuleEditor;
+ * - `style`: the Styles tab editor next to its list (about 1150 px at @8xl up to 3000 px on a 3440 px Full page).
+ */
+const TILE_COLUMNS = {
+  rule: '@8xl/page:grid-cols-2 @10xl/page:grid-cols-1 @11xl/page:grid-cols-2',
+  style: '@8xl/page:grid-cols-2 @9xl/page:grid-cols-3 @10xl/page:grid-cols-4 @11xl/page:grid-cols-5',
+} as const;
+
+/**
  * Form for every action key of the guide (names, label colours, chat, notify, sound, icon, droplight,
  * useStyle, hide…), shared by the rule editor and the Styles tab. Each control sends a shallow patch;
  * `passthrough` is never touched. A rule's `comment` belongs to the rule editor; a style's is edited here.
@@ -43,8 +58,8 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName }: A
   const dropFormat = resolveText(filter.notifications?.dropFormat) ?? DEFAULT_DROP_FORMAT;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
+    <div className={cn('flex flex-col gap-4 @8xl/page:grid', TILE_COLUMNS[owner])}>
+      <div className="flex flex-col gap-1.5 @8xl/page:rounded-lg @8xl/page:border @8xl/page:p-4">
         <span className="text-sm font-medium">
           Label preview
           {owner === 'style' && styleName !== undefined ? ` · ${styleName}` : ''}

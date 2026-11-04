@@ -33,7 +33,8 @@ export function QualityColorsEditor({ value }: QualityColorsEditorProps) {
   };
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    // Wide pages: the card spans two columns of the Settings grid, so the nine qualities fit in two rows.
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-5">
       {QUALITIES.map((quality) => {
         const current = value?.[quality];
         const known = current === undefined || COLOR_CODES.some((entry) => `ÿc${entry.code}` === current);

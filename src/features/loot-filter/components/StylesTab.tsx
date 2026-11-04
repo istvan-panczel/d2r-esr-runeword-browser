@@ -93,7 +93,8 @@ export function StylesTab({ filter }: StylesTabProps) {
   const stray = currentStyle === undefined ? [] : strayConditions(currentStyle);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
+    // Wide pages: a little more room for the style names; the editor's sections become tiles (ActionsEditor).
+    <div className="grid gap-4 lg:grid-cols-[18rem_1fr] @8xl/page:grid-cols-[20rem_minmax(0,1fr)] @10xl/page:grid-cols-[22rem_minmax(0,1fr)]">
       <Card className="self-start">
         <CardHeader>
           <CardTitle>Styles</CardTitle>

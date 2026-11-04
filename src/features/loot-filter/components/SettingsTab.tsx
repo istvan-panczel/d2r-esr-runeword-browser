@@ -42,8 +42,10 @@ export function SettingsTab({ filter }: SettingsTabProps) {
   const patch = (value: HeaderPatch) => dispatch(setHeader(value));
   const emptyToUndefined = (value: string) => (value === '' ? undefined : value);
 
+  // Wide pages: the cards fill a grid (two columns from @8xl/page, three from @10xl/page; a row as high as its
+  // tallest card) and the quality colours take two columns. Standard pages keep the one column.
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 @8xl/page:grid @8xl/page:grid-cols-2 @8xl/page:gap-4 @8xl/page:space-y-0 @10xl/page:grid-cols-3">
       <Card>
         <CardHeader>
           <CardTitle>About the filter</CardTitle>
@@ -134,7 +136,7 @@ export function SettingsTab({ filter }: SettingsTabProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="@8xl/page:col-span-2">
         <CardHeader>
           <CardTitle>Quality colours</CardTitle>
           <CardDescription>The colour code {'{qualityColor}'} uses for each item quality.</CardDescription>

@@ -86,8 +86,9 @@ export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showR
         </p>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-4">
+      {/* From @9xl/page (Wide and Full pages of 1920 px and up) Item, Context and Result are three columns. */}
+      <div className="grid items-start gap-4 lg:grid-cols-2 @9xl/page:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-4 @9xl/page:grid @9xl/page:grid-cols-2 @9xl/page:items-start">
           <Card className="gap-3 py-4">
             <CardHeader className="px-4">
               <CardTitle>Item</CardTitle>

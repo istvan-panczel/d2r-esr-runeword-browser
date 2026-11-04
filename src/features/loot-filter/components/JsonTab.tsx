@@ -121,8 +121,9 @@ export function JsonTab({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    // Wide pages (from @9xl/page): the problems list sits beside the editor, so Show in JSON and the text are both in view.
+    <div className="space-y-6 @9xl/page:grid @9xl/page:grid-cols-[minmax(0,1fr)_minmax(0,32rem)] @9xl/page:items-start @9xl/page:gap-6 @9xl/page:space-y-0 @10xl/page:grid-cols-[minmax(0,1fr)_minmax(0,40rem)]">
+      <div className="min-w-0 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" onClick={handleApply} disabled={!edited && filter !== null}>
             <Check />
@@ -164,7 +165,7 @@ export function JsonTab({
             Not applied: {problem.message}
           </p>
         )}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground @8xl/page:max-w-4xl">
           Apply reads the text like an upload. Only the <code>{'//'}</code> comment lines at the top of the file are kept; comments between
           rules are not shown here and are dropped by Apply and by any edit in the other tabs. Syntax errors are underlined as you type; the
           coloured chips at the left show each rule&apos;s and style&apos;s label look (hover for details); Ctrl/Cmd+F searches.
