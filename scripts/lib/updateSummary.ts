@@ -42,14 +42,59 @@ export function parsePorcelain(output: string): string[] {
     .map((line) => line.slice(3));
 }
 
+export interface SummaryStep {
+  name: string;
+  ok: boolean;
+  note?: string;
+  /** Extra lines printed under the step, e.g. the failing test files. */
+  details?: string[];
+}
+
 export interface SummaryInput {
   before: ManifestSnapshot | null;
   after: ManifestSnapshot | null;
-  steps: { name: string; ok: boolean; note?: string }[];
+  steps: SummaryStep[];
   changedFiles: string[];
+  /** Follow-ups printed after the steps (what a failure means and what to do). */
+  notes?: string[];
 }
 
-export function formatSummary({ before, after, steps, changedFiles }: SummaryInput): string[] {
+/** The subset of Vitest's JSON reporter output the update script reads. */
+export interface VitestJsonReport {
+  testResults?: { name: string; status: string }[];
+}
+
+/** Failing test files of a Vitest JSON report, relative to `root` and sorted. */
+export function failedTestFiles(report: VitestJsonReport, root: string): string[] {
+  const prefix = root.endsWith('/') ? root : `${root}/`;
+  return (report.testResults ?? [])
+    .filter((result) => result.status !== 'passed')
+    .map((result) => (result.name.startsWith(prefix) ? result.name.slice(prefix.length) : result.name))
+    .sort();
+}
+
+/**
+ * The note for an update without the vanilla art folder: the item icons were not regenerated, so icons.json keeps the
+ * old esrVersion/esrTag and game-data --check, icons:check and bundleIntegrity.test.ts fail. Null when icons.json
+ * matches the manifest (nothing to do).
+ */
+export function staleIconsNote(
+  icons: { esrVersion: string; esrTag: string | null } | null,
+  manifest: ManifestSnapshot | null,
+  vanillaDir: string
+): string | null {
+  if (icons === null || manifest === null) return null;
+  if (icons.esrVersion === manifest.esrVersion && icons.esrTag === manifest.esrTag) return null;
+  return (
+    `Item icons are stale: the vanilla art folder (${vanillaDir}) is missing, so they were not regenerated and ` +
+    `icons.json still says ESR ${icons.esrVersion} (tag ${String(icons.esrTag)}) while the manifest says ` +
+    `${manifest.esrVersion} (tag ${String(manifest.esrTag)}). game-data --check, icons:check and bundleIntegrity.test.ts ` +
+    'fail because of it. Run `npm run game-data:icons` on a machine with ../d2r-vanilla-art (or set D2R_VANILLA_ART_DIR, ' +
+    'or pass --vanilla <dir> to this script) and re-run the update; do not edit icons.json by hand.'
+  );
+}
+
+export function formatSummary({ before, after, steps, changedFiles, notes = [] }: SummaryInput): string[] {
   const out: string[] = [];
   const version = (m: ManifestSnapshot | null) => m?.esrVersion ?? '(none)';
   const tag = (m: ManifestSnapshot | null) => m?.esrTag ?? '(none)';
@@ -69,9 +114,17 @@ export function formatSummary({ before, after, steps, changedFiles }: SummaryInp
   for (const warning of warnings) out.push(`  - ${warning}`);
 
   out.push('', 'Steps:');
-  for (const step of steps) out.push(`  ${step.ok ? 'OK  ' : 'FAIL'} ${step.name}${step.note ? ` (${step.note})` : ''}`);
+  for (const step of steps) {
+    out.push(`  ${step.ok ? 'OK  ' : 'FAIL'} ${step.name}${step.note ? ` (${step.note})` : ''}`);
+    for (const line of step.details ?? []) out.push(`         ${line}`);
+  }
 
-  out.push('', changedFiles.length > 0 ? 'Changed files:' : 'Changed files: none (public/game-data is up to date)');
+  if (notes.length > 0) {
+    out.push('', 'Notes:');
+    for (const note of notes) out.push(`  - ${note}`);
+  }
+
+  out.push('', changedFiles.length > 0 ? 'Changed files:' : 'Changed files: none (the generated files under public/ are up to date)');
   for (const file of changedFiles) out.push(`  ${file}`);
   return out;
 }
