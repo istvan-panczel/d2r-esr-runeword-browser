@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.51.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.50.0...v1.51.0) (2026-11-04)
+
+### Features
+
+* **home:** drop the outdated ESR IAS Calculator from the community tools ([c4276eb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c4276eb450318c357e8186e713a93dc0eae37603))
+* **home:** hide the New to ESR section until it is reworked ([a20fe97](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a20fe97a4706d961c1efd323026bcd527625a0eb))
+* **home:** refresh the official and community link descriptions, add feature lines ([d82d092](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d82d0925573351b572481d61015b77290ed451b7))
+* **loot-filter:** code editor with syntax highlighting and label chips in the JSON tab ([b929fc7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b929fc7472521576e25be165ab9408aa265fe4ed))
+* **loot-filter:** merge the JSON tab code editor ([e1e9e17](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e1e9e17a43b34dbf874a61437e57803c2726669f))
+* merge the link refresh, repo hygiene, security checks and CodeQL fixes ([872ff8d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/872ff8d3a7fb89ddb014460ba2ec625efe61aeac))
+* **tooling:** add esr:review and esr:user-data, extend esr:diff ([e5e7f19](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e5e7f19e4baaf43a5827acd68f5ae2b7e7e0be5b))
+* **tooling:** flag ESR releases whose docs pages were not regenerated ([6738621](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/67386216b60868163b8261f6c0fbc37a380558a3))
+* **tooling:** merge the esr-update skill rework, review tooling and the level 110 cap ([4f91cf3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4f91cf361df5cf857b980fed9260e5e10f169abb))
+* **tooling:** merge the esr:review docs-lag check ([73e4fac](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/73e4fac11626ad76731f754852e14c0cf0d3bc8b))
+
+### Bug Fixes
+
+* **best-base:** allow character levels up to 110 ([078dbd4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/078dbd40f4e4a54eecfb909aa5f99583f78314a3))
+* **parsers:** strip HTML tags until none is left and decode &amp; last ([35910f5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/35910f52fb822675306447208eb18bf8fd73b27a))
+* **profiles:** only load avatar images from Discord's CDN ([85fde72](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/85fde721ee54e0eb6d1e0b88922868f3922aa515))
+
+### Documentation
+
+* add a security policy ([4eff792](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4eff79281d010c88a29d2224c80929c8e40ac7a6))
+* describe the npm release-age cooldown ([8d50a37](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8d50a37c8db90f28953eed555638563f93c631b6))
+* **readme:** bring the README up to date ([a270532](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a2705327bdb1c3d0dd86b368a4b4dfea6dcc5e9a))
+* remove the fork research, shipped specs and the guide PDF copy ([9328db2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9328db2c31cd6191368ecdd47e78da57595f2022))
+* rewrite CONTRIBUTING, word the loot filter notes neutrally, refresh stash and setup docs ([9be7810](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9be78108cdd2e5ff4db5d1b888c683e6b6399eb8))
+
+### Chores
+
+* **deps:** merge the November 2026 dependency round ([0878fdc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0878fdc57adfd81213e81a6c093a96e429f1ba3b))
+* **deps:** only install npm versions older than 7 days ([adce7a1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/adce7a10d48b9c8aca2b6aa168d5086f122fb578))
+* **deps:** update dependencies within their semver ranges ([ef2d446](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ef2d44693fce4544d8d282a56e68555948dd0b15))
+* **deps:** update jsdom to 30 and lint-staged to 17 ([9d36e42](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9d36e42340b4bb9bd0c3791a4c6b1223eaa12ea1))
+* **deps:** update lucide-react to 1.x ([d268c50](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d268c503187cf8059cf8aa5927500d4776148ccd))
+* **deps:** update TypeScript to 6.0 ([453a11a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/453a11adcce79d56943af088ae7ecfc79c985cb9))
+* **esr-update:** rewrite the skill around the review tooling ([29d9099](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/29d90995beb0ad266321b62a3338bce1defa7abb))
+* **format:** format the whole repo with Prettier and keep it formatted ([b0080dc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b0080dcf3273133f77c3b70d1972505eb64285f9))
+* **game-data:** run the full test suite in game-data:update and keep the previous fixtures ([a180023](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a18002385d8ef0a17b77b6ab75317f1a2d6822aa))
+* **git:** add secret, metadata and staged-file checks to the pre-commit hook ([34679cc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/34679ccafc64b9f40e1a543708477c745298b3b1))
+
+### Tests
+
+* **game-data:** pin the hard-coded stat ids and descfuncs to the bundles ([e2e3d4b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e2e3d4bf29f8037299bb4b50b132ffccdee903be))
+* use synthetic values for the personalized name and the sample UUID ([8de63db](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8de63dba015fdf10491a601c2ab5ea8178fe9ca9))
+
 ## [1.50.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.49.0...v1.50.0) (2026-11-03)
 
 ### Features
