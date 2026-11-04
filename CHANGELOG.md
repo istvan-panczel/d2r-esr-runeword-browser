@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.52.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.51.0...v1.52.0) (2026-11-04)
+
+### Features
+
+* **layout:** merge the page width setting for wide monitors ([bedbf4e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bedbf4e1100bb4e3fd313611f687c250787f9df0))
+* **layout:** more cards and columns on Wide and Full pages ([efd388d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/efd388d3491b007caf1db18b880105c5678029c4))
+* **layout:** page width setting with a header menu (Standard, Wide, Full) ([82e426e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/82e426e6561f6cd01b381561ea0843e6edb7711f))
+* **loot-filter:** use the room of Wide and Full pages ([fc39ebc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fc39ebcf6a21a857fc68d75af8e4c3a3b32ba20a))
+
 ## [1.51.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.50.0...v1.51.0) (2026-11-04)
 
 ### Features
