@@ -59,6 +59,10 @@ Reusable components used across features:
 - `CopyLinkHelpButton.tsx` - Help info for copy link
 - `ScrollToTopButton.tsx` - Floating action button to scroll to top
 - `SearchHelpButton.tsx` - Search syntax help (quoted phrases, AND logic)
+- `PeekPopover.tsx` + `useHoverPopover.ts` - The hover / focus "peek" popover (mouse and `:focus-visible` only, 300 ms
+  delay, so a touch tap never traps): one popover per trigger (`trigger` + `peek.triggerProps`: guide note links, glossary
+  terms, graph nodes) or one shared by many triggers through event delegation (`anchorRef` + `peek.delegate`: the campaign
+  map's areas, `campaign-map/hooks/useAreaPeek.ts`). The guide passes its prose font as `className`
 - `ExternalLink.tsx` - Link that opens in a new tab (`noopener noreferrer`) with a ↗ icon and a screen-reader "(opens in a new tab)" hint (guide, home community tools)
 
 ## Page pattern

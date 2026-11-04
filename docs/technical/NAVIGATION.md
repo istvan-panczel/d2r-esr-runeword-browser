@@ -32,6 +32,7 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/game-data/materials`  | MaterialsScreen         | Every misc item: how to get it, the cube families and Enhance recipes using it, guide notes                      | `search`, `group`, `name` (kept in the URL)                                                            |
 | `/game-data/areas`      | AreasScreen             | Every area: monster level, density and unique packs per difficulty, waypoint, connections; maps by tier          | `search`, `minlvl`, `maxlvl` (kept in the URL)                                                         |
 | `/game-data/sets`       | SetsScreen              | Every set: items, per-item and set-wide partial bonuses, full-set bonuses, item sources                          | `search`, `maxlvl`, `pieces`, `cls`, `name` (kept in the URL)                                          |
+| `/campaign-map`         | CampaignMapScreen       | Act maps, special areas, ubers & portals, endgame maps ([CAMPAIGN-MAP](../features/CAMPAIGN-MAP.md))             | `tab`, `area` (alone: its home tab), `view=list`, `act` (alias) (kept in the URL)                      |
 | `/loot-filters`         | LootFilterLayout        | Loot filter frame: an "Under development" notice above every loot-filter page, then the child route              |                                                                                                        |
 | `/loot-filters` (index) | LootFilterLibraryScreen | Loot filter library: new, upload, Sully's QoL filter template, download (.json or .zip)                          |                                                                                                        |
 | `/loot-filters/:id`     | LootFilterEditorScreen  | Loot filter editor; unknown id shows "Filter not found"                                                          | `tab=rules\|styles\|settings\|json\|test`                                                              |
@@ -55,7 +56,7 @@ feature-specific keys live next to each feature's `useUrlInitialize` hook, and `
 `src/features/game-data/constants/urlParams.ts`. The filter screens (runewords, gemwords, socketables, uniques, mythicals,
 ascendancies, bases, best base, affixes) read their params once on mount, put them into Redux and remove them from the URL;
 Copy Link rebuilds a URL from the current state (non-default values only). Item Types (`type`), Enhance (`tab`, `slot`,
-`tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Areas (`search`, `minlvl`, `maxlvl`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
+`tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Areas (`search`, `minlvl`, `maxlvl`), the Campaign Map (`tab`, `area`, `view`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
 Redux only.
 
 **`?name=<Name>` focus** (runewords, gemwords, socketables, uniques, mythicals): shows only the items whose name equals `<Name>`
@@ -89,7 +90,8 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
    suffix, "Amplify Damage (Aura)"), `materials.json` (item names, plus its `families` labels for Cube recipes, so
    `cube.json` is not fetched) and `areas.json`. A result opens its page focused on it (`homeResultHref`):
    `?name=<exact name>` on the item list pages, Sets and Materials; Skills `/skills?skill=<id>` (the page picks the class
-   and tab); Cube `/game-data/cube?family=<id>`; Bases and Areas have no exact-name focus, so `?search="<name>"`. The
+   and tab); Cube `/game-data/cube?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
+   panel links the Areas page row); Bases have no exact-name focus, so `?search="<name>"`. The
    first row, selected by default, is "Search runewords for “…”", so Enter without picking a result goes to
    `/runewords?search=<query>`.
 3. **Section cards** (`HomeSections`): one card per `NAV_ENTRIES` entry (`getHomeSections` in `utils/homeSections.ts`):
@@ -148,6 +150,8 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 - `/game-data/enhance`, `/game-data/cube`, `/game-data/materials`, `/game-data/sets` and `/game-data/areas`: only
   `enhance.json` / `cube.json` / `materials.json` / `sets.json` / `areas.json` (+ the guide bundle, or sources.json for Sets) (the other Game Data pages stay behind the gate: Best Base matches the HTM
   runewords), see [GAME-DATA.md](../features/GAME-DATA.md).
+- `/campaign-map`: `areas.json`, `icons.json` and `stashnames.json` (quest item names), see
+  [CAMPAIGN-MAP.md](../features/CAMPAIGN-MAP.md).
 - `/stash`: the My Stash pages read `stash.json` and the uploaded file (IndexedDB `d2r-esr-stash`), see
   [STASH.md](../features/STASH.md).
 
@@ -157,14 +161,14 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 (groups of `NavItem`s with a label, a one-line description and a path, plus plain links). The home page's section
 cards render from the same config (group `description`, link `homeLinks`):
 
-| Entry      | Kind  | Pages                                                                                                                                                                                                                    |
-| ---------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                           |
-| Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/game-data/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Bases (`/game-data/bases`), Materials (`/game-data/materials`), Areas (`/game-data/areas`) |
-| Tools ▾    | group | Best Base (`/game-data/best-base`), Affixes (`/game-data/affixes`), Item Types (`/game-data/types`), Enhance (`/game-data/enhance`), Cube Recipes (`/game-data/cube`), Loot Filters (`/loot-filters`)                    |
-| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                                                |
-| Guide      | link  | `/guide`                                                                                                                                                                                                                 |
-| Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                            |
+| Entry      | Kind  | Pages                                                                                                                                                                                                                                                    |
+| ---------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                                                           |
+| Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/game-data/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Bases (`/game-data/bases`), Materials (`/game-data/materials`), Areas (`/game-data/areas`), Campaign Map (`/campaign-map`) |
+| Tools ▾    | group | Best Base (`/game-data/best-base`), Affixes (`/game-data/affixes`), Item Types (`/game-data/types`), Enhance (`/game-data/enhance`), Cube Recipes (`/game-data/cube`), Loot Filters (`/loot-filters`)                                                    |
+| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                                                                                |
+| Guide      | link  | `/guide`                                                                                                                                                                                                                                                 |
+| Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                                                            |
 
 - **Brand**: "D2R ESR", a link to `/` (the home page).
 - **Desktop (md and up)**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
@@ -214,7 +218,7 @@ The version line comes from `public/game-data/manifest.json`; the docs line from
 `metadata.docsLastModified`. Both versions normally come from `metadata.modVersion` of ESR's `d2rloader/metadata.json`;
 the docs version may fall back to the changelog page's header, so the note never says which version is newer.
 
-The Game Data child pages are separate header items (Bases, Sets, Materials and Areas under Database; Best Base, Affixes, Item Types, Enhance and Cube Recipes under Tools).
+The Game Data child pages are separate header items (Bases, Sets, Materials and Areas under Database, next to the top-level Campaign Map; Best Base, Affixes, Item Types, Enhance and Cube Recipes under Tools).
 Guide and Loot Filters items are prefix-matched, so they stay active on every child page.
 
 The header triggers and links, the Game Data sub-tabs and the loot filter editor's tabs share one set of classes

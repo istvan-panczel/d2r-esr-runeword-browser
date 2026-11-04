@@ -72,7 +72,11 @@ Apply what the findings call for; reference.md says how for each kind. Do not co
    assets, `SULLYS_QOL_TEMPLATE` and the docs; the validation must not gain diagnostics.
 5. Official links (`net.links`, `net.docs-site`): fix moved or dead official URLs in `navConfig.ts`,
    `guideHome.ts` and the guide's `docs:` links. Community tools are out of scope: only report them.
-6. Do **not** apply without asking: a `LOOT_FILTER_PLUGIN_VERSION` bump, generator or app code changes, skill edits.
+6. Campaign map (`src/features/campaign-map/campaignMapIntegrity.test.ts` failures, or new/renamed/removed areas in
+   the release diff): place new areas in the act grids (`data/grids.ts`), update `data/names.ts`, curated links and facts
+   (`data/links.ts`, `data/areas.ts`) and the official Maps page notes; see docs/features/CAMPAIGN-MAP.md. Also check
+   the areas build warnings (`REMOVED_LEVELS`, `EXPECTED_ONE_WAY_VIS`, unknown LevelType, missing comment columns).
+7. Do **not** apply without asking: a `LOOT_FILTER_PLUGIN_VERSION` bump, generator or app code changes, skill edits.
 
 Then `npx prettier --write` on the touched files, `npm run guide:generate`, `npm run guide:check` and `npm run test`;
 all must pass.

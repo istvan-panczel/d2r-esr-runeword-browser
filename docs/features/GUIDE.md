@@ -271,7 +271,7 @@ src/features/guide/
   build/staleness.ts            block hashes, patch-note scan, staleReasons
   build/verifyLock.ts           .verify-lock.json, the guide:verify frontmatter edit
   build/report.ts               guide:report
-  hooks/                        useGuide, useLoadedGuide (context), useVisitedNotes, useHoverPopover
+  hooks/                        useGuide, useLoadedGuide (context), useVisitedNotes (the peek: src/components/PeekPopover + useHoverPopover)
   utils/                        pure screen helpers (app links, search, source cells, card lookup, visited list, map groups, spine entry cards + official reference list)
   screens/, components/
   index.ts                      lazy-route exports
