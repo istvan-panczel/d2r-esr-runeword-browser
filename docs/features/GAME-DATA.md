@@ -1045,7 +1045,8 @@ build), manifest counts and warnings, changed entries per bundle by key, skill i
 ops, guide `::recipes` blocks and notes whose data changed, icons (missing, vanilla art folder, inputs), runeword and
 gemword `name:variant` shifts (old vs new docs pages), loot filter (plugin DLL version vs `LOOT_FILTER_PLUGIN_VERSION`,
 `LootFilters/sources.json`, Sully's upstream template and assets, bundled filters validated against old and new
-data), the docs site vs the clone's `docs/`, external links and the Discord invite, docs quoting the old version, and
+data), tables vs the generated docs pages the app parses (`runes.txt`, `gems.txt` and `uniqueitems.txt` changed but
+their pages were not regenerated), the docs site vs the clone's `docs/`, external links and the Discord invite, docs quoting the old version, and
 a self-check: bundle files, count keys or warning classes it does not know, and feature commits since the skill or
 the review script last changed. Exit 0 when it ran (findings are not a failure), 2 when it cannot run. Logic and
 tests: `scripts/lib/esrReview/`; `scripts/lib/srcImport.ts` loads app modules (the `@/` alias) from Node.
