@@ -62,6 +62,7 @@ import { get, mapLimited, MAX_PARALLEL } from './lib/esrReview/net.ts';
 import { countByStatus, formatMarkdown, formatText, skipped, type Check, type ReviewReport } from './lib/esrReview/report.ts';
 import { commitsCheck, coverageCheck, featureCommits, warningClassesInSource } from './lib/esrReview/selfCheck.ts';
 import { importSrc } from './lib/srcImport.ts';
+import { DOCS_PAGES_BY_TABLE, docsLagCheck } from './lib/esrReview/docsLag.ts';
 import { variantMap, variantsCheck, type ParsedRecipe } from './lib/esrReview/variants.ts';
 
 type Doc = Readonly<Record<string, unknown>>;
@@ -482,6 +483,22 @@ async function main(): Promise<void> {
 
   // 11. Runeword and gemword variants
   checks.push(...(await variantChecks(esrDir, oldCommit, newCommit)));
+
+  // 11b. Tables vs the generated docs pages the app parses (were the docs regenerated?)
+  const excelDir = 'Eastern_Sun_Resurrected.mpq/data/global/excel/';
+  checks.push(
+    oldCommit === null
+      ? skipped('docs.lag', 'Tables vs the generated docs pages', noOld)
+      : docsLagCheck(
+          changedPaths(
+            esrDir,
+            oldCommit,
+            newCommit,
+            Object.keys(DOCS_PAGES_BY_TABLE).map((table) => `${excelDir}${table}`)
+          ),
+          changedPaths(esrDir, oldCommit, newCommit, ['docs/'])
+        )
+  );
 
   // 14. Loot filter (offline)
   const constants = await importSrc<TemplateConstants>('features/loot-filter/utils/template.ts').catch(() => null);
