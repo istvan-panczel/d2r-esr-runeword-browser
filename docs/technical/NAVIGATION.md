@@ -103,9 +103,9 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
 6. **Official ESR links** (`HomeOfficialLinks`): compact cards (label linking out, description) for `OFFICIAL_LINKS` in
    `navConfig.ts`, the same list as the header's ESR links menu: Official site, Installation Guide, Documentation, Drop Finder,
    Frame Table, Patch notes, Changelog (stops at 3.2.02), Releases, ESR Discord, ESR on GitHub.
-7. **Community tools** (`HomeCommunityTools`): a card per ESR tool made outside this site from `COMMUNITY_TOOLS` in `navConfig.ts`
+7. **Community tools** (`HomeCommunityTools`): a card per fan-made ESR tool from `COMMUNITY_TOOLS` in `navConfig.ts`
    (label linking out, author, a kind badge, a one-sentence description, a dot-separated line of short feature labels, caveat,
-   "Source on GitHub" when the project has one), with a note that they are not affiliated with this site. The descriptions were
+   "Source on GitHub" when the project has one), with a note that they are not affiliated with this site or the mod. The descriptions were
    last checked against the live tools on 2026-11-04. Static data, no fetches. Both sections share the `HomeLinkCard` component.
 8. **Footer** (`HomeFooter`): app version (`src/assets/version.json`), ESR / GitHub / privacy policy links (URLs from
    `navConfig.ts`), credits.
@@ -167,7 +167,7 @@ cards render from the same config (group `description`, link `homeLinks`):
   Tab move through the items, Escape closes; choosing a link closes the menu.
 - **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
   Frame Table, Patch notes, Changelog, Releases, ESR Discord, ESR on GitHub, then a "Community tools" label with ESR Wiki Overlay, ESR Docs,
-  ESR Tools, ESR IAS Calculator, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), theme toggle, GitHub link,
+  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), theme toggle, GitHub link,
   `AuthControls` (Sign In / user menu, Supabase only), settings cog.
 - **Mobile (below md)**: hamburger opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
   the group of the current route starts open, Guide and Builds are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the

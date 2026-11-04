@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { COMMUNITY_TOOL_KIND_LABELS, COMMUNITY_TOOLS } from '@/core/navigation/navConfig';
 import { HomeLinkCard } from './HomeLinkCard';
 
-/** "Community tools" block: ESR tools made outside this site (static list from navConfig). */
+/** "Community tools" block: fan-made ESR tools by other players (static list from navConfig). */
 export function HomeCommunityTools() {
   return (
     <section aria-labelledby="home-community-heading" className="space-y-4 rounded-xl border bg-card p-4 sm:p-6">
@@ -11,8 +11,7 @@ export function HomeCommunityTools() {
           Community tools
         </h2>
         <p className="text-sm text-muted-foreground">
-          ESR tools made outside this site, mostly by other players. Not affiliated with this site; each project has its own licence and
-          support.
+          Fan-made ESR tools by other players. Not affiliated with this site or the mod; each project has its own licence and support.
         </p>
       </div>
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">

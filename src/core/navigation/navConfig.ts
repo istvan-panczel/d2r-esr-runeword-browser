@@ -91,7 +91,7 @@ export const OFFICIAL_LINKS: readonly OfficialLink[] = [
   },
 ];
 
-/** An ESR tool made outside this site (mostly by other players), listed on the home page and in the header's external-links menu. */
+/** A fan-made ESR tool, listed on the home page and in the header's external-links menu. */
 export interface CommunityTool {
   readonly key: string;
   readonly label: string;
@@ -154,17 +154,6 @@ export const COMMUNITY_TOOLS: readonly CommunityTool[] = [
     description: 'Item and cube recipe search over the official docs, plus a life calculator, area levels and organ drops.',
     features: ['Item search', 'Cube recipe search', 'Area levels', 'Life calculator', 'Organ drop finder'],
     caveat: 'Area, drop and life data are from older ESR versions (3.9 and 3.10), without the Warlock.',
-  },
-  {
-    key: 'ias-calculator',
-    label: 'ESR IAS Calculator',
-    author: 'CelestialRayOne (mod author)',
-    href: 'https://celestialrayone.github.io/ESR_IAS_Calculator/',
-    sourceUrl: 'https://github.com/CelestialRayOne/ESR_IAS_Calculator',
-    kind: 'web',
-    description: 'Interactive attack speed calculator: enter your weapon, IAS and auras to see your breakpoint.',
-    features: ['IAS breakpoints', 'Wereforms', 'Mercenaries', 'Speed skills and slows', 'Shareable link'],
-    caveat: 'Last updated for ESR 3.0, without the Warlock; the official Frame Table is current.',
   },
   {
     key: 'unofficial-wiki',
