@@ -934,6 +934,7 @@ Recommended: one command after an ESR release.
 npm run game-data:update                       # clone/pull ESR main, generate, fixtures, tests, check, summary
 npm run game-data:update -- --tag 3.2.10       # pin a specific release tag (detached HEAD)
 npm run game-data:update -- --no-fixtures      # skip re-downloading the HTM test fixtures
+npm run game-data:update -- --no-pull          # use the clone as it is (no fetch or checkout)
 npm run game-data:update -- --esr <dir>        # use another clone directory
 ```
 
@@ -950,15 +951,20 @@ npm run game-data:update -- --esr <dir>        # use another clone directory
 3. Runs `generate-game-data.ts --esr <dir>`, then `generate-item-icons.ts` and `generate-game-data.ts` again (so the
    manifest lists the new icons.json), then `generate-skill-icons.ts` (the cels of the fresh skilldetails.json). A
    failure skips the verify step and exits 1.
-4. Runs `fetch-test-fixtures.js` (skippable with `--no-fixtures`). A download failure is only a warning; tests that
-   need a missing fixture skip themselves.
-5. Runs `npx vitest run src/features/game-data` (with `ESR_SOURCE_DIR` set to the clone) and `--check` (game data,
-   item icons and skill icons).
+4. Copies the current HTM fixtures to `test-fixtures/previous/`, then runs `fetch-test-fixtures.js` (both skipped with
+   `--no-fixtures`). A download failure is only a warning; tests that need a missing fixture skip themselves.
+5. Runs `--check` (game data, item icons and skill icons), `guide:generate` and `guide:check`, then the **full** test
+   suite (`npx vitest run`, `ESR_SOURCE_DIR` set to the clone): parsers, loot filter, stash, builds and guide tests read
+   the regenerated bundles and fixtures too. Failing test files are listed in the summary.
 6. Prints a summary: version/tag/commit before → after, changed counts (incl. warnings), generator warnings, step
-   results and changed files under `public/game-data/`, then the commit command to run. It never runs `git add`/`commit`.
+   results, notes (e.g. icons.json kept the old version because the vanilla art folder is missing, or the stash `.d2i`
+   fixture is absent) and changed files under `public/game-data/`, `public/guide/` and `public/sitemap.xml`, then the
+   commit command to run. It never runs `git add`/`commit`.
 
-**After an ESR release** the `/esr-update` Claude Code skill (`.claude/skills/esr-update/SKILL.md`) runs this command
-plus the release diff, explains the count changes, proposes guide note edits and asks the owner before committing.
+**After an ESR release** the `/esr-update` Claude Code skill (`.claude/skills/esr-update/SKILL.md`, details in
+`reference.md` next to it) runs this command, the release diff, the [update review](#update-review) and the user-data
+scan, starts parallel review agents, applies guide, doc, template and link edits, and asks the owner before
+committing. It also proposes updates to itself when the review reports data or feature commits it does not cover.
 
 Manual fallback:
 
@@ -1007,18 +1013,54 @@ that fails. Sections, in order:
    after, added/removed/changed rows (rows paired by first column + occurrence), added/removed row keys (20 shown),
    column changes.
 4. **Strings**: added/removed/changed keys per file and up to 20 `Key: old → new` enUS changes.
-5. **Official docs pages**: byte-size delta per changed `docs/` file, hand-written pages flagged `[HAND-WRITTEN]`.
+5. **Official docs pages**: byte-size delta per changed page, listed once with the locales it changed in;
+   hand-written pages flagged `[HAND-WRITTEN]`.
 6. **Launcher configs**: changed `d2rloader/` files, with a unified diff for text files up to 200 lines.
-7. **Everything else**: the remaining changed files with line counts.
+7. **Loot filters**: added/removed filters under `LootFilters/` and the diff of small text files (`sources.json`).
+8. **Everything else**: the remaining changed files with line counts.
+
+A launcher-versions line under the header shows `modVersion`, D2RLoader, game version/build, the save mode and the
+loot-filter plugin DLL version, old → new; tables the generators read are marked "(read by the app)". `--out <file>`
+writes the text (or the JSON with `--json`).
 
 Exit codes: 0 (also when nothing changed), 1 (missing clone, bad `--to`, git failure), 2 (`--from` not available).
-Helpers and tests: `scripts/lib/releaseDiff.ts`, `scripts/lib/releaseDiff.test.ts`.
+Helpers and tests: `scripts/lib/releaseDiff.ts`, `scripts/lib/esrGit.ts`, `scripts/lib/launcherInfo.ts` and their tests.
+
+### Update review
+
+`npm run esr:review` (`scripts/esr-update-review.ts`) reviews the regenerated working tree after `game-data:update`.
+It is read-only and compares the working tree with `git HEAD` (the previous version), the clone at the new and the old
+revision (fetched on demand) and, unless `--offline`, the live sites. Every baseline comes from HEAD, so it needs no
+hand-kept numbers.
+
+```bash
+npm run esr:review                              # text report
+npm run esr:review -- --out review.md           # Markdown + review.json
+npm run esr:review -- --offline                 # skip the network checks
+```
+
+Checks (ids as in the report): versions (manifest, clone tag, `metadata.json` modVersion vs tag, D2RLoader and game
+build), manifest counts and warnings, changed entries per bundle by key, skill ids, unknown sources, id shifts
+(lootfilter, stashnames, itemtext, stash save widths), build crafts (`slot:roll` / `kind:key`), cube fallback rows and
+ops, guide `::recipes` blocks and notes whose data changed, icons (missing, vanilla art folder, inputs), runeword and
+gemword `name:variant` shifts (old vs new docs pages), loot filter (plugin DLL version vs `LOOT_FILTER_PLUGIN_VERSION`,
+`LootFilters/sources.json`, Sully's upstream template and assets, bundled filters validated against old and new
+data), the docs site vs the clone's `docs/`, external links and the Discord invite, docs quoting the old version, and
+a self-check: bundle files, count keys or warning classes it does not know, and feature commits since the skill or
+the review script last changed. Exit 0 when it ran (findings are not a failure), 2 when it cannot run. Logic and
+tests: `scripts/lib/esrReview/`; `scripts/lib/srcImport.ts` loads app modules (the `@/` alias) from Node.
+
+`npm run esr:user-data` (`scripts/check-user-data.ts`) scans PROD's public builds, favourite counts and shared loot
+filters (GET only, the publishable key from `.env.production`) and lists the references that no longer resolve in the
+current data: unique, set and runeword names and variants, skill ids, crafts, favourite ids, loot filter codes and ids.
+It shows counts and public names only. Logic and tests: `scripts/lib/userData/`.
 
 ### Bumping the ESR version (manual)
 
 1. `git -C ../Eastern_Sun_Resurrected fetch --tags && git -C ../Eastern_Sun_Resurrected checkout <tag>` (tags have no `v` prefix, e.g. `3.2.10`)
 2. `npm run game-data:generate` and read the printed counts and warnings
-3. `npm run test` (the bundle integrity test expects 369 weapons / 255 armors; update the numbers if ESR changed them on purpose)
+3. `npm run test` (the bundle integrity test pins counts such as 369 weapons / 255 armors; update the numbers if ESR
+   changed them on purpose) and `npm run esr:review`
 4. Commit `public/game-data/` together with any code changes
 
 The script warns when the clone has uncommitted changes, because the output would then not match the recorded commit.
@@ -1173,7 +1215,7 @@ recipes therefore show up as "unmatched txt".
 
 Top row: a cmdk **runeword picker** (`components/ComboPicker.tsx`, every query term must appear in name, recipe or
 allowed items; variant number shown for multi-variant names; first 100 hits) and the Copy Link button. Second row: the
-**character form** (`components/CharacterForm.tsx`): class (Any + the 8 classes from `types.json`), level 1–99,
+**character form** (`components/CharacterForm.tsx`): class (Any + the 8 classes from `types.json`), level 1–110 (the ESR cap, `maxLevel` of skills.json),
 Strength and Dexterity 0–999, and the toggles "Include bases I can't use yet" and "Ethereal (estimate)".
 
 For the selected runeword the page shows the name, socket badge, recipe and allowed/excluded items, a "Game files:
@@ -1211,7 +1253,7 @@ character, the rest is kept.
 | `rw`  | selected.name    | HTM runeword name                     |
 | `v`   | selected.variant | number (default 1)                    |
 | `cls` | character.cls    | `any` or a class code (`ama` … `war`) |
-| `lvl` | character.level  | 1–99                                  |
+| `lvl` | character.level  | 1–110                                 |
 | `str` | character.str    | 0–999                                 |
 | `dex` | character.dex    | 0–999                                 |
 
@@ -1687,4 +1729,9 @@ utils/sets.ts                          URL state, options, order, search / focus
   `lootfilter.json`; asserts ≥ 99 % of the HTM unique and mythical names are txt unique names (unmatched names are
   logged, visible when a test fails).
 - `statRenderer.oracle.test.ts`: see "Oracle"; skips without the fixtures or bundles.
-- `scripts/lib/updateSummary.test.ts`: summary formatting of `game-data:update` (count diffs, porcelain parsing).
+- `scripts/lib/updateSummary.test.ts`: summary formatting of `game-data:update` (count diffs, porcelain parsing), step notes such as the stale-icons hint).
+- `runtimeConstants.test.ts`: pins the stat ids, paired stats, descfuncs, `STAT_QUIRKS` and `STAT_SCALES` that the
+  stash parser, the stat text runtime and the loot filter hard-code to the committed bundles, by name.
+- `scripts/lib/esrReview/*.test.ts`, `scripts/lib/launcherInfo.test.ts`, `scripts/lib/userData/resolve.test.ts`: the
+  pure comparison logic of `esr:review`, the launcher/DLL version reader and the `esr:user-data` resolver, on synthetic
+  inputs.

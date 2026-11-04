@@ -47,12 +47,13 @@ and committed under `public/game-data/`. CI never generates them. The generator 
 `../Eastern_Sun_Resurrected` (a sibling of this repo); `game-data:update` creates it on the first run.
 
 ```bash
-npm run game-data:update    # after an ESR release: clone/pull ESR, generate, fetch fixtures, run game-data tests + check
+npm run game-data:update    # after an ESR release: clone/pull ESR, generate, fetch fixtures, check, full test suite
 npm run game-data:generate  # regenerate the bundles from the current clone
 npm run game-data:icons     # item icons (also reruns the bundles and skill icons)
 npm run game-data:skill-icons
 npm run game-data:check     # exit 1 if the committed bundles or icons are stale
 npm run esr:diff            # what changed in ESR since the committed game data
+npm run esr:review          # read-only review of the regenerated data (run after game-data:update)
 ```
 
 Item icons come from the mod's HD sprites. For items the mod has no art for, the generator falls back to vanilla D2R art

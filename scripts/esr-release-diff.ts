@@ -4,17 +4,18 @@
  * HEAD: patch notes, changelog entries, game tables, strings, official docs pages, launcher configs, everything else.
  * Read-only: never modifies the clone (except an on-demand `git fetch` of a missing --from commit in a shallow clone).
  *
- *   node scripts/esr-release-diff.ts [--esr <dir>] [--from <rev>] [--to <rev>] [--json]
+ *   node scripts/esr-release-diff.ts [--esr <dir>] [--from <rev>] [--to <rev>] [--json] [--out <file>]
  *
+ * --out writes the report (text, or JSON with --json) to <file> instead of stdout.
  * --from defaults to esrCommit of public/game-data/manifest.json as committed in HEAD (the working-tree copy already
  * holds the new commit after game-data:update), --to to the clone's HEAD. Exit 0 also when nothing changed, 1 on
  * errors, 2 when --from cannot be found even after a fetch.
  */
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { REPO_ROOT, resolveEsrDir } from './lib/esrClone.ts';
+import { readLauncherVersionsAt, resolveCommit, resolveOrFetch, runGit } from './lib/esrGit.ts';
 import {
   classifyPath,
   diffStrings,
@@ -40,18 +41,7 @@ class UsageError extends Error {
   }
 }
 
-/** Runs git and returns stdout untrimmed, or null when it fails. Large buffer: some tables are several MB. */
-function run(cwd: string, args: string[]): string | null {
-  try {
-    return execFileSync('git', ['-C', cwd, ...args], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      maxBuffer: 512 * 1024 * 1024,
-    });
-  } catch {
-    return null;
-  }
-}
+const run = runGit;
 
 function manifestCommit(text: string | null): string | null {
   if (text === null) return null;
@@ -73,19 +63,12 @@ function defaultFrom(): string {
   return working;
 }
 
-function resolveCommit(esrDir: string, rev: string): string | null {
-  return run(esrDir, ['rev-parse', '--verify', '--quiet', `${rev}^{commit}`])?.trim() ?? null;
-}
-
 /** Resolves --from; in a shallow clone fetches the missing commit once (best effort). */
 function resolveFrom(esrDir: string, rev: string): string {
-  const local = resolveCommit(esrDir, rev);
-  if (local !== null) return local;
-  console.error(`--from ${rev} is not in the clone (shallow?); trying: git -C ${esrDir} fetch --depth 1 origin ${rev}`);
-  if (run(esrDir, ['fetch', '--depth', '1', '--no-tags', 'origin', rev]) !== null) {
-    const fetched = resolveCommit(esrDir, rev) ?? (/^[0-9a-f]{7,40}$/i.test(rev) ? null : resolveCommit(esrDir, 'FETCH_HEAD'));
-    if (fetched !== null) return fetched;
-  }
+  const commit = resolveOrFetch(esrDir, rev, (message) => {
+    console.error(`--from ${message}`);
+  });
+  if (commit !== null) return commit;
   throw new UsageError(
     `Revision ${rev} is not available in ${esrDir}, and fetching it from origin failed.\n` +
       'Fetch more history (git fetch --unshallow) or pass --from with a revision the clone has.',
@@ -104,7 +87,13 @@ function revisionInfo(esrDir: string, rev: string, commit: string): RevisionInfo
 
 function main(): void {
   const { values } = parseArgs({
-    options: { esr: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' }, json: { type: 'boolean', default: false } },
+    options: {
+      esr: { type: 'string' },
+      from: { type: 'string' },
+      to: { type: 'string' },
+      json: { type: 'boolean', default: false },
+      out: { type: 'string' },
+    },
   });
   const esrDir = resolveEsrDir(values.esr);
   if (!existsSync(esrDir) || run(esrDir, ['rev-parse', '--git-dir']) === null) {
@@ -140,7 +129,17 @@ function main(): void {
     strings: [],
     docs: [],
     launcher: [],
+    lootFilters: [],
+    launcherVersions: { before: readLauncherVersionsAt(esrDir, fromCommit), after: readLauncherVersionsAt(esrDir, toCommit) },
     other: [],
+  };
+
+  /** Unified diff for small text files (at most LAUNCHER_DIFF_MAX_LINES lines and changed lines), else null. */
+  const smallDiff = (change: FileChange) => {
+    const text = change.added !== null;
+    const lines = text && change.status !== 'D' ? after(change).split('\n').length : 0;
+    const small = text && lines <= LAUNCHER_DIFF_MAX_LINES && (change.added ?? 0) + (change.removed ?? 0) <= LAUNCHER_DIFF_MAX_LINES;
+    return small ? unified(change.path) : null;
   };
 
   for (const change of parseChanges(nameStatus, numstat)) {
@@ -175,21 +174,25 @@ function main(): void {
           bytesAfter: change.status === 'D' ? null : size(toCommit, change.path),
         });
         break;
-      case 'launcher': {
-        const text = change.added !== null;
-        const lines = text && change.status !== 'D' ? after(change).split('\n').length : 0;
-        const small = text && lines <= LAUNCHER_DIFF_MAX_LINES && (change.added ?? 0) + (change.removed ?? 0) <= LAUNCHER_DIFF_MAX_LINES;
-        diff.launcher.push({ ...change, diff: small ? unified(change.path) : null });
+      case 'launcher':
+        diff.launcher.push({ ...change, diff: smallDiff(change) });
         break;
-      }
+      case 'lootFilters':
+        diff.lootFilters.push({ ...change, diff: smallDiff(change) });
+        break;
       case 'other':
         diff.other.push(change);
         break;
     }
   }
 
-  if (values.json) console.log(JSON.stringify(diff, null, 2));
-  else for (const line of formatReleaseDiff(diff)) console.log(line);
+  const report = values.json ? JSON.stringify(diff, null, 2) : formatReleaseDiff(diff).join('\n');
+  if (values.out === undefined) console.log(report);
+  else {
+    const out = resolve(process.cwd(), values.out);
+    writeFileSync(out, `${report}\n`);
+    console.log(`Wrote ${out}`);
+  }
 }
 
 try {

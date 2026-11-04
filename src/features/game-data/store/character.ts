@@ -6,10 +6,11 @@ export type { Character };
 /** localStorage key of the persisted character (Best Base page). */
 export const CHARACTER_STORAGE_KEY = 'gameData.character';
 
-export const CHARACTER_LEVEL_RANGE = { min: 1, max: 99 } as const;
+/** Character level 1–110: ESR raises the cap to 110 (skills.json `maxLevel`; runtimeConstants.test.ts pins it). */
+export const CHARACTER_LEVEL_RANGE = { min: 1, max: 110 } as const;
 export const CHARACTER_STAT_RANGE = { min: 0, max: 999 } as const;
 
-export const DEFAULT_CHARACTER: Character = { cls: 'any', level: 99, str: 100, dex: 100 };
+export const DEFAULT_CHARACTER: Character = { cls: 'any', level: CHARACTER_LEVEL_RANGE.max, str: 100, dex: 100 };
 
 function isIntIn(value: unknown, range: { readonly min: number; readonly max: number }): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= range.min && value <= range.max;

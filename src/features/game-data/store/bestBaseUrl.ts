@@ -30,7 +30,7 @@ function parseIntIn(value: string | null, range: { readonly min: number; readonl
   return parsed >= range.min && parsed <= range.max ? parsed : undefined;
 }
 
-/** Decodes `rw`, `v` (default 1), `cls` (`any` or a class code), `lvl` (1–99), `str` / `dex` (0–999); invalid values are ignored. */
+/** Decodes `rw`, `v` (default 1), `cls` (`any` or a class code), `lvl` (1–110), `str` / `dex` (0–999); invalid values are ignored. */
 export function decodeBestBaseParams(params: URLSearchParams): BestBaseUrlState {
   const name = params.get(GAME_DATA_URL_PARAM_KEYS.RW)?.trim() ?? '';
   const variant = parseIntIn(params.get(GAME_DATA_URL_PARAM_KEYS.VARIANT), { min: 1, max: 99 }) ?? 1;

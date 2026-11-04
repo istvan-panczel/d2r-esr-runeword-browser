@@ -1,0 +1,296 @@
+/**
+ * Entry-level diff of the game-data bundles (public/game-data/*.json), HEAD → working tree: each bundle section is
+ * compared by a key per entry, never by lines (several bundles pretty-print objects over many lines). The spec below is
+ * also the review's coverage list: a bundle file or section it does not name is reported by the self-check.
+ */
+import { capLines, info, ok, type Check } from './report.ts';
+
+type Entry = Readonly<Record<string, unknown>>;
+
+export type SectionSpec =
+  /** An array of objects compared by `key`; `label` names an entry in the output (default: the key) */
+  | { kind: 'list'; key: (entry: Entry, index: number) => string; label?: (entry: Entry) => string }
+  /** An array of scalars, compared as a multiset of values (positions are the id-shift check's job) */
+  | { kind: 'values' }
+  /** An object keyed by code or name; each property compared whole */
+  | { kind: 'map' }
+  /** One value compared whole */
+  | { kind: 'value' };
+
+const str = (value: unknown): string =>
+  typeof value === 'string' ? value : typeof value === 'number' || typeof value === 'boolean' ? String(value) : JSON.stringify(value);
+const field = (entry: Entry, ...path: string[]): string => {
+  let value: unknown = entry;
+  for (const part of path) value = typeof value === 'object' && value !== null ? (value as Entry)[part] : undefined;
+  return value === undefined || value === null ? '' : str(value);
+};
+const codes = (value: unknown): string =>
+  Array.isArray(value)
+    ? value.map((item) => (typeof item === 'object' && item !== null ? field(item as Entry, 'code') : str(item))).join('+')
+    : '';
+const named = (key: string) => (entry: Entry) => `${field(entry, key)} (${field(entry, 'name')})`;
+const list = (key: (entry: Entry, index: number) => string, label?: (entry: Entry) => string): SectionSpec => ({
+  kind: 'list',
+  key,
+  label,
+});
+const byField = (name: string, label?: (entry: Entry) => string): SectionSpec => list((entry) => field(entry, name), label);
+const VALUES: SectionSpec = { kind: 'values' };
+const MAP: SectionSpec = { kind: 'map' };
+const VALUE: SectionSpec = { kind: 'value' };
+
+/**
+ * Every bundle file and section the review knows. `null` marks a file another check covers (manifest.json: the
+ * versions and manifest checks). Keep in sync with src/features/game-data/build/generateBundles.ts.
+ */
+export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, SectionSpec>> | null>> = {
+  'manifest.json': null,
+  'affixes.json': {
+    affixes: list(
+      (entry) => `${field(entry, 'kind')}:${field(entry, 'id')}`,
+      (entry) => `${field(entry, 'kind')}${field(entry, 'id')} ${field(entry, 'name')}`
+    ),
+    stats: byField('id', named('id')),
+  },
+  'areas.json': { areas: byField('id', named('id')) },
+  'bases.json': { bases: byField('code', named('code')), automods: byField('id', named('id')) },
+  'crafting.json': {
+    forgings: list(
+      (entry) => `${field(entry, 'kind')}:${field(entry, 'key')}`,
+      (entry) => `${field(entry, 'kind')}:${field(entry, 'key')} (${field(entry, 'label')})`
+    ),
+    stacking: list((entry) => `${field(entry, 'kind')}:${field(entry, 'material', 'code')}:${field(entry, 'switchItem', 'code')}`),
+  },
+  'cube.json': {
+    sections: byField('id'),
+    families: byField('id'),
+    groups: list((entry) => `${field(entry, 'family')}: ${field(entry, 'label')}`),
+    rows: list((entry) => `${field(entry, 'family')}: ${codes(entry.inputs)} → ${field(entry, 'output')}`),
+    recipes: list((entry) => `${field(entry, 'family')}: ${field(entry, 'description')}`),
+    hidden: MAP,
+  },
+  'enhance.json': {
+    corruption: VALUE,
+    corruptionSlots: byField('slot'),
+    corruptionOutcomes: list((entry) => `${field(entry, 'slot')}:${field(entry, 'roll')}`),
+    anointment: VALUE,
+    anointmentSlots: byField('slot'),
+    anointmentOutcomes: list(
+      (entry) => `${field(entry, 'pool')}:${field(entry, 'roll')}`,
+      (entry) => `${field(entry, 'pool')}:${field(entry, 'roll')} ${field(entry, 'label')}`
+    ),
+    vessel: VALUE,
+    vesselTiers: byField('tier'),
+    vesselRecipes: list((entry) => `tier ${field(entry, 'tier')}: ${codes(entry.materials)}`),
+    vesselTransforms: list((entry) => `${codes(entry.materials)} → ${field(entry, 'output', 'code')}`),
+  },
+  'icons.json': { esrVersion: VALUE, esrTag: VALUE, vanilla: VALUE, bases: MAP, uniques: MAP, sets: MAP, misc: MAP },
+  'itemtext.json': {
+    stats: list((entry, index) => `${String(index)} ${field(entry, 'stat')}`),
+    strings: MAP,
+    skills: byField('id', named('id')),
+    classes: byField('name'),
+    monsters: VALUES,
+    monTypes: VALUES,
+    magicPrefixes: VALUES,
+    magicSuffixes: VALUES,
+    autoAffixes: VALUES,
+    rareNames: VALUES,
+    lowQuality: VALUES,
+    superior: VALUE,
+    setBonusPieces: MAP,
+    bases: MAP,
+    socketables: MAP,
+    levels: MAP,
+  },
+  'lootfilter.json': {
+    items: byField('code', named('code')),
+    stats: byField('id', named('id')),
+    areas: byField('id', named('id')),
+    sounds: VALUES,
+    uniques: byField('id', named('id')),
+    sets: byField('id', named('id')),
+    skills: byField('id', named('id')),
+    knownLayers: byField('stat'),
+  },
+  'materials.json': { groups: byField('code'), families: byField('id'), items: byField('code', named('code')) },
+  'runewords.json': { runewords: byField('key', named('key')) },
+  'sets.json': { sets: byField('id') },
+  'skilldetails.json': {
+    items: list((entry) => `${field(entry, 'kind')}:${field(entry, 'name')}`),
+    skills: list((entry) => `${field(entry, 'cls') || 'item'}/${field(entry, 'id')}`),
+  },
+  'skills.json': { maxLevel: VALUE, classes: byField('code') },
+  'sources.json': { items: list((entry) => `${field(entry, 'item')}:${field(entry, 'name')} (${field(entry, 'code')})`) },
+  'stash.json': {
+    grid: VALUE,
+    stats: list((_entry, index) => `stat ${String(index)}`),
+    items: list((entry) => (Array.isArray(entry) ? str(entry[0]) : field(entry, 'code'))),
+    coupons: byField('code', named('code')),
+    couponTiers: byField('type'),
+    gemwords: VALUES,
+  },
+  'stashnames.json': {
+    bases: byField('code', named('code')),
+    uniques: byField('id', named('id')),
+    setItems: byField('id', named('id')),
+    sets: byField('id'),
+    runewords: byField('id', (entry) => `${field(entry, 'id')} (${field(entry, 'key')})`),
+  },
+  'tiers.json': { codes: MAP },
+  'types.json': { types: byField('code', named('code')), classes: byField('code') },
+};
+
+export interface SectionDiff {
+  section: string;
+  added: string[];
+  removed: string[];
+  changed: string[];
+  /** Entries before / after (null for a missing section) */
+  before: number | null;
+  after: number | null;
+}
+
+export interface BundleDiff {
+  file: string;
+  sections: SectionDiff[];
+  /** Sections of the documents that BUNDLE_SPECS does not name (diffed with a fallback spec) */
+  unknownSections: string[];
+}
+
+const isRecord = (value: unknown): value is Entry => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+function sizeOf(value: unknown): number | null {
+  if (value === undefined) return null;
+  if (Array.isArray(value)) return value.length;
+  return isRecord(value) ? Object.keys(value).length : 1;
+}
+
+/** A spec for a section BUNDLE_SPECS does not know: id / code / key / name when the entries have one. */
+export function fallbackSpec(value: unknown): SectionSpec {
+  if (isRecord(value)) return MAP;
+  if (!Array.isArray(value)) return VALUE;
+  const first: unknown = value.find((entry) => entry !== null);
+  if (!isRecord(first)) return VALUES;
+  const keyField = ['id', 'code', 'key', 'name'].find((name) => name in first);
+  return keyField === undefined ? list((_entry, index) => String(index)) : byField(keyField);
+}
+
+/** Entries keyed for comparison; a repeated key gets `#2`, `#3` … in order. */
+function keyed(value: unknown, spec: Extract<SectionSpec, { kind: 'list' }>): Map<string, { label: string; json: string; raw: unknown }> {
+  const result = new Map<string, { label: string; json: string; raw: unknown }>();
+  const seen = new Map<string, number>();
+  const entries: unknown[] = Array.isArray(value) ? value : [];
+  entries.forEach((raw, index) => {
+    const entry: Entry = isRecord(raw) ? raw : Array.isArray(raw) ? (raw as unknown as Entry) : { value: raw };
+    const base = spec.key(entry, index);
+    const n = (seen.get(base) ?? 0) + 1;
+    seen.set(base, n);
+    const label = spec.label?.(entry) ?? base;
+    result.set(n === 1 ? base : `${base}#${String(n)}`, {
+      label: n === 1 ? label : `${label} #${String(n)}`,
+      json: JSON.stringify(raw),
+      raw,
+    });
+  });
+  return result;
+}
+
+/** ` [rows, reqLvl]`: the top-level fields of two objects that differ (empty for other shapes). */
+export function changedFields(before: unknown, after: unknown): string {
+  if (!isRecord(before) || !isRecord(after)) return '';
+  const fields = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter(
+    (name) => JSON.stringify(before[name]) !== JSON.stringify(after[name])
+  );
+  return fields.length === 0 ? '' : ` [${fields.slice(0, 6).join(', ')}${fields.length > 6 ? ', …' : ''}]`;
+}
+
+const shown = (value: unknown) => (value === undefined ? '—' : str(value));
+
+function multiset(value: unknown): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const entry of Array.isArray(value) ? (value as unknown[]) : []) {
+    const key = str(entry);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/** Added / removed / changed entries of one section (labels). */
+export function diffSection(section: string, before: unknown, after: unknown, spec: SectionSpec): SectionDiff {
+  const result: SectionDiff = { section, added: [], removed: [], changed: [], before: sizeOf(before), after: sizeOf(after) };
+  switch (spec.kind) {
+    case 'value':
+      if (JSON.stringify(before) !== JSON.stringify(after))
+        result.changed.push(`${section}: ${shown(before)} → ${shown(after)}`.slice(0, 200));
+      break;
+    case 'values': {
+      const a = multiset(before);
+      const b = multiset(after);
+      for (const [value, n] of b) for (let i = a.get(value) ?? 0; i < n; i++) result.added.push(JSON.stringify(value));
+      for (const [value, n] of a) for (let i = b.get(value) ?? 0; i < n; i++) result.removed.push(JSON.stringify(value));
+      break;
+    }
+    case 'map': {
+      const a = isRecord(before) ? before : {};
+      const b = isRecord(after) ? after : {};
+      for (const key of Object.keys(b)) {
+        if (!Object.hasOwn(a, key)) result.added.push(key);
+        else if (JSON.stringify(a[key]) !== JSON.stringify(b[key])) result.changed.push(`${key}${changedFields(a[key], b[key])}`);
+      }
+      for (const key of Object.keys(a)) if (!Object.hasOwn(b, key)) result.removed.push(key);
+      break;
+    }
+    case 'list': {
+      const a = keyed(before, spec);
+      const b = keyed(after, spec);
+      for (const [key, entry] of b) {
+        const old = a.get(key);
+        if (old === undefined) result.added.push(entry.label);
+        else if (old.json !== entry.json) result.changed.push(`${entry.label}${changedFields(old.raw, entry.raw)}`);
+      }
+      for (const [key, entry] of a) if (!b.has(key)) result.removed.push(entry.label);
+      break;
+    }
+  }
+  return result;
+}
+
+/** Diff of one bundle file; `before` / `after` are the parsed documents (null when the file is missing). */
+export function diffBundle(file: string, before: unknown, after: unknown): BundleDiff {
+  const specs = BUNDLE_SPECS[file] ?? {};
+  const a = isRecord(before) ? before : {};
+  const b = isRecord(after) ? after : {};
+  const names = [...new Set([...Object.keys(specs), ...Object.keys(a), ...Object.keys(b)])];
+  const unknownSections = names.filter((name) => !Object.hasOwn(specs, name));
+  const sections = names.map((name) =>
+    diffSection(name, a[name], b[name], Object.hasOwn(specs, name) ? specs[name] : fallbackSpec(b[name] ?? a[name]))
+  );
+  return { file, sections, unknownSections };
+}
+
+const changedSections = (diff: BundleDiff) =>
+  diff.sections.filter((section) => section.added.length + section.removed.length + section.changed.length > 0);
+
+/** One check per bundle file: ok when nothing changed, info listing the changed entries by name. */
+export function bundleCheck(diff: BundleDiff, limit = 40): Check {
+  const id = `bundle.${diff.file.replace(/\.json$/, '')}`;
+  const title = `Bundle entries: ${diff.file}`;
+  const sections = changedSections(diff);
+  if (sections.length === 0) return ok(id, title, 'No entry changed.');
+  const lines: string[] = [];
+  for (const section of sections) {
+    const size =
+      section.before === section.after ? String(section.after ?? 0) : `${String(section.before ?? '—')} → ${String(section.after ?? '—')}`;
+    lines.push(
+      `${section.section} (${size}): +${String(section.added.length)} -${String(section.removed.length)} ~${String(section.changed.length)}`
+    );
+  }
+  const entries = sections.flatMap((section) => [
+    ...section.added.map((label) => `+ ${section.section}: ${label}`),
+    ...section.removed.map((label) => `- ${section.section}: ${label}`),
+    ...section.changed.map((label) => `~ ${section.section}: ${label}`),
+  ]);
+  const summary = sections.map((section) => section.section).join(', ');
+  return info(id, title, `Changed sections: ${summary}.`, [...lines, ...capLines(entries, limit)]);
+}

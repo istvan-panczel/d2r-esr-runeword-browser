@@ -12,17 +12,17 @@ const gemsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems
 describe('parseGemwordsHtml', () => {
   const gems = parseGemsHtml(gemsHtml);
   const gemReqLevelLookup: GemReqLevelLookup = new Map(gems.map((gem) => [gem.name, gem.reqLevel]));
+  // Parsed once: each parse takes 1–2 s under jsdom, and parsing per test pushed single tests past the 5 s timeout
+  // under parallel load (the full suite). The tests only read the result.
+  const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
 
   it('should parse all gemword rows (approximately 720-750)', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
-
     // ESR 3.2: 8 families x 90 rows (18 Charm-only rows + 72 item rows) + 14 named gemwords
     expect(gemwords.length).toBeGreaterThanOrEqual(720);
     expect(gemwords.length).toBeLessThanOrEqual(750);
   });
 
   it('parses a one-socket Holy charm gemword (Charm rows are listed separately since ESR 3.2)', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const holy = gemwords.find((gemword) => gemword.name === 'Holy' && gemword.variant === 1);
 
     expect(holy).toBeDefined();
@@ -37,7 +37,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('parses a one-socket Holy item gemword with allowed items and per-column bonuses', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const holy = gemwords.find(
       (gemword) => gemword.name === 'Holy' && gemword.allowedItems.includes('Body Armor') && gemword.gems.join() === 'Chipped Diamond'
     );
@@ -58,7 +57,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('keeps only the gemword bonuses, not the random bonus pools or gem bonuses after the <br><br> separator', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const holy = gemwords.find(
       (gemword) => gemword.name === 'Holy' && gemword.allowedItems.includes('Body Armor') && gemword.gems.join() === 'Chipped Diamond'
     );
@@ -76,7 +74,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('parses the random bonus pools of the one-socket Holy item gemword, identical in both populated columns', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const holy = gemwords.find(
       (gemword) => gemword.name === 'Holy' && gemword.allowedItems.includes('Body Armor') && gemword.gems.join() === 'Chipped Diamond'
     );
@@ -112,7 +109,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('parses no bonus pools for Charm-only rows', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const charms = gemwords.filter((gemword) => gemword.allowedItems.join() === 'Charm');
 
     expect(charms.length).toBeGreaterThan(100);
@@ -122,7 +118,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('gives most item gemwords at least one pool in every populated column, with "N-M of the following:" headers', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const items = gemwords.filter((gemword) => gemword.allowedItems.join() !== 'Charm');
     const withPools = items.filter((gemword) => allPools(gemword).length > 0);
 
@@ -161,7 +156,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('keeps pools apart from the gemword bonuses and the trailing gem bonuses', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const holyArmor = gemwords.find(
       (gemword) => gemword.name === 'Holy' && gemword.allowedItems.includes('Body Armor') && gemword.gems.join() === 'Chipped Diamond'
     );
@@ -180,7 +174,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('parses one pool per "of the following:" header in the raw HTML', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const doc = new DOMParser().parseFromString(gemwordsHtml, 'text/html');
     const uniqueRows = new Set(Array.from(doc.querySelectorAll('tr.recipeRow'), (row) => row.innerHTML));
     const rawHeaderCount = Array.from(uniqueRows).reduce(
@@ -193,7 +186,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('captures the jewel requirement for recipes that need one', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const america = gemwords.find((gemword) => gemword.name === 'America');
 
     expect(america).toBeDefined();
@@ -206,20 +198,16 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('skips rows that repeat an earlier row verbatim (America is listed twice since ESR 3.2)', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
-
     expect(gemwords.filter((gemword) => gemword.name === 'America')).toHaveLength(1);
   });
 
   it('assigns unique (name, variant) pairs — favourite ids depend on this', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const keys = gemwords.map((gemword) => `${gemword.name}:${String(gemword.variant)}`);
 
     expect(new Set(keys).size).toBe(keys.length);
   });
 
   it('keeps gemword variants separate by name', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const holyVariants = gemwords.filter((gemword) => gemword.name === 'Holy');
 
     expect(holyVariants.length).toBeGreaterThan(20);
@@ -227,7 +215,6 @@ describe('parseGemwordsHtml', () => {
   });
 
   it('only accepts known gem names as ingredients', () => {
-    const gemwords = parseGemwordsHtml(gemwordsHtml, gemReqLevelLookup);
     const gemNames = new Set(gems.map((gem) => gem.name));
 
     for (const gemword of gemwords) {

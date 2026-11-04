@@ -19,7 +19,7 @@ import { STAT_TABLES, type StatTableName } from '../../game-data/build/stats/sta
 import { buildStringTable, type StringsFile } from '../../game-data/build/strings.ts';
 import { parseTsv, type TsvTable } from '../../game-data/build/tsv.ts';
 
-const GUIDE_TABLES = ['cubemain', 'misc', 'armor', 'weapons', 'itemtypes', 'difficultylevels'] as const;
+export const GUIDE_TABLES = ['cubemain', 'misc', 'armor', 'weapons', 'itemtypes', 'difficultylevels'] as const;
 export type GuideTableName = (typeof GUIDE_TABLES)[number];
 
 export interface EsrGuideSources {
