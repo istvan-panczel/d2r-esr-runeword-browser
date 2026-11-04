@@ -6,7 +6,7 @@
 | -------------- | ------- | ------------------------------------ |
 | React          | 19      | UI library                           |
 | React Compiler | Latest  | Automatic memoization & optimization |
-| TypeScript     | 5.9     | Type safety                          |
+| TypeScript     | 6.0     | Type safety                          |
 | Vite           | 8       | Build tool & dev server              |
 
 ## UI & Styling
