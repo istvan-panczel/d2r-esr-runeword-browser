@@ -163,6 +163,81 @@ describe('checkBuild', () => {
   it('lists the recipe keys for the review cross-reference', () => {
     expect(buildRecipeKeys(resolving)).toEqual(['runeword:Spirit:1']);
   });
+
+  const gone = { type: 'unique', snapshot: { name: 'Gone Ring' } };
+
+  it('scans every variant with the variant in the reference', () => {
+    const variants = {
+      items: { ring1: { type: 'unique', snapshot: { name: 'Nagelring' } } },
+      variants: [
+        'oops',
+        {
+          items: { ring1: gone },
+          itemCrafts: { ring1: [{ kind: 'anointment', pool: 'ring', roll: 9 }] },
+          skillPoints: { Zeal: 1, 'Old Skill': 1 },
+          ascendancy: 'Gone',
+        },
+      ],
+    };
+    const result = checkBuild('Paladin', variants, DATA);
+    expect(result.problems.map((problem) => `${problem.kind}: ${problem.ref}`)).toEqual([
+      'unique: variants[1].items.ring1 "Gone Ring"',
+      'craft: variants[1].itemCrafts.ring1 anointment ring:9',
+      'skill: variants[1] Old Skill',
+      'ascendancy: variants[1] Gone',
+    ]);
+    expect(result.checked).toBe(7);
+  });
+
+  it('scans alternative items and their crafts', () => {
+    const withAlternatives = {
+      itemAlternatives: {
+        ring1: [
+          { ref: { type: 'unique', snapshot: { name: 'Nagelring' } } },
+          { ref: gone, note: 'budget', crafts: [{ kind: 'forge', forge: 'rune', key: 'r99' }] },
+        ],
+      },
+      weaponSwapAlternatives: { weapon2: [{ ref: { type: 'runeword', name: 'Spirit', variant: 7, snapshot: {} } }] },
+      variants: [{ mercenaryAlternatives: { helmet: [{ ref: { type: 'set', name: 'Gone Set Item', snapshot: {} } }] } }],
+    };
+    expect(checkBuild('Paladin', withAlternatives, DATA).problems.map((problem) => `${problem.kind}: ${problem.ref}`)).toEqual([
+      'unique: itemAlternatives.ring1[1] "Gone Ring"',
+      'craft: itemAlternatives.ring1[1] forge rune:r99',
+      'runeword: weaponSwapAlternatives.weapon2[0] runeword:Spirit:7',
+      'set item: variants[0].mercenaryAlternatives.helmet[0] "Gone Set Item"',
+    ]);
+  });
+
+  it('ignores malformed alternatives and nested variants', () => {
+    const malformed = {
+      itemAlternatives: {
+        ring1: [null, 7, { note: 'no ref' }, { ref: 'oops', crafts: 'oops' }, { ref: gone, crafts: [null, 3] }],
+        ring2: 'oops',
+      },
+      weaponSwapAlternatives: [{ ref: gone }],
+      mercenaryAlternatives: 'oops',
+      variants: [{ variants: [{ items: { ring1: gone } }] }],
+    };
+    expect(checkBuild('Paladin', malformed, DATA)).toEqual({
+      checked: 2,
+      unchecked: 0,
+      problems: [{ kind: 'unique', ref: 'itemAlternatives.ring1[4] "Gone Ring"', reason: 'not on the unique pages' }],
+    });
+    expect(checkBuild('Paladin', { variants: 'oops' }, DATA).checked).toBe(1);
+  });
+
+  it('lists the recipe keys of every variant and alternative once', () => {
+    const spirit = { type: 'runeword', name: 'Spirit', variant: 1 };
+    const keys = buildRecipeKeys({
+      items: { weapon: spirit },
+      itemAlternatives: { weapon: [{ ref: { type: 'runeword', name: 'Insight', variant: 1 } }, { ref: spirit }, 'oops'] },
+      variants: [
+        { weaponSwap: { weapon2: spirit }, mercenaryAlternatives: { weapon: [{ ref: { type: 'gemword', name: 'Holy', variant: 1 } }] } },
+        { variants: [{ items: { weapon: { type: 'runeword', name: 'Nested', variant: 1 } } }] },
+      ],
+    });
+    expect(keys).toEqual(['runeword:Spirit:1', 'runeword:Insight:1', 'gemword:Holy:1']);
+  });
 });
 
 describe('checkLootFilter', () => {

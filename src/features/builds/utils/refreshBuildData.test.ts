@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db';
-import type { BuildData } from '../buildData';
+import type { BuildData, ItemRef } from '../buildData';
 import { refreshBuildData } from './refreshBuildData';
 
 afterEach(async () => {
@@ -124,5 +124,80 @@ describe('refreshBuildData with same-name variants', () => {
     });
     const weapon = refreshed.items?.weapon;
     expect(weapon?.type === 'unique' && weapon.snapshot.properties).toEqual(['-200% Target Defense']);
+  });
+});
+
+describe('refreshBuildData with alternatives and variants', () => {
+  const stale = (id: number) =>
+    ({
+      type: 'unique',
+      id,
+      snapshot: { name: 'Harlequin Crest', baseItem: 'Shako', category: 'Helm', reqLevel: 62, properties: ['STALE'] },
+    }) as const;
+
+  async function addShako(): Promise<number> {
+    return (await db.htmUniqueItems.add({
+      name: 'Harlequin Crest',
+      baseItem: 'Shako',
+      baseItemCode: 'uap',
+      page: 'armors',
+      category: 'Helm',
+      itemLevel: 69,
+      reqLevel: 62,
+      properties: ['current'],
+      isAncientCoupon: false,
+      gambleItem: '',
+      notes: '',
+    })) as number;
+  }
+
+  const propertiesOf = (ref: ItemRef | null | undefined) => (ref?.type === 'unique' ? ref.snapshot.properties : undefined);
+
+  it('refreshes alternatives in all three maps and keeps their note and crafts', async () => {
+    const id = await addShako();
+    const crafts = [{ kind: 'meld', material: 'grb', uses: 1 }] as const;
+    const refreshed = await refreshBuildData({
+      itemAlternatives: { helmet: [{ ref: stale(id), note: 'Budget', crafts }, { ref: { type: 'freetext', name: 'Circlet' } }] },
+      weaponSwapAlternatives: { weapon2: [{ ref: stale(id) }] },
+      mercenaryAlternatives: { helmet: [{ ref: stale(id) }] },
+    });
+    const [first, second] = refreshed.itemAlternatives?.helmet ?? [];
+    expect(propertiesOf(first.ref)).toEqual(['current']);
+    expect(first.note).toBe('Budget');
+    expect(first.crafts).toBe(crafts);
+    expect(second).toEqual({ ref: { type: 'freetext', name: 'Circlet' } });
+    expect(propertiesOf(refreshed.weaponSwapAlternatives?.weapon2?.[0].ref)).toEqual(['current']);
+    expect(propertiesOf(refreshed.mercenaryAlternatives?.helmet?.[0].ref)).toEqual(['current']);
+  });
+
+  it('keeps the stored ref of an alternative that no longer exists', async () => {
+    const refreshed = await refreshBuildData({ itemAlternatives: { helmet: [{ ref: stale(99999), note: 'gone' }] } });
+    expect(refreshed.itemAlternatives?.helmet).toEqual([{ ref: stale(99999), note: 'gone' }]);
+  });
+
+  it('refreshes the main items and alternatives of every extra variant', async () => {
+    const id = await addShako();
+    const buildData: BuildData = {
+      items: { helmet: stale(id) },
+      variants: [
+        { items: { helmet: stale(id) }, variantName: 'Second', itemNotes: { helmet: 'note' } },
+        { mercenaryAlternatives: { helmet: [{ ref: stale(id) }] }, skills: 'Zeal' },
+      ],
+    };
+    const refreshed = await refreshBuildData(buildData);
+    expect(propertiesOf(refreshed.items?.helmet)).toEqual(['current']);
+    expect(refreshed.variants).toHaveLength(2);
+    const [second, third] = refreshed.variants ?? [];
+    expect(propertiesOf(second.items?.helmet)).toEqual(['current']);
+    expect(second.variantName).toBe('Second');
+    expect(second.itemNotes).toEqual({ helmet: 'note' });
+    expect(propertiesOf(third.mercenaryAlternatives?.helmet?.[0].ref)).toEqual(['current']);
+    expect(third.skills).toBe('Zeal');
+  });
+
+  it('adds no variants key to a build without variants', async () => {
+    const refreshed = await refreshBuildData({ items: { gloves: { type: 'freetext', name: 'GG rare gloves' } } });
+    expect(refreshed).not.toHaveProperty('variants');
+    expect(refreshed).not.toHaveProperty('itemAlternatives');
   });
 });

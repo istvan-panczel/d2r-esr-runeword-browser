@@ -24,3 +24,14 @@ export const SKILL_POINTS_MAX = 99;
 export const SKILL_POINTS_MAX_ENTRIES = 60;
 /** Longest skill id accepted as a `skillPoints` key. */
 export const SKILL_ID_MAX_LENGTH = 100;
+
+/** Most variants per build (the top level of build_data is the first; `variants` holds the rest). */
+export const VARIANTS_MAX = 10;
+/** Most alternative items stored per slot, besides the main item. */
+export const ALTERNATIVES_MAX_PER_SLOT = 10;
+export const VARIANT_NAME_MAX_LENGTH = 50;
+export const VARIANT_NOTE_MAX_LENGTH = 500;
+/** Label of a variant without a stored name at index 0 (later ones are "Variant N"). */
+export const DEFAULT_VARIANT_NAME = 'Default';
+/** App-side cap on the UTF-8 bytes of JSON.stringify(build_data); migration 006 backs it with a looser DB CHECK. */
+export const BUILD_DATA_MAX_BYTES = 1_048_576;

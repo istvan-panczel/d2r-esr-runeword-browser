@@ -3,7 +3,16 @@
 // See builds-feature-docs/FEATURE-BUILD-SHARING.md.
 
 import type { ForgingKind } from '@/features/game-data/engine/schema';
-import { LEVEL_MAX, SKILL_ID_MAX_LENGTH, SKILL_POINTS_MAX, SKILL_POINTS_MAX_ENTRIES } from './constants';
+import {
+  ALTERNATIVES_MAX_PER_SLOT,
+  LEVEL_MAX,
+  SKILL_ID_MAX_LENGTH,
+  SKILL_POINTS_MAX,
+  SKILL_POINTS_MAX_ENTRIES,
+  VARIANT_NAME_MAX_LENGTH,
+  VARIANT_NOTE_MAX_LENGTH,
+  VARIANTS_MAX,
+} from './constants';
 
 /** Per-column runeword/gemword bonuses, stored as rawText strings. */
 export interface ColumnAffixesSnapshot {
@@ -168,7 +177,22 @@ export const CRAFT_ID_MAX_LENGTH = 100;
 
 const FORGING_KINDS: readonly ForgingKind[] = ['skill', 'all', 'stat', 'rune', 'aura'];
 
-export interface BuildData {
+/**
+ * An alternative item for a slot, besides the main item in `items` / `weaponSwap` / `mercenary`. A wrapped entry
+ * (not extra keys on the ref) so rebuilding a ref (withAuthorChoices) never strips it; it carries its own note and
+ * crafts, while the main item keeps the slot-keyed ones.
+ */
+export interface ItemAlternative {
+  readonly ref: ItemRef;
+  readonly note?: string;
+  readonly crafts?: readonly CraftAnnotation[];
+}
+
+/** Slot → alternatives in display order (at most ALTERNATIVES_MAX_PER_SLOT each). */
+export type AlternativesMap<K extends string> = Partial<Record<K, readonly ItemAlternative[]>>;
+
+/** Everything one variant owns. The top level of build_data is the first variant. */
+export interface VariantData {
   readonly items?: Partial<Record<EquipmentSlot, ItemRef | null>>;
   readonly weaponSwap?: Partial<Record<WeaponSwapSlot, ItemRef | null>>;
   readonly mercenary?: Partial<Record<EquipmentSlot, ItemRef | null>>;
@@ -192,6 +216,21 @@ export interface BuildData {
   // (owner decision); ids outside the build's class tree are kept and shown as "other skills".
   readonly level?: number;
   readonly skillPoints?: Readonly<Record<string, number>>;
+  // Alternative items per slot, parallel to the item maps. Absent on older builds; old clients ignore them.
+  readonly itemAlternatives?: AlternativesMap<EquipmentSlot>;
+  readonly weaponSwapAlternatives?: AlternativesMap<WeaponSwapSlot>;
+  readonly mercenaryAlternatives?: AlternativesMap<EquipmentSlot>;
+  /** Absent → "Default" (first variant) or "Variant N" (see variantLabel). Named so it can't be confused with builds.name. */
+  readonly variantName?: string;
+  readonly variantNote?: string;
+}
+
+/**
+ * The stored build_data: the top level is the first variant (what old clients render), `variants` holds the
+ * second to last (at most VARIANTS_MAX - 1, one level deep: a `variants` key inside an entry is ignored).
+ */
+export interface BuildData extends VariantData {
+  readonly variants?: readonly VariantData[];
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -391,14 +430,50 @@ export function asSkillPoints(value: unknown): Readonly<Record<string, number>> 
 
 const optionalString = (value: unknown): string | null | undefined => (typeof value === 'string' || value === null ? value : undefined);
 
+/** A trimmed, non-blank string sliced to `max` characters, or undefined. */
+function cappedText(value: unknown, max: number): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const text = value.trim().slice(0, max);
+  return text.length > 0 ? text : undefined;
+}
+
+/** A stored alternative rebuilt with only its known fields, or undefined when its ref is malformed. */
+export function asItemAlternative(value: unknown): ItemAlternative | undefined {
+  if (!isRecord(value) || !isItemRef(value.ref)) return undefined;
+  const note = typeof value.note === 'string' ? value.note.trim() : '';
+  const crafts = asCraftList(value.crafts);
+  return {
+    ref: sanitizeItemRef(value.ref),
+    ...(note.length > 0 ? { note } : {}),
+    ...(crafts !== undefined ? { crafts } : {}),
+  };
+}
+
 /**
- * Defensive read of the jsonb column into BuildData. The column is user-writable
- * (any authenticated owner can PATCH arbitrary JSON through PostgREST), so every
- * field is validated: malformed item refs, notes and charms are dropped rather than
- * crashing the detail/edit screens. A malformed `base` / `socketed` drops just that field,
- * a malformed crafting annotation just that entry, a malformed level or skill point entry just that value.
+ * A stored alternatives map, cleaned: malformed entries dropped, at most ALTERNATIVES_MAX_PER_SLOT kept per slot,
+ * empty slots dropped. Slot keys are not validated (same as the item maps). Undefined when not an object.
  */
-export function asBuildData(value: unknown): BuildData {
+export function alternativesSection(value: unknown): Record<string, readonly ItemAlternative[]> | undefined {
+  if (!isRecord(value)) return undefined;
+  const entries = Object.entries(value).flatMap(([slot, list]) => {
+    if (!Array.isArray(list)) return [];
+    const alternatives = list
+      .map(asItemAlternative)
+      .filter((alternative): alternative is ItemAlternative => alternative !== undefined)
+      .slice(0, ALTERNATIVES_MAX_PER_SLOT);
+    return alternatives.length > 0 ? [[slot, alternatives] as const] : [];
+  });
+  return Object.fromEntries(entries);
+}
+
+/**
+ * Defensive read of one variant (the top level of build_data, or an entry of `variants`). The column is
+ * user-writable (any authenticated owner can PATCH arbitrary JSON through PostgREST), so every field is
+ * validated: malformed item refs, notes and charms are dropped rather than crashing the detail/edit screens.
+ * A malformed `base` / `socketed` drops just that field, a malformed crafting annotation just that entry,
+ * a malformed level or skill point entry just that value, a malformed alternative just that alternative.
+ */
+export function asVariantData(value: unknown): VariantData {
   if (!isRecord(value)) return {};
   return {
     items: itemSection(value.items),
@@ -415,5 +490,27 @@ export function asBuildData(value: unknown): BuildData {
     skills: optionalString(value.skills),
     level: asLevel(value.level),
     skillPoints: asSkillPoints(value.skillPoints),
+    itemAlternatives: alternativesSection(value.itemAlternatives),
+    weaponSwapAlternatives: alternativesSection(value.weaponSwapAlternatives),
+    mercenaryAlternatives: alternativesSection(value.mercenaryAlternatives),
+    variantName: cappedText(value.variantName, VARIANT_NAME_MAX_LENGTH),
+    variantNote: cappedText(value.variantNote, VARIANT_NOTE_MAX_LENGTH),
   };
+}
+
+/** The stored extra variants: non-object entries dropped, at most VARIANTS_MAX - 1 kept; undefined when none. */
+export function asVariantList(value: unknown): readonly VariantData[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  // asVariantData never reads `variants`, so nesting stays one level deep.
+  const variants = value
+    .filter(isRecord)
+    .map(asVariantData)
+    .slice(0, VARIANTS_MAX - 1);
+  return variants.length > 0 ? variants : undefined;
+}
+
+/** Defensive read of the jsonb column into BuildData: the first variant at the top level plus `variants` (see asVariantData). */
+export function asBuildData(value: unknown): BuildData {
+  if (!isRecord(value)) return {};
+  return { ...asVariantData(value), variants: asVariantList(value.variants) };
 }
