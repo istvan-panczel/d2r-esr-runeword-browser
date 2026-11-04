@@ -132,6 +132,22 @@ After running, verify under **Table Editor**:
 And under **Database → Functions**:
 - `handle_favorites_change`
 
+### Apply the Write-Access Hardening Migration (003)
+
+Column-level grants on top of the row-level policies: an owner can no longer write trigger-managed or immutable columns
+(like counts, timestamps, `avatar_url`) through the REST API. No data changes.
+
+1. Open `supabase/migrations/003_harden_write_access.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+
+### Apply the Discriminator Retry Migration (004)
+
+Replaces `handle_new_user()` so a sign-up retries when its random `#1234` discriminator is already taken (before, the
+collision failed the sign-up with "Database error saving new user"). No data or schema changes.
+
+1. Open `supabase/migrations/004_handle_new_user_discriminator_retry.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+
 ### Apply the Loot Filter Sharing Migration (005)
 
 Adds saved loot filters (public unless private), their likes and a download counter

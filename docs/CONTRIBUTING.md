@@ -1,63 +1,109 @@
-# Documentation Process Guide
+# Contributing
 
-This document serves as the entry point for continuing documentation sessions with Claude. Link this file when resuming work on project documentation.
+How to set up, change, test and release the D2R ESR Runeword Browser. Project overview and the full docs index:
+[docs/README.md](./README.md).
 
-## Purpose
+## Prerequisites
 
-This project uses an iterative documentation process where:
+- **Node 24** (the version in `.nvmrc`; `package.json` `engines` allows `>=24 <25`). With nvm: `nvm use`.
+- **npm** (the one that comes with Node 24, or npm 12). `.npmrc` sets `allow-remote=all`: npm 12 defaults to `none`,
+  which breaks dry runs and lockfile-only resolves on one fallback tarball. The lockfile's integrity hashes still pin
+  every package.
+- Optional, for the game-data workflow: a clone of the ESR repo next to this one (see below).
+- Optional, for the pre-commit checks: `brew install gitleaks exiftool`.
 
-1. The developer shares project details, requirements, and decisions
-2. Claude maintains and updates documentation in the `docs/` folder
-3. Documentation evolves as the project develops
+## Setup
 
-## How to Continue a Session
+```bash
+npm install            # also installs the husky git hooks (prepare script)
+npm run test:fixtures  # once after checkout: downloads the HTML fixtures the integration tests need (not committed)
+npm run dev            # dev server
+```
 
-1. Start a new conversation with Claude
-2. Link this file: `docs/CONTRIBUTING.md`
-3. Claude will review current documentation status and continue from where we left off
-4. Share new information about features, technical decisions, or requirements
+The app runs without any backend. Sign-in, builds, favourites and loot filter sharing use Supabase (see below).
 
-## Topics to Cover
+## Commands
 
-- [x] **Tech Stack** - Libraries, frameworks, and tools
-- [x] **UI Components** - Component patterns, styling approach, design system
-- [x] **Architecture** - Project structure, data flow, state management
-- [x] **Coding Guidelines** - Conventions beyond what's in CLAUDE.md
-- [x] **Features** - Core functionality and user-facing features
+```bash
+npm run dev              # dev server
+npm run build            # TypeScript check + production build
+npm run preview          # serve the production build
+npm run lint             # ESLint
+npm run lint:fix         # ESLint with auto-fix
+npm run test             # all tests once (Vitest)
+npm run test:watch       # tests in watch mode
+npm run test:coverage    # coverage report
+npm run compiler:check   # React Compiler problems that ESLint can report
+npm run compiler:health  # React Compiler health check
+npm run guide:generate   # compile content/guide/ into public/guide/ and rewrite public/sitemap.xml
+npm run guide:check      # exit 1 if the guide bundle or the sitemap is stale
+npm run release          # lint + build, then bump the version, update CHANGELOG.md and tag
+```
 
-## Current Status
+## Game data
 
-### Completed
+The Game Data, Sets, Skills, Cube, Stash and loot filter pages use JSON bundles generated from the ESR txt game files
+and committed under `public/game-data/`. CI never generates them. The generator reads a clone of the ESR repo at
+`../Eastern_Sun_Resurrected` (a sibling of this repo); `game-data:update` creates it on the first run.
 
-- Initial documentation structure created
-- Tech stack documented (React 19, Vite 7, shadcn/ui, Redux Toolkit + Saga, Dexie.js)
-- Architecture documented (folder structure, feature modules, single HTM-based data flow)
-- UI component guidelines (shadcn/ui usage, theming, dark/light modes, text size, Diablo font)
-- Coding guidelines (TypeScript, React, Redux conventions)
-- **Core Data feature** - HTM parsing for socketables, runewords, and unique items; app startup flow; version checking
-- **Runewords feature** - Filters (runes, sockets, item types, req level, tier points), gems/jewels support, per-column bonuses, share URLs
-- **Socketables feature** - 5 category checkboxes, text search, only highest quality filter, share URLs
-- **Unique Items feature** - HTM-based parsing from 3 pages, category groups, coupon detection, share URLs
-- **Navigation** - 11 routes + `*` not-found (runewords, gemwords, socketables, uniques, mythicals, ascendancies, builds pages), settings drawer with theme, text size, Diablo font
-- **Data Models** - Single Dexie database (d2r-esr-runeword-browser) with 11 tables (schema version 14)
-- **Sagas** - Redux Saga patterns (pipeline pattern, dynamic registration, parallel operations)
-- **Testing** - Vitest setup, unit tests, integration tests, database testing patterns, 9 fixture files
+```bash
+npm run game-data:update    # after an ESR release: clone/pull ESR, generate, fetch fixtures, run game-data tests + check
+npm run game-data:generate  # regenerate the bundles from the current clone
+npm run game-data:icons     # item icons (also reruns the bundles and skill icons)
+npm run game-data:skill-icons
+npm run game-data:check     # exit 1 if the committed bundles or icons are stale
+npm run esr:diff            # what changed in ESR since the committed game data
+```
 
-## Documentation Guidelines
+Item icons come from the mod's HD sprites. For items the mod has no art for, the generator falls back to vanilla D2R art
+extracted to `../d2r-vanilla-art` (not in git). That folder is optional: without it, `game-data:check` skips the
+vanilla-derived icons with a warning. Details: [Game Data → Regenerating](./features/GAME-DATA.md#regenerating).
 
-- All docs in Markdown format
-- Place files in appropriate subdirectory:
-  - `features/` - Feature specs, user stories
-  - `technical/` - Architecture, guidelines, tech stack
-- Update this file's status section after each session
-- Keep docs concise but comprehensive
+## Supabase environment
 
-## Notes for Claude
+Vite loads `.env.development` for `npm run dev` and `.env.production` for `npm run build`. Both are committed and hold
+only the Supabase URL and the publishable (anon) key, which ship in the browser bundle anyway; row-level security does
+the authorisation. Secrets (service-role keys, test user passwords for the maintenance scripts) go in `.env.local`,
+which git ignores. `.env.example` lists every variable. Setup of the Supabase projects:
+`builds-feature-docs/SUPABASE-SETUP.md`.
 
-When continuing documentation:
+## Code style
 
-1. Read this file first to understand current status
-2. Review existing docs in subdirectories for context
-3. Ask clarifying questions when requirements are ambiguous
-4. Suggest improvements to libraries, patterns, or approaches when relevant
-5. Update the status section after making changes
+- TypeScript with ESLint `strictTypeChecked`: no `!` non-null assertions, use real null checks.
+- React 19 with the React Compiler: do not add `useMemo`, `useCallback` or `React.memo` by hand unless the compiler
+  cannot cover the case, and then say why in a comment.
+- Prettier formats everything (single quotes, 140 print width, trailing commas).
+- More conventions: [Coding Guidelines](./technical/CODING-GUIDELINES.md), [Testing](./technical/TESTING.md).
+
+## Commits
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`,
+`refactor:`, `docs:`, `perf:`, `test:`), checked by commitlint in the `commit-msg` hook. The type decides the next
+version and the CHANGELOG section.
+
+The `pre-commit` hook runs:
+
+- a staged-file check that refuses save and stash files, logs, env files other than the three committed ones, and
+  files over 2 MB outside `public/game-data/`;
+- lint-staged: Prettier and ESLint on the staged source files;
+- a gitleaks secret scan of the staged changes;
+- an exiftool check that staged images and PDFs carry no identifying metadata (GPS position, author, owner).
+
+gitleaks and exiftool are optional: when one is missing, its check is skipped with a message. Install both with
+`brew install gitleaks exiftool`.
+
+## Releasing and deploying
+
+`npm run release` runs lint and the build, then `commit-and-tag-version` bumps `package.json`, writes CHANGELOG.md and
+creates a `vX.Y.Z` tag. Push the commit and the tag yourself. Deploying to GitHub Pages is a manual run of the
+"Deploy to GitHub Pages" workflow in the Actions tab; pushing to `master` does not deploy.
+
+## Documentation
+
+- [docs/README.md](./README.md): the index, data sources and routes.
+- `docs/features/`: one file per feature (behaviour, data, decisions, open questions).
+- `docs/technical/`: architecture, navigation, data models, sagas, UI components, testing.
+- `builds-feature-docs/`: the Supabase-backed features (builds, favourites, loot filter sharing) and the loot filter
+  format guide.
+
+Update the feature doc in the same change as the code it describes.

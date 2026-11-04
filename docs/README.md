@@ -14,7 +14,7 @@ Architecture decisions, coding guidelines, tech stack documentation, and impleme
 
 ## Quick Links
 
-- [Contributing & Documentation Process](./CONTRIBUTING.md) - How to continue documentation sessions
+- [Contributing](./CONTRIBUTING.md) - Setup, commands, game-data workflow, conventions and releasing
 
 ### Feature Documentation
 
@@ -27,8 +27,9 @@ Architecture decisions, coding guidelines, tech stack documentation, and impleme
 - [Loot Filter](./features/LOOT-FILTER.md) - Loot filter editor for ESR's loot filter plugin: shared and saved filters (Supabase), browser drafts, rule builder with game-data pickers, styles, label/sound/icon previews, JSON tab, test-item tab, download for the launcher
 - [Loot Filter backlog](./features/LOOT-FILTER-BACKLOG.md) - Deferred loot filter requests: what waits for an in-game check, what needs the plugin or the mod, what was decided against
 - [My Stash](./features/STASH.md) - Upload the ESR shared stash (.d2i), parsed and remembered in the browser only; Ancient Coupons page (`/stash`, `/stash/coupons`)
-  - [All Items](./features/STASH-ITEMS.md) - Every stash page item, searchable by name and stats (`/stash/items`, in progress); [roadmap](./features/STASH-ROADMAP.md)
+  - [All Items](./features/STASH-ITEMS.md) - Every stash page item, searchable by name and stats (`/stash/items`); [roadmap](./features/STASH-ROADMAP.md)
 - [Guide](./features/GUIDE.md) - New-player guide: markdown notes compiled into a static bundle, journey spine, data directives, staleness tracking
+- [Ideas backlog](./features/IDEAS-BACKLOG.md) - Open feature ideas not planned yet, open checks, and ideas decided against
 
 ### Technical Documentation
 
@@ -115,4 +116,4 @@ when either is stale. See [Guide](./features/GUIDE.md).
 
 ## Status
 
-Documentation is actively being maintained. See [CONTRIBUTING.md](./CONTRIBUTING.md) for current status and next steps.
+Documentation is actively being maintained. See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to set up, test and release.
