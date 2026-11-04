@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { avatarInitials, formatProfileTag } from '@/features/auth';
@@ -48,7 +49,7 @@ export function BuildCard({ build, currentEsrVersion, liked = false }: BuildCard
             className="relative z-10 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <Avatar className="size-5">
-              {author.avatar_url !== null && <AvatarImage src={author.avatar_url} alt="" />}
+              <ProfileAvatarImage url={author.avatar_url} />
               <AvatarFallback className="text-[10px]">{avatarInitials(author.display_name)}</AvatarFallback>
             </Avatar>
             <span className="max-w-[16ch] truncate">{formatProfileTag(author.display_name, author.discriminator)}</span>

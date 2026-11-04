@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** 2026-11-02
+**Last updated:** 2026-11-04
 
 This privacy policy explains what data I collect, why I collect it, and how you can control it. I've kept it short and written in plain language because I believe you shouldn't need a lawyer to understand how your data is handled.
 
@@ -44,6 +44,7 @@ I use [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) to s
 - I do not collect your IP address, precise location, or individual device information for my own purposes. Cloudflare Web Analytics only gives me aggregated country, browser and device-type counts.
 - I do not use cookies for tracking. The app only uses session tokens necessary for authentication.
 - Loot filters you have not saved (drafts) stay in your browser's local storage and are never sent to me. Only the **Save** button sends a filter to the server.
+- **Stash files** you open on the My Stash pages are read in your browser and kept in its local database (IndexedDB) so the page remembers them. They are never uploaded to me or anyone else.
 
 ## Why I Collect This Data
 
@@ -62,6 +63,8 @@ Account data serves one purpose: to let you save your builds and loot filters, s
 ## What Is Publicly Visible
 
 - Your **display name**, your **Discord avatar** (if you signed in with Discord), your **public builds** and your **public loot filters** (with their description, change note, like and download counts) are visible to all users (including unauthenticated visitors), who can also download those filters.
+- Your **profile** (display name, avatar, and when the account was created and when you accepted this policy) can be listed by anyone through the app's public API, even if you have not shared anything yet. A Discord avatar address contains your Discord user ID.
+- The app only shows avatar images hosted by Discord. Avatar addresses pointing anywhere else are not loaded.
 - Loot filters you mark **Private** are visible only to you. Likes stay attached to a filter you make private and count again if you make it public again.
 - Your **email address** is **never** visible to other users. It is stored in a separate, protected authentication system.
 - Your **likes** and **favourites**: the app itself only shows totals (like counts on builds and loot filters, favourite counts on items). However, the underlying records — which builds and public loot filters you liked and which items you favourited, linked to your account ID — are technically readable by anyone through the app's public API.
@@ -83,6 +86,15 @@ I use the following third-party services that may process your data:
 | Cloudflare | Anonymous traffic statistics (Web Analytics) | Page views, referrer, country, browser and device type (no cookies) |
 
 I do not share your data with anyone else. I do not sell your data. I never will.
+
+Like any website, the app is loaded from and fetches public files from a few hosts, which therefore see your IP address and browser details as part of the normal request (I receive none of this):
+
+| Host                                                | Why your browser contacts it                        |
+| --------------------------------------------------- | --------------------------------------------------- |
+| GitHub Pages (`istvan-panczel.github.io`)           | Serves the app itself                               |
+| GitHub (`raw.githubusercontent.com`)                | The ESR version check (the mod's launcher metadata) |
+| The official ESR site (`easternsunresurrected.com`) | The item, runeword and unique tables the app reads  |
+| Discord's CDN (`cdn.discordapp.com`)                | Avatar images of players who signed in with Discord |
 
 The app also links to external sites (the official ESR site, Discord and fan-made community tools) that are not operated by me and have their own privacy practices, which this policy does not cover.
 

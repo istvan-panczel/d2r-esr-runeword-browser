@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Download, GitFork, Heart, Lock, MessageSquareText } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -86,7 +87,7 @@ export function SharedFilterCard({ filter, badges, compact = false }: SharedFilt
         {author !== null ? (
           <Link to={`/user/${filter.user_id}`} className="inline-flex min-w-0 items-center gap-1.5 hover:text-foreground">
             <Avatar className="size-5">
-              {author.avatar_url !== null && <AvatarImage src={author.avatar_url} alt="" />}
+              <ProfileAvatarImage url={author.avatar_url} />
               <AvatarFallback className="text-[10px]">{avatarInitials(author.display_name)}</AvatarFallback>
             </Avatar>
             <span className="truncate">{formatProfileTag(author.display_name, author.discriminator)}</span>
