@@ -2,7 +2,7 @@
 
 The player uploads their ESR shared stash file and the app reads it in the browser. The first page is **Ancient
 Coupons**: the coupons the stash holds, the unique each makes, how many are needed, the Wild Card alternative and where
-every coupon lies. **All Items** (in progress, [STASH-ITEMS.md](./STASH-ITEMS.md)) lists every item on the stash pages.
+every coupon lies. **All Items** ([STASH-ITEMS.md](./STASH-ITEMS.md)) lists every item on the stash pages.
 More stash pages can be added on the same upload (see "Adding a stash page").
 
 Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/`, `screens/`). Data: `stash.json`

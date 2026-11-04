@@ -205,10 +205,11 @@ describe('crafting list edits', () => {
   });
 
   it('ignores a new entry past the cap', () => {
-    const full = Array.from(
-      { length: CRAFTS_MAX_PER_SLOT },
-      (_, index): CraftAnnotation => ({ kind: 'meld', material: `m${String(index)}`, uses: 1 })
-    );
+    const full = Array.from({ length: CRAFTS_MAX_PER_SLOT }, (_, index): CraftAnnotation => ({
+      kind: 'meld',
+      material: `m${String(index)}`,
+      uses: 1,
+    }));
     expect(addCraft(full, forge)).toBe(full);
   });
 

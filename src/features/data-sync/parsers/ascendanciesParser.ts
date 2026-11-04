@@ -1,12 +1,6 @@
 import type { Ascendancy, AscendancyTier } from '@/core/db';
+import { stripHtmlTags } from '@/lib/html';
 import { decodeHtmlEntities, mergeWrappedLines } from './shared/parserUtils';
-
-/**
- * Strips all HTML tags from a string, preserving text content.
- */
-function stripHtmlTags(html: string): string {
-  return html.replace(/<[^>]*>/g, '');
-}
 
 /**
  * Cleans a text string: strips HTML tags, decodes entities, normalizes whitespace, trims.

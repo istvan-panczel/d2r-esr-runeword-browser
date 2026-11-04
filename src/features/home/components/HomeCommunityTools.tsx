@@ -21,6 +21,7 @@ export function HomeCommunityTools() {
             label={tool.label}
             href={tool.href}
             description={tool.description}
+            features={tool.features}
             caveat={tool.caveat}
             sourceUrl={tool.sourceUrl}
             meta={

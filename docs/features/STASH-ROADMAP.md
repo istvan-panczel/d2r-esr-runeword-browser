@@ -1,9 +1,11 @@
 # My Stash: All Items roadmap
 
-Status: planned 2026-11-03, after v1.49.0 (Ancient Coupons). Branch `feat/stash-items`; one merge to master and one
-release after the owner has tested and we have iterated.
+Status: **shipped in v1.50.0** (2026-11-03). The stash upload and the Ancient Coupons page shipped before it in
+v1.49.0. Planned 2026-11-03 on branch `feat/stash-items`, merged to master in one release. What the page does now:
+[STASH-ITEMS.md](./STASH-ITEMS.md). Still open: the dropped ideas below and the in-game checks under "Risks and in-game
+checks".
 
-## Scope and owner decisions
+## Scope and owner decisions (shipped in v1.50.0)
 
 One new page, **All items** (`/stash/items`): every gear / page item in the stash, searchable for everything.
 
@@ -25,8 +27,11 @@ One new page, **All items** (`/stash/items`): every gear / page item in the stas
 - **Filters**: quality, category (weapon / armor / jewelry / charm / jewel / other via type chain), tier, page,
   ethereal, socketed / runeword. Sort by name, quality, ilvl, location, and by a chosen stat. State in the URL.
 - **Uniques / set items in my stash** = the quality filter; no separate pages.
+- Added during the build (v1.50.0): a **Coupon** quality value for Ancient Coupons, the Wild Card and blank coupons
+  (normal items by quality), socket filler bonuses, weapon damage and requirement lines, and lazy item names
+  (`stashnames.json`).
 
-Dropped (may come back later): runewords I can make, set tracker with missing pieces, materials page, builds panel,
+Dropped (still open, may come back later): runewords I can make, set tracker with missing pieces, materials page, builds panel,
 Chronicle tab, character `.d2s`, sharing, roll-quality %.
 
 ## Format facts found while planning (fixture-verified)
@@ -41,7 +46,7 @@ Chronicle tab, character `.d2s`, sharing, roll-quality %.
 - `uniqueId` / `setId` share the lootfilter.json id space; same-name uniques on other bases (Azurewrath `7cr` / `p30`)
   are separate rows.
 
-## Delivery
+## Delivery (done)
 
 ```
 master ── feat/stash-items ── Foundation (one agent)
@@ -84,7 +89,9 @@ the stash, table + card view, phone layout, home summary.
 
 ## Risks and in-game checks
 
-- Rare names decoding order (spot-check 3 rare names in game).
-- Crafted / tempered items: widths unverified (none in the fixture); a crafted item in the stash would help.
-- Stat text details: charges, life / mana shifts, poison totals, grouped damage lines.
-- Performance with ~2500 items and stat text search (measure in the fixture test; compute once per stash).
+- Open: rare names decoding order (spot-check 3 rare names in game).
+- Open: crafted / tempered items: widths unverified (none in the fixture); a crafted item in the stash would help.
+- Open: stat text details to check in game: charges, life / mana shifts, poison totals, grouped damage lines. The
+  fixture checks against the docs pages pass (STASH-ITEMS.md "Text"); the approximations are listed there.
+- Done: performance. The fixture's 2189 rows build in < 10 ms without stat text and the whole stash renders in
+  ~100 ms, once per stash.

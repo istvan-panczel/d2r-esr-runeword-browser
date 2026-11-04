@@ -5,7 +5,8 @@ import { HomeFooter } from '../components/HomeFooter';
 import { HomeOfficialLinks } from '../components/HomeOfficialLinks';
 import { HomeHero } from '../components/HomeHero';
 import { HomeSections } from '../components/HomeSections';
-import { HomeStartHere } from '../components/HomeStartHere';
+// Hidden for now, see the note in the JSX below.
+// import { HomeStartHere } from '../components/HomeStartHere';
 import { LatestBuilds } from '../components/LatestBuilds';
 import { LatestLootFilters } from '../components/LatestLootFilters';
 
@@ -22,7 +23,11 @@ export function HomeScreen() {
       <HomeSections />
       {isSupabaseEnabled && <LatestBuilds />}
       {isSupabaseEnabled && <LatestLootFilters />}
-      <HomeStartHere />
+      {/*
+        "New to ESR? Start here" (HomeStartHere) is hidden on purpose (2026-11-04): it no longer does its job of pointing
+        new players to the right place. The component is kept and will be revisited; restore the import above to show it.
+        <HomeStartHere />
+      */}
       <HomeOfficialLinks />
       <HomeCommunityTools />
       <HomeFooter />

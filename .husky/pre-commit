@@ -1,1 +1,7 @@
+sh scripts/check-staged-files.sh
 npx lint-staged
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --pre-commit --staged --redact --no-banner -v
+else
+  echo "gitleaks not installed (brew install gitleaks): secret scan skipped"
+fi

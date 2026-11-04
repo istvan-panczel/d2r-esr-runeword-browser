@@ -1,6 +1,7 @@
 import type { Runeword, Affix, SocketableBonuses, TierPointTotal, RuneCategory } from '@/core/db';
 import { parseRecipeAffixes } from './shared/parserUtils';
 import { isGemName } from './gemsParser';
+import { stripHtmlTags } from '@/lib/html';
 
 export interface RunePointInfo {
   points: number;
@@ -146,10 +147,7 @@ export function extractIngredients(cell: Element): ExtractedIngredients {
       const parts = innerHTML.split(/<br\s*\/?>/i);
       for (const part of parts) {
         // Strip any remaining HTML tags and normalize whitespace
-        const text = part
-          .replace(/<[^>]*>/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
+        const text = stripHtmlTags(part).replace(/\s+/g, ' ').trim();
         if (text) classifyAndAdd(text);
       }
     } else {
@@ -180,7 +178,7 @@ function extractJewelInfo(cell: Element): string | undefined {
   const optionalMatch = /\(\d+(?:-\d+)?\) Jewels?/.exec(cellText);
   if (optionalMatch) return optionalMatch[0];
 
-  const lines = cell.innerHTML.split(/<br\s*\/?>/i).map((line) => line.replace(/<[^>]*>/g, '').trim());
+  const lines = cell.innerHTML.split(/<br\s*\/?>/i).map((line) => stripHtmlTags(line).trim());
   const requiredJewels = lines.filter((line) => line === 'Jewel').length;
   if (requiredJewels === 0) return undefined;
   return `(${String(requiredJewels)}) Jewel${requiredJewels > 1 ? 's' : ''}`;
@@ -203,12 +201,7 @@ export function extractAllowedItems(cell: Element): AllowedItemsResult {
   const html = cell.innerHTML;
   const items = html
     .split(/<br\s*\/?>/i)
-    .map((item) =>
-      item
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-    )
+    .map((item) => stripHtmlTags(item).replace(/\s+/g, ' ').trim())
     .filter((item) => item.length > 0);
 
   const excludedIndex = items.findIndex((item) => item === 'Excluded:');

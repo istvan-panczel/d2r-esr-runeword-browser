@@ -124,14 +124,14 @@ describe('readItem (ESR extended layout)', () => {
     const item = readOne({
       code: 'xtp',
       sockets: 2,
-      personalized: 'Mefi',
+      personalized: 'Hero',
       runeword: { id: 63086, stats: [{ id: 107, param: 54, value: 2 }] },
       stats: [
         { id: 17, value: 30 },
         { id: 18, value: 30 },
       ],
     });
-    expect(item).toMatchObject({ personalizedName: 'Mefi', runewordId: 63086, sockets: 2 });
+    expect(item).toMatchObject({ personalizedName: 'Hero', runewordId: 63086, sockets: 2 });
     expect(item.runewordStats).toEqual([{ id: 107, param: 54, value: 2 }]);
     expect(item.stats).toHaveLength(2);
   });

@@ -12,8 +12,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "prettier:format-check": "prettier --check ./src",
-    "prettier:format-fix": "prettier --write ./src",
+    "prettier:format-check": "prettier --check .",
+    "prettier:format-fix": "prettier --write .",
     "prepare": "husky",
     "release": "npm run lint && npm run build && commit-and-tag-version -a",
     "compiler:check": "eslint ./src --rule 'react-hooks/incompatible-library: error' --rule 'react-hooks/unsupported-syntax: error'",
@@ -95,16 +95,15 @@
     ]
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
+    "*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix --no-warn-ignored"
     ],
-    "src/**/*.{js,jsx,json,css,md}": [
+    "*.{js,jsx,mjs,cjs,json,css,md,html,yml,yaml}": [
       "prettier --write"
     ],
-    "scripts/**/*.ts": [
-      "prettier --write",
-      "eslint --fix"
+    "*.{png,jpg,jpeg,webp,pdf}": [
+      "sh scripts/check-metadata.sh"
     ]
   },
   "dependencies": {

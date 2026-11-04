@@ -1,6 +1,6 @@
 # ESR Loot Filter Guide (reference copy)
 
-> Markdown transcription of the mod author's PDF guide, the copy shipped with ESR 3.2.20 (its date line still reads Oct 11, 2026), kept next to it as `ESR-Loot-Filter-Guide.pdf`. The PDF is authoritative where they differ.
+> Markdown transcription of the mod author's PDF guide, the copy shipped with ESR 3.2.20 (its date line still reads Oct 11, 2026), published in the ESR repository as [`LootFilters/ESR Loot Filter Guide.pdf`](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/blob/main/LootFilters/ESR%20Loot%20Filter%20Guide.pdf). The PDF is authoritative where they differ.
 
 Oct 11, 2026 · @Bogdan
 

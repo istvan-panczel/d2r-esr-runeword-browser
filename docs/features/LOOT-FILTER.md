@@ -122,8 +122,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   trailing commas are blanked to spaces, so `JSON.parse` offsets are the source's; when the engine's message has no
   position (V8's `Unexpected token ']'`) a small strict scanner finds it, so a syntax error carries its line and column.
   The serializer always writes strict JSON.
-- **A single-number level** (`"activeInLevels": 4`): the format wants a list, but the plugin accepts one number (Sully's
-  Ancient Scroll hide rule works in game), so the parser reads it as `[4]` with a warning at the key ("A single number
+- **A single-number level** (`"activeInLevels": 4`): the format wants a list, but the plugin accepts one number (verified in
+  game with the Ancient Scroll hide rule of Sully's template), so the parser reads it as `[4]` with a warning at the key ("A single number
   works in game; [4] is the documented form."), not an error. Any other wrong shape (`"4"`, an object) stays a
   wrong-shaped key in `passthrough` with an error. The rule keeps the editor-only `activeInLevelsNumber: 4` (never a
   key in the file), and the serializer writes `4` back while the levels are still exactly `[4]`, so a rule the user did
@@ -186,8 +186,8 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   check ("The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this
   rule…"). A presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) holds either way and
   gets none, so Sully's template (rules 29 and 30,
-  stats 218 and 219 `>= 1`) stays clean; those rules print `{stat:218}/8` in the name, which suggests Sully sees the
-  stored eighths in game. Disabled rules are validated like the
+  stats 218 and 219 `>= 1`) stays clean; those rules print `{stat:218}/8` in the name, which suggests the plugin prints
+  the stored eighths. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
@@ -326,7 +326,7 @@ filter with no rules. …") say the same in short.
   jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
   and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
-  `"activeInLevels": 4`, a number where the format wants a list. Sully confirmed the rule works in game, so the editor
+  `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
   reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
   single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
   Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
@@ -536,8 +536,8 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
   rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
   passthrough" block.
-- **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). A power user verifies
-  what the plugin reads by printing it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
+- **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). One way to verify
+  what the plugin reads is to print it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
   how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected
   rule (so the rule becomes N + 1) and selects it; a toast says so, and keyboard focus moves to the new editor's title
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
@@ -593,8 +593,8 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   key, so an exception is stored as its opposite check (`invertStatCheck` in `utils/statChecks.ts`: `>=`↔`<`,
   `>`↔`<=`, `==`↔`!=`; `between` has no single opposite) in an item stat list: "Keep items with any of these" →
   `itemStats` (every check must hold to hide, so one exception keeps the item), "Keep items with all of these" →
-  `itemStatsAnyOf` (one failing exception hides it). The control **owns those rows** (decided after a power user's
-  feedback, 2026-11: switching the mode did not move existing exceptions, they showed negated in the regular lists,
+  `itemStatsAnyOf` (one failing exception hides it). The control **owns those rows** (decided because, before that,
+  switching the mode did not move existing exceptions, they showed negated in the regular lists,
   the exceptions' Browse affixes saw only one side, and the regular Browse affixes added `>= 1` checks on hide rules):
   - The `<`, `<=` and `!=` checks of both lists (`isExceptionCheck`, `exceptionOf`) are listed here as `StatCheckRow`s
     in their natural form: the row shows `invertStatCheck(stored)` and writes back `storedException(edited)`, edits go
@@ -1044,8 +1044,8 @@ research doc and the Test tab's note link here.
   switches the rule off is not known (our evaluator: an empty `activeInLevels` is never active).
 - A rule with a wrong-shaped condition or action (`"sockets": "2"`) is switched off (the guide: "a rule with an
   error is switched off and logged"); unknown keys are ignored and the rule runs. The Test tab models both.
-- `"activeInLevels": 4` (one number instead of a list) works in game (Sully, 2026-11: his Ancient Scroll hide rule
-  hides them at level 4). We read it as `[4]`; still to check: are the scrolls shown at levels 1 to 3, i.e. the plugin
+- `"activeInLevels": 4` (one number instead of a list) works in game (verified with the template's Ancient Scroll
+  hide rule, which hides them at level 4). We read it as `[4]`; still to check: are the scrolls shown at levels 1 to 3, i.e. the plugin
   reads `[4]` rather than ignoring the key (backlog)?
 - Stats stored scaled (`engine/statScale.ts`): whether the plugin compares and prints the stored value (Life ×256,
   per-level stats in eighths) or the tooltip's. The validator warns about such checks; Check in game shows it

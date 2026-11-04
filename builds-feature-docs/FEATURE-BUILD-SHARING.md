@@ -78,6 +78,7 @@ Not needed at this scale. Adding it would introduce a second state management pa
 ### Sign-In UI
 
 Clicking the "Sign In" button opens a **Dialog modal** (centered overlay using the existing Dialog component) with:
+
 - **"Sign in with Discord"** button (primary, prominent)
 - Separator: "or"
 - **Email input** + **"Send magic link"** button
@@ -91,6 +92,7 @@ The dialog closes on successful auth initiation (Discord redirects away; magic l
 After first login, a **full-page modal overlay** is rendered (non-dismissible, covers the entire viewport). It cannot be closed — the user must accept to proceed.
 
 The overlay contains:
+
 - Privacy policy link + unchecked acceptance checkbox
 - Display name field (pre-filled from Discord username or "Adventurer")
 - "Continue" button (disabled until checkbox is checked)
@@ -102,13 +104,13 @@ The overlay contains:
 ```ts
 // Discord login
 const { error } = await supabase.auth.signInWithOAuth({
-  provider: 'discord'
-})
+  provider: 'discord',
+});
 
 // Magic link login
 const { error } = await supabase.auth.signInWithOtp({
-  email: userEmail
-})
+  email: userEmail,
+});
 ```
 
 ## Navigation & Header
@@ -149,17 +151,18 @@ No modal dialogs or page redirects — keep prompts lightweight and non-disrupti
 
 #### `profiles`
 
-| Column                     | Type      | Notes                                                                     |
-| -------------------------- | --------- | ------------------------------------------------------------------------- |
-| id                         | uuid (PK) | FK → `auth.users.id` with `ON DELETE CASCADE`                             |
-| display_name               | text      | Chosen by user, visible publicly                                          |
+| Column                     | Type      | Notes                                                                                                                                                                    |
+| -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| id                         | uuid (PK) | FK → `auth.users.id` with `ON DELETE CASCADE`                                                                                                                            |
+| display_name               | text      | Chosen by user, visible publicly                                                                                                                                         |
 | discriminator              | smallint  | Random 1000-9999, NOT NULL, DEFAULT `floor(random() * 9000 + 1000)::smallint`. On collision during display name change, retry with a new random value (max 10 attempts). |
-| avatar_url                 | text      | Optional, from Discord metadata                                           |
-| privacy_policy_accepted_at | timestamp | Set on first consent, required to use build features                      |
-| created_at                 | timestamp | Default `now()`                                                           |
-| updated_at                 | timestamp | Auto-updated                                                              |
+| avatar_url                 | text      | Optional, from Discord metadata                                                                                                                                          |
+| privacy_policy_accepted_at | timestamp | Set on first consent, required to use build features                                                                                                                     |
+| created_at                 | timestamp | Default `now()`                                                                                                                                                          |
+| updated_at                 | timestamp | Auto-updated                                                                                                                                                             |
 
 **Constraints:**
+
 - `UNIQUE(display_name, discriminator)` — prevents true duplicates while allowing same display names with different discriminators
 - Display format everywhere: `Name#1234` (always visible, like old Discord style)
 - On display name change, a new discriminator is generated. If the `(new_name, new_discriminator)` pair collides with an existing one, retry with a new random discriminator (up to 10 attempts before returning an error)
@@ -167,21 +170,22 @@ No modal dialogs or page redirects — keep prompts lightweight and non-disrupti
 
 #### `builds`
 
-| Column              | Type      | Notes                                                         |
-| ------------------- | --------- | ------------------------------------------------------------- |
-| id                  | uuid (PK) | Auto-generated                                                |
-| user_id             | uuid (FK) | References `profiles.id`                                      |
-| name                | text      | Build name (e.g., "Hammerdin MF")                             |
-| description         | text      | Optional notes/guide                                          |
-| class               | text      | Character class                                               |
-| build_data          | jsonb     | The actual build: item references with snapshots (see below)  |
-| esr_version         | text      | ESR version when the build was first created. Never changes.  |
-| esr_version_updated | text      | ESR version when last edited. Null if never edited.           |
-| likes_count         | integer   | Default `0`, updated via trigger                              |
-| created_at          | timestamp | Default `now()`                                               |
-| updated_at          | timestamp | Auto-updated via trigger (same as profiles)                   |
+| Column              | Type      | Notes                                                        |
+| ------------------- | --------- | ------------------------------------------------------------ |
+| id                  | uuid (PK) | Auto-generated                                               |
+| user_id             | uuid (FK) | References `profiles.id`                                     |
+| name                | text      | Build name (e.g., "Hammerdin MF")                            |
+| description         | text      | Optional notes/guide                                         |
+| class               | text      | Character class                                              |
+| build_data          | jsonb     | The actual build: item references with snapshots (see below) |
+| esr_version         | text      | ESR version when the build was first created. Never changes. |
+| esr_version_updated | text      | ESR version when last edited. Null if never edited.          |
+| likes_count         | integer   | Default `0`, updated via trigger                             |
+| created_at          | timestamp | Default `now()`                                              |
+| updated_at          | timestamp | Auto-updated via trigger (same as profiles)                  |
 
 **Constraints:**
+
 - `builds.user_id` → `profiles.id` with `ON DELETE CASCADE` (deleting a profile cascades to all their builds)
 - `updated_at` auto-set on every row update via trigger
 
@@ -189,12 +193,13 @@ All builds are public. There is no private/draft state.
 
 #### `likes`
 
-| Column   | Type      | Notes                                                        |
-| -------- | --------- | ------------------------------------------------------------ |
-| build_id | uuid (FK) | References `builds.id` with `ON DELETE CASCADE`              |
-| user_id  | uuid (FK) | References `profiles.id` with `ON DELETE CASCADE`            |
+| Column   | Type      | Notes                                             |
+| -------- | --------- | ------------------------------------------------- |
+| build_id | uuid (FK) | References `builds.id` with `ON DELETE CASCADE`   |
+| user_id  | uuid (FK) | References `profiles.id` with `ON DELETE CASCADE` |
 
 **Constraints:**
+
 - `PRIMARY KEY (build_id, user_id)` — composite PK, enforces one like per user per build
 - Cascading deletes: deleting a build removes all its likes; deleting a profile removes all their likes
 
@@ -207,6 +212,7 @@ The database stores **typed item references** with full item snapshots. Each equ
 There are six types of item references:
 
 **Unique item** — references a unique item from `htmUniqueItems`, includes a full snapshot of the item's stats at the time the build was created/edited. The stored `id` is informational only: the local auto-increment ID is reassigned on every data re-sync, so the item is resolved by snapshot `name` and, among same-name variants, by snapshot similarity (base item, category, properties, level — see `utils/itemLookup.ts`):
+
 ```json
 {
   "type": "unique",
@@ -224,6 +230,7 @@ There are six types of item references:
 Snapshot fields for uniques: `name`, `baseItem`, `category`, `reqLevel`, `properties` (stored as strings — the `rawText` values from `Affix` objects where applicable). Other `htmUniqueItems` fields (`baseItemCode`, `itemLevel`, `isAncientCoupon`, `gambleItem`) are not included — they're not useful for display on a build page.
 
 **Mythical unique** — references a mythical unique item from `mythicalUniques` (resolved by name + snapshot similarity, like uniques), includes a snapshot:
+
 ```json
 {
   "type": "mythical",
@@ -241,6 +248,7 @@ Snapshot fields for uniques: `name`, `baseItem`, `category`, `reqLevel`, `proper
 Snapshot fields for mythicals: `name`, `baseItem`, `category`, `reqLevel`, `properties` (matching the unique snapshot structure for consistent display), plus `specialProperties` (the orange special-effect lines, shown before `properties`). `specialProperties` is optional: snapshots saved before it existed lack it, and the diff logic treats those legacy snapshots as unchanged when their text still matches.
 
 **Runeword** — references a runeword by its compound key (`name` + `variant`), includes a full snapshot:
+
 ```json
 {
   "type": "runeword",
@@ -264,6 +272,7 @@ Snapshot fields for mythicals: `name`, `baseItem`, `category`, `reqLevel`, `prop
 Snapshot stores all three bonus columns from `columnAffixes`. Each column's affixes are stored as `rawText` strings extracted from the `Affix` objects. The display logic picks the correct column based on which equipment slot the runeword occupies (e.g., armor slot → `armorShieldsBelts`). Storing all three columns ensures snapshots survive slot changes during edits.
 
 **Gemword** — references a gemword by its compound key (`name` + `variant`), includes a full snapshot. Gemwords were added to the app (post-initial-design) and behave like runewords but use gems instead of runes:
+
 ```json
 {
   "type": "gemword",
@@ -286,6 +295,7 @@ Snapshot stores all three bonus columns from `columnAffixes`. Each column's affi
 Gemword snapshots store all three bonus columns (same as runewords) as `rawText` strings; the display picks the column for the equipment slot. Gemwords have no `runes` field — the recipe is in `gems`.
 
 **Set item** — references a set item from the static game-data bundle `public/game-data/sets.json` (generated from ESR's `sets.txt` / `setitems.txt`, not the parsed HTML in IndexedDB). Set item names are unique across the bundle, so the `name` is the key; `setId` (the `sets.txt` index) groups equipped pieces for the set bonuses, since the hireling sets share their display name across difficulties:
+
 ```json
 {
   "type": "set",
@@ -298,7 +308,10 @@ Gemword snapshots store all three bonus columns (same as runewords) as `rawText`
     "category": "Circlet",
     "reqLevel": 16,
     "properties": ["+10% Faster Cast Rate", "+(2 to 4) to Fire Ball (Sorceress Only)", "..."],
-    "partial": [{ "pieces": 2, "lines": ["10% Chance to Cast Level 4 Elemental Nova when Struck", "Replenish Life +17"] }, { "pieces": 3, "lines": ["..."] }]
+    "partial": [
+      { "pieces": 2, "lines": ["10% Chance to Cast Level 4 Elemental Nova when Struck", "Replenish Life +17"] },
+      { "pieces": 3, "lines": ["..."] }
+    ]
   }
 }
 ```
@@ -306,6 +319,7 @@ Gemword snapshots store all three bonus columns (same as runewords) as `rawText`
 Snapshot fields for set items: `name`, `setName`, `setId`, `baseItem` (the base's name), `category` (the base's item type name from `types.json`), `reqLevel`, `properties` (the item's own lines) and `partial` (the item's own partial bonuses: group `pieces` is active while that many items of the set are worn). The set-wide partial and full-set bonuses are not snapshotted; the detail page reads them from the bundle. `properties` and each group's `lines` compare as whole text for the version diff, like unique properties. The bundle is fetched over the network, so a failed load never marks a set item as missing: the diff keeps the stored ref (shown as unchanged) and an edit keeps the saved snapshot.
 
 **Freetext** — user-typed name for items not in the database (rares, crafted, magic items). No snapshot:
+
 ```json
 {
   "type": "freetext",
@@ -313,7 +327,7 @@ Snapshot fields for set items: `name`, `setName`, `setId`, `baseItem` (the base'
 }
 ```
 
-**Author choices: `base` and `socketed` (optional).** Two optional fields record what the author chose for an item. They are *author choices, not snapshots*:
+**Author choices: `base` and `socketed` (optional).** Two optional fields record what the author chose for an item. They are _author choices, not snapshots_:
 
 - `base` (runeword refs only): `{ "code": "kit", "name": "Kite Shield" }`, the runeword's base item; `code` is the `public/game-data/bases.json` code, `name` its display name at save time (shown as is when the code no longer resolves).
 - `socketed` (unique, mythical, runeword and set refs): the socket fillers in socket order, as names: `["Ko Rune", "Perfect Ruby", "Rainbow Facet"]`. Rune / gem / crystal / unique jewel names from the local data, or any free text. Gemwords (their sockets are the recipe) and freetext items (nothing to attach to) never carry it.
@@ -336,11 +350,11 @@ Snapshot fields for set items: `name`, `setName`, `setId`, `baseItem` (the base'
 
 ```ts
 type CraftAnnotation =
-  | { kind: 'corruption'; slot: string; roll: number }      // enhance.json corruptionOutcomes (slot id + 1-based roll)
-  | { kind: 'anointment'; pool: string; roll: number }      // enhance.json anointmentOutcomes (pool + roll value)
+  | { kind: 'corruption'; slot: string; roll: number } // enhance.json corruptionOutcomes (slot id + 1-based roll)
+  | { kind: 'anointment'; pool: string; roll: number } // enhance.json anointmentOutcomes (pool + roll value)
   | { kind: 'forge'; forge: 'skill' | 'all' | 'stat' | 'rune' | 'aura'; key: string } // crafting.json forgings
-  | { kind: 'dstone'; material: string; switchItem?: string; uses: number }           // crafting.json stacking (D-stoning)
-  | { kind: 'meld'; material: string; uses: number };                                 // crafting.json stacking (gem melding)
+  | { kind: 'dstone'; material: string; switchItem?: string; uses: number } // crafting.json stacking (D-stoning)
+  | { kind: 'meld'; material: string; uses: number }; // crafting.json stacking (gem melding)
 ```
 
 - **Ids, never text.** Every field is an id into a game-data bundle (`crafting.json`, `enhance.json`); the detail page renders the title and bonus lines from the viewer's current bundles (`utils/crafts.ts`, `renderCraft`), so a rebalanced forging shows its current values and no stored text can be spoofed or go out of date. The free-text notes stay as they are, for explanations ("D-Stone until very fast attack speed"); both are shown.
@@ -370,8 +384,21 @@ type CraftAnnotation =
 ```json
 {
   "items": {
-    "helmet": { "type": "unique", "id": 42, "snapshot": { "name": "Harlequin Crest", "baseItem": "Shako", "properties": ["..."] }, "socketed": ["Ber Rune"] },
-    "armor": { "type": "runeword", "name": "Enigma", "variant": 1, "snapshot": { "runes": ["Jah", "Ith", "Ber"], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } } },
+    "helmet": {
+      "type": "unique",
+      "id": 42,
+      "snapshot": { "name": "Harlequin Crest", "baseItem": "Shako", "properties": ["..."] },
+      "socketed": ["Ber Rune"]
+    },
+    "armor": {
+      "type": "runeword",
+      "name": "Enigma",
+      "variant": 1,
+      "snapshot": {
+        "runes": ["Jah", "Ith", "Ber"],
+        "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] }
+      }
+    },
     "weapon": { "type": "unique", "id": 105, "snapshot": { "name": "Grief", "baseItem": "Phase Blade", "properties": ["..."] } },
     "shield": { "type": "unique", "id": 78, "snapshot": { "name": "Herald of Zakarum", "properties": ["..."] } },
     "gloves": { "type": "freetext", "name": "3/20 rare java gloves" },
@@ -382,13 +409,34 @@ type CraftAnnotation =
     "ring2": { "type": "unique", "id": 215, "snapshot": { "name": "Bul-Kathos' Wedding Band", "properties": ["..."] } }
   },
   "weaponSwap": {
-    "weapon2": { "type": "runeword", "name": "Call to Arms", "variant": 1, "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } } },
-    "shield2": { "type": "runeword", "name": "Spirit", "variant": 1, "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } }, "base": { "code": "kit", "name": "Kite Shield" } }
+    "weapon2": {
+      "type": "runeword",
+      "name": "Call to Arms",
+      "variant": 1,
+      "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } }
+    },
+    "shield2": {
+      "type": "runeword",
+      "name": "Spirit",
+      "variant": 1,
+      "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } },
+      "base": { "code": "kit", "name": "Kite Shield" }
+    }
   },
   "mercenary": {
     "helmet": { "type": "unique", "id": 150, "snapshot": { "name": "Andariel's Visage", "properties": ["..."] } },
-    "armor": { "type": "runeword", "name": "Fortitude", "variant": 1, "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } } },
-    "weapon": { "type": "runeword", "name": "Infinity", "variant": 1, "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } } },
+    "armor": {
+      "type": "runeword",
+      "name": "Fortitude",
+      "variant": 1,
+      "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } }
+    },
+    "weapon": {
+      "type": "runeword",
+      "name": "Infinity",
+      "variant": 1,
+      "snapshot": { "runes": ["..."], "columnAffixes": { "weaponsGloves": ["..."], "helmsBoots": ["..."], "armorShieldsBelts": ["..."] } }
+    },
     "shield": null,
     "gloves": null,
     "boots": null,
@@ -399,7 +447,10 @@ type CraftAnnotation =
   },
   "itemNotes": { "weapon": "Ko forge first, then D-stone to the attack speed breakpoint" },
   "itemCrafts": {
-    "weapon": [{ "kind": "forge", "forge": "rune", "key": "r19" }, { "kind": "dstone", "material": "ppp", "uses": 3 }]
+    "weapon": [
+      { "kind": "forge", "forge": "rune", "key": "r19" },
+      { "kind": "dstone", "material": "ppp", "uses": 3 }
+    ]
   },
   "charms": ["Annihilus", "Hellfire Torch", "9x Paladin Combat GCs", "Gheed's Fortune"],
   "ascendancy": "Battlemage",
@@ -410,6 +461,7 @@ type CraftAnnotation =
 ```
 
 **Slot summary:**
+
 - **Player gear**: 10 slots (helmet, armor, weapon, shield, gloves, boots, belt, amulet, ring1, ring2)
 - **Weapon swap**: 2 slots (weapon2, shield2)
 - **Mercenary gear**: 10 slots (same as player — ESR gives mercs full equipment)
@@ -561,13 +613,13 @@ Complete list: Battlemage, Blademaster, Arcanist, Bloodmage, Awakened, Ironbolt,
 
 ### New Routes
 
-| Route                    | Screen                        | Access                                                        |
-| ------------------------ | ----------------------------- | ------------------------------------------------------------- |
-| `/builds`                | Builds listing / browse screen | Public (anyone can browse)                                   |
-| `/builds/new`            | Build creation form           | Authenticated only (redirects to `/builds` if not logged in)  |
-| `/builds/:buildId/edit`  | Build editing form            | Authenticated, owner only (redirects to `/builds` if not)     |
-| `/build/:buildId`        | Individual build detail page  | Public                                                        |
-| `/user/:userId`          | Author profile page           | Public                                                        |
+| Route                   | Screen                         | Access                                                       |
+| ----------------------- | ------------------------------ | ------------------------------------------------------------ |
+| `/builds`               | Builds listing / browse screen | Public (anyone can browse)                                   |
+| `/builds/new`           | Build creation form            | Authenticated only (redirects to `/builds` if not logged in) |
+| `/builds/:buildId/edit` | Build editing form             | Authenticated, owner only (redirects to `/builds` if not)    |
+| `/build/:buildId`       | Individual build detail page   | Public                                                       |
+| `/user/:userId`         | Author profile page            | Public                                                       |
 
 ### Auth-Protected Route Behavior
 
@@ -575,13 +627,13 @@ Unauthenticated users navigating directly to `/builds/new` or `/builds/:buildId/
 
 ### Existing Routes (unchanged)
 
-| Route | Screen |
-| ----- | ------ |
-| `/` | Runewords browser (home) |
-| `/socketables` | Socketables browser |
-| `/uniques` | Unique items browser |
-| `/mythicals` | Mythical uniques browser |
-| `/ascendancies` | Ascendancies browser |
+| Route           | Screen                   |
+| --------------- | ------------------------ |
+| `/`             | Runewords browser (home) |
+| `/socketables`  | Socketables browser      |
+| `/uniques`      | Unique items browser     |
+| `/mythicals`    | Mythical uniques browser |
+| `/ascendancies` | Ascendancies browser     |
 
 ## Builds Listing Screen (`/builds`)
 
@@ -611,6 +663,7 @@ Minimal card design — optimized for scanning:
 ```
 
 Each card shows:
+
 - Build name
 - Character class
 - Small author avatar (20-24px) + display name with discriminator (clickable, links to `/user/:userId`)
@@ -634,6 +687,7 @@ No ascendancy filter — keep it simple.
 **Cursor-based pagination** with 50 builds per batch. Load more as the user scrolls down (infinite scroll). List pages select only the columns the cards render (no `build_data` / `description`); the detail page fetches the full row. A failed load-more keeps the loaded list, pauses infinite scroll and shows an inline Retry (no automatic retry). A refetch (filter/sort change) cancels any in-flight load-more so a stale page is never appended. Cursor-based pagination is used instead of offset-based to avoid missed or duplicated items when `likes_count` changes between page fetches.
 
 **Cursor strategy per sort mode:**
+
 - **Newest first**: Cursor is `(created_at, id)` — both are immutable, so ordering is stable
 - **Most liked**: Cursor is `(likes_count, created_at, id)` — `likes_count` can change between fetches, but the triple cursor minimizes duplicates. Acceptable trade-off for v1.
 
@@ -723,6 +777,7 @@ On small screens (below `md` breakpoint), the equipment grid stacks to a **verti
 Each equipment slot uses an **inline autocomplete** picker. Clicking a slot turns it into a search input. The user types to search the app's existing local item database (**unique items**, **mythical uniques**, **runewords**, and **gemwords**) and the **set items** of the `sets.json` game-data bundle (matched by item or set name). If the desired item isn't found, the user can type a custom name for rares, crafted, or magic items (stored as freetext).
 
 **Autocomplete result presentation:** Results are **grouped by type** using `cmdk` Command component's native group support. Five sections appear in order:
+
 1. **Unique Items** — from `htmUniqueItems`
 2. **Mythical Uniques** — from `mythicalUniques`
 3. **Set Items** — from `public/game-data/sets.json` (each row: green item name, base, and the set name below; the group is empty while the bundle loads or if it fails to load)
@@ -732,6 +787,7 @@ Each equipment slot uses an **inline autocomplete** picker. Clicking a slot turn
 Only groups with matches are shown. Empty groups are hidden.
 
 **Runeword variant display:** Runewords with multiple variants show their full `allowedItems` list in parentheses to distinguish them:
+
 - `Grief (Phase Blade, Berserker Axe)` vs `Grief (Sword, Axe)`
 - `Spirit (Sword)` vs `Spirit (Shield)`
 
@@ -782,6 +838,7 @@ Only groups with matches are shown. Empty groups are hidden.
 ```
 
 When a user selects an item from the autocomplete:
+
 - **Unique item**: The reference stores the item's `id` (auto-increment PK from `htmUniqueItems`, informational only — lookups go by snapshot name + similarity) and a full snapshot of its current stats
 - **Mythical unique**: The reference stores the item's `id` (from `mythicalUniques`, informational only, as above) and a full snapshot — same display structure as regular uniques
 - **Runeword**: The reference stores the runeword's `name` and `variant` (compound key) and a full snapshot of its current stats
@@ -795,12 +852,12 @@ When a user selects an item from the autocomplete:
 - **Socket fillers**: "Sockets (n/N)" (runewords: "Jewel sockets") with a chip per filler and an "Add…" picker grouped as ESR Runes, LoD Runes, Kanji Runes, Gems, Crystals, Unique Jewels (`htmUniqueItems` category `Jewel`) and Custom (free text). Only names are stored.
 - **Caps** (`utils/sockets.ts`): a runeword's free sockets are its jewel sockets only: the largest `jewels` of the matched txt rows (narrowed to the rows the chosen base can hold), else the HTM recipe (`socketsMax - sockets`, or the "(N) Jewels" line), else 0, in which case the filler row is hidden. Uniques, mythicals and set items are capped by slot family:
 
-| Slot | Max fillers |
-| --- | --- |
-| Weapon, Weapon 2, Shield, Shield 2, Armor | 6 |
-| Helmet | 4 |
-| Gloves, Boots, Belt | 2 |
-| Amulet, Ring 1, Ring 2 | 1 |
+| Slot                                      | Max fillers |
+| ----------------------------------------- | ----------- |
+| Weapon, Weapon 2, Shield, Shield 2, Armor | 6           |
+| Helmet                                    | 4           |
+| Gloves, Boots, Belt                       | 2           |
+| Amulet, Ring 1, Ring 2                    | 1           |
 
 **Crafting.** Under the item card (above the note) a "Crafting" row shows a chip per annotation (its rendered title, × to remove; D-stoning and meld chips also get − / + to change `uses`, 1..99) and an "Add…" picker (`components/CraftsEditor.tsx`), searchable over labels and bonus lines, with groups: Corruption and Anointment (the outcomes of the slot's enhance slot, labelled by their first line; hidden once one is set), Forging (options whose `bySlot` has the slot family: "Rune Forging · Ko Rune" with the slot's line muted; hidden once a forging is set), D-stoning and Gem melding (picking one adds `uses: 1`, or increments `uses` if that material + switch item is already there). The row shows only for a filled slot and is hidden at 8 annotations. The form loads `crafting.json` + `enhance.json` once (`hooks/useCraftData.ts`) and passes them down to the slots.
 
@@ -827,7 +884,7 @@ All sections visible on one scrollable page (no wizard, no collapsible sections)
 
 7. **Skills** — Freetext area for describing skill allocation, then the level and skill tree block (`components/SkillTreeEditor.tsx`):
    - **Level**: number input (1..`maxLevel` from `skills.json`, 110 as fallback); blank = unset. An out-of-range or non-integer value shows a "1–110" hint and disables Save.
-   - **Skill tree**: "Pick a class to allocate skill points." until a class is chosen; a skeleton line while `skills.json` + `skilldetails.json` load; "Skill tree unavailable" if they fail (the freetext still works). With a class: a "N points spent" header (every stored point) and the same tree layout as the detail page (`BuildSkillTrees`, remounted on a class change): the three tab cards of 6 × 3 icon tiles (each title and tab pill shows its points when > 0), side by side from `lg` with a sticky right column, one tab at a time behind pills below that. Tiles carry no buttons: clicking one selects it (ring + prerequisite / unlocked marks, as on the Skills page) and the right column shows its detail card with the point controls right under the header: "−  n/20  +  Set to 20  0". − is disabled at 0, + at 99 (not at the skill's max level), "Set to 20" sets the skill straight to its max level and "0" clears it; a count above the max level is amber (in the counter and the tile's corner badge). No level or prerequisite rule is enforced. While nothing is selected the column shows "Pick a skill to allocate points." (from `lg`). The controls are disabled while saving. "Reset points" (shown when the class has points) clears this class's points. After a class change, ids outside the new tree raise "N points belong to another class" with a "Clear them" button.
+   - **Skill tree**: "Pick a class to allocate skill points." until a class is chosen; a skeleton line while `skills.json` + `skilldetails.json` load; "Skill tree unavailable" if they fail (the freetext still works). With a class: a "N points spent" header (every stored point) and the same tree layout as the detail page (`BuildSkillTrees`, remounted on a class change): the three tab cards of 6 × 3 icon tiles (each title and tab pill shows its points when > 0), side by side from `lg` with a sticky right column, one tab at a time behind pills below that. Tiles carry no buttons: clicking one selects it (ring + prerequisite / unlocked marks, as on the Skills page) and the right column shows its detail card with the point controls right under the header: "− n/20 + Set to 20 0". − is disabled at 0, + at 99 (not at the skill's max level), "Set to 20" sets the skill straight to its max level and "0" clears it; a count above the max level is amber (in the counter and the tile's corner badge). No level or prerequisite rule is enforced. While nothing is selected the column shows "Pick a skill to allocate points." (from `lg`). The controls are disabled while saving. "Reset points" (shown when the class has points) clears this class's points. After a class change, ids outside the new tree raise "N points belong to another class" with a "Clear them" button.
    - Below `lg` the detail card sits under the trees and a tap scrolls to it; at phone width each tab keeps its 3 columns of tiles.
 
 ### Save
@@ -837,6 +894,7 @@ Single **"Save Build"** button. The build goes live immediately — no draft sta
 **Save failure:** If the save request fails (network error, Supabase paused), show an error toast and keep the form open with all data intact. Do not clear or navigate away.
 
 On save, the app automatically:
+
 - Sets `esr_version` to the current ESR version from local IndexedDB metadata (on create)
 - Sets `esr_version_updated` to the current ESR version (on edit)
 - Captures full item snapshots for all referenced items (unique/mythical/set/runeword/gemword) at the current point in time
@@ -864,15 +922,15 @@ Browser `beforeunload` prompt when navigating away from the create/edit form wit
 
 ### Field Limits
 
-| Field | Required | Min | Max |
-|-------|----------|-----|-----|
-| Build name | Yes | 1 | 100 characters |
-| Description | No | — | 2000 characters |
-| Skills freetext | No | — | 2000 characters |
-| Level | No | 1 | 110 (integer) |
-| Skill points (per skill) | No | 1 | 99 (integer; at most 60 skills, ids ≤ 100 chars) |
-| Charm entry | Yes (per entry) | 1 | 100 characters |
-| Display name | Yes | 1 | 50 characters |
+| Field                    | Required        | Min | Max                                              |
+| ------------------------ | --------------- | --- | ------------------------------------------------ |
+| Build name               | Yes             | 1   | 100 characters                                   |
+| Description              | No              | —   | 2000 characters                                  |
+| Skills freetext          | No              | —   | 2000 characters                                  |
+| Level                    | No              | 1   | 110 (integer)                                    |
+| Skill points (per skill) | No              | 1   | 99 (integer; at most 60 skills, ids ≤ 100 chars) |
+| Charm entry              | Yes (per entry) | 1   | 100 characters                                   |
+| Display name             | Yes             | 1   | 50 characters                                    |
 
 ### Display Name Validation
 
@@ -891,6 +949,7 @@ Browser `beforeunload` prompt when navigating away from the create/edit form wit
 ### Rate Limiting
 
 No custom rate limiting for v1:
+
 - Supabase built-in API rate limiting (~100 req/s per IP) is sufficient
 - `UNIQUE(build_id, user_id)` constraint prevents double-liking
 - Auth endpoints have Supabase built-in rate limits (email send limits, OAuth is naturally rate-limited by the redirect flow)
@@ -933,6 +992,7 @@ Every build card on the listing shows an **ESR version badge** (e.g., "ESR 3.9.0
 ### Profile Editing (owner only)
 
 When viewing your own profile, an **"Edit Profile"** button is shown:
+
 - Change display name (within validation limits) — generates a new discriminator
 - Account deletion link (navigates to the account deletion flow)
 
@@ -942,40 +1002,44 @@ The project uses **shadcn/ui** patterns (Radix UI primitives + Tailwind CSS + CV
 
 ### Existing Components Reused
 
-| Component | Used For |
-|-----------|---------|
-| **Button** | Create Build, Save, Delete, Sign In, Like, nav actions |
-| **Badge** | Class badge on build cards, like count, version diff warning badges |
-| **Card** | Build cards on listing, equipment slot cards (mobile) |
-| **Dialog** | Delete build confirmation, account deletion |
-| **Input** | Build name, search on listing |
-| **Label** | Form field labels on create form |
-| **Popover** | Auth prompts (sign-in to like/create), help buttons |
-| **Sheet** | Mobile nav (add Builds link + auth items to existing) |
-| **Textarea** | Build description, skills freetext |
-| **Spinner** | Loading states |
-| **InputGroup** | Search input on builds listing |
+| Component      | Used For                                                            |
+| -------------- | ------------------------------------------------------------------- |
+| **Button**     | Create Build, Save, Delete, Sign In, Like, nav actions              |
+| **Badge**      | Class badge on build cards, like count, version diff warning badges |
+| **Card**       | Build cards on listing, equipment slot cards (mobile)               |
+| **Dialog**     | Delete build confirmation, account deletion                         |
+| **Input**      | Build name, search on listing                                       |
+| **Label**      | Form field labels on create form                                    |
+| **Popover**    | Auth prompts (sign-in to like/create), help buttons                 |
+| **Sheet**      | Mobile nav (add Builds link + auth items to existing)               |
+| **Textarea**   | Build description, skills freetext                                  |
+| **Spinner**    | Loading states                                                      |
+| **InputGroup** | Search input on builds listing                                      |
 
 ### New Components to Add
 
 #### Critical (required for core feature)
 
 **DropdownMenu** — signed-in user menu in header
+
 - Contains: My Builds, Profile, Sign Out
 - Radix: `@radix-ui/react-dropdown-menu`
 - Install: `npx shadcn@latest add dropdown-menu`
 
 **Avatar** — user avatar display
+
 - Used in: header user button, build cards (author), build detail, author profile page
 - Radix: `@radix-ui/react-avatar`
 - Install: `npx shadcn@latest add avatar`
 
 **Select** — dropdown selects
+
 - Used for: class filter on listing, sort dropdown, class picker on create form, ascendancy picker
 - Radix: `@radix-ui/react-select`
 - Install: `npx shadcn@latest add select`
 
 **Command (Combobox)** — inline autocomplete item picker
+
 - Used for: equipment slot pickers on create/edit form. Searches local item database (uniques, mythical uniques, runewords, and gemwords) with freetext fallback for custom item names.
 - Dependencies: `cmdk` + existing Popover (combined into "Combobox" pattern per shadcn/ui docs)
 - Install: `npx shadcn@latest add command`
@@ -984,11 +1048,13 @@ The project uses **shadcn/ui** patterns (Radix UI primitives + Tailwind CSS + CV
 #### Important (loading/feedback UX)
 
 **Skeleton** — loading placeholder
+
 - Used for: build card skeletons while loading, build detail skeleton while fetching
 - Dependencies: none (pure Tailwind animation)
 - Install: `npx shadcn@latest add skeleton`
 
 **Sonner (Toast)** — feedback notifications
+
 - Used for: build saved, build deleted, like toggled, errors, "link copied"
 - Dependencies: `sonner`
 - Install: `npx shadcn@latest add sonner`
@@ -996,6 +1062,7 @@ The project uses **shadcn/ui** patterns (Radix UI primitives + Tailwind CSS + CV
 #### Nice-to-have
 
 **Tooltip** — hover hints
+
 - Used for: equipment slot labels in grid, short hints, version diff badge details
 - Radix: `@radix-ui/react-tooltip`
 - Install: `npx shadcn@latest add tooltip`
@@ -1003,13 +1070,13 @@ The project uses **shadcn/ui** patterns (Radix UI primitives + Tailwind CSS + CV
 
 ### Components NOT Needed
 
-| Component | Why |
-|-----------|-----|
-| Tabs | Builds listing uses a toggle, not tabs |
-| Switch/Toggle | "My Builds" can use a Button toggle |
-| Separator | Tailwind border utilities suffice |
-| ScrollArea | Native scrolling is fine |
-| Alert | Warning banners use simple styled divs |
+| Component     | Why                                    |
+| ------------- | -------------------------------------- |
+| Tabs          | Builds listing uses a toggle, not tabs |
+| Switch/Toggle | "My Builds" can use a Button toggle    |
+| Separator     | Tailwind border utilities suffice      |
+| ScrollArea    | Native scrolling is fine               |
+| Alert         | Warning banners use simple styled divs |
 
 ### New Dependencies
 
@@ -1030,18 +1097,18 @@ sonner                           (toast notifications)
 
 ### Component-to-Feature Map
 
-| Feature Area | Existing | New |
-|-------------|----------|-----|
-| Header (signed out) | Button, Sheet | — |
-| Header (signed in) | Button, Sheet | DropdownMenu, Avatar |
-| Auth prompts | Popover | Tooltip (optional) |
-| Builds listing | Card, Badge, InputGroup, Button, Spinner | Select, Skeleton |
-| Build card | Card, Badge, Button | Avatar |
-| Build detail (gear grid) | Card, Badge | Tooltip |
-| Build detail (interactions) | Button, Popover, Dialog | Sonner |
-| Build detail (version diff) | Badge | Tooltip |
-| Build create/edit form | Input, Textarea, Label, Button | Select, Command |
-| Author profile | Card, Badge | Avatar |
+| Feature Area                | Existing                                 | New                  |
+| --------------------------- | ---------------------------------------- | -------------------- |
+| Header (signed out)         | Button, Sheet                            | —                    |
+| Header (signed in)          | Button, Sheet                            | DropdownMenu, Avatar |
+| Auth prompts                | Popover                                  | Tooltip (optional)   |
+| Builds listing              | Card, Badge, InputGroup, Button, Spinner | Select, Skeleton     |
+| Build card                  | Card, Badge, Button                      | Avatar               |
+| Build detail (gear grid)    | Card, Badge                              | Tooltip              |
+| Build detail (interactions) | Button, Popover, Dialog                  | Sonner               |
+| Build detail (version diff) | Badge                                    | Tooltip              |
+| Build create/edit form      | Input, Textarea, Label, Button           | Select, Command      |
+| Author profile              | Card, Badge                              | Avatar               |
 
 ## Integration into Existing App
 
@@ -1134,16 +1201,17 @@ Data export for GDPR compliance is handled manually by a developer for v1. No in
 
 Two separate Supabase projects are used:
 
-| Environment | Purpose | Users |
-|-------------|---------|-------|
-| **PROD** | Published to real users | Real community members |
-| **DEV** | Development and testing | Solo developer + test accounts |
+| Environment | Purpose                 | Users                          |
+| ----------- | ----------------------- | ------------------------------ |
+| **PROD**    | Published to real users | Real community members         |
+| **DEV**     | Development and testing | Solo developer + test accounts |
 
 Both environments have identical schema, Discord OAuth, and email magic link configured. Each has its own Discord app in the Discord Developer Portal (separate Client ID/Secret and redirect URLs).
 
 ### Vite Environment Variable Switching
 
 Vite natively loads different `.env` files based on the mode:
+
 - `npm run dev` → loads `.env.development` (DEV Supabase)
 - `npm run build` → loads `.env.production` (PROD Supabase)
 
@@ -1152,12 +1220,14 @@ No manual switching needed — it's automatic.
 **Environment files (committed to repo):**
 
 `.env.development`:
+
 ```
 VITE_SUPABASE_URL=https://xxx-dev.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...dev
 ```
 
 `.env.production`:
+
 ```
 VITE_SUPABASE_URL=https://xxx-prod.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...prod
@@ -1168,6 +1238,7 @@ Anon keys are safe to commit — they're public by design (exposed in the browse
 **Secret file (gitignored via `*.local` pattern):**
 
 `.env.local`:
+
 ```
 # Only used by the seed script — never exposed to the browser
 DEV_SUPABASE_URL=https://xxx-dev.supabase.co

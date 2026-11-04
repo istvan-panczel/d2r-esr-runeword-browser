@@ -1,8 +1,6 @@
 # My Stash: All Items
 
-Status: **in progress** (branch `feat/stash-items`). The foundation (data, parser fields, shared engine and UI, route
-stub, contracts) is in; the stat text runtime (workstream A) and the page (workstream B) are built in parallel against
-the contracts below. Plan and owner decisions: [STASH-ROADMAP.md](./STASH-ROADMAP.md). Shared stash basics (upload,
+Status: **shipped** in v1.50.0 (2026-11-03). Plan and owner decisions: [STASH-ROADMAP.md](./STASH-ROADMAP.md). Shared stash basics (upload,
 storage, file format): [STASH.md](./STASH.md).
 
 `/stash/items` (`StashItemsScreen`): every item on stash pages 1–1000, socketed items inside their parent; the

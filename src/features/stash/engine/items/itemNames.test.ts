@@ -67,7 +67,7 @@ describe('itemDisplayName', () => {
     expect(itemDisplayName(makeItem('cap', { quality: 'rare', rareNameIds: [2, 1] }), catalog, text)).toBe('Grim Shell');
     expect(itemDisplayName(makeItem('cap', { quality: 'superior', qualityVariant: 3 }), catalog, text)).toBe('Superior Cap');
     expect(itemDisplayName(makeItem('cap', { quality: 'inferior', qualityVariant: 1 }), catalog, text)).toBe('Cracked Cap');
-    expect(itemDisplayName(makeItem('cap', { personalizedName: 'Mefi' }), catalog, text)).toBe("Mefi's Cap");
+    expect(itemDisplayName(makeItem('cap', { personalizedName: 'Hero' }), catalog, text)).toBe("Hero's Cap");
   });
 
   it('falls back to the base name without the text tables', () => {
@@ -85,12 +85,12 @@ describe('itemDisplayName', () => {
 
   it('names gemword charms and personalized uniques, runewords and rares', () => {
     expect(itemDisplayName(makeItem('cm1', { quality: 'magic', runewordId: 10910 }), catalog, text)).toBe('Holy');
-    expect(itemDisplayName(makeItem('cap', { quality: 'unique', uniqueId: 770, personalizedName: 'Mefi' }), catalog)).toBe(
-      "Mefi's Biggin's Bonnet"
+    expect(itemDisplayName(makeItem('cap', { quality: 'unique', uniqueId: 770, personalizedName: 'Hero' }), catalog)).toBe(
+      "Hero's Biggin's Bonnet"
     );
-    expect(itemDisplayName(makeItem('cap', { runewordId: 63086, personalizedName: 'Mefi' }), catalog)).toBe("Mefi's Cow");
-    expect(itemDisplayName(makeItem('cap', { quality: 'rare', rareNameIds: [2, 1], personalizedName: 'Mefi' }), catalog, text)).toBe(
-      "Mefi's Grim Shell"
+    expect(itemDisplayName(makeItem('cap', { runewordId: 63086, personalizedName: 'Hero' }), catalog)).toBe("Hero's Cow");
+    expect(itemDisplayName(makeItem('cap', { quality: 'rare', rareNameIds: [2, 1], personalizedName: 'Hero' }), catalog, text)).toBe(
+      "Hero's Grim Shell"
     );
   });
 

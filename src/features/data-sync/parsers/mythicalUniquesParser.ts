@@ -1,5 +1,6 @@
 import type { MythicalUnique } from '@/core/db';
 import { decodeHtmlEntities, extractCellLines, mergeWrappedCellLines } from './shared/parserUtils';
+import { stripHtmlTags } from '@/lib/html';
 
 /**
  * Parses Mythical Unique items from the ESR unique_mythicals.htm page.
@@ -105,10 +106,7 @@ function parseNameCell(cell: Element): ParsedNameCell {
 
   // Find the first non-empty part as the item name (skip leading empty segments from <br>)
   for (const part of parts) {
-    const cleaned = part
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const cleaned = stripHtmlTags(part).replace(/\s+/g, ' ').trim();
     if (cleaned.length > 0) {
       result.name = cleaned;
       break;
@@ -127,12 +125,7 @@ function parseNameCell(cell: Element): ParsedNameCell {
       result.baseItem = styledFont.textContent.replace(/\s+/g, ' ').trim();
     } else if (parts.length > 1) {
       // Fallback: extract from second part, strip HTML
-      result.baseItem = parts
-        .slice(1)
-        .join(' ')
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+      result.baseItem = stripHtmlTags(parts.slice(1).join(' ')).replace(/\s+/g, ' ').trim();
     }
   }
 
@@ -196,7 +189,7 @@ function parseNotesCell(cell: Element): string[] {
 
   return html
     .split(/<br\s*\/?>/i)
-    .map((line) => line.replace(/<[^>]*>/g, ''))
+    .map((line) => stripHtmlTags(line))
     .map((line) => decodeHtmlEntities(line))
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0);

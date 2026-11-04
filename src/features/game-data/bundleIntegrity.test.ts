@@ -35,6 +35,7 @@ import {
   type TxtRunewordsBundle,
   type TypesBundle,
 } from './engine/schema.ts';
+import { stripHtmlTags } from '@/lib/html';
 
 const OUTPUT_DIR = resolve(__dirname, '../../../public/game-data');
 const ESR_DIR = resolve(__dirname, '../../../', process.env.ESR_SOURCE_DIR ?? '../Eastern_Sun_Resurrected');
@@ -873,7 +874,7 @@ function readHtmBaseNames(file: string): Map<string, string> {
     const first = cells[0];
     if (first === undefined) continue;
     const [name = '', code = ''] = first.innerHTML.includes('<br>')
-      ? first.innerHTML.split('<br>').map((part) => part.replace(/<[^>]*>/g, '').trim())
+      ? first.innerHTML.split('<br>').map((part) => stripHtmlTags(part).trim())
       : [first.textContent.trim(), cells[1]?.textContent.trim() ?? ''];
     if (name !== '' && CODE.test(code) && !names.has(code)) names.set(code, name.replace(/&amp;/g, '&'));
   }

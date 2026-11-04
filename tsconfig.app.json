@@ -38,5 +38,13 @@
     }
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.mock.ts", "src/**/*.mock.tsx", "src/test", "src/features/game-data/build", "src/features/guide/build"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.mock.ts",
+    "src/**/*.mock.tsx",
+    "src/test",
+    "src/features/game-data/build",
+    "src/features/guide/build"
+  ]
 }

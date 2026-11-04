@@ -1,7 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Copy, Eye, Heart, Undo2 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Button } from '@/components/ui/button';
 import { isSupabaseConfigured } from '@/core/supabase/config';
 import { avatarInitials, openSignInDialog, selectIsAuthenticated } from '@/features/auth';
@@ -104,7 +105,7 @@ export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerPr
         {author !== null && detail !== null && (
           <Link to={`/user/${detail.user_id}`} className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground">
             <Avatar className="size-5">
-              {author.avatar_url !== null && <AvatarImage src={author.avatar_url} alt="" />}
+              <ProfileAvatarImage url={author.avatar_url} />
               <AvatarFallback className="text-[10px]">{avatarInitials(author.display_name)}</AvatarFallback>
             </Avatar>
             More by {author.display_name}

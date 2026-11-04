@@ -11,17 +11,7 @@ import { disambiguation, duplicateNames, SKILLS_ROUTE, SKILLS_URL_PARAMS } from 
 const SETS_PAGE = '/game-data/sets';
 
 export type HomeSearchCategory =
-  | 'runewords'
-  | 'gemwords'
-  | 'uniques'
-  | 'mythicals'
-  | 'sets'
-  | 'setItems'
-  | 'bases'
-  | 'skills'
-  | 'materials'
-  | 'areas'
-  | 'cube';
+  'runewords' | 'gemwords' | 'uniques' | 'mythicals' | 'sets' | 'setItems' | 'bases' | 'skills' | 'materials' | 'areas' | 'cube';
 
 export interface HomeSearchCategoryInfo {
   readonly key: HomeSearchCategory;

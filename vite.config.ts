@@ -1,24 +1,24 @@
-import { defineConfig, type Plugin } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { defineConfig, type Plugin } from 'vite';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
 /** Dev only: full page reload when `npm run guide:watch` rewrites public/guide/ (static files are not part of HMR). */
 function guideReload(): Plugin {
-  const guideDir = path.resolve(import.meta.dirname, './public/guide')
+  const guideDir = path.resolve(import.meta.dirname, './public/guide');
   return {
     name: 'guide-reload',
     apply: 'serve',
     configureServer(server) {
-      server.watcher.add(guideDir)
+      server.watcher.add(guideDir);
       const reload = (file: string) => {
-        if (file.startsWith(guideDir)) server.ws.send({ type: 'full-reload' })
-      }
-      server.watcher.on('add', reload)
-      server.watcher.on('change', reload)
+        if (file.startsWith(guideDir)) server.ws.send({ type: 'full-reload' });
+      };
+      server.watcher.on('add', reload);
+      server.watcher.on('change', reload);
     },
-  }
+  };
 }
 
 // https://vite.dev/config/
@@ -47,4 +47,4 @@ export default defineConfig(({ mode }) => ({
   // esbuild: {
   //   drop: mode === 'production' ? ['console', 'debugger'] : [],
   // },
-}))
+}));

@@ -22,6 +22,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["scripts/**/*.ts", "src/features/game-data/engine/**/*.ts", "src/features/game-data/build/**/*.ts", "src/features/guide/engine/**/*.ts", "src/features/guide/build/**/*.ts"],
+  "include": [
+    "scripts/**/*.ts",
+    "src/features/game-data/engine/**/*.ts",
+    "src/features/game-data/build/**/*.ts",
+    "src/features/guide/engine/**/*.ts",
+    "src/features/guide/build/**/*.ts"
+  ],
   "exclude": ["src/**/*.test.ts", "scripts/**/*.test.ts", "src/features/game-data/engine/browser", "src/features/guide/engine/browser"]
 }

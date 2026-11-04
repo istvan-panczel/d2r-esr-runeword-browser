@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,7 +27,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="h-9 gap-2 px-2">
           <Avatar className="size-6">
-            {avatarUrl !== null && <AvatarImage src={avatarUrl} alt="" />}
+            <ProfileAvatarImage url={avatarUrl} />
             <AvatarFallback className="text-xs">{avatarInitials(displayName ?? '')}</AvatarFallback>
           </Avatar>
           <span className="hidden max-w-[14ch] truncate text-sm font-medium sm:inline">{tag}</span>

@@ -38,6 +38,7 @@ import { DEFAULT_ESR_RUNE_POINTS, DEFAULT_LOD_RUNE_POINTS } from '../constants/d
 import { getRelevantCategories, getItemCategory } from '@/core/utils/itemCategoryMapping';
 import { expandRunewordsByColumn } from '@/features/runewords/utils/filteringHelpers';
 import type { EsrRune, LodRune, KanjiRune, Runeword } from '@/core/db/models';
+import { decodeHtmlEntities, stripHtmlTags } from '@/lib/html';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -128,15 +129,6 @@ function norm(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-function decodeEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-}
-
 function rawExtractName(cell: Element): string {
   const b = cell.querySelector('font[color="#908858"] b, FONT[color="#908858"] b');
   return b?.textContent?.trim() ?? '';
@@ -188,10 +180,7 @@ function rawExtractIngredients(cell: Element): RawIngredients {
     if (innerHTML.includes('<br>') || innerHTML.includes('<BR>')) {
       const parts = innerHTML.split(/<br\s*\/?>/i);
       for (const part of parts) {
-        const text = part
-          .replace(/<[^>]*>/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
+        const text = stripHtmlTags(part).replace(/\s+/g, ' ').trim();
         if (text.endsWith(' Rune')) {
           runes.push(text);
           ingredients.push(text);
@@ -238,12 +227,7 @@ function rawExtractAllowedItems(cell: Element): { allowedItems: string[]; exclud
   const html = cell.innerHTML;
   const items = html
     .split(/<br\s*\/?>/i)
-    .map((s) =>
-      s
-        .replace(/<[^>]*>/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-    )
+    .map((s) => stripHtmlTags(s).replace(/\s+/g, ' ').trim())
     .filter((s) => s.length > 0);
   const exIdx = items.findIndex((s) => s === 'Excluded:');
   if (exIdx === -1) return { allowedItems: items, excludedItems: [] };
@@ -257,8 +241,8 @@ function rawExtractCellAffixes(cell: Element): string[] {
   const runewordPart = parts[0] ?? '';
   return runewordPart
     .split(/<br\s*\/?>/i)
-    .map((line) => line.replace(/<[^>]*>/g, ''))
-    .map((line) => decodeEntities(line))
+    .map((line) => stripHtmlTags(line))
+    .map((line) => decodeHtmlEntities(line))
     .map((line) => norm(line))
     .filter((line) => line.length > 0);
 }

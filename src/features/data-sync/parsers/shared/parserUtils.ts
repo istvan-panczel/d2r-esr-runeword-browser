@@ -1,5 +1,8 @@
 import type { Affix, BonusPool, SocketableBonuses } from '@/core/db';
 
+/** The entity decoder lives in `@/lib/html` (shared with the Node scripts); re-exported for the parsers. */
+export { decodeHtmlEntities } from '@/lib/html';
+
 export interface NormalizedRuneName {
   name: string;
   points?: number;
@@ -146,19 +149,6 @@ export function getItemName(headerCell: Element): string {
  */
 function normalizeWhitespace(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
-}
-
-/**
- * Decodes common HTML entities that remain after stripping HTML tags from innerHTML.
- * When using innerHTML to split on <br> tags, entities like &amp; stay encoded.
- */
-export function decodeHtmlEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
 }
 
 /**

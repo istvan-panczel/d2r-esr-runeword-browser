@@ -3,6 +3,7 @@
  * between two revisions). The CLI does the git calls; everything here works on strings.
  */
 import { ESR_EXCEL_DIR, ESR_STRINGS_DIR } from '../../src/features/game-data/build/esrSources.ts';
+import { stripHtmlTags } from '../../src/lib/html.ts';
 
 /** How many keys/strings the text output lists per file before "… and N more". */
 export const LIST_LIMIT = 20;
@@ -91,11 +92,7 @@ export interface ChangelogEntry {
   href: string;
 }
 
-const collapse = (text: string) =>
-  text
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+const collapse = (text: string) => stripHtmlTags(text, ' ').replace(/\s+/g, ' ').trim();
 
 /**
  * Entries of docs/changelogs.html: a "Eastern Sun Resurrected <version> - <date>" heading followed by a link (usually a

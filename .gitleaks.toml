@@ -1,0 +1,17 @@
+# gitleaks config: the default rules plus allowlists for values that are public by design.
+# Runs on staged changes in the pre-commit hook (see .husky/pre-commit); full history: `gitleaks git --redact .`
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Supabase publishable keys (anon role, meant for the browser bundle)"
+regexes = ['''^sb_publishable_[A-Za-z0-9_-]+$''']
+
+[[allowlists]]
+description = "Cloudflare Web Analytics beacon site token (public on every page)"
+regexTarget = "line"
+regexes = ['''data-cf-beacon=''']
+
+[[allowlists]]
+description = "Generated game data and build output"
+paths = ['''^public/game-data/''', '''^dist/''', '''^coverage/''']

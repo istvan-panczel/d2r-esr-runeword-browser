@@ -38,7 +38,7 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/stash`                | StashLayout             | My Stash frame: Overview / Ancient Coupons / All Items tabs, shared upload state ([STASH](../features/STASH.md)) |                                                                                                        |
 | `/stash` (index)        | StashHomeScreen         | Upload (or the loaded file) and the stash pages with a one-line summary each                                     |                                                                                                        |
 | `/stash/coupons`        | StashCouponsScreen      | Ancient Coupons in the uploaded stash: unique, have / need, Wild Card recipe, where                              | `search`, `status`, `tier`, `page`, `sort`, `dir` (kept in the URL)                                    |
-| `/stash/items`          | StashItemsScreen        | All Items: every item on the stash pages ([STASH-ITEMS](../features/STASH-ITEMS.md)); stub so far                |                                                                                                        |
+| `/stash/items`          | StashItemsScreen        | All Items: every item on the stash pages ([STASH-ITEMS](../features/STASH-ITEMS.md))                             |                                                                                                        |
 | `/builds`               | BuildsScreen            | Shared builds list (Supabase only)                                                                               |                                                                                                        |
 | `/builds/new`           | CreateBuildScreen       | Create a build (sign-in required)                                                                                |                                                                                                        |
 | `/builds/:buildId/edit` | EditBuildScreen         | Edit an own build                                                                                                |                                                                                                        |
@@ -99,13 +99,15 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
    component awaits `startBuilds()` before dispatching `fetchRecentBuildsRequested`, a separate query in the builds saga
    that writes `recentBuilds` / `recentStatus` only, so the `/builds` list, its filters and paging are untouched. One
    skeleton row while loading; hidden on error or when there are no builds.
-5. **New to ESR?** (`HomeStartHere`): a button to `/guide` and the guide's `GuideOfficialReference` strip.
+5. **New to ESR?** (`HomeStartHere`): a button to `/guide` and the guide's `GuideOfficialReference` strip. Hidden since
+   2026-11-04 (commented out in `HomeScreen.tsx`, the component is kept) until the section is reworked.
 6. **Official ESR links** (`HomeOfficialLinks`): compact cards (label linking out, description) for `OFFICIAL_LINKS` in
-   `navConfig.ts`, the same list as the header's ESR links menu: Official site, Drop Finder, Frame Table, Changelog, ESR Discord,
-   ESR on GitHub.
+   `navConfig.ts`, the same list as the header's ESR links menu: Official site, Installation Guide, Documentation, Drop Finder,
+   Frame Table, Patch notes, Changelog (stops at 3.2.02), Releases, ESR Discord, ESR on GitHub.
 7. **Community tools** (`HomeCommunityTools`): a card per fan-made ESR tool from `COMMUNITY_TOOLS` in `navConfig.ts`
-   (label linking out, author, a kind badge, description, caveat, "Source on GitHub" when the project has one), with a
-   note that they are not affiliated with this site or the mod. Static data, no fetches. Both sections share the `HomeLinkCard` component.
+   (label linking out, author, a kind badge, a one-sentence description, a dot-separated line of short feature labels, caveat,
+   "Source on GitHub" when the project has one), with a note that they are not affiliated with this site or the mod. The descriptions were
+   last checked against the live tools on 2026-11-04. Static data, no fetches. Both sections share the `HomeLinkCard` component.
 8. **Footer** (`HomeFooter`): app version (`src/assets/version.json`), ESR / GitHub / privacy policy links (URLs from
    `navConfig.ts`), credits.
 
@@ -164,8 +166,9 @@ cards render from the same config (group `description`, link `homeLinks`):
   an item is active when the path equals its `to` or starts with `to/` (only the former for an `exact` item; no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). Active links
   get `aria-current="page"`. Keyboard (Radix): triggers are in the tab order, Enter/Space/ArrowDown opens, arrows and
   Tab move through the items, Escape closes; choosing a link closes the menu.
-- **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Drop Finder, Frame Table, Changelog, ESR Discord, ESR on GitHub,
-  then a "Community tools" label with ESR Wiki Overlay, ESR Docs, ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), theme toggle, GitHub link,
+- **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
+  Frame Table, Patch notes, Changelog, Releases, ESR Discord, ESR on GitHub, then a "Community tools" label with ESR Wiki Overlay, ESR Docs,
+  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), theme toggle, GitHub link,
   `AuthControls` (Sign In / user menu, Supabase only), settings cog.
 - **Mobile (below md)**: hamburger opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
   the group of the current route starts open, Guide and Builds are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the

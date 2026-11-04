@@ -204,14 +204,15 @@ type GemQuality = 'Chipped' | 'Flawed' | 'Standard' | 'Flawless' | 'Blemished' |
 ```
 
 **Gem Tiers (6 levels):**
-| Quality | Req Level |
-|---------|-----------|
-| Chipped | 1 |
-| Flawed | 7 |
-| Standard | 14 |
-| Flawless | 21 |
-| Blemished | 28 |
-| Perfect | 35 |
+
+| Quality   | Req Level |
+| --------- | --------- |
+| Chipped   | 1         |
+| Flawed    | 7         |
+| Standard  | 14        |
+| Flawless  | 21        |
+| Blemished | 28        |
+| Perfect   | 35        |
 
 ### ESR Rune
 

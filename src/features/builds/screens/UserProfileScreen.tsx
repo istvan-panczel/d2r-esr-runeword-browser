@@ -3,7 +3,8 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Pencil } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -123,7 +124,7 @@ export function UserProfileScreen() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Avatar className="size-16">
-            {profile.avatar_url !== null && <AvatarImage src={profile.avatar_url} alt="" />}
+            <ProfileAvatarImage url={profile.avatar_url} />
             <AvatarFallback className="text-lg">{avatarInitials(profile.display_name)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col gap-1">

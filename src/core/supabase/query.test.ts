@@ -27,7 +27,7 @@ describe('descendingKeysetFilter', () => {
 
 describe('isUuid', () => {
   it('accepts a uuid in either case', () => {
-    expect(isUuid('dccfffc5-feca-40d2-b2c7-96c6a97decc3')).toBe(true);
+    expect(isUuid('12345678-90ab-4cde-8f01-234567890abc')).toBe(true);
     expect(isUuid('DCCFFFC5-FECA-40D2-B2C7-96C6A97DECC3')).toBe(true);
   });
 

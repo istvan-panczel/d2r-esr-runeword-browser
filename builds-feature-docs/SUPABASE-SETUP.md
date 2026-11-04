@@ -21,6 +21,7 @@ Step-by-step guide to set up both PROD and DEV Supabase environments from scratc
 ### Collect Project Credentials
 
 For each project, go to **Settings → API** and note:
+
 - **Project URL** (e.g., `https://xxxxx.supabase.co`)
 - **Anon key** (public, safe for client-side)
 - **Service role key** (secret, only for the seed script — never commit this)
@@ -43,11 +44,13 @@ You need **two separate Discord apps** — one for PROD, one for DEV.
 For each Discord app, under **OAuth2 → Redirects**, add the Supabase auth callback URL:
 
 **PROD Discord app:**
+
 ```
 https://[PROD_PROJECT_REF].supabase.co/auth/v1/callback
 ```
 
 **DEV Discord app:**
+
 ```
 https://[DEV_PROJECT_REF].supabase.co/auth/v1/callback
 ```
@@ -110,11 +113,13 @@ For each Supabase project:
 ### Verify Tables
 
 After running the migration, check that these tables exist under **Table Editor**:
+
 - `profiles`
 - `builds`
 - `likes`
 
 And under **Database → Functions**, verify these functions exist:
+
 - `handle_new_user`
 - `handle_likes_change`
 
@@ -126,11 +131,29 @@ Adds Supabase-backed item favourites (runewords / gemwords / uniques) and a publ
 2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
 
 After running, verify under **Table Editor**:
+
 - `favorites`
 - `favorite_counts`
 
 And under **Database → Functions**:
+
 - `handle_favorites_change`
+
+### Apply the Write-Access Hardening Migration (003)
+
+Column-level grants on top of the row-level policies: an owner can no longer write trigger-managed or immutable columns
+(like counts, timestamps, `avatar_url`) through the REST API. No data changes.
+
+1. Open `supabase/migrations/003_harden_write_access.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+
+### Apply the Discriminator Retry Migration (004)
+
+Replaces `handle_new_user()` so a sign-up retries when its random `#1234` discriminator is already taken (before, the
+collision failed the sign-up with "Database error saving new user"). No data or schema changes.
+
+1. Open `supabase/migrations/004_handle_new_user_discriminator_retry.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
 
 ### Apply the Loot Filter Sharing Migration (005)
 
@@ -141,10 +164,12 @@ Adds saved loot filters (public unless private), their likes and a download coun
 2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
 
 After running, verify under **Table Editor**:
+
 - `loot_filters`
 - `loot_filter_likes`
 
 And under **Database → Functions**:
+
 - `loot_filters_before_update`, `loot_filters_cap`, `handle_loot_filter_likes_change`
 - `increment_loot_filter_download`
 
@@ -173,6 +198,7 @@ applying 005 to PROD.
 ### Future Migrations
 
 When new migration files are added to `supabase/migrations/`:
+
 1. Apply to DEV first, test the feature
 2. Then apply to PROD before deploying the corresponding code change
 3. Always run migrations in order (don't skip numbers)
@@ -219,11 +245,11 @@ DEV_TEST_USER_B_PASSWORD=[PASSWORD]
 
 ### Which files are committed?
 
-| File | Committed | Why |
-|------|-----------|-----|
-| `.env.development` | Yes | Contains only public anon key (safe, exposed in browser bundle anyway) |
-| `.env.production` | Yes | Same — public anon key only |
-| `.env.local` | No (gitignored) | Contains service role key and test user passwords (secret) |
+| File               | Committed       | Why                                                                    |
+| ------------------ | --------------- | ---------------------------------------------------------------------- |
+| `.env.development` | Yes             | Contains only public anon key (safe, exposed in browser bundle anyway) |
+| `.env.production`  | Yes             | Same — public anon key only                                            |
+| `.env.local`       | No (gitignored) | Contains service role key and test user passwords (secret)             |
 
 ## Step 7: Verify Setup
 
@@ -264,12 +290,14 @@ npx tsx scripts/seed-dev-from-prod.ts
 ```
 
 This will:
+
 - Read all builds from PROD (read-only, using anon key)
 - Create test users in DEV (`testuser1@example.com`, `testuser2@example.com`, etc.)
 - Copy builds to DEV, assigned to test users
 - Generate random likes
 
 **When to use this:**
+
 - Before developing a new feature that needs realistic data
 - After a major schema migration to verify data integrity
 - To test pagination, sorting, and filtering with real build content

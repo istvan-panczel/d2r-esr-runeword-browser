@@ -83,7 +83,7 @@ for (const [color, names] of runesByColor) {
 
 // Output non-runes (gems, crystals, etc.)
 console.log(`=== NON-RUNES (${nonRunes.length} total) ===`);
-console.log(nonRunes.map(item => item.name).join(', '));
+console.log(nonRunes.map((item) => item.name).join(', '));
 console.log('');
 
 // Summary
