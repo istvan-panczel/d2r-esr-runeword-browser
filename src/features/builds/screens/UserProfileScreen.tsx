@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { PageShell } from '@/components/PageShell';
 import { ProfileAvatarImage } from '@/components/ProfileAvatarImage';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -100,7 +101,7 @@ export function UserProfileScreen() {
       );
     }
     return (
-      <div className="mx-auto max-w-7xl">
+      <PageShell>
         <div className="flex items-center gap-4">
           <Skeleton className="size-16 rounded-full" />
           <div className="flex flex-col gap-2">
@@ -113,14 +114,14 @@ export function UserProfileScreen() {
             <BuildCardSkeleton key={key} />
           ))}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   const isOwner = currentUserId !== null && currentUserId === profile.id;
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <PageShell>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Avatar className="size-16">
@@ -190,6 +191,6 @@ export function UserProfileScreen() {
           }}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

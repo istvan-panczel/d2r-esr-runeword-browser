@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PAGE_WIDE_LG_CLASS } from '@/components/pageWidthClasses';
+import { selectPageWidth } from '@/features/settings';
 import type { LoadedGuide } from '../engine/browser/loadGuide';
 import type { GuideNote } from '../engine/schema';
 import { FreshnessMarker } from '../components/FreshnessBadge';
@@ -96,11 +99,13 @@ interface MapProps {
 
 function GuideMap({ guide }: MapProps) {
   const { visited } = useVisitedNotes();
+  // A reading column below lg; from lg the page width setting (the graph grows with it).
+  const pageWidth = useSelector(selectPageWidth);
   const groups = groupNotesForMap(guide.bundle);
   const order = groups.flatMap((group) => group.notes.map((note) => note.slug));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 lg:max-w-7xl">
+    <div className={cn('mx-auto max-w-2xl space-y-6', PAGE_WIDE_LG_CLASS[pageWidth])}>
       <header className="space-y-1">
         <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
           <Link to="/guide" className="hover:text-foreground hover:underline">

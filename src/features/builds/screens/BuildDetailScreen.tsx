@@ -23,6 +23,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { db } from '@/core/db';
 import { RequestState } from '@/core/types';
 import { avatarInitials, formatProfileTag, openSignInDialog, selectAuthUserId, selectIsAuthenticated } from '@/features/auth';
+import { selectPageWidth } from '@/features/settings';
 import { asBuildData, type EquipmentSlot, type ItemRef, type WeaponSwapSlot } from '../buildData';
 import { compactItems } from '../utils/buildSnapshot';
 import { hasCrafts } from '../utils/crafts';
@@ -70,6 +71,7 @@ export function BuildDetailScreen() {
 
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUserId = useSelector(selectAuthUserId);
+  const pageWidth = useSelector(selectPageWidth);
 
   const esrVersionMeta = useLiveQuery(() => db.metadata.get('esrVersion'));
   const currentEsrVersion = esrVersionMeta?.value ?? null;
@@ -181,6 +183,7 @@ export function BuildDetailScreen() {
   const hasSkills = hasSkillText || level !== null || hasSkillPoints(skillPoints);
   // Charms + ascendancy sit beside the player gear on wide screens.
   const hasPlayerAside = charms.length > 0 || ascendancyName !== null;
+  const breakout = hasPlayerAside && pageWidth === 'standard';
   const availableTabs: readonly DetailTab[] = [
     'player',
     ...(hasSkills ? (['skills'] as const) : []),
@@ -190,10 +193,12 @@ export function BuildDetailScreen() {
   const esrLabel = `ESR ${effectiveVersion ?? 'Unknown'}`;
 
   return (
-    // When there's a sidebar, break out of the app container so the gear column can grow
-    // as wide as the browse pages; capped and centered so it isn't edge-to-edge.
-    <div className={hasPlayerAside ? 'mx-[calc(50%_-_50vw)] px-4 sm:px-6' : ''}>
-      <div className={hasPlayerAside ? 'mx-auto w-full max-w-[1920px]' : ''}>
+    // With the sidebar and the Standard page width, break out of the app container so the gear column can grow;
+    // capped at 1920 px and centered so it isn't edge-to-edge. Wide and Full need no breakout: the app frame itself is
+    // 1920 px (Wide) or the whole window (Full), and the page lines up with the header. Without the sidebar the page
+    // fills the app frame.
+    <div className={breakout ? 'mx-[calc(50%_-_50vw)] px-4 sm:px-6' : ''}>
+      <div className={breakout ? 'mx-auto w-full max-w-[1920px]' : ''}>
         <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
           <Link to="/builds">
             <ArrowLeft className="size-4" />

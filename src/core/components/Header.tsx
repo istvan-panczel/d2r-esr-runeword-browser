@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/navigation-menu';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
-import { openDrawer, selectTheme, setTheme } from '@/features/settings';
+import { APP_FRAME_CLASS } from '@/components/pageWidthClasses';
+import { openDrawer, selectPageWidth, selectTheme, setTheme } from '@/features/settings';
 import { AuthControls, selectAuthIsConfigured } from '@/features/auth';
 import {
   COMMUNITY_TOOLS,
@@ -36,6 +37,7 @@ import {
 } from '@/core/navigation/navConfig';
 // Shared nav-link styling (also the page sub-tabs), so the group triggers and the plain links look the same.
 import { TAB_ACTIVE, TAB_BASE, TAB_INACTIVE } from './navTabClasses';
+import { PageWidthMenu } from './PageWidthMenu';
 
 const DROPDOWN_LINK_CLASS = 'flex w-full cursor-pointer items-center justify-between gap-2';
 const MOBILE_EXTERNAL_LINK_CLASS =
@@ -94,6 +96,7 @@ const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 export function Header() {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
+  const pageWidth = useSelector(selectPageWidth);
   const isSupabaseEnabled = useSelector(selectAuthIsConfigured);
   const { pathname } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -111,7 +114,8 @@ export function Header() {
 
   return (
     <header className="border-b bg-card">
-      <div className="container mx-auto flex h-14 items-center gap-3 px-4 md:gap-4">
+      {/* Same frame as <main> (Page width setting), so in Wide and Full the logo and the icons line up with the page edges. */}
+      <div className={cn(APP_FRAME_CLASS[pageWidth], 'flex h-14 items-center gap-3 px-4 md:gap-4')}>
         <Button
           variant="ghost"
           size="icon"
@@ -176,6 +180,7 @@ export function Header() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <PageWidthMenu />
           <Button variant="ghost" size="icon" onClick={handleThemeToggle} aria-label="Toggle theme">
             {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
           </Button>

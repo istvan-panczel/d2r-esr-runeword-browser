@@ -1,16 +1,18 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import type { RootState } from '@/core/store/store';
-import type { Theme, TextSize } from '../constants/types';
+import type { Theme, TextSize, PageWidthMode } from '../constants/types';
 import { TEXT_SIZE_MAP } from '../constants/textSize';
+import { DEFAULT_PAGE_WIDTH, PAGE_WIDTH_STORAGE_KEY, isPageWidthMode } from '../constants/pageWidth';
 
-export type { Theme, TextSize };
+export type { Theme, TextSize, PageWidthMode };
 export { TEXT_SIZE_MAP };
 
 interface SettingsState {
   readonly theme: Theme;
   readonly textSize: TextSize;
   readonly useDiabloFont: boolean;
+  readonly pageWidth: PageWidthMode;
   readonly isDrawerOpen: boolean;
 }
 
@@ -35,10 +37,18 @@ const getInitialDiabloFont = (): boolean => {
   return localStorage.getItem('useDiabloFont') === 'true';
 };
 
+// Applied by the layout components (AppLayout, Header, PageShell) on render, so it has no pre-paint counterpart.
+const getInitialPageWidth = (): PageWidthMode => {
+  if (typeof window === 'undefined') return DEFAULT_PAGE_WIDTH;
+  const stored = localStorage.getItem(PAGE_WIDTH_STORAGE_KEY);
+  return isPageWidthMode(stored) ? stored : DEFAULT_PAGE_WIDTH;
+};
+
 const initialState: SettingsState = {
   theme: getInitialTheme(),
   textSize: getInitialTextSize(),
   useDiabloFont: getInitialDiabloFont(),
+  pageWidth: getInitialPageWidth(),
   isDrawerOpen: false,
 };
 
@@ -61,6 +71,10 @@ const settingsSlice = createSlice({
       localStorage.setItem('useDiabloFont', String(action.payload));
       document.documentElement.classList.toggle('diablo-font', action.payload);
     },
+    setPageWidth(state, action: PayloadAction<PageWidthMode>) {
+      state.pageWidth = action.payload;
+      localStorage.setItem(PAGE_WIDTH_STORAGE_KEY, action.payload);
+    },
     openDrawer(state) {
       state.isDrawerOpen = true;
     },
@@ -70,7 +84,7 @@ const settingsSlice = createSlice({
   },
 });
 
-export const { setTheme, setTextSize, setUseDiabloFont, openDrawer, closeDrawer } = settingsSlice.actions;
+export const { setTheme, setTextSize, setUseDiabloFont, setPageWidth, openDrawer, closeDrawer } = settingsSlice.actions;
 export default settingsSlice.reducer;
 
 // Selectors
@@ -81,5 +95,7 @@ export const selectTheme = createSelector([selectSettingsState], (settings) => s
 export const selectTextSize = createSelector([selectSettingsState], (settings) => settings.textSize);
 
 export const selectUseDiabloFont = createSelector([selectSettingsState], (settings) => settings.useDiabloFont);
+
+export const selectPageWidth = createSelector([selectSettingsState], (settings) => settings.pageWidth);
 
 export const selectIsDrawerOpen = createSelector([selectSettingsState], (settings) => settings.isDrawerOpen);
