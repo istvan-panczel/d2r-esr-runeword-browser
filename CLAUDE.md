@@ -37,8 +37,10 @@ npm run game-data:generate  # Regenerate the static game-data bundles
 npm run game-data:icons     # Item icons from the ESR HD sprites, vanilla art (../d2r-vanilla-art, not in git) as fallback → public/game-data/icons/*.webp + icons.json (then the manifest)
 npm run game-data:skill-icons  # Skill icons cropped from the ESR HD skill icon sheets → public/game-data/icons/skills/*.webp (keys from skilldetails.json; also run by game-data:icons)
 npm run game-data:check     # Exit 1 if the committed bundles, item icons or skill icons are stale (without ../d2r-vanilla-art: vanilla-derived icons skipped with a warning)
-npm run game-data:update    # After an ESR release: clone/pull ESR, generate, fetch fixtures, run game-data tests + check
-npm run esr:diff            # What changed in ESR since the committed game data (patch notes, tables, strings, docs, launcher); --json, --from/--to <rev>
+npm run game-data:update    # After an ESR release: clone/pull ESR, generate, fetch fixtures, check, guide, full test suite
+npm run esr:diff            # What changed in ESR since the committed game data (patch notes, tables, strings, docs, launcher, loot filters); --json, --from/--to <rev>, --out
+npm run esr:review          # Read-only review of a regenerated update vs HEAD, the clone and the live sites; --out x.md, --offline
+npm run esr:user-data       # Read-only scan of PROD's public builds/favourites/loot filters against the current data
 
 # Testing
 npm run test:fixtures    # Fetch test fixtures (required once after checkout)
@@ -46,7 +48,7 @@ npm run test             # Run tests once (CI mode)
 npm run test:coverage    # Generate code coverage report
 ```
 
-- After an ESR release, run the `/esr-update` skill (`.claude/skills/esr-update/SKILL.md`): it runs `game-data:update` and the release diff, reviews the bundles, proposes guide note edits and asks before committing.
+- After an ESR release, run the `/esr-update` skill (`.claude/skills/esr-update/SKILL.md` + `reference.md`): it runs `game-data:update`, the release diff, `esr:review` and `esr:user-data`, starts parallel review agents, applies guide/doc/template/link edits, proposes updates to itself and asks before committing.
 
 ## React Compiler
 
