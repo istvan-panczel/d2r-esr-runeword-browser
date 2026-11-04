@@ -13,3 +13,9 @@ export function variantIndexFromParam(raw: string | null, count: number): number
 export function variantParamValue(index: number): string | null {
   return index > 0 ? String(index + 1) : null;
 }
+
+/** `path` with the `?variant=` parameter of a 0-based index (none for the first), e.g. the detail or edit page. */
+export function withVariantParam(path: string, index: number): string {
+  const value = variantParamValue(index);
+  return value === null ? path : `${path}?${new URLSearchParams({ [VARIANT_PARAM]: value }).toString()}`;
+}

@@ -198,10 +198,21 @@ describe('conversions', () => {
       ...OLD_BUILD,
       itemAlternatives: { helmet: [{ ref: item('Circlet'), note: 'Budget', crafts: [meld] }] },
       variantName: 'Endgame',
-      variants: [{ items: { armor: item('Fortitude') }, variantName: 'Starter', variantNote: 'Early' }, { skills: 'x' }],
+      variants: [
+        { items: { armor: item('Fortitude') }, variantName: 'Starter', variantNote: 'Early' },
+        { skills: 'x', variantName: 'MF' },
+      ],
     };
     const values = buildFormValuesFromBuild({ name: 'x', description: '', class: 'Paladin', build_data: build });
     expect(draftsToBuildData(initialVariantDrafts(values.variants))).toEqual(build);
+  });
+
+  it('a blank name on a multi-variant build saves as its positional fallback; a single variant saves none', () => {
+    const drafts = [emptyVariantDraft('a'), emptyVariantDraft('b', 'MF'), emptyVariantDraft('c', '  ')];
+    const saved = draftsToBuildData(drafts);
+    expect(saved.variantName).toBe('Default');
+    expect(saved.variants?.map((variant) => variant.variantName)).toEqual(['MF', 'Variant 3']);
+    expect(draftsToBuildData([{ ...emptyVariantDraft('a'), skills: 'a' }])).toEqual({ skills: 'a' });
   });
 
   it('draftLabel and nextVariantName use the fallback labels', () => {
@@ -230,6 +241,35 @@ describe('variant actions', () => {
     // Editing the copy leaves the source alone.
     const edited = run(state, { type: 'setSlot', variant: 1, section: 'player', slot: 'helmet', ref: item('Crown') });
     expect(edited[0].player.items.helmet).toEqual(item('Shako'));
+  });
+
+  it('addVariant copies alternatives under new keys', () => {
+    const state = run(withHelmet([{ ref: item('Circlet') }, { ref: null }]), addVariantAction('Copy', 0));
+    const sourceKeys = (state[0].player.alternatives.helmet ?? []).map((alternative) => alternative.key);
+    const copyKeys = (state[1].player.alternatives.helmet ?? []).map((alternative) => alternative.key);
+    expect(copyKeys).toHaveLength(2);
+    for (const key of copyKeys) expect(sourceKeys).not.toContain(key);
+    expect(new Set(copyKeys).size).toBe(2);
+    expect(helmetOf(state, 1)).toEqual(helmetOf(state, 0));
+  });
+
+  it('addVariant names the unnamed variants with their current labels, so a move keeps them', () => {
+    const state = run([emptyVariantDraft('a')], addVariantAction('Budget', 'empty'));
+    expect(state.map((draft) => draft.name)).toEqual(['Default', 'Budget']);
+    const movedState = run(state, { type: 'moveVariant', from: 0, to: 1 });
+    expect(movedState.map(draftLabel)).toEqual(['Budget', 'Default']);
+    const packed = draftsToBuildData(movedState);
+    expect(packed.variantName).toBe('Budget');
+    expect(packed.variants?.map((variant) => variant.variantName)).toEqual(['Default']);
+  });
+
+  it('addVariant names a blank new variant with nextVariantName and leaves named drafts alone', () => {
+    const state = run(base, addVariantAction('  ', 'empty'), addVariantAction('', 0));
+    expect(state.map((draft) => draft.name)).toEqual(['A', 'Variant 2', 'Variant 3']);
+    expect(state[0]).toBe(base[0]);
+    // A blank in the middle keeps its label when the next variant is added.
+    const cleared = run(state, { type: 'renameVariant', variant: 1, name: ' ' }, addVariantAction('D', 'empty'));
+    expect(cleared.map((draft) => draft.name)).toEqual(['A', 'Variant 2', 'Variant 3', 'D']);
   });
 
   it('addVariant from Empty starts blank', () => {

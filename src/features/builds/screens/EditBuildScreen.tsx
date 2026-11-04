@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/PageShell';
@@ -19,6 +19,7 @@ import {
 import { BuildForm } from '../components/BuildForm';
 import type { BuildFormSubmit } from '../components/buildFormModel';
 import { buildFormValuesFromBuild } from '../utils/variantDrafts';
+import { VARIANT_PARAM, variantIndexFromParam, withVariantParam } from '../utils/variantParam';
 
 export function EditBuildScreen() {
   const { buildId } = useParams();
@@ -32,6 +33,9 @@ export function EditBuildScreen() {
   const detailStatus = useSelector(selectDetailStatus);
   const notFound = useSelector(selectDetailNotFound);
   const updateStatus = useSelector(selectUpdateBuildStatus);
+  // The detail page's `?variant=N` opens the form on that variant; after saving, the page opens the one shown then.
+  const [searchParams] = useSearchParams();
+  const [savedVariant, setSavedVariant] = useState(0);
 
   useEffect(() => {
     dispatch(resetUpdateStatus());
@@ -47,9 +51,9 @@ export function EditBuildScreen() {
 
   useEffect(() => {
     if (updateStatus === RequestState.SUCCESS && buildId !== undefined) {
-      void navigate(`/build/${buildId}`, { replace: true });
+      void navigate(withVariantParam(`/build/${buildId}`, savedVariant), { replace: true });
     }
-  }, [updateStatus, navigate, buildId]);
+  }, [updateStatus, navigate, buildId, savedVariant]);
 
   if (!initialized) {
     return (
@@ -94,8 +98,10 @@ export function EditBuildScreen() {
   }
 
   const initialValues = buildFormValuesFromBuild(build);
+  const initialVariant = variantIndexFromParam(searchParams.get(VARIANT_PARAM), initialValues.variants.length);
 
   const handleSubmit = (payload: BuildFormSubmit) => {
+    setSavedVariant(payload.activeVariant);
     dispatch(
       updateBuildRequested({
         id: buildId,
@@ -114,12 +120,13 @@ export function EditBuildScreen() {
         // previously-edited build if the route changes without an unmount.
         key={build.id}
         initialValues={initialValues}
+        initialVariant={initialVariant}
         submitLabel="Save Changes"
         saving={updateStatus === RequestState.LOADING}
         saved={updateStatus === RequestState.SUCCESS}
         onSubmit={handleSubmit}
         onCancel={() => {
-          void navigate(`/build/${build.id}`);
+          void navigate(withVariantParam(`/build/${build.id}`, initialVariant));
         }}
       />
     </PageShell>

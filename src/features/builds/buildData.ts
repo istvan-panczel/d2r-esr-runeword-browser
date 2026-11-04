@@ -216,7 +216,8 @@ export interface VariantData {
   // (owner decision); ids outside the build's class tree are kept and shown as "other skills".
   readonly level?: number;
   readonly skillPoints?: Readonly<Record<string, number>>;
-  // Alternative items per slot, parallel to the item maps. Absent on older builds; old clients ignore them.
+  // Alternative items per slot, parallel to the item maps. Absent on older builds. Old clients ignore them (and
+  // `variants`) when viewing but drop them when saving: a stale tab editing such a build keeps only the main items.
   readonly itemAlternatives?: AlternativesMap<EquipmentSlot>;
   readonly weaponSwapAlternatives?: AlternativesMap<WeaponSwapSlot>;
   readonly mercenaryAlternatives?: AlternativesMap<EquipmentSlot>;
@@ -430,10 +431,10 @@ export function asSkillPoints(value: unknown): Readonly<Record<string, number>> 
 
 const optionalString = (value: unknown): string | null | undefined => (typeof value === 'string' || value === null ? value : undefined);
 
-/** A trimmed, non-blank string sliced to `max` characters, or undefined. */
+/** A trimmed, non-blank string cut to `max` code points (an emoji is never split into a lone surrogate), or undefined. */
 function cappedText(value: unknown, max: number): string | undefined {
   if (typeof value !== 'string') return undefined;
-  const text = value.trim().slice(0, max);
+  const text = Array.from(value.trim()).slice(0, max).join('');
   return text.length > 0 ? text : undefined;
 }
 

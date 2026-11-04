@@ -34,6 +34,9 @@ interface VariantToolbarProps {
  */
 export function VariantToolbar({ drafts, activeIndex, onSelect, disabled, dispatch }: VariantToolbarProps) {
   const [adding, setAdding] = useState(false);
+  // The variant the delete dialog asks about, captured when it opens: the dialog keeps its text while it animates
+  // closed, after the active variant has already changed. Kept (not cleared) on close for that reason.
+  const [pendingDelete, setPendingDelete] = useState<{ readonly index: number; readonly label: string } | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const active = drafts[activeIndex];
   const labels = drafts.map(draftLabel);
@@ -120,6 +123,7 @@ export function VariantToolbar({ drafts, activeIndex, onSelect, disabled, dispat
               variant="destructive"
               disabled={drafts.length <= 1}
               onSelect={() => {
+                setPendingDelete({ index: activeIndex, label: activeLabel });
                 setConfirmingDelete(true);
               }}
             >
@@ -144,6 +148,10 @@ export function VariantToolbar({ drafts, activeIndex, onSelect, disabled, dispat
             disabled={disabled}
             onChange={(event) => {
               dispatch({ type: 'renameVariant', variant: activeIndex, name: event.target.value });
+            }}
+            onKeyDown={(event) => {
+              // Enter in a lone text input would submit the whole build form.
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) event.preventDefault();
             }}
           />
         </div>
@@ -184,7 +192,7 @@ export function VariantToolbar({ drafts, activeIndex, onSelect, disabled, dispat
           <DialogHeader>
             <DialogTitle>Delete variant?</DialogTitle>
             <DialogDescription>
-              “{activeLabel}” and everything in it (gear, alternatives, skills, charms) is removed from the build when you save.
+              “{pendingDelete?.label}” and everything in it (gear, alternatives, skills, charms) is removed from the build when you save.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -201,8 +209,10 @@ export function VariantToolbar({ drafts, activeIndex, onSelect, disabled, dispat
               type="button"
               variant="destructive"
               onClick={() => {
-                dispatch({ type: 'deleteVariant', variant: activeIndex });
-                onSelect(Math.min(activeIndex, drafts.length - 2));
+                if (pendingDelete !== null) {
+                  dispatch({ type: 'deleteVariant', variant: pendingDelete.index });
+                  onSelect(Math.min(pendingDelete.index, drafts.length - 2));
+                }
                 setConfirmingDelete(false);
               }}
             >

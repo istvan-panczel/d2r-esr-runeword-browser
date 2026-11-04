@@ -23,6 +23,8 @@ import type { BuildFormSubmit, BuildFormValues } from './buildFormModel';
 
 interface BuildFormProps {
   readonly initialValues: BuildFormValues;
+  /** The 0-based variant shown first (clamped to the variants; default the first). */
+  readonly initialVariant?: number;
   readonly submitLabel: string;
   readonly saving: boolean;
   /** True once the save succeeded, so the unsaved-changes guard stands down. */
@@ -31,13 +33,13 @@ interface BuildFormProps {
   readonly onCancel: () => void;
 }
 
-export function BuildForm({ initialValues, submitLabel, saving, saved, onSubmit, onCancel }: BuildFormProps) {
+export function BuildForm({ initialValues, initialVariant = 0, submitLabel, saving, saved, onSubmit, onCancel }: BuildFormProps) {
   const [name, setName] = useState(initialValues.name);
   const [description, setDescription] = useState(initialValues.description);
   const [characterClass, setCharacterClass] = useState<CharacterClass | ''>(initialValues.characterClass);
   const [drafts, dispatch] = useReducer(variantDraftsReducer, initialValues.variants, initialVariantDrafts);
   // Outside the reducer: switching variants is navigation and never marks the form changed.
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() => Math.min(Math.max(initialVariant, 0), drafts.length - 1));
   // The crafting picker needs the bundles in every slot, so they load once here for the whole form.
   const craftData = useCraftData(true);
   // One item scan for every slot picker of the form (main items and alternatives).
@@ -68,7 +70,7 @@ export function BuildForm({ initialValues, submitLabel, saving, saved, onSubmit,
     event.preventDefault();
     // canSave already guarantees characterClass !== '' (TS narrows it here).
     if (!canSave) return;
-    onSubmit({ name: trimmedName, description, characterClass, buildData: draftsToBuildData(drafts) });
+    onSubmit({ name: trimmedName, description, characterClass, buildData: draftsToBuildData(drafts), activeVariant: active });
   };
 
   return (

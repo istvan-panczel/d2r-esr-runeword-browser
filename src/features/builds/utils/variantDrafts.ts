@@ -160,9 +160,13 @@ export function fromVariantDraft(draft: VariantDraft): VariantData {
   };
 }
 
-/** The build_data the form saves. */
+/**
+ * The build_data the form saves. With more than one variant a blank name is saved as its fallback label, so a stored
+ * name never depends on the variant's position (a later reorder keeps every label).
+ */
 export function draftsToBuildData(drafts: readonly VariantDraft[]): BuildData {
-  return packVariants(drafts.map(fromVariantDraft));
+  const named = drafts.length > 1 ? withFallbackNames(drafts) : drafts;
+  return packVariants(named.map(fromVariantDraft));
 }
 
 /** The edit form's initial values for a stored build. */
@@ -186,6 +190,12 @@ export function draftLabel(draft: VariantDraft, index: number): string {
 /** Whether the draft's level text is blank or a valid level. */
 export function draftLevelValid(draft: VariantDraft): boolean {
   return draft.levelText.trim() === '' || parseLevelText(draft.levelText) !== undefined;
+}
+
+/** The drafts with every blank name set to its current fallback label (the same array when all are named). */
+function withFallbackNames(drafts: readonly VariantDraft[]): readonly VariantDraft[] {
+  if (drafts.every((draft) => draft.name.trim().length > 0)) return drafts;
+  return drafts.map((draft, index) => (draft.name.trim().length > 0 ? draft : { ...draft, name: draftLabel(draft, index) }));
 }
 
 /** The suggested name of a new variant: "Variant N" for the first N from count + 1 that no tab is labelled with. */
@@ -312,10 +322,27 @@ function updateSlot(
   return updateVariant(state, target.variant, () => withSection(draft, target.section, writeSlot(section, target.slot, next)));
 }
 
-/** A deep copy of `source` under a new key and name, with new charm ids. */
+/** A copy of the section with new alternative keys (two drafts never share a React key). */
+function withNewAlternativeKeys<K extends string>(section: SectionDraft<K>): SectionDraft<K> {
+  const alternatives: Partial<Record<K, readonly DraftAlternative[]>> = {};
+  for (const slot of Object.keys(section.alternatives) as K[]) {
+    alternatives[slot] = (section.alternatives[slot] ?? []).map((alternative) => ({ ...alternative, key: newDraftKey('alt') }));
+  }
+  return { ...section, alternatives };
+}
+
+/** A deep copy of `source` under a new key and name, with new charm ids and alternative keys. */
 function copyDraft(source: VariantDraft, key: string, name: string): VariantDraft {
   const copy = structuredClone(source);
-  return { ...copy, key, name, charms: copy.charms.map((charm) => newCharmEntry(charm.text)) };
+  return {
+    ...copy,
+    key,
+    name,
+    player: withNewAlternativeKeys(copy.player),
+    swap: withNewAlternativeKeys(copy.swap),
+    merc: withNewAlternativeKeys(copy.merc),
+    charms: copy.charms.map((charm) => newCharmEntry(charm.text)),
+  };
 }
 
 /** Clearing the main item promotes the first alternative with an item (with its note and crafts); without one the slot empties. */
@@ -355,9 +382,12 @@ export function variantDraftsReducer(state: readonly VariantDraft[], action: Var
   switch (action.type) {
     case 'addVariant': {
       if (state.length >= VARIANTS_MAX) return state;
-      if (action.from === 'empty') return [...state, emptyVariantDraft(action.key, action.name)];
-      if (!inRange(action.from, state.length)) return state;
-      return [...state, copyDraft(state[action.from], action.key, action.name)];
+      if (action.from !== 'empty' && !inRange(action.from, state.length)) return state;
+      // Unnamed variants keep the label they had (the first stays "Default"), so a later move never relabels them.
+      const named = withFallbackNames(state);
+      const name = action.name.trim().length > 0 ? action.name : nextVariantName(named);
+      const added = action.from === 'empty' ? emptyVariantDraft(action.key, name) : copyDraft(named[action.from], action.key, name);
+      return [...named, added];
     }
     case 'renameVariant':
       return updateVariant(state, action.variant, (draft) => ({ ...draft, name: action.name }));

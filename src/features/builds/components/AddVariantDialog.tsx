@@ -19,19 +19,26 @@ interface AddVariantDialogProps {
   readonly onCreate: (name: string, from: number | 'empty') => void;
 }
 
-/** Name a new variant and pick what it starts from (a copy of any variant, or empty). Rendered only while open. */
+/** Name a new variant and pick what it starts from (a copy of any variant, or empty). The form starts fresh on each open. */
 export function AddVariantDialog({ open, onOpenChange, ...props }: AddVariantDialogProps) {
+  // Counts the openings: the form is keyed on it, so it resets on each open but stays filled while the dialog
+  // animates closed (unmounting it on close would blank the closing dialog).
+  const [openings, setOpenings] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setOpenings(openings + 1);
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        {open && (
-          <AddVariantForm
-            {...props}
-            onCancel={() => {
-              onOpenChange(false);
-            }}
-          />
-        )}
+        <AddVariantForm
+          key={openings}
+          {...props}
+          onCancel={() => {
+            onOpenChange(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

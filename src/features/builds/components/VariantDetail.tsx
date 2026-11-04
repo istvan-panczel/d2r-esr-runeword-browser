@@ -60,6 +60,8 @@ function variantHasPlayerAside(variant: VariantData): boolean {
 
 interface VariantDetailProps {
   readonly variant: VariantData;
+  /** The build has more than one variant (the empty-gear message then speaks of "this variant"). */
+  readonly multiVariant: boolean;
   readonly characterClass: string;
   /** The active variant's version diffs; undefined until they (and the local data) are ready. */
   readonly diffs: VariantItemDiffs | undefined;
@@ -74,7 +76,16 @@ interface VariantDetailProps {
  * Everything the detail page shows for one variant: the Player / Skills / Mercenary tabs. Keyed by the variant
  * index in the screen, so the swapped-in alternatives and "Show all" toggles reset on a variant switch.
  */
-export function VariantDetail({ variant, characterClass, diffs, craftData, skillData, tab, onTabChange }: VariantDetailProps) {
+export function VariantDetail({
+  variant,
+  multiVariant,
+  characterClass,
+  diffs,
+  craftData,
+  skillData,
+  tab,
+  onTabChange,
+}: VariantDetailProps) {
   // View-only alternative picks per section and slot (never saved), and the slots showing every alternative.
   const [picks, setPicks] = useState<SectionPicks>(NO_PICKS);
   const [showAll, setShowAll] = useState<ReadonlySet<string>>(() => new Set());
@@ -267,7 +278,7 @@ export function VariantDetail({ variant, characterClass, diffs, craftData, skill
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {hasMercGear ? 'No player gear has been added to this build yet.' : 'No gear has been added to this build yet.'}
+                {`No ${hasMercGear ? 'player gear' : 'gear'} has been added to ${multiVariant ? 'this variant' : 'this build'} yet.`}
               </p>
             )}
           </section>

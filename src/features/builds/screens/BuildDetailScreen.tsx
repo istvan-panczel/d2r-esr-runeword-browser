@@ -29,9 +29,9 @@ import { useSkillTree } from '../hooks/useSkillTree';
 import { hasSkillPoints } from '../utils/skillTree';
 import { unpackVariants, variantAt, variantHasCrafts, variantLabel } from '../utils/buildVariants';
 import { computeVariantItemDiffs } from '../utils/itemDiff';
-import { VARIANT_PARAM, variantIndexFromParam, variantParamValue } from '../utils/variantParam';
+import { VARIANT_PARAM, variantIndexFromParam, variantParamValue, withVariantParam } from '../utils/variantParam';
 import { VariantDetail, type DetailTab } from '../components/VariantDetail';
-import { VariantSelector } from '../components/VariantSelector';
+import { SingleVariantHeader, VariantSelector } from '../components/VariantSelector';
 import { ExportBuildButton } from '../components/ExportBuildButton';
 import {
   clearDetail,
@@ -252,7 +252,7 @@ export function BuildDetailScreen() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link to={`/builds/${build.id}/edit`}>
+                      <Link to={withVariantParam(`/builds/${build.id}/edit`, variantIndex)}>
                         <Pencil className="size-4" />
                         Edit
                       </Link>
@@ -287,18 +287,21 @@ export function BuildDetailScreen() {
           </section>
         )}
 
-        {variantList.length > 1 && (
+        {variantList.length > 1 ? (
           <VariantSelector
             labels={variantList.map((entry, index) => variantLabel(entry, index))}
             activeIndex={variantIndex}
             onSelect={selectVariant}
             note={variant.variantNote}
           />
+        ) : (
+          <SingleVariantHeader name={variant.variantName} note={variant.variantNote} />
         )}
 
         <VariantDetail
           key={variantIndex}
           variant={variant}
+          multiVariant={variantList.length > 1}
           characterClass={build.class}
           diffs={diffsReady}
           craftData={craftData}

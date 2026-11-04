@@ -406,6 +406,9 @@ describe('asVariantData', () => {
     const long = asVariantData({ variantName: 'n'.repeat(80), variantNote: 'x'.repeat(700) });
     expect(long.variantName).toHaveLength(50);
     expect(long.variantNote).toHaveLength(500);
+    // Capped by code points, so an emoji at the cut is kept whole (Postgres jsonb rejects lone surrogates).
+    const emoji = asVariantData({ variantName: `${'n'.repeat(49)}🔥🔥` });
+    expect(emoji.variantName).toBe(`${'n'.repeat(49)}🔥`);
   });
 
   it('never reads a variants key', () => {

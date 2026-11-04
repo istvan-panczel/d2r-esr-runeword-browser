@@ -23,6 +23,8 @@ export interface BuildFormSubmit {
   readonly description: string;
   readonly characterClass: CharacterClass;
   readonly buildData: BuildData;
+  /** The 0-based index of the variant shown when saving (the order is the saved one), so the page can open it. */
+  readonly activeVariant: number;
 }
 
 /** An alternative item while editing: the ref is null until one is picked (dropped on submit). */

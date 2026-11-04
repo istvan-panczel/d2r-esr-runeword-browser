@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { DEFAULT_VARIANT_NAME } from '../constants';
 
 interface VariantSelectorProps {
   /** The variant labels in order (variantLabel). */
@@ -11,7 +12,6 @@ interface VariantSelectorProps {
 
 /** The detail page's variant row: one segment per variant, scrolling sideways when the labels don't fit. */
 export function VariantSelector({ labels, activeIndex, onSelect, note }: VariantSelectorProps) {
-  const noteText = note?.trim();
   return (
     <div className="mb-4 flex flex-col gap-2">
       <div className="overflow-x-auto">
@@ -39,7 +39,36 @@ export function VariantSelector({ labels, activeIndex, onSelect, note }: Variant
           })}
         </div>
       </div>
-      {noteText !== undefined && noteText.length > 0 && <p className="whitespace-pre-wrap text-sm text-muted-foreground">{noteText}</p>}
+      <VariantNote note={note} />
+    </div>
+  );
+}
+
+/** A variant note (muted, line breaks kept); nothing when blank. */
+function VariantNote({ note }: { readonly note: string | undefined }) {
+  const text = note?.trim();
+  if (text === undefined || text.length === 0) return null;
+  return <p className="whitespace-pre-wrap text-sm text-muted-foreground">{text}</p>;
+}
+
+interface SingleVariantHeaderProps {
+  readonly name: string | undefined;
+  readonly note: string | undefined;
+}
+
+/**
+ * The name and note of a build's only variant (no selector to show them in). Nothing when the variant has neither a
+ * custom name (anything but "Default") nor a note, so such builds look as they did before variants.
+ */
+export function SingleVariantHeader({ name, note }: SingleVariantHeaderProps) {
+  const customName = name?.trim();
+  const shownName = customName !== undefined && customName.length > 0 && customName !== DEFAULT_VARIANT_NAME ? customName : null;
+  const hasNote = (note?.trim().length ?? 0) > 0;
+  if (shownName === null && !hasNote) return null;
+  return (
+    <div className="mb-4 flex flex-col gap-1">
+      {shownName !== null && <h2 className="text-base font-semibold">{shownName}</h2>}
+      <VariantNote note={note} />
     </div>
   );
 }
