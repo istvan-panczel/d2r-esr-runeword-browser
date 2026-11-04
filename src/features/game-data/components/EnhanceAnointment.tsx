@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import type { EnhanceBundle } from '../engine/schema';
 import { ANOINTMENT_EXTRA_POOLS, filterAnointmentOutcomes, qualityList } from '../utils/enhance';
 import { BonusLines, NoMatches, Pills } from './EnhanceParts';
+import { ROW_LIST_COLUMNS } from './rowListColumns';
 
 interface EnhanceAnointmentProps {
   readonly bundle: EnhanceBundle;
@@ -80,7 +82,7 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
       {outcomes.length === 0 ? (
         <NoMatches />
       ) : (
-        <ol className="divide-y rounded-md border">
+        <ol className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
           {outcomes.map((outcome) => {
             const notSocketed = socketedMax !== null && outcome.roll > socketedMax;
             return (

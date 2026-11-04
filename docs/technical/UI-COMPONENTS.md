@@ -109,12 +109,16 @@ PageShell            one centred width + the title row
   (`grid sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5`): a Standard page is never wider
   than 1280 px, so it never matches them. Always name the container (`/page`); a bare `@8xl:` queries the nearest
   container of any kind (shadcn's `CardHeader` is one). `container-type: inline-size` leaves `position: fixed`
-  (`ScrollToTopButton`, the guide note's phone bar) and `sticky` columns working.
+  (`ScrollToTopButton`, the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
+  (Enhance outcomes, cube rows, materials) use CSS columns instead: `ROW_LIST_COLUMNS` in
+  `src/features/game-data/components/rowListColumns.ts`.
 - Screens that set their own frame: the home page (`max-w-5xl`), the guide note (`max-w-2xl`, `lg:max-w-7xl` in every
   mode: a reading column plus the graph aside), the guide map (`max-w-2xl`, from `lg` the setting via
   `PAGE_WIDE_LG_CLASS`) and the build detail with the player sidebar (Standard: breaks out of the container to a 1920 px
-  cap; Wide and Full: fills the app frame, so it lines up with the header). The user profile uses a width-only
-  `PageShell`.
+  cap; Wide and Full: fills the app frame, so it lines up with the header, and is itself the `page` container: from
+  `@10xl` a weapon swap sits beside the player gear, and without one the gear column stops at 120rem). The user profile
+  uses a width-only `PageShell`. The guide map graph is never taller than the window minus 15rem (never capped below
+  48rem, the Standard graph height), so a Full page does not get a graph taller than the screen.
 - `title` omitted: the shell only sets the width. Layout routes use this (`GuideLayout`, `LootFilterLayout`) and their
   children render their own headers (the loot filter editor's inline-editable name, the guide note's breadcrumb card).
   Nested shells are harmless (the same `mx-auto max-w-*`; `/page` container queries resolve to the innermost one).

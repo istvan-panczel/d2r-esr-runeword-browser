@@ -57,6 +57,22 @@ type DetailTab = 'player' | 'skills' | 'mercenary';
 
 const hasText = (value: string | null | undefined): boolean => value !== null && value !== undefined && value.trim().length > 0;
 
+/*
+ * The Player tab on pages of 2400 px and up (Wide and Full page widths; the `page` container is set below only for
+ * them). With player gear and a weapon swap, the swap sits beside the gear: five equal slot columns use the width.
+ * Without one of them the three paperdoll columns would stretch across an ultrawide window, so the gear column stops
+ * at 120rem (the charms + ascendancy aside stays right next to it) and the rest of the row stays empty.
+ */
+const GEAR_SIDE_BY_SIDE_CLASS =
+  'flex flex-col gap-6 @10xl/page:grid @10xl/page:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @10xl/page:items-start';
+const PLAYER_TAB_CLASS = {
+  aside: {
+    fill: 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]',
+    capped: 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] @10xl/page:grid-cols-[minmax(0,120rem)_24rem]',
+  },
+  noAside: { fill: 'flex flex-col gap-6', capped: 'flex flex-col gap-6 @10xl/page:max-w-[120rem]' },
+} as const;
+
 export function BuildDetailScreen() {
   const { buildId } = useParams();
   const dispatch = useDispatch();
@@ -184,6 +200,7 @@ export function BuildDetailScreen() {
   // Charms + ascendancy sit beside the player gear on wide screens.
   const hasPlayerAside = charms.length > 0 || ascendancyName !== null;
   const breakout = hasPlayerAside && pageWidth === 'standard';
+  const gearSideBySide = hasPlayerGear && hasSwap;
   const availableTabs: readonly DetailTab[] = [
     'player',
     ...(hasSkills ? (['skills'] as const) : []),
@@ -196,9 +213,10 @@ export function BuildDetailScreen() {
     // With the sidebar and the Standard page width, break out of the app container so the gear column can grow;
     // capped at 1920 px and centered so it isn't edge-to-edge. Wide and Full need no breakout: the app frame itself is
     // 1920 px (Wide) or the whole window (Full), and the page lines up with the header. Without the sidebar the page
-    // fills the app frame.
+    // fills the app frame. Wide and Full make the page the `page` container (like PageShell), so the gear can use the
+    // extra room; Standard has no container, so the `@…/page:` classes below never apply there.
     <div className={breakout ? 'mx-[calc(50%_-_50vw)] px-4 sm:px-6' : ''}>
-      <div className={breakout ? 'mx-auto w-full max-w-[1920px]' : ''}>
+      <div className={breakout ? 'mx-auto w-full max-w-[1920px]' : pageWidth === 'standard' ? '' : '@container/page'}>
         <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
           <Link to="/builds">
             <ArrowLeft className="size-4" />
@@ -325,11 +343,11 @@ export function BuildDetailScreen() {
           )}
 
           <TabsContent value="player">
-            <div className={hasPlayerAside ? 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]' : 'flex flex-col gap-6'}>
+            <div className={PLAYER_TAB_CLASS[hasPlayerAside ? 'aside' : 'noAside'][gearSideBySide ? 'fill' : 'capped']}>
               <section>
                 <SectionHeader title="Equipment" />
                 {hasPlayerGear || hasSwap ? (
-                  <div className="flex flex-col gap-6">
+                  <div className={gearSideBySide ? GEAR_SIDE_BY_SIDE_CLASS : 'flex flex-col gap-6'}>
                     {hasPlayerGear && (
                       <div>
                         <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Player Gear</h3>

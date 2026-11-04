@@ -109,7 +109,7 @@ export function UserProfileScreen() {
             <Skeleton className="h-4 w-32" />
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
           {SKELETON_KEYS.map((key) => (
             <BuildCardSkeleton key={key} />
           ))}
@@ -162,7 +162,7 @@ export function UserProfileScreen() {
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
               {builds.map((build) => (
                 <BuildCard key={build.id} build={build} currentEsrVersion={currentEsrVersion} liked={likedBuildIds.has(build.id)} />
               ))}

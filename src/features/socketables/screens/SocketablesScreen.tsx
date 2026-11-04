@@ -44,7 +44,7 @@ export function SocketablesScreen() {
             : 'No socketables found. Try adjusting your filters or load data first.'}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 @8xl/page:grid-cols-5 @9xl/page:grid-cols-6 @10xl/page:grid-cols-8 @11xl/page:grid-cols-9 gap-4">
           {socketables.map((socketable) => (
             <div key={`${socketable.category}-${socketable.name}`} className="card-visibility-auto">
               <SocketableCard socketable={socketable} sourceIndex={sourceIndex} />

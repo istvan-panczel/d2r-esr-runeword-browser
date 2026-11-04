@@ -9,11 +9,13 @@ import { ExactNameChip } from '@/core/components/ExactNameChip';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { useGuide } from '@/features/guide/hooks/useGuide';
+import { cn } from '@/lib/utils';
 import type { MaterialsBundle } from '../engine/schema';
 import { EnhanceSearch, Pills } from '../components/EnhanceParts';
 import { GameDataError } from '../components/GameDataError';
 import { GameDataLoading } from '../components/GameDataLoading';
 import { MaterialRow } from '../components/MaterialRow';
+import { ROW_LIST_COLUMNS } from '../components/rowListColumns';
 import { useGameData } from '../hooks/useGameData';
 import { formatCount } from '../utils/cube';
 import {
@@ -147,7 +149,7 @@ function MaterialsBrowser({ bundle }: { readonly bundle: MaterialsBundle }) {
               {view.blocks.map((block) => (
                 <div key={block.code} className="space-y-1">
                   {view.blocks.length > 1 && <h3 className="px-1 text-sm font-medium text-muted-foreground">{block.label}</h3>}
-                  <ul className="divide-y rounded-md border">
+                  <ul className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
                     {block.items.map((item) => (
                       <MaterialRow
                         key={item.code}

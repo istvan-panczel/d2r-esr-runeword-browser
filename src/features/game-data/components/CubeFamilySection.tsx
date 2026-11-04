@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { CubeMergedRow, CubeRecipe, CubeSection } from '../engine/schema';
 import { familyAnchor, formatCount, sectionDocsUrl, type CubeFamilyView, type CubeGroupView } from '../utils/cube';
 import { BonusLines } from './EnhanceParts';
+import { ROW_LIST_COLUMNS } from './rowListColumns';
 
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 px-3 py-2 text-sm break-words';
 
@@ -127,14 +128,14 @@ function GroupBlock({
         </div>
       )}
       {expanded && recipes.length > 0 ? (
-        <ul className="divide-y rounded-md border bg-muted/20">
+        <ul className={cn('divide-y rounded-md border bg-muted/20', ROW_LIST_COLUMNS)}>
           {recipes.map((recipe) => (
             <RawRecipe key={recipe.id} recipe={recipe} />
           ))}
         </ul>
       ) : (
         rows.length > 0 && (
-          <ul className="divide-y rounded-md border">
+          <ul className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
             {rows.map((row, i) => (
               <MergedRow key={`${String(i)}-${row.output}`} row={row} />
             ))}

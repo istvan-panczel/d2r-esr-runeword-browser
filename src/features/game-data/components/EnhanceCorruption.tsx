@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import type { EnhanceBundle } from '../engine/schema';
 import { brickSummary, filterCorruptionOutcomes, formatRate, missingQualities, qualityList } from '../utils/enhance';
 import { BonusLines, ComputedRate, NoMatches, Pills } from './EnhanceParts';
+import { ROW_LIST_COLUMNS } from './rowListColumns';
 
 interface EnhanceCorruptionProps {
   readonly bundle: EnhanceBundle;
@@ -75,7 +77,7 @@ export function EnhanceCorruption({ bundle, slot: slotId, search, onSlot }: Enha
       {outcomes.length === 0 ? (
         <NoMatches />
       ) : (
-        <ol className="divide-y rounded-md border">
+        <ol className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
           {outcomes.map((outcome) => (
             <li key={outcome.roll} className="flex gap-3 px-3 py-2 text-sm">
               <span className="w-8 shrink-0 text-right font-mono text-xs text-muted-foreground" title="Roll">

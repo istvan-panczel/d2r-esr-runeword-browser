@@ -364,7 +364,7 @@ function BaseGroupSection({ group, bases, typeByCode, classNames }: BaseGroupSec
       <h3 className="text-sm font-semibold">
         {group.name} <span className="font-normal text-muted-foreground">({group.results.length})</span>
       </h3>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7">
         {visible.map((result) => (
           <EligibleBaseCard
             key={result.base.code}

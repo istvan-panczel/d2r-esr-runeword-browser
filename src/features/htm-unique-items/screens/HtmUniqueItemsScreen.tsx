@@ -70,7 +70,7 @@ export function HtmUniqueItemsScreen() {
               : 'No unique items found. Try adjusting your filters.'}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7 gap-4">
           {filteredItems.map((item) => (
             <div key={item.id} className="card-visibility-auto">
               <HtmUniqueItemCard

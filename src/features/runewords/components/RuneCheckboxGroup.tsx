@@ -26,14 +26,15 @@ function getTierState(runes: readonly string[], category: string, selectedRunes:
 /**
  * Rune columns per group kind, as fixed-width grids so the wrapped lines line up and no line holds a single rune.
  * Tuned for the current group sizes (ESR tiers 7, LoD tiers 11, Kanji 14) at 390 / 768 / 1024 / 1280 px:
- * ESR 5 → 7 per line, LoD 4 → 6 → 11 → 6 (two-column layout from xl), Kanji 3 → 5 → 7 → 4.
+ * ESR 5 → 7 per line, LoD 4 → 6 → 11 → 6 (two-column layout from xl), Kanji 3 → 5 → 7 → 4. Pages of 1920 px and up
+ * (the Wide and Full page widths) have room for a whole LoD tier and half the Kanji runes per line again: 11 and 7.
  */
 const RUNE_COLUMNS: Record<RuneGroup['category'], string> = {
   esrRunes: 'grid-cols-[repeat(5,3.25rem)] md:grid-cols-[repeat(7,3.25rem)]',
   lodRunes:
-    'grid-cols-[repeat(4,3.75rem)] md:grid-cols-[repeat(6,3.75rem)] lg:grid-cols-[repeat(11,3.75rem)] xl:grid-cols-[repeat(6,3.75rem)]',
+    'grid-cols-[repeat(4,3.75rem)] md:grid-cols-[repeat(6,3.75rem)] lg:grid-cols-[repeat(11,3.75rem)] xl:grid-cols-[repeat(6,3.75rem)] @9xl/page:grid-cols-[repeat(11,3.75rem)]',
   kanjiRunes:
-    'grid-cols-[repeat(3,5.25rem)] md:grid-cols-[repeat(5,5.25rem)] lg:grid-cols-[repeat(7,5.25rem)] xl:grid-cols-[repeat(4,5.25rem)]',
+    'grid-cols-[repeat(3,5.25rem)] md:grid-cols-[repeat(5,5.25rem)] lg:grid-cols-[repeat(7,5.25rem)] xl:grid-cols-[repeat(4,5.25rem)] @9xl/page:grid-cols-[repeat(7,5.25rem)]',
 };
 
 /** One rune group, laid out like `FilterGroup` (10rem label column from md, label on its own line on phones). */

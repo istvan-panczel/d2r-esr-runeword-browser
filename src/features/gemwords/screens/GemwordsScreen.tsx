@@ -68,7 +68,7 @@ export function GemwordsScreen() {
         </p>
       ) : (
         <SocketableLookupContext value={socketableLookup}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7 gap-4">
             {filteredGemwords.map((gemword) => (
               <div key={`${gemword.name}-${String(gemword.variant)}-${gemword.allowedItems.join(',')}`} className="card-visibility-auto">
                 <GemwordCard

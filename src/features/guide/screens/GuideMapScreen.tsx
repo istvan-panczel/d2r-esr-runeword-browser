@@ -127,7 +127,8 @@ function GuideMap({ guide }: MapProps) {
 
       <div className="space-y-3">
         <SectionLabel>All notes</SectionLabel>
-        <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+        {/* Two groups per row; three from 1536 px and all six (five spine steps + other topics) from 2880 px */}
+        <div className="grid gap-3 lg:grid-cols-2 lg:items-start @8xl/page:grid-cols-3 @11xl/page:grid-cols-6">
           {groups.map((group) => (
             <Group key={group.kind === 'step' ? `step-${String(group.index)}` : 'other'} guide={guide} group={group} visited={visited} />
           ))}

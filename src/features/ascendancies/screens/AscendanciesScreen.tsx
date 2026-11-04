@@ -29,7 +29,7 @@ export function AscendanciesScreen() {
       {items.length === 0 ? (
         <p className="text-muted-foreground py-8 text-center">No ascendancies found. Try adjusting your search.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7 gap-4">
           {items.map((item) => (
             <AscendancyCard key={item.name} item={item} />
           ))}
