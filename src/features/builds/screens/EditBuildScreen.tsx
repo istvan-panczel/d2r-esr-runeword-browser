@@ -6,8 +6,6 @@ import { PageShell } from '@/components/PageShell';
 import { Spinner } from '@/components/ui/spinner';
 import { RequestState } from '@/core/types';
 import { selectAuthInitialized, selectAuthUserId, selectIsAuthenticated } from '@/features/auth';
-import { asBuildData } from '../buildData';
-import type { CharacterClass } from '../constants';
 import {
   clearDetail,
   fetchBuildRequested,
@@ -19,7 +17,8 @@ import {
   updateBuildRequested,
 } from '../store';
 import { BuildForm } from '../components/BuildForm';
-import type { BuildFormSubmit, BuildFormValues } from '../components/buildFormModel';
+import type { BuildFormSubmit } from '../components/buildFormModel';
+import { buildFormValuesFromBuild } from '../utils/variantDrafts';
 
 export function EditBuildScreen() {
   const { buildId } = useParams();
@@ -94,26 +93,7 @@ export function EditBuildScreen() {
     return <Navigate to={`/build/${build.id}`} replace />;
   }
 
-  const buildData = asBuildData(build.build_data);
-  const initialValues: BuildFormValues = {
-    name: build.name,
-    description: build.description ?? '',
-    characterClass: build.class as CharacterClass,
-    items: buildData.items ?? {},
-    weaponSwap: buildData.weaponSwap ?? {},
-    mercenary: buildData.mercenary ?? {},
-    itemNotes: buildData.itemNotes ?? {},
-    weaponSwapNotes: buildData.weaponSwapNotes ?? {},
-    mercenaryNotes: buildData.mercenaryNotes ?? {},
-    itemCrafts: buildData.itemCrafts ?? {},
-    weaponSwapCrafts: buildData.weaponSwapCrafts ?? {},
-    mercenaryCrafts: buildData.mercenaryCrafts ?? {},
-    charms: buildData.charms ?? [],
-    ascendancy: buildData.ascendancy ?? null,
-    skills: buildData.skills ?? '',
-    level: buildData.level ?? null,
-    skillPoints: buildData.skillPoints ?? {},
-  };
+  const initialValues = buildFormValuesFromBuild(build);
 
   const handleSubmit = (payload: BuildFormSubmit) => {
     dispatch(
