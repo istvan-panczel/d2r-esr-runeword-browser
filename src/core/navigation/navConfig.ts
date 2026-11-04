@@ -220,7 +220,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     kind: 'group',
     key: 'database',
     label: 'Database',
-    description: 'Uniques, mythicals, sets, ascendancies, skills, every base item, material and area',
+    description: 'Uniques, mythicals, sets, ascendancies, skills, every base item, material and area, the campaign map',
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
@@ -239,6 +239,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         to: '/game-data/areas',
         label: 'Areas',
         description: "Every area's monster level per difficulty, density, waypoints and the endgame map tiers",
+      },
+      {
+        key: 'campaign-map',
+        to: '/campaign-map',
+        label: 'Campaign Map',
+        description: 'Acts, quest items, special areas, uber portals and endgame maps on one map per act',
       },
     ],
   },

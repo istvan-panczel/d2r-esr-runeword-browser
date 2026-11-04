@@ -1,5 +1,5 @@
-import { Check } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Check, Map as MapIcon } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
@@ -10,6 +10,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { NumberFilterInput } from '@/core/components/RecipeCommonFilters';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
+import { campaignMapAreaPath } from '@/features/campaign-map/utils/urlState';
 import type { Area, AreasBundle, PerDifficulty } from '../engine/schema';
 import { EnhanceSearch } from '../components/EnhanceParts';
 import { GameDataError } from '../components/GameDataError';
@@ -229,6 +230,14 @@ function AreaRow({ area, nameOf }: { readonly area: Area; readonly nameOf: (id: 
           )}
         </span>
         {area.boss !== undefined && <span className="block text-xs font-normal text-muted-foreground">Boss: {area.boss}</span>}
+        <Link
+          to={campaignMapAreaPath(area.id)}
+          className="inline-flex items-center gap-1 text-xs font-normal text-primary hover:underline"
+          aria-label={`Show ${area.name} on the campaign map`}
+        >
+          <MapIcon className="size-3" aria-hidden />
+          Show on map
+        </Link>
       </th>
       <td className={`${CELL_CLASS} whitespace-nowrap tabular-nums`}>{formatTriple(area.level)}</td>
       <td className={`${CELL_CLASS} whitespace-nowrap tabular-nums`}>{formatTriple(area.density)}</td>

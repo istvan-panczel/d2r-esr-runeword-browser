@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { homeResultHref, rankNames, runewordsSearchHref, searchHome, skillSearchNames } from './homeSearch';
+import { areaSearchNames, homeResultHref, rankNames, runewordsSearchHref, searchHome, skillSearchNames } from './homeSearch';
 
 describe('rankNames', () => {
   const names = ['Black Enigma', 'Enigma', 'Enigmatic Ring', 'Stenigma', 'Oath', 'Mosaic'];
@@ -75,6 +75,32 @@ describe('searchHome', () => {
   });
 });
 
+describe('areaSearchNames', () => {
+  it('suffixes the act of names shared across acts and keeps one result per twin family', () => {
+    const names = areaSearchNames([
+      { id: 38, name: 'Tristram', act: 0 },
+      { id: 48, name: 'Sewers Level 1', act: 1 },
+      { id: 66, name: "Tal Rasha's Tomb", act: 1 },
+      { id: 67, name: "Tal Rasha's Tomb", act: 1 },
+      { id: 92, name: 'Sewers Level 1', act: 2 },
+      { id: 136, name: 'Tristram', act: 4 },
+    ]);
+    expect(names).toEqual([
+      { name: 'Tristram (Act I)', id: '38' },
+      { name: 'Sewers Level 1 (Act II)', id: '48' },
+      { name: "Tal Rasha's Tomb", id: '66' },
+      { name: "Tal Rasha's Tomb", id: '67' },
+      { name: 'Sewers Level 1 (Act III)', id: '92' },
+      { name: 'Tristram (Act V)', id: '136' },
+    ]);
+    expect(rankNames(names, 'sewers level 1').map((entry) => homeResultHref('areas', entry))).toEqual([
+      '/campaign-map?area=48',
+      '/campaign-map?area=92',
+    ]);
+    expect(rankNames(names, 'tal rasha')).toEqual([{ name: "Tal Rasha's Tomb", id: '66' }]);
+  });
+});
+
 describe('skillSearchNames', () => {
   it('suffixes the variant of skills sharing a name and keeps every id', () => {
     const names = skillSearchNames([
@@ -107,12 +133,13 @@ describe('result links', () => {
     expect(homeResultHref('bases', 'Ring Mail')).toBe('/game-data/bases?search=%22Ring%20Mail%22');
   });
 
-  it('focuses a skill id, a material name, a cube family id and phrase-searches areas', () => {
+  it('focuses a skill id, a material name, a cube family id, opens an area on the campaign map (phrase search without an id)', () => {
     expect(homeResultHref('skills', { name: 'Amplify Damage (Aura)', id: 'Amplify Damage Aura' })).toBe(
       '/skills?skill=Amplify%20Damage%20Aura'
     );
     expect(homeResultHref('materials', 'Small Charm')).toBe('/game-data/materials?name=Small%20Charm');
     expect(homeResultHref('areas', 'Catacombs Level 3')).toBe('/game-data/areas?search=%22Catacombs%20Level%203%22');
+    expect(homeResultHref('areas', { name: 'Sewers Level 2', id: '93' })).toBe('/campaign-map?area=93');
     expect(homeResultHref('cube', { name: 'Opening map portals', id: 'map-portals' })).toBe('/game-data/cube?family=map-portals');
   });
 

@@ -23,6 +23,7 @@ describe('isStaticBundlePath', () => {
     '/game-data/cube',
     '/game-data/materials',
     '/game-data/sets',
+    '/campaign-map',
     '/stash',
     '/stash/coupons',
     '/stash/items',

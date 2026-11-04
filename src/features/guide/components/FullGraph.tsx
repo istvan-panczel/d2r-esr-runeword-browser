@@ -10,9 +10,9 @@ import {
 } from '../engine/fullGraph';
 import { findNote } from '../engine/notes';
 import type { GuideSpineStep } from '../engine/schema';
-import { useHoverPopover } from '../hooks/useHoverPopover';
+import { useHoverPopover } from '@/components/useHoverPopover';
 import { useLoadedGuide } from '../hooks/useLoadedGuide';
-import { PeekPopover, PeekText } from './PeekPopover';
+import { PeekPopover, PeekText } from '@/components/PeekPopover';
 import { GUIDE_PROSE_FONT } from './styles';
 
 /** Height / width of the graph panel. */
@@ -60,6 +60,7 @@ function Node({ node, visited, emphasis, onActive }: NodeProps) {
   return (
     <PeekPopover
       peek={peek}
+      className={GUIDE_PROSE_FONT}
       enabled={target !== undefined}
       trigger={
         <Link

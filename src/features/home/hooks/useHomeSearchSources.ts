@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/core/db';
 import { loadGameDataFile } from '@/features/game-data/engine/browser/loadGameData';
-import { skillSearchNames, type HomeSearchSources } from '../utils/homeSearch';
+import { areaSearchNames, skillSearchNames, type HomeSearchSources } from '../utils/homeSearch';
 
 type ItemSources = Required<Pick<HomeSearchSources, 'runewords' | 'gemwords' | 'uniques' | 'mythicals'>>;
 
@@ -55,7 +55,7 @@ const NAME_LOADERS: Record<NamesBundle, () => Promise<HomeSearchSources>> = {
   },
   areas: async () => {
     const bundle = await loadGameDataFile('areas');
-    return { areas: bundle.areas.map((area) => area.name) };
+    return { areas: areaSearchNames(bundle.areas) };
   },
 };
 

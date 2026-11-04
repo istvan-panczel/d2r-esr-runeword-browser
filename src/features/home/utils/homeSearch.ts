@@ -5,8 +5,9 @@
 import { NAME_FOCUS_PAGES } from '@/features/guide/engine/linkSchemes';
 import { normaliseItemName } from '@/core/utils/itemName';
 import { GAME_DATA_URL_PARAM_KEYS } from '@/features/game-data/constants/urlParams';
-import type { SkillDetail } from '@/features/game-data/engine/schema';
+import type { Area, SkillDetail } from '@/features/game-data/engine/schema';
 import { disambiguation, duplicateNames, SKILLS_ROUTE, SKILLS_URL_PARAMS } from '@/features/skills/utils/skills';
+import { campaignMapAreaPath } from '@/features/campaign-map/utils/urlState';
 
 const SETS_PAGE = '/game-data/sets';
 
@@ -114,8 +115,10 @@ const NAME_FOCUS_PATHS: Record<Exclude<HomeSearchCategory, 'bases' | 'skills' | 
 /**
  * Page link of a picked result. The list pages and Materials focus the exact name (`?name=`); Skills focuses the skill id
  * (`?skill=`, the page picks its class and tab) and the Cube page a family id (`?family=`), falling back to the name
- * when the entry carries no id. Bases and Areas have no exact-name focus, so they get a quoted phrase search (`?search=`,
- * the same link the guide's `base:` scheme builds).
+ * when the entry carries no id. An area with its levels.txt id opens the Campaign Map on it (`/campaign-map?area=<id>`,
+ * whose detail panel links the Areas page row); without an id it falls back to the Areas page. Bases (and id-less
+ * areas) have no exact-name focus, so they get a quoted phrase search (`?search=`, the same link the guide's `base:`
+ * scheme builds).
  */
 export function homeResultHref(category: HomeSearchCategory, entry: HomeSearchName): string {
   const name = nameOf(entry);
@@ -124,7 +127,9 @@ export function homeResultHref(category: HomeSearchCategory, entry: HomeSearchNa
     case 'bases':
       return `/game-data/bases?search=${encodeURIComponent(`"${name}"`)}`;
     case 'areas':
-      return `/game-data/areas?search=${encodeURIComponent(`"${name}"`)}`;
+      return typeof entry === 'string' || !/^\d+$/.test(entry.id)
+        ? `/game-data/areas?search=${encodeURIComponent(`"${name}"`)}`
+        : campaignMapAreaPath(Number(entry.id));
     case 'skills':
       return `/${SKILLS_ROUTE}?${SKILLS_URL_PARAMS.SKILL}=${encodeURIComponent(id)}`;
     case 'cube':
@@ -143,6 +148,23 @@ export function skillSearchNames(skills: readonly Pick<SkillDetail, 'id' | 'name
   return skills.map((skill) => {
     const variant = disambiguation(skill, duplicates);
     return { name: variant === null ? skill.name : `${skill.name} (${variant})`, id: skill.id };
+  });
+}
+
+const ACT_NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
+
+/**
+ * Area search names with their levels.txt ids (each opens its own `/campaign-map?area=<id>`). Names shared across acts
+ * get the act as a suffix ("Sewers Level 1 (Act II)", "Tristram (Act V)" for the uber level); rows sharing a name within
+ * one act (Tal Rasha's Tomb ×7, one station on the map) stay one result.
+ */
+export function areaSearchNames(areas: readonly Pick<Area, 'id' | 'name' | 'act'>[]): HomeSearchName[] {
+  const actsOf = new Map<string, Set<number>>();
+  for (const area of areas) actsOf.set(area.name, (actsOf.get(area.name) ?? new Set()).add(area.act));
+  return areas.map((area) => {
+    const shared = (actsOf.get(area.name)?.size ?? 0) > 1;
+    const act = ACT_NUMERALS[area.act] ?? String(area.act + 1);
+    return { name: shared ? `${area.name} (Act ${act})` : area.name, id: String(area.id) };
   });
 }
 

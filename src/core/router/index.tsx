@@ -100,6 +100,11 @@ const UserProfileScreen = lazy(async () => {
   return { default: module.UserProfileScreen };
 });
 
+const CampaignMapScreen = lazy(async () => {
+  const module = await import('@/features/campaign-map');
+  return { default: module.CampaignMapScreen };
+});
+
 const GameDataLayout = lazy(async () => {
   const module = await import('@/features/game-data');
   return { default: module.GameDataLayout };
@@ -231,6 +236,7 @@ export const router = createBrowserRouter(
         { path: 'mythicals', element: routeElement(MythicalUniquesScreen) },
         { path: 'ascendancies', element: routeElement(AscendanciesScreen) },
         { path: 'skills', element: routeElement(SkillsScreen) },
+        { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
         {
           path: 'game-data',
           element: routeElement(GameDataLayout),

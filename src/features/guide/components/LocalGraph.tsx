@@ -11,9 +11,9 @@ import {
 } from '../engine/localGraph';
 import { findNote } from '../engine/notes';
 import type { GuideNote } from '../engine/schema';
-import { useHoverPopover } from '../hooks/useHoverPopover';
+import { useHoverPopover } from '@/components/useHoverPopover';
 import { useLoadedGuide } from '../hooks/useLoadedGuide';
-import { PeekPopover, PeekText } from './PeekPopover';
+import { PeekPopover, PeekText } from '@/components/PeekPopover';
 import { SectionLabel } from './SectionLabel';
 import { GUIDE_PROSE_FONT } from './styles';
 
@@ -79,6 +79,7 @@ function NeighbourNode({ node, visited }: NeighbourNodeProps) {
   return (
     <PeekPopover
       peek={peek}
+      className={GUIDE_PROSE_FONT}
       enabled={target !== undefined}
       trigger={
         <Link

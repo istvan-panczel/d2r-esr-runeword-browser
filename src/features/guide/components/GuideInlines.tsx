@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { findNote } from '../engine/notes';
 import type { GuideInline } from '../engine/schema';
-import { useHoverPopover } from '../hooks/useHoverPopover';
+import { useHoverPopover } from '@/components/useHoverPopover';
 import { useLoadedGuide } from '../hooks/useLoadedGuide';
 import { AppLinkIcon } from './AppLinkIcon';
 import { ExternalLink } from '@/components/ExternalLink';
-import { PeekPopover, PeekText } from './PeekPopover';
-import { LINK_CLASS } from './styles';
+import { PeekPopover, PeekText } from '@/components/PeekPopover';
+import { GUIDE_PROSE_FONT, LINK_CLASS } from './styles';
 
 interface NoteLinkProps {
   readonly slug: string;
@@ -23,6 +23,7 @@ function NoteLink({ slug, children }: NoteLinkProps) {
   return (
     <PeekPopover
       peek={peek}
+      className={GUIDE_PROSE_FONT}
       enabled={target !== undefined}
       trigger={
         <Link to={`/guide/${slug}`} className={LINK_CLASS} {...peek.triggerProps}>
@@ -50,6 +51,7 @@ function Term({ term, children }: TermProps) {
   return (
     <PeekPopover
       peek={peek}
+      className={GUIDE_PROSE_FONT}
       trigger={
         // A tap (touch) opens it too; tapping outside closes it.
         <button
