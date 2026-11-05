@@ -38,7 +38,8 @@
     "guide:watch": "node scripts/generate-guide.ts --watch",
     "guide:verify": "node scripts/generate-guide.ts verify",
     "guide:report": "node scripts/generate-guide.ts report",
-    "check:loot-filter-sharing": "node scripts/check-loot-filter-sharing.ts"
+    "check:loot-filter-sharing": "node scripts/check-loot-filter-sharing.ts",
+    "loot-filter:icons": "node scripts/generate-loot-filter-icons.ts"
   },
   "commit-and-tag-version": {
     "scripts": {
