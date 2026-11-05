@@ -1,5 +1,5 @@
 /**
- * Example rules for a starter filter (the Rules tab's "Example rules" dialog): about sixty rules in groups modelled on
+ * Example rules for a starter filter (the Rules tab's "Example rules" dialog): some seventy rules in groups modelled on
  * the sections of Sully's QoL filter (runes, gems, uniques, sets, mythicals, coupons, bases, charms and jewels, class
  * items, endgame items, crafting reagents, maps, gold and potions, junk), written for this site. An example is its
  * conditions (plus any fixed name tag or hide) and default presentation choices: a style preset, a sound, a minimap
@@ -80,7 +80,8 @@ export const EXAMPLE_GROUPS: readonly ExampleGroup[] = [
   {
     id: 'endgame',
     title: 'Keys, organs and endgame items',
-    intro: 'Uber keys and organs, respec essences, legendary materials and the Ascendancy items.',
+    intro:
+      'Uber keys and organs, respec essences, legendary materials, the Ascendancy items, Weapon Mastery Tokens and the pieces of the Eternal Hourglass.',
   },
   { id: 'crafting', title: 'Crafting reagents', intro: 'Cube ingredients from common body parts to rare reagents.' },
   { id: 'maps', title: 'Maps', intro: 'Endgame maps z01 to z20 by tier, and The Hidden Vault.' },
@@ -88,7 +89,7 @@ export const EXAMPLE_GROUPS: readonly ExampleGroup[] = [
     id: 'gold',
     title: 'Gold and potions',
     intro:
-      'Character stats: “level” is your character level, so a rule can wait until small gold and weak potions stop mattering. Town areas are left out so nothing is hidden there.',
+      'Character stats: “level” is your character level, so a rule can wait until small gold and weak potions stop mattering; the levels are the ones Sully’s filter uses. Town areas are left out so nothing is hidden there.',
   },
   {
     id: 'junk',
@@ -288,10 +289,10 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
   {
     id: 'hide-low-gems',
     group: 'gems',
-    title: 'Hide chipped and flawed gems from character level 30',
+    title: 'Hide chipped and flawed gems from character level 20',
     description:
-      'A character stat condition: the rule waits until your character is level 30, and never hides in town. Skip it if you craft Aura Stones, which take a chipped gem.',
-    rule: { itemTypes: ['gem0', 'gem1'], playerStats: [level(30)], excludeAreas: TOWNS, hide: true },
+      'A character stat condition: the rule waits until your character is level 20 (Sully hides chipped gems from 20), and never hides in town. Skip it if you craft Aura Stones, which take a chipped gem.',
+    rule: { itemTypes: ['gem0', 'gem1'], playerStats: [level(20)], excludeAreas: TOWNS, hide: true },
   },
 
   // ----- Uniques -----
@@ -600,6 +601,24 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     rule: { itemCodes: numbered('', 1, 50, 'b') },
     presentation: { style: 'rare-reagent', sound: 'gong.mp3', chatMessage: 'ÿc4Ancient Scroll' },
   },
+  {
+    id: 'weapon-mastery-tokens',
+    group: 'endgame',
+    title: 'Weapon Mastery Tokens',
+    description:
+      'The token (u23) Corrupted Zakarum in Nightmare and Hell and the Endgame Map bosses drop: cubed with a class weapon it awakens, and the awakened token gives that weapon its mastery. The awakened tokens are made in the cube, so the rule leaves them out.',
+    rule: { itemCodes: ['u23'] },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc8Weapon Mastery Token' },
+  },
+  {
+    id: 'hourglass-pieces',
+    group: 'endgame',
+    title: 'Broken hourglass and its shards',
+    description:
+      'The Eternal Ancients of their tier 5 map drop the Broken hourglass (um6) and two shards (um4, um5); all three cube into the Eternal Hourglass of the Timeless Sands, a unique charm, so none may be left behind.',
+    rule: { itemCodes: ['um4', 'um5', 'um6'] },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'charm', iconSize: 35, chatMessage: 'ÿc4Hourglass piece: ÿc0{name}' },
+  },
 
   // ----- Crafting -----
   {
@@ -642,6 +661,15 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     rule: { itemCodes: ['an3', 'an4', 'an5', 'an6', 'an7', 'an8', 'an9', 'a10'] },
     presentation: { style: 'valuable', sound: 'tink.mp3', chatMessage: 'ÿc8Aura Stone: ÿc0{name}' },
   },
+  {
+    id: 'unique-stones',
+    group: 'crafting',
+    title: 'Unique Stones',
+    description:
+      'Unique Stones (nor, exc, eli: an0 to an2) come out of the cube from an Ancient’s Gift (a Baal and Diablo drop); one cubed with a white, grey or low quality base of its tier and no sockets makes a unique of that type. They never lie on the ground, so the rule only marks them in your inventory and stash: a look, no sound or icon.',
+    rule: { itemCodes: ['an0', 'an1', 'an2'] },
+    presentation: { style: 'valuable' },
+  },
 
   // ----- Maps -----
   {
@@ -679,24 +707,62 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     presentation: { sound: 'other.mp3', chatMessage: 'ÿc9Large gold pile' },
   },
   {
-    id: 'hide-small-gold',
+    id: 'ore-and-fake-notes',
     group: 'gold',
-    title: 'Hide gold piles under 1,000 from character level 40',
-    description: 'Gold under 1,000 stops mattering in the second half of the game; the town areas are left out.',
+    title: 'Ore and Fake Notes',
+    description:
+      'Both sell for gold, so Sully gives them the gold pile look: a gold plate between $$ marks. An Ore can also be smashed with Secret Recipe 25 for a chance at a crystal (a failed smash leaves Ore Shards, which sell too); Fake Notes drop in the Fake Note Factory endgame zone and from Nihlathak’s clones.',
+    rule: { itemCodes: ['ore', 'fkn'], namePrefix: 'ÿc2$$ ', nameSuffix: ' ÿc2$$' },
+    presentation: { style: 'rare-reagent' },
+  },
+  {
+    id: 'hide-tiny-gold',
+    group: 'gold',
+    title: 'Hide gold piles under 100 from character level 20',
+    description: 'Sully’s first gold step: piles under 100 once your character is level 20, outside town.',
     rule: {
       itemCodes: ['gld'],
-      itemStats: [{ stat: 'gold', op: '<', value: 1000 }],
-      playerStats: [level(40)],
+      itemStats: [{ stat: 'gold', op: '<', value: 100 }],
+      playerStats: [level(20)],
       excludeAreas: TOWNS,
       hide: true,
     },
   },
   {
-    id: 'hide-weak-potions',
+    id: 'hide-small-gold',
     group: 'gold',
-    title: 'Hide minor to normal healing and mana potions from character level 40',
-    description: 'Healing and mana potions 1 to 3 (hp1 to hp3, mp1 to mp3) once your character is level 40, outside town.',
-    rule: { itemCodes: ['hp1', 'hp2', 'hp3', 'mp1', 'mp2', 'mp3'], playerStats: [level(40)], excludeAreas: TOWNS, hide: true },
+    title: 'Hide gold piles under 500 from character level 60',
+    description:
+      'Sully’s next step, outside town. He goes on with piles under 750 from level 80 and under 2,000 from level 90: copy the rule and raise both numbers for those.',
+    rule: {
+      itemCodes: ['gld'],
+      itemStats: [{ stat: 'gold', op: '<', value: 500 }],
+      playerStats: [level(60)],
+      excludeAreas: TOWNS,
+      hide: true,
+    },
+  },
+  {
+    id: 'hide-minor-potions',
+    group: 'gold',
+    title: 'Hide minor healing and mana potions from character level 12',
+    description: 'The smallest potions (hp1, mp1) once your character is level 12, outside town, as in Sully’s filter.',
+    rule: { itemCodes: ['hp1', 'mp1'], playerStats: [level(12)], excludeAreas: TOWNS, hide: true },
+  },
+  {
+    id: 'hide-light-potions',
+    group: 'gold',
+    title: 'Hide light healing and mana potions from character level 20',
+    description: 'The next size (hp2, mp2) from character level 20, outside town.',
+    rule: { itemCodes: ['hp2', 'mp2'], playerStats: [level(20)], excludeAreas: TOWNS, hide: true },
+  },
+  {
+    id: 'hide-normal-potions',
+    group: 'gold',
+    title: 'Hide healing and mana potions (hp3, mp3) from character level 40',
+    description:
+      'The third size from character level 40, outside town. Sully hides greater and super potions (hp4, hp5, mp4, mp5) from 40 as well; add their codes if you drink rejuvenation potions only.',
+    rule: { itemCodes: ['hp3', 'mp3'], playerStats: [level(40)], excludeAreas: TOWNS, hide: true },
   },
   {
     id: 'hide-utility-potions',
@@ -710,17 +776,17 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
   {
     id: 'hide-inferior',
     group: 'junk',
-    title: 'Hide cracked, damaged and crude gear',
+    title: 'Hide cracked, damaged and crude gear from character level 10',
     description:
-      'A narrow hide rule: one quality (inferior) on weapons and armour. A hidden item loses its label for good, so keep hide rules this specific.',
-    rule: { itemTypes: ['weap', 'armo'], quality: 'inferior', hide: true },
+      'A narrow hide rule: one quality (inferior) on weapons and armour, from character level 10 and outside town, as in Sully’s filter. A hidden item loses its label for good, so keep hide rules this specific.',
+    rule: { itemTypes: ['weap', 'armo'], quality: 'inferior', playerStats: [level(10)], excludeAreas: TOWNS, hide: true },
   },
   {
     id: 'hide-weapons-except',
     group: 'junk',
-    title: 'Hide magic and rare weapons from character level 30, except useful ones',
+    title: 'Hide magic and rare weapons from character level 20, except useful ones',
     description:
-      'A hide rule with exceptions: the stats under “Except items with…” are written as < 1 checks, and every check must hold to hide, so a weapon with +All Skills, +class skills, +a skill tab, Faster Cast Rate or Increased Attack Speed keeps its label. Class skills and skill tabs get one check per class and tab, since a check without param reads only the first; +skills to one skill (oskills) are not kept. It waits for character level 30 and leaves the towns out; class weapons, quest items and mythical bases are excluded.',
+      'A hide rule with exceptions: the stats under “Except items with…” are written as < 1 checks, and every check must hold to hide, so a weapon with +All Skills, +class skills, +a skill tab, Faster Cast Rate or Increased Attack Speed keeps its label. Class skills and skill tabs get one check per class and tab, since a check without param reads only the first; +skills to one skill (oskills) are not kept. It waits for character level 20 (Sully hides magic gear from 20) and leaves the towns out; class weapons, quest items and mythical bases are excluded.',
     rule: {
       itemTypes: ['weap'],
       excludeItemTypes: ['clas'],
@@ -732,7 +798,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
         newExceptionCheck('item_fasterattackrate'),
         ...skillExceptions(),
       ],
-      playerStats: [level(30)],
+      playerStats: [level(20)],
       excludeAreas: TOWNS,
       hide: true,
     },
@@ -740,9 +806,9 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
   {
     id: 'hide-magic-armour-except',
     group: 'junk',
-    title: 'Hide magic armour from character level 30, except useful ones',
+    title: 'Hide magic armour from character level 20, except useful ones',
     description:
-      'Magic armour without +All Skills, +class skills, +a skill tab, Faster Cast Rate, Faster Hit Recovery, Faster Run/Walk, Increased Attack Speed or Magic Find, once your character is level 30, outside town (one check per class and tab, as in the weapon rule; oskills are not kept). Class armour, quest items and mythical bases are excluded.',
+      'Magic armour without +All Skills, +class skills, +a skill tab, Faster Cast Rate, Faster Hit Recovery, Faster Run/Walk, Increased Attack Speed or Magic Find, once your character is level 20 (as Sully’s magic gear hide), outside town (one check per class and tab, as in the weapon rule; oskills are not kept). Class armour, quest items and mythical bases are excluded.',
     rule: {
       itemTypes: ['armo'],
       excludeItemTypes: ['clas'],
@@ -757,7 +823,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
         newExceptionCheck('item_magicbonus'),
         ...skillExceptions(),
       ],
-      playerStats: [level(30)],
+      playerStats: [level(20)],
       excludeAreas: TOWNS,
       hide: true,
     },
@@ -767,7 +833,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     group: 'junk',
     title: 'Hide white gear with 0 or 1 socket from character level 10',
     description:
-      'Normal-quality weapons and armour with at most one socket, white class items among them, once your character is level 10, outside town. That includes bases you could still socket (Larzuk’s quest, a Socket Donut), so skip it if you want those. Superior items stay; quest items, mythical bases and throwing potions are excluded.',
+      'Normal-quality weapons and armour with at most one socket, white class items among them, once your character is level 10 (as in Sully’s filter), outside town. That includes bases you could still socket (Larzuk’s quest, a Socket Donut), so skip it if you want those. Superior items stay; quest items, mythical bases and throwing potions are excluded.',
     rule: {
       itemTypes: ['weap', 'armo'],
       excludeItemTypes: ['tpot'],
@@ -784,7 +850,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     group: 'junk',
     title: 'Hide plain arrows, bolts and throwing potions from character level 10',
     description:
-      'A quality range: up to superior (inferior, normal, superior), from character level 10, outside town. Magic, rare and unique quivers stay, since ESR has hundreds of quiver affixes.',
+      'A quality range: up to superior (inferior, normal, superior), from character level 10 (Sully’s level for plain quivers), outside town. Magic, rare and unique quivers stay, since ESR has hundreds of quiver affixes.',
     rule: { itemTypes: ['bowq', 'xboq', 'tpot'], quality: { max: 'superior' }, playerStats: [level(10)], excludeAreas: TOWNS, hide: true },
   },
 ];

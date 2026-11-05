@@ -139,7 +139,20 @@ describe('EXAMPLE_RULES', () => {
       "Inarius' Everburning Halo",
     ]);
     expect(runes('mythical-uniques').every((name) => name === 'Ring' || name === 'Amulet' || name?.startsWith('Mythical '))).toBe(true);
-    for (const id of ['mythical-uniques', 'rune-crystals', 'body-parts', 'tier-5-maps']) {
+    expect(runes('weapon-mastery-tokens')).toEqual(['Weapon Mastery Token']);
+    expect(runes('hourglass-pieces')).toEqual(['Broken hourglass shard', 'Broken hourglass shard', 'Broken hourglass']);
+    expect(runes('unique-stones')).toEqual(['Unique Stone (nor)', 'Unique Stone (exc)', 'Unique Stone (eli)']);
+    expect(runes('ore-and-fake-notes')).toEqual(['Ore', 'Fake Note']);
+    const dropLists = [
+      'mythical-uniques',
+      'rune-crystals',
+      'body-parts',
+      'tier-5-maps',
+      'weapon-mastery-tokens',
+      'hourglass-pieces',
+      'ore-and-fake-notes',
+    ];
+    for (const id of dropLists) {
       for (const code of example(id).rule.itemCodes ?? [])
         expect(lootfilter.items.find((item) => item.code === code)?.drops, `${id} ${code}`).toBe(true);
     }
@@ -182,7 +195,14 @@ describe('buildExampleRule', () => {
     const hide = example('hide-inferior');
     expect(defaultChoices(hide)).toEqual(NO_CHOICES);
     expect(buildExampleRule(hide, { style: 'muted', sound: 'tink.mp3', icon: 'rune', chatMessage: 'x' })).toEqual({
-      rule: { comment: hide.title, itemTypes: ['weap', 'armo'], quality: 'inferior', hide: true },
+      rule: {
+        comment: hide.title,
+        itemTypes: ['weap', 'armo'],
+        quality: 'inferior',
+        playerStats: [{ stat: 'level', op: '>=', value: 10 }],
+        excludeAreas: [1, 40, 75, 103, 109],
+        hide: true,
+      },
       stylesToAdd: {},
     });
   });
@@ -241,14 +261,61 @@ describe('the examples in the Test tab evaluator', () => {
     expect(run(armour, { ...circlet, stats: martialArts }).hidden).toBe(false);
   });
 
-  it('waits for character level 30 and never hides in town in the weapon and armour hides', () => {
-    for (const exampleId of ['hide-weapons-except', 'hide-magic-armour-except']) {
-      const rule = defaultRule(exampleId);
-      const armour = exampleId === 'hide-magic-armour-except' ? { code: 'qui', typeAncestors: ['tors', 'armo'] } : {};
-      expect(run(rule, armour).hidden, exampleId).toBe(true);
-      expect(run(rule, armour, { ...context, playerStats: [{ stat: id('level'), value: 29 }] }).hidden, exampleId).toBe(false);
-      expect(run(rule, armour, { ...context, area: 40 }).hidden, exampleId).toBe(false);
+  /** Each hide rule's character level gate, mirroring Sully's filter (undefined: no gate, as Sully's utility potion hide). */
+  const LEVEL_GATES: Readonly<Record<string, number | undefined>> = {
+    'hide-low-gems': 20,
+    'hide-tiny-gold': 20,
+    'hide-small-gold': 60,
+    'hide-minor-potions': 12,
+    'hide-light-potions': 20,
+    'hide-normal-potions': 40,
+    'hide-utility-potions': undefined,
+    'hide-inferior': 10,
+    'hide-weapons-except': 20,
+    'hide-magic-armour-except': 20,
+    'hide-plain-gear': 10,
+    'hide-ammo-and-throwing-potions': 10,
+  };
+  const misc = (code: string, type: string, stats: TestItem['stats'] = []): Partial<TestItem> => ({
+    code,
+    typeAncestors: [type, 'misc'],
+    baseTier: null,
+    quality: 2,
+    stats,
+  });
+  /** An item each hide rule hides once its level gate is reached. */
+  const HIDDEN_ITEM: Readonly<Record<string, Partial<TestItem>>> = {
+    'hide-low-gems': misc('gcv', 'gem0'),
+    'hide-tiny-gold': misc('gld', 'gold', [{ stat: id('gold'), value: 50 }]),
+    'hide-small-gold': misc('gld', 'gold', [{ stat: id('gold'), value: 300 }]),
+    'hide-minor-potions': misc('hp1', 'hpot'),
+    'hide-light-potions': misc('mp2', 'mpot'),
+    'hide-normal-potions': misc('hp3', 'hpot'),
+    'hide-utility-potions': misc('wms', 'wpot'),
+    'hide-inferior': { quality: 1 },
+    'hide-weapons-except': {},
+    'hide-magic-armour-except': { code: 'qui', typeAncestors: ['tors', 'armo'] },
+    'hide-plain-gear': { code: 'sst', typeAncestors: ['staf', 'blun', 'mele', 'weap'], quality: 2 },
+    'hide-ammo-and-throwing-potions': { code: 'aq2', typeAncestors: ['arrm', 'bowq', 'seco', 'misl', 'misc'], baseTier: null, quality: 2 },
+  };
+  const atLevel = (value: number): TestContext => ({ ...context, playerStats: [{ stat: id('level'), value }] });
+
+  it('gates every hide rule at the character level of Sully’s matching hide and leaves the towns out', () => {
+    const hides = EXAMPLE_RULES.filter(isHideExample);
+    expect(hides.map((entry) => entry.id).sort()).toEqual(Object.keys(LEVEL_GATES).sort());
+    for (const entry of hides) {
+      const gate = LEVEL_GATES[entry.id];
+      expect(entry.rule.playerStats, entry.id).toEqual(gate === undefined ? undefined : [{ stat: 'level', op: '>=', value: gate }]);
+      expect(entry.rule.excludeAreas, entry.id).toEqual([1, 40, 75, 103, 109]);
     }
+  });
+
+  it.each(Object.entries(LEVEL_GATES))('%s hides from its level on, not a level before and never in town', (exampleId, gate) => {
+    const rule = defaultRule(exampleId);
+    const sample = HIDDEN_ITEM[exampleId] ?? {};
+    expect(run(rule, sample, atLevel(gate ?? 1)).hidden).toBe(true);
+    if (gate !== undefined) expect(run(rule, sample, atLevel(gate - 1)).hidden).toBe(false);
+    expect(run(rule, sample, { ...atLevel(99), area: 40 }).hidden).toBe(false);
   });
 
   it('never hides quest weapons or mythical bases in the broad gear hides', () => {
@@ -298,13 +365,22 @@ describe('the examples in the Test tab evaluator', () => {
     expect(run(defaultRule('charms-any-of'), { ...charm, stats: [] }).matched).toBe(false);
   });
 
-  it('hides small gold only from character level 40 and never in town', () => {
-    const rule = defaultRule('hide-small-gold');
-    const gold = { code: 'gld', typeAncestors: ['gold', 'misc'], baseTier: null, stats: [{ stat: id('gold'), value: 500 }] };
-    expect(run(rule, gold).hidden).toBe(true);
-    expect(run(rule, gold, { ...context, area: 1 }).hidden).toBe(false);
-    expect(run(rule, gold, { ...context, playerStats: [{ stat: id('level'), value: 20 }] }).hidden).toBe(false);
-    expect(run(rule, { ...gold, stats: [{ stat: id('gold'), value: 5000 }] }).hidden).toBe(false);
+  it('hides small gold by steps and keeps the piles at or over each step', () => {
+    const gold = (value: number) => misc('gld', 'gold', [{ stat: id('gold'), value }]);
+    expect(run(defaultRule('hide-tiny-gold'), gold(99), atLevel(20)).hidden).toBe(true);
+    expect(run(defaultRule('hide-tiny-gold'), gold(100), atLevel(99)).hidden).toBe(false);
+    expect(run(defaultRule('hide-small-gold'), gold(499), atLevel(60)).hidden).toBe(true);
+    expect(run(defaultRule('hide-small-gold'), gold(500), atLevel(99)).hidden).toBe(false);
+  });
+
+  it('puts $$ marks around Ore and Fake Notes, whatever the style choice', () => {
+    for (const [code, type] of [
+      ['ore', 'rock'],
+      ['fkn', 'cube'],
+    ] as const) {
+      const result = run(buildExampleRule(example('ore-and-fake-notes'), NO_CHOICES).rule, misc(code, type));
+      expect([result.matched, result.namePrefix, result.nameSuffix], code).toEqual([true, 'ÿc2$$ ', ' ÿc2$$']);
+    }
   });
 
   it('gives a +3 class item the label and leaves +2 alone', () => {
