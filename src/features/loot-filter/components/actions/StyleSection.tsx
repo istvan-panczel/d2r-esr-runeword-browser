@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import type { LootFilter, LootFilterStyle, RuleActions } from '../../engine/types';
-import { findStyle, previewLabelText } from '../../utils/effectiveActions';
+import type { LootFilter, RuleActions } from '../../engine/types';
+import { findStyle } from '../../utils/effectiveActions';
 import type { StyleTarget } from '../../utils/styleChoice';
 import { STYLE_PRESETS } from '../../utils/stylePresets';
 import { Field } from '../Field';
-import { LabelPreview } from '../LabelPreview';
 import { PresetPreview } from '../PresetPreview';
-import { IconThumb } from './IconThumb';
+import { StylePreview } from '../StylePreview';
 import { Section } from './Section';
 import { StyleSummary } from './StyleSummary';
 
@@ -28,20 +27,11 @@ interface StyleSectionProps {
   readonly badge?: React.ReactNode;
 }
 
-/** A filter style's look: its label with "Item Name", and its minimap icon when it has one. */
-function StyleLook({ style, className }: { readonly style: LootFilterStyle; readonly className?: string }) {
-  return (
-    <span className={cn('flex shrink-0 items-center gap-1', className)}>
-      <LabelPreview
-        text={style.hide === true ? '' : previewLabelText(style)}
-        background={style.labelBackground}
-        border={style.labelBorder}
-        className="min-w-0 flex-1 px-2 py-1.5 text-xs"
-      />
-      {style.icon !== undefined && <IconThumb iconName={style.icon.iconName} size={18} color={style.icon.color} />}
-    </span>
-  );
-}
+/** The sample name a filter style's preview shows (the presets show their own, e.g. "Ber Rune"). */
+const STYLE_SAMPLE = 'Item Name';
+
+/** The icon size cap in the list and the button, so a large icon (a 128 px file without iconSize) keeps rows even. */
+const ROW_ICON_MAX = 40;
 
 /**
  * A rule's `useStyle`: a searchable picker with the filter's styles and the presets the filter lacks, each with its
@@ -83,7 +73,9 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
               className="h-auto min-h-9 w-full justify-between gap-2 py-1 font-normal sm:w-96"
             >
               <span className="flex min-w-0 items-center gap-2">
-                {style !== undefined && <StyleLook style={style} className="w-28" />}
+                {style !== undefined && (
+                  <StylePreview style={style} sample={STYLE_SAMPLE} maxIconSize={ROW_ICON_MAX} className="w-40 shrink-0 px-1.5 py-1" />
+                )}
                 <span className={cn('truncate', actions.useStyle === undefined && 'text-muted-foreground')}>
                   {actions.useStyle === undefined ? 'None' : actions.useStyle}
                   {missing !== undefined && ' (missing)'}
@@ -127,7 +119,7 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
                         }}
                       >
                         <Check className={cn('size-4 shrink-0', actions.useStyle === name ? 'opacity-100' : 'opacity-0')} aria-hidden />
-                        <StyleLook style={entry} className="w-36" />
+                        <StylePreview style={entry} sample={STYLE_SAMPLE} maxIconSize={ROW_ICON_MAX} className="w-40 shrink-0" />
                         <span className="min-w-0 truncate">{name}</span>
                       </CommandItem>
                     ))}
@@ -146,7 +138,7 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
                         }}
                       >
                         <span className="size-4 shrink-0" aria-hidden />
-                        <PresetPreview preset={preset} className="w-36 shrink-0" />
+                        <PresetPreview preset={preset} maxIconSize={ROW_ICON_MAX} className="w-40 shrink-0" />
                         <span className="min-w-0">
                           <span className="block font-medium">
                             {preset.label} <span className="font-mono text-xs text-muted-foreground">{preset.name}</span>

@@ -13,11 +13,16 @@ export function previewPlaceholders(text: string): string {
   return text.replaceAll('{name}', PREVIEW_ITEM_NAME);
 }
 
-/** The ground label text: prefix + (replaceName, else `{name}`) + suffix, in enUS, with `{name}` filled in. */
-export function previewLabelText(actions: RuleActions): string {
+/** The ground label text: prefix + (replaceName, else `{name}`) + suffix, in enUS, with `sample` in place of `{name}`. */
+export function labelText(actions: RuleActions, sample: string): string {
   const text =
     (resolveText(actions.namePrefix) ?? '') + (resolveText(actions.replaceName) ?? '{name}') + (resolveText(actions.nameSuffix) ?? '');
-  return previewPlaceholders(text);
+  return text.replaceAll('{name}', sample);
+}
+
+/** The ground label text (`labelText`) with "Item Name" for `{name}`. */
+export function previewLabelText(actions: RuleActions): string {
+  return labelText(actions, PREVIEW_ITEM_NAME);
 }
 
 /** How many action keys are set (`comment` and unknown keys not counted). */

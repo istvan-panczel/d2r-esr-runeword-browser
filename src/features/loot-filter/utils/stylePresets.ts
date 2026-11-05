@@ -11,6 +11,7 @@
  * before the presets had icons holds it without one: it now counts as a different style and is kept as it is.
  */
 import type { LootFilterStyle, MinimapIcon } from '../engine/types';
+import { labelText } from './effectiveActions';
 
 export type StylePresetId =
   | 'high-rune'
@@ -304,10 +305,12 @@ export function presetStyleStatus(
   return sameStyle(styles[preset.name], preset.style) ? 'same' : 'different';
 }
 
-/** The label preview text of a style: its `replaceName` (or `{name}`) with `sample` in place of `{name}`. */
+/**
+ * The label preview text of a style: prefix + its `replaceName` (or `{name}`) + suffix in enUS, with `sample` in place
+ * of `{name}` (`labelText`); empty for a style that hides (no label).
+ */
 export function stylePreviewText(style: LootFilterStyle, sample: string): string {
-  const name = typeof style.replaceName === 'string' ? style.replaceName : '{name}';
-  return name.replaceAll('{name}', sample);
+  return style.hide === true ? '' : labelText(style, sample);
 }
 
 /** The label preview text of a preset: its `replaceName` (or `{name}`) with the sample name in place of `{name}`. */

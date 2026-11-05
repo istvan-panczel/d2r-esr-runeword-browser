@@ -19,6 +19,7 @@ import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { NameDialog } from './NameDialog';
 import { MoreInAdvanced, ViewToggle } from './rules/ViewToggle';
 import { StylePresetMenu } from './StylePresetMenu';
+import { StylePreview } from './StylePreview';
 
 interface StylesTabProps {
   readonly filter: LootFilter;
@@ -27,6 +28,9 @@ interface StylesTabProps {
 }
 
 const VIEW_TOGGLE_ID = 'loot-filter-style-view';
+
+/** The list's style previews cap the minimap icon here, so a large icon keeps the list compact. */
+const LIST_ICON_MAX = 28;
 
 type NameDialogState = { readonly mode: 'add' } | { readonly mode: 'rename'; readonly name: string } | null;
 
@@ -153,6 +157,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
                     <span className="text-xs text-muted-foreground">
                       {count === 1 ? '1 action' : `${String(count)} actions`} · {usedBy(countStyleUsers(filter, name))}
                     </span>
+                    <StylePreview style={style} sample="Item Name" maxIconSize={LIST_ICON_MAX} className="mt-1.5 w-full px-1.5 py-1" />
                   </button>
                 </li>
               );

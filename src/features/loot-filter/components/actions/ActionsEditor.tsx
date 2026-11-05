@@ -8,6 +8,7 @@ import type { ActionField, ActionFieldGate } from '../../utils/ruleView';
 import type { StyleKey, StyleTarget } from '../../utils/styleChoice';
 import { CheckField, Field } from '../Field';
 import { LabelPreview } from '../LabelPreview';
+import { MinimapIconPreview } from '../MinimapIconPreview';
 import { AdvancedBadge } from '../rules/AdvancedBadge';
 import { ColorControl } from './ColorControl';
 import { ColorTextField } from './ColorTextField';
@@ -43,6 +44,9 @@ export interface ActionsEditorProps {
 }
 
 const DEFAULT_DROP_FORMAT = '{qualityColor}{name}';
+
+/** The label preview draws the minimap icon at its size up to this (a 256 px icon would dwarf the label). */
+const LABEL_PREVIEW_ICON_MAX = 64;
 
 /**
  * Tile columns on wide pages (`/page` container steps, see PageShell): from @8xl every section is a bordered tile and
@@ -95,11 +99,16 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
           background={effective.labelBackground}
           border={effective.labelBorder}
           className="min-h-16"
+          trailing={
+            effective.icon === undefined || effective.hide === true ? undefined : (
+              <MinimapIconPreview icon={effective.icon} maxSize={LABEL_PREVIEW_ICON_MAX} />
+            )
+          }
         />
         <p className="text-xs text-muted-foreground">
           {effective.hide === true
             ? 'Hidden: the item shows no label.'
-            : '{name} shows as "Item Name"; other placeholders as written. Without a colour code the game colours the name by quality.'}
+            : `{name} shows as "Item Name"; other placeholders as written. Without a colour code the game colours the name by quality.${effective.icon === undefined ? '' : ' Beside it the minimap icon at its size.'}`}
         </p>
       </div>
 

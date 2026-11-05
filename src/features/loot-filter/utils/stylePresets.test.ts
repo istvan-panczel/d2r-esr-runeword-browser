@@ -122,6 +122,12 @@ describe('presetPreviewText', () => {
     expect(presetPreviewText(stylePreset('runeword-base'))).toBe('Phase Blade');
     expect(stylePreviewText({ replaceName: 'ÿc4{name} [{name}]' }, 'Shako')).toBe('ÿc4Shako [Shako]');
   });
+
+  it('draws a filter style as the label shows it: prefix and suffix, the enUS text, nothing when it hides', () => {
+    expect(stylePreviewText({ namePrefix: 'ÿc1* ', nameSuffix: ' *' }, 'Shako')).toBe('ÿc1* Shako *');
+    expect(stylePreviewText({ replaceName: { enUS: 'ÿc4{name}', deDE: 'ÿc4{name}!' } }, 'Shako')).toBe('ÿc4Shako');
+    expect(stylePreviewText({ hide: true, replaceName: 'ÿc4{name}' }, 'Shako')).toBe('');
+  });
 });
 
 describe('styleWithoutIcon and sameIcon', () => {
