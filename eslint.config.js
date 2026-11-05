@@ -9,7 +9,17 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', '**/*.test.ts', '**/*.test.tsx', '**/*.mock.ts', '**/*.mock.tsx', 'src/test/**', 'vitest.config.ts']),
+  globalIgnores([
+    'dist',
+    'coverage',
+    '.claude/worktrees',
+    '**/*.test.ts',
+    '**/*.test.tsx',
+    '**/*.mock.ts',
+    '**/*.mock.tsx',
+    'src/test/**',
+    'vitest.config.ts',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
