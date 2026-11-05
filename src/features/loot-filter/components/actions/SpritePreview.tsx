@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { decodeSprite, type DecodedSprite } from '../../engine/sprite';
 import type { LabelColor } from '../../engine/types';
 import { errorMessage, useBundledSprite } from '../../hooks/useBundledSprite';
 import { findBundledIcon } from '../../utils/bundledAssets';
-import { tintSprite } from '../../utils/tintSprite';
+import { spriteDrawSize } from '../../utils/spriteSize';
+import { SpriteCanvas } from '../SpriteCanvas';
 
 interface SpritePreviewProps {
   readonly idPrefix: string;
@@ -18,15 +19,8 @@ type LocalSprite =
   | { readonly name: string; readonly sprite: DecodedSprite; readonly error?: undefined }
   | { readonly name: string; readonly sprite?: undefined; readonly error: string };
 
-/** The canvas size for `iconSize` (the longer side), keeping the sprite's proportions. */
-function drawSize(sprite: DecodedSprite, iconSize: number | undefined): { readonly width: number; readonly height: number } {
-  const longer = Math.max(sprite.width, sprite.height);
-  const target = iconSize === undefined ? longer : Math.min(256, Math.max(4, iconSize));
-  const scale = target / longer;
-  return { width: Math.max(1, Math.round(sprite.width * scale)), height: Math.max(1, Math.round(sprite.height * scale)) };
-}
-
-function SpriteCanvas({
+/** The icon at its minimap size with its pixel sizes under it. */
+function SpriteCanvasWithSize({
   sprite,
   iconSize,
   color,
@@ -35,30 +29,11 @@ function SpriteCanvas({
   readonly iconSize?: number;
   readonly color?: LabelColor;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { width, height } = drawSize(sprite, iconSize);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return;
-    const source = document.createElement('canvas');
-    source.width = sprite.width;
-    source.height = sprite.height;
-    const sourceContext = source.getContext('2d');
-    if (!sourceContext) return;
-    const pixels = new ImageData(sprite.width, sprite.height);
-    pixels.data.set(tintSprite(sprite.rgba, color));
-    sourceContext.putImageData(pixels, 0, 0);
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.imageSmoothingEnabled = true;
-    context.drawImage(source, 0, 0, canvas.width, canvas.height);
-  }, [sprite, color, width, height]);
-
+  const { width, height } = spriteDrawSize(sprite, iconSize);
   return (
     <div className="flex flex-col items-start gap-1">
       <div className="flex min-h-12 min-w-12 items-center justify-center rounded-md bg-neutral-950 p-2">
-        <canvas ref={canvasRef} width={width} height={height} aria-label="Minimap icon preview" role="img" />
+        <SpriteCanvas sprite={sprite} color={color} width={width} height={height} aria-label="Minimap icon preview" role="img" />
       </div>
       <p className="text-xs text-muted-foreground">
         {String(width)}×{String(height)} px · file {String(sprite.width)}×{String(sprite.height)}
@@ -77,7 +52,7 @@ export function SpritePreview({ idPrefix, iconName, iconSize, color }: SpritePre
   const latestFile = useRef<File | null>(null);
 
   if (bundledName !== undefined) {
-    if (bundled.status === 'ready') return <SpriteCanvas sprite={bundled.sprite} iconSize={iconSize} color={color} />;
+    if (bundled.status === 'ready') return <SpriteCanvasWithSize sprite={bundled.sprite} iconSize={iconSize} color={color} />;
     if (bundled.status === 'error')
       return (
         <p className="text-xs text-destructive">
@@ -133,7 +108,7 @@ export function SpritePreview({ idPrefix, iconName, iconSize, color }: SpritePre
           {local.name}: {local.error}
         </p>
       )}
-      {local?.sprite !== undefined && <SpriteCanvas sprite={local.sprite} iconSize={iconSize} color={color} />}
+      {local?.sprite !== undefined && <SpriteCanvasWithSize sprite={local.sprite} iconSize={iconSize} color={color} />}
     </div>
   );
 }
