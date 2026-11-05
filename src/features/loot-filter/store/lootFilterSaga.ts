@@ -14,6 +14,7 @@ import type { PersistentStorage } from '@/core/hooks/usePersistentState';
 import { readLibrary, writeLibrary } from './libraryStorage';
 import {
   addRule,
+  addRules,
   close,
   copyToMyFilters,
   createBlank,
@@ -60,6 +61,7 @@ const isEditorMutation = isAnyOf(
   setNotifications,
   setQualityColors,
   addRule,
+  addRules,
   updateRule,
   patchRule,
   setRuleDisabled,
