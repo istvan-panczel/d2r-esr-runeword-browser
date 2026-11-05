@@ -1,13 +1,16 @@
 /**
  * Ready-made styles in the spirit of Sully's PoE-like labels: a name colour (a `ÿc` code before `{name}` in
- * `replaceName`), a label background and a border, sometimes a droplight. The Styles tab adds them ("Add preset") and the
- * example rules dialog offers them per rule. A preset holds the look only: sound, minimap icon and chat line stay on the
- * rule, so the dialog's "No sounds" / "No chat messages" / "No minimap icons" switches really switch them all off.
+ * `replaceName`), a label background and a border, sometimes a droplight, and the minimap icon drawn for it (the
+ * generated `<shape>_<colour>` icon `bundledAssets.ts` pairs with it, at a size in Sully's 27 to 50 range). Low rune and
+ * Muted have no icon: they are the quiet looks. The Styles tab adds them ("Add preset") and the example rules dialog
+ * offers them per rule. Sound and chat line stay on the rule. A rule cannot remove its style's icon, so the example
+ * picker adds a copy without it for rules that want none (`buildExampleSet` in exampleRules.ts).
  *
  * Adding a preset copies it into the filter's `styles` under `name`. When the filter already has a style of that name,
- * the filter's own style is kept and reused, never overwritten (`presetStyleStatus`).
+ * the filter's own style is kept and reused, never overwritten (`presetStyleStatus`). A filter that added a preset
+ * before the presets had icons holds it without one: it now counts as a different style and is kept as it is.
  */
-import type { LootFilterStyle } from '../engine/types';
+import type { LootFilterStyle, MinimapIcon } from '../engine/types';
 
 export type StylePresetId =
   | 'high-rune'
@@ -58,6 +61,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
       labelBackground: WHITE,
       labelBorder: { color: [240, 0, 0, 255], width: 2 },
       droplight: { color: [255, 40, 0] },
+      icon: { iconName: 'diamond_red', iconSize: 50 },
     },
   },
   {
@@ -66,7 +70,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Mid rune',
     description: 'Orange name on black with an orange border: good runes you still pick up.',
     sample: 'Ist Rune',
-    style: { replaceName: 'ÿc8{name}', labelBackground: [0, 0, 0, 230], labelBorder: { color: [255, 168, 0, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc8{name}',
+      labelBackground: [0, 0, 0, 230],
+      labelBorder: { color: [255, 168, 0, 255], width: 1 },
+      icon: { iconName: 'diamond_orange', iconSize: 40 },
+    },
   },
   {
     id: 'low-rune',
@@ -82,7 +91,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Unique',
     description: 'Gold name on dark brown with an orange border.',
     sample: 'Harlequin Crest',
-    style: { replaceName: 'ÿc4{name}', labelBackground: [40, 25, 0, 230], labelBorder: { color: [255, 165, 0, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc4{name}',
+      labelBackground: [40, 25, 0, 230],
+      labelBorder: { color: [255, 165, 0, 255], width: 1 },
+      icon: { iconName: 'star_gold', iconSize: 30 },
+    },
   },
   {
     id: 'set',
@@ -90,7 +104,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Set',
     description: 'Green name on dark green with a green border.',
     sample: "Tal Rasha's Guardianship",
-    style: { replaceName: 'ÿc2{name}', labelBackground: [0, 35, 0, 230], labelBorder: { color: [0, 255, 0, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc2{name}',
+      labelBackground: [0, 35, 0, 230],
+      labelBorder: { color: [0, 255, 0, 255], width: 1 },
+      icon: { iconName: 'star_green', iconSize: 30 },
+    },
   },
   {
     id: 'mythical',
@@ -103,6 +122,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
       labelBackground: WHITE,
       labelBorder: { color: [174, 0, 255, 255], width: 2 },
       droplight: { color: [174, 0, 255] },
+      icon: { iconName: 'star_purple', iconSize: 50 },
     },
   },
   {
@@ -111,7 +131,11 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Runeword base',
     description: 'Grey plate with a white border: a white or grey base with the sockets you want.',
     sample: 'Phase Blade',
-    style: { labelBackground: [45, 45, 45, 230], labelBorder: { color: WHITE, width: 1 } },
+    style: {
+      labelBackground: [45, 45, 45, 230],
+      labelBorder: { color: WHITE, width: 1 },
+      icon: { iconName: 'shield_white', iconSize: 30 },
+    },
   },
   {
     id: 'good-charm',
@@ -119,7 +143,11 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Good charm',
     description: 'Dark green plate with a green border: a charm with a stat worth checking.',
     sample: 'Grand Charm',
-    style: { labelBackground: [0, 40, 20, 230], labelBorder: { color: [0, 200, 80, 255], width: 1 } },
+    style: {
+      labelBackground: [0, 40, 20, 230],
+      labelBorder: { color: [0, 200, 80, 255], width: 1 },
+      icon: { iconName: 'square_emerald', iconSize: 35 },
+    },
   },
   {
     id: 'good-jewel',
@@ -127,7 +155,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Good jewel',
     description: 'Yellow name on black with a teal border (Sully’s rare jewel look).',
     sample: 'Jewel',
-    style: { replaceName: 'ÿc9{name}', labelBackground: BLACK, labelBorder: { color: [0, 200, 200, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc9{name}',
+      labelBackground: BLACK,
+      labelBorder: { color: [0, 200, 200, 255], width: 1 },
+      icon: { iconName: 'hexagon_yellow', iconSize: 27 },
+    },
   },
   {
     id: 'jewellery',
@@ -135,7 +168,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Good jewellery',
     description: 'A thick light blue border: rings, amulets and class jewellery worth identifying.',
     sample: 'Ring',
-    style: { labelBorder: { color: [0, 160, 255, 255], width: 2 } },
+    style: { labelBorder: { color: [0, 160, 255, 255], width: 2 }, icon: { iconName: 'ring_blue', iconSize: 35 } },
   },
   {
     id: 'uber',
@@ -143,7 +176,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Uber key or organ',
     description: 'Purple name on black with a purple border (Sully’s Uber look): keys, organs, essences.',
     sample: 'Key of Terror',
-    style: { replaceName: 'ÿc;{name}', labelBackground: [0, 0, 0, 200], labelBorder: { color: [165, 55, 253, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc;{name}',
+      labelBackground: [0, 0, 0, 200],
+      labelBorder: { color: [165, 55, 253, 255], width: 1 },
+      icon: { iconName: 'key_purple', iconSize: 35 },
+    },
   },
   {
     id: 'perfect-gem',
@@ -151,7 +189,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Perfect gem',
     description: 'A thin gold border, the game’s own name colour.',
     sample: 'Perfect Ruby',
-    style: { labelBorder: { color: [200, 150, 0, 255], width: 1 } },
+    style: { labelBorder: { color: [200, 150, 0, 255], width: 1 }, icon: { iconName: 'gem_gold', iconSize: 27 } },
   },
   {
     id: 'crafting',
@@ -159,7 +197,11 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Crafting reagent',
     description: 'Orange name with a thin gold border: body parts, crystals and other cube ingredients.',
     sample: 'Heart',
-    style: { replaceName: 'ÿc8{name}', labelBorder: { color: [200, 150, 0, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc8{name}',
+      labelBorder: { color: [200, 150, 0, 255], width: 1 },
+      icon: { iconName: 'flame_orange', iconSize: 27 },
+    },
   },
   {
     id: 'rare-reagent',
@@ -167,7 +209,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Rare reagent (gold plate)',
     description: 'Black name on a gold plate (Sully’s GoldPlate): rare cube reagents and large gold piles.',
     sample: 'Maple Leaf',
-    style: { replaceName: 'ÿc6{name}', labelBackground: [200, 150, 0, 255], labelBorder: { color: BLACK, width: 1 } },
+    style: {
+      replaceName: 'ÿc6{name}',
+      labelBackground: [200, 150, 0, 255],
+      labelBorder: { color: BLACK, width: 1 },
+      icon: { iconName: 'coin_gold', iconSize: 27 },
+    },
   },
   {
     id: 'coupon',
@@ -175,7 +222,11 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Coupon',
     description: 'Gold name with an orange border: Ancient Coupons you cube into uniques.',
     sample: 'Ancient Coupon (Shako, Harlequin Crest)',
-    style: { replaceName: 'ÿc4{name}', labelBorder: { color: [255, 165, 0, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc4{name}',
+      labelBorder: { color: [255, 165, 0, 255], width: 1 },
+      icon: { iconName: 'scroll_gold', iconSize: 40 },
+    },
   },
   {
     id: 'map',
@@ -183,7 +234,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Map',
     description: 'White name on black with a white border (Sully’s map look).',
     sample: 'Chaos Rift (Tier 2)',
-    style: { replaceName: 'ÿc0{name}', labelBackground: BLACK, labelBorder: { color: WHITE, width: 1 } },
+    style: {
+      replaceName: 'ÿc0{name}',
+      labelBackground: BLACK,
+      labelBorder: { color: WHITE, width: 1 },
+      icon: { iconName: 'map_white', iconSize: 30 },
+    },
   },
   {
     id: 'valuable',
@@ -191,7 +247,12 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
     label: 'Valuable',
     description: 'Red name on white with a red border: anything rare and valuable that has no look of its own.',
     sample: "Lilith's Crystallized Tear",
-    style: { replaceName: 'ÿc1{name}', labelBackground: WHITE, labelBorder: { color: [255, 0, 0, 255], width: 1 } },
+    style: {
+      replaceName: 'ÿc1{name}',
+      labelBackground: WHITE,
+      labelBorder: { color: [255, 0, 0, 255], width: 1 },
+      icon: { iconName: 'cross_red', iconSize: 40 },
+    },
   },
   {
     id: 'muted',
@@ -243,8 +304,27 @@ export function presetStyleStatus(
   return sameStyle(styles[preset.name], preset.style) ? 'same' : 'different';
 }
 
+/** The label preview text of a style: its `replaceName` (or `{name}`) with `sample` in place of `{name}`. */
+export function stylePreviewText(style: LootFilterStyle, sample: string): string {
+  const name = typeof style.replaceName === 'string' ? style.replaceName : '{name}';
+  return name.replaceAll('{name}', sample);
+}
+
 /** The label preview text of a preset: its `replaceName` (or `{name}`) with the sample name in place of `{name}`. */
 export function presetPreviewText(preset: StylePreset): string {
-  const name = typeof preset.style.replaceName === 'string' ? preset.style.replaceName : '{name}';
-  return name.replaceAll('{name}', preset.sample);
+  return stylePreviewText(preset.style, preset.sample);
+}
+
+/** The style without its minimap icon (the same object when it has none). */
+export function styleWithoutIcon(style: LootFilterStyle): LootFilterStyle {
+  if (style.icon === undefined) return style;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the rest is the point
+  const { icon, ...rest } = style;
+  return rest;
+}
+
+/** True when two minimap icons are the same (both absent counts as the same). */
+export function sameIcon(a: MinimapIcon | undefined, b: MinimapIcon | undefined): boolean {
+  if (a === undefined || b === undefined) return a === b;
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 }

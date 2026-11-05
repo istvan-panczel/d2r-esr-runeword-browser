@@ -8,7 +8,7 @@ interface StylePresetMenuProps {
   readonly onPick: (preset: StylePreset) => void;
 }
 
-/** "Add preset": the ready-made styles with a label preview and what each is for. */
+/** "Add preset": the ready-made styles with a label preview (with the minimap icon, `PresetPreview`) and what each is for. */
 export function StylePresetMenu({ onPick }: StylePresetMenuProps) {
   return (
     <DropdownMenu>
@@ -19,9 +19,9 @@ export function StylePresetMenu({ onPick }: StylePresetMenuProps) {
           <ChevronDown />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-[70vh] w-[min(26rem,calc(100vw-2rem))] overflow-y-auto">
+      <DropdownMenuContent align="start" className="max-h-[70vh] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto">
         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-          A preset is copied into the filter under its name; a style of that name you already have is kept.
+          A preset is copied into the filter under its name, minimap icon included; a style of that name you already have is kept.
         </DropdownMenuLabel>
         {STYLE_PRESETS.map((preset) => (
           <DropdownMenuItem
@@ -31,7 +31,7 @@ export function StylePresetMenu({ onPick }: StylePresetMenuProps) {
               onPick(preset);
             }}
           >
-            <PresetPreview preset={preset} className="w-36 shrink-0" />
+            <PresetPreview preset={preset} className="w-40 shrink-0 sm:w-48" />
             <span className="min-w-0">
               <span className="block font-medium">
                 {preset.label} <span className="font-mono text-xs text-muted-foreground">{preset.name}</span>

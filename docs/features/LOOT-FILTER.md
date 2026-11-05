@@ -344,14 +344,21 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '2.0.0', label: 'Example filter (with explanations) v2.0.0' }`. Our own
+  `basedOn { template: 'example', version: '2.1.0', label: 'Example filter (with explanations) v2.1.0' }`. Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "ÿc4Drop: {qualityColor}{name}".
-  - _v2.0.0_ (2026-11-05) is built from the example rules (Rules tab, below): 28 of them, each exactly as the picker adds it
-    with its default choices (`buildExampleRule(example, defaultChoices(example))`: its style preset, Sully's sound,
-    the generated icon), plus `notify: true` on the unique rule and `activeInLevels: [2]` on four hide rules. Its
-    `styles` are the 13 presets the rules use (HighRune, MidRune, PerfectGem, UniqueItem, SetItem, MythicalUnique,
-    CouponItem, RunewordBase, ValuableDrop, GoodCharm, GoodJewel, UberItem, MapItem), copied as they are. Each
+  - _v2.1.0_ (2026-11-05, current) is built from the example rules (Rules tab, below): 28 of them, exactly as the
+    picker adds them together with their default choices (`buildExampleSet` over the examples with `defaultChoices`:
+    the style preset, which now brings its generated icon, Sully's sound, the chat line), plus `notify: true` on the
+    unique rule and `activeInLevels: [2]` on four hide rules. Its `styles` are the 13 presets the rules use (HighRune,
+    MidRune, PerfectGem, UniqueItem, SetItem, MythicalUnique, CouponItem, RunewordBase, ValuableDrop, GoodCharm,
+    GoodJewel, UberItem, MapItem), copied as they are with their icons, plus `MidRuneNoIcon` (MidRune without its
+    icon) for Hel to Um, which keep no icon as before: a rule cannot remove its style's icon, and the rule's comment
+    says so. Only three rules carry an icon of their own, where it differs from the style's: unique rings and amulets
+    (`crown_gold` 40), tier 5 maps (`map_white` 40, the style's is 30) and large gold piles (no style). The elite body
+    armour bases and the two small charm rules gained their style's icon (`shield_white`, `square_emerald`); the
+    other icons are the same as in v2.0.0. The header says a style holds the look and the minimap icon, and that a
+    rule's own icon replaces the style's. Each
     `comment` (the rule list's title line) is the example's title, a period, then what the rule teaches; in the file
     the comment is each rule's first key (the editor's serializer writes it last, so the first edit moves it). The
     rules: high runes, ESR elemental runes, Mal/Ist/Gul, mid runes, perfect gems, unique weapons and armour (with the
@@ -363,15 +370,19 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
     500 (60), magic and rare weapons except useful ones and magic armour except useful ones (20). The `//` header says
     what the file is, how rules run, the all-of/any-of lists, what a style holds, that a hide stops and needs its own
     exceptions, the two levels and the .zip download.
-  - _v1.0.0_ (hand-written, 21 rules, two custom styles Valuable and Good with sounds and Sully's icons in them) was
-    replaced; drafts started from it get "Update available".
+  - _v2.0.0_ (2026-11-05) had the same rules with the icons on the rules and icon-less presets; _v1.0.0_
+    (hand-written, 21 rules, two custom styles Valuable and Good with sounds and Sully's icons in them) came before.
+    Drafts started from either get "Update available".
   - _Tests_: `exampleFilter.test.ts` parses and validates it, checks the header at `EXAMPLE_TEMPLATE.version`, every
-    rule against its example (`FROM_EXAMPLES`, the ids in file order with what the file adds; a changed example fails
-    until the file follows and its version is bumped), the comments, the styles against the presets, the levels, the
-    sounds and the generated icons (the .zip carries them all, no `.lowend.sprite`), and runs it through the
-    evaluator; and that an edit keeps every comment. The file was written once with the serializer (comments moved
-    first) and is kept byte-stable: `public/loot-filters/` is Prettier-ignored.
-  - Credit line: "Example filter v2.0.0, built for this site from its example rules to show how rules work; sounds by
+    rule against its example (`FROM_EXAMPLES`, the ids in file order with what the file adds, built as one set; a
+    changed example fails until the file follows and its version is bumped), the comments, the styles against the
+    presets (icons included, the one NoIcon copy, the three rules with an icon of their own), the levels, the sounds
+    and the generated icons (the .zip carries them all, no `.lowend.sprite`), and runs it through the evaluator; and
+    that an edit keeps every comment. The file is written with the serializer (comments moved first: v2.1.0 was
+    regenerated from v2.0.0 with a throwaway script that serializes the parsed file with the new styles, rules and
+    comments and moves each `comment` line first, which reproduces v2.0.0 byte for byte when nothing changes) and is
+    kept byte-stable: `public/loot-filters/` is Prettier-ignored.
+  - Credit line: "Example filter v2.1.0, built for this site from its example rules to show how rules work; sounds by
     Sully, icons generated for this app".
 - **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
   (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
@@ -580,40 +591,41 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
     rule, which also has a visible "hide" badge) linked by `aria-describedby`.
   - _Presentation_: an example is its conditions (plus a fixed name tag or `hide`) and default choices for Style (a
     style preset, see [Style presets](#style-presets)), Sound and Minimap icon (from the asset registry) and Chat
-    message (its own line or the plain `{qualityColor}{name}`), each None or a value. Sounds, icons and chat lines are
+    message (its own line or the plain `{qualityColor}{name}`), each None or a value. Sounds and chat lines are
     defaults only on valuable drops; hide rules have none (a hidden item shows nothing). A ticked example shows the four
     compact selects prefilled with its defaults, a play button for the chosen sound (`useSoundPreview`, at the filter's
-    `soundVolume`), a preview of the chosen style, and "With every choice None this rule does nothing." when that is so.
-    A select's options mount only while it is open (controlled `open`; the trigger shows the chosen label as
+    `soundVolume`), a preview of the chosen style with the minimap icon the rule will show beside the label, drawn at
+    its size as on the minimap (`PresetPreview` with `icon`; an icon without a style is drawn alone with "Minimap icon
+    coin_gold, 30 px, no style."), "With every choice None this rule does nothing." when that is so, and one muted
+    line: "After adding, you can change everything in the rule: colours, the icon’s size and tint, the sound, the chat
+    line." A select's options mount only while it is open (controlled `open`; the trigger shows the chosen label as
     `SelectValue` children): with every example ticked there are some 200 selects, and Select all took about 850 ms
     with every option rendered, about 150 ms now. Typing a letter on a closed trigger no longer picks an option.
-  - _Default icons_ (2026-11-05): every example icon is a [generated icon](#generated-icons) that pairs with the
-    example's style preset; Sully's twelve stay in the Icon select. 34 examples have one, at 27 to 50 px
-    (`exampleRules.test.ts` checks both):
+  - _Icons_ (2026-11-05, owner decision: presets carry their icon): every style preset but Low rune and Muted brings
+    its paired [generated icon](#generated-icons), so the Minimap icon select of a styled example offers None,
+    **Style's icon (star_gold, 30)** (`STYLE_ICON`; it follows the Style select, and reads None for a style
+    without an icon), then every bundled icon (Sully's twelve too). A styled example defaults to the style's
+    icon; an example names its own (`presentation.icon`, with `iconSize`) only where it differs from its preset's, and
+    `icon: null` for none. Picking another icon gives it the example's own size, else the preset icon's, else 40
+    (`chosenIcon`). With the defaults, 49 of the 55 label examples show an icon, all generated, at 27 to 50 px
+    (`exampleRules.test.ts`):
 
-    | Examples                                                                                                                                                           | Icon             | Size     |
-    | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | -------- |
-    | High runes, ESR kanji Su to Null, ESR elemental runes                                                                                                              | `diamond_red`    | 50       |
-    | Mal/Ist/Gul, ESR kanji No to Re                                                                                                                                    | `diamond_orange` | 40       |
-    | Perfect gems                                                                                                                                                       | `gem_gold`       | 27       |
-    | Unique weapons and armour                                                                                                                                          | `star_gold`      | 30       |
-    | Unique rings and amulets                                                                                                                                           | `crown_gold`     | 40       |
-    | Set items                                                                                                                                                          | `star_green`     | 30       |
-    | Mythical uniques                                                                                                                                                   | `star_purple`    | 50       |
-    | Elite coupons, Wild Card coupon; exceptional coupons                                                                                                               | `scroll_gold`    | 40; 30   |
-    | Ethereal elite polearms and spears (new)                                                                                                                           | `shield_white`   | 30       |
-    | Grand charms with +1 to a skill tab                                                                                                                                | `square_emerald` | 35       |
-    | Rare jewels                                                                                                                                                        | `hexagon_yellow` | 27       |
-    | Pandemonium keys                                                                                                                                                   | `key_purple`     | 35       |
-    | Uber organs, essences and the Token of Absolution                                                                                                                  | `skull_purple`   | 35       |
-    | The Valuable look: decals, unique charms/jewels, +All Skills bases, +3 class items, legendary materials, Ascendancy items, Weapon Mastery Tokens, hourglass pieces | `cross_red`      | 30 to 40 |
-    | Body parts, rune crystals                                                                                                                                          | `flame_orange`   | 27       |
-    | Rare reagents; gold piles of 100,000 or more (new)                                                                                                                 | `coin_gold`      | 27; 30   |
-    | Maps (tier 1, tier 2 to 4; tier 5)                                                                                                                                 | `map_white`      | 30; 40   |
+    | Examples                                                                                                                         | Icon (size)                                               | From          |
+    | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------- |
+    | Every example with a style preset that has an icon, unless listed below                                                          | the preset's (see [Style presets](#style-presets))        | the style     |
+    | Unique rings and amulets                                                                                                         | `crown_gold` (40)                                         | its own       |
+    | Exceptional coupons; tier 5 maps                                                                                                 | `scroll_gold` (30); `map_white` (40): another size        | its own       |
+    | Ancient Decals (30), unique charms and jewels, legendary materials, hourglass pieces (35)                                        | `cross_red`, smaller than the Valuable preset's 40        | its own       |
+    | Wild Card coupon (Valuable look)                                                                                                 | `scroll_gold` (40)                                        | its own       |
+    | Uber organs, essences and the Token of Absolution (Uber look, whose icon is the key)                                             | `skull_purple` (35)                                       | its own       |
+    | Gold piles of 100,000 or more (no style)                                                                                         | `coin_gold` (30)                                          | its own       |
+    | Mid runes Hel to Um                                                                                                              | none (`icon: null`, as in Sully's filter: icons from Mal) | a NoIcon copy |
+    | Low runes, ESR kanji I to Mo (Low rune has no icon); the socket count and unsocketed tags and the elite set chat line (no style) | none                                                      |               |
 
-    Examples without an icon kept none, except the two marked new (the only base rule with a sound, and big gold
-    piles, which `coin_gold` names). The uber items and legendary materials went from 27 to 35 px, jackpot drops
-    that had been the smallest icons.
+    Compared with the per-rule icons before (34 examples), the styled examples that had none now show their
+    preset's: blemished gems, The Oculus (the same star the unique rule gives it), the runeword bases and white
+    mythical bases, the charm rules, the jewellery rules, Aura Stones and Unique Stones (which never lie on the
+    ground, so it never shows), the ancient scrolls, common reagents and ore. Mid runes stay without one.
 
   - _Bulk_: "No sounds", "No chat messages", "No minimap icons" switch those off for every rule (the selects show
     "None (no sounds)"…; the choices come back when the switch is off), plus **Select all label rules**, Clear and
@@ -625,17 +637,36 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
     a group of hide rules only, where the click can mean nothing else. Unticking a group unticks all of it, hide rules
     too, and the checkbox shows "all" once what it ticks is ticked (`groupSelection`), so an unticked hide rule beside
     them does not leave it stuck at partial.
-  - _Add selected (N)_: `buildStarterRules` builds the rules (`buildExampleRule(example, choices) → { rule,
-stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, `sound`, `icon` with the
-    example's size or 40, `chatMessage`) in insertion order: label rules first in group and list order, hide rules
-    last (a hidden item loses its label whatever comes before or after, so this only keeps the list readable). The
-    button merges the styles (`mergeStyles`: a name the filter lacks is added; one it has with other content is kept
-    and reused, never overwritten) and dispatches `addRules({ rules, styles, at })`, one edit: the rules go after the
-    selected rule (else at the end) and the first one is selected. The toast counts the rules and names the added and
-    the kept styles.
+  - _Add selected (N)_: `buildStarterRules(state, existingStyles)` builds the ticked examples as one set
+    (`buildExampleSet(entries, existing) → { rules, styles }`: per rule the title as `comment`, the conditions,
+    `useStyle`, `sound`, `icon` only where needed, `chatMessage`) in insertion order: label rules first in group and
+    list order, hide rules last (a hidden item loses its label whatever comes before or after, so this only keeps the
+    list readable). **Every rule gets exactly the icon it chose**, although a rule can only replace its style's icon,
+    never remove it:
+    - the style a preset's rules use is the filter's own style of that name when it has one (never overwritten),
+      else the preset: with its icon, or without it when no rule of that preset wants the preset's icon (every one
+      chose None or an icon of its own; the "No minimap icons" switch makes all of them None, so every preset goes in
+      without its icon and no copy is made);
+    - a rule carries its own `icon` only when the one it wants differs from that style's (another icon or size; the
+      preset's icon on a filter style that has another icon or none, e.g. a preset added before presets had icons);
+    - a rule that wants no icon while that style has one uses a copy of the style without it, `<Name>NoIcon`
+      (`UniqueItemNoIcon`; `<Name>NoIcon2`… when the filter uses the name for something else; a filter style of that
+      name with the same content is reused). The copy of a filter's own style keeps the filter's look.
+
+    Example: Unique weapons and armour set to None and The Oculus left on Style's icon add `UniqueItem` (with the
+    star) and `UniqueItemNoIcon`; with The Oculus on Gold crown instead (nobody wants the star) only `UniqueItem`
+    without the star, the crown on The Oculus's rule. The button merges the styles (`mergeStyles`: a name the filter
+    lacks is added; one it has with other content is kept and reused, never overwritten) and dispatches
+    `addRules({ rules, styles, at })`, one edit (a debounced editor flush like any other edit; `addRules` was missing
+    from the saga's flush list until 2026-11-05, so the added rules reached the library only with the next edit or on
+    leaving the editor): the rules go after the selected rule (else at the end) and the first one is selected. The
+    toast counts the rules and names the added and the kept styles ("Kept your own style UniqueItem; the new rules use
+    it unchanged." also for a preset added before the presets had icons, which now differs from the preset).
+
   - _Reuse_: `ExampleRulesPicker` (`onConfirm(rules, styles, selection)`, `onCancel`, `confirmLabel`, `previewVolume`,
-    `initialState`) has no store dependency (the AI page's "Pick example rules" starter uses it, reopening on the
-    `selection` it got back), and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
+    `initialState`, `existingStyles`: the Rules tab passes the filter's styles) has no store dependency (the AI page's
+    "Pick example rules" starter uses it without `existingStyles`, reopening on the `selection` it got back), and
+    `starterRulesFor(ids, existing?)` builds a set without a picker, for starters outside the editor.
   - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
     Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
     (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109). The level gates are
@@ -1239,8 +1270,8 @@ fails while the folders and the registry disagree, and decodes every icon.
 | `circle_grey`                                 | Muted                                                               |
 | `star_white`, `diamond_white`, `circle_white` | any colour through the icon's tint (`color` multiplies the colours) |
 
-The example rules default to them (_Default icons_ under the Rules tab's example rules), and so the example filter
-v2.0.0 uses them; Sully's filter keeps his own.
+The style presets carry them (see [Style presets](#style-presets)), the example rules show them through their presets
+(_Icons_ under the Rules tab's example rules), and so the example filter v2.1.0 has them in its styles; Sully's filter keeps his own.
 
 Drawing: every shape is a signed distance function on the 128 px canvas; a pixel's distance gives the fill, a dark
 outline 6 px wide (about 2 px at the usual 40 minimap pixels; the colour × 0.16) and the transparent outside, each edge
@@ -1283,18 +1314,58 @@ celestialrayone.loot-filter/icons/<name>-<w>x<h>-<hash>` as both `.sprite` and `
 ### Style presets (`utils/stylePresets.ts`, `components/StylePresetMenu.tsx`, `components/PresetPreview.tsx`)
 
 `STYLE_PRESETS`: 18 ready-made styles in the spirit of Sully's PoE-like labels, each `{ id, name, label, description,
-sample, style }`. A preset holds the look only (a `ÿc` colour before `{name}` in `replaceName`, `labelBackground`,
-`labelBorder`, a `droplight` on the two top ones); sound, icon and chat line stay on the rule, so the example dialog's
-"No sounds / chat / icons" switches really switch everything off. Names are PascalCase without spaces like Sully's
-(`HighRune`, `MidRune`, `LowRune`, `UniqueItem`, `SetItem`, `MythicalUnique`, `RunewordBase`, `GoodCharm`, `GoodJewel`,
-`GoodJewellery`, `UberItem`, `PerfectGem`, `CraftingReagent`, `RareReagent`, `CouponItem`, `MapItem`, `ValuableDrop`,
-`MutedJunk`), none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows each with a
-`PresetPreview` (a `LabelPreview` of `presetPreviewText`: the sample name in place of `{name}`) and its description.
-Picking one copies it into `styles` under its name and selects it (toast "Added the style …"); `presetStyleStatus`
-compares by content (key order ignored): an identical style of that name is just selected ("already in the filter"),
-a different one is kept and selected ("Your style is kept as it is. Rename it first to add the preset."), never
-overwritten. `stylePresets.test.ts` checks the colour codes, that no preset has a sound, icon, chat line or hide, and
-validates all of them in one filter.
+sample, style }`. A preset holds the look (a `ÿc` colour before `{name}` in `replaceName`, `labelBackground`,
+`labelBorder`, a `droplight` on the two top ones) and, since 2026-11-05 (owner decision), the minimap icon drawn for it
+([Generated icons](#generated-icons), the pairing the registry notes name), at a size in Sully's 27 to 50 range, the
+size the example rules used. Sound and chat line stay on the rule. Low rune and Muted have no icon (judgement call:
+they are the quiet looks, and low runes drop by the hundred), so `triangle_orange` and `circle_grey` stay in the Icon
+select only. Where a preset has two candidates, the one its sample and its examples use won:
+
+| Preset            | Name              | Icon (size)                                           |
+| ----------------- | ----------------- | ----------------------------------------------------- |
+| High rune         | `HighRune`        | `diamond_red` (50)                                    |
+| Mid rune          | `MidRune`         | `diamond_orange` (40)                                 |
+| Low rune          | `LowRune`         | none                                                  |
+| Unique            | `UniqueItem`      | `star_gold` (30); `crown_gold` stays a rule's choice  |
+| Set               | `SetItem`         | `star_green` (30)                                     |
+| Mythical unique   | `MythicalUnique`  | `star_purple` (50)                                    |
+| Runeword base     | `RunewordBase`    | `shield_white` (30)                                   |
+| Good charm        | `GoodCharm`       | `square_emerald` (35)                                 |
+| Good jewel        | `GoodJewel`       | `hexagon_yellow` (27), the rare jewel example's       |
+| Good jewellery    | `GoodJewellery`   | `ring_blue` (35)                                      |
+| Uber key or organ | `UberItem`        | `key_purple` (35), its sample; organs carry the skull |
+| Perfect gem       | `PerfectGem`      | `gem_gold` (27)                                       |
+| Crafting reagent  | `CraftingReagent` | `flame_orange` (27)                                   |
+| Rare reagent      | `RareReagent`     | `coin_gold` (27)                                      |
+| Coupon            | `CouponItem`      | `scroll_gold` (40), the elite coupons'                |
+| Map               | `MapItem`         | `map_white` (30)                                      |
+| Valuable          | `ValuableDrop`    | `cross_red` (40), the most common example size        |
+| Muted             | `MutedJunk`       | none                                                  |
+
+A rule's own `icon` overrides its style's, but no rule can remove it: the example picker handles a rule that wants
+none with a `<Name>NoIcon` copy of the style (see _Add selected_ under the Rules tab's example rules). Names are
+PascalCase without spaces like Sully's, none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows
+each with a `PresetPreview` and its description; the menu says the preset is copied "minimap icon included".
+
+**Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, className? })`
+(`components/StylePreview.tsx`) draws a ground label with the style's name colour (`stylePreviewText`: the sample in
+place of `{name}`), background and border, and the minimap icon beside it on the same dark ground at its `iconSize` as
+on the minimap; `icon` overrides the style's (a rule's own), `null` draws none. `PresetPreview({ preset, icon?,
+className? })` is it for a preset and its sample. The icon is `MinimapIconPreview({ icon })`
+(`components/MinimapIconPreview.tsx`): a bundled icon decoded once per name (`useBundledSprite`, cached for the page's
+life), the first frame on a canvas at `iconSize` (longer side, 4 to 256; absent = the file's size) with the tint
+applied (`tintSprite`); a name that is not bundled is a dashed box of about that size with the name in its tooltip.
+`LabelPreview` has a `trailing` slot for it. The Add preset menu, the example rules picker and the rule editor's style
+dropdown use them.
+
+Picking a preset copies it into `styles` under its name and selects it (toast "Added the style …");
+`presetStyleStatus` compares by content (key order ignored): an identical style of that name is just selected
+("already in the filter"), a different one is kept and selected ("Your style is kept as it is. Rename it first to add
+the preset."), never overwritten. A filter that added a preset before the presets had icons holds it without its icon,
+which now counts as different: Add preset keeps it with that toast, and the example picker reuses it, giving a rule that
+wants the preset's icon that icon as its own. `stylePresets.test.ts` checks the colour codes, that no preset has a
+sound, chat line or hide, the icon of each (generated, the registry note naming the preset, 27 to 50 px), and validates
+all of them in one filter.
 
 The rule editor's Style dropdown lists the presets the filter lacks too, with the same `PresetPreview`, and adds the
 picked one (see [Style first, then tweak](#style-first-then-tweak)).
@@ -1457,12 +1528,15 @@ example rules: of the request), else of the request's first line, else "ai-filte
   through `readLootFilter` + `validateLootFilter` against the game data, so the LLM sees the app's own messages. Prose
   covers only semantics (how rules combine, hide rules and exceptions, ids, writing the file for the app).
   `examples.md` (`buildExamples`): first the style presets (`DEFAULT_PROMPT_STYLE_PRESETS` from `STYLE_PRESETS`, each
-  its name, description and `{ "Name": { … } }` block one key per line, with the note that a filter must copy every
-  preset it uses into `styles`; a style an example uses but the given presets lack is added), then the example rules
-  under their group headings and intros, each its title, description and the complete rule the picker adds with its
-  default presentation (`buildExampleRule(example, defaultChoices(example))`: comment, conditions, `useStyle`, sound,
-  icon, chat line; one key per line). `assets.md` lists every registry entry with its "when to use" line
-  (`DEFAULT_PROMPT_ASSETS` from `BUNDLED_SOUND_ASSETS` / `BUNDLED_ICON_ASSETS`).
+  its name, description and `{ "Name": { … } }` block one key per line, icon included, with the note that a filter must
+  copy every preset it uses into `styles` and that a rule's own icon replaces its style's but cannot remove it; a style
+  an example uses but the given presets lack is added: with the editor's presets that is `MidRuneNoIcon`), then the
+  example rules under their group headings and intros, each its title, description and the complete rule the picker
+  adds with its default presentation (`examplesWithPresentation`: the examples built as one set with `buildExampleSet`
+  against the shown presets, so a rule that wants no icon uses the NoIcon copy and no preset block is ever changed:
+  comment, conditions, `useStyle`, sound, an icon only where it differs from the style's, chat line; one key per line).
+  `assets.md` lists every registry entry with its "when to use" line (`DEFAULT_PROMPT_ASSETS` from
+  `BUNDLED_SOUND_ASSETS` / `BUNDLED_ICON_ASSETS`).
 - **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.2.24, the single .md without request or starter):
   **Compact** about 213k characters (~53k tokens; measured on ESR 3.2.24, it grows with the example rules): every item type (`item-types.csv`), the misc items that drop
   (`items.csv`: runes, gems, charms, jewels, potions, keys, organs, essences, coupons, maps, scrolls; stacks of five or

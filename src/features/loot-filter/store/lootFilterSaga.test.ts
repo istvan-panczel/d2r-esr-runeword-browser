@@ -6,6 +6,7 @@ import { parseLootFilter } from '../engine/parse';
 import { LIBRARY_STORAGE_KEY } from './libraryStorage';
 import { EDITOR_FLUSH_DELAY_MS, createLootFilterSaga } from './lootFilterSaga';
 import reducer, {
+  addRules,
   close,
   createBlank,
   discardChanges,
@@ -118,6 +119,23 @@ describe('lootFilterSaga', () => {
     expect(store.getState().lootFilter.editor.dirty).toBe(false);
     expect(storage.setItem).toHaveBeenCalledTimes(1);
     expect(parseLootFilter(storedEntries(storage)[0].text).filter.title).toBe('Second');
+  });
+
+  it('flushes the rules and styles the example rules dialog adds in one edit (addRules)', async () => {
+    const storage = testStorage([STORED]);
+    const { store } = setup(storage);
+    store.dispatch(open('stored'));
+    store.dispatch(
+      addRules({
+        rules: [{ comment: 'Set items', quality: 'set', useStyle: 'SetItem' }],
+        styles: { SetItem: { replaceName: 'ÿc2{name}' } },
+      })
+    );
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS + 50);
+    expect(store.getState().lootFilter.editor.dirty).toBe(false);
+    const stored = parseLootFilter(storedEntries(storage)[0].text).filter;
+    expect(stored.rules.map((rule) => rule.useStyle)).toEqual(['SetItem']);
+    expect(Object.keys(stored.styles ?? {})).toEqual(['SetItem']);
   });
 
   it('selecting a rule is not an edit', async () => {

@@ -1,20 +1,15 @@
-import { cn } from '@/lib/utils';
-import { presetPreviewText, type StylePreset } from '../utils/stylePresets';
-import { LabelPreview } from './LabelPreview';
+import type { MinimapIcon } from '../engine/types';
+import type { StylePreset } from '../utils/stylePresets';
+import { StylePreview } from './StylePreview';
 
 interface PresetPreviewProps {
   readonly preset: StylePreset;
+  /** The icon to draw instead of the preset's (a rule's own icon); null draws none. Default: the preset's icon. */
+  readonly icon?: MinimapIcon | null;
   readonly className?: string;
 }
 
-/** A small ground label drawn with a style preset and its sample item name. */
-export function PresetPreview({ preset, className }: PresetPreviewProps) {
-  return (
-    <LabelPreview
-      text={presetPreviewText(preset)}
-      background={preset.style.labelBackground}
-      border={preset.style.labelBorder}
-      className={cn('px-2 py-1.5 text-xs', className)}
-    />
-  );
+/** A small ground label drawn with a style preset and its sample item name, its minimap icon beside it (`StylePreview`). */
+export function PresetPreview({ preset, icon, className }: PresetPreviewProps) {
+  return <StylePreview style={preset.style} sample={preset.sample} icon={icon} className={className} />;
 }

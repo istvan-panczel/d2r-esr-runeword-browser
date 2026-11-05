@@ -9,9 +9,12 @@ import { serializeLootFilter } from '../engine/serialize';
 import type { LootFilter, LootFilterRule, LootFilterStyle } from '../engine/types';
 import { validateLootFilter } from '../engine/validate';
 import { findBundledIcon, findBundledIconAsset, findBundledSound } from './bundledAssets';
+import { buildStarterRules, INITIAL_PICKER_STATE, mergeStyles, setExamplesSelected } from './examplePicker';
 import {
   buildExampleRule,
+  buildExampleSet,
   chatOptions,
+  chosenIcon,
   DEFAULT_EXAMPLE_ICON_SIZE,
   defaultChoices,
   EXAMPLE_GROUPS,
@@ -21,9 +24,14 @@ import {
   isHideExample,
   NO_CHOICES,
   PLAIN_CHAT_MESSAGE,
+  presetIcon,
+  STYLE_ICON,
+  type ExampleChoices,
+  type ExampleEntry,
   type ExampleRule,
+  type ExampleSet,
 } from './exampleRules';
-import { STYLE_PRESETS } from './stylePresets';
+import { sameIcon, STYLE_PRESETS, stylePreset, styleWithoutIcon } from './stylePresets';
 
 const json = (file: string) => JSON.parse(readFileSync(resolve(process.cwd(), 'public/game-data', file), 'utf8')) as unknown;
 const lootfilter = json('lootfilter.json') as LootFilterDataBundle;
@@ -101,34 +109,57 @@ describe('EXAMPLE_RULES', () => {
       expect(entry.presentation, entry.id).toBeDefined();
       if (presentation.style !== undefined) expect(presets.has(presentation.style), entry.id).toBe(true);
       if (presentation.sound !== undefined) expect(findBundledSound(presentation.sound), entry.id).toBe(presentation.sound);
-      if (presentation.icon !== undefined) expect(findBundledIcon(presentation.icon), entry.id).toBe(presentation.icon);
+      if (typeof presentation.icon === 'string') expect(findBundledIcon(presentation.icon), entry.id).toBe(presentation.icon);
     }
   });
 
-  it('defaults to the generated icons, drawn at 27 to 50 px', () => {
-    const withIcon = EXAMPLE_RULES.filter((entry) => entry.presentation?.icon !== undefined);
-    expect(withIcon.length).toBeGreaterThan(30);
-    for (const entry of withIcon) {
-      expect(findBundledIconAsset(entry.presentation?.icon)?.credit, entry.id).toBe('Generated for this app');
-      const size = entry.presentation?.iconSize ?? DEFAULT_EXAMPLE_ICON_SIZE;
-      expect(size, entry.id).toBeGreaterThanOrEqual(27);
-      expect(size, entry.id).toBeLessThanOrEqual(50);
+  it('shows the generated icons at 27 to 50 px: the style preset’s, or its own only where it differs', () => {
+    const icons = EXAMPLE_RULES.filter((entry) => !isHideExample(entry)).map((entry) => ({
+      id: entry.id,
+      own: entry.presentation?.icon,
+      shown: chosenIcon(entry, defaultChoices(entry)),
+      preset: presetIcon(entry.presentation?.style ?? null),
+    }));
+    expect(icons.filter((entry) => entry.shown !== undefined).length).toBeGreaterThan(45);
+    for (const { id, own, shown, preset } of icons) {
+      if (shown === undefined) continue;
+      expect(findBundledIconAsset(shown.iconName)?.credit, id).toBe('Generated for this app');
+      expect(shown.iconSize ?? 0, id).toBeGreaterThanOrEqual(27);
+      expect(shown.iconSize ?? 0, id).toBeLessThanOrEqual(50);
+      // An own icon is never the preset's own (that is the style's job).
+      if (typeof own === 'string') expect(sameIcon(shown, preset), id).toBe(false);
     }
-    const icon = (id: string) => example(id).presentation?.icon;
-    expect([icon('high-runes'), icon('upper-runes'), icon('unique-items'), icon('set-items'), icon('mythical-uniques')]).toEqual([
-      'diamond_red',
-      'diamond_orange',
-      'star_gold',
-      'star_green',
-      'star_purple',
+    const shown = (id: string) => {
+      const icon = icons.find((entry) => entry.id === id)?.shown;
+      return icon === undefined ? undefined : `${icon.iconName} ${String(icon.iconSize)}`;
+    };
+    expect(['high-runes', 'upper-runes', 'unique-items', 'unique-jewellery', 'set-items', 'mythical-uniques'].map(shown)).toEqual([
+      'diamond_red 50',
+      'diamond_orange 40',
+      'star_gold 30',
+      'crown_gold 40',
+      'star_green 30',
+      'star_purple 50',
     ]);
-    expect([icon('pandemonium-keys'), icon('uber-organs'), icon('elite-coupons'), icon('perfect-gems'), icon('tier-5-maps')]).toEqual([
-      'key_purple',
-      'skull_purple',
-      'scroll_gold',
-      'gem_gold',
-      'map_white',
+    expect(['pandemonium-keys', 'uber-organs', 'elite-coupons', 'exceptional-coupons', 'perfect-gems', 'tier-5-maps'].map(shown)).toEqual([
+      'key_purple 35',
+      'skull_purple 35',
+      'scroll_gold 40',
+      'scroll_gold 30',
+      'gem_gold 27',
+      'map_white 40',
     ]);
+    // The quiet ones: low runes (a preset without an icon), Hel to Um (no icon although MidRune has one), unstyled tags.
+    expect(['low-runes', 'kanji-runes', 'mid-runes', 'socket-count-tag', 'elite-set-chat'].map(shown)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    expect(defaultChoices(example('mid-runes')).icon).toBeNull();
+    expect(defaultChoices(example('unique-items')).icon).toBe(STYLE_ICON);
+    expect(defaultChoices(example('large-gold')).icon).toBe('coin_gold');
   });
 
   it('never checks Enhanced Damage or Defense', () => {
@@ -236,6 +267,131 @@ describe('buildExampleRule', () => {
   it('offers its own chat line and the plain item name', () => {
     expect(chatOptions(high).map((option) => option.value)).toEqual(['ÿc1High rune: ÿc0{name}', PLAIN_CHAT_MESSAGE]);
     expect(chatOptions(example('low-runes')).map((option) => option.value)).toEqual([PLAIN_CHAT_MESSAGE]);
+  });
+});
+
+describe('buildExampleSet: every rule gets exactly the icon it chose', () => {
+  const unique = stylePreset('unique');
+  const uniqueBare = styleWithoutIcon(unique.style);
+  const STAR = { iconName: 'star_gold', iconSize: 30 };
+  const CROWN = { iconName: 'crown_gold', iconSize: 30 };
+  const items = example('unique-items');
+  const oculus = example('unique-by-id');
+  const jewellery = example('unique-jewellery');
+  const withIcon = (icon: string | null): ExampleChoices => ({ ...defaultChoices(items), icon });
+  const entry = (ex: ExampleRule, icon: string | null): ExampleEntry => ({ example: ex, choices: { ...defaultChoices(ex), icon } });
+  /** Each rule's style and own icon, and the icon it shows once its style applies (`effectiveActions`). */
+  const outcome = (set: ExampleSet, existing: Readonly<Record<string, LootFilterStyle>> = {}) =>
+    set.rules.map((rule) => {
+      const styles = { ...set.styles, ...existing };
+      const style = rule.useStyle === undefined ? undefined : styles[rule.useStyle];
+      return { useStyle: rule.useStyle, own: rule.icon, shows: rule.icon ?? style?.icon };
+    });
+
+  it('uses the preset with its icon when the rules take the style’s icon, without an own icon on the rule', () => {
+    const set = buildExampleSet([{ example: items, choices: withIcon(STYLE_ICON) }]);
+    expect(set.styles).toEqual({ UniqueItem: unique.style });
+    expect(outcome(set)).toEqual([{ useStyle: 'UniqueItem', own: undefined, shows: STAR }]);
+  });
+
+  it('gives a different icon as the rule’s own (the rule wins), and drops an own icon equal to the style’s', () => {
+    const set = buildExampleSet([entry(items, 'crown_gold'), entry(oculus, 'star_gold')]);
+    expect(set.styles).toEqual({ UniqueItem: unique.style });
+    expect(outcome(set)).toEqual([
+      { useStyle: 'UniqueItem', own: CROWN, shows: CROWN },
+      { useStyle: 'UniqueItem', own: undefined, shows: STAR },
+    ]);
+  });
+
+  it('adds the preset without its icon when every rule of it wants none', () => {
+    const set = buildExampleSet([entry(items, null), entry(oculus, null), entry(jewellery, 'crown_gold')]);
+    expect(set.styles).toEqual({ UniqueItem: uniqueBare });
+    expect(outcome(set)).toEqual([
+      { useStyle: 'UniqueItem', own: undefined, shows: undefined },
+      { useStyle: 'UniqueItem', own: undefined, shows: undefined },
+      { useStyle: 'UniqueItem', own: { iconName: 'crown_gold', iconSize: 40 }, shows: { iconName: 'crown_gold', iconSize: 40 } },
+    ]);
+  });
+
+  it('adds a NoIcon copy for the rules that want none when others want the style’s icon', () => {
+    const set = buildExampleSet([entry(items, null), entry(oculus, STYLE_ICON), entry(jewellery, null)]);
+    expect(set.styles).toEqual({ UniqueItemNoIcon: uniqueBare, UniqueItem: unique.style });
+    expect(outcome(set)).toEqual([
+      { useStyle: 'UniqueItemNoIcon', own: undefined, shows: undefined },
+      { useStyle: 'UniqueItem', own: undefined, shows: STAR },
+      { useStyle: 'UniqueItemNoIcon', own: undefined, shows: undefined },
+    ]);
+  });
+
+  it('honours the bulk "No minimap icons" switch with icon-less presets and no copies', () => {
+    const ids = ['high-runes', 'upper-runes', 'mid-runes', 'unique-items', 'unique-jewellery', 'set-items'];
+    const state = { ...setExamplesSelected(INITIAL_PICKER_STATE, ids, true), noIcons: true };
+    const set = buildStarterRules(state);
+    expect(Object.keys(set.styles)).toEqual(['MidRune', 'HighRune', 'UniqueItem', 'SetItem']);
+    for (const style of Object.values(set.styles)) expect(style.icon).toBeUndefined();
+    expect(outcome(set).every((rule) => rule.shows === undefined)).toBe(true);
+  });
+
+  it('treats "Style’s icon" on a preset without one, or without a style, as no icon', () => {
+    const low = buildExampleSet([entry(example('low-runes'), STYLE_ICON)]);
+    expect(outcome(low)).toEqual([{ useStyle: 'LowRune', own: undefined, shows: undefined }]);
+    const plain = buildExampleSet([{ example: example('elite-set-chat'), choices: { ...NO_CHOICES, icon: STYLE_ICON } }]);
+    expect(plain.rules[0]?.icon).toBeUndefined();
+  });
+
+  describe('against the filter’s own styles (never overwritten)', () => {
+    it('reuses an identical preset, adding only the NoIcon copy a rule needs', () => {
+      const existing = { UniqueItem: unique.style };
+      const set = buildExampleSet([entry(items, STYLE_ICON), entry(oculus, null)], existing);
+      expect(mergeStyles(existing, set.styles)).toEqual({ add: { UniqueItemNoIcon: uniqueBare }, reused: [] });
+      expect(outcome(set, existing)).toEqual([
+        { useStyle: 'UniqueItem', own: undefined, shows: STAR },
+        { useStyle: 'UniqueItemNoIcon', own: undefined, shows: undefined },
+      ]);
+    });
+
+    it('on a preset added before the presets had icons: the rules wanting the icon carry it themselves', () => {
+      const existing = { UniqueItem: uniqueBare };
+      const set = buildExampleSet([entry(items, STYLE_ICON), entry(oculus, null)], existing);
+      // The filter's UniqueItem differs from today's preset: it is kept, and the toast says so.
+      expect(mergeStyles(existing, set.styles)).toEqual({ add: {}, reused: ['UniqueItem'] });
+      expect(outcome(set, existing)).toEqual([
+        { useStyle: 'UniqueItem', own: STAR, shows: STAR },
+        { useStyle: 'UniqueItem', own: undefined, shows: undefined },
+      ]);
+    });
+
+    it('on the user’s own style of that name with another icon: keeps it, the look stays theirs, the icons are the chosen ones', () => {
+      const mine: LootFilterStyle = { replaceName: 'ÿc1{name}', icon: { iconName: 'goldstar', iconSize: 50 } };
+      const existing = { UniqueItem: mine };
+      const set = buildExampleSet([entry(items, STYLE_ICON), entry(oculus, null), entry(jewellery, 'goldstar')], existing);
+      const merge = mergeStyles(existing, set.styles);
+      expect(merge.reused).toEqual(['UniqueItem']);
+      // The NoIcon copy is the user's look without its icon.
+      expect(merge.add).toEqual({ UniqueItemNoIcon: { replaceName: 'ÿc1{name}' } });
+      expect(outcome(set, existing)).toEqual([
+        { useStyle: 'UniqueItem', own: STAR, shows: STAR },
+        { useStyle: 'UniqueItemNoIcon', own: undefined, shows: undefined },
+        // goldstar at the example's size (40) differs from the user's goldstar 50.
+        { useStyle: 'UniqueItem', own: { iconName: 'goldstar', iconSize: 40 }, shows: { iconName: 'goldstar', iconSize: 40 } },
+      ]);
+    });
+
+    it('picks the next free NoIcon name when the filter uses the first for something else, and reuses a matching one', () => {
+      const taken = { UniqueItemNoIcon: { replaceName: 'ÿc2{name}', icon: STAR } };
+      const set = buildExampleSet([entry(items, STYLE_ICON), entry(oculus, null)], taken);
+      expect(set.rules[1]?.useStyle).toBe('UniqueItemNoIcon2');
+      expect(mergeStyles(taken, set.styles).add).toEqual({ UniqueItem: unique.style, UniqueItemNoIcon2: uniqueBare });
+      const matching = { UniqueItemNoIcon: uniqueBare };
+      expect(buildExampleSet([entry(items, STYLE_ICON), entry(oculus, null)], matching).rules[1]?.useStyle).toBe('UniqueItemNoIcon');
+    });
+
+    it('uses the user’s icon-less style of that name directly for the rules that want none', () => {
+      const existing = { UniqueItem: { replaceName: 'ÿc1{name}' } };
+      const set = buildExampleSet([entry(items, null)], existing);
+      expect(outcome(set, existing)).toEqual([{ useStyle: 'UniqueItem', own: undefined, shows: undefined }]);
+      expect(mergeStyles(existing, set.styles)).toEqual({ add: {}, reused: ['UniqueItem'] });
+    });
   });
 });
 

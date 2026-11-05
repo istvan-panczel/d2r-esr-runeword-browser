@@ -11,9 +11,9 @@ import { statQuirk } from '../engine/statQuirks';
 import type { LootFilter, LootFilterRule } from '../engine/types';
 import { validateLootFilter } from '../engine/validate';
 import { findBundledIconAsset, findBundledSound } from './bundledAssets';
-import { buildExampleRule, defaultChoices, findExample } from './exampleRules';
+import { buildExampleSet, defaultChoices, findExample } from './exampleRules';
 import { collectReferencedAssets } from './referencedAssets';
-import { STYLE_PRESETS } from './stylePresets';
+import { STYLE_PRESETS, styleWithoutIcon } from './stylePresets';
 import { EXAMPLE_TEMPLATE } from './template';
 
 /** The bundled example filter for new users (`public/loot-filters/example-filter.json`). */
@@ -29,7 +29,7 @@ const LEVELING = 1;
 const STRICT = 2;
 
 /**
- * The file's rules in order: the example each one is (`buildExampleRule` with its default choices) and what the file
+ * The file's rules in order: the example each one is (`buildExampleSet` with its default choices) and what the file
  * adds to it besides its comment. A changed example fails here until the file follows (and its version is bumped).
  */
 const FROM_EXAMPLES: readonly (readonly [id: string, extra?: Partial<LootFilterRule>])[] = [
@@ -62,6 +62,15 @@ const FROM_EXAMPLES: readonly (readonly [id: string, extra?: Partial<LootFilterR
   ['hide-weapons-except', { activeInLevels: [STRICT] }],
   ['hide-magic-armour-except', { activeInLevels: [STRICT] }],
 ];
+
+/** The examples built as one set, as the picker adds them (`buildExampleSet`: the styles and the NoIcon copy they need). */
+const fromExamples = buildExampleSet(
+  FROM_EXAMPLES.map(([id]) => {
+    const example = findExample(id);
+    if (example === undefined) throw new Error(`no example ${id}`);
+    return { example, choices: defaultChoices(example) };
+  })
+);
 
 const items = new Map(lootfilter.items.map((item) => [item.code, item]));
 const statIds = new Map(lootfilter.stats.map((stat) => [stat.name, stat.id]));
@@ -144,7 +153,7 @@ describe('example filter', () => {
       defaultLevel: LEVELING,
       notifications: { dropFormat: 'ÿc4Drop: {qualityColor}{name}' },
     });
-    expect(EXAMPLE_TEMPLATE.version).toBe('2.0.0');
+    expect(EXAMPLE_TEMPLATE.version).toBe('2.1.0');
     expect(filter.description).toBeTruthy();
     expect(filter.updateUrl).toBeUndefined();
     expect(filter.leadingComments.length).toBeGreaterThan(0);
@@ -156,7 +165,7 @@ describe('example filter', () => {
       const [id, extra = {}] = FROM_EXAMPLES[index] ?? [''];
       const example = findExample(id);
       if (example === undefined) throw new Error(`no example ${id}`);
-      expect(rule, id).toEqual({ ...buildExampleRule(example, defaultChoices(example)).rule, ...extra, comment: rule.comment });
+      expect(rule, id).toEqual({ ...fromExamples.rules[index], ...extra, comment: rule.comment });
       // The comment is the rule list's title line: the example's title first, then what the rule teaches.
       expect(rule.comment?.startsWith(`${example.title}. `), id).toBe(true);
       expect(rule.comment?.length ?? 0, id).toBeGreaterThan(example.title.length + 30);
@@ -165,12 +174,23 @@ describe('example filter', () => {
     expect(filter.rules.length).toBeLessThanOrEqual(30);
   });
 
-  it('defines exactly the style presets its rules use, as the presets are', () => {
+  it('defines exactly the style presets its rules use, as the presets are, icons included, plus the one NoIcon copy', () => {
     const used = new Set(filter.rules.flatMap((rule) => (rule.useStyle === undefined ? [] : [rule.useStyle])));
     expect(new Set(Object.keys(filter.styles ?? {}))).toEqual(used);
+    expect(filter.styles).toEqual(fromExamples.styles);
     for (const [name, style] of Object.entries(filter.styles ?? {})) {
+      if (name === 'MidRuneNoIcon') continue;
       expect(style, name).toEqual(STYLE_PRESETS.find((preset) => preset.name === name)?.style);
+      expect(style.icon, name).toBeDefined();
     }
+    // Hel to Um keep no icon (as in v2.0.0): a rule cannot remove its style's icon, so they use a copy without it.
+    expect(filter.styles?.MidRuneNoIcon).toEqual(styleWithoutIcon(STYLE_PRESETS.find((preset) => preset.id === 'mid-rune')?.style ?? {}));
+    // A rule carries its own icon only where it differs from its style's.
+    expect(filter.rules.filter((rule) => rule.icon !== undefined).map((rule) => rule.comment?.split('.')[0])).toEqual([
+      'Unique rings and amulets',
+      'Tier 5 maps and The Hidden Vault',
+      'Gold piles of 100,000 or more',
+    ]);
   });
 
   it('has rules for every level and rules for Strict only, label rules first and hide rules last', () => {
