@@ -120,6 +120,11 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   `moveRule({ from, to })` and `duplicateRule(index)` (both keep the `disabled` flag with the rule), `selectRule(index)`,
   `setStyle({ name, style })`, `renameStyle({ from, to })` (also re-points rules' `useStyle`), `removeStyle(name)`,
   `replaceFilter({ filter, diagnostics, notes? })`.
+- **Persistence** (`lootFilterSaga.ts`): every reducer that edits the open filter is in the saga's `isEditorMutation`
+  list, which starts the 400 ms debounced flush into the library; one missing there keeps its edit in memory only, until
+  another edit flushes it (a reload in between loses it: `addRules` and `chooseRuleStyle` both shipped that way and
+  were added on 2026-11-05). `lootFilterSaga.test.ts` fails while a slice action is neither in that list nor in its
+  list of known non-edits (library actions, `selectRule`), so a new reducer has to be classified.
 - **Reading is lenient, writing strict**: `engine/jsonc.ts` reads what the ESR loot filter plugin (v1.5.3) reads, so
   besides `//` line comments it accepts `/* */` block comments and a single trailing comma before `]` or `}` (Sully's
   launcher filter ends its rules with `},` + `]`); `[1,,2]`, `[,]` and an unclosed `/*` stay syntax errors. Comments and
@@ -537,7 +542,7 @@ fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Styles   | Style list (name, action count, "used by N rules"), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor, with the Basic / Advanced toggle (see the Rules tab). Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Styles   | Style list (name, action count, "used by N rules", its look as a `StylePreview` with the minimap icon), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor, with the Basic / Advanced toggle (see the Rules tab). Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Only the `//` comment lines at the top of the file are kept: comments between rules are not shown here (the text is the serialized model) and are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
 | Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -1130,13 +1135,16 @@ action key; the rule editor and the Styles tab both render it. Every control sen
 removes the key); `passthrough` is never patched. Sections:
 
 - **Label preview** (top): `LabelPreview` of prefix + (`replaceName` or `{name}`) + suffix in enUS, with `{name}` shown
-  as "Item Name" and other placeholders as written; background and border from the effective actions. For a rule with
+  as "Item Name" and other placeholders as written; background and border from the effective actions, and the
+  effective minimap icon beside it (`MinimapIconPreview`, at its size up to 64 px; none while the rule hides). For a rule with
   `useStyle`, the style's actions are underneath and the rule's own win, per key (`utils/effectiveActions.ts`).
-- **Style** (rules only, `StyleSection`): `useStyle` as a searchable picker (a button with the style's label preview
-  and name, opening a cmdk list): None, **In this filter** (the filter's styles, each with its label preview and its
-  minimap icon if it has one; a missing name kept as "(missing)") and **Presets (added to the filter when picked)**
-  (`STYLE_PRESETS` with the Styles tab's `PresetPreview`, label and description; a preset whose name the filter
-  already has is listed once, as the filter's own). Picking goes through `onChooseStyle` (see
+- **Style** (rules only, `StyleSection`): `useStyle` as a searchable picker (a button with the style's `StylePreview`
+  and name, opening a cmdk list): None, **In this filter** (the filter's styles, each drawn with `StylePreview`:
+  "Item Name" in its label look and its minimap icon beside it; a `<Name>NoIcon` copy the example picker added shows
+  the same label without the icon; a missing name kept as "(missing)") and **Presets (added to the filter when
+  picked)** (`STYLE_PRESETS` with the Styles tab's `PresetPreview`, label and description; a preset whose name the
+  filter already has is listed once, as the filter's own). The icons in the list and the button are capped at 40 px
+  (`maxIconSize`) so a 128 px icon keeps the rows even; the tooltip gives the real size. Picking goes through `onChooseStyle` (see
   [Style first, then tweak](#style-first-then-tweak)); below it a collapsed read-only list of the style's actions
   (`StyleSummary`; its `comment` is shown but not counted). A rule's
   `comment` belongs to the rule editor; a style's is a one-line field under **Notes** ("A note for yourself; the plugin
@@ -1148,7 +1156,8 @@ removes the key); `passthrough` is never patched. Sections:
 - **Label** (`LabelSection`): `labelBackground` (colour + alpha, default alpha 242), `labelBorder` (colour + alpha, width; "Add border" /
   remove).
 - **Sound**: combobox in two groups: **Bundled sounds** (all 9 files, each with its label and use and its own play /
-  stop button, which plays without picking) and **Game sounds** (the sounds.txt names, at most 100 shown); the
+  stop button, which plays without picking, by click or by Enter / Space on the focused button: the button keeps those
+  keys from the list, whose own Enter would pick the highlighted sound) and **Game sounds** (the sounds.txt names, at most 100 shown); the
   search matches anywhere in the text (a bundled file also by its label and use), so the chosen sound never narrows
   the list, and the current one has a check mark; "Use as typed" takes any other name (digits become a row number).
   Closing the list stops a preview started from it. A play button for the chosen bundled file (an `Audio` at
@@ -1165,7 +1174,8 @@ removes the key); `passthrough` is never patched. Sections:
     file") that opens a popover: a search box (`filterIcons` in `utils/iconPicker.ts`: every word anywhere in the
     name, label or use, any case; an empty search lists all), a 4-column grid of every bundled icon
     (`ICON_PICKER_ICONS`: the 25 generated ones first, then Sully's 12; each tile its picture and name, the current one
-    outlined with a check), arrow keys (`gridMove`: left / right by one, up / down by a row) and Enter in the search
+    outlined with a check; a tile's accessible name is the file name and its label, "star_gold, Gold star (shape)"),
+    arrow keys (`gridMove`: left / right by one, up / down by a row) and Enter in the search
     box, and **Custom file name…** (a text box + Use) for the user's own `.sprite` (`.sprite` may be left off); a search
     that matches nothing offers "Use “…” as the file name". The thumbnails decode through `useBundledSprite`, once per
     name for the page, and only while the grid is open. The datalist it replaces only suggested names starting with
@@ -1197,7 +1207,8 @@ everything; then change a few things":
 
 - **Picking a style clears the rule's own values for the keys the style sets** (`utils/styleChoice.ts`):
   `applyStyleChoice(rule, style)` gives `{ patch, cleared }` (every `STYLE_KEYS` key, the effect keys but `useStyle`,
-  that both set; keys the style leaves free stay). `planStyleChoice(rule, filter, target)` (target None, a filter
+  that both set; keys the style leaves free stay; a wrong-shaped own value kept in `passthrough` counts as set, since it
+  is written back to the file and would still win there while the field shows the style's value). `planStyleChoice(rule, filter, target)` (target None, a filter
   style or a preset) builds one `chooseRuleStyle` edit (`useStyle` + the clearing patch + `addStyle` for a preset the
   filter lacks) and its exact undo (the removed values and the old `useStyle` back, a wrong-shaped original in
   `passthrough` too; `removeStyleIfUnused` for an added preset, kept when another rule uses it by then; `ifUseStyle`
@@ -1347,16 +1358,26 @@ none with a `<Name>NoIcon` copy of the style (see _Add selected_ under the Rules
 PascalCase without spaces like Sully's, none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows
 each with a `PresetPreview` and its description; the menu says the preset is copied "minimap icon included".
 
-**Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, className? })`
-(`components/StylePreview.tsx`) draws a ground label with the style's name colour (`stylePreviewText`: the sample in
-place of `{name}`), background and border, and the minimap icon beside it on the same dark ground at its `iconSize` as
-on the minimap; `icon` overrides the style's (a rule's own), `null` draws none. `PresetPreview({ preset, icon?,
+**Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, maxIconSize?, className? })`
+(`components/StylePreview.tsx`) draws a ground label with the style's text (`stylePreviewText`: prefix + `replaceName`
+or `{name}` + suffix in enUS with the sample in place of `{name}`, the label text the actions editor shows; empty, so
+"(empty label)", for a style that hides), background and border, and the minimap icon beside it on the same dark ground
+at its `iconSize` as on the minimap; `icon` overrides the style's (a rule's own), `null` draws none; `maxIconSize` caps
+the drawn icon in a list row. `PresetPreview({ preset, icon?,
 className? })` is it for a preset and its sample. The icon is `MinimapIconPreview({ icon })`
 (`components/MinimapIconPreview.tsx`): a bundled icon decoded once per name (`useBundledSprite`, cached for the page's
 life), the first frame on a canvas at `iconSize` (longer side, 4 to 256; absent = the file's size) with the tint
 applied (`tintSprite`); a name that is not bundled is a dashed box of about that size with the name in its tooltip.
-`LabelPreview` has a `trailing` slot for it. The Add preset menu, the example rules picker and the rule editor's style
-dropdown use them.
+`LabelPreview` has a `trailing` slot for it. The Add preset menu, the example rules picker, the rule editor's style
+dropdown (filter styles and presets alike) and the Styles tab's style list (each style with its look under its name)
+use them.
+
+**One drawing routine**: every minimap icon preview draws through `SpriteCanvas` (`components/SpriteCanvas.tsx`: the
+decoded first frame, tinted with `tintSprite`, scaled onto a canvas of the given CSS size; `density` 2 keeps a small
+thumbnail sharp), with the sizes from `utils/spriteSize.ts` (`spriteDrawSize(sprite, iconSize, max?)`: the minimap size,
+4 to 256, absent = the file's size, optionally capped; `spriteFitSize(sprite, side)`: fitted into a square). Its users:
+`MinimapIconPreview` (minimap size), `IconThumb` (the icon picker's tiles and button: fitted into a dark tile) and the
+icon field's `SpritePreview` (minimap size with the pixel sizes under it, also for a local `.sprite`).
 
 Picking a preset copies it into `styles` under its name and selects it (toast "Added the style …");
 `presetStyleStatus` compares by content (key order ignored): an identical style of that name is just selected
