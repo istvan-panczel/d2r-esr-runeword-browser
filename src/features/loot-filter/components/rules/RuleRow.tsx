@@ -58,7 +58,8 @@ export function RuleRow({
     <li
       data-rule-index={index}
       className={cn(
-        'group relative flex items-stretch border-l-2',
+        // Rows outside the list's scroll view skip layout, so moving the splitter on a long filter stays smooth.
+        'group relative flex flex-wrap items-stretch border-l-2 [contain-intrinsic-size:auto_3.5rem] [content-visibility:auto]',
         selected ? 'border-l-primary bg-accent' : 'border-l-transparent hover:bg-muted/50'
       )}
     >
@@ -67,7 +68,7 @@ export function RuleRow({
         data-rule-main
         aria-current={selected ? 'true' : undefined}
         className={cn(
-          'flex min-w-0 flex-1 items-start gap-2 px-2 py-1.5 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset',
+          'flex min-w-0 flex-1 basis-full items-start gap-2 px-2 py-1.5 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset',
           disabled && 'opacity-60'
         )}
         onClick={() => {
@@ -140,7 +141,9 @@ export function RuleRow({
       </button>
       <div
         className={cn(
-          'flex shrink-0 items-start gap-0.5 py-1 pr-1 transition-opacity',
+          // On touch the buttons are always there, on their own line under the text (right-aligned), so the comment
+          // keeps the row's full width.
+          'ml-auto flex shrink-0 items-start gap-0.5 pr-1 pb-1 transition-opacity',
           // With a mouse the buttons float over the row's end, so a hidden toolbar takes no room from the summary.
           'pointer-fine:absolute pointer-fine:top-0.5 pointer-fine:right-0.5 pointer-fine:rounded-md pointer-fine:bg-card pointer-fine:py-0.5 pointer-fine:pl-0.5 pointer-fine:shadow-xs',
           !selected && 'pointer-fine:opacity-0 pointer-fine:group-focus-within:opacity-100 pointer-fine:group-hover:opacity-100'

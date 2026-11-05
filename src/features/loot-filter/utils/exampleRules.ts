@@ -11,6 +11,7 @@
  * apply at every filter level) and none checks Enhanced Damage or Enhanced Defense: the plugin reads them as 0 on
  * weapons and armour (see "Known plugin limits" in docs/features/LOOT-FILTER.md).
  */
+import { CLASS_CODES } from '@/features/game-data/engine/schema';
 import { tabLayer } from '@/features/game-data/engine/statLayers';
 import type { LootFilterRule, LootFilterStyle, StatCheck } from '../engine/types';
 import { newExceptionCheck } from './statChecks';
@@ -143,6 +144,15 @@ const TOWNS = [1, 40, 75, 103, 109];
 const MYTHICAL_GEAR = [...numbered('m', 1, 18), 'dd1', 'm20', ...numbered('m', 29, 39), 'm60', 'm61'];
 const MYTHICAL_JEWELLERY = ['mrn', 'mam', 'au9'];
 
+/** Every mythical weapon and armour base, the ones that do not drop too (m21 to m28, m40 to m59, 7wd), as Sully lists them. */
+const MYTHICAL_BASES = ['7wd', 'dd1', ...numbered('m', 1, 18), ...numbered('m', 20, 61)];
+
+/** Quest weapons: the Gidbinn and its decoy, the Horadric Malus, the Hell Forge Hammer, the Horadric Staff and its shaft, Wirt's Leg, Khalim's Flail and Will. */
+const QUEST_ITEMS = ['d33', 'g33', 'hdm', 'hfh', 'hst', 'leg', 'msf', 'qf1', 'qf2'];
+
+/** What every broad weapon/armour rule leaves out, as Sully's filter does: mythical bases and quest weapons. */
+const NOT_PLAIN_GEAR = [...MYTHICAL_BASES, ...QUEST_ITEMS];
+
 /** Class rings and amulets (Amazonian Loop … Warlock's Pendant). */
 const CLASS_JEWELLERY = ['zrn', 'srn', 'nrn', 'prn', 'brg', 'drn', 'arn', 'wrn', 'zam', 'sam', 'nam', 'pam', 'bam', 'dam', 'aam', 'wam'];
 
@@ -154,6 +164,17 @@ const CRYSTAL_SUFFIXES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x',
 const RUNE_CRYSTALS = ['xr', 'xl', 'xt'].flatMap((prefix) => CRYSTAL_SUFFIXES.map((suffix) => `${prefix}${suffix}`));
 
 const level = (min: number): StatCheck => ({ stat: 'level', op: '>=', value: min });
+
+/**
+ * Exceptions that keep skill items out of a hide rule: `item_addclassskills < 1` for each class and
+ * `item_addskill_tab < 1` for each class tab. A check without param reads only the param-0 entry (verified in game),
+ * so each class and tab needs its own check; every check must hold to hide, so one skill bonus keeps the item.
+ */
+function skillExceptions(): StatCheck[] {
+  const classes = CLASS_CODES.map((_code, cls): StatCheck => ({ stat: 'item_addclassskills', param: cls, op: '<', value: 1 }));
+  const tabs = everySkillTab(1).map((check): StatCheck => ({ ...check, op: '<' }));
+  return [...classes, ...tabs];
+}
 
 /** One `item_addskill_tab` check per class skill tab (8 classes × 3 tabs, param `class << 3 | tab`). */
 function everySkillTab(min: number): StatCheck[] {
@@ -278,16 +299,18 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'unique-items',
     group: 'uniques',
     title: 'Unique weapons and armour',
-    description: 'Every unique weapon and armour piece gets the unique look, the unique sound and a gold star on the minimap.',
-    rule: { itemTypes: ['weap', 'armo'], quality: 'unique' },
+    description:
+      'Every unique weapon and armour piece gets the unique look, the unique sound and a gold star on the minimap. Mythical bases are left out: the mythical rule gives them their own sound and chat line.',
+    rule: { itemTypes: ['weap', 'armo'], excludeItemCodes: MYTHICAL_BASES, quality: 'unique' },
     presentation: { style: 'unique', sound: 'unique.mp3', icon: 'goldstar', iconSize: 30 },
   },
   {
     id: 'unique-jewellery',
     group: 'uniques',
     title: 'Unique rings and amulets',
-    description: 'Ring and amulet types include the class rings and amulets, since an item type matches its children.',
-    rule: { itemTypes: ['ring', 'amul'], quality: 'unique' },
+    description:
+      'Ring and amulet types include the class rings and amulets, since an item type matches its children. The mythical ring and amulets are left out for the mythical rule.',
+    rule: { itemTypes: ['ring', 'amul'], excludeItemCodes: MYTHICAL_JEWELLERY, quality: 'unique' },
     presentation: { style: 'unique', sound: 'other.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc4Unique jewellery: {name}' },
   },
   {
@@ -695,19 +718,22 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
   {
     id: 'hide-weapons-except',
     group: 'junk',
-    title: 'Hide magic and rare weapons, except useful ones',
+    title: 'Hide magic and rare weapons from character level 30, except useful ones',
     description:
-      'A hide rule with exceptions: the stats under “Except items with…” are written as < 1 checks, and every check must hold to hide, so a weapon with +All Skills, Faster Cast Rate or Increased Attack Speed keeps its label. Class weapons and mythical bases are excluded.',
+      'A hide rule with exceptions: the stats under “Except items with…” are written as < 1 checks, and every check must hold to hide, so a weapon with +All Skills, +class skills, +a skill tab, Faster Cast Rate or Increased Attack Speed keeps its label. Class skills and skill tabs get one check per class and tab, since a check without param reads only the first; +skills to one skill (oskills) are not kept. It waits for character level 30 and leaves the towns out; class weapons, quest items and mythical bases are excluded.',
     rule: {
       itemTypes: ['weap'],
       excludeItemTypes: ['clas'],
-      excludeItemCodes: MYTHICAL_GEAR,
+      excludeItemCodes: NOT_PLAIN_GEAR,
       quality: ['magic', 'rare'],
       itemStats: [
         newExceptionCheck('item_allskills'),
         newExceptionCheck('item_fastercastrate'),
         newExceptionCheck('item_fasterattackrate'),
+        ...skillExceptions(),
       ],
+      playerStats: [level(30)],
+      excludeAreas: TOWNS,
       hide: true,
     },
   },
@@ -716,11 +742,11 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     group: 'junk',
     title: 'Hide magic armour from character level 30, except useful ones',
     description:
-      'Magic armour without +All Skills, Faster Cast Rate, Faster Hit Recovery, Faster Run/Walk, Increased Attack Speed or Magic Find, once your character is level 30, outside town. Class armour and mythical bases are excluded.',
+      'Magic armour without +All Skills, +class skills, +a skill tab, Faster Cast Rate, Faster Hit Recovery, Faster Run/Walk, Increased Attack Speed or Magic Find, once your character is level 30, outside town (one check per class and tab, as in the weapon rule; oskills are not kept). Class armour, quest items and mythical bases are excluded.',
     rule: {
       itemTypes: ['armo'],
       excludeItemTypes: ['clas'],
-      excludeItemCodes: MYTHICAL_GEAR,
+      excludeItemCodes: NOT_PLAIN_GEAR,
       quality: 'magic',
       itemStats: [
         newExceptionCheck('item_allskills'),
@@ -729,6 +755,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
         newExceptionCheck('item_fastermovevelocity'),
         newExceptionCheck('item_fasterattackrate'),
         newExceptionCheck('item_magicbonus'),
+        ...skillExceptions(),
       ],
       playerStats: [level(30)],
       excludeAreas: TOWNS,
@@ -739,10 +766,12 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'hide-plain-gear',
     group: 'junk',
     title: 'Hide white gear with 0 or 1 socket from character level 10',
-    description: 'Normal-quality weapons and armour that cannot be runeword bases (at most one socket); superior items stay.',
+    description:
+      'Normal-quality weapons and armour with at most one socket, white class items among them, once your character is level 10, outside town. That includes bases you could still socket (Larzuk’s quest, a Socket Donut), so skip it if you want those. Superior items stay; quest items, mythical bases and throwing potions are excluded.',
     rule: {
       itemTypes: ['weap', 'armo'],
-      excludeItemCodes: MYTHICAL_GEAR,
+      excludeItemTypes: ['tpot'],
+      excludeItemCodes: NOT_PLAIN_GEAR,
       quality: 'normal',
       sockets: { max: 1 },
       playerStats: [level(10)],
@@ -753,9 +782,10 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
   {
     id: 'hide-ammo-and-throwing-potions',
     group: 'junk',
-    title: 'Hide arrows, bolts and throwing potions',
-    description: 'A quality range: up to magic (inferior, normal, superior, magic), so rare and unique quivers still show.',
-    rule: { itemTypes: ['bowq', 'xboq', 'tpot'], quality: { max: 'magic' }, excludeAreas: TOWNS, hide: true },
+    title: 'Hide plain arrows, bolts and throwing potions from character level 10',
+    description:
+      'A quality range: up to superior (inferior, normal, superior), from character level 10, outside town. Magic, rare and unique quivers stay, since ESR has hundreds of quiver affixes.',
+    rule: { itemTypes: ['bowq', 'xboq', 'tpot'], quality: { max: 'superior' }, playerStats: [level(10)], excludeAreas: TOWNS, hide: true },
   },
 ];
 

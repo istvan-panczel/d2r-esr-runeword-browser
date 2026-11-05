@@ -70,31 +70,43 @@ interface ChoiceSelectProps {
   readonly onChange: (value: string | null) => void;
 }
 
-/** One compact "None or a value" select. */
+/**
+ * One compact "None or a value" select. Its options mount only while it is open (the trigger shows the chosen label
+ * itself): Select all ticks every example, and some 200 closed selects with all their options made that slow. Typing
+ * a letter on a closed trigger therefore does not pick an option; open it first.
+ */
 function ChoiceSelect({ id, label, value, options, disabled = false, disabledLabel, onChange }: ChoiceSelectProps) {
+  const [open, setOpen] = useState(false);
+  const selected = disabled ? NONE : (value ?? NONE);
+  const noneLabel = disabled ? (disabledLabel ?? 'None') : 'None';
+  const selectedLabel = selected === NONE ? noneLabel : (options.find((option) => option.value === selected)?.label ?? selected);
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <label htmlFor={id} className="text-xs text-muted-foreground">
         {label}
       </label>
       <Select
-        value={disabled ? NONE : (value ?? NONE)}
+        value={selected}
         disabled={disabled}
+        open={open}
+        onOpenChange={setOpen}
         onValueChange={(next) => {
           onChange(next === NONE ? null : next);
         }}
       >
         <SelectTrigger id={id} size="sm" className="w-full min-w-0">
-          <SelectValue />
+          <SelectValue>{selectedLabel}</SelectValue>
         </SelectTrigger>
-        <SelectContent position="popper">
-          <SelectItem value={NONE}>{disabled ? (disabledLabel ?? 'None') : 'None'}</SelectItem>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
+        {open && (
+          <SelectContent position="popper">
+            <SelectItem value={NONE}>{noneLabel}</SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        )}
       </Select>
     </div>
   );
@@ -308,21 +320,28 @@ export function ExampleRulesPicker({
                           type="checkbox"
                           className="mt-0.5 size-4 shrink-0 accent-primary"
                           checked={choices !== null}
+                          // The title is the name; the description (and the hide badge) describe it.
+                          aria-describedby={`${checkboxId}-description`}
                           onChange={(event) => {
                             setState((current) => setExamplesSelected(current, [example.id], event.target.checked));
                           }}
                         />
-                        <label htmlFor={checkboxId} className="min-w-0 flex-1 cursor-pointer">
+                        <div className="min-w-0 flex-1">
                           <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                            {example.title}
+                            <label htmlFor={checkboxId} className="cursor-pointer">
+                              {example.title}
+                            </label>
                             {isHideExample(example) && (
                               <Badge variant="outline" className="text-[10px]">
                                 hide
                               </Badge>
                             )}
                           </span>
-                          <span className="block text-xs text-muted-foreground">{example.description}</span>
-                        </label>
+                          <p id={`${checkboxId}-description`} className="text-xs text-muted-foreground">
+                            {isHideExample(example) && <span className="sr-only">Hide rule. </span>}
+                            {example.description}
+                          </p>
+                        </div>
                       </div>
                       {choices !== null && !isHideExample(example) && (
                         <div className="pl-6">

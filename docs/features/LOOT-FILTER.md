@@ -526,8 +526,13 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
   clamp keeps it between 18rem and 60% of the row when the window shrinks too. The width is remembered per browser
   (`loot-filters/rule-list-width` in localStorage, every access in try/catch; without storage it lasts until the tab
   is left); double-click resets it to the default (and forgets it). Drag with pointer capture (no text selection, a
-  `col-resize` cursor while dragging); the handle is a focusable `role="separator"` (`aria-orientation="vertical"`,
-  `aria-valuenow/min/max` in px from a ResizeObserver, `aria-controls` the list) that ArrowLeft / ArrowRight move by
+  `col-resize` cursor while dragging): a drag writes `--rule-list-width` straight on the row element, at most once per
+  animation frame, and commits the width (state and localStorage) on release, so the Rules tab does not re-render per
+  pointer move; the rule rows use `content-visibility: auto`, so rows outside the list's scroll view skip layout
+  (measured on Sully's 225 rules at 1280 px: a width change's layout went from about 24 ms to 7.5 ms, 60 drag steps
+  from about 3.4 s to 1.1-1.7 s). The handle is a focusable `role="separator"` (`aria-orientation="vertical"`,
+  `aria-valuenow/min/max` in px from a ResizeObserver (paused while dragging, the drag sets the value itself),
+  `aria-valuetext` such as "24 rem, 31% of the row" (`ruleListValueText`), `aria-controls` the list) that ArrowLeft / ArrowRight move by
   1rem (Shift: 4rem) and Home / End send to the minimum / maximum. It sits last in the list pane, so the tab order is
   list, splitter, editor. Hidden on the stacked layout.
 
@@ -544,15 +549,18 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
   - _Groups_ (`EXAMPLE_GROUPS`, modelled on the sections of Sully's v0.6.13, rules written for this site), each with a
     one-line intro and a "Select all in group" tri-state checkbox: Runes, Gems, Uniques, Sets, Mythical uniques,
     Coupons, Runeword bases, Charms and jewels, Class items and jewellery, Keys/organs/endgame items, Crafting reagents,
-    Maps, Gold and potions, Hide junk. 60 examples (`EXAMPLE_RULES`; the list is in the code). Each is a checkbox, its
-    title (also the rule's `comment`, the title line in the rule list) and a description; a hide rule has a "hide"
-    badge.
+    Maps, Gold and potions, Hide junk. 60 examples (`EXAMPLE_RULES`; the list is in the code). Each is a checkbox named by its
+    title (also the rule's `comment`, the title line in the rule list), the description (with "Hide rule." for a hide
+    rule, which also has a visible "hide" badge) linked by `aria-describedby`.
   - _Presentation_: an example is its conditions (plus a fixed name tag or `hide`) and default choices for Style (a
     style preset, see [Style presets](#style-presets)), Sound and Minimap icon (from the asset registry) and Chat
     message (its own line or the plain `{qualityColor}{name}`), each None or a value. Sounds, icons and chat lines are
     defaults only on valuable drops; hide rules have none (a hidden item shows nothing). A ticked example shows the four
     compact selects prefilled with its defaults, a play button for the chosen sound (`useSoundPreview`, at the filter's
     `soundVolume`), a preview of the chosen style, and "With every choice None this rule does nothing." when that is so.
+    A select's options mount only while it is open (controlled `open`; the trigger shows the chosen label as
+    `SelectValue` children): with every example ticked there are some 200 selects, and Select all took about 850 ms
+    with every option rendered, about 150 ms now. Typing a letter on a closed trigger no longer picks an option.
   - _Bulk_: "No sounds", "No chat messages", "No minimap icons" switch those off for every rule (the selects show
     "None (no sounds)"…; the choices come back when the switch is off), plus Select all, Clear and "N selected".
   - _Add selected (N)_: `buildStarterRules` builds the rules (`buildExampleRule(example, choices) → { rule,
@@ -568,15 +576,25 @@ stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, 
     `selection` it got back), and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
   - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
     Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
-    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits; the
-    broad weapon/armour hides exclude class items (`excludeItemTypes: ['clas']`) and the mythical bases, and keep
-    useful stats as `< 1` exceptions. The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
+    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits. The
+    broad weapon/armour hides leave out what Sully's filter leaves out: every mythical base (`MYTHICAL_BASES`, the
+    ones that do not drop too) and the quest weapons (`QUEST_ITEMS`: d33 g33 hdm hfh hst leg msf qf1 qf2). The unique
+    weapon/armour rule leaves out the mythical bases and the unique jewellery rule the mythical ring and amulets
+    (mrn, mam, au9), so mythical uniques get only the mythical rule's sound and chat line. The two "except
+    useful ones" hides (magic/rare weapons, magic armour, both from level 30 outside town) also exclude class items
+    (`excludeItemTypes: ['clas']`) and keep useful stats as `< 1` exceptions; +class skills and +skill tabs get one
+    check per class (8) and per tab (24), since a check without param reads only param 0 (oskills, +skills to one
+    skill, are not kept: there is one param per skill). The white-gear hide (normal, at most one socket, from level 10)
+    hides white class items and 0-socket bases you could still socket (Larzuk, Socket Donut), as Sully's does, and
+    leaves throwing potions to the quiver rule, which hides only inferior to superior quivers and throwing potions
+    from level 10 (magic quivers stay: ESR has hundreds of quiver affixes). The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
     an item code list, sockets vs max sockets, unique ids for The Oculus, a narrow inferior hide) are in their groups;
     the rune one now covers Vex to Zod.
   - _Tests_: `exampleRules.test.ts` writes, reads and validates every example against the real game data with its
     default presentation and with every choice None (then only "does nothing" for rules without a fixed action),
     checks that every code drops, the rune/material names, the 24 skill tab params and the presets, sounds and icons,
-    and runs the hide, all-of/any-of, small gold and +3 class item examples through the evaluator.
+    and runs the hide (skill items, level gates, quest weapons, mythical bases, quivers), mythical vs unique,
+    all-of/any-of, small gold and +3 class item examples through the evaluator.
     `examplePicker.test.ts` covers the selection model, the order and the style merge; `lootFilterSlice.test.ts` the
     `addRules` reducer.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
@@ -589,7 +607,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   and has a dashed "disabled" badge first. Move up, move down, disable/enable (`PowerOff`/`Power`, "Disable rule N" /
   "Enable rule N", `aria-pressed`), duplicate and delete (asks first, the dialog showing the comment over the
   summary, as the row does) are icon buttons
-  that float over the row on hover/focus with a mouse and are always shown on touch and on the selected row. The
+  that float over the row on hover/focus with a mouse and are always shown on the selected row; on touch (no fine
+  pointer) they are always shown, on their own right-aligned line under the text, so the comment keeps the row's
+  full width (at 390 px they used to take about 150 px of it). The
   selected row is scrolled into view when the selection changes elsewhere (the JSON tab's "Rule N" link).
 - **Editor** (`RuleEditor`, remounted per rule): "Rule N" (with a "disabled" badge), an **Enabled** checkbox (hint:
   kept in the file under `disabledRules`, which the game ignores; the repo has no Switch component), the `comment` field, the rule's diagnostics (paths relative to
@@ -613,12 +633,17 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   try/catch), default **Basic**, existing users included. Advanced is the full editor described here. Basic shows:
   Enabled, Comment, the diagnostics, How rules combine (collapsed), Item codes, Item types, Unique or set items,
   Quality, Sockets, Ethereal, Item stats (all of) and, on a hide rule, Except items with…; in the actions the label
-  preview, Hide, a **Name colour** select (Basic only: "By quality" or a colour code, written as
-  `replaceName: "ÿc<code>{name}"`; disabled with a pointer to Replace name when replaceName holds other text), label
-  background and border, chat line, sound (with its volume) and minimap icon. Everything else is Advanced: the
+  preview, **Use style** (every example rule uses one, so it is chosen like the sound or icon), Hide, a **Name
+  colour** select (Basic only: "None (no name colour from this rule)" or a colour code, written as
+  `replaceName: "ÿc<code>{name}"`, a whole new name that a later rule's replaceName overrides, as the hint says;
+  disabled with a pointer to Replace name when replaceName holds other text), label background and border, chat
+  line, sound (with its volume) and minimap icon. **Style values under empty controls**: when the rule leaves Name
+  colour / Replace name, Background or Border empty and its style sets one, the control's hint says so ("From style
+  “Unique”: ÿc4{name} (gold)", a swatch and the numbers for colours), in Basic and Advanced, so an empty control on
+  a styled rule does not read as "nothing". Everything else is Advanced: the
   except lists, base tier, item level, max sockets, the other three flags, Item stats any of, both character stat
   lists, a hide rule's "Advanced: hide only items with these stats" box, areas, location, filter levels, difficulty,
-  Use style, Hide if other conditions fail, Chat line when hidden, Replace name, Prefix, Suffix, Notify and
+  Hide if other conditions fail, Chat line when hidden, Replace name, Prefix, Suffix, Notify and
   Droplight. The tables `BASIC_CONDITIONS` / `BASIC_ACTIONS` classify every condition and action key (`satisfies`
   over the types, so a new key must pick a side); `ruleFieldGate({ view, rule, hides, diagnostics })` gives each
   field `shown`, `advanced` or `hidden`. **A set field always shows**: in Basic an Advanced field with a value, a

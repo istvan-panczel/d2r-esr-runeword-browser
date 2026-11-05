@@ -10,9 +10,10 @@ import { LabelPreview } from '../LabelPreview';
 import { AdvancedBadge } from '../rules/AdvancedBadge';
 import { ColorControl } from './ColorControl';
 import { ColorTextField } from './ColorTextField';
+import { FromStyleHint } from './FromStyleHint';
 import { IconField } from './IconField';
 import { LabelSection } from './LabelSection';
-import { NameColorField } from './NameColorField';
+import { NameColorField, StyleNameValue } from './NameColorField';
 import { Section } from './Section';
 import { SoundField } from './SoundField';
 import { StyleSection } from './StyleSection';
@@ -66,6 +67,17 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
 
   const effective = owner === 'rule' ? effectiveActions(actions, filter) : actions;
   const style = owner === 'rule' ? findStyle(actions, filter) : undefined;
+  // What the style gives for a key the rule leaves empty: shown under that control, so an empty one does not mislead.
+  const usedStyle = actions.useStyle;
+  const inherited = <K extends keyof RuleActions>(key: K): RuleActions[K] | undefined =>
+    style !== undefined && actions[key] === undefined ? style[key] : undefined;
+  const styleReplaceName = inherited('replaceName');
+  const nameFromStyle =
+    usedStyle !== undefined && styleReplaceName !== undefined ? { styleName: usedStyle, replaceName: styleReplaceName } : undefined;
+  const labelFromStyle =
+    usedStyle === undefined || style === undefined
+      ? undefined
+      : { styleName: usedStyle, labelBackground: inherited('labelBackground'), labelBorder: inherited('labelBorder') };
   const dropFormat = resolveText(filter.notifications?.dropFormat) ?? DEFAULT_DROP_FORMAT;
 
   return (
@@ -140,6 +152,7 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
           <NameColorField
             id={id('name-color')}
             replaceName={actions.replaceName}
+            fromStyle={nameFromStyle}
             onChange={(replaceName) => {
               onChange({ replaceName });
             }}
@@ -152,7 +165,17 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
             context="names"
             value={actions.replaceName}
             placeholder="{name}"
-            hint="A new name; {name} is the game's own."
+            hint={
+              <>
+                {nameFromStyle !== undefined && (
+                  <FromStyleHint styleName={nameFromStyle.styleName}>
+                    <StyleNameValue replaceName={nameFromStyle.replaceName} />
+                    <span>A name here overrides it for this rule.</span>
+                  </FromStyleHint>
+                )}
+                <span className="block">A new name; {'{name}'} is the game&apos;s own. A later rule&apos;s replaceName overrides it.</span>
+              </>
+            }
             badge={badge('replaceName')}
             onChange={(replaceName) => {
               onChange({ replaceName });
@@ -191,7 +214,7 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
         )}
       </Section>
 
-      <LabelSection idPrefix={idPrefix} actions={actions} onChange={onChange} />
+      <LabelSection idPrefix={idPrefix} actions={actions} onChange={onChange} fromStyle={labelFromStyle} />
 
       <Section title="Chat">
         <ColorTextField

@@ -62,6 +62,13 @@ export function ruleListWidthForKey(
   }
 }
 
+/** The splitter's value for assistive tech: "24 rem, 31% of the row" (rem to one decimal; the row is list, gap and editor). */
+export function ruleListValueText(listPx: number, rowPx: number, remPx: number): string {
+  const rem = remPx > 0 ? Math.round((listPx / remPx) * 10) / 10 : 0;
+  const share = rowPx > 0 ? Math.round((listPx / rowPx) * 100) : 0;
+  return `${String(rem)} rem, ${String(share)}% of the row`;
+}
+
 /** Reads the stored width; null without storage (private windows, blocked site data) or a usable value. */
 export function readRuleListWidth(): number | null {
   try {

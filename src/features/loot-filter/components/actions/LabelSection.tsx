@@ -1,11 +1,12 @@
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { DEFAULT_LABEL_BACKGROUND_ALPHA, type RuleActions } from '../../engine/types';
+import { DEFAULT_LABEL_BACKGROUND_ALPHA, type LabelBorder, type LabelColor, type RuleActions } from '../../engine/types';
 import type { ShallowPatch } from '../../utils/patch';
 import { Field } from '../Field';
 import { NumberInput } from '../NumberInput';
 import { ColorControl } from './ColorControl';
+import { ColorValue, FromStyleHint } from './FromStyleHint';
 import { Section } from './Section';
 
 interface LabelSectionProps {
@@ -13,10 +14,16 @@ interface LabelSectionProps {
   readonly idPrefix: string;
   readonly actions: RuleActions;
   readonly onChange: (patch: ShallowPatch<RuleActions>) => void;
+  /** What the rule's style gives for the keys the rule leaves empty (rule editor only). */
+  readonly fromStyle?: {
+    readonly styleName: string;
+    readonly labelBackground?: LabelColor;
+    readonly labelBorder?: LabelBorder;
+  };
 }
 
-/** The ground label's background colour and border (colour and width). */
-export function LabelSection({ idPrefix, actions, onChange }: LabelSectionProps) {
+/** The ground label's background colour and border (colour and width); a style's values show under empty controls. */
+export function LabelSection({ idPrefix, actions, onChange, fromStyle }: LabelSectionProps) {
   const backgroundId = `${idPrefix}-label-background`;
   const borderId = `${idPrefix}-label-border`;
   const widthId = `${idPrefix}-label-border-width`;
@@ -28,7 +35,16 @@ export function LabelSection({ idPrefix, actions, onChange }: LabelSectionProps)
         <Field
           id={backgroundId}
           label="Background"
-          hint={`Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`}
+          hint={
+            <>
+              {fromStyle?.labelBackground !== undefined && (
+                <FromStyleHint styleName={fromStyle.styleName}>
+                  <ColorValue color={fromStyle.labelBackground} />
+                </FromStyleHint>
+              )}
+              <span className="block">Fills the ground label; alpha defaults to {String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.</span>
+            </>
+          }
         >
           <ColorControl
             id={backgroundId}
@@ -42,7 +58,21 @@ export function LabelSection({ idPrefix, actions, onChange }: LabelSectionProps)
             }}
           />
         </Field>
-        <Field id={borderId} label="Border" hint="Outlines the ground label.">
+        <Field
+          id={borderId}
+          label="Border"
+          hint={
+            <>
+              {fromStyle?.labelBorder !== undefined && (
+                <FromStyleHint styleName={fromStyle.styleName}>
+                  <ColorValue color={fromStyle.labelBorder.color} defaultAlpha={255} />
+                  <span>width {String(fromStyle.labelBorder.width)}</span>
+                </FromStyleHint>
+              )}
+              <span className="block">Outlines the ground label.</span>
+            </>
+          }
+        >
           {border === undefined ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground">none</span>

@@ -40,7 +40,8 @@ export const BASIC_CONDITIONS = {
 
 /** Every action key, true when the Basic view shows it (a rule's own actions; a style's editor always shows all). */
 export const BASIC_ACTIONS = {
-  useStyle: false,
+  // Every example rule uses a style, chosen like the sound or icon.
+  useStyle: true,
   hide: true,
   hideIfOtherConditionsFail: false,
   chatMessageWhenHidden: false,

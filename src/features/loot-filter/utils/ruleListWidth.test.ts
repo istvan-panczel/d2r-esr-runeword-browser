@@ -5,6 +5,7 @@ import {
   parseRuleListWidth,
   readRuleListWidth,
   ruleListBounds,
+  ruleListValueText,
   ruleListWidthForKey,
   writeRuleListWidth,
 } from './ruleListWidth';
@@ -64,6 +65,17 @@ describe('ruleListWidthForKey', () => {
     expect(ruleListWidthForKey('End', false, 400, bounds, 16)).toBe(720);
     expect(ruleListWidthForKey('ArrowUp', false, 400, bounds, 16)).toBeNull();
     expect(ruleListWidthForKey('Enter', false, 400, bounds, 16)).toBeNull();
+  });
+});
+
+describe('ruleListValueText', () => {
+  it('names the width in rem and as a share of the row', () => {
+    expect(ruleListValueText(384, 1232, 16)).toBe('24 rem, 31% of the row');
+    expect(ruleListValueText(300, 1000, 16)).toBe('18.8 rem, 30% of the row');
+  });
+
+  it('reads 0 before anything is measured', () => {
+    expect(ruleListValueText(0, 0, 16)).toBe('0 rem, 0% of the row');
   });
 });
 
