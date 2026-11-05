@@ -656,7 +656,8 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
       preset's icon on a filter style that has another icon or none, e.g. a preset added before presets had icons);
     - a rule that wants no icon while that style has one uses a copy of the style without it, `<Name>NoIcon`
       (`UniqueItemNoIcon`; `<Name>NoIcon2`… when the filter uses the name for something else; a filter style of that
-      name with the same content is reused). The copy of a filter's own style keeps the filter's look.
+      name with the same content is reused). The copy of a filter's own style keeps the filter's look. A copy is added
+      right after its base style when both are added (owner, 2026-11-05), else at the end.
 
     Example: Unique weapons and armour set to None and The Oculus left on Style's icon add `UniqueItem` (with the
     star) and `UniqueItemNoIcon`; with The Oculus on Gold crown instead (nobody wants the star) only `UniqueItem`

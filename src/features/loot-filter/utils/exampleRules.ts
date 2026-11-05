@@ -1020,6 +1020,8 @@ export function buildExampleSet(entries: readonly ExampleEntry[], existing?: Sty
   }
 
   const styles: Record<string, LootFilterStyle> = {};
+  /** `<Name>NoIcon` copy → its base style's name. */
+  const copyOf = new Map<string, string>();
   const rules = entries.map(({ example, choices }): LootFilterRule => {
     const base: LootFilterRule = { comment: example.title, ...example.rule };
     if (isHideExample(example)) return base;
@@ -1036,6 +1038,7 @@ export function buildExampleSet(entries: readonly ExampleEntry[], existing?: Sty
         const bare = styleWithoutIcon(target);
         useStyle = noIconName(preset.name, bare, existing, styles);
         styles[useStyle] = bare;
+        copyOf.set(useStyle, preset.name);
       } else {
         useStyle = preset.name;
         if (!Object.hasOwn(styles, useStyle)) styles[useStyle] = wanted;
@@ -1050,7 +1053,24 @@ export function buildExampleSet(entries: readonly ExampleEntry[], existing?: Sty
       ...(choices.chatMessage === null ? {} : { chatMessage: choices.chatMessage }),
     };
   });
-  return { rules, styles };
+  return { rules, styles: copiesAfterBase(styles, copyOf) };
+}
+
+/** The styles with each `<Name>NoIcon` copy right after its base style (when the base is added too), else in place. */
+function copiesAfterBase(
+  styles: Readonly<Record<string, LootFilterStyle>>,
+  copyOf: ReadonlyMap<string, string>
+): Record<string, LootFilterStyle> {
+  const ordered: Record<string, LootFilterStyle> = {};
+  for (const [name, style] of Object.entries(styles)) {
+    const base = copyOf.get(name);
+    if (base !== undefined && Object.hasOwn(styles, base)) continue;
+    ordered[name] = style;
+    for (const [copy, copyBase] of copyOf) {
+      if (copyBase === name && Object.hasOwn(styles, copy)) ordered[copy] = styles[copy];
+    }
+  }
+  return ordered;
 }
 
 export interface BuiltExample {
