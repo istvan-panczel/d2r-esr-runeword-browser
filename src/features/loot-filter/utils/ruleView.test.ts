@@ -31,9 +31,9 @@ describe('ruleFieldGate, Basic view', () => {
       'isEthereal',
       'itemStats',
     ]);
-    expect(shownActions(gate)).toEqual(['hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
+    expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
     expect(gate.hiddenConditions).toBe(17);
-    expect(gate.hiddenActions).toBe(8);
+    expect(gate.hiddenActions).toBe(7);
   });
 
   it('shows an Advanced field that holds a value, tagged, and counts only the hidden ones', () => {
@@ -44,7 +44,7 @@ describe('ruleFieldGate, Basic view', () => {
     expect(gate.condition('baseTier')).toBe('hidden');
     expect(gate.condition('itemCodes')).toBe('shown');
     expect(gate.action('droplight')).toBe('advanced');
-    expect(gate.action('useStyle')).toBe('advanced');
+    expect(gate.action('useStyle')).toBe('shown');
     expect(gate.hiddenConditions).toBe(15);
     expect(gate.hiddenActions).toBe(6);
   });
@@ -107,7 +107,17 @@ describe('the field tables', () => {
     const basicActions = Object.entries(BASIC_ACTIONS)
       .filter(([, basic]) => basic)
       .map(([key]) => key);
-    expect(basicActions).toEqual(['hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'soundVolume', 'icon', 'comment']);
+    expect(basicActions).toEqual([
+      'useStyle',
+      'hide',
+      'labelBackground',
+      'labelBorder',
+      'chatMessage',
+      'sound',
+      'soundVolume',
+      'icon',
+      'comment',
+    ]);
   });
 });
 

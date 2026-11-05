@@ -622,12 +622,17 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   try/catch), default **Basic**, existing users included. Advanced is the full editor described here. Basic shows:
   Enabled, Comment, the diagnostics, How rules combine (collapsed), Item codes, Item types, Unique or set items,
   Quality, Sockets, Ethereal, Item stats (all of) and, on a hide rule, Except items with…; in the actions the label
-  preview, Hide, a **Name colour** select (Basic only: "By quality" or a colour code, written as
-  `replaceName: "ÿc<code>{name}"`; disabled with a pointer to Replace name when replaceName holds other text), label
-  background and border, chat line, sound (with its volume) and minimap icon. Everything else is Advanced: the
+  preview, **Use style** (every example rule uses one, so it is chosen like the sound or icon), Hide, a **Name
+  colour** select (Basic only: "None (no name colour from this rule)" or a colour code, written as
+  `replaceName: "ÿc<code>{name}"`, a whole new name that a later rule's replaceName overrides, as the hint says;
+  disabled with a pointer to Replace name when replaceName holds other text), label background and border, chat
+  line, sound (with its volume) and minimap icon. **Style values under empty controls**: when the rule leaves Name
+  colour / Replace name, Background or Border empty and its style sets one, the control's hint says so ("From style
+  “Unique”: ÿc4{name} (gold)", a swatch and the numbers for colours), in Basic and Advanced, so an empty control on
+  a styled rule does not read as "nothing". Everything else is Advanced: the
   except lists, base tier, item level, max sockets, the other three flags, Item stats any of, both character stat
   lists, a hide rule's "Advanced: hide only items with these stats" box, areas, location, filter levels, difficulty,
-  Use style, Hide if other conditions fail, Chat line when hidden, Replace name, Prefix, Suffix, Notify and
+  Hide if other conditions fail, Chat line when hidden, Replace name, Prefix, Suffix, Notify and
   Droplight. The tables `BASIC_CONDITIONS` / `BASIC_ACTIONS` classify every condition and action key (`satisfies`
   over the types, so a new key must pick a side); `ruleFieldGate({ view, rule, hides, diagnostics })` gives each
   field `shown`, `advanced` or `hidden`. **A set field always shows**: in Basic an Advanced field with a value, a
