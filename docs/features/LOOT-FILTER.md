@@ -1406,7 +1406,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   icon, chat line; one key per line). `assets.md` lists every registry entry with its "when to use" line
   (`DEFAULT_PROMPT_ASSETS` from `BUNDLED_SOUND_ASSETS` / `BUNDLED_ICON_ASSETS`).
 - **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.2.24, the single .md without request or starter):
-  **Compact** about 207k characters (~52k tokens; examples.md is 41k of it): every item type (`item-types.csv`), the misc items that drop
+  **Compact** about 213k characters (~53k tokens; measured on ESR 3.2.24, it grows with the example rules): every item type (`item-types.csv`), the misc items that drop
   (`items.csv`: runes, gems, charms, jewels, potions, keys, organs, essences, coupons, maps, scrolls; stacks of five or
   more identically named containers (the Rune, Decal and Multi Stockers, Gem and Crystal Cans, Rerolling Orbs)
   collapse to one row "match them by item type"), the weapon and armour bases that drop by item type and tier
@@ -1414,7 +1414,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   can use `itemTypes` + `baseTier`), every stat with label, param kind and the quirk or scale note (`stats.csv`),
   uniques merged by name with the dropped and Ancient Coupon ids, then the set items (`uniques-sets.csv`, disabled rows
   left out), every area (`areas.csv`, 5k), the class skills, the skill tabs (param = class × 8 + tab) and the classes.
-  **Full** about 332k characters (~83k tokens): one row per item code with kind, types, tier and drop flag, one row
+  **Full** about 338k characters (~84k tokens): one row per item code with kind, types, tier and drop flag, one row
   per unique and set row with base, level and coupon/disabled notes, and every skill. Neither size lists the sounds.txt
   names (they were 263k, about half of Full, until 2026-11): the prompt and assets.md say game sounds exist and that the
   LLM asks the user for the exact name (the editor's Sound picker lists them; the validator warns on an unknown one), and
