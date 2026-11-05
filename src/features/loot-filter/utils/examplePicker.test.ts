@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { EXAMPLE_GROUPS, EXAMPLE_RULES, findExample } from './exampleRules';
+import { EXAMPLE_GROUPS, EXAMPLE_RULES, findExample, isHideExample } from './exampleRules';
 import {
   buildStarterRules,
   effectiveChoices,
+  groupBulkKind,
   groupExamples,
   groupSelection,
   INITIAL_PICKER_STATE,
   mergeStyles,
   orderedSelection,
+  selectAllLabelRules,
   setExampleChoice,
   setExamplesSelected,
+  setGroupSelected,
   setPickerSwitch,
   starterRulesFor,
 } from './examplePicker';
@@ -40,6 +43,37 @@ describe('example picker state', () => {
     expect(groupSelection(INITIAL_PICKER_STATE, 'runes')).toBe('none');
     expect(groupSelection(pick(runes[0] ?? ''), 'runes')).toBe('some');
     expect(groupSelection(pick(...runes), 'runes')).toBe('all');
+  });
+
+  it('ticks every label rule on Select all and no hide rule', () => {
+    const state = selectAllLabelRules(INITIAL_PICKER_STATE);
+    const ticked = new Set(Object.keys(state.selected));
+    for (const example of EXAMPLE_RULES) expect(ticked.has(example.id), example.id).toBe(!isHideExample(example));
+    // A hide rule ticked by hand stays ticked, with the label rules added around it.
+    const withHide = selectAllLabelRules(pick('hide-inferior'));
+    expect(Object.keys(withHide.selected)).toHaveLength(ticked.size + 1);
+    expect(groupSelection(state, 'junk')).toBe('none');
+  });
+
+  it('lets a group checkbox tick label rules only, except in a group of hide rules only', () => {
+    expect(groupBulkKind('runes')).toBe('all');
+    expect(groupBulkKind('gems')).toBe('labels');
+    expect(groupBulkKind('gold')).toBe('labels');
+    expect(groupBulkKind('junk')).toBe('hides');
+
+    const gems = setGroupSelected(INITIAL_PICKER_STATE, 'gems', true);
+    expect(Object.keys(gems.selected).sort()).toEqual(['blemished-gems', 'perfect-gems']);
+    // The untouched hide rule does not make the group partial, so the next click unticks it.
+    expect(groupSelection(gems, 'gems')).toBe('all');
+    expect(groupSelection(pick('hide-low-gems'), 'gems')).toBe('some');
+    const gemsAndHide = setExamplesSelected(gems, ['hide-low-gems'], true);
+    expect(groupSelection(gemsAndHide, 'gems')).toBe('all');
+    expect(setGroupSelected(gemsAndHide, 'gems', false).selected).toEqual({});
+
+    const junk = setGroupSelected(INITIAL_PICKER_STATE, 'junk', true);
+    expect(Object.keys(junk.selected)).toEqual(groupExamples('junk').map((example) => example.id));
+    expect(groupSelection(junk, 'junk')).toBe('all');
+    expect(setGroupSelected(junk, 'junk', false).selected).toEqual({});
   });
 
   it('applies the bulk switches on top of the choices', () => {

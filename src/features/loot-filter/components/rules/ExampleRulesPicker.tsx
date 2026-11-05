@@ -11,11 +11,14 @@ import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS, bundledSoundUrl } from '../.
 import {
   buildStarterRules,
   effectiveChoices,
+  groupBulkKind,
   groupExamples,
   groupSelection,
   INITIAL_PICKER_STATE,
+  selectAllLabelRules,
   setExampleChoice,
   setExamplesSelected,
+  setGroupSelected,
   setPickerSwitch,
   type ExamplePickerState,
   type PickerSwitch,
@@ -23,7 +26,6 @@ import {
 import {
   chatOptions,
   EXAMPLE_GROUPS,
-  EXAMPLE_RULES,
   hasFixedAction,
   isHideExample,
   type ExampleChoices,
@@ -34,6 +36,13 @@ import { TriCheckbox } from '../pickers/BrowserGroups';
 import { PresetPreview } from '../PresetPreview';
 
 const NONE = '__none';
+
+/** The group checkbox's text by what it ticks (`groupBulkKind`). */
+const GROUP_SELECT_LABEL = {
+  all: 'Select all in group',
+  labels: 'Select label rules in group',
+  hides: 'Select all hide rules in group',
+} as const;
 
 const SWITCHES: readonly { readonly key: PickerSwitch; readonly label: string }[] = [
   { key: 'noSounds', label: 'No sounds' },
@@ -253,17 +262,12 @@ export function ExampleRulesPicker({
             type="button"
             variant="ghost"
             size="sm"
+            aria-describedby={`${idPrefix}-select-all-hint`}
             onClick={() => {
-              setState((current) =>
-                setExamplesSelected(
-                  current,
-                  EXAMPLE_RULES.map((example) => example.id),
-                  true
-                )
-              );
+              setState(selectAllLabelRules);
             }}
           >
-            Select all
+            Select all label rules
           </Button>
           <Button
             type="button"
@@ -280,6 +284,9 @@ export function ExampleRulesPicker({
             {count} selected
           </span>
         </span>
+        <p id={`${idPrefix}-select-all-hint`} className="basis-full text-xs text-muted-foreground">
+          Select all leaves the hide rules out: tick the ones you want yourself.
+        </p>
       </div>
       <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4 sm:px-6">
         {EXAMPLE_GROUPS.map((group) => {
@@ -295,16 +302,10 @@ export function ExampleRulesPicker({
                   state={groupSelection(state, group.id)}
                   className="text-xs text-muted-foreground"
                   onChange={(on) => {
-                    setState((current) =>
-                      setExamplesSelected(
-                        current,
-                        examples.map((example) => example.id),
-                        on
-                      )
-                    );
+                    setState((current) => setGroupSelected(current, group.id, on));
                   }}
                 >
-                  Select all in group
+                  {GROUP_SELECT_LABEL[groupBulkKind(group.id)]}
                 </TriCheckbox>
               </div>
               <p className="text-xs text-muted-foreground">{group.intro}</p>
