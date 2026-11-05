@@ -28,7 +28,7 @@ describe('parseLootFilter on Sully’s filter', () => {
     expect(filter.rules[98]).toMatchObject({ activeInLevels: [4], activeInLevelsNumber: 4, hide: true });
     expect(filter.rules[98]?.passthrough).toBeUndefined();
     expect(filter.rules.flatMap((rule, index) => (wrongShapedKeys(rule).length > 0 ? [index] : []))).toEqual([]);
-    expect(filter.rules).toHaveLength(223);
+    expect(filter.rules).toHaveLength(225);
     expect(Object.keys(filter.styles ?? {})).toEqual([
       'Mythical',
       'Jackpot',

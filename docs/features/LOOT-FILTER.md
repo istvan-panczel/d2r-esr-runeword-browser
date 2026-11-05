@@ -209,7 +209,7 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.6.11) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+    Skills, which is param 56"). Sully's template (v0.6.13) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -314,7 +314,7 @@ filter with no rules. …") say the same in short.
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
   entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.6.11 from github.com/Thisisnotsully/QoL-Filter, verbatim (223 rules, 12 styles, 4
+  is `Sullys-QoL-Filter.json` v0.6.13 from github.com/Thisisnotsully/QoL-Filter, verbatim (225 rules, 12 styles, 4
   levels, `soundVolume` 25, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
   3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
   fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
@@ -325,13 +325,15 @@ filter with no rules. …") say the same in short.
   4 (Uber-Strict - Maps+) and limit their gong highlight to levels 1 to 3, add the Mythical Jewel (`mjw`) to the rare
   jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
-  and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
+  and `14e` (Nightwing's Veil) the other way; v0.6.12 and v0.6.13 (2026-11-04) add two Legendary
+  Materials to the `STierMaterial` group, Lucion's Relic of Sanctification (`u18`) and Inarius' Everburning Halo
+  (`u40`), with the existing `redD` icon (no new assets, no new warnings). The v0.6.9 hide rule (rule 98) writes
   `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
   reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
   single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
   Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
   The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
-  in `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  in `utils/template.ts`): "Sully's QoL filter v0.6.13, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
