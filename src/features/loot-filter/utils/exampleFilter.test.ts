@@ -10,7 +10,11 @@ import { statScale } from '../engine/statScale';
 import { statQuirk } from '../engine/statQuirks';
 import type { LootFilter, LootFilterRule } from '../engine/types';
 import { validateLootFilter } from '../engine/validate';
-import { findBundledIcon, findBundledSound } from './bundledAssets';
+import { findBundledIconAsset, findBundledSound } from './bundledAssets';
+import { buildExampleRule, defaultChoices, findExample } from './exampleRules';
+import { collectReferencedAssets } from './referencedAssets';
+import { STYLE_PRESETS } from './stylePresets';
+import { EXAMPLE_TEMPLATE } from './template';
 
 /** The bundled example filter for new users (`public/loot-filters/example-filter.json`). */
 const text = readFileSync(resolve(process.cwd(), 'public/loot-filters/example-filter.json'), 'utf8');
@@ -23,6 +27,41 @@ const filter = parsed.filter;
 
 const LEVELING = 1;
 const STRICT = 2;
+
+/**
+ * The file's rules in order: the example each one is (`buildExampleRule` with its default choices) and what the file
+ * adds to it besides its comment. A changed example fails here until the file follows (and its version is bumped).
+ */
+const FROM_EXAMPLES: readonly (readonly [id: string, extra?: Partial<LootFilterRule>])[] = [
+  ['high-runes'],
+  ['elemental-runes'],
+  ['upper-runes'],
+  ['mid-runes'],
+  ['perfect-gems'],
+  ['unique-items', { notify: true }],
+  ['unique-jewellery'],
+  ['unique-by-id'],
+  ['set-items'],
+  ['mythical-uniques'],
+  ['elite-coupons'],
+  ['socket-count-tag'],
+  ['elite-armour-bases'],
+  ['ethereal-merc-bases'],
+  ['all-skills-bases'],
+  ['charms-any-of'],
+  ['all-resist-charms'],
+  ['rare-jewels'],
+  ['pandemonium-keys'],
+  ['tier-5-maps'],
+  ['large-gold'],
+  ['hide-inferior'],
+  ['hide-plain-gear'],
+  ['hide-minor-potions'],
+  ['hide-low-gems', { activeInLevels: [STRICT] }],
+  ['hide-small-gold', { activeInLevels: [STRICT] }],
+  ['hide-weapons-except', { activeInLevels: [STRICT] }],
+  ['hide-magic-armour-except', { activeInLevels: [STRICT] }],
+];
 
 const items = new Map(lootfilter.items.map((item) => [item.code, item]));
 const statIds = new Map(lootfilter.stats.map((stat) => [stat.name, stat.id]));
@@ -92,41 +131,61 @@ describe('example filter', () => {
     expect(validateLootFilter(filter, reference)).toEqual([]);
   });
 
-  it('has the header new users see in the library', () => {
+  it('has the header new users see in the library, at the bundled version', () => {
     expect(filter).toMatchObject({
       formatVersion: 1,
       title: 'Example filter (with explanations)',
       author: 'D2R ESR Runeword Browser',
-      version: '1.0.0',
+      version: EXAMPLE_TEMPLATE.version,
       filterLevels: [
         { id: LEVELING, name: 'Leveling' },
         { id: STRICT, name: 'Strict' },
       ],
       defaultLevel: LEVELING,
+      notifications: { dropFormat: 'ÿc4Drop: {qualityColor}{name}' },
     });
+    expect(EXAMPLE_TEMPLATE.version).toBe('2.0.0');
     expect(filter.description).toBeTruthy();
     expect(filter.updateUrl).toBeUndefined();
     expect(filter.leadingComments.length).toBeGreaterThan(0);
-    expect(Object.keys(filter.styles ?? {})).toEqual(['Valuable', 'Good']);
   });
 
-  it('explains every rule in its comment and keeps to a readable size', () => {
-    for (const rule of filter.rules) expect(rule.comment?.trim()).toBeTruthy();
+  it('is the example rules with their default presentation, in order, plus the levels and the drop line', () => {
+    expect(filter.rules).toHaveLength(FROM_EXAMPLES.length);
+    filter.rules.forEach((rule, index) => {
+      const [id, extra = {}] = FROM_EXAMPLES[index] ?? [''];
+      const example = findExample(id);
+      if (example === undefined) throw new Error(`no example ${id}`);
+      expect(rule, id).toEqual({ ...buildExampleRule(example, defaultChoices(example)).rule, ...extra, comment: rule.comment });
+      // The comment is the rule list's title line: the example's title first, then what the rule teaches.
+      expect(rule.comment?.startsWith(`${example.title}. `), id).toBe(true);
+      expect(rule.comment?.length ?? 0, id).toBeGreaterThan(example.title.length + 30);
+    });
     expect(filter.rules.length).toBeGreaterThanOrEqual(20);
     expect(filter.rules.length).toBeLessThanOrEqual(30);
   });
 
-  it('has rules for every level and rules for Strict only', () => {
+  it('defines exactly the style presets its rules use, as the presets are', () => {
+    const used = new Set(filter.rules.flatMap((rule) => (rule.useStyle === undefined ? [] : [rule.useStyle])));
+    expect(new Set(Object.keys(filter.styles ?? {}))).toEqual(used);
+    for (const [name, style] of Object.entries(filter.styles ?? {})) {
+      expect(style, name).toEqual(STYLE_PRESETS.find((preset) => preset.name === name)?.style);
+    }
+  });
+
+  it('has rules for every level and rules for Strict only, label rules first and hide rules last', () => {
     const strictOnly = filter.rules.filter((rule) => rule.activeInLevels?.length === 1 && rule.activeInLevels[0] === STRICT);
     expect(strictOnly.length).toBeGreaterThan(0);
     expect(filter.rules.some((rule) => rule.hide === true && rule.activeInLevels === undefined)).toBe(true);
+    const firstHide = filter.rules.findIndex((rule) => rule.hide === true);
+    expect(filter.rules.slice(firstHide).every((rule) => rule.hide === true)).toBe(true);
   });
 
-  it('uses only the bundled sounds and icons, and only stats the plugin reads as shown', () => {
+  it('uses only the bundled sounds and the generated icons, and only stats the plugin reads as shown', () => {
     const actions = [...Object.values(filter.styles ?? {}), ...filter.rules];
     for (const entry of actions) {
       if (entry.sound !== undefined) expect(findBundledSound(entry.sound)).toBeDefined();
-      if (entry.icon !== undefined) expect(findBundledIcon(entry.icon.iconName)).toBeDefined();
+      if (entry.icon !== undefined) expect(findBundledIconAsset(entry.icon.iconName)?.credit).toBe('Generated for this app');
     }
     const checks = filter.rules.flatMap((rule) => [
       ...(rule.itemStats ?? []),
@@ -140,127 +199,120 @@ describe('example filter', () => {
     }
   });
 
+  it('puts every sound and icon it uses into the .zip download', () => {
+    const { bundled, missing } = collectReferencedAssets(filter);
+    expect(missing).toEqual([]);
+    expect(bundled.map((file) => file.path)).toEqual(
+      expect.arrayContaining(['sounds/tink.mp3', 'icons/diamond_red.sprite', 'icons/star_gold.sprite', 'icons/key_purple.sprite'])
+    );
+    expect(bundled.some((file) => file.path.endsWith('.lowend.sprite'))).toBe(false);
+  });
+
   describe('behaves as its comments say (Test tab evaluator)', () => {
-    it('gives a high rune the sound, droplight, rune icon and chat line', () => {
+    it('gives a high rune the HighRune look and beam, the tink, a red diamond and a chat line at both levels', () => {
       const result = run(item('r80'));
       expect(result.hidden).toBe(false);
+      expect(result.name).toBe('ÿc1Ber Rune');
       expect(result.sounds).toEqual([{ sound: 'tink.mp3', volume: 50 }]);
-      expect(result.droplight).toEqual({ color: [255, 128, 0] });
-      expect(result.icon).toEqual({ iconName: 'rune', iconSize: 50 });
-      expect(result.labelBorder).toEqual({ color: [255, 0, 0, 255], width: 2 });
-      expect(result.chatMessages).toEqual(['ÿc8High rune: ÿc0Ber Rune']);
-      expect(run(item('r80'), { level: STRICT })).toMatchObject({ hidden: false, droplight: { color: [255, 128, 0] } });
+      expect(result.droplight).toEqual({ color: [255, 40, 0] });
+      expect(result.icon).toEqual({ iconName: 'diamond_red', iconSize: 50 });
+      expect(result.labelBorder).toEqual({ color: [240, 0, 0, 255], width: 2 });
+      expect(result.chatMessages).toEqual(['ÿc1High rune: ÿc0Ber Rune']);
+      expect(run(item('r80'), { level: STRICT })).toMatchObject({ hidden: false, droplight: { color: [255, 40, 0] } });
+      expect(run(item('r90')).icon).toEqual({ iconName: 'diamond_red', iconSize: 50 });
     });
 
-    it('gives a mid rune the Good style and a small icon, without a droplight', () => {
-      const result = run(item('r74'));
-      expect(result.sounds).toEqual([{ sound: 'mid.mp3', volume: 50 }]);
-      expect(result.icon).toEqual({ iconName: 'rune', iconSize: 30 });
-      expect(result.droplight).toBeNull();
+    it('gives Ist the mid sound and an orange diamond, and Hel only the MidRune look', () => {
+      const ist = run(item('r74'));
+      expect(ist.sounds).toEqual([{ sound: 'mid.mp3', volume: 50 }]);
+      expect(ist.icon).toEqual({ iconName: 'diamond_orange', iconSize: 40 });
+      expect(ist.droplight).toBeNull();
+      const hel = run(item('r65'));
+      expect(hel).toMatchObject({ sounds: [], icon: null, chatMessages: [], labelBorder: { color: [255, 168, 0, 255], width: 1 } });
     });
 
-    it('shows a white 4-socket base with its socket count and hides a white 2-socket one at Strict', () => {
-      const base = run(item('crs', { sockets: 4 }), { level: STRICT });
-      expect(base.hidden).toBe(false);
-      expect(base.name).toBe('Crystal Sword [4 sockets]');
-      expect(base.labelBorder).toEqual({ color: [240, 240, 240, 255], width: 1 });
-      expect(run(item('crs', { sockets: 2 }), { level: STRICT }).hidden).toBe(true);
-      expect(run(item('crs', { sockets: 2 }), { level: LEVELING }).hidden).toBe(false);
-    });
-
-    it('hides white items without sockets once the character is level 12, except ethereal, superior, quest items and in town', () => {
-      expect(run(item('crs'), { characterLevel: 11 }).hidden).toBe(false);
-      const plain = run(item('crs'), { characterLevel: 12 });
-      expect(plain.hidden).toBe(true);
-      expect(hiddenBy(plain)).toContain('White weapons and armour without sockets');
-      expect(run(item('crs', { isEthereal: true }), { characterLevel: 30 }).hidden).toBe(false);
-      expect(run(item('crs', { quality: QUALITY.superior }), { characterLevel: 30 }).hidden).toBe(false);
-      expect(run(item('hst'), { characterLevel: 30 }).hidden).toBe(false);
-      expect(run(item('hst'), { characterLevel: 30, level: STRICT }).hidden).toBe(false);
-      expect(run(item('crs'), { characterLevel: 30, area: 1 }).hidden).toBe(false);
-      expect(run(item('crs'), { characterLevel: 30, area: 1, level: STRICT }).hidden).toBe(false);
-    });
-
-    it('hides inferior gear, plain arrows and stamina potions at every level', () => {
-      for (const level of [LEVELING, STRICT]) {
-        expect(run(item('crs', { quality: QUALITY.inferior, sockets: 4 }), { level }).hidden).toBe(true);
-        expect(run(item('aq2'), { level }).hidden).toBe(true);
-        expect(run(item('vps'), { level }).hidden).toBe(true);
-      }
-      expect(run(item('aq2', { quality: QUALITY.magic }), { level: STRICT }).hidden).toBe(false);
-    });
-
-    it('hides minor potions, chipped gems, scrolls and small gold piles only at Strict', () => {
-      for (const code of ['hp1', 'mp2', 'gcv', 'skc', 'tsc', 'isc']) {
-        expect(run(item(code), { level: LEVELING }).hidden).toBe(false);
-        expect(run(item(code), { level: STRICT }).hidden).toBe(true);
-      }
-      expect(run(item('hp3'), { level: STRICT }).hidden).toBe(false);
-      expect(run(item('gfv'), { level: STRICT }).hidden).toBe(false);
-      expect(run(item('gld', { stats: [stat('gold', 499)] }), { level: LEVELING }).hidden).toBe(false);
-      expect(run(item('gld', { stats: [stat('gold', 499)] }), { level: STRICT }).hidden).toBe(true);
-      expect(run(item('gld', { stats: [stat('gold', 500)] }), { level: STRICT }).hidden).toBe(false);
-    });
-
-    it('at Strict shows a magic ring and a magic circlet but hides a magic sword unless it has an exception stat', () => {
-      const where = { level: STRICT };
-      expect(run(item('rin', { quality: QUALITY.magic }), where).hidden).toBe(false);
-      expect(run(item('ci0', { quality: QUALITY.magic }), where).hidden).toBe(false);
-      expect(run(item('crs', { quality: QUALITY.magic }), where).hidden).toBe(true);
-      expect(run(item('crs', { quality: QUALITY.magic, stats: [stat('item_fastercastrate', 10)] }), where).hidden).toBe(true);
-      expect(run(item('crs', { quality: QUALITY.magic, stats: [stat('item_fastercastrate', 20)] }), where).hidden).toBe(false);
-      const skills = run(item('crs', { quality: QUALITY.magic, stats: [stat('item_allskills', 2)] }), where);
-      expect(skills.hidden).toBe(false);
-      expect(skills.name).toBe('Crystal Sword ÿc1[+2 skills]');
-      expect(run(item('crs', { quality: QUALITY.magic }), { level: LEVELING }).hidden).toBe(false);
-    });
-
-    it('gives magic jewels and charms a blue border', () => {
-      expect(run(item('jew', { quality: QUALITY.magic }), { level: STRICT }).labelBorder).toEqual({
-        color: [110, 110, 255, 255],
-        width: 1,
-      });
-      expect(run(item('cm3', { quality: QUALITY.magic }), { level: STRICT }).hidden).toBe(false);
-    });
-
-    it('highlights a rare amulet and keeps rare gloves, but hides a rare sword at Strict unless it has + to All Skills', () => {
-      const where = { level: STRICT };
-      const amulet = run(item('amu', { quality: QUALITY.rare }), where);
-      expect(amulet.hidden).toBe(false);
-      expect(amulet.icon).toEqual({ iconName: 'gem', iconSize: 25 });
-      expect(amulet.chatMessages).toEqual(['ÿc9Rare: Amulet']);
-      expect(run(item('lgl', { quality: QUALITY.rare }), where).hidden).toBe(false);
-      expect(run(item('crs', { quality: QUALITY.rare }), where).hidden).toBe(true);
-      expect(run(item('crs', { quality: QUALITY.rare, stats: [stat('item_allskills', 1)] }), where).hidden).toBe(false);
-      expect(run(item('crs', { quality: QUALITY.rare }), { level: LEVELING }).hidden).toBe(false);
-    });
-
-    it('highlights uniques, and hides a normal-tier unique at Strict only', () => {
-      const lowUnique = item('cap', { quality: QUALITY.unique, uniqueOrSetId: 426, name: 'Cap' });
-      const leveling = run(lowUnique);
-      expect(leveling.hidden).toBe(false);
-      expect(leveling.notified).toBe(true);
+    it('notifies a unique with the drop line, and adds The Oculus’s own chat line and sound after it', () => {
+      const shako = run(item('uap', { quality: QUALITY.unique, uniqueOrSetId: 1 }));
+      expect(shako).toMatchObject({ hidden: false, notified: true, icon: { iconName: 'star_gold', iconSize: 30 } });
       // The drop line from notifications.dropFormat; {qualityColor} is the unique label colour.
-      expect(leveling.chatMessages).toEqual(['ÿc4Drop: ÿcDCap']);
-      expect(leveling.sounds).toEqual([{ sound: 'unique.mp3', volume: 50 }]);
-      expect(leveling.icon).toEqual({ iconName: 'goldstar', iconSize: 30 });
-      expect(leveling.droplight).toEqual({ color: [199, 179, 119] });
-      expect(run(lowUnique, { level: STRICT }).hidden).toBe(true);
-      expect(run(lowUnique, { level: STRICT, area: 109 }).hidden).toBe(false);
-      expect(run(item('xlm', { quality: QUALITY.unique }), { level: STRICT }).hidden).toBe(false);
-      expect(run(item('rin', { quality: QUALITY.unique }), { level: STRICT }).hidden).toBe(false);
-      expect(run(item('m01', { quality: QUALITY.unique }), { level: STRICT }).hidden).toBe(false);
+      expect(shako.chatMessages).toEqual(['ÿc4Drop: ÿcDShako']);
+      expect(shako.sounds).toEqual([{ sound: 'unique.mp3', volume: 50 }]);
+      const oculus = run(item('oba', { quality: QUALITY.unique, uniqueOrSetId: 418, name: 'The Oculus' }));
+      expect(oculus.chatMessages).toEqual(['ÿc4Drop: ÿcDThe Oculus', 'ÿc4The Oculus dropped']);
+      expect(oculus.sounds).toHaveLength(2);
+      expect(run(item('rin', { quality: QUALITY.unique })).icon).toEqual({ iconName: 'crown_gold', iconSize: 40 });
     });
 
-    it('highlights set items, and hides a normal-tier set item at Strict only', () => {
-      const lowSet = item('lgl', { quality: QUALITY.set, uniqueOrSetId: 51 });
-      const leveling = run(lowSet);
-      expect(leveling.hidden).toBe(false);
-      expect(leveling.notified).toBe(true);
-      expect(leveling.icon).toEqual({ iconName: 'star', iconSize: 30 });
-      expect(run(lowSet, { level: STRICT }).hidden).toBe(true);
-      expect(run(item('xlm', { quality: QUALITY.set }), { level: STRICT }).hidden).toBe(false);
-      expect(run(item('amu', { quality: QUALITY.set }), { level: STRICT }).hidden).toBe(false);
+    it('gives a mythical unique only the mythical treatment, and set items the green star', () => {
+      const mythical = run(item('m01', { quality: QUALITY.unique }), { level: STRICT });
+      expect(mythical).toMatchObject({ hidden: false, notified: false, icon: { iconName: 'star_purple', iconSize: 50 } });
+      expect(mythical.sounds).toEqual([{ sound: 'mythical.mp3', volume: 50 }]);
+      expect(run(item('lgl', { quality: QUALITY.set, uniqueOrSetId: 51 })).icon).toEqual({ iconName: 'star_green', iconSize: 30 });
+    });
+
+    it('tags white bases with their sockets, and a later name tag wins on a +All Skills base', () => {
+      expect(run(item('crs', { sockets: 4 }), { level: STRICT })).toMatchObject({ hidden: false, name: 'Crystal Sword ÿc5[4]' });
+      const armour = run(item('utp', { sockets: 3 }));
+      expect(armour.labelBorder).toEqual({ color: [255, 255, 255, 255], width: 1 });
+      const merc = run(item('7s8', { sockets: 5, isEthereal: true }));
+      expect(merc.icon).toEqual({ iconName: 'shield_white', iconSize: 30 });
+      expect(merc.chatMessages).toEqual(['ÿc5Ethereal base: ÿc0Thresher (5 sockets)']);
+      const skills = run(item('crs', { quality: QUALITY.superior, sockets: 2, stats: [stat('item_allskills', 2)] }));
+      expect(skills.name).toBe('ÿc1Crystal Sword ÿc1[+2 skills]');
+      expect(skills.icon).toEqual({ iconName: 'cross_red', iconSize: 40 });
+    });
+
+    it('needs one stat for the any-of charm rule and every stat for the all-of one', () => {
+      const style = (result: EvaluationResult) => result.labelBorder;
+      const goodCharm = { color: [0, 200, 80, 255], width: 1 };
+      expect(style(run(item('cm1', { quality: QUALITY.magic, stats: [stat('item_magicbonus', 5)] })))).toEqual(goodCharm);
+      expect(style(run(item('cm1', { quality: QUALITY.magic, stats: [stat('fireresist', 5)] })))).toBeNull();
+      const allRes = ['fireresist', 'lightresist', 'coldresist', 'poisonresist'].map((name) => stat(name, 5));
+      expect(style(run(item('cm1', { quality: QUALITY.magic, stats: allRes })))).toEqual(goodCharm);
+    });
+
+    it('marks rare jewels, keys, tier 5 maps and large gold piles on the minimap', () => {
+      expect(run(item('jew', { quality: QUALITY.rare })).icon).toEqual({ iconName: 'hexagon_yellow', iconSize: 27 });
+      expect(run(item('pk1')).icon).toEqual({ iconName: 'key_purple', iconSize: 35 });
+      expect(run(item('z17')).icon).toEqual({ iconName: 'map_white', iconSize: 40 });
+      const gold = run(item('gld', { stats: [stat('gold', 150000)] }));
+      expect(gold.icon).toEqual({ iconName: 'coin_gold', iconSize: 30 });
+      expect(gold.name).toBe('ÿc2$$ Gold ÿc2$$');
+    });
+
+    it('hides inferior gear, white gear with at most one socket and minor potions at both levels, from their character level', () => {
+      for (const level of [LEVELING, STRICT]) {
+        expect(run(item('crs', { quality: QUALITY.inferior }), { level }).hidden).toBe(true);
+        expect(run(item('crs', { sockets: 1 }), { level }).hidden).toBe(true);
+        expect(run(item('hp1'), { level }).hidden).toBe(true);
+      }
+      expect(run(item('crs', { quality: QUALITY.inferior }), { characterLevel: 9 }).hidden).toBe(false);
+      expect(run(item('hp1'), { characterLevel: 11 }).hidden).toBe(false);
+      expect(run(item('crs', { sockets: 1 }), { area: 1 }).hidden).toBe(false);
+      expect(run(item('crs', { quality: QUALITY.superior, sockets: 1 })).hidden).toBe(false);
+      expect(run(item('hst')).hidden).toBe(false);
+      expect(hiddenBy(run(item('crs')))).toContain('Hide white gear with 0 or 1 socket');
+    });
+
+    it('hides chipped gems and small gold piles only at Strict', () => {
+      for (const testItem of [item('gcv'), item('gld', { stats: [stat('gold', 499)] })]) {
+        expect(run(testItem, { level: LEVELING }).hidden).toBe(false);
+        expect(run(testItem, { level: STRICT }).hidden).toBe(true);
+      }
+      expect(run(item('gld', { stats: [stat('gold', 500)] }), { level: STRICT }).hidden).toBe(false);
+      expect(run(item('gvb'), { level: STRICT }).hidden).toBe(false);
+    });
+
+    it('at Strict hides a magic sword or magic armour unless it has an exception stat, and keeps magic rings', () => {
+      const where = { level: STRICT };
+      expect(run(item('crs', { quality: QUALITY.magic }), where).hidden).toBe(true);
+      expect(run(item('crs', { quality: QUALITY.rare }), where).hidden).toBe(true);
+      expect(run(item('crs', { quality: QUALITY.magic, stats: [stat('item_fastercastrate', 10)] }), where).hidden).toBe(false);
+      expect(run(item('crs', { quality: QUALITY.magic, stats: [stat('item_allskills', 1)] }), where).hidden).toBe(false);
+      expect(run(item('xtp', { quality: QUALITY.magic }), where).hidden).toBe(true);
+      expect(run(item('xtp', { quality: QUALITY.magic, stats: [stat('item_magicbonus', 10)] }), where).hidden).toBe(false);
+      expect(run(item('rin', { quality: QUALITY.magic }), where).hidden).toBe(false);
+      expect(run(item('crs', { quality: QUALITY.magic }), { level: LEVELING }).hidden).toBe(false);
     });
   });
 
