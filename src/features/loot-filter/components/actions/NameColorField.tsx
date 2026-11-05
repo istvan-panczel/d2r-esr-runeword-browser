@@ -18,7 +18,9 @@ function Swatch({ code }: { readonly code: string }) {
 
 interface NameColorFieldProps {
   readonly id: string;
-  /** The rule's own replaceName. */
+  /** Whose replaceName it edits, for the wording. */
+  readonly owner?: 'rule' | 'style';
+  /** The rule's (or style's) own replaceName. */
   readonly replaceName: FilterText | undefined;
   /** The replaceName the rule's style gives when the rule sets none, with the style's name. */
   readonly fromStyle?: { readonly styleName: string; readonly replaceName: FilterText };
@@ -41,13 +43,18 @@ export function StyleNameValue({ replaceName }: { readonly replaceName: FilterTe
 /**
  * The Basic view's name colour: a colour code select over `replaceName: "ÿc<code>{name}"` (the game's own name in
  * that colour). A replaceName with other text is not this control's: it is disabled and points to Replace name.
- * When the rule sets none, the hint shows what its style gives.
+ * When the rule sets none, the hint shows what its style gives. A style's editor uses it too (`owner="style"`).
  */
-export function NameColorField({ id, replaceName, fromStyle, onChange }: NameColorFieldProps) {
+export function NameColorField({ id, owner = 'rule', replaceName, fromStyle, onChange }: NameColorFieldProps) {
   const code = nameColorCode(replaceName);
   const custom = replaceName !== undefined && code === undefined;
+  let none: string;
+  if (fromStyle !== undefined) none = 'None: the style’s name applies.';
+  else if (owner === 'style')
+    none = 'None: this style writes no name; a rule that uses it keeps its own name colour, an earlier rule’s or the game’s.';
+  else none = 'None: this rule writes no name; the item keeps an earlier rule’s name or the game’s quality colour.';
   let hint: React.ReactNode;
-  if (custom) hint = 'This rule replaces the name with its own text: edit it under Replace name.';
+  if (custom) hint = `This ${owner} replaces the name with its own text: edit it under Replace name.`;
   else
     hint = (
       <>
@@ -58,10 +65,7 @@ export function NameColorField({ id, replaceName, fromStyle, onChange }: NameCol
           </FromStyleHint>
         )}
         <span className="block">
-          Written as a whole new name (replaceName ÿc&lt;code&gt;{'{name}'}), so a later rule&apos;s replaceName overrides it.{' '}
-          {fromStyle === undefined
-            ? 'None: this rule writes no name; the item keeps an earlier rule’s name or the game’s quality colour.'
-            : 'None: the style’s name applies.'}
+          Written as a whole new name (replaceName ÿc&lt;code&gt;{'{name}'}), so a later rule&apos;s replaceName overrides it. {none}
         </span>
       </>
     );
@@ -79,7 +83,7 @@ export function NameColorField({ id, replaceName, fromStyle, onChange }: NameCol
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={NO_COLOR}>
-            {fromStyle === undefined ? 'None (no name colour from this rule)' : 'None (the style’s name)'}
+            {fromStyle === undefined ? `None (no name colour from this ${owner})` : 'None (the style’s name)'}
           </SelectItem>
           {COLOR_CODES.map((entry) => (
             <SelectItem key={entry.code} value={entry.code}>

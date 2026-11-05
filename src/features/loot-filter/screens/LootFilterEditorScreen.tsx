@@ -637,7 +637,7 @@ export function LootFilterEditorScreen() {
       case 'rules':
         return <RulesTab filter={filter} selectedRule={editor.selectedRule} diagnostics={diagnostics} />;
       case 'styles':
-        return <StylesTab filter={filter} />;
+        return <StylesTab filter={filter} diagnostics={diagnostics} />;
       case 'settings':
         return <SettingsTab filter={filter} />;
       case 'test':

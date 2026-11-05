@@ -1,25 +1,32 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Copy, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { selectRuleView } from '@/features/settings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { CONDITION_KEYS } from '../engine/parse';
-import type { LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
+import type { Diagnostic, LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
 import { removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
 import { countActions, countStyleUsers } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
+import { actionFieldGate } from '../utils/ruleView';
 import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { NameDialog } from './NameDialog';
+import { MoreInAdvanced, ViewToggle } from './rules/ViewToggle';
 import { StylePresetMenu } from './StylePresetMenu';
 
 interface StylesTabProps {
   readonly filter: LootFilter;
+  /** The filter's diagnostics: a style's own (`style` set) keep the fields they point at visible in the Basic view. */
+  readonly diagnostics: readonly Diagnostic[];
 }
+
+const VIEW_TOGGLE_ID = 'loot-filter-style-view';
 
 type NameDialogState = { readonly mode: 'add' } | { readonly mode: 'rename'; readonly name: string } | null;
 
@@ -42,7 +49,7 @@ function strayConditions(style: LootFilterStyle): string[] {
 }
 
 /** Named sets of actions that rules pull in with `useStyle`: list, add, rename, duplicate, delete, edit. */
-export function StylesTab({ filter }: StylesTabProps) {
+export function StylesTab({ filter, diagnostics }: StylesTabProps) {
   const dispatch = useDispatch();
   const styles = filter.styles ?? {};
   const entries = Object.entries(styles);
@@ -52,6 +59,8 @@ export function StylesTab({ filter }: StylesTabProps) {
   // The style being deleted stays set while the dialog closes, so its text does not change during the animation.
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // Basic / Advanced: the rule editor's setting, so one view for the whole editor.
+  const view = useSelector(selectRuleView);
 
   // A renamed, deleted or not-yet-chosen selection falls back to the first style.
   const [current, currentStyle] = entries.find(([name]) => name === selected) ?? entries.at(0) ?? [null, undefined];
@@ -109,6 +118,10 @@ export function StylesTab({ filter }: StylesTabProps) {
 
   const deletingUsers = deleting === null ? 0 : countStyleUsers(filter, deleting);
   const stray = currentStyle === undefined ? [] : strayConditions(currentStyle);
+  const gate =
+    current === null
+      ? undefined
+      : actionFieldGate({ view, actions: currentStyle, diagnostics: diagnostics.filter((diagnostic) => diagnostic.style === current) });
 
   return (
     // Wide pages: a little more room for the style names; the editor's sections become tiles (ActionsEditor).
@@ -170,7 +183,8 @@ export function StylesTab({ filter }: StylesTabProps) {
                   {usedBy(countStyleUsers(filter, current))}. The rule&apos;s own actions win over the style&apos;s.
                 </CardDescription>
               </div>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap items-center gap-1">
+                <ViewToggle id={VIEW_TOGGLE_ID} owner="style" />
                 <Button
                   variant="ghost"
                   size="icon-sm"
@@ -223,17 +237,19 @@ export function StylesTab({ filter }: StylesTabProps) {
               </div>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <ActionsEditor
               key={current}
               actions={currentStyle}
               filter={filter}
               owner="style"
               styleName={current}
+              gate={gate}
               onChange={(patch) => {
                 handleChange(current, currentStyle, patch);
               }}
             />
+            <MoreInAdvanced count={gate?.hiddenActions ?? 0} noun="action" toggleId={VIEW_TOGGLE_ID} />
           </CardContent>
         </Card>
       ) : (

@@ -4,7 +4,7 @@ import { resolveText } from '../../engine/text';
 import type { LootFilter, RuleActions } from '../../engine/types';
 import { effectiveActions, findStyle, previewLabelText } from '../../utils/effectiveActions';
 import type { ShallowPatch } from '../../utils/patch';
-import type { ActionField, RuleFieldGate } from '../../utils/ruleView';
+import type { ActionField, ActionFieldGate } from '../../utils/ruleView';
 import { CheckField, Field } from '../Field';
 import { LabelPreview } from '../LabelPreview';
 import { AdvancedBadge } from '../rules/AdvancedBadge';
@@ -30,10 +30,10 @@ export interface ActionsEditorProps {
   /** Name of the style being edited (for the preview heading); unused for rules. */
   readonly styleName?: string;
   /**
-   * The rule editor's Basic / Advanced gate (`ruleFieldGate`): Basic shows the common actions, an Advanced one only
-   * when it holds a value (tagged), and a Name colour select. Undefined (the Styles tab): every action.
+   * The Basic / Advanced gate (`ruleFieldGate` for a rule, `actionFieldGate` for a style): Basic shows the common
+   * actions, an Advanced one only when it holds a value (tagged), and a Name colour select. Undefined: every action.
    */
-  readonly gate?: RuleFieldGate;
+  readonly gate?: ActionFieldGate;
 }
 
 const DEFAULT_DROP_FORMAT = '{qualityColor}{name}';
@@ -62,7 +62,7 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
   const id = (key: string) => `${idPrefix}-${key}`;
   const flag = (value: boolean) => (value ? true : undefined);
   const shows = (field: ActionField) => (gate?.action(field) ?? 'shown') !== 'hidden';
-  const badge = (field: ActionField) => (gate?.action(field) === 'advanced' ? <AdvancedBadge /> : undefined);
+  const badge = (field: ActionField) => (gate?.action(field) === 'advanced' ? <AdvancedBadge owner={owner} /> : undefined);
   const basic = gate?.view === 'basic';
 
   const effective = owner === 'rule' ? effectiveActions(actions, filter) : actions;
@@ -151,6 +151,7 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
         {basic && (
           <NameColorField
             id={id('name-color')}
+            owner={owner}
             replaceName={actions.replaceName}
             fromStyle={nameFromStyle}
             onChange={(replaceName) => {
