@@ -567,15 +567,25 @@ stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, 
     store dependency, and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
   - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
     Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
-    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits; the
-    broad weapon/armour hides exclude class items (`excludeItemTypes: ['clas']`) and the mythical bases, and keep
-    useful stats as `< 1` exceptions. The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
+    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits. The
+    broad weapon/armour hides leave out what Sully's filter leaves out: every mythical base (`MYTHICAL_BASES`, the
+    ones that do not drop too) and the quest weapons (`QUEST_ITEMS`: d33 g33 hdm hfh hst leg msf qf1 qf2). The unique
+    weapon/armour rule leaves out the mythical bases and the unique jewellery rule the mythical ring and amulets
+    (mrn, mam, au9), so mythical uniques get only the mythical rule's sound and chat line. The two "except
+    useful ones" hides (magic/rare weapons, magic armour, both from level 30 outside town) also exclude class items
+    (`excludeItemTypes: ['clas']`) and keep useful stats as `< 1` exceptions; +class skills and +skill tabs get one
+    check per class (8) and per tab (24), since a check without param reads only param 0 (oskills, +skills to one
+    skill, are not kept: there is one param per skill). The white-gear hide (normal, at most one socket, from level 10)
+    hides white class items and 0-socket bases you could still socket (Larzuk, Socket Donut), as Sully's does, and
+    leaves throwing potions to the quiver rule, which hides only inferior to superior quivers and throwing potions
+    from level 10 (magic quivers stay: ESR has hundreds of quiver affixes). The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
     an item code list, sockets vs max sockets, unique ids for The Oculus, a narrow inferior hide) are in their groups;
     the rune one now covers Vex to Zod.
   - _Tests_: `exampleRules.test.ts` writes, reads and validates every example against the real game data with its
     default presentation and with every choice None (then only "does nothing" for rules without a fixed action),
     checks that every code drops, the rune/material names, the 24 skill tab params and the presets, sounds and icons,
-    and runs the hide, all-of/any-of, small gold and +3 class item examples through the evaluator.
+    and runs the hide (skill items, level gates, quest weapons, mythical bases, quivers), mythical vs unique,
+    all-of/any-of, small gold and +3 class item examples through the evaluator.
     `examplePicker.test.ts` covers the selection model, the order and the style merge; `lootFilterSlice.test.ts` the
     `addRules` reducer.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style

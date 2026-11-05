@@ -226,6 +226,67 @@ describe('the examples in the Test tab evaluator', () => {
     expect(run(rule, { code: 'ob1', typeAncestors: ['orb', 'weap', 'sorc', 'clas'] }).hidden).toBe(false);
   });
 
+  it('keeps weapons and armour with +class skills or +a skill tab, whatever the class or tab', () => {
+    const berserkers = [{ stat: id('item_addclassskills'), param: 4, value: 2 }];
+    const martialArts = [{ stat: id('item_addskill_tab'), param: 50, value: 1 }];
+    const weapons = defaultRule('hide-weapons-except');
+    expect(run(weapons, { stats: berserkers }).hidden).toBe(false);
+    expect(run(weapons, { stats: martialArts }).hidden).toBe(false);
+    expect(run(weapons, { quality: 6, stats: [{ stat: id('item_addskill_tab'), param: 8, value: 3 }] }).hidden).toBe(false);
+    const armour = defaultRule('hide-magic-armour-except');
+    const tors = { code: 'qui', typeAncestors: ['tors', 'armo'] };
+    expect(run(armour, tors).hidden).toBe(true);
+    expect(run(armour, { ...tors, stats: [{ stat: id('item_addclassskills'), param: 1, value: 1 }] }).hidden).toBe(false);
+    const circlet = { code: 'ci0', typeAncestors: ['circ', 'helm', 'armo', 'merc'] };
+    expect(run(armour, { ...circlet, stats: martialArts }).hidden).toBe(false);
+  });
+
+  it('waits for character level 30 and never hides in town in the weapon and armour hides', () => {
+    for (const exampleId of ['hide-weapons-except', 'hide-magic-armour-except']) {
+      const rule = defaultRule(exampleId);
+      const armour = exampleId === 'hide-magic-armour-except' ? { code: 'qui', typeAncestors: ['tors', 'armo'] } : {};
+      expect(run(rule, armour).hidden, exampleId).toBe(true);
+      expect(run(rule, armour, { ...context, playerStats: [{ stat: id('level'), value: 29 }] }).hidden, exampleId).toBe(false);
+      expect(run(rule, armour, { ...context, area: 40 }).hidden, exampleId).toBe(false);
+    }
+  });
+
+  it('never hides quest weapons or mythical bases in the broad gear hides', () => {
+    const shaft = { code: 'msf', typeAncestors: ['staf', 'rod', 'blun', 'mele', 'weap'], quality: 2, sockets: 0 };
+    const lowLevel = { ...context, playerStats: [{ stat: id('level'), value: 20 }] };
+    const plain = defaultRule('hide-plain-gear');
+    expect(run(plain, { ...shaft, code: 'sst' }, lowLevel).hidden).toBe(true);
+    expect(run(plain, shaft, lowLevel).hidden).toBe(false);
+    for (const code of ['qf1', 'qf2', 'hst', 'leg', 'g33', 'hdm', 'hfh', 'd33'])
+      expect(run(plain, { ...shaft, code }, lowLevel).hidden, code).toBe(false);
+    expect(run(plain, { ...shaft, code: 'm21', typeAncestors: ['axe', 'mele', 'weap'] }, lowLevel).hidden).toBe(false);
+    expect(run(plain, { code: 'opm', typeAncestors: ['tpot', 'thro', 'weap'], quality: 2 }, lowLevel).hidden).toBe(false);
+    for (const exampleId of ['hide-weapons-except', 'hide-magic-armour-except']) {
+      expect(run(defaultRule(exampleId), { code: 'm21', typeAncestors: ['axe', 'mele', 'weap'] }).hidden, exampleId).toBe(false);
+      expect(run(defaultRule(exampleId), { code: 'm06', typeAncestors: ['tors', 'armo'] }).hidden, exampleId).toBe(false);
+    }
+  });
+
+  it('gives mythical uniques only the mythical rule, not the unique weapon or jewellery rule as well', () => {
+    const mythicalBow = { code: 'm01', typeAncestors: ['bow', 'miss', 'weap'], quality: 7 };
+    expect(run(defaultRule('unique-items'), mythicalBow).matched).toBe(false);
+    expect(run(defaultRule('unique-items'), { ...mythicalBow, code: 'hax' }).matched).toBe(true);
+    expect(run(defaultRule('mythical-uniques'), mythicalBow).matched).toBe(true);
+    const ring = { typeAncestors: ['ring', 'misc'], baseTier: null, quality: 7 };
+    expect(run(defaultRule('unique-jewellery'), { ...ring, code: 'mrn' }).matched).toBe(false);
+    expect(run(defaultRule('unique-jewellery'), { ...ring, code: 'rin' }).matched).toBe(true);
+    expect(run(defaultRule('mythical-uniques'), { ...ring, code: 'mrn' }).matched).toBe(true);
+  });
+
+  it('hides plain quivers and throwing potions from character level 10 and keeps magic quivers', () => {
+    const rule = defaultRule('hide-ammo-and-throwing-potions');
+    const arrows = { code: 'aq2', typeAncestors: ['arrm', 'bowq', 'seco', 'misl', 'misc'], baseTier: null, quality: 2 };
+    expect(run(rule, arrows).hidden).toBe(true);
+    expect(run(rule, { ...arrows, quality: 4 }).hidden).toBe(false);
+    expect(run(rule, arrows, { ...context, playerStats: [{ stat: id('level'), value: 5 }] }).hidden).toBe(false);
+    expect(run(rule, { code: 'opl', typeAncestors: ['tpot', 'thro', 'weap'], quality: 2 }).hidden).toBe(true);
+  });
+
   it('needs both stats in the all-of example and one in the any-of example', () => {
     const ring = { code: 'rin', typeAncestors: ['ring', 'misc'], baseTier: null };
     const fcr = { stat: id('item_fastercastrate'), value: 10 };
