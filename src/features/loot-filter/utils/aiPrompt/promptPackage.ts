@@ -169,7 +169,8 @@ function starterFile(starter: PromptStarter): PromptFile {
 export function buildPromptPackage(input: PromptPackageInput): PromptPackage {
   const files = [...referenceFiles(input, input.size), ...(input.starter === null ? [] : [starterFile(input.starter)])];
   const name = input.starter?.label ?? aiFilterName(input.request);
-  const baseName = `${slugify(name, 'loot-filter')}-ai-prompt-${isoDate(input.date)}`;
+  // "Sully's" → "sullys", not "sully-s".
+  const baseName = `${slugify(name.replace(/['’]/g, ''), 'loot-filter')}-ai-prompt-${isoDate(input.date)}`;
   const markdown = [instructionsFor(input, files, 'single'), '---', '', ...files.map(fileSection)].join('\n');
   return { baseName, prompt: instructionsFor(input, files, 'files'), files, markdown };
 }

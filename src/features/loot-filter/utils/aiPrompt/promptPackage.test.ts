@@ -47,6 +47,9 @@ describe('buildPromptPackage', () => {
     expect(pkg.baseName).toBe('my-filter-ai-prompt-2026-11-05');
     expect(buildPromptPackage(input({ starter: null })).baseName).toBe('blizzard-sorceress-in-hell-ai-prompt-2026-11-05');
     expect(buildPromptPackage(input({ starter: null, request: '' })).baseName).toBe('ai-filter-ai-prompt-2026-11-05');
+    expect(buildPromptPackage(input({ starter: { label: "Sully's QoL Filter v0.6.11", text: STARTER_TEXT, ruleCount: 1 } })).baseName).toBe(
+      'sullys-qol-filter-v0-6-11-ai-prompt-2026-11-05'
+    );
   });
 
   it('has the reference files, then the starter', () => {
