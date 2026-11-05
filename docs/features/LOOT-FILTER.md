@@ -300,7 +300,7 @@ troubleshooting line from "Using a filter in the game". The start buttons (My fi
 **Start from the example**, **Upload**, **New filter**, **Create a filter with AI help** (outline; a link to `/loot-filters/ai`, see "AI help"). A "Tip:" line under them says most players start
 from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
 work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
-blank; its Rules tab's Example rules button offers about sixty ready rules in groups to tick into a starter set; the Rules tab has them
+blank; its Rules tab's Example rules button offers some seventy ready rules in groups to tick into a starter set; the Rules tab has them
 either way; new players can describe their filter on the AI help page. The templates' credit lines follow. The empty state and the New filter dialog ("A blank filter with no
 rules; the Example rules button on the Rules tab offers a starter set to tick. …") say the same in short.
 
@@ -543,11 +543,12 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
 - **Example rules** (`rules/ExampleRulesButton.tsx`, `ExampleRulesDialog.tsx`, `ExampleRulesPicker.tsx`,
   `utils/exampleRules.ts`, `utils/examplePicker.ts`): an **Example rules** button under the toolbar opens a wide,
   scrolling dialog (`sm:max-w-5xl`, 90vh). Its intro says how rules run (top to bottom, every matching rule applies,
-  later labels win, a matching hide rule hides the item and stops) and that the sounds and icons come with the .zip.
+  later labels win, a matching hide rule hides the item and stops) and that the sounds and icons come with the .zip;
+  a caller can pass its own (`description`; the AI page's speaks of the AI starter, `AI_STARTER_EXAMPLES_INTRO`).
   - _Groups_ (`EXAMPLE_GROUPS`, modelled on the sections of Sully's v0.6.13, rules written for this site), each with a
-    one-line intro and a "Select all in group" tri-state checkbox: Runes, Gems, Uniques, Sets, Mythical uniques,
+    one-line intro and a tri-state group checkbox: Runes, Gems, Uniques, Sets, Mythical uniques,
     Coupons, Runeword bases, Charms and jewels, Class items and jewellery, Keys/organs/endgame items, Crafting reagents,
-    Maps, Gold and potions, Hide junk. 60 examples (`EXAMPLE_RULES`; the list is in the code). Each is a checkbox named by its
+    Maps, Gold and potions, Hide junk. 67 examples, 12 of them hide rules (`EXAMPLE_RULES`; the list is in the code). Each is a checkbox named by its
     title (also the rule's `comment`, the title line in the rule list), the description (with "Hide rule." for a hide
     rule, which also has a visible "hide" badge) linked by `aria-describedby`.
   - _Presentation_: an example is its conditions (plus a fixed name tag or `hide`) and default choices for Style (a
@@ -560,7 +561,15 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
     `SelectValue` children): with every example ticked there are some 200 selects, and Select all took about 850 ms
     with every option rendered, about 150 ms now. Typing a letter on a closed trigger no longer picks an option.
   - _Bulk_: "No sounds", "No chat messages", "No minimap icons" switch those off for every rule (the selects show
-    "None (no sounds)"…; the choices come back when the switch is off), plus Select all, Clear and "N selected".
+    "None (no sounds)"…; the choices come back when the switch is off), plus **Select all label rules**, Clear and
+    "N selected". Bulk selects never tick a hide rule among label rules (owner, 2026-11-05: a hide rule always needs a
+    deliberate tick; a line under the switches says "Select all leaves the hide rules out: tick the ones you want
+    yourself."): Select all ticks the label rules only (`selectAllLabelRules`); a group checkbox (`setGroupSelected`,
+    `groupBulkKind`) reads "Select all in group" in a group without hide rules, "Select label rules in group" in a
+    mixed group (Gems, Gold and potions: it ticks the label rules), and "Select all hide rules in group" in Hide junk,
+    a group of hide rules only, where the click can mean nothing else. Unticking a group unticks all of it, hide rules
+    too, and the checkbox shows "all" once what it ticks is ticked (`groupSelection`), so an unticked hide rule beside
+    them does not leave it stuck at partial.
   - _Add selected (N)_: `buildStarterRules` builds the rules (`buildExampleRule(example, choices) → { rule,
 stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, `sound`, `icon` with the
     example's size or 40, `chatMessage`) in insertion order: label rules first in group and list order, hide rules
@@ -574,12 +583,20 @@ stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, 
     `selection` it got back), and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
   - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
     Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
-    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits. The
+    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109). The level gates are
+    the ones of Sully's matching v0.6.13 hides (owner, 2026-11-05): inferior gear 10, white gear with at most one
+    socket 10, plain quivers and throwing potions 10 (Sully: plain quivers 10; he hides the Choking Gas and Exploding
+    potions at every level), magic and rare weapons and magic armour (the "except useful ones" hides) 20 (Sully's magic
+    gear hide; ours keep rare weapons too), chipped and flawed gems 20 (Sully hides chipped gems from 20; flawed ones
+    are ours), gold under 100 from 20 and under 500 from 60 (his first two gold steps; he goes on with under 750 from
+    80 and under 2,000 from 90), minor potions (hp1, mp1) 12, light (hp2, mp2) 20, hp3/mp3 40 (he hides hp4, hp5,
+    mp4, mp5 from 40 too), stamina/antidote/thawing potions at every level outside town (as his). Magic quivers
+    stay, though Sully hides them from 20 (ESR has hundreds of quiver affixes). The
     broad weapon/armour hides leave out what Sully's filter leaves out: every mythical base (`MYTHICAL_BASES`, the
     ones that do not drop too) and the quest weapons (`QUEST_ITEMS`: d33 g33 hdm hfh hst leg msf qf1 qf2). The unique
     weapon/armour rule leaves out the mythical bases and the unique jewellery rule the mythical ring and amulets
     (mrn, mam, au9), so mythical uniques get only the mythical rule's sound and chat line. The two "except
-    useful ones" hides (magic/rare weapons, magic armour, both from level 30 outside town) also exclude class items
+    useful ones" hides (magic/rare weapons, magic armour, both from level 20 outside town) also exclude class items
     (`excludeItemTypes: ['clas']`) and keep useful stats as `< 1` exceptions; +class skills and +skill tabs get one
     check per class (8) and per tab (24), since a check without param reads only param 0 (oskills, +skills to one
     skill, are not kept: there is one param per skill). The white-gear hide (normal, at most one socket, from level 10)
@@ -587,13 +604,22 @@ stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, 
     leaves throwing potions to the quiver rule, which hides only inferior to superior quivers and throwing potions
     from level 10 (magic quivers stay: ESR has hundreds of quiver affixes). The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
     an item code list, sockets vs max sockets, unique ids for The Oculus, a narrow inferior hide) are in their groups;
-    the rune one now covers Vex to Zod.
+    the rune one now covers Vex to Zod. ESR items added on 2026-11-05: Weapon Mastery Tokens (`u23`, the drop from
+    Corrupted Zakarum and map bosses; the awakened tokens u24 to u41 are cube-made and left out) and the Broken
+    hourglass with its two shards (`um4` to `um6`, from the Eternal Ancients' tier 5 map, cubed into the Eternal
+    Hourglass) in Keys/organs/endgame with the valuable look, the tink, an icon and a chat line; Unique Stones (`an0`
+    to `an2`, cube outputs of an Ancient's Gift that turn a white base of their tier into a unique) in Crafting with the
+    valuable look only (they never lie on the ground); Ore and Fake Notes (`ore`, `fkn`, both sold for gold) in Gold
+    and potions with Sully's gold pile treatment: the gold plate and `$$` name parts, no sound.
   - _Tests_: `exampleRules.test.ts` writes, reads and validates every example against the real game data with its
     default presentation and with every choice None (then only "does nothing" for rules without a fixed action),
     checks that every code drops, the rune/material names, the 24 skill tab params and the presets, sounds and icons,
-    and runs the hide (skill items, level gates, quest weapons, mythical bases, quivers), mythical vs unique,
-    all-of/any-of, small gold and +3 class item examples through the evaluator.
-    `examplePicker.test.ts` covers the selection model, the order and the style merge; `lootFilterSlice.test.ts` the
+    and runs the hide (skill items, quest weapons, mythical bases, quivers), mythical vs unique, all-of/any-of, gold
+    steps, Ore/Fake Note name parts and +3 class item examples through the evaluator; a table of every hide rule's
+    level gate (`LEVEL_GATES`, a new hide rule must be added to it) checks each one hides a sample item at its level,
+    not one level before and never in town.
+    `examplePicker.test.ts` covers the selection model (Select all and the group checkboxes leaving hide rules out),
+    the order and the style merge; `lootFilterSlice.test.ts` the
     `addRules` reducer.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
 Mythical`: items/types/uniques by name when the bundles are in, codes otherwise, then quality, tier, flags, item level,
@@ -1186,7 +1212,9 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
   (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, fetched with
   `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first), an uploaded `.json` or **Pick
   example rules**: the button opens the Rules tab's `ExampleRulesDialog` ("Pick example rules for the starter", confirm
-  "Use as starter (N)"); confirm sets `rulesStarter` (`starterFromRules`: the rules plus every style they use, one
+  "Use as starter (N)", and its own intro, `AI_STARTER_EXAMPLES_INTRO`: "Tick the rules your filter should start
+  from; the AI keeps them and extends them into a full filter. … Sounds and icons come with the app's .zip
+  download."); confirm sets `rulesStarter` (`starterFromRules`: the rules plus every style they use, one
   "Default" level, title "AI filter") and the `rules` choice. Like the upload, the picked set stays in the list ("N
   example rules") when another starter is chosen, and the button turns into **Change example rules**, which reopens the
   picker on the previous selection (the picker's `initialState`, from the `selection` its `onConfirm` hands back);
