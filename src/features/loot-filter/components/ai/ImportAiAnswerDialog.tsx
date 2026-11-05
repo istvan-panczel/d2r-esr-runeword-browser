@@ -123,9 +123,9 @@ function ImportForm({ mode, reference, onImport, onCancel }: ImportFormProps) {
       )}
 
       {found !== null && counts !== null && (
-        <div className="space-y-1 rounded-md border px-3 py-2 text-sm">
+        <div role="status" aria-live="polite" className="space-y-1 rounded-md border px-3 py-2 text-sm">
           <p>
-            Found {found.filter.title === undefined ? 'a filter' : <>&ldquo;{found.filter.title}&rdquo;</>}:{' '}
+            Found {found.filter.title === undefined ? 'a filter' : <>&ldquo;{found.filter.title.replace(/ÿc./g, '')}&rdquo;</>}:{' '}
             {plural(found.filter.rules.length, 'rule')}, {plural(styleCount, 'style')},{' '}
             {plural(found.filter.filterLevels?.length ?? 0, 'level')}.{' '}
             {counts.errors + counts.warnings === 0

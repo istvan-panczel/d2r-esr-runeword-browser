@@ -577,7 +577,7 @@ export function LootFilterEditorScreen() {
       description:
         errors + warnings === 0
           ? 'No problems found.'
-          : `${String(errors)} errors, ${String(warnings)} warnings: Copy problems for the AI and paste them into the chat.`,
+          : `${String(errors)} ${errors === 1 ? 'error' : 'errors'}, ${String(warnings)} ${warnings === 1 ? 'warning' : 'warnings'}: Copy problems for the AI and paste them into the chat.`,
     });
     showDiagnostics();
   };

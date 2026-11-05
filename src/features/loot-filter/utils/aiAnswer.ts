@@ -114,6 +114,9 @@ function braceSpans(text: string): string[] {
   return [...new Set(spans)];
 }
 
+/** A top-level-looking `"formatVersion"` key: the candidate is a whole filter file, not a snippet. */
+const WHOLE_FILE = /"formatVersion"\s*:/;
+
 const NONE: AiAnswerFailure = { ok: false, kind: 'none', message: 'No JSON found in the answer' };
 
 /** Reads the filter out of a pasted LLM answer. */
@@ -124,11 +127,17 @@ export function extractFilterFromAnswer(answer: string): AiAnswerResult {
   const candidates = blocks.length > 0 ? blocks.map((block) => block.content).reverse() : braceSpans(answer);
   if (candidates.length === 0) return NONE;
   const failures: AiAnswerFailure[] = [];
+  // The latest block that is a whole file ("formatVersion" at the top) wins over a later snippet that only has "rules"
+  // (an answer adding "to add a level, add this:" after the full filter); without one, the latest that reads.
+  let snippet: AiAnswerSuccess | undefined;
   for (const candidate of candidates) {
     const tried = attempt(candidate, blocks.length);
-    if (tried.ok) return tried.result;
-    failures.push(tried.failure);
+    if (tried.ok) {
+      if (WHOLE_FILE.test(tried.result.text)) return tried.result;
+      snippet ??= tried.result;
+    } else failures.push(tried.failure);
   }
+  if (snippet !== undefined) return snippet;
   // A long answer continued in a second block: the blocks joined.
   if (blocks.length > 1) {
     const joined = attempt(blocks.map((block) => block.content).join('\n'), blocks.length);

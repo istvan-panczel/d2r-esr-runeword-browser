@@ -300,7 +300,9 @@ export function LootFilterAiScreen() {
       description:
         problems === 0
           ? 'No problems found. Download it from the editor, or keep improving it with the AI.'
-          : 'Its problems are listed under the JSON: Copy problems for the AI, paste them into the chat, and import the next answer with Import AI answer.',
+          : 'Copy problems for the AI (under the JSON) and paste them into the chat.',
+      // Short: the toast sits over the problems list it points to.
+      duration: problems === 0 ? undefined : 3000,
     });
     // With problems, open on the JSON tab scrolled to the list (the editor reads SHOW_PROBLEMS_STATE once on mount).
     if (problems === 0) void navigate(draftPath(action.payload.id));
@@ -485,7 +487,8 @@ export function LootFilterAiScreen() {
           onClick={() => {
             setImportOpen(true);
           }}
-          disabled={!hydrated}
+          // The import counts the problems against the game data, so it waits for it (an early import missed unknown codes).
+          disabled={!hydrated || lootData.status !== 'ready'}
         >
           <ClipboardPaste />
           Import AI answer

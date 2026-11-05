@@ -46,6 +46,17 @@ describe('extractFilterFromAnswer', () => {
     expect(result.filter.rules).toHaveLength(1);
   });
 
+  it('prefers the whole file over a later snippet that has only "rules"', () => {
+    const answer = `Here is the filter:\n\n\`\`\`json\n${FILTER}\n\`\`\`\n\nTo add a level later, add this:\n\n\`\`\`json\n{ "rules": [] }\n\`\`\``;
+    const result = success(extractFilterFromAnswer(answer));
+    expect(result.filter.rules).toHaveLength(1);
+  });
+
+  it('still reads a lone snippet with only "rules"', () => {
+    const result = success(extractFilterFromAnswer('```json\n{ "rules": [] }\n```'));
+    expect(result.filter.rules).toHaveLength(0);
+  });
+
   it('takes the last complete filter when the reply has several blocks', () => {
     const reply = `Old:\n\`\`\`json\n${FILTER}\n\`\`\`\nNew:\n\`\`\`json\n${OTHER}\n\`\`\`\nOne rule:\n\`\`\`json\n{ "itemCodes": ["r51"], "hide": true }\n\`\`\``;
     const result = success(extractFilterFromAnswer(reply));
