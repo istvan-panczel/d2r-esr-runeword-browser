@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -6,28 +7,32 @@ import type { ShallowPatch } from '../../utils/patch';
 import { Field } from '../Field';
 import { NumberInput } from '../NumberInput';
 import { ColorControl } from './ColorControl';
-import { ColorValue, FromStyleHint } from './FromStyleHint';
 import { Section } from './Section';
+
+/** One of the two label keys as the section shows it. */
+interface LabelValue<T> {
+  /** The rule's own value, else its style's. */
+  readonly value: T | undefined;
+  /** After the label (the "advanced" tag, the style mark). */
+  readonly badge?: ReactNode;
+  /** The rule's style sets it: no clear / remove (a rule cannot remove a style's value, only change it). */
+  readonly fromStyle?: boolean;
+}
 
 interface LabelSectionProps {
   /** Prefix of the controls' ids. */
   readonly idPrefix: string;
-  readonly actions: RuleActions;
+  readonly background: LabelValue<LabelColor>;
+  readonly border: LabelValue<LabelBorder>;
   readonly onChange: (patch: ShallowPatch<RuleActions>) => void;
-  /** What the rule's style gives for the keys the rule leaves empty (rule editor only). */
-  readonly fromStyle?: {
-    readonly styleName: string;
-    readonly labelBackground?: LabelColor;
-    readonly labelBorder?: LabelBorder;
-  };
 }
 
-/** The ground label's background colour and border (colour and width); a style's values show under empty controls. */
-export function LabelSection({ idPrefix, actions, onChange, fromStyle }: LabelSectionProps) {
+/** The ground label's background colour and border (colour and width). */
+export function LabelSection({ idPrefix, background, border, onChange }: LabelSectionProps) {
   const backgroundId = `${idPrefix}-label-background`;
   const borderId = `${idPrefix}-label-border`;
   const widthId = `${idPrefix}-label-border-width`;
-  const border = actions.labelBorder;
+  const shownBorder = border.value;
 
   return (
     <Section title="Label">
@@ -35,22 +40,15 @@ export function LabelSection({ idPrefix, actions, onChange, fromStyle }: LabelSe
         <Field
           id={backgroundId}
           label="Background"
-          hint={
-            <>
-              {fromStyle?.labelBackground !== undefined && (
-                <FromStyleHint styleName={fromStyle.styleName}>
-                  <ColorValue color={fromStyle.labelBackground} />
-                </FromStyleHint>
-              )}
-              <span className="block">Fills the ground label; alpha defaults to {String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.</span>
-            </>
-          }
+          badge={background.badge}
+          hint={`Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`}
         >
           <ColorControl
             id={backgroundId}
             label="label background"
-            value={actions.labelBackground}
+            value={background.value}
             withAlpha
+            clearable={background.fromStyle !== true}
             defaultAlpha={DEFAULT_LABEL_BACKGROUND_ALPHA}
             initialColor={[0, 0, 0]}
             onChange={(labelBackground) => {
@@ -58,22 +56,8 @@ export function LabelSection({ idPrefix, actions, onChange, fromStyle }: LabelSe
             }}
           />
         </Field>
-        <Field
-          id={borderId}
-          label="Border"
-          hint={
-            <>
-              {fromStyle?.labelBorder !== undefined && (
-                <FromStyleHint styleName={fromStyle.styleName}>
-                  <ColorValue color={fromStyle.labelBorder.color} defaultAlpha={255} />
-                  <span>width {String(fromStyle.labelBorder.width)}</span>
-                </FromStyleHint>
-              )}
-              <span className="block">Outlines the ground label.</span>
-            </>
-          }
-        >
-          {border === undefined ? (
+        <Field id={borderId} label="Border" badge={border.badge} hint="Outlines the ground label.">
+          {shownBorder === undefined ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground">none</span>
               <Button
@@ -95,24 +79,26 @@ export function LabelSection({ idPrefix, actions, onChange, fromStyle }: LabelSe
                 <ColorControl
                   id={borderId}
                   label="border colour"
-                  value={border.color}
+                  value={shownBorder.color}
                   withAlpha
                   clearable={false}
                   onChange={(color) => {
-                    if (color) onChange({ labelBorder: { ...border, color } });
+                    if (color) onChange({ labelBorder: { ...shownBorder, color } });
                   }}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Remove the border"
-                  onClick={() => {
-                    onChange({ labelBorder: undefined });
-                  }}
-                >
-                  <X />
-                </Button>
+                {border.fromStyle !== true && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Remove the border"
+                    onClick={() => {
+                      onChange({ labelBorder: undefined });
+                    }}
+                  >
+                    <X />
+                  </Button>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Label htmlFor={widthId} className="text-xs font-normal text-muted-foreground">
@@ -122,9 +108,9 @@ export function LabelSection({ idPrefix, actions, onChange, fromStyle }: LabelSe
                   id={widthId}
                   className="w-20"
                   min={0}
-                  value={border.width}
+                  value={shownBorder.width}
                   onCommit={(width) => {
-                    onChange({ labelBorder: { ...border, width: width ?? 0 } });
+                    onChange({ labelBorder: { ...shownBorder, width: width ?? 0 } });
                   }}
                 />
               </div>

@@ -7,7 +7,7 @@ import {
   BUNDLED_ICONS,
   BUNDLED_SOUND_ASSETS,
   BUNDLED_SOUNDS,
-  DEFAULT_ICON_NAME,
+  DEFAULT_ICON,
   findBundledIcon,
   findBundledIconAsset,
   findBundledSound,
@@ -38,7 +38,7 @@ describe('bundled asset registry', () => {
     }
     expect(new Set(BUNDLED_SOUNDS.map((name) => name.toLowerCase())).size).toBe(BUNDLED_SOUNDS.length);
     expect(new Set(BUNDLED_ICONS.map((name) => name.toLowerCase())).size).toBe(BUNDLED_ICONS.length);
-    expect(DEFAULT_ICON_NAME).toBe('goldstar');
+    expect(findBundledIcon(DEFAULT_ICON.iconName)).toBe('star_white');
   });
 
   it('finds files case-insensitively, icons with or without .sprite', () => {

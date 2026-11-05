@@ -161,6 +161,8 @@ interface ActionFieldGateInput {
   readonly actions: LootFilterStyle | LootFilterRule;
   /** The rule's or style's diagnostics: a field one points at counts as set. */
   readonly diagnostics?: readonly Diagnostic[];
+  /** A rule's style: a key it sets counts as set (its value shows in the field, so it must show). */
+  readonly style?: RuleActions;
 }
 
 interface RuleFieldGateInput {
@@ -170,6 +172,8 @@ interface RuleFieldGateInput {
   readonly hides: boolean;
   /** The rule's diagnostics: a field one points at counts as set. */
   readonly diagnostics?: readonly Diagnostic[];
+  /** The rule's style (`findStyle`): a key it sets counts as set. */
+  readonly style?: RuleActions;
 }
 
 function visibility(view: RuleView, basic: boolean, set: boolean): FieldVisibility {
@@ -184,18 +188,22 @@ function isSet(owner: LootFilterStyle | LootFilterRule, flagged: ReadonlySet<str
 }
 
 /** Which fields of the actions editor show for this rule's or style's actions in this view. */
-export function actionFieldGate({ view, actions, diagnostics = [] }: ActionFieldGateInput): ActionFieldGate {
+export function actionFieldGate({ view, actions, diagnostics = [], style }: ActionFieldGateInput): ActionFieldGate {
   const flagged = diagnosticKeys(diagnostics);
-  const has = isSet(actions, flagged);
+  const own = isSet(actions, flagged);
+  const has = (field: ActionField) => own(field) || (field !== 'useStyle' && style?.[field] !== undefined);
   const actionSet = (field: ActionField) =>
-    // Name colour (Basic) edits a replaceName that only recolours; any other replaceName shows the full field.
-    field === 'replaceName' ? has(field) && (nameColorCode(actions.replaceName) === undefined || flagged.has(field)) : has(field);
+    // Name colour (Basic) edits a replaceName that only recolours (the rule's own, else its style's); any other
+    // replaceName shows the full field.
+    field === 'replaceName'
+      ? has(field) && (nameColorCode(actions.replaceName ?? style?.replaceName) === undefined || flagged.has(field))
+      : has(field);
   const action = (field: ActionField): FieldVisibility => visibility(view, BASIC_ACTIONS[field], actionSet(field));
   return { view, action, hiddenActions: ACTION_EDITOR_FIELDS.filter((field) => action(field) === 'hidden').length };
 }
 
 /** Which fields of the rule editor show for this rule in this view (its actions as `actionFieldGate`). */
-export function ruleFieldGate({ view, rule, hides, diagnostics = [] }: RuleFieldGateInput): RuleFieldGate {
+export function ruleFieldGate({ view, rule, hides, diagnostics = [], style }: RuleFieldGateInput): RuleFieldGate {
   const has = isSet(rule, diagnosticKeys(diagnostics));
   const passthrough = rule.passthrough ?? {};
 
@@ -220,7 +228,7 @@ export function ruleFieldGate({ view, rule, hides, diagnostics = [] }: RuleField
     visibility(view, field === HIDE_ONLY_STATS ? false : BASIC_CONDITIONS[field], conditionSet(field));
 
   return {
-    ...actionFieldGate({ view, actions: rule, diagnostics }),
+    ...actionFieldGate({ view, actions: rule, diagnostics, style }),
     condition,
     hiddenConditions: conditionFields(hides).filter((field) => condition(field) === 'hidden').length,
   };

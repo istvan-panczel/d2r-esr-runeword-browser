@@ -4,10 +4,13 @@ import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
 import type { LootFilter, LootFilterRule } from '../engine/types';
 import { createBlankFilter } from '../utils/blankFilter';
+import { planStyleChoice } from '../utils/styleChoice';
+import { stylePreset } from '../utils/stylePresets';
 import reducer, {
   EMPTY_EDITOR,
   addRule,
   addRules,
+  chooseRuleStyle,
   close,
   createBlank,
   duplicate,
@@ -472,6 +475,56 @@ describe('style reducers', () => {
     const empty = reducer(state, removeStyle('Red'));
     expect(empty.editor.filter && 'styles' in empty.editor.filter).toBe(false);
     expect(reducer(empty, removeStyle('Red'))).toBe(empty);
+  });
+});
+
+describe('chooseRuleStyle', () => {
+  const own: LootFilterRule = { comment: 'mine', replaceName: 'ÿc1{name}', labelBackground: [1, 2, 3], sound: 'tink.mp3' };
+  const opened = () => openState(filterWith({ styles: { Gold: { replaceName: 'ÿc4{name}' } }, rules: [own, { comment: 'other' }] }));
+  const filterOf = (state: LootFilterState): LootFilter => {
+    const { filter } = state.editor;
+    if (filter === null) throw new Error('no filter');
+    return filter;
+  };
+
+  it('picks a filter style, clears the keys it sets and undoes exactly', () => {
+    const before = opened();
+    const plan = planStyleChoice(own, filterOf(before), { kind: 'style', name: 'Gold' });
+    const picked = reducer(before, chooseRuleStyle({ index: 0, ...plan.apply }));
+    expect(filterOf(picked).rules[0]).toEqual({ comment: 'mine', labelBackground: [1, 2, 3], sound: 'tink.mp3', useStyle: 'Gold' });
+    expect(picked.editor.dirty).toBe(true);
+    const undone = reducer(picked, chooseRuleStyle({ index: 0, ...plan.undo }));
+    expect(filterOf(undone).rules[0]).toEqual(own);
+    expect(filterOf(undone).styles).toEqual(filterOf(before).styles);
+  });
+
+  it('adds a picked preset once and removes it on undo unless another rule uses it', () => {
+    const before = opened();
+    const preset = stylePreset('unique');
+    const plan = planStyleChoice(own, filterOf(before), { kind: 'preset', preset });
+    const picked = reducer(before, chooseRuleStyle({ index: 0, ...plan.apply }));
+    expect(Object.keys(filterOf(picked).styles ?? {})).toEqual(['Gold', 'UniqueItem']);
+    expect(filterOf(picked).rules[0]).toEqual({ comment: 'mine', sound: 'tink.mp3', useStyle: 'UniqueItem' });
+    expect(filterOf(reducer(picked, chooseRuleStyle({ index: 0, ...plan.undo })))).toEqual(filterOf(before));
+
+    const shared = reducer(picked, patchRule({ index: 1, patch: { useStyle: 'UniqueItem' } }));
+    const undone = reducer(shared, chooseRuleStyle({ index: 0, ...plan.undo }));
+    expect(filterOf(undone).rules[0]).toEqual(own);
+    expect(Object.keys(filterOf(undone).styles ?? {})).toEqual(['Gold', 'UniqueItem']);
+  });
+
+  it('never overwrites a style of the preset name', () => {
+    const before = openState(filterWith({ styles: { UniqueItem: { notify: true } }, rules: [own] }));
+    const plan = planStyleChoice(own, filterOf(before), { kind: 'preset', preset: stylePreset('unique') });
+    const picked = reducer(before, chooseRuleStyle({ index: 0, ...plan.apply, addStyle: { name: 'UniqueItem', style: {} } }));
+    expect(filterOf(picked).styles).toEqual({ UniqueItem: { notify: true } });
+  });
+
+  it('is a no-op for a bad index or when the rule no longer uses the picked style', () => {
+    const before = opened();
+    const plan = planStyleChoice(own, filterOf(before), { kind: 'style', name: 'Gold' });
+    expect(reducer(before, chooseRuleStyle({ index: 5, ...plan.apply }))).toBe(before);
+    expect(reducer(before, chooseRuleStyle({ index: 0, ...plan.undo }))).toBe(before);
   });
 });
 
