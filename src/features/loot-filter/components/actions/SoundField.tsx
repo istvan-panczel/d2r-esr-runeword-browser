@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { SOUND_FILE_EXTENSIONS } from '../../engine/validate';
 import { useLootFilterData } from '../../hooks/useLootFilterData';
 import { useSoundPreview } from '../../hooks/useSoundPreview';
-import { BUNDLED_SOUNDS, bundledSoundUrl, findBundledSound, soundLabel } from '../../utils/bundledAssets';
+import { BUNDLED_SOUND_ASSETS, bundledSoundUrl, findBundledSound, soundLabel } from '../../utils/bundledAssets';
 import { Field } from '../Field';
 import { NumberInput } from '../NumberInput';
 
@@ -60,7 +60,7 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
 
   const lower = query.trim().toLowerCase();
   const options = [
-    ...BUNDLED_SOUNDS.map((name) => ({ value: name, label: name, detail: 'bundled file' })),
+    ...BUNDLED_SOUND_ASSETS.map((asset) => ({ value: asset.file, label: asset.file, detail: 'bundled file' })),
     ...[...new Set(soundNames.filter((name) => name !== ''))].map((name) => ({ value: name, label: name, detail: 'sounds.txt' })),
   ];
   const matches = options.filter((option) => option.label.toLowerCase().includes(lower)).slice(0, MAX_RESULTS);

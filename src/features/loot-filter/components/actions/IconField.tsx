@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import type { LabelColor, MinimapIcon } from '../../engine/types';
-import { BUNDLED_ICONS } from '../../utils/bundledAssets';
+import { BUNDLED_ICON_ASSETS, DEFAULT_ICON_NAME } from '../../utils/bundledAssets';
 import { applyPatch } from '../../utils/patch';
 import { CheckField, Field } from '../Field';
 import { NumberInput } from '../NumberInput';
@@ -25,7 +25,7 @@ export function IconField({ idPrefix, icon, onChange }: IconFieldProps) {
         checked={icon !== undefined}
         onChange={(checked) => {
           // goldstar at 50 px; drawn at its own size it is 200 px wide on the minimap.
-          onChange(checked ? { iconName: BUNDLED_ICONS[0], iconSize: 50 } : undefined);
+          onChange(checked ? { iconName: DEFAULT_ICON_NAME, iconSize: 50 } : undefined);
         }}
       />
       {icon && (
@@ -46,8 +46,8 @@ export function IconField({ idPrefix, icon, onChange }: IconFieldProps) {
               }}
             />
             <datalist id={`${idPrefix}-icon-names`}>
-              {BUNDLED_ICONS.map((name) => (
-                <option key={name} value={name} />
+              {BUNDLED_ICON_ASSETS.map((asset) => (
+                <option key={asset.name} value={asset.name} label={`${asset.label}: ${asset.use}`} />
               ))}
             </datalist>
           </Field>

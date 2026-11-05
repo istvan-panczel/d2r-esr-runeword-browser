@@ -6,7 +6,7 @@
   "formatVersion": 1,
   "title": "Sully's QoL Filter",
   "author": "Sully",
-  "version": "0.6.11",
+  "version": "0.6.13",
   "description": "Sully's D2RLAN QoL filter - PoE themed drop labels, sounds, mini-map icons.",
   "updateUrl": "https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json",
   "filterLevels": [
@@ -765,7 +765,9 @@
     {"itemCodes": ["um8"], "replaceName": "ÿcPLilith's Crystallized Tear", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
     {"itemCodes": ["um9"], "replaceName": "ÿcPTyrael's Eternal Feather", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
     {"itemCodes": ["u17"], "replaceName": "ÿcPLucion's Essence", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    {"itemCodes": ["u18"], "replaceName": "ÿcPLucion's Relic of Sanctification", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
     {"itemCodes": ["u20"], "replaceName": "ÿcPAstrogha's Petrified Heart", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    {"itemCodes": ["u40"], "replaceName": "ÿcPInarius' Everburning Halo", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
     {
       "itemCodes": ["an3", "an4", "an5", "an6", "an7", "an8", "an9", "a10"],
       "replaceName": "ÿc1{name}",

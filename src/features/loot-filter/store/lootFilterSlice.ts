@@ -675,6 +675,36 @@ const lootFilterSlice = createSlice({
       });
     },
 
+    /**
+     * Inserts several rules (the example rules dialog) at `at` (default: the end) and selects the first of them. `styles`
+     * the rules use are added at the end of the filter's `styles`; a name the filter already has keeps the filter's own
+     * style, never overwritten. No rules: no-op.
+     */
+    addRules(
+      state,
+      action: PayloadAction<{
+        readonly rules: readonly LootFilterRule[];
+        readonly styles?: Readonly<Record<string, LootFilterStyle>>;
+        readonly at?: number;
+      }>
+    ): State {
+      const { rules: added, styles = {}, at } = action.payload;
+      if (added.length === 0) return state;
+      let index = 0;
+      const edited = editFilter(state, (filter) => {
+        const { rules } = filter;
+        index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
+        const existing = filter.styles ?? {};
+        const missing = Object.entries(styles).filter(([name]) => name !== '' && !Object.hasOwn(existing, name));
+        return {
+          ...filter,
+          rules: [...rules.slice(0, index), ...added, ...rules.slice(index)],
+          ...(missing.length === 0 ? {} : { styles: { ...existing, ...Object.fromEntries(missing) } }),
+        };
+      });
+      return edited === state ? state : withEditor(edited, { selectedRule: index });
+    },
+
     /** Replaces a whole rule. */
     updateRule(state, action: PayloadAction<{ readonly index: number; readonly rule: LootFilterRule }>): State {
       const { index, rule } = action.payload;
@@ -834,6 +864,7 @@ export const {
   setNotifications,
   setQualityColors,
   addRule,
+  addRules,
   updateRule,
   patchRule,
   setRuleDisabled,

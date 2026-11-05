@@ -11,9 +11,11 @@ import type { LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
 import { removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
 import { countActions, countStyleUsers } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
+import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { NameDialog } from './NameDialog';
+import { StylePresetMenu } from './StylePresetMenu';
 
 interface StylesTabProps {
   readonly filter: LootFilter;
@@ -62,6 +64,22 @@ export function StylesTab({ filter }: StylesTabProps) {
     dispatch(setStyle({ name, style: {} }));
     setSelected(name);
     setNameDialog(null);
+  };
+
+  // A preset never overwrites a style of the same name: the filter's own style is kept and selected.
+  const handleAddPreset = (preset: StylePreset) => {
+    const status = presetStyleStatus(styles, preset);
+    if (status === 'missing') {
+      dispatch(setStyle({ name: preset.name, style: preset.style }));
+      toast.success(`Added the style ${preset.name}`, { description: 'Rules use it with Use style.' });
+    } else if (status === 'same') {
+      toast.info(`${preset.name} is already in the filter`);
+    } else {
+      toast.info(`The filter already has a style named ${preset.name}`, {
+        description: 'Your style is kept as it is. Rename it first to add the preset.',
+      });
+    }
+    setSelected(preset.name);
   };
 
   const handleRename = (from: string, to: string) => {
@@ -127,15 +145,18 @@ export function StylesTab({ filter }: StylesTabProps) {
               );
             })}
           </ul>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setNameDialog({ mode: 'add' });
-            }}
-          >
-            <Plus />
-            Add style
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setNameDialog({ mode: 'add' });
+              }}
+            >
+              <Plus />
+              Add style
+            </Button>
+            <StylePresetMenu onPick={handleAddPreset} />
+          </div>
         </CardContent>
       </Card>
 

@@ -209,7 +209,7 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.6.11) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+    Skills, which is param 56"). Sully's template (v0.6.13) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -299,13 +299,16 @@ troubleshooting line from "Using a filter in the game". The start buttons (My fi
 **Start from the example**, **Upload**, **New filter** (outline). A "Tip:" line under them says most players start
 from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
 work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
-blank (no rules, so every item shows as the game shows it) and is for authors who know the format; the Rules tab has
-example rules either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank
-filter with no rules. …") say the same in short.
+blank and opens the example rules (about sixty ready rules in groups to tick into a starter set); the Rules tab has them
+either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank filter with no
+rules; the example rules open next, so you can tick a starter set. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
-  `{ id: 1, name: 'Default' }`, `defaultLevel: 1`, no rules).
+  `{ id: 1, name: 'Default' }`, `defaultLevel: 1`, no rules) with the example rules dialog open: `createNew` navigates
+  to `withExamples(draftPath(id))` (`?examples=1`, `EXAMPLES_PARAM` in `utils/library.ts`), which the Rules tab's
+  example button reads; closing the dialog (Cancel, Add selected, Escape) drops the param, so a reload or Back does
+  not reopen it.
 - **Upload**: a `.json` file read as UTF-8, as leniently as the game reads it (`//` and `/* */` comments, trailing
   commas). A JSON syntax error shows a toast with the line and column and imports nothing; a file with diagnostics
   (unknown keys, wrong shapes) is imported and the editor lists them. The success toast counts the problems and spells
@@ -314,7 +317,7 @@ filter with no rules. …") say the same in short.
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
   entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.6.11 from github.com/Thisisnotsully/QoL-Filter, verbatim (223 rules, 12 styles, 4
+  is `Sullys-QoL-Filter.json` v0.6.13 from github.com/Thisisnotsully/QoL-Filter, verbatim (225 rules, 12 styles, 4
   levels, `soundVolume` 25, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
   3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
   fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
@@ -325,13 +328,15 @@ filter with no rules. …") say the same in short.
   4 (Uber-Strict - Maps+) and limit their gong highlight to levels 1 to 3, add the Mythical Jewel (`mjw`) to the rare
   jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
-  and `14e` (Nightwing's Veil) the other way. The new hide rule (rule 98) writes
+  and `14e` (Nightwing's Veil) the other way; v0.6.12 and v0.6.13 (2026-11-04) add two Legendary
+  Materials to the `STierMaterial` group, Lucion's Relic of Sanctification (`u18`) and Inarius' Everburning Halo
+  (`u40`), with the existing `redD` icon (no new assets, no new warnings). The v0.6.9 hide rule (rule 98) writes
   `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
   reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
   single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
   Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
   The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
-  in `utils/template.ts`): "Sully's QoL filter v0.6.11, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  in `utils/template.ts`): "Sully's QoL filter v0.6.13, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
@@ -495,7 +500,7 @@ fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Styles   | Style list (name, action count, "used by N rules"), Add style, rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor. Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Styles   | Style list (name, action count, "used by N rules"), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor. Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Only the `//` comment lines at the top of the file are kept: comments between rules are not shown here (the text is the serialized model) and are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
 | Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -531,20 +536,47 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
   selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
   The search text includes `disabled` for a disabled rule, so searching "disabled" lists them. An empty rule list says
   "No rules yet. …" and points to the example rules and to Sully's QoL filter (a link to the library).
-- **Example rules** (`rules/ExampleRules.tsx`, `utils/exampleRules.ts`): a collapsed box under the toolbar. Its intro
-  says most players start from Sully's filter (or a shared one) and adapt it, where an example goes (after the
-  selected rule, else at the end) and how rules run (top to bottom, every matching rule applies, later labels win, a
-  matching hide rule hides the item and stops). Then one card per example (title, what it does and why it is built
-  that way, **Add this rule**, which adds it like Add rule and selects it): hide magic and rare weapons except those
-  with +All Skills, Faster Cast Rate or Increased Attack Speed (`< 1` exceptions in `itemStats`); rings and amulets
-  with 10% Faster Cast Rate and 10% Magic Find (all of); small charms with Magic Find or Faster Hit Recovery (any of);
-  Ist to Zod runes (`r74`–`r83`) with `tink.mp3`, the `rune` icon and a border (bundled files, so the .zip download
-  carries them); hide inferior weapons and armour (a narrow hide rule); normal or superior swords with exactly 4
-  sockets (`sockets` vs `maxSockets`); The Oculus by unique id (418, the dropped row, and 973, the Ancient Coupon row,
-  with quality unique since set ids overlap). Each rule has a `comment` starting "Example:". None checks Enhanced
-  Damage or Defense (see "Known plugin limits"). `exampleRules.test.ts` writes and reads every example, validates it
-  against the real game data with no diagnostic, checks the bundled sound and icon names and the ids, and runs the
-  hide, all-of and any-of examples through the evaluator.
+- **Example rules** (`rules/ExampleRulesButton.tsx`, `ExampleRulesDialog.tsx`, `ExampleRulesPicker.tsx`,
+  `utils/exampleRules.ts`, `utils/examplePicker.ts`): an **Example rules** button under the toolbar opens a wide,
+  scrolling dialog (`sm:max-w-5xl`, 90vh). Its intro says how rules run (top to bottom, every matching rule applies,
+  later labels win, a matching hide rule hides the item and stops) and that the sounds and icons come with the .zip.
+  - _Groups_ (`EXAMPLE_GROUPS`, modelled on the sections of Sully's v0.6.13, rules written for this site), each with a
+    one-line intro and a "Select all in group" tri-state checkbox: Runes, Gems, Uniques, Sets, Mythical uniques,
+    Coupons, Runeword bases, Charms and jewels, Class items and jewellery, Keys/organs/endgame items, Crafting reagents,
+    Maps, Gold and potions, Hide junk. 60 examples (`EXAMPLE_RULES`; the list is in the code). Each is a checkbox, its
+    title (also the rule's `comment`, the title line in the rule list) and a description; a hide rule has a "hide"
+    badge.
+  - _Presentation_: an example is its conditions (plus a fixed name tag or `hide`) and default choices for Style (a
+    style preset, see [Style presets](#style-presets)), Sound and Minimap icon (from the asset registry) and Chat
+    message (its own line or the plain `{qualityColor}{name}`), each None or a value. Sounds, icons and chat lines are
+    defaults only on valuable drops; hide rules have none (a hidden item shows nothing). A ticked example shows the four
+    compact selects prefilled with its defaults, a play button for the chosen sound (`useSoundPreview`, at the filter's
+    `soundVolume`), a preview of the chosen style, and "With every choice None this rule does nothing." when that is so.
+  - _Bulk_: "No sounds", "No chat messages", "No minimap icons" switch those off for every rule (the selects show
+    "None (no sounds)"…; the choices come back when the switch is off), plus Select all, Clear and "N selected".
+  - _Add selected (N)_: `buildStarterRules` builds the rules (`buildExampleRule(example, choices) → { rule,
+stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, `sound`, `icon` with the
+    example's size or 40, `chatMessage`) in insertion order: label rules first in group and list order, hide rules
+    last (a hidden item loses its label whatever comes before or after, so this only keeps the list readable). The
+    button merges the styles (`mergeStyles`: a name the filter lacks is added; one it has with other content is kept
+    and reused, never overwritten) and dispatches `addRules({ rules, styles, at })`, one edit: the rules go after the
+    selected rule (else at the end) and the first one is selected. The toast counts the rules and names the added and
+    the kept styles.
+  - _Reuse_: `ExampleRulesPicker` (`onConfirm(rules, styles)`, `onCancel`, `confirmLabel`, `previewVolume`) has no
+    store dependency, and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
+  - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
+    Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
+    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits; the
+    broad weapon/armour hides exclude class items (`excludeItemTypes: ['clas']`) and the mythical bases, and keep
+    useful stats as `< 1` exceptions. The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
+    an item code list, sockets vs max sockets, unique ids for The Oculus, a narrow inferior hide) are in their groups;
+    the rune one now covers Vex to Zod.
+  - _Tests_: `exampleRules.test.ts` writes, reads and validates every example against the real game data with its
+    default presentation and with every choice None (then only "does nothing" for rules without a fixed action),
+    checks that every code drops, the rune/material names, the 24 skill tab params and the presets, sounds and icons,
+    and runs the hide, all-of/any-of, small gold and +3 class item examples through the evaluator.
+    `examplePicker.test.ts` covers the selection model, the order and the style merge; `lootFilterSlice.test.ts` the
+    `addRules` reducer.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
 Mythical`: items/types/uniques by name when the bundles are in, codes otherwise, then quality, tier, flags, item level,
   sockets, stats, difficulty, areas, and the main action: `hide`, `→ style X`, the stripped replaceName/prefix/suffix or
@@ -978,13 +1010,48 @@ not work in that context, gets a hint. Per-language texts are read-only ("multi-
 `ColorControl` is a native colour input + optional alpha slider + `[r, g, b(, a)]` readout + clear
 (`utils/colorValues.ts`).
 
-Previews: bundled assets are listed in `utils/bundledAssets.ts` (the nine `public/loot-filters/sounds/*.mp3` and the
-twelve `public/loot-filters/icons/*.sprite`, names in the files' own case because the app's server is case-sensitive;
-an `iconName` in any case finds them). `useSoundPreview` plays one `Audio` at a time across the page and stops on
+Previews: bundled assets are listed in the asset registry, `utils/bundledAssets.ts` (see below; names in the files'
+own case because the app's server is case-sensitive; an `iconName` in any case finds them). `useSoundPreview` plays one `Audio` at a time across the page and stops on
 unmount. `useBundledSprite` fetches and decodes a bundled sprite once per name; any other icon name offers a local
 `.sprite` picker. The canvas draws the first frame at `iconSize` (longer side) with the tint applied
 (`utils/tintSprite.ts`: RGB × colour/255, alpha × colour[3]/255); a decode error shows the decoder's message. A sounds.txt
 sound has no preview (it plays from the game files).
+
+### Bundled sounds and icons (`utils/bundledAssets.ts`)
+
+The asset registry lists every sound and minimap icon the app bundles under `public/loot-filters/sounds/` and
+`public/loot-filters/icons/`: `BUNDLED_SOUND_ASSETS` (`file`, `label`, `use`, `credit`) and `BUNDLED_ICON_ASSETS`
+(`name` without `.sprite`, `label`, `use`, `credit`, `lowend` when a `<name>.lowend.sprite` variant sits next to it).
+`BUNDLED_SOUNDS` / `BUNDLED_ICONS` (the names), `findBundledSound(Asset)` / `findBundledIcon(Asset)` and
+`DEFAULT_ICON_NAME` (the first icon, `goldstar`) derive from it. Everything that offers or ships the files reads it: the
+sound combobox and its play button, the icon field's suggestions, the sprite preview, the example rules dialog's
+Sound and Icon selects, the Test tab's play button, and the .zip download (`collectReferencedAssets`, which adds the
+`.lowend.sprite` of a `lowend` icon). Today all nine sounds and twelve icons are Sully's (the `use` lines say where his
+filter uses each one; `tinkLOUD.mp3` is bundled but unused by him).
+
+**Adding a sound or icon**: put the file into `public/loot-filters/sounds/` (`.mp3`, `.wav` or `.flac`) or
+`public/loot-filters/icons/` (`.sprite`), then add one line to the registry, e.g.
+`sound('chime.mp3', 'Chime', 'Rare drops you want a soft cue for.')` (the `sound` / `icon` helpers fill in the credit;
+pass a full object for another author). Icons are bundled at 128 px on the longer side (Lanczos on premultiplied
+alpha, see [Using a filter in the game](#using-a-filter-in-the-game); the repo has no script for it, so shrink a new
+sprite with your sprite tool first). `bundledAssets.test.ts`
+fails while the folders and the registry disagree, and decodes every icon.
+
+### Style presets (`utils/stylePresets.ts`, `components/StylePresetMenu.tsx`, `components/PresetPreview.tsx`)
+
+`STYLE_PRESETS`: 18 ready-made styles in the spirit of Sully's PoE-like labels, each `{ id, name, label, description,
+sample, style }`. A preset holds the look only (a `ÿc` colour before `{name}` in `replaceName`, `labelBackground`,
+`labelBorder`, a `droplight` on the two top ones); sound, icon and chat line stay on the rule, so the example dialog's
+"No sounds / chat / icons" switches really switch everything off. Names are PascalCase without spaces like Sully's
+(`HighRune`, `MidRune`, `LowRune`, `UniqueItem`, `SetItem`, `MythicalUnique`, `RunewordBase`, `GoodCharm`, `GoodJewel`,
+`GoodJewellery`, `UberItem`, `PerfectGem`, `CraftingReagent`, `RareReagent`, `CouponItem`, `MapItem`, `ValuableDrop`,
+`MutedJunk`), none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows each with a
+`PresetPreview` (a `LabelPreview` of `presetPreviewText`: the sample name in place of `{name}`) and its description.
+Picking one copies it into `styles` under its name and selects it (toast "Added the style …"); `presetStyleStatus`
+compares by content (key order ignored): an identical style of that name is just selected ("already in the filter"),
+a different one is kept and selected ("Your style is kept as it is. Rename it first to add the preset."), never
+overwritten. `stylePresets.test.ts` checks the colour codes, that no preset has a sound, icon, chat line or hide, and
+validates all of them in one filter.
 
 ## JSON tab (`components/JsonTab.tsx`, `components/json-editor/`)
 
