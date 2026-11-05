@@ -71,9 +71,9 @@ export function StartFilterActions({ ready }: StartFilterActionsProps) {
       <p className="max-w-3xl text-sm text-muted-foreground">
         <span className="font-medium text-foreground">Tip:</span> most players start from Sully&apos;s QoL filter for a full filter, or
         upload a filter someone shared, and change what they need. To learn how rules work, start from the example: a small filter whose
-        every rule explains itself in its comment. A new filter starts blank and opens the example rules, about sixty ready rules in groups
-        (runes, uniques, bases, charms, maps, junk to hide…) to tick into a starter set. The Rules tab has them either way. New to filters?
-        Create a filter with AI help builds a prompt for the AI chat of your choice from your description.
+        every rule explains itself in its comment. A new filter starts blank; its Example rules button (Rules tab) offers about sixty ready
+        rules in groups (runes, uniques, bases, charms, maps, junk to hide…) to tick into a starter set. The Rules tab has them either way.
+        New to filters? Create a filter with AI help builds a prompt for the AI chat of your choice from your description.
       </p>
       <div className="space-y-0.5 text-xs text-muted-foreground">
         {BUNDLED_TEMPLATE_LIST.map((template) => (
@@ -85,7 +85,7 @@ export function StartFilterActions({ ready }: StartFilterActionsProps) {
         open={newOpen}
         onOpenChange={setNewOpen}
         title="New filter"
-        description="A blank filter with no rules; the example rules open next, so you can tick a starter set. The name also becomes the filter's title (Settings tab), which the launcher shows."
+        description="A blank filter with no rules; the Example rules button on the Rules tab offers a starter set to tick. The name also becomes the filter's title (Settings tab), which the launcher shows."
         initialName="My filter"
         submitLabel="Create"
         onSubmit={(name) => {

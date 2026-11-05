@@ -134,6 +134,14 @@ export function extractFilterFromAnswer(answer: string): AiAnswerResult {
     const joined = attempt(blocks.map((block) => block.content).join('\n'), blocks.length);
     if (joined.ok) return joined.result;
   }
+  // The JSON written outside the fences (ChatGPT once put the whole filter before its ```json line and only its closing
+  // sentence inside): the brace spans of the whole answer.
+  if (blocks.length > 0) {
+    for (const span of braceSpans(answer)) {
+      const tried = attempt(span, 0);
+      if (tried.ok) return tried.result;
+    }
+  }
   // The first failure is the last block's (or the tightest span's): the one the LLM meant as its answer.
   return failures[0] ?? NONE;
 }

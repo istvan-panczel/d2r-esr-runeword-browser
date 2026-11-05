@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
 import { BookOpenCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import type { LootFilter } from '../../engine/types';
 import { addRules } from '../../store/lootFilterSlice';
 import { mergeStyles } from '../../utils/examplePicker';
-import { EXAMPLES_PARAM } from '../../utils/library';
 import { ExampleRulesDialog } from './ExampleRulesDialog';
 
 interface ExampleRulesButtonProps {
@@ -21,30 +19,12 @@ interface ExampleRulesButtonProps {
 const names = (list: readonly string[]) => list.join(', ');
 
 /**
- * The Rules tab's "Example rules" button and dialog. `?examples=1` (a new blank filter, `withExamples`) opens it once;
- * closing it drops the param. Confirm adds the rules in one edit (`addRules`) and the styles the filter lacks; a style
+ * The Rules tab's "Example rules" button and dialog. Confirm adds the rules in one edit (`addRules`) and the styles the filter lacks; a style
  * name the filter already uses keeps the filter's own style, and the toast says so.
  */
 export function ExampleRulesButton({ filter, insertAt, onAdded }: ExampleRulesButtonProps) {
   const dispatch = useDispatch();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(false);
-  const fromParam = searchParams.get(EXAMPLES_PARAM) === '1';
-
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next);
-    if (!next && fromParam) {
-      setSearchParams(
-        (previous) => {
-          const params = new URLSearchParams(previous);
-          params.delete(EXAMPLES_PARAM);
-          return params;
-        },
-        { replace: true }
-      );
-    }
-  };
-
   return (
     <>
       <Button
@@ -60,8 +40,8 @@ export function ExampleRulesButton({ filter, insertAt, onAdded }: ExampleRulesBu
         Example rules
       </Button>
       <ExampleRulesDialog
-        open={open || fromParam}
-        onOpenChange={handleOpenChange}
+        open={open}
+        onOpenChange={setOpen}
         previewVolume={filter.soundVolume ?? 100}
         onConfirm={(rules, styles) => {
           const merge = mergeStyles(filter.styles, styles);
@@ -76,7 +56,7 @@ export function ExampleRulesButton({ filter, insertAt, onAdded }: ExampleRulesBu
           toast.success(rules.length === 1 ? 'Added 1 example rule' : `Added ${String(rules.length)} example rules`, {
             description: notes.length > 0 ? notes.join(' ') : undefined,
           });
-          handleOpenChange(false);
+          setOpen(false);
           onAdded?.();
         }}
       />

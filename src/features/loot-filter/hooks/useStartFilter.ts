@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { createBlank, importText } from '../store/lootFilterSlice';
 import { templateStartInput } from '../utils/basedOn';
-import { draftPath, withExamples } from '../utils/library';
+import { draftPath } from '../utils/library';
 import { checkFilterText, fileBaseName, importDescription } from '../utils/readFilterText';
 import { BUNDLED_TEMPLATES, loadTemplateText, type BundledTemplateId } from '../utils/template';
 
@@ -18,11 +18,11 @@ export function useStartFilter() {
   /** The template whose start is loading its file (one at a time: the start buttons are disabled meanwhile). */
   const [loadingTemplate, setLoadingTemplate] = useState<BundledTemplateId | null>(null);
 
-  /** A blank filter opens with the example rules dialog, so a new player can click a starter set together. */
+  /** A blank filter opens on the Rules tab; its Example rules button offers a starter set. */
   const createNew = (name: string) => {
     const action = createBlank(name);
     dispatch(action);
-    void navigate(withExamples(draftPath(action.payload.id)));
+    void navigate(draftPath(action.payload.id));
   };
 
   const upload = async (file: File) => {

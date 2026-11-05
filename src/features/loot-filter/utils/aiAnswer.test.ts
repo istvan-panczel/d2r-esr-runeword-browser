@@ -40,6 +40,12 @@ describe('extractFilterFromAnswer', () => {
     expect(result.diagnostics).toEqual([]);
   });
 
+  it('reads the filter when the JSON sits before the fence and only the closing sentence is inside it (seen from ChatGPT)', () => {
+    const answer = `Here is your filter:\n\n${FILTER}\n\n\`\`\`json\nImport it in the app: click Import AI answer.\n\`\`\``;
+    const result = success(extractFilterFromAnswer(answer));
+    expect(result.filter.rules).toHaveLength(1);
+  });
+
   it('takes the last complete filter when the reply has several blocks', () => {
     const reply = `Old:\n\`\`\`json\n${FILTER}\n\`\`\`\nNew:\n\`\`\`json\n${OTHER}\n\`\`\`\nOne rule:\n\`\`\`json\n{ "itemCodes": ["r51"], "hide": true }\n\`\`\``;
     const result = success(extractFilterFromAnswer(reply));

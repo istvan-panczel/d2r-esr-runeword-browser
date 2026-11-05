@@ -300,16 +300,14 @@ troubleshooting line from "Using a filter in the game". The start buttons (My fi
 **Start from the example**, **Upload**, **New filter**, **Create a filter with AI help** (outline; a link to `/loot-filters/ai`, see "AI help"). A "Tip:" line under them says most players start
 from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
 work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
-blank and opens the example rules (about sixty ready rules in groups to tick into a starter set); the Rules tab has them
+blank; its Rules tab's Example rules button offers about sixty ready rules in groups to tick into a starter set; the Rules tab has them
 either way; new players can describe their filter on the AI help page. The templates' credit lines follow. The empty state and the New filter dialog ("A blank filter with no
-rules; the example rules open next, so you can tick a starter set. …") say the same in short.
+rules; the Example rules button on the Rules tab offers a starter set to tick. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
-  `{ id: 1, name: 'Default' }`, `defaultLevel: 1`, no rules) with the example rules dialog open: `createNew` navigates
-  to `withExamples(draftPath(id))` (`?examples=1`, `EXAMPLES_PARAM` in `utils/library.ts`), which the Rules tab's
-  example button reads; closing the dialog (Cancel, Add selected, Escape) drops the param, so a reload or Back does
-  not reopen it.
+  `{ id: 1, name: 'Default' }`, `defaultLevel: 1`, no rules) on the Rules tab. The example rules dialog does not open
+  by itself (owner, 2026-11-05); the Rules tab's Example rules button opens it.
 - **Upload**: a `.json` file read as UTF-8, as leniently as the game reads it (`//` and `/* */` comments, trailing
   commas). A JSON syntax error shows a toast with the line and column and imports nothing; a file with diagnostics
   (unknown keys, wrong shapes) is imported and the editor lists them. The success toast counts the problems and spells
