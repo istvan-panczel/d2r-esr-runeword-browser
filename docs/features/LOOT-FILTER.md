@@ -114,7 +114,9 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
 - `editor`: `{ target, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (a `draft`
   target; parses the text; a JSONC syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
   `setNotifications(patch)`, `setQualityColors(patch)`, `addRule({ rule?, at? })`, `updateRule({ index, rule })`,
-  `patchRule({ index, patch })`, `setRuleDisabled({ index, disabled })` (see "Disabled rules"), `removeRule(index)`,
+  `patchRule({ index, patch })`, `chooseRuleStyle({ index, patch, addStyle?, removeStyleIfUnused?, ifUseStyle? })` (the
+  rule's Style dropdown, see [Style first, then tweak](#style-first-then-tweak)), `setRuleDisabled({ index, disabled })`
+  (see "Disabled rules"), `removeRule(index)`,
   `moveRule({ from, to })` and `duplicateRule(index)` (both keep the `disabled` flag with the rule), `selectRule(index)`,
   `setStyle({ name, style })`, `renameStyle({ from, to })` (also re-points rules' `useStyle`), `removeStyle(name)`,
   `replaceFilter({ filter, diagnostics, notes? })`.
@@ -715,10 +717,11 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   colour** select (Basic only: "None (no name colour from this rule)" or a colour code, written as
   `replaceName: "ÿc<code>{name}"`, a whole new name that a later rule's replaceName overrides, as the hint says;
   disabled with a pointer to Replace name when replaceName holds other text), label background and border, chat
-  line, sound (with its volume) and minimap icon. **Style values under empty controls**: when the rule leaves Name
-  colour / Replace name, Background or Border empty and its style sets one, the control's hint says so ("From style
-  “Unique”: ÿc4{name} (gold)", a swatch and the numbers for colours), in Basic and Advanced, so an empty control on
-  a styled rule does not read as "nothing". Everything else is Advanced: the
+  line, sound (with its volume) and minimap icon. **Style values in the fields**: on a rule with a style, every
+  field the style sets shows the style's value (see [Style first, then tweak](#style-first-then-tweak)); a key the
+  style sets counts as set for the gate, so an Advanced field the style sets (a prefix, a droplight) shows in Basic
+  with the "advanced" badge, and a style's name colour belongs to Name colour (`ruleFieldGate({ …, style })`, where
+  `style` is `findStyle(rule, filter)`). Everything else is Advanced: the
   except lists, base tier, item level, max sockets, the other three flags, Item stats any of, both character stat
   lists, a hide rule's "Advanced: hide only items with these stats" box, areas, location, filter levels, difficulty,
   Hide if other conditions fail, Chat line when hidden, Replace name, Prefix, Suffix, Notify and
@@ -1098,8 +1101,13 @@ removes the key); `passthrough` is never patched. Sections:
 - **Label preview** (top): `LabelPreview` of prefix + (`replaceName` or `{name}`) + suffix in enUS, with `{name}` shown
   as "Item Name" and other placeholders as written; background and border from the effective actions. For a rule with
   `useStyle`, the style's actions are underneath and the rule's own win, per key (`utils/effectiveActions.ts`).
-- **Style** (rules only, `StyleSection`): `useStyle` select (None, every style, a missing name kept as "(missing)"); a
-  collapsed read-only list of the style's actions (`StyleSummary`; its `comment` is shown but not counted). A rule's
+- **Style** (rules only, `StyleSection`): `useStyle` as a searchable picker (a button with the style's label preview
+  and name, opening a cmdk list): None, **In this filter** (the filter's styles, each with its label preview and its
+  minimap icon if it has one; a missing name kept as "(missing)") and **Presets (added to the filter when picked)**
+  (`STYLE_PRESETS` with the Styles tab's `PresetPreview`, label and description; a preset whose name the filter
+  already has is listed once, as the filter's own). Picking goes through `onChooseStyle` (see
+  [Style first, then tweak](#style-first-then-tweak)); below it a collapsed read-only list of the style's actions
+  (`StyleSummary`; its `comment` is shown but not counted). A rule's
   `comment` belongs to the rule editor; a style's is a one-line field under **Notes** ("A note for yourself; the plugin
   ignores it.").
 - **Visibility**: `hide` (hint: no later rule runs, and no rule can show it again), `hideIfOtherConditionsFail`
@@ -1108,15 +1116,29 @@ removes the key); `passthrough` is never patched. Sections:
   effective drop line).
 - **Label** (`LabelSection`): `labelBackground` (colour + alpha, default alpha 242), `labelBorder` (colour + alpha, width; "Add border" /
   remove).
-- **Sound**: combobox over the 9 bundled files and the sounds.txt names (digits typed free become a row number), play
-  button for bundled files (an `Audio` at `soundVolume ?? filter.soundVolume ?? 100`), "preview a local file" input
+- **Sound**: combobox in two groups: **Bundled sounds** (all 9 files, each with its label and use and its own play /
+  stop button, which plays without picking) and **Game sounds** (the sounds.txt names, at most 100 shown); the
+  search matches anywhere in the text (a bundled file also by its label and use), so the chosen sound never narrows
+  the list, and the current one has a check mark; "Use as typed" takes any other name (digits become a row number).
+  Closing the list stops a preview started from it. A play button for the chosen bundled file (an `Audio` at
+  `soundVolume ?? filter.soundVolume ?? 100`), "preview a local file" input
   (object URL, revoked on change/unmount), `soundVolume` (blank = filter default). The hint says where sounds come
   from: a file in the `sounds` folder next to the filter (the bundled ones from Sully's QoL) or a game sound by its
   sounds.txt name or row, which needs no file (sounds.txt is a table in the mod's game data); such a sound has no
   preview ("a game sound plays from the game's files").
-- **Minimap icon**: on/off (turning it on gives `{ iconName: 'goldstar', iconSize: 50 }`; the sprite's own size is
-  128 px, as every bundled icon), `iconName` (suggests every bundled icon, `BUNDLED_ICONS`), `iconSize` (4–256, blank = file size), tint
-  (alpha optional), sprite preview.
+- **Minimap icon**: on/off (turning it on gives `DEFAULT_ICON`, `{ iconName: 'star_white', iconSize: 40 }`: the white
+  star takes any tint; the sprite's own size is 128 px, as every bundled icon; on a rule whose style has an icon the
+  box is already ticked with the style's icon), the **icon picker** (`IconPicker`, below), `iconSize` (4–256, blank =
+  file size), tint (alpha optional), sprite preview.
+  - _Icon picker_: a button with the current icon (a tinted `IconThumb`, the name and its label, or "Your own .sprite
+    file") that opens a popover: a search box (`filterIcons` in `utils/iconPicker.ts`: every word anywhere in the
+    name, label or use, any case; an empty search lists all), a 4-column grid of every bundled icon
+    (`ICON_PICKER_ICONS`: the 25 generated ones first, then Sully's 12; each tile its picture and name, the current one
+    outlined with a check), arrow keys (`gridMove`: left / right by one, up / down by a row) and Enter in the search
+    box, and **Custom file name…** (a text box + Use) for the user's own `.sprite` (`.sprite` may be left off); a search
+    that matches nothing offers "Use “…” as the file name". The thumbnails decode through `useBundledSprite`, once per
+    name for the page, and only while the grid is open. The datalist it replaces only suggested names starting with
+    the current one, so once a rule had `goldstar` no other icon was offered.
 - **Droplight**: on/off (`{}`), a beam colour or "the game's white beam".
 
 Text fields (`ColorTextField`) take raw `ÿc` codes and have two insert menus: colour codes (swatch grid of `COLOR_CODES`)
@@ -1135,14 +1157,47 @@ unmount. `useBundledSprite` fetches and decodes a bundled sprite once per name; 
 (`utils/tintSprite.ts`: RGB × colour/255, alpha × colour[3]/255); a decode error shows the decoder's message. A sounds.txt
 sound has no preview (it plays from the game files).
 
+### Style first, then tweak
+
+Owner decision after testing a filter from scratch: a rule's own action wins over its style's, per key (the format's
+rule, `engine/actions.ts` `mergeActions`; kept as is), so a rule that already set a background, border and name colour
+kept them when it picked a style, and the style seemed not to work. The editor now follows "pick the style, it sets
+everything; then change a few things":
+
+- **Picking a style clears the rule's own values for the keys the style sets** (`utils/styleChoice.ts`):
+  `applyStyleChoice(rule, style)` gives `{ patch, cleared }` (every `STYLE_KEYS` key, the effect keys but `useStyle`,
+  that both set; keys the style leaves free stay). `planStyleChoice(rule, filter, target)` (target None, a filter
+  style or a preset) builds one `chooseRuleStyle` edit (`useStyle` + the clearing patch + `addStyle` for a preset the
+  filter lacks) and its exact undo (the removed values and the old `useStyle` back, a wrong-shaped original in
+  `passthrough` too; `removeStyleIfUnused` for an added preset, kept when another rule uses it by then; `ifUseStyle`
+  makes the undo a no-op once the rule's style has changed again). The rule editor dispatches it and shows a toast
+  (`styleChoiceMessage`): "Cleared this rule's own name colour, background and border so the style shows." (titled
+  "Added the style UniqueItem" when a preset was added) with **Undo** (10 s). Nothing cleared and nothing added: no
+  toast.
+- **Presets in the dropdown**: picking a preset adds it to `styles` with the Styles tab's rule (`presetStyleStatus`:
+  a missing one is copied in; a style of that name is never overwritten, the filter's own is used, "The filter
+  already has a style named …"), sets `useStyle` and clears as above, all one store edit.
+- **Fields show the style's values** (`components/actions/styleValues.tsx`, one helper for every field, and
+  `StyleValueMark`): with a style, each field the style sets (name colour / Replace name, prefix, suffix, background,
+  border, chat lines, hide flags, notify, sound and volume, minimap icon, droplight) shows the style's value with a
+  muted "from style X" tag after its label; editing it writes the rule's own override, tagged "changed from style X"
+  with **Reset to style** (removes the own key). `actionOrigin(own, style, key)` tells `own` / `style` / `changed` /
+  `none` apart. An edit back to exactly the style's value removes the own key (`collapseToStyle`), so no redundant
+  override is left. A rule cannot remove a style's value (the format has no "unset"): over a style's value the
+  remove buttons are gone (background clear, border remove, sound remove), the Minimap icon and Droplight boxes stay
+  ticked (disabled, hint "pick another style to drop it"), and the Name colour select has no None; the Hide, Hide if
+  other conditions fail and Notify boxes write the rule's own `false` when unticked over a style's `true` (own wins
+  per key; not checked in game). Fields the style does not set behave as before. The Styles tab edits a style
+  itself, so it has no style values (same pickers, no tags).
+
 ### Bundled sounds and icons (`utils/bundledAssets.ts`)
 
 The asset registry lists every sound and minimap icon the app bundles under `public/loot-filters/sounds/` and
 `public/loot-filters/icons/`: `BUNDLED_SOUND_ASSETS` (`file`, `label`, `use`, `credit`) and `BUNDLED_ICON_ASSETS`
 (`name` without `.sprite`, `label`, `use`, `credit`, `lowend` when a `<name>.lowend.sprite` variant sits next to it).
 `BUNDLED_SOUNDS` / `BUNDLED_ICONS` (the names), `findBundledSound(Asset)` / `findBundledIcon(Asset)` and
-`DEFAULT_ICON_NAME` (the first icon, `goldstar`) derive from it. Everything that offers or ships the files reads it: the
-sound combobox and its play button, the icon field's suggestions, the sprite preview, the example rules dialog's
+`isGeneratedIcon(asset)` derive from it; `DEFAULT_ICON` is what ticking Minimap icon gives. Everything that offers or
+ships the files reads it: the sound combobox and its play buttons, the icon picker, the sprite preview, the example rules dialog's
 Sound and Icon selects, the Test tab's play button, and the .zip download (`collectReferencedAssets`, which adds the
 `.lowend.sprite` of a `lowend` icon). All nine sounds and the first twelve icons are Sully's (the `use` lines say where
 his filter uses each one; `tinkLOUD.mp3` is bundled but unused by him); the other 25 icons are generated (credit
@@ -1240,6 +1295,9 @@ compares by content (key order ignored): an identical style of that name is just
 a different one is kept and selected ("Your style is kept as it is. Rename it first to add the preset."), never
 overwritten. `stylePresets.test.ts` checks the colour codes, that no preset has a sound, icon, chat line or hide, and
 validates all of them in one filter.
+
+The rule editor's Style dropdown lists the presets the filter lacks too, with the same `PresetPreview`, and adds the
+picked one (see [Style first, then tweak](#style-first-then-tweak)).
 
 ## JSON tab (`components/JsonTab.tsx`, `components/json-editor/`)
 
