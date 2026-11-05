@@ -14,7 +14,7 @@ import { selectAuthUserId } from '@/features/auth';
 import { useManifest } from '@/features/game-data/hooks/useManifest';
 import { downloadBlob } from '@/utils/download';
 import { validateLootFilter } from '../engine/validate';
-import { AiStarterPicker, type AiSavedFilters, type AiStarterStatus } from '../components/ai/AiStarterPicker';
+import { AI_STARTER_EXAMPLES_INTRO, AiStarterPicker, type AiSavedFilters, type AiStarterStatus } from '../components/ai/AiStarterPicker';
 import { ExampleRulesDialog } from '../components/rules/ExampleRulesDialog';
 import { copyText } from '../components/ai/copyText';
 import { ImportAiAnswerDialog } from '../components/ai/ImportAiAnswerDialog';
@@ -380,6 +380,7 @@ export function LootFilterAiScreen() {
           open={rulesOpen}
           onOpenChange={setRulesOpen}
           title="Pick example rules for the starter"
+          description={AI_STARTER_EXAMPLES_INTRO}
           confirmLabel="Use as starter"
           initialState={rulesSelection}
           onConfirm={(rules, styles, selection) => {

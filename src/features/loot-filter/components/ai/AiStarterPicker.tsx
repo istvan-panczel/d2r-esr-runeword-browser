@@ -25,6 +25,10 @@ export type AiSavedFilters =
   | { readonly kind: 'error' }
   | { readonly kind: 'ready'; readonly items: readonly AiSavedFilterOption[] };
 
+/** The example rules dialog's intro when it picks the AI starter (Pick example rules); the editor has its own. */
+export const AI_STARTER_EXAMPLES_INTRO =
+  'Tick the rules your filter should start from; the AI keeps them and extends them into a full filter. Each ticked rule shows its style, sound, minimap icon and chat line, ready to change. Sounds and icons come with the app’s .zip download.';
+
 interface AiStarterPickerProps {
   readonly choice: AiStarterChoice;
   readonly onChoiceChange: (choice: AiStarterChoice) => void;

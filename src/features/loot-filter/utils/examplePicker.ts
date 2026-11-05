@@ -2,6 +2,8 @@
  * The selection model of the example rules picker (the Rules tab's dialog, and any other place that builds a starter
  * rule set): which examples are ticked with which presentation choices, plus three switches that turn every sound,
  * chat line or minimap icon off. Pure state updates and the build step that turns a selection into rules and styles.
+ * Bulk selects never tick a hide rule among label rules (owner decision): Select all ticks the label rules, a group's
+ * checkbox its label rules, and only the Hide junk group's checkbox, a group of hide rules alone, ticks hide rules.
  */
 import type { LootFilterRule, LootFilterStyle } from '../engine/types';
 import {
@@ -59,12 +61,51 @@ export function groupExamples(group: ExampleGroupId): readonly ExampleRule[] {
   return EXAMPLE_RULES.filter((example) => example.group === group);
 }
 
-/** `all`, `some` or `none` of the group's examples are ticked. */
-export function groupSelection(state: ExamplePickerState, group: ExampleGroupId): 'all' | 'some' | 'none' {
+/**
+ * What a group's "select all" checkbox ticks: `all` its examples (it has no hide rule), its `labels` rules only (a hide
+ * rule among label rules needs its own tick) or, in a group of hide rules only (Hide junk), its `hides`: there the
+ * click can mean nothing else.
+ */
+export function groupBulkKind(group: ExampleGroupId): 'all' | 'labels' | 'hides' {
   const examples = groupExamples(group);
-  const count = examples.filter((example) => Object.hasOwn(state.selected, example.id)).length;
-  if (count === 0) return 'none';
-  return count === examples.length ? 'all' : 'some';
+  const hides = examples.filter(isHideExample).length;
+  if (hides === 0) return 'all';
+  return hides === examples.length ? 'hides' : 'labels';
+}
+
+/** The examples a group's "select all" ticks (see `groupBulkKind`). */
+function groupBulkExamples(group: ExampleGroupId): readonly ExampleRule[] {
+  const examples = groupExamples(group);
+  return groupBulkKind(group) === 'labels' ? examples.filter((example) => !isHideExample(example)) : examples;
+}
+
+/** "Select all": ticks every label rule; hide rules always need a deliberate tick (one by one or by their group). */
+export function selectAllLabelRules(state: ExamplePickerState): ExamplePickerState {
+  return setExamplesSelected(
+    state,
+    EXAMPLE_RULES.filter((example) => !isHideExample(example)).map((example) => example.id),
+    true
+  );
+}
+
+/** A group's "select all" checkbox: on ticks what `groupBulkKind` says; off unticks the whole group, hide rules too. */
+export function setGroupSelected(state: ExamplePickerState, group: ExampleGroupId, on: boolean): ExamplePickerState {
+  const examples = on ? groupBulkExamples(group) : groupExamples(group);
+  return setExamplesSelected(
+    state,
+    examples.map((example) => example.id),
+    on
+  );
+}
+
+/**
+ * The group checkbox's state: `none` ticked, `all` that its "select all" ticks (a hide rule left unticked among label
+ * rules does not make it partial, so the next click unticks the group), else `some`.
+ */
+export function groupSelection(state: ExamplePickerState, group: ExampleGroupId): 'all' | 'some' | 'none' {
+  const ticked = (example: ExampleRule) => Object.hasOwn(state.selected, example.id);
+  if (!groupExamples(group).some(ticked)) return 'none';
+  return groupBulkExamples(group).every(ticked) ? 'all' : 'some';
 }
 
 /** A ticked example's choices with the bulk switches applied. */
