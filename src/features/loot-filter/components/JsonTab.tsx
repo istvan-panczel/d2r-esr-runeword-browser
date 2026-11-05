@@ -77,10 +77,12 @@ export function JsonTab({
   const stale = edited && base !== modelText;
 
   useEffect(() => {
-    if (scrollToProblems === 0) return;
+    // Wait for the filter: a draft opened straight on this tab (the AI help page's first import) is still loading on
+    // the first render, and the page is too short to scroll to the list.
+    if (scrollToProblems === 0 || filter === null) return;
     document.getElementById(DIAGNOSTICS_LIST_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     onScrolledToProblems();
-  }, [scrollToProblems, onScrolledToProblems]);
+  }, [scrollToProblems, onScrolledToProblems, filter]);
 
   const handleApply = () => {
     try {

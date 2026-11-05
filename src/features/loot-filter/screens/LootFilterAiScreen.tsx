@@ -31,6 +31,7 @@ import {
   type StarterResult,
 } from '../utils/aiStarter';
 import type { ExamplePickerState } from '../utils/examplePicker';
+import { SHOW_PROBLEMS_STATE } from '../utils/editorRoute';
 import { draftPath } from '../utils/library';
 import { BUNDLED_TEMPLATES, loadTemplateText, type BundledTemplateId } from '../utils/template';
 
@@ -255,9 +256,11 @@ export function LootFilterAiScreen() {
       description:
         problems === 0
           ? 'No problems found. Download it from the editor, or keep improving it with the AI.'
-          : 'Its problems are listed below the JSON: Copy problems for the AI, paste them into the chat, and import the next answer with Import AI answer.',
+          : 'Its problems are listed under the JSON: Copy problems for the AI, paste them into the chat, and import the next answer with Import AI answer.',
     });
-    void navigate(problems === 0 ? draftPath(action.payload.id) : `${draftPath(action.payload.id)}?tab=json`);
+    // With problems, open on the JSON tab scrolled to the list (the editor reads SHOW_PROBLEMS_STATE once on mount).
+    if (problems === 0) void navigate(draftPath(action.payload.id));
+    else void navigate(`${draftPath(action.payload.id)}?tab=json`, { state: SHOW_PROBLEMS_STATE });
   };
 
   return (

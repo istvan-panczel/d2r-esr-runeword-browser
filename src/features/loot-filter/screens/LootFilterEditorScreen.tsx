@@ -96,7 +96,14 @@ import type { AiAnswerSuccess } from '../utils/aiAnswer';
 import { aiStarterState } from '../utils/aiStarter';
 import { templateBasedOn } from '../utils/basedOn';
 import { AI_PAGE_PATH } from '../utils/library';
-import { authorLabelOf, editorRouteOf, keepsOwnerSandbox, saveDialogDetailsOf, targetMatchesRoute } from '../utils/editorRoute';
+import {
+  authorLabelOf,
+  editorRouteOf,
+  isShowProblemsState,
+  keepsOwnerSandbox,
+  saveDialogDetailsOf,
+  targetMatchesRoute,
+} from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
 import { BUNDLED_TEMPLATES, fetchTemplateText, type BundledTemplateId } from '../utils/template';
 import { defaultTestItem } from '../utils/testItemForm';
@@ -224,7 +231,8 @@ export function LootFilterEditorScreen() {
   const [aiImportOpen, setAiImportOpen] = useState(false);
   // State the tabs share or that must outlive a tab switch (each tab unmounts when another is shown).
   const [jsonState, setJsonState] = useState<SessionJsonDraft | null>(null);
-  const [problemsScroll, setProblemsScroll] = useState(0);
+  // Arriving from the AI help page's first import with problems: scroll to them once the JSON tab renders.
+  const [problemsScroll, setProblemsScroll] = useState(() => (isShowProblemsState(location.state) ? 1 : 0));
   const [testForm, setTestForm] = useState(defaultTestItem);
 
   // The open filter moving to another route without being another filter: Save (a draft becoming the saved row, or

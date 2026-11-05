@@ -6,8 +6,10 @@ import {
   editorPathOf,
   editorRouteOf,
   isSameEditorFilter,
+  isShowProblemsState,
   keepsOwnerSandbox,
   saveDialogDetailsOf,
+  SHOW_PROBLEMS_STATE,
   sourceUpdateOf,
   targetMatchesRoute,
 } from './editorRoute';
@@ -179,5 +181,14 @@ describe('sourceUpdateOf', () => {
     expect(sourceUpdateOf(templateBasedOn('example', '0.6.12'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.6.12' });
     expect(sourceUpdateOf(templateBasedOn('example', null), {})).toEqual({ ...exampleUpdate, fromVersion: null });
     expect(sourceUpdateOf({ template: 'retired', version: '0.1', label: 'Old' }, {})).toEqual({ kind: 'none' });
+  });
+});
+
+describe('isShowProblemsState', () => {
+  it('accepts only the show-problems router state', () => {
+    expect(isShowProblemsState(SHOW_PROBLEMS_STATE)).toBe(true);
+    expect(isShowProblemsState(null)).toBe(false);
+    expect(isShowProblemsState({ showProblems: 'yes' })).toBe(false);
+    expect(isShowProblemsState(undefined)).toBe(false);
   });
 });

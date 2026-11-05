@@ -142,3 +142,10 @@ export function sourceUpdateOf(
     ? { kind: 'template', template: template.id, fromVersion: version }
     : { kind: 'none' };
 }
+
+/** Router state that opens the editor scrolled to the problems list (the AI help page's first import with problems). */
+export const SHOW_PROBLEMS_STATE = { showProblems: true } as const;
+
+export function isShowProblemsState(state: unknown): boolean {
+  return typeof state === 'object' && state !== null && 'showProblems' in state && state.showProblems === true;
+}
