@@ -563,8 +563,9 @@ stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, 
     and reused, never overwritten) and dispatches `addRules({ rules, styles, at })`, one edit: the rules go after the
     selected rule (else at the end) and the first one is selected. The toast counts the rules and names the added and
     the kept styles.
-  - _Reuse_: `ExampleRulesPicker` (`onConfirm(rules, styles)`, `onCancel`, `confirmLabel`, `previewVolume`) has no
-    store dependency, and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
+  - _Reuse_: `ExampleRulesPicker` (`onConfirm(rules, styles, selection)`, `onCancel`, `confirmLabel`, `previewVolume`,
+    `initialState`) has no store dependency (the AI page's "Pick example rules" starter uses it, reopening on the
+    `selection` it got back), and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
   - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
     Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
     (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits; the
@@ -1160,8 +1161,13 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
 - **The page** (a 1-2-3 explanation on top): (1) the request textarea (placeholder example; kept in `sessionStorage`
   `loot-filters/ai-request` so it survives a trip to the editor; storage errors are ignored) and **Start from**
   (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, fetched with
-  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first) or an uploaded `.json`; the line
-  under it gives the rule count and size (a starter over 100 rules adds a note that long answers may be cut off), or why
+  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first), an uploaded `.json` or **Pick
+  example rules**: the button opens the Rules tab's `ExampleRulesDialog` ("Pick example rules for the starter", confirm
+  "Use as starter (N)"); confirm sets `rulesStarter` (`starterFromRules`: the rules plus every style they use, one
+  "Default" level, title "AI filter") and the `rules` choice. Like the upload, the picked set stays in the list ("N
+  example rules") when another starter is chosen, and the button turns into **Change example rules**, which reopens the
+  picker on the previous selection (the picker's `initialState`, from the `selection` its `onConfirm` hands back);
+  Cancel changes nothing. The line under the picker gives the rule count and size (a starter over 100 rules adds a note that long answers may be cut off), or why
   the text cannot be used (not valid JSON). Saved filters start through Improve with AI (the hint says so). (2) **Game
   data** Compact (default) or Full with the measured size of each (characters and ~tokens = characters / 4, plus the
   total with the request and starter), **Download .md (one file)**, **Download .zip (prompt + files)** and **Copy
@@ -1173,29 +1179,40 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
   (`instructions.ts`: role and goal; reply in the user's language with JSON keys and texts as the format needs; the
   workflow: ask every clarifying question first (class/build, difficulty/progress, item groups, strictness levels,
   sounds/icons, languages), propose a plan, the complete filter as one json block every time (never a diff unless
-  asked), meaningful rule comments (they become the rule titles), after every JSON answer remind the user to Import AI
-  answer and paste the problems back, fix exactly the pasted problems and keep everything else; the rules for codes
-  (only from the reference, ask the user otherwise, the validator flags unknown codes), bundled assets and the plugin
-  limits; the file list with summaries; the request verbatim between `<user_request>` tags (it cannot close them); the
-  starter), then the files: `FORMAT.md`, `examples.md`, `assets.md`, the CSV tables and `starter.json`. The single `.md`
+  asked), meaningful rule comments (they become the rule titles), after every JSON answer remind the user (in their
+  language, button names as written) to Import AI answer (the first time on the AI page, later in the editor) and paste
+  the problems from Copy problems for the AI back, fix exactly the pasted problems and keep everything else; the rules for codes
+  (only from the reference, ask the user otherwise, the validator flags unknown codes), bundled assets (a sounds.txt
+  sound only when asked), styles (every `useStyle` defined under `styles`; copy a preset from examples.md) and the
+  plugin limits; the file list with summaries; the request verbatim between `<user_request>` tags (it cannot close them); the
+  starter: a filter is kept as it is apart from what the request changes; picked example rules are a skeleton to keep
+  and extend, with a fitting title and the agreed levels), then the files: `FORMAT.md`, `examples.md`, `assets.md`, the
+  CSV tables and `starter.json`. The single `.md`
   is the prompt for one document ("each reference file follows under a heading File: <name>"), then every file under
   `# File: <name>` (markdown files one heading level down, CSV and JSON in four-backtick fences); the zip
-  (`buildPromptZip`, `utils/zip.ts`) holds `PROMPT.md` and the files. Names: `<slug of the starter label, else of the
-request's first line, else "ai-filter">-ai-prompt-<yyyy-mm-dd>.md|.zip`.
+  (`buildPromptZip`, `utils/zip.ts`) holds `PROMPT.md` and the files. Names: `<slug of the starter label (picked
+example rules: of the request), else of the request's first line, else "ai-filter">-ai-prompt-<yyyy-mm-dd>.md|.zip`.
 - **Generated from the code** (`formatReference.ts`), so it follows the editor: the key tables from `TOP_LEVEL_KEYS`,
   `CONDITION_KEYS` and `ACTION_KEYS` (their descriptions are `Record`s over the model's key types, so a new key does not
   compile without one), the enumerations, `STAT_OPS`, `PLACEHOLDERS`, `COLOR_CODES`, `STAT_QUIRKS` (headline and
   message), `STAT_SCALES`, `STAT_LAYER_KINDS` (what each layered stat's param holds), `OMITTED_PARAM_RULE`,
   `FILTER_CONTENT_MAX_BYTES`, `LOOT_FILTER_PLUGIN_VERSION`, a complete example file (`SKELETON_FILTER`, validated clean
-  by a test), the example rules (`EXAMPLE_RULES`, one key per line) and "Common mistakes and what the app reports":
+  by a test) and "Common mistakes and what the app reports":
   `MISTAKE_SAMPLES` (unknown code, a type name for a code, a stat label for a name, an unknown quality, Enhanced Damage
   on weapons, a skill tab without param or with a properties.txt number, a Life value, a missing level or style,
   `between` with one number, an empty list, unique ids with a non-unique quality, codes of other types,
   `hideIfOtherConditionsFail` with quality, a hide rule without conditions, a colour out of range, an unknown key) run
   through `readLootFilter` + `validateLootFilter` against the game data, so the LLM sees the app's own messages. Prose
   covers only semantics (how rules combine, hide rules and exceptions, ids, writing the file for the app).
+  `examples.md` (`buildExamples`): first the style presets (`DEFAULT_PROMPT_STYLE_PRESETS` from `STYLE_PRESETS`, each
+  its name, description and `{ "Name": { … } }` block one key per line, with the note that a filter must copy every
+  preset it uses into `styles`; a style an example uses but the given presets lack is added), then the example rules
+  under their group headings and intros, each its title, description and the complete rule the picker adds with its
+  default presentation (`buildExampleRule(example, defaultChoices(example))`: comment, conditions, `useStyle`, sound,
+  icon, chat line; one key per line). `assets.md` lists every registry entry with its "when to use" line
+  (`DEFAULT_PROMPT_ASSETS` from `BUNDLED_SOUND_ASSETS` / `BUNDLED_ICON_ASSETS`).
 - **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.2.24, the single .md without request or starter):
-  **Compact** about 167k characters (~42k tokens): every item type (`item-types.csv`), the misc items that drop
+  **Compact** about 199k characters (~50k tokens; examples.md is 35k of it): every item type (`item-types.csv`), the misc items that drop
   (`items.csv`: runes, gems, charms, jewels, potions, keys, organs, essences, coupons, maps, scrolls; stacks of five or
   more identically named containers (the Rune, Decal and Multi Stockers, Gem and Crystal Cans, Rerolling Orbs)
   collapse to one row "match them by item type"), the weapon and armour bases that drop by item type and tier
@@ -1203,7 +1220,7 @@ request's first line, else "ai-filter">-ai-prompt-<yyyy-mm-dd>.md|.zip`.
   can use `itemTypes` + `baseTier`), every stat with label, param kind and the quirk or scale note (`stats.csv`),
   uniques merged by name with the dropped and Ancient Coupon ids, then the set items (`uniques-sets.csv`, disabled rows
   left out), every area (`areas.csv`, 5k), the class skills, the skill tabs (param = class × 8 + tab) and the classes.
-  **Full** about 555k characters (~139k tokens): one row per item code with kind, types, tier and drop flag, one row
+  **Full** about 587k characters (~147k tokens): one row per item code with kind, types, tier and drop flag, one row
   per unique and set row with base, level and coupon/disabled notes, every skill and every sounds.txt name
   (`sounds.csv`, 263k of the total). Sully's template as the starter adds about 68k characters.
 - **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
@@ -1226,14 +1243,14 @@ request's first line, else "ai-filter">-ai-prompt-<yyyy-mm-dd>.md|.zip`.
   `- Rule 12 "High runes" (rules/11/itemCodes/3): Unknown item code "r99"` (style problems name the style), at most 80
   lines with the rest counted, and ends with "Fix these and keep everything else; reply with the complete filter as one
   json block."
-- **Seams for later integration**: an example-rules starter (`AiStarterChoice` `rules`, `ExampleRulesStarter` = the
-  `{ rules, styles }` a picker's `onConfirm(rules, styles)` gives, `starterFromRules`, and the screen's `rulesStarter`
-  state; not offered in the picker until the example rule picker exists), style presets
-  (`PromptReferenceInput.stylePresets`, shown in examples.md) and an asset registry (`PromptReferenceInput.assets`:
-  sounds and icons with optional notes; default `DEFAULT_PROMPT_ASSETS` from `bundledAssets.ts`).
-- Tests (logic only): `gameDataTables.test.ts`, `formatReference.test.ts` (every key has a row, the skeleton and the
-  example rules read back cleanly, every mistake sample yields the validator's messages against the real bundles),
-  `promptPackage.test.ts` (files, layout, delimiters, names, zip entries, sizes), `aiAnswer.test.ts`,
+- **Inputs with defaults**: `PromptReferenceInput.examples` (default `EXAMPLE_RULES`), `.stylePresets` (default
+  `DEFAULT_PROMPT_STYLE_PRESETS`) and `.assets` (default `DEFAULT_PROMPT_ASSETS`); the page passes none of them, so
+  the reference cache keys stay stable.
+- Tests (logic only): `gameDataTables.test.ts`, `formatReference.test.ts` (every key has a row, the skeleton reads back
+  cleanly, every mistake sample yields the validator's messages against the real bundles; examples.md has every preset
+  and group, each example reads back as the picker's rule with its default presentation, and the presets plus all the
+  rules validate as one clean filter; assets.md has every registry note), `promptPackage.test.ts` (files, layout,
+  delimiters, names, zip entries, sizes, the picked example rules starter), `aiAnswer.test.ts`,
   `aiFollowUp.test.ts`, `aiStarter.test.ts`.
 
 ## Phase status
