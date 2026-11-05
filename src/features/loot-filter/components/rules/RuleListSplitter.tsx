@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { clampRuleListWidth, ruleListBounds, ruleListWidthForKey } from '../../utils/ruleListWidth';
+import { clampRuleListWidth, ruleListBounds, ruleListValueText, ruleListWidthForKey } from '../../utils/ruleListWidth';
 
 interface RuleListSplitterProps {
   /** The two-pane grid (list, gap, editor): the 60% maximum is of its width. */
@@ -9,17 +9,20 @@ interface RuleListSplitterProps {
   readonly listRef: React.RefObject<HTMLElement | null>;
   /** The id of the list pane (`aria-controls`). */
   readonly listId: string;
-  /**
-   * A new width in rem, or null for the default; `commit` is false while dragging (the caller remembers the width once
-   * the drag ends, on a key press and on reset).
-   */
-  readonly onResize: (rem: number | null, commit: boolean) => void;
+  /** A new width in rem, or null for the default: once a drag ends, on a key press and on reset. */
+  readonly onResize: (rem: number | null) => void;
 }
 
 interface Drag {
   readonly pointerId: number;
   readonly startX: number;
   readonly startPx: number;
+  /** The row and root font size at the press (neither changes while dragging). */
+  readonly rowPx: number;
+  readonly remPx: number;
+  /** The latest pointer x, applied on the next animation frame. */
+  clientX: number;
+  frame: number | null;
   rem: number | null;
 }
 
@@ -44,13 +47,16 @@ export function RuleListSplitter({ rowRef, listRef, listId, onResize }: RuleList
   const [size, setSize] = useState({ row: 0, list: 0, rem: 16 });
   const [dragging, setDragging] = useState(false);
   const drag = useRef<Drag | null>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
 
   // The value and the bounds for assistive tech follow the rendered widths (window resizes, page width, text size).
+  // Not while dragging: the drag writes the width and the value straight to the DOM, and the state catches up once.
   useEffect(() => {
     const row = rowRef.current;
     const list = listRef.current;
     if (!row || !list) return;
     const observer = new ResizeObserver(() => {
+      if (drag.current) return;
       setSize({ row: width(rowRef), list: width(listRef), rem: rootFontPx() });
     });
     observer.observe(row);
@@ -63,7 +69,10 @@ export function RuleListSplitter({ rowRef, listRef, listId, onResize }: RuleList
   // A drag cut short by unmounting (the tab switches) must not leave the page unselectable.
   useEffect(
     () => () => {
-      if (drag.current) setDragStyles(false);
+      const active = drag.current;
+      if (!active) return;
+      if (active.frame !== null) cancelAnimationFrame(active.frame);
+      setDragStyles(false);
     },
     []
   );
@@ -74,22 +83,42 @@ export function RuleListSplitter({ rowRef, listRef, listId, onResize }: RuleList
     return { rem, px: width(listRef), bounds: ruleListBounds(width(rowRef), rem) };
   };
 
+  // A drag moves the list by writing `--rule-list-width` on the row (no React render per pointer move, which would
+  // re-render the whole Rules tab), at most once per animation frame; the width is committed on release.
+  const applyDrag = () => {
+    const active = drag.current;
+    if (!active) return;
+    active.frame = null;
+    const px = clampRuleListWidth(active.startPx + active.clientX - active.startX, ruleListBounds(active.rowPx, active.remPx));
+    active.rem = px / active.remPx;
+    rowRef.current?.style.setProperty('--rule-list-width', `${String(active.rem)}rem`);
+    handleRef.current?.setAttribute('aria-valuenow', String(Math.round(px)));
+    handleRef.current?.setAttribute('aria-valuetext', ruleListValueText(px, active.rowPx, active.remPx));
+  };
+
   const endDrag = () => {
     const ended = drag.current;
     if (!ended) return;
+    if (ended.frame !== null) {
+      cancelAnimationFrame(ended.frame);
+      applyDrag();
+    }
     drag.current = null;
     setDragging(false);
     setDragStyles(false);
-    if (ended.rem !== null) onResize(ended.rem, true);
+    setSize({ row: width(rowRef), list: width(listRef), rem: rootFontPx() });
+    if (ended.rem !== null) onResize(ended.rem);
   };
 
   return (
     <div
+      ref={handleRef}
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize the rule list"
       aria-controls={listId}
       aria-valuenow={Math.round(size.list)}
+      aria-valuetext={ruleListValueText(size.list, size.row, size.rem)}
       aria-valuemin={Math.round(bounds.min)}
       aria-valuemax={Math.round(bounds.max)}
       title="Drag to resize the rule list; double-click to reset"
@@ -101,30 +130,37 @@ export function RuleListSplitter({ rowRef, listRef, listId, onResize }: RuleList
         // No text selection or native drag from the press.
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
-        drag.current = { pointerId: event.pointerId, startX: event.clientX, startPx: width(listRef), rem: null };
+        drag.current = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startPx: width(listRef),
+          rowPx: width(rowRef),
+          remPx: rootFontPx(),
+          clientX: event.clientX,
+          frame: null,
+          rem: null,
+        };
         setDragging(true);
         setDragStyles(true);
       }}
       onPointerMove={(event) => {
         const active = drag.current;
         if (active?.pointerId !== event.pointerId) return;
-        const { rem, bounds: now } = current();
-        const px = clampRuleListWidth(active.startPx + event.clientX - active.startX, now);
-        active.rem = px / rem;
-        onResize(active.rem, false);
+        active.clientX = event.clientX;
+        active.frame ??= requestAnimationFrame(applyDrag);
       }}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onLostPointerCapture={endDrag}
       onDoubleClick={() => {
-        onResize(null, true);
+        onResize(null);
       }}
       onKeyDown={(event) => {
         const { rem, px, bounds: now } = current();
         const next = ruleListWidthForKey(event.key, event.shiftKey, px, now, rem);
         if (next === null) return;
         event.preventDefault();
-        onResize(next / rem, true);
+        onResize(next / rem);
       }}
     >
       <span

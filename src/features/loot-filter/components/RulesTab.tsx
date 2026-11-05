@@ -87,7 +87,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
     // Two panes from lg: the list is `--rule-list-width` wide, kept between 18rem and 60% of the row (the clamp also
     // holds when the window shrinks). The default grows on Wide and Full pages (`/page` container steps, see PageShell;
     // Standard pages never reach @8xl), so summaries truncate less and RuleEditor fills the rest with more columns.
-    // Moving the splitter sets the width inline.
+    // Moving the splitter sets the width inline (straight on the element while dragging, as state once released).
     <div
       ref={rowRef}
       className={cn(
@@ -174,9 +174,9 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
           rowRef={rowRef}
           listRef={listRef}
           listId={RULE_LIST_ID}
-          onResize={(rem, commit) => {
+          onResize={(rem) => {
             setListWidth(rem);
-            if (commit) writeRuleListWidth(rem);
+            writeRuleListWidth(rem);
           }}
         />
       </section>
