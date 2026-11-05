@@ -4,9 +4,11 @@ import createSagaMiddleware from 'redux-saga';
 import type { PersistentStorage } from '@/core/hooks/usePersistentState';
 import { parseLootFilter } from '../engine/parse';
 import { LIBRARY_STORAGE_KEY } from './libraryStorage';
-import { EDITOR_FLUSH_DELAY_MS, createLootFilterSaga } from './lootFilterSaga';
+import { EDITOR_FLUSH_DELAY_MS, createLootFilterSaga, isEditorMutation } from './lootFilterSaga';
+import * as slice from './lootFilterSlice';
 import reducer, {
   addRules,
+  chooseRuleStyle,
   close,
   createBlank,
   discardChanges,
@@ -136,6 +138,72 @@ describe('lootFilterSaga', () => {
     const stored = parseLootFilter(storedEntries(storage)[0].text).filter;
     expect(stored.rules.map((rule) => rule.useStyle)).toEqual(['SetItem']);
     expect(Object.keys(stored.styles ?? {})).toEqual(['SetItem']);
+  });
+
+  it('flushes a style picked in the rule editor (chooseRuleStyle) and its undo', async () => {
+    const storage = testStorage([
+      { ...STORED, text: '{"formatVersion": 1, "title": "Stored", "rules": [{"comment": "r", "labelBackground": [1, 2, 3]}]}' },
+    ]);
+    const { store } = setup(storage);
+    store.dispatch(open('stored'));
+    store.dispatch(
+      chooseRuleStyle({
+        index: 0,
+        patch: { useStyle: 'UniqueItem', labelBackground: undefined },
+        addStyle: { name: 'UniqueItem', style: { labelBackground: [9, 9, 9] } },
+      })
+    );
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS + 50);
+    expect(store.getState().lootFilter.editor.dirty).toBe(false);
+    const stored = parseLootFilter(storedEntries(storage)[0].text).filter;
+    expect(stored.rules[0]).toEqual({ comment: 'r', useStyle: 'UniqueItem' });
+    expect(Object.keys(stored.styles ?? {})).toEqual(['UniqueItem']);
+
+    store.dispatch(
+      chooseRuleStyle({
+        index: 0,
+        patch: { useStyle: undefined, labelBackground: [1, 2, 3] },
+        removeStyleIfUnused: 'UniqueItem',
+        ifUseStyle: { value: 'UniqueItem' },
+      })
+    );
+    await vi.advanceTimersByTimeAsync(EDITOR_FLUSH_DELAY_MS + 50);
+    const undone = parseLootFilter(storedEntries(storage)[0].text).filter;
+    expect(undone.rules[0]).toEqual({ comment: 'r', labelBackground: [1, 2, 3] });
+    expect(undone.styles).toBeUndefined();
+  });
+
+  it('classifies every slice action: an editor edit starts the flush, the rest are known non-edits', () => {
+    // A new reducer that edits the open filter must be added to `isEditorMutation` (else its edit is only kept in
+    // memory until another edit flushes it); one that does not goes here.
+    const notEditorEdits = new Set([
+      'hydrate',
+      'createBlank',
+      'importText',
+      'duplicate',
+      'rename',
+      'remove',
+      'editorFlushed',
+      'flushNow',
+      'open',
+      'openSaved',
+      'openSandbox',
+      'close',
+      'saveSucceeded',
+      'savedFilterRenamed',
+      'discardChanges',
+      'copyToMyFilters',
+      'takeUpdate',
+      'selectRule',
+    ]);
+    // The module's action creators (functions with a `type` and `match`), by export name.
+    const creators: (readonly [string, string])[] = [];
+    for (const [name, value] of Object.entries(slice) as [string, unknown][])
+      if (typeof value === 'function' && 'match' in value && 'type' in value && typeof value.type === 'string')
+        creators.push([name, value.type]);
+    expect(creators.length).toBeGreaterThan(notEditorEdits.size);
+    const unclassified = creators.filter(([name, type]) => notEditorEdits.has(name) === isEditorMutation({ type })).map(([name]) => name);
+    expect(unclassified).toEqual([]);
   });
 
   it('selecting a rule is not an edit', async () => {

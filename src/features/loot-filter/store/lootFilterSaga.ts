@@ -15,6 +15,7 @@ import { readLibrary, writeLibrary } from './libraryStorage';
 import {
   addRule,
   addRules,
+  chooseRuleStyle,
   close,
   copyToMyFilters,
   createBlank,
@@ -53,8 +54,12 @@ import type { LootFilterEntry, LootFilterState } from './types';
 export const EDITOR_FLUSH_DELAY_MS = 400;
 const STORAGE_FULL_MESSAGE = 'Could not save: browser storage is full';
 
-/** Editor actions that change the model (selection is not an edit). */
-const isEditorMutation = isAnyOf(
+/**
+ * Editor actions that change the model (selection is not an edit): each one starts the debounced flush into the
+ * library, so a reducer missing here keeps its edit in memory only until the next listed one (lootFilterSaga.test.ts
+ * checks that every slice action is either here or a known non-edit).
+ */
+export const isEditorMutation = isAnyOf(
   setHeader,
   setFilterLevels,
   renumberLevel,
@@ -64,6 +69,7 @@ const isEditorMutation = isAnyOf(
   addRules,
   updateRule,
   patchRule,
+  chooseRuleStyle,
   setRuleDisabled,
   removeRule,
   moveRule,
