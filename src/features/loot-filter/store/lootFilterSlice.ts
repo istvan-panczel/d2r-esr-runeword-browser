@@ -21,6 +21,7 @@ import { basedOnFromRow, sharedBasedOn } from '../utils/basedOn';
 import { createBlankFilter } from '../utils/blankFilter';
 import { newEntryId } from '../utils/ids';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
+import type { StyleChoiceEdit } from '../utils/styleChoice';
 import type { EditorTarget, LootFilterBasedOn, LootFilterEditorState, LootFilterEntry, LootFilterSource, LootFilterState } from './types';
 
 type State = LootFilterState;
@@ -728,6 +729,33 @@ const lootFilterSlice = createSlice({
     },
 
     /**
+     * A rule's Style dropdown (`utils/styleChoice.ts` `planStyleChoice`), one edit: patches the rule (`useStyle` and the
+     * own keys the style sets), adds a picked preset the filter lacks (never overwriting a style of that name) and, for
+     * the undo, removes an added preset no rule uses any more. `ifUseStyle`: a no-op unless the rule's `useStyle` is that.
+     */
+    chooseRuleStyle(state, action: PayloadAction<StyleChoiceEdit & { readonly index: number }>): State {
+      const { index, patch, addStyle, removeStyleIfUnused, ifUseStyle } = action.payload;
+      return editFilter(state, (filter) => {
+        const { rules } = filter;
+        if (!isIndex(index, rules.length)) return undefined;
+        if (ifUseStyle !== undefined && rules[index].useStyle !== ifUseStyle.value) return undefined;
+        const nextRules = [...rules];
+        nextRules[index] = applyPatch(rules[index], patch);
+        let styles = filter.styles;
+        if (addStyle !== undefined && addStyle.name !== '' && !Object.hasOwn(styles ?? {}, addStyle.name))
+          styles = { ...styles, [addStyle.name]: addStyle.style };
+        if (
+          removeStyleIfUnused !== undefined &&
+          styles !== undefined &&
+          Object.hasOwn(styles, removeStyleIfUnused) &&
+          !nextRules.some((rule) => rule.useStyle === removeStyleIfUnused)
+        )
+          styles = nonEmpty(Object.fromEntries(Object.entries(styles).filter(([name]) => name !== removeStyleIfUnused)));
+        return applyPatch({ ...filter, rules: nextRules }, { styles });
+      });
+    },
+
+    /**
      * Switches a rule off or on. A disabled rule keeps its place in `rules` (indices and the selection stay put) and is
      * written to `disabledRules`; the flag is not a rule key, so the rule's passthrough is untouched. Same value: no-op.
      */
@@ -867,6 +895,7 @@ export const {
   addRules,
   updateRule,
   patchRule,
+  chooseRuleStyle,
   setRuleDisabled,
   removeRule,
   moveRule,

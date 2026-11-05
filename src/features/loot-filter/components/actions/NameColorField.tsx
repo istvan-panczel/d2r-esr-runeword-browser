@@ -1,10 +1,9 @@
+import type { ReactNode } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { COLOR_CODES, colorCodeRgb, findColorCode } from '../../engine/colors';
-import { resolveText } from '../../engine/text';
+import { COLOR_CODES, colorCodeRgb } from '../../engine/colors';
 import type { FilterText } from '../../engine/types';
 import { nameColorCode, nameColorText } from '../../utils/ruleView';
 import { Field } from '../Field';
-import { FromStyleHint } from './FromStyleHint';
 
 const NO_COLOR = '__none';
 
@@ -20,57 +19,37 @@ interface NameColorFieldProps {
   readonly id: string;
   /** Whose replaceName it edits, for the wording. */
   readonly owner?: 'rule' | 'style';
-  /** The rule's (or style's) own replaceName. */
+  /** The replaceName the field shows: the rule's (or style's) own, else the rule's style's. */
   readonly replaceName: FilterText | undefined;
-  /** The replaceName the rule's style gives when the rule sets none, with the style's name. */
-  readonly fromStyle?: { readonly styleName: string; readonly replaceName: FilterText };
+  /** The rule's style sets a replaceName: no None (Reset to style brings the style's back). */
+  readonly fromStyle?: boolean;
+  /** After the label (the style mark). */
+  readonly badge?: ReactNode;
   readonly onChange: (replaceName: string | undefined) => void;
-}
-
-/** A style's replaceName as the hint shows it: `ÿc4{name}` (gold), or the text it writes. */
-export function StyleNameValue({ replaceName }: { readonly replaceName: FilterText }) {
-  const code = nameColorCode(replaceName);
-  const text = resolveText(replaceName) ?? '';
-  return (
-    <>
-      {code !== undefined && <Swatch code={code} />}
-      <code className="break-all">{text}</code>
-      {code !== undefined && <span>({findColorCode(code)?.name})</span>}
-    </>
-  );
 }
 
 /**
  * The Basic view's name colour: a colour code select over `replaceName: "ÿc<code>{name}"` (the game's own name in
  * that colour). A replaceName with other text is not this control's: it is disabled and points to Replace name.
- * When the rule sets none, the hint shows what its style gives. A style's editor uses it too (`owner="style"`).
+ * A style's editor uses it too (`owner="style"`).
  */
-export function NameColorField({ id, owner = 'rule', replaceName, fromStyle, onChange }: NameColorFieldProps) {
+export function NameColorField({ id, owner = 'rule', replaceName, fromStyle = false, badge, onChange }: NameColorFieldProps) {
   const code = nameColorCode(replaceName);
   const custom = replaceName !== undefined && code === undefined;
   let none: string;
-  if (fromStyle !== undefined) none = 'None: the style’s name applies.';
+  if (fromStyle) none = 'The style gives this rule its name colour; another colour here overrides it.';
   else if (owner === 'style')
     none = 'None: this style writes no name; a rule that uses it keeps its own name colour, an earlier rule’s or the game’s.';
   else none = 'None: this rule writes no name; the item keeps an earlier rule’s name or the game’s quality colour.';
-  let hint: React.ReactNode;
-  if (custom) hint = `This ${owner} replaces the name with its own text: edit it under Replace name.`;
-  else
-    hint = (
-      <>
-        {replaceName === undefined && fromStyle !== undefined && (
-          <FromStyleHint styleName={fromStyle.styleName}>
-            <StyleNameValue replaceName={fromStyle.replaceName} />
-            <span>A colour here overrides it for this rule.</span>
-          </FromStyleHint>
-        )}
-        <span className="block">
-          Written as a whole new name (replaceName ÿc&lt;code&gt;{'{name}'}), so a later rule&apos;s replaceName overrides it. {none}
-        </span>
-      </>
-    );
+  const hint = custom ? (
+    'The name is replaced with other text: edit it under Replace name.'
+  ) : (
+    <>
+      Written as a whole new name (replaceName ÿc&lt;code&gt;{'{name}'}), so a later rule&apos;s replaceName overrides it. {none}
+    </>
+  );
   return (
-    <Field id={id} label="Name colour" hint={hint}>
+    <Field id={id} label="Name colour" hint={hint} badge={badge}>
       <Select
         value={custom ? '' : (code ?? NO_COLOR)}
         disabled={custom}
@@ -82,9 +61,7 @@ export function NameColorField({ id, owner = 'rule', replaceName, fromStyle, onC
           <SelectValue placeholder="Custom name" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={NO_COLOR}>
-            {fromStyle === undefined ? `None (no name colour from this ${owner})` : 'None (the style’s name)'}
-          </SelectItem>
+          {!fromStyle && <SelectItem value={NO_COLOR}>None (no name colour from this {owner})</SelectItem>}
           {COLOR_CODES.map((entry) => (
             <SelectItem key={entry.code} value={entry.code}>
               <Swatch code={entry.code} />

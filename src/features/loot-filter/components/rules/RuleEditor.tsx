@@ -10,16 +10,17 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { effectiveActions } from '../../engine/actions';
+import { effectiveActions, findStyle } from '../../engine/actions';
 import { ACTION_KEYS } from '../../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterRule, RuleActions, StatCheck } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
-import { addRule, patchRule, setRuleDisabled } from '../../store/lootFilterSlice';
+import { addRule, chooseRuleStyle, patchRule, setRuleDisabled } from '../../store/lootFilterSlice';
 import { inGameCheckRule, isInGameCheckRule, REPORT_STAT_URL } from '../../utils/inGameCheck';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, QUALITY_SCALE } from '../../utils/matchValues';
 import { isExceptionCheck, PLAIN_HIDE_ROW_OPS, plainCheckCount, readsExceptions, ruleStatQuirk } from '../../utils/statChecks';
 import type { ShallowPatch } from '../../utils/patch';
 import { HIDE_ONLY_STATS, ruleFieldGate, type ConditionField as GatedCondition } from '../../utils/ruleView';
+import { planStyleChoice, styleChoiceMessage, type StyleTarget } from '../../utils/styleChoice';
 import { ActionsEditor } from '../actions/ActionsEditor';
 import { AreaPicker, ItemPicker, ItemTypePicker, UniqueOrSetPicker } from '../pickers';
 import { AdvancedBadge } from './AdvancedBadge';
@@ -228,9 +229,26 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   const isCheck = isInGameCheckRule(rule);
   // Basic / Advanced: which fields show (a set Advanced field always shows in Basic, tagged).
   const view = useSelector(selectRuleView);
-  const gate = ruleFieldGate({ view, rule, hides, diagnostics });
+  const gate = ruleFieldGate({ view, rule, hides, diagnostics, style: findStyle(rule, filter) });
   const shows = (field: GatedCondition) => gate.condition(field) !== 'hidden';
   const badge = (field: GatedCondition) => (gate.condition(field) === 'advanced' ? <AdvancedBadge /> : undefined);
+  // Style first, then tweak: the pick clears the rule's own values for what the style sets, with an exact Undo.
+  const chooseStyle = (target: StyleTarget) => {
+    const plan = planStyleChoice(rule, filter, target);
+    dispatch(chooseRuleStyle({ index, ...plan.apply }));
+    const message = styleChoiceMessage(plan, rule);
+    if (message === null) return;
+    toast.success(message.title, {
+      description: message.description,
+      duration: 10_000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          dispatch(chooseRuleStyle({ index, ...plan.undo }));
+        },
+      },
+    });
+  };
   const addCheck = () => {
     if (!check.ok) return;
     dispatch(addRule({ rule: check.rule, at: index }));
@@ -578,7 +596,14 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
           <CardTitle>Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ActionsEditor actions={pickActions(rule)} onChange={(value) => patch(value)} filter={filter} owner="rule" gate={gate} />
+          <ActionsEditor
+            actions={pickActions(rule)}
+            onChange={(value) => patch(value)}
+            onChooseStyle={chooseStyle}
+            filter={filter}
+            owner="rule"
+            gate={gate}
+          />
           <MoreInAdvanced count={gate.hiddenActions} noun="action" toggleId={VIEW_TOGGLE_ID} />
         </CardContent>
       </Card>

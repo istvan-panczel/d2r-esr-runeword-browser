@@ -149,6 +149,20 @@ describe('actionFieldGate (a style)', () => {
     expect(ACTION_EDITOR_FIELDS.map((field) => gate.action(field))).toEqual(ACTION_EDITOR_FIELDS.map((field) => ruleGate.action(field)));
     expect(gate.hiddenActions).toBe(ruleGate.hiddenActions);
   });
+
+  it("counts a key the rule's style sets as set: it shows in Basic, tagged when Advanced", () => {
+    const style: LootFilterStyle = { namePrefix: '* ', droplight: {}, replaceName: 'ÿc4{name}', useStyle: 'Other' };
+    const gate = ruleFieldGate({ view: 'basic', rule: { useStyle: 'Gold' }, hides: false, style });
+    expect(gate.action('namePrefix')).toBe('advanced');
+    expect(gate.action('droplight')).toBe('advanced');
+    expect(gate.action('nameSuffix')).toBe('hidden');
+    // A name colour from the style belongs to Name colour; a custom name from it shows Replace name.
+    expect(gate.action('replaceName')).toBe('hidden');
+    expect(ruleFieldGate({ view: 'basic', rule: {}, hides: false, style: { replaceName: 'Shiny' } }).action('replaceName')).toBe(
+      'advanced'
+    );
+    expect(ruleFieldGate({ view: 'basic', rule: { replaceName: 'Mine' }, hides: false, style }).action('replaceName')).toBe('advanced');
+  });
 });
 
 describe('the field tables', () => {

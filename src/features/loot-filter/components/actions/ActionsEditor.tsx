@@ -5,27 +5,33 @@ import type { LootFilter, RuleActions } from '../../engine/types';
 import { effectiveActions, findStyle, previewLabelText } from '../../utils/effectiveActions';
 import type { ShallowPatch } from '../../utils/patch';
 import type { ActionField, ActionFieldGate } from '../../utils/ruleView';
+import type { StyleKey, StyleTarget } from '../../utils/styleChoice';
 import { CheckField, Field } from '../Field';
 import { LabelPreview } from '../LabelPreview';
 import { AdvancedBadge } from '../rules/AdvancedBadge';
 import { ColorControl } from './ColorControl';
 import { ColorTextField } from './ColorTextField';
-import { FromStyleHint } from './FromStyleHint';
 import { IconField } from './IconField';
 import { LabelSection } from './LabelSection';
-import { NameColorField, StyleNameValue } from './NameColorField';
+import { NameColorField } from './NameColorField';
 import { Section } from './Section';
 import { SoundField } from './SoundField';
 import { StyleSection } from './StyleSection';
+import { styleValues } from './styleValues';
 
 export interface ActionsEditorProps {
   /** The actions being edited (a rule's own actions, or a style's). */
   readonly actions: RuleActions;
   /** Shallow patch: a key with `undefined` removes it. The caller dispatches `patchRule` or `setStyle`. */
   readonly onChange: (patch: ShallowPatch<RuleActions>) => void;
+  /**
+   * A rule's Style dropdown pick (rules only): the caller sets `useStyle`, clears the rule's own values for the keys
+   * the style sets and adds a picked preset (`utils/styleChoice.ts`), with an Undo toast.
+   */
+  readonly onChooseStyle?: (target: StyleTarget) => void;
   /** The whole filter, for the style list (`useStyle`), the quality colours and the label preview. */
   readonly filter: LootFilter;
-  /** `rule`: offers `useStyle` and previews the style's actions underneath; `style`: no `useStyle`. */
+  /** `rule`: offers `useStyle` and shows the style's values in the fields it sets; `style`: no `useStyle`. */
   readonly owner: 'rule' | 'style';
   /** Name of the style being edited (for the preview heading); unused for rules. */
   readonly styleName?: string;
@@ -56,29 +62,25 @@ const TILE_COLUMNS = {
  * Form for every action key of the guide (names, label colours, chat, notify, sound, icon, droplight,
  * useStyle, hide…), shared by the rule editor and the Styles tab. Each control sends a shallow patch;
  * `passthrough` is never touched. A rule's `comment` belongs to the rule editor; a style's is edited here.
+ *
+ * On a rule with a style, every field the style sets shows the style's value ("from style X"); editing it writes the
+ * rule's own override ("changed from style X", Reset to style). One helper (`styleValues`) does it for every field.
  */
-export function ActionsEditor({ actions, onChange, filter, owner, styleName, gate }: ActionsEditorProps) {
+export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner, styleName, gate }: ActionsEditorProps) {
   const idPrefix = owner === 'style' ? `loot-filter-style-${(styleName ?? '').replace(/[^A-Za-z0-9_-]/g, '_')}` : 'loot-filter-rule';
   const id = (key: string) => `${idPrefix}-${key}`;
-  const flag = (value: boolean) => (value ? true : undefined);
   const shows = (field: ActionField) => (gate?.action(field) ?? 'shown') !== 'hidden';
-  const badge = (field: ActionField) => (gate?.action(field) === 'advanced' ? <AdvancedBadge owner={owner} /> : undefined);
+  const advanced = (field: ActionField) => (gate?.action(field) === 'advanced' ? <AdvancedBadge owner={owner} /> : undefined);
   const basic = gate?.view === 'basic';
 
   const effective = owner === 'rule' ? effectiveActions(actions, filter) : actions;
   const style = owner === 'rule' ? findStyle(actions, filter) : undefined;
-  // What the style gives for a key the rule leaves empty: shown under that control, so an empty one does not mislead.
-  const usedStyle = actions.useStyle;
-  const inherited = <K extends keyof RuleActions>(key: K): RuleActions[K] | undefined =>
-    style !== undefined && actions[key] === undefined ? style[key] : undefined;
-  const styleReplaceName = inherited('replaceName');
-  const nameFromStyle =
-    usedStyle !== undefined && styleReplaceName !== undefined ? { styleName: usedStyle, replaceName: styleReplaceName } : undefined;
-  const labelFromStyle =
-    usedStyle === undefined || style === undefined
-      ? undefined
-      : { styleName: usedStyle, labelBackground: inherited('labelBackground'), labelBorder: inherited('labelBorder') };
+  const values = styleValues(actions, style, owner === 'rule' ? actions.useStyle : undefined, onChange);
+  const { value, change } = values;
+  /** The label extras of a field: its "advanced" tag and its style mark. */
+  const badge = (key: StyleKey) => values.badge(key, advanced(key));
   const dropFormat = resolveText(filter.notifications?.dropFormat) ?? DEFAULT_DROP_FORMAT;
+  const droplight = value('droplight');
 
   return (
     <div className={cn('flex flex-col gap-4 @8xl/page:grid', TILE_COLUMNS[owner])}>
@@ -102,7 +104,16 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
       </div>
 
       {owner === 'rule' && shows('useStyle') && (
-        <StyleSection idPrefix={idPrefix} actions={actions} filter={filter} onChange={onChange} badge={badge('useStyle')} />
+        <StyleSection
+          idPrefix={idPrefix}
+          actions={actions}
+          filter={filter}
+          onChoose={(target) => {
+            if (onChooseStyle) onChooseStyle(target);
+            else onChange({ useStyle: target.kind === 'none' ? undefined : target.kind === 'style' ? target.name : target.preset.name });
+          }}
+          badge={advanced('useStyle')}
+        />
       )}
 
       <Section title="Visibility">
@@ -111,9 +122,10 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
             id={id('hide')}
             label="Hide"
             hint="Hides the ground label; no later rule runs, and no rule can show it again."
-            checked={actions.hide === true}
-            onChange={(value) => {
-              onChange({ hide: flag(value) });
+            checked={value('hide') === true}
+            badge={values.badge('hide')}
+            onChange={(checked) => {
+              change({ hide: values.flag('hide', checked) });
             }}
           />
           {shows('hideIfOtherConditionsFail') && (
@@ -121,10 +133,10 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
               id={id('hide-if-other-fail')}
               label="Hide if other conditions fail"
               hint="When codes, types and location match but another condition fails, the item is hidden."
-              checked={actions.hideIfOtherConditionsFail === true}
+              checked={value('hideIfOtherConditionsFail') === true}
               badge={badge('hideIfOtherConditionsFail')}
-              onChange={(value) => {
-                onChange({ hideIfOtherConditionsFail: flag(value) });
+              onChange={(checked) => {
+                change({ hideIfOtherConditionsFail: values.flag('hideIfOtherConditionsFail', checked) });
               }}
             />
           )}
@@ -135,12 +147,12 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
             label="Chat line when hidden"
             context="chat"
             defaultColor="0"
-            value={actions.chatMessageWhenHidden}
+            value={value('chatMessageWhenHidden')}
             placeholder="ÿc5Hidden: {name}"
             hint="Printed when this rule hides the item."
             badge={badge('chatMessageWhenHidden')}
             onChange={(chatMessageWhenHidden) => {
-              onChange({ chatMessageWhenHidden });
+              change({ chatMessageWhenHidden });
             }}
           />
         )}
@@ -152,10 +164,11 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
           <NameColorField
             id={id('name-color')}
             owner={owner}
-            replaceName={actions.replaceName}
-            fromStyle={nameFromStyle}
+            replaceName={value('replaceName')}
+            fromStyle={values.fromStyle('replaceName')}
+            badge={values.badge('replaceName')}
             onChange={(replaceName) => {
-              onChange({ replaceName });
+              change({ replaceName });
             }}
           />
         )}
@@ -164,22 +177,12 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
             id={id('replace-name')}
             label="Replace name"
             context="names"
-            value={actions.replaceName}
+            value={value('replaceName')}
             placeholder="{name}"
-            hint={
-              <>
-                {nameFromStyle !== undefined && (
-                  <FromStyleHint styleName={nameFromStyle.styleName}>
-                    <StyleNameValue replaceName={nameFromStyle.replaceName} />
-                    <span>A name here overrides it for this rule.</span>
-                  </FromStyleHint>
-                )}
-                <span className="block">A new name; {'{name}'} is the game&apos;s own. A later rule&apos;s replaceName overrides it.</span>
-              </>
-            }
+            hint={<>A new name; {'{name}'} is the game&apos;s own. A later rule&apos;s replaceName overrides it.</>}
             badge={badge('replaceName')}
             onChange={(replaceName) => {
-              onChange({ replaceName });
+              change({ replaceName });
             }}
           />
         )}
@@ -190,11 +193,11 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
                 id={id('name-prefix')}
                 label="Prefix"
                 context="names"
-                value={actions.namePrefix}
+                value={value('namePrefix')}
                 placeholder="ÿc1* "
                 badge={badge('namePrefix')}
                 onChange={(namePrefix) => {
-                  onChange({ namePrefix });
+                  change({ namePrefix });
                 }}
               />
             )}
@@ -203,11 +206,11 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
                 id={id('name-suffix')}
                 label="Suffix"
                 context="names"
-                value={actions.nameSuffix}
+                value={value('nameSuffix')}
                 placeholder=" ({sockets})"
                 badge={badge('nameSuffix')}
                 onChange={(nameSuffix) => {
-                  onChange({ nameSuffix });
+                  change({ nameSuffix });
                 }}
               />
             )}
@@ -215,7 +218,12 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
         )}
       </Section>
 
-      <LabelSection idPrefix={idPrefix} actions={actions} onChange={onChange} fromStyle={labelFromStyle} />
+      <LabelSection
+        idPrefix={idPrefix}
+        background={{ value: value('labelBackground'), badge: badge('labelBackground'), fromStyle: values.fromStyle('labelBackground') }}
+        border={{ value: value('labelBorder'), badge: badge('labelBorder'), fromStyle: values.fromStyle('labelBorder') }}
+        onChange={change}
+      />
 
       <Section title="Chat">
         <ColorTextField
@@ -223,11 +231,12 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
           label="Chat line"
           context="chat"
           defaultColor="0"
-          value={actions.chatMessage}
+          value={value('chatMessage')}
           placeholder="ÿc4Drop: {link}"
           hint="Printed when the item drops; replaces the drop line of notify."
+          badge={badge('chatMessage')}
           onChange={(chatMessage) => {
-            onChange({ chatMessage });
+            change({ chatMessage });
           }}
         />
         {shows('notify') && (
@@ -240,10 +249,10 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
                 {effective.chatMessage !== undefined ? ' (the chat line above replaces it).' : '.'}
               </>
             }
-            checked={actions.notify === true}
+            checked={value('notify') === true}
             badge={badge('notify')}
-            onChange={(value) => {
-              onChange({ notify: flag(value) });
+            onChange={(checked) => {
+              change({ notify: values.flag('notify', checked) });
             }}
           />
         )}
@@ -252,14 +261,17 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
       <Section title="Sound">
         <SoundField
           idPrefix={idPrefix}
-          sound={actions.sound}
-          soundVolume={actions.soundVolume}
+          sound={value('sound')}
+          soundVolume={value('soundVolume')}
           filterVolume={filter.soundVolume}
+          badge={badge('sound')}
+          volumeBadge={badge('soundVolume')}
+          fromStyle={values.fromStyle('sound')}
           onSoundChange={(sound) => {
-            onChange({ sound });
+            change({ sound });
           }}
           onVolumeChange={(soundVolume) => {
-            onChange({ soundVolume });
+            change({ soundVolume });
           }}
         />
       </Section>
@@ -267,9 +279,11 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
       <Section title="Minimap icon">
         <IconField
           idPrefix={idPrefix}
-          icon={actions.icon}
+          icon={value('icon')}
+          badge={badge('icon')}
+          fromStyle={values.fromStyle('icon')}
           onChange={(icon) => {
-            onChange({ icon });
+            change({ icon });
           }}
         />
       </Section>
@@ -279,22 +293,27 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName, gat
           <CheckField
             id={id('droplight')}
             label="Droplight"
-            hint="A beam of light with a sparkle on the item. HD graphics only."
-            checked={actions.droplight !== undefined}
+            hint={
+              values.fromStyle('droplight')
+                ? 'A beam of light with a sparkle on the item. HD graphics only. The style gives it: change its tint here, or pick another style to drop it.'
+                : 'A beam of light with a sparkle on the item. HD graphics only.'
+            }
+            checked={droplight !== undefined}
+            disabled={values.fromStyle('droplight')}
             badge={badge('droplight')}
-            onChange={(value) => {
-              onChange({ droplight: value ? {} : undefined });
+            onChange={(checked) => {
+              change({ droplight: checked ? {} : undefined });
             }}
           />
-          {actions.droplight !== undefined && (
+          {droplight !== undefined && (
             <Field id={id('droplight-color')} label="Tint">
               <ColorControl
                 id={id('droplight-color')}
                 label="droplight tint"
-                value={actions.droplight.color}
+                value={droplight.color}
                 noneLabel="the game's white beam"
                 onChange={(color) => {
-                  onChange({ droplight: color === undefined ? {} : { color: [color[0], color[1], color[2]] } });
+                  change({ droplight: color === undefined ? {} : { color: [color[0], color[1], color[2]] } });
                 }}
               />
             </Field>
