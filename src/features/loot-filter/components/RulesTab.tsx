@@ -63,6 +63,8 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
     hiddenCount > 0 ? `${String(hiddenCount)} hidden by search` : undefined,
   ].filter((note) => note !== undefined);
 
+  const pendingEntry = pendingDelete === null ? undefined : all.at(pendingDelete);
+
   const rule = selectedRule === null ? undefined : filter.rules.at(selectedRule);
   const ruleDiagnostics = selectedRule === null ? [] : diagnostics.filter((diagnostic) => diagnostic.rule === selectedRule);
 
@@ -202,7 +204,15 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
         open={deleteOpen}
         name={pendingDelete === null ? null : `rule ${String(pendingDelete + 1)}`}
         title={pendingDelete === null ? 'Delete rule?' : `Delete rule ${String(pendingDelete + 1)}?`}
-        description={<span className="break-words">{pendingDelete === null ? '' : (all.at(pendingDelete)?.summary ?? '')}</span>}
+        description={
+          // As the row reads: the comment (when there is one) over the summary.
+          <>
+            {pendingEntry?.rule.comment !== undefined && pendingEntry.rule.comment.trim() !== '' && (
+              <span className="block font-medium break-words text-foreground">{pendingEntry.rule.comment}</span>
+            )}
+            <span className="block break-words">{pendingEntry?.summary ?? ''}</span>
+          </>
+        }
         onCancel={() => {
           setDeleteOpen(false);
         }}

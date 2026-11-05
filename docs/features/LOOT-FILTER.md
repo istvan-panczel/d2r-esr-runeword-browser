@@ -548,10 +548,13 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
 Mythical`: items/types/uniques by name when the bundles are in, codes otherwise, then quality, tier, flags, item level,
   sockets, stats, difficulty, areas, and the main action: `hide`, `→ style X`, the stripped replaceName/prefix/suffix or
-  chat line), badges for `hide`, `useStyle`, `activeInLevels` (`L1,3`) and a non-default `location`, the comment, and a
-  red/amber dot for the rule's worst diagnostic. A disabled rule's row is dimmed and has a dashed "disabled" badge
-  first. Move up, move down, disable/enable (`PowerOff`/`Power`, "Disable rule N" / "Enable rule N",
-  `aria-pressed`), duplicate and delete (asks first) are icon buttons
+  chat line), badges for `hide`, `useStyle`, `activeInLevels` (`L1,3`) and a non-default `location`, and a
+  red/amber dot for the rule's worst diagnostic. **Comment first**: a rule with a (non-blank) comment shows the comment
+  as the main line (`text-sm`) and the summary as a thin grey line under it (`text-xs`, truncated, the full text as
+  its tooltip); without one the summary is the main line. The search matches both. A disabled rule's row is dimmed
+  and has a dashed "disabled" badge first. Move up, move down, disable/enable (`PowerOff`/`Power`, "Disable rule N" /
+  "Enable rule N", `aria-pressed`), duplicate and delete (asks first, the dialog showing the comment over the
+  summary, as the row does) are icon buttons
   that float over the row on hover/focus with a mouse and are always shown on touch and on the selected row. The
   selected row is scrolled into view when the selection changes elsewhere (the JSON tab's "Rule N" link).
 - **Editor** (`RuleEditor`, remounted per rule): "Rule N" (with a "disabled" badge), an **Enabled** checkbox (hint:

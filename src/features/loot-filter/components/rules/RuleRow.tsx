@@ -25,8 +25,9 @@ export interface RuleRowProps {
 }
 
 /**
- * One rule: number, summary, badges and a problem dot (a disabled rule is dimmed with a "disabled" badge); move,
- * disable/enable, duplicate and delete on hover/focus (always on touch).
+ * One rule: number, the comment as the main line with the summary in small grey under it (no comment: the summary is
+ * the main line), badges and a problem dot (a disabled rule is dimmed with a "disabled" badge); move, disable/enable,
+ * duplicate and delete on hover/focus (always on touch).
  */
 export function RuleRow({
   index,
@@ -48,6 +49,8 @@ export function RuleRow({
   const location = locationBadge(rule.location);
   const number = String(index + 1);
   const isCheck = isInGameCheckRule(rule);
+  // The author's words first when there are any: the summary under it is the generated detail.
+  const comment = rule.comment === undefined || rule.comment.trim() === '' ? undefined : rule.comment;
   const hasBadges =
     disabled || isCheck || rule.hide === true || rule.useStyle !== undefined || levels !== undefined || location !== undefined;
 
@@ -74,8 +77,8 @@ export function RuleRow({
         <span className="w-7 shrink-0 pt-px text-right font-mono text-xs text-muted-foreground tabular-nums">{number}</span>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-sm" title={summary}>
-              {summary}
+            <span className="truncate text-sm" title={comment ?? summary}>
+              {comment ?? summary}
             </span>
             {severity !== undefined && (
               <span
@@ -86,7 +89,12 @@ export function RuleRow({
               />
             )}
           </span>
-          {(hasBadges || rule.comment !== undefined) && (
+          {comment !== undefined && (
+            <span className="-mt-0.5 truncate text-xs text-muted-foreground" title={summary}>
+              {summary}
+            </span>
+          )}
+          {hasBadges && (
             <span className="flex min-w-0 flex-wrap items-center gap-1">
               {disabled && (
                 <Badge
@@ -126,7 +134,6 @@ export function RuleRow({
                   {location}
                 </Badge>
               )}
-              {rule.comment !== undefined && <span className="truncate text-xs text-muted-foreground italic">{rule.comment}</span>}
             </span>
           )}
         </span>
