@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { ListPlus, Search } from 'lucide-react';
@@ -11,14 +11,17 @@ import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from 
 import { useLootFilterData } from '../hooks/useLootFilterData';
 import { addRule, duplicateRule, moveRule, removeRule, selectRule, setRuleDisabled } from '../store/lootFilterSlice';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
+import { readRuleListWidth, writeRuleListWidth } from '../utils/ruleListWidth';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
 import { ExampleRules } from './rules/ExampleRules';
 import { RuleList, type RuleListEntry } from './rules/RuleList';
+import { RuleListSplitter } from './rules/RuleListSplitter';
 
 /** Below this width the list and the editor are stacked. */
 const TWO_PANE_QUERY = '(min-width: 1024px)';
+const RULE_LIST_ID = 'loot-filter-rule-list';
 
 interface RulesTabProps {
   readonly filter: LootFilter;
@@ -34,6 +37,10 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const [query, setQuery] = useState('');
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  // The list width (rem) once the splitter has moved, remembered per browser; null = the per-page-width default.
+  const [listWidth, setListWidth] = useState<number | null>(readRuleListWidth);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLElement>(null);
 
   const severities = new Map<number, DiagnosticSeverity>();
   for (const diagnostic of diagnostics) {
@@ -75,18 +82,25 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   };
 
   return (
-    // Wide and Full pages (`/page` container steps, see PageShell): the list grows (its summaries truncate less) and the
-    // editor gets the rest, which RuleEditor fills with more columns. Standard pages never reach @8xl.
+    // Two panes from lg: the list is `--rule-list-width` wide, kept between 18rem and 60% of the row (the clamp also
+    // holds when the window shrinks). The default grows on Wide and Full pages (`/page` container steps, see PageShell;
+    // Standard pages never reach @8xl), so summaries truncate less and RuleEditor fills the rest with more columns.
+    // Moving the splitter sets the width inline.
     <div
+      ref={rowRef}
       className={cn(
-        'grid items-start gap-4 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]',
-        '@8xl/page:grid-cols-[minmax(0,28rem)_minmax(0,1fr)] @9xl/page:grid-cols-[minmax(0,32rem)_minmax(0,1fr)]',
-        '@10xl/page:grid-cols-[minmax(0,36rem)_minmax(0,1fr)] @11xl/page:grid-cols-[minmax(0,40rem)_minmax(0,1fr)]'
+        'grid items-start gap-4 lg:grid-cols-[minmax(0,clamp(18rem,var(--rule-list-width),60%))_minmax(0,1fr)]',
+        '[--rule-list-width:24rem] @8xl/page:[--rule-list-width:28rem] @9xl/page:[--rule-list-width:32rem]',
+        '@10xl/page:[--rule-list-width:36rem] @11xl/page:[--rule-list-width:40rem]'
       )}
+      // A custom property is not one of CSSProperties' keys.
+      style={listWidth === null ? undefined : ({ '--rule-list-width': `${String(listWidth)}rem` } as React.CSSProperties)}
     >
       <section
+        ref={listRef}
+        id={RULE_LIST_ID}
         aria-label="Rule list"
-        className="flex min-w-0 flex-col rounded-xl border bg-card lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]"
+        className="relative flex min-w-0 flex-col rounded-xl border bg-card lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]"
       >
         <div className="space-y-2 border-b p-3">
           <div className="flex items-center gap-2">
@@ -147,6 +161,16 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             }}
           />
         )}
+        {/* Last in the pane, so the tab order runs list, splitter, editor. */}
+        <RuleListSplitter
+          rowRef={rowRef}
+          listRef={listRef}
+          listId={RULE_LIST_ID}
+          onResize={(rem, commit) => {
+            setListWidth(rem);
+            if (commit) writeRuleListWidth(rem);
+          }}
+        />
       </section>
 
       <div className="min-w-0">

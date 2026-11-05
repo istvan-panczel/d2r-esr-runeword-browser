@@ -513,6 +513,18 @@ Two panes from `lg` up (list left, sticky; editor right), stacked below (list ca
 rule scrolls the editor into view). Wide and Full pages widen the list and give the editor more columns (see
 [Wide and Full pages](#wide-and-full-pages)).
 
+- **Splitter** (`rules/RuleListSplitter.tsx`, `utils/ruleListWidth.ts`): on two-pane layouts, at every page width, a
+  vertical handle in the gap between the list and the editor resizes the list. The grid column is
+  `clamp(18rem, var(--rule-list-width), 60%)`: the classes set the variable to the per-page-width defaults of the Wide and Full pages table
+  (24, 28, 32, 36, 40rem), a moved splitter sets it inline in rem (so it follows the Text size setting), and the
+  clamp keeps it between 18rem and 60% of the row when the window shrinks too. The width is remembered per browser
+  (`loot-filters/rule-list-width` in localStorage, every access in try/catch; without storage it lasts until the tab
+  is left); double-click resets it to the default (and forgets it). Drag with pointer capture (no text selection, a
+  `col-resize` cursor while dragging); the handle is a focusable `role="separator"` (`aria-orientation="vertical"`,
+  `aria-valuenow/min/max` in px from a ResizeObserver, `aria-controls` the list) that ArrowLeft / ArrowRight move by
+  1rem (Shift: 4rem) and Home / End send to the minimum / maximum. It sits last in the list pane, so the tab order is
+  list, splitter, editor. Hidden on the stacked layout.
+
 - **Toolbar**: search box (every term must appear in `ruleSearchText`: summary, codes and their names, types, unique/set
   and area names, stat names and the names of their params (skill, tab, class), comment, style, name changes and chat
   lines), **Add rule** (an empty rule after the

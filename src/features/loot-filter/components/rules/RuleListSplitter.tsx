@@ -1,0 +1,147 @@
+import { useEffect, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { clampRuleListWidth, ruleListBounds, ruleListWidthForKey } from '../../utils/ruleListWidth';
+
+interface RuleListSplitterProps {
+  /** The two-pane grid (list, gap, editor): the 60% maximum is of its width. */
+  readonly rowRef: React.RefObject<HTMLElement | null>;
+  /** The list pane, whose rendered width is the splitter's value. */
+  readonly listRef: React.RefObject<HTMLElement | null>;
+  /** The id of the list pane (`aria-controls`). */
+  readonly listId: string;
+  /**
+   * A new width in rem, or null for the default; `commit` is false while dragging (the caller remembers the width once
+   * the drag ends, on a key press and on reset).
+   */
+  readonly onResize: (rem: number | null, commit: boolean) => void;
+}
+
+interface Drag {
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startPx: number;
+  rem: number | null;
+}
+
+function rootFontPx(): number {
+  const size = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return Number.isFinite(size) && size > 0 ? size : 16;
+}
+
+const width = (ref: React.RefObject<HTMLElement | null>) => ref.current?.getBoundingClientRect().width ?? 0;
+
+/** Text selection and the cursor while a drag is on (the pointer leaves the thin handle). */
+function setDragStyles(on: boolean) {
+  document.body.style.userSelect = on ? 'none' : '';
+  document.body.style.cursor = on ? 'col-resize' : '';
+}
+
+/**
+ * The vertical splitter between the rule list and the editor (two-pane layouts only; hidden when stacked). Drag it
+ * (pointer capture), use ArrowLeft / ArrowRight (Shift: bigger steps), Home / End, or double-click to reset.
+ */
+export function RuleListSplitter({ rowRef, listRef, listId, onResize }: RuleListSplitterProps) {
+  const [size, setSize] = useState({ row: 0, list: 0, rem: 16 });
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<Drag | null>(null);
+
+  // The value and the bounds for assistive tech follow the rendered widths (window resizes, page width, text size).
+  useEffect(() => {
+    const row = rowRef.current;
+    const list = listRef.current;
+    if (!row || !list) return;
+    const observer = new ResizeObserver(() => {
+      setSize({ row: width(rowRef), list: width(listRef), rem: rootFontPx() });
+    });
+    observer.observe(row);
+    observer.observe(list);
+    return () => {
+      observer.disconnect();
+    };
+  }, [rowRef, listRef]);
+
+  // A drag cut short by unmounting (the tab switches) must not leave the page unselectable.
+  useEffect(
+    () => () => {
+      if (drag.current) setDragStyles(false);
+    },
+    []
+  );
+
+  const bounds = ruleListBounds(size.row, size.rem);
+  const current = () => {
+    const rem = rootFontPx();
+    return { rem, px: width(listRef), bounds: ruleListBounds(width(rowRef), rem) };
+  };
+
+  const endDrag = () => {
+    const ended = drag.current;
+    if (!ended) return;
+    drag.current = null;
+    setDragging(false);
+    setDragStyles(false);
+    if (ended.rem !== null) onResize(ended.rem, true);
+  };
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the rule list"
+      aria-controls={listId}
+      aria-valuenow={Math.round(size.list)}
+      aria-valuemin={Math.round(bounds.min)}
+      aria-valuemax={Math.round(bounds.max)}
+      title="Drag to resize the rule list; double-click to reset"
+      tabIndex={0}
+      // Centred in the 1rem grid gap, along the (sticky) list's height.
+      className="group/splitter absolute top-0 -right-4 bottom-0 z-10 hidden w-4 cursor-col-resize touch-none items-center justify-center focus-visible:outline-none lg:flex"
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        // No text selection or native drag from the press.
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        drag.current = { pointerId: event.pointerId, startX: event.clientX, startPx: width(listRef), rem: null };
+        setDragging(true);
+        setDragStyles(true);
+      }}
+      onPointerMove={(event) => {
+        const active = drag.current;
+        if (active?.pointerId !== event.pointerId) return;
+        const { rem, bounds: now } = current();
+        const px = clampRuleListWidth(active.startPx + event.clientX - active.startX, now);
+        active.rem = px / rem;
+        onResize(active.rem, false);
+      }}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
+      onDoubleClick={() => {
+        onResize(null, true);
+      }}
+      onKeyDown={(event) => {
+        const { rem, px, bounds: now } = current();
+        const next = ruleListWidthForKey(event.key, event.shiftKey, px, now, rem);
+        if (next === null) return;
+        event.preventDefault();
+        onResize(next / rem, true);
+      }}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          'absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-transparent transition-colors group-hover/splitter:bg-border',
+          dragging && 'bg-border'
+        )}
+      />
+      <span
+        aria-hidden
+        className={cn(
+          'relative',
+          'h-12 w-1 rounded-full bg-border transition-colors group-hover/splitter:bg-primary/60 group-focus-visible/splitter:bg-primary group-focus-visible/splitter:ring-2 group-focus-visible/splitter:ring-ring',
+          dragging && 'bg-primary'
+        )}
+      />
+    </div>
+  );
+}
