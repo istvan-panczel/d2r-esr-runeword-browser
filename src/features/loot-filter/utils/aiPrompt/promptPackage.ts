@@ -17,6 +17,7 @@ import {
   buildExamples,
   buildFormatReference,
   DEFAULT_PROMPT_ASSETS,
+  DEFAULT_PROMPT_STYLE_PRESETS,
   type PromptAssets,
   type PromptStylePreset,
 } from './formatReference';
@@ -41,7 +42,7 @@ export interface PromptReferenceInput {
   readonly examples?: readonly ExampleRule[];
   /** Default: the bundled sounds and icons (`DEFAULT_PROMPT_ASSETS`). */
   readonly assets?: PromptAssets;
-  /** Ready-made styles to show in examples.md; none by default. */
+  /** Ready-made styles to show in examples.md; default: the editor's style presets (`DEFAULT_PROMPT_STYLE_PRESETS`). */
   readonly stylePresets?: readonly PromptStylePreset[];
 }
 
@@ -109,12 +110,12 @@ export function referenceFiles(input: PromptReferenceInput, size: GameDataSize):
     },
     {
       path: 'examples.md',
-      summary: 'example rules, each teaching one idea (exceptions, all-of vs any-of, sockets, unique ids…)',
-      text: buildExamples(examples, input.stylePresets),
+      summary: `the style presets, then ${String(examples.length)} complete example rules in groups (runes, uniques, sets, bases, charms, endgame items, maps, junk hides) with styles, sounds, icons and chat lines`,
+      text: buildExamples(examples, input.stylePresets ?? DEFAULT_PROMPT_STYLE_PRESETS),
     },
     {
       path: 'assets.md',
-      summary: 'the bundled sound and icon files, the only ones to use',
+      summary: 'the bundled sound and icon files, the only ones to use, with when to use each',
       text: buildAssets(input.assets ?? DEFAULT_PROMPT_ASSETS),
     },
     ...gameDataTables(input.data, input.types, size),
@@ -149,7 +150,10 @@ function fileSection(file: PromptFile): string {
 function instructionsFor(input: PromptPackageInput, files: readonly PromptFile[], layout: PromptLayout): string {
   return buildInstructions({
     request: input.request,
-    starter: input.starter === null ? null : { label: input.starter.label, ruleCount: input.starter.ruleCount },
+    starter:
+      input.starter === null
+        ? null
+        : { label: input.starter.label, ruleCount: input.starter.ruleCount, fromExamples: input.starter.fromExamples },
     size: input.size,
     files: files.map(({ path, summary }) => ({ path, summary })),
     layout,
@@ -160,7 +164,10 @@ function instructionsFor(input: PromptPackageInput, files: readonly PromptFile[]
 function starterFile(starter: PromptStarter): PromptFile {
   return {
     path: 'starter.json',
-    summary: `the filter to start from ("${starter.label}", ${String(starter.ruleCount)} rules)`,
+    summary:
+      starter.fromExamples === true
+        ? `the ${String(starter.ruleCount)} example rules to start from, with their styles`
+        : `the filter to start from ("${starter.label}", ${String(starter.ruleCount)} rules)`,
     text: starter.text,
   };
 }
@@ -168,7 +175,8 @@ function starterFile(starter: PromptStarter): PromptFile {
 /** The whole package for one request. */
 export function buildPromptPackage(input: PromptPackageInput): PromptPackage {
   const files = [...referenceFiles(input, input.size), ...(input.starter === null ? [] : [starterFile(input.starter)])];
-  const name = input.starter?.label ?? aiFilterName(input.request);
+  // Named after the starter, except picked example rules (a skeleton): those are named after the request.
+  const name = input.starter === null || input.starter.fromExamples === true ? aiFilterName(input.request) : input.starter.label;
   // "Sully's" → "sullys", not "sully-s".
   const baseName = `${slugify(name.replace(/['’]/g, ''), 'loot-filter')}-ai-prompt-${isoDate(input.date)}`;
   const markdown = [instructionsFor(input, files, 'single'), '---', '', ...files.map(fileSection)].join('\n');

@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { LootFilterDataBundle, TypesBundle } from '@/features/game-data/engine/schema';
+import { parseLootFilter } from '../../engine/parse';
 import { buildLootFilterReference } from '../../engine/reference';
+import { validateLootFilter } from '../../engine/validate';
+import { starterFromRules } from '../aiStarter';
+import { starterRulesFor } from '../examplePicker';
 import { CENTRAL_DIRECTORY_SIGNATURE } from '../zip';
 import { REQUEST_CLOSE, REQUEST_OPEN } from './instructions';
 import { approxTokens, buildPromptPackage, buildPromptZip, referenceSizes, type PromptPackageInput } from './promptPackage';
@@ -96,6 +100,24 @@ describe('buildPromptPackage', () => {
 
   it('says there is no starter when there is none', () => {
     expect(buildPromptPackage(input({ starter: null })).prompt).toContain('There is no starter');
+  });
+
+  it('treats picked example rules as a skeleton with their styles, named after the request', () => {
+    const starter = starterFromRules(starterRulesFor(['high-runes', 'unique-items', 'hide-small-gold']));
+    const examples = buildPromptPackage(input({ starter }));
+    expect(examples.baseName).toBe('blizzard-sorceress-in-hell-ai-prompt-2026-11-05');
+    expect(examples.prompt).toContain("3 rules I picked from the app's example rules, with the style presets they use");
+    expect(examples.prompt).toContain('- starter.json: the 3 example rules to start from, with their styles');
+    const file = examples.files.at(-1);
+    expect(file?.path).toBe('starter.json');
+    const parsed = parseLootFilter(file?.text ?? '');
+    expect(Object.keys(parsed.filter.styles ?? {})).toEqual(['HighRune', 'UniqueItem']);
+    expect(validateLootFilter(parsed.filter, reference)).toEqual([]);
+  });
+
+  it('tells the LLM to define every style it uses and to remind the user of the app buttons', () => {
+    expect(pkg.prompt).toContain('every `useStyle` must name a style defined under `"styles"`');
+    expect(pkg.prompt).toContain('the first time on the AI help page, step 3');
   });
 
   it('builds the single .md: the prompt for one document, then every file under its heading', () => {

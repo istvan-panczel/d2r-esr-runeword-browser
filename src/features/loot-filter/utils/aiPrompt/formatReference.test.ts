@@ -8,17 +8,21 @@ import { serializeLootFilter } from '../../engine/serialize';
 import { STAT_QUIRKS } from '../../engine/statQuirks';
 import { PLACEHOLDERS } from '../../engine/text';
 import { validateLootFilter } from '../../engine/validate';
-import { BUNDLED_ICONS, BUNDLED_SOUNDS } from '../bundledAssets';
-import { EXAMPLE_RULES } from '../exampleRules';
+import { FORMAT_VERSION, type LootFilterStyle } from '../../engine/types';
+import { BUNDLED_ICON_ASSETS, BUNDLED_ICONS, BUNDLED_SOUND_ASSETS, BUNDLED_SOUNDS } from '../bundledAssets';
+import { buildExampleRule, defaultChoices, EXAMPLE_GROUPS, EXAMPLE_RULES } from '../exampleRules';
+import { STYLE_PRESETS } from '../stylePresets';
 import {
   buildAssets,
   buildExamples,
   buildFormatReference,
   DEFAULT_PROMPT_ASSETS,
+  DEFAULT_PROMPT_STYLE_PRESETS,
   MISTAKE_SAMPLES,
   mistakeMessages,
   ruleJson,
   SKELETON_FILTER,
+  styleJson,
 } from './formatReference';
 
 const json = (file: string) => JSON.parse(readFileSync(resolve(process.cwd(), 'public/game-data', file), 'utf8')) as unknown;
@@ -67,26 +71,60 @@ describe('buildFormatReference', () => {
 });
 
 describe('buildExamples', () => {
-  it('shows every example rule as JSON that reads back to the rule', () => {
-    const text = buildExamples(EXAMPLE_RULES);
-    const blocks = jsonBlocks(text);
-    expect(blocks).toHaveLength(EXAMPLE_RULES.length);
-    EXAMPLE_RULES.forEach((example, index) => {
-      expect(text).toContain(`## ${example.title}`);
-      const parsed = parseLootFilter(`{"formatVersion": 1, "rules": [${blocks[index] ?? ''}]}`);
+  const text = buildExamples(EXAMPLE_RULES, DEFAULT_PROMPT_STYLE_PRESETS);
+  const blocks = jsonBlocks(text);
+  const styleBlocks = blocks.slice(0, STYLE_PRESETS.length);
+  const ruleBlocks = blocks.slice(STYLE_PRESETS.length);
+
+  it('shows the style presets first, with their descriptions, then every example under its group heading', () => {
+    expect(blocks).toHaveLength(STYLE_PRESETS.length + EXAMPLE_RULES.length);
+    expect(text.indexOf('# Style presets')).toBeLessThan(text.indexOf('# Example rules'));
+    for (const preset of STYLE_PRESETS) {
+      expect(text).toContain(`## ${preset.name}\n\n${preset.description}`);
+      expect(text).toContain(styleJson(preset.name, preset.style));
+    }
+    for (const group of EXAMPLE_GROUPS) expect(text).toContain(`## ${group.title}\n\n${group.intro}`);
+    for (const example of EXAMPLE_RULES) expect(text).toContain(`### ${example.title}\n\n${example.description}`);
+  });
+
+  it('shows each example as the complete rule the picker adds with its default presentation', () => {
+    const order = EXAMPLE_GROUPS.flatMap((group) => EXAMPLE_RULES.filter((example) => example.group === group.id));
+    order.forEach((example, index) => {
+      const parsed = parseLootFilter(`{"formatVersion": 1, "rules": [${ruleBlocks[index] ?? ''}]}`);
       expect(parsed.diagnostics).toEqual([]);
-      expect(parsed.filter.rules[0]).toEqual(example.rule);
+      expect(parsed.filter.rules[0]).toEqual(buildExampleRule(example, defaultChoices(example)).rule);
     });
+    expect(text).toContain('"useStyle": "HighRune"');
+    expect(text).toContain('"sound": "tink.mp3"');
+  });
+
+  it('defines every style the examples use: the presets and the rules make a clean filter', () => {
+    const styles = Object.assign({}, ...styleBlocks.map((block) => JSON.parse(block) as Record<string, LootFilterStyle>)) as Record<
+      string,
+      LootFilterStyle
+    >;
+    const filterText = `{"formatVersion": ${String(FORMAT_VERSION)}, "styles": ${JSON.stringify(styles)}, "rules": [${ruleBlocks.join(',')}]}`;
+    const parsed = parseLootFilter(filterText);
+    expect(parsed.diagnostics).toEqual([]);
+    expect(validateLootFilter(parsed.filter, reference)).toEqual([]);
+    expect(serializeLootFilter(parsed.filter)).toContain('"HighRune"');
+  });
+
+  it('adds a style an example uses even when the given presets lack it', () => {
+    const highRunes = EXAMPLE_RULES.filter((example) => example.id === 'high-runes');
+    const bare = buildExamples(highRunes);
+    expect(bare).toContain('# Style presets');
+    expect(bare).toContain('## HighRune');
   });
 
   it('adds the style presets when given', () => {
-    const text = buildExamples(
+    const custom = buildExamples(
       [],
       [{ name: 'Gold', description: 'For uniques.', style: { labelBorder: { color: [199, 179, 119], width: 2 } } }]
     );
-    expect(text).toContain('# Style presets');
-    expect(text).toContain('## Gold');
-    expect(jsonBlocks(text).map((block) => JSON.parse(block) as unknown)).toEqual([
+    expect(custom).toContain('# Style presets');
+    expect(custom).toContain('## Gold');
+    expect(jsonBlocks(custom).map((block) => JSON.parse(block) as unknown)).toEqual([
       { Gold: { labelBorder: { color: [199, 179, 119], width: 2 } } },
     ]);
   });
@@ -104,6 +142,8 @@ describe('buildAssets', () => {
   it('lists the bundled sounds and icons', () => {
     const text = buildAssets(DEFAULT_PROMPT_ASSETS);
     for (const name of [...BUNDLED_SOUNDS, ...BUNDLED_ICONS]) expect(text).toContain(`- \`${name}\``);
+    for (const asset of BUNDLED_SOUND_ASSETS) expect(text).toContain(`- \`${asset.file}\`: ${asset.use}`);
+    for (const asset of BUNDLED_ICON_ASSETS) expect(text).toContain(`- \`${asset.name}\`: ${asset.use}`);
     expect(buildAssets({ sounds: [{ name: 'gong.mp3', note: 'a deep gong' }], icons: [] })).toContain('- `gong.mp3`: a deep gong');
   });
 });

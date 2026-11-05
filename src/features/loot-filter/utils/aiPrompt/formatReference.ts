@@ -32,8 +32,9 @@ import {
 } from '../../engine/types';
 import { validateLootFilter } from '../../engine/validate';
 import { FILTER_CONTENT_MAX_BYTES } from '../../sharing/constants';
-import { BUNDLED_ICONS, BUNDLED_SOUNDS } from '../bundledAssets';
-import type { ExampleRule } from '../exampleRules';
+import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS } from '../bundledAssets';
+import { buildExampleRule, defaultChoices, EXAMPLE_GROUPS, type ExampleRule } from '../exampleRules';
+import { STYLE_PRESETS } from '../stylePresets';
 import { LOOT_FILTER_PLUGIN_VERSION } from '../template';
 
 /** The bundled sound and icon files the prompt offers (the zip download of a filter ships these). */
@@ -50,18 +51,25 @@ export interface PromptAsset {
   readonly note?: string;
 }
 
-/** The files bundled today: Sully's nine mp3s and twelve icons (`utils/bundledAssets.ts`), without notes. */
+/** The files bundled today (`utils/bundledAssets.ts`), each with its "when to use" line. */
 export const DEFAULT_PROMPT_ASSETS: PromptAssets = {
-  sounds: BUNDLED_SOUNDS.map((name) => ({ name })),
-  icons: BUNDLED_ICONS.map((name) => ({ name })),
+  sounds: BUNDLED_SOUND_ASSETS.map((asset) => ({ name: asset.file, note: asset.use })),
+  icons: BUNDLED_ICON_ASSETS.map((asset) => ({ name: asset.name, note: asset.use })),
 };
 
-/** A ready-made style the prompt shows as an example (a seam for the editor's style presets). */
+/** A ready-made style the prompt shows in examples.md. */
 export interface PromptStylePreset {
   readonly name: string;
   readonly description?: string;
   readonly style: LootFilterStyle;
 }
+
+/** The editor's style presets (`utils/stylePresets.ts`), the ones the example rules use. */
+export const DEFAULT_PROMPT_STYLE_PRESETS: readonly PromptStylePreset[] = STYLE_PRESETS.map(({ name, description, style }) => ({
+  name,
+  description,
+  style,
+}));
 
 const code = (text: string) => `\`${text}\``;
 const list = (values: readonly string[]) => values.map(code).join(', ');
@@ -328,7 +336,7 @@ function jsonStyleSection(): string {
     '- Strict JSON: double quotes, no trailing commas. `//` comment lines are allowed only before the opening `{`; the app drops comments between rules on its first edit, so put explanations in each rule\'s `"comment"`.',
     '- Give every rule a `"comment"`: a short title the app lists ("Hide magic weapons without +skills (Strict)").',
     '- Keys inside a rule: conditions, then actions, then nothing else. Unknown keys are kept but ignored by the game.',
-    '- Reuse styles for repeated looks (a "Valuable" style for top items, "Good" for useful ones) instead of copying actions.',
+    '- Reuse styles for repeated looks (a "Valuable" style for top items, "Good" for useful ones, or the style presets in examples.md) instead of copying actions. Every `useStyle` name must be defined under `"styles"`.',
   ].join('\n');
 }
 
@@ -562,48 +570,78 @@ export function buildFormatReference({ reference, examples, esrVersion }: Format
   ].join('\n');
 }
 
-/** examples.md: the editor's example rules (each teaches one idea) and, when given, the style presets. */
+/** An example as the complete rule the picker adds with its default presentation (title as comment, style, sound, icon, chat). */
+export function exampleWithPresentation(example: ExampleRule): ReturnType<typeof buildExampleRule> {
+  return buildExampleRule(example, defaultChoices(example));
+}
+
+/** A style as `{ "Name": { … } }` with one key per line (valid to copy into "styles"). */
+export function styleJson(name: string, style: LootFilterStyle): string {
+  const plain: unknown = toPlainJson({ formatVersion: FORMAT_VERSION, styles: { [name]: style }, rules: [], leadingComments: [] }).styles;
+  const body = typeof plain === 'object' && plain !== null ? (plain as Record<string, unknown>)[name] : undefined;
+  if (typeof body !== 'object' || body === null) return JSON.stringify(plain, null, 2);
+  const lines = Object.entries(body).map(([key, value]) => `    ${JSON.stringify(key)}: ${JSON.stringify(value)}`);
+  return `{\n  ${JSON.stringify(name)}: {\n${lines.join(',\n')}\n  }\n}`;
+}
+
+/**
+ * examples.md: the style presets (every style an example uses is among them), then the editor's example rules by group,
+ * each as the complete rule the example rules picker adds with its default presentation.
+ */
 export function buildExamples(examples: readonly ExampleRule[], presets: readonly PromptStylePreset[] = []): string {
-  const rules = examples.flatMap((example) => [
-    `## ${example.title}`,
-    '',
-    example.description,
-    '',
-    '```json',
-    ruleJson(example.rule),
-    '```',
-    '',
-  ]);
+  const built = examples.map((example) => ({ example, ...exampleWithPresentation(example) }));
+  // A style an example uses but the given presets lack is shown too, so every `useStyle` below is defined above.
+  const shown = [...presets];
+  for (const { stylesToAdd } of built)
+    for (const [name, style] of Object.entries(stylesToAdd)) if (!shown.some((preset) => preset.name === name)) shown.push({ name, style });
+
   const styles =
-    presets.length === 0
+    shown.length === 0
       ? []
       : [
           '# Style presets',
           '',
-          'Ready-made looks; copy one into "styles" under its name and use it with "useStyle".',
+          'Ready-made looks (name colour, label background and border, sometimes a droplight); the example rules below use them. A rule\'s `"useStyle": "HighRune"` works only when the filter defines that style under `"styles"`: for every preset you use, copy its block into the filter\'s `"styles"` object under the same name (change the look freely). A missing one is the app\'s "There is no style named …" error. Presets hold the look only; sounds, icons and chat lines stay on the rules.',
           '',
-          ...presets.flatMap((preset) => [
+          ...shown.flatMap((preset) => [
             `## ${preset.name}`,
             '',
             ...(preset.description === undefined ? [] : [preset.description, '']),
             '```json',
-            JSON.stringify(
-              toPlainJson({ formatVersion: FORMAT_VERSION, styles: { [preset.name]: preset.style }, rules: [], leadingComments: [] })
-                .styles,
-              null,
-              2
-            ),
+            styleJson(preset.name, preset.style),
             '```',
             '',
           ]),
         ];
+
+  const groups = EXAMPLE_GROUPS.flatMap((group) => {
+    const entries = built.filter(({ example }) => example.group === group.id);
+    if (entries.length === 0) return [];
+    return [
+      `## ${group.title}`,
+      '',
+      group.intro,
+      '',
+      ...entries.flatMap(({ example, rule }) => [
+        `### ${example.title}`,
+        '',
+        example.description,
+        '',
+        '```json',
+        ruleJson(rule),
+        '```',
+        '',
+      ]),
+    ];
+  });
+
   return [
+    ...styles,
     '# Example rules',
     '',
-    "Each example shows one idea of the format. They use real ESR codes and pass the app's checks.",
+    "Complete rules in groups: conditions, a style preset from above, and on the valuable drops a bundled sound, a minimap icon and a chat line; hide rules have no looks (a hidden item shows nothing). They use real ESR codes and pass the app's checks: reuse and adapt them. Put the label rules first and the hide rules last; a hide rule hides wherever it stands, so this only keeps the filter readable.",
     '',
-    ...rules,
-    ...styles,
+    ...groups,
   ].join('\n');
 }
 
@@ -623,7 +661,7 @@ export function buildAssets(assets: PromptAssets): string {
     '',
     ...assets.icons.map(line),
     '',
-    'Icon sizes of 30 to 50 minimap pixels read well. A sounds.txt name (sounds.csv in the full data) also works as "sound" but follows the game volume.',
+    'Icon sizes of 30 to 50 minimap pixels read well. A sounds.txt name (sounds.csv in the full data) also works as "sound" (it follows the game volume): use one only when the user asks for game sounds.',
     '',
   ].join('\n');
 }

@@ -12,9 +12,11 @@ export interface ReferenceFileInfo {
 
 /** The filter the user starts from, as the prompt names it. */
 export interface StarterInfo {
-  /** "Sully's QoL Filter v0.6.11", "My filter". */
+  /** "Sully's QoL Filter v0.6.13", "My filter", "11 example rules". */
   readonly label: string;
   readonly ruleCount: number;
+  /** The rules were picked from the app's example rules: a skeleton (one "Default" level), not a finished filter. */
+  readonly fromExamples?: boolean;
 }
 
 /** `files`: the reference comes as attached files (zip, Copy prompt); `single`: it follows in the same document. */
@@ -55,10 +57,19 @@ function referenceSection({ files, layout, size }: InstructionsInput): string[] 
 function starterSection(starter: StarterInfo | null, layout: PromptLayout): string[] {
   if (starter === null) return ['## Starter', '', 'There is no starter: write a new filter from scratch.'];
   const where = layout === 'files' ? 'starter.json' : 'the section "File: starter.json" at the end';
+  const tooLong =
+    'If the complete file would be too long for one answer, tell me before you start, so we can shorten it or I can paste the parts together.';
+  const rules = `${String(starter.ruleCount)} ${starter.ruleCount === 1 ? 'rule' : 'rules'}`;
+  if (starter.fromExamples === true)
+    return [
+      '## Starter',
+      '',
+      `Start from ${where}: ${rules} I picked from the app's example rules, with the style presets they use. It is a skeleton: one "Default" level and the title "AI filter". Keep these rules and their styles (adapt them where my request says otherwise), add the rules my request needs, and give the filter a fitting title and the levels we agree on. ${tooLong}`,
+    ];
   return [
     '## Starter',
     '',
-    `Start from the filter in ${where}: "${starter.label}", ${String(starter.ruleCount)} ${starter.ruleCount === 1 ? 'rule' : 'rules'}. Change it as my request says and keep everything else (rules, comments, styles, levels) unless I say otherwise. If the complete file would be too long for one answer, tell me before you start, so we can shorten it or I can paste the parts together.`,
+    `Start from the filter in ${where}: "${starter.label}", ${rules}. Change it as my request says and keep everything else (rules, comments, styles, levels) unless I say otherwise. ${tooLong}`,
   ];
 }
 
@@ -79,13 +90,14 @@ export function buildInstructions(input: InstructionsInput): string {
     '1. Ask first. Before writing any rule, ask me every question you need, as one short numbered list, and ask again later whenever something is unclear. Typical questions: which class and build; which difficulty and how far into the game (leveling, Hell, maps); which item groups matter (runes, gems, charms, jewels, uniques, sets, runeword bases, maps, coupons, potions, gold); how strict, how many filter levels and what each level hides; sounds and minimap icons (yes or no, for which items); languages for chat and name texts.',
     '2. Plan. Propose a short plan: the filter levels, the rule groups in order (the looks, and narrow hide rules with their exceptions), the styles, sounds and icons. Wait for my OK.',
     '3. Write. Output the complete filter as ONE ```json code block: the whole file every time, never a partial diff or "the rest stays the same", unless I ask for a snippet. Give every rule a meaningful "comment": the app shows it as the rule title.',
-    '4. After every answer with JSON, end with this reminder: "Import it in the app: click Import AI answer (in the filter editor, or step 3 of the AI page) and paste my whole answer. Then click Copy problems for the AI and paste the list here."',
+    '4. After every answer with JSON, end with this reminder (in my language, the button names as written): "Import it in the app: click Import AI answer and paste my whole answer (the first time on the AI help page, step 3, which creates a draft; after that in the filter editor, which replaces the draft\'s content). If the app lists problems, click Copy problems for the AI and paste the list here."',
     '5. When I paste a problems list: fix exactly those problems, keep everything else as it is, and reply with the complete filter again as one json block. If a problem cannot be fixed (a plugin limit), say so and suggest another way.',
     '',
     '## Rules for the filter',
     '',
     "- Use only item codes, item types, stat names, params and unique or set ids from the reference. If you need one you cannot find, ask me: I can look it up in the app's pickers. Never guess one: the app's validator flags unknown codes.",
-    "- Sounds and minimap icons: only the bundled files in assets.md (the app's .zip download ships them).",
+    "- Sounds and minimap icons: only the bundled files in assets.md (the app's .zip download ships them); assets.md says what each one is for. A game sound from sounds.txt only when I ask for one.",
+    '- Styles: every `useStyle` must name a style defined under `"styles"` in the same file. For a ready-made look, copy a style preset from examples.md into `"styles"` under its name.',
     '- Mind the known plugin limits in FORMAT.md: Enhanced Damage and Enhanced Defense read 0 on weapons and armour, a stat check without "param" reads only param 0, Life and Mana are stored ×256.',
     '- A matching hide rule hides the item whatever the rules before it did, so every hide rule is narrow and carries its own exceptions ("< 1" stat checks, except lists, a quality list).',
     '- Strict JSON. `//` comment lines only before the opening brace.',
