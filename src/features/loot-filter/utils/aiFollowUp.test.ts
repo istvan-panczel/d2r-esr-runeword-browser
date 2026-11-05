@@ -94,5 +94,22 @@ describe('aiFilterName', () => {
     expect(aiFilterName('\n  Hammerdin filter for Hell.\nmore')).toBe('Hammerdin filter for Hell');
     expect(aiFilterName('I play a Blizzard Sorceress in Hell and want runes from Lum up')).toBe('I play a Blizzard Sorceress in Hell and…');
     expect(aiFilterName('   ')).toBe('AI filter');
+    expect(aiFilterName('...')).toBe('AI filter');
+  });
+
+  it("prefers the filter's title, trimmed, without colour codes and shortened at a word", () => {
+    expect(aiFilterName('Hammerdin filter for Hell.', '  Hammerdin   Hell  ')).toBe('Hammerdin Hell');
+    expect(aiFilterName('', 'ÿc;Hammerdin ÿc0maps')).toBe('Hammerdin maps');
+    expect(aiFilterName('', 'Strict Hammerdin filter for Hell and the endgame maps with three levels and sounds')).toBe(
+      'Strict Hammerdin filter for Hell and the endgame maps with…'
+    );
+    expect(aiFilterName('', 'x'.repeat(70))).toBe(`${'x'.repeat(60)}…`);
+  });
+
+  it('falls back to the request when the title is missing or blank', () => {
+    expect(aiFilterName('Hammerdin filter for Hell.', undefined)).toBe('Hammerdin filter for Hell');
+    expect(aiFilterName('Hammerdin filter for Hell.', '   ')).toBe('Hammerdin filter for Hell');
+    expect(aiFilterName('Hammerdin filter for Hell.', 'ÿc4')).toBe('Hammerdin filter for Hell');
+    expect(aiFilterName('', '')).toBe('AI filter');
   });
 });

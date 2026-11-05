@@ -90,17 +90,30 @@ export function resendMessage(failure: AiAnswerFailure): string {
 }
 
 const NAME_LENGTH = 40;
+/** A title is meant as a name, so it may be longer than a request's first line (saved filter names allow 100). */
+const TITLE_LENGTH = 60;
 
-/** The name of a new draft from an AI answer: the request's first line, shortened, else "AI filter". */
-export function aiFilterName(request: string): string {
+/** Collapses whitespace and shortens to `max` characters, at a word when one ends past the middle (`…` when cut). */
+function clipName(text: string, max: number): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  const chars = Array.from(clean);
+  if (chars.length <= max) return clean;
+  const cut = chars.slice(0, max).join('');
+  const space = cut.lastIndexOf(' ');
+  return `${(space > cut.length / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
+/**
+ * The name of a new draft from an AI answer: the filter's `title` (colour codes dropped, shortened at a word), else
+ * the request's first line (trailing punctuation dropped, shortened), else "AI filter".
+ */
+export function aiFilterName(request: string, title?: string): string {
+  const fromTitle = clipName((title ?? '').replace(/ÿc./g, ''), TITLE_LENGTH);
+  if (fromTitle !== '') return fromTitle;
   const firstLine = request
     .split('\n')
     .map((line) => line.trim())
     .find((line) => line !== '');
-  if (firstLine === undefined) return 'AI filter';
-  const clean = firstLine.replace(/\s+/g, ' ').replace(/[.,;:!?]+$/, '');
-  if (clean.length <= NAME_LENGTH) return clean;
-  const cut = clean.slice(0, NAME_LENGTH);
-  const space = cut.lastIndexOf(' ');
-  return `${(space > NAME_LENGTH / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+  const fromRequest = firstLine === undefined ? '' : clipName(firstLine.replace(/[.,;:!?]+$/, ''), NAME_LENGTH);
+  return fromRequest === '' ? 'AI filter' : fromRequest;
 }

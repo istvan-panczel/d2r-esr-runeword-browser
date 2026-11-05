@@ -4,15 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { LootFilterReference } from '../../engine/types';
+import type { LootFilter, LootFilterReference } from '../../engine/types';
 import { validateLootFilter } from '../../engine/validate';
 import { countDiagnostics } from '../../store/selectors';
 import { extractFilterFromAnswer, type AiAnswerResult, type AiAnswerSuccess } from '../../utils/aiAnswer';
 import { resendMessage } from '../../utils/aiFollowUp';
 import { copyText } from './copyText';
 
-/** `replace`: the open filter's content is replaced; `create`: a new draft with this name is made and opened. */
-export type ImportAiAnswerMode = { readonly kind: 'replace' } | { readonly kind: 'create'; readonly name: string };
+/**
+ * `replace`: the open filter's content is replaced; `create`: a new draft is made and opened, named by `nameOf` from the
+ * filter read out of the answer (its title, else the request).
+ */
+export type ImportAiAnswerMode =
+  { readonly kind: 'replace' } | { readonly kind: 'create'; readonly nameOf: (filter: LootFilter) => string };
 
 interface ImportAiAnswerDialogProps {
   readonly open: boolean;
@@ -131,7 +135,7 @@ function ImportForm({ mode, reference, onImport, onCancel }: ImportFormProps) {
           <p className="text-muted-foreground">
             {mode.kind === 'replace'
               ? 'Importing replaces the whole content of the open filter with this one.'
-              : `Importing creates the draft “${mode.name}” in this browser and opens it.`}
+              : `Importing creates the draft “${mode.nameOf(found.filter)}” in this browser and opens it.`}
           </p>
         </div>
       )}
