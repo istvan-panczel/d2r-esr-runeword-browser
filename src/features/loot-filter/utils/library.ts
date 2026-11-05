@@ -14,6 +14,14 @@ export function draftPath(entryId: string): string {
   return `/loot-filters/draft/${entryId}`;
 }
 
+/** The search param that opens the Rules tab's example rules dialog once (`withExamples`). */
+export const EXAMPLES_PARAM = 'examples';
+
+/** Opens the editor with the example rules dialog (a new blank filter's starter). */
+export function withExamples(path: string): string {
+  return `${path}?${EXAMPLES_PARAM}=1`;
+}
+
 /** Opens the editor with the Save dialog. */
 export function withSave(path: string): string {
   return `${path}?save=1`;

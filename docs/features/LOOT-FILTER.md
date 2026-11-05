@@ -299,13 +299,16 @@ troubleshooting line from "Using a filter in the game". The start buttons (My fi
 **Start from the example**, **Upload**, **New filter** (outline). A "Tip:" line under them says most players start
 from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
 work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
-blank (no rules, so every item shows as the game shows it) and is for authors who know the format; the Rules tab has
-example rules either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank
-filter with no rules. …") say the same in short.
+blank and opens the example rules (about sixty ready rules in groups to tick into a starter set); the Rules tab has them
+either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank filter with no
+rules; the example rules open next, so you can tick a starter set. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
   opens the editor on a blank filter (`formatVersion: 1`, `title` = name, one level
-  `{ id: 1, name: 'Default' }`, `defaultLevel: 1`, no rules).
+  `{ id: 1, name: 'Default' }`, `defaultLevel: 1`, no rules) with the example rules dialog open: `createNew` navigates
+  to `withExamples(draftPath(id))` (`?examples=1`, `EXAMPLES_PARAM` in `utils/library.ts`), which the Rules tab's
+  example button reads; closing the dialog (Cancel, Add selected, Escape) drops the param, so a reload or Back does
+  not reopen it.
 - **Upload**: a `.json` file read as UTF-8, as leniently as the game reads it (`//` and `/* */` comments, trailing
   commas). A JSON syntax error shows a toast with the line and column and imports nothing; a file with diagnostics
   (unknown keys, wrong shapes) is imported and the editor lists them. The success toast counts the problems and spells
@@ -521,20 +524,47 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
   selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
   The search text includes `disabled` for a disabled rule, so searching "disabled" lists them. An empty rule list says
   "No rules yet. …" and points to the example rules and to Sully's QoL filter (a link to the library).
-- **Example rules** (`rules/ExampleRules.tsx`, `utils/exampleRules.ts`): a collapsed box under the toolbar. Its intro
-  says most players start from Sully's filter (or a shared one) and adapt it, where an example goes (after the
-  selected rule, else at the end) and how rules run (top to bottom, every matching rule applies, later labels win, a
-  matching hide rule hides the item and stops). Then one card per example (title, what it does and why it is built
-  that way, **Add this rule**, which adds it like Add rule and selects it): hide magic and rare weapons except those
-  with +All Skills, Faster Cast Rate or Increased Attack Speed (`< 1` exceptions in `itemStats`); rings and amulets
-  with 10% Faster Cast Rate and 10% Magic Find (all of); small charms with Magic Find or Faster Hit Recovery (any of);
-  Ist to Zod runes (`r74`–`r83`) with `tink.mp3`, the `rune` icon and a border (bundled files, so the .zip download
-  carries them); hide inferior weapons and armour (a narrow hide rule); normal or superior swords with exactly 4
-  sockets (`sockets` vs `maxSockets`); The Oculus by unique id (418, the dropped row, and 973, the Ancient Coupon row,
-  with quality unique since set ids overlap). Each rule has a `comment` starting "Example:". None checks Enhanced
-  Damage or Defense (see "Known plugin limits"). `exampleRules.test.ts` writes and reads every example, validates it
-  against the real game data with no diagnostic, checks the bundled sound and icon names and the ids, and runs the
-  hide, all-of and any-of examples through the evaluator.
+- **Example rules** (`rules/ExampleRulesButton.tsx`, `ExampleRulesDialog.tsx`, `ExampleRulesPicker.tsx`,
+  `utils/exampleRules.ts`, `utils/examplePicker.ts`): an **Example rules** button under the toolbar opens a wide,
+  scrolling dialog (`sm:max-w-5xl`, 90vh). Its intro says how rules run (top to bottom, every matching rule applies,
+  later labels win, a matching hide rule hides the item and stops) and that the sounds and icons come with the .zip.
+  - _Groups_ (`EXAMPLE_GROUPS`, modelled on the sections of Sully's v0.6.13, rules written for this site), each with a
+    one-line intro and a "Select all in group" tri-state checkbox: Runes, Gems, Uniques, Sets, Mythical uniques,
+    Coupons, Runeword bases, Charms and jewels, Class items and jewellery, Keys/organs/endgame items, Crafting reagents,
+    Maps, Gold and potions, Hide junk. 60 examples (`EXAMPLE_RULES`; the list is in the code). Each is a checkbox, its
+    title (also the rule's `comment`, the title line in the rule list) and a description; a hide rule has a "hide"
+    badge.
+  - _Presentation_: an example is its conditions (plus a fixed name tag or `hide`) and default choices for Style (a
+    style preset, see [Style presets](#style-presets)), Sound and Minimap icon (from the asset registry) and Chat
+    message (its own line or the plain `{qualityColor}{name}`), each None or a value. Sounds, icons and chat lines are
+    defaults only on valuable drops; hide rules have none (a hidden item shows nothing). A ticked example shows the four
+    compact selects prefilled with its defaults, a play button for the chosen sound (`useSoundPreview`, at the filter's
+    `soundVolume`), a preview of the chosen style, and "With every choice None this rule does nothing." when that is so.
+  - _Bulk_: "No sounds", "No chat messages", "No minimap icons" switch those off for every rule (the selects show
+    "None (no sounds)"…; the choices come back when the switch is off), plus Select all, Clear and "N selected".
+  - _Add selected (N)_: `buildStarterRules` builds the rules (`buildExampleRule(example, choices) → { rule,
+stylesToAdd }`: title as `comment`, conditions, `useStyle` = the preset's name, `sound`, `icon` with the
+    example's size or 40, `chatMessage`) in insertion order: label rules first in group and list order, hide rules
+    last (a hidden item loses its label whatever comes before or after, so this only keeps the list readable). The
+    button merges the styles (`mergeStyles`: a name the filter lacks is added; one it has with other content is kept
+    and reused, never overwritten) and dispatches `addRules({ rules, styles, at })`, one edit: the rules go after the
+    selected rule (else at the end) and the first one is selected. The toast counts the rules and names the added and
+    the kept styles.
+  - _Reuse_: `ExampleRulesPicker` (`onConfirm(rules, styles)`, `onCancel`, `confirmLabel`, `previewVolume`) has no
+    store dependency, and `starterRulesFor(ids)` builds a set without a picker, for starters outside the editor.
+  - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
+    Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
+    (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109) where that fits; the
+    broad weapon/armour hides exclude class items (`excludeItemTypes: ['clas']`) and the mythical bases, and keep
+    useful stats as `< 1` exceptions. The seven earlier teaching examples (exceptions on a hide rule, all-of vs any-of,
+    an item code list, sockets vs max sockets, unique ids for The Oculus, a narrow inferior hide) are in their groups;
+    the rune one now covers Vex to Zod.
+  - _Tests_: `exampleRules.test.ts` writes, reads and validates every example against the real game data with its
+    default presentation and with every choice None (then only "does nothing" for rules without a fixed action),
+    checks that every code drops, the rune/material names, the 24 skill tab params and the presets, sounds and icons,
+    and runs the hide, all-of/any-of, small gold and +3 class item examples through the evaluator.
+    `examplePicker.test.ts` covers the selection model, the order and the style merge; `lootFilterSlice.test.ts` the
+    `addRules` reducer.
 - **Rows** (`RuleRow`): 1-based number, `ruleSummary` (e.g. `Zod Rune, Cham Rune +2 · unique · ≥3 sockets · → style
 Mythical`: items/types/uniques by name when the bundles are in, codes otherwise, then quality, tier, flags, item level,
   sockets, stats, difficulty, areas, and the main action: `hide`, `→ style X`, the stripped replaceName/prefix/suffix or

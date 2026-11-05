@@ -14,7 +14,7 @@ import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSum
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
-import { ExampleRules } from './rules/ExampleRules';
+import { ExampleRulesButton } from './rules/ExampleRulesButton';
 import { RuleList, type RuleListEntry } from './rules/RuleList';
 
 /** Below this width the list and the editor are stacked. */
@@ -118,7 +118,13 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             {all.length} {all.length === 1 ? 'rule' : 'rules'}
             {countNotes.length > 0 && ` (${countNotes.join(', ')})`}
           </p>
-          <ExampleRules onAdd={handleAdd} />
+          <ExampleRulesButton
+            filter={filter}
+            insertAt={selectedRule === null ? undefined : selectedRule + 1}
+            onAdded={() => {
+              setQuery('');
+            }}
+          />
         </div>
         {all.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">

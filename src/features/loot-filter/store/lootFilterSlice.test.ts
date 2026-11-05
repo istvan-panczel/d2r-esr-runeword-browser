@@ -7,6 +7,7 @@ import { createBlankFilter } from '../utils/blankFilter';
 import reducer, {
   EMPTY_EDITOR,
   addRule,
+  addRules,
   close,
   createBlank,
   duplicate,
@@ -321,6 +322,28 @@ describe('rule reducers', () => {
     expect(comments(reducer(openState(), addRule({ rule: { comment: 'new' }, at: 1 })))).toEqual(['a', 'new', 'b', 'c', 'd']);
     expect(comments(reducer(openState(), addRule({ rule: { comment: 'new' }, at: -5 })))).toEqual(['new', 'a', 'b', 'c', 'd']);
     expect(comments(reducer(openState(), addRule({ rule: { comment: 'new' }, at: 99 })))).toEqual(['a', 'b', 'c', 'd', 'new']);
+  });
+
+  it('addRules inserts the rules at a clamped position, selects the first and adds only the missing styles', () => {
+    const base = openState(filterWith({ styles: { Mine: { notify: true } } }));
+    const state = reducer(
+      base,
+      addRules({
+        rules: [
+          { comment: 'x', useStyle: 'Mine' },
+          { comment: 'y', useStyle: 'New' },
+        ],
+        styles: { Mine: { hide: true }, New: { sound: 'tink.mp3' } },
+        at: 1,
+      })
+    );
+    expect(comments(state)).toEqual(['a', 'x', 'y', 'b', 'c', 'd']);
+    expect(state.editor).toMatchObject({ selectedRule: 1, dirty: true });
+    expect(state.editor.filter?.styles).toEqual({ Mine: { notify: true }, New: { sound: 'tink.mp3' } });
+    expect(comments(reducer(base, addRules({ rules: [{ comment: 'z' }], at: 99 })))).toEqual(['a', 'b', 'c', 'd', 'z']);
+    expect(reducer(base, addRules({ rules: [{ comment: 'z' }] })).editor.filter?.styles).toBe(base.editor.filter?.styles);
+    expect(reducer(base, addRules({ rules: [], styles: { New: {} } }))).toBe(base);
+    expect(reducer(initialState, addRules({ rules: [{}] }))).toBe(initialState);
   });
 
   it('updateRule replaces the whole rule; out of range is a no-op', () => {
