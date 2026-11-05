@@ -75,6 +75,15 @@ describe('planStyleChoice', () => {
     expect(applyPatch(picked, plan.undo.patch)).toEqual(odd);
   });
 
+  it('clears a wrong-shaped own value of a key the style sets, and gives it back on undo', () => {
+    const odd: LootFilterRule = { comment: 'Odd', passthrough: { labelBackground: 'red', extra: true } };
+    const plan = planStyleChoice(odd, filterWith({ styles: { UniqueItem: UNIQUE.style } }), { kind: 'style', name: 'UniqueItem' });
+    expect(plan.cleared).toEqual(['labelBackground']);
+    const picked = applyPatch(odd, plan.apply.patch);
+    expect(picked).toEqual({ comment: 'Odd', useStyle: 'UniqueItem', passthrough: { extra: true } });
+    expect(applyPatch(picked, plan.undo.patch)).toEqual(odd);
+  });
+
   it('adds a missing preset and removes it on undo', () => {
     const plan = planStyleChoice(rule, filterWith(), { kind: 'preset', preset: UNIQUE });
     expect(plan.preset).toBe('added');

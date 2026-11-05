@@ -72,9 +72,15 @@ export interface StyleChoice {
   readonly cleared: readonly StyleKey[];
 }
 
-/** What picking `style` clears on a rule: its own value of each key the style sets (keys the style leaves free stay). */
-export function applyStyleChoice(rule: RuleActions, style: RuleActions | undefined): StyleChoice {
-  const cleared = style === undefined ? [] : STYLE_KEYS.filter((key) => rule[key] !== undefined && style[key] !== undefined);
+/**
+ * What picking `style` clears on a rule: its own value of each key the style sets (keys the style leaves free stay),
+ * a wrong-shaped one kept in `passthrough` too (it is written back to the file, where it would still be the rule's own
+ * value, while the field shows the style's).
+ */
+export function applyStyleChoice(rule: LootFilterRule, style: RuleActions | undefined): StyleChoice {
+  const passthrough = rule.passthrough ?? {};
+  const own = (key: StyleKey) => rule[key] !== undefined || Object.hasOwn(passthrough, key);
+  const cleared = style === undefined ? [] : STYLE_KEYS.filter((key) => own(key) && style[key] !== undefined);
   return { patch: Object.fromEntries(cleared.map((key) => [key, undefined])), cleared };
 }
 
