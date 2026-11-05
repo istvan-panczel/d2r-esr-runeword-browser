@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { Diagnostic, LootFilterRule } from '../engine/types';
+import type { Diagnostic, LootFilterRule, LootFilterStyle } from '../engine/types';
 import {
   ACTION_EDITOR_FIELDS,
+  actionFieldGate,
   BASIC_ACTIONS,
   BASIC_CONDITIONS,
   HIDE_ONLY_STATS,
@@ -10,14 +11,16 @@ import {
   nameColorCode,
   nameColorText,
   ruleFieldGate,
+  type ActionFieldGate,
   type ConditionField,
-  type RuleFieldGate,
 } from './ruleView';
 
-const shown = (gate: RuleFieldGate, fields: readonly ConditionField[]) => fields.filter((field) => gate.condition(field) !== 'hidden');
-const shownActions = (gate: RuleFieldGate) => ACTION_EDITOR_FIELDS.filter((field) => gate.action(field) !== 'hidden');
+const shown = (gate: ReturnType<typeof ruleFieldGate>, fields: readonly ConditionField[]) =>
+  fields.filter((field) => gate.condition(field) !== 'hidden');
+const shownActions = (gate: ActionFieldGate) => ACTION_EDITOR_FIELDS.filter((field) => gate.action(field) !== 'hidden');
 
 const warning = (path: string): Diagnostic => ({ severity: 'warning', message: 'x', path });
+const styleWarning = (style: string, key: string): Diagnostic => ({ ...warning(`styles/${style}/${key}`), style });
 
 describe('ruleFieldGate, Basic view', () => {
   it('shows the common conditions and actions of an empty rule', () => {
@@ -98,6 +101,56 @@ describe('ruleFieldGate, Advanced view', () => {
   });
 });
 
+describe('actionFieldGate (a style)', () => {
+  it('shows the Basic actions of an empty style, as for a rule', () => {
+    const gate = actionFieldGate({ view: 'basic', actions: {} });
+    expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
+    expect(gate.hiddenActions).toBe(7);
+    expect(gate.view).toBe('basic');
+  });
+
+  it('shows a set Advanced action tagged, and leaves a name-only recolour to Name colour', () => {
+    const style: LootFilterStyle = { replaceName: 'ÿc8{name}', droplight: { color: [255, 128, 0] }, namePrefix: 'ÿc1* ' };
+    const gate = actionFieldGate({ view: 'basic', actions: style });
+    expect(gate.action('droplight')).toBe('advanced');
+    expect(gate.action('namePrefix')).toBe('advanced');
+    expect(gate.action('replaceName')).toBe('hidden');
+    expect(gate.action('labelBackground')).toBe('shown');
+    expect(gate.hiddenActions).toBe(5);
+  });
+
+  it('counts a wrong-shaped value and a diagnostic on the style as set', () => {
+    const style: LootFilterStyle = { passthrough: { notify: 'yes' } };
+    const gate = actionFieldGate({ view: 'basic', actions: style, diagnostics: [styleWarning('Rune', 'droplight')] });
+    expect(gate.action('notify')).toBe('advanced');
+    expect(gate.action('droplight')).toBe('advanced');
+    expect(gate.action('nameSuffix')).toBe('hidden');
+  });
+
+  it('keeps a recolouring replaceName visible when a diagnostic points at it', () => {
+    const gate = actionFieldGate({
+      view: 'basic',
+      actions: { replaceName: 'ÿc8{name}' },
+      diagnostics: [styleWarning('a/b', 'replaceName')],
+    });
+    expect(gate.action('replaceName')).toBe('advanced');
+  });
+
+  it('shows every action in the Advanced view', () => {
+    const gate = actionFieldGate({ view: 'advanced', actions: {} });
+    expect(shownActions(gate)).toEqual(ACTION_EDITOR_FIELDS);
+    expect(gate.hiddenActions).toBe(0);
+  });
+
+  it('gives a rule the same action gate as ruleFieldGate', () => {
+    const rule: LootFilterRule = { itemLevel: { min: 1 }, notify: true, replaceName: 'ÿc4{name}' };
+    const ruleGate = ruleFieldGate({ view: 'basic', rule, hides: false });
+    const gate = actionFieldGate({ view: 'basic', actions: rule });
+    expect(ACTION_EDITOR_FIELDS.map((field) => gate.action(field))).toEqual(ACTION_EDITOR_FIELDS.map((field) => ruleGate.action(field)));
+    expect(gate.hiddenActions).toBe(ruleGate.hiddenActions);
+  });
+});
+
 describe('the field tables', () => {
   it('match the owner decision for Basic', () => {
     const basicConditions = Object.entries(BASIC_CONDITIONS)
@@ -143,5 +196,15 @@ describe('diagnosticKeys', () => {
       'itemLevel',
       'sound',
     ]);
+  });
+
+  it('takes the style key of a style path, a name with a slash included', () => {
+    expect([
+      ...diagnosticKeys([
+        styleWarning('Rune', 'sound'),
+        styleWarning('a/b', 'labelBorder/width'),
+        { ...warning('styles/Rune'), style: 'Rune' },
+      ]),
+    ]).toEqual(['sound', 'labelBorder']);
   });
 });

@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ScanSearch } from 'lucide-react';
 import { toast } from 'sonner';
-import { RULE_VIEW_OPTIONS, selectRuleView, setRuleView, type RuleViewMode } from '@/features/settings';
+import { selectRuleView } from '@/features/settings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,8 @@ import { HIDE_ONLY_STATS, ruleFieldGate, type ConditionField as GatedCondition }
 import { ActionsEditor } from '../actions/ActionsEditor';
 import { AreaPicker, ItemPicker, ItemTypePicker, UniqueOrSetPicker } from '../pickers';
 import { AdvancedBadge } from './AdvancedBadge';
+import { MoreInAdvanced, ViewToggle } from './ViewToggle';
 import { ConditionField, ConditionSection } from './conditions/ConditionField';
-import { SegmentedControl, type SegmentedOption } from './conditions/SegmentedControl';
 import { ExceptionsControl } from './conditions/ExceptionsControl';
 import { LevelsControl } from './conditions/LevelsControl';
 import { LocationControl } from './conditions/LocationControl';
@@ -172,31 +172,6 @@ const ENABLED_HINT_ID = `${ENABLED_ID}-hint`;
 const CHECK_HINT_ID = 'loot-filter-rule-check-hint';
 const VIEW_TOGGLE_ID = 'loot-filter-rule-view';
 
-const VIEW_TITLES: Readonly<Record<RuleViewMode, string>> = {
-  basic: 'The common conditions and actions; a set Advanced field still shows, tagged "advanced"',
-  advanced: 'Every condition and action',
-};
-const VIEW_OPTIONS: readonly SegmentedOption<RuleViewMode>[] = RULE_VIEW_OPTIONS.map((option) => ({
-  ...option,
-  title: VIEW_TITLES[option.value],
-}));
-
-/** "N more conditions in the Advanced view" with a button that switches to it (Basic view only). */
-function MoreInAdvanced({ count, noun, onShow }: { readonly count: number; readonly noun: string; readonly onShow: () => void }) {
-  if (count === 0) return null;
-  return (
-    <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
-      <span>
-        {count} more {noun}
-        {count === 1 ? '' : 's'} in the Advanced view.
-      </span>
-      <button type="button" className="underline underline-offset-2 hover:text-foreground" onClick={onShow}>
-        Show Advanced view
-      </button>
-    </p>
-  );
-}
-
 /**
  * A hide rule's plain item stat checks ("hide only items with these stats"), collapsed: its `<`, `<=` and `!=` checks
  * are exceptions, which "Except items with…" lists. Open at first when it holds plain checks.
@@ -256,13 +231,6 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   const gate = ruleFieldGate({ view, rule, hides, diagnostics });
   const shows = (field: GatedCondition) => gate.condition(field) !== 'hidden';
   const badge = (field: GatedCondition) => (gate.condition(field) === 'advanced' ? <AdvancedBadge /> : undefined);
-  const showAdvanced = () => {
-    dispatch(setRuleView('advanced'));
-    // The "more in Advanced" line goes away with its button: keep the focus on the view toggle.
-    requestAnimationFrame(() => {
-      document.getElementById(VIEW_TOGGLE_ID)?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus();
-    });
-  };
   const addCheck = () => {
     if (!check.ok) return;
     dispatch(addRule({ rule: check.rule, at: index }));
@@ -384,15 +352,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
             )}
           </CardDescription>
           <CardAction className="flex flex-wrap items-center justify-end gap-2 @max-xl/page:col-start-1 @max-xl/page:row-span-1 @max-xl/page:row-start-auto @max-xl/page:justify-self-start @max-xl/page:justify-start">
-            <div id={VIEW_TOGGLE_ID}>
-              <SegmentedControl
-                aria-label="Rule view"
-                className="h-8"
-                value={view}
-                options={VIEW_OPTIONS}
-                onChange={(next) => dispatch(setRuleView(next))}
-              />
-            </div>
+            <ViewToggle id={VIEW_TOGGLE_ID} owner="rule" />
             {!isCheck && (
               <Button type="button" variant="outline" size="sm" disabled={!check.ok} aria-describedby={CHECK_HINT_ID} onClick={addCheck}>
                 <ScanSearch />
@@ -592,7 +552,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
             </ConditionSection>
           )}
 
-          <MoreInAdvanced count={gate.hiddenConditions} noun="condition" onShow={showAdvanced} />
+          <MoreInAdvanced count={gate.hiddenConditions} noun="condition" toggleId={VIEW_TOGGLE_ID} />
 
           {passthroughKeys.length > 0 && (
             <details className="rounded-md border px-3 py-2 text-sm">
@@ -619,7 +579,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
         </CardHeader>
         <CardContent className="space-y-4">
           <ActionsEditor actions={pickActions(rule)} onChange={(value) => patch(value)} filter={filter} owner="rule" gate={gate} />
-          <MoreInAdvanced count={gate.hiddenActions} noun="action" onShow={showAdvanced} />
+          <MoreInAdvanced count={gate.hiddenActions} noun="action" toggleId={VIEW_TOGGLE_ID} />
         </CardContent>
       </Card>
     </div>
