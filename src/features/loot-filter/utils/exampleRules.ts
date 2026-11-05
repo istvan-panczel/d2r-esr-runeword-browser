@@ -6,6 +6,10 @@
  * icon and a chat line, each of which the player can change or switch off (`buildExampleRule`). Hide rules have no
  * presentation: a hidden item shows nothing.
  *
+ * The default minimap icons are the generated `<shape>_<colour>` icons that pair with the example's style preset
+ * (`bundledAssets.ts` names the pairing): diamonds for runes, stars for uniques, sets and mythicals, a red cross for the
+ * Valuable look, and so on. Sully's icons stay in the Icon select.
+ *
  * Every rule uses real ESR 3.2.24 codes, types and stat names and passes the validator without warnings against the
  * game data, with its default presentation and without (exampleRules.test.ts). None uses `activeInLevels` (examples
  * apply at every filter level) and none checks Enhanced Damage or Enhanced Defense: the plugin reads them as 0 on
@@ -215,18 +219,18 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'upper-runes',
     group: 'runes',
     title: 'Mal, Ist and Gul runes',
-    description: 'Mal (r73), Ist (r74) and Gul (r75): the mid-rune look plus a sound, a rune icon on the minimap and a chat line.',
+    description: 'Mal (r73), Ist (r74) and Gul (r75): the mid-rune look plus a sound, an orange diamond on the minimap and a chat line.',
     rule: { itemCodes: numbered('r', 73, 75) },
-    presentation: { style: 'mid-rune', sound: 'mid.mp3', icon: 'rune', iconSize: 40, chatMessage: 'ÿc8Rune: ÿc0{name}' },
+    presentation: { style: 'mid-rune', sound: 'mid.mp3', icon: 'diamond_orange', iconSize: 40, chatMessage: 'ÿc8Rune: ÿc0{name}' },
   },
   {
     id: 'high-runes',
     group: 'runes',
     title: 'High runes: Vex to Zod',
     description:
-      'Vex (r76) to Zod (r83) with everything: a white plate, a beam, the tink sound, a rune icon and a chat line. The sound and icon files come with the .zip download.',
+      'Vex (r76) to Zod (r83) with everything: a white plate, a beam, the tink sound, a red diamond on the minimap and a chat line. The sound and icon files come with the .zip download.',
     rule: { itemCodes: numbered('r', 76, 83) },
-    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'rune', iconSize: 50, chatMessage: 'ÿc1High rune: ÿc0{name}' },
+    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'diamond_red', iconSize: 50, chatMessage: 'ÿc1High rune: ÿc0{name}' },
   },
   {
     id: 'kanji-runes',
@@ -242,7 +246,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'ESR kanji runes: No to Re',
     description: 'No (r36) to Re (r42), which Sully calls the gold runes: the mid-rune look with a sound and an icon.',
     rule: { itemCodes: numbered('r', 36, 42) },
-    presentation: { style: 'mid-rune', sound: 'mid.mp3', icon: 'rune', iconSize: 40, chatMessage: 'ÿc8ESR rune: ÿc0{name}' },
+    presentation: { style: 'mid-rune', sound: 'mid.mp3', icon: 'diamond_orange', iconSize: 40, chatMessage: 'ÿc8ESR rune: ÿc0{name}' },
   },
   {
     id: 'kanji-high-runes',
@@ -250,7 +254,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'ESR kanji runes: Su, He, Nu, Wo and Null',
     description: 'The top of the kanji line (r43 to r46) and the Null Rune (r50), treated like high runes.',
     rule: { itemCodes: [...numbered('r', 43, 46), 'r50'] },
-    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'rune', iconSize: 50, chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
+    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'diamond_red', iconSize: 50, chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
   },
   {
     id: 'elemental-runes',
@@ -258,7 +262,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'ESR elemental runes: Moon to God',
     description: 'Moon (r84) to God (r97), ESR’s highest runes, treated like high runes.',
     rule: { itemCodes: numbered('r', 84, 97) },
-    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'rune', iconSize: 50, chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
+    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'diamond_red', iconSize: 50, chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
   },
   {
     id: 'high-rune-decals',
@@ -266,7 +270,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Ancient Decals for Mal to Zod',
     description: 'An Ancient Decal names the rune it makes (To -> Mal … Wo -> Zod, 23l to 33l); Sully highlights these like the runes.',
     rule: { itemCodes: numbered('', 23, 33, 'l') },
-    presentation: { style: 'valuable', sound: 'mid.mp3', icon: 'scroll', iconSize: 30, chatMessage: 'ÿc8Decal: ÿc0{name}' },
+    presentation: { style: 'valuable', sound: 'mid.mp3', icon: 'cross_red', iconSize: 30, chatMessage: 'ÿc8Decal: ÿc0{name}' },
   },
 
   // ----- Gems -----
@@ -276,7 +280,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Perfect gems',
     description: 'One item type (gem5) covers every perfect gem, Amethyst to Obsidian; Perfect gems pay for most rerolls.',
     rule: { itemTypes: ['gem5'] },
-    presentation: { style: 'perfect-gem', icon: 'gem2', iconSize: 27 },
+    presentation: { style: 'perfect-gem', icon: 'gem_gold', iconSize: 27 },
   },
   {
     id: 'blemished-gems',
@@ -303,7 +307,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Every unique weapon and armour piece gets the unique look, the unique sound and a gold star on the minimap. Mythical bases are left out: the mythical rule gives them their own sound and chat line.',
     rule: { itemTypes: ['weap', 'armo'], excludeItemCodes: MYTHICAL_BASES, quality: 'unique' },
-    presentation: { style: 'unique', sound: 'unique.mp3', icon: 'goldstar', iconSize: 30 },
+    presentation: { style: 'unique', sound: 'unique.mp3', icon: 'star_gold', iconSize: 30 },
   },
   {
     id: 'unique-jewellery',
@@ -312,7 +316,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Ring and amulet types include the class rings and amulets, since an item type matches its children. The mythical ring and amulets are left out for the mythical rule.',
     rule: { itemTypes: ['ring', 'amul'], excludeItemCodes: MYTHICAL_JEWELLERY, quality: 'unique' },
-    presentation: { style: 'unique', sound: 'other.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc4Unique jewellery: {name}' },
+    presentation: { style: 'unique', sound: 'other.mp3', icon: 'crown_gold', iconSize: 40, chatMessage: 'ÿc4Unique jewellery: {name}' },
   },
   {
     id: 'unique-charms-jewels',
@@ -320,7 +324,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Unique charms and jewels',
     description: 'Unique charms and jewels are rare and often worth a lot, so they get the valuable look and the tink.',
     rule: { itemTypes: ['char', 'jewl'], quality: 'unique' },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'charm', iconSize: 35, chatMessage: 'ÿc4Unique: {name}' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'cross_red', iconSize: 35, chatMessage: 'ÿc4Unique: {name}' },
   },
   {
     id: 'unique-by-id',
@@ -337,9 +341,9 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'set-items',
     group: 'sets',
     title: 'Set items',
-    description: 'Every set item gets the set look, the unique sound and a star on the minimap.',
+    description: 'Every set item gets the set look, the unique sound and a green star on the minimap.',
     rule: { quality: 'set' },
-    presentation: { style: 'set', sound: 'unique.mp3', icon: 'star', iconSize: 30 },
+    presentation: { style: 'set', sound: 'unique.mp3', icon: 'star_green', iconSize: 30 },
   },
   {
     id: 'elite-set-chat',
@@ -358,7 +362,13 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Mythical uniques',
     description: 'The mythical bases that drop (weapons, armour, the mythical ring and amulets) at quality unique: ESR’s rarest drops.',
     rule: { itemCodes: [...MYTHICAL_GEAR, ...MYTHICAL_JEWELLERY], quality: 'unique' },
-    presentation: { style: 'mythical', sound: 'mythical.mp3', icon: 'Myth', iconSize: 50, chatMessage: 'ÿc;Mythical unique: ÿc4{name}' },
+    presentation: {
+      style: 'mythical',
+      sound: 'mythical.mp3',
+      icon: 'star_purple',
+      iconSize: 50,
+      chatMessage: 'ÿc;Mythical unique: ÿc4{name}',
+    },
   },
   {
     id: 'mythical-bases',
@@ -375,9 +385,9 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'elite-coupons',
     group: 'coupons',
     title: 'Elite coupons',
-    description: 'Every coupon for an elite unique (item type cpn3), with a sound, a scroll icon and a chat line.',
+    description: 'Every coupon for an elite unique (item type cpn3), with a sound, a gold scroll icon and a chat line.',
     rule: { itemTypes: ['cpn3'] },
-    presentation: { style: 'coupon', sound: 'other.mp3', icon: 'scroll', iconSize: 40, chatMessage: 'ÿc4Elite coupon: ÿc0{name}' },
+    presentation: { style: 'coupon', sound: 'other.mp3', icon: 'scroll_gold', iconSize: 40, chatMessage: 'ÿc4Elite coupon: ÿc0{name}' },
   },
   {
     id: 'exceptional-coupons',
@@ -385,7 +395,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Exceptional coupons',
     description: 'Coupons for exceptional uniques (cpn2): the coupon look and a smaller icon.',
     rule: { itemTypes: ['cpn2'] },
-    presentation: { style: 'coupon', icon: 'scroll', iconSize: 30 },
+    presentation: { style: 'coupon', icon: 'scroll_gold', iconSize: 30 },
   },
   {
     id: 'wild-card-coupon',
@@ -393,7 +403,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Ancient Coupon (Wild Card)',
     description: 'The Wild Card (99j) is a shortcut in many recipes, Blemished and Perfect gems among them.',
     rule: { itemCodes: ['99j'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'scroll', iconSize: 40, chatMessage: 'ÿc1Wild Card coupon' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'scroll_gold', iconSize: 40, chatMessage: 'ÿc1Wild Card coupon' },
   },
 
   // ----- Runeword bases -----
@@ -427,9 +437,16 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'ethereal-merc-bases',
     group: 'bases',
     title: 'Ethereal elite polearms and spears with 4 or more sockets',
-    description: 'Ethereal plus elite plus sockets: the classic mercenary weapon bases, with a chat line that names the sockets.',
+    description:
+      'Ethereal plus elite plus sockets: the classic mercenary weapon bases, with a socketed shield icon and a chat line that names the sockets.',
     rule: { itemTypes: ['pole', 'spea'], quality: ['normal', 'superior'], baseTier: 'elite', isEthereal: true, sockets: { min: 4 } },
-    presentation: { style: 'runeword-base', sound: 'other.mp3', chatMessage: 'ÿc5Ethereal base: ÿc0{name} ({sockets} sockets)' },
+    presentation: {
+      style: 'runeword-base',
+      sound: 'other.mp3',
+      icon: 'shield_white',
+      iconSize: 30,
+      chatMessage: 'ÿc5Ethereal base: ÿc0{name} ({sockets} sockets)',
+    },
   },
   {
     id: 'paladin-shield-bases',
@@ -465,7 +482,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
       itemStats: [{ stat: 'item_allskills', op: '>=', value: 1 }],
       nameSuffix: ' ÿc1[+{stat:127} skills]',
     },
-    presentation: { style: 'valuable', sound: 'other.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc4+All Skills base: ÿc0{name}' },
+    presentation: { style: 'valuable', sound: 'other.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc4+All Skills base: ÿc0{name}' },
   },
 
   // ----- Charms and jewels -----
@@ -506,7 +523,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Grand charms with +1 to a skill tab',
     description: 'One check per class skill tab under “any of” (24 tabs, param class × 8 + tab): any tab is enough.',
     rule: { itemTypes: ['lcha'], itemStatsAnyOf: everySkillTab(1) },
-    presentation: { style: 'good-charm', sound: 'other.mp3', icon: 'charm', iconSize: 35, chatMessage: 'ÿc3Skiller: {name}' },
+    presentation: { style: 'good-charm', sound: 'other.mp3', icon: 'square_emerald', iconSize: 35, chatMessage: 'ÿc3Skiller: {name}' },
   },
   {
     id: 'rare-jewels',
@@ -514,7 +531,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Rare jewels',
     description: 'Both jewel codes (jew and the Mythical Jewel mjw) at quality rare, Sully’s rare jewel look.',
     rule: { itemCodes: ['jew', 'mjw'], quality: 'rare' },
-    presentation: { style: 'good-jewel', sound: 'other.mp3', icon: 'gem', iconSize: 27, chatMessage: 'ÿc9Rare jewel' },
+    presentation: { style: 'good-jewel', sound: 'other.mp3', icon: 'hexagon_yellow', iconSize: 27, chatMessage: 'ÿc9Rare jewel' },
   },
 
   // ----- Class items and jewellery -----
@@ -548,7 +565,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Class-specific items (type clas) minus class rings and amulets (Exclude item types), magic or rare, with +3 to any skill tab: one check per tab under “any of”.',
     rule: { itemTypes: ['clas'], excludeItemTypes: ['ring', 'amul'], quality: ['magic', 'rare'], itemStatsAnyOf: everySkillTab(3) },
-    presentation: { style: 'valuable', sound: 'other.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc4+3 skill tab: {name}' },
+    presentation: { style: 'valuable', sound: 'other.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc4+3 skill tab: {name}' },
   },
 
   // ----- Endgame -----
@@ -558,7 +575,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Pandemonium keys',
     description: 'The Keys of Terror, Hate and Destruction (pk1 to pk3) with Sully’s Uber look and the gong.',
     rule: { itemCodes: ['pk1', 'pk2', 'pk3'] },
-    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'gemP', iconSize: 27, chatMessage: 'ÿc;Key: ÿc0{name}' },
+    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'key_purple', iconSize: 35, chatMessage: 'ÿc;Key: ÿc0{name}' },
   },
   {
     id: 'uber-organs',
@@ -566,7 +583,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Uber organs',
     description: 'Diablo’s Horn, Baal’s Eye and Mephisto’s Brain in their plain, Enhanced and Demonic forms.',
     rule: { itemCodes: ['dhn', 'bey', 'mbr', 'ht1', 'ht2', 'ht3', 'um1', 'um2', 'um3'] },
-    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'gemP', iconSize: 27, chatMessage: 'ÿc;Organ: ÿc0{name}' },
+    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'skull_purple', iconSize: 35, chatMessage: 'ÿc;Organ: ÿc0{name}' },
   },
   {
     id: 'respec-items',
@@ -574,7 +591,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Essences and the Token of Absolution',
     description: 'The four essences and the token they make, the way to respec.',
     rule: { itemCodes: ['tes', 'ceh', 'bet', 'fed', 'toa'] },
-    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'gemP', iconSize: 27, chatMessage: 'ÿc;Respec: ÿc0{name}' },
+    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'skull_purple', iconSize: 35, chatMessage: 'ÿc;Respec: ÿc0{name}' },
   },
   {
     id: 'legendary-materials',
@@ -583,7 +600,13 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Lilith’s Crystallized Tear, Tyrael’s Eternal Feather, Lucion’s Essence and Relic, Astrogha’s Petrified Heart, Inarius’ Everburning Halo.',
     rule: { itemCodes: ['um8', 'um9', 'u17', 'u18', 'u20', 'u40'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'redD', iconSize: 27, chatMessage: 'ÿc8Legendary material: ÿc0{name}' },
+    presentation: {
+      style: 'valuable',
+      sound: 'tink.mp3',
+      icon: 'cross_red',
+      iconSize: 35,
+      chatMessage: 'ÿc8Legendary material: ÿc0{name}',
+    },
   },
   {
     id: 'ascendancy-items',
@@ -591,7 +614,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Ascendancy Stones and orbs',
     description: 'The Ascendancy Stone, the five elemental orbs, the Orb of Creation and the Primordial Soulstone.',
     rule: { itemCodes: ['ast', 'u11', 'u12', 'u13', 'u14', 'u15', 'u16', 'u19'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc8Ascendancy: ÿc0{name}' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc8Ascendancy: ÿc0{name}' },
   },
   {
     id: 'ancient-scrolls',
@@ -608,7 +631,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'The token (u23) Corrupted Zakarum in Nightmare and Hell and the Endgame Map bosses drop: cubed with a class weapon it awakens, and the awakened token gives that weapon its mastery. The awakened tokens are made in the cube, so the rule leaves them out.',
     rule: { itemCodes: ['u23'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'goldstar', iconSize: 40, chatMessage: 'ÿc8Weapon Mastery Token' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc8Weapon Mastery Token' },
   },
   {
     id: 'hourglass-pieces',
@@ -617,7 +640,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'The Eternal Ancients of their tier 5 map drop the Broken hourglass (um6) and two shards (um4, um5); all three cube into the Eternal Hourglass of the Timeless Sands, a unique charm, so none may be left behind.',
     rule: { itemCodes: ['um4', 'um5', 'um6'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'charm', iconSize: 35, chatMessage: 'ÿc4Hourglass piece: ÿc0{name}' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'cross_red', iconSize: 35, chatMessage: 'ÿc4Hourglass piece: ÿc0{name}' },
   },
 
   // ----- Crafting -----
@@ -627,7 +650,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Body parts',
     description: 'Hearts, brains, eyes and the other monster parts the cube recipes take.',
     rule: { itemCodes: BODY_PARTS },
-    presentation: { style: 'crafting', icon: 'cube', iconSize: 27 },
+    presentation: { style: 'crafting', icon: 'flame_orange', iconSize: 27 },
   },
   {
     id: 'rune-crystals',
@@ -635,7 +658,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Rune crystals',
     description: 'The twelve crystals (Frozen Soul … Tainted Tourmaline) in their chipped, flawed and normal grades.',
     rule: { itemCodes: RUNE_CRYSTALS },
-    presentation: { style: 'crafting', icon: 'gem2', iconSize: 27 },
+    presentation: { style: 'crafting', icon: 'flame_orange', iconSize: 27 },
   },
   {
     id: 'common-reagents',
@@ -651,7 +674,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Rare reagents',
     description: 'Maple Leaf, Anvil Stone, Elixir, Cookbook and the Orb of Anointment: the gold plate, the gong and an icon.',
     rule: { itemCodes: ['map', 'qqq', 'elx', 'yyy', 'um7'] },
-    presentation: { style: 'rare-reagent', sound: 'gong.mp3', icon: 'redD', iconSize: 27, chatMessage: 'ÿc1Rare reagent: ÿc4{name}' },
+    presentation: { style: 'rare-reagent', sound: 'gong.mp3', icon: 'coin_gold', iconSize: 27, chatMessage: 'ÿc1Rare reagent: ÿc4{name}' },
   },
   {
     id: 'aura-stones',
@@ -678,7 +701,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Tier 1 maps',
     description: 'z01 to z04 with the map look and icon, no sound.',
     rule: { itemCodes: numbered('z', 1, 4) },
-    presentation: { style: 'map', icon: 'map', iconSize: 30 },
+    presentation: { style: 'map', icon: 'map_white', iconSize: 30 },
   },
   {
     id: 'tier-2-4-maps',
@@ -686,7 +709,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Tier 2 to 4 maps',
     description: 'z05 to z16 with the map sound and a chat line.',
     rule: { itemCodes: numbered('z', 5, 16) },
-    presentation: { style: 'map', sound: 'map.mp3', icon: 'map', iconSize: 30, chatMessage: 'Map: ÿc0{name}' },
+    presentation: { style: 'map', sound: 'map.mp3', icon: 'map_white', iconSize: 30, chatMessage: 'Map: ÿc0{name}' },
   },
   {
     id: 'tier-5-maps',
@@ -694,7 +717,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Tier 5 maps and The Hidden Vault',
     description: 'z17 to z20 and z99 with the tier 5 sound and a larger icon.',
     rule: { itemCodes: [...numbered('z', 17, 20), 'z99'] },
-    presentation: { style: 'map', sound: 't5_map.mp3', icon: 'map', iconSize: 40, chatMessage: 'ÿc4Tier 5 map: ÿc0{name}' },
+    presentation: { style: 'map', sound: 't5_map.mp3', icon: 'map_white', iconSize: 40, chatMessage: 'ÿc4Tier 5 map: ÿc0{name}' },
   },
 
   // ----- Gold and potions -----
@@ -704,7 +727,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Gold piles of 100,000 or more',
     description: 'Stat 14 (gold) is the size of the pile. The $$ marks are name parts of the rule, so the amount stays visible.',
     rule: { itemCodes: ['gld'], itemStats: [{ stat: 'gold', op: '>=', value: 100000 }], namePrefix: 'ÿc2$$ ', nameSuffix: ' ÿc2$$' },
-    presentation: { sound: 'other.mp3', chatMessage: 'ÿc9Large gold pile' },
+    presentation: { sound: 'other.mp3', icon: 'coin_gold', iconSize: 30, chatMessage: 'ÿc9Large gold pile' },
   },
   {
     id: 'ore-and-fake-notes',

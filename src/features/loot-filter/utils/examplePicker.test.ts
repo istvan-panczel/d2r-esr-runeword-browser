@@ -27,7 +27,7 @@ describe('example picker state', () => {
     expect(state.selected['high-runes']).toEqual({
       style: 'high-rune',
       sound: 'tink.mp3',
-      icon: 'rune',
+      icon: 'diamond_red',
       chatMessage: 'ÿc1High rune: ÿc0{name}',
     });
     state = setExampleChoice(state, 'high-runes', 'sound', null);
@@ -106,7 +106,7 @@ describe('buildStarterRules', () => {
     expect(Object.keys(styles)).toEqual(['HighRune', 'MapItem']);
     expect(styles.HighRune).toEqual(stylePreset('high-rune').style);
     expect(rules.every((rule) => rule.sound === undefined && rule.chatMessage === undefined)).toBe(true);
-    expect(rules.map((rule) => rule.icon?.iconName)).toEqual(['rune', 'rune', 'map']);
+    expect(rules.map((rule) => rule.icon?.iconName)).toEqual(['diamond_red', 'diamond_red', 'map_white']);
   });
 
   it('builds every example together without duplicate comments', () => {
