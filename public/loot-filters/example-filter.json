@@ -1,22 +1,27 @@
 // Example filter (with explanations), from the D2R ESR Runeword Browser. Use it as it is, or copy rules into your own.
+// Its rules are examples from the editor (Rules tab > Example rules): each comment starts with the example’s title.
 // How to read it:
 // - Rules run from top to bottom. Every rule whose conditions all hold applies to the item.
+// - The conditions of a rule must all hold; a list (item codes, item types, qualities) means any of them.
+//   "itemStats" needs every check, "itemStatsAnyOf" one of them.
+// - "useStyle" names one of the styles below, presets from the Styles tab: they hold the look (name colour,
+//   background, border, droplight). The sounds, minimap icons and chat lines are on the rules.
+// - Later rules win for the name, background, border, minimap icon and droplight; chat lines and sounds add up.
 // - "hide": true hides the item's ground label and stops: no rule after it runs for that item, and the
 //   highlights of the rules above it are gone too. So each hide rule carries its own exceptions, written
 //   as opposite checks: "item_allskills" "<" 1 means "only items without + to All Skills are hidden".
-// - Later rules win for the name, background, border, minimap icon and droplight; chat lines and sounds add up.
 // - Two levels: Leveling (id 1) shows more, Strict (id 2) hides more. "activeInLevels": [2] makes a rule
 //   work at Strict only; a rule without it works at every level. Bind the Next Filter Level key under
 //   Options > Controls > Loot Filter to switch in game, and Show Hidden Items to see hidden labels again.
-// - Each rule's "comment" says what it does and what to change. The editor keeps them (and these lines).
-// - tink.mp3, mid.mp3, unique.mp3 and the rune, goldstar, star and gem icons are files: download the filter
-//   as .zip with sounds and icons and unzip it into your LootFilters folder. Icons and droplights need HD graphics.
+// - The sounds (tink.mp3, mid.mp3, …) and minimap icons (diamond_red, star_gold, …) are files: download the
+//   filter as .zip with sounds and icons and unzip it into your LootFilters folder. Icons and droplights need
+//   HD graphics.
 {
   "formatVersion": 1,
   "title": "Example filter (with explanations)",
   "author": "D2R ESR Runeword Browser",
-  "version": "1.0.0",
-  "description": "A small filter to learn from: highlights runes, uniques, sets and jewellery, hides junk, and hides white, magic, rare, unique and set items with exceptions. Leveling shows more, Strict hides more.",
+  "version": "2.0.0",
+  "description": "A small filter to learn from, built from the editor’s example rules: highlights runes, gems, uniques, sets, mythicals, coupons, runeword bases, charms, jewels, keys, maps and big gold piles, and hides junk with exceptions. Leveling shows more, Strict hides more.",
   "filterLevels": [
     {"id": 1, "name": "Leveling"},
     {"id": 2, "name": "Strict"}
@@ -25,172 +30,374 @@
   "soundVolume": 50,
   "notifications": {"dropFormat": "ÿc4Drop: {qualityColor}{name}"},
   "styles": {
-    "Valuable": {
-      "sound": "tink.mp3",
+    "HighRune": {
+      "replaceName": "ÿc1{name}",
       "labelBackground": [255, 255, 255, 255],
-      "labelBorder": {"color": [255, 0, 0, 255], "width": 2},
-      "icon": {"iconName": "goldstar", "iconSize": 40},
-      "droplight": {"color": [255, 128, 0]}
+      "labelBorder": {"color": [240, 0, 0, 255], "width": 2},
+      "droplight": {"color": [255, 40, 0]}
     },
-    "Good": {"sound": "mid.mp3", "labelBorder": {"color": [255, 168, 0, 255], "width": 1}}
+    "MidRune": {"replaceName": "ÿc8{name}", "labelBackground": [0, 0, 0, 230], "labelBorder": {"color": [255, 168, 0, 255], "width": 1}},
+    "PerfectGem": {"labelBorder": {"color": [200, 150, 0, 255], "width": 1}},
+    "UniqueItem": {"replaceName": "ÿc4{name}", "labelBackground": [40, 25, 0, 230], "labelBorder": {"color": [255, 165, 0, 255], "width": 1}},
+    "SetItem": {"replaceName": "ÿc2{name}", "labelBackground": [0, 35, 0, 230], "labelBorder": {"color": [0, 255, 0, 255], "width": 1}},
+    "MythicalUnique": {
+      "replaceName": "ÿc;{name}",
+      "labelBackground": [255, 255, 255, 255],
+      "labelBorder": {"color": [174, 0, 255, 255], "width": 2},
+      "droplight": {"color": [174, 0, 255]}
+    },
+    "CouponItem": {"replaceName": "ÿc4{name}", "labelBorder": {"color": [255, 165, 0, 255], "width": 1}},
+    "RunewordBase": {"labelBackground": [45, 45, 45, 230], "labelBorder": {"color": [255, 255, 255, 255], "width": 1}},
+    "ValuableDrop": {"replaceName": "ÿc1{name}", "labelBackground": [255, 255, 255, 255], "labelBorder": {"color": [255, 0, 0, 255], "width": 1}},
+    "GoodCharm": {"labelBackground": [0, 40, 20, 230], "labelBorder": {"color": [0, 200, 80, 255], "width": 1}},
+    "GoodJewel": {"replaceName": "ÿc9{name}", "labelBackground": [0, 0, 0, 255], "labelBorder": {"color": [0, 200, 200, 255], "width": 1}},
+    "UberItem": {"replaceName": "ÿc;{name}", "labelBackground": [0, 0, 0, 200], "labelBorder": {"color": [165, 55, 253, 255], "width": 1}},
+    "MapItem": {"replaceName": "ÿc0{name}", "labelBackground": [0, 0, 0, 255], "labelBorder": {"color": [255, 255, 255, 255], "width": 1}}
   },
   "rules": [
     {
-      "comment": "High runes, Vex to Zod. The Valuable style adds tink.mp3, a white label with a red border, an orange droplight (light pillar) and a minimap icon; this rule swaps the style's gold star for the rune icon (a rule's own actions win over its style's) and prints a chat line. Add r84 to r97 for ESR's kanji runes.",
+      "comment": "High runes: Vex to Zod. useStyle HighRune (a style preset from the Styles tab) gives the white plate, the red border and the red beam (droplight); the rule adds the tink, a red diamond on the minimap and a chat line. Where a rule and its style set the same thing, the rule wins.",
       "itemCodes": ["r76", "r77", "r78", "r79", "r80", "r81", "r82", "r83"],
-      "useStyle": "Valuable",
-      "icon": {"iconName": "rune", "iconSize": 50},
-      "chatMessage": "ÿc8High rune: ÿc0{name}"
+      "chatMessage": "ÿc1High rune: ÿc0{name}",
+      "sound": "tink.mp3",
+      "icon": {"iconName": "diamond_red", "iconSize": 50},
+      "useStyle": "HighRune"
     },
     {
-      "comment": "Mal, Ist and Gul. The Good style adds mid.mp3 and an orange border; this rule adds a smaller rune icon. Move a rune code between this rule and the one above to make it louder or quieter.",
+      "comment": "ESR elemental runes: Moon to God. ESR’s highest runes (r84 to r97) get the high rune treatment: one style, used by two rules.",
+      "itemCodes": ["r84", "r85", "r86", "r87", "r88", "r89", "r90", "r91", "r92", "r93", "r94", "r95", "r96", "r97"],
+      "chatMessage": "ÿc;ESR rune: ÿc0{name}",
+      "sound": "tink.mp3",
+      "icon": {"iconName": "diamond_red", "iconSize": 50},
+      "useStyle": "HighRune"
+    },
+    {
+      "comment": "Mal, Ist and Gul runes. The MidRune style (a black box with an orange border), the mid sound, a smaller orange diamond (iconSize 40) and a chat line. In a chat line ÿc8 is orange and ÿc0 white.",
       "itemCodes": ["r73", "r74", "r75"],
-      "useStyle": "Good",
-      "icon": {"iconName": "rune", "iconSize": 30}
+      "chatMessage": "ÿc8Rune: ÿc0{name}",
+      "sound": "mid.mp3",
+      "icon": {"iconName": "diamond_orange", "iconSize": 40},
+      "useStyle": "MidRune"
     },
     {
-      "comment": "Magic and rare weapons and armour with + to All Skills: the Good style and a red tag after the name ({stat:127} is the item's All Skills value). The magic and rare hide rules below keep these items with an exception.",
+      "comment": "Mid runes: Hel to Um. The same MidRune style without a sound or an icon: a rule has only the actions you give it.",
+      "itemCodes": ["r65", "r66", "r67", "r68", "r69", "r70", "r71", "r72"],
+      "useStyle": "MidRune"
+    },
+    {
+      "comment": "Perfect gems. One item type (gem5) covers every perfect gem; itemCodes would list single items instead. The PerfectGem style is a thin gold border, the gold gem a small icon (iconSize 27).",
+      "itemTypes": ["gem5"],
+      "icon": {"iconName": "gem_gold", "iconSize": 27},
+      "useStyle": "PerfectGem"
+    },
+    {
+      "comment": "Unique weapons and armour. The UniqueItem look, the unique sound and a gold star; notify: true also prints the drop line set under notifications at the top of the file. excludeItemCodes leaves the mythical bases to the mythical rule.",
+      "excludeItemCodes": [
+        "7wd", "dd1", "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13",
+        "m14", "m15", "m16", "m17", "m18", "m20", "m21", "m22", "m23", "m24", "m25", "m26", "m27", "m28", "m29",
+        "m30", "m31", "m32", "m33", "m34", "m35", "m36", "m37", "m38", "m39", "m40", "m41", "m42", "m43", "m44",
+        "m45", "m46", "m47", "m48", "m49", "m50", "m51", "m52", "m53", "m54", "m55", "m56", "m57", "m58", "m59",
+        "m60", "m61"
+      ],
       "itemTypes": ["weap", "armo"],
-      "quality": ["magic", "rare"],
-      "itemStats": [{"stat": "item_allskills", "op": ">=", "value": 1}],
-      "useStyle": "Good",
-      "nameSuffix": " ÿc1[+{stat:127} skills]"
-    },
-    {
-      "comment": "Every unique: prints the drop line set under notifications, plays unique.mp3, a gold border, a gold droplight and a gold star on the minimap. At Strict a hide rule further down hides normal-tier uniques again: a later hide wins.",
       "quality": "unique",
       "notify": true,
       "sound": "unique.mp3",
-      "labelBorder": {"color": [199, 179, 119, 255], "width": 2},
-      "icon": {"iconName": "goldstar", "iconSize": 30},
-      "droplight": {"color": [199, 179, 119]}
+      "icon": {"iconName": "star_gold", "iconSize": 30},
+      "useStyle": "UniqueItem"
     },
     {
-      "comment": "Every set item: the drop line, unique.mp3, a green border and a star on the minimap. At Strict a hide rule further down hides normal-tier set items again.",
-      "quality": "set",
-      "notify": true,
+      "comment": "Unique rings and amulets. An item type matches its children, so ring and amul include ESR’s class rings and amulets. A gold crown on the minimap for the uniques worth the most.",
+      "excludeItemCodes": ["mrn", "mam", "au9"],
+      "itemTypes": ["ring", "amul"],
+      "quality": "unique",
+      "chatMessage": "ÿc4Unique jewellery: {name}",
+      "sound": "other.mp3",
+      "icon": {"iconName": "crown_gold", "iconSize": 40},
+      "useStyle": "UniqueItem"
+    },
+    {
+      "comment": "One unique by name: The Oculus. uniqueOrSetIds matches a unique by its row id (the picker finds it by name; ESR has a drop row and an Ancient Coupon row). It comes after the unique rules, so The Oculus keeps their label and gets this chat line too: sounds and chat lines add up.",
+      "quality": "unique",
+      "uniqueOrSetIds": [418, 973],
+      "chatMessage": "ÿc4The Oculus dropped",
       "sound": "unique.mp3",
-      "labelBorder": {"color": [0, 252, 0, 255], "width": 2},
-      "icon": {"iconName": "star", "iconSize": 30}
+      "useStyle": "UniqueItem"
     },
     {
-      "comment": "Rare rings, amulets, charms, jewels and circlets: a yellow border, a gem icon on the minimap and a chat line. Several item types in one list mean any of them. The rare hide rule below leaves these types alone.",
-      "itemTypes": ["ring", "amul", "char", "jewl", "circ"],
-      "quality": "rare",
-      "labelBorder": {"color": [255, 255, 100, 255], "width": 1},
-      "icon": {"iconName": "gem", "iconSize": 25},
-      "chatMessage": "ÿc9Rare: {name}"
+      "comment": "Set items. A quality with no item code or type matches every set item: the SetItem look, the unique sound and a green star.",
+      "quality": "set",
+      "sound": "unique.mp3",
+      "icon": {"iconName": "star_green", "iconSize": 30},
+      "useStyle": "SetItem"
     },
     {
-      "comment": "Magic jewels and charms: a blue border, so they stand out from the blue weapons the Strict level hides. Charm (char) covers small, large and grand charms.",
-      "itemTypes": ["jewl", "char"],
-      "quality": "magic",
-      "labelBorder": {"color": [110, 110, 255, 255], "width": 1}
+      "comment": "Mythical uniques. ESR’s mythical bases by item code at quality unique: the MythicalUnique look with its purple beam, the mythical sound, a purple star at the largest size (50) and a chat line (ÿc; is purple).",
+      "itemCodes": [
+        "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13", "m14", "m15",
+        "m16", "m17", "m18", "dd1", "m20", "m29", "m30", "m31", "m32", "m33", "m34", "m35", "m36", "m37", "m38",
+        "m39", "m60", "m61", "mrn", "mam", "au9"
+      ],
+      "quality": "unique",
+      "chatMessage": "ÿc;Mythical unique: ÿc4{name}",
+      "sound": "mythical.mp3",
+      "icon": {"iconName": "star_purple", "iconSize": 50},
+      "useStyle": "MythicalUnique"
     },
     {
-      "comment": "Runeword bases: white and superior (grey) weapons and armour with 3 or more sockets get a white border and the socket count after the name ({sockets}). The white hide rules below hide only 0 to 2 sockets, so these stay. Change 3 to 4 for 4+ sockets only.",
+      "comment": "Elite coupons. Ancient Coupons cube into uniques, and item type cpn3 holds the elite ones: the CouponItem look, a sound, a gold scroll and a chat line.",
+      "itemTypes": ["cpn3"],
+      "chatMessage": "ÿc4Elite coupon: ÿc0{name}",
+      "sound": "other.mp3",
+      "icon": {"iconName": "scroll_gold", "iconSize": 40},
+      "useStyle": "CouponItem"
+    },
+    {
+      "comment": "Show the socket count on white and grey gear. No style, sound or icon: {sockets} in nameSuffix writes the item’s sockets after its name. A later rule with its own name tag wins, as the +All Skills base rule below does.",
       "itemTypes": ["weap", "armo"],
       "quality": ["normal", "superior"],
-      "sockets": {"min": 3},
-      "labelBorder": {"color": [240, 240, 240, 255], "width": 1},
-      "nameSuffix": " [{sockets} sockets]"
+      "sockets": {"min": 2},
+      "nameSuffix": " ÿc5[{sockets}]"
     },
     {
-      "comment": "Hides cracked, damaged, crude and low quality (inferior) weapons and armour at every level: there is no activeInLevels, so the rule works at both levels.",
+      "comment": "Elite body armour with 3 or 4 sockets. sockets with a min and a max is a range; quality normal and superior means white or grey. The RunewordBase look: a grey plate with a white border.",
+      "itemTypes": ["tors"],
+      "quality": ["normal", "superior"],
+      "baseTier": "elite",
+      "sockets": {"min": 3, "max": 4},
+      "useStyle": "RunewordBase"
+    },
+    {
+      "comment": "Ethereal elite polearms and spears with 4 or more sockets. Every condition must hold: ethereal, an elite base and 4 or more sockets. A socketed shield on the minimap, and a chat line that names the sockets ({sockets}).",
+      "itemTypes": ["pole", "spea"],
+      "quality": ["normal", "superior"],
+      "baseTier": "elite",
+      "sockets": {"min": 4},
+      "isEthereal": true,
+      "chatMessage": "ÿc5Ethereal base: ÿc0{name} ({sockets} sockets)",
+      "sound": "other.mp3",
+      "icon": {"iconName": "shield_white", "iconSize": 30},
+      "useStyle": "RunewordBase"
+    },
+    {
+      "comment": "Superior bases with +All Skills. A stat check on a white base (item_allskills >= 1); {stat:127} writes the amount in the name, 127 being the stat’s id. The ValuableDrop look and a red cross on the minimap.",
+      "itemTypes": ["weap", "armo"],
+      "quality": "superior",
+      "itemStats": [{"stat": "item_allskills", "op": ">=", "value": 1}],
+      "nameSuffix": " ÿc1[+{stat:127} skills]",
+      "chatMessage": "ÿc4+All Skills base: ÿc0{name}",
+      "sound": "other.mp3",
+      "icon": {"iconName": "cross_red", "iconSize": 40},
+      "useStyle": "ValuableDrop"
+    },
+    {
+      "comment": "Small charms with Magic Find or Faster Hit Recovery. itemStatsAnyOf needs only one of its checks, so either stat is enough. Compare the next rule.",
+      "itemTypes": ["scha"],
+      "itemStatsAnyOf": [{"stat": "item_magicbonus", "op": ">=", "value": 5}, {"stat": "item_fastergethitrate", "op": ">=", "value": 5}],
+      "useStyle": "GoodCharm"
+    },
+    {
+      "comment": "Small charms with 5 or more to all resistances. itemStats needs every check: all four resistances at 5 or more, which only an all-resistances charm has.",
+      "itemTypes": ["scha"],
+      "itemStats": [
+        {"stat": "fireresist", "op": ">=", "value": 5},
+        {"stat": "lightresist", "op": ">=", "value": 5},
+        {"stat": "coldresist", "op": ">=", "value": 5},
+        {"stat": "poisonresist", "op": ">=", "value": 5}
+      ],
+      "useStyle": "GoodCharm"
+    },
+    {
+      "comment": "Rare jewels. Two item codes (jew and the Mythical Jewel mjw) at quality rare: the GoodJewel look and a yellow hexagon.",
+      "itemCodes": ["jew", "mjw"],
+      "quality": "rare",
+      "chatMessage": "ÿc9Rare jewel",
+      "sound": "other.mp3",
+      "icon": {"iconName": "hexagon_yellow", "iconSize": 27},
+      "useStyle": "GoodJewel"
+    },
+    {
+      "comment": "Pandemonium keys. The UberItem look, the gong and a purple key on the minimap.",
+      "itemCodes": ["pk1", "pk2", "pk3"],
+      "chatMessage": "ÿc;Key: ÿc0{name}",
+      "sound": "gong.mp3",
+      "icon": {"iconName": "key_purple", "iconSize": 35},
+      "useStyle": "UberItem"
+    },
+    {
+      "comment": "Tier 5 maps and The Hidden Vault. The MapItem look, the tier 5 map sound, a white map and a chat line.",
+      "itemCodes": ["z17", "z18", "z19", "z20", "z99"],
+      "chatMessage": "ÿc4Tier 5 map: ÿc0{name}",
+      "sound": "t5_map.mp3",
+      "icon": {"iconName": "map_white", "iconSize": 40},
+      "useStyle": "MapItem"
+    },
+    {
+      "comment": "Gold piles of 100,000 or more. The gold stat is the size of the pile. namePrefix and nameSuffix put $$ marks around the name, which keeps the amount visible; a gold coin on the minimap.",
+      "itemCodes": ["gld"],
+      "itemStats": [{"stat": "gold", "op": ">=", "value": 100000}],
+      "namePrefix": "ÿc2$$ ",
+      "nameSuffix": " ÿc2$$",
+      "chatMessage": "ÿc9Large gold pile",
+      "sound": "other.mp3",
+      "icon": {"iconName": "coin_gold", "iconSize": 30}
+    },
+    {
+      "comment": "Hide cracked, damaged and crude gear from character level 10. The hide rules start here. No activeInLevels, so it works at both levels; playerStats checks your character, not the item; excludeAreas leaves the five towns out, so nothing is hidden there.",
       "itemTypes": ["weap", "armo"],
       "quality": "inferior",
+      "playerStats": [{"stat": "level", "op": ">=", "value": 10}],
+      "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
     {
-      "comment": "Hides stamina, antidote and thawing potions at every level. One item type covers every item of that type; itemCodes would list single items instead.",
-      "itemTypes": ["spot", "apot", "wpot"],
-      "hide": true
-    },
-    {
-      "comment": "Hides plain arrows and bolts (normal and superior: a range of qualities) at every level; magic, rare and unique quivers still show. Delete this rule if you play a bow or crossbow character.",
-      "itemTypes": ["bowq", "xboq"],
-      "quality": {"max": "superior"},
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides minor and light healing and mana potions (hp1, hp2, mp1, mp2). At Leveling they still show. Add hp3 and mp3 to hide more.",
-      "itemCodes": ["hp1", "hp2", "mp1", "mp2"],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides every chipped gem with one item type, gem0 (gem1 is flawed, gem2 normal). Chipped gems still show at Leveling.",
-      "itemTypes": ["gem0"],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides Town Portal and Identify scrolls; carry the tomes instead.",
-      "itemCodes": ["tsc", "isc"],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides gold piles under 500 (the gold stat is the size of the pile). Change 500 to the smallest pile you still want to see.",
-      "itemCodes": ["gld"],
-      "itemStats": [{"stat": "gold", "op": "<", "value": 500}],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "White weapons and armour without sockets, hidden once your character is level 12 or higher (playerStats checks your character, not the item). Exceptions: ethereal items (isEthereal false), superior items (only quality normal is hidden), the quest items in excludeItemCodes and the five towns (excludeAreas), so items you drop in town stay visible.",
+      "comment": "Hide white gear with 0 or 1 socket from character level 10. Both levels. Superior items and bases with 2 or more sockets stay, and excludeItemCodes keeps quest items and mythical bases. Delete it if you socket white bases yourself.",
+      "excludeItemCodes": [
+        "7wd", "dd1", "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13",
+        "m14", "m15", "m16", "m17", "m18", "m20", "m21", "m22", "m23", "m24", "m25", "m26", "m27", "m28", "m29",
+        "m30", "m31", "m32", "m33", "m34", "m35", "m36", "m37", "m38", "m39", "m40", "m41", "m42", "m43", "m44",
+        "m45", "m46", "m47", "m48", "m49", "m50", "m51", "m52", "m53", "m54", "m55", "m56", "m57", "m58", "m59",
+        "m60", "m61", "d33", "g33", "hdm", "hfh", "hst", "leg", "msf", "qf1", "qf2"
+      ],
       "itemTypes": ["weap", "armo"],
-      "excludeItemCodes": ["leg", "hdm", "hfh", "hst", "msf", "g33", "d33", "qf1", "qf2"],
+      "excludeItemTypes": ["tpot"],
       "quality": "normal",
-      "sockets": 0,
-      "isEthereal": false,
+      "sockets": {"max": 1},
+      "playerStats": [{"stat": "level", "op": ">=", "value": 10}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "hide": true
+    },
+    {
+      "comment": "Hide minor healing and mana potions from character level 12. Both levels: list the codes of the potions you no longer drink.",
+      "itemCodes": ["hp1", "mp1"],
       "playerStats": [{"stat": "level", "op": ">=", "value": 12}],
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
     {
-      "comment": "Strict only: white weapons and armour with 0 to 2 sockets are hidden at any character level; 3+ socket bases and ethereal ones still show. Change the max to 3 to keep only 4+ socket bases. ESR's mythical bases (m01 to m61) are weapons too: add their codes to excludeItemCodes to keep white ones.",
-      "itemTypes": ["weap", "armo"],
-      "excludeItemCodes": ["leg", "hdm", "hfh", "hst", "msf", "g33", "d33", "qf1", "qf2"],
-      "quality": "normal",
-      "sockets": {"max": 2},
-      "isEthereal": false,
+      "comment": "Hide chipped and flawed gems from character level 20. Strict only (activeInLevels [2]): at Leveling they still show. Skip it if you craft Aura Stones, which take a chipped gem.",
+      "itemTypes": ["gem0", "gem1"],
+      "playerStats": [{"stat": "level", "op": ">=", "value": 20}],
       "excludeAreas": [1, 40, 75, 103, 109],
       "activeInLevels": [2],
       "hide": true
     },
     {
-      "comment": "Strict only: hides magic (blue) weapons and armour, except circlets (excludeItemTypes) and items with + to All Skills or 20% Faster Cast Rate or more. Every stat check must hold to hide, so one exception is enough to keep an item. Magic rings, amulets, jewels and charms are not weapons or armour, so they always show.",
-      "itemTypes": ["weap", "armo"],
-      "excludeItemTypes": ["circ"],
+      "comment": "Hide gold piles under 500 from character level 60. Strict only. Change 500 to the smallest pile you still want to see.",
+      "itemCodes": ["gld"],
+      "itemStats": [{"stat": "gold", "op": "<", "value": 500}],
+      "playerStats": [{"stat": "level", "op": ">=", "value": 60}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Hide magic and rare weapons from character level 20, except useful ones. Strict only. The exceptions are < 1 checks under itemStats, and every check must hold to hide, so a weapon with +All Skills, +class skills, +a skill tab, Faster Cast Rate or Increased Attack Speed keeps its label. Class skills and skill tabs need one check per class and per tab.",
+      "excludeItemCodes": [
+        "7wd", "dd1", "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13",
+        "m14", "m15", "m16", "m17", "m18", "m20", "m21", "m22", "m23", "m24", "m25", "m26", "m27", "m28", "m29",
+        "m30", "m31", "m32", "m33", "m34", "m35", "m36", "m37", "m38", "m39", "m40", "m41", "m42", "m43", "m44",
+        "m45", "m46", "m47", "m48", "m49", "m50", "m51", "m52", "m53", "m54", "m55", "m56", "m57", "m58", "m59",
+        "m60", "m61", "d33", "g33", "hdm", "hfh", "hst", "leg", "msf", "qf1", "qf2"
+      ],
+      "itemTypes": ["weap"],
+      "excludeItemTypes": ["clas"],
+      "quality": ["magic", "rare"],
+      "itemStats": [
+        {"stat": "item_allskills", "op": "<", "value": 1},
+        {"stat": "item_fastercastrate", "op": "<", "value": 1},
+        {"stat": "item_fasterattackrate", "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 0, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 1, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 2, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 3, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 4, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 5, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 6, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 7, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 0, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 1, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 2, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 8, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 9, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 10, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 16, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 17, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 18, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 24, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 25, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 26, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 32, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 33, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 34, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 40, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 41, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 42, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 48, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 49, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 50, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 56, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 57, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 58, "op": "<", "value": 1}
+      ],
+      "playerStats": [{"stat": "level", "op": ">=", "value": 20}],
+      "excludeAreas": [1, 40, 75, 103, 109],
+      "activeInLevels": [2],
+      "hide": true
+    },
+    {
+      "comment": "Hide magic armour from character level 20, except useful ones. Strict only, with the weapon rule’s exceptions plus Faster Hit Recovery, Faster Run/Walk and Magic Find. Rings, amulets, charms and jewels are not armour, so they always show.",
+      "excludeItemCodes": [
+        "7wd", "dd1", "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13",
+        "m14", "m15", "m16", "m17", "m18", "m20", "m21", "m22", "m23", "m24", "m25", "m26", "m27", "m28", "m29",
+        "m30", "m31", "m32", "m33", "m34", "m35", "m36", "m37", "m38", "m39", "m40", "m41", "m42", "m43", "m44",
+        "m45", "m46", "m47", "m48", "m49", "m50", "m51", "m52", "m53", "m54", "m55", "m56", "m57", "m58", "m59",
+        "m60", "m61", "d33", "g33", "hdm", "hfh", "hst", "leg", "msf", "qf1", "qf2"
+      ],
+      "itemTypes": ["armo"],
+      "excludeItemTypes": ["clas"],
       "quality": "magic",
-      "itemStats": [{"stat": "item_allskills", "op": "<", "value": 1}, {"stat": "item_fastercastrate", "op": "<", "value": 20}],
-      "excludeAreas": [1, 40, 75, 103, 109],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides rare weapons and armour, except circlets, gloves, boots and belts and items with + to All Skills. Rare rings, amulets, charms and jewels are not weapons or armour, so they always show.",
-      "itemTypes": ["weap", "armo"],
-      "excludeItemTypes": ["circ", "glov", "boot", "belt"],
-      "quality": "rare",
-      "itemStats": [{"stat": "item_allskills", "op": "<", "value": 1}],
-      "excludeAreas": [1, 40, 75, 103, 109],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides uniques on normal-tier bases (the low ones). Exceptional and elite uniques still show. Rings, amulets, charms, jewels and ESR's mythical uniques have no base tier, so baseTier never matches them and they always show. Write [\"normal\", \"exceptional\"] to hide more.",
-      "quality": "unique",
-      "baseTier": "normal",
-      "excludeAreas": [1, 40, 75, 103, 109],
-      "activeInLevels": [2],
-      "hide": true
-    },
-    {
-      "comment": "Strict only: hides set items on normal-tier bases; exceptional and elite set items, and set rings and amulets, still show. Delete this rule if you collect sets.",
-      "quality": "set",
-      "baseTier": "normal",
+      "itemStats": [
+        {"stat": "item_allskills", "op": "<", "value": 1},
+        {"stat": "item_fastercastrate", "op": "<", "value": 1},
+        {"stat": "item_fastergethitrate", "op": "<", "value": 1},
+        {"stat": "item_fastermovevelocity", "op": "<", "value": 1},
+        {"stat": "item_fasterattackrate", "op": "<", "value": 1},
+        {"stat": "item_magicbonus", "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 0, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 1, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 2, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 3, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 4, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 5, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 6, "op": "<", "value": 1},
+        {"stat": "item_addclassskills", "param": 7, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 0, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 1, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 2, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 8, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 9, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 10, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 16, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 17, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 18, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 24, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 25, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 26, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 32, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 33, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 34, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 40, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 41, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 42, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 48, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 49, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 50, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 56, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 57, "op": "<", "value": 1},
+        {"stat": "item_addskill_tab", "param": 58, "op": "<", "value": 1}
+      ],
+      "playerStats": [{"stat": "level", "op": ">=", "value": 20}],
       "excludeAreas": [1, 40, 75, 103, 109],
       "activeInLevels": [2],
       "hide": true

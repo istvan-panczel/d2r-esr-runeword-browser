@@ -342,11 +342,35 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '1.0.0', label: 'Example filter (with explanations) v1.0.0' }`. Our own
-  file (author "D2R ESR Runeword Browser"): 21 commented rules over two levels, Leveling (1) and Strict (2), with a
-  header comment on how rules run; it uses Sully's bundled sounds and icons. `exampleFilter.test.ts` parses, validates
-  and evaluates it. Credit line: "Example filter v1.0.0, written for this site to show how rules work; it uses sounds
-  and icons from Sully".
+  `basedOn { template: 'example', version: '2.0.0', label: 'Example filter (with explanations) v2.0.0' }`. Our own
+  file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
+  `soundVolume` 50 and the drop line `notifications.dropFormat` "ÿc4Drop: {qualityColor}{name}".
+  - _v2.0.0_ (2026-11-05) is built from the example rules (Rules tab, below): 28 of them, each exactly as the picker adds it
+    with its default choices (`buildExampleRule(example, defaultChoices(example))`: its style preset, Sully's sound,
+    the generated icon), plus `notify: true` on the unique rule and `activeInLevels: [2]` on four hide rules. Its
+    `styles` are the 13 presets the rules use (HighRune, MidRune, PerfectGem, UniqueItem, SetItem, MythicalUnique,
+    CouponItem, RunewordBase, ValuableDrop, GoodCharm, GoodJewel, UberItem, MapItem), copied as they are. Each
+    `comment` (the rule list's title line) is the example's title, a period, then what the rule teaches; in the file
+    the comment is each rule's first key (the editor's serializer writes it last, so the first edit moves it). The
+    rules: high runes, ESR elemental runes, Mal/Ist/Gul, mid runes, perfect gems, unique weapons and armour (with the
+    drop line), unique rings and amulets, The Oculus by unique id, set items, mythical uniques, elite coupons, the
+    socket count tag, elite body armour with 3 or 4 sockets, ethereal elite polearms and spears, superior +All Skills
+    bases, small charms any-of (MF or FHR) and all-of (all resistances), rare jewels, Pandemonium keys, tier 5 maps,
+    gold piles of 100,000 or more; then the hides: inferior gear (from character level 10), white gear with at most
+    one socket (10), minor potions (12) at both levels, and at Strict only chipped and flawed gems (20), gold under
+    500 (60), magic and rare weapons except useful ones and magic armour except useful ones (20). The `//` header says
+    what the file is, how rules run, the all-of/any-of lists, what a style holds, that a hide stops and needs its own
+    exceptions, the two levels and the .zip download.
+  - _v1.0.0_ (hand-written, 21 rules, two custom styles Valuable and Good with sounds and Sully's icons in them) was
+    replaced; drafts started from it get "Update available".
+  - _Tests_: `exampleFilter.test.ts` parses and validates it, checks the header at `EXAMPLE_TEMPLATE.version`, every
+    rule against its example (`FROM_EXAMPLES`, the ids in file order with what the file adds; a changed example fails
+    until the file follows and its version is bumped), the comments, the styles against the presets, the levels, the
+    sounds and the generated icons (the .zip carries them all, no `.lowend.sprite`), and runs it through the
+    evaluator; and that an edit keeps every comment. The file was written once with the serializer (comments moved
+    first) and is kept byte-stable: `public/loot-filters/` is Prettier-ignored.
+  - Credit line: "Example filter v2.0.0, built for this site from its example rules to show how rules work; sounds by
+    Sully, icons generated for this app".
 - **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
   (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
   order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `version`, `file`,
@@ -561,6 +585,34 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
     A select's options mount only while it is open (controlled `open`; the trigger shows the chosen label as
     `SelectValue` children): with every example ticked there are some 200 selects, and Select all took about 850 ms
     with every option rendered, about 150 ms now. Typing a letter on a closed trigger no longer picks an option.
+  - _Default icons_ (2026-11-05): every example icon is a [generated icon](#generated-icons) that pairs with the
+    example's style preset; Sully's twelve stay in the Icon select. 34 examples have one, at 27 to 50 px
+    (`exampleRules.test.ts` checks both):
+
+    | Examples                                                                                                                                                           | Icon             | Size     |
+    | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | -------- |
+    | High runes, ESR kanji Su to Null, ESR elemental runes                                                                                                              | `diamond_red`    | 50       |
+    | Mal/Ist/Gul, ESR kanji No to Re                                                                                                                                    | `diamond_orange` | 40       |
+    | Perfect gems                                                                                                                                                       | `gem_gold`       | 27       |
+    | Unique weapons and armour                                                                                                                                          | `star_gold`      | 30       |
+    | Unique rings and amulets                                                                                                                                           | `crown_gold`     | 40       |
+    | Set items                                                                                                                                                          | `star_green`     | 30       |
+    | Mythical uniques                                                                                                                                                   | `star_purple`    | 50       |
+    | Elite coupons, Wild Card coupon; exceptional coupons                                                                                                               | `scroll_gold`    | 40; 30   |
+    | Ethereal elite polearms and spears (new)                                                                                                                           | `shield_white`   | 30       |
+    | Grand charms with +1 to a skill tab                                                                                                                                | `square_emerald` | 35       |
+    | Rare jewels                                                                                                                                                        | `hexagon_yellow` | 27       |
+    | Pandemonium keys                                                                                                                                                   | `key_purple`     | 35       |
+    | Uber organs, essences and the Token of Absolution                                                                                                                  | `skull_purple`   | 35       |
+    | The Valuable look: decals, unique charms/jewels, +All Skills bases, +3 class items, legendary materials, Ascendancy items, Weapon Mastery Tokens, hourglass pieces | `cross_red`      | 30 to 40 |
+    | Body parts, rune crystals                                                                                                                                          | `flame_orange`   | 27       |
+    | Rare reagents; gold piles of 100,000 or more (new)                                                                                                                 | `coin_gold`      | 27; 30   |
+    | Maps (tier 1, tier 2 to 4; tier 5)                                                                                                                                 | `map_white`      | 30; 40   |
+
+    Examples without an icon kept none, except the two marked new (the only base rule with a sound, and big gold
+    piles, which `coin_gold` names). The uber items and legendary materials went from 27 to 35 px, jackpot drops
+    that had been the smallest icons.
+
   - _Bulk_: "No sounds", "No chat messages", "No minimap icons" switch those off for every rule (the selects show
     "None (no sounds)"…; the choices come back when the switch is off), plus **Select all label rules**, Clear and
     "N selected". Bulk selects never tick a hide rule among label rules (owner, 2026-11-05: a hide rule always needs a
@@ -1131,6 +1183,9 @@ fails while the folders and the registry disagree, and decodes every icon.
 | `map_white`                                   | Map                                                                 |
 | `circle_grey`                                 | Muted                                                               |
 | `star_white`, `diamond_white`, `circle_white` | any colour through the icon's tint (`color` multiplies the colours) |
+
+The example rules default to them (_Default icons_ under the Rules tab's example rules), and so the example filter
+v2.0.0 uses them; Sully's filter keeps his own.
 
 Drawing: every shape is a signed distance function on the 128 px canvas; a pixel's distance gives the fill, a dark
 outline 6 px wide (about 2 px at the usual 40 minimap pixels; the colour × 0.16) and the transparent outside, each edge

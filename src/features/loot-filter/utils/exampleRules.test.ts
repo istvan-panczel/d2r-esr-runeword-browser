@@ -8,7 +8,7 @@ import { buildLootFilterReference } from '../engine/reference';
 import { serializeLootFilter } from '../engine/serialize';
 import type { LootFilter, LootFilterRule, LootFilterStyle } from '../engine/types';
 import { validateLootFilter } from '../engine/validate';
-import { findBundledIcon, findBundledSound } from './bundledAssets';
+import { findBundledIcon, findBundledIconAsset, findBundledSound } from './bundledAssets';
 import {
   buildExampleRule,
   chatOptions,
@@ -103,6 +103,32 @@ describe('EXAMPLE_RULES', () => {
       if (presentation.sound !== undefined) expect(findBundledSound(presentation.sound), entry.id).toBe(presentation.sound);
       if (presentation.icon !== undefined) expect(findBundledIcon(presentation.icon), entry.id).toBe(presentation.icon);
     }
+  });
+
+  it('defaults to the generated icons, drawn at 27 to 50 px', () => {
+    const withIcon = EXAMPLE_RULES.filter((entry) => entry.presentation?.icon !== undefined);
+    expect(withIcon.length).toBeGreaterThan(30);
+    for (const entry of withIcon) {
+      expect(findBundledIconAsset(entry.presentation?.icon)?.credit, entry.id).toBe('Generated for this app');
+      const size = entry.presentation?.iconSize ?? DEFAULT_EXAMPLE_ICON_SIZE;
+      expect(size, entry.id).toBeGreaterThanOrEqual(27);
+      expect(size, entry.id).toBeLessThanOrEqual(50);
+    }
+    const icon = (id: string) => example(id).presentation?.icon;
+    expect([icon('high-runes'), icon('upper-runes'), icon('unique-items'), icon('set-items'), icon('mythical-uniques')]).toEqual([
+      'diamond_red',
+      'diamond_orange',
+      'star_gold',
+      'star_green',
+      'star_purple',
+    ]);
+    expect([icon('pandemonium-keys'), icon('uber-organs'), icon('elite-coupons'), icon('perfect-gems'), icon('tier-5-maps')]).toEqual([
+      'key_purple',
+      'skull_purple',
+      'scroll_gold',
+      'gem_gold',
+      'map_white',
+    ]);
   });
 
   it('never checks Enhanced Damage or Defense', () => {
