@@ -497,7 +497,7 @@ fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Styles   | Style list (name, action count, "used by N rules"), Add style, rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor. Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Styles   | Style list (name, action count, "used by N rules"), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor. Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Only the `//` comment lines at the top of the file are kept: comments between rules are not shown here (the text is the serialized model) and are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
 | Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -945,13 +945,48 @@ not work in that context, gets a hint. Per-language texts are read-only ("multi-
 `ColorControl` is a native colour input + optional alpha slider + `[r, g, b(, a)]` readout + clear
 (`utils/colorValues.ts`).
 
-Previews: bundled assets are listed in `utils/bundledAssets.ts` (the nine `public/loot-filters/sounds/*.mp3` and the
-twelve `public/loot-filters/icons/*.sprite`, names in the files' own case because the app's server is case-sensitive;
-an `iconName` in any case finds them). `useSoundPreview` plays one `Audio` at a time across the page and stops on
+Previews: bundled assets are listed in the asset registry, `utils/bundledAssets.ts` (see below; names in the files'
+own case because the app's server is case-sensitive; an `iconName` in any case finds them). `useSoundPreview` plays one `Audio` at a time across the page and stops on
 unmount. `useBundledSprite` fetches and decodes a bundled sprite once per name; any other icon name offers a local
 `.sprite` picker. The canvas draws the first frame at `iconSize` (longer side) with the tint applied
 (`utils/tintSprite.ts`: RGB × colour/255, alpha × colour[3]/255); a decode error shows the decoder's message. A sounds.txt
 sound has no preview (it plays from the game files).
+
+### Bundled sounds and icons (`utils/bundledAssets.ts`)
+
+The asset registry lists every sound and minimap icon the app bundles under `public/loot-filters/sounds/` and
+`public/loot-filters/icons/`: `BUNDLED_SOUND_ASSETS` (`file`, `label`, `use`, `credit`) and `BUNDLED_ICON_ASSETS`
+(`name` without `.sprite`, `label`, `use`, `credit`, `lowend` when a `<name>.lowend.sprite` variant sits next to it).
+`BUNDLED_SOUNDS` / `BUNDLED_ICONS` (the names), `findBundledSound(Asset)` / `findBundledIcon(Asset)` and
+`DEFAULT_ICON_NAME` (the first icon, `goldstar`) derive from it. Everything that offers or ships the files reads it: the
+sound combobox and its play button, the icon field's suggestions, the sprite preview, the example rules dialog's
+Sound and Icon selects, the Test tab's play button, and the .zip download (`collectReferencedAssets`, which adds the
+`.lowend.sprite` of a `lowend` icon). Today all nine sounds and twelve icons are Sully's (the `use` lines say where his
+filter uses each one; `tinkLOUD.mp3` is bundled but unused by him).
+
+**Adding a sound or icon**: put the file into `public/loot-filters/sounds/` (`.mp3`, `.wav` or `.flac`) or
+`public/loot-filters/icons/` (`.sprite`), then add one line to the registry, e.g.
+`sound('chime.mp3', 'Chime', 'Rare drops you want a soft cue for.')` (the `sound` / `icon` helpers fill in the credit;
+pass a full object for another author). Icons are bundled at 128 px on the longer side (Lanczos on premultiplied
+alpha, see [Using a filter in the game](#using-a-filter-in-the-game); the repo has no script for it, so shrink a new
+sprite with your sprite tool first). `bundledAssets.test.ts`
+fails while the folders and the registry disagree, and decodes every icon.
+
+### Style presets (`utils/stylePresets.ts`, `components/StylePresetMenu.tsx`, `components/PresetPreview.tsx`)
+
+`STYLE_PRESETS`: 18 ready-made styles in the spirit of Sully's PoE-like labels, each `{ id, name, label, description,
+sample, style }`. A preset holds the look only (a `ÿc` colour before `{name}` in `replaceName`, `labelBackground`,
+`labelBorder`, a `droplight` on the two top ones); sound, icon and chat line stay on the rule, so the example dialog's
+"No sounds / chat / icons" switches really switch everything off. Names are PascalCase without spaces like Sully's
+(`HighRune`, `MidRune`, `LowRune`, `UniqueItem`, `SetItem`, `MythicalUnique`, `RunewordBase`, `GoodCharm`, `GoodJewel`,
+`GoodJewellery`, `UberItem`, `PerfectGem`, `CraftingReagent`, `RareReagent`, `CouponItem`, `MapItem`, `ValuableDrop`,
+`MutedJunk`), none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows each with a
+`PresetPreview` (a `LabelPreview` of `presetPreviewText`: the sample name in place of `{name}`) and its description.
+Picking one copies it into `styles` under its name and selects it (toast "Added the style …"); `presetStyleStatus`
+compares by content (key order ignored): an identical style of that name is just selected ("already in the filter"),
+a different one is kept and selected ("Your style is kept as it is. Rename it first to add the preset."), never
+overwritten. `stylePresets.test.ts` checks the colour codes, that no preset has a sound, icon, chat line or hide, and
+validates all of them in one filter.
 
 ## JSON tab (`components/JsonTab.tsx`, `components/json-editor/`)
 

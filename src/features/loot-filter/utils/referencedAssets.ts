@@ -1,7 +1,7 @@
 import { JsoncSyntaxError } from '../engine/jsonc';
 import { parseLootFilter } from '../engine/parse';
 import type { LootFilter, RuleActions } from '../engine/types';
-import { findBundledIcon, findBundledSound } from './bundledAssets';
+import { findBundledIconAsset, findBundledSound } from './bundledAssets';
 import { lootFilterAssetUrl } from './template';
 
 /**
@@ -18,14 +18,11 @@ export interface BundledAssetFile {
 }
 
 export interface ReferencedAssets {
-  /** Files the app bundles, in first-reference order (an icon brings its `.lowend.sprite` variant along). */
+  /** Files the app bundles (the `bundledAssets.ts` registry), in first-reference order (an icon brings its `.lowend.sprite` variant along). */
   readonly bundled: readonly BundledAssetFile[];
   /** Files the filter references that the app does not bundle (paths as above): the user must supply them. */
   readonly missing: readonly string[];
 }
-
-/** Icons whose bundled files include a `<name>.lowend.sprite` variant (the game's low graphics setting). */
-const LOWEND_ICONS: ReadonlySet<string> = new Set(['goldstar']);
 
 const SOUND_FILE = /\.(wav|mp3|flac)$/i;
 
@@ -54,11 +51,11 @@ export function collectReferencedAssets(filter: LootFilter): ReferencedAssets {
     }
     const iconName = actions.icon?.iconName;
     if (iconName !== undefined && iconName.trim() !== '') {
-      const name = findBundledIcon(iconName);
-      if (name === undefined) addMissing(`icons/${iconName.trim().replace(/\.sprite$/i, '')}.sprite`);
+      const asset = findBundledIconAsset(iconName);
+      if (asset === undefined) addMissing(`icons/${iconName.trim().replace(/\.sprite$/i, '')}.sprite`);
       else {
-        addBundled(`icons/${name}.sprite`);
-        if (LOWEND_ICONS.has(name)) addBundled(`icons/${name}.lowend.sprite`);
+        addBundled(`icons/${asset.name}.sprite`);
+        if (asset.lowend === true) addBundled(`icons/${asset.name}.lowend.sprite`);
       }
     }
   };
