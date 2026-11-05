@@ -172,7 +172,7 @@ export function JsonTab({
         </p>
       </div>
 
-      <DiagnosticsList diagnostics={diagnostics} onShowRule={onShowRule} onShowInJson={handleShowInJson} />
+      <DiagnosticsList diagnostics={diagnostics} onShowRule={onShowRule} onShowInJson={handleShowInJson} filter={filter} />
     </div>
   );
 }

@@ -2,7 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, FileWarning, Heart, Download as DownloadIcon, Lock, Pencil, Save, Settings2, Trash2, Undo2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Bot,
+  ClipboardPaste,
+  FileWarning,
+  Heart,
+  Download as DownloadIcon,
+  Lock,
+  Pencil,
+  Save,
+  Settings2,
+  Trash2,
+  Undo2,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +27,7 @@ import { isSupabaseConfigured } from '@/core/supabase/config';
 import { RequestState } from '@/core/types';
 import { openSignInDialog, selectAuthInitialized, selectAuthUserId } from '@/features/auth';
 import { serializeLootFilter } from '../engine/serialize';
+import { ImportAiAnswerDialog } from '../components/ai/ImportAiAnswerDialog';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { DiagnosticsChip } from '../components/DiagnosticsChip';
 import { FilterDownloadMenu } from '../components/FilterDownloadMenu';
@@ -61,6 +75,7 @@ import {
   openSaved,
   remove,
   rename,
+  replaceFilter,
   selectRule,
 } from '../store/lootFilterSlice';
 import {
@@ -77,7 +92,10 @@ import {
   selectLibraryHydrated,
 } from '../store/selectors';
 import type { EditorTarget } from '../store/types';
+import type { AiAnswerSuccess } from '../utils/aiAnswer';
+import { aiStarterState } from '../utils/aiStarter';
 import { templateBasedOn } from '../utils/basedOn';
+import { AI_PAGE_PATH } from '../utils/library';
 import { authorLabelOf, editorRouteOf, keepsOwnerSandbox, saveDialogDetailsOf, targetMatchesRoute } from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
 import { BUNDLED_TEMPLATES, fetchTemplateText, type BundledTemplateId } from '../utils/template';
@@ -203,6 +221,7 @@ export function LootFilterEditorScreen() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirm, setConfirm] = useState<'discard' | 'delete' | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [aiImportOpen, setAiImportOpen] = useState(false);
   // State the tabs share or that must outlive a tab switch (each tab unmounts when another is shown).
   const [jsonState, setJsonState] = useState<SessionJsonDraft | null>(null);
   const [problemsScroll, setProblemsScroll] = useState(0);
@@ -534,6 +553,27 @@ export function LootFilterEditorScreen() {
     setJsonState(draft === null ? null : { session: sessionKey, draft });
   };
 
+  // "Improve with AI": the AI page with this filter as the starter (the router state carries its current text).
+  const handleImproveWithAi = () => {
+    void navigate(AI_PAGE_PATH, { state: aiStarterState({ name, text: downloadText() }) });
+  };
+
+  // "Import AI answer": the answer replaces the content like the JSON tab's Apply, then the problems list shows.
+  const handleAiImport = (answer: AiAnswerSuccess) => {
+    setAiImportOpen(false);
+    dispatch(replaceFilter({ filter: answer.filter, diagnostics: answer.diagnostics, notes: answer.notes }));
+    // Unapplied JSON-tab text belonged to the replaced content.
+    setJsonState(null);
+    const { errors, warnings } = countDiagnostics(selectDiagnostics(store.getState(), reference));
+    toast.success('Imported the AI answer', {
+      description:
+        errors + warnings === 0
+          ? 'No problems found.'
+          : `${String(errors)} errors, ${String(warnings)} warnings: Copy problems for the AI and paste them into the chat.`,
+    });
+    showDiagnostics();
+  };
+
   const showRule = (index: number) => {
     dispatch(selectRule(index));
     setTab('rules');
@@ -694,6 +734,25 @@ export function LootFilterEditorScreen() {
                 Details
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setAiImportOpen(true);
+              }}
+            >
+              <ClipboardPaste />
+              Import AI answer
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleImproveWithAi}
+              title="Build a prompt for an AI chat that starts from this filter"
+            >
+              <Bot />
+              Improve with AI
+            </Button>
             <FilterDownloadMenu
               name={name}
               getText={downloadText}
@@ -770,6 +829,13 @@ export function LootFilterEditorScreen() {
           details={{ name: row.name, description: row.description ?? '', isPrivate: row.is_private }}
         />
       )}
+      <ImportAiAnswerDialog
+        open={aiImportOpen}
+        onOpenChange={setAiImportOpen}
+        mode={{ kind: 'replace' }}
+        reference={reference}
+        onImport={handleAiImport}
+      />
       <ConfirmDeleteDialog
         open={confirm === 'discard'}
         name={null}

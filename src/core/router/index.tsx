@@ -175,6 +175,11 @@ const LootFilterEditorScreen = lazy(async () => {
   return { default: module.LootFilterEditorScreen };
 });
 
+const LootFilterAiScreen = lazy(async () => {
+  const module = await loadLootFilterFeature();
+  return { default: module.LootFilterAiScreen };
+});
+
 const StashLayout = lazy(async () => {
   const module = await import('@/features/stash');
   return { default: module.StashLayout };
@@ -258,6 +263,7 @@ export const router = createBrowserRouter(
           element: routeElement(LootFilterLayout),
           children: [
             { index: true, element: routeElement(LootFilterLibraryScreen) },
+            { path: 'ai', element: routeElement(LootFilterAiScreen) },
             // One screen for the editor routes (the param names, or the path of a bundled template's sandbox, tell
             // them apart), so moving from a draft's route to its saved route after Save keeps the editor mounted.
             // Static segments rank above ':id'.
