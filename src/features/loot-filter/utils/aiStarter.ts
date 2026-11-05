@@ -2,7 +2,7 @@
  * The starter of the AI page: the filter the prompt asks the LLM to start from. Sources: none (a new filter), a bundled
  * template, a draft in this browser, the filter open in the editor ("Improve with AI", handed over in the router
  * state), an uploaded file, or rules picked from the example rules (`{ rules, styles }`, the shape the example rule
- * picker's `onConfirm(rules, styles)` gives; wired once that picker exists).
+ * picker's `onConfirm(rules, styles)` gives).
  */
 import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
@@ -34,6 +34,8 @@ export interface ResolvedStarter {
   readonly label: string;
   readonly text: string;
   readonly ruleCount: number;
+  /** Picked from the example rules (`starterFromRules`): the prompt treats it as a skeleton, not a finished filter. */
+  readonly fromExamples?: boolean;
 }
 
 export type StarterResult = { readonly ok: true; readonly starter: ResolvedStarter } | { readonly ok: false; readonly message: string };
@@ -60,7 +62,7 @@ export function starterFromRules({ rules, styles }: ExampleRulesStarter, label?:
     leadingComments: [],
   });
   const count = `${String(rules.length)} example ${rules.length === 1 ? 'rule' : 'rules'}`;
-  return { label: label ?? count, text, ruleCount: rules.length };
+  return { label: label ?? count, text, ruleCount: rules.length, fromExamples: true };
 }
 
 /** The router state key "Improve with AI" uses. */

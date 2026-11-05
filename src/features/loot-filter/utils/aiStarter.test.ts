@@ -31,6 +31,7 @@ describe('starterFromRules', () => {
     });
     expect(starter.label).toBe('1 example rule');
     expect(starter.ruleCount).toBe(1);
+    expect(starter.fromExamples).toBe(true);
     const parsed = parseLootFilter(starter.text);
     expect(parsed.diagnostics).toEqual([]);
     expect(validateLootFilter(parsed.filter)).toEqual([]);

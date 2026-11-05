@@ -13,6 +13,7 @@ import { useManifest } from '@/features/game-data/hooks/useManifest';
 import { downloadBlob } from '@/utils/download';
 import { validateLootFilter } from '../engine/validate';
 import { AiStarterPicker } from '../components/ai/AiStarterPicker';
+import { ExampleRulesDialog } from '../components/rules/ExampleRulesDialog';
 import { copyText } from '../components/ai/copyText';
 import { ImportAiAnswerDialog } from '../components/ai/ImportAiAnswerDialog';
 import { useLootFilterData } from '../hooks/useLootFilterData';
@@ -29,6 +30,7 @@ import {
   type ExampleRulesStarter,
   type StarterResult,
 } from '../utils/aiStarter';
+import type { ExamplePickerState } from '../utils/examplePicker';
 import { draftPath } from '../utils/library';
 import { BUNDLED_TEMPLATES, loadTemplateText, type BundledTemplateId } from '../utils/template';
 
@@ -106,8 +108,10 @@ export function LootFilterAiScreen() {
   const [upload, setUpload] = useState<{ readonly name: string; readonly text: string } | null>(null);
   const [templateTexts, setTemplateTexts] = useState<Partial<Record<BundledTemplateId, string>>>({});
   const [templateErrors, setTemplateErrors] = useState<Partial<Record<BundledTemplateId, string>>>({});
-  // Seam: the example rule picker (`onConfirm(rules, styles)`) sets this and the `rules` choice once it is wired.
-  const [rulesStarter] = useState<ExampleRulesStarter | null>(null);
+  // Example rules picked as the starter, with the picker's selection so "Change example rules" reopens on it.
+  const [rulesStarter, setRulesStarter] = useState<ExampleRulesStarter | null>(null);
+  const [rulesSelection, setRulesSelection] = useState<ExamplePickerState | undefined>(undefined);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [size, setSize] = useState<GameDataSize>('compact');
   const [generator, setGenerator] = useState<PromptModule | null>(null);
   const [generatorFailed, setGeneratorFailed] = useState(false);
@@ -311,7 +315,24 @@ export function LootFilterAiScreen() {
           drafts={drafts}
           uploadName={upload?.name ?? null}
           onUpload={(file) => void handleUpload(file)}
+          rulesCount={rulesStarter === null ? null : rulesStarter.rules.length}
+          onPickRules={() => {
+            setRulesOpen(true);
+          }}
           status={starterStatus}
+        />
+        <ExampleRulesDialog
+          open={rulesOpen}
+          onOpenChange={setRulesOpen}
+          title="Pick example rules for the starter"
+          confirmLabel="Use as starter"
+          initialState={rulesSelection}
+          onConfirm={(rules, styles, selection) => {
+            setRulesStarter({ rules, styles });
+            setRulesSelection(selection);
+            setChoice({ kind: 'rules' });
+            setRulesOpen(false);
+          }}
         />
       </section>
 

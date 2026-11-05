@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Upload } from 'lucide-react';
+import { BookOpenCheck, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,17 +19,31 @@ interface AiStarterPickerProps {
   /** The uploaded file's name, once one is uploaded. */
   readonly uploadName: string | null;
   readonly onUpload: (file: File) => void;
+  /** How many example rules were picked as a starter, once some were. */
+  readonly rulesCount: number | null;
+  /** Opens the example rules picker (on the previous selection, if any). */
+  readonly onPickRules: () => void;
   /** What the chosen starter is: "223 rules", a spinner while a template loads, or why it cannot be used. */
   readonly status:
     { readonly kind: 'ready'; readonly text: string } | { readonly kind: 'loading' } | { readonly kind: 'error'; readonly text: string };
 }
 
 /**
- * The starter of the AI page: none, a bundled template, the filter from the editor, a draft of this browser or an
- * uploaded file. ("Pick example rules" joins once the example rule picker can hand over `{ rules, styles }`: the
- * `rules` choice of `AiStarterChoice`.)
+ * The starter of the AI page: none, a bundled template, the filter from the editor, a draft of this browser, an
+ * uploaded file or example rules picked in the example rules dialog. Like the upload, the picked rules stay in the list
+ * when another starter is chosen, and the button reopens the picker on them to change the set.
  */
-export function AiStarterPicker({ choice, onChoiceChange, openFilter, drafts, uploadName, onUpload, status }: AiStarterPickerProps) {
+export function AiStarterPicker({
+  choice,
+  onChoiceChange,
+  openFilter,
+  drafts,
+  uploadName,
+  onUpload,
+  rulesCount,
+  onPickRules,
+  status,
+}: AiStarterPickerProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   return (
     <div className="space-y-2">
@@ -70,6 +84,14 @@ export function AiStarterPicker({ choice, onChoiceChange, openFilter, drafts, up
                 ))}
               </SelectGroup>
             )}
+            {rulesCount !== null && (
+              <SelectGroup>
+                <SelectLabel>Picked example rules</SelectLabel>
+                <SelectItem value="rules">
+                  {rulesCount} example {rulesCount === 1 ? 'rule' : 'rules'}
+                </SelectItem>
+              </SelectGroup>
+            )}
             {uploadName !== null && (
               <SelectGroup>
                 <SelectLabel>Uploaded</SelectLabel>
@@ -78,6 +100,10 @@ export function AiStarterPicker({ choice, onChoiceChange, openFilter, drafts, up
             )}
           </SelectContent>
         </Select>
+        <Button variant="outline" onClick={onPickRules}>
+          <BookOpenCheck />
+          {rulesCount === null ? 'Pick example rules' : 'Change example rules'}
+        </Button>
         <Button variant="outline" onClick={() => fileInput.current?.click()}>
           <Upload />
           Upload .json

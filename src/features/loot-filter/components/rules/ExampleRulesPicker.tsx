@@ -42,13 +42,22 @@ const SWITCHES: readonly { readonly key: PickerSwitch; readonly label: string }[
 ];
 
 export interface ExampleRulesPickerProps {
-  /** Called with the rules (label rules first, hide rules last) and every style they use (the caller adds the missing ones). */
-  readonly onConfirm: (rules: readonly LootFilterRule[], styles: Readonly<Record<string, LootFilterStyle>>) => void;
+  /**
+   * Called with the rules (label rules first, hide rules last) and every style they use (the caller adds the missing ones),
+   * plus the picker's selection, for a caller that reopens the picker on it (`initialState`).
+   */
+  readonly onConfirm: (
+    rules: readonly LootFilterRule[],
+    styles: Readonly<Record<string, LootFilterStyle>>,
+    selection: ExamplePickerState
+  ) => void;
   readonly onCancel: () => void;
   /** The confirm button's text before the count, default "Add selected". */
   readonly confirmLabel?: string;
   /** Volume of the sound previews (0 to 100), e.g. the filter's `soundVolume`. */
   readonly previewVolume?: number;
+  /** The selection to start with (default: nothing ticked), e.g. the one a previous confirm handed over. */
+  readonly initialState?: ExamplePickerState;
 }
 
 interface ChoiceSelectProps {
@@ -200,9 +209,15 @@ function ExampleChoicesRow({ idPrefix, example, choices, state, previewVolume, o
  * sound, chat line or icon off. Confirm hands the built rules and styles to the caller (`buildStarterRules`), so the
  * Rules tab and other starters can share it.
  */
-export function ExampleRulesPicker({ onConfirm, onCancel, confirmLabel = 'Add selected', previewVolume = 100 }: ExampleRulesPickerProps) {
+export function ExampleRulesPicker({
+  onConfirm,
+  onCancel,
+  confirmLabel = 'Add selected',
+  previewVolume = 100,
+  initialState = INITIAL_PICKER_STATE,
+}: ExampleRulesPickerProps) {
   const idPrefix = useId();
-  const [state, setState] = useState<ExamplePickerState>(INITIAL_PICKER_STATE);
+  const [state, setState] = useState<ExamplePickerState>(initialState);
   const count = Object.keys(state.selected).length;
 
   return (
@@ -341,7 +356,7 @@ export function ExampleRulesPicker({ onConfirm, onCancel, confirmLabel = 'Add se
           disabled={count === 0}
           onClick={() => {
             const { rules, styles } = buildStarterRules(state);
-            onConfirm(rules, styles);
+            onConfirm(rules, styles, state);
           }}
         >
           <ListPlus />

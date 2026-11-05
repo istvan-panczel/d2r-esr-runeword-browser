@@ -9,7 +9,7 @@ interface ExampleRulesDialogProps extends Omit<ExampleRulesPickerProps, 'onCance
 
 /**
  * The example rules picker in a wide, scrolling dialog. The picker unmounts on close, so every opening starts with
- * nothing ticked. `onConfirm` does not close the dialog; the caller does (after adding the rules).
+ * `initialState` (nothing ticked by default). `onConfirm` does not close the dialog; the caller does (after adding the rules).
  */
 export function ExampleRulesDialog({ open, onOpenChange, title = 'Example rules', ...pickerProps }: ExampleRulesDialogProps) {
   return (
