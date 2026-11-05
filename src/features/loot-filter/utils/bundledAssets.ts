@@ -9,8 +9,10 @@ import { lootFilterAssetUrl } from './template';
  * `public/loot-filters/icons/` (`.sprite`; shrink it to 128 px like the others, see docs/features/LOOT-FILTER.md), then add
  * one line below. bundledAssets.test.ts fails while a file and the registry disagree.
  *
- * Today every file comes from Sully's QoL filter (github.com/Thisisnotsully/QoL-Filter); the descriptions say where his
- * filter uses each one, the clearest guide to what it is for.
+ * The sounds and the first twelve icons come from Sully's QoL filter (github.com/Thisisnotsully/QoL-Filter); their
+ * descriptions say where his filter uses each one, the clearest guide to what it is for. The `<shape>_<colour>` icons
+ * after them are drawn for this app by scripts/generate-loot-filter-icons.ts in the style presets' colours (their notes
+ * name the preset each one pairs with); change them there and regenerate (`npm run loot-filter:icons`), never by hand.
  */
 
 export interface BundledSoundAsset {
@@ -32,11 +34,15 @@ export interface BundledIconAsset {
   readonly label: string;
   readonly use: string;
   readonly credit: string;
-  /** The folder also has `<name>.lowend.sprite` (the game's low graphics setting); the zip carries it along. */
+  /**
+   * The folder also has `<name>.lowend.sprite` (the mod's own file for the game's low graphics setting); the zip carries
+   * it along. The plugin does not need it: it registers its own low graphics copy of the .sprite (see LOOT-FILTER.md).
+   */
   readonly lowend?: true;
 }
 
 const SULLY = "Sully (Sully's QoL filter)";
+const GENERATED = 'Generated for this app';
 
 const sound = (file: string, label: string, use: string): BundledSoundAsset => ({ file, label, use, credit: SULLY });
 const icon = (name: string, label: string, use: string, extra: Partial<Pick<BundledIconAsset, 'lowend'>> = {}): BundledIconAsset => ({
@@ -46,6 +52,8 @@ const icon = (name: string, label: string, use: string, extra: Partial<Pick<Bund
   credit: SULLY,
   ...extra,
 });
+/** A generated icon (scripts/generate-loot-filter-icons.ts); the plugin makes the low graphics copy itself, so none has a `lowend` file. */
+const generated = (name: string, label: string, use: string): BundledIconAsset => ({ name, label, use, credit: GENERATED });
 
 /** Every bundled sound, in picker order. */
 export const BUNDLED_SOUND_ASSETS: readonly BundledSoundAsset[] = [
@@ -74,6 +82,31 @@ export const BUNDLED_ICON_ASSETS: readonly BundledIconAsset[] = [
   icon('redD', 'Red diamond', 'Rare crafting materials.'),
   icon('scroll', 'Scroll', 'Coupons and scrolls.'),
   icon('map', 'Map', 'Maps.'),
+  generated('star_gold', 'Gold star (shape)', 'Unique items; pairs with the Unique preset.'),
+  generated('crown_gold', 'Gold crown', 'The uniques worth the most; pairs with the Unique preset.'),
+  generated('star_green', 'Green star', 'Set items; pairs with the Set preset.'),
+  generated('star_purple', 'Purple star', 'Mythical uniques; pairs with the Mythical unique preset.'),
+  generated('crown_purple', 'Purple crown', 'The rarest mythical uniques; pairs with the Mythical unique preset.'),
+  generated('diamond_red', 'Red diamond (shape)', 'High runes; pairs with the High rune preset.'),
+  generated('diamond_orange', 'Orange diamond', 'Mid runes; pairs with the Mid rune preset.'),
+  generated('triangle_orange', 'Orange triangle', 'Low runes and other minor drops; pairs with the Low rune preset.'),
+  generated('cross_red', 'Red cross', 'Anything rare and valuable without an icon of its own; pairs with the Valuable preset.'),
+  generated('shield_white', 'Socketed shield', 'Runeword bases with the sockets you want; pairs with the Runeword base preset.'),
+  generated('square_emerald', 'Green square', 'Charms worth checking; pairs with the Good charm preset.'),
+  generated('hexagon_teal', 'Teal hexagon', 'Jewels; pairs with the Good jewel preset (its teal border).'),
+  generated('hexagon_yellow', 'Yellow hexagon', 'Rare jewels; pairs with the Good jewel preset (its yellow name).'),
+  generated('ring_blue', 'Blue ring', 'Rings, amulets and class jewellery; pairs with the Good jewellery preset.'),
+  generated('skull_purple', 'Purple skull', 'Uber organs and essences; pairs with the Uber key or organ preset.'),
+  generated('key_purple', 'Purple key', 'Uber keys; pairs with the Uber key or organ preset.'),
+  generated('gem_gold', 'Gold gem', 'Perfect gems; pairs with the Perfect gem preset.'),
+  generated('flame_orange', 'Orange flame', 'Crafting reagents; pairs with the Crafting reagent preset.'),
+  generated('coin_gold', 'Gold coin', 'Rare reagents and large gold piles; pairs with the Rare reagent (gold plate) preset.'),
+  generated('scroll_gold', 'Gold scroll', 'Ancient Coupons; pairs with the Coupon preset.'),
+  generated('map_white', 'White map', 'Maps; pairs with the Map preset.'),
+  generated('circle_grey', 'Grey dot', 'Drops you keep visible but quiet; pairs with the Muted preset.'),
+  generated('star_white', 'White star', 'Any colour: set the icon tint (it multiplies the colours).'),
+  generated('diamond_white', 'White diamond', 'Any colour: set the icon tint (it multiplies the colours).'),
+  generated('circle_white', 'White dot', 'Any colour: set the icon tint (it multiplies the colours).'),
 ];
 
 /** The bundled sound file names, in picker order. */

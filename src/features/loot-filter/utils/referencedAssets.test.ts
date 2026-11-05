@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { decodeSprite } from '../engine/sprite';
 import type { LootFilter } from '../engine/types';
-import { BUNDLED_ICONS } from './bundledAssets';
+import { BUNDLED_ICON_ASSETS } from './bundledAssets';
 import { collectReferencedAssets, isSoundFile, referencedAssetsOfText } from './referencedAssets';
 import { lootFilterAssetUrl } from './template';
 
@@ -77,8 +77,10 @@ describe('referencedAssetsOfText', () => {
     expect(assets.missing).toEqual([]);
     expect(paths(assets).filter((path) => path.startsWith('sounds/')).length).toBeGreaterThan(0);
     const icons = paths(assets).filter((path) => path.startsWith('icons/'));
-    // All twelve bundled icons, plus goldstar's low graphics variant.
-    expect(icons).toHaveLength(BUNDLED_ICONS.length + 1);
+    // All twelve of Sully's bundled icons (not the generated ones), plus goldstar's low graphics variant.
+    const sullys = BUNDLED_ICON_ASSETS.filter((asset) => asset.credit !== 'Generated for this app');
+    expect(sullys).toHaveLength(12);
+    expect(icons).toHaveLength(sullys.length + 1);
     for (const path of icons) {
       const sprite = decodeSprite(readFileSync(resolve(process.cwd(), 'public/loot-filters', path)));
       expect(sprite.width, path).toBeGreaterThan(0);

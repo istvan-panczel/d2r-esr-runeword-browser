@@ -51,7 +51,8 @@ the nine mp3s in `public/loot-filters/sounds/` and twelve icons in `public/loot-
 `goldstar` 200 px) of raw RGBA, 1 to 4.7 MB each (about 16 MB in all), but filters draw them at 27 to 50 minimap
 pixels; at 128 px each is 64 KB (0.9 MB in all), still 2.5 times the largest size used, and a pre-shrunk icon avoids the
 jagged edges of a huge texture drawn small. Lanczos on premultiplied alpha, same names (a .zip unzipped into
-`LootFilters\` replaces Sully's originals there; his filter works the same with them). **Download .zip with sounds and icons** puts the filter
+`LootFilters\` replaces Sully's originals there; his filter works the same with them). Next to them sit 25 icons drawn
+for this app (`<shape>_<colour>`, e.g. `star_gold`, see [Generated icons](#generated-icons)). **Download .zip with sounds and icons** puts the filter
 and the bundled files it references into one archive to unzip into `LootFilters\` (see Library screen).
 
 Troubleshooting (also in the library how-to): if a sound or icon does not work, check the `sounds`/`icons` folders next
@@ -1062,7 +1063,7 @@ removes the key); `passthrough` is never patched. Sections:
   sounds.txt name or row, which needs no file (sounds.txt is a table in the mod's game data); such a sound has no
   preview ("a game sound plays from the game's files").
 - **Minimap icon**: on/off (turning it on gives `{ iconName: 'goldstar', iconSize: 50 }`; the sprite's own size is
-  200 px), `iconName` (suggests every bundled icon, `BUNDLED_ICONS`), `iconSize` (4–256, blank = file size), tint
+  128 px, as every bundled icon), `iconName` (suggests every bundled icon, `BUNDLED_ICONS`), `iconSize` (4–256, blank = file size), tint
   (alpha optional), sprite preview.
 - **Droplight**: on/off (`{}`), a beam colour or "the game's white beam".
 
@@ -1091,16 +1092,83 @@ The asset registry lists every sound and minimap icon the app bundles under `pub
 `DEFAULT_ICON_NAME` (the first icon, `goldstar`) derive from it. Everything that offers or ships the files reads it: the
 sound combobox and its play button, the icon field's suggestions, the sprite preview, the example rules dialog's
 Sound and Icon selects, the Test tab's play button, and the .zip download (`collectReferencedAssets`, which adds the
-`.lowend.sprite` of a `lowend` icon). Today all nine sounds and twelve icons are Sully's (the `use` lines say where his
-filter uses each one; `tinkLOUD.mp3` is bundled but unused by him).
+`.lowend.sprite` of a `lowend` icon). All nine sounds and the first twelve icons are Sully's (the `use` lines say where
+his filter uses each one; `tinkLOUD.mp3` is bundled but unused by him); the other 25 icons are generated (credit
+"Generated for this app", see below). The `credit` is not shown in the UI today; the pickers show `label` and `use`.
 
 **Adding a sound or icon**: put the file into `public/loot-filters/sounds/` (`.mp3`, `.wav` or `.flac`) or
 `public/loot-filters/icons/` (`.sprite`), then add one line to the registry, e.g.
 `sound('chime.mp3', 'Chime', 'Rare drops you want a soft cue for.')` (the `sound` / `icon` helpers fill in the credit;
 pass a full object for another author). Icons are bundled at 128 px on the longer side (Lanczos on premultiplied
-alpha, see [Using a filter in the game](#using-a-filter-in-the-game); the repo has no script for it, so shrink a new
-sprite with your sprite tool first). `bundledAssets.test.ts`
+alpha, see [Using a filter in the game](#using-a-filter-in-the-game); the repo has no script for shrinking, so shrink a
+new sprite with your sprite tool first). A generated icon is added in the generator instead (below). `bundledAssets.test.ts`
 fails while the folders and the registry disagree, and decodes every icon.
+
+#### Generated icons
+
+25 minimap icons are drawn in code in the style presets' colours, so every preset has a matching icon:
+`scripts/lib/lootFilterIcons.ts` (shapes, colours, the list), `scripts/generate-loot-filter-icons.ts` (writes them),
+`engine/spriteEncode.ts` (the `.sprite` encoder). Names are `<shape>_<colour>`; none clashes with Sully's in any case.
+
+| Icon                                          | Pairs with (preset)                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| `star_gold`, `crown_gold`                     | Unique (`crown_gold` for the best ones)                             |
+| `star_green`                                  | Set                                                                 |
+| `star_purple`, `crown_purple`                 | Mythical unique                                                     |
+| `diamond_red`                                 | High rune                                                           |
+| `diamond_orange`                              | Mid rune                                                            |
+| `triangle_orange`                             | Low rune (points down at the drop)                                  |
+| `cross_red`                                   | Valuable                                                            |
+| `shield_white` (three sockets)                | Runeword base                                                       |
+| `square_emerald`                              | Good charm                                                          |
+| `hexagon_teal`, `hexagon_yellow`              | Good jewel (its teal border, its yellow name)                       |
+| `ring_blue`                                   | Good jewellery                                                      |
+| `skull_purple`, `key_purple`                  | Uber key or organ (organs and essences, keys)                       |
+| `gem_gold`                                    | Perfect gem                                                         |
+| `flame_orange`                                | Crafting reagent                                                    |
+| `coin_gold`                                   | Rare reagent (gold plate), large gold piles                         |
+| `scroll_gold`                                 | Coupon                                                              |
+| `map_white`                                   | Map                                                                 |
+| `circle_grey`                                 | Muted                                                               |
+| `star_white`, `diamond_white`, `circle_white` | any colour through the icon's tint (`color` multiplies the colours) |
+
+Drawing: every shape is a signed distance function on the 128 px canvas; a pixel's distance gives the fill, a dark
+outline 6 px wide (about 2 px at the usual 40 minimap pixels; the colour × 0.16) and the transparent outside, each edge
+anti-aliased over one pixel from the exact distance (the result of heavy supersampling, without its cost, and
+deterministic). The fill is the colour shaded lighter at the top and darker at the bottom, with bevelled facets lit from
+the top left, shine spots and dark detail marks (skull eyes, scroll lines, shield sockets). Straight (not premultiplied)
+alpha, fully transparent pixels `0, 0, 0, 0`, as in Sully's files. 64 KB each, 1.56 MB in all.
+
+**Regenerate** after changing a shape, colour or the list: `npm run loot-filter:icons` (writes the files and removes a
+`<shape>_<colour>.sprite` no longer listed; `-- --check` only compares and exits 1 when one is stale; `-- --sheet
+<file.png>` also writes a contact sheet of every icon decoded back with the app's decoder at 128, 48 and 32 px, Sully's
+below for comparison). Then list a new one in `bundledAssets.ts` with the `generated(name, label, use)` helper.
+`scripts/lib/lootFilterIcons.test.ts` fails while a committed file differs from a fresh render, the registry and the list
+disagree, or an icon loses its transparent border.
+
+**Format and verification** (no in-game check, owner decision; by structure and bytes):
+
+- The header (40 bytes, little-endian): `SpA1`, u16 version 31, u16 frame width (= width), u32 width, u32 height, u32 0,
+  u32 frame count 1, u32 0, u32 0, u32 pixel byte count (width × height × 4), u32 4 (bytes per pixel); then the RGBA
+  rows from the top and nothing after them. The encoder writes exactly this.
+- Round trip (`engine/spriteEncode.test.ts`): decoding and re-encoding each of Sully's twelve bundled icons gives the
+  file byte for byte; the same holds for his eleven original 512 / 1080 px files (checked once from his repository, not
+  committed). The mod's `goldstar.lowend.sprite` (and its original 200 px `goldstar.sprite`) differ only in the last two
+  header fields, which they leave 0. Of the ESR clone's and the vanilla art's 2,150 single-frame `SpA1` sprites, 721
+  re-encode byte for byte, 1,234 differ only in those two fields (0) and 195 only in the u32 at 28 (an unknown value in
+  some item sprites); the pixels and every other byte always match.
+- Every generated file has the very same 40 header bytes as Sully's 128 px icons, decodes with `engine/sprite.ts`, and
+  passes the plugin's own file check (below).
+- The plugin (v1.5.3 disassembly, `d2rl-celestialrayone-loot-filter.dll`) reads `icons/<iconName>.sprite` and accepts it
+  when it is at least 40 bytes, starts with `SpA1` (not `SPa1`, which the decoder also takes for the game's item
+  sprites), has version 31, a width, height and frame count other than 0, a width divisible by the frame count, a width
+  up to 8192 and a height up to 4096, and all the pixels ("it is not a D2R sprite (SpA1, version 31)", "its header does
+  not match its pixels"). It reads no other header field and takes the first frame. It then writes its own copy for the
+  game, with the header above (the same last two fields), and registers it under `data/hd/global/ui/d2rloader/
+celestialrayone.loot-filter/icons/<name>-<w>x<h>-<hash>` as both `.sprite` and `.lowend.sprite`: **a filter needs no
+  `.lowend.sprite`**, so none is generated (the mod's `goldstar.lowend.sprite` stays bundled but is not read).
+- Residual risk: none of the 25 has been seen in the game. What the game itself does with the plugin's copy is the same
+  as for Sully's icons, whose header ours copies field for field.
 
 ### Style presets (`utils/stylePresets.ts`, `components/StylePresetMenu.tsx`, `components/PresetPreview.tsx`)
 
@@ -1377,7 +1445,8 @@ research doc and the Test tab's note link here.
 - `hideUnmatchedItems` hides an on-ground item no rule applied to.
 - Colour codes `ÿcN` to `ÿcV` use preview approximations (the guide gives no RGB for them).
 - `.sprite` icons: header layout and RGBA pixel order as observed in `goldstar.sprite` (Sully's other eleven icons decode
-  the same way); only the first frame is drawn.
+  the same way); only the first frame is drawn. The plugin's reader (v1.5.3 disassembly) confirms the fields it uses
+  and takes the first frame of a strip; see [Generated icons](#generated-icons).
 - The serializer does not keep comments between rules (only the `//` lines before the object) and writes no trailing
   commas or block comments; the reader accepts both, as the plugin does (v1.5.3, from its disassembly). A warning says
   so when a file has them.
