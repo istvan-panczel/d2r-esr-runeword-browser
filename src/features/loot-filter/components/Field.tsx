@@ -47,15 +47,17 @@ interface CheckFieldProps {
   readonly onChange: (checked: boolean) => void;
   /** Shown after the label (the rule editor's "advanced" tag). */
   readonly badge?: ReactNode;
+  readonly disabled?: boolean;
 }
 
 /** A checkbox with its label and a hint beside it. */
-export function CheckField({ id, label, hint, checked, onChange, badge }: CheckFieldProps) {
+export function CheckField({ id, label, hint, checked, onChange, badge, disabled }: CheckFieldProps) {
   return (
     <div className="flex items-start gap-2">
       <Checkbox
         id={id}
         checked={checked}
+        disabled={disabled}
         onCheckedChange={(value) => {
           onChange(value === true);
         }}

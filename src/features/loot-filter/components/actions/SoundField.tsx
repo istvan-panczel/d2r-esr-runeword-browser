@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronsUpDown, Play, Square, X } from 'lucide-react';
+import { Check, ChevronsUpDown, Play, Square, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { SOUND_FILE_EXTENSIONS } from '../../engine/validate';
 import { useLootFilterData } from '../../hooks/useLootFilterData';
 import { useSoundPreview } from '../../hooks/useSoundPreview';
-import { BUNDLED_SOUND_ASSETS, bundledSoundUrl, findBundledSound, soundLabel } from '../../utils/bundledAssets';
+import { BUNDLED_SOUND_ASSETS, BUNDLED_SOUNDS, bundledSoundUrl, findBundledSound, soundLabel } from '../../utils/bundledAssets';
 import { Field } from '../Field';
 import { NumberInput } from '../NumberInput';
 
@@ -23,6 +23,11 @@ interface SoundFieldProps {
   readonly filterVolume: number | undefined;
   readonly onSoundChange: (sound: string | number | undefined) => void;
   readonly onVolumeChange: (volume: number | undefined) => void;
+  /** After the Sound and Volume labels (the "advanced" tag, the style mark). */
+  readonly badge?: React.ReactNode;
+  readonly volumeBadge?: React.ReactNode;
+  /** The rule's style sets a sound: no remove button (a rule cannot remove a style's sound, only change it). */
+  readonly fromStyle?: boolean;
 }
 
 function isSoundFile(sound: string): boolean {
@@ -36,8 +41,21 @@ function parseSound(text: string): string | number {
   return /^\d+$/.test(trimmed) ? Number(trimmed) : trimmed;
 }
 
-/** `sound` combobox (bundled files + sounds.txt names, free text allowed), a play button and `soundVolume`. */
-export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSoundChange, onVolumeChange }: SoundFieldProps) {
+/**
+ * `sound` combobox (every bundled file with a play button, then the sounds.txt names; the search matches anywhere in
+ * the text, free text allowed), a play button for the chosen file and `soundVolume`.
+ */
+export function SoundField({
+  idPrefix,
+  sound,
+  soundVolume,
+  filterVolume,
+  onSoundChange,
+  onVolumeChange,
+  badge,
+  volumeBadge,
+  fromStyle = false,
+}: SoundFieldProps) {
   const gameData = useLootFilterData();
   const soundNames = gameData.data?.sounds ?? [];
   const [open, setOpen] = useState(false);
@@ -59,17 +77,23 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
   const bundledUrl = bundled === undefined ? undefined : bundledSoundUrl(bundled);
 
   const lower = query.trim().toLowerCase();
-  const options = [
-    ...BUNDLED_SOUND_ASSETS.map((asset) => ({ value: asset.file, label: asset.file, detail: 'bundled file' })),
-    ...[...new Set(soundNames.filter((name) => name !== ''))].map((name) => ({ value: name, label: name, detail: 'sounds.txt' })),
-  ];
-  const matches = options.filter((option) => option.label.toLowerCase().includes(lower)).slice(0, MAX_RESULTS);
-  const exact = options.some((option) => option.label.toLowerCase() === lower);
+  // Every bundled file shows with an empty search (it matches its name, label or use anywhere); the game's sounds by name.
+  const bundledMatches = BUNDLED_SOUND_ASSETS.filter((asset) => `${asset.file} ${asset.label} ${asset.use}`.toLowerCase().includes(lower));
+  const gameSounds = [...new Set(soundNames.filter((name) => name !== ''))];
+  const gameMatches = gameSounds.filter((name) => name.toLowerCase().includes(lower)).slice(0, MAX_RESULTS);
+  const exact = [...BUNDLED_SOUNDS, ...gameSounds].some((name) => name.toLowerCase() === lower);
+  const currentText = sound === undefined ? undefined : String(sound).toLowerCase();
+
+  // Closing the list stops a preview started from it.
+  const closeList = () => {
+    setOpen(false);
+    setQuery('');
+    preview.stop();
+  };
 
   const choose = (value: string | number) => {
     onSoundChange(value);
-    setOpen(false);
-    setQuery('');
+    closeList();
   };
 
   const togglePlay = (url: string) => {
@@ -87,13 +111,13 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
 
   return (
     <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-      <Field id={`${idPrefix}-sound`} label="Sound">
+      <Field id={`${idPrefix}-sound`} label="Sound" badge={badge}>
         <div className="flex gap-1">
           <Popover
             open={open}
             onOpenChange={(next) => {
-              setOpen(next);
-              if (!next) setQuery('');
+              if (next) setOpen(true);
+              else closeList();
             }}
           >
             <PopoverTrigger asChild>
@@ -111,10 +135,10 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
                 <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[min(24rem,calc(100vw-2rem))] p-0" align="start">
+            <PopoverContent className="w-[min(28rem,calc(100vw-2rem))] p-0" align="start">
               <Command shouldFilter={false}>
                 <CommandInput placeholder="Search, or type a file name or row number…" value={query} onValueChange={setQuery} />
-                <CommandList>
+                <CommandList className="max-h-[min(26rem,calc(var(--radix-popover-content-available-height)-2.5rem))]">
                   <CommandEmpty>Nothing found.</CommandEmpty>
                   {lower !== '' && !exact && (
                     <CommandGroup heading="Use as typed">
@@ -128,18 +152,74 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
                       </CommandItem>
                     </CommandGroup>
                   )}
-                  {matches.length > 0 && (
-                    <CommandGroup heading={gameData.status === 'loading' ? 'Sounds (loading sounds.txt…)' : 'Sounds'}>
-                      {matches.map((option) => (
+                  {bundledMatches.length > 0 && (
+                    <CommandGroup heading="Bundled sounds (they go into the .zip download)">
+                      {bundledMatches.map((asset) => {
+                        const url = bundledSoundUrl(asset.file);
+                        const playing = preview.playing === url;
+                        return (
+                          <CommandItem
+                            key={`bundled:${asset.file}`}
+                            value={`bundled:${asset.file}`}
+                            className="items-start"
+                            onSelect={() => {
+                              choose(asset.file);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mt-0.5 size-4 shrink-0',
+                                currentText === asset.file.toLowerCase() ? 'opacity-100' : 'opacity-0'
+                              )}
+                              aria-hidden
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-mono">{asset.file}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {asset.label}: {asset.use}
+                              </span>
+                            </span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon-sm"
+                              className="shrink-0"
+                              aria-label={playing ? 'Stop the sound' : `Play ${asset.file}`}
+                              // Plays without picking the sound: the item's own pointer and click handling stay out of it.
+                              onPointerDown={(event) => {
+                                event.stopPropagation();
+                              }}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                togglePlay(url);
+                              }}
+                            >
+                              {playing ? <Square /> : <Play />}
+                            </Button>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )}
+                  {gameMatches.length > 0 && (
+                    <CommandGroup
+                      heading={
+                        gameData.status === 'loading' ? 'Game sounds (loading sounds.txt…)' : 'Game sounds (sounds.txt, no file needed)'
+                      }
+                    >
+                      {gameMatches.map((name) => (
                         <CommandItem
-                          key={`${option.detail}:${option.value}`}
-                          value={`${option.detail}:${option.value}`}
+                          key={`game:${name}`}
+                          value={`game:${name}`}
                           onSelect={() => {
-                            choose(option.value);
+                            choose(name);
                           }}
                         >
-                          <span className="truncate font-mono">{option.label}</span>
-                          <span className="ml-auto shrink-0 text-xs text-muted-foreground">{option.detail}</span>
+                          <Check
+                            className={cn('size-4 shrink-0', currentText === name.toLowerCase() ? 'opacity-100' : 'opacity-0')}
+                            aria-hidden
+                          />
+                          <span className="truncate font-mono">{name}</span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -161,7 +241,7 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
               {preview.playing === bundledUrl ? <Square /> : <Play />}
             </Button>
           )}
-          {sound !== undefined && (
+          {sound !== undefined && !fromStyle && (
             <Button
               type="button"
               variant="ghost"
@@ -215,6 +295,7 @@ export function SoundField({ idPrefix, sound, soundVolume, filterVolume, onSound
       <Field
         id={`${idPrefix}-sound-volume`}
         label="Volume"
+        badge={volumeBadge}
         hint={soundVolume === undefined ? `Filter default (${String(filterVolume ?? 100)})` : '0 to 100'}
       >
         <NumberInput

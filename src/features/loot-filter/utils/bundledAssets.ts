@@ -1,3 +1,4 @@
+import type { MinimapIcon } from '../engine/types';
 import { lootFilterAssetUrl } from './template';
 
 /**
@@ -115,8 +116,13 @@ export const BUNDLED_SOUNDS: readonly string[] = BUNDLED_SOUND_ASSETS.map((asset
 /** The bundled icon names (without `.sprite`), in picker order; the first is the editor's default icon. */
 export const BUNDLED_ICONS: readonly string[] = BUNDLED_ICON_ASSETS.map((asset) => asset.name);
 
-/** The editor's default minimap icon (the first registered one). */
-export const DEFAULT_ICON_NAME = BUNDLED_ICONS.at(0) ?? 'goldstar';
+/** True for an icon drawn for this app (scripts/generate-loot-filter-icons.ts), false for Sully's. */
+export function isGeneratedIcon(asset: BundledIconAsset): boolean {
+  return asset.credit === GENERATED;
+}
+
+/** What ticking Minimap icon gives a rule or style without one: the white star (tint it any colour) at 40 minimap pixels. */
+export const DEFAULT_ICON = { iconName: 'star_white', iconSize: 40 } as const satisfies MinimapIcon;
 
 /** The bundled sound file a `sound` value names (the plugin's file names are case-insensitive), or undefined. */
 export function findBundledSound(sound: string | number | undefined): string | undefined {
