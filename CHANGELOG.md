@@ -2,6 +2,75 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.54.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.53.0...v1.54.0) (2026-11-05)
+
+### Features
+
+* **campaign-map:** add the campaign map page ([f2875b0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f2875b06ef0cdf12887a467b19fe5d9c885769f5))
+* **loot-filter:** add 25 generated minimap icons in the style presets' colours ([bba56bf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bba56bf773dab47c603a9403da86c259fa3287d7))
+* **loot-filter:** add a .sprite encoder that writes Sully's icon header ([308b146](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/308b14682183a3bce1b34eb9081c1d3d1bd828cd))
+* **loot-filter:** add a bundled asset registry and style presets ([138f2e6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/138f2e6fa6f5e8d6ab13698e01ee559783a8b4e7))
+* **loot-filter:** add a NoIcon style copy right after its base style ([b65cd31](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b65cd31a1919cd0af10d7d9f926985579d4515b3))
+* **loot-filter:** add basic and advanced views to the rule editor ([cf2181d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cf2181de094114a99057a50f7e2dab64fec49d6c))
+* **loot-filter:** add the AI help page and the Import AI answer loop ([531e88c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/531e88cde814717671b6aef56807151db40cf05b))
+* **loot-filter:** basic/advanced view on the Styles tab ([88474a6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/88474a65229ae420ad66fac2d411a23f6ed8abae))
+* **loot-filter:** build LLM prompt packages and read LLM answers ([8334b39](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8334b39ec714525123474e9ebcc8c22fb8256423))
+* **loot-filter:** default the example rules to the generated icons ([6bf9e84](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6bf9e841dd4b083a524f5d270f53c48f2f2a4b9f))
+* **loot-filter:** drop apostrophes from AI prompt file names ([f4cc4cb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f4cc4cb57bb9cd5a1c8bf841ac342b90fb4c08dc))
+* **loot-filter:** drop the sounds.txt names from the Full AI prompt data ([ac021c1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ac021c1441101dc93880942e8e8462b5d6daa4e1))
+* **loot-filter:** example dialog's Select all leaves hide rules out ([81cb201](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/81cb201534bff58b906fa4d85b76a9e2adb36459))
+* **loot-filter:** example hides at Sully's level gates, new ESR item examples ([ac784e9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ac784e98798648c9827c82dd054e9b86701e1d19))
+* **loot-filter:** icon grid picker and sound list with play buttons ([cf334ae](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cf334aed0e4d5fcc23be22975b73daf0f52e819f))
+* **loot-filter:** name AI drafts after their title and start from saved filters ([2849ea9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2849ea93e59f09d44d8c0bd9b580774ea0defc4f))
+* **loot-filter:** pick a starter set from sixty example rules ([2a65198](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2a65198127493999c941f5f5bb89033198a04de1))
+* **loot-filter:** pick example rules as the AI help starter ([93425a9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/93425a9d1539a7246a2edf0396db45dc05c2da40))
+* **loot-filter:** rebuild the example filter from the example rules ([c9218d9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c9218d937f9bbfb60e0dea1ef70c06688306cf65))
+* **loot-filter:** resizable rule list with a keyboard-accessible splitter ([273e212](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/273e21215ae892129c814fede21d6d63c72e7b24))
+* **loot-filter:** show a rule's comment as its row's main line ([1e2af47](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1e2af4753831cc7a16d7739bdfd999f7a052caad))
+* **loot-filter:** show complete example rules, style presets and asset notes in the AI prompt ([0de5543](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0de5543d9198f164ea3856f8a9429205c06ca540))
+* **loot-filter:** starter wording in the example rules dialog on the AI page ([40ec670](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/40ec6701d5cc2c681f697c90068fc1a438b6a63c))
+* **loot-filter:** style first, then tweak ([3a298c3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3a298c337aa2aecf8e2266b4aa48e37282dbd8bf))
+* **loot-filter:** style presets carry their minimap icon ([d049a71](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d049a71e5811c8037280f4ba1c0edf1e06b49022))
+* **loot-filter:** style previews with their minimap icon everywhere a style is shown ([98513bf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/98513bff4c6123496e1bd2d9bf0f0ff9b6894066))
+
+### Bug Fixes
+
+* **game-data:** correct areas.json and add terrain, map items and quest icons ([d72180d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d72180da88bd94a6b91794b3465ca230adaeb8c8))
+* **loot-filter:** faster Select all and title-only checkbox names in the example picker ([b45e529](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b45e529d38901bbd540bf3f2f83516004b4bf7ac))
+* **loot-filter:** keep quest, mythical and skill items out of the example hides ([5df408e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5df408eced1aacf54aa3974f2d9872b79c38d3b6))
+* **loot-filter:** keyboard and screen reader fixes in the sound and icon pickers ([ed2cb76](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ed2cb765a73a206a5fb8366b72cb2c489f68e0ce))
+* **loot-filter:** no example dialog on New filter, firmer JSON output rules for the AI ([7f62c9a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7f62c9a56349a69d1cb684dace1345b92db1f931))
+* **loot-filter:** picking a style also clears a wrong-shaped own value ([b7cab39](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b7cab396cc992dcf9e2caf7f68f55755fe215537))
+* **loot-filter:** review fixes for the AI import ([f94a7dc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f94a7dc51925c712c1530d69a32cbaa707ab2ae4))
+* **loot-filter:** save a style picked in the rule editor with the debounced flush ([4983e15](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4983e1594bd6f894b5fff50b7c29f477c83017a7))
+* **loot-filter:** save the added example rules with the debounced editor flush ([e00cf1b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e00cf1bbee7427fa6b4a689f16357b2ad368a52e))
+* **loot-filter:** scroll to the problems after the AI help page's first import ([27a5e71](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/27a5e71f65c7c834004ac700df0ac7090707638e))
+* **loot-filter:** show what a rule's style sets and make Use style a Basic field ([09c44ba](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/09c44bad6c60bda2aaf4ba9bb90638294cceaff3))
+* **loot-filter:** smooth splitter drag, splitter value text, readable touch rows ([181062a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/181062aab7e62e1bdbdd758e38ec9e4413c17e5f))
+
+### Documentation
+
+* **campaign-map:** document the campaign map and its ESR update steps ([7059a86](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7059a864a090cb3674022cc676909fcae7f9ac91))
+* list the loot filter icon generator in CLAUDE.md ([445b7b9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/445b7b9366bf15b7683a49ade5ab33773b2b3da9))
+* **loot-filter:** current AI prompt sizes ([f22102c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f22102c30e8667a229c6a776b7c761d730d36439))
+* **loot-filter:** document style first, then tweak and the new pickers ([ac48770](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ac487703ec65fe705c7e28ef9506313736a3e3d3))
+* **loot-filter:** document the AI help page and close the LLM prompt backlog item ([7302de8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7302de839d65ab58df6776d255dc48e98613bc42))
+* **loot-filter:** document the example icon defaults and example filter v2.0.0 ([3ef5696](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3ef5696db7e8b36e8ef28293c0629caadfd19c3c))
+* **loot-filter:** document the example rules starter and the richer AI prompt ([a59e8a2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a59e8a28c88eb34be66aa036d3e0554b7913e83e))
+* **loot-filter:** document the shared previews, the flush guard and the picker fixes ([49f0b4a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/49f0b4a2b573bccdac61e25e826506992adfcc28))
+* **loot-filter:** example hides' level gates, new examples, select all rule ([beb2026](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/beb20264bf1257756116c3a308b95cc5bf74bf4a))
+* **loot-filter:** presets with icons, picker icon handling, example filter v2.1.0 ([f2b8c60](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f2b8c605bc716ef33379660982be5b87a25545df))
+
+### Chores
+
+* **lint:** skip agent worktrees in ESLint ([ab1206e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ab1206eed7dc589d105312aea38a1e468df5b2c1))
+* **loot-filter:** bump Sully's template to v0.6.13 ([d2726e4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d2726e42e70a00bff321fa313944598f02f21352))
+
+### Refactoring
+
+* **loot-filter:** one sprite canvas for every minimap icon preview ([d62c9dc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d62c9dc395f96681678c56d87c55c69b94b0de0e))
+* **loot-filter:** share the Basic/Advanced action gate and view toggle ([0c50775](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0c50775c7068ee106642af5dda7ff959de136243))
+
 ## [1.53.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.52.0...v1.53.0) (2026-11-04)
 
 ### Features
