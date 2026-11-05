@@ -158,7 +158,7 @@ const ACTIONS: Readonly<Record<keyof RuleActions, readonly [value: string, effec
   chatMessageWhenHidden: ['text', 'A chat line when this rule hides the item.'],
   notify: ['true', 'Prints the filter\'s drop line (notifications.dropFormat, default "{qualityColor}{name}").'],
   sound: [
-    'a bundled sound file (assets.md), e.g. `"tink.mp3"`; or a sounds.txt name or row',
+    'a bundled sound file (assets.md), e.g. `"tink.mp3"`; or a sounds.txt name or row (only one the user names: not in the reference)',
     'Plays when the item drops. Sounds of several matching rules add up.',
   ],
   soundVolume: ['0 to 100', "This rule's sound volume."],
@@ -661,7 +661,7 @@ export function buildAssets(assets: PromptAssets): string {
     '',
     ...assets.icons.map(line),
     '',
-    'Icon sizes of 30 to 50 minimap pixels read well. A sounds.txt name (sounds.csv in the full data) also works as "sound" (it follows the game volume): use one only when the user asks for game sounds.',
+    'Icon sizes of 30 to 50 minimap pixels read well. A sound name of the game\'s sounds.txt also works as "sound" (it follows the game volume; no file needed). The reference does not list them: use one only when the user asks for a game sound, with the exact name the user gives (the app\'s sound picker lists them).',
     '',
   ].join('\n');
 }

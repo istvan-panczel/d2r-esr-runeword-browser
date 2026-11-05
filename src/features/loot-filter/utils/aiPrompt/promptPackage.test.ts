@@ -86,6 +86,14 @@ describe('buildPromptPackage', () => {
     expect(pkg.prompt).toContain('ESR 3.2.24');
   });
 
+  it('says the sounds.txt names exist but must come from the user', () => {
+    for (const size of ['compact', 'full'] as const) {
+      const built = buildPromptPackage(input({ size }));
+      expect(built.files.some((file) => file.path === 'sounds.csv')).toBe(false);
+      expect(built.prompt).toContain("ask me for its exact name (I can look it up in the app's sound picker)");
+    }
+  });
+
   it('lists every file in the prompt with its summary, for attached files', () => {
     expect(pkg.prompt).toContain('The reference comes as attached files');
     for (const file of pkg.files) expect(pkg.prompt).toContain(`- ${file.path}: ${file.summary}`);
@@ -142,10 +150,12 @@ describe('buildPromptPackage', () => {
 });
 
 describe('referenceSizes', () => {
-  it('measures both sizes; Compact is far smaller than Full', () => {
+  it('measures both sizes; Compact is well below Full, which has no sounds.txt names', () => {
     const sizes = referenceSizes({ data, types, reference, esrVersion: '3.2.24' });
     expect(sizes.compact).toBeGreaterThan(50_000);
-    expect(sizes.compact).toBeLessThan(sizes.full / 2.5);
+    expect(sizes.compact).toBeLessThan(sizes.full / 1.5);
+    // Full stays well under 400k characters (about 100k tokens) without the sounds.txt names.
+    expect(sizes.full).toBeLessThan(400_000);
     expect(sizes.compact).toBe(buildPromptPackage(input({ request: '', starter: null })).markdown.length);
   });
 
