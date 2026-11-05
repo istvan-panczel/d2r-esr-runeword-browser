@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
-import { FilePlus2, GraduationCap, Sparkles, Upload } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bot, FilePlus2, GraduationCap, Sparkles, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useStartFilter } from '../../hooks/useStartFilter';
+import { AI_PAGE_PATH } from '../../utils/library';
 import { BUNDLED_TEMPLATE_LIST } from '../../utils/template';
 import { NameDialog } from '../NameDialog';
 
@@ -12,8 +14,8 @@ interface StartFilterActionsProps {
 }
 
 /**
- * Start from Sully's (the primary button) / Start from the example / Upload / New (each makes a draft and opens it),
- * with the tip on where to start and the templates' credits.
+ * Start from Sully's (the primary button) / Start from the example / Upload / New (each makes a draft and opens it) /
+ * Create a filter with AI help (the AI page), with the tip on where to start and the templates' credits.
  */
 export function StartFilterActions({ ready }: StartFilterActionsProps) {
   const { createNew, upload, startFromTemplate, loadingTemplate } = useStartFilter();
@@ -48,6 +50,12 @@ export function StartFilterActions({ ready }: StartFilterActionsProps) {
           <FilePlus2 />
           New filter
         </Button>
+        <Button asChild variant="outline">
+          <Link to={AI_PAGE_PATH}>
+            <Bot />
+            Create a filter with AI help
+          </Link>
+        </Button>
         <input
           ref={fileInput}
           type="file"
@@ -64,7 +72,8 @@ export function StartFilterActions({ ready }: StartFilterActionsProps) {
         <span className="font-medium text-foreground">Tip:</span> most players start from Sully&apos;s QoL filter for a full filter, or
         upload a filter someone shared, and change what they need. To learn how rules work, start from the example: a small filter whose
         every rule explains itself in its comment. A new filter starts blank and opens the example rules, about sixty ready rules in groups
-        (runes, uniques, bases, charms, maps, junk to hide…) to tick into a starter set. The Rules tab has them either way.
+        (runes, uniques, bases, charms, maps, junk to hide…) to tick into a starter set. The Rules tab has them either way. New to filters?
+        Create a filter with AI help builds a prompt for the AI chat of your choice from your description.
       </p>
       <div className="space-y-0.5 text-xs text-muted-foreground">
         {BUNDLED_TEMPLATE_LIST.map((template) => (

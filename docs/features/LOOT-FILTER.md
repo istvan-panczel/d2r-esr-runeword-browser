@@ -18,6 +18,7 @@ answers), §5 and §5.1 (owner decisions).
 | `/loot-filters/:id`            | LootFilterEditorScreen  | A saved filter: its owner edits it, anyone else gets the sandbox; a local draft id redirects to the draft route (old links); not found / load error states |
 | `/loot-filters/sully`          | LootFilterEditorScreen  | The sandbox on the bundled Sully filter                                                                                                                    |
 | `/loot-filters/example`        | LootFilterEditorScreen  | The sandbox on the bundled example filter                                                                                                                  |
+| `/loot-filters/ai`             | LootFilterAiScreen      | Create a filter with AI help: the LLM prompt package and the first Import AI answer (see "AI help")                                                        |
 
 The editor routes share one screen component (the param names, or the path of a template sandbox, tell them apart:
 `editorRouteOf(params, pathname)` in `utils/editorRoute.ts` gives `draft`, `saved` or `{ kind: 'template', template }`),
@@ -296,11 +297,11 @@ tabs: the page is the My filters content without the saved section (the drafts, 
 
 The how-to above the tabs covers the launcher import, the `sounds`/`icons` folders, the zip download and the
 troubleshooting line from "Using a filter in the game". The start buttons (My filters tab) come in this order: **Start from Sully's QoL filter** (the primary button),
-**Start from the example**, **Upload**, **New filter** (outline). A "Tip:" line under them says most players start
+**Start from the example**, **Upload**, **New filter**, **Create a filter with AI help** (outline; a link to `/loot-filters/ai`, see "AI help"). A "Tip:" line under them says most players start
 from Sully's filter for a full filter, or upload one someone shared, and change what they need; to learn how rules
 work, start from the example (a small filter whose every rule explains itself in its comment); a new filter starts
 blank and opens the example rules (about sixty ready rules in groups to tick into a starter set); the Rules tab has them
-either way. The templates' credit lines follow. The empty state and the New filter dialog ("A blank filter with no
+either way; new players can describe their filter on the AI help page. The templates' credit lines follow. The empty state and the New filter dialog ("A blank filter with no
 rules; the example rules open next, so you can tick a starter set. …") say the same in short.
 
 - **New filter**: a name dialog ("It also becomes the filter's title (Settings tab), which the launcher shows."), then
@@ -374,8 +375,8 @@ rules; the example rules open next, so you can tick a starter set. …") say the
 
 Header row: back link, the filter name (a new draft: pencil to rename inline, Enter or Escape returns the focus to the
 pencil; a saved filter is renamed through Details), the status line (see "Saving and sharing in the editor"), a
-problems chip ("N errors / M warnings", also announced to screen readers through a polite live region) and
-**Download**. Clicking the chip opens the JSON tab and bumps a counter the screen passes to `JsonTab`
+problems chip ("N errors / M warnings", also announced to screen readers through a polite live region), **Import AI
+answer** and **Improve with AI** (see "AI help") and **Download**. Clicking the chip opens the JSON tab and bumps a counter the screen passes to `JsonTab`
 (`scrollToProblems`); `JsonTab` scrolls to the problems list in an effect once it has rendered (the tab switch runs in a
 transition, so scrolling from the click handler could miss the element) and resets the counter. Download saves the
 stored `text` (comments and formatting as uploaded) unless edits are not yet written back (`editor.dirty`), then the
@@ -1146,6 +1147,95 @@ tab switches; it is not saved.
 - While the bundles load (or when they fail) a hint says that typed codes work but item-type conditions only see the
   typed type.
 
+## AI help (`screens/LootFilterAiScreen.tsx`, `components/ai/`, `utils/aiPrompt/`, `utils/aiAnswer.ts`, `utils/aiFollowUp.ts`, `utils/aiStarter.ts`)
+
+New players describe the filter they want; the app builds a prompt package for any LLM; the user talks it through with
+the LLM, pastes each JSON answer back, sees the validator's problems and sends them back until the filter is clean.
+Nothing is sent anywhere: the page only builds files (the page says so). Owner decisions (2026-11) are the list below.
+
+- **Entry points**: **Create a filter with AI help** next to the library's start buttons (a link to `/loot-filters/ai`,
+  `AI_PAGE_PATH`), and **Improve with AI** in the editor header, which opens the same page with the open filter as the
+  starter: the router state `{ aiStarter: { name, text } }` (`aiStarterState` / `readAiOpenFilter`) carries the text
+  Download would save, so drafts, saved filters and sandboxes all work. Leaving the editor flushes as usual.
+- **The page** (a 1-2-3 explanation on top): (1) the request textarea (placeholder example; kept in `sessionStorage`
+  `loot-filters/ai-request` so it survives a trip to the editor; storage errors are ignored) and **Start from**
+  (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, fetched with
+  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first) or an uploaded `.json`; the line
+  under it gives the rule count and size (a starter over 100 rules adds a note that long answers may be cut off), or why
+  the text cannot be used (not valid JSON). Saved filters start through Improve with AI (the hint says so). (2) **Game
+  data** Compact (default) or Full with the measured size of each (characters and ~tokens = characters / 4, plus the
+  total with the request and starter), **Download .md (one file)**, **Download .zip (prompt + files)** and **Copy
+  prompt** (the instructions and request only; the toast says to attach the files too), with notes on what each holds
+  and that LLMs with file upload or a large context handle Full best. (3) **Import AI answer** (the first import creates
+  a new draft, see below).
+- **The package** (`utils/aiPrompt/promptPackage.ts`, its own lazy chunk of about 33 KB / 13 KB gzip, imported by the
+  page; the reference files are cached per bundle identity and size, about 20 ms to build both): `PROMPT.md`
+  (`instructions.ts`: role and goal; reply in the user's language with JSON keys and texts as the format needs; the
+  workflow: ask every clarifying question first (class/build, difficulty/progress, item groups, strictness levels,
+  sounds/icons, languages), propose a plan, the complete filter as one json block every time (never a diff unless
+  asked), meaningful rule comments (they become the rule titles), after every JSON answer remind the user to Import AI
+  answer and paste the problems back, fix exactly the pasted problems and keep everything else; the rules for codes
+  (only from the reference, ask the user otherwise, the validator flags unknown codes), bundled assets and the plugin
+  limits; the file list with summaries; the request verbatim between `<user_request>` tags (it cannot close them); the
+  starter), then the files: `FORMAT.md`, `examples.md`, `assets.md`, the CSV tables and `starter.json`. The single `.md`
+  is the prompt for one document ("each reference file follows under a heading File: <name>"), then every file under
+  `# File: <name>` (markdown files one heading level down, CSV and JSON in four-backtick fences); the zip
+  (`buildPromptZip`, `utils/zip.ts`) holds `PROMPT.md` and the files. Names: `<slug of the starter label, else of the
+request's first line, else "ai-filter">-ai-prompt-<yyyy-mm-dd>.md|.zip`.
+- **Generated from the code** (`formatReference.ts`), so it follows the editor: the key tables from `TOP_LEVEL_KEYS`,
+  `CONDITION_KEYS` and `ACTION_KEYS` (their descriptions are `Record`s over the model's key types, so a new key does not
+  compile without one), the enumerations, `STAT_OPS`, `PLACEHOLDERS`, `COLOR_CODES`, `STAT_QUIRKS` (headline and
+  message), `STAT_SCALES`, `STAT_LAYER_KINDS` (what each layered stat's param holds), `OMITTED_PARAM_RULE`,
+  `FILTER_CONTENT_MAX_BYTES`, `LOOT_FILTER_PLUGIN_VERSION`, a complete example file (`SKELETON_FILTER`, validated clean
+  by a test), the example rules (`EXAMPLE_RULES`, one key per line) and "Common mistakes and what the app reports":
+  `MISTAKE_SAMPLES` (unknown code, a type name for a code, a stat label for a name, an unknown quality, Enhanced Damage
+  on weapons, a skill tab without param or with a properties.txt number, a Life value, a missing level or style,
+  `between` with one number, an empty list, unique ids with a non-unique quality, codes of other types,
+  `hideIfOtherConditionsFail` with quality, a hide rule without conditions, a colour out of range, an unknown key) run
+  through `readLootFilter` + `validateLootFilter` against the game data, so the LLM sees the app's own messages. Prose
+  covers only semantics (how rules combine, hide rules and exceptions, ids, writing the file for the app).
+- **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.2.24, the single .md without request or starter):
+  **Compact** about 167k characters (~42k tokens): every item type (`item-types.csv`), the misc items that drop
+  (`items.csv`: runes, gems, charms, jewels, potions, keys, organs, essences, coupons, maps, scrolls; stacks of five or
+  more identically named containers (the Rune, Decal and Multi Stockers, Gem and Crystal Cans, Rerolling Orbs)
+  collapse to one row "match them by item type"), the weapon and armour bases that drop by item type and tier
+  (`bases.csv`, one row per type and tier with `code name` pairs: 15k instead of 19k as one row per code, and the LLM
+  can use `itemTypes` + `baseTier`), every stat with label, param kind and the quirk or scale note (`stats.csv`),
+  uniques merged by name with the dropped and Ancient Coupon ids, then the set items (`uniques-sets.csv`, disabled rows
+  left out), every area (`areas.csv`, 5k), the class skills, the skill tabs (param = class × 8 + tab) and the classes.
+  **Full** about 555k characters (~139k tokens): one row per item code with kind, types, tier and drop flag, one row
+  per unique and set row with base, level and coupon/disabled notes, every skill and every sounds.txt name
+  (`sounds.csv`, 263k of the total). Sully's template as the starter adds about 68k characters.
+- **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
+  blocks (backticks or tildes, any length, an unclosed last block included) that look like JSON (info `json`, `jsonc`,
+  `json5`, `js`, none, or content starting with `{` or `//`) are tried last first and the first complete filter wins (a
+  whole filter has `rules` or `formatVersion` at the top); then all blocks joined (an answer continued in a second
+  block); without fences, from the first line opening an object (with the `//` lines above it) to the last line that is
+  only `}`, then to the last `}`. Parsing is the upload's (`parseLootFilter`, lenient JSONC). The dialog shows what it
+  found (title, rules, styles, levels, the problem count with the game data) and the confirm text: in the editor
+  "Importing replaces the whole content of the open filter" (**Replace the filter** dispatches `replaceFilter` exactly
+  like the JSON tab's Apply, drops unapplied JSON-tab text, toasts the counts and opens the problems list); on the AI
+  page "Importing creates the draft <name>" (`importText` with source `upload`, named by `aiFilterName`: the request's
+  first line up to 40 characters, else "AI filter"; it opens on `?tab=json` when there are problems). Without a
+  readable filter it says why (no JSON: maybe the AI is still asking questions; a syntax error with its position: maybe
+  cut off; JSON that is a list or a single rule) and offers **Copy a message asking the AI to resend the filter**
+  (`resendMessage`).
+- **Copy problems for the AI** (`CopyProblemsButton`, in the Problems heading of the JSON tab's list, so it works on any
+  filter; hidden without problems): `problemsMessage` writes the counts, how to read rule numbers (1-based in the file's
+  `rules` list; "Disabled rule N" for `disabledRules`) and paths, the errors then the warnings as
+  `- Rule 12 "High runes" (rules/11/itemCodes/3): Unknown item code "r99"` (style problems name the style), at most 80
+  lines with the rest counted, and ends with "Fix these and keep everything else; reply with the complete filter as one
+  json block."
+- **Seams for later integration**: an example-rules starter (`AiStarterChoice` `rules`, `ExampleRulesStarter` = the
+  `{ rules, styles }` a picker's `onConfirm(rules, styles)` gives, `starterFromRules`, and the screen's `rulesStarter`
+  state; not offered in the picker until the example rule picker exists), style presets
+  (`PromptReferenceInput.stylePresets`, shown in examples.md) and an asset registry (`PromptReferenceInput.assets`:
+  sounds and icons with optional notes; default `DEFAULT_PROMPT_ASSETS` from `bundledAssets.ts`).
+- Tests (logic only): `gameDataTables.test.ts`, `formatReference.test.ts` (every key has a row, the skeleton and the
+  example rules read back cleanly, every mistake sample yields the validator's messages against the real bundles),
+  `promptPackage.test.ts` (files, layout, delimiters, names, zip entries, sizes), `aiAnswer.test.ts`,
+  `aiFollowUp.test.ts`, `aiStarter.test.ts`.
+
 ## Phase status
 
 | Phase | Content                                                                                       | Status                                                    |
@@ -1156,6 +1246,7 @@ tab switches; it is not saved.
 | 4     | Rule builder with pickers, style editor, label preview                                        | done (rule builder, actions editor, Styles tab, previews) |
 | 5     | Test-item tab with a rule trace                                                               | done                                                      |
 | 6     | Sharing: saved filters in Supabase, library tabs, profile and home blocks                     | built (FEATURE-LOOT-FILTER-SHARING.md)                    |
+| 7     | AI help: LLM prompt package, Import AI answer, Copy problems for the AI                       | built (see "AI help")                                     |
 
 ## Verify in game
 

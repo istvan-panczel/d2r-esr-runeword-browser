@@ -99,8 +99,8 @@ Collected to forward together once the current implementation round is done.
 
 ## Planned features on top of the loot filter
 
-Owner requests (2026-11), to start once the editor is mostly done and verified in game. Sharing is built; the rest is
-not built yet.
+Owner requests (2026-11), to start once the editor is mostly done and verified in game. Sharing and the LLM prompt start
+are built.
 
 ### Loot filter sharing (Supabase)
 
@@ -114,21 +114,12 @@ save, a change note), and `updateUrl` is left as the author wrote it.
 
 ### LLM prompt start
 
-A "Start with an LLM" button opens a textarea where the user describes what they want from the filter ("show runes
-from Ist up with a sound, hide magic weapons without +skills, …"). The app builds one prompt to paste into an LLM of the
-user's choice: the request, the filter format (keys, value shapes, how conditions and rules combine, hide and
-exceptions as `< 1` checks), the plugin's conditions and actions, the game data the rules need (item codes and names,
-item types, stat names with labels and which need a param, unique and set ids, bundled sounds and icons) in a compact
-form, and the known plugin limits (Enhanced Damage/Defense read 0, params read as param 0 when omitted). The user
-imports the LLM's answer like an upload and fixes what the validator reports. Open points:
-
-- Prompt size: the full code and stat lists are large (lootfilter.json is ~830 KB), so pick what to include from the
-  request (keyword match against item, type and stat names) or send only the common subsets, and say how to look up
-  the rest.
-- Validating and importing the answer: strip prose and code fences, read it with the lenient reader, show the
-  validator's problems before saving; maybe a second prompt that feeds the problems back.
-- Keeping the format text in sync with the editor: generate it from the same sources (types, validator messages,
-  `STAT_QUIRKS`, the example rules) rather than a hand-written copy.
+Built (2026-11) as the AI help page (`/loot-filters/ai`, "Create a filter with AI help" in the library, "Improve with
+AI" in the editor): a prompt package for any LLM in a Compact or Full game data size (one .md, a zip, or Copy prompt),
+the format text generated from the editor's own sources and validator, "Import AI answer" (fences and prose stripped,
+the last complete filter taken, read like an upload) and "Copy problems for the AI". See LOOT-FILTER.md "AI help". Open:
+the example-rules starter waits for the example rule picker; style presets and the asset registry are inputs the page
+does not pass yet.
 
 ## Decided against or parked
 

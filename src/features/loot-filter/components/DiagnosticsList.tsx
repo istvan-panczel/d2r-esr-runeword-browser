@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Diagnostic } from '../engine/types';
+import type { Diagnostic, LootFilter } from '../engine/types';
+import { CopyProblemsButton } from './ai/CopyProblemsButton';
 
 export const DIAGNOSTICS_LIST_ID = 'loot-filter-diagnostics';
 
@@ -15,20 +16,26 @@ interface DiagnosticsListProps {
   readonly onShowRule: (index: number) => void;
   /** When given, problems with a path also get a "Show in JSON" button (the JSON tab selects the path in its text). */
   readonly onShowInJson?: (diagnostic: Diagnostic) => void;
+  /** The open model, for the rule comments of "Copy problems for the AI"; null when the text cannot be read. */
+  readonly filter: LootFilter | null;
 }
 
 /**
  * Every problem with the filter: severity, path and message; rule problems link to their rule, and with `onShowInJson`
- * a problem with a path links to its place in the text. Errors come first.
+ * a problem with a path links to its place in the text. Errors come first. "Copy problems for the AI" copies them as a
+ * follow-up message for an LLM.
  */
-export function DiagnosticsList({ diagnostics, onShowRule, onShowInJson }: DiagnosticsListProps) {
+export function DiagnosticsList({ diagnostics, onShowRule, onShowInJson, filter }: DiagnosticsListProps) {
   const [showAll, setShowAll] = useState(false);
   const sorted = [...diagnostics].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'error' ? -1 : 1));
   const rows = showAll ? sorted : sorted.slice(0, INITIAL_ROWS);
 
   return (
     <section id={DIAGNOSTICS_LIST_ID} className="scroll-mt-4 space-y-2">
-      <h2 className="text-lg font-semibold">Problems</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold">Problems</h2>
+        <CopyProblemsButton diagnostics={sorted} filter={filter} />
+      </div>
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       ) : (

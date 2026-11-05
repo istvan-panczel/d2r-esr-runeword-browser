@@ -27,6 +27,9 @@ export function withSave(path: string): string {
   return `${path}?save=1`;
 }
 
+/** The "Create a filter with AI help" page. */
+export const AI_PAGE_PATH = '/loot-filters/ai';
+
 /** The library tab with the public filters. */
 export const SHARED_TAB_PATH = '/loot-filters?tab=shared';
 
