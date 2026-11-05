@@ -3,12 +3,13 @@
  * the sections of Sully's QoL filter (runes, gems, uniques, sets, mythicals, coupons, bases, charms and jewels, class
  * items, endgame items, crafting reagents, maps, gold and potions, junk), written for this site. An example is its
  * conditions (plus any fixed name tag or hide) and default presentation choices: a style preset, a sound, a minimap
- * icon and a chat line, each of which the player can change or switch off (`buildExampleRule`). Hide rules have no
+ * icon and a chat line, each of which the player can change or switch off (`buildExampleSet`). Hide rules have no
  * presentation: a hidden item shows nothing.
  *
- * The default minimap icons are the generated `<shape>_<colour>` icons that pair with the example's style preset
- * (`bundledAssets.ts` names the pairing): diamonds for runes, stars for uniques, sets and mythicals, a red cross for the
- * Valuable look, and so on. Sully's icons stay in the Icon select.
+ * The minimap icons are the generated `<shape>_<colour>` icons: a styled example shows its preset's icon (each preset
+ * carries the one `bundledAssets.ts` pairs with it) unless it names its own, another icon or another size (a crown
+ * for unique jewellery, a smaller scroll for exceptional coupons), or none (`icon: null`, Hel to Um as in Sully's
+ * filter). Sully's icons stay in the Icon select.
  *
  * Every rule uses real ESR 3.2.24 codes, types and stat names and passes the validator without warnings against the
  * game data, with its default presentation and without (exampleRules.test.ts). None uses `activeInLevels` (examples
@@ -17,9 +18,9 @@
  */
 import { CLASS_CODES } from '@/features/game-data/engine/schema';
 import { tabLayer } from '@/features/game-data/engine/statLayers';
-import type { LootFilterRule, LootFilterStyle, StatCheck } from '../engine/types';
+import type { LootFilterRule, LootFilterStyle, MinimapIcon, StatCheck } from '../engine/types';
 import { newExceptionCheck } from './statChecks';
-import { stylePreset, type StylePresetId } from './stylePresets';
+import { sameIcon, sameStyle, stylePreset, styleWithoutIcon, type StylePresetId } from './stylePresets';
 
 export type ExampleGroupId =
   | 'runes'
@@ -103,14 +104,18 @@ export const EXAMPLE_GROUPS: readonly ExampleGroup[] = [
   },
 ];
 
-/** The four presentation choices of an example; a missing key is "None". */
+/** The four presentation choices of an example; a missing key is "None", except `icon` (see there). */
 export interface ExamplePresentation {
   readonly style?: StylePresetId;
   /** A bundled sound file (`bundledAssets.ts`). */
   readonly sound?: string;
-  /** A bundled icon name (`bundledAssets.ts`). */
-  readonly icon?: string;
-  /** The minimap icon size; default `DEFAULT_EXAMPLE_ICON_SIZE`. */
+  /**
+   * Missing: the style preset's icon (none without a style or for a preset without one). A bundled icon name
+   * (`bundledAssets.ts`): the rule's own icon, only where it differs from the preset's (another icon or size). null: no
+   * icon although the preset has one (the picker then adds a copy of the style without its icon).
+   */
+  readonly icon?: string | null;
+  /** The size of the example's own icon; default: the preset icon's size, else `DEFAULT_EXAMPLE_ICON_SIZE`. */
   readonly iconSize?: number;
   readonly chatMessage?: string;
 }
@@ -128,7 +133,7 @@ export interface ExampleRule {
   readonly presentation?: ExamplePresentation;
 }
 
-/** The icon size an example's icon gets when it names none. */
+/** The icon size an example's own icon gets when neither it nor its style preset names one. */
 export const DEFAULT_EXAMPLE_ICON_SIZE = 40;
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -213,7 +218,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Mid runes: Hel to Um',
     description: 'Hel (r65) to Um (r72) get a box and a border, still without a sound.',
     rule: { itemCodes: numbered('r', 65, 72) },
-    presentation: { style: 'mid-rune' },
+    presentation: { style: 'mid-rune', icon: null },
   },
   {
     id: 'upper-runes',
@@ -221,7 +226,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Mal, Ist and Gul runes',
     description: 'Mal (r73), Ist (r74) and Gul (r75): the mid-rune look plus a sound, an orange diamond on the minimap and a chat line.',
     rule: { itemCodes: numbered('r', 73, 75) },
-    presentation: { style: 'mid-rune', sound: 'mid.mp3', icon: 'diamond_orange', iconSize: 40, chatMessage: 'ÿc8Rune: ÿc0{name}' },
+    presentation: { style: 'mid-rune', sound: 'mid.mp3', chatMessage: 'ÿc8Rune: ÿc0{name}' },
   },
   {
     id: 'high-runes',
@@ -230,7 +235,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Vex (r76) to Zod (r83) with everything: a white plate, a beam, the tink sound, a red diamond on the minimap and a chat line. The sound and icon files come with the .zip download.',
     rule: { itemCodes: numbered('r', 76, 83) },
-    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'diamond_red', iconSize: 50, chatMessage: 'ÿc1High rune: ÿc0{name}' },
+    presentation: { style: 'high-rune', sound: 'tink.mp3', chatMessage: 'ÿc1High rune: ÿc0{name}' },
   },
   {
     id: 'kanji-runes',
@@ -246,7 +251,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'ESR kanji runes: No to Re',
     description: 'No (r36) to Re (r42), which Sully calls the gold runes: the mid-rune look with a sound and an icon.',
     rule: { itemCodes: numbered('r', 36, 42) },
-    presentation: { style: 'mid-rune', sound: 'mid.mp3', icon: 'diamond_orange', iconSize: 40, chatMessage: 'ÿc8ESR rune: ÿc0{name}' },
+    presentation: { style: 'mid-rune', sound: 'mid.mp3', chatMessage: 'ÿc8ESR rune: ÿc0{name}' },
   },
   {
     id: 'kanji-high-runes',
@@ -254,7 +259,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'ESR kanji runes: Su, He, Nu, Wo and Null',
     description: 'The top of the kanji line (r43 to r46) and the Null Rune (r50), treated like high runes.',
     rule: { itemCodes: [...numbered('r', 43, 46), 'r50'] },
-    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'diamond_red', iconSize: 50, chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
+    presentation: { style: 'high-rune', sound: 'tink.mp3', chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
   },
   {
     id: 'elemental-runes',
@@ -262,7 +267,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'ESR elemental runes: Moon to God',
     description: 'Moon (r84) to God (r97), ESR’s highest runes, treated like high runes.',
     rule: { itemCodes: numbered('r', 84, 97) },
-    presentation: { style: 'high-rune', sound: 'tink.mp3', icon: 'diamond_red', iconSize: 50, chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
+    presentation: { style: 'high-rune', sound: 'tink.mp3', chatMessage: 'ÿc;ESR rune: ÿc0{name}' },
   },
   {
     id: 'high-rune-decals',
@@ -280,7 +285,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Perfect gems',
     description: 'One item type (gem5) covers every perfect gem, Amethyst to Obsidian; Perfect gems pay for most rerolls.',
     rule: { itemTypes: ['gem5'] },
-    presentation: { style: 'perfect-gem', icon: 'gem_gold', iconSize: 27 },
+    presentation: { style: 'perfect-gem' },
   },
   {
     id: 'blemished-gems',
@@ -307,7 +312,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Every unique weapon and armour piece gets the unique look, the unique sound and a gold star on the minimap. Mythical bases are left out: the mythical rule gives them their own sound and chat line.',
     rule: { itemTypes: ['weap', 'armo'], excludeItemCodes: MYTHICAL_BASES, quality: 'unique' },
-    presentation: { style: 'unique', sound: 'unique.mp3', icon: 'star_gold', iconSize: 30 },
+    presentation: { style: 'unique', sound: 'unique.mp3' },
   },
   {
     id: 'unique-jewellery',
@@ -343,7 +348,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Set items',
     description: 'Every set item gets the set look, the unique sound and a green star on the minimap.',
     rule: { quality: 'set' },
-    presentation: { style: 'set', sound: 'unique.mp3', icon: 'star_green', iconSize: 30 },
+    presentation: { style: 'set', sound: 'unique.mp3' },
   },
   {
     id: 'elite-set-chat',
@@ -365,8 +370,6 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     presentation: {
       style: 'mythical',
       sound: 'mythical.mp3',
-      icon: 'star_purple',
-      iconSize: 50,
       chatMessage: 'ÿc;Mythical unique: ÿc4{name}',
     },
   },
@@ -387,7 +390,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Elite coupons',
     description: 'Every coupon for an elite unique (item type cpn3), with a sound, a gold scroll icon and a chat line.',
     rule: { itemTypes: ['cpn3'] },
-    presentation: { style: 'coupon', sound: 'other.mp3', icon: 'scroll_gold', iconSize: 40, chatMessage: 'ÿc4Elite coupon: ÿc0{name}' },
+    presentation: { style: 'coupon', sound: 'other.mp3', chatMessage: 'ÿc4Elite coupon: ÿc0{name}' },
   },
   {
     id: 'exceptional-coupons',
@@ -443,8 +446,6 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     presentation: {
       style: 'runeword-base',
       sound: 'other.mp3',
-      icon: 'shield_white',
-      iconSize: 30,
       chatMessage: 'ÿc5Ethereal base: ÿc0{name} ({sockets} sockets)',
     },
   },
@@ -482,7 +483,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
       itemStats: [{ stat: 'item_allskills', op: '>=', value: 1 }],
       nameSuffix: ' ÿc1[+{stat:127} skills]',
     },
-    presentation: { style: 'valuable', sound: 'other.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc4+All Skills base: ÿc0{name}' },
+    presentation: { style: 'valuable', sound: 'other.mp3', chatMessage: 'ÿc4+All Skills base: ÿc0{name}' },
   },
 
   // ----- Charms and jewels -----
@@ -523,7 +524,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Grand charms with +1 to a skill tab',
     description: 'One check per class skill tab under “any of” (24 tabs, param class × 8 + tab): any tab is enough.',
     rule: { itemTypes: ['lcha'], itemStatsAnyOf: everySkillTab(1) },
-    presentation: { style: 'good-charm', sound: 'other.mp3', icon: 'square_emerald', iconSize: 35, chatMessage: 'ÿc3Skiller: {name}' },
+    presentation: { style: 'good-charm', sound: 'other.mp3', chatMessage: 'ÿc3Skiller: {name}' },
   },
   {
     id: 'rare-jewels',
@@ -531,7 +532,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Rare jewels',
     description: 'Both jewel codes (jew and the Mythical Jewel mjw) at quality rare, Sully’s rare jewel look.',
     rule: { itemCodes: ['jew', 'mjw'], quality: 'rare' },
-    presentation: { style: 'good-jewel', sound: 'other.mp3', icon: 'hexagon_yellow', iconSize: 27, chatMessage: 'ÿc9Rare jewel' },
+    presentation: { style: 'good-jewel', sound: 'other.mp3', chatMessage: 'ÿc9Rare jewel' },
   },
 
   // ----- Class items and jewellery -----
@@ -565,7 +566,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'Class-specific items (type clas) minus class rings and amulets (Exclude item types), magic or rare, with +3 to any skill tab: one check per tab under “any of”.',
     rule: { itemTypes: ['clas'], excludeItemTypes: ['ring', 'amul'], quality: ['magic', 'rare'], itemStatsAnyOf: everySkillTab(3) },
-    presentation: { style: 'valuable', sound: 'other.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc4+3 skill tab: {name}' },
+    presentation: { style: 'valuable', sound: 'other.mp3', chatMessage: 'ÿc4+3 skill tab: {name}' },
   },
 
   // ----- Endgame -----
@@ -575,7 +576,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Pandemonium keys',
     description: 'The Keys of Terror, Hate and Destruction (pk1 to pk3) with Sully’s Uber look and the gong.',
     rule: { itemCodes: ['pk1', 'pk2', 'pk3'] },
-    presentation: { style: 'uber', sound: 'gong.mp3', icon: 'key_purple', iconSize: 35, chatMessage: 'ÿc;Key: ÿc0{name}' },
+    presentation: { style: 'uber', sound: 'gong.mp3', chatMessage: 'ÿc;Key: ÿc0{name}' },
   },
   {
     id: 'uber-organs',
@@ -614,7 +615,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Ascendancy Stones and orbs',
     description: 'The Ascendancy Stone, the five elemental orbs, the Orb of Creation and the Primordial Soulstone.',
     rule: { itemCodes: ['ast', 'u11', 'u12', 'u13', 'u14', 'u15', 'u16', 'u19'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc8Ascendancy: ÿc0{name}' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', chatMessage: 'ÿc8Ascendancy: ÿc0{name}' },
   },
   {
     id: 'ancient-scrolls',
@@ -631,7 +632,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     description:
       'The token (u23) Corrupted Zakarum in Nightmare and Hell and the Endgame Map bosses drop: cubed with a class weapon it awakens, and the awakened token gives that weapon its mastery. The awakened tokens are made in the cube, so the rule leaves them out.',
     rule: { itemCodes: ['u23'] },
-    presentation: { style: 'valuable', sound: 'tink.mp3', icon: 'cross_red', iconSize: 40, chatMessage: 'ÿc8Weapon Mastery Token' },
+    presentation: { style: 'valuable', sound: 'tink.mp3', chatMessage: 'ÿc8Weapon Mastery Token' },
   },
   {
     id: 'hourglass-pieces',
@@ -650,7 +651,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Body parts',
     description: 'Hearts, brains, eyes and the other monster parts the cube recipes take.',
     rule: { itemCodes: BODY_PARTS },
-    presentation: { style: 'crafting', icon: 'flame_orange', iconSize: 27 },
+    presentation: { style: 'crafting' },
   },
   {
     id: 'rune-crystals',
@@ -658,7 +659,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Rune crystals',
     description: 'The twelve crystals (Frozen Soul … Tainted Tourmaline) in their chipped, flawed and normal grades.',
     rule: { itemCodes: RUNE_CRYSTALS },
-    presentation: { style: 'crafting', icon: 'flame_orange', iconSize: 27 },
+    presentation: { style: 'crafting' },
   },
   {
     id: 'common-reagents',
@@ -674,7 +675,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Rare reagents',
     description: 'Maple Leaf, Anvil Stone, Elixir, Cookbook and the Orb of Anointment: the gold plate, the gong and an icon.',
     rule: { itemCodes: ['map', 'qqq', 'elx', 'yyy', 'um7'] },
-    presentation: { style: 'rare-reagent', sound: 'gong.mp3', icon: 'coin_gold', iconSize: 27, chatMessage: 'ÿc1Rare reagent: ÿc4{name}' },
+    presentation: { style: 'rare-reagent', sound: 'gong.mp3', chatMessage: 'ÿc1Rare reagent: ÿc4{name}' },
   },
   {
     id: 'aura-stones',
@@ -689,7 +690,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     group: 'crafting',
     title: 'Unique Stones',
     description:
-      'Unique Stones (nor, exc, eli: an0 to an2) come out of the cube from an Ancient’s Gift (a Baal and Diablo drop); one cubed with a white, grey or low quality base of its tier and no sockets makes a unique of that type. They never lie on the ground, so the rule only marks them in your inventory and stash: a look, no sound or icon.',
+      'Unique Stones (nor, exc, eli: an0 to an2) come out of the cube from an Ancient’s Gift (a Baal and Diablo drop); one cubed with a white, grey or low quality base of its tier and no sockets makes a unique of that type. They never lie on the ground, so the rule only marks them in your inventory and stash: a look, no sound (the style’s minimap icon never shows, as it marks items on the ground).',
     rule: { itemCodes: ['an0', 'an1', 'an2'] },
     presentation: { style: 'valuable' },
   },
@@ -701,7 +702,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Tier 1 maps',
     description: 'z01 to z04 with the map look and icon, no sound.',
     rule: { itemCodes: numbered('z', 1, 4) },
-    presentation: { style: 'map', icon: 'map_white', iconSize: 30 },
+    presentation: { style: 'map' },
   },
   {
     id: 'tier-2-4-maps',
@@ -709,7 +710,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     title: 'Tier 2 to 4 maps',
     description: 'z05 to z16 with the map sound and a chat line.',
     rule: { itemCodes: numbered('z', 5, 16) },
-    presentation: { style: 'map', sound: 'map.mp3', icon: 'map_white', iconSize: 30, chatMessage: 'Map: ÿc0{name}' },
+    presentation: { style: 'map', sound: 'map.mp3', chatMessage: 'Map: ÿc0{name}' },
   },
   {
     id: 'tier-5-maps',
@@ -900,26 +901,47 @@ export function isHideExample(example: ExampleRule): boolean {
 // Presentation choices
 // ---------------------------------------------------------------------------------------------------------------------
 
+/** The Icon choice "Style's icon": the rule shows its style preset's icon (none when the preset has none). */
+export const STYLE_ICON = '<style>';
+
 /** The four presentation choices; null is "None". */
 export interface ExampleChoices {
   readonly style: StylePresetId | null;
   readonly sound: string | null;
+  /** `STYLE_ICON`, a bundled icon name (the rule's own icon, at the example's size) or null (no icon). */
   readonly icon: string | null;
   readonly chatMessage: string | null;
 }
 
 export const NO_CHOICES: ExampleChoices = { style: null, sound: null, icon: null, chatMessage: null };
 
-/** The example's default choices (all None for a hide rule). */
+/** The example's default choices (all None for a hide rule); a styled example without an icon of its own takes the style's. */
 export function defaultChoices(example: ExampleRule): ExampleChoices {
   const presentation = example.presentation;
   if (presentation === undefined || isHideExample(example)) return NO_CHOICES;
+  const icon = presentation.icon === undefined ? (presentation.style === undefined ? null : STYLE_ICON) : presentation.icon;
   return {
     style: presentation.style ?? null,
     sound: presentation.sound ?? null,
-    icon: presentation.icon ?? null,
+    icon,
     chatMessage: presentation.chatMessage ?? null,
   };
+}
+
+/** The minimap icon of a style preset, or undefined (no preset, or one without an icon). */
+export function presetIcon(style: StylePresetId | null): MinimapIcon | undefined {
+  return style === null ? undefined : stylePreset(style).style.icon;
+}
+
+/**
+ * The minimap icon the rule shows with these choices, or undefined for none: the style preset's (`STYLE_ICON`), or its own
+ * at the example's `iconSize` (else the preset icon's size, else `DEFAULT_EXAMPLE_ICON_SIZE`).
+ */
+export function chosenIcon(example: ExampleRule, choices: ExampleChoices): MinimapIcon | undefined {
+  if (choices.icon === null || isHideExample(example)) return undefined;
+  const fromStyle = presetIcon(choices.style);
+  if (choices.icon === STYLE_ICON) return fromStyle;
+  return { iconName: choices.icon, iconSize: example.presentation?.iconSize ?? fromStyle?.iconSize ?? DEFAULT_EXAMPLE_ICON_SIZE };
 }
 
 /** The plain drop line the chat select offers besides the example's own line. */
@@ -932,29 +954,115 @@ export function chatOptions(example: ExampleRule): readonly { readonly value: st
   return own === PLAIN_CHAT_MESSAGE ? options : [...options, { value: PLAIN_CHAT_MESSAGE, label: 'The item name' }];
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Building rules and styles
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** One example to build, with its presentation choices. */
+export interface ExampleEntry {
+  readonly example: ExampleRule;
+  readonly choices: ExampleChoices;
+}
+
+export interface ExampleSet {
+  /** One rule per entry, in entry order. */
+  readonly rules: readonly LootFilterRule[];
+  /**
+   * Every style the rules use, by name, in first-use order: a preset's copy (with its icon, or without it when every
+   * rule of that preset wants no icon) and the `<Name>NoIcon` copies. Hand them to `mergeStyles`: a name the filter
+   * already holds is never overwritten.
+   */
+  readonly styles: Readonly<Record<string, LootFilterStyle>>;
+}
+
+type Styles = Readonly<Record<string, LootFilterStyle>>;
+
+const styleIn = (styles: Styles | undefined, name: string): LootFilterStyle | undefined =>
+  styles !== undefined && Object.hasOwn(styles, name) ? styles[name] : undefined;
+
+/**
+ * The name for a copy of `base` without its icon: `<base>NoIcon`, else `<base>NoIcon2`, … the first that neither the
+ * filter nor this set uses for other content.
+ */
+function noIconName(base: string, content: LootFilterStyle, existing: Styles | undefined, built: Styles): string {
+  for (let n = 1; ; n += 1) {
+    const name = n === 1 ? `${base}NoIcon` : `${base}NoIcon${String(n)}`;
+    const taken = styleIn(built, name) ?? styleIn(existing, name);
+    if (taken === undefined || sameStyle(taken, content)) return name;
+  }
+}
+
+/**
+ * The rules the entries add, and the styles they use. A rule is its example's title as `comment`, its conditions and
+ * fixed actions, then `useStyle`, `sound`, `icon` and `chatMessage` for the choices that are not None; a hide rule
+ * ignores the choices.
+ *
+ * Icons: a style preset carries an icon, a rule's own `icon` overrides it, and a rule cannot remove it. So every rule
+ * gets exactly the icon it chose (`chosenIcon`):
+ * - The style a preset's rules use is the filter's own style of the preset's name when `existing` has one (kept as it
+ *   is), else the preset: with its icon, or without it when every rule of that preset wants none (the bulk "No
+ *   minimap icons" switch, say).
+ * - A rule carries its own `icon` only when the one it wants differs from that style's (another icon, the preset's
+ *   icon on a filter style without it).
+ * - A rule that wants no icon while that style has one uses a copy of the style without it, `<Name>NoIcon`
+ *   (`UniqueItemNoIcon`; a further number when the filter uses that name for something else).
+ */
+export function buildExampleSet(entries: readonly ExampleEntry[], existing?: Styles): ExampleSet {
+  // Per preset: does any rule want no icon, does any want the preset's own?
+  const wishes = new Map<StylePresetId, { none: boolean; preset: boolean }>();
+  for (const { example, choices } of entries) {
+    if (isHideExample(example) || choices.style === null) continue;
+    const wish = wishes.get(choices.style) ?? { none: false, preset: false };
+    const icon = chosenIcon(example, choices);
+    if (icon === undefined) wish.none = true;
+    else if (sameIcon(icon, presetIcon(choices.style))) wish.preset = true;
+    wishes.set(choices.style, wish);
+  }
+
+  const styles: Record<string, LootFilterStyle> = {};
+  const rules = entries.map(({ example, choices }): LootFilterRule => {
+    const base: LootFilterRule = { comment: example.title, ...example.rule };
+    if (isHideExample(example)) return base;
+    const icon = chosenIcon(example, choices);
+    let useStyle: string | undefined;
+    let ownIcon = icon;
+    if (choices.style !== null) {
+      const preset = stylePreset(choices.style);
+      const wish = wishes.get(choices.style);
+      const wanted = wish?.none === true && !wish.preset ? styleWithoutIcon(preset.style) : preset.style;
+      // What the preset's name holds once the styles are merged: the filter's own style wins.
+      const target = styleIn(existing, preset.name) ?? wanted;
+      if (icon === undefined && target.icon !== undefined) {
+        const bare = styleWithoutIcon(target);
+        useStyle = noIconName(preset.name, bare, existing, styles);
+        styles[useStyle] = bare;
+      } else {
+        useStyle = preset.name;
+        if (!Object.hasOwn(styles, useStyle)) styles[useStyle] = wanted;
+        if (sameIcon(icon, target.icon)) ownIcon = undefined;
+      }
+    }
+    return {
+      ...base,
+      ...(useStyle === undefined ? {} : { useStyle }),
+      ...(choices.sound === null ? {} : { sound: choices.sound }),
+      ...(ownIcon === undefined ? {} : { icon: ownIcon }),
+      ...(choices.chatMessage === null ? {} : { chatMessage: choices.chatMessage }),
+    };
+  });
+  return { rules, styles };
+}
+
 export interface BuiltExample {
   readonly rule: LootFilterRule;
   /** The styles the rule's `useStyle` needs, by name (a preset's copy). */
   readonly stylesToAdd: Readonly<Record<string, LootFilterStyle>>;
 }
 
-/**
- * The rule an example adds with the given choices: its conditions and fixed actions, its title as `comment`, then
- * `useStyle` (a preset's name, the preset going into `stylesToAdd`), `sound`, `icon` (the example's size, else
- * `DEFAULT_EXAMPLE_ICON_SIZE`) and `chatMessage` for the choices that are not None. A hide rule ignores the choices.
- */
-export function buildExampleRule(example: ExampleRule, choices: ExampleChoices): BuiltExample {
-  const base: LootFilterRule = { comment: example.title, ...example.rule };
-  if (isHideExample(example)) return { rule: base, stylesToAdd: {} };
-  const preset = choices.style === null ? null : stylePreset(choices.style);
-  const rule: LootFilterRule = {
-    ...base,
-    ...(preset === null ? {} : { useStyle: preset.name }),
-    ...(choices.sound === null ? {} : { sound: choices.sound }),
-    ...(choices.icon === null
-      ? {}
-      : { icon: { iconName: choices.icon, iconSize: example.presentation?.iconSize ?? DEFAULT_EXAMPLE_ICON_SIZE } }),
-    ...(choices.chatMessage === null ? {} : { chatMessage: choices.chatMessage }),
-  };
-  return { rule, stylesToAdd: preset === null ? {} : { [preset.name]: preset.style } };
+/** One example on its own (`buildExampleSet` with one entry): the rule and the styles it uses. */
+export function buildExampleRule(example: ExampleRule, choices: ExampleChoices, existing?: Styles): BuiltExample {
+  const { rules, styles } = buildExampleSet([{ example, choices }], existing);
+  const rule = rules.at(0);
+  if (rule === undefined) throw new Error('buildExampleSet returned no rule');
+  return { rule, stylesToAdd: styles };
 }

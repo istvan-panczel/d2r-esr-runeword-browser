@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { LootFilterRule, LootFilterStyle } from '../../engine/types';
+import type { LootFilterRule, LootFilterStyle, MinimapIcon } from '../../engine/types';
 import { useSoundPreview } from '../../hooks/useSoundPreview';
 import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS, bundledSoundUrl } from '../../utils/bundledAssets';
 import {
@@ -25,13 +25,17 @@ import {
 } from '../../utils/examplePicker';
 import {
   chatOptions,
+  chosenIcon,
   EXAMPLE_GROUPS,
   hasFixedAction,
   isHideExample,
+  presetIcon,
+  STYLE_ICON,
   type ExampleChoices,
   type ExampleRule,
 } from '../../utils/exampleRules';
 import { STYLE_PRESETS, stylePreset } from '../../utils/stylePresets';
+import { MinimapIconPreview } from '../MinimapIconPreview';
 import { TriCheckbox } from '../pickers/BrowserGroups';
 import { PresetPreview } from '../PresetPreview';
 
@@ -67,6 +71,11 @@ export interface ExampleRulesPickerProps {
   readonly previewVolume?: number;
   /** The selection to start with (default: nothing ticked), e.g. the one a previous confirm handed over. */
   readonly initialState?: ExamplePickerState;
+  /**
+   * The filter's styles, if any: a style of a preset's name there is kept, and the rules get exactly the icons they
+   * chose against it (their own icon, or a `<Name>NoIcon` copy; `buildStarterRules`).
+   */
+  readonly existingStyles?: Readonly<Record<string, LootFilterStyle>>;
 }
 
 interface ChoiceSelectProps {
@@ -125,6 +134,16 @@ const STYLE_OPTIONS = STYLE_PRESETS.map((preset) => ({ value: preset.id, label: 
 const SOUND_OPTIONS = BUNDLED_SOUND_ASSETS.map((asset) => ({ value: asset.file, label: `${asset.label} (${asset.file})` }));
 const ICON_OPTIONS = BUNDLED_ICON_ASSETS.map((asset) => ({ value: asset.name, label: asset.label }));
 
+const iconText = (icon: MinimapIcon) => (icon.iconSize === undefined ? icon.iconName : `${icon.iconName}, ${String(icon.iconSize)}`);
+
+/** The Icon select's options: "Style's icon (star_gold, 30)" first when the chosen style has one, then every bundled icon. */
+function iconOptions(style: ExampleChoices['style']): readonly { readonly value: string; readonly label: string }[] {
+  const fromStyle = presetIcon(style);
+  return fromStyle === undefined ? ICON_OPTIONS : [{ value: STYLE_ICON, label: `Style's icon (${iconText(fromStyle)})` }, ...ICON_OPTIONS];
+}
+
+const EDIT_LATER_HINT = 'After adding, you can change everything in the rule: colours, the icon’s size and tint, the sound, the chat line.';
+
 interface ExampleChoicesRowProps {
   readonly idPrefix: string;
   readonly example: ExampleRule;
@@ -139,12 +158,15 @@ function ExampleChoicesRow({ idPrefix, example, choices, state, previewVolume, o
   const preview = useSoundPreview();
   const effective = effectiveChoices(state, choices);
   const soundUrl = effective.sound === null ? null : bundledSoundUrl(effective.sound);
+  const icon = chosenIcon(example, effective);
   const doesNothing =
     !hasFixedAction(example) &&
     effective.style === null &&
     effective.sound === null &&
-    effective.icon === null &&
+    icon === undefined &&
     effective.chatMessage === null;
+  // "Style's icon" with a style that has none (or no style) is no icon: the select shows None.
+  const iconValue = choices.icon === STYLE_ICON && presetIcon(choices.style) === undefined ? null : choices.icon;
   const chat = chatOptions(example).map((option) => ({ ...option, label: `${option.label}: ${option.value}` }));
 
   return (
@@ -192,8 +214,8 @@ function ExampleChoicesRow({ idPrefix, example, choices, state, previewVolume, o
         <ChoiceSelect
           id={`${idPrefix}-icon`}
           label="Minimap icon"
-          value={choices.icon}
-          options={ICON_OPTIONS}
+          value={iconValue}
+          options={iconOptions(choices.style)}
           disabled={state.noIcons}
           disabledLabel="None (no icons)"
           onChange={(value) => {
@@ -212,12 +234,22 @@ function ExampleChoicesRow({ idPrefix, example, choices, state, previewVolume, o
           }}
         />
       </div>
-      {effective.style !== null && (
+      {effective.style !== null ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <PresetPreview preset={stylePreset(effective.style)} className="w-40" />
+          <PresetPreview preset={stylePreset(effective.style)} icon={icon ?? null} className="w-40 shrink-0 sm:w-48" />
           <span className="min-w-0">{stylePreset(effective.style).description}</span>
         </div>
+      ) : (
+        icon !== undefined && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="flex min-h-10 min-w-12 items-center justify-center rounded-md bg-neutral-950 p-1.5">
+              <MinimapIconPreview icon={icon} />
+            </span>
+            <span className="min-w-0">Minimap icon {iconText(icon)} px, no style.</span>
+          </div>
+        )
       )}
+      <p className="text-xs text-muted-foreground">{EDIT_LATER_HINT}</p>
       {doesNothing && <p className="text-xs text-amber-600 dark:text-amber-400">With every choice None this rule does nothing.</p>}
       {preview.error !== null && <p className="text-xs text-destructive">{preview.error}</p>}
     </div>
@@ -236,6 +268,7 @@ export function ExampleRulesPicker({
   confirmLabel = 'Add selected',
   previewVolume = 100,
   initialState = INITIAL_PICKER_STATE,
+  existingStyles,
 }: ExampleRulesPickerProps) {
   const idPrefix = useId();
   const [state, setState] = useState<ExamplePickerState>(initialState);
@@ -375,7 +408,7 @@ export function ExampleRulesPicker({
           type="button"
           disabled={count === 0}
           onClick={() => {
-            const { rules, styles } = buildStarterRules(state);
+            const { rules, styles } = buildStarterRules(state, existingStyles);
             onConfirm(rules, styles, state);
           }}
         >

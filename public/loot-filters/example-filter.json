@@ -5,7 +5,8 @@
 // - The conditions of a rule must all hold; a list (item codes, item types, qualities) means any of them.
 //   "itemStats" needs every check, "itemStatsAnyOf" one of them.
 // - "useStyle" names one of the styles below, presets from the Styles tab: they hold the look (name colour,
-//   background, border, droplight). The sounds, minimap icons and chat lines are on the rules.
+//   background, border, droplight) and the minimap icon; the sounds and chat lines are on the rules.
+//   A rule’s own icon replaces its style’s; for none, use a copy of the style without it (see Mid runes).
 // - Later rules win for the name, background, border, minimap icon and droplight; chat lines and sounds add up.
 // - "hide": true hides the item's ground label and stops: no rule after it runs for that item, and the
 //   highlights of the rules above it are gone too. So each hide rule carries its own exceptions, written
@@ -20,7 +21,7 @@
   "formatVersion": 1,
   "title": "Example filter (with explanations)",
   "author": "D2R ESR Runeword Browser",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A small filter to learn from, built from the editor’s example rules: highlights runes, gems, uniques, sets, mythicals, coupons, runeword bases, charms, jewels, keys, maps and big gold piles, and hides junk with exceptions. Leveling shows more, Strict hides more.",
   "filterLevels": [
     {"id": 1, "name": "Leveling"},
@@ -34,33 +35,78 @@
       "replaceName": "ÿc1{name}",
       "labelBackground": [255, 255, 255, 255],
       "labelBorder": {"color": [240, 0, 0, 255], "width": 2},
+      "icon": {"iconName": "diamond_red", "iconSize": 50},
       "droplight": {"color": [255, 40, 0]}
     },
-    "MidRune": {"replaceName": "ÿc8{name}", "labelBackground": [0, 0, 0, 230], "labelBorder": {"color": [255, 168, 0, 255], "width": 1}},
-    "PerfectGem": {"labelBorder": {"color": [200, 150, 0, 255], "width": 1}},
-    "UniqueItem": {"replaceName": "ÿc4{name}", "labelBackground": [40, 25, 0, 230], "labelBorder": {"color": [255, 165, 0, 255], "width": 1}},
-    "SetItem": {"replaceName": "ÿc2{name}", "labelBackground": [0, 35, 0, 230], "labelBorder": {"color": [0, 255, 0, 255], "width": 1}},
+    "MidRune": {
+      "replaceName": "ÿc8{name}",
+      "labelBackground": [0, 0, 0, 230],
+      "labelBorder": {"color": [255, 168, 0, 255], "width": 1},
+      "icon": {"iconName": "diamond_orange", "iconSize": 40}
+    },
+    "MidRuneNoIcon": {"replaceName": "ÿc8{name}", "labelBackground": [0, 0, 0, 230], "labelBorder": {"color": [255, 168, 0, 255], "width": 1}},
+    "PerfectGem": {"labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem_gold", "iconSize": 27}},
+    "UniqueItem": {
+      "replaceName": "ÿc4{name}",
+      "labelBackground": [40, 25, 0, 230],
+      "labelBorder": {"color": [255, 165, 0, 255], "width": 1},
+      "icon": {"iconName": "star_gold", "iconSize": 30}
+    },
+    "SetItem": {
+      "replaceName": "ÿc2{name}",
+      "labelBackground": [0, 35, 0, 230],
+      "labelBorder": {"color": [0, 255, 0, 255], "width": 1},
+      "icon": {"iconName": "star_green", "iconSize": 30}
+    },
     "MythicalUnique": {
       "replaceName": "ÿc;{name}",
       "labelBackground": [255, 255, 255, 255],
       "labelBorder": {"color": [174, 0, 255, 255], "width": 2},
+      "icon": {"iconName": "star_purple", "iconSize": 50},
       "droplight": {"color": [174, 0, 255]}
     },
-    "CouponItem": {"replaceName": "ÿc4{name}", "labelBorder": {"color": [255, 165, 0, 255], "width": 1}},
-    "RunewordBase": {"labelBackground": [45, 45, 45, 230], "labelBorder": {"color": [255, 255, 255, 255], "width": 1}},
-    "ValuableDrop": {"replaceName": "ÿc1{name}", "labelBackground": [255, 255, 255, 255], "labelBorder": {"color": [255, 0, 0, 255], "width": 1}},
-    "GoodCharm": {"labelBackground": [0, 40, 20, 230], "labelBorder": {"color": [0, 200, 80, 255], "width": 1}},
-    "GoodJewel": {"replaceName": "ÿc9{name}", "labelBackground": [0, 0, 0, 255], "labelBorder": {"color": [0, 200, 200, 255], "width": 1}},
-    "UberItem": {"replaceName": "ÿc;{name}", "labelBackground": [0, 0, 0, 200], "labelBorder": {"color": [165, 55, 253, 255], "width": 1}},
-    "MapItem": {"replaceName": "ÿc0{name}", "labelBackground": [0, 0, 0, 255], "labelBorder": {"color": [255, 255, 255, 255], "width": 1}}
+    "CouponItem": {"replaceName": "ÿc4{name}", "labelBorder": {"color": [255, 165, 0, 255], "width": 1}, "icon": {"iconName": "scroll_gold", "iconSize": 40}},
+    "RunewordBase": {
+      "labelBackground": [45, 45, 45, 230],
+      "labelBorder": {"color": [255, 255, 255, 255], "width": 1},
+      "icon": {"iconName": "shield_white", "iconSize": 30}
+    },
+    "ValuableDrop": {
+      "replaceName": "ÿc1{name}",
+      "labelBackground": [255, 255, 255, 255],
+      "labelBorder": {"color": [255, 0, 0, 255], "width": 1},
+      "icon": {"iconName": "cross_red", "iconSize": 40}
+    },
+    "GoodCharm": {
+      "labelBackground": [0, 40, 20, 230],
+      "labelBorder": {"color": [0, 200, 80, 255], "width": 1},
+      "icon": {"iconName": "square_emerald", "iconSize": 35}
+    },
+    "GoodJewel": {
+      "replaceName": "ÿc9{name}",
+      "labelBackground": [0, 0, 0, 255],
+      "labelBorder": {"color": [0, 200, 200, 255], "width": 1},
+      "icon": {"iconName": "hexagon_yellow", "iconSize": 27}
+    },
+    "UberItem": {
+      "replaceName": "ÿc;{name}",
+      "labelBackground": [0, 0, 0, 200],
+      "labelBorder": {"color": [165, 55, 253, 255], "width": 1},
+      "icon": {"iconName": "key_purple", "iconSize": 35}
+    },
+    "MapItem": {
+      "replaceName": "ÿc0{name}",
+      "labelBackground": [0, 0, 0, 255],
+      "labelBorder": {"color": [255, 255, 255, 255], "width": 1},
+      "icon": {"iconName": "map_white", "iconSize": 30}
+    }
   },
   "rules": [
     {
-      "comment": "High runes: Vex to Zod. useStyle HighRune (a style preset from the Styles tab) gives the white plate, the red border and the red beam (droplight); the rule adds the tink, a red diamond on the minimap and a chat line. Where a rule and its style set the same thing, the rule wins.",
+      "comment": "High runes: Vex to Zod. useStyle HighRune (a style preset from the Styles tab) gives the white plate, the red border, the red beam (droplight) and a red diamond on the minimap; the rule adds the tink and a chat line. Where a rule and its style set the same thing, the rule wins.",
       "itemCodes": ["r76", "r77", "r78", "r79", "r80", "r81", "r82", "r83"],
       "chatMessage": "ÿc1High rune: ÿc0{name}",
       "sound": "tink.mp3",
-      "icon": {"iconName": "diamond_red", "iconSize": 50},
       "useStyle": "HighRune"
     },
     {
@@ -68,30 +114,27 @@
       "itemCodes": ["r84", "r85", "r86", "r87", "r88", "r89", "r90", "r91", "r92", "r93", "r94", "r95", "r96", "r97"],
       "chatMessage": "ÿc;ESR rune: ÿc0{name}",
       "sound": "tink.mp3",
-      "icon": {"iconName": "diamond_red", "iconSize": 50},
       "useStyle": "HighRune"
     },
     {
-      "comment": "Mal, Ist and Gul runes. The MidRune style (a black box with an orange border), the mid sound, a smaller orange diamond (iconSize 40) and a chat line. In a chat line ÿc8 is orange and ÿc0 white.",
+      "comment": "Mal, Ist and Gul runes. The MidRune style (a black box with an orange border and a smaller orange diamond, iconSize 40), the mid sound and a chat line. In a chat line ÿc8 is orange and ÿc0 white.",
       "itemCodes": ["r73", "r74", "r75"],
       "chatMessage": "ÿc8Rune: ÿc0{name}",
       "sound": "mid.mp3",
-      "icon": {"iconName": "diamond_orange", "iconSize": 40},
       "useStyle": "MidRune"
     },
     {
-      "comment": "Mid runes: Hel to Um. The same MidRune style without a sound or an icon: a rule has only the actions you give it.",
+      "comment": "Mid runes: Hel to Um. MidRuneNoIcon is the MidRune look without its icon: a rule can replace its style’s icon with its own but cannot remove it, so a quieter rule uses a copy of the style without one. No sound either: a rule has only the actions you give it.",
       "itemCodes": ["r65", "r66", "r67", "r68", "r69", "r70", "r71", "r72"],
-      "useStyle": "MidRune"
+      "useStyle": "MidRuneNoIcon"
     },
     {
-      "comment": "Perfect gems. One item type (gem5) covers every perfect gem; itemCodes would list single items instead. The PerfectGem style is a thin gold border, the gold gem a small icon (iconSize 27).",
+      "comment": "Perfect gems. One item type (gem5) covers every perfect gem; itemCodes would list single items instead. The PerfectGem style is a thin gold border and a small gold gem icon (iconSize 27).",
       "itemTypes": ["gem5"],
-      "icon": {"iconName": "gem_gold", "iconSize": 27},
       "useStyle": "PerfectGem"
     },
     {
-      "comment": "Unique weapons and armour. The UniqueItem look, the unique sound and a gold star; notify: true also prints the drop line set under notifications at the top of the file. excludeItemCodes leaves the mythical bases to the mythical rule.",
+      "comment": "Unique weapons and armour. The UniqueItem look with its gold star and the unique sound; notify: true also prints the drop line set under notifications at the top of the file. excludeItemCodes leaves the mythical bases to the mythical rule.",
       "excludeItemCodes": [
         "7wd", "dd1", "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13",
         "m14", "m15", "m16", "m17", "m18", "m20", "m21", "m22", "m23", "m24", "m25", "m26", "m27", "m28", "m29",
@@ -103,11 +146,10 @@
       "quality": "unique",
       "notify": true,
       "sound": "unique.mp3",
-      "icon": {"iconName": "star_gold", "iconSize": 30},
       "useStyle": "UniqueItem"
     },
     {
-      "comment": "Unique rings and amulets. An item type matches its children, so ring and amul include ESR’s class rings and amulets. A gold crown on the minimap for the uniques worth the most.",
+      "comment": "Unique rings and amulets. An item type matches its children, so ring and amul include ESR’s class rings and amulets. The rule’s own icon, a gold crown for the uniques worth the most, replaces the style’s gold star.",
       "excludeItemCodes": ["mrn", "mam", "au9"],
       "itemTypes": ["ring", "amul"],
       "quality": "unique",
@@ -125,14 +167,13 @@
       "useStyle": "UniqueItem"
     },
     {
-      "comment": "Set items. A quality with no item code or type matches every set item: the SetItem look, the unique sound and a green star.",
+      "comment": "Set items. A quality with no item code or type matches every set item: the SetItem look with its green star, and the unique sound.",
       "quality": "set",
       "sound": "unique.mp3",
-      "icon": {"iconName": "star_green", "iconSize": 30},
       "useStyle": "SetItem"
     },
     {
-      "comment": "Mythical uniques. ESR’s mythical bases by item code at quality unique: the MythicalUnique look with its purple beam, the mythical sound, a purple star at the largest size (50) and a chat line (ÿc; is purple).",
+      "comment": "Mythical uniques. ESR’s mythical bases by item code at quality unique: the MythicalUnique look with its purple beam and a purple star at the largest size (50), the mythical sound and a chat line (ÿc; is purple).",
       "itemCodes": [
         "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13", "m14", "m15",
         "m16", "m17", "m18", "dd1", "m20", "m29", "m30", "m31", "m32", "m33", "m34", "m35", "m36", "m37", "m38",
@@ -141,15 +182,13 @@
       "quality": "unique",
       "chatMessage": "ÿc;Mythical unique: ÿc4{name}",
       "sound": "mythical.mp3",
-      "icon": {"iconName": "star_purple", "iconSize": 50},
       "useStyle": "MythicalUnique"
     },
     {
-      "comment": "Elite coupons. Ancient Coupons cube into uniques, and item type cpn3 holds the elite ones: the CouponItem look, a sound, a gold scroll and a chat line.",
+      "comment": "Elite coupons. Ancient Coupons cube into uniques, and item type cpn3 holds the elite ones: the CouponItem look with its gold scroll, a sound and a chat line.",
       "itemTypes": ["cpn3"],
       "chatMessage": "ÿc4Elite coupon: ÿc0{name}",
       "sound": "other.mp3",
-      "icon": {"iconName": "scroll_gold", "iconSize": 40},
       "useStyle": "CouponItem"
     },
     {
@@ -160,7 +199,7 @@
       "nameSuffix": " ÿc5[{sockets}]"
     },
     {
-      "comment": "Elite body armour with 3 or 4 sockets. sockets with a min and a max is a range; quality normal and superior means white or grey. The RunewordBase look: a grey plate with a white border.",
+      "comment": "Elite body armour with 3 or 4 sockets. sockets with a min and a max is a range; quality normal and superior means white or grey. The RunewordBase look: a grey plate with a white border and a socketed shield on the minimap.",
       "itemTypes": ["tors"],
       "quality": ["normal", "superior"],
       "baseTier": "elite",
@@ -168,7 +207,7 @@
       "useStyle": "RunewordBase"
     },
     {
-      "comment": "Ethereal elite polearms and spears with 4 or more sockets. Every condition must hold: ethereal, an elite base and 4 or more sockets. A socketed shield on the minimap, and a chat line that names the sockets ({sockets}).",
+      "comment": "Ethereal elite polearms and spears with 4 or more sockets. Every condition must hold: ethereal, an elite base and 4 or more sockets. The RunewordBase look and shield again, plus a sound and a chat line that names the sockets ({sockets}).",
       "itemTypes": ["pole", "spea"],
       "quality": ["normal", "superior"],
       "baseTier": "elite",
@@ -176,18 +215,16 @@
       "isEthereal": true,
       "chatMessage": "ÿc5Ethereal base: ÿc0{name} ({sockets} sockets)",
       "sound": "other.mp3",
-      "icon": {"iconName": "shield_white", "iconSize": 30},
       "useStyle": "RunewordBase"
     },
     {
-      "comment": "Superior bases with +All Skills. A stat check on a white base (item_allskills >= 1); {stat:127} writes the amount in the name, 127 being the stat’s id. The ValuableDrop look and a red cross on the minimap.",
+      "comment": "Superior bases with +All Skills. A stat check on a white base (item_allskills >= 1); {stat:127} writes the amount in the name, 127 being the stat’s id. The ValuableDrop look with its red cross on the minimap.",
       "itemTypes": ["weap", "armo"],
       "quality": "superior",
       "itemStats": [{"stat": "item_allskills", "op": ">=", "value": 1}],
       "nameSuffix": " ÿc1[+{stat:127} skills]",
       "chatMessage": "ÿc4+All Skills base: ÿc0{name}",
       "sound": "other.mp3",
-      "icon": {"iconName": "cross_red", "iconSize": 40},
       "useStyle": "ValuableDrop"
     },
     {
@@ -208,24 +245,22 @@
       "useStyle": "GoodCharm"
     },
     {
-      "comment": "Rare jewels. Two item codes (jew and the Mythical Jewel mjw) at quality rare: the GoodJewel look and a yellow hexagon.",
+      "comment": "Rare jewels. Two item codes (jew and the Mythical Jewel mjw) at quality rare: the GoodJewel look with its yellow hexagon.",
       "itemCodes": ["jew", "mjw"],
       "quality": "rare",
       "chatMessage": "ÿc9Rare jewel",
       "sound": "other.mp3",
-      "icon": {"iconName": "hexagon_yellow", "iconSize": 27},
       "useStyle": "GoodJewel"
     },
     {
-      "comment": "Pandemonium keys. The UberItem look, the gong and a purple key on the minimap.",
+      "comment": "Pandemonium keys. The UberItem look with its purple key on the minimap, and the gong.",
       "itemCodes": ["pk1", "pk2", "pk3"],
       "chatMessage": "ÿc;Key: ÿc0{name}",
       "sound": "gong.mp3",
-      "icon": {"iconName": "key_purple", "iconSize": 35},
       "useStyle": "UberItem"
     },
     {
-      "comment": "Tier 5 maps and The Hidden Vault. The MapItem look, the tier 5 map sound, a white map and a chat line.",
+      "comment": "Tier 5 maps and The Hidden Vault. The MapItem look, a larger white map (the rule’s own icon at iconSize 40 replaces the style’s 30), the tier 5 map sound and a chat line.",
       "itemCodes": ["z17", "z18", "z19", "z20", "z99"],
       "chatMessage": "ÿc4Tier 5 map: ÿc0{name}",
       "sound": "t5_map.mp3",

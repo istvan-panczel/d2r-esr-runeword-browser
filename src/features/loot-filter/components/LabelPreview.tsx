@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { colorCodeRgb, labelRgba } from '../engine/colors';
 import { splitColorRuns } from '../engine/text';
@@ -12,6 +13,8 @@ interface LabelPreviewProps {
   readonly defaultColor?: string;
   /** Extra classes for the dark "ground" backdrop around the label. */
   readonly className?: string;
+  /** Drawn on the backdrop after the label, e.g. the minimap icon (`StylePreview`). */
+  readonly trailing?: ReactNode;
 }
 
 function textColor(code: string | null, defaultColor: string): string {
@@ -23,7 +26,7 @@ function textColor(code: string | null, defaultColor: string): string {
  * Draws a ground label the way the game would: coloured text runs on an optional filled, bordered box,
  * over a dark backdrop. Pure presentation; the caller resolves texts and placeholders.
  */
-export function LabelPreview({ text, background, border, defaultColor = '=', className }: LabelPreviewProps) {
+export function LabelPreview({ text, background, border, defaultColor = '=', className, trailing }: LabelPreviewProps) {
   const segments = splitColorRuns(text);
   const style = {
     backgroundColor: background ? labelRgba(background, DEFAULT_LABEL_BACKGROUND_ALPHA) : undefined,
@@ -32,7 +35,9 @@ export function LabelPreview({ text, background, border, defaultColor = '=', cla
     borderStyle: border ? 'solid' : undefined,
   };
   return (
-    <div className={cn('flex items-center justify-center rounded-md bg-neutral-950 px-4 py-3', className)}>
+    <div
+      className={cn('flex items-center justify-center rounded-md bg-neutral-950 px-4 py-3', trailing !== undefined && 'gap-3', className)}
+    >
       <span
         className="inline-block whitespace-pre-wrap px-1.5 py-0.5 text-center font-semibold leading-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]"
         style={style}
@@ -51,6 +56,7 @@ export function LabelPreview({ text, background, border, defaultColor = '=', cla
           )
         )}
       </span>
+      {trailing}
     </div>
   );
 }

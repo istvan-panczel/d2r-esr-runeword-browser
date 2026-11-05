@@ -89,7 +89,11 @@ export const BUNDLED_ICON_ASSETS: readonly BundledIconAsset[] = [
   generated('crown_purple', 'Purple crown', 'The rarest mythical uniques; pairs with the Mythical unique preset.'),
   generated('diamond_red', 'Red diamond (shape)', 'High runes; pairs with the High rune preset.'),
   generated('diamond_orange', 'Orange diamond', 'Mid runes; pairs with the Mid rune preset.'),
-  generated('triangle_orange', 'Orange triangle', 'Low runes and other minor drops; pairs with the Low rune preset.'),
+  generated(
+    'triangle_orange',
+    'Orange triangle',
+    'Low runes and other minor drops; matches the Low rune preset (which has no icon itself).'
+  ),
   generated('cross_red', 'Red cross', 'Anything rare and valuable without an icon of its own; pairs with the Valuable preset.'),
   generated('shield_white', 'Socketed shield', 'Runeword bases with the sockets you want; pairs with the Runeword base preset.'),
   generated('square_emerald', 'Green square', 'Charms worth checking; pairs with the Good charm preset.'),
@@ -103,7 +107,7 @@ export const BUNDLED_ICON_ASSETS: readonly BundledIconAsset[] = [
   generated('coin_gold', 'Gold coin', 'Rare reagents and large gold piles; pairs with the Rare reagent (gold plate) preset.'),
   generated('scroll_gold', 'Gold scroll', 'Ancient Coupons; pairs with the Coupon preset.'),
   generated('map_white', 'White map', 'Maps; pairs with the Map preset.'),
-  generated('circle_grey', 'Grey dot', 'Drops you keep visible but quiet; pairs with the Muted preset.'),
+  generated('circle_grey', 'Grey dot', 'Drops you keep visible but quiet; matches the Muted preset (which has no icon itself).'),
   generated('star_white', 'White star', 'Any colour: set the icon tint (it multiplies the colours).'),
   generated('diamond_white', 'White diamond', 'Any colour: set the icon tint (it multiplies the colours).'),
   generated('circle_white', 'White dot', 'Any colour: set the icon tint (it multiplies the colours).'),

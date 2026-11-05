@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXAMPLE_GROUPS, EXAMPLE_RULES, findExample, isHideExample } from './exampleRules';
+import { EXAMPLE_GROUPS, EXAMPLE_RULES, findExample, isHideExample, STYLE_ICON } from './exampleRules';
 import {
   buildStarterRules,
   effectiveChoices,
@@ -16,7 +16,7 @@ import {
   setPickerSwitch,
   starterRulesFor,
 } from './examplePicker';
-import { stylePreset } from './stylePresets';
+import { stylePreset, styleWithoutIcon } from './stylePresets';
 
 const pick = (...ids: string[]) => setExamplesSelected(INITIAL_PICKER_STATE, ids, true);
 
@@ -27,7 +27,7 @@ describe('example picker state', () => {
     expect(state.selected['high-runes']).toEqual({
       style: 'high-rune',
       sound: 'tink.mp3',
-      icon: 'diamond_red',
+      icon: STYLE_ICON,
       chatMessage: 'ÿc1High rune: ÿc0{name}',
     });
     state = setExampleChoice(state, 'high-runes', 'sound', null);
@@ -106,7 +106,9 @@ describe('buildStarterRules', () => {
     expect(Object.keys(styles)).toEqual(['HighRune', 'MapItem']);
     expect(styles.HighRune).toEqual(stylePreset('high-rune').style);
     expect(rules.every((rule) => rule.sound === undefined && rule.chatMessage === undefined)).toBe(true);
-    expect(rules.map((rule) => rule.icon?.iconName)).toEqual(['diamond_red', 'diamond_red', 'map_white']);
+    // The icons come with the styles; no rule needs its own.
+    expect(rules.map((rule) => rule.icon)).toEqual([undefined, undefined, undefined]);
+    expect([styles.HighRune?.icon?.iconName, styles.MapItem?.icon?.iconName]).toEqual(['diamond_red', 'map_white']);
   });
 
   it('builds every example together without duplicate comments', () => {
@@ -116,6 +118,85 @@ describe('buildStarterRules', () => {
     const firstHide = rules.findIndex((rule) => rule.hide === true);
     expect(rules.slice(firstHide).every((rule) => rule.hide === true)).toBe(true);
     expect(EXAMPLE_GROUPS.length).toBeGreaterThan(10);
+  });
+
+  it('needs one NoIcon copy with the default choices of every example: Hel to Um, which keep no icon', () => {
+    const { rules, styles } = starterRulesFor(EXAMPLE_RULES.map((example) => example.id));
+    expect(Object.keys(styles).filter((name) => name.endsWith('NoIcon'))).toEqual(['MidRuneNoIcon']);
+    expect(styles.MidRuneNoIcon).toEqual(styleWithoutIcon(stylePreset('mid-rune').style));
+    expect(rules.filter((rule) => rule.useStyle === 'MidRuneNoIcon').map((rule) => rule.comment)).toEqual(['Mid runes: Hel to Um']);
+    // Every other style is a preset with its icon (Low rune and Muted have none).
+    const quiet = new Set(['MidRuneNoIcon', 'LowRune', 'MutedJunk']);
+    for (const [name, style] of Object.entries(styles)) if (!quiet.has(name)) expect(style.icon, name).toBeDefined();
+  });
+
+  describe('per-rule icon choices', () => {
+    const uniques = pick('unique-items', 'unique-by-id', 'unique-jewellery');
+    const unique = stylePreset('unique');
+    const icons = (state: typeof uniques, existing?: Parameters<typeof buildStarterRules>[1]) =>
+      buildStarterRules(state, existing).rules.map((rule) => [rule.useStyle, rule.icon?.iconName ?? null]);
+
+    // Rule order: unique-items, unique-jewellery, unique-by-id (the group's list order).
+    it('default: the style’s star on two, the jewellery rule’s own crown', () => {
+      expect(icons(uniques)).toEqual([
+        ['UniqueItem', null],
+        ['UniqueItem', 'crown_gold'],
+        ['UniqueItem', null],
+      ]);
+      expect(buildStarterRules(uniques).styles).toEqual({ UniqueItem: unique.style });
+    });
+
+    it('all None: the preset without its icon, no copy', () => {
+      let state = uniques;
+      for (const id of ['unique-items', 'unique-by-id', 'unique-jewellery']) state = setExampleChoice(state, id, 'icon', null);
+      const { styles } = buildStarterRules(state);
+      expect(styles).toEqual({ UniqueItem: styleWithoutIcon(unique.style) });
+      expect(icons(state)).toEqual([
+        ['UniqueItem', null],
+        ['UniqueItem', null],
+        ['UniqueItem', null],
+      ]);
+    });
+
+    it('None next to own icons only (nobody wants the star): the preset without its icon, the others keep their own', () => {
+      const state = setExampleChoice(setExampleChoice(uniques, 'unique-items', 'icon', null), 'unique-by-id', 'icon', 'crown_gold');
+      expect(buildStarterRules(state).styles).toEqual({ UniqueItem: styleWithoutIcon(unique.style) });
+      expect(icons(state)).toEqual([
+        ['UniqueItem', null],
+        ['UniqueItem', 'crown_gold'],
+        ['UniqueItem', 'crown_gold'],
+      ]);
+    });
+
+    it('mixed: None, the style’s star and a crown, the None rule on the NoIcon copy', () => {
+      const state = setExampleChoice(uniques, 'unique-items', 'icon', null);
+      const { styles } = buildStarterRules(state);
+      expect(styles).toEqual({ UniqueItemNoIcon: styleWithoutIcon(unique.style), UniqueItem: unique.style });
+      expect(icons(state)).toEqual([
+        ['UniqueItemNoIcon', null],
+        ['UniqueItem', 'crown_gold'],
+        ['UniqueItem', null],
+      ]);
+    });
+
+    it('the bulk switch: no icon anywhere, the presets without theirs, and the choices back once it is off', () => {
+      const off = setPickerSwitch(uniques, 'noIcons', true);
+      expect(buildStarterRules(off).styles).toEqual({ UniqueItem: styleWithoutIcon(unique.style) });
+      expect(icons(off).every(([, icon]) => icon === null)).toBe(true);
+      expect(icons(setPickerSwitch(off, 'noIcons', false))).toEqual(icons(uniques));
+    });
+
+    it('a filter style of the same name is never overwritten, and the rules still show what they chose', () => {
+      const mine = { replaceName: 'ÿc3{name}' };
+      const state = setExampleChoice(uniques, 'unique-items', 'icon', null);
+      const { styles } = buildStarterRules(state, { UniqueItem: mine });
+      expect(mergeStyles({ UniqueItem: mine }, styles)).toEqual({ add: {}, reused: ['UniqueItem'] });
+      expect(icons(state, { UniqueItem: mine })).toEqual([
+        ['UniqueItem', null],
+        ['UniqueItem', 'crown_gold'],
+        ['UniqueItem', 'star_gold'],
+      ]);
+    });
   });
 });
 

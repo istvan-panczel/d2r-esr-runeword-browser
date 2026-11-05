@@ -33,7 +33,7 @@ import {
 import { validateLootFilter } from '../../engine/validate';
 import { FILTER_CONTENT_MAX_BYTES } from '../../sharing/constants';
 import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS } from '../bundledAssets';
-import { buildExampleRule, defaultChoices, EXAMPLE_GROUPS, type ExampleRule } from '../exampleRules';
+import { buildExampleSet, defaultChoices, EXAMPLE_GROUPS, type ExampleRule } from '../exampleRules';
 import { STYLE_PRESETS } from '../stylePresets';
 import { LOOT_FILTER_PLUGIN_VERSION } from '../template';
 
@@ -570,9 +570,20 @@ export function buildFormatReference({ reference, examples, esrVersion }: Format
   ].join('\n');
 }
 
-/** An example as the complete rule the picker adds with its default presentation (title as comment, style, sound, icon, chat). */
-export function exampleWithPresentation(example: ExampleRule): ReturnType<typeof buildExampleRule> {
-  return buildExampleRule(example, defaultChoices(example));
+/**
+ * The examples as the complete rules the picker adds with their default presentation (title as comment, style, sound,
+ * icon, chat), built as one set against the shown presets: a rule that wants no icon while its preset has one uses the
+ * `<Name>NoIcon` copy (`buildExampleSet`), so every rule reads right with the preset blocks copied as they are.
+ */
+export function examplesWithPresentation(
+  examples: readonly ExampleRule[],
+  presets: readonly PromptStylePreset[] = []
+): ReturnType<typeof buildExampleSet> {
+  const shown = Object.fromEntries(presets.map((preset) => [preset.name, preset.style]));
+  return buildExampleSet(
+    examples.map((example) => ({ example, choices: defaultChoices(example) })),
+    shown
+  );
 }
 
 /** A style as `{ "Name": { … } }` with one key per line (valid to copy into "styles"). */
@@ -589,11 +600,11 @@ export function styleJson(name: string, style: LootFilterStyle): string {
  * each as the complete rule the example rules picker adds with its default presentation.
  */
 export function buildExamples(examples: readonly ExampleRule[], presets: readonly PromptStylePreset[] = []): string {
-  const built = examples.map((example) => ({ example, ...exampleWithPresentation(example) }));
-  // A style an example uses but the given presets lack is shown too, so every `useStyle` below is defined above.
+  const set = examplesWithPresentation(examples, presets);
+  const built = examples.map((example, index) => ({ example, rule: set.rules[index] ?? {} }));
+  // A style an example uses but the given presets lack is shown too (a NoIcon copy, say), so every `useStyle` below is defined above.
   const shown = [...presets];
-  for (const { stylesToAdd } of built)
-    for (const [name, style] of Object.entries(stylesToAdd)) if (!shown.some((preset) => preset.name === name)) shown.push({ name, style });
+  for (const [name, style] of Object.entries(set.styles)) if (!shown.some((preset) => preset.name === name)) shown.push({ name, style });
 
   const styles =
     shown.length === 0
@@ -601,7 +612,7 @@ export function buildExamples(examples: readonly ExampleRule[], presets: readonl
       : [
           '# Style presets',
           '',
-          'Ready-made looks (name colour, label background and border, sometimes a droplight); the example rules below use them. A rule\'s `"useStyle": "HighRune"` works only when the filter defines that style under `"styles"`: for every preset you use, copy its block into the filter\'s `"styles"` object under the same name (change the look freely). A missing one is the app\'s "There is no style named …" error. Presets hold the look only; sounds, icons and chat lines stay on the rules.',
+          'Ready-made looks (name colour, label background and border, sometimes a droplight, and most with a minimap icon); the example rules below use them. A rule\'s `"useStyle": "HighRune"` works only when the filter defines that style under `"styles"`: for every preset you use, copy its block into the filter\'s `"styles"` object under the same name (change the look freely). A missing one is the app\'s "There is no style named …" error. A rule\'s own `"icon"` replaces its style\'s, but no rule can remove it: a rule that wants no icon uses a copy of the style without one (the `NoIcon` blocks). Sounds and chat lines stay on the rules.',
           '',
           ...shown.flatMap((preset) => [
             `## ${preset.name}`,

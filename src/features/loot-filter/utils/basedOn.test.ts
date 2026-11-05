@@ -82,7 +82,7 @@ describe('template basedOn', () => {
       name: 'Example filter (with explanations)',
       text: EXAMPLE_TEXT,
       source: 'template',
-      basedOn: { template: 'example', version: '2.0.0', label: 'Example filter (with explanations) v2.0.0' },
+      basedOn: { template: 'example', version: '2.1.0', label: 'Example filter (with explanations) v2.1.0' },
     });
     expect(templateStartInput('sullys-qol', SULLY_TEXT)).toMatchObject({
       name: "Sully's QoL Filter",

@@ -176,9 +176,10 @@ describe('sourceUpdateOf', () => {
   it('compares an example-based filter with the bundled example, not with Sully', () => {
     const exampleUpdate = { kind: 'template', template: 'example' } as const;
     expect(sourceUpdateOf(templateBasedOn('example'), {})).toEqual({ kind: 'none' });
-    // Older than the bundled example (2.0.0), though newer than Sully's version; a draft from the old 1.0.0 file too.
+    // Older than the bundled example (2.1.0), though newer than Sully's version; a draft from the old 1.0.0 file too.
     expect(sourceUpdateOf(templateBasedOn('example', '0.9.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.9.0' });
     expect(sourceUpdateOf(templateBasedOn('example', '1.0.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '1.0.0' });
+    expect(sourceUpdateOf(templateBasedOn('example', '2.0.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '2.0.0' });
     expect(sourceUpdateOf(templateBasedOn('example', '0.6.12'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.6.12' });
     expect(sourceUpdateOf(templateBasedOn('example', null), {})).toEqual({ ...exampleUpdate, fromVersion: null });
     expect(sourceUpdateOf({ template: 'retired', version: '0.1', label: 'Old' }, {})).toEqual({ kind: 'none' });

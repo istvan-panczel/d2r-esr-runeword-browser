@@ -43,6 +43,7 @@ export function ExampleRulesButton({ filter, insertAt, onAdded }: ExampleRulesBu
         open={open}
         onOpenChange={setOpen}
         previewVolume={filter.soundVolume ?? 100}
+        existingStyles={filter.styles}
         onConfirm={(rules, styles) => {
           const merge = mergeStyles(filter.styles, styles);
           dispatch(addRules({ rules, styles: merge.add, at: insertAt }));

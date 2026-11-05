@@ -5,9 +5,9 @@
  * Bulk selects never tick a hide rule among label rules (owner decision): Select all ticks the label rules, a group's
  * checkbox its label rules, and only the Hide junk group's checkbox, a group of hide rules alone, ticks hide rules.
  */
-import type { LootFilterRule, LootFilterStyle } from '../engine/types';
+import type { LootFilterStyle } from '../engine/types';
 import {
-  buildExampleRule,
+  buildExampleSet,
   defaultChoices,
   EXAMPLE_GROUPS,
   EXAMPLE_RULES,
@@ -15,6 +15,7 @@ import {
   type ExampleChoices,
   type ExampleGroupId,
   type ExampleRule,
+  type ExampleSet,
 } from './exampleRules';
 import { presetStyleStatus } from './stylePresets';
 
@@ -135,28 +136,26 @@ export function orderedSelection(state: ExamplePickerState): readonly ExampleRul
     .map(({ example }) => example);
 }
 
-export interface StarterRules {
-  readonly rules: readonly LootFilterRule[];
-  /** Every style the rules use, by name, in first-use order. */
-  readonly styles: Readonly<Record<string, LootFilterStyle>>;
-}
+/** The rules and styles of a starter set (see `buildExampleSet`). */
+export type StarterRules = ExampleSet;
 
-/** The rules and styles of the ticked examples (see `orderedSelection` for the order). */
-export function buildStarterRules(state: ExamplePickerState): StarterRules {
-  const rules: LootFilterRule[] = [];
-  const styles: Record<string, LootFilterStyle> = {};
-  for (const example of orderedSelection(state)) {
+type Styles = Readonly<Record<string, LootFilterStyle>>;
+
+/**
+ * The rules and styles of the ticked examples (see `orderedSelection` for the order). `existing` is the filter's
+ * styles: a name it holds is kept, and the rules get exactly the icons they chose against it (`buildExampleSet`).
+ */
+export function buildStarterRules(state: ExamplePickerState, existing?: Styles): StarterRules {
+  return buildExampleSet(
     // orderedSelection lists ticked examples only, so the choices are there.
-    const built = buildExampleRule(example, effectiveChoices(state, state.selected[example.id]));
-    rules.push(built.rule);
-    for (const [name, style] of Object.entries(built.stylesToAdd)) if (!Object.hasOwn(styles, name)) styles[name] = style;
-  }
-  return { rules, styles };
+    orderedSelection(state).map((example) => ({ example, choices: effectiveChoices(state, state.selected[example.id]) })),
+    existing
+  );
 }
 
 /** The starter rules of the given example ids with their default choices (for callers without a picker). */
-export function starterRulesFor(ids: readonly string[]): StarterRules {
-  return buildStarterRules(setExamplesSelected(INITIAL_PICKER_STATE, ids, true));
+export function starterRulesFor(ids: readonly string[], existing?: Styles): StarterRules {
+  return buildStarterRules(setExamplesSelected(INITIAL_PICKER_STATE, ids, true), existing);
 }
 
 export interface StyleMerge {
