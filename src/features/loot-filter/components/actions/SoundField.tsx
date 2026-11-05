@@ -189,6 +189,10 @@ export function SoundField({
                               onPointerDown={(event) => {
                                 event.stopPropagation();
                               }}
+                              // Enter on the focused button plays too: the list's own Enter would pick the highlighted sound.
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+                              }}
                               onClick={(event) => {
                                 event.stopPropagation();
                                 togglePlay(url);

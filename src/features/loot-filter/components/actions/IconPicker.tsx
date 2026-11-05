@@ -107,7 +107,7 @@ export function IconPicker({ id, iconName, color, onPick }: IconPickerProps) {
             role="combobox"
             aria-label="Search icons"
             aria-expanded
-            aria-controls={listId}
+            aria-controls={icons.length === 0 ? undefined : listId}
             aria-activedescendant={activeId}
             autoComplete="off"
             value={query}
@@ -149,6 +149,8 @@ export function IconPicker({ id, iconName, color, onPick }: IconPickerProps) {
                   id={optionId(index)}
                   role="option"
                   aria-selected={selected}
+                  // The name alone is a file name: the label says what it looks like ("star_gold, Gold star (shape)").
+                  aria-label={`${asset.name}, ${asset.label}`}
                   title={`${asset.label}: ${asset.use}`}
                   className={cn(
                     'relative flex cursor-pointer flex-col items-center gap-1 rounded-md border border-transparent p-1.5 text-center',
