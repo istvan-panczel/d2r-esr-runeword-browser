@@ -1,9 +1,10 @@
 /**
  * The starter of the AI page: the filter the prompt asks the LLM to start from. Sources: none (a new filter), a bundled
- * template, a draft in this browser, the filter open in the editor ("Improve with AI", handed over in the router
- * state), an uploaded file, or rules picked from the example rules (`{ rules, styles }`, the shape the example rule
- * picker's `onConfirm(rules, styles)` gives).
+ * template, a draft in this browser, one of the signed-in user's saved filters (its file fetched on pick), the filter
+ * open in the editor ("Improve with AI", handed over in the router state), an uploaded file, or rules picked from the
+ * example rules (`{ rules, styles }`, the shape the example rule picker's `onConfirm(rules, styles)` gives).
  */
+import { RequestState } from '@/core/types';
 import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
 import { FORMAT_VERSION, type LootFilterRule, type LootFilterStyle } from '../engine/types';
@@ -13,6 +14,7 @@ export type AiStarterChoice =
   | { readonly kind: 'none' }
   | { readonly kind: 'template'; readonly template: BundledTemplateId }
   | { readonly kind: 'entry'; readonly entryId: string }
+  | { readonly kind: 'saved'; readonly savedId: string }
   | { readonly kind: 'open' }
   | { readonly kind: 'upload' }
   | { readonly kind: 'rules' };
@@ -89,6 +91,8 @@ export function starterChoiceValue(choice: AiStarterChoice): string {
       return `template:${choice.template}`;
     case 'entry':
       return `entry:${choice.entryId}`;
+    case 'saved':
+      return `saved:${choice.savedId}`;
     default:
       return choice.kind;
   }
@@ -101,6 +105,34 @@ export function parseStarterChoice(value: string, templates: readonly BundledTem
     return template === undefined ? { kind: 'none' } : { kind: 'template', template };
   }
   if (value.startsWith('entry:')) return { kind: 'entry', entryId: value.slice('entry:'.length) };
+  if (value.startsWith('saved:')) return { kind: 'saved', savedId: value.slice('saved:'.length) };
   if (value === 'open' || value === 'upload' || value === 'rules') return { kind: value };
   return { kind: 'none' };
+}
+
+/** The sharing slice's filter detail, as far as a saved filter starter needs it. */
+export interface SavedFilterDetailState {
+  readonly detail: { readonly id: string; readonly name: string; readonly content: string } | null;
+  readonly status: RequestState;
+  readonly notFound: boolean;
+}
+
+/** Whether a saved filter's file has to be fetched for the starter (it is not the detail already loaded or loading). */
+export function needsSavedFilterFetch(savedId: string, { detail, status }: SavedFilterDetailState): boolean {
+  if (status === RequestState.LOADING) return true;
+  return !(status === RequestState.SUCCESS && detail?.id === savedId);
+}
+
+/**
+ * A saved filter as the starter, from the detail the page fetched for it on pick: its file once the detail is this
+ * filter, 'loading' while it is on its way (or not asked for yet), or why it cannot be used. The detail fetch is the
+ * sharing saga's (`fetchSharedFilterRequested`): its latest request wins, so an error or "not found" is this filter's.
+ */
+export function savedFilterStarter(savedId: string, { detail, status, notFound }: SavedFilterDetailState): StarterResult | 'loading' {
+  if (status === RequestState.ERROR)
+    return { ok: false, message: 'Could not load this saved filter. Check your connection and try again.' };
+  if (status !== RequestState.SUCCESS) return 'loading';
+  if (notFound) return { ok: false, message: 'This saved filter no longer exists (deleted, or saved by another account).' };
+  if (detail?.id !== savedId) return 'loading';
+  return starterFromText(detail.name, detail.content);
 }

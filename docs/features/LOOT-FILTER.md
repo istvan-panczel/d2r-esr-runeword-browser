@@ -1198,14 +1198,20 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
 - **The page** (a 1-2-3 explanation on top): (1) the request textarea (placeholder example; kept in `sessionStorage`
   `loot-filters/ai-request` so it survives a trip to the editor; storage errors are ignored) and **Start from**
   (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, fetched with
-  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first), an uploaded `.json` or **Pick
-  example rules**: the button opens the Rules tab's `ExampleRulesDialog` ("Pick example rules for the starter", confirm
+  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first), **My saved filters** when signed in
+  (the sharing slice's My filters list, `fetchMyFiltersRequested` on mount and on an account switch; loading, failed and
+  empty rows are disabled items; a filter with a local draft says "saved version; a draft has changes"; the list has no
+  files, so a pick dispatches the sharing saga's detail fetch `fetchSharedFilterRequested` unless that filter's detail is
+  already loaded (`needsSavedFilterFetch`) and `savedFilterStarter` reads the starter from `selectSharedFilterDetail`:
+  a spinner while it loads, the reason when it failed (with **Try again**) or is gone; no new query), an uploaded
+  `.json` or **Pick example rules**: the button opens the Rules tab's `ExampleRulesDialog` ("Pick example rules for the starter", confirm
   "Use as starter (N)"); confirm sets `rulesStarter` (`starterFromRules`: the rules plus every style they use, one
   "Default" level, title "AI filter") and the `rules` choice. Like the upload, the picked set stays in the list ("N
   example rules") when another starter is chosen, and the button turns into **Change example rules**, which reopens the
   picker on the previous selection (the picker's `initialState`, from the `selection` its `onConfirm` hands back);
   Cancel changes nothing. The line under the picker gives the rule count and size (a starter over 100 rules adds a note that long answers may be cut off), or why
-  the text cannot be used (not valid JSON). Saved filters start through Improve with AI (the hint says so). (2) **Game
+  the text cannot be used (not valid JSON). Signed out, the hint says saved filters are listed after sign-in or start
+  through Improve with AI; signed in, that a saved filter starts from its last saved version. (2) **Game
   data** Compact (default) or Full with the measured size of each (characters and ~tokens = characters / 4, plus the
   total with the request and starter), **Download .md (one file)**, **Download .zip (prompt + files)** and **Copy
   prompt** (the instructions and request only; the toast says to attach the files too), with notes on what each holds
@@ -1216,11 +1222,11 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
   (`instructions.ts`: role and goal; reply in the user's language with JSON keys and texts as the format needs; the
   workflow: ask every clarifying question first (class/build, difficulty/progress, item groups, strictness levels,
   sounds/icons, languages), propose a plan, the complete filter as one json block every time (never a diff unless
-  asked), meaningful rule comments (they become the rule titles), after every JSON answer remind the user (in their
+  asked), a short `title` (it names the draft) and meaningful rule comments (they become the rule titles), after every JSON answer remind the user (in their
   language, button names as written) to Import AI answer (the first time on the AI page, later in the editor) and paste
   the problems from Copy problems for the AI back, fix exactly the pasted problems and keep everything else; the rules for codes
   (only from the reference, ask the user otherwise, the validator flags unknown codes), bundled assets (a sounds.txt
-  sound only when asked), styles (every `useStyle` defined under `styles`; copy a preset from examples.md) and the
+  sound only when asked, by the exact name the user gives: the reference does not list them), styles (every `useStyle` defined under `styles`; copy a preset from examples.md) and the
   plugin limits; the file list with summaries; the request verbatim between `<user_request>` tags (it cannot close them); the
   starter: a filter is kept as it is apart from what the request changes; picked example rules are a skeleton to keep
   and extend, with a fitting title and the agreed levels), then the files: `FORMAT.md`, `examples.md`, `assets.md`, the
@@ -1249,7 +1255,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   icon, chat line; one key per line). `assets.md` lists every registry entry with its "when to use" line
   (`DEFAULT_PROMPT_ASSETS` from `BUNDLED_SOUND_ASSETS` / `BUNDLED_ICON_ASSETS`).
 - **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.2.24, the single .md without request or starter):
-  **Compact** about 199k characters (~50k tokens; examples.md is 35k of it): every item type (`item-types.csv`), the misc items that drop
+  **Compact** about 207k characters (~52k tokens; examples.md is 41k of it): every item type (`item-types.csv`), the misc items that drop
   (`items.csv`: runes, gems, charms, jewels, potions, keys, organs, essences, coupons, maps, scrolls; stacks of five or
   more identically named containers (the Rune, Decal and Multi Stockers, Gem and Crystal Cans, Rerolling Orbs)
   collapse to one row "match them by item type"), the weapon and armour bases that drop by item type and tier
@@ -1257,9 +1263,12 @@ example rules: of the request), else of the request's first line, else "ai-filte
   can use `itemTypes` + `baseTier`), every stat with label, param kind and the quirk or scale note (`stats.csv`),
   uniques merged by name with the dropped and Ancient Coupon ids, then the set items (`uniques-sets.csv`, disabled rows
   left out), every area (`areas.csv`, 5k), the class skills, the skill tabs (param = class × 8 + tab) and the classes.
-  **Full** about 587k characters (~147k tokens): one row per item code with kind, types, tier and drop flag, one row
-  per unique and set row with base, level and coupon/disabled notes, every skill and every sounds.txt name
-  (`sounds.csv`, 263k of the total). Sully's template as the starter adds about 68k characters.
+  **Full** about 332k characters (~83k tokens): one row per item code with kind, types, tier and drop flag, one row
+  per unique and set row with base, level and coupon/disabled notes, and every skill. Neither size lists the sounds.txt
+  names (they were 263k, about half of Full, until 2026-11): the prompt and assets.md say game sounds exist and that the
+  LLM asks the user for the exact name (the editor's Sound picker lists them; the validator warns on an unknown one), and
+  the page says so under the downloads. Sully's template as the
+  starter adds about 68k characters (Full with Sully's: about 400k).
 - **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
   blocks (backticks or tildes, any length, an unclosed last block included) that look like JSON (info `json`, `jsonc`,
   `json5`, `js`, none, or content starting with `{` or `//`) are tried last first and the first complete filter wins (a
@@ -1269,8 +1278,10 @@ example rules: of the request), else of the request's first line, else "ai-filte
   found (title, rules, styles, levels, the problem count with the game data) and the confirm text: in the editor
   "Importing replaces the whole content of the open filter" (**Replace the filter** dispatches `replaceFilter` exactly
   like the JSON tab's Apply, drops unapplied JSON-tab text, toasts the counts and opens the problems list); on the AI
-  page "Importing creates the draft <name>" (`importText` with source `upload`, named by `aiFilterName`: the request's
-  first line up to 40 characters, else "AI filter"; it opens on `?tab=json` when there are problems). Without a
+  page "Importing creates the draft <name>" (`importText` with source `upload`, named by `aiFilterName(request, title)`:
+  the filter's `title` (colour codes dropped, whitespace collapsed, up to 60 characters cut at a word), else the
+  request's first line up to 40 characters, else "AI filter"; the dialog's `create` mode takes `nameOf(filter)`, so it
+  shows the name of the filter it read; it opens on `?tab=json` when there are problems). Without a
   readable filter it says why (no JSON: maybe the AI is still asking questions; a syntax error with its position: maybe
   cut off; JSON that is a list or a single rule) and offers **Copy a message asking the AI to resend the filter**
   (`resendMessage`).
@@ -1288,7 +1299,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   and group, each example reads back as the picker's rule with its default presentation, and the presets plus all the
   rules validate as one clean filter; assets.md has every registry note), `promptPackage.test.ts` (files, layout,
   delimiters, names, zip entries, sizes, the picked example rules starter), `aiAnswer.test.ts`,
-  `aiFollowUp.test.ts`, `aiStarter.test.ts`.
+  `aiFollowUp.test.ts` (the draft name from the title, the request fallback), `aiStarter.test.ts` (choice values, the
+  saved filter starter states and when a pick fetches).
 
 ## Phase status
 

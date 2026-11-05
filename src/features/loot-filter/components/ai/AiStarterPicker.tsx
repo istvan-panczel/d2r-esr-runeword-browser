@@ -10,12 +10,28 @@ import { BUNDLED_TEMPLATE_LIST } from '../../utils/template';
 
 const TEMPLATE_IDS = BUNDLED_TEMPLATE_LIST.map((template) => template.id);
 
+/** One of the signed-in user's saved filters in the list (its file is fetched when it is picked). */
+export interface AiSavedFilterOption {
+  readonly id: string;
+  readonly name: string;
+  /** A draft in this browser holds unsaved changes to it (the draft is listed too). */
+  readonly hasDraft: boolean;
+}
+
+/** The "My saved filters" group: signed out (not listed), loading, failed or the list. */
+export type AiSavedFilters =
+  | { readonly kind: 'signedOut' }
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'error' }
+  | { readonly kind: 'ready'; readonly items: readonly AiSavedFilterOption[] };
+
 interface AiStarterPickerProps {
   readonly choice: AiStarterChoice;
   readonly onChoiceChange: (choice: AiStarterChoice) => void;
   /** The filter "Improve with AI" brought from the editor, if any. */
   readonly openFilter: AiOpenFilter | null;
   readonly drafts: readonly LootFilterEntry[];
+  readonly savedFilters: AiSavedFilters;
   /** The uploaded file's name, once one is uploaded. */
   readonly uploadName: string | null;
   readonly onUpload: (file: File) => void;
@@ -23,14 +39,18 @@ interface AiStarterPickerProps {
   readonly rulesCount: number | null;
   /** Opens the example rules picker (on the previous selection, if any). */
   readonly onPickRules: () => void;
-  /** What the chosen starter is: "223 rules", a spinner while a template loads, or why it cannot be used. */
-  readonly status:
-    { readonly kind: 'ready'; readonly text: string } | { readonly kind: 'loading' } | { readonly kind: 'error'; readonly text: string };
+  /** What the chosen starter is: "223 rules", a spinner while a file loads, or why it cannot be used. */
+  readonly status: AiStarterStatus;
+  /** Shown with an error status when the starter can be fetched again (a saved filter whose fetch failed). */
+  readonly onRetry?: () => void;
 }
 
+export type AiStarterStatus =
+  { readonly kind: 'ready'; readonly text: string } | { readonly kind: 'loading' } | { readonly kind: 'error'; readonly text: string };
+
 /**
- * The starter of the AI page: none, a bundled template, the filter from the editor, a draft of this browser, an
- * uploaded file or example rules picked in the example rules dialog. Like the upload, the picked rules stay in the list
+ * The starter of the AI page: none, a bundled template, the filter from the editor, a draft of this browser, a saved
+ * filter of the signed-in user, an uploaded file or example rules picked in the example rules dialog. Like the upload, the picked rules stay in the list
  * when another starter is chosen, and the button reopens the picker on them to change the set.
  */
 export function AiStarterPicker({
@@ -38,11 +58,13 @@ export function AiStarterPicker({
   onChoiceChange,
   openFilter,
   drafts,
+  savedFilters,
   uploadName,
   onUpload,
   rulesCount,
   onPickRules,
   status,
+  onRetry,
 }: AiStarterPickerProps) {
   const fileInput = useRef<HTMLInputElement>(null);
   return (
@@ -82,6 +104,31 @@ export function AiStarterPicker({
                     {entry.name}
                   </SelectItem>
                 ))}
+              </SelectGroup>
+            )}
+            {savedFilters.kind !== 'signedOut' && (
+              <SelectGroup>
+                <SelectLabel>My saved filters</SelectLabel>
+                {savedFilters.kind === 'loading' ? (
+                  <SelectItem value="saved-loading" disabled>
+                    Loading your saved filters…
+                  </SelectItem>
+                ) : savedFilters.kind === 'error' ? (
+                  <SelectItem value="saved-error" disabled>
+                    Your saved filters could not be loaded
+                  </SelectItem>
+                ) : savedFilters.items.length === 0 ? (
+                  <SelectItem value="saved-none" disabled>
+                    No saved filters yet
+                  </SelectItem>
+                ) : (
+                  savedFilters.items.map((item) => (
+                    <SelectItem key={item.id} value={`saved:${item.id}`}>
+                      {item.name}
+                      {item.hasDraft && <span className="text-muted-foreground"> (saved version; a draft has changes)</span>}
+                    </SelectItem>
+                  ))
+                )}
               </SelectGroup>
             )}
             {rulesCount !== null && (
@@ -127,14 +174,23 @@ export function AiStarterPicker({
             Loading…
           </span>
         ) : status.kind === 'error' ? (
-          <span className="text-destructive">{status.text}</span>
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span className="text-destructive">{status.text}</span>
+            {onRetry !== undefined && (
+              <Button variant="outline" size="sm" className="h-7" onClick={onRetry}>
+                Try again
+              </Button>
+            )}
+          </span>
         ) : (
           status.text
         )}
       </p>
       <p className="text-xs text-muted-foreground">
-        To start from one of your saved filters, open it in the editor and choose Improve with AI. The AI keeps what you do not ask it to
-        change.
+        {savedFilters.kind === 'signedOut'
+          ? 'Your saved filters are listed here once you sign in; or open one in the editor and choose Improve with AI.'
+          : 'A saved filter starts from its last saved version; unsaved changes are in its draft.'}{' '}
+        The AI keeps what you do not ask it to change.
       </p>
     </div>
   );

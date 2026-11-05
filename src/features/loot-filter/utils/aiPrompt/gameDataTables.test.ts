@@ -52,14 +52,13 @@ describe('gameDataTables', () => {
       'skills.csv',
       'skill-tabs.csv',
       'classes.csv',
-      'sounds.csv',
     ]);
     for (const entry of [...compact, ...full]) expect(entry.summary).not.toBe('');
   });
 
-  it('keeps Compact at about a third of Full', () => {
+  it('keeps the Compact tables at about half of Full', () => {
     const size = (tables: readonly GameDataTable[]) => tables.reduce((sum, entry) => sum + entry.text.length, 0);
-    expect(size(compact)).toBeLessThan(size(full) / 2.5);
+    expect(size(compact)).toBeLessThan(size(full) / 1.8);
   });
 
   it('has every item type and every stat in both sizes', () => {
@@ -130,9 +129,10 @@ describe('gameDataTables', () => {
     expect(table(compact, 'classes.csv')).toContain('0,ama,Amazon');
   });
 
-  it('puts the sounds.txt names in Full only', () => {
-    const sounds = table(full, 'sounds.csv');
-    expect(sounds).toHaveLength(1 + data.sounds.filter((name) => name !== '').length);
-    expect(sounds).toContain('item_rune');
+  it('lists no sounds.txt names in either size (the prompt asks the user for one)', () => {
+    for (const tables of [compact, full]) {
+      expect(tables.some((entry) => entry.path === 'sounds.csv')).toBe(false);
+      expect(tables.some((entry) => entry.text.includes('item_rune'))).toBe(false);
+    }
   });
 });

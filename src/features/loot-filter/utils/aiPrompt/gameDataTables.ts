@@ -4,8 +4,9 @@
  * plugin quirk or storage scale), the misc items that drop (runes, gems, charms, jewels, potions, keys, organs,
  * essences, coupons, maps…; stacks of identically named containers collapsed to their type), the weapon and armour
  * bases that drop grouped by item type and tier, uniques merged by name with every id (dropped and Ancient Coupon
- * rows), set items, areas, class skills, skill tabs and classes. Full has every row of every table, the sounds.txt
- * names and every skill.
+ * rows), set items, areas, class skills, skill tabs and classes. Full has every row of every table and every skill.
+ * Neither lists the sounds.txt names (they were about half of Full): the prompt says they exist and that the LLM asks
+ * the user for an exact name, which the app's sound picker shows.
  */
 import { CLASS_CODES, type LootFilterDataBundle, type LootFilterItem, type TypesBundle } from '@/features/game-data/engine/schema';
 import { statLayerKind, tabLayer, type StatLayerKind } from '@/features/game-data/engine/statLayers';
@@ -236,7 +237,7 @@ function compactUniquesSetsTable(data: LootFilterDataBundle): GameDataTable {
   };
 }
 
-// --- Areas, skills, sounds ---
+// --- Areas and skills ---
 
 function areasTable(data: LootFilterDataBundle): GameDataTable {
   return {
@@ -289,17 +290,6 @@ function classesTables(types: TypesBundle): GameDataTable[] {
   ];
 }
 
-function soundsTable(data: LootFilterDataBundle): GameDataTable {
-  return {
-    path: 'sounds.csv',
-    summary: 'every sounds.txt sound name (a "sound" can be one of them; the bundled mp3 files are usually the better choice)',
-    text: toCsv(
-      ['name'],
-      data.sounds.filter((name) => name !== '').map((name) => [name])
-    ),
-  };
-}
-
 /** The game data tables of one size, in the order the prompt lists them. */
 export function gameDataTables(data: LootFilterDataBundle, types: TypesBundle, size: GameDataSize): GameDataTable[] {
   const items = size === 'full' ? [fullItemsTable(data)] : [compactMiscTable(data), compactBasesTable(data, types)];
@@ -311,6 +301,5 @@ export function gameDataTables(data: LootFilterDataBundle, types: TypesBundle, s
     areasTable(data),
     skillsTable(data, size),
     ...classesTables(types),
-    ...(size === 'full' ? [soundsTable(data)] : []),
   ];
 }

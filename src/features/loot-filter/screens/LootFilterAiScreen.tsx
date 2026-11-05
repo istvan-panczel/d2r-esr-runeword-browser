@@ -8,22 +8,35 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { RootState } from '@/core/store';
+import { isSupabaseConfigured } from '@/core/supabase/config';
+import { RequestState } from '@/core/types';
 import { selectAuthUserId } from '@/features/auth';
 import { useManifest } from '@/features/game-data/hooks/useManifest';
 import { downloadBlob } from '@/utils/download';
 import { validateLootFilter } from '../engine/validate';
-import { AiStarterPicker } from '../components/ai/AiStarterPicker';
+import { AiStarterPicker, type AiSavedFilters, type AiStarterStatus } from '../components/ai/AiStarterPicker';
 import { ExampleRulesDialog } from '../components/rules/ExampleRulesDialog';
 import { copyText } from '../components/ai/copyText';
 import { ImportAiAnswerDialog } from '../components/ai/ImportAiAnswerDialog';
 import { useLootFilterData } from '../hooks/useLootFilterData';
+import {
+  fetchMyFiltersRequested,
+  fetchSharedFilterRequested,
+  selectMyFilters,
+  selectMyFiltersStatus,
+  selectSharedFilterDetail,
+  selectSharedFilterDetailNotFound,
+  selectSharedFilterDetailStatus,
+} from '../sharing';
 import { importText } from '../store/lootFilterSlice';
 import { countDiagnostics, selectLibraryHydrated, selectVisibleDrafts } from '../store/selectors';
 import type { AiAnswerSuccess } from '../utils/aiAnswer';
 import { aiFilterName } from '../utils/aiFollowUp';
 import type { GameDataSize, PromptPackage, PromptPackageInput } from '../utils/aiPrompt/promptPackage';
 import {
+  needsSavedFilterFetch,
   readAiOpenFilter,
+  savedFilterStarter,
   starterFromRules,
   starterFromText,
   type AiStarterChoice,
@@ -65,7 +78,7 @@ const SIZE_TEXT: Readonly<Record<GameDataSize, { readonly title: string; readonl
   },
   full: {
     title: 'Full',
-    text: 'Every item code, type, stat, unique and set row, area, skill and sounds.txt sound. For LLMs with file upload or a large context.',
+    text: 'Every item code, type, stat, unique and set row, area and skill. For LLMs with file upload or a large context.',
   },
 };
 
@@ -82,9 +95,6 @@ function StepHeading({ step, title }: { readonly step: number; readonly title: s
     </h2>
   );
 }
-
-type StarterStatus =
-  { readonly kind: 'ready'; readonly text: string } | { readonly kind: 'loading' } | { readonly kind: 'error'; readonly text: string };
 
 /**
  * "Create a filter with AI help" (`/loot-filters/ai`): the user describes the filter, picks a starter and the game data
@@ -103,6 +113,22 @@ export function LootFilterAiScreen() {
   const viewerId = useSelector(selectAuthUserId);
   const visibleDrafts = useSelector((state: RootState) => selectVisibleDrafts(state, viewerId));
   const drafts = [...visibleDrafts].map((draft) => draft.entry).sort((a, b) => b.updatedAt - a.updatedAt);
+  // The signed-in user's saved filters (the list has no files: a pick fetches the filter's detail with its file).
+  const signedIn = isSupabaseConfigured && viewerId !== null;
+  const myFilters = useSelector(selectMyFilters);
+  const myFiltersStatus = useSelector(selectMyFiltersStatus);
+  const detail = useSelector(selectSharedFilterDetail);
+  const detailStatus = useSelector(selectSharedFilterDetailStatus);
+  const detailNotFound = useSelector(selectSharedFilterDetailNotFound);
+  const savedDetail = { detail, status: detailStatus, notFound: detailNotFound };
+  const draftSavedIds = new Set(drafts.map((entry) => entry.savedId).filter((id) => id !== undefined));
+  const savedFilters: AiSavedFilters = !signedIn
+    ? { kind: 'signedOut' }
+    : myFiltersStatus === RequestState.ERROR && myFilters.length === 0
+      ? { kind: 'error' }
+      : myFiltersStatus !== RequestState.SUCCESS && myFilters.length === 0
+        ? { kind: 'loading' }
+        : { kind: 'ready', items: myFilters.map((row) => ({ id: row.id, name: row.name, hasDraft: draftSavedIds.has(row.id) })) };
 
   const [request, setRequest] = useState(readStoredRequest);
   const [choice, setChoice] = useState<AiStarterChoice>(openFilter === null ? { kind: 'none' } : { kind: 'open' });
@@ -117,6 +143,20 @@ export function LootFilterAiScreen() {
   const [generator, setGenerator] = useState<PromptModule | null>(null);
   const [generatorFailed, setGeneratorFailed] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+
+  // Signed in: list the saved filters (again after an account switch, as the library's My filters tab does).
+  useEffect(() => {
+    if (signedIn) dispatch(fetchMyFiltersRequested());
+  }, [dispatch, signedIn, viewerId]);
+
+  const fetchSaved = (savedId: string) => {
+    dispatch(fetchSharedFilterRequested(savedId));
+  };
+
+  const changeChoice = (next: AiStarterChoice) => {
+    setChoice(next);
+    if (next.kind === 'saved' && needsSavedFilterFetch(next.savedId, savedDetail)) fetchSaved(next.savedId);
+  };
 
   // The prompt builder is a chunk of its own (format text, tables, validator runs): loaded when this page opens.
   useEffect(() => {
@@ -174,6 +214,10 @@ export function LootFilterAiScreen() {
           ? { ok: false, message: 'This draft is no longer in this browser.' }
           : starterFromText(entry.name, entry.text);
       }
+      case 'saved':
+        return signedIn
+          ? savedFilterStarter(choice.savedId, savedDetail)
+          : { ok: false, message: 'Sign in to start from your saved filters.' };
       case 'open':
         return openFilter === null ? null : starterFromText(openFilter.name, openFilter.text);
       case 'upload':
@@ -186,7 +230,7 @@ export function LootFilterAiScreen() {
   };
   const resolved = resolveStarter();
   const starter = resolved !== null && resolved !== 'loading' && resolved.ok ? resolved.starter : null;
-  const starterStatus: StarterStatus =
+  const starterStatus: AiStarterStatus =
     resolved === 'loading'
       ? { kind: 'loading' }
       : resolved === null
@@ -242,7 +286,7 @@ export function LootFilterAiScreen() {
   };
 
   const handleImport = (answer: AiAnswerSuccess) => {
-    const name = aiFilterName(request);
+    const name = aiFilterName(request, answer.filter.title);
     const action = importText({ name, text: answer.text, source: 'upload' });
     dispatch(action);
     setImportOpen(false);
@@ -313,9 +357,10 @@ export function LootFilterAiScreen() {
         </div>
         <AiStarterPicker
           choice={choice}
-          onChoiceChange={setChoice}
+          onChoiceChange={changeChoice}
           openFilter={openFilter}
           drafts={drafts}
+          savedFilters={savedFilters}
           uploadName={upload?.name ?? null}
           onUpload={(file) => void handleUpload(file)}
           rulesCount={rulesStarter === null ? null : rulesStarter.rules.length}
@@ -323,6 +368,13 @@ export function LootFilterAiScreen() {
             setRulesOpen(true);
           }}
           status={starterStatus}
+          onRetry={
+            choice.kind === 'saved' && signedIn && savedDetail.status === RequestState.ERROR
+              ? () => {
+                  fetchSaved(choice.savedId);
+                }
+              : undefined
+          }
         />
         <ExampleRulesDialog
           open={rulesOpen}
@@ -413,6 +465,10 @@ export function LootFilterAiScreen() {
             LLMs with file upload or a large context handle Full best; with a small context, take Compact. The AI may still need a code it
             does not have: it should ask you, and the app flags every unknown code.
           </li>
+          <li>
+            Neither size lists the game&apos;s own sounds (sounds.txt): the AI uses the bundled sound files, and asks you for the exact name
+            when you want a game sound. The Sound picker of the editor&apos;s rules lists them.
+          </li>
         </ul>
       </section>
 
@@ -444,7 +500,7 @@ export function LootFilterAiScreen() {
       <ImportAiAnswerDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        mode={{ kind: 'create', name: aiFilterName(request) }}
+        mode={{ kind: 'create', nameOf: (filter) => aiFilterName(request, filter.title) }}
         reference={lootData.reference}
         onImport={handleImport}
       />

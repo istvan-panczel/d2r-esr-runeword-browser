@@ -42,8 +42,8 @@ export function delimitRequest(request: string): string {
 
 const SIZE_NOTE: Readonly<Record<GameDataSize, string>> = {
   compact:
-    'This is the compact game data: every item type and stat, the bases and misc items that drop, uniques by name, set items, areas and class skills. If you need something it lacks (a base or misc item that does not drop, a sounds.txt name, an item skill id), ask me.',
-  full: 'This is the full game data: every item code, type, stat, unique and set row, area, skill and sounds.txt sound.',
+    'This is the compact game data: every item type and stat, the bases and misc items that drop, uniques by name, set items, areas and class skills. If you need something it lacks (a base or misc item that does not drop, an item skill id), ask me.',
+  full: 'This is the full game data: every item code, type, stat, unique and set row, area and skill.',
 };
 
 function referenceSection({ files, layout, size }: InstructionsInput): string[] {
@@ -89,8 +89,8 @@ export function buildInstructions(input: InstructionsInput): string {
     '',
     '1. Ask first. Before writing any rule, ask me every question you need, as one short numbered list, and ask again later whenever something is unclear. Typical questions: which class and build; which difficulty and how far into the game (leveling, Hell, maps); which item groups matter (runes, gems, charms, jewels, uniques, sets, runeword bases, maps, coupons, potions, gold); how strict, how many filter levels and what each level hides; sounds and minimap icons (yes or no, for which items); languages for chat and name texts.',
     '2. Plan. Propose a short plan: the filter levels, the rule groups in order (the looks, and narrow hide rules with their exceptions), the styles, sounds and icons. Wait for my OK.',
-    '3. Write. Output the complete filter as ONE ```json code block, following "How to write the JSON" below: the whole file every time, never a partial diff or "the rest stays the same", unless I ask for a snippet. Give every rule a meaningful "comment": the app shows it as the rule title.',
-    '4. After every answer with JSON, end with this reminder (in my language, the button names as written): "Import it in the app: click Import AI answer and paste my whole answer (the first time on the AI help page, step 3, which creates a draft; after that in the filter editor, which replaces the draft\'s content). If the app lists problems, click Copy problems for the AI and paste the list here."',
+    '3. Write. Output the complete filter as ONE ```json code block, following "How to write the JSON" below (it also says how to split a filter too long for one message): the whole file every time, never a partial diff or "the rest stays the same", unless I ask for a snippet. Give the filter a short "title" (the app names the draft after it; a starter keeps its title unless I ask for another) and every rule a meaningful "comment": the app shows it as the rule title.',
+    '4. After every answer with the complete filter (when it is split, after its last part only), end with this reminder (in my language, the button names as written): "Import it in the app: click Import AI answer and paste my whole answer (the first time on the AI help page, step 3, which creates a draft; after that in the filter editor, which replaces the draft\'s content). If the app lists problems, click Copy problems for the AI and paste the list here."',
     '5. When I paste a problems list: fix exactly those problems, keep everything else as it is, and reply with the complete filter again as one json block. If a problem cannot be fixed (a plugin limit), say so and suggest another way.',
     '',
     '## How to write the JSON',
@@ -98,20 +98,20 @@ export function buildInstructions(input: InstructionsInput): string {
     'The app reads the filter out of your answer, so its shape matters:',
     '',
     '- Write the filter in the chat message itself, never in a canvas, document, file, attachment or download link.',
-    '- Open the code block with a line that holds only ```json and close it with a line that holds only ```. The first line inside the block is `{`, the last line inside is the closing `}` of the filter.',
+    "- Open the code block with a line that holds only ```json and close it with a line that holds only ```. Inside the block, the file's `//` header comment lines come first (only if the filter has them, as a starter may), then the opening `{`; the last line inside is the closing `}` of the filter.",
     '- Put ALL of the JSON inside that one block, and NOTHING else: no sentences, no reminder, no "..." placeholders. Not a single line of JSON may come before the opening ```json line or after the closing ``` line.',
     '- Your explanation goes before the block; the import reminder (step 4) goes after the closing ```.',
-    '- Before you send, check: exactly one ```json line, exactly one closing ``` line after the last `}`, the braces balance, and the reminder is outside the block.',
+    '- Before you send, check: exactly one ```json line and one closing ``` line in the message, nothing but JSON between them, the braces of the whole file balance, and the reminder is outside the block.',
     '- If the filter is too long for one message, stop after a complete rule, close the block with ```, and say "continued in the next message". When I say continue, send the rest in a new ```json block. I paste all parts into the app together.',
     '',
     '## Rules for the filter',
     '',
     "- Use only item codes, item types, stat names, params and unique or set ids from the reference. If you need one you cannot find, ask me: I can look it up in the app's pickers. Never guess one: the app's validator flags unknown codes.",
-    "- Sounds and minimap icons: only the bundled files in assets.md (the app's .zip download ships them); assets.md says what each one is for. A game sound from sounds.txt only when I ask for one.",
+    "- Sounds and minimap icons: only the bundled files in assets.md (the app's .zip download ships them); assets.md says what each one is for. The game's own sounds (the sound names of the mod's sounds.txt) work too, but the reference does not list them: use one only when I ask for a game sound, and ask me for its exact name (I can look it up in the app's sound picker). Never guess a sounds.txt name.",
     '- Styles: every `useStyle` must name a style defined under `"styles"` in the same file. For a ready-made look, copy a style preset from examples.md into `"styles"` under its name.',
     '- Mind the known plugin limits in FORMAT.md: Enhanced Damage and Enhanced Defense read 0 on weapons and armour, a stat check without "param" reads only param 0, Life and Mana are stored ×256.',
     '- A matching hide rule hides the item whatever the rules before it did, so every hide rule is narrow and carries its own exceptions ("< 1" stat checks, except lists, a quality list).',
-    '- Strict JSON. `//` comment lines only before the opening brace.',
+    '- Strict JSON between the braces: no comments, no trailing commas (notes belong in the rules\' "comment"). `//` comment lines only at the top of the file, before the opening brace.',
     '',
     ...referenceSection(input),
     '',
