@@ -10,13 +10,20 @@ interface ConditionFieldProps {
   /** The file had a wrong-shaped value for this key (kept in passthrough until the field is edited). */
   readonly invalid?: boolean;
   readonly className?: string;
+  /** Shown after the label (the Basic view's "advanced" tag on a set Advanced field). */
+  readonly badge?: React.ReactNode;
   readonly children: React.ReactNode;
 }
 
 /** A labelled condition control with a one-line hint. */
-export function ConditionField({ id, label, hint, invalid = false, className, children }: ConditionFieldProps) {
+export function ConditionField({ id, label, hint, invalid = false, className, badge, children }: ConditionFieldProps) {
   const labelId = `${id}-label`;
   const hintId = `${id}-hint`;
+  const labelElement = (
+    <span id={labelId} className="text-sm leading-none font-medium">
+      {label}
+    </span>
+  );
   return (
     <div
       role="group"
@@ -24,9 +31,14 @@ export function ConditionField({ id, label, hint, invalid = false, className, ch
       aria-describedby={hint === undefined ? undefined : hintId}
       className={cn('flex min-w-0 flex-col gap-1.5', className)}
     >
-      <span id={labelId} className="text-sm leading-none font-medium">
-        {label}
-      </span>
+      {badge === undefined ? (
+        labelElement
+      ) : (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {labelElement}
+          {badge}
+        </div>
+      )}
       {children}
       {invalid && (
         <p className="flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">

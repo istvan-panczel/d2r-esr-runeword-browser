@@ -1,11 +1,12 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import type { RootState } from '@/core/store/store';
-import type { Theme, TextSize, PageWidthMode } from '../constants/types';
+import type { Theme, TextSize, PageWidthMode, RuleViewMode } from '../constants/types';
 import { TEXT_SIZE_MAP } from '../constants/textSize';
 import { DEFAULT_PAGE_WIDTH, PAGE_WIDTH_STORAGE_KEY, isPageWidthMode } from '../constants/pageWidth';
+import { DEFAULT_RULE_VIEW, RULE_VIEW_STORAGE_KEY, isRuleViewMode } from '../constants/ruleView';
 
-export type { Theme, TextSize, PageWidthMode };
+export type { Theme, TextSize, PageWidthMode, RuleViewMode };
 export { TEXT_SIZE_MAP };
 
 interface SettingsState {
@@ -13,6 +14,7 @@ interface SettingsState {
   readonly textSize: TextSize;
   readonly useDiabloFont: boolean;
   readonly pageWidth: PageWidthMode;
+  readonly ruleView: RuleViewMode;
   readonly isDrawerOpen: boolean;
 }
 
@@ -44,11 +46,23 @@ const getInitialPageWidth = (): PageWidthMode => {
   return isPageWidthMode(stored) ? stored : DEFAULT_PAGE_WIDTH;
 };
 
+// The loot filter rule editor's Basic / Advanced view. Storage can throw (blocked site data): the default then applies.
+const getInitialRuleView = (): RuleViewMode => {
+  if (typeof window === 'undefined') return DEFAULT_RULE_VIEW;
+  try {
+    const stored = localStorage.getItem(RULE_VIEW_STORAGE_KEY);
+    return isRuleViewMode(stored) ? stored : DEFAULT_RULE_VIEW;
+  } catch {
+    return DEFAULT_RULE_VIEW;
+  }
+};
+
 const initialState: SettingsState = {
   theme: getInitialTheme(),
   textSize: getInitialTextSize(),
   useDiabloFont: getInitialDiabloFont(),
   pageWidth: getInitialPageWidth(),
+  ruleView: getInitialRuleView(),
   isDrawerOpen: false,
 };
 
@@ -75,6 +89,14 @@ const settingsSlice = createSlice({
       state.pageWidth = action.payload;
       localStorage.setItem(PAGE_WIDTH_STORAGE_KEY, action.payload);
     },
+    setRuleView(state, action: PayloadAction<RuleViewMode>) {
+      state.ruleView = action.payload;
+      try {
+        localStorage.setItem(RULE_VIEW_STORAGE_KEY, action.payload);
+      } catch {
+        // Not remembered; the view still applies until the page is reloaded.
+      }
+    },
     openDrawer(state) {
       state.isDrawerOpen = true;
     },
@@ -84,7 +106,7 @@ const settingsSlice = createSlice({
   },
 });
 
-export const { setTheme, setTextSize, setUseDiabloFont, setPageWidth, openDrawer, closeDrawer } = settingsSlice.actions;
+export const { setTheme, setTextSize, setUseDiabloFont, setPageWidth, setRuleView, openDrawer, closeDrawer } = settingsSlice.actions;
 export default settingsSlice.reducer;
 
 // Selectors
@@ -97,5 +119,7 @@ export const selectTextSize = createSelector([selectSettingsState], (settings) =
 export const selectUseDiabloFont = createSelector([selectSettingsState], (settings) => settings.useDiabloFont);
 
 export const selectPageWidth = createSelector([selectSettingsState], (settings) => settings.pageWidth);
+
+export const selectRuleView = createSelector([selectSettingsState], (settings) => settings.ruleView);
 
 export const selectIsDrawerOpen = createSelector([selectSettingsState], (settings) => settings.isDrawerOpen);

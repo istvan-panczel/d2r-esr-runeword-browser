@@ -1,9 +1,7 @@
 import { CircleAlert, TriangleAlert } from 'lucide-react';
 import { quirkOfMessage } from '../../engine/statQuirks';
 import type { Diagnostic } from '../../engine/types';
-
-/** A rule's own path in the file: `rules/<n>` or, for a disabled rule, `disabledRules/<n>/rule`. */
-const RULE_PATH = /^(?:rules\/\d+|disabledRules\/\d+\/rule)(?:\/|$)/;
+import { RULE_PATH } from '../../utils/ruleView';
 
 interface RuleDiagnosticsProps {
   /** This rule's diagnostics only. */

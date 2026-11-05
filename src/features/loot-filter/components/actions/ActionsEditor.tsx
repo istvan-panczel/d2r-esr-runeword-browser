@@ -4,12 +4,15 @@ import { resolveText } from '../../engine/text';
 import type { LootFilter, RuleActions } from '../../engine/types';
 import { effectiveActions, findStyle, previewLabelText } from '../../utils/effectiveActions';
 import type { ShallowPatch } from '../../utils/patch';
+import type { ActionField, RuleFieldGate } from '../../utils/ruleView';
 import { CheckField, Field } from '../Field';
 import { LabelPreview } from '../LabelPreview';
+import { AdvancedBadge } from '../rules/AdvancedBadge';
 import { ColorControl } from './ColorControl';
 import { ColorTextField } from './ColorTextField';
 import { IconField } from './IconField';
 import { LabelSection } from './LabelSection';
+import { NameColorField } from './NameColorField';
 import { Section } from './Section';
 import { SoundField } from './SoundField';
 import { StyleSection } from './StyleSection';
@@ -25,6 +28,11 @@ export interface ActionsEditorProps {
   readonly owner: 'rule' | 'style';
   /** Name of the style being edited (for the preview heading); unused for rules. */
   readonly styleName?: string;
+  /**
+   * The rule editor's Basic / Advanced gate (`ruleFieldGate`): Basic shows the common actions, an Advanced one only
+   * when it holds a value (tagged), and a Name colour select. Undefined (the Styles tab): every action.
+   */
+  readonly gate?: RuleFieldGate;
 }
 
 const DEFAULT_DROP_FORMAT = '{qualityColor}{name}';
@@ -48,10 +56,13 @@ const TILE_COLUMNS = {
  * useStyle, hide…), shared by the rule editor and the Styles tab. Each control sends a shallow patch;
  * `passthrough` is never touched. A rule's `comment` belongs to the rule editor; a style's is edited here.
  */
-export function ActionsEditor({ actions, onChange, filter, owner, styleName }: ActionsEditorProps) {
+export function ActionsEditor({ actions, onChange, filter, owner, styleName, gate }: ActionsEditorProps) {
   const idPrefix = owner === 'style' ? `loot-filter-style-${(styleName ?? '').replace(/[^A-Za-z0-9_-]/g, '_')}` : 'loot-filter-rule';
   const id = (key: string) => `${idPrefix}-${key}`;
   const flag = (value: boolean) => (value ? true : undefined);
+  const shows = (field: ActionField) => (gate?.action(field) ?? 'shown') !== 'hidden';
+  const badge = (field: ActionField) => (gate?.action(field) === 'advanced' ? <AdvancedBadge /> : undefined);
+  const basic = gate?.view === 'basic';
 
   const effective = owner === 'rule' ? effectiveActions(actions, filter) : actions;
   const style = owner === 'rule' ? findStyle(actions, filter) : undefined;
@@ -78,7 +89,9 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName }: A
         </p>
       </div>
 
-      {owner === 'rule' && <StyleSection idPrefix={idPrefix} actions={actions} filter={filter} onChange={onChange} />}
+      {owner === 'rule' && shows('useStyle') && (
+        <StyleSection idPrefix={idPrefix} actions={actions} filter={filter} onChange={onChange} badge={badge('useStyle')} />
+      )}
 
       <Section title="Visibility">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -91,64 +104,91 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName }: A
               onChange({ hide: flag(value) });
             }}
           />
-          <CheckField
-            id={id('hide-if-other-fail')}
-            label="Hide if other conditions fail"
-            hint="When codes, types and location match but another condition fails, the item is hidden."
-            checked={actions.hideIfOtherConditionsFail === true}
-            onChange={(value) => {
-              onChange({ hideIfOtherConditionsFail: flag(value) });
+          {shows('hideIfOtherConditionsFail') && (
+            <CheckField
+              id={id('hide-if-other-fail')}
+              label="Hide if other conditions fail"
+              hint="When codes, types and location match but another condition fails, the item is hidden."
+              checked={actions.hideIfOtherConditionsFail === true}
+              badge={badge('hideIfOtherConditionsFail')}
+              onChange={(value) => {
+                onChange({ hideIfOtherConditionsFail: flag(value) });
+              }}
+            />
+          )}
+        </div>
+        {shows('chatMessageWhenHidden') && (
+          <ColorTextField
+            id={id('chat-when-hidden')}
+            label="Chat line when hidden"
+            context="chat"
+            defaultColor="0"
+            value={actions.chatMessageWhenHidden}
+            placeholder="ÿc5Hidden: {name}"
+            hint="Printed when this rule hides the item."
+            badge={badge('chatMessageWhenHidden')}
+            onChange={(chatMessageWhenHidden) => {
+              onChange({ chatMessageWhenHidden });
             }}
           />
-        </div>
-        <ColorTextField
-          id={id('chat-when-hidden')}
-          label="Chat line when hidden"
-          context="chat"
-          defaultColor="0"
-          value={actions.chatMessageWhenHidden}
-          placeholder="ÿc5Hidden: {name}"
-          hint="Printed when this rule hides the item."
-          onChange={(chatMessageWhenHidden) => {
-            onChange({ chatMessageWhenHidden });
-          }}
-        />
+        )}
       </Section>
 
       <Section title="Name">
-        <ColorTextField
-          id={id('replace-name')}
-          label="Replace name"
-          context="names"
-          value={actions.replaceName}
-          placeholder="{name}"
-          hint="A new name; {name} is the game's own."
-          onChange={(replaceName) => {
-            onChange({ replaceName });
-          }}
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ColorTextField
-            id={id('name-prefix')}
-            label="Prefix"
-            context="names"
-            value={actions.namePrefix}
-            placeholder="ÿc1* "
-            onChange={(namePrefix) => {
-              onChange({ namePrefix });
+        {/* Basic only: the common case of replaceName (the game's name in a colour) as a select. */}
+        {basic && (
+          <NameColorField
+            id={id('name-color')}
+            replaceName={actions.replaceName}
+            onChange={(replaceName) => {
+              onChange({ replaceName });
             }}
           />
+        )}
+        {shows('replaceName') && (
           <ColorTextField
-            id={id('name-suffix')}
-            label="Suffix"
+            id={id('replace-name')}
+            label="Replace name"
             context="names"
-            value={actions.nameSuffix}
-            placeholder=" ({sockets})"
-            onChange={(nameSuffix) => {
-              onChange({ nameSuffix });
+            value={actions.replaceName}
+            placeholder="{name}"
+            hint="A new name; {name} is the game's own."
+            badge={badge('replaceName')}
+            onChange={(replaceName) => {
+              onChange({ replaceName });
             }}
           />
-        </div>
+        )}
+        {(shows('namePrefix') || shows('nameSuffix')) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {shows('namePrefix') && (
+              <ColorTextField
+                id={id('name-prefix')}
+                label="Prefix"
+                context="names"
+                value={actions.namePrefix}
+                placeholder="ÿc1* "
+                badge={badge('namePrefix')}
+                onChange={(namePrefix) => {
+                  onChange({ namePrefix });
+                }}
+              />
+            )}
+            {shows('nameSuffix') && (
+              <ColorTextField
+                id={id('name-suffix')}
+                label="Suffix"
+                context="names"
+                value={actions.nameSuffix}
+                placeholder=" ({sockets})"
+                badge={badge('nameSuffix')}
+                onChange={(nameSuffix) => {
+                  onChange({ nameSuffix });
+                }}
+              />
+            )}
+          </div>
+        )}
       </Section>
 
       <LabelSection idPrefix={idPrefix} actions={actions} onChange={onChange} />
@@ -166,20 +206,23 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName }: A
             onChange({ chatMessage });
           }}
         />
-        <CheckField
-          id={id('notify')}
-          label="Notify"
-          hint={
-            <>
-              Prints the filter&apos;s drop line: <code className="break-all">{dropFormat}</code>
-              {effective.chatMessage !== undefined ? ' (the chat line above replaces it).' : '.'}
-            </>
-          }
-          checked={actions.notify === true}
-          onChange={(value) => {
-            onChange({ notify: flag(value) });
-          }}
-        />
+        {shows('notify') && (
+          <CheckField
+            id={id('notify')}
+            label="Notify"
+            hint={
+              <>
+                Prints the filter&apos;s drop line: <code className="break-all">{dropFormat}</code>
+                {effective.chatMessage !== undefined ? ' (the chat line above replaces it).' : '.'}
+              </>
+            }
+            checked={actions.notify === true}
+            badge={badge('notify')}
+            onChange={(value) => {
+              onChange({ notify: flag(value) });
+            }}
+          />
+        )}
       </Section>
 
       <Section title="Sound">
@@ -207,30 +250,33 @@ export function ActionsEditor({ actions, onChange, filter, owner, styleName }: A
         />
       </Section>
 
-      <Section title="Droplight">
-        <CheckField
-          id={id('droplight')}
-          label="Droplight"
-          hint="A beam of light with a sparkle on the item. HD graphics only."
-          checked={actions.droplight !== undefined}
-          onChange={(value) => {
-            onChange({ droplight: value ? {} : undefined });
-          }}
-        />
-        {actions.droplight !== undefined && (
-          <Field id={id('droplight-color')} label="Tint">
-            <ColorControl
-              id={id('droplight-color')}
-              label="droplight tint"
-              value={actions.droplight.color}
-              noneLabel="the game's white beam"
-              onChange={(color) => {
-                onChange({ droplight: color === undefined ? {} : { color: [color[0], color[1], color[2]] } });
-              }}
-            />
-          </Field>
-        )}
-      </Section>
+      {shows('droplight') && (
+        <Section title="Droplight">
+          <CheckField
+            id={id('droplight')}
+            label="Droplight"
+            hint="A beam of light with a sparkle on the item. HD graphics only."
+            checked={actions.droplight !== undefined}
+            badge={badge('droplight')}
+            onChange={(value) => {
+              onChange({ droplight: value ? {} : undefined });
+            }}
+          />
+          {actions.droplight !== undefined && (
+            <Field id={id('droplight-color')} label="Tint">
+              <ColorControl
+                id={id('droplight-color')}
+                label="droplight tint"
+                value={actions.droplight.color}
+                noneLabel="the game's white beam"
+                onChange={(color) => {
+                  onChange({ droplight: color === undefined ? {} : { color: [color[0], color[1], color[2]] } });
+                }}
+              />
+            </Field>
+          )}
+        </Section>
+      )}
 
       {owner === 'style' && (
         <Section title="Notes">

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ScanSearch } from 'lucide-react';
 import { toast } from 'sonner';
+import { RULE_VIEW_OPTIONS, selectRuleView, setRuleView, type RuleViewMode } from '@/features/settings';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,9 +19,12 @@ import { inGameCheckRule, isInGameCheckRule, REPORT_STAT_URL } from '../../utils
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, QUALITY_SCALE } from '../../utils/matchValues';
 import { isExceptionCheck, PLAIN_HIDE_ROW_OPS, plainCheckCount, readsExceptions, ruleStatQuirk } from '../../utils/statChecks';
 import type { ShallowPatch } from '../../utils/patch';
+import { HIDE_ONLY_STATS, ruleFieldGate, type ConditionField as GatedCondition } from '../../utils/ruleView';
 import { ActionsEditor } from '../actions/ActionsEditor';
 import { AreaPicker, ItemPicker, ItemTypePicker, UniqueOrSetPicker } from '../pickers';
+import { AdvancedBadge } from './AdvancedBadge';
 import { ConditionField, ConditionSection } from './conditions/ConditionField';
+import { SegmentedControl, type SegmentedOption } from './conditions/SegmentedControl';
 import { ExceptionsControl } from './conditions/ExceptionsControl';
 import { LevelsControl } from './conditions/LevelsControl';
 import { LocationControl } from './conditions/LocationControl';
@@ -166,12 +170,46 @@ const COMMENT_HINT_ID = `${COMMENT_ID}-hint`;
 const ENABLED_ID = 'loot-filter-rule-enabled';
 const ENABLED_HINT_ID = `${ENABLED_ID}-hint`;
 const CHECK_HINT_ID = 'loot-filter-rule-check-hint';
+const VIEW_TOGGLE_ID = 'loot-filter-rule-view';
+
+const VIEW_TITLES: Readonly<Record<RuleViewMode, string>> = {
+  basic: 'The common conditions and actions; a set Advanced field still shows, tagged "advanced"',
+  advanced: 'Every condition and action',
+};
+const VIEW_OPTIONS: readonly SegmentedOption<RuleViewMode>[] = RULE_VIEW_OPTIONS.map((option) => ({
+  ...option,
+  title: VIEW_TITLES[option.value],
+}));
+
+/** "N more conditions in the Advanced view" with a button that switches to it (Basic view only). */
+function MoreInAdvanced({ count, noun, onShow }: { readonly count: number; readonly noun: string; readonly onShow: () => void }) {
+  if (count === 0) return null;
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
+      <span>
+        {count} more {noun}
+        {count === 1 ? '' : 's'} in the Advanced view.
+      </span>
+      <button type="button" className="underline underline-offset-2 hover:text-foreground" onClick={onShow}>
+        Show Advanced view
+      </button>
+    </p>
+  );
+}
 
 /**
  * A hide rule's plain item stat checks ("hide only items with these stats"), collapsed: its `<`, `<=` and `!=` checks
  * are exceptions, which "Except items with…" lists. Open at first when it holds plain checks.
  */
-function AdvancedItemStats({ initiallyOpen, children }: { readonly initiallyOpen: boolean; readonly children: React.ReactNode }) {
+function AdvancedItemStats({
+  initiallyOpen,
+  badge,
+  children,
+}: {
+  readonly initiallyOpen: boolean;
+  readonly badge?: React.ReactNode;
+  readonly children: React.ReactNode;
+}) {
   const [open, setOpen] = useState(initiallyOpen);
   return (
     <details
@@ -184,6 +222,7 @@ function AdvancedItemStats({ initiallyOpen, children }: { readonly initiallyOpen
       <summary className="flex cursor-pointer list-none items-center gap-1 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <ChevronRight className="size-4 transition-transform group-open:rotate-90" aria-hidden />
         Advanced: hide only items with these stats
+        {badge}
       </summary>
       <p className="mt-1 text-xs text-muted-foreground">
         Plain checks narrow what the rule hides. The exceptions above are stored in these lists too, as their opposite (&lt; 1), but are
@@ -212,6 +251,18 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   const invalid = (key: string) => passthroughKeys.includes(key);
   const check = inGameCheckRule(filter, index, data.lookup);
   const isCheck = isInGameCheckRule(rule);
+  // Basic / Advanced: which fields show (a set Advanced field always shows in Basic, tagged).
+  const view = useSelector(selectRuleView);
+  const gate = ruleFieldGate({ view, rule, hides, diagnostics });
+  const shows = (field: GatedCondition) => gate.condition(field) !== 'hidden';
+  const badge = (field: GatedCondition) => (gate.condition(field) === 'advanced' ? <AdvancedBadge /> : undefined);
+  const showAdvanced = () => {
+    dispatch(setRuleView('advanced'));
+    // The "more in Advanced" line goes away with its button: keep the focus on the view toggle.
+    requestAnimationFrame(() => {
+      document.getElementById(VIEW_TOGGLE_ID)?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus();
+    });
+  };
   const addCheck = () => {
     if (!check.ok) return;
     dispatch(addRule({ rule: check.rule, at: index }));
@@ -224,7 +275,14 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   };
 
   const listField = (field: ListField) => (
-    <ConditionField key={field.key} id={fieldId(field.key)} label={field.label} hint={field.hint} invalid={invalid(field.key)}>
+    <ConditionField
+      key={field.key}
+      id={fieldId(field.key)}
+      label={field.label}
+      hint={field.hint}
+      invalid={invalid(field.key)}
+      badge={badge(field.key)}
+    >
       {field.codes ? (
         <field.Picker
           id={fieldId(field.key)}
@@ -243,6 +301,10 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
     </ConditionField>
   );
 
+  const itemListFields = ITEM_LIST_FIELDS.filter((field) => shows(field.key));
+  const areaFields = AREA_FIELDS.filter((field) => shows(field.key));
+  const numberFields = NUMBER_FIELDS.filter((field) => shows(field.key));
+  const flags = FLAGS.filter((flag) => shows(flag.key));
   const itemStatFields = STAT_FIELDS.filter((field) => field.key === 'itemStats' || field.key === 'itemStatsAnyOf');
   const playerStatFields = STAT_FIELDS.filter((field) => field.key === 'playerStats' || field.key === 'playerStatsAnyOf');
   const statField = (field: (typeof STAT_FIELDS)[number]) => {
@@ -258,6 +320,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
         label={field.label}
         hint={plainOnly ? hideHint : field.hint}
         invalid={invalid(field.key)}
+        // Inside the hide-only box the box carries the tag.
+        badge={plainOnly ? undefined : badge(field.key)}
       >
         <StatCheckList
           id={fieldId(field.key)}
@@ -283,7 +347,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
       className="scroll-mt-4 space-y-4 @10xl/page:grid @10xl/page:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @10xl/page:items-start @10xl/page:gap-4 @10xl/page:space-y-0"
     >
       <Card className="gap-4">
-        <CardHeader>
+        {/* A narrow page (phones) puts the view toggle and Check in game on their own row under the description. */}
+        <CardHeader className="@max-xl/page:grid-cols-1!">
           <CardTitle id={RULE_TITLE_ID} tabIndex={-1} className="flex items-center gap-2 outline-none">
             Rule {index + 1}
             {rule.disabled === true && (
@@ -318,14 +383,23 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
               check.reason
             )}
           </CardDescription>
-          {!isCheck && (
-            <CardAction>
+          <CardAction className="flex flex-wrap items-center justify-end gap-2 @max-xl/page:col-start-1 @max-xl/page:row-span-1 @max-xl/page:row-start-auto @max-xl/page:justify-self-start @max-xl/page:justify-start">
+            <div id={VIEW_TOGGLE_ID}>
+              <SegmentedControl
+                aria-label="Rule view"
+                className="h-8"
+                value={view}
+                options={VIEW_OPTIONS}
+                onChange={(next) => dispatch(setRuleView(next))}
+              />
+            </div>
+            {!isCheck && (
               <Button type="button" variant="outline" size="sm" disabled={!check.ok} aria-describedby={CHECK_HINT_ID} onClick={addCheck}>
                 <ScanSearch />
                 Check in game
               </Button>
-            </CardAction>
-          )}
+            )}
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Side by side on wide pages, in line with the two-column condition grids below. */}
@@ -367,7 +441,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
 
           <HowRulesCombine />
 
-          <ConditionSection title="Which items">{ITEM_LIST_FIELDS.map(listField)}</ConditionSection>
+          {itemListFields.length > 0 && <ConditionSection title="Which items">{itemListFields.map(listField)}</ConditionSection>}
 
           {/* Short controls (segmented choices, number boxes): three per row on wide pages instead of two stretched ones. */}
           <ConditionSection title="Item properties" className="@8xl/page:grid-cols-3">
@@ -376,6 +450,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
               label="Quality"
               hint="inferior … tempered (numbers 1 to 9)."
               invalid={invalid('quality')}
+              badge={badge('quality')}
             >
               <NamedMatchControl
                 id={fieldId('quality')}
@@ -385,22 +460,32 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
                 onChange={(quality) => patch({ quality })}
               />
             </ConditionField>
-            <ConditionField
-              id={fieldId('baseTier')}
-              label="Base tier"
-              hint="normal, exceptional, elite (0 to 2)."
-              invalid={invalid('baseTier')}
-            >
-              <NamedMatchControl
+            {shows('baseTier') && (
+              <ConditionField
                 id={fieldId('baseTier')}
                 label="Base tier"
-                scale={BASE_TIER_SCALE}
-                value={rule.baseTier}
-                onChange={(baseTier) => patch({ baseTier })}
-              />
-            </ConditionField>
-            {NUMBER_FIELDS.map((field) => (
-              <ConditionField key={field.key} id={fieldId(field.key)} label={field.label} hint={field.hint} invalid={invalid(field.key)}>
+                hint="normal, exceptional, elite (0 to 2)."
+                invalid={invalid('baseTier')}
+                badge={badge('baseTier')}
+              >
+                <NamedMatchControl
+                  id={fieldId('baseTier')}
+                  label="Base tier"
+                  scale={BASE_TIER_SCALE}
+                  value={rule.baseTier}
+                  onChange={(baseTier) => patch({ baseTier })}
+                />
+              </ConditionField>
+            )}
+            {numberFields.map((field) => (
+              <ConditionField
+                key={field.key}
+                id={fieldId(field.key)}
+                label={field.label}
+                hint={field.hint}
+                invalid={invalid(field.key)}
+                badge={badge(field.key)}
+              >
                 <NumberMatchControl
                   id={fieldId(field.key)}
                   label={field.label}
@@ -413,9 +498,12 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
               </ConditionField>
             ))}
             <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5">
-              {FLAGS.map((flag) => (
+              {flags.map((flag) => (
                 <div key={flag.key} className="contents">
-                  <span className="text-sm">{flag.label}</span>
+                  <span className="flex items-center gap-1.5 text-sm">
+                    {flag.label}
+                    {badge(flag.key)}
+                  </span>
                   <TriStateControl label={flag.label} value={rule[flag.key]} onChange={(value) => patch({ [flag.key]: value })} />
                 </div>
               ))}
@@ -434,12 +522,15 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
                 />
               </ConditionField>
             )}
-            {hides && (
-              <AdvancedItemStats initiallyOpen={plainCheckCount(rule.itemStats) + plainCheckCount(rule.itemStatsAnyOf) > 0}>
+            {hides && shows(HIDE_ONLY_STATS) && (
+              <AdvancedItemStats
+                initiallyOpen={plainCheckCount(rule.itemStats) + plainCheckCount(rule.itemStatsAnyOf) > 0}
+                badge={badge(HIDE_ONLY_STATS)}
+              >
                 {itemStatFields.map(statField)}
               </AdvancedItemStats>
             )}
-            {(hides ? playerStatFields : STAT_FIELDS).map(statField)}
+            {(hides ? playerStatFields : STAT_FIELDS).filter((field) => shows(field.key)).map(statField)}
             {!hides && [...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? [])].some(isExceptionCheck) && (
               <p className="text-xs text-muted-foreground sm:col-span-2">
                 This rule does not hide, so its &lt;, &lt;= and != item stat checks are plain conditions (items without the stat), not
@@ -451,44 +542,57 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
             </p>
           </ConditionSection>
 
-          <ConditionSection title="Where and when" className="@8xl/page:grid-cols-3">
-            {AREA_FIELDS.map(listField)}
-            <ConditionField
-              id={fieldId('location')}
-              label="Location"
-              hint="None ticked = on the ground only (the default)."
-              invalid={invalid('location')}
-            >
-              <LocationControl id={fieldId('location')} value={rule.location} onChange={(location) => patch({ location })} />
-            </ConditionField>
-            <ConditionField
-              id={fieldId('activeInLevels')}
-              label="Filter levels"
-              hint="The levels the rule is active at."
-              invalid={invalid('activeInLevels')}
-            >
-              <LevelsControl
-                id={fieldId('activeInLevels')}
-                levels={filter.filterLevels ?? []}
-                value={rule.activeInLevels}
-                onChange={(activeInLevels) => patch({ activeInLevels })}
-              />
-            </ConditionField>
-            <ConditionField
-              id={fieldId('difficulty')}
-              label="Difficulty"
-              hint="normal, nightmare, hell (0 to 2)."
-              invalid={invalid('difficulty')}
-            >
-              <NamedMatchControl
-                id={fieldId('difficulty')}
-                label="Difficulty"
-                scale={DIFFICULTY_SCALE}
-                value={rule.difficulty}
-                onChange={(difficulty) => patch({ difficulty })}
-              />
-            </ConditionField>
-          </ConditionSection>
+          {(areaFields.length > 0 || shows('location') || shows('activeInLevels') || shows('difficulty')) && (
+            <ConditionSection title="Where and when" className="@8xl/page:grid-cols-3">
+              {areaFields.map(listField)}
+              {shows('location') && (
+                <ConditionField
+                  id={fieldId('location')}
+                  label="Location"
+                  hint="None ticked = on the ground only (the default)."
+                  invalid={invalid('location')}
+                  badge={badge('location')}
+                >
+                  <LocationControl id={fieldId('location')} value={rule.location} onChange={(location) => patch({ location })} />
+                </ConditionField>
+              )}
+              {shows('activeInLevels') && (
+                <ConditionField
+                  id={fieldId('activeInLevels')}
+                  label="Filter levels"
+                  hint="The levels the rule is active at."
+                  invalid={invalid('activeInLevels')}
+                  badge={badge('activeInLevels')}
+                >
+                  <LevelsControl
+                    id={fieldId('activeInLevels')}
+                    levels={filter.filterLevels ?? []}
+                    value={rule.activeInLevels}
+                    onChange={(activeInLevels) => patch({ activeInLevels })}
+                  />
+                </ConditionField>
+              )}
+              {shows('difficulty') && (
+                <ConditionField
+                  id={fieldId('difficulty')}
+                  label="Difficulty"
+                  hint="normal, nightmare, hell (0 to 2)."
+                  invalid={invalid('difficulty')}
+                  badge={badge('difficulty')}
+                >
+                  <NamedMatchControl
+                    id={fieldId('difficulty')}
+                    label="Difficulty"
+                    scale={DIFFICULTY_SCALE}
+                    value={rule.difficulty}
+                    onChange={(difficulty) => patch({ difficulty })}
+                  />
+                </ConditionField>
+              )}
+            </ConditionSection>
+          )}
+
+          <MoreInAdvanced count={gate.hiddenConditions} noun="condition" onShow={showAdvanced} />
 
           {passthroughKeys.length > 0 && (
             <details className="rounded-md border px-3 py-2 text-sm">
@@ -513,8 +617,9 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
         <CardHeader>
           <CardTitle>Actions</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ActionsEditor actions={pickActions(rule)} onChange={(value) => patch(value)} filter={filter} owner="rule" />
+        <CardContent className="space-y-4">
+          <ActionsEditor actions={pickActions(rule)} onChange={(value) => patch(value)} filter={filter} owner="rule" gate={gate} />
+          <MoreInAdvanced count={gate.hiddenActions} noun="action" onShow={showAdvanced} />
         </CardContent>
       </Card>
     </div>

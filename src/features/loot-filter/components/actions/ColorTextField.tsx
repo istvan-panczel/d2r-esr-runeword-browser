@@ -23,6 +23,8 @@ interface ColorTextFieldProps {
   readonly hint?: React.ReactNode;
   /** The colour code before the first `ÿc` in the preview (`=` for labels, `0` for chat). */
   readonly defaultColor?: string;
+  /** Shown after the label (the rule editor's "advanced" tag). */
+  readonly badge?: React.ReactNode;
 }
 
 const CONTEXT_NAMES: Readonly<Record<PlaceholderContext, string>> = {
@@ -47,7 +49,7 @@ function placeholderProblems(text: string, context: PlaceholderContext): string[
  * placeholders of its context, a small live preview, and hints for unknown placeholders. A per-language
  * text is shown read-only (it is edited in the JSON tab).
  */
-export function ColorTextField({ id, label, value, onChange, context, placeholder, hint, defaultColor = '=' }: ColorTextFieldProps) {
+export function ColorTextField({ id, label, value, onChange, context, placeholder, hint, defaultColor = '=', badge }: ColorTextFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [colorsOpen, setColorsOpen] = useState(false);
   const [placeholdersOpen, setPlaceholdersOpen] = useState(false);
@@ -58,7 +60,7 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   if (typeof value === 'object') {
     const enUS = resolveText(value);
     return (
-      <Field id={id} label={label}>
+      <Field id={id} label={label} badge={badge}>
         <div id={id} className="rounded-md border border-dashed px-3 py-2 text-sm">
           <p className="text-muted-foreground">Multi-language text, edit in the JSON tab.</p>
           {enUS !== undefined && <p className="mt-1 break-all font-mono text-xs">enUS: {enUS}</p>}
@@ -93,7 +95,7 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   const offered = PLACEHOLDERS.filter((entry) => entry.contexts.includes(context));
 
   return (
-    <Field id={id} label={label} hint={hint}>
+    <Field id={id} label={label} hint={hint} badge={badge}>
       <div className="flex gap-1">
         <Input
           ref={inputRef}

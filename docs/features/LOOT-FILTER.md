@@ -573,6 +573,26 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
   rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
   passthrough" block.
+- **Basic / Advanced view** (`utils/ruleView.ts`, the segmented toggle at the top right of the rule editor, before
+  Check in game; on a page narrower than 36rem both drop under the description). A per-browser setting in the settings
+  feature (`ruleView`, `setRuleView` / `selectRuleView`, localStorage `lootFilterRuleView`, reads and writes in
+  try/catch), default **Basic**, existing users included. Advanced is the full editor described here. Basic shows:
+  Enabled, Comment, the diagnostics, How rules combine (collapsed), Item codes, Item types, Unique or set items,
+  Quality, Sockets, Ethereal, Item stats (all of) and, on a hide rule, Except items with…; in the actions the label
+  preview, Hide, a **Name colour** select (Basic only: "By quality" or a colour code, written as
+  `replaceName: "ÿc<code>{name}"`; disabled with a pointer to Replace name when replaceName holds other text), label
+  background and border, chat line, sound (with its volume) and minimap icon. Everything else is Advanced: the
+  except lists, base tier, item level, max sockets, the other three flags, Item stats any of, both character stat
+  lists, a hide rule's "Advanced: hide only items with these stats" box, areas, location, filter levels, difficulty,
+  Use style, Hide if other conditions fail, Chat line when hidden, Replace name, Prefix, Suffix, Notify and
+  Droplight. The tables `BASIC_CONDITIONS` / `BASIC_ACTIONS` classify every condition and action key (`satisfies`
+  over the types, so a new key must pick a side); `ruleFieldGate({ view, rule, hides, diagnostics })` gives each
+  field `shown`, `advanced` or `hidden`. **A set field always shows**: in Basic an Advanced field with a value, a
+  wrong-shaped value (passthrough) or a diagnostic on its key shows with a small "advanced" badge (the hide-only box
+  counts its plain checks only, and a replaceName that only recolours the name belongs to Name colour), so nothing
+  set is hidden and every diagnostic's field is reachable. Field ids and order do not change. The hidden ones are
+  counted in a quiet "N more conditions / actions in the Advanced view." line at the end of each card, with a "Show
+  Advanced view" button (focus moves to the toggle). The Styles tab's actions editor is always complete (no gate).
 - **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). One way to verify
   what the plugin reads is to print it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
   how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected

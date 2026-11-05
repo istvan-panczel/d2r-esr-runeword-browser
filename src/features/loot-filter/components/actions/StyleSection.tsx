@@ -14,12 +14,14 @@ interface StyleSectionProps {
   /** The whole filter, for its style list. */
   readonly filter: LootFilter;
   readonly onChange: (patch: ShallowPatch<RuleActions>) => void;
+  /** Shown after the field's label (the Basic view's "advanced" tag). */
+  readonly badge?: React.ReactNode;
 }
 
 const NO_STYLE = '__none';
 
 /** A rule's `useStyle`: the style picker and a collapsed summary of the chosen style's actions. */
-export function StyleSection({ idPrefix, actions, filter, onChange }: StyleSectionProps) {
+export function StyleSection({ idPrefix, actions, filter, onChange, badge }: StyleSectionProps) {
   const selectId = `${idPrefix}-use-style`;
   const style = findStyle(actions, filter);
   const styleNames = Object.keys(filter.styles ?? {});
@@ -31,7 +33,7 @@ export function StyleSection({ idPrefix, actions, filter, onChange }: StyleSecti
 
   return (
     <Section title="Style">
-      <Field id={selectId} label="Use style" hint={hint}>
+      <Field id={selectId} label="Use style" hint={hint} badge={badge}>
         <Select
           value={actions.useStyle ?? NO_STYLE}
           onValueChange={(value) => {

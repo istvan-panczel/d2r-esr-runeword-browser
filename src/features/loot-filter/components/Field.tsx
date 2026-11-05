@@ -11,16 +11,28 @@ interface FieldProps {
   /** A smaller label and tighter spacing, for the Test tab's dense forms. */
   readonly dense?: boolean;
   readonly className?: string;
+  /** Shown after the label (the rule editor's "advanced" tag). */
+  readonly badge?: ReactNode;
   readonly children: ReactNode;
 }
 
 /** A label above its control, with an optional hint underneath. */
-export function Field({ id, label, hint, dense = false, className, children }: FieldProps) {
+export function Field({ id, label, hint, dense = false, className, badge, children }: FieldProps) {
+  const labelElement = (
+    <Label htmlFor={id} className={dense ? 'text-xs' : undefined}>
+      {label}
+    </Label>
+  );
   return (
     <div className={cn('flex min-w-0 flex-col', dense ? 'gap-1' : 'gap-1.5', className)}>
-      <Label htmlFor={id} className={dense ? 'text-xs' : undefined}>
-        {label}
-      </Label>
+      {badge === undefined ? (
+        labelElement
+      ) : (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {labelElement}
+          {badge}
+        </div>
+      )}
       {children}
       {hint !== undefined && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
@@ -33,10 +45,12 @@ interface CheckFieldProps {
   readonly hint: ReactNode;
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
+  /** Shown after the label (the rule editor's "advanced" tag). */
+  readonly badge?: ReactNode;
 }
 
 /** A checkbox with its label and a hint beside it. */
-export function CheckField({ id, label, hint, checked, onChange }: CheckFieldProps) {
+export function CheckField({ id, label, hint, checked, onChange, badge }: CheckFieldProps) {
   return (
     <div className="flex items-start gap-2">
       <Checkbox
@@ -47,7 +61,14 @@ export function CheckField({ id, label, hint, checked, onChange }: CheckFieldPro
         }}
       />
       <div className="grid min-w-0 gap-1">
-        <Label htmlFor={id}>{label}</Label>
+        {badge === undefined ? (
+          <Label htmlFor={id}>{label}</Label>
+        ) : (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Label htmlFor={id}>{label}</Label>
+            {badge}
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
     </div>

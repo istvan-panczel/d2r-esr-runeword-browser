@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PAGE_WIDTH_STORAGE_KEY, isPageWidthMode } from '../constants/pageWidth';
+import { RULE_VIEW_STORAGE_KEY, isRuleViewMode } from '../constants/ruleView';
 
 afterEach(() => {
   localStorage.clear();
@@ -54,5 +55,69 @@ describe('isPageWidthMode', () => {
     expect(isPageWidthMode('narrow')).toBe(false);
     expect(isPageWidthMode(null)).toBe(false);
     expect(isPageWidthMode(1)).toBe(false);
+  });
+});
+
+describe('settingsSlice rule view', () => {
+  it('defaults to basic when nothing (or an unknown value) is stored', async () => {
+    const empty = await loadSlice();
+    expect(empty.default(undefined, { type: '@@INIT' }).ruleView).toBe('basic');
+
+    for (const stored of ['expert', 'Advanced', '', 'toString']) {
+      localStorage.setItem(RULE_VIEW_STORAGE_KEY, stored);
+      const slice = await loadSlice();
+      expect(slice.default(undefined, { type: '@@INIT' }).ruleView).toBe('basic');
+    }
+  });
+
+  it('restores a stored view', async () => {
+    for (const stored of ['basic', 'advanced'] as const) {
+      localStorage.setItem(RULE_VIEW_STORAGE_KEY, stored);
+      const slice = await loadSlice();
+      expect(slice.default(undefined, { type: '@@INIT' }).ruleView).toBe(stored);
+    }
+  });
+
+  it('sets and persists the view, and the selector reads it', async () => {
+    const slice = await loadSlice();
+    let state = slice.default(undefined, { type: '@@INIT' });
+    state = slice.default(state, slice.setRuleView('advanced'));
+    expect(state.ruleView).toBe('advanced');
+    expect(localStorage.getItem(RULE_VIEW_STORAGE_KEY)).toBe('advanced');
+    expect(slice.selectRuleView({ settings: state } as Parameters<typeof slice.selectRuleView>[0])).toBe('advanced');
+
+    state = slice.default(state, slice.setRuleView('basic'));
+    expect(state.ruleView).toBe('basic');
+    expect(localStorage.getItem(RULE_VIEW_STORAGE_KEY)).toBe('basic');
+  });
+
+  it('falls back to basic and still switches when its storage throws', async () => {
+    const realGetItem = Storage.prototype.getItem;
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, key: string) {
+      if (key === RULE_VIEW_STORAGE_KEY) throw new Error('blocked');
+      return realGetItem.call(this, key);
+    });
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    try {
+      const slice = await loadSlice();
+      let state = slice.default(undefined, { type: '@@INIT' });
+      expect(state.ruleView).toBe('basic');
+      state = slice.default(state, slice.setRuleView('advanced'));
+      expect(state.ruleView).toBe('advanced');
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+    }
+  });
+});
+
+describe('isRuleViewMode', () => {
+  it('accepts the two views only', () => {
+    expect(isRuleViewMode('basic')).toBe(true);
+    expect(isRuleViewMode('advanced')).toBe(true);
+    expect(isRuleViewMode('expert')).toBe(false);
+    expect(isRuleViewMode(null)).toBe(false);
   });
 });
