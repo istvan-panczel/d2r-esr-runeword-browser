@@ -360,35 +360,41 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   below that one tab is shown at a time (tab pills) and the card follows the tree (a tap scrolls to it).
 - **Selection**: the selected tile is ringed; its prerequisites (transitively) are amber, the skills it unlocks
   directly sky blue.
-- **Detail card**: icon, name, class · tab (or "Item skill", plus the skills.txt id when it differs from the name),
-  fact chips (required level, max level, mana, element, aura / passive) and the calculator's tags (dashed, explained
-  on hover: "Scales with character level", "Scales with hard points only" (+skills do not raise that part), "Item procs
-  can cast this" / "Unknown whether item procs can cast this" from `itemTriggerInfo`), description, the **ESR skill
-  information page** text (`infoPage`: the description itself, with "From the ESR skill information page" under it,
-  when skilldesc has none, else a block under the description labelled with the link; the entry's heading is shown
-  when it names more skills), the **values per
-  level** (below), Requires / Unlocks links, "Used by mercenaries: Desert Mercenary (Comb – Normal, …)" (`mercenaries`
-  grouped by hireling, with a Source link to the page's Mercenaries table), "Receives bonuses from" (linked; with a hard-points input 0..cap per
-  synergy the calculator knows and the computed bonus text instead of `+?%`; a skill listed twice, such as Blizzard's
-  two Orb of Winter bonuses, gets the input on its first line only (`synergyLineInputs`); then "Also affected by (not listed in the
-  tooltip)": the record's `unlistedSynergies`, linked, with the same hard-points inputs), notes, and **Granted by**,
-  grouped into
-  Usable skill, +Skill levels, Aura when equipped, Charges and Chance to cast; 8 per group, then "Show all N". Every
-  grant except "+N levels (class only)" (a bonus on top of the character's points, not a level) gets a muted line with
-  the skill's headline values at the item's level (a range's maximum, no hard points: items never give any): the first
-  one or two per-level lines that vary, mana left out, damage lines first, then attack rating / defense / life lines,
-  then the others in tooltip order (`headlineKeys`): "Lvl 40 – Fire Damage: 260-348 · Radius: 6.7 yards". The line
-  ends in "(no hard points)" when those values differ from the ones at the default hard points (`min(level, max level)`,
-  what the calculator below uses): both are evaluated per row (`grantHeadline`; Venom, Lycanthropy, the masteries …,
-  34 skills at level 20), not taken from the skill's `scalesWithHardPointsOnly` flag. The values are computed from the
-  current synergy points and character level on every render (no cache across renders: the React Compiler would keep
-  one). The level is a button that sets the calculator's level and scrolls the values block's top (controls and "At
-  level N") into view, also on a phone where the block is taller than the screen (the page scrolls below `lg`, the
-  sticky detail column from `lg`; `scrollToTop` in `useDetailScroll.ts`); an open All levels table scrolls the selected
-  row into view inside its own box. Builds: a level below the allocated points is plain text, "Below this build's N
-  points". Item links: uniques →
-  `/uniques?name=`, or `/mythicals?name=` when the HTM mythicals list in IndexedDB has the name; set items →
-  `/game-data/sets?name=`; runewords → `/runewords?name=`; gemwords → `/gemwords?name=` (the pages' exact-name focus).
+- **Detail card** (`components/SkillDetailCard.tsx`): a header (48 px icon, name, class · tab or "Item skill", one
+  muted facts line "Req 12 · Max 20 · Mana 5 (+0.5 per level) · Fire · Aura"), the builds pages' point controls, the
+  description (or the **ESR skill information page** text when skilldesc has none, with "From the ESR skill information
+  page" under it), then three **tabs** (Radix Tabs; the tab is card state, not in the URL, and starts at Values for
+  every skill):
+  - **Values** (default; left out when the skill has no calculator lines, no fixed lines and no synergies, e.g. Warm Up:
+    the card opens on Items): see "Values per level" below.
+  - **Items N**: "Item procs can cast this skill." / "Unknown whether …" with the reason (`itemTriggerInfo`), then
+    **Granted by**, grouped into Usable skill, +Skill levels, Aura when equipped, Charges and Chance to cast; 8 per
+    group, then "Show all N". Every grant except "+N levels (class only)" (a bonus on top of the character's points,
+    not a level) gets a muted line with the skill's headline values at the item's level (a range's maximum, no hard
+    points: items never give any): the first one or two per-level lines that vary, mana left out, damage lines first,
+    then attack rating / defense / life lines, then the others in tooltip order (`headlineKeys`): "Lvl 40 – Fire
+    Damage: 260-348 · Radius: 6.7 yards". The line ends in "(no hard points)" when those values differ from the ones
+    at the default hard points (`min(level, max level)`, what the calculator uses): both are evaluated per row
+    (`grantHeadline`; Venom, Lycanthropy, the masteries …, 34 skills at level 20), not taken from the skill's
+    `scalesWithHardPointsOnly` flag. The values follow the current synergy points and character level (no cache across
+    renders: the React Compiler would keep one). The level is a button: it sets the calculator's level, switches to
+    Values, scrolls the card's top into view (`scrollToTop`: the sticky detail column from `lg`, the page below) and
+    shows "Level 40 from Hellmouth · Back to items" under the level bar until another level is picked; "Back to
+    items" returns to the Items tab at the scroll position it had (`saveScroll` / `restoreScroll` in
+    `useDetailScroll.ts`; the Items tab stays mounted while hidden, so expanded "Show all" groups survive too). Builds: a level below the allocated points is plain text, "Below this build's N points".
+    Item links: uniques → `/uniques?name=`, or `/mythicals?name=` when the HTM mythicals list in IndexedDB has the
+    name; set items → `/game-data/sets?name=`; runewords → `/runewords?name=`; gemwords → `/gemwords?name=`.
+  - **About**: the facts as a list (skill, required / max level, mana, damage element, aura / passive, Requires and
+    Unlocks links, the skills.txt id when it differs from the name), the calculator's scaling tags written out ("Scales
+    with character level", "Scales with hard points only": +skills do not raise that part), the ESR skill information
+    page block when skilldesc has a description too (labelled with the link; the entry's heading is shown when it names
+    more skills), "Used by mercenaries: Desert Mercenary (Comb – Normal, …)" (`mercenaries` grouped by hireling, with a
+    Source link) and the notes.
+
+  The tab list and, on Values, the **level bar** under it are `sticky top-0` inside the card (the detail column scrolls
+  from `lg`, the page below), so the level stays in reach while the values scroll. Fire Ball's card is about 780 px
+  high at 1440 × 900 (1,735 px before the tabs).
+
 - **Item skills**: the 181 class-less granted skills as a tile grid by name; the subtitle is the number of granting
   items, and same-name skills (Empowered Enchant × 6, Chain Lightning × 2, …) also show the id suffix ("Cold",
   "Djinn").
@@ -396,30 +402,40 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   the trees, picking one opens its class.
 - **Values per level** (`components/SkillLevelValues.tsx`): `skillcalc.json` loads lazily the first time a card
   is shown (`hooks/useSkillCalc.ts`, kept for the page's lifetime); until then (a small "Loading the values per level…"
-  line), on a load error and for a skill without a calc record or lines, the card shows skilldetails.json's fixed
-  `lines` as before. With the calculator, the fixed lines come from its `fixed` block instead (no duplicates). In order:
-  - controls: **Skill level** (number input + slider, 1..110, default 20; quick buttons 1 / 20 / 30 / 50 / 110\*),
-    **Character level** (1..110, default 110; only for skills with `scalesWithCharLevel`), **Max synergies** (checkbox;
-    every synergy input, listed and unlisted, at its own cap: skills.txt `maxlvl`). Without varying lines the skill level
-    controls are hidden (the character level and synergy controls stay). The slider commits its level on release (and
-    per keyboard step) and the number inputs after a 250 ms pause, on Enter or on blur, so the URL is not rewritten on
-    every tick (browsers throttle `replaceState`: Safari throws after ~100 calls in 10 s).
-  - **At level N**: the `level` and `fixed` blocks at that state (blue, tooltip order), then muted notes "N lines
-    depend on character stats and are not shown" (`hiddenStatLines`) and "N other lines are not shown: the game engine
-    computes them … or the calculator does not support their formulas yet" (`hiddenOtherLines`).
-  - the compact table at levels 1 / 20 / 30 / 50 / 110\* (`skillTable`): one label row per line that varies (synergy
-    block left out) with the five values under it; the selected level's column is highlighted. A trailing text every
-    cell shares moves into the label ("Radius (yards)", "Average Fire Damage (per second)"), "%" stays in the cells
-    (`utils/skillLevels.ts` `tableRow`), so a cell on a phone holds one number.
-  - **All levels** (`<details>`, closed; computed only while open): rows = levels 1..20, then every 5th to 110, plus
-    the selected level; columns = the varying lines; sticky header and level column, scrolls inside its own box
-    (max 28rem high), the selected row highlighted.
-  - an assumptions note: a character without items or ascendancy bonuses, levels above 20 need +skills, \*110 is the
-    theoretical max (player community), formulas from the game files, not all verified in game.
+  line), on a load error and for a skill without a calc record or lines, the Values tab shows skilldetails.json's fixed
+  `lines` and the synergy texts. With the calculator, the fixed lines come from its `fixed` block instead (no
+  duplicates). In order:
+  - the pinned **level bar** (`SkillLevelBar`): "Lvl" − [20] + (1..110, default 20) and the quick buttons 1 / 20 / 30 /
+    50 / 110\* (110 is "the theoretical max skill level (player community)", as a tooltip). Hidden for a skill without
+    varying lines (also the builds pages' gear control); a line "varies" when its quick-level values differ
+    (`quickRows`: the selected level's extra column does not count, so the list, the bar and the Granted by headline
+    lines do not change with the level). The number inputs commit after a 250 ms pause, on Enter or on blur, so the URL is not rewritten on
+    every keystroke (browsers throttle `replaceState`: Safari throws after ~100 calls in 10 s); − / + commit one step
+    and are `aria-disabled` (not `disabled`) at a bound, so a keyboard user keeps the focus.
+    There is no slider (dropped in the card redesign: imprecise over 110 levels, and a row of height).
+  - **Character level** − / + (1..110, default 110; only for skills with `scalesWithCharLevel`).
+  - **Receives bonuses from**, next to the values they change: each synergy linked, with the computed bonus text
+    instead of `+?%` and a − / + hard-points stepper 0..cap per synergy the calculator knows; a skill listed twice
+    (Blizzard's two Orb of Winter bonuses) gets the stepper on its first line only (`synergyLineInputs`); then "Also
+    affected by (not listed in the tooltip):" with the record's `unlistedSynergies`. **Max all** (checkbox in the
+    heading row; every synergy input at its own cap, skills.txt `maxlvl`) and the builds pages' "Reset to build".
+  - **At level N**: one list in tooltip order (`level` and `fixed` blocks, synergy block left out, from
+    `skillTable` at `valueTableLevels(level)`: the quick levels plus the selected level when it is not one of them). A
+    line that changes between those levels shows its label with the current value (bold, blue) and the five quick-level
+    values under it (the selected one bold; a header row "Lvl 1 … Lvl 110\*" over the first such line); the other lines
+    are the tooltip text (blue). A trailing text every value shares moves into the label ("Radius (yards)", "Average
+    Fire Damage (per second)"), "%" stays in the values (`tableRow`). Then muted notes "N lines depend on character
+    stats and are not shown" (`hiddenStatLines`) and "N other lines are not shown: the game engine computes them … or
+    the calculator does not support their formulas yet" (`hiddenOtherLines`).
+  - **All levels** (a button): a wide dialog (`sm:max-w-5xl`, computed only while open) with rows = levels 1..20, then
+    every 5th to 110, plus the selected level; columns = the varying lines; sticky header and level column, the selected
+    row highlighted and kept in view. A level number is a button that shows that level in the card (the dialog stays
+    open; builds: levels below the allocated points are plain text). Focus returns to the button on close.
+  - **About these values** (`<details>`): a character without items or ascendancy bonuses, levels above 20 need
+    +skills, \*110 is the theoretical max (player community), formulas from the game files, not all verified in game.
 
-  Every value (at-level lines, both tables, synergy texts, the Granted by values) uses the current synergy points and
-  character level. Below `lg` the card is full width under the trees; the controls and the compact table fit 375 px
-  (a table wraps a long range at its hyphen rather than scrolling the page).
+  Every value (the list, the dialog, synergy texts, the Granted by values) uses the current synergy points and
+  character level. Below `lg` the card is full width under the trees; the list fits 375 px.
 
 - **URL state**: `class` (class code or `items`), `tab` (1..3, narrow screens; omitted for 1), `skill` (skills.txt id),
   `search`, and the calculator's `lvl` (skill level, omitted at 20), `clvl` (character level, omitted at 110) and `syn`
@@ -429,11 +445,11 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   the skill's class and tab. "Copy Link" shares the view.
 - **Builds**: a build's Skills tab and the create / edit form reuse the card through `BuildSkillTrees`, which passes a
   `levels` config (`SkillLevelsConfig`: state, hard points, onChange, plus slots for its own level control, a note and
-  a synergy action, and `minPickLevel`). Level = the build's allocated points + a "+Skills from gear" input (default 0,
-  up to 110 − points, local, not saved);
+  a synergy action, and `minPickLevel`). Level = the build's allocated points + a "+Skills from gear" − / + stepper in the pinned
+  level bar (default 0, up to 110 − points, local, not saved);
   hard points = the allocated points; synergy points default to the build's own points in each synergy skill (editable,
-  "Reset to build"; reset on another skill unless Max synergies is on). A skill with 0 points shows the normal level
-  controls with "Not learned in this build: the level below is not tied to the build." The character level input is
+  "Reset to build"; reset on another skill unless Max all is on). A skill with 0 points shows the normal level
+  bar, and the Values tab starts with "Not learned in this build: the level is not tied to the build." The character level input is
   local too (default 110, not the build's level).
 
 ## Skill peek on item lines
@@ -541,11 +557,11 @@ src/features/skills/
   components/SkillClassTrees.tsx   one class: tab pills (below lg) + the three SkillTreeTab cards (side by side from lg)
   components/SkillTreeTab.tsx      one tab grid (optional point count in the title)
   components/SkillTile.tsx         one tile (optional corner badge, dimmed state)
-  components/SkillDetailCard.tsx   details + Granted by (optional slot after the header, optional `levels` config)
-  components/SkillLevelValues.tsx  the calculator block: level controls, at-level lines, compact + full tables
-  components/LevelInput.tsx        compact integer input (levels, synergy points, +skills from gear)
+  components/SkillDetailCard.tsx   the card: header, Values / Items / About tabs, pinned level bar (optional slot after the header, optional `levels` config)
+  components/SkillLevelValues.tsx  the Values tab: level bar, character level, synergies slot, values list, All levels dialog
+  components/LevelInput.tsx        compact integer input and the − / + LevelStepper (levels, synergy points, +skills from gear)
   components/SkillIcon.tsx         icon <img> with a reserved square
-  hooks/useDetailScroll.ts         scrolls the card into view after a tap below lg; scrollToTop for the values block
+  hooks/useDetailScroll.ts         scrolls the card into view after a tap below lg; scrollToTop for the card; saveScroll / restoreScroll (Back to items)
   hooks/useMythicalNames.ts        HTM mythical names from IndexedDB (item links)
   hooks/useSkillCalc.ts            lazy skillcalc.json + index (cached for the page's lifetime)
   hooks/useSkillRefIndex.ts        skill names for item lines (skilldetails.json on idle, cached)

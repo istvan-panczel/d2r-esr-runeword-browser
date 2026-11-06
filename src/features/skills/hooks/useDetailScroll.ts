@@ -46,3 +46,20 @@ export function scrollToTop(element: HTMLElement) {
   const top = element.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
   scroller.scrollTo({ top: Math.max(0, top - 8), behavior: 'smooth' });
 }
+
+/** A scroll position to come back to: the sticky detail column's, or the page's (null scroller) */
+export interface SavedScroll {
+  readonly scroller: HTMLElement | null;
+  readonly top: number;
+}
+
+/** The current scroll position of what scrolls `element` (the detail column from `lg`, else the page) */
+export function saveScroll(element: HTMLElement): SavedScroll {
+  const scroller = scrollParent(element);
+  return { scroller, top: scroller === null ? window.scrollY : scroller.scrollTop };
+}
+
+export function restoreScroll({ scroller, top }: SavedScroll) {
+  if (scroller === null) window.scrollTo({ top });
+  else scroller.scrollTop = top;
+}

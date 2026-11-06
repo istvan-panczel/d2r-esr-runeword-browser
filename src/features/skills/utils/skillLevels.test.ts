@@ -26,10 +26,12 @@ import {
   parseSynergyParam,
   resolveSynergyPoints,
   QUICK_LEVELS,
+  quickRows,
   rowLabel,
   synergyLineInputs,
   synergyTexts,
   tableRow,
+  valueTableLevels,
   varyingRows,
   withSynergyPoints,
 } from './skillLevels';
@@ -217,6 +219,19 @@ describe('grant headlines (committed skillcalc.json)', () => {
     expect(headline('Fire Ball', 40)).toEqual({ texts: ['Fire Damage: 260-348', 'Radius: 6.7 yards'], noHardPoints: false });
     expect(headline('Blizzard', 20).texts).toEqual(['Cold Damage: 76-120', 'Cold and Freeze Length: 4.8 seconds']);
     expect(headline('Blizzard', 20, true).texts).toEqual(['Cold Damage: 440-696', 'Cold and Freeze Length: 9.6 seconds']);
+  });
+
+  it('keeps the headline lines and the varying lines independent of the selected level', () => {
+    const record = index.record('Fire Ball');
+    if (record === undefined) throw new Error('Fire Ball');
+    expect(valueTableLevels(20)).toEqual(QUICK_LEVELS);
+    expect(valueTableLevels(35)).toEqual([...QUICK_LEVELS, 35]);
+    const quick = skillTable(record, index, QUICK_LEVELS);
+    const withSelected = skillTable(record, index, valueTableLevels(7));
+    expect(headlineKeys(quickRows(withSelected))).toEqual(headlineKeys(quick));
+    expect(varyingRows(quickRows(withSelected)).map((row) => row.key)).toEqual(varyingRows(quick).map((row) => row.key));
+    // The extra column is kept for the current value
+    expect(withSelected.every((row) => row.cells.length === QUICK_LEVELS.length + 1)).toBe(true);
   });
 
   it('marks values that differ without hard points (not by the skill flag)', () => {
