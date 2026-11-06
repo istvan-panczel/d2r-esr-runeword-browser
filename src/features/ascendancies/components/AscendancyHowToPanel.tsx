@@ -1,6 +1,6 @@
 import { Fragment, useId } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronRight, ScrollText } from 'lucide-react';
+import { ArrowRight, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AscendancyChallenge } from '@/core/db';
 import { ESR_BASE_URL } from '@/core/api';
@@ -19,7 +19,6 @@ import { AMBER_HEADING_CLASS, LINK_CLASS } from './styles';
 /** localStorage key of the panel's open state (per viewer; open by default) */
 const OPEN_STORAGE_KEY = 'ascendancies.howToOpen';
 const OFFICIAL_CHALLENGES_URL = `${ESR_BASE_URL}/ascendancies.htm#challenge`;
-const GUIDE_NOTE_PATH = '/guide/ascendancies';
 
 const MORE_LINK_CLASS = 'inline-flex items-center gap-1.5 text-primary hover:underline';
 const CHIP_CLASS = 'rounded border bg-muted/50 px-1.5 py-0.5 text-xs';
@@ -208,12 +207,6 @@ function PanelLinks() {
         <Link to={cubeFamilyHref(ASCENDANCY_CUBE_FAMILY)} className={MORE_LINK_CLASS}>
           <ArrowRight className="size-3.5" aria-hidden />
           Cube recipes
-        </Link>
-      </li>
-      <li>
-        <Link to={GUIDE_NOTE_PATH} className={MORE_LINK_CLASS}>
-          <ScrollText className="size-3.5" aria-hidden />
-          Guide note
         </Link>
       </li>
     </ul>
