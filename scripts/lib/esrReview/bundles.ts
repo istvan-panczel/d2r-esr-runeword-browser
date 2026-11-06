@@ -114,6 +114,12 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     knownLayers: byField('stat'),
   },
   'materials.json': { groups: byField('code'), families: byField('id'), items: byField('code', named('code')) },
+  // modifiers: a changed fact (difficultylevels.txt, a plugin config value) means the explanation text needs a re-check
+  'modifiers.json': {
+    kinds: byField('key', (entry) => `${field(entry, 'key')} (${field(entry, 'title')})`),
+    stats: byField('id', (entry) => `${field(entry, 'id')} (${field(entry, 'stat')})`),
+    facts: byField('key'),
+  },
   'runewords.json': { runewords: byField('key', named('key')) },
   'sets.json': { sets: byField('id') },
   'skilldetails.json': {

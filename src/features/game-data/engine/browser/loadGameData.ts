@@ -19,6 +19,7 @@ import {
   type ItemTextBundle,
   type LootFilterDataBundle,
   type MaterialsBundle,
+  type ModifiersBundle,
   type SetsBundle,
   type SkillCalcBundle,
   type SkillDetailsBundle,
@@ -53,6 +54,7 @@ export interface GameDataBundles {
   stashnames: StashNamesBundle;
   itemtext: ItemTextBundle;
   terrorzones: TerrorZonesBundle;
+  modifiers: ModifiersBundle;
   icons: IconsBundle;
 }
 

@@ -25,6 +25,7 @@ Architecture decisions, coding guidelines, tech stack documentation, and impleme
 - [Game Data](./features/GAME-DATA.md) - Static bundles built from the ESR txt game files (Bases, Item Types, Best Base and Affixes pages)
 - [Campaign Map](./features/CAMPAIGN-MAP.md) - Hand-placed map per act plus special areas, uber portals and endgame maps: quest items, caveats, waypoints, monsters, every curated fact with its source (`/campaign-map`)
 - [Skills](./features/SKILLS.md) - Class skill trees and item-granted skills from the game files: descriptions, synergies, the items that grant each skill, per-level values (a calculator with synergy points and character level), and a skill peek on item property lines (`/skills`)
+- [Modifiers](./features/MODIFIERS.md) - What item modifiers do (deadly strike, crushing blow, leech, resists, procs, speed, MF …): `modifiers.json` with every stat ESR items carry, modifier kinds and numbers from the game files and ESR's plugin configs, plus the calculator formulas; the `/modifiers` page and the modifier peek come next
 - [Loot Filter](./features/LOOT-FILTER.md) - Loot filter editor for ESR's loot filter plugin: shared and saved filters (Supabase), browser drafts, rule builder with game-data pickers, styles, label/sound/icon previews, JSON tab, test-item tab, download for the launcher
 - [Loot Filter backlog](./features/LOOT-FILTER-BACKLOG.md) - Deferred loot filter requests: what waits for an in-game check, what needs the plugin or the mod, what was decided against
 - [My Stash](./features/STASH.md) - Upload the ESR shared stash (.d2i), parsed and remembered in the browser only; Ancient Coupons page (`/stash`, `/stash/coupons`)
@@ -97,7 +98,7 @@ Favourites for runewords, gemwords, and unique items (sign-in required, synced t
 A second, build-time data source: `npm run game-data:generate` converts the ESR repo's txt game tables (from a local
 clone at `../Eastern_Sun_Resurrected`) into JSON committed under `public/game-data/` (`manifest.json`, `types.json`,
 `bases.json`, `runewords.json`, `affixes.json`, `sources.json`, `lootfilter.json`, `enhance.json`, `cube.json`,
-`materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `skillcalc.json`, `crafting.json`, `tiers.json`, `areas.json`, `stash.json`, `terrorzones.json`; `skills.json` feeds the Skills page
+`materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `skillcalc.json`, `crafting.json`, `tiers.json`, `areas.json`, `stash.json`, `terrorzones.json`, `modifiers.json`; `skills.json` feeds the Skills page
 and the builds feature, `crafting.json` the builds feature only), plus item icons from the mod's HD sprites, with the
 vanilla D2R art extracted from a game install as the fallback (`npm run game-data:icons`: `icons.json` + `icons/*.webp`:
 bases, uniques, set items and socketables, shown on the Bases, Sets, Unique Items and Socketables pages, in builds and in the runeword cards' socket row),

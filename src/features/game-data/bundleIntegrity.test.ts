@@ -27,6 +27,7 @@ import {
   type ItemTextBundle,
   type LootFilterDataBundle,
   type MaterialsBundle,
+  type ModifiersBundle,
   type SetsBundle,
   type SkillCalcBundle,
   type SkillDetailsBundle,
@@ -69,6 +70,7 @@ const stashText = readText('stash');
 const stashNamesText = readText('stashnames');
 const itemTextText = readText('itemtext');
 const terrorZonesText = readText('terrorzones');
+const modifiersText = readText('modifiers');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const { bases, automods: baseAutomods = [] } = JSON.parse(basesText) as BasesBundle;
@@ -90,6 +92,7 @@ const stash = JSON.parse(stashText) as StashBundle;
 const stashNames = JSON.parse(stashNamesText) as StashNamesBundle;
 const itemText = JSON.parse(itemTextText) as ItemTextBundle;
 const terrorZones = JSON.parse(terrorZonesText) as TerrorZonesBundle;
+const modifiers = JSON.parse(modifiersText) as ModifiersBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -118,6 +121,7 @@ describe('committed game-data bundles', () => {
       ['stashnames', stashNamesText],
       ['itemtext', itemTextText],
       ['terrorzones', terrorZonesText],
+      ['modifiers', modifiersText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -947,6 +951,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.stashnames)).toBe(stashNamesText);
     expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
     expect(serializeBundle(generated.terrorzones)).toBe(terrorZonesText);
+    expect(serializeBundle(generated.modifiers)).toBe(modifiersText);
   });
 
   it('numbers uniques, sets, stats and sounds like the *ID / *Index comment columns where those are consistent', () => {
@@ -1222,5 +1227,94 @@ describe('committed terrorzones bundle', () => {
       for (const area of zone.areas) expect(areaIds.get(area.id), `${zone.id} ${String(area.id)}`).toBe(area.name);
     }
     expect(manifest.counts.terrorZoneAreas).toBe(terrorZones.zones.reduce((sum, zone) => sum + zone.areas.length, 0));
+  });
+});
+
+// --- modifiers.json -----------------------------------------------------------------------------------------------
+
+describe('committed modifiers bundle (ESR 3.2.24)', () => {
+  const stat = (name: string) => modifiers.stats.find((entry) => entry.stat === name);
+  const kind = (key: string) => modifiers.kinds.find((entry) => entry.key === key);
+  const fact = (key: string) => modifiers.facts.find((entry) => entry.key === key);
+
+  it('lists about 480 used stats, each in one kind, with unique kind keys', () => {
+    const used = modifiers.stats.filter((entry) => entry.items > 0);
+    expect(used.length).toBeGreaterThan(450);
+    expect(used.length).toBeLessThan(560);
+    expect(manifest.counts.modifierStatsUsed).toBe(used.length);
+    expect(manifest.counts.modifierStats).toBe(modifiers.stats.length);
+    expect(manifest.counts.modifierKinds).toBe(modifiers.kinds.length);
+    expect(new Set(modifiers.kinds.map((entry) => entry.key)).size).toBe(modifiers.kinds.length);
+    const kindKeys = new Set(modifiers.kinds.map((entry) => entry.key));
+    const ids = new Set(modifiers.stats.map((entry) => entry.id));
+    for (const entry of modifiers.stats) {
+      expect(kindKeys.has(entry.kind), entry.stat).toBe(true);
+      expect(entry.examples.length, entry.stat).toBeLessThanOrEqual(12);
+      // every item is in one list, so the per-list counts add up to the item count
+      expect(entry.items, entry.stat).toBe(Object.values(entry.usage).reduce((sum, count) => sum + count, 0));
+    }
+    const inKinds = modifiers.kinds.flatMap((entry) => entry.stats);
+    expect(new Set(inKinds).size).toBe(inKinds.length);
+    for (const id of inKinds) expect(ids.has(id)).toBe(true);
+    expect(manifest.files.modifiers?.bytes).toBeLessThan(400_000);
+  });
+
+  it('pins the key modifier stats', () => {
+    expect(kind('deadly-strike')?.items).toBeGreaterThan(0);
+    expect(stat('item_deadlystrike')).toMatchObject({ id: 141, kind: 'deadly-strike' });
+    expect(stat('item_deadlystrike')?.items).toBeGreaterThan(100);
+    expect(stat('criticaldamage')).toMatchObject({ id: 434, kind: 'critical-damage', vanilla: 'esr' });
+    expect(stat('item_crushingblow')?.events?.map((event) => event.func)).toEqual([16, 16]);
+    // Open Wounds: only non-spawnable "of Wounding" suffixes have it, and ESR removed its item events (bleed replaces it)
+    expect(stat('item_openwounds')).toMatchObject({ id: 135, items: 0, vanilla: 'changed' });
+    expect(stat('item_openwounds')?.events).toBeUndefined();
+    expect(kind('open-wounds')?.items).toBe(0);
+    expect(stat('bleedmindam')?.items).toBeGreaterThan(0);
+    // ESR fires thorns on missile hits too, and on-kill casts through the on-death function
+    expect(stat('item_attackertakesdamage')?.changed).toEqual(expect.arrayContaining(['itemevent2']));
+    expect(stat('item_skillonkill')?.events?.[0]?.func).toBe(30);
+    expect(stat('item_hp_perlevel')?.op?.formula).toBe('maxhp += value × character level / 8');
+    expect(stat('lifedrainmindam')?.text).toBe('%+d%% Physical Damage Leeched as Life');
+  });
+
+  it('pins the difficulty and plugin facts', () => {
+    expect(fact('difficulty.LifeStealDivisor')).toMatchObject({ value: [1, 25, 150], vanilla: [1, 2, 3] });
+    expect(fact('difficulty.ManaStealDivisor')?.value).toEqual([1, 15, 75]);
+    expect(fact('difficulty.ResistPenalty')?.value).toEqual([1, -80, -150]);
+    expect(fact('difficulty.PlayerDamagePercentVSPrimeEvil')?.value).toEqual([100, 50, 25]);
+    expect(fact('crushingBlow.share')?.value).toEqual({
+      monster: 12.5,
+      champion: 12.5,
+      unique: 6.25,
+      super_unique: 2,
+      act_boss: 2,
+      minion: 12.5,
+      mercenary: 5,
+      player: 5,
+    });
+    // The config comment of `unique = 25` says 12.5 %; the value is kept, the note and a warning say so
+    expect(fact('crushingBlow.share')?.note).toContain('unique = 25 gives 6.25 %');
+    expect(manifest.warnings.filter((warning) => warning.startsWith('modifiers:'))).toEqual([
+      'modifiers: crushing-blow.toml unique = 25 gives 6.25 % of current life, but its config comment says "50 -> 12.5 %"',
+    ]);
+    expect(fact('crushingBlow.ranged')?.value).toBe(100);
+    expect(fact('criticalDamage.stat')?.value).toBe(434);
+    expect(fact('criticalDamage.basePercent')?.value).toBe(200);
+    expect(fact('dodge.cap')?.value).toEqual({ dodge: 75, avoid: 75, evade: 75 });
+    expect(fact('castRate.cap')?.value).toBe(500);
+    expect(fact('castRate.maxRate')?.value).toBe(196);
+    expect(fact('magicFind.tail')?.value).toEqual({ unique: 10, set: 10, rare: 10 });
+    expect(fact('attackRating.curve')?.value).toMatchObject({
+      pivotRatio: 5,
+      steepness: 5,
+      tail: 3,
+      lateTail: 1,
+      minChance: 0,
+      maxChance: 100,
+    });
+    expect(fact('bleed.stats')?.value).toEqual({ min: 435, max: 436, length: 437, state: 62 });
+    expect(fact('resist.floor')?.value).toBe(-1000);
+    expect(fact('charstats.BlockFactor')?.value).toMatchObject({ Amazon: 5, Paladin: 6, Sorceress: 4 });
+    for (const entry of modifiers.facts) expect(entry.source.file, entry.key).not.toBe('');
   });
 });

@@ -29,30 +29,31 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                | Contents                                                                                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                        |
-| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                   |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                           |
-| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                |
-| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                            |
-| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                           |
-| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                 |
-| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                              |
-| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                      |
-| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                    |
-| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                       |
-| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                             |
-| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                                    |
-| `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))       |
-| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                   |
-| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                   |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                   |
-| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                          |
-| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")        |
-| `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md)) |
-| `icons.json`        | item icon index (base / quest item code, unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                       |
+| File                | Contents                                                                                                                                                              |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                           |
+| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                      |
+| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                              |
+| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                   |
+| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                               |
+| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                              |
+| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                    |
+| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                                 |
+| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                         |
+| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                       |
+| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                          |
+| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                |
+| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                                       |
+| `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))          |
+| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                      |
+| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                      |
+| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                   |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                      |
+| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                             |
+| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")           |
+| `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))    |
+| `modifiers.json`    | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md)) |
+| `icons.json`        | item icon index (base / quest item code, unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                          |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -80,6 +81,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `stashnames.json`   | ESR 3.2.24: 294 KB / 49 KB                                                                                      |
 | `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
 | `terrorzones.json`  | ESR 3.2.24: 9 KB / 2 KB                                                                                         |
+| `modifiers.json`    | ESR 3.2.24: 293 KB / 50 KB (stats 251 KB, of which example items 113 KB; kinds 51 KB; facts 19 KB)              |
 | `icons.json`        | ESR 3.2.24: 318 KB / 39 KB (+ `icons/`: 1,434 WebP files, 5.7 MB)                                               |
 
 ### Bases and types
@@ -776,6 +778,22 @@ item skills with description text only), `skillCalcLines` 2694 (`skillCalcLevelL
 the calculator refuses with the lines it hides (`skillcalc: code:clc0 in 2 lines (Frenzy dsc2-1, …)`), a missing
 string, an unsupported line function, a text with more placeholders than its function fills, and `the cut rows change …`
 (the row cutting lost a column: a generator bug).
+
+### Modifiers
+
+`modifiers.json` (`ModifiersBundle`, built by `build/bundleModifiers.ts` after the cube rows) explains the item
+modifiers: `stats` (every itemstatcost.txt stat an ESR item list carries, with display strings, op formula, item
+events, the properties setting it, the vanilla D2R comparison, usage per item list and up to 12 example items),
+`kinds` (58 reviewed key kinds, then generated ones) and `facts` (difficultylevels.txt, charstats.txt, monstats.txt,
+ESR's D2RLoader plugin configs and patches, vanilla engine constants, each with its source). The plugin configs and
+patches it reads are `ESR_MODIFIER_CONFIGS` / `ESR_MODIFIER_PATCHES` in `build/esrSources.ts` (also in the sparse clone
+paths); `build/toml.ts` reads the TOML. Vanilla reference values: `build/data/vanillaReference.ts`. difficultylevels.txt
+and qualityitems.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
+Details, facts and open questions: [MODIFIERS.md](./MODIFIERS.md).
+
+Counts (ESR 3.2.24): `modifierStats` 486, `modifierStatsUsed` 473, `modifierStatsEsrOnly` 314, `modifierStatsChanged` 9,
+`modifierKinds` 395, `modifierKeyKinds` 58, `modifierFacts` 59, `modifierConfigFacts` 27, `modifierSources` 18271.
+Warnings start with `modifiers:`.
 
 ### Crafting options
 
@@ -1634,16 +1652,17 @@ in the rune-bonus group.
 Warnings are printed and stored in `manifest.warnings`; string conflicts are printed only (their number is in
 `counts.stringConflicts`). Warnings do not fail the build.
 
-| Warning                                                  | Meaning                                                                                                                                                                                                                                                                                                                                                                      |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `string "<key>": kept … ignored …` (console only)        | The same string key exists in several `strings/*.json` files with different English text. The kept value comes from the higher-priority file: `item-runes` > `item-nameaffixes` > `item-modifiers` > `item-names` > `skills` > other files alphabetically > `chinese-overlay` (the censored names of the Chinese release). Expected: ~85, almost all from `chinese-overlay`. |
-| `bases: <code> … is not in its own tier family`          | The base's code is not listed in its `normcode/ubercode/ultracode`; treated as normal tier. ESR 3.2.10: `q86` Scissors Suwayyah, `qdf` Hunter's Guise.                                                                                                                                                                                                                       |
-| `bases: <code> is mythical but its name string is …`     | Mythical accessories `mam`/`mrn`/`mjw` reuse the plain amu/rin/jew name strings; the `name` column ("Mythical Amulet") is used instead.                                                                                                                                                                                                                                      |
-| `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms). `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                  |
-| `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                         |
-| `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                      |
-| `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                    |
-| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".       |
+| Warning                                                  | Meaning                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `string "<key>": kept … ignored …` (console only)        | The same string key exists in several `strings/*.json` files with different English text. The kept value comes from the higher-priority file: `item-runes` > `item-nameaffixes` > `item-modifiers` > `item-names` > `skills` > other files alphabetically > `chinese-overlay` (the censored names of the Chinese release). Expected: ~85, almost all from `chinese-overlay`.                     |
+| `bases: <code> … is not in its own tier family`          | The base's code is not listed in its `normcode/ubercode/ultracode`; treated as normal tier. ESR 3.2.10: `q86` Scissors Suwayyah, `qdf` Hunter's Guise.                                                                                                                                                                                                                                           |
+| `bases: <code> is mythical but its name string is …`     | Mythical accessories `mam`/`mrn`/`mjw` reuse the plain amu/rin/jew name strings; the `name` column ("Mythical Amulet") is used instead.                                                                                                                                                                                                                                                          |
+| `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms). `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                                      |
+| `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                                             |
+| `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                                          |
+| `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                                        |
+| `modifiers: crushing-blow.toml unique = 25 gives …`      | A plugin config comment ("50 -> 12.5 %") disagrees with the value the plugin reads; the fact keeps the value and notes the comment. ESR 3.2.24: `unique = 25` (6.25 % of current life, the comment says 12.5 %). Other `modifiers:` warnings: a key kind naming a stat itemstatcost.txt lacks, an unknown item event function, a missing config file or key. See [MODIFIERS.md](./MODIFIERS.md). |
+| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".                           |
 
 ## Code layout
 
@@ -1660,6 +1679,7 @@ src/features/game-data/
                bundleRunewords.ts, bundleAffixes.ts, bundleSources.ts (+ treasureClasses.ts, pluginUniques.ts,
                itemNames.ts), bundleLootFilter.ts (+ bundleLootFilterSkills.ts), bundleEnhance.ts, bundleCube.ts, bundleMaterials.ts, bundleSets.ts,
                bundleSkills.ts, bundleSkillDetails.ts, bundleSkillCalc.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts, itemIcons.ts,
+               bundleModifiers.ts (+ toml.ts, data/vanillaReference.ts),
                generateBundles.ts,
                writeBundle.ts
   build/cube/  cubemain rows and texts shared with the guide: cubeRows.ts, cubeText.ts, cubeFamilies.ts, cubeCatalog.ts
