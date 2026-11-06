@@ -11,12 +11,15 @@ import {
   filterItemRows,
   formatStatValue,
   hasItemFilters,
+  ignoreCouponsPatch,
   initialItemSortDir,
   itemPages,
   itemPageUrl,
   itemRows,
+  itemsResultSummary,
   itemsSummary,
   kindLabel,
+  listedItemRows,
   matchesConditions,
   parseStatCondition,
   readItemsState,
@@ -398,8 +401,10 @@ describe('items URL state', () => {
       sortStat: 'g.allres',
       dir: 'desc',
       details: true,
+      ignoreCoupons: false,
     };
     const params = encodeItemsState(state);
+    expect(params.get('coupons')).toBe('1');
     expect(params.getAll('stat')).toEqual(['s105_min_20', 'g.dmg-fire_max_-2.5', 's107.54_min_3']);
     expect(params.toString()).toContain('stat=s105_min_20');
     expect(readItemsState(new URLSearchParams(params.toString()))).toEqual(state);
@@ -420,5 +425,81 @@ describe('items URL state', () => {
   it('keeps the stat sort key only with the stat sort', () => {
     expect(encodeItemsState({ ...DEFAULT_ITEMS_STATE, sort: 'name', sortStat: 's105' }).has('by')).toBe(false);
     expect(parseStatCondition(encodeStatCondition({ key: 's0', op: 'max', value: 0 }))).toEqual({ key: 's0', op: 'max', value: 0 });
+  });
+});
+
+describe('ignore coupons', () => {
+  const couponCatalog = stashCatalog(
+    makeBundle({
+      bases: [
+        { code: 'cap', name: 'Cap', type: 'helm', tier: 'normal' },
+        { code: '01c', name: 'Ancient Coupon (Buckler, Pelta Lunata)', type: 'misc' },
+        { code: '99j', name: 'Coupon Wild Card', type: 'misc' },
+      ],
+      coupons: [
+        { code: '01c', name: 'Ancient Coupon (Buckler, Pelta Lunata)', type: 'cpn1', unique: { id: 793, name: 'Pelta Lunata' }, qty: 3 },
+        { code: '99j', name: 'Coupon Wild Card', type: 'coup', wildCard: true },
+      ],
+    }),
+    TYPES
+  );
+  // page 1: a cap and a coupon; page 2: the Wild Card only (a page of coupons)
+  const couponStash = makeStash([
+    makeSection(0, [makeItem('cap', { x: 0, y: 0, sockets: 2 }), makeItem('01c', { x: 2, y: 0 })]),
+    makeSection(1, [makeItem('99j', { compact: true, quality: null, level: null })]),
+  ]);
+  const all = createItemRows(couponStash, couponCatalog, text, engine);
+  const kinds = (list: readonly ItemRow[]) => list.map((row) => row.info.kind);
+  const shown = (patch: Partial<ItemsState>) => kinds(filterItemRows(all, { ...DEFAULT_ITEMS_STATE, ...patch }, TYPES));
+
+  it('leaves the coupons out by default, before every filter', () => {
+    expect(kinds(all)).toEqual(['normal', 'coupon', 'coupon']);
+    expect(shown({})).toEqual(['normal']);
+    expect(shown({ ignoreCoupons: false })).toEqual(['normal', 'coupon', 'coupon']);
+    expect(shown({ search: 'coupon' })).toEqual([]);
+    expect(shown({ search: 'coupon', ignoreCoupons: false })).toEqual(['coupon', 'coupon']);
+    expect(shown({ sockets: 'none' })).toEqual([]);
+    expect(shown({ sockets: 'none', ignoreCoupons: false })).toEqual(['coupon', 'coupon']);
+  });
+
+  it('counts and pages the listed rows only; the summary chips count every item', () => {
+    const listed = listedItemRows(all, true);
+    expect(kinds(listed)).toEqual(['normal']);
+    expect(listedItemRows(all, false)).toBe(all);
+    expect(itemPages(listed)).toEqual([1]);
+    expect(itemPages(listedItemRows(all, false))).toEqual([1, 2]);
+    expect(itemsSummary(couponStash, couponCatalog.bundle).total).toBe(3);
+  });
+
+  it('says how many coupons are hidden', () => {
+    expect(itemsResultSummary(1, 1, 2)).toBe('Showing 1 of 1 items · 2 coupons hidden');
+    expect(itemsResultSummary(0, 4, 1)).toBe('Showing 0 of 4 items · 1 coupon hidden');
+    expect(itemsResultSummary(3, 3, 0)).toBe('Showing 3 of 3 items');
+  });
+
+  it('writes nothing while ignoring, coupons=1 while listing them; old links ignore them', () => {
+    expect(encodeItemsState({ ...DEFAULT_ITEMS_STATE, ignoreCoupons: true }).toString()).toBe('');
+    expect(encodeItemsState({ ...DEFAULT_ITEMS_STATE, ignoreCoupons: false }).toString()).toBe('coupons=1');
+    expect(readItemsState(new URLSearchParams('coupons=1')).ignoreCoupons).toBe(false);
+    expect(readItemsState(new URLSearchParams('search=ring&details=1')).ignoreCoupons).toBe(true);
+    expect(readItemsState(new URLSearchParams('coupons=yes')).ignoreCoupons).toBe(true);
+  });
+
+  it('lists the coupons for a link to the Coupon quality, and leaves that quality when ignoring them again', () => {
+    const state = readItemsState(new URLSearchParams('quality=coupon'));
+    expect(state).toEqual({ ...DEFAULT_ITEMS_STATE, quality: 'coupon', ignoreCoupons: false });
+    expect(kinds(filterItemRows(all, state, TYPES))).toEqual(['coupon', 'coupon']);
+    expect(encodeItemsState(state).toString()).toBe('quality=coupon&coupons=1');
+    expect(ignoreCouponsPatch(state, true)).toEqual({ ignoreCoupons: true, quality: 'all' });
+    expect(ignoreCouponsPatch({ quality: 'unique' }, true)).toEqual({ ignoreCoupons: true });
+    expect(ignoreCouponsPatch({ quality: 'coupon' }, false)).toEqual({ ignoreCoupons: false });
+  });
+
+  it('is no filter while ignoring; listing the coupons is one, so Reset ignores them again', () => {
+    expect(hasItemFilters(DEFAULT_ITEMS_STATE)).toBe(false);
+    expect(hasItemFilters({ ...DEFAULT_ITEMS_STATE, ignoreCoupons: false })).toBe(true);
+    const cards: ItemsState = { ...DEFAULT_ITEMS_STATE, details: true };
+    expect(hasItemFilters(cards)).toBe(false);
+    expect(DEFAULT_ITEMS_STATE.ignoreCoupons).toBe(true);
   });
 });

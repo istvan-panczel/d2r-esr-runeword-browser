@@ -399,6 +399,11 @@ export interface ItemsState {
   readonly dir: SortDir;
   /** "Show all item information": tooltip cards instead of the table */
   readonly details: boolean;
+  /**
+   * "Ignore coupons" (default on): the coupons (Ancient Coupons, the Wild Card, blank coupons; the Ancient Coupons page
+   * lists them) are left out before every filter and count. Never on with `quality: 'coupon'` (see readItemsState).
+   */
+  readonly ignoreCoupons: boolean;
 }
 
 export const DEFAULT_ITEMS_STATE: ItemsState = {
@@ -414,6 +419,7 @@ export const DEFAULT_ITEMS_STATE: ItemsState = {
   sortStat: null,
   dir: 'asc',
   details: false,
+  ignoreCoupons: true,
 };
 
 const KEYS = {
@@ -429,6 +435,7 @@ const KEYS = {
   SORT_STAT: 'by',
   DIR: 'dir',
   DETAILS: 'details',
+  COUPONS: 'coupons',
 } as const;
 
 const QUALITY_FILTERS: readonly QualityFilter[] = ['all', ...STASH_ITEM_KINDS];
@@ -461,11 +468,16 @@ export function parseStatCondition(text: string): StatCondition | null {
   return { key, op, value: number };
 }
 
+/**
+ * The state of the page's URL. Coupons are ignored unless `coupons=1`, so links from before the checkbox hide them,
+ * except `quality=coupon` (an old link to the Coupon pill), which lists them: that pill is the only way to see them.
+ */
 export function readItemsState(params: URLSearchParams): ItemsState {
   const sortStat = readText(params, KEYS.SORT_STAT);
+  const quality = readEnum(params, KEYS.QUALITY, QUALITY_FILTERS, 'all');
   return {
     search: params.get(KEYS.SEARCH) ?? '',
-    quality: readEnum(params, KEYS.QUALITY, QUALITY_FILTERS, 'all'),
+    quality,
     category: readEnum(params, KEYS.CATEGORY, CATEGORY_FILTERS, 'all'),
     tier: readEnum(params, KEYS.TIER, TIER_FILTERS, 'all'),
     page: readPage(params, KEYS.PAGE),
@@ -476,6 +488,7 @@ export function readItemsState(params: URLSearchParams): ItemsState {
     sortStat: sortStat !== null && STAT_KEY.test(sortStat) ? sortStat : null,
     dir: readSortDir(params, KEYS.DIR),
     details: readFlag(params, KEYS.DETAILS),
+    ignoreCoupons: quality !== 'coupon' && !readFlag(params, KEYS.COUPONS),
   };
 }
 
@@ -495,6 +508,7 @@ export function encodeItemsState(state: ItemsState): URLSearchParams {
   }
   if (state.sort === 'stat') setParam(params, KEYS.SORT_STAT, state.sortStat);
   setParam(params, KEYS.DETAILS, state.details);
+  setParam(params, KEYS.COUPONS, !state.ignoreCoupons);
   return params;
 }
 
@@ -516,8 +530,31 @@ function matchesSockets(row: ItemRow, filter: SocketFilter): boolean {
 
 export type ItemFilter = Omit<ItemsState, 'sort' | 'sortStat' | 'dir' | 'details'>;
 
+export const isCouponRow = (row: Pick<ItemRow, 'info'>): boolean => row.info.kind === 'coupon';
+
+/** The rows the page lists and counts: every row, or the rows without the coupons while they are ignored */
+export function listedItemRows(rows: readonly ItemRow[], ignoreCoupons: boolean): readonly ItemRow[] {
+  return ignoreCoupons ? rows.filter((row) => !isCouponRow(row)) : rows;
+}
+
+/**
+ * The state patch of the "Ignore coupons" checkbox: ignoring them again while the Coupon pill is selected goes back to
+ * every quality (the pill is hidden then, and it would match nothing).
+ */
+export function ignoreCouponsPatch(state: Pick<ItemsState, 'quality'>, ignore: boolean): Partial<ItemsState> {
+  return ignore && state.quality === 'coupon' ? { ignoreCoupons: true, quality: 'all' } : { ignoreCoupons: ignore };
+}
+
+/** "Showing 120 of 340 items", plus " · 25 coupons hidden" while coupons are ignored and the stash has some */
+export function itemsResultSummary(shown: number, listed: number, hiddenCoupons: number): string {
+  const summary = `Showing ${String(shown)} of ${String(listed)} items`;
+  if (hiddenCoupons === 0) return summary;
+  return `${summary} · ${String(hiddenCoupons)} coupon${hiddenCoupons === 1 ? '' : 's'} hidden`;
+}
+
 /** The filters other than search and stats, one row at a time */
 function matchesFields(row: ItemRow, state: ItemFilter): boolean {
+  if (state.ignoreCoupons && isCouponRow(row)) return false;
   if (state.quality !== 'all' && row.info.kind !== state.quality) return false;
   if (state.category !== 'all' && row.info.category !== state.category) return false;
   if (state.tier !== 'all' && (row.info.tier ?? 'none') !== state.tier) return false;
@@ -527,8 +564,9 @@ function matchesFields(row: ItemRow, state: ItemFilter): boolean {
 }
 
 /**
- * The rows matching every filter: search terms (an item type word by the type chain, any other term as text in the
- * row's search text), quality, category, tier, page, ethereal, sockets and the stat conditions.
+ * The rows matching every filter: the coupons out while they are ignored, search terms (an item type word by the type
+ * chain, any other term as text in the row's search text), quality, category, tier, page, ethereal, sockets and the
+ * stat conditions.
  */
 export function filterItemRows(rows: readonly ItemRow[], state: ItemFilter, types: ItemTypeIndex | null = null): ItemRow[] {
   const terms = parseItemSearch(state.search, types);
@@ -587,9 +625,13 @@ export function countBy<K extends string>(rows: readonly ItemRow[], keyOf: (row:
   return counts;
 }
 
-/** Whether a state filters anything (the reset link) */
+/**
+ * Whether a state differs from the default filters (the reset link, which goes back to them and keeps the view):
+ * listing the coupons counts, ignoring them is the default
+ */
 export function hasItemFilters(state: ItemFilter): boolean {
   return (
+    !state.ignoreCoupons ||
     state.search.trim() !== '' ||
     state.quality !== 'all' ||
     state.category !== 'all' ||

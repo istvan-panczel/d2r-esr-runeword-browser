@@ -56,6 +56,16 @@ Ancient Coupons, the Wild Card and blank coupons, which are normal items by qual
 (weapons, armor, rings & amulets, charms, jewels, other), tier (Normal … Mythical, No tier), ethereal (yes / no),
 sockets (socketed, empty sockets, no sockets, runewords & gemwords), stash page. "Reset filters" keeps the view (table / cards).
 
+**Ignore coupons** (checkbox beside "Show all item information", on by default; the coupons have their own page,
+`/stash/coupons`, [STASH.md → Ancient Coupons page](./STASH.md#ancient-coupons-page), linked from the hint): the
+`coupon` kind rows (Ancient Coupons, the Wild Card, blank coupons) are left out before everything else (`listedItemRows`, and `filterItemRows` with `ignoreCoupons`): the list, every pill
+count, the stash page select and the stat picker; the Coupon quality pill only appears while the box is off. The
+summary chips still count every item. The results bar reads "Showing X of Y items · N coupons hidden" (Y without the
+coupons; `itemsResultSummary`). Turning ignoring back on while the Coupon pill is selected goes back to every quality
+(`ignoreCouponsPatch`); a link with `quality=coupon` (from before the checkbox) lists the coupons. Listing them counts
+as a filter (`hasItemFilters`), so "Reset filters" ignores them again. A stash whose page items are all coupons shows
+a note with a link to the coupons page and a "List the coupons" button instead of an empty page.
+
 **Stat filters** (`StatConditions`): "Add a stat filter" picks a key from the stats present in the uploaded stash
 (`statOptions`: distinct `StatValue` keys with their item count and value span, sorted by the label's words; skill /
 class params are keys of their own, the picker searches label, stat label and param name) and adds `stat ≥ smallest
@@ -84,6 +94,7 @@ title, `statTitle`: "Faster Cast Rate"); the stat sort from a condition row or t
 | `sort`, `dir`    | `location`, `name`, `quality`, `ilvl`, `stat`; `asc` / `desc` (written together) |
 | `by`             | the stat key of `sort=stat`                                                      |
 | `details`        | `1`: tooltip cards                                                               |
+| `coupons`        | `1`: list the coupons (unset: ignored; `quality=coupon` lists them too)          |
 
 **Text states** (`useItemText`): loading → a spinner note, names and item fields searchable; error → a note with Retry;
 ready without text (the placeholder) → a note; ready with text → stat lines, stat search and stat filters.
@@ -91,8 +102,9 @@ ready without text (the placeholder) → a note; ready with text → stat lines,
 **Home card** (`StashHomeScreen`): "N items: U uniques, S set items, R runewords, G gemwords" (`itemsSummary`, no item text; the
 page's chip reads "R + G runewords + gemwords").
 
-Tests: `allItems.test.ts` (rows, names in rows, every filter, conditions, picker options, sort, URL round trip, with a
-fake text engine), `itemNames.test.ts` (every quality and its fallbacks), `allItems.fixture.integration.test.ts` (row
+Tests: `allItems.test.ts` (rows, names in rows, every filter, conditions, picker options, sort, URL round trip, the
+ignored coupons: exclusion, counts, pages, results summary, `coupons` param, `quality=coupon` links, reset; with a fake
+text engine), `itemNames.test.ts` (every quality and its fallbacks), `allItems.fixture.integration.test.ts` (row
 count, sockets inside parents, search basics).
 
 ## Data

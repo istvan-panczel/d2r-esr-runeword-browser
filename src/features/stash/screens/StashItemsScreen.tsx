@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { RotateCcw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
@@ -30,6 +31,7 @@ import {
   ETHEREAL_FILTERS,
   filterItemRows,
   hasItemFilters,
+  ignoreCouponsPatch,
   initialItemSortDir,
   isCategoryFilter,
   isEtherealFilter,
@@ -41,7 +43,9 @@ import {
   ITEM_KIND_LABELS,
   itemPages,
   itemRows,
+  itemsResultSummary,
   itemsSummary,
+  listedItemRows,
   readItemsState,
   SOCKET_FILTERS,
   sortItemRows,
@@ -85,6 +89,8 @@ const SORT_LABELS: Readonly<Record<Exclude<ItemSortKey, 'stat'>, string>> = {
 /** The quality pills: the kind labels, with the runeword pill naming the gemwords it holds */
 const QUALITY_LABELS: Readonly<Record<StashItemKind, string>> = { ...ITEM_KIND_LABELS, runeword: 'Runeword & gemword' };
 const BASE_SORT_KEYS: readonly string[] = Object.keys(SORT_LABELS);
+const COUPONS_PAGE = '/stash/coupons';
+const LINK_CLASS = 'font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary';
 const TIER_VALUES: readonly Exclude<TierFilter, 'all'>[] = [...BASE_TIERS, 'none'];
 
 /**
@@ -137,11 +143,17 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
 
   const text = textState.status === 'ready' ? textState.text : null;
   const note = textNote(textState);
-  const rows = itemRows(stash, catalog, text);
+  const allRows = itemRows(stash, catalog, text);
+  // The coupons go first while they are ignored: out of the list, the counts, the pages and the stat picker
+  const rows = listedItemRows(allRows, state.ignoreCoupons);
+  const hiddenCoupons = allRows.length - rows.length;
   const options = note === null ? statOptions(rows) : [];
   // Stat conditions wait for the stat text: without it no item has a stat value, so they would hide every item
   const filters = note === null ? state : { ...state, stats: [] };
   const shown = sortItemRows(filterItemRows(rows, filters, types), state.sort, state.dir, state.sortStat);
+  const setIgnoreCoupons = (ignore: boolean) => {
+    update(ignoreCouponsPatch(state, ignore), false);
+  };
   const optionByKey = new Map(options.map((option) => [option.key, option]));
   const sortStat = state.sort === 'stat' ? state.sortStat : null;
   const shownStats = [...new Set([...state.stats.map((condition) => condition.key), ...(sortStat === null ? [] : [sortStat])])];
@@ -157,7 +169,19 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
     set({ ...DEFAULT_ITEMS_STATE, details: state.details });
   };
 
-  if (rows.length === 0) return <p className="py-6 text-center text-sm text-muted-foreground">No items on the stash pages of this file.</p>;
+  if (allRows.length === 0) {
+    return <p className="py-6 text-center text-sm text-muted-foreground">No items on the stash pages of this file.</p>;
+  }
+  if (rows.length === 0) {
+    return (
+      <OnlyCoupons
+        count={hiddenCoupons}
+        onShow={() => {
+          setIgnoreCoupons(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -185,7 +209,7 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
           hint="Search the name, base, item type (belt, ring…), quality, code, socketed items and stat text;"
           help={STASH_SEARCH_HELP}
         />
-        <ItemFilters rows={rows} state={state} update={update} />
+        <ItemFilters rows={rows} state={state} update={update} onIgnoreCoupons={setIgnoreCoupons} />
         <StatConditions
           conditions={state.stats}
           options={options}
@@ -201,7 +225,7 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
       </FilterPanel>
 
       <ResultsBar
-        summary={`Showing ${String(shown.length)} of ${String(rows.length)} items`}
+        summary={itemsResultSummary(shown.length, rows.length, hiddenCoupons)}
         actions={
           <SortSelect
             id="stash-items-sort"
@@ -251,6 +275,24 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
   );
 }
 
+/** The page of a stash whose items are all coupons, while they are ignored */
+function OnlyCoupons({ count, onShow }: { readonly count: number; readonly onShow: () => void }) {
+  return (
+    <div className="space-y-1 py-6 text-center text-sm text-muted-foreground">
+      <p>
+        Your stash pages hold only coupons ({count}), and this page ignores them by default. See them on the{' '}
+        <Link to={COUPONS_PAGE} className={LINK_CLASS}>
+          Ancient Coupons
+        </Link>{' '}
+        page, or list them here.
+      </p>
+      <button type="button" className={LINK_CLASS} onClick={onShow}>
+        List the coupons
+      </button>
+    </div>
+  );
+}
+
 function ItemsSummaryChips({ stash, catalog }: { readonly stash: StashFile; readonly catalog: StashCatalog }) {
   const summary = itemsSummary(stash, catalog.bundle);
   return (
@@ -296,13 +338,15 @@ function pillOptions<K extends string>(
 const TIER_LABELS: Readonly<Record<Exclude<TierFilter, 'all'>, string>> = { ...BASE_TIER_LABELS, none: 'No tier' };
 
 interface ItemFiltersProps {
+  /** The listed rows (without the coupons while they are ignored) */
   readonly rows: readonly ItemRow[];
   readonly state: ItemsState;
   readonly update: UrlState<ItemsState>['update'];
+  readonly onIgnoreCoupons: (ignore: boolean) => void;
 }
 
-/** Quality, category, tier, ethereal, sockets, page and the details switch */
-function ItemFilters({ rows, state, update }: ItemFiltersProps) {
+/** Quality, category, tier, ethereal, sockets, page, the details switch and the coupons switch */
+function ItemFilters({ rows, state, update, onIgnoreCoupons }: ItemFiltersProps) {
   const all: PillOption = { value: ALL, label: 'All', count: rows.length };
   const qualityOptions = [
     all,
@@ -340,7 +384,7 @@ function ItemFilters({ rows, state, update }: ItemFiltersProps) {
   const socketOptions = SOCKET_FILTERS.map((value) => ({
     value,
     label: SOCKET_LABELS[value],
-    count: filterItemRows(rows, { ...DEFAULT_ITEMS_STATE, sockets: value }).length,
+    count: filterItemRows(rows, { ...DEFAULT_ITEMS_STATE, ignoreCoupons: state.ignoreCoupons, sockets: value }).length,
   }));
 
   return (
@@ -415,6 +459,25 @@ function ItemFilters({ rows, state, update }: ItemFiltersProps) {
           />
           <span className="text-sm">Show all item information</span>
         </label>
+        <div className="flex h-8 items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-2">
+            <Checkbox
+              checked={state.ignoreCoupons}
+              onCheckedChange={(checked) => {
+                onIgnoreCoupons(checked === true);
+              }}
+              aria-describedby="stash-items-coupons-hint"
+            />
+            <span className="text-sm">Ignore coupons</span>
+          </label>
+          <span id="stash-items-coupons-hint" className="text-xs text-muted-foreground">
+            (they have their own{' '}
+            <Link to={COUPONS_PAGE} className={LINK_CLASS}>
+              Ancient Coupons
+            </Link>{' '}
+            page)
+          </span>
+        </div>
       </div>
     </>
   );
