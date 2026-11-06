@@ -13,8 +13,8 @@ dodge and every other stat ESR items carry. Owner decisions (2026-11-06):
 - about 40–60 key kinds get hand-checked explanations; every other stat gets a generated entry.
 
 Status: **Phase 1 (data) and Phase 2 (page, content, calculators) done**: `public/game-data/modifiers.json`, the
-calculator formulas, the hand-checked explanations in `content/modifiers/` and the `/modifiers` page. The modifier peek
-and the guide additions come next.
+calculator formulas, the hand-checked explanations in `content/modifiers/` and the `/modifiers` page. **Phase 3 (the
+modifier peek on item lines) done**, see "Modifier peek" below.
 
 ## Data: `modifiers.json`
 
@@ -318,6 +318,87 @@ bundle's order. A generated title that is only a stat name or a stray word ("to"
   in the URL.
 
 Mobile: one column at 375 px without horizontal page scroll; wide tables scroll inside their box.
+
+## Modifier peek
+
+A whole item line that is a modifier ("+20% Deadly Strike", "+8% Physical Damage Leeched as Life", "Fire Resist +30%",
+"-15% to Enemy Fire Resist", "Cannot Be Frozen") is a link to `/modifiers?kind=<entry key>` with a peek: the entry's
+title and main source badge, its one-line `summary:`, one or two ESR numbers and "Open in Modifiers →". It reuses the
+skill peek's machinery ([SKILLS.md](./SKILLS.md) "Skill peek on item lines"): the same line renderer (`SkillRefText`),
+the same delegated layer and popover (`data-mod-ref` next to `data-skill-ref`), the same rules (not tab stops,
+`aria-haspopup="dialog"`, hover / focus / first tap opens it, a click or a second tap follows it, modifier-key clicks
+left to the browser, in-form lines only peek and the card's link opens a new tab, no peek after a navigation). A line
+whose skill name links (skill templates) is the skill's; a line is never both. The underline is fainter than a skill
+name's (dotted, `decoration-current/25`, stronger on hover): most lines get one.
+
+**Which lines**: only entries with something to tell: the hand-written explanations and the reviewed key kinds (the
+"Key modifiers" view, 50 entries; `replenish-life` and `attribute-percent` have no summary and say so). Generated kinds
+("+20 to Strength", "+N Defense", Enhanced Defense) and technical stats stay plain text.
+
+**Templates** (`utils/modifierRefsBuild.ts`, at build time): every display string of those entries' stats (`text`,
+`textNeg`, the group string `group`; with and without `text2`, e.g. "(Based on Character Level)") becomes a canonical
+whole line: lower case, colour codes and footnote `*` marks dropped, every number (`15`, `+15`, `-(5 to 8)`,
+`(10 to 20)`, `10-12`, `1.5`) → `#`. Fixed strings of descfuncs 1–14 also get the value before (descval 1: "+3 Life on
+Striking") or after it (descval 2: "Freezes target +5"); descfunc 13 / 14 lines name a class or skill tab, so those parts
+are wildcards ("+2 to Druid Skill Levels", "+1 to Warlock Skills", "+1 to Summoning Skills (Necromancer Only)"), as is
+Reanimate's monster. `EXTRA_TEMPLATES` adds the lines the game prints from a property ("+N% Enhanced Damage"). The skill
+templates (descfunc 15 / 16 / 24 / 27 / 28) are left to the skill peek. A key several entries claim goes to the one with
+the most stats behind it ("+N% to Spell Damage" → elemental-mastery, 4 of 6; "+N% Total All Resists" → resists); a tie
+is left out ("+N% to All Speeds", one stat each of IAS / FRW / FHR / FBR / FCR). At run time
+(`utils/modifierRefs.ts` `findModifierRef`) a line is canonicalised the same way and looked up in a `Map` (the four
+wildcard keys are regexes tried after a miss): ~0.9 µs per line. Prose ("Gain 3% Maximum Damage for every 1% Physical
+Damage Leeched as Life") never equals a whole template.
+
+**Numbers** (`utils/modifierPeek.ts` `peekNumbers`, from the facts, for the line's value: a roll's maximum, none for
+per-level lines):
+
+| Entry                           | Peek number                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| life-leech / mana-leech         | the line's leech in Nightmare and Hell (`effectiveLeech` engine value)                         |
+| magic-find                      | the line alone as unique / set / rare MF (`effectiveMagicFind`, Vanilla badge: the curve)      |
+| crushing-blow                   | the share of current life vs normal monsters, uniques and act bosses                           |
+| deadly-strike / critical-damage | the critical multiplier (×2; Deadly Strike Damage: ×2 → ×(200 + N) / 100)                      |
+| fcr / dodge / block / absorb    | ESR's FCR cap (500, vanilla 200) / the 75% dodge caps / the 75% block cap / the 40% absorb cap |
+| resists / max-resists / phys.   | the Nightmare and Hell penalty, the 75% / 95% caps / the 95% ceiling / the 50% cap             |
+| attack-rating / target-defense  | 50% hit chance at 5× the target's defense (vanilla 1×)                                         |
+| freeze                          | the freeze length divisors (÷2 Nightmare, ÷4 Hell)                                             |
+
+A number's badge shows only when its source differs from the title's (the engine constants: "Vanilla D2"). The title's
+badge is the source kind the entry's body tags name most (ties: the more ESR-specific), "ESR files" for the two key
+kinds without text.
+
+**Data** (`src/features/modifiers/data/modifierRefs.json`, 21 KB raw / 5.9 KB gzip): the entries (key, title,
+category, summary, source), 136 templates, 4 wildcard patterns and the 17 facts of `PEEK_FACT_KEYS`. Written by
+`npm run modifiers:refs` (`scripts/generate-modifier-refs.ts`, from the committed `public/game-data/modifiers.json` and
+`content/modifiers/modifiers.md`; also run by `game-data:generate` and `game-data:update`, checked by `game-data:check`
+with `--check`); `modifierRefs.test.ts` fails when it is stale (run `npm run modifiers:refs` after replacing
+modifiers.md). It is a separate chunk (dynamic `import()` of the JSON): the first `SkillRefText` starts loading it on
+idle like skilldetails.json (`hooks/useModifierRefIndex.ts`), so neither modifiers.json (50 KB gzip) nor the page's
+content chunk (55 KB gzip) loads for the peek. The card (`components/ModifierPeekCard.tsx`, 2.3 KB gzip) is its own
+lazy chunk inside the shared popover host.
+
+**Coverage** (ESR 3.2.24; lines that are not skill links): runewords 2,000 of 3,939 lines, uniques 4,848 of 9,763,
+mythicals 208 of 415, ascendancies 110 of 226, gemwords 324 + 8,420 random-pool lines, socketables 605 of 958, affixes
+1,270 of 3,092, sets 1,117 of 2,404 (items, partial and set bonuses), enhance / cube outputs 839 of 2,270. The unlinked
+lines with a modifier word are generated kinds (Enhanced Defense 1,008, Defense 559, "+24% Base Attack Speed"), the
+"+N to Curses (Necromancer Only)" tab line (no "Skills" in it), unresolved skill lines ("Lower Resist", "Amplify Damage"
+are the skill peek's) and prose. Of 262 distinct prose lines that name a modifier (sentences with "you", "gain",
+"for every", "per", "while" …) none is linked; `modifierRefs.integration.test.ts` pins that and the coverage per page.
+
+## Guide
+
+The guide ([GUIDE.md](./GUIDE.md)) reads `modifiers.json` at build time:
+
+- **Glossary**: 20 combat terms in `content/guide/_glossary.yml` (Deadly Strike, Crushing Blow, Leech, Resistance
+  penalty, Prime evil …) carry `link: page:/modifiers?kind=<kind key>`, shown as "Modifier details" in the glossary
+  list and the term peek. Their numbers are `{fact:<fact key>[:<difficulty or field>]}` values filled from `facts`, so
+  they follow the game data.
+- **Links**: every `page:/modifiers?kind=…` link (notes and glossary) must name a `kinds` key, or the guide build fails.
+  A kind key resolves to the entry that explains it (`resolveEntryKey`), e.g. `resist-fire` → the resists entry.
+- **Penalties table**: `::difficulty-penalties` (hell-survival note) also shows the leech divisors, player and summon
+  damage to prime evils, mercenary damage to bosses and the freeze, chill and AI-curse divisors. It reads
+  difficultylevels.txt from the ESR clone like the rest of the guide's tables (the same columns as the
+  `difficulty.*` facts).
 
 ## ESR updates
 

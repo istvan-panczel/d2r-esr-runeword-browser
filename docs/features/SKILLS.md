@@ -443,15 +443,20 @@ Damage Aura, Conduit / Conduit Proc, Holy Bolt / Holy Bolt Weapon Damage, Empowe
 
 **Data**: the first `SkillRefText` that renders starts loading skilldetails.json on idle (`requestIdleCallback`,
 3 s timeout; 1 s timer without it), cached for the page's lifetime (`hooks/useSkillRefIndex.ts`); lines render as plain
-text until then and after a failed load. The popover (Radix Popover, floating-ui), the card, skillcalc.json and the
-calculator load only with the first peek (`SkillPeekHost` with `SkillPeekCard` is a lazy chunk; the app shell keeps
-only the delegation hook). `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
+text until then and after a failed load. The popover (Radix Popover, floating-ui) loads with the first peek, the card,
+skillcalc.json and the calculator with the first skill peek (`SkillPeekHost` and `SkillPeekCard` are lazy chunks; the
+app shell keeps only the delegation hook). `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
 calculator); it copies their route, params and default / max level, and the test checks the copies. Matching costs ~1 µs
 per line (32k fixture lines in ~22 ms).
 
-**One popover**: `SkillPeekLayer` (mounted once in `AppLayout` around the routed page) delegates pointer / focus / click
-events from anchors marked `data-skill-ref` (the reference as JSON, `utils/skillRefData.ts`) and renders one shared
-`PeekPopover` (`hooks/useSkillRefPeek.ts`, the stash table's useItemPeek pattern) through the lazy `SkillPeekHost`.
+**One popover, shared with the modifier peek**: `SkillPeekLayer` (mounted once in `AppLayout` around the routed page)
+delegates pointer / focus / click events from anchors marked `data-skill-ref` (the reference as JSON,
+`utils/skillRefData.ts`) or `data-mod-ref` (a modifier line, `features/modifiers/utils/modifierRefData.ts`; a `PeekRef`
+union `{ type: 'skill' | 'modifier', ref }`) and renders one shared `PeekPopover` (`hooks/useSkillRefPeek.ts`, the
+stash table's useItemPeek pattern) through the lazy `SkillPeekHost`, which lazy-loads `SkillPeekCard` or
+`ModifierPeekCard`. `SkillRefText` renders both: a line whose skill name resolves links the name; otherwise a whole line
+that is a modifier template links the line (fainter underline). Everything below applies to both; see
+[MODIFIERS.md](./MODIFIERS.md) "Modifier peek".
 Anchors inside another popover (the stash table's item peek) keep only their link. Inside a `<form>` (the build editor)
 a click, tap or Enter opens the peek instead of navigating, so edits are not lost, and the peek's "Open in Skills"
 link opens a new tab (`target="_blank"`). Ctrl / Cmd / Shift / Alt clicks and other mouse buttons are never
@@ -502,10 +507,11 @@ src/features/skills/
   hooks/useMythicalNames.ts        HTM mythical names from IndexedDB (item links)
   hooks/useSkillCalc.ts            lazy skillcalc.json + index (cached for the page's lifetime)
   hooks/useSkillRefIndex.ts        skill names for item lines (skilldetails.json on idle, cached)
-  hooks/useSkillRefPeek.ts         the delegated peek of skill names in item lines
-  components/SkillRefText.tsx      an item line with its skill name linked (data-skill-ref)
+  hooks/useSkillRefPeek.ts         the delegated peek of skill names and modifier lines in item lines (PeekRef)
+  components/SkillRefText.tsx      an item line with its skill name (data-skill-ref) or the whole modifier line
+                                   (data-mod-ref) linked
   components/SkillPeekLayer.tsx    app-shell wrapper: delegation, lazy-loads the popover host with the first peek
-  components/SkillPeekHost.tsx     the one shared PeekPopover (lazy chunk: Radix Popover + the card)
+  components/SkillPeekHost.tsx     the one shared PeekPopover (lazy chunk: Radix Popover; lazy skill / modifier card)
   components/SkillPeekCard.tsx     the peek's content (with the calculator)
   utils/skills.ts                  view model, URL state, search, selection marks, grant texts, item links
   utils/skillLevels.ts             calculator state: lvl / clvl / syn params, synergy points, table levels and labels,

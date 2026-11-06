@@ -1,21 +1,37 @@
 import { useEffect, useRef, useState, type FocusEvent, type MouseEvent, type PointerEvent } from 'react';
 import { useHoverPopover } from '@/components/useHoverPopover';
+import { decodeModifierRef, MODIFIER_REF_SELECTOR, type ModifierRef } from '@/features/modifiers/utils/modifierRefData';
 import { decodeSkillRef, SKILL_REF_SELECTOR, type SkillRef } from '../utils/skillRefData';
 
 /** Another popover's content (the stash table's item peek): skill names in there keep only their link */
 const POPPER_CONTENT = '[data-radix-popper-content-wrapper]';
+/** Skill names (`data-skill-ref`) and modifier lines (`data-mod-ref`); a line is one or the other, never both */
+const PEEK_SELECTOR = `${SKILL_REF_SELECTOR},${MODIFIER_REF_SELECTOR}`;
 
-/** The skill name anchor under an event target, outside other popovers */
+/** What a peek shows: a skill name's skill or a modifier line's /modifiers entry */
+export type PeekRef = { readonly type: 'skill'; readonly ref: SkillRef } | { readonly type: 'modifier'; readonly ref: ModifierRef };
+
+/** The skill name or modifier line anchor under an event target, outside other popovers */
 function anchorOf(target: EventTarget | null): HTMLElement | null {
   if (!(target instanceof Element)) return null;
-  const anchor = target.closest(SKILL_REF_SELECTOR);
+  const anchor = target.closest(PEEK_SELECTOR);
   if (!(anchor instanceof HTMLElement) || anchor.closest(POPPER_CONTENT) !== null) return null;
   return anchor;
 }
 
+/** The reference an anchor carries; null when its attribute does not decode */
+function decodeAnchor(anchor: HTMLElement): PeekRef | null {
+  if (anchor.dataset.skillRef !== undefined) {
+    const ref = decodeSkillRef(anchor.dataset.skillRef);
+    return ref === null ? null : { type: 'skill', ref };
+  }
+  const ref = decodeModifierRef(anchor.dataset.modRef);
+  return ref === null ? null : { type: 'modifier', ref };
+}
+
 /** The reference the peek shows, where its name is */
 interface PeekTarget {
-  readonly ref: SkillRef;
+  readonly ref: PeekRef;
   /** The name sits in a form (the build editor) */
   readonly inForm: boolean;
   /** The page (path + query) the name was on */
@@ -28,8 +44,8 @@ function isSpecialClick(event: MouseEvent<HTMLElement>): boolean {
 }
 
 /**
- * One hover / focus / tap peek for every skill name in item lines (`SkillRefText` anchors carry `data-skill-ref`), by
- * event delegation on a wrapper around the page (like the stash table's useItemPeek). Spread `wrapperProps` on the
+ * One hover / focus / tap peek for every skill name and modifier line in item lines (`SkillRefText` anchors carry
+ * `data-skill-ref` or `data-mod-ref`), by event delegation on a wrapper around the page (like the stash table's useItemPeek). Spread `wrapperProps` on the
  * wrapper and render one `PeekPopover` with `peek` and `peek.anchorRef`, showing `shown` (null when nothing was picked
  * on the current `page`: a peek never outlives the page its name is on).
  *
@@ -58,7 +74,7 @@ export function useSkillRefPeek(page: string) {
 
   /** Shows the anchor's reference; false when its attribute does not decode */
   const select = (anchor: HTMLElement): boolean => {
-    const ref = decodeSkillRef(anchor.dataset.skillRef);
+    const ref = decodeAnchor(anchor);
     if (ref === null) return false;
     // A peek left open on the previous page: closed, so this one opens with the usual delay
     if (target !== null && target.page !== page) peek.setOpen(false);

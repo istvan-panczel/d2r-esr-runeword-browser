@@ -90,8 +90,11 @@ ESR removed, an unknown item event function, a missing or changed config key, or
 its value. Expected at 3.2.24: one, `crushing-blow.toml unique = 25 gives 6.25 % … comment says "50 -> 12.5 %"` (the
 value wins; when ESR fixes either side the warning disappears, say which). A changed `attack-rating.toml` table or curve
 must still pass `modifierMath.test.ts` (it reproduces the table). data-review: in the `modifiers.json` entry diff, list
-changed facts with old → new values and the kinds whose stats or item counts changed a lot. See
-`docs/features/MODIFIERS.md`.
+changed facts with old → new values and the kinds whose stats or item counts changed a lot. The modifier peek's
+templates (`src/features/modifiers/data/modifierRefs.json`) regenerate from modifiers.json and modifiers.md with
+`game-data:update` / `npm run modifiers:refs`; `modifierRefs.test.ts` fails when they are stale, and
+`modifierRefs.integration.test.ts` when an ESR rewording drops a page's linked lines below its bound or links prose (a
+new string for a key kind: check the "Modifier peek" coverage). See `docs/features/MODIFIERS.md`.
 
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the

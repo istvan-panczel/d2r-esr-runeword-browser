@@ -186,6 +186,8 @@ function main(): void {
     }
     // Skill icons need only the clone; their keys come from the fresh skilldetails.json
     steps.push({ name: 'skill icons', ok: run(process.execPath, ['scripts/generate-skill-icons.ts', '--esr', esrDir]) });
+    // The modifier peek's templates come from the fresh modifiers.json
+    steps.push({ name: 'modifier refs', ok: run(process.execPath, ['scripts/generate-modifier-refs.ts']) });
   }
   steps.push({ name: 'generate', ok: generated });
   const after = readJson(MANIFEST) as ManifestSnapshot | null;
@@ -216,6 +218,7 @@ function main(): void {
     steps.push({ name: 'check', ok: run(process.execPath, ['scripts/generate-game-data.ts', '--check', '--esr', esrDir]) });
     steps.push({ name: 'icons:check', ok: run(process.execPath, ['scripts/generate-item-icons.ts', '--check', ...iconArgs]) });
     steps.push({ name: 'skill-icons:check', ok: run(process.execPath, ['scripts/generate-skill-icons.ts', '--check', '--esr', esrDir]) });
+    steps.push({ name: 'modifier-refs:check', ok: run(process.execPath, ['scripts/generate-modifier-refs.ts', '--check']) });
   } else {
     console.log('Skipped: generation failed.');
   }

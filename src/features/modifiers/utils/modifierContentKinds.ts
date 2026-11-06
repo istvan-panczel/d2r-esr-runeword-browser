@@ -5,7 +5,7 @@
  * here, every kind named here exists, no kind is claimed twice and every key kind has a text or is in
  * KEY_KINDS_WITHOUT_TEXT. See docs/features/MODIFIERS.md "Content".
  */
-import type { ModifierCategory } from '@/features/game-data/engine/schema';
+import type { ModifierCategory } from '../../game-data/engine/schema.ts';
 
 export interface ContentKinds {
   /** modifiers.json kind keys the explanation covers; the first one gives the category unless `category` is set */
