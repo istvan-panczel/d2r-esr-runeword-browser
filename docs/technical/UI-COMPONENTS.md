@@ -117,7 +117,10 @@ PageShell            one centred width + the title row
   container of any kind (shadcn's `CardHeader` is one). `container-type: inline-size` leaves `position: fixed`
   (`ScrollToTopButton`, the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
   (Enhance outcomes, cube rows, materials) use CSS columns instead: `ROW_LIST_COLUMNS` in
-  `src/features/game-data/components/rowListColumns.ts`.
+  `src/features/game-data/components/rowListColumns.ts`. Those lists sit on the card surface, never on the bare page:
+  `LIST_CARD_CLASS` (same file) is the card; a Materials group or a cube family is one card with a
+  `LIST_CARD_HEADER_CLASS` header (title, count, links) and its sub-blocks (Gem, Rune…, a recipe shape) as
+  `LIST_CARD_SUBHEAD_CLASS` bands above their rows; an Enhance outcome list is a card on its own.
 - Screens that set their own frame: the home page (`max-w-5xl`), the guide note (`max-w-2xl`, `lg:max-w-7xl` in every
   mode: a reading column plus the graph aside), the guide map (`max-w-2xl`, from `lg` the setting via
   `PAGE_WIDE_LG_CLASS`) and the build detail with the player sidebar (Standard: breaks out of the container to a 1920 px

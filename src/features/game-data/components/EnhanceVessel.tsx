@@ -6,7 +6,7 @@ import type { EnhanceBundle } from '../engine/schema';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { VESSEL_COMPLETION, filterVesselRecipes, filterVesselTransforms, materialText } from '../utils/enhance';
 import { BonusLines, NoMatches, Pills } from './EnhanceParts';
-import { ROW_LIST_COLUMNS } from './rowListColumns';
+import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
 
 interface EnhanceVesselProps {
   readonly bundle: EnhanceBundle;
@@ -75,7 +75,7 @@ function VesselTierList({ bundle, tier, search }: { readonly bundle: EnhanceBund
       {recipes.length === 0 ? (
         <NoMatches />
       ) : (
-        <ul className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
+        <ul className={cn('divide-y', LIST_CARD_CLASS, ROW_LIST_COLUMNS)}>
           {recipes.map((recipe) => (
             <li
               key={`${recipe.materials.map(materialText).join('+')}|${recipe.lines.join('|')}`}
@@ -134,7 +134,7 @@ function VesselCompletion({ transforms, item, search }: VesselCompletionProps) {
       {shown.length === 0 ? (
         <NoMatches />
       ) : (
-        <ul className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
+        <ul className={cn('divide-y', LIST_CARD_CLASS, ROW_LIST_COLUMNS)}>
           {shown.map((transform) => (
             <li key={transform.output.code} className="flex flex-col gap-1 px-3 py-2 text-sm sm:flex-row sm:gap-4">
               <span className="text-muted-foreground sm:w-72 sm:shrink-0">{transform.materials.map(materialText).join(' + ')}</span>

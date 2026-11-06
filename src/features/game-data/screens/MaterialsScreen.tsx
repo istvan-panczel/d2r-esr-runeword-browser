@@ -4,7 +4,6 @@ import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
-import { SectionHeader } from '@/components/SectionHeader';
 import { ExactNameChip } from '@/core/components/ExactNameChip';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
@@ -15,7 +14,7 @@ import { EnhanceSearch, Pills } from '../components/EnhanceParts';
 import { GameDataError } from '../components/GameDataError';
 import { GameDataLoading } from '../components/GameDataLoading';
 import { MaterialRow } from '../components/MaterialRow';
-import { ROW_LIST_COLUMNS } from '../components/rowListColumns';
+import { LIST_CARD_CLASS, LIST_CARD_HEADER_CLASS, LIST_CARD_SUBHEAD_CLASS, ROW_LIST_COLUMNS } from '../components/rowListColumns';
 import { useGameData } from '../hooks/useGameData';
 import { formatCount } from '../utils/cube';
 import {
@@ -142,25 +141,32 @@ function MaterialsBrowser({ bundle }: { readonly bundle: MaterialsBundle }) {
           }}
         />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {shown.map((view) => (
-            <section key={view.group.code} aria-labelledby={`materials-${view.group.code}`} className="space-y-3">
-              <SectionHeader id={`materials-${view.group.code}`} title={view.group.label} count={formatCount(itemCount(view))} />
-              {view.blocks.map((block) => (
-                <div key={block.code} className="space-y-1">
-                  {view.blocks.length > 1 && <h3 className="px-1 text-sm font-medium text-muted-foreground">{block.label}</h3>}
-                  <ul className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
-                    {block.items.map((item) => (
-                      <MaterialRow
-                        key={item.code}
-                        item={item}
-                        familyLabel={familyLabel}
-                        notes={itemGuideNotes(item, notesIndex, knownNotes).map((slug) => ({ slug, title: titles.get(slug) ?? slug }))}
-                      />
-                    ))}
-                  </ul>
-                </div>
-              ))}
+            <section key={view.group.code} aria-labelledby={`materials-${view.group.code}`} className={LIST_CARD_CLASS}>
+              <header className={LIST_CARD_HEADER_CLASS}>
+                <h2 id={`materials-${view.group.code}`} className="flex items-baseline gap-2 text-lg font-semibold">
+                  <span>{view.group.label}</span>
+                  <span className="text-sm font-normal text-muted-foreground">{formatCount(itemCount(view))}</span>
+                </h2>
+              </header>
+              <div className="divide-y">
+                {view.blocks.map((block) => (
+                  <div key={block.code}>
+                    {view.blocks.length > 1 && <h3 className={LIST_CARD_SUBHEAD_CLASS}>{block.label}</h3>}
+                    <ul className={cn('divide-y', ROW_LIST_COLUMNS)}>
+                      {block.items.map((item) => (
+                        <MaterialRow
+                          key={item.code}
+                          item={item}
+                          familyLabel={familyLabel}
+                          notes={itemGuideNotes(item, notesIndex, knownNotes).map((slug) => ({ slug, title: titles.get(slug) ?? slug }))}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </section>
           ))}
         </div>

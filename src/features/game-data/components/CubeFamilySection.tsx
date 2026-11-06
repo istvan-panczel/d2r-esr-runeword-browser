@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import type { CubeMergedRow, CubeRecipe, CubeSection } from '../engine/schema';
 import { familyAnchor, formatCount, sectionDocsUrl, type CubeFamilyView, type CubeGroupView } from '../utils/cube';
 import { BonusLines } from './EnhanceParts';
-import { ROW_LIST_COLUMNS } from './rowListColumns';
+import { LIST_CARD_CLASS, LIST_CARD_HEADER_CLASS, LIST_CARD_SUBHEAD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
 
 const ROW_GRID = 'grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 px-3 py-2 text-sm break-words';
 
@@ -111,9 +111,9 @@ function GroupBlock({
 }) {
   const { group, rows, recipes } = view;
   return (
-    <div className="space-y-1">
+    <div>
       {showHeader && (
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 px-1">
+        <div className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-1', LIST_CARD_SUBHEAD_CLASS)}>
           <p className="text-xs font-medium text-muted-foreground" title="The recipe shape, from the cubemain.txt descriptions">
             {group.label}
           </p>
@@ -123,19 +123,19 @@ function GroupBlock({
         </div>
       )}
       {!showHeader && group.conditions.length > 0 && (
-        <div className="px-1">
+        <div className={LIST_CARD_SUBHEAD_CLASS}>
           <Conditions conditions={group.conditions} />
         </div>
       )}
       {expanded && recipes.length > 0 ? (
-        <ul className={cn('divide-y rounded-md border bg-muted/20', ROW_LIST_COLUMNS)}>
+        <ul className={cn('divide-y bg-muted/20', ROW_LIST_COLUMNS)}>
           {recipes.map((recipe) => (
             <RawRecipe key={recipe.id} recipe={recipe} />
           ))}
         </ul>
       ) : (
         rows.length > 0 && (
-          <ul className={cn('divide-y rounded-md border', ROW_LIST_COLUMNS)}>
+          <ul className={cn('divide-y', ROW_LIST_COLUMNS)}>
             {rows.map((row, i) => (
               <MergedRow key={`${String(i)}-${row.output}`} row={row} />
             ))}
@@ -170,8 +170,12 @@ export function CubeFamilySection({ view, section, searching, onFocus }: CubeFam
   const expanded = showAll || onlyRaw;
 
   return (
-    <section id={familyAnchor(family.id)} aria-labelledby={`${familyAnchor(family.id)}-title`} className="scroll-mt-20 space-y-2">
-      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+    <section
+      id={familyAnchor(family.id)}
+      aria-labelledby={`${familyAnchor(family.id)}-title`}
+      className={cn('scroll-mt-20', LIST_CARD_CLASS)}
+    >
+      <header className={LIST_CARD_HEADER_CLASS}>
         <h3 id={`${familyAnchor(family.id)}-title`} className="text-base font-semibold">
           <button
             type="button"
@@ -191,22 +195,24 @@ export function CubeFamilySection({ view, section, searching, onFocus }: CubeFam
           {docs !== null && <DocsLink href={docs}>Official: {section.label}</DocsLink>}
         </div>
       </header>
-      <div className="space-y-3">
+      <div className="divide-y">
         {groups.map((group) => (
           // One group holding the whole family needs no header
           <GroupBlock key={group.group.id} view={group} showHeader={group.group.rowCount !== family.rowCount} expanded={expanded} />
         ))}
       </div>
       {family.raw && rawCount > 0 && !onlyRaw && (
-        <button
-          type="button"
-          className="text-xs font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
-          onClick={() => {
-            setShowAll(!showAll);
-          }}
-        >
-          {showAll ? 'Show the merged rows' : showAllLabel(rawCount, searching)}
-        </button>
+        <div className="border-t px-4 py-2">
+          <button
+            type="button"
+            className="text-xs font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+            onClick={() => {
+              setShowAll(!showAll);
+            }}
+          >
+            {showAll ? 'Show the merged rows' : showAllLabel(rawCount, searching)}
+          </button>
+        </div>
       )}
     </section>
   );
