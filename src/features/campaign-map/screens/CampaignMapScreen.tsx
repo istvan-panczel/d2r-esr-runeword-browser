@@ -23,7 +23,7 @@ import { MapLegend } from '../components/MapLegend';
 import { SectionNotes } from '../components/SectionNotes';
 import { useAreaPeek } from '../hooks/useAreaPeek';
 import { useItemNamesByCode } from '../hooks/useItemNamesByCode';
-import { usePanelScroll } from '../hooks/usePanelScroll';
+import { isWideScreen, usePanelScroll } from '../hooks/usePanelScroll';
 import { twinRepresentative } from '../utils/listGroups';
 import { SECTION_TAB_LABELS } from '../utils/sourceLabels';
 import {
@@ -90,7 +90,8 @@ function CampaignMapBrowser({ map, version }: CampaignMapBrowserProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const state = resolveCampaignMapState(readCampaignMapUrlState(searchParams), map);
   const itemNames = useItemNamesByCode();
-  const [highlightId, setHighlightId] = useState<number | null>(null);
+  // Arriving with an area in the URL (a link from another page, a shared link) shows it like a search hit
+  const [highlightId, setHighlightId] = useState<number | null>(() => state.area);
   const rootRef = useRef<HTMLDivElement>(null);
   const { panelRef, requestScroll } = usePanelScroll(state.area);
   const { peek, peekId, wrapperProps, close: closePeek } = useAreaPeek();
@@ -156,6 +157,16 @@ function CampaignMapBrowser({ map, version }: CampaignMapBrowserProps) {
     problemsLogged = true;
     console.warn(`[Campaign map] ${String(map.problems.length)} problem(s) in the curated data:`, map.problems);
   }, [map]);
+
+  // On arrival below `lg` the detail panel (above the list) is what to scroll to, not the list row. Once per mount.
+  const arrived = useRef(false);
+  useEffect(() => {
+    if (arrived.current) return;
+    arrived.current = true;
+    if (state.area === null || isWideScreen()) return;
+    scrollToHighlight.current = false;
+    panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   // Search hit / jump: scroll the area into view once the tab has rendered, then stop the pulse.
   useEffect(() => {

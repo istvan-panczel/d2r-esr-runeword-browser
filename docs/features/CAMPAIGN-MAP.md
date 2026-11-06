@@ -136,6 +136,13 @@ Plain game-file facts that need no label (the monster table, the waypoint chip) 
   and map zone; ranked exact, prefix, word prefix, substring, then by kind (area name first), then map order; one hit per
   area (its best text) and one per twin family, 12 at most. `/` anywhere focuses it. Picking a hit switches to the area's home tab, selects it,
   scrolls it into view and pulses it for 1.4 s (`highlightId`).
+- **Arriving with `?area=`** (a link from another page such as the Ascendancies orb table, or a shared link) does the
+  same once per mount: `highlightId` starts as the URL's area, so the map scrolls to it and pulses; below `lg` the
+  detail panel is scrolled to instead.
+- **Selected station**: an amber glow disc and a thick amber ring around the dot (amber like the search pulse), and its
+  label in a filled amber pill drawn last over the whole canvas (`SelectedLabel` in `canvas/Station.tsx`, fitted to
+  the rendered text with `getBBox`), so no other label or line covers it; on a dungeon stack the pill names the
+  selected level ("Hole Level 2"). The rest of the map is not dimmed (owner decision).
 - **Esc** and the panel's Close clear the selection and put focus back on the area's station or row (the search and
   popovers handle their own Esc first).
 - **Ghost stations** (an area drawn on another tab) jump there (`onJump`).

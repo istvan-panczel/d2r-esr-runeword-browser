@@ -3,6 +3,11 @@ import { useEffect, useRef } from 'react';
 /** Tailwind `lg`: the detail panel is a side column from here on */
 const WIDE_QUERY = '(min-width: 1024px)';
 
+/** True from `lg` up, where the detail panel is a side column (no panel scroll) */
+export function isWideScreen(): boolean {
+  return window.matchMedia(WIDE_QUERY).matches;
+}
+
 /**
  * Below `lg` the detail panel sits above the list: after a tap (`requestScroll`, then the selection changes) the panel
  * (`panelRef`) is scrolled into view. `requestScroll` returns whether a scroll is coming (false on a wide screen), so
@@ -18,7 +23,7 @@ export function usePanelScroll(selected: number | null) {
     if (selected !== null) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   const requestScroll = (): boolean => {
-    pending.current = !window.matchMedia(WIDE_QUERY).matches;
+    pending.current = !isWideScreen();
     return pending.current;
   };
   return { panelRef, requestScroll };

@@ -3,7 +3,7 @@ import { useHref } from 'react-router-dom';
 import { DOT_R, LABEL_CHAR_W, LABEL_LINE, REGION_CAPTION_DX, REGION_CAPTION_DY, regionCaptionBox } from '../engine/geometry';
 import type { CampaignMap, CampaignSection, CampaignSectionKey, MapStation } from '../engine/types';
 import { CanvasMarkers, EdgeLabel, EdgePath } from './canvas/EdgePath';
-import { Station } from './canvas/Station';
+import { SelectedLabel, Station } from './canvas/Station';
 
 export interface CampaignMapCanvasProps {
   map: CampaignMap;
@@ -65,6 +65,8 @@ export function CampaignMapCanvas({ map, section, selectedId, highlightId = null
   const isUnplaced = (station: MapStation) => station.ghostOf === undefined && station.ids.some((id) => unplaced.has(id));
   const frame = unplacedFrame(layout.stations.filter(isUnplaced));
   const touches = (from: number, to: number) => selectedId !== null && (from === selectedId || to === selectedId);
+  const selectedStation =
+    selectedId === null ? undefined : layout.stations.find((station) => station.ghostOf === undefined && station.ids.includes(selectedId));
 
   return (
     <div className="overflow-x-auto">
@@ -168,6 +170,13 @@ export function CampaignMapCanvas({ map, section, selectedId, highlightId = null
             );
           })}
         </g>
+        {/* The selected label last, over every other station and line */}
+        {selectedStation !== undefined && selectedId !== null && (
+          <SelectedLabel
+            station={selectedStation}
+            lines={selectedStation.dots.length > 1 && selectedStation.folded !== true ? [nameOf(selectedId)] : selectedStation.label.lines}
+          />
+        )}
       </svg>
     </div>
   );

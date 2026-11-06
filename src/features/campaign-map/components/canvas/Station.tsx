@@ -1,9 +1,18 @@
+import { useLayoutEffect, useRef } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { DOT_R, LABEL_FONT, LABEL_LINE, MEMBER_LABEL_DX, MEMBER_LABEL_FONT } from '../../engine/geometry';
+import { DOT_R, LABEL_FONT, LABEL_LINE, MEMBER_LABEL_DX, MEMBER_LABEL_FONT, labelSize } from '../../engine/geometry';
 import { memberLabel } from '../../engine/text';
 import type { CampaignArea, MapStation, Point } from '../../engine/types';
-import { HALO, TERRAIN_CLASS, TERRAIN_LABEL } from './canvasStyles';
+import {
+  HALO,
+  SELECTED_GLOW_CLASS,
+  SELECTED_PILL_CLASS,
+  SELECTED_PILL_TEXT_CLASS,
+  SELECTED_RING_CLASS,
+  TERRAIN_CLASS,
+  TERRAIN_LABEL,
+} from './canvasStyles';
 
 interface StationProps {
   readonly station: MapStation;
@@ -118,6 +127,8 @@ function Dot({ area, at, ghost, selected, highlighted }: DotProps) {
   );
   return (
     <>
+      {/* Selection glow, under everything else of the dot */}
+      {selected && <circle cx={at.x} cy={at.y} r={DOT_R + 15} className={SELECTED_GLOW_CLASS} />}
       {/* Larger invisible hit area */}
       <circle cx={at.x} cy={at.y} r={DOT_R + 7} fill="transparent" />
       {highlighted && (
@@ -130,7 +141,7 @@ function Dot({ area, at, ghost, selected, highlighted }: DotProps) {
           className="animate-ping stroke-amber-500 [transform-box:fill-box] [transform-origin:center]"
         />
       )}
-      {selected && <circle cx={at.x} cy={at.y} r={DOT_R + 6} fill="none" strokeWidth={2.5} className="stroke-primary" />}
+      {selected && <circle cx={at.x} cy={at.y} r={DOT_R + 6} fill="none" strokeWidth={3.5} className={SELECTED_RING_CLASS} />}
       <circle
         cx={at.x}
         cy={at.y}
@@ -272,6 +283,67 @@ export function Station({ station, areas, ghostTitle, unplaced, selectedId, high
       <g aria-hidden>
         <Label station={station} muted={unplaced} selected={selected} />
       </g>
+    </g>
+  );
+}
+
+/** Padding of the selected label's pill around its text, in canvas units */
+const PILL_PAD_X = 6;
+const PILL_PAD_Y = 3;
+
+/**
+ * The selected station's label in a filled pill, drawn once over the whole canvas (after every station) so no other
+ * label or line covers it; the station's own label stays underneath for links and screen readers. The pill starts from
+ * the estimated label size and is fitted to the rendered text before paint.
+ */
+interface SelectedLabelProps {
+  readonly station: MapStation;
+  /** The text, one entry per line: the station's label, or the selected level's full name on a dungeon stack */
+  readonly lines: readonly string[];
+}
+
+export function SelectedLabel({ station, lines }: SelectedLabelProps) {
+  const { label } = station;
+  const textRef = useRef<SVGTextElement>(null);
+  const pillRef = useRef<SVGRectElement>(null);
+  const estimate = labelSize(lines);
+  // Fit the pill to the real text (bold glyphs are wider than the layout's estimate); jsdom has no getBBox
+  useLayoutEffect(() => {
+    const text = textRef.current;
+    const pill = pillRef.current;
+    if (text === null || pill === null || typeof text.getBBox !== 'function') return;
+    const box = text.getBBox();
+    if (box.width === 0) return;
+    pill.setAttribute('x', String(box.x - PILL_PAD_X));
+    pill.setAttribute('width', String(box.width + PILL_PAD_X * 2));
+  });
+  return (
+    <g aria-hidden className="pointer-events-none">
+      <rect
+        ref={pillRef}
+        x={label.x - estimate.w / 2 - PILL_PAD_X}
+        y={label.y - PILL_PAD_Y}
+        width={estimate.w + PILL_PAD_X * 2}
+        height={estimate.h + PILL_PAD_Y}
+        rx={(LABEL_LINE + PILL_PAD_Y) / 2}
+        strokeWidth={1.25}
+        className={SELECTED_PILL_CLASS}
+      />
+      <text
+        ref={textRef}
+        x={label.x}
+        y={label.y}
+        textAnchor="middle"
+        dominantBaseline="hanging"
+        className={SELECTED_PILL_TEXT_CLASS}
+        style={{ fontSize: LABEL_FONT }}
+      >
+        {lines.map((line, i) => (
+          <tspan key={line} x={label.x} dy={i === 0 ? 0 : LABEL_LINE}>
+            {line}
+          </tspan>
+        ))}
+      </text>
     </g>
   );
 }

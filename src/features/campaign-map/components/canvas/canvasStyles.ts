@@ -67,3 +67,12 @@ export const markerId = (prefix: string, kind: string) => `${prefix}-${kind}`;
 
 /** Label halo: a card-coloured outline keeps text legible where it crosses an edge (same as the guide map) */
 export const HALO = 'stroke-card [paint-order:stroke] [stroke-linejoin:round] [stroke-width:3px]';
+
+/**
+ * The selected station: a soft glow disc and a thick ring around the dot, and its label in a filled pill. Amber, like
+ * the search-hit pulse, so "this one" reads the same way in both; the glow and pill keep it apart from dungeon dots.
+ */
+export const SELECTED_GLOW_CLASS = 'fill-amber-400/35 dark:fill-amber-400/25';
+export const SELECTED_RING_CLASS = 'stroke-amber-500 dark:stroke-amber-400';
+export const SELECTED_PILL_CLASS = 'fill-amber-400 stroke-amber-600 dark:fill-amber-400 dark:stroke-amber-300';
+export const SELECTED_PILL_TEXT_CLASS = 'fill-neutral-950 font-semibold';
