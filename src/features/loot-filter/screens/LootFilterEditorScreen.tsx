@@ -20,8 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import { ToolbarCard } from '@/components/ToolbarCard';
 import { cn } from '@/lib/utils';
-import { TAB_ACTIVE, TAB_BASE, TAB_INACTIVE } from '@/core/components/navTabClasses';
+import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import type { RootState } from '@/core/store';
 import { isSupabaseConfigured } from '@/core/supabase/config';
 import { RequestState } from '@/core/types';
@@ -647,7 +648,7 @@ export function LootFilterEditorScreen() {
 
   return (
     <div>
-      <div className="mb-4 space-y-3 border-b pb-3">
+      <div className="mb-4 space-y-3">
         <BackToLibrary />
         {ownerSandbox && (
           <div role="note" className="space-y-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
@@ -794,24 +795,26 @@ export function LootFilterEditorScreen() {
           <p className="text-xs text-muted-foreground">Saving and sharing are off in this build: filters stay in this browser.</p>
         )}
         {target.kind !== 'sandbox' && <UpdateBanner basedOn={basedOn} hasUnsavedChanges={hasUnsavedChanges} replaceable={!newDraft} />}
-        <div role="tablist" className="flex flex-wrap gap-1" aria-label="Filter editor tabs">
-          {EDITOR_TABS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              id={`loot-filter-tab-${item.id}`}
-              role="tab"
-              aria-selected={tab === item.id}
-              aria-controls="loot-filter-tab-panel"
-              className={cn(TAB_BASE, tab === item.id ? TAB_ACTIVE : TAB_INACTIVE)}
-              onClick={() => {
-                setTab(item.id);
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        <ToolbarCard>
+          <div role="tablist" className="flex flex-wrap gap-1" aria-label="Filter editor tabs">
+            {EDITOR_TABS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                id={`loot-filter-tab-${item.id}`}
+                role="tab"
+                aria-selected={tab === item.id}
+                aria-controls="loot-filter-tab-panel"
+                className={cn(SUBTAB_BASE, tab === item.id ? SUBTAB_ACTIVE : SUBTAB_INACTIVE)}
+                onClick={() => {
+                  setTab(item.id);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </ToolbarCard>
       </div>
       <div id="loot-filter-tab-panel" role="tabpanel" aria-labelledby={`loot-filter-tab-${tab}`}>
         {renderTab(tab)}

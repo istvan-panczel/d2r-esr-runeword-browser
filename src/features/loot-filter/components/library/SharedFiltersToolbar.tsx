@@ -21,7 +21,10 @@ const SORT_LABELS: Readonly<Record<SharedFilterSort, string>> = {
 
 const SORTS = Object.keys(SORT_LABELS) as SharedFilterSort[];
 
-/** Search by name (debounced, server-side) and the sort of the Shared tab, as the builds list has them. */
+/**
+ * Search by name (debounced, server-side) and the sort of the Shared tab, as the builds list has them. Rendered on the
+ * library's toolbar card next to the Shared / My filters switch (it grows to fill that row).
+ */
 export function SharedFiltersToolbar() {
   const dispatch = useDispatch();
   const searchText = useSelector(selectSharedFiltersSearchText);
@@ -46,7 +49,7 @@ export function SharedFiltersToolbar() {
   }, [localSearch, searchText, dispatch]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-1 flex-wrap items-center gap-2">
       <InputGroup className="max-w-xs flex-1">
         <InputGroupAddon>
           <Search className="size-4" />

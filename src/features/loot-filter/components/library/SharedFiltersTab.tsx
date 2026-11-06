@@ -20,14 +20,16 @@ import { BUNDLED_TEMPLATE_LIST } from '../../utils/template';
 import { BundledTemplateCard } from './BundledTemplateCard';
 import { SharedFilterCard } from './SharedFilterCard';
 import { SharedFilterCardSkeleton } from './SharedFilterCardSkeleton';
-import { SharedFiltersToolbar } from './SharedFiltersToolbar';
 
 const SKELETON_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6'];
 /** Three cards per row on Standard pages; Wide and Full pages add one per step of the `page` container (see PageShell). */
 const GRID =
   'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5 @10xl/page:grid-cols-6 @11xl/page:grid-cols-7';
 
-/** The Shared tab: the pinned bundled templates (Sully's, the example), then the public filters (search, sort, infinite scroll). */
+/**
+ * The Shared tab: the pinned bundled templates (Sully's, the example), then the public filters (infinite scroll). Their search
+ * and sort (`SharedFiltersToolbar`) sit on the library's toolbar card, next to the Shared / My filters switch.
+ */
 export function SharedFiltersTab() {
   const dispatch = useDispatch();
   const filters = useSelector(selectSharedFilters);
@@ -65,8 +67,6 @@ export function SharedFiltersTab() {
           />
         ))}
       </div>
-
-      <SharedFiltersToolbar />
 
       {error !== null && filters.length === 0 ? (
         <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-4 text-sm">

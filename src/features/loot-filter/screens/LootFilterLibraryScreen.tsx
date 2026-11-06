@@ -2,16 +2,21 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { Globe, UserRound } from 'lucide-react';
+import { ToolbarCard } from '@/components/ToolbarCard';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { RootState } from '@/core/store';
 import { selectAuthInitialized, selectAuthIsConfigured, selectAuthUserId } from '@/features/auth';
 import { MyFiltersTab } from '../components/library/MyFiltersTab';
 import { SharedFiltersTab } from '../components/library/SharedFiltersTab';
+import { SharedFiltersToolbar } from '../components/library/SharedFiltersToolbar';
 import { selectLibraryHydrated, selectVisibleDrafts } from '../store/selectors';
 import { resolveLibraryTab, type LibraryTab } from '../utils/library';
 
 const CODE = 'rounded bg-muted px-1 py-0.5 text-xs';
+/** The Shared / My filters switch on the toolbar card: the active one filled like the page sub-tabs (`SUBTAB_ACTIVE`). */
+const TRIGGER =
+  'px-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground';
 
 /** How long the library waits for the sign-in state before treating the visitor as signed out. */
 const AUTH_WAIT_MS = 4000;
@@ -54,9 +59,9 @@ export function LootFilterLibraryScreen() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3 border-b pb-4">
+      <div className="space-y-3">
         <h1 className="text-2xl font-bold">Loot Filters</h1>
-        <div className="max-w-3xl space-y-2 text-sm text-muted-foreground">
+        <div className="space-y-2 rounded-xl border bg-card p-4 text-sm text-muted-foreground shadow-sm [&>p]:max-w-4xl">
           {sharingEnabled ? (
             <p>
               Create and edit filters for ESR&apos;s loot filter plugin, and browse the ones other players share. A filter stays in this
@@ -104,16 +109,19 @@ export function LootFilterLibraryScreen() {
           }}
           className="gap-4"
         >
-          <TabsList>
-            <TabsTrigger value="shared" className="px-3">
-              <Globe />
-              Shared
-            </TabsTrigger>
-            <TabsTrigger value="mine" className="px-3">
-              <UserRound />
-              My filters
-            </TabsTrigger>
-          </TabsList>
+          <ToolbarCard className="flex flex-wrap items-center gap-x-4 gap-y-2 space-y-0">
+            <TabsList>
+              <TabsTrigger value="shared" className={TRIGGER}>
+                <Globe />
+                Shared
+              </TabsTrigger>
+              <TabsTrigger value="mine" className={TRIGGER}>
+                <UserRound />
+                My filters
+              </TabsTrigger>
+            </TabsList>
+            {tab === 'shared' && <SharedFiltersToolbar />}
+          </ToolbarCard>
           <TabsContent value="shared">
             <SharedFiltersTab />
           </TabsContent>
