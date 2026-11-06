@@ -3,7 +3,7 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
-import { TAB_ACTIVE, TAB_BASE, TAB_INACTIVE } from '@/core/components/navTabClasses';
+import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { cn } from '@/lib/utils';
@@ -62,23 +62,23 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
         Every outcome of corrupting, anointing and filling the Vessel of Souls, read from the cube recipes of the game files.
       </p>
 
-      <nav className="flex flex-wrap gap-1 border-b pb-2" aria-label="Enhance sections">
-        {ENHANCE_TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            aria-pressed={state.tab === tab}
-            onClick={() => {
-              update({ tab });
-            }}
-            className={cn(TAB_BASE, state.tab === tab ? TAB_ACTIVE : TAB_INACTIVE)}
-          >
-            {ENHANCE_TAB_LABELS[tab]}
-          </button>
-        ))}
-      </nav>
-
       <FilterPanel>
+        <nav className="flex flex-wrap gap-1" aria-label="Enhance sections">
+          {ENHANCE_TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              aria-pressed={state.tab === tab}
+              onClick={() => {
+                update({ tab });
+              }}
+              className={cn(SUBTAB_BASE, state.tab === tab ? SUBTAB_ACTIVE : SUBTAB_INACTIVE)}
+            >
+              {ENHANCE_TAB_LABELS[tab]}
+            </button>
+          ))}
+        </nav>
+
         <div className="flex flex-wrap items-end gap-4">
           <EnhanceSearch
             value={search}
