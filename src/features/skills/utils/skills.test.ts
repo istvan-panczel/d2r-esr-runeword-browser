@@ -91,24 +91,48 @@ describe('buildSkillsView', () => {
 });
 
 describe('URL state', () => {
+  const defaults = { level: 20, charLevel: 110, synergy: [] };
+
   it('defaults to the first class and follows a skill link to its class and tab', () => {
-    expect(readSkillsState(new URLSearchParams(), view)).toEqual({ view: 'sor', tab: 1, skill: null, search: '' });
-    expect(readSkillsState(new URLSearchParams('skill=Teleport'), view)).toEqual({ view: 'sor', tab: 2, skill: 'Teleport', search: '' });
+    expect(readSkillsState(new URLSearchParams(), view)).toEqual({ view: 'sor', tab: 1, skill: null, search: '', ...defaults });
+    expect(readSkillsState(new URLSearchParams('skill=Teleport'), view)).toEqual({
+      view: 'sor',
+      tab: 2,
+      skill: 'Teleport',
+      search: '',
+      ...defaults,
+    });
     expect(readSkillsState(new URLSearchParams('skill=Rift+Shot'), view).view).toBe(ITEM_SKILLS);
     expect(readSkillsState(new URLSearchParams('class=nope&skill=nope&tab=9'), view)).toEqual({
       view: 'sor',
       tab: 1,
       skill: null,
       search: '',
+      ...defaults,
     });
   });
 
   it('round-trips through the URL', () => {
-    const state = { view: 'war', tab: 3, skill: 'Fire Ball', search: 'fire' };
+    const state = { view: 'war', tab: 3, skill: 'Fire Ball', search: 'fire', ...defaults };
     expect(readSkillsState(encodeSkillsState(state), view)).toEqual(state);
-    expect(encodeSkillsState({ view: 'sor', tab: 1, skill: null, search: '' }).toString()).toBe('class=sor');
+    expect(encodeSkillsState({ view: 'sor', tab: 1, skill: null, search: '', ...defaults }).toString()).toBe('class=sor');
     expect(skillPageUrl({ id: 'Teleport', cls: 'sor', page: 2 })).toBe('/skills?class=sor&tab=2&skill=Teleport');
     expect(skillPageUrl({ id: 'Rift Shot', cls: null, page: null })).toBe('/skills?class=items&skill=Rift+Shot');
+  });
+
+  it('keeps the calculator level, character level and synergies, omitted at their defaults', () => {
+    const state = { view: 'sor', tab: 1, skill: 'Fire Ball', search: '', level: 30, charLevel: 90, synergy: [20, 0, 5] };
+    const params = encodeSkillsState(state);
+    expect(params.toString()).toBe('class=sor&skill=Fire+Ball&lvl=30&clvl=90&syn=20.0.5');
+    expect(readSkillsState(params, view)).toEqual(state);
+    expect(encodeSkillsState({ ...state, synergy: 'max' }).get('syn')).toBe('max');
+    expect(encodeSkillsState({ ...state, synergy: [0, 0] }).has('syn')).toBe(false);
+    expect(readSkillsState(new URLSearchParams('lvl=0&clvl=111&syn=x.1'), view)).toMatchObject(defaults);
+    expect(readSkillsState(new URLSearchParams('lvl=110&clvl=1&syn=max'), view)).toMatchObject({
+      level: 110,
+      charLevel: 1,
+      synergy: 'max',
+    });
   });
 });
 

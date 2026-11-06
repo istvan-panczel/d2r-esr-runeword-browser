@@ -6,6 +6,7 @@ import type { SkillDetail, SkillDetailsBundle, SkillGrant, SkillGrantItem, Skill
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
 import { normaliseItemName } from '@/core/utils/itemName';
 import { parseSearchTerms } from '@/core/utils/searchTerms';
+import { DEFAULT_CHAR_LEVEL, DEFAULT_SKILL_LEVEL, formatSynergyParam, parseLevelParam, parseSynergyParam } from './skillLevels';
 
 export const SKILLS_ROUTE = 'skills';
 /** `class` value of the item skills view */
@@ -13,7 +14,15 @@ export const ITEM_SKILLS = 'items';
 export const SKILL_ROWS = 6;
 export const SKILL_COLUMNS = 3;
 
-export const SKILLS_URL_PARAMS = { CLASS: 'class', TAB: 'tab', SKILL: 'skill', SEARCH: FILTER_URL_PARAM_KEYS.SEARCH } as const;
+export const SKILLS_URL_PARAMS = {
+  CLASS: 'class',
+  TAB: 'tab',
+  SKILL: 'skill',
+  SEARCH: FILTER_URL_PARAM_KEYS.SEARCH,
+  LEVEL: 'lvl',
+  CHAR_LEVEL: 'clvl',
+  SYNERGY: 'syn',
+} as const;
 
 export interface SkillsState {
   /** Class code or ITEM_SKILLS */
@@ -23,7 +32,19 @@ export interface SkillsState {
   /** Selected skill id, null when none */
   readonly skill: string | null;
   readonly search: string;
+  /** The calculator's skill level (1..110, default 20) */
+  readonly level: number;
+  /** The calculator's character level (1..110, default 110) */
+  readonly charLevel: number;
+  /** Synergy hard points: 'max', or points per synergy of the selected skill in its listed order */
+  readonly synergy: 'max' | readonly number[];
 }
+
+/** The calculator part of SkillsState at its defaults (omitted from the URL) */
+export const DEFAULT_LEVEL_STATE = { level: DEFAULT_SKILL_LEVEL, charLevel: DEFAULT_CHAR_LEVEL, synergy: [] } as const satisfies Pick<
+  SkillsState,
+  'level' | 'charLevel' | 'synergy'
+>;
 
 export interface SkillCell {
   readonly detail: SkillDetail;
@@ -87,7 +108,15 @@ export function readSkillsState(params: URLSearchParams, view: SkillsView): Skil
   const fallback = detail === undefined ? (view.classes[0]?.code ?? ITEM_SKILLS) : (detail.cls ?? ITEM_SKILLS);
   const tabParam = Number(params.get(SKILLS_URL_PARAMS.TAB));
   const tab = Number.isInteger(tabParam) && tabParam >= 1 && tabParam <= 3 ? tabParam : (detail?.page ?? 1);
-  return { view: known && classParam !== null ? classParam : fallback, tab, skill, search: params.get(SKILLS_URL_PARAMS.SEARCH) ?? '' };
+  return {
+    view: known && classParam !== null ? classParam : fallback,
+    tab,
+    skill,
+    search: params.get(SKILLS_URL_PARAMS.SEARCH) ?? '',
+    level: parseLevelParam(params.get(SKILLS_URL_PARAMS.LEVEL), DEFAULT_SKILL_LEVEL),
+    charLevel: parseLevelParam(params.get(SKILLS_URL_PARAMS.CHAR_LEVEL), DEFAULT_CHAR_LEVEL),
+    synergy: parseSynergyParam(params.get(SKILLS_URL_PARAMS.SYNERGY)),
+  };
 }
 
 export function encodeSkillsState(state: SkillsState): URLSearchParams {
@@ -96,12 +125,22 @@ export function encodeSkillsState(state: SkillsState): URLSearchParams {
   if (state.tab !== 1) params.set(SKILLS_URL_PARAMS.TAB, String(state.tab));
   if (state.skill !== null) params.set(SKILLS_URL_PARAMS.SKILL, state.skill);
   if (state.search !== '') params.set(SKILLS_URL_PARAMS.SEARCH, state.search);
+  if (state.level !== DEFAULT_SKILL_LEVEL) params.set(SKILLS_URL_PARAMS.LEVEL, String(state.level));
+  if (state.charLevel !== DEFAULT_CHAR_LEVEL) params.set(SKILLS_URL_PARAMS.CHAR_LEVEL, String(state.charLevel));
+  const synergy = formatSynergyParam(state.synergy);
+  if (synergy !== null) params.set(SKILLS_URL_PARAMS.SYNERGY, synergy);
   return params;
 }
 
 /** The page focused on one skill (class and tab follow from the skill) */
 export function skillPageUrl(detail: Pick<SkillDetail, 'id' | 'cls' | 'page'>): string {
-  const params = encodeSkillsState({ view: detail.cls ?? ITEM_SKILLS, tab: detail.page ?? 1, skill: detail.id, search: '' });
+  const params = encodeSkillsState({
+    view: detail.cls ?? ITEM_SKILLS,
+    tab: detail.page ?? 1,
+    skill: detail.id,
+    search: '',
+    ...DEFAULT_LEVEL_STATE,
+  });
   return `/${SKILLS_ROUTE}?${params.toString()}`;
 }
 
