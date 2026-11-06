@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import type { SkillDetail } from '@/features/game-data/engine/schema';
-import { LevelInput } from '@/features/skills/components/LevelInput';
+import { LevelStepper } from '@/features/skills/components/LevelInput';
 import { SkillClassTrees } from '@/features/skills/components/SkillClassTrees';
 import { SkillDetailCard } from '@/features/skills/components/SkillDetailCard';
 import type { SkillLevelsConfig } from '@/features/skills/components/SkillLevelValues';
@@ -101,7 +101,7 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
           <Label htmlFor={gearId} className="shrink-0 text-xs font-normal text-muted-foreground">
             +Skills from gear
           </Label>
-          <LevelInput id={gearId} value={shownGear} min={0} max={gearMax} onCommit={setGear} />
+          <LevelStepper id={gearId} label="skills from gear" value={shownGear} min={0} max={gearMax} onCommit={setGear} />
           <span className="text-xs text-muted-foreground">
             Level <span className="font-semibold text-foreground tabular-nums">{level}</span> = {points} hard point{points === 1 ? '' : 's'}{' '}
             + {shownGear}
@@ -109,7 +109,7 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
         </div>
       ) : undefined,
       note: learned ? undefined : (
-        <p className="text-xs text-muted-foreground">Not learned in this build: the level below is not tied to the build.</p>
+        <p className="text-xs text-muted-foreground">Not learned in this build: the level is not tied to the build.</p>
       ),
       synergyAction:
         synergy === null ? undefined : (

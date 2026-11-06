@@ -107,6 +107,14 @@ export function withSynergyPoints(inputs: readonly SynergyInput[], setting: Syne
   );
 }
 
+/**
+ * The Values list's columns: the quick levels, plus the selected level when it is not one of them (its column gives
+ * the current values and is not drawn as a quick level)
+ */
+export function valueTableLevels(level: number): readonly number[] {
+  return QUICK_LEVELS.includes(level) ? QUICK_LEVELS : [...QUICK_LEVELS, level];
+}
+
 /** The full table's levels: 1..20, then every 5th up to MAX_LEVEL, plus the selected level where it is missing */
 export function fullTableLevels(selected: number): number[] {
   const levels: number[] = [];
@@ -118,6 +126,15 @@ export function fullTableLevels(selected: number): number[] {
 /** Table rows that change with the level, without the synergy block (its bonuses are per synergy point, not per level) */
 export function varyingRows(rows: readonly SkillTableRow[]): SkillTableRow[] {
   return rows.filter((row) => row.varies && row.block !== 'synergy');
+}
+
+/**
+ * The rows with `varies` over the quick levels only (the first QUICK_LEVELS.length cells): the selected level's extra
+ * column (`valueTableLevels`) must not change which lines count as varying (the values list, the level bar, the
+ * "Granted by" headline lines)
+ */
+export function quickRows(rows: readonly SkillTableRow[]): SkillTableRow[] {
+  return rows.map((row) => ({ ...row, varies: new Set(row.cells.slice(0, QUICK_LEVELS.length).map((cell) => cell.text)).size > 1 }));
 }
 
 /** A table column / row label: the text before the number ("Fire Damage", "Radius"), else the text after it */
