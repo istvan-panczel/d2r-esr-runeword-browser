@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-04T22:34:23.846Z",
+  "generatedAt": "2026-11-06T13:37:08.275Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -76,6 +76,10 @@
     "itemtext": {
       "hash": "ec4bc6eb2769317685bdb64eae2baab13ef9f13880e772af10c9b3ed4df38a56",
       "bytes": 495103
+    },
+    "terrorzones": {
+      "hash": "856d432135a37296646e52d08c1a75147c52e14386ab7bac609774ea95bca6d8",
+      "bytes": 9099
     },
     "icons": {
       "hash": "104a73e60c06a6099e2b60e80f492ea6ea94955d9cba9deb93d5bc25c916bb08",
@@ -200,6 +204,10 @@
     "itemTextMagicSuffixes": 1597,
     "itemTextAutoAffixes": 126,
     "itemTextRareNames": 201,
+    "terrorZoneGroups": 22,
+    "terrorZoneAreas": 127,
+    "terrorZoneUnlistedLevels": 20,
+    "terrorZoneBoosts": 6,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,

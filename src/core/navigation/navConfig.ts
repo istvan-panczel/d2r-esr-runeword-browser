@@ -252,7 +252,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     kind: 'group',
     key: 'tools',
     label: 'Tools',
-    description: 'Pick a base, check affix rolls, plan enhancements and write loot filters',
+    description: 'Pick a base, check affix rolls, plan enhancements, write loot filters and track terror zones',
     items: [
       { key: 'best-base', to: '/game-data/best-base', label: 'Best Base', description: 'Best base for a runeword and character' },
       { key: 'affixes', to: '/game-data/affixes', label: 'Affixes', description: 'Affixes and what can roll on a base' },
@@ -260,6 +260,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
       { key: 'enhance', to: '/game-data/enhance', label: 'Enhance', description: 'Corruption, anointment and Vessel of Souls outcomes' },
       { key: 'cube', to: '/game-data/cube', label: 'Cube Recipes', description: 'Every cube recipe, grouped by family' },
       { key: 'loot-filters', to: '/loot-filters', label: 'Loot Filters', description: 'Build and test loot filters' },
+      {
+        key: 'terror-zones',
+        to: '/terror-zones',
+        label: 'Terror Zones',
+        description: 'Offline terror zone schedule: now, next and your watched zones',
+      },
     ],
   },
   {

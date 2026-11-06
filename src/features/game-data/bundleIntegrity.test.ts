@@ -32,6 +32,7 @@ import {
   type SourcesBundle,
   type StashBundle,
   type StashNamesBundle,
+  type TerrorZonesBundle,
   type TiersBundle,
   type TxtRunewordsBundle,
   type TypesBundle,
@@ -64,6 +65,7 @@ const areasText = readText('areas');
 const stashText = readText('stash');
 const stashNamesText = readText('stashnames');
 const itemTextText = readText('itemtext');
+const terrorZonesText = readText('terrorzones');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const { bases, automods: baseAutomods = [] } = JSON.parse(basesText) as BasesBundle;
@@ -83,6 +85,7 @@ const { areas } = JSON.parse(areasText) as AreasBundle;
 const stash = JSON.parse(stashText) as StashBundle;
 const stashNames = JSON.parse(stashNamesText) as StashNamesBundle;
 const itemText = JSON.parse(itemTextText) as ItemTextBundle;
+const terrorZones = JSON.parse(terrorZonesText) as TerrorZonesBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -109,6 +112,7 @@ describe('committed game-data bundles', () => {
       ['stash', stashText],
       ['stashnames', stashNamesText],
       ['itemtext', itemTextText],
+      ['terrorzones', terrorZonesText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -936,6 +940,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.stash)).toBe(stashText);
     expect(serializeBundle(generated.stashnames)).toBe(stashNamesText);
     expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
+    expect(serializeBundle(generated.terrorzones)).toBe(terrorZonesText);
   });
 
   it('numbers uniques, sets, stats and sounds like the *ID / *Index comment columns where those are consistent', () => {
@@ -1034,5 +1039,47 @@ describe('committed areas bundle', () => {
     expect(entries).toHaveLength(zones.size);
     expect(new Set(entries.map((area) => area.mapItem)).size).toBe(entries.length);
     expect(manifest.counts.areasWithMapItem).toBe(entries.length);
+  });
+});
+
+// --- terrorzones.json ----------------------------------------------------------------------------------------------
+
+describe('committed terrorzones bundle', () => {
+  const areaIds = new Map(areas.map((area) => [area.id, area.name]));
+
+  it('carries the manifest version, an exact 64-bit seed and a usable config', () => {
+    expect(Object.keys(terrorZones)).toEqual(['esrVersion', 'config', 'boosts', 'zones']);
+    expect(terrorZones.esrVersion).toBe(manifest.esrVersion);
+    expect(terrorZones.config.seed).toMatch(/^\d+$/);
+    expect(BigInt(terrorZones.config.seed) < 2n ** 64n).toBe(true);
+    expect(terrorZones.config.zoneMinutes).toBeGreaterThan(0);
+    expect(terrorZones.config.breakMinutes).toBeGreaterThanOrEqual(0);
+    expect(manifest.files.terrorzones?.bytes).toBeLessThan(20_000);
+  });
+
+  it('has a boost per game version and difficulty, inside the monster level bounds', () => {
+    expect(terrorZones.boosts.map((boost) => `${boost.version}:${String(boost.difficulty)}`)).toEqual([
+      'expansion:0',
+      'expansion:1',
+      'expansion:2',
+      'rotw:0',
+      'rotw:1',
+      'rotw:2',
+    ]);
+    for (const boost of terrorZones.boosts) expect(boost.minLevel).toBeLessThan(boost.maxLevel);
+    expect(manifest.counts.terrorZoneBoosts).toBe(terrorZones.boosts.length);
+  });
+
+  it('names every zone group, with unique ids and areas as areas.json names them', () => {
+    expect(new Set(terrorZones.zones.map((zone) => zone.id)).size).toBe(terrorZones.zones.length);
+    expect(manifest.counts.terrorZoneGroups).toBe(terrorZones.zones.length);
+    // ESR 3.2.24: 22 groups ESR-Zone01 … ESR-Zone22 in file order
+    expect(terrorZones.zones.length).toBeGreaterThanOrEqual(2);
+    for (const zone of terrorZones.zones) {
+      expect(zone.labels.length, zone.id).toBeGreaterThan(0);
+      expect(zone.areas.length, zone.id).toBeGreaterThan(0);
+      for (const area of zone.areas) expect(areaIds.get(area.id), `${zone.id} ${String(area.id)}`).toBe(area.name);
+    }
+    expect(manifest.counts.terrorZoneAreas).toBe(terrorZones.zones.reduce((sum, zone) => sum + zone.areas.length, 0));
   });
 });

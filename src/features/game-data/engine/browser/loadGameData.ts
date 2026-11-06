@@ -25,6 +25,7 @@ import {
   type SourcesBundle,
   type StashBundle,
   type StashNamesBundle,
+  type TerrorZonesBundle,
   type TiersBundle,
   type TxtRunewordsBundle,
   type TypesBundle,
@@ -49,6 +50,7 @@ export interface GameDataBundles {
   stash: StashBundle;
   stashnames: StashNamesBundle;
   itemtext: ItemTextBundle;
+  terrorzones: TerrorZonesBundle;
   icons: IconsBundle;
 }
 

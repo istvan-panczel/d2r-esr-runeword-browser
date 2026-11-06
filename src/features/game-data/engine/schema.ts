@@ -26,6 +26,7 @@ export type GameDataFile =
   | 'stash'
   | 'stashnames'
   | 'itemtext'
+  | 'terrorzones'
   | 'icons';
 
 export interface GameDataManifest {
@@ -1289,4 +1290,58 @@ export interface ItemTextBase {
   lvl?: number;
   /** `gemapplytype` when not 0: 1 = socketed gems give their helm column, 2 = their shield column */
   gem?: number;
+}
+
+/**
+ * terrorzones.json: the offline terror zone rotation of `data/hd/global/excel/desecratedzones.json` (the first config)
+ * with each zone group's names. The schedule itself is worked out in the browser (src/features/terror-zones/engine/).
+ * See docs/features/TERROR-ZONES.md.
+ */
+export interface TerrorZonesBundle {
+  /** `metadata.modVersion` of the clone (the schedule changes when ESR changes the file) */
+  esrVersion: string;
+  config: TerrorZoneConfig;
+  /** The terror boost per game version and difficulty (`game_difficulties` … `defaults`) */
+  boosts: TerrorZoneBoost[];
+  /** Zone groups in file order (the order is part of the rotation); duplicate ids left out like the game does */
+  zones: TerrorZoneGroup[];
+}
+
+export interface TerrorZoneConfig {
+  /** `start_time_utc` as Unix seconds */
+  start: number;
+  /** `end_time_utc` as Unix seconds; null when empty (never ends) */
+  end: number | null;
+  /** Unsigned 64-bit seed as a decimal string (above 2^53: a JSON number would round it and change every slot) */
+  seed: string;
+  zoneMinutes: number;
+  breakMinutes: number;
+}
+
+export type TerrorZoneGameVersion = 'expansion' | 'rotw';
+
+export interface TerrorZoneBoost {
+  /** `expansion` (Lord of Destruction) or `rotw` (Reign of the Warlock) */
+  version: TerrorZoneGameVersion;
+  /** 0 Normal, 1 Nightmare, 2 Hell */
+  difficulty: number;
+  /** `bound_incl_min` / `bound_incl_max`: the monster level range of a terrorized area */
+  minLevel: number;
+  maxLevel: number;
+  /** `boost_level`: monster levels added */
+  levelBoost: number;
+  /** `boost_experience_percent` */
+  xpPercent: number;
+}
+
+export interface TerrorZoneGroup {
+  /** The zone's `id` (ESR-Zone01 …) */
+  id: string;
+  /**
+   * The names the game's terror zone display lists: each level group once (levelgroups.txt `NameString`, "Chasm of
+   * Horrors (Tier 1)"), then the levels without a group (levels.txt `LevelName`), in level order
+   */
+  labels: string[];
+  /** The zone's levels that areas.json lists (same names as the Areas page and the campaign map), in file order */
+  areas: { id: number; name: string }[];
 }

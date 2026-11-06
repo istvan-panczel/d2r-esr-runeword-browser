@@ -137,6 +137,13 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     sets: byField('id'),
     runewords: byField('id', (entry) => `${field(entry, 'id')} (${field(entry, 'key')})`),
   },
+  // config (seed, start, durations) and the zone order drive every slot of the schedule: any change there moves all of them
+  'terrorzones.json': {
+    esrVersion: VALUE,
+    config: VALUE,
+    boosts: list((entry) => `${field(entry, 'version')}:${field(entry, 'difficulty')}`),
+    zones: list((entry, index) => `${String(index)}:${field(entry, 'id')}`),
+  },
   'tiers.json': { codes: MAP },
   'types.json': { types: byField('code', named('code')), classes: byField('code') },
 };

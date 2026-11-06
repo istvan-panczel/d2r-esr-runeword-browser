@@ -15,6 +15,7 @@ const routeScreenImports = [
   '@/features/guide',
   '@/features/loot-filter',
   '@/features/stash',
+  '@/features/terror-zones',
 ] as const;
 
 function readRouterSource(): string {

@@ -48,6 +48,18 @@ numbers and ids that matter.
 | `docs.old-version`                                   | files quoting the old version                                                                                                                                                                                                 | update them (below)                                                                                                                                                                          |
 | `self.coverage`, `self.commits`                      | data the review does not know / feature commits since the skill changed                                                                                                                                                       | SKILL step 8                                                                                                                                                                                 |
 
+**Terror zones**: `terrorzones.json` regenerates from `data/hd/global/excel/desecratedzones.json` (not a `.txt` table,
+so `esr:diff` lists it under "other files"; names from levels.txt / levelgroups.txt / areas.json). A changed seed, start,
+duration, zone list or zone order (`bundle.terrorzones.json` `config` / `zones`) changes **every** slot of the schedule:
+say so in the release summary, check the ESR ground truth in `src/features/terror-zones/engine/schedule.test.ts`
+(it fails then: re-check the zones in game and replace the dated ESR slots) and note that players' watched groups
+(`terrorZones.watched`, zone ids in localStorage) are ignored for ids that no longer exist. **More than one config** in
+desecratedzones.json makes `game-data:generate` fail (`terrorzones: … configs, the app schedules only one`): the app
+schedules only one. Ask the owner; supporting it means choosing the config covering each time (the game uses the first
+in file order with `start <= t < end`) in `src/features/terror-zones/engine/schedule.ts` and the bundle shape. An
+unreadable `start_time_utc` / `end_time_utc` (not `YYYY-MM-DD HH:MM:SS`) fails it too. See
+`docs/features/TERROR-ZONES.md`.
+
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
