@@ -162,7 +162,8 @@ export function parseSkillInfoPage(html: string): SkillInfoPage {
 /**
  * Page name → skills: every skill with that display name (case-insensitive; same-name variants all match), else the
  * skill whose skills.txt id is the name, else the NAME_ALIASES target's name. `classFirst`: when the name matches a
- * class skill, only the class skills (a hireling's Conduit is the Sorceress skill, not the item skill "Conduit Proc").
+ * class skill, only the class skills (a hireling's Conduit is shown as the Sorceress skill, which stands in for the
+ * hireling's own copy, hireling.txt "Conduit Hireling", not in the bundle; never the item skill "Conduit Proc").
  */
 export function createNameResolver(skills: readonly SkillDetail[]): (name: string, classFirst?: boolean) => SkillDetail[] {
   const byName = new Map<string, SkillDetail[]>();

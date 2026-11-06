@@ -378,7 +378,7 @@ function InfoPageText({ info, name, main }: { readonly info: SkillInfoText; read
       <ExternalLink href={`${ESR_SKILL_INFO_URL}#oskills`} className={INFO_LINK} iconClassName="size-3">
         ESR skill information page
       </ExternalLink>
-      {info.heading !== name && <> · {info.heading}</>}
+      {comparableName(info.heading) !== comparableName(name) && <> · {info.heading}</>}
     </>
   );
   const paragraphs = keyed(info.text, String).map(({ key, value }) => <p key={key}>{value}</p>);
@@ -396,6 +396,11 @@ function InfoPageText({ info, name, main }: { readonly info: SkillInfoText; read
       {paragraphs}
     </div>
   );
+}
+
+/** A heading that differs from the skill name only by case or spacing ("Super Nova" / Supernova) is not shown */
+function comparableName(name: string): string {
+  return name.replace(/\s+/g, '').toLowerCase();
 }
 
 /** "Used by mercenaries": the hirelings that use the skill (ESR's skill information page) */

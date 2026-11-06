@@ -115,7 +115,9 @@ https://easternsunresurrected.com/skill_information.htm, also tracked by `esr:di
   Lightning / Magic Spike Nova → "… Enhanced Spike Nova", Non-Elemental Spike Nova → Spike Nova, Trophy of Skills →
   Trophy of All Skills, and the Barbarian Offensive hireling's "Ancients' Presence" → Shout of the Ancients, which is
   what hireling.txt lists in that slot). Mercenary names prefer the class skills: a hireling's Conduit, Whirlpool and
-  Shout are the class skills, not the item skills "Conduit Proc", "Whirlpool Proc" and "Shout Aura" of the same name;
+  Shout are shown as the class skills, never the item skills "Conduit Proc", "Whirlpool Proc" and "Shout Aura" of the
+  same name. For Conduit and Whirlpool the class skill stands in for the hireling's own copy (hireling.txt "Conduit
+  Hireling" / "Whirlpool Hireling", separate skills.txt rows that are not in the bundle);
   item skills match when no class skill has the name (Fire / Cold / Lightning Damage Aura).
 - Only skills in skilldetails.json can carry the fields. A name that resolves to nothing is a manifest warning
   (`skilldetails: skill_information.htm Oskills "<heading>" names "<name>": no such skill`, or `…: a skills.txt

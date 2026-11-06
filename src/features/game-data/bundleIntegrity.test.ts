@@ -734,7 +734,8 @@ describe('committed game-data bundles', () => {
 
     expect(byId('Fanaticism')?.mercenaries).toContainEqual({ hireling: 'Desert Mercenary', subtype: 'Comb - Nightmare' });
     expect(byId('Shout of the Ancients')?.mercenaries).toEqual([{ hireling: 'Barbarian', subtype: 'Offensive' }]);
-    // A hireling's Conduit is the Sorceress skill, not the item skill of the same name
+    // A hireling's Conduit is shown as the Sorceress skill (standing in for hireling.txt's "Conduit Hireling", which
+    // is not in the bundle), never the item skill of the same name
     expect(byId('Conduit')?.mercenaries).toEqual([{ hireling: 'Eastern Sorcerer', subtype: 'Lightning' }]);
     expect(byId('Conduit Proc')?.mercenaries).toBeUndefined();
   });
