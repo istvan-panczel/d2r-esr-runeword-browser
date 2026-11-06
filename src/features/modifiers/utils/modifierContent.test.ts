@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { ModifiersBundle } from '@/features/game-data/engine/schema';
+import type { ModifierFactValue, ModifiersBundle } from '@/features/game-data/engine/schema';
 import { parseModifierContent, parseOpenQuestions, plainText, sourceLink, tokenizeInline } from './modifierContent';
 import { CONTENT_KINDS, KEY_KINDS_WITHOUT_TEXT, KIND_CALCULATORS, KIND_FACTS } from './modifierContentKinds';
 import { formatFactValue, resolvePlaceholder, resolveText } from './modifierPlaceholders';
@@ -105,7 +105,7 @@ describe('tokenizeInline', () => {
 });
 
 describe('sourceLink', () => {
-  it('links ESR paths, D2MOO files, the wiki and URLs; drops research files', () => {
+  it('links ESR paths, D2MOO files, the wiki and URLs', () => {
     expect(sourceLink('`excel/itemstatcost.txt` row 136')?.href).toBe(
       'https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/blob/main/Eastern_Sun_Resurrected.mpq/data/global/excel/itemstatcost.txt'
     );
@@ -123,7 +123,7 @@ describe('sourceLink', () => {
       text: 'maxroll.gg/d2/resources/attack-modifiers',
       href: 'https://maxroll.gg/d2/resources/attack-modifiers',
     });
-    expect(sourceLink('`scratchpad/modifiers/out/skills-stat-refs.txt`')).toBeNull();
+    expect(sourceLink('  ')).toBeNull();
     expect(sourceLink('guide note `dstoning-and-mapling`')).toEqual({ text: 'guide note dstoning-and-mapling', href: null });
   });
 });
@@ -161,6 +161,20 @@ describe('placeholders', () => {
     expect(resolvePlaceholder('derived.crushing-blow.unique', facts)?.text).toBe('6.25%');
     expect(resolvePlaceholder('derived.leech.life.20.hell', facts)?.text).toBe('0.125%');
     expect(resolvePlaceholder('derived.leech.mana.10.nightmare', facts)?.text).toBe('0.656%');
+    expect(resolvePlaceholder('derived.leech-threshold.life.hell', facts)?.text).toBe('2.34%');
+    expect(resolvePlaceholder('derived.critical-multiplier.50', facts)?.text).toBe('2.5');
+    expect(resolvePlaceholder('derived.magic-find.unique.300', facts)?.text).toBe('166');
+    expect(resolvePlaceholder('derived.fcr-rate.300', facts)?.text).toBe('185');
+    expect(resolvePlaceholder('derived.fcr-frames.16.400', facts)?.text).toBe('8');
+    expect(resolvePlaceholder('derived.fcr-max-useful', facts)?.text).toBe('480');
+    expect(resolvePlaceholder('derived.max-resist-headroom', facts)?.text).toBe('20');
+    expect(resolvePlaceholder('derived.attack-rating-table', facts)?.text).toMatch(/^1 → 0, 2 → 1, .* 104 → 100$/);
+    expect(resolvePlaceholder('engine.absorb.percent-cap', facts)?.text).toBe('40');
+    expect(resolvePlaceholder('vanilla.difficulty.*.lifeStealDivisor', facts)?.text).toBe('1 / 2 / 3');
+    expect(resolvePlaceholder('vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap', facts)?.text).toBe('200');
+    expect(resolvePlaceholder('vanilla.config.crushing-blow.targets.unique', facts)).toBeNull();
+    expect(resolvePlaceholder('derived.leech.blood.10.hell', facts)).toBeNull();
+    expect(resolvePlaceholder('derived.nothing', facts)).toBeNull();
     expect(resolvePlaceholder('difficulty.hell.noSuchColumn', facts)).toBeNull();
     expect(resolvePlaceholder('config.unknown.key', facts)).toBeNull();
   });
@@ -229,6 +243,38 @@ describe('committed modifier content', () => {
         .filter((key) => !factKeys.has(key))
     ).toEqual([]);
     expect(Object.keys(KIND_CALCULATORS).filter((key) => !kindKeys.has(key))).toEqual([]);
+  });
+
+  it('ships no local paths or internal research notes (both files are bundled whole into the page chunk)', () => {
+    for (const text of [contentText, questionsText]) expect(text).not.toMatch(/\/Users\/|scratchpad|research-|research notes|factcheck/i);
+  });
+
+  it('has a value comment only right after a placeholder (any other comment would render as text)', () => {
+    const orphans = [...contentText.matchAll(/<!--[\s\S]*?-->/g)].flatMap((match) =>
+      /\}`?\s*$/.test(contentText.slice(Math.max(0, match.index - 3), match.index)) ? [] : [match[0]]
+    );
+    expect(orphans).toEqual([]);
+  });
+
+  it('types no number in a summary that a fact of its card holds (write a placeholder instead)', () => {
+    const view = buildModifiersView(bundle, blocks, questions);
+    const numbers = (value: ModifierFactValue | undefined): number[] => {
+      if (typeof value === 'number') return [value];
+      if (value === undefined || typeof value !== 'object') return [];
+      return (Array.isArray(value) ? value : Object.values(value)).filter((entry) => typeof entry === 'number');
+    };
+    const typed = blocks.flatMap((block) => {
+      // A percent fact also shows up as a multiplier (base_percent 200 → ×2)
+      const values = new Set(
+        (view.byKey.get(block.key)?.facts ?? [])
+          .flatMap((fact) => [...numbers(fact.value), ...numbers(fact.vanilla)])
+          .flatMap((value) => [value, value / 100])
+          .filter((value) => Math.abs(value) > 1)
+      );
+      const text = block.summary.replace(/\{[^{}\s]+\}/g, '').replace(/<!--[\s\S]*?-->/g, '');
+      return [...text.matchAll(/\d+(?:\.\d+)?/g)].flatMap((match) => (values.has(Number(match[0])) ? [`${block.key}: ${match[0]}`] : []));
+    });
+    expect(typed).toEqual([]);
   });
 
   it('ties every open question to existing content keys', () => {

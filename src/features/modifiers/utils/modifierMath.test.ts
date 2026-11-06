@@ -58,6 +58,16 @@ describe('effectiveMagicFind (committed ESR facts)', () => {
     expect(effectiveMagicFind(300, 'unique', withFact('magicFind.tail', { unique: 0, set: 0, rare: 0 }))).toBe(136);
     expect(effectiveMagicFind(0, 'unique', facts)).toBe(0);
   });
+
+  it('skips the diminishing returns up to 10 MF, as the engine does (100 + MF must be above 110)', () => {
+    expect(effectiveMagicFind(5, 'unique', facts)).toBe(5);
+    expect(effectiveMagicFind(10, 'unique', facts)).toBe(10);
+    expect(effectiveMagicFind(10, 'rare', facts)).toBe(10);
+    expect(effectiveMagicFind(-20, 'set', facts)).toBe(-20);
+    // 11: floor(250 × 11 / 261) = 10, + floor(1.1) = 1
+    expect(effectiveMagicFind(11, 'unique', facts)).toBe(11);
+    expect(effectiveMagicFind(11, 'unique', withFact('magicFind.tail', { unique: 0, set: 0, rare: 0 }))).toBe(10);
+  });
 });
 
 describe('hitChance (committed ESR facts)', () => {

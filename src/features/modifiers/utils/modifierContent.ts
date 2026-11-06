@@ -254,7 +254,7 @@ const ESR_PREFIXES: readonly [string, string][] = [
 
 export interface SourceLink {
   readonly text: string;
-  /** Null for a source with no public page (research notes, guide notes) */
+  /** Null for a source with no public page (guide notes) */
   readonly href: string | null;
 }
 
@@ -266,12 +266,12 @@ function sourcePath(entry: string): string {
 
 /**
  * A `sources:` entry as a link: ESR paths (`ESR/…`, `excel/…`, `strings/…`) to the ESR repository, D2MOO paths to the
- * D2MOO commit the drafts read, wiki page names to the unofficial wiki, URLs as they are. Local research files
- * (`scratchpad/…`) are left out (null).
+ * D2MOO commit the texts were checked against, wiki page names to the unofficial wiki, URLs as they are; anything else is
+ * text without a link (null when empty).
  */
 export function sourceLink(entry: string): SourceLink | null {
   const text = entry.replace(/`/g, '').trim();
-  if (text.startsWith('scratchpad/')) return null;
+  if (text === '') return null;
   const url = /https?:\/\/\S+/.exec(text);
   if (url !== null) return { text: text.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''), href: url[0] };
   if (text.startsWith('wiki')) return { text: `Unofficial wiki: ${text.replace(/^wiki\s*/, '')}`, href: UNOFFICIAL_WIKI };

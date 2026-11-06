@@ -7,6 +7,7 @@
 import type { ModifierCategory, ModifiersBundle, ModifierStat } from '../../game-data/engine/schema.ts';
 import { parseModifierContent, tokenizeInline, type SourceKind } from './modifierContent.ts';
 import { CONTENT_KINDS } from './modifierContentKinds.ts';
+import { resolveText } from './modifierPlaceholders.ts';
 import { canonicalLine, NUMBER_MARK, PEEK_FACT_KEYS, WILDCARD, type ModifierRefEntry, type ModifierRefsData } from './modifierRefs.ts';
 
 /** Skill templates (chance to cast, aura, charges, +N to <skill>): skill names are the skill peek's (skillRefs.ts) */
@@ -93,13 +94,16 @@ export function buildModifierRefsData(bundle: ModifiersBundle, markdown: string)
     const first = kinds.at(0);
     if (mapping === undefined || first === undefined) continue;
     if (block.summary === '') problems.push(`${block.key}: no summary`);
+    // The summary's placeholders are filled in now: the peek has no facts beyond PEEK_FACT_KEYS
+    const summary = resolveText(block.summary, bundle.facts);
+    for (const path of summary.missing) problems.push(`${block.key}: summary placeholder {${path}} resolves to nothing`);
     const category: ModifierCategory = mapping.category ?? first.category;
     for (const kind of kinds) entryOfKind.set(kind.key, entries.length);
     entries.push({
       key: block.key,
       title: block.title,
       category,
-      summary: block.summary === '' ? null : block.summary,
+      summary: block.summary === '' ? null : summary.text,
       source: mainSource(block.body) ?? 'esr-files',
     });
   }
@@ -151,5 +155,19 @@ export function buildModifierRefsData(bundle: ModifiersBundle, markdown: string)
     if (fact === undefined) problems.push(`modifiers.json has no fact ${key}`);
     return fact === undefined ? [] : [fact];
   });
-  return { data: { entries, templates, patterns, facts }, conflicts, problems };
+  return { data: { entries, templates, patterns, facts, searchNames: modifierSearchNames(bundle) }, conflicts, problems };
+}
+
+/**
+ * The home search's modifier names, [title, kind key] (`/modifiers?kind=<key>`): every kind title except kinds made only
+ * of ESR bookkeeping stats (tinkering caps, display twins) and generated titles that are only a stat name or a stray
+ * word. Kept in modifierRefs.json so the search does not fetch the whole modifiers.json for them.
+ */
+export function modifierSearchNames(bundle: Pick<ModifiersBundle, 'kinds' | 'stats'>): [string, string][] {
+  const technical = new Set(bundle.stats.filter((stat) => stat.technical === true).map((stat) => stat.id));
+  return bundle.kinds.flatMap((kind): [string, string][] => {
+    if (kind.stats.length > 0 && kind.stats.every((id) => technical.has(id))) return [];
+    if (kind.generated === true && (/^[a-z0-9_]+$/.test(kind.title) || kind.title.length <= 3)) return [];
+    return [[kind.title, kind.key]];
+  });
 }

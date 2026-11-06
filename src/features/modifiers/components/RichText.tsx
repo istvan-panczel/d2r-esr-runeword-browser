@@ -2,8 +2,11 @@ import { ExternalLink } from '@/components/ExternalLink';
 import type { RichLine } from '../utils/modifiersView';
 import { SourceBadge } from './SourceBadge';
 
-/** One resolved content line: text, `code`, **bold**, links and the source badges after each claim */
-export function RichText({ line }: { readonly line: RichLine }) {
+/**
+ * One resolved content line: text, `code`, **bold**, links and the source badges after each claim. `badgeDetails`:
+ * a badge with a detail ("D2MOO SUnitDmg.cpp:…") opens it on click or tap; off inside a link (the list cards).
+ */
+export function RichText({ line, badgeDetails = true }: { readonly line: RichLine; readonly badgeDetails?: boolean }) {
   return (
     <>
       {line.map((token, index) => {
@@ -31,7 +34,7 @@ export function RichText({ line }: { readonly line: RichLine }) {
               </ExternalLink>
             );
           case 'tag':
-            return <SourceBadge key={key} tag={token.tag} />;
+            return <SourceBadge key={key} tag={token.tag} details={badgeDetails} />;
         }
       })}
     </>

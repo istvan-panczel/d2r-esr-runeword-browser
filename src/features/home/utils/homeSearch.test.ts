@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  areaSearchNames,
-  homeResultHref,
-  modifierSearchNames,
-  rankNames,
-  runewordsSearchHref,
-  searchHome,
-  skillSearchNames,
-} from './homeSearch';
+import { areaSearchNames, homeResultHref, rankNames, runewordsSearchHref, searchHome, skillSearchNames } from './homeSearch';
 
 describe('rankNames', () => {
   const names = ['Black Enigma', 'Enigma', 'Enigmatic Ring', 'Stenigma', 'Oath', 'Mosaic'];
@@ -65,21 +57,6 @@ describe('searchHome', () => {
     expect(groups.map((g) => g.category)).toEqual(['bases', 'skills', 'modifiers', 'materials', 'areas', 'cube']);
     expect(groups.map((g) => g.label)).toEqual(['Bases', 'Skills', 'Modifiers', 'Materials', 'Areas', 'Cube recipes']);
     expect(groups[2]?.results).toEqual([{ name: 'Fire Resist', href: '/modifiers?kind=resist-fire' }]);
-  });
-
-  it('lists modifier kinds without bookkeeping-only kinds or stat-name titles', () => {
-    const stat = (id: number, technical?: true) => ({ id, ...(technical === undefined ? {} : { technical }) });
-    const kind = (key: string, title: string, stats: number[], generated?: true) => ({
-      key,
-      title,
-      stats,
-      ...(generated === undefined ? {} : { generated }),
-    });
-    const names = modifierSearchNames({
-      stats: [stat(1), stat(2, true), stat(3)],
-      kinds: [kind('deadly-strike', 'Deadly Strike', [1]), kind('stat-cap', 'Cap', [2], true), kind('stat-x', 'item_x', [3], true)],
-    } as unknown as Parameters<typeof modifierSearchNames>[0]);
-    expect(names).toEqual([{ name: 'Deadly Strike', id: 'deadly-strike' }]);
   });
 
   it('links a cube family label to its family id', () => {

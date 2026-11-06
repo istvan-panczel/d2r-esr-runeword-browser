@@ -1,28 +1,6 @@
-# Item modifier explanations (verified, ESR 3.2.24)
+# Item modifier explanations (ESR 3.2.24)
 
-Draft text for a `/modifiers` page and a hover peek on modifier lines. One block per modifier kind. Written 2026-11-06 against ESR 3.2.24 (d2rloader 1.3.1, game 3.3.0 build 93847). Fact-checked 2026-11-06 against the ESR clone at b0622767 and D2MOO at 4a60fca; every change is listed in `factcheck.md`.
-
-## How to read these drafts
-
-Source tags, used inline after each claim:
-
-- **[ESR config]**: the mod's own loader plugin configs and memory patches, `d2rloader/config/celestialrayone.*.toml` and `d2rloader/patches/*.json`. The author documents each DLL change there in plain English. First-party.
-- **[ESR files]**: ESR's game tables, strings, official docs (`docs/*.htm*`, including the official Frame Table `docs/ias-calculator.html`) and patch notes. First-party.
-- **[Vanilla]**: vanilla engine behaviour, from the D2MOO reconstruction (1.10f / 1.14d) or vanilla guides. Show with the badge **"Vanilla D2 behaviour, not confirmed for ESR"**.
-- **[Community 3.9]** / **[Community 3.10]**: the unofficial ESR wiki and its mod-author Q&A. These versions predate the 3.2.x line; treat as possibly outdated.
-
-Placeholders: every number read from a table or config is written as `{source.path}` with the current value in an HTML comment, for wiring to generated data later. Naming:
-
-- `{difficulty.<normal|nightmare|hell>.<column>}`: `excel/difficultylevels.txt`
-- `{config.<plugin>.<section>.<key>}`: `d2rloader/config/celestialrayone.<plugin>.toml`
-- `{patch.<file>.<value>}`: `d2rloader/patches/<file>.json`
-- `{charstats.<class>.<column>}`, `{isc.<stat>.<column>}`, `{skills.<row>.<column>}`, `{monstats.<…>}`: the matching `excel/*.txt`
-- Vanilla engine constants (for example the 40% absorb cap) stay plain numbers with a [Vanilla] tag; they are not in any table.
-- `{derived.<kind>.<case>}`: a number computed from a placeholder and a vanilla formula (Crushing Blow share, effective leech). The comment shows the formula, so the generator can compute it.
-
-Path prefixes: `ESR/` = `/Users/mefi/git/private/d2r-runewords-folders/Eastern_Sun_Resurrected/`, `excel/` = `ESR/Eastern_Sun_Resurrected.mpq/data/global/excel/`, `strings/` = `ESR/Eastern_Sun_Resurrected.mpq/data/local/lng/strings/`, `D2MOO/` = `scratchpad/modifiers/dl/d2moo/source/` (https://github.com/ThePhrozenKeep/D2MOO at 4a60fca), wiki = https://doubleeclipse.github.io/esr-tools/unofficial-wiki/ (archive of the Fandom wiki, mostly ESR 3.9/3.10).
-
-Kinds dropped or folded: Open Wounds (no spawnable ESR item; note under `bleed`), Prevent Monster Heal, Hit Blinds Target and Hit Causes Monster to Flee (zero or one item; `rare-procs`), Weapon Mastery crit (folded into `deadly-strike`), Rest in Peace (folded into `reanimate`).
+The format, source tags and placeholders are documented in docs/features/MODIFIERS.md "Content".
 
 ---
 
@@ -30,7 +8,7 @@ Kinds dropped or folded: Open Wounds (no spawnable ESR item; note under `bleed`)
 
 stats: item_deadlystrike (141), item_deadlystrike_perlevel (250); resolved in one block with the weapon-mastery Critical and the engine's Critical Strike stat (the loader config calls it passive_critical_strike, stat 337, but ESR's itemstatcost.txt row 337 is item_attackertakesfiredamage and no row is named passive_critical_strike)
 
-summary: A chance per hit to multiply the hit's physical damage, ×2 by default and more with Deadly Strike Damage.
+summary: A chance per hit to multiply the hit's physical damage, ×{derived.critical-multiplier.0} by default and more with Deadly Strike Damage.
 
 body: Each hit rolls against your total Deadly Strike. On success the physical damage is multiplied by {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->% plus your Deadly Strike Damage, for melee and missiles alike [ESR config]. Weapon-mastery Critical, Critical Strike and Deadly Strike are resolved in that order and only one can succeed, so they never multiply each other [ESR config]. Only physical damage is multiplied [Vanilla]. Physical damage that a skill converts to an element can still crit [Community 3.9]. At 100% every hit crits [Vanilla]. Two unique weapons, Demon Limb and Lacerator, give extra bonuses for each 1% Deadly Strike above 100, so going past 100 pays on those [ESR files]. A few uniques (Voidrend, Dwarf Star, Earthshifter, Gargoyle's Bite, Icing Death, Raven Frost) carry hidden auras that use your Deadly Strike as the chance for one element's damage to crit, boosted by Deadly Strike Damage [ESR files].
 
@@ -44,7 +22,6 @@ facts:
 - Element crit auras: `excel/skills.txt` "Magic/Fire/Cold/Lightning/Poison Damage Crit" calc1 `stat('randomgenerator'.accr)>(1000-stat('item_deadlystrike'.accr)*10)`, aurastatcalc1 `(100+stat('criticaldamage'.accr))*(100+mastery)/100`; granted as `aura-hidden` by the uniques named above (`excel/uniqueitems.txt`).
 - `excel/itemstatcost.txt` also has `item_deadlystrike_cap` (605, no tooltip), added by some cube recipes (`excel/cubemain.txt` "HS + Any Weapon + key", "DS + Any Amulet", "DS + Any Ring"); what reads it is not documented.
 - Tooltip `%+d%% Deadly Strike` (`excel/itemstatcost.txt` row 141 descstrpos ModStr5q, `strings/item-modifiers.json`).
-- Used on 196 item rows (`scratchpad/modifiers/out/stat-usage.json`, items excluding cube).
 
 caveats:
 
@@ -60,16 +37,15 @@ sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `ex
 
 stats: criticaldamage (434)
 
-summary: Raises the damage multiplier of every crit and Deadly Strike: +50% turns ×2 into ×2.5.
+summary: Raises the damage multiplier of every crit and Deadly Strike: +50% turns ×{derived.critical-multiplier.0} into ×{derived.critical-multiplier.50}.
 
-body: ESR-only stat. It adds straight to the base crit multiplier of {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->%, so +50% Deadly Strike Damage makes each crit deal ×2.5 physical damage instead of ×2 [ESR config]. It works for weapon-mastery crits, Critical Strike and Deadly Strike, melee and missiles [ESR config]. It does nothing on its own: you still need a crit chance. It is rare on items (13 rows) [ESR files]. Some skills and auras also read it for their own crit bonuses, for example the "Magic Damage Crit" rows [ESR files].
+body: ESR-only stat. It adds straight to the base crit multiplier of {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->%, so +50% Deadly Strike Damage makes each crit deal ×{derived.critical-multiplier.50} physical damage instead of ×{derived.critical-multiplier.0} [ESR config]. It works for weapon-mastery crits, Critical Strike and Deadly Strike, melee and missiles [ESR config]. It does nothing on its own: you still need a crit chance. It is rare on items [ESR files]. Some skills and auras also read it for their own crit bonuses, for example the "Magic Damage Crit" rows [ESR files].
 
 facts:
 
-- Stat id `{config.critical-strike-damage.critical_strike_damage.stat_id}`<!-- 434 -->; added to `base_percent`<!-- 200 -->; cap `max_percent`<!-- 100000 -->. Source: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`.
+- Stat id `{config.critical-strike-damage.critical_strike_damage.stat_id}`<!-- 434 -->; added to `base_percent = {…base_percent}`<!-- 200 -->; cap `max_percent = {…max_percent}`<!-- 100000 -->. Source: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`.
 - Missiles: "the bonus is used when any of [the three sources] is enabled", because missiles only carry a yes/no crit flag (same file).
 - Tooltip `+%d%% Deadly Strike Damage` (`strings/item-modifiers.json` key `critdamage`).
-- Item rows: 13 (research inventory, §1).
 
 caveats:
 
@@ -85,18 +61,18 @@ stats: item_crushingblow (136)
 
 summary: A chance on hit to remove a share of the target's current life. ESR halves it against most targets and cuts it hardest against bosses.
 
-body: When a hit lands, Crushing Blow rolls its chance. On success the target loses a share of its current life, not maximum life, so it is best early in a fight [Vanilla]. ESR scales that share per target class. Normal monsters, champions and minions lose {derived.crushing-blow.monster}<!-- 12.5% = 25% x config 50 -->, yellow uniques {derived.crushing-blow.unique}<!-- 6.25% = 25% x config 25 -->, superuniques and act bosses {derived.crushing-blow.super_unique}<!-- 2% = 12.5% x config 16 -->, players and mercenaries {derived.crushing-blow.player}<!-- 5% = 10% x config 50 --> [ESR config]. Vanilla removes 25%, 12.5% and 10% for those groups, so every class is at half or less [ESR config]. Ranged Crushing Blow is as strong as melee; vanilla halves it [ESR config]. The /players setting still weakens it against monsters, and the target's physical resist reduces it [ESR config]. Flat Damage Reduced does not [Vanilla]. Physical resist above 50% helps against monster Crushing Blow [Community 3.9].
+body: When a hit lands, Crushing Blow rolls its chance. On success the target loses a share of its current life, not maximum life, so it is best early in a fight [Vanilla]. ESR scales that share per target class. Normal monsters, champions and minions lose {derived.crushing-blow.monster}<!-- 12.5% = 25% x config 50 -->, yellow uniques {derived.crushing-blow.unique}<!-- 6.25% = 25% x config 25 -->, superuniques and act bosses {derived.crushing-blow.super_unique}<!-- 2% = 12.5% x config 16 -->, players and mercenaries {derived.crushing-blow.player}<!-- 5% = 10% x config 50 --> [ESR config]. Vanilla removes {vanilla.derived.crushing-blow.monster}, {vanilla.derived.crushing-blow.super_unique} and {vanilla.derived.crushing-blow.player} for those groups, so every class is at half or less [ESR config]. Ranged Crushing Blow is as strong as melee; vanilla halves it [ESR config]. The /players setting still weakens it against monsters, and the target's physical resist reduces it [ESR config]. Flat Damage Reduced does not [Vanilla]. Physical resist above 50% helps against monster Crushing Blow [Community 3.9].
 
 facts (share of current life = vanilla share × config percent):
 
-- Normal monster: 25% × `{config.crushing-blow.targets.monster}`<!-- 50 -->% = 12.5%.
-- Champion: 25% × `{config.crushing-blow.targets.champion}`<!-- 50 -->% = 12.5%.
-- Unique (yellow): 25% × `{config.crushing-blow.targets.unique}`<!-- 25 -->% = **6.25%** (the file's comment above this key says "50 -> 12.5 %"; the value is 25).
-- Superunique: 12.5% × `{config.crushing-blow.targets.super_unique}`<!-- 16 -->% = 2%.
-- Act boss (monstats boss flag): 12.5% × `{config.crushing-blow.targets.act_boss}`<!-- 16 -->% = 2%.
-- Minion of a pack leader: 25% × `{config.crushing-blow.targets.minion}`<!-- 50 -->% = 12.5%.
-- Mercenary: 10% × `{config.crushing-blow.targets.mercenary}`<!-- 50 -->% = 5%. Player: 10% × `{config.crushing-blow.targets.player}`<!-- 50 -->% = 5%.
-- Ranged: `{config.crushing-blow.attack.ranged}`<!-- 100 -->% of the melee result (vanilla 50).
+- Normal monster: {vanilla.derived.crushing-blow.monster} × `{config.crushing-blow.targets.monster}`<!-- 50 -->% = {derived.crushing-blow.monster}.
+- Champion: {vanilla.derived.crushing-blow.champion} × `{config.crushing-blow.targets.champion}`<!-- 50 -->% = {derived.crushing-blow.champion}.
+- Unique (yellow): {vanilla.derived.crushing-blow.unique} × `{config.crushing-blow.targets.unique}`<!-- 25 -->% = **{derived.crushing-blow.unique}** (the file's comment above this key says "50 -> 12.5 %"; the value is {config.crushing-blow.targets.unique}).
+- Superunique: {vanilla.derived.crushing-blow.super_unique} × `{config.crushing-blow.targets.super_unique}`<!-- 16 -->% = {derived.crushing-blow.super_unique}.
+- Act boss (monstats boss flag): {vanilla.derived.crushing-blow.act_boss} × `{config.crushing-blow.targets.act_boss}`<!-- 16 -->% = {derived.crushing-blow.act_boss}.
+- Minion of a pack leader: {vanilla.derived.crushing-blow.minion} × `{config.crushing-blow.targets.minion}`<!-- 50 -->% = {derived.crushing-blow.minion}.
+- Mercenary: {vanilla.derived.crushing-blow.mercenary} × `{config.crushing-blow.targets.mercenary}`<!-- 50 -->% = {derived.crushing-blow.mercenary}. Player: {vanilla.derived.crushing-blow.player} × `{config.crushing-blow.targets.player}`<!-- 50 -->% = {derived.crushing-blow.player}.
+- Ranged: `{config.crushing-blow.attack.ranged}`<!-- 100 -->% of the melee result (vanilla {vanilla.config.crushing-blow.attack.ranged}).
 - Classes do not stack; matched in order mercenary → act_boss → super_unique → unique → champion → minion → monster (same file).
 - /players: divisor grows by the monster HP bonus, 0/50/100…350% for 1–8 players, so at /players 8 the share is ÷4.5 [Vanilla, D2MOO D2Game/src/MONSTER/Monster.cpp:431–441; SKILLITEM_EventFunc16 SkillItem.cpp:1399–1440]. Players and hirelings are not divided by /players.
 - Physical resist: `loss −= loss × min(damageresist,100)/100`, using the raw stat, not the 50% capped value [Vanilla, SkillItem.cpp:1449–1458]; kept per the config ("Physical damage reduction on the target still reduces the result").
@@ -104,8 +80,8 @@ facts (share of current life = vanilla share × config percent):
 
 caveats:
 
-- Comment/value mismatch for `unique` (comment 12.5%, value 25 → 6.25%). Ask the author which is intended.
-- Whether a Crushing Blow hit can kill a boss outright at low life is unverified for ESR.
+- Comment/value mismatch for `unique` (comment 12.5%, value {config.crushing-blow.targets.unique} → {derived.crushing-blow.unique}). Ask the author which is intended.
+- Whether a Crushing Blow hit can kill a boss outright at low life is not confirmed for ESR.
 
 sources: `ESR/d2rloader/config/celestialrayone.crushing-blow.toml`; `excel/itemstatcost.txt` row 136; D2MOO/D2Game/src/SKILLS/SkillItem.cpp:1399–1482; D2MOO/D2Game/src/MONSTER/Monster.cpp:431; wiki "Physical Resist X% / Damage Reduced by X%"; https://maxroll.gg/d2/resources/attack-modifiers
 
@@ -128,7 +104,6 @@ facts:
 - Tooltip `strModBleedDamageRange` = "Adds %d%%-%d%% Bleed Damage over %d seconds" (`strings/item-modifiers.json`); length shown as length / 25.
 - Immunity clear: `ESR/d2rloader/config/celestialrayone.immunity-dot-clear.toml`, `immune_to` = all six types.
 - Open Wounds: `excel/itemstatcost.txt` row 135 has empty itemevent1/2 and itemeventfunc (vanilla: domeleedamage/domissiledamage func 15).
-- Item rows: 87 (research inventory).
 
 caveats:
 
@@ -143,22 +118,22 @@ sources: `ESR/d2rloader/config/celestialrayone.bleed.toml`; `ESR/d2rloader/confi
 
 stats: lifedrainmindam (60)
 
-summary: Heals you for a percent of the physical damage you deal; cut to 1/25 in Nightmare and 1/150 in Hell.
+summary: Heals you for a percent of the physical damage you deal; divided by {difficulty.nightmare.lifeStealDivisor} in Nightmare and {difficulty.hell.lifeStealDivisor} in Hell.
 
-body: ESR calls Life Steal "Physical Damage Leeched as Life" [ESR files]. Each hit heals you for a percent of the physical damage it dealt after the target's defences, up to the target's remaining life [Vanilla]. In Nightmare your leech is divided by {difficulty.nightmare.lifeStealDivisor}<!-- 25 -->, in Hell by {difficulty.hell.lifeStealDivisor}<!-- 150 --> [ESR files]. So 20% leech is about {derived.leech.life.20.nightmare}<!-- 0.8% --> in Nightmare and about {derived.leech.life.20.hell}<!-- 0.125% --> in Hell [ESR files] [Vanilla]. Some monsters cannot be leeched at all: in Hell 648 enabled monster rows have no drain value, most of them skeleton-type monsters, plus constructs, wisps, swarms, wraiths and town NPCs [ESR files]. In Hell, plan on Life on Striking, Life after each Kill and regeneration instead.
+body: ESR calls Life Steal "Physical Damage Leeched as Life" [ESR files]. Each hit heals you for a percent of the physical damage it dealt after the target's defences, up to the target's remaining life [Vanilla]. In Nightmare your leech is divided by {difficulty.nightmare.lifeStealDivisor}<!-- 25 -->, in Hell by {difficulty.hell.lifeStealDivisor}<!-- 150 --> [ESR files]. So 20% leech is about {derived.leech.life.20.nightmare}<!-- 0.8% --> in Nightmare and about {derived.leech.life.20.hell}<!-- 0.125% --> in Hell [ESR files] [Vanilla]. Some monsters cannot be leeched at all: in Hell {monstats.drainH.blankCount} enabled monster rows have no drain value, most of them skeleton-type monsters, plus constructs, wisps, swarms, wraiths and town NPCs [ESR files]. In Hell, plan on Life on Striking, Life after each Kill and regeneration instead.
 
 facts:
 
-- `{difficulty.normal.lifeStealDivisor}`<!-- 1 --> / `{difficulty.nightmare.lifeStealDivisor}`<!-- 25 --> / `{difficulty.hell.lifeStealDivisor}`<!-- 150 --> (`excel/difficultylevels.txt` LifeStealDivisor; vanilla 1/2/3).
-- Engine math [Vanilla, D2MOO D2Game/src/UNIT/SUnitDmg.cpp:1163–1243]: `leech64 = (leech << 6) / divisor` (integer), `gain = physDealt × leech64/100 × Drain/100 / 64`. With that precision: 10% → 0.39% NM, 0.0625% Hell; 20% → 0.80% NM, 0.125% Hell; 75% → 3.0% NM, 0.5% Hell. Below 150/64 ≈ 2.34% leech (so 2% or less) the Hell value is 0.
+- `{difficulty.normal.lifeStealDivisor}`<!-- 1 --> / `{difficulty.nightmare.lifeStealDivisor}`<!-- 25 --> / `{difficulty.hell.lifeStealDivisor}`<!-- 150 --> (`excel/difficultylevels.txt` LifeStealDivisor; vanilla {vanilla.difficulty.*.lifeStealDivisor}).
+- Engine math [Vanilla, D2MOO D2Game/src/UNIT/SUnitDmg.cpp:1163–1243]: `leech64 = (leech << 6) / divisor` (integer), `gain = physDealt × leech64/100 × Drain/100 / 64`. With that precision: 10% → {derived.leech.life.10.nightmare} NM, {derived.leech.life.10.hell} Hell; 20% → {derived.leech.life.20.nightmare} NM, {derived.leech.life.20.hell} Hell; 75% → {derived.leech.life.75.nightmare} NM, {derived.leech.life.75.hell} Hell. Item leech below divisor / 64 = {derived.leech-threshold.life.hell} gives 0 in Hell.
 - The divisor is applied only when the attacker is a player (SUnitDmg.cpp:1186–1199); a hireling's leech is not divided in the 1.10 code [Vanilla].
-- Monster drain: `excel/monstats.txt` Drain / Drain(N) / Drain(H); players count as 100. In Hell, enabled rows: 771 at 100, 648 blank (no leech), 5 at 10 (Corrupted Zakarum). Of the 648 blank rows, 456 have MonType `skeleton`. `{monstats.drainH.blankCount}`<!-- 648 -->.
+- Monster drain: `excel/monstats.txt` Drain / Drain(N) / Drain(H); players count as 100. In Hell, enabled rows: {monstats.drainH.blankCount} blank (no leech), most of them MonType `skeleton`; {monstats.drainH.partialCount} at 10 (Corrupted Zakarum); the rest at 100.
 - ESR's damage-overflow-fix repairs leech that wrapped negative at very high damage (`ESR/d2rloader/config/celestialrayone.damage-overflow-fix.toml`, `leech = true`).
 - Tooltip `%+d%% Physical Damage Leeched as Life` (`strings/item-modifiers.json` ModStr2z).
 
 caveats:
 
-- D2R's leech precision is unconfirmed. The research notes cite Maxroll as saying leech under 1% after reductions rounds to 0 (not re-checked in this pass); if D2R did that, all item leech below 150% would do nothing in Hell. Check in game.
+- D2R's leech precision is unconfirmed. Some guides (Maxroll) say leech under 1% after reductions rounds to 0; if D2R did that, all item leech below {difficulty.hell.lifeStealDivisor}% would do nothing in Hell. Check in game.
 - The overflow-fix config describes the D2R leech sum as "physical + fire + lightning + cold + magic", while the stat name and D2MOO say physical only. Which damage leeches in ESR is unconfirmed.
 
 sources: `excel/difficultylevels.txt`; `excel/monstats.txt`; `ESR/d2rloader/config/celestialrayone.damage-overflow-fix.toml` ("Life and mana steal (3 sites)"); D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:560–580, 1163–1296; wiki "Penalties based on Difficulty" (v3.9.15); https://maxroll.gg/d2/resources/attack-modifiers
@@ -169,14 +144,14 @@ sources: `excel/difficultylevels.txt`; `excel/monstats.txt`; `ESR/d2rloader/conf
 
 stats: manadrainmindam (62)
 
-summary: Restores mana from a percent of the physical damage you deal; cut to 1/15 in Nightmare and 1/75 in Hell.
+summary: Restores mana from a percent of the physical damage you deal; divided by {difficulty.nightmare.manaStealDivisor} in Nightmare and {difficulty.hell.manaStealDivisor} in Hell.
 
-body: Works like life leech but fills mana [Vanilla]. The difficulty divisors are smaller than for life: {difficulty.nightmare.manaStealDivisor}<!-- 15 --> in Nightmare and {difficulty.hell.manaStealDivisor}<!-- 75 --> in Hell [ESR files]. So 10% mana leech is about {derived.leech.mana.10.nightmare}<!-- 0.66% --> in Nightmare and about {derived.leech.mana.10.hell}<!-- 0.125% --> in Hell [ESR files] [Vanilla]. The same monsters that cannot be life-leeched cannot be mana-leeched [ESR files]. Casters who do not hit things get nothing from it. For mana in Hell, Mana on Striking, Mana after each Kill, Damage Taken Goes to Mana and mana regeneration are steadier.
+body: Works like life leech but fills mana [Vanilla]. The difficulty divisors are smaller than for life: {difficulty.nightmare.manaStealDivisor}<!-- 15 --> in Nightmare and {difficulty.hell.manaStealDivisor}<!-- 75 --> in Hell [ESR files]. So 10% mana leech is about {derived.leech.mana.10.nightmare}<!-- 0.656% --> in Nightmare and about {derived.leech.mana.10.hell}<!-- 0.125% --> in Hell [ESR files] [Vanilla]. The same monsters that cannot be life-leeched cannot be mana-leeched [ESR files]. Casters who do not hit things get nothing from it. For mana in Hell, Mana on Striking, Mana after each Kill, Damage Taken Goes to Mana and mana regeneration are steadier.
 
 facts:
 
-- `{difficulty.normal.manaStealDivisor}`<!-- 1 --> / `{difficulty.nightmare.manaStealDivisor}`<!-- 15 --> / `{difficulty.hell.manaStealDivisor}`<!-- 75 --> (`excel/difficultylevels.txt` ManaStealDivisor; vanilla 1/2/3).
-- Same 1/64 math as life leech [Vanilla, D2MOO SUnitDmg.cpp:1163–1243]: 10% → (640/15 = 42)/64 = 0.66% NM; (640/75 = 8)/64 = 0.125% Hell. Below 75/64 ≈ 1.17% (so 1%) the Hell value is 0.
+- `{difficulty.normal.manaStealDivisor}`<!-- 1 --> / `{difficulty.nightmare.manaStealDivisor}`<!-- 15 --> / `{difficulty.hell.manaStealDivisor}`<!-- 75 --> (`excel/difficultylevels.txt` ManaStealDivisor; vanilla {vanilla.difficulty.*.manaStealDivisor}).
+- Same 1/64 math as life leech [Vanilla, D2MOO SUnitDmg.cpp:1163–1243]: 10% → floor(640 / divisor) / 64 = {derived.leech.mana.10.nightmare} NM, {derived.leech.mana.10.hell} Hell. Item leech below divisor / 64 = {derived.leech-threshold.mana.hell} gives 0 in Hell.
 - Drain columns as in `life-leech`.
 - Tooltip `%+d%% Physical Damage Leeched as Mana` (ModStr2y).
 
@@ -201,7 +176,6 @@ facts:
 - `excel/itemstatcost.txt` row 505 `itemevent1 = domeleedamage`, `itemeventfunc1 = 28`, `itemevent2 = domissiledamage`, `itemeventfunc2 = 28`; row 506 the same with func 17.
 - Func 28 = heal after kill, func 17 = mana after kill (D2MOO/D2Game/src/SKILLS/Skills.cpp:4248, 4259 event table; bodies SkillItem.cpp:1486, 1520) [Vanilla]. Func 17 checks `pAttacker->dwUnitType == UNIT_PLAYER`; func 28 has no such check. Both only add while the unit is below its maximum.
 - Tooltip "Life on Striking" / "Mana on Striking" with descfunc 1 (number before the text).
-- Item rows: 76 / 55.
 
 caveats:
 
@@ -224,7 +198,6 @@ facts:
 
 - `excel/itemstatcost.txt` row 86 `itemevent1 = kill`, func 28; row 138 `kill`, func 17.
 - Thorns kill credit: `ESR/d2rloader/config/celestialrayone.soft-hit-removal.toml` `attacker_takes_damage = true` (event function 6 only: stat 78 and the thorns aura); also `holy_fire_and_holy_shock`, `holy_freeze`, `iron_maiden = true`. Lightning thorns (func 10) and fire thorns (func 11) are not listed; `thorns_percent = false`.
-- Item rows: 157 / 111.
 
 caveats:
 
@@ -238,7 +211,7 @@ sources: `excel/itemstatcost.txt` rows 86, 138; `ESR/d2rloader/config/celestialr
 
 stats: damageresist (36)
 
-summary: Cuts physical damage you take by a percent, capped at 50%. Also shrinks Crushing Blow against you.
+summary: Cuts physical damage you take by a percent, capped at {engine.resist.physical-cap}%. Also shrinks Crushing Blow against you.
 
 body: The ESR tooltip says "Physical Resist: +X%" [ESR files]. It is the same stat as vanilla "Damage Reduced by X%" [ESR files] [Community 3.9, author]. It caps at 50% for players and hirelings [Vanilla], and ESR applies the same cap to your summons [ESR config]. There is no difficulty penalty on it [Vanilla]. Stacking above 50% is not wasted: monster debuffs such as Amplify Damage lower it first [Community 3.9], and Crushing Blow against you is reduced by your uncapped value [Vanilla]. Flat "Damage Reduced by N" is subtracted before this percent [Vanilla].
 
@@ -249,7 +222,7 @@ facts:
 - Summons: `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml` "physical = 50"; "The 75 base, the 95 ceiling and the 50 physical cap are the game's own immediates" (not a setting).
 - Floor: `{patch.esr-resistance-floor-minus-1000.floor}`<!-- -1000 --> for all units; the physical cap 50 is left untouched (`ESR/d2rloader/patches/esr-resistance-floor-minus-1000.json`).
 - Crushing Blow: reduced by `min(damageresist, 100)` (raw stat) [Vanilla, SkillItem.cpp:1399–1482].
-- Tooltip `Physical Resist: %+d%%` (row 36). Item rows: 228.
+- Tooltip `Physical Resist: %+d%%` (row 36).
 - Sanctuary: an attacker with Sanctuary treats an undead monster's physical resist as 0 (immunity-dot-clear.toml lines 14–16; D2MOO SUnitDmg.cpp:1012). Not relevant to your own physical resist.
 
 caveats:
@@ -266,7 +239,7 @@ stats: normal_damage_reduction (34)
 
 summary: Subtracts a flat amount from every physical hit you take, before physical resist.
 
-body: Each physical hit loses this flat amount first, then your Physical Resist percent applies to the rest [Vanilla]. It is strong against many small hits and does little against big ones. It does not reduce Crushing Blow [Vanilla]. It is common in ESR: 264 item rows [ESR files]. No loader config or patch changes it; the only mentions are debug-log wording in damage-overflow-fix.toml [ESR config].
+body: Each physical hit loses this flat amount first, then your Physical Resist percent applies to the rest [Vanilla]. It is strong against many small hits and does little against big ones. It does not reduce Crushing Blow [Vanilla]. It is common on ESR items [ESR files]. No loader config or patch changes it; the only mentions are debug-log wording in damage-overflow-fix.toml [ESR config].
 
 facts:
 
@@ -287,7 +260,7 @@ stats: magic_damage_reduction (35)
 
 summary: Subtracts a flat amount from each fire, lightning, cold and magic hit you take. Not poison.
 
-body: Despite the name it covers fire, lightning, cold and magic damage, each one separately, before your resistance applies [Vanilla]. Poison is not reduced [Vanilla]. Like flat physical reduction, it helps most against many small hits [Vanilla]. 227 item rows carry it [ESR files]. No loader config changes it [ESR config].
+body: Despite the name it covers fire, lightning, cold and magic damage, each one separately, before your resistance applies [Vanilla]. Poison is not reduced [Vanilla]. Like flat physical reduction, it helps most against many small hits [Vanilla]. No loader config changes it [ESR config].
 
 facts:
 
@@ -306,22 +279,21 @@ stats: fireresist (39), coldresist (43), lightresist (41), poisonresist (45), ma
 
 summary: Cuts elemental damage you take by a percent. Nightmare and Hell subtract a large penalty, so stack well above the cap.
 
-body: Your resistance is everything on your gear and skills plus the difficulty penalty: {difficulty.nightmare.resistPenalty}<!-- -80 --> in Nightmare and {difficulty.hell.resistPenalty}<!-- -150 --> in Hell, for fire, cold, lightning and poison [ESR files]. That is far harsher than vanilla's −40 and −100. Magic resist gets no penalty [Vanilla]. The result is capped at 75% plus your maximum resist, never above 95% [Vanilla]; ESR's resistance patches leave that ceiling untouched [ESR config]. There is no hard floor at −100 in ESR: resists go down to {patch.esr-resistance-floor-minus-1000.floor}<!-- -1000 -->, and the character screen shows it [ESR config]. Monster maps and bosses can lower your resists, so overcapping helps [Community 3.9]. "Total X Resist" lines raise the stat by a percent of itself [ESR files].
+body: Your resistance is everything on your gear and skills plus the difficulty penalty: {difficulty.nightmare.resistPenalty}<!-- -80 --> in Nightmare and {difficulty.hell.resistPenalty}<!-- -150 --> in Hell, for fire, cold, lightning and poison [ESR files]. That is far harsher than vanilla's {vanilla.difficulty.nightmare.resistPenalty} and {vanilla.difficulty.hell.resistPenalty}. Magic resist gets no penalty [Vanilla]. The result is capped at 75% plus your maximum resist, never above 95% [Vanilla]; ESR's resistance patches leave that ceiling untouched [ESR config]. There is no hard floor at −100 in ESR: resists go down to {patch.esr-resistance-floor-minus-1000.floor}<!-- -1000 -->, and the character screen shows it [ESR config]. Monster maps and bosses can lower your resists, so overcapping helps [Community 3.9]. "Total X Resist" lines raise the stat by a percent of itself [ESR files].
 
 facts:
 
-- ResistPenalty: Normal `{difficulty.normal.resistPenalty}`<!-- 1 -->, Nightmare `{difficulty.nightmare.resistPenalty}`<!-- -80 -->, Hell `{difficulty.hell.resistPenalty}`<!-- -150 --> (`excel/difficultylevels.txt`; vanilla 0/−40/−100). Normal is +1 in the file.
+- ResistPenalty: Normal `{difficulty.normal.resistPenalty}`<!-- 1 -->, Nightmare `{difficulty.nightmare.resistPenalty}`<!-- -80 -->, Hell `{difficulty.hell.resistPenalty}`<!-- -150 --> (`excel/difficultylevels.txt`; vanilla {vanilla.difficulty.*.resistPenalty}). Normal is +1 in the file.
 - Penalty applies to players and hirelings, to every row of the damage table except damageresist and magicresist [Vanilla, D2MOO SUnitDmg.cpp:976–990]. That includes Poison Length Reduced and the chill/freeze length rows (see `poison-length`). Not applied to allied summons [ESR config, summon-resist-cap.toml: "The nightmare/hell difficulty penalty is never applied to them"].
 - Clamp `[−1000, min(75 + max resist, 95)]`: floor from `ESR/d2rloader/patches/esr-resistance-floor-minus-1000.json` ("A target at -1000 resist takes 1100% of that damage type"); display floor from `…-player-display.json`; 75 and 95 [Vanilla, SUnitDmg.cpp:996–1009], "the elemental ceiling at 0x4524DE (95) [is] untouched" by the patch.
 - Damage taken: `(damage − flat reduction) × (100 − resist)/100` [Vanilla].
 - `total_*_resist` stats use op 11 (percent of the resist stat) (`excel/itemstatcost.txt`, e.g. 393 total_lightning_resist → lightresist).
 - Poison length is a separate stat, 110 (see `poison-length`) [Vanilla].
-- Item rows 425–449 each for fire/cold/light/poison, 96 for magic.
 
 caveats:
 
 - Normal ResistPenalty is 1, which by the engine formula gives +1% in Normal. Intentional or a placeholder?
-- Magic resist cap 75 (+ maximum magic resist, 85 item rows) is vanilla code; the wiki marks it "[TBC]".
+- Magic resist cap {engine.resist.max-base} (+ maximum magic resist) is vanilla code; the wiki marks it "[TBC]".
 
 sources: `excel/difficultylevels.txt`; `excel/itemstatcost.txt`; `ESR/d2rloader/patches/esr-resistance-floor-minus-1000.json`, `esr-resistance-floor-minus-1000-player-display.json`; `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml`; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:949–1072; wiki "Tips for Hell difficulty"
 
@@ -331,14 +303,13 @@ sources: `excel/difficultylevels.txt`; `excel/itemstatcost.txt`; `ESR/d2rloader/
 
 stats: maxfireresist (40), maxcoldresist (44), maxlightresist (42), maxpoisonresist (46), maxmagicresist (38)
 
-summary: Raises the 75% resistance cap for one element, up to a hard ceiling of 95%.
+summary: Raises the {engine.resist.max-base}% resistance cap for one element, up to a hard ceiling of {engine.resist.hard-cap}%.
 
-body: Each point lifts that element's cap above 75% [Vanilla]. The hard ceiling is 95%, so +20% is the most that matters [Vanilla]. ESR leaves both numbers as in vanilla [ESR config]. Maximum resist only helps if your resist after the difficulty penalty is high enough to reach the new cap. Summons use the same caps when they have maximum resist [ESR config]. Maximum magic resist exists in ESR and works the same way for magic [Vanilla]. Patch 3.2.22 removed maximum resists from Thawing and Antidote Potions [ESR files].
+body: Each point lifts that element's cap above {engine.resist.max-base}% [Vanilla]. The hard ceiling is {engine.resist.hard-cap}%, so +{derived.max-resist-headroom}% is the most that matters [Vanilla]. ESR leaves both numbers as in vanilla [ESR config]. Maximum resist only helps if your resist after the difficulty penalty is high enough to reach the new cap. Summons use the same caps when they have maximum resist [ESR config]. Maximum magic resist exists in ESR and works the same way for magic [Vanilla]. Patch 3.2.22 removed maximum resists from Thawing and Antidote Potions [ESR files].
 
 facts:
 
 - Cap `min(75 + max resist, 95)` [Vanilla, D2MOO SUnitDmg.cpp:1006]; "the elemental ceiling at 0x4524DE (95) [is] untouched" (`ESR/d2rloader/patches/esr-resistance-floor-minus-1000.json`); summons "cap = 75 + the unit's per-element max-resist stat, hard cap = 95" (`summon-resist-cap.toml`).
-- Item rows: 112 fire, 111 cold, 109 lightning, 104 poison; 85 maximum magic resist.
 - `ESR/patchnotes/3.2.22.md` line 79: "**Thawing and Antidote Potions** - No longer grant maximum resistances."
 
 caveats: none known.
@@ -361,7 +332,7 @@ facts:
 - Penalty: `nResValue += dwResistPenalty` for every row whose resist stat is not damageresist or magicresist, players and hirelings only (SUnitDmg.cpp:976–981) [Vanilla].
 - Cap: rows without a max-resist stat get `nMaxResValue = 75` for players and hirelings (50 only for damageresist) (SUnitDmg.cpp:996–1009) [Vanilla].
 - Poison immunity: `ESR/d2rloader/config/celestialrayone.poison-immunity.toml`, state `{config.poison-immunity.poison_immunity.state_id}`<!-- 25 -->.
-- Tooltip `Poison Length Reduced by %+d%%` (row 110). Item rows: 70.
+- Tooltip `Poison Length Reduced by %+d%%` (row 110).
 
 caveats:
 
@@ -384,7 +355,6 @@ facts:
 - Pierce is skipped when the monster's resistance is ≥ 100 [Vanilla, D2MOO SUnitDmg.cpp:967: `nResValue < 100 || !bDefenderIsMonster`].
 - Immunity judged "the monster's resistance, then that unit's Sunder, then its −enemy resistance, then the Sanctuary rule" (`ESR/d2rloader/config/celestialrayone.immunity-dot-clear.toml`).
 - Floor: `{patch.esr-resistance-floor-minus-1000.floor}`<!-- -1000 --> "for all elements and all unit types" (patch description). The wiki (3.9) says pierce cannot go below −100; that was the old engine floor, which this patch moves.
-- Item rows: fire 230, lightning 217, cold 209, poison 129, magic 21, physical 17.
 - Patch 3.2.19: a player's own pierce no longer shows in ally resist display (`ESR/patchnotes/3.2.19.md` line 10).
 - Summons: `excel/skills.txt` Valkyrie passivestat6–11 = the six pierce stats with passivecalc `stat('passive_*_pierce'.accr)` (the same row's passivestats give the pet curse immunity and summon resists, so they land on the pet); Raise Kornac passivecalc5 copies `passive_dmg_pierce`. This supports the 3.9 answer for summons.
 
@@ -402,20 +372,19 @@ sources: `ESR/d2rloader/config/celestialrayone.immunity-dot-clear.toml`; `ESR/d2
 
 stats: item_absorbfire_percent (142), item_absorbfire (143), item_absorblight_percent (144), item_absorblight (145), item_absorbmagic_percent (146), item_absorbmagic (147), item_absorbcold_percent (148), item_absorbcold (149)
 
-summary: Turns part of the elemental damage that gets through your resists into healing. Percent absorb caps at 40%.
+summary: Turns part of the elemental damage that gets through your resists into healing. Percent absorb caps at {engine.absorb.percent-cap}%.
 
-body: Absorb works after resistances [Vanilla]. Percent absorb takes up to 40% of what is left and heals you for it; flat absorb then takes a fixed amount per hit [Vanilla]. Both heal rather than just block [Vanilla]. There is no poison or physical item absorb [Vanilla]. ESR's "absorb all damage" plugin only changes certain skill shields, not these item stats [ESR config]. ESR shows grouped lines such as "Elemental Absorb N%" [ESR files].
+body: Absorb works after resistances [Vanilla]. Percent absorb takes up to {engine.absorb.percent-cap}% of what is left and heals you for it; flat absorb then takes a fixed amount per hit [Vanilla]. Both heal rather than just block [Vanilla]. There is no poison or physical item absorb [Vanilla]. ESR's "absorb all damage" plugin only changes certain skill shields, not these item stats [ESR config]. ESR shows grouped lines such as "Elemental Absorb N%" [ESR files].
 
 facts:
 
 - Percent cap 40 [Vanilla, D2MOO SUnitDmg.cpp:1052]; flat absorb applied after percent, as points per hit, both added to the heal (`dwAbsLife`, 1047–1066) [Vanilla].
 - `ESR/d2rloader/config/celestialrayone.absorb-all-damage.toml`: "Makes skills.txt auraeventfunc 40 absorb every kind of damage" — skill shields only.
 - Grouped line: rows 142, 144, 148 (fire, lightning, cold %) share dgrp 5 `strModAbsorbElemental` = "Elemental Absorb %d%%"; magic % is not in the group.
-- Item rows: % 15–52, flat 4–18.
 
 caveats:
 
-- Whether the 40% cap is per element after summing all sources: yes in the code; check display.
+- Whether the {engine.absorb.percent-cap}% cap is per element after summing all sources: yes in the code; check display.
 
 sources: `excel/itemstatcost.txt` rows 142–149; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:1052–1072; `ESR/d2rloader/config/celestialrayone.absorb-all-damage.toml`
 
@@ -425,7 +394,7 @@ sources: `excel/itemstatcost.txt` rows 142–149; D2MOO/D2Game/src/UNIT/SUnitDmg
 
 stats: tohit (19), item_tohit_percent (119), item_tohit_perlevel (224), item_tohitpercent_perlevel (225), item_demon_tohit (123), item_undead_tohit (124)
 
-summary: Decides whether your attacks hit. ESR uses a much steeper curve: you need about five times the target's defense for 50%.
+summary: Decides whether your attacks hit. ESR uses a much steeper curve: you need about {config.attack-rating.curve.pivot_ratio}× the target's defense for an even chance.
 
 body: ESR replaces the hit formula for everyone: players, hirelings and monsters [ESR config]. The chance depends only on attack rating divided by defense; level no longer matters [ESR config]. At {config.attack-rating.curve.pivot_ratio}<!-- 5 -->× the target's defense you hit 50% of the time; below that it falls fast, above it it climbs slowly towards 100% [ESR config]. There is no 5% minimum or 95% maximum: low attack rating can mean 0%, and very high rating 100% [ESR config]. The character screen shows the real chance, including bonuses against demons and undead and the target's live defense [ESR config]. Running no longer makes monsters auto-hit you [ESR config].
 
@@ -433,7 +402,7 @@ facts:
 
 - Curve (`ESR/d2rloader/config/celestialrayone.attack-rating.toml` `[curve]`): `pivot_ratio = {config.attack-rating.curve.pivot_ratio}`<!-- 5.0 -->, `steepness = {…steepness}`<!-- 5.0 -->, `tail = {…tail}`<!-- 3.0 -->, `late_tail = {…late_tail}`<!-- 1.0 --> blended from `{…blend_start_ratio}`<!-- 30 --> to `{…blend_end_ratio}`<!-- 100 -->, `snap_to_100_at = {…snap_to_100_at}`<!-- 99.5 -->.
 - Below pivot `100 × r^s / (r^s + p^s)`; above `50 + 50 × (r − p) / ((r − p) + tail)` (same file).
-- Table from the file (r = AR / defense → chance): 1 → 0, 2 → 1, 3 → 7, 4 → 24, 5 → 50, 6 → 62, 8 → 75, 10 → 81, 20 → 91, 30 → 94, 40 → 96, 50 → 97, 60 → 98, 80 → 99, 100 → 99, 104 → 100.
+- Table from the file (r = AR / defense → chance): {derived.attack-rating-table}.
 - `[chance] min_chance = {config.attack-rating.chance.min_chance}`<!-- 0 -->, `max_chance = {…max_chance}`<!-- 100 -->, `level_scaling = {…level_scaling}`<!-- false -->. Vanilla (same file): pivot 1, steepness 1, tail 2, late_tail 0, level scaling, 5–95.
 - `[character_screen] skip_client_fudge = true`: the screen no longer applies its own Nightmare/Hell 10/12 defense and 10/15 attack rating reductions.
 - `charstats.txt` ToHitFactor `{charstats.*.ToHitFactor}`<!-- 20 for all classes -->; the screen no longer counts it twice (`server_accurate_attack_rating`).
@@ -443,7 +412,7 @@ facts:
 
 caveats:
 
-- The research-app-community summary said "min/max 5–95"; the config says 0 and 100. The config is authoritative.
+- Older community summaries say the chance is limited to 5–95%; the config says {config.attack-rating.chance.min_chance} and {…max_chance}. The config is authoritative.
 
 sources: `ESR/d2rloader/config/celestialrayone.attack-rating.toml`; `ESR/d2rloader/patches/no-run-penalties.json`, `summon-no-monlvl-stats.json`; `excel/charstats.txt`; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:2479–2610
 
@@ -462,7 +431,6 @@ facts:
 - Halving named in `ESR/d2rloader/config/celestialrayone.attack-rating.toml` `[character_screen] live_monster_defense`: "the halved −% target defense against superuniques, uniques and hirelings".
 - Vanilla halving: players, bosses, superuniques, hirelings; clamp 0–100 (D2MOO SUnitDmg.cpp:2516–2526). Ignore: player attackers only, not against unique/superunique/boss/hireling (SUnitDmg.cpp:2511).
 - −N per hit: added to the monster's armorclass stat (floored at 0) when a player or an allied unit attacks (SUnitDmg.cpp:270–277) [Vanilla].
-- Item rows: ignore 30, −% 78, −N per hit 28.
 
 caveats:
 
@@ -485,7 +453,6 @@ facts:
 
 - Op 13 (percent of the item's own base value) on rows 17/18 (`excel/itemstatcost.txt`).
 - Fix: `ESR/d2rloader/config/celestialrayone.enhanced-damage-fix.toml` `[enhanced_damage_fix] enabled = {config.enhanced-damage-fix.enhanced_damage_fix.enabled}`<!-- true -->; "the percent stays on the item only when the item has base damage of that kind"; "Existing characters are fixed when they load"; "Enhanced Defense and max durability % also use op 13; they keep the game's own decision".
-- Item rows: 559.
 
 caveats:
 
@@ -501,7 +468,7 @@ stats: item_cannotbefrozen (153), item_halffreezeduration (118)
 
 summary: Cannot Be Frozen removes both freeze and chill on you; Half Freeze Duration halves both.
 
-body: Cannot Be Frozen sets both the chill length and the freeze length of incoming hits to zero, so you are neither frozen nor slowed by cold [Vanilla]. Half Freeze Duration halves both instead; it does nothing when you already have Cannot Be Frozen [Vanilla]. Cold damage itself still hits you [Vanilla]. 96 ESR item rows have Cannot Be Frozen, 11 have Half Freeze Duration [ESR files].
+body: Cannot Be Frozen sets both the chill length and the freeze length of incoming hits to zero, so you are neither frozen nor slowed by cold [Vanilla]. Half Freeze Duration halves both instead; it does nothing when you already have Cannot Be Frozen [Vanilla]. Cold damage itself still hits you [Vanilla].
 
 facts:
 
@@ -520,7 +487,7 @@ stats: item_slow (150)
 
 summary: Each hit slows the target's movement and attack speed by the percent, for about 30 seconds. Bosses are capped at 50%.
 
-body: Every hit applies the slow; there is no chance roll [Vanilla]. The target's movement, attack and animation speed drop by the percent for 30 seconds [Vanilla]. Caps depend on the target: 90% for normal monsters and minions, 75% for superuniques, and 50% for players, champions, uniques, bosses and hirelings [Vanilla]. A new slow replaces the running one [Vanilla]. 60 ESR item rows carry it [ESR files]. No loader config changes it [ESR config].
+body: Every hit applies the slow; there is no chance roll [Vanilla]. The target's movement, attack and animation speed drop by the percent for 30 seconds [Vanilla]. Caps depend on the target: 90% for normal monsters and minions, 75% for superuniques, and 50% for players, champions, uniques, bosses and hirelings [Vanilla]. A new slow replaces the running one [Vanilla]. No loader config changes it [ESR config].
 
 facts:
 
@@ -541,7 +508,7 @@ stats: item_freeze (134)
 
 summary: A chance on hit to freeze the target solid for a short time; bosses and uniques are only chilled.
 
-body: The chance rises with the item value and with your level compared with the target's level, and is lower on ranged hits [Vanilla]. Freeze length is shortened in higher difficulties: divided by {difficulty.nightmare.monsterFreezeDivisor}<!-- 2 --> in Nightmare and {difficulty.hell.monsterFreezeDivisor}<!-- 4 --> in Hell, the same as vanilla [ESR files]. Uniques, bosses and hirelings are only chilled, not frozen [Vanilla]. Monsters that cannot be chilled are not affected [Vanilla]. 49 ESR item rows carry it [ESR files].
+body: The chance rises with the item value and with your level compared with the target's level, and is lower on ranged hits [Vanilla]. Freeze length is shortened in higher difficulties: divided by {difficulty.nightmare.monsterFreezeDivisor}<!-- 2 --> in Nightmare and {difficulty.hell.monsterFreezeDivisor}<!-- 4 --> in Hell, the same as vanilla [ESR files]. Uniques, bosses and hirelings are only chilled, not frozen [Vanilla]. Monsters that cannot be chilled are not affected [Vanilla].
 
 facts:
 
@@ -564,7 +531,7 @@ stats: item_knockback (81)
 
 summary: Hits can push the target back a short distance, interrupting it. Large monsters are pushed less often, small ones every time.
 
-body: A successful hit has a chance to push the target back: 50% for normal-size monsters, 25% for large ones and always for small ones [Vanilla]. It interrupts many monster attacks but can also push melee targets out of your reach [Vanilla]. 25 ESR item rows carry it [ESR files]. No loader config changes it [ESR config].
+body: A successful hit has a chance to push the target back: 50% for normal-size monsters, 25% for large ones and always for small ones [Vanilla]. It interrupts many monster attacks but can also push melee targets out of your reach [Vanilla]. No loader config changes it [ESR config].
 
 facts:
 
@@ -583,7 +550,7 @@ stats: item_damagetomana (114)
 
 summary: A percent of the damage you take, after resistances, is added to your mana.
 
-body: When you are hit in melee or by a missile, the percent of the damage that got through is added to your mana [Vanilla]. It does not reduce the damage [Vanilla]. It works for players only, not mercenaries [Vanilla]. The difficulty table has no divisor for it, unlike leech, so it stays useful in Hell [ESR files]. 34 ESR item rows carry it [ESR files].
+body: When you are hit in melee or by a missile, the percent of the damage that got through is added to your mana [Vanilla]. It does not reduce the damage [Vanilla]. It works for players only, not mercenaries [Vanilla]. The difficulty table has no divisor for it, unlike leech, so it stays useful in Hell [ESR files].
 
 facts:
 
@@ -608,11 +575,10 @@ body: Each time a monster attacks you in melee or hits you with a missile, it ta
 
 facts:
 
-- Row 78: `itemevent1 = attackedinmelee`, func 6; `itemevent2 = damagedbymissile`, func 6 (vanilla has no missile event). Row 128: `attackedinmelee` / `damagedbymissile`, func 10 (vanilla: `damagedinmelee` only). Source `excel/itemstatcost.txt`; diff `scratchpad/modifiers/out/isc-vanilla-diff.txt`.
+- Row 78: `itemevent1 = attackedinmelee`, func 6; `itemevent2 = damagedbymissile`, func 6 (vanilla has no missile event). Row 128: `attackedinmelee` / `damagedbymissile`, func 10 (vanilla: `damagedinmelee` only). Source `excel/itemstatcost.txt` (compared with vanilla D2R's).
 - Kill credit: `ESR/d2rloader/config/celestialrayone.soft-hit-removal.toml` `attacker_takes_damage = {config.soft-hit-removal.soft_hit_removal.attacker_takes_damage}`<!-- true --> covers "Event function 6: itemstatcost itemeventfunc 6 (item_attackertakesdamage in vanilla) and skills.txt auraeventfunc 6"; percent reflect `thorns_percent = {…thorns_percent}`<!-- false --> (stats 131/208 stay soft hits, no kill credit). Row 128 uses func 10 and row 337 (fire thorns) func 11; neither is listed.
 - D2MOO func 6 and func 10 both mark the reflected hit with result flags 0x4021 (SkillItem.cpp:1025–1065) [Vanilla]; the config calls 0x20 the soft-hit flag ("Stock marks this damage with flags 0x4021; the switch writes 0x0001").
 - Per-level: row 238 `op = 2`, `op param = 3`, `op base = level`, `op stat1 = item_attackertakesdamage`, so it adds value × level / 8 to the flat stat.
-- Item rows: 93 flat, 48 per level, 5 lightning.
 
 caveats:
 
@@ -638,7 +604,6 @@ facts:
 - `absorbdamage` is triggered in SUNITDMG_CalculateTotalDamage before resistances are applied (D2MOO SUnitDmg.cpp:874) [Vanilla].
 - Cast on cast: `ESR/d2rloader/config/celestialrayone.cast-on-cast.toml` ("the caster is in the cast animation (mode 10)", "the skill is not an aura", "a real cast that pays its cost"); `server_proc_aim = true` applies to every item proc.
 - Restrict: `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml` — item procs are checked only when the skill row has `ItemUseRestrict = 1`.
-- Item rows: on striking 978, when struck 546, on kill 490, on attack 395, on cast 147, on death 8, when taking damage 2.
 - Crossbows put all skills on cooldown while equipped [Community 3.9].
 
 caveats:
@@ -659,7 +624,7 @@ stats: item_reanimate (155), item_restinpeace (108)
 
 summary: Reanimate: killed monsters may rise as a named monster fighting for you. Rest in Peace: slain monsters cannot be raised.
 
-body: "N% Reanimate as: X" gives a chance on kill to raise the slain monster's corpse as monster X on your side [Vanilla]. It does not work on unique or champion kills [Vanilla]. Only 5 ESR items have it [ESR files]. "Slain Monsters Rest in Peace" marks your kills so their corpses cannot be raised or used, which also blocks corpse skills [Vanilla]. 24 ESR item rows have it [ESR files].
+body: "N% Reanimate as: X" gives a chance on kill to raise the slain monster's corpse as monster X on your side [Vanilla]. It does not work on unique or champion kills [Vanilla]. Few ESR items have it [ESR files]. "Slain Monsters Rest in Peace" marks your kills so their corpses cannot be raised or used, which also blocks corpse skills [Vanilla].
 
 facts:
 
@@ -690,7 +655,6 @@ facts:
 - Exactly −120 IAS divides by zero and crashes (same page).
 - Whirlwind: interval × 170/100, attack speed in full but base speed, weapon speed and slows at 50%, cap 300, minimum 6 frames (same page; `ESR/d2rloader/config/celestialrayone.whirlwind.toml` `interval_stretch = 170`, `max_rate = 300`; `ESR/patchnotes/3.2.21.md` "The last IAS breakpoint is now 6 frames instead of 4").
 - Frenzy frames stat 920: one frame off each of Frenzy's two swings per point, down to a 3-frame double swing (`ESR/d2rloader/config/celestialrayone.frenzy-speed.toml` `frames_stat_id = 920`; Frame Table).
-- Item rows: 631.
 
 caveats: none beyond in-game confirmation of individual breakpoints.
 
@@ -702,22 +666,21 @@ sources: `ESR/docs/ias-calculator.html` (official Frame Table); `ESR/docs/ias-ca
 
 stats: item_fastercastrate (105)
 
-summary: Shortens cast animations. ESR raises the useful cap from 200 to about 480 FCR; check breakpoints in the Frame Table.
+summary: Shortens cast animations. ESR raises the useful cap from {vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap} to about {derived.fcr-max-useful} FCR; check breakpoints in the Frame Table.
 
-body: FCR has diminishing returns [ESR config]. In vanilla it stops paying at 200 FCR [ESR config]. ESR moves the cap to {config.cast-rate-cap.cast-rate-cap.fcr_cap}<!-- 500 --> FCR [ESR config]. Because of rounding, nothing above 480 FCR changes anything [ESR files]. Higher FCR only helps when it crosses a whole-frame breakpoint, and many breakpoints past 200 need very large amounts [ESR config]. ESR also removes the minimum casting delay [ESR files]. Most casting animations differ from vanilla, so vanilla breakpoint tables are wrong for ESR [Community 3.10]. The official Frame Table has every class and form [ESR files]. Monsters with FCR get the same cap [ESR config].
+body: FCR has diminishing returns [ESR config]. In vanilla it stops paying at {vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap} FCR [ESR config]. ESR moves the cap to {config.cast-rate-cap.cast-rate-cap.fcr_cap}<!-- 500 --> FCR [ESR config]. Because of rounding, nothing above {derived.fcr-max-useful} FCR changes anything [ESR files]. Higher FCR only helps when it crosses a whole-frame breakpoint, and many breakpoints past {vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap} need very large amounts [ESR config]. ESR also removes the minimum casting delay [ESR files]. Most casting animations differ from vanilla, so vanilla breakpoint tables are wrong for ESR [Community 3.10]. The official Frame Table has every class and form [ESR files]. Monsters with FCR get the same cap [ESR config].
 
 facts:
 
-- `fcr_cap = {config.cast-rate-cap.cast-rate-cap.fcr_cap}`<!-- 500 --> (default 200) in `ESR/d2rloader/config/celestialrayone.cast-rate-cap.toml`.
-- `effective = 120 × FCR / (FCR + 120)`; `rate = min(100 + effective, ceiling)`; ceiling at 500 = 196 (table in the same file: 200 → 175, 300 → 185, 400 → 192, 500 → 196). Frames `ceil(256 × FramesPerDirection / (AnimationSpeed × rate / 100)) − 1`.
+- `fcr_cap = {config.cast-rate-cap.cast-rate-cap.fcr_cap}`<!-- 500 --> (default {vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap}) in `ESR/d2rloader/config/celestialrayone.cast-rate-cap.toml`.
+- `effective = 120 × FCR / (FCR + 120)`; `rate = min(100 + effective, ceiling)`; the ceiling is the rate at the cap, {derived.fcr-ceiling} (vanilla {vanilla.derived.fcr-ceiling}). Rates: 200 FCR → {derived.fcr-rate.200}, 300 → {derived.fcr-rate.300}, 400 → {derived.fcr-rate.400}, 500 → {derived.fcr-rate.500} (the same file has the table). Frames `ceil(256 × FramesPerDirection / (AnimationSpeed × rate / 100)) − 1`.
 - "nothing above 480 faster cast rate changes anything"; between −55 and −119 FCR the cast becomes instant (game arithmetic wrap) (`ESR/docs/ias-calculator.html`).
-- `excel/charstats.txt` MinimumCastingDelay `{charstats.*.MinimumCastingDelay}`<!-- 0 for all classes; vanilla 12 -->.
-- Example from the config: a 14-frame cast gets 7 frames at 200 and gains nothing until 600; a 16-frame cast gets 9 frames at 200, 8 at 400 and 7 at 600. So at ESR's 500 cap a 14-frame cast still takes 7 frames.
-- Item rows: 285.
+- `excel/charstats.txt` MinimumCastingDelay `{charstats.*.MinimumCastingDelay}`<!-- 0 for all classes --> (vanilla {vanilla.charstats.*.MinimumCastingDelay}).
+- Frames at AnimationSpeed 256 (the config's example): a 14-frame cast takes {derived.fcr-frames.14.200} frames at 200 FCR and still {derived.fcr-frames.14.500} at 500; a 16-frame cast takes {derived.fcr-frames.16.200} at 200, {derived.fcr-frames.16.400} at 400 and {derived.fcr-frames.16.500} at 500. The config: a 14-frame cast gains nothing "under a 600 cap".
 
 caveats:
 
-- The research-app-community summary said "cap stays vanilla 200"; the config value is 500 and the official Frame Table agrees.
+- Older community summaries say the cap stays at the vanilla {vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap}; the config value is {config.cast-rate-cap.cast-rate-cap.fcr_cap} and the official Frame Table agrees.
 
 sources: `ESR/d2rloader/config/celestialrayone.cast-rate-cap.toml`; `ESR/docs/ias-calculator.html`; `excel/charstats.txt`; wiki "Breakpoints (FCR, FHR, FBR)" (values from 3.10.11, untested)
 
@@ -735,11 +698,10 @@ facts:
 
 - `effective = 120 × FHR / (FHR + 120)` (D2MOO D2Common/src/Units/Units.cpp:1613; base table 1284–1290) [Vanilla].
 - `cast-rate-cap.toml`: "Attack speed, block rate, hit recovery and run speed have their own separate ceilings and are not touched."
-- Item rows: 176.
 
 caveats:
 
-- The damage threshold that triggers a stagger is unverified for D2R (community lore says 1/12 of max life; not checked in D2MOO in this pass).
+- The damage threshold that triggers a stagger is not confirmed for D2R (community lore says 1/12 of max life).
 - ESR FHR breakpoints: only the wiki's 3.10.11 table, untested.
 
 sources: D2MOO/D2Common/src/Units/Units.cpp; `ESR/d2rloader/config/celestialrayone.cast-rate-cap.toml`; wiki "Breakpoints (FCR, FHR, FBR)"
@@ -750,17 +712,16 @@ sources: D2MOO/D2Common/src/Units/Units.cpp; `ESR/d2rloader/config/celestialrayo
 
 stats: toblock (20), passive_weaponblock (348)
 
-summary: Chance to block attacks with a shield, up to 75%. Dexterity raises it, level lowers it; ESR has low class base values.
+summary: Chance to block attacks with a shield, up to {engine.block.cap}%. Dexterity raises it, level lowers it; ESR has low class base values.
 
-body: Shield block chance uses your class base, your shield and "Increased Chance of Blocking", scaled by Dexterity and divided by your level [Vanilla]. It caps at 75% [Vanilla]. ESR's class bases are far lower than vanilla's, so shields and block items matter more [ESR files]. In ESR, moving no longer cuts block chance to a third [ESR config]. Weapon block lets any class block with two claws, two swords, or one sword held in both hands with nothing in the other [ESR config]. It is not capped at 75%, rolls only after shield block fails, and never while moving [ESR config].
+body: Shield block chance uses your class base, your shield and "Increased Chance of Blocking", scaled by Dexterity and divided by your level [Vanilla]. It caps at {engine.block.cap}% [Vanilla]. ESR's class bases are far lower than vanilla's, so shields and block items matter more [ESR files]. In ESR, moving no longer cuts block chance to a third [ESR config]. Weapon block lets any class block with two claws, two swords, or one sword held in both hands with nothing in the other [ESR config]. It is not capped at {engine.block.cap}%, rolls only after shield block fails, and never while moving [ESR config].
 
 facts:
 
 - Formula `(BlockFactor + toblock) × (Dex − 15) / (2 × level)`, cap 75, players with a shield (D2MOO D2Common/src/Units/Units.cpp:2555–2576) [Vanilla]. `toblock` includes the shield's own block value.
-- BlockFactor (`excel/charstats.txt`): Amazon `{charstats.amazon.BlockFactor}`<!-- 5 -->, Sorceress <!-- 4 -->, Necromancer <!-- 4 -->, Paladin <!-- 6 -->, Barbarian <!-- 5 -->, Druid <!-- 4 -->, Assassin <!-- 5 -->, Warlock <!-- 4 --> (vanilla 20–30).
+- BlockFactor (`excel/charstats.txt`): `{charstats.*.BlockFactor}`<!-- Amazon 5, Sorceress 4, Necromancer 4, Paladin 6, Barbarian 5, Druid 4, Assassin 5, Warlock 4 --> (vanilla `{vanilla.charstats.*.BlockFactor}`).
 - `ESR/d2rloader/patches/no-run-penalties.json`: "Do not divide block chance by three while moving".
 - `ESR/d2rloader/config/celestialrayone.weapon-block-rules.toml`: `claw_item_types = ["h2h"]`, `sword_item_types = ["swor"]`; "it is not capped at 75 like shield block", "shield block rolls first", "no weapon block while walking or running"; monsters, hirelings and werewolf/werebear forms keep the stock rule; melee skills with `alwayshit = 1` skip the roll.
-- Item rows: toblock 75.
 
 caveats:
 
@@ -782,7 +743,6 @@ facts:
 
 - `effective = 120 × FBR / (FBR + 120)` [Vanilla, D2MOO Units.cpp:1513].
 - Not touched by `cast-rate-cap.toml` (see `fhr`).
-- Item rows: 71.
 
 caveats: ESR block breakpoints are only in the 3.10.11 wiki table, untested.
 
@@ -796,12 +756,12 @@ stats: item_fastermovevelocity (96)
 
 summary: Raises walking and running speed, with diminishing returns. ESR characters already run faster than in vanilla.
 
-body: Movement speed from gear has diminishing returns that are gentler than attack speed's [Vanilla]. ESR characters have a higher base run and walk speed than vanilla [ESR files]. Some ESR effects read Faster Run/Walk, for example an ascendancy that gives Dodge Chance per FRW [ESR files]. 320 item rows carry it [ESR files].
+body: Movement speed from gear has diminishing returns that are gentler than attack speed's [Vanilla]. ESR characters have a higher base run and walk speed than vanilla [ESR files]. Some ESR effects read Faster Run/Walk, for example an ascendancy that gives Dodge Chance per FRW [ESR files].
 
 facts:
 
 - `effective = 150 × FRW / (150 + FRW)` (D2MOO Units.cpp:1289, 1294–1305) [Vanilla].
-- `excel/charstats.txt` RunVelocity `{charstats.*.RunVelocity}`<!-- 13; vanilla 9 -->, WalkVelocity `{charstats.*.WalkVelocity}`<!-- 9; vanilla 6 -->.
+- `excel/charstats.txt` RunVelocity `{charstats.*.RunVelocity}`<!-- 13 --> (vanilla `{vanilla.charstats.*.RunVelocity}`), WalkVelocity `{charstats.*.WalkVelocity}`<!-- 9 --> (vanilla `{vanilla.charstats.*.WalkVelocity}`).
 - `strings/item-modifiers.json` `nomadtiertwo`: "Gain 5% Dodge Chance per 200% Faster Run/Walk or 40% Base Run/Walk Speed"; `excel/skills.txt` has "Nomad Ascendancy" rows, and 11 skills.txt cells read `item_fastermovevelocity`.
 
 caveats: none.
@@ -814,15 +774,14 @@ sources: `excel/charstats.txt`; `strings/item-modifiers.json`; D2MOO/D2Common/sr
 
 stats: passive_dodge (338), passive_avoid (339), passive_evade (340)
 
-summary: Chances to dodge melee, avoid missiles while standing, or evade both while moving. Each is capped at 75%.
+summary: Chances to dodge melee, avoid missiles while standing, or evade both while moving. Each is capped at {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}%.
 
-body: Dodge works against melee attacks while you stand still; Avoid works against missiles while you stand still; Evade works against both while you walk or run [ESR config]. ESR items often show the three as one line, "+N% Dodge Chance" [ESR files]. Each is capped at {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}<!-- 75 -->% for players, hirelings and monsters, and the Advanced Stats panel shows the capped value [ESR config]. Anything above 75 is wasted [ESR config]. Dodge works on mercenaries, though the animation may not play [Community 3.9].
+body: Dodge works against melee attacks while you stand still; Avoid works against missiles while you stand still; Evade works against both while you walk or run [ESR config]. ESR items often show the three as one line, "+N% Dodge Chance" [ESR files]. Each is capped at {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}<!-- 75 -->% for players, hirelings and monsters, and the Advanced Stats panel shows the capped value [ESR config]. Anything above {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent} is wasted [ESR config]. Dodge works on mercenaries, though the animation may not play [Community 3.9].
 
 facts:
 
 - `cap_percent = {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}`<!-- 75 -->; per-stat overrides −1 (inherit); `cap_gameplay = true`, `cap_display = true` (`ESR/d2rloader/config/celestialrayone.dodge-avoid-evade-cap.toml`).
 - Roll 0–99 against the stat (same file).
-- Item rows: 47 each.
 
 caveats:
 
@@ -842,12 +801,11 @@ body: Magic Find upgrades the quality of items that drop; it does not add drops 
 
 facts:
 
-- `MagicFind = 100 + dim × MF / (MF + dim) + MF × tail / 100` with dim 250 unique, 500 set, 600 rare (`ESR/d2rloader/config/celestialrayone.magic-find-soft-tail.toml`).
+- `MagicFind = 100 + dim × MF / (MF + dim) + MF × tail / 100` with dim {engine.magic-find.dim.unique} unique, {engine.magic-find.dim.set} set, {engine.magic-find.dim.rare} rare (`ESR/d2rloader/config/celestialrayone.magic-find-soft-tail.toml`). Up to 10 MF the engine skips the curve and uses the full value (100 + MF must be above 110) [Vanilla, D2MOO D2Game/src/ITEMS/Items.cpp:2397].
 - `tail_percent = {config.magic-find-soft-tail.magic_find_soft_tail.tail_percent}`<!-- 10 -->; per-quality overrides −1.
-- Worked example, unique: 300 MF → 136 + 30 = 166% effective; 1000 MF → 200 + 100 = 300%.
+- Worked example, unique: 300 MF → {derived.magic-find.unique.300}% effective; 1000 MF → {derived.magic-find.unique.1000}% (curve plus tail).
 - Minion kills: `celestialrayone.item-quantity.toml` mentions "the same way the game credits the owner's magic find on those kills"; D2MOO adds the minion owner's MF (D2Game/src/ITEMS/Items.cpp:2383–2388) [Vanilla].
 - `ESR/patchnotes/3.2.17.md` line 5: "Fixed a bug where magic find past \~2000% was not being counted at all." Line 10: culling strike kills now count magic find and gold find.
-- Item rows: 187 (plus 21 per-level).
 
 caveats:
 
@@ -869,7 +827,6 @@ facts:
 
 - `gold × (100 + GF) / 100`, plus the minion owner's GF (D2MOO D2Game/src/ITEMS/Items.cpp:2596–2605) [Vanilla].
 - `ESR/patchnotes/3.2.17.md` L10 (culling strike, gold find and magic find).
-- Item rows: 147 (plus 16 per-level).
 
 caveats: none.
 
@@ -889,7 +846,7 @@ facts:
 
 - `stat_id = {config.item-quantity.stat_id}`<!-- 426 -->, `percent = {config.item-quantity.percent}`<!-- true -->, `exclude_prime_evils = {config.item-quantity.exclude_prime_evils}`<!-- true -->, `credit_minion_owner = {config.item-quantity.credit_minion_owner}`<!-- true -->, `max_bonus_picks = {config.item-quantity.max_bonus_picks}`<!-- 0 = no limit --> (`ESR/d2rloader/config/celestialrayone.item-quantity.toml`).
 - Prime evils = `excel/monstats.txt` primeevil flag (42 rows: act bosses, ubers, endgame map bosses and others).
-- Tooltip `%+d%% Increased Quantity of Items Found` (key `itemquantity`). Item rows: 12.
+- Tooltip `%+d%% Increased Quantity of Items Found` (key `itemquantity`).
 
 caveats: none.
 
@@ -911,7 +868,6 @@ facts:
 - No floor or a level-based one: Leap Attack, Blade Warp, Sacrificial Offering `max(0, …)`; Call of the Wild, Death Mark, Mind Blast, Frozen Cascade (no max on the reduced value); the teleport family (Slow Teleport, Ice Blink, Lightning Warp, Umbral Flight, Flame Rift, Venom Veil, Wind Walk) `max(0, max(25, …) − lvl/2)`.
 - 69 skills.txt cells in 68 skills mention the stat; 3 of them grant it rather than read it (Glacial Focus, Eternal Hourglass Power, Ties That Bind Fire).
 - Strings: `skills.json` iceblink23, lightningwarp23, umbralflight23 "This spell ignores cooldown reduction cap"; devastatingoverwhelm23 "Cooldown goes down with strength instead".
-- Item rows: 89.
 
 caveats:
 
@@ -933,7 +889,7 @@ facts:
 
 - Damage-overflow-fix debug log lists "each element to attacks with its mastery" (`ESR/d2rloader/config/celestialrayone.damage-overflow-fix.toml` line 302, debug_log section). D2MOO rolls attack fire, lightning, cold, magic and poison damage with the matching mastery as a percent bonus (SUnitDmg.cpp:356–486, 603) [Vanilla].
 - `excel/skills.txt` Enchant aurastatcalc1 `enma*100/(100+stat('passive_fire_mastery'.accr))` (aurastatcalc2 the same for max).
-- Item rows: 97 fire, 92 lightning, 97 cold, 89 poison. Grouped line: dgrp 4 `strModSpellDamage` "%+d%% to Spell Damage" has six members: 329–332, 482 (magic) and 483 (physical).
+- Grouped line: dgrp 4 `strModSpellDamage` "%+d%% to Spell Damage" has six members: 329–332, 482 (magic) and 483 (physical).
 
 caveats:
 
@@ -957,14 +913,13 @@ facts:
 - 482: `op 11` on `magicmindam`/`magicmaxdam` (`excel/itemstatcost.txt`); read in 54 skills.txt `EDmgSymPerCalc`.
 - 483: read in 43 skills.txt `DmgSymPerCalc` (49 skills in all).
 - 398: read by 9 skills (4 `EDmgSymPerCalc`, 4 calc2, 1 calc3); e.g. skills.txt "Fire Ball Tainted" calc2 `…*(100+stat('passive_summ_mastery'.accr))/100*(100+stat('generictotalmultiplier'.accr))/100-100`.
-- Item rows: 482 → 127, 483 → 81, 398 → 5.
 
 caveats:
 
 - Which 9 skills read 398: the app's formula engine can list them.
 - The physical spell damage limits come from a 3.9 answer about D-stoning, not about this stat by name.
 
-sources: `excel/itemstatcost.txt` rows 398, 482, 483; `excel/skills.txt`; `scratchpad/modifiers/out/skills-stat-refs.txt`; wiki Q&A
+sources: `excel/itemstatcost.txt` rows 398, 482, 483; `excel/skills.txt`; wiki Q&A
 
 ---
 
@@ -980,10 +935,9 @@ facts:
 
 - Formulas: `excel/skills.txt` (e.g. Raise Kornac calc1 `(100+lvl*par8)*(100+stat('passive_summ_life'.accr))/100-100`; Valkyrie aurastatcalc1 with passive_summ_mastery; 14 skills' `petmax` read passive_summ_limit).
 - 303 is op 1 on 486: `+X% Total Multiplier to Summon Damage Stat`.
-- Cap: `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml` (Align = 1 monsters: "summons, Valkyrie, golems, Revives, hirelings"; `pairs = [423, 511]`: monstats *hcIdx 423 = heartofwolverine is uncapped while the owner has stat 511 summonexceedcap, which is on 1 runeword).
-- `ESR/d2rloader/patches/summon-no-monlvl-stats.json`; `ESR/d2rloader/patches/pet-damage-vs-prime-evil.json` (`PlayerDamagePercentVSPrimeEvil` `{difficulty.*.playerDamagePercentVSPrimeEvil}`<!-- 100/50/25 -->).
+- Cap: `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml` (Align = 1 monsters: "summons, Valkyrie, golems, Revives, hirelings"; `pairs = [423, 511]`: monstats *hcIdx 423 = heartofwolverine is uncapped while the owner has stat 511 summonexceedcap, which is on a runeword).
+- `ESR/d2rloader/patches/summon-no-monlvl-stats.json`; `ESR/d2rloader/patches/pet-damage-vs-prime-evil.json` (`PlayerDamagePercentVSPrimeEvil` `{difficulty.*.playerDamagePercentVSPrimeEvil}`<!-- 100/50/25 -->, vanilla {vanilla.difficulty.*.playerDamagePercentVSPrimeEvil}).
 - `ESR/patchnotes/3.2.19.md` line 4: "Fixed a bug where summons would still show up as immune to elements in certain cases, despite their resistances capping at 75% (50% for phys)."
-- Item rows: damage 110, life 30, ele res 20, phys res 17, limit 16.
 
 caveats:
 
@@ -1004,7 +958,6 @@ body: "+N to All Skills" raises every skill you have points in [Vanilla]. Class 
 facts:
 
 - Merge: `ESR/d2rloader/config/celestialrayone.skill-line-merge.toml` — only rows 97 and 107, same skill, same tooltip block; merged text uses string key `allclasses`.
-- Item rows: all skills 496, class 378, tab 349, single 349, oskill 1117.
 - Synergy formulas (`excel/skills.txt` DmgSymPerCalc, EDmgSymPerCalc, ELenSymPerCalc): 306 `.blvl` references, 25 `.lvl`.
 - The old wiki (3.9) gives a +32 per-item cap for all skills and for class skills. In 3.2.24 `excel/itemstatcost.txt` saves item_allskills with 16 bits / SaveAdd 1000 and item_addclassskills with 10 bits / SaveAdd 50, so that cap does not come from the save format; treat it as outdated.
 
@@ -1020,7 +973,7 @@ stats: curse_resistance (109)
 
 summary: Shortens curses cast on you by the percent; 100% makes you immune to curses.
 
-body: Curses on you last that much shorter [Vanilla]. At 100% curses cannot be applied to you at all [Vanilla]. Separately, the difficulty table divides the length of curses that change monster behaviour (Terror, Confuse, Attract, Dim Vision) by {difficulty.nightmare.aiCurseDivisor}<!-- 2 --> in Nightmare and {difficulty.hell.aiCurseDivisor}<!-- 4 --> in Hell [ESR files] [Vanilla]. 26 ESR item rows carry it [ESR files].
+body: Curses on you last that much shorter [Vanilla]. At 100% curses cannot be applied to you at all [Vanilla]. Separately, the difficulty table divides the length of curses that change monster behaviour (Terror, Confuse, Attract, Dim Vision) by {difficulty.nightmare.aiCurseDivisor}<!-- 2 --> in Nightmare and {difficulty.hell.aiCurseDivisor}<!-- 4 --> in Hell [ESR files] [Vanilla].
 
 facts:
 
@@ -1047,7 +1000,7 @@ body: Each time a missile hits, it may continue on to another target [Vanilla]. 
 
 facts:
 
-- Tooltip `%+d%% Piercing Attack` (row 156). Item rows: 64.
+- Tooltip `%+d%% Piercing Attack` (row 156).
 - Wiki (3.9): Dance of Death and Fend projectiles pierce by default; Spearstorm does not.
 
 caveats: skill-by-skill support is undocumented in 3.2.
@@ -1062,11 +1015,11 @@ stats: item_addexperience (85)
 
 summary: Adds a percent to the experience you get from kills.
 
-body: Kill experience is raised by the percent [Vanilla]. ESR takes {difficulty.normal.deathExpPenalty}<!-- 10 -->% of your current level's experience when you die, in every difficulty, including Normal [ESR files]. Dying in 19 listed endgame map levels, mostly a map's last level, or in the Goblin Realm map costs no experience [ESR config]. 74 item rows carry the bonus [ESR files].
+body: Kill experience is raised by the percent [Vanilla]. ESR takes {difficulty.normal.deathExpPenalty}<!-- 10 -->% of your current level's experience when you die, in every difficulty, including Normal [ESR files]. Dying in 19 listed endgame map levels, mostly a map's last level, or in the Goblin Realm map costs no experience [ESR config].
 
 facts:
 
-- `{difficulty.*.deathExpPenalty}`<!-- 10/10/10; vanilla 0/5/10 --> (`excel/difficultylevels.txt`).
+- `{difficulty.*.deathExpPenalty}`<!-- 10/10/10 --> (vanilla {vanilla.difficulty.*.deathExpPenalty}; `excel/difficultylevels.txt`).
 - Safe levels: `ESR/d2rloader/config/celestialrayone.death-penalty-safe-levels.toml` `protected_levels` (19 ids, 141 … 213), `protect_experience = true`, `protect_gold = false`. By `excel/levels.txt` they are all endgame map levels, mostly a map's last level (for example "Tier 1 Map - Chasm of Horror Level 2", "Tier 5 Map - The Frozen Throne") and "Unique Map - Goblin Realm".
 - The loss is DeathExpPenalty percent "of the experience span of your current level", never below the start of that level (same file).
 
@@ -1084,8 +1037,6 @@ summary: Changes how far around you the game lights the area. Mostly cosmetic.
 
 body: More light radius shows more of the dark area around you [Vanilla]. Negative values shrink it. It has no combat effect [Vanilla].
 
-facts: Item rows 84.
-
 caveats: none.
 
 sources: `excel/itemstatcost.txt` row 89
@@ -1100,7 +1051,7 @@ summary: Changes the Strength, Dexterity or level needed to equip the item.
 
 body: "Requirements −N%" lowers the item's Strength and Dexterity requirements by that percent; positive values raise them [Vanilla]. "+N Level Required" raises the character level needed [ESR files]. ESR recipes such as D-stoning and melding add it, and Mapling lowers it [ESR files].
 
-facts: Item rows: req% 145; level 236 (all uniques), plus 328 cube rows (D-stoning recipes such as "DS + Any Weapon", gem melding, and the negative "[SECRET50] Lvl Req -N" Mapling rows) (`excel/cubemain.txt`).
+facts: Level Required is on every unique and on many cube recipes (D-stoning recipes such as "DS + Any Weapon", gem melding, and the negative "[SECRET50] Lvl Req -N" Mapling rows) (`excel/cubemain.txt`).
 
 caveats: none.
 
@@ -1118,9 +1069,9 @@ body: Prevent Monster Heal stops a monster you hit from regenerating life [Vanil
 
 facts:
 
-- Item rows: 117 `noheal` → 0 (only the non-spawnable suffix "of Vileness"), 112 `howl` → 0 (six non-spawnable prefixes Screaming/Howling/Wailing), 113 `stupidity` → 1 setitems row, Death's Hand, as a partial set bonus (`excel/magicprefix.txt`, `magicsuffix.txt`, `setitems.txt`).
+- Carriers: 117 `noheal` only on the non-spawnable suffix "of Vileness", 112 `howl` only on the non-spawnable prefixes Screaming/Howling/Wailing, 113 `stupidity` only on Death's Hand as a partial set bonus (`excel/magicprefix.txt`, `magicsuffix.txt`, `setitems.txt`).
 - Prevent heal: a 120000-frame state on hit, player attackers only, not on ubers (D2MOO SUnitDmg.cpp:2453–2475) [Vanilla].
 
 caveats: none.
 
-sources: `excel/itemstatcost.txt`; `scratchpad/modifiers/out/stat-usage.json`; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:2454
+sources: `excel/itemstatcost.txt`; `excel/magicprefix.txt`, `magicsuffix.txt`, `setitems.txt`; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:2454

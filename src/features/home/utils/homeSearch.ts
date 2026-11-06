@@ -5,7 +5,7 @@
 import { NAME_FOCUS_PAGES } from '@/features/guide/engine/linkSchemes';
 import { normaliseItemName } from '@/core/utils/itemName';
 import { GAME_DATA_URL_PARAM_KEYS } from '@/features/game-data/constants/urlParams';
-import type { Area, ModifiersBundle, SkillDetail } from '@/features/game-data/engine/schema';
+import type { Area, SkillDetail } from '@/features/game-data/engine/schema';
 import { disambiguation, duplicateNames, SKILLS_ROUTE, SKILLS_URL_PARAMS } from '@/features/skills/utils/skills';
 import { campaignMapAreaPath } from '@/features/campaign-map/utils/urlState';
 import { MODIFIERS_ROUTE, MODIFIERS_URL_PARAMS } from '@/features/modifiers/utils/modifierRoutes';
@@ -163,19 +163,6 @@ export function skillSearchNames(skills: readonly Pick<SkillDetail, 'id' | 'name
   return skills.map((skill) => {
     const variant = disambiguation(skill, duplicates);
     return { name: variant === null ? skill.name : `${skill.name} (${variant})`, id: skill.id };
-  });
-}
-
-/**
- * Modifier search names: every kind title with its key (`/modifiers?kind=<key>`), except kinds made only of ESR
- * bookkeeping stats (tinkering caps, display twins) and generated titles that are only a stat name or a stray word.
- */
-export function modifierSearchNames(bundle: Pick<ModifiersBundle, 'kinds' | 'stats'>): HomeSearchName[] {
-  const technical = new Set(bundle.stats.filter((stat) => stat.technical === true).map((stat) => stat.id));
-  return bundle.kinds.flatMap((kind) => {
-    if (kind.stats.length > 0 && kind.stats.every((id) => technical.has(id))) return [];
-    if (kind.generated === true && (/^[a-z0-9_]+$/.test(kind.title) || kind.title.length <= 3)) return [];
-    return [{ name: kind.title, id: kind.key }];
   });
 }
 

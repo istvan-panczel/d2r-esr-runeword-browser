@@ -1,15 +1,15 @@
-# Open questions for the modifier explanations (verified)
+# Open questions for the modifier explanations
 
-Phrased so the owner can test them in game or paste them on the ESR Discord. "Ask" = a question for the mod author (CelestialRay). "Test" = something one person can check in single player. Each item names the draft key it affects. Updated after the fact-check of 2026-11-06: new items are marked **(new)**, resolved items are listed at the end.
+"Ask" = a question for the mod author (CelestialRay). "Test" = something one person can check in single player. Each item names the explanation keys it affects.
 
 ## Highest impact
 
 1. **Leech in Hell rounds to nothing? (Test, then ask)** — `life-leech`, `mana-leech`
-   ESR divides life leech by 150 in Hell and mana leech by 75 (`difficultylevels.txt`). In the 1.10 code the reduced value keeps 1/64 precision, so 20% leech becomes 0.125%, and 2% or less becomes 0. The research notes cite Maxroll as saying D2R rounds any leech below 1% after reductions down to 0 (not re-checked), which would make all item leech under 150% useless in Hell.
+   ESR divides life leech by 150 in Hell and mana leech by 75 (`difficultylevels.txt`). In the 1.10 code the reduced value keeps 1/64 precision, so 20% leech becomes 0.125%, and 2% or less becomes 0. Some guides (Maxroll) say D2R rounds any leech below 1% after reductions down to 0, which would make all item leech under 150% useless in Hell.
    Test: Hell, a character with only ~20–40% life leech and no other sustain, hit a normal monster (not a skeleton type) while below full life with regeneration removed. Does the life globe move on hits? Repeat in Nightmare.
    Ask: "Is life leech in Hell meant to be near zero for normal gear (20% → 0.13%)? Does D2R keep the fractional precision?"
 
-2. **Poison Length Reduced and the difficulty penalty (Test, then ask)** **(new)** — `poison-length`, `resists`
+2. **Poison Length Reduced and the difficulty penalty (Test, then ask)** — `poison-length`, `resists`
    In the 1.10 code Poison Length Reduced is handled like a resistance: the difficulty resist penalty is added to it and it caps at 75% (D2MOO SUnitDmg.cpp:976–1009). With ESR's −150 in Hell, 75% from gear would become −75%, which would make poison last longer, not shorter.
    Test: Hell, compare how long a poison lasts on you with 0% and with as much Poison Length Reduced as you can stack. Repeat in Normal.
    Ask: "Does Poison Length Reduced get the −80/−150 resist penalty in Nightmare/Hell?"
@@ -22,7 +22,7 @@ Phrased so the owner can test them in game or paste them on the ESR Discord. "As
    `celestialrayone.crushing-blow.toml` line 35 has `unique = 25`, but the comment above it (line 34) says "50 -> 12.5 % of current life". With 25 the share is 25% × 25% = 6.25%.
    Ask: "In crushing-blow.toml the unique line says 50 → 12.5% but the value is 25 (= 6.25%). Which one is intended?"
 
-5. **Fire thorns as Critical Strike? (Ask)** **(new)** — `deadly-strike`, `thorns`
+5. **Fire thorns as Critical Strike? (Ask)** — `deadly-strike`, `thorns`
    The critical-strike-damage config says the engine resolves "passive_critical_strike (stat 337)" in the crit block. In ESR's itemstatcost.txt, row 337 is `item_attackertakesfiredamage` ("Attacker Takes Fire Damage", events attackedinmelee/damagedbymissile func 11); there is no passive_critical_strike row.
    Ask: "Does the engine's Critical Strike roll now read stat 337, which ESR uses for fire thorns? Would a fire-thorns item give that much crit chance?"
 
@@ -37,13 +37,13 @@ Phrased so the owner can test them in game or paste them on the ESR Discord. "As
 
 ## Mechanics to confirm in game
 
-8. **Lightning thorns kill credit (Test)** **(new)** — `thorns`, `after-kill`
+8. **Lightning thorns kill credit (Test)** — `thorns`, `after-kill`
    The soft-hit-removal config gives kill credit to event function 6 (physical thorns, stat 78/238) but does not list function 10 (lightning thorns, stat 128) or 11 (fire thorns, 337). Test: kill a monster only with "Attacker Takes Lightning Damage" while wearing Life after each Kill; does life refill?
 
-9. **AI curse divisor scope (Test)** **(new)** — `curse-resistance`, penalties table
+9. **AI curse divisor scope (Test)** — `curse-resistance`, penalties table
    `AiCurseDivisor` (1/2/4) is read in the 1.10 code only for Terror, Confuse, Attract and Dim Vision. The old wiki says all curses last 1/2 and 1/4 as long in Nightmare and Hell. Test: cast Amplify Damage (or any non-AI curse) on the same monster in Normal and Hell and compare the duration.
 
-10. **"on Melee Attack" with bows and crossbows (Test)** **(new)** — `chance-to-cast`
+10. **"on Melee Attack" with bows and crossbows (Test)** — `chance-to-cast`
     Stat 195 lists `domeleeattack` and `domissileattack` (same as vanilla D2R data), but the old wiki quotes Amazon Basin: not applied to ranged attacks. Test with a bow and a chance-to-cast-on-attack item.
 
 11. **Who gets halved −% Target Defense (Test)** — `target-defense`
@@ -65,7 +65,7 @@ Phrased so the owner can test them in game or paste them on the ESR Discord. "As
     Bleed uses the hit's physical damage "after damage reduction and absorb". Does that include the target's % physical resist? Test on a monster with high physical resist: is the bleed noticeably smaller?
 
 17. **Life on Striking against undrainable monsters, Mana on Striking on mercenaries (Test)** — `on-striking`
-    Skeleton-type monsters have no drain value (no leech). Does Life on Striking still heal when hitting them? It should by the code. **(new)** In the 1.10 code the mana function only works for players: does Mana on Striking do anything on a mercenary?
+    Skeleton-type monsters have no drain value (no leech). Does Life on Striking still heal when hitting them? It should by the code. In the 1.10 code the mana function only works for players: does Mana on Striking do anything on a mercenary?
 
 18. **Hit recovery threshold (Ask)** — `fhr`
     What damage triggers hit recovery in ESR 3.2 (community lore: 1/12 of max life)? Are ESR hit-recovery and block frame tables available like the official Frame Table for attack and cast speed?
@@ -82,19 +82,5 @@ Phrased so the owner can test them in game or paste them on the ESR Discord. "As
 22. **Elemental mastery on item elemental damage (Test)** — `elemental-mastery`
     The overflow-fix config says elemental damage "to attacks" goes through its mastery, as the 1.10 code does. Test: a melee character with +fire damage to attacks; does +% Fire Spell Damage raise the fire part of the weapon hit on the character screen?
 
-23. **Hireling leech in Nightmare and Hell (Ask)** **(new)** — `life-leech`, penalties table
+23. **Hireling leech in Nightmare and Hell (Ask)** — `life-leech`, penalties table
     In the 1.10 code the leech divisor is applied only when the attacker is a player, so hireling leech is not reduced. Is that still true in D2R/ESR?
-
-## Data or tooling follow-ups (no game needed)
-
-- The glossary parser only allows `term`, `definition`, `note` (`src/features/guide/build/content.ts:57`); the drafts add `link`.
-- `rare-procs`: Prevent Monster Heal, Flee and Hit Blinds are effectively unused (0, 0 and 1 rows, the last a partial set bonus on Death's Hand); keep the entry only if the matcher meets them.
-- Two summaries from the earlier research were wrong and are corrected in the drafts: FCR cap is 500, not 200 (`cast-rate-cap.toml`, official Frame Table); hit chance limits are 0–100, not 5–95 (`attack-rating.toml`).
-- **(new)** The wiki's +32 per-item cap for +all skills / +class skills no longer matches the save format (item_allskills 16 bits / SaveAdd 1000); dropped from `skills`.
-- **(new)** Cooldown floors: about 15 skills have no 20% floor (Leap Attack, Blade Warp, Sacrificial Offering, Call of the Wild, Death Mark, Mind Blast, Frozen Cascade, the teleport family). The app could compute each skill's floor from skills.txt instead of quoting "80% cap".
-
-## Resolved by the fact-check
-
-- **−% Enemy Resist below −100** (was 6): the floor patch lowers the floor "for all elements and all unit types" on the uncapped negative path, which is the one monsters use; pierce should now reach −1000. An in-game look is optional.
-- **−% Enemy Resist for summons and mercenaries** (was 7): kept as a 3.9 caveat in `enemy-resist`; no 3.2 source found either way. Moved out of the question list because the Valkyrie row copies the owner's pierce stats to the pet (`skills.txt` Valkyrie passivecalc6–11), which supports "works for summons"; hirelings remain unknown.
-- **Poison Length Reduced cap** (was 15): the 1.10 code does cap it at 75% for players (rows without a max-resist stat default to 75); folded into the new question 2.

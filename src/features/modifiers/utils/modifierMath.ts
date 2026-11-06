@@ -4,7 +4,7 @@
  * `facts` (difficultylevels.txt, ESR's plugin configs, vanilla engine constants), so an ESR update flows through
  * without code changes. Pure functions; a missing fact throws (the bundle integrity test pins them).
  */
-import type { ModifierFact } from '@/features/game-data/engine/schema';
+import type { ModifierFact } from '../../game-data/engine/schema.ts';
 
 export type Facts = readonly ModifierFact[];
 
@@ -68,12 +68,19 @@ export function effectiveLeech(leech: number, difficulty: Difficulty, resource: 
 export type MagicFindQuality = 'unique' | 'set' | 'rare' | 'magic';
 
 /**
- * The Magic Find a quality roll uses: magic items get the full value; unique, set and rare items
- * floor(dim × MF / (MF + dim)) (dim 250 / 500 / 600) plus ESR's soft tail floor(MF × tail / 100). Whole numbers, as
- * the engine's integer maths gives them (the tail's rounding is the config's formula read the same way).
+ * Up to this much Magic Find the engine skips the diminishing returns: it applies the curve only when 100 + MF is
+ * above 110 (D2MOO D2Game/src/ITEMS/Items.cpp:2397, 2416, 2437), else it divides by 100 + MF directly.
+ */
+export const MAGIC_FIND_FULL_VALUE_UP_TO = 10;
+
+/**
+ * The Magic Find a quality roll uses: magic items get the full value, and so does any MF up to 10 (or negative MF);
+ * above that unique, set and rare items get floor(dim × MF / (MF + dim)) (dim 250 / 500 / 600) plus ESR's soft tail
+ * floor(MF × tail / 100). Whole numbers, as the engine's integer maths gives them (the tail's rounding is the config's
+ * formula read the same way; the tail is assumed to ride on the curve branch only).
  */
 export function effectiveMagicFind(mf: number, quality: MagicFindQuality, facts: Facts): number {
-  if (quality === 'magic' || mf <= 0) return mf;
+  if (quality === 'magic' || mf <= MAGIC_FIND_FULL_VALUE_UP_TO) return mf;
   const dim = recordFact(facts, 'magicFind.dim')[quality];
   const tail = recordFact(facts, 'magicFind.tail')[quality] ?? 0;
   return Math.floor((dim * mf) / (mf + dim)) + Math.floor((mf * tail) / 100);

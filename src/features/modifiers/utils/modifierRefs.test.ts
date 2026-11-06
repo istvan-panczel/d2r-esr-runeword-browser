@@ -16,7 +16,7 @@ import {
   ROUTE,
   type ModifierRefsData,
 } from './modifierRefs';
-import { buildModifierRefsData, statKeys } from './modifierRefsBuild';
+import { buildModifierRefsData, modifierSearchNames, statKeys } from './modifierRefsBuild';
 import { buildModifiersView } from './modifiersView';
 import { parseModifierContent } from './modifierContent';
 
@@ -57,7 +57,8 @@ describe('data/modifierRefs.json', () => {
 
   it('carries the facts the peek reads and stays small', () => {
     expect(committed.facts.map((fact) => fact.key)).toEqual(PEEK_FACT_KEYS);
-    expect(committedText.length).toBeLessThan(30_000);
+    // ~34 KB raw / 9 KB gzip, of which the home search names ~12 KB raw
+    expect(committedText.length).toBeLessThan(40_000);
   });
 
   it('copies the route and param of modifierRoutes.ts', () => {
@@ -209,5 +210,27 @@ describe('modifier reference attribute and URL', () => {
 
   it('links the focused entry', () => {
     expect(modifierRefUrl('life-leech')).toBe('/modifiers?kind=life-leech');
+  });
+});
+
+describe('modifierSearchNames', () => {
+  it('lists modifier kinds without bookkeeping-only kinds or stat-name titles', () => {
+    const stat = (id: number, technical?: true) => ({ id, ...(technical === undefined ? {} : { technical }) });
+    const kind = (key: string, title: string, stats: number[], generated?: true) => ({
+      key,
+      title,
+      stats,
+      ...(generated === undefined ? {} : { generated }),
+    });
+    const names = modifierSearchNames({
+      stats: [stat(1), stat(2, true), stat(3)],
+      kinds: [kind('deadly-strike', 'Deadly Strike', [1]), kind('stat-cap', 'Cap', [2], true), kind('stat-x', 'item_x', [3], true)],
+    } as unknown as Parameters<typeof modifierSearchNames>[0]);
+    expect(names).toEqual([['Deadly Strike', 'deadly-strike']]);
+  });
+
+  it('gives the home search the kind titles from modifierRefs.json', () => {
+    expect(committed.searchNames.length).toBeGreaterThan(200);
+    expect(committed.searchNames).toContainEqual(['Fire Resist', 'resist-fire']);
   });
 });

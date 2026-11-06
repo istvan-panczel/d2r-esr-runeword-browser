@@ -39,6 +39,8 @@ export interface ModifierRefsData {
   readonly patterns: readonly (readonly [string, number])[];
   /** The modifiers.json facts the peek's numbers use (modifierPeek.ts PEEK_FACT_KEYS) */
   readonly facts: readonly ModifierFact[];
+  /** [title, kind key] of every kind the home search lists (`modifierSearchNames`) */
+  readonly searchNames: readonly (readonly [string, string])[];
 }
 
 export interface ModifierRefIndex {

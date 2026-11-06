@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/core/db';
 import { loadGameDataFile } from '@/features/game-data/engine/browser/loadGameData';
-import { areaSearchNames, modifierSearchNames, skillSearchNames, type HomeSearchSources } from '../utils/homeSearch';
+import type { ModifierRefsData } from '@/features/modifiers/utils/modifierRefs';
+import { areaSearchNames, skillSearchNames, type HomeSearchSources } from '../utils/homeSearch';
 
 type ItemSources = Required<Pick<HomeSearchSources, 'runewords' | 'gemwords' | 'uniques' | 'mythicals'>>;
 
@@ -28,7 +29,7 @@ export function useItemNames(enabled: boolean): ItemSources | undefined {
   }, [enabled]);
 }
 
-/** The static bundles the search reads, fetched in parallel on the first keystroke */
+/** The static bundles the search reads, fetched in parallel on the first keystroke (`modifiers`: modifierRefs.json) */
 const NAMES_BUNDLES = ['bases', 'sets', 'skilldetails', 'modifiers', 'materials', 'areas'] as const;
 type NamesBundle = (typeof NAMES_BUNDLES)[number];
 
@@ -46,9 +47,12 @@ const NAME_LOADERS: Record<NamesBundle, () => Promise<HomeSearchSources>> = {
     const bundle = await loadGameDataFile('skilldetails');
     return { skills: skillSearchNames(bundle.skills) };
   },
+  // The modifier peek's small data chunk (~9 KB gzip) has the kind titles; modifiers.json is ~50 KB gzip
   modifiers: async () => {
-    const bundle = await loadGameDataFile('modifiers');
-    return { modifiers: modifierSearchNames(bundle) };
+    const module = await import('@/features/modifiers/data/modifierRefs.json');
+    // The JSON's inferred type has plain arrays where the data has tuples
+    const { searchNames } = module.default as unknown as ModifierRefsData;
+    return { modifiers: searchNames.map(([name, id]) => ({ name, id })) };
   },
   materials: async () => {
     const bundle = await loadGameDataFile('materials');

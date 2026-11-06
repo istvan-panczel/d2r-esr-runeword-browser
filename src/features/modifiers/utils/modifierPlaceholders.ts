@@ -1,20 +1,32 @@
 /**
- * The `{placeholders}` of the modifier explanations, resolved against modifiers.json `facts` at render time, so a new
- * ESR value shows up without editing the text (docs/features/MODIFIERS.md "Content"). Naming (the drafts' convention):
+ * The `{placeholders}` of the modifier explanations, resolved against modifiers.json `facts` at render time (and for the
+ * peek's summaries at `modifiers:refs` time), so a new ESR value shows up without editing the text
+ * (docs/features/MODIFIERS.md "Content"). Naming:
  *
  * - `{difficulty.<normal|nightmare|hell|*>.<column>}`: difficultylevels.txt (`difficulty.<Column>` facts); `*` = all three
  * - `{charstats.<class|*>.<Column>}`: charstats.txt per class (`charstats.<Column>`); `*` = one value when every class
  *   has it, else the list
- * - `{config.<plugin>.<section>.<key>}`, `{patch.<file>.<value>}`, `{monstats.…}`: PLACEHOLDER_FACTS below
- * - `{derived.crushing-blow.<target>}`: the share of current life (`crushingBlow.share`), with "%"
- * - `{derived.leech.<life|mana>.<item %>.<difficulty>}`: effective leech with the engine's 1/64 precision, with "%"
+ * - `{config.<plugin>.<section>.<key>}`, `{patch.<file>.<value>}`, `{monstats.…}`, `{engine.…}` (vanilla engine
+ *   constants): PLACEHOLDER_FACTS below
+ * - `{derived.…}`: a number computed from the facts with the calculators' formulas (DERIVED below), e.g.
+ *   `{derived.crushing-blow.<target>}`, `{derived.leech.<life|mana>.<item %>.<difficulty>}`
+ * - `{vanilla.<any path above>}`: the same fact's vanilla value (only facts that have one)
  * - `{…key}`: the previous placeholder's path with its last part replaced (`{config.x.curve.tail}` … `{…late_tail}`)
  *
  * An HTML comment right after a placeholder (`{x}<!-- 150 -->`) is the value at writing time and is dropped; any other
- * comment's text is kept as plain text.
+ * comment's text is kept as plain text (the content test allows no such comment in the committed text).
  */
-import type { ModifierFact, ModifierFactValue } from '@/features/game-data/engine/schema';
-import { effectiveLeech, type Difficulty, type Facts } from './modifierMath';
+import type { ModifierFact, ModifierFactValue } from '../../game-data/engine/schema.ts';
+import {
+  difficultyFact,
+  effectiveLeech,
+  effectiveMagicFind,
+  numberFact,
+  recordFact,
+  type Difficulty,
+  type Facts,
+  type MagicFindQuality,
+} from './modifierMath.ts';
 
 interface FactRef {
   readonly fact: string;
@@ -62,6 +74,17 @@ export const PLACEHOLDER_FACTS: Readonly<Partial<Record<string, FactRef>>> = {
   'monstats.drainN.blankCount': { fact: 'monstats.drainZero', index: 0 },
   'monstats.drainNM.blankCount': { fact: 'monstats.drainZero', index: 1 },
   'monstats.drainH.blankCount': { fact: 'monstats.drainZero', index: 2 },
+  'monstats.drainH.partialCount': { fact: 'monstats.drainPartial', index: 2 },
+  'engine.leech.precision': { fact: 'leech.precision' },
+  'engine.resist.max-base': { fact: 'resist.maxBase' },
+  'engine.resist.hard-cap': { fact: 'resist.hardCap' },
+  'engine.resist.physical-cap': { fact: 'resist.physicalCap' },
+  'engine.absorb.percent-cap': { fact: 'absorb.percentCap' },
+  'engine.block.cap': { fact: 'block.cap' },
+  'engine.magic-find.dim.unique': { fact: 'magicFind.dim', field: 'unique' },
+  'engine.magic-find.dim.set': { fact: 'magicFind.dim', field: 'set' },
+  'engine.magic-find.dim.rare': { fact: 'magicFind.dim', field: 'rare' },
+  'derived.fcr-ceiling': { fact: 'castRate.maxRate' },
 };
 
 const DIFFICULTIES: Readonly<Partial<Record<string, Difficulty>>> = { normal: 0, nightmare: 1, hell: 2 };
@@ -109,11 +132,104 @@ function select(found: ModifierFact, ref: FactRef): string | null {
   return formatFactValue(value, ref.bool === true);
 }
 
+const RESOURCES: Readonly<Partial<Record<string, 'life' | 'mana'>>> = { life: 'life', mana: 'mana' };
+const QUALITIES: Readonly<Partial<Record<string, MagicFindQuality>>> = { unique: 'unique', set: 'set', rare: 'rare', magic: 'magic' };
+const LEECH_DIVISORS = { life: 'difficulty.LifeStealDivisor', mana: 'difficulty.ManaStealDivisor' } as const;
+
+/** A whole-number path part, or NaN */
+function numberPart(part: string | undefined): number {
+  return part !== undefined && /^-?\d+(\.\d+)?$/.test(part) ? Number(part) : Number.NaN;
+}
+
+/** ESR's cast rate for an FCR value: 100 + the engine's 120 × FCR / (FCR + 120), stopped at the plugin's ceiling */
+function castRate(fcr: number, facts: Facts): number {
+  const divisors = recordFact(facts, 'speed.breakpointDivisor');
+  if (!Object.hasOwn(divisors, 'fcr')) throw new Error('speed.breakpointDivisor has no fcr');
+  const divisor = divisors.fcr;
+  return Math.min(100 + Math.floor((divisor * fcr) / (fcr + divisor)), numberFact(facts, 'castRate.maxRate'));
+}
+
+/** The path parts after the name (each may be missing) */
+type Derive = (args: readonly (string | undefined)[], facts: Facts) => ResolvedPlaceholder | null;
+
+/** `{derived.<name>.<args…>}`: numbers computed from the facts (a missing fact throws and resolves to nothing) */
+const DERIVED: Readonly<Partial<Record<string, Derive>>> = {
+  /** `crushing-blow.<target>`: the share of current life, with "%" */
+  'crushing-blow': ([target], facts) => {
+    const shares = recordFact(facts, 'crushingBlow.share');
+    if (target === undefined || !Object.hasOwn(shares, target)) return null;
+    return { text: `${formatNumber(shares[target])}%`, fact: 'crushingBlow.share' };
+  },
+  /** `leech.<life|mana>.<item %>.<difficulty>`: effective leech with the engine's 1/64 precision, with "%" */
+  leech: ([resource, leech, difficulty], facts) => {
+    const res = RESOURCES[resource ?? ''];
+    const level = DIFFICULTIES[difficulty ?? ''];
+    const value = numberPart(leech);
+    if (res === undefined || level === undefined || !Number.isFinite(value)) return null;
+    return { text: formatSmallPercent(effectiveLeech(value, level, res, facts).engine), fact: LEECH_DIVISORS[res] };
+  },
+  /** `leech-threshold.<life|mana>.<difficulty>`: item leech below divisor / precision gives 0, with "%" */
+  'leech-threshold': ([resource, difficulty], facts) => {
+    const res = RESOURCES[resource ?? ''];
+    const level = DIFFICULTIES[difficulty ?? ''];
+    if (res === undefined || level === undefined) return null;
+    const divisor = difficultyFact(facts, LEECH_DIVISORS[res], level);
+    return { text: formatSmallPercent(divisor / numberFact(facts, 'leech.precision')), fact: LEECH_DIVISORS[res] };
+  },
+  /** `critical-multiplier.<Deadly Strike Damage %>`: the crit multiplier (base_percent + bonus) / 100, without "×" */
+  'critical-multiplier': ([bonus], facts) => {
+    const value = numberPart(bonus);
+    if (!Number.isFinite(value)) return null;
+    return { text: formatNumber((numberFact(facts, 'criticalDamage.basePercent') + value) / 100), fact: 'criticalDamage.basePercent' };
+  },
+  /** `magic-find.<quality>.<MF>`: the effective Magic Find (effectiveMagicFind), without "%" */
+  'magic-find': ([quality, mf], facts) => {
+    const q = QUALITIES[quality ?? ''];
+    const value = numberPart(mf);
+    if (q === undefined || !Number.isFinite(value)) return null;
+    return { text: formatNumber(effectiveMagicFind(value, q, facts)), fact: 'magicFind.tail' };
+  },
+  /** `fcr-rate.<FCR>`: the cast animation rate ESR gives that FCR */
+  'fcr-rate': ([fcr], facts) => {
+    const value = numberPart(fcr);
+    return Number.isFinite(value) ? { text: formatNumber(castRate(value, facts)), fact: 'castRate.maxRate' } : null;
+  },
+  /** `fcr-frames.<animation frames>.<FCR>`: frames per cast at AnimationSpeed 256, ceil(100 × frames / rate) − 1 */
+  'fcr-frames': ([frames, fcr], facts) => {
+    const length = numberPart(frames);
+    const value = numberPart(fcr);
+    if (!Number.isFinite(length) || !Number.isFinite(value)) return null;
+    return { text: formatNumber(Math.ceil((100 * length) / castRate(value, facts)) - 1), fact: 'castRate.maxRate' };
+  },
+  /** `fcr-max-useful`: the smallest FCR that reaches ESR's ceiling (more changes nothing) */
+  'fcr-max-useful': (args, facts) => {
+    if (args.length > 0) return null;
+    const ceiling = numberFact(facts, 'castRate.maxRate');
+    const cap = numberFact(facts, 'castRate.cap');
+    for (let fcr = 0; fcr <= cap; fcr++) if (castRate(fcr, facts) >= ceiling) return { text: formatNumber(fcr), fact: 'castRate.cap' };
+    return null;
+  },
+  /** `max-resist-headroom`: the most maximum resist that matters, hard cap − base cap */
+  'max-resist-headroom': (args, facts) =>
+    args.length > 0
+      ? null
+      : { text: formatNumber(numberFact(facts, 'resist.hardCap') - numberFact(facts, 'resist.maxBase')), fact: 'resist.hardCap' },
+  /** `attack-rating-table`: the plugin author's own table, "ratio → chance, …" */
+  'attack-rating-table': (args, facts) => {
+    if (args.length > 0) return null;
+    const table = Object.entries(recordFact(facts, 'attackRating.table'))
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([ratio, chance]) => `${ratio} → ${formatNumber(chance)}`)
+      .join(', ');
+    return { text: table, fact: 'attackRating.table' };
+  },
+};
+
 /** One placeholder path (without braces), or null when it names nothing in `facts` */
 export function resolvePlaceholder(path: string, facts: Facts): ResolvedPlaceholder | null {
   const factOf = (key: string) => facts.find((entry) => entry.key === key);
   const parts = path.split('.');
-  const [scope, second, third, fourth, fifth] = [0, 1, 2, 3, 4].map((index) => parts.at(index));
+  const [scope, second, third] = [0, 1, 2].map((index) => parts.at(index));
   if (scope === 'difficulty' && parts.length === 3 && second !== undefined && third !== undefined) {
     const key = `difficulty.${third.charAt(0).toUpperCase()}${third.slice(1)}`;
     const found = factOf(key);
@@ -129,19 +245,20 @@ export function resolvePlaceholder(path: string, facts: Facts): ResolvedPlacehol
     const cls = Object.keys(found.value).find((name) => name.toLowerCase() === second.toLowerCase());
     return cls === undefined ? null : { text: formatNumber(found.value[cls]), fact: key };
   }
-  if (scope === 'derived' && second === 'crushing-blow' && third !== undefined && parts.length === 3) {
-    const found = factOf('crushingBlow.share');
-    const share = found === undefined ? null : select(found, { fact: 'crushingBlow.share', field: third });
-    return share === null ? null : { text: `${share}%`, fact: 'crushingBlow.share' };
+  if (scope === 'vanilla' && parts.length > 1) {
+    const vanilla = facts.flatMap((entry) => (entry.vanilla === undefined ? [] : [{ ...entry, value: entry.vanilla }]));
+    return resolvePlaceholder(parts.slice(1).join('.'), vanilla);
   }
-  if (scope === 'derived' && second === 'leech' && parts.length === 5) {
-    const resource = third === 'life' || third === 'mana' ? third : null;
-    const leech = Number(fourth);
-    const difficulty = DIFFICULTIES[fifth ?? ''];
-    if (resource === null || !Number.isFinite(leech) || difficulty === undefined) return null;
-    const key = resource === 'life' ? 'difficulty.LifeStealDivisor' : 'difficulty.ManaStealDivisor';
-    if (factOf(key) === undefined || factOf('leech.precision') === undefined) return null;
-    return { text: formatSmallPercent(effectiveLeech(leech, difficulty, resource, facts).engine), fact: key };
+  if (scope === 'derived' && second !== undefined) {
+    const derive = DERIVED[second];
+    if (derive !== undefined) {
+      try {
+        return derive(parts.slice(2), facts);
+      } catch {
+        // A fact the formula needs is missing (or has another shape): the placeholder resolves to nothing
+        return null;
+      }
+    }
   }
   const target = /^config\.crushing-blow\.targets\.(\w+)$/.exec(path)?.at(1);
   const ref = target === undefined ? PLACEHOLDER_FACTS[path] : { fact: 'crushingBlow.settings', field: target };

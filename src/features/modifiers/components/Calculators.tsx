@@ -81,7 +81,7 @@ function LeechCalculator({ facts, resource: initial }: { readonly facts: readonl
         <NumberField label={`Item ${resource} leech %`} value={leechText} onChange={setLeechText} />
         <NumberField label="Target drain" value={drainText} onChange={setDrainText} hint="monstats Drain: 100 most, 0 none" />
       </div>
-      <div className="overflow-x-auto rounded-md border bg-background">
+      <div aria-live="polite" className="overflow-x-auto rounded-md border bg-background">
         <table className={TABLE}>
           <thead>
             <tr>
@@ -130,7 +130,7 @@ function MagicFindCalculator({ facts }: { readonly facts: readonly ModifierFact[
   return (
     <CalculatorBox title="Effective Magic Find">
       <NumberField label="Magic Find %" value={mfText} onChange={setMfText} />
-      <div className="overflow-x-auto rounded-md border bg-background">
+      <div aria-live="polite" className="overflow-x-auto rounded-md border bg-background">
         <table className={TABLE}>
           <thead>
             <tr>
@@ -155,8 +155,9 @@ function MagicFindCalculator({ facts }: { readonly facts: readonly ModifierFact[
         </table>
       </div>
       <p className="text-xs text-muted-foreground">
-        Unique, set and rare rolls use dim × MF / (MF + dim) (whole numbers, as the engine computes them) plus ESR&apos;s soft tail, a share
-        of your raw MF with no limit. The tail&apos;s rounding is assumed to follow the engine&apos;s integer maths.
+        Above 10 MF, unique, set and rare rolls use dim × MF / (MF + dim) (whole numbers, as the engine computes them) plus ESR&apos;s soft
+        tail, a share of your raw MF with no limit; up to 10 the engine uses MF in full. The tail&apos;s rounding is assumed to follow the
+        engine&apos;s integer maths.
       </p>
     </CalculatorBox>
   );
@@ -175,7 +176,7 @@ function HitChanceCalculator({ facts }: { readonly facts: readonly ModifierFact[
         <NumberField label="Attack rating" value={arText} onChange={setArText} />
         <NumberField label="Target defense" value={defText} onChange={setDefText} hint="after −% target defense" />
       </div>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+      <dl aria-live="polite" className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
         <dt className="text-muted-foreground">Ratio</dt>
         <dd className="tabular-nums">{view.ratio === null ? 'no defense' : `×${formatNumber(view.ratio, 2)}`}</dd>
         <dt className="text-muted-foreground">ESR</dt>
@@ -183,7 +184,7 @@ function HitChanceCalculator({ facts }: { readonly facts: readonly ModifierFact[
         <dt className="text-muted-foreground">Vanilla D2R</dt>
         <dd className="text-muted-foreground tabular-nums">{view.vanilla}% (equal levels)</dd>
       </dl>
-      <div className="overflow-x-auto rounded-md border bg-background">
+      <div aria-live="polite" className="overflow-x-auto rounded-md border bg-background">
         <table className={TABLE}>
           <thead>
             <tr>
@@ -247,7 +248,7 @@ function CrushingBlowCalculator({ facts }: { readonly facts: readonly ModifierFa
           setRanged(value === 'ranged');
         }}
       />
-      <div className="overflow-x-auto rounded-md border bg-background">
+      <div aria-live="polite" className="overflow-x-auto rounded-md border bg-background">
         <table className={TABLE}>
           <thead>
             <tr>

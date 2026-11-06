@@ -88,7 +88,13 @@ function ModifiersBrowser({ view, facts }: { readonly view: ModifiersView; reado
   return (
     <div className="space-y-4">
       {focused !== undefined ? (
-        <ModifierDetail entry={focused} facts={facts} mythicals={mythicals} backHref={listHref(state, { kind: null, search })} />
+        <ModifierDetail
+          key={focused.key}
+          entry={focused}
+          facts={facts}
+          mythicals={mythicals}
+          backHref={listHref(state, { kind: null, search })}
+        />
       ) : (
         <>
           <div className="space-y-2 text-sm text-muted-foreground">
@@ -184,7 +190,7 @@ function ModifierListItem({ entry, href }: { readonly entry: ModifierEntry; read
         <span className="block font-semibold">{entry.title}</span>
         <span className="block text-sm text-muted-foreground">
           {entry.content !== null ? (
-            <RichText line={entry.content.summary} />
+            <RichText line={entry.content.summary} badgeDetails={false} />
           ) : firstText !== undefined ? (
             statDisplayText(firstText)
           ) : (

@@ -12,9 +12,9 @@ dodge and every other stat ESR items carry. Owner decisions (2026-11-06):
   blow per target;
 - about 40–60 key kinds get hand-checked explanations; every other stat gets a generated entry.
 
-Status: **Phase 1 (data) and Phase 2 (page, content, calculators) done**: `public/game-data/modifiers.json`, the
-calculator formulas, the hand-checked explanations in `content/modifiers/` and the `/modifiers` page. **Phase 3 (the
-modifier peek on item lines) done**, see "Modifier peek" below.
+Status: **all done**: the data (`public/game-data/modifiers.json`, 90d63f8); the calculator formulas, the hand-checked
+explanations in `content/modifiers/` and the `/modifiers` page (e6ac2a8); the guide glossary terms and penalties table
+additions (423e91e, "Guide" below); the modifier peek on item lines (130b2c9, "Modifier peek" below).
 
 ## Data: `modifiers.json`
 
@@ -212,8 +212,9 @@ changes these tables.
 
 - `effectiveLeech(leech, difficulty, 'life' | 'mana', facts, drain = 100)`: `exact` = leech / divisor × Drain / 100;
   `engine` = floor(leech × 64 / divisor) / 64 × Drain / 100 (D2MOO's precision).
-- `effectiveMagicFind(mf, quality, facts)`: magic = MF; unique / set / rare = floor(dim × MF / (MF + dim)) +
-  floor(MF × tail / 100).
+- `effectiveMagicFind(mf, quality, facts)`: magic = MF, and any MF up to 10 is used in full (the engine applies the
+  curve only when 100 + MF > 110, D2MOO Items.cpp:2397); above that unique / set / rare = floor(dim × MF / (MF + dim)) +
+  floor(MF × tail / 100) (the tail is assumed to ride on the curve branch only).
 - `hitChance(ar, def, facts, { vanilla?, levels? })` / `curveChance(ratio, curve)`: below the pivot 100 × r^s / (r^s +
   pivot^s), above 50 + 50 × d / (d + tail), the late tail blended in with a smoothstep weight between blendStart and
   blendEnd, floored to a whole percent, snapped to 100 at 99.5, then level scaling (vanilla only) and min / max. The test
@@ -229,23 +230,41 @@ rewordings) are two markdown files, Prettier-formatted like the rest of the repo
 
 - `modifiers.md`: one block per explanation, `## <key> — <title>` followed by `stats:` (free text), `summary:`,
   `body:`, `facts:` (bullets, or inline; `facts (intro):` keeps the intro), `caveats:` (bullets or inline; "none…" = no
-  caveats) and `sources:` (entries separated by "; "), blocks separated by `---`. Other headings (the file's "How to
-  read" section) are skipped. Inline source tags after a claim: `[ESR config]`, `[ESR files]`, `[Vanilla]`,
-  `[Community 3.9]` / `[Community 3.10]`, optionally with a detail after a comma (`[Vanilla, D2MOO SUnitDmg.cpp:1000]`,
-  shown on hover). `` `code` ``, `**bold**`, `[text](url)` and bare URLs render too; any other `[…]` stays text.
+  caveats) and `sources:` (entries separated by "; "), blocks separated by `---`. Other headings (the file's title)
+  are skipped. Inline source tags after a claim: `[ESR config]` (the loader plugin configs and memory patches,
+  `d2rloader/config/celestialrayone.*.toml`, `d2rloader/patches/*.json`), `[ESR files]` (game tables, strings, the
+  official docs including the Frame Table `docs/ias-calculator.html`, patch notes), `[Vanilla]` (vanilla engine
+  behaviour from D2MOO 1.10f / 1.14d or vanilla guides: "Vanilla D2 behaviour, not confirmed for ESR"),
+  `[Community 3.9]` / `[Community 3.10]` (the unofficial wiki and its mod-author Q&A, older than the 3.2.x line),
+  optionally with a detail after a comma (`[Vanilla, D2MOO SUnitDmg.cpp:1000]`: on hover, and in a popover on click /
+  tap). `` `code` ``, `**bold**`, `[text](url)` and bare URLs render too; any other `[…]` stays text. Path prefixes in
+  facts and sources: `ESR/` = the ESR repository root, `excel/` = `ESR/Eastern_Sun_Resurrected.mpq/data/global/excel/`,
+  `strings/` = `ESR/Eastern_Sun_Resurrected.mpq/data/local/lng/strings/`, `D2MOO/` = D2MOO's `source/` at 4a60fca, wiki
+  = https://doubleeclipse.github.io/esr-tools/unofficial-wiki/ (archive of the Fandom wiki, mostly ESR 3.9 / 3.10).
+  Kinds without their own block: Open Wounds (a note under `bleed`), Prevent Monster Heal, Hit Blinds Target and Hit
+  Causes Monster to Flee (`rare-procs`), weapon-mastery crit (in `deadly-strike`), Rest in Peace (in `reanimate`).
 - `open-questions.md`: numbered questions `N. **Title (Test)** — \`key\`, \`key\``(an optional`**(new)**` after the
   title is dropped) with indented lines; they show in the "Unconfirmed" note of each card they name.
+- **Both files ship whole** (`?raw` in the page chunk): no local paths, research-file references or authoring notes in
+  them (the content test fails on `/Users/`, `scratchpad`, `research-`, "research notes" and `factcheck`). Item counts
+  are not written in the text: the card shows the bundle's counts.
 
-Numbers are placeholders resolved against `facts` at render time (`utils/modifierPlaceholders.ts`):
-`{difficulty.<normal|nightmare|hell|*>.<column>}` → `difficulty.<Column>`; `{charstats.<class|*>.<Column>}` →
-`charstats.<Column>`; `{config.crushing-blow.targets.<t>}` → `crushingBlow.settings`; `{derived.crushing-blow.<t>}` →
-the share with "%"; `{derived.leech.<life|mana>.<item %>.<difficulty>}` → `effectiveLeech(…).engine` with "%"; other
-`{config.…}`, `{patch.…}`, `{monstats.…}` paths through `PLACEHOLDER_FACTS`; `{…key}` continues the previous
-placeholder's path on the same line. An HTML comment right after a placeholder (the value when written) is dropped; any
-other comment's text is kept as plain text. The quoted facts also become the card's fact tables.
+Numbers are placeholders resolved against `facts` at render time (`utils/modifierPlaceholders.ts`; the summaries also
+at `modifiers:refs` time for the peek): `{difficulty.<normal|nightmare|hell|*>.<column>}` → `difficulty.<Column>`;
+`{charstats.<class|*>.<Column>}` → `charstats.<Column>`; `{config.crushing-blow.targets.<t>}` →
+`crushingBlow.settings`; other `{config.…}`, `{patch.…}`, `{monstats.…}` and `{engine.…}` (vanilla engine constants:
+resist caps, absorb and block caps, MF dims, leech precision) paths through `PLACEHOLDER_FACTS`; `{derived.<name>.…}`
+through `DERIVED`, computed with the calculators' formulas: `crushing-blow.<t>` (share with "%"),
+`leech.<life|mana>.<item %>.<difficulty>` (`effectiveLeech(…).engine` with "%"), `leech-threshold.<life|mana>.<difficulty>`
+(divisor / 64), `critical-multiplier.<bonus>` ((base_percent + bonus) / 100), `magic-find.<quality>.<MF>`,
+`fcr-rate.<FCR>`, `fcr-frames.<frames>.<FCR>`, `fcr-max-useful`, `fcr-ceiling`, `max-resist-headroom`,
+`attack-rating-table`; `{vanilla.<path>}` is any of these with the facts' `vanilla` values (only facts that have one);
+`{…key}` continues the previous placeholder's path on the same line. An HTML comment right after a placeholder (the
+value when written) is dropped; any other comment's text would render as plain text, so the content test allows none.
+The quoted facts also become the card's fact tables.
 
-The page imports both files as text (`src/features/modifiers/content.ts`, `?raw`, in the page chunk: 166 KB raw /
-55 KB gzip with the parser and components) and parses them once (`utils/modifierContent.ts`).
+The page imports both files as text (`src/features/modifiers/content.ts`, `?raw`, in the page chunk: 153 KB raw /
+49 KB gzip with the parser and components) and parses them once (`utils/modifierContent.ts`).
 
 **Content keys vs kinds** (`utils/modifierContentKinds.ts`, outside the markdown so a re-checked file replaces the old
 one as it is): `CONTENT_KINDS` maps each content key to the bundle kinds it explains (the first gives the category
@@ -275,7 +294,9 @@ unless `category` is set); `KEY_KINDS_WITHOUT_TEXT` lists the key kinds that kee
 `modifierContent.test.ts` fails when the committed content does not parse, a placeholder resolves to nothing, a
 content key has no mapping (or a mapping no content), a mapped kind is missing from the bundle or claimed twice, a key
 kind has neither text nor a `KEY_KINDS_WITHOUT_TEXT` entry, `KIND_FACTS` / `KIND_CALCULATORS` name an unknown kind or
-fact, or an open question names an unknown content key.
+fact, an open question names an unknown content key, the shipped text has a local path or research note, an HTML
+comment does not follow a placeholder, or a summary types a number that a fact of its card holds (a placeholder
+belongs there: the summaries feed the peek too).
 
 **Updating the text** (after an ESR release, or a new fact-check): replace `content/modifiers/modifiers.md` /
 `open-questions.md`, run `npx prettier --write content/modifiers` and `npx vitest run src/features/modifiers`. A
@@ -305,10 +326,15 @@ bundle's order. A generated title that is only a stat name or a stray word ("to"
   item events, usage per item list), **Found on** (up to 12 examples linked to their focused pages: uniques or
   mythicals, sets, runewords, gemwords, socketables `?name=`, affixes `?search="…"`; superior mods and cube recipes are
   plain text), "Technical details" (the `facts:` bullets) and **Sources** (ESR paths → the ESR GitHub repo, D2MOO paths
-  → D2MOO at 4a60fca, wiki names → the unofficial wiki, URLs; `scratchpad/` research files are left out).
+  → D2MOO at 4a60fca, wiki names → the unofficial wiki, URLs). The focused card is keyed by its entry, so the
+  calculators' inputs reset when another entry opens; calculator results are `aria-live="polite"`. A source badge with
+  a detail is a button: the detail opens in a popover on click / tap (hover shows it too); not inside the list cards'
+  links.
 - **URL** (`readModifiersState` / `encodeModifiersState`, defaults omitted): `kind` (an entry key or any kind key, which
   resolves to its entry: `?kind=resist-cold` opens `resists`), `category`, `search`, `view=all`. The home search lists
-  every kind title (not bookkeeping-only kinds or stat-name titles) and links `/modifiers?kind=<kind key>`.
+  every kind title (not bookkeeping-only kinds or stat-name titles) and links `/modifiers?kind=<kind key>`; it reads
+  them from `modifierRefs.json` `searchNames` (`modifierSearchNames` in `utils/modifierRefsBuild.ts`), not from the
+  50 KB gzip modifiers.json.
 - **Calculators** (`components/Calculators.tsx`, rows from `utils/calculatorViews.ts`, all numbers from the facts; the
   vanilla columns run the same formulas on the facts' `vanilla` values): leech (life / mana, item %, target Drain →
   divisor, exact, engine 1/64 %, per 1000 damage, vanilla; the smallest item leech that is not 0 in Hell; the rounding
@@ -367,14 +393,15 @@ A number's badge shows only when its source differs from the title's (the engine
 badge is the source kind the entry's body tags name most (ties: the more ESR-specific), "ESR files" for the two key
 kinds without text.
 
-**Data** (`src/features/modifiers/data/modifierRefs.json`, 21 KB raw / 5.9 KB gzip): the entries (key, title,
-category, summary, source), 136 templates, 4 wildcard patterns and the 17 facts of `PEEK_FACT_KEYS`. Written by
+**Data** (`src/features/modifiers/data/modifierRefs.json`, 34 KB raw / 9.1 KB gzip): the entries (key, title,
+category, summary with its placeholders filled in, source), 136 templates, 4 wildcard patterns, the 17 facts of
+`PEEK_FACT_KEYS` and the home search's kind titles (`searchNames`, [title, kind key], ~12 KB raw). Written by
 `npm run modifiers:refs` (`scripts/generate-modifier-refs.ts`, from the committed `public/game-data/modifiers.json` and
 `content/modifiers/modifiers.md`; also run by `game-data:generate` and `game-data:update`, checked by `game-data:check`
 with `--check`); `modifierRefs.test.ts` fails when it is stale (run `npm run modifiers:refs` after replacing
 modifiers.md). It is a separate chunk (dynamic `import()` of the JSON): the first `SkillRefText` starts loading it on
 idle like skilldetails.json (`hooks/useModifierRefIndex.ts`), so neither modifiers.json (50 KB gzip) nor the page's
-content chunk (55 KB gzip) loads for the peek. The card (`components/ModifierPeekCard.tsx`, 2.3 KB gzip) is its own
+content chunk (49 KB gzip) loads for the peek. The card (`components/ModifierPeekCard.tsx`, 2.3 KB gzip) is its own
 lazy chunk inside the shared popover host.
 
 **Coverage** (ESR 3.2.24; lines that are not skill links): runewords 2,000 of 3,939 lines, uniques 4,848 of 9,763,
@@ -426,3 +453,13 @@ expected warning and the size (< 400 KB).
 - **Crushing Blow per-player division** uses the vanilla +50 % life per extra player; `player-count-halving-removal.json`
   is about drops, not life, so it is assumed unchanged.
 - Vanilla engine facts (`vanilla-engine`) come from D2MOO (1.10f / 1.14d); D2R may differ.
+- **Magic Find tail below 10 MF**: the engine uses MF up to 10 in full (no curve); whether ESR's soft tail is added
+  there too is unknown (the calculator adds it only on the curve branch).
+- **Content follow-ups** (no game needed): the wiki's +32 per-item cap for +all skills / +class skills no longer matches
+  the save format (item_allskills 16 bits / SaveAdd 1000), so `skills` leaves it out; about 15 skills have no 20 %
+  cooldown floor (Leap Attack, Blade Warp, Sacrificial Offering, Call of the Wild, Death Mark, Mind Blast, Frozen
+  Cascade, the teleport family): the page could compute each skill's floor from skills.txt instead of quoting "80 %".
+- **Resolved by the fact-check**: −% Enemy Resist below −100 (the floor patch's uncapped negative path is the one
+  monsters use, so pierce should reach −1000); −% Enemy Resist for summons (the Valkyrie row copies the owner's pierce
+  stats; hirelings unknown, kept as a caveat); the Poison Length Reduced cap (75 % for players in the 1.10 code,
+  folded into open question 2).
