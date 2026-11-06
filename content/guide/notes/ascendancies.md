@@ -47,4 +47,4 @@ Each later tier is a challenge finished in the cube: Nihlathak on Hell, all thre
 
 ::recipes[ascendancy]
 
-You can wear one stone at a time. It cannot be moved to another character, corrupted or anointed. Older official pages said you must re-equip it after a death; the 3.2.24 page no longer does ([[death-and-respec]]). <!-- verify: the docs dropped the re-equip warning between 3.2.20 and 3.2.24 without a patch note; check in game whether the bonuses survive a death --> Compare them on the app's [Ascendancies](page:/ascendancies) page.
+You can wear one stone at a time. It cannot be moved to another character, corrupted or anointed. Older official pages said you must re-equip it after a death; the 3.2.24 page no longer does ([[death-and-respec]]). <!-- verify: the docs dropped the re-equip warning between 3.2.20 and 3.2.24 without a patch note; check in game whether the bonuses survive a death --> Compare them on the app's [Ascendancies](page:/ascendancies) page, which also lists the orb locations and the tier challenges.
