@@ -131,7 +131,7 @@ Each stage dispatches a success action that triggers the next stage, with indepe
 
 ### Store Sanity Check
 
-Parsers return `[]` (or far fewer rows) instead of throwing when the upstream HTML format drifts. Before the store transaction, `handleStoreData` compares each parsed dataset (gems, ESR/LoD/Kanji runes, crystals, runewords, gemwords, unique items, mythical uniques, ascendancies) against the row count already cached in its table. A dataset is **bad** when it parsed empty, or when it has a cache and parsed below 50% of the cached count (`store/storeSanity.ts`).
+Parsers return `[]` (or far fewer rows) instead of throwing when the upstream HTML format drifts. Before the store transaction, `handleStoreData` compares each parsed dataset (gems, ESR/LoD/Kanji runes, crystals, runewords, gemwords, unique items, mythical uniques, ascendancies) against the row count already cached in its table. A dataset is **bad** when it parsed empty, or when it has a cache and parsed below 50% of the cached count (`store/storeSanity.ts`). The ascendancy challenges (`ascendancyChallenges`) are deliberately not checked: when the page has no readable challenge section they store empty and the Ascendancies page hides that part.
 
 | Bad datasets   | Cached Data? | Behavior                                                                                                                                  |
 | -------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -163,7 +163,7 @@ When a full parse is triggered:
    d. Extract Kanji Runes (~14 items)
    e. Extract Crystals (12 types x 3 tiers = 36 items)
 3. Parse runewords.htm and gemwords.htm (multi-variant, per-column bonuses, gems)
-4. Parse unique item pages (weapons, armors, others), mythical uniques, and ascendancies
+4. Parse unique item pages (weapons, armors, others), mythical uniques, and ascendancies (the cards plus the Tier 1–5 challenges, `parseAscendanciesPage`)
 5. Store everything in IndexedDB (separate tables per category)
 6. Store version string and timestamp in metadata
 7. Signal app ready (storeDataSuccess)
@@ -171,9 +171,11 @@ When a full parse is triggered:
 
 ## Database
 
-Single IndexedDB database: **`d2r-esr-runeword-browser`** (version 14)
+Single IndexedDB database: **`d2r-esr-runeword-browser`** (version 15)
 
-Tables: `gems`, `esrRunes`, `lodRunes`, `kanjiRunes`, `crystals`, `runewords`, `gemwords`, `htmUniqueItems`, `mythicalUniques`, `ascendancies`, `metadata`
+Tables: `gems`, `esrRunes`, `lodRunes`, `kanjiRunes`, `crystals`, `runewords`, `gemwords`, `htmUniqueItems`, `mythicalUniques`, `ascendancies`, `ascendancyChallenges`, `metadata`
+
+Version 15 added `ascendancyChallenges`; its upgrade deletes the stored `appVersion`, so the next online startup refetches and re-parses (existing caches get the challenges and `Ascendancy.unlockInputs` without waiting for an app release).
 
 The startup check opens the database first via `openDatabase()` (`src/core/db/openDatabase.ts`). If Dexie cannot upgrade the stored schema (`UpgradeError`, e.g. a very old install with a different primary key) or the stored version is newer (`VersionError`), the database is deleted and recreated empty; it is only a cache, so the startup check then refetches everything.
 
@@ -353,6 +355,30 @@ form three statements; only the hard-wrapped pair is joined. Known limits: a wra
 line ends in a capitalised noun and the next line starts uppercase (Aegis of Corruption: "…your Direct
 Damage" ⏎ "Spells that have…") stays split, and Mosaic's orange lines, which are in reversed order
 upstream, are intentionally left as two lines.
+
+### Ascendancies Page (ascendancies.htm)
+
+`parseAscendanciesPage(html)` (`parsers/ascendanciesParser.ts`) returns `{ ascendancies, challenges }`;
+`parseAscendancies(html)` is the cards-only wrapper (used by `scripts/check-user-data.ts`).
+
+- **Cards**: one flex `<div>` per ascendancy (name, image, `Tier N` bonus groups, `<font size="-2">` footnotes).
+- **Challenges**: every `<h3>Tier N Challenge</h3>` (after `<a name="challenge">`) is followed by a one-cell
+  description table and an Input/Output recipe table. The description becomes plain-text paragraphs (one per `<br>`
+  line, emphasis dropped, hard-wrapped lines re-joined with `mergeWrappedLines`); each recipe row becomes
+  `{ inputs, outputs }`, one entry per visual line of the cell. Tables are collected up to the next heading (also
+  inside wrapper elements). A heading with neither a description nor recipes is skipped.
+- **Unlock recipes**: a recipe whose only output is "<Name> Ascendancy Stone" (the Tier 1 table) gives that card its
+  `unlockInputs` (matched case-insensitively; `[]` when the page has none).
+- **Degradation**: challenge parsing never affects the cards: a missing or reshaped section yields fewer (or no)
+  challenges, and an unexpected exception is caught and logged (`challenges: []`). The Ascendancies page then shows only
+  the orb locations and the links in its how-to panel, and the cards hide their unlock line.
+- **Page panel**: the Ascendancies page shows these in a collapsible "How to get and upgrade an Ascendancy Stone"
+  panel above the filters (open by default, the state kept in localStorage `ascendancies.howToOpen`). Its "Orb
+  locations (Hell)" table is **not** parsed (the official page only names the acts): it is the static
+  `ORB_LOCATIONS` in `src/features/ascendancies/data/orbLocations.ts`, checked in game, with the levels.txt area ids
+  for the campaign map links; `orbLocations.test.ts` checks the superuniques against `sources.json` and the area ids
+  and names against `areas.json` and the campaign map, so an ESR update that moves an orb fails the test suite. Orbs
+  and the Primordial Soulstone link to the official Drop Finder (the plain page, like the guide's `dropfinder:` links).
 
 ### Test Fixtures
 

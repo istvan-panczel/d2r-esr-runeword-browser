@@ -19,26 +19,33 @@ class AppDatabase extends Dexie {
   htmUniqueItems!: EntityTable<HtmUniqueItem, 'id'>;
   mythicalUniques!: EntityTable<MythicalUnique, 'id'>;
   ascendancies!: EntityTable<Ascendancy, 'name'>;
+  ascendancyChallenges!: EntityTable<AscendancyChallenge, 'tier'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    // version(13) (with affixes) is still declared before this so existing databases upgrade
-    this.version(14).stores({
-      gems: 'name, type, quality, color',
-      esrRunes: 'name, order, tier, color',
-      lodRunes: 'name, order',
-      kanjiRunes: 'name',
-      crystals: 'name, type, quality, color',
-      runewords: '[name+variant], name, sockets, reqLevel, sortKey',
-      gemwords: '[name+variant], name, sockets, reqLevel, sortKey',
-      affixes: null, // v14: unused affixes table dropped
-      htmUniqueItems: '++id, name, page, category, reqLevel',
-      mythicalUniques: '++id, name, category, reqLevel',
-      ascendancies: 'name',
-      metadata: 'key',
-    });
+    // version(13) (with affixes) and version(14) (affixes: null, the unused table dropped) are still declared
+    // before this so existing databases upgrade
+    this.version(15)
+      .stores({
+        gems: 'name, type, quality, color',
+        esrRunes: 'name, order, tier, color',
+        lodRunes: 'name, order',
+        kanjiRunes: 'name',
+        crystals: 'name, type, quality, color',
+        runewords: '[name+variant], name, sockets, reqLevel, sortKey',
+        gemwords: '[name+variant], name, sockets, reqLevel, sortKey',
+        htmUniqueItems: '++id, name, page, category, reqLevel',
+        mythicalUniques: '++id, name, category, reqLevel',
+        ascendancies: 'name',
+        ascendancyChallenges: 'tier', // v15
+        metadata: 'key',
+      })
+      // v15: forget the app version that wrote the cache, so the next online startup re-parses
+      .upgrade(async (tx) => {
+        await tx.table('metadata').delete('appVersion');
+      });
   }
 }
 
@@ -172,6 +179,29 @@ Stores unique items parsed from HTM pages.
 | isAncientCoupon | boolean           | No      | True if coupon-only item                                                                                                 |
 | gambleItem      | string            | No      | Gamble item identifier                                                                                                   |
 
+### ascendancies
+
+Stores the ascendancies parsed from `ascendancies.htm` (15 at ESR 3.2.24).
+
+| Column       | Type             | Index   | Description                                                                                                                                      |
+| ------------ | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| name         | string           | Primary | "Battlemage", "Soul Warden"                                                                                                                      |
+| imageUrl     | string           | No      | Relative URL on the docs site, e.g. "./images/ascendancies/battlemage.png"                                                                       |
+| tiers        | AscendancyTier[] | No      | `{ tier, bonuses }` for tiers 1–5                                                                                                                |
+| footnotes    | string[]         | No      | The `*` notes under the card                                                                                                                     |
+| unlockInputs | string[]?        | No      | The Tier 1 Challenge recipe for this stone: ["Orb of Creation", "2 Blemished Sapphire", …]; `[]` when the page has none; undefined in older data |
+
+### ascendancyChallenges
+
+Stores the "Tier N Challenge" sections of `ascendancies.htm` (5 at ESR 3.2.24). Not sanity-checked: empty when the
+page has no readable challenge section (the Ascendancies page then hides its tier steps).
+
+| Column      | Type               | Index   | Description                                                                                                                                                                                      |
+| ----------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| tier        | number             | Primary | 1–5                                                                                                                                                                                              |
+| description | string[]           | No      | Plain-text paragraphs (emphasis dropped, hard-wrapped lines re-joined)                                                                                                                           |
+| recipes     | AscendancyRecipe[] | No      | `{ inputs, outputs }`, one entry per cell line; Tier 1 has one per ascendancy (15), the later tiers one each (e.g. "Ascendancy Stone" + "Maple Leaf" → "Ascendancy Stone", "Upgraded to Tier 3") |
+
 ### metadata
 
 Key-value store for app metadata.
@@ -187,7 +217,7 @@ Key-value store for app metadata.
   (`metadata.modVersion`), or the changelog page's first header as a fallback
 - `docsLastModified` - ISO `Last-Modified` of the docs site's `runewords.htm` at the last sync (absent when not sent)
 - `lastUpdated` - ISO timestamp of the last successful store
-- `appVersion` - App version that wrote the cache (an app upgrade triggers a refetch)
+- `appVersion` - App version that wrote the cache (an app upgrade triggers a refetch; the v15 schema upgrade deletes it to force one)
 
 ## TypeScript Interfaces
 
@@ -370,7 +400,7 @@ See [GAME-DATA.md](../features/GAME-DATA.md) for the generation rules.
 When schema changes are needed:
 
 ```typescript
-this.version(15)
+this.version(16)
   .stores({
     // Updated schema
   })
