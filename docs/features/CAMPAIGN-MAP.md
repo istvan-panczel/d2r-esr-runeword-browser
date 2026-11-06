@@ -23,9 +23,11 @@ layout).
 
 ```
 PageShell "Campaign Map"   meta: what it covers, ESR version
-[Find an area, boss or quest item… ( / )] [Copy Link]
-tabs: Act I … Act V                      Special areas  Ubers & portals  Endgame Maps
-toolbar (tabs with a map): [Map | List]  hint (peek, click, /, Esc)
+┌ ToolbarCard ────────────────────────────────────────────────────────────────────────┐
+│ [Find an area, boss or quest item… ( / )] [Copy Link]                               │
+│ tabs: Act I … Act V                    Special areas  Ubers & portals  Endgame Maps │
+│ (tabs with a map, from lg): [Map | List]  hint (peek, click, /, Esc)                │
+└─────────────────────────────────────────────────────────────────────────────────────┘
 ┌ map card ───────────────────────────────┐ ┌ side column, sticky, 20rem ──┐
 │ CampaignMapCanvas (role: engine + SVG)  │ │ area detail (selected)       │
 │ stamp "Act III · ESR 3.2.24 · …"        │ │ or the section's notes       │
@@ -34,7 +36,7 @@ toolbar (tabs with a map): [Map | List]  hint (peek, click, /, Esc)
 ```
 
 - **Tabs** are links (`?tab=…`), so middle-click and Back work. Acts on the left, the other sections on the right; the
-  row scrolls sideways on phones. Switching tab keeps the selection only when the area belongs to the new tab.
+  row scrolls sideways inside the toolbar card on phones (`SUBTAB_*` classes). Switching tab keeps the selection only when the area belongs to the new tab.
 - **Map | List** (tabs with a drawn map: the acts and Endgame Maps). The list carries the same data in reading order:
   kind swatch, name, official name, bosses, quest item icons, a heads-up mark, WP, Hell monster level, "Not curated
   yet" / "Not on the map yet". Endgame Maps group the list by tier and zone. Twin rows (Tal Rasha's Tomb ×7) are one

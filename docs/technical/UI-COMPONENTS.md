@@ -40,7 +40,8 @@ Location: `src/core/components/`
   `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; mobile sheet with an accordion.
   See [NAVIGATION.md](./NAVIGATION.md#header-components).
 - `SettingsDrawer.tsx` - Settings sheet (theme, font, text size, data refresh, versions, credits).
-- `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE`, shared by the header and page sub-tabs.
+- `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `SUBTAB_BASE` / `SUBTAB_INACTIVE` /
+  `SUBTAB_ACTIVE` for the page sub-tabs (see [Toolbar card and sub-tabs](#toolbarcard-and-sub-tabs)).
 
 ### Shared Components
 
@@ -52,6 +53,7 @@ Reusable components used across features:
 - `pageWidthClasses.ts` - The Page width setting's classes: app frame, `PageShell` `wide` width (see [`PageShell`](#pageshell))
 - `PageHeader.tsx` - The title row itself: title (+ count), actions, meta line, tab row
 - `FilterPanel.tsx` - Card surface around a page's filter controls
+- `ToolbarCard.tsx` - The same card surface, compact, around a page's sub-tab row and top controls
 - `FilterGroup.tsx` - `FilterGroup` (one labelled checkbox row), `FilterGroupList`, `FilterGroupHeader`
 - `ResultsBar.tsx` - The "Showing N …" line with chips and list toggles
 - `SectionHeader.tsx` - In-page section heading with a hairline (Build detail, Cube and Materials sections)
@@ -74,7 +76,7 @@ Loot filters, guide notes) is built the same way, top to bottom:
 PageShell            one centred width + the title row
   PageHeader         "Title (count)"                         [actions]
                      meta line (e.g. the Game Data version lines)
-                     tab row (Game Data sub-pages), hairline below
+                     ToolbarCard: sub-tab row (Game Data, My Stash)
   (intro paragraph)  optional, e.g. the Game Data tab descriptions
   FilterPanel        rounded-xl card: search row first, then option rows / FilterGroup rows
   ResultsBar         "Showing N …" · ExactNameChip            [Favorites only]
@@ -128,7 +130,8 @@ PageShell            one centred width + the title row
   Nested shells are harmless (the same `mx-auto max-w-*`; `/page` container queries resolve to the innermost one).
 - `count` renders as "Title (N)" inside the `h1`, so the accessible name stays "Runewords (409)".
 - `actions` sit right of the title and wrap under it on phones (Builds: "Create Build"; Guide: the map link).
-- `meta` is a muted line under the title; `nav` is a tab row with a hairline under it (`GameDataLayout`).
+- `meta` is a muted line under the title; `nav` is a sub-tab row, rendered on a `ToolbarCard` (`GameDataLayout`,
+  `StashLayout`).
 
 `PageHeader` is the same title row without the width, for a screen whose layout route already sets it.
 
@@ -144,6 +147,43 @@ The home page's card surface (`rounded-xl border bg-card p-4 sm:p-6 shadow-sm`, 
 It is a `section` region named by `title` or `label`. It never collapses, also not on phones. Each page keeps the
 controls it had (Copy Link, Reset filters) where they were; the header row is optional and unused so far. Inside the
 panel the search row comes first; option rows (checkboxes, pills, selects) follow.
+
+### `ToolbarCard` and sub-tabs
+
+```tsx
+<ToolbarCard>                                   {/* rounded-xl border bg-card p-2 sm:p-3 shadow-sm, space-y-3 */}
+  <nav aria-label="Map sections" className="flex gap-1 overflow-x-auto">
+    <Link className={cn(SUBTAB_BASE, active ? SUBTAB_ACTIVE : SUBTAB_INACTIVE)} aria-current={…}>Act I</Link>
+  </nav>
+</ToolbarCard>
+```
+
+**Rule: page sub-tabs and top controls sit in a toolbar card; the header nav keeps `TAB_*`.** On the bare page
+background the sub-tab rows, search boxes and toggles were hard to see, so they sit on the filter panels' card surface,
+and the page title, meta line and intro stay outside it. A plain `div` (the controls inside carry their own `nav
+aria-label` / `role="tablist"` / labels); pass `className` to lay the children out in a row instead of the default
+`space-y-3` stack.
+
+- Sub-tab classes (`src/core/components/navTabClasses.ts`): `SUBTAB_BASE` (`px-3 py-1.5`, inset `focus-visible` ring so
+  a sideways-scrolling row does not clip it), `SUBTAB_INACTIVE` (muted text, `bg-accent` on hover) and `SUBTAB_ACTIVE`
+  (`bg-primary text-primary-foreground shadow-sm`: the filled pill the default `Button` and the selected filter pills
+  use, dark brown in light mode and near white in dark mode; the header's `bg-accent` pill hardly shows on `bg-card`).
+  Roles and states are unchanged: route tabs are `NavLink`s / `Link`s (`aria-current`), the Enhance sections are
+  `aria-pressed` buttons, the loot filter editor tabs a `role="tablist"`.
+- Where they are used:
+
+  | Page                          | In the card                                                                                   |
+  | ----------------------------- | --------------------------------------------------------------------------------------------- |
+  | Game Data, My Stash (layouts) | the sub-page tabs (`PageShell` `nav`)                                                         |
+  | Enhance                       | Corruption / Anointment / Vessel of Souls in the same `FilterPanel` as search + Copy Link     |
+  | Campaign map                  | search + Copy Link, the section tabs (scroll sideways on phones), Map \| List + the key hint  |
+  | Loot filter library           | the Shared / My filters switch with the Shared tab's search + sort (`SharedFiltersToolbar`)   |
+  | Loot filter editor            | the Rules / Styles / Settings / JSON / Test tab row (the title row and buttons stay above it) |
+
+  A page whose tabs already sit in a `FilterPanel` (Enhance) puts them in that panel instead of a second card. The
+  loot filter library's how-to text is a plain card (`rounded-xl border bg-card p-4 shadow-sm`), always shown. The
+  library's Shared / My filters switch is a shadcn `Tabs` list whose active trigger is restyled to `bg-primary`; the
+  campaign map's Map | List toggle uses `SUBTAB_ACTIVE` / `SUBTAB_INACTIVE` inside its bordered group.
 
 ### `FilterGroup`
 

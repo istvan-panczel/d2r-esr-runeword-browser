@@ -250,7 +250,8 @@ chunk (about 6.5 KB gzip); a documented exception, see [SAGAS.md](../technical/S
 
 ## Library screen
 
-`screens/LootFilterLibraryScreen.tsx`, `components/library/`. Title and a short how-to, then two tabs (shadcn Tabs,
+`screens/LootFilterLibraryScreen.tsx`, `components/library/`. Title and a short how-to (on a card, always shown), then a
+toolbar card (`ToolbarCard`) with two tabs (shadcn Tabs, the active trigger filled `bg-primary` like the page sub-tabs,
 `?tab=shared|mine`; without the parameter **My filters** when signed in or when this browser has drafts (a returning
 signed-out visitor sees their filters at once, even before the sign-in state is known), else **Shared**; without drafts
 a spinner while the sign-in state is unknown, for at most 4 seconds, then it goes on as signed out; `resolveLibraryTab`
@@ -267,7 +268,9 @@ tabs: the page is the My filters content without the saved section (the drafts, 
   as a draft's, with the zip) and **Start from it** (the template start below; every start button waits while one
   loads).
 - Search by name (debounced 300 ms like the builds list, server-side `ilike`) and sort **Newest** / **Most liked** /
-  **Most downloaded** (`SharedFiltersToolbar`, the sharing slice's `searchText` / `sortMode`; a change refetches).
+  **Most downloaded** (`SharedFiltersToolbar`, the sharing slice's `searchText` / `sortMode`; a change refetches). It sits
+  on the library's toolbar card next to the Shared / My filters switch, shown while Shared is open, so it is above the
+  pinned template cards too (they are not searched).
 - The public filters, 50 per page, infinite scroll (the builds' `useInfiniteScroll`, paused while a page loads and
   after a failed page; the builds' `LoadMoreError` retries), skeleton cards while the first page loads, "temporarily
   unavailable" with Try again when it fails, "No shared filters match your search." / "No shared filters yet."
@@ -417,7 +420,8 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
 Header row: back link, the filter name (a new draft: pencil to rename inline, Enter or Escape returns the focus to the
 pencil; a saved filter is renamed through Details), the status line (see "Saving and sharing in the editor"), a
 problems chip ("N errors / M warnings", also announced to screen readers through a polite live region), **Import AI
-answer** and **Improve with AI** (see "AI help") and **Download**. Clicking the chip opens the JSON tab and bumps a counter the screen passes to `JsonTab`
+answer** and **Improve with AI** (see "AI help") and **Download**; under it the tab row (Rules, Styles, Settings, JSON,
+Test) on a `ToolbarCard` (`SUBTAB_*` classes). Clicking the chip opens the JSON tab and bumps a counter the screen passes to `JsonTab`
 (`scrollToProblems`); `JsonTab` scrolls to the problems list in an effect once it has rendered (the tab switch runs in a
 transition, so scrolling from the click handler could miss the element) and resets the counter. Download saves the
 stored `text` (comments and formatting as uploaded) unless edits are not yet written back (`editor.dirty`), then the

@@ -207,8 +207,9 @@ Game Data
 Game files: ESR 3.2.10 (tag 3.2.10 @ 10b540e, generated 2026-10-09)
 Docs data: ESR 3.2.10 (site updated 9 Oct 2026)
 [amber note when the HTM docs ESR version differs]
-[Bases] [Best Base] [Affixes] [Item Types]      <- NavLinks, same classes as the header links (navTabClasses.ts)
-----------------------------------------------
+╭────────────────────────────────────────────────╮
+│ [Bases] Sets  Best Base  Affixes  Item Types … │ <- NavLinks on a ToolbarCard (SUBTAB_* in navTabClasses.ts)
+╰────────────────────────────────────────────────╯
 <Outlet />                                        <- child route screen
 ```
 
@@ -221,8 +222,10 @@ the docs version may fall back to the changelog page's header, so the note never
 The Game Data child pages are separate header items (Bases, Sets, Materials and Areas under Database, next to the top-level Campaign Map; Best Base, Affixes, Item Types, Enhance and Cube Recipes under Tools).
 Guide and Loot Filters items are prefix-matched, so they stay active on every child page.
 
-The header triggers and links, the Game Data sub-tabs and the loot filter editor's tabs share one set of classes
-(`TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` in `src/core/components/navTabClasses.ts`). The editor's tabs are not routes but
+The header triggers and links use `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` (`src/core/components/navTabClasses.ts`). The
+page sub-tabs (Game Data, My Stash, Enhance sections, campaign map sections, the loot filter editor's tabs) use
+`SUBTAB_BASE` / `SUBTAB_INACTIVE` / `SUBTAB_ACTIVE` (a filled `bg-primary` active pill) and sit in a `ToolbarCard` (see
+[UI-COMPONENTS.md](./UI-COMPONENTS.md#toolbarcard-and-sub-tabs)). The editor's tabs are not routes but
 buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=`. The amber notices of `GuideLayout` and
 `LootFilterLayout` are both `DevNotice` (`src/core/components/DevNotice.tsx`).
 
@@ -398,7 +401,7 @@ src/core/
 └── components/
     ├── Header.tsx          # Top navigation bar (NavigationMenu groups, mobile accordion)
     ├── PageWidthMenu.tsx   # Header quick control for the Page width setting (md and up)
-    ├── navTabClasses.ts    # Shared nav link / sub-tab classes
+    ├── navTabClasses.ts    # Header nav link (TAB_*) and page sub-tab (SUBTAB_*) classes
     └── SettingsDrawer.tsx  # Settings slide-out panel
 
 src/features/settings/

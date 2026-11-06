@@ -1366,7 +1366,9 @@ the non-default values. Invalid values fall back to the defaults; unknown type a
 ### Enhance page
 
 `/game-data/enhance` (`screens/EnhanceScreen.tsx`) loads only `enhance.json`, so it is a static-bundle route that skips
-the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Three tabs:
+the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Three tabs (`SUBTAB_*`
+`aria-pressed` buttons, the first row of the filter panel above the search and Copy Link; the slot / pool / tier pills stay
+under the panel, with each tab's content):
 
 - **Corruption** (`components/EnhanceCorruption.tsx`): slot pills with outcome counts; a header "N outcomes · 75%
   success, 25% brick → Rare item of the same type (Crafted, Superior, Normal and Low Quality keep their quality)"
