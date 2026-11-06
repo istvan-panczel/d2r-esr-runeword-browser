@@ -4,14 +4,15 @@ import type { HoverPopover } from '@/components/useHoverPopover';
 import { useModifierRefIndex } from '@/features/modifiers/hooks/useModifierRefIndex';
 import { useSkillRefIndex } from '../hooks/useSkillRefIndex';
 import type { PeekRef } from '../hooks/useSkillRefPeek';
+import { loadModifierPeekCard, loadSkillPeekCard } from './peekChunks';
 
-// Each card is its own chunk: a modifier peek does not load the skill calculator, a skill peek not the modifier card
+// Each card is its own chunk (prefetched on idle once item lines have their data, peekChunks.ts)
 const SkillPeekCard = lazy(async () => {
-  const module = await import('./SkillPeekCard');
+  const module = await loadSkillPeekCard();
   return { default: module.SkillPeekCard };
 });
 const ModifierPeekCard = lazy(async () => {
-  const module = await import('@/features/modifiers/components/ModifierPeekCard');
+  const module = await loadModifierPeekCard();
   return { default: module.ModifierPeekCard };
 });
 

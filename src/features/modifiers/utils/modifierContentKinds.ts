@@ -2,8 +2,8 @@
  * How the hand-written explanations (content/modifiers/modifiers.md, keyed by the drafts' own keys) join the generated
  * modifier kinds of modifiers.json, plus the facts and calculators each kind shows. Kept out of the markdown so a
  * re-checked content file can replace the old one as it is. modifierContent.test.ts checks that every content key is
- * here, every kind named here exists, no kind is claimed twice and every key kind has a text or is in
- * KEY_KINDS_WITHOUT_TEXT. See docs/features/MODIFIERS.md "Content".
+ * here, every kind named here exists, no kind is claimed twice, every key kind has a text or is in
+ * KEY_KINDS_WITHOUT_TEXT, and a block's `stats:` line names exactly the stats of its kinds. See docs/features/MODIFIERS.md "Content".
  */
 import type { ModifierCategory } from '../../game-data/engine/schema.ts';
 
@@ -57,6 +57,7 @@ export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
   'spell-damage': { kinds: ['spell-damage', 'total-spell-damage'] },
   'summon-stats': {
     kinds: [
+      'summon-damage',
       'stat-passive-summ-mastery-total',
       'stat-passive-summ-life',
       'stat-passive-summ-elemental-resist',
@@ -81,7 +82,7 @@ export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
   experience: { kinds: ['stat-item-addexperience'] },
   'light-radius': { kinds: ['stat-item-lightradius'], category: 'other' },
   requirements: { kinds: ['stat-item-req-percent', 'stat-item-levelreq'], category: 'other' },
-  'rare-procs': { kinds: ['prevent-heal', 'stat-item-stupidity'] },
+  'rare-procs': { kinds: ['prevent-heal', 'stat-item-stupidity', 'monster-flee'] },
 };
 
 /** Key kinds that have no hand-written text yet: they get the generated entry */

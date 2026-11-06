@@ -34,7 +34,7 @@ export function EntryChips({ entry, className }: { readonly entry: ModifierEntry
           Changed in ESR
         </span>
       )}
-      {entry.technical && <span className="rounded-full border px-2 py-px text-muted-foreground">Technical</span>}
+      {entry.technical && <span className="rounded-full border px-2 py-px text-muted-foreground">Technical (ESR bookkeeping)</span>}
       <span className="rounded-full border px-2 py-px text-muted-foreground">
         {entry.items === 0 ? 'on no item' : `${entry.items.toLocaleString('en-US')} item${entry.items === 1 ? '' : 's'}`}
       </span>

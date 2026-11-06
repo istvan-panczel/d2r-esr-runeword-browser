@@ -57,9 +57,11 @@ once per stat (`usage` per list, `items` = their sum). Per stat:
 - `technical`: ESR bookkeeping (`*_cap` tinkering caps, `_display` / `_hidden` companions, tinker flags;
   `isTechnicalStat`), for the page to tuck away.
 - `usage`, `items`, `examples`: up to 12 example items, round-robin over the lists in the order runeword, unique,
-  set, setBonus, gemword, socketable, superior, prefix, suffix, automagic, cube (file order within a list).
+  set, setBonus, gemword, socketable, superior, prefix, suffix, automagic, cube (file order within a list). A nameless
+  source (the automagic / suffix rows of `item_randomize`) counts in `usage` but is no example; the page's `entryExamples`
+  skips empty names too.
 
-ESR 3.2.24: 486 stats, 473 carried by an item, 314 not in vanilla, 9 vanilla stats changed: `item_armor_percent`,
+ESR 3.2.24: 487 stats, 473 carried by an item, 314 not in vanilla, 9 vanilla stats changed: `item_armor_percent`,
 `item_maxhp_percent`, `item_maxmana_percent` (extra op stats: per-level defense / life / mana), `item_attackertakesdamage`
 (also fires on missile hits), `item_attackertakeslightdamage` (attacked in melee + missiles), `item_openwounds` (no item
 events: bleed replaces it), `item_skillonkill` (func 30, the on-death cast), `item_tohit_perlevel` and
@@ -70,7 +72,7 @@ events: bleed replaces it), `item_skillonkill` (func 30, the on-death cast), `it
 A kind is what one explanation covers. The reviewed key kinds (`KEY_KINDS` in the builder, page order within a
 category) come first; a stat may be in one kind only, and a key kind naming a stat itemstatcost.txt lacks is a warning.
 Every other stat gets a generated kind (`generated: true`, key `stat-<stat name>`, title from its description via
-`labelFromDescription`, else the stat name; category from the stat name, `other` for technical stats). Stats with the same
+`labelFromDescription`; the stat name when that has no letter, e.g. `item_mythicaldesc` ".%1%0", or there is no description; category from the stat name, `other` for technical stats). Stats with the same
 description text share one generated kind (`strength` + `item_strength_perlevel` = `stat-strength`). `items` counts the
 distinct items carrying any of the kind's stats. The explanation text is not in the bundle: it joins on `key`.
 
@@ -91,13 +93,15 @@ Key kinds (ESR 3.2.24; items = rows of the item lists above):
 | `ignore-target-defense` | Ignore Target's Defense                   | offense    | `item_ignoretargetac` (115)                                                                                                                                                                                                                | 54    |
 | `enemy-resist`          | -% Enemy Resistance                       | offense    | `passive_fire_pierce` (333), `passive_ltng_pierce` (334), `passive_cold_pierce` (335), `passive_pois_pierce` (336), `passive_mag_pierce` (358), `passive_dmg_pierce` (366)                                                                 | 632   |
 | `elemental-mastery`     | Elemental Spell Damage                    | offense    | `passive_fire_mastery` (329), `passive_ltng_mastery` (330), `passive_cold_mastery` (331), `passive_pois_mastery` (332), `passive_mag_mastery` (357)                                                                                        | 612   |
-| `spell-damage`          | Magic, Physical and Summon Spell Damage   | offense    | `passive_mag2_mastery` (482), `passive_wind_mastery` (483), `passive_summ_mastery` (486)                                                                                                                                                   | 680   |
+| `spell-damage`          | Magic and Physical Spell Damage           | offense    | `passive_mag2_mastery` (482), `passive_wind_mastery` (483)                                                                                                                                                                                 | 525   |
+| `summon-damage`         | Summon Damage                             | offense    | `passive_summ_mastery` (486)                                                                                                                                                                                                               | 444   |
 | `total-spell-damage`    | Total Spell Damage                        | offense    | `generictotalmultiplier` (398)                                                                                                                                                                                                             | 295   |
 | `piercing-attack`       | Piercing Attack                           | offense    | `item_pierce` (156)                                                                                                                                                                                                                        | 91    |
 | `slow-target`           | Slows Target                              | offense    | `item_slow` (150)                                                                                                                                                                                                                          | 104   |
 | `freeze-target`         | Freezes Target                            | offense    | `item_freeze` (134)                                                                                                                                                                                                                        | 57    |
 | `knockback`             | Knockback                                 | offense    | `item_knockback` (81)                                                                                                                                                                                                                      | 43    |
 | `prevent-heal`          | Prevent Monster Heal                      | offense    | `item_preventheal` (117)                                                                                                                                                                                                                   | 0     |
+| `monster-flee`          | Hit Causes Monster to Flee                | offense    | `item_howl` (112)                                                                                                                                                                                                                          | 0     |
 | `reanimate`             | Reanimate As                              | offense    | `item_reanimate` (155)                                                                                                                                                                                                                     | 5     |
 | `cast-on-strike`        | Chance to Cast on Striking / Attack       | procs      | `item_skillonhit` (198), `item_skillonattack` (195), `item_skillonhit_hidden` (405), `item_skillonattack_hidden` (404)                                                                                                                     | 2059  |
 | `cast-when-struck`      | Chance to Cast when Struck                | procs      | `item_skillongethit` (201), `item_skillontakedmg` (376), `item_skillongethit_hidden` (415), `item_skillontakedmg_hidden` (377)                                                                                                             | 851   |
@@ -137,7 +141,7 @@ Key kinds (ESR 3.2.24; items = rows of the item lists above):
 | `skill-cooldown`        | Skill Cooldown Reduction                  | skills     | `item_skill_cooldown` (371)                                                                                                                                                                                                                | 125   |
 | `attribute-percent`     | % Bonus to Attributes                     | attributes | `strengthpercent` (255), `dexteritypercent` (256), `vitalitypercent` (257), `energypercent` (258)                                                                                                                                          | 559   |
 
-ESR 3.2.24: 395 kinds, 58 key kinds, 337 generated.
+ESR 3.2.24: 397 kinds, 60 key kinds, 337 generated.
 
 ### `facts`
 
@@ -270,30 +274,31 @@ The page imports both files as text (`src/features/modifiers/content.ts`, `?raw`
 one as it is): `CONTENT_KINDS` maps each content key to the bundle kinds it explains (the first gives the category
 unless `category` is set); `KEY_KINDS_WITHOUT_TEXT` lists the key kinds that keep a generated entry (`replenish-life`,
 `attribute-percent`); `KIND_FACTS` adds facts a kind's card always tabulates; `KIND_CALCULATORS` places the calculators.
-48 content keys cover 56 of the 58 key kinds plus 21 generated kinds:
+48 content keys cover 58 of the 60 key kinds plus 21 generated kinds:
 
-| Content key                                                                                                                                                                                                                                                                                                     | Kinds                                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| same key (deadly-strike, critical-damage, crushing-blow, life-leech, mana-leech, on-striking, physical-resist, damage-reduced, magic-damage-reduced, poison-length, enemy-resist, absorb, enhanced-damage, knockback, damage-to-mana, ias, fcr, fhr, fbr, frw, dodge, magic-find, gold-find, elemental-mastery) | the kind of the same key                                                                                                        |
-| `bleed`                                                                                                                                                                                                                                                                                                         | bleed, open-wounds                                                                                                              |
-| `after-kill`                                                                                                                                                                                                                                                                                                    | life-after-kill, mana-after-kill                                                                                                |
-| `resists`                                                                                                                                                                                                                                                                                                       | resist-fire, resist-cold, resist-lightning, resist-poison, magic-resist                                                         |
-| `max-resists`                                                                                                                                                                                                                                                                                                   | max-resist                                                                                                                      |
-| `attack-rating`                                                                                                                                                                                                                                                                                                 | attack-rating, stat-item-demon-tohit, stat-item-undead-tohit                                                                    |
-| `target-defense`                                                                                                                                                                                                                                                                                                | target-defense, ignore-target-defense, stat-item-damagetargetac                                                                 |
-| `cannot-be-frozen`                                                                                                                                                                                                                                                                                              | cannot-be-frozen, half-freeze                                                                                                   |
-| `slow` / `freeze` / `thorns` / `pierce` / `curse-resistance` / `item-quantity` / `cooldown-reduction`                                                                                                                                                                                                           | slow-target / freeze-target / attacker-takes-damage / piercing-attack / curse-resist / extra-items / skill-cooldown             |
-| `chance-to-cast`                                                                                                                                                                                                                                                                                                | cast-on-strike, cast-when-struck, cast-on-kill, cast-on-cast                                                                    |
-| `reanimate`                                                                                                                                                                                                                                                                                                     | reanimate, stat-item-restinpeace                                                                                                |
-| `block`                                                                                                                                                                                                                                                                                                         | block, weapon-block                                                                                                             |
-| `spell-damage`                                                                                                                                                                                                                                                                                                  | spell-damage, total-spell-damage                                                                                                |
-| `summon-stats` (category skills)                                                                                                                                                                                                                                                                                | stat-passive-summ-mastery-total, -summ-life, -summ-elemental-resist, -summ-phys-resist, -summ-limit, stat-summonexceedcap       |
-| `skills`                                                                                                                                                                                                                                                                                                        | stat-item-allskills, -addclassskills, -addskill-tab, -singleskill, -nonclassskill, -nonclassskill-display                       |
-| `experience` / `light-radius` / `requirements` / `rare-procs`                                                                                                                                                                                                                                                   | stat-item-addexperience / stat-item-lightradius / stat-item-req-percent, stat-item-levelreq / prevent-heal, stat-item-stupidity |
+| Content key                                                                                                                                                                                                                                                                                                     | Kinds                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| same key (deadly-strike, critical-damage, crushing-blow, life-leech, mana-leech, on-striking, physical-resist, damage-reduced, magic-damage-reduced, poison-length, enemy-resist, absorb, enhanced-damage, knockback, damage-to-mana, ias, fcr, fhr, fbr, frw, dodge, magic-find, gold-find, elemental-mastery) | the kind of the same key                                                                                                                      |
+| `bleed`                                                                                                                                                                                                                                                                                                         | bleed, open-wounds                                                                                                                            |
+| `after-kill`                                                                                                                                                                                                                                                                                                    | life-after-kill, mana-after-kill                                                                                                              |
+| `resists`                                                                                                                                                                                                                                                                                                       | resist-fire, resist-cold, resist-lightning, resist-poison, magic-resist                                                                       |
+| `max-resists`                                                                                                                                                                                                                                                                                                   | max-resist                                                                                                                                    |
+| `attack-rating`                                                                                                                                                                                                                                                                                                 | attack-rating, stat-item-demon-tohit, stat-item-undead-tohit                                                                                  |
+| `target-defense`                                                                                                                                                                                                                                                                                                | target-defense, ignore-target-defense, stat-item-damagetargetac                                                                               |
+| `cannot-be-frozen`                                                                                                                                                                                                                                                                                              | cannot-be-frozen, half-freeze                                                                                                                 |
+| `slow` / `freeze` / `thorns` / `pierce` / `curse-resistance` / `item-quantity` / `cooldown-reduction`                                                                                                                                                                                                           | slow-target / freeze-target / attacker-takes-damage / piercing-attack / curse-resist / extra-items / skill-cooldown                           |
+| `chance-to-cast`                                                                                                                                                                                                                                                                                                | cast-on-strike, cast-when-struck, cast-on-kill, cast-on-cast                                                                                  |
+| `reanimate`                                                                                                                                                                                                                                                                                                     | reanimate, stat-item-restinpeace                                                                                                              |
+| `block`                                                                                                                                                                                                                                                                                                         | block, weapon-block                                                                                                                           |
+| `spell-damage`                                                                                                                                                                                                                                                                                                  | spell-damage, total-spell-damage                                                                                                              |
+| `summon-stats` (category skills)                                                                                                                                                                                                                                                                                | summon-damage, stat-passive-summ-mastery-total, -summ-life, -summ-elemental-resist, -summ-phys-resist, -summ-limit, stat-summonexceedcap      |
+| `skills`                                                                                                                                                                                                                                                                                                        | stat-item-allskills, -addclassskills, -addskill-tab, -singleskill, -nonclassskill, -nonclassskill-display                                     |
+| `experience` / `light-radius` / `requirements` / `rare-procs`                                                                                                                                                                                                                                                   | stat-item-addexperience / stat-item-lightradius / stat-item-req-percent, stat-item-levelreq / prevent-heal, stat-item-stupidity, monster-flee |
 
 `modifierContent.test.ts` fails when the committed content does not parse, a placeholder resolves to nothing, a
 content key has no mapping (or a mapping no content), a mapped kind is missing from the bundle or claimed twice, a key
-kind has neither text nor a `KEY_KINDS_WITHOUT_TEXT` entry, `KIND_FACTS` / `KIND_CALCULATORS` name an unknown kind or
+kind has neither text nor a `KEY_KINDS_WITHOUT_TEXT` entry, a block's `stats:` line names a stat (`name (id)`) that
+is not in its kinds or leaves out one of their stats (a bare id counts: "hidden twins 377, 378"), `KIND_FACTS` / `KIND_CALCULATORS` name an unknown kind or
 fact, an open question names an unknown content key, the shipped text has a local path or research note, an HTML
 comment does not follow a placeholder, or a summary types a number that a fact of its card holds (a placeholder
 belongs there: the summaries feed the peek too).
@@ -316,8 +321,9 @@ bundle's order. A generated title that is only a stat name or a stray word ("to"
 - **List**: intro, source-badge legend, search (`EnhanceSearch`; every word or "quoted phrase" must occur in the
   titles, summary, body or the stats' display texts and names, like the Skills search), category pills with counts,
   "Key modifiers" (hand-written and key kinds: 50 entries) / "All stats" (366), Copy Link. A card shows the title, the
-  summary (or the stat's display text), the category, "ESR only" / "Changed in ESR" / "Technical" chips and the item
-  count; "N more in All stats" switches the view.
+  summary (or the stat's display text), the category, "ESR only" / "Changed in ESR" / "Technical (ESR bookkeeping)"
+  chips and the item count; "N more in All stats" switches the view. Technical entries (all stats `technical`) stay in
+  "All stats", last in their category, with that chip: labelled rather than hidden.
 - **Focused card** (`?kind=`): the explanation with an inline source badge after each claim (short label, the full
   meaning and the tag detail on hover; Vanilla is dashed muted amber: "Vanilla D2 behaviour, not confirmed for ESR"),
   an "Unconfirmed" note (caveats and the open questions naming the card), the calculators, **Numbers** (fact tables:
@@ -328,10 +334,11 @@ bundle's order. A generated title that is only a stat name or a stray word ("to"
   plain text), "Technical details" (the `facts:` bullets) and **Sources** (ESR paths → the ESR GitHub repo, D2MOO paths
   → D2MOO at 4a60fca, wiki names → the unofficial wiki, URLs). The focused card is keyed by its entry, so the
   calculators' inputs reset when another entry opens; calculator results are `aria-live="polite"`. A source badge with
-  a detail is a button: the detail opens in a popover on click / tap (hover shows it too); not inside the list cards'
-  links.
+  a detail is a button: the detail opens in a popover on click / tap (hover shows it too; 16 px collision padding, so
+  it never sits flush at a phone's edge); not inside the list cards' links.
 - **URL** (`readModifiersState` / `encodeModifiersState`, defaults omitted): `kind` (an entry key or any kind key, which
-  resolves to its entry: `?kind=resist-cold` opens `resists`), `category`, `search`, `view=all`. The home search lists
+  resolves to its entry: `?kind=resist-cold` opens `resists`; an unknown one shows the list with a "No modifier named …"
+  note, and the next change of the view drops it), `category`, `search`, `view=all`. The home search lists
   every kind title (not bookkeeping-only kinds or stat-name titles) and links `/modifiers?kind=<kind key>`; it reads
   them from `modifierRefs.json` `searchNames` (`modifierSearchNames` in `utils/modifierRefsBuild.ts`), not from the
   50 KB gzip modifiers.json.
@@ -370,39 +377,43 @@ are wildcards ("+2 to Druid Skill Levels", "+1 to Warlock Skills", "+1 to Summon
 Reanimate's monster. `EXTRA_TEMPLATES` adds the lines the game prints from a property ("+N% Enhanced Damage"). The skill
 templates (descfunc 15 / 16 / 24 / 27 / 28) are left to the skill peek. A key several entries claim goes to the one with
 the most stats behind it ("+N% to Spell Damage" → elemental-mastery, 4 of 6; "+N% Total All Resists" → resists); a tie
-is left out ("+N% to All Speeds", one stat each of IAS / FRW / FHR / FBR / FCR). At run time
+is left out ("+N% to All Speeds", one stat each of IAS / FRW / FHR / FBR / FCR). A template of an entry with several
+kinds also names the kind with the most stats behind it, and the line's reference (`data-mod-ref`) carries it: the
+`resists` peek drops the difficulty penalty for `magic-resist` lines. At run time
 (`utils/modifierRefs.ts` `findModifierRef`) a line is canonicalised the same way and looked up in a `Map` (the four
 wildcard keys are regexes tried after a miss): ~0.9 µs per line. Prose ("Gain 3% Maximum Damage for every 1% Physical
 Damage Leeched as Life") never equals a whole template.
 
-**Numbers** (`utils/modifierPeek.ts` `peekNumbers`, from the facts, for the line's value: a roll's maximum, none for
-per-level lines):
+**Numbers** (`utils/modifierPeek.ts` `peekNumbers`, from the facts, for the line's value: the roll's larger end with
+its sign (a stash item's negative line stays negative: no leech amount, MF counted in full), none for per-level lines):
 
-| Entry                           | Peek number                                                                                    |
-| ------------------------------- | ---------------------------------------------------------------------------------------------- |
-| life-leech / mana-leech         | the line's leech in Nightmare and Hell (`effectiveLeech` engine value)                         |
-| magic-find                      | the line alone as unique / set / rare MF (`effectiveMagicFind`, Vanilla badge: the curve)      |
-| crushing-blow                   | the share of current life vs normal monsters, uniques and act bosses                           |
-| deadly-strike / critical-damage | the critical multiplier (×2; Deadly Strike Damage: ×2 → ×(200 + N) / 100)                      |
-| fcr / dodge / block / absorb    | ESR's FCR cap (500, vanilla 200) / the 75% dodge caps / the 75% block cap / the 40% absorb cap |
-| resists / max-resists / phys.   | the Nightmare and Hell penalty, the 75% / 95% caps / the 95% ceiling / the 50% cap             |
-| attack-rating / target-defense  | 50% hit chance at 5× the target's defense (vanilla 1×)                                         |
-| freeze                          | the freeze length divisors (÷2 Nightmare, ÷4 Hell)                                             |
+| Entry                           | Peek number                                                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| life-leech / mana-leech         | the line's leech in Nightmare and Hell (`effectiveLeech` engine value)                                         |
+| magic-find                      | the line alone as unique / set / rare MF (`effectiveMagicFind`, Vanilla badge: the curve)                      |
+| crushing-blow                   | the share of current life vs normal monsters, uniques and act bosses                                           |
+| deadly-strike / critical-damage | the critical multiplier (×2; Deadly Strike Damage: ×2 → ×(200 + N) / 100)                                      |
+| fcr / dodge / block / absorb    | ESR's FCR cap (500, vanilla 200) / the 75% dodge caps / the 75% block cap / the 40% absorb cap                 |
+| resists / max-resists / phys.   | the Nightmare and Hell penalty (not on Magic Resist lines), the 75% / 95% caps / the 95% ceiling / the 50% cap |
+| attack-rating / target-defense  | 50% hit chance at 5× the target's defense (vanilla 1×)                                                         |
+| freeze                          | the freeze length divisors (÷2 Nightmare, ÷4 Hell)                                                             |
 
 A number's badge shows only when its source differs from the title's (the engine constants: "Vanilla D2"). The title's
 badge is the source kind the entry's body tags name most (ties: the more ESR-specific), "ESR files" for the two key
 kinds without text.
 
-**Data** (`src/features/modifiers/data/modifierRefs.json`, 34 KB raw / 9.1 KB gzip): the entries (key, title,
-category, summary with its placeholders filled in, source), 136 templates, 4 wildcard patterns, the 17 facts of
+**Data** (`src/features/modifiers/data/modifierRefs.json`, 35 KB raw / 9.3 KB gzip): the entries (key, title,
+category, summary with its placeholders filled in, source), 137 templates, 4 wildcard patterns, the 17 facts of
 `PEEK_FACT_KEYS` and the home search's kind titles (`searchNames`, [title, kind key], ~12 KB raw). Written by
 `npm run modifiers:refs` (`scripts/generate-modifier-refs.ts`, from the committed `public/game-data/modifiers.json` and
-`content/modifiers/modifiers.md`; also run by `game-data:generate` and `game-data:update`, checked by `game-data:check`
-with `--check`); `modifierRefs.test.ts` fails when it is stale (run `npm run modifiers:refs` after replacing
+`content/modifiers/modifiers.md`); `generate-game-data.ts` writes it too, from the bundle it just generated (so
+`game-data:generate`, `game-data:update` and `npm run game-data:generate -- --esr <dir>` do), and checks it with
+`--check` (`game-data:check`); both through `scripts/lib/modifierRefsFile.ts`; `modifierRefs.test.ts` fails when it is stale (run `npm run modifiers:refs` after replacing
 modifiers.md). It is a separate chunk (dynamic `import()` of the JSON): the first `SkillRefText` starts loading it on
 idle like skilldetails.json (`hooks/useModifierRefIndex.ts`), so neither modifiers.json (50 KB gzip) nor the page's
 content chunk (49 KB gzip) loads for the peek. The card (`components/ModifierPeekCard.tsx`, 2.3 KB gzip) is its own
-lazy chunk inside the shared popover host.
+lazy chunk inside the shared popover host; the host and both cards are prefetched on idle once a ref index has loaded
+(`features/skills/components/peekChunks.ts`), so the first peek opens without a "Loading…" step.
 
 **Coverage** (ESR 3.2.24; lines that are not skill links): runewords 2,000 of 3,939 lines, uniques 4,848 of 9,763,
 mythicals 208 of 415, ascendancies 110 of 226, gemwords 324 + 8,420 random-pool lines, socketables 605 of 958, affixes

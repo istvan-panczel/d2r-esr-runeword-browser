@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-06T19:32:29.246Z",
+  "generatedAt": "2026-11-06T21:19:29.137Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -86,8 +86,8 @@
       "bytes": 9099
     },
     "modifiers": {
-      "hash": "68ed407caaa51ac20877764462e53d79c2a14ed49452a14d4732784321e5ac1d",
-      "bytes": 302439
+      "hash": "4587686fe40e45c844a563fd7acedd9932a18a4bf6226c71af04cf007c318fc1",
+      "bytes": 303098
     },
     "icons": {
       "hash": "104a73e60c06a6099e2b60e80f492ea6ea94955d9cba9deb93d5bc25c916bb08",
@@ -237,12 +237,12 @@
     "terrorZoneAreas": 127,
     "terrorZoneUnlistedLevels": 20,
     "terrorZoneBoosts": 6,
-    "modifierStats": 486,
+    "modifierStats": 487,
     "modifierStatsUsed": 473,
     "modifierStatsEsrOnly": 314,
     "modifierStatsChanged": 9,
-    "modifierKinds": 395,
-    "modifierKeyKinds": 58,
+    "modifierKinds": 397,
+    "modifierKeyKinds": 60,
     "modifierFacts": 66,
     "modifierConfigFacts": 30,
     "modifierSources": 18271,

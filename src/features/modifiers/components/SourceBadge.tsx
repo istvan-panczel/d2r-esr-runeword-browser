@@ -45,7 +45,8 @@ export function SourceBadge({ tag, long = false, details = false, className }: S
           <span className="sr-only">{` (source: ${meaning}; show the detail)`}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" className="w-auto max-w-[min(20rem,calc(100vw-2rem))] space-y-0.5 p-2 text-xs">
+      {/* collisionPadding: on a phone the popover keeps a 16px gutter instead of sitting flush at the screen edge */}
+      <PopoverContent side="top" collisionPadding={16} className="w-auto max-w-[min(20rem,calc(100vw-2rem))] space-y-0.5 p-2 text-xs">
         <p className="font-medium">{meaning}</p>
         <p className="font-mono break-words text-muted-foreground">{tag.detail}</p>
       </PopoverContent>

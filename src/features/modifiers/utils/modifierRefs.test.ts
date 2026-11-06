@@ -161,8 +161,17 @@ describe('findModifierRef: real lines (HTM pages and game-data bundles, ESR 3.2.
     ['20% Bonus to Strength', 'attribute-percent', [20, 20]],
     ['+25% to Summon Life', 'summon-stats', [25, 25]],
     ['+(1 to 2) to Non-Unique Summons Limit', 'summon-stats', [1, 2]],
+    ['+25% to Summon Damage', 'summon-stats', [25, 25]],
   ])('%s → %s', (line, key, value) => {
-    expect(findModifierRef(line, index)).toEqual({ key, ...(value === undefined ? {} : { value }) });
+    const ref = findModifierRef(line, index);
+    expect(ref === null ? null : { key: ref.key, value: ref.value }).toEqual({ key, value });
+  });
+
+  it('names the kind when the entry covers several', () => {
+    expect(findModifierRef('Magic Resist +10%', index)).toEqual({ key: 'resists', kind: 'magic-resist', value: [10, 10] });
+    expect(findModifierRef('Fire Resist +30%', index)).toEqual({ key: 'resists', kind: 'resist-fire', value: [30, 30] });
+    expect(findModifierRef('+25% to Summon Damage', index)).toEqual({ key: 'summon-stats', kind: 'summon-damage', value: [25, 25] });
+    expect(findModifierRef('+20% Deadly Strike', index)).toEqual({ key: 'deadly-strike', value: [20, 20] });
   });
 
   it('marks per-level lines', () => {
@@ -200,6 +209,9 @@ describe('modifier reference attribute and URL', () => {
   it('round-trips and rejects anything else', () => {
     const ref = { key: 'life-leech', value: [5, 8] as const, perLevel: true as const };
     expect(decodeModifierRef(encodeModifierRef(ref))).toEqual(ref);
+    const withKind = { key: 'resists', kind: 'magic-resist', value: [10, 10] as const };
+    expect(decodeModifierRef(encodeModifierRef(withKind))).toEqual(withKind);
+    expect(decodeModifierRef('{"key":"x","kind":1}')).toBeNull();
     expect(decodeModifierRef(encodeModifierRef({ key: 'knockback' }))).toEqual({ key: 'knockback' });
     expect(decodeModifierRef(undefined)).toBeNull();
     expect(decodeModifierRef('{')).toBeNull();

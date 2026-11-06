@@ -235,6 +235,29 @@ describe('committed modifier content', () => {
     expect(KEY_KINDS_WITHOUT_TEXT.filter((key) => claimed.includes(key) || !keyKinds.includes(key))).toEqual([]);
   });
 
+  it("names in a block's stats: line exactly the stats of its kinds", () => {
+    // stats: lists `name (id)`; a stat of the block's kinds may also be named by a bare id ("hidden twins 377, 378")
+    const kindStats = new Map(bundle.kinds.map((kind) => [kind.key, kind.stats]));
+    const statName = new Map(bundle.stats.map((stat) => [stat.id, stat.stat]));
+    const mismatches = blocks.flatMap((block) => {
+      const mapped = new Set((CONTENT_KINDS[block.key]?.kinds ?? []).flatMap((key) => kindStats.get(key) ?? []));
+      const named = [...block.stats.matchAll(/(\w+) \((\d+)\)/g)].map((match) => ({ name: match[1], id: Number(match[2]) }));
+      const mentioned = new Set([...block.stats.matchAll(/\b\d+\b/g)].map((match) => Number(match[0])));
+      return [
+        ...named
+          .filter(({ id }) => !mapped.has(id))
+          .map(({ name, id }) => `${block.key}: ${String(name)} (${String(id)}) is not a stat of its kinds`),
+        ...named
+          .filter(({ name, id }) => statName.has(id) && statName.get(id) !== name)
+          .map(({ name, id }) => `${block.key}: ${String(id)} is not ${String(name)}`),
+        ...[...mapped]
+          .filter((id) => !mentioned.has(id))
+          .map((id) => `${block.key}: ${statName.get(id) ?? '?'} (${String(id)}) is missing from stats:`),
+      ];
+    });
+    expect(mismatches).toEqual([]);
+  });
+
   it('names only existing kinds and facts in the fact and calculator tables', () => {
     expect(Object.keys(KIND_FACTS).filter((key) => !kindKeys.has(key))).toEqual([]);
     expect(

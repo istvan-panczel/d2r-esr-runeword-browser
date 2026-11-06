@@ -1,10 +1,12 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSkillRefPeek } from '../hooks/useSkillRefPeek';
+import { loadPeekHost } from './peekChunks';
 
-// The popover (Radix + floating-ui) loads with the first peek, not with the shell; each card with its first peek
+// The popover (Radix + floating-ui) and the cards are not in the shell: they load on idle once a page's item lines have
+// their data (peekChunks.ts), or with the first peek
 const SkillPeekHost = lazy(async () => {
-  const module = await import('./SkillPeekHost');
+  const module = await loadPeekHost();
   return { default: module.SkillPeekHost };
 });
 

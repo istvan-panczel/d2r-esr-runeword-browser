@@ -421,6 +421,8 @@ export function entryExamples(stats: readonly Pick<ModifierStat, 'examples'>[], 
       const example = list.at(index);
       if (example === undefined) continue;
       const [kind, name] = example;
+      // An empty name would render as an invisible link
+      if (name.trim() === '') continue;
       const id = `${kind}:${name}`;
       if (seen.has(id)) continue;
       seen.add(id);

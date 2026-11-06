@@ -119,16 +119,18 @@ export const KEY_KINDS: readonly KeyKind[] = [
   },
   {
     key: 'spell-damage',
-    title: 'Magic, Physical and Summon Spell Damage',
+    title: 'Magic and Physical Spell Damage',
     category: 'offense',
-    stats: ['passive_mag2_mastery', 'passive_wind_mastery', 'passive_summ_mastery'],
+    stats: ['passive_mag2_mastery', 'passive_wind_mastery'],
   },
+  { key: 'summon-damage', title: 'Summon Damage', category: 'offense', stats: ['passive_summ_mastery'] },
   { key: 'total-spell-damage', title: 'Total Spell Damage', category: 'offense', stats: ['generictotalmultiplier'] },
   { key: 'piercing-attack', title: 'Piercing Attack', category: 'offense', stats: ['item_pierce'] },
   { key: 'slow-target', title: 'Slows Target', category: 'offense', stats: ['item_slow'] },
   { key: 'freeze-target', title: 'Freezes Target', category: 'offense', stats: ['item_freeze'] },
   { key: 'knockback', title: 'Knockback', category: 'offense', stats: ['item_knockback'] },
   { key: 'prevent-heal', title: 'Prevent Monster Heal', category: 'offense', stats: ['item_preventheal'] },
+  { key: 'monster-flee', title: 'Hit Causes Monster to Flee', category: 'offense', stats: ['item_howl'] },
   { key: 'reanimate', title: 'Reanimate As', category: 'offense', stats: ['item_reanimate'] },
   // procs
   {
@@ -1040,7 +1042,8 @@ export function buildModifiersBundle(input: ModifiersInput): ModifiersResult {
       entry.counts.set(source.kind, (entry.counts.get(source.kind) ?? 0) + 1);
       entry.items.add(String(index));
       const examples = entry.examples.get(source.kind) ?? [];
-      if (examples.length < MAX_EXAMPLES && !examples.includes(source.name)) examples.push(source.name);
+      // A nameless source (the automagic / suffix rows of item_randomize) still counts, but is no example
+      if (source.name !== '' && examples.length < MAX_EXAMPLES && !examples.includes(source.name)) examples.push(source.name);
       entry.examples.set(source.kind, examples);
     }
   }
@@ -1073,7 +1076,8 @@ export function buildModifiersBundle(input: ModifiersInput): ModifiersResult {
     const label = description === undefined ? '' : labelFromDescription(description);
     generatedKinds.set(key, {
       key,
-      title: label === '' ? stat : label,
+      // A description without a word (".%1%0", item_mythicaldesc) is no title: the stat name is
+      title: /[a-z]/i.test(label) ? label : stat,
       category: isTechnicalStat(stat) ? 'other' : generatedCategory(stat),
       stats: [stat],
     });

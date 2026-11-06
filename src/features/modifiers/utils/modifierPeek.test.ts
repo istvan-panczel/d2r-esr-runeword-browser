@@ -24,12 +24,21 @@ describe('peekNumbers (committed ESR 3.2.24 facts)', () => {
     // Hell divisor 150: 2% leech is 0 there
     expect(texts({ key: 'life-leech', value: [2, 2] })).toEqual(['2% leeches about 0.078% in Nightmare and 0% in Hell [game-files]']);
     expect(texts({ key: 'life-leech' })).toEqual(['Divided by 25 in Nightmare and 150 in Hell [game-files]']);
+    // A negative line (stash items) keeps its sign: no leech amount, only the divisors
+    expect(texts({ key: 'life-leech', value: [-5, -5] })).toEqual(['Divided by 25 in Nightmare and 150 in Hell [game-files]']);
   });
 
   it('works out Magic Find per quality for the line alone', () => {
     // unique: floor(250 × 100 / 350) + floor(100 × 10 / 100) = 71 + 10
     expect(texts({ key: 'magic-find', value: [100, 100] })).toEqual([
       'This line alone (100%): unique +81%, set +93%, rare +95% (diminishing returns) [vanilla-engine]',
+    ]);
+    // Small and negative values count in full, sign kept
+    expect(texts({ key: 'magic-find', value: [-20, -20] })).toEqual([
+      'This line alone (-20%): unique -20%, set -20%, rare -20% (counts in full) [vanilla-engine]',
+    ]);
+    expect(texts({ key: 'magic-find', value: [8, 8] })).toEqual([
+      'This line alone (8%): unique +8%, set +8%, rare +8% (counts in full) [vanilla-engine]',
     ]);
     // Per-level lines: the number is per level, so no value-based numbers
     expect(texts({ key: 'magic-find', value: [3, 3], perLevel: true })).toEqual([]);
@@ -47,6 +56,12 @@ describe('peekNumbers (committed ESR 3.2.24 facts)', () => {
       'Nightmare subtracts 80%, Hell 150% [game-files]',
       'Capped at 75%, 95% at most with Maximum Resist [vanilla-engine]',
     ]);
+    // Magic resist gets no difficulty penalty
+    expect(texts({ key: 'resists', kind: 'magic-resist', value: [10, 10] })).toEqual([
+      'Capped at 75%, 95% at most with Maximum Resist [vanilla-engine]',
+    ]);
+    expect(texts({ key: 'resists', kind: 'resist-fire', value: [30, 30] })).toHaveLength(2);
+    expect(texts({ key: 'critical-damage', value: [-10, -10] })).toEqual(['Critical multiplier ×2 → ×1.9 [esr-config]']);
     expect(texts({ key: 'attack-rating' })).toEqual(["50% chance to hit at 5× the target's defense (vanilla 1×) [esr-config]"]);
     expect(texts({ key: 'freeze' })).toEqual(['Freeze length ÷2 in Nightmare, ÷4 in Hell [game-files]']);
   });

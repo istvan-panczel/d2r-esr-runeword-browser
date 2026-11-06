@@ -23,6 +23,7 @@ import {
   encodeModifiersState,
   filterModifiers,
   MODIFIERS_ROUTE,
+  MODIFIERS_URL_PARAMS,
   readModifiersState,
   statDisplayText,
   type CategoryFilter,
@@ -71,6 +72,8 @@ function ModifiersBrowser({ view, facts }: { readonly view: ModifiersView; reado
   );
   const mythicals = useMythicalNames();
   const focused = state.kind === null ? undefined : view.byKey.get(state.kind);
+  // An old or mistyped `?kind=`: the list shows with a note; the next change of the view drops the param
+  const unknownKind = state.kind === null ? (searchParams.get(MODIFIERS_URL_PARAMS.KIND) ?? '') : '';
 
   // A newly focused modifier opens at the top of the page
   useEffect(() => {
@@ -145,6 +148,11 @@ function ModifiersBrowser({ view, facts }: { readonly view: ModifiersView; reado
           </FilterPanel>
 
           <section aria-label="Modifiers" className="space-y-2">
+            {unknownKind !== '' && (
+              <p role="status" className="rounded-md border border-amber-600/40 bg-amber-500/10 px-3 py-2 text-sm">
+                No modifier named &ldquo;{unknownKind}&rdquo;. Showing the list instead.
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               {list.entries.length} modifier{list.entries.length === 1 ? '' : 's'}
               {list.moreInAll > 0 && (

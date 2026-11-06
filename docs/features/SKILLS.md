@@ -443,9 +443,10 @@ Damage Aura, Conduit / Conduit Proc, Holy Bolt / Holy Bolt Weapon Damage, Empowe
 
 **Data**: the first `SkillRefText` that renders starts loading skilldetails.json on idle (`requestIdleCallback`,
 3 s timeout; 1 s timer without it), cached for the page's lifetime (`hooks/useSkillRefIndex.ts`); lines render as plain
-text until then and after a failed load. The popover (Radix Popover, floating-ui) loads with the first peek, the card,
-skillcalc.json and the calculator with the first skill peek (`SkillPeekHost` and `SkillPeekCard` are lazy chunks; the
-app shell keeps only the delegation hook). `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
+text until then and after a failed load. The popover (Radix Popover, floating-ui) and the cards with the calculator
+code are lazy chunks (`SkillPeekHost`, `SkillPeekCard`, `ModifierPeekCard`; the app shell keeps only the delegation hook),
+prefetched on idle once either ref index has loaded (`components/peekChunks.ts`, called by both index loaders), so the
+first peek opens without a "Loading…" step; skillcalc.json loads with the first skill peek. `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
 calculator); it copies their route, params and default / max level, and the test checks the copies. Matching costs ~1 µs
 per line (32k fixture lines in ~22 ms).
 

@@ -6,17 +6,20 @@
  *
  * Source: --esr <dir> | ESR_SOURCE_DIR | ../Eastern_Sun_Resurrected (relative to the repo root).
  * --check regenerates in memory and exits 1 when the committed files are stale.
+ * Also writes (--check: checks) src/features/modifiers/data/modifierRefs.json from the fresh modifiers bundle
+ * (scripts/lib/modifierRefsFile.ts; `npm run modifiers:refs` does that step alone).
  * icons.json comes from scripts/generate-item-icons.ts; when present it is only listed in the manifest (hash, counts).
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import type { GameDataManifest, IconsBundle } from '../src/features/game-data/engine/schema.ts';
+import type { GameDataManifest, IconsBundle, ModifiersBundle } from '../src/features/game-data/engine/schema.ts';
 import { readEsrSources } from '../src/features/game-data/build/esrSources.ts';
 import { generateBundles } from '../src/features/game-data/build/generateBundles.ts';
 import { untintedFile } from '../src/features/game-data/build/itemTint.ts';
 import { buildManifest, serializeBundle } from '../src/features/game-data/build/writeBundle.ts';
 import { git, REPO_ROOT, resolveEsrDir } from './lib/esrClone.ts';
+import { updateModifierRefs } from './lib/modifierRefsFile.ts';
 
 const OUTPUT_DIR = join(REPO_ROOT, 'public', 'game-data');
 
@@ -130,15 +133,21 @@ function main(): void {
   console.log(`\nWarnings (${String(generated.warnings.length)}):`);
   for (const warning of generated.warnings) console.log(`  - ${warning}`);
 
+  // The modifier peek's data comes from the modifiers bundle as written (JSON, not the in-memory objects)
+  const modifiers = JSON.parse(files.modifiers) as ModifiersBundle;
+
   if (values.check) {
     const stale = Object.entries(outputs).filter(([name, text]) => {
       const path = join(OUTPUT_DIR, `${name}.json`);
       return !existsSync(path) || readFileSync(path, 'utf8') !== text;
     });
+    console.log('');
+    const refsOk = updateModifierRefs(modifiers, true);
     if (stale.length > 0) {
       console.error(`\nStale game data: ${stale.map(([name]) => `${name}.json`).join(', ')}. Run npm run game-data:generate.`);
       process.exit(1);
     }
+    if (!refsOk) process.exit(1);
     console.log('\nGame data is up to date.');
     return;
   }
@@ -149,6 +158,8 @@ function main(): void {
     writeFileSync(join(OUTPUT_DIR, `${name}.json`), text, 'utf8');
     console.log(`  public/game-data/${name}.json (${(Buffer.byteLength(text, 'utf8') / 1024).toFixed(1)} KB)`);
   }
+  console.log('');
+  if (!updateModifierRefs(modifiers, false)) process.exit(1);
 }
 
 main();

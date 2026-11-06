@@ -57,7 +57,7 @@ sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `ex
 
 ## crushing-blow — Crushing Blow
 
-stats: item_crushingblow (136)
+stats: item_crushingblow (136), item_crushingblow_perlevel (247)
 
 summary: A chance on hit to remove a share of the target's current life. ESR halves it against most targets and cuts it hardest against bosses.
 
@@ -116,7 +116,7 @@ sources: `ESR/d2rloader/config/celestialrayone.bleed.toml`; `ESR/d2rloader/confi
 
 ## life-leech — Physical Damage Leeched as Life
 
-stats: lifedrainmindam (60)
+stats: lifedrainmindam (60), lifedrainmaxdam (61)
 
 summary: Heals you for a percent of the physical damage you deal; divided by {difficulty.nightmare.lifeStealDivisor} in Nightmare and {difficulty.hell.lifeStealDivisor} in Hell.
 
@@ -142,7 +142,7 @@ sources: `excel/difficultylevels.txt`; `excel/monstats.txt`; `ESR/d2rloader/conf
 
 ## mana-leech — Physical Damage Leeched as Mana
 
-stats: manadrainmindam (62)
+stats: manadrainmindam (62), manadrainmaxdam (63)
 
 summary: Restores mana from a percent of the physical damage you deal; divided by {difficulty.nightmare.manaStealDivisor} in Nightmare and {difficulty.hell.manaStealDivisor} in Hell.
 
@@ -188,7 +188,7 @@ sources: `excel/itemstatcost.txt` rows 505, 506; D2MOO/D2Game/src/SKILLS/SkillIt
 
 ## after-kill — Life / Mana after each Kill
 
-stats: item_healafterkill (86), item_manaafterkill (138)
+stats: item_healafterkill (86), item_healafterdemonkill (139), item_manaafterkill (138)
 
 summary: Restores a flat amount of life or mana whenever you kill a monster.
 
@@ -209,7 +209,7 @@ sources: `excel/itemstatcost.txt` rows 86, 138; `ESR/d2rloader/config/celestialr
 
 ## physical-resist — Physical Resist (Damage Reduced by %)
 
-stats: damageresist (36)
+stats: damageresist (36), total_physical_resist (427)
 
 summary: Cuts physical damage you take by a percent, capped at {engine.resist.physical-cap}%. Also shrinks Crushing Blow against you.
 
@@ -275,7 +275,7 @@ sources: `excel/itemstatcost.txt` row 35; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:771
 
 ## resists — Fire, Cold, Lightning, Poison and Magic Resist
 
-stats: fireresist (39), coldresist (43), lightresist (41), poisonresist (45), magicresist (37); total_*_resist (op 11, e.g. 393)
+stats: fireresist (39), coldresist (43), lightresist (41), poisonresist (45), magicresist (37); per level item_resist_fire_perlevel (231), item_resist_cold_perlevel (230), item_resist_ltng_perlevel (232), item_resist_pois_perlevel (233); op 11 totals total_fire_resist (391), total_cold_resist (392), total_lightning_resist (393), total_poison_resist (394), total_magic_resist (400)
 
 summary: Cuts elemental damage you take by a percent. Nightmare and Hell subtract a large penalty, so stack well above the cap.
 
@@ -443,7 +443,7 @@ sources: `ESR/d2rloader/config/celestialrayone.attack-rating.toml`; D2MOO/D2Game
 
 ## enhanced-damage — Enhanced Damage
 
-stats: item_maxdamage_percent (17), item_mindamage_percent (18)
+stats: item_maxdamage_percent (17), item_mindamage_percent (18), item_maxdamage_percent_perlevel (219)
 
 summary: Raises damage by a percent. On weapons it boosts the weapon's base damage; elsewhere it boosts your total weapon damage.
 
@@ -567,7 +567,7 @@ sources: `excel/itemstatcost.txt` row 114; D2MOO/D2Game/src/SKILLS/SkillItem.cpp
 
 ## thorns — Attacker Takes Damage
 
-stats: item_attackertakesdamage (78), item_thorns_perlevel (238), item_attackertakeslightdamage (128)
+stats: item_attackertakesdamage (78), item_thorns_perlevel (238), item_attackertakeslightdamage (128), item_attackertakesfiredamage (337), item_attackertakescolddamage (401), thorns_percent (131), missile_thorns_percent (208)
 
 summary: Deals flat damage back to anything that attacks you in melee or hits you with a missile. Physical thorns kills count as yours.
 
@@ -591,7 +591,7 @@ sources: `excel/itemstatcost.txt` rows 78, 128, 238; `ESR/d2rloader/config/celes
 
 ## chance-to-cast — Chance to Cast
 
-stats: item_skillonhit (198), item_skillonattack (195), item_skillongethit (201), item_skillonkill (196), item_skilloncast (422), item_skillontakedmg (376), item_skillondeath (197); hidden twins 377, 378, 404, 405, 415, 423
+stats: item_skillonhit (198), item_skillonattack (195), item_skillongethit (201), item_skillonkill (196), item_skilloncast (422), item_skillontakedmg (376), item_skillondeath (197), item_skillonlevelup (199); hidden twins 377, 378, 404, 405, 415, 423
 
 summary: A percent chance to cast the listed skill at the given level when the trigger happens: hitting, attacking, being struck, killing, casting or dying.
 
@@ -879,7 +879,7 @@ sources: `excel/skills.txt` (calc4–7, auralencalc); `strings/skills.json`; wik
 
 ## elemental-mastery — +% to Fire, Cold, Lightning or Poison Spell Damage
 
-stats: passive_fire_mastery (329), passive_cold_mastery (331), passive_ltng_mastery (330), passive_pois_mastery (332)
+stats: passive_fire_mastery (329), passive_cold_mastery (331), passive_ltng_mastery (330), passive_pois_mastery (332); passive_mag_mastery (357), on no ESR item
 
 summary: Raises your damage of that element by the percent, for skills and for that element's damage added to attacks.
 

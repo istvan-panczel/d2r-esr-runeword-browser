@@ -6,6 +6,8 @@
 export interface ModifierRef {
   /** The /modifiers entry key (`?kind=`): a content key ("resists") or a key kind ("replenish-life") */
   readonly key: string;
+  /** The modifiers.json kind of the line when the entry covers several ("magic-resist" in "resists") */
+  readonly kind?: string;
   /** The line's first number as [min, max] (a rolled range "(5 to 8)" → [5, 8]); absent on lines without one */
   readonly value?: readonly [number, number];
   /** The line is a per-level stat ("(Based on Character Level)"): its number is not the effective value */
@@ -34,12 +36,14 @@ export function decodeModifierRef(value: string | undefined): ModifierRef | null
     return null;
   }
   if (typeof parsed !== 'object' || parsed === null) return null;
-  const { key, value: number, perLevel } = parsed as Record<string, unknown>;
+  const { key, kind, value: number, perLevel } = parsed as Record<string, unknown>;
   if (typeof key !== 'string' || key === '') return null;
+  if (kind !== undefined && (typeof kind !== 'string' || kind === '')) return null;
   if (number !== undefined && !isValue(number)) return null;
   if (perLevel !== undefined && perLevel !== true) return null;
   return {
     key,
+    ...(kind === undefined ? {} : { kind }),
     ...(number === undefined ? {} : { value: [number[0], number[1]] as const }),
     ...(perLevel === true ? { perLevel } : {}),
   };

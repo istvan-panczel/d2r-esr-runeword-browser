@@ -8,7 +8,15 @@ import type { ModifierCategory, ModifiersBundle, ModifierStat } from '../../game
 import { parseModifierContent, tokenizeInline, type SourceKind } from './modifierContent.ts';
 import { CONTENT_KINDS } from './modifierContentKinds.ts';
 import { resolveText } from './modifierPlaceholders.ts';
-import { canonicalLine, NUMBER_MARK, PEEK_FACT_KEYS, WILDCARD, type ModifierRefEntry, type ModifierRefsData } from './modifierRefs.ts';
+import {
+  canonicalLine,
+  NUMBER_MARK,
+  PEEK_FACT_KEYS,
+  WILDCARD,
+  type ModifierRefEntry,
+  type ModifierRefsData,
+  type ModifierRefTemplate,
+} from './modifierRefs.ts';
 
 /** Skill templates (chance to cast, aura, charges, +N to <skill>): skill names are the skill peek's (skillRefs.ts) */
 const SKILL_DESCFUNCS: ReadonlySet<number> = new Set([15, 16, 24, 27, 28]);
@@ -87,6 +95,8 @@ export function buildModifierRefsData(bundle: ModifiersBundle, markdown: string)
   const kindByKey = new Map(bundle.kinds.map((kind) => [kind.key, kind]));
   const entries: ModifierRefEntry[] = [];
   const entryOfKind = new Map<string, number>();
+  /** Entries that cover several kinds: their templates name the kind too */
+  const multiKind = new Set<number>();
 
   for (const block of blocks) {
     const mapping = CONTENT_KINDS[block.key];
@@ -99,6 +109,7 @@ export function buildModifierRefsData(bundle: ModifiersBundle, markdown: string)
     for (const path of summary.missing) problems.push(`${block.key}: summary placeholder {${path}} resolves to nothing`);
     const category: ModifierCategory = mapping.category ?? first.category;
     for (const kind of kinds) entryOfKind.set(kind.key, entries.length);
+    if (kinds.length > 1) multiKind.add(entries.length);
     entries.push({
       key: block.key,
       title: block.title,
@@ -113,30 +124,33 @@ export function buildModifierRefsData(bundle: ModifiersBundle, markdown: string)
     entries.push({ key: kind.key, title: kind.title, category: kind.category, summary: null, source: 'esr-files' });
   }
 
-  // key → entry index → the stats behind it
-  const claims = new Map<string, Map<number, number>>();
-  const claim = (key: string, entry: number) => {
-    const byEntry = claims.get(key) ?? new Map<number, number>();
-    byEntry.set(entry, (byEntry.get(entry) ?? 0) + 1);
+  // key → entry index → kind → the stats behind it
+  const claims = new Map<string, Map<number, Map<string, number>>>();
+  const claim = (key: string, entry: number, kind: string) => {
+    const byEntry = claims.get(key) ?? new Map<number, Map<string, number>>();
+    const byKind = byEntry.get(entry) ?? new Map<string, number>();
+    byKind.set(kind, (byKind.get(kind) ?? 0) + 1);
+    byEntry.set(entry, byKind);
     claims.set(key, byEntry);
   };
   for (const stat of bundle.stats) {
     const entry = entryOfKind.get(stat.kind);
     if (entry === undefined || stat.technical === true || (stat.descfunc !== undefined && SKILL_DESCFUNCS.has(stat.descfunc))) continue;
     const formats = [stat.text, stat.textNeg, stat.group].filter((text) => text !== undefined);
-    for (const key of new Set(formats.flatMap((format) => statKeys(stat, format)))) claim(key, entry);
+    for (const key of new Set(formats.flatMap((format) => statKeys(stat, format)))) claim(key, entry, stat.kind);
   }
   for (const [format, kind] of EXTRA_TEMPLATES) {
     const entry = entryOfKind.get(kind);
     if (entry === undefined) problems.push(`extra template ${format}: no entry for kind ${kind}`);
-    else claim(formatKey(format), entry);
+    else claim(formatKey(format), entry, kind);
   }
 
-  const templates: [string, number][] = [];
-  const patterns: [string, number][] = [];
+  const templates: ModifierRefTemplate[] = [];
+  const patterns: ModifierRefTemplate[] = [];
   const conflicts: string[] = [];
+  const total = (byKind: ReadonlyMap<string, number>) => [...byKind.values()].reduce((sum, count) => sum + count, 0);
   for (const [key, byEntry] of claims) {
-    const ranked = [...byEntry].sort((a, b) => b[1] - a[1]);
+    const ranked = [...byEntry].map(([entry, byKind]) => [entry, total(byKind), byKind] as const).sort((a, b) => b[1] - a[1]);
     const best = ranked.at(0);
     const second = ranked.at(1);
     if (best === undefined) continue;
@@ -145,7 +159,9 @@ export function buildModifierRefsData(bundle: ModifiersBundle, markdown: string)
     if (second !== undefined && second[1] === best[1]) continue;
     // Nothing but a number, or a wildcard alone, would match any line
     if (key.replace(/[#%+\-¤ ]/g, '') === '') continue;
-    (key.includes(WILDCARD) ? patterns : templates).push([key, best[0]]);
+    // The kind with the most stats behind the key (a tie: the first claimed, which is the bundle's stat order)
+    const kind = [...best[2]].reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+    (key.includes(WILDCARD) ? patterns : templates).push(multiKind.has(best[0]) ? [key, best[0], kind] : [key, best[0]]);
   }
   templates.sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]));
   patterns.sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]));

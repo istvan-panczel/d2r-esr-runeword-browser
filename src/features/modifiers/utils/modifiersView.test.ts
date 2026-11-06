@@ -157,6 +157,20 @@ describe('display helpers', () => {
     ]);
   });
 
+  it('skips nameless example items', () => {
+    expect(
+      entryExamples([
+        {
+          examples: [
+            ['automagic', ''],
+            ['suffix', ' '],
+            ['prefix', 'Bloodlust'],
+          ],
+        },
+      ])
+    ).toEqual([{ kind: 'prefix', name: 'Bloodlust' }]);
+  });
+
   it('summarises usage largest first', () => {
     expect(usageSummary({ unique: 3, runeword: 10, set: 0 })).toEqual([
       { kind: 'runeword', label: 'Runeword', count: 10 },

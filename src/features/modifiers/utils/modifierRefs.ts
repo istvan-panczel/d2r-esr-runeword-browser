@@ -30,23 +30,35 @@ export interface ModifierRefEntry {
   readonly source: SourceKind;
 }
 
+/**
+ * [canonical key, entries index, the modifiers.json kind]: the kind only when the entry covers several ("resists": the
+ * magic resist line gets no difficulty penalty in the peek)
+ */
+export type ModifierRefTemplate = readonly [string, number] | readonly [string, number, string];
+
 /** `data/modifierRefs.json`: the generated templates, entries and the facts the peek quotes */
 export interface ModifierRefsData {
   readonly entries: readonly ModifierRefEntry[];
-  /** [canonical whole-line key, entries index] */
-  readonly templates: readonly (readonly [string, number])[];
-  /** [canonical key with `¤` wildcards (a class or skill tab name, a monster), entries index] */
-  readonly patterns: readonly (readonly [string, number])[];
+  /** Canonical whole-line keys */
+  readonly templates: readonly ModifierRefTemplate[];
+  /** Canonical keys with `¤` wildcards (a class or skill tab name, a monster) */
+  readonly patterns: readonly ModifierRefTemplate[];
   /** The modifiers.json facts the peek's numbers use (modifierPeek.ts PEEK_FACT_KEYS) */
   readonly facts: readonly ModifierFact[];
   /** [title, kind key] of every kind the home search lists (`modifierSearchNames`) */
   readonly searchNames: readonly (readonly [string, string])[];
 }
 
+/** What a template names: the entry, and the kind when the entry covers several */
+export interface ModifierRefTarget {
+  readonly entry: ModifierRefEntry;
+  readonly kind?: string;
+}
+
 export interface ModifierRefIndex {
   readonly byKey: ReadonlyMap<string, ModifierRefEntry>;
-  readonly templates: ReadonlyMap<string, ModifierRefEntry>;
-  readonly patterns: readonly (readonly [RegExp, ModifierRefEntry])[];
+  readonly templates: ReadonlyMap<string, ModifierRefTarget>;
+  readonly patterns: readonly (readonly [RegExp, ModifierRefTarget])[];
   readonly facts: readonly ModifierFact[];
 }
 
@@ -128,10 +140,14 @@ export function buildModifierRefIndex(data: ModifierRefsData): ModifierRefIndex 
     if (entry === undefined) throw new Error(`modifierRefs.json: no entry ${String(index)}`);
     return entry;
   };
+  const target = ([, index, kind]: ModifierRefTemplate): ModifierRefTarget => ({
+    entry: entryAt(index),
+    ...(kind === undefined ? {} : { kind }),
+  });
   return {
     byKey: new Map(data.entries.map((entry) => [entry.key, entry])),
-    templates: new Map(data.templates.map(([key, index]) => [key, entryAt(index)])),
-    patterns: data.patterns.map(([key, index]) => [patternRegExp(key), entryAt(index)] as const),
+    templates: new Map(data.templates.map((template) => [template[0], target(template)])),
+    patterns: data.patterns.map((template) => [patternRegExp(template[0]), target(template)] as const),
     facts: data.facts,
   };
 }
@@ -143,20 +159,21 @@ export function buildModifierRefIndex(data: ModifierRefsData): ModifierRefIndex 
 export function findModifierRef(line: string, index: ModifierRefIndex): ModifierRef | null {
   if (line.length > MAX_LINE_LENGTH || line.length === 0) return null;
   const { key, numbers } = canonicalLine(line);
-  let entry = index.templates.get(key);
-  if (entry === undefined) {
+  let target = index.templates.get(key);
+  if (target === undefined) {
     for (const [pattern, candidate] of index.patterns) {
       if (pattern.test(key)) {
-        entry = candidate;
+        target = candidate;
         break;
       }
     }
   }
-  if (entry === undefined) return null;
+  if (target === undefined) return null;
   const first = numbers.at(0);
   const value = first === undefined ? null : parseLineNumber(first);
   return {
-    key: entry.key,
+    key: target.entry.key,
+    ...(target.kind === undefined ? {} : { kind: target.kind }),
     ...(value === null ? {} : { value }),
     ...(key.endsWith(PER_LEVEL) ? { perLevel: true as const } : {}),
   };

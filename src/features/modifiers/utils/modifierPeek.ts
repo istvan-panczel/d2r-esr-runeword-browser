@@ -14,11 +14,15 @@ export interface PeekNumber {
   readonly origin: ModifierFactOrigin;
 }
 
-/** The line's value for per-value numbers: the roll's maximum; none for per-level lines (the number is per level) */
+/**
+ * The line's value for per-value numbers: the roll's larger end, sign kept (a stash item's "-5% Magic Find" stays
+ * negative); none for per-level lines (the number is per level) and for 0
+ */
 function lineValue(ref: ModifierRef): number | null {
   if (ref.value === undefined || ref.perLevel === true) return null;
-  const value = Math.max(Math.abs(ref.value[0]), Math.abs(ref.value[1]));
-  return value > 0 ? value : null;
+  const [min, max] = ref.value;
+  const value = Math.abs(max) >= Math.abs(min) ? max : min;
+  return value === 0 ? null : value;
 }
 
 function percent(value: number): string {
@@ -29,7 +33,9 @@ function leechNumbers(ref: ModifierRef, facts: Facts, resource: 'life' | 'mana')
   const value = lineValue(ref);
   const nightmare = difficultyFact(facts, resource === 'life' ? 'difficulty.LifeStealDivisor' : 'difficulty.ManaStealDivisor', 1);
   const hell = difficultyFact(facts, resource === 'life' ? 'difficulty.LifeStealDivisor' : 'difficulty.ManaStealDivisor', 2);
-  if (value === null) return [{ text: `Divided by ${String(nightmare)} in Nightmare and ${String(hell)} in Hell`, origin: 'game-files' }];
+  // A negative line only lowers the total leech: the divisors are all there is to say
+  if (value === null || value < 0)
+    return [{ text: `Divided by ${String(nightmare)} in Nightmare and ${String(hell)} in Hell`, origin: 'game-files' }];
   const at = (difficulty: 1 | 2) => formatSmallPercent(effectiveLeech(value, difficulty, resource, facts).engine);
   return [{ text: `${percent(value)} leeches about ${at(1)} in Nightmare and ${at(2)} in Hell`, origin: 'game-files' }];
 }
@@ -37,10 +43,16 @@ function leechNumbers(ref: ModifierRef, facts: Facts, resource: 'life' | 'mana')
 function magicFindNumbers(ref: ModifierRef, facts: Facts): PeekNumber[] {
   const value = lineValue(ref);
   if (value === null) return [];
-  const at = (quality: 'unique' | 'set' | 'rare') => `+${String(effectiveMagicFind(value, quality, facts))}%`;
+  const effective = (['unique', 'set', 'rare'] as const).map((quality) => effectiveMagicFind(value, quality, facts));
+  const at = (index: number) => {
+    const number = effective[index] ?? value;
+    return `${number < 0 ? '' : '+'}${String(number)}%`;
+  };
+  // Small and negative values count in full (the curve starts above +10%)
+  const note = effective.every((number) => number === value) ? 'counts in full' : 'diminishing returns';
   return [
     {
-      text: `This line alone (${percent(value)}): unique ${at('unique')}, set ${at('set')}, rare ${at('rare')} (diminishing returns)`,
+      text: `This line alone (${percent(value)}): unique ${at(0)}, set ${at(1)}, rare ${at(2)} (${note})`,
       origin: 'vanilla-engine',
     },
   ];
@@ -85,15 +97,15 @@ export function peekNumbers(ref: ModifierRef, facts: Facts): PeekNumber[] {
       return [{ text: `Dodge, Avoid and Evade are each capped at ${percent(cap.dodge)}`, origin: 'esr-config' }];
     }
     case 'resists': {
+      const cap: PeekNumber = {
+        text: `Capped at ${percent(numberFact(facts, 'resist.maxBase'))}, ${percent(numberFact(facts, 'resist.hardCap'))} at most with Maximum Resist`,
+        origin: 'vanilla-engine',
+      };
+      // The difficulty penalty is on fire, cold, lightning and poison only
+      if (ref.kind === 'magic-resist') return [cap];
       const nightmare = -difficultyFact(facts, 'difficulty.ResistPenalty', 1);
       const hell = -difficultyFact(facts, 'difficulty.ResistPenalty', 2);
-      return [
-        { text: `Nightmare subtracts ${String(nightmare)}%, Hell ${String(hell)}%`, origin: 'game-files' },
-        {
-          text: `Capped at ${percent(numberFact(facts, 'resist.maxBase'))}, ${percent(numberFact(facts, 'resist.hardCap'))} at most with Maximum Resist`,
-          origin: 'vanilla-engine',
-        },
-      ];
+      return [{ text: `Nightmare subtracts ${String(nightmare)}%, Hell ${String(hell)}%`, origin: 'game-files' }, cap];
     }
     case 'max-resists':
       return [{ text: `Hard ceiling: ${percent(numberFact(facts, 'resist.hardCap'))}`, origin: 'vanilla-engine' }];
