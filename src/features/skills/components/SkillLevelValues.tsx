@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode, type Ref } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type Ref } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -72,7 +72,7 @@ export function SkillLevelValues({ config, record, index, results, rows, tableOp
     <section
       ref={sectionRef}
       aria-label="Values per skill level"
-      className="scroll-mt-20 space-y-3 rounded-md border bg-background/60 p-2 sm:p-3"
+      className="scroll-mt-2 space-y-3 rounded-md border bg-background/60 p-2 sm:p-3"
     >
       {config.note}
       {showControls && (
@@ -306,11 +306,29 @@ function FullTableBody({
 }) {
   const levels = fullTableLevels(selected);
   const columns = varyingRows(skillTable(record, index, levels, options)).map((row) => ({ key: row.key, ...tableRow(row) }));
+  const boxRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLTableSectionElement>(null);
+  const selectedRef = useRef<HTMLTableRowElement>(null);
+  // Keeps the selected level's row visible inside the table's own box (a "Granted by" level, the slider); the page
+  // itself does not scroll
+  useEffect(() => {
+    const box = boxRef.current;
+    const row = selectedRef.current;
+    if (box === null || row === null) return;
+    const head = headRef.current?.offsetHeight ?? 0;
+    const boxTop = box.getBoundingClientRect().top;
+    const rowRect = row.getBoundingClientRect();
+    const top = rowRect.top - boxTop - head;
+    const bottom = rowRect.bottom - boxTop;
+    if (top >= 0 && bottom <= box.clientHeight) return;
+    // Near the top of the box (one row above it for context): on a phone the box's lower part is often below the screen
+    box.scrollTo({ top: Math.max(0, box.scrollTop + top - rowRect.height) });
+  }, [selected]);
   return (
-    <div className="mt-2 max-h-[28rem] overflow-auto rounded border">
+    <div ref={boxRef} className="mt-2 max-h-[28rem] overflow-auto rounded border">
       <table className="border-collapse tabular-nums">
         <caption className="sr-only">Values at every level</caption>
-        <thead className="sticky top-0 z-10 bg-card">
+        <thead ref={headRef} className="sticky top-0 z-10 bg-card">
           <tr className="text-muted-foreground">
             <th scope="col" className="sticky left-0 bg-card px-2 py-1 text-right font-normal">
               Lvl
@@ -324,7 +342,11 @@ function FullTableBody({
         </thead>
         <tbody>
           {levels.map((level, i) => (
-            <tr key={level} className={cn('border-t border-border/60', level === selected && 'bg-primary/10 font-semibold')}>
+            <tr
+              key={level}
+              ref={level === selected ? selectedRef : undefined}
+              className={cn('border-t border-border/60', level === selected && 'bg-primary/10 font-semibold')}
+            >
               <th scope="row" className={cn('sticky left-0 px-2 py-0.5 text-right', level === selected ? 'bg-accent' : 'bg-card')}>
                 {level}
                 {level === MAX_LEVEL && FOOTNOTE}

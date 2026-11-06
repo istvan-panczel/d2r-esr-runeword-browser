@@ -14,6 +14,7 @@ interface SkillRefTextProps {
  * An item property line whose skill name ("+3 to Fire Ball", "Level 15 Fanaticism Aura When Equipped", …) links to the
  * Skills page and opens the skill peek (`SkillPeekLayer`, one popover for the whole page, found through
  * `data-skill-ref`). Plain text until the skill names are loaded, and for every line that is not a skill property.
+ * The links are not tab stops (`tabIndex -1`): keyboard users keep the item flow; see docs/features/SKILLS.md.
  */
 export function SkillRefText({ line, item }: SkillRefTextProps) {
   const index = useSkillRefIndex();
@@ -29,6 +30,9 @@ export function SkillRefText({ line, item }: SkillRefTextProps) {
         key={key}
         to={skillRefUrl(skill, urlLevel)}
         {...{ [SKILL_REF_ATTRIBUTE]: encodeSkillRef(segment.ref) }}
+        // Not a tab stop (a uniques page has ~1,500 of these); still a link for pointers and screen readers' link lists
+        tabIndex={-1}
+        aria-haspopup="dialog"
         className="underline decoration-current/50 decoration-dotted underline-offset-2 hover:decoration-solid"
       >
         {segment.text}

@@ -3,9 +3,9 @@
  * synergy state with its URL form, the table levels, the column labels, the synergy texts, the "Granted by" headline
  * values and the builds mapping. See docs/features/SKILLS.md ("Page").
  */
-import { DEFAULT_CHAR_LEVEL, DEFAULT_TABLE_LEVELS, MAX_LEVEL } from '@/features/game-data/engine/skillCalc';
-import type { SkillLineResult, SkillTableRow } from '@/features/game-data/engine/skillCalc';
-import type { SkillGrant, SkillSynergy } from '@/features/game-data/engine/schema';
+import { DEFAULT_CHAR_LEVEL, DEFAULT_TABLE_LEVELS, defaultContext, evaluateSkill, MAX_LEVEL } from '@/features/game-data/engine/skillCalc';
+import type { SkillCalcSource, SkillLineResult, SkillTableRow } from '@/features/game-data/engine/skillCalc';
+import type { SkillCalcSkill, SkillGrant, SkillSynergy } from '@/features/game-data/engine/schema';
 
 export { DEFAULT_CHAR_LEVEL, MAX_LEVEL };
 
@@ -142,22 +142,29 @@ export function cellText(cell: SkillLineResult): string {
   return before === '' ? `${cell.span}${cell.after.startsWith('%') ? '%' : ''}` : `${cell.span}${cell.after}`.replace(/\s+/g, ' ');
 }
 
-/** Longest word unit moved from the cells into the label ("Radius (yards)") */
-const UNIT_MAX_LENGTH = 12;
+/** A trailing text every cell shares, split into a kept "%" and the words that move into the label */
+function sharedTrailing(cells: readonly SkillLineResult[]): { percent: boolean; words: string } | null {
+  const afters = new Set(cells.map((cell) => cell.after.replace(/\s+/g, ' ').trim()));
+  const after = afters.size === 1 ? (afters.values().next().value ?? '') : '';
+  const percent = after.startsWith('%');
+  const words = (percent ? after.slice(1) : after).trim();
+  return /[a-z]/i.test(words) ? { percent, words } : null;
+}
 
 /**
- * A table row ready to draw: a word unit every cell shares moves into the label ("Radius (yards)": 4, 5.3, …) so the
- * narrow columns hold only numbers; "%" stays in the cells.
+ * A table row ready to draw: a trailing text every cell shares moves into the label ("Radius (yards)": 4, 5.3, …;
+ * "Average Fire Damage (per second)") so the narrow columns hold only numbers; "%" stays in the cells.
  */
 export function tableRow(row: SkillTableRow): { label: string; cells: string[] } {
   const label = rowLabel(row);
   const available = row.cells.filter((cell) => cell.unavailable !== true && cell.span !== '');
-  const units = new Set(available.map((cell) => cell.after.trim()));
-  const unit = available.at(0)?.after.trim() ?? '';
-  const shared =
-    units.size === 1 && /^[a-z]+$/i.test(unit) && unit.length <= UNIT_MAX_LENGTH && available.every((cell) => cell.before.trim() !== '');
-  if (!shared) return { label, cells: row.cells.map(cellText) };
-  return { label: `${label} (${unit})`, cells: row.cells.map((cell) => (cell.unavailable === true ? '–' : cell.span)) };
+  const shared = available.every((cell) => cell.before.trim() !== '') ? sharedTrailing(available) : null;
+  if (available.length === 0 || shared === null) return { label, cells: row.cells.map(cellText) };
+  const suffix = shared.percent ? '%' : '';
+  return {
+    label: `${label} (${shared.words})`,
+    cells: row.cells.map((cell) => (cell.unavailable === true ? '–' : cell.span === '' ? cellText(cell) : `${cell.span}${suffix}`)),
+  };
 }
 
 /** "Mana Cost: 14.5" says nothing about what an item's level of the skill does */
@@ -165,12 +172,24 @@ function isManaRow(row: SkillTableRow): boolean {
   return /^mana cost\b/i.test(row.label);
 }
 
-/** The keys of the lines a "Granted by" row shows at its level: the first `count` per-level lines that vary, mana left out */
+/** Headline preference: damage lines, then attack rating / defense / life, then the other lines (tooltip order within each) */
+function headlineRank(row: SkillTableRow): number {
+  if (/damage/i.test(row.label)) return 0;
+  if (/attack rating|defense|life/i.test(row.label)) return 1;
+  return 2;
+}
+
+/**
+ * The keys of the lines a "Granted by" row (and the skill peek) shows at its level: the first `count` per-level lines
+ * that vary, mana left out, damage-like lines first
+ */
 export function headlineKeys(rows: readonly SkillTableRow[], count = 2): string[] {
-  return varyingRows(rows)
-    .filter((row) => row.block === 'level' && !isManaRow(row))
+  const candidates = varyingRows(rows).filter((row) => row.block === 'level' && !isManaRow(row));
+  return candidates
+    .map((row, order) => ({ row, order, rank: headlineRank(row) }))
+    .sort((a, b) => a.rank - b.rank || a.order - b.order)
     .slice(0, count)
-    .map((row) => row.key);
+    .map(({ row }) => row.key);
 }
 
 /** Those lines' texts (multi-line strings joined with " ") in the results of one level */
@@ -189,6 +208,61 @@ export function grantLevel(grant: Pick<SkillGrant, 'how' | 'level'>): number | n
   if (grant.how === 'skill') return null;
   const level = typeof grant.level === 'number' ? grant.level : grant.level[1];
   return level >= 1 ? clampLevel(level) : null;
+}
+
+/** A "Granted by" row's values at the item's level */
+export interface GrantHeadline {
+  readonly texts: readonly string[];
+  /** The texts use no hard points (items give none) and differ from the calculator's default hard points */
+  readonly noHardPoints: boolean;
+}
+
+const NO_HEADLINE: GrantHeadline = { texts: [], noHardPoints: false };
+
+/**
+ * The headline lines (`keys`) at an item's skill level with the page's synergy points and character level, without
+ * hard points (items never give any); `noHardPoints` when the default hard points (min(level, max level)) would show
+ * other values
+ */
+export function grantHeadline(
+  record: SkillCalcSkill,
+  source: SkillCalcSource,
+  keys: readonly string[],
+  level: number,
+  options: { readonly charLevel?: number; readonly synergyPoints?: Readonly<Record<string, number>> }
+): GrantHeadline {
+  if (keys.length === 0) return NO_HEADLINE;
+  const at = (hardPoints: { hardPoints?: number }) =>
+    headlineTexts(evaluateSkill(record, source, defaultContext(record, { ...options, ...hardPoints, level })), keys);
+  const texts = at({ hardPoints: 0 });
+  const withDefault = at({});
+  return { texts, noHardPoints: texts.join('\n') !== withDefault.join('\n') };
+}
+
+/** Each grant level's headline, every level evaluated once (many grants share a level) */
+export function grantHeadlines(
+  levels: readonly number[],
+  headline: ((level: number) => GrantHeadline) | undefined
+): ReadonlyMap<number, GrantHeadline> {
+  const out = new Map<number, GrantHeadline>();
+  if (headline === undefined) return out;
+  for (const level of levels) if (!out.has(level)) out.set(level, headline(level));
+  return out;
+}
+
+/**
+ * The synergy input shown next to each "Receives bonuses from" line: the first line of each synergy skill gets it, a
+ * second line of the same skill (Blizzard's two Orb of Winter bonuses) none, as both would edit the same points
+ */
+export function synergyLineInputs<T extends SynergyInput>(synergies: readonly SkillSynergy[], inputs: readonly T[]): (T | undefined)[] {
+  const used = new Set<string>();
+  return synergies.map((synergy) => {
+    const id = synergy.id ?? synergy.name;
+    if (used.has(id)) return undefined;
+    const input = inputs.find((entry) => entry.id === id);
+    if (input !== undefined) used.add(id);
+    return input;
+  });
 }
 
 /**

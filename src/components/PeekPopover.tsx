@@ -10,6 +10,10 @@ type PeekPopoverProps = {
   readonly enabled?: boolean;
   /** Extra classes of the content (the guide passes its prose font) */
   readonly className?: string;
+  /** Accessible name of the content (a dialog for assistive technology) */
+  readonly label?: string;
+  /** Hide the content while its anchor is out of view or no longer in the page (a shared, delegated peek) */
+  readonly hideWhenDetached?: boolean;
   readonly children: ReactNode;
 } & (
   | {
@@ -28,12 +32,18 @@ type PeekPopoverProps = {
 );
 
 /** The hover/focus "peek" above a note link, glossary term, graph node or campaign map area. */
-export function PeekPopover({ peek, trigger, anchorRef, enabled = true, className, children }: PeekPopoverProps) {
+export function PeekPopover({ peek, trigger, anchorRef, enabled = true, className, label, hideWhenDetached, children }: PeekPopoverProps) {
   return (
     <Popover open={peek.open && enabled} onOpenChange={peek.setOpen}>
       {anchorRef === undefined ? <PopoverAnchor asChild>{trigger}</PopoverAnchor> : <PopoverAnchor virtualRef={anchorRef} />}
       {enabled && (
-        <PopoverContent side="top" className={cn('w-72 p-3 text-sm', className)} {...peek.contentProps}>
+        <PopoverContent
+          side="top"
+          className={cn('w-72 p-3 text-sm', className)}
+          aria-label={label}
+          hideWhenDetached={hideWhenDetached}
+          {...peek.contentProps}
+        >
           {children}
         </PopoverContent>
       )}

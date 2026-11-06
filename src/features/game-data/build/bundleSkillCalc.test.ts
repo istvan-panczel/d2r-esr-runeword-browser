@@ -182,6 +182,10 @@ function build() {
         descline3: '74',
         desctexta3: 'Heal',
         desccalca3: "(skill('Eschuta Passive'.lvl)>0)*5",
+        // reads Bolt (same class) only behind that always-0 gate: kept, but Bolt's points change nothing (no input)
+        descline4: '74',
+        desctexta4: 'Heal',
+        desccalca4: "(skill('Eschuta Passive'.lvl)>0)*skill('Bolt'.blvl)+3",
         dsc2line1: '74',
         dsc2texta1: 'Dur',
         dsc2calca1: '5&&1',
@@ -223,7 +227,8 @@ describe('buildSkillCalcBundle', () => {
 
   it('keeps a line that is non-zero only when a class skill it reads has points, and lists unlisted same-class reads', () => {
     const nova = bundle.skills.find((skill) => skill.id === 'Nova');
-    expect(nova?.lines.map((line) => line.key)).toEqual(['desc1', 'desc2', 'dsc2-1']);
+    expect(nova?.lines.map((line) => line.key)).toEqual(['desc1', 'desc2', 'desc4', 'dsc2-1']);
+    // Bolt is read too, but only behind a gate that is always 0: an input that could never change a value is left out
     expect(nova?.unlistedSynergies).toEqual(['Charge']);
     expect(nova?.synergies).toBeUndefined();
     expect(blast?.unlistedSynergies).toBeUndefined();

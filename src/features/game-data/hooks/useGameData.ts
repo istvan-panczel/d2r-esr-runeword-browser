@@ -16,9 +16,15 @@ type LoadState<F extends GameDataFile> =
   | { readonly status: 'ready'; readonly data: LoadedBundles<F> }
   | { readonly status: 'error'; readonly error: unknown };
 
+/** The files of a `files.join(',')` key; an empty key is no files (not one file named "") */
+export function filesFromKey<F extends GameDataFile>(key: string): F[] {
+  return key === '' ? [] : (key.split(',') as F[]);
+}
+
 /**
  * Loads the given game-data bundles (cached per file by `loadGameDataFile`).
- * `retry` refetches after an error; the failed promise has already been evicted from the loader cache.
+ * `retry` refetches after an error; the failed promise has already been evicted from the loader cache. An empty list
+ * fetches nothing and is ready with no data (callers pass one while a feature is off).
  */
 export function useGameData<F extends GameDataFile>(files: readonly F[]): GameDataState<F> {
   const filesKey = files.join(',');
@@ -27,7 +33,7 @@ export function useGameData<F extends GameDataFile>(files: readonly F[]): GameDa
 
   useEffect(() => {
     let cancelled = false;
-    const list = filesKey.split(',') as F[];
+    const list = filesFromKey<F>(filesKey);
     Promise.all(list.map(async (file) => [file, await loadGameDataFile(file)] as const)).then(
       (entries) => {
         if (!cancelled) setState({ status: 'ready', data: Object.fromEntries(entries) as LoadedBundles<F> });

@@ -9,7 +9,7 @@ import { REMOVED_LEVELS } from './build/bundleAreas.ts';
 import { generateBundles } from './build/generateBundles.ts';
 import { COLORMAP_FILES, TINT_COLORS, untintedFile } from './build/itemTint.ts';
 import { serializeBundle } from './build/writeBundle.ts';
-import { indexSkillCalc, maxSynergyPoints, skillTable } from './engine/skillCalc/index.ts';
+import { defaultContext, evaluateSkill, indexSkillCalc, maxSynergyPoints, skillTable, synergyInputs } from './engine/skillCalc/index.ts';
 import { decodeSkillLevelLayer, decodeTabLayer, MAX_STAT_PARAM, statLayerKind } from './engine/statLayers.ts';
 import {
   CLASS_CODES,
@@ -1136,6 +1136,41 @@ describe('committed skillcalc bundle', () => {
         ).toBe(true);
     for (const skill of skillCalc.skills)
       for (const id of skill.unlistedSynergies ?? []) expect(index.skill(id)?.maxlvl, id).toBeGreaterThan(0);
+  });
+
+  it('lists only unlisted synergies whose points can change a value, one input per skill', () => {
+    // Fire Ball reads Zap, Conduit, Storm Nexus and Static Focus only behind an ascendancy gate that is always 0 here
+    expect(index.record('Fire Ball')?.unlistedSynergies).toBeUndefined();
+    expect(index.record('Werewolf')?.unlistedSynergies).toEqual(['Lycanthropy']);
+    const counts = skillCalc.skills.reduce(
+      (sum, skill) => ({
+        skills: sum.skills + (skill.unlistedSynergies === undefined ? 0 : 1),
+        inputs: sum.inputs + (skill.unlistedSynergies?.length ?? 0),
+      }),
+      { skills: 0, inputs: 0 }
+    );
+    expect(counts).toEqual({ skills: 73, inputs: 235 });
+    // Blizzard's tooltip lists Orb of Winter twice: one input
+    const blizzard = index.record('Blizzard');
+    expect(blizzard === undefined ? [] : synergyInputs(blizzard, index).map((input) => input.id)).toEqual([
+      'Raging Gale',
+      'Orb of Winter',
+      'Glacial Focus',
+    ]);
+  });
+
+  it('keeps the skilldetails.json fixed lines in the order the calculator shows them', () => {
+    let compared = 0;
+    for (const detail of skillDetails.skills) {
+      const record = index.record(detail.id);
+      if (detail.lines === undefined || record === undefined) continue;
+      const texts = evaluateSkill(record, index, defaultContext(record, { level: 20 })).map((result) => result.text);
+      const positions = detail.lines.map((line) => texts.indexOf(line)).filter((position) => position >= 0);
+      if (positions.length < 2) continue;
+      compared++;
+      expect(positions, detail.id).toEqual([...positions].sort((a, b) => a - b));
+    }
+    expect(compared).toBeGreaterThan(10);
   });
 
   it('hides engine-computed, character-stat and always-zero lines', () => {

@@ -174,6 +174,17 @@ describe('contexts and inputs', () => {
       { id: 'Nope', max: 20, listed: false },
     ]);
     expect(maxSynergyPoints(withUnlisted, index)).toEqual({ 'Fire Bolt': 20, Attack: 20, Nope: 20 });
+    // one input per skill id: a repeated id (listed twice, or listed and unlisted) keeps its first place
+    const repeated: SkillCalcSkill = {
+      ...FIRE_BALL,
+      synergies: ['Fire Bolt', 'Attack', 'Fire Bolt'],
+      unlistedSynergies: ['Attack', 'Nope'],
+    };
+    expect(synergyInputs(repeated, index).map(({ id, listed }) => `${id}:${String(listed)}`)).toEqual([
+      'Fire Bolt:true',
+      'Attack:true',
+      'Nope:false',
+    ]);
   });
 
   it('tells whether item procs can cast the skill', () => {

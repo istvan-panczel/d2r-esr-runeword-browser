@@ -114,14 +114,18 @@ export interface SynergyInputInfo {
 
 /**
  * The skills a user can put hard points into: the listed synergies, then the unlisted ones (other class skills the
- * shown lines read), each with its hard-point cap (skills.txt maxlvl)
+ * shown lines read), each with its hard-point cap (skills.txt maxlvl), once per skill id
  */
 export function synergyInputs(skill: SkillCalcSkill, source: SkillCalcSource): SynergyInputInfo[] {
   const input = (id: string, listed: boolean): SynergyInputInfo => {
     const max = source.skill(id)?.maxlvl;
     return { id, max: typeof max === 'number' && max > 0 ? max : DEFAULT_SYNERGY_POINTS, listed };
   };
-  return [...(skill.synergies ?? []).map((id) => input(id, true)), ...(skill.unlistedSynergies ?? []).map((id) => input(id, false))];
+  // One input per skill id (the first: a listed synergy before an unlisted one)
+  const seen = new Set<string>();
+  return [...(skill.synergies ?? []).map((id) => input(id, true)), ...(skill.unlistedSynergies ?? []).map((id) => input(id, false))].filter(
+    ({ id }) => !seen.has(id) && seen.add(id)
+  );
 }
 
 /** Every synergy input (listed and unlisted) at its cap (the "max synergies" state) */

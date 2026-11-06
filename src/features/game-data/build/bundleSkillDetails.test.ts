@@ -88,7 +88,20 @@ function input(items: SkillDetailsInput['items'] = []): SkillDetailsInput {
         dsc3calca3: 'clc1',
         dsc3texta4: 'BothNote',
       },
-      { skilldesc: 'fire ball', SkillPage: '1', SkillRow: '2', SkillColumn: '3', IconCel: '22', 'str name': 'FireBallName' },
+      {
+        skilldesc: 'fire ball',
+        SkillPage: '1',
+        SkillRow: '2',
+        SkillColumn: '3',
+        IconCel: '22',
+        'str name': 'FireBallName',
+        desctexta1: 'FbRadius',
+        desccalca1: '4',
+        desctexta2: 'FbSplit',
+        desccalca2: '3',
+        dsc2texta1: 'FbPinned1',
+        dsc2texta2: 'FbPinned2',
+      },
       {
         skilldesc: 'warmth',
         SkillPage: '1',
@@ -113,6 +126,10 @@ function input(items: SkillDetailsInput['items'] = []): SkillDetailsInput {
       ['HolyFireName', 'Holy Fire'],
       ['LonelyName', 'Lonely Proc'],
       ['ManaCost', 'Mana Cost: %d'],
+      ['FbRadius', 'Radius: %d yards'],
+      ['FbSplit', 'Splits into %d'],
+      ['FbPinned1', 'Pinned one'],
+      ['FbPinned2', 'Pinned two'],
       ['Stacks', 'up to %d stacks\nFirestarter lasts'],
       ['Cooldown1', 'Cooldown: %d second'],
       ['Cooldowns', 'Cooldown: %d seconds'],
@@ -207,6 +224,10 @@ describe('buildSkillDetailsBundle', () => {
 
   it('keeps constant description lines (bottom-up) and drops formula, plural-pair and mana lines', () => {
     expect(byId('Fire Bolt')?.lines).toEqual(['Firestarter lasts\nup to 6 stacks']);
+  });
+
+  it('orders the lines as the tooltip (and the calculator) shows them: dsc2 bottom-up, then desc bottom-up', () => {
+    expect(byId('Fire Ball')?.lines).toEqual(['Pinned two', 'Pinned one', 'Splits into 3', 'Radius: 4 yards']);
   });
 
   it('reads synergies with param values, "?" for formulas, and special rules as notes', () => {

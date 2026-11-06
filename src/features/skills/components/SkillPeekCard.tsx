@@ -18,9 +18,10 @@ function headlineValues(record: SkillCalcSkill, index: SkillCalcIndex, level: nu
 
 /**
  * The skill peek of an item line: icon, name, class, what the line gives, the headline values at its level (the
- * calculator; skillcalc.json loads with the first peek) and a link to the Skills page at that level.
+ * calculator; skillcalc.json loads with the first peek) and a link to the Skills page at that level (`newTab`: in a new
+ * tab, for names inside a form whose edits would be lost).
  */
-export function SkillPeekCard({ skillRef }: { readonly skillRef: SkillRef }) {
+export function SkillPeekCard({ skillRef, newTab = false }: { readonly skillRef: SkillRef; readonly newTab?: boolean }) {
   const index = useSkillRefIndex();
   const calc = useSkillCalc();
   const skill = index?.byId.get(skillRef.id);
@@ -59,9 +60,10 @@ export function SkillPeekCard({ skillRef }: { readonly skillRef: SkillRef }) {
       )}
       <Link
         to={skillRefUrl(skill, at.urlLevel)}
+        {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         className="inline-block text-xs font-medium text-primary underline-offset-2 hover:underline"
       >
-        Open in Skills →
+        Open in Skills {newTab ? '(new tab) ' : ''}→
       </Link>
     </div>
   );

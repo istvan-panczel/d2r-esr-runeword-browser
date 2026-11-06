@@ -5,7 +5,8 @@
  *   class-less rows with a skilldesc row that some unique, set item or runes.txt recipe grants ("item skills").
  * - Text: skilldesc `str name` / `str long` through the strings (`str short` is identical in ESR and not stored).
  *   `lines`: descline1..6 / dsc2line1..5 whose values are constants or skill params (`par8`); any line that needs
- *   a calc formula, a second text (`textb`) or an unresolved string is left out (per-level evaluation is out of scope).
+ *   a calc formula, a second text (`textb`) or an unresolved string is left out (the calculator evaluates those). In
+ *   tooltip order: the dsc2 block bottom-up, then the desc block bottom-up (as engine/skillCalc `tooltipOrder`).
  *   `synergies`: dsc3 lines after the `Sksyn` header whose textb is a skill name; other dsc3 texts become `notes`.
  * - Mana: (mana | lvlmana) × 2^manashift / 256, the cost at level 1 and per extra level.
  * - Icon: `<first two letters of the class code>-<IconCel>` (the class sheet hd/global/ui/spells/<class>/<xx>skillicon),
@@ -354,8 +355,7 @@ function readDetail(
   detail.description = lines.length === 1 && lines[0] === name ? [] : lines;
 
   const params = (n: number) => (row.has(`Param${String(n)}`) ? row.num(`Param${String(n)}`) : 0);
-  const fixed: string[] = [];
-  const readLine = (prefix: string, i: number) => {
+  const readLine = (prefix: string, i: number, into: string[]) => {
     const n = String(i);
     const textKey = desc.str(`${prefix}texta${n}`);
     if (textKey === '' || desc.str(`${prefix}textb${n}`) !== '') return;
@@ -372,10 +372,15 @@ function readDetail(
     }
     const line = bottomUp(sprintf(format, args));
     // A label whose value is a formula line of its own ("Attack Rating:") says nothing alone
-    if (line !== '' && !line.endsWith(':')) fixed.push(line);
+    if (line !== '' && !line.endsWith(':')) into.push(line);
   };
-  for (let i = 1; i <= DESC_LINES; i++) if (desc.has(`desctexta${String(i)}`)) readLine('desc', i);
-  for (let i = 1; i <= DSC2_LINES; i++) if (desc.has(`dsc2texta${String(i)}`)) readLine('dsc2', i);
+  const descBlock: string[] = [];
+  const dsc2Block: string[] = [];
+  for (let i = 1; i <= DESC_LINES; i++) if (desc.has(`desctexta${String(i)}`)) readLine('desc', i, descBlock);
+  for (let i = 1; i <= DSC2_LINES; i++) if (desc.has(`dsc2texta${String(i)}`)) readLine('dsc2', i, dsc2Block);
+  // Tooltip order, as the calculator shows them: the game adds the desc and dsc2 lines bottom-up and draws the dsc2
+  // block above the desc block (engine/skillCalc tooltipOrder)
+  const fixed = [...dsc2Block.reverse(), ...descBlock.reverse()];
   if (fixed.length > 0) detail.lines = fixed;
 
   const cel = desc.str('IconCel');

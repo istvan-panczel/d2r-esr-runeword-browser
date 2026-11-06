@@ -1,11 +1,12 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { describe, expect, it } from 'vitest';
-import type { SkillDetail, SkillDetailsBundle, SkillGrant } from '@/features/game-data/engine/schema';
+import type { SkillDetail, SkillDetailsBundle, SkillGrant, SkillsBundle } from '@/features/game-data/engine/schema';
 import { DEFAULT_SKILL_LEVEL, MAX_LEVEL } from './skillLevels';
 import { duplicateNames, SKILLS_ROUTE, SKILLS_URL_PARAMS } from './skills';
 import {
   buildSkillRefIndex,
+  CLASS_NAMES,
   findSkillRefs,
   LEVEL_CAP,
   LEVEL_PARAM,
@@ -174,6 +175,11 @@ describe('peek texts, levels and links', () => {
     expect([ROUTE, SKILL_PARAM, LEVEL_PARAM]).toEqual([SKILLS_ROUTE, SKILLS_URL_PARAMS.SKILL, SKILLS_URL_PARAMS.LEVEL]);
     expect([PAGE_DEFAULT_LEVEL, LEVEL_CAP]).toEqual([DEFAULT_SKILL_LEVEL, MAX_LEVEL]);
     expect(real.duplicates).toEqual(duplicateNames(committed.skills));
+  });
+
+  it('names the classes as skills.json (the Skills page) does', () => {
+    const trees = JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data/skills.json'), 'utf-8')) as SkillsBundle;
+    expect(CLASS_NAMES).toEqual(Object.fromEntries(trees.classes.map((cls) => [cls.code, cls.name])));
   });
 
   const ref = (line: string) => {

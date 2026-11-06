@@ -13,19 +13,36 @@ function anchorOf(target: EventTarget | null): HTMLElement | null {
   return anchor;
 }
 
+/** The reference the peek shows, where its name is */
+interface PeekTarget {
+  readonly ref: SkillRef;
+  /** The name sits in a form (the build editor) */
+  readonly inForm: boolean;
+  /** The page (path + query) the name was on */
+  readonly page: string;
+}
+
+/** A click the browser handles itself: a new tab / window (modifier keys) or not the main button */
+function isSpecialClick(event: MouseEvent<HTMLElement>): boolean {
+  return event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
+}
+
 /**
  * One hover / focus / tap peek for every skill name in item lines (`SkillRefText` anchors carry `data-skill-ref`), by
  * event delegation on a wrapper around the page (like the stash table's useItemPeek). Spread `wrapperProps` on the
- * wrapper and render one `PeekPopover` with `peek` and `peek.anchorRef`, showing `skillRef`.
+ * wrapper and render one `PeekPopover` with `peek` and `peek.anchorRef`, showing `shown` (null when nothing was picked
+ * on the current `page`: a peek never outlives the page its name is on).
  *
- * Mouse: hovering a name opens its peek (useHoverPopover's delays); a click follows the link. Keyboard: focusing the
- * link (:focus-visible) opens it; Enter follows it. Touch: the first tap on a name opens its peek instead of following
+ * Mouse: hovering a name opens its peek (useHoverPopover's delays); a click follows the link. Keyboard: the names are
+ * not tab stops (`SkillRefText`), but a focused one (:focus-visible) opens it and Enter follows it. Touch: the first tap on a name opens its peek instead of following
  * the link, a second tap on the same name follows it (as does the peek's own link); tapping elsewhere closes it.
- * Inside a form (the build editor) a click, tap or Enter only opens the peek: leaving the page would drop the edits.
+ * Inside a form (the build editor) a click, tap or Enter only opens the peek: leaving the page would drop the edits (the
+ * peek's own link opens a new tab there). Ctrl / Cmd / Shift / Alt clicks and other buttons are left to the browser
+ * (open in a new tab or window).
  */
-export function useSkillRefPeek() {
+export function useSkillRefPeek(page: string) {
   const peek = useHoverPopover();
-  const [skillRef, setSkillRef] = useState<SkillRef | null>(null);
+  const [target, setTarget] = useState<PeekTarget | null>(null);
   const hovered = useRef<HTMLElement | null>(null);
   const tapTimer = useRef<number | undefined>(undefined);
   const pointerType = useRef('mouse');
@@ -43,7 +60,9 @@ export function useSkillRefPeek() {
   const select = (anchor: HTMLElement): boolean => {
     const ref = decodeSkillRef(anchor.dataset.skillRef);
     if (ref === null) return false;
-    setSkillRef(ref);
+    // A peek left open on the previous page: closed, so this one opens with the usual delay
+    if (target !== null && target.page !== page) peek.setOpen(false);
+    setTarget({ ref, inForm: anchor.closest('form') !== null, page });
     return true;
   };
 
@@ -78,7 +97,7 @@ export function useSkillRefPeek() {
     // Capture phase: before the link's own click handler (React Router's Link navigates unless prevented)
     onClickCapture: (event: MouseEvent<HTMLElement>) => {
       const anchor = anchorOf(event.target);
-      if (anchor === null) return;
+      if (anchor === null || isSpecialClick(event)) return;
       // Mouse clicks and keyboard activation (detail 0) follow the link, a tap on the name of the open peek too
       const tap = pointerType.current !== 'mouse' && event.detail !== 0 && openOnTap.current !== anchor;
       if ((!tap && anchor.closest('form') === null) || !select(anchor)) return;
@@ -93,5 +112,5 @@ export function useSkillRefPeek() {
     },
   };
 
-  return { peek, skillRef, wrapperProps };
+  return { peek, shown: target !== null && target.page === page ? target : null, wrapperProps };
 }

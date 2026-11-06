@@ -55,7 +55,9 @@ same-name rows such as the 20 Ember of Creation variants share one entry) and `s
   calc that is an integer, a skill param (`par8`) or `+ - * /` of those. Lines that are a bare label ending in ":" are
   left out ("Attack Rating:" whose value is another line). Multi-line strings of these lines read bottom-up in game
   ("cast rate to a minimum of 0.2 seconds\nTick rate goes down…" is shown reversed); the page keeps the line breaks.
-  Mana cost, damage, duration and other formula lines are left out.
+  Mana cost, damage, duration and other formula lines are left out. The lines are in tooltip order, as the calculator
+  returns them (see "Line order"): the dsc2 lines bottom-up, then the desc lines bottom-up, so they do not reorder when
+  skillcalc.json loads (pinned in `bundleIntegrity.test.ts`).
 - **synergies**: dsc3 lines after the `Sksyn` header ("%s Receives Bonuses From:"): textb is the synergy skill's name,
   texta the bonus format ("%s: %+d%% Fire Damage per Level"); `text` is the format without the name, with constants /
   params filled in and `?` for formulas ("+12% Fire Damage per Level", "+?% …"). `id` links to the skill when the name
@@ -128,9 +130,11 @@ is shown.
   `synergies` = the skills.txt ids of the skills the dsc3 "Receives Bonuses From" lines name (skilldetails.json
   `synergies` that resolve to a skills.txt row other than the skill itself; `*Passive` / `*Control` rows excluded).
   `unlistedSynergies` = other skills of the same class tree whose points the shown lines read without the tooltip
-  listing them (Weaken reads every curse's hard points through Attack's `calc1`; Werewolf reads Lycanthropy): 104
-  skills, 343 inputs. Other classes' skills are left out (only Elemental Nova and Fist of the Heavens read any), as are
-  `*Passive` / `*Control` rows and item skills. Flags: `scalesWithCharLevel`, `scalesWithHardPointsOnly`, `hiddenStatLines`, `hiddenOtherLines`, `itemEffect`.
+  listing them (Weaken reads every curse's hard points through Attack's `calc1`; Werewolf reads Lycanthropy), kept only
+  when that skill alone at its cap (the other inputs at 0, ascendancy gates at 0) changes a shown line at a sample
+  level: Fire Ball reads Zap, Conduit, Storm Nexus and Static Focus only behind `skill('Eschuta Temper Passive'.lvl)>0`,
+  so it has none. ESR 3.2.24: 73 skills, 235 inputs (104 / 343 before the filter). Other classes' skills are left out
+  (only Elemental Nova and Fist of the Heavens read any), as are `*Passive` / `*Control` rows and item skills. Flags: `scalesWithCharLevel`, `scalesWithHardPointsOnly`, `hiddenStatLines`, `hiddenOtherLines`, `itemEffect`.
 - **rows** / **missiles**: the skills.txt / missiles.txt rows the shown lines' formulas can read on any branch
   (`collectFormulaRefs`: formula columns, `skill()` / `sklvl()` / `miss()` targets and skilldesc descmissiles,
   transitively), each cut to those columns; numbers as numbers, formulas as text, blank / 0 cells left out. Synergy
@@ -240,7 +244,7 @@ textb " percent" is dropped). The guide's 67 (`'%s+%d%s'`) would print "Lycanthr
 Phrozen Keep SkillDesc.txt File Guide ("desc and dsc2 add their lines to the description from bottom to top while
 dsc3 goes from top to bottom"; layout: name, long description, dsc2 lines, current / next level desc lines, dsc3
 lines) and the data: descline1 is the Mana Cost line of most skills, which the game shows last in the level block.
-skilldetails.json `lines` (the fallback without the calculator) still keep file order.
+skilldetails.json `lines` (the fallback without the calculator) use the same order.
 
 ### Public API (`engine/skillCalc/index.ts`)
 
@@ -250,7 +254,7 @@ const skill = index.record('Fire Ball'); // SkillCalcSkill | undefined
 defaultContext(skill, { level, hardPoints?, charLevel?, synergyPoints? }); // SkillCalcContext of a bare character
 evaluateSkill(skill, index, ctx); // SkillLineResult[]: key, block, type, text, values, before/span/after, color?, unavailable?
 skillTable(skill, index, [1, 20, 30, 50, 110], { synergyPoints, charLevel }); // SkillTableRow[]: label, cells, varies
-synergyInputs(skill, index); // [{ id, max, listed }]: listed synergies, then unlistedSynergies
+synergyInputs(skill, index); // [{ id, max, listed }]: listed synergies, then unlistedSynergies, once per skill id
 maxSynergyPoints(skill, index); // every synergy input (listed and unlisted) at its cap
 tooltipOrder(skill.lines); // lines top to bottom as the tooltip draws them
 itemTriggerInfo(skill); // { value: 'yes' | 'unknown', reason }
@@ -299,16 +303,24 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   on hover: "Scales with character level", "Scales with hard points only" (+skills do not raise that part), "Item procs
   can cast this" / "Unknown whether item procs can cast this" from `itemTriggerInfo`), description, the **values per
   level** (below), Requires / Unlocks links, "Receives bonuses from" (linked; with a hard-points input 0..cap per
-  synergy the calculator knows and the computed bonus text instead of `+?%`; then "Also affected by (not listed in the
+  synergy the calculator knows and the computed bonus text instead of `+?%`; a skill listed twice, such as Blizzard's
+  two Orb of Winter bonuses, gets the input on its first line only (`synergyLineInputs`); then "Also affected by (not listed in the
   tooltip)": the record's `unlistedSynergies`, linked, with the same hard-points inputs), notes, and **Granted by**,
   grouped into
   Usable skill, +Skill levels, Aura when equipped, Charges and Chance to cast; 8 per group, then "Show all N". Every
   grant except "+N levels (class only)" (a bonus on top of the character's points, not a level) gets a muted line with
-  the skill's first one or two per-level lines that vary (mana left out) at the item's level (a range's maximum,
-  no hard points: items never give any): "Lvl 40 – Fire Damage: 1508-2018 · Enemy Fire Resist: -30%"; for a skill with
-  `scalesWithHardPointsOnly` the line ends in "(no hard points)", since the calculator below uses `min(level, max
-level)` hard points. The level is a button that sets the calculator's level and scrolls the values into view (builds:
-  a level below the allocated points is plain text, "Below this build's N points"). Item links: uniques →
+  the skill's headline values at the item's level (a range's maximum, no hard points: items never give any): the first
+  one or two per-level lines that vary, mana left out, damage lines first, then attack rating / defense / life lines,
+  then the others in tooltip order (`headlineKeys`): "Lvl 40 – Fire Damage: 260-348 · Radius: 6.7 yards". The line
+  ends in "(no hard points)" when those values differ from the ones at the default hard points (`min(level, max level)`,
+  what the calculator below uses): both are evaluated per row (`grantHeadline`; Venom, Lycanthropy, the masteries …,
+  34 skills at level 20), not taken from the skill's `scalesWithHardPointsOnly` flag. The values are computed from the
+  current synergy points and character level on every render (no cache across renders: the React Compiler would keep
+  one). The level is a button that sets the calculator's level and scrolls the values block's top (controls and "At
+  level N") into view, also on a phone where the block is taller than the screen (the page scrolls below `lg`, the
+  sticky detail column from `lg`; `scrollToTop` in `useDetailScroll.ts`); an open All levels table scrolls the selected
+  row into view inside its own box. Builds: a level below the allocated points is plain text, "Below this build's N
+  points". Item links: uniques →
   `/uniques?name=`, or `/mythicals?name=` when the HTM mythicals list in IndexedDB has the name; set items →
   `/game-data/sets?name=`; runewords → `/runewords?name=`; gemwords → `/gemwords?name=` (the pages' exact-name focus).
 - **Item skills**: the 181 class-less granted skills as a tile grid by name; the subtitle is the number of granting
@@ -330,8 +342,9 @@ level)` hard points. The level is a button that sets the calculator's level and 
     depend on character stats and are not shown" (`hiddenStatLines`) and "N other lines are not shown: the game engine
     computes them … or the calculator does not support their formulas yet" (`hiddenOtherLines`).
   - the compact table at levels 1 / 20 / 30 / 50 / 110\* (`skillTable`): one label row per line that varies (synergy
-    block left out) with the five values under it; the selected level's column is highlighted. A word unit every cell
-    shares moves into the label ("Radius (yards)"), "%" stays in the cells (`utils/skillLevels.ts` `tableRow`).
+    block left out) with the five values under it; the selected level's column is highlighted. A trailing text every
+    cell shares moves into the label ("Radius (yards)", "Average Fire Damage (per second)"), "%" stays in the cells
+    (`utils/skillLevels.ts` `tableRow`), so a cell on a phone holds one number.
   - **All levels** (`<details>`, closed; computed only while open): rows = levels 1..20, then every 5th to 110, plus
     the selected level; columns = the varying lines; sticky header and level column, scrolls inside its own box
     (max 28rem high), the selected row highlighted.
@@ -363,7 +376,14 @@ Skill names in item property lines are links with a peek (`utils/skillRefs.ts`, 
 (mouse), focus (keyboard) or a first tap (touch) opens a small card with the skill's icon, name (+ the id suffix of
 same-name skills), class or "Item skill", what the line gives, the first one or two per-level values that vary (as in
 "Granted by": mana left out, no synergies, character level 110) and "Open in Skills →". A click (or a second tap on the
-same name) opens `/skills?skill=<id>&lvl=<N>` (`lvl` omitted at 20).
+same name) opens `/skills?skill=<id>&lvl=<N>` (`lvl` omitted at 20). The values are picked like "Granted by"'s
+(`headlineKeys`: damage lines first).
+
+**Keyboard and screen readers** (decision of 2026-11-06): the names are not tab stops (`tabIndex={-1}`): a uniques
+page has ~1,560 of them, which made it ~70% more Tab presses to get through the items. They stay real links (mouse,
+touch, screen readers' link lists and their link navigation), marked `aria-haspopup="dialog"`; the peek's popover
+(Radix `role="dialog"`) is named by the skill (`aria-label`). Keyboard users reach a skill through the Skills page or
+its search instead of the peek.
 
 **Templates** (whole line, case-insensitive, trailing footnote `*` marks allowed; nothing else is matched, so skill names
 in prose such as "Your Teleport now automatically casts …" stay plain text):
@@ -396,16 +416,21 @@ Damage Aura, Conduit / Conduit Proc, Holy Bolt / Holy Bolt Weapon Damage, Empowe
 
 **Data**: the first `SkillRefText` that renders starts loading skilldetails.json on idle (`requestIdleCallback`,
 3 s timeout; 1 s timer without it), cached for the page's lifetime (`hooks/useSkillRefIndex.ts`); lines render as plain
-text until then and after a failed load. skillcalc.json and the calculator load only with the first peek
-(`SkillPeekCard` is its own chunk). `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
+text until then and after a failed load. The popover (Radix Popover, floating-ui), the card, skillcalc.json and the
+calculator load only with the first peek (`SkillPeekHost` with `SkillPeekCard` is a lazy chunk; the app shell keeps
+only the delegation hook). `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
 calculator); it copies their route, params and default / max level, and the test checks the copies. Matching costs ~1 µs
 per line (32k fixture lines in ~22 ms).
 
 **One popover**: `SkillPeekLayer` (mounted once in `AppLayout` around the routed page) delegates pointer / focus / click
 events from anchors marked `data-skill-ref` (the reference as JSON, `utils/skillRefData.ts`) and renders one shared
-`PeekPopover` (`hooks/useSkillRefPeek.ts`, the stash table's useItemPeek pattern). Anchors inside another popover (the
-stash table's item peek) keep only their link. Inside a `<form>` (the build editor) a click, tap or Enter opens the peek
-instead of navigating, so edits are not lost.
+`PeekPopover` (`hooks/useSkillRefPeek.ts`, the stash table's useItemPeek pattern) through the lazy `SkillPeekHost`.
+Anchors inside another popover (the stash table's item peek) keep only their link. Inside a `<form>` (the build editor)
+a click, tap or Enter opens the peek instead of navigating, so edits are not lost, and the peek's "Open in Skills"
+link opens a new tab (`target="_blank"`). Ctrl / Cmd / Shift / Alt clicks and other mouse buttons are never
+intercepted (open in a new tab or window). A peek belongs to the page (path + query) its name was picked on: after a
+navigation (Enter on a name, a tap on the peek's link) it is not rendered, and Radix `hideWhenDetached` hides it while
+its name is scrolled out or removed from the page.
 
 **Surfaces** (item context passed where known):
 
@@ -421,7 +446,8 @@ instead of navigating, so edits are not lost.
 | Affixes (`AffixCard`), Enhance / Cube outputs (`BonusLines`)                              | none                          |
 
 Not covered: base automods (`BaseCard` joins the lines with " · "), the loot filter browsers, the cube's "Magic item of
-the same type (…)" outputs (not a whole-line template) and guide prose. Fixture numbers (ESR 3.2.24 HTM pages): runewords
+the same type (…)" and "The same item (Level 10 Blessed Aim Aura When Equipped)" outputs (the skill line is
+parenthesised inside another text, not a whole-line template) and guide prose. Fixture numbers (ESR 3.2.24 HTM pages): runewords
 924 linked lines, uniques 1561, gemwords 936, mythicals 84, ascendancies 15; every line whose template names a known
 skill is linked except Lich King's Essence "+(5 to 15) To Empowered Enchant" (it grants all six variants). Checked
 against skilldetails.json grants: every linked chance-to-cast / charges line and all but ESR's random auras (Ars
@@ -451,8 +477,9 @@ src/features/skills/
   hooks/useSkillRefIndex.ts        skill names for item lines (skilldetails.json on idle, cached)
   hooks/useSkillRefPeek.ts         the delegated peek of skill names in item lines
   components/SkillRefText.tsx      an item line with its skill name linked (data-skill-ref)
-  components/SkillPeekLayer.tsx    app-shell wrapper: delegation + the one shared PeekPopover
-  components/SkillPeekCard.tsx     the peek's content (lazy chunk with the calculator)
+  components/SkillPeekLayer.tsx    app-shell wrapper: delegation, lazy-loads the popover host with the first peek
+  components/SkillPeekHost.tsx     the one shared PeekPopover (lazy chunk: Radix Popover + the card)
+  components/SkillPeekCard.tsx     the peek's content (with the calculator)
   utils/skills.ts                  view model, URL state, search, selection marks, grant texts, item links
   utils/skillLevels.ts             calculator state: lvl / clvl / syn params, synergy points, table levels and labels,
                                    synergy texts, grant headline values, builds level (points + gear)
@@ -472,14 +499,12 @@ Bolt / Teleport / Rift Shot examples, one icon file per key; skillcalc.json: Fir
 Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot),
 `features/skills/utils/skills.test.ts` (incl. the `lvl` / `clvl` / `syn` URL state), `skillLevels.test.ts` and
 `skillRefs.test.ts` (templates on real lines with the committed skilldetails.json, ambiguity rules on a small bundle,
-peek texts / levels / URLs, the attribute round trip).
+peek texts / levels / URLs, the attribute round trip, the class names against skills.json).
 
 ## Known gaps
 
 - skilldetails.json synergy texts still show `?` for formula bonuses; the page replaces them with the calculator's
   values once skillcalc.json is loaded (a synergy line the calculator hides keeps the `?`).
-- skilldetails.json `lines` (shown only while skillcalc.json is not loaded) keep file order; the calculator's lines
-  are in tooltip order.
 - Hidden grants, random-skill properties, propertygroups pools and set-wide bonuses are not listed.
 - Mercenary (hireable) skills and their sheet `hireables/hrskillicon.sprite` are not covered.
 - A unique and a runeword with the same name (Enigma) are separate entries; the unique links to the Uniques page

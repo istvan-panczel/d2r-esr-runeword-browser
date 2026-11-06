@@ -1,5 +1,15 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { describe, expect, it } from 'vitest';
-import type { SkillLineResult, SkillTableRow } from '@/features/game-data/engine/skillCalc';
+import type { SkillCalcBundle } from '@/features/game-data/engine/schema';
+import {
+  indexSkillCalc,
+  maxSynergyPoints,
+  skillTable,
+  synergyInputs,
+  type SkillLineResult,
+  type SkillTableRow,
+} from '@/features/game-data/engine/skillCalc';
 import {
   buildSkillLevel,
   cellText,
@@ -7,13 +17,17 @@ import {
   formatSynergyParam,
   fullTableLevels,
   gearForLevel,
+  grantHeadline,
+  grantHeadlines,
   grantLevel,
   headlineKeys,
   headlineTexts,
   parseLevelParam,
   parseSynergyParam,
   resolveSynergyPoints,
+  QUICK_LEVELS,
   rowLabel,
+  synergyLineInputs,
   synergyTexts,
   tableRow,
   varyingRows,
@@ -164,9 +178,18 @@ describe('table labels and headline values', () => {
     expect(varyingRows(FIRE_BALL_ROWS).map((entry) => entry.key)).toEqual(['desc1', 'desc2', 'desc3', 'desc4']);
   });
 
-  it('picks the first varying per-level lines without mana as headlines', () => {
+  it('picks the first varying per-level lines without mana as headlines, damage-like lines first', () => {
     expect(headlineKeys(FIRE_BALL_ROWS)).toEqual(['desc2', 'desc3']);
     expect(headlineKeys(FIRE_BALL_ROWS, 1)).toEqual(['desc2']);
+    // tooltip order (Radius first): damage still leads, then attack rating / defense / life, then the rest in order
+    const tooltip = [...FIRE_BALL_ROWS].reverse();
+    expect(headlineKeys(tooltip)).toEqual(['desc2', 'desc4']);
+    const aura = [
+      row('desc1', ['Radius: 4 yards', 'Radius: 8 yards']),
+      row('desc2', ['Attack Rating: +10%', 'Attack Rating: +50%']),
+      row('desc3', ['Physical Damage: +20%', 'Physical Damage: +90%']),
+    ];
+    expect(headlineKeys(aura)).toEqual(['desc3', 'desc2']);
     const results = [line('desc2', 'Fire Damage: 80-128'), line('desc3', 'Bonuses:\nEnemy Fire Resist: -20%')];
     expect(headlineTexts(results, ['desc2', 'desc3', 'desc9'])).toEqual(['Fire Damage: 80-128', 'Bonuses: Enemy Fire Resist: -20%']);
   });
@@ -177,6 +200,53 @@ describe('table labels and headline values', () => {
     expect(grantLevel({ how: 'hit-skill', level: 150 })).toBe(110);
     expect(grantLevel({ how: 'skill', level: 2 })).toBeNull();
     expect(grantLevel({ how: 'charged', level: 0 })).toBeNull();
+  });
+});
+
+describe('grant headlines (committed skillcalc.json)', () => {
+  const bundle = JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data/skillcalc.json'), 'utf-8')) as SkillCalcBundle;
+  const index = indexSkillCalc(bundle);
+  const headline = (id: string, level: number, synergies = false) => {
+    const record = index.record(id);
+    if (record === undefined) throw new Error(id);
+    const keys = headlineKeys(skillTable(record, index, QUICK_LEVELS));
+    return grantHeadline(record, index, keys, level, { synergyPoints: synergies ? maxSynergyPoints(record, index) : {} });
+  };
+
+  it('shows damage first and follows the synergy points', () => {
+    expect(headline('Fire Ball', 40)).toEqual({ texts: ['Fire Damage: 260-348', 'Radius: 6.7 yards'], noHardPoints: false });
+    expect(headline('Blizzard', 20).texts).toEqual(['Cold Damage: 76-120', 'Cold and Freeze Length: 4.8 seconds']);
+    expect(headline('Blizzard', 20, true).texts).toEqual(['Cold Damage: 440-696', 'Cold and Freeze Length: 9.6 seconds']);
+  });
+
+  it('marks values that differ without hard points (not by the skill flag)', () => {
+    expect(headline('Venom', 20).noHardPoints).toBe(true);
+    expect(headline('Lycanthropy', 20).noHardPoints).toBe(true);
+    expect(headline('Fanaticism', 20).noHardPoints).toBe(false);
+  });
+
+  it('evaluates each level once, from the inputs it is given', () => {
+    const calls: number[] = [];
+    const values = grantHeadlines([20, 5, 20, 20], (level) => {
+      calls.push(level);
+      return { texts: [`at ${String(level)}`], noHardPoints: false };
+    });
+    expect(calls).toEqual([20, 5]);
+    expect(values.get(20)?.texts).toEqual(['at 20']);
+    expect(grantHeadlines([20], undefined).size).toBe(0);
+  });
+
+  it('gives a synergy skill listed twice one input (Blizzard: Orb of Winter)', () => {
+    const blizzard = index.record('Blizzard');
+    if (blizzard === undefined) throw new Error('Blizzard');
+    const inputs = synergyInputs(blizzard, index);
+    const synergies = [{ name: 'Raging Gale' }, { name: 'Orb of Winter' }, { name: 'Glacial Focus' }, { name: 'Orb of Winter' }];
+    expect(synergyLineInputs(synergies, inputs).map((input) => input?.id)).toEqual([
+      'Raging Gale',
+      'Orb of Winter',
+      'Glacial Focus',
+      undefined,
+    ]);
   });
 });
 
@@ -201,6 +271,15 @@ describe('tableRow', () => {
     expect(tableRow(row('desc6', ['Duration: 1 second', 'Duration: 3 seconds']))).toEqual({
       label: 'Duration',
       cells: ['1 second', '3 seconds'],
+    });
+    // a shared trailing phrase moves too (Hellfire Lance), "%" stays in the cells
+    expect(tableRow(row('desc2', ['Average Fire Damage: 9-14 per second', 'Average Fire Damage: 412-506 per second']))).toEqual({
+      label: 'Average Fire Damage (per second)',
+      cells: ['9-14', '412-506'],
+    });
+    expect(tableRow(row('desc5', ['Freeze: 10% over 1 second', 'Freeze: 20% over 1 second']))).toEqual({
+      label: 'Freeze (over 1 second)',
+      cells: ['10%', '20%'],
     });
   });
 });

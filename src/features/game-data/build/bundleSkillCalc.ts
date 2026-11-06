@@ -13,7 +13,8 @@
  *   set to the probe values. Stats used as 0/1 toggles or gear counters stay 0 (no items, no ascendancy);
  * - every number in it is 0 at every level in every state (ESR's ascendancy / item gates: a 0-second cooldown).
  * Kept lines get `ulvl` / `blvl` when their value changes with the character level / the own hard points. Same-class
- * skills the kept lines read without the tooltip listing them become the record's `unlistedSynergies`.
+ * skills the kept lines read without the tooltip listing them become the record's `unlistedSynergies` when their points
+ * alone (at the cap, the others at 0) change a kept line at a sample level.
  *
  * Warnings also cover the bundle's formula cells where the game's compiler ignores part of a formula and `stat()`
  * names missing from itemstatcost.txt (`statNames`).
@@ -297,6 +298,15 @@ function classify(
   return { line: out, hidden: null, problems: [], readSkills };
 }
 
+/** Some shown line reads differently at a sample level with these synergy points than with none */
+function changesLines(record: SkillCalcSkill, source: SkillCalcSource, synergyPoints: Readonly<Record<string, number>>): boolean {
+  return SAMPLE_LEVELS.some((level) => {
+    const without = new CalcRun(source, record.id, defaultContext(record, { level }));
+    const withPoints = new CalcRun(source, record.id, defaultContext(record, { level, synergyPoints }));
+    return record.lines.some((line) => evaluateLine(line, without).result.text !== evaluateLine(line, withPoints).result.text);
+  });
+}
+
 export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResult {
   const warnings: string[] = [];
   const { strings } = input;
@@ -447,7 +457,10 @@ export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResul
         for (const id of result.readSkills ?? []) if (classOf.get(id) === detail.cls && !synergies.includes(id)) unlisted.add(id);
       }
     }
-    if (unlisted.size > 0) record.unlistedSynergies = [...unlisted].sort((a, b) => (treeOrder.get(a) ?? 0) - (treeOrder.get(b) ?? 0));
+    // An unlisted skill is an input only when its points alone can change a shown line (Fire Ball reads Zap, Conduit, …
+    // behind an ascendancy gate that is always 0 here: no input)
+    const effective = [...unlisted].filter((id) => changesLines(record, full, { [id]: classSkillCap(id) ?? DEFAULT_SYNERGY_POINTS }));
+    if (effective.length > 0) record.unlistedSynergies = effective.sort((a, b) => (treeOrder.get(a) ?? 0) - (treeOrder.get(b) ?? 0));
     if (record.lines.some((line) => line.ulvl === true)) record.scalesWithCharLevel = true;
     if (record.lines.some((line) => line.blvl === true)) record.scalesWithHardPointsOnly = true;
     if (statLines > 0) record.hiddenStatLines = statLines;
