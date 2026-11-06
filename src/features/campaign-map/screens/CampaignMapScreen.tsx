@@ -4,7 +4,8 @@ import { List, Map as MapIcon } from 'lucide-react';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { PageShell } from '@/components/PageShell';
 import { PeekPopover } from '@/components/PeekPopover';
-import { TAB_ACTIVE, TAB_BASE, TAB_INACTIVE } from '@/core/components/navTabClasses';
+import { ToolbarCard } from '@/components/ToolbarCard';
+import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
@@ -205,27 +206,29 @@ function CampaignMapBrowser({ map, version }: CampaignMapBrowserProps) {
 
   return (
     <div ref={rootRef} className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <CampaignSearch map={map} itemNames={itemNames} sectionTitle={sectionTitle} onPick={pick} />
-        <CopyLinkButton getShareUrl={getShareUrl} />
-      </div>
-
-      <SectionTabs sections={map.sections} active={state.tab} tabHref={tabHref} onSwitch={closePeek} />
-
-      {hasLayout && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <ViewToggle
-            view={state.view}
-            onChange={(view) => {
-              go({ ...state, view }, true);
-            }}
-          />
-          <p className="hidden text-xs text-muted-foreground lg:block">
-            Hover or focus an area to peek · click to select · <kbd className="rounded border px-1 font-mono text-[0.6875rem]">/</kbd>{' '}
-            search · <kbd className="rounded border px-1 font-mono text-[0.6875rem]">Esc</kbd> clears
-          </p>
+      <ToolbarCard>
+        <div className="flex flex-wrap items-center gap-2">
+          <CampaignSearch map={map} itemNames={itemNames} sectionTitle={sectionTitle} onPick={pick} />
+          <CopyLinkButton getShareUrl={getShareUrl} />
         </div>
-      )}
+
+        <SectionTabs sections={map.sections} active={state.tab} tabHref={tabHref} onSwitch={closePeek} />
+
+        {hasLayout && (
+          <div className="hidden flex-wrap items-center gap-x-4 gap-y-2 lg:flex">
+            <ViewToggle
+              view={state.view}
+              onChange={(view) => {
+                go({ ...state, view }, true);
+              }}
+            />
+            <p className="text-xs text-muted-foreground">
+              Hover or focus an area to peek · click to select · <kbd className="rounded border px-1 font-mono text-[0.6875rem]">/</kbd>{' '}
+              search · <kbd className="rounded border px-1 font-mono text-[0.6875rem]">Esc</kbd> clears
+            </p>
+          </div>
+        )}
+      </ToolbarCard>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start @9xl/page:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0">
@@ -327,7 +330,7 @@ function SectionTabs({ sections, active, tabHref, onSwitch }: SectionTabsProps) 
       to={tabHref(section.key)}
       onClick={onSwitch}
       aria-current={section.key === active ? 'page' : undefined}
-      className={cn(TAB_BASE, 'shrink-0 whitespace-nowrap', section.key === active ? TAB_ACTIVE : TAB_INACTIVE)}
+      className={cn(SUBTAB_BASE, 'shrink-0 whitespace-nowrap', section.key === active ? SUBTAB_ACTIVE : SUBTAB_INACTIVE)}
     >
       {section.title}
     </Link>
@@ -335,7 +338,7 @@ function SectionTabs({ sections, active, tabHref, onSwitch }: SectionTabsProps) 
   const acts = sections.filter((section) => ACT_KEYS.includes(section.key));
   const others = sections.filter((section) => !ACT_KEYS.includes(section.key));
   return (
-    <nav aria-label="Map sections" className="flex gap-1 overflow-x-auto border-b pb-2">
+    <nav aria-label="Map sections" className="flex gap-1 overflow-x-auto">
       {acts.map(tab)}
       <span className="min-w-4 flex-1" aria-hidden />
       {others.map(tab)}
@@ -358,8 +361,8 @@ function ViewToggle({
         onChange(value);
       }}
       className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-1 text-sm transition-colors',
-        view === value ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+        'inline-flex items-center gap-1.5 px-3 py-1 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+        view === value ? SUBTAB_ACTIVE : SUBTAB_INACTIVE
       )}
     >
       <Icon className="size-4" aria-hidden />
@@ -367,7 +370,7 @@ function ViewToggle({
     </button>
   );
   return (
-    <div role="group" aria-label="View" className="hidden overflow-hidden rounded-md border lg:inline-flex lg:divide-x">
+    <div role="group" aria-label="View" className="inline-flex divide-x overflow-hidden rounded-md border">
       {option('map', 'Map', MapIcon)}
       {option('list', 'List', List)}
     </div>
