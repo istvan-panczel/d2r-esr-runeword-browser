@@ -20,6 +20,7 @@ import {
   type LootFilterDataBundle,
   type MaterialsBundle,
   type SetsBundle,
+  type SkillCalcBundle,
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
@@ -44,6 +45,7 @@ export interface GameDataBundles {
   sets: SetsBundle;
   skills: SkillsBundle;
   skilldetails: SkillDetailsBundle;
+  skillcalc: SkillCalcBundle;
   crafting: CraftingBundle;
   tiers: TiersBundle;
   areas: AreasBundle;

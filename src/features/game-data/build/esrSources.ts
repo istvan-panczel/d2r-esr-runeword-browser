@@ -44,6 +44,8 @@ export const TABLES = [
   'gems',
   // skills.json
   'experience',
+  // skillcalc.json (skill formulas reading missiles: descmissile, miss('m'.rang))
+  'missiles',
   // stash.json (the stash page grid)
   'inventory',
   // terrorzones.json (the names the game's terror zone display uses)

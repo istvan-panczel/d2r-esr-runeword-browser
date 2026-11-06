@@ -60,6 +60,15 @@ in file order with `start <= t < end`) in `src/features/terror-zones/engine/sche
 unreadable `start_time_utc` / `end_time_utc` (not `YYYY-MM-DD HH:MM:SS`) fails it too. See
 `docs/features/TERROR-ZONES.md`.
 
+**Skill levels**: `skillcalc.json` regenerates from skills.txt, skilldesc.txt and missiles.txt (the formulas behind the
+Skills page's per-level values, `docs/features/SKILLS.md` "Skill levels"). Explain changes of the `skillCalc*` counts:
+`skillCalcHidden*` going up means lines the calculator now refuses. A `skillcalc: <token> in N lines` warning names a
+formula code, function, skill or missile it cannot evaluate (ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, `rad`, the
+ambiguous `m2eo`/`me3o` codes, Plague Javelin's missing descmissile): a new one is a follow-up for the owner, never a
+code mapped by guess. `skillcalc: the cut rows change …` means the row cutting lost a column: a generator bug, report it.
+The integrity test pins Fire Ball, Blizzard, Fanaticism, Might, Raise Skeleton, Whirlwind, Hellfire Lance and Rift
+Shot; a changed value there needs the release diff's formula change as the source of the new pin.
+
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
@@ -143,7 +152,7 @@ and gitleaks, and the exiftool check takes a few seconds.
 - **Vanilla art folder missing**: icons.json keeps the old `esrVersion`, so `game-data --check`, the icon check and
   `bundleIntegrity.test.ts` fail. Only `npm run game-data:icons` with the folder fixes it; never hand-edit icons.json.
 - **New generator warnings** (string conflicts, duplicate bases, unresolved stats, `affix stats: property … is not
-mapped`, `lootfilter skills:`, `stash:`, `itemtext:` missing strings): find the rows in the table diff and explain
+mapped`, `lootfilter skills:`, `stash:`, `itemtext:`, `skillcalc:` missing strings): find the rows in the table diff and explain
   them; a parser gap is a follow-up, not a silent code fix.
 - **Integrity test fails**: if the release diff explains the new count, update the pin (step 5); otherwise
   investigate. It also pins `r48` Fu Rune as the only spawnable item that never drops, disabled uniques 0 and 690–695,

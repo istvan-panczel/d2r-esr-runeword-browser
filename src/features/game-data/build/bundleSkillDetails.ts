@@ -30,6 +30,9 @@ import { resolveName } from './itemNames.ts';
 import { readMods, type PropertyMod, type RuneRecipeRow } from './model.ts';
 import { sprintf, type SprintfArg } from '../engine/stats/sprintf.ts';
 import type { TsvRow, TsvTable } from './tsv.ts';
+import { bottomUp } from '../engine/skillCalc/text.ts';
+
+export { bottomUp };
 
 export const GRANT_PROPERTIES: readonly SkillGrantHow[] = [
   'oskill',
@@ -177,20 +180,6 @@ const PLACEHOLDER = /%(\+d|d|i|s|[0-9])/g;
 
 function placeholderCount(format: string): number {
   return (format.match(PLACEHOLDER) ?? []).length;
-}
-
-/**
- * The lines of a multi-line description-line string in reading order, joined with newlines. The game draws these
- * strings bottom-up, like item names (ESR: "cast rate to a minimum of 0.2 seconds\nTick rate goes down by 0.04 seconds
- * for every 25% faster"); `str long` is the exception and reads top-down (Rift Shot's sentence runs across its lines).
- */
-export function bottomUp(text: string): string {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line !== '')
-    .reverse()
-    .join('\n');
 }
 
 /** Rounds a mana value to 1/1000 (manashift gives fractions like 0.625) */

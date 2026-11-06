@@ -15,19 +15,20 @@ fields, synergies and the uniques, set items and runewords that grant it (`/skil
 - Point to the official Frame Table (`FRAME_TABLE_URL` in `navConfig.ts`, `ias-calculator.html`; also an `OFFICIAL_LINKS`
   entry) for IAS and FCR breakpoints in the intro; the app does not compute breakpoints
 
-Out of scope: per-level values (damage, duration, …). The game computes them with calc expressions (`clc4`,
-`ln12`, `skill('Fire Ball'.blvl)`, …) that reference stats and other skills; only constants and skill params are
-evaluated (see "Text").
+Per-level values (damage, radius, duration, mana, aura and synergy bonuses at any skill level, with synergy points and a
+character level) come from `skillcalc.json` and the calculator in `engine/skillCalc/` (see "Skill levels"). The
+skilldetails.json `lines` stay the formula-free fixed lines (see "Text").
 
 ## Data
 
-Two bundles under `public/game-data/` (see [Game Data](./GAME-DATA.md)):
+Three bundles under `public/game-data/` (see [Game Data](./GAME-DATA.md)):
 
-| File                | Built by                          | Used for                                                    |
-| ------------------- | --------------------------------- | ----------------------------------------------------------- |
-| `skills.json`       | `build/bundleSkills.ts`           | Tree layout (tabs, row / column), also the builds feature   |
-| `skilldetails.json` | `build/bundleSkillDetails.ts`     | Details per skill and the granting items (also builds)      |
-| `icons/skills/*`    | `scripts/generate-skill-icons.ts` | 64 px WebP cels cropped from the mod's HD skill icon sheets |
+| File                | Built by                          | Used for                                                         |
+| ------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| `skills.json`       | `build/bundleSkills.ts`           | Tree layout (tabs, row / column), also the builds feature        |
+| `skilldetails.json` | `build/bundleSkillDetails.ts`     | Details per skill and the granting items (also builds)           |
+| `skillcalc.json`    | `build/bundleSkillCalc.ts`        | Per-level values: line definitions, formulas, the rows they read |
+| `icons/skills/*`    | `scripts/generate-skill-icons.ts` | 64 px WebP cels cropped from the mod's HD skill icon sheets      |
 
 The details are a sibling bundle so `skills.json` (the trees, level cap and names the builds model validates against)
 stays small (31 KB). Both are generated in one run and joined by skill id in the browser (`utils/skills.ts`
@@ -108,6 +109,137 @@ ESR 3.2.24: 325 files, 433 KB). The key names the file, so there is no separate 
 `skillIcons` is the number of keys. `--check` (part of `npm run game-data:check`) fails on a changed, missing or
 orphaned file and on a key whose cel is outside its sheet. No vanilla art is needed.
 
+## Skill levels
+
+The calculator evaluates a skill's tooltip lines at any skill level (1–110, 110 being the owner's "theoretical max")
+from the game's own formulas, shipped in `skillcalc.json`. It is pure TypeScript (`src/features/game-data/engine/
+skillCalc/`), shared by the bundle builder (Node) and the browser, which loads the bundle lazily where the calculator
+is shown.
+
+### skillcalc.json
+
+`SkillCalcBundle` (`engine/schema.ts`), built by `build/bundleSkillCalc.ts`:
+
+- **skills**: one record per skilldetails.json skill, same order. `lines` = the shown skilldesc lines in file order:
+  `desc1..6` (the per-level block), `dsc2-1..5` (pinned lines, may still vary), `dsc3-1..7` (the synergy block), each
+  with its line function `type`, texts `a` / `b` (indexes into `texts`), formulas `ca` / `cb` and the flags `ulvl` /
+  `blvl`. `maxHardPoints` = skills.txt `maxlvl` for class skills, 0 for item skills (items never give hard points).
+  `synergies` = the skills.txt ids of the skills the dsc3 "Receives Bonuses From" lines name (skilldetails.json
+  `synergies` that resolve to a skills.txt row other than the skill itself; `*Passive` / `*Control` rows excluded).
+  Flags: `scalesWithCharLevel`, `scalesWithHardPointsOnly`, `hiddenStatLines`, `hiddenOtherLines`, `itemEffect`.
+- **rows** / **missiles**: the skills.txt / missiles.txt rows the shown lines' formulas can read on any branch
+  (`collectFormulaRefs`: formula columns, `skill()` / `sklvl()` / `miss()` targets and skilldesc descmissiles,
+  transitively), each cut to those columns; numbers as numbers, formulas as text, blank / 0 cells left out. Synergy
+  rows also carry `maxlvl` (the input cap). descmissile1..3 are copied from skilldesc onto the skill row.
+- **texts**: every line text once (format strings and skill names through the strings).
+
+A self-check at build time evaluates the shown lines again from the cut rows and warns
+(`skillcalc: the cut rows change …`) on any difference.
+
+### Evaluator
+
+`engine/skillCalc/parse.ts` (tokenizer + precedence parser, ASTs cached per text), `evaluate.ts` (`CalcRun`: the code
+tables, damage helpers, reads), `lines.ts` (line functions), `text.ts` (printf with marked numbers, `bottomUp`),
+`index.ts` (public API). Semantics follow D2MOO (`SKILLS_GetSpecialParamValue`, `SKILLS_GetMin/MaxElemDamage`,
+`SKILLS_GetElementalLength`, `SKILLS_GetManaCosts`, `D2Common_11033`, `MISSILE_GetSpecialParamValue`, Fog `Calc.cpp`) and
+the D2R Data Guide's SkillCalc / MissCalc code lists:
+
+- 32-bit integer math, `/` truncates toward 0, `x / 0` = 0, `^` repeated multiply (exponent ≤ 0 → 1), comparisons
+  give 1 / 0, `cond ? a : b`, `min` / `max`. Conventional precedence (ternary loosest, then comparisons, `+ -`, `* /`,
+  `^`, unary minus); every ESR ternary is parenthesised, so the game's shunting-yard quirks do not matter. A minus right
+  after `?`, `:` or `,` is refused: the game's compiler may read it as a subtraction (ESR: Circle of Blades).
+- Codes: `lvl`, `blvl`, `ulvl`, `par1..par9` / `pa10..pa20`, `ln12/34/56/78/91/21` (`a + (lvl-1)·b`, 0 at level ≤ 0),
+  `dm12…` (`a + (b-a)·(110·lvl/(lvl+6))/100`, capped at b, so every dm value stops at level 60), `clc1..10`,
+  `ast1..6`, `pst1..14`, `len`, `rng`, `pets`, `skpt`, `toht`, `usmc` / `mana` / `mps`, `edmn` / `edmx` / `edns` /
+  `edxs` / `enma` / `exma` / `enms` / `exms`, `edln` / `edma`, `pnma` / `pxma` / `pnms` / `pxms`, `m1en..m3el`,
+  `m1rn..m3rn`, `m1eo` / `m1ey`; masteries (`math`, `mael`, …) are 0. Functions: `skill('X'.code)` (X's code at X's
+  level), `sklvl('X'.a.b)` (X's b at this skill's a), `sksrc('X'.lvl)`, `stat('x'.accr|base)`, `miss('m'.code)`
+  (missile code at this skill's level), `min`, `max`, `rand`.
+- Damage: per-level damage for levels 2-8, 9-16, 17-22, 23-28 and 29+ (`L1..L5`, linear from 29 on); skill elemental
+  damage `(EMin + bonus) << HitShift`, then `EDmgSymPerCalc` % (for the minimum only when above 256 or `EMinLev1` ≠ 0);
+  missiles apply their synergy % before the shift. Elemental length: `ELevLen1` for 2-8, `ELevLen2` for 9-16,
+  `ELevLen3` from 17, + `ELen`, + `ELenSymPerCalc` % (frames, 25 per second). Mana `(mana + (lvl-1)·lvlmana) <<
+manashift` in 256ths (minmana applies when casting, not in the tooltip). Skill-only physical damage `pnma` / `pxma`:
+  `MinDam` + bonus, + `DmgSymPerCalc` %, `<< HitShift`; skills with `Kick` use strength + dexterity.
+- Every read is recorded (stats, `ulvl`, own and other skills' points, `rand`, refused tokens). A refused token gives
+  0 and makes the line `unavailable`: the calculator never shows a number it cannot stand behind.
+
+### The character
+
+- `level` = skill level with +skills; own hard points `blvl` default `min(level, maxHardPoints)` (0 for item skills).
+- `charLevel` (`ulvl`) default 110.
+- Other skills: hard points from the synergy inputs (default 0); their level (`.lvl`) = their hard points. The base
+  skills Attack, Kick, Throw, Unsummon, Left Hand Throw / Swing are at least 1. `skill('X'.clc3)` of a skill the
+  character lacks is evaluated at level 0 (params and calcs still evaluate, `ln12` / damage / mana give 0), as in the
+  engine.
+- Every stat is 0: no items, no ascendancy, no passive masteries, `playermode` 0. ESR uses many stats as 0/1 toggles or
+  gear counters (`weaponmastery`, `item_corrupted`, `item_skill_cooldown`, `randomgenerator`, `skillcontrol*`); at 0 the
+  value is the bare character's tooltip.
+
+### Which lines are shown
+
+The builder evaluates every line at levels 1..110 without synergies and with every listed synergy at its `maxlvl` (20).
+A line is left out (counted in the manifest, `skillCalcHidden*`, and on the skill) when:
+
+| Reason        | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine`      | line function 13 (summon life: monstats.txt life × %), 31 (difficulty divisor), 34 (summon damage), 56 (book quantity)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `type`        | a line function the calculator does not format                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `string`      | texta / textb missing from the strings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `format`      | the text has more placeholders than the line function fills                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `parse`       | a formula it reaches does not parse                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `unsupported` | a formula it reaches uses an unknown code / function / skill / missile, text in a numeric column, a recursion, or an ambiguous code                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `random`      | it reaches `rand(a, b)` with a < b (the engine rolls; a tooltip value would be one roll). `rand(a, a)` = a                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `stat`        | **its value changes when the character stats are set**: strength, dexterity, vitality, energy, life, mana, stamina (pools full), level, experience, defense, attack rating are set to two probe value sets at 14 sample levels; if any value differs from the all-0 state the line is about the character, not the skill (Righteous Fire's damage from max life, Wisdom of Athulua's per-attribute bonuses). Those stats are never 0 on a real character, unlike gear / toggle stats. A stat read that the line does not depend on (Might's `maxhp/25600` behind an ascendancy gate, `hitpoints·3 < maxhp` at full life) keeps the line. `hiddenStatLines` on the skill tells the UI how many lines depend on character stats |
+| `gated`       | every number in it is 0 at every level in both states: ESR's ascendancy / item gates (a 0-second cooldown without the item effect)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+Kept lines get `ulvl` when the value differs between character level 1, 55 and 110 at a sample level (only 3 skills:
+Venom, Hex Purge, Eldritch Blast), `blvl` when it differs between the default hard points and 1 hard point at a sample
+level (ESR passives that scale with hard points only: Lycanthropy, Molten Focus, Critical Strike, …).
+
+### Line functions
+
+`lines.ts` formats the line functions ESR uses: 74 `printf(a, calca)`, 75 `printf(a, calca, calcb)`, 76
+`printf(a, b, calca)` (synergy lines), 77 `printf(a, b, calca, calcb)`, 79 `printf(a, b, calca / calcb)`, 36
+`calca / calcb` (calcb blank = 1) with texta when the shown value is exactly 1 and textb otherwise (texta when there is
+no textb), 40 header `printf(a, b)` with `calca` = colour, 18 text, 78 `printf(a, b)`, 25 `a + b`, the old 3
+(`a + value + b`), 4 (`a + signed value + b`), 5 (`a + value`), 6 (`signed value + a + b`), 63 (`a: +value% b`) and 67
+(`a: +value b`). Multi-line strings read bottom-up, like skilldetails.json's lines.
+
+### Public API (`engine/skillCalc/index.ts`)
+
+```ts
+const index = indexSkillCalc(bundle); // cached per bundle object
+const skill = index.record('Fire Ball'); // SkillCalcSkill | undefined
+defaultContext(skill, { level, hardPoints?, charLevel?, synergyPoints? }); // SkillCalcContext of a bare character
+evaluateSkill(skill, index, ctx); // SkillLineResult[]: key, block, type, text, values, before/span/after, color?, unavailable?
+skillTable(skill, index, [1, 20, 30, 50, 110], { synergyPoints, charLevel }); // SkillTableRow[]: label, cells, varies
+synergyInputs(skill, index); // [{ id, max }]
+maxSynergyPoints(skill, index); // every listed synergy at its cap
+itemTriggerInfo(skill); // { value: 'yes' | 'unknown', reason }
+```
+
+`itemTriggerInfo`: skills.txt `ItemEffect` is the server function the game runs when an item event (chance to cast on
+striking, when struck, …) triggers the skill (Data Guide). Set → yes (328 of 461). Blank → unknown, not no: ESR grants
+Maelstrom Cascade Proc as a chance-to-cast with a blank ItemEffect. Whether _using_ a skill fires on-striking procs has no
+column: it depends on the skill's server function and damage path in the engine, so the calculator does not say.
+
+### Not verified in game
+
+- Type 36 decimals: one decimal at most, rounded (Fire Ball radius 5.3 yards, mana 14.5); the game's rounding and
+  decimal display are from vanilla memory. The singular text at exactly 1 (after rounding) per the Data Guide.
+- Raise Skeleton (and Fire Golem) "Physical Damage" use `pnma` for both values in ESR's skilldesc: shown as the data
+  says (4-4, 204-204).
+- D2R-only codes taken by analogy with the documented ones: `clc5..10`, `pst6..14`, `pa13..pa20`, `ln91` / `dm91` /
+  `ln21` / `dm21`, `sksrc('X'.lvl)` read like `skill('X'.lvl)`, `sklvl('X'.a.b)`. missiles.txt `Range` holds formulas in
+  ESR ("90+25*lvl", no `LevRange`): evaluated as a missile formula at the skill level.
+- The old line functions 3 / 4 / 5 / 6 / 63 / 67 and the D2R 79: formats inferred from their texts.
+- Refused, left for round 2: `m2eo` / `m2ey` / `me3o` / `me3y` (D2MOO picks descmissile1 / 2 for them, a copy-paste bug
+  D2R may have fixed: Overseer Volley), `m1nm` / `m1xm` (not in the Data Guide: Miasma Chains, Abyss), missile `rad`, the
+  broken `clc0` (Frenzy, Mirrored Blades), `ln43` (Bind Demon), Plague Javelin's descmissile that is not in
+  missiles.txt, and the two lines whose strings are missing.
+- Summon life (type 13) needs monstats.txt and the difficulty; not computed.
+
 ## Page
 
 Route `/skills` (`SkillsScreen`, lazy-loaded), nav: Database ▾ → Skills (after Ascendancies), also a chip on the home
@@ -137,7 +269,9 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
 ## Code
 
 ```
-src/features/game-data/build/bundleSkillDetails.ts   builder (+ readGrantSources, evalSimpleCalc, bottomUp)
+src/features/game-data/build/bundleSkillDetails.ts   builder (+ readGrantSources, evalSimpleCalc; re-exports bottomUp)
+src/features/game-data/build/bundleSkillCalc.ts      skillcalc.json builder: line classification, row cutting, self-check
+src/features/game-data/engine/skillCalc/             calculator: parse.ts, evaluate.ts, lines.ts, text.ts, index.ts
 src/features/game-data/build/skillIcons.ts           sheet listing, icon keys, cel crop
 scripts/generate-skill-icons.ts                      CLI: crop + WebP + --check
 src/features/skills/
@@ -157,13 +291,17 @@ The builds feature imports the components, hooks and utils by deep path (`@/feat
 `index.ts` only exports the lazy route screen. The builds-specific parts (point badges, the point controls in the
 card's slot, local selection state) live in `src/features/builds/components/BuildSkillTrees.tsx`.
 
-Tests: `build/bundleSkillDetails.test.ts` and `build/skillIcons.test.ts` (fixture rows), `bundleIntegrity.test.ts`
-(committed bundle vs. trees, counts, Fire Bolt / Teleport / Rift Shot examples, one icon file per key),
+Tests: `build/bundleSkillDetails.test.ts`, `build/bundleSkillCalc.test.ts` and `build/skillIcons.test.ts` (fixture rows),
+`engine/skillCalc/evaluate.test.ts` (parser, integer math, codes, damage / length / mana helpers, references) and
+`lines.test.ts` (line functions, contexts, table), `bundleIntegrity.test.ts` (committed bundle vs. trees, counts, Fire
+Bolt / Teleport / Rift Shot examples, one icon file per key; skillcalc.json: Fire Ball 10-20 / 80-128 / 160-228 /
+360-468 and 960-1188 at 110, with synergies 58-116 / … / 2088-2714, mana, radius, resist, Blizzard, Fanaticism, Might,
+Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot),
 `features/skills/utils/skills.test.ts`.
 
 ## Known gaps
 
-- No per-level numbers (damage, duration, radius, synergy bonuses that are formulas show `?`).
+- skilldetails.json synergy texts still show `?` for formula bonuses; the calculator (skillcalc.json) computes them.
 - Skill tooltips' line order across description entries (descline1 vs descline2) follows the file, not verified
   in game; only the bottom-up order inside one multi-line string is confirmed by the data.
 - Hidden grants, random-skill properties, propertygroups pools and set-wide bonuses are not listed.

@@ -97,7 +97,7 @@ Favourites for runewords, gemwords, and unique items (sign-in required, synced t
 A second, build-time data source: `npm run game-data:generate` converts the ESR repo's txt game tables (from a local
 clone at `../Eastern_Sun_Resurrected`) into JSON committed under `public/game-data/` (`manifest.json`, `types.json`,
 `bases.json`, `runewords.json`, `affixes.json`, `sources.json`, `lootfilter.json`, `enhance.json`, `cube.json`,
-`materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `crafting.json`, `tiers.json`, `areas.json`, `stash.json`, `terrorzones.json`; `skills.json` feeds the Skills page
+`materials.json`, `sets.json`, `skills.json`, `skilldetails.json`, `skillcalc.json`, `crafting.json`, `tiers.json`, `areas.json`, `stash.json`, `terrorzones.json`; `skills.json` feeds the Skills page
 and the builds feature, `crafting.json` the builds feature only), plus item icons from the mod's HD sprites, with the
 vanilla D2R art extracted from a game install as the fallback (`npm run game-data:icons`: `icons.json` + `icons/*.webp`:
 bases, uniques, set items and socketables, shown on the Bases, Sets, Unique Items and Socketables pages, in builds and in the runeword cards' socket row),

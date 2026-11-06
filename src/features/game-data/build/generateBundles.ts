@@ -9,6 +9,7 @@ import type {
   LootFilterDataBundle,
   MaterialsBundle,
   SetsBundle,
+  SkillCalcBundle,
   SkillDetailsBundle,
   SkillsBundle,
   SourcesBundle,
@@ -35,6 +36,7 @@ import { buildSkillsBundle } from './bundleSkills.ts';
 import { buildStashBundle } from './bundleStash.ts';
 import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
+import { buildSkillCalcBundle } from './bundleSkillCalc.ts';
 import { buildCraftingBundle } from './bundleCrafting.ts';
 import { buildSourcesBundle } from './bundleSources.ts';
 import { buildTerrorZonesBundle } from './bundleTerrorZones.ts';
@@ -64,6 +66,8 @@ export interface GeneratedBundles {
   sets: SetsBundle;
   skills: SkillsBundle;
   skilldetails: SkillDetailsBundle;
+  // skillcalc.json
+  skillcalc: SkillCalcBundle;
   crafting: CraftingBundle;
   tiers: TiersBundle;
   // areas.json
@@ -272,6 +276,41 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       isRune: (code) => runeCodes.has(code),
     }),
   });
+  // --- skillcalc.json ---
+  const skillCalc = buildSkillCalcBundle({
+    skills: table('skills'),
+    skilldesc: table('skilldesc'),
+    missiles: table('missiles'),
+    strings,
+    details: skillDetails.bundle,
+  });
+  const skillCalcLines = skillCalc.bundle.skills.flatMap((skill) => skill.lines);
+  const skillCalcCounts = {
+    skillCalcSkills: skillCalc.bundle.skills.length,
+    skillCalcSkillsWithLevelLines: skillCalc.bundle.skills.filter((skill) => skill.lines.some((line) => line.key.startsWith('desc')))
+      .length,
+    skillCalcLines: skillCalcLines.length,
+    skillCalcLevelLines: skillCalcLines.filter((line) => line.key.startsWith('desc')).length,
+    skillCalcFixedLines: skillCalcLines.filter((line) => line.key.startsWith('dsc2')).length,
+    skillCalcSynergyLines: skillCalcLines.filter((line) => line.key.startsWith('dsc3')).length,
+    skillCalcHiddenStat: skillCalc.hidden.stat,
+    skillCalcHiddenEngine: skillCalc.hidden.engine,
+    skillCalcHiddenUnsupported: skillCalc.hidden.unsupported,
+    skillCalcHiddenParse: skillCalc.hidden.parse,
+    skillCalcHiddenRandom: skillCalc.hidden.random,
+    skillCalcHiddenGated: skillCalc.hidden.gated,
+    skillCalcHiddenType: skillCalc.hidden.type,
+    skillCalcHiddenString: skillCalc.hidden.string,
+    skillCalcHiddenFormat: skillCalc.hidden.format,
+    skillCalcCharLevelSkills: skillCalc.bundle.skills.filter((skill) => skill.scalesWithCharLevel === true).length,
+    skillCalcHardPointSkills: skillCalc.bundle.skills.filter((skill) => skill.scalesWithHardPointsOnly === true).length,
+    skillCalcSynergyInputs: skillCalc.bundle.skills.reduce((sum, skill) => sum + (skill.synergies?.length ?? 0), 0),
+    skillCalcItemEffect: skillCalc.bundle.skills.filter((skill) => skill.itemEffect !== undefined).length,
+    skillCalcRows: skillCalc.bundle.rows.length,
+    skillCalcMissiles: skillCalc.bundle.missiles.length,
+  };
+  // --- end skillcalc.json ---
+
   const skillDetailCount = (pick: (skill: SkillDetailsBundle['skills'][number]) => boolean) =>
     skillDetails.bundle.skills.filter(pick).length;
 
@@ -375,6 +414,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     sets: sets.bundle,
     skills: skills.bundle,
     skilldetails: skillDetails.bundle,
+    skillcalc: skillCalc.bundle,
     crafting: crafting.bundle,
     tiers: tiers.bundle,
     areas: areas.bundle,
@@ -461,6 +501,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       skillGrantItems: skillDetails.bundle.items.length,
       skillGrants: skillDetails.bundle.skills.reduce((sum, skill) => sum + (skill.grantedBy?.length ?? 0), 0),
       skillGrantsUndescribed: skillDetails.undescribedGrants,
+      ...skillCalcCounts,
       skillIcons: new Set(skillDetails.bundle.skills.flatMap((skill) => (skill.icon === undefined ? [] : [skill.icon]))).size,
       craftingForgings: crafting.bundle.forgings.length,
       craftingStacking: crafting.bundle.stacking.length,
@@ -509,6 +550,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...sets.warnings,
       ...skills.warnings,
       ...skillDetails.warnings,
+      ...skillCalc.warnings,
       ...crafting.warnings,
       ...tiers.warnings,
       ...areas.warnings,

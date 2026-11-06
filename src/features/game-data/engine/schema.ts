@@ -20,6 +20,7 @@ export type GameDataFile =
   | 'sets'
   | 'skills'
   | 'skilldetails'
+  | 'skillcalc'
   | 'crafting'
   | 'tiers'
   | 'areas'
@@ -852,6 +853,70 @@ export interface SkillDetailsBundle {
   items: SkillGrantItem[];
   /** Class skills (class order, tab, row, column), then item skills by name */
   skills: SkillDetail[];
+}
+
+// --- skillcalc.json -----------------------------------------------------------------------------------------------
+
+/**
+ * A skills.txt or missiles.txt row reduced to the columns the shown lines' formulas can read (every branch, every
+ * referenced row): numeric columns as numbers, formula columns (`calc1`, `aurastatcalc1`, `EDmgSymPerCalc`, …) as their
+ * text, skilldesc `descmissile1..3` as missile names. Blank and zero cells are left out. `id` = the `skill` / `Missile`
+ * column. Evaluated by `engine/skillCalc`.
+ */
+export interface SkillCalcRow {
+  id: string;
+  [column: string]: string | number | undefined;
+}
+
+/** One tooltip line of a skill: a skilldesc descline / dsc2line / dsc3line entry with its texts resolved */
+export interface SkillCalcLine {
+  /** `desc1`..`desc6` (the per-level block), `dsc2-1`..`dsc2-5` (fixed lines), `dsc3-1`..`dsc3-7` (synergy block) */
+  key: string;
+  /** skilldesc line function (74, 75, 36, 76, 40, 18, …) */
+  type: number;
+  /** texta / textb through the strings, as indexes into SkillCalcBundle.texts */
+  a?: number;
+  b?: number;
+  /** calca / calcb formulas */
+  ca?: string;
+  cb?: string;
+  /** The value changes with the character level (`ulvl`) */
+  ulvl?: true;
+  /** The value changes with the skill's own hard points at a fixed skill level (`blvl`): +skills do not raise that part */
+  blvl?: true;
+}
+
+export interface SkillCalcSkill {
+  /** skills.txt id (the skilldetails.json id) */
+  id: string;
+  /** Hard-point cap: skills.txt maxlvl for class skills, 0 for item skills (items grant levels, never hard points) */
+  maxHardPoints: number;
+  /** The lines that can be shown, in skilldesc order (desc, then dsc2, then dsc3); hidden lines are left out */
+  lines: SkillCalcLine[];
+  /** skills.txt ids of the synergies the dsc3 "Receives Bonuses From" lines name (inputs for hard points) */
+  synergies?: string[];
+  /** Some line scales with the character level */
+  scalesWithCharLevel?: true;
+  /** Some line scales with the skill's own hard points (not with +skills) */
+  scalesWithHardPointsOnly?: true;
+  /** Lines left out because their value depends on character stats (strength, life, …) */
+  hiddenStatLines?: number;
+  /** Lines left out for any other reason (engine-computed, unsupported formula, always 0, …) */
+  hiddenOtherLines?: number;
+  /** skills.txt ItemEffect: the server function used when an item event (chance to cast) triggers the skill */
+  itemEffect?: number;
+}
+
+/** skillcalc.json: what the skill-level calculator needs to evaluate every skilldetails.json skill's tooltip lines */
+export interface SkillCalcBundle {
+  /** One per skilldetails.json skill, same order */
+  skills: SkillCalcSkill[];
+  /** skills.txt rows the formulas read (the skills themselves, their synergies, `skill('X'.clc3)` targets, …) */
+  rows: SkillCalcRow[];
+  /** missiles.txt rows the formulas read (`miss('m'.rang)`, skilldesc descmissile) */
+  missiles: SkillCalcRow[];
+  /** The line texts (format strings and names), each once */
+  texts: string[];
 }
 
 // --- crafting.json ------------------------------------------------------------------------------------------------
