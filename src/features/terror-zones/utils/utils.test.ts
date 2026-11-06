@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TerrorZoneBoost, TerrorZoneGroup } from '@/features/game-data/engine/schema';
 import type { TerrorZoneSlot } from '../engine/schedule';
-import { formatCompactBoosts, sameCaps, summariseBoosts, formatVersionBoost } from './boosts';
+import { formatBoostLines, sameCaps, summariseBoosts, formatVersionBoost } from './boosts';
 import { formatClockRange, formatCountdown, formatDayLabel, formatIn, formatWhen, localDayKey } from './format';
 import { filterSlots, knownWatched, shouldNotify, toggleWatched, watchAlert } from './watched';
 import { isWidgetHidden, widgetLift } from './widgetPosition';
@@ -118,7 +118,7 @@ describe('boost summary', () => {
     const summary = summariseBoosts(boosts);
     expect(summary.map((entry) => entry.version)).toEqual(['expansion', 'rotw']);
     expect(summary[0]).toMatchObject({ levelBoost: 4, xpPercent: 50, caps: [45, 71, 96] });
-    expect(formatCompactBoosts(summary)).toBe('LoD +4 mlvl, +50% XP · RotW +2 mlvl, +25% XP');
+    expect(formatBoostLines(summary)).toEqual(['LoD: +4 monster levels, +50% XP', 'RotW: +2 monster levels, +25% XP']);
     expect(sameCaps(summary)).toEqual([45, 71, 96]);
     expect(formatVersionBoost(summary[1] ?? summary[0])).toBe('+2 monster levels (capped at 45 / 71 / 96), +25% XP');
   });
@@ -126,7 +126,7 @@ describe('boost summary', () => {
   it('leaves out a version whose difficulties differ', () => {
     const mixed = boosts.map((boost) => (boost.version === 'rotw' && boost.difficulty === 2 ? { ...boost, levelBoost: 3 } : boost));
     expect(summariseBoosts(mixed).map((entry) => entry.version)).toEqual(['expansion']);
-    expect(formatCompactBoosts([])).toBeNull();
+    expect(formatBoostLines([])).toEqual([]);
   });
 });
 

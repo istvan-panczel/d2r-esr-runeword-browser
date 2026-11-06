@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { CalendarClock, Info, Layers, Skull, Star, TrendingUp } from 'lucide-react';
+import { CalendarClock, Info, Layers, Star, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from '@/components/ExternalLink';
 import { PageShell } from '@/components/PageShell';
@@ -14,7 +14,7 @@ import { BoostTable } from '../components/BoostTable';
 import { NotificationToggle } from '../components/NotificationToggle';
 import { ScheduleList } from '../components/ScheduleList';
 import { ZoneGroupList } from '../components/ZoneGroupList';
-import { Countdown, WatchButton } from '../components/ZoneParts';
+import { Countdown, TzMark, WatchButton } from '../components/ZoneParts';
 import { CURRENT_ROW_CLASS, WATCHED_ROW_CLASS, zoneTitle } from '../utils/zoneDisplay';
 import { useCurrentSlots } from '../hooks/useCurrentSlots';
 import { useTerrorZonePrefs } from '../store/preferences';
@@ -203,7 +203,7 @@ function SlotCard({ label, slot, watched, emphasis, detail }: SlotCardProps) {
       )}
     >
       <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {emphasis === 'current' && <Skull className="size-4" aria-hidden />}
+        {emphasis === 'current' && <TzMark className="text-sm tracking-normal" />}
         <span className="flex-1">{label}</span>
         {isWatched && <span className="normal-case tracking-normal text-warning">Watched</span>}
       </div>

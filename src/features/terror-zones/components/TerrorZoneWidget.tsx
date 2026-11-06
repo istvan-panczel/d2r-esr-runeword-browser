@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type Ref } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronUp, ExternalLink, Minus, Skull } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePersistentState } from '@/core/hooks/usePersistentState';
 import { cn } from '@/lib/utils';
@@ -11,11 +11,11 @@ import { useTerrorZoneNotifications } from '../hooks/useTerrorZoneNotifications'
 import { useTerrorZonePrefs, WIDGET_OPEN_STORAGE_KEY } from '../store/preferences';
 import { useClockValue } from '../store/clock';
 import { useTerrorZoneSchedule } from '../store/scheduleStore';
-import { formatCompactBoosts, sameCaps, summariseBoosts } from '../utils/boosts';
+import { formatBoostLines, sameCaps, summariseBoosts } from '../utils/boosts';
 import { formatWhen } from '../utils/format';
 import { knownWatched, watchAlert, type WatchAlert } from '../utils/watched';
 import { isWidgetHidden, TERROR_ZONES_PATH, WIDGET_BOTTOM_CLASS, widgetLift } from '../utils/widgetPosition';
-import { Countdown, WatchButton } from './ZoneParts';
+import { Countdown, TzMark, WatchButton } from './ZoneParts';
 import { CURRENT_ROW_CLASS, WATCHED_ROW_CLASS, zoneTitle } from '../utils/zoneDisplay';
 
 const UPCOMING_FEW = 3;
@@ -126,7 +126,7 @@ function MinimisedButton({ className, alert, buttonRef, onOpen }: MinimisedButto
       aria-label={`Show the terror zone tracker${alert === null ? '' : ` (${ALERT_LABELS[alert]})`}`}
       title="Terror zones"
     >
-      <Skull className="size-5" />
+      <TzMark className="text-sm" />
       {alert !== null && (
         <span
           className={cn(
@@ -157,7 +157,7 @@ function WidgetCard({ className, schedule, watched, current, nextSlot, minimiseR
   // Day names relative to the real time (minute resolution), not the slot start: a slot can cross local midnight
   const nowMinute = useClockValue((now) => Math.floor(now / 60) * 60);
   const boosts = summariseBoosts(schedule.bundle.boosts);
-  const boostLine = formatCompactBoosts(boosts);
+  const boostLines = formatBoostLines(boosts);
   // The caps are the same for every game version in ESR 3.2.24; shown once when they agree
   const caps = sameCaps(boosts);
   const currentWatched = current !== null && watched.has(current.zone.id);
@@ -171,7 +171,7 @@ function WidgetCard({ className, schedule, watched, current, nextSlot, minimiseR
       )}
     >
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        <Skull className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        <TzMark className="shrink-0 text-sm" />
         <h2 className="flex-1 text-sm font-semibold">Terror zone</h2>
         <Button asChild variant="ghost" size="icon" className="size-7">
           <Link to={TERROR_ZONES_PATH} aria-label="Open the terror zone schedule page" title="Full schedule">
@@ -252,15 +252,20 @@ function WidgetCard({ className, schedule, watched, current, nextSlot, minimiseR
           </Link>
         </div>
 
-        <p className="border-t pt-2 text-[11px] leading-snug text-muted-foreground">
-          {boostLine !== null && (
-            <span className="block">
-              <span className="font-medium">Terror boost:</span> {boostLine}
-              {caps.length > 0 && <> (monster level cap {caps.join(' / ')})</>}
-            </span>
+        <div className="space-y-1.5 border-t pt-2">
+          {boostLines.length > 0 && (
+            <div className="text-sm leading-snug font-semibold text-terror">
+              <p className="text-xs tracking-wide uppercase">Terror boost</p>
+              {boostLines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+              {caps.length > 0 && <p className="font-medium">Monster level cap {caps.join(' / ')}</p>}
+            </div>
           )}
-          <span className="block">ESR {schedule.bundle.esrVersion} offline schedule, by your PC clock</span>
-        </p>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            ESR {schedule.bundle.esrVersion} offline schedule, by your PC clock
+          </p>
+        </div>
       </div>
     </section>
   );

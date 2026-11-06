@@ -74,10 +74,12 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
   game's names), a live countdown to the next change, the next 3 groups with their local start times ("Show more": 12;
   day names relative to the real time, not the slot start, so a slot crossing local midnight in a half-hour time zone
   is labelled right),
-  star toggles, a link to the page, and one line with the terror boost (`LoD +4 mlvl, +50% XP · RotW +2 mlvl, +25% XP
-(monster level cap 45 / 71 / 96)`, from `utils/boosts.ts`) and the ESR version.
-- **Minimised**: a round outline button with a skull, the ScrollToTopButton style. A watched group terrorized now gives
+  star toggles, a link to the page, the terror boost in larger bold text in the terror colour, one line per game
+  version (`LoD: +4 monster levels, +50% XP`, `RotW: +2 monster levels, +25% XP`, then `Monster level cap 45 / 71 /
+96`; `formatBoostLines` in `utils/boosts.ts`), and the ESR version.
+- **Minimised**: a round outline button with a bold "TZ" (`TzMark`) in the terror colour, the ScrollToTopButton style. A watched group terrorized now gives
   it a `warning` ring and a pulsing dot; a watched group next, a softer ring and a still dot (`watchAlert`).
+- **Colour**: `--terror` / `text-terror` (`src/index.css`), the in-game terror zone purple-pink, lighter in dark mode.
 - **Focus**: after a click on minimise the circle gets the focus, after opening the card's minimise button (never on
   mount).
 - **Open or minimised** is remembered in this browser (`terrorZones.widgetOpen`, `usePersistentState`); without a stored

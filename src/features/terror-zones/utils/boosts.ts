@@ -41,15 +41,12 @@ export const GAME_VERSION_SHORT_LABELS: Readonly<Record<TerrorZoneGameVersion, s
   rotw: 'RotW',
 };
 
-/** The widget's one-liner: "LoD +4 mlvl, +50% XP · RotW +2 mlvl, +25% XP"; null when no version has a uniform boost */
-export function formatCompactBoosts(boosts: readonly VersionBoost[]): string | null {
-  if (boosts.length === 0) return null;
-  return boosts
-    .map((boost) => {
-      const text = `+${String(boost.levelBoost)} mlvl, +${String(boost.xpPercent)}% XP`;
-      return boosts.length > 1 ? `${GAME_VERSION_SHORT_LABELS[boost.version]} ${text}` : text;
-    })
-    .join(' · ');
+/** The widget's boost lines, one per game version: "LoD: +4 monster levels, +50% XP" (no label with one version) */
+export function formatBoostLines(boosts: readonly VersionBoost[]): string[] {
+  return boosts.map((boost) => {
+    const text = `+${String(boost.levelBoost)} monster levels, +${String(boost.xpPercent)}% XP`;
+    return boosts.length > 1 ? `${GAME_VERSION_SHORT_LABELS[boost.version]}: ${text}` : text;
+  });
 }
 
 /** The monster level caps per difficulty when every version has the same ones; [] when they differ */

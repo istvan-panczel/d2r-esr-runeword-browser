@@ -7,6 +7,15 @@ import { toggleWatchedZone } from '../store/preferences';
 import { formatCountdown } from '../utils/format';
 import { zoneTitle } from '../utils/zoneDisplay';
 
+/** The "TZ" mark in the in-game terror zone colour (in place of an icon) */
+export function TzMark({ className }: { readonly className?: string }) {
+  return (
+    <span className={cn('font-bold leading-none text-terror', className)} aria-hidden>
+      TZ
+    </span>
+  );
+}
+
 interface WatchButtonProps {
   readonly zone: TerrorZoneGroup;
   readonly watched: boolean;
