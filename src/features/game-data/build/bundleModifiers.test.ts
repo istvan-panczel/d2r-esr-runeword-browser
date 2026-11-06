@@ -161,9 +161,9 @@ function input(overrides: Partial<ModifiersInput> = {}): ModifiersInput {
     ],
     difficultylevels,
     charstats: tsv([
-      ['class', 'BlockFactor'],
-      ['Amazon', '5'],
-      ['Paladin', '6'],
+      ['class', 'BlockFactor', 'ToHitFactor', 'WalkVelocity', 'RunVelocity', 'MinimumCastingDelay'],
+      ['Amazon', '5', '20', '9', '13', '0'],
+      ['Paladin', '6', '20', '9', '13', '0'],
     ]),
     monstats: tsv([
       ['Id', 'enabled', 'Drain', 'Drain(N)', 'Drain(H)'],
@@ -273,6 +273,8 @@ describe('buildModifiersBundle', () => {
       source: { file: 'difficultylevels.txt', key: 'LifeStealDivisor' },
     });
     expect(fact('charstats.BlockFactor')?.value).toEqual({ Amazon: 5, Paladin: 6 });
+    expect(fact('charstats.RunVelocity')).toMatchObject({ value: { Amazon: 13, Paladin: 13 }, vanilla: { Amazon: 9 } });
+    expect(fact('charstats.MinimumCastingDelay')?.value).toEqual({ Amazon: 0, Paladin: 0 });
     expect(fact('monstats.drainZero')?.value).toEqual([1, 1, 1]);
     expect(fact('monstats.drainPartial')?.value).toEqual([1, 1, 1]);
   });

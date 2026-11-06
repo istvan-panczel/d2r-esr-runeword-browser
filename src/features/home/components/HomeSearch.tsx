@@ -13,7 +13,7 @@ const ITEM_CLASS =
 
 /**
  * One input over every name list: runewords, gemwords, uniques and mythicals (Dexie, once the startup sync is done) and
- * bases, sets, skills, materials, areas and cube recipe families (static bundles, fetched on the first keystroke). Picking
+ * bases, sets, skills, modifiers, materials, areas and cube recipe families (static bundles, fetched on the first keystroke). Picking
  * a result opens its page focused on it; Enter on the first row (selected by default) runs the runewords free-text search.
  */
 export function HomeSearch() {
@@ -117,7 +117,9 @@ export function HomeSearch() {
             {groups.length === 0 && !itemsPending && !bundlesPending && (
               <p className="px-3 py-2 text-xs text-muted-foreground">No names match; Enter searches the runeword bonuses too.</p>
             )}
-            {bundlesPending && <p className="px-3 py-2 text-xs text-muted-foreground">Loading bases, sets, skills, materials and areas…</p>}
+            {bundlesPending && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">Loading bases, sets, skills, modifiers, materials and areas…</p>
+            )}
           </CommandList>
         )}
       </Command>

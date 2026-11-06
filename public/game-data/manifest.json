@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-06T19:18:59.095Z",
+  "generatedAt": "2026-11-06T19:32:29.246Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -86,8 +86,8 @@
       "bytes": 9099
     },
     "modifiers": {
-      "hash": "5d9eba698ce9d3b3037d2d775871f93632777438f12502782d3c9cb0a70cd4c5",
-      "bytes": 299993
+      "hash": "68ed407caaa51ac20877764462e53d79c2a14ed49452a14d4732784321e5ac1d",
+      "bytes": 302439
     },
     "icons": {
       "hash": "104a73e60c06a6099e2b60e80f492ea6ea94955d9cba9deb93d5bc25c916bb08",
@@ -243,8 +243,8 @@
     "modifierStatsChanged": 9,
     "modifierKinds": 395,
     "modifierKeyKinds": 58,
-    "modifierFacts": 59,
-    "modifierConfigFacts": 27,
+    "modifierFacts": 66,
+    "modifierConfigFacts": 30,
     "modifierSources": 18271,
     "itemIcons": 653,
     "uniqueIcons": 1114,

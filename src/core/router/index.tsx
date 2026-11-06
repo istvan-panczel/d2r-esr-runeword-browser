@@ -69,6 +69,11 @@ const SkillsScreen = lazy(async () => {
   return { default: module.SkillsScreen };
 });
 
+const ModifiersScreen = lazy(async () => {
+  const module = await import('@/features/modifiers');
+  return { default: module.ModifiersScreen };
+});
+
 // The builds screens dispatch fetch requests in mount effects, so they must not mount before the builds saga listens
 // (an action dispatched earlier is silently lost and the page stays on skeletons). `startBuilds` is idempotent and
 // resolves at once when Supabase is not configured, where the screens show their "not configured" state instead.
@@ -246,6 +251,7 @@ export const router = createBrowserRouter(
         { path: 'mythicals', element: routeElement(MythicalUniquesScreen) },
         { path: 'ascendancies', element: routeElement(AscendanciesScreen) },
         { path: 'skills', element: routeElement(SkillsScreen) },
+        { path: 'modifiers', element: routeElement(ModifiersScreen) },
         { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
         { path: 'terror-zones', element: routeElement(TerrorZonesScreen) },
         {

@@ -80,8 +80,11 @@ difficultylevels.txt, charstats.txt, monstats.txt and the D2RLoader plugin confi
 `facts` are what the /modifiers explanations, the guide's difficulty-penalties table and the calculators quote: **a
 changed `facts` entry (a difficultylevels.txt value such as LifeStealDivisor / ResistPenalty, or a TOML value such as
 crushing-blow `[targets]`, `cast-rate-cap` `fcr_cap`, `dodge-avoid-evade-cap`, `magic-find-soft-tail`, the
-`attack-rating` curve) means every explanation text quoting it must be re-checked** (the explanation content file and
-the guide notes; list them for the owner) and the pinned values in `bundleIntegrity.test.ts` ("committed modifiers
+`attack-rating` curve) means every explanation text quoting it must be re-checked** (`content/modifiers/modifiers.md`:
+its `{placeholders}` show the new value on their own, but the prose around them, hard-coded numbers in `facts:` lines
+and `open-questions.md` may now be wrong; and the guide notes; list them for the owner). `modifierContent.test.ts`
+fails when a placeholder no longer resolves, a content key has no `CONTENT_KINDS` entry or a key kind has no text
+(`src/features/modifiers/utils/modifierContentKinds.ts`) and the pinned values in `bundleIntegrity.test.ts` ("committed modifiers
 bundle") updated with the release diff as the source. A new `modifiers:` warning is a finding: a key kind naming a stat
 ESR removed, an unknown item event function, a missing or changed config key, or a config comment that disagrees with
 its value. Expected at 3.2.24: one, `crushing-blow.toml unique = 25 gives 6.25 % … comment says "50 -> 12.5 %"` (the

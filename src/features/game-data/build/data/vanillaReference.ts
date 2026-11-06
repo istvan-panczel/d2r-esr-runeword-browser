@@ -524,3 +524,13 @@ export const VANILLA_BLOCK_FACTOR: Readonly<Record<string, number>> = {
   Assassin: 25,
   Warlock: 25,
 };
+
+/** charstats.txt ToHitFactor, WalkVelocity, RunVelocity and MinimumCastingDelay by class name */
+export const VANILLA_CHARSTATS: Readonly<
+  Record<'ToHitFactor' | 'WalkVelocity' | 'RunVelocity' | 'MinimumCastingDelay', Readonly<Record<string, number>>>
+> = {
+  ToHitFactor: { Amazon: 5, Sorceress: -15, Necromancer: -10, Paladin: 20, Barbarian: 20, Druid: 5, Assassin: 15, Warlock: 5 },
+  WalkVelocity: { Amazon: 6, Sorceress: 6, Necromancer: 6, Paladin: 6, Barbarian: 6, Druid: 6, Assassin: 6, Warlock: 6 },
+  RunVelocity: { Amazon: 9, Sorceress: 9, Necromancer: 9, Paladin: 9, Barbarian: 9, Druid: 9, Assassin: 9, Warlock: 9 },
+  MinimumCastingDelay: { Amazon: 12, Sorceress: 12, Necromancer: 12, Paladin: 12, Barbarian: 12, Druid: 12, Assassin: 12, Warlock: 12 },
+};

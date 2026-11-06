@@ -30,6 +30,7 @@ const ROUTES_AFTER_NOTES: readonly SitemapEntry[] = [
   { path: 'mythicals', changefreq: 'weekly', priority: '0.8' },
   { path: 'ascendancies', changefreq: 'weekly', priority: '0.8' },
   { path: 'skills', changefreq: 'monthly', priority: '0.7' },
+  { path: 'modifiers', changefreq: 'monthly', priority: '0.7' },
   { path: 'builds', changefreq: 'weekly', priority: '0.7' },
   { path: 'game-data/bases', changefreq: 'monthly', priority: '0.7' },
   { path: 'game-data/sets', changefreq: 'monthly', priority: '0.7' },

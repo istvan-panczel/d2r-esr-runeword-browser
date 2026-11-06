@@ -22,7 +22,13 @@ import type {
   ModifiersBundle,
 } from '../engine/schema.ts';
 import { isTechnicalStat, labelFromDescription, propertyStats } from './affixStats.ts';
-import { VANILLA_BLOCK_FACTOR, VANILLA_DIFFICULTY, VANILLA_STAT_COLUMNS, VANILLA_STATS } from './data/vanillaReference.ts';
+import {
+  VANILLA_BLOCK_FACTOR,
+  VANILLA_CHARSTATS,
+  VANILLA_DIFFICULTY,
+  VANILLA_STAT_COLUMNS,
+  VANILLA_STATS,
+} from './data/vanillaReference.ts';
 import type { EsrModifierConfig, EsrModifierPatch } from './esrSources.ts';
 import { modifierConfigFile, modifierPatchFile } from './esrSources.ts';
 import type { PropertyDef, PropertyGroupDef } from './stats/tables.ts';
@@ -404,14 +410,22 @@ function difficultyFacts(table: TsvTable, warnings: string[]): ModifierFact[] {
   });
 }
 
-function charStatsFacts(table: TsvTable): ModifierFact[] {
-  const value: Record<string, number> = {};
-  for (const row of table.rows) if (row.str('class') !== '') value[row.str('class')] = row.num('BlockFactor');
-  return [
+/** charstats.txt columns besides BlockFactor that the explanation texts quote, per class */
+const CHARSTATS_COLUMNS = [
+  { column: 'ToHitFactor', label: 'Class attack rating bonus', unit: 'points' },
+  { column: 'WalkVelocity', label: 'Walk speed', unit: 'points' },
+  { column: 'RunVelocity', label: 'Run speed', unit: 'points' },
+  { column: 'MinimumCastingDelay', label: 'Minimum casting delay', unit: 'frames' },
+] as const satisfies readonly { column: string; label: string; unit: ModifierFact['unit'] }[];
+
+function charStatsFacts(table: TsvTable, warnings: string[]): ModifierFact[] {
+  const rows = table.rows.filter((row) => row.str('class') !== '');
+  const byClass = (column: string) => Object.fromEntries(rows.map((row) => [row.str('class'), row.num(column)]));
+  const facts: ModifierFact[] = [
     {
       key: 'charstats.BlockFactor',
       label: 'Class block factor',
-      value,
+      value: byClass('BlockFactor'),
       vanilla: { ...VANILLA_BLOCK_FACTOR },
       unit: 'points',
       origin: 'game-files',
@@ -419,6 +433,22 @@ function charStatsFacts(table: TsvTable): ModifierFact[] {
       note: 'Shield block = (BlockFactor + block) × (Dexterity − 15) / (2 × character level), capped at 75.',
     },
   ];
+  for (const { column, label, unit } of CHARSTATS_COLUMNS) {
+    if (!table.columns.includes(column)) {
+      warnings.push(`modifiers: charstats.txt has no ${column} column`);
+      continue;
+    }
+    facts.push({
+      key: `charstats.${column}`,
+      label,
+      value: byClass(column),
+      vanilla: { ...VANILLA_CHARSTATS[column] },
+      unit,
+      origin: 'game-files',
+      source: { file: 'charstats.txt', key: column },
+    });
+  }
+  return facts;
 }
 
 function monsterFacts(table: TsvTable): ModifierFact[] {
@@ -767,6 +797,27 @@ function configFacts(input: ModifiersInput, warnings: string[]): ModifierFact[] 
     });
     boolFact(softHit, 'soft_hit_removal.thorns_percent', { key: 'thorns.percentKillCredit', label: 'Percent thorns kills count' });
   }
+
+  // poison-immunity.toml: the state that blocks poison over time
+  const poisonImmunity = read('poison-immunity');
+  if (poisonImmunity !== null) {
+    boolFact(poisonImmunity, 'poison_immunity.enabled', { key: 'poisonImmunity.enabled', label: 'Poison immunity state enabled' });
+    numFact(poisonImmunity, 'poison_immunity.state_id', {
+      key: 'poisonImmunity.state',
+      label: 'Poison immunity state id',
+      unit: 'stat',
+      note: 'A unit in this state takes no poison over time.',
+    });
+  }
+
+  // enhanced-damage-fix.toml
+  const edFix = read('enhanced-damage-fix');
+  if (edFix !== null)
+    boolFact(edFix, 'enhanced_damage_fix.enabled', {
+      key: 'enhancedDamageFix.enabled',
+      label: 'Off-weapon Enhanced Damage fix enabled',
+      note: 'Off-weapon Enhanced Damage is no longer lost when the item (or a jewel in it) also has flat minimum or maximum damage.',
+    });
 
   // item-quantity.toml
   const quantity = read('item-quantity');
@@ -1149,7 +1200,7 @@ export function buildModifiersBundle(input: ModifiersInput): ModifiersResult {
 
   const facts = [
     ...difficultyFacts(input.difficultylevels, warnings),
-    ...charStatsFacts(input.charstats),
+    ...charStatsFacts(input.charstats, warnings),
     ...monsterFacts(input.monstats),
     ...configFacts(input, warnings),
     ...patchFacts(input, warnings),

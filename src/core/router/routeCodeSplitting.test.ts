@@ -11,6 +11,7 @@ const routeScreenImports = [
   '@/features/mythical-uniques',
   '@/features/ascendancies',
   '@/features/skills',
+  '@/features/modifiers',
   '@/features/game-data',
   '@/features/guide',
   '@/features/loot-filter',

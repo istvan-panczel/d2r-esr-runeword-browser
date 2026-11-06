@@ -12,8 +12,9 @@ dodge and every other stat ESR items carry. Owner decisions (2026-11-06):
   blow per target;
 - about 40–60 key kinds get hand-checked explanations; every other stat gets a generated entry.
 
-Status: **Phase 1 (data) done**: `public/game-data/modifiers.json` and the calculator formulas. The explanation texts
-(a content file joined on the kind `key`), the page, the peek and the guide additions come next.
+Status: **Phase 1 (data) and Phase 2 (page, content, calculators) done**: `public/game-data/modifiers.json`, the
+calculator formulas, the hand-checked explanations in `content/modifiers/` and the `/modifiers` page. The modifier peek
+and the guide additions come next.
 
 ## Data: `modifiers.json`
 
@@ -164,6 +165,7 @@ Hell]` or a record per class / target / setting), `vanilla` in the same shape wh
 | `difficulty.MonsterFireEnchantExplosionDamagePercent`                             | 75 / 50 / 13                                                                                                        | same                                              | difficultylevels.txt                               |
 | `difficulty.StaticFieldMin`                                                       | 0                                                                                                                   | 0 / 33 / 50                                       | difficultylevels.txt                               |
 | `charstats.BlockFactor`                                                           | Ama 5, Sor 4, Nec 4, Pal 6, Bar 5, Dru 4, Ass 5, War 4                                                              | 20–30                                             | charstats.txt                                      |
+| `charstats.ToHitFactor` / `WalkVelocity` / `RunVelocity` / `MinimumCastingDelay`  | 20 / 9 / 13 / 0 for every class                                                                                     | 5…−15 / 6 / 9 / 12                                | charstats.txt                                      |
 | `monstats.drainZero`                                                              | 647 / 648 / 648 of 1424 enabled monsters cannot be leeched                                                          | —                                                 | monstats.txt `Drain`, `Drain(N)`, `Drain(H)`       |
 | `monstats.drainPartial`                                                           | 5 / 5 / 5 (Drain 1–99)                                                                                              | —                                                 | monstats.txt                                       |
 | `crushingBlow.settings`                                                           | monster 50, champion 50, unique 25, super_unique 16, act_boss 16, minion 50, mercenary 50, player 50 (% of vanilla) | 100                                               | crushing-blow.toml `[targets]`                     |
@@ -178,6 +180,8 @@ Hell]` or a record per class / target / setting), `vanilla` in the same shape wh
 | `bleed.stats`, `bleed.enabled`                                                    | min 435, max 436, length 437, state 62; true                                                                        | —                                                 | bleed.toml                                         |
 | `weaponBlock.enabled` / `.clawTypes` / `.swordTypes`                              | true / `h2h` / `swor`                                                                                               | Assassin claws only                               | weapon-block-rules.toml                            |
 | `summonResistCap.enabled`                                                         | true                                                                                                                | —                                                 | summon-resist-cap.toml                             |
+| `poisonImmunity.enabled` / `.state`                                               | true / 25                                                                                                           | —                                                 | poison-immunity.toml                               |
+| `enhancedDamageFix.enabled`                                                       | true                                                                                                                | —                                                 | enhanced-damage-fix.toml                           |
 | `thorns.killCredit` / `.percentKillCredit`                                        | true / false                                                                                                        | —                                                 | soft-hit-removal.toml                              |
 | `extraItems.settings`                                                             | stat 426, percent, prime evils excluded, minion owner credited, no pick limit                                       | —                                                 | item-quantity.toml                                 |
 | `resist.floor`                                                                    | -1000 (decoded from the patched `mov ecx, imm32`)                                                                   | -100                                              | patches/esr-resistance-floor-minus-1000.json       |
@@ -217,6 +221,103 @@ changes these tables.
 - `crushingBlow({ currentLife, target, ranged?, players?, physicalResist? }, facts)`: share = `crushingBlow.share`
   [target] (× ranged / 100 for missiles), divided by 1 + 50 % × (players − 1) against monsters (not mercenaries or
   players), × (100 − physical resist clamped to 0–100) / 100; damage = current life × share / 100.
+
+## Content: `content/modifiers/`
+
+The hand-checked explanations (written 2026-11-06 against ESR 3.2.24, then fact-checked: 28 factual fixes, 22
+rewordings) are two markdown files, Prettier-formatted like the rest of the repo:
+
+- `modifiers.md`: one block per explanation, `## <key> — <title>` followed by `stats:` (free text), `summary:`,
+  `body:`, `facts:` (bullets, or inline; `facts (intro):` keeps the intro), `caveats:` (bullets or inline; "none…" = no
+  caveats) and `sources:` (entries separated by "; "), blocks separated by `---`. Other headings (the file's "How to
+  read" section) are skipped. Inline source tags after a claim: `[ESR config]`, `[ESR files]`, `[Vanilla]`,
+  `[Community 3.9]` / `[Community 3.10]`, optionally with a detail after a comma (`[Vanilla, D2MOO SUnitDmg.cpp:1000]`,
+  shown on hover). `` `code` ``, `**bold**`, `[text](url)` and bare URLs render too; any other `[…]` stays text.
+- `open-questions.md`: numbered questions `N. **Title (Test)** — \`key\`, \`key\``(an optional`**(new)**` after the
+  title is dropped) with indented lines; they show in the "Unconfirmed" note of each card they name.
+
+Numbers are placeholders resolved against `facts` at render time (`utils/modifierPlaceholders.ts`):
+`{difficulty.<normal|nightmare|hell|*>.<column>}` → `difficulty.<Column>`; `{charstats.<class|*>.<Column>}` →
+`charstats.<Column>`; `{config.crushing-blow.targets.<t>}` → `crushingBlow.settings`; `{derived.crushing-blow.<t>}` →
+the share with "%"; `{derived.leech.<life|mana>.<item %>.<difficulty>}` → `effectiveLeech(…).engine` with "%"; other
+`{config.…}`, `{patch.…}`, `{monstats.…}` paths through `PLACEHOLDER_FACTS`; `{…key}` continues the previous
+placeholder's path on the same line. An HTML comment right after a placeholder (the value when written) is dropped; any
+other comment's text is kept as plain text. The quoted facts also become the card's fact tables.
+
+The page imports both files as text (`src/features/modifiers/content.ts`, `?raw`, in the page chunk: 166 KB raw /
+55 KB gzip with the parser and components) and parses them once (`utils/modifierContent.ts`).
+
+**Content keys vs kinds** (`utils/modifierContentKinds.ts`, outside the markdown so a re-checked file replaces the old
+one as it is): `CONTENT_KINDS` maps each content key to the bundle kinds it explains (the first gives the category
+unless `category` is set); `KEY_KINDS_WITHOUT_TEXT` lists the key kinds that keep a generated entry (`replenish-life`,
+`attribute-percent`); `KIND_FACTS` adds facts a kind's card always tabulates; `KIND_CALCULATORS` places the calculators.
+48 content keys cover 56 of the 58 key kinds plus 21 generated kinds:
+
+| Content key                                                                                                                                                                                                                                                                                                     | Kinds                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| same key (deadly-strike, critical-damage, crushing-blow, life-leech, mana-leech, on-striking, physical-resist, damage-reduced, magic-damage-reduced, poison-length, enemy-resist, absorb, enhanced-damage, knockback, damage-to-mana, ias, fcr, fhr, fbr, frw, dodge, magic-find, gold-find, elemental-mastery) | the kind of the same key                                                                                                        |
+| `bleed`                                                                                                                                                                                                                                                                                                         | bleed, open-wounds                                                                                                              |
+| `after-kill`                                                                                                                                                                                                                                                                                                    | life-after-kill, mana-after-kill                                                                                                |
+| `resists`                                                                                                                                                                                                                                                                                                       | resist-fire, resist-cold, resist-lightning, resist-poison, magic-resist                                                         |
+| `max-resists`                                                                                                                                                                                                                                                                                                   | max-resist                                                                                                                      |
+| `attack-rating`                                                                                                                                                                                                                                                                                                 | attack-rating, stat-item-demon-tohit, stat-item-undead-tohit                                                                    |
+| `target-defense`                                                                                                                                                                                                                                                                                                | target-defense, ignore-target-defense, stat-item-damagetargetac                                                                 |
+| `cannot-be-frozen`                                                                                                                                                                                                                                                                                              | cannot-be-frozen, half-freeze                                                                                                   |
+| `slow` / `freeze` / `thorns` / `pierce` / `curse-resistance` / `item-quantity` / `cooldown-reduction`                                                                                                                                                                                                           | slow-target / freeze-target / attacker-takes-damage / piercing-attack / curse-resist / extra-items / skill-cooldown             |
+| `chance-to-cast`                                                                                                                                                                                                                                                                                                | cast-on-strike, cast-when-struck, cast-on-kill, cast-on-cast                                                                    |
+| `reanimate`                                                                                                                                                                                                                                                                                                     | reanimate, stat-item-restinpeace                                                                                                |
+| `block`                                                                                                                                                                                                                                                                                                         | block, weapon-block                                                                                                             |
+| `spell-damage`                                                                                                                                                                                                                                                                                                  | spell-damage, total-spell-damage                                                                                                |
+| `summon-stats` (category skills)                                                                                                                                                                                                                                                                                | stat-passive-summ-mastery-total, -summ-life, -summ-elemental-resist, -summ-phys-resist, -summ-limit, stat-summonexceedcap       |
+| `skills`                                                                                                                                                                                                                                                                                                        | stat-item-allskills, -addclassskills, -addskill-tab, -singleskill, -nonclassskill, -nonclassskill-display                       |
+| `experience` / `light-radius` / `requirements` / `rare-procs`                                                                                                                                                                                                                                                   | stat-item-addexperience / stat-item-lightradius / stat-item-req-percent, stat-item-levelreq / prevent-heal, stat-item-stupidity |
+
+`modifierContent.test.ts` fails when the committed content does not parse, a placeholder resolves to nothing, a
+content key has no mapping (or a mapping no content), a mapped kind is missing from the bundle or claimed twice, a key
+kind has neither text nor a `KEY_KINDS_WITHOUT_TEXT` entry, `KIND_FACTS` / `KIND_CALCULATORS` name an unknown kind or
+fact, or an open question names an unknown content key.
+
+**Updating the text** (after an ESR release, or a new fact-check): replace `content/modifiers/modifiers.md` /
+`open-questions.md`, run `npx prettier --write content/modifiers` and `npx vitest run src/features/modifiers`. A
+renamed or new content key needs its `CONTENT_KINDS` line; a new placeholder path that is not a rule above needs a
+`PLACEHOLDER_FACTS` line (and its fact in the builder when the bundle lacks it). A changed fact needs no text edit for
+the placeholder itself, but the prose around it and the hard-coded numbers in `facts:` / `open-questions.md` must be
+re-read (`.claude/skills/esr-update/reference.md` "Modifiers").
+
+## Page: `/modifiers`
+
+Database menu entry, home Database card chip, lazy route (`src/features/modifiers/`), a static-bundle route (no HTM
+gate), in the sitemap and the guide's `page:` targets. The model is `utils/modifiersView.ts` (`buildModifiersView`):
+one entry per content block, then one generated entry per remaining kind, ordered by category (offense, defense,
+speed, procs, resources "Life and mana", find, skills, attributes, other), hand-written and key entries first, then the
+bundle's order. A generated title that is only a stat name or a stray word ("to") falls back to the stat's display text.
+
+- **List**: intro, source-badge legend, search (`EnhanceSearch`; every word or "quoted phrase" must occur in the
+  titles, summary, body or the stats' display texts and names, like the Skills search), category pills with counts,
+  "Key modifiers" (hand-written and key kinds: 50 entries) / "All stats" (366), Copy Link. A card shows the title, the
+  summary (or the stat's display text), the category, "ESR only" / "Changed in ESR" / "Technical" chips and the item
+  count; "N more in All stats" switches the view.
+- **Focused card** (`?kind=`): the explanation with an inline source badge after each claim (short label, the full
+  meaning and the tag detail on hover; Vanilla is dashed muted amber: "Vanilla D2 behaviour, not confirmed for ESR"),
+  an "Unconfirmed" note (caveats and the open questions naming the card), the calculators, **Numbers** (fact tables:
+  per difficulty, per class / target / setting, single settings; ESR next to vanilla, the origin badge, file and key,
+  the fact note), **Stats** (display texts, stat name and id, vanilla / changed / ESR-only with `reusesId`, op formula,
+  item events, usage per item list), **Found on** (up to 12 examples linked to their focused pages: uniques or
+  mythicals, sets, runewords, gemwords, socketables `?name=`, affixes `?search="…"`; superior mods and cube recipes are
+  plain text), "Technical details" (the `facts:` bullets) and **Sources** (ESR paths → the ESR GitHub repo, D2MOO paths
+  → D2MOO at 4a60fca, wiki names → the unofficial wiki, URLs; `scratchpad/` research files are left out).
+- **URL** (`readModifiersState` / `encodeModifiersState`, defaults omitted): `kind` (an entry key or any kind key, which
+  resolves to its entry: `?kind=resist-cold` opens `resists`), `category`, `search`, `view=all`. The home search lists
+  every kind title (not bookkeeping-only kinds or stat-name titles) and links `/modifiers?kind=<kind key>`.
+- **Calculators** (`components/Calculators.tsx`, rows from `utils/calculatorViews.ts`, all numbers from the facts; the
+  vanilla columns run the same formulas on the facts' `vanilla` values): leech (life / mana, item %, target Drain →
+  divisor, exact, engine 1/64 %, per 1000 damage, vanilla; the smallest item leech that is not 0 in Hell; the rounding
+  caveat), Magic Find (per quality: ESR effective MF, the tail's part, vanilla, the diminishing constant), hit chance
+  (AR and defense → ratio, ESR, vanilla at equal levels, the AR needed for 50 / 75 / 90 / 95 %), Crushing Blow (current
+  life, physical resist, /players, melee / ranged → share and life removed per target class, vanilla). Local state, not
+  in the URL.
+
+Mobile: one column at 375 px without horizontal page scroll; wide tables scroll inside their box.
 
 ## ESR updates
 
