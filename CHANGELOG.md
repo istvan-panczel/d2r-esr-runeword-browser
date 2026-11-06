@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.55.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.54.0...v1.55.0) (2026-11-06)
+
+### Features
+
+* **ascendancies:** add a how-to panel with orb locations and tier challenges ([7af9a8a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7af9a8a3c08c9f027bfe55dce8a041ff9782fff3))
+* **campaign-map:** make the selected area easy to spot and show it on arrival ([2d3dd61](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2d3dd61fc08473aa2c1a1123b3c314b9f194930d))
+* **campaign-map:** put the search, section tabs and view toggle on a toolbar card ([89aaed2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/89aaed2ea590797e1ff1373a73f95c7361eb8f35))
+* **data-sync:** parse the ascendancy challenges and each stone's unlock recipe ([0034602](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0034602e19bacb9f38ffbdc645f1ff0660de9234))
+* **game-data:** move the Enhance section tabs into the filter panel ([d3b8201](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d3b82013b240e350421ad5a95a4a130c04bfde61))
+* **game-data:** put the Materials groups, cube families and Enhance outcomes on cards ([d96c3ed](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d96c3ed59dec3a278d7c84b6b2b82e1071838a08))
+* **loot-filter:** card the library intro and toolbar and the editor tab row ([277c5b2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/277c5b23661884f3dd4633eb4a3a7d92c3554a14))
+* **stash:** ignore coupons on the All Items page by default ([bcad740](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bcad740664faa6f96e4f3a9e4773de616e6020af))
+* **stash:** peek at an item's whole card from the All Items table ([1a400ce](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1a400ce179fed0b46f4ab5f16d11ac3a72272a84))
+* **ui:** put the Game Data and My Stash sub-tabs on a toolbar card ([6ccdb75](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6ccdb75a64c31acd0ad67cd40c14967cd30180bc))
+
+### Bug Fixes
+
+* **ascendancies:** drop the guide note link from the how-to panel ([3daaeaa](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3daaeaae2d63ac973b9aec5954f300f3101600f2))
+
+### Documentation
+
+* document the ascendancy challenges, unlock recipes and how-to panel ([d0168b4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d0168b44809d135b72f4984e8fd036505b32a8dd))
+* document ToolbarCard and the page sub-tab classes ([82924d2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/82924d2c17b696e547ca53abe584a61105ebcada))
+* **guide:** mention the orb locations and tier challenges on the Ascendancies page ([8d17290](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8d172905710beb64f4f29f68e246dd017e478878))
+
+### Chores
+
+* **esr-update:** re-check the hand-maintained ascendancy orb table after a release ([732708f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/732708f06f3f3cc22743204f4c63b3c8eddc95c2))
+
 ## [1.54.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.53.0...v1.54.0) (2026-11-05)
 
 ### Features
