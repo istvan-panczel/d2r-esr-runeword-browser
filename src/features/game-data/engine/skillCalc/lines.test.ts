@@ -9,6 +9,7 @@ import {
   oneDecimal,
   skillTable,
   synergyInputs,
+  tooltipOrder,
 } from './index.ts';
 import { bottomUp, placeholderCount, printfMarked, splitMarked } from './text.ts';
 
@@ -28,6 +29,7 @@ const TEXTS = [
   'Cooldown: %d seconds', // 12
   'Skeleton Mastery', // 13
   ' percent', // 14
+  ' to Vitality', // 15
 ];
 
 const line = (key: string, type: number, rest: Partial<SkillCalcLine> = {}): SkillCalcLine => ({ key, type, ...rest });
@@ -49,6 +51,8 @@ const FIRE_BALL: SkillCalcSkill = {
     line('dsc3-1', 40, { a: 5, b: 6, ca: '2' }),
     line('dsc3-2', 76, { a: 7, b: 8, ca: 'par8' }),
     line('dsc3-3', 3, { a: 10, b: 14, ca: 'lvl>1?7:7' }),
+    line('dsc3-4', 4, { a: 10, b: 14, ca: '-3' }),
+    line('dsc3-5', 6, { a: 15, b: 14, ca: 'par8' }),
   ],
 };
 const BUNDLE: SkillCalcBundle = {
@@ -107,35 +111,46 @@ describe('text helpers', () => {
 });
 
 describe('evaluateSkill', () => {
-  it('formats the line functions at a level', () => {
+  it('formats the line functions at a level, in tooltip order (dsc2 and desc blocks bottom-up, dsc3 top-down)', () => {
     const lines = evaluateSkill(FIRE_BALL, index, defaultContext(FIRE_BALL, { level: 20, charLevel: 40 }));
     expect(lines.map((entry) => (entry.unavailable === true ? `${entry.key}: —` : `${entry.key}: ${entry.text}`))).toEqual([
-      'desc1: Mana Cost: 14.5',
-      'desc2: Fire Damage: 80-128',
-      'desc3: Enemy Fire Resist: -20%',
-      'desc4: Radius: 5.3 yards',
-      'desc5: first line 20\nsecond line',
-      'desc6: Attack Rating: 80',
-      'dsc2-1: Cooldown: 1 second',
       'dsc2-2: —',
+      'dsc2-1: Cooldown: 1 second',
+      'desc6: Attack Rating: 80',
+      'desc5: first line 20\nsecond line',
+      'desc4: Radius: 5.3 yards',
+      'desc3: Enemy Fire Resist: -20%',
+      'desc2: Fire Damage: 80-128',
+      'desc1: Mana Cost: 14.5',
       'dsc3-1: Fire Ball Receives Bonuses From:',
       'dsc3-2: Fire Bolt: +6% Fire Damage per Level',
-      'dsc3-3: Attack Rating: 7 percent',
+      // the game compiles lvl>1?7:7 as lvl > (1 ? 7 : 7)
+      'dsc3-3: Attack Rating: 1 percent',
+      // types 4 and 6 print "+%d" and no textb
+      'dsc3-4: Attack Rating: +-3',
+      'dsc3-5: +6 to Vitality',
     ]);
-    expect(lines[0]).toMatchObject({ block: 'level', values: [14.5], before: 'Mana Cost: ', span: '14.5', after: '' });
-    expect(lines[3]).toMatchObject({ values: [5.3] });
-    expect(lines[4]).toMatchObject({ readsHardPoints: true, before: 'first line ', after: '\nsecond line' });
-    expect(lines[5]).toMatchObject({ readsCharLevel: true });
-    expect(lines[6]).toMatchObject({ block: 'fixed' });
-    expect(lines[8]).toMatchObject({ block: 'synergy', color: 2, values: [] });
+    const byKey = (key: string) => lines.find((entry) => entry.key === key);
+    expect(byKey('desc1')).toMatchObject({ block: 'level', values: [14.5], before: 'Mana Cost: ', span: '14.5', after: '' });
+    expect(byKey('desc4')).toMatchObject({ values: [5.3] });
+    expect(byKey('desc5')).toMatchObject({ readsHardPoints: true, before: 'first line ', after: '\nsecond line' });
+    expect(byKey('desc6')).toMatchObject({ readsCharLevel: true });
+    expect(byKey('dsc2-1')).toMatchObject({ block: 'fixed' });
+    expect(byKey('dsc3-1')).toMatchObject({ block: 'synergy', color: 2, values: [] });
+    expect(byKey('dsc3-4')).toMatchObject({ values: [-3], before: 'Attack Rating: +', span: '-3' });
+  });
+
+  it('orders lines like the tooltip', () => {
+    const keys = ['desc1', 'desc2', 'dsc2-1', 'dsc2-2', 'dsc3-1', 'dsc3-2', 'desc3'].map((key) => ({ key }));
+    expect(tooltipOrder(keys).map(({ key }) => key)).toEqual(['dsc2-2', 'dsc2-1', 'desc3', 'desc2', 'desc1', 'dsc3-1', 'dsc3-2']);
   });
 
   it('applies synergy points and picks singular texts at exactly 1', () => {
     const at1 = evaluateSkill(FIRE_BALL, index, defaultContext(FIRE_BALL, { level: 1 }));
-    expect(at1[3]?.text).toBe('Radius: 4 yards');
+    expect(at1.find((entry) => entry.key === 'desc4')?.text).toBe('Radius: 4 yards');
     const withSynergy = evaluateSkill(FIRE_BALL, index, defaultContext(FIRE_BALL, { level: 1, synergyPoints: { 'Fire Bolt': 20 } }));
     // +120%
-    expect(withSynergy[1]?.text).toBe('Fire Damage: 22-44');
+    expect(withSynergy.find((entry) => entry.key === 'desc2')?.text).toBe('Fire Damage: 22-44');
   });
 });
 
@@ -149,9 +164,16 @@ describe('contexts and inputs', () => {
     if (proc !== undefined) expect(defaultContext(proc, { level: 30 }).hardPoints).toBe(0);
   });
 
-  it('lists the synergy inputs with their caps', () => {
-    expect(synergyInputs(FIRE_BALL, index)).toEqual([{ id: 'Fire Bolt', max: 20 }]);
+  it('lists the synergy inputs with their caps, the listed ones first', () => {
+    expect(synergyInputs(FIRE_BALL, index)).toEqual([{ id: 'Fire Bolt', max: 20, listed: true }]);
     expect(maxSynergyPoints(FIRE_BALL, index)).toEqual({ 'Fire Bolt': 20 });
+    const withUnlisted: SkillCalcSkill = { ...FIRE_BALL, unlistedSynergies: ['Attack', 'Nope'] };
+    expect(synergyInputs(withUnlisted, index)).toEqual([
+      { id: 'Fire Bolt', max: 20, listed: true },
+      { id: 'Attack', max: 20, listed: false },
+      { id: 'Nope', max: 20, listed: false },
+    ]);
+    expect(maxSynergyPoints(withUnlisted, index)).toEqual({ 'Fire Bolt': 20, Attack: 20, Nope: 20 });
   });
 
   it('tells whether item procs can cast the skill', () => {
@@ -164,6 +186,7 @@ describe('skillTable', () => {
   it('gives a cell per level, labels from the last column and drops rows unavailable everywhere', () => {
     const rows = skillTable(FIRE_BALL, index, [1, 20, 30, 50]);
     expect(rows.map((row) => row.key)).not.toContain('dsc2-2');
+    expect(rows.slice(0, 3).map((row) => row.key)).toEqual(['dsc2-1', 'desc6', 'desc5']);
     const damage = rows.find((row) => row.key === 'desc2');
     expect(damage?.label).toBe('Fire Damage: …');
     expect(damage?.cells.map((cell) => cell.span)).toEqual(['10-20', '80-128', '160-228', '360-468']);

@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-06T15:43:46.572Z",
+  "generatedAt": "2026-11-06T16:19:12.746Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -54,8 +54,8 @@
       "bytes": 396315
     },
     "skillcalc": {
-      "hash": "1c2d6cc7777c5e014d544dce7733cf4b311d57b1fd44a4ae8974126a5642c2e9",
-      "bytes": 383130
+      "hash": "4777fdf7e016c8714ba5e22a3f1f08ba981b28cc0d58ef4ec937f41601c7a130",
+      "bytes": 391346
     },
     "crafting": {
       "hash": "c60369006f5669ab5cd122256b21f956cff89f39c4a4173c631175e3808028be",
@@ -171,16 +171,16 @@
     "skillGrantsUndescribed": 0,
     "skillCalcSkills": 461,
     "skillCalcSkillsWithLevelLines": 369,
-    "skillCalcLines": 2685,
-    "skillCalcLevelLines": 1238,
-    "skillCalcFixedLines": 480,
+    "skillCalcLines": 2694,
+    "skillCalcLevelLines": 1245,
+    "skillCalcFixedLines": 482,
     "skillCalcSynergyLines": 967,
     "skillCalcHiddenStat": 10,
     "skillCalcHiddenEngine": 22,
-    "skillCalcHiddenUnsupported": 9,
+    "skillCalcHiddenUnsupported": 10,
     "skillCalcHiddenParse": 0,
     "skillCalcHiddenRandom": 0,
-    "skillCalcHiddenGated": 90,
+    "skillCalcHiddenGated": 80,
     "skillCalcHiddenType": 0,
     "skillCalcHiddenString": 2,
     "skillCalcHiddenFormat": 0,
@@ -189,7 +189,7 @@
     "skillCalcSynergyInputs": 587,
     "skillCalcItemEffect": 328,
     "skillCalcRows": 520,
-    "skillCalcMissiles": 32,
+    "skillCalcMissiles": 31,
     "skillIcons": 325,
     "craftingForgings": 84,
     "craftingStacking": 31,
@@ -270,6 +270,7 @@
     "skillcalc: code:m1xm in 2 lines (Miasma Chains desc2, Abyss desc5)",
     "skillcalc: descmissile:m1en in 1 line (Plague Javelin desc5)",
     "skillcalc: descmissile:m1ex in 1 line (Plague Javelin desc5)",
+    "skillcalc: mastery:mael in 1 line (Meteor Sentry desc3)",
     "skillcalc: missile code:rad in 1 line (Miasma Chains dsc2-3)",
     "crafting: cubemain line 11716 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients",
     "stash: unique \"Azurewrath_old\" (row 728) has no string; named \"Azurewrath\" after coupon 24f",

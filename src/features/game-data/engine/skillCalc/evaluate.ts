@@ -1,13 +1,15 @@
 /**
  * Evaluator of the game's calc formulas for one skill of one (imaginary) character, after D2MOO
  * (`SKILLS_GetSpecialParamValue`, `SKILLS_GetMin/MaxElemDamage`, `SKILLS_GetElementalLength`, `SKILLS_GetManaCosts`,
- * `D2Common_11033`, `MISSILE_GetSpecialParamValue`, Fog `Calc.cpp`) and the D2R Data Guide code lists.
+ * `D2Common_11033`, `MISSILE_GetSpecialParamValue`, Fog `Calc.cpp`) and the D2R Data Guide code lists. Formulas are
+ * compiled like the game's Fog compiler does (`parse.ts`: its precedence and ternary rules, not the conventional ones).
  *
  * - 32-bit integer arithmetic: `/` truncates toward 0 and `x / 0` = 0, `^` is a repeated multiply (exponent ≤ 0 → 1),
  *   comparisons give 1 / 0, the ternary picks a branch by `cond ≠ 0`
  * - the character: skill level `level` (with +skills), own hard points `hardPoints`, `charLevel` (`ulvl`), other skills'
- *   hard points (`skill('X'.blvl)`, the synergies) and total levels (`skill('X'.lvl)`, default = their hard points; the
- *   base skills Attack, Kick, Throw, Unsummon, Left Hand Throw / Swing are at least 1), every stat 0 unless given
+ *   hard points (`skill('X'.blvl)`, the synergies) and total levels (`skill('X'.lvl)`, default = their hard points: a
+ *   simplification, in game it includes the character's +skills; the base skills Attack, Kick, Throw, Unsummon, Left
+ *   Hand Throw / Swing are at least 1), every stat 0 unless given
  * - `skill('X'.code)` evaluates X's column at X's level (0 when the character lacks X: params and calcs still evaluate,
  *   `ln12` / damage / mana give 0); `sklvl('X'.a.b)` evaluates X's `b` at this skill's `a`; `sksrc('X'.lvl)` (D2R) is read
  *   like `skill('X'.lvl)`; `miss('m'.code)` reads a missiles.txt code at this skill's level
@@ -189,7 +191,11 @@ const DESC_MISSILE_CODES: Readonly<Partial<Record<string, string>>> = {
  */
 const AMBIGUOUS_MISSILE_CODES: ReadonlySet<string> = new Set(['m2eo', 'm2ey', 'me3o', 'me3y']);
 
-/** Weapon / elemental / throwing masteries (stats of passive skills): 0 for the bare character */
+/**
+ * Mastery codes, refused. `math` / `madm` / `macr` are not unit stats: the engine (D2MOO `D2Common_11032`) evaluates the
+ * skill's own passivecalc whose passivestat is the melee / throwing mastery to-hit / damage / crit stat (ESR uses none).
+ * `mael` / `mapi` / `manc` are D2R additions the engine sources do not cover (ESR: `mael` once, Inferno Sentry).
+ */
 const MASTERY_CODES: ReadonlySet<string> = new Set(['math', 'madm', 'macr', 'mael', 'mapi', 'manc']);
 
 function descMissileCode(code: string): { slot: number; code: string } | null {
@@ -384,7 +390,6 @@ export class CalcRun {
       case 'code':
         return frame.kind === 'skill' ? this.#skillCode(frame, node.code) : this.#missileCode(frame, node.code);
       case 'neg':
-        if (node.ambiguous === true) return this.#unsupported('ambiguous: minus after ? : or ,');
         return i32(-this.#eval(node.arg, frame));
       case 'ternary':
         return this.#eval(node.cond, frame) !== 0 ? this.#eval(node.then, frame) : this.#eval(node.else, frame);
@@ -500,7 +505,7 @@ export class CalcRun {
       case 'pxms':
         return this.#skillPhys(frame, 'max');
     }
-    if (MASTERY_CODES.has(code)) return this.#stat(`mastery:${code}`);
+    if (MASTERY_CODES.has(code)) return this.#unsupported(`mastery:${code}`);
     if (AMBIGUOUS_MISSILE_CODES.has(code)) return this.#unsupported(`ambiguous:${code}`);
     const missileCode = descMissileCode(code);
     if (missileCode !== null) {

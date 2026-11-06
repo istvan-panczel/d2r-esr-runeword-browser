@@ -83,6 +83,8 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
     return {
       state: { level, charLevel, synergy: setting },
       hardPoints: learned ? points : undefined,
+      // gear cannot lower the level below the allocated points
+      minPickLevel: learned ? points : undefined,
       onChange: (patch) => {
         if (patch.level !== undefined) {
           if (learned) setGear(gearForLevel(points, patch.level));
@@ -96,7 +98,7 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
           <Label htmlFor={gearId} className="shrink-0 text-xs font-normal text-muted-foreground">
             +Skills from gear
           </Label>
-          <LevelInput id={gearId} value={gear} min={0} max={MAX_LEVEL - 1} onCommit={setGear} />
+          <LevelInput id={gearId} value={gear} min={0} max={Math.max(0, MAX_LEVEL - points)} onCommit={setGear} />
           <span className="text-xs text-muted-foreground">
             Level <span className="font-semibold text-foreground tabular-nums">{level}</span> = {points} hard point{points === 1 ? '' : 's'}{' '}
             + {gear}

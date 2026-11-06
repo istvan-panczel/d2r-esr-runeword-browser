@@ -16,13 +16,14 @@ export const QUICK_LEVELS: readonly number[] = DEFAULT_TABLE_LEVELS;
 /** Every level up to this one gets a row in the full table, then every FULL_TABLE_STEP-th */
 const FULL_TABLE_DENSE = 20;
 const FULL_TABLE_STEP = 5;
-/** URL guards: synergy lists longer than this or values above this are cut */
-const SYNERGY_LIST_MAX = 12;
+/** URL guards: synergy lists longer than this (ESR's longest: 21 inputs, Elemental Nova) or values above this are cut */
+const SYNERGY_LIST_MAX = 40;
 const SYNERGY_POINTS_MAX = 99;
 
 /**
- * Synergy hard points: `'max'` = every listed synergy at its cap; a list = points per synergy in `synergyInputs` order
- * (missing entries = 0); a record = points by skill id (the builds pages: the build's own allocation).
+ * Synergy hard points: `'max'` = every synergy input at its cap; a list = points per input in `synergyInputs` order (the
+ * listed synergies, then the unlisted ones; missing entries = 0); a record = points by skill id (the builds pages: the
+ * build's own allocation).
  */
 export type SynergySetting = 'max' | readonly number[] | Readonly<Record<string, number>>;
 
@@ -44,6 +45,8 @@ export interface SkillLevelPatch {
 export interface SynergyInput {
   readonly id: string;
   readonly max: number;
+  /** false = a class skill the formulas read that the tooltip does not list ("Also affected by") */
+  readonly listed?: boolean;
 }
 
 /** An integer in 1..MAX_LEVEL (fallback for anything else) */
@@ -52,11 +55,11 @@ export function clampLevel(value: number, fallback = DEFAULT_SKILL_LEVEL): numbe
   return Math.min(MAX_LEVEL, Math.max(1, Math.trunc(value)));
 }
 
-/** A URL level param (`lvl`, `clvl`) as a level, or the fallback when missing or invalid */
+/** A URL level param (`lvl`, `clvl`: digits only) as a level, or the fallback when missing or invalid */
 export function parseLevelParam(value: string | null, fallback: number): number {
-  if (value === null || value.trim() === '') return fallback;
+  if (value === null || !/^\d{1,3}$/.test(value)) return fallback;
   const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed >= 1 && parsed <= MAX_LEVEL ? parsed : fallback;
+  return parsed >= 1 && parsed <= MAX_LEVEL ? parsed : fallback;
 }
 
 /** `syn` param: `max`, or points per synergy joined with "." (`5.0.20`); missing or invalid = no synergies */

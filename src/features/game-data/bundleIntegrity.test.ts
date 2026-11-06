@@ -1110,6 +1110,34 @@ describe('committed skillcalc bundle', () => {
     expect(spans('Rift Shot', lineKey('Rift Shot', 'Mana Cost: …'))).toEqual(['20', '58', '78', '118']);
   });
 
+  it('compiles formulas like the game (ternary and minus rules) and keeps lines unlisted synergies switch on', () => {
+    // Cloak of Shadows aurastatcalc3 -(cond)?0:(10+lvl/2) negates the whole ternary
+    expect(spans('Cloak of Shadows', lineKey('Cloak of Shadows', 'Enemy Physical Resist: …%'), false, [1, 20])).toEqual(['-10', '-20']);
+    // Sharpened Focus ((lvl>0)?5:0+lvl/5)…: (cond ? 5 : 0) + lvl/5
+    expect(spans('Sharpened Focus', lineKey('Sharpened Focus', 'Enemy Physical Resist: …%'), false, [1, 20])).toEqual(['-5', '-14']);
+    expect(spans('Sharpened Focus', lineKey('Sharpened Focus', 'Enemy Elemental and Poison Resists: …%'), false, [20])).toEqual(['-24']);
+    // Weaken reads every curse's hard points through Attack's calc1 without listing them
+    expect(index.record('Weaken')?.unlistedSynergies).toContain('Amplify Damage');
+    expect(spans('Weaken', lineKey('Weaken', 'Enemy Elemental Resist: …%'), true, [20])).toEqual(['-115']);
+    // lines that are 0 without points in another class skill are shown
+    expect(spans('Werewolf', lineKey('Werewolf', 'Max Life: …%'), true, [20])).toEqual(['+96']);
+    for (const [id, keys] of [
+      ['Fire Claws', ['desc4']],
+      ['Fury', ['desc4']],
+      ['Poison Weapon', ['desc4', 'desc5']],
+      ['Reap Souls', ['dsc2-1']],
+      ['Bone Armor', ['desc4', 'desc5']],
+      ['Werebear', ['desc5']],
+    ] as const)
+      for (const key of keys)
+        expect(
+          index.record(id)?.lines.some((line) => line.key === key),
+          `${id} ${key}`
+        ).toBe(true);
+    for (const skill of skillCalc.skills)
+      for (const id of skill.unlistedSynergies ?? []) expect(index.skill(id)?.maxlvl, id).toBeGreaterThan(0);
+  });
+
   it('hides engine-computed, character-stat and always-zero lines', () => {
     // Raise Skeleton's Life is type 13 (monstats); Hellfire Lance's cooldown is 0 without its item effect
     expect(index.record('Raise Skeleton')?.lines.some((line) => line.type === 13)).toBe(false);

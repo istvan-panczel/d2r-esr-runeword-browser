@@ -71,6 +71,7 @@ describe('levels', () => {
     expect(parseLevelParam('45', 20)).toBe(45);
     expect(parseLevelParam('4.5', 20)).toBe(20);
     expect(parseLevelParam('111', 110)).toBe(110);
+    for (const bad of ['0', '-5', '', '  ', 'abc', '1e1']) expect(parseLevelParam(bad, 20), bad).toBe(20);
   });
 
   it('lists 1..20, every 5th level to 110 and the selected level', () => {
@@ -89,6 +90,8 @@ describe('synergies', () => {
     { id: 'Fire Bolt', max: 20 },
     { id: 'Rain of Fire', max: 20 },
     { id: 'Molten Focus', max: 10 },
+    // an unlisted synergy (a class skill the formulas read) comes after the listed ones
+    { id: 'Warmth', max: 20, listed: false },
   ];
 
   it('parses and formats the syn param', () => {
@@ -97,6 +100,13 @@ describe('synergies', () => {
     expect(parseSynergyParam('5.0.20.0')).toEqual([5, 0, 20]);
     expect(parseSynergyParam('5.x')).toEqual([]);
     expect(parseSynergyParam('5.-1')).toEqual([]);
+    expect(parseSynergyParam('100')).toEqual([]);
+    expect(parseSynergyParam('5.100')).toEqual([]);
+    expect(parseSynergyParam('MAX')).toEqual([]);
+    // a long list (unlisted synergies after the listed ones) is kept up to 40 entries
+    const long = Array.from({ length: 50 }, (_, i) => String(i % 7)).join('.');
+    expect(parseSynergyParam(long)).toHaveLength(40);
+    expect(parseSynergyParam(Array.from({ length: 21 }, () => '1').join('.'))).toHaveLength(21);
     expect(formatSynergyParam('max')).toBe('max');
     expect(formatSynergyParam([5, 0, 20, 0])).toBe('5.0.20');
     expect(formatSynergyParam([0, 0])).toBeNull();
@@ -104,14 +114,16 @@ describe('synergies', () => {
   });
 
   it('resolves max, positional and by-id settings with the caps', () => {
-    expect(resolveSynergyPoints(inputs, 'max')).toEqual({ 'Fire Bolt': 20, 'Rain of Fire': 20, 'Molten Focus': 10 });
+    expect(resolveSynergyPoints(inputs, 'max')).toEqual({ 'Fire Bolt': 20, 'Rain of Fire': 20, 'Molten Focus': 10, Warmth: 20 });
     expect(resolveSynergyPoints(inputs, [5, 0, 99])).toEqual({ 'Fire Bolt': 5, 'Molten Focus': 10 });
-    expect(resolveSynergyPoints(inputs, { 'Rain of Fire': 3, Teleport: 20 })).toEqual({ 'Rain of Fire': 3 });
+    expect(resolveSynergyPoints(inputs, [0, 0, 0, 7])).toEqual({ Warmth: 7 });
+    expect(resolveSynergyPoints(inputs, { 'Rain of Fire': 3, Teleport: 20, Warmth: 4 })).toEqual({ 'Rain of Fire': 3, Warmth: 4 });
     expect(resolveSynergyPoints(inputs, [])).toEqual({});
   });
 
   it('changes one synergy and keeps what the others showed', () => {
-    expect(withSynergyPoints(inputs, 'max', 'Rain of Fire', 4)).toEqual([20, 4, 10]);
+    expect(withSynergyPoints(inputs, 'max', 'Rain of Fire', 4)).toEqual([20, 4, 10, 20]);
+    expect(withSynergyPoints(inputs, [], 'Warmth', 3)).toEqual([0, 0, 0, 3]);
     expect(withSynergyPoints(inputs, [], 'Fire Bolt', 30)).toEqual([20]);
     expect(withSynergyPoints(inputs, { 'Molten Focus': 2 }, 'Fire Bolt', 1)).toEqual([1, 0, 2]);
     expect(withSynergyPoints(inputs, [5], 'Fire Bolt', 0)).toEqual([]);

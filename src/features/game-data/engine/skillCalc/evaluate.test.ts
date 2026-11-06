@@ -12,7 +12,7 @@ import {
   type FormulaRefs,
   type SkillCalcContext,
 } from './evaluate.ts';
-import { parseCalc } from './parse.ts';
+import { compileCalc, formatCalc, parseCalc } from './parse.ts';
 
 const ctx = (patch: Partial<SkillCalcContext> = {}): SkillCalcContext => ({
   level: 1,
@@ -80,8 +80,10 @@ function run(text: string, patch: Partial<SkillCalcContext> = {}, own = 'Test') 
 }
 const value = (text: string, patch: Partial<SkillCalcContext> = {}, own = 'Test') => run(text, patch, own).value;
 
-describe('parseCalc', () => {
-  it('follows the usual precedence, left to right', () => {
+describe("parseCalc (the game's Fog compiler)", () => {
+  const tree = (text: string) => formatCalc(parseCalc(text));
+
+  it('follows the usual precedence for arithmetic, left to right', () => {
     expect(value('2+3*4')).toBe(14);
     expect(value('(2+3)*4')).toBe(20);
     expect(value('10-3-2')).toBe(5);
@@ -89,32 +91,65 @@ describe('parseCalc', () => {
     expect(value('2^3^2')).toBe(64);
     expect(value('-2^2')).toBe(4);
     expect(value('1+2>2')).toBe(1);
+    expect(value('2>1+2')).toBe(0);
     expect(value('"5 + 5"')).toBe(10);
   });
 
-  it('reads the ternary as the loosest operator and nests it to the right', () => {
-    expect(value('1>0?10:20')).toBe(10);
-    expect(value('0?1:0?2:3')).toBe(3);
+  it('pushes the ternary above anything pending: its condition is only the value right before "?"', () => {
+    // a < b ? c : d = a < (b ? c : d)
+    expect(tree('1>0?10:20')).toBe('(1 > (0 ? 10 : 20))');
+    expect(value('1>0?10:20')).toBe(0);
+    expect(value('(1>0)?10:20')).toBe(10);
+    // Cloak of Shadows aurastatcalc3: the minus negates the whole ternary
+    expect(tree("-(skill('Tal Rasha Passive'.lvl)>0)?0:(10+lvl/2)")).toBe(
+      "(-((skill('Tal Rasha Passive'.lvl) > 0) ? 0 : (10 + (lvl / 2))))"
+    );
+    expect(value("-(skill('Tal Rasha Passive'.lvl)>0)?0:(10+lvl/2)", { level: 1 })).toBe(-10);
+    expect(value('-(1>0)?2:3')).toBe(-2);
+  });
+
+  it('applies the ternary before any operator after its else-operand, and chains ternaries from the left', () => {
+    // Sharpened Focus calc1: (cond ? 5 : 0) + lvl/5, not cond ? 5 : (0 + lvl/5)
+    expect(tree('(((lvl>0)?5:0+lvl/5)*(100+blvl*3)/100)')).toBe('(((((lvl > 0) ? 5 : 0) + (lvl / 5)) * (100 + (blvl * 3))) / 100)');
+    expect(value('(((lvl>0)?5:0+lvl/5)*(100+blvl*3)/100)', { level: 20, hardPoints: 20 })).toBe(14);
+    expect(tree('0?1:0?2:3')).toBe('((0 ? 1 : 0) ? 2 : 3)');
     expect(value('(1?2:3)+4')).toBe(6);
     expect(value('2*(0?5:7)')).toBe(14);
+    expect(value('(0?1:(0?2:3))')).toBe(3);
   });
 
-  it('returns an error node for broken formulas instead of throwing', () => {
-    expect(parseCalc("stat('x'.accr')>1")).toMatchObject({ kind: 'error' });
-    expect(parseCalc('(1+2')).toMatchObject({ kind: 'error' });
-    expect(parseCalc('+3')).toMatchObject({ kind: 'error' });
-    expect(parseCalc('')).toEqual({ kind: 'num', value: 0 });
-    expect(run("stat('x'.accr')>1").reads.unsupported.size).toBe(1);
-  });
-
-  it('marks a minus right after ? : or , as ambiguous and refuses it', () => {
-    expect(parseCalc('1?1:-2')).toMatchObject({ kind: 'ternary', else: { kind: 'neg', ambiguous: true } });
-    expect([...run('0?1:-2').reads.unsupported]).toEqual(['ambiguous: minus after ? : or ,']);
+  it('reads "-" as a subtraction whenever a value precedes it, also after "?", ":", "," and "^"', () => {
     expect(value('-2+5')).toBe(3);
-    expect(parseCalc('-(1>0)?2:3')).toMatchObject({ kind: 'ternary', cond: { kind: 'neg' } });
-    expect(parseCalc('-(1>0)?2:3')).not.toMatchObject({ cond: { ambiguous: true } });
-    expect(value('-(1>0)?2:3')).toBe(2);
     expect(value('3*(-2)')).toBe(-6);
+    expect(value('3*-2')).toBe(-6);
+    // "c ? 1 : -2": the minus subtracts and applies the ternary with too few values: the game compiles nothing
+    expect(parseCalc('1?1:-2')).toMatchObject({ kind: 'error' });
+    expect(run('0?1:-2').reads.unsupported.size).toBe(1);
+    // ... it takes an outer value when there is one: 5+(c?1:-2) = (5 ? c : 1) - 2, and then "+" lacks a value
+    expect(parseCalc('5+(0?1:-2)')).toMatchObject({ kind: 'error' });
+    // max(7, (0 ? 1 : -2)): the ternary takes 7 as its condition, then max lacks a value
+    expect(parseCalc('max(7,(0?1:-2))')).toMatchObject({ kind: 'error' });
+  });
+
+  it('stops where the game stops: an unknown character, an unclosed "(", left-over values', () => {
+    expect(compileCalc('2+3&&1')).toEqual({ node: parseCalc('2+3'), notes: ['stopped at "&" (position 3): the game ignores the rest'] });
+    expect(compileCalc('lvl_x').notes).toHaveLength(1);
+    // an unclosed "(": the evaluation returns the top of the stack where the "(" is emitted
+    expect(compileCalc('4*(1+2').node).toEqual(parseCalc('1+2'));
+    expect(compileCalc('4*(1+2').notes).toEqual(['unclosed "(": the game stops evaluating there']);
+    expect(compileCalc('2 3')).toEqual({ node: { kind: 'num', value: 3 }, notes: ['1 value(s) left over: the game uses the last one'] });
+    // a name followed by "(" that is not a function is a code and a parenthesis
+    expect(tree('foo(1)')).toBe('1');
+  });
+
+  it('returns an error node for formulas the game cannot compile instead of throwing', () => {
+    expect(parseCalc('+3')).toMatchObject({ kind: 'error' });
+    expect(parseCalc('1+2)')).toMatchObject({ kind: 'error' });
+    expect(parseCalc('min(3)')).toMatchObject({ kind: 'error' });
+    expect(parseCalc('')).toEqual({ kind: 'num', value: 0 });
+    expect(run('+3').reads.unsupported.size).toBe(1);
+    // a stray quote opens a link: the evaluator refuses a link outside a function
+    expect(run("stat('x'.accr')>1").reads.unsupported.size).toBe(1);
   });
 });
 
@@ -132,7 +167,7 @@ describe('arithmetic', () => {
   it('gives 1 / 0 for comparisons and evaluates min / max', () => {
     expect([value('3==3'), value('3!=3'), value('2<=1'), value('2>=2')]).toEqual([1, 0, 0, 1]);
     expect(value('min(3,7)+max(3,7)')).toBe(10);
-    expect(run('min(3)').reads.unsupported.has('function:min/1')).toBe(true);
+    expect(value('max(min(3,7),(1?4:5))')).toBe(4);
   });
 
   it('marks rand(a, b) with a < b as random and gives a when a >= b', () => {
@@ -157,7 +192,9 @@ describe('skill codes', () => {
   it('reports recursion and unknown codes as unsupported', () => {
     expect(run('clc3').reads.unsupported.has('recursion')).toBe(true);
     expect([...run('clc0+ln43+par34').reads.unsupported].sort()).toEqual(['code:clc0', 'code:ln43', 'code:par34']);
-    expect([...run("skill('Nope'.blvl)+foo(1)").reads.unsupported].sort()).toEqual(['function:foo', 'skill:Nope']);
+    expect([...run("skill('Nope'.blvl)+foo").reads.unsupported].sort()).toEqual(['code:foo', 'skill:Nope']);
+    expect([...run("skill('Nope'.blvl)+foo(1)").reads.unsupported]).toEqual(['code:foo']);
+    expect(run('math+mael').reads.unsupported).toEqual(new Set(['mastery:math', 'mastery:mael']));
   });
 
   it('reads other skills: hard points for blvl, total level for lvl, their columns at their level', () => {

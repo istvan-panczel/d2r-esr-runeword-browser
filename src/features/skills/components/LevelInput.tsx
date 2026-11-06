@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -12,9 +12,43 @@ interface LevelInputProps {
   readonly className?: string;
 }
 
-/** Compact integer input: commits every valid value while typing and shows the stored value again on blur. */
+/**
+ * A pause in typing (or in holding a spinner arrow) after which a valid value is committed. The Skills page writes
+ * every commit to the URL (`replaceState`), which browsers throttle (Safari throws after ~100 calls in 10 s).
+ */
+const COMMIT_DELAY_MS = 250;
+
+/**
+ * Compact integer input: commits a valid value after a short pause in typing, at once on Enter or blur, and shows
+ * the stored value again on blur. A new stored value (a quick button, the slider) replaces what was being typed.
+ */
 export function LevelInput({ id, value, min, max, onCommit, 'aria-label': ariaLabel, className }: LevelInputProps) {
   const [draft, setDraft] = useState<string | null>(null);
+  const [shown, setShown] = useState(value);
+  const timer = useRef<number | undefined>(undefined);
+  // Clear the draft when the committed value changes from outside (compared during render, no effect)
+  if (shown !== value) {
+    setShown(value);
+    setDraft(null);
+  }
+  useEffect(
+    () => () => {
+      window.clearTimeout(timer.current);
+    },
+    []
+  );
+
+  const valid = (text: string): number | null => {
+    if (!/^\d+$/.test(text.trim())) return null;
+    const parsed = Number(text);
+    return parsed >= min && parsed <= max ? parsed : null;
+  };
+  const commit = (text: string) => {
+    window.clearTimeout(timer.current);
+    const parsed = valid(text);
+    if (parsed !== null && parsed !== value) onCommit(parsed);
+  };
+
   return (
     <Input
       id={id}
@@ -25,11 +59,19 @@ export function LevelInput({ id, value, min, max, onCommit, 'aria-label': ariaLa
       value={draft ?? String(value)}
       aria-label={ariaLabel}
       onChange={(e) => {
-        setDraft(e.target.value);
-        const parsed = Number(e.target.value);
-        if (e.target.value !== '' && Number.isInteger(parsed) && parsed >= min && parsed <= max) onCommit(parsed);
+        const text = e.target.value;
+        setDraft(text);
+        window.clearTimeout(timer.current);
+        if (valid(text) !== null)
+          timer.current = window.setTimeout(() => {
+            commit(text);
+          }, COMMIT_DELAY_MS);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && draft !== null) commit(draft);
       }}
       onBlur={() => {
+        if (draft !== null) commit(draft);
         setDraft(null);
       }}
       autoComplete="off"

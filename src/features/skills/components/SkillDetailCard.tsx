@@ -130,6 +130,7 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
       ? evaluateCalc(record, calc.index, levels)
       : null;
   const synergyValues = active === null || skill.synergies === undefined ? [] : synergyTexts(skill.synergies, active.results);
+  const unlisted = active === null ? [] : active.inputs.filter((input) => input.listed === false);
   const pickLevel =
     active === null
       ? undefined
@@ -137,6 +138,21 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
           active.config.onChange({ level });
           valuesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         };
+  const synergyPointsInput = (input: SynergyInput, name: string) =>
+    active === null ? null : (
+      <LevelInput
+        value={active.synergyPoints[input.id] ?? 0}
+        min={0}
+        max={input.max}
+        aria-label={`Hard points in ${name} (0 to ${String(input.max)})`}
+        className="h-7 w-14 shrink-0"
+        onCommit={(points) => {
+          active.config.onChange({
+            synergy: withSynergyPoints(active.inputs, active.config.state.synergy, input.id, points),
+          });
+        }}
+      />
+    );
   const facts = [
     skill.cls === null ? null : `Required level ${String(skill.reqLevel)}`,
     `Max level ${String(skill.maxLevel)}`,
@@ -242,15 +258,15 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
         </div>
       )}
 
-      {skill.synergies !== undefined && (
+      {(skill.synergies !== undefined || unlisted.length > 0) && (
         <section className="space-y-1">
           <h3 className="flex items-baseline justify-between gap-2 font-semibold">
-            Receives bonuses from
+            {skill.synergies === undefined ? 'Also affected by' : 'Receives bonuses from'}
             {active !== null && active.inputs.length > 0 && <span className="text-xs font-normal text-muted-foreground">Hard points</span>}
           </h3>
           <ul className="space-y-0.5">
             {keyed(
-              skill.synergies.map((synergy, i) => ({ synergy, text: synergyValues[i] ?? synergy.text })),
+              (skill.synergies ?? []).map((synergy, i) => ({ synergy, text: synergyValues[i] ?? synergy.text })),
               ({ synergy }) => `${synergy.name}:${synergy.text ?? ''}`
             ).map(({ key, value: { synergy, text } }) => {
               const target = view.byId.get(synergy.id ?? synergy.name);
@@ -273,24 +289,49 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
                     )}
                     {text !== undefined && <span className="text-muted-foreground">: {text}</span>}
                   </div>
-                  {active !== null && input !== undefined && (
-                    <LevelInput
-                      value={active.synergyPoints[input.id] ?? 0}
-                      min={0}
-                      max={input.max}
-                      aria-label={`Hard points in ${synergy.name} (0 to ${String(input.max)})`}
-                      className="h-7 w-14 shrink-0"
-                      onCommit={(points) => {
-                        active.config.onChange({
-                          synergy: withSynergyPoints(active.inputs, active.config.state.synergy, input.id, points),
-                        });
-                      }}
-                    />
-                  )}
+                  {input !== undefined && synergyPointsInput(input, synergy.name)}
                 </li>
               );
             })}
           </ul>
+          {unlisted.length > 0 && (
+            <div className="space-y-0.5 pt-1">
+              {skill.synergies !== undefined && (
+                <h4 className="text-xs font-medium text-muted-foreground">Also affected by (not listed in the tooltip)</h4>
+              )}
+              {skill.synergies === undefined && (
+                <p className="text-xs text-muted-foreground">
+                  Not listed in the tooltip: the formulas read these skills&apos; hard points.
+                </p>
+              )}
+              <ul className="space-y-0.5">
+                {unlisted.map((input) => {
+                  const target = view.byId.get(input.id);
+                  const name = target?.name ?? input.id;
+                  return (
+                    <li key={input.id} className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        {target === undefined ? (
+                          <span className="font-medium">{name}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className={LINK}
+                            onClick={() => {
+                              onSelect(target.id);
+                            }}
+                          >
+                            {name}
+                          </button>
+                        )}
+                      </div>
+                      {synergyPointsInput(input, name)}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 
@@ -304,7 +345,15 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
         </ul>
       )}
 
-      <GrantedBy view={view} grants={skill.grantedBy ?? []} mythicals={mythicals} headline={active?.headline} onPickLevel={pickLevel} />
+      <GrantedBy
+        view={view}
+        grants={skill.grantedBy ?? []}
+        mythicals={mythicals}
+        headline={active?.headline}
+        onPickLevel={pickLevel}
+        minPickLevel={active?.config.minPickLevel}
+        noHardPoints={active?.record.scalesWithHardPointsOnly === true}
+      />
     </article>
   );
 }
@@ -350,6 +399,10 @@ interface GrantValuesProps {
   readonly headline?: (level: number) => string[];
   /** Sets the calculator's level */
   readonly onPickLevel?: (level: number) => void;
+  /** Levels below this are not offered as buttons (builds: the allocated points) */
+  readonly minPickLevel?: number;
+  /** The skill scales with hard points, which item levels never give: the inline values use none */
+  readonly noHardPoints?: boolean;
 }
 
 function GrantedBy({
@@ -358,6 +411,8 @@ function GrantedBy({
   mythicals,
   headline,
   onPickLevel,
+  minPickLevel,
+  noHardPoints,
 }: {
   readonly view: SkillsView;
   readonly grants: readonly SkillGrant[];
@@ -384,6 +439,8 @@ function GrantedBy({
             mythicals={mythicals}
             headline={headline}
             onPickLevel={onPickLevel}
+            minPickLevel={minPickLevel}
+            noHardPoints={noHardPoints}
           />
         );
       })}
@@ -398,6 +455,8 @@ function GrantGroup({
   mythicals,
   headline,
   onPickLevel,
+  minPickLevel,
+  noHardPoints,
 }: {
   readonly label: string;
   readonly view: SkillsView;
@@ -436,7 +495,13 @@ function GrantGroup({
               </Link>
               <span className="text-xs text-muted-foreground"> · {ITEM_KIND_LABELS[item.kind]}</span>
               <div className="text-xs">{grantText(grant)}</div>
-              <GrantValues grant={grant} values={headlineAt} onPickLevel={onPickLevel} />
+              <GrantValues
+                grant={grant}
+                values={headlineAt}
+                onPickLevel={onPickLevel}
+                minPickLevel={minPickLevel}
+                noHardPoints={noHardPoints}
+              />
             </li>
           );
         })}
@@ -461,24 +526,30 @@ function GrantValues({
   grant,
   values,
   onPickLevel,
+  minPickLevel,
+  noHardPoints = false,
 }: {
   readonly grant: SkillGrant;
   readonly values: (level: number) => string[];
   readonly onPickLevel?: (level: number) => void;
+  readonly minPickLevel?: number;
+  readonly noHardPoints?: boolean;
 }) {
   const level = grantLevel(grant);
   if (level === null) return null;
   const texts = values(level);
   if (texts.length === 0) return null;
+  const belowBuild = minPickLevel !== undefined && level < minPickLevel;
+  const suffix = noHardPoints ? ' (no hard points)' : '';
   return (
     <div className="text-xs text-muted-foreground">
-      {onPickLevel === undefined ? (
-        <span>Lvl {level}</span>
+      {onPickLevel === undefined || belowBuild ? (
+        <span title={belowBuild ? `Below this build's ${String(minPickLevel)} points` : undefined}>Lvl {level}</span>
       ) : (
         <button
           type="button"
           className="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
-          title={`Show the values at level ${String(level)}`}
+          title={`Show the values at level ${String(level)}${noHardPoints ? ' (the inline values here use no hard points)' : ''}`}
           onClick={() => {
             onPickLevel(level);
           }}
@@ -488,6 +559,7 @@ function GrantValues({
       )}
       {' – '}
       {texts.join(' · ')}
+      {suffix}
     </div>
   );
 }

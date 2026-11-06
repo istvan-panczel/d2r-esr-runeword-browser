@@ -895,6 +895,12 @@ export interface SkillCalcSkill {
   lines: SkillCalcLine[];
   /** skills.txt ids of the synergies the dsc3 "Receives Bonuses From" lines name (inputs for hard points) */
   synergies?: string[];
+  /**
+   * skills.txt ids of other skills of the same class tree whose points the shown lines read (`skill('X'.blvl)`, often
+   * through another row such as Attack's calc1) without the tooltip listing them; ascendancy / item passives and
+   * `*Control` rows excluded. Inputs for hard points after the listed ones.
+   */
+  unlistedSynergies?: string[];
   /** Some line scales with the character level */
   scalesWithCharLevel?: true;
   /** Some line scales with the skill's own hard points (not with +skills) */

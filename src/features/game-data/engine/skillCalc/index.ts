@@ -11,7 +11,7 @@
  *   const ctx2 = defaultContext(skill, { level: 30, synergyPoints: maxSynergyPoints(skill, index) });
  *   evaluateSkill(skill, index, ctx);                          // SkillLineResult[] for that state
  *   skillTable(skill, index, [1, 20, 30, 50, 110], { synergyPoints, charLevel });  // SkillTableRow[], a column per level
- *   synergyInputs(skill, index);                               // [{ id, max }] for the per-synergy point inputs
+ *   synergyInputs(skill, index);                               // [{ id, max, listed }] for the per-synergy point inputs
  *   itemTriggerInfo(skill);                                    // can item procs (chance to cast) cast it?
  *
  * A line (`SkillLineResult`) carries its `key` (stable across levels: `desc2`, `dsc2-1`, `dsc3-3`), `block` ('level' =
@@ -21,9 +21,18 @@
  */
 import type { SkillCalcBundle, SkillCalcSkill } from '../schema.ts';
 import { createSource, type SkillCalcContext, type SkillCalcSource } from './evaluate.ts';
-import { evaluateSkill, type SkillLineBlock, type SkillLineResult } from './lines.ts';
+import { evaluateSkill, tooltipOrder, type SkillLineBlock, type SkillLineResult } from './lines.ts';
 
-export { evaluateSkill, evaluateLine, lineBlock, oneDecimal, ENGINE_LINE_TYPES, LINE_TYPES, TEXT_LINE_TYPES } from './lines.ts';
+export {
+  evaluateSkill,
+  evaluateLine,
+  lineBlock,
+  oneDecimal,
+  tooltipOrder,
+  ENGINE_LINE_TYPES,
+  LINE_TYPES,
+  TEXT_LINE_TYPES,
+} from './lines.ts';
 export type { EvaluatedLine, SkillLineBlock, SkillLineResult } from './lines.ts';
 export {
   applyPercent,
@@ -37,8 +46,8 @@ export {
   manaCost,
 } from './evaluate.ts';
 export type { CalcReads, SkillCalcContext, SkillCalcSource } from './evaluate.ts';
-export { parseCalc } from './parse.ts';
-export type { CalcNode } from './parse.ts';
+export { compileCalc, formatCalc, parseCalc } from './parse.ts';
+export type { CalcNode, CompiledCalc } from './parse.ts';
 
 /** The highest skill and character level the calculator offers (the owner's "theoretical max") */
 export const MAX_LEVEL = 110;
@@ -46,7 +55,7 @@ export const MAX_LEVEL = 110;
 export const DEFAULT_CHAR_LEVEL = 110;
 /** The compact table's columns */
 export const DEFAULT_TABLE_LEVELS: readonly number[] = [1, 20, 30, 50, 110];
-/** Hard points a synergy gets in the "with synergies" state when its row has no maxlvl */
+/** Hard points a synergy gets in the "max synergies" state when its row has no maxlvl */
 const DEFAULT_SYNERGY_POINTS = 20;
 
 export interface SkillCalcIndex extends SkillCalcSource {
@@ -94,15 +103,28 @@ export function defaultContext(skill: SkillCalcSkill, options: SkillCalcOptions)
   };
 }
 
-/** The synergies a user can put points into, with their hard-point cap (skills.txt maxlvl) */
-export function synergyInputs(skill: SkillCalcSkill, source: SkillCalcSource): { id: string; max: number }[] {
-  return (skill.synergies ?? []).map((id) => {
-    const max = source.skill(id)?.maxlvl;
-    return { id, max: typeof max === 'number' && max > 0 ? max : DEFAULT_SYNERGY_POINTS };
-  });
+export interface SynergyInputInfo {
+  /** skills.txt id */
+  id: string;
+  /** Hard-point cap (skills.txt maxlvl) */
+  max: number;
+  /** Named by the tooltip's "Receives Bonuses From" lines; false = a class skill the formulas read without listing it */
+  listed: boolean;
 }
 
-/** Every listed synergy at its cap (the "with synergies" state) */
+/**
+ * The skills a user can put hard points into: the listed synergies, then the unlisted ones (other class skills the
+ * shown lines read), each with its hard-point cap (skills.txt maxlvl)
+ */
+export function synergyInputs(skill: SkillCalcSkill, source: SkillCalcSource): SynergyInputInfo[] {
+  const input = (id: string, listed: boolean): SynergyInputInfo => {
+    const max = source.skill(id)?.maxlvl;
+    return { id, max: typeof max === 'number' && max > 0 ? max : DEFAULT_SYNERGY_POINTS, listed };
+  };
+  return [...(skill.synergies ?? []).map((id) => input(id, true)), ...(skill.unlistedSynergies ?? []).map((id) => input(id, false))];
+}
+
+/** Every synergy input (listed and unlisted) at its cap (the "max synergies" state) */
 export function maxSynergyPoints(skill: SkillCalcSkill, source: SkillCalcSource): Record<string, number> {
   return Object.fromEntries(synergyInputs(skill, source).map(({ id, max }) => [id, max]));
 }
@@ -123,7 +145,7 @@ export interface SkillTableRow {
 
 /**
  * The skill's lines at several levels (one cell per level, same options at every level; hard points follow the level
- * unless `hardPoints` is given). Rows unavailable at every requested level are left out.
+ * unless `hardPoints` is given), in tooltip order. Rows unavailable at every requested level are left out.
  */
 export function skillTable(
   skill: SkillCalcSkill,
@@ -132,7 +154,7 @@ export function skillTable(
   options: Omit<SkillCalcOptions, 'level'> = {}
 ): SkillTableRow[] {
   const columns = levels.map((level) => evaluateSkill(skill, source, defaultContext(skill, { ...options, level })));
-  return skill.lines.flatMap((line, i): SkillTableRow[] => {
+  return tooltipOrder(skill.lines).flatMap((line, i): SkillTableRow[] => {
     const cells = columns.map((column) => column[i]);
     const last = cells.filter((cell) => cell.unavailable !== true).at(-1);
     if (last === undefined) return [];

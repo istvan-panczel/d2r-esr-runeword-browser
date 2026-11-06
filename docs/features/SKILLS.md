@@ -120,39 +120,59 @@ is shown.
 
 `SkillCalcBundle` (`engine/schema.ts`), built by `build/bundleSkillCalc.ts`:
 
-- **skills**: one record per skilldetails.json skill, same order. `lines` = the shown skilldesc lines in file order:
+- **skills**: one record per skilldetails.json skill, same order. `lines` = the shown skilldesc lines in file order
+  (`evaluateSkill` / `skillTable` return them in tooltip order, see "Line order"):
   `desc1..6` (the per-level block), `dsc2-1..5` (pinned lines, may still vary), `dsc3-1..7` (the synergy block), each
   with its line function `type`, texts `a` / `b` (indexes into `texts`), formulas `ca` / `cb` and the flags `ulvl` /
   `blvl`. `maxHardPoints` = skills.txt `maxlvl` for class skills, 0 for item skills (items never give hard points).
   `synergies` = the skills.txt ids of the skills the dsc3 "Receives Bonuses From" lines name (skilldetails.json
   `synergies` that resolve to a skills.txt row other than the skill itself; `*Passive` / `*Control` rows excluded).
-  Flags: `scalesWithCharLevel`, `scalesWithHardPointsOnly`, `hiddenStatLines`, `hiddenOtherLines`, `itemEffect`.
+  `unlistedSynergies` = other skills of the same class tree whose points the shown lines read without the tooltip
+  listing them (Weaken reads every curse's hard points through Attack's `calc1`; Werewolf reads Lycanthropy): 104
+  skills, 343 inputs. Other classes' skills are left out (only Elemental Nova and Fist of the Heavens read any), as are
+  `*Passive` / `*Control` rows and item skills. Flags: `scalesWithCharLevel`, `scalesWithHardPointsOnly`, `hiddenStatLines`, `hiddenOtherLines`, `itemEffect`.
 - **rows** / **missiles**: the skills.txt / missiles.txt rows the shown lines' formulas can read on any branch
   (`collectFormulaRefs`: formula columns, `skill()` / `sklvl()` / `miss()` targets and skilldesc descmissiles,
   transitively), each cut to those columns; numbers as numbers, formulas as text, blank / 0 cells left out. Synergy
-  rows also carry `maxlvl` (the input cap). descmissile1..3 are copied from skilldesc onto the skill row.
+  rows (listed and unlisted) also carry `maxlvl` (the input cap). descmissile1..3 are copied from skilldesc onto the skill row.
 - **texts**: every line text once (format strings and skill names through the strings).
 
 A self-check at build time evaluates the shown lines again from the cut rows and warns
-(`skillcalc: the cut rows change …`) on any difference.
+(`skillcalc: the cut rows change …`) on any difference. The builder also warns on every formula cell in the bundle
+where the game's compiler ignores part of the formula (`stopped at "&"`, an unclosed `(`, left-over values) and on
+`stat('x'.…)` names that are not in itemstatcost.txt (a trailing space: `'item_demondamage_percent '` on the DEFUNCT
+ballistas, not in the bundle; the game resolves an unknown link name to index 0, the calculator reads 0).
 
 ### Evaluator
 
-`engine/skillCalc/parse.ts` (tokenizer + precedence parser, ASTs cached per text), `evaluate.ts` (`CalcRun`: the code
+`engine/skillCalc/parse.ts` (a port of the game's Fog compiler that builds a tree, cached per text), `evaluate.ts` (`CalcRun`: the code
 tables, damage helpers, reads), `lines.ts` (line functions), `text.ts` (printf with marked numbers, `bottomUp`),
 `index.ts` (public API). Semantics follow D2MOO (`SKILLS_GetSpecialParamValue`, `SKILLS_GetMin/MaxElemDamage`,
 `SKILLS_GetElementalLength`, `SKILLS_GetManaCosts`, `D2Common_11033`, `MISSILE_GetSpecialParamValue`, Fog `Calc.cpp`) and
 the D2R Data Guide's SkillCalc / MissCalc code lists:
 
 - 32-bit integer math, `/` truncates toward 0, `x / 0` = 0, `^` repeated multiply (exponent ≤ 0 → 1), comparisons
-  give 1 / 0, `cond ? a : b`, `min` / `max`. Conventional precedence (ternary loosest, then comparisons, `+ -`, `* /`,
-  `^`, unary minus); every ESR ternary is parenthesised, so the game's shunting-yard quirks do not matter. A minus right
-  after `?`, `:` or `,` is refused: the game's compiler may read it as a subtraction (ESR: Circle of Blades).
+  give 1 / 0, `cond ? a : b`, `min` / `max`.
+- **Parsing = the game's compiler** (D2MOO `DATATBLS_CompileExpression`, `DATATABLS_CheckPrecendence`,
+  `DATATBLS_Evaluate_HandleNewOp`), ported in `parse.ts`, not a conventional grammar. Arithmetic and comparisons bind as
+  usual (left-associative, `-2^2` = `(-2)^2`), but the ternary (precedence 22) is pushed above anything pending, `?`
+  pops only a previous ternary, `:` pops nothing, and any operator after the else-operand applies the ternary first:
+  `a < b ? c : d` = `a < (b ? c : d)`, `-(x) ? 0 : y` = `-(x ? 0 : y)` (Cloak of Shadows: Enemy Physical Resist −10%
+  at level 1), `(c ? 5 : 0 + lvl/5)` = `(c ? 5 : 0) + lvl/5` (Sharpened Focus: −14% / −24% at level 20), and the
+  Spirit / Dire Wolf `petmax` chain. `-` is a negation only when no value precedes it (`?`, `:`, `,`, `(`, `)` and `^`
+  keep that state, so `c ? 1 : -x` subtracts). An operator with too few values on the stack fails the formula (shown
+  as `parse`); an unknown character (`&`, `_`, a lone `=`) ends the formula; an unclosed `(` stops the evaluation there.
+  Tests pin these cases (`evaluate.test.ts`, `bundleIntegrity.test.ts`); a second independent port agrees on all 1029
+  bundle formulas. D2MOO's evaluator has no `break` after `AST_Ternary`, which would return right after the first
+  ternary; this is most likely a transcription slip (ESR's formulas would then mostly show the ternary alone), not
+  verified, so the calculator evaluates the whole formula.
 - Codes: `lvl`, `blvl`, `ulvl`, `par1..par9` / `pa10..pa20`, `ln12/34/56/78/91/21` (`a + (lvl-1)·b`, 0 at level ≤ 0),
   `dm12…` (`a + (b-a)·(110·lvl/(lvl+6))/100`, capped at b, so every dm value stops at level 60), `clc1..10`,
   `ast1..6`, `pst1..14`, `len`, `rng`, `pets`, `skpt`, `toht`, `usmc` / `mana` / `mps`, `edmn` / `edmx` / `edns` /
   `edxs` / `enma` / `exma` / `enms` / `exms`, `edln` / `edma`, `pnma` / `pxma` / `pnms` / `pxms`, `m1en..m3el`,
-  `m1rn..m3rn`, `m1eo` / `m1ey`; masteries (`math`, `mael`, …) are 0. Functions: `skill('X'.code)` (X's code at X's
+  `m1rn..m3rn`, `m1eo` / `m1ey`. Mastery codes are refused: `math` / `madm` / `macr` evaluate the skill's own
+  passivecalc whose passivestat is a melee / throwing mastery stat (`D2Common_11032`; ESR uses none), `mael` / `mapi` /
+  `manc` are D2R codes D2MOO does not cover (`mael`: Meteor Sentry's average fire damage line, hidden). Functions: `skill('X'.code)` (X's code at X's
   level), `sklvl('X'.a.b)` (X's b at this skill's a), `sksrc('X'.lvl)`, `stat('x'.accr|base)`, `miss('m'.code)`
   (missile code at this skill's level), `min`, `max`, `rand`.
 - Damage: per-level damage for levels 2-8, 9-16, 17-22, 23-28 and 29+ (`L1..L5`, linear from 29 on); skill elemental
@@ -168,7 +188,8 @@ manashift` in 256ths (minmana applies when casting, not in the tooltip). Skill-o
 
 - `level` = skill level with +skills; own hard points `blvl` default `min(level, maxHardPoints)` (0 for item skills).
 - `charLevel` (`ulvl`) default 110.
-- Other skills: hard points from the synergy inputs (default 0); their level (`.lvl`) = their hard points. The base
+- Other skills: hard points from the synergy inputs (default 0); their level (`.lvl`) = their hard points (a
+  simplification: in game it includes the character's +skills). The base
   skills Attack, Kick, Throw, Unsummon, Left Hand Throw / Swing are at least 1. `skill('X'.clc3)` of a skill the
   character lacks is evaluated at level 0 (params and calcs still evaluate, `ln12` / damage / mana give 0), as in the
   engine.
@@ -178,8 +199,11 @@ manashift` in 256ths (minmana applies when casting, not in the tooltip). Skill-o
 
 ### Which lines are shown
 
-The builder evaluates every line at levels 1..110 without synergies and with every listed synergy at its `maxlvl` (20).
-A line is left out (counted in the manifest, `skillCalcHidden*`, and on the skill) when:
+The builder evaluates every line at levels 1..110 in three states: no synergies, every listed synergy at its `maxlvl`,
+and every class-tree skill the line reads (of any class, repeated while new reads appear) at its `maxlvl`. ESR's
+ascendancy / item passives (`*Passive`), `*Control` rows and item skills stay at 0 in every state, so their gated lines
+stay hidden. The third state keeps Fire Claws' and Fury's resist lines, Poison Weapon's and Bone Armor's bonus lines,
+Reap Souls' poison resist, and Werewolf / Werebear's Max Life (+96% with Lycanthropy at 20). A line is left out (counted in the manifest, `skillCalcHidden*`, and on the skill) when:
 
 | Reason        | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -191,7 +215,7 @@ A line is left out (counted in the manifest, `skillCalcHidden*`, and on the skil
 | `unsupported` | a formula it reaches uses an unknown code / function / skill / missile, text in a numeric column, a recursion, or an ambiguous code                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `random`      | it reaches `rand(a, b)` with a < b (the engine rolls; a tooltip value would be one roll). `rand(a, a)` = a                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `stat`        | **its value changes when the character stats are set**: strength, dexterity, vitality, energy, life, mana, stamina (pools full), level, experience, defense, attack rating are set to two probe value sets at 14 sample levels; if any value differs from the all-0 state the line is about the character, not the skill (Righteous Fire's damage from max life, Wisdom of Athulua's per-attribute bonuses). Those stats are never 0 on a real character, unlike gear / toggle stats. A stat read that the line does not depend on (Might's `maxhp/25600` behind an ascendancy gate, `hitpoints·3 < maxhp` at full life) keeps the line. `hiddenStatLines` on the skill tells the UI how many lines depend on character stats |
-| `gated`       | every number in it is 0 at every level in both states: ESR's ascendancy / item gates (a 0-second cooldown without the item effect)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `gated`       | every number in it is 0 at every level in all three states: ESR's ascendancy / item gates (a 0-second cooldown without the item effect)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 Kept lines get `ulvl` when the value differs between character level 1, 55 and 110 at a sample level (only 3 skills:
 Venom, Hex Purge, Eldritch Blast), `blvl` when it differs between the default hard points and 1 hard point at a sample
@@ -203,8 +227,20 @@ level (ESR passives that scale with hard points only: Lycanthropy, Molten Focus,
 `printf(a, b, calca)` (synergy lines), 77 `printf(a, b, calca, calcb)`, 79 `printf(a, b, calca / calcb)`, 36
 `calca / calcb` (calcb blank = 1) with texta when the shown value is exactly 1 and textb otherwise (texta when there is
 no textb), 40 header `printf(a, b)` with `calca` = colour, 18 text, 78 `printf(a, b)`, 25 `a + b`, the old 3
-(`a + value + b`), 4 (`a + signed value + b`), 5 (`a + value`), 6 (`signed value + a + b`), 63 (`a: +value% b`) and 67
-(`a: +value b`). Multi-line strings read bottom-up, like skilldetails.json's lines.
+(`a + value + b`), 4 (`a + "+" value`), 5 (`a + value`), 6 (`"+" value + a`), 63 (`a: +value% b`) and 67
+(`a: +value b`). 3-6 and 63 follow the Phrozen Keep SkillDesc.txt File Guide (`4 '%s+%d',desctexta,desccalca`,
+`6 '+%d%s',desccalca,desctexta`): types 4 and 6 print no textb, so Vigor of the Ancients shows "+76 to Vitality" (its
+textb " percent" is dropped). The guide's 67 (`'%s+%d%s'`) would print "Lycanthropy+1Second per Level", so 67 keeps the
+63 layout. Multi-line strings read bottom-up, like skilldetails.json's lines.
+
+### Line order
+
+`evaluateSkill` and `skillTable` return the lines top to bottom as the tooltip draws them: the dsc2 block bottom-up
+(the last dsc2line first), the desc block bottom-up (descline1 last), then the dsc3 block top-down. Evidence: the
+Phrozen Keep SkillDesc.txt File Guide ("desc and dsc2 add their lines to the description from bottom to top while
+dsc3 goes from top to bottom"; layout: name, long description, dsc2 lines, current / next level desc lines, dsc3
+lines) and the data: descline1 is the Mana Cost line of most skills, which the game shows last in the level block.
+skilldetails.json `lines` (the fallback without the calculator) still keep file order.
 
 ### Public API (`engine/skillCalc/index.ts`)
 
@@ -214,8 +250,9 @@ const skill = index.record('Fire Ball'); // SkillCalcSkill | undefined
 defaultContext(skill, { level, hardPoints?, charLevel?, synergyPoints? }); // SkillCalcContext of a bare character
 evaluateSkill(skill, index, ctx); // SkillLineResult[]: key, block, type, text, values, before/span/after, color?, unavailable?
 skillTable(skill, index, [1, 20, 30, 50, 110], { synergyPoints, charLevel }); // SkillTableRow[]: label, cells, varies
-synergyInputs(skill, index); // [{ id, max }]
-maxSynergyPoints(skill, index); // every listed synergy at its cap
+synergyInputs(skill, index); // [{ id, max, listed }]: listed synergies, then unlistedSynergies
+maxSynergyPoints(skill, index); // every synergy input (listed and unlisted) at its cap
+tooltipOrder(skill.lines); // lines top to bottom as the tooltip draws them
 itemTriggerInfo(skill); // { value: 'yes' | 'unknown', reason }
 ```
 
@@ -233,7 +270,12 @@ column: it depends on the skill's server function and damage path in the engine,
 - D2R-only codes taken by analogy with the documented ones: `clc5..10`, `pst6..14`, `pa13..pa20`, `ln91` / `dm91` /
   `ln21` / `dm21`, `sksrc('X'.lvl)` read like `skill('X'.lvl)`, `sklvl('X'.a.b)`. missiles.txt `Range` holds formulas in
   ESR ("90+25*lvl", no `LevRange`): evaluated as a missile formula at the skill level.
-- The old line functions 3 / 4 / 5 / 6 / 63 / 67 and the D2R 79: formats inferred from their texts.
+- The old line functions 3 / 4 / 5 / 6 / 63 / 67 (one community guide, "a first pass") and the D2R 79 (inferred from
+  its texts). Check Vigor of the Ancients ("+N to Vitality" without "percent"?) and a Lycanthropy synergy line in game.
+- Line order (dsc2 / desc bottom-up, dsc3 top-down): from the community guide and the Mana Cost convention; check a
+  skill with several dsc2 lines (Reap Souls) in game.
+- The game's compiler quirks (ternary, minus): from D2MOO's port of Fog; check Cloak of Shadows (−10% physical resist
+  at level 1) and Sharpened Focus in game.
 - Refused, left for round 2: `m2eo` / `m2ey` / `me3o` / `me3y` (D2MOO picks descmissile1 / 2 for them, a copy-paste bug
   D2R may have fixed: Overseer Volley), `m1nm` / `m1xm` (not in the Data Guide: Miasma Chains, Abyss), missile `rad`, the
   broken `clc0` (Frenzy, Mirrored Blades), `ln43` (Bind Demon), Plague Javelin's descmissile that is not in
@@ -257,12 +299,16 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   on hover: "Scales with character level", "Scales with hard points only" (+skills do not raise that part), "Item procs
   can cast this" / "Unknown whether item procs can cast this" from `itemTriggerInfo`), description, the **values per
   level** (below), Requires / Unlocks links, "Receives bonuses from" (linked; with a hard-points input 0..cap per
-  synergy the calculator knows and the computed bonus text instead of `+?%`), notes, and **Granted by**, grouped into
+  synergy the calculator knows and the computed bonus text instead of `+?%`; then "Also affected by (not listed in the
+  tooltip)": the record's `unlistedSynergies`, linked, with the same hard-points inputs), notes, and **Granted by**,
+  grouped into
   Usable skill, +Skill levels, Aura when equipped, Charges and Chance to cast; 8 per group, then "Show all N". Every
   grant except "+N levels (class only)" (a bonus on top of the character's points, not a level) gets a muted line with
   the skill's first one or two per-level lines that vary (mana left out) at the item's level (a range's maximum,
-  no hard points: items never give any): "Lvl 40 – Fire Damage: 1508-2018 · Enemy Fire Resist: -30%". The level is a
-  button that sets the calculator's level and scrolls the values into view. Item links: uniques →
+  no hard points: items never give any): "Lvl 40 – Fire Damage: 1508-2018 · Enemy Fire Resist: -30%"; for a skill with
+  `scalesWithHardPointsOnly` the line ends in "(no hard points)", since the calculator below uses `min(level, max
+level)` hard points. The level is a button that sets the calculator's level and scrolls the values into view (builds:
+  a level below the allocated points is plain text, "Below this build's N points"). Item links: uniques →
   `/uniques?name=`, or `/mythicals?name=` when the HTM mythicals list in IndexedDB has the name; set items →
   `/game-data/sets?name=`; runewords → `/runewords?name=`; gemwords → `/gemwords?name=` (the pages' exact-name focus).
 - **Item skills**: the 181 class-less granted skills as a tile grid by name; the subtitle is the number of granting
@@ -276,7 +322,10 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   `lines` as before. With the calculator, the fixed lines come from its `fixed` block instead (no duplicates). In order:
   - controls: **Skill level** (number input + slider, 1..110, default 20; quick buttons 1 / 20 / 30 / 50 / 110\*),
     **Character level** (1..110, default 110; only for skills with `scalesWithCharLevel`), **Max synergies** (checkbox;
-    every listed synergy at its cap, 20). Without varying lines the level controls are hidden.
+    every synergy input, listed and unlisted, at its own cap: skills.txt `maxlvl`). Without varying lines the skill level
+    controls are hidden (the character level and synergy controls stay). The slider commits its level on release (and
+    per keyboard step) and the number inputs after a 250 ms pause, on Enter or on blur, so the URL is not rewritten on
+    every tick (browsers throttle `replaceState`: Safari throws after ~100 calls in 10 s).
   - **At level N**: the `level` and `fixed` blocks at that state (blue, tooltip order), then muted notes "N lines
     depend on character stats and are not shown" (`hiddenStatLines`) and "N other lines are not shown: the game engine
     computes them … or the calculator does not support their formulas yet" (`hiddenOtherLines`).
@@ -295,17 +344,88 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
 
 - **URL state**: `class` (class code or `items`), `tab` (1..3, narrow screens; omitted for 1), `skill` (skills.txt id),
   `search`, and the calculator's `lvl` (skill level, omitted at 20), `clvl` (character level, omitted at 110) and `syn`
-  (`max`, or the selected skill's synergy points in its listed order joined with "." such as `syn=5.0.20`, trailing
-  zeros cut; omitted when none). The level and character level stay when another skill is picked (compare skills at the
+  (`max`, or the selected skill's synergy points in `synergyInputs` order, the listed synergies then the unlisted ones,
+  joined with "." such as `syn=5.0.20`, trailing zeros cut, at most 40 entries of 0..99; omitted when none). The level and character level stay when another skill is picked (compare skills at the
   same level); synergy points belong to one skill and are reset then, unless `syn=max`. A link with only `skill` opens
   the skill's class and tab. "Copy Link" shares the view.
 - **Builds**: a build's Skills tab and the create / edit form reuse the card through `BuildSkillTrees`, which passes a
   `levels` config (`SkillLevelsConfig`: state, hard points, onChange, plus slots for its own level control, a note and
-  a synergy action). Level = the build's allocated points + a "+Skills from gear" input (default 0, local, not saved);
+  a synergy action, and `minPickLevel`). Level = the build's allocated points + a "+Skills from gear" input (default 0,
+  up to 110 − points, local, not saved);
   hard points = the allocated points; synergy points default to the build's own points in each synergy skill (editable,
   "Reset to build"; reset on another skill unless Max synergies is on). A skill with 0 points shows the normal level
   controls with "Not learned in this build: the level below is not tied to the build." The character level input is
   local too (default 110, not the build's level).
+
+## Skill peek on item lines
+
+Skill names in item property lines are links with a peek (`utils/skillRefs.ts`, `components/SkillRefText.tsx`): hover
+(mouse), focus (keyboard) or a first tap (touch) opens a small card with the skill's icon, name (+ the id suffix of
+same-name skills), class or "Item skill", what the line gives, the first one or two per-level values that vary (as in
+"Granted by": mana left out, no synergies, character level 110) and "Open in Skills →". A click (or a second tap on the
+same name) opens `/skills?skill=<id>&lvl=<N>` (`lvl` omitted at 20).
+
+**Templates** (whole line, case-insensitive, trailing footnote `*` marks allowed; nothing else is matched, so skill names
+in prose such as "Your Teleport now automatically casts …" stay plain text):
+
+| Kind      | Template                                                          | Level shown                                                           |
+| --------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `chance`  | `C% Chance to Cast Level L <skill> <event>`                       | L                                                                     |
+| `aura`    | `Level L <skill> Aura When Equipped` (L may be `(a to b)`)        | L (a range's maximum)                                                 |
+| `charges` | `Level L <skill> (C/C Charges)`                                   | L                                                                     |
+| `plus`    | `+N to <skill>`, `… (All Classes)`, `… (<Class> Only)` (`To` too) | "+N skill levels": item skills at N, class skills at 20 for reference |
+
+Events: on Striking, on Melee Attack, on Attack, when Struck, when you Kill an Enemy, When you Die, on Casting a Skill,
+when Taking Damage, when you Level Up (`hit-skill`, `att-skill`, `gethit-skill`, `kill-skill`, `death-skill`,
+`cast-skill`, `takedmg-skill`, `levelup-skill`). The same templates cover the HTM pages and the game-data strings
+(descfunc 15 / 16 / 24 / 27 / 28). ESR's HTM pages print `+N to X (All Classes)` as the item's oskill and skill levels
+summed (Reason: oskill 3 + skill 17 = "+20 to Soul Shiver"), so a plus line's level is never matched against the grants.
+
+**Names and ambiguity**: the name must equal a skilldetails.json skill name exactly (case-insensitive; a `Map` by
+lower-case name). Non-skill targets ("All Skills", "Fire Skills", "Trap Limit", "Random Class Skill", procs without a
+skilldesc row such as Annihilation) stay plain text. When several skills share the name (Amplify Damage / Amplify
+Damage Aura, Conduit / Conduit Proc, Holy Bolt / Holy Bolt Weapon Damage, Empowered Enchant × 6, …):
+
+1. a `(<Class> Only)` hint keeps that class's skill; a hint naming another class (or a non-class word) gives no link;
+2. the line's item (the renderer passes `{ kind, name }`, matched by kind + normalised name against the bundle's
+   `items`): the one candidate that item grants the same way (`aura`, `charged`, the event property, `skill` / `oskill`);
+   several → no link;
+3. without the item (or when it grants none of them, e.g. ESR's random auras): the one candidate any item grants the same
+   way at that level (and chance; plus lines: any level);
+4. otherwise no link. A wrong link is worse than none.
+
+**Data**: the first `SkillRefText` that renders starts loading skilldetails.json on idle (`requestIdleCallback`,
+3 s timeout; 1 s timer without it), cached for the page's lifetime (`hooks/useSkillRefIndex.ts`); lines render as plain
+text until then and after a failed load. skillcalc.json and the calculator load only with the first peek
+(`SkillPeekCard` is its own chunk). `skillRefs.ts` imports neither `skills.ts` nor `skillLevels.ts` (they pull in the
+calculator); it copies their route, params and default / max level, and the test checks the copies. Matching costs ~1 µs
+per line (32k fixture lines in ~22 ms).
+
+**One popover**: `SkillPeekLayer` (mounted once in `AppLayout` around the routed page) delegates pointer / focus / click
+events from anchors marked `data-skill-ref` (the reference as JSON, `utils/skillRefData.ts`) and renders one shared
+`PeekPopover` (`hooks/useSkillRefPeek.ts`, the stash table's useItemPeek pattern). Anchors inside another popover (the
+stash table's item peek) keep only their link. Inside a `<form>` (the build editor) a click, tap or Enter opens the peek
+instead of navigating, so edits are not lost.
+
+**Surfaces** (item context passed where known):
+
+| Surface                                                                                   | Item context                  |
+| ----------------------------------------------------------------------------------------- | ----------------------------- |
+| Runewords / gemwords (`RecipeAffixes`: bonuses, gemword random pools; also builds, guide) | runeword / gemword name       |
+| Socketable bonuses on runeword / gemword cards, Socketables page                          | none                          |
+| Uniques (`HtmUniqueItemCard`: Uniques page, builds, guide, stash coupons), Mythicals      | unique name                   |
+| Sets page: item lines and item partial bonuses (`BonusLines`); set-wide boxes             | set item name; set-wide: none |
+| Builds: saved snapshots (`ItemRefDisplay`), set item cards, set bonus summaries           | snapshot / set item name      |
+| Stash item cards (`ItemCards` Lines, also the item table's peek)                          | none (exact rolled levels)    |
+| Ascendancy tier bonuses                                                                   | none                          |
+| Affixes (`AffixCard`), Enhance / Cube outputs (`BonusLines`)                              | none                          |
+
+Not covered: base automods (`BaseCard` joins the lines with " · "), the loot filter browsers, the cube's "Magic item of
+the same type (…)" outputs (not a whole-line template) and guide prose. Fixture numbers (ESR 3.2.24 HTM pages): runewords
+924 linked lines, uniques 1561, gemwords 936, mythicals 84, ascendancies 15; every line whose template names a known
+skill is linked except Lich King's Essence "+(5 to 15) To Empowered Enchant" (it grants all six variants). Checked
+against skilldetails.json grants: every linked chance-to-cast / charges line and all but ESR's random auras (Ars
+Tor'Baalos) match a grant of that item with the same property, level and chance.
 
 ## Code
 
@@ -328,9 +448,16 @@ src/features/skills/
   hooks/useDetailScroll.ts         scrolls the card into view after a tap below lg
   hooks/useMythicalNames.ts        HTM mythical names from IndexedDB (item links)
   hooks/useSkillCalc.ts            lazy skillcalc.json + index (cached for the page's lifetime)
+  hooks/useSkillRefIndex.ts        skill names for item lines (skilldetails.json on idle, cached)
+  hooks/useSkillRefPeek.ts         the delegated peek of skill names in item lines
+  components/SkillRefText.tsx      an item line with its skill name linked (data-skill-ref)
+  components/SkillPeekLayer.tsx    app-shell wrapper: delegation + the one shared PeekPopover
+  components/SkillPeekCard.tsx     the peek's content (lazy chunk with the calculator)
   utils/skills.ts                  view model, URL state, search, selection marks, grant texts, item links
   utils/skillLevels.ts             calculator state: lvl / clvl / syn params, synergy points, table levels and labels,
                                    synergy texts, grant headline values, builds level (points + gear)
+  utils/skillRefs.ts               item line templates → skill references, ambiguity rules, peek texts / level / URL
+  utils/skillRefData.ts            the reference type and its data-skill-ref attribute form (no imports)
 ```
 
 The builds feature imports the components, hooks and utils by deep path (`@/features/skills/components/SkillTile`);
@@ -343,14 +470,16 @@ Tests: `build/bundleSkillDetails.test.ts`, `build/bundleSkillCalc.test.ts` and `
 Bolt / Teleport / Rift Shot examples, one icon file per key; skillcalc.json: Fire Ball 10-20 / 80-128 / 160-228 /
 360-468 and 960-1188 at 110, with synergies 58-116 / … / 2088-2714, mana, radius, resist, Blizzard, Fanaticism, Might,
 Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot),
-`features/skills/utils/skills.test.ts` (incl. the `lvl` / `clvl` / `syn` URL state) and `skillLevels.test.ts`.
+`features/skills/utils/skills.test.ts` (incl. the `lvl` / `clvl` / `syn` URL state), `skillLevels.test.ts` and
+`skillRefs.test.ts` (templates on real lines with the committed skilldetails.json, ambiguity rules on a small bundle,
+peek texts / levels / URLs, the attribute round trip).
 
 ## Known gaps
 
 - skilldetails.json synergy texts still show `?` for formula bonuses; the page replaces them with the calculator's
   values once skillcalc.json is loaded (a synergy line the calculator hides keeps the `?`).
-- Skill tooltips' line order across description entries (descline1 vs descline2) follows the file, not verified
-  in game; only the bottom-up order inside one multi-line string is confirmed by the data.
+- skilldetails.json `lines` (shown only while skillcalc.json is not loaded) keep file order; the calculator's lines
+  are in tooltip order.
 - Hidden grants, random-skill properties, propertygroups pools and set-wide bonuses are not listed.
 - Mercenary (hireable) skills and their sheet `hireables/hrskillicon.sprite` are not covered.
 - A unique and a runeword with the same name (Enigma) are separate entries; the unique links to the Uniques page

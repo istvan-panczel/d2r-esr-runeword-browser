@@ -13,11 +13,21 @@
  * | 18   | a                                                                                  |
  * | 78   | printf(a, b)                                                                       |
  * | 25   | a + b                                                                              |
- * | 3    | a + calca + b;  4: a + signed calca + b;  5: a + calca;  6: signed calca + a + b    |
+ * | 3    | a + calca + b;  4: a + "+" calca;  5: a + calca;  6: "+" calca + a (no b)          |
  * | 63   | "a: +calca% b";  67: "a: +calca b" (old synergy lines)                             |
+ *
+ * Types 3-6 and 63 follow the Phrozen Keep SkillDesc.txt File Guide (`3 '%s%d%s',desctexta,desccalca,desctextb`,
+ * `4 '%s+%d',desctexta,desccalca`, `5 '%s%d',desctexta,desccalca`, `6 '+%d%s',desccalca,desctexta`); types 4 and 6 print
+ * no textb (ESR Vigor of the Ancients: textb " percent" is not shown). The guide's 67 (`'%s+%d%s'`) would glue
+ * "Lycanthropy+1Second per Level" together, so 67 keeps the 63 layout without "%".
  *
  * 13 (summon life from monstats), 31 (difficulty divisor), 34 (summon damage) and 56 (item quantity) need the engine and
  * are never shown. Multi-line strings are read bottom-up (`bottomUp`), as in skilldetails.json.
+ *
+ * Tooltip order (`tooltipOrder`): the game adds the desc and dsc2 lines from bottom to top (descline1 is the lowest
+ * line of its block: usually Mana Cost) and the dsc3 lines from top to bottom (Phrozen Keep SkillDesc.txt File Guide:
+ * "desc and dsc2 add their lines to the description from bottom to top while dsc3 goes from top to bottom"); the
+ * blocks are drawn dsc2 (pinned lines), desc (the level block), dsc3 (synergies).
  */
 import type { SkillCalcLine, SkillCalcSkill } from '../schema.ts';
 import { CalcRun, type CalcReads, type SkillCalcContext, type SkillCalcSource } from './evaluate.ts';
@@ -72,6 +82,11 @@ function ratio(a: number, b: number | undefined): number {
   return b === 0 ? 0 : oneDecimal(a / b);
 }
 
+/** printf "+%d": a literal plus, so a negative value shows as "+-5" like in game */
+function plusNumber(value: number): string {
+  return value < 0 ? `+${markNumber(value, false)}` : markNumber(value, true);
+}
+
 /** The marked (unordered) text of a line; null for a type the calculator does not format */
 function formatLine(line: SkillCalcLine, source: SkillCalcSource, va: number | undefined, vb: number | undefined): string | null {
   const a = line.a === undefined ? '' : (source.text(line.a) ?? '');
@@ -103,11 +118,11 @@ function formatLine(line: SkillCalcLine, source: SkillCalcSource, va: number | u
     case 3:
       return `${a}${markNumber(x, false)}${b}`;
     case 4:
-      return `${a}${markNumber(x, true)}${b}`;
+      return `${a}${plusNumber(x)}`;
     case 5:
       return `${a}${markNumber(x, false)}`;
     case 6:
-      return `${markNumber(x, true)}${a}${b}`;
+      return `${plusNumber(x)}${a}`;
     case 63:
       return `${a}: ${markNumber(x, true)}% ${b}`;
     case 67:
@@ -157,8 +172,17 @@ export function evaluateLine(line: SkillCalcLine, run: CalcRun): EvaluatedLine {
   return { result, reads, raw: [va, vb] };
 }
 
-/** The lines of a skill for one character state, in tooltip order */
+/**
+ * Lines (in skilldesc file order) in the order the tooltip shows them, top to bottom: the dsc2 block bottom-up (last
+ * dsc2line first), the desc block bottom-up (descline1 last), then the dsc3 block top-down.
+ */
+export function tooltipOrder<T extends { key: string }>(lines: readonly T[]): T[] {
+  const block = (name: SkillLineBlock) => lines.filter((line) => lineBlock(line.key) === name);
+  return [...block('fixed').reverse(), ...block('level').reverse(), ...block('synergy')];
+}
+
+/** The lines of a skill for one character state, in tooltip order (top to bottom, see `tooltipOrder`) */
 export function evaluateSkill(skill: SkillCalcSkill, source: SkillCalcSource, ctx: SkillCalcContext): SkillLineResult[] {
   const run = new CalcRun(source, skill.id, ctx);
-  return skill.lines.map((line) => evaluateLine(line, run).result);
+  return tooltipOrder(skill.lines).map((line) => evaluateLine(line, run).result);
 }

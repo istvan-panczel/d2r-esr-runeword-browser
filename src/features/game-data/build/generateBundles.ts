@@ -283,6 +283,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     missiles: table('missiles'),
     strings,
     details: skillDetails.bundle,
+    statNames: new Set(rowTable('itemstatcost').rows.map((row) => row.str('Stat'))),
   });
   const skillCalcLines = skillCalc.bundle.skills.flatMap((skill) => skill.lines);
   const skillCalcCounts = {

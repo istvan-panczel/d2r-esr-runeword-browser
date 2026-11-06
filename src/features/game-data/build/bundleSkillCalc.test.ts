@@ -88,6 +88,9 @@ const details: SkillDetailsBundle = {
       synergies: [{ name: 'Bolt' }, { name: 'Bolt' }, { name: 'Eschuta Passive' }, { name: 'Any Other Curse' }],
     },
     { id: 'Proc', name: 'Proc', cls: null, page: null, reqLevel: 1, maxLevel: 20, description: [] },
+    { id: 'Nova', name: 'Nova', cls: 'sor', page: 1, reqLevel: 1, maxLevel: 20, description: [] },
+    { id: 'Charge', name: 'Charge', cls: 'sor', page: 1, reqLevel: 1, maxLevel: 15, description: [] },
+    { id: 'Axe', name: 'Axe', cls: 'bar', page: 1, reqLevel: 1, maxLevel: 20, description: [] },
   ],
 };
 
@@ -118,6 +121,9 @@ function build() {
       { skill: 'Eschuta Passive', maxlvl: '1' },
       { skill: 'Proc', skilldesc: 'proc', maxlvl: '20', Param1: '3' },
       { skill: 'Unused', Param1: '1' },
+      { skill: 'Nova', charclass: 'sor', skilldesc: 'nova', maxlvl: '20' },
+      { skill: 'Charge', charclass: 'sor', maxlvl: '15' },
+      { skill: 'Axe', charclass: 'bar', maxlvl: '20' },
     ]),
     skilldesc: table(DESC_COLUMNS, [
       {
@@ -162,6 +168,24 @@ function build() {
       },
       { skilldesc: 'bolt' },
       { skilldesc: 'proc', descline1: '74', desctexta1: 'Missing', desccalca1: '1', descline2: '18', desctexta2: 'Note' },
+      {
+        skilldesc: 'nova',
+        // non-zero only with points in Charge (same class, not listed): kept, Charge becomes an unlisted synergy
+        descline1: '74',
+        desctexta1: 'Heal',
+        desccalca1: "(skill('Charge'.blvl)>0)*5+stat('item_bogus '.accr)",
+        // another class's skill: kept, not an input
+        descline2: '74',
+        desctexta2: 'Heal',
+        desccalca2: "(skill('Axe'.blvl)>0)*5",
+        // an ascendancy passive: stays hidden
+        descline3: '74',
+        desctexta3: 'Heal',
+        desccalca3: "(skill('Eschuta Passive'.lvl)>0)*5",
+        dsc2line1: '74',
+        dsc2texta1: 'Dur',
+        dsc2calca1: '5&&1',
+      },
     ]),
     missiles: table(MISSILE_COLUMNS, [
       { Missile: 'blastmissile', Range: '10+lvl', EMin: '1', HitShift: '8', Param1: '5' },
@@ -169,6 +193,7 @@ function build() {
     ]),
     strings: STRINGS,
     details,
+    statNames: new Set(['weaponmastery', 'maxhp']),
   });
 }
 
@@ -184,13 +209,25 @@ describe('buildSkillCalcBundle', () => {
       { skill: 'Blast', key: 'dsc2-1', reason: 'gated' },
       { skill: 'Blast', key: 'dsc2-2', reason: 'unsupported' },
       { skill: 'Proc', key: 'desc1', reason: 'string' },
+      { skill: 'Nova', key: 'desc3', reason: 'gated' },
     ]);
-    expect(hidden).toMatchObject({ engine: 1, stat: 1, gated: 1, unsupported: 1, string: 1 });
+    expect(hidden).toMatchObject({ engine: 1, stat: 1, gated: 2, unsupported: 1, string: 1 });
     expect(blast).toMatchObject({ hiddenStatLines: 1, hiddenOtherLines: 3, itemEffect: 1, maxHardPoints: 20 });
     expect(warnings).toEqual([
       'skillcalc: string "Missing" not in the strings (Proc desc1)',
       'skillcalc: code:clc0 in 1 line (Blast dsc2-2)',
+      'skillcalc: stat "item_bogus " is not in itemstatcost.txt (Nova desc1)',
+      'skillcalc: stopped at "&" (position 1): the game ignores the rest in "5&&1" (Nova dsc2-1)',
     ]);
+  });
+
+  it('keeps a line that is non-zero only when a class skill it reads has points, and lists unlisted same-class reads', () => {
+    const nova = bundle.skills.find((skill) => skill.id === 'Nova');
+    expect(nova?.lines.map((line) => line.key)).toEqual(['desc1', 'desc2', 'dsc2-1']);
+    expect(nova?.unlistedSynergies).toEqual(['Charge']);
+    expect(nova?.synergies).toBeUndefined();
+    expect(blast?.unlistedSynergies).toBeUndefined();
+    expect(bundle.rows.find((row) => row.id === 'Charge')).toEqual({ id: 'Charge', maxlvl: 15 });
   });
 
   it('flags the lines that move with the character level or the own hard points', () => {
@@ -209,7 +246,7 @@ describe('buildSkillCalcBundle', () => {
   });
 
   it('cuts the rows to the columns the kept lines reach and stores each text once', () => {
-    expect(bundle.rows.map((row) => row.id)).toEqual(['Blast', 'Bolt', 'Eschuta Passive', 'Proc']);
+    expect(bundle.rows.map((row) => row.id)).toEqual(['Blast', 'Bolt', 'Eschuta Passive', 'Proc', 'Nova', 'Charge', 'Axe']);
     expect(Object.keys(bundle.rows[0] ?? {}).sort()).toEqual(
       ['id', 'EDmgSymPerCalc', 'EMax', 'EMin', 'HitShift', 'Param8', 'calc1', 'calc3', 'mana', 'lvlmana', 'manashift'].sort()
     );
@@ -225,6 +262,8 @@ describe('buildSkillCalcBundle', () => {
       '%s: %+d%% Fire Damage per Level',
       'Bolt',
       'Bottom\nTop',
+      'Heals: %d',
+      'Duration: %d',
     ]);
   });
 
@@ -235,10 +274,10 @@ describe('buildSkillCalcBundle', () => {
     if (record === undefined) return;
     const lines = evaluateSkill(record, index, defaultContext(record, { level: 20, synergyPoints: { Bolt: 20 } }));
     expect(lines.map((line) => line.text)).toEqual([
-      'Mana Cost: 14.5',
-      'Fire Damage: 22-44',
-      'Bonus: 50',
       'Hard bonus: 30%',
+      'Bonus: 50',
+      'Fire Damage: 22-44',
+      'Mana Cost: 14.5',
       'Blast Receives Bonuses From:',
       'Bolt: +6% Fire Damage per Level',
     ]);

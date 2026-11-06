@@ -1,4 +1,4 @@
-import { Fragment, useId, useState, type ReactNode, type Ref } from 'react';
+import { useId, useState, type ReactNode, type Ref } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -37,6 +37,8 @@ export interface SkillLevelsConfig {
   readonly note?: ReactNode;
   /** Next to the "Max synergies" toggle (builds: reset to the build's points) */
   readonly synergyAction?: ReactNode;
+  /** "Granted by" levels below this are plain text, not buttons (builds: the allocated points, which gear cannot lower) */
+  readonly minPickLevel?: number;
 }
 
 interface SkillLevelValuesProps {
@@ -61,7 +63,10 @@ export function SkillLevelValues({ config, record, index, results, rows, tableOp
   const ids = useId();
   const varying = varyingRows(rows);
   const lines = results.filter((result) => result.block !== 'synergy' && result.unavailable !== true && result.text !== '');
-  const showControls = varying.length > 0 || hasSynergies;
+  const showControls = varying.length > 0 || hasSynergies || record.scalesWithCharLevel === true;
+  // The slider's position while dragging: the level is committed on release (or per keyboard step), so dragging does
+  // not write the URL on every tick
+  const [dragLevel, setDragLevel] = useState<number | null>(null);
 
   return (
     <section
@@ -81,7 +86,7 @@ export function SkillLevelValues({ config, record, index, results, rows, tableOp
                   </Label>
                   <LevelInput
                     id={`${ids}-level`}
-                    value={state.level}
+                    value={dragLevel ?? state.level}
                     min={1}
                     max={MAX_LEVEL}
                     onCommit={(level) => {
@@ -93,10 +98,15 @@ export function SkillLevelValues({ config, record, index, results, rows, tableOp
                     min={1}
                     max={MAX_LEVEL}
                     step={1}
-                    value={[state.level]}
+                    value={[dragLevel ?? state.level]}
                     onValueChange={(values) => {
                       const level = values.at(0);
-                      if (level !== undefined) onChange({ level });
+                      if (level !== undefined) setDragLevel(level);
+                    }}
+                    onValueCommit={(values) => {
+                      const level = values.at(0);
+                      setDragLevel(null);
+                      if (level !== undefined && level !== state.level) onChange({ level });
                     }}
                     thumbProps={{ 'aria-label': 'Skill level' }}
                   />
@@ -190,7 +200,11 @@ function HiddenLinesNote({ record }: { readonly record: SkillCalcSkill }) {
   if (stat === 0 && other === 0) return null;
   return (
     <ul className="space-y-0.5 pt-1 text-xs text-muted-foreground">
-      {stat > 0 && <li>{plural(stat, 'line depends', 'lines depend')} on character stats and is not shown.</li>}
+      {stat > 0 && (
+        <li>
+          {plural(stat, 'line depends', 'lines depend')} on character stats and {stat === 1 ? 'is' : 'are'} not shown.
+        </li>
+      )}
       {other > 0 && (
         <li>
           {plural(other, 'other line is', 'other lines are')} not shown: the game engine computes {other === 1 ? 'it' : 'them'} (summon life
@@ -224,27 +238,26 @@ function CompactTable({ rows, selected }: { readonly rows: readonly SkillTableRo
             ))}
           </tr>
         </thead>
-        <tbody>
-          {rows.map((row) => {
-            const { label, cells } = tableRow(row);
-            return (
-              <Fragment key={row.key}>
-                <tr>
-                  <th scope="colgroup" colSpan={QUICK_LEVELS.length} className="px-1 pt-1.5 text-left font-medium">
-                    {label}
-                  </th>
-                </tr>
-                <tr className="border-b border-border/60">
-                  {QUICK_LEVELS.map((level, i) => (
-                    <td key={level} className={cn('px-1 py-0.5 text-right align-top', level === selected && 'bg-primary/10 font-semibold')}>
-                      {cells.at(i) ?? ''}
-                    </td>
-                  ))}
-                </tr>
-              </Fragment>
-            );
-          })}
-        </tbody>
+        {rows.map((row) => {
+          const { label, cells } = tableRow(row);
+          // One row group per line: its label row heads the values row below it
+          return (
+            <tbody key={row.key}>
+              <tr>
+                <th scope="rowgroup" colSpan={QUICK_LEVELS.length} className="px-1 pt-1.5 text-left font-medium">
+                  {label}
+                </th>
+              </tr>
+              <tr className="border-b border-border/60">
+                {QUICK_LEVELS.map((level, i) => (
+                  <td key={level} className={cn('px-1 py-0.5 text-right align-top', level === selected && 'bg-primary/10 font-semibold')}>
+                    {cells.at(i) ?? ''}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          );
+        })}
       </table>
     </div>
   );

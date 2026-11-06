@@ -2,16 +2,21 @@
  * skillcalc.json: the formulas and columns the skill-level calculator (engine/skillCalc) needs to evaluate the tooltip
  * lines of every skilldetails.json skill at any level, plus the line definitions with resolved texts.
  *
- * Every line (skilldesc descline1..6, dsc2line1..5, dsc3line1..7) is evaluated at skill levels 1..110 with no synergies
- * and with every listed synergy at its cap. A line is left out (and counted) when
+ * Every line (skilldesc descline1..6, dsc2line1..5, dsc3line1..7) is evaluated at skill levels 1..110 with no synergies,
+ * with every listed synergy at its cap and with every class-tree skill it reads at its cap (not ascendancy / item
+ * passives, `*Control` rows or item skills). A line is left out (and counted) when
  * - its function needs the engine (13 summon life, 31, 34 summon damage, 56 quantity) or is unknown;
  * - a text does not resolve, or the text has more placeholders than the function fills;
  * - a formula it reaches does not parse or uses an unknown / ambiguous code, function, skill or missile;
  * - it rolls a random number (`rand(a, b)` with a < b);
  * - its value depends on the character's stats: it changes when the never-zero character stats (CHARACTER_STATS) are
  *   set to the probe values. Stats used as 0/1 toggles or gear counters stay 0 (no items, no ascendancy);
- * - every number in it is 0 at every level in both states (ESR's ascendancy / item gates: a 0-second cooldown).
- * Kept lines get `ulvl` / `blvl` when their value changes with the character level / the own hard points.
+ * - every number in it is 0 at every level in every state (ESR's ascendancy / item gates: a 0-second cooldown).
+ * Kept lines get `ulvl` / `blvl` when their value changes with the character level / the own hard points. Same-class
+ * skills the kept lines read without the tooltip listing them become the record's `unlistedSynergies`.
+ *
+ * Warnings also cover the bundle's formula cells where the game's compiler ignores part of a formula and `stat()`
+ * names missing from itemstatcost.txt (`statNames`).
  *
  * The rows are cut to the columns the kept lines can reach on any branch (`collectFormulaRefs`); a self-check evaluates
  * the kept lines again from the cut rows (at the sample levels) and warns on any difference. See docs/features/SKILLS.md ("Skill levels").
@@ -31,6 +36,7 @@ import {
   type SkillCalcSource,
 } from '../engine/skillCalc/index.ts';
 import { collectFormulaRefs, MISSILE_FORMULA_COLUMNS, SKILL_FORMULA_COLUMNS, type FormulaRefs } from '../engine/skillCalc/evaluate.ts';
+import { compileCalc, type CalcNode } from '../engine/skillCalc/parse.ts';
 import { placeholderCount } from '../engine/skillCalc/text.ts';
 import type { TsvRow, TsvTable } from './tsv.ts';
 
@@ -155,6 +161,8 @@ export interface SkillCalcInput {
   strings: ReadonlyMap<string, string>;
   /** The skills to cover, their class and synergies */
   details: SkillDetailsBundle;
+  /** itemstatcost.txt `Stat` names: a `stat('x'.accr)` naming another stat gets a warning */
+  statNames?: ReadonlySet<string>;
 }
 
 export interface SkillCalcBuildResult {
@@ -184,6 +192,14 @@ function readRow(row: TsvRow, id: string, numbers: readonly string[], formulas: 
   return out;
 }
 
+/** ESR's ascendancy / item passives and skill control rows: no player puts points into them */
+function isPassiveOrControl(id: string): boolean {
+  return /(Passive|Control)$/.test(id);
+}
+
+/** Hard-point cap of a class skill without maxlvl (as `synergyInputs`) */
+const DEFAULT_SYNERGY_POINTS = 20;
+
 function firstById<T extends { id: string }>(rows: readonly T[]): Map<string, T> {
   const map = new Map<string, T>();
   for (const row of rows) if (row.id !== '' && !map.has(row.id)) map.set(row.id, row);
@@ -195,6 +211,8 @@ interface Classified {
   hidden: HiddenReason | null;
   /** Unsupported tokens / parse messages for the warnings */
   problems: string[];
+  /** Class skills (with a hard-point cap) the line read, kept lines only */
+  readSkills?: string[];
 }
 
 function union(into: CalcReads, from: CalcReads): void {
@@ -206,8 +224,21 @@ function union(into: CalcReads, from: CalcReads): void {
   into.random ||= from.random;
 }
 
-/** Evaluates a line's formulas over the states and decides whether it is shown */
-function classify(line: SkillCalcLine, skill: SkillCalcSkill, source: SkillCalcSource, synergies: Record<string, number>): Classified {
+/** Rounds of the "every read skill at its cap" state (each round adds the skills the previous one newly read) */
+const READ_ROUNDS = 4;
+
+/**
+ * Evaluates a line's formulas over the states and decides whether it is shown. States: no synergies, every listed
+ * synergy at its cap, and every class skill the line reads (`cap` gives its hard-point cap, null for skills a player
+ * cannot put points into: ascendancy / item passives, `*Control` rows, item skills) at its cap.
+ */
+function classify(
+  line: SkillCalcLine,
+  skill: SkillCalcSkill,
+  source: SkillCalcSource,
+  synergies: Readonly<Record<string, number>>,
+  cap: (id: string) => number | null
+): Classified {
   const evaluate = (ctx: SkillCalcContext) => evaluateLine(line, new CalcRun(source, skill.id, ctx));
   const reads: CalcReads = {
     stats: new Set(),
@@ -217,17 +248,32 @@ function classify(line: SkillCalcLine, skill: SkillCalcSkill, source: SkillCalcS
     ownHardPoints: false,
     random: false,
   };
-  let shownNumbers = false;
-  let nonZero = false;
+  /** Some state shows a number / a non-zero number */
+  const seen = { numbers: false, nonZero: false };
   const baseline = new Map<number, string>();
-  for (const synergyPoints of [{}, synergies]) {
+  const evaluateState = (synergyPoints: Readonly<Record<string, number>>) => {
     for (const level of LEVELS) {
       const { result, reads: lineReads, raw } = evaluate(defaultContext(skill, { level, synergyPoints }));
       union(reads, lineReads);
-      if (result.values.length > 0) shownNumbers = true;
-      if (result.values.some((value) => value !== 0)) nonZero = true;
-      if (synergyPoints !== synergies) baseline.set(level, JSON.stringify(raw));
+      if (result.values.length > 0) seen.numbers = true;
+      if (result.values.some((value) => value !== 0)) seen.nonZero = true;
+      if (Object.keys(synergyPoints).length === 0 && !baseline.has(level)) baseline.set(level, JSON.stringify(raw));
     }
+  };
+  evaluateState({});
+  evaluateState(synergies);
+  const everyRead: Record<string, number> = { ...synergies };
+  for (let round = 0; round < READ_ROUNDS; round++) {
+    let grew = false;
+    for (const id of reads.skills) {
+      const max = cap(id);
+      if (max !== null && !(id in everyRead)) {
+        everyRead[id] = max;
+        grew = true;
+      }
+    }
+    if (!grew) break;
+    evaluateState(everyRead);
   }
   const problems = [...reads.unsupported].sort();
   if (problems.some((problem) => problem.startsWith('parse:'))) return { line, hidden: 'parse', problems };
@@ -237,8 +283,9 @@ function classify(line: SkillCalcLine, skill: SkillCalcSkill, source: SkillCalcS
   const contextAt = (level: number) => defaultContext(skill, { level });
   for (const probe of PROBES)
     if (SAMPLE_LEVELS.some((level) => differs(level, { ...contextAt(level), stats: probe }))) return { line, hidden: 'stat', problems: [] };
-  if (shownNumbers && !nonZero) return { line, hidden: 'gated', problems: [] };
+  if (seen.numbers && !seen.nonZero) return { line, hidden: 'gated', problems: [] };
   const out: SkillCalcLine = { ...line };
+  const readSkills = [...reads.skills].filter((id) => cap(id) !== null);
   if (reads.charLevel && SAMPLE_LEVELS.some((level) => [1, 55].some((charLevel) => differs(level, { ...contextAt(level), charLevel }))))
     out.ulvl = true;
   if (
@@ -247,7 +294,7 @@ function classify(line: SkillCalcLine, skill: SkillCalcSkill, source: SkillCalcS
     SAMPLE_LEVELS.some((level) => level > 1 && differs(level, { ...contextAt(level), hardPoints: 1 }))
   )
     out.blvl = true;
-  return { line: out, hidden: null, problems: [] };
+  return { line: out, hidden: null, problems: [], readSkills };
 }
 
 export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResult {
@@ -300,6 +347,19 @@ export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResul
     stat: 0,
     gated: 0,
   };
+  // Skills a player can put hard points into: class tree skills, without ascendancy passives and *Control rows
+  const classOf = new Map<string, string>();
+  const treeOrder = new Map<string, number>();
+  for (const [i, detail] of input.details.skills.entries()) {
+    if (detail.cls === null || isPassiveOrControl(detail.id)) continue;
+    classOf.set(detail.id, detail.cls);
+    treeOrder.set(detail.id, i);
+  }
+  const classSkillCap = (id: string): number | null => {
+    if (!classOf.has(id)) return null;
+    const max = full.skill(id)?.maxlvl;
+    return typeof max === 'number' && max > 0 ? max : DEFAULT_SYNERGY_POINTS;
+  };
   const problemLines = new Map<string, string[]>();
   const hiddenLines: SkillCalcBuildResult['hiddenLines'] = [];
   const records: SkillCalcSkill[] = [];
@@ -316,11 +376,12 @@ export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResul
       ...new Set(
         (detail.synergies ?? []).flatMap((synergy) => {
           const row = full.skill(synergy.id ?? synergy.name);
-          return row === undefined || row.id === detail.id || /(Passive|Control)$/.test(row.id) ? [] : [row.id];
+          return row === undefined || row.id === detail.id || isPassiveOrControl(row.id) ? [] : [row.id];
         })
       ),
     ];
     if (synergies.length > 0) record.synergies = synergies;
+    const unlisted = new Set<string>();
     const itemEffect = tsv.row.has('ItemEffect') ? Number(tsv.row.str('ItemEffect')) : 0;
     if (Number.isFinite(itemEffect) && itemEffect !== 0) record.itemEffect = itemEffect;
     const synergyPoints = maxSynergyPoints(record, full);
@@ -376,15 +437,17 @@ export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResul
           hide('format', `line function ${String(type)} fills ${String(filled)} placeholders, the text has more`);
           continue;
         }
-        const result = classify(line, record, full, synergyPoints);
+        const result = classify(line, record, full, synergyPoints, (id) => (id === detail.id ? null : classSkillCap(id)));
         if (result.hidden !== null) {
           hide(result.hidden);
           for (const problem of result.problems) problemLines.set(problem, [...(problemLines.get(problem) ?? []), where]);
           continue;
         }
         record.lines.push(result.line);
+        for (const id of result.readSkills ?? []) if (classOf.get(id) === detail.cls && !synergies.includes(id)) unlisted.add(id);
       }
     }
+    if (unlisted.size > 0) record.unlistedSynergies = [...unlisted].sort((a, b) => (treeOrder.get(a) ?? 0) - (treeOrder.get(b) ?? 0));
     if (record.lines.some((line) => line.ulvl === true)) record.scalesWithCharLevel = true;
     if (record.lines.some((line) => line.blvl === true)) record.scalesWithHardPointsOnly = true;
     if (statLines > 0) record.hiddenStatLines = statLines;
@@ -406,7 +469,7 @@ export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResul
     refs.skills.set(row.id, refs.skills.get(row.id) ?? new Set());
     for (const line of record.lines)
       for (const text of [line.ca, line.cb]) if (text !== undefined) collectFormulaRefs(full, row, text, refs);
-    for (const id of record.synergies ?? []) {
+    for (const id of [...(record.synergies ?? []), ...(record.unlistedSynergies ?? [])]) {
       const columns = refs.skills.get(id) ?? new Set();
       columns.add('maxlvl');
       refs.skills.set(id, columns);
@@ -473,5 +536,62 @@ export function buildSkillCalcBundle(input: SkillCalcInput): SkillCalcBuildResul
       }
     }
   }
+  warnings.push(...formulaWarnings(bundle, input.statNames));
   return { bundle, hidden, hiddenLines, warnings: [...new Set(warnings)] };
+}
+
+/** The stat names a formula reads (`stat('x'.accr)`) */
+function statLinks(node: CalcNode, out: Set<string>): void {
+  switch (node.kind) {
+    case 'neg':
+      statLinks(node.arg, out);
+      return;
+    case 'bin':
+      statLinks(node.left, out);
+      statLinks(node.right, out);
+      return;
+    case 'ternary':
+      statLinks(node.cond, out);
+      statLinks(node.then, out);
+      statLinks(node.else, out);
+      return;
+    case 'call':
+      if (node.name === 'stat' && node.args[0]?.kind === 'link') out.add(node.args[0].link.name);
+      for (const arg of node.args) statLinks(arg, out);
+      return;
+    default:
+      return;
+  }
+}
+
+/**
+ * Warnings on the formula cells the bundle holds: where the game's compiler ignores part of a formula (a character it
+ * does not know, an unclosed parenthesis, left-over values) and `stat('x')` names that are not in itemstatcost.txt
+ * (the game resolves an unknown link name to index 0; the calculator reads such a stat as 0)
+ */
+function formulaWarnings(bundle: SkillCalcBundle, statNames: ReadonlySet<string> | undefined): string[] {
+  const cells: [string, string][] = [];
+  for (const row of bundle.rows)
+    for (const column of SKILL_FORMULA_COLUMNS) {
+      const text = row[column];
+      if (typeof text === 'string') cells.push([`${row.id}.${column}`, text]);
+    }
+  for (const row of bundle.missiles)
+    for (const column of MISSILE_FORMULA_COLUMNS) {
+      const text = row[column];
+      if (typeof text === 'string') cells.push([`missile ${row.id}.${column}`, text]);
+    }
+  for (const skill of bundle.skills)
+    for (const line of skill.lines)
+      for (const text of [line.ca, line.cb]) if (text !== undefined) cells.push([`${skill.id} ${line.key}`, text]);
+  const warnings: string[] = [];
+  for (const [where, text] of cells) {
+    const { node, notes } = compileCalc(text);
+    for (const note of notes) warnings.push(`skillcalc: ${note} in "${text}" (${where})`);
+    if (statNames === undefined) continue;
+    const stats = new Set<string>();
+    statLinks(node, stats);
+    for (const stat of stats) if (!statNames.has(stat)) warnings.push(`skillcalc: stat "${stat}" is not in itemstatcost.txt (${where})`);
+  }
+  return warnings;
 }
