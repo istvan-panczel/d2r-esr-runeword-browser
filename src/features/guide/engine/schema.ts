@@ -86,6 +86,11 @@ export interface GlossaryEntry {
   definition: string;
   /** Owning note slug, if any */
   note: string | null;
+  /**
+   * App page the term links to (`/modifiers?kind=deadly-strike`), resolved from the `link:` key of _glossary.yml like a
+   * note's `page:` link; left out when the entry has none
+   */
+  link?: string;
 }
 
 export interface SourceRef {

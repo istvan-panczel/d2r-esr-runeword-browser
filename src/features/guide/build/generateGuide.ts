@@ -6,6 +6,7 @@ import { normaliseItemName } from '../../../core/utils/itemName.ts';
 import type { GuideBlock, GuideBundle, GuideInline, GuideNote } from '../engine/schema.ts';
 import { compareCodeUnits } from './compare.ts';
 import { parseGlossary, parseSourceRefs, parseSpine } from './content.ts';
+import { resolveGlossaryEntries } from './glossaryEntries.ts';
 import { createGuideContext, type DocsIndex, type GameDataInputs, type GuideContext } from './context.ts';
 import type { EsrGuideTables } from './esrGuideSources.ts';
 import type { EsrForGuide } from './readGuideInputs.ts';
@@ -115,10 +116,13 @@ export function generateGuide(input: GenerateGuideInput): GeneratedGuide {
   if (input.esr === null) warnings.push('ESR clone missing: directives that read the txt files cannot resolve');
 
   const spine = parseSpine(input.content.spine, 'spine.yml', errors);
-  const glossary = parseGlossary(input.content.glossary ?? '', '_glossary.yml', errors);
+  const parsedGlossary = parseGlossary(input.content.glossary ?? '', '_glossary.yml', errors);
   const sourceRefs = parseSourceRefs(input.content.sources ?? '', '_sources.yml', errors);
   const lock = parseVerifyLock(input.content.verifyLock ?? null, LOCK_FILE, errors);
-  const ctx = createGuideContext({ gameData: input.gameData, glossary, esr: input.esr, docs: input.docs });
+  const baseCtx = createGuideContext({ gameData: input.gameData, glossary: parsedGlossary, esr: input.esr, docs: input.docs });
+  // Fact values and links resolve against the game data the context holds; terms and owning notes stay as parsed.
+  const glossary = resolveGlossaryEntries(parsedGlossary, baseCtx, '_glossary.yml', errors);
+  const ctx: GuideContext = { ...baseCtx, glossary };
 
   const parsed: (ParsedNote & { file: string })[] = [...input.content.notes]
     .sort((a, b) => compareCodeUnits(a.file, b.file))

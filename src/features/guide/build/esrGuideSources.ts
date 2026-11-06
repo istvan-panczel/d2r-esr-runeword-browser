@@ -40,11 +40,19 @@ export interface EsrItem extends CubeItem {
   vendors: VendorOffer[];
 }
 
+/** One difficultylevels.txt row: the columns the `::difficulty-penalties` table shows */
 export interface DifficultyRow {
   name: string;
   resistPenalty: number;
   deathExpPenalty: number;
   monsterSkillBonus: number;
+  lifeStealDivisor: number;
+  manaStealDivisor: number;
+  playerDamagePercentVSPrimeEvil: number;
+  mercenaryDamagePercentVSBoss: number;
+  monsterFreezeDivisor: number;
+  monsterColdDivisor: number;
+  aiCurseDivisor: number;
 }
 
 export interface EsrGuideTables extends CubeTables {
@@ -115,6 +123,13 @@ export function buildEsrGuideTables(
     resistPenalty: numberOf(row, 'ResistPenalty'),
     deathExpPenalty: numberOf(row, 'DeathExpPenalty'),
     monsterSkillBonus: numberOf(row, 'MonsterSkillBonus'),
+    lifeStealDivisor: numberOf(row, 'LifeStealDivisor'),
+    manaStealDivisor: numberOf(row, 'ManaStealDivisor'),
+    playerDamagePercentVSPrimeEvil: numberOf(row, 'PlayerDamagePercentVSPrimeEvil'),
+    mercenaryDamagePercentVSBoss: numberOf(row, 'MercenaryDamagePercentVSBoss'),
+    monsterFreezeDivisor: numberOf(row, 'MonsterFreezeDivisor'),
+    monsterColdDivisor: numberOf(row, 'MonsterColdDivisor'),
+    aiCurseDivisor: numberOf(row, 'AiCurseDivisor'),
   }));
 
   return {

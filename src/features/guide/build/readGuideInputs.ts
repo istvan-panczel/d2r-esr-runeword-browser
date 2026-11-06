@@ -1,7 +1,14 @@
 /** fs side of the guide generator: content dir, committed game-data bundles and the ESR clone. */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { BasesBundle, GameDataManifest, SourcesBundle, TxtRunewordsBundle, TypesBundle } from '../../game-data/engine/schema.ts';
+import type {
+  BasesBundle,
+  GameDataManifest,
+  ModifiersBundle,
+  SourcesBundle,
+  TxtRunewordsBundle,
+  TypesBundle,
+} from '../../game-data/engine/schema.ts';
 import type { DocsIndex, GameDataInputs } from './context.ts';
 import { buildEsrGuideTables, readDocsIndex, readEsrGuideSources, type EsrGuideTables } from './esrGuideSources.ts';
 import type { GuideContentFiles } from './generateGuide.ts';
@@ -50,6 +57,7 @@ export function readGameDataInputs(gameDataDir: string, sourcesFile: string): Ga
     bases: readJson(join(gameDataDir, 'bases.json'), hint) as BasesBundle,
     types: readJson(join(gameDataDir, 'types.json'), hint) as TypesBundle,
     sources: readJson(sourcesFile, `The guide's ::source[...] blocks need it; ${hint}`) as SourcesBundle,
+    modifiers: readJson(join(gameDataDir, 'modifiers.json'), hint) as ModifiersBundle,
   };
 }
 

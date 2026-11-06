@@ -103,15 +103,22 @@ describe('vendor', () => {
 });
 
 describe('difficulty-penalties', () => {
-  it('builds a table from difficultylevels.txt', () => {
+  it('builds a table from difficultylevels.txt, one row per penalty and one column per difficulty', () => {
     expect(resolve('difficulty-penalties', null)).toEqual({
       kind: 'table',
       caption: 'Penalties per difficulty',
-      header: ['Difficulty', 'Resistance penalty', 'Experience lost on death', 'Monster skill bonus'],
+      header: ['Penalty', 'Normal', 'Nightmare', 'Hell'],
       rows: [
-        ['Normal', '0', '0%', '+0'],
-        ['Nightmare', '-40', '5%', '+3'],
-        ['Hell', '-100', '10%', '+7'],
+        ['Resistance penalty', '0', '-40', '-100'],
+        ['Experience lost on death', '0%', '5%', '10%'],
+        ['Monster skill bonus', '+0', '+3', '+7'],
+        ['Life leech divided by', '1', '25', '150'],
+        ['Mana leech divided by', '1', '15', '75'],
+        ["Your and your summons' damage to prime evils", '100%', '50%', '25%'],
+        ['Mercenary damage to bosses', '50%', '35%', '25%'],
+        ['Freeze length on monsters divided by', '1', '2', '4'],
+        ['Chill length on monsters divided by', '1', '2', '4'],
+        ['Terror, Confuse, Attract and Dim Vision length on monsters divided by', '1', '2', '4'],
       ],
     });
   });

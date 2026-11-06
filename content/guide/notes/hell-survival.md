@@ -18,13 +18,13 @@ ESR's campaign is harder than vanilla, and the jump from late Nightmare into Hel
 
 ::difficulty-penalties
 
-In short: your resistances drop sharply, life and mana leech become much weaker, monsters get extra skill levels, and freeze, chill and curse durations on them shrink.
+In short: your resistances drop sharply, monsters get extra skill levels, and your freezes, chills and some curses on them wear off sooner. :term[Leech] is divided by the numbers above, so most item leech is close to nothing in Hell; [Life on Striking](page:/modifiers?kind=on-striking) and Life after each Kill are not reduced. You and your summons deal less damage to :term[Prime evil]{label="prime evils"} in Nightmare and Hell, and your mercenary deals less to bosses in every difficulty.
 
 ### Before you enter Hell
 
-- **Resistances:** get fire, cold, lightning and poison back to the cap after the penalty, and add some physical and magic resistance if you can.
+- **Resistances:** get fire, cold, lightning and poison back to the cap after the :term[Resistance penalty]{label=penalty}, and add some [physical](page:/modifiers?kind=physical-resist) and magic resistance if you can.
 - **Life:** Stat Forging with a chipped Topaz adds % maximum life ([[forging]]); the first Kill Ledger milestones add resistances and more ([[kill-ledger]]).
-- **Damage:** Skill Forging (+1 to your class skills) on every slot is the standard early boost for skill-based builds. Plan a way past immunities, such as Lower Resist charges, a Conviction aura forged onto your amulet with a White Aura Stone, or a Hell Combat Desert Mercenary, whose skills include Conviction ([[mercenaries-oskills]]).
+- **Damage:** Skill Forging (+1 to your class skills) on every slot is the standard early boost for skill-based builds. Plan a way past :term[Immunity]{label=immunities}, such as Lower Resist charges, a Conviction aura forged onto your amulet with a White Aura Stone, or a Hell Combat Desert Mercenary, whose skills include Conviction ([[mercenaries-oskills]]).
 - **Materials:** farm Nightmare's special areas first. The official Maps page lists them (the Secret Cow Level, Blood Raven's Workshop, Lost Farm and others) and recommends them once you have beaten that difficulty.
 - **Players setting:** raise it for more experience and drops when you are comfortable, and lower it when you are not.
 

@@ -112,11 +112,20 @@ export function resolveLink(url: string, ctx: GuideContext): ResolvedLink | Buil
       return { kind: 'app', href: `/game-data/best-base?rw=${encodeURIComponent(target)}` };
     case 'affixes':
       return { kind: 'app', href: `/game-data/affixes?${target}` };
-    case 'page':
-      if (!APP_PAGES.includes(target.split(/[?#]/)[0] ?? '')) {
+    case 'page': {
+      const path = target.split(/[?#]/)[0] ?? '';
+      if (!APP_PAGES.includes(path)) {
         return { error: `page: link "${target}" is not an app page (known: ${APP_PAGES.join(', ')})` };
       }
+      if (path === '/modifiers') {
+        const query = target.match(/\?([^#]*)/)?.[1] ?? '';
+        const kind = new URLSearchParams(query).get('kind');
+        if (kind !== null && !ctx.modifierKinds.has(kind)) {
+          return { error: `page: link "${target}": unknown modifier kind "${kind}" (a kind key of public/game-data/modifiers.json)` };
+        }
+      }
       return { kind: 'app', href: target };
+    }
     case 'docs':
       return resolveDocsLink(target, ctx);
     // Validated against sources.json (any item kind: unique, set or misc) so a typo fails the build, but not carried in

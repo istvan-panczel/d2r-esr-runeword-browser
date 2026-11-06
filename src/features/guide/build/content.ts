@@ -54,12 +54,15 @@ export function parseGlossary(text: string, where: string, errors: string[]): Gl
       return [];
     }
     const entry = new FieldReader(item, `${where}: [${String(i)}]`, errors);
-    entry.onlyKeys(['term', 'definition', 'note']);
+    entry.onlyKeys(['term', 'definition', 'note', 'link']);
+    // The link is still a guide link target (`page:/modifiers?kind=…`) here; resolveGlossaryEntries resolves it.
+    const link = entry.string('link');
     return [
       {
         term: entry.string('term', { required: true }),
         definition: entry.string('definition', { required: true }),
         note: entry.string('note'),
+        ...(link === null ? {} : { link }),
       },
     ];
   });
