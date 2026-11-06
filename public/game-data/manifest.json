@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-06T21:19:29.137Z",
+  "generatedAt": "2026-11-06T21:54:35.273Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -50,8 +50,8 @@
       "bytes": 32002
     },
     "skilldetails": {
-      "hash": "6d784ea47c000e54a82c689afdd3d0630f89658b5f22656cd382b2b0b0dd8580",
-      "bytes": 396315
+      "hash": "37418c6d2bbda8cf0a62cf4d9367a42cc86bf8bc72bb6ab42b9cdd93d64a9303",
+      "bytes": 415595
     },
     "skillcalc": {
       "hash": "882d5eeeed75ea5eb322c251c78bffdd2c3d63cfc12334dec2eb213a2f5f1d6f",
@@ -170,6 +170,14 @@
     "skillDetailsWithGrants": 438,
     "skillDetailsWithSynergies": 226,
     "skillDetailsWithoutDescription": 93,
+    "skillInfoEntries": 38,
+    "skillInfoNames": 68,
+    "skillInfoSkills": 68,
+    "skillInfoOnlyDescription": 63,
+    "skillInfoMercenaryRows": 16,
+    "skillInfoMercenarySkills": 44,
+    "skillInfoMercenaryLinks": 70,
+    "skillInfoUnmatched": 0,
     "skillGrantItems": 1185,
     "skillGrants": 3122,
     "skillGrantsUndescribed": 0,

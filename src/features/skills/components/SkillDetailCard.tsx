@@ -1,8 +1,10 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { ExternalLink } from '@/components/ExternalLink';
 import { Spinner } from '@/components/ui/spinner';
-import type { SkillCalcSkill, SkillDetail, SkillGrant } from '@/features/game-data/engine/schema';
+import { ESR_SKILL_INFO_URL } from '@/core/navigation/navConfig';
+import type { SkillCalcSkill, SkillDetail, SkillGrant, SkillInfoText, SkillMercenary } from '@/features/game-data/engine/schema';
 import {
   defaultContext,
   evaluateSkill,
@@ -39,6 +41,7 @@ import {
   ITEM_KIND_LABELS,
   itemPageUrl,
   keyed,
+  mercenaryGroups,
   skillContext,
   type SkillsView,
 } from '../utils/skills';
@@ -211,6 +214,8 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
         </div>
       )}
 
+      {skill.infoPage !== undefined && <InfoPageText info={skill.infoPage} name={skill.name} main={skill.description.length === 0} />}
+
       {levels !== undefined && calc.status === 'loading' && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Spinner className="size-3" />
@@ -337,6 +342,8 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
         </section>
       )}
 
+      {skill.mercenaries !== undefined && <Mercenaries mercenaries={skill.mercenaries} />}
+
       {skill.notes !== undefined && (
         <ul className="space-y-1 text-xs text-muted-foreground">
           {keyed(skill.notes, String).map(({ key, value }) => (
@@ -356,6 +363,62 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
         minPickLevel={active?.config.minPickLevel}
       />
     </article>
+  );
+}
+
+const INFO_LINK = 'inline-flex items-center gap-0.5 text-primary hover:underline';
+
+/**
+ * The skill's entry of ESR's skill information page: the main description when the game files have none, else a
+ * labelled block under it. The entry's heading is shown when it names more skills than this one.
+ */
+function InfoPageText({ info, name, main }: { readonly info: SkillInfoText; readonly name: string; readonly main: boolean }) {
+  const source = (
+    <>
+      <ExternalLink href={`${ESR_SKILL_INFO_URL}#oskills`} className={INFO_LINK} iconClassName="size-3">
+        ESR skill information page
+      </ExternalLink>
+      {comparableName(info.heading) !== comparableName(name) && <> · {info.heading}</>}
+    </>
+  );
+  const paragraphs = keyed(info.text, String).map(({ key, value }) => <p key={key}>{value}</p>);
+  if (main) {
+    return (
+      <div className="space-y-1">
+        <div className="space-y-0.5">{paragraphs}</div>
+        <p className="text-xs text-muted-foreground">From the {source}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-0.5 border-l-2 pl-3">
+      <p className="text-xs text-muted-foreground">{source}</p>
+      {paragraphs}
+    </div>
+  );
+}
+
+/** A heading that differs from the skill name only by case or spacing ("Super Nova" / Supernova) is not shown */
+function comparableName(name: string): string {
+  return name.replace(/\s+/g, '').toLowerCase();
+}
+
+/** "Used by mercenaries": the hirelings that use the skill (ESR's skill information page) */
+function Mercenaries({ mercenaries }: { readonly mercenaries: readonly SkillMercenary[] }) {
+  return (
+    <p>
+      <span className="text-muted-foreground">Used by mercenaries: </span>
+      {mercenaryGroups(mercenaries).map(({ hireling, subtypes }, i) => (
+        <span key={hireling}>
+          {i > 0 && ', '}
+          {hireling}
+          {subtypes.length > 0 && <span className="text-muted-foreground"> ({subtypes.join(', ')})</span>}
+        </span>
+      ))}{' '}
+      <ExternalLink href={`${ESR_SKILL_INFO_URL}#mercenaries`} className={cn(INFO_LINK, 'text-xs')} iconClassName="size-3">
+        Source
+      </ExternalLink>
+    </p>
   );
 }
 

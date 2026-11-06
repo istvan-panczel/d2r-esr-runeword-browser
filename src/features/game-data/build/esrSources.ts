@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SKILL_INFO_PAGE_FILE } from './skillInfoPage.ts';
 import type { StringsFile } from './strings.ts';
 
 /** Paths inside an Eastern_Sun_Resurrected clone. `excel/base/` is a byte-identical duplicate and is ignored. */
@@ -90,6 +91,8 @@ export interface EsrSources {
   modifierPatches: Record<EsrModifierPatch, string | null>;
   /** Raw desecratedzones.json (the terror zone rotation) */
   desecratedZones: string;
+  /** Raw docs/skill_information.htm (the official mercenary and oskill page); null when the file is missing */
+  skillInfoPage: string | null;
 }
 
 /** `metadata.modVersion` of the clone's d2rloader metadata (the ESR version). */
@@ -132,6 +135,9 @@ export function readEsrSources(esrDir: string): EsrSources {
     string | null
   >;
 
+  const skillInfoFile = join(esrDir, SKILL_INFO_PAGE_FILE);
+  const skillInfoPage = existsSync(skillInfoFile) ? readFileSync(skillInfoFile, 'utf8') : null;
+
   return {
     esrVersion: readModVersion(esrDir),
     tables,
@@ -140,5 +146,6 @@ export function readEsrSources(esrDir: string): EsrSources {
     modifierConfigs,
     modifierPatches,
     desecratedZones,
+    skillInfoPage,
   };
 }

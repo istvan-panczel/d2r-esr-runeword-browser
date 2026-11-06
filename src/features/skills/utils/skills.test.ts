@@ -4,6 +4,8 @@ import {
   buildSkillsView,
   dependents,
   descriptionParagraphs,
+  firstSentence,
+  mercenaryGroups,
   disambiguation,
   duplicateNames,
   encodeSkillsState,
@@ -192,6 +194,31 @@ describe('texts and links', () => {
 
   it('says "level" for one level', () => {
     expect(grantText({ item: 0, how: 'oskill', level: 1 })).toBe('+1 level (any class)');
+  });
+
+  it('cuts the first sentence, not inside parentheses or after e.g.', () => {
+    expect(firstSentence('A buff that grants 2% attack speed per level. Also regenerates life.')).toBe(
+      'A buff that grants 2% attack speed per level.'
+    );
+    expect(firstSentence('Heals (e.g. level 10 = 10% heal. Of max life) when cast. Level = % heal.')).toBe(
+      'Heals (e.g. level 10 = 10% heal. Of max life) when cast.'
+    );
+    expect(firstSentence('Grants it, e.g. Fire Surge gets more. Then stops.')).toBe('Grants it, e.g. Fire Surge gets more.');
+    expect(firstSentence('Lasts 20 seconds')).toBe('Lasts 20 seconds');
+    expect(firstSentence('Deals 1.5x damage. More')).toBe('Deals 1.5x damage.');
+  });
+
+  it('groups mercenaries by hireling', () => {
+    expect(
+      mercenaryGroups([
+        { hireling: 'Desert Mercenary', subtype: 'Comb - Normal' },
+        { hireling: 'Barbarian', subtype: 'Offensive' },
+        { hireling: 'Desert Mercenary', subtype: 'Def - Hell' },
+      ])
+    ).toEqual([
+      { hireling: 'Desert Mercenary', subtypes: ['Comb – Normal', 'Def – Hell'] },
+      { hireling: 'Barbarian', subtypes: ['Offensive'] },
+    ]);
   });
 
   it('joins hand-broken description lines into paragraphs', () => {

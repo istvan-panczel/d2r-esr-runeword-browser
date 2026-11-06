@@ -24,6 +24,8 @@ export const ESR_RELEASES_URL = `${ESR_REPO_URL}/releases`;
 export { DROP_FINDER_URL };
 /** The official Frame Table (IAS and FCR breakpoints); the docs pages link it as "IAS Calculator", the site's home page does not. */
 export const FRAME_TABLE_URL = officialDocsUrl('ias-calculator.html');
+/** The official "Mercenary and Oskill Information" page (skilldetails.json `infoPage` / `mercenaries` come from it). */
+export const ESR_SKILL_INFO_URL = officialDocsUrl('skill_information.htm');
 
 /** An official ESR link, listed in the header's external-links menu and on the home page. */
 export interface OfficialLink {

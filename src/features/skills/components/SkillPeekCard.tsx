@@ -4,7 +4,7 @@ import type { SkillCalcSkill } from '@/features/game-data/engine/schema';
 import { useSkillCalc } from '../hooks/useSkillCalc';
 import { useSkillRefIndex } from '../hooks/useSkillRefIndex';
 import { headlineKeys, headlineTexts, QUICK_LEVELS } from '../utils/skillLevels';
-import { disambiguation } from '../utils/skills';
+import { disambiguation, firstSentence } from '../utils/skills';
 import { CLASS_NAMES, skillRefLevel, skillRefText, skillRefUrl, type SkillRef } from '../utils/skillRefs';
 import { SkillIcon } from './SkillIcon';
 
@@ -17,7 +17,8 @@ function headlineValues(record: SkillCalcSkill, index: SkillCalcIndex, level: nu
 }
 
 /**
- * The skill peek of an item line: icon, name, class, what the line gives, the headline values at its level (the
+ * The skill peek of an item line: icon, name, class, what the line gives, the first sentence of ESR's skill information
+ * page when the skill has no description, the headline values at its level (the
  * calculator; skillcalc.json loads with the first peek) and a link to the Skills page at that level (`newTab`: in a new
  * tab, for names inside a form whose edits would be lost).
  */
@@ -33,6 +34,8 @@ export function SkillPeekCard({ skillRef, newTab = false }: { readonly skillRef:
   // Item grants give levels, never hard points; a +levels line on a class skill is shown as a maxed skill (the default)
   const hardPoints = skillRef.kind === 'plus' ? undefined : 0;
   const values = calc.index === undefined || record === undefined ? [] : headlineValues(record, calc.index, at.level, hardPoints);
+  // Item skills without a skilldesc description: the first sentence of ESR's skill information page
+  const infoText = skill.description.length === 0 ? skill.infoPage?.text[0] : undefined;
 
   return (
     <div className="space-y-2">
@@ -47,6 +50,7 @@ export function SkillPeekCard({ skillRef, newTab = false }: { readonly skillRef:
         </div>
       </div>
       <p className="text-xs">{skillRefText(skillRef)}</p>
+      {infoText !== undefined && <p className="text-xs text-muted-foreground">{firstSentence(infoText)}</p>}
       {calc.status === 'loading' && <p className="text-xs text-muted-foreground">Loading the values…</p>}
       {values.length > 0 && (
         <div className="text-xs">
