@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { loadGameDataFile } from '@/features/game-data/engine/browser/loadGameData';
+import { prefetchPeekChunks } from '../components/peekChunks';
 import { buildSkillRefIndex, type SkillRefIndex } from '../utils/skillRefs';
 
 /** How long the load may wait for an idle moment */
@@ -16,6 +17,7 @@ function load() {
     (bundle) => {
       index = buildSkillRefIndex(bundle);
       for (const listener of listeners) listener();
+      prefetchPeekChunks();
     },
     (error: unknown) => {
       // Item lines keep rendering as plain text; the next page load tries again

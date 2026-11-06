@@ -105,10 +105,22 @@ export const ITEMTYPES = tsv([
 ]);
 
 export const DIFFICULTYLEVELS = tsv([
-  ['Name', 'ResistPenalty', 'DeathExpPenalty', 'MonsterSkillBonus'],
-  ['Normal', '0', '0', '0'],
-  ['Nightmare', '-40', '5', '3'],
-  ['Hell', '-100', '10', '7'],
+  [
+    'Name',
+    'ResistPenalty',
+    'DeathExpPenalty',
+    'MonsterSkillBonus',
+    'MonsterFreezeDivisor',
+    'MonsterColdDivisor',
+    'AiCurseDivisor',
+    'LifeStealDivisor',
+    'ManaStealDivisor',
+    'PlayerDamagePercentVSPrimeEvil',
+    'MercenaryDamagePercentVSBoss',
+  ],
+  ['Normal', '0', '0', '0', '1', '1', '1', '1', '1', '100', '50'],
+  ['Nightmare', '-40', '5', '3', '2', '2', '2', '25', '15', '50', '35'],
+  ['Hell', '-100', '10', '7', '4', '4', '4', '150', '75', '25', '25'],
 ]);
 
 export const STRINGS = JSON.stringify([
@@ -189,6 +201,24 @@ export function fixtureGameData(): GameDataInputs {
         { name: 'Anvil Stone', code: 'qqq', item: 'misc', labels: [] },
         { name: 'Worldstone Shard', code: 'amu', item: 'set', labels: [{ kind: 'drop', text: 'Drops (random)' }] },
         { name: 'Worldstone Shard', code: 'xa1', item: 'misc', labels: [{ kind: 'boss', text: 'Drops from Baal' }] },
+      ],
+    },
+    modifiers: {
+      kinds: [
+        { key: 'deadly-strike', title: 'Deadly Strike', category: 'offense', stats: [141], items: 1 },
+        { key: 'life-leech', title: 'Life Leech', category: 'offense', stats: [60], items: 1 },
+      ],
+      facts: [
+        { key: 'castRate.cap', label: 'FCR cap', value: 500, origin: 'esr-config', source: { file: 'x', key: 'y' } },
+        { key: 'difficulty.ResistPenalty', label: 'Resist', value: [1, -80, -150], origin: 'game-files', source: { file: 'x', key: 'y' } },
+        {
+          key: 'crushingBlow.share',
+          label: 'CB',
+          value: { monster: 12.5, unique: 6.25 },
+          origin: 'esr-config',
+          source: { file: 'x', key: 'y' },
+        },
+        { key: 'bleed.enabled', label: 'Bleed', value: true, origin: 'esr-config', source: { file: 'x', key: 'y' } },
       ],
     },
   } as unknown as GameDataInputs;

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/core/db';
 import { loadGameDataFile } from '@/features/game-data/engine/browser/loadGameData';
+import type { ModifierRefsData } from '@/features/modifiers/utils/modifierRefs';
 import { areaSearchNames, skillSearchNames, type HomeSearchSources } from '../utils/homeSearch';
 
 type ItemSources = Required<Pick<HomeSearchSources, 'runewords' | 'gemwords' | 'uniques' | 'mythicals'>>;
@@ -28,8 +29,8 @@ export function useItemNames(enabled: boolean): ItemSources | undefined {
   }, [enabled]);
 }
 
-/** The static bundles the search reads, fetched in parallel on the first keystroke */
-const NAMES_BUNDLES = ['bases', 'sets', 'skilldetails', 'materials', 'areas'] as const;
+/** The static bundles the search reads, fetched in parallel on the first keystroke (`modifiers`: modifierRefs.json) */
+const NAMES_BUNDLES = ['bases', 'sets', 'skilldetails', 'modifiers', 'materials', 'areas'] as const;
 type NamesBundle = (typeof NAMES_BUNDLES)[number];
 
 /** The search names each static bundle contributes (materials.json also carries the cube family labels and ids) */
@@ -45,6 +46,13 @@ const NAME_LOADERS: Record<NamesBundle, () => Promise<HomeSearchSources>> = {
   skilldetails: async () => {
     const bundle = await loadGameDataFile('skilldetails');
     return { skills: skillSearchNames(bundle.skills) };
+  },
+  // The modifier peek's small data chunk (~9 KB gzip) has the kind titles; modifiers.json is ~50 KB gzip
+  modifiers: async () => {
+    const module = await import('@/features/modifiers/data/modifierRefs.json');
+    // The JSON's inferred type has plain arrays where the data has tuples
+    const { searchNames } = module.default as unknown as ModifierRefsData;
+    return { modifiers: searchNames.map(([name, id]) => ({ name, id })) };
   },
   materials: async () => {
     const bundle = await loadGameDataFile('materials');
@@ -69,7 +77,7 @@ export interface BundleNamesState {
 type Settled = Partial<Record<NamesBundle, HomeSearchSources | 'error'>>;
 
 /**
- * Names from the static game-data bundles (bases, sets, skills, materials and cube families, areas), each fetched once
+ * Names from the static game-data bundles (bases, sets, skills, modifier kinds, materials and cube families, areas), each fetched once
  * `enabled` (on the first keystroke). A bundle that fails to load is logged and left out; the others still search.
  */
 export function useBundleNames(enabled: boolean): BundleNamesState {

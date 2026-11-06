@@ -31,6 +31,20 @@ describe('parseGlossary', () => {
     expect(errors).toEqual(['_glossary.yml: duplicate term "stocker"']);
   });
 
+  it('keeps the link target as written and leaves it out when absent', () => {
+    const errors: string[] = [];
+    const entries = parseGlossary(
+      '- term: Leech\n  definition: A\n  link: page:/modifiers?kind=life-leech\n- term: Stocker\n  definition: B\n',
+      '_glossary.yml',
+      errors
+    );
+    expect(entries).toEqual([
+      { term: 'Leech', definition: 'A', note: null, link: 'page:/modifiers?kind=life-leech' },
+      { term: 'Stocker', definition: 'B', note: null },
+    ]);
+    expect(errors).toEqual([]);
+  });
+
   it('treats an empty file as no entries and rejects a mapping', () => {
     const errors: string[] = [];
     expect(parseGlossary('', '_glossary.yml', errors)).toEqual([]);

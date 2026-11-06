@@ -45,16 +45,18 @@ describe('searchHome', () => {
     expect(searchHome('rune', { runewords: names })[0]?.results).toHaveLength(6);
   });
 
-  it('appends skills, materials, areas and cube recipes after bases', () => {
+  it('appends skills, modifiers, materials, areas and cube recipes after bases', () => {
     const groups = searchHome('fire', {
       cube: [{ name: 'Fire facets', id: 'facets-fire' }],
       areas: ['Fire Pit'],
       materials: ['Fire Rune'],
+      modifiers: [{ name: 'Fire Resist', id: 'resist-fire' }],
       skills: [{ name: 'Fire Bolt', id: 'Fire Bolt' }],
       bases: ['Fire Staff'],
     });
-    expect(groups.map((g) => g.category)).toEqual(['bases', 'skills', 'materials', 'areas', 'cube']);
-    expect(groups.map((g) => g.label)).toEqual(['Bases', 'Skills', 'Materials', 'Areas', 'Cube recipes']);
+    expect(groups.map((g) => g.category)).toEqual(['bases', 'skills', 'modifiers', 'materials', 'areas', 'cube']);
+    expect(groups.map((g) => g.label)).toEqual(['Bases', 'Skills', 'Modifiers', 'Materials', 'Areas', 'Cube recipes']);
+    expect(groups[2]?.results).toEqual([{ name: 'Fire Resist', href: '/modifiers?kind=resist-fire' }]);
   });
 
   it('links a cube family label to its family id', () => {

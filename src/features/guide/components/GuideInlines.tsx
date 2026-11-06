@@ -6,6 +6,7 @@ import type { GuideInline } from '../engine/schema';
 import { useHoverPopover } from '@/components/useHoverPopover';
 import { useLoadedGuide } from '../hooks/useLoadedGuide';
 import { AppLinkIcon } from './AppLinkIcon';
+import { GlossaryAppLink } from './GlossaryAppLink';
 import { ExternalLink } from '@/components/ExternalLink';
 import { PeekPopover, PeekText } from '@/components/PeekPopover';
 import { GUIDE_PROSE_FONT, LINK_CLASS } from './styles';
@@ -68,10 +69,15 @@ function Term({ term, children }: TermProps) {
       }
     >
       <PeekText title={entry.term} text={entry.definition} />
-      {entry.note !== null && (
-        <Link to={`/guide/${entry.note}`} className={cn(LINK_CLASS, 'mt-2 inline-block text-xs')}>
-          Read more
-        </Link>
+      {(entry.note !== null || entry.link !== undefined) && (
+        <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+          {entry.note !== null && (
+            <Link to={`/guide/${entry.note}`} className={cn(LINK_CLASS, 'inline-block text-xs')}>
+              Read more
+            </Link>
+          )}
+          {entry.link !== undefined && <GlossaryAppLink href={entry.link} />}
+        </p>
       )}
     </PeekPopover>
   );

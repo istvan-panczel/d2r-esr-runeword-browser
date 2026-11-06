@@ -8,6 +8,7 @@ import type { DataBlock } from '../engine/schema';
 import { sourceCells } from '../utils/guideUtils';
 import { GuideCardBoundary } from './GuideCardBoundary';
 import { ExternalLink } from '@/components/ExternalLink';
+import { GlossaryAppLink } from './GlossaryAppLink';
 import { GuideCardFailed, GuideCardLoading } from './GuideCardPlaceholder';
 import { GuideTable } from './GuideTable';
 import { SectionLabel } from './SectionLabel';
@@ -151,7 +152,10 @@ export function GuideDataBlock({ block }: GuideDataBlockProps) {
                   entry.term
                 )}
               </dt>
-              <dd className="mt-0.5 text-muted-foreground">{entry.definition}</dd>
+              <dd className="mt-0.5 text-muted-foreground">
+                {entry.definition}
+                {entry.link !== undefined && <GlossaryAppLink href={entry.link} className="ml-2" />}
+              </dd>
             </div>
           ))}
         </dl>

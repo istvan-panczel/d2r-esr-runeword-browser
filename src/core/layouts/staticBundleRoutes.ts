@@ -18,6 +18,7 @@ const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/campaign-map',
   '/stash',
   '/terror-zones',
+  '/modifiers',
 ];
 
 export function isStaticBundlePath(pathname: string): boolean {

@@ -206,6 +206,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/modifiers</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/builds</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

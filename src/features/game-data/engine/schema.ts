@@ -28,6 +28,7 @@ export type GameDataFile =
   | 'stashnames'
   | 'itemtext'
   | 'terrorzones'
+  | 'modifiers'
   | 'icons';
 
 export interface GameDataManifest {
@@ -1415,4 +1416,117 @@ export interface TerrorZoneGroup {
   labels: string[];
   /** The zone's levels that areas.json lists (same names as the Areas page and the campaign map), in file order */
   areas: { id: number; name: string }[];
+}
+
+// --- modifiers.json -----------------------------------------------------------------------------------------------
+
+/** Where a modifier stat appears: the item lists of the game files */
+export type ModifierItemKind =
+  'unique' | 'set' | 'setBonus' | 'runeword' | 'gemword' | 'prefix' | 'suffix' | 'automagic' | 'superior' | 'socketable' | 'cube';
+
+export type ModifierCategory = 'offense' | 'defense' | 'speed' | 'procs' | 'resources' | 'find' | 'skills' | 'attributes' | 'other';
+
+/** An itemstatcost.txt `op` (the stat feeds other stats) with a readable formula */
+export interface ModifierStatOp {
+  op: number;
+  /** `op param` when not 0 (op 2-5: the value is divided by 2^param) */
+  param?: number;
+  /** `op base` (the stat the value is multiplied by: `level` = character level) */
+  base?: string;
+  /** `op stat1-3`: the stats it changes */
+  stats: string[];
+  /** "item_hp_perlevel: maxhp += value × level / 8" style text */
+  formula: string;
+}
+
+/** An itemstatcost.txt item event: when the stat fires and what it does */
+export interface ModifierStatEvent {
+  /** `itemevent1/2` (domeleedamage, damagedbymissile, kill …) */
+  event: string;
+  /** Readable trigger ("on a melee hit") */
+  trigger: string;
+  /** `itemeventfunc1/2` */
+  func: number;
+  /** Readable function ("Crushing Blow", "cast a skill at the target") */
+  action: string;
+}
+
+/** One itemstatcost.txt stat that ESR items carry (or that a key modifier kind names) */
+export interface ModifierStat {
+  /** itemstatcost.txt row (= `*ID`, the save / plugin stat id) */
+  id: number;
+  /** itemstatcost.txt `Stat` */
+  stat: string;
+  /** ModifiersBundle.kinds key */
+  kind: string;
+  /** descstrpos / descstrneg (when different) / descstr2 / dgrpstrpos through the strings */
+  text?: string;
+  textNeg?: string;
+  text2?: string;
+  group?: string;
+  descfunc?: number;
+  descval?: number;
+  op?: ModifierStatOp;
+  events?: ModifierStatEvent[];
+  /** properties.txt codes that set the stat */
+  properties: string[];
+  /** ESR bookkeeping (tinkering cap / flag, `_display` / `_hidden` / `_cap` companion; affixStats.ts isTechnicalStat) */
+  technical?: true;
+  /**
+   * `same`: a vanilla D2R stat with the same mechanic columns; `changed`: a vanilla stat whose columns ESR changed
+   * (`changed` lists them, `id` when ESR moved it); `esr`: not in vanilla D2R (`reusesId` names the vanilla stat that had
+   * this row id)
+   */
+  vanilla: 'same' | 'changed' | 'esr';
+  changed?: string[];
+  reusesId?: string;
+  /** Items (rows of the item lists) carrying the stat, per list; every list counts an item once */
+  usage: Partial<Record<ModifierItemKind, number>>;
+  /** Sum of `usage` */
+  items: number;
+  /** Up to 12 example items, runewords / uniques / sets first, file order within a list */
+  examples: [ModifierItemKind, string][];
+}
+
+/** A modifier kind: the stats one explanation covers ("deadly-strike" = item_deadlystrike + per-level variant) */
+export interface ModifierKind {
+  /** Stable key, joined with the explanation text */
+  key: string;
+  title: string;
+  category: ModifierCategory;
+  /** ModifierStat ids */
+  stats: number[];
+  /** A one-stat (or same-text) kind made by the generator, not from the reviewed key-kind table */
+  generated?: true;
+  /** Distinct items carrying any of its stats */
+  items: number;
+}
+
+/**
+ * `esr-config`: ESR's D2RLoader plugin configs and patches; `game-files`: ESR's txt tables; `vanilla-engine`: vanilla
+ * D2 engine behaviour (D2MOO), not confirmed for ESR
+ */
+export type ModifierFactOrigin = 'esr-config' | 'game-files' | 'vanilla-engine';
+
+/** A number per difficulty is `[Normal, Nightmare, Hell]`; a record is per class / target / setting */
+export type ModifierFactValue = number | boolean | string | number[] | string[] | Record<string, number>;
+
+export interface ModifierFact {
+  key: string;
+  label: string;
+  value: ModifierFactValue;
+  /** The vanilla D2R value in the same shape, when known */
+  vanilla?: ModifierFactValue;
+  unit?: 'percent' | 'divisor' | 'frames' | 'ratio' | 'count' | 'stat' | 'points';
+  origin: ModifierFactOrigin;
+  /** The file (path in the ESR repo, or the engine source) and its column / `section.key` */
+  source: { file: string; key: string };
+  note?: string;
+}
+
+/** modifiers.json: what the item modifiers do, for the /modifiers page, the modifier peek and the calculators */
+export interface ModifiersBundle {
+  kinds: ModifierKind[];
+  stats: ModifierStat[];
+  facts: ModifierFact[];
 }

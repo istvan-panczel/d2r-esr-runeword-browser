@@ -30,6 +30,7 @@
     "game-data:icons": "node scripts/generate-item-icons.ts && node scripts/generate-game-data.ts && node scripts/generate-skill-icons.ts",
     "game-data:skill-icons": "node scripts/generate-skill-icons.ts",
     "game-data:update": "node scripts/update-game-data.ts",
+    "modifiers:refs": "node scripts/generate-modifier-refs.ts",
     "esr:diff": "node scripts/esr-release-diff.ts",
     "esr:review": "node scripts/esr-update-review.ts",
     "esr:user-data": "node scripts/check-user-data.ts",

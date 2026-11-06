@@ -3,7 +3,15 @@
  * Built once per generation from the committed game-data bundles, the guide's glossary and (when present) the ESR clone.
  */
 import { normaliseItemName } from '../../../core/utils/itemName.ts';
-import type { BasesBundle, ItemSource, SourcesBundle, TxtRunewordsBundle, TypesBundle } from '../../game-data/engine/schema.ts';
+import type {
+  BasesBundle,
+  ItemSource,
+  ModifierFact,
+  ModifiersBundle,
+  SourcesBundle,
+  TxtRunewordsBundle,
+  TypesBundle,
+} from '../../game-data/engine/schema.ts';
 import type { GlossaryEntry } from '../engine/schema.ts';
 import type { EsrGuideTables } from './esrGuideSources.ts';
 
@@ -12,6 +20,8 @@ export interface GameDataInputs {
   bases: BasesBundle;
   types: TypesBundle;
   sources: SourcesBundle;
+  /** modifiers.json: kind keys for `page:/modifiers?kind=…` links, facts for the glossary's `{fact:…}` values */
+  modifiers: Pick<ModifiersBundle, 'kinds' | 'facts'>;
 }
 
 /** File name → anchors of the official docs pages (the clone's docs/ folder) */
@@ -28,6 +38,10 @@ export interface GuideContext {
   /** Normalised names (normaliseItemName) a `unique:` / `mythical:` / `socketable:` link or card may target (see linkTargetNames) */
   linkNames: Readonly<Record<LinkTargetKind, ReadonlySet<string>>>;
   glossary: readonly GlossaryEntry[];
+  /** modifiers.json kind keys (a `page:/modifiers?kind=` link must name one) */
+  modifierKinds: ReadonlySet<string>;
+  /** modifiers.json facts by key (the glossary's `{fact:…}` values) */
+  modifierFacts: ReadonlyMap<string, ModifierFact>;
   /** null when the ESR clone is missing (ESR-backed directives then fail) */
   esr: EsrGuideTables | null;
   /** null when the clone (or its docs/ folder) is missing; docs: links are then not checked */
@@ -90,6 +104,8 @@ export function createGuideContext(input: ContextInput): GuideContext {
     },
     linkNames: linkTargetNames(input.gameData.sources, input.gameData.types, input.esr),
     glossary: input.glossary,
+    modifierKinds: new Set(input.gameData.modifiers.kinds.map((kind) => kind.key)),
+    modifierFacts: new Map(input.gameData.modifiers.facts.map((fact) => [fact.key, fact])),
     esr: input.esr,
     docs: input.docs,
   };

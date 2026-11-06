@@ -10,6 +10,28 @@ export const ESR_METADATA_FILE = 'd2rloader/metadata.json';
 export const ESR_BOSS_SET_UNIQUE_DROP_FILE = 'd2rloader/config/celestialrayone.boss-set-unique-drop.toml';
 /** The offline terror zone rotation (terrorzones.json) */
 export const ESR_DESECRATED_ZONES_FILE = 'Eastern_Sun_Resurrected.mpq/data/hd/global/excel/desecratedzones.json';
+/** D2RLoader plugin configs the modifiers bundle reads its ESR facts from (crushing blow per target, caps, curves …) */
+export const ESR_MODIFIER_CONFIGS = [
+  'attack-rating',
+  'bleed',
+  'cast-rate-cap',
+  'critical-strike-damage',
+  'crushing-blow',
+  'dodge-avoid-evade-cap',
+  'enhanced-damage-fix',
+  'item-quantity',
+  'magic-find-soft-tail',
+  'poison-immunity',
+  'soft-hit-removal',
+  'summon-resist-cap',
+  'weapon-block-rules',
+] as const;
+export type EsrModifierConfig = (typeof ESR_MODIFIER_CONFIGS)[number];
+/** D2RLoader memory patches the modifiers bundle reads (resistance floor, no run penalties, pet damage vs prime evils) */
+export const ESR_MODIFIER_PATCHES = ['esr-resistance-floor-minus-1000', 'no-run-penalties', 'pet-damage-vs-prime-evil'] as const;
+export type EsrModifierPatch = (typeof ESR_MODIFIER_PATCHES)[number];
+export const modifierConfigFile = (name: EsrModifierConfig) => `d2rloader/config/celestialrayone.${name}.toml`;
+export const modifierPatchFile = (name: EsrModifierPatch) => `d2rloader/patches/${name}.json`;
 
 export const TABLES = [
   'itemtypes',
@@ -50,6 +72,9 @@ export const TABLES = [
   'inventory',
   // terrorzones.json (the names the game's terror zone display uses)
   'levelgroups',
+  // modifiers.json (difficulty penalties, leech divisors; superior affixes)
+  'difficultylevels',
+  'qualityitems',
 ] as const;
 export type EsrTableName = (typeof TABLES)[number];
 
@@ -60,6 +85,9 @@ export interface EsrSources {
   strings: StringsFile[];
   /** Launcher plugin configs (raw text; null when the file is missing) */
   plugins: { bossSetUniqueDrop: string | null };
+  /** Plugin configs and memory patches of modifiers.json by name (raw text; null when the file is missing) */
+  modifierConfigs: Record<EsrModifierConfig, string | null>;
+  modifierPatches: Record<EsrModifierPatch, string | null>;
   /** Raw desecratedzones.json (the terror zone rotation) */
   desecratedZones: string;
 }
@@ -94,5 +122,23 @@ export function readEsrSources(esrDir: string): EsrSources {
 
   const desecratedZones = readFileSync(join(esrDir, ESR_DESECRATED_ZONES_FILE), 'utf8');
 
-  return { esrVersion: readModVersion(esrDir), tables, strings, plugins: { bossSetUniqueDrop }, desecratedZones };
+  const optional = (path: string) => (existsSync(join(esrDir, path)) ? readFileSync(join(esrDir, path), 'utf8') : null);
+  const modifierConfigs = Object.fromEntries(ESR_MODIFIER_CONFIGS.map((name) => [name, optional(modifierConfigFile(name))])) as Record<
+    EsrModifierConfig,
+    string | null
+  >;
+  const modifierPatches = Object.fromEntries(ESR_MODIFIER_PATCHES.map((name) => [name, optional(modifierPatchFile(name))])) as Record<
+    EsrModifierPatch,
+    string | null
+  >;
+
+  return {
+    esrVersion: readModVersion(esrDir),
+    tables,
+    strings,
+    plugins: { bossSetUniqueDrop },
+    modifierConfigs,
+    modifierPatches,
+    desecratedZones,
+  };
 }

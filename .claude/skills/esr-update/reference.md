@@ -73,6 +73,29 @@ change as its source. data-review: in the `skillcalc.json` entry diff, list ever
 `hiddenStatLines` rose or that lost a `desc*` line (a class skill must keep per-level lines), and every new
 `skillcalc:` warning token (incl. `mastery:`); never map a token by guess. Near 450 KB: report, do not raise the cap.
 
+**Modifiers**: `modifiers.json` regenerates from itemstatcost.txt, properties.txt, propertygroups.txt, every item list
+(uniques, set items and bonuses, runewords, gemwords, affixes, qualityitems.txt, gems.txt, cubemain.txt),
+difficultylevels.txt, charstats.txt, monstats.txt and the D2RLoader plugin configs / patches listed in
+`ESR_MODIFIER_CONFIGS` / `ESR_MODIFIER_PATCHES` (`build/esrSources.ts`; `esr:diff` section 6 shows their diffs). The
+`facts` are what the /modifiers explanations, the guide's difficulty-penalties table and the calculators quote: **a
+changed `facts` entry (a difficultylevels.txt value such as LifeStealDivisor / ResistPenalty, or a TOML value such as
+crushing-blow `[targets]`, `cast-rate-cap` `fcr_cap`, `dodge-avoid-evade-cap`, `magic-find-soft-tail`, the
+`attack-rating` curve) means every explanation text quoting it must be re-checked** (`content/modifiers/modifiers.md`:
+its `{placeholders}` show the new value on their own, but the prose around them, hard-coded numbers in `facts:` lines
+and `open-questions.md` may now be wrong; and the guide notes; list them for the owner). `modifierContent.test.ts`
+fails when a placeholder no longer resolves, a content key has no `CONTENT_KINDS` entry or a key kind has no text
+(`src/features/modifiers/utils/modifierContentKinds.ts`) and the pinned values in `bundleIntegrity.test.ts` ("committed modifiers
+bundle") updated with the release diff as the source. A new `modifiers:` warning is a finding: a key kind naming a stat
+ESR removed, an unknown item event function, a missing or changed config key, or a config comment that disagrees with
+its value. Expected at 3.2.24: one, `crushing-blow.toml unique = 25 gives 6.25 % … comment says "50 -> 12.5 %"` (the
+value wins; when ESR fixes either side the warning disappears, say which). A changed `attack-rating.toml` table or curve
+must still pass `modifierMath.test.ts` (it reproduces the table). data-review: in the `modifiers.json` entry diff, list
+changed facts with old → new values and the kinds whose stats or item counts changed a lot. The modifier peek's
+templates (`src/features/modifiers/data/modifierRefs.json`) regenerate from modifiers.json and modifiers.md with
+`game-data:update` / `npm run modifiers:refs`; `modifierRefs.test.ts` fails when they are stale, and
+`modifierRefs.integration.test.ts` when an ESR rewording drops a page's linked lines below its bound or links prose (a
+new string for a key kind: check the "Modifier peek" coverage). See `docs/features/MODIFIERS.md`.
+
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.

@@ -8,11 +8,23 @@ import { GAME_DATA_URL_PARAM_KEYS } from '@/features/game-data/constants/urlPara
 import type { Area, SkillDetail } from '@/features/game-data/engine/schema';
 import { disambiguation, duplicateNames, SKILLS_ROUTE, SKILLS_URL_PARAMS } from '@/features/skills/utils/skills';
 import { campaignMapAreaPath } from '@/features/campaign-map/utils/urlState';
+import { MODIFIERS_ROUTE, MODIFIERS_URL_PARAMS } from '@/features/modifiers/utils/modifierRoutes';
 
 const SETS_PAGE = '/game-data/sets';
 
 export type HomeSearchCategory =
-  'runewords' | 'gemwords' | 'uniques' | 'mythicals' | 'sets' | 'setItems' | 'bases' | 'skills' | 'materials' | 'areas' | 'cube';
+  | 'runewords'
+  | 'gemwords'
+  | 'uniques'
+  | 'mythicals'
+  | 'sets'
+  | 'setItems'
+  | 'bases'
+  | 'skills'
+  | 'modifiers'
+  | 'materials'
+  | 'areas'
+  | 'cube';
 
 export interface HomeSearchCategoryInfo {
   readonly key: HomeSearchCategory;
@@ -29,6 +41,7 @@ export const HOME_SEARCH_CATEGORIES: readonly HomeSearchCategoryInfo[] = [
   { key: 'setItems', label: 'Set items' },
   { key: 'bases', label: 'Bases' },
   { key: 'skills', label: 'Skills' },
+  { key: 'modifiers', label: 'Modifiers' },
   { key: 'materials', label: 'Materials' },
   { key: 'areas', label: 'Areas' },
   { key: 'cube', label: 'Cube recipes' },
@@ -101,7 +114,7 @@ export function searchHome(query: string, sources: HomeSearchSources, limit = HO
   });
 }
 
-const NAME_FOCUS_PATHS: Record<Exclude<HomeSearchCategory, 'bases' | 'skills' | 'areas' | 'cube'>, string> = {
+const NAME_FOCUS_PATHS: Record<Exclude<HomeSearchCategory, 'bases' | 'skills' | 'modifiers' | 'areas' | 'cube'>, string> = {
   runewords: NAME_FOCUS_PAGES.rw,
   gemwords: NAME_FOCUS_PAGES.gw,
   uniques: NAME_FOCUS_PAGES.unique,
@@ -114,7 +127,7 @@ const NAME_FOCUS_PATHS: Record<Exclude<HomeSearchCategory, 'bases' | 'skills' | 
 
 /**
  * Page link of a picked result. The list pages and Materials focus the exact name (`?name=`); Skills focuses the skill id
- * (`?skill=`, the page picks its class and tab) and the Cube page a family id (`?family=`), falling back to the name
+ * (`?skill=`, the page picks its class and tab), Modifiers a modifier kind (`?kind=`) and the Cube page a family id (`?family=`), falling back to the name
  * when the entry carries no id. An area with its levels.txt id opens the Campaign Map on it (`/campaign-map?area=<id>`,
  * whose detail panel links the Areas page row); without an id it falls back to the Areas page. Bases (and id-less
  * areas) have no exact-name focus, so they get a quoted phrase search (`?search=`, the same link the guide's `base:`
@@ -132,6 +145,8 @@ export function homeResultHref(category: HomeSearchCategory, entry: HomeSearchNa
         : campaignMapAreaPath(Number(entry.id));
     case 'skills':
       return `/${SKILLS_ROUTE}?${SKILLS_URL_PARAMS.SKILL}=${encodeURIComponent(id)}`;
+    case 'modifiers':
+      return `/${MODIFIERS_ROUTE}?${MODIFIERS_URL_PARAMS.KIND}=${encodeURIComponent(id)}`;
     case 'cube':
       return `/game-data/cube?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=${encodeURIComponent(id)}`;
     default:

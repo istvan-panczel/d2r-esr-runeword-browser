@@ -4,7 +4,13 @@
 import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ESR_BOSS_SET_UNIQUE_DROP_FILE } from '../../src/features/game-data/build/esrSources.ts';
+import {
+  ESR_BOSS_SET_UNIQUE_DROP_FILE,
+  ESR_MODIFIER_CONFIGS,
+  ESR_MODIFIER_PATCHES,
+  modifierConfigFile,
+  modifierPatchFile,
+} from '../../src/features/game-data/build/esrSources.ts';
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const ESR_REPO_URL = 'https://github.com/CelestialRayOne/Eastern_Sun_Resurrected.git';
@@ -14,7 +20,8 @@ export const DEFAULT_ESR_DIR = '../Eastern_Sun_Resurrected';
  * Paths the generators and the tests read (non-cone sparse-checkout patterns). docs/ is the official site: weapons.htm
  * and armors.htm are the base-name oracle of bundleIntegrity.test.ts, and the guide checks its docs: links against it.
  * patchnotes/ is reference material for the guide authors. hd/items/ and hd/global/ui/items/ are the item art
- * (generate-item-icons.ts), hd/global/ui/spells/ the skill icon sheets (generate-skill-icons.ts).
+ * (generate-item-icons.ts), hd/global/ui/spells/ the skill icon sheets (generate-skill-icons.ts). The plugin configs and
+ * patches of ESR_MODIFIER_CONFIGS / ESR_MODIFIER_PATCHES are the ESR facts of modifiers.json.
  */
 export const ESR_SPARSE_PATHS = [
   '/Eastern_Sun_Resurrected.mpq/data/global/excel/',
@@ -24,6 +31,8 @@ export const ESR_SPARSE_PATHS = [
   '/Eastern_Sun_Resurrected.mpq/data/hd/global/ui/spells/',
   '/d2rloader/metadata.json',
   `/${ESR_BOSS_SET_UNIQUE_DROP_FILE}`,
+  ...ESR_MODIFIER_CONFIGS.map((name) => `/${modifierConfigFile(name)}`),
+  ...ESR_MODIFIER_PATCHES.map((name) => `/${modifierPatchFile(name)}`),
   '/docs/',
   '/patchnotes/',
 ];

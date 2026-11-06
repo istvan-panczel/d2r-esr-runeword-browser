@@ -8,6 +8,7 @@ import type {
   ItemTextBundle,
   LootFilterDataBundle,
   MaterialsBundle,
+  ModifiersBundle,
   SetsBundle,
   SkillCalcBundle,
   SkillDetailsBundle,
@@ -26,6 +27,7 @@ import { buildAreasBundle } from './bundleAreas.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
+import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
 import { buildCubeNames, modRendererFor, readCube, readCubeItem } from './cube/cubeRows.ts';
 import { buildLootFilterBundle } from './bundleLootFilter.ts';
@@ -80,6 +82,8 @@ export interface GeneratedBundles {
   itemtext: ItemTextBundle;
   // terrorzones.json
   terrorzones: TerrorZonesBundle;
+  // modifiers.json
+  modifiers: ModifiersBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -401,6 +405,67 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   });
   // --- end terrorzones.json ---
 
+  // --- modifiers.json ---
+  const itemNames = new Map(items.map((item) => [item.code, resolveName(strings, item.namestr, item.name)]));
+  const typeNames = new Map(types.bundle.types.map((type) => [type.code, type.name]));
+  const affixKinds = { p: 'prefix', s: 'suffix', a: 'automagic' } as const;
+  const modCodes = (mods: readonly { code: string }[]) => mods.filter((mod) => mod.code !== '');
+  const modifierSources: ModifierSource[] = [
+    ...affixes.bundle.affixes.map((affix) => ({
+      kind: affixKinds[affix.kind],
+      name: affix.name,
+      mods: affix.mods.map((mod) => ({ code: mod.prop })),
+    })),
+    ...readGrantSources({
+      uniqueitems: table('uniqueitems'),
+      setitems: table('setitems'),
+      runes: readRuneRecipes(table('runes')),
+      strings,
+      isRune: (code) => runeCodes.has(code),
+    }).map((source) => ({
+      kind: source.kind,
+      name: source.name,
+      mods: modCodes([...source.mods, ...(source.partialMods ?? [])]),
+    })),
+    ...setBonusSources(table('sets')).map((source) => {
+      const index = source.label.replace(/^set bonus /, '');
+      return { kind: 'setBonus' as const, name: resolveName(strings, index, index), mods: modCodes(source.mods) };
+    }),
+    ...table('qualityitems').rows.map((row) => {
+      const itemTypes = [1, 2, 3, 4, 5, 6, 7].map((i) => row.str(`itype${String(i)}`)).filter((code) => code !== '');
+      return {
+        kind: 'superior' as const,
+        name: `Superior ${itemTypes.map((code) => typeNames.get(code) ?? code).join(' / ') || 'item'}`,
+        mods: modCodes([row.str('mod1code'), row.str('mod2code')].map((code) => ({ code }))),
+      };
+    }),
+    ...table('gems').rows.map((row) => ({
+      kind: 'socketable' as const,
+      name: itemNames.get(row.str('code')) ?? row.str('name'),
+      mods: modCodes(
+        ['weapon', 'helm', 'shield'].flatMap((slot) => [1, 2, 3].map((i) => ({ code: row.str(`${slot}Mod${String(i)}Code`) })))
+      ),
+    })),
+    ...cubeTables.cube.map((row) => ({
+      kind: 'cube' as const,
+      name: row.description === '' ? `cubemain line ${String(row.line)}` : row.description,
+      mods: modCodes(row.outputs.flatMap((output) => output.mods.map((mod) => ({ code: mod.mod })))),
+    })),
+  ].filter((source) => source.mods.length > 0);
+  const modifiers = buildModifiersBundle({
+    itemstatcost: rowTable('itemstatcost'),
+    properties: statTables.properties,
+    groups: statTables.groups,
+    strings,
+    sources: modifierSources,
+    difficultylevels: table('difficultylevels'),
+    charstats: table('charstats'),
+    monstats: table('monstats'),
+    configs: sources.modifierConfigs,
+    patches: sources.modifierPatches,
+  });
+  // --- end modifiers.json ---
+
   const countKind = (kind: string) => bases.bundle.bases.filter((base) => base.kind === kind).length;
   return {
     types: types.bundle,
@@ -423,6 +488,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     stashnames: stash.names,
     itemtext: itemText.bundle,
     terrorzones: terrorZones.bundle,
+    modifiers: modifiers.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -535,6 +601,15 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       terrorZoneAreas: terrorZones.bundle.zones.reduce((sum, zone) => sum + zone.areas.length, 0),
       terrorZoneUnlistedLevels: terrorZones.unlistedLevels,
       terrorZoneBoosts: terrorZones.bundle.boosts.length,
+      modifierStats: modifiers.bundle.stats.length,
+      modifierStatsUsed: modifiers.bundle.stats.filter((stat) => stat.items > 0).length,
+      modifierStatsEsrOnly: modifiers.bundle.stats.filter((stat) => stat.vanilla === 'esr').length,
+      modifierStatsChanged: modifiers.bundle.stats.filter((stat) => stat.vanilla === 'changed').length,
+      modifierKinds: modifiers.bundle.kinds.length,
+      modifierKeyKinds: modifiers.bundle.kinds.filter((kind) => kind.generated !== true).length,
+      modifierFacts: modifiers.bundle.facts.length,
+      modifierConfigFacts: modifiers.bundle.facts.filter((fact) => fact.origin === 'esr-config').length,
+      modifierSources: modifierSources.length,
     },
     warnings: [
       ...types.warnings,
@@ -558,6 +633,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...stash.warnings,
       ...itemText.warnings,
       ...terrorZones.warnings,
+      ...modifiers.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

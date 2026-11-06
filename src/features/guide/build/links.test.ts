@@ -65,6 +65,15 @@ describe('resolveLink', () => {
     expect(resolveLink('page:/game-data/bases?search=x', ctx)).toEqual({ kind: 'app', href: '/game-data/bases?search=x' });
   });
 
+  it('checks the kind of a page:/modifiers link against modifiers.json', () => {
+    expect(resolveLink('page:/modifiers?kind=deadly-strike', ctx)).toEqual({ kind: 'app', href: '/modifiers?kind=deadly-strike' });
+    expect(resolveLink('page:/modifiers', ctx)).toEqual({ kind: 'app', href: '/modifiers' });
+    expect(resolveLink('page:/modifiers?kind=deadly-strik', ctx)).toEqual({
+      error:
+        'page: link "/modifiers?kind=deadly-strik": unknown modifier kind "deadly-strik" (a kind key of public/game-data/modifiers.json)',
+    });
+  });
+
   it('resolves dropfinder: to the plain Drop Finder page for any sources.json item, without the name in the URL', () => {
     const external = { kind: 'external', href: 'https://easternsunresurrected.com/drop-finder.html' };
     expect(resolveLink('dropfinder:Annihilus', ctx)).toEqual(external);

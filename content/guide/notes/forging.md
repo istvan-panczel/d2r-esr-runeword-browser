@@ -19,7 +19,7 @@ sources: [official-cube, esr-txt, esru-wiki]
 
 - **Skill Forging:** +1 to one class's skills; the chipped gem picks the class (Obsidian is the Warlock).
 - **All Skill Forging:** +1 to all skills, paid with a Maple Leaf, an Anvil Stone and any chipped gem.
-- **Stat Forging:** one stat, such as life, faster cast rate or resistances, depending on the gem and the item slot.
+- **Stat Forging:** one stat, such as life, [faster cast rate](page:/modifiers?kind=fcr) or resistances, depending on the gem and the item slot.
 - **Rune Forging:** two identical ES or Kanji runes and any chipped gem add that rune's bonus; LoD runes cannot be forged. It is cheap and useful from Normal on.
 - **Aura Forging:** amulets only; the Aura Stone picks the aura.
 
