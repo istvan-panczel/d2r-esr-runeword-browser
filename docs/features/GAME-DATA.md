@@ -44,6 +44,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                       |
 | `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                             |
 | `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                                    |
+| `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))       |
 | `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                   |
 | `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                   |
 | `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                |
@@ -71,6 +72,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
 | `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
 | `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
+| `skillcalc.json`    | ESR 3.2.24: 380 KB / 52 KB (skills + lines 186 KB, rows 143 KB, texts 32 KB, missiles 9 KB)                     |
 | `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                        |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
 | `areas.json`        | ESR 3.2.24: 39 KB / 5 KB                                                                                        |
@@ -755,6 +757,25 @@ the types) holds the class skill trees for the builds feature's skill allocation
 
 Counts: `skillClasses` 8, `skills` 280 (35 per class: the vanilla 30 + 5), `skillsSkipped` 0 (ESR 3.2.24). Adding the
 file did not bump `GAME_DATA_SCHEMA`; experience.txt joined the tables `esrSources.ts` reads.
+
+### Skill levels
+
+`skillcalc.json` (`SkillCalcBundle`, built by `build/bundleSkillCalc.ts` from skills.txt, skilldesc.txt, missiles.txt and
+the strings, after skilldetails.json) is what the calculator in `engine/skillCalc/` needs to evaluate every
+skilldetails.json skill's tooltip lines at any level: `skills` (one per skilldetails skill, same order: the shown line
+definitions, synergy ids, flags), `rows` / `missiles` (skills.txt / missiles.txt rows cut to the columns the shown lines
+can reach) and `texts` (each line text once). Rules, assumptions and the evaluator: [SKILLS.md](./SKILLS.md) "Skill
+levels". missiles.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
+
+Counts (ESR 3.2.24): `skillCalcSkills` 461, `skillCalcSkillsWithLevelLines` 369 (every class skill; the 92 others are
+item skills with description text only), `skillCalcLines` 2694 (`skillCalcLevelLines` 1245, `skillCalcFixedLines` 482,
+`skillCalcSynergyLines` 967), hidden lines by reason `skillCalcHiddenGated` 80, `skillCalcHiddenEngine` 22,
+`skillCalcHiddenStat` 10, `skillCalcHiddenUnsupported` 10, `skillCalcHiddenString` 2, `skillCalcHiddenParse` /
+`…Random` / `…Type` / `…Format` 0; `skillCalcCharLevelSkills` 3, `skillCalcHardPointSkills` 28, `skillCalcSynergyInputs`
+587 (listed; plus 235 unlisted on 73 skills), `skillCalcItemEffect` 328, `skillCalcRows` 520, `skillCalcMissiles` 31. Warnings start with `skillcalc:`: a token
+the calculator refuses with the lines it hides (`skillcalc: code:clc0 in 2 lines (Frenzy dsc2-1, …)`), a missing
+string, an unsupported line function, a text with more placeholders than its function fills, and `the cut rows change …`
+(the row cutting lost a column: a generator bug).
 
 ### Crafting options
 
@@ -1622,6 +1643,7 @@ Warnings are printed and stored in `manifest.warnings`; string conflicts are pri
 | `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                         |
 | `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                      |
 | `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                    |
+| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".       |
 
 ## Code layout
 
@@ -1632,11 +1654,12 @@ scripts/generate-skill-icons.ts          CLI: skill icons (cels of the HD skill 
 src/features/game-data/
   engine/      runtime + build time: schema.ts, itemTypes.ts, sockets.ts, matchRunewords.ts, bestBase.ts,
                affixEligibility.ts, statLayers.ts
+  engine/skillCalc/ skill-level calculator (parse.ts, evaluate.ts, lines.ts, text.ts, index.ts; also in the browser)
   engine/browser/loadGameData.ts         browser-only loader (fetch, import.meta.env)
   build/       build only: tsv.ts, strings.ts, model.ts, esrSources.ts, bundleTypes.ts, bundleBases.ts,
                bundleRunewords.ts, bundleAffixes.ts, bundleSources.ts (+ treasureClasses.ts, pluginUniques.ts,
                itemNames.ts), bundleLootFilter.ts (+ bundleLootFilterSkills.ts), bundleEnhance.ts, bundleCube.ts, bundleMaterials.ts, bundleSets.ts,
-               bundleSkills.ts, bundleSkillDetails.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts, itemIcons.ts,
+               bundleSkills.ts, bundleSkillDetails.ts, bundleSkillCalc.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts, itemIcons.ts,
                generateBundles.ts,
                writeBundle.ts
   build/cube/  cubemain rows and texts shared with the guide: cubeRows.ts, cubeText.ts, cubeFamilies.ts, cubeCatalog.ts

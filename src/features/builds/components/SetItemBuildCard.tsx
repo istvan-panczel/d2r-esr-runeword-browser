@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 import type { SetInfo, SetItemInfo } from '@/features/game-data/engine/schema';
 import { cn } from '@/lib/utils';
 import type { SetBonusGroupSnapshot } from '../buildData';
@@ -8,12 +9,14 @@ import { SET_NAME_CLASS, setItemPageUrl } from '../utils/setItems';
 
 interface SetPartialGroupsProps {
   readonly groups: readonly SetBonusGroupSnapshot[];
+  /** The set item (its skill lines link to the skill it grants) */
+  readonly itemName: string;
   /** Pieces of the set equipped in this section; undefined → groups shown without an active/inactive state. */
   readonly equippedPieces?: number;
 }
 
 /** An item's own partial bonuses as "2 items" / "3 items" groups; inactive groups are muted. */
-export function SetPartialGroups({ groups, equippedPieces }: SetPartialGroupsProps) {
+export function SetPartialGroups({ groups, itemName, equippedPieces }: SetPartialGroupsProps) {
   if (groups.length === 0) return null;
   return (
     <div className="space-y-2 border-t pt-2">
@@ -27,7 +30,9 @@ export function SetPartialGroups({ groups, equippedPieces }: SetPartialGroupsPro
             </p>
             <ul className="space-y-0.5">
               {group.lines.map((line, index) => (
-                <li key={`${String(index)}-${line}`}>{line}</li>
+                <li key={`${String(index)}-${line}`}>
+                  <SkillRefText line={line} item={{ kind: 'set', name: itemName }} />
+                </li>
               ))}
             </ul>
           </div>
@@ -70,11 +75,13 @@ export function SetItemBuildCard({ item, set, equippedPieces }: SetItemBuildCard
         {item.lines.length > 0 && (
           <ul className="space-y-0.5 text-center text-[#8080E6]">
             {item.lines.map((line, index) => (
-              <li key={`${String(index)}-${line}`}>{line}</li>
+              <li key={`${String(index)}-${line}`}>
+                <SkillRefText line={line} item={{ kind: 'set', name: item.name }} />
+              </li>
             ))}
           </ul>
         )}
-        <SetPartialGroups groups={item.partial} equippedPieces={equippedPieces} />
+        <SetPartialGroups groups={item.partial} itemName={item.name} equippedPieces={equippedPieces} />
       </CardContent>
     </Card>
   );

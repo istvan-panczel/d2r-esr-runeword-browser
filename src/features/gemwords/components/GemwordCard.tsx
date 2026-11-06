@@ -70,6 +70,7 @@ export function GemwordCard({
           columnBonusPools={gemword.columnBonusPools}
           allowedItems={allowedItems}
           categories={relevantCategories}
+          skillItem={{ kind: 'gemword', name }}
         />
 
         <SocketableBonusesSection title="Gem Bonuses:" bonuses={gemBonuses} allowedItems={allowedItems} categories={relevantCategories} />

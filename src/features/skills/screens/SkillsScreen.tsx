@@ -14,12 +14,14 @@ import type { SkillDetail } from '@/features/game-data/engine/schema';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
 import { SkillClassTrees } from '../components/SkillClassTrees';
 import { SkillDetailCard } from '../components/SkillDetailCard';
+import type { SkillLevelsConfig } from '../components/SkillLevelValues';
 import { SkillTile } from '../components/SkillTile';
 import { SkillTreesLayout } from '../components/SkillTreesLayout';
 import { useDetailScroll } from '../hooks/useDetailScroll';
 import { useMythicalNames } from '../hooks/useMythicalNames';
 import {
   buildSkillsView,
+  DEFAULT_LEVEL_STATE,
   disambiguation,
   duplicateNames,
   encodeSkillsState,
@@ -66,12 +68,27 @@ function SkillsBrowser({ view }: { readonly view: SkillsView }) {
   const selected = state.skill === null ? undefined : view.byId.get(state.skill);
   const markOf = selectionMarks(view, state.skill);
   const { ref: detailRef, requestScroll } = useDetailScroll(state.skill);
+  // The level stays when the skill changes (compare skills at the same level); synergy points belong to one skill
+  const nextSynergy = state.synergy === 'max' ? 'max' : DEFAULT_LEVEL_STATE.synergy;
   const select = (id: string) => {
     const detail = view.byId.get(id);
     if (detail === undefined) return;
     requestScroll();
     commitSearch('');
-    update({ skill: id, view: detail.cls ?? ITEM_SKILLS, tab: detail.page ?? state.tab, search: '' });
+    update({ skill: id, view: detail.cls ?? ITEM_SKILLS, tab: detail.page ?? state.tab, search: '', synergy: nextSynergy });
+  };
+  const levels: SkillLevelsConfig = {
+    state,
+    onChange: (patch) => {
+      update(
+        {
+          ...(patch.level === undefined ? {} : { level: patch.level }),
+          ...(patch.charLevel === undefined ? {} : { charLevel: patch.charLevel }),
+          ...(patch.synergy === undefined ? {} : { synergy: patch.synergy ?? DEFAULT_LEVEL_STATE.synergy }),
+        },
+        true
+      );
+    },
   };
 
   const cls = view.classes.find((entry) => entry.code === state.view);
@@ -92,8 +109,9 @@ function SkillsBrowser({ view }: { readonly view: SkillsView }) {
           mythicals={mythicals}
           onSelect={select}
           onClose={() => {
-            update({ skill: null });
+            update({ skill: null, synergy: nextSynergy });
           }}
+          levels={levels}
         />
       </div>
     );
@@ -102,8 +120,8 @@ function SkillsBrowser({ view }: { readonly view: SkillsView }) {
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Every class skill tree from the ESR game files, plus the skills only items grant. Pick a skill for its description, mana cost,
-        synergies and the uniques, set items and runewords that grant it. Per-level values are formulas in the game files and are not shown.
-        For attack and cast speed breakpoints see the official{' '}
+        synergies, its values at any skill level (with synergies) and the uniques, set items and runewords that grant it. The values are
+        evaluated from the formulas in the game files for a character without items. For attack and cast speed breakpoints see the official{' '}
         <ExternalLink
           href={FRAME_TABLE_URL}
           className="inline-flex items-center gap-0.5 text-primary hover:underline"
@@ -136,7 +154,7 @@ function SkillsBrowser({ view }: { readonly view: SkillsView }) {
           options={classOptions}
           value={state.view}
           onChange={(value) => {
-            update({ view: value, skill: null, tab: 1 });
+            update({ view: value, skill: null, tab: 1, synergy: nextSynergy });
           }}
         />
       </FilterPanel>

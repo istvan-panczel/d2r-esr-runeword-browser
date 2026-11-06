@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { SetBonusGroup, SetInfo, SetItemInfo } from '../engine/schema';
 import type { SourceIndex } from '../engine/sourceLookup';
 import { DocsLink } from './CubeFamilySection';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 import { BonusLines } from './EnhanceParts';
 import { ItemIcon } from './ItemIcon';
 import { ItemSourceLine } from './ItemSourceLine';
@@ -20,13 +21,13 @@ function PiecesPill({ pieces, className }: { readonly pieces: number; readonly c
 }
 
 /** Per-item bonuses: "2 items" pill, then the lines */
-function ItemBonuses({ groups }: { readonly groups: readonly SetBonusGroup[] }) {
+function ItemBonuses({ groups, itemName }: { readonly groups: readonly SetBonusGroup[]; readonly itemName: string }) {
   return (
     <div className="space-y-2">
       {groups.map((group) => (
         <div key={group.pieces} className="space-y-0.5">
           <PiecesPill pieces={group.pieces} className="border-green-600/40 bg-green-600/10 text-green-800 dark:text-green-300" />
-          <BonusLines lines={group.lines} className="text-green-700 dark:text-green-400" />
+          <BonusLines lines={group.lines} className="text-green-700 dark:text-green-400" skillItem={{ kind: 'set', name: itemName }} />
         </div>
       ))}
     </div>
@@ -65,10 +66,10 @@ function SetItemRow({
             </p>
           </div>
         </div>
-        <BonusLines lines={item.lines} />
+        <BonusLines lines={item.lines} skillItem={{ kind: 'set', name: item.name }} />
         <ItemSourceLine index={sources} name={item.name} kind="set" />
       </div>
-      {item.partial.length > 0 && <ItemBonuses groups={item.partial} />}
+      {item.partial.length > 0 && <ItemBonuses groups={item.partial} itemName={item.name} />}
     </li>
   );
 }
@@ -81,7 +82,9 @@ function SetBonusBox({ label, lines }: { readonly label: string; readonly lines:
       <ul className="space-y-0.5 text-amber-900 dark:text-amber-200">
         {lines.map((line, index) => (
           // Lines can repeat; the index keeps keys unique
-          <li key={`${String(index)}-${line}`}>{line}</li>
+          <li key={`${String(index)}-${line}`}>
+            <SkillRefText line={line} />
+          </li>
         ))}
       </ul>
     </div>

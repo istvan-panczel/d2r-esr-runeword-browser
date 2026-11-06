@@ -9,6 +9,7 @@ import { REMOVED_LEVELS } from './build/bundleAreas.ts';
 import { generateBundles } from './build/generateBundles.ts';
 import { COLORMAP_FILES, TINT_COLORS, untintedFile } from './build/itemTint.ts';
 import { serializeBundle } from './build/writeBundle.ts';
+import { defaultContext, evaluateSkill, indexSkillCalc, maxSynergyPoints, skillTable, synergyInputs } from './engine/skillCalc/index.ts';
 import { decodeSkillLevelLayer, decodeTabLayer, MAX_STAT_PARAM, statLayerKind } from './engine/statLayers.ts';
 import {
   CLASS_CODES,
@@ -27,6 +28,7 @@ import {
   type LootFilterDataBundle,
   type MaterialsBundle,
   type SetsBundle,
+  type SkillCalcBundle,
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
@@ -59,6 +61,7 @@ const materialsText = readText('materials');
 const setsText = readText('sets');
 const skillsText = readText('skills');
 const skillDetailsText = readText('skilldetails');
+const skillCalcText = readText('skillcalc');
 const craftingText = readText('crafting');
 const tiersText = readText('tiers');
 const areasText = readText('areas');
@@ -79,6 +82,7 @@ const materials = JSON.parse(materialsText) as MaterialsBundle;
 const { sets } = JSON.parse(setsText) as SetsBundle;
 const skills = JSON.parse(skillsText) as SkillsBundle;
 const skillDetails = JSON.parse(skillDetailsText) as SkillDetailsBundle;
+const skillCalc = JSON.parse(skillCalcText) as SkillCalcBundle;
 const crafting = JSON.parse(craftingText) as CraftingBundle;
 const { codes: tierCodes } = JSON.parse(tiersText) as TiersBundle;
 const { areas } = JSON.parse(areasText) as AreasBundle;
@@ -106,6 +110,7 @@ describe('committed game-data bundles', () => {
       ['sets', setsText],
       ['skills', skillsText],
       ['skilldetails', skillDetailsText],
+      ['skillcalc', skillCalcText],
       ['crafting', craftingText],
       ['tiers', tiersText],
       ['areas', areasText],
@@ -934,6 +939,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.sets)).toBe(setsText);
     expect(serializeBundle(generated.skills)).toBe(skillsText);
     expect(serializeBundle(generated.skilldetails)).toBe(skillDetailsText);
+    expect(serializeBundle(generated.skillcalc)).toBe(skillCalcText);
     expect(serializeBundle(generated.crafting)).toBe(craftingText);
     expect(serializeBundle(generated.tiers)).toBe(tiersText);
     expect(serializeBundle(generated.areas)).toBe(areasText);
@@ -1039,6 +1045,141 @@ describe('committed areas bundle', () => {
     expect(entries).toHaveLength(zones.size);
     expect(new Set(entries.map((area) => area.mapItem)).size).toBe(entries.length);
     expect(manifest.counts.areasWithMapItem).toBe(entries.length);
+  });
+});
+
+// --- skillcalc.json -----------------------------------------------------------------------------------------------
+
+describe('committed skillcalc bundle', () => {
+  const index = indexSkillCalc(skillCalc);
+  /** The value spans of a line at levels 1 / 20 / 30 / 50 (synergies: every listed one at 20, or none) */
+  const spans = (id: string, key: string, synergies = false, levels = [1, 20, 30, 50]) => {
+    const skill = index.record(id);
+    if (skill === undefined) throw new Error(`no skillcalc record for ${id}`);
+    const synergyPoints = synergies ? maxSynergyPoints(skill, index) : {};
+    const row = skillTable(skill, index, levels, { synergyPoints }).find((entry) => entry.key === key);
+    return row?.cells.map((cell) => (cell.unavailable === true ? null : cell.span));
+  };
+  const lineKey = (id: string, label: string) => {
+    const skill = index.record(id);
+    const row = skill === undefined ? undefined : skillTable(skill, index, [20]).find((entry) => entry.label === label);
+    if (row === undefined) throw new Error(`no "${label}" line on ${id}`);
+    return row.key;
+  };
+
+  it('covers every skilldetails skill in the same order, with rows for every referenced skill (ESR 3.2.24)', () => {
+    expect(skillCalc.skills.map((skill) => skill.id)).toEqual(skillDetails.skills.map((skill) => skill.id));
+    expect(manifest.counts.skillCalcSkills).toBe(skillCalc.skills.length);
+    expect(manifest.counts.skillCalcLines).toBe(skillCalc.skills.reduce((sum, skill) => sum + skill.lines.length, 0));
+    expect(manifest.counts.skillCalcRows).toBe(skillCalc.rows.length);
+    expect(manifest.counts.skillCalcMissiles).toBe(skillCalc.missiles.length);
+    for (const skill of skillCalc.skills) {
+      expect(index.skill(skill.id), skill.id).toBeDefined();
+      for (const id of skill.synergies ?? []) expect(index.skill(id)?.maxlvl, `${skill.id} → ${id}`).toBeGreaterThan(0);
+      for (const line of skill.lines)
+        for (const text of [line.a, line.b]) if (text !== undefined) expect(skillCalc.texts[text], `${skill.id} ${line.key}`).toBeDefined();
+    }
+    // Every class skill has per-level lines; most item skills too
+    const classIds = new Set(skillDetails.skills.filter((skill) => skill.cls !== null).map((skill) => skill.id));
+    const withLevelLines = skillCalc.skills.filter((skill) => skill.lines.some((line) => line.key.startsWith('desc')));
+    expect(withLevelLines.filter((skill) => classIds.has(skill.id))).toHaveLength(classIds.size);
+    expect(manifest.counts.skillCalcSkillsWithLevelLines).toBe(withLevelLines.length);
+    expect(manifest.counts.skillCalcLines).toBeGreaterThan(2500);
+    expect(manifest.files.skillcalc?.bytes).toBeLessThan(450_000);
+  });
+
+  it('reproduces the reference values of Fire Ball, with and without synergies', () => {
+    const damage = lineKey('Fire Ball', 'Fire Damage: …');
+    expect(spans('Fire Ball', damage)).toEqual(['10-20', '80-128', '160-228', '360-468']);
+    expect(spans('Fire Ball', damage, false, [110])).toEqual(['960-1188']);
+    expect(index.record('Fire Ball')?.synergies).toEqual(['Fire Bolt', 'Rain of Fire', 'Molten Focus']);
+    expect(spans('Fire Ball', damage, true)).toEqual(['58-116', '464-742', '928-1322', '2088-2714']);
+    expect(spans('Fire Ball', lineKey('Fire Ball', 'Mana Cost: …'))).toEqual(['5', '14.5', '19.5', '29.5']);
+    expect(spans('Fire Ball', lineKey('Fire Ball', 'Radius: … yards'))).toEqual(['4', '5.3', '6', '7.3']);
+    expect(spans('Fire Ball', lineKey('Fire Ball', 'Enemy Fire Resist: …%'))).toEqual(['-10', '-20', '-25', '-35']);
+  });
+
+  it('reproduces the reference values of other class and item skills', () => {
+    expect(spans('Blizzard', lineKey('Blizzard', 'Cold Damage: …'))).toEqual(['6-12', '76-120', '156-220', '356-460']);
+    expect(spans('Fanaticism', lineKey('Fanaticism', 'Physical Damage: …%'))).toEqual(['+50', '+240', '+340', '+540']);
+    expect(spans('Fanaticism', lineKey('Fanaticism', '…% Base Attack Speed'))).toEqual(['+15', '+28', '+35', '+48']);
+    expect(spans('Might', lineKey('Might', 'Physical Damage: …%'))).toEqual(['+50', '+392', '+572', '+932']);
+    expect(spans('Raise Skeleton', lineKey('Raise Skeleton', 'Defense: …'))).toEqual(['22', '828', '1716', '4452']);
+    expect(spans('Whirlwind', lineKey('Whirlwind', 'Attack Rating: …%'))).toEqual(['+15', '+300', '+450', '+750']);
+    expect(spans('Hellfire Lance', lineKey('Hellfire Lance', 'Fire Damage: …'))).toEqual(['8-10', '256-296', '516-576', '1156-1256']);
+    expect(spans('Rift Shot', lineKey('Rift Shot', 'Mana Cost: …'))).toEqual(['20', '58', '78', '118']);
+  });
+
+  it('compiles formulas like the game (ternary and minus rules) and keeps lines unlisted synergies switch on', () => {
+    // Cloak of Shadows aurastatcalc3 -(cond)?0:(10+lvl/2) negates the whole ternary
+    expect(spans('Cloak of Shadows', lineKey('Cloak of Shadows', 'Enemy Physical Resist: …%'), false, [1, 20])).toEqual(['-10', '-20']);
+    // Sharpened Focus ((lvl>0)?5:0+lvl/5)…: (cond ? 5 : 0) + lvl/5
+    expect(spans('Sharpened Focus', lineKey('Sharpened Focus', 'Enemy Physical Resist: …%'), false, [1, 20])).toEqual(['-5', '-14']);
+    expect(spans('Sharpened Focus', lineKey('Sharpened Focus', 'Enemy Elemental and Poison Resists: …%'), false, [20])).toEqual(['-24']);
+    // Weaken reads every curse's hard points through Attack's calc1 without listing them
+    expect(index.record('Weaken')?.unlistedSynergies).toContain('Amplify Damage');
+    expect(spans('Weaken', lineKey('Weaken', 'Enemy Elemental Resist: …%'), true, [20])).toEqual(['-115']);
+    // lines that are 0 without points in another class skill are shown
+    expect(spans('Werewolf', lineKey('Werewolf', 'Max Life: …%'), true, [20])).toEqual(['+96']);
+    for (const [id, keys] of [
+      ['Fire Claws', ['desc4']],
+      ['Fury', ['desc4']],
+      ['Poison Weapon', ['desc4', 'desc5']],
+      ['Reap Souls', ['dsc2-1']],
+      ['Bone Armor', ['desc4', 'desc5']],
+      ['Werebear', ['desc5']],
+    ] as const)
+      for (const key of keys)
+        expect(
+          index.record(id)?.lines.some((line) => line.key === key),
+          `${id} ${key}`
+        ).toBe(true);
+    for (const skill of skillCalc.skills)
+      for (const id of skill.unlistedSynergies ?? []) expect(index.skill(id)?.maxlvl, id).toBeGreaterThan(0);
+  });
+
+  it('lists only unlisted synergies whose points can change a value, one input per skill', () => {
+    // Fire Ball reads Zap, Conduit, Storm Nexus and Static Focus only behind an ascendancy gate that is always 0 here
+    expect(index.record('Fire Ball')?.unlistedSynergies).toBeUndefined();
+    expect(index.record('Werewolf')?.unlistedSynergies).toEqual(['Lycanthropy']);
+    const counts = skillCalc.skills.reduce(
+      (sum, skill) => ({
+        skills: sum.skills + (skill.unlistedSynergies === undefined ? 0 : 1),
+        inputs: sum.inputs + (skill.unlistedSynergies?.length ?? 0),
+      }),
+      { skills: 0, inputs: 0 }
+    );
+    expect(counts).toEqual({ skills: 73, inputs: 235 });
+    // Blizzard's tooltip lists Orb of Winter twice: one input
+    const blizzard = index.record('Blizzard');
+    expect(blizzard === undefined ? [] : synergyInputs(blizzard, index).map((input) => input.id)).toEqual([
+      'Raging Gale',
+      'Orb of Winter',
+      'Glacial Focus',
+    ]);
+  });
+
+  it('keeps the skilldetails.json fixed lines in the order the calculator shows them', () => {
+    let compared = 0;
+    for (const detail of skillDetails.skills) {
+      const record = index.record(detail.id);
+      if (detail.lines === undefined || record === undefined) continue;
+      const texts = evaluateSkill(record, index, defaultContext(record, { level: 20 })).map((result) => result.text);
+      const positions = detail.lines.map((line) => texts.indexOf(line)).filter((position) => position >= 0);
+      if (positions.length < 2) continue;
+      compared++;
+      expect(positions, detail.id).toEqual([...positions].sort((a, b) => a - b));
+    }
+    expect(compared).toBeGreaterThan(10);
+  });
+
+  it('hides engine-computed, character-stat and always-zero lines', () => {
+    // Raise Skeleton's Life is type 13 (monstats); Hellfire Lance's cooldown is 0 without its item effect
+    expect(index.record('Raise Skeleton')?.lines.some((line) => line.type === 13)).toBe(false);
+    expect(index.record('Hellfire Lance')?.lines.some((line) => line.key === 'dsc2-1')).toBe(false);
+    // Righteous Fire's damage scales with maximum life
+    expect(index.record('Righteous Fire')?.hiddenStatLines).toBeGreaterThan(0);
+    expect(manifest.counts.skillCalcHiddenStat).toBe(skillCalc.skills.reduce((sum, skill) => sum + (skill.hiddenStatLines ?? 0), 0));
   });
 });
 

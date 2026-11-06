@@ -16,7 +16,7 @@ interface SkillTreesLayoutProps {
  */
 export function SkillTreesLayout({ children, aside, placeholder }: SkillTreesLayoutProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start @9xl/page:grid-cols-[minmax(0,1fr)_28rem] @10xl/page:grid-cols-[minmax(0,124rem)_minmax(22rem,40rem)]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start @9xl/page:grid-cols-[minmax(0,1fr)_28rem] @10xl/page:grid-cols-[minmax(0,124rem)_minmax(22rem,40rem)]">
       <div className="min-w-0 space-y-4">{children}</div>
       <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
         {aside ?? <p className="hidden rounded-lg border border-dashed p-4 text-sm text-muted-foreground lg:block">{placeholder}</p>}

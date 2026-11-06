@@ -120,6 +120,13 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     items: list((entry) => `${field(entry, 'kind')}:${field(entry, 'name')}`),
     skills: list((entry) => `${field(entry, 'cls') || 'item'}/${field(entry, 'id')}`),
   },
+  // the skill-level calculator: line definitions per skill, the rows / missiles its formulas read, the shared texts
+  'skillcalc.json': {
+    skills: byField('id'),
+    rows: byField('id'),
+    missiles: byField('id'),
+    texts: VALUES,
+  },
   'skills.json': { maxLevel: VALUE, classes: byField('code') },
   'sources.json': { items: list((entry) => `${field(entry, 'item')}:${field(entry, 'name')} (${field(entry, 'code')})`) },
   'stash.json': {

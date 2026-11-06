@@ -132,7 +132,13 @@ function RunewordCardContent({
           {excludedItems.length > 0 && <p className="text-sm text-muted-foreground mt-1">Excluded: {excludedItems.join(', ')}</p>}
         </div>
 
-        <RecipeAffixes affixes={affixes} columnAffixes={columnAffixes} allowedItems={allowedItems} categories={relevantCategories} />
+        <RecipeAffixes
+          affixes={affixes}
+          columnAffixes={columnAffixes}
+          allowedItems={allowedItems}
+          categories={relevantCategories}
+          skillItem={{ kind: 'runeword', name }}
+        />
 
         <SocketableBonusesSection
           title="Socketable Bonuses:"

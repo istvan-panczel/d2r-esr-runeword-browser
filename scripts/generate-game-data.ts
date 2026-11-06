@@ -100,6 +100,7 @@ function main(): void {
     sets: serializeBundle(generated.sets),
     skills: serializeBundle(generated.skills),
     skilldetails: serializeBundle(generated.skilldetails),
+    skillcalc: serializeBundle(generated.skillcalc),
     crafting: serializeBundle(generated.crafting),
     tiers: serializeBundle(generated.tiers),
     areas: serializeBundle(generated.areas),

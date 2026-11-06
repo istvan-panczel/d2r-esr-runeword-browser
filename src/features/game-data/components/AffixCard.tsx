@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Affix } from '../engine/schema';
 import { AFFIX_KIND_LABELS } from '../constants/affixes';
 import { affixDisplayName, affixTypeNames, formatAffixLevel, formatWeight } from '../utils/filterAffixes';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 
 const KIND_BADGE_CLASS: Record<Affix['kind'], string> = {
   p: 'border-sky-600/50 text-sky-700 dark:text-sky-400',
@@ -54,7 +55,9 @@ export function AffixCard({ affix, typeNames, classNames, weight }: AffixCardPro
         <ul className="space-y-0.5 text-blue-700 dark:text-blue-400">
           {affix.text.map((line, index) => (
             // Lines can repeat (e.g. identical stats on several mods); the index keeps keys unique
-            <li key={`${String(index)}-${line}`}>{line}</li>
+            <li key={`${String(index)}-${line}`}>
+              <SkillRefText line={line} />
+            </li>
           ))}
         </ul>
         <p className="text-xs text-muted-foreground">

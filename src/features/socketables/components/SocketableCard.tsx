@@ -7,6 +7,7 @@ import { socketableIconRef } from '../utils/socketableIcon';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { ItemSourceLine } from '@/features/game-data/components/ItemSourceLine';
 import type { SourceIndex } from '@/features/game-data/engine/sourceLookup';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 
 interface SocketableCardProps {
   readonly socketable: UnifiedSocketable;
@@ -44,7 +45,9 @@ export function SocketableCard({ socketable, sourceIndex }: SocketableCardProps)
             <p className="font-medium text-muted-foreground mb-1">Weapons/Gloves:</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.weaponsGloves.map((affix) => (
-                <li key={affix.rawText}>{affix.rawText}</li>
+                <li key={affix.rawText}>
+                  <SkillRefText line={affix.rawText} />
+                </li>
               ))}
             </ul>
           </div>
@@ -56,7 +59,9 @@ export function SocketableCard({ socketable, sourceIndex }: SocketableCardProps)
             <p className="font-medium text-muted-foreground mb-1">Helms/Boots:</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.helmsBoots.map((affix) => (
-                <li key={affix.rawText}>{affix.rawText}</li>
+                <li key={affix.rawText}>
+                  <SkillRefText line={affix.rawText} />
+                </li>
               ))}
             </ul>
           </div>
@@ -68,7 +73,9 @@ export function SocketableCard({ socketable, sourceIndex }: SocketableCardProps)
             <p className="font-medium text-muted-foreground mb-1">Armor/Shields/Belts:</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.armorShieldsBelts.map((affix) => (
-                <li key={affix.rawText}>{affix.rawText}</li>
+                <li key={affix.rawText}>
+                  <SkillRefText line={affix.rawText} />
+                </li>
               ))}
             </ul>
           </div>
