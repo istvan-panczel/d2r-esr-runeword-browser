@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.56.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.55.0...v1.56.0) (2026-11-06)
+
+### Features
+
+* **terror-zones:** give the widget a frosted glass look ([55b8783](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/55b8783ac08d33526bbe4ebba634e851a0e25374))
+* **terror-zones:** show a purple TZ mark and larger boost lines ([fc327a4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fc327a46be671e91de8f6390d6ddd3cad402e167))
+* **terror-zones:** show the terrorized zones now and next on every page ([b210e47](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b210e47bb089dff8ba65d9ab9a69addcfb80eb80))
+
 ## [1.55.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.54.0...v1.55.0) (2026-11-06)
 
 ### Features
