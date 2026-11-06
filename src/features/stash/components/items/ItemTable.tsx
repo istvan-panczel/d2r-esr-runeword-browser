@@ -1,9 +1,13 @@
+import { PeekPopover } from '@/components/PeekPopover';
 import { TierBadge } from '@/features/game-data/components/TierBadge';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
+import { cn } from '@/lib/utils';
 import { fillStatLabel, initialItemSortDir, kindLabel, type ItemRow, type ItemSortKey, type SortDir } from '../../engine/items/allItems';
 import { formatLocation } from '../../engine/locations';
+import { useItemPeek } from '../../hooks/useItemPeek';
 import { SORT_HEAD_CLASS } from '../shared/classes';
 import { SortHeader as SharedSortHeader } from '../shared/SortHeader';
+import { ItemCard } from './ItemCards';
 import { BaseTypeLine, EtherealBadge, ItemName, KindText, SocketsInfo } from './ItemParts';
 import { STAT_LINE_CLASS } from './itemClasses';
 
@@ -61,12 +65,18 @@ function StatValues({
   );
 }
 
-/** One row per item: icon, name, base · type, quality, tier, item level, ethereal, sockets, location (and chosen stats) */
+/**
+ * One row per item: icon, name, base · type, quality, tier, item level, ethereal, sockets, location (and chosen stats).
+ * Hovering a row, focusing its name or copy button, or tapping its name peeks at the item's whole tooltip card
+ * (useItemPeek: one popover for the table, above the row, or below it when there is no room).
+ */
 export function ItemTable({ rows, sort, dir, onSort, shownStats }: ItemTableProps) {
   const header = { sort, dir, onSort };
+  const { peek, peekKey, wrapperProps } = useItemPeek();
+  const peekRow = peekKey === null ? undefined : rows.find((row) => row.key === peekKey);
   return (
     <div className="rounded-md border bg-card">
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-sm" {...wrapperProps}>
         <thead className="bg-muted/40 text-xs text-muted-foreground">
           <tr>
             <SortHeader label="Item" column="name" {...header} />
@@ -97,12 +107,18 @@ export function ItemTable({ rows, sort, dir, onSort, shownStats }: ItemTableProp
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.key}>
+            <tr
+              key={row.key}
+              data-item-row={row.key}
+              className={cn('hover:bg-muted/30', peek.open && peekKey === row.key && 'bg-muted/40')}
+            >
               <th scope="row" className={`${CELL_CLASS} text-left font-medium`}>
                 <div className="flex items-start gap-2">
                   <ItemIcon item={row.info.icon} size={32} className="rounded bg-muted/50" />
                   <div className="min-w-0 flex-1">
-                    <ItemName row={row} />
+                    <span data-item-peek>
+                      <ItemName row={row} />
+                    </span>
                     <BaseTypeLine row={row} />
                     <PhoneFacts row={row} shownStats={shownStats} />
                   </div>
@@ -127,6 +143,16 @@ export function ItemTable({ rows, sort, dir, onSort, shownStats }: ItemTableProp
           ))}
         </tbody>
       </table>
+      {/* Outside the table: React bubbles the portaled peek's events through its parents */}
+      {peekRow !== undefined && (
+        <PeekPopover
+          peek={peek}
+          anchorRef={peek.anchorRef}
+          className="max-h-(--radix-popover-content-available-height) w-80 overflow-y-auto p-0"
+        >
+          <ItemCard row={peekRow} className="rounded-md border-0 shadow-none" />
+        </PeekPopover>
+      )}
     </div>
   );
 }

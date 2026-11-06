@@ -268,7 +268,8 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
       )}
       <p className="text-xs text-muted-foreground">
         Every item on your stash pages; items in sockets are listed inside their item, the materials tab is left out. Rows and columns count
-        from 1 at the top left of a stash page. The copy button copies the name for the in-game shared stash search.
+        from 1 at the top left of a stash page. The copy button copies the name for the in-game shared stash search. In the table, hover a
+        row, tab to its name or tap the name to peek at all its information.
       </p>
       <ScrollToTopButton />
     </div>

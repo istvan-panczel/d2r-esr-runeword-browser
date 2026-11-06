@@ -38,11 +38,12 @@ function Lines({ lines, className }: { readonly lines: readonly string[]; readon
   );
 }
 
-function ItemCard({ row }: { readonly row: ItemRow }) {
+/** One item's tooltip-style card: the "Show all item information" cards and the item table's hover peek */
+export function ItemCard({ row, className }: { readonly row: ItemRow; readonly className?: string }) {
   const { text } = row;
   const facts = [kindLabel(row), row.item.level === null ? null : `Item level ${String(row.item.level)}`].filter((fact) => fact !== null);
   return (
-    <article className="flex h-full flex-col gap-2 rounded-xl border bg-card p-3 text-center text-sm shadow-sm">
+    <article className={cn('flex h-full flex-col gap-2 rounded-xl border bg-card p-3 text-center text-sm shadow-sm', className)}>
       <header className="flex flex-col items-center gap-1">
         <ItemIcon item={row.info.icon} size={48} />
         <ItemName row={row} quantity={false} />

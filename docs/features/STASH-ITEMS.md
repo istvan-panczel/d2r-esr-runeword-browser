@@ -8,8 +8,8 @@ materials tab is left out. Search, stat filters, filters and sort; a table or to
 
 ## Page
 
-Engine: `engine/items/allItems.ts`; UI: `screens/StashItemsScreen.tsx` and `components/items/` (`ItemTable`,
-`ItemCards`, `StatConditions`, `ItemParts`, `itemClasses`).
+Engine: `engine/items/allItems.ts`; UI: `screens/StashItemsScreen.tsx`, `hooks/useItemPeek.ts` and
+`components/items/` (`ItemTable`, `ItemCards`, `StatConditions`, `ItemParts`, `itemClasses`).
 
 **Rows** (`itemRows(stash, catalog, text)`): one per item listed on a page (`walkStashItems`, `tabs: 'pages'`), in stash
 order. Socketed items are no rows: their names (`itemDisplayName`) and jewel lines sit in the parent's `socketed`. Each
@@ -34,6 +34,20 @@ Cast Rate"; a negative value replaces the `+`, "-20% Increased Attack Speed"; a 
 for ±1, "Indestructible", else "Tinkering Points: 30"; per-level values add "(per character level)").
 Below `md` the extra columns become lines under the name (quality · ilvl, tier, ethereal, sockets, stats, location):
 no sideways scrolling on phones. 100 rows, then "Show more".
+
+**Peek** (table only; `hooks/useItemPeek.ts`, the shared `PeekPopover` / `useHoverPopover` like the campaign map's
+area peek): hovering a row with the mouse, focusing its name link or copy button with the keyboard (`:focus-visible`),
+or tapping its name on touch shows the row's whole tooltip card (`ItemCard`, the same as the details view: stat,
+runeword, socketed and set bonus lines) in one popover per table, above the row (below it when there is no room; the
+card scrolls inside the space left, so it never covers its row). Event delegation on the table: rows carry
+`data-item-row` (the row key), the name `data-item-peek`. The usual delays (300 ms to open, 150 ms to close; the
+pointer can move into the peek, whose links work); while a peek is open, another row takes over after the pointer
+rests on it for 100 ms, so crossing the row above on the way into the peek does not swap it, and moving down the
+table swaps it without closing. The peeked row is shaded. On touch the first tap on a name opens the peek (a linked
+name does not navigate), a second tap on the same name follows its link, tapping elsewhere closes it; the copy button
+copies as before. Esc and a click outside close it; focus stays in the table (no focus trap, no Tab into the peek).
+The peek is supplementary, as on the campaign map (no `aria-describedby`): "Show all item information" lists the same
+cards for every item, and the peek never shows in that view.
 
 **Details** (`details=1`, "Show all item information"): one tooltip-style card per item, 30 per "Show more": icon,
 name, base · type, set name, then the `ItemTextGroups` top to bottom: base lines, stats (blue), runeword lines (blue),
