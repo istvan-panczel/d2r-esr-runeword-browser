@@ -78,7 +78,10 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
   const levelsOf = (skill: SkillDetail): SkillLevelsConfig => {
     const points = pointsOf(skill.id);
     const learned = points > 0;
-    const level = learned ? buildSkillLevel(points, gear) : freeLevel;
+    // More points lower the gear's cap; the shown gear follows it (the state keeps the typed value)
+    const gearMax = Math.max(0, MAX_LEVEL - points);
+    const shownGear = Math.min(gear, gearMax);
+    const level = learned ? buildSkillLevel(points, shownGear) : freeLevel;
     const setting: SynergySetting = synergy ?? skillPoints;
     return {
       state: { level, charLevel, synergy: setting },
@@ -98,10 +101,10 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
           <Label htmlFor={gearId} className="shrink-0 text-xs font-normal text-muted-foreground">
             +Skills from gear
           </Label>
-          <LevelInput id={gearId} value={gear} min={0} max={Math.max(0, MAX_LEVEL - points)} onCommit={setGear} />
+          <LevelInput id={gearId} value={shownGear} min={0} max={gearMax} onCommit={setGear} />
           <span className="text-xs text-muted-foreground">
             Level <span className="font-semibold text-foreground tabular-nums">{level}</span> = {points} hard point{points === 1 ? '' : 's'}{' '}
-            + {gear}
+            + {shownGear}
           </span>
         </div>
       ) : undefined,

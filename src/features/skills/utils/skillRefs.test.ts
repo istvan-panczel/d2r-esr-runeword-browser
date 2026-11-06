@@ -114,6 +114,10 @@ describe('findSkillRefs: templates (committed skilldetails.json, lines from the 
     'Sanctuary Aura now reduces elemental resists instead of magic',
     '+(2 to 4) to Fire Ball damage',
     'Level 15 Fanaticism Aura When Equipped (but only on Tuesdays)',
+    // Level 0: no level to show values at
+    'Level 0 Fanaticism Aura When Equipped',
+    '10% Chance to Cast Level 0 Static Field on Striking',
+    '+0 to Teleport',
   ])('leaves %s alone', (line) => {
     expect(findSkillRefs(line, real)).toBeNull();
   });

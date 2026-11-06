@@ -19,8 +19,8 @@ interface LevelInputProps {
 const COMMIT_DELAY_MS = 250;
 
 /**
- * Compact integer input: commits a valid value after a short pause in typing, at once on Enter or blur, and shows
- * the stored value again on blur. A new stored value (a quick button, the slider) replaces what was being typed.
+ * Compact integer input: commits a valid value after a short pause in typing, at once on Enter (which never submits a
+ * surrounding form) or blur, and shows the stored value again on blur. A new stored value (a quick button, the slider) replaces what was being typed.
  */
 export function LevelInput({ id, value, min, max, onCommit, 'aria-label': ariaLabel, className }: LevelInputProps) {
   const [draft, setDraft] = useState<string | null>(null);
@@ -68,7 +68,10 @@ export function LevelInput({ id, value, min, max, onCommit, 'aria-label': ariaLa
           }, COMMIT_DELAY_MS);
       }}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && draft !== null) commit(draft);
+        if (e.key !== 'Enter') return;
+        // Enter never submits a surrounding form (the build editor's Save)
+        e.preventDefault();
+        if (draft !== null) commit(draft);
       }}
       onBlur={() => {
         if (draft !== null) commit(draft);

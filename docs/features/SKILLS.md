@@ -31,9 +31,11 @@ Three bundles under `public/game-data/` (see [Game Data](./GAME-DATA.md)):
 | `icons/skills/*`    | `scripts/generate-skill-icons.ts` | 64 px WebP cels cropped from the mod's HD skill icon sheets      |
 
 The details are a sibling bundle so `skills.json` (the trees, level cap and names the builds model validates against)
-stays small (31 KB). Both are generated in one run and joined by skill id in the browser (`utils/skills.ts`
-`buildSkillsView`). The builds pages (a build's Skills tab, the create / edit form) load both too, only when they draw
-a tree (`builds/hooks/useSkillTree.ts`), and reuse this page's tiles, layout and detail card.
+stays small (31 KB). The three bundles are generated in one run; the first two are joined by skill id in the browser
+(`utils/skills.ts` `buildSkillsView`), and `skillcalc.json` loads lazily only where the calculator is shown (a detail
+card, the skill peek: `hooks/useSkillCalc.ts`). The builds pages (a build's Skills tab, the create / edit form) load
+the first two too, only when they draw a tree (`builds/hooks/useSkillTree.ts`), and reuse this page's tiles, layout and
+detail card.
 
 ### skilldetails.json
 
@@ -216,7 +218,7 @@ Reap Souls' poison resist, and Werewolf / Werebear's Max Life (+96% with Lycanth
 | `string`      | texta / textb missing from the strings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `format`      | the text has more placeholders than the line function fills                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `parse`       | a formula it reaches does not parse                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `unsupported` | a formula it reaches uses an unknown code / function / skill / missile, text in a numeric column, a recursion, or an ambiguous code                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `unsupported` | a formula it reaches uses an unknown code / function / skill / missile, text in a numeric column, a recursion (a formula column read again while it is being evaluated, or 40 levels deep), more than 200,000 formula nodes in one formula (`steps`), or an ambiguous code                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `random`      | it reaches `rand(a, b)` with a < b (the engine rolls; a tooltip value would be one roll). `rand(a, a)` = a                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `stat`        | **its value changes when the character stats are set**: strength, dexterity, vitality, energy, life, mana, stamina (pools full), level, experience, defense, attack rating are set to two probe value sets at 14 sample levels; if any value differs from the all-0 state the line is about the character, not the skill (Righteous Fire's damage from max life, Wisdom of Athulua's per-attribute bonuses). Those stats are never 0 on a real character, unlike gear / toggle stats. A stat read that the line does not depend on (Might's `maxhp/25600` behind an ascendancy gate, `hitpoints·3 < maxhp` at full life) keeps the line. `hiddenStatLines` on the skill tells the UI how many lines depend on character stats |
 | `gated`       | every number in it is 0 at every level in all three states: ESR's ascendancy / item gates (a 0-second cooldown without the item effect)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -265,26 +267,51 @@ striking, when struck, …) triggers the skill (Data Guide). Set → yes (328 of
 Maelstrom Cascade Proc as a chance-to-cast with a blank ItemEffect. Whether _using_ a skill fires on-striking procs has no
 column: it depends on the skill's server function and damage path in the engine, so the calculator does not say.
 
-### Not verified in game
+### In-game checks
 
-- Type 36 decimals: one decimal at most, rounded (Fire Ball radius 5.3 yards, mana 14.5); the game's rounding and
-  decimal display are from vanilla memory. The singular text at exactly 1 (after rounding) per the Data Guide.
-- Raise Skeleton (and Fire Golem) "Physical Damage" use `pnma` for both values in ESR's skilldesc: shown as the data
-  says (4-4, 204-204).
+The calculator's numbers come from the game files and the community's descriptions of the engine; none of the lines
+below has been compared with the game yet. The in-game tooltip shows the current and the next level, so a low-level
+character (or one with known +skills) can check them. Bare character (no items, no ascendancy), no synergies unless
+stated; "Level (hard pts)" gives the skill level and, in brackets, the hard points when they differ. Fill in "Result"
+after checking.
+
+| Skill                                        | Level (hard pts)  | Line                              | We show                                                                                         | Look for                               | Result |
+| -------------------------------------------- | ----------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------- | ------ |
+| Blizzard                                     | 1                 | Radius                            | 5.3 yards                                                                                       | type-36 decimals: 5.3 vs 5.33          |        |
+| Fire Ball                                    | 2 / 20            | Mana Cost                         | 5.5 / 14.5                                                                                      | half-mana display                      |        |
+| Multiple Shot                                | 10                | Mana Cost                         | 3.3                                                                                             | rounding of 3.33                       |        |
+| Raise Skeleton                               | 1                 | skeleton count                    | "1 skeleton total"                                                                              | singular text at exactly 1             |        |
+| Blizzard                                     | 1                 | Cooldown / Cold and Freeze Length | "1 second" / "1 seconds"                                                                        | the second is ESR data (textb = texta) |        |
+| Multiple Shot                                | 10 (next 11 = 14) | Missiles                          | 13                                                                                              | dm integer math: 13 vs 14              |        |
+| Fade                                         | 1 (next 2 = 42%)  | curse duration                    | 34%                                                                                             | dm: 34 vs 35                           |        |
+| Fire Ball                                    | 1                 | line order                        | text, Radius 4, Resist −10%, Fire Damage 10-20, Mana Cost 5 last                                | bottom-up desc block                   |        |
+| Reap Souls                                   | 1                 | dsc2 order                        | "Requires Polearm or Knife", "0% … Magic", "50% Weapon Damage", "Up to -0% Enemy Poison Resist" | dsc2 bottom-up                         |        |
+| Cloak of Shadows                             | 1 / 2             | Enemy Physical Resist             | −10% / −11%                                                                                     | a conventional parser would give +10%  |        |
+| Sharpened Focus                              | 5 (5) / 8 (5)     | Phys / Elem resists               | −6% / −12%; at 8: −6% / −13%                                                                    | old parse gave −5% / −11%              |        |
+| Vigor of the Ancients                        | 1 / 6 (5)         | Vitality                          | "+10 to Vitality" / "+23"; run speed +10% / +14%                                                | no "percent" in the text               |        |
+| Feral Rage                                   | any               | synergy                           | "Lycanthropy: +1 Second per Level"                                                              | type-67 layout                         |        |
+| Raise Skeleton                               | 1 / 2             | Physical Damage                   | 4-4 / 12-12                                                                                     | min-min as the data says?              |        |
+| Raise Skeleton                               | 1                 | Life                              | hidden (type 13)                                                                                | the value the game shows               |        |
+| Hellfire Lance                               | 1                 | Cooldown                          | not shown                                                                                       | is a cooldown line shown?              |        |
+| Overseer Volley (Shenk's Mask, oskill 10-30) | 10                | Avg Lightning / Cold              | hidden; Fire 225-375, Mana 38                                                                   | the hidden values; the fire value      |        |
+| Fire Ball + 5 Fire Bolt                      | 1 / 2             | Fire Damage                       | 13-26 / 15-31 (no synergy 10-20 / 12-24)                                                        | synergy % applied                      |        |
+
+What the rows test: type-36 decimals (one decimal at most, rounded) and the singular text at exactly 1 are from vanilla
+memory and the Data Guide; the line functions 5 / 6 / 67 and the line order (dsc2 / desc bottom-up, dsc3 top-down) from
+one community guide and the Mana Cost convention; the compiler quirks (ternary, minus) from D2MOO's port of Fog;
+Raise Skeleton (and Fire Golem) "Physical Damage" use `pnma` for both values in ESR's skilldesc (shown as the data says:
+4-4, 204-204); summon life (type 13) needs monstats.txt and the difficulty and is not computed.
+
+Other assumptions, not checked yet:
+
 - D2R-only codes taken by analogy with the documented ones: `clc5..10`, `pst6..14`, `pa13..pa20`, `ln91` / `dm91` /
   `ln21` / `dm21`, `sksrc('X'.lvl)` read like `skill('X'.lvl)`, `sklvl('X'.a.b)`. missiles.txt `Range` holds formulas in
   ESR ("90+25*lvl", no `LevRange`): evaluated as a missile formula at the skill level.
-- The old line functions 3 / 4 / 5 / 6 / 63 / 67 (one community guide, "a first pass") and the D2R 79 (inferred from
-  its texts). Check Vigor of the Ancients ("+N to Vitality" without "percent"?) and a Lycanthropy synergy line in game.
-- Line order (dsc2 / desc bottom-up, dsc3 top-down): from the community guide and the Mana Cost convention; check a
-  skill with several dsc2 lines (Reap Souls) in game.
-- The game's compiler quirks (ternary, minus): from D2MOO's port of Fog; check Cloak of Shadows (−10% physical resist
-  at level 1) and Sharpened Focus in game.
+- The old line functions 3 / 4 / 63 (one community guide, "a first pass") and the D2R 79 (inferred from its texts).
 - Refused, left for round 2: `m2eo` / `m2ey` / `me3o` / `me3y` (D2MOO picks descmissile1 / 2 for them, a copy-paste bug
   D2R may have fixed: Overseer Volley), `m1nm` / `m1xm` (not in the Data Guide: Miasma Chains, Abyss), missile `rad`, the
-  broken `clc0` (Frenzy, Mirrored Blades), `ln43` (Bind Demon), Plague Javelin's descmissile that is not in
-  missiles.txt, and the two lines whose strings are missing.
-- Summon life (type 13) needs monstats.txt and the difficulty; not computed.
+  broken `clc0` (Frenzy, Mirrored Blades), `ln43` (Bind Demon), the mastery code `mael` (Meteor Sentry), Plague
+  Javelin's descmissile that is not in missiles.txt, and the two lines whose strings are missing.
 
 ## Page
 
@@ -471,7 +498,7 @@ src/features/skills/
   components/SkillLevelValues.tsx  the calculator block: level controls, at-level lines, compact + full tables
   components/LevelInput.tsx        compact integer input (levels, synergy points, +skills from gear)
   components/SkillIcon.tsx         icon <img> with a reserved square
-  hooks/useDetailScroll.ts         scrolls the card into view after a tap below lg
+  hooks/useDetailScroll.ts         scrolls the card into view after a tap below lg; scrollToTop for the values block
   hooks/useMythicalNames.ts        HTM mythical names from IndexedDB (item links)
   hooks/useSkillCalc.ts            lazy skillcalc.json + index (cached for the page's lifetime)
   hooks/useSkillRefIndex.ts        skill names for item lines (skilldetails.json on idle, cached)
@@ -496,7 +523,9 @@ Tests: `build/bundleSkillDetails.test.ts`, `build/bundleSkillCalc.test.ts` and `
 `lines.test.ts` (line functions, contexts, table), `bundleIntegrity.test.ts` (committed bundle vs. trees, counts, Fire
 Bolt / Teleport / Rift Shot examples, one icon file per key; skillcalc.json: Fire Ball 10-20 / 80-128 / 160-228 /
 360-468 and 960-1188 at 110, with synergies 58-116 / … / 2088-2714, mana, radius, resist, Blizzard, Fanaticism, Might,
-Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot),
+Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot; the compiler quirks Cloak of Shadows (−10% / −20%) and Sharpened
+Focus (−5% / −14%, −24%); unlisted synergies Weaken (−115% at 20) and Werewolf (+96% at 20), 73 skills / 235 inputs;
+the fixed-line order; skillcalc.json < 450,000 bytes),
 `features/skills/utils/skills.test.ts` (incl. the `lvl` / `clvl` / `syn` URL state), `skillLevels.test.ts` and
 `skillRefs.test.ts` (templates on real lines with the committed skilldetails.json, ambiguity rules on a small bundle,
 peek texts / levels / URLs, the attribute round trip, the class names against skills.json).

@@ -19,16 +19,20 @@ export function useSkillCalc(): SkillCalcState {
   useEffect(() => {
     if (loaded !== undefined) return;
     let cancelled = false;
-    loadGameDataFile('skillcalc').then(
-      (bundle) => {
+    const fail = (error: unknown) => {
+      console.error('Failed to load the skill calculator data:', error);
+      if (!cancelled) setState({ status: 'error', index: undefined });
+    };
+    loadGameDataFile('skillcalc').then((bundle) => {
+      // A bundle that cannot be indexed is an error too (the card falls back to its fixed lines), not an endless load
+      try {
         loaded = indexSkillCalc(bundle);
-        if (!cancelled) setState({ status: 'ready', index: loaded });
-      },
-      (error: unknown) => {
-        console.error('Failed to load the skill calculator data:', error);
-        if (!cancelled) setState({ status: 'error', index: undefined });
+      } catch (error: unknown) {
+        fail(error);
+        return;
       }
-    );
+      if (!cancelled) setState({ status: 'ready', index: loaded });
+    }, fail);
     return () => {
       cancelled = true;
     };

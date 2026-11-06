@@ -64,10 +64,14 @@ unreadable `start_time_utc` / `end_time_utc` (not `YYYY-MM-DD HH:MM:SS`) fails i
 Skills page's per-level values, `docs/features/SKILLS.md` "Skill levels"). Explain changes of the `skillCalc*` counts:
 `skillCalcHidden*` going up means lines the calculator now refuses. A `skillcalc: <token> in N lines` warning names a
 formula code, function, skill or missile it cannot evaluate (ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, `rad`, the
-ambiguous `m2eo`/`me3o` codes, Plague Javelin's missing descmissile): a new one is a follow-up for the owner, never a
+ambiguous `m2eo`/`me3o` codes, the mastery code `mael`, Plague Javelin's missing descmissile): a new one is a follow-up for the owner, never a
 code mapped by guess. `skillcalc: the cut rows change …` means the row cutting lost a column: a generator bug, report it.
-The integrity test pins Fire Ball, Blizzard, Fanaticism, Might, Raise Skeleton, Whirlwind, Hellfire Lance and Rift
-Shot; a changed value there needs the release diff's formula change as the source of the new pin.
+The integrity test pins Fire Ball, Blizzard, Fanaticism, Might, Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot,
+Cloak of Shadows and Sharpened Focus (compiler quirks), Weaken and Werewolf (unlisted synergies, 73 skills / 235
+inputs) and `skillcalc.json` < 450 KB (ESR 3.2.24: 389,234 bytes). A changed value needs the release diff's formula
+change as its source. data-review: in the `skillcalc.json` entry diff, list every skill whose `hiddenOtherLines` /
+`hiddenStatLines` rose or that lost a `desc*` line (a class skill must keep per-level lines), and every new
+`skillcalc:` warning token (incl. `mastery:`); never map a token by guess. Near 450 KB: report, do not raise the cap.
 
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the

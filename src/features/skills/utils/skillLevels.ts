@@ -258,9 +258,10 @@ export function synergyLineInputs<T extends SynergyInput>(synergies: readonly Sk
   const used = new Set<string>();
   return synergies.map((synergy) => {
     const id = synergy.id ?? synergy.name;
-    if (used.has(id)) return undefined;
-    const input = inputs.find((entry) => entry.id === id);
-    if (input !== undefined) used.add(id);
+    // Case-insensitive like the bundle builder's skill lookup (an exact id first)
+    const input = inputs.find((entry) => entry.id === id) ?? inputs.find((entry) => entry.id.toLowerCase() === id.toLowerCase());
+    if (input === undefined || used.has(input.id)) return undefined;
+    used.add(input.id);
     return input;
   });
 }

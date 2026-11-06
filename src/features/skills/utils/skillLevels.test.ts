@@ -248,6 +248,16 @@ describe('grant headlines (committed skillcalc.json)', () => {
       undefined,
     ]);
   });
+
+  it('matches synergy ids case-insensitively, an exact id first, each input once', () => {
+    const inputs = [
+      { id: 'Fire Bolt', max: 20 },
+      { id: 'fire bolt', max: 20 },
+      { id: 'Meteor', max: 20 },
+    ];
+    const synergies = [{ name: 'fire bolt' }, { name: 'METEOR' }, { name: 'Fire Bolt' }, { name: 'meteor' }, { name: 'Inferno' }];
+    expect(synergyLineInputs(synergies, inputs)).toEqual([inputs[1], inputs[2], inputs[0], undefined, undefined]);
+  });
 });
 
 describe('builds', () => {

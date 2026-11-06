@@ -72,7 +72,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
 | `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
 | `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
-| `skillcalc.json`    | ESR 3.2.24: 374 KB / 53 KB (skills + lines 181 KB, rows 141 KB, texts 32 KB, missiles 9 KB)                     |
+| `skillcalc.json`    | ESR 3.2.24: 380 KB / 52 KB (skills + lines 186 KB, rows 143 KB, texts 32 KB, missiles 9 KB)                     |
 | `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                        |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
 | `areas.json`        | ESR 3.2.24: 39 KB / 5 KB                                                                                        |
@@ -768,11 +768,11 @@ can reach) and `texts` (each line text once). Rules, assumptions and the evaluat
 levels". missiles.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
 
 Counts (ESR 3.2.24): `skillCalcSkills` 461, `skillCalcSkillsWithLevelLines` 369 (every class skill; the 92 others are
-item skills with description text only), `skillCalcLines` 2685 (`skillCalcLevelLines` 1238, `skillCalcFixedLines` 480,
-`skillCalcSynergyLines` 967), hidden lines by reason `skillCalcHiddenGated` 90, `skillCalcHiddenEngine` 22,
-`skillCalcHiddenStat` 10, `skillCalcHiddenUnsupported` 9, `skillCalcHiddenString` 2, `skillCalcHiddenParse` /
+item skills with description text only), `skillCalcLines` 2694 (`skillCalcLevelLines` 1245, `skillCalcFixedLines` 482,
+`skillCalcSynergyLines` 967), hidden lines by reason `skillCalcHiddenGated` 80, `skillCalcHiddenEngine` 22,
+`skillCalcHiddenStat` 10, `skillCalcHiddenUnsupported` 10, `skillCalcHiddenString` 2, `skillCalcHiddenParse` /
 `…Random` / `…Type` / `…Format` 0; `skillCalcCharLevelSkills` 3, `skillCalcHardPointSkills` 28, `skillCalcSynergyInputs`
-587, `skillCalcItemEffect` 328, `skillCalcRows` 520, `skillCalcMissiles` 32. Warnings start with `skillcalc:`: a token
+587 (listed; plus 235 unlisted on 73 skills), `skillCalcItemEffect` 328, `skillCalcRows` 520, `skillCalcMissiles` 31. Warnings start with `skillcalc:`: a token
 the calculator refuses with the lines it hides (`skillcalc: code:clc0 in 2 lines (Frenzy dsc2-1, …)`), a missing
 string, an unsupported line function, a text with more placeholders than its function fills, and `the cut rows change …`
 (the row cutting lost a column: a generator bug).
@@ -1643,7 +1643,7 @@ Warnings are printed and stored in `manifest.warnings`; string conflicts are pri
 | `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                         |
 | `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                      |
 | `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                    |
-| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm` / `m1xm`, missile `rad`, `m2eo` / `m2ey` / `me3o` / `me3y`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".               |
+| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".       |
 
 ## Code layout
 

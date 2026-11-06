@@ -302,6 +302,11 @@ interface Frame {
 }
 
 const MAX_DEPTH = 40;
+/**
+ * Formula nodes one `formula()` call may evaluate (reported as `steps`). ESR's formulas stay far below it; a chain of
+ * columns that each read the next one twice would double the work per column without this cap.
+ */
+const MAX_STEPS = 200_000;
 
 /**
  * One evaluation run for one character: `formula(text)` evaluates a cell of the skill row `ownId` at `ctx.level`, or of
@@ -312,6 +317,9 @@ export class CalcRun {
   readonly #source: SkillCalcSource;
   readonly #ownId: string;
   readonly #ctx: SkillCalcContext;
+  /** The formula columns being evaluated (`kind:row:column:level`): reading one again is a cycle */
+  readonly #active = new Set<string>();
+  #steps = 0;
 
   constructor(source: SkillCalcSource, ownId: string, ctx: SkillCalcContext) {
     this.#source = source;
@@ -334,6 +342,7 @@ export class CalcRun {
       this.reads.unsupported.add(`skill:${this.#ownId}`);
       return 0;
     }
+    this.#steps = 0;
     return this.#eval(parseCalc(text), { kind: 'skill', row, level: this.#ctx.level, depth: 0 });
   }
 
@@ -366,8 +375,14 @@ export class CalcRun {
     const text = frame.row[column];
     if (typeof text === 'number') return text;
     if (text === undefined || text === '') return 0;
-    if (frame.depth >= MAX_DEPTH) return this.#unsupported('recursion');
-    return this.#eval(parseCalc(text), { ...frame, depth: frame.depth + 1 });
+    const key = `${frame.kind}:${frame.row.id}:${column}:${String(frame.level)}`;
+    if (frame.depth >= MAX_DEPTH || this.#active.has(key)) return this.#unsupported('recursion');
+    this.#active.add(key);
+    try {
+      return this.#eval(parseCalc(text), { ...frame, depth: frame.depth + 1 });
+    } finally {
+      this.#active.delete(key);
+    }
   }
 
   /** A numeric cell; text in a numeric column (missiles.txt sHitPar2 "NU") cannot be evaluated */
@@ -384,6 +399,7 @@ export class CalcRun {
   }
 
   #eval(node: CalcNode, frame: Frame): number {
+    if (++this.#steps > MAX_STEPS) return this.#unsupported('steps');
     switch (node.kind) {
       case 'num':
         return node.value;

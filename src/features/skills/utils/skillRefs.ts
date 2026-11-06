@@ -242,7 +242,8 @@ export function findSkillRefs(line: string, index: SkillRefIndex, item?: SkillRe
   const first = line.charAt(0);
   if (first !== '+' && first !== 'L' && first !== 'l' && !(first >= '0' && first <= '9')) return null;
   const template = matchTemplate(line);
-  if (template === null) return null;
+  // A level-0 line ("Level 0 aura when equipped") has no level to show values at
+  if (template === null || template.level[1] < 1) return null;
   const skill = resolveSkill(template, index, item);
   if (skill === null) return null;
   const ref: SkillRef = {

@@ -36,6 +36,9 @@ const ROWS: SkillCalcRow[] = [
     calc2: 'clc1*2',
     calc3: 'clc4',
     calc4: 'clc3',
+    // A cycle that reads each column twice: without the in-progress check ~2^40 evaluations
+    calc5: 'clc6+clc6',
+    calc6: 'clc5+clc5',
   },
   {
     id: 'Fire Ball',
@@ -67,6 +70,12 @@ const ROWS: SkillCalcRow[] = [
   { id: 'Kick', Kick: 1 },
   { id: 'Summoner', Param1: 5, Param2: 1 },
   { id: 'Missiles', descmissile1: 'fireball', descmissile2: 'bolt' },
+  // No cycle and within the depth guard, but each row reads the next one twice: 2^18 column reads without the step budget
+  ...Array.from({ length: 18 }, (_, i) => ({
+    id: `Chain${String(i)}`,
+    calc1: `skill('Chain${String(i + 1)}'.clc1)*2+skill('Chain${String(i + 1)}'.clc1)`,
+  })),
+  { id: 'Chain18', calc1: '1' },
 ];
 const MISSILES: SkillCalcRow[] = [
   { id: 'fireball', EMin: 4, MinELev1: 2, EMax: 8, MaxELev1: 2, HitShift: 6, EDmgSymPerCalc: '100', Range: '90+25*lvl', Param1: 7 },
@@ -191,6 +200,15 @@ describe('skill codes', () => {
 
   it('reports recursion and unknown codes as unsupported', () => {
     expect(run('clc3').reads.unsupported.has('recursion')).toBe(true);
+    const started = performance.now();
+    expect(run('clc5').reads.unsupported).toEqual(new Set(['recursion']));
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(run("skill('Chain0'.clc1)").reads.unsupported).toEqual(new Set(['steps']));
+    expect(performance.now() - started).toBeLessThan(2000);
+    // the budget is per formula: the next one starts afresh
+    const calc = new CalcRun(source, 'Test', ctx());
+    calc.formula("skill('Chain0'.clc1)");
+    expect(calc.formula('par1')).toBe(10);
     expect([...run('clc0+ln43+par34').reads.unsupported].sort()).toEqual(['code:clc0', 'code:ln43', 'code:par34']);
     expect([...run("skill('Nope'.blvl)+foo").reads.unsupported].sort()).toEqual(['code:foo', 'skill:Nope']);
     expect([...run("skill('Nope'.blvl)+foo(1)").reads.unsupported]).toEqual(['code:foo']);
