@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { ToolbarCard } from './ToolbarCard';
 
 export interface PageHeaderProps {
   readonly title: ReactNode;
@@ -9,7 +10,7 @@ export interface PageHeaderProps {
   readonly actions?: ReactNode;
   /** Subtitle or meta line(s) under the title (e.g. the Game Data version lines) */
   readonly meta?: ReactNode;
-  /** A tab row under the title and meta, separated from the page body by a hairline */
+  /** A sub-tab row (`SUBTAB_*` classes) under the title and meta, on a `ToolbarCard` */
   readonly nav?: ReactNode;
   readonly className?: string;
 }
@@ -29,7 +30,7 @@ export function PageHeader({ title, count, actions, meta, nav, className }: Page
         {actions !== undefined && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
       {meta !== undefined && <div className="text-sm text-muted-foreground">{meta}</div>}
-      {nav !== undefined && <div className="border-b pb-2">{nav}</div>}
+      {nav !== undefined && <ToolbarCard className="mt-3">{nav}</ToolbarCard>}
     </div>
   );
 }

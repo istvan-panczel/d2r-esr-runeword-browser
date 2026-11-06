@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { PageShell } from '@/components/PageShell';
-import { TAB_ACTIVE, TAB_BASE, TAB_INACTIVE } from '@/core/components/navTabClasses';
+import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
@@ -23,7 +23,12 @@ export function StashLayout() {
       nav={
         <nav className="flex flex-wrap gap-1" aria-label="My Stash pages">
           {STASH_PAGES.map((page) => (
-            <NavLink key={page.to} to={page.to} end className={({ isActive }) => cn(TAB_BASE, isActive ? TAB_ACTIVE : TAB_INACTIVE)}>
+            <NavLink
+              key={page.to}
+              to={page.to}
+              end
+              className={({ isActive }) => cn(SUBTAB_BASE, isActive ? SUBTAB_ACTIVE : SUBTAB_INACTIVE)}
+            >
               {page.label}
             </NavLink>
           ))}
