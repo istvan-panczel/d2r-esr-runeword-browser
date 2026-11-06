@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.57.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.56.0...v1.57.0) (2026-11-06)
+
+### Features
+
+* **guide:** combat glossary terms and more difficulty penalties ([423e91e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/423e91eb432edbc9a77ea512f0f3694d312363c4))
+* **modifiers:** generate a modifiers bundle from the game files and ESR plugin configs ([90d63f8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/90d63f8247eaa70e563ad652aed2a2049b60577b))
+* **modifiers:** modifier peek on item lines ([130b2c9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/130b2c943476e62f52f32c5a5b598eb859518acc))
+* **modifiers:** modifiers reference page with fact-checked explanations and calculators ([e6ac2a8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e6ac2a85b8e632a214a77a9c51c75c66ff91b4d4))
+* **skills:** add ESR's skill information page to skill details ([36a18af](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/36a18afa50e7a8a9dd703a17e8bd20b3cfc9dcc4))
+* **skills:** evaluate skill calc formulas per level (skillcalc bundle + engine) ([fcfe83e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fcfe83e68a828fbeaac0c40c72a846b64b518a49))
+* **skills:** show per-level skill values on the Skills page and build trees ([42f9629](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/42f9629a6bff030d68b0114a4024c0eb27de4012))
+* **skills:** skill card with Values / Items / About tabs ([c3ec65c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c3ec65cf1c097e536d6befb4c4726f1adae53949))
+* **skills:** skill peek on item property lines ([4087a67](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4087a6711e2b714a2873fa008e30fdcfefd3eb17))
+
+### Bug Fixes
+
+* **modifiers:** final review and E2E fixes ([9d7bc62](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9d7bc620356d15504512977bfea8ab77ff068e2b))
+* **modifiers:** review fixes for the content, calculators and peek ([c79a35f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c79a35f1cd0b4b04a4630323949456a27f494be7))
+* **skills:** final review fixes, docs and in-game checklist ([6ccb637](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6ccb6374e4838e2243a46a2ab85f09815d5ce0b8))
+* **skills:** match the game's calc compiler, tooltip order and synergy reads ([b16af8e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b16af8edea7f01e609fe0489a87b779bbdf0354f))
+* **skills:** review and E2E fixes for skill levels and the skill peek ([3f39ecb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3f39ecbef5e2068e6dd813fe49a833c51971f094))
+* **skills:** skill information wording and heading duplicate ([fec8146](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fec81464e057a82a8c68b98521f9e4f02c2618ae))
+
 ## [1.56.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.55.0...v1.56.0) (2026-11-06)
 
 ### Features
