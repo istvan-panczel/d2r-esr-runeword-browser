@@ -76,7 +76,10 @@ Apply what the findings call for; reference.md says how for each kind. Do not co
    the release diff): place new areas in the act grids (`data/grids.ts`), update `data/names.ts`, curated links and facts
    (`data/links.ts`, `data/areas.ts`) and the official Maps page notes; see docs/features/CAMPAIGN-MAP.md. Also check
    the areas build warnings (`REMOVED_LEVELS`, `EXPECTED_ONE_WAY_VIS`, unknown LevelType, missing comment columns).
-7. Do **not** apply without asking: a `LOOT_FILTER_PLUGIN_VERSION` bump, generator or app code changes, skill edits.
+7. Ascendancy orb table (`src/features/ascendancies/data/orbLocations.ts`, hand-maintained, checked in game): when
+   `orbLocations.test.ts` fails or the release diff touches the orbs (misc.txt u11–u15), their superuniques or those
+   areas, propose the fix and ask the owner to re-check the spots in game; keep `content/guide/notes/ascendancies.md` in step.
+8. Do **not** apply without asking: a `LOOT_FILTER_PLUGIN_VERSION` bump, generator or app code changes, skill edits.
 
 Then `npx prettier --write` on the touched files, `npm run guide:generate`, `npm run guide:check` and `npm run test`;
 all must pass.
