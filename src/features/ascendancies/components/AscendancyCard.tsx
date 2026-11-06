@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Ascendancy } from '@/core/db';
 import { ESR_BASE_URL } from '@/core/api';
+import { UnlockRecipe } from './UnlockRecipe';
 
 interface AscendancyCardProps {
   readonly item: Ascendancy;
@@ -25,6 +26,9 @@ export function AscendancyCard({ item }: AscendancyCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-3">
+        {/* Unlock recipe (absent in data cached before it was parsed) */}
+        {item.unlockInputs !== undefined && item.unlockInputs.length > 0 && <UnlockRecipe inputs={item.unlockInputs} />}
+
         {/* Tiers */}
         {item.tiers.map((tier) => (
           <div key={tier.tier} className="text-center">

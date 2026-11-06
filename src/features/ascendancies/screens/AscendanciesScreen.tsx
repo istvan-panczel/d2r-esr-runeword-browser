@@ -1,4 +1,5 @@
 import { AscendancyFilters } from '../components/AscendancyFilters';
+import { AscendancyHowToPanel } from '../components/AscendancyHowToPanel';
 import { AscendancyCard } from '../components/AscendancyCard';
 import { useFilteredAscendancies } from '../hooks/useFilteredAscendancies';
 import { useUrlInitialize } from '../hooks/useUrlInitialize';
@@ -22,6 +23,8 @@ export function AscendanciesScreen() {
 
   return (
     <PageShell title="Ascendancies" count={items.length}>
+      <AscendancyHowToPanel />
+
       <AscendancyFilters />
 
       <ResultsBar summary={`Showing ${String(items.length)} ascendancies`} />
