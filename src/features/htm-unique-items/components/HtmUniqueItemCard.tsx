@@ -7,6 +7,7 @@ import { ItemSourceLine } from '@/features/game-data/components/ItemSourceLine';
 import type { SourceIndex } from '@/features/game-data/engine/sourceLookup';
 import { TierBadge } from '@/features/game-data/components/TierBadge';
 import type { BaseTierIndex } from '@/features/game-data/hooks/useBaseTiers';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 import { uniqueBaseTier } from '../utils/tierFilter';
 
 interface HtmUniqueItemCardProps {
@@ -72,7 +73,9 @@ export function HtmUniqueItemCard({
           <div className="text-center">
             <ul className="space-y-0.5 text-[#8080E6]">
               {item.properties.map((prop, idx) => (
-                <li key={`${String(idx)}-${prop}`}>{prop}</li>
+                <li key={`${String(idx)}-${prop}`}>
+                  <SkillRefText line={prop} item={{ kind: 'unique', name: item.name }} />
+                </li>
               ))}
             </ul>
           </div>

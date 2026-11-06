@@ -5,6 +5,7 @@ import { ESR_BASE_URL } from '@/core/api';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { ItemSourceLine } from '@/features/game-data/components/ItemSourceLine';
 import type { SourceIndex } from '@/features/game-data/engine/sourceLookup';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 
 interface MythicalUniqueCardProps {
   readonly item: MythicalUnique;
@@ -61,7 +62,9 @@ export function MythicalUniqueCard({ item, sourceIndex }: MythicalUniqueCardProp
           <div className="text-center">
             <ul className="space-y-0.5 text-amber-500 dark:text-amber-300">
               {item.specialProperties.map((prop, idx) => (
-                <li key={`special-${String(idx)}-${prop}`}>{prop}</li>
+                <li key={`special-${String(idx)}-${prop}`}>
+                  <SkillRefText line={prop} item={{ kind: 'unique', name: item.name }} />
+                </li>
               ))}
             </ul>
           </div>
@@ -72,7 +75,9 @@ export function MythicalUniqueCard({ item, sourceIndex }: MythicalUniqueCardProp
           <div className="text-center">
             <ul className="space-y-0.5 text-[#8080E6]">
               {item.properties.map((prop, idx) => (
-                <li key={`${String(idx)}-${prop}`}>{prop}</li>
+                <li key={`${String(idx)}-${prop}`}>
+                  <SkillRefText line={prop} item={{ kind: 'unique', name: item.name }} />
+                </li>
               ))}
             </ul>
           </div>

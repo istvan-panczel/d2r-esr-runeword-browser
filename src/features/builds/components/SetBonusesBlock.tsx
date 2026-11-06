@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 import { cn } from '@/lib/utils';
 import type { SetBonusGroupSnapshot } from '../buildData';
 import { setBonuses, type SectionItems, type SetBonusSummary } from '../utils/setBonuses';
@@ -12,7 +13,9 @@ function BonusGroup({ label, lines }: { readonly label: string; readonly lines: 
       <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">{label}</p>
       <ul className="space-y-0.5 text-amber-900 dark:text-amber-200">
         {lines.map((line, index) => (
-          <li key={`${String(index)}-${line}`}>{line}</li>
+          <li key={`${String(index)}-${line}`}>
+            <SkillRefText line={line} />
+          </li>
         ))}
       </ul>
     </div>
@@ -59,7 +62,9 @@ function SetSummaryCard({
                 {item.activePartial
                   .flatMap((group) => group.lines)
                   .map((line, index) => (
-                    <li key={`${String(index)}-${line}`}>{line}</li>
+                    <li key={`${String(index)}-${line}`}>
+                      <SkillRefText line={line} item={{ kind: 'set', name: item.name }} />
+                    </li>
                   ))}
               </ul>
             </div>

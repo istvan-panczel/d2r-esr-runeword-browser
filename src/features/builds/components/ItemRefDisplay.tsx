@@ -1,4 +1,6 @@
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
+import type { SkillRefItem } from '@/features/skills/utils/skillRefs';
 import type { EquipmentSlot, ItemRef, WeaponSwapSlot } from '../buildData';
 import { slotToColumn } from '../utils/buildSnapshot';
 import { SET_NAME_CLASS } from '../utils/setItems';
@@ -11,12 +13,14 @@ interface ItemRefDisplayProps {
   readonly setPieces?: number;
 }
 
-function AffixList({ lines }: { readonly lines: readonly string[] }) {
+function AffixList({ lines, skillItem }: { readonly lines: readonly string[]; readonly skillItem: SkillRefItem }) {
   if (lines.length === 0) return null;
   return (
     <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
       {lines.map((line, index) => (
-        <li key={`${String(index)}:${line}`}>{line}</li>
+        <li key={`${String(index)}:${line}`}>
+          <SkillRefText line={line} item={skillItem} />
+        </li>
       ))}
     </ul>
   );
@@ -42,7 +46,10 @@ export function ItemRefDisplay({ item, slot, setPieces }: ItemRefDisplayProps) {
             <p className="text-xs text-muted-foreground">{item.snapshot.baseItem}</p>
           </div>
         </div>
-        <AffixList lines={[...(item.snapshot.specialProperties ?? []), ...item.snapshot.properties]} />
+        <AffixList
+          lines={[...(item.snapshot.specialProperties ?? []), ...item.snapshot.properties]}
+          skillItem={{ kind: 'unique', name: item.snapshot.name }}
+        />
       </div>
     );
   }
@@ -60,8 +67,8 @@ export function ItemRefDisplay({ item, slot, setPieces }: ItemRefDisplayProps) {
             </p>
           </div>
         </div>
-        <AffixList lines={snapshot.properties} />
-        <SetPartialGroups groups={snapshot.partial} equippedPieces={setPieces} />
+        <AffixList lines={snapshot.properties} skillItem={{ kind: 'set', name: snapshot.name }} />
+        <SetPartialGroups groups={snapshot.partial} itemName={snapshot.name} equippedPieces={setPieces} />
       </div>
     );
   }
@@ -74,7 +81,7 @@ export function ItemRefDisplay({ item, slot, setPieces }: ItemRefDisplayProps) {
       <p className="text-sm font-medium">
         {item.name} <span className="text-xs font-normal text-muted-foreground">({recipe.join(' ')})</span>
       </p>
-      <AffixList lines={affixes} />
+      <AffixList lines={affixes} skillItem={{ kind: item.type, name: item.name }} />
     </div>
   );
 }

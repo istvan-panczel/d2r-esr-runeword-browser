@@ -1,5 +1,6 @@
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { TierBadge } from '@/features/game-data/components/TierBadge';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 import { cn } from '@/lib/utils';
 import { kindLabel, type ItemRow } from '../../engine/items/allItems';
 import { formatLocation } from '../../engine/locations';
@@ -32,7 +33,9 @@ function Lines({ lines, className }: { readonly lines: readonly string[]; readon
     <ul className={cn('space-y-0.5', className)}>
       {lines.map((line, index) => (
         // Lines can repeat (two "+1 to All Skills" sources), so the index is part of the key
-        <li key={`${String(index)}:${line}`}>{line}</li>
+        <li key={`${String(index)}:${line}`}>
+          <SkillRefText line={line} />
+        </li>
       ))}
     </ul>
   );

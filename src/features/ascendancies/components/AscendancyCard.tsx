@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Ascendancy } from '@/core/db';
 import { ESR_BASE_URL } from '@/core/api';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
 import { UnlockRecipe } from './UnlockRecipe';
 
 interface AscendancyCardProps {
@@ -35,7 +36,9 @@ export function AscendancyCard({ item }: AscendancyCardProps) {
             <p className="text-sm font-semibold text-amber-600 dark:text-amber-500">Tier {tier.tier}</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {tier.bonuses.map((bonus, idx) => (
-                <li key={`${String(tier.tier)}-${String(idx)}`}>{bonus}</li>
+                <li key={`${String(tier.tier)}-${String(idx)}`}>
+                  <SkillRefText line={bonus} />
+                </li>
               ))}
             </ul>
           </div>

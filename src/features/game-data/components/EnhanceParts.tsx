@@ -4,6 +4,8 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '
 import { Label } from '@/components/ui/label';
 import { SearchHelpButton } from '@/components/SearchHelpButton';
 import { cn } from '@/lib/utils';
+import { SkillRefText } from '@/features/skills/components/SkillRefText';
+import type { SkillRefItem } from '@/features/skills/utils/skillRefs';
 
 export interface PillOption {
   readonly value: string;
@@ -112,12 +114,22 @@ export function EnhanceSearch({
 }
 
 /** Rendered stat lines in the item-text colour */
-export function BonusLines({ lines, className }: { readonly lines: readonly string[]; readonly className?: string }) {
+interface BonusLinesProps {
+  readonly lines: readonly string[];
+  readonly className?: string;
+  /** The item the lines belong to (its skill lines link to the skill it grants); omit when unknown */
+  readonly skillItem?: SkillRefItem;
+}
+
+/** Item bonus lines; skill names in them peek at the skill (SkillRefText) */
+export function BonusLines({ lines, className, skillItem }: BonusLinesProps) {
   return (
     <ul className={cn('space-y-0.5 text-blue-700 dark:text-blue-400', className)}>
       {lines.map((line, index) => (
         // Lines can repeat; the index keeps keys unique
-        <li key={`${String(index)}-${line}`}>{line}</li>
+        <li key={`${String(index)}-${line}`}>
+          <SkillRefText line={line} item={skillItem} />
+        </li>
       ))}
     </ul>
   );

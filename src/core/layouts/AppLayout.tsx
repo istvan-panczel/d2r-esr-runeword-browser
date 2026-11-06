@@ -11,6 +11,7 @@ import { selectIsInitialized, selectError } from '@/core/store';
 import { startDataSync } from '@/core/startup';
 import { AuthOverlays, selectAuthIsConfigured } from '@/features/auth';
 import { selectPageWidth } from '@/features/settings';
+import { SkillPeekLayer } from '@/features/skills/components/SkillPeekLayer';
 // Static-bundle routes (the home page, guide, loot filters, enhance) skip both startup gates below.
 import { isStaticBundlePath } from './staticBundleRoutes';
 
@@ -63,7 +64,10 @@ export function AppLayout() {
       <Header />
       {/* The frame width follows the Page width setting (the pages inside set their own width, see PageShell). */}
       <main className={cn('flex-1 p-4', APP_FRAME_CLASS[pageWidth])}>
-        <Outlet />
+        {/* Skill names in item lines (any page) peek at the skill: one shared popover */}
+        <SkillPeekLayer>
+          <Outlet />
+        </SkillPeekLayer>
       </main>
       <SettingsDrawer />
       <Suspense fallback={null}>
