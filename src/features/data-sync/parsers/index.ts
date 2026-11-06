@@ -15,4 +15,4 @@ export {
 export { parseGemwordsHtml, calculateGemwordReqLevel } from './gemwordsParser';
 export { parseHtmUniqueItems } from './htmUniqueItemsParser';
 export { parseMythicalUniques } from './mythicalUniquesParser';
-export { parseAscendancies } from './ascendanciesParser';
+export { parseAscendancies, parseAscendanciesPage, type ParsedAscendanciesPage } from './ascendanciesParser';

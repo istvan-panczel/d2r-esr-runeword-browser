@@ -10,6 +10,7 @@ import type {
   HtmUniqueItem,
   MythicalUnique,
   Ascendancy,
+  AscendancyChallenge,
   Metadata,
 } from './models';
 
@@ -24,6 +25,7 @@ class AppDatabase extends Dexie {
   htmUniqueItems!: EntityTable<HtmUniqueItem, 'id'>;
   mythicalUniques!: EntityTable<MythicalUnique, 'id'>;
   ascendancies!: EntityTable<Ascendancy, 'name'>;
+  ascendancyChallenges!: EntityTable<AscendancyChallenge, 'tier'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
@@ -59,6 +61,27 @@ class AppDatabase extends Dexie {
       ascendancies: 'name',
       metadata: 'key',
     });
+
+    // v15: the ascendancies.htm Tier 1–5 challenges (Ascendancy rows also gained unlockInputs). Dropping the stored
+    // app version makes the next online startup refetch and re-parse, so existing caches fill the new table and field
+    this.version(15)
+      .stores({
+        gems: 'name, type, quality, color',
+        esrRunes: 'name, order, tier, color',
+        lodRunes: 'name, order',
+        kanjiRunes: 'name',
+        crystals: 'name, type, quality, color',
+        runewords: '[name+variant], name, sockets, reqLevel, sortKey',
+        gemwords: '[name+variant], name, sockets, reqLevel, sortKey',
+        htmUniqueItems: '++id, name, page, category, reqLevel',
+        mythicalUniques: '++id, name, category, reqLevel',
+        ascendancies: 'name',
+        ascendancyChallenges: 'tier',
+        metadata: 'key',
+      })
+      .upgrade(async (tx) => {
+        await tx.table('metadata').delete('appVersion');
+      });
   }
 }
 

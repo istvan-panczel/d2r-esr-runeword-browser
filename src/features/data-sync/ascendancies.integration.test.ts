@@ -6,8 +6,8 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import Dexie from 'dexie';
 import 'fake-indexeddb/auto';
-import { parseAscendancies } from './parsers/ascendanciesParser';
-import type { Ascendancy } from '@/core/db';
+import { parseAscendanciesPage } from './parsers/ascendanciesParser';
+import type { Ascendancy, AscendancyChallenge } from '@/core/db';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -17,26 +17,32 @@ const ascendanciesHtml = readFileSync(resolve(__dirname, '../../../test-fixtures
 
 class TestDb extends Dexie {
   ascendancies!: Dexie.Table<Ascendancy, string>;
+  ascendancyChallenges!: Dexie.Table<AscendancyChallenge, number>;
 
   constructor() {
     super('test-ascendancies');
     this.version(1).stores({
       ascendancies: 'name',
+      ascendancyChallenges: 'tier',
     });
   }
 }
 
 let testDb: TestDb;
 let allParsedItems: Ascendancy[];
+let allParsedChallenges: AscendancyChallenge[];
 
 beforeAll(async () => {
   testDb = new TestDb();
 
-  // Parse ascendancies
-  allParsedItems = parseAscendancies(ascendanciesHtml);
+  // Parse ascendancies and their challenges
+  const page = parseAscendanciesPage(ascendanciesHtml);
+  allParsedItems = page.ascendancies;
+  allParsedChallenges = page.challenges;
 
   // Store in IndexedDB
   await testDb.ascendancies.bulkPut(allParsedItems);
+  await testDb.ascendancyChallenges.bulkPut(allParsedChallenges);
 });
 
 afterAll(async () => {
@@ -76,6 +82,16 @@ describe('Known item verification from DB', () => {
     expect(item!.tiers[0].bonuses).toContain('+1 to Class Skill Levels');
     expect(item!.footnotes.length).toBe(1);
     expect(item!.footnotes[0]).toContain('Total Defense Bonus');
+    expect(item!.unlockInputs).toEqual(['Orb of Creation', '2 Blemished Sapphire', '2 Blemished Obsidian']);
+  });
+
+  it('should store the five challenges keyed by tier', async () => {
+    const tiers = await testDb.ascendancyChallenges.toArray();
+    expect(tiers.map((c) => c.tier)).toEqual([1, 2, 3, 4, 5]);
+    expect(tiers[0].recipes.length).toBe(15);
+    const tier4 = await testDb.ascendancyChallenges.get(4);
+    expect(tier4?.recipes[0].inputs).toContain('Primordial Soulstones Captured: 10/10');
+    expect(tier4?.description[0]).toContain('Primordial Soulstones');
   });
 
   it('should retrieve Worldshaper from DB with footnotes', async () => {

@@ -23,5 +23,7 @@ export type {
   MythicalUnique,
   Ascendancy,
   AscendancyTier,
+  AscendancyRecipe,
+  AscendancyChallenge,
   Metadata,
 } from './models';

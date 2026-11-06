@@ -38,6 +38,7 @@ const EMPTY_PARSED_DATA: ParsedData = {
   htmUniqueItems: [],
   mythicalUniques: [],
   ascendancies: [],
+  ascendancyChallenges: [],
 };
 
 const EMPTY_FETCHED_HTML: FetchedHtmlData = {
@@ -74,7 +75,8 @@ function fakeRows(prefix: string, count: number): never[] {
 }
 
 function fullParsedData(count = 10): ParsedData {
-  return Object.fromEntries(DATASETS.map((dataset) => [dataset, fakeRows('fresh', count)])) as unknown as ParsedData;
+  const datasets = Object.fromEntries(DATASETS.map((dataset) => [dataset, fakeRows('fresh', count)])) as unknown as ParsedData;
+  return { ...datasets, ascendancyChallenges: [] };
 }
 
 /** Populates every dataset table with `count` rows and stamps an old ESR version. */
@@ -132,6 +134,36 @@ describe('dataSyncSaga store step', () => {
     expect(appVersionMeta?.value).toBe(appVersion.version);
     expect(lastUpdatedMeta?.value).toBeTruthy();
     expect(await db.runewords.count()).toBe(10);
+    expect(toast.warning).not.toHaveBeenCalled();
+  });
+
+  it('stores the ascendancy challenges in their own table', async () => {
+    const store = createTestStore();
+    const challenge = {
+      tier: 2,
+      description: ['Kill Nihlathak.'],
+      recipes: [{ inputs: ['Ascendancy Stone'], outputs: ['Upgraded to Tier 2'] }],
+    };
+
+    store.dispatch(parseDataSuccess({ ...fullParsedData(), ascendancyChallenges: [challenge], esrVersion: '9.9.9' }));
+
+    await vi.waitFor(async () => {
+      expect((await db.metadata.get('esrVersion'))?.value).toBe('9.9.9');
+    });
+    expect(await db.ascendancyChallenges.toArray()).toEqual([challenge]);
+  });
+
+  it('stores the other data when the page had no challenge section', async () => {
+    const store = createTestStore();
+    await db.ascendancyChallenges.put({ tier: 1, description: ['Old'], recipes: [] });
+
+    store.dispatch(parseDataSuccess({ ...fullParsedData(), esrVersion: '9.9.9' }));
+
+    await vi.waitFor(async () => {
+      expect((await db.metadata.get('esrVersion'))?.value).toBe('9.9.9');
+    });
+    expect(await db.ascendancies.count()).toBe(10);
+    expect(await db.ascendancyChallenges.count()).toBe(0);
     expect(toast.warning).not.toHaveBeenCalled();
   });
 

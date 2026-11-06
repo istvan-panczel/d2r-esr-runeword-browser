@@ -22,7 +22,7 @@ describe('openDatabase', () => {
     await openDatabase();
 
     expect(db.isOpen()).toBe(true);
-    expect(db.verno).toBe(14);
+    expect(db.verno).toBe(15);
     expect(await db.runewords.count()).toBe(0);
     expect(db.tables.map((table) => table.name)).not.toContain('affixes');
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -38,5 +38,27 @@ describe('openDatabase', () => {
     await openDatabase();
 
     expect((await db.metadata.get('esrVersion'))?.value).toBe('1.0.0');
+  });
+
+  it('upgrades a version 14 cache to 15 and drops the stored app version so the next startup re-parses', async () => {
+    db.close();
+    await Dexie.delete(db.name);
+
+    const v14 = new Dexie(db.name);
+    v14.version(14).stores({ ascendancies: 'name', metadata: 'key' });
+    await v14.table('ascendancies').put({ name: 'Battlemage' });
+    await v14.table('metadata').bulkPut([
+      { key: 'esrVersion', value: '3.2.24' },
+      { key: 'appVersion', value: '1.54.0' },
+    ]);
+    v14.close();
+
+    await openDatabase();
+
+    expect(db.verno).toBe(15);
+    expect(await db.ascendancies.count()).toBe(1);
+    expect(await db.ascendancyChallenges.count()).toBe(0);
+    expect((await db.metadata.get('esrVersion'))?.value).toBe('3.2.24');
+    expect(await db.metadata.get('appVersion')).toBeUndefined();
   });
 });

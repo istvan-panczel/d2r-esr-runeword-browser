@@ -190,6 +190,27 @@ export interface Ascendancy {
   readonly imageUrl: string; // Relative URL, e.g. "./images/ascendancies/battlemage.png"
   readonly tiers: readonly AscendancyTier[];
   readonly footnotes: readonly string[];
+  /**
+   * The Tier 1 Challenge recipe that makes this ascendancy's stone, one input per line as the page lists them:
+   * ["Orb of Creation", "2 Blemished Sapphire", "2 Blemished Obsidian"]. Empty when the page has no recipe for it;
+   * undefined in data cached before it existed.
+   */
+  readonly unlockInputs?: readonly string[];
+}
+
+/** One Input → Output row of a challenge table on ascendancies.htm, one entry per visual line of each cell. */
+export interface AscendancyRecipe {
+  readonly inputs: readonly string[]; // e.g. ["Ascendancy Stone", "Maple Leaf"]
+  readonly outputs: readonly string[]; // e.g. ["Ascendancy Stone", "Upgraded to Tier 3"]
+}
+
+/** A "Tier N Challenge" section of ascendancies.htm: how to unlock (tier 1) or upgrade the Ascendancy Stone. */
+export interface AscendancyChallenge {
+  readonly tier: number; // PK, 1-5
+  /** Plain-text paragraphs (emphasis dropped, hard-wrapped lines re-joined) */
+  readonly description: readonly string[];
+  /** Tier 1 lists one recipe per ascendancy, the later tiers one each */
+  readonly recipes: readonly AscendancyRecipe[];
 }
 
 // Metadata

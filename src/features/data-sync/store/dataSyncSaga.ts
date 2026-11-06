@@ -26,7 +26,7 @@ import {
   parseGemwordsHtml,
   parseHtmUniqueItems,
   parseMythicalUniques,
-  parseAscendancies,
+  parseAscendanciesPage,
   type RunePointsLookup,
   type RuneReqLevelLookup,
   type RunePriorityLookup,
@@ -271,8 +271,8 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     const mythicalUniques = parseMythicalUniques(mythicalsHtml);
     console.log('[HTML] Parsed mythical uniques:', mythicalUniques.length);
 
-    const ascendancies = parseAscendancies(ascendanciesHtml);
-    console.log('[HTML] Parsed ascendancies:', ascendancies.length);
+    const { ascendancies, challenges: ascendancyChallenges } = parseAscendanciesPage(ascendanciesHtml);
+    console.log('[HTML] Parsed ascendancies:', ascendancies.length, 'challenges:', ascendancyChallenges.length);
 
     yield put(
       parseDataSuccess({
@@ -286,6 +286,7 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
         htmUniqueItems,
         mythicalUniques,
         ascendancies,
+        ascendancyChallenges,
         esrVersion: action.payload.esrVersion,
         docsLastModified: action.payload.docsLastModified,
       })
@@ -309,6 +310,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       htmUniqueItems,
       mythicalUniques,
       ascendancies,
+      ascendancyChallenges,
       docsLastModified,
     } = action.payload;
 
@@ -371,6 +373,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
           db.htmUniqueItems.bulkPut(htmUniqueItems),
           db.mythicalUniques.bulkPut(mythicalUniques),
           db.ascendancies.bulkPut(ascendancies),
+          db.ascendancyChallenges.bulkPut(ascendancyChallenges),
         ]);
         if (esrVersion !== null) {
           await db.metadata.put({ key: 'esrVersion', value: esrVersion });
@@ -402,6 +405,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       htmUniqueItems: htmUniqueItems.length,
       mythicalUniques: mythicalUniques.length,
       ascendancies: ascendancies.length,
+      ascendancyChallenges: ascendancyChallenges.length,
     });
 
     if (isPartial) {
