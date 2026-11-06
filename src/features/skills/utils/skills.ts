@@ -2,7 +2,14 @@
  * Pure helpers of the Skills page: the view model (skills.json trees + skilldetails.json), the URL state, search,
  * the "Granted by" texts and the item page links. See docs/features/SKILLS.md.
  */
-import type { SkillDetail, SkillDetailsBundle, SkillGrant, SkillGrantItem, SkillsBundle } from '@/features/game-data/engine/schema';
+import type {
+  SkillDetail,
+  SkillDetailsBundle,
+  SkillGrant,
+  SkillGrantItem,
+  SkillMercenary,
+  SkillsBundle,
+} from '@/features/game-data/engine/schema';
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
 import { normaliseItemName } from '@/core/utils/itemName';
 import { parseSearchTerms } from '@/core/utils/searchTerms';
@@ -306,6 +313,44 @@ export function descriptionParagraphs(lines: readonly string[]): string[] {
     else paragraphs.push(line);
   }
   return paragraphs;
+}
+
+/** Abbreviations whose full stop does not end a sentence */
+const ABBREVIATIONS = /(?:^|[\s(])(?:e\.g|i\.e|etc|vs|approx)$/i;
+
+/**
+ * The first sentence of a text: up to the first `.`, `!` or `?` outside parentheses that is followed by a space and a
+ * capital letter (not after "e.g." and the like); the whole text when there is no such stop.
+ */
+export function firstSentence(text: string): string {
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '(') depth++;
+    else if (char === ')') depth = Math.max(0, depth - 1);
+    else if (depth === 0 && (char === '.' || char === '!' || char === '?') && /^\s+[A-Z]/.test(text.slice(i + 1))) {
+      if (char === '.' && ABBREVIATIONS.test(text.slice(0, i))) continue;
+      return text.slice(0, i + 1);
+    }
+  }
+  return text;
+}
+
+/**
+ * A skill's mercenaries grouped by hireling, in page order: "Desert Mercenary" → ["Comb – Normal", "Def – Normal"]
+ * (the page's " - " shown as an en dash).
+ */
+export function mercenaryGroups(mercenaries: readonly SkillMercenary[]): { hireling: string; subtypes: string[] }[] {
+  const groups: { hireling: string; subtypes: string[] }[] = [];
+  for (const { hireling, subtype } of mercenaries) {
+    let group = groups.find((entry) => entry.hireling === hireling);
+    if (group === undefined) {
+      group = { hireling, subtypes: [] };
+      groups.push(group);
+    }
+    if (subtype !== '') group.subtypes.push(subtype.replace(/ - /g, ' – '));
+  }
+  return groups;
 }
 
 /**

@@ -73,6 +73,15 @@ change as its source. data-review: in the `skillcalc.json` entry diff, list ever
 `hiddenStatLines` rose or that lost a `desc*` line (a class skill must keep per-level lines), and every new
 `skillcalc:` warning token (incl. `mastery:`); never map a token by guess. Near 450 KB: report, do not raise the cap.
 
+**Skill information page**: `docs/skill_information.htm` (the official "Mercenary and Oskill Information" page) feeds
+skilldetails.json's `infoPage` (hand-written oskill descriptions) and `mercenaries` (`build/skillInfoPage.ts`,
+`docs/features/SKILLS.md` "ESR skill information page"). Explain changes of the `skillInfo*` counts with the page's
+diff (`esr:diff` docs section). A `skilldetails: skill_information.htm … names "<name>": no such skill` warning is a
+renamed skill or a new entry whose name differs from the game's: find the skill in skills.txt / the strings and, only
+when the match is certain, add it to `NAME_ALIASES` (otherwise report it to the owner); `skillInfoUnmatched` is 0 at
+3.2.24 and the integrity test pins it. "a skills.txt skill not in skilldetails.json" means no item grants that skill
+any more: report, no fix.
+
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
@@ -156,7 +165,7 @@ and gitleaks, and the exiftool check takes a few seconds.
 - **Vanilla art folder missing**: icons.json keeps the old `esrVersion`, so `game-data --check`, the icon check and
   `bundleIntegrity.test.ts` fail. Only `npm run game-data:icons` with the folder fixes it; never hand-edit icons.json.
 - **New generator warnings** (string conflicts, duplicate bases, unresolved stats, `affix stats: property … is not
-mapped`, `lootfilter skills:`, `stash:`, `itemtext:`, `skillcalc:` missing strings): find the rows in the table diff and explain
+mapped`, `lootfilter skills:`, `stash:`, `itemtext:`, `skillcalc:` missing strings, `skilldetails: skill_information.htm`): find the rows in the table diff and explain
   them; a parser gap is a follow-up, not a silent code fix.
 - **Integrity test fails**: if the release diff explains the new count, update the pin (step 5); otherwise
   investigate. It also pins `r48` Fu Rune as the only spawnable item that never drops, disabled uniques 0 and 690–695,

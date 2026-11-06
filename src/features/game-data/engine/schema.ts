@@ -845,6 +845,26 @@ export interface SkillDetail {
   icon?: string;
   /** Uniques, set items and runewords granting the skill; omitted when none */
   grantedBy?: SkillGrant[];
+  /** ESR's skill information page (docs/skill_information.htm, Oskills table): the hand-written description */
+  infoPage?: SkillInfoText;
+  /** ESR's skill information page, Mercenaries table: the hirelings that use the skill */
+  mercenaries?: SkillMercenary[];
+}
+
+/** An Oskills entry of ESR's skill information page */
+export interface SkillInfoText {
+  /** The entry's Skill cell as written; may name several skills ("Fire/Cold/Lightning Damage Aura") */
+  heading: string;
+  /** The Description cell: paragraphs, HTML stripped, whitespace normalised */
+  text: string[];
+}
+
+/** A mercenary that uses a skill (ESR's skill information page) */
+export interface SkillMercenary {
+  /** "Desert Mercenary" */
+  hireling: string;
+  /** "Comb - Nightmare" (as written on the page) */
+  subtype: string;
 }
 
 /** skilldetails.json: details of every class skill and of every described item skill some item grants */

@@ -87,11 +87,44 @@ pools and the set-wide bonuses of sets.txt.
 
 Counts (manifest, ESR 3.2.24): `skillDetails` 461, `skillDetailsItemSkills` 181, `skillDetailsWithGrants` 438,
 `skillDetailsWithSynergies` 226, `skillDetailsWithoutDescription` 93 (mostly item skills: ESR's surges, masteries,
-trophies), `skillGrantItems` 1185, `skillGrants` 3122, `skillGrantsUndescribed` 0 (grants of class-less skills
-without a skilldesc row, not listed), `skillIcons` 325. Size: 387 KB / 61 KB gzip.
+trophies; 63 of them get the skill information page's text, see below), `skillGrantItems` 1185, `skillGrants` 3122,
+`skillGrantsUndescribed` 0 (grants of class-less skills without a skilldesc row, not listed), `skillIcons` 325.
+Size: 406 KB / 64 KB gzip.
 
 Warnings (manifest): `skilldetails: unknown skill in <prop> "<par>" (<item>)` (ESR 3.2.24: one, Ember of Creation's
 `oskill Axe Swarm`), missing name / description / dsc3 strings, duplicate skills.txt ids.
+
+### ESR skill information page
+
+ESR's official "Mercenary and Oskill Information" page (`docs/skill_information.htm` in the clone, the same file as
+https://easternsunresurrected.com/skill_information.htm, also tracked by `esr:diff`) adds two fields
+(`build/skillInfoPage.ts`, applied after the skills are built; the generator reads the file through `esrSources.ts`):
+
+- **`infoPage`** `{ heading, text }`: the Oskills table's hand-written description (paragraphs split at `<br>` / `<p>`,
+  tags stripped, entities decoded, whitespace collapsed: the page's source line breaks are only wrapping). `heading`
+  is the Skill cell as written. A heading names several skills: comma-separated parts, and slash groups whose last
+  member carries the shared suffix: "Fire/Cold/Lightning/Poison/Magic/Wind Surge" → Fire Surge … Wind Surge, "Axe
+  Throw, Fire/Cold/Lightning/Magic Enhanced Axe" → Axe Throw + four Enhanced Axes. The last member's own prefix has as
+  many words as the first member ("Blades of Ice/Claws of Thunder/Fists of Fire Discharge" → suffix "Discharge"), or
+  one word when that would leave no suffix ("Dragon Fury/Execute Discharge").
+- **`mercenaries`** `[{ hireling, subtype }]`: the Mercenaries table (hireling, subtype as written, e.g. "Comb -
+  Nightmare", and a comma-separated skill list), one entry per row naming the skill.
+- **Name resolution**: every skill whose display name matches (case-insensitive; same-name variants such as Empowered
+  Enchant all get the entry), else the skill whose skills.txt id matches ("Super Nova" → Supernova, "Cold Pierce Aura"),
+  else a small alias table for names the page writes differently (`NAME_ALIASES`: Axe Throw → Thrown Axe, Fire / Cold /
+  Lightning / Magic Spike Nova → "… Enhanced Spike Nova", Non-Elemental Spike Nova → Spike Nova, Trophy of Skills →
+  Trophy of All Skills, and the Barbarian Offensive hireling's "Ancients' Presence" → Shout of the Ancients, which is
+  what hireling.txt lists in that slot). Mercenary names prefer the class skills: a hireling's Conduit, Whirlpool and
+  Shout are the class skills, not the item skills "Conduit Proc", "Whirlpool Proc" and "Shout Aura" of the same name;
+  item skills match when no class skill has the name (Fire / Cold / Lightning Damage Aura).
+- Only skills in skilldetails.json can carry the fields. A name that resolves to nothing is a manifest warning
+  (`skilldetails: skill_information.htm Oskills "<heading>" names "<name>": no such skill`, or `…: a skills.txt
+skill not in skilldetails.json` when no item grants it); a missing table, an empty row, a skill described by two
+  entries and a missing file are warnings too.
+
+Counts (manifest, ESR 3.2.24): `skillInfoEntries` 38 (Oskills rows), `skillInfoNames` 68 (names they expand to),
+`skillInfoSkills` 68, `skillInfoOnlyDescription` 63 (skills whose only description is the page's), `skillInfoMercenaryRows` 16,
+`skillInfoMercenarySkills` 44, `skillInfoMercenaryLinks` 70, `skillInfoUnmatched` 0.
 
 ### Icons
 
@@ -328,8 +361,12 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
 - **Detail card**: icon, name, class · tab (or "Item skill", plus the skills.txt id when it differs from the name),
   fact chips (required level, max level, mana, element, aura / passive) and the calculator's tags (dashed, explained
   on hover: "Scales with character level", "Scales with hard points only" (+skills do not raise that part), "Item procs
-  can cast this" / "Unknown whether item procs can cast this" from `itemTriggerInfo`), description, the **values per
-  level** (below), Requires / Unlocks links, "Receives bonuses from" (linked; with a hard-points input 0..cap per
+  can cast this" / "Unknown whether item procs can cast this" from `itemTriggerInfo`), description, the **ESR skill
+  information page** text (`infoPage`: the description itself, with "From the ESR skill information page" under it,
+  when skilldesc has none, else a block under the description labelled with the link; the entry's heading is shown
+  when it names more skills), the **values per
+  level** (below), Requires / Unlocks links, "Used by mercenaries: Desert Mercenary (Comb – Normal, …)" (`mercenaries`
+  grouped by hireling, with a Source link to the page's Mercenaries table), "Receives bonuses from" (linked; with a hard-points input 0..cap per
   synergy the calculator knows and the computed bonus text instead of `+?%`; a skill listed twice, such as Blizzard's
   two Orb of Winter bonuses, gets the input on its first line only (`synergyLineInputs`); then "Also affected by (not listed in the
   tooltip)": the record's `unlistedSynergies`, linked, with the same hard-points inputs), notes, and **Granted by**,
@@ -401,7 +438,8 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
 
 Skill names in item property lines are links with a peek (`utils/skillRefs.ts`, `components/SkillRefText.tsx`): hover
 (mouse), focus (keyboard) or a first tap (touch) opens a small card with the skill's icon, name (+ the id suffix of
-same-name skills), class or "Item skill", what the line gives, the first one or two per-level values that vary (as in
+same-name skills), class or "Item skill", what the line gives, the first sentence of the ESR skill information page
+when the skill has no description (`firstSentence`: Warm Up, the surges, …), the first one or two per-level values that vary (as in
 "Granted by": mana left out, no synergies, character level 110) and "Open in Skills →". A click (or a second tap on the
 same name) opens `/skills?skill=<id>&lvl=<N>` (`lvl` omitted at 20). The values are picked like "Granted by"'s
 (`headlineKeys`: damage lines first).
@@ -484,6 +522,7 @@ Tor'Baalos) match a grant of that item with the same property, level and chance.
 
 ```
 src/features/game-data/build/bundleSkillDetails.ts   builder (+ readGrantSources, evalSimpleCalc; re-exports bottomUp)
+src/features/game-data/build/skillInfoPage.ts        ESR skill information page: parse, heading expansion, names → infoPage / mercenaries
 src/features/game-data/build/bundleSkillCalc.ts      skillcalc.json builder: line classification, row cutting, self-check
 src/features/game-data/engine/skillCalc/             calculator: parse.ts, evaluate.ts, lines.ts, text.ts, index.ts
 src/features/game-data/build/skillIcons.ts           sheet listing, icon keys, cel crop
@@ -519,13 +558,15 @@ The builds feature imports the components, hooks and utils by deep path (`@/feat
 card's slot, local selection state) live in `src/features/builds/components/BuildSkillTrees.tsx`.
 
 Tests: `build/bundleSkillDetails.test.ts`, `build/bundleSkillCalc.test.ts` and `build/skillIcons.test.ts` (fixture rows),
+`build/skillInfoPage.test.ts` (a page snippet: grouped headings, mercenary rows, name resolution, determinism),
 `engine/skillCalc/evaluate.test.ts` (parser, integer math, codes, damage / length / mana helpers, references) and
 `lines.test.ts` (line functions, contexts, table), `bundleIntegrity.test.ts` (committed bundle vs. trees, counts, Fire
 Bolt / Teleport / Rift Shot examples, one icon file per key; skillcalc.json: Fire Ball 10-20 / 80-128 / 160-228 /
 360-468 and 960-1188 at 110, with synergies 58-116 / … / 2088-2714, mana, radius, resist, Blizzard, Fanaticism, Might,
 Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot; the compiler quirks Cloak of Shadows (−10% / −20%) and Sharpened
 Focus (−5% / −14%, −24%); unlisted synergies Weaken (−115% at 20) and Werewolf (+96% at 20), 73 skills / 235 inputs;
-the fixed-line order; skillcalc.json < 450,000 bytes),
+the fixed-line order; skillcalc.json < 450,000 bytes; the skill information page: Warm Up, Fire Surge, Thrown Axe,
+Fanaticism ← Desert Mercenary Comb - Nightmare, Conduit not Conduit Proc, no unmatched names),
 `features/skills/utils/skills.test.ts` (incl. the `lvl` / `clvl` / `syn` URL state), `skillLevels.test.ts` and
 `skillRefs.test.ts` (templates on real lines with the committed skilldetails.json, ambiguity rules on a small bundle,
 peek texts / levels / URLs, the attribute round trip, the class names against skills.json).
@@ -535,6 +576,11 @@ peek texts / levels / URLs, the attribute round trip, the class names against sk
 - skilldetails.json synergy texts still show `?` for formula bonuses; the page replaces them with the calculator's
   values once skillcalc.json is loaded (a synergy line the calculator hides keeps the `?`).
 - Hidden grants, random-skill properties, propertygroups pools and set-wide bonuses are not listed.
-- Mercenary (hireable) skills and their sheet `hireables/hrskillicon.sprite` are not covered.
+- Mercenary (hireable) skills come only from the ESR skill information page (which hireling uses which skill), not from
+  hireling.txt: no merc skill levels per hireling level and no `hireables/hrskillicon.sprite` icons. The page's subtype
+  labels ("Comb - Nightmare") are shown as written.
+- The skill information page is hand-written: its numbers ("2% attack speed per level") are not checked against the
+  game files, and the alias table (`NAME_ALIASES`) needs a look when ESR renames a skill (an unmatched name is a
+  manifest warning).
 - A unique and a runeword with the same name (Enigma) are separate entries; the unique links to the Uniques page
   unless the HTM mythicals list knows it.

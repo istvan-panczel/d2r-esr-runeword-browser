@@ -37,6 +37,7 @@ import { buildStashBundle } from './bundleStash.ts';
 import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
 import { buildSkillCalcBundle } from './bundleSkillCalc.ts';
+import { applySkillInfoPage, parseSkillInfoPage } from './skillInfoPage.ts';
 import { buildCraftingBundle } from './bundleCrafting.ts';
 import { buildSourcesBundle } from './bundleSources.ts';
 import { buildTerrorZonesBundle } from './bundleTerrorZones.ts';
@@ -276,6 +277,16 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       isRune: (code) => runeCodes.has(code),
     }),
   });
+  // ESR's skill information page: hand-written oskill descriptions and the mercenaries' skills
+  const skillInfo =
+    sources.skillInfoPage === null
+      ? null
+      : applySkillInfoPage(
+          skillDetails.bundle.skills,
+          parseSkillInfoPage(sources.skillInfoPage),
+          new Set(table('skills').rows.map((row) => row.str('skill')))
+        );
+  const skillInfoWarnings = skillInfo?.warnings ?? ['skilldetails: docs/skill_information.htm missing in the ESR clone'];
   // --- skillcalc.json ---
   const skillCalc = buildSkillCalcBundle({
     skills: table('skills'),
@@ -499,6 +510,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       skillDetailsWithGrants: skillDetailCount((skill) => skill.grantedBy !== undefined),
       skillDetailsWithSynergies: skillDetailCount((skill) => skill.synergies !== undefined),
       skillDetailsWithoutDescription: skillDetailCount((skill) => skill.description.length === 0),
+      ...skillInfo?.counts,
       skillGrantItems: skillDetails.bundle.items.length,
       skillGrants: skillDetails.bundle.skills.reduce((sum, skill) => sum + (skill.grantedBy?.length ?? 0), 0),
       skillGrantsUndescribed: skillDetails.undescribedGrants,
@@ -551,6 +563,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...sets.warnings,
       ...skills.warnings,
       ...skillDetails.warnings,
+      ...skillInfoWarnings,
       ...skillCalc.warnings,
       ...crafting.warnings,
       ...tiers.warnings,

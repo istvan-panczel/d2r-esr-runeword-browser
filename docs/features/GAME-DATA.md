@@ -43,7 +43,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                    |
 | `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                       |
 | `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                             |
-| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                                    |
+| `skilldetails.json` | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))       |
 | `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))       |
 | `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                   |
 | `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                   |
@@ -71,7 +71,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                      |
 | `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
 | `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
-| `skilldetails.json` | ESR 3.2.24: 387 KB / 61 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
+| `skilldetails.json` | ESR 3.2.24: 406 KB / 64 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
 | `skillcalc.json`    | ESR 3.2.24: 380 KB / 52 KB (skills + lines 186 KB, rows 143 KB, texts 32 KB, missiles 9 KB)                     |
 | `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                        |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
@@ -1062,10 +1062,13 @@ A minimal clone only needs (this is what `game-data:update` creates):
 git clone --depth 1 --filter=blob:none --sparse https://github.com/CelestialRayOne/Eastern_Sun_Resurrected.git
 git -C Eastern_Sun_Resurrected sparse-checkout set --no-cone /Eastern_Sun_Resurrected.mpq/data/global/excel/ \
   /Eastern_Sun_Resurrected.mpq/data/local/lng/strings/ /d2rloader/metadata.json /docs/weapons.htm /docs/armors.htm \
+  /docs/skill_information.htm \
   /Eastern_Sun_Resurrected.mpq/data/hd/items/ /Eastern_Sun_Resurrected.mpq/data/hd/global/ui/items/
 ```
 
-(`docs` is only needed for the clone-dependent name oracle test.)
+(`docs/skill_information.htm` feeds skilldetails.json's `infoPage` / `mercenaries`, a warning when it is missing;
+the rest of `docs` is only needed for the clone-dependent name oracle test. `game-data:update`'s sparse clone includes
+all of `docs/`.)
 
 ### Release diff
 

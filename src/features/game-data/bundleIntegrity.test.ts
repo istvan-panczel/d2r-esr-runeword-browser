@@ -712,6 +712,33 @@ describe('committed game-data bundles', () => {
     for (const key of iconKeys) expect(existsSync(resolve(OUTPUT_DIR, 'icons/skills', `${key}.webp`)), key).toBe(true);
   });
 
+  it('carry the ESR skill information page: oskill texts and mercenary skills (ESR 3.2.24)', () => {
+    const details = skillDetails.skills;
+    const byId = (id: string) => details.find((skill) => skill.id === id);
+    const withInfo = details.filter((skill) => skill.infoPage !== undefined);
+    const withMercs = details.filter((skill) => skill.mercenaries !== undefined);
+    expect(manifest.counts.skillInfoEntries).toBe(38);
+    expect(manifest.counts.skillInfoSkills).toBe(withInfo.length);
+    expect(manifest.counts.skillInfoMercenarySkills).toBe(withMercs.length);
+    expect(manifest.counts.skillInfoUnmatched).toBe(0);
+    expect(manifest.warnings.filter((warning) => warning.includes('skill_information.htm'))).toEqual([]);
+
+    expect(byId('Warm Up')?.description).toEqual([]);
+    expect(byId('Warm Up')?.infoPage?.text.join(' ')).toContain('2% attack speed');
+    expect(byId('Fire Surge')?.infoPage?.heading).toBe('Fire/Cold/Lightning/Poison/Magic/Wind Surge');
+    expect(byId('Fire Surge')?.infoPage?.text[0]).toMatch(/^A small area of effect instant spell damage skill\./);
+    // Grouped headings with a multi-word member, an alias and same-name lookups by skills.txt id
+    expect(byId('Fists of Fire Discharge')?.infoPage).toBeDefined();
+    expect(byId('Axe Proc')?.infoPage?.heading).toBe('Axe Throw, Fire/Cold/Lightning/Magic Enhanced Axe');
+    expect(byId('Super Nova')?.infoPage).toBeDefined();
+
+    expect(byId('Fanaticism')?.mercenaries).toContainEqual({ hireling: 'Desert Mercenary', subtype: 'Comb - Nightmare' });
+    expect(byId('Shout of the Ancients')?.mercenaries).toEqual([{ hireling: 'Barbarian', subtype: 'Offensive' }]);
+    // A hireling's Conduit is the Sorceress skill, not the item skill of the same name
+    expect(byId('Conduit')?.mercenaries).toEqual([{ hireling: 'Eastern Sorcerer', subtype: 'Lightning' }]);
+    expect(byId('Conduit Proc')?.mercenaries).toBeUndefined();
+  });
+
   it('list the forging, D-stoning and gem meld options per slot family (ESR 3.2.24)', () => {
     const { forgings, stacking } = crafting;
     const ofKind = (kind: string) => forgings.filter((option) => option.kind === kind);
