@@ -37,6 +37,7 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'areas',
   'stash',
   'itemText',
+  'terrorZone',
   'itemIcons',
   'uniqueIcons',
   'setIcons',
@@ -66,6 +67,7 @@ export const KNOWN_WARNING_CLASSES: readonly string[] = [
   'areas',
   'stash',
   'itemtext',
+  'terrorzones',
 ];
 
 /** `lootfilter skills: …` → `lootfilter skills`; null when the text has no lower-case class prefix. */

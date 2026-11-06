@@ -40,6 +40,12 @@ Location: `src/core/components/`
   `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; mobile sheet with an accordion.
   See [NAVIGATION.md](./NAVIGATION.md#header-components).
 - `SettingsDrawer.tsx` - Settings sheet (theme, font, text size, data refresh, versions, credits).
+- The terror zone widget (`src/features/terror-zones/components/TerrorZoneWidget.tsx`) - Floating tracker, bottom-left
+  on every page but `/terror-zones`, mounted once by `AppLayout` (lazy). Open: a card with the current zone group, a countdown, the next 3
+  (12 with "Show more"), star toggles, the boost line and a link to `/terror-zones`; minimised: a round outline icon
+  button like `ScrollToTopButton`, with a `warning` ring and dot when a watched group is up. `z-40` (dialogs and sheets
+  cover it), safe-area insets, lifted above the app's fixed bottom bars. See
+  [TERROR-ZONES.md](../features/TERROR-ZONES.md#widget).
 - `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `SUBTAB_BASE` / `SUBTAB_INACTIVE` /
   `SUBTAB_ACTIVE` for the page sub-tabs (see [Toolbar card and sub-tabs](#toolbarcard-and-sub-tabs)).
 
@@ -59,7 +65,7 @@ Reusable components used across features:
 - `SectionHeader.tsx` - In-page section heading with a hairline (Build detail, Cube and Materials sections)
 - `CopyLinkButton.tsx` - Copy shareable URL to clipboard
 - `CopyLinkHelpButton.tsx` - Help info for copy link
-- `ScrollToTopButton.tsx` - Floating action button to scroll to top
+- `ScrollToTopButton.tsx` - Floating action button to scroll to top (bottom-right; the terror zone widget takes bottom-left)
 - `SearchHelpButton.tsx` - Search syntax help (quoted phrases, AND logic)
 - `PeekPopover.tsx` + `useHoverPopover.ts` - The hover / focus "peek" popover (mouse and `:focus-visible` only, 300 ms
   delay, so a touch tap never traps): one popover per trigger (`trigger` + `peek.triggerProps`: guide note links, glossary

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/core/components/Header';
@@ -12,6 +13,12 @@ import { AuthOverlays, selectAuthIsConfigured } from '@/features/auth';
 import { selectPageWidth } from '@/features/settings';
 // Static-bundle routes (the home page, guide, loot filters, enhance) skip both startup gates below.
 import { isStaticBundlePath } from './staticBundleRoutes';
+
+// The floating terror zone tracker (every page): its own chunk, loaded after the shell renders, with its small bundle
+const TerrorZoneWidget = lazy(async () => {
+  const module = await import('@/features/terror-zones/widget');
+  return { default: module.TerrorZoneWidget };
+});
 
 export function AppLayout() {
   const isInitialized = useSelector(selectIsInitialized);
@@ -59,6 +66,9 @@ export function AppLayout() {
         <Outlet />
       </main>
       <SettingsDrawer />
+      <Suspense fallback={null}>
+        <TerrorZoneWidget />
+      </Suspense>
       {isSupabaseEnabled && <AuthOverlays />}
     </div>
   );

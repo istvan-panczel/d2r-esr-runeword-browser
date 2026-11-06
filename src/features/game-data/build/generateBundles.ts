@@ -14,6 +14,7 @@ import type {
   SourcesBundle,
   StashBundle,
   StashNamesBundle,
+  TerrorZonesBundle,
   TiersBundle,
   TxtRunewordsBundle,
   TypesBundle,
@@ -36,6 +37,7 @@ import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
 import { buildCraftingBundle } from './bundleCrafting.ts';
 import { buildSourcesBundle } from './bundleSources.ts';
+import { buildTerrorZonesBundle } from './bundleTerrorZones.ts';
 import { buildTiersBundle } from './bundleTiers.ts';
 import { buildTypesBundle } from './bundleTypes.ts';
 import type { EsrSources } from './esrSources.ts';
@@ -72,6 +74,8 @@ export interface GeneratedBundles {
   stashnames: StashNamesBundle;
   // itemtext.json
   itemtext: ItemTextBundle;
+  // terrorzones.json
+  terrorzones: TerrorZonesBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -346,6 +350,17 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   );
   // --- end itemtext.json ---
 
+  // --- terrorzones.json ---
+  const terrorZones = buildTerrorZonesBundle({
+    esrVersion: sources.esrVersion,
+    desecratedZonesText: sources.desecratedZones,
+    levelsText: sources.tables.levels,
+    levelGroupsText: sources.tables.levelgroups,
+    strings,
+    areas: areas.bundle,
+  });
+  // --- end terrorzones.json ---
+
   const countKind = (kind: string) => bases.bundle.bases.filter((base) => base.kind === kind).length;
   return {
     types: types.bundle,
@@ -366,6 +381,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     stash: stash.bundle,
     stashnames: stash.names,
     itemtext: itemText.bundle,
+    terrorzones: terrorZones.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -473,6 +489,10 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       itemTextMagicSuffixes: itemText.bundle.magicSuffixes.filter((name) => name !== null).length,
       itemTextAutoAffixes: itemText.bundle.autoAffixes.filter((name) => name !== null).length,
       itemTextRareNames: itemText.bundle.rareNames.filter((name) => name !== null).length,
+      terrorZoneGroups: terrorZones.bundle.zones.length,
+      terrorZoneAreas: terrorZones.bundle.zones.reduce((sum, zone) => sum + zone.areas.length, 0),
+      terrorZoneUnlistedLevels: terrorZones.unlistedLevels,
+      terrorZoneBoosts: terrorZones.bundle.boosts.length,
     },
     warnings: [
       ...types.warnings,
@@ -494,6 +514,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...areas.warnings,
       ...stash.warnings,
       ...itemText.warnings,
+      ...terrorZones.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

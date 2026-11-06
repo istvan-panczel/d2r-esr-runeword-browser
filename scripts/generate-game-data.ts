@@ -106,6 +106,7 @@ function main(): void {
     stash: serializeBundle(generated.stash),
     stashnames: serializeBundle(generated.stashnames),
     itemtext: serializeBundle(generated.itemtext),
+    terrorzones: serializeBundle(generated.terrorzones),
   };
   const icons = readIcons();
   const manifest = buildManifest({

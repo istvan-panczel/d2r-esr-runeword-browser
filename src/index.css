@@ -50,6 +50,7 @@
   --color-destructive: var(--destructive);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-terror: var(--terror);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -87,6 +88,8 @@
   --destructive: oklch(0.577 0.245 27.325);
   --warning: oklch(0.473 0.137 46.201);
   --warning-foreground: oklch(0.985 0 0);
+  /* The in-game terror zone purple-pink (darker on light backgrounds) */
+  --terror: oklch(0.52 0.25 318);
   --border: oklch(0.85 0.02 80);
   --input: oklch(0.88 0.015 80);
   --ring: oklch(0.6 0.05 80);
@@ -123,6 +126,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --warning: oklch(0.795 0.184 86.047);
   --warning-foreground: oklch(0.205 0 0);
+  --terror: oklch(0.74 0.2 318);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);

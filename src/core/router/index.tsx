@@ -105,6 +105,11 @@ const CampaignMapScreen = lazy(async () => {
   return { default: module.CampaignMapScreen };
 });
 
+const TerrorZonesScreen = lazy(async () => {
+  const module = await import('@/features/terror-zones');
+  return { default: module.TerrorZonesScreen };
+});
+
 const GameDataLayout = lazy(async () => {
   const module = await import('@/features/game-data');
   return { default: module.GameDataLayout };
@@ -242,6 +247,7 @@ export const router = createBrowserRouter(
         { path: 'ascendancies', element: routeElement(AscendanciesScreen) },
         { path: 'skills', element: routeElement(SkillsScreen) },
         { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
+        { path: 'terror-zones', element: routeElement(TerrorZonesScreen) },
         {
           path: 'game-data',
           element: routeElement(GameDataLayout),

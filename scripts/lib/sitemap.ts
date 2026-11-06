@@ -42,6 +42,7 @@ const ROUTES_AFTER_NOTES: readonly SitemapEntry[] = [
   { path: 'game-data/areas', changefreq: 'monthly', priority: '0.6' },
   { path: 'campaign-map', changefreq: 'monthly', priority: '0.7' },
   { path: 'loot-filters', changefreq: 'monthly', priority: '0.6' },
+  { path: 'terror-zones', changefreq: 'monthly', priority: '0.6' },
 ];
 
 /** Note slugs are sorted so the output does not depend on the bundle's note order. */

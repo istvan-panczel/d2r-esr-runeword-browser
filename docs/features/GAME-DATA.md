@@ -29,28 +29,29 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                | Contents                                                                                                                                                    |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                 |
-| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                            |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                    |
-| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                         |
-| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                     |
-| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                    |
-| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                          |
-| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                       |
-| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                               |
-| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                             |
-| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                |
-| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                      |
-| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                             |
-| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                            |
-| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                            |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")         |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                            |
-| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                   |
-| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text") |
-| `icons.json`        | item icon index (base / quest item code, unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                |
+| File                | Contents                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                        |
+| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                   |
+| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                           |
+| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                |
+| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                            |
+| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                           |
+| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                 |
+| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                              |
+| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                      |
+| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                    |
+| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                       |
+| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                             |
+| `skilldetails.json` | details of every class skill and item-granted skill and the items granting them, for the Skills page ([SKILLS.md](./SKILLS.md))                                    |
+| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                   |
+| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                   |
+| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                   |
+| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                          |
+| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")        |
+| `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md)) |
+| `icons.json`        | item icon index (base / quest item code, unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                       |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -76,6 +77,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes) |
 | `stashnames.json`   | ESR 3.2.24: 294 KB / 49 KB                                                                                      |
 | `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
+| `terrorzones.json`  | ESR 3.2.24: 9 KB / 2 KB                                                                                         |
 | `icons.json`        | ESR 3.2.24: 318 KB / 39 KB (+ `icons/`: 1,434 WebP files, 5.7 MB)                                               |
 
 ### Bases and types
@@ -613,6 +615,16 @@ Counts (ESR 3.2.24): `areas` 193, `areasMaps` 55 (tier 1: 7, 2: 9, 3: 15, 4: 8, 
 `areasWithWaypoint` 38, `areasHiddenPrepZones` 19, `areasHiddenRemoved` 2, `areasHiddenOther` 1, `areasOneWayVis` 2,
 `areasWithMapItem` 21, `areasUniquesMinsThenMaxes` 59. levels.txt is also read by bundleLootFilter.ts (lootfilter
 areas, every row) and generateBundles.ts (the cube's level names); those reads were left as they were.
+
+### Terror zones
+
+`terrorzones.json` (`TerrorZonesBundle`, built by `build/bundleTerrorZones.ts`) is the only bundle not read from
+`data/global/excel/`: its source is `data/hd/global/excel/desecratedzones.json` (`ESR_DESECRATED_ZONES_FILE`), plus
+levels.txt, levelgroups.txt and areas.json for the names. The seed (above 2^53) is quoted before `JSON.parse` and kept
+as a decimal string. The app schedules one config: more than one fails the generator (a warning when it has an end time); a
+duplicate zone id is left out like the game does. See [TERROR-ZONES.md](./TERROR-ZONES.md) for the shape, the names and
+the schedule. Counts (ESR 3.2.24): `terrorZoneGroups` 22, `terrorZoneAreas` 127, `terrorZoneUnlistedLevels` 20 (map
+entrances and the removed Catacombs level 36), `terrorZoneBoosts` 6. Warnings start with `terrorzones:`.
 
 ### Stash
 
