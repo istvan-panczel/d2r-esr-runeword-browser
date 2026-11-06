@@ -117,7 +117,7 @@ function MinimisedButton({ className, alert, buttonRef, onOpen }: MinimisedButto
       variant="outline"
       size="icon"
       className={cn(
-        'relative rounded-full shadow-lg',
+        'relative rounded-full shadow-lg backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-background/55',
         alert === 'active' && 'ring-2 ring-warning ring-offset-2 ring-offset-background',
         alert === 'next' && 'ring-2 ring-warning/50',
         className
@@ -166,7 +166,7 @@ function WidgetCard({ className, schedule, watched, current, nextSlot, minimiseR
     <section
       aria-label="Terror zone tracker"
       className={cn(
-        'flex max-h-[min(70svh,34rem)] w-80 max-w-[calc(100vw-6rem)] flex-col rounded-xl border bg-card/95 text-card-foreground shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/90',
+        'flex max-h-[min(70svh,34rem)] w-80 max-w-[calc(100vw-6rem)] flex-col rounded-xl border border-border/60 bg-card/95 text-card-foreground shadow-xl inset-shadow-xs inset-shadow-white/40 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-card/55 dark:inset-shadow-white/10',
         className
       )}
     >
