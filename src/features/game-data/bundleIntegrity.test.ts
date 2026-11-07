@@ -1033,8 +1033,13 @@ describe('committed game-data bundles', () => {
           expect(details.find((other) => other.id === entry.id)?.cls, `${skill.id} → ${entry.id}`).toBe(skill.cls);
       }
     }
-    // Groups the files do not name as one skill (Fanatic Swing, Blade Nova)
-    expect(unresolved.sort()).toEqual(['All Elemental Armors', 'Any Finishing Move']);
+    // Blade Nova's "Any Finishing Move" is not one skill; Fanatic Swing's "All Elemental Armors" are the three armors
+    expect(unresolved).toEqual(['Any Finishing Move']);
+    expect(details.find((skill) => skill.id === 'Fanatic Swing')?.comboBonuses?.[1]?.skills.map((entry) => entry.id)).toEqual([
+      'Fire Armor',
+      'Shiver Armor',
+      'Shock Armor',
+    ]);
     const grantOf = (skill: string, item: string) =>
       details.find((entry) => entry.id === skill)?.grantedBy?.filter((grant) => items[grant.item]?.name === item);
     expect(grantOf('Teleport', 'Cactus Petal')).toEqual([expect.objectContaining({ how: 'charged', charges: 7, level: 1 })]);

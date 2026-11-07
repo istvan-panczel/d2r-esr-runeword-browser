@@ -393,6 +393,14 @@ function readDetail(
 
 /** A combo bonus's condition line: "If both A and B have 20 levels:", "If All Elemental Armors have 20 levels:" */
 const COMBO_CONDITION = /^(If (?:both )?(.+?) (?:have|has) (\d+) levels?):$/;
+/**
+ * Group names of a combo condition → the skills its formula reads. Fanatic Swing: `(skill('Fire Armor'.blvl)+
+ * skill('Shiver Armor'.blvl)+skill('Shock Armor'.blvl))==60`. "Any Finishing Move" (Blade Nova) is left as written:
+ * its formula does not match the text (`(Dragon Tail==20)+(Iaigiri==20)+(Dragon Talon==20)*(Blade Nova==20)>0`).
+ */
+const COMBO_GROUPS: Readonly<Record<string, readonly string[]>> = {
+  'All Elemental Armors': ['Fire Armor', 'Shiver Armor', 'Shock Armor'],
+};
 
 /** A combo bonus before its skill names are resolved */
 export interface ComboBonusText {
@@ -527,10 +535,12 @@ function readSynergies(
       if (combo.text.length === 0) warnings.push(`skilldetails: skill "${info.id}" combo bonus "${combo.condition}" has no text`);
       comboBonuses.push({
         condition: combo.condition,
-        skills: combo.names.map((name) => {
-          const comboId = findComboId(name);
-          return comboId === undefined ? { name } : { name, id: comboId };
-        }),
+        skills: combo.names.flatMap((name) =>
+          (COMBO_GROUPS[name] ?? [name]).map((skill) => {
+            const comboId = findComboId(skill);
+            return comboId === undefined ? { name: skill } : { name: skill, id: comboId };
+          })
+        ),
         level: combo.level,
         text: combo.text,
       });

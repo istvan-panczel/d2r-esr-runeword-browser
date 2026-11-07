@@ -3,7 +3,7 @@
   "esrVersion": "3.3",
   "esrTag": "3.3",
   "esrCommit": "d6f5996c2b64636917feac8991be3ac04d21e01e",
-  "generatedAt": "2026-11-07T20:10:27.687Z",
+  "generatedAt": "2026-11-07T20:18:36.813Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -50,8 +50,8 @@
       "bytes": 32008
     },
     "skilldetails": {
-      "hash": "f2dd5b8928860a69b74be5392fc8cac96be2b6c5dbd324f66b88e08cca06e688",
-      "bytes": 429117
+      "hash": "adc3b9c7066c981fc8b5b763a6c8b3b198ef0558c663b531d93e630776f2e2e3",
+      "bytes": 429211
     },
     "skillcalc": {
       "hash": "ada8895fa056c4d20834a6793828211e1fb0b73f646abf917f003dbfa49b8b6e",

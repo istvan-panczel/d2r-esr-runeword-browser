@@ -76,12 +76,15 @@ same-name rows such as the 20 Ember of Creation variants share one entry) and `s
   levels:" (or "If All Elemental Armors have 20 levels:"): `{ condition, skills: [{ name, id? }], level, text: [lines] }`
   (`splitComboBonuses`). "If both" names two skills, any other wording one group as written. `id` is the skill whose
   display name it is (same class first, then a class skill, so the Proc copies link the class skill: Ricochet →
-  `Shuriken`, Levitation Mastery → `Levitate`); "All Elemental Armors" (Fanatic Swing) and "Any Finishing Move" (Blade
-  Nova) have none. One text can hold two conditions (Fanatic Swing); a skill can have two texts (Meteor Shower,
+  `Shuriken`, Levitation Mastery → `Levitate`). A group name is replaced by the skills its formula reads
+  (`COMBO_GROUPS`: "All Elemental Armors" → Fire / Shiver / Shock Armor, Fanatic Swing); "Any Finishing Move" (Blade
+  Nova) stays as written without an id: its formula, `((skill('Dragon Tail'.blvl)==20)+(skill('Iaigiri'.blvl)==20)+
+(skill('Dragon Talon'.blvl)==20)*(skill('Blade Nova'.blvl)==20))>0`, does not match the text (Dragon Tail or Iaigiri
+  at 20 alone would do; the multiplication only binds Dragon Talon to Blade Nova). One text can hold two conditions (Fanatic Swing); a skill can have two texts (Meteor Shower,
   Overwhelm, Storm of the Old Gods, Dragon Fury, Execute, Blade Nova). ESR 3.3: 63 bonuses on 56 skills (two are the
   item skills Maelstrom Cascade Proc and Reap Souls Proc, which share the class skill's skilldesc row). **What "have 20
   levels" means**: ESR's formulas test the sum of both skills' hard points, `(skill('Splintering Javelin'.blvl)+
-skill('Eagle Eye'.blvl))>39` (80 such formulas in skills.txt; Fanatic Swing's armors: `(skill('Fire Armor'.blvl)+
+skill('Eagle Eye'.blvl))>39` (91 such cells on 79 skills.txt rows, none uses `.lvl`; Fanatic Swing's armors: `(skill('Fire Armor'.blvl)+
 skill('Shiver Armor'.blvl)+skill('Shock Armor'.blvl))==60`). `blvl` is the base level, the points spent (the
   calculator's "hard points"), capped at `maxlvl` 20, so both need 20 hard points: +skills from items do not count.
   Other dsc3 texts without placeholders are `notes` (none in ESR 3.3).
