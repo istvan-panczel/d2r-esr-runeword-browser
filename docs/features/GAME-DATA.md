@@ -58,7 +58,10 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
-(`GAME_DATA_SCHEMA`); bump it whenever a bundle shape changes incompatibly.
+(`GAME_DATA_SCHEMA`); bump it whenever a bundle shape changes incompatibly. The manifest carries it and
+`loadGameData` rejects another value with "Reload the page" (`GameDataSchemaError`): bundle URLs are hash-busted, so new
+code never reads old cached bundles; the bump stops a tab still running old code from reading new bundles it would
+misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; anointment pools became item types).
 
 | Bundle              | ESR 3.2.12 size (raw / gzip)                                                                                    |
 | ------------------- | --------------------------------------------------------------------------------------------------------------- |
