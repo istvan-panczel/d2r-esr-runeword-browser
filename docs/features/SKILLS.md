@@ -65,8 +65,29 @@ same-name rows such as the 20 Ember of Creation variants share one entry) and `s
   params filled in and `?` for formulas ("+12% Fire Damage per Level", "+?% …"). `id` links to the skill when the name
   resolves (same class first) and differs from the name; the page links `id ?? name` when the bundle has that skill
   ("Any Other Curse" and "All sentries" stay plain text). A dsc3 line that is just a skill name is a synergy without a
-  bonus. Other dsc3 texts without placeholders are `notes` (the "If both A and B have 20 levels: …" rules), read
-  bottom-up like the lines.
+  bonus. The old synergy layouts are synergies too, with texta = the skill name and textb the bonus: line function 63
+  ("Fists of Fire: +6% All Damage per Level", Phoenix Strike), 67 ("Lycanthropy: +1 Second per Level", Feral Rage, Maul,
+  Hurricane) and 25 (a + b: "Inner Sight" + ": +0.20 Seconds per Level", Petrify; "Holy Ward", Summon Holy Defender);
+  until 2026-11 they were read as bare-name `notes` and lost their bonus. A one-line text "Skill: bonus" whose name is
+  a skill is a synergy written out (Dance of Death's type-18 "Spearstorm: +0.5% Chance to Deal Double Damage"). A dsc3
+  line without a line function (blank or 0) is not shown in game and is skipped (Skeleton Mastery's orphan "Magi,
+  Skeleton King").
+- **comboBonuses**: the dsc3 texts (read bottom-up like the lines) split at each condition line "If both A and B have 20
+  levels:" (or "If All Elemental Armors have 20 levels:"): `{ condition, skills: [{ name, id? }], level, text: [lines] }`
+  (`splitComboBonuses`). "If both" names two skills, any other wording one group as written. `id` is the skill whose
+  display name it is (same class first, then a class skill, so the Proc copies link the class skill: Ricochet →
+  `Shuriken`, Levitation Mastery → `Levitate`). A group name is replaced by the skills its formula reads
+  (`COMBO_GROUPS`: "All Elemental Armors" → Fire / Shiver / Shock Armor, Fanatic Swing); "Any Finishing Move" (Blade
+  Nova) stays as written without an id: its formula, `((skill('Dragon Tail'.blvl)==20)+(skill('Iaigiri'.blvl)==20)+
+(skill('Dragon Talon'.blvl)==20)*(skill('Blade Nova'.blvl)==20))>0`, does not match the text (Dragon Tail or Iaigiri
+  at 20 alone would do; the multiplication only binds Dragon Talon to Blade Nova). One text can hold two conditions (Fanatic Swing); a skill can have two texts (Meteor Shower,
+  Overwhelm, Storm of the Old Gods, Dragon Fury, Execute, Blade Nova). ESR 3.3: 63 bonuses on 56 skills (two are the
+  item skills Maelstrom Cascade Proc and Reap Souls Proc, which share the class skill's skilldesc row). **What "have 20
+  levels" means**: ESR's formulas test the sum of both skills' hard points, `(skill('Splintering Javelin'.blvl)+
+skill('Eagle Eye'.blvl))>39` (91 such cells on 79 skills.txt rows, none uses `.lvl`; Fanatic Swing's armors: `(skill('Fire Armor'.blvl)+
+skill('Shiver Armor'.blvl)+skill('Shock Armor'.blvl))==60`). `blvl` is the base level, the points spent (the
+  calculator's "hard points"), capped at `maxlvl` 20, so both need 20 hard points: +skills from items do not count.
+  Other dsc3 texts without placeholders are `notes` (none in ESR 3.3).
 - **icon**: `<class prefix>-<IconCel>` or `gen-<IconCel>` (see "Icons").
 - **grantedBy**: `{ item, how, level, chance?, charges?, partial? }` per granting property (deduplicated):
 
@@ -86,7 +107,7 @@ invisible on the item, mostly internal mechanics), random skills (`skill-rand`, 
 pools and the set-wide bonuses of sets.txt.
 
 Counts (manifest, ESR 3.3): `skillDetails` 465, `skillDetailsItemSkills` 185, `skillDetailsWithGrants` 445,
-`skillDetailsWithSynergies` 226, `skillDetailsWithoutDescription` 96 (mostly item skills: ESR's surges, masteries,
+`skillDetailsWithSynergies` 231, `skillComboBonuses` 63, `skillDetailsWithoutDescription` 96 (mostly item skills: ESR's surges, masteries,
 trophies; 63 of them get the skill information page's text, see below), `skillGrantItems` 1194, `skillGrants` 3168,
 `skillGrantsUndescribed` 1 (grants of class-less skills without a skilldesc row, not listed), `skillIcons` 325.
 Size: 410 KB / 62 KB gzip.
@@ -310,26 +331,27 @@ character (or one with known +skills) can check them. Bare character (no items, 
 stated; "Level (hard pts)" gives the skill level and, in brackets, the hard points when they differ. Fill in "Result"
 after checking.
 
-| Skill                                        | Level (hard pts)  | Line                              | We show                                                                                         | Look for                               | Result |
-| -------------------------------------------- | ----------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------- | ------ |
-| Blizzard                                     | 1                 | Radius                            | 5.3 yards                                                                                       | type-36 decimals: 5.3 vs 5.33          |        |
-| Fire Ball                                    | 2 / 20            | Mana Cost                         | 5.5 / 14.5                                                                                      | half-mana display                      |        |
-| Multiple Shot                                | 10                | Mana Cost                         | 3.3                                                                                             | rounding of 3.33                       |        |
-| Raise Skeleton                               | 1                 | skeleton count                    | "1 skeleton total"                                                                              | singular text at exactly 1             |        |
-| Blizzard                                     | 1                 | Cooldown / Cold and Freeze Length | "1 second" / "1 seconds"                                                                        | the second is ESR data (textb = texta) |        |
-| Multiple Shot                                | 10 (next 11 = 14) | Missiles                          | 13                                                                                              | dm integer math: 13 vs 14              |        |
-| Fade                                         | 1 (next 2 = 42%)  | curse duration                    | 34%                                                                                             | dm: 34 vs 35                           |        |
-| Fire Ball                                    | 1                 | line order                        | text, Radius 4, Resist −10%, Fire Damage 10-20, Mana Cost 5 last                                | bottom-up desc block                   |        |
-| Reap Souls                                   | 1                 | dsc2 order                        | "Requires Polearm or Knife", "0% … Magic", "50% Weapon Damage", "Up to -0% Enemy Poison Resist" | dsc2 bottom-up                         |        |
-| Cloak of Shadows                             | 1 / 2             | Enemy Physical Resist             | −10% / −11%                                                                                     | a conventional parser would give +10%  |        |
-| Sharpened Focus                              | 5 (5) / 8 (5)     | Phys / Elem resists               | −6% / −12%; at 8: −6% / −13%                                                                    | old parse gave −5% / −11%              |        |
-| Vigor of the Ancients                        | 1 / 6 (5)         | Vitality                          | "+10 to Vitality" / "+23"; run speed +10% / +14%                                                | no "percent" in the text               |        |
-| Feral Rage                                   | any               | synergy                           | "Lycanthropy: +1 Second per Level"                                                              | type-67 layout                         |        |
-| Raise Skeleton                               | 1 / 2             | Physical Damage                   | 4-4 / 12-12                                                                                     | min-min as the data says?              |        |
-| Raise Skeleton                               | 1                 | Life                              | hidden (type 13)                                                                                | the value the game shows               |        |
-| Hellfire Lance                               | 1                 | Cooldown                          | not shown                                                                                       | is a cooldown line shown?              |        |
-| Overseer Volley (Shenk's Mask, oskill 10-30) | 10                | Avg Lightning / Cold              | hidden; Fire 225-375, Mana 38                                                                   | the hidden values; the fire value      |        |
-| Fire Ball + 5 Fire Bolt                      | 1 / 2             | Fire Damage                       | 13-26 / 15-31 (no synergy 10-20 / 12-24)                                                        | synergy % applied                      |        |
+| Skill                                        | Level (hard pts)  | Line                              | We show                                                                                         | Look for                                | Result |
+| -------------------------------------------- | ----------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------- | ------ |
+| Blizzard                                     | 1                 | Radius                            | 5.3 yards                                                                                       | type-36 decimals: 5.3 vs 5.33           |        |
+| Fire Ball                                    | 2 / 20            | Mana Cost                         | 5.5 / 14.5                                                                                      | half-mana display                       |        |
+| Multiple Shot                                | 10                | Mana Cost                         | 3.3                                                                                             | rounding of 3.33                        |        |
+| Raise Skeleton                               | 1                 | skeleton count                    | "1 skeleton total"                                                                              | singular text at exactly 1              |        |
+| Blizzard                                     | 1                 | Cooldown / Cold and Freeze Length | "1 second" / "1 seconds"                                                                        | the second is ESR data (textb = texta)  |        |
+| Multiple Shot                                | 10 (next 11 = 14) | Missiles                          | 13                                                                                              | dm integer math: 13 vs 14               |        |
+| Fade                                         | 1 (next 2 = 42%)  | curse duration                    | 34%                                                                                             | dm: 34 vs 35                            |        |
+| Fire Ball                                    | 1                 | line order                        | text, Radius 4, Resist −10%, Fire Damage 10-20, Mana Cost 5 last                                | bottom-up desc block                    |        |
+| Reap Souls                                   | 1                 | dsc2 order                        | "Requires Polearm or Knife", "0% … Magic", "50% Weapon Damage", "Up to -0% Enemy Poison Resist" | dsc2 bottom-up                          |        |
+| Cloak of Shadows                             | 1 / 2             | Enemy Physical Resist             | −10% / −11%                                                                                     | a conventional parser would give +10%   |        |
+| Sharpened Focus                              | 5 (5) / 8 (5)     | Phys / Elem resists               | −6% / −12%; at 8: −6% / −13%                                                                    | old parse gave −5% / −11%               |        |
+| Vigor of the Ancients                        | 1 / 6 (5)         | Vitality                          | "+10 to Vitality" / "+23"; run speed +10% / +14%                                                | no "percent" in the text                |        |
+| Feral Rage                                   | any               | synergy                           | "Lycanthropy: +1 Second per Level"                                                              | type-67 layout                          |        |
+| Raise Skeleton                               | 1 / 2             | Physical Damage                   | 4-4 / 12-12                                                                                     | min-min as the data says?               |        |
+| Raise Skeleton                               | 1                 | Life                              | hidden (type 13)                                                                                | the value the game shows                |        |
+| Hellfire Lance                               | 1                 | Cooldown                          | not shown                                                                                       | is a cooldown line shown?               |        |
+| Overseer Volley (Shenk's Mask, oskill 10-30) | 10                | Avg Lightning / Cold              | hidden; Fire 225-375, Mana 38                                                                   | the hidden values; the fire value       |        |
+| Fire Ball + 5 Fire Bolt                      | 1 / 2             | Fire Damage                       | 13-26 / 15-31 (no synergy 10-20 / 12-24)                                                        | synergy % applied                       |        |
+| Frenzy + Warpath (combo bonus)               | 20 (19) + 1 gear  | Frenzy's weapon damage            | the combo needs 20 hard points in both: not active at 19 + 1                                    | the +25% bonus off until 20 hard points |        |
 
 What the rows test: type-36 decimals (one decimal at most, rounded) and the singular text at exactly 1 are from vanilla
 memory and the Data Guide; the line functions 5 / 6 / 67 and the line order (dsc2 / desc bottom-up, dsc3 top-down) from
@@ -366,7 +388,13 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
 - **Detail card** (`components/SkillDetailCard.tsx`): a header (48 px icon, name, class · tab or "Item skill", one
   muted facts line "Req 12 · Max 20 · Mana 5 (+0.5 per level) · Fire · Aura"), the builds pages' point controls, the
   description (or the **ESR skill information page** text when skilldesc has none, with "From the ESR skill information
-  page" under it), then three **tabs** (Radix Tabs; the tab is card state, not in the URL, and starts at Values for
+  page" under it), the **combo bonuses** (`SkillComboBonuses.tsx`, owner request 2026-11-07: the tooltip's "If both A
+  and B have 20 levels:" rules matter, so they sit above the tabs instead of muted in About): one amber box ("Combo
+  bonus" / "Combo bonuses", `border-amber-500/50 bg-amber-500/10` like the app's other amber boxes, amber-800 / -300
+  label, amber-900 / -200 condition), per bonus the condition with the other skills as links that select them (the
+  card's own skill bold, a name without an id plain) and the bonus lines (hand-broken lines joined like the
+  description), then "Hard points only: +skills from items do not count." Only the skill whose tooltip lists the bonus
+  shows it (Eagle Eye's card has none for Splintering Javelin's), as in game. Then three **tabs** (Radix Tabs; the tab is card state, not in the URL, and starts at Values for
   every skill):
   - **Values** (default; left out when the skill has no calculator lines, no fixed lines and no synergies, e.g. Warm Up:
     the card opens on Items): see "Values per level" below.
@@ -392,7 +420,7 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
     with character level", "Scales with hard points only": +skills do not raise that part), the ESR skill information
     page block when skilldesc has a description too (labelled with the link; the entry's heading is shown when it names
     more skills), "Used by mercenaries: Desert Mercenary (Comb – Normal, …)" (`mercenaries` grouped by hireling, with a
-    Source link), the notes and **Weapon mastery** (`SkillMasteries.tsx`; masteries.json, loaded lazily by
+    Source link), the dsc3 `notes` (none in ESR 3.3; the combo bonuses moved above the tabs) and **Weapon mastery** (`SkillMasteries.tsx`; masteries.json, loaded lazily by
     `useMasteries` with the first card): per specialisation whose effect names the skill, the weapon (base icon, link to
     every base it applies to on the Bases page: `?codes=` for a base family, `?type=` for Orb / Claw / Void Blade), the recipe icons, the effect (with the skills line when it is a group such as "Curses") and
     the apply rows' other mods; Spearstorm, Fend and Dance of Death have two (Maiden Spear and Maiden Pike), the
@@ -457,14 +485,19 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   hard points = the allocated points; synergy points default to the build's own points in each synergy skill (editable,
   "Reset to build"; reset on another skill unless Max all is on). A skill with 0 points shows the normal level
   bar, and the Values tab starts with "Not learned in this build: the level is not tied to the build." The character level input is
-  local too (default 110, not the build's level).
+  local too (default 110, not the build's level). `comboPoints` (the allocated points) adds a status line to each
+  combo bonus (`comboStatus`): "Active in this build" (green check) when every named skill has the level in hard
+  points, else "Not active in this build", with "Splintering Javelin 20/20 · Eagle Eye 12/20"; a name that is not one
+  skill ("Any Finishing Move") gives "Not checked (… is not one skill)". +Skills from gear do not count (the formulas
+  read `blvl`). The tree tiles carry no combo marker (owner decision).
 
 ## Skill peek on item lines
 
 Skill names in item property lines are links with a peek (`utils/skillRefs.ts`, `components/SkillRefText.tsx`): hover
 (mouse), focus (keyboard) or a first tap (touch) opens a small card with the skill's icon, name (+ the id suffix of
 same-name skills), class or "Item skill", what the line gives, the first sentence of the ESR skill information page
-when the skill has no description (`firstSentence`: Warm Up, the surges, …), the first one or two per-level values that vary (as in
+when the skill has no description (`firstSentence`: Warm Up, the surges, …), the combo bonuses (the card's amber box in
+`text-xs`, names as plain text), the first one or two per-level values that vary (as in
 "Granted by": mana left out, no synergies, character level 110) and "Open in Skills →". A click (or a second tap on the
 same name) opens `/skills?skill=<id>&lvl=<N>` (`lvl` omitted at 20). The values are picked like "Granted by"'s
 (`headlineKeys`: damage lines first).
@@ -564,7 +597,9 @@ src/features/skills/
   components/SkillClassTrees.tsx   one class: tab pills (below lg) + the three SkillTreeTab cards (side by side from lg)
   components/SkillTreeTab.tsx      one tab grid (optional point count in the title)
   components/SkillTile.tsx         one tile (optional corner badge, dimmed state)
-  components/SkillDetailCard.tsx   the card: header, Values / Items / About tabs, pinned level bar (optional slot after the header, optional `levels` config)
+  components/SkillDetailCard.tsx   the card: header, combo bonuses, Values / Items / About tabs, pinned level bar (optional slot after the header, optional `levels` config, optional `comboPoints`)
+  components/SkillComboBonuses.tsx the amber combo bonus box (card, peek; a build's active / not active line)
+  utils/comboBonuses.ts            comboSegments (condition around the skill names), comboStatus (a build's hard points)
   components/SkillLevelValues.tsx  the Values tab: level bar, character level, synergies slot, values list, All levels dialog
   components/LevelInput.tsx        compact integer input and the − / + LevelStepper (levels, synergy points, +skills from gear)
   components/SkillIcon.tsx         icon <img> with a reserved square
@@ -616,3 +651,7 @@ peek texts / levels / URLs, the attribute round trip, the class names against sk
   manifest warning).
 - A unique and a runeword with the same name (Enigma) are separate entries; the unique links to the Uniques page
   unless the HTM mythicals list knows it.
+- Combo bonuses: Blade Nova's "If both Blade Nova and Any Finishing Move have 20 levels" is not checked on builds (no
+  single skill; ESR's formula does not match the text, see "comboBonuses"), and a group name other than "All Elemental
+  Armors" needs a `COMBO_GROUPS` entry. dsc3 type-74 lines that list several skills in one text ("Crucify, Vengeance,
+  Judgement: +N% Attack Rating per Level", Zeal; Corpse Explosion; Sanctuary) are still left out of `synergies`.

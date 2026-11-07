@@ -7,7 +7,8 @@
  *   `lines`: descline1..6 / dsc2line1..5 whose values are constants or skill params (`par8`); any line that needs
  *   a calc formula, a second text (`textb`) or an unresolved string is left out (the calculator evaluates those). In
  *   tooltip order: the dsc2 block bottom-up, then the desc block bottom-up (as engine/skillCalc `tooltipOrder`).
- *   `synergies`: dsc3 lines after the `Sksyn` header whose textb is a skill name; other dsc3 texts become `notes`.
+ *   `synergies`: dsc3 lines after the `Sksyn` header whose textb is a skill name (and the old 63 / 67 / 25 layouts,
+ *   texta = the skill name); `comboBonuses`: the "If both A and B have 20 levels:" texts; other dsc3 texts are `notes`.
  * - Mana: (mana | lvlmana) × 2^manashift / 256, the cost at level 1 and per extra level.
  * - Icon: `<first two letters of the class code>-<IconCel>` (the class sheet hd/global/ui/spells/<class>/<xx>skillicon),
  *   `gen-<IconCel>` for item skills (the shared hd/global/ui/spells/submenu/skillicon sheet, where Attack, Kick, Throw
@@ -19,6 +20,7 @@
  */
 import type {
   ClassCode,
+  SkillComboBonus,
   SkillDetail,
   SkillDetailsBundle,
   SkillGrant,
@@ -286,8 +288,9 @@ export function buildSkillDetailsBundle(input: SkillDetailsInput): SkillDetailsB
   }
 
   for (const entry of pending) {
-    const { synergies, notes } = readSynergies(entry.desc, entry.info, strings, idsByName, warnings);
+    const { synergies, comboBonuses, notes } = readSynergies(entry.desc, entry.info, strings, idsByName, warnings);
     if (synergies.length > 0) entry.detail.synergies = synergies;
+    if (comboBonuses.length > 0) entry.detail.comboBonuses = comboBonuses;
     if (notes.length > 0) entry.detail.notes = notes;
     const grants = (grantsBySkill.get(entry.info.id) ?? [])
       .map(({ item, grant }): SkillGrant => ({ item: itemIndex.get(item) ?? -1, ...grant }))
@@ -388,51 +391,127 @@ function readDetail(
   return detail;
 }
 
+/** A combo bonus's condition line: "If both A and B have 20 levels:", "If All Elemental Armors have 20 levels:" */
+const COMBO_CONDITION = /^(If (?:both )?(.+?) (?:have|has) (\d+) levels?):$/;
+/**
+ * Group names of a combo condition → the skills its formula reads. Fanatic Swing: `(skill('Fire Armor'.blvl)+
+ * skill('Shiver Armor'.blvl)+skill('Shock Armor'.blvl))==60`. "Any Finishing Move" (Blade Nova) is left as written:
+ * its formula does not match the text (`(Dragon Tail==20)+(Iaigiri==20)+(Dragon Talon==20)*(Blade Nova==20)>0`).
+ */
+const COMBO_GROUPS: Readonly<Record<string, readonly string[]>> = {
+  'All Elemental Armors': ['Fire Armor', 'Shiver Armor', 'Shock Armor'],
+};
+
+/** A combo bonus before its skill names are resolved */
+export interface ComboBonusText {
+  condition: string;
+  names: string[];
+  level: number;
+  text: string[];
+}
+
+/**
+ * Splits a dsc3 text (in reading order) into its combo bonuses (a condition line and the lines under it, up to the next
+ * condition) and the lines before the first condition. "If both A and B" names two skills; any other wording names one
+ * group as written ("All Elemental Armors").
+ */
+export function splitComboBonuses(text: string): { combos: ComboBonusText[]; rest: string[] } {
+  const combos: ComboBonusText[] = [];
+  const rest: string[] = [];
+  for (const line of text.split('\n').map((entry) => entry.trim())) {
+    if (line === '') continue;
+    const match = COMBO_CONDITION.exec(line);
+    if (match !== null) {
+      const [, condition, names, level] = match;
+      const pair = condition.startsWith('If both ');
+      combos.push({ condition, names: pair ? names.split(' and ') : [names], level: Number(level), text: [] });
+      continue;
+    }
+    const current = combos.at(-1);
+    if (current === undefined) rest.push(line);
+    else current.text.push(line);
+  }
+  return { combos, rest };
+}
+
+/** "+15% All Damage per Level": a type 63 / 67 synergy value (`?` when the calc is a formula) */
+function plusValue(value: number | null): string {
+  return value === null ? '+?' : sprintf('%+d', [value]);
+}
+
 function readSynergies(
   desc: TsvRow,
   info: SkillRowInfo,
   strings: ReadonlyMap<string, string>,
   idsByName: ReadonlyMap<string, SkillRowInfo[]>,
   warnings: string[]
-): { synergies: SkillSynergy[]; notes: string[] } {
+): { synergies: SkillSynergy[]; comboBonuses: SkillComboBonus[]; notes: string[] } {
   const synergies: SkillSynergy[] = [];
+  const comboBonuses: SkillComboBonus[] = [];
   const notes: string[] = [];
   const params = (n: number) => (info.row.has(`Param${String(n)}`) ? info.row.num(`Param${String(n)}`) : 0);
   const findId = (name: string) => {
     const matches = idsByName.get(name.toLowerCase()) ?? [];
     return (matches.find((match) => match.cls === info.cls) ?? matches.at(0))?.id;
   };
+  // Combo conditions name class skills: an item skill's copy of the tooltip (Maelstrom Cascade Proc) links the class skill
+  const findComboId = (name: string) => {
+    const matches = idsByName.get(name.toLowerCase()) ?? [];
+    return (
+      matches.find((match) => match.cls === info.cls && match.cls !== '') ??
+      matches.find((match) => match.cls !== '') ??
+      matches.at(0)
+    )?.id;
+  };
+  const synergy = (name: string, text: string | undefined): SkillSynergy => {
+    const entry: SkillSynergy = { name };
+    const id = findId(name);
+    if (id !== undefined && id !== name) entry.id = id;
+    if (text !== undefined && text !== '') entry.text = text;
+    return entry;
+  };
   for (let i = 1; i <= DSC3_LINES; i++) {
     const n = String(i);
     if (!desc.has(`dsc3texta${n}`)) break;
     const textKey = desc.str(`dsc3texta${n}`);
     if (textKey === '' || textKey === SYNERGY_HEADER) continue;
+    // Line function 0 / blank: the game shows nothing (ESR's Skeleton Mastery keeps an orphan "Magi, Skeleton King")
+    const type = desc.has(`dsc3line${n}`) ? Number(desc.str(`dsc3line${n}`)) : null;
+    if (type === 0) continue;
     const format = strings.get(textKey);
     if (format === undefined) {
       warnings.push(`skilldetails: skill "${info.id}" dsc3 string "${textKey}" not in the strings`);
       continue;
     }
     const nameKey = desc.str(`dsc3textb${n}`);
-    const skillName = nameKey === '' ? undefined : strings.get(nameKey);
-    if (skillName !== undefined && format.includes('%s')) {
-      const synergy: SkillSynergy = { name: skillName.trim() };
-      const id = findId(synergy.name);
-      if (id !== undefined && id !== synergy.name) synergy.id = id;
+    const textB = nameKey === '' ? undefined : strings.get(nameKey);
+    // The old synergy layouts: texta is the skill name, textb the bonus ("Fists of Fire: +15% All Damage per Level",
+    // "Lycanthropy: +1 Second per Level", "Inner Sight" + ": +0.20 Seconds per Level")
+    if (type === 63 || type === 67 || type === 25) {
+      const value = evalSimpleCalc(desc.str(`dsc3calca${n}`), params);
+      const bonus = (textB ?? '').trim();
+      const text =
+        type === 25 ? bonus.replace(/^:\s*/, '') : `${plusValue(value)}${type === 63 ? '%' : ''}${bonus === '' ? '' : ` ${bonus}`}`;
+      synergies.push(synergy(format.trim(), text));
+      continue;
+    }
+    if (textB !== undefined && format.includes('%s')) {
+      const entry = synergy(textB.trim(), undefined);
       const calcs = [desc.str(`dsc3calca${n}`), desc.str(`dsc3calcb${n}`)];
       const values = calcs.map((calc) => (calc === '' ? null : evalSimpleCalc(calc, params)));
       let next = 0;
       const text = format
         .replace(/^%s:\s*/, '')
         .replace(PLACEHOLDER, (token) => {
-          if (token === '%s') return synergy.name;
+          if (token === '%s') return entry.name;
           const value = values.at(next++);
           if (value === null || value === undefined) return token === '%+d' ? '+?' : '?';
           return sprintf(token, [value]);
         })
         .replace(/%%/g, '%')
         .trim();
-      if (text !== '') synergy.text = text;
-      synergies.push(synergy);
+      if (text !== '') entry.text = text;
+      synergies.push(entry);
       continue;
     }
     // A bare skill name (line 18 lists without a bonus) is a synergy too
@@ -443,10 +522,31 @@ function readSynergies(
       continue;
     }
     if (placeholderCount(plain) > 0) continue;
-    const note = bottomUp(plain.replace(/%%/g, '%'));
-    if (note !== '') notes.push(note);
+    const reading = bottomUp(plain.replace(/%%/g, '%'));
+    // A one-line "Skill: bonus" text is a synergy written out (Dance of Death's "Spearstorm: +0.5% Chance to Deal …")
+    const written = /^([^:\n]+): (.+)$/.exec(reading);
+    if (written !== null && findId(written[1]) !== undefined) {
+      synergies.push(synergy(written[1], written[2]));
+      continue;
+    }
+    const { combos, rest } = splitComboBonuses(reading);
+    if (rest.length > 0) notes.push(rest.join('\n'));
+    for (const combo of combos) {
+      if (combo.text.length === 0) warnings.push(`skilldetails: skill "${info.id}" combo bonus "${combo.condition}" has no text`);
+      comboBonuses.push({
+        condition: combo.condition,
+        skills: combo.names.flatMap((name) =>
+          (COMBO_GROUPS[name] ?? [name]).map((skill) => {
+            const comboId = findComboId(skill);
+            return comboId === undefined ? { name: skill } : { name: skill, id: comboId };
+          })
+        ),
+        level: combo.level,
+        text: combo.text,
+      });
+    }
   }
-  return { synergies, notes };
+  return { synergies, comboBonuses, notes };
 }
 
 /** The items that may grant skills: uniqueitems.txt (prop1..12), setitems.txt (prop1..9, aprop1..5 a/b), runes.txt. */

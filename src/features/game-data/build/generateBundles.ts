@@ -695,6 +695,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       skillDetailsItemSkills: skillDetailCount((skill) => skill.cls === null),
       skillDetailsWithGrants: skillDetailCount((skill) => skill.grantedBy !== undefined),
       skillDetailsWithSynergies: skillDetailCount((skill) => skill.synergies !== undefined),
+      skillComboBonuses: skillDetails.bundle.skills.reduce((sum, skill) => sum + (skill.comboBonuses?.length ?? 0), 0),
       skillDetailsWithoutDescription: skillDetailCount((skill) => skill.description.length === 0),
       ...skillInfo?.counts,
       skillGrantItems: skillDetails.bundle.items.length,

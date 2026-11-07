@@ -49,6 +49,7 @@ import {
   type SkillsView,
 } from '../utils/skills';
 import { LevelStepper } from './LevelInput';
+import { SkillComboBonuses } from './SkillComboBonuses';
 import { SkillIcon } from './SkillIcon';
 import { SkillMasteries } from './SkillMasteries';
 import { SkillLevelBar, SkillLevelValues, type SkillLevelsConfig } from './SkillLevelValues';
@@ -75,6 +76,8 @@ interface SkillDetailCardProps {
   readonly children?: ReactNode;
   /** The per-level values (skill calculator) and how the page drives them; omitted = only the fixed lines */
   readonly levels?: SkillLevelsConfig;
+  /** A build's hard points per skill id: the combo bonuses say whether the build reaches them */
+  readonly comboPoints?: (id: string) => number;
 }
 
 type CardTab = 'values' | 'items' | 'about';
@@ -140,9 +143,20 @@ function scalingTags(record: SkillCalcSkill): FactTag[] {
 
 /**
  * Everything the files say about one skill, in three tabs: Values (the level bar pinned under the tabs, synergies,
- * the lines at the level), Items (what grants it) and About (facts, requirements, notes).
+ * the lines at the level), Items (what grants it) and About (facts, requirements, notes). The tooltip's combo bonuses
+ * ("If both A and B have 20 levels") sit above the tabs, under the description.
  */
-export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, className, children, levels }: SkillDetailCardProps) {
+export function SkillDetailCard({
+  view,
+  skill,
+  mythicals,
+  onSelect,
+  onClose,
+  className,
+  children,
+  levels,
+  comboPoints,
+}: SkillDetailCardProps) {
   const unlocks = dependents(view, skill.id);
   const calc = useSkillCalc();
   const articleRef = useRef<HTMLElement>(null);
@@ -322,6 +336,14 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
         </div>
       )}
       {skill.infoPage !== undefined && skill.description.length === 0 && <InfoPageText info={skill.infoPage} name={skill.name} main />}
+      {skill.comboBonuses !== undefined && (
+        <SkillComboBonuses
+          combos={skill.comboBonuses}
+          skillId={skill.id}
+          renderSkill={(target) => skillButton(target.id, target.name)}
+          pointsOf={comboPoints}
+        />
+      )}
 
       <Tabs
         value={shownTab}

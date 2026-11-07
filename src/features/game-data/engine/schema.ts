@@ -969,6 +969,29 @@ export interface SkillSynergy {
   text?: string;
 }
 
+/** A skill a combo bonus names */
+export interface SkillComboSkill {
+  /** As the tooltip writes it ("Eagle Eye", "Levitation Mastery", "All Elemental Armors") */
+  name: string;
+  /** skills.txt id when the name is a skill's display name (same class first, then a class skill); omitted when not */
+  id?: string;
+}
+
+/**
+ * A dsc3 combo bonus: "If both A and B have 20 levels:" and the bonus lines under it. ESR's formulas test the skills'
+ * hard points (`(skill('A'.blvl)+skill('B'.blvl))>39`): +skills from items do not count (docs/features/SKILLS.md).
+ */
+export interface SkillComboBonus {
+  /** The condition as the tooltip writes it, without the colon ("If both Splintering Javelin and Eagle Eye have 20 levels") */
+  condition: string;
+  /** The skills the condition names, in its order (the card's own skill included) */
+  skills: SkillComboSkill[];
+  /** The level each skill needs (20) */
+  level: number;
+  /** The bonus, one entry per tooltip line in reading order */
+  text: string[];
+}
+
 export interface SkillDetail {
   /** skills.txt `skill`, the same id as skills.json */
   id: string;
@@ -993,7 +1016,9 @@ export interface SkillDetail {
   lines?: string[];
   /** dsc3 "Receives Bonuses From" lines */
   synergies?: SkillSynergy[];
-  /** Other dsc3 text lines (special synergy rules) */
+  /** dsc3 "If both A and B have 20 levels:" bonuses, in tooltip order */
+  comboBonuses?: SkillComboBonus[];
+  /** Other dsc3 text lines (none in ESR 3.3) */
   notes?: string[];
   /** Icon key: `<class prefix>-<cel>` (e.g. `so-0`) or `gen-<cel>` for item skills; file icons/skills/<icon>.webp */
   icon?: string;

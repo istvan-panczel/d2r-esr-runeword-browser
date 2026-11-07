@@ -3,7 +3,7 @@
   "esrVersion": "3.3",
   "esrTag": "3.3",
   "esrCommit": "d6f5996c2b64636917feac8991be3ac04d21e01e",
-  "generatedAt": "2026-11-07T19:08:00.824Z",
+  "generatedAt": "2026-11-07T20:18:36.813Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -50,12 +50,12 @@
       "bytes": 32008
     },
     "skilldetails": {
-      "hash": "4c43da58560aa504e7096484b3ed0e2f4432ba2e572a65a6a9d1f2e61cffb309",
-      "bytes": 419734
+      "hash": "adc3b9c7066c981fc8b5b763a6c8b3b198ef0558c663b531d93e630776f2e2e3",
+      "bytes": 429211
     },
     "skillcalc": {
-      "hash": "cd989b0f0b2ca720de428fec23e7fb30c7c0c837f2b7bca66449e3c253454611",
-      "bytes": 396951
+      "hash": "ada8895fa056c4d20834a6793828211e1fb0b73f646abf917f003dbfa49b8b6e",
+      "bytes": 396995
     },
     "crafting": {
       "hash": "0de4b4ec04c16dd56ab4cbffa4c8efa7553ae09ee4d27b2e3abd24d7b40b338f",
@@ -185,7 +185,8 @@
     "skillDetails": 465,
     "skillDetailsItemSkills": 185,
     "skillDetailsWithGrants": 445,
-    "skillDetailsWithSynergies": 226,
+    "skillDetailsWithSynergies": 231,
+    "skillComboBonuses": 63,
     "skillDetailsWithoutDescription": 96,
     "skillInfoEntries": 38,
     "skillInfoNames": 68,
@@ -215,7 +216,7 @@
     "skillCalcHiddenFormat": 0,
     "skillCalcCharLevelSkills": 3,
     "skillCalcHardPointSkills": 28,
-    "skillCalcSynergyInputs": 593,
+    "skillCalcSynergyInputs": 611,
     "skillCalcItemEffect": 331,
     "skillCalcRows": 524,
     "skillCalcMissiles": 31,

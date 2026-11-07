@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { bottomUp, buildSkillDetailsBundle, evalSimpleCalc, readGrantSources, type SkillDetailsInput } from './bundleSkillDetails.ts';
+import {
+  bottomUp,
+  buildSkillDetailsBundle,
+  evalSimpleCalc,
+  readGrantSources,
+  splitComboBonuses,
+  type SkillDetailsInput,
+} from './bundleSkillDetails.ts';
 import { parseTsv } from './tsv.ts';
 
 /** Rows as column → value records, so a test names only the cells it needs */
@@ -35,7 +42,13 @@ const DESC_COLUMNS = [
   ...[1, 2].flatMap((i) =>
     ['desc', 'dsc2'].flatMap((p) => [`${p}texta${String(i)}`, `${p}textb${String(i)}`, `${p}calca${String(i)}`, `${p}calcb${String(i)}`])
   ),
-  ...[1, 2, 3, 4].flatMap((i) => [`dsc3texta${String(i)}`, `dsc3textb${String(i)}`, `dsc3calca${String(i)}`, `dsc3calcb${String(i)}`]),
+  ...[1, 2, 3, 4, 5, 6, 7].flatMap((i) => [
+    `dsc3line${String(i)}`,
+    `dsc3texta${String(i)}`,
+    `dsc3textb${String(i)}`,
+    `dsc3calca${String(i)}`,
+    `dsc3calcb${String(i)}`,
+  ]),
 ];
 
 function input(items: SkillDetailsInput['items'] = []): SkillDetailsInput {
@@ -59,6 +72,7 @@ function input(items: SkillDetailsInput['items'] = []): SkillDetailsInput {
       { skill: 'Fire Surge', skilldesc: 'fire surge', reqlevel: '1', maxlvl: '20' },
       { skill: 'Lonely Proc', skilldesc: 'lonely proc', reqlevel: '1', maxlvl: '20' },
       { skill: 'Hidden Proc', reqlevel: '1', maxlvl: '20' },
+      { skill: 'Inferno', charclass: 'sor', skilldesc: 'inferno', reqlevel: '12', maxlvl: '20', Param8: '6' },
       { skill: 'Holy Fire', charclass: 'pal', skilldesc: 'holy fire', reqlevel: '6', maxlvl: '20', aura: '1', passive: '1' },
     ]),
     skilldesc: table(DESC_COLUMNS, [
@@ -78,15 +92,45 @@ function input(items: SkillDetailsInput['items'] = []): SkillDetailsInput {
         dsc2texta2: 'Cooldown1',
         dsc2textb2: 'Cooldowns',
         dsc2calca2: '2',
+        dsc3line1: '40',
         dsc3texta1: 'Sksyn',
         dsc3textb1: 'FireBoltName',
+        dsc3line2: '76',
         dsc3texta2: 'Firedplev',
         dsc3textb2: 'FireBallName',
         dsc3calca2: 'par8*2',
+        dsc3line3: '76',
         dsc3texta3: 'Firedplev',
         dsc3textb3: 'WarmthName',
         dsc3calca3: 'clc1',
+        dsc3line4: '18',
         dsc3texta4: 'BothNote',
+      },
+      {
+        skilldesc: 'inferno',
+        SkillPage: '1',
+        SkillRow: '3',
+        SkillColumn: '3',
+        'str name': 'InfernoName',
+        dsc3line1: '40',
+        dsc3texta1: 'Sksyn',
+        dsc3textb1: 'InfernoName',
+        dsc3line2: '63',
+        dsc3texta2: 'FireBallName',
+        dsc3textb2: 'Alldplev',
+        dsc3calca2: 'par8',
+        dsc3line3: '67',
+        dsc3texta3: 'WarmthName',
+        dsc3textb3: 'Secplev',
+        dsc3calca3: '1',
+        dsc3line4: '25',
+        dsc3texta4: 'FireBoltName',
+        dsc3textb4: 'SecplevSuffix',
+        dsc3line5: '18',
+        dsc3texta5: 'WrittenSynergy',
+        dsc3line6: '18',
+        dsc3texta6: 'TwoCombos',
+        dsc3texta7: 'OrphanName',
       },
       {
         skilldesc: 'fire ball',
@@ -136,6 +180,12 @@ function input(items: SkillDetailsInput['items'] = []): SkillDetailsInput {
       ['Sksyn', '%s Receives Bonuses From:'],
       ['Firedplev', '%s: %+d%% Fire Damage per Level'],
       ['BothNote', 'Bolts split\nIf both Fire Bolt and Fire Ball have 20 levels:'],
+      ['InfernoName', 'Inferno'],
+      ['Alldplev', 'All Damage per Level'],
+      ['Secplev', 'Second per Level'],
+      ['SecplevSuffix', ': +0.20 Seconds per Level'],
+      ['WrittenSynergy', 'Fire Ball: +0.5% Chance to Deal Double Damage'],
+      ['TwoCombos', 'Life is tripled\nIf All Fire Skills have 20 levels:\nHits are doubled\nIf both Inferno and Fire Bolt have 20 levels:'],
     ]),
     items,
   };
@@ -156,6 +206,23 @@ describe('evalSimpleCalc', () => {
     expect(evalSimpleCalc("skill('Fire Ball'.blvl)*par8", params)).toBeNull();
     expect(evalSimpleCalc('12/clc4', params)).toBeNull();
     expect(evalSimpleCalc('', params)).toBeNull();
+  });
+});
+
+describe('splitComboBonuses', () => {
+  it('reads each condition with the lines under it and keeps the lines before the first one', () => {
+    expect(
+      splitComboBonuses('Old rule\nIf both A and B C have 20 levels:\nFirst line\nsecond line\nIf Every Armor has 10 levels:\nTripled')
+    ).toEqual({
+      rest: ['Old rule'],
+      combos: [
+        { condition: 'If both A and B C have 20 levels', names: ['A', 'B C'], level: 20, text: ['First line', 'second line'] },
+        { condition: 'If Every Armor has 10 levels', names: ['Every Armor'], level: 10, text: ['Tripled'] },
+      ],
+    });
+  });
+  it('leaves a text without a condition alone', () => {
+    expect(splitComboBonuses('Magi, Skeleton King')).toEqual({ rest: ['Magi, Skeleton King'], combos: [] });
   });
 });
 
@@ -198,7 +265,7 @@ describe('buildSkillDetailsBundle', () => {
   const byId = (id: string) => bundle.skills.find((skill) => skill.id === id);
 
   it('lists class skills in class / tab / row / column order, then granted item skills', () => {
-    expect(bundle.skills.map((skill) => skill.id)).toEqual(['Warmth', 'Fire Bolt', 'Fire Ball', 'Holy Fire', 'Fire Surge']);
+    expect(bundle.skills.map((skill) => skill.id)).toEqual(['Warmth', 'Fire Bolt', 'Fire Ball', 'Inferno', 'Holy Fire', 'Fire Surge']);
     // Attack (no grant), Lonely Proc (no grant) and Hidden Proc (no skilldesc) are left out
     expect(undescribedGrants).toBe(1);
   });
@@ -230,12 +297,52 @@ describe('buildSkillDetailsBundle', () => {
     expect(byId('Fire Ball')?.lines).toEqual(['Pinned two', 'Pinned one', 'Splits into 3', 'Radius: 4 yards']);
   });
 
-  it('reads synergies with param values, "?" for formulas, and special rules as notes', () => {
+  it('reads synergies with param values, "?" for formulas, and the "If both" rules as combo bonuses', () => {
     expect(byId('Fire Bolt')?.synergies).toEqual([
       { name: 'Fire Ball', text: '+12% Fire Damage per Level' },
       { name: 'Warmth', text: '+?% Fire Damage per Level' },
     ]);
-    expect(byId('Fire Bolt')?.notes).toEqual(['If both Fire Bolt and Fire Ball have 20 levels:\nBolts split']);
+    expect(byId('Fire Bolt')?.comboBonuses).toEqual([
+      {
+        condition: 'If both Fire Bolt and Fire Ball have 20 levels',
+        skills: [
+          { name: 'Fire Bolt', id: 'Fire Bolt' },
+          { name: 'Fire Ball', id: 'Fire Ball' },
+        ],
+        level: 20,
+        text: ['Bolts split'],
+      },
+    ]);
+    expect(byId('Fire Bolt')?.notes).toBeUndefined();
+  });
+
+  it('reads the old synergy layouts (63 / 67 / 25) and a written-out "Skill: bonus" line as synergies', () => {
+    expect(byId('Inferno')?.synergies).toEqual([
+      { name: 'Fire Ball', text: '+6% All Damage per Level' },
+      { name: 'Warmth', text: '+1 Second per Level' },
+      { name: 'Fire Bolt', text: '+0.20 Seconds per Level' },
+      { name: 'Fire Ball', text: '+0.5% Chance to Deal Double Damage' },
+    ]);
+  });
+
+  it('splits a text with two conditions into two combo bonuses and keeps unresolved names without an id', () => {
+    expect(byId('Inferno')?.comboBonuses).toEqual([
+      {
+        condition: 'If both Inferno and Fire Bolt have 20 levels',
+        skills: [
+          { name: 'Inferno', id: 'Inferno' },
+          { name: 'Fire Bolt', id: 'Fire Bolt' },
+        ],
+        level: 20,
+        text: ['Hits are doubled'],
+      },
+      { condition: 'If All Fire Skills have 20 levels', skills: [{ name: 'All Fire Skills' }], level: 20, text: ['Life is tripled'] },
+    ]);
+    expect(byId('Inferno')?.notes).toBeUndefined();
+  });
+
+  it('skips dsc3 lines without a line function (the game shows nothing)', () => {
+    expect(warnings.some((warning) => warning.includes('OrphanName'))).toBe(false);
   });
 
   it('collects visible grants per skill, deduplicated, with chance / charges / partial', () => {
