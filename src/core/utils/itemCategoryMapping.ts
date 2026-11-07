@@ -46,10 +46,11 @@ const CATEGORY_OVERRIDES: Readonly<Partial<Record<string, BonusCategory>>> = {
   'barbaric knuckle': 'helmsBoots',
 };
 
-// Fallback display labels for each category (used when dynamic labels can't be generated)
+// Short labels of the gems.htm columns: the socketable tooltips / cards, and the fallback when dynamic labels can't be
+// generated. Weapons = all but staves, wands and orbs (the Mythical Arcane Staff counts as a weapon)
 export const CATEGORY_LABELS: Record<BonusCategory, string> = {
   weaponsGloves: 'Weapons/Gloves',
-  helmsBoots: 'Helms/Boots/Staves/Wands/Orbs/Amulets/Rings/Charms',
+  helmsBoots: 'Helms/Boots/Staves/Wands/Orbs/Jewelry/Charms',
   armorShieldsBelts: 'Shields/Body Armor/Belts',
 };
 

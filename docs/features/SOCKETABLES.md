@@ -63,10 +63,11 @@ Each socketable displays:
 - Name (with item color if available)
 - Category badge (Gem, ESR, LoD, Kanji, Crystal)
 - Required level
-- Bonuses for each slot type:
-  - Weapons/Gloves
-  - Helms/Boots
-  - Armor/Shields/Belts
+- Bonuses for each gems.htm column, labelled with the short `CATEGORY_LABELS` (`core/utils/itemCategoryMapping.ts`,
+  shared with the rune and gem tooltips). ESR 3.3 headers in brackets:
+  - Weapons/Gloves ("Weapon (except Orb, Staff, Wand) / Gloves / Missile / Mythical Arcane Staff")
+  - Helms/Boots/Staves/Wands/Orbs/Jewelry/Charms ("Helm / Boots / Staff / Wand / Orb / Amulet / Ring / Charm")
+  - Shields/Body Armor/Belts ("Any Shield / Body Armor / Belt")
 - Source line (see below)
 
 ### Source Line
