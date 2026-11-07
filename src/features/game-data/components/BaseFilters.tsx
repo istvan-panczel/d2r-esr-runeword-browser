@@ -28,6 +28,7 @@ import {
   isBaseView,
 } from '../constants/bases';
 import {
+  clearBaseCodes,
   clearBaseTypes,
   resetBaseFilters,
   selectBaseFilters,
@@ -118,6 +119,14 @@ export function BaseFilters({ classes, typeGroups, typeNames, getShareUrl }: Bas
               </InputGroupAddon>
             )}
           </InputGroup>
+          {filters.codes.length > 0 && (
+            <Badge variant="secondary" asChild>
+              <button type="button" onClick={() => dispatch(clearBaseCodes())} aria-label="Show all bases, not only the linked ones">
+                Only the {filters.codes.length} linked {filters.codes.length === 1 ? 'base' : 'bases'}
+                <X />
+              </button>
+            </Badge>
+          )}
         </div>
 
         <NumberFilterInput

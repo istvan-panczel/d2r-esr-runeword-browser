@@ -18,6 +18,7 @@ import {
   type IconsBundle,
   type ItemTextBundle,
   type LootFilterDataBundle,
+  type MasteriesBundle,
   type MaterialsBundle,
   type ModifiersBundle,
   type SetsBundle,
@@ -55,6 +56,7 @@ export interface GameDataBundles {
   itemtext: ItemTextBundle;
   terrorzones: TerrorZonesBundle;
   modifiers: ModifiersBundle;
+  masteries: MasteriesBundle;
   icons: IconsBundle;
 }
 

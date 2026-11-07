@@ -17,6 +17,8 @@ export interface BaseFilters {
   readonly tiers: readonly BaseTier[];
   /** Selected item-type codes, matched against `base.ancestors`. Empty = all types */
   readonly types: readonly string[];
+  /** Only these base codes (a link's list, e.g. a weapon mastery's bases; no picker). Empty = all bases */
+  readonly codes: readonly string[];
   /** Minimum of `max(socketCaps)` */
   readonly minSockets: number | null;
   readonly maxReqLvl: number | null;
@@ -82,6 +84,7 @@ export const DEFAULT_BASE_FILTERS: BaseFilters = {
   kinds: [],
   tiers: [],
   types: [],
+  codes: [],
   minSockets: null,
   maxReqLvl: null,
   classOnly: 'any',
@@ -165,6 +168,9 @@ const gameDataSlice = createSlice({
     },
     clearBaseTypes(state) {
       state.bases.types = [];
+    },
+    clearBaseCodes(state) {
+      state.bases.codes = [];
     },
     setBaseMinSockets(state, action: PayloadAction<number | null>) {
       state.bases.minSockets = action.payload;
@@ -273,6 +279,7 @@ export const {
   toggleBaseType,
   setBaseTypeGroup,
   clearBaseTypes,
+  clearBaseCodes,
   setBaseMinSockets,
   setBaseMaxReqLvl,
   setBaseClassOnly,

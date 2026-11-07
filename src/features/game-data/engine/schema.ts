@@ -29,6 +29,7 @@ export type GameDataFile =
   | 'itemtext'
   | 'terrorzones'
   | 'modifiers'
+  | 'masteries'
   | 'icons';
 
 export interface GameDataManifest {
@@ -993,6 +994,68 @@ export interface SkillDetailsBundle {
   items: SkillGrantItem[];
   /** Class skills (class order, tab, row, column), then item skills by name */
   skills: SkillDetail[];
+}
+
+// --- masteries.json -----------------------------------------------------------------------------------------------
+
+/**
+ * masteries.json: ESR's weapon mastery specialisations. The cubemain rows that set the `weaponmastery` stat (one value
+ * per specialisation) give the bases, token and ingredients; the awakened token's description string gives the effects.
+ * The Bases page shows them on the class weapons, the Skills page on the affected skills.
+ */
+export interface MasteriesBundle {
+  /** The unawakened Weapon Mastery Token (misc code) */
+  token: string;
+  /** Display names of the tokens and ingredients by item code */
+  names: Record<string, string>;
+  /** Display names of the skills the effects name, by skill id */
+  skillNames: Record<string, string>;
+  /** By stat value */
+  masteries: WeaponMastery[];
+}
+
+export interface WeaponMastery {
+  /** The `weaponmastery` stat value the apply rows set: one per specialisation */
+  value: number;
+  /** The weapon as the cube rows name it ("Stag Bow", "Orb", "Void Blade") */
+  label: string;
+  cls: ClassCode;
+  /** The item type when the rows take any item of a type (orb, claw, wswd); omitted for a base family */
+  type?: string;
+  /** Every base the apply rows take, in bases.json order */
+  bases: string[];
+  /** The awakened token (misc code) the apply rows take */
+  token: string;
+  /** Apply: the inputs after the weapon and the token, in cube order */
+  inputs: MasteryInput[];
+  /** Remove: the inputs after the weapon (the token is lost) */
+  remove: MasteryInput[];
+  /** Bases the rows can apply the mastery to but no remove row takes (an ESR data slip); omitted when none */
+  noRemove?: string[];
+  /** Bases the rows can apply the mastery to but no awaken row takes (no token for them; a data slip); omitted when none */
+  noAwaken?: string[];
+  /** The token description's effect blocks, in display order */
+  effects: MasteryEffect[];
+  /**
+   * Other mods the apply rows add, rendered ("+20% Total Spell Damage"); a mod without item text (no descfunc) as a
+   * written-out line ("-100% Magic Resist (no item line; …)") and a `masteries:` warning. Omitted when none
+   */
+  mods?: string[];
+}
+
+export interface MasteryInput {
+  code: string;
+  /** Omitted when 1 */
+  qty?: number;
+}
+
+export interface MasteryEffect {
+  /** The skills line as the token names it ("Strafe", "Curses", "Poison, Immolation, Freezing, Lightning Arrow") */
+  heading: string;
+  /** Affected class skills (skill ids), in skill tree order; empty when none could be resolved */
+  skills: string[];
+  /** The effect, one sentence group per entry */
+  text: string[];
 }
 
 // --- skillcalc.json -----------------------------------------------------------------------------------------------

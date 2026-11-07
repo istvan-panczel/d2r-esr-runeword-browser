@@ -120,6 +120,13 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     skills: byField('id', named('id')),
     knownLayers: byField('stat'),
   },
+  // weapon masteries: a changed effect text or skill list means the Bases panel and the skill cards read differently
+  'masteries.json': {
+    token: VALUE,
+    names: MAP,
+    skillNames: MAP,
+    masteries: byField('value', (entry) => `${field(entry, 'value')} (${field(entry, 'label')})`),
+  },
   'materials.json': { groups: byField('code'), families: byField('id'), items: byField('code', named('code')) },
   // modifiers: a changed fact (difficultylevels.txt, a plugin config value) means the explanation text needs a re-check
   'modifiers.json': {

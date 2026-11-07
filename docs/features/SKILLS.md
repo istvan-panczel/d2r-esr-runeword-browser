@@ -389,7 +389,11 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
     with character level", "Scales with hard points only": +skills do not raise that part), the ESR skill information
     page block when skilldesc has a description too (labelled with the link; the entry's heading is shown when it names
     more skills), "Used by mercenaries: Desert Mercenary (Comb – Normal, …)" (`mercenaries` grouped by hireling, with a
-    Source link) and the notes.
+    Source link), the notes and **Weapon mastery** (`SkillMasteries.tsx`; masteries.json, loaded lazily by
+    `useMasteries` with the first card): per specialisation whose effect names the skill, the weapon (base icon, link to
+    every base it applies to on the Bases page: `?codes=` for a base family, `?type=` for Orb / Claw / Void Blade), the recipe icons, the effect (with the skills line when it is a group such as "Curses") and
+    the apply rows' other mods; Spearstorm, Fend and Dance of Death have two (Maiden Spear and Maiden Pike), the
+    Assassin charge-ups two (Claw + Chipped Ruby / Skull). Builds share the card. Mapping: GAME-DATA.md "Weapon mastery".
 
   The tab list and, on Values, the **level bar** under it are `sticky top-0` inside the card (the detail column scrolls
   from `lg`, the page below), so the level stays in reach while the values scroll. Fire Ball's card is about 780 px

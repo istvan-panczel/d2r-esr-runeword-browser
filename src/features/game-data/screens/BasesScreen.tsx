@@ -17,9 +17,10 @@ import { selectBaseFilters, setBaseSearch, setBaseView, type BaseFilters as Base
 import { buildBaseFamilies } from '../utils/baseFamilies';
 import { buildFamilyView } from '../utils/familyView';
 import { filterBases } from '../utils/filterBases';
+import { buildMasteryIndex, type MasteryIndex } from '../utils/masteries';
 import { buildTypeGroups } from '../utils/typeGroups';
 
-const BASES_FILES = ['types', 'bases'] as const;
+const BASES_FILES = ['types', 'bases', 'masteries'] as const;
 
 export function BasesScreen() {
   const gameData = useGameData(BASES_FILES);
@@ -31,6 +32,7 @@ export function BasesScreen() {
       bases={gameData.data.bases.bases}
       automods={gameData.data.bases.automods ?? []}
       superior={readSuperiorAffixes(gameData.data.bases)}
+      masteries={buildMasteryIndex(gameData.data.masteries)}
     />
   );
 }
@@ -40,9 +42,10 @@ interface BasesBrowserProps {
   readonly bases: readonly BaseItem[];
   readonly automods: readonly BaseAutomod[];
   readonly superior: SuperiorAffixes | null;
+  readonly masteries: MasteryIndex;
 }
 
-function BasesBrowser({ typesBundle, bases, automods, superior }: BasesBrowserProps) {
+function BasesBrowser({ typesBundle, bases, automods, superior, masteries }: BasesBrowserProps) {
   const dispatch = useDispatch();
   const filters = useSelector(selectBaseFilters);
   const { types, classes } = typesBundle;
@@ -105,6 +108,7 @@ function BasesBrowser({ typesBundle, bases, automods, superior }: BasesBrowserPr
               automodById={automodById}
               classNames={classNames}
               superior={superior}
+              masteries={masteries}
               onSearch={handleSearch}
             />
           )}

@@ -29,31 +29,32 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                | Contents                                                                                                                                                              |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                           |
-| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                      |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools            |
-| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                   |
-| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                               |
-| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                              |
-| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                    |
-| `enhance.json`      | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                           |
-| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                         |
-| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                       |
-| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                          |
-| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                |
-| `skilldetails.json` | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))          |
-| `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))          |
-| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                      |
-| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                      |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                   |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                      |
-| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                             |
-| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")           |
-| `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))    |
-| `modifiers.json`    | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md)) |
-| `icons.json`        | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")             |
+| File                | Contents                                                                                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                            |
+| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                       |
+| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools             |
+| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                    |
+| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                                |
+| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                               |
+| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                     |
+| `enhance.json`      | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                            |
+| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                          |
+| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                        |
+| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                           |
+| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                 |
+| `skilldetails.json` | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))           |
+| `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))           |
+| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                       |
+| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                       |
+| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                    |
+| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                       |
+| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                              |
+| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")            |
+| `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))     |
+| `modifiers.json`    | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))  |
+| `masteries.json`    | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery") |
+| `icons.json`        | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")              |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -82,6 +83,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
 | `terrorzones.json`  | ESR 3.2.24: 9 KB / 2 KB                                                                                         |
 | `modifiers.json`    | ESR 3.2.24: 293 KB / 50 KB (stats 251 KB, of which example items 113 KB; kinds 51 KB; facts 19 KB)              |
+| `masteries.json`    | ESR 3.2.24: 14 KB / 4 KB                                                                                        |
 | `icons.json`        | ESR 3.2.24: 451 KB / 52 KB (+ `icons/`: 1,842 WebP, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB)            |
 
 ### Bases and types
@@ -158,6 +160,38 @@ Other `superior:` warnings: unknown item type codes, a row no base rolls, an unr
 etypes and text against the "Grouped" view of `docs/quality_affixes.htm` and the rows of all 52 item type sections of
 its "Expanded" view against `superiorRollsFor` (the page shows the Enhanced Defense rows with their max only and orders
 the -enemy resist lines differently; both are normalised). Adding the keys did not bump `GAME_DATA_SCHEMA`.
+
+#### Weapon mastery
+
+`build/bundleMasteries.ts` → `masteries.json` (`MasteriesBundle`). The cubemain rows whose output mod is
+`weapon-mastery` (stat `weaponmastery`) are grouped by its value, one per specialisation (ESR 3.2.24: 1-14 one per base
+family, 15 / 17 Orb + Chipped Ruby / Skull, 20 / 25 Claw + Chipped Ruby / Skull, 55 / 60 Void Blade + Chipped Obsidian /
+Sapphire, Warlock, not on `docs/weapon_mastery.html`); negative values are the Remove rows. Per `WeaponMastery`:
+`value`, `label` (the row description after " - ", trailing number dropped), `cls`, `type` (orb, claw, wswd: the rows take
+any item of the type), `bases` (input 1 codes, an item type expanded to its bases; codes that are not spawnable bases,
+ESR's LoD `q..` copies and some mythicals, are skipped), `token` (input 2), `inputs` (the rest, Anvil Stone included),
+`remove` (the Remove row's inputs after the weapon: the Dragon Stone form + 3 Thawing Potions), `noRemove` / `noAwaken`
+(bases no Remove row / no Awaken row (weapon + unawakened token → that token) takes), `mods` (the apply rows' other mods,
+rendered one at a time; Orb 1: "+20% Total Spell Damage"; a mod the renderer gives no text, such as the Scythe's
+`total-magic-resist` -100 (no descfunc), is written out from `HIDDEN_MOD_LABELS` or as its code, with a warning) and
+`effects`.
+
+Effects come from the awakened token's `<token>desc` string (u24-u39, u41). Item descriptions render bottom-up, so
+`parseMasteryDescription` reverses the lines: each block is "Transmute this with a <weapon> variant, a <ingredient>" /
+"and an Anvil Stone …", then after every blank line a skills line and its effect lines (the game colours the skills
+line; the string table strips colours). `joinEffectLines` joins wrapped lines (a capital letter starts a sentence).
+Tokens with two specialisations have two blocks, paired with their rows by the ingredients the recipe line names.
+`resolveEffectSkills` maps a skills line to class skill ids: every part a skill name or id ("Poison, Immolation,
+Freezing, Lightning Arrow" shares "Arrow"; "Wolves" → the skills with the word Wolf), else a `GROUP_RULES` entry
+(Magic Spells, Sorceress Spells, Sorceress Exclusives, Elemental Charge-up Skills; skills.txt EType, reqlevel,
+aurastate, itypea1), else the class tab of that name (Curses); plus the class skills the effect text names, capitalised
+("Fire and Magic Skills": Hellfire Lance … Abyss), and `LOWER_CASE_MENTIONS` (Oak Branch: "contagion").
+`skillNames` carries the display names. Warnings (`masteries:`): a recipe line naming another weapon or other ingredients
+than the rows (3.2.24: u28desc says Maiden Spear for the Pike; u39desc's Chipped Skull block says Crushed Gem, the rows
+take a Dragon Stone), the Celestial Blade Awaken and Remove rows taking `0bs` (so `0be` has neither recipe), a mod
+without item text, a skills line naming no skill. Counts: `masteries`,
+`masteryBases`, `masteryEffects`, `masterySkills`. Shown on the Bases page cards and on the Skills page cards
+([SKILLS.md](./SKILLS.md)).
 
 ### Runewords
 
@@ -1436,7 +1470,13 @@ are pulled out into "Every option also: …". More than 5 options start collapse
 has no visible rows keeps the "Automod N" badge instead. Then a collapsed "Superior rolls: one of N, kept in runewords" (`components/SuperiorRollsSection.tsx`, also on the
 Best Base cards): the superior rows this base rolls (`superiorRollsForBase`), each with its chance (rows under 1% in
 amber; weight and row number in the tooltip) and the rendered lines, and an "All superior rows" link to
-`/game-data/affixes?view=superior&stype=<own type>`. Hidden for bases that roll no row (misc, Arrows, Bolts). The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
+`/game-data/affixes?view=superior&stype=<own type>`. Hidden for bases that roll no row (misc, Arrows, Bolts). Class
+weapons that take a weapon mastery get a collapsed "Weapon mastery: <skills lines>" ("one of 2 (…)" for Orb, Claw, Void
+Blade; `components/WeaponMasterySection.tsx`, masteries.json loads with the page): per specialisation the recipe with
+icons (Weapon + Awakened token + ingredients), the skills lines with the skill names linked (skill peek, ref kind
+`mention`), the effect sentences and the other mods, then one note (one per weapon, no runeword, drops, the remove
+recipe, the guide link; a base in `noAwaken` / `noRemove` reads "The game files have no awaken or remove recipe for this
+base (likely a data slip)" instead of those steps). The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
 
 #### Families view
 
@@ -1464,17 +1504,18 @@ Read once on mount by `hooks/useBasesUrlState.ts` (same pattern as runewords `us
 present, the decoded params replace the whole filter state (missing ones fall back to defaults) and are removed from the
 URL. The Copy Link button builds the URL from the current filters (`encodeBaseFilters`, only non-default values).
 
-| Param     | Field          | Format                                           |
-| --------- | -------------- | ------------------------------------------------ |
-| `search`  | search         | text (shared key)                                |
-| `sockets` | minSockets     | 1–6 (shared key)                                 |
-| `maxlvl`  | maxReqLvl      | 1–999 (shared key)                               |
-| `kind`    | kinds          | comma list                                       |
-| `tier`    | tiers          | comma list                                       |
-| `type`    | types          | comma list of type codes (unknown codes dropped) |
-| `cls`     | classOnly      | `none` or a class code                           |
-| `sort`    | sort + sortDir | `dmg` ascending, `-dmg` descending               |
-| `view`    | view           | `families` (cards, the default, is omitted)      |
+| Param     | Field          | Format                                                                                                         |
+| --------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
+| `search`  | search         | text (shared key)                                                                                              |
+| `sockets` | minSockets     | 1–6 (shared key)                                                                                               |
+| `maxlvl`  | maxReqLvl      | 1–999 (shared key)                                                                                             |
+| `kind`    | kinds          | comma list                                                                                                     |
+| `tier`    | tiers          | comma list                                                                                                     |
+| `type`    | types          | comma list of type codes (unknown codes dropped)                                                               |
+| `codes`   | codes          | comma list of base codes (no picker; a chip under the search clears it; the skill cards' weapon mastery links) |
+| `cls`     | classOnly      | `none` or a class code                                                                                         |
+| `sort`    | sort + sortDir | `dmg` ascending, `-dmg` descending                                                                             |
+| `view`    | view           | `families` (cards, the default, is omitted)                                                                    |
 
 Keys are per page (`constants/urlParams.ts`; `search`, `sockets` and `maxlvl` are the app-wide shared keys; `sockets` is a plain
 minimum here, while the recipe screens accept a range), so `cls`, `type`

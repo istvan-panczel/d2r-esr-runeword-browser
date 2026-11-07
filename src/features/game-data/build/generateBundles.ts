@@ -7,6 +7,7 @@ import type {
   EnhanceBundle,
   ItemTextBundle,
   LootFilterDataBundle,
+  MasteriesBundle,
   MaterialsBundle,
   ModifiersBundle,
   SetsBundle,
@@ -26,6 +27,7 @@ import { buildAffixesBundle } from './bundleAffixes.ts';
 import { buildAreasBundle } from './bundleAreas.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
+import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
@@ -86,6 +88,8 @@ export interface GeneratedBundles {
   terrorzones: TerrorZonesBundle;
   // modifiers.json
   modifiers: ModifiersBundle;
+  // masteries.json
+  masteries: MasteriesBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -311,6 +315,20 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
           new Set(table('skills').rows.map((row) => row.str('skill')))
         );
   const skillInfoWarnings = skillInfo?.warnings ?? ['skilldetails: docs/skill_information.htm missing in the ESR clone'];
+  // --- masteries.json ---
+  const masteries = buildMasteriesBundle({
+    cube: cubeTables.cube,
+    nameOf: cubeTables.nameOf,
+    itemCodes: new Set(cubeItems.map((item) => item.code)),
+    bases: basesBundle.bases,
+    types: types.bundle.types,
+    classes: types.bundle.classes,
+    strings,
+    skills: readMasterySkills(table('skills'), skillDetails.bundle.skills),
+    renderMods: cubeTables.renderMods,
+  });
+  // --- end masteries.json ---
+
   // --- skillcalc.json ---
   const skillCalc = buildSkillCalcBundle({
     skills: table('skills'),
@@ -521,6 +539,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     itemtext: itemText.bundle,
     terrorzones: terrorZones.bundle,
     modifiers: modifiers.bundle,
+    masteries: masteries.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -647,6 +666,10 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       modifierFacts: modifiers.bundle.facts.length,
       modifierConfigFacts: modifiers.bundle.facts.filter((fact) => fact.origin === 'esr-config').length,
       modifierSources: modifierSources.length,
+      masteries: masteries.bundle.masteries.length,
+      masteryBases: new Set(masteries.bundle.masteries.flatMap((mastery) => mastery.bases)).size,
+      masteryEffects: masteries.bundle.masteries.reduce((sum, mastery) => sum + mastery.effects.length, 0),
+      masterySkills: Object.keys(masteries.bundle.skillNames).length,
     },
     warnings: [
       ...types.warnings,
@@ -673,6 +696,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...itemText.warnings,
       ...terrorZones.warnings,
       ...modifiers.warnings,
+      ...masteries.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

@@ -7,8 +7,10 @@ import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { baseAutomodView, baseDamageLabel, type BaseAutomodView } from '../utils/baseAutomods';
 import { formatAffixLevel } from '../utils/filterAffixes';
 import { formatRange, formatSocketCaps } from '../utils/format';
+import type { MasteryIndex } from '../utils/masteries';
 import { ItemIcon } from './ItemIcon';
 import { SuperiorRollsSection } from './SuperiorRollsSection';
+import { WeaponMasterySection } from './WeaponMasterySection';
 
 const DEFAULT_THRESHOLDS: ItemTypeInfo['thresholds'] = [25, 40];
 
@@ -21,6 +23,8 @@ interface BaseCardProps {
   readonly classNames: ReadonlyMap<string, string>;
   /** Superior affix rows and rules (null: no "Superior rolls" panel) */
   readonly superior: SuperiorAffixes | null;
+  /** Weapon mastery specialisations (null: no "Weapon mastery" panel) */
+  readonly masteries: MasteryIndex | null;
   /** Sets the page search (family links) */
   readonly onSearch: (text: string) => void;
 }
@@ -101,7 +105,7 @@ function AutomodSection({ view, group }: { readonly view: BaseAutomodView; reado
   );
 }
 
-export function BaseCard({ base, typeByCode, baseByCode, automodById, classNames, superior, onSearch }: BaseCardProps) {
+export function BaseCard({ base, typeByCode, baseByCode, automodById, classNames, superior, masteries, onSearch }: BaseCardProps) {
   const type = typeByCode.get(base.type);
   const type2 = base.type2 === null ? undefined : typeByCode.get(base.type2);
   const thresholds = type?.thresholds ?? DEFAULT_THRESHOLDS;
@@ -219,6 +223,7 @@ export function BaseCard({ base, typeByCode, baseByCode, automodById, classNames
         </dl>
         {automods !== null && <AutomodSection view={automods} group={base.autoGroup} />}
         {superior !== null && <SuperiorRollsSection superior={superior} base={base} />}
+        {masteries !== null && <WeaponMasterySection masteries={masteries} base={base} />}
         <Link
           to={`/game-data/affixes?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.BASE]: base.code }).toString()}`}
           className="mt-2 inline-block text-sm text-primary underline-offset-2 hover:underline"

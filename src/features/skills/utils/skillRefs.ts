@@ -265,7 +265,7 @@ function levelText([min, max]: readonly [number, number]): string {
   return min === max ? String(min) : `${String(min)}-${String(max)}`;
 }
 
-/** What the line gives, in the peek's words: "Level 15 aura when equipped", "+3 skill levels", … */
+/** What the line gives, in the peek's words: "Level 15 aura when equipped", "+3 skill levels", …; '' for a mention */
 export function skillRefText(ref: SkillRef): string {
   const level = levelText(ref.level);
   switch (ref.kind) {
@@ -277,6 +277,8 @@ export function skillRefText(ref: SkillRef): string {
       return `Level ${level}, ${String(ref.charges ?? 0)} charges`;
     case 'chance':
       return `${String(ref.chance ?? 0)}% chance to cast level ${level} ${ref.event ?? ''}`.trimEnd();
+    case 'mention':
+      return '';
   }
 }
 
@@ -297,6 +299,10 @@ export interface SkillRefLevel {
 export function skillRefLevel(ref: SkillRef, skill: Pick<SkillDetail, 'cls'>): SkillRefLevel {
   const max = clampLevel(ref.level[1]);
   const ranged = ref.level[0] !== ref.level[1];
+  // A skill named in text gives no level: the Skills page default, for reference
+  if (ref.kind === 'mention') {
+    return { level: PAGE_DEFAULT_LEVEL, label: `At level ${String(PAGE_DEFAULT_LEVEL)} for reference`, urlLevel: null };
+  }
   if (ref.kind !== 'plus') {
     return { level: max, label: `At level ${String(max)}${ranged ? ' (the roll’s maximum)' : ''}`, urlLevel: max };
   }
