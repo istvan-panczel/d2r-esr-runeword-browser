@@ -410,7 +410,7 @@ export class CalcRun {
       case 'ternary':
         return this.#eval(node.cond, frame) !== 0 ? this.#eval(node.then, frame) : this.#eval(node.else, frame);
       case 'bin':
-        return binary(node.op, this.#eval(node.left, frame), this.#eval(node.right, frame));
+        return calcBinary(node.op, this.#eval(node.left, frame), this.#eval(node.right, frame));
       case 'call':
         return this.#call(frame, node.name, node.args);
       case 'link':
@@ -644,7 +644,8 @@ export class CalcRun {
   }
 }
 
-function binary(op: string, a: number, b: number): number {
+/** A binary operator of the calc language on 32-bit integers (division truncates; comparisons give 1 or 0) */
+export function calcBinary(op: string, a: number, b: number): number {
   switch (op) {
     case '+':
       return i32(a + b);

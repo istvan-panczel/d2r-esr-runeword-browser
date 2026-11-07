@@ -79,6 +79,15 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     // cell text → icon token (i:/t:/u:/s:); a removed key or a changed token changes a cell's picture (icons.cube checks they resolve)
     icons: MAP,
   },
+  // elixirs: a changed formula, drop chance or perk fact means the Elixirs page (and the guide's elixirs note) read differently
+  'elixirs.json': {
+    maxLevel: VALUE,
+    elixirs: byField('code', named('code')),
+    perks: byField('key', (entry) => `${field(entry, 'key')} (${field(entry, 'title')})`),
+    drops: VALUE,
+    recipes: byField('id', (entry) => `${field(entry, 'id')} (${field(entry, 'description')})`),
+    otherUtilityPotions: VALUES,
+  },
   'enhance.json': {
     corruption: VALUE,
     corruptionSlots: byField('slot'),
