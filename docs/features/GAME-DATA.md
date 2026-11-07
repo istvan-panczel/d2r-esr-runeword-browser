@@ -68,7 +68,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `sources.json`      | 298 KB / 29 KB                                                                                                  |
 | `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills)                                  |
 | `enhance.json`      | ESR 3.2.24: 416 KB / 35 KB (357 KB / 32 KB before sanctification)                                               |
-| `cube.json`         | ESR 3.2.24: 647 KB / 68 KB (+ `icons`: 46 KB / 10 KB)                                                           |
+| `cube.json`         | ESR 3.2.24: 742 KB / 77 KB (before the audit fixes: 647 KB / 68 KB + `icons` 46 KB / 10 KB)                     |
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                      |
 | `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
 | `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
@@ -441,31 +441,52 @@ output bonuses, variant merging), `cubeFamilies.ts` (the guide's `::recipes` fam
 **Hidden rows** (`hidden`, counted by reason, first match): `enhance` = corruption, anointment and Vessel tier rows
 with their roll rows and blockers, matched by description (`Corruption[ Brick] - `, `Add Corruption|Anointment Dummy
 Stat`, `Anointment - `, `Vessel of Souls Tier N - `, `Check if already Corrupted|Anointed`, `Prevent Vessel of Souls
-Corrupt`; the Enhance page shows them); `traps` = `void` outputs and descriptions with the word "Trap"; `old` = "OLD
-(Delete later)"; `stockers` = descriptions with Stocker / Gem Can / Xtal Can / Rerolling Orb, or an input that is a
-stocker or can item (the Crystal Can rows are labelled "Moon Rune" … "God Rune"; the Rerolling Orb is an input of the
-real custom ring rerolls and is not a can); `dummy` = other "Add … Dummy Stat" rows. A row a guide family claims (the
-Anvil Stone's Multi Stocker row, the Sanctification roll) is never stocker or dummy bookkeeping. ESR 3.2.24: 9,121 of
-17,776 enabled rows are listed; hidden 4,007 enhance, 401 traps, 80 old, 4,167 stockers, 0 dummy.
+Corrupt`; the Enhance page shows them); `traps` = `void` outputs and descriptions with the word "Trap" (not "Starter
+Weapon for Trap Assassin", a real recipe); `old` = "OLD (Delete later)"; `stockers` = descriptions with Stocker / Gem
+Can / Xtal Can / Rerolling Orb, or an input that is a stocker or can item (the Crystal Can rows are labelled "Moon Rune"
+… "God Rune"; the Rerolling Orb is an input of the real custom ring rerolls and is not a can); `dummy` = other "Add …
+Dummy Stat" rows. A row a guide family or a stocker family (`STOCKER_FAMILIES`, below) claims (the Anvil Stone's Multi
+Stocker row, the Sanctification roll, the Rune Stocker upgrades) is never stocker or dummy bookkeeping. ESR 3.2.24:
+9,747 of 17,776 enabled rows are listed; hidden 4,007 enhance, 400 traps, 80 old, 3,542 stockers (storing, taking out,
+cycling the selected item), 0 dummy.
 
-**Families** (first match wins): the 33 guide families (`CUBE_FAMILIES`, sections in `GUIDE_FAMILY_SECTIONS`), then 20
-cube-only families (`EXTRA_FAMILIES`: unique rerolls, set conversions / cycles / rerolls, rune forging on the other
+**Stocker families** (`STOCKER_FAMILIES` in `cubeCatalog.ts`, first in `EXTRA_FAMILIES`): the stocker rows a player
+uses on purpose, worded in points through `CubeTables.counterName` (the stocker stat's `descstrpos` string, keyed by
+stat and property code; `stockerCounterNames` in `cubeRows.ts`; the Rerolling Orb's "Ring Point" gets "Magic" / "Rare"
+from the quality of the item its first storing row takes): `stocker-upgrades` (Rune / Decal Stocker + Scroll of
+Identify: 2 points of the selected rune → 1 of the next, one row per stocker), `crystal-can` (Kanji runes into 50
+crystal points, the Null Rune back), `multi-stocker` (Decipherer / coupon / Wild Card / Heart and Soul point
+conversions, the stocker shown with the item it is set to, the one its "… Output" row takes out, so the rows of one rate
+merge into one row listing the items; Maple Leaf points; Wirt's Leg → Cookbook; the "Multi Stocker Input" rows that
+convert: `isStockerConversion` = a set, crafted or unique item, a named item, or other points than items),
+`rerolling-orb` (the orb's outputs: its setting picks the points it spends and the quality it makes, "Rerolling Orb
+(set to Magic Ring Points → rare ring) + Key, or a Dragon Stone form for a class ring"; its converting inputs: Devil's
+Food points per unique, Jewel and quiver points from set, crafted and unique items) and `gem-can-rerolls` (charm, jewel
+and quiver rerolls for the points of the can's gem). ESR 3.2.24: 625 rows in 5 families, 119 merged rows.
+
+**Families** (first match wins): a numbered secret recipe (`[SECRETnn]`) always goes to `secret` (Secret Recipes 26,
+27, 28 and 40 also match `maple-leaf` / `charm-reroll`, which keep them for the guide); then the 33 guide families
+(`CUBE_FAMILIES`, sections in `GUIDE_FAMILY_SECTIONS`; `CUBE_FAMILY_OVERRIDES` changes `class-craft` for the cube page
+only: every slot's bonuses, one group per class), then 25 cube-only families (`EXTRA_FAMILIES`: the 5 stocker families,
+unique rerolls, set conversions / cycles / rerolls, rune forging on the other
 slots, legacy crafts, base upgrades, normal items, magic/rare rerolls and starter weapons, ring and amulet recipes,
 jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Might boon, Primordial Soulstones, quest
 items, Blemished gems / Mi Rune, secret recipes grouped per number), then a fallback `other:<prefix>` per description
-prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.2.24: 62 families, 9 fallback families with 41 rows
+prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.2.24: 67 families, 9 fallback families with 41 rows
 (Introductory Book Cycle 9, Weapons Crate 8, Negative MF Charm 8, Opener Size Change 6, Anya's Gift 6 + 1 + 1,
 Randomize Stone 1, Morph Charm Refund 1); the integrity test fails past 60 fallback rows or 12 fallback families, and
 when a defined family has no row.
 
 **Shape.** Top-level arrays: `sections` (official Cube Recipes page anchors in page order, then the Ascendancies, Kill
-Ledger, Weapon Mastery and Vessel of Souls pages, then `other`; only sections with families), `families` (`id`,
-`label`, `section`, `order`, `rowCount`, `raw`), `groups` (one recipe shape of a family: the family's `collapse` key;
-`label` = the first row's description with numbers as `#`, or "Secret Recipe N"; `conditions` every row shares;
+Ledger, Weapon Mastery and Vessel of Souls pages, then `other`; only sections with families; `notes` = short rewrites of
+the official page's footnotes for the section, `guide` = guide note slugs, both hand-written in `CUBE_SECTIONS`, the
+slugs checked against `content/guide/notes` by the integrity test), `families` (`id`, `label`, `section`, `order`,
+`rowCount`, `raw`, `notes`: `FAMILY_NOTES` plus the notes read from the rows, below), `groups` (one recipe shape of a
+family: the family's `collapse` key; `label` (below); `conditions` every row shares;
 `inputNames` / `outputNames` = the unique / set names its rows take / give, only for families without raw rows, for the
 ingredient / result searches), `rows` (the merged rows of `groupFamily(…, 'full')`: the guide's text, uncapped, always
 with the output bonuses unless the family hides them, `variants` = the cubemain rows merged into it, `outputLevel`,
-`dstoneCaps`, `enhanceTab`, `qualities`) and `recipes` (every row of the families with at most 40 rows: `id` = cubemain line, `description`, parsed
+`dstoneCaps`, `enhanceTab`, `conditions`, `returned`, `odds`, `qualities`) and `recipes` (every row of the families with at most 40 rows: `id` = cubemain line, `description`, parsed
 `inputs` (`text`, `code`, `qty`, `quals`, `kind` item / type / unique / any), `outputs` (`text`, `code` or null for
 useitem/usetype/cloneitem, `bonus` lines, `details` such as "socketed items come out" for `rem`, "item level N" or "to
 <map>" for the `lvl=` qualifier, `level`), `conditions`, `qualities`).
@@ -476,10 +497,50 @@ from zero and the summed bonus is rendered ("+121% Increased Attack Speed"); a m
 the D-stonings it merges (the tiered weapon rows share +300%). Rows without a cap condition, or with the elemental
 half-point counter (`op 18`), get none. ESR 3.2.24: 151 of 152 merged rows have one (not the weapon Forging Hammer).
 
+**Group labels**: "Secret Recipe N"; the family's `groupLabel` (class crafts "Amazon craft", legacy crafts "Caster craft",
+D-stoning by slot, the stocker families); for `skill-forging`, `stat-forging`, `rune-forging-slots` and `tinkering` the
+ingredients that tell the groups apart ("Chipped Emerald", "3× Heart"); the shared ingredients of the group when the
+description names a gem colour or grade or a potion the rows do not take (`labelDisagrees`: "Belt Upgrade: Sash +
+Thawing Potion" → "Sash + Stamina Potion"; "… perfect amethyst -> caster helm" takes a Perfect Sapphire); else the first
+row's description shape.
+
+**Merged-row extras**: `conditions` = the conditions of the row that its group does not show (all its cubemain rows
+share them; one only some have reads "… (some variants)", left out past 3 such values, which are per-variant selectors
+the row text already names; random rolls and a D-stoning's cap condition are left out); `returned` = ingredients handed
+back unchanged (`returnedOutputs` in `cubeFamilies.ts`: an output equal to an input that is a plain item code without a
+quality, so `cx1,mag` out of `cx1,mag` is a reroll, not a return), options joined with " / " ("Key", "Ancient Scroll
+38"); `odds` = `rollOdds`: when every row of a merged row rolls `item_randomize ≤ N` (the game tries the rows in file
+order), one line per band, "50%: Ore Shards" (Secret Recipe 25: ≤ 254 / 407 / 511 → 50 / 30 / 20%), only with 2 to 4
+bands and a top threshold of 2^n − 1 (the coupon, map and scroll rerolls have more bands and stay pools). ESR 3.2.24:
+148 rows with conditions, 573 with a returned ingredient, 1 with odds.
+
+**Notes read from the rows**: the fail-safe of the hidden "Too High Req Lvl" `void` blockers (`op 15` on
+`item_levelreq`; `failSafeNotes`: reagent type `dstn` → `dstoning`, `gem5` → `gem-meld`): "does nothing once the item's
+added level requirement is at least 58 (elite), 79 (exceptional) or 99 (normal tier, rings, amulets)" (gem melding 55
+/ 78 / 99), and the Gem Can's points per gem grade (`gemCanNote`: Chipped 1, Flawed 3, Standard 9, Flawless 27,
+Blemished 81, Perfect 243). `FAMILY_NOTES` adds the hand-written ones (the uncapped weapon Forging Hammer row, how to
+cycle a stocker).
+
 **Enhance link** (`enhanceTab`): a merged row whose cubemain rows are all sanctification outcomes (`op 18` on
 `item_sanctification_dummy`) is `sanctification`; the page links it to `/game-data/enhance?tab=sanctification` ("All
 217 outcomes on the Enhance page"). The roll row ("Add Sanctification Dummy Stat", whose "Not marked for sanctification"
 condition `statConditionText` names) stays a plain row.
+
+**Socket counts**: an output `sock` mod reads "N sockets", or its range ("1-2 sockets": the starter weapons, Set +
+Socket Donut) when min and max differ (`socketText`).
+
+**Removals**: a negative output mod that takes something off reads "Removes {its positive line}" (`bonusLines`): a flag
+(its positive line has no number: "Removes Knockback", "Removes Slain Monsters Rest in Peace"), and every negative bonus
+of an output that also takes a forging marker off (`craftflag` / `craftflag2` < 0: Secret Recipe 8 "Removes +25% to
+Experience Gained"); `corrupted` −1 (Astrogha's Petrified Heart) reads "Removes the corruption status, so the item can
+be corrupted again". Other negative bonuses stay maluses ("-2 to Light Radius").
+
+**Item types as ingredients** (`formatInput`, `CubeNames.anyType`): a type that reads like an item ("Helm", "Healing
+Potion", "Club", "Boots"; a type whose items all share one name, such as the Multi Stocker's, keeps that name), a
+renamed one (`tors` "Body Armor", itemtypes.txt's "Armor") or "Any Armor" reads "Any …" with the qualities after "Any":
+"Any Magic Helm", "Any Ethereal Rare Armor", "Any Set item". The D-stoning "Any Armor" rows come after the body armor,
+helm and shield rows with the same reagents, so they read "Gloves, Belt or Boots (the Any Armor rows)". The icon map
+keys follow (`cubeIconMap` keys `formatInput`'s text), so "Any Helm" gets the `helm` type and "Helm" the item.
 
 **Bonus lines** (`bonus` on recipe outputs, the parenthesis of a merged row's output) leave out the markers and
 counters of `isHiddenMod` (`cubeText.ts`: forging, tinkering and merc flags, dummies, soul and stocker counters, tier
@@ -495,13 +556,13 @@ qualifier: "Item level 99" (fixed), "Item level 60% of character level" (`plvl`)
 level" (`ilvl`), both added: "Item level 60% of character level + 60% of input item level". It is a separate field so
 it does not split the merged rows (they cluster on the output text; `clusterVariantsCounted` returns the indices of the
 variants each merged row stands for). A merged row lists the distinct levels of its variants joined with " / "
-(variants without one do not count). ESR 3.2.24: 500 of 1,364 merged rows have a level, none disagree. The guide's
+(variants without one do not count). ESR 3.2.24: 619 of 1,556 merged rows have a level, none disagree. The guide's
 `::recipes` blocks do not show it (their rows are built by `collectFamily`, a separate path without this field).
 
 **Qualities** (`qualities`, the page's quality filter, order unique / set / rare / magic / crafted): from the outputs a
 row gives (an output equal to an input left out, as the output text): the quality qualifiers `uni` / `set` / `rar` /
 `mag` / `crf` and named outputs (a setitems.txt `index` → set, a uniqueitems.txt `index` → unique). `useitem` without
-a qualifier has none. ESR 3.2.24 merged rows: unique 109, magic 107, set 61, rare 53, crafted 44 (374 rows with one). Cube-only rewrites: a named unique or set
+a qualifier has none. ESR 3.2.24 merged rows: magic 124, unique 116, crafted 116, rare 76, set 61 (493 rows with one). Cube-only rewrites: a named unique or set
 item cubed into itself reads "The same item, rerolled"; "Unique: 3 Sets" / "Set: 3 Uniques" read "3× Set items of one
 base → A unique item of that base".
 
@@ -509,14 +570,18 @@ base → A unique item of that base".
 recorded <boss> kill" (`kill_check`, op 6, the boss named after the Kill Ledger row with the same value; unknown values
 "(#N)") and every other stat check (`op` / `param` = itemstatcost row / `value`, `statConditionText` in
 `bundleCube.ts`). The ops as ESR uses them: 3 and 15 "≥", 16 "≤", 17 "≠", 18 "=" ("Unsocket" needs sockets ≥ 1,
-"Adds Socket(4)" sockets ≤ 3, tinkering needs points ≥ 2 before the row takes 2); op 28 (no stat) and unknown ops are
-skipped. Named checks: `item_craftflag` "No forging mod" / "Has a forging mod", `item_craftflag2` "No jewel forging" /
+"Adds Socket(4)" sockets ≤ 3, tinkering needs points ≥ 2 before the row takes 2); op 28 (no stat: the vanilla quest and portal recipes, Horadric
+Staff, Khalim's Will, Cow Portal and the Pandemonium portals) reads "Game rules of the original recipe apply (quest
+state, act or difficulty)"; unknown ops are skipped. Named checks: `item_craftflag` "No forging mod" / "Has a forging mod", `item_craftflag2` "No jewel forging" /
 "Has a jewel forging", `item_mercflag` "Not merc-only" / "Merc-only item", `weaponmastery` "No weapon mastery token
 applied" / "Weapon mastery token applied" (= 0 / nonzero), `item_upgraded` ≠ 1 "Not upgraded yet", `item_levelreq` = 0
 "Only items without an added level requirement", `kill_base` op 3 "Kill count ≥ N", `soul_counter` = 0 "No souls
 remaining", `item_sanctification_dummy` ≤ 0 "Not marked for sanctification"; the rest read "{stat} {op} {value}" with
-a short label ("Sockets", "Tinkering points", "Faster cast rate", "Stocker count junk*09") or the stat name without
-`item*`. Groups show the conditions all their rows share: ESR 3.2.24, 155 of 511 groups (14 before the stat checks). Counts (`cube\*` in the manifest): recipes, families,
+a short label ("Sockets", "Tinkering points", "Faster cast rate") or the stat name without `item_`. A stocker counter
+reads "Stored Devil's Food Points ≥ 25" / "Stored Ancient Decipherer points ≥ 32" (`counterName`; its capacity check,
+≤ 65,000 / 4,000, is left out); `item_randomize` reads "Not used yet" (= 0), "Use counter = 9" (Anya's Gift) and, for
+the random pools, "Random roll ≤ N (of 0 to 511)" (raw rows only; merged rows show `odds`); `stancedancecontrol` = 0
+"Not applied to this stone yet". Groups show the conditions all their rows share: ESR 3.2.24, 160 of 536 groups. Counts (`cube\*` in the manifest): recipes, families,
 fallback families / rows, merged rows, raw recipes and each hidden reason.
 
 ### Materials
@@ -585,8 +650,8 @@ holds every set with its items and the rendered bonus lines (`renderMods`, the s
 - The renderer sums identical stats (as the game does), so it can differ from docs/sets.htm, which lists them one by
   one: Naj's Mastery 2 items "+1500 Defense" (docs: +500 and +1000), Bane's Garments "All Resists +40" (docs +20),
   Ihsan's Shade "+80 to Strength" plus +20 to the other attributes (docs "+20 to All Attributes"). Two renderer gaps
-  remain against the docs: "Freezes target" / "Hit Blinds Target" without the "+1", and `rep-dur` 100 reads "Repairs
-  100 durability per second" (docs "Repairs 1 durability in 1 seconds").
+  remains against the docs: "Freezes target" / "Hit Blinds Target" without the "+1" (`rep-dur` 100 reads "Repairs 1
+  durability in 1 seconds" like the docs since descfunc 11 was fixed).
 
 Counts: `sets` 76, `setItems` 266, `setsHidden` 1, `setItemsHidden` 4 (ESR 3.2.24; 43 sets of 3 items, 28 of 4, 5 of
 5; 55 class sets, 21 for any class). Adding the file did not bump `GAME_DATA_SCHEMA`.
@@ -772,7 +837,7 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
   `dgrpstrneg` when equal to the positive string (the renderer falls back to it). ValShift is not needed: a save stores
   the unshifted value (+52 life is saved as 52).
 - `strings`: the texts of every description key of those stats, renderLines' own keys (damage ranges, enhanced
-  damage) and the physical / magic range labels of the stat filters. ESR 3.2.24 references four keys no string table
+  damage, descfunc 11's `ModStre9u`) and the physical / magic range labels of the stat filters. ESR 3.2.24 references four keys no string table
   has (`MaxMagDmgPerLvl`, `ModStr3kSum`, `ModStr3u2`, `ModStrMagMastery`; warnings), drawn as the key.
 - `skills`: `{ id, name, cls? }` for the lootfilter.json skills (the class trees and the skills a property names),
   every class skill, and every skill a skill / event / charged property or a random class skill range names, read from
@@ -1598,27 +1663,33 @@ Invalid values fall back to the tab's first option; Copy Link encodes only the n
 `/game-data/cube` (`screens/CubeScreen.tsx`) loads only `cube.json` and is a static-bundle route like Enhance. Tools
 menu entry "Cube Recipes", layout tab "Cube".
 
-- **Filters**: two searches, "Ingredient" (inputs only) and "Result" (the output text, and on raw rows the output
-  code, bonus lines and details), and "Result quality" checkboxes (Unique, Set, Rare, Magic, Crafted; any of them).
+- **Filters**: two searches, "Ingredient" (inputs only) and "Result" (the output text and a merged row's `odds`, and on
+  raw rows the output code, bonus lines and details), and "Result quality" checkboxes (Unique, Set, Rare, Magic, Crafted; any of them).
   All must match. Family and group labels are not searched by them (they are txt descriptions that name both sides);
   a big family's group names per side are (`inputNames` / `outputNames`), a match keeping the group's rows.
 - **Family index**: inside the filter panel under the filters (a hairline above it, the chips on the panel's card
   surface like the home page chips), one line per section (its label links to the official page section), the families
   as chips with their row counts (matching rows while searching); a chip focuses the family.
 - Two cards (no search, no focus): the corruption / anointment / Vessel rows are on the Enhance page (with their
-  count), and the stocker / can bookkeeping rows are left out (count, official page link).
+  count), and the stocker / can bookkeeping rows (storing, taking out, cycling) are left out while their upgrades,
+  conversions and rerolls are listed (count, official page link).
+- **Section notes** under each section header: the section's `notes` (the official page's footnotes) as a muted list
+  and "Guide:" links to its `guide` notes (titles from guide.json; none while the guide bundle loads or fails, the page
+  works without it, `useGuide`).
 - **Family sections** by official section (`components/CubeFamilySection.tsx`): label (a button that focuses it), row
-  count, "Official: <section>" link; per group a header (the recipe shape, a dev label, with its conditions as badges)
-  unless one group holds the whole family; the merged rows (inputs → output, the output item level as a muted note,
-  "Cap: …" on D-stoning rows (`dstoneCaps`), "N cubemain rows" when merged, and for `enhanceTab` rows a link "All N
-  outcomes on the Enhance page" in the Enhance page link style). Families
+  count, "Official: <section>" link, the family's `notes` and "Guide:" links to the notes guide.json's `familyNotes`
+  lists for it (minus the section's, `familyGuideNotes` in `utils/cube.ts`); per group a header (its label, with its
+  conditions as badges) unless one group holds the whole family; the merged rows (inputs → output, the output item level
+  as a muted note, "Cap: …" on D-stoning rows (`dstoneCaps`), the `odds` lines, "Given back: …" (`returned`), the row's
+  own `conditions` as badges (they wrap on phones), "N cubemain rows" when merged, and for `enhanceTab` rows a link "All
+  N outcomes on the Enhance page" in the Enhance page link style). Families
   with raw rows offer "Show all N cubemain rows" (every row with its outputs, bonus lines, conditions, description and
   line number, the item level under an output); a filter that only matches raw rows shows them directly.
 - **Icons** (28 px, `components/CellIcon.tsx` around `ItemIcon`): each ingredient and result of a merged or raw row
   gets the icon of what it names, through cube.json `icons` (`engine/cubeIcons.ts`). The build
   (`bundleCube.ts` `cubeIconMap`) keys the cell texts of every listed row, without their count (inputs as
   `formatInput` writes them, outputs by name), to `i:<item code>` / `t:<item type code>` / `u:<unique name>` /
-  `s:<set item name>`, keeping only the keys the shown texts are looked up by (1,256 in 3.2.24); the first row naming a
+  `s:<set item name>`, keeping only the keys the shown texts are looked up by (1,290 in 3.2.24); the first row naming a
   text wins, an item over an item type. The page splits a cell into its options ("A / B / … (7 variants)", counts
   dropped) and looks each up by its text, then without a trailing parenthetical ("Assassin's Choker (Unique)"); the
   cell gets an icon only when every option resolves to the same token, so "Normal Weapon (elite tier) / Superior
@@ -1793,6 +1864,11 @@ Rules taken from the docs pages (`statRenderer.oracle.test.ts`) rather than vani
 - Multi-line strings (`\n`) are drawn bottom-up, so their lines are reversed. ESR's mythical descriptions
   (`item_mythicaldesc`, descfunc 23, format `.%1%0` with the text in monstats `NameStr`) drop the value and the leading dot.
 - A `dgrp` set is the stats sharing `dgrp` + `dgrpstrpos` (ESR puts min and max elemental damage into one dgrp).
+- Descfunc 11 (`item_replenish_durability`, `rep-dur`) repairs 1 durability every 100 / value seconds and reads like the
+  game: "Repairs 1 durability in 20 seconds" (`ModStre9u`, value 5; 100 / 3 rounds down to 33), "in 1 seconds" at 100
+  (the docs pages), "Repairs N durability per second" (`ModStre9t`, the stat's own string) only from 200 up. The stat's
+  label (affixes.json / lootfilter.json `label`, the modifiers kind title) is "Repairs Durability" instead of its
+  misleading string, and the My Stash value filter reads "Repairs durability (rate #)".
 
 ### Affix eligibility
 

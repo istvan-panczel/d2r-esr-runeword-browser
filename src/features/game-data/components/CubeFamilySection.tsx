@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink } from 'lucide-react';
+import { BookOpen, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { cubeCellIcon, type CubeIconRef } from '../engine/cubeIcons';
@@ -38,12 +38,50 @@ export function DocsLink({
   );
 }
 
+/** A guide note: its slug and title */
+export interface CubeGuideNote {
+  readonly slug: string;
+  readonly title: string;
+}
+
+/** "Guide: Forging · Mercenaries" links to the guide notes */
+export function GuideLinks({ notes, className }: { readonly notes: readonly CubeGuideNote[]; readonly className?: string }) {
+  if (notes.length === 0) return null;
+  return (
+    <p className={cn('flex flex-wrap items-center gap-x-3 gap-y-1 text-xs', className)}>
+      <span className="text-muted-foreground">Guide:</span>
+      {notes.map((note) => (
+        <Link
+          key={note.slug}
+          to={`/guide/${note.slug}`}
+          className="inline-flex items-center gap-1 font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+        >
+          <BookOpen className="size-3" aria-hidden />
+          {note.title}
+        </Link>
+      ))}
+    </p>
+  );
+}
+
+/** Short notes (the official page's rules, fail-safe limits) as a muted list */
+export function CubeNotes({ notes, className }: { readonly notes: readonly string[]; readonly className?: string }) {
+  if (notes.length === 0) return null;
+  return (
+    <ul className={cn('list-disc space-y-0.5 pl-4 text-xs text-muted-foreground', className)}>
+      {notes.map((note) => (
+        <li key={note}>{note}</li>
+      ))}
+    </ul>
+  );
+}
+
 function Conditions({ conditions }: { readonly conditions: readonly string[] }) {
   if (conditions.length === 0) return null;
   return (
     <span className="inline-flex flex-wrap gap-1">
       {conditions.map((condition) => (
-        <Badge key={condition} variant="outline" className="text-[11px] font-normal">
+        <Badge key={condition} variant="outline" className="h-auto max-w-full text-left text-[11px] font-normal whitespace-normal">
           {condition}
         </Badge>
       ))}
@@ -121,6 +159,19 @@ function MergedRow({ row, icons }: { readonly row: CubeMergedRow; readonly icons
               Cap: {row.dstoneCaps.join(' / ')}
             </p>
           )}
+          {row.odds !== undefined && (
+            <ul className="text-xs" aria-label="Odds">
+              {row.odds.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          )}
+          {row.returned !== undefined && (
+            <p className="text-xs text-muted-foreground" title="Ingredients the cube hands back unchanged">
+              Given back: {row.returned}
+            </p>
+          )}
+          {row.conditions !== undefined && <Conditions conditions={row.conditions} />}
           {row.variants > 1 && <p className="text-xs text-muted-foreground">{formatCount(row.variants)} cubemain rows</p>}
           {row.enhanceTab !== undefined && (
             <p className="text-xs">
@@ -230,10 +281,12 @@ interface CubeFamilySectionProps {
   readonly onFocus: (family: string) => void;
   /** cube.json `icons` */
   readonly icons: CubeIcons;
+  /** Guide notes that show this family (the section's are listed above it); empty without the guide bundle */
+  readonly guideNotes: readonly CubeGuideNote[];
 }
 
 /** One family: its header, the merged rows per group and (small families) every cubemain row behind "Show all". */
-export function CubeFamilySection({ view, section, searching, onFocus, icons }: CubeFamilySectionProps) {
+export function CubeFamilySection({ view, section, searching, onFocus, icons, guideNotes }: CubeFamilySectionProps) {
   const { family, groups } = view;
   const [showAll, setShowAll] = useState(false);
   const docs = sectionDocsUrl(section);
@@ -267,6 +320,8 @@ export function CubeFamilySection({ view, section, searching, onFocus, icons }: 
           </span>
           {docs !== null && <DocsLink href={docs}>Official: {section.label}</DocsLink>}
         </div>
+        {family.notes !== undefined && <CubeNotes notes={family.notes} className="basis-full" />}
+        <GuideLinks notes={guideNotes} className="basis-full" />
       </header>
       <div className="divide-y">
         {groups.map((group) => (

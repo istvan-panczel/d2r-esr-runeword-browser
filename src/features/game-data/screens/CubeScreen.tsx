@@ -10,7 +10,8 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { CUBE_QUALITIES, type CubeBundle, type CubeQuality } from '../engine/schema';
-import { CubeFamilySection, DocsLink } from '../components/CubeFamilySection';
+import { useGuide } from '@/features/guide/hooks/useGuide';
+import { CubeFamilySection, CubeNotes, DocsLink, GuideLinks, type CubeGuideNote } from '../components/CubeFamilySection';
 import { EnhanceSearch } from '../components/EnhanceParts';
 import { GameDataError } from '../components/GameDataError';
 import { GameDataLoading } from '../components/GameDataLoading';
@@ -20,6 +21,7 @@ import {
   CUBE_QUALITY_LABELS,
   buildCubeTree,
   encodeCubeState,
+  familyGuideNotes,
   filterCubeTree,
   focusCubeTree,
   formatCount,
@@ -49,6 +51,12 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const state = readCubeState(searchParams, bundle);
   const tree = buildCubeTree(bundle);
+  // The guide links are a bonus: the page works without the guide bundle (loading or failed)
+  const guide = useGuide();
+  const notesIndex = guide.status === 'ready' ? guide.data.bundle : null;
+  const titles = new Map(guide.status === 'ready' ? guide.data.bundle.notes.map((note) => [note.slug, note.title]) : []);
+  const known = new Set(titles.keys());
+  const guideNotes = (slugs: readonly string[]): CubeGuideNote[] => slugs.map((slug) => ({ slug, title: titles.get(slug) ?? slug }));
 
   const update = (patch: Partial<CubeState>, replace = true) => {
     setSearchParams(encodeCubeState({ ...state, ...patch }), { replace });
@@ -196,7 +204,11 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
         <div className="space-y-8">
           {shown.map(({ section, families }) => (
             <div key={section.id} className="space-y-5">
-              <SectionHeader title={section.label} />
+              <div className="space-y-2">
+                <SectionHeader title={section.label} />
+                {section.notes !== undefined && <CubeNotes notes={section.notes} className="text-sm" />}
+                <GuideLinks notes={guideNotes((section.guide ?? []).filter((slug) => known.has(slug)))} />
+              </div>
               {families.map((view) => (
                 <CubeFamilySection
                   key={`${view.family.id}|${filterKey}`}
@@ -204,6 +216,7 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
                   section={section}
                   searching={filtering}
                   icons={bundle.icons}
+                  guideNotes={guideNotes(familyGuideNotes(section, view.family.id, notesIndex, known, true))}
                   onFocus={(family) => {
                     focus(family);
                   }}
@@ -283,9 +296,10 @@ function HiddenRowsCards({ bundle }: { readonly bundle: CubeBundle }) {
         <CardContent className="space-y-1 px-4 text-sm">
           <p className="font-medium">Stockers and cans</p>
           <p className="text-muted-foreground">
-            Storing gems, runes, crystals and decals in a Multi Stocker, Rune Stocker or Gem Can (and taking them out) takes{' '}
-            {formatCount(hidden.stockers)} rows; they are left out, as are {formatCount(hidden.traps + hidden.old + hidden.dummy)} internal
-            blocker and unused rows. The <DocsLink href={CUBE_DOCS_URL}>official Cube Recipes page</DocsLink> explains the stockers.
+            Storing items in a Multi Stocker, Rune Stocker, Gem Can, Crystal Can or Rerolling Orb, taking them out and cycling the selected
+            item take {formatCount(hidden.stockers)} rows; they are left out, as are {formatCount(hidden.traps + hidden.old + hidden.dummy)}{' '}
+            internal blocker and unused rows. Their upgrades, point conversions and rerolls are listed with the other recipes. The{' '}
+            <DocsLink href={CUBE_DOCS_URL}>official Cube Recipes page</DocsLink> explains the stockers.
           </p>
         </CardContent>
       </Card>
