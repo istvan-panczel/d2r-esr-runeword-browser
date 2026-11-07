@@ -734,7 +734,8 @@ describe('committed game-data bundles', () => {
     // guide is claimed first by the unique charm upgrades and the secret recipes
     for (const family of [...CUBE_FAMILIES, ...EXTRA_FAMILIES].filter((entry) => entry.id !== 'maple-leaf'))
       expect(counts.get(family.id) ?? 0, family.id).toBeGreaterThan(0);
-    // ESR 3.2.24 and 3.3: 41 rows in 9 fallback families; a release that adds new recipe shapes shows up here
+    // ESR 3.2.24: 41 rows in 9 fallback families, which have their own families since the 3.3 update (0 fallback rows);
+    // a release that adds new recipe shapes shows up here
     const fallback = cube.families.filter((family) => family.id.startsWith('other:'));
     expect(fallback.reduce((sum, family) => sum + family.rowCount, 0)).toBeLessThanOrEqual(60);
     expect(fallback.length).toBeLessThanOrEqual(12);

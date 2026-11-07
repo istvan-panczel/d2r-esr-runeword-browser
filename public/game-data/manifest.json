@@ -3,7 +3,7 @@
   "esrVersion": "3.3",
   "esrTag": "3.3",
   "esrCommit": "d6f5996c2b64636917feac8991be3ac04d21e01e",
-  "generatedAt": "2026-11-07T17:38:16.598Z",
+  "generatedAt": "2026-11-07T17:57:53.991Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -34,12 +34,12 @@
       "bytes": 1214962
     },
     "cube": {
-      "hash": "c7d093d49ada69b9ed0d06d48c6eea9ff13b8fca8102a8ee0409139593ab2b66",
-      "bytes": 778370
+      "hash": "b1a5663177c4f01b9ac01f8981c2953c0f9ae8c547fb7720003d816d70d9cf48",
+      "bytes": 775645
     },
     "materials": {
-      "hash": "1cff07674293f462b274c73a0aa671c239ba2d1c7e7b0fee6f81515cf5a9c280",
-      "bytes": 184047
+      "hash": "1037de0123cc2d1553393621dca4757395d1fe42ce1fb2abd12c644dda975291",
+      "bytes": 183477
     },
     "sets": {
       "hash": "27c09f0ac7a20409b32f7f7189d5590a855953e058e0b82a49e4a26f2a5cf250",
@@ -146,10 +146,10 @@
     "enhanceVesselRecipes": 382,
     "enhanceVesselTransforms": 29,
     "cubeRecipes": 11157,
-    "cubeFamilies": 68,
-    "cubeFallbackFamilies": 9,
-    "cubeFallbackRows": 41,
-    "cubeMergedRows": 1597,
+    "cubeFamilies": 66,
+    "cubeFallbackFamilies": 0,
+    "cubeFallbackRows": 0,
+    "cubeMergedRows": 1590,
     "cubeRawRecipes": 456,
     "cubeHiddenEnhance": 8261,
     "cubeHiddenTraps": 599,

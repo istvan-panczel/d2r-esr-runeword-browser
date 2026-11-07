@@ -545,12 +545,16 @@ jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Mi
 items, Blemished gems / Mi Rune, secret recipes grouped per number), then a fallback `other:<prefix>` per description
 prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.3 additions: `crucible` (section Forging: the 884 "Crucible - …"
 rows and the 4 "[SECRET08/09] Crucible - …" rows of the Blacksmith perk The Secret Crucible, a second forging, worded
-by the matching forging family's rewrite, bonuses hidden), `specializations` (Mystical Tesseract), the Alchemist Gem
+by the matching forging family's rewrite, bonuses hidden; groups per forging kind and add / remove, titled by
+`crucibleGroupLabel`: "Second stat forging", "Removing the second rune forging", …), `specializations` (Mystical Tesseract), the Alchemist Gem
 Infusion rows in `potions`, the Orb of Anointment recycle to Dragon Stones in `materials`, True Master and "Remove Weapon
 Mastery" rows in `weapon-mastery`, the "… - Jeweler 15 Special" / "… - Archaeology 13 Special" perk rows as their own
-groups of `unsocket` / `socket`, amulet and ring sanctification in `legendary-consumables`. ESR 3.3 (as 3.2.24): 9
-fallback families with 41 rows (Introductory Book Cycle 9, Weapons Crate 8, Negative MF Charm 8, Opener Size Change 6,
-Anya's Gift 6 + 1 + 1, Randomize Stone 1, Morph Charm Refund 1); the integrity test fails past 60 fallback rows or 12
+groups of `unsocket` / `socket`, amulet and ring sanctification in `legendary-consumables`. The 41 rows ESR 3.2.24 and
+3.3 left in 9 fallback families have their own families since the 3.3 update, with readable titles: `introductory-book`
+(Misc, 9), `negative-charms` (Charms, 8: Magic Small Charm + Ancient Decipherer + Stamina or Mana Potions),
+`morph-charm-refund` (Charms, 1), `randomizing-stone` (Cubing Materials, 1), `ancients-gift` (Cubing Materials, 8:
+cubemain's "Anya's Gift" rows), `can-opener` (Gems / Runes, 6), `weapons-crate` (Normal Items, 8); ESR 3.3 has no
+fallback row, so the page has no "Other recipes" section. The integrity test fails past 60 fallback rows or 12
 fallback families, and when a defined family has no row (except `maple-leaf`: since 3.3 its rows, the unique charm
 recycle and Secret Recipes 26 / 40, are all claimed earlier; the guide still lists it).
 
@@ -633,7 +637,7 @@ qualifier: "Item level 99" (fixed), "Item level 60% of character level" (`plvl`)
 level" (`ilvl`), both added: "Item level 60% of character level + 60% of input item level". It is a separate field so
 it does not split the merged rows (they cluster on the output text; `clusterVariantsCounted` returns the indices of the
 variants each merged row stands for). A merged row lists the distinct levels of its variants joined with " / "
-(variants without one do not count). ESR 3.3: 624 of 1,597 merged rows have a level, none disagree. The guide's
+(variants without one do not count). ESR 3.3: 624 of 1,590 merged rows have a level, none disagree. The guide's
 `::recipes` blocks do not show it (their rows are built by `collectFamily`, a separate path without this field).
 
 **Qualities** (`qualities`, the page's quality filter, order unique / set / rare / magic / crafted): from the outputs a
