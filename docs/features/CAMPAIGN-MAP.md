@@ -123,7 +123,9 @@ a tiered map zone (the same summary on the entry, the middle levels and the aren
   left out of that pairing.
 - Since ESR 3.3 every map boss rolls a 2% Alien Artefact (treasureclassex.txt `Artefact Chance`, no condition). The
   Specializations page lists "Alien Artefacts" as an Archaeologist perk, so that row reads "Official page: Archaeologist
-  perk only (…)" (`PERK_DROPS` in `data/mapBosses.ts`, shown for every boss, curated or not).
+  perk only (…); in 3.3 it drops for everyone, a bug the mod author says the next patch fixes" (`PERK_DROPS` in
+  `data/mapBosses.ts`, shown for every boss, curated or not; mod author, 2026-11-07: "No, fixed in next patch"). Drop
+  the part after the semicolon once the files gate the drop.
 - A link to the guide note `/guide/endgame-bosses`; the note links back to every arena (`page:/campaign-map?area=…`).
 
 Rewards and chances are computed at build time from the treasure classes (areas.json `mapBosses`, GAME-DATA.md
