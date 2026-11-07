@@ -59,6 +59,14 @@ describe('socketableGroupsForSlot', () => {
     expect(labels('armor')).toEqual(['Any Shield / Body Armor / Belt']);
   });
 
+  it('keeps a group naming the Mythical Arcane Staff out of the armour slots', () => {
+    const labels = (name: string, slot: Parameters<typeof socketableGroupsForSlot>[1]) =>
+      socketableGroupsForSlot(groupsOf(name), slot).map((index) => groupsOf(name)[index]?.label);
+    expect(labels('Fortitude', 'armor').some((label) => label?.includes('Mythical Arcane Staff'))).toBe(false);
+    expect(labels('Fortitude', 'armor').length).toBeGreaterThan(0);
+    expect(labels('Boar', 'helmet')).toEqual([]);
+  });
+
   it('keeps both Boar groups in a weapon slot (swords and staves both go there)', () => {
     expect(socketableGroupsForSlot(groupsOf('Boar'), 'weapon')).toEqual([0, 1]);
   });

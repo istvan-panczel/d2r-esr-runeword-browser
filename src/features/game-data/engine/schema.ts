@@ -4,7 +4,12 @@
  */
 import type { ClassText, StatDef } from './stats/types.ts';
 
-export const GAME_DATA_SCHEMA = 1;
+/**
+ * The manifest carries it; a tab whose code expects another one shows "Reload the page" instead of reading bundles it
+ * does not understand (bundle URLs are hash-busted, so it only guards old code against new bundles). 2: ESR 3.3
+ * (`WeaponMastery.property` replaced `value`, anointment pools are item types instead of slots).
+ */
+export const GAME_DATA_SCHEMA = 2;
 
 export type ClassCode = 'ama' | 'sor' | 'nec' | 'pal' | 'bar' | 'dru' | 'ass' | 'war';
 export type GameDataFile =

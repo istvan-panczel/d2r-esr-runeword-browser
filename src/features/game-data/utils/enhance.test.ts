@@ -56,6 +56,26 @@ describe('enhance URL state', () => {
     expect(readEnhanceState(new URLSearchParams(`tab=vessel&tier=${VESSEL_COMPLETION}`), bundle).tier).toBe(VESSEL_COMPLETION);
   });
 
+  it('maps an ESR 3.2 anointment slot id to the first pool of that slot group', () => {
+    const pools = {
+      ...bundle,
+      anointmentSlots: [
+        { slot: 'ajav', group: 'weapon' },
+        { slot: 'axe', group: 'weapon' },
+        { slot: 'shie', group: 'shield' },
+        { slot: 'helm', group: 'helm' },
+      ],
+    } as unknown as EnhanceBundle;
+    const pool = (query: string) => readEnhanceState(new URLSearchParams(query), pools).slot;
+    expect(pool('tab=anointment&slot=shield')).toBe('shie');
+    expect(pool('tab=anointment&slot=weapon')).toBe('ajav');
+    // a pool id that is also a group name stays itself; unknown ids fall back to the first pool
+    expect(pool('tab=anointment&slot=helm')).toBe('helm');
+    expect(pool('tab=anointment&slot=axe')).toBe('axe');
+    expect(pool('tab=anointment&slot=nope')).toBe('ajav');
+    expect(pool('tab=corruption&slot=shield')).toBe('weapon');
+  });
+
   it('round-trips and only writes non-default values the tab uses', () => {
     const params = new URLSearchParams('tab=anointment&slot=ring&tier=2&search=life');
     const state = readEnhanceState(params, bundle);

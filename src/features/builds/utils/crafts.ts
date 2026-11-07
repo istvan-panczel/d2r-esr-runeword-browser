@@ -30,18 +30,16 @@ export const ENHANCE_SLOT_BY_FAMILY: Readonly<Record<CraftingSlot, string>> = {
   ring: 'ring',
 };
 
-/**
- * The anointment pool (item type) of a slot whose base is unknown (a freetext or gemword item): the slot's generic type,
- * which a plain item of that slot rolls; none for weapons and shields (one pool per weapon / shield type). ESR 3.3
- * rolls one pool per item type, so a class item (circlet, class ring …) needs its base to pick the right one.
- */
-const FALLBACK_ANOINTMENT_TYPE: Readonly<Partial<Record<CraftingSlot, string>>> = {
+/** Builds slot family → enhance.json `AnointmentSlot.group` (the equipment slot of the item type pools) */
+const ANOINTMENT_GROUP_BY_FAMILY: Readonly<Record<CraftingSlot, string>> = {
+  weapon: 'weapon',
+  shield: 'shield',
   helmet: 'helm',
-  armor: 'tors',
-  gloves: 'glov',
-  boots: 'boot',
+  armor: 'body',
+  gloves: 'gloves',
+  boots: 'boots',
   belt: 'belt',
-  amulet: 'amul',
+  amulet: 'amulet',
   ring: 'ring',
 };
 
@@ -143,20 +141,39 @@ export function itemBase(item: ItemRef | null | undefined, lookups: CraftLookups
 }
 
 /**
- * The anointment pool of a slot's item: the first pool (bundle order, class types first) its base's type or type2 is
- * or descends from; without a known base, the slot's generic type (FALLBACK_ANOINTMENT_TYPE).
+ * The anointment pools a slot's item may roll (ESR 3.3: one pool per item type). A known base: the first pool (bundle
+ * order, class types first) its type or type2 is or descends from. Unknown (freetext, gemword, a runeword without a
+ * base, or a base no pool matches): every pool of the slot's equipment group (Axe … Hand to Hand 2 for weapons, Helm /
+ * Circlet / Pelt / Primal Helm for helmets …), for the player to choose, so there is always something to pick.
  */
-export function anointmentPoolFor(
-  base: Pick<BaseItem, 'ancestors'> | undefined,
+export function anointmentPoolsFor(
+  item: ItemRef | null | undefined,
   family: CraftingSlot,
   lookups: CraftLookups
-): AnointmentSlot | undefined {
-  if (base !== undefined) return lookups.anointmentSlots.find((slot) => base.ancestors.includes(slot.typeCode));
-  const fallback = FALLBACK_ANOINTMENT_TYPE[family];
-  return fallback === undefined ? undefined : lookups.anointmentSlots.find((slot) => slot.typeCode === fallback);
+): readonly AnointmentSlot[] {
+  const base = itemBase(item, lookups);
+  const pool = base === undefined ? undefined : lookups.anointmentSlots.find((slot) => base.ancestors.includes(slot.typeCode));
+  if (pool !== undefined) return [pool];
+  return lookups.anointmentSlots.filter((slot) => slot.group === ANOINTMENT_GROUP_BY_FAMILY[family]);
 }
 
-/** Shown for an ESR 3.2 anointment (one pool per slot), which no longer resolves since ESR 3.3 */
+/**
+ * Whether an anointment fits the slot's item: an ESR 3.3 one whose pool is among the item's (anointmentPoolsFor). Not
+ * an ESR 3.2 one (per-slot pool), nor one left from another item (an axe anointment on a sword).
+ */
+export function anointmentFits(
+  craft: Extract<CraftAnnotation, { kind: 'anointment' }>,
+  item: ItemRef | null | undefined,
+  family: CraftingSlot,
+  lookups: CraftLookups
+): boolean {
+  return 'itemType' in craft && anointmentPoolsFor(item, family, lookups).some((pool) => pool.slot === craft.itemType);
+}
+
+/**
+ * Shown for an anointment the slot's item cannot roll: an ESR 3.2 one (one pool per slot, gone since ESR 3.3) or one
+ * of another item type (the item changed); the picker offers the item's pools again
+ */
 export const OUTDATED_ANOINTMENT = 'Anointment outdated, pick again';
 
 export interface RenderedCraft {
@@ -171,8 +188,16 @@ export interface RenderedCraft {
 const stale = (title: string): RenderedCraft => ({ title, lines: [], stale: true });
 const levelLine = (levelReq: number, uses: number) => `+${String(levelReq * uses)} Level Required`;
 
-/** Title and lines of an annotation on a slot family, from the bundles; never throws. */
-export function renderCraft(craft: CraftAnnotation, family: CraftingSlot, lookups: CraftLookups | undefined): RenderedCraft {
+/**
+ * Title and lines of an annotation on a slot family, from the bundles; never throws. With the slot's `item`, an
+ * anointment the item cannot roll (anointmentFits) is outdated.
+ */
+export function renderCraft(
+  craft: CraftAnnotation,
+  family: CraftingSlot,
+  lookups: CraftLookups | undefined,
+  item?: ItemRef | null
+): RenderedCraft {
   switch (craft.kind) {
     case 'corruption': {
       const outcome = lookups?.corruption.get(rollId(craft.slot, craft.roll));
@@ -187,6 +212,7 @@ export function renderCraft(craft: CraftAnnotation, family: CraftingSlot, lookup
     }
     case 'anointment': {
       if (!('itemType' in craft)) return stale(OUTDATED_ANOINTMENT);
+      if (item !== undefined && lookups !== undefined && !anointmentFits(craft, item, family, lookups)) return stale(OUTDATED_ANOINTMENT);
       const outcome = lookups?.anointment.get(rollId(craft.itemType, craft.roll));
       if (outcome === undefined) return stale(`Anointment (roll ${String(craft.roll)})`);
       return { title: outcome.label !== undefined ? `Anointment · ${outcome.label}` : 'Anointment', lines: outcome.lines, stale: false };
@@ -295,7 +321,10 @@ export interface CraftPickerOption {
   readonly detail: string;
   /** Lower-cased text the search matches */
   readonly search: string;
-  readonly craft: CraftAnnotation;
+  /** The annotation the option adds; null for a step that only picks an anointment pool (`pool`) */
+  readonly craft: CraftAnnotation | null;
+  /** The anointment pool (item type) the option picks, for an item whose base is unknown */
+  readonly pool?: string;
 }
 
 export interface CraftPickerGroup {
@@ -306,28 +335,31 @@ export interface CraftPickerGroup {
 const outcomeLabel = (outcome: { readonly lines: readonly string[]; readonly roll: number }): string =>
   outcome.lines.length > 0 ? outcome.lines[0] : `Roll ${String(outcome.roll)}`;
 
-const option = (id: string, label: string, lines: readonly string[], craft: CraftAnnotation): CraftPickerOption => {
+const option = (id: string, label: string, lines: readonly string[], craft: CraftAnnotation | null): CraftPickerOption => {
   const detail = lines.join(', ');
   return { id, label, detail, search: `${label} ${detail}`.toLowerCase(), craft };
 };
 
 /**
- * The picker groups for a slot: Corruption (the slot's enhance outcomes) and Anointment (the pool of the item's base
- * type, headed with its name), Forging, D-stoning and Gem melding (options with a row for the slot family). Corruption,
- * Anointment and Forging are left out once the slot has one (an outdated ESR 3.2 anointment does not count: a new pick
- * replaces it); empty groups are dropped.
+ * The picker groups for a slot: Corruption (the slot's enhance outcomes), Anointment (the pool of the item's base type,
+ * headed with its name; with an unknown base and several pools first a choice of the item type, then `chosenPool`'s
+ * outcomes), Forging, D-stoning and Gem melding (options with a row for the slot family). Corruption, Anointment and
+ * Forging are left out once the slot has one (an anointment the item cannot roll does not count: a new pick replaces
+ * it); empty groups are dropped.
  */
 export function craftPickerGroups(
   slot: PickerSlot,
   lookups: CraftLookups,
   existing: readonly CraftAnnotation[],
-  item?: ItemRef | null
+  item?: ItemRef | null,
+  chosenPool?: string
 ): readonly CraftPickerGroup[] {
   const family = slotGroup(slot);
   const enhanceSlot = ENHANCE_SLOT_BY_FAMILY[family];
   const has = (kind: CraftAnnotation['kind']) =>
-    existing.some((craft) => craft.kind === kind && (craft.kind !== 'anointment' || 'itemType' in craft));
-  const pool = anointmentPoolFor(itemBase(item, lookups), family, lookups);
+    existing.some((craft) => craft.kind === kind && (craft.kind !== 'anointment' || anointmentFits(craft, item, family, lookups)));
+  const pools = anointmentPoolsFor(item, family, lookups);
+  const pool = pools.length === 1 ? pools[0] : pools.find((entry) => entry.slot === chosenPool);
 
   const corruption = has('corruption')
     ? []
@@ -338,10 +370,16 @@ export function craftPickerGroups(
           roll: outcome.roll,
         })
       );
-  const anointment =
-    has('anointment') || pool === undefined
-      ? []
-      : (lookups.anointmentByPool.get(pool.slot) ?? []).map((outcome) =>
+  const outcomes = (entry: AnointmentSlot) => lookups.anointmentByPool.get(entry.slot) ?? [];
+  const anointment = has('anointment')
+    ? []
+    : pool === undefined
+      ? // Unknown base, several pools: the item type first
+        pools.map((entry): CraftPickerOption => ({
+          ...option(`anointment-pool:${entry.slot}`, entry.label, [`${String(outcomes(entry).length)} outcomes`], null),
+          pool: entry.slot,
+        }))
+      : outcomes(pool).map((outcome) =>
           option(
             `anointment:${String(outcome.roll)}`,
             outcomeLabel(outcome),
@@ -379,7 +417,7 @@ export function craftPickerGroups(
 
   return [
     { heading: 'Corruption', options: corruption },
-    { heading: pool === undefined ? 'Anointment' : `Anointment · ${pool.label}`, options: anointment },
+    { heading: pool === undefined ? 'Anointment: pick the item type' : `Anointment · ${pool.label}`, options: anointment },
     { heading: 'Forging', options: forging },
     { heading: 'D-stoning', options: stacking('dstone') },
     { heading: 'Gem melding', options: stacking('meld') },

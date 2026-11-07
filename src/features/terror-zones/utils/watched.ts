@@ -26,28 +26,75 @@ export function knownWatched(watched: readonly string[], zoneIds: readonly strin
   return new Set(watched.filter((id) => known.has(id)));
 }
 
-/**
- * What the zone groups mean: every id with its areas, in file order, hashed (FNV-1a, 32 bit) to a short string. It
- * changes when ESR regroups the zones (3.3 reused `ESR-Zone19` / `ESR-Zone20` for new groups), not with the seed,
- * start or durations, which move the schedule but keep what a starred group is.
- */
-export function zoneSetFingerprint(zones: readonly TerrorZoneGroup[]): string {
-  const text = zones.map((group) => `${group.id}:${group.areas.map((area) => String(area.id)).join(',')}`).join('|');
+/** FNV-1a (32 bit) of a string, as 8 hex digits */
+function fnv1a(text: string): string {
   let hash = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
     hash ^= text.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
-  return `${String(zones.length)}-${hash.toString(16).padStart(8, '0')}`;
+  return hash.toString(16).padStart(8, '0');
 }
 
 /**
- * The watch list to keep when a bundle loads: the stored one while the zone groups mean what they meant when it was
- * starred (`storedFingerprint` equal to `fingerprint`), else none, since an id may now name another group. A list
- * without a stored fingerprint was starred before the fingerprint existed (ESR 3.2.24's groups), so it is dropped too.
+ * What the zone groups mean as one string: every id with its areas, in file order, hashed. The format v1.59.0 stored
+ * (`terrorZones.watchedZoneSet`); now only read to keep such a list when the groups are still the ones it was starred
+ * against.
  */
-export function reconcileWatched(watched: readonly string[], storedFingerprint: string | null, fingerprint: string): readonly string[] {
-  return storedFingerprint === fingerprint || watched.length === 0 ? watched : [];
+export function zoneSetFingerprint(zones: readonly TerrorZoneGroup[]): string {
+  const text = zones.map((group) => `${group.id}:${group.areas.map((area) => String(area.id)).join(',')}`).join('|');
+  return `${String(zones.length)}-${fnv1a(text)}`;
+}
+
+/** What each zone group means: id → a hash of its area ids (sorted). Not the labels, seed, start or durations. */
+export type ZoneGroupHashes = Readonly<Record<string, string>>;
+
+export function zoneGroupHashes(zones: readonly TerrorZoneGroup[]): ZoneGroupHashes {
+  return Object.fromEntries(
+    zones.map((group) => [
+      group.id,
+      fnv1a(
+        group.areas
+          .map((area) => area.id)
+          .sort((a, b) => a - b)
+          .join(',')
+      ),
+    ])
+  );
+}
+
+/** Whether two stored hash maps hold the same groups with the same areas */
+export function sameZoneGroupHashes(a: ZoneGroupHashes, b: ZoneGroupHashes): boolean {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((id) => Object.hasOwn(b, id) && a[id] === b[id]);
+}
+
+/** Zone group ids ESR 3.3 reused for other areas (endgame-map groups in 3.2, Act 1 groups since 3.3) */
+const REGROUPED_IN_ESR_3_3: ReadonlySet<string> = new Set(['ESR-Zone19', 'ESR-Zone20']);
+
+/**
+ * The watch list to keep when a bundle loads, per group: a starred id stays while it names the same areas as when it
+ * was starred (`stored`, the zoneGroupHashes saved with the list), and is dropped when its areas changed or the group
+ * is gone, since the id may now name another group. Older stored formats: a v1.59.0 whole-set fingerprint keeps the
+ * list only when it still matches every group; none at all means a list starred with ESR 3.2.24's groups, which loses
+ * the two ids ESR 3.3 reused and those it removed. Returns `watched` itself when nothing is dropped.
+ */
+export function reconcileWatched(
+  watched: readonly string[],
+  stored: ZoneGroupHashes | string | null,
+  zones: readonly TerrorZoneGroup[]
+): readonly string[] {
+  if (watched.length === 0) return watched;
+  const current = zoneGroupHashes(zones);
+  const exists = (id: string) => Object.hasOwn(current, id);
+  let keep: (id: string) => boolean;
+  if (stored === null) keep = (id) => exists(id) && !REGROUPED_IN_ESR_3_3.has(id);
+  else if (typeof stored === 'string') {
+    const unchanged = stored === zoneSetFingerprint(zones);
+    keep = (id) => unchanged && exists(id);
+  } else keep = (id) => exists(id) && Object.hasOwn(stored, id) && stored[id] === current[id];
+  const kept = watched.filter(keep);
+  return kept.length === watched.length ? watched : kept;
 }
 
 /** Toggles `id` in a stored watch list (kept in insertion order, no duplicates). */

@@ -58,7 +58,10 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
-(`GAME_DATA_SCHEMA`); bump it whenever a bundle shape changes incompatibly.
+(`GAME_DATA_SCHEMA`); bump it whenever a bundle shape changes incompatibly. The manifest carries it and
+`loadGameData` rejects another value with "Reload the page" (`GameDataSchemaError`): bundle URLs are hash-busted, so new
+code never reads old cached bundles; the bump stops a tab still running old code from reading new bundles it would
+misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; anointment pools became item types).
 
 | Bundle              | Size (raw / gzip; gzip at the default level)                                                                                       |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -1785,7 +1788,8 @@ State lives in the URL (read on every render, written with `replace`), parsed an
 | `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                           |
 | `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names)                                 |
 
-Invalid values fall back to the tab's first option; Copy Link encodes only the non-default values the tab uses.
+Invalid values fall back to the tab's first option (an ESR 3.2 anointment link's slot id, `slot=weapon`, `body` …, opens
+that slot group's first pool); Copy Link encodes only the non-default values the tab uses.
 
 ### Cube page
 
