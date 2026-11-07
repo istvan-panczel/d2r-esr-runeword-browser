@@ -179,6 +179,12 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     texts: VALUES,
   },
   'skills.json': { maxLevel: VALUE, classes: byField('code') },
+  // specialisations: a changed perk text, plugin setting, cube / drop link or page difference changes the perk cards
+  'specializations.json': {
+    rules: VALUE,
+    trees: byField('slug', (entry) => `${field(entry, 'slug')} (${field(entry, 'name')})`),
+    pageDiffs: byField('subject'),
+  },
   'sources.json': { items: list((entry) => `${field(entry, 'item')}:${field(entry, 'name')} (${field(entry, 'code')})`) },
   'stash.json': {
     grid: VALUE,

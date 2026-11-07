@@ -16,6 +16,7 @@ import type {
   SkillDetailsBundle,
   SkillsBundle,
   SourcesBundle,
+  SpecializationsBundle,
   StashBundle,
   StashNamesBundle,
   TerrorZonesBundle,
@@ -31,6 +32,7 @@ import { readBossSetRules } from './pluginUniques.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
 import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
+import { buildSpecializationsBundle } from './bundleSpecializations.ts';
 import { perkChecks, perkOfStat } from './cube/perks.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
@@ -95,6 +97,8 @@ export interface GeneratedBundles {
   modifiers: ModifiersBundle;
   // masteries.json
   masteries: MasteriesBundle;
+  // specializations.json
+  specializations: SpecializationsBundle;
   // elixirs.json
   elixirs: ElixirsBundle;
   counts: Record<string, number>;
@@ -444,6 +448,28 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   };
   // --- end areas.json ---
 
+  // --- specializations.json ---
+  const specializations = buildSpecializationsBundle({
+    sources: sources.specializations,
+    itemstatcost: rowTable('itemstatcost'),
+    misc: table('misc'),
+    skills: table('skills'),
+    treasureclassex: table('treasureclassex'),
+    monstats: table('monstats'),
+    superuniques: table('superuniques'),
+    levels: table('levels'),
+    areaNames: new Map(areas.bundle.areas.map((area) => [area.id, area.name])),
+    cubeRows: cubeTables.cube,
+    familyRows: new Map([...assignCubeRows(cubeTables).assigned].map(([id, { rows }]) => [id, rows])),
+    perkChecks: cubeTables.perkChecks,
+    cube: cube.bundle,
+    enhance: enhance.bundle,
+    masteries: masteries.bundle,
+    strings,
+    nameOf: cubeTables.nameOf,
+  });
+  // --- end specializations.json ---
+
   // --- stash.json ---
   const stash = buildStashBundle(
     {
@@ -586,6 +612,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     terrorzones: terrorZones.bundle,
     modifiers: modifiers.bundle,
     masteries: masteries.bundle,
+    specializations: specializations.bundle,
     elixirs: elixirs.bundle,
     counts: {
       types: types.bundle.types.length,
@@ -719,6 +746,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       masteryBases: new Set(masteries.bundle.masteries.flatMap((mastery) => mastery.bases)).size,
       masteryEffects: masteries.bundle.masteries.reduce((sum, mastery) => sum + mastery.effects.length, 0),
       masterySkills: Object.keys(masteries.bundle.skillNames).length,
+      ...specializations.counts,
       elixirs: elixirs.bundle.elixirs.length,
       elixirsRegular: countElixirs((elixir) => elixir.variant === 'regular'),
       elixirsGreater: countElixirs((elixir) => elixir.variant === 'greater'),
@@ -756,6 +784,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...terrorZones.warnings,
       ...modifiers.warnings,
       ...masteries.warnings,
+      ...specializations.warnings,
       ...elixirs.warnings,
     ],
     stringWarnings: [...stringWarnings],

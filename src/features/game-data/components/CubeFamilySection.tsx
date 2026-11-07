@@ -4,6 +4,7 @@ import { BookOpen, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { cubeCellIcon, type CubeIconRef } from '../engine/cubeIcons';
+import { parsePerkCheck, specializationHref } from '../engine/specializationLinks';
 import type { CubeMergedRow, CubeRecipe, CubeSection } from '../engine/schema';
 import { enhanceTabHref, familyAnchor, formatCount, sectionDocsUrl, type CubeFamilyView, type CubeGroupView } from '../utils/cube';
 import { CellIcon } from './CellIcon';
@@ -76,13 +77,32 @@ export function CubeNotes({ notes, className }: { readonly notes: readonly strin
   );
 }
 
+/** A condition's text; a specialisation perk check links the perk on the Specializations page */
+function ConditionText({ condition }: { readonly condition: string }) {
+  const perk = parsePerkCheck(condition);
+  if (perk === null) return condition;
+  return (
+    <>
+      {perk.prefix}
+      {perk.tree} perk{' '}
+      <Link
+        to={specializationHref(perk.tree, perk.title)}
+        className="underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+      >
+        {perk.title}
+      </Link>
+      {perk.suffix}
+    </>
+  );
+}
+
 function Conditions({ conditions }: { readonly conditions: readonly string[] }) {
   if (conditions.length === 0) return null;
   return (
     <span className="inline-flex flex-wrap gap-1">
       {conditions.map((condition) => (
         <Badge key={condition} variant="outline" className="h-auto max-w-full text-left text-[11px] font-normal whitespace-normal">
-          {condition}
+          <ConditionText condition={condition} />
         </Badge>
       ))}
     </span>

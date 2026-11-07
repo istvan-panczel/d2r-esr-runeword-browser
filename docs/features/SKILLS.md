@@ -23,12 +23,12 @@ skilldetails.json `lines` stay the formula-free fixed lines (see "Text").
 
 Three bundles under `public/game-data/` (see [Game Data](./GAME-DATA.md)):
 
-| File                | Built by                          | Used for                                                         |
-| ------------------- | --------------------------------- | ---------------------------------------------------------------- |
-| `skills.json`       | `build/bundleSkills.ts`           | Tree layout (tabs, row / column), also the builds feature        |
-| `skilldetails.json` | `build/bundleSkillDetails.ts`     | Details per skill and the granting items (also builds)           |
-| `skillcalc.json`    | `build/bundleSkillCalc.ts`        | Per-level values: line definitions, formulas, the rows they read |
-| `icons/skills/*`    | `scripts/generate-skill-icons.ts` | 64 px WebP cels cropped from the mod's HD skill icon sheets      |
+| File                | Built by                          | Used for                                                                                                                                     |
+| ------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `skills.json`       | `build/bundleSkills.ts`           | Tree layout (tabs, row / column), also the builds feature                                                                                    |
+| `skilldetails.json` | `build/bundleSkillDetails.ts`     | Details per skill and the granting items (also builds)                                                                                       |
+| `skillcalc.json`    | `build/bundleSkillCalc.ts`        | Per-level values: line definitions, formulas, the rows they read                                                                             |
+| `icons/skills/*`    | `scripts/generate-skill-icons.ts` | 64 px WebP cels cropped from the mod's HD skill icon sheets (the same script crops the specialisation perk icons, `icons/specializations/*`) |
 
 The details are a sibling bundle so `skills.json` (the trees, level cap and names the builds model validates against)
 stays small (31 KB). The three bundles are generated in one run; the first two are joined by skill id in the browser

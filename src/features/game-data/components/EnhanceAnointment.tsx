@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { EnhanceBundle } from '../engine/schema';
+import { specializationHref } from '../engine/specializationLinks';
 import { ANOINTMENT_EXTRA_POOLS, anointmentGroups, filterAnointmentOutcomes, qualityList } from '../utils/enhance';
 import { BonusLines, NoMatches, Pills } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
@@ -102,7 +104,14 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
                 Cube the item with the orb, then cube the item again on its own. An item is anointed once
                 {slot.secondPerk !== undefined && (
                   <>
-                    ; with the {slot.secondPerk.tree} perk {slot.secondPerk.title}, a second time
+                    ; with the {slot.secondPerk.tree} perk{' '}
+                    <Link
+                      to={specializationHref(slot.secondPerk.tree, slot.secondPerk.title)}
+                      className="underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+                    >
+                      {slot.secondPerk.title}
+                    </Link>
+                    , a second time
                   </>
                 )}
                 .

@@ -1,6 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  ESR_HD_SPECIALIZATION_SPRITES_DIR,
+  PERK_CONFIG_FILES,
+  SPECIALIZATIONS_CONFIG_FILE,
+  type SpecializationsSources,
+} from './bundleSpecializations.ts';
 import { SKILL_INFO_PAGE_FILE } from './skillInfoPage.ts';
+import { SPECIALIZATIONS_PAGE_FILE } from './specializationsPage.ts';
 import type { StringsFile } from './strings.ts';
 
 /** Paths inside an Eastern_Sun_Resurrected clone. `excel/base/` is a byte-identical duplicate and is ignored. */
@@ -102,7 +109,12 @@ export interface EsrSources {
   desecratedZones: string;
   /** Raw docs/skill_information.htm (the official mercenary and oskill page); null when the file is missing */
   skillInfoPage: string | null;
+  /** specializations.json: the plugin configs, the official page and the icon sheet names */
+  specializations: SpecializationsSources;
 }
+
+/** Launcher config path of a specialisation plugin config file name */
+export const specializationConfigPath = (file: string) => `d2rloader/config/${file}`;
 
 /** `metadata.modVersion` of the clone's d2rloader metadata (the ESR version). */
 export function readModVersion(esrDir: string): string {
@@ -147,6 +159,14 @@ export function readEsrSources(esrDir: string): EsrSources {
   const skillInfoFile = join(esrDir, SKILL_INFO_PAGE_FILE);
   const skillInfoPage = existsSync(skillInfoFile) ? readFileSync(skillInfoFile, 'utf8') : null;
 
+  const spritesDir = join(esrDir, ESR_HD_SPECIALIZATION_SPRITES_DIR);
+  const specializations: SpecializationsSources = {
+    config: optional(specializationConfigPath(SPECIALIZATIONS_CONFIG_FILE)),
+    perkConfigs: PERK_CONFIG_FILES.map((file) => ({ file, text: optional(specializationConfigPath(file)) })),
+    page: optional(SPECIALIZATIONS_PAGE_FILE),
+    sheets: existsSync(spritesDir) ? readdirSync(spritesDir).sort() : [],
+  };
+
   return {
     esrVersion: readModVersion(esrDir),
     tables,
@@ -156,5 +176,6 @@ export function readEsrSources(esrDir: string): EsrSources {
     modifierPatches,
     desecratedZones,
     skillInfoPage,
+    specializations,
   };
 }

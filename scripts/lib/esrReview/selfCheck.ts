@@ -46,6 +46,8 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   // masteries, masteryBases, masteryEffects, masterySkills
   'masteries',
   'mastery',
+  // specializationTrees, specializationPerks, specializationIcons, …
+  'specialization',
   // elixirs, elixirsRegular … elixirsNoSource, elixirPerks, elixirDropSources, elixirRecipes
   'elixir',
   'itemIcons',
@@ -86,6 +88,7 @@ export const KNOWN_WARNING_CLASSES: readonly string[] = [
   'terrorzones',
   'modifiers',
   'masteries',
+  'specializations',
   'elixirs',
 ];
 

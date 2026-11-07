@@ -29,33 +29,35 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                | Contents                                                                                                                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                            |
-| `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                       |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools             |
-| `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                    |
-| `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                                |
-| `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                               |
-| `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                     |
-| `enhance.json`      | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                            |
-| `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                          |
-| `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                        |
-| `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                           |
-| `skills.json`       | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                 |
-| `skilldetails.json` | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))           |
-| `skillcalc.json`    | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))           |
-| `crafting.json`     | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                       |
-| `tiers.json`        | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                       |
-| `areas.json`        | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                    |
-| `stash.json`        | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                       |
-| `stashnames.json`   | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                              |
-| `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")            |
-| `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))     |
-| `modifiers.json`    | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))  |
-| `masteries.json`    | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery") |
-| `elixirs.json`      | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                     |
-| `icons.json`        | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")              |
+| File                   | Contents                                                                                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------    | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------             |
+| `manifest.json`        | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                                        |
+| `types.json`           | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                                   |
+| `bases.json`           | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools                         |
+| `runewords.json`       | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                                |
+| `affixes.json`         | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                                            |
+| `sources.json`         | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                                           |
+| `lootfilter.json`      | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                                 |
+| `enhance.json`         | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                        |
+| `cube.json`            | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                                      |
+| `materials.json`       | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                                    |
+| `sets.json`            | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                                       |
+| `skills.json`          | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                             |
+| `skilldetails.json`    | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))                       |
+| `skillcalc.json`       | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))                       |
+| `crafting.json`        | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                                   |
+| `tiers.json`           | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                                   |
+| `areas.json`           | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                                |
+| `stash.json`           | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                                   |
+| `stashnames.json`      | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                                          |
+| `itemtext.json`        | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")                        |
+| `terrorzones.json`     | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))                 |
+| `modifiers.json`       | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))              |
+| `masteries.json`       | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery")             |
+| `specializations.json` | ESR 3.3 specialisation trees: rules, perks and what reads each perk stat, from the specializations plugin configs, strings and tables ([SPECIALIZATIONS.md](./SPECIALIZATIONS.md)) |
+| `elixirs.json`         | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                                 |
+| `icons.json`           | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")                          |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -64,32 +66,34 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 code never reads old cached bundles; the bump stops a tab still running old code from reading new bundles it would
 misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; anointment pools became item types).
 
-| Bundle              | Size (raw / gzip; gzip at the default level)                                                                                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `types.json`        | ESR 3.3: 45 KB / 5 KB (3.2.12: 44 / 5)                                                                                             |
-| `bases.json`        | ESR 3.3: 354 KB / 33 KB (3.2.12: 292 / 26; 3.2.24 with automods, staffmods and range: 322 / 27, + superior: 340 / 31)              |
-| `runewords.json`    | ESR 3.3: 229 KB / 29 KB (3.2.12: 197 / 28)                                                                                         |
-| `affixes.json`      | ESR 3.3: 900 KB / 72 KB (3.2.12: 795 / 61; 3.2.24 with `stats`: 852 / 67, + `layers`: 894 / 72)                                    |
-| `sources.json`      | ESR 3.3: 303 KB / 30 KB (3.2.12: 298 / 29)                                                                                         |
-| `lootfilter.json`   | ESR 3.3: 879 KB / 130 KB (3.2.24: 829 / 118; 825 / 117 before labels, 771 / 103 before skills)                                     |
-| `enhance.json`      | ESR 3.3: 1,186 KB / 70 KB, per-item-type anointment pools (3.2.24: 416 / 35; 357 / 32 before sanctification)                       |
-| `cube.json`         | ESR 3.3: 760 KB / 79 KB (3.2.24: 742 / 77; before the audit fixes: 647 / 68 + `icons` 46 / 10)                                     |
-| `materials.json`    | ESR 3.3: 180 KB / 12 KB                                                                                                            |
-| `sets.json`         | ESR 3.3: 150 KB / 21 KB                                                                                                            |
-| `skills.json`       | ESR 3.3: 31 KB / 4 KB                                                                                                              |
-| `skilldetails.json` | ESR 3.3: 410 KB / 64 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                                                |
-| `skillcalc.json`    | ESR 3.3: 388 KB / 53 KB (skills + lines 188 KB, rows 149 KB, texts 33 KB, missiles 9 KB)                                           |
-| `crafting.json`     | ESR 3.3: 63 KB / 7 KB (55 KB / 6 KB before the caps)                                                                               |
-| `tiers.json`        | ESR 3.3: 23 KB / 3 KB                                                                                                              |
-| `areas.json`        | ESR 3.3: 52 KB / 7 KB (map bosses: 12 KB raw)                                                                                      |
-| `stash.json`        | ESR 3.3: 145 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes)                       |
-| `stashnames.json`   | ESR 3.3: 297 KB / 51 KB                                                                                                            |
-| `itemtext.json`     | ESR 3.3: 495 KB / 62 KB (3.2.24: 484 / 58; monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)         |
-| `terrorzones.json`  | ESR 3.3: 12 KB / 3 KB                                                                                                              |
-| `modifiers.json`    | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
-| `masteries.json`    | ESR 3.3: 15 KB / 4 KB                                                                                                              |
-| `elixirs.json`      | ESR 3.3: 35 KB / 5 KB                                                                                                              |
-| `icons.json`        | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
+| Bundle                 | Size (raw / gzip; gzip at the default level)                                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------    | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `types.json`           | ESR 3.3: 45 KB / 5 KB (3.2.12: 44 / 5)                                                                                             |
+| `bases.json`           | ESR 3.3: 354 KB / 33 KB (3.2.12: 292 / 26; 3.2.24 with automods, staffmods and range: 322 / 27, + superior: 340 / 31)              |
+| `runewords.json`       | ESR 3.3: 229 KB / 29 KB (3.2.12: 197 / 28)                                                                                         |
+| `affixes.json`         | ESR 3.3: 900 KB / 72 KB (3.2.12: 795 / 61; 3.2.24 with `stats`: 852 / 67, + `layers`: 894 / 72)                                    |
+| `sources.json`         | ESR 3.3: 303 KB / 30 KB (3.2.12: 298 / 29)                                                                                         |
+| `lootfilter.json`      | ESR 3.3: 879 KB / 130 KB (3.2.24: 829 / 118; 825 / 117 before labels, 771 / 103 before skills)                                     |
+| `enhance.json`         | ESR 3.3: 1,186 KB / 70 KB, per-item-type anointment pools (3.2.24: 416 / 35; 357 / 32 before sanctification)                       |
+| `cube.json`            | ESR 3.3: 760 KB / 79 KB (3.2.24: 742 / 77; before the audit fixes: 647 / 68 + `icons` 46 / 10)                                     |
+| `materials.json`       | ESR 3.3: 180 KB / 12 KB                                                                                                            |
+| `sets.json`            | ESR 3.3: 150 KB / 21 KB                                                                                                            |
+| `skills.json`          | ESR 3.3: 31 KB / 4 KB                                                                                                              |
+| `skilldetails.json`    | ESR 3.3: 410 KB / 64 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                                                |
+| `skillcalc.json`       | ESR 3.3: 388 KB / 53 KB (skills + lines 188 KB, rows 149 KB, texts 33 KB, missiles 9 KB)                                           |
+| `crafting.json`        | ESR 3.3: 63 KB / 7 KB (55 KB / 6 KB before the caps)                                                                               |
+| `tiers.json`           | ESR 3.3: 23 KB / 3 KB                                                                                                              |
+| `areas.json`           | ESR 3.3: 52 KB / 7 KB (map bosses: 12 KB raw)                                                                                      |
+| `stash.json`           | ESR 3.3: 145 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes)                       |
+| `stashnames.json`      | ESR 3.3: 297 KB / 51 KB                                                                                                            |
+| `itemtext.json`        | ESR 3.3: 495 KB / 62 KB (3.2.24: 484 / 58; monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)         |
+| `terrorzones.json`     | ESR 3.3: 12 KB / 3 KB                                                                                                              |
+| `modifiers.json`       | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
+| `masteries.json`       | ESR 3.3: 15 KB / 4 KB                                                                                                              |
+| `specializations.json` | ESR 3.3: 29 KB (+ `icons/specializations/`: 60 WebP, 138 KB)                                                                       |
+| `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
+| `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types
 

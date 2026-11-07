@@ -27,6 +27,7 @@ import {
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
+  type SpecializationsBundle,
   type StashBundle,
   type StashNamesBundle,
   type TerrorZonesBundle,
@@ -58,6 +59,7 @@ export interface GameDataBundles {
   terrorzones: TerrorZonesBundle;
   modifiers: ModifiersBundle;
   masteries: MasteriesBundle;
+  specializations: SpecializationsBundle;
   elixirs: ElixirsBundle;
   icons: IconsBundle;
 }
