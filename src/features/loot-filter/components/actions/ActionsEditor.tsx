@@ -254,7 +254,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
           defaultColor="0"
           value={value('chatMessage')}
           placeholder="ÿc4Drop: {link}"
-          hint="Printed when the item drops; replaces the drop line of notify."
+          hint="Printed once per item when it drops; replaces the drop line of notify. The launcher's chat notifications switch turns it off."
           badge={badge('chatMessage')}
           onChange={(chatMessage) => {
             change({ chatMessage });

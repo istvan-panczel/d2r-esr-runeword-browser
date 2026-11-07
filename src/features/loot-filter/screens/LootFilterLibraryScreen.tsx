@@ -85,7 +85,8 @@ export function LootFilterLibraryScreen() {
           </p>
           <p>
             If a sound or icon does not work, check the <code className={CODE}>sounds</code>/<code className={CODE}>icons</code> folders
-            next to the filter; if chat lines do not print, run <code className={CODE}>lootfilter</code> in the game console and read{' '}
+            next to the filter; if chat lines do not print, first check that the launcher&apos;s chat notifications are on (Enable chat
+            notifications), then run <code className={CODE}>lootfilter</code> in the game console and read{' '}
             <code className={CODE}>{'d2rloader\\logs\\celestialrayone.loot-filter.log'}</code> (set{' '}
             <code className={CODE}>debug_log = true</code> in the plugin&apos;s TOML to log every chat line).
           </p>

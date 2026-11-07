@@ -160,7 +160,7 @@ const ACTIONS: Readonly<Record<keyof RuleActions, readonly [value: string, effec
   nameSuffix: ['text', 'Text after the name.'],
   labelBackground: [COLOR, `Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`],
   labelBorder: [`\`{ "color": ${COLOR.replace(/`/g, '')}, "width": 2 }\``, 'Outlines the ground label; width 1 to 3 reads well.'],
-  chatMessage: ['text', 'A chat line when the item drops (replaces the notify line).'],
+  chatMessage: ['text', 'A chat line when the item drops, once per item (replaces the notify line).'],
   chatMessageWhenHidden: ['text', 'A chat line when this rule hides the item.'],
   notify: ['true', 'Prints the filter\'s drop line (notifications.dropFormat, default "{qualityColor}{name}").'],
   sound: [
@@ -368,6 +368,7 @@ function limitsSection(): string {
     '- Stat values: every stat reads the number the item tooltip prints (stat checks, formulas, `{stat:}`): +40 Life reads 40, `item_howl` and `item_fear` read the percent, charges read the skill level; everything else as stored.',
     `- Per-level stats read the value at the character's level (0.5 per level reads 0 at level 1 and 49 at level 99), so their checks depend on the level: ${perLevel}.`,
     `- Unidentified items: a rule that checks an item stat (stat lists or a formula) skips an unidentified item entirely: none of its actions run and it cannot hide it. ${list(STATS_WHILE_UNIDENTIFIED)} still work. Magic and rare drops are unidentified, so a hide rule with stat exceptions does not hide them until identified.`,
+    '- Chat lines and sounds play once per item. The launcher\'s "Enable chat notifications" (selection.json `chatNotifications`) turns every item chat line off, and "Play sounds" every sound.',
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
     `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
   ].join('\n');
