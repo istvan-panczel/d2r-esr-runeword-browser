@@ -69,6 +69,22 @@ export function TestResult({ data, result, quality, onShowRule }: TestResultProp
         <Section dense title="Ground label">
           <LabelPreview text={result.name} background={result.labelBackground} border={result.labelBorder} defaultColor={defaultColor} />
           {!result.matched && <p className="text-xs text-muted-foreground">No rule applied: the game&apos;s own label.</p>}
+          {result.shownBy !== null && (
+            <p className="text-xs text-muted-foreground">
+              Shown by{' '}
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto p-0 text-xs"
+                onClick={() => {
+                  if (result.shownBy !== null) onShowRule(result.shownBy);
+                }}
+              >
+                rule {result.shownBy + 1}
+              </Button>
+              : no later rule can hide it.
+            </p>
+          )}
         </Section>
       )}
 

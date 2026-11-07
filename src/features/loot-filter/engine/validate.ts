@@ -362,6 +362,18 @@ function checkSound(report: Report, sound: string | number | undefined, referenc
   }
 }
 
+const SHOW_AND_HIDE_MESSAGE = 'A rule cannot both show and hide an item: the game switches the rule off';
+
+/**
+ * `show` and `hide` together (plugin 1.8.2: "a rule cannot both show and hide an item"). On a rule they are its own
+ * actions with its style's under them; the error points at the rule's own `show`, else its `hide`, else `useStyle`.
+ */
+function checkShowAndHide(report: Report, own: RuleActions, effective: RuleActions = own): void {
+  if (effective.show !== true || effective.hide !== true) return;
+  const key = own.show === true ? 'show' : own.hide === true ? 'hide' : 'useStyle';
+  report('error', key, own.show === true && own.hide === true ? SHOW_AND_HIDE_MESSAGE : `${SHOW_AND_HIDE_MESSAGE} (with its style)`);
+}
+
 function checkActions(report: Report, actions: RuleActions, reference: LootFilterReference | undefined): void {
   checkColor(report, 'labelBackground', actions.labelBackground, [3, 4]);
   if (actions.labelBorder) {
@@ -547,6 +559,7 @@ function checkRule(
     report('error', 'useStyle', `There is no style named "${rule.useStyle}"`);
   }
   checkHideIfFail(report, rule);
+  checkShowAndHide(report, rule, effectiveActions(rule, filter));
   checkEmptyLists(report, rule);
 
   checkNamedMatch(report, 'quality', rule.quality, QUALITIES, 1, 'quality');
@@ -610,6 +623,7 @@ export function validateLootFilter(filter: LootFilter, reference?: LootFilterRef
   for (const [name, style] of Object.entries(filter.styles ?? {})) {
     const report = reporter(diagnostics, { path: `styles/${name}`, style: name });
     if (style.useStyle !== undefined) report('error', 'useStyle', 'Styles hold actions only; a style cannot use another style');
+    checkShowAndHide(report, style);
     checkActions(report, style, reference);
   }
 

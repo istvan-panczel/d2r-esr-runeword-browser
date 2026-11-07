@@ -162,6 +162,7 @@ export function planStyleChoice(rule: LootFilterRule, filter: LootFilter, target
 const KEY_LABELS: Readonly<Record<StyleKey, string>> = {
   hide: 'hide',
   hideIfOtherConditionsFail: 'hide if other conditions fail',
+  show: 'show',
   replaceName: 'name',
   namePrefix: 'name prefix',
   nameSuffix: 'name suffix',

@@ -16,6 +16,7 @@ const ASSUMPTIONS: readonly string[] = [
   'In {stat:ID}, ID may also be a stat name.',
   '{ethereal} becomes "Ethereal" for ethereal items and nothing otherwise.',
   '"Hide unmatched items" hides an item on the ground that no rule applied to.',
+  'After a Show rule, a later hide rule applies like a rule without hide (its looks, chat line and sound) and the rules after it still run; its chat line when hidden does not print.',
   'Items without a normal/exceptional/elite family (rings, amulets, charms, jewels, arrows, mythical bases) match no base-tier condition.',
 ];
 

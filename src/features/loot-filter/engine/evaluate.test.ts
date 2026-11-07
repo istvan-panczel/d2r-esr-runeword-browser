@@ -613,7 +613,7 @@ describe('wrong-shaped rules', () => {
   });
 
   it('lists only known keys as wrong-shaped', () => {
-    expect(wrongShapedKeys({ passthrough: { activeInLevels: 4, show: true, sound: [1] } })).toEqual(['activeInLevels', 'sound']);
+    expect(wrongShapedKeys({ passthrough: { activeInLevels: 4, highlight: true, sound: [1] } })).toEqual(['activeInLevels', 'sound']);
     expect(wrongShapedKeys({ itemCodes: ['r33'] })).toEqual([]);
   });
 
@@ -640,5 +640,80 @@ describe('disabled rules', () => {
     ]);
     expect(result.hidden).toBe(false);
     expect(result.name).toBe('X Zod Rune');
+  });
+});
+
+describe('show (plugin 1.8.2)', () => {
+  it('protects the item from a later hide, whose other actions still apply', () => {
+    const result = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r33'], show: true, labelBackground: [1, 2, 3] },
+        { itemTypes: ['rune'], hide: true, chatMessageWhenHidden: 'hid', replaceName: 'Later' },
+        { itemCodes: ['r33'], sound: 'item_rune' },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(result.hidden).toBe(false);
+    expect(result.shownBy).toBe(0);
+    expect(result.trace.map((entry) => entry.outcome)).toEqual(['applied', 'applied', 'applied']);
+    expect(result.trace[1]?.hideBlockedBy).toBe(0);
+    expect(result.name).toBe('Later');
+    expect(result.labelBackground).toEqual([1, 2, 3, 242]);
+    expect(result.chatMessages).toEqual([]);
+    expect(result.sounds).toEqual([{ sound: 'item_rune', volume: 100 }]);
+  });
+
+  it('protects from hideIfOtherConditionsFail and hideUnmatchedItems', () => {
+    const blocked = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r33'], show: true },
+        { itemCodes: ['r33'], sockets: { min: 2 }, hideIfOtherConditionsFail: true },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(blocked.hidden).toBe(false);
+    expect(blocked.trace[1]).toMatchObject({ outcome: 'skipped', hideBlockedBy: 0 });
+    const unmatched = evaluateFilter(
+      makeFilter([{ itemCodes: ['r33'], show: true }], { hideUnmatchedItems: true }),
+      makeItem(),
+      makeContext()
+    );
+    expect(unmatched.hidden).toBe(false);
+  });
+
+  it('does not protect from a hide before it, and only when it matched', () => {
+    const before = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r33'], hide: true },
+        { itemCodes: ['r33'], show: true },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(before.hiddenBy).toBe(0);
+    const notMatched = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r01'], show: true },
+        { itemCodes: ['r33'], hide: true },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(notMatched.hiddenBy).toBe(1);
+  });
+
+  it('switches off a rule that both shows and hides, also through its style', () => {
+    const own = evaluateFilter(makeFilter([{ itemCodes: ['r33'], show: true, hide: true }]), makeItem(), makeContext());
+    expect(own.trace[0]?.outcome).toBe('switchedOff');
+    expect(own.hidden).toBe(false);
+    expect(own.matched).toBe(false);
+    const styled = evaluateFilter(
+      makeFilter([{ itemCodes: ['r33'], useStyle: 'H', show: true }], { styles: { H: { hide: true } } }),
+      makeItem(),
+      makeContext()
+    );
+    expect(styled.trace[0]?.outcome).toBe('switchedOff');
   });
 });

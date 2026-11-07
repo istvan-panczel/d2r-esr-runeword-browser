@@ -385,3 +385,18 @@ describe('localised filter level names (plugin 1.8.2)', () => {
     }
   });
 });
+
+describe('show (plugin 1.8.2)', () => {
+  it('reads show as an action; another shape is kept with an error', () => {
+    const { filter, diagnostics } = parse({
+      formatVersion: 1,
+      rules: [
+        { itemCodes: ['r30'], show: true },
+        { itemCodes: ['r30'], show: 'yes' },
+      ],
+    });
+    expect(filter.rules[0]).toEqual({ itemCodes: ['r30'], show: true });
+    expect(filter.rules[1]).toEqual({ itemCodes: ['r30'], passthrough: { show: 'yes' } });
+    expect(diagnostics.map((d) => [d.severity, d.path])).toEqual([['error', 'rules/1/show']]);
+  });
+});

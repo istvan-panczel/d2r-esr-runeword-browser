@@ -130,13 +130,25 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
           <CheckField
             id={id('hide')}
             label="Hide"
-            hint="Hides the ground label; no later rule runs, and no rule can show it again."
+            hint="Hides the ground label and the item cannot be picked up; no later rule runs. A Show rule above protects the item."
             checked={value('hide') === true}
             badge={values.badge('hide')}
             onChange={(checked) => {
               change({ hide: values.flag('hide', checked) });
             }}
           />
+          {shows('show') && (
+            <CheckField
+              id={id('show')}
+              label="Show"
+              hint="Keeps the item visible: no later rule can hide it; later rules still change its looks, chat lines and sounds. Not with Hide."
+              checked={value('show') === true}
+              badge={badge('show')}
+              onChange={(checked) => {
+                change({ show: values.flag('show', checked) });
+              }}
+            />
+          )}
           {shows('hideIfOtherConditionsFail') && (
             <CheckField
               id={id('hide-if-other-fail')}

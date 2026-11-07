@@ -552,3 +552,21 @@ describe('hideIfOtherConditionsFail, empty lists and disabled rules', () => {
     ]);
   });
 });
+
+describe('show (plugin 1.8.2)', () => {
+  it('accepts show as an action', () => {
+    expect(checkRule({ itemCodes: ['r01'], show: true })).toEqual([]);
+  });
+
+  it('reports a rule or style that both shows and hides', () => {
+    expect(checkRule({ itemCodes: ['r01'], show: true, hide: true })).toEqual([['error', 'rules/0/show']]);
+    const styled = validateLootFilter({
+      ...base,
+      styles: { H: { hide: true } },
+      rules: [{ itemCodes: ['r01'], useStyle: 'H', show: true }],
+    });
+    expect(styled.map((d) => [d.severity, d.path])).toEqual([['error', 'rules/0/show']]);
+    const style = validateLootFilter({ ...base, styles: { B: { hide: true, show: true } } });
+    expect(style.map((d) => [d.severity, d.path])).toEqual([['error', 'styles/B/show']]);
+  });
+});

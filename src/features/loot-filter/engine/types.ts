@@ -162,6 +162,12 @@ export interface RuleActions {
   readonly hide?: boolean;
   /** When codes, types and location match but another condition fails, the item is hidden. */
   readonly hideIfOtherConditionsFail?: boolean;
+  /**
+   * Plugin 1.8.2: keeps the item visible. After a rule with `show: true` matches, later rules cannot hide the item (by
+   * `hide`, `hideIfOtherConditionsFail` or `hideUnmatchedItems`); their other actions still apply. A rule cannot both
+   * show and hide.
+   */
+  readonly show?: boolean;
   readonly replaceName?: FilterText;
   readonly namePrefix?: FilterText;
   readonly nameSuffix?: FilterText;

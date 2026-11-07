@@ -323,6 +323,7 @@ const CONDITION_READERS: FieldReaders<RuleConditions> = {
 const ACTION_READERS: FieldReaders<RuleActions> = {
   hide: readBoolean,
   hideIfOtherConditionsFail: readBoolean,
+  show: readBoolean,
   replaceName: readText,
   namePrefix: readText,
   nameSuffix: readText,

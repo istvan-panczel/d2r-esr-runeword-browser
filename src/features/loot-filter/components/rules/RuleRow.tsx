@@ -120,6 +120,15 @@ export function RuleRow({
                   hide
                 </Badge>
               )}
+              {rule.show === true && (
+                <Badge
+                  variant="outline"
+                  className="border-emerald-600/50 px-1.5 py-0 text-[0.7rem] text-emerald-700 dark:text-emerald-300"
+                  title="Show: no later rule can hide the item"
+                >
+                  show
+                </Badge>
+              )}
               {rule.useStyle !== undefined && (
                 <Badge variant="secondary" className="max-w-40 px-1.5 py-0 text-[0.7rem]">
                   <span className="truncate">{rule.useStyle}</span>

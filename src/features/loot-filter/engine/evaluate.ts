@@ -17,6 +17,12 @@
  *   with `item_demondamage_percent < 1` hid the magic items without demon damage).
  * - `{ethereal}` expands to `Ethereal` for ethereal items and to an empty string otherwise.
  * - `hideUnmatchedItems` hides an on-ground item no rule applied to (`hiddenBy` stays null).
+ * - `show` (plugin 1.8.2, the guide): after a rule with `"show": true` applies, later rules cannot hide the item, by
+ *   `hide`, `hideIfOtherConditionsFail` or `hideUnmatchedItems`; their colours, names, sounds and chat lines still apply.
+ *   Where the guide is silent: a later `hide` rule whose hide is blocked applies like a rule without `hide` and the rules
+ *   after it still run; its `chatMessageWhenHidden` does not print (the item is not hidden); a blocked
+ *   `hideIfOtherConditionsFail` rule is skipped. A rule whose own and style's actions together both show and hide is an
+ *   error ("A rule cannot both show and hide"), so the plugin switches it off (`switchedOff`).
  * - An item without a normal/exceptional/elite family (rings, amulets, charms, jewels, arrows, ESR mythical bases;
  *   `baseTier: null`) matches no `baseTier` condition, and `{baseTier}` expands to an empty string for it. The plugin's
  *   tier for such items is unknown (its `debug_log` line prints `tier %d` per item).
@@ -104,8 +110,13 @@ export interface RuleTrace {
    * `disabled`: the rule is switched off in the editor (written to `disabledRules`), so the game never sees it.
    * `wrongShape`: a known key of the rule has the wrong shape (`wrongShapedKeys`), so the plugin most likely switches
    * the rule off (not verified).
+   * `switchedOff`: the rule has an error the plugin reports when the filter loads (`reason`), so it never runs.
    */
-  readonly outcome: 'applied' | 'skipped' | 'disabled' | 'wrongShape' | 'hidden' | 'hiddenByOtherConditions';
+  readonly outcome: 'applied' | 'skipped' | 'disabled' | 'wrongShape' | 'switchedOff' | 'hidden' | 'hiddenByOtherConditions';
+  /** `switchedOff` only: why. */
+  readonly reason?: string;
+  /** The rule would have hidden the item, but the `show` rule at this index protects it. */
+  readonly hideBlockedBy?: number;
   /**
    * Condition keys that did not hold; empty when applied or disabled. For `wrongShape`, the ones of the rest of the
    * rule (so the trace can tell whether the rule would have matched).
@@ -128,6 +139,8 @@ export interface EvaluationResult {
   readonly matched: boolean;
   readonly hidden: boolean;
   readonly hiddenBy: number | null;
+  /** The first applied rule with `show: true`: no later rule can hide the item. */
+  readonly shownBy: number | null;
   /** Final label text with raw ÿc codes, placeholders expanded. */
   readonly name: string;
   readonly replaceName: string | undefined;
@@ -143,6 +156,9 @@ export interface EvaluationResult {
 }
 
 const DEFAULT_DROP_FORMAT = '{qualityColor}{name}';
+/** The `switchedOff` reason of a rule that both shows and hides (the plugin: "a rule cannot both show and hide an item"). */
+export const SHOW_AND_HIDE =
+  'it both shows and hides the item (its own actions and its style together), which the plugin reports as an error';
 const DEFAULT_LOCATIONS: readonly ItemLocation[] = ['onGround'];
 
 // ---------------------------------------------------------------------------
@@ -369,6 +385,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
   const trace: RuleTrace[] = [];
   let matched = false;
   let hiddenBy: number | null = null;
+  let shownBy: number | null = null;
   let hiddenMessage: string | undefined;
   let replaceName: FilterText | undefined;
   let namePrefix: FilterText | undefined;
@@ -392,9 +409,17 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       trace.push({ index, outcome: 'wrongShape', failed, actions: {}, wrongShaped });
       continue;
     }
+    const actions = effectiveActions(rule, filter);
+    if (actions.show === true && actions.hide === true) {
+      trace.push({ index, outcome: 'switchedOff', failed, actions: {}, reason: SHOW_AND_HIDE });
+      continue;
+    }
     if (failed.length > 0) {
-      const actions = effectiveActions(rule, filter);
       const gateHolds = failed.every((key) => !GATE_KEYS.has(key)) && !failed.includes('activeInLevels');
+      if (actions.hideIfOtherConditionsFail === true && gateHolds && shownBy !== null) {
+        trace.push({ index, outcome: 'skipped', failed, actions: {}, hideBlockedBy: shownBy });
+        continue;
+      }
       if (actions.hideIfOtherConditionsFail === true && gateHolds) {
         trace.push({ index, outcome: 'hiddenByOtherConditions', failed, actions });
         hiddenBy = index;
@@ -405,16 +430,22 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       continue;
     }
 
-    const actions = effectiveActions(rule, filter);
     matched = true;
-    if (actions.hide === true) {
+    if (actions.hide === true && shownBy === null) {
       trace.push({ index, outcome: 'hidden', failed, actions });
       hiddenBy = index;
       if (actions.chatMessageWhenHidden !== undefined) hiddenMessage = text(actions.chatMessageWhenHidden);
       break;
     }
 
-    trace.push({ index, outcome: 'applied', failed, actions });
+    trace.push({
+      index,
+      outcome: 'applied',
+      failed,
+      actions,
+      ...(actions.hide === true && shownBy !== null ? { hideBlockedBy: shownBy } : {}),
+    });
+    if (actions.show === true) shownBy ??= index;
     replaceName = actions.replaceName ?? replaceName;
     namePrefix = actions.namePrefix ?? namePrefix;
     nameSuffix = actions.nameSuffix ?? nameSuffix;
@@ -438,7 +469,8 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
   const resolvedSuffix = nameSuffix === undefined ? undefined : text(nameSuffix);
   const name = `${resolvedPrefix ?? ''}${resolvedReplace ?? item.name}${resolvedSuffix ?? ''}`;
 
-  const hiddenUnmatched = !matched && hiddenBy === null && filter.hideUnmatchedItems === true && item.location === 'onGround';
+  const hiddenUnmatched =
+    !matched && hiddenBy === null && shownBy === null && filter.hideUnmatchedItems === true && item.location === 'onGround';
   const hidden = hiddenBy !== null || hiddenUnmatched;
 
   if (hidden) {
@@ -447,6 +479,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       matched: matched || hiddenBy !== null,
       hidden,
       hiddenBy,
+      shownBy,
       name,
       replaceName: resolvedReplace,
       namePrefix: resolvedPrefix,
@@ -466,6 +499,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
     matched,
     hidden,
     hiddenBy,
+    shownBy,
     name,
     replaceName: resolvedReplace,
     namePrefix: resolvedPrefix,

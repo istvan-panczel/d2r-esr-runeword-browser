@@ -45,6 +45,8 @@ export const BASIC_ACTIONS = {
   useStyle: true,
   hide: true,
   hideIfOtherConditionsFail: false,
+  // Protects an item from later hides (plugin 1.8.2); Advanced until the owner decides otherwise.
+  show: false,
   chatMessageWhenHidden: false,
   replaceName: false,
   namePrefix: false,
@@ -83,6 +85,7 @@ export const ACTION_EDITOR_FIELDS: readonly ActionField[] = [
   'useStyle',
   'hide',
   'hideIfOtherConditionsFail',
+  'show',
   'chatMessageWhenHidden',
   'replaceName',
   'namePrefix',

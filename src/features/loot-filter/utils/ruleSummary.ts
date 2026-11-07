@@ -109,6 +109,7 @@ export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLoo
 export function ruleActionHint(rule: LootFilterRule): string | undefined {
   if (rule.hide === true) return 'hide';
   const parts: string[] = [];
+  if (rule.show === true) parts.push('show');
   if (rule.useStyle !== undefined) parts.push(`→ style ${rule.useStyle}`);
   const name = plainText(rule.replaceName);
   const prefix = plainText(rule.namePrefix);

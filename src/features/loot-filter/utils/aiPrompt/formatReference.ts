@@ -150,6 +150,10 @@ const ACTIONS: Readonly<Record<keyof RuleActions, readonly [value: string, effec
     'true',
     'When the codes, types and location match but any other condition fails, the item is hidden (see "Hide rules").',
   ],
+  show: [
+    'true',
+    'Keeps the item visible: no later rule can hide it (hide, hideIfOtherConditionsFail, hideUnmatchedItems); later rules still change its looks, chat lines and sounds. A rule cannot both show and hide.',
+  ],
   replaceName: ['text', 'A new name. `{name}` is the game name.'],
   namePrefix: ['text', 'Text before the name.'],
   nameSuffix: ['text', 'Text after the name.'],
@@ -249,8 +253,9 @@ function combineSection(): string {
     '- All conditions of a rule must hold (AND); values inside one list are alternatives (OR): `"itemCodes": ["r30", "r31"]` matches either.',
     '- `itemCodes` and `itemTypes` both apply: a code that is not of a listed type never matches.',
     "- Later wins: a later rule's name change, background, border, icon or droplight replaces an earlier one's. Chat lines and sounds add up.",
-    '- `hide` stops: nothing after the hiding rule runs, and the highlights of the rules above it are gone too. There is no "show" action, so an earlier rule cannot protect an item from a later hide.',
-    "- So the order cannot protect an item from a hide rule; only the hide rule's own exceptions can. Order matters for the looks: put broad looks first and the specific ones after them (later wins).",
+    '- `hide` stops: nothing after the hiding rule runs, and the highlights of the rules above it are gone too.',
+    '- `show` protects: after a rule with `"show": true` matches, later rules cannot hide the item (`hide`, `hideIfOtherConditionsFail`, `hideUnmatchedItems`); their colours, names, sounds and chat lines still apply. Put the show rules for what must never be hidden (high runes, uniques) first, then the broad hide rules. A rule cannot both show and hide.',
+    '- Order matters for the looks too: put broad looks first and the specific ones after them (later wins).',
     '- A rule with an error is switched off by the game (logged with its number); the rest of the filter works.',
     '- Rules look at ground items unless `location` says otherwise. Labels, icons and droplights show on ground items only.',
     "- Styles: `useStyle` pulls in a style's actions; the rule's own actions win key by key. Styles cannot hold conditions or use another style.",
@@ -324,7 +329,7 @@ function limitsSection(): string {
     ...STAT_QUIRKS.map((quirk) => `- ${code(quirk.name)} (${String(quirk.id)}): ${quirk.headline}. ${quirk.message}`),
     `- ${OMITTED_PARAM_RULE}`,
     `- Stored scaled (not verified whether the plugin compares the stored or the shown value; use presence checks \`>= 1\` / \`< 1\` with them): ×256 ${scaleNames('shift')}; eighths per character level ${scaleNames('perLevel')}; both ${scaleNames('shiftPerLevel')}.`,
-    '- There is no "show" action and no formula condition.',
+    '- There is no formula condition.',
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
     `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
   ].join('\n');
@@ -438,7 +443,12 @@ export const MISTAKE_SAMPLES: readonly MistakeSample[] = [
     fix: 'give every hide rule conditions',
   },
   { what: 'a colour out of range', rules: [{ itemCodes: ['r83'], labelBackground: [300, 0, 0] }], fix: 'whole numbers 0 to 255' },
-  { what: 'a key the format does not have', rules: [{ itemCodes: ['r83'], show: true }], fix: 'there is no show action; remove it' },
+  { what: 'a key the format does not have', rules: [{ itemCodes: ['r83'], highlight: true }], fix: 'use only the keys above; remove it' },
+  {
+    what: 'show and hide in one rule',
+    rules: [{ itemCodes: ['r83'], show: true, hide: true }],
+    fix: 'a rule either shows or hides; use two rules',
+  },
 ];
 
 /** What the app reports for one sample: the parser's and the validator's messages on its first rule. */

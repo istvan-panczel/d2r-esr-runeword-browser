@@ -23,6 +23,10 @@ const OUTCOMES: Readonly<Record<RuleTraceEntry['outcome'], { readonly label: str
     label: 'skipped: wrong shape',
     className: 'border-amber-600/40 bg-amber-500/15 text-amber-800 dark:text-amber-300',
   },
+  switchedOff: {
+    label: 'switched off: error',
+    className: 'border-red-600/40 bg-red-500/10 text-red-800 dark:text-red-300',
+  },
 };
 
 /**
@@ -30,7 +34,9 @@ const OUTCOMES: Readonly<Record<RuleTraceEntry['outcome'], { readonly label: str
  * rest of it holds (it would have applied or hidden).
  */
 const isQuiet = (entry: RuleTraceEntry): boolean =>
-  entry.outcome === 'skipped' || entry.outcome === 'disabled' || (entry.outcome === 'wrongShape' && entry.failed.length > 0);
+  (entry.outcome === 'skipped' && entry.hideBlockedBy === undefined) ||
+  entry.outcome === 'disabled' ||
+  ((entry.outcome === 'wrongShape' || entry.outcome === 'switchedOff') && entry.failed.length > 0);
 
 /** "activeInLevels has", "activeInLevels and sound have". */
 function wrongShapeText(keys: readonly string[]): string {
@@ -54,10 +60,12 @@ export function RuleTrace({ filter, result, lookup, onShowRule }: RuleTraceProps
   const skipped = result.trace.filter((entry) => entry.outcome === 'skipped').length;
   const disabled = result.trace.filter((entry) => entry.outcome === 'disabled').length;
   const wrongShape = result.trace.filter((entry) => entry.outcome === 'wrongShape').length;
+  const switchedOff = result.trace.filter((entry) => entry.outcome === 'switchedOff').length;
   const quietText = [
     `${String(skipped)} skipped`,
     disabled > 0 ? `${String(disabled)} disabled` : undefined,
     wrongShape > 0 ? `${String(wrongShape)} wrong shape` : undefined,
+    switchedOff > 0 ? `${String(switchedOff)} switched off` : undefined,
   ]
     .filter((part) => part !== undefined)
     .join(', ');
@@ -125,6 +133,14 @@ export function RuleTrace({ filter, result, lookup, onShowRule }: RuleTraceProps
                     </span>
                     {entry.wrongShaped !== undefined && entry.wrongShaped.length > 0 && (
                       <span className="text-xs text-amber-800 dark:text-amber-300">{wrongShapeText(entry.wrongShaped)}</span>
+                    )}
+                    {entry.reason !== undefined && (
+                      <span className="text-xs text-red-700 dark:text-red-400">The plugin switches this rule off: {entry.reason}.</span>
+                    )}
+                    {entry.hideBlockedBy !== undefined && (
+                      <span className="text-[0.7rem] text-muted-foreground">
+                        Would hide the item, but rule {entry.hideBlockedBy + 1} shows it (show protects it from later hides).
+                      </span>
                     )}
                     {entry.failed.length > 0 && (
                       <span className="flex flex-wrap items-center gap-1">
