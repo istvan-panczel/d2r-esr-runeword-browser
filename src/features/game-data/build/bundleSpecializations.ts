@@ -12,9 +12,10 @@
  * - Per perk, everything in the files that reads its stat: cube rows (`cube/perks.ts` checks, grouped by family),
  *   treasure classes (`ConditionCalc`), misc.txt and skills.txt formulas, the perk plugin configs (`perk_stat = <id>`,
  *   or the alchemy plugin's `[perks]` table), the Enhance bundle (Sanctimonious, Hallowed Accessories) and the weapon
- *   mastery bundle (True Master). A perk nothing reads gets a note and a `specializations:` warning.
+ *   mastery bundle (True Master). A perk nothing reads gets a note and a `specializations:` warning, unless the mod
+ *   author said a plugin grants it (`MOD_AUTHOR_PERK_ANSWERS`: his note instead, no warning).
  * - `PERK_ITEMS`: perks whose text promises an item; the files are checked for it (a recipe that makes it, a drop
- *   behind the perk) and the result is a note.
+ *   behind the perk) and the result is a note, plus the mod author's note when he called the gap a bug.
  * - The official page is parsed (`specializationsPage.ts`) and compared; differences go to `pageDiffs`, the files win.
  */
 import type {
@@ -36,6 +37,7 @@ import { specializationSlug } from '../engine/specializationLinks.ts';
 import type { CubeRow } from './cube/cubeRows.ts';
 import type { PerkCheck } from './cube/perks.ts';
 import { resolveName } from './itemNames.ts';
+import { modAuthorNote } from './modAuthorAnswers.ts';
 import { parseSpecializationsPage, type SpecializationsPage } from './specializationsPage.ts';
 import { stripColorCodes } from './strings.ts';
 import { parseToml, type TomlEntry, type TomlValue } from './toml.ts';
@@ -537,10 +539,14 @@ export function buildSpecializationsBundle(input: SpecializationsInput): Special
       const claim = PERK_ITEMS[statText] as (typeof PERK_ITEMS)[string] | undefined;
       if (claim !== undefined) notes.push(...checkPerkItems(input, claim, statText, warn, `${name} › ${perkTitle}`));
       else if (!read) {
-        notes.push(
-          `Nothing in the game tables or the launcher configs reads its stat (${statText}), so the files do not show how it works.`
-        );
-        warn(`${name} › ${perkTitle} (${statText}): no table or launcher config reads it`);
+        const granted = modAuthorNote(statText, 'plugin');
+        if (granted !== undefined) notes.push(granted);
+        else {
+          notes.push(
+            `Nothing in the game tables or the launcher configs reads its stat (${statText}), so the files do not show how it works.`
+          );
+          warn(`${name} › ${perkTitle} (${statText}): no table or launcher config reads it`);
+        }
       }
       const mismatch = describedNumbers(description ?? '').filter((value) => {
         const known = fileNumbers(plugin, formulaNumbers.get(statText), drops);
@@ -619,11 +625,14 @@ function checkPerkItems(
 ): string[] {
   const names = [...new Set(claim.codes.map((code) => input.nameOf(code)))].join(', ');
   const codes = claim.codes.join(', ');
+  // A gap the mod author called a bug gets his note after the files' one
+  const bug = modAuthorNote(stat, 'bug');
+  const gap = (note: string) => (bug === undefined ? [note] : [note, bug]);
   if (claim.how === 'cube') {
     const rows = input.cubeRows.filter((row) => row.outputs.some((output) => claim.codes.includes(refOf(output.spec))));
     if (rows.length === 0) {
       warn(`${label} (${stat}): no cubemain row makes ${names} (${codes}), nothing else reads the stat`);
-      return [`No cube recipe in the files makes ${names} (${codes}), and nothing else reads the perk's stat (${stat}).`];
+      return gap(`No cube recipe in the files makes ${names} (${codes}), and nothing else reads the perk's stat (${stat}).`);
     }
     const gated = rows.filter((row) => input.perkChecks(row).some((check) => check.has));
     return [`${plural(rows.length, 'cube recipe')} make ${names}; ${String(gated.length)} of them check the perk.`];
@@ -636,13 +645,13 @@ function checkPerkItems(
   });
   if (monsters.size === 0) {
     warn(`${label} (${stat}): no treasure class drops ${names} (${codes})`);
-    return [`No treasure class in the files drops ${names}.`];
+    return gap(`No treasure class in the files drops ${names}.`);
   }
   if (!gated) {
     warn(`${label} (${stat}): ${names} (${codes}) drop from ${plural(monsters.size, 'monster')} with no perk condition`);
-    return [
-      `In the files, ${names} drops from ${plural(monsters.size, 'monster')} without the perk: no treasure class checks its stat (${stat}).`,
-    ];
+    return gap(
+      `In the files, ${names} drops from ${plural(monsters.size, 'monster')} without the perk: no treasure class checks its stat (${stat}).`
+    );
   }
   return [`${names} drops from ${plural(monsters.size, 'monster')}; a treasure class on the way checks the perk.`];
 }

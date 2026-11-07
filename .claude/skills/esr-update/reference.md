@@ -183,8 +183,11 @@ the owner's OK.
   `specializations:` warnings: "no table or launcher config reads it", "no cubemain row makes", "drop from N monsters
   with no perk condition", "the description says N %, the files …" → genuine data, a question for the mod author; a
   missing config, string or icon sheet → a rename to follow. `bundleIntegrity.test.ts` pins 4 trees × 15 perks, the
-  rules, the 8 cube-linked perks, an empty `pageDiffs` and the 3 warnings of 3.3 (Elixir of Reincarnation, Deep
-  Pockets, Alien Artefacts). The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
+  rules, the 8 cube-linked perks, an empty `pageDiffs` and the 2 warnings of 3.3 (Elixir of Reincarnation, Alien
+  Artefacts: bugs the mod author says the next patch fixes, so expect both to go; then drop the `bug` answers in
+  `build/modAuthorAnswers.ts`, the guide's `elixirs` / `specializations` / `endgame-bosses` sentences and the
+  `PERK_DROPS` note in `src/features/campaign-map/data/mapBosses.ts`). Deep Pockets is read by nothing in the files but
+  granted by the plugin (mod author), so its `plugin` answer keeps it from warning. The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
   its slug (check `content/guide` for `page:/specializations` links).
 - **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
   `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
@@ -192,7 +195,8 @@ the owner's OK.
   shows in the `elixirs.json` diff; re-read the guide's `elixirs` note and docs/features/ELIXIRS.md against it. New
   `elixirs:` warnings: a line that renders without its value (a stat whose descfunc divides or hides it), a
   ConditionCalc that is no perk check, a missing root class or config → read the change, then propose a rule. Known
-  page-vs-files gap (3.3): the Elixir of Reincarnation perk names a 5 Dragon Stone recipe cubemain.txt does not have.
+  page-vs-files gap (3.3): the Elixir of Reincarnation perk names a 5 Dragon Stone recipe cubemain.txt does not have
+  (a bug the mod author says the next patch fixes).
 - **Cube page** (`docs/Eastern Sun Resurrected Cube Recipes.html`): `CUBE_SECTIONS` in `build/cube/cubeCatalog.ts` (the
   page's anchors, `notes` rewritten from its footnotes, guide slugs) and `FAMILY_NOTES`. A renamed anchor breaks the
   "Official: <section>" links. The page lagged the files in about 31 places at 3.2.24 (cube audit 2026-11-07), so read

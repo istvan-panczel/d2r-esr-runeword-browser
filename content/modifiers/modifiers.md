@@ -778,7 +778,7 @@ stats: passive_dodge (338), passive_avoid (339), passive_evade (340)
 
 summary: Chances to dodge melee, avoid missiles while standing, or evade both while moving. Each is capped at {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}%.
 
-body: Dodge works against melee attacks while you stand still; Avoid works against missiles while you stand still; Evade works against both while you walk or run [ESR config]. ESR items often show the three as one line, "+N% Dodge Chance" [ESR files]. Each is capped at {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}<!-- 75 -->% for players, hirelings and monsters, and the Advanced Stats panel shows the capped value [ESR config]. Anything above {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent} is wasted [ESR config]. Dodge works on mercenaries, though the animation may not play [Community 3.9].
+body: Dodge works against melee attacks while you stand still; Avoid works against missiles while you stand still; Evade works against both while you walk or run [ESR config]. ESR items often show the three as one line, "+N% Dodge Chance" [ESR files]. In ESR, Dodge means all three pooled together: Dodge for melee attacks, Avoid for missiles and, as far as the mod author knows, Evade for both while running, so one Dodge line works like a chance to avoid any attack [Mod author]. The Elixir of Quickness, whose tooltip names only Dodge, gives all three the same way [ESR files]. Each is capped at {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent}<!-- 75 -->% for players, hirelings and monsters, and the Advanced Stats panel shows the capped value [ESR config]. Anything above {config.dodge-avoid-evade-cap.dodge_avoid_evade_cap.cap_percent} is wasted [ESR config]. Dodge works on mercenaries, though the animation may not play [Community 3.9].
 
 facts:
 
@@ -789,7 +789,7 @@ caveats:
 
 - Whether dodge blocks on-striking procs of the attacker (vanilla: a dodged attack is not "on striking").
 
-sources: `ESR/d2rloader/config/celestialrayone.dodge-avoid-evade-cap.toml`; `excel/itemstatcost.txt` rows 338–340; wiki Q&A
+sources: `ESR/d2rloader/config/celestialrayone.dodge-avoid-evade-cap.toml`; `excel/itemstatcost.txt` rows 338–340; `excel/misc.txt` (Elixir of Quickness); ESR mod author (Discord, 2026-11-07); wiki Q&A
 
 ---
 

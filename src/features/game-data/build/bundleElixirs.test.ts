@@ -409,6 +409,7 @@ describe('buildElixirsBundle', () => {
     expect(facts['Savvy Elixirs']).toEqual(['25% chance that a utility potion is not used up; its effect still applies (alchemy plugin).']);
     expect(facts['Elixir of Reincarnation']).toEqual([
       'Gives the Elixir of Reincarnation; cubemain.txt has no recipe that makes it and no treasure class drops it.',
+      'The mod author (2026-11-07): the missing recipe is a bug of 3.3; the next patch adds it, so until then the elixir cannot be had.',
       'On a hit that would kill you it restores full life and mana instead, makes you invulnerable for 1 s, and starts a 300 s cooldown (alchemy plugin).',
     ]);
   });

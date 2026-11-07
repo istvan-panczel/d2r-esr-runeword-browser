@@ -19,8 +19,9 @@ perks change them. Route `/elixirs` (Database menu), data `public/game-data/elix
   (`utilitypotionduration`). Reincarnation: `len` 2,000,000,000 (until it triggers) and a `UsageConditionCalc` (not while
   its effect or cooldown runs).
 - **Tooltip**: `spelldescstr` with the value of `calc1` (`spelldesc` 2; the spelldesc-decimals plugin config says the
-  value is calc1). Some tooltips name less than the stats give: Quickness says "Dodge" but gives Dodge, Avoid and Evade;
-  Deadly Crits says "Critical Damage", the stat line reads "Deadly Strike Damage".
+  value is calc1). Deadly Crits says "Critical Damage", the stat line reads "Deadly Strike Damage". Quickness says
+  "Dodge" and gives Dodge, Avoid and Evade: no mismatch, ESR's Dodge is the three pooled together (mod author,
+  2026-11-07; the Modifiers page's `dodge` block).
 - **Top level**: experience.txt `MaxLvl` (110), so the page shows values at level 1 and 110.
 - **Drops**: every elixir drop goes through the treasure class `Utility Elixir` (Regular 3, Greater 1). `Potion N Single`
   picks it instead of a potion: Normal Act 1 1%, Act 2 1%, Act 3 2%, Act 4 3%, Act 5 3%, Nightmare 4%, Hell 5%,
@@ -41,8 +42,10 @@ perks change them. Route `/elixirs` (Database menu), data `public/game-data/elix
   is a use counter). The output is any item of the type, so the four hidden elixirs can come from it without Hidden
   Elixirs.
 - **Elixir of Reincarnation**: the perk of the same name (Alchemist row 5) says it is crafted from 5 Dragon Stones, but
-  cubemain.txt has no row making `35p` and no treasure class drops it. The alchemy plugin's `[[reincarnation]]` gives the
-  effect: full life and mana on a fatal hit, 25 frames (1 s) invulnerable, a 300 s cooldown.
+  cubemain.txt has no row making `35p` and no treasure class drops it. The mod author (2026-11-07): "Fixed in next
+  patch", so in 3.3 it cannot be had; the perk's facts carry his note while no recipe makes it
+  (`build/modAuthorAnswers.ts`). The alchemy plugin's `[[reincarnation]]` gives the effect: full life and mana on a
+  fatal hit, 25 frames (1 s) invulnerable, a 300 s cooldown.
 - **Plugin perks** (`celestialrayone.alchemy.toml`): Savvy Elixirs (25% not used up), Serendipity (15% one of ten
   shrine effects), Compounded Synergy (+5% per different potion effect running; not in the page's values). Stamina,
   Antidote and Thawing Potions are utility potions too (type2 `upot`; same stats and perks).
@@ -84,7 +87,11 @@ check, and an item the root class drops that is not an elixir. Counts: `elixirs*
 ## Open questions (in game / mod author)
 
 1. Does a perk-gated treasure class drop out of the roll (as read here) or drop nothing when the killer lacks the perk?
-2. Elixir of Reincarnation: how is it obtained? The perk text says "transmuting 5 Dragon Stones", cubemain.txt has no
-   such row (ESR 3.3).
-3. Does a greater elixir replace a running regular one of the same kind (shared state), or the other way round?
-4. Elixir of Quickness's tooltip names Dodge only; the item gives Dodge, Avoid and Evade.
+2. Does a greater elixir replace a running regular one of the same kind (shared state), or the other way round?
+
+Answered by the mod author (2026-11-07):
+
+- Elixir of Reincarnation: how is it obtained? The perk text says "transmuting 5 Dragon Stones", cubemain.txt has no
+  such row (ESR 3.3). "Fixed in next patch": a bug; the next patch adds the recipe.
+- Elixir of Quickness's tooltip names Dodge only; the item gives Dodge, Avoid and Evade. Not a bug: "Dodge in ESR is
+  dodge, avoid and evade all pooled together."

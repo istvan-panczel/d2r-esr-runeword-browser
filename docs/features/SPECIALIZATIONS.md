@@ -48,19 +48,26 @@ Sources, all in the ESR clone:
   - `enhance`: Sanctimonious (enhance.json `secondPerk` on 45 anointment types), Hallowed Accessories
     (`sanctification.perkItems`); `anyWeaponMastery`: True Master (masteries.json `anyWeaponPerk`).
   - `notes`: a perk nothing reads; the PERK_ITEMS checks (Elixir of Reincarnation must have a cube recipe, the Alien
-    Artefacts must drop behind the perk); a description percentage that none of the numbers above gives.
+    Artefacts must drop behind the perk); a description percentage that none of the numbers above gives. The mod
+    author's answers (`build/modAuthorAnswers.ts`, 2026-11-07, shared with the Elixirs bundle) add a note while the
+    files still show the gap: a `bug` answer after a failed PERK_ITEMS check (the warning stays, so the fixing patch
+    shows), a `plugin` answer instead of the "nothing reads it" note and warning.
 - The official page: `pageDiffs` lists every difference (tree names, perk count, title, description, unlearn line,
   shards per Tesseract, point levels, the level 63 example, perks per tree / row, maximum points, respec points, Dragon
   Stones per unlearn). The tree summaries ("Specialized in potions.") are the only text taken from the page.
 
-Warnings start with `specializations:`. ESR 3.3 has three, pinned in `bundleIntegrity.test.ts`:
+Warnings start with `specializations:`. ESR 3.3 has two, pinned in `bundleIntegrity.test.ts`; the mod author
+(2026-11-07) called both bugs the next patch fixes:
 
 - Elixir of Reincarnation (alchemy_13): no cubemain row makes 35p and nothing else reads the stat (the description and
-  the page say "transmuting 5 Dragon Stones").
-- Deep Pockets (archaeology_4): no table or config reads it (the archaeology config's comment says the perk "gives
-  extra_items (426)", but nothing in the files does).
+  the page say "transmuting 5 Dragon Stones"). Mod author: "Fixed in next patch", so in 3.3 the elixir cannot be had.
 - Alien Artefacts (archaeology_15): aa1–aa5 drop from 572 monsters with no perk condition ("Artefact Chance": 1 in 50
-  per roll), while the perk says only Archaeologists get them (the campaign map's map boss notes say the same).
+  per roll), while the perk says only Archaeologists get them (the campaign map's map boss notes say the same). Mod
+  author: not intended, "fixed in next patch"; in 3.3 everyone gets them.
+
+Deep Pockets (archaeology_4) is read by no table or config either (the archaeology config's comment says the perk
+"gives extra_items (426)"), but the mod author says the plugin grants it directly, outside the excel files, so it is
+no warning; its note says the perk works.
 
 Every other perk description agrees with the files' numbers, and the official page agrees with the files everywhere
 (`pageDiffs` is empty).
@@ -91,8 +98,11 @@ anointment and sanctification perk lines, the guide (`page:/specializations…` 
 
 ## Questions (ESR 3.3)
 
-- Elixir of Reincarnation: where is the recipe? cubemain.txt has no row that makes 35p.
-- Deep Pockets: what gives the +10% item quantity? Nothing in the tables or configs reads archaeology_4.
-- Alien Artefacts: should the "Artefacts" treasure classes check archaeology_15? Today every player gets them.
+- Answered by the mod author (2026-11-07):
+  - Elixir of Reincarnation: where is the recipe? cubemain.txt has no row that makes 35p. "Fixed in next patch."
+  - Deep Pockets: what gives the +10% item quantity? Nothing in the tables or configs reads archaeology_4. "Granted
+    directly by the plugin, not in the excel files."
+  - Alien Artefacts: is it intended that every player gets them (no "Artefacts" treasure class checks
+    archaeology_15)? "No, fixed in next patch": the next patch makes them need the perk.
 - "Rows are taken in order, one perk per row" (specializations config): must the rows be learned top to bottom? The
   page only says one perk per row.
