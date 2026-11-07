@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-07T10:49:09.126Z",
+  "generatedAt": "2026-11-07T12:14:22.447Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -88,6 +88,10 @@
     "modifiers": {
       "hash": "25909034155ad1d8bb4c7f114095954706b7081d729ecb950552a3abf467734d",
       "bytes": 303087
+    },
+    "masteries": {
+      "hash": "49da5be89addc31035feae5e9b56ae4aa53da0d439ad7f864b630d4a5bce8db2",
+      "bytes": 14508
     },
     "icons": {
       "hash": "18352925c1f8c739d3271b06ed630738ef723eea3ce6e0b12ba71a4a1499e509",
@@ -258,6 +262,10 @@
     "modifierFacts": 66,
     "modifierConfigFacts": 30,
     "modifierSources": 18271,
+    "masteries": 20,
+    "masteryBases": 93,
+    "masteryEffects": 30,
+    "masterySkills": 68,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
@@ -308,6 +316,10 @@
     "itemtext: string \"ModStr3kSum\" (stat description) not found",
     "itemtext: string \"ModStr3u2\" (stat description) not found",
     "itemtext: string \"ModStrMagMastery\" (stat description) not found",
-    "modifiers: crushing-blow.toml unique = 25 gives 6.25 % of current life, but its config comment says \"50 -> 12.5 %\""
+    "modifiers: crushing-blow.toml unique = 25 gives 6.25 % of current life, but its config comment says \"50 -> 12.5 %\"",
+    "masteries: cubemain line 2523 \"Remove Awaken Weapon Mastery Token - Celestial Blade\" takes \"0bs\", which cannot get this mastery",
+    "masteries: Blessed Edge: no remove row takes 0be",
+    "masteries: u28desc (Maiden Pike, value 5) names the weapon \"Maiden Spear\", the rows take Maiden Pike",
+    "masteries: u39desc (Claw, value 25) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull"
   ]
 }

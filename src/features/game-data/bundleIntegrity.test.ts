@@ -27,6 +27,7 @@ import {
   type IconsBundle,
   type ItemTextBundle,
   type LootFilterDataBundle,
+  type MasteriesBundle,
   type MaterialsBundle,
   type ModifiersBundle,
   type SetsBundle,
@@ -72,6 +73,7 @@ const stashNamesText = readText('stashnames');
 const itemTextText = readText('itemtext');
 const terrorZonesText = readText('terrorzones');
 const modifiersText = readText('modifiers');
+const masteriesText = readText('masteries');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const basesBundle = JSON.parse(basesText) as BasesBundle;
@@ -95,6 +97,7 @@ const stashNames = JSON.parse(stashNamesText) as StashNamesBundle;
 const itemText = JSON.parse(itemTextText) as ItemTextBundle;
 const terrorZones = JSON.parse(terrorZonesText) as TerrorZonesBundle;
 const modifiers = JSON.parse(modifiersText) as ModifiersBundle;
+const masteries = JSON.parse(masteriesText) as MasteriesBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -124,6 +127,7 @@ describe('committed game-data bundles', () => {
       ['itemtext', itemTextText],
       ['terrorzones', terrorZonesText],
       ['modifiers', modifiersText],
+      ['masteries', masteriesText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -1336,6 +1340,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
     expect(serializeBundle(generated.terrorzones)).toBe(terrorZonesText);
     expect(serializeBundle(generated.modifiers)).toBe(modifiersText);
+    expect(serializeBundle(generated.masteries)).toBe(masteriesText);
   });
 
   it('rolls the superior rows of docs/quality_affixes.htm with its rarities, per row and per item type (ESR 3.2.24)', () => {
@@ -1776,5 +1781,75 @@ describe('committed modifiers bundle (ESR 3.2.24)', () => {
     expect(fact('resist.floor')?.value).toBe(-1000);
     expect(fact('charstats.BlockFactor')?.value).toMatchObject({ Amazon: 5, Paladin: 6, Sorceress: 4 });
     for (const entry of modifiers.facts) expect(entry.source.file, entry.key).not.toBe('');
+  });
+});
+
+// --- masteries.json ------------------------------------------------------------------------------------------------
+
+describe('committed masteries bundle (ESR 3.2.24)', () => {
+  const baseByCode = new Map(bases.map((base) => [base.code, base]));
+  const skillById = new Map(skillDetails.skills.map((skill) => [skill.id, skill]));
+
+  it('has the 16 specialisations of docs/weapon_mastery.html plus the Warlock Void Blade, each with effects', () => {
+    expect(masteries.masteries.map((mastery) => `${String(mastery.value)} ${mastery.label}`)).toEqual([
+      '1 Stag Bow',
+      '2 Reflex Bow',
+      '3 Precision Bow',
+      '4 Maiden Spear',
+      '5 Maiden Pike',
+      '6 Maiden Javelin',
+      '7 Ninja To',
+      '8 Tribal Hatchet',
+      '9 Oak Branch',
+      '10 Soul Hunter',
+      '11 Ritualistic Dagger',
+      '12 Wretched Scythe',
+      '13 Blessed Edge',
+      '14 Mana Blade',
+      '15 Orb',
+      '17 Orb',
+      '20 Claw',
+      '25 Claw',
+      '55 Void Blade',
+      '60 Void Blade',
+    ]);
+    for (const mastery of masteries.masteries) {
+      expect(mastery.effects.length, mastery.label).toBeGreaterThan(0);
+      // The Anvil Stone in every apply recipe, three Thawing Potions in every remove recipe
+      expect(
+        mastery.inputs.some((input) => input.code === 'qqq'),
+        mastery.label
+      ).toBe(true);
+      expect(
+        mastery.remove.some((input) => input.code === 'wms' && input.qty === 3),
+        mastery.label
+      ).toBe(true);
+    }
+    expect(manifest.files.masteries?.bytes).toBeLessThan(20_000);
+  });
+
+  it('names known bases of the class, known items and class skills only', () => {
+    for (const mastery of masteries.masteries) {
+      for (const code of mastery.bases) expect(baseByCode.get(code)?.cls, `${mastery.label} ${code}`).toBe(mastery.cls);
+      for (const input of [...mastery.inputs, ...mastery.remove]) expect(masteries.names[input.code], input.code).toBeDefined();
+      expect(masteries.names[mastery.token]).toBe('Awakened Weapon Mastery Token');
+      for (const effect of mastery.effects) {
+        expect(effect.skills.length, `${mastery.label}: ${effect.heading}`).toBeGreaterThan(0);
+        for (const id of effect.skills) {
+          expect(skillById.get(id)?.cls, id).toBe(mastery.cls);
+          expect(masteries.skillNames[id]).toBe(skillById.get(id)?.name);
+        }
+      }
+    }
+    expect(masteries.names[masteries.token]).toBe('Weapon Mastery Token');
+  });
+
+  it('records the known string and row slips as warnings', () => {
+    expect(manifest.warnings.filter((warning) => warning.startsWith('masteries:'))).toEqual([
+      'masteries: cubemain line 2523 "Remove Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
+      'masteries: Blessed Edge: no remove row takes 0be',
+      'masteries: u28desc (Maiden Pike, value 5) names the weapon "Maiden Spear", the rows take Maiden Pike',
+      'masteries: u39desc (Claw, value 25) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
+    ]);
   });
 });

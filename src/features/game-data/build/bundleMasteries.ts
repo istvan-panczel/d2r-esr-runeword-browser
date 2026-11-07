@@ -1,0 +1,459 @@
+/**
+ * masteries.json: ESR's weapon mastery specialisations (docs/weapon_mastery.html).
+ *
+ * - cubemain.txt: every "Apply Awaken Weapon Mastery Token" row sets the `weapon-mastery` property to one value per
+ *   specialisation (input 1 the base or item type, input 2 the awakened token, then the ingredients); the "Remove" rows
+ *   set the negative value. Rows are grouped by that value, not by their descriptions.
+ * - The awakened token's description string (`<token>desc`, item-modifiers.json) holds the effects. Item descriptions
+ *   render bottom-up, so its lines are in reverse display order; each block reads "Transmute this with a <weapon>
+ *   variant, a <ingredient>" / "and an Anvil Stone …" then, after each blank line, a skills line (coloured ÿc@ in the
+ *   game; the string table strips colours) and its effect lines.
+ * - The skills line names skills ("Strafe", "Poison, Immolation, Freezing, Lightning Arrow") or a group ("Curses",
+ *   "Sorceress Exclusives"); `resolveEffectSkills` maps both to skill ids, with the few groups the data cannot name in
+ *   GROUP_RULES.
+ */
+import type {
+  BaseItem,
+  ClassCode,
+  ClassInfo,
+  ItemTypeInfo,
+  MasteriesBundle,
+  MasteryEffect,
+  MasteryInput,
+  SkillDetail,
+  WeaponMastery,
+} from '../engine/schema.ts';
+import type { CubeRow, ModRenderer } from './cube/cubeRows.ts';
+import type { TsvTable } from './tsv.ts';
+
+/** The cube property that sets the `weaponmastery` stat */
+export const MASTERY_PROPERTY = 'weapon-mastery';
+
+// --- token descriptions ---------------------------------------------------------------------------------------------
+
+/** One "Transmute this with …" block of an awakened token's description, in display order */
+export interface DescriptionBlock {
+  /** The weapon as the recipe line names it ("Stag Bow", "Orb") */
+  weapon: string;
+  /** Ingredient names of the recipe lines, Anvil Stone included */
+  ingredients: string[];
+  effects: { heading: string; lines: string[] }[];
+}
+
+const COLOUR = /ÿc./g;
+const RECIPE_LINE = /^Transmute this with an? (.+?)(?: variant)?, (.+)$/;
+const ANVIL_LINE = /^and an? (.+?) to empower it/;
+
+const withoutArticle = (text: string) => text.trim().replace(/^an? /, '');
+
+/**
+ * The blocks of an awakened token's description: lines reversed (bottom-up rendering), colour codes stripped; inside a
+ * block the first line after a blank line is a skills line, the lines under it its effect.
+ */
+export function parseMasteryDescription(text: string): DescriptionBlock[] {
+  const blocks: DescriptionBlock[] = [];
+  let effect: { heading: string; lines: string[] } | null = null;
+  for (const raw of text.split('\n').reverse()) {
+    const line = raw.replace(COLOUR, '').trim();
+    const block = blocks.at(-1);
+    const recipe = RECIPE_LINE.exec(line);
+    if (recipe !== null) {
+      blocks.push({ weapon: recipe[1], ingredients: recipe[2].split(',').map(withoutArticle).filter(Boolean), effects: [] });
+      effect = null;
+      continue;
+    }
+    if (block === undefined) continue;
+    const anvil = ANVIL_LINE.exec(line);
+    if (anvil !== null && block.effects.length === 0) {
+      block.ingredients.push(withoutArticle(anvil[1]));
+      continue;
+    }
+    if (line === '') {
+      effect = null;
+      continue;
+    }
+    if (effect === null) {
+      effect = { heading: line, lines: [] };
+      block.effects.push(effect);
+      continue;
+    }
+    effect.lines.push(line);
+  }
+  return blocks;
+}
+
+/**
+ * Wrapped effect lines as sentences: a line starting with a capital letter starts a new one, any other line (lower
+ * case, a number) continues the previous; each gets a closing full stop.
+ */
+export function joinEffectLines(lines: readonly string[]): string[] {
+  const sentences: string[] = [];
+  for (const line of lines) {
+    const last = sentences.at(-1);
+    if (last !== undefined && !/^[A-Z]/.test(line)) sentences[sentences.length - 1] = `${last} ${line}`;
+    else sentences.push(line);
+  }
+  return sentences.map((sentence) => (/[.!?]$/.test(sentence) ? sentence : `${sentence}.`));
+}
+
+// --- skills ---------------------------------------------------------------------------------------------------------
+
+/** A class skill with the skills.txt columns the group rules read */
+export interface MasterySkill {
+  id: string;
+  /** Display name (skilldetails.json) */
+  name: string;
+  cls: ClassCode;
+  /** Skill tab 1..3 */
+  page: number;
+  reqLevel: number;
+  /** skills.txt EType (`fire`, `mag` …), '' when none */
+  etype: string;
+  /** skills.txt aurastate */
+  aurastate: string;
+  /** skills.txt passive / aura */
+  passive: boolean;
+  /** skills.txt itypea1 set: the skill needs a weapon type (melee and weapon skills) */
+  weaponSkill: boolean;
+}
+
+/** Class skills in skilldetails.json order (class, tab, row, column) with their skills.txt columns */
+export function readMasterySkills(skills: TsvTable, details: readonly SkillDetail[]): MasterySkill[] {
+  const rows = new Map(skills.rows.map((row) => [row.str('skill'), row]));
+  return details.flatMap((detail) => {
+    const row = rows.get(detail.id);
+    if (detail.cls === null || detail.page === null || row === undefined) return [];
+    return [
+      {
+        id: detail.id,
+        name: detail.name,
+        cls: detail.cls,
+        page: detail.page,
+        reqLevel: detail.reqLevel,
+        etype: row.str('EType'),
+        aurastate: row.str('aurastate'),
+        passive: detail.type !== undefined,
+        weaponSkill: row.str('itypea1') !== '',
+      },
+    ];
+  });
+}
+
+/** What a group rule sees: the skill and the effect it is tested against */
+interface GroupContext {
+  readonly text: string;
+}
+
+/**
+ * Skills lines that name a group instead of skills, and how the data picks its members. Keyed by the skills line as
+ * the token description writes it. Lines that are a class tab's name ("Curses") and skills named in the effect text
+ * ("Hellfire Lance, Flame Wave …" under "Fire and Magic Skills") need no entry.
+ */
+const GROUP_RULES: Readonly<Record<string, (skill: MasterySkill, context: GroupContext) => boolean>> = {
+  // Wretched Scythe, "Your Necromancer's direct damage magic spells": magic damage (EType mag), cast rather than swung
+  // (no itypea1 weapon requirement: Reap Souls is a melee skill), not a passive (Soul Reaper / Bone Mastery). Corpse
+  // Explosion is left out: its damage is magic only when "50% or more of the damage is converted to magic" (its
+  // description), so whether the repeat applies is unclear
+  'Magic Spells': (skill) => skill.etype === 'mag' && !skill.weaponSkill && !skill.passive && skill.id !== 'Corpse Explosion',
+  // Orb + Chipped Ruby, "Triples the cooldown of your level 24 Sorceress spells and adds a 2 second cooldown to
+  // Hydra": the level is read from the text (Lightning Hydra is a level 24 skill too)
+  'Sorceress Spells': (skill, { text }) => {
+    const level = /level (\d+) Sorceress spells/i.exec(text);
+    return level !== null && skill.reqLevel === Number(level[1]);
+  },
+  // Orb + Chipped Skull: ESR's exclusive skills (Omnipotence: "Only one exclusive skill can be active at one time")
+  // share the `exclusiveskill` aura state
+  'Sorceress Exclusives': (skill) => skill.aurastate === 'exclusiveskill',
+  // Claw: the charge-up skills carry a progressive_* aura state; elemental = fire, cold or lightning damage (Tiger
+  // Strike and Execute have none, Dragon Fury is stun)
+  'Elemental Charge-up Skills': (skill) => skill.aurastate.startsWith('progressive') && ['fire', 'cold', 'ltng'].includes(skill.etype),
+};
+
+/**
+ * Skills an effect names in lower case, which the (case-sensitive) scan of the effect text cannot tell from ordinary
+ * words ("converging nova" is not the Barbarian's Nova). Keyed by the skills line.
+ */
+const LOWER_CASE_MENTIONS: Readonly<Record<string, readonly string[]>> = {
+  // Oak Branch: "Double the amount of hits of all pet skills and the damage dealt by contagion"
+  'Wolves, Ravens, Grizzly': ['Contagion'],
+};
+
+/** "Wolves" → "Wolf", "Ravens" → "Raven" (enough for the words the skills lines use) */
+function singular(word: string): string {
+  if (word.endsWith('ves')) return `${word.slice(0, -3)}f`;
+  if (word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
+  return word;
+}
+
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const wholeWord = (word: string, flags = '') => new RegExp(`(?<![\\w'])${escape(word)}(?![\\w'])`, flags);
+const same = (a: string, b: string) => a.localeCompare(b, 'en', { sensitivity: 'accent' }) === 0;
+
+/** One part of a skills line: a skill by name or id, the shared last word added ("Poison" + "Arrow"), or a word */
+function resolvePart(part: string, suffix: string | null, skills: readonly MasterySkill[]): MasterySkill[] {
+  const named = (name: string) => skills.filter((skill) => same(skill.name, name) || same(skill.id, name));
+  const exact = named(part);
+  if (exact.length > 0) return exact;
+  if (suffix !== null) {
+    const suffixed = named(`${part} ${suffix}`);
+    if (suffixed.length > 0) return suffixed;
+  }
+  // "Wolves" → Summon Spirit Wolf and Summon Dire Wolf (a whole word: not Werewolf)
+  if (/\s/.test(part)) return [];
+  const word = wholeWord(singular(part), 'i');
+  return skills.filter((skill) => word.test(skill.name));
+}
+
+/**
+ * The class skills an effect is about: every part of the skills line resolved to skills (else the group's rule, or the
+ * class tab of that name), plus the class skills the effect text names. In skill tree order.
+ */
+export function resolveEffectSkills(
+  heading: string,
+  text: readonly string[],
+  classSkills: readonly MasterySkill[],
+  tabs: readonly string[]
+): { skills: string[]; how: 'names' | 'rule' | 'tab' | 'text' | 'none' } {
+  const parts = heading.split(/\s*,\s*|\s+and\s+/).filter(Boolean);
+  const resolved = parts.map((part, i) => {
+    // The shared word of a list ("Arrow" of "Poison, Immolation, Freezing, Lightning Arrow"): the last word of a later part
+    const later = parts.slice(i + 1).find((other) => /\s/.test(other));
+    return resolvePart(part, later === undefined ? null : (later.split(/\s+/).at(-1) ?? null), classSkills);
+  });
+  const joined = text.join(' ');
+  let picked: MasterySkill[];
+  let how: 'names' | 'rule' | 'tab' | 'text' | 'none';
+  if (resolved.every((skills) => skills.length > 0)) {
+    picked = resolved.flat();
+    how = 'names';
+  } else if (heading in GROUP_RULES) {
+    const rule = GROUP_RULES[heading];
+    picked = classSkills.filter((skill) => rule(skill, { text: joined }));
+    how = 'rule';
+  } else {
+    const tab = tabs.findIndex((name) => same(name, heading));
+    picked = tab === -1 ? [] : classSkills.filter((skill) => skill.page === tab + 1);
+    how = tab === -1 ? 'none' : 'tab';
+  }
+  // Skills the effect text names ("Miasma Bolt, Miasma Chains and Abyss deal …"), by name or id, as capitalised
+  const extra = LOWER_CASE_MENTIONS[heading] ?? [];
+  const mentioned = classSkills.filter(
+    (skill) => [skill.name, skill.id].some((name) => wholeWord(name).test(joined)) || extra.includes(skill.id)
+  );
+  if (how === 'none' && mentioned.length > 0) how = 'text';
+  const ids = new Set([...picked, ...mentioned].map((skill) => skill.id));
+  return { skills: classSkills.filter((skill) => ids.has(skill.id)).map((skill) => skill.id), how };
+}
+
+// --- cube rows ------------------------------------------------------------------------------------------------------
+
+/** "wms,qty=3" → { code: 'wms', qty: 3 }; "am1,nru" → { code: 'am1' } */
+export function readInput(cell: string): MasteryInput {
+  const [code, ...qualifiers] = cell.split(',').map((part) => part.trim());
+  const qty = qualifiers.find((part) => part.startsWith('qty='));
+  const count = qty === undefined ? 1 : Number(qty.slice(4));
+  return count > 1 ? { code, qty: count } : { code };
+}
+
+/** The `weapon-mastery` value a row sets (negative: removes); null for other rows */
+function masteryValue(row: CubeRow): number | null {
+  const mod = row.outputs[0]?.mods.find((entry) => entry.mod === MASTERY_PROPERTY);
+  return mod === undefined || mod.min !== mod.max || mod.min === 0 ? null : mod.min;
+}
+
+const TIER_ORDER: readonly BaseItem['tier'][] = ['normal', 'exceptional', 'elite', 'mythical'];
+
+const sameInputs = (a: readonly MasteryInput[], b: readonly MasteryInput[]) => JSON.stringify(a) === JSON.stringify(b);
+
+/** "Apply Awaken Weapon Mastery Token - Orb 1" → "Orb" */
+function labelOf(row: CubeRow): string {
+  return row.description.replace(/^.* - /, '').replace(/\s+\d+$/, '');
+}
+
+export interface MasteryBuildInput {
+  cube: readonly CubeRow[];
+  /** Display name of an item code or item type code */
+  nameOf: (code: string) => string;
+  /** Every misc / armor / weapons.txt code (bases that do not spawn, such as ESR's LoD copies, are not in `bases`) */
+  itemCodes: ReadonlySet<string>;
+  bases: readonly BaseItem[];
+  types: readonly ItemTypeInfo[];
+  classes: readonly ClassInfo[];
+  strings: ReadonlyMap<string, string>;
+  skills: readonly MasterySkill[];
+  /** Renders the apply rows' other mods */
+  renderMods: ModRenderer;
+}
+
+/** Pairs each specialisation of a token with its description block, by the ingredients the recipe lines name */
+function pairBlocks(
+  masteries: readonly WeaponMastery[],
+  blocks: readonly DescriptionBlock[],
+  nameOf: (code: string) => string
+): Map<number, DescriptionBlock> {
+  const pairs = new Map<number, DescriptionBlock>();
+  if (masteries.length === 1 && blocks.length === 1) {
+    pairs.set(masteries[0].value, blocks[0]);
+    return pairs;
+  }
+  for (const block of blocks) {
+    const named = new Set(block.ingredients.map((name) => name.toLowerCase()));
+    const scored = masteries
+      .filter((mastery) => !pairs.has(mastery.value))
+      .map((mastery) => ({ mastery, score: mastery.inputs.filter((input) => named.has(nameOf(input.code).toLowerCase())).length }))
+      .sort((a, b) => b.score - a.score);
+    const best = scored.at(0);
+    const next = scored.at(1);
+    if (best === undefined || best.score === 0 || (next !== undefined && next.score === best.score)) continue;
+    pairs.set(best.mastery.value, block);
+  }
+  return pairs;
+}
+
+/** Names that differ between a block's recipe lines and the cube row (the game strings are shown, the rows decide) */
+function recipeMismatches(mastery: WeaponMastery, block: DescriptionBlock, nameOf: (code: string) => string): string[] {
+  const issues: string[] = [];
+  if (!same(block.weapon, mastery.label)) issues.push(`names the weapon "${block.weapon}", the rows take ${mastery.label}`);
+  const rowNames = mastery.inputs.map((input) => nameOf(input.code));
+  const named = new Set(block.ingredients.map((name) => name.toLowerCase()));
+  const missing = rowNames.filter((name) => !named.has(name.toLowerCase()));
+  const extra = block.ingredients.filter((name) => !rowNames.some((rowName) => same(rowName, name)));
+  if (missing.length > 0 || extra.length > 0) {
+    issues.push(`names ${block.ingredients.join(', ')}; the rows take ${rowNames.join(', ')}`);
+  }
+  return issues;
+}
+
+export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: MasteriesBundle; warnings: string[] } {
+  const warnings: string[] = [];
+  const warn = (message: string) => warnings.push(`masteries: ${message}`);
+  const { nameOf } = input;
+  const baseByCode = new Map(input.bases.map((base) => [base.code, base]));
+  const typeByCode = new Map(input.types.map((type) => [type.code, type]));
+  const isOfType = (base: BaseItem, code: string) =>
+    [base.type, base.type2].some((own) => own !== null && (typeByCode.get(own)?.ancestors ?? [own]).includes(code));
+  /** The bases an input-1 cell takes: the base itself, or every base of the item type */
+  const basesOf = (code: string): BaseItem[] => {
+    const own = baseByCode.get(code);
+    if (own !== undefined) return [own];
+    return typeByCode.has(code) ? input.bases.filter((base) => isOfType(base, code)) : [];
+  };
+
+  const applyRows = new Map<number, CubeRow[]>();
+  const removeRows = new Map<number, CubeRow[]>();
+  for (const row of input.cube) {
+    const value = masteryValue(row);
+    if (value === null) continue;
+    const target = value > 0 ? applyRows : removeRows;
+    const key = Math.abs(value);
+    target.set(key, [...(target.get(key) ?? []), row]);
+  }
+
+  const masteries: WeaponMastery[] = [];
+  for (const [value, rows] of [...applyRows].sort(([a], [b]) => a - b)) {
+    const [first] = rows;
+    const token = readInput(first.inputs[1] ?? '').code;
+    const inputs = first.inputs.slice(2).map(readInput);
+    const weaponCodes = rows.map((row) => readInput(row.inputs[0] ?? '').code);
+    for (const row of rows) {
+      if (readInput(row.inputs[1] ?? '').code !== token || !sameInputs(row.inputs.slice(2).map(readInput), inputs)) {
+        warn(`cubemain line ${String(row.line)} (value ${String(value)}) takes other inputs than line ${String(first.line)}`);
+      }
+    }
+    const bases = new Set(weaponCodes.flatMap((code) => basesOf(code).map((base) => base.code)));
+    for (const code of weaponCodes) {
+      if (basesOf(code).length === 0 && !input.itemCodes.has(code)) warn(`value ${String(value)}: unknown item "${code}"`);
+    }
+    // Normal, exceptional, elite, then mythical (bases.json order within a tier)
+    const ordered = input.bases
+      .filter((base) => bases.has(base.code))
+      .map((base, index) => ({ base, index }))
+      .sort((a, b) => TIER_ORDER.indexOf(a.base.tier) - TIER_ORDER.indexOf(b.base.tier) || a.index - b.index)
+      .map(({ base }) => base);
+    const classes = new Set(ordered.map((base) => base.cls));
+    const cls = ordered.at(0)?.cls ?? null;
+    if (classes.size !== 1 || cls === null) {
+      warn(`value ${String(value)} (${first.description}): its bases are not of one class; left out`);
+      continue;
+    }
+
+    const remove = removeRows.get(value) ?? [];
+    const removable = new Set(remove.flatMap((row) => basesOf(readInput(row.inputs[0] ?? '').code).map((base) => base.code)));
+    for (const row of remove) {
+      const code = readInput(row.inputs[0] ?? '').code;
+      if (!basesOf(code).some((base) => bases.has(base.code)) && !weaponCodes.includes(code)) {
+        warn(`cubemain line ${String(row.line)} "${row.description}" takes "${code}", which cannot get this mastery`);
+      }
+    }
+    const noRemove = ordered.filter((base) => !removable.has(base.code)).map((base) => base.code);
+    const typeCode = weaponCodes.every((code) => typeByCode.has(code) && !baseByCode.has(code)) ? weaponCodes[0] : undefined;
+    const mods = input.renderMods(first.outputs[0]?.mods.filter((mod) => mod.mod !== MASTERY_PROPERTY) ?? []);
+    masteries.push({
+      value,
+      label: labelOf(first),
+      cls,
+      ...(typeCode === undefined ? {} : { type: typeCode }),
+      bases: ordered.map((base) => base.code),
+      token,
+      inputs,
+      remove: remove.length === 0 ? [] : remove[0].inputs.slice(1).map(readInput),
+      ...(noRemove.length === 0 ? {} : { noRemove }),
+      effects: [],
+      ...(mods.length === 0 ? {} : { mods }),
+    });
+    if (remove.length === 0) warn(`value ${String(value)} (${labelOf(first)}) has no remove row`);
+    else if (noRemove.length > 0) warn(`${labelOf(first)}: no remove row takes ${noRemove.join(', ')}`);
+  }
+
+  // Effects: each token's description, block by block
+  const tabsOf = new Map(input.classes.map((cls) => [cls.code, cls.tabs]));
+  const skillNames: Record<string, string> = {};
+  for (const token of new Set(masteries.map((mastery) => mastery.token))) {
+    const own = masteries.filter((mastery) => mastery.token === token);
+    const text = input.strings.get(`${token}desc`);
+    if (text === undefined) {
+      warn(`no "${token}desc" string; ${own.map((mastery) => mastery.label).join(', ')} without effects`);
+      continue;
+    }
+    const blocks = parseMasteryDescription(text);
+    const pairs = pairBlocks(own, blocks, nameOf);
+    if (blocks.length !== own.length) warn(`${token}desc has ${String(blocks.length)} blocks for ${String(own.length)} specialisations`);
+    for (const mastery of own) {
+      const block = pairs.get(mastery.value);
+      if (block === undefined) {
+        warn(`${token}desc: no block matches ${mastery.label} (value ${String(mastery.value)})`);
+        continue;
+      }
+      for (const issue of recipeMismatches(mastery, block, nameOf))
+        warn(`${token}desc (${mastery.label}, value ${String(mastery.value)}) ${issue}`);
+      const classSkills = input.skills.filter((skill) => skill.cls === mastery.cls);
+      mastery.effects = block.effects.map((effect): MasteryEffect => {
+        const sentences = joinEffectLines(effect.lines);
+        const { skills } = resolveEffectSkills(effect.heading, sentences, classSkills, tabsOf.get(mastery.cls) ?? []);
+        if (skills.length === 0) warn(`${token}desc: "${effect.heading}" (${mastery.label}) names no ${mastery.cls} skill`);
+        for (const id of skills) skillNames[id] = classSkills.find((skill) => skill.id === id)?.name ?? id;
+        return { heading: effect.heading, skills, text: sentences };
+      });
+    }
+  }
+
+  const tokens = new Set(masteries.map((mastery) => mastery.token));
+  const unawakened = input.cube.find((row) => row.inputs.length === 1 && tokens.has(readInput(row.inputs[0]).code))?.outputs[0]?.spec ?? '';
+  if (unawakened === '') warn('no "Unawaken" row: the unawakened token is unknown');
+  const codes = new Set([
+    unawakened,
+    ...masteries.flatMap((mastery) => [
+      mastery.token,
+      ...mastery.inputs.map((entry) => entry.code),
+      ...mastery.remove.map((entry) => entry.code),
+    ]),
+  ]);
+  const names = Object.fromEntries(
+    [...codes]
+      .filter(Boolean)
+      .sort()
+      .map((code) => [code, nameOf(code)])
+  );
+  const sortedSkillNames = Object.fromEntries(Object.entries(skillNames).sort(([a], [b]) => a.localeCompare(b)));
+  return { bundle: { token: unawakened, names, skillNames: sortedSkillNames, masteries }, warnings };
+}
