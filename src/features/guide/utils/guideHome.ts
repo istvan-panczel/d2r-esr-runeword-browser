@@ -85,6 +85,11 @@ export const OFFICIAL_REFERENCES: readonly OfficialReference[] = [
     description: 'Ascendancy Stones: how to unlock them and the challenges that upgrade them.',
   },
   {
+    label: 'Specializations',
+    file: 'specializations.htm',
+    description: 'Mystical Tesseract specializations: the 4 trees, their perks and how to respec them.',
+  },
+  {
     label: 'Frame Table',
     file: 'ias-calculator.html',
     description: 'Attack and cast speed breakpoints (IAS and FCR) per class, shapeshift form, skill and weapon.',

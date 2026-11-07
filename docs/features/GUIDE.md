@@ -73,7 +73,7 @@ above the search, `START_CARDS` are four task-shaped entry cards (two columns fr
 what is it?" → `loot-triage`, "What can I make in the cube?" → `cube-basics`, "Where do I go next?" → `start-here`,
 "Which base for my runeword?" → `/game-data/best-base`. A card whose note is missing from the bundle is hidden
 (`visibleStartCards`). Below "I found something", `OFFICIAL_REFERENCES` lists the official docs pages (Cube Recipes,
-Maps, Endgame Maps, Kill Ledger, Weapon Mastery, Skill Information, Ascendancies, Frame Table, Changelog; the Frame Table,
+Maps, Endgame Maps, Kill Ledger, Weapon Mastery, Skill Information, Ascendancies, Specializations, Frame Table, Changelog; the Frame Table,
 `ias-calculator.html`, has the IAS and FCR breakpoints and is not linked from the official site's nav), each with a one-line
 description, opening in a new tab (`ExternalLink`, `rel="noopener noreferrer"`, ↗ icon). The URLs come from
 `officialDocsUrl(file)` in `engine/linkSchemes.ts`, the same helper that resolves `docs:` links. Both lists are kept in
