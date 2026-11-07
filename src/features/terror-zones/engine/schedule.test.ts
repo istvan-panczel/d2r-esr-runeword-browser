@@ -73,11 +73,14 @@ const RETAIL_SLOTS: [string, string][] = [
   ['2026-11-11T21:00:00Z', 'Act1-Monastery'],
 ];
 
-/*
- * ESR ground truth: the 3.2.24 checks (zones seen in game and the owner's, 2026-10-31 … 2026-11-06) no longer apply,
- * since ESR 3.3 regrouped the zones (22 → 20) and so moved every slot. The 3.3 slots await the owner's in-game check;
- * add them here as `[utc, zoneId]` pairs once seen in game (never from the app's own output).
+/**
+ * ESR 3.3's config: zones observed in game by the owner on 2026-11-07 (ESR 3.3), with the first name the game lists.
+ * (The 3.2.24 checks no longer apply: 3.3 regrouped the zones, 22 → 20, and so moved every slot.)
  */
+const ESR_SLOTS: [string, string, string][] = [
+  ['2026-11-07T15:00:00Z', 'ESR-Zone16', 'The Icecrown Citadel (Tier 5)'],
+  ['2026-11-07T16:00:00Z', 'ESR-Zone01', 'Chasm of Horrors (Tier 1)'],
+];
 
 const bundle = JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data/terrorzones.json'), 'utf-8')) as TerrorZonesBundle;
 
@@ -131,6 +134,15 @@ describe('ESR schedule (committed terrorzones.json)', () => {
   it('keeps the seed exact (it is above 2^53)', () => {
     expect(bundle.config.seed).toBe('16664395743969097666');
     expect(BigInt(bundle.config.seed) > BigInt(Number.MAX_SAFE_INTEGER)).toBe(true);
+  });
+
+  it.each(ESR_SLOTS)('%s is %s (%s), as seen in game', (utc, zoneId, firstLabel) => {
+    const schedule = createSchedule(bundle);
+    const window = currentWindow(schedule, toSeconds(utc) + 1);
+    expect(window?.zone.id).toBe(zoneId);
+    expect(window?.zone.labels[0]).toBe(firstLabel);
+    expect(window?.start).toBe(toSeconds(utc));
+    expect(window?.end).toBe(toSeconds(utc) + HOUR);
   });
 
   it('has 60-minute windows on the hour, each the rotation pick of its slot', () => {

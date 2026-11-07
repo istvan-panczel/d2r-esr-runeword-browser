@@ -36,10 +36,10 @@ at most 55 bytes), since `crypto.subtle.digest` is async. `engine/schedule.ts` t
 `upcomingWindows`, `windowsFrom`, `nextWindowPerZone`).
 
 Checked by `engine/schedule.test.ts` against the retail config (d2emu's published slots via d2r-arcane-tracker's
-tests, and ESR Docs' retail picks). The ESR 3.2.24 in-game checks (2026-10-31 … 2026-11-06) no longer apply, since
-3.3 regrouped the zones and so moved every slot; the ESR 3.3 slots await an in-game check (then they go back into
-the test as dated `[utc, zoneId]` pairs). Until then the ESR tests check the committed bundle's schedule for
-consistency only (hourly windows, no repeat, upcoming and next-per-group windows). `engine/sha1.test.ts` compares the
+tests, and ESR Docs' retail picks) and against ESR 3.3 (the owner's in-game check on 2026-11-07: 15:00 UTC
+`ESR-Zone16`, The Icecrown Citadel (Tier 5); 16:00 `ESR-Zone01`, Chasm of Horrors (Tier 1)), plus the committed
+bundle's consistency (hourly windows, no repeat, upcoming and next-per-group windows). The ESR 3.2.24 in-game checks
+(2026-10-31 … 2026-11-06) were dropped: 3.3 regrouped the zones and so moved every slot. `engine/sha1.test.ts` compares the
 SHA-1 with `node:crypto`.
 
 ## Data: `terrorzones.json`
@@ -144,7 +144,7 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 
 ## Tests
 
-Logic only: `engine/sha1.test.ts`, `engine/schedule.test.ts` (retail ground truth, the ESR bundle's consistency, cache,
+Logic only: `engine/sha1.test.ts`, `engine/schedule.test.ts` (retail and ESR 3.3 ground truth, the ESR bundle's consistency, cache,
 edges: before the start, breaks, an end time), `utils/utils.test.ts` (countdown and wait formatting, watched alert /
 filter / toggle, zone-set fingerprint and watch-list reset, notification decision, boost summary, widget lift),
 `store/preferences.test.ts` (the stored watch list cleared once when the fingerprint changes), `build/bundleTerrorZones.test.ts` (seed precision, names, duplicate
