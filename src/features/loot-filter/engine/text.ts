@@ -12,13 +12,27 @@ export function textLanguages(text: LocalizedText): Language[] {
   return LANGUAGES.filter((language) => text[language] !== undefined);
 }
 
-/** `text` with `language` set to `value` (the others kept), or removed when `value` is empty; undefined once none is left. */
-export function withLanguage(text: LocalizedText, language: Language, value: string): LocalizedText | undefined {
-  // An edited language keeps its place (the file's key order); an added one goes last.
-  const entries = Object.entries(text).map(([key, current]): [string, string | undefined] => [key, key === language ? value : current]);
+/**
+ * `text` with `language` set to `value`, the others kept. An edited language keeps its place (the file's key order), an
+ * added one goes last, and an emptied one stays (as `''`) while it is edited: `pruneEmptyLanguages` drops it afterwards.
+ */
+export function withLanguage(text: LocalizedText, language: Language, value: string): LocalizedText {
+  const entries = Object.entries(text).map(([key, current]) => [key, key === language ? value : current]);
   if (!(language in text)) entries.push([language, value]);
-  const next: LocalizedText = Object.fromEntries(entries.filter(([, entry]) => entry !== undefined && entry !== ''));
-  return Object.keys(next).length === 0 ? undefined : next;
+  return Object.fromEntries(entries) as LocalizedText;
+}
+
+/** `text` without its empty languages (the editor's emptied fields); undefined when none is left. */
+export function pruneEmptyLanguages(text: LocalizedText): LocalizedText | undefined {
+  const entries = Object.entries(text).filter(([, value]) => value !== '');
+  if (entries.length === Object.keys(text).length) return text;
+  return entries.length === 0 ? undefined : (Object.fromEntries(entries));
+}
+
+/** The language a per-language text shows by default (`resolveText` without a language): enUS, else its first one. */
+export function shownLanguage(text: LocalizedText): Language {
+  if (text.enUS !== undefined) return 'enUS';
+  return LANGUAGES.find((language) => language === Object.keys(text)[0]) ?? 'enUS';
 }
 
 /** A filter level's name in the language (enUS by default), `''` when it has none. */

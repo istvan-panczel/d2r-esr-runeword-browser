@@ -1,4 +1,14 @@
-import { PLACEHOLDERS, findPlaceholder, listPlaceholders, resolveText, splitColorRuns, textLanguages, withLanguage } from './text.ts';
+import {
+  PLACEHOLDERS,
+  findPlaceholder,
+  listPlaceholders,
+  resolveText,
+  splitColorRuns,
+  pruneEmptyLanguages,
+  shownLanguage,
+  textLanguages,
+  withLanguage,
+} from './text.ts';
 
 describe('resolveText', () => {
   it('resolves strings and per-language texts with fallbacks', () => {
@@ -49,13 +59,30 @@ describe('placeholders', () => {
 });
 
 describe('per-language texts', () => {
-  it('edits one language and keeps the others', () => {
+  it('edits one language and keeps the others, an emptied one too until pruned', () => {
     const text = { enUS: 'Rune', deDE: 'Rune', frFR: 'Rune' };
     expect(withLanguage(text, 'enUS', 'High rune')).toEqual({ enUS: 'High rune', deDE: 'Rune', frFR: 'Rune' });
     expect(withLanguage(text, 'zhTW', '符文')).toEqual({ ...text, zhTW: '符文' });
-    expect(withLanguage(text, 'deDE', '')).toEqual({ enUS: 'Rune', frFR: 'Rune' });
-    expect(withLanguage({ enUS: 'x' }, 'enUS', '')).toBeUndefined();
-    expect(Object.keys(withLanguage({ deDE: 'a', enUS: 'b' }, 'deDE', 'c') ?? {})).toEqual(['deDE', 'enUS']);
+    // Emptying the edited language keeps it (and its place), so the field stays on it while typing
+    expect(Object.entries(withLanguage(text, 'enUS', ''))).toEqual([
+      ['enUS', ''],
+      ['deDE', 'Rune'],
+      ['frFR', 'Rune'],
+    ]);
+    expect(withLanguage({ enUS: 'x' }, 'enUS', '')).toEqual({ enUS: '' });
+    expect(Object.keys(withLanguage({ deDE: 'a', enUS: 'b' }, 'deDE', 'c'))).toEqual(['deDE', 'enUS']);
+  });
+
+  it('prunes the emptied languages, keeping the object when nothing is empty', () => {
+    const full = { enUS: 'a', deDE: 'b' };
+    expect(pruneEmptyLanguages(full)).toBe(full);
+    expect(pruneEmptyLanguages({ enUS: '', deDE: 'b' })).toEqual({ deDE: 'b' });
+    expect(pruneEmptyLanguages({ enUS: '' })).toBeUndefined();
+  });
+
+  it('shows enUS, else the first language of the file', () => {
+    expect(shownLanguage({ deDE: 'a', enUS: 'b' })).toBe('enUS');
+    expect(shownLanguage({ frFR: 'a', deDE: 'b' })).toBe('frFR');
   });
 
   it('lists the languages in the guide order', () => {

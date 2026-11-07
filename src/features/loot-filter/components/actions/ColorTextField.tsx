@@ -9,7 +9,9 @@ import {
   PLACEHOLDERS,
   findPlaceholder,
   listPlaceholders,
+  pruneEmptyLanguages,
   resolveText,
+  shownLanguage,
   textLanguages,
   withLanguage,
   type PlaceholderContext,
@@ -70,15 +72,27 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   // (after the close animation) would otherwise move the focus back to the menu button.
   const pendingCaret = useRef<number | null>(null);
 
-  const [chosenLanguage, setChosenLanguage] = useState<Language>('enUS');
+  const [chosenLanguage, setChosenLanguage] = useState<Language | null>(null);
   const localized = typeof value === 'object' ? value : undefined;
   const present = localized === undefined ? [] : textLanguages(localized);
-  // The chosen language while the text has it (or it was just added), else the first one it has.
-  const language = localized === undefined || localized[chosenLanguage] !== undefined || present.length === 0 ? chosenLanguage : present[0];
-  const text = localized === undefined ? (typeof value === 'string' ? value : '') : (localized[language] ?? resolveText(localized) ?? '');
+  // The language the user picked while the text has it (an emptied one stays as '' until the field loses focus), else
+  // the one the text shows by default.
+  const language =
+    localized === undefined
+      ? 'enUS'
+      : chosenLanguage !== null && localized[chosenLanguage] !== undefined
+        ? chosenLanguage
+        : shownLanguage(localized);
+  const text = localized === undefined ? (typeof value === 'string' ? value : '') : (localized[language] ?? '');
   const setText = (next: string) => {
     if (localized === undefined) onChange(next === '' ? undefined : next);
     else onChange(withLanguage(localized, language, next));
+  };
+  /** Leaving the field drops the languages emptied in it (all of them: the key goes). */
+  const pruneOnBlur = () => {
+    if (localized === undefined) return;
+    const pruned = pruneEmptyLanguages(localized);
+    if (pruned !== localized) onChange(pruned);
   };
   const insert = (token: string) => {
     const input = inputRef.current;
@@ -138,6 +152,7 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
           onChange={(event) => {
             setText(event.target.value);
           }}
+          onBlur={pruneOnBlur}
         />
         <Popover open={colorsOpen} onOpenChange={setColorsOpen}>
           <PopoverTrigger asChild>
@@ -217,8 +232,8 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
       {text !== '' && <LabelPreview text={previewPlaceholders(text)} defaultColor={defaultColor} className="px-2 py-1.5 text-sm" />}
       {localized !== undefined && (
         <p className="text-xs text-muted-foreground">
-          {present.length} {present.length === 1 ? 'language' : 'languages'} ({present.join(', ')}); a missing one falls back to enUS.
-          Emptying a language removes it.
+          {present.length} {present.length === 1 ? 'language' : 'languages'} ({present.join(', ')}); a missing one falls back to enUS. A
+          language left empty is removed when you leave the field.
         </p>
       )}
       {problems.map((problem) => (
