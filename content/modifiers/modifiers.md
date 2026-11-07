@@ -596,7 +596,7 @@ stats: item_skillonhit (198), item_skillonattack (195), item_skillongethit (201)
 
 summary: A percent chance to cast the listed skill at the given level when the trigger happens: hitting, attacking, being struck, killing, casting or dying.
 
-body: The item picks the skill, level and chance [ESR config]. Triggers: "on Striking" needs a hit that lands, melee or missile [ESR files]. "on Melee Attack" fires on an attack even when it misses [Vanilla]; the table also lists missile attacks, as vanilla's does, but the old wiki (quoting Amazon Basin) says it does not fire for bows and crossbows [ESR files] [Community 3.9]. "when Struck" fires when you are hit in melee or by a missile [ESR files]. "when Taking Damage" fires on every damage instance you take; poison and bleed trigger it only when they are applied [Mod author]. "when you Kill" fires on your kills; ESR moved it to the function without the hit check, so kills by spells may now count too [ESR files]. ESR adds "on Casting a Skill": real casts in the cast animation that pay their cost, never auras or procs, so it cannot chain [ESR config]. Procs fly at the target like a normal cast [ESR config]. They ignore the cooldown of the skill they cast, and there is no internal proc cooldown [Mod author]. Some skills cannot proc while a blocking state is on [ESR config].
+body: The item picks the skill, level and chance [ESR config]. Triggers: "on Striking" needs a hit that lands, melee or missile [ESR files]. "on Melee Attack" fires on an attack even when it misses [Vanilla]; the table also lists missile attacks, as vanilla's does, but the old wiki (quoting Amazon Basin) says it does not fire for bows and crossbows [ESR files] [Community 3.9]. "when Struck" fires when you are hit in melee or by a missile [ESR files]. "when Taking Damage" fires on every damage instance you take; poison and bleed trigger it only when they are applied [Mod author]. "when you Kill" fires on your kills; ESR moved it to the function without the hit check, so kills by spells may now count too [ESR files]. ESR adds "on Casting a Skill": real casts in the cast animation that pay their cost, never auras or procs, so it cannot chain [ESR config]. Procs fly at the target like a normal cast [ESR config]. They ignore the cooldown of the skill they cast, and there is no internal proc cooldown [Mod author]. Some skills cannot proc while a blocking state is on [ESR config]. Powers that fire "every N attacks" (the mythical and other item powers that say so) count each Whirlwind hit as a third of an attack since 3.3: 15 Whirlwind swings fire three "every 5 attacks" procs [ESR files, patch notes 3.3].
 
 facts:
 
@@ -607,6 +607,7 @@ facts:
 - Restrict: `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml` — item procs are checked only when the skill row has `ItemUseRestrict = 1`.
 - Crossbows put all skills on cooldown while equipped [Community 3.9].
 - The mod author (2026-11-07): item procs do not respect the cast skill's cooldown, there is no internal proc cooldown and none is planned; "when Taking Damage" (376) fires on every damage instance, but for poison and bleed only on application.
+- Patch 3.3 (`ESR/patchnotes/3.3.md` line 34): "Fixed a bug where whirlwind would proc “every x attack” procs all the time. Now every attack in whirlwind is counted as a third of a regular attack for the purpose of those procs (so every 15 swings in whirlwind will proc 3 “every 5 attacks” procs)."
 
 caveats:
 
@@ -614,7 +615,7 @@ caveats:
 - "on Melee Attack" with bows and crossbows: the table says yes, the old wiki says no. Check in game.
 - Whether attack skills (attack animation, not cast animation) ever trigger "on Casting a Skill": by the config, no.
 
-sources: `excel/itemstatcost.txt`; `ESR/d2rloader/config/celestialrayone.cast-on-cast.toml`; `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml`; ESR mod author (Discord, 2026-11-07); D2MOO/D2Game/src/SKILLS/SkillItem.cpp:1664–1780; wiki "Chance to Cast (CtC)" (quotes Amazon Basin), "Crossbows and cooldown"
+sources: `excel/itemstatcost.txt`; `ESR/d2rloader/config/celestialrayone.cast-on-cast.toml`; `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml`; `ESR/patchnotes/3.3.md`; ESR mod author (Discord, 2026-11-07); D2MOO/D2Game/src/SKILLS/SkillItem.cpp:1664–1780; wiki "Chance to Cast (CtC)" (quotes Amazon Basin), "Crossbows and cooldown"
 
 ---
 
