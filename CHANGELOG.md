@@ -2,6 +2,61 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.59.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.58.0...v1.59.0) (2026-11-07)
+
+### Features
+
+* **game-data:** skills.txt names in lootfilter.json for loot filter formulas ([0085482](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0085482444299a308cd34ecd5c3f75627519d019))
+* **loot-filter:** edit per-language texts and test in a game language ([313aa57](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/313aa57675d0af0a30dfb25d284df9d2cd9a760e))
+* **loot-filter:** formulas ([004efc3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/004efc30f51e1104771b62af669a3ad79bd125c3))
+* **loot-filter:** plugin 1.8.2 stat values and unidentified items ([fcd106d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fcd106dcb8609e75b3740c70dedf02af979a3567))
+* **loot-filter:** show rule ([f52a116](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f52a116a48d5a5a2883f89a5c5f6ee61675a3fad))
+* **runewords:** show the page's socketable bonuses per item-type group ([08bdb78](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/08bdb78fc271e4fcf543a23292d881da7b2e220e))
+
+### Bug Fixes
+
+* **builds:** anointment pool from the item's base type for ESR 3.3 ([bb6bd2a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bb6bd2a76a67b852a8200ea68b79350fec090943))
+* **campaign-map:** alien artefact drop and page-name notes for esr 3.3 ([7178d57](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7178d570552d187424005d1a83bf750e841513c4))
+* **data-sync:** parse the ESR 3.3 runewords and gemwords layout ([29ac437](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/29ac437365359bdbc7f007c96650c05494fc3448))
+* **game-data:** format the ESR 3.3 bleed duration (%.2f) ([fa8e025](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fa8e0259a2cfa1f1aaed8830d6c0570e682b8985))
+* **game-data:** per-item-type anointment pools and perk sanctification for ESR 3.3 ([ea634fc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ea634fc7a432836e9270c276b4674da67226c9bb))
+* **game-data:** perk conditions and cube families for ESR 3.3 recipes ([c729a76](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c729a76445d262e5b042c80cc7e934a272802e60))
+* **game-data:** read the ESR 3.3 weapon mastery rows and superior frequencies ([52cfdfb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/52cfdfb1794147b812d0bf68bf45abbee3f8e98e))
+* **game-data:** read the ESR 3.3 weapon mastery rows and superior frequencies ([865c893](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/865c89379d149a2a28cc345deadf44d445b3f0eb))
+* **loot-filter:** accept localised level names (plugin 1.8.2) ([6589dad](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6589dad83fe431fd32b32e8c3d70b3da8e52685a))
+* **loot-filter:** colour codes from the 3.3 guide ([285e6f1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/285e6f1115ffeaa095e430e4b8772bcfc87dbc90))
+* **loot-filter:** keep the gem grades as the misc browser ladder in ESR 3.3 ([d983248](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d983248994327e31a1e40ebc6a94f04ffa38d230))
+* **loot-filter:** per-language editing stays on the edited language ([2ceda91](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2ceda91979a9cb40c0b92aad39c826a65086da65))
+* **loot-filter:** the 16 per-level stats of ESR 3.3 in STAT_SCALES ([c14d2d3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c14d2d3e84adca879306ba815a224eb84523d868))
+* **socketables:** label the bonus columns after the ESR 3.3 gems.htm headers ([95c6c05](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/95c6c051914be3ec770403dd00023ad74f1e901d))
+* **terror-zones:** schedule for ESR 3.3 and watched-group reset ([16c2da5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/16c2da594ef7d74ad540847e2c851001fab25792))
+
+### Documentation
+
+* **game-data:** masteries, superior frequencies, anointment pools and perks for ESR 3.3 ([7066ac7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7066ac767d95dc508e288db7158047f5ecf6bde9))
+* **guide:** corrections and additions for ESR 3.3 ([862a9c5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/862a9c545b329479ae3938e4d8f9a3b58ae32839))
+* **loot-filter:** chat once per item and the launcher's chat switch ([7aa6c64](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7aa6c647a485860cdc234a3266cabc4b49898297))
+* **loot-filter:** checklist of the 3.3 guide against the editor ([590d3d2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/590d3d23910b9084018d318af0df938a041011cc))
+* **loot-filter:** the 3.3 guide (plugin 1.8.2) ([e6197ff](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e6197ffbba88a594de870b5348b020ea62cd151d))
+* **modifiers:** apply the mod author's answers and the ESR 3.3 facts ([61f88ed](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/61f88ed7fd3519be2c18ee611fa7762c9ba74f35))
+* **uniques:** the weapon mastery variant notes are property lines since ESR 3.3 ([824813f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/824813f6894241e268f91bb045c90dde9360fb3e))
+
+### Styles
+
+* **loot-filter:** format text.ts ([42b90ee](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/42b90eee2d775615749347c062b462e74fc8ab36))
+
+### Chores
+
+* **game-data:** update to ESR 3.3 ([070e6ef](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/070e6ef759a84fa0ca00da65f6f7a10df9587f61))
+* gitignored owner-notes folder for owner checklists and Discord drafts ([f1b0529](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f1b052922735711bfb41687866452c69e89870d4))
+* **loot-filter:** refresh Sully's QoL template to v0.7.0 ([461a21d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/461a21d0f869b2a832ccef66b27eb0f6145a1446))
+
+### Tests
+
+* **stash:** item text floor 94 % for the ESR 3.3 stash fixture ([8f583f0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8f583f0fb4d6d16afd31f590ce4d33b7d656a728))
+* **stash:** the ESR 3.3 stash fixture ([de4471f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/de4471f3a6d1f8bfd6bec37b43613cff4580428b))
+* **terror-zones:** owner's ESR 3.3 in-game slots as ground truth ([e7b1484](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e7b1484354a722ebcd78a301896f8592ed0d1116))
+
 ## [1.58.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.57.0...v1.58.0) (2026-11-07)
 
 ### Features
