@@ -7,9 +7,12 @@ every page and a full schedule page at `/terror-zones` (Tools menu). Code: `src/
 ## How the game picks the zone
 
 Offline D2R, and so ESR (played offline), does not ask a server: it works the terror zone out from
-`data/hd/global/excel/desecratedzones.json` and the PC clock. ESR 3.2.24 ships one config: start
-2025-12-05 00:00:00 UTC, seed `16664395743969097666`, 60-minute zones, no break, 22 zone groups `ESR-Zone01` …
-`ESR-Zone22`, each a list of `level_id`s.
+`data/hd/global/excel/desecratedzones.json` and the PC clock. ESR 3.3 ships one config: start
+2025-12-05 00:00:00 UTC, seed `16664395743969097666`, 60-minute zones, no break, 20 zone groups `ESR-Zone01` …
+`ESR-Zone20`, each a list of `level_id`s. Since 3.3 every campaign group also holds one endgame map and all zones
+but the towns and a few special levels belong to a group; 3.2.24 had 22 groups, `ESR-Zone19` … `ESR-Zone22` being the endgame-map groups.
+3.3 reused `ESR-Zone19` and `ESR-Zone20` for two new Act 1 groups (see [Watched groups](#watched-groups-and-notifications)
+for the starred-group reset).
 
 The rotation (recovered from the game executable by d2r-arcane-tracker, `docs/TERROR_ZONE_FINDINGS_2026.md` there):
 
@@ -33,18 +36,20 @@ at most 55 bytes), since `crypto.subtle.digest` is async. `engine/schedule.ts` t
 `upcomingWindows`, `windowsFrom`, `nextWindowPerZone`).
 
 Checked by `engine/schedule.test.ts` against the retail config (d2emu's published slots via d2r-arcane-tracker's
-tests, and ESR Docs' retail picks) and against ESR 3.2.24 (zones seen in game: 2026-10-31 23:00 UTC `ESR-Zone19`,
-2026-11-01 00:00 `ESR-Zone03`; the owner's check: 2026-11-06 13:00 `ESR-Zone21`, 14:00 `ESR-Zone15`, 15:00
-`ESR-Zone16`, 16:00 `ESR-Zone13`). `engine/sha1.test.ts` compares the SHA-1 with `node:crypto`.
+tests, and ESR Docs' retail picks). The ESR 3.2.24 in-game checks (2026-10-31 … 2026-11-06) no longer apply, since
+3.3 regrouped the zones and so moved every slot; the ESR 3.3 slots await an in-game check (then they go back into
+the test as dated `[utc, zoneId]` pairs). Until then the ESR tests check the committed bundle's schedule for
+consistency only (hourly windows, no repeat, upcoming and next-per-group windows). `engine/sha1.test.ts` compares the
+SHA-1 with `node:crypto`.
 
 ## Data: `terrorzones.json`
 
 ```jsonc
 {
-  "esrVersion": "3.2.24",
+  "esrVersion": "3.3",
   "config": { "start": 1764892800, "end": null, "seed": "16664395743969097666", "zoneMinutes": 60, "breakMinutes": 0 },
   "boosts": [{ "version": "expansion", "difficulty": 0, "minLevel": 3, "maxLevel": 45, "levelBoost": 4, "xpPercent": 50 }, …],
-  "zones": [{ "id": "ESR-Zone03", "labels": ["Catacombs", "The Secret Cow Level"], "areas": [{ "id": 39, "name": "The Secret Cow Level" }, …] }, …]
+  "zones": [{ "id": "ESR-Zone03", "labels": ["Catacombs", "Necropolis (Tier 1)", "The Secret Cow Level"], "areas": [{ "id": 39, "name": "The Secret Cow Level" }, …] }, …]
 }
 ```
 
@@ -56,11 +61,11 @@ tests, and ESR Docs' retail picks) and against ESR 3.2.24 (zones seen in game: 2
   are the zone's levels as areas.json names them (the Areas page and campaign map names; map entrances and removed
   levels are not areas, `terrorZoneUnlistedLevels`).
 - `boosts`: `game_difficulties.<expansion|rotw>.<difficulty>.defaults`: `boost_level`, `boost_experience_percent` and
-  the monster level bounds `bound_incl_min` / `bound_incl_max`. ESR 3.2.24: Lord of Destruction +4 levels, +50% XP;
+  the monster level bounds `bound_incl_min` / `bound_incl_max`. ESR 3.3 (as 3.2.24): Lord of Destruction +4 levels, +50% XP;
   Reign of the Warlock +2, +25%; bounds 3–45 / 40–71 / 70–96. The herald tiers and unique mod boosts of RotW Hell are
   not carried.
 
-The browser loads it with `loadGameDataFile('terrorzones')` (manifest + one 9 KB file) into one shared store
+The browser loads it with `loadGameDataFile('terrorzones')` (manifest + one 12 KB file) into one shared store
 (`store/scheduleStore.ts`, `useTerrorZoneSchedule`), so the widget and the page share the `Rotation` cache.
 
 ## Widget
@@ -97,7 +102,7 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 - a `ToolbarCard`: "Watched only" filter and the notification toggle;
 - **Schedule**: the next 48 slots in local time with a day separator per local day, the current slot first and
   highlighted, watched rows highlighted, star toggles; "Load 48 more hours";
-- **Zone groups**: all 22 in file order, star toggle, the game's names, "Next: Sun 14:00 (in 2 d 4 h)" or "Terrorized
+- **Zone groups**: all 20 in file order, star toggle, the game's names, "Next: Sun 14:00 (in 2 d 4 h)" or "Terrorized
   now" (`nextWindowPerZone`, up to 1000 slots ahead), and a collapsible list of the group's areas linking to the
   campaign map;
 - **Terror boost**: a table per game version and difficulty;
@@ -110,6 +115,13 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 - Users star whole zone groups (not single areas). Stored in this browser only: `terrorZones.watched` (zone ids) in
   localStorage, through one shared store (`store/preferences.ts`) so the widget and the page stay in sync; other tabs
   follow through the `storage` event. Ids the current bundle does not have are ignored (`knownWatched`).
+- **Reset when ESR regroups the zones**: an id can survive with another meaning (3.3 turned `ESR-Zone19` / `ESR-Zone20`
+  from endgame-map groups into Act 1 groups), so `terrorZones.watchedZoneSet` keeps the `zoneSetFingerprint` of the
+  groups the list was starred against: the zone count and an FNV-1a hash of every group's id and area ids in file order
+  (not the labels, seed, start or durations). When a bundle loads (`scheduleStore`, before anything renders it)
+  `syncWatchedZoneSet` compares it: a different or missing fingerprint with a non-empty list clears the list once
+  (`reconcileWatched`; a missing one means a list starred with ESR 3.2.24, before the key existed), then the new
+  fingerprint is stored. Any release that adds or moves an area clears every star, not only the changed groups'.
 - Watched groups are highlighted with the `warning` token (`WATCHED_ROW_CLASS`: brown-orange in light, yellow in dark)
   and the favourites' amber star.
 - **Notifications** (opt-in, `terrorZones.notify`): the page's toggle asks for permission on the click only, then shows
@@ -132,7 +144,8 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 
 ## Tests
 
-Logic only: `engine/sha1.test.ts`, `engine/schedule.test.ts` (retail and ESR ground truth, cache, edges: before the
-start, breaks, an end time), `utils/utils.test.ts` (countdown and wait formatting, watched alert / filter / toggle,
-notification decision, boost summary, widget lift), `build/bundleTerrorZones.test.ts` (seed precision, names, duplicate
+Logic only: `engine/sha1.test.ts`, `engine/schedule.test.ts` (retail ground truth, the ESR bundle's consistency, cache,
+edges: before the start, breaks, an end time), `utils/utils.test.ts` (countdown and wait formatting, watched alert /
+filter / toggle, zone-set fingerprint and watch-list reset, notification decision, boost summary, widget lift),
+`store/preferences.test.ts` (the stored watch list cleared once when the fingerprint changes), `build/bundleTerrorZones.test.ts` (seed precision, names, duplicate
 ids, invalid configs) and the committed-bundle checks in `bundleIntegrity.test.ts`.

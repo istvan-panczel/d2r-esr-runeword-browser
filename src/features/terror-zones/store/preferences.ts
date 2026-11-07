@@ -1,9 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import { readPersistentJson, writePersistentJson, type PersistentStorage } from '@/core/hooks/usePersistentState';
-import { toggleWatched } from '../utils/watched';
+import { reconcileWatched, toggleWatched } from '../utils/watched';
 
 /** localStorage keys (this browser only; nothing is synced to an account) */
 export const WATCHED_STORAGE_KEY = 'terrorZones.watched';
+/** `zoneSetFingerprint` of the zone groups the watch list was starred against (cleared once when ESR regroups them) */
+export const WATCHED_ZONE_SET_STORAGE_KEY = 'terrorZones.watchedZoneSet';
 export const NOTIFY_STORAGE_KEY = 'terrorZones.notify';
 /**
  * The start (Unix seconds) of the last slot a tab sent a notification for, so a second open tab does not notify again.
@@ -13,6 +15,7 @@ export const LAST_NOTIFIED_STORAGE_KEY = 'terrorZones.lastNotifiedStart';
 export const WIDGET_OPEN_STORAGE_KEY = 'terrorZones.widgetOpen';
 
 const isStringList = (value: unknown): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+const isString = (value: unknown): value is string => typeof value === 'string';
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
 const isSeconds = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value);
 
@@ -76,6 +79,25 @@ export function toggleWatchedZone(id: string): void {
   const watched = toggleWatched(getSnapshot().watched, id);
   writePersistentJson(storage(), WATCHED_STORAGE_KEY, watched);
   emit({ ...getSnapshot(), watched });
+}
+
+/**
+ * Called once per loaded bundle, before anything shows the watch list: when the zone groups changed since the list was
+ * starred (`fingerprint` differs from the stored one), the list is cleared, since a kept id may now name another group.
+ * Then the fingerprint is stored.
+ */
+export function syncWatchedZoneSet(fingerprint: string): void {
+  const store = storage();
+  const stored = readPersistentJson<string | null>(store, WATCHED_ZONE_SET_STORAGE_KEY, null, isString);
+  if (stored === fingerprint) return;
+  const prefs = read();
+  const watched = reconcileWatched(prefs.watched, stored, fingerprint);
+  if (watched !== prefs.watched) {
+    console.info('Terror zone groups changed with this ESR version: starred groups cleared');
+    writePersistentJson(store, WATCHED_STORAGE_KEY, watched);
+    emit({ ...prefs, watched });
+  }
+  writePersistentJson(store, WATCHED_ZONE_SET_STORAGE_KEY, fingerprint);
 }
 
 export function setNotifyEnabled(notify: boolean): void {

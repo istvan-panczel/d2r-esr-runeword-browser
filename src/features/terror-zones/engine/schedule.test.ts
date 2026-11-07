@@ -73,15 +73,11 @@ const RETAIL_SLOTS: [string, string][] = [
   ['2026-11-11T21:00:00Z', 'Act1-Monastery'],
 ];
 
-/** ESR 3.2.24's config: zones seen in game (ESR Docs' rules) and the owner's checks */
-const ESR_SLOTS: [string, string][] = [
-  ['2026-10-31T23:00:00Z', 'ESR-Zone19'],
-  ['2026-11-01T00:00:00Z', 'ESR-Zone03'],
-  ['2026-11-06T13:00:00Z', 'ESR-Zone21'],
-  ['2026-11-06T14:00:00Z', 'ESR-Zone15'],
-  ['2026-11-06T15:00:00Z', 'ESR-Zone16'],
-  ['2026-11-06T16:00:00Z', 'ESR-Zone13'],
-];
+/*
+ * ESR ground truth: the 3.2.24 checks (zones seen in game and the owner's, 2026-10-31 … 2026-11-06) no longer apply,
+ * since ESR 3.3 regrouped the zones (22 → 20) and so moved every slot. The 3.3 slots await the owner's in-game check;
+ * add them here as `[utc, zoneId]` pairs once seen in game (never from the app's own output).
+ */
 
 const bundle = JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data/terrorzones.json'), 'utf-8')) as TerrorZonesBundle;
 
@@ -137,35 +133,49 @@ describe('ESR schedule (committed terrorzones.json)', () => {
     expect(BigInt(bundle.config.seed) > BigInt(Number.MAX_SAFE_INTEGER)).toBe(true);
   });
 
-  it.each(ESR_SLOTS)('%s is %s', (utc, zoneId) => {
+  it('has 60-minute windows on the hour, each the rotation pick of its slot', () => {
     const schedule = createSchedule(bundle);
-    const window = currentWindow(schedule, toSeconds(utc) + 1);
-    expect(window?.zone.id).toBe(zoneId);
-    expect(window?.start).toBe(toSeconds(utc));
-    expect(window?.end).toBe(toSeconds(utc) + HOUR);
+    const now = toSeconds('2026-11-07T13:20:00Z');
+    const window = currentWindow(schedule, now);
+    const slot = (toSeconds('2026-11-07T13:00:00Z') - bundle.config.start) / HOUR;
+    expect(window?.slot).toBe(slot);
+    expect(window?.start).toBe(toSeconds('2026-11-07T13:00:00Z'));
+    expect(window?.end).toBe(toSeconds('2026-11-07T14:00:00Z'));
+    expect(window?.zone).toBe(bundle.zones[schedule.rotation.pick(slot)]);
+  });
+
+  it('never terrorizes the same group twice in a row', () => {
+    const schedule = createSchedule(bundle);
+    const windows = windowsFrom(schedule, 0, 2000);
+    for (let i = 1; i < windows.length; i++) expect(windows[i]?.zone.id).not.toBe(windows[i - 1]?.zone.id);
   });
 
   it('lists the upcoming windows back to back, the next starting where the current ends', () => {
     const schedule = createSchedule(bundle);
-    const now = toSeconds('2026-11-06T13:20:00Z');
+    const now = toSeconds('2026-11-07T13:20:00Z');
     const current = currentWindow(schedule, now);
     const upcoming = upcomingWindows(schedule, now, 3);
-    expect(upcoming.map((window) => window.zone.id)).toEqual(['ESR-Zone15', 'ESR-Zone16', 'ESR-Zone13']);
+    expect(upcoming).toHaveLength(3);
     expect(upcoming[0]?.start).toBe(current?.end);
     expect(upcoming.map((window) => window.slot)).toEqual([1, 2, 3].map((offset) => (current?.slot ?? 0) + offset));
+    // each one is the group that will be current then
+    for (const window of upcoming) expect(currentWindow(schedule, window.start + 1)?.zone.id).toBe(window.zone.id);
   });
 
   it('finds the next window of every group (the current one counts) within the lookahead', () => {
     const schedule = createSchedule(bundle);
-    const now = toSeconds('2026-11-06T13:20:00Z');
+    const now = toSeconds('2026-11-07T13:20:00Z');
+    const current = currentWindow(schedule, now);
     const next = nextWindowPerZone(schedule, now);
     expect(next).toHaveLength(bundle.zones.length);
-    expect(next.every((window) => window !== null)).toBe(true);
-    const zone21 = bundle.zones.findIndex((zone) => zone.id === 'ESR-Zone21');
-    expect(next[zone21]?.start).toBe(toSeconds('2026-11-06T13:00:00Z'));
-    const zone16 = bundle.zones.findIndex((zone) => zone.id === 'ESR-Zone16');
-    expect(next[zone16]?.start).toBe(toSeconds('2026-11-06T15:00:00Z'));
-    for (const window of next) expect(window === null || window.end > now).toBe(true);
+    expect(next[current?.zoneIndex ?? -1]).toEqual(current);
+    const ahead = windowsFrom(schedule, current?.slot ?? 0, 1000);
+    next.forEach((window, zoneIndex) => {
+      expect(window?.zone.id).toBe(bundle.zones[zoneIndex]?.id);
+      expect(window?.end).toBeGreaterThan(now);
+      // the first window of the group from the current slot on, none before it
+      expect(window?.slot).toBe(ahead.find((candidate) => candidate.zoneIndex === zoneIndex)?.slot);
+    });
   });
 });
 

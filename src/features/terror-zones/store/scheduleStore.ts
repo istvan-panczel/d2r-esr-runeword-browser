@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { loadGameDataFile } from '@/features/game-data/engine/browser/loadGameData';
 import { createSchedule, type TerrorZoneSchedule } from '../engine/schedule';
+import { zoneSetFingerprint } from '../utils/watched';
+import { syncWatchedZoneSet } from './preferences';
 
 /** The shared schedule: null while loading (`error` null) or after a failed load (`error` set). */
 export interface TerrorZoneScheduleState {
@@ -32,6 +34,8 @@ function load(): void {
     .then(
       (schedule) => {
         loading = false;
+        // before the first render with this bundle, so a reused group id never shows (or notifies) as starred
+        syncWatchedZoneSet(zoneSetFingerprint(schedule.bundle.zones));
         setState({ schedule, error: null });
       },
       (error: unknown) => {
