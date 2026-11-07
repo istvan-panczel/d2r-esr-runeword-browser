@@ -137,11 +137,11 @@ export function UnlockPanel({ rules }: { readonly rules: SpecializationRules }) 
                 {respecToken !== undefined && (
                   <>
                     {' '}
-                    ({rules.unlearnCost} {respecToken.name}s
+                    ({rules.unlearnCost} × {respecToken.name}
                     {respecToken.recipe !== undefined && (
                       <>
-                        , {respecToken.recipe.qty} {respecToken.recipe.name}s each: {rules.unlearnCost * respecToken.recipe.qty}{' '}
-                        {respecToken.recipe.name}s
+                        , each made from {respecToken.recipe.qty} × {respecToken.recipe.name}: {rules.unlearnCost * respecToken.recipe.qty}{' '}
+                        × {respecToken.recipe.name} in all
                       </>
                     )}
                     )

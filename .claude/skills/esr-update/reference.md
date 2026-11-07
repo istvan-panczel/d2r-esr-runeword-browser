@@ -173,6 +173,19 @@ the owner's OK.
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
   specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
   formulas read `weapon_mastery_orb_1`) and the 4 warnings of 3.3.
+- **Specializations** (`docs/specializations.htm`): specializations.json comes from
+  `celestialrayone.specializations.toml` (rules, perk stats and string keys per tree), the strings, misc.txt / cubemain
+  (Tesseract, Token of Absolution), the treasure classes (shard drops, perk-gated drops) and the perk plugin configs
+  (`celestialrayone.alchemy` / `blacksmith` / `jeweler` / `archaeology.toml`, sections by `perk_stat`)
+  (`build/bundleSpecializations.ts`); the perk icons come from `hd/global/ui/specializations/<tree>.sprite`
+  (`npm run game-data:icons`). The page is parsed and compared: `bundle.specializations.json` `pageDiffs` lists every
+  difference (a question for the mod author; the files win). `PERK_ITEMS` is hand-kept (perks promising an item).
+  `specializations:` warnings: "no table or launcher config reads it", "no cubemain row makes", "drop from N monsters
+  with no perk condition", "the description says N %, the files …" → genuine data, a question for the mod author; a
+  missing config, string or icon sheet → a rename to follow. `bundleIntegrity.test.ts` pins 4 trees × 15 perks, the
+  rules, the 8 cube-linked perks, an empty `pageDiffs` and the 3 warnings of 3.3 (Elixir of Reincarnation, Deep
+  Pockets, Alien Artefacts). The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
+  its slug (check `content/guide` for `page:/specializations` links).
 - **Cube page** (`docs/Eastern Sun Resurrected Cube Recipes.html`): `CUBE_SECTIONS` in `build/cube/cubeCatalog.ts` (the
   page's anchors, `notes` rewritten from its footnotes, guide slugs) and `FAMILY_NOTES`. A renamed anchor breaks the
   "Official: <section>" links. The page lagged the files in about 31 places at 3.2.24 (cube audit 2026-11-07), so read
