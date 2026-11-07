@@ -76,6 +76,9 @@ Apply what the findings call for; reference.md says how for each kind. Do not co
    the release diff): place new areas in the act grids (`data/grids.ts`), update `data/names.ts`, curated links and facts
    (`data/links.ts`, `data/areas.ts`) and the official Maps page notes; see docs/features/CAMPAIGN-MAP.md. Also check
    the areas build warnings (`REMOVED_LEVELS`, `EXPECTED_ONE_WAY_VIS`, unknown LevelType, missing comment columns).
+   Map bosses: a new or renamed boss fails the integrity test (`data/mapBosses.ts`, keyed by monstats Id); when
+   `docs/endgame_maps.htm` changes, re-read it and update the fight notes and the `page` figures there (the panel and
+   `content/guide/notes/endgame-bosses.md` compare them with the files' rewards in areas.json `mapBosses`).
 7. Ascendancy orb table (`src/features/ascendancies/data/orbLocations.ts`, hand-maintained, checked in game): when
    `orbLocations.test.ts` fails or the release diff touches the orbs (misc.txt u11–u15), their superuniques or those
    areas, propose the fix and ask the owner to re-check the spots in game; keep `content/guide/notes/ascendancies.md` in step.

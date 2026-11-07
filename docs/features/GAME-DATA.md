@@ -77,7 +77,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `skillcalc.json`    | ESR 3.2.24: 380 KB / 52 KB (skills + lines 186 KB, rows 143 KB, texts 32 KB, missiles 9 KB)                     |
 | `crafting.json`     | ESR 3.2.24: 63 KB / 7 KB (55 KB / 6 KB before the caps)                                                         |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
-| `areas.json`        | ESR 3.2.24: 39 KB / 5 KB                                                                                        |
+| `areas.json`        | ESR 3.2.24: 51 KB / 7 KB (map bosses: +13 KB raw, +1.4 KB gzip)                                                 |
 | `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes) |
 | `stashnames.json`   | ESR 3.2.24: 294 KB / 49 KB                                                                                      |
 | `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
@@ -274,7 +274,9 @@ versions of a unique such as Eaglehorn, 47 "Rune Stocker" misc variants, …) me
 `code`, the union of all labels (deduped by kind + text, in the order above; `Unknown` only when nothing else
 applies). The same name across kinds stays separate (Worldstone Shard set item vs material; the guide disambiguates
 with `{item=…}`). Names come from the string tables; multi-line names are read bottom-up ("Ancient Coupon (Buckler,
-Pelta Lunata)"). `diabloclone` is shown as "Diablo Clone" (its name string is plain "Diablo"). Counts: `counts.sourcesUnique`,
+Pelta Lunata)"). `diabloclone` is shown as "Diablo Clone" and `extralucionloot` (the loot dummy uber Lucion's death
+skill spawns on players 8; it drops Lucion's Essence) as "Uber Lucion (players 8)": both reuse the plain "Diablo" name
+string (`NAME_OVERRIDES` in treasureClasses.ts). Counts: `counts.sourcesUnique`,
 `sourcesSet`, `sourcesMisc`, `sourcesMerged` (rows folded into an earlier entry), `sourcesUnknown` (ESR 3.2.12:
 1107 / 270 / 795 / 516 / 13). `buildSourcesBundle` also returns `miscLabels(code)`: the misc label rules for any one
 code, unmerged and including the `NOISE_TYPES` rows; the materials bundle uses it for the rows sources.json leaves out.
@@ -720,11 +722,11 @@ Counts: `tierCodes` 1067 (`tierCodesNormal` 321, `tierCodesExceptional` 331, `ti
 ### Areas
 
 `areas.json` (`AreasBundle`, built by `build/bundleAreas.ts` from the raw levels.txt and cubemain.txt text) is
-`{ areas: Area[] }` in levels.txt row order, for the Areas page and the campaign map. Per area: `id` (`Id`), `name`
+`{ areas: Area[], mapBosses: MapBoss[] }` (areas in levels.txt row order), for the Areas page and the campaign map. Per area: `id` (`Id`), `name`
 (`LevelName` through the string table, else `Name` without its "Act N - " prefix: only id 137 ColossalSummit lacks a
 string), `act` (0-based), `waypoint` (`Waypoint` ≠ 255, never on a map row), `level` / `density` (`[n, nm, h]`),
 `uniques` (`[[min, max] × 3]`), `connections` (ids), `terrain` and, when set, `group`, `tier`, `uniqueMap`, `boss`,
-`mapItem`, `preventTownPortal`, `teleport`, `questGate`, `endgameZone`.
+`mapItem`, `mapItemName`, `mapBosses`, `mapBossPick`, `preventTownPortal`, `teleport`, `questGate`, `endgameZone`.
 
 - **Monster level** is `MonLvlEx`, `MonLvlEx(N)`, `MonLvlEx(H)` (the expansion level the game uses; `MonLvl*` is the
   classic one, lower in Nightmare / Hell, e.g. Blood Moor 1 / 26 / 51 vs 2 / 38 / 68). `null` in towns (no
@@ -748,6 +750,30 @@ string), `act` (0-based), `waypoint` (`Waypoint` ≠ 255, never on a map row), `
   Icecrown Citadel 201, …), or N itself when it is listed (Cursed Ossuary 191 and The Hidden Vault 213 have no entrance
   row). One map item per zone (21 in 3.2.24: 20 tier zones and the unique map); a portal that leads to no listed level
   and two items entering the same level are warnings.
+- **Map bosses** (`build/bundleMapBosses.ts`, tested; the odds in `build/treasureClassOdds.ts`, tested): each boss
+  arena's `*Map Boss` comment is matched to the monstats row with that in-game name (case and spacing ignored) and a
+  `TreasureClass(H)`; "Guardians of Time" expands to Talic, Madawc and Korlic, and "Double T<n> Bosses" (Chaos Rift 159)
+  to every tier-n boss with `mapBossPick` 2. The arena gets `mapBosses` (monstats ids); the map entry level gets
+  `mapItemName`. Per boss (`MapBoss`): `name` (in game: "Herald Of Doom"), `arenas`, `tier` (its own arena's),
+  `treasureClass`, `rewards`, `otherRolls`, `terrorShards`, and when they apply `terrorMissing`, `sameTableAs`,
+  `setDrop`. The boss TC is split into its rolls (the leaves of its negative-picks tree, `X Boss Main` → `X Boss`):
+  a roll that can give gold is the generic loot (`otherRolls`, counted with its Prob); the others become rewards by the
+  items they reach: `orb` (um7), `map` (map items; `tiers` from areas.json), `key` (pk1–pk3), `token` (u23),
+  `soulstone` (u19, with its `ConditionCalc`), else `item`, one reward per distinct name (Frostmourne and the six Lich
+  King's Essences are two rewards). `chance` is the chance of at least one at players 1 and 8; `expected` only when a
+  drop can be more than one item (a whole key set). The odds: positive Picks = independent picks, NoDrop shrunk by the
+  `/players` rule (n = floor((players + 1) / 2), the new weight truncated; an explicit `Nothing` entry is not shrunk),
+  single-pick sub-TCs followed, a multi-pick sub-TC kept as one branch; negative Picks roll each entry Prob times;
+  memoised, and a TC that leads back to itself throws. Not modelled: monster-level TC upgrades, quality, the item
+  cap. `terrorShards` = expected Worldstone Shards of `TreasureClassDesecrated(H)` (null when blank: Lucion);
+  `terrorMissing` = rewards that table never reaches (the terrorized Lich King points at `The Lich King Boss`, skipping
+  his Frostmourne/Essence roll). `sameTableAs` = map bosses of another zone with the same TC (Herald of Doom ↔ Avatar of
+  the Night: Herald drops tier 3 maps). `setDrop` = a boss-set-unique-drop plugin rule (`readBossSetRules`) whose
+  monsters (hcIdx = monstats row without Expansion rows) are all map bosses: the Eternal Hourglass from the last of the
+  three Ancients. Warnings: a comment matching no monster, a "Double" comment finding too few bosses, a boss TC without a
+  generic roll, a set-drop unique that is not a uniqueitems index. The hand-written fight notes and the official page's
+  figures live in the campaign map (`src/features/campaign-map/data/mapBosses.ts`); the guide's `::map-bosses[tier]`
+  renders the rewards. 3.2.24: 19 bosses, 18 arenas (`areasMapBosses`, `areasMapBossArenas`).
 - **Waypoint**: a map row's `Waypoint` slot is a copy from the row it was made from (the in-game waypoint menu has act
   tabs only), so map rows never have one (Twisted Maze 164 has slot 26, Durance of Hate Level 2's). Act rows keep
   theirs, ESR's own changes included (Moo Moo Farm has slot 6, vanilla's Jail Level 1 slot).
@@ -783,7 +809,7 @@ string), `act` (0-based), `waypoint` (`Waypoint` ≠ 255, never on a map row), `
 Counts (ESR 3.2.24): `areas` 193, `areasMaps` 55 (tier 1: 7, 2: 9, 3: 15, 4: 8, 5: 16), `areasMapZones` 20,
 `areasUniqueMaps` 1, `areasWithoutMonsters` 8 (5 towns, Forgotten Tower, Harem Level 1, Dimensional Gate),
 `areasWithWaypoint` 38, `areasHiddenPrepZones` 19, `areasHiddenRemoved` 2, `areasHiddenOther` 1, `areasOneWayVis` 2,
-`areasWithMapItem` 21, `areasUniquesMinsThenMaxes` 59. levels.txt is also read by bundleLootFilter.ts (lootfilter
+`areasWithMapItem` 21, `areasUniquesMinsThenMaxes` 59, `areasMapBosses` 19, `areasMapBossArenas` 18. levels.txt is also read by bundleLootFilter.ts (lootfilter
 areas, every row) and generateBundles.ts (the cube's level names); those reads were left as they were.
 
 ### Terror zones
@@ -1961,7 +1987,7 @@ src/features/game-data/
   build/       build only: tsv.ts, strings.ts, model.ts, esrSources.ts, bundleTypes.ts, bundleBases.ts,
                bundleRunewords.ts, bundleAffixes.ts, bundleSources.ts (+ treasureClasses.ts, pluginUniques.ts,
                itemNames.ts), bundleLootFilter.ts (+ bundleLootFilterSkills.ts), bundleEnhance.ts, bundleCube.ts, bundleMaterials.ts, bundleSets.ts,
-               bundleSkills.ts, bundleSkillDetails.ts, bundleSkillCalc.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts, itemIcons.ts,
+               bundleSkills.ts, bundleSkillDetails.ts, bundleSkillCalc.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts (+ bundleMapBosses.ts, treasureClassOdds.ts), itemIcons.ts,
                bundleModifiers.ts (+ toml.ts, data/vanillaReference.ts), bundleSuperior.ts,
                generateBundles.ts,
                writeBundle.ts
