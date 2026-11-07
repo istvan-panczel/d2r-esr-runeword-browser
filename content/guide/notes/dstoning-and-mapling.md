@@ -31,7 +31,7 @@ Each cap counts only what D-stoning added: 190% fire spell damage from affixes s
 
 ::dstone-caps
 
-On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps. The official page differs (ESR 3.2.24) on the weapon Forging Hammer (no cap check in the recipe; page 500%), Blackmoor + Key on weapons (page 150), Holy Symbol on armor (page 150) and Forging Hammer + Stamina Potion on jewelry (page 400%). Its Void Shard + Stamina Potion elemental damage recipe takes a Forging Hammer in the game files, where the physical spell damage recipe comes first.
+On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps. The official page differs (ESR 3.3) on the weapon Forging Hammer (no cap check in the recipe; page 500%), Blackmoor + Key on weapons (page 150), Holy Symbol on armor (page 150) and Forging Hammer + Stamina Potion on jewelry (page 400%). Its Void Shard + Stamina Potion elemental damage recipe takes a Forging Hammer in the game files, where the physical spell damage recipe comes first.
 
 ### Gem melding
 
@@ -45,7 +45,7 @@ On armor, Blackmoor + Key also fills the separate strength, dexterity and energy
 
 ::secret-recipe[50]
 
-Maple Leaves come mainly from spare unique charms ([[unique-charms]]), spare Orbs of Anointment and Secret Recipes 26 and 40 ([[secret-recipes]]).
+Maple Leaves come mainly from spare unique charms ([[unique-charms]]) and Secret Recipes 26 and 40 ([[secret-recipes]]). Orbs of Anointment stopped making Maple Leaves in 3.3 ([[corruption-anointment]]).
 
 ::recipes[maple-leaf]
 
