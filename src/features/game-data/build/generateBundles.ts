@@ -50,7 +50,7 @@ import { resolveName } from './itemNames.ts';
 import { readAffixes, readCharStats, readItems, readItemTypes, readRuneRecipes, type ItemRow } from './model.ts';
 import type { ModsRenderer } from './bundleRunewords.ts';
 import type { EnhanceContext } from './bundleEnhance.ts';
-import type { PropertyDef } from './stats/tables.ts';
+import type { PropertyDef, PropertyGroupDef } from './stats/tables.ts';
 import { createStatRenderer, readStatTables } from './stats/statRenderer.ts';
 import { createSkillLookup } from './stats/skills.ts';
 import { buildStringTable } from './strings.ts';
@@ -233,6 +233,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     statNames: new Map(rowTable('itemstatcost').rows.map((row, id) => [id, row.str('Stat')])),
     setNames: new Set(table('setitems').rows.map((row) => row.str('index'))),
     uniqueNames: new Set(table('uniqueitems').rows.map((row) => row.str('index'))),
+    statIdsOf: propertyStatIds(statTables.properties, rowTable('itemstatcost'), statTables.groups),
   });
   const cubeFallbackRows = cube.fallback.reduce((sum, family) => sum + family.rows, 0);
 
@@ -336,6 +337,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     classes: types.bundle.classes,
     bases: basesBundle.bases,
     renderMods,
+    statIdsOf: propertyStatIds(statTables.properties, rowTable('itemstatcost'), statTables.groups),
   });
 
   const tiers = buildTiersBundle(items);
@@ -540,6 +542,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       enhanceAnointmentOutcomes: anointmentOutcomes.length - countPool('charm') - countPool('vessel'),
       enhanceCharmAnointments: countPool('charm'),
       enhanceVesselAnointments: countPool('vessel'),
+      enhanceSanctificationOutcomes: enhance.bundle.sanctificationOutcomes.length,
       enhanceVesselRecipes: vesselRecipes.length,
       enhanceVesselTransforms: vesselTransforms.length,
       cubeRecipes: cube.bundle.families.reduce((sum, family) => sum + family.rowCount, 0),
@@ -673,7 +676,6 @@ function enhanceContext(
     for (const type of own) typeItemNames.set(type, (typeItemNames.get(type) ?? new Set()).add(name));
   }
   const typeInfo = new Map(types.types.map((type) => [type.code, type]));
-  const statIds = new Map(itemstatcost.rows.map((row, id) => [row.str('Stat'), id]));
   // A type whose items all share one name reads as that name: ESR's "Large Charm" type holds the Grand Charm
   const typeName = (code: string) => {
     const names = [...(typeItemNames.get(code) ?? [])];
@@ -683,11 +685,28 @@ function enhanceContext(
   return {
     nameOf: (token) => itemNames.get(token) ?? typeName(token) ?? resolveName(strings, token, token),
     isA: (code, parent) => isType(code, parent) || (itemTypes.get(code) ?? []).some((type) => isType(type, parent)),
-    statIdsOf: (property) =>
-      (properties.get(property)?.slots ?? []).flatMap((slot) => {
-        const id = statIds.get(slot.stat);
-        return id === undefined ? [] : [id];
-      }),
+    statIdsOf: propertyStatIds(properties, itemstatcost),
     renderMods,
   };
+}
+
+/**
+ * Property → the itemstatcost ids (row numbers) of the stats it sets; [] for an unknown property. With `groups`, a
+ * propertygroups.txt group whose entries all apply (PickMode 0, the D-stoning `*-cap-group` mods) sets its entries' stats.
+ */
+function propertyStatIds(
+  properties: ReadonlyMap<string, PropertyDef>,
+  itemstatcost: TsvTable,
+  groups?: ReadonlyMap<string, PropertyGroupDef>
+): (property: string) => number[] {
+  const statIds = new Map(itemstatcost.rows.map((row, id) => [row.str('Stat'), id]));
+  const idsOf = (property: string, depth: number): number[] => {
+    const group = groups?.get(property);
+    if (group !== undefined && group.pickMode === 0 && depth < 5) return group.entries.flatMap((entry) => idsOf(entry.prop, depth + 1));
+    return (properties.get(property)?.slots ?? []).flatMap((slot) => {
+      const id = statIds.get(slot.stat);
+      return id === undefined ? [] : [id];
+    });
+  };
+  return (property) => idsOf(property, 0);
 }

@@ -117,6 +117,8 @@ describe('releaseDiff', () => {
     expect(docKind('docs/Eastern Sun Resurrected Cube Recipes.html')).toBe('hand-written');
     expect(docKind('docs/Eastern Sun Resurrected Maps.html')).toBe('hand-written');
     expect(docKind('docs/endgame_maps.htm')).toBe('hand-written');
+    expect(docKind('docs/special_crafting_outcomes.htm')).toBe('hand-written');
+    expect(docKind('docs/corruptions.htm')).toBe('hand-written');
     expect(docKind('docs/runewords.htm')).toBe('generated');
     expect(docKind('docs/images/x.png')).toBe('asset');
   });

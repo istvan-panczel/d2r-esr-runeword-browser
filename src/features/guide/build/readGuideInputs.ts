@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type {
   BasesBundle,
+  CraftingBundle,
   GameDataManifest,
   ModifiersBundle,
   SourcesBundle,
@@ -58,6 +59,7 @@ export function readGameDataInputs(gameDataDir: string, sourcesFile: string): Ga
     types: readJson(join(gameDataDir, 'types.json'), hint) as TypesBundle,
     sources: readJson(sourcesFile, `The guide's ::source[...] blocks need it; ${hint}`) as SourcesBundle,
     modifiers: readJson(join(gameDataDir, 'modifiers.json'), hint) as ModifiersBundle,
+    crafting: readJson(join(gameDataDir, 'crafting.json'), hint) as CraftingBundle,
   };
 }
 

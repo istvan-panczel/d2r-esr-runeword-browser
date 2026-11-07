@@ -11,6 +11,7 @@ import type { EnhanceBundle } from '../engine/schema';
 import { EnhanceAnointment } from '../components/EnhanceAnointment';
 import { EnhanceCorruption } from '../components/EnhanceCorruption';
 import { EnhanceSearch } from '../components/EnhanceParts';
+import { EnhanceSanctification } from '../components/EnhanceSanctification';
 import { EnhanceVessel } from '../components/EnhanceVessel';
 import { GameDataError } from '../components/GameDataError';
 import { GameDataLoading } from '../components/GameDataLoading';
@@ -31,6 +32,7 @@ export function EnhanceScreen() {
 const SEARCH_PLACEHOLDERS: Record<EnhanceState['tab'], string> = {
   corruption: 'Search outcomes...',
   anointment: 'Search anointments...',
+  sanctification: 'Search sanctifications...',
   vessel: 'Search materials or bonuses...',
 };
 
@@ -59,7 +61,8 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Every outcome of corrupting, anointing and filling the Vessel of Souls, read from the cube recipes of the game files.
+        Every outcome of corrupting, anointing, sanctifying jewels and filling the Vessel of Souls, read from the cube recipes of the game
+        files.
       </p>
 
       <FilterPanel>
@@ -118,6 +121,7 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
           }}
         />
       )}
+      {state.tab === 'sanctification' && <EnhanceSanctification bundle={bundle} search={state.search} />}
       {state.tab === 'vessel' && (
         <EnhanceVessel
           bundle={bundle}

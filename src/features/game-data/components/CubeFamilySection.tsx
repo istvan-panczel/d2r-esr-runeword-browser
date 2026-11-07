@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { CubeMergedRow, CubeRecipe, CubeSection } from '../engine/schema';
-import { familyAnchor, formatCount, sectionDocsUrl, type CubeFamilyView, type CubeGroupView } from '../utils/cube';
+import { enhanceTabHref, familyAnchor, formatCount, sectionDocsUrl, type CubeFamilyView, type CubeGroupView } from '../utils/cube';
 import { BonusLines } from './EnhanceParts';
 import { LIST_CARD_CLASS, LIST_CARD_HEADER_CLASS, LIST_CARD_SUBHEAD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
 
@@ -63,7 +64,22 @@ function MergedRow({ row }: { readonly row: CubeMergedRow }) {
       <div>
         <p className="font-medium">{row.output}</p>
         {row.outputLevel !== undefined && <p className="text-xs text-muted-foreground">{row.outputLevel}</p>}
+        {row.dstoneCaps !== undefined && (
+          <p className="text-xs text-muted-foreground" title="What this D-stoning adds in total before its cap condition stops it">
+            Cap: {row.dstoneCaps.join(' / ')}
+          </p>
+        )}
         {row.variants > 1 && <p className="text-xs text-muted-foreground">{formatCount(row.variants)} cubemain rows</p>}
+        {row.enhanceTab !== undefined && (
+          <p className="text-xs">
+            <Link
+              to={enhanceTabHref(row.enhanceTab)}
+              className="font-medium text-primary underline decoration-primary/40 underline-offset-2"
+            >
+              All {formatCount(row.variants)} outcomes on the Enhance page
+            </Link>
+          </p>
+        )}
       </div>
     </li>
   );

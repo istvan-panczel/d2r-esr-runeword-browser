@@ -73,7 +73,8 @@ export interface MaterialsInput {
   sources: SourcesBundle;
   /** Labels of one misc code (bundleSources), for the rows sources.json leaves out (potions, scrolls, keys, tomes) */
   miscLabels: (code: string) => SourceLabel[];
-  enhance: Pick<EnhanceBundle, 'corruption' | 'anointment' | 'vesselRecipes' | 'vesselTransforms'>;
+  enhance: Pick<EnhanceBundle, 'corruption' | 'anointment' | 'vesselRecipes' | 'vesselTransforms'> &
+    Partial<Pick<EnhanceBundle, 'sanctification'>>;
 }
 
 export interface MaterialsExclusions {
@@ -410,7 +411,7 @@ function dedupeRoles(roles: readonly MaterialEnhanceRole[]): MaterialEnhanceRole
   });
 }
 
-/** Item code → its Enhance roles (corruption reagent, anointment reagents, Vessel of Souls materials) */
+/** Item code → its Enhance roles (corruption reagent, anointment reagents, sanctification reagent, Vessel of Souls materials) */
 export function enhanceRolesByCode(enhance: MaterialsInput['enhance']): Map<string, MaterialEnhanceRole[]> {
   const roles = new Map<string, MaterialEnhanceRole[]>();
   const add = (code: string, role: MaterialEnhanceRole) => {
@@ -420,6 +421,8 @@ export function enhanceRolesByCode(enhance: MaterialsInput['enhance']): Map<stri
   add(enhance.anointment.reagent.code, { tab: 'anointment', label: 'Anointment reagent' });
   for (const reagent of enhance.anointment.charmReagents)
     add(reagent.code, { tab: 'anointment', slot: 'charm', label: 'Unique charm anointment' });
+  const sanctifier = enhance.sanctification?.reagent.code ?? '';
+  if (sanctifier !== '') add(sanctifier, { tab: 'sanctification', label: 'Sanctification reagent' });
   for (const recipe of [...enhance.vesselRecipes, ...enhance.vesselTransforms]) {
     for (const material of recipe.materials) add(material.code, { tab: 'vessel', label: 'Vessel of Souls material' });
   }

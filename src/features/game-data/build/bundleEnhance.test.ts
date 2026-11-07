@@ -321,3 +321,73 @@ describe('buildEnhanceBundle: Vessel of Souls', () => {
     expect(bundle.corruption.notes).toEqual(['Vessel of Souls cannot be corrupted while it still has souls.']);
   });
 });
+
+describe('buildEnhanceBundle: sanctification', () => {
+  /** Step 2: marker + clear the dummy + the bonus */
+  const sanctify = (value: number, bonus: Mod[]): Row => ({
+    description: `Jewel Sanctification ${String(value)}`,
+    cond: [18, 236, value],
+    inputs: ['jewl'],
+    output: 'useitem',
+    mods: [['sanctified', 1, 1], ['sanctified-dummy', -value, -value], ...bonus],
+  });
+  const rows: Row[] = [
+    { description: 'Check if already Sanctified - Jewel', cond: [18, 234, 1], inputs: ['jewl', 'u18'], output: 'void' },
+    { cond: [16, 236, 0], inputs: ['jewl', 'u18'], output: 'useitem', mods: [['sanctified-dummy', 1, 4]] },
+    sanctify(1, [
+      ['res-fire-max', 1, 1],
+      ['str', 15, 25],
+    ]),
+    sanctify(2, [
+      ['res-fire-max', 1, 1],
+      ['dex', 15, 25],
+    ]),
+    sanctify(3, [
+      ['res-cold-max', 1, 1],
+      ['str', 15, 25],
+    ]),
+    sanctify(4, [
+      ['res-cold-max', 1, 1],
+      ['dex', 15, 25],
+    ]),
+    // Another dummy's outcome row on the jewel is not a sanctification
+    { cond: [18, 999, 5], inputs: ['jewl'], output: 'useitem', mods: [['str', 1, 1]] },
+  ];
+  const { bundle, warnings } = build(rows);
+
+  it('reads the reagent, the item and the roll range from the roll row, and the one-time blocker', () => {
+    expect(bundle.sanctification).toEqual({
+      reagent: { code: 'u18', name: 'u18' },
+      item: { code: 'jewl', name: 'jewl' },
+      rollRange: 4,
+      once: true,
+    });
+    expect(warnings).toEqual([]);
+  });
+
+  it('lists one outcome per roll with the marker and dummy mods hidden', () => {
+    expect(bundle.sanctificationOutcomes.map((outcome) => outcome.roll)).toEqual([1, 2, 3, 4]);
+    expect(bundle.sanctificationOutcomes[0]).toEqual({
+      roll: 1,
+      mods: [
+        { code: 'res-fire-max', param: null, min: 1, max: 1 },
+        { code: 'str', param: null, min: 15, max: 25 },
+      ],
+      lines: ['res-fire-max 1-1', 'str 15-25'],
+    });
+  });
+
+  it('counts the outcomes of each bonus, by its column in the rows', () => {
+    expect(bundle.sanctificationBonuses).toEqual([
+      { line: 'res-fire-max 1-1', outcomes: 2 },
+      { line: 'res-cold-max 1-1', outcomes: 2 },
+      { line: 'str 15-25', outcomes: 2 },
+      { line: 'dex 15-25', outcomes: 2 },
+    ]);
+  });
+
+  it('warns when the outcome rows do not cover the roll range; without a roll row there is no sanctification', () => {
+    expect(build(rows.slice(0, 4)).warnings).toEqual(['enhance: sanctification has 2 outcome rows for 4 rolls']);
+    expect(build([]).bundle.sanctificationOutcomes).toEqual([]);
+  });
+});

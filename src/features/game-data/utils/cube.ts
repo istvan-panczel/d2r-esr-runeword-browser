@@ -12,7 +12,7 @@ import { parseSearchTerms } from '@/core/utils/searchTerms';
 import { ESR_DOCS_URL } from '@/core/navigation/navConfig';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { CUBE_QUALITIES, type CubeQuality } from '../engine/schema';
-import type { CubeBundle, CubeFamilyInfo, CubeGroup, CubeMergedRow, CubeRecipe, CubeSection } from '../engine/schema';
+import type { CubeBundle, CubeFamilyInfo, CubeGroup, CubeMergedRow, CubeRecipe, CubeSection, MaterialEnhanceTab } from '../engine/schema';
 
 export interface CubeState {
   /** Legacy `?search=` of old links: matches ingredients or results; the page no longer has a box for it */
@@ -258,6 +258,11 @@ export function sectionDocsUrl(section: CubeSection): string | null {
 }
 
 export const CUBE_DOCS_URL = `${ESR_DOCS_URL}${encodeURIComponent(CUBE_DOCS_PAGE)}`;
+
+/** The Enhance page tab that lists a merged row's outcomes (`CubeMergedRow.enhanceTab`) */
+export function enhanceTabHref(tab: MaterialEnhanceTab): string {
+  return `/game-data/enhance?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.TAB]: tab }).toString()}`;
+}
 
 /** DOM id of a family's section */
 export function familyAnchor(id: string): string {

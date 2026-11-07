@@ -54,4 +54,6 @@ ESR stacks many upgrades on one item. Some can be undone, some are random, and s
 
 ::recipes[legendary-consumables]
 
+Every sanctification outcome, with how often each bonus comes up: [Sanctification outcomes](page:/game-data/enhance?tab=sanctification).
+
 Most players only need steps 1 to 4 before Hell ([[hell-survival]]).

@@ -4,6 +4,7 @@ import {
   brickSummary,
   encodeEnhanceState,
   filterCorruptionOutcomes,
+  filterSanctificationOutcomes,
   filterVesselRecipes,
   formatRate,
   readEnhanceState,
@@ -26,6 +27,10 @@ const bundle = {
   anointment: { reagent: { code: 'um7', name: 'Orb' }, blockedQualities: [], noRunewords: true, charmReagents: [], vesselItem: 'Vessel' },
   anointmentSlots: [{ slot: 'weapon' }, { slot: 'ring' }],
   anointmentOutcomes: [],
+  sanctificationOutcomes: [
+    { roll: 1, mods: [], lines: ['+(15 to 25) to Strength', '+1% to Maximum Fire Resist'] },
+    { roll: 2, mods: [], lines: ['+(15 to 25) to Dexterity', '+1% to Maximum Fire Resist'] },
+  ],
   vessel: { item: 'Vessel', startSouls: 2000 },
   vesselTiers: [{ tier: 1 }, { tier: 2 }],
   vesselRecipes: [
@@ -57,6 +62,12 @@ describe('enhance URL state', () => {
     expect(encodeEnhanceState({ tab: 'corruption', slot: 'weapon', tier: '1', search: ' ' }, bundle).toString()).toBe('');
     expect(encodeEnhanceState({ tab: 'vessel', slot: 'weapon', tier: '2', search: '' }, bundle).toString()).toBe('tab=vessel&tier=2');
   });
+
+  it('reads and writes the sanctification tab, which has no slot', () => {
+    const state = readEnhanceState(new URLSearchParams('tab=sanctification&slot=ring&search=fire'), bundle);
+    expect(state).toEqual({ tab: 'sanctification', slot: '', tier: '1', search: 'fire' });
+    expect(encodeEnhanceState(state, bundle).toString()).toBe('tab=sanctification&search=fire');
+  });
 });
 
 describe('enhance search and texts', () => {
@@ -64,6 +75,11 @@ describe('enhance search and texts', () => {
     expect(filterCorruptionOutcomes(bundle.corruptionOutcomes, 'attack rating').map((outcome) => outcome.roll)).toEqual([2]);
     expect(filterCorruptionOutcomes(bundle.corruptionOutcomes, '"magic resist"').map((outcome) => outcome.roll)).toEqual([2]);
     expect(filterCorruptionOutcomes(bundle.corruptionOutcomes, '')).toHaveLength(2);
+  });
+
+  it('matches sanctification outcomes by their lines', () => {
+    expect(filterSanctificationOutcomes(bundle.sanctificationOutcomes, 'dexterity fire').map((outcome) => outcome.roll)).toEqual([2]);
+    expect(filterSanctificationOutcomes(bundle.sanctificationOutcomes, '"maximum fire"')).toHaveLength(2);
   });
 
   it('matches vessel recipes by material name or bonus', () => {

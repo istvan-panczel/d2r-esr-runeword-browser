@@ -425,6 +425,7 @@ describe('buildCraftingBundle: D-stoning and gem melding', () => {
       [
         ['levelreq', 2],
         ['extra-ele', 1],
+        ['extra-ele-cap', 1],
       ],
       { cap: 300 }
     ),
@@ -438,6 +439,15 @@ describe('buildCraftingBundle: D-stoning and gem melding', () => {
       { cap: 300 }
     ),
     row('VS + Any Weapon + vps', ['weap', 'vvv', 'vps'], [], { output: 'void' }),
+    // No cap condition: no cap
+    row(
+      'FH + Any Weapon',
+      ['weap', 'hh2'],
+      [
+        ['levelreq', 2],
+        ['dmg%', 12],
+      ]
+    ),
     row(
       'TO + Any Weapon',
       ['weap', 'ttt'],
@@ -495,17 +505,28 @@ describe('buildCraftingBundle: D-stoning and gem melding', () => {
       kind: 'dstone',
       material: { code: 'ppp', label: 'Dragon Stone' },
       bySlot: {
-        weapon: { lines: ['swing2 5'], levelReq: 2, steps: [5, 4, 3] },
-        shield: { lines: ['swing1 5'], levelReq: 4, steps: [5] },
-        helmet: { lines: ['swing1 5'], levelReq: 4, steps: [5] },
-        armor: { lines: ['swing1 5'], levelReq: 3, steps: [5] },
-        gloves: { lines: ['swing1 5'], levelReq: 4, steps: [5] },
-        boots: { lines: ['swing1 5'], levelReq: 4, steps: [5] },
-        belt: { lines: ['swing1 5'], levelReq: 4, steps: [5] },
+        weapon: { lines: ['swing2 5'], levelReq: 2, steps: [5, 4, 3], cap: 120, capLines: ['swing2 120'] },
+        shield: { lines: ['swing1 5'], levelReq: 4, steps: [5], cap: 120, capLines: ['swing1 120'] },
+        helmet: { lines: ['swing1 5'], levelReq: 4, steps: [5], cap: 120, capLines: ['swing1 120'] },
+        armor: { lines: ['swing1 5'], levelReq: 3, steps: [5], cap: 120, capLines: ['swing1 120'] },
+        gloves: { lines: ['swing1 5'], levelReq: 4, steps: [5], cap: 120, capLines: ['swing1 120'] },
+        boots: { lines: ['swing1 5'], levelReq: 4, steps: [5], cap: 120, capLines: ['swing1 120'] },
+        belt: { lines: ['swing1 5'], levelReq: 4, steps: [5], cap: 120, capLines: ['swing1 120'] },
       },
     });
     // The same bonus under another cap condition is one step
     expect(option('dstone', 'hly')?.bySlot.weapon?.steps).toEqual([12]);
+  });
+
+  it('stores the total a D-stoning stops at: its rows applied from zero until no cap condition holds', () => {
+    // ≤ 116 +5, ≤ 117 +4, ≤ 118 +3: 115 → 120, then no row applies
+    expect(option('dstone', 'ppp')?.bySlot.weapon).toMatchObject({ cap: 120, capLines: ['swing2 120'] });
+    // +12 while at most 500 (or 501): 492 → 504
+    expect(option('dstone', 'hly')?.bySlot.weapon).toMatchObject({ cap: 504, capLines: ['dmg-undead 504'] });
+    // ≤ 56 +1, ≤ 57 +2: 56 → 57 → 59
+    expect(option('dstone', 'ttt')?.bySlot.weapon).toMatchObject({ cap: 59 });
+    // A row without a cap condition never stops: no cap
+    expect(option('dstone', 'hh2')?.bySlot.weapon).toEqual({ lines: ['dmg% 12'], levelReq: 2, steps: [12] });
   });
 
   it('uses the untiered row of a switch-item D-stoning and skips two-handed and tiered variants', () => {
@@ -513,16 +534,16 @@ describe('buildCraftingBundle: D-stoning and gem melding', () => {
       kind: 'dstone',
       material: { code: 'ppp', label: 'Dragon Stone' },
       switchItem: { code: 'key', label: 'Key' },
-      bySlot: { weapon: { lines: ['extra-fire 2'], levelReq: 2, steps: [2] } },
+      bySlot: { weapon: { lines: ['extra-fire 2'], levelReq: 2, steps: [2], cap: 300, capLines: ['extra-fire 300'] } },
     });
-    expect(bundle.stacking.map((entry) => entry.switchItem?.code ?? null)).toEqual([null, null, null, 'key', 'key', null]);
+    expect(bundle.stacking.map((entry) => entry.switchItem?.code ?? null)).toEqual([null, null, null, null, 'key', 'key', null]);
   });
 
   it('warns about a shadowed group and steps that do not decrease; skips blocker rows', () => {
     expect(option('dstone', 'eee', 'key')?.bySlot.weapon?.lines).toEqual(['extra-ele 1']);
     expect(warnings).toEqual([
       'crafting: cubemain line 13 "BM + Any Weapon + key" is shadowed by an earlier dstone row with the same ingredients',
-      'crafting: D-stoning "TO + Any Weapon" (cubemain line 15) steps 1, 2 are not decreasing',
+      'crafting: D-stoning "TO + Any Weapon" (cubemain line 16) steps 1, 2 are not decreasing',
     ]);
     expect(option('dstone', 'vvv', 'vps')).toBeUndefined();
   });

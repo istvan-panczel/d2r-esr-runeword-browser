@@ -4,7 +4,8 @@
  * (stockers, blockers, dead rows) and without the corruption / anointment / Vessel tier rows enhance.json covers.
  *
  * Per family the merged rows of the guide (cube/cubeFamilies.ts `groupFamily`, uncapped, with the number of rows
- * each stands for); small families also keep every row with its parsed cells (`recipes`).
+ * each stands for); small families also keep every row with its parsed cells (`recipes`). D-stoning rows carry the
+ * total their D-stoning stops at (cube/dstoneCaps.ts); the sanctification outcome row links to the Enhance page.
  */
 import type {
   CubeBundle,
@@ -17,6 +18,7 @@ import type {
   CubeRecipe,
   CubeRecipeInput,
   CubeRecipeOutput,
+  MaterialEnhanceTab,
 } from '../engine/schema.ts';
 import { CUBE_QUALITIES } from '../engine/schema.ts';
 import {
@@ -34,7 +36,8 @@ import {
 } from './cube/cubeCatalog.ts';
 import { CUBE_FAMILIES, groupFamily, type CubeFamily } from './cube/cubeFamilies.ts';
 import type { CubeRow, CubeTables } from './cube/cubeRows.ts';
-import { bonusLines, describeOutput, describeOutputLevel, distinct, formatInput, parseCubeCell } from './cube/cubeText.ts';
+import { bonusLines, describeOutput, describeOutputLevel, distinct, formatInput, isHiddenMod, parseCubeCell } from './cube/cubeText.ts';
+import { dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
 import type { TsvTable } from './tsv.ts';
 
 /** Families with at most this many rows keep every row (`recipes`); larger ones only their merged rows */
@@ -50,7 +53,12 @@ export interface CubeContext {
   setNames?: ReadonlySet<string>;
   /** uniqueitems.txt `index` names; omitted: every named output that is not an item or type counts as unique */
   uniqueNames?: ReadonlySet<string>;
+  /** itemstatcost ids a property sets, for the D-stoning cap stats; omitted: a cap mod raises its row's condition stat */
+  statIdsOf?: (property: string) => readonly number[];
 }
+
+/** The family whose merged rows get their D-stoning cap */
+const DSTONE_FAMILY = 'dstoning';
 
 export interface CubeBuildResult {
   bundle: CubeBundle;
@@ -251,6 +259,39 @@ function namedItems(rows: readonly CubeRow[], side: 'inputs' | 'outputs', ctx: C
   return [...names];
 }
 
+/**
+ * The cap text of every D-stoning row of a family: rows with the same inputs and bonus stats are one D-stoning
+ * (cube/dstoneCaps.ts applies them from zero); its cap reads like the bonus ("+120% Increased Attack Speed"). Rows of a
+ * D-stoning without a cap condition, or with a counter condition (the elemental half points), get none.
+ */
+function dstoneCapTexts(rows: readonly CubeRow[], ctx: CubeContext): Map<CubeRow, string> {
+  const bonusMods = (row: CubeRow) =>
+    (row.outputs.at(0)?.mods ?? []).filter((mod) => !isCapMod(mod.mod) && mod.mod !== 'levelreq' && !isHiddenMod(mod.mod));
+  const chains = new Map<string, CubeRow[]>();
+  for (const row of rows) {
+    const key = `${row.inputs.join('|')}|${bonusMods(row)
+      .map((mod) => mod.mod)
+      .sort()
+      .join('+')}`;
+    chains.set(key, [...(chains.get(key) ?? []), row]);
+  }
+  const texts = new Map<CubeRow, string>();
+  for (const chain of chains.values()) {
+    const result = dstoneCap(chain, bonusMods, ctx.statIdsOf ?? (() => []));
+    if (result.kind !== 'capped') continue;
+    const text = ctx.tables.renderMods(result.cap.mods).join(', ');
+    if (text !== '') for (const row of chain) texts.set(row, text);
+  }
+  return texts;
+}
+
+/** The Enhance tab that lists a merged row's outcomes: the sanctification rows (`item_sanctification_dummy` = roll) */
+function enhanceTabOf(rows: readonly CubeRow[], ctx: CubeContext): MaterialEnhanceTab | undefined {
+  const isOutcome = (row: CubeRow) =>
+    row.condition !== null && row.condition.op === 18 && ctx.statNames.get(row.condition.param) === 'item_sanctification_dummy';
+  return rows.length > 0 && rows.every(isOutcome) ? 'sanctification' : undefined;
+}
+
 /** Group label: "Secret Recipe N", else the first row's description shape */
 function groupLabel(family: CubeFamily, rows: readonly CubeRow[]): string {
   const first = rows[0]?.description ?? '';
@@ -344,6 +385,7 @@ export function buildCubeBundle(ctx: CubeContext): CubeBuildResult {
       rowCount: familyRows.length,
       raw,
     });
+    const capTexts = family.id === DSTONE_FAMILY ? dstoneCapTexts(familyRows, ctx) : new Map<CubeRow, string>();
     for (const group of groupFamily(family, ctx.tables, familyRows, 'full')) {
       const id = groups.length;
       const conditions = group.rows.map((row) => conditionsOf(row, ctx, bosses));
@@ -364,6 +406,8 @@ export function buildCubeBundle(ctx: CubeContext): CubeBuildResult {
         // Variants without a level do not count; a row whose variants disagree lists each level
         const levels = distinct(merged.flatMap((entry) => rowLevel(entry) ?? []));
         const qualities = new Set(merged.flatMap((entry) => [...rowQualities(entry, ctx, itemCodes)]));
+        const caps = distinct(merged.flatMap((entry) => capTexts.get(entry) ?? []));
+        const enhanceTab = enhanceTabOf(merged, ctx);
         rows.push({
           family: family.id,
           group: id,
@@ -371,6 +415,8 @@ export function buildCubeBundle(ctx: CubeContext): CubeBuildResult {
           output: variant.output,
           variants: count,
           ...(levels.length === 0 ? {} : { outputLevel: levels.join(' / ') }),
+          ...(caps.length === 0 ? {} : { dstoneCaps: caps }),
+          ...(enhanceTab === undefined ? {} : { enhanceTab }),
           qualities: orderedQualities(qualities),
         });
       }

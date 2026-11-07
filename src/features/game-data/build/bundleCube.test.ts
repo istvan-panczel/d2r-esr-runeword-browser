@@ -26,6 +26,9 @@ const HEADER = [
   'mod 1',
   'mod 1 min',
   'mod 1 max',
+  'mod 2',
+  'mod 2 min',
+  'mod 2 max',
   'output b',
   '*eol',
 ];
@@ -36,6 +39,7 @@ interface RowOptions {
   condition?: [number, number, number];
   cls?: string;
   mod?: [string, number];
+  mod2?: [string, number];
   outputB?: string;
   /** `lvl`, `plvl`, `ilvl` of output a (0 = unset) */
   level?: [number, number, number];
@@ -45,6 +49,7 @@ function row(description: string, inputs: string[], output: string, options: Row
   const [op = 0, param = 0, value = 0] = options.condition ?? [];
   const [first = '', second = '', third = ''] = inputs;
   const [mod = '', amount = 0] = options.mod ?? [];
+  const [mod2 = '', amount2 = 0] = options.mod2 ?? [];
   return [
     description,
     options.enabled === false ? '0' : '1',
@@ -62,6 +67,9 @@ function row(description: string, inputs: string[], output: string, options: Row
     mod,
     mod === '' ? '' : String(amount),
     mod === '' ? '' : String(amount),
+    mod2,
+    mod2 === '' ? '' : String(amount2),
+    mod2 === '' ? '' : String(amount2),
     options.outputB ?? '',
     '0',
   ];
@@ -120,9 +128,10 @@ function stubRenderMods(mods: readonly CubeMod[]): string[] {
   return mods.map((mod) => `${mod.mod} +${String(mod.max)}`);
 }
 
-/** itemstatcost rows by id: 92 item_levelreq, 508 kill_check, 470 some hidden marker */
+/** itemstatcost rows by id: 92 item_levelreq, 508 kill_check, 470 some hidden marker, 236 the sanctification roll */
 const STAT_NAMES = new Map([
   [92, 'item_levelreq'],
+  [236, 'item_sanctification_dummy'],
   [470, 'item_corrupted_dummy'],
   [508, 'kill_check'],
 ]);
@@ -273,6 +282,33 @@ describe('buildCubeBundle', () => {
     const crate = bundle.recipes.find((entry) => entry.description === 'Weapons Crate');
     expect(crate?.qualities).toEqual(['set']);
     expect(crate?.outputs[0]?.level).toBe('Item level 100% of input item level');
+  });
+
+  it('gives D-stoning rows the total their cap condition stops at, none without a condition', () => {
+    const { bundle } = build([
+      row('DS + Any Weapon', ['weap', 'gpr'], 'useitem', { condition: [16, 584, 116], mod: ['swing2', 5], mod2: ['swing2-cap', 5] }),
+      row('DS + Any Weapon', ['weap', 'gpr'], 'useitem', { condition: [16, 584, 117], mod: ['swing2', 4], mod2: ['swing2-cap', 4] }),
+      row('FH + Any Weapon', ['weap', 'gpv'], 'useitem', { mod: ['dmg%', 12] }),
+    ]);
+    const rows = bundle.rows.filter((entry) => entry.family === 'dstoning');
+    // ≤ 116: +5 up to 120, then neither row applies
+    expect(rows.map((entry) => [entry.inputs.join(' + '), entry.dstoneCaps])).toEqual([
+      ['Weapon + Perfect Ruby', ['swing2 +120']],
+      ['Weapon + Perfect Amethyst', undefined],
+    ]);
+  });
+
+  it('links the sanctification outcome row to the Enhance page tab, not the roll row', () => {
+    const { bundle } = build([
+      row('Add Sanctification Dummy Stat - Jewel', ['jewl', 'u18'], 'useitem', { condition: [16, 236, 0], mod: ['sanctified-dummy', 2] }),
+      row('Jewel Sanctification 1', ['jewl'], 'useitem', { condition: [18, 236, 1], mod: ['str', 15] }),
+      row('Jewel Sanctification 2', ['jewl'], 'useitem', { condition: [18, 236, 2], mod: ['dex', 15] }),
+    ]);
+    const rows = bundle.rows.filter((entry) => entry.family === 'legendary-consumables');
+    expect(rows.map((entry) => [entry.inputs, entry.enhanceTab])).toEqual([
+      [['jewl', 'u18'], undefined],
+      [['That jewel, on its own'], 'sanctification'],
+    ]);
   });
 
   it('renders the readable conditions: class, difficulty, boss kills and the stat checks', () => {

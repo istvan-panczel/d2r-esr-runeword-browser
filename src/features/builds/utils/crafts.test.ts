@@ -30,7 +30,7 @@ const fakeCrafting: CraftingBundle = {
     {
       kind: 'dstone',
       material: { code: 'ppp', label: 'Dragon Stone' },
-      bySlot: { weapon: { lines: ['+5% IAS'], steps: [5, 4, 3, 2, 1], levelReq: 2 } },
+      bySlot: { weapon: { lines: ['+5% IAS'], steps: [5, 4, 3, 2, 1], levelReq: 2, cap: 121, capLines: ['+121% IAS'] } },
     },
     {
       kind: 'dstone',
@@ -129,11 +129,11 @@ describe('renderCraft', () => {
     expect(renderCraft({ kind: 'forge', forge: 'aura', key: 'au1' }, 'amulet', fake).title).toBe('Aura Forging · Might Stone');
   });
 
-  it('renders D-stoning with the level requirement times uses and the per-use steps, never a summed total', () => {
+  it('renders D-stoning with the level requirement times uses, the per-use steps and the cap, never a summed total', () => {
     expect(renderCraft({ kind: 'dstone', material: 'ppp', uses: 3 }, 'weapon', fake)).toEqual({
       title: 'D-stoning · Dragon Stone ×3',
       lines: ['+5% IAS', '+6 Level Required'],
-      note: 'per use: 5, 4, 3, 2, 1',
+      note: 'per use: 5, 4, 3, 2, 1 · cap: +121% IAS',
       stale: false,
     });
     expect(renderCraft({ kind: 'dstone', material: 'ppp', switchItem: 'key', uses: 1 }, 'weapon', fake)).toEqual({
@@ -233,6 +233,10 @@ describe('craftPickerGroups', () => {
     expect(groups.find((group) => group.heading === 'D-stoning')?.options.map((option) => option.craft)).toEqual([
       { kind: 'dstone', material: 'ppp', uses: 1 },
       { kind: 'dstone', material: 'ppp', switchItem: 'key', uses: 1 },
+    ]);
+    expect(groups.find((group) => group.heading === 'D-stoning')?.options.map((option) => option.detail)).toEqual([
+      '+5% IAS, cap +121% IAS',
+      '+2% to Fire Spell Damage',
     ]);
     const withSingles = craftPickerGroups('weapon', fake, [
       { kind: 'forge', forge: 'rune', key: 'r19' },
