@@ -23,6 +23,10 @@ import {
   resolveArt,
   resolveSprite,
   selectMiscIconRows,
+  selectItemCodeRows,
+  sixPackSingleCode,
+  duplicateImageAliases,
+  TYPE_ICON_REPRESENTATIVES,
   readItemNames,
   selectQuestIconCodes,
 } from './itemIcons.ts';
@@ -475,6 +479,181 @@ describe('misc item art (socket fillers)', () => {
   });
 });
 
+describe('item art by code and item type art', () => {
+  const item = (code: string, name: string, type: string, extra: Partial<LootFilterItem> = {}): LootFilterItem => ({
+    code,
+    name,
+    kind: 'misc',
+    type,
+    spawnable: true,
+    drops: true,
+    ...extra,
+  });
+
+  it('finds the single item of a "(6 Pack)" row by its code without the leading 6', () => {
+    expect(sixPackSingleCode({ code: '6hrt', name: 'Heart (6 Pack)', type: 'or6p' })).toBe('hrt');
+    // Names that differ from the single item's (DragonStone / Dragon Stone) still follow the code
+    expect(sixPackSingleCode({ code: '6ppp', name: 'DragonStone (6 Pack)', type: 'or6p' })).toBe('ppp');
+    expect(sixPackSingleCode({ code: '699j', name: 'Wild Card (6 Pack)', type: 'or6p' })).toBe('99j');
+    expect(sixPackSingleCode({ code: 'hrt', name: 'Heart', type: 'body' })).toBeNull();
+    expect(sixPackSingleCode({ code: 'xyz', name: 'Odd (6 Pack)', type: 'or6p' })).toBeNull();
+  });
+
+  it('keys every other item by code, the 6-packs on the single item, sharing files, without repeating bases and quest codes', () => {
+    const rows = selectItemCodeRows([
+      item('hrt', 'Heart', 'body'),
+      item('6hrt', 'Heart (6 Pack)', 'or6p', { spawnable: false }),
+      item('6gw', 'Perfect Diamond (6 Pack)', 'gm6p'),
+      item('ulm', 'Armet', 'helm', { kind: 'armor', spawnable: false }),
+      item('w31', 'Secret Tome 1', 'can5'),
+      item('6zzz', 'Steak (6 Pack)', 'or6p'),
+      item('rin', 'Ring', 'ring'),
+      item('vip', 'Top of the Horadric Staff', 'ques'),
+      item('hrt', 'Heart again', 'body'),
+    ]);
+    expect(rows[3]).toEqual({ code: 'ulm', name: 'Armet', type: 'helm' });
+    const plan = planItemIcons({
+      codes: ['rin'],
+      uniques: [],
+      sets: [],
+      quest: ['vip'],
+      items: rows,
+      assets: new Map([
+        ['hrt', 'body_part/heart'],
+        ['6gw', 'gem/6pack_diamond'],
+        ['ulm', 'helmet/armet'],
+        ['rin', 'ring/ring'],
+        ['vip', 'quest/top'],
+      ]),
+      uniqueArt: new Map(),
+      setArt: new Map(),
+      index: buildSpriteIndex([
+        'misc/body_part/heart.sprite',
+        'misc/gem/6pack_diamond.sprite',
+        'armor/helmet/armet.sprite',
+        'misc/ring/ring.sprite',
+        'misc/quest/top.sprite',
+      ]),
+    });
+    expect([...plan.items]).toEqual([
+      ['hrt', 'body_part_heart'],
+      // The single item's file, not a copy
+      ['6hrt', 'body_part_heart'],
+      // A 6-pack with art of its own keeps it
+      ['6gw', 'gem_6pack_diamond'],
+      ['ulm', 'helmet_armet'],
+    ]);
+    expect(plan.itemStats).toEqual({
+      requested: 6,
+      vanilla: 0,
+      sixPack: ['6hrt'],
+      missing: [
+        { code: 'w31', name: 'Secret Tome 1' },
+        { code: '6zzz', name: 'Steak (6 Pack)' },
+      ],
+    });
+    expect([...plan.sprites.keys()].filter((slug) => slug === 'body_part_heart')).toHaveLength(1);
+  });
+
+  it('gives a type the art all its spawnable items share, else its representative, else none', () => {
+    const ancestors = new Map([
+      ['mcha', ['mcha', 'char', 'misc']],
+      ['scha', ['scha', 'char', 'misc']],
+      ['ring', ['ring', 'misc']],
+      ['weap', ['weap']],
+      ['axe', ['axe', 'weap']],
+      ['swor', ['swor', 'weap']],
+    ]);
+    const rows: LootFilterItem[] = [
+      item('cm2', 'Large Charm', 'mcha'),
+      item('cm1', 'Small Charm', 'scha'),
+      item('cx1', 'Small Charm', 'scha', { spawnable: false }),
+      item('rin', 'Ring', 'ring'),
+      item('zrn', 'Amazon Ring', 'ring'),
+      item('hax', 'Hand Axe', 'axe', { kind: 'weapon' }),
+      item('ssd', 'Short Sword', 'swor', { kind: 'weapon' }),
+    ];
+    const plan = planItemIcons({
+      codes: [],
+      uniques: [],
+      sets: [],
+      types: { rows, ancestors, representatives: { ring: 'rin', char: 'nope' } },
+      assets: new Map([
+        ['cm2', 'charm/charm_medium'],
+        ['cm1', 'charm/charm_small'],
+        ['cx1', 'charm/other'],
+        ['rin', 'ring/ring'],
+        ['zrn', 'ring/ama_ring'],
+        ['hax', 'axe/hand_axe'],
+        ['ssd', 'sword/short_sword'],
+      ]),
+      uniqueArt: new Map(),
+      setArt: new Map(),
+      index: buildSpriteIndex([
+        'misc/charm/charm_medium.sprite',
+        'misc/charm/charm_small.sprite',
+        'misc/charm/other.sprite',
+        'misc/ring/ring.sprite',
+        'misc/ring/ama_ring.sprite',
+        'weapon/axe/hand_axe.sprite',
+        'weapon/sword/short_sword.sprite',
+      ]),
+    });
+    expect(Object.fromEntries(plan.types)).toEqual({
+      mcha: 'charm_charm_medium',
+      // The non-spawnable cx1 does not count
+      scha: 'charm_charm_small',
+      axe: 'axe_hand_axe',
+      swor: 'sword_short_sword',
+      ring: 'ring_ring',
+    });
+    // weap (two arts) and char (two arts, representative without art) have none
+    expect(plan.typeStats).toEqual({ shared: 4, representative: 1, missingRepresentatives: ['char → nope'] });
+    expect(TYPE_ICON_REPRESENTATIVES.weap).toBeUndefined();
+    expect(TYPE_ICON_REPRESENTATIVES.gem5).toBe('gwb');
+  });
+
+  it('makes byte-identical images share the alphabetically first file, within a source group only', () => {
+    const aliases = duplicateImageAliases([
+      { slug: 'quiver_bolts', group: 'esr', hash: 'b' },
+      { slug: 'bow_bolts2', group: 'esr', hash: 'b' },
+      { slug: 'armor_robe', group: 'esr', hash: 'r' },
+      { slug: 'armor_cape', group: 'esr', hash: 'r' },
+      { slug: 'unique_one', group: 'esr', hash: 'u' },
+      // Same bytes, other group: kept apart (a run without the vanilla folder makes the same choices)
+      { slug: 'vanilla_bolts', group: 'vanilla', hash: 'b' },
+    ]);
+    expect(Object.fromEntries(aliases)).toEqual({ quiver_bolts: 'bow_bolts2', armor_robe: 'armor_cape' });
+    const bundle = buildIconsBundle({
+      esrVersion: '3.2.24',
+      esrTag: null,
+      vanilla: { rootHash: 'abc', extractedAt: '2026-10-25' },
+      plan: {
+        bases: new Map([['rob', 'armor_robe']]),
+        uniques: new Map(),
+        sets: new Map(),
+        items: new Map([['cqv', 'quiver_bolts']]),
+        sprites: new Map([
+          ['armor_robe', { source: 'vanilla' as const, path: 'armor/robe.sprite' }],
+          ['armor_cape', { source: 'vanilla' as const, path: 'armor/cape.sprite' }],
+        ]),
+      },
+      images: new Map([
+        ['armor_robe', { width: 50, height: 80 }],
+        ['armor_cape', { width: 50, height: 80 }],
+        ['quiver_bolts', { width: 40, height: 100 }],
+        ['bow_bolts2', { width: 40, height: 100 }],
+      ]),
+      aliases,
+      extension: 'webp',
+    });
+    expect(bundle.bases.rob?.file).toBe('armor_cape.webp');
+    expect(bundle.items.cqv?.file).toBe('bow_bolts2.webp');
+    // An aliased vanilla file is not written, so it is not listed
+    expect(bundle.vanilla?.files).toEqual(['armor_cape.webp']);
+  });
+});
+
 describe('quest item art', () => {
   const table = (rows: string[][]) => parseTsv(rows.map((cells) => cells.join('\t')).join('\n'), 'items.txt');
 
@@ -561,6 +740,8 @@ describe('compareWithoutVanilla', () => {
     sets: {},
     misc: { 'El Rune': axe },
     quest: { vip: { ...axe, name: 'Top of the Horadric Staff' } },
+    items: {},
+    types: {},
   };
   const esrOnly: IconsBundle = {
     esrVersion: '3.2.24',
@@ -570,6 +751,8 @@ describe('compareWithoutVanilla', () => {
     sets: {},
     misc: { 'El Rune': axe },
     quest: { vip: { ...axe, name: 'Top of the Horadric Staff' } },
+    items: {},
+    types: {},
   };
 
   it('accepts the committed vanilla-derived entries and matching clone-derived ones', () => {
@@ -585,6 +768,8 @@ describe('compareWithoutVanilla', () => {
       sets: {},
       misc: { 'El Rune': boots },
       quest: {},
+      items: {},
+      types: {},
     };
     expect(compareWithoutVanilla(committed, fresh)).toEqual([
       'esrVersion 3.2.24 ≠ 3.2.25',
@@ -694,6 +879,8 @@ describe('buildIconsBundle', () => {
         'Ko Rune#r19': { file: 'axe_the_gnasher.webp', w: 60, h: 120 },
       },
       quest: { vip: { file: 'axe_the_gnasher.webp', w: 60, h: 120, name: 'Top of the Horadric Staff' } },
+      items: {},
+      types: {},
     });
     expect(Object.keys(JSON.parse(serializeBundle(bundle)) as object)).toEqual([
       'esrVersion',
@@ -703,6 +890,8 @@ describe('buildIconsBundle', () => {
       'sets',
       'misc',
       'quest',
+      'items',
+      'types',
     ]);
   });
 
@@ -763,7 +952,7 @@ describe('buildIconsBundle', () => {
     const bundle = buildIconsBundle({ esrVersion: '3.2.24', esrTag: null, vanilla, plan, images, extension: 'webp' });
     // helmet_cap failed to decode: neither an entry nor a listed file
     expect(bundle.vanilla).toEqual({ ...vanilla, files: ['boot_boots.webp'] });
-    expect(Object.keys(bundle)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest']);
+    expect(Object.keys(bundle)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest', 'items', 'types']);
     // No misc rows or quest codes planned: empty sections
     expect(bundle.misc).toEqual({});
     expect(bundle.quest).toEqual({});

@@ -11,7 +11,10 @@
  *   `data/hd/...` instead of `Eastern_Sun_Resurrected.mpq/data/hd/...`). The clone's sprite wins when it ships one;
  *   the vanilla items.json / uniques.json / sets.json fill in codes and keys the mod's files do not list;
  * - misc items in scope (`MISC_ICON_TYPES`: the socket fillers) get their code's art, keyed by display name;
- * - quest items (`selectQuestIconCodes`) get their code's art, keyed by code.
+ * - quest items (`selectQuestIconCodes`) get their code's art, keyed by code;
+ * - every other item code (`selectItemCodeRows`: misc.txt, and the weapons / armor.txt rows bases.json leaves out) gets
+ *   its code's art, keyed by code (`items`); a "(6 Pack)" row without art uses the single item's (`sixPackSingleCode`);
+ * - item types get the art all their items share, else a curated representative (`TYPE_ICON_REPRESENTATIVES`).
  */
 import { readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
@@ -239,6 +242,12 @@ export interface IconPlan {
   readonly setChoices: ReadonlyMap<string, NamedArtChoice>;
   /** Misc item display name (or `name#code` when the name's rows differ in art) → asset slug */
   readonly misc: ReadonlyMap<string, string>;
+  /** Item code (`selectItemCodeRows`, codes in `bases` / `quest` left out) → asset slug */
+  readonly items: ReadonlyMap<string, string>;
+  readonly itemStats: ItemCodeStats;
+  /** Item type code → asset slug (the art all its items share, else its TYPE_ICON_REPRESENTATIVES item's) */
+  readonly types: ReadonlyMap<string, string>;
+  readonly typeStats: TypeIconStats;
   /** Slug → source and real relative sprite path, one per distinct asset */
   readonly sprites: ReadonlyMap<string, ResolvedSprite>;
   /** Base codes without an items.json entry (mod or vanilla) */
@@ -265,6 +274,10 @@ export interface IconPlanInput {
   readonly misc?: readonly MiscIconRow[];
   /** Quest item codes (`selectQuestIconCodes`); omitted → no quest section entries */
   readonly quest?: readonly string[];
+  /** Every item row (`selectItemCodeRows`); omitted → no items section entries */
+  readonly items?: readonly ItemCodeRow[];
+  /** Item rows with their types and the types.json ancestry, for the types section; omitted → no type icons */
+  readonly types?: TypeIconInput;
   readonly index: SpriteIndex;
   /** The vanilla art folder: its sprites and json maps, used where the clone's lack an asset, code or key */
   readonly vanilla?: VanillaArt;
@@ -364,6 +377,102 @@ export function readItemNames(tables: readonly TsvTable[], strings: ReadonlyMap<
   return names;
 }
 
+/** An item row of the by-code section (`items`) */
+export interface ItemCodeRow {
+  readonly code: string;
+  readonly name: string;
+  /** itemtypes.txt code of the `type` column */
+  readonly type: string;
+}
+
+/**
+ * Every item row of lootfilter.json (misc / weapons / armor.txt with display names, non-spawnable rows included), in
+ * file order: the misc items and the weapons / armor rows bases.json leaves out (ESR's shadow bases such as Armet
+ * `ulm`, the mythical weapons `m21`…, which cube recipes and the Vessel of Souls name by code).
+ */
+export function selectItemCodeRows(items: readonly LootFilterItem[]): ItemCodeRow[] {
+  return items.map((item) => ({ code: item.code, name: item.name, type: item.type }));
+}
+
+/** itemtypes.txt type of ESR's "(6 Pack)" bundles of an organ or cube material ("Heart (6 Pack)", `6hrt`) */
+export const SIX_PACK_TYPE = 'or6p';
+const SIX_PACK_SUFFIX = ' (6 Pack)';
+
+/**
+ * The single item a "(6 Pack)" row bundles: its code without the leading `6` (`6hrt` → `hrt`, `6ppp` → `ppp` Dragon
+ * Stone, `699j` → `99j` Wild Card). misc.txt has no column that links the two, and 7 of the 22 names differ from the
+ * single item's ("DragonStone", "Anvil", "Decipherer"), while the codes all follow the pattern. Null for other rows.
+ */
+export function sixPackSingleCode(row: Pick<ItemCodeRow, 'code' | 'name' | 'type'>): string | null {
+  if (row.type !== SIX_PACK_TYPE && !row.name.endsWith(SIX_PACK_SUFFIX)) return null;
+  return row.code.length > 1 && row.code.startsWith('6') ? row.code.slice(1) : null;
+}
+
+/** How the items of the by-code section got their icon (per code). */
+export interface ItemCodeStats {
+  /** Distinct codes, without those `bases` or `quest` already key */
+  readonly requested: number;
+  /** Of the codes with an icon: art from the vanilla folder */
+  readonly vanilla: number;
+  /** Codes that use the single item's art (`sixPackSingleCode`) */
+  readonly sixPack: readonly string[];
+  /** Codes without art (no items.json entry in either source, or an asset in no source), with their names */
+  readonly missing: readonly { readonly code: string; readonly name: string }[];
+}
+
+/**
+ * Item types whose items differ in art but are variants of one thing (a ring is a ring, a perfect gem a perfect gem):
+ * the type's icon is this item's. Broad equipment types (Weapon, Any Armor, Helm …) have none on purpose: one base
+ * would read as "this base only". A type whose items all share one art gets that art without an entry here.
+ */
+export const TYPE_ICON_REPRESENTATIVES: Readonly<Record<string, string>> = {
+  ring: 'rin',
+  amul: 'amu',
+  char: 'cm1',
+  scha: 'cm1',
+  mcha: 'cm2',
+  lcha: 'cm3',
+  // The gem grades: the Diamond of the grade (neutral white)
+  gem0: 'gcw',
+  gem1: 'gfw',
+  gem2: 'gsw',
+  gem3: 'glw',
+  gem4: 'gpw',
+  gem5: 'gwb',
+  // Perfect gem 6-packs ("Gem 6 Pack"): the Perfect Diamond one
+  gm6p: '6gw',
+  // The coupon tiers: the blank coupon of the tier
+  cpn1: '96j',
+  cpn2: '97j',
+  cpn3: '98j',
+};
+
+/** An item row with its types (lootfilter.json `items`) */
+export interface TypedItemRow {
+  readonly code: string;
+  readonly type: string;
+  readonly type2?: string;
+  readonly spawnable: boolean;
+}
+
+export interface TypeIconInput {
+  /** Item rows; only the spawnable ones count */
+  readonly rows: readonly TypedItemRow[];
+  /** Type code → its ancestors, itself included (types.json `ancestors`) */
+  readonly ancestors: ReadonlyMap<string, readonly string[]>;
+  /** Default TYPE_ICON_REPRESENTATIVES */
+  readonly representatives?: Readonly<Record<string, string>>;
+}
+
+export interface TypeIconStats {
+  /** Types whose items all share one art */
+  readonly shared: number;
+  /** Types with a representative item */
+  readonly representative: number;
+  /** Representatives whose item has no art */
+  readonly missingRepresentatives: readonly string[];
+}
+
 /** How the quest items of a plan got their icon (per code). */
 export interface QuestIconStats {
   readonly requested: number;
@@ -434,6 +543,76 @@ export function planItemIcons(input: IconPlanInput): IconPlan {
   };
   const { byCode: bases, missingEntry, missingArt, fromVanilla: basesFromVanilla } = planCodes(input.codes);
   const quest = planCodes(input.quest ?? []);
+
+  /*
+   * Every other item by code, without the codes `bases` or `quest` already key: its items.json art, else for a
+   * "(6 Pack)" row the single item's.
+   */
+  const items = new Map<string, string>();
+  const itemMissing: { code: string; name: string }[] = [];
+  const sixPack: string[] = [];
+  const itemSeen = new Set<string>();
+  let itemsFromVanilla = 0;
+  const artOf = (code: string) => {
+    const asset = assets.get(code);
+    const sprite = asset === undefined ? null : resolve(asset);
+    return asset === undefined || sprite === null ? null : { asset, sprite };
+  };
+  for (const row of input.items ?? []) {
+    if (itemSeen.has(row.code) || bases.has(row.code) || quest.byCode.has(row.code)) continue;
+    itemSeen.add(row.code);
+    let art = artOf(row.code);
+    const single = art === null ? sixPackSingleCode(row) : null;
+    if (single !== null) {
+      art = artOf(single);
+      if (art !== null) sixPack.push(row.code);
+    }
+    if (art === null) {
+      itemMissing.push({ code: row.code, name: row.name });
+      continue;
+    }
+    if (art.sprite.source === 'vanilla') itemsFromVanilla++;
+    items.set(row.code, addSprite(art.asset, art.sprite));
+  }
+
+  /*
+   * Item types: the art every spawnable item of the type (by `type` / `type2` ancestry) shares, else the curated
+   * representative's. Types in first-seen order, then the representatives.
+   */
+  const types = new Map<string, string>();
+  let sharedTypes = 0;
+  let representativeTypes = 0;
+  const missingRepresentatives: string[] = [];
+  if (input.types !== undefined) {
+    const { rows, ancestors } = input.types;
+    const artByType = new Map<string, Map<string, ReturnType<typeof artOf>>>();
+    for (const row of rows) {
+      if (!row.spawnable) continue;
+      const art = artOf(row.code);
+      const slug = art === null ? '' : assetSlug(art.asset);
+      for (const type of new Set([row.type, row.type2 ?? ''].flatMap((own) => (own === '' ? [] : (ancestors.get(own) ?? [own]))))) {
+        const arts = artByType.get(type) ?? new Map<string, ReturnType<typeof artOf>>();
+        arts.set(slug, art);
+        artByType.set(type, arts);
+      }
+    }
+    for (const [type, arts] of artByType) {
+      const only = arts.size === 1 ? [...arts.values()][0] : undefined;
+      if (only === undefined || only === null) continue;
+      types.set(type, addSprite(only.asset, only.sprite));
+      sharedTypes++;
+    }
+    for (const [type, code] of Object.entries(input.types.representatives ?? TYPE_ICON_REPRESENTATIVES)) {
+      if (types.has(type)) continue;
+      const art = artOf(code);
+      if (art === null) {
+        missingRepresentatives.push(`${type} → ${code}`);
+        continue;
+      }
+      types.set(type, addSprite(art.asset, art.sprite));
+      representativeTypes++;
+    }
+  }
 
   /*
    * One icon per display name. Enabled rows come first; a later row replaces an earlier one with the same name only
@@ -576,6 +755,15 @@ export function planItemIcons(input: IconPlanInput): IconPlan {
       noneNames,
       splitNames,
     },
+    items,
+    itemStats: {
+      requested: itemSeen.size,
+      vanilla: itemsFromVanilla,
+      sixPack,
+      missing: itemMissing,
+    },
+    types,
+    typeStats: { shared: sharedTypes, representative: representativeTypes, missingRepresentatives },
   };
 }
 
@@ -621,6 +809,34 @@ export function fitInside(width: number, height: number, max: number = ICON_MAX_
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
 }
 
+/** An encoded image for duplicateImageAliases: its slug, the group it may merge within and a hash of its bytes */
+export interface ImageFingerprint {
+  readonly slug: string;
+  /** `esr` / `vanilla` (the sprite's source) or `tint` (a recoloured variant, written only with the vanilla folder) */
+  readonly group: string;
+  readonly hash: string;
+}
+
+/**
+ * Slugs whose encoded image is byte-identical to another's → the slug whose file they share (the alphabetically first
+ * of the group), so no two files hold the same picture (the ESR bolt quiver art equals the arrows' `bow/bolts2`; Robe
+ * and Cape share their art). Images merge only within a group: a run without the vanilla folder then makes the same
+ * choices for the clone's images, which keeps `--check` without the folder exact.
+ */
+export function duplicateImageAliases(images: Iterable<ImageFingerprint>): Map<string, string> {
+  const first = new Map<string, string>();
+  for (const image of [...images].sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0))) {
+    const key = `${image.group}\u0000${image.hash}`;
+    if (!first.has(key)) first.set(key, image.slug);
+  }
+  const aliases = new Map<string, string>();
+  for (const image of images) {
+    const canonical = first.get(`${image.group}\u0000${image.hash}`);
+    if (canonical !== undefined && canonical !== image.slug) aliases.set(image.slug, canonical);
+  }
+  return aliases;
+}
+
 /**
  * icons.json: only the entries whose slug got an image (decode failures drop out). `vanilla` (the art folder's
  * provenance) is written, with the files that came from it, only when any did.
@@ -629,14 +845,17 @@ export function buildIconsBundle(input: {
   esrVersion: string;
   esrTag: string | null;
   vanilla?: { rootHash: string; extractedAt: string };
-  plan: Pick<IconPlan, 'bases' | 'uniques' | 'sets' | 'sprites'> & Partial<Pick<IconPlan, 'misc' | 'quest'>>;
+  plan: Pick<IconPlan, 'bases' | 'uniques' | 'sets' | 'sprites'> & Partial<Pick<IconPlan, 'misc' | 'quest' | 'items' | 'types'>>;
   /** Recoloured variants by unique / set item name (`planTints`); their images are in `images` under the variant slug */
   tints?: { uniques: ReadonlyMap<string, TintRef>; sets: ReadonlyMap<string, TintRef> };
   /** Display names by item code (`readItemNames`) for the `quest` entries; a code without one is named by its code */
   itemNames?: ReadonlyMap<string, string>;
   images: ReadonlyMap<string, { width: number; height: number }>;
+  /** duplicateImageAliases: a slug whose image another slug's file holds points at that file */
+  aliases?: ReadonlyMap<string, string>;
   extension: string;
 }): IconsBundle {
+  const fileSlug = (slug: string) => input.aliases?.get(slug) ?? slug;
   const section = (bySlug: ReadonlyMap<string, string>, tints?: ReadonlyMap<string, TintRef>): Record<string, ItemIconInfo> => {
     const icons: Record<string, ItemIconInfo> = {};
     for (const [key, slug] of bySlug) {
@@ -644,7 +863,7 @@ export function buildIconsBundle(input: {
       const tinted = tint === undefined ? undefined : input.images.get(tint.slug);
       if (tint !== undefined && tinted !== undefined) {
         icons[key] = {
-          file: `${tint.slug}.${input.extension}`,
+          file: `${fileSlug(tint.slug)}.${input.extension}`,
           w: tinted.width,
           h: tinted.height,
           tint: { map: tint.map, color: tint.color },
@@ -653,12 +872,12 @@ export function buildIconsBundle(input: {
       }
       const image = input.images.get(slug);
       if (image === undefined) continue;
-      icons[key] = { file: `${slug}.${input.extension}`, w: image.width, h: image.height };
+      icons[key] = { file: `${fileSlug(slug)}.${input.extension}`, w: image.width, h: image.height };
     }
     return icons;
   };
   const vanillaFiles = [...input.plan.sprites]
-    .filter(([slug, sprite]) => sprite.source === 'vanilla' && input.images.has(slug))
+    .filter(([slug, sprite]) => sprite.source === 'vanilla' && input.images.has(slug) && input.aliases?.has(slug) !== true)
     .map(([slug]) => `${slug}.${input.extension}`)
     .sort();
   return {
@@ -675,6 +894,8 @@ export function buildIconsBundle(input: {
         { ...icon, name: input.itemNames?.get(code) ?? code },
       ])
     ),
+    items: section(input.plan.items ?? new Map()),
+    types: section(input.plan.types ?? new Map()),
   };
 }
 
@@ -694,7 +915,7 @@ export function compareWithoutVanilla(committed: IconsBundle, esrOnly: IconsBund
   type Entry = ItemIconInfo & { name?: string };
   const same = (a: Entry, b: Entry) => a.file === b.file && a.w === b.w && a.h === b.h && a.name === b.name;
   const describe = (icon: ItemIconInfo) => `${icon.file} ${String(icon.w)}×${String(icon.h)}`;
-  for (const section of ['bases', 'uniques', 'sets', 'misc', 'quest'] as const) {
+  for (const section of ['bases', 'uniques', 'sets', 'misc', 'quest', 'items', 'types'] as const) {
     const old = committed[section];
     const fresh = esrOnly[section];
     for (const [key, committedIcon] of Object.entries(old)) {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createHash } from 'crypto';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { EXTRA_FAMILIES } from './build/cube/cubeCatalog.ts';
 import { CUBE_FAMILIES } from './build/cube/cubeFamilies.ts';
@@ -135,12 +135,14 @@ describe('committed game-data bundles', () => {
     expect(manifest.files.icons?.hash).toBe(createHash('sha256').update(iconsText, 'utf8').digest('hex'));
     const icons = JSON.parse(iconsText) as IconsBundle;
     expect(icons.esrVersion).toBe(manifest.esrVersion);
-    expect(Object.keys(icons)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest']);
+    expect(Object.keys(icons)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest', 'items', 'types']);
     expect(manifest.counts.itemIcons).toBe(Object.keys(icons.bases).length);
     expect(manifest.counts.uniqueIcons).toBe(Object.keys(icons.uniques).length);
     expect(manifest.counts.setIcons).toBe(Object.keys(icons.sets).length);
     expect(manifest.counts.miscIcons).toBe(Object.keys(icons.misc).length);
     expect(manifest.counts.questIcons).toBe(Object.keys(icons.quest).length);
+    expect(manifest.counts.itemCodeIcons).toBe(Object.keys(icons.items).length);
+    expect(manifest.counts.typeIcons).toBe(Object.keys(icons.types).length);
     // With the vanilla art as the second source almost every item has an icon (ESR 3.2.24: all of them)
     expect(Object.keys(icons.bases).length).toBeGreaterThan(640);
     expect(Object.keys(icons.uniques).length).toBeGreaterThan(1100);
@@ -172,6 +174,20 @@ describe('committed game-data bundles', () => {
       expect(icons.quest[code], code).toBeDefined();
     for (const area of areas) if (area.mapItem !== undefined) expect(icons.quest[area.mapItem], area.mapItem).toBeDefined();
 
+    // Every other item by code (ESR 3.2.24: 1,472 of 1,579 codes), not repeating a base or quest code; the "(6 Pack)"
+    // rows share the single item's file, and a gem / rune's code shares its name entry's file
+    expect(Object.keys(icons.items).length).toBeGreaterThan(1400);
+    for (const code of Object.keys(icons.items))
+      expect(Object.hasOwn(icons.bases, code) || Object.hasOwn(icons.quest, code), code).toBe(false);
+    expect(icons.items['6hrt']?.file).toBe(icons.items.hrt?.file);
+    expect(icons.items['6ppp']?.file).toBe(icons.items.ppp?.file);
+    expect(icons.items.gsw?.file).toBe(icons.misc.Diamond?.file);
+    // Item types: shared art or a representative (Ring, Perfect Gem); none for the broad equipment types
+    expect(icons.types.ring?.file).toBe(icons.bases.rin?.file);
+    expect(icons.types.gem5?.file).toBe(icons.misc['Perfect Diamond']?.file);
+    expect(icons.types.weap).toBeUndefined();
+    expect(icons.types.armo).toBeUndefined();
+
     // Vanilla provenance: the Steam build's root hash, the extraction date and the files made from vanilla sprites
     const vanilla = icons.vanilla;
     expect(vanilla?.rootHash).toMatch(/^[0-9a-f]{32}$/);
@@ -181,7 +197,9 @@ describe('committed game-data bundles', () => {
     expect(vanillaFiles).toEqual([...new Set(vanillaFiles)].sort());
     for (const file of vanillaFiles) expect(existsSync(resolve(OUTPUT_DIR, 'icons', file)), file).toBe(true);
     expect(manifest.counts.vanillaIconFiles).toBe(vanillaFiles.length);
-    const entries = [icons.bases, icons.uniques, icons.sets, icons.misc, icons.quest].flatMap((section) => Object.values(section));
+    const entries = [icons.bases, icons.uniques, icons.sets, icons.misc, icons.quest, icons.items, icons.types].flatMap((section) =>
+      Object.values(section)
+    );
     // A vanilla file is used directly or through a recoloured variant made from it
     const usedFiles = new Set(entries.map((icon) => untintedFile(icon.file)));
     for (const file of vanillaFiles) expect(usedFiles.has(file), file).toBe(true);
@@ -189,12 +207,15 @@ describe('committed game-data bundles', () => {
 
     // Inventory colour transforms: only unique / set entries, file named after the untinted file, map and colour
     expect(
-      [icons.bases, icons.misc, icons.quest].flatMap((section) => Object.values(section)).some((icon) => icon.tint !== undefined)
+      [icons.bases, icons.misc, icons.quest, icons.items, icons.types]
+        .flatMap((section) => Object.values(section))
+        .some((icon) => icon.tint !== undefined)
     ).toBe(false);
     const tinted = [icons.uniques, icons.sets].flatMap((section) => Object.values(section)).filter((icon) => icon.tint !== undefined);
     for (const icon of tinted) {
       const tint = icon.tint ?? { map: '', color: '' };
-      expect(icon.file).toBe(`${untintedFile(icon.file).replace(/\.webp$/, '')}__${tint.map}-${tint.color}.webp`);
+      // A variant byte-identical to another colour's shares that file (lgrn / dgrn on the Large Charm art)
+      expect(icon.file).toMatch(new RegExp(`^${untintedFile(icon.file).replace(/\.webp$/, '')}__${tint.map}-[a-z]{4}\\.webp$`));
       expect(COLORMAP_FILES as readonly string[]).toContain(tint.map);
       expect(TINT_COLORS as readonly string[]).toContain(tint.color);
       expect(existsSync(resolve(OUTPUT_DIR, 'icons', untintedFile(icon.file))), icon.file).toBe(true);
@@ -205,6 +226,28 @@ describe('committed game-data bundles', () => {
     expect(manifest.counts.tintedIconFiles).toBe(new Set(tinted.map((icon) => icon.file)).size);
     expect(icons.sets["Alaziel's Grip"]?.tint).toEqual({ map: 'invgreybrown', color: 'cred' });
     expect(icons.sets["Alaziel's Protector"]?.tint).toBeUndefined();
+
+    // No duplicate art: byte-identical images share one file (duplicateImageAliases)
+    const iconFiles = readdirSync(resolve(OUTPUT_DIR, 'icons')).filter((name) => name.endsWith('.webp'));
+    const byHash = new Map<string, string>();
+    for (const name of iconFiles) {
+      const hash = createHash('sha256')
+        .update(readFileSync(resolve(OUTPUT_DIR, 'icons', name)))
+        .digest('hex');
+      expect(byHash.get(hash), `${name} has the same bytes as ${byHash.get(hash) ?? ''}`).toBeUndefined();
+      byHash.set(hash, name);
+    }
+
+    const itemCodes = new Set(lootfilter.items.map((item) => item.code));
+    for (const [section, known] of [
+      ['items', itemCodes],
+      ['types', new Set(types.map((type) => type.code))],
+    ] as const) {
+      for (const [key, icon] of Object.entries(icons[section])) {
+        expect(known.has(key), `${section}: ${key}`).toBe(true);
+        expect(existsSync(resolve(OUTPUT_DIR, 'icons', icon.file)), icon.file).toBe(true);
+      }
+    }
 
     const codes = new Set(bases.map((base) => base.code));
     const uniqueNames = new Set(lootfilter.uniques.map((unique) => unique.name));
@@ -646,6 +689,96 @@ describe('committed game-data bundles', () => {
         ).toHaveLength(family.rowCount);
     }
     expect(cube.sections.map((section) => section.id)).toEqual([...new Set(cube.families.map((family) => family.section))]);
+  });
+
+  it('pin the cube page fixes of the official-page audit (ESR 3.2.24)', () => {
+    const groups = new Map(cube.groups.map((group) => [group.id, group]));
+    const rowsOf = (family: string) => cube.rows.filter((row) => row.family === family);
+    const find = (family: string, pick: (text: string) => boolean) =>
+      rowsOf(family).find((row) => pick(`${row.inputs.join(' + ')} => ${row.output}`));
+    // The Trap Assassin starter weapon (cubemain L8918) is listed, with its 1-2 sockets
+    const trap = find('magic-rare-reroll', (text) => text.includes('Throwing Knife') && text.includes('Assassin Skill Levels'));
+    expect(trap?.output).toContain('1-2 sockets');
+    expect(rowsOf('magic-rare-reroll').some((row) => /\(2 sockets, \+\(1 to 2\) to Bow/.test(row.output))).toBe(false);
+    // Removals read as removals: Astrogha's Petrified Heart, Secret Recipe 38 and 8
+    expect(find('legendary-consumables', (text) => text.includes("Astrogha's"))?.output).toBe(
+      'The same item (Removes the corruption status, so the item can be corrupted again)'
+    );
+    const secret = rowsOf('secret').map((row) => row.output);
+    expect(secret).toContain('The same item (Removes Slain Monsters Rest in Peace)');
+    expect(secret).toContain('The same item (Removes Knockback)');
+    expect(secret).toContain('The same item (Removes +25% to Experience Gained) + Ancient Scroll 8');
+    // Durability repair as the game writes it (Secret Recipe 37: rep-dur 5), app-wide
+    expect(secret).toContain('The same item (Repairs 1 durability in 20 seconds)');
+    for (const [name, text] of [
+      ['cube', cubeText],
+      ['affixes', affixesText],
+      ['enhance', enhanceText],
+      ['crafting', craftingText],
+      ['sets', setsText],
+    ] as const) {
+      expect(text, name).not.toMatch(/Repairs \d+ durability per second/);
+    }
+    expect(setsText).toContain('Repairs 1 durability in 1 seconds');
+    // Class crafts: one group per class, each slot with its stats (L9914: the Amazon helm)
+    expect(rowsOf('class-craft')).toHaveLength(80);
+    expect(new Set(rowsOf('class-craft').map((row) => groups.get(row.group)?.label)).size).toBe(8);
+    expect(find('class-craft', (text) => text.startsWith('Any Magic Helm') && text.includes('Amazon'))?.output).toBe(
+      'Crafted item of the same type (+(1 to 2) to Amazon Skill Levels, +(80 to 100)% Enhanced Defense, +(30 to 45) to Energy, All Resists +(15 to 25))'
+    );
+    // Per-row conditions: the Rerolling Orb point requirements and Tyrael's boon
+    expect(rowsOf('ring-amulet').filter((row) => row.conditions?.includes('Stored Magic Ring Points ≥ 7') === true).length).toBeGreaterThan(
+      0
+    );
+    // 11 of its 12 rows check it (L2316 does not: an ESR data issue)
+    const notUpgraded = rowsOf('tyrael-boon').filter((row) => row.conditions?.includes('Not upgraded yet') === true);
+    expect(notUpgraded.reduce((sum, row) => sum + row.variants, 0)).toBe(11);
+    // Returned ingredients: Mythical Map + Key gives the Key back
+    expect(find('map-portals', (text) => text.startsWith('Mythical Map + Key'))?.returned).toBe('Key');
+    // Readable stocker and roll conditions, no raw labels
+    const conditionTexts = [...cube.groups.flatMap((group) => group.conditions), ...cube.rows.flatMap((row) => row.conditions ?? [])];
+    expect(conditionTexts.filter((text) => /Stocker count|Randomize counter|junk_|item_\d/.test(text))).toEqual([]);
+    expect(rowsOf('secret').some((row) => row.conditions?.includes("Stored Devil's Food Points ≥ 25") === true)).toBe(true);
+    // Item types read as types
+    expect(find('quest-items', (text) => text.includes('Cow Portal'))?.inputs).toEqual(['Any Club', 'Tome of Town Portal']);
+    expect(find('dstoning', (text) => text.startsWith('Gloves, Belt or Boots'))).toBeDefined();
+    // The player-facing stocker rows: Rune Stocker upgrades, Multi Stocker, Rerolling Orb, Gem Can
+    expect(find('stocker-upgrades', (text) => text.startsWith('Rune Stocker'))?.output).toBe(
+      'The same Rune Stocker (2 points of that rune → 1 point of the next rune)'
+    );
+    for (const family of ['multi-stocker', 'rerolling-orb', 'gem-can-rerolls', 'crystal-can'])
+      expect(rowsOf(family).length, family).toBeGreaterThan(0);
+    expect(cube.hidden.stockers).toBeLessThan(3700);
+    // D-stoning notes: fail-safe limits and the 500% ceiling; Secret Recipe 25's odds
+    const notes = (id: string) => cube.families.find((family) => family.id === id)?.notes ?? [];
+    expect(notes('dstoning')).toContain(
+      "Fail-safe: does nothing once the item's added level requirement is at least 58 (elite), 79 (exceptional) or 99 (normal tier, rings, amulets)."
+    );
+    expect(notes('dstoning').some((note) => note.includes('500%'))).toBe(true);
+    expect(notes('gem-meld').some((note) => note.includes('55 (elite), 78 (exceptional) or 99 (normal tier)'))).toBe(true);
+    expect(find('secret', (text) => text.startsWith('Ore + Ancient Scroll 25'))?.odds?.map((line) => line.split(':')[0])).toEqual([
+      '50%',
+      '30%',
+      '20%',
+    ]);
+    // Section notes and guide links; Secret Recipes 26, 27, 28 and 40 in the secret family
+    expect(cube.sections.find((section) => section.id === 'legendary')?.notes?.some((note) => note.includes('engine bug'))).toBe(true);
+    const secretGroups = cube.groups.filter((group) => group.family === 'secret').map((group) => group.label);
+    for (const n of [26, 27, 28, 40]) expect(secretGroups, String(n)).toContain(`Secret Recipe ${String(n)}`);
+    // Group labels from the ingredients where the description names another (Caster craft takes a Perfect Sapphire)
+    expect(cube.groups.filter((group) => group.family === 'legacy-craft').map((group) => group.label)).toEqual([
+      'Hit Power craft',
+      'Blood craft',
+      'Caster craft',
+      'Safety craft',
+    ]);
+    expect(cube.groups.some((group) => group.label === 'Belt Upgrade: Sash + Thawing Potion')).toBe(false);
+  });
+
+  it('link the cube sections to guide notes that exist', () => {
+    const slugs = new Set(readdirSync(resolve(__dirname, '../../../content/guide/notes')).map((file) => file.replace(/\.md$/, '')));
+    for (const section of cube.sections)
+      for (const slug of section.guide ?? []) expect(slugs.has(slug), `${section.id} → ${slug}`).toBe(true);
   });
 
   it('list the materials with known families, enhance roles and groups, without equipment bases', () => {

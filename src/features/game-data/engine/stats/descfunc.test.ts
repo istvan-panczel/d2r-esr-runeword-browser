@@ -73,8 +73,13 @@ describe('renderStat by descfunc', () => {
     expect(render(def(7, 'pct', s2), entry(10))).toEqual(['10% Increased Attack Speed (Based on Character Level)']);
   });
 
-  it('11: repair durability', () => {
-    expect(render(def(11, 'ModStre9t'), entry(3))).toEqual(['Repairs 3 durability per second']);
+  it('11: repair durability, 1 per 100 / V seconds as the game writes it', () => {
+    // Secret Recipe 37's rep-dur 5: the official page's "Repairs 1 Durability In 20 Sec"
+    expect(render(def(11, 'ModStre9t'), entry(5))).toEqual(['Repairs 1 durability in 20 seconds']);
+    // of Self-Repair (3): 100 / 3 rounds down; Aanna's Touch (100): the docs' "in 1 seconds"
+    expect(render(def(11, 'ModStre9t'), entry(3))).toEqual(['Repairs 1 durability in 33 seconds']);
+    expect(render(def(11, 'ModStre9t'), entry(100))).toEqual(['Repairs 1 durability in 1 seconds']);
+    expect(render(def(11, 'ModStre9t'), entry(200))).toEqual(['Repairs 2 durability per second']);
   });
 
   it('12: +V S1, V omitted when 1', () => {

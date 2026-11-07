@@ -12,7 +12,7 @@ export interface CubeRecipeRow {
 }
 
 /** Qualifiers written before the name */
-const ADJECTIVES: Record<string, string> = {
+export const ADJECTIVES: Readonly<Record<string, string>> = {
   low: 'Low Quality',
   nor: 'Normal',
   hiq: 'Superior',
@@ -87,15 +87,31 @@ function withQualifiers(adjectives: string[], name: string, notes: string[]): st
   return notes.length === 0 ? text : `${text} (${notes.join(', ')})`;
 }
 
-export function formatInput(spec: string, esr: Pick<CubeTables, 'nameOf'>): string {
+/**
+ * An input cell as text: "2× Unique Jewel", "Magic Ring (no sockets)". An item type that reads like an item
+ * (`CubeNames.anyType`: "Helm", "Healing Potion", "Body Armor", "Any Armor") reads "Any Magic Helm", so a type is not
+ * taken for one base.
+ */
+export function formatInput(spec: string, esr: Pick<CubeTables, 'nameOf' | 'anyType'>): string {
   const parsed = parseSpec(spec);
   const name = parsed.token === 'any' ? 'Any item' : esr.nameOf(parsed.token);
-  const text = withQualifiers(parsed.adjectives, name, parsed.notes);
+  const any = /^Any /.test(name) || esr.anyType?.(parsed.token) === true;
+  const text = any
+    ? `Any ${withQualifiers(parsed.adjectives, name.replace(/^Any /, ''), parsed.notes)}`
+    : withQualifiers(parsed.adjectives, name, parsed.notes);
   return parsed.qty > 1 ? `${String(parsed.qty)}× ${text}` : text;
 }
 
+/** "2 sockets", or the range a `sock` mod rolls ("1-2 sockets") */
+export function socketText(min: number, max: number): string {
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  if (low === high || low <= 0) return high === 1 ? '1 socket' : `${String(high)} sockets`;
+  return `${String(low)}-${String(high)} sockets`;
+}
+
 function modNotes(mods: readonly CubeMod[]): string[] {
-  return mods.filter((mod) => mod.mod === 'sock').map((mod) => (mod.max === 1 ? '1 socket' : `${String(mod.max)} sockets`));
+  return mods.filter((mod) => mod.mod === 'sock').map((mod) => socketText(mod.min, mod.max));
 }
 
 /**
@@ -148,10 +164,45 @@ export interface DescribeOptions {
   bonus?: boolean;
 }
 
-/** The bonus lines of an output's mods through the game-data stat renderer ("+5 to Life"), markers left out */
+/** Forging markers: an output that takes one off (a negative value) removes the forging and every bonus it gave */
+const FORGING_MARKERS = new Set(['craftflag', 'craftflag2']);
+
+/** Removals worded by property code instead of "Removes {line}" */
+const REMOVAL_TEXT: Readonly<Partial<Record<string, string>>> = {
+  corrupted: 'Removes the corruption status, so the item can be corrupted again',
+};
+
+function negated(mod: CubeMod): CubeMod {
+  return { ...mod, min: -mod.max, max: -mod.min };
+}
+
+/**
+ * A negative mod that takes something off instead of giving a malus: a flag (its positive line has no number, e.g.
+ * "Slain Monsters Rest in Peace", "Knockback", "Corrupted"), or any bonus of an output that removes a forging marker
+ * (Secret Recipe 8's "-25% to Experience Gained" undoes the +25% it added).
+ */
+function isRemoval(mod: CubeMod, removesForging: boolean, esr: Pick<OutputTables, 'renderMods'>): boolean {
+  if (mod.max >= 0 || mod.min > 0) return false;
+  if (removesForging || REMOVAL_TEXT[mod.mod] !== undefined) return true;
+  const lines = esr.renderMods([negated(mod)]);
+  return lines.length > 0 && lines.every((line) => !/\d/.test(line));
+}
+
+/**
+ * The bonus lines of an output's mods through the game-data stat renderer ("+5 to Life"), markers left out. A mod
+ * that removes something (isRemoval) reads "Removes {its positive line}" ("Removes Knockback", "Removes +25% to
+ * Experience Gained"), after the bonuses.
+ */
 export function bonusLines(mods: readonly CubeMod[], esr: Pick<OutputTables, 'renderMods'>): string[] {
   const shown = mods.filter((mod) => !isHiddenOutputMod(mod));
-  return shown.length === 0 ? [] : esr.renderMods(shown);
+  if (shown.length === 0) return [];
+  const removesForging = mods.some((mod) => FORGING_MARKERS.has(mod.mod) && mod.max < 0);
+  const removed = shown.filter((mod) => isRemoval(mod, removesForging, esr));
+  const given = shown.filter((mod) => !removed.includes(mod));
+  return [
+    ...(given.length === 0 ? [] : esr.renderMods(given)),
+    ...removed.flatMap((mod) => REMOVAL_TEXT[mod.mod] ?? esr.renderMods([negated(mod)]).map((line) => `Removes ${line}`)),
+  ];
 }
 
 /** Output text plus the qualifiers on their own (for item lists). */

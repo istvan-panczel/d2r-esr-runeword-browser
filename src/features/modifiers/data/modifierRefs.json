@@ -333,7 +333,7 @@
     ["Obsidian","stat-gem-k"],
     ["Sanctified","stat-item-sanctification"],
     ["Transmute to Sanctify Item","stat-item-sanctification-dummy"],
-    ["Repairs durability per second","stat-item-replenish-durability"],
+    ["Repairs Durability","stat-item-replenish-durability"],
     ["Amethyst","stat-gem-v"],
     ["Topaz","stat-gem-y"],
     ["Sapphire","stat-gem-b"],

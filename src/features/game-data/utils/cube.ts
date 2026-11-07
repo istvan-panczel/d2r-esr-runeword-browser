@@ -13,6 +13,7 @@ import { ESR_DOCS_URL } from '@/core/navigation/navConfig';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { CUBE_QUALITIES, type CubeQuality } from '../engine/schema';
 import type { CubeBundle, CubeFamilyInfo, CubeGroup, CubeMergedRow, CubeRecipe, CubeSection, MaterialEnhanceTab } from '../engine/schema';
+import type { GuideNoteIndex } from './materials';
 
 export interface CubeState {
   /** Legacy `?search=` of old links: matches ingredients or results; the page no longer has a box for it */
@@ -138,7 +139,29 @@ export function groupHeaderTexts(group: CubeGroup): string[] {
 }
 
 export function mergedRowTexts(row: CubeMergedRow): string[] {
-  return [...row.inputs, row.output];
+  return [...row.inputs, ...mergedOutputTexts(row), ...(row.conditions ?? []), ...(row.returned === undefined ? [] : [row.returned])];
+}
+
+/** What the result search reads on a merged row: its output and the odds of a random pool */
+function mergedOutputTexts(row: CubeMergedRow): string[] {
+  return [row.output, ...(row.odds ?? [])];
+}
+
+/**
+ * Guide notes for a family: the section's (cube.json `guide`), then those that show the family (guide.json
+ * `familyNotes`), without repeats and unknown slugs; `excludeSection` leaves the section's out (shown above).
+ */
+export function familyGuideNotes(
+  section: Pick<CubeSection, 'guide'>,
+  family: string,
+  index: GuideNoteIndex | null,
+  known: ReadonlySet<string>,
+  excludeSection = false
+): string[] {
+  const own = excludeSection ? [] : (section.guide ?? []);
+  const shown = new Set(excludeSection ? (section.guide ?? []) : []);
+  const slugs = [...own, ...(index?.familyNotes?.[family] ?? [])];
+  return [...new Set(slugs)].filter((slug) => known.has(slug) && !shown.has(slug));
 }
 
 export function recipeTexts(recipe: CubeRecipe): string[] {
@@ -196,7 +219,8 @@ function filterBySides(tree: readonly CubeSectionView[], filters: CubeFilters): 
     const inGroup = inTerms.length === 0 || matches(group.inputNames ?? [], inTerms);
     const outGroup = outTerms.length === 0 || matches(group.outputNames ?? [], outTerms);
     const rows = groupView.rows.filter(
-      (row) => hasQuality(row.qualities) && (inGroup || matches(row.inputs, inTerms)) && (outGroup || matches([row.output], outTerms))
+      (row) =>
+        hasQuality(row.qualities) && (inGroup || matches(row.inputs, inTerms)) && (outGroup || matches(mergedOutputTexts(row), outTerms))
     );
     const recipes = groupView.recipes.filter(
       (recipe) =>

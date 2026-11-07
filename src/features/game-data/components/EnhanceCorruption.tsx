@@ -4,6 +4,7 @@ import type { EnhanceBundle } from '../engine/schema';
 import { brickSummary, filterCorruptionOutcomes, formatRate, missingQualities, qualityList } from '../utils/enhance';
 import { BonusLines, ComputedRate, NoMatches, Pills } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
+import { IngredientIcons } from './CellIcon';
 
 interface EnhanceCorruptionProps {
   readonly bundle: EnhanceBundle;
@@ -32,7 +33,13 @@ export function EnhanceCorruption({ bundle, slot: slotId, search, onSlot }: Enha
 
       <Card className="gap-3 py-4">
         <CardHeader className="px-4">
-          <CardTitle className="text-base">
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            <IngredientIcons
+              items={[
+                { kind: 'type', code: slot.typeCode },
+                { kind: 'item', code: corruption.reagent.code },
+              ]}
+            />
             {slot.label} + {corruption.reagent.name}
           </CardTitle>
           <p className="text-sm">

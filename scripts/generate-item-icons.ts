@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
  * Extracts item icons from HD item sprites into public/game-data/icons/*.webp and public/game-data/icons.json (file and
- * size by base code, unique name, set item name and misc item name). Scope: the codes of the committed bases.json, every
+ * size by base code, unique name, set item name, misc item name, item code and item type). Scope: the codes of the committed bases.json, every
  * uniqueitems.txt and setitems.txt row with a base (own art from hd/items/uniques.json / sets.json, else the base's art)
  * the committed lootfilter.json misc items whose type descends from MISC_ICON_TYPES (types.json; the socket fillers)
- * and the quest items of misc/weapons/armor.txt (a `quest` number or a QUEST_ICON_TYPES type; by code).
+ * the quest items of misc/weapons/armor.txt (a `quest` number or a QUEST_ICON_TYPES type; by code), every other item
+ * code (misc.txt, and the weapons / armor.txt rows bases.json leaves out) (a "(6 Pack)" row without art uses the single item's) and the item types whose items share one art or
+ * that have a TYPE_ICON_REPRESENTATIVES item.
  *
  *   node scripts/generate-item-icons.ts [--esr <dir>] [--vanilla <dir>] [--check]
  *
@@ -18,6 +20,7 @@
  * exits 0; writing without the folder is refused (it would drop those files).
  * Run generate-game-data.ts afterwards: it lists icons.json (hash) in the manifest (`npm run game-data:icons` does both).
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -33,12 +36,15 @@ import {
   buildSpriteIndex,
   compareWithoutVanilla,
   cropRgba,
+  duplicateImageAliases,
   ESR_HD_ITEM_SPRITES_DIR,
   ESR_HD_ITEMS_FILE,
   ESR_HD_SETS_FILE,
   ESR_HD_UNIQUES_FILE,
   fitInside,
+  type ItemCodeStats,
   type MiscIconStats,
+  type NamedArtChoice,
   MISC_ICON_TYPES,
   QUEST_ICON_TYPES,
   type QuestIconStats,
@@ -50,8 +56,10 @@ import {
   parseNamedArt,
   planItemIcons,
   readItemNames,
+  selectItemCodeRows,
   selectMiscIconRows,
   selectQuestIconCodes,
+  type TypeIconStats,
   VANILLA_BUILD_CONFIG_FILE,
   VANILLA_HD_ITEM_SPRITES_DIR,
   VANILLA_HD_ITEMS_FILE,
@@ -215,7 +223,9 @@ async function main(): Promise<void> {
   const codes = bases.map((base) => base.code);
   const lootfilter = JSON.parse(readFileSync(join(OUTPUT_DIR, 'lootfilter.json'), 'utf8')) as LootFilterDataBundle;
   const { types } = JSON.parse(readFileSync(join(OUTPUT_DIR, 'types.json'), 'utf8')) as TypesBundle;
-  const misc = selectMiscIconRows(lootfilter.items, new Map(types.map((type) => [type.code, type.ancestors])));
+  const ancestors = new Map(types.map((type) => [type.code, type.ancestors]));
+  const misc = selectMiscIconRows(lootfilter.items, ancestors);
+  const items = selectItemCodeRows(lootfilter.items);
   const { assets, duplicates } = parseItemAssets(JSON.parse(readFileSync(itemsFile, 'utf8')));
   const uniqueArt = parseNamedArt(JSON.parse(readFileSync(uniquesFile, 'utf8')), 'uniques.json');
   const setArt = parseNamedArt(JSON.parse(readFileSync(setsFile, 'utf8')), 'sets.json');
@@ -233,6 +243,8 @@ async function main(): Promise<void> {
     sets,
     misc,
     quest,
+    items,
+    types: { rows: lootfilter.items, ancestors },
     assets,
     uniqueArt: uniqueArt.art,
     setArt: setArt.art,
@@ -241,18 +253,6 @@ async function main(): Promise<void> {
   });
 
   const sourceDirs: Record<ArtSource, string> = { esr: spritesDir, vanilla: vanilla?.spritesDir ?? '' };
-  // Inventory colour transforms need the vanilla folder's palette files; without it no entry is recoloured
-  const tintPlan = planTints({
-    uniqueChoices: plan.uniqueChoices,
-    setChoices: plan.setChoices,
-    invTrans,
-    colormaps: vanilla === null ? null : new Set(vanilla.colormaps.keys()),
-    tintOwnArt: (slug) => {
-      const sprite = plan.sprites.get(slug);
-      return sprite !== undefined && meanChroma(readSprite(join(sourceDirs[sprite.source], sprite.path)).rgba) <= GREYSCALE_MAX_CHROMA;
-    },
-  });
-
   const images = new Map<string, EncodedIcon>();
   const failures: string[] = [];
   for (const [slug, sprite] of plan.sprites) {
@@ -262,6 +262,30 @@ async function main(): Promise<void> {
       failures.push(`${sprite.source}: ${sprite.path}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+  const hashOf = (image: EncodedIcon) => createHash('sha256').update(image.bytes).digest('hex');
+  /*
+   * Byte-identical images share one file (within a source group), and so do byte-identical recoloured variants. The
+   * recoloured variants are planned from the shared files, so a variant's untinted file always exists.
+   */
+  const untintedAliases = duplicateImageAliases(
+    [...images].flatMap(([slug, image]) => {
+      const source = plan.sprites.get(slug)?.source;
+      return source === undefined ? [] : [{ slug, group: source, hash: hashOf(image) }];
+    })
+  );
+  const shared = (choices: ReadonlyMap<string, NamedArtChoice>) =>
+    new Map([...choices].map(([name, choice]) => [name, { ...choice, slug: untintedAliases.get(choice.slug) ?? choice.slug }]));
+  // Inventory colour transforms need the vanilla folder's palette files; without it no entry is recoloured
+  const tintPlan = planTints({
+    uniqueChoices: shared(plan.uniqueChoices),
+    setChoices: shared(plan.setChoices),
+    invTrans,
+    colormaps: vanilla === null ? null : new Set(vanilla.colormaps.keys()),
+    tintOwnArt: (slug) => {
+      const sprite = plan.sprites.get(slug);
+      return sprite !== undefined && meanChroma(readSprite(join(sourceDirs[sprite.source], sprite.path)).rgba) <= GREYSCALE_MAX_CHROMA;
+    },
+  });
   const tints = new Map<string, Tint>();
   for (const [slug, variant] of tintPlan.variants) {
     const sprite = plan.sprites.get(variant.source);
@@ -275,6 +299,12 @@ async function main(): Promise<void> {
     }
     images.set(slug, await encodeIcon(join(sourceDirs[sprite.source], sprite.path), tint));
   }
+  const aliases = new Map([
+    ...untintedAliases,
+    ...duplicateImageAliases(
+      [...images].flatMap(([slug, image]) => (plan.sprites.has(slug) ? [] : [{ slug, group: 'tint', hash: hashOf(image) }]))
+    ),
+  ]);
   const bundle = buildIconsBundle({
     esrVersion,
     esrTag,
@@ -283,12 +313,13 @@ async function main(): Promise<void> {
     tints: tintPlan,
     itemNames: readItemNames([table('misc'), table('weapons'), table('armor')], strings),
     images,
+    aliases,
     extension: EXTENSION,
   });
   const bundleText = serializeBundle(bundle);
-  const files = new Map([...images].map(([slug, image]) => [`${slug}.${EXTENSION}`, image.bytes]));
+  const files = new Map([...images].filter(([slug]) => !aliases.has(slug)).map(([slug, image]) => [`${slug}.${EXTENSION}`, image.bytes]));
   const totalBytes = [...files.values()].reduce((sum, bytes) => sum + bytes.byteLength, 0);
-  const vanillaFileCount = [...plan.sprites.values()].filter((sprite) => sprite.source === 'vanilla').length;
+  const vanillaFileCount = [...plan.sprites].filter(([slug, sprite]) => sprite.source === 'vanilla' && !aliases.has(slug)).length;
   const tintedFiles = new Set(
     [bundle.uniques, bundle.sets].flatMap((section) =>
       Object.values(section)
@@ -297,12 +328,12 @@ async function main(): Promise<void> {
     )
   );
   const usedFiles = new Set(
-    [bundle.bases, bundle.uniques, bundle.sets, bundle.misc, bundle.quest].flatMap((section) =>
+    [bundle.bases, bundle.uniques, bundle.sets, bundle.misc, bundle.quest, bundle.items, bundle.types].flatMap((section) =>
       Object.values(section).map((icon) => icon.file)
     )
   );
   const unusedFiles = [...files.keys()].filter((name) => !usedFiles.has(name));
-  const failedEntries = [plan.bases, plan.uniques, plan.sets, plan.misc, plan.quest].reduce(
+  const failedEntries = [plan.bases, plan.uniques, plan.sets, plan.misc, plan.quest, plan.items, plan.types].reduce(
     (sum, map) => sum + [...map.values()].filter((slug) => !images.has(slug)).length,
     0
   );
@@ -324,6 +355,8 @@ async function main(): Promise<void> {
   printNamed('set items (setitems.txt rows, by name)', sets.length, plan.setStats, setArt.duplicates);
   printMisc(misc.length, plan.miscStats);
   printQuest(plan.questStats);
+  printItemCodes(plan.itemStats);
+  printTypes(plan.typeStats);
   console.log(
     `  icons written (distinct assets): ${String(files.size)} (${String(vanillaFileCount)} from vanilla art), ${(totalBytes / 1024).toFixed(1)} KB`
   );
@@ -331,6 +364,9 @@ async function main(): Promise<void> {
   printTints('set items', tintPlan.setStats);
   console.log(`    recoloured files (distinct asset, map, colour): ${String(tintedFiles.size)}`);
   console.log(`    untinted files only the recoloured variants use: ${String(unusedFiles.length)}${listCodes(unusedFiles)}`);
+  console.log(
+    `  byte-identical images sharing another's file: ${String(aliases.size)}${listCodes([...aliases].map(([slug, canonical]) => `${slug} → ${canonical}`))}`
+  );
   console.log(`  decode failures: ${String(failures.length)} sprites, ${String(failedEntries)} entries`);
   for (const failure of failures) console.log(`    - ${failure}`);
 
@@ -438,6 +474,25 @@ function printQuest(stats: QuestIconStats): void {
     `    ${String(withArt - stats.vanilla)} from ESR art, ${String(stats.vanilla)} from vanilla art, ` +
       `${String(stats.missing.length)} without art${listCodes(stats.missing)}`
   );
+}
+
+function printItemCodes(stats: ItemCodeStats): void {
+  const withArt = stats.requested - stats.missing.length;
+  console.log(`  items by code (misc / weapons / armor.txt codes not keyed under bases / quest): ${String(stats.requested)} codes`);
+  console.log(
+    `    ${String(withArt - stats.vanilla)} from ESR art, ${String(stats.vanilla)} from vanilla art, ` +
+      `${String(stats.missing.length)} without art; ${String(stats.sixPack.length)} "(6 Pack)" rows use the single item's art`
+  );
+  if (stats.missing.length > 0) {
+    console.log(`    without art: ${stats.missing.map((row) => `${row.code} ${row.name}`).join(', ')}`);
+  }
+}
+
+function printTypes(stats: TypeIconStats): void {
+  console.log(
+    `  item types: ${String(stats.shared)} whose items share one art, ${String(stats.representative)} with a representative item`
+  );
+  if (stats.missingRepresentatives.length > 0) console.log(`    representatives without art: ${stats.missingRepresentatives.join(', ')}`);
 }
 
 function printTints(label: string, stats: TintStats): void {

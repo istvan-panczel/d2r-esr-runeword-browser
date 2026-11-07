@@ -4,6 +4,7 @@ import type { EnhanceBundle } from '../engine/schema';
 import { ANOINTMENT_EXTRA_POOLS, filterAnointmentOutcomes, qualityList } from '../utils/enhance';
 import { BonusLines, NoMatches, Pills } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
+import { IngredientIcons } from './CellIcon';
 
 interface EnhanceAnointmentProps {
   readonly bundle: EnhanceBundle;
@@ -43,7 +44,22 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
 
       <Card className="gap-3 py-4">
         <CardHeader className="px-4">
-          <CardTitle className="text-base">
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            <IngredientIcons
+              items={
+                slot !== undefined
+                  ? [
+                      { kind: 'type', code: slot.typeCode },
+                      { kind: 'item', code: anointment.reagent.code },
+                    ]
+                  : pool === 'charm'
+                    ? [
+                        { kind: 'type', code: 'char' },
+                        ...anointment.charmReagents.map((reagent) => ({ kind: 'item' as const, code: reagent.code })),
+                      ]
+                    : [{ kind: 'unique', name: anointment.vesselItem }]
+              }
+            />
             {slot !== undefined && `${slot.label} + ${anointment.reagent.name}`}
             {pool === 'charm' && `Unique Charm + ${anointment.charmReagents.map((reagent) => reagent.name).join(' + ')}`}
             {pool === 'vessel' && `${anointment.vesselItem} (tier 4 recipe)`}

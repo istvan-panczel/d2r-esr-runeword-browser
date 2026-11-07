@@ -91,6 +91,8 @@ function capitalized(text: string): string {
  */
 function sentinelLine(full: StatDef, param: string, ctx: RenderContext): string {
   const def = PER_LEVEL_OPS.has(full.op) ? { ...full, descstr2: '' } : full;
+  // The line shows 100 / value seconds ("Repairs 1 durability in 20 seconds"), not the value: the label names the rate
+  if (def.descfunc === 11) return 'Repairs durability (rate #)';
   if (def.descfunc === 24) {
     const name = ctx.skills.skill(param)?.name ?? param;
     const format = ctx.strings.get(def.descstrpos) ?? 'Level %d %s (%d/%d Charges)';

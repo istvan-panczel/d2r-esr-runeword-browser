@@ -5,7 +5,10 @@ import { loadGameDataFile } from '../engine/browser/loadGameData';
 
 type IconMap = ReadonlyMap<string, ItemIconInfo>;
 
-/** icons.json indexed for lookups: bases and quest items by code; uniques, set items and misc items by normalised display name. */
+/**
+ * icons.json indexed for lookups: bases, quest items and the other misc items by code; uniques, set items and misc
+ * items by normalised display name; item types by type code.
+ */
 export interface ItemIconIndex {
   readonly bases: IconMap;
   readonly uniques: IconMap;
@@ -13,6 +16,9 @@ export interface ItemIconIndex {
   readonly misc: IconMap;
   /** With the item's display name */
   readonly quest: ReadonlyMap<string, QuestIconInfo>;
+  /** Misc items by code (the codes `bases` and `quest` key are not repeated) */
+  readonly items: IconMap;
+  readonly types: IconMap;
 }
 
 /** Separator of a code-qualified misc key in icons.json (`Ko Rune#r19`; build/itemIcons.ts `MISC_CODE_SEPARATOR`) */
@@ -25,6 +31,10 @@ const MISC_CODE_SEPARATOR = '#';
  */
 export type ItemIconRef =
   | { readonly kind: 'base'; readonly code: string }
+  /** Any item by code: a base, a quest item or another misc item (organs, cube materials, potions, coupons …) */
+  | { readonly kind: 'item'; readonly code: string }
+  /** An item type: the art its items share, else a representative item's; broad types (Weapon, Any Armor) have none */
+  | { readonly kind: 'type'; readonly code: string }
   /** Quest items, portal keys, organs and endgame map items (icons.json `quest`) */
   | { readonly kind: 'quest'; readonly code: string }
   | { readonly kind: 'unique' | 'set'; readonly name: string; readonly code?: string }
@@ -35,7 +45,7 @@ export type ItemIconRef =
  * apostrophes, casing or spacing than the string table).
  */
 export function buildItemIconIndex(
-  bundle: Pick<IconsBundle, 'bases' | 'uniques' | 'sets'> & Partial<Pick<IconsBundle, 'misc' | 'quest'>>
+  bundle: Pick<IconsBundle, 'bases' | 'uniques' | 'sets'> & Partial<Pick<IconsBundle, 'misc' | 'quest' | 'items' | 'types'>>
 ): ItemIconIndex {
   const byName = (section: Record<string, ItemIconInfo>): IconMap => {
     const map = new Map<string, ItemIconInfo>();
@@ -51,6 +61,8 @@ export function buildItemIconIndex(
     sets: byName(bundle.sets),
     misc: byName(bundle.misc ?? {}),
     quest: new Map(Object.entries(bundle.quest ?? {})),
+    items: new Map(Object.entries(bundle.items ?? {})),
+    types: new Map(Object.entries(bundle.types ?? {})),
   };
 }
 
@@ -63,6 +75,8 @@ export function withoutVariantSuffix(name: string): string {
 export function findItemIcon(index: ItemIconIndex, ref: ItemIconRef): ItemIconInfo | undefined {
   if (ref.kind === 'base') return index.bases.get(ref.code);
   if (ref.kind === 'quest') return index.quest.get(ref.code);
+  if (ref.kind === 'item') return index.bases.get(ref.code) ?? index.quest.get(ref.code) ?? index.items.get(ref.code);
+  if (ref.kind === 'type') return index.types.get(ref.code);
   if (ref.kind === 'misc') {
     const name = normaliseItemName(withoutVariantSuffix(ref.name));
     const qualified = ref.code === undefined ? undefined : index.misc.get(`${name}${MISC_CODE_SEPARATOR}${ref.code.toLowerCase()}`);

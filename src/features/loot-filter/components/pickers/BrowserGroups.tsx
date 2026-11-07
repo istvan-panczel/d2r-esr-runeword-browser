@@ -1,7 +1,8 @@
-import { useId, useState, type ReactNode } from 'react';
+import { createContext, use, useId, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { BASE_TIER_LABELS, TIER_BADGE_CLASS } from '@/features/game-data/constants/bases';
 import { cn } from '@/lib/utils';
 import {
@@ -16,6 +17,12 @@ import {
   type BrowserType,
   type TriState,
 } from '../../utils/browserModel';
+
+/** True when the cells' `code` is an item code whose icon (icons.json by code) goes in front of the name */
+const CodeIconsContext = createContext(false);
+
+/** Side of the cell icons */
+const CELL_ICON_SIZE = 24;
 
 /** Adds (`on`) or removes the codes from the draft. */
 export type ToggleCodes = (codes: readonly string[], on: boolean) => void;
@@ -115,6 +122,7 @@ function ItemCell({ item, selected, onToggle, badge }: ItemCellProps) {
   // A merged cell (several unique rows) can be partly selected through values typed into the picker.
   const state = triState(codes, selected);
   const disabled = item.disabled !== undefined;
+  const codeIcons = use(CodeIconsContext);
   return (
     <label
       title={item.sockets === undefined ? item.title : `Sockets: ${item.sockets}`}
@@ -135,6 +143,7 @@ function ItemCell({ item, selected, onToggle, badge }: ItemCellProps) {
           onToggle(codes, state !== 'all');
         }}
       />
+      {codeIcons && <ItemIcon item={{ kind: 'item', code: item.code }} size={CELL_ICON_SIZE} className="-my-0.5" />}
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-1.5">
           <span className="text-sm font-medium break-words">{item.name}</span>
@@ -285,8 +294,16 @@ function TypeBlock({ type, selected, onToggle }: SelectionProps & { readonly typ
   );
 }
 
-/** A type group (Weapons, Armor, Gems…): collapsible, with a checkbox for all its (shown) items. */
-export function BrowserGroupSection({ group, selected, onToggle }: SelectionProps & { readonly group: BrowserGroup }) {
+/**
+ * A type group (Weapons, Armor, Gems…): collapsible, with a checkbox for all its (shown) items. `codeIcons`: the cells
+ * are item codes (bases, misc items), shown with their icon.
+ */
+export function BrowserGroupSection({
+  group,
+  selected,
+  onToggle,
+  codeIcons = false,
+}: SelectionProps & { readonly group: BrowserGroup; readonly codeIcons?: boolean }) {
   const [open, setOpen] = useState(true);
   const contentId = useId();
   const codes = groupCodes(group);
@@ -318,11 +335,13 @@ export function BrowserGroupSection({ group, selected, onToggle }: SelectionProp
         <SelectedCount codes={codes} selected={selected} />
       </div>
       {open && (
-        <div id={contentId} className="space-y-5 p-3">
-          {group.types.map((type) => (
-            <TypeBlock key={type.code} type={type} selected={selected} onToggle={onToggle} />
-          ))}
-        </div>
+        <CodeIconsContext value={codeIcons}>
+          <div id={contentId} className="space-y-5 p-3">
+            {group.types.map((type) => (
+              <TypeBlock key={type.code} type={type} selected={selected} onToggle={onToggle} />
+            ))}
+          </div>
+        </CodeIconsContext>
       )}
     </section>
   );

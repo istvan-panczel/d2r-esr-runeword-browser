@@ -103,6 +103,7 @@ export const TEST_STRINGS = new Map<string, string>([
   ['wealthdesc', 'second line\nFirst line'],
   ['ModStre9s', 'Indestructible'],
   ['ModStre9t', 'Repairs %d durability per second'],
+  ['ModStre9u', 'Repairs %d durability in %d seconds'],
   ['ModStr3l', 'Freezes target'],
   ['ModStr6d', 'Hit Blinds Target'],
   ['ModStr5o', '%d%% Target Defense'],

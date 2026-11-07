@@ -42,7 +42,9 @@ function readIcons(): { text: string; counts: Record<string, number> } | null {
   const count = (section: Record<string, unknown> | undefined) => Object.keys(section ?? {}).length;
   // Entries (all sections) whose image came from the vanilla art folder (recoloured ones through their source file)
   const vanillaFiles = new Set(bundle.vanilla?.files ?? []);
-  const entries = [bundle.bases, bundle.uniques, bundle.sets, bundle.misc, bundle.quest].flatMap((section) => Object.values(section));
+  const entries = [bundle.bases, bundle.uniques, bundle.sets, bundle.misc, bundle.quest, bundle.items, bundle.types].flatMap((section) =>
+    Object.values(section)
+  );
   const vanillaIcons = entries.filter((icon) => vanillaFiles.has(untintedFile(icon.file))).length;
   const tinted = entries.filter((icon) => icon.tint !== undefined);
   return {
@@ -53,6 +55,8 @@ function readIcons(): { text: string; counts: Record<string, number> } | null {
       setIcons: count(bundle.sets),
       miscIcons: count(bundle.misc),
       questIcons: count(bundle.quest),
+      itemCodeIcons: count(bundle.items),
+      typeIcons: count(bundle.types),
       vanillaIcons,
       vanillaIconFiles: vanillaFiles.size,
       tintedIcons: tinted.length,

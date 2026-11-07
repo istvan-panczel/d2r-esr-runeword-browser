@@ -15,7 +15,7 @@ sources: [official-cube, esr-txt, esru-wiki]
 
 ### Removing socketables
 
-Cube any socketed item with a Key: you get the item back with empty sockets plus every gem, rune or jewel that was in it. Nothing is lost (the recipe also identifies the item). That makes runewords and gem choices cheap to change ([[runewords-gemwords]]).
+Cube any socketed item with a Key: you get the item back with empty sockets plus every gem, rune or jewel that was in it. Nothing is lost, but the recipe also identifies an unidentified item (not intended, and it cannot be fixed). That makes runewords and gem choices cheap to change ([[runewords-gemwords]]).
 
 ::recipes[unsocket]
 
@@ -38,6 +38,7 @@ Lucion's Essence, a legendary consumable, adds a fixed number of sockets to magi
 - An item never gets more sockets than its base allows, and an existing socket count cannot be changed.
 - Items from Normal and Nightmare Act 1 may be too low level to reach the base's maximum. The [Bases](page:/game-data/bases) page shows socket limits by item level.
 - Rerolling a unique removes sockets added before the reroll, so reroll first.
+- A socketed quiver no longer shows its quantity (a game bug); the arrows or bolts are still there.
 
 Where Socket Donuts come from:
 

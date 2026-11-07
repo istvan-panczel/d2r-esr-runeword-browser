@@ -4,6 +4,7 @@ import type { EnhanceBundle } from '../engine/schema';
 import { filterSanctificationOutcomes, formatRate } from '../utils/enhance';
 import { BonusLines, ComputedRate, NoMatches } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
+import { IngredientIcons } from './CellIcon';
 
 interface EnhanceSanctificationProps {
   readonly bundle: EnhanceBundle;
@@ -20,7 +21,14 @@ export function EnhanceSanctification({ bundle, search }: EnhanceSanctificationP
     <div className="space-y-4">
       <Card className="gap-3 py-4">
         <CardHeader className="px-4">
-          <CardTitle className="text-base">
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            <IngredientIcons
+              items={[
+                // The item is an item type (Jewel); the reagent an item
+                { kind: 'type', code: sanctification.item.code },
+                { kind: 'item', code: sanctification.reagent.code },
+              ]}
+            />
             {sanctification.item.name} + {sanctification.reagent.name}
           </CardTitle>
           <p className="text-sm">
