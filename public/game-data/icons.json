@@ -1,6 +1,6 @@
 {
-  "esrVersion": "3.2.24",
-  "esrTag": "3.2.24",
+  "esrVersion": "3.3",
+  "esrTag": "3.3",
   "vanilla": {
     "rootHash": "06a0ca43e82f06e04f7e20551513a737",
     "extractedAt": "2026-10-25",
@@ -15194,6 +15194,42 @@
       "h": 91,
       "name": "Ascendancy Stone"
     },
+    "u11": {
+      "file": "quest_orb_of_storm.webp",
+      "w": 126,
+      "h": 128,
+      "name": "Orb of Storms"
+    },
+    "u12": {
+      "file": "quest_orb_of_earth.webp",
+      "w": 125,
+      "h": 128,
+      "name": "Orb of Earth"
+    },
+    "u13": {
+      "file": "quest_orb_of_water.webp",
+      "w": 128,
+      "h": 127,
+      "name": "Orb of Water"
+    },
+    "u14": {
+      "file": "quest_orb_of_fire.webp",
+      "w": 127,
+      "h": 128,
+      "name": "Orb of Fire"
+    },
+    "u15": {
+      "file": "quest_orb_of_wind.webp",
+      "w": 127,
+      "h": 128,
+      "name": "Orb of Wind"
+    },
+    "u16": {
+      "file": "quest_orb_of_creation.webp",
+      "w": 127,
+      "h": 128,
+      "name": "Orb of Creation"
+    },
     "led": {
       "file": "charm_kill_ledger.webp",
       "w": 91,
@@ -15241,6 +15277,12 @@
       "w": 98,
       "h": 98,
       "name": "The Hidden Vault"
+    },
+    "u42": {
+      "file": "quest_mystical_shard.webp",
+      "w": 87,
+      "h": 96,
+      "name": "Mystical Shard"
     },
     "d33": {
       "file": "knife_decoy_dagger.webp",
@@ -22383,36 +22425,6 @@
       "w": 51,
       "h": 128
     },
-    "u11": {
-      "file": "quest_orb_of_storm.webp",
-      "w": 126,
-      "h": 128
-    },
-    "u12": {
-      "file": "quest_orb_of_earth.webp",
-      "w": 125,
-      "h": 128
-    },
-    "u13": {
-      "file": "quest_orb_of_water.webp",
-      "w": 128,
-      "h": 127
-    },
-    "u14": {
-      "file": "quest_orb_of_fire.webp",
-      "w": 127,
-      "h": 128
-    },
-    "u15": {
-      "file": "quest_orb_of_wind.webp",
-      "w": 127,
-      "h": 128
-    },
-    "u16": {
-      "file": "quest_orb_of_creation.webp",
-      "w": 127,
-      "h": 128
-    },
     "u20": {
       "file": "quest_astrogha_petrified_heart.webp",
       "w": 98,
@@ -22656,6 +22668,126 @@
     "17p": {
       "file": "potion_elixir_of_the_raven.webp",
       "w": 58,
+      "h": 97
+    },
+    "18p": {
+      "file": "potion_greater_elixir_of_attributes.webp",
+      "w": 81,
+      "h": 97
+    },
+    "19p": {
+      "file": "potion_greater_elixir_of_skill.webp",
+      "w": 80,
+      "h": 96
+    },
+    "20p": {
+      "file": "potion_greater_elixir_of_phasing.webp",
+      "w": 72,
+      "h": 96
+    },
+    "21p": {
+      "file": "potion_greater_elixir_of_shielding.webp",
+      "w": 80,
+      "h": 95
+    },
+    "22p": {
+      "file": "potion_greater_elixir_of_slaughter.webp",
+      "w": 79,
+      "h": 91
+    },
+    "23p": {
+      "file": "potion_greater_elixir_of_knowledge.webp",
+      "w": 81,
+      "h": 95
+    },
+    "24p": {
+      "file": "potion_greater_elixir_of_speed.webp",
+      "w": 63,
+      "h": 96
+    },
+    "25p": {
+      "file": "potion_greater_elixir_of_luck.webp",
+      "w": 79,
+      "h": 93
+    },
+    "26p": {
+      "file": "potion_greater_elixir_of_steal.webp",
+      "w": 64,
+      "h": 97
+    },
+    "27p": {
+      "file": "potion_greater_elixir_of_deadly_crits.webp",
+      "w": 78,
+      "h": 98
+    },
+    "28p": {
+      "file": "potion_greater_elixir_of_quickness.webp",
+      "w": 78,
+      "h": 97
+    },
+    "29p": {
+      "file": "potion_greater_elixir_of_absolution.webp",
+      "w": 80,
+      "h": 97
+    },
+    "30p": {
+      "file": "potion_greater_elixir_of_potency.webp",
+      "w": 70,
+      "h": 96
+    },
+    "31p": {
+      "file": "potion_greater_elixir_of_the_giant.webp",
+      "w": 76,
+      "h": 97
+    },
+    "32p": {
+      "file": "potion_greater_elixir_of_the_feline.webp",
+      "w": 75,
+      "h": 97
+    },
+    "33p": {
+      "file": "potion_greater_elixir_of_the_gorilla.webp",
+      "w": 76,
+      "h": 96
+    },
+    "34p": {
+      "file": "potion_greater_elixir_of_the_raven.webp",
+      "w": 76,
+      "h": 97
+    },
+    "u43": {
+      "file": "quest_mystical_tesseract.webp",
+      "w": 81,
+      "h": 98
+    },
+    "35p": {
+      "file": "potion_elixir_of_reincarnation.webp",
+      "w": 53,
+      "h": 98
+    },
+    "aa1": {
+      "file": "potion_alien_artefact_1.webp",
+      "w": 93,
+      "h": 84
+    },
+    "aa2": {
+      "file": "potion_alien_artefact_2.webp",
+      "w": 98,
+      "h": 93
+    },
+    "aa3": {
+      "file": "potion_alien_artefact_3.webp",
+      "w": 90,
+      "h": 92
+    },
+    "aa4": {
+      "file": "potion_alien_artefact_4.webp",
+      "w": 96,
+      "h": 94
+    },
+    "aa5": {
+      "file": "potion_alien_artefact_5.webp",
+      "w": 90,
       "h": 97
     }
   },
