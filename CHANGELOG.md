@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.60.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.60.0...v1.60.1) (2026-11-07)
+
+### Bug Fixes
+
+* **campaign-map:** note that alien artefacts drop for everyone in 3.3 by mistake ([232ca1f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/232ca1f84d2275208e921a75604901c10f1c5e0b))
+* **specializations:** apply the mod author's answers on three unbacked perks ([4bf1a3c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4bf1a3ce4fad0efab79126945241bf915e01a8ff))
+
+### Documentation
+
+* **esr-update:** record the mod author's answers on the 3.3 perk warnings ([f2d8b29](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f2d8b294984860a7e99ed27ece1c8828335a3dd2))
+* **guide:** apply the mod author's answers on the 3.3 perk gaps ([53c1d6f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/53c1d6f84077c19bab51c192fbf2d9a2b26789f4))
+* **modifiers:** add the mod author's pooled dodge answer to the dodge block ([f1e35bf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f1e35bf8529714249870db01a7260270f6c3c464))
+
 ## [1.60.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.59.0...v1.60.0) (2026-11-07)
 
 ### Features
