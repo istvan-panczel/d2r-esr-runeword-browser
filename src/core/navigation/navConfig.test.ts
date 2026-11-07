@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { router } from '@/core/router';
 import {
   COMMUNITY_TOOLS,
+  ESR_REPO_URL,
+  ESR_WIKI_OVERLAY_NOTE_URL,
   NAV_ENTRIES,
   OFFICIAL_LINKS,
   getAllNavItems,
@@ -103,6 +105,14 @@ describe('navConfig', () => {
 
     it('gives archives no source link', () => {
       for (const tool of COMMUNITY_TOOLS.filter((t) => t.kind === 'archive')) expect(tool.sourceUrl).toBeUndefined();
+    });
+
+    it('links the wiki overlay built into ESR 3.3 to its patch note, the author repository only as the source', () => {
+      const overlay = COMMUNITY_TOOLS.find((tool) => tool.key === 'wiki-overlay');
+      expect(overlay?.href).toBe(ESR_WIKI_OVERLAY_NOTE_URL);
+      expect(overlay?.href.startsWith(`${ESR_REPO_URL}/`)).toBe(true);
+      expect(overlay?.sourceUrl).toBe('https://github.com/Thisisnotsully/ESR-Wiki-Overlay');
+      expect(overlay?.description).toContain('built into ESR');
     });
   });
 });

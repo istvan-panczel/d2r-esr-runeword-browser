@@ -20,6 +20,8 @@ export const DISCORD_URL = 'https://discord.com/invite/XfFmAYZAbA';
 export const ESR_REPO_URL = `https://github.com/${ESR_REPO_SLUG}`;
 export const ESR_PATCH_NOTES_URL = `${ESR_REPO_URL}/tree/main/patchnotes`;
 export const ESR_RELEASES_URL = `${ESR_REPO_URL}/releases`;
+/** The ESR 3.3 patch notes, which announce Sully's wiki overlay built into the game */
+export const ESR_WIKI_OVERLAY_NOTE_URL = `${ESR_REPO_URL}/blob/main/patchnotes/3.3.md`;
 /** The official Drop Finder; defined with the guide's link schemes (shared with the Node guide generator). */
 export { DROP_FINDER_URL };
 /** The official Frame Table (IAS and FCR breakpoints); the docs pages link it as "IAS Calculator", the site's home page does not. */
@@ -120,10 +122,13 @@ export const COMMUNITY_TOOLS: readonly CommunityTool[] = [
     key: 'wiki-overlay',
     label: 'ESR Wiki Overlay',
     author: 'Sully',
-    href: 'https://github.com/Thisisnotsully/ESR-Wiki-Overlay/releases/latest',
+    // Built into ESR since 3.3 (d2rloader/plugins/esr-wiki-overlay/): the link is the patch note that announces it, the
+    // author's repository stays as the source
+    href: ESR_WIKI_OVERLAY_NOTE_URL,
     sourceUrl: 'https://github.com/Thisisnotsully/ESR-Wiki-Overlay',
     kind: 'in-game',
-    description: 'In-game ESR wiki and Horadric Cube recipe browser, opened from the pause menu or the cube.',
+    description:
+      'In-game ESR wiki and Horadric Cube recipe browser, built into ESR since 3.3: open it from the cube button or the main menu, or bind a hotkey.',
     features: [
       'Cube recipes',
       'Runewords and uniques',
@@ -133,7 +138,7 @@ export const COMMUNITY_TOOLS: readonly CommunityTool[] = [
       '13 languages',
       'Controller support',
     ],
-    caveat: 'Windows only: a D2RLoader plugin (ESR ships the loader). Its tabs refresh from the official site.',
+    caveat: 'Ships with ESR since 3.3, nothing to install (a D2RLoader plugin, Windows only). Its tabs refresh from the official site.',
   },
   {
     key: 'esr-docs',
