@@ -34,6 +34,7 @@ import { buildLootFilterBundle } from './bundleLootFilter.ts';
 import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources, setBonusSources } from './bundleLootFilterSkills.ts';
 import { buildRunewordsBundle } from './bundleRunewords.ts';
 import { buildSetsBundle } from './bundleSets.ts';
+import { buildSuperiorAffixes } from './bundleSuperior.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
 import { buildStashBundle } from './bundleStash.ts';
 import { buildItemTextBundle } from './bundleItemText.ts';
@@ -130,7 +131,22 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     stats: statIndex,
     layers,
   });
-  const basesBundle = attachAutomods(bases.bundle, affixes.bundle.affixes);
+  const withAutomods = attachAutomods(bases.bundle, affixes.bundle.affixes);
+  const superior = buildSuperiorAffixes({
+    // Rows are addressed by number (row 0 = the first line under the header)
+    qualityitems: rowTable('qualityitems'),
+    config: sources.plugins.superiorAffixes,
+    bases: withAutomods.bases,
+    types: types.bundle.types,
+    throwableTypes: new Set(
+      table('itemtypes')
+        .rows.filter((row) => row.num('Throwable') === 1)
+        .map((row) => row.str('Code'))
+    ),
+    renderMods,
+  });
+  const { rows: superiorRows, pools: superiorPools, ...superiorRules } = superior.superior;
+  const basesBundle = { ...withAutomods, superior: superiorRules, superiorRows, superiorPools };
   const countAffixes = (kind: string) => affixes.bundle.affixes.filter((affix) => affix.kind === kind).length;
 
   const sourceItems = buildSourcesBundle(
@@ -515,6 +531,9 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       baseAutomods: basesBundle.automods?.length ?? 0,
       basesWithAutomods: basesBundle.bases.filter((base) => base.automods !== undefined).length,
       basesWithStaffMods: basesBundle.bases.filter((base) => base.staffMods !== undefined).length,
+      superiorRows: superior.superior.rows.length,
+      superiorPools: superior.superior.pools.length,
+      superiorWeightedRows: superior.superior.rows.filter((row) => row.weight !== superior.superior.defaultWeight).length,
       runewords: runewords.bundle.runewords.length,
       runewordRows: runewords.bundle.runewords.reduce((sum, runeword) => sum + runeword.rows.length, 0),
       affixes: affixes.bundle.affixes.length,
@@ -630,6 +649,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...types.warnings,
       ...staffMods.warnings,
       ...bases.warnings,
+      ...superior.warnings,
       ...runewords.warnings,
       ...affixes.warnings,
       ...sourceItems.warnings,

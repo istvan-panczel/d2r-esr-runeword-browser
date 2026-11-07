@@ -33,7 +33,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `manifest.json`     | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                           |
 | `types.json`        | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                      |
-| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels)                                                              |
+| `bases.json`        | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools            |
 | `runewords.json`    | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                   |
 | `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                               |
 | `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                              |
@@ -62,7 +62,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | Bundle              | ESR 3.2.12 size (raw / gzip)                                                                                    |
 | ------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `types.json`        | 44 KB / 5 KB                                                                                                    |
-| `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB)                                  |
+| `bases.json`        | 292 KB / 26 KB (ESR 3.2.24 with automods, staffmods and range: 322 KB / 27 KB; + superior: 340 KB / 31 KB)      |
 | `runewords.json`    | 197 KB / 28 KB                                                                                                  |
 | `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72)                                  |
 | `sources.json`      | 298 KB / 29 KB                                                                                                  |
@@ -109,9 +109,55 @@ the manifest itself is always revalidated. The shape is defined in `src/features
   ESR's arrow group 313, whose only row is an invisible `noconsume` placeholder. ESR 3.2.24: 86 rows, 616 bases; group
   320 (455 bases) only adds "Tinkering Points". Counts: `baseAutomods`, `basesWithAutomods`, `basesWithStaffMods`.
   Adding these optional fields did not bump `GAME_DATA_SCHEMA`.
+- Superior affixes: see "Superior affixes" below.
 - Type names: itemtypes `ItemType` column. When two types share a name, the type without bases of its own gets
   " (code)" appended (`merc` → "Helm (merc)", `helm` stays "Helm"); when all or none of them have bases, all do
   ("Gem Can 1 (can1)" / "Gem Can 1 (can9)").
+
+#### Superior affixes
+
+When an item rolls Superior, the server picks ONE `qualityitems.txt` row the item may use and applies its mod1 and mod2
+(mod2 only when mod1code is set); each value is rolled once and stays on the item as an ordinary stat, so a superior
+white base keeps it when a runeword is made in it. ESR's D2RLoader plugin
+`d2rloader/config/celestialrayone.superior-affixes.toml` replaces the stock equal odds with a weight per row
+(`[superior_affixes.weights]`, `row = weight`, rows numbered from 0 = the first line under the header; unlisted rows
+weigh `default_weight`, 100) and removes the stock 10-row limit. `build/bundleSuperior.ts` writes three top-level keys
+into `bases.json` (separate keys so the rows serialize one per line; `engine/superiorAffixes.ts` →
+`readSuperiorAffixes(bundle)` joins them into a `SuperiorAffixes`):
+
+- `superior` (`SuperiorRules`): `enabled`, `defaultWeight`, and `firstFourRowBases` (only when the plugin's
+  `first_four_rows_for_throwing_and_nodurability` is true: the gear whose own type is `Throwable` or that has
+  `nodurability`, which then only use rows 0-3; ESR 3.2.24: false, omitted). Without the config file, or with
+  `enabled = false`, every row weighs 100 (stock equal odds) and a warning says so.
+- `superiorRows` (`SuperiorRow[]`, file order): `row`, `weight`, `mods` (`{ prop, param, min, max }`), `text` (the
+  stat renderer, as affixes.json), `columns` (the stock `armor` … `belt` columns set to 1), `itypes` (`itype1-7`),
+  `etypes` (`etype1-5`).
+- `superiorPools` (`SuperiorPool[]`): weapon and armor bases grouped by the exact set of rows they roll, in bases.json
+  order of their first base: `label`, own `types`, `bases` (count), `rows`, `total` (summed weights; a row's chance on
+  a base of the pool = weight / total). `label` = the deepest item type all the pool's own types descend from, plus
+  " (other types)" when bases of other pools descend from it too ("Weapon (other types)" next to "Wand").
+
+Eligibility (`engine/superiorAffixes.ts`, shared by the generator and the pages, from the toml's comments): misc items
+never roll Superior; `etype` always excludes; a row with any `itype` rolls only on items whose type or type2 is one of
+them or below one (Equiv walk, `BaseItem.ancestors`), ignoring its stock columns; a row without itypes uses the stock
+columns, tested against the item's OWN type: `weapon` = every weapon except own type scep, wand, staf, bow, xbow (so
+Amazon bows, orbs and claws use it), `armor` = every armor except own type shie, boot, glov, belt (Paladin shields,
+heads, helms, circlets, pelts), `bow` = own type bow or xbow (not abow), the other columns own type exactly. The pages
+compute a base's rows in the browser with `superiorRollsForBase`.
+
+ESR 3.2.24: 83 rows, every one with itypes (the stock columns are blank, so the own-type exceptions play no part: an
+Amazon bow matches `bow` and `weap` rows through its ancestors), 74 rows with a listed weight; 12 pools: Weapon (other
+types) 31 rows / total 969, Wand 15 / 217, Staff 16 / 220, Claw 32 / 994, Orb 10 / 173, Druid Club 10 / 200,
+Necromancer Dagger 11 / 203, Helm 19 / 549, Any Armor (other types: body armor, shields, heads, cloaks, robes,
+grimoires) 21 / 439, Gloves 20 / 523, Boots 18 / 473, Belt 18 / 473. Arrows and Bolts (weapons.txt `arrm` / `boqm`)
+roll no row. +1 to All Skills (row 23, weight 1) is 0.10% on a sword, 0.23% on body armor, 0.58% on an orb; max
+resists (22) and elemental absorb (24) 0.23% on body armor and shields. The toml also weighs rows 83-86, which
+qualityitems.txt does not have (warning `superior: superior-affixes.toml has weights for rows 83, 84, 85, 86; …`).
+Other `superior:` warnings: unknown item type codes, a row no base rolls, an unreadable weight line. Counts:
+`superiorRows`, `superiorPools`, `superiorWeightedRows`. `bundleIntegrity.test.ts` checks every row's weight, itypes,
+etypes and text against the "Grouped" view of `docs/quality_affixes.htm` and the rows of all 52 item type sections of
+its "Expanded" view against `superiorRollsFor` (the page shows the Enhanced Defense rows with their max only and orders
+the -enemy resist lines differently; both are normalised). Adding the keys did not bump `GAME_DATA_SCHEMA`.
 
 ### Runewords
 
@@ -1290,7 +1336,10 @@ name, affix level range and required level. Several options read "Automod: one o
 picks one row of the group per item, among the rows whose level range fits the affix level, weighted by frequency); each
 option shows its own lines plus name · `lvl a–b` · `req lvl r`, and lines every option has (ESR's "Tinkering Points")
 are pulled out into "Every option also: …". More than 5 options start collapsed in a `<details>`. A base whose group
-has no visible rows keeps the "Automod N" badge instead. The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
+has no visible rows keeps the "Automod N" badge instead. Then a collapsed "Superior rolls: one of N, kept in runewords" (`components/SuperiorRollsSection.tsx`, also on the
+Best Base cards): the superior rows this base rolls (`superiorRollsForBase`), each with its chance (rows under 1% in
+amber; weight and row number in the tooltip) and the rendered lines, and an "All superior rows" link to
+`/game-data/affixes?view=superior&stype=<own type>`. Hidden for bases that roll no row (misc, Arrows, Bolts). The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
 
 #### Families view
 
@@ -1370,7 +1419,8 @@ with its socket counts; rune bonuses not included), then the results:
 defense/block after the ethereal estimate, speed, requirements (effective level = max(base, runeword), Str/Dex after
 the ethereal −10) with deficits in red "(+12)", sockets as one line per socket count — rows for Jewel and Mythical
 Jewel are collapsed (`collapseRowsBySockets`: "4 sockets (1 Jewel or 1 Mythical Jewel)") with "needs ilvl ≥ N for N"
-when the base needs a higher item level — and "Upgrade: <next tier>" linking to `/game-data/bases?search="<name>"`.
+when the base needs a higher item level — "Upgrade: <next tier>" linking to `/game-data/bases?search="<name>"`, and
+the collapsed "Superior rolls" panel of the Bases page (a superior base's bonus stays in the runeword).
 Unusable bases (only listed with the toggle) are dimmed.
 
 A red banner appears when the runeword's level requirement (lowest of the used rows) exceeds the character level.
@@ -1400,15 +1450,16 @@ stored character is kept.
 
 ### Affixes page
 
-`/game-data/affixes` (`screens/AffixesScreen.tsx`) loads `types`, `bases` and `affixes`. It has two modes, switched by the
-selected base (`base` in the slice / URL). Every Bases page card links to `/game-data/affixes?base=<code>`
-("What can roll").
+`/game-data/affixes` (`screens/AffixesScreen.tsx`) loads `types`, `bases` and `affixes`. Sub-tabs at the top (`view`)
+switch between **Magic & rare** (the affix lists below) and **Superior** (see "Superior view"). The Magic & rare view
+has two modes, switched by the selected base (`base` in the slice / URL). Every Bases page card links to
+`/game-data/affixes?base=<code>` ("What can roll").
 
-State (`gameData.affixes`): `search`, `kinds` (`p`/`s`/`a`, empty = all), `rareOnly`, `minLvl`/`maxLvl` (1–99 or
+State (`gameData.affixes`): `view` (`affixes` default / `superior`), `superiorType` (own type code or null), `search` (shared by both views), `kinds` (`p`/`s`/`a`, empty = all), `rareOnly`, `minLvl`/`maxLvl` (1–99 or
 null), `cls` (`any` / `none` / class code), `types` (item-type codes), `base` (base code or null), `ilvl` (1–99, default
 99), `quality` (`magic` default / `rare`), `includeAutomagic` (default true), `sort` (`name` / `lvl` default / `group` /
-`freq`), `sortDir`. "Reset filters" resets everything except `base`, `ilvl`, `quality` and `includeAutomagic` (it stays
-in the current mode); "Clear base" returns to browse mode.
+`freq`), `sortDir`. "Reset filters" resets everything except `view`, `base`, `ilvl`, `quality` and `includeAutomagic` (it stays
+in the current view and mode); "Clear base" returns to browse mode.
 
 #### Browse mode (no base)
 
@@ -1435,6 +1486,20 @@ card shows its weight (`freq / Σfreq` within its kind, over all eligible affixe
 rare-only and class still apply on top; the level range, item types and sort are hidden and ignored. Each section has its
 own "Show more".
 
+#### Superior view (`view=superior`)
+
+`components/SuperiorAffixesView.tsx`, from the `superior*` keys of bases.json (the tab is hidden for a bundle without
+them). A filter panel (search, **Item type** select of every own type in some pool, Copy Link, Reset filters), a short
+explanation (one row per Superior weapon or armor, picked by weight; chance = weight / summed weights of the rows the
+base may use; values rolled once and kept in runewords; and, depending on the data, that every row names item types
+matched through the type tree so the stock columns where Amazon bows use the weapon column play no part, or how the
+stock columns treat Amazon bows, Paladin shields and circlets), "Showing R of 83 superior rows in P of 12 item groups",
+then one card per pool (`utils/superiorView.ts` → `filterSuperiorPools`): label, rows · total weight · bases, the own
+type names, and its rows in file order (`components/SuperiorRollList.tsx`: chance, `w <weight> · #<row>`, the rendered
+lines; under 1% in amber). Search terms must all appear in a row's text or the pool's label / type names ("orb
+skills"); the item type keeps the pools containing that type. Chances always use the pool's full total. Cards sit in
+a grid (2 columns from `lg`, 3 / 4 on wider pages).
+
 #### URL params
 
 Read once on mount by `hooks/useAffixesUrlState.ts`, then removed from the URL (like the Bases page); Copy Link encodes
@@ -1454,6 +1519,8 @@ the non-default values. Invalid values fall back to the defaults; unknown type a
 | `q`      | quality          | `rare` (default magic)                        |
 | `auto`   | includeAutomagic | `0` hides automods (default shown)            |
 | `sort`   | sort + sortDir   | `name`/`lvl`/`group`/`freq`, `-` = descending |
+| `view`   | view             | `superior` (default `affixes` is omitted)     |
+| `stype`  | superiorType     | own item type code (unknown codes dropped)    |
 
 ### Enhance page
 
@@ -1707,6 +1774,7 @@ Warnings are printed and stored in `manifest.warnings`; string conflicts are pri
 | `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms). `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                                      |
 | `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                                             |
 | `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                                          |
+| `superior: superior-affixes.toml has weights for rows …` | The superior-affixes plugin config weighs rows qualityitems.txt does not have (ESR 3.2.24: rows 83-86; the plugin ignores them). Other `superior:` warnings: a missing config (stock equal odds), an unreadable weight line, an unknown item type code, a row no base rolls. See "Superior affixes".                                                                                             |
 | `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                                        |
 | `modifiers: crushing-blow.toml unique = 25 gives …`      | A plugin config comment ("50 -> 12.5 %") disagrees with the value the plugin reads; the fact keeps the value and notes the comment. ESR 3.2.24: `unique = 25` (6.25 % of current life, the comment says 12.5 %). Other `modifiers:` warnings: a key kind naming a stat itemstatcost.txt lacks, an unknown item event function, a missing config file or key. See [MODIFIERS.md](./MODIFIERS.md). |
 | `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".                           |
@@ -1719,14 +1787,14 @@ scripts/generate-item-icons.ts           CLI: item icons (sharp WebP encoding, f
 scripts/generate-skill-icons.ts          CLI: skill icons (cels of the HD skill icon sheets, see SKILLS.md)
 src/features/game-data/
   engine/      runtime + build time: schema.ts, itemTypes.ts, sockets.ts, matchRunewords.ts, bestBase.ts,
-               affixEligibility.ts, statLayers.ts
+               affixEligibility.ts, statLayers.ts, superiorAffixes.ts
   engine/skillCalc/ skill-level calculator (parse.ts, evaluate.ts, lines.ts, text.ts, index.ts; also in the browser)
   engine/browser/loadGameData.ts         browser-only loader (fetch, import.meta.env)
   build/       build only: tsv.ts, strings.ts, model.ts, esrSources.ts, bundleTypes.ts, bundleBases.ts,
                bundleRunewords.ts, bundleAffixes.ts, bundleSources.ts (+ treasureClasses.ts, pluginUniques.ts,
                itemNames.ts), bundleLootFilter.ts (+ bundleLootFilterSkills.ts), bundleEnhance.ts, bundleCube.ts, bundleMaterials.ts, bundleSets.ts,
                bundleSkills.ts, bundleSkillDetails.ts, bundleSkillCalc.ts, skillIcons.ts, bundleCrafting.ts, bundleTiers.ts (+ tiers.ts), bundleAreas.ts, itemIcons.ts,
-               bundleModifiers.ts (+ toml.ts, data/vanillaReference.ts),
+               bundleModifiers.ts (+ toml.ts, data/vanillaReference.ts), bundleSuperior.ts,
                generateBundles.ts,
                writeBundle.ts
   build/cube/  cubemain rows and texts shared with the guide: cubeRows.ts, cubeText.ts, cubeFamilies.ts, cubeCatalog.ts
@@ -1783,7 +1851,11 @@ components/AffixList.tsx          "Show more" paging (200 per page)
 utils/filterAffixes.ts            filtering, sorting, grouping, formatting (+ test)
 store/affixFiltersUrl.ts          URL encode/decode (tests: store/affixFilters.test.ts)
 hooks/useAffixesUrlState.ts       URL → slice on mount, share URL
-constants/affixes.ts              kinds, sort keys, labels, level range, page size
+constants/affixes.ts              views, kinds, sort keys, labels, level range, page size
+components/SuperiorAffixesView.tsx  Superior view: filters, explanation, pool cards
+components/SuperiorRollList.tsx   superior rows with chance / weight / row (also the base panels)
+components/SuperiorRollsSection.tsx  "Superior rolls" panel of BaseCard and EligibleBaseCard
+utils/superiorView.ts             type options, filterSuperiorPools, superiorAffixesPath (+ test)
 ```
 
 UI files (Enhance):
@@ -1847,7 +1919,9 @@ utils/sets.ts                          URL state, options, order, search / focus
   D-stoning steps and cap-duplicate rows, caps (and none without a condition), shadowed groups, gem meld without steps,
   row counts),
   `build/cube/cubeText.test.ts` (rem, lvl=, counted merging), `build/bundleBases.test.ts` (staffmods, range, smite/kick,
-  automod eligibility and attachment on inline TSV), `build/bundleRunewords.test.ts`, `build/bundleAffixes.test.ts`,
+  automod eligibility and attachment on inline TSV), `build/bundleSuperior.test.ts` (toml weights, defaults, disabled /
+  missing config, orphan weights, mod2 without mod1, pools, totals, labels, the rows 0-3 rule),
+  `build/bundleRunewords.test.ts`, `build/bundleAffixes.test.ts`,
   `build/bundleSources.test.ts` (each label rule on inline TSV; with the ESR clone, the verified examples Pelta Lunata,
   Krok's Basher, Mephisto's Will, Frostmourne, Annihilus, Hellfire Torch, Kill Ledger, Orb of Anointment, Forging Hammer),
   `build/stats/*.test.ts` (expandProperty, renderLines, propertyGroups), `engine/stats/*.test.ts` (sprintf, descfunc),
@@ -1858,10 +1932,12 @@ utils/sets.ts                          URL state, options, order, search / focus
   quest gate / endgame zone, removed and unnamed-entrance rows, tier ladder / LevelGroup / unknown Vis / LevelType /
   one-way link warnings)
 - Engine: `engine/itemTypes.test.ts`, `engine/sockets.test.ts`, `engine/matchRunewords.test.ts`, `engine/statLayers.test.ts`,
-  `engine/bestBase.test.ts`, `engine/affixEligibility.test.ts`, `engine/browser/loadGameData.test.ts`
+  `engine/bestBase.test.ts`, `engine/affixEligibility.test.ts`, `engine/browser/loadGameData.test.ts`,
+  `engine/superiorAffixes.test.ts` (stock columns with an Amazon bow, crossbow, Paladin shield, circlet and orb;
+  itype / etype through ancestors; weights, chances, the rows 0-3 limit, formatting)
 - UI: `store/gameDataSlice.test.ts`, `store/bestBaseState.test.ts`, `utils/filterBases.test.ts`,
   `utils/typeTree.test.ts`, `utils/bestBaseResults.test.ts`, `utils/filterAffixes.test.ts`, `store/affixFilters.test.ts`,
-  `utils/baseAutomods.test.ts`, `utils/enhance.test.ts`, `utils/cube.test.ts`, `utils/materials.test.ts`,
+  `utils/baseAutomods.test.ts`, `utils/superiorView.test.ts`, `utils/enhance.test.ts`, `utils/cube.test.ts`, `utils/materials.test.ts`,
   `utils/sets.test.ts`, `utils/areas.test.ts`
 - `bundleIntegrity.test.ts`: reads the committed JSON (counts, hashes, schema, type references, affix text, the enhance
   counts and rates listed under "Enhance", the cube families, fallback limits and hidden enhance rows listed under "Cube

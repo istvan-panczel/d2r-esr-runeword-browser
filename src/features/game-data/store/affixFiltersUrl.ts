@@ -1,6 +1,6 @@
 import { FILTER_URL_PARAM_KEYS, parseBoundedIntParam } from '@/core/utils/filterUrlParams';
 import { isClassCode } from '../engine/schema';
-import { AFFIX_KINDS, AFFIX_LEVEL_RANGE, isAffixSortKey, type AffixKind } from '../constants/affixes';
+import { AFFIX_KINDS, AFFIX_LEVEL_RANGE, isAffixSortKey, isAffixView, type AffixKind } from '../constants/affixes';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { DEFAULT_AFFIX_FILTERS, type AffixFilters, type ClassFilter } from './gameDataSlice';
 
@@ -20,6 +20,8 @@ export const AFFIX_FILTER_PARAM_KEYS: readonly string[] = [
   KEYS.QUALITY,
   KEYS.AUTO,
   KEYS.SORT,
+  KEYS.VIEW,
+  KEYS.SUPERIOR_TYPE,
 ];
 
 export function hasAffixFilterParams(params: URLSearchParams): boolean {
@@ -31,12 +33,14 @@ function splitList(value: string | null): string[] {
 }
 
 /**
- * Non-default filters as URL params: `search`, `aff=p,s,a`, `rare=1`, `minlvl`/`maxlvl`, `cls`, `type=a,b`,
+ * Non-default filters as URL params: `view=superior`, `stype=<type code>`, `search`, `aff=p,s,a`, `rare=1`, `minlvl`/`maxlvl`, `cls`, `type=a,b`,
  * `base=<code>`, `ilvl`, `q=rare`, `auto=0`, `sort=<key>` or `sort=-<key>` (descending).
  */
 export function encodeAffixFilters(filters: AffixFilters): URLSearchParams {
   const params = new URLSearchParams();
   const defaults = DEFAULT_AFFIX_FILTERS;
+  if (filters.view !== defaults.view) params.set(KEYS.VIEW, filters.view);
+  if (filters.superiorType !== null) params.set(KEYS.SUPERIOR_TYPE, filters.superiorType);
   if (filters.search) params.set(FILTER_URL_PARAM_KEYS.SEARCH, filters.search);
   if (filters.kinds.length > 0) params.set(KEYS.AFF, filters.kinds.join(','));
   if (filters.rareOnly) params.set(KEYS.RARE, '1');
@@ -88,7 +92,10 @@ export function decodeAffixFilters(params: URLSearchParams, known: AffixUrlKnown
   const types = splitList(params.get(KEYS.TYPE)).filter((code) => known.types === undefined || known.types.has(code));
   const base = params.get(KEYS.BASE)?.trim() ?? '';
   const quality = params.get(KEYS.QUALITY);
+  const view = params.get(KEYS.VIEW) ?? '';
+  const superiorType = params.get(KEYS.SUPERIOR_TYPE)?.trim() ?? '';
   return {
+    view: isAffixView(view) ? view : DEFAULT_AFFIX_FILTERS.view,
     search: params.get(FILTER_URL_PARAM_KEYS.SEARCH) ?? '',
     kinds,
     rareOnly: decodeBool(params.get(KEYS.RARE), false),
@@ -101,5 +108,6 @@ export function decodeAffixFilters(params: URLSearchParams, known: AffixUrlKnown
     quality: quality === 'rare' || quality === 'magic' ? quality : DEFAULT_AFFIX_FILTERS.quality,
     includeAutomagic: decodeBool(params.get(KEYS.AUTO), DEFAULT_AFFIX_FILTERS.includeAutomagic),
     ...decodeSort(params.get(KEYS.SORT)),
+    superiorType: superiorType === '' || (known.types !== undefined && !known.types.has(superiorType)) ? null : superiorType,
   };
 }

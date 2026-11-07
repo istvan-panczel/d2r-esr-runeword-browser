@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ResultsBar } from '@/components/ResultsBar';
-import type { BaseAutomod, BaseItem, TypesBundle } from '../engine/schema';
+import type { BaseAutomod, BaseItem, SuperiorAffixes, TypesBundle } from '../engine/schema';
+import { readSuperiorAffixes } from '../engine/superiorAffixes';
 import { BASES_PAGE_SIZE } from '../constants/bases';
 import { BaseCard } from '../components/BaseCard';
 import { BaseFamilyTable } from '../components/BaseFamilyTable';
@@ -24,16 +25,24 @@ export function BasesScreen() {
   const gameData = useGameData(BASES_FILES);
   if (gameData.status === 'loading') return <GameDataLoading />;
   if (gameData.status === 'error') return <GameDataError error={gameData.error} onRetry={gameData.retry} />;
-  return <BasesBrowser typesBundle={gameData.data.types} bases={gameData.data.bases.bases} automods={gameData.data.bases.automods ?? []} />;
+  return (
+    <BasesBrowser
+      typesBundle={gameData.data.types}
+      bases={gameData.data.bases.bases}
+      automods={gameData.data.bases.automods ?? []}
+      superior={readSuperiorAffixes(gameData.data.bases)}
+    />
+  );
 }
 
 interface BasesBrowserProps {
   readonly typesBundle: TypesBundle;
   readonly bases: readonly BaseItem[];
   readonly automods: readonly BaseAutomod[];
+  readonly superior: SuperiorAffixes | null;
 }
 
-function BasesBrowser({ typesBundle, bases, automods }: BasesBrowserProps) {
+function BasesBrowser({ typesBundle, bases, automods, superior }: BasesBrowserProps) {
   const dispatch = useDispatch();
   const filters = useSelector(selectBaseFilters);
   const { types, classes } = typesBundle;
@@ -95,6 +104,7 @@ function BasesBrowser({ typesBundle, bases, automods }: BasesBrowserProps) {
               baseByCode={baseByCode}
               automodById={automodById}
               classNames={classNames}
+              superior={superior}
               onSearch={handleSearch}
             />
           )}

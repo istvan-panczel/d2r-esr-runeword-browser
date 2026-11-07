@@ -53,7 +53,14 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     stats: byField('id', named('id')),
   },
   'areas.json': { areas: byField('id', named('id')) },
-  'bases.json': { bases: byField('code', named('code')), automods: byField('id', named('id')) },
+  'bases.json': {
+    bases: byField('code', named('code')),
+    automods: byField('id', named('id')),
+    superior: VALUE,
+    // qualityitems.txt rows by row number: a changed weight or stat shows as a changed row
+    superiorRows: byField('row', (entry) => `row ${field(entry, 'row')} (${field(entry, 'text')})`),
+    superiorPools: byField('label'),
+  },
   'crafting.json': {
     forgings: list(
       (entry) => `${field(entry, 'kind')}:${field(entry, 'key')}`,

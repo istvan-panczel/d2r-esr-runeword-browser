@@ -15,6 +15,8 @@ import reducer, {
   setAffixSearch,
   setAffixSort,
   setAffixSortDir,
+  setAffixSuperiorType,
+  setAffixView,
   toggleAffixKind,
   toggleAffixType,
   type AffixFilters,
@@ -77,6 +79,14 @@ describe('gameDataSlice affix filters', () => {
     state = reducer(state, resetAffixFilters());
     expect(state.affixes).toEqual({ ...DEFAULT_AFFIX_FILTERS, base: 'xui', ilvl: 50, quality: 'rare' });
   });
+
+  it('switches to the superior view, filters its item type and keeps the view on reset', () => {
+    let state = reducer(initial, setAffixView('superior'));
+    state = reducer(state, setAffixSuperiorType('abow'));
+    state = reducer(state, setAffixSearch('skills'));
+    expect(state.affixes).toEqual({ ...DEFAULT_AFFIX_FILTERS, view: 'superior', superiorType: 'abow', search: 'skills' });
+    expect(reducer(state, resetAffixFilters()).affixes).toEqual({ ...DEFAULT_AFFIX_FILTERS, view: 'superior' });
+  });
 });
 
 describe('affix URL params', () => {
@@ -87,6 +97,7 @@ describe('affix URL params', () => {
 
   it('round-trips every filter', () => {
     const filters: AffixFilters = {
+      view: 'superior',
       search: '"cold damage"',
       kinds: ['p', 's'],
       rareOnly: true,
@@ -100,8 +111,11 @@ describe('affix URL params', () => {
       includeAutomagic: false,
       sort: 'group',
       sortDir: 'desc',
+      superiorType: 'abow',
     };
     const params = encodeAffixFilters(filters);
+    expect(params.get('view')).toBe('superior');
+    expect(params.get('stype')).toBe('abow');
     expect(params.get('aff')).toBe('p,s');
     expect(params.get('rare')).toBe('1');
     expect(params.get('minlvl')).toBe('10');
@@ -115,7 +129,7 @@ describe('affix URL params', () => {
 
   it('drops invalid and unknown values', () => {
     const params = new URLSearchParams(
-      'aff=p,x,p&rare=yes&minlvl=0&maxlvl=100&cls=xyz&type=ring,zzz&base=nope&ilvl=120&q=epic&auto=2&sort=-bogus'
+      'aff=p,x,p&rare=yes&minlvl=0&maxlvl=100&cls=xyz&type=ring,zzz&base=nope&ilvl=120&q=epic&auto=2&sort=-bogus&view=magic&stype=zzz'
     );
     expect(decodeAffixFilters(params, { types: new Set(['ring']), bases: new Set(['xui']) })).toEqual({
       ...DEFAULT_AFFIX_FILTERS,

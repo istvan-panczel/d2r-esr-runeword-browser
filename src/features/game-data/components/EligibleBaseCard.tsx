@@ -2,18 +2,21 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
-import type { BaseItem, ItemTypeInfo } from '../engine/schema';
+import type { BaseItem, ItemTypeInfo, SuperiorAffixes } from '../engine/schema';
 import type { EligibleBase } from '../engine/bestBase';
 import { minIlvlForSockets } from '../engine/sockets';
 import { BASE_TIER_LABELS, TIER_BADGE_CLASS } from '../constants/bases';
 import { formatRange } from '../utils/format';
 import { collapseRowsBySockets, formatSocketOption } from '../utils/bestBaseResults';
+import { SuperiorRollsSection } from './SuperiorRollsSection';
 
 interface EligibleBaseCardProps {
   readonly result: EligibleBase;
   readonly type: ItemTypeInfo | undefined;
   readonly classNames: ReadonlyMap<string, string>;
   readonly upgrade: BaseItem | null;
+  /** Superior affix rows and rules (null: no "Superior rolls" panel) */
+  readonly superior: SuperiorAffixes | null;
 }
 
 function Stat({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
@@ -39,7 +42,7 @@ function basesSearchPath(name: string): string {
 }
 
 /** Compact base card for the Best Base results: stats after the ethereal estimate, requirement deficits, sockets. */
-export function EligibleBaseCard({ result, type, classNames, upgrade }: EligibleBaseCardProps) {
+export function EligibleBaseCard({ result, type, classNames, upgrade, superior }: EligibleBaseCardProps) {
   const { base, deficits } = result;
   const damage = [
     result.dmg1 && `1H ${formatRange(result.dmg1)}`,
@@ -111,6 +114,7 @@ export function EligibleBaseCard({ result, type, classNames, upgrade }: Eligible
             </Stat>
           )}
         </dl>
+        {superior !== null && <SuperiorRollsSection superior={superior} base={base} />}
       </CardContent>
     </Card>
   );

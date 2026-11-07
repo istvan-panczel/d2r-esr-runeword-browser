@@ -4,6 +4,15 @@ export type AffixKind = Affix['kind'];
 export type AffixQuality = 'magic' | 'rare';
 
 export const AFFIX_KINDS: readonly AffixKind[] = ['p', 's', 'a'];
+
+/** The page's two lists: magic / rare / automod affixes, or the superior quality rows (qualityitems.txt) */
+export const AFFIX_VIEWS = ['affixes', 'superior'] as const;
+export type AffixView = (typeof AFFIX_VIEWS)[number];
+export const AFFIX_VIEW_LABELS: Record<AffixView, string> = { affixes: 'Magic & rare', superior: 'Superior' };
+
+export function isAffixView(value: string): value is AffixView {
+  return (AFFIX_VIEWS as readonly string[]).includes(value);
+}
 export const AFFIX_KIND_LABELS: Record<AffixKind, string> = { p: 'Prefix', s: 'Suffix', a: 'Automod' };
 
 export const AFFIX_SORT_KEYS = ['name', 'lvl', 'group', 'freq'] as const;

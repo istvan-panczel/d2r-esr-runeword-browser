@@ -3,15 +3,15 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-07T09:03:11.420Z",
+  "generatedAt": "2026-11-07T09:33:20.946Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
       "bytes": 45013
     },
     "bases": {
-      "hash": "91456a03792aeecc4ecc5fd2fafac70acc993265a98a45f1cb3cadd4e9364a74",
-      "bytes": 329778
+      "hash": "4cd3599db545e82c577cfc2a81fa8fef8960739b2f202714cec71c4769185aca",
+      "bytes": 347714
     },
     "runewords": {
       "hash": "6da9e3092538b78a02c379a697113e4a87c8805c95b02a4e13446e664cf29fed",
@@ -107,6 +107,9 @@
     "baseAutomods": 86,
     "basesWithAutomods": 616,
     "basesWithStaffMods": 218,
+    "superiorRows": 83,
+    "superiorPools": 12,
+    "superiorWeightedRows": 74,
     "runewords": 391,
     "runewordRows": 449,
     "affixes": 2548,
@@ -272,6 +275,7 @@
     "bases: mrn is mythical but its name string is \"Ring\"; using \"Mythical Ring\"",
     "bases: mjw is mythical but its name string is \"Jewel\"; using \"Mythical Jewel\"",
     "bases: dropped cx1 (duplicate of cm1), cx2 (duplicate of cm2), cx3 (duplicate of cm3)",
+    "superior: superior-affixes.toml has weights for rows 83, 84, 85, 86; qualityitems.txt has 83 rows (0-82)",
     "affixes: p910 \"Apprentice's\" references unknown item type \"voib\"",
     "affixes: p911 \"Death Master's\" references unknown item type \"voib\"",
     "affixes: p918 \"Death Master's\" references unknown item type \"voib\"",

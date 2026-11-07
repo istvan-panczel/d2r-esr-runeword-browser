@@ -11,7 +11,8 @@ import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { db } from '@/core/db';
 import type { Runeword } from '@/core/db/models';
-import type { BaseItem, ItemTypeInfo, TxtRuneword, TxtRunewordsBundle, TypesBundle } from '../engine/schema';
+import type { BaseItem, ItemTypeInfo, SuperiorAffixes, TxtRuneword, TxtRunewordsBundle, TypesBundle } from '../engine/schema';
+import { readSuperiorAffixes } from '../engine/superiorAffixes';
 import { findEligibleBases, upgradePath, type EligibleBase } from '../engine/bestBase';
 import { htmRunewordId, matchRunewords, type RunewordMatchResult } from '../engine/matchRunewords';
 import { CharacterForm } from '../components/CharacterForm';
@@ -49,6 +50,7 @@ export function BestBaseScreen() {
     <BestBaseFinder
       typesBundle={gameData.data.types}
       bases={gameData.data.bases.bases}
+      superior={readSuperiorAffixes(gameData.data.bases)}
       txtBundle={gameData.data.runewords}
       htmRunewords={htmRunewords}
     />
@@ -58,6 +60,7 @@ export function BestBaseScreen() {
 interface BestBaseFinderProps {
   readonly typesBundle: TypesBundle;
   readonly bases: readonly BaseItem[];
+  readonly superior: SuperiorAffixes | null;
   readonly txtBundle: TxtRunewordsBundle;
   readonly htmRunewords: readonly Runeword[];
 }
@@ -97,7 +100,7 @@ function txtOptions(runewords: readonly TxtRuneword[]): ComboOption[] {
     });
 }
 
-function BestBaseFinder({ typesBundle, bases, txtBundle, htmRunewords }: BestBaseFinderProps) {
+function BestBaseFinder({ typesBundle, bases, superior, txtBundle, htmRunewords }: BestBaseFinderProps) {
   const dispatch = useDispatch();
   const options = useSelector(selectBestBaseOptions);
   const getShareUrl = useBestBaseUrlState();
@@ -166,6 +169,7 @@ function BestBaseFinder({ typesBundle, bases, txtBundle, htmRunewords }: BestBas
           )}
           txtRunewords={txtBundle.runewords}
           bases={bases}
+          superior={superior}
           typeByCode={typeByCode}
           classNames={classNames}
           gameVersion={manifest?.esrVersion}
@@ -184,6 +188,7 @@ interface SelectedRunewordProps {
   readonly source: TxtSource;
   readonly txtRunewords: readonly TxtRuneword[];
   readonly bases: readonly BaseItem[];
+  readonly superior: SuperiorAffixes | null;
   readonly typeByCode: ReadonlyMap<string, ItemTypeInfo>;
   readonly classNames: ReadonlyMap<string, string>;
   readonly gameVersion: string | undefined;
@@ -195,6 +200,7 @@ function SelectedRuneword({
   source,
   txtRunewords,
   bases,
+  superior,
   typeByCode,
   classNames,
   gameVersion,
@@ -290,7 +296,14 @@ function SelectedRuneword({
             <EmptyState summary={summary} includeUnusable={options.includeUnusable} />
           ) : (
             groups.map((group) => (
-              <BaseGroupSection key={group.type} group={group} bases={bases} typeByCode={typeByCode} classNames={classNames} />
+              <BaseGroupSection
+                key={group.type}
+                group={group}
+                bases={bases}
+                superior={superior}
+                typeByCode={typeByCode}
+                classNames={classNames}
+              />
             ))
           )}
         </>
@@ -350,11 +363,12 @@ function EmptyState({ summary, includeUnusable }: { readonly summary: RejectionS
 interface BaseGroupSectionProps {
   readonly group: BaseGroup;
   readonly bases: readonly BaseItem[];
+  readonly superior: SuperiorAffixes | null;
   readonly typeByCode: ReadonlyMap<string, ItemTypeInfo>;
   readonly classNames: ReadonlyMap<string, string>;
 }
 
-function BaseGroupSection({ group, bases, typeByCode, classNames }: BaseGroupSectionProps) {
+function BaseGroupSection({ group, bases, superior, typeByCode, classNames }: BaseGroupSectionProps) {
   const [showAll, setShowAll] = useState(false);
   const visible: EligibleBase[] = showAll ? group.results : group.results.slice(0, GROUP_PREVIEW_SIZE);
   const hidden = group.results.length - visible.length;
@@ -372,6 +386,7 @@ function BaseGroupSection({ group, bases, typeByCode, classNames }: BaseGroupSec
             type={typeByCode.get(result.base.type)}
             classNames={classNames}
             upgrade={upgradePath(result.base, bases)}
+            superior={superior}
           />
         ))}
       </div>

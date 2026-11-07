@@ -9,6 +9,8 @@ export const ESR_STRINGS_DIR = 'Eastern_Sun_Resurrected.mpq/data/local/lng/strin
 export const ESR_METADATA_FILE = 'd2rloader/metadata.json';
 /** D2RLoader plugin config naming uniques dropped by boss sets (Hellfire Torch, …); optional */
 export const ESR_BOSS_SET_UNIQUE_DROP_FILE = 'd2rloader/config/celestialrayone.boss-set-unique-drop.toml';
+/** D2RLoader plugin config with the superior affix weights and rules (bases.json `superior`); optional */
+export const ESR_SUPERIOR_AFFIXES_FILE = 'd2rloader/config/celestialrayone.superior-affixes.toml';
 /** The offline terror zone rotation (terrorzones.json) */
 export const ESR_DESECRATED_ZONES_FILE = 'Eastern_Sun_Resurrected.mpq/data/hd/global/excel/desecratedzones.json';
 /** D2RLoader plugin configs the modifiers bundle reads its ESR facts from (crushing blow per target, caps, curves …) */
@@ -73,7 +75,7 @@ export const TABLES = [
   'inventory',
   // terrorzones.json (the names the game's terror zone display uses)
   'levelgroups',
-  // modifiers.json (difficulty penalties, leech divisors; superior affixes)
+  // modifiers.json (difficulty penalties, leech divisors; superior affixes); bases.json superior
   'difficultylevels',
   'qualityitems',
 ] as const;
@@ -85,7 +87,7 @@ export interface EsrSources {
   tables: Record<EsrTableName, string>;
   strings: StringsFile[];
   /** Launcher plugin configs (raw text; null when the file is missing) */
-  plugins: { bossSetUniqueDrop: string | null };
+  plugins: { bossSetUniqueDrop: string | null; superiorAffixes: string | null };
   /** Plugin configs and memory patches of modifiers.json by name (raw text; null when the file is missing) */
   modifierConfigs: Record<EsrModifierConfig, string | null>;
   modifierPatches: Record<EsrModifierPatch, string | null>;
@@ -142,7 +144,7 @@ export function readEsrSources(esrDir: string): EsrSources {
     esrVersion: readModVersion(esrDir),
     tables,
     strings,
-    plugins: { bossSetUniqueDrop },
+    plugins: { bossSetUniqueDrop, superiorAffixes: optional(ESR_SUPERIOR_AFFIXES_FILE) },
     modifierConfigs,
     modifierPatches,
     desecratedZones,
