@@ -219,18 +219,18 @@ describe('buildCubeBundle', () => {
       row('Unique Reroll ES Charm Exc', ['"char,uni"', 'gpv'], 'usetype,uni'),
       row('Unique Reroll ES Weapon Exc', ['Axe of the Elements', 'gpv'], 'Axe of the Elements'),
       row('Unique Reroll ES Weapon Exc', ['Hacker', 'gpv'], 'Hacker'),
-      row('Weapons Crate', ['u22'], 'lbw,nor', { outputB: 'ssd,nor' }),
-      row('Weapons Crate', ['u22'], 'ssd,nor'),
+      row('Mystery Crate', ['u22'], 'lbw,nor', { outputB: 'ssd,nor' }),
+      row('Mystery Crate', ['u22'], 'ssd,nor'),
       row('Something New: 3 Keys', ['"key,qty=3"'], 'gpv'),
     ]);
     expect(bundle.families.map((family) => family.id)).toEqual([
       'unique-charm-upgrades',
       'unique-reroll',
-      'other:weapons-crate',
+      'other:mystery-crate',
       'other:something-new',
     ]);
     expect(fallback).toEqual([
-      { id: 'other:weapons-crate', rows: 2 },
+      { id: 'other:mystery-crate', rows: 2 },
       { id: 'other:something-new', rows: 1 },
     ]);
     // The rerolls of named uniques merge into one row; their names stay searchable on small families' recipes

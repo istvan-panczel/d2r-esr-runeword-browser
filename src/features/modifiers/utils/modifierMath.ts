@@ -172,6 +172,8 @@ export interface CrushingBlowInput {
   players?: number;
   /** The target's physical resist (damage reduced by %); reduces the result, a negative value does not raise it */
   physicalResist?: number;
+  /** The attacker's "+x% Crushing Blow Damage" (crushing-blow.toml [effectiveness] stat, 1045 in ESR 3.3) */
+  crushingBlowDamage?: number;
 }
 
 export interface CrushingBlowResult {
@@ -183,16 +185,21 @@ export interface CrushingBlowResult {
 
 /**
  * Life one Crushing Blow removes: the per-class share of current life (crushing-blow.toml, % of vanilla), the ranged
- * setting for missiles, divided by the /players life bonus against monsters (vanilla: +50 % life per extra player),
- * reduced by the target's physical resist (capped at 100; negative resist does not add).
+ * setting for missiles, times (100 + "+x% Crushing Blow Damage") / 100 when the config names an effectiveness stat
+ * (`[effectiveness]`: "-100 or lower ... does nothing"), divided by the /players life bonus against monsters (vanilla:
+ * +50 % life per extra player), reduced by the target's physical resist (capped at 100; negative resist does not add).
+ * Never more than the target's current life.
  */
 export function crushingBlow(input: CrushingBlowInput, facts: Facts): CrushingBlowResult {
   let share = recordFact(facts, 'crushingBlow.share')[input.target] ?? 0;
   if (input.ranged === true) share = (share * numberFact(facts, 'crushingBlow.ranged')) / 100;
+  const bonus = input.crushingBlowDamage ?? 0;
+  if (bonus !== 0 && numberFact(facts, 'crushingBlow.effectivenessStat') >= 0) share = (share * Math.max(0, 100 + bonus)) / 100;
   const players = Math.max(1, Math.floor(input.players ?? 1));
   if (input.target !== 'mercenary' && input.target !== 'player')
     share = share / (1 + (numberFact(facts, 'monster.hpBonusPerPlayer') * (players - 1)) / 100);
   const resist = Math.min(100, Math.max(0, input.physicalResist ?? 0));
   share = (share * (100 - resist)) / 100;
-  return { share, damage: (Math.max(0, input.currentLife) * share) / 100 };
+  const life = Math.max(0, input.currentLife);
+  return { share, damage: Math.min(life, (life * share) / 100) };
 }

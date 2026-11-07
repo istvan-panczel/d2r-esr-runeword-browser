@@ -329,6 +329,10 @@ helpers in `parsers/shared/parserUtils.ts` instead of splitting `innerHTML` on `
   `<font color="orange">` element (attribute value matched case-insensitively, quoted or not) — even
   when that font spans several `<br>`-separated lines or starts with a `<br>`. The mythical uniques
   parser uses this flag to route every orange line to `specialProperties` and the rest to `properties`.
+  Each line also goes through `fillUnformattedBleedDuration`: the ESR 3.3 pages print the bleed string's format unfilled
+  ("Adds 25%-50% Bleed Damage over %.2f seconds", 84 lines on the runeword and unique pages; an upstream docs-generator
+  slip, the txt-generated bundles have the number), and the duration differs per item (0.60 to 20 seconds), so the line
+  reads "… Bleed Damage over time" instead of a number the page does not give.
 - `splitCellLineGroups(lines)` splits on `<br><br>` (recipe bonuses vs. ingredient bonuses in the
   pre-ESR 3.3 runeword/gemword cells; `parseRecipeAffixes` keeps only the first group). Since ESR 3.2, gemword
   cells for most non-Charm items also list "1-2 of the following:" random bonus pools between the two;

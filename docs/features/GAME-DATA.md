@@ -545,12 +545,16 @@ jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Mi
 items, Blemished gems / Mi Rune, secret recipes grouped per number), then a fallback `other:<prefix>` per description
 prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.3 additions: `crucible` (section Forging: the 884 "Crucible - …"
 rows and the 4 "[SECRET08/09] Crucible - …" rows of the Blacksmith perk The Secret Crucible, a second forging, worded
-by the matching forging family's rewrite, bonuses hidden), `specializations` (Mystical Tesseract), the Alchemist Gem
+by the matching forging family's rewrite, bonuses hidden; groups per forging kind and add / remove, titled by
+`crucibleGroupLabel`: "Second stat forging", "Removing the second rune forging", …), `specializations` (Mystical Tesseract), the Alchemist Gem
 Infusion rows in `potions`, the Orb of Anointment recycle to Dragon Stones in `materials`, True Master and "Remove Weapon
 Mastery" rows in `weapon-mastery`, the "… - Jeweler 15 Special" / "… - Archaeology 13 Special" perk rows as their own
-groups of `unsocket` / `socket`, amulet and ring sanctification in `legendary-consumables`. ESR 3.3 (as 3.2.24): 9
-fallback families with 41 rows (Introductory Book Cycle 9, Weapons Crate 8, Negative MF Charm 8, Opener Size Change 6,
-Anya's Gift 6 + 1 + 1, Randomize Stone 1, Morph Charm Refund 1); the integrity test fails past 60 fallback rows or 12
+groups of `unsocket` / `socket`, amulet and ring sanctification in `legendary-consumables`. The 41 rows ESR 3.2.24 and
+3.3 left in 9 fallback families have their own families since the 3.3 update, with readable titles: `introductory-book`
+(Misc, 9), `negative-charms` (Charms, 8: Magic Small Charm + Ancient Decipherer + Stamina or Mana Potions),
+`morph-charm-refund` (Charms, 1), `randomizing-stone` (Cubing Materials, 1), `ancients-gift` (Cubing Materials, 8:
+cubemain's "Anya's Gift" rows), `can-opener` (Gems / Runes, 6), `weapons-crate` (Normal Items, 8); ESR 3.3 has no
+fallback row, so the page has no "Other recipes" section. The integrity test fails past 60 fallback rows or 12
 fallback families, and when a defined family has no row (except `maple-leaf`: since 3.3 its rows, the unique charm
 recycle and Secret Recipes 26 / 40, are all claimed earlier; the guide still lists it).
 
@@ -633,7 +637,7 @@ qualifier: "Item level 99" (fixed), "Item level 60% of character level" (`plvl`)
 level" (`ilvl`), both added: "Item level 60% of character level + 60% of input item level". It is a separate field so
 it does not split the merged rows (they cluster on the output text; `clusterVariantsCounted` returns the indices of the
 variants each merged row stands for). A merged row lists the distinct levels of its variants joined with " / "
-(variants without one do not count). ESR 3.3: 624 of 1,597 merged rows have a level, none disagree. The guide's
+(variants without one do not count). ESR 3.3: 624 of 1,590 merged rows have a level, none disagree. The guide's
 `::recipes` blocks do not show it (their rows are built by `collectFamily`, a separate path without this field).
 
 **Qualities** (`qualities`, the page's quality filter, order unique / set / rare / magic / crafted): from the outputs a
@@ -1164,8 +1168,8 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   (art) and r48 (ESR's unused "Hu Rune" row, namestr r32, no items.json entry anywhere), so r32's art. A name whose
   rows with art differ in art is keyed per row as `name#code` instead of by the plain name, so neither row shows the
   other's art: in ESR 3.3 (as 3.2.24) only Ko Rune (`Ko Rune#r19`, the ESR rune; `Ko Rune#r68`, the LoD rune, art `ko_lod_rune`).
-  Counts (3.2.24): 179 rows → 177 names, 110 from ESR art, 67 from vanilla art (the LoD runes and the vanilla gems), 0
-  without art; 178 entries, 177 new files (Perfect Diamond's file was already there: the Jewel bases use that art; +0.42 MB), icons.json +19 KB.
+  Counts (ESR 3.3, as 3.2.24): 179 rows → 177 names, 110 from ESR art, 67 from vanilla art (the LoD runes and the vanilla
+  gems), 0 without art; 178 entries. When added: 177 new files (Perfect Diamond's file was already there: the Jewel bases use that art; +0.42 MB), icons.json +19 KB.
   No colour transforms (misc rows have `InvTrans` 0).
 - **Quest items** (by code, for the campaign map): `selectQuestIconCodes` takes the misc / weapons / armor.txt rows
   with a `quest` number (the campaign quest items: Horadric Staff and its parts, Khalim's organs and flails, The Gidbinn,
@@ -1174,8 +1178,9 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   organs, essences, Standard of Heroes and ESR's other quest-typed items; `mmap`: the endgame map items, areas.json
   `mapItem`). Each code gets its items.json art (mod first, vanilla fallback, as for bases), keyed by code, with the
   item's display name (`readItemNames`: `namestr`, else `name`, the way stashnames.json `bases` names a code; the
-  campaign map shows it without loading stashnames.json). Counts (3.2.24; ESR 3.3: 84 entries, `questIcons`): 78 codes, 46 from ESR art, 31 from vanilla art (the vanilla quest
-  items), 1 without art (ek2, no items.json entry); 77 entries, 73 new files (+0.32 MB), icons.json +8 KB.
+  campaign map shows it without loading stashnames.json). Counts (ESR 3.3): 85 codes, 53 from ESR art, 31 from vanilla art (the vanilla quest
+  items), 1 without art (ek2, no items.json entry); 84 entries (3.2.24: 78 codes, 46 from ESR art, 77 entries). When
+  added: 73 new files (+0.32 MB), icons.json +8 KB.
 - **Every other item by code** (`items`, for the Cube, Materials and Enhance pages and the loot filter item browser):
   `selectItemCodeRows` takes every lootfilter.json row (misc.txt, and the weapons / armor.txt rows bases.json leaves
   out: ESR's non-spawnable shadow bases such as Armet `ulm` and the mythical weapons `m21`…, which cube recipes and
@@ -1184,8 +1189,9 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   (`sixPackSingleCode`: the code without its leading `6`, `6hrt` → `hrt`, `6ppp` → `ppp` Dragon Stone, `699j` → `99j`
   Wild Card; misc.txt has no column linking the two, and 7 of the 22 names differ from the single item's, "DragonStone",
   "Anvil", "Decipherer"), so it points at the same file. A gem's or rune's code entry points at the same file as its
-  name entry in `misc` (same asset slug). Counts (3.2.24; ESR 3.3: 1,490 entries, `itemCodeIcons`): 1,579 codes, 1,134 from ESR art, 338 from vanilla art, 107
-  without art (22 "(6 Pack)" rows on the single item's art); 1,472 entries.
+  name entry in `misc` (same asset slug). Counts (ESR 3.3): 1,597 codes, 1,152 from ESR art, 338 from vanilla art, 107
+  without art (22 "(6 Pack)" rows on the single item's art); 1,490 entries (3.2.24: 1,579 codes, 1,134 from ESR art,
+  1,472 entries).
 - **Item types** (`types`, for type ingredients such as "Ring" or "5× Perfect Gem"): the art every spawnable item of
   the type (by `type` / `type2` ancestry) shares (`mcha` Large Charm, `jewl` Jewel, `ocha`, the class rings and
   amulets: 42 types), else the item of `TYPE_ICON_REPRESENTATIVES` (15): `ring` Ring, `amul` Amulet, `char` / `scha`
@@ -1201,8 +1207,8 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   variant's untinted file always exists. The integrity test fails on two files with the same bytes. Adding `items`
   and `types` wrote 408 files (+1.43 MB: 5,829,142 → 7,324,296 bytes) and merged 5 pre-existing duplicates; icons.json
   +140 KB raw / +13 KB gzip.
-- **Scope and counts** (ESR 3.2.24, vanilla root `06a0ca43…` extracted 2026-10-25; the generator prints them per
-  section; ESR 3.3 has the same 653 base, 1,114 unique and 270 set entries and 1,281 vanilla-art entries in 267 files): bases: 653 codes, 356 from ESR art, 297 from vanilla art (Jewel, Boots, Leather Armor, Short Spear, …),
+- **Scope and counts** (ESR 3.3, vanilla root `06a0ca43…` extracted 2026-10-25; the generator prints them per
+  section, `--check` too; the bases, uniques and set items split as in 3.2.24): bases: 653 codes, 356 from ESR art, 297 from vanilla art (Jewel, Boots, Leather Armor, Short Spear, …),
   0 without art. Uniques: 1,390 rows → 1,114 names; 695 from ESR art, 419 from vanilla art, 0 without art (392 own art,
   722 base art only). Two own entries of the mod's uniques.json point at art neither source has
   (`armor/deflective_spikes`, `amulet/BlackKnights_Holy_Signet`, ESR art missing from the repo); those items show
@@ -1212,9 +1218,10 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   `amulet_of_the_viper`, `rainbow_facet`, and `gotterdamerung`, a typo of ESR's "Gotterdammerung"). Set items: 270
   names; 153 from ESR art, 117 from vanilla art, 0 without art (83 own art; 3 from the vanilla sets.json: Bane's
   Oathmaker, Wraithskin, Authority); 108 mod sets.json keys match no row — all vanilla sets ESR replaced (Civerb's,
-  Isenhart's, Tal Rasha's, …). 2182 items.json entries, 993 sprites in the clone, 444 in the vanilla folder; 492
-  untinted files (138 from vanilla sprites; 2.0 MB WebP) plus 692 recoloured ones (690 files since byte-identical images share one) (see "Colour transforms"), 0 decode
-  failures. Vanilla art also replaced the base art of 25 names whose own entry pointed at vanilla art (Twinkle →
+  Isenhart's, Tal Rasha's, …). 2,207 items.json entries, 1,020 sprites in the clone, 444 in the vanilla folder
+  (3.2.24: 2,182 and 993); 1,867 files in all sections (267 from vanilla art, 7.1 MB WebP), of them 690 recoloured (869
+  recoloured entries: 668 uniques, 201 set items; see "Colour transforms"), 0 decode failures. Before `items` and
+  `types` (3.2.24): 492 untinted files (138 from vanilla sprites; 2.0 MB WebP) plus the recoloured ones. Vanilla art also replaced the base art of 25 names whose own entry pointed at vanilla art (Twinkle →
   Blood Crescent's art, Stormguild, Athena's Wrath, …).
 - **Colour transforms**: the game recolours a unique / set item's inventory art at draw time with the legacy palette
   system (D2R has no HD colour data; the owner saw Alaziel's Abstraction red in game while the base art is not). The
@@ -1254,8 +1261,8 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   `items[].name`. Stale `.webp` files in `icons/`
   are deleted.
 - **Manifest**: `generate-game-data.ts` does not build icons.json; it lists the committed file in the manifest as is
-  (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178) / `questIcons` (77) /
-  `itemCodeIcons` (1,472) / `typeIcons` (57), plus
+  (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178) / `questIcons` (84) /
+  `itemCodeIcons` (1,490) / `typeIcons` (57), plus
   `vanillaIcons` = entries (all sections) pointing at a vanilla file, recoloured ones through their untinted file (1,281),
   `vanillaIconFiles` (267), `tintedIcons` (869) and
   `tintedIconFiles` (690)) so `loadGameDataFile('icons')` works like every other

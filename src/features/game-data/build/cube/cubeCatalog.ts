@@ -521,6 +521,27 @@ const CRUCIBLE_PREFIX = /^(?:\[SECRET\d+\] )?Crucible - /;
  * ESR 3.3 "Crucible - <forging>" rows (Blacksmith perk The Secret Crucible): a second forging, the same recipe as the
  * forging family that matches the rest of the description; that family's rewrite words it.
  */
+/** The forging families' titles per forging kind of a "Crucible - [Remove ]<…> <kind> Forging <slot>" description */
+const CRUCIBLE_KINDS: readonly (readonly [RegExp, string])[] = [
+  [/\bAll Skill Forging\b/, 'all skills forging'],
+  [/\bSkill Forging\b/, 'class skill forging'],
+  [/\bStat Forging\b/, 'stat forging'],
+  [/\bRune Forging\b/, 'rune forging'],
+  [/\bAura Forging\b/, 'aura forging'],
+  [/\bForging Exp\b/, 'experience forging (secret recipe)'],
+];
+
+/**
+ * Cube page title of a crucible group, from its first row's description: the forging kind (the group mixes every
+ * quality, class and slot the cubemain rows name, so none of those is in the title) and whether it adds or removes it.
+ */
+export function crucibleGroupLabel(description: string): string {
+  const rest = description.replace(CRUCIBLE_PREFIX, '');
+  const kind = CRUCIBLE_KINDS.find(([pattern]) => pattern.test(rest))?.[1];
+  if (kind === undefined) return descriptionShape(description);
+  return /^Remove\b/.test(rest) ? `Removing the second ${kind}` : `Second ${kind}`;
+}
+
 function crucibleForging(recipe: RecipeVariant, row: CubeRow, esr: FamilyTables): RecipeVariant {
   const description = row.description.replace(CRUCIBLE_PREFIX, '');
   const base = CUBE_FAMILIES.find((family) => family.match.test(description));
@@ -542,6 +563,7 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
       /\[SECRET\d+\]/.test(row.description)
         ? 'secret'
         : (/(?:Remove )?(?:All Skill|Skill|Stat|Rune|Aura) Forging/.exec(row.description)?.[0] ?? row.description),
+    groupLabel: (rows) => crucibleGroupLabel(rows[0]?.description ?? ''),
   },
   {
     id: 'unique-reroll',
@@ -697,6 +719,57 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
     match: /^(?:[\w ]+ Primordial Soulstone \d+|[\w ]+ Lich King Bonus|Stance Dance Fix)$/,
     collapse: (row) => (/Lich King|Stance Dance/.test(row.description) ? 'bonus' : 'soulstone'),
     outputBonus: 'hide',
+  },
+  // Small recipe sets without a family of their own until 3.3 (they were "Other recipes" under their cubemain names)
+  {
+    id: 'introductory-book',
+    label: 'Introductory Book cycle',
+    section: 'mis',
+    match: /^Introductory Book Cycle \d+$/,
+    groupLabel: () => 'Introductory Book, cubed alone',
+  },
+  {
+    id: 'negative-charms',
+    label: 'Small charms with negative Magic Find or maximum mana',
+    section: 'cha',
+    match: /^Negative MF Charm: /,
+    groupLabel: () => 'Magic Small Charm + Ancient Decipherer + Stamina or Mana Potions',
+  },
+  {
+    id: 'morph-charm-refund',
+    label: 'Morph Charm refund',
+    section: 'cha',
+    match: /^Morph Charm Refund$/,
+    groupLabel: () => 'Morph Charm, cubed alone',
+  },
+  {
+    id: 'randomizing-stone',
+    label: 'Randomizing Stone',
+    section: 'mat',
+    match: /^Randomize Stone$/,
+    groupLabel: () => 'Chipped Skull + Key',
+  },
+  {
+    id: 'ancients-gift',
+    label: "Ancient's Gift: Unique Stones and Dragon Stones",
+    section: 'mat',
+    // cubemain names it "Anya's Gift"
+    match: /^Anya's Gift\b/,
+    groupLabel: () => "Ancient's Gift, cubed alone",
+  },
+  {
+    id: 'can-opener',
+    label: 'Can Opener size change',
+    section: 'gem',
+    match: /^Opener Size Change$/,
+    groupLabel: () => 'Can Opener, cubed alone',
+  },
+  {
+    id: 'weapons-crate',
+    label: 'Weapons Crate',
+    section: 'nor',
+    match: /^Weapons Crate$/,
+    groupLabel: () => 'Weapons Crate, cubed alone: a set of normal items',
   },
   {
     id: 'secret',

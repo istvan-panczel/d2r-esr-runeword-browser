@@ -152,6 +152,15 @@ function normalizeWhitespace(text: string): string {
 }
 
 /**
+ * ESR 3.3's docs pages print the bleed string's printf format unfilled ("Adds 25%-50% Bleed Damage over %.2f seconds":
+ * 84 lines on the runeword and unique pages). The duration differs per item (0.60 to 20 seconds in the txt-generated
+ * bundles) and the page gives no hint of it, so the line reads "over time" rather than a guessed number.
+ */
+export function fillUnformattedBleedDuration(text: string): string {
+  return text.replace(/ over %\.\d*f seconds\b/g, ' over time');
+}
+
+/**
  * Parses affixes from a recipe (runeword/gemword) bonus cell, extracting ONLY
  * the recipe's own bonuses (before the <br><br> separator).
  *
@@ -327,7 +336,7 @@ export function extractCellLines(root: Node): CellLine[] {
         if (value.trim().length > 0 && hasOrangeAncestor(child, root)) orange = true;
       } else if (child instanceof Element) {
         if (child.tagName === 'BR') {
-          lines.push({ text: normalizeWhitespace(text), orange });
+          lines.push({ text: fillUnformattedBleedDuration(normalizeWhitespace(text)), orange });
           text = '';
           orange = false;
         } else {
@@ -338,7 +347,7 @@ export function extractCellLines(root: Node): CellLine[] {
   };
 
   walk(root);
-  lines.push({ text: normalizeWhitespace(text), orange });
+  lines.push({ text: fillUnformattedBleedDuration(normalizeWhitespace(text)), orange });
   return lines;
 }
 

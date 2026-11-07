@@ -110,7 +110,9 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
 7. **Community tools** (`HomeCommunityTools`): a card per fan-made ESR tool from `COMMUNITY_TOOLS` in `navConfig.ts`
    (label linking out, author, a kind badge, a one-sentence description, a dot-separated line of short feature labels, caveat,
    "Source on GitHub" when the project has one), with a note that they are not affiliated with this site or the mod. The descriptions were
-   last checked against the live tools on 2026-11-04. Static data, no fetches. Both sections share the `HomeLinkCard` component.
+   last checked against the live tools on 2026-11-04. Sully's ESR Wiki Overlay ships with ESR since 3.3 (hotkey, cube button or
+   main menu), so its label links the ESR 3.3 patch notes (`ESR_WIKI_OVERLAY_NOTE_URL`) and its GitHub repository is only the
+   source link. Static data, no fetches. Both sections share the `HomeLinkCard` component.
 8. **Footer** (`HomeFooter`): app version (`src/assets/version.json`), ESR / GitHub / privacy policy links (URLs from
    `navConfig.ts`), credits.
 

@@ -39,9 +39,9 @@ const setLines = sets.sets.flatMap((set) => set.items.flatMap((item) => [...item
 
 const linked = (lines: readonly string[]) => lines.filter((line) => findModifierRef(line, index) !== null).length;
 
-describe('modifier lines on the item pages (ESR 3.2.24 fixtures)', () => {
+describe('modifier lines on the item pages (ESR 3.3 fixtures)', () => {
   it('links the modifier lines of every surface', () => {
-    // ESR 3.2.24: runewords 2000 / 3939, uniques 4848 / 9763, mythicals 208 / 415, ascendancies 110 / 226, sets 1030 / 2197
+    // ESR 3.3: runewords 2005 / 3944, uniques 4771 / 9786, mythicals 208 / 412, ascendancies 110 / 226, sets 1030 / 2197
     expect(linked(runewordLines)).toBeGreaterThan(1900);
     expect(linked(uniqueLines)).toBeGreaterThan(4600);
     expect(linked(mythicals.flatMap((item) => item.properties))).toBeGreaterThan(190);

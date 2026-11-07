@@ -941,8 +941,8 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
   weapons and armor are greyed with "shadow base" (tooltip: they exist only as a unique's base or as a cube result),
   misc items with `drops: false` with "never drops"; non-spawnable misc items that drop (the Ancient Scrolls, Ore) look
   like any other (`itemMutedState` in `utils/lookup.ts`, shared by the options and the chips). Two or more unmuted
-  items sharing a display name get their code in the option label ("Ko Rune (r19)" / "Ko Rune (r68)"; ESR 3.2.24: 24
-  names, 277 items, mostly containers and the 50 Ancient Scrolls); a muted twin keeps the plain name and is told apart
+  items sharing a display name get their code in the option label ("Ko Rune (r19)" / "Ko Rune (r68)"; ESR 3.3: 25
+  names, 282 items, mostly containers and the 50 Ancient Scrolls; 3.3 added the 5 Alien Artefacts); a muted twin keeps the plain name and is told apart
   by its hint (Hand Axe `hax` / `p01` "shadow base", Fu Rune `r32` / `r48` "never drops"). The search still matches the
   plain name. Item options show their type (`hax · Axe`) and also match the names and codes of
   every type the base counts as (`type` and `type2` with their ancestors, the option's `searchMore`), ranked after the
@@ -1693,8 +1693,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   comment, conditions, `useStyle`, sound, an icon only where it differs from the style's, chat line; one key per line).
   `assets.md` lists every registry entry with its "when to use" line (`DEFAULT_PROMPT_ASSETS` from
   `BUNDLED_SOUND_ASSETS` / `BUNDLED_ICON_ASSETS`).
-- **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.2.24, the single .md without request or starter):
-  **Compact** about 213k characters (~53k tokens; measured on ESR 3.2.24, it grows with the example rules): every item type (`item-types.csv`), the misc items that drop
+- **Game data sizes** (`gameDataTables.ts`, measured on ESR 3.3 with `referenceSizes`, the single .md without request or
+  starter): **Compact** about 227k characters (~57k tokens; it grows with the example rules): every item type (`item-types.csv`), the misc items that drop
   (`items.csv`: runes, gems, charms, jewels, potions, keys, organs, essences, coupons, maps, scrolls; stacks of five or
   more identically named containers (the Rune, Decal and Multi Stockers, Gem and Crystal Cans, Rerolling Orbs)
   collapse to one row "match them by item type"), the weapon and armour bases that drop by item type and tier
@@ -1702,12 +1702,12 @@ example rules: of the request), else of the request's first line, else "ai-filte
   can use `itemTypes` + `baseTier`), every stat with label, param kind and the quirk or scale note (`stats.csv`),
   uniques merged by name with the dropped and Ancient Coupon ids, then the set items (`uniques-sets.csv`, disabled rows
   left out), every area (`areas.csv`, 5k), the class skills, the skill tabs (param = class × 8 + tab) and the classes.
-  **Full** about 338k characters (~84k tokens): one row per item code with kind, types, tier and drop flag, one row
+  **Full** about 362k characters (~90k tokens): one row per item code with kind, types, tier and drop flag, one row
   per unique and set row with base, level and coupon/disabled notes, and every skill. Neither size lists the sounds.txt
   names (they were 263k, about half of Full, until 2026-11): the prompt and assets.md say game sounds exist and that the
   LLM asks the user for the exact name (the editor's Sound picker lists them; the validator warns on an unknown one), and
-  the page says so under the downloads. Sully's template as the
-  starter adds about 68k characters (Full with Sully's: about 400k).
+  the page says so under the downloads. Sully's template (v0.7.0, 184k
+  characters) as the starter adds about 185k characters (Full with Sully's: about 546k).
 - **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
   blocks (backticks or tildes, any length, an unclosed last block included) that look like JSON (info `json`, `jsonc`,
   `json5`, `js`, none, or content starting with `{` or `//`) are tried last first and the first complete filter wins (a

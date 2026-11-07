@@ -176,6 +176,7 @@ Hell]` or a record per class / target / setting), `vanilla` in the same shape wh
 | `crushingBlow.settings`                                                           | monster 50, champion 50, unique 25, super_unique 16, act_boss 16, minion 50, mercenary 50, player 50 (% of vanilla) | 100                                               | crushing-blow.toml `[targets]`                     |
 | `crushingBlow.share`                                                              | 12.5 / 12.5 / 6.25 / 2 / 2 / 12.5 / 5 / 5 % of current life                                                         | 25 / 25 / 25 / 12.5 / 12.5 / 25 / 10 / 10         | derived: vanilla share × setting / 100             |
 | `crushingBlow.ranged`, `.enabled`                                                 | 100 (ranged = melee), true                                                                                          | 50                                                | crushing-blow.toml `[attack] ranged`               |
+| `crushingBlow.effectivenessStat`                                                  | 1045 (`crushingblow_damage`, ESR 3.3; -1 = off)                                                                     | —                                                 | crushing-blow.toml `[effectiveness] stat_id`       |
 | `criticalDamage.stat` / `.basePercent` / `.maxPercent` / `.enabled` / `.missiles` | 434 / 200 / 100000 / true / true                                                                                    | — / 200                                           | critical-strike-damage.toml                        |
 | `dodge.cap`                                                                       | dodge 75, avoid 75, evade 75                                                                                        | 100 (no cap)                                      | dodge-avoid-evade-cap.toml (per-stat -1 = inherit) |
 | `castRate.cap`, `castRate.maxRate`                                                | 500 FCR, rate 196 (derived: 100 + floor(120 × cap / (cap + 120)))                                                   | 200, 175                                          | cast-rate-cap.toml `fcr_cap`                       |
@@ -224,9 +225,11 @@ changes these tables.
   pivot^s), above 50 + 50 × d / (d + tail), the late tail blended in with a smoothstep weight between blendStart and
   blendEnd, floored to a whole percent, snapped to 100 at 99.5, then level scaling (vanilla only) and min / max. The test
   reproduces the config's own table; the vanilla curve gives 100 × AR / (AR + DEF) × 2 alvl / (alvl + dlvl), 5–95.
-- `crushingBlow({ currentLife, target, ranged?, players?, physicalResist? }, facts)`: share = `crushingBlow.share`
-  [target] (× ranged / 100 for missiles), divided by 1 + 50 % × (players − 1) against monsters (not mercenaries or
-  players), × (100 − physical resist clamped to 0–100) / 100; damage = current life × share / 100.
+- `crushingBlow({ currentLife, target, ranged?, players?, physicalResist?, crushingBlowDamage? }, facts)`: share =
+  `crushingBlow.share` [target] (× ranged / 100 for missiles), × max(0, 100 + "+x% Crushing Blow Damage") / 100 when
+  `crushingBlow.effectivenessStat` is not -1 (crushing-blow.toml `[effectiveness]`: "+25 multiplies every share by 1.25",
+  "-100 or lower ... does nothing"), divided by 1 + 50 % × (players − 1) against monsters (not mercenaries or players),
+  × (100 − physical resist clamped to 0–100) / 100; damage = current life × share / 100, at most the current life.
 
 ## Content: `content/modifiers/`
 
@@ -350,7 +353,8 @@ bundle's order. A generated title that is only a stat name or a stray word ("to"
   divisor, exact, engine 1/64 %, per 1000 damage, vanilla; the smallest item leech that is not 0 in Hell; the rounding
   caveat), Magic Find (per quality: ESR effective MF, the tail's part, vanilla, the diminishing constant), hit chance
   (AR and defense → ratio, ESR, vanilla at equal levels, the AR needed for 50 / 75 / 90 / 95 %), Crushing Blow (current
-  life, physical resist, /players, melee / ranged → share and life removed per target class, vanilla). Local state, not
+  life, physical resist, /players, +% Crushing Blow Damage (hidden when the config's stat is -1; ESR only, the vanilla
+  column ignores it), melee / ranged → share and life removed per target class, vanilla). Local state, not
   in the URL.
 
 Mobile: one column at 375 px without horizontal page scroll; wide tables scroll inside their box.
@@ -406,7 +410,7 @@ badge is the source kind the entry's body tags name most (ties: the more ESR-spe
 kinds without text.
 
 **Data** (`src/features/modifiers/data/modifierRefs.json`, 35 KB raw / 9.3 KB gzip): the entries (key, title,
-category, summary with its placeholders filled in, source), 137 templates, 4 wildcard patterns, the 17 facts of
+category, summary with its placeholders filled in, source), 138 templates, 4 wildcard patterns, the 17 facts of
 `PEEK_FACT_KEYS` and the home search's kind titles (`searchNames`, [title, kind key], ~12 KB raw). Written by
 `npm run modifiers:refs` (`scripts/generate-modifier-refs.ts`, from the committed `public/game-data/modifiers.json` and
 `content/modifiers/modifiers.md`); `generate-game-data.ts` writes it too, from the bundle it just generated (so
@@ -418,13 +422,13 @@ content chunk (49 KB gzip) loads for the peek. The card (`components/ModifierPee
 lazy chunk inside the shared popover host; the host and both cards are prefetched on idle once a ref index has loaded
 (`features/skills/components/peekChunks.ts`), so the first peek opens without a "Loading…" step.
 
-**Coverage** (lines that are not skill links; ESR 3.3 for the first four, ESR 3.2.24 for the rest, not re-measured):
-runewords 2,005 of 3,944 lines, uniques 4,771 of 9,786, mythicals 208 of 412, ascendancies 110 of 226, gemwords 324 +
-8,420 random-pool lines, socketables 605 of 958, affixes 1,270 of 3,092, sets 1,117 of 2,404 (items, partial and set
-bonuses), enhance / cube outputs 839 of 2,270. The unlinked
+**Coverage** (ESR 3.3; lines that are not skill links): runewords 2,005 of 3,944 lines, uniques 4,771 of 9,786,
+mythicals 208 of 412, ascendancies 110 of 226, gemwords 324 of 2,498 + 8,420 of 15,104 random-pool lines, socketables
+605 of 958, affixes 1,270 of 3,108, sets 1,117 of 2,404 (items, partial and set bonuses), enhance outcomes (corruption,
+anointment, sanctification, Vessel recipes) 2,302 of 7,708 (1,020 distinct lines), cube output bonuses 204 of 303. The unlinked
 lines with a modifier word are generated kinds (Enhanced Defense 1,008, Defense 559, "+24% Base Attack Speed"), the
 "+N to Curses (Necromancer Only)" tab line (no "Skills" in it), unresolved skill lines ("Lower Resist", "Amplify Damage"
-are the skill peek's) and prose. Of 262 distinct prose lines that name a modifier (sentences with "you", "gain",
+are the skill peek's) and prose. Of 243 distinct prose lines (ESR 3.3, the integration test's filter) that name a modifier (sentences with "you", "gain",
 "for every", "per", "while" …) none is linked; `modifierRefs.integration.test.ts` pins that and the coverage per page.
 
 ## Guide

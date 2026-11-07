@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { ModifiersBundle } from '@/features/game-data/engine/schema';
 import {
   attackRatingFor,
+  crushingBlowDamageStat,
   crushingBlowRows,
   hitChanceView,
   leechRows,
@@ -92,5 +93,19 @@ describe('crushingBlowRows', () => {
     // ESR ranged = melee; vanilla halves it; 3 players = ÷2 against monsters; 50 % physical resist halves again
     expect(ranged.find((entry) => entry.target === 'monster')).toMatchObject({ share: 3.125, vanillaShare: 3.125 });
     expect(ranged.find((entry) => entry.target === 'player')).toMatchObject({ share: 2.5 });
+  });
+
+  it('applies +x% Crushing Blow Damage to ESR only (vanilla D2R has no such stat)', () => {
+    const rows = crushingBlowRows({ currentLife: 10_000, physicalResist: 0, players: 1, ranged: false, crushingBlowDamage: 25 }, facts);
+    expect(rows.find((entry) => entry.target === 'monster')).toMatchObject({ share: 15.625, damage: 1562.5, vanillaShare: 25 });
+    expect(rows.find((entry) => entry.target === 'act_boss')).toMatchObject({ share: 2.5, vanillaShare: 12.5 });
+  });
+
+  it('names the effectiveness stat, or null when the config turns it off', () => {
+    expect(crushingBlowDamageStat(facts)).toBe(1045);
+    expect(
+      crushingBlowDamageStat(facts.map((fact) => (fact.key === 'crushingBlow.effectivenessStat' ? { ...fact, value: -1 } : fact)))
+    ).toBeNull();
+    expect(crushingBlowDamageStat(facts.filter((fact) => fact.key !== 'crushingBlow.effectivenessStat'))).toBeNull();
   });
 });

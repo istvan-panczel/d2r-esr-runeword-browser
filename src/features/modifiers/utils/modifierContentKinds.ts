@@ -92,7 +92,13 @@ export const KEY_KINDS_WITHOUT_TEXT: readonly string[] = ['replenish-life', 'att
 export const KIND_FACTS: Readonly<Partial<Record<string, readonly string[]>>> = {
   'deadly-strike': ['criticalDamage.basePercent', 'criticalDamage.missiles'],
   'critical-damage': ['criticalDamage.stat', 'criticalDamage.basePercent', 'criticalDamage.maxPercent'],
-  'crushing-blow': ['crushingBlow.share', 'crushingBlow.settings', 'crushingBlow.ranged', 'monster.hpBonusPerPlayer'],
+  'crushing-blow': [
+    'crushingBlow.share',
+    'crushingBlow.settings',
+    'crushingBlow.ranged',
+    'crushingBlow.effectivenessStat',
+    'monster.hpBonusPerPlayer',
+  ],
   bleed: ['bleed.enabled', 'bleed.stats'],
   'life-leech': ['difficulty.LifeStealDivisor', 'monstats.drainZero', 'monstats.drainPartial', 'leech.precision'],
   'mana-leech': ['difficulty.ManaStealDivisor', 'monstats.drainZero', 'monstats.drainPartial', 'leech.precision'],

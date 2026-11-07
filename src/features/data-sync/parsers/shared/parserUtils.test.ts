@@ -18,6 +18,7 @@ import {
   mergeWrappedLines,
   mergeWrappedCellLines,
   extractCellLines,
+  fillUnformattedBleedDuration,
   splitCellLineGroups,
 } from './parserUtils';
 
@@ -403,6 +404,23 @@ describe('extractCellLines', () => {
 
   it('normalises whitespace and decodes entities', () => {
     expect(extractCellLines(cellFrom('Pierce   Flesh &amp;\n Bone'))).toEqual([{ text: 'Pierce Flesh & Bone', orange: false }]);
+  });
+  it('reads ESR 3.3\'s unfilled bleed duration as "over time" (the page has no number for it)', () => {
+    const cell = cellFrom('Adds 25%-50% Bleed Damage over %.2f seconds<br>\n\t\tAdds 1%-1000% Bleed Damage over %.2f seconds');
+    expect(extractCellLines(cell).map((line) => line.text)).toEqual([
+      'Adds 25%-50% Bleed Damage over time',
+      'Adds 1%-1000% Bleed Damage over time',
+    ]);
+  });
+});
+
+describe('fillUnformattedBleedDuration', () => {
+  it('replaces only an unfilled printf duration and keeps real numbers', () => {
+    expect(fillUnformattedBleedDuration('Adds 400%-500% Bleed Damage over %.2f seconds')).toBe('Adds 400%-500% Bleed Damage over time');
+    expect(fillUnformattedBleedDuration('Adds 400%-500% Bleed Damage over 2.00 seconds')).toBe(
+      'Adds 400%-500% Bleed Damage over 2.00 seconds'
+    );
+    expect(fillUnformattedBleedDuration('+50% Cold Damage over 3 seconds')).toBe('+50% Cold Damage over 3 seconds');
   });
 });
 
