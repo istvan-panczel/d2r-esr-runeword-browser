@@ -243,12 +243,16 @@ function rawExtractCellAffixes(cell: Element, firstGroupOnly = true): string[] {
   if (!html.trim()) return [];
   const parts = html.split(/<br\s*\/?>\s*<br\s*\/?>/i);
   const runewordPart = firstGroupOnly ? (parts[0] ?? '') : parts.join('<br>');
-  return runewordPart
-    .split(/<br\s*\/?>/i)
-    .map((line) => stripHtmlTags(line))
-    .map((line) => decodeHtmlEntities(line))
-    .map((line) => norm(line))
-    .filter((line) => line.length > 0);
+  return (
+    runewordPart
+      .split(/<br\s*\/?>/i)
+      .map((line) => stripHtmlTags(line))
+      .map((line) => decodeHtmlEntities(line))
+      .map((line) => norm(line))
+      // ESR 3.3 pages print the bleed duration's printf format unfilled; the parser reads it as "over time"
+      .map((line) => line.replace(/ over %\.\d*f seconds\b/g, ' over time'))
+      .filter((line) => line.length > 0)
+  );
 }
 
 /** ESR 3.3+: 5 cells ("Bonuses" + "Socketable Bonuses"); before: 6 (one bonus column per item category). */

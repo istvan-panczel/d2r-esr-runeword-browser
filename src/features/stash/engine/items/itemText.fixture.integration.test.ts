@@ -34,8 +34,10 @@ export function shapeOf(line: string): string {
       .replace(/[‐‑‒–—−]/g, '-')
       .replace(/[‘’‛`´′]/g, "'")
       .toLowerCase()
-      // ESR 3.3's docs pages print the bleed string's "%.2f" unformatted (the item text writes "2.00")
+      // ESR 3.3's docs pages print the bleed string's "%.2f" unformatted (the item text writes "2.00"); the HTM parsers
+      // read it as "over time" (fillUnformattedBleedDuration)
       .replace(/%\.2f/g, '#')
+      .replace(/ bleed damage over time\b/g, ' bleed damage over # seconds')
       .replace(/\(\s*[-+]?\d+(\.\d+)?\s*to\s*[-+]?\d+(\.\d+)?\s*\)/g, '#')
       .replace(/\d+(\.\d+)?/g, '#')
       .replace(/#\s*(to|-)\s*[-+]?#/g, '#')
