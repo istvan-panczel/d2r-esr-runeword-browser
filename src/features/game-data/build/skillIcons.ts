@@ -55,3 +55,17 @@ export function cropCel(
   }
   return { width, height: sheet.height, rgba: out };
 }
+
+/** A specialisation perk icon key (specializations.json `icon`): `<tree slug>-<perk number from 1>` */
+export interface PerkIconKey {
+  /** The sheet file name (`alchemist.sprite`) */
+  sheet: string;
+  /** The cel (perk number − 1: the sheet holds one cel per perk in row order) */
+  cel: number;
+}
+
+export function parsePerkIconKey(key: string): PerkIconKey | null {
+  const match = /^([a-z][a-z-]*)-(\d+)$/.exec(key);
+  if (match === null || Number(match[2]) < 1) return null;
+  return { sheet: `${match[1]}.sprite`, cel: Number(match[2]) - 1 };
+}

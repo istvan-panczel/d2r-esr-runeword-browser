@@ -117,6 +117,7 @@ function main(): void {
     terrorzones: serializeBundle(generated.terrorzones),
     modifiers: serializeBundle(generated.modifiers),
     masteries: serializeBundle(generated.masteries),
+    specializations: serializeBundle(generated.specializations),
   };
   const icons = readIcons();
   const manifest = buildManifest({

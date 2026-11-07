@@ -3,7 +3,7 @@
   "esrVersion": "3.3",
   "esrTag": "3.3",
   "esrCommit": "d6f5996c2b64636917feac8991be3ac04d21e01e",
-  "generatedAt": "2026-11-07T17:57:53.991Z",
+  "generatedAt": "2026-11-07T18:28:52.780Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -92,6 +92,10 @@
     "masteries": {
       "hash": "f70d909b2b3132c23dfaf6ed44b4ea4a42f0f95dd2272e75f4024a906255c447",
       "bytes": 15199
+    },
+    "specializations": {
+      "hash": "0a6c079c132455f3ff3548eb039052316745bb9ec6c153840107601067f56151",
+      "bytes": 29614
     },
     "icons": {
       "hash": "b712a00e99568e491ccdee3fc78a66797772848b61a61ec2c441adb88bd38126",
@@ -269,6 +273,14 @@
     "masteryBases": 93,
     "masteryEffects": 30,
     "masterySkills": 68,
+    "specializationTrees": 4,
+    "specializationPerks": 60,
+    "specializationIcons": 60,
+    "specializationCubePerks": 8,
+    "specializationDropPerks": 7,
+    "specializationPluginPerks": 42,
+    "specializationShardMonsters": 9,
+    "specializationPageDiffs": 0,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
@@ -335,6 +347,9 @@
     "masteries: Wretched Scythe (weapon-mastery-wretched-scythe): mod total-magic-resist -100 has no item text; shown as \"-100% Magic Resist (no item line; why your magic resist is always 0)\"",
     "masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull",
     "masteries: cubemain line 2379 \"Awaken Weapon Mastery Token - Celestial Blade\" takes \"0bs\", which cannot get this mastery",
-    "masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be"
+    "masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be",
+    "specializations: Alchemist › Elixir of Reincarnation (alchemy_13): no cubemain row makes Elixir of Reincarnation (35p), nothing else reads the stat",
+    "specializations: Archaeologist › Deep Pockets (archaeology_4): no table or launcher config reads it",
+    "specializations: Archaeologist › Alien Artefacts (archaeology_15): Alien Artefact (aa1, aa2, aa3, aa4, aa5) drop from 572 monsters with no perk condition"
   ]
 }

@@ -35,6 +35,7 @@ export type GameDataFile =
   | 'terrorzones'
   | 'modifiers'
   | 'masteries'
+  | 'specializations'
   | 'icons';
 
 export interface GameDataManifest {
@@ -1840,4 +1841,160 @@ export interface ModifiersBundle {
   kinds: ModifierKind[];
   stats: ModifierStat[];
   facts: ModifierFact[];
+}
+
+// --- specializations.json -----------------------------------------------------------------------------------------
+
+/**
+ * specializations.json: ESR 3.3's specialisation system (docs/specializations.htm). The rules and the perk order come
+ * from the launcher plugin config `celestialrayone.specializations.toml`, titles and descriptions from the strings
+ * (`Specializations<Tree><row>_<col>Title` / `Desc`), the unlock items from misc.txt and cubemain.txt, and each perk's
+ * links from every file that reads its stat (cubemain conditions, treasure class ConditionCalc, misc.txt and skills.txt
+ * formulas, the perk plugin configs, the Enhance and weapon mastery bundles). The official page is only compared with
+ * them (`pageDiffs`); the tree summaries are the one thing taken from it.
+ */
+export interface SpecializationsBundle {
+  rules: SpecializationRules;
+  /** In tab order */
+  trees: SpecializationTree[];
+  /** Where the official page reads differently from the files (the bundle keeps the files' value); [] when none */
+  pageDiffs: SpecializationPageDiff[];
+}
+
+export interface SpecializationRules {
+  /** Character levels that add a point once the character is unlocked */
+  pointLevels: number[];
+  /** Points the unlock gives on its own (before the level points) */
+  unlockPoints: number;
+  /** Hard cap on owned points (spent and unspent) */
+  maxPoints: number;
+  perksPerRow: number;
+  /** Respec points one unlearn costs; omitted when unlearning is switched off */
+  unlearnCost?: number;
+  /** The unlearn line under every perk ("Shift + Click to Unlearn. Costs 5 Respec Points.") */
+  unlearnHint: string;
+  /** The item that gives one respec point and its cube recipe, when the files have one (Token of Absolution: 4 Dragon Stones) */
+  respecToken?: { code: string; name: string; recipe?: { code: string; name: string; qty: number } };
+  /** Mystical Shard */
+  shard: SpecializationItem;
+  /** Mystical Tesseract */
+  token: SpecializationItem & {
+    /** Shards the cube recipe takes */
+    shards?: number;
+    /** cube.json family of the recipe */
+    family?: string;
+    /** Levels whose passing adds a point when the token is used late (read from its misc.txt formula) */
+    levels: number[];
+  };
+  /** Shards drop only while the character has not used a token (the shard TC's ConditionCalc) */
+  shardsOnlyBeforeUnlock: boolean;
+  /** Monsters whose treasure classes roll the shard, most likely first */
+  shardDrops: SpecializationShardDrop[];
+}
+
+export interface SpecializationItem {
+  code: string;
+  name: string;
+  /** The item's description lines (misc.txt spelldescstr), colour codes removed */
+  description: string[];
+}
+
+export interface SpecializationShardDrop {
+  /** Monster or superunique display name */
+  name: string;
+  /** Chance per kill (one player, best difficulty), 0–1 */
+  chance: number;
+  /** The areas it spawns in (levels.txt), by level id with the areas.json name; omitted when none (superuniques) */
+  areas?: { id: number; name: string }[];
+}
+
+export interface SpecializationTree {
+  /** Lower-case kebab slug of the English name (`alchemist`): the `?tree=` value */
+  slug: string;
+  name: string;
+  /** The official page's one-line summary ("Specialized in potions."); omitted when the page has none */
+  summary?: string;
+  /** Row by row, three per row */
+  perks: SpecializationPerk[];
+}
+
+export interface SpecializationPerk {
+  /** Lower-case kebab slug of the English title (`hidden-elixirs`): the `?perk=` value */
+  slug: string;
+  title: string;
+  description: string;
+  /** 1-based */
+  row: number;
+  /** 1-based, left to right */
+  column: number;
+  /** itemstatcost.txt id and name of the perk's stat (`alchemy_4`) */
+  stat: number;
+  statName: string;
+  /** Icon key: `<tree slug>-<perk number>`; file icons/specializations/<icon>.webp. Omitted when the tree has no sheet */
+  icon?: string;
+  /** The perk plugin config section that implements it, with its scalar settings; omitted when none names the stat */
+  plugin?: SpecializationPlugin;
+  /** Cube families whose recipes check the perk */
+  cube?: SpecializationCubeLink[];
+  /** Treasure classes that drop only with the perk (ConditionCalc), with what they hold */
+  drops?: SpecializationDrop[];
+  /** misc.txt items whose formulas read the perk (the potions it strengthens), by name */
+  items?: string[];
+  /** Number of skills.txt rows (item auras and passives) whose formulas read the perk */
+  skillRows?: number;
+  /** Enhance page links: the perk allows a second anointment, or sanctifying more item types */
+  enhance?: SpecializationEnhanceLink[];
+  /** The perk lets any weapon take any weapon mastery (masteries.json `anyWeaponPerk`) */
+  anyWeaponMastery?: true;
+  /** Facts from the files worth knowing next to the description (nothing reads the stat, a drop without the perk) */
+  notes?: string[];
+}
+
+export interface SpecializationPlugin {
+  /** Config file name (`celestialrayone.blacksmith.toml`) */
+  file: string;
+  /** Section (`tempered_steel`) or `perks` for a plugin that lists its perk stats in one table */
+  section: string;
+  /** Number, boolean and short text-list settings, in file order (`perk_stat` and `enabled` left out) */
+  values: { key: string; value: number | boolean | string }[];
+}
+
+export interface SpecializationCubeLink {
+  family: string;
+  /** The family's Cube page label */
+  label: string;
+  /** cubemain rows of the family that check the perk */
+  rows: number;
+  /** true: the rows need the perk; false: they only work without it */
+  has: boolean;
+}
+
+export interface SpecializationDrop {
+  /** treasureclassex.txt name */
+  tc: string;
+  /** Item names or treasure class names it holds */
+  items: string[];
+  /** How many picks the TC makes (2 for the "Double" TCs of the quantity perks) */
+  picks: number;
+  /**
+   * The share of its parent TC's picks that lands on it, 0–1 (the perk's chance: "Potion 1" picks "Potion 1 Double" 1
+   * time in 2); one value per distinct parent weighting. Omitted when no single-pick TC lists it
+   */
+  shares?: number[];
+}
+
+export interface SpecializationEnhanceLink {
+  tab: 'anointment' | 'sanctification';
+  /** What the perk adds there ("A second anointment on 18 item types", "Sanctify Amulets and Rings") */
+  text: string;
+}
+
+export interface SpecializationPageDiff {
+  /** What is compared ("Mystical Shards per Tesseract", "Jeweler › My Precious description") */
+  subject: string;
+  files: string;
+  page: string;
+  /** The tree and perk slugs when the difference is about one perk */
+  tree?: string;
+  perk?: string;
 }

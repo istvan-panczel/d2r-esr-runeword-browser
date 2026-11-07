@@ -36,6 +36,7 @@ import {
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
+  type SpecializationsBundle,
   type StashBundle,
   type StashNamesBundle,
   type TerrorZonesBundle,
@@ -75,6 +76,7 @@ const itemTextText = readText('itemtext');
 const terrorZonesText = readText('terrorzones');
 const modifiersText = readText('modifiers');
 const masteriesText = readText('masteries');
+const specializationsText = readText('specializations');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const basesBundle = JSON.parse(basesText) as BasesBundle;
@@ -99,6 +101,7 @@ const itemText = JSON.parse(itemTextText) as ItemTextBundle;
 const terrorZones = JSON.parse(terrorZonesText) as TerrorZonesBundle;
 const modifiers = JSON.parse(modifiersText) as ModifiersBundle;
 const masteries = JSON.parse(masteriesText) as MasteriesBundle;
+const specializations = JSON.parse(specializationsText) as SpecializationsBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -129,6 +132,7 @@ describe('committed game-data bundles', () => {
       ['terrorzones', terrorZonesText],
       ['modifiers', modifiersText],
       ['masteries', masteriesText],
+      ['specializations', specializationsText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -1408,6 +1412,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.terrorzones)).toBe(terrorZonesText);
     expect(serializeBundle(generated.modifiers)).toBe(modifiersText);
     expect(serializeBundle(generated.masteries)).toBe(masteriesText);
+    expect(serializeBundle(generated.specializations)).toBe(specializationsText);
   });
 
   // ESR 3.3: the page's Rarity column is stale. It still prints the 3.2.24 superior-affixes.toml weights by row
@@ -1937,6 +1942,78 @@ describe('committed masteries bundle (ESR 3.3)', () => {
       'masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
       'masteries: cubemain line 2379 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
       'masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be',
+    ]);
+  });
+});
+
+// --- specializations.json ------------------------------------------------------------------------------------------
+
+describe('committed specializations bundle (ESR 3.3)', () => {
+  const perks = specializations.trees.flatMap((tree) => tree.perks.map((perk) => ({ tree, perk })));
+  const familyIds = new Set(cube.families.map((family) => family.id));
+
+  it('has the 4 trees of docs/specializations.htm with 15 perks each, 3 per row, and the plugin rules', () => {
+    expect(specializations.trees.map((tree) => [tree.slug, tree.perks.length])).toEqual([
+      ['alchemist', 15],
+      ['blacksmith', 15],
+      ['jeweler', 15],
+      ['archaeologist', 15],
+    ]);
+    expect(specializations.rules).toMatchObject({
+      pointLevels: [45, 60, 75, 90],
+      unlockPoints: 1,
+      maxPoints: 5,
+      perksPerRow: 3,
+      unlearnCost: 5,
+      respecToken: { code: 'toa', recipe: { code: 'ppp', qty: 4 } },
+      shard: { code: 'u42', name: 'Mystical Shard' },
+      token: { code: 'u43', name: 'Mystical Tesseract', shards: 10, family: 'specializations', levels: [45, 60, 75, 90] },
+      shardsOnlyBeforeUnlock: true,
+    });
+    for (const tree of specializations.trees) {
+      expect(tree.summary, tree.name).toBeDefined();
+      for (const [i, perk] of tree.perks.entries()) {
+        expect([perk.row, perk.column], perk.title).toEqual([Math.floor(i / 3) + 1, (i % 3) + 1]);
+        expect(perk.description, perk.title).not.toBe('');
+      }
+    }
+    expect(manifest.files.specializations?.bytes).toBeLessThan(40_000);
+  });
+
+  it('keeps unique slugs (the ?tree= / ?perk= links) and an icon for every perk', () => {
+    expect(new Set(specializations.trees.map((tree) => tree.slug)).size).toBe(4);
+    for (const tree of specializations.trees) expect(new Set(tree.perks.map((perk) => perk.slug)).size, tree.name).toBe(15);
+    expect(perks.find(({ perk }) => perk.title === 'Hidden Elixirs')?.perk.slug).toBe('hidden-elixirs');
+    for (const { perk } of perks) {
+      expect(perk.icon, perk.title).toBeDefined();
+      expect(existsSync(resolve(OUTPUT_DIR, 'icons/specializations', `${String(perk.icon)}.webp`)), perk.title).toBe(true);
+    }
+    expect(manifest.counts.specializationIcons).toBe(60);
+    expect(readdirSync(resolve(OUTPUT_DIR, 'icons/specializations')).length).toBe(60);
+  });
+
+  it('links the perks the cube checks to known cube families, and agrees with the official page', () => {
+    const cubePerks = perks.filter(({ perk }) => perk.cube !== undefined).map(({ perk }) => perk.title);
+    expect(cubePerks).toEqual([
+      'Gem Infusion',
+      'Alchemical Excellence',
+      'True Master',
+      'The Secret Crucible',
+      'Hallowed Accessories',
+      'Perfect Form',
+      'Steady Pliers',
+      'Power Overwhelming',
+    ]);
+    for (const { perk } of perks) for (const link of perk.cube ?? []) expect(familyIds.has(link.family), link.family).toBe(true);
+    // ESR 3.3: the page is a copy of the in-game window; every title, description and rule agrees with the files
+    expect(specializations.pageDiffs).toEqual([]);
+  });
+
+  it('records the perks the files do not back as warnings', () => {
+    expect(manifest.warnings.filter((warning) => warning.startsWith('specializations:'))).toEqual([
+      'specializations: Alchemist › Elixir of Reincarnation (alchemy_13): no cubemain row makes Elixir of Reincarnation (35p), nothing else reads the stat',
+      'specializations: Archaeologist › Deep Pockets (archaeology_4): no table or launcher config reads it',
+      'specializations: Archaeologist › Alien Artefacts (archaeology_15): Alien Artefact (aa1, aa2, aa3, aa4, aa5) drop from 572 monsters with no perk condition',
     ]);
   });
 });
