@@ -7,6 +7,8 @@ import { enhanceTabHref } from '@/features/game-data/utils/cube';
 import { MASTERY_GUIDE_PATH } from '@/features/game-data/utils/masteries';
 import { cubeFamilyHref } from '@/features/game-data/utils/materials';
 import { LINK_CLASS } from '@/features/ascendancies/components/styles';
+import { elixirHref } from '@/features/elixirs/utils/elixirsView';
+import { specializationSlug } from '@/features/game-data/engine/specializationLinks';
 import { perkAnchor, percentText, settingText, specializationsParams } from '../utils/specializationsView';
 
 const COLUMN_NAMES = ['left', 'middle', 'right'];
@@ -56,6 +58,20 @@ function Fact({ label, children }: { readonly label: string; readonly children: 
       {children}
     </li>
   );
+}
+
+/** An item name; an elixir links to its card on the Elixirs page (`/elixirs?name=<kebab name>`) */
+function ItemName({ name }: { readonly name: string }) {
+  if (!/^(Greater )?Elixir of /.test(name)) return name;
+  return (
+    <Link to={elixirHref(specializationSlug(name))} className={LINK_CLASS}>
+      {name}
+    </Link>
+  );
+}
+
+function itemList(names: readonly string[]): ReactNode[] {
+  return names.flatMap((name, i) => [...(i === 0 ? [] : [', ']), <ItemName key={name} name={name} />]);
 }
 
 function joined(parts: readonly ReactNode[]): ReactNode[] {
@@ -120,7 +136,7 @@ export function PerkCard({ tree, perk, focused, diffs }: PerkCardProps) {
             <li key={drop.tc}>
               <span className="font-medium">{drop.tc}</span>
               {drop.shares !== undefined && <> ({drop.shares.map(percentText).join(' / ')} of the picks)</>}
-              {drop.picks > 1 && <>, {drop.picks} picks</>}: {drop.items.join(', ')}
+              {drop.picks > 1 && <>, {drop.picks} picks</>}: {itemList(drop.items)}
             </li>
           ))}
         </ul>
@@ -131,7 +147,7 @@ export function PerkCard({ tree, perk, focused, diffs }: PerkCardProps) {
     const more = items.length - ITEMS_SHOWN;
     facts.push(
       <Fact key="items" label="Read by the formulas of">
-        {items.slice(0, ITEMS_SHOWN).join(', ')}
+        {itemList(items.slice(0, ITEMS_SHOWN))}
         {more > 0 && ` and ${String(more)} more`}
       </Fact>
     );
