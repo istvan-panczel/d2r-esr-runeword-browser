@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.58.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.57.0...v1.58.0) (2026-11-07)
+
+### Features
+
+* **campaign-map:** boss section on endgame map zones ([0d4a7e1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0d4a7e172677b7b91bfecf2d34adab9a55dfb0c3))
+* **game-data:** cube page notes, guide links, odds and per-row details ([8968710](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/896871012018ffd194f574b457a381fd249388c2))
+* **game-data:** endgame map boss rewards worked out from the treasure classes ([4566643](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4566643a5bb8027098c2d0a6c70356b6e46367b9))
+* **game-data:** item icons on the cube, materials and enhance pages ([d1abdf2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d1abdf280a01ff500491dab6b6d256e525c3a753))
+* **game-data:** sanctification outcomes and D-stoning caps ([a119d98](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a119d982c897ccb052d4ef4df079b320a1dcd1ad))
+* **game-data:** superior affix pool with odds ([872cb5f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/872cb5f65303cc937f491a4a13499b67215e1cd1))
+* **game-data:** weapon mastery bundle from cubemain and the token descriptions ([406342a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/406342a36bc7790f37e20c98413db09a409cab37))
+* **guide:** endgame map bosses note and ::map-bosses directive ([0f4b151](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0f4b1519f61063175d1e9483e08e04b4e5ef35b3))
+* **tooling:** esr:review and esr:diff cover the features since the skill v2 ([20f5d72](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/20f5d72e73f8e81d1868d2be6ae1d3c34789fd1c))
+* weapon mastery panel on class weapon bases and on skill cards ([e036417](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e036417c4eb91293bbc174000cfca412c7f3b7da))
+
+### Bug Fixes
+
+* **campaign-map:** map boss review fixes ([5c90b8a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5c90b8af02f605814d18a39c8f82c51bb6291dca))
+* **game-data:** make the cube recipes match the official Cube Recipes page ([94a7449](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/94a74499780ab33dd91a0d984d5c70acde72ba5d))
+* **game-data:** weapon mastery review fixes ([e589960](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e589960c163479831d662b1280d480bc151cbe64))
+* **game-data:** write durability repair like the game (descfunc 11) ([a358b6b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a358b6b32416c09bf196366fc5e4031fa706e740))
+
+### Documentation
+
+* **guide:** official cube page footnotes in the guide notes ([2f7d531](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2f7d5319b3062e2a990db6621be39bbd3d96b9fe))
+* map bosses in the campaign map, game data and guide docs ([d4cb35e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d4cb35e430c8798b2a935808a0093299bf2587b4))
+* weapon mastery bundle, panels and guide note pointers ([f774044](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f774044ff0c28790f8f4b417b208f29eef8efd8b))
+
+### Chores
+
+* **esr-update:** cover the features added since the skill v2 ([454bc2e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/454bc2e6e4c8f54cb78a263ab83f37b72fb4a3f8))
+
 ## [1.57.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.56.0...v1.57.0) (2026-11-06)
 
 ### Features
