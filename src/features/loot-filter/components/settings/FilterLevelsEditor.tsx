@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { FilterLevel, LootFilter } from '../../engine/types';
+import { levelName, shownLanguage } from '../../engine/text';
+import type { FilterLevel, FilterText, LootFilter } from '../../engine/types';
 import { renumberLevel, setFilterLevels, setHeader } from '../../store/lootFilterSlice';
 import { NumberInput } from '../NumberInput';
 
@@ -36,8 +37,11 @@ export function FilterLevelsEditor({ filter }: FilterLevelsEditorProps) {
     if (next.length === 0 && filter.defaultLevel !== undefined) dispatch(setHeader({ defaultLevel: undefined }));
   };
 
+  /** A per-language name keeps its other languages: the field edits the language it shows (enUS, else the first). */
   const renameLevel = (index: number, name: string) => {
-    commit(levels.map((current, position) => (position === index ? { ...current, name } : current)));
+    const renamed = (current: FilterText): FilterText =>
+      typeof current === 'string' ? name : { ...current, [shownLanguage(current)]: name };
+    commit(levels.map((current, position) => (position === index ? { ...current, name: renamed(current.name) } : current)));
   };
 
   /** Changes a level's id along with the rules and default level that use it; a taken id is not committed. */
@@ -77,6 +81,8 @@ export function FilterLevelsEditor({ filter }: FilterLevelsEditorProps) {
         <ul className="space-y-2">
           {levels.map((level, index) => {
             const used = usage.get(level.id) ?? 0;
+            const edited = typeof level.name === 'string' ? undefined : shownLanguage(level.name);
+            const otherLanguages = typeof level.name === 'string' ? 0 : Object.keys(level.name).length - 1;
             return (
               // Ids can repeat or change while typing, so the row position is the only stable key.
               // eslint-disable-next-line react-x/no-array-index-key
@@ -99,11 +105,16 @@ export function FilterLevelsEditor({ filter }: FilterLevelsEditorProps) {
                 <Input
                   id={`loot-filter-level-name-${String(index)}`}
                   className="min-w-40 flex-1"
-                  value={level.name}
+                  value={levelName(level)}
                   onChange={(event) => {
                     renameLevel(index, event.target.value);
                   }}
                 />
+                {otherLanguages > 0 && (
+                  <span className="text-xs text-muted-foreground" title="Edit the other languages in the JSON tab">
+                    {edited}; +{otherLanguages} {otherLanguages === 1 ? 'language' : 'languages'}
+                  </span>
+                )}
                 <span className="w-28 text-xs text-muted-foreground">
                   {used === 0 ? 'Not used by rules' : `Used by ${String(used)} ${used === 1 ? 'rule' : 'rules'}`}
                 </span>
@@ -113,7 +124,7 @@ export function FilterLevelsEditor({ filter }: FilterLevelsEditorProps) {
                   onClick={() => {
                     removeLevel(index);
                   }}
-                  aria-label={`Remove level ${level.name}`}
+                  aria-label={`Remove level ${levelName(level)}`}
                 >
                   <Trash2 />
                 </Button>
@@ -157,7 +168,7 @@ export function FilterLevelsEditor({ filter }: FilterLevelsEditorProps) {
                 {!defaultKnown && <SelectItem value={String(filter.defaultLevel)}>{filter.defaultLevel} (not in the list)</SelectItem>}
                 {[...new Map(levels.map((level) => [level.id, level])).values()].map((level) => (
                   <SelectItem key={level.id} value={String(level.id)}>
-                    {level.id}: {level.name === '' ? 'unnamed' : level.name}
+                    {level.id}: {levelName(level) === '' ? 'unnamed' : levelName(level)}
                   </SelectItem>
                 ))}
               </SelectContent>

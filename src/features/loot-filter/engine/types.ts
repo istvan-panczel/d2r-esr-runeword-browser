@@ -102,7 +102,8 @@ export interface Droplight {
 
 export interface FilterLevel {
   readonly id: number;
-  readonly name: string;
+  /** One string or one per language (plugin 1.8.2: "Any text can be one string or one string per language"). */
+  readonly name: FilterText;
 }
 
 export interface Notifications {
@@ -147,6 +148,11 @@ export interface RuleConditions {
   readonly itemStatsAnyOf?: readonly StatCheck[];
   readonly playerStats?: readonly StatCheck[];
   readonly playerStatsAnyOf?: readonly StatCheck[];
+  /**
+   * PREVIEW (announced by the mod author, not in plugin 1.5.3): an expression that holds when it is not 0, e.g.
+   * `(stat('item_fastercastrate')>=10)`; see engine/formula.ts.
+   */
+  readonly formula?: string;
   readonly location?: readonly ItemLocation[];
   readonly difficulty?: NamedMatch<DifficultyName>;
   /** levels.txt Id numbers */
@@ -161,6 +167,12 @@ export interface RuleActions {
   readonly hide?: boolean;
   /** When codes, types and location match but another condition fails, the item is hidden. */
   readonly hideIfOtherConditionsFail?: boolean;
+  /**
+   * Plugin 1.8.2: keeps the item visible. After a rule with `show: true` matches, later rules cannot hide the item (by
+   * `hide`, `hideIfOtherConditionsFail` or `hideUnmatchedItems`); their other actions still apply. A rule cannot both
+   * show and hide.
+   */
+  readonly show?: boolean;
   readonly replaceName?: FilterText;
   readonly namePrefix?: FilterText;
   readonly nameSuffix?: FilterText;
@@ -275,4 +287,8 @@ export interface LootFilterReference {
   readonly itemCodeTypes: ReadonlyMap<string, ReadonlySet<string>>;
   /** Item type → its ancestors, including itself. */
   readonly typeAncestors: ReadonlyMap<string, ReadonlySet<string>>;
+  /** skills.txt `skill` → id, keyed by `formulaSkillKey` (formula skill names). */
+  readonly skillIds: ReadonlyMap<string, number>;
+  /** In-game skill name (`formulaSkillKey`) → the skills.txt names of the skills that show it, for the formula hints. */
+  readonly skillDisplayNames: ReadonlyMap<string, readonly string[]>;
 }

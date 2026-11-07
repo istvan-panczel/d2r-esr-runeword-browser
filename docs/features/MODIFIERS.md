@@ -170,7 +170,7 @@ Hell]` or a record per class / target / setting), `vanilla` in the same shape wh
 | `difficulty.StaticFieldMin`                                                       | 0                                                                                                                   | 0 / 33 / 50                                       | difficultylevels.txt                               |
 | `charstats.BlockFactor`                                                           | Ama 5, Sor 4, Nec 4, Pal 6, Bar 5, Dru 4, Ass 5, War 4                                                              | 20–30                                             | charstats.txt                                      |
 | `charstats.ToHitFactor` / `WalkVelocity` / `RunVelocity` / `MinimumCastingDelay`  | 20 / 9 / 13 / 0 for every class                                                                                     | 5…−15 / 6 / 9 / 12                                | charstats.txt                                      |
-| `monstats.drainZero`                                                              | 647 / 648 / 648 of 1424 enabled monsters cannot be leeched                                                          | —                                                 | monstats.txt `Drain`, `Drain(N)`, `Drain(H)`       |
+| `monstats.drainZero`                                                              | 658 / 659 / 659 of 1436 enabled monsters cannot be leeched (ESR 3.3)                                                | —                                                 | monstats.txt `Drain`, `Drain(N)`, `Drain(H)`       |
 | `monstats.drainPartial`                                                           | 5 / 5 / 5 (Drain 1–99)                                                                                              | —                                                 | monstats.txt                                       |
 | `crushingBlow.settings`                                                           | monster 50, champion 50, unique 25, super_unique 16, act_boss 16, minion 50, mercenary 50, player 50 (% of vanilla) | 100                                               | crushing-blow.toml `[targets]`                     |
 | `crushingBlow.share`                                                              | 12.5 / 12.5 / 6.25 / 2 / 2 / 12.5 / 5 / 5 % of current life                                                         | 25 / 25 / 25 / 12.5 / 12.5 / 25 / 10 / 10         | derived: vanilla share × setting / 100             |
@@ -202,7 +202,7 @@ The plugin configs and patches read are `ESR_MODIFIER_CONFIGS` / `ESR_MODIFIER_P
 (`d2rloader/config/celestialrayone.<name>.toml`, `d2rloader/patches/<name>.json`); they are in the sparse clone paths
 (`scripts/lib/esrClone.ts`). A missing file or key is a warning and its facts are left out. `build/toml.ts` is a small
 TOML reader (sections, scalars, nested multi-line arrays, arrays of tables) that keeps the comment block above each
-key: the crushing-blow comments ("50 -> 12.5 % of current life.") are compared with the values.
+key: the crushing-blow comments ("25 -> 6.25 % of current life.") are compared with the values.
 
 Vanilla reference values (`build/data/vanillaReference.ts`): the vanilla D2R itemstatcost.txt names, ids and mechanic
 columns, the difficultylevels.txt columns above and charstats.txt BlockFactor, from blizzhackers/d2data (MIT licence)
@@ -239,7 +239,9 @@ rewordings) are two markdown files, Prettier-formatted like the rest of the repo
   `d2rloader/config/celestialrayone.*.toml`, `d2rloader/patches/*.json`), `[ESR files]` (game tables, strings, the
   official docs including the Frame Table `docs/ias-calculator.html`, patch notes), `[Vanilla]` (vanilla engine
   behaviour from D2MOO 1.10f / 1.14d or vanilla guides: "Vanilla D2 behaviour, not confirmed for ESR"),
-  `[Community 3.9]` / `[Community 3.10]` (the unofficial wiki and its mod-author Q&A, older than the 3.2.x line),
+  `[Mod author]` (the mod author's answers to our questions; the card's `sources:` name the date, e.g. "ESR mod author
+  (Discord, 2026-11-07)"), `[Community 3.9]` / `[Community 3.10]` (the unofficial wiki and its mod-author Q&A, older than
+  the 3.2.x line),
   optionally with a detail after a comma (`[Vanilla, D2MOO SUnitDmg.cpp:1000]`: on hover, and in a popover on click /
   tap). `` `code` ``, `**bold**`, `[text](url)` and bare URLs render too; any other `[…]` stays text. Path prefixes in
   facts and sources: `ESR/` = the ESR repository root, `excel/` = `ESR/Eastern_Sun_Resurrected.mpq/data/global/excel/`,
@@ -451,15 +453,16 @@ expected warning and the size (< 400 KB).
 
 - **Leech rounding under 1 %**: ESR Hell leech is item % / 150 (10 % → 0.067 %). D2MOO keeps 1/64 % precision; some
   guides say anything under 1 % after reductions rounds to 0, which would make all ESR Hell leech under 150 % useless.
-  Unconfirmed for D2R; verify in game. The calculator shows both `exact` and `engine`.
-- **Crushing Blow vs uniques**: crushing-blow.toml says `unique = 25` under the comment "50 -> 12.5 % of current life";
-  25 gives 6.25 %. The bundle keeps the value (what the plugin reads), the fact note quotes the comment and the
-  generator warns. Ask the mod author which is intended.
+  The mod author (2026-11-07) is "pretty sure" D2R keeps fractional leech; not tested in game. The calculator shows
+  both `exact` and `engine`.
+- **Crushing Blow vs uniques** (answered): crushing-blow.toml had `unique = 25` under the comment "50 -> 12.5 % of
+  current life". The mod author (2026-11-07): 6.25 % is right; ESR 3.3 fixed the comment, so the generator's
+  comment/value warning is gone.
 - **Hit chance blend**: the config only says the late tail is "blended in smoothly". A smoothstep weight reproduces the
   author's table (a linear blend misses r = 80 by one); blending the tail value instead of the chance also fits.
 - **Magic Find tail rounding**: the config gives MF × tail / 100; the calculator floors it like the engine's integer
   maths. Unverified.
-- **monstats Drain**: 647 of 1424 enabled monsters have Drain 0 / blank in Normal (the research notes counted 566 with
+- **monstats Drain**: 658 of 1436 enabled monsters (ESR 3.3; 647 of 1424 at 3.2.24) have Drain 0 / blank in Normal (the research notes counted 566 with
   another filter); the fact counts enabled rows with an `Id`.
 - **Crushing Blow per-player division** uses the vanilla +50 % life per extra player; `player-count-halving-removal.json`
   is about drops, not life, so it is assumed unchanged.

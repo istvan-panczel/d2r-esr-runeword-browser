@@ -10,7 +10,7 @@ mentions: [Starter's Pack, Kill Ledger, Noob's Odd Charm, Character Augmenter, W
 officialDocs:
   - label: Cube Recipes – Special
     href: 'docs:Eastern Sun Resurrected Cube Recipes.html#special'
-sources: [official-cube, esr-txt, esru-wiki]
+sources: [official-cube, esr-txt, patchnotes, esru-wiki]
 ---
 
 A new ESR character starts with a few unusual items. Put the **Starter Pack** into the Horadric Cube on its own and transmute. For your class the game files give:
@@ -25,7 +25,7 @@ The official cube page also lists a :term[Character Augmenter] in the pack. The 
 Your starting inventory also holds:
 
 - a **Weapons Crate**: cube it alone for a set of class starter weapons;
-- an **Elixir of Skill**: drink it for one permanent skill point;
+- an **Elixir of Skill**: drink it for one permanent skill point (the Elixir of Skill that drops since 3.3 is a different, 45-second utility elixir);
 - an **Introductory Book**: a few pages of tips; cube it alone to turn the page;
 - your class's chipped gem, which Skill Forging uses later.
 

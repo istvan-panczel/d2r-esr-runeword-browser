@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { Gem } from '@/core/db/models';
+import { CATEGORY_LABELS } from '@/core/utils/itemCategoryMapping';
 
 interface GemTooltipProps {
   readonly gem: Gem | undefined;
@@ -24,7 +25,7 @@ export function GemTooltip({ gem, children }: GemTooltipProps) {
         <div className="space-y-2 text-xs">
           {gem.bonuses.weaponsGloves.length > 0 && (
             <div>
-              <p className="font-medium text-muted-foreground">Weapons/Gloves:</p>
+              <p className="font-medium text-muted-foreground">{CATEGORY_LABELS.weaponsGloves}:</p>
               <ul className="mt-0.5 space-y-0.5">
                 {gem.bonuses.weaponsGloves.map((a) => (
                   <li key={a.rawText}>{a.rawText}</li>
@@ -34,7 +35,7 @@ export function GemTooltip({ gem, children }: GemTooltipProps) {
           )}
           {gem.bonuses.helmsBoots.length > 0 && (
             <div>
-              <p className="font-medium text-muted-foreground">Helms/Boots:</p>
+              <p className="font-medium text-muted-foreground">{CATEGORY_LABELS.helmsBoots}:</p>
               <ul className="mt-0.5 space-y-0.5">
                 {gem.bonuses.helmsBoots.map((a) => (
                   <li key={a.rawText}>{a.rawText}</li>
@@ -44,7 +45,7 @@ export function GemTooltip({ gem, children }: GemTooltipProps) {
           )}
           {gem.bonuses.armorShieldsBelts.length > 0 && (
             <div>
-              <p className="font-medium text-muted-foreground">Armor/Shields/Belts:</p>
+              <p className="font-medium text-muted-foreground">{CATEGORY_LABELS.armorShieldsBelts}:</p>
               <ul className="mt-0.5 space-y-0.5">
                 {gem.bonuses.armorShieldsBelts.map((a) => (
                   <li key={a.rawText}>{a.rawText}</li>

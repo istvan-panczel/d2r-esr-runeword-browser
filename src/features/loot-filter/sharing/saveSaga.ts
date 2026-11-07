@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { db } from '@/core/db';
 import type { Metadata } from '@/core/db';
 import { requireSupabase } from '@/core/supabase';
-import type { Json, LootFilterInsert, LootFilterUpdate } from '@/core/supabase/types';
+import type { LootFilterInsert, LootFilterUpdate } from '@/core/supabase/types';
 import { openSignInDialog, selectAuthUserId, selectNeedsConsent } from '@/features/auth/store/authSlice';
 import { parseLootFilter } from '../engine/parse';
 import { flushNow, saveSucceeded, savedFilterRenamed } from '../store/lootFilterSlice';
@@ -25,6 +25,7 @@ import {
   SHARED_FILTER_LIST_SELECT,
   detailToRow,
   isUuid,
+  levelJson,
   toSharedFilterDetail,
   toSharedFilterSummary,
   type SharedFilterDetailRow,
@@ -128,7 +129,7 @@ function* readEsrVersion() {
 /** The file columns of `text` (already checked by `checkSaveText`). */
 function metadataColumns(text: string) {
   const { levels, ...metadata } = filterMetadata(text);
-  return { ...metadata, levels: levels === null ? null : levels.map((level): Json => ({ id: level.id, name: level.name })) };
+  return { ...metadata, levels: levels === null ? null : levels.map(levelJson) };
 }
 
 function* finishSave(request: LootFilterSaveRequest, row: SharedFilterDetail, inserted: boolean) {

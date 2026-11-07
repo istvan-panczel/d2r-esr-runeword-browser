@@ -133,8 +133,13 @@ function groupBy<T>(items: readonly T[], keyOf: (item: T) => string): Map<string
  */
 const SITE_TYPE_LABELS: Readonly<Record<string, string>> = { tors: 'Body Armor' };
 
+/** The name the ESR site uses for an itemtypes code, normalised (`normalizeName`): "tors" → "body armor". */
+export function siteTypeLabel(code: string, typeNames: ReadonlyMap<string, string>): string {
+  return normalizeName(SITE_TYPE_LABELS[code] ?? (typeNames.get(code) ?? code).replace(/ \([^)]*\)$/, ''));
+}
+
 function typeLabels(codes: readonly string[], typeNames: ReadonlyMap<string, string>): string {
-  const labels = codes.map((code) => normalizeName(SITE_TYPE_LABELS[code] ?? (typeNames.get(code) ?? code).replace(/ \([^)]*\)$/, '')));
+  const labels = codes.map((code) => siteTypeLabel(code, typeNames));
   return [...new Set(labels)].sort().join('|');
 }
 

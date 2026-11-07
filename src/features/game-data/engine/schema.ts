@@ -106,7 +106,12 @@ export interface SuperiorAffixes extends SuperiorRules {
 export interface SuperiorRules {
   /** `[superior_affixes] enabled`; false (or no config) = the stock picker with equal odds */
   enabled: boolean;
-  /** `default_weight`: the weight of rows the weights table does not list */
+  /**
+   * Where the row weights come from: the qualityitems.txt `frequency` column (ESR 3.3), the plugin toml's weights table
+   * (ESR ≤ 3.2), or equal odds (stock: the plugin is off or missing)
+   */
+  weightSource: 'frequency' | 'config' | 'equal';
+  /** The weight of a row without one: 0 (an empty frequency cell never rolls) or the toml's `default_weight` */
   defaultWeight: number;
   /**
    * Base codes that only use rows 0-3 (`first_four_rows_for_throwing_and_nodurability = true`: own type Throwable or
@@ -390,6 +395,11 @@ export interface LootFilterDataBundle {
   skills?: LootFilterSkill[];
   /** Params the game data puts on items, per layered stat (skill, event and charged stats; see engine/statLayers.ts) */
   knownLayers?: LootFilterKnownLayers[];
+  /**
+   * skills.txt `skill` column by row (`skillNames[id]`, every row, '' for a blank one): the names a loot filter formula's
+   * `stat('name', 'Skill')` takes. Unlike the display names of `skills` they are unique.
+   */
+  skillNames?: string[];
 }
 
 export interface LootFilterSkill {
@@ -473,13 +483,24 @@ export interface CorruptionSlot {
   brick: { rolls: number; rate: number; results: CorruptionBrickResult[] };
 }
 
+/**
+ * An equipment anointment pool. ESR 3.3 rolls one pool per item type (`axe`, `circ`, `zrin` …, 61 pools; ESR 3.2 had
+ * one per equipment slot). Listed in cubemain order: the game takes the first pool whose type an item is (class types
+ * before generic ones), so an item's pool is the first entry its type descends from.
+ */
 export interface AnointmentSlot {
+  /** Pool id = the item type code */
   slot: string;
   typeCode: string;
+  /** The item type's name ("Axe", "Circlet") */
   label: string;
+  /** The equipment slot the type belongs to (`weapon`, `helm`, `shield`, `body`, `gloves`, `belt`, `boots`, `ring`, `amulet`) */
+  group: string;
   rollRange: number;
   /** Roll range of socketed items ("… Socketed" dummy rows); null when the slot has none */
   socketedRollRange: number | null;
+  /** The specialisation perk that allows a second anointment of this type (ESR 3.3 "Sanctimonious"); omitted: none */
+  secondPerk?: { title: string; tree: string };
 }
 
 export interface AnointmentOutcome extends EnhanceBonus {
@@ -563,8 +584,13 @@ export interface EnhanceBundle {
   sanctification: {
     /** Lucion's Relic of Sanctification */
     reagent: EnhanceItemRef;
-    /** The item type it works on (Jewel) */
+    /** The item type it works on without a perk (Jewel) */
     item: EnhanceItemRef;
+    /**
+     * Item types a specialisation perk lets you sanctify too, with the same outcomes (ESR 3.3: amulets and rings,
+     * Jeweler perk "Hallowed Accessories"); omitted when none
+     */
+    perkItems?: { items: EnhanceItemRef[]; perk: { title: string; tree: string } };
     /** Size of the `sanctified-dummy` roll range; one outcome per roll */
     rollRange: number;
     /** A `void` "item + reagent" row blocks a second sanctification */
@@ -1010,13 +1036,18 @@ export interface MasteriesBundle {
   names: Record<string, string>;
   /** Display names of the skills the effects name, by skill id */
   skillNames: Record<string, string>;
-  /** By stat value */
+  /** In cubemain order */
   masteries: WeaponMastery[];
+  /**
+   * The specialisation perk with which any weapon takes any specialisation (ESR 3.3: "True Master", Blacksmith; the
+   * "True Master - Apply …" rows); omitted when the rows have none
+   */
+  anyWeaponPerk?: { title: string; tree: string };
 }
 
 export interface WeaponMastery {
-  /** The `weaponmastery` stat value the apply rows set: one per specialisation */
-  value: number;
+  /** The cube property the apply rows set (`weapon-mastery-stag-bow`): one per specialisation */
+  property: string;
   /** The weapon as the cube rows name it ("Stag Bow", "Orb", "Void Blade") */
   label: string;
   cls: ClassCode;

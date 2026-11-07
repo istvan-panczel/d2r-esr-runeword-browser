@@ -219,7 +219,14 @@ function craftReason(craft: UnknownRecord, data: CurrentData): { label: string; 
   switch (kind) {
     case 'corruption':
     case 'anointment': {
-      const slot = asString(kind === 'corruption' ? craft.slot : craft.pool);
+      // ESR 3.3 anointments name their item type pool (`itemType`); the 3.2 per-slot `pool` is shown as outdated
+      if (kind === 'anointment' && craft.itemType === undefined) {
+        const pool = asString(craft.pool);
+        const roll = asNumber(craft.roll);
+        if (pool === undefined || roll === undefined) return undefined;
+        return { label: `anointment ${rollKey(pool, roll)}`, reason: 'ESR 3.2 per-slot pool (outdated since ESR 3.3)' };
+      }
+      const slot = asString(kind === 'corruption' ? craft.slot : craft.itemType);
       const roll = asNumber(craft.roll);
       if (slot === undefined || roll === undefined) return undefined;
       const key = rollKey(slot, roll);

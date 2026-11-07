@@ -1,6 +1,7 @@
 /** One-line rule summaries for the rule list, and the text its search box matches. */
 import type { FilterText, ItemLocation, LootFilterRule, StatCheck } from '../engine/types';
 import { resolveText, splitColorRuns } from '../engine/text';
+import { formulaSummary } from './formulaText';
 import type { LootFilterLookup } from './lookup';
 import { BASE_TIER_SCALE, DIFFICULTY_SCALE, formatNamedMatch, formatNumberMatch, QUALITY_SCALE } from './matchValues';
 import { exceptionOf, formatStatCheck, readsExceptions, ruleExceptions } from './statChecks';
@@ -94,6 +95,7 @@ export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLoo
     ...itemStatParts(rule, lookup, exceptions),
     statPart('character ', rule.playerStats, lookup),
     statPart('character any of ', rule.playerStatsAnyOf, lookup),
+    rule.formula === undefined ? undefined : formulaSummary(rule.formula),
     rule.difficulty === undefined ? undefined : formatNamedMatch(rule.difficulty, DIFFICULTY_SCALE),
     rule.areas && rule.areas.length > 0
       ? rule.areas.length <= LIST_PREVIEW
@@ -109,6 +111,7 @@ export function ruleConditionSummary(rule: LootFilterRule, lookup: LootFilterLoo
 export function ruleActionHint(rule: LootFilterRule): string | undefined {
   if (rule.hide === true) return 'hide';
   const parts: string[] = [];
+  if (rule.show === true) parts.push('show');
   if (rule.useStyle !== undefined) parts.push(`→ style ${rule.useStyle}`);
   const name = plainText(rule.replaceName);
   const prefix = plainText(rule.namePrefix);
@@ -133,13 +136,14 @@ export function ruleSummary(rule: LootFilterRule, lookup: LootFilterLookup, exce
 
 /**
  * Lowercase text the rule list's search box matches: codes, names, types, ids, stats with their param names (skill, tab,
- * class), comment, style, name changes, chat.
+ * class), comment, the formula, style, name changes, chat.
  */
 export function ruleSearchText(rule: LootFilterRule, lookup: LootFilterLookup, summary = ruleSummary(rule, lookup)): string {
   const parts: (string | undefined)[] = [
     summary,
     rule.disabled === true ? 'disabled' : undefined,
     rule.comment,
+    rule.formula,
     rule.useStyle,
     plainText(rule.replaceName),
     plainText(rule.namePrefix),

@@ -1,3 +1,4 @@
+import type { TerrorZoneGroup } from '@/features/game-data/engine/schema';
 import type { TerrorZoneSlot } from '../engine/schedule';
 
 /** How a watched zone group shows on the minimised widget: terrorized now, next up, or nothing. */
@@ -23,6 +24,30 @@ export function filterSlots(slots: readonly TerrorZoneSlot[], watched: ReadonlyS
 export function knownWatched(watched: readonly string[], zoneIds: readonly string[]): Set<string> {
   const known = new Set(zoneIds);
   return new Set(watched.filter((id) => known.has(id)));
+}
+
+/**
+ * What the zone groups mean: every id with its areas, in file order, hashed (FNV-1a, 32 bit) to a short string. It
+ * changes when ESR regroups the zones (3.3 reused `ESR-Zone19` / `ESR-Zone20` for new groups), not with the seed,
+ * start or durations, which move the schedule but keep what a starred group is.
+ */
+export function zoneSetFingerprint(zones: readonly TerrorZoneGroup[]): string {
+  const text = zones.map((group) => `${group.id}:${group.areas.map((area) => String(area.id)).join(',')}`).join('|');
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `${String(zones.length)}-${hash.toString(16).padStart(8, '0')}`;
+}
+
+/**
+ * The watch list to keep when a bundle loads: the stored one while the zone groups mean what they meant when it was
+ * starred (`storedFingerprint` equal to `fingerprint`), else none, since an id may now name another group. A list
+ * without a stored fingerprint was starred before the fingerprint existed (ESR 3.2.24's groups), so it is dropped too.
+ */
+export function reconcileWatched(watched: readonly string[], storedFingerprint: string | null, fingerprint: string): readonly string[] {
+  return storedFingerprint === fingerprint || watched.length === 0 ? watched : [];
 }
 
 /** Toggles `id` in a stored watch list (kept in insertion order, no duplicates). */

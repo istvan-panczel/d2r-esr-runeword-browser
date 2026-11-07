@@ -71,4 +71,16 @@ describe('readLevels', () => {
     expect(readLevels({ id: 1 })).toBeNull();
     expect(readLevels(null)).toBeNull();
   });
+
+  it('keeps per-language names, dropping entries that are not strings of a known language', () => {
+    expect(readLevels([{ id: 1, name: { enUS: 'Strict', deDE: 'Streng', xxXX: 'x', frFR: 3 } }])).toEqual([
+      { id: 1, name: { enUS: 'Strict', deDE: 'Streng' } },
+    ]);
+    expect(
+      readLevels([
+        { id: 1, name: { xxXX: 'x' } },
+        { id: 2, name: [] },
+      ])
+    ).toBeNull();
+  });
 });

@@ -215,6 +215,8 @@ describe('asBuildData with crafting annotations', () => {
     { kind: 'dstone', material: 'ppp', switchItem: 'key', uses: 1 },
     { kind: 'meld', material: 'grb', uses: 2 },
     { kind: 'corruption', slot: 'body', roll: 15 },
+    { kind: 'anointment', itemType: 'tors', roll: 3 },
+    // ESR 3.2 per-slot anointment: kept as is (shown as outdated)
     { kind: 'anointment', pool: 'body', roll: 3 },
   ];
 
@@ -249,6 +251,8 @@ describe('asBuildData with crafting annotations', () => {
       { kind: 'corruption', slot: 'body', roll: 1.5 },
       { kind: 'corruption', slot: 'body', roll: '3' },
       { kind: 'anointment', pool: 3, roll: 3 },
+      { kind: 'anointment', itemType: 'tors', roll: 0 },
+      { kind: 'anointment', itemType: '', roll: 3 },
       { kind: 'dstone', material: 'ppp', uses: 100 },
       { kind: 'dstone', material: 'ppp', uses: 0 },
       { kind: 'dstone', material: 'ppp', switchItem: '', uses: 1 },

@@ -4,7 +4,7 @@
  * page says otherwise. Pure (the component only renders it).
  */
 import type { MapBoss, MapBossReward } from '@/features/game-data/engine/schema';
-import type { MapBossFacts, OfficialBossRewards } from '../data/mapBosses';
+import { PERK_DROPS, type MapBossFacts, type OfficialBossRewards } from '../data/mapBosses';
 import type { CampaignArea, CampaignMap, CampaignNote } from '../engine/types';
 
 export interface BossRewardLine {
@@ -16,7 +16,7 @@ export interface BossRewardLine {
   readonly players8: string | null;
   /** Extra words after the chance ("until your Ascendancy Stone holds 10", "one at random") */
   readonly note: string | null;
-  /** What the official page says instead, when it differs ("35%", "a whole key set") */
+  /** What the official page says instead, when it differs ("35%", "a whole key set", "Archaeologist perk only …") */
   readonly official: string | null;
 }
 
@@ -103,9 +103,14 @@ function officialFor(reward: MapBossReward, page: OfficialBossRewards, pageItem:
   }
 }
 
+/** The note another official page gives a drop of every boss (an Alien Artefact: an Archaeologist perk) */
+const perkNote = (reward: MapBossReward): string | null =>
+  reward.kind === 'item' && Object.hasOwn(PERK_DROPS, reward.label) ? PERK_DROPS[reward.label] : null;
+
 function rewardLines(boss: MapBoss, page: OfficialBossRewards | undefined): BossRewardLine[] {
-  // The page's item names the files do not have, paired in order with the files' items the page does not name
-  const items = boss.rewards.filter((reward) => reward.kind === 'item');
+  // The page's item names the files do not have, paired with the files' item the page does not name when there is
+  // exactly one. The perk drops have their own note and are never on the Endgame Maps page: left out of the pairing.
+  const items = boss.rewards.filter((reward) => reward.kind === 'item' && perkNote(reward) === null);
   const pageOnly = (page?.items ?? []).filter((name) => !items.some((reward) => reward.label === name));
   const unnamed = items.filter((reward) => !(page?.items ?? []).includes(reward.label));
   return boss.rewards.map((reward, index) => {
@@ -120,20 +125,21 @@ function rewardLines(boss: MapBoss, page: OfficialBossRewards | undefined): Boss
           : reward.kind === 'token' && players8 === null
             ? 'players setting does not raise it'
             : null;
-    const pageItem = reward.kind === 'item' && pageOnly.length > 0 && unnamed.length === 1 ? pageOnly[0] : undefined;
+    const pageItem = unnamed.includes(reward) && pageOnly.length > 0 && unnamed.length === 1 ? pageOnly[0] : undefined;
     return {
       key: `${reward.kind}-${String(index)}`,
       label: reward.label,
       chance: chanceText(reward.chance[0]),
       players8,
       note,
-      official: page === undefined ? null : officialFor(reward, page, pageItem),
+      official: perkNote(reward) ?? (page === undefined ? null : officialFor(reward, page, pageItem)),
     };
   });
 }
 
 /**
- * The terrorized line. A blank `TreasureClassDesecrated(H)` (Lucion) is just unset: he likely drops his normal table. The
+ * The terrorized line. A blank `TreasureClassDesecrated(H)` (none in ESR 3.3; Lucion's until 3.2.24) is just unset: the
+ * boss likely drops his normal table. The
  * official page says tier 5 bosses drop no shards (an engine limit, runtime behaviour the files cannot show): then both
  * are given and the line is unconfirmed. The page's "always a shard" for tiers 1-4 is not a count, so not compared.
  */

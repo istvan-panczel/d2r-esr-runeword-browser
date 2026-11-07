@@ -599,7 +599,7 @@ describe('wrong-shaped rules', () => {
       { itemCodes: ['r33'], hide: true, passthrough: { activeInLevels: 4 } },
       { itemCodes: ['r33'], hideIfOtherConditionsFail: true, quality: 'unique', passthrough: { labelBackground: [1, 2] } },
       { itemCodes: ['r32'], namePrefix: 'Y ', passthrough: { sockets: 'two' } },
-      { itemCodes: ['r33'], namePrefix: 'X ', passthrough: { formula: "stat('x')" } },
+      { itemCodes: ['r33'], namePrefix: 'X ', passthrough: { highlight: true } },
     ]);
     const result = evaluateFilter(filter, makeItem(), makeContext());
     expect(result.trace).toEqual([
@@ -613,7 +613,7 @@ describe('wrong-shaped rules', () => {
   });
 
   it('lists only known keys as wrong-shaped', () => {
-    expect(wrongShapedKeys({ passthrough: { activeInLevels: 4, show: true, sound: [1] } })).toEqual(['activeInLevels', 'sound']);
+    expect(wrongShapedKeys({ passthrough: { activeInLevels: 4, highlight: true, sound: [1] } })).toEqual(['activeInLevels', 'sound']);
     expect(wrongShapedKeys({ itemCodes: ['r33'] })).toEqual([]);
   });
 
@@ -640,5 +640,212 @@ describe('disabled rules', () => {
     ]);
     expect(result.hidden).toBe(false);
     expect(result.name).toBe('X Zod Rune');
+  });
+});
+
+describe('show (plugin 1.8.2)', () => {
+  it('protects the item from a later hide, whose other actions still apply', () => {
+    const result = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r33'], show: true, labelBackground: [1, 2, 3] },
+        { itemTypes: ['rune'], hide: true, chatMessageWhenHidden: 'hid', replaceName: 'Later' },
+        { itemCodes: ['r33'], sound: 'item_rune' },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(result.hidden).toBe(false);
+    expect(result.shownBy).toBe(0);
+    expect(result.trace.map((entry) => entry.outcome)).toEqual(['applied', 'applied', 'applied']);
+    expect(result.trace[1]?.hideBlockedBy).toBe(0);
+    expect(result.name).toBe('Later');
+    expect(result.labelBackground).toEqual([1, 2, 3, 242]);
+    expect(result.chatMessages).toEqual([]);
+    expect(result.sounds).toEqual([{ sound: 'item_rune', volume: 100 }]);
+  });
+
+  it('protects from hideIfOtherConditionsFail and hideUnmatchedItems', () => {
+    const blocked = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r33'], show: true },
+        { itemCodes: ['r33'], sockets: { min: 2 }, hideIfOtherConditionsFail: true },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(blocked.hidden).toBe(false);
+    expect(blocked.trace[1]).toMatchObject({ outcome: 'skipped', hideBlockedBy: 0 });
+    const unmatched = evaluateFilter(
+      makeFilter([{ itemCodes: ['r33'], show: true }], { hideUnmatchedItems: true }),
+      makeItem(),
+      makeContext()
+    );
+    expect(unmatched.hidden).toBe(false);
+  });
+
+  it('does not protect from a hide before it, and only when it matched', () => {
+    const before = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r33'], hide: true },
+        { itemCodes: ['r33'], show: true },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(before.hiddenBy).toBe(0);
+    const notMatched = evaluateFilter(
+      makeFilter([
+        { itemCodes: ['r01'], show: true },
+        { itemCodes: ['r33'], hide: true },
+      ]),
+      makeItem(),
+      makeContext()
+    );
+    expect(notMatched.hiddenBy).toBe(1);
+  });
+
+  it('switches off a rule that both shows and hides, also through its style', () => {
+    const own = evaluateFilter(makeFilter([{ itemCodes: ['r33'], show: true, hide: true }]), makeItem(), makeContext());
+    expect(own.trace[0]?.outcome).toBe('switchedOff');
+    expect(own.hidden).toBe(false);
+    expect(own.matched).toBe(false);
+    const styled = evaluateFilter(
+      makeFilter([{ itemCodes: ['r33'], useStyle: 'H', show: true }], { styles: { H: { hide: true } } }),
+      makeItem(),
+      makeContext()
+    );
+    expect(styled.trace[0]?.outcome).toBe('switchedOff');
+  });
+});
+
+describe('evaluateFilter: formula', () => {
+  const FCR = 105;
+  const context = makeContext({
+    statIds: new Map([
+      ['item_fastercastrate', FCR],
+      ['fireresist', 39],
+      ['item_nonclassskill', 97],
+      ['item_skillonhit', 201],
+      ['item_numsockets', 194],
+      ['level', 12],
+    ]),
+    skillIds: new Map([['teleport', 54]]),
+    playerStats: [{ stat: 12, value: 70 }],
+  });
+  const ring = (overrides: Partial<TestItem> = {}) =>
+    makeItem({ code: 'rin', typeAncestors: ['ring', 'misc'], quality: 4, name: 'Ring', ...overrides });
+  const run = (rules: LootFilterRule[], item: TestItem = ring()) => evaluateFilter(makeFilter(rules), item, context);
+
+  it('is ANDed with the other conditions and traces its value', () => {
+    const rule: LootFilterRule = { itemTypes: ['ring'], formula: "stat('item_fastercastrate') >= 10", namePrefix: 'FCR ' };
+    const hit = run([rule], ring({ stats: [{ stat: FCR, value: 10 }] }));
+    expect(hit.trace[0]).toEqual({
+      index: 0,
+      outcome: 'applied',
+      failed: [],
+      actions: { namePrefix: 'FCR ' },
+      formula: { status: 'value', value: 1 },
+    });
+    const miss = run([rule], ring({ stats: [{ stat: FCR, value: 5 }] }));
+    expect(miss.trace[0]).toMatchObject({ outcome: 'skipped', failed: ['formula'], formula: { status: 'value', value: 0 } });
+    const wrongType = run([rule], makeItem({ stats: [{ stat: FCR, value: 20 }] }));
+    expect(wrongType.trace[0]).toMatchObject({ outcome: 'skipped', failed: ['itemTypes'], formula: { status: 'value', value: 1 } });
+  });
+
+  it('holds for any non-zero value, reads player stats and skill names', () => {
+    const item = ring({ stats: [{ stat: 97, param: 54, value: 12 }] });
+    expect(run([{ formula: "stat('fireresist') - 5", hide: true }], item).trace[0]).toMatchObject({ outcome: 'hidden' });
+    expect(run([{ formula: "playerStat('level') > 60 && stat('item_nonclassskill', 'Teleport') > 10", hide: true }], item).hidden).toBe(
+      true
+    );
+    expect(run([{ formula: "stat('item_nonclassskill', 'Teleport') > 12", hide: true }], item).hidden).toBe(false);
+  });
+
+  it('is an other condition for hideIfOtherConditionsFail (the guide example)', () => {
+    const rule: LootFilterRule = {
+      itemTypes: ['ring'],
+      quality: 'magic',
+      formula: "((stat('item_fastercastrate')>=10)&&((stat('fireresist')+stat('coldresist')+stat('lightresist'))>=40))",
+      hideIfOtherConditionsFail: true,
+    };
+    const result = run([rule], ring({ stats: [{ stat: FCR, value: 10 }] }));
+    expect(result.trace[0]).toMatchObject({ outcome: 'hiddenByOtherConditions', failed: ['formula'] });
+    expect(result.hidden).toBe(true);
+  });
+
+  it('skips the whole rule on an unidentified item when the formula reads an item stat (the guide)', () => {
+    const rule: LootFilterRule = { itemTypes: ['ring'], formula: "stat('item_fastercastrate') >= 10", hideIfOtherConditionsFail: true };
+    const result = run([rule], ring({ isIdentified: false }));
+    expect(result.trace[0]).toMatchObject({ outcome: 'skipped', failed: [], unidentified: true, formula: { status: 'unidentified' } });
+    expect(result.hidden).toBe(false);
+    // Player stats and the stats every item carries still work
+    for (const formula of ["playerStat('level') > 1 && 0", "stat('item_numsockets') >= 9"]) {
+      expect(run([{ ...rule, formula }], ring({ isIdentified: false })).trace[0]).toMatchObject({ outcome: 'hiddenByOtherConditions' });
+    }
+  });
+
+  it('switches a rule with a syntax error off: it never runs, nor hides', () => {
+    const rule: LootFilterRule = { itemTypes: ['ring'], formula: "stat('fireresist') = 1", hideIfOtherConditionsFail: true, hide: true };
+    const result = run([rule, { itemTypes: ['ring'], namePrefix: 'x ' }]);
+    expect(result.trace[0]).toEqual({
+      index: 0,
+      outcome: 'switchedOff',
+      failed: [],
+      actions: {},
+      reason: 'its formula has an error',
+      formula: { status: 'error', message: "'=' is not an operator; compare with '=='", offset: 19 },
+    });
+    expect(result.hidden).toBe(false);
+    expect(result.name).toBe('x Ring');
+  });
+
+  it('switches rules with huge formulas off instead of overflowing the stack', () => {
+    for (const formula of [`${'('.repeat(3000)}1${')'.repeat(3000)}`, `${'!'.repeat(10000)}1`, Array<string>(10000).fill('1').join('+')]) {
+      expect(run([{ formula, hide: true }]).trace[0]).toMatchObject({ outcome: 'switchedOff', formula: { status: 'error' } });
+    }
+  });
+
+  it('leaves rules without a formula untraced', () => {
+    expect(run([{ itemTypes: ['ring'], namePrefix: 'x' }]).trace[0]).not.toHaveProperty('formula');
+  });
+});
+
+describe('unidentified items (plugin 1.8.2)', () => {
+  const context = makeContext({
+    statIds: new Map([
+      ['item_numsockets', 194],
+      ['item_allskills', 127],
+      ['level', 12],
+    ]),
+  });
+  const ring = (isIdentified: boolean) => makeItem({ code: 'rin', typeAncestors: ['ring', 'misc'], quality: 4, isIdentified });
+
+  it('skips a rule that checks an item stat: no actions, and it cannot hide the item', () => {
+    const rule: LootFilterRule = {
+      itemTypes: ['ring'],
+      quality: 'magic',
+      itemStats: [{ stat: 'item_allskills', op: '<', value: 1 }],
+      hide: true,
+    };
+    const unidentified = evaluateFilter(makeFilter([rule]), ring(false), context);
+    expect(unidentified.hidden).toBe(false);
+    expect(unidentified.trace[0]).toEqual({ index: 0, outcome: 'skipped', failed: [], actions: {}, unidentified: true });
+    expect(evaluateFilter(makeFilter([rule]), ring(true), context).hidden).toBe(true);
+    const anyOf = evaluateFilter(
+      makeFilter([{ itemTypes: ['ring'], itemStatsAnyOf: [{ stat: 127, value: 1 }], namePrefix: 'x' }]),
+      ring(false),
+      context
+    );
+    expect(anyOf.trace[0]).toMatchObject({ outcome: 'skipped', unidentified: true });
+  });
+
+  it('runs rules on the stats every item carries, player stats and no stats', () => {
+    const rules: LootFilterRule[] = [
+      { itemTypes: ['ring'], itemStats: [{ stat: 'item_numsockets', op: '<', value: 1 }], namePrefix: 'a ' },
+      { itemTypes: ['ring'], playerStats: [{ stat: 'level', op: '<', value: 99 }], namePrefix: 'b ' },
+      { itemTypes: ['ring'], hide: true },
+    ];
+    const result = evaluateFilter(makeFilter(rules), ring(false), context);
+    expect(result.trace.map((entry) => entry.outcome)).toEqual(['applied', 'applied', 'hidden']);
   });
 });

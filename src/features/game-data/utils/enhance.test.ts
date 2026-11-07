@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { CorruptionBrickResult, EnhanceBundle } from '../engine/schema';
 import {
+  anointmentGroups,
   brickSummary,
   encodeEnhanceState,
   filterCorruptionOutcomes,
@@ -112,5 +113,24 @@ describe('enhance search and texts', () => {
       main: 'Rare item of the same type',
       exceptions: ['Odd Charm → Rare Grand Charm'],
     });
+  });
+});
+
+describe('anointmentGroups', () => {
+  it('groups the per-type pools by equipment slot, in pool order', () => {
+    const slot = (code: string, group: string) => ({
+      slot: code,
+      typeCode: code,
+      label: code,
+      group,
+      rollRange: 1,
+      socketedRollRange: null,
+    });
+    const groups = anointmentGroups([slot('ajav', 'weapon'), slot('circ', 'helm'), slot('axe', 'weapon'), slot('zrin', 'ring')]);
+    expect(groups.map((group) => [group.label, group.slots.map((entry) => entry.slot)])).toEqual([
+      ['Weapons', ['ajav', 'axe']],
+      ['Helms', ['circ']],
+      ['Rings', ['zrin']],
+    ]);
   });
 });

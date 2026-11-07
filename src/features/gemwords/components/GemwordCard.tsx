@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { GemBadge } from '@/core/components/GemBadge';
 import { FavoriteButton } from '@/core/components/FavoriteButton';
 import { aggregateGemBonuses, type GemBonusMap } from '../hooks/useGemBonuses';
-import { RecipeAffixes, SocketableBonusesSection } from '@/core/components/RecipeBonuses';
+import { RecipeAffixes, SocketableBonusGroupsSection, SocketableBonusesSection } from '@/core/components/RecipeBonuses';
 import { getRelevantCategories } from '@/core/utils/itemCategoryMapping';
 import type { Gemword } from '@/core/db/models';
 
@@ -14,6 +14,8 @@ interface GemwordCardProps {
   readonly favoriteCount?: number;
   readonly favoritePending?: boolean;
   readonly onToggleFavorite?: (gemword: Gemword) => void;
+  /** Builds: indexes of the page's socketable bonus groups that apply to the slot; all when omitted */
+  readonly socketableGroups?: readonly number[];
 }
 
 export function GemwordCard({
@@ -23,9 +25,13 @@ export function GemwordCard({
   favoriteCount = 0,
   favoritePending = false,
   onToggleFavorite,
+  socketableGroups,
 }: GemwordCardProps) {
   const { name, sockets, reqLevel, gems, allowedItems, affixes, jewelInfo } = gemword;
-  const gemBonuses = gemBonusMap ? aggregateGemBonuses(gems, gemBonusMap) : undefined;
+  // The page's gem bonuses per item-type group (ESR 3.3+); old cached rows fall back to the gems table
+  const pageSocketableBonuses =
+    gemword.socketableBonuses !== undefined && gemword.socketableBonuses.length > 0 ? gemword.socketableBonuses : null;
+  const gemBonuses = gemBonusMap && pageSocketableBonuses === null ? aggregateGemBonuses(gems, gemBonusMap) : undefined;
   const relevantCategories = getRelevantCategories(allowedItems);
 
   return (
@@ -73,7 +79,11 @@ export function GemwordCard({
           skillItem={{ kind: 'gemword', name }}
         />
 
-        <SocketableBonusesSection title="Gem Bonuses:" bonuses={gemBonuses} allowedItems={allowedItems} categories={relevantCategories} />
+        {pageSocketableBonuses ? (
+          <SocketableBonusGroupsSection title="Gem Bonuses:" groups={pageSocketableBonuses} shown={socketableGroups} />
+        ) : (
+          <SocketableBonusesSection title="Gem Bonuses:" bonuses={gemBonuses} allowedItems={allowedItems} categories={relevantCategories} />
+        )}
       </CardContent>
     </Card>
   );

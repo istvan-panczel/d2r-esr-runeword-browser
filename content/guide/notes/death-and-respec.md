@@ -10,18 +10,18 @@ mentions: [Token of Absolution, Dragon Stone, Ascendancy Stone, Key, Thawing Pot
 officialDocs:
   - label: Cube Recipes – Misc
     href: 'docs:Eastern Sun Resurrected Cube Recipes.html#mis'
-sources: [esr-txt, esr-loader, official-cube, official-docs, esru-wiki]
+sources: [esr-txt, esr-loader, official-cube, official-docs, patchnotes, esru-wiki]
 ---
 
 ### Respec
 
-Hold Alt and click any of the + buttons on the character screen to reset every stat and skill point. Each use spends one respec from a counter shown in that button's tooltip. A new character starts with a few; characters created before the counter existed start with none. The Introductory Book still calls respecs free, which predates the counter.
+Hold Alt and click any of the + buttons on the character screen to reset every stat and skill point. Each use spends one respec from a counter shown in that button's tooltip. A new character starts with a few; characters created before the counter existed start with none. Patch 3.3 corrected the Introductory Book, which used to call respecs free.
 
 To refill the counter, cube Dragon Stones into a :term[Token of Absolution] and right-click it for one more respec:
 
 ::recipes[respec-token]
 
-The official cube page still shows an older recipe with two Tomes; the game files use the one above. Akara's quest reset still works and is not counted.
+The official cube page still shows an older recipe with two Tomes; the game files use the one above. Akara's quest reset still works and is not counted. Unlearning a specialization perk (3.3, shift-click the perk) takes five respecs from the same counter.
 
 ### Dying
 

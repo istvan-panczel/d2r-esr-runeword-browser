@@ -132,6 +132,8 @@ const HIDDEN_MODS = new Set([
   'sock',
   'craftflag',
   'craftflag2',
+  // ESR 3.3 crucible forging marker ("*** Crucible Forged (Equipment)")
+  'craftflag-crucible',
   'tinkerflag2',
   'mercflag',
   'meldflag',

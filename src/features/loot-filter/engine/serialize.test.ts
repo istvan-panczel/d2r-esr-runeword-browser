@@ -111,9 +111,10 @@ describe('serializeLootFilter', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const text = serializeLootFilter(parseLootFilter(source).filter);
     const oneLineRules = (s: string) => s.split('\n').filter((line) => line.startsWith('    {"')).length;
-    expect(text.startsWith("// Sully's QoL Filter")).toBe(true);
-    // Sully writes some one-line rules and styles longer than the serializer's line width (12 of 113 when last checked).
-    expect(Math.abs(oneLineRules(text) - oneLineRules(source))).toBeLessThanOrEqual(15);
+    expect(text.startsWith('// volume can be adjusted')).toBe(true);
+    // Sully writes one-line rules and styles longer than the serializer's line width: 12 of 113 up to v0.6.13, 91 of 115
+    // since v0.7.0 localised the names and chat lines (11 languages on one line).
+    expect(Math.abs(oneLineRules(text) - oneLineRules(source))).toBeLessThanOrEqual(95);
     // The Ancient Scroll hide rule keeps its single-number `"activeInLevels": 4`, now in canonical key order.
     expect(text).toMatch(/\n {6}"activeInLevels": 4,\n {6}"hide": true\n/);
     expect(text.split('"activeInLevels": 4').length - 1).toBe(source.split('"activeInLevels": 4').length - 1);
@@ -143,6 +144,36 @@ describe('serializeLootFilter', () => {
         '    {"at": 0, "rule": {"itemCodes": ["r01"], "hide": true}},',
       ].join('\n')
     );
+  });
+
+  it('round-trips the previewed formula next to the stat lists', () => {
+    const text = [
+      '{',
+      '  "formatVersion": 1,',
+      '  "rules": [',
+      '    {"location": ["onGround"], "formula": "(stat(\'item_fastercastrate\')>=10)", "itemTypes": ["ring"], "playerStats": [{"stat": "level", "value": 10}], "hide": true}',
+      '  ]',
+      '}',
+    ].join('\n');
+    const written = serializeLootFilter(parseLootFilter(text).filter);
+    expect(written).toBe(
+      [
+        '{',
+        '  "formatVersion": 1,',
+        '  "rules": [',
+        '    {',
+        '      "itemTypes": ["ring"],',
+        '      "playerStats": [{"stat": "level", "value": 10}],',
+        '      "formula": "(stat(\'item_fastercastrate\')>=10)",',
+        '      "location": ["onGround"],',
+        '      "hide": true',
+        '    }',
+        '  ]',
+        '}',
+        '',
+      ].join('\n')
+    );
+    expect(serializeLootFilter(parseLootFilter(written).filter)).toBe(written);
   });
 
   it('writes no disabledRules key without disabled rules, and keeps a wrong-shaped one until a rule is disabled', () => {

@@ -280,8 +280,6 @@ const CUBEMAIN = tsv([
   cube('Unique Reroll ES Charm Exc', ['Yello Jello', '"gem5,qty=2"'], ['Yello Jello']),
   cube('Unique Reroll ES Charm Exc', ['Deviant Cell', '"gem5,qty=2"'], ['Deviant Cell']),
   cube('Maple Leaf: Unique Charm + Key + any rejuv pot', ['"char,uni"', 'key', 'rpot'], ['map', 'key']),
-  cube('Orb of Anointment Recycle to Maple Leaf', ['um7', 'gem5'], ['map']),
-  cube('Orb of Anointment Recycle to Maple Leaf x2', ['"um7,qty=2"', '"gem5,qty=2"'], ['map', 'map']),
   cube("[SECRET40] 10 Devil's Foods -> Maple Leaf", ['"dfc,qty=5"', '40a'], ['map', '40a']),
   // Class crafts (one row per class) and a Legacy craft, which is left out
   cubeWith("magic helm + jewel + spider's silk + perfect emerald -> amazon helm", ['"helm,mag"', 'jewl', 'sss', 'ggb'], ['"usetype,crf"'], {
@@ -672,7 +670,7 @@ describe('cube families', () => {
     ]);
   });
 
-  it('merges the unique charm upgrades and rerolls and the Orb of Anointment batches', () => {
+  it('merges the unique charm upgrades and rerolls; Maple Leaves from charms and secret recipes', () => {
     expect(collectFamily(family('unique-charm-upgrades'), esr())).toEqual([
       { inputs: ['Hellfire Torch / Annihilus', 'Standard of Heroes'], output: 'The same charm (upgraded)', note: null },
       { inputs: ['Yello Jello / Deviant Cell', '2× Perfect Gem'], output: 'The same charm, rerolled', note: null },
@@ -680,7 +678,6 @@ describe('cube families', () => {
     ]);
     expect(collectFamily(family('maple-leaf'), esr())).toEqual([
       { inputs: ['Unique Charm', 'Skeleton Key', 'Rejuv Potion'], output: 'Maple Leaf', note: null },
-      { inputs: ['N× Orb of Anointment (N = 1 to 2)', 'N× Perfect Gem'], output: 'N× Maple Leaf', note: null },
       { inputs: ["5× Devil's Food", 'Ancient Scroll 40'], output: 'Maple Leaf', note: null },
     ]);
   });

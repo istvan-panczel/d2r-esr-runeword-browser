@@ -1,25 +1,22 @@
-// Sully's QoL Filter, converted from Sullys-QoL-Filter.lua (D2RLAN).
-// Its sound files go in the sounds folder next to this file: gong.mp3, map.mp3, mid.mp3,
-// mythical.mp3, other.mp3, t5_map.mp3, tink.mp3, unique.mp3.
 // volume can be adjusted on line 19 "soundVolume": XX, where XX is a number between 0-100; By default set to 25
 {
   "formatVersion": 1,
   "title": "Sully's QoL Filter",
   "author": "Sully",
-  "version": "0.6.13",
-  "description": "Sully's D2RLAN QoL filter - PoE themed drop labels, sounds, mini-map icons.",
+  "version": "0.7.0",
+  "description": "Sully's ESR QoL filter - PoE themed filter with language localizations",
   "updateUrl": "https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json",
   "filterLevels": [
-    {"id": 1, "name": "Leveling"},
-    {"id": 2, "name": "Strict - Nightmare"},
-    {"id": 3, "name": "Very-Strict - Hell (pre-maps)"},
-    {"id": 4, "name": "Uber-Strict - Maps+"}
+    {"id": 1, "name": {"enUS": "Leveling", "deDE": "Leveln", "esES": "Subir de nivel", "frFR": "Montée de niveau", "itIT": "Livellamento", "koKR": "레벨링", "plPL": "Levelowanie", "ruRU": "Прокачка", "zhCN": "升级", "zhTW": "升級", "esMX": "Subir de nivel"}},
+    {"id": 2, "name": {"enUS": "Strict - Nightmare", "deDE": "Streng - Alptraum", "esES": "Estricto - Pesadilla", "frFR": "Strict - Cauchemar", "itIT": "Rigoroso - Incubo", "koKR": "엄격 - 악몽", "plPL": "Surowy - Koszmar", "ruRU": "Строгий - Кошмар", "zhCN": "严格 - 噩梦", "zhTW": "嚴格 - 惡夢", "esMX": "Estricto - Pesadilla"}},
+    {"id": 3, "name": {"enUS": "Very-Strict - Hell (pre-maps)", "deDE": "Sehr streng - Hölle (vor Karten)", "esES": "Muy estricto - Infierno (antes de mapas)", "frFR": "Très strict - Enfer (avant les cartes)", "itIT": "Molto rigoroso - Inferno (pre-mappe)", "koKR": "매우 엄격 - 지옥 (맵 이전)", "plPL": "Bardzo surowy - Piekło (przed mapami)", "ruRU": "Очень строгий - Ад (до карт)", "zhCN": "非常严格 - 地狱（地图前）", "zhTW": "非常嚴格 - 地獄（地圖前）", "esMX": "Muy estricto - Infierno (antes de mapas)"}},
+    {"id": 4, "name": {"enUS": "Uber-Strict - Maps+", "deDE": "Extrem streng - Karten+", "esES": "Ultra estricto - Mapas+", "frFR": "Ultra strict - Cartes+", "itIT": "Ultra rigoroso - Mappe+", "koKR": "최고 엄격 - 맵+", "plPL": "Ekstremalnie surowy - Mapy+", "ruRU": "Сверхстрогий - Карты+", "zhCN": "超严格 - 地图+", "zhTW": "超嚴格 - 地圖+", "esMX": "Ultra estricto - Mapas+"}}
   ],
   "defaultLevel": 3,
   "soundVolume": 25,
   "styles": {
     "Mythical": {
-      "chatMessage": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4MYTHICAL UNIQUE ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3",
+      "chatMessage": {"enUS": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4MYTHICAL UNIQUE ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "deDE": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4MYTHISCH EINZIGARTIG ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "esES": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4ÚNICO MÍTICO ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "frFR": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4UNIQUE MYTHIQUE ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "itIT": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4UNICO MITICO ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "koKR": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4신화적 고유 ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "plPL": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4MITYCZNY UNIKAT ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "ruRU": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4МИФИЧЕСКИЙ УНИКАЛЬНЫЙ ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "zhCN": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4神话暗金 ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "zhTW": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4神話獨特 ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3", "esMX": "\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*\nÿc1*ÿc2*ÿc3*ÿc;* ÿc4ÚNICO MÍTICO ÿc1*ÿc2*ÿc3*ÿc;*\nÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3*ÿc;*ÿc1*ÿc2*ÿc3"},
       "sound": "mythical.mp3",
       "labelBackground": [255, 255, 255, 255],
       "labelBorder": {"color": [240, 0, 0, 230], "width": 2},
@@ -27,7 +24,7 @@
     },
     "Jackpot": {"sound": "tink.mp3", "labelBackground": [255, 255, 255, 255], "labelBorder": {"color": [240, 0, 0, 230], "width": 2}},
     "PurpleRune": {
-      "chatMessage": "ÿc8Purple ESR Rune: {name}",
+      "chatMessage": {"enUS": "ÿc8Purple ESR Rune: {name}", "deDE": "ÿc8Lila ESR-Rune: {name}", "esES": "ÿc8Runa ESR púrpura: {name}", "frFR": "ÿc8Rune ESR violette: {name}", "itIT": "ÿc8Runa ESR viola: {name}", "koKR": "ÿc8보라색 ESR 룬: {name}", "plPL": "ÿc8Fioletowa Runa ESR: {name}", "ruRU": "ÿc8Фиолетовая руна ESR: {name}", "zhCN": "ÿc8紫色ESR符文: {name}", "zhTW": "ÿc8紫色ESR符文: {name}", "esMX": "ÿc8Runa ESR púrpura: {name}"},
       "sound": "tink.mp3",
       "labelBackground": [255, 255, 255, 255],
       "labelBorder": {"color": [240, 0, 0, 230], "width": 2},
@@ -35,7 +32,7 @@
       "icon": {"iconName": "rune", "iconSize": 50}
     },
     "STierMaterial": {
-      "chatMessage": "ÿc1*ÿc3*ÿc2*  ÿc4S-Tier Crafting Material ÿc1*ÿc3*ÿc2*: {name}",
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*  ÿc4S-Tier Crafting Material ÿc1*ÿc3*ÿc2*: {name}", "deDE": "ÿc1*ÿc3*ÿc2*  ÿc4Handwerksmaterial der S-Stufe ÿc1*ÿc3*ÿc2*: {name}", "esES": "ÿc1*ÿc3*ÿc2*  ÿc4Material de fabricación de nivel S ÿc1*ÿc3*ÿc2*: {name}", "frFR": "ÿc1*ÿc3*ÿc2*  ÿc4Matériau d'artisanat de rang S ÿc1*ÿc3*ÿc2*: {name}", "itIT": "ÿc1*ÿc3*ÿc2*  ÿc4Materiale di artigianato di livello S ÿc1*ÿc3*ÿc2*: {name}", "koKR": "ÿc1*ÿc3*ÿc2*  ÿc4S급 제작 소재 ÿc1*ÿc3*ÿc2*: {name}", "plPL": "ÿc1*ÿc3*ÿc2*  ÿc4Materiał rzemieślniczy klasy S ÿc1*ÿc3*ÿc2*: {name}", "ruRU": "ÿc1*ÿc3*ÿc2*  ÿc4Материал для крафта S-уровня ÿc1*ÿc3*ÿc2*: {name}", "zhCN": "ÿc1*ÿc3*ÿc2*  ÿc4S级制作材料 ÿc1*ÿc3*ÿc2*: {name}", "zhTW": "ÿc1*ÿc3*ÿc2*  ÿc4S級製作材料 ÿc1*ÿc3*ÿc2*: {name}", "esMX": "ÿc1*ÿc3*ÿc2*  ÿc4Material de fabricación de nivel S ÿc1*ÿc3*ÿc2*: {name}"},
       "sound": "tink.mp3",
       "labelBackground": [255, 255, 255, 255],
       "labelBorder": {"color": [255, 0, 0, 255], "width": 1}
@@ -51,18 +48,25 @@
   },
   "rules": [
     // Crafting reagents
-    {"itemCodes": ["ddd"], "activeInLevels": [1, 2, 3], "chatMessage": "ÿc1Crafting Reagent: ÿc4Ancient Decipherer"},
-    {"itemCodes": ["sdo"], "chatMessage": "ÿc1Crafting Material: {name}"},
-    {"itemCodes": ["wss"], "chatMessage": "ÿc1Crafting Reagent: ÿc0Worldstone Shard"},
-    {"itemCodes": ["rel"], "chatMessage": "ÿc1Crafting Reagent: ÿc0Relic of Knowledge"},
+    // Chat line when an Ancient Decipherer (ddd) drops, levels 1-3. Chat only; the label is not changed or hidden.
+    {"itemCodes": ["ddd"], "activeInLevels": [1, 2, 3], "chatMessage": {"enUS": "ÿc1Crafting Reagent: ÿc4Ancient Decipherer", "deDE": "ÿc1Handwerksreagenz: ÿc4Uralter Entzifferer", "esES": "ÿc1Reactivo de fabricación: ÿc4Descifrador antiguo", "frFR": "ÿc1Réactif d'artisanat: ÿc4Déchiffreur ancien", "itIT": "ÿc1Reagente di artigianato: ÿc4Decifratore antico", "koKR": "ÿc1제작 재료: ÿc4고대 해독자", "plPL": "ÿc1Odczynnik rzemieślniczy: ÿc4Starożytny deszyfrator", "ruRU": "ÿc1Реагент для крафта: ÿc4Древний дешифровщик", "zhCN": "ÿc1制作试剂: ÿc4古代解读者", "zhTW": "ÿc1製作試劑: ÿc4古代解讀者", "esMX": "ÿc1Reactivo de fabricación: ÿc4Descifrador antiguo"}},
+    // Chat line when a Socket Donut crafting material (sdo) drops. Chat only.
+    {"itemCodes": ["sdo"], "chatMessage": {"enUS": "ÿc1Crafting Material: {name}", "deDE": "ÿc1Handwerksmaterial: {name}", "esES": "ÿc1Material de fabricación: {name}", "frFR": "ÿc1Matériau d'artisanat: {name}", "itIT": "ÿc1Materiale di artigianato: {name}", "koKR": "ÿc1제작 소재: {name}", "plPL": "ÿc1Materiał rzemieślniczy: {name}", "ruRU": "ÿc1Материал для крафта: {name}", "zhCN": "ÿc1制作材料: {name}", "zhTW": "ÿc1製作材料: {name}", "esMX": "ÿc1Material de fabricación: {name}"}},
+    // Chat line when a Worldstone Shard (wss) drops. Chat only.
+    {"itemCodes": ["wss"], "chatMessage": {"enUS": "ÿc1Crafting Reagent: ÿc0Worldstone Shard", "deDE": "ÿc1Handwerksreagenz: ÿc0Weltsteinfragment", "esES": "ÿc1Reactivo de fabricación: ÿc0Fragmento de piedra del mundo", "frFR": "ÿc1Réactif d'artisanat: ÿc0Fragment de pierre-monde", "itIT": "ÿc1Reagente di artigianato: ÿc0Frammento della pietra del mondo", "koKR": "ÿc1제작 재료: ÿc0세계석 파편", "plPL": "ÿc1Odczynnik rzemieślniczy: ÿc0Odłamek Kamienia Świata", "ruRU": "ÿc1Реагент для крафта: ÿc0Осколок Камня Мира", "zhCN": "ÿc1制作试剂: ÿc0世界石碎片", "zhTW": "ÿc1製作試劑: ÿc0世界石碎片", "esMX": "ÿc1Reactivo de fabricación: ÿc0Fragmento de piedra del mundo"}},
+    // Chat line when a Relic of Knowledge (rel) drops. Chat only.
+    {"itemCodes": ["rel"], "chatMessage": {"enUS": "ÿc1Crafting Reagent: ÿc0Relic of Knowledge", "deDE": "ÿc1Handwerksreagenz: ÿc0Relikt des Wissens", "esES": "ÿc1Reactivo de fabricación: ÿc0Reliquia del conocimiento", "frFR": "ÿc1Réactif d'artisanat: ÿc0Relique du savoir", "itIT": "ÿc1Reagente di artigianato: ÿc0Reliquia della conoscenza", "koKR": "ÿc1제작 재료: ÿc0지식의 유물", "plPL": "ÿc1Odczynnik rzemieślniczy: ÿc0Relikt wiedzy", "ruRU": "ÿc1Реагент для крафта: ÿc0Реликвия знания", "zhCN": "ÿc1制作试剂: ÿc0知识圣物", "zhTW": "ÿc1製作試劑: ÿc0知識聖物", "esMX": "ÿc1Reactivo de fabricación: ÿc0Reliquia del conocimiento"}},
+    // Chat line for the xl* crafting reagents, levels 1-3. Chat only.
     {
       "itemCodes": ["xl0", "xl1", "xl2", "xl3", "xl4", "xl5", "xl6", "xl7", "xl8", "xl9", "xlx", "xly"],
       "activeInLevels": [1, 2, 3],
-      "chatMessage": "ÿc1Crafting Reagent: {name}"
+      "chatMessage": {"enUS": "ÿc1Crafting Reagent: {name}", "deDE": "ÿc1Handwerksreagenz: {name}", "esES": "ÿc1Reactivo de fabricación: {name}", "frFR": "ÿc1Réactif d'artisanat: {name}", "itIT": "ÿc1Reagente di artigianato: {name}", "koKR": "ÿc1제작 재료: {name}", "plPL": "ÿc1Odczynnik rzemieślniczy: {name}", "ruRU": "ÿc1Реагент для крафта: {name}", "zhCN": "ÿc1制作试剂: {name}", "zhTW": "ÿc1製作試劑: {name}", "esMX": "ÿc1Reactivo de fabricación: {name}"}
     },
-    {"itemCodes": ["xt0", "xt1", "xt2", "xt3", "xt4", "xt5", "xt6", "xt7", "xt8", "xt9", "xtx", "xty"], "chatMessage": "ÿc1Crafting Reagent: {name}"},
+    // Chat line for the xt* crafting reagents, all levels. Chat only.
+    {"itemCodes": ["xt0", "xt1", "xt2", "xt3", "xt4", "xt5", "xt6", "xt7", "xt8", "xt9", "xtx", "xty"], "chatMessage": {"enUS": "ÿc1Crafting Reagent: {name}", "deDE": "ÿc1Handwerksreagenz: {name}", "esES": "ÿc1Reactivo de fabricación: {name}", "frFR": "ÿc1Réactif d'artisanat: {name}", "itIT": "ÿc1Reagente di artigianato: {name}", "koKR": "ÿc1제작 재료: {name}", "plPL": "ÿc1Odczynnik rzemieślniczy: {name}", "ruRU": "ÿc1Реагент для крафта: {name}", "zhCN": "ÿc1制作试剂: {name}", "zhTW": "ÿc1製作試劑: {name}", "esMX": "ÿc1Reactivo de fabricación: {name}"}},
 
     // Drop announcements: uniques, sets and coupons
+    // Chat announcement for normal-tier uniques (baseTier 0), levels 1-2. Skips mythicals and the codes in excludeItemCodes. Chat only.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -76,8 +80,9 @@
       "quality": "unique",
       "baseTier": 0,
       "activeInLevels": [1, 2],
-      "chatMessage": "ÿc0 ** ÿc5Normal: ÿc4{name} ÿc0**"
+      "chatMessage": {"enUS": "ÿc0 ** ÿc5Normal: ÿc4{name} ÿc0**", "deDE": "ÿc0 ** ÿc5Normal: ÿc4{name} ÿc0**", "esES": "ÿc0 ** ÿc5Normal: ÿc4{name} ÿc0**", "frFR": "ÿc0 ** ÿc5Normal: ÿc4{name} ÿc0**", "itIT": "ÿc0 ** ÿc5Normale: ÿc4{name} ÿc0**", "koKR": "ÿc0 ** ÿc5보통: ÿc4{name} ÿc0**", "plPL": "ÿc0 ** ÿc5Normalny: ÿc4{name} ÿc0**", "ruRU": "ÿc0 ** ÿc5Обычная: ÿc4{name} ÿc0**", "zhCN": "ÿc0 ** ÿc5普通: ÿc4{name} ÿc0**", "zhTW": "ÿc0 ** ÿc5普通: ÿc4{name} ÿc0**", "esMX": "ÿc0 ** ÿc5Normal: ÿc4{name} ÿc0**"}
     },
+    // Chat announcement for exceptional-tier uniques (baseTier 1), levels 1-2. Skips mythicals and excluded codes. Chat only.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -91,8 +96,9 @@
       "quality": "unique",
       "baseTier": 1,
       "activeInLevels": [1, 2],
-      "chatMessage": "ÿc0 ** ÿc5Exceptional: ÿc4{name} ÿc0**"
+      "chatMessage": {"enUS": "ÿc0 ** ÿc5Exceptional: ÿc4{name} ÿc0**", "deDE": "ÿc0 ** ÿc5Außergewöhnlich: ÿc4{name} ÿc0**", "esES": "ÿc0 ** ÿc5Excepcional: ÿc4{name} ÿc0**", "frFR": "ÿc0 ** ÿc5Exceptionnel: ÿc4{name} ÿc0**", "itIT": "ÿc0 ** ÿc5Eccezionale: ÿc4{name} ÿc0**", "koKR": "ÿc0 ** ÿc5특급: ÿc4{name} ÿc0**", "plPL": "ÿc0 ** ÿc5Wyjątkowy: ÿc4{name} ÿc0**", "ruRU": "ÿc0 ** ÿc5Особые: ÿc4{name} ÿc0**", "zhCN": "ÿc0 ** ÿc5扩展级: ÿc4{name} ÿc0**", "zhTW": "ÿc0 ** ÿc5卓越: ÿc4{name} ÿc0**", "esMX": "ÿc0 ** ÿc5Excepcional: ÿc4{name} ÿc0**"}
     },
+    // Chat announcement for elite-tier uniques (baseTier 2), levels 1-3. Skips mythicals and excluded codes. Chat only.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -106,11 +112,15 @@
       "quality": "unique",
       "baseTier": 2,
       "activeInLevels": [1, 2, 3],
-      "chatMessage": "ÿc0 ** ÿc5Elite: ÿc4{name} ÿc0**"
+      "chatMessage": {"enUS": "ÿc0 ** ÿc5Elite: ÿc4{name} ÿc0**", "deDE": "ÿc0 ** ÿc5Elite: ÿc4{name} ÿc0**", "esES": "ÿc0 ** ÿc5Élite: ÿc4{name} ÿc0**", "frFR": "ÿc0 ** ÿc5Élite: ÿc4{name} ÿc0**", "itIT": "ÿc0 ** ÿc5Élite: ÿc4{name} ÿc0**", "koKR": "ÿc0 ** ÿc5정예: ÿc4{name} ÿc0**", "plPL": "ÿc0 ** ÿc5Elitarny: ÿc4{name} ÿc0**", "ruRU": "ÿc0 ** ÿc5Элитные: ÿc4{name} ÿc0**", "zhCN": "ÿc0 ** ÿc5精英: ÿc4{name} ÿc0**", "zhTW": "ÿc0 ** ÿc5精英: ÿc4{name} ÿc0**", "esMX": "ÿc0 ** ÿc5Élite: ÿc4{name} ÿc0**"}
     },
+    // Chat announcement for normal-tier set items (baseTier 0), levels 1-2. Chat only.
     {"quality": "set", "baseTier": 0, "activeInLevels": [1, 2], "chatMessage": "ÿc0 ** ÿc5ÿc2{name}ÿc0 **"},
+    // Chat announcement for exceptional-tier set items (baseTier 1), levels 1-2. Chat only.
     {"quality": "set", "baseTier": 1, "activeInLevels": [1, 2], "chatMessage": "ÿc0 ** ÿc5ÿc2{name}ÿc0 **"},
+    // Chat announcement for elite-tier set items (baseTier 2), levels 1-3. Chat only.
     {"quality": "set", "baseTier": 2, "activeInLevels": [1, 2, 3], "chatMessage": "ÿc0 ** ÿc5ÿc2{name}ÿc0 **"},
+    // Chat line for normal coupons (the listed 01c-96j codes), levels 1-2. Chat only.
     {
       "itemCodes": [
         "01c", "02c", "03c", "04c", "05c", "06c", "07c", "08c", "09c", "10c", "11c", "12c", "13c", "14c", "15c",
@@ -124,8 +134,9 @@
         "01j", "02j", "04j", "96j"
       ],
       "activeInLevels": [1, 2],
-      "chatMessage": "ÿc4Normal Coupon: ÿc0{name}"
+      "chatMessage": {"enUS": "ÿc4Normal Coupon: ÿc0{name}", "deDE": "ÿc4Normaler Gutschein: ÿc0{name}", "esES": "ÿc4Cupón normal: ÿc0{name}", "frFR": "ÿc4Coupon normal: ÿc0{name}", "itIT": "ÿc4Coupon normale: ÿc0{name}", "koKR": "ÿc4보통 쿠폰: ÿc0{name}", "plPL": "ÿc4Zwykły Kupon: ÿc0{name}", "ruRU": "ÿc4Обычный купон: ÿc0{name}", "zhCN": "ÿc4普通兑换券: ÿc0{name}", "zhTW": "ÿc4普通優惠券: ÿc0{name}", "esMX": "ÿc4Cupón normal: ÿc0{name}"}
     },
+    // Chat line for exceptional coupons (the listed 01d-97j codes), levels 1-3. Chat only.
     {
       "itemCodes": [
         "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "13d", "14d", "15d", "16d",
@@ -140,8 +151,9 @@
         "04i", "51d", "97j"
       ],
       "activeInLevels": [1, 2, 3],
-      "chatMessage": "ÿc4Exceptional Coupon: ÿc0{name}"
+      "chatMessage": {"enUS": "ÿc4Exceptional Coupon: ÿc0{name}", "deDE": "ÿc4Außergewöhnlicher Gutschein: ÿc0{name}", "esES": "ÿc4Cupón excepcional: ÿc0{name}", "frFR": "ÿc4Coupon exceptionnel: ÿc0{name}", "itIT": "ÿc4Coupon eccezionale: ÿc0{name}", "koKR": "ÿc4특급 쿠폰: ÿc0{name}", "plPL": "ÿc4Wyjątkowy Kupon: ÿc0{name}", "ruRU": "ÿc4Особый купон: ÿc0{name}", "zhCN": "ÿc4扩展级兑换券: ÿc0{name}", "zhTW": "ÿc4卓越優惠券: ÿc0{name}", "esMX": "ÿc4Cupón excepcional: ÿc0{name}"}
     },
+    // Chat line for elite coupons (the listed 01e-98j codes), levels 1-3. Chat only.
     {
       "itemCodes": [
         "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "15e", "16e", "17e", "18e",
@@ -154,142 +166,165 @@
         "13i", "42e", "43e", "44e", "45e", "46e", "47e", "63k", "64k", "98j"
       ],
       "activeInLevels": [1, 2, 3],
-      "chatMessage": "ÿc4Elite Coupon: ÿc0{name}"
+      "chatMessage": {"enUS": "ÿc4Elite Coupon: ÿc0{name}", "deDE": "ÿc4Elite-Gutschein: ÿc0{name}", "esES": "ÿc4Cupón élite: ÿc0{name}", "frFR": "ÿc4Coupon élite: ÿc0{name}", "itIT": "ÿc4Coupon élite: ÿc0{name}", "koKR": "ÿc4정예 쿠폰: ÿc0{name}", "plPL": "ÿc4Elitarny Kupon: ÿc0{name}", "ruRU": "ÿc4Элитный купон: ÿc0{name}", "zhCN": "ÿc4精英兑换券: ÿc0{name}", "zhTW": "ÿc4精英優惠券: ÿc0{name}", "esMX": "ÿc4Cupón élite: ÿc0{name}"}
     },
 
     // Class jewellery, reagents and perfect gems
+    // Chat line for class jewellery rares (zrn, srn, zam, etc.), levels 1-3. Chat only.
     {
       "itemCodes": ["zrn", "srn", "nrn", "prn", "brg", "drn", "arn", "wrn", "zam", "sam", "nam", "pam", "bam", "dam", "aam", "wam"],
       "quality": "rare",
       "activeInLevels": [1, 2, 3],
-      "chatMessage": "Class Jewellery: ÿc9{name}"
+      "chatMessage": {"enUS": "Class Jewellery: ÿc9{name}", "deDE": "Klassenschmuck: ÿc9{name}", "esES": "Joyería de clase: ÿc9{name}", "frFR": "Bijoux de classe: ÿc9{name}", "itIT": "Gioielli di classe: ÿc9{name}", "koKR": "직업 장신구: ÿc9{name}", "plPL": "Biżuteria klasowa: ÿc9{name}", "ruRU": "Классовые украшения: ÿc9{name}", "zhCN": "职业首饰: ÿc9{name}", "zhTW": "職業飾品: ÿc9{name}", "esMX": "Joyería de clase: ÿc9{name}"}
     },
+    // Chat line for crafting reagents such as qll, hrt, sol, scz, levels 1-3. Chat only.
     {
       "itemCodes": ["qll", "hrt", "brz", "jaw", "eyz", "hrn", "tal", "flg", "fng", "sol", "scz", "spe", "zzz"],
       "activeInLevels": [1, 2, 3],
-      "chatMessage": "ÿc1Crafting Reagent: ÿc0{name}"
+      "chatMessage": {"enUS": "ÿc1Crafting Reagent: ÿc0{name}", "deDE": "ÿc1Handwerksreagenz: ÿc0{name}", "esES": "ÿc1Reactivo de fabricación: ÿc0{name}", "frFR": "ÿc1Réactif d'artisanat: ÿc0{name}", "itIT": "ÿc1Reagente di artigianato: ÿc0{name}", "koKR": "ÿc1제작 재료: ÿc0{name}", "plPL": "ÿc1Odczynnik rzemieślniczy: ÿc0{name}", "ruRU": "ÿc1Реагент для крафта: ÿc0{name}", "zhCN": "ÿc1制作试剂: ÿc0{name}", "zhTW": "ÿc1製作試劑: ÿc0{name}", "esMX": "ÿc1Reactivo de fabricación: ÿc0{name}"}
     },
-    {"itemCodes": ["hrt", "sol"], "activeInLevels": [4], "chatMessage": "ÿc1Crafting Reagent: ÿc0{name}"},
+    // Chat line for hrt and sol on level 4 only. Chat only.
+    {"itemCodes": ["hrt", "sol"], "activeInLevels": [4], "chatMessage": {"enUS": "ÿc1Crafting Reagent: ÿc0{name}", "deDE": "ÿc1Handwerksreagenz: ÿc0{name}", "esES": "ÿc1Reactivo de fabricación: ÿc0{name}", "frFR": "ÿc1Réactif d'artisanat: ÿc0{name}", "itIT": "ÿc1Reagente di artigianato: ÿc0{name}", "koKR": "ÿc1제작 재료: ÿc0{name}", "plPL": "ÿc1Odczynnik rzemieślniczy: ÿc0{name}", "ruRU": "ÿc1Реагент для крафта: ÿc0{name}", "zhCN": "ÿc1制作试剂: ÿc0{name}", "zhTW": "ÿc1製作試劑: ÿc0{name}", "esMX": "ÿc1Reactivo de fabricación: ÿc0{name}"}},
+    // Chat line for perfect gems (gvb, gyb, gbb, etc.), levels 1-3. Shows the item name in chat.
     {"itemCodes": ["gvb", "gyb", "gbb", "ggb", "grb", "gwb", "skb", "gbk"], "activeInLevels": [1, 2, 3], "chatMessage": "{name}"},
 
     // Bases worth a look: tags on their stats
+    // Superior armor and weapons with 8+ enemy resistance pierce (stat 336). Adds a red name tag showing the pierce value. Label only; nothing is hidden.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 336, "op": ">=", "value": 8}],
-      "nameSuffix": "ÿc1[-{stat:333}% Res Pierce]"
+      "nameSuffix": {"enUS": "ÿc1[-{stat:333}% Res Pierce]", "deDE": "ÿc1[-{stat:333}% Widerst.-Durchd.]", "esES": "ÿc1[-{stat:333}% Penetr. resist.]", "frFR": "ÿc1[-{stat:333}% Pénét. rés.]", "itIT": "ÿc1[-{stat:333}% Penetr. resist.]", "koKR": "ÿc1[-{stat:333}% 저항 관통]", "plPL": "ÿc1[-{stat:333}% Przebicie odp.]", "ruRU": "ÿc1[-{stat:333}% Пробив. сопр.]", "zhCN": "ÿc1[-{stat:333}% 抗性穿透]", "zhTW": "ÿc1[-{stat:333}% 抗性穿透]", "esMX": "ÿc1[-{stat:333}% Penetr. resist.]"}
     },
+    // Superior armor and weapons with +1 or more All Skills (stat 127). Adds a chat line, sound, red border, goldstar icon and name tag. Applies at every level. The hide rules further down hide superiors without All Skills at level 3 (normal and exceptional tiers) and at level 4.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 127, "op": ">=", "value": 1}],
-      "chatMessage": "ÿc1*ÿc2*ÿc3 ÿc4+1 All Skills Base ÿc1*ÿc2*ÿc3",
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3 ÿc4+1 All Skills Base ÿc1*ÿc2*ÿc3", "deDE": "ÿc1*ÿc2*ÿc3 ÿc4+1 Alle Fähigkeiten (Basis) ÿc1*ÿc2*ÿc3", "esES": "ÿc1*ÿc2*ÿc3 ÿc4+1 Todas las habilidades base ÿc1*ÿc2*ÿc3", "frFR": "ÿc1*ÿc2*ÿc3 ÿc4+1 Toutes compétences (base) ÿc1*ÿc2*ÿc3", "itIT": "ÿc1*ÿc2*ÿc3 ÿc4+1 Tutte le abilità base ÿc1*ÿc2*ÿc3", "koKR": "ÿc1*ÿc2*ÿc3 ÿc4+1 모든 기술 (기본) ÿc1*ÿc2*ÿc3", "plPL": "ÿc1*ÿc2*ÿc3 ÿc4+1 Wszystkie umiejętności (podstawowe) ÿc1*ÿc2*ÿc3", "ruRU": "ÿc1*ÿc2*ÿc3 ÿc4+1 Все навыки (базовые) ÿc1*ÿc2*ÿc3", "zhCN": "ÿc1*ÿc2*ÿc3 ÿc4+1 全技能（基础） ÿc1*ÿc2*ÿc3", "zhTW": "ÿc1*ÿc2*ÿc3 ÿc4+1 全技能（基礎） ÿc1*ÿc2*ÿc3", "esMX": "ÿc1*ÿc2*ÿc3 ÿc4+1 Todas las habilidades base ÿc1*ÿc2*ÿc3"},
       "sound": "other.mp3",
       "labelBorder": {"color": [255, 0, 0, 255], "width": 1},
       "icon": {"iconName": "goldstar", "iconSize": 40},
-      "nameSuffix": "ÿc1[{stat:127} All Skills]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:127} All Skills]", "deDE": "ÿc1[{stat:127} Alle Fähigkeiten]", "esES": "ÿc1[{stat:127} Todas las habilidades]", "frFR": "ÿc1[{stat:127} Toutes compétences]", "itIT": "ÿc1[{stat:127} Tutte le abilità]", "koKR": "ÿc1[{stat:127} 모든 기술]", "plPL": "ÿc1[{stat:127} Wszystkie umiejętności]", "ruRU": "ÿc1[{stat:127} Все навыки]", "zhCN": "ÿc1[{stat:127} 全技能]", "zhTW": "ÿc1[{stat:127} 全技能]", "esMX": "ÿc1[{stat:127} Todas las habilidades]"}
     },
+    // Superior armor and weapons with 5% or more All Attributes (stat 256). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 256, "op": ">=", "value": 5}],
-      "nameSuffix": "ÿc1[{stat:256}% all attributes]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:256}% all attributes]", "deDE": "ÿc1[{stat:256}% alle Attribute]", "esES": "ÿc1[{stat:256}% todos los atributos]", "frFR": "ÿc1[{stat:256}% toutes les caractéristiques]", "itIT": "ÿc1[{stat:256}% tutti gli attributi]", "koKR": "ÿc1[{stat:256}% 모든 속성]", "plPL": "ÿc1[{stat:256}% wszystkie atrybuty]", "ruRU": "ÿc1[{stat:256}% все характеристики]", "zhCN": "ÿc1[{stat:256}% 全属性]", "zhTW": "ÿc1[{stat:256}% 全屬性]", "esMX": "ÿc1[{stat:256}% todos los atributos]"}
     },
+    // Superior armor and weapons with any Mana% (stat 77). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 77, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:77}% Mana]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:77}% Mana]", "deDE": "ÿc1[{stat:77}% Mana]", "esES": "ÿc1[{stat:77}% Maná]", "frFR": "ÿc1[{stat:77}% Mana]", "itIT": "ÿc1[{stat:77}% Mana]", "koKR": "ÿc1[{stat:77}% 마나]", "plPL": "ÿc1[{stat:77}% Mana]", "ruRU": "ÿc1[{stat:77}% Мана]", "zhCN": "ÿc1[{stat:77}% 法力]", "zhTW": "ÿc1[{stat:77}% 法力]", "esMX": "ÿc1[{stat:77}% Maná]"}
     },
+    // Superior armor and weapons with any Life% (stat 76). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 76, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:76}% Life]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:76}% Life]", "deDE": "ÿc1[{stat:76}% Leben]", "esES": "ÿc1[{stat:76}% Vida]", "frFR": "ÿc1[{stat:76}% Vie]", "itIT": "ÿc1[{stat:76}% Vita]", "koKR": "ÿc1[{stat:76}% 생명]", "plPL": "ÿc1[{stat:76}% Życie]", "ruRU": "ÿc1[{stat:76}% Жизнь]", "zhCN": "ÿc1[{stat:76}% 生命]", "zhTW": "ÿc1[{stat:76}% 生命]", "esMX": "ÿc1[{stat:76}% Vida]"}
     },
+    // Superior armor and weapons with any max resistance (stat 40). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 40, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:40}% max Res]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:40}% max Res]", "deDE": "ÿc1[{stat:40}% max. Widerst.]", "esES": "ÿc1[{stat:40}% res. máx.]", "frFR": "ÿc1[{stat:40}% rés. max]", "itIT": "ÿc1[{stat:40}% res. max]", "koKR": "ÿc1[{stat:40}% 최대 저항]", "plPL": "ÿc1[{stat:40}% maks. odp.]", "ruRU": "ÿc1[{stat:40}% макс. сопр.]", "zhCN": "ÿc1[{stat:40}% 最大抗性]", "zhTW": "ÿc1[{stat:40}% 最大抗性]", "esMX": "ÿc1[{stat:40}% res. máx.]"}
     },
+    // Superior armor and weapons with any Absorb (stat 142). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 142, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:142}% Absorb]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:142}% Absorb]", "deDE": "ÿc1[{stat:142}% Absorption]", "esES": "ÿc1[{stat:142}% Absorción]", "frFR": "ÿc1[{stat:142}% Absorption]", "itIT": "ÿc1[{stat:142}% Assorbimento]", "koKR": "ÿc1[{stat:142}% 흡수]", "plPL": "ÿc1[{stat:142}% Absorpcja]", "ruRU": "ÿc1[{stat:142}% Поглощение]", "zhCN": "ÿc1[{stat:142}% 吸收]", "zhTW": "ÿc1[{stat:142}% 吸收]", "esMX": "ÿc1[{stat:142}% Absorción]"}
     },
+    // Superior armor and weapons with 15+ light radius (stat 89). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 89, "op": ">=", "value": 15}],
-      "nameSuffix": "ÿc1[{stat:89} Light Radius]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:89} Light Radius]", "deDE": "ÿc1[{stat:89} Lichtradius]", "esES": "ÿc1[{stat:89} Radio de luz]", "frFR": "ÿc1[{stat:89} Rayon lumineux]", "itIT": "ÿc1[{stat:89} Raggio di luce]", "koKR": "ÿc1[{stat:89} 빛 반경]", "plPL": "ÿc1[{stat:89} Promień światła]", "ruRU": "ÿc1[{stat:89} Радиус света]", "zhCN": "ÿc1[{stat:89} 光照范围]", "zhTW": "ÿc1[{stat:89} 光照範圍]", "esMX": "ÿc1[{stat:89} Radio de luz]"}
     },
+    // Superior armor and weapons with Phasing (stat 530). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 530, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:530} PHASING]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:530} PHASING]", "deDE": "ÿc1[{stat:530} HINDURCHGLEITEN]", "esES": "ÿc1[{stat:530} FASE]", "frFR": "ÿc1[{stat:530} PHASAGE]", "itIT": "ÿc1[{stat:530} FASAGGIO]", "koKR": "ÿc1[{stat:530} 위상 이동]", "plPL": "ÿc1[{stat:530} PRZENIKANIE]", "ruRU": "ÿc1[{stat:530} ФАЗИРОВАНИЕ]", "zhCN": "ÿc1[{stat:530} 相位]", "zhTW": "ÿc1[{stat:530} 相位]", "esMX": "ÿc1[{stat:530} FASE]"}
     },
+    // Superior armor and weapons with 15%+ Dodge Chance (stat 338). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 338, "op": ">=", "value": 15}],
-      "nameSuffix": "ÿc1[{stat:338}% Dodge Chance]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:338}% Dodge Chance]", "deDE": "ÿc1[{stat:338}% Ausweichchance]", "esES": "ÿc1[{stat:338}% Prob. de esquivar]", "frFR": "ÿc1[{stat:338}% Chance d'esquive]", "itIT": "ÿc1[{stat:338}% Probabilità di schivata]", "koKR": "ÿc1[{stat:338}% 회피 확률]", "plPL": "ÿc1[{stat:338}% Szansa na unik]", "ruRU": "ÿc1[{stat:338}% Шанс уклонения]", "zhCN": "ÿc1[{stat:338}% 闪避几率]", "zhTW": "ÿc1[{stat:338}% 閃避機率]", "esMX": "ÿc1[{stat:338}% Prob. de esquivar]"}
     },
+    // Superior armor and weapons with max damage per level (stat 218). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 218, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:218}/8 Max Damage per Level]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:218}/8 Max Damage per Level]", "deDE": "ÿc1[{stat:218}/8 Max. Schaden pro Stufe]", "esES": "ÿc1[{stat:218}/8 Daño máx. por nivel]", "frFR": "ÿc1[{stat:218}/8 Dégâts max par niveau]", "itIT": "ÿc1[{stat:218}/8 Danno max per livello]", "koKR": "ÿc1[{stat:218}/8 레벨당 최대 피해]", "plPL": "ÿc1[{stat:218}/8 Maks. obrażenia za poziom]", "ruRU": "ÿc1[{stat:218}/8 Макс. урон за уровень]", "zhCN": "ÿc1[{stat:218}/8 每级最大伤害]", "zhTW": "ÿc1[{stat:218}/8 每級最大傷害]", "esMX": "ÿc1[{stat:218}/8 Daño máx. por nivel]"}
     },
+    // Superior armor and weapons with the percent max damage per level (stat 219). Adds a name tag. Label only.
     {
       "itemTypes": ["armo", "weap"],
       "quality": "superior",
       "itemStats": [{"stat": 219, "op": ">=", "value": 1}],
-      "nameSuffix": "ÿc1[{stat:219}/8 %Max Damage per Level]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:219}/8 %Max Damage per Level]", "deDE": "ÿc1[{stat:219}/8 %Max. Schaden pro Stufe]", "esES": "ÿc1[{stat:219}/8 %Daño máx. por nivel]", "frFR": "ÿc1[{stat:219}/8 %Dégâts max par niveau]", "itIT": "ÿc1[{stat:219}/8 %Danno max per livello]", "koKR": "ÿc1[{stat:219}/8 %레벨당 최대 피해]", "plPL": "ÿc1[{stat:219}/8 %Maks. obrażenia za poziom]", "ruRU": "ÿc1[{stat:219}/8 %Макс. урон за уровень]", "zhCN": "ÿc1[{stat:219}/8 %每级最大伤害]", "zhTW": "ÿc1[{stat:219}/8 %每級最大傷害]", "esMX": "ÿc1[{stat:219}/8 %Daño máx. por nivel]"}
     },
+    // Superior items of the listed base codes (0pb, amb, amc, q80, amf, q82, m31, amd, ame, q81) that have any +3 or higher superior affix (stat 188). Adds a [+3] name tag. Label only.
     {
       "itemCodes": ["0pb", "amb", "amc", "q80", "amf", "q82", "m31", "amd", "ame", "q81"],
       "quality": "superior",
       "itemStatsAnyOf": [{"stat": 188, "op": ">=", "value": 3}, {"stat": 188, "param": 1, "op": ">=", "value": 3}, {"stat": 188, "param": 2, "op": ">=", "value": 3}, {"stat": 188, "param": 3, "op": ">=", "value": 3}, {"stat": 188, "param": 4, "op": ">=", "value": 3}, {"stat": 188, "param": 5, "op": ">=", "value": 3}, {"stat": 188, "param": 6, "op": ">=", "value": 3}, {"stat": 188, "param": 7, "op": ">=", "value": 3}, {"stat": 188, "param": 8, "op": ">=", "value": 3}, {"stat": 188, "param": 9, "op": ">=", "value": 3}, {"stat": 188, "param": 10, "op": ">=", "value": 3}, {"stat": 188, "param": 11, "op": ">=", "value": 3}, {"stat": 188, "param": 12, "op": ">=", "value": 3}, {"stat": 188, "param": 13, "op": ">=", "value": 3}, {"stat": 188, "param": 14, "op": ">=", "value": 3}, {"stat": 188, "param": 15, "op": ">=", "value": 3}, {"stat": 188, "param": 16, "op": ">=", "value": 3}, {"stat": 188, "param": 17, "op": ">=", "value": 3}, {"stat": 188, "param": 18, "op": ">=", "value": 3}, {"stat": 188, "param": 19, "op": ">=", "value": 3}, {"stat": 188, "param": 20, "op": ">=", "value": 3}, {"stat": 188, "param": 21, "op": ">=", "value": 3}],
       "nameSuffix": "ÿc1[+3]"
     },
+    // Superior weapons of the listed base codes (1ss, 6ws, m29, m36, m11, etc.) with a +4 superior affix (stat 188). Adds a [+4] name tag. Label only.
     {
       "itemCodes": ["1ss", "1ls", "1cs", "1bs", "1ws", "6ss", "6ls", "6cs", "6bs", "6ws", "m29", "m36", "m11"],
       "quality": "superior",
       "itemStatsAnyOf": [{"stat": 188, "op": "==", "value": 4}, {"stat": 188, "param": 1, "op": "==", "value": 4}, {"stat": 188, "param": 2, "op": "==", "value": 4}, {"stat": 188, "param": 3, "op": "==", "value": 4}, {"stat": 188, "param": 4, "op": "==", "value": 4}, {"stat": 188, "param": 5, "op": "==", "value": 4}, {"stat": 188, "param": 6, "op": "==", "value": 4}, {"stat": 188, "param": 7, "op": "==", "value": 4}, {"stat": 188, "param": 8, "op": "==", "value": 4}, {"stat": 188, "param": 9, "op": "==", "value": 4}, {"stat": 188, "param": 10, "op": "==", "value": 4}, {"stat": 188, "param": 11, "op": "==", "value": 4}, {"stat": 188, "param": 12, "op": "==", "value": 4}, {"stat": 188, "param": 13, "op": "==", "value": 4}, {"stat": 188, "param": 14, "op": "==", "value": 4}, {"stat": 188, "param": 15, "op": "==", "value": 4}, {"stat": 188, "param": 16, "op": "==", "value": 4}, {"stat": 188, "param": 17, "op": "==", "value": 4}, {"stat": 188, "param": 18, "op": "==", "value": 4}, {"stat": 188, "param": 19, "op": "==", "value": 4}, {"stat": 188, "param": 20, "op": "==", "value": 4}, {"stat": 188, "param": 21, "op": ">=", "value": 4}],
       "nameSuffix": "ÿc1[+4]"
     },
+    // Superior weapons of the same base codes with a +5 superior affix (stat 188). Adds a [+5] name tag. Label only.
     {
       "itemCodes": ["1ss", "1ls", "1cs", "1bs", "1ws", "6ss", "6ls", "6cs", "6bs", "6ws", "m29", "m36", "m11"],
       "quality": "superior",
       "itemStatsAnyOf": [{"stat": 188, "op": "==", "value": 5}, {"stat": 188, "param": 1, "op": "==", "value": 5}, {"stat": 188, "param": 2, "op": "==", "value": 5}, {"stat": 188, "param": 3, "op": "==", "value": 5}, {"stat": 188, "param": 4, "op": "==", "value": 5}, {"stat": 188, "param": 5, "op": "==", "value": 5}, {"stat": 188, "param": 6, "op": "==", "value": 5}, {"stat": 188, "param": 7, "op": "==", "value": 5}, {"stat": 188, "param": 8, "op": "==", "value": 5}, {"stat": 188, "param": 9, "op": "==", "value": 5}, {"stat": 188, "param": 10, "op": "==", "value": 5}, {"stat": 188, "param": 11, "op": "==", "value": 5}, {"stat": 188, "param": 12, "op": "==", "value": 5}, {"stat": 188, "param": 13, "op": "==", "value": 5}, {"stat": 188, "param": 14, "op": "==", "value": 5}, {"stat": 188, "param": 15, "op": "==", "value": 5}, {"stat": 188, "param": 16, "op": "==", "value": 5}, {"stat": 188, "param": 17, "op": "==", "value": 5}, {"stat": 188, "param": 18, "op": "==", "value": 5}, {"stat": 188, "param": 19, "op": "==", "value": 5}, {"stat": 188, "param": 20, "op": "==", "value": 5}, {"stat": 188, "param": 21, "op": "==", "value": 5}],
       "nameSuffix": "ÿc1[+5]"
     },
+    // Superior items of the listed base codes (ylg, yvg, ulg, uhg, etc.) with 20+ IAS (stat 93). Adds a name tag. Label only.
     {
       "itemCodes": ["ylg", "yvg", "ymg", "ytg", "yhg", "yig", "ulg", "uvg", "umg", "utg", "uhg"],
       "quality": "superior",
       "itemStats": [{"stat": 93, "op": ">=", "value": 20}],
-      "nameSuffix": "ÿc1[{stat:93}% IAS]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:93}% IAS]", "deDE": "ÿc1[{stat:93}% Angriffstempo]", "esES": "ÿc1[{stat:93}% Vel. de ataque]", "frFR": "ÿc1[{stat:93}% Vit. d'attaque]", "itIT": "ÿc1[{stat:93}% Vel. attacco]", "koKR": "ÿc1[{stat:93}% 공격 속도]", "plPL": "ÿc1[{stat:93}% Szybkość ataku]", "ruRU": "ÿc1[{stat:93}% Скор. атаки]", "zhCN": "ÿc1[{stat:93}% 攻击速度]", "zhTW": "ÿc1[{stat:93}% 攻擊速度]", "esMX": "ÿc1[{stat:93}% Vel. de ataque]"}
     },
+    // Superior items of the same base codes with 20+ FCR (stat 105). Adds a name tag. Label only.
     {
       "itemCodes": ["ylg", "yvg", "ymg", "ytg", "yhg", "yig", "ulg", "uvg", "umg", "utg", "uhg"],
       "quality": "superior",
       "itemStats": [{"stat": 105, "op": ">=", "value": 20}],
-      "nameSuffix": "ÿc1[{stat:105}% FCR]"
+      "nameSuffix": {"enUS": "ÿc1[{stat:105}% FCR]", "deDE": "ÿc1[{stat:105}% Zauber-Tempo]", "esES": "ÿc1[{stat:105}% Vel. lanzamiento]", "frFR": "ÿc1[{stat:105}% Vit. incantation]", "itIT": "ÿc1[{stat:105}% Vel. lancio]", "koKR": "ÿc1[{stat:105}% 시전 속도]", "plPL": "ÿc1[{stat:105}% Szybkość rzucania]", "ruRU": "ÿc1[{stat:105}% Скор. каста]", "zhCN": "ÿc1[{stat:105}% 施法速度]", "zhTW": "ÿc1[{stat:105}% 施法速度]", "esMX": "ÿc1[{stat:105}% Vel. lanzamiento]"}
     },
+    // Items of the same base codes with 8+ enemy resistance pierce (stat 336). Adds a name tag showing the pierce value. Any quality. Label only.
     {
       "itemCodes": ["ylg", "yvg", "ymg", "ytg", "yhg", "yig", "ulg", "uvg", "umg", "utg", "uhg"],
       "itemStats": [{"stat": 336, "op": ">=", "value": 8}],
-      "nameSuffix": "ÿc1-{stat:333}% Enemy Res"
+      "nameSuffix": {"enUS": "ÿc1-{stat:333}% Enemy Res", "deDE": "ÿc1-{stat:333}% Feind-Res.", "esES": "ÿc1-{stat:333}% Res. enemiga", "frFR": "ÿc1-{stat:333}% Rés. ennemie", "itIT": "ÿc1-{stat:333}% Res. nemica", "koKR": "ÿc1-{stat:333}% 적 저항", "plPL": "ÿc1-{stat:333}% Odp. wroga", "ruRU": "ÿc1-{stat:333}% Сопр. врага", "zhCN": "ÿc1-{stat:333}% 敌抗", "zhTW": "ÿc1-{stat:333}% 敵抗", "esMX": "ÿc1-{stat:333}% Res. enemiga"}
     },
 
     // Gold and low-value items
+    // Gold piles of 500,000 or more. Adds a chat line, sound, $$ name tags, and renames the label to 500k+. Label only.
     {
       "itemCodes": ["gld"],
       "itemStats": [{"stat": 14, "op": ">=", "value": 500000}],
-      "chatMessage": "ÿc9** Large Gold Stack **",
+      "chatMessage": {"enUS": "ÿc9** Large Gold Stack **", "deDE": "ÿc9** Großer Goldstapel **", "esES": "ÿc9** Gran pila de oro **", "frFR": "ÿc9** Grosse pile d'or **", "itIT": "ÿc9** Grande pila d'oro **", "koKR": "ÿc9** 대량의 금 **", "plPL": "ÿc9** Duży stos złota **", "ruRU": "ÿc9** Большая куча золота **", "zhCN": "ÿc9** 大量金币 **", "zhTW": "ÿc9** 大量金幣 **", "esMX": "ÿc9** Gran pila de oro **"},
       "sound": "other.mp3",
       "labelBackground": [255, 215, 150, 242],
       "replaceName": "ÿc6500k+",
@@ -297,7 +332,9 @@
       "nameSuffix": "ÿc2$$",
       "labelBorder": {"color": [0, 0, 0, 255], "width": 1}
     },
+    // Gold piles of 1 gold or less are hidden at every level, everywhere.
     {"itemCodes": ["gld"], "itemStats": [{"stat": 14, "op": "<=", "value": 1}], "hide": true},
+    // Gold piles of 99 gold or less are hidden at character level 20+ outside towns.
     {
       "itemCodes": ["gld"],
       "itemStats": [{"stat": 14, "op": "<=", "value": 99}],
@@ -305,12 +342,14 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Mini and healing potions (mp1, hp1) are hidden at character level 12+ outside towns.
     {
       "itemCodes": ["mp1","hp1"],
       "playerStats": [{"stat": 12, "op": ">=", "value": 12}],
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Gold piles of 499 gold or less are hidden at character level 60+ outside towns.
     {
       "itemCodes": ["gld"],
       "itemStats": [{"stat": 14, "op": "<=", "value": 499}],
@@ -318,6 +357,7 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Gold piles of 749 gold or less are hidden at character level 80+ outside towns.
     {
       "itemCodes": ["gld"],
       "itemStats": [{"stat": 14, "op": "<=", "value": 749}],
@@ -325,6 +365,7 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Gold piles of 1,999 gold or less are hidden at character level 90+ outside towns.
     {
       "itemCodes": ["gld"],
       "itemStats": [{"stat": 14, "op": "<=", "value": 1999}],
@@ -332,9 +373,13 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Any remaining gold pile is renamed to a dim $$ label. Label only.
     {"itemCodes": ["gld"], "replaceName": "ÿc0$$"},
+    // Hides low-value items (vps, yps, gpm, opm, wms, tbk, ibk, tsc, isc) outside towns at every level.
     {"itemCodes": ["vps", "yps", "gpm", "opm", "wms", "tbk", "ibk", "tsc", "isc"], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
+    // Hides inferior-quality items at character level 10+ outside towns.
     {"quality": "inferior", "playerStats": [{"stat": 12, "op": ">=", "value": 10}], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
+    // Hides normal-quality weapons and armor with at most 1 socket at character level 10+ outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -351,6 +396,7 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Hides normal-quality items of the listed codes (aq0, aq2, aqv, cq0, cq2, cqv) with at most 1 socket at character level 10+ outside towns.
     {
       "itemCodes": ["aq0", "aq2", "aqv", "cq0", "cq2", "cqv"],
       "quality": "normal",
@@ -359,6 +405,7 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Hides magic-quality weapons and armor at character level 20+ outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -374,6 +421,7 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Hides magic-quality items of the listed codes (aq*, cq*) at character level 20+ outside towns.
     {
       "itemCodes": ["aq0", "aq2", "aqv", "cq0", "cq2", "cqv"],
       "quality": "magic",
@@ -381,14 +429,18 @@
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Hides mp2 and hp2 at character level 20+ outside towns.
     {"itemCodes": ["hp2", "mp2"], "playerStats": [{"stat": 12, "op": ">=", "value": 20}], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
+    // Hides the listed codes (gcv, gcy, gcb, gcg, gcr, gcw, skc, gck) at character level 20+ outside towns.
     {
       "itemCodes": ["gcv", "gcy", "gcb", "gcg", "gcr", "gcw", "skc", "gck"],
       "playerStats": [{"stat": 12, "op": ">=", "value": 20}],
       "excludeAreas": [1, 40, 75, 103, 109],
       "hide": true
     },
+    // Hides mp3 and hp3 at character level 40+ outside towns.
     {"itemCodes": ["hp3", "mp3"], "playerStats": [{"stat": 12, "op": ">=", "value": 40}], "excludeAreas": [1, 40, 75, 103, 109], "hide": true},
+    // Hides hp4, hp5, mp4 and mp5 at character level 40+ outside towns.
     {
       "itemCodes": ["hp4", "hp5", "mp4", "mp5"],
       "playerStats": [{"stat": 12, "op": ">=", "value": 40}],
@@ -397,6 +449,7 @@
     },
 
     // Strictness levels
+    // On level 3, hides rings, amulets and rng items that are magic or below, outside towns.
     {
       "itemCodes": [
         "rng", "amu", "rin"
@@ -406,6 +459,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides the normal coupons (the listed 01c-96j codes) outside towns.
     {
       "itemCodes": [
         "01c", "02c", "03c", "04c", "05c", "06c", "07c", "08c", "09c", "10c", "11c", "12c", "13c", "14c", "15c",
@@ -422,6 +476,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides magic-quality rings, amulets and class jewellery outside towns.
     {
       "itemCodes": [
         "rng", "amu", "zrn", "srn", "nrn", "prn", "brg", "drn", "arn", "zam", "sam", "nam", "pam", "bam", "dam", "wrn", "wam",
@@ -432,6 +487,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides normal-tier uniques (baseTier 0) outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -448,6 +504,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides normal-quality weapons and armor outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -463,8 +520,11 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides rvs outside towns.
     {"itemCodes": ["rvs"], "excludeAreas": [1, 40, 75, 103, 109], "activeInLevels": [3], "hide": true},
+    // On level 3, hides set items with baseTier 0 or 1 (normal and exceptional) outside towns.
     {"quality": "set", "baseTier": {"max": 1}, "excludeAreas": [1, 40, 75, 103, 109], "activeInLevels": [3], "hide": true},
+    // On level 3, hides superior normal-tier armor that has no All Skills, outside towns. The listed base codes (scl, plt, ful, kit, tow, gts, fts) are kept.
     {
       "itemTypes": ["armo"],
       "itemStats": [{"stat": 127, "op": "<", "value": 1}],
@@ -477,6 +537,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides superior normal and exceptional weapons that have no All Skills, outside towns. The listed base codes (wsp, crs, wax, mpi, 9mp, 9pa, 9cr, 9ws) are kept.
     {
       "itemTypes": ["weap"],
       "itemStats": [{"stat": 127, "op": "<", "value": 1}],
@@ -489,12 +550,14 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides the listed gem and skull codes (gzv, gly, glb, glg, glr, glw, skl, gzk) outside towns.
     {
       "itemCodes": ["gzv", "gly", "glb", "glg", "glr", "glw", "skl", "gzk"],
       "excludeAreas": [1, 40, 75, 103, 109],
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides cq* and aq* items at superior quality or below, outside towns.
     {
       "itemCodes": ["cqv", "cq2", "cq0", "aq0", "aq2", "aqv"],
       "quality": {"max": "superior"},
@@ -502,6 +565,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 3, hides rare weapons and armor with no sockets, outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -518,6 +582,7 @@
       "activeInLevels": [3],
       "hide": true
     },
+    // On level 4, hides magic-quality mythical bases (m01-m39) outside towns.
     {
       "itemCodes": [
         "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13", "m14", "m15",
@@ -529,6 +594,7 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides normal-quality mythical bases (m01-m39) outside towns.
     {
       "itemCodes": [
         "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13", "m14", "m15",
@@ -540,7 +606,9 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides the tier 1 maps (z01-z04) everywhere.
     {"itemCodes": ["z01", "z02", "z03", "z04"], "activeInLevels": [4], "hide": true},
+    // On level 4, hides normal and exceptional uniques (baseTier 0-1) outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -557,7 +625,9 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides all set items outside towns.
     {"quality": "set", "excludeAreas": [1, 40, 75, 103, 109], "activeInLevels": [4], "hide": true},
+    // On level 4, hides magic-quality rings, amulets, class jewellery and charms outside towns.
     {
       "itemCodes": [
         "mrn", "mam", "rin", "amu", "zrn", "srn", "nrn", "prn", "brg", "drn", "arn", "zam", "sam", "nam", "pam", "wam", "wrn",
@@ -568,6 +638,7 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides rare weapons and armor outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -584,6 +655,7 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides weapons and armor at superior quality or below that have no All Skills, outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -599,6 +671,7 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides rare cq* and aq* items outside towns.
     {
       "itemCodes": ["aq0", "aq2", "aqv", "cq0", "cq2", "cqv"],
       "quality": "rare",
@@ -606,13 +679,16 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides the listed gem and skull codes (gzv, gpv, gly, gpy, glb, gpb, glg, gpg, glr, gpr, glw, gpw, skl, skz, gzk, gpk) outside towns.
     {
       "itemCodes": ["gzv", "gpv", "gly", "gpy", "glb", "gpb", "glg", "gpg", "glr", "gpr", "glw", "gpw", "skl", "skz", "gzk", "gpk"],
       "excludeAreas": [1, 40, 75, 103, 109],
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides rvs outside towns.
     {"itemCodes": ["rvs"], "excludeAreas": [1, 40, 75, 103, 109], "activeInLevels": [4], "hide": true},
+    // On level 4, hides cq* and aq* items at unique quality or below, outside towns.
     {
       "itemCodes": ["cqv", "cq2", "cq0", "aq0", "aq2", "aqv"],
       "quality": {"max": "unique"},
@@ -620,7 +696,9 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides ddd (Ancient Decipherer) outside towns.
     {"itemCodes": ["ddd"], "excludeAreas": [1, 40, 75, 103, 109], "activeInLevels": [4], "hide": true},
+    // On level 4, hides normal coupons (the listed 01c-96j codes) outside towns.
     {
       "itemCodes": [
         "01c", "02c", "03c", "04c", "05c", "06c", "07c", "08c", "09c", "10c", "11c", "12c", "13c", "14c", "15c",
@@ -637,6 +715,7 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides exceptional coupons (the listed 01d-97j codes) outside towns.
     {
       "itemCodes": [
         "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "13d", "14d", "15d", "16d",
@@ -654,6 +733,7 @@
       "activeInLevels": [4],
       "hide": true
     },
+    // On level 4, hides elite-tier uniques (baseTier 2) outside towns. Mythicals and the excluded codes are kept.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -672,145 +752,177 @@
     },
 
     // Jewels, potions and special items
+    // Rare jewels (jew, mjw). Adds a cyan border, dark background, gem icon, chat line and other.mp3 sound. Label only.
     {
       "itemCodes": ["jew","mjw"],
       "quality": "rare",
       "replaceName": "ÿc9{name}",
-      "chatMessage": "ÿc9** Rare Jewel **",
+      "chatMessage": {"enUS": "ÿc9** Rare Jewel **", "deDE": "ÿc9** Seltenes Juwel **", "esES": "ÿc9** Joya rara **", "frFR": "ÿc9** Bijou rare **", "itIT": "ÿc9** Gioiello raro **", "koKR": "ÿc9** 희귀 보석 **", "plPL": "ÿc9** Rzadki Jewel **", "ruRU": "ÿc9** Редкая драгоценность **", "zhCN": "ÿc9** 稀有珠宝 **", "zhTW": "ÿc9** 稀有寶石 **", "esMX": "ÿc9** Joya rara **"},
       "sound": "other.mp3",
       "labelBackground": [0, 0, 0, 255],
       "labelBorder": {"color": [0, 200, 200, 255], "width": 1},
       "icon": {"iconName": "gem", "iconSize": 27}
     },
+    // Renames rvs to 25% with a purple border. Label only.
     {"itemCodes": ["rvs"], "replaceName": "ÿc0*ÿc;25%ÿc0*", "labelBorder": {"color": [128, 0, 128, 255], "width": 1}},
+    // Renames rvl to 50% with a purple border. Label only.
     {"itemCodes": ["rvl"], "replaceName": "ÿc0*ÿc;50%ÿc0*", "labelBorder": {"color": [128, 0, 128, 255], "width": 1}},
-    {"itemCodes": ["po3"], "replaceName": "ÿc;*ÿc0Fullÿc;*", "labelBorder": {"color": [128, 0, 128, 255], "width": 1}},
+    // Renames po3 to Full with a purple border. Label only.
+    {"itemCodes": ["po3"], "replaceName": {"enUS": "ÿc;*ÿc0Fullÿc;*", "deDE": "ÿc;*ÿc0Vollÿc;*", "esES": "ÿc;*ÿc0Llenoÿc;*", "frFR": "ÿc;*ÿc0Pleinÿc;*", "itIT": "ÿc;*ÿc0Pienoÿc;*", "koKR": "ÿc;*ÿc0가득ÿc;*", "plPL": "ÿc;*ÿc0Pełnyÿc;*", "ruRU": "ÿc;*ÿc0Полныйÿc;*", "zhCN": "ÿc;*ÿc0满ÿc;*", "zhTW": "ÿc;*ÿc0滿ÿc;*", "esMX": "ÿc;*ÿc0Llenoÿc;*"}, "labelBorder": {"color": [128, 0, 128, 255], "width": 1}},
+    // Ore: renames to Ore with $$ tags and a gold-style label. Label only.
     {
       "itemCodes": ["ore"],
-      "replaceName": "ÿc6Ore",
+      "replaceName": {"enUS": "ÿc6Ore", "deDE": "ÿc6Erz", "esES": "ÿc6Mineral", "frFR": "ÿc6Minerai", "itIT": "ÿc6Minerale", "koKR": "ÿc6광석", "plPL": "ÿc6Ruda", "ruRU": "ÿc6Руда", "zhCN": "ÿc6矿石", "zhTW": "ÿc6礦石", "esMX": "ÿc6Mineral"},
       "namePrefix": "ÿc2$$",
       "nameSuffix": "ÿc2$$",
       "labelBackground": [255, 215, 150, 242],
       "labelBorder": {"color": [0, 0, 0, 255], "width": 1}
     },
+    // Fake notes: renames to Fake Note with $$ tags and a gold-style label. Label only.
     {
       "itemCodes": ["fkn"],
-      "replaceName": "ÿc6Fake Note",
+      "replaceName": {"enUS": "ÿc6Fake Note", "deDE": "ÿc6Gefälschter Schein", "esES": "ÿc6Nota falsa", "frFR": "ÿc6Faux billet", "itIT": "ÿc6Banconota falsa", "koKR": "ÿc6가짜 지폐", "plPL": "ÿc6Fałszywy banknot", "ruRU": "ÿc6Фальшивая записка", "zhCN": "ÿc6假钞", "zhTW": "ÿc6假鈔", "esMX": "ÿc6Nota falsa"},
       "namePrefix": "ÿc2$$",
       "nameSuffix": "ÿc2$$",
       "labelBackground": [255, 215, 150, 242],
       "labelBorder": {"color": [0, 0, 0, 255], "width": 1}
     },
+    // Renames ppp to D-Stone with a purple border, at any location. Label only.
     {
       "itemCodes": ["ppp"],
       "location": ["stored", "atVendor", "onGround"],
-      "replaceName": "ÿc;D-Stone",
+      "replaceName": {"enUS": "ÿc;D-Stone", "deDE": "ÿc;Drachenstein", "esES": "ÿc;Piedra dragón", "frFR": "ÿc;Pierre de dragon", "itIT": "ÿc;Pietra del drago", "koKR": "ÿc;용의 돌", "plPL": "ÿc;Kamień smoka", "ruRU": "ÿc;Драконий камень", "zhCN": "ÿc;龙石", "zhTW": "ÿc;龍石", "esMX": "ÿc;Piedra dragón"},
       "labelBorder": {"color": [128, 0, 128, 255], "width": 1}
     },
-    {"itemCodes": ["sdo"], "replaceName": "ÿc6Socket Donut", "sound": "mid.mp3", "useStyle": "GoldPlate"},
+    // Socket Donut: renames the label, plays mid.mp3, and uses the GoldPlate style.
+    {"itemCodes": ["sdo"], "replaceName": {"enUS": "ÿc6Socket Donut", "deDE": "ÿc6Sockel-Donut", "esES": "ÿc6Rosquilla de engaste", "frFR": "ÿc6Beignet à sertir", "itIT": "ÿc6Ciambella da incastonare", "koKR": "ÿc6소켓 도넛", "plPL": "ÿc6Pączek z gniazdem", "ruRU": "ÿc6Пончик с гнёздами", "zhCN": "ÿc6镶孔甜甜圈", "zhTW": "ÿc6鑲孔甜甜圈", "esMX": "ÿc6Rosquilla de engaste"}, "sound": "mid.mp3", "useStyle": "GoldPlate"},
+    // Orb of Anointment (um7): chat line, white label with purple border, redD icon.
     {
       "itemCodes": ["um7"],
-      "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc; Orb of Anointment ÿc1*ÿc2*ÿc3*",
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc; Orb of Anointment ÿc1*ÿc2*ÿc3*", "deDE": "ÿc1*ÿc2*ÿc3* ÿc1Seltenes Handwerksreagenz: ÿc; Salbungskugel ÿc1*ÿc2*ÿc3*", "esES": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc; Orbe de unción ÿc1*ÿc2*ÿc3*", "frFR": "ÿc1*ÿc2*ÿc3* ÿc1Réactif d'artisanat rare: ÿc; Orbe d'onction ÿc1*ÿc2*ÿc3*", "itIT": "ÿc1*ÿc2*ÿc3* ÿc1Reagente di artigianato raro: ÿc; Globo dell'unzione ÿc1*ÿc2*ÿc3*", "koKR": "ÿc1*ÿc2*ÿc3* ÿc1희귀 제작 재료: ÿc; 도유의 구슬 ÿc1*ÿc2*ÿc3*", "plPL": "ÿc1*ÿc2*ÿc3* ÿc1Rzadki odczynnik rzemieślniczy: ÿc; Kula namaszczenia ÿc1*ÿc2*ÿc3*", "ruRU": "ÿc1*ÿc2*ÿc3* ÿc1Редкий реагент для крафта: ÿc; Сфера помазания ÿc1*ÿc2*ÿc3*", "zhCN": "ÿc1*ÿc2*ÿc3* ÿc1稀有制作试剂: ÿc; 涂油宝珠 ÿc1*ÿc2*ÿc3*", "zhTW": "ÿc1*ÿc2*ÿc3* ÿc1稀有製作試劑: ÿc; 塗油寶珠 ÿc1*ÿc2*ÿc3*", "esMX": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc; Orbe de unción ÿc1*ÿc2*ÿc3*"},
       "labelBackground": [255, 255, 255, 250],
       "labelBorder": {"color": [150, 0, 200, 250], "width": 1},
       "icon": {"iconName": "redD", "iconSize": 27}
     },
-    {"itemCodes": ["wss"], "replaceName": "ÿc6Worldstone Shard", "sound": "mid.mp3", "useStyle": "GoldPlate", "icon": {"iconName": "redD", "iconSize": 27}},
-    {"itemCodes": ["rel"], "replaceName": "ÿc6Relic of Knowledge", "sound": "mid.mp3", "useStyle": "GoldPlate", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Worldstone Shard: renames the label, plays mid.mp3, and uses the GoldPlate style with a redD icon.
+    {"itemCodes": ["wss"], "replaceName": {"enUS": "ÿc6Worldstone Shard", "deDE": "ÿc6Weltsteinfragment", "esES": "ÿc6Fragmento de piedra del mundo", "frFR": "ÿc6Fragment de pierre-monde", "itIT": "ÿc6Frammento della pietra del mondo", "koKR": "ÿc6세계석 파편", "plPL": "ÿc6Odłamek Kamienia Świata", "ruRU": "ÿc6Осколок Камня Мира", "zhCN": "ÿc6世界石碎片", "zhTW": "ÿc6世界石碎片", "esMX": "ÿc6Fragmento de piedra del mundo"}, "sound": "mid.mp3", "useStyle": "GoldPlate", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Relic of Knowledge: renames the label, plays mid.mp3, and uses the GoldPlate style with a redD icon.
+    {"itemCodes": ["rel"], "replaceName": {"enUS": "ÿc6Relic of Knowledge", "deDE": "ÿc6Relikt des Wissens", "esES": "ÿc6Reliquia del conocimiento", "frFR": "ÿc6Relique du savoir", "itIT": "ÿc6Reliquia della conoscenza", "koKR": "ÿc6지식의 유물", "plPL": "ÿc6Relikt wiedzy", "ruRU": "ÿc6Реликвия знания", "zhCN": "ÿc6知识圣物", "zhTW": "ÿc6知識聖物", "esMX": "ÿc6Reliquia del conocimiento"}, "sound": "mid.mp3", "useStyle": "GoldPlate", "icon": {"iconName": "redD", "iconSize": 27}},
 
+    // Maple Leaf (map): renames the label, chat line, gong.mp3 sound, GoldPlate style.
     {
       "itemCodes": ["map"],
-      "replaceName": "ÿc6Maple Leaf",
-      "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Maple Leaf ÿc1*ÿc2*ÿc3*",
+      "replaceName": {"enUS": "ÿc6Maple Leaf", "deDE": "ÿc6Ahornblatt", "esES": "ÿc6Hoja de arce", "frFR": "ÿc6Feuille d'érable", "itIT": "ÿc6Foglia d'acero", "koKR": "ÿc6단풍잎", "plPL": "ÿc6Liść klonu", "ruRU": "ÿc6Кленовый лист", "zhCN": "ÿc6枫叶", "zhTW": "ÿc6楓葉", "esMX": "ÿc6Hoja de arce"},
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Maple Leaf ÿc1*ÿc2*ÿc3*", "deDE": "ÿc1*ÿc2*ÿc3* ÿc1Seltenes Handwerksreagenz: ÿc4 Ahornblatt ÿc1*ÿc2*ÿc3*", "esES": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Hoja de arce ÿc1*ÿc2*ÿc3*", "frFR": "ÿc1*ÿc2*ÿc3* ÿc1Réactif d'artisanat rare: ÿc4 Feuille d'érable ÿc1*ÿc2*ÿc3*", "itIT": "ÿc1*ÿc2*ÿc3* ÿc1Reagente di artigianato raro: ÿc4 Foglia d'acero ÿc1*ÿc2*ÿc3*", "koKR": "ÿc1*ÿc2*ÿc3* ÿc1희귀 제작 재료: ÿc4 단풍잎 ÿc1*ÿc2*ÿc3*", "plPL": "ÿc1*ÿc2*ÿc3* ÿc1Rzadki odczynnik rzemieślniczy: ÿc4 Liść klonu ÿc1*ÿc2*ÿc3*", "ruRU": "ÿc1*ÿc2*ÿc3* ÿc1Редкий реагент для крафта: ÿc4 Кленовый лист ÿc1*ÿc2*ÿc3*", "zhCN": "ÿc1*ÿc2*ÿc3* ÿc1稀有制作试剂: ÿc4 枫叶 ÿc1*ÿc2*ÿc3*", "zhTW": "ÿc1*ÿc2*ÿc3* ÿc1稀有製作試劑: ÿc4 楓葉 ÿc1*ÿc2*ÿc3*", "esMX": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Hoja de arce ÿc1*ÿc2*ÿc3*"},
       "sound": "gong.mp3",
       "useStyle": "GoldPlate"
     },
+    // Anvil Stone (qqq): renames the label, chat line, gong.mp3 sound, GoldPlate style.
     {
       "itemCodes": ["qqq"],
-      "replaceName": "ÿc6Anvil Stone",
-      "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Anvil Stone ÿc1*ÿc2*ÿc3*",
+      "replaceName": {"enUS": "ÿc6Anvil Stone", "deDE": "ÿc6Ambossstein", "esES": "ÿc6Piedra de yunque", "frFR": "ÿc6Pierre d'enclume", "itIT": "ÿc6Pietra dell'incudine", "koKR": "ÿc6모루 돌", "plPL": "ÿc6Kamień kowadła", "ruRU": "ÿc6Камень наковальни", "zhCN": "ÿc6铁砧石", "zhTW": "ÿc6鐵砧石", "esMX": "ÿc6Piedra de yunque"},
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Anvil Stone ÿc1*ÿc2*ÿc3*", "deDE": "ÿc1*ÿc2*ÿc3* ÿc1Seltenes Handwerksreagenz: ÿc4 Ambossstein ÿc1*ÿc2*ÿc3*", "esES": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Piedra de yunque ÿc1*ÿc2*ÿc3*", "frFR": "ÿc1*ÿc2*ÿc3* ÿc1Réactif d'artisanat rare: ÿc4 Pierre d'enclume ÿc1*ÿc2*ÿc3*", "itIT": "ÿc1*ÿc2*ÿc3* ÿc1Reagente di artigianato raro: ÿc4 Pietra dell'incudine ÿc1*ÿc2*ÿc3*", "koKR": "ÿc1*ÿc2*ÿc3* ÿc1희귀 제작 재료: ÿc4 모루 돌 ÿc1*ÿc2*ÿc3*", "plPL": "ÿc1*ÿc2*ÿc3* ÿc1Rzadki odczynnik rzemieślniczy: ÿc4 Kamień kowadła ÿc1*ÿc2*ÿc3*", "ruRU": "ÿc1*ÿc2*ÿc3* ÿc1Редкий реагент для крафта: ÿc4 Камень наковальни ÿc1*ÿc2*ÿc3*", "zhCN": "ÿc1*ÿc2*ÿc3* ÿc1稀有制作试剂: ÿc4 铁砧石 ÿc1*ÿc2*ÿc3*", "zhTW": "ÿc1*ÿc2*ÿc3* ÿc1稀有製作試劑: ÿc4 鐵砧石 ÿc1*ÿc2*ÿc3*", "esMX": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Piedra de yunque ÿc1*ÿc2*ÿc3*"},
       "sound": "gong.mp3",
       "useStyle": "GoldPlate"
     },
+    // Elixir (elx): renames the label, chat line, gong.mp3 sound, GoldPlate style.
     {
       "itemCodes": ["elx"],
-      "replaceName": "ÿc6Elixir",
-      "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Elixir ÿc1*ÿc2*ÿc3*",
+      "replaceName": {"enUS": "ÿc6Elixir", "deDE": "ÿc6Elixier", "esES": "ÿc6Elixir", "frFR": "ÿc6Élixir", "itIT": "ÿc6Elisir", "koKR": "ÿc6영약", "plPL": "ÿc6Eliksir", "ruRU": "ÿc6Эликсир", "zhCN": "ÿc6灵药", "zhTW": "ÿc6靈藥", "esMX": "ÿc6Elixir"},
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Elixir ÿc1*ÿc2*ÿc3*", "deDE": "ÿc1*ÿc2*ÿc3* ÿc1Seltenes Handwerksreagenz: ÿc4 Elixier ÿc1*ÿc2*ÿc3*", "esES": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Elixir ÿc1*ÿc2*ÿc3*", "frFR": "ÿc1*ÿc2*ÿc3* ÿc1Réactif d'artisanat rare: ÿc4 Élixir ÿc1*ÿc2*ÿc3*", "itIT": "ÿc1*ÿc2*ÿc3* ÿc1Reagente di artigianato raro: ÿc4 Elisir ÿc1*ÿc2*ÿc3*", "koKR": "ÿc1*ÿc2*ÿc3* ÿc1희귀 제작 재료: ÿc4 영약 ÿc1*ÿc2*ÿc3*", "plPL": "ÿc1*ÿc2*ÿc3* ÿc1Rzadki odczynnik rzemieślniczy: ÿc4 Eliksir ÿc1*ÿc2*ÿc3*", "ruRU": "ÿc1*ÿc2*ÿc3* ÿc1Редкий реагент для крафта: ÿc4 Эликсир ÿc1*ÿc2*ÿc3*", "zhCN": "ÿc1*ÿc2*ÿc3* ÿc1稀有制作试剂: ÿc4 灵药 ÿc1*ÿc2*ÿc3*", "zhTW": "ÿc1*ÿc2*ÿc3* ÿc1稀有製作試劑: ÿc4 靈藥 ÿc1*ÿc2*ÿc3*", "esMX": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Elixir ÿc1*ÿc2*ÿc3*"},
       "sound": "gong.mp3",
       "useStyle": "GoldPlate"
     },
+    // Cookbook (yyy): renames the label, chat line, gong.mp3 sound, GoldPlate style with a redD icon.
     {
       "itemCodes": ["yyy"],
-      "replaceName": "ÿc6Cookbook",
-      "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Cookbook ÿc1*ÿc2*ÿc3*",
+      "replaceName": {"enUS": "ÿc6Cookbook", "deDE": "ÿc6Kochbuch", "esES": "ÿc6Libro de recetas", "frFR": "ÿc6Livre de cuisine", "itIT": "ÿc6Libro di cucina", "koKR": "ÿc6요리책", "plPL": "ÿc6Księga kucharska", "ruRU": "ÿc6Поваренная книга", "zhCN": "ÿc6食谱", "zhTW": "ÿc6食譜", "esMX": "ÿc6Libro de recetas"},
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3* ÿc1Rare Crafting Reagent: ÿc4 Cookbook ÿc1*ÿc2*ÿc3*", "deDE": "ÿc1*ÿc2*ÿc3* ÿc1Seltenes Handwerksreagenz: ÿc4 Kochbuch ÿc1*ÿc2*ÿc3*", "esES": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Libro de recetas ÿc1*ÿc2*ÿc3*", "frFR": "ÿc1*ÿc2*ÿc3* ÿc1Réactif d'artisanat rare: ÿc4 Livre de cuisine ÿc1*ÿc2*ÿc3*", "itIT": "ÿc1*ÿc2*ÿc3* ÿc1Reagente di artigianato raro: ÿc4 Libro di cucina ÿc1*ÿc2*ÿc3*", "koKR": "ÿc1*ÿc2*ÿc3* ÿc1희귀 제작 재료: ÿc4 요리책 ÿc1*ÿc2*ÿc3*", "plPL": "ÿc1*ÿc2*ÿc3* ÿc1Rzadki odczynnik rzemieślniczy: ÿc4 Księga kucharska ÿc1*ÿc2*ÿc3*", "ruRU": "ÿc1*ÿc2*ÿc3* ÿc1Редкий реагент для крафта: ÿc4 Поваренная книга ÿc1*ÿc2*ÿc3*", "zhCN": "ÿc1*ÿc2*ÿc3* ÿc1稀有制作试剂: ÿc4 食谱 ÿc1*ÿc2*ÿc3*", "zhTW": "ÿc1*ÿc2*ÿc3* ÿc1稀有製作試劑: ÿc4 食譜 ÿc1*ÿc2*ÿc3*", "esMX": "ÿc1*ÿc2*ÿc3* ÿc1Reactivo de fabricación raro: ÿc4 Libro de recetas ÿc1*ÿc2*ÿc3*"},
       "sound": "gong.mp3",
       "useStyle": "GoldPlate",
       "icon": {"iconName": "redD", "iconSize": 27}
     },
     //Ancient Scroll tiering
+    // Hides the Ancient Scrolls (01b-50b) at level 4.
     {
       "itemCodes": ["01b","02b","03b","04b","05b","06b","07b","08b","09b","10b","11b","12b","13b","14b","15b","16b","17b","18b","19b","20b","21b","22b","23b","24b","25b","26b","27b","28b","29b","30b","31b","32b","33b","34b","35b","36b","37b","38b","39b","40b","41b","42b","43b","44b","45b","46b","47b","48b","49b","50b"],
       "activeInLevels": 4,
       "hide": true
     },
+    // Ancient Scrolls (01b-50b): renames the label, chat line, gong.mp3 sound, GoldPlate style, levels 1-3.
     {
       "itemCodes": ["01b","02b","03b","04b","05b","06b","07b","08b","09b","10b","11b","12b","13b","14b","15b","16b","17b","18b","19b","20b","21b","22b","23b","24b","25b","26b","27b","28b","29b","30b","31b","32b","33b","34b","35b","36b","37b","38b","39b","40b","41b","42b","43b","44b","45b","46b","47b","48b","49b","50b"],
-      "replaceName": "ÿc6Ancient Scroll",
-      "chatMessage": "ÿc1*ÿc2*ÿc3* ÿc4 Ancient Scroll ÿc1*ÿc2*ÿc3*",
+      "replaceName": {"enUS": "ÿc6Ancient Scroll", "deDE": "ÿc6Alte Schriftrolle", "esES": "ÿc6Pergamino antiguo", "frFR": "ÿc6Parchemin ancien", "itIT": "ÿc6Pergamena antica", "koKR": "ÿc6고대 두루마리", "plPL": "ÿc6Starożytny zwój", "ruRU": "ÿc6Древний свиток", "zhCN": "ÿc6古代卷轴", "zhTW": "ÿc6古代卷軸", "esMX": "ÿc6Pergamino antiguo"},
+      "chatMessage": {"enUS": "ÿc1*ÿc2*ÿc3* ÿc4 Ancient Scroll ÿc1*ÿc2*ÿc3*", "deDE": "ÿc1*ÿc2*ÿc3* ÿc4 Alte Schriftrolle ÿc1*ÿc2*ÿc3*", "esES": "ÿc1*ÿc2*ÿc3* ÿc4 Pergamino antiguo ÿc1*ÿc2*ÿc3*", "frFR": "ÿc1*ÿc2*ÿc3* ÿc4 Parchemin ancien ÿc1*ÿc2*ÿc3*", "itIT": "ÿc1*ÿc2*ÿc3* ÿc4 Pergamena antica ÿc1*ÿc2*ÿc3*", "koKR": "ÿc1*ÿc2*ÿc3* ÿc4 고대 두루마리 ÿc1*ÿc2*ÿc3*", "plPL": "ÿc1*ÿc2*ÿc3* ÿc4 Starożytny zwój ÿc1*ÿc2*ÿc3*", "ruRU": "ÿc1*ÿc2*ÿc3* ÿc4 Древний свиток ÿc1*ÿc2*ÿc3*", "zhCN": "ÿc1*ÿc2*ÿc3* ÿc4 古代卷轴 ÿc1*ÿc2*ÿc3*", "zhTW": "ÿc1*ÿc2*ÿc3* ÿc4 古代卷軸 ÿc1*ÿc2*ÿc3*", "esMX": "ÿc1*ÿc2*ÿc3* ÿc4 Pergamino antiguo ÿc1*ÿc2*ÿc3*"},
       "sound": "gong.mp3",
       "useStyle": "GoldPlate",
       "activeInLevels": [1, 2, 3]
     },
     //Legendary Materials
-    {"itemCodes": ["um8"], "replaceName": "ÿcPLilith's Crystallized Tear", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
-    {"itemCodes": ["um9"], "replaceName": "ÿcPTyrael's Eternal Feather", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
-    {"itemCodes": ["u17"], "replaceName": "ÿcPLucion's Essence", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
-    {"itemCodes": ["u18"], "replaceName": "ÿcPLucion's Relic of Sanctification", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
-    {"itemCodes": ["u20"], "replaceName": "ÿcPAstrogha's Petrified Heart", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
-    {"itemCodes": ["u40"], "replaceName": "ÿcPInarius' Everburning Halo", "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Lilith's Crystallized Tear (um8): renames the label and uses the S-tier material style.
+    {"itemCodes": ["um8"], "replaceName": {"enUS": "ÿcPLilith's Crystallized Tear", "deDE": "ÿcPLiliths kristallisierte Träne", "esES": "ÿcPLágrima cristalizada de Lilith", "frFR": "ÿcPLarme cristallisée de Lilith", "itIT": "ÿcPLacrima cristallizzata di Lilith", "koKR": "ÿcP릴리스의 결정화된 눈물", "plPL": "ÿcPSkrystalizowana łza Lilith", "ruRU": "ÿcPКристаллизованная слеза Лилит", "zhCN": "ÿcP莉莉丝的结晶之泪", "zhTW": "ÿcP莉莉絲的結晶之淚", "esMX": "ÿcPLágrima cristalizada de Lilith"}, "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Tyrael's Eternal Feather (um9): renames the label and uses the S-tier material style.
+    {"itemCodes": ["um9"], "replaceName": {"enUS": "ÿcPTyrael's Eternal Feather", "deDE": "ÿcPTyraels ewige Feder", "esES": "ÿcPPluma eterna de Tyrael", "frFR": "ÿcPPlume éternelle de Tyrael", "itIT": "ÿcPPiuma eterna di Tyrael", "koKR": "ÿcP티라엘의 영원한 깃털", "plPL": "ÿcPWieczne pióro Tyraela", "ruRU": "ÿcPВечное перо Тираэля", "zhCN": "ÿcP提瑞尔的永恒之羽", "zhTW": "ÿcP提瑞爾的永恆之羽", "esMX": "ÿcPPluma eterna de Tyrael"}, "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Lucion's Essence (u17): renames the label and uses the S-tier material style.
+    {"itemCodes": ["u17"], "replaceName": {"enUS": "ÿcPLucion's Essence", "deDE": "ÿcPLucions Essenz", "esES": "ÿcPEsencia de Lucion", "frFR": "ÿcPEssence de Lucion", "itIT": "ÿcPEssenza di Lucion", "koKR": "ÿcP루시온의 정수", "plPL": "ÿcPEsencja Lucion", "ruRU": "ÿcPЭссенция Люсиона", "zhCN": "ÿcP卢西恩之精华", "zhTW": "ÿcP盧西恩之精華", "esMX": "ÿcPEsencia de Lucion"}, "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Lucion's Relic of Sanctification (u18): renames the label and uses the S-tier material style.
+    {"itemCodes": ["u18"], "replaceName": {"enUS": "ÿcPLucion's Relic of Sanctification", "deDE": "ÿcPLucions Reliquie der Heiligung", "esES": "ÿcPReliquia de santificación de Lucion", "frFR": "ÿcPRelique de sanctification de Lucion", "itIT": "ÿcPReliquia di santificazione di Lucion", "koKR": "ÿcP루시온의 신성화 유물", "plPL": "ÿcPRelikwia uświęcenia Lucion", "ruRU": "ÿcPРеликвия освящения Люсиона", "zhCN": "ÿcP卢西恩的圣化遗物", "zhTW": "ÿcP盧西恩的聖化遺物", "esMX": "ÿcPReliquia de santificación de Lucion"}, "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Astrogha's Petrified Heart (u20): renames the label and uses the S-tier material style.
+    {"itemCodes": ["u20"], "replaceName": {"enUS": "ÿcPAstrogha's Petrified Heart", "deDE": "ÿcPAstroghas versteinertes Herz", "esES": "ÿcPCorazón petrificado de Astrogha", "frFR": "ÿcPCœur pétrifié d'Astrogha", "itIT": "ÿcPCuore pietrificato di Astrogha", "koKR": "ÿcP아스트로가의 석화된 심장", "plPL": "ÿcPSkamieniałe serce Astrogi", "ruRU": "ÿcPОкаменевшее сердце Астрогхи", "zhCN": "ÿcP阿斯特罗加的石化之心", "zhTW": "ÿcP阿斯特羅加的石化之心", "esMX": "ÿcPCorazón petrificado de Astrogha"}, "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Inarius' Everburning Halo (u40): renames the label and uses the S-tier material style.
+    {"itemCodes": ["u40"], "replaceName": {"enUS": "ÿcPInarius' Everburning Halo", "deDE": "ÿcPInarius' ewig brennender Heiligenschein", "esES": "ÿcPHalo de Inarius de fuego eterno", "frFR": "ÿcPAuréole éternellement ardente d'Inarius", "itIT": "ÿcPAureola perennemente ardente di Inarius", "koKR": "ÿcP이나리우스의 영원히 타오르는 후광", "plPL": "ÿcPWiecznie płonąca aureola Inariusa", "ruRU": "ÿcPВечно горящий ореол Инариуса", "zhCN": "ÿcP伊纳瑞斯的永燃光环", "zhTW": "ÿcP伊納瑞斯的永燃光環", "esMX": "ÿcPHalo de Inarius de fuego eterno"}, "useStyle": "STierMaterial", "icon": {"iconName": "redD", "iconSize": 27}},
+    // Aura stones (an3-an9, a10): renames them with a chat line and the Valuable style.
     {
       "itemCodes": ["an3", "an4", "an5", "an6", "an7", "an8", "an9", "a10"],
       "replaceName": "ÿc1{name}",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*  ÿc8Aura Stone ÿc1*ÿc3*ÿc2*",
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*  ÿc8Aura Stone ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*  ÿc8Aura-Stein ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*  ÿc8Piedra de aura ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*  ÿc8Pierre d'aura ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*  ÿc8Pietra d'aura ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*  ÿc8오라 석 ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*  ÿc8Kamień aury ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*  ÿc8Камень ауры ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*  ÿc8光环石 ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*  ÿc8光環石 ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*  ÿc8Piedra de aura ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Valuable"
     },
+    // Blessed Aim aura stone (an3) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an3"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc2 Lvl 10 Blessed Aim Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc2 Lvl 10 Blessed Aim Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc2 Lvl 10 Gesegneter Zielschuss Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc2 Nv. 10 Puntería bendecida Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc2 Niv. 10 Visée bénie Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc2 Liv 10 Mira benedetta Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc2 레벨 10 축복받은 조준 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc2 Poziom 10 Błogosławiony cel Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc2 Уровень 10 Благословлённый прицел Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc2 等级 10 祝福瞄准 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc2 等級 10 祝福瞄準 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc2 Nvl 10 Puntería bendecida Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
+    // Concentration aura stone (an4) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an4"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc1 Lvl 15 Concentration Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc1 Lvl 15 Concentration Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc1 Lvl 15 Konzentration Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc1 Nv. 15 Concentración Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc1 Niv. 15 Concentration Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc1 Liv 15 Concentrazione Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc1 레벨 15 집중 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc1 Poziom 15 Koncentracja Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc1 Уровень 15 Концентрация Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc1 等级 15 专注 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc1 等級 15 專注 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc1 Nvl 15 Concentración Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
+    // Defiance aura stone (an5) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an5"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc; Lvl 20 Defiance Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc; Lvl 20 Defiance Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc; Lvl 20 Trotz Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc; Nv. 20 Desafío Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc; Niv. 20 Défi Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc; Liv 20 Sfida Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc; 레벨 20 저항 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc; Poziom 20 Wyzwanie Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc; Уровень 20 Неповиновение Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc; 等级 20 反抗 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc; 等級 20 反抗 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc; Nvl 20 Desafío Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
+    // Vigor aura stone (an6) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an6"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc9 Lvl 10 Vigor Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc9 Lvl 10 Vigor Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc9 Lvl 10 Vitalität Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc9 Nv. 10 Vigor Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc9 Niv. 10 Vigueur Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc9 Liv 10 Vigore Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc9 레벨 10 활력 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc9 Poziom 10 Wigor Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc9 Уровень 10 Бодрость Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc9 等级 10 活力 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc9 等級 10 活力 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc9 Nvl 10 Vigor Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
+    // Thorns aura stone (an7) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an7"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc5 Lvl 30 Thorns Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc5 Lvl 30 Thorns Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc5 Lvl 30 Dornen Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc5 Nv. 30 Espinas Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc5 Niv. 30 Épines Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc5 Liv 30 Spine Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc5 레벨 30 가시 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc5 Poziom 30 Ciernie Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc5 Уровень 30 Шипы Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc5 等级 30 荆棘 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc5 等級 30 荊棘 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc5 Nvl 30 Espinas Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
+    // Conviction aura stone (an8) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an8"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc4 Lvl 21 Conviction Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc4 Lvl 21 Conviction Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc4 Lvl 21 Überzeugung Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc4 Nv. 21 Convicción Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc4 Niv. 21 Conviction Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc4 Liv 21 Convinzione Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc4 레벨 21 확신 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc4 Poziom 21 Przekonanie Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc4 Уровень 21 Убеждённость Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc4 等级 21 信念 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc4 等級 21 信念 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc4 Nvl 21 Convicción Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
+    // Meditation aura stone (an9) when stored or at a vendor: adds a name prefix with the aura's details and crafting note.
     {
       "itemCodes": ["an9"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "ÿc3 Lvl 15 Meditation Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n"
+      "namePrefix": {"enUS": "ÿc3 Lvl 15 Meditation Aura when equipped\nÿc0Cube with any Amulet and a chipped gem to forge:\n ÿc1Rare Crafting Material\n", "deDE": "ÿc3 Lvl 15 Meditation Aura wenn angelegt\nÿc0Würfel mit beliebigem Amulett und einem abgeschliffenen Edelstein zum Schmieden:\n ÿc1Seltenes Handwerksmaterial\n", "esES": "ÿc3 Nv. 15 Meditación Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n", "frFR": "ÿc3 Niv. 15 Méditation Aura lorsqu'équipé\nÿc0Cube avec n'importe quelle amulette et une gemme ébréchée pour forger :\n ÿc1Matériau d'artisanat rare\n", "itIT": "ÿc3 Liv 15 Meditazione Aura quando equipaggiato\nÿc0Cubo con qualsiasi amuleto e una gemma scheggiata da forgiare:\n ÿc1Materiale di artigianato raro\n", "koKR": "ÿc3 레벨 15 명상 오라 장착 시\nÿc0아무 아뮬렛과 조각난 보석을 큐브에 넣어 제련:\n ÿc1희귀 제작 소재\n", "plPL": "ÿc3 Poziom 15 Medytacja Aura po założeniu\nÿc0Kostka z dowolnym amuletem i odłamkiem klejnotu do wykucia:\n ÿc1Rzadki materiał rzemieślniczy\n", "ruRU": "ÿc3 Уровень 15 Медитация Аура при экипировке\nÿc0Куб с любым амулетом и отколотым камнем для ковки:\n ÿc1Редкий материал для крафта\n", "zhCN": "ÿc3 等级 15 冥想 光环 装备时\nÿc0将任意护身符与碎裂宝石放入方块进行锻造：\n ÿc1稀有制作材料\n", "zhTW": "ÿc3 等級 15 冥想 光環 裝備時\nÿc0將任意護身符與碎裂寶石放入方塊進行鍛造：\n ÿc1稀有製作材料\n", "esMX": "ÿc3 Nvl 15 Meditación Aura al equipar\nÿc0Cubo con cualquier amuleto y una gema astillada para forjar:\n ÿc1Material de fabricación raro\n"}
     },
 
     // Unique and set labels
+    // Normal-tier unique armor and weapons (baseTier 0), levels 1-2: uses the UniqueLabel style (gold border, goldstar icon). Label only.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -826,6 +938,7 @@
       "activeInLevels": [1, 2],
       "useStyle": "UniqueLabel"
     },
+    // Exceptional-tier unique armor and weapons (baseTier 1), levels 1-2: uses the UniqueLabel style. Label only.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -841,6 +954,7 @@
       "activeInLevels": [1, 2],
       "useStyle": "UniqueLabel"
     },
+    // Elite-tier unique armor and weapons (baseTier 2), levels 1-3: uses the UniqueLabel style. Label only.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -856,6 +970,7 @@
       "activeInLevels": [1, 2, 3],
       "useStyle": "UniqueLabel"
     },
+    // Uniques from rings, amulets, class jewellery and charms: chat line, other.mp3 sound, red border, goldstar icon.
     {
       "itemCodes": ["rin", "amu", "zrn", "srn", "nrn", "prn", "brg", "drn", "arn", "zam", "sam", "nam", "pam", "bam", "dam", "aam","wam", "wrn"],
       "quality": "unique",
@@ -864,7 +979,9 @@
       "labelBorder": {"color": [255, 0, 0, 255], "width": 1},
       "icon": {"iconName": "goldstar", "iconSize": 40}
     },
+    // Uniques from the aq*/cq* codes: chat line and the UniqueLabel style.
     {"itemCodes": ["aq2", "cq2", "aqv", "cqv", "cq0", "aq0"], "quality": "unique", "chatMessage": "ÿc0 ** ÿc4{name} ÿc0**", "useStyle": "UniqueLabel"},
+    // Uniques from charms, jewels and z99: chat line, charm icon, Jackpot style.
     {
       "itemCodes": ["cm1", "cm2", "cm3", "jew", "cm4", "mjw", "z99"],
       "quality": "unique",
@@ -872,9 +989,13 @@
       "icon": {"iconName": "charm", "iconSize": 35},
       "useStyle": "Jackpot"
     },
+    // Normal-tier set items (baseTier 0), levels 1-2: uses the SetLabel style (green border, star icon).
     {"quality": "set", "baseTier": 0, "activeInLevels": [1, 2], "useStyle": "SetLabel"},
+    // Exceptional-tier set items (baseTier 1), levels 1-2: uses the SetLabel style.
     {"quality": "set", "baseTier": 1, "activeInLevels": [1, 2], "useStyle": "SetLabel"},
+    // Elite-tier set items (baseTier 2), levels 1-3: uses the SetLabel style.
     {"quality": "set", "baseTier": 2, "activeInLevels": [1, 2, 3], "useStyle": "SetLabel"},
+    // All unique armor and weapons that are not mythical: adds a gold [baseTier] tag to the name. Label only, all levels.
     {
       "itemTypes": ["weap", "armo"],
       "excludeItemCodes": [
@@ -888,7 +1009,9 @@
       "quality": "unique",
       "replaceName": "ÿc5[{baseTier}]ÿc4{name}"
     },
+    // All set items: adds a green [baseTier] tag to the name. Label only, all levels.
     {"quality": "set", "replaceName": "ÿc5[{baseTier}]ÿc2{name}"},
+    // Superior mythical bases (m01-m39): dark teal background with black border. Label only.
     {
       "itemCodes": [
         "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12", "m13", "m14", "m15",
@@ -901,46 +1024,85 @@
     },
 
     // Mythical uniques
-    {"itemCodes": ["mrn"], "quality": "unique", "replaceName": "Marksmen Bow", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["au9"], "quality": "unique", "replaceName": "Amulet", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m01"], "quality": "unique", "replaceName": "Marksmen Bow", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m02"], "quality": "unique", "replaceName": "Odysseus Crossbow", "useStyle": "Mythical"},
-    {"itemCodes": ["m03"], "quality": "unique", "replaceName": "Titan's Maul", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m04"], "quality": "unique", "replaceName": "Demonic Wand", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m05"], "quality": "unique", "replaceName": "Soul Destroyer", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m06"], "quality": "unique", "replaceName": "Gemstoned Armor", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m07"], "quality": "unique", "replaceName": "Dimensional Shard", "useStyle": "Mythical"},
-    {"itemCodes": ["m08"], "quality": "unique", "replaceName": "Balanced Dagger", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m09"], "quality": "unique", "replaceName": "Magic Blade", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m10"], "quality": "unique", "replaceName": "Hemp Band", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m11"], "quality": "unique", "replaceName": "Arcane Staff", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m12"], "quality": "unique", "replaceName": "Seraphic Sceptre", "useStyle": "Mythical"},
-    {"itemCodes": ["m13"], "quality": "unique", "replaceName": "Scissors Suwayyah", "useStyle": "Mythical"},
-    {"itemCodes": ["m14"], "quality": "unique", "replaceName": "Ceremonial Dagger", "useStyle": "Mythical"},
-    {"itemCodes": ["m15"], "quality": "unique", "replaceName": "Dream Spirit", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m16"], "quality": "unique", "replaceName": "Rapier", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m17"], "quality": "unique", "replaceName": "Celestial Sceptre", "useStyle": "Mythical"},
-    {"itemCodes": ["m18"], "quality": "unique", "replaceName": "Death Blade", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["dd1"], "quality": "unique", "replaceName": "Death Blade", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m20"], "quality": "unique", "replaceName": "Diadem", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m21"], "quality": "unique", "replaceName": "Razor Axe", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m22"], "quality": "unique", "replaceName": "Hellfire Sword", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m29"], "quality": "unique", "replaceName": "Petrified Staff", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m30"], "quality": "unique", "replaceName": "Ancient Bow", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m31"], "quality": "unique", "replaceName": "Matriarchal Javelin", "useStyle": "Mythical"},
-    {"itemCodes": ["m32"], "quality": "unique", "replaceName": "Whale Hunter", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m33"], "quality": "unique", "replaceName": "Ancient Shards", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m34"], "quality": "unique", "replaceName": "Shillelagh", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m35"], "quality": "unique", "replaceName": "Celestial Sword", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m36"], "quality": "unique", "replaceName": "Mage Staff", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m37"], "quality": "unique", "replaceName": "Katana", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m38"], "quality": "unique", "replaceName": "Arreat's Hatchet", "useStyle": "Mythical"},
-    {"itemCodes": ["m39"], "quality": "unique", "replaceName": "Kagekiri", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["mam"], "quality": "unique", "replaceName": "Amulet", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m60"], "quality": "unique", "replaceName": "Light Plate", "namePrefix": "Mythical ", "useStyle": "Mythical"},
-    {"itemCodes": ["m61"], "quality": "unique", "replaceName": "Abyssal Blade", "namePrefix": "Mythical ", "useStyle": "Mythical"},
+    // Mythical label: Mythical Ring (mrn), with the Mythical style and name prefix.
+    {"itemCodes": ["mrn"], "quality": "unique", "replaceName": {"enUS": "Ring", "deDE": "Ring", "esES": "Anillo", "frFR": "Anneau", "itIT": "Anello", "koKR": "반지", "plPL": "Pierścień", "ruRU": "Кольцо", "zhCN": "戒指", "zhTW": "戒指", "esMX": "Anillo"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Amulet (au9), with the Mythical style and name prefix.
+    {"itemCodes": ["au9"], "quality": "unique", "replaceName": {"enUS": "Amulet", "deDE": "Amulett", "esES": "Amuleto", "frFR": "Amulette", "itIT": "Amuleto", "koKR": "아뮬렛", "plPL": "Amulet", "ruRU": "Амулет", "zhCN": "护身符", "zhTW": "護身符", "esMX": "Amuleto"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Marksmen Bow (m01), with the Mythical style and name prefix.
+    {"itemCodes": ["m01"], "quality": "unique", "replaceName": {"enUS": "Marksmen Bow", "deDE": "Schützenbogen", "esES": "Arco de Francotirador", "frFR": "Arc de tireur d'élite", "itIT": "Arco del Tiratore", "koKR": "명사수의 활", "plPL": "Łuk Strzelca", "ruRU": "Стрелковый лук", "zhCN": "神射手之弓", "zhTW": "神射手之弓", "esMX": "Arco de Francotirador"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Odysseus Crossbow (m02), with the Mythical style.
+    {"itemCodes": ["m02"], "quality": "unique", "replaceName": {"enUS": "Odysseus Crossbow", "deDE": "Odysseus-Armbrust", "esES": "Ballesta de Odiseo", "frFR": "Arbalète d'Ulysse", "itIT": "Balestra di Odisseo", "koKR": "오디세우스 석궁", "plPL": "Kusza Odyseusza", "ruRU": "Арбалет Одиссея", "zhCN": "奥德修斯十字弩", "zhTW": "奧德修斯十字弩", "esMX": "Ballesta de Odiseo"}, "useStyle": "Mythical"},
+    // Mythical label: Titan's Maul (m03), with the Mythical style and name prefix.
+    {"itemCodes": ["m03"], "quality": "unique", "replaceName": {"enUS": "Titan's Maul", "deDE": "Titanenhammer", "esES": "Mazo del Titán", "frFR": "Maillet du Titan", "itIT": "Maglio del Titano", "koKR": "타이탄의 망치", "plPL": "Młot Tytana", "ruRU": "Молот Титана", "zhCN": "泰坦之槌", "zhTW": "泰坦之槌", "esMX": "Mazo del Titán"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Demonic Wand (m04), with the Mythical style and name prefix.
+    {"itemCodes": ["m04"], "quality": "unique", "replaceName": {"enUS": "Demonic Wand", "deDE": "Dämonenstab", "esES": "Varita demoníaca", "frFR": "Baguette démoniaque", "itIT": "Bacchetta demoniaca", "koKR": "악마의 지팡이", "plPL": "Demoniczna różdżka", "ruRU": "Демонический жезл", "zhCN": "恶魔魔杖", "zhTW": "惡魔魔杖", "esMX": "Varita demoníaca"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Soul Destroyer (m05), with the Mythical style and name prefix.
+    {"itemCodes": ["m05"], "quality": "unique", "replaceName": {"enUS": "Soul Destroyer", "deDE": "Seelenzerstörer", "esES": "Destructor de almas", "frFR": "Destructeur d'âmes", "itIT": "Distruttore di anime", "koKR": "영혼 파괴자", "plPL": "Niszczyciel dusz", "ruRU": "Разрушитель душ", "zhCN": "灵魂毁灭者", "zhTW": "靈魂毀滅者", "esMX": "Destructor de almas"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Gemstoned Armor (m06), with the Mythical style and name prefix.
+    {"itemCodes": ["m06"], "quality": "unique", "replaceName": {"enUS": "Gemstoned Armor", "deDE": "Edelsteinrüstung", "esES": "Armadura de gemas", "frFR": "Armure incrustée de gemmes", "itIT": "Armatura gemmata", "koKR": "보석 갑옷", "plPL": "Pancerz z klejnotami", "ruRU": "Броня с камнями", "zhCN": "宝石盔甲", "zhTW": "寶石盔甲", "esMX": "Armadura de gemas"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Dimensional Shard (m07), with the Mythical style.
+    {"itemCodes": ["m07"], "quality": "unique", "replaceName": {"enUS": "Dimensional Shard", "deDE": "Dimensionaler Splitter", "esES": "Fragmento dimensional", "frFR": "Éclat dimensionnel", "itIT": "Frammento dimensionale", "koKR": "차원의 파편", "plPL": "Odłamek wymiarów", "ruRU": "Осколок измерения", "zhCN": "次元碎片", "zhTW": "次元碎片", "esMX": "Fragmento dimensional"}, "useStyle": "Mythical"},
+    // Mythical label: Balanced Dagger (m08), with the Mythical style and name prefix.
+    {"itemCodes": ["m08"], "quality": "unique", "replaceName": {"enUS": "Balanced Dagger", "deDE": "Ausgewogener Dolch", "esES": "Daga equilibrada", "frFR": "Dague équilibrée", "itIT": "Pugnale bilanciato", "koKR": "균형 단검", "plPL": "Zrównoważony sztylet", "ruRU": "Сбалансированный кинжал", "zhCN": "平衡匕首", "zhTW": "平衡匕首", "esMX": "Daga equilibrada"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Magic Blade (m09), with the Mythical style and name prefix.
+    {"itemCodes": ["m09"], "quality": "unique", "replaceName": {"enUS": "Magic Blade", "deDE": "Magische Klinge", "esES": "Hoja mágica", "frFR": "Lame magique", "itIT": "Lama magica", "koKR": "마법 칼날", "plPL": "Magiczne ostrze", "ruRU": "Магический клинок", "zhCN": "魔法之刃", "zhTW": "魔法之刃", "esMX": "Hoja mágica"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Hemp Band (m10), with the Mythical style and name prefix.
+    {"itemCodes": ["m10"], "quality": "unique", "replaceName": {"enUS": "Hemp Band", "deDE": "Hanfband", "esES": "Banda de cáñamo", "frFR": "Bandeau de chanvre", "itIT": "Fascia di canapa", "koKR": "삼 띠", "plPL": "Konopna opaska", "ruRU": "Конопляная повязка", "zhCN": "麻绳腰带", "zhTW": "麻繩腰帶", "esMX": "Banda de cáñamo"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Arcane Staff (m11), with the Mythical style and name prefix.
+    {"itemCodes": ["m11"], "quality": "unique", "replaceName": {"enUS": "Arcane Staff", "deDE": "Arkaner Stab", "esES": "Bastón arcano", "frFR": "Bâton arcanique", "itIT": "Bastone arcano", "koKR": "비전 지팡이", "plPL": "Arkaniczna laska", "ruRU": "Тайный посох", "zhCN": "奥术法杖", "zhTW": "奧術法杖", "esMX": "Bastón arcano"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Seraphic Sceptre (m12), with the Mythical style.
+    {"itemCodes": ["m12"], "quality": "unique", "replaceName": {"enUS": "Seraphic Sceptre", "deDE": "Seraphisches Zepter", "esES": "Cetro serafico", "frFR": "Sceptre séraphique", "itIT": "Scettro serafico", "koKR": "세라핌 홀", "plPL": "Serafickie berło", "ruRU": "Серафимический скипетр", "zhCN": "炽天使权杖", "zhTW": "熾天使權杖", "esMX": "Cetro serafico"}, "useStyle": "Mythical"},
+    // Mythical label: Scissors Suwayyah (m13), with the Mythical style.
+    {"itemCodes": ["m13"], "quality": "unique", "replaceName": {"enUS": "Scissors Suwayyah", "deDE": "Scheren-Suwayyah", "esES": "Suwayyah de tijeras", "frFR": "Suwayyah ciseaux", "itIT": "Suwayyah a forbice", "koKR": "가위 수와야", "plPL": "Nożyce Suwayyah", "ruRU": "Суваийя-ножницы", "zhCN": "剪刀苏维亚", "zhTW": "剪刀蘇維亞", "esMX": "Suwayyah de tijeras"}, "useStyle": "Mythical"},
+    // Mythical label: Ceremonial Dagger (m14), with the Mythical style.
+    {"itemCodes": ["m14"], "quality": "unique", "replaceName": {"enUS": "Ceremonial Dagger", "deDE": "Zeremoniendolch", "esES": "Daga ceremonial", "frFR": "Dague cérémonielle", "itIT": "Pugnale cerimoniale", "koKR": "의식용 단검", "plPL": "Ceremonialny sztylet", "ruRU": "Церемониальный кинжал", "zhCN": "仪式匕首", "zhTW": "儀式匕首", "esMX": "Daga ceremonial"}, "useStyle": "Mythical"},
+    // Mythical label: Dream Spirit (m15), with the Mythical style and name prefix.
+    {"itemCodes": ["m15"], "quality": "unique", "replaceName": {"enUS": "Dream Spirit", "deDE": "Traumgeist", "esES": "Espíritu de sueño", "frFR": "Esprit du rêve", "itIT": "Spirito del sogno", "koKR": "꿈의 정령", "plPL": "Duch snu", "ruRU": "Дух мечты", "zhCN": "梦境之灵", "zhTW": "夢境之靈", "esMX": "Espíritu de sueño"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Rapier (m16), with the Mythical style and name prefix.
+    {"itemCodes": ["m16"], "quality": "unique", "replaceName": {"enUS": "Rapier", "deDE": "Rapier", "esES": "Estoque", "frFR": "Rapière", "itIT": "Fioretto", "koKR": "레이피어", "plPL": "Rapier", "ruRU": "Рапира", "zhCN": "刺剑", "zhTW": "刺劍", "esMX": "Estoque"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Celestial Sceptre (m17), with the Mythical style.
+    {"itemCodes": ["m17"], "quality": "unique", "replaceName": {"enUS": "Celestial Sceptre", "deDE": "Himmlisches Zepter", "esES": "Cetro celestial", "frFR": "Sceptre céleste", "itIT": "Scettro celeste", "koKR": "천상의 홀", "plPL": "Niebiańskie berło", "ruRU": "Небесный скипетр", "zhCN": "天界权杖", "zhTW": "天界權杖", "esMX": "Cetro celestial"}, "useStyle": "Mythical"},
+    // Mythical label: Death Blade (m18), with the Mythical style and name prefix.
+    {"itemCodes": ["m18"], "quality": "unique", "replaceName": {"enUS": "Death Blade", "deDE": "Todesklinge", "esES": "Hoja de Muerte", "frFR": "Lame de la Mort", "itIT": "Lama della Morte", "koKR": "죽음의 칼날", "plPL": "Ostrze Śmierci", "ruRU": "Клинок смерти", "zhCN": "死亡之刃", "zhTW": "死亡之刃", "esMX": "Hoja de Muerte"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Death Blade (dd1), with the Mythical style and name prefix.
+    {"itemCodes": ["dd1"], "quality": "unique", "replaceName": {"enUS": "Death Blade", "deDE": "Todesklinge", "esES": "Hoja de Muerte", "frFR": "Lame de la Mort", "itIT": "Lama della Morte", "koKR": "죽음의 칼날", "plPL": "Ostrze Śmierci", "ruRU": "Клинок смерти", "zhCN": "死亡之刃", "zhTW": "死亡之刃", "esMX": "Hoja de Muerte"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Diadem (m20), with the Mythical style and name prefix.
+    {"itemCodes": ["m20"], "quality": "unique", "replaceName": {"enUS": "Diadem", "deDE": "Diadem", "esES": "Diadema", "frFR": "Diadème", "itIT": "Diadema", "koKR": "왕관", "plPL": "Diadem", "ruRU": "Диадема", "zhCN": "头冠", "zhTW": "頭冠", "esMX": "Diadema"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Razor Axe (m21), with the Mythical style and name prefix.
+    {"itemCodes": ["m21"], "quality": "unique", "replaceName": {"enUS": "Razor Axe", "deDE": "Rasierklingenaxt", "esES": "Hacha afilada", "frFR": "Hache rasoir", "itIT": "Ascia affilata", "koKR": "면도날 도끼", "plPL": "Brzytwiasty topór", "ruRU": "Бритвенный топор", "zhCN": "剃刀斧", "zhTW": "剃刀斧", "esMX": "Hacha afilada"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Hellfire Sword (m22), with the Mythical style and name prefix.
+    {"itemCodes": ["m22"], "quality": "unique", "replaceName": {"enUS": "Hellfire Sword", "deDE": "Höllenfeuerschwert", "esES": "Espada de fuego infernal", "frFR": "Épée des feux infernaux", "itIT": "Spada del fuoco infernale", "koKR": "지옥불 검", "plPL": "Miecz piekielnego ognia", "ruRU": "Меч адского пламени", "zhCN": "地狱火之剑", "zhTW": "地獄火之劍", "esMX": "Espada de fuego infernal"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Petrified Staff (m29), with the Mythical style and name prefix.
+    {"itemCodes": ["m29"], "quality": "unique", "replaceName": {"enUS": "Petrified Staff", "deDE": "Versteinerter Stab", "esES": "Bastón petrificado", "frFR": "Bâton pétrifié", "itIT": "Bastone pietrificato", "koKR": "석화된 지팡이", "plPL": "Skamieniała laska", "ruRU": "Окаменевший посох", "zhCN": "石化法杖", "zhTW": "石化法杖", "esMX": "Bastón petrificado"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Ancient Bow (m30), with the Mythical style and name prefix.
+    {"itemCodes": ["m30"], "quality": "unique", "replaceName": {"enUS": "Ancient Bow", "deDE": "Alter Bogen", "esES": "Arco antiguo", "frFR": "Arc ancien", "itIT": "Arco antico", "koKR": "고대 활", "plPL": "Starożytny łuk", "ruRU": "Древний лук", "zhCN": "古代弓", "zhTW": "古代弓", "esMX": "Arco antiguo"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Matriarchal Javelin (m31), with the Mythical style.
+    {"itemCodes": ["m31"], "quality": "unique", "replaceName": {"enUS": "Matriarchal Javelin", "deDE": "Matriarchalischer Speer", "esES": "Jabalina matriarcal", "frFR": "Javelot matriarcal", "itIT": "Giavellotto matriarcale", "koKR": "모계 투창", "plPL": "Matriarchalna włócznia", "ruRU": "Матриархальный дротик", "zhCN": "女族长标枪", "zhTW": "女族長標槍", "esMX": "Jabalina matriarcal"}, "useStyle": "Mythical"},
+    // Mythical label: Whale Hunter (m32), with the Mythical style and name prefix.
+    {"itemCodes": ["m32"], "quality": "unique", "replaceName": {"enUS": "Whale Hunter", "deDE": "Walfänger", "esES": "Cazaballenas", "frFR": "Chasseur de baleines", "itIT": "Cacciatore di balene", "koKR": "고래 사냥꾼", "plPL": "Łowca wielorybów", "ruRU": "Китобой", "zhCN": "捕鲸者", "zhTW": "捕鯨者", "esMX": "Cazaballenas"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Ancient Shards (m33), with the Mythical style and name prefix.
+    {"itemCodes": ["m33"], "quality": "unique", "replaceName": {"enUS": "Ancient Shards", "deDE": "Uralte Splitter", "esES": "Fragmentos antiguos", "frFR": "Éclats anciens", "itIT": "Frammenti antichi", "koKR": "고대 파편", "plPL": "Starożytne odłamki", "ruRU": "Древние осколки", "zhCN": "古代碎片", "zhTW": "古代碎片", "esMX": "Fragmentos antiguos"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Shillelagh (m34), with the Mythical style and name prefix.
+    {"itemCodes": ["m34"], "quality": "unique", "replaceName": {"enUS": "Shillelagh", "deDE": "Shillelagh", "esES": "Shillelagh", "frFR": "Shillelagh", "itIT": "Shillelagh", "koKR": "실레일라", "plPL": "Shillelagh", "ruRU": "Шиллелах", "zhCN": "古橡灵杖", "zhTW": "古橡靈杖", "esMX": "Shillelagh"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Celestial Sword (m35), with the Mythical style and name prefix.
+    {"itemCodes": ["m35"], "quality": "unique", "replaceName": {"enUS": "Celestial Sword", "deDE": "Himmlisches Schwert", "esES": "Espada celestial", "frFR": "Épée céleste", "itIT": "Spada celeste", "koKR": "천상의 검", "plPL": "Niebiański miecz", "ruRU": "Небесный меч", "zhCN": "天界之剑", "zhTW": "天界之劍", "esMX": "Espada celestial"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Mage Staff (m36), with the Mythical style and name prefix.
+    {"itemCodes": ["m36"], "quality": "unique", "replaceName": {"enUS": "Mage Staff", "deDE": "Magierstab", "esES": "Bastón de mago", "frFR": "Bâton de mage", "itIT": "Bastone da mago", "koKR": "마법사의 지팡이", "plPL": "Laska maga", "ruRU": "Посох мага", "zhCN": "法师法杖", "zhTW": "法師法杖", "esMX": "Bastón de mago"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Katana (m37), with the Mythical style and name prefix.
+    {"itemCodes": ["m37"], "quality": "unique", "replaceName": {"enUS": "Katana", "deDE": "Katana", "esES": "Katana", "frFR": "Katana", "itIT": "Katana", "koKR": "카타나", "plPL": "Katana", "ruRU": "Катана", "zhCN": "武士刀", "zhTW": "武士刀", "esMX": "Katana"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Arreat's Hatchet (m38), with the Mythical style.
+    {"itemCodes": ["m38"], "quality": "unique", "replaceName": {"enUS": "Arreat's Hatchet", "deDE": "Arreats Beil", "esES": "Hacha de Arreat", "frFR": "Hachette d'Arreat", "itIT": "Ascia di Arreat", "koKR": "아리트의 손도끼", "plPL": "Topór Arreata", "ruRU": "Топорик Арреата", "zhCN": "亚瑞特之斧", "zhTW": "亞瑞特之斧", "esMX": "Hacha de Arreat"}, "useStyle": "Mythical"},
+    // Mythical label: Kagekiri (m39), with the Mythical style and name prefix.
+    {"itemCodes": ["m39"], "quality": "unique", "replaceName": {"enUS": "Kagekiri", "deDE": "Kagekiri", "esES": "Kagekiri", "frFR": "Kagekiri", "itIT": "Kagekiri", "koKR": "카게키리", "plPL": "Kagekiri", "ruRU": "Кагекири", "zhCN": "影切", "zhTW": "影切", "esMX": "Kagekiri"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Amulet (mam), with the Mythical style and name prefix.
+    {"itemCodes": ["mam"], "quality": "unique", "replaceName": {"enUS": "Amulet", "deDE": "Amulett", "esES": "Amuleto", "frFR": "Amulette", "itIT": "Amuleto", "koKR": "아뮬렛", "plPL": "Amulet", "ruRU": "Амулет", "zhCN": "护身符", "zhTW": "護身符", "esMX": "Amuleto"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Light Plate (m60), with the Mythical style and name prefix.
+    {"itemCodes": ["m60"], "quality": "unique", "replaceName": {"enUS": "Light Plate", "deDE": "Leichte Platte", "esES": "Armadura ligera", "frFR": "Armure légère", "itIT": "Armatura leggera", "koKR": "가벼운 판금", "plPL": "Lekka zbroja płytowa", "ruRU": "Лёгкие латы", "zhCN": "轻型板甲", "zhTW": "輕型板甲", "esMX": "Armadura ligera"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
+    // Mythical label: Abyssal Blade (m61), with the Mythical style and name prefix.
+    {"itemCodes": ["m61"], "quality": "unique", "replaceName": {"enUS": "Abyssal Blade", "deDE": "Abgrundklinge", "esES": "Hoja abisal", "frFR": "Lame abyssale", "itIT": "Lama abissale", "koKR": "심연의 칼날", "plPL": "Ostrze Otchłani", "ruRU": "Клинок бездны", "zhCN": "深渊之刃", "zhTW": "深淵之刃", "esMX": "Hoja abisal"}, "namePrefix": {"enUS": "Mythical ", "deDE": "Mythische ", "esES": "Mítico ", "frFR": "Mythique ", "itIT": "Mitico ", "koKR": "신화적인 ", "plPL": "Mityczny ", "ruRU": "Мифическое ", "zhCN": "神话", "zhTW": "神話", "esMX": "Mítico "}, "useStyle": "Mythical"},
 
     // Coupon and class jewellery labels
+    // Normal coupons: renames the label to Normal: with an orange border. Label only.
     {
       "itemCodes": [
         "01c", "02c", "03c", "04c", "05c", "06c", "07c", "08c", "09c", "10c", "11c", "12c", "13c", "14c", "15c",
@@ -953,9 +1115,10 @@
         "60f", "61f", "62f", "63f", "64f", "65f", "66f", "67f", "68f", "69f", "70f", "71f", "01i", "02i", "03i",
         "01j", "02j", "04j", "96j"
       ],
-      "replaceName": "ÿc5Norm:ÿc4{name}",
+      "replaceName": {"enUS": "ÿc5Norm:ÿc4{name}", "deDE": "ÿc5Normal:ÿc4{name}", "esES": "ÿc5Normal:ÿc4{name}", "frFR": "ÿc5Normal:ÿc4{name}", "itIT": "ÿc5Normale:ÿc4{name}", "koKR": "ÿc5보통:ÿc4{name}", "plPL": "ÿc5Normalny:ÿc4{name}", "ruRU": "ÿc5Обычная:ÿc4{name}", "zhCN": "ÿc5普通:ÿc4{name}", "zhTW": "ÿc5普通:ÿc4{name}", "esMX": "ÿc5Normal:ÿc4{name}"},
       "labelBorder": {"color": [255, 165, 0, 255], "width": 1}
     },
+    // Exceptional coupons: renames the label to Exceptional: with an orange border. Label only.
     {
       "itemCodes": [
         "01d", "02d", "03d", "04d", "05d", "06d", "07d", "08d", "09d", "10d", "11d", "12d", "13d", "14d", "15d", "16d",
@@ -969,9 +1132,10 @@
         "72g", "73g", "74g", "75g", "76g", "77g", "78g", "05i", "06i", "07i", "08i", "05j", "06j", "07j", "08j",
         "04i", "51d", "97j"
       ],
-      "replaceName": "ÿc5Exc:ÿc4{name}",
+      "replaceName": {"enUS": "ÿc5Exc:ÿc4{name}", "deDE": "ÿc5Außergewöhnlich:ÿc4{name}", "esES": "ÿc5Excepcional:ÿc4{name}", "frFR": "ÿc5Exceptionnel:ÿc4{name}", "itIT": "ÿc5Eccezionale:ÿc4{name}", "koKR": "ÿc5특급:ÿc4{name}", "plPL": "ÿc5Wyjątkowy:ÿc4{name}", "ruRU": "ÿc5Особые:ÿc4{name}", "zhCN": "ÿc5扩展级:ÿc4{name}", "zhTW": "ÿc5卓越:ÿc4{name}", "esMX": "ÿc5Excepcional:ÿc4{name}"},
       "labelBorder": {"color": [255, 165, 0, 255], "width": 1}
     },
+    // Elite coupons, levels 1-3: renames the label to Elite: with an orange border and plays other.mp3.
     {
       "itemCodes": [
         "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "15e", "16e","17e", "18e",
@@ -984,10 +1148,11 @@
         "13i", "42e", "43e", "44e", "45e", "46e", "47e", "63k", "64k", "98j"
       ],
       "activeInLevels": [1, 2, 3],
-      "replaceName": "ÿc5Elt:ÿc4{name}",
+      "replaceName": {"enUS": "ÿc5Elt:ÿc4{name}", "deDE": "ÿc5Elite:ÿc4{name}", "esES": "ÿc5Élite:ÿc4{name}", "frFR": "ÿc5Élite:ÿc4{name}", "itIT": "ÿc5Élite:ÿc4{name}", "koKR": "ÿc5정예:ÿc4{name}", "plPL": "ÿc5Elitarny:ÿc4{name}", "ruRU": "ÿc5Элитные:ÿc4{name}", "zhCN": "ÿc5精英:ÿc4{name}", "zhTW": "ÿc5精英:ÿc4{name}", "esMX": "ÿc5Élite:ÿc4{name}"},
       "sound": "other.mp3",
       "labelBorder": {"color": [255, 165, 0, 255], "width": 1}
     },
+    // Elite coupons, all levels: renames the label to Elite: with an orange border. Label only.
     {
       "itemCodes": [
         "01e", "02e", "04e", "05e", "07e", "08e", "09e", "10e", "11e", "12e", "13e", "15e", "16e","17e", "18e",
@@ -999,22 +1164,26 @@
         "56h", "57h", "58h", "59h", "60h", "61h", "62k", "09i", "10i", "11i", "12i", "09j", "10j", "11j", "12j",
         "13i", "42e", "43e", "44e", "45e", "46e", "47e", "63k", "64k", "98j"
       ],
-      "replaceName": "ÿc5Elt:ÿc4{name}",
+      "replaceName": {"enUS": "ÿc5Elt:ÿc4{name}", "deDE": "ÿc5Elite:ÿc4{name}", "esES": "ÿc5Élite:ÿc4{name}", "frFR": "ÿc5Élite:ÿc4{name}", "itIT": "ÿc5Élite:ÿc4{name}", "koKR": "ÿc5정예:ÿc4{name}", "plPL": "ÿc5Elitarny:ÿc4{name}", "ruRU": "ÿc5Элитные:ÿc4{name}", "zhCN": "ÿc5精英:ÿc4{name}", "zhTW": "ÿc5精英:ÿc4{name}", "esMX": "ÿc5Élite:ÿc4{name}"},
       "labelBorder": {"color": [255, 165, 0, 255], "width": 1}
     },
+    // High-tier unique coupons (03j, 46h, 41e, etc.): chat line, Valuable style, scroll icon.
     {
       "itemCodes": ["03j", "46h", "41e", "03e", "40e", "06e", "43e", "14e"],
-      "chatMessage": "ÿc1High Tier Unique Coupon: {name}",
+      "chatMessage": {"enUS": "ÿc1High Tier Unique Coupon: {name}", "deDE": "ÿc1Einzigartiger Gutschein hoher Stufe: {name}", "esES": "ÿc1Cupón único de alto nivel: {name}", "frFR": "ÿc1Coupon unique de haut niveau: {name}", "itIT": "ÿc1Coupon unico di alto livello: {name}", "koKR": "ÿc1고급 고유 쿠폰: {name}", "plPL": "ÿc1Wysoki Kupon Unikatowy: {name}", "ruRU": "ÿc1Купон высокого уровня Уникальный: {name}", "zhCN": "ÿc1高阶暗金兑换券: {name}", "zhTW": "ÿc1高階獨特優惠券: {name}", "esMX": "ÿc1Cupón único de alto nivel: {name}"},
       "useStyle": "Valuable",
       "icon": {"iconName": "scroll", "iconSize": 40}
     },
-    {"itemCodes": ["ci3"], "quality": "unique", "chatMessage": "ÿc8High Tier Unique: {name}", "useStyle": "Valuable", "icon": {"iconName": "goldstar", "iconSize": 50}},
+    // Unique ci3 items: chat line, Valuable style, goldstar icon.
+    {"itemCodes": ["ci3"], "quality": "unique", "chatMessage": {"enUS": "ÿc8High Tier Unique: {name}", "deDE": "ÿc8Einzigartig hoher Stufe: {name}", "esES": "ÿc8Único de alto nivel: {name}", "frFR": "ÿc8Unique haut niveau: {name}", "itIT": "ÿc8Unico di alto livello: {name}", "koKR": "ÿc8고급 고유: {name}", "plPL": "ÿc8Wysoki Unikat: {name}", "ruRU": "ÿc8Высокий уникальный: {name}", "zhCN": "ÿc8高阶暗金: {name}", "zhTW": "ÿc8高階獨特: {name}", "esMX": "ÿc8Único de alto nivel: {name}"}, "useStyle": "Valuable", "icon": {"iconName": "goldstar", "iconSize": 50}},
+    // Magic-quality class jewellery: chat line and a blue border.
     {
       "itemCodes": ["zrn", "srn", "nrn", "prn", "brg", "drn", "arn", "zam", "sam", "nam", "pam", "bam", "dam", "aam", "wam", "wrn"],
       "quality": "magic",
-      "chatMessage": "Class Jewellery: ÿc3{name}",
+      "chatMessage": {"enUS": "Class Jewellery: ÿc3{name}", "deDE": "Klassenschmuck: ÿc3{name}", "esES": "Joyería de clase: ÿc3{name}", "frFR": "Bijoux de classe: ÿc3{name}", "itIT": "Gioielli di classe: ÿc3{name}", "koKR": "직업 장신구: ÿc3{name}", "plPL": "Biżuteria klasowa: ÿc3{name}", "ruRU": "Классовые украшения: ÿc3{name}", "zhCN": "职业首饰: ÿc3{name}", "zhTW": "職業飾品: ÿc3{name}", "esMX": "Joyería de clase: ÿc3{name}"},
       "labelBorder": {"color": [0, 0, 255, 230], "width": 1}
     },
+    // Rare class jewellery: cyan border. Label only.
     {
       "itemCodes": ["zrn", "srn", "nrn", "prn", "brg", "drn", "arn", "zam", "sam", "nam", "pam", "bam", "dam", "aam", "wam", "wrn"],
       "quality": "rare",
@@ -1022,16 +1191,21 @@
     },
 
     // Pandemonium keys and organs, respec items
-    {"itemCodes": ["pk1", "pk2", "pk3"], "chatMessage": "ÿc1Pandemonium Key: {name}", "useStyle": "Uber", "icon": {"iconName": "gemp", "iconSize": 27}},
-    {"itemCodes": ["dhn", "bey", "mbr", "ht1", "ht2", "ht3"], "chatMessage": "ÿc1Pandemonium Organ: {name}", "useStyle": "Uber", "icon": {"iconName": "gemp", "iconSize": 27}},
-    {"itemCodes": ["toa", "tes", "ceh", "bet", "fed"], "chatMessage": "ÿc1Respec: {name}", "useStyle": "Uber", "icon": {"iconName": "gemp", "iconSize": 27}},
+    // Pandemonium keys (pk1-pk3): chat line, Uber style, gem icon.
+    {"itemCodes": ["pk1", "pk2", "pk3"], "chatMessage": {"enUS": "ÿc1Pandemonium Key: {name}", "deDE": "ÿc1Pandämonium-Schlüssel: {name}", "esES": "ÿc1Llave de Pandemonium: {name}", "frFR": "ÿc1Clé du Pandémonium: {name}", "itIT": "ÿc1Chiave del Pandemonium: {name}", "koKR": "ÿc1판데모니엄 열쇠: {name}", "plPL": "ÿc1Klucz Pandemonium: {name}", "ruRU": "ÿc1Ключ Пандемониума: {name}", "zhCN": "ÿc1混沌之钥: {name}", "zhTW": "ÿc1混沌之鑰: {name}", "esMX": "ÿc1Llave de Pandemonium: {name}"}, "useStyle": "Uber", "icon": {"iconName": "gemp", "iconSize": 27}},
+    // Pandemonium organs (dhn, bey, mbr, ht1-ht3): chat line, Uber style, gem icon.
+    {"itemCodes": ["dhn", "bey", "mbr", "ht1", "ht2", "ht3"], "chatMessage": {"enUS": "ÿc1Pandemonium Organ: {name}", "deDE": "ÿc1Pandämonium-Organ: {name}", "esES": "ÿc1Órgano de Pandemonium: {name}", "frFR": "ÿc1Organe du Pandémonium: {name}", "itIT": "ÿc1Organo del Pandemonium: {name}", "koKR": "ÿc1판데모니엄 장기: {name}", "plPL": "ÿc1Organ Pandemonium: {name}", "ruRU": "ÿc1Орган Пандемониума: {name}", "zhCN": "ÿc1混沌器官: {name}", "zhTW": "ÿc1混沌器官: {name}", "esMX": "ÿc1Órgano de Pandemonium: {name}"}, "useStyle": "Uber", "icon": {"iconName": "gemp", "iconSize": 27}},
+    // Respec items (toa, tes, ceh, bet, fed): chat line, Uber style, gem icon.
+    {"itemCodes": ["toa", "tes", "ceh", "bet", "fed"], "chatMessage": {"enUS": "ÿc1Respec: {name}", "deDE": "ÿc1Neuverteilung: {name}", "esES": "ÿc1Reasignación: {name}", "frFR": "ÿc1Réattribution: {name}", "itIT": "ÿc1Riassegnazione: {name}", "koKR": "ÿc1재분배: {name}", "plPL": "ÿc1Reset punktów: {name}", "ruRU": "ÿc1Перераспределение: {name}", "zhCN": "ÿc1重置: {name}", "zhTW": "ÿc1重置: {name}", "esMX": "ÿc1Reasignación: {name}"}, "useStyle": "Uber", "icon": {"iconName": "gemp", "iconSize": 27}},
 
     // Crafting reagent and perfect gem labels
+    // Crafting reagents (same codes as the chat rule at line 167): gold border and cube icon. Label only.
     {
       "itemCodes": ["qll", "hrt", "brz", "jaw", "eyz", "hrn", "tal", "flg", "fng", "sol", "scz", "spe", "zzz"],
       "labelBorder": {"color": [200, 150, 0, 255], "width": 1},
       "icon": {"iconName": "cube", "iconSize": 27}
     },
+    // Reagent gems (xl* and xt* codes): gold border and gem2 icon. Label only.
     {
       "itemCodes": [
         "xl0", "xl1", "xl2", "xl3", "xl4", "xl5", "xl6", "xl7", "xl8", "xl9", "xlx", "xly", "xt0", "xt1", "xt2",
@@ -1040,164 +1214,212 @@
       "labelBorder": {"color": [200, 150, 0, 255], "width": 1},
       "icon": {"iconName": "gem2", "iconSize": 27}
     },
-    {"itemCodes": ["gvb"], "replaceName": "ÿc;*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["gyb"], "replaceName": "ÿc9*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["gbb"], "replaceName": "ÿc3*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["ggb"], "replaceName": "ÿc2*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["grb"], "replaceName": "ÿc1*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["gwb"], "replaceName": "ÿc0*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["skb"], "replaceName": "ÿc5*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
-    {"itemCodes": ["gbk"], "replaceName": "ÿc6*P.Gem*", "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem gvb: renames to a purple gem label with a gold border and gem2 icon.
+    {"itemCodes": ["gvb"], "replaceName": {"enUS": "ÿc;*P.Gem*", "deDE": "ÿc;*Perf.-Edelstein*", "esES": "ÿc;*Gema perf.*", "frFR": "ÿc;*Gemme parf.*", "itIT": "ÿc;*Gemma perf.*", "koKR": "ÿc;*완벽한 보석*", "plPL": "ÿc;*Doskonały klejnot*", "ruRU": "ÿc;*Идеальный камень*", "zhCN": "ÿc;*完美宝石*", "zhTW": "ÿc;*完美寶石*", "esMX": "ÿc;*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem gyb: renames to a yellow P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["gyb"], "replaceName": {"enUS": "ÿc9*P.Gem*", "deDE": "ÿc9*Perf.-Edelstein*", "esES": "ÿc9*Gema perf.*", "frFR": "ÿc9*Gemme parf.*", "itIT": "ÿc9*Gemma perf.*", "koKR": "ÿc9*완벽한 보석*", "plPL": "ÿc9*Doskonały klejnot*", "ruRU": "ÿc9*Идеальный камень*", "zhCN": "ÿc9*完美宝石*", "zhTW": "ÿc9*完美寶石*", "esMX": "ÿc9*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem gbb: renames to a blue P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["gbb"], "replaceName": {"enUS": "ÿc3*P.Gem*", "deDE": "ÿc3*Perf.-Edelstein*", "esES": "ÿc3*Gema perf.*", "frFR": "ÿc3*Gemme parf.*", "itIT": "ÿc3*Gemma perf.*", "koKR": "ÿc3*완벽한 보석*", "plPL": "ÿc3*Doskonały klejnot*", "ruRU": "ÿc3*Идеальный камень*", "zhCN": "ÿc3*完美宝石*", "zhTW": "ÿc3*完美寶石*", "esMX": "ÿc3*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem ggb: renames to a green P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["ggb"], "replaceName": {"enUS": "ÿc2*P.Gem*", "deDE": "ÿc2*Perf.-Edelstein*", "esES": "ÿc2*Gema perf.*", "frFR": "ÿc2*Gemme parf.*", "itIT": "ÿc2*Gemma perf.*", "koKR": "ÿc2*완벽한 보석*", "plPL": "ÿc2*Doskonały klejnot*", "ruRU": "ÿc2*Идеальный камень*", "zhCN": "ÿc2*完美宝石*", "zhTW": "ÿc2*完美寶石*", "esMX": "ÿc2*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem grb: renames to a red P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["grb"], "replaceName": {"enUS": "ÿc1*P.Gem*", "deDE": "ÿc1*Perf.-Edelstein*", "esES": "ÿc1*Gema perf.*", "frFR": "ÿc1*Gemme parf.*", "itIT": "ÿc1*Gemma perf.*", "koKR": "ÿc1*완벽한 보석*", "plPL": "ÿc1*Doskonały klejnot*", "ruRU": "ÿc1*Идеальный камень*", "zhCN": "ÿc1*完美宝石*", "zhTW": "ÿc1*完美寶石*", "esMX": "ÿc1*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem gwb: renames to a white P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["gwb"], "replaceName": {"enUS": "ÿc0*P.Gem*", "deDE": "ÿc0*Perf.-Edelstein*", "esES": "ÿc0*Gema perf.*", "frFR": "ÿc0*Gemme parf.*", "itIT": "ÿc0*Gemma perf.*", "koKR": "ÿc0*완벽한 보석*", "plPL": "ÿc0*Doskonały klejnot*", "ruRU": "ÿc0*Идеальный камень*", "zhCN": "ÿc0*完美宝石*", "zhTW": "ÿc0*完美寶石*", "esMX": "ÿc0*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem skb: renames to a grey P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["skb"], "replaceName": {"enUS": "ÿc5*P.Gem*", "deDE": "ÿc5*Perf.-Edelstein*", "esES": "ÿc5*Gema perf.*", "frFR": "ÿc5*Gemme parf.*", "itIT": "ÿc5*Gemma perf.*", "koKR": "ÿc5*완벽한 보석*", "plPL": "ÿc5*Doskonały klejnot*", "ruRU": "ÿc5*Идеальный камень*", "zhCN": "ÿc5*完美宝石*", "zhTW": "ÿc5*完美寶石*", "esMX": "ÿc5*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
+    // Perfect gem gbk: renames to a gold P.Gem label with a gold border and gem2 icon.
+    {"itemCodes": ["gbk"], "replaceName": {"enUS": "ÿc6*P.Gem*", "deDE": "ÿc6*Perf.-Edelstein*", "esES": "ÿc6*Gema perf.*", "frFR": "ÿc6*Gemme parf.*", "itIT": "ÿc6*Gemma perf.*", "koKR": "ÿc6*완벽한 보석*", "plPL": "ÿc6*Doskonały klejnot*", "ruRU": "ÿc6*Идеальный камень*", "zhCN": "ÿc6*完美宝石*", "zhTW": "ÿc6*完美寶石*", "esMX": "ÿc6*Gema perf.*"}, "labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem2", "iconSize": 27}},
 
     // Runes
+    // Mal rune (23l, r73): renames the label, high-rune chat line, mid.mp3 sound, GoldPlate style, rune icon.
     {
       "itemCodes": ["23l", "r73"],
-      "replaceName": "ÿc6Mal Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Mal  ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc6Mal Rune", "deDE": "ÿc6Mal-Rune", "esES": "ÿc6Runa Mal", "frFR": "ÿc6Rune Mal", "itIT": "ÿc6Runa Mal", "koKR": "ÿc6Mal 룬", "plPL": "ÿc6Runa Mal", "ruRU": "ÿc6Руна Mal", "zhCN": "ÿc6Mal符文", "zhTW": "ÿc6Mal符文", "esMX": "ÿc6Runa Mal"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Mal  ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Mal  ÿc1*ÿc3*ÿc2*"},
       "sound": "mid.mp3",
       "useStyle": "GoldPlate",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Ist rune (24l, r74): renames the label, high-rune chat line, mid.mp3 sound, GoldPlate style, rune icon.
     {
       "itemCodes": ["24l", "r74"],
-      "replaceName": "ÿc6Ist Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Ist   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc6Ist Rune", "deDE": "ÿc6Ist-Rune", "esES": "ÿc6Runa Ist", "frFR": "ÿc6Rune Ist", "itIT": "ÿc6Runa Ist", "koKR": "ÿc6Ist 룬", "plPL": "ÿc6Runa Ist", "ruRU": "ÿc6Руна Ist", "zhCN": "ÿc6Ist符文", "zhTW": "ÿc6Ist符文", "esMX": "ÿc6Runa Ist"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Ist   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Ist   ÿc1*ÿc3*ÿc2*"},
       "sound": "mid.mp3",
       "useStyle": "GoldPlate",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Gul rune (25l, r75): renames the label, high-rune chat line, mid.mp3 sound, GoldPlate style, rune icon.
     {
       "itemCodes": ["25l", "r75"],
-      "replaceName": "ÿc6Gul Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Gul   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc6Gul Rune", "deDE": "ÿc6Gul-Rune", "esES": "ÿc6Runa Gul", "frFR": "ÿc6Rune Gul", "itIT": "ÿc6Runa Gul", "koKR": "ÿc6Gul 룬", "plPL": "ÿc6Runa Gul", "ruRU": "ÿc6Руна Gul", "zhCN": "ÿc6Gul符文", "zhTW": "ÿc6Gul符文", "esMX": "ÿc6Runa Gul"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Gul   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Gul   ÿc1*ÿc3*ÿc2*"},
       "sound": "mid.mp3",
       "useStyle": "GoldPlate",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Vex rune (26l, r76): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["26l", "r76"],
-      "replaceName": "ÿc1Vex Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Vex   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Vex Rune", "deDE": "ÿc1Vex-Rune", "esES": "ÿc1Runa Vex", "frFR": "ÿc1Rune Vex", "itIT": "ÿc1Runa Vex", "koKR": "ÿc1Vex 룬", "plPL": "ÿc1Runa Vex", "ruRU": "ÿc1Руна Vex", "zhCN": "ÿc1Vex符文", "zhTW": "ÿc1Vex符文", "esMX": "ÿc1Runa Vex"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Vex   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Vex   ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Ohm rune (27l, r77): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["27l", "r77"],
-      "replaceName": "ÿc1Ohm Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Ohm  ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Ohm Rune", "deDE": "ÿc1Ohm-Rune", "esES": "ÿc1Runa Ohm", "frFR": "ÿc1Rune Ohm", "itIT": "ÿc1Runa Ohm", "koKR": "ÿc1Ohm 룬", "plPL": "ÿc1Runa Ohm", "ruRU": "ÿc1Руна Ohm", "zhCN": "ÿc1Ohm符文", "zhTW": "ÿc1Ohm符文", "esMX": "ÿc1Runa Ohm"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Ohm  ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Ohm  ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Lo rune (28l, r78): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["28l", "r78"],
-      "replaceName": "ÿc1Lo Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Lo   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Lo Rune", "deDE": "ÿc1Lo-Rune", "esES": "ÿc1Runa Lo", "frFR": "ÿc1Rune Lo", "itIT": "ÿc1Runa Lo", "koKR": "ÿc1Lo 룬", "plPL": "ÿc1Runa Lo", "ruRU": "ÿc1Руна Lo", "zhCN": "ÿc1Lo符文", "zhTW": "ÿc1Lo符文", "esMX": "ÿc1Runa Lo"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Lo   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Lo   ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Sur rune (29l, r79): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["29l", "r79"],
-      "replaceName": "ÿc1Sur Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Sur   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Sur Rune", "deDE": "ÿc1Sur-Rune", "esES": "ÿc1Runa Sur", "frFR": "ÿc1Rune Sur", "itIT": "ÿc1Runa Sur", "koKR": "ÿc1Sur 룬", "plPL": "ÿc1Runa Sur", "ruRU": "ÿc1Руна Sur", "zhCN": "ÿc1Sur符文", "zhTW": "ÿc1Sur符文", "esMX": "ÿc1Runa Sur"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Sur   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Sur   ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Ber rune (30l, r80): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["30l", "r80"],
-      "replaceName": "ÿc1Ber Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Ber  ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Ber Rune", "deDE": "ÿc1Ber-Rune", "esES": "ÿc1Runa Ber", "frFR": "ÿc1Rune Ber", "itIT": "ÿc1Runa Ber", "koKR": "ÿc1Ber 룬", "plPL": "ÿc1Runa Ber", "ruRU": "ÿc1Руна Ber", "zhCN": "ÿc1Ber符文", "zhTW": "ÿc1Ber符文", "esMX": "ÿc1Runa Ber"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Ber  ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Ber  ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Jah rune (31l, r81): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["31l", "r81"],
-      "replaceName": "ÿc1Jah Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Jah   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Jah Rune", "deDE": "ÿc1Jah-Rune", "esES": "ÿc1Runa Jah", "frFR": "ÿc1Rune Jah", "itIT": "ÿc1Runa Jah", "koKR": "ÿc1Jah 룬", "plPL": "ÿc1Runa Jah", "ruRU": "ÿc1Руна Jah", "zhCN": "ÿc1Jah符文", "zhTW": "ÿc1Jah符文", "esMX": "ÿc1Runa Jah"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Jah   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Jah   ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Cham rune (32l, r82): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["32l", "r82"],
-      "replaceName": "ÿc1Cham Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Cham   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Cham Rune", "deDE": "ÿc1Cham-Rune", "esES": "ÿc1Runa Cham", "frFR": "ÿc1Rune Cham", "itIT": "ÿc1Runa Cham", "koKR": "ÿc1Cham 룬", "plPL": "ÿc1Runa Cham", "ruRU": "ÿc1Руна Cham", "zhCN": "ÿc1Cham符文", "zhTW": "ÿc1Cham符文", "esMX": "ÿc1Runa Cham"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Cham   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Cham   ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Zod rune (33l, r83): renames the label, high-rune chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["33l", "r83"],
-      "replaceName": "ÿc1Zod Rune",
-      "chatMessage": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Zod   ÿc1*ÿc3*ÿc2*",
+      "replaceName": {"enUS": "ÿc1Zod Rune", "deDE": "ÿc1Zod-Rune", "esES": "ÿc1Runa Zod", "frFR": "ÿc1Rune Zod", "itIT": "ÿc1Runa Zod", "koKR": "ÿc1Zod 룬", "plPL": "ÿc1Runa Zod", "ruRU": "ÿc1Руна Zod", "zhCN": "ÿc1Zod符文", "zhTW": "ÿc1Zod符文", "esMX": "ÿc1Runa Zod"},
+      "chatMessage": {"enUS": "ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "deDE": "ÿc1*ÿc3*ÿc2*   ÿc8Hohe Rune gefallen: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "esES": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "frFR": "ÿc1*ÿc3*ÿc2*   ÿc8Chute de Rune Haute: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "itIT": "ÿc1*ÿc3*ÿc2*   ÿc8Caduta Runa Alta: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "koKR": "ÿc1*ÿc3*ÿc2*   ÿc8고급 룬 드롭: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "plPL": "ÿc1*ÿc3*ÿc2*   ÿc8Upuszczona Wysoka Runa: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "ruRU": "ÿc1*ÿc3*ÿc2*   ÿc8Выпала Высокая руна: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "zhCN": "ÿc1*ÿc3*ÿc2*   ÿc8高级符文掉落: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "zhTW": "ÿc1*ÿc3*ÿc2*   ÿc8高級符文掉落: ÿc0Zod   ÿc1*ÿc3*ÿc2*", "esMX": "ÿc1*ÿc3*ÿc2*   ÿc8Caída de Runa Alta: ÿc0Zod   ÿc1*ÿc3*ÿc2*"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Gold runes r36-r42: chat line, black background, gold border, gold droplight and rune icon.
     {
       "itemCodes": ["r36", "r37", "r38", "r39", "r40", "r41", "r42"],
-      "chatMessage": "ÿc1Gold Rune Dropÿc4: {name}",
+      "chatMessage": {"enUS": "ÿc1Gold Rune Dropÿc4: {name}", "deDE": "ÿc1Goldrune-Dropÿc4: {name}", "esES": "ÿc1Caída de Runa Doradaÿc4: {name}", "frFR": "ÿc1Chute de Rune d'Orÿc4: {name}", "itIT": "ÿc1Caduta Runa d'Oroÿc4: {name}", "koKR": "ÿc1금색 룬 드롭ÿc4: {name}", "plPL": "ÿc1Upuszczona Złota Runaÿc4: {name}", "ruRU": "ÿc1Выпала Золотая рунаÿc4: {name}", "zhCN": "ÿc1金色符文掉落ÿc4: {name}", "zhTW": "ÿc1金色符文掉落ÿc4: {name}", "esMX": "ÿc1Caída de Runa Doradaÿc4: {name}"},
       "sound": "mid.mp3",
       "labelBackground": [0, 0, 0, 255],
       "labelBorder": {"color": [255, 215, 0, 255], "width": 1},
       "droplight": {"color": [255, 215, 0]},
       "icon": {"iconName": "rune", "iconSize": 50}
     },
-    {"itemCodes": ["r43"], "replaceName": "ÿc;Su Rune", "useStyle": "PurpleRune"},
-    {"itemCodes": ["r44"], "replaceName": "ÿc;He Rune", "useStyle": "PurpleRune"},
-    {"itemCodes": ["r45"], "replaceName": "ÿc;Nu Rune", "useStyle": "PurpleRune"},
-    {"itemCodes": ["r46"], "replaceName": "ÿc;Wo Rune", "useStyle": "PurpleRune"},
-    {"itemCodes": ["r50"], "replaceName": "ÿc;Null Rune", "useStyle": "PurpleRune"},
+    // Su rune (r43): renames the label and uses the PurpleRune style (chat line, tink.mp3, purple droplight, rune icon).
+    {"itemCodes": ["r43"], "replaceName": {"enUS": "ÿc;Su Rune", "deDE": "ÿc;Su-Rune", "esES": "ÿc;Runa Su", "frFR": "ÿc;Rune Su", "itIT": "ÿc;Runa Su", "koKR": "ÿc;Su 룬", "plPL": "ÿc;Runa Su", "ruRU": "ÿc;Руна Su", "zhCN": "ÿc;Su符文", "zhTW": "ÿc;Su符文", "esMX": "ÿc;Runa Su"}, "useStyle": "PurpleRune"},
+    // He rune (r44): renames the label and uses the PurpleRune style.
+    {"itemCodes": ["r44"], "replaceName": {"enUS": "ÿc;He Rune", "deDE": "ÿc;He-Rune", "esES": "ÿc;Runa He", "frFR": "ÿc;Rune He", "itIT": "ÿc;Runa He", "koKR": "ÿc;He 룬", "plPL": "ÿc;Runa He", "ruRU": "ÿc;Руна He", "zhCN": "ÿc;He符文", "zhTW": "ÿc;He符文", "esMX": "ÿc;Runa He"}, "useStyle": "PurpleRune"},
+    // Nu rune (r45): renames the label and uses the PurpleRune style.
+    {"itemCodes": ["r45"], "replaceName": {"enUS": "ÿc;Nu Rune", "deDE": "ÿc;Nu-Rune", "esES": "ÿc;Runa Nu", "frFR": "ÿc;Rune Nu", "itIT": "ÿc;Runa Nu", "koKR": "ÿc;Nu 룬", "plPL": "ÿc;Runa Nu", "ruRU": "ÿc;Руна Nu", "zhCN": "ÿc;Nu符文", "zhTW": "ÿc;Nu符文", "esMX": "ÿc;Runa Nu"}, "useStyle": "PurpleRune"},
+    // Wo rune (r46): renames the label and uses the PurpleRune style.
+    {"itemCodes": ["r46"], "replaceName": {"enUS": "ÿc;Wo Rune", "deDE": "ÿc;Wo-Rune", "esES": "ÿc;Runa Wo", "frFR": "ÿc;Rune Wo", "itIT": "ÿc;Runa Wo", "koKR": "ÿc;Wo 룬", "plPL": "ÿc;Runa Wo", "ruRU": "ÿc;Руна Wo", "zhCN": "ÿc;Wo符文", "zhTW": "ÿc;Wo符文", "esMX": "ÿc;Runa Wo"}, "useStyle": "PurpleRune"},
+    // Null rune (r50): renames the label and uses the PurpleRune style.
+    {"itemCodes": ["r50"], "replaceName": {"enUS": "ÿc;Null Rune", "deDE": "ÿc;Null-Rune", "esES": "ÿc;Runa Null", "frFR": "ÿc;Rune Null", "itIT": "ÿc;Runa Null", "koKR": "ÿc;Null 룬", "plPL": "ÿc;Runa Null", "ruRU": "ÿc;Руна Null", "zhCN": "ÿc;Null符文", "zhTW": "ÿc;Null符文", "esMX": "ÿc;Runa Null"}, "useStyle": "PurpleRune"},
+    // ESR runes r84-r97: chat line, Jackpot style, rune icon.
     {
       "itemCodes": ["r84", "r85", "r86", "r87", "r88", "r89", "r90", "r91", "r92", "r93", "r94", "r95", "r96", "r97"],
-      "chatMessage": "ÿc8ESR Rune: {name}",
+      "chatMessage": {"enUS": "ÿc8ESR Rune: {name}", "deDE": "ÿc8ESR-Rune: {name}", "esES": "ÿc8Runa ESR: {name}", "frFR": "ÿc8Rune ESR: {name}", "itIT": "ÿc8Runa ESR: {name}", "koKR": "ÿc8ESR 룬: {name}", "plPL": "ÿc8Runa ESR: {name}", "ruRU": "ÿc8Руна ESR: {name}", "zhCN": "ÿc8ESR符文: {name}", "zhTW": "ÿc8ESR符文: {name}", "esMX": "ÿc8Runa ESR: {name}"},
       "useStyle": "Jackpot",
       "icon": {"iconName": "rune", "iconSize": 50}
     },
+    // Null rune (r50) when stored or at a vendor: adds a name prefix listing the Gods, Heaven, Death and other rune recipes for crafting.
     {
       "itemCodes": ["r50"],
       "location": ["stored", "atVendor"],
-      "namePrefix": "\nGod Rune: ÿc3Frozen Soul ÿc1Enigmatic Cinnabar ÿc4Pulsing Opal ÿc5Shadow Quartz\nÿc8Heaven Rune: ÿc1Bleeding Stone ÿc3Dark Azurite ÿcABitter Peridot ÿc;Tainted Tourmalineÿc0\nÿc8Death Rune: ÿc5Shadow Quartzÿc0\nÿc8Life Rune: ÿc4Pulsing Opal\nÿc8Dragon Rune: Storm Amber\nWind Rune: ÿc;Tainted Tourmaline\nÿc8Thunder Rune: ÿc9Burning Sulphur\nÿc8Sun Rune: ÿc1Enigmatic Cinnabar\nÿc8Earth Rune: ÿcABitter Peridot\nÿc8Metal Rune: ÿc0Solid Mercury\nÿc8Wood Rune: ÿc2Tomb Jade\nÿc8Water Rune: ÿc3Dark Azurite\nÿc8Fire Rune: ÿc1Bleeding Stone\nÿc8Moon Rune: ÿc3Frozen Soul\nÿc0** Combine this rune with the below crystals to obtain Kanji Runes **ÿc;\n"
+      "namePrefix": {"enUS": "\nGod Rune: ÿc3Frozen Soul ÿc1Enigmatic Cinnabar ÿc4Pulsing Opal ÿc5Shadow Quartz\nÿc8Heaven Rune: ÿc1Bleeding Stone ÿc3Dark Azurite ÿcABitter Peridot ÿc;Tainted Tourmalineÿc0\nÿc8Death Rune: ÿc5Shadow Quartzÿc0\nÿc8Life Rune: ÿc4Pulsing Opal\nÿc8Dragon Rune: Storm Amber\nWind Rune: ÿc;Tainted Tourmaline\nÿc8Thunder Rune: ÿc9Burning Sulphur\nÿc8Sun Rune: ÿc1Enigmatic Cinnabar\nÿc8Earth Rune: ÿcABitter Peridot\nÿc8Metal Rune: ÿc0Solid Mercury\nÿc8Wood Rune: ÿc2Tomb Jade\nÿc8Water Rune: ÿc3Dark Azurite\nÿc8Fire Rune: ÿc1Bleeding Stone\nÿc8Moon Rune: ÿc3Frozen Soul\nÿc0** Combine this rune with the below crystals to obtain Kanji Runes **ÿc;\n", "deDE": "\nGott-Rune: ÿc3Gefrorene Seele ÿc1Rätselhafter Zinnober ÿc4Pulsierender Opal ÿc5Schattenquarz\nÿc8Himmel-Rune: ÿc1Blutender Stein ÿc3Dunkler Azurit ÿcABitterer Peridot ÿc;Befleckter Turmalinÿc0\nÿc8Tod-Rune: ÿc5Schattenquarzÿc0\nÿc8Leben-Rune: ÿc4Pulsierender Opal\nÿc8Drachen-Rune: Sturmbernstein\nWind-Rune: ÿc;Befleckter Turmalin\nÿc8Donner-Rune: ÿc9Brennender Schwefel\nÿc8Sonne-Rune: ÿc1Rätselhafter Zinnober\nÿc8Erde-Rune: ÿcABitterer Peridot\nÿc8Metall-Rune: ÿc0Festes Quecksilber\nÿc8Holz-Rune: ÿc2Grabjade\nÿc8Wasser-Rune: ÿc3Dunkler Azurit\nÿc8Feuer-Rune: ÿc1Blutender Stein\nÿc8Mond-Rune: ÿc3Gefrorene Seele\nÿc0** Kombiniere diese Rune mit den unten stehenden Kristallen, um Kanji-Runen zu erhalten **ÿc;\n", "esES": "\nRuna de Dios: ÿc3Alma congelada ÿc1Cinabrio enigmático ÿc4Ópalo palpitante ÿc5Cuarzo de sombra\nÿc8Runa de Cielo: ÿc1Piedra sangrante ÿc3Azurita oscura ÿcAPeridoto amargo ÿc;Turmalina contaminadaÿc0\nÿc8Runa de Muerte: ÿc5Cuarzo de sombraÿc0\nÿc8Runa de Vida: ÿc4Ópalo palpitante\nÿc8Runa de Dragón: Ámbar de tormenta\nRuna de Viento: ÿc;Turmalina contaminada\nÿc8Runa de Trueno: ÿc9Azufre ardiente\nÿc8Runa de Sol: ÿc1Cinabrio enigmático\nÿc8Runa de Tierra: ÿcAPeridoto amargo\nÿc8Runa de Metal: ÿc0Mercurio sólido\nÿc8Runa de Madera: ÿc2Jade de tumba\nÿc8Runa de Agua: ÿc3Azurita oscura\nÿc8Runa de Fuego: ÿc1Piedra sangrante\nÿc8Runa de Luna: ÿc3Alma congelada\nÿc0** Combina esta runa con los cristales de abajo para obtener runas Kanji **ÿc;\n", "frFR": "\nRune de Dieu: ÿc3Âme gelée ÿc1Cinabre énigmatique ÿc4Opale pulsante ÿc5Quartz d'ombre\nÿc8Rune de Ciel: ÿc1Pierre sanglante ÿc3Azurite sombre ÿcAPéridot amer ÿc;Tourmaline souilléeÿc0\nÿc8Rune de Mort: ÿc5Quartz d'ombreÿc0\nÿc8Rune de Vie: ÿc4Opale pulsante\nÿc8Rune de Dragon: Ambre de tempête\nRune de Vent: ÿc;Tourmaline souillée\nÿc8Rune de Tonnerre: ÿc9Soufre brûlant\nÿc8Rune de Soleil: ÿc1Cinabre énigmatique\nÿc8Rune de Terre: ÿcAPéridot amer\nÿc8Rune de Métal: ÿc0Mercure solide\nÿc8Rune de Bois: ÿc2Jade funéraire\nÿc8Rune de Eau: ÿc3Azurite sombre\nÿc8Rune de Feu: ÿc1Pierre sanglante\nÿc8Rune de Lune: ÿc3Âme gelée\nÿc0** Combinez cette rune avec les cristaux ci-dessous pour obtenir des runes Kanji **ÿc;\n", "itIT": "\nRuna di Dio: ÿc3Anima gelata ÿc1Cinabro enigmatico ÿc4Opale pulsante ÿc5Quarzo d'ombra\nÿc8Runa di Paradiso: ÿc1Pietra sanguinante ÿc3Azurite oscura ÿcAPeridoto amaro ÿc;Tormalina corrottaÿc0\nÿc8Runa di Morte: ÿc5Quarzo d'ombraÿc0\nÿc8Runa di Vita: ÿc4Opale pulsante\nÿc8Runa di Drago: Ambra della tempesta\nRuna di Vento: ÿc;Tormalina corrotta\nÿc8Runa di Tuono: ÿc9Zolfo ardente\nÿc8Runa di Sole: ÿc1Cinabro enigmatico\nÿc8Runa di Terra: ÿcAPeridoto amaro\nÿc8Runa di Metallo: ÿc0Mercurio solido\nÿc8Runa di Legno: ÿc2Giada tombale\nÿc8Runa di Acqua: ÿc3Azurite oscura\nÿc8Runa di Fuoco: ÿc1Pietra sanguinante\nÿc8Runa di Luna: ÿc3Anima gelata\nÿc0** Combina questa runa con i cristalli sottostanti per ottenere le Rune Kanji **ÿc;\n", "koKR": "\n신 룬: ÿc3얼어붙은 영혼 ÿc1신비한 진사 ÿc4맥동하는 오팔 ÿc5그림자 석영\nÿc8천국 룬: ÿc1피 흘리는 돌 ÿc3어두운 남동석 ÿcA쓴 감람석 ÿc;오염된 전기석ÿc0\nÿc8죽음 룬: ÿc5그림자 석영ÿc0\nÿc8생명 룬: ÿc4맥동하는 오팔\nÿc8드래곤 룬: 폭풍 호박\n바람 룬: ÿc;오염된 전기석\nÿc8천둥 룬: ÿc9타오르는 유황\nÿc8태양 룬: ÿc1신비한 진사\nÿc8대지 룬: ÿcA쓴 감람석\nÿc8금속 룬: ÿc0단단한 수은\nÿc8나무 룬: ÿc2무덤 옥\nÿc8물 룬: ÿc3어두운 남동석\nÿc8불 룬: ÿc1피 흘리는 돌\nÿc8달 룬: ÿc3얼어붙은 영혼\nÿc0** 이 룬을 아래 수정들과 합쳐 칸지 룬을 얻으세요 **ÿc;\n", "plPL": "\nRuna Boga: ÿc3Zamrożona dusza ÿc1Enigmatyczny cynobr ÿc4Pulsujący opal ÿc5Kwarc cienia\nÿc8Runa Nieba: ÿc1Krwawiący kamień ÿc3Mroczny azuryt ÿcAGorzki peryd ÿc;Skażony turmalinÿc0\nÿc8Runa Śmierci: ÿc5Kwarc cieniaÿc0\nÿc8Runa Życia: ÿc4Pulsujący opal\nÿc8Runa Smoka: Burzowy bursztyn\nRuna Wiatru: ÿc;Skażony turmalin\nÿc8Runa Gromu: ÿc9Płonąca siarka\nÿc8Runa Słońca: ÿc1Enigmatyczny cynobr\nÿc8Runa Ziemi: ÿcAGorzki peryd\nÿc8Runa Metalu: ÿc0Stały rtęć\nÿc8Runa Drewna: ÿc2Grobowy jadeit\nÿc8Runa Wody: ÿc3Mroczny azuryt\nÿc8Runa Ognia: ÿc1Krwawiący kamień\nÿc8Runa Księżyca: ÿc3Zamrożona dusza\nÿc0** Połącz tę runę z poniższymi kryształami, aby uzyskać Runy Kanji **ÿc;\n", "ruRU": "\nРуна Бога: ÿc3Замёрзшая душа ÿc1Загадочная киноварь ÿc4Пульсирующий опал ÿc5Теневой кварц\nÿc8Руна Небо: ÿc1Кровоточащий камень ÿc3Тёмный азурит ÿcAГорький перидот ÿc;Запятнанный турмалинÿc0\nÿc8Руна Смерти: ÿc5Теневой кварцÿc0\nÿc8Руна Жизни: ÿc4Пульсирующий опал\nÿc8Руна Дракона: Штормовой янтарь\nРуна Ветра: ÿc;Запятнанный турмалин\nÿc8Руна Грома: ÿc9Горящая сера\nÿc8Руна Солнца: ÿc1Загадочная киноварь\nÿc8Руна Земли: ÿcAГорький перидот\nÿc8Руна Металла: ÿc0Твёрдая ртуть\nÿc8Руна Дерева: ÿc2Гробовой нефрит\nÿc8Руна Воды: ÿc3Тёмный азурит\nÿc8Руна Огня: ÿc1Кровоточащий камень\nÿc8Руна Luny: ÿc3Замёрзшая душа\nÿc0** Объедините эту руну с кристаллами ниже, чтобы получить руны Канджи **ÿc;\n", "zhCN": "\n神符文: ÿc3冰冻之魂 ÿc1神秘朱砂 ÿc4脉动蛋白石 ÿc5暗影石英\nÿc8天堂符文: ÿc1血石 ÿc3暗蓝晶 ÿcA苦橄榄石 ÿc;污染碧玺ÿc0\nÿc8死亡符文: ÿc5暗影石英ÿc0\nÿc8生命符文: ÿc4脉动蛋白石\nÿc8龙符文: 风暴琥珀\n风符文: ÿc;污染碧玺\nÿc8雷符文: ÿc9燃硫\nÿc8太阳符文: ÿc1神秘朱砂\nÿc8大地符文: ÿcA苦橄榄石\nÿc8金属符文: ÿc0固态水银\nÿc8木符文: ÿc2墓穴翡翠\nÿc8水符文: ÿc3暗蓝晶\nÿc8火符文: ÿc1血石\nÿc8月符文: ÿc3冰冻之魂\nÿc0** 将此符文与下方水晶合成，即可获得汉字符文 **ÿc;\n", "zhTW": "\n神符文: ÿc3冰凍之魂 ÿc1神秘朱砂 ÿc4脈動蛋白石 ÿc5暗影石英\nÿc8天堂符文: ÿc1血石 ÿc3暗藍晶 ÿcA苦橄欖石 ÿc;污染碧璽ÿc0\nÿc8死亡符文: ÿc5暗影石英ÿc0\nÿc8生命符文: ÿc4脈動蛋白石\nÿc8龍符文: 風暴琥珀\n風符文: ÿc;污染碧璽\nÿc8雷符文: ÿc9燃硫\nÿc8太陽符文: ÿc1神秘朱砂\nÿc8大地符文: ÿcA苦橄欖石\nÿc8金屬符文: ÿc0固態水銀\nÿc8木符文: ÿc2墓穴翡翠\nÿc8水符文: ÿc3暗藍晶\nÿc8火符文: ÿc1血石\nÿc8月符文: ÿc3冰凍之魂\nÿc0** 將此符文與下方水晶合成，即可獲得漢字符文 **ÿc;\n", "esMX": "\nRuna de Dios: ÿc3Alma congelada ÿc1Cinabrio enigmático ÿc4Ópalo palpitante ÿc5Cuarzo de sombra\nÿc8Runa de Cielo: ÿc1Piedra sangrante ÿc3Azurita oscura ÿcAPeridoto amargo ÿc;Turmalina contaminadaÿc0\nÿc8Runa de Muerte: ÿc5Cuarzo de sombraÿc0\nÿc8Runa de Vida: ÿc4Ópalo palpitante\nÿc8Runa de Dragón: Ámbar de tormenta\nRuna de Viento: ÿc;Turmalina contaminada\nÿc8Runa de Trueno: ÿc9Azufre ardiente\nÿc8Runa de Sol: ÿc1Cinabrio enigmático\nÿc8Runa de Tierra: ÿcAPeridoto amargo\nÿc8Runa de Metal: ÿc0Mercurio sólido\nÿc8Runa de Madera: ÿc2Jade de tumba\nÿc8Runa de Agua: ÿc3Azurita oscura\nÿc8Runa de Fuego: ÿc1Piedra sangrante\nÿc8Runa de Luna: ÿc3Alma congelada\nÿc0** Combina esta runa con los cristales de abajo para obtener runas Kanji **ÿc;\n"}
     },
 
     // Maps
-    {"itemCodes": ["z01"], "replaceName": "Cellar of Pain (Tier 1)", "chatMessage": "Tier 1 Map: ÿc0Cellars of Pain", "useStyle": "MapTier1"},
-    {"itemCodes": ["z02"], "replaceName": "Chasm of Horrors (Tier 1)", "chatMessage": "Tier 1 Map: ÿc0Chasm of Horrors", "useStyle": "MapTier1"},
-    {"itemCodes": ["z03"], "replaceName": "Crypt Of Damnation (Tier 1)", "chatMessage": "Tier 1 Map: ÿc0Crypt of Damnation", "useStyle": "MapTier1"},
-    {"itemCodes": ["z04"], "replaceName": "Necropolis (Tier 1)", "chatMessage": "Tier 1 Map: ÿc0Necropolis", "useStyle": "MapTier1"},
-    {"itemCodes": ["z05"], "replaceName": "Ancient Tomb (Tier 2)", "chatMessage": "Tier 2 Map: ÿc0Ancient Tomb", "useStyle": "Map"},
-    {"itemCodes": ["z06"], "replaceName": "Chaos Rift (Tier 2)", "chatMessage": "Tier 2 Map: ÿc0Chaos Rift", "useStyle": "Map"},
-    {"itemCodes": ["z07"], "replaceName": "Infested Lair (Tier 2)", "chatMessage": "Tier 2 Map: ÿc0Infested Lair", "useStyle": "Map"},
+    // Tier 1 map z01: renames to Cellar of Pain and uses the MapTier1 style with a chat line.
+    {"itemCodes": ["z01"], "replaceName": {"enUS": "Cellar of Pain (Tier 1)", "deDE": "Kerker des Schmerzes (Stufe 1)", "esES": "Cámara del Dolor (Nivel 1)", "frFR": "Cave de la Douleur (Niveau 1)", "itIT": "Cantina del Dolore (Livello 1)", "koKR": "고통의 지하실 (티어 1)", "plPL": "Piwnica Bólu (Poziom 1)", "ruRU": "Подвал боли (Уровень 1)", "zhCN": "痛苦地窖 (第1阶)", "zhTW": "痛苦地窖 (第1階)", "esMX": "Cámara del Dolor (Nivel 1)"}, "chatMessage": {"enUS": "Tier 1 Map: ÿc0Cellars of Pain", "deDE": "Karte Stufe 1: ÿc0Kerker des Schmerzes", "esES": "Mapa nivel 1: ÿc0Cámara del Dolor", "frFR": "Carte niveau 1: ÿc0Cave de la Douleur", "itIT": "Mappa livello 1: ÿc0Cantina del Dolore", "koKR": "1단계 지도: ÿc0고통의 지하실", "plPL": "Mapa poziom 1: ÿc0Piwnica Bólu", "ruRU": "Карта уровня 1: ÿc0Подвал боли", "zhCN": "1级地图: ÿc0痛苦地窖", "zhTW": "1級地圖: ÿc0痛苦地窖", "esMX": "Mapa nivel 1: ÿc0Cámara del Dolor"}, "useStyle": "MapTier1"},
+    // Tier 1 map z02: renames to Chasm of Horrors and uses the MapTier1 style with a chat line.
+    {"itemCodes": ["z02"], "replaceName": {"enUS": "Chasm of Horrors (Tier 1)", "deDE": "Abgrund des Grauens (Stufe 1)", "esES": "Abismo de los Horrores (Nivel 1)", "frFR": "Gouffre des horreurs (Niveau 1)", "itIT": "Abisso degli orrori (Livello 1)", "koKR": "공포의 협곡 (티어 1)", "plPL": "Otchłań Horrorów (Poziom 1)", "ruRU": "Бездна ужаса (Уровень 1)", "zhCN": "恐惧深渊 (第1阶)", "zhTW": "恐懼深淵 (第1階)", "esMX": "Abismo de los Horrores (Nivel 1)"}, "chatMessage": {"enUS": "Tier 1 Map: ÿc0Chasm of Horrors", "deDE": "Karte Stufe 1: ÿc0Abgrund des Grauens", "esES": "Mapa nivel 1: ÿc0Abismo de los Horrores", "frFR": "Carte niveau 1: ÿc0Gouffre des horreurs", "itIT": "Mappa livello 1: ÿc0Abisso degli orrori", "koKR": "1단계 지도: ÿc0공포의 협곡", "plPL": "Mapa poziom 1: ÿc0Otchłań Horrorów", "ruRU": "Карта уровня 1: ÿc0Бездна ужаса", "zhCN": "1级地图: ÿc0恐惧深渊", "zhTW": "1級地圖: ÿc0恐懼深淵", "esMX": "Mapa nivel 1: ÿc0Abismo de los Horrores"}, "useStyle": "MapTier1"},
+    // Tier 1 map z03: renames to Crypt of Damnation and uses the MapTier1 style with a chat line.
+    {"itemCodes": ["z03"], "replaceName": {"enUS": "Crypt Of Damnation (Tier 1)", "deDE": "Gruft der Verdammnis (Stufe 1)", "esES": "Cripta de la Condenación (Nivel 1)", "frFR": "Crypte de la Damnation (Niveau 1)", "itIT": "Cripta della Dannazione (Livello 1)", "koKR": "저주받은 지하묘지 (티어 1)", "plPL": "Krypta Potępienia (Poziom 1)", "ruRU": "Склеп проклятия (Уровень 1)", "zhCN": "诅咒墓穴 (第1阶)", "zhTW": "詛咒墓穴 (第1階)", "esMX": "Cripta de la Condenación (Nivel 1)"}, "chatMessage": {"enUS": "Tier 1 Map: ÿc0Crypt of Damnation", "deDE": "Karte Stufe 1: ÿc0Gruft der Verdammnis", "esES": "Mapa nivel 1: ÿc0Cripta de la Condenación", "frFR": "Carte niveau 1: ÿc0Crypte de la Damnation", "itIT": "Mappa livello 1: ÿc0Cripta della Dannazione", "koKR": "1단계 지도: ÿc0저주받은 지하묘지", "plPL": "Mapa poziom 1: ÿc0Krypta Potępienia", "ruRU": "Карта уровня 1: ÿc0Склеп проклятия", "zhCN": "1级地图: ÿc0诅咒墓穴", "zhTW": "1級地圖: ÿc0詛咒墓穴", "esMX": "Mapa nivel 1: ÿc0Cripta de la Condenación"}, "useStyle": "MapTier1"},
+    // Tier 1 map z04: renames to Necropolis and uses the MapTier1 style with a chat line.
+    {"itemCodes": ["z04"], "replaceName": {"enUS": "Necropolis (Tier 1)", "deDE": "Nekropole (Stufe 1)", "esES": "Necrópolis (Nivel 1)", "frFR": "Nécropole (Niveau 1)", "itIT": "Necropoli (Livello 1)", "koKR": "네크로폴리스 (티어 1)", "plPL": "Nekropolia (Poziom 1)", "ruRU": "Некрополь (Уровень 1)", "zhCN": "死亡之城 (第1阶)", "zhTW": "死亡之城 (第1階)", "esMX": "Necrópolis (Nivel 1)"}, "chatMessage": {"enUS": "Tier 1 Map: ÿc0Necropolis", "deDE": "Karte Stufe 1: ÿc0Nekropole", "esES": "Mapa nivel 1: ÿc0Necrópolis", "frFR": "Carte niveau 1: ÿc0Nécropole", "itIT": "Mappa livello 1: ÿc0Necropoli", "koKR": "1단계 지도: ÿc0네크로폴리스", "plPL": "Mapa poziom 1: ÿc0Nekropolia", "ruRU": "Карта уровня 1: ÿc0Некрополь", "zhCN": "1级地图: ÿc0死亡之城", "zhTW": "1級地圖: ÿc0死亡之城", "esMX": "Mapa nivel 1: ÿc0Necrópolis"}, "useStyle": "MapTier1"},
+    // Tier 2 map z05: renames to Ancient Tomb and uses the Map style with a chat line.
+    {"itemCodes": ["z05"], "replaceName": {"enUS": "Ancient Tomb (Tier 2)", "deDE": "Antike Grabstätte (Stufe 2)", "esES": "Tumba antigua (Nivel 2)", "frFR": "Tombe antique (Niveau 2)", "itIT": "Tomba antica (Livello 2)", "koKR": "고대 무덤 (티어 2)", "plPL": "Starożytny grobowiec (Poziom 2)", "ruRU": "Древняя гробница (Уровень 2)", "zhCN": "古代陵墓 (第2阶)", "zhTW": "古代陵墓 (第2階)", "esMX": "Tumba antigua (Nivel 2)"}, "chatMessage": {"enUS": "Tier 2 Map: ÿc0Ancient Tomb", "deDE": "Karte Stufe 2: ÿc0Antike Grabstätte", "esES": "Mapa nivel 2: ÿc0Tumba antigua", "frFR": "Carte niveau 2: ÿc0Tombe antique", "itIT": "Mappa livello 2: ÿc0Tomba antica", "koKR": "2단계 지도: ÿc0고대 무덤", "plPL": "Mapa poziom 2: ÿc0Starożytny grobowiec", "ruRU": "Карта уровня 2: ÿc0Древняя гробница", "zhCN": "2级地图: ÿc0古代陵墓", "zhTW": "2級地圖: ÿc0古代陵墓", "esMX": "Mapa nivel 2: ÿc0Tumba antigua"}, "useStyle": "Map"},
+    // Tier 2 map z06: renames to Chaos Rift and uses the Map style with a chat line.
+    {"itemCodes": ["z06"], "replaceName": {"enUS": "Chaos Rift (Tier 2)", "deDE": "Chaosriss (Stufe 2)", "esES": "Grieta del Caos (Nivel 2)", "frFR": "Faille du Chaos (Niveau 2)", "itIT": "Squarcio del Caos (Livello 2)", "koKR": "혼돈의 균열 (티어 2)", "plPL": "Szczelina Chaosu (Poziom 2)", "ruRU": "Разлом Хаоса (Уровень 2)", "zhCN": "混沌裂隙 (第2阶)", "zhTW": "混沌裂隙 (第2階)", "esMX": "Grieta del Caos (Nivel 2)"}, "chatMessage": {"enUS": "Tier 2 Map: ÿc0Chaos Rift", "deDE": "Karte Stufe 2: ÿc0Chaosriss", "esES": "Mapa nivel 2: ÿc0Grieta del Caos", "frFR": "Carte niveau 2: ÿc0Faille du Chaos", "itIT": "Mappa livello 2: ÿc0Squarcio del Caos", "koKR": "2단계 지도: ÿc0혼돈의 균열", "plPL": "Mapa poziom 2: ÿc0Szczelina Chaosu", "ruRU": "Карта уровня 2: ÿc0Разлом Хаоса", "zhCN": "2级地图: ÿc0混沌裂隙", "zhTW": "2級地圖: ÿc0混沌裂隙", "esMX": "Mapa nivel 2: ÿc0Grieta del Caos"}, "useStyle": "Map"},
+    // Tier 2 map z07: renames to Infested Lair and uses the Map style with a chat line.
+    {"itemCodes": ["z07"], "replaceName": {"enUS": "Infested Lair (Tier 2)", "deDE": "Verseuchtes Versteck (Stufe 2)", "esES": "Guarida infestada (Nivel 2)", "frFR": "Repaire infesté (Niveau 2)", "itIT": "Covo infestato (Livello 2)", "koKR": "오염된 소굴 (티어 2)", "plPL": "Zarażone leże (Poziom 2)", "ruRU": "Заражённое логово (Уровень 2)", "zhCN": "感染巢穴 (第2阶)", "zhTW": "感染巢穴 (第2階)", "esMX": "Guarida infestada (Nivel 2)"}, "chatMessage": {"enUS": "Tier 2 Map: ÿc0Infested Lair", "deDE": "Karte Stufe 2: ÿc0Verseuchtes Versteck", "esES": "Mapa nivel 2: ÿc0Guarida infestada", "frFR": "Carte niveau 2: ÿc0Repaire infesté", "itIT": "Mappa livello 2: ÿc0Covo infestato", "koKR": "2단계 지도: ÿc0오염된 소굴", "plPL": "Mapa poziom 2: ÿc0Zarażone leże", "ruRU": "Карта уровня 2: ÿc0Заражённое логово", "zhCN": "2级地图: ÿc0感染巢穴", "zhTW": "2級地圖: ÿc0感染巢穴", "esMX": "Mapa nivel 2: ÿc0Guarida infestada"}, "useStyle": "Map"},
+    // Tier 2 map z08: renames to Labyrinth of Suffering and uses the Map style with a chat line.
     {
       "itemCodes": ["z08"],
-      "replaceName": "Labyrinth of Suffering (Tier 2)",
-      "chatMessage": "Tier 2 Map: ÿc0Labyrinth of Suffering",
+      "replaceName": {"enUS": "Labyrinth of Suffering (Tier 2)", "deDE": "Labyrinth des Leidens (Stufe 2)", "esES": "Laberinto del Sufrimiento (Nivel 2)", "frFR": "Labyrinthe de la souffrance (Niveau 2)", "itIT": "Labirinto della sofferenza (Livello 2)", "koKR": "고통의 미궁 (티어 2)", "plPL": "Labirynt Cierpienia (Poziom 2)", "ruRU": "Лабиринт страданий (Уровень 2)", "zhCN": "苦难迷宫 (第2阶)", "zhTW": "苦難迷宮 (第2階)", "esMX": "Laberinto del Sufrimiento (Nivel 2)"},
+      "chatMessage": {"enUS": "Tier 2 Map: ÿc0Labyrinth of Suffering", "deDE": "Karte Stufe 2: ÿc0Labyrinth des Leidens", "esES": "Mapa nivel 2: ÿc0Laberinto del Sufrimiento", "frFR": "Carte niveau 2: ÿc0Labyrinthe de la souffrance", "itIT": "Mappa livello 2: ÿc0Labirinto della sofferenza", "koKR": "2단계 지도: ÿc0고통의 미궁", "plPL": "Mapa poziom 2: ÿc0Labirynt Cierpienia", "ruRU": "Карта уровня 2: ÿc0Лабиринт страданий", "zhCN": "2级地图: ÿc0苦难迷宫", "zhTW": "2級地圖: ÿc0苦難迷宮", "esMX": "Mapa nivel 2: ÿc0Laberinto del Sufrimiento"},
       "useStyle": "Map"
     },
-    {"itemCodes": ["z09"], "replaceName": "Decaying Depths (Tier 3)", "chatMessage": "Tier 3 Map: ÿc0Decaying Depths", "useStyle": "Map"},
-    {"itemCodes": ["z10"], "replaceName": "Endless Abyss (Tier 3)", "chatMessage": "Tier 3 Map: ÿc0Endless Abyss", "useStyle": "Map"},
-    {"itemCodes": ["z11"], "replaceName": "Frozen Wastes (Tier 3)", "chatMessage": "Tier 3 Map: ÿc0Frozen Wastes", "useStyle": "Map"},
-    {"itemCodes": ["z12"], "replaceName": "Twisted Maze (Tier 3)", "chatMessage": "Tier 3 Map: ÿc0Twisted Maze", "useStyle": "Map"},
-    {"itemCodes": ["z13"], "replaceName": "Cursed Ossuary (Tier 4)", "chatMessage": "Tier 4 Map: ÿc0Cursed Ossuary", "useStyle": "Map"},
-    {"itemCodes": ["z14"], "replaceName": "Infernal Nexus (Tier 4)", "chatMessage": "Tier 4 Map: ÿc0Infernal Nexus", "useStyle": "Map"},
-    {"itemCodes": ["z15"], "replaceName": "Reliquary of Souls (Tier 4)", "chatMessage": "Tier 4 Map: ÿc0Reliquary of Souls", "useStyle": "Map"},
+    // Tier 3 map z09: renames to Decaying Depths and uses the Map style with a chat line.
+    {"itemCodes": ["z09"], "replaceName": {"enUS": "Decaying Depths (Tier 3)", "deDE": "Verfallene Tiefen (Stufe 3)", "esES": "Profundidades en decadencia (Nivel 3)", "frFR": "Profondeurs en décomposition (Niveau 3)", "itIT": "Profondità in decadenza (Livello 3)", "koKR": "썩어가는 심연 (티어 3)", "plPL": "Gnijące głębiny (Poziom 3)", "ruRU": "Гниющие глубины (Уровень 3)", "zhCN": "腐朽深渊 (第3阶)", "zhTW": "腐朽深淵 (第3階)", "esMX": "Profundidades en decadencia (Nivel 3)"}, "chatMessage": {"enUS": "Tier 3 Map: ÿc0Decaying Depths", "deDE": "Karte Stufe 3: ÿc0Verfallene Tiefen", "esES": "Mapa nivel 3: ÿc0Profundidades en decadencia", "frFR": "Carte niveau 3: ÿc0Profondeurs en décomposition", "itIT": "Mappa livello 3: ÿc0Profondità in decadenza", "koKR": "3단계 지도: ÿc0썩어가는 심연", "plPL": "Mapa poziom 3: ÿc0Gnijące głębiny", "ruRU": "Карта уровня 3: ÿc0Гниющие глубины", "zhCN": "3级地图: ÿc0腐朽深渊", "zhTW": "3級地圖: ÿc0腐朽深淵", "esMX": "Mapa nivel 3: ÿc0Profundidades en decadencia"}, "useStyle": "Map"},
+    // Tier 3 map z10: renames to Endless Abyss and uses the Map style with a chat line.
+    {"itemCodes": ["z10"], "replaceName": {"enUS": "Endless Abyss (Tier 3)", "deDE": "Endloser Abgrund (Stufe 3)", "esES": "Abismo sin fin (Nivel 3)", "frFR": "Abysse sans fin (Niveau 3)", "itIT": "Abisso infinito (Livello 3)", "koKR": "끝없는 심연 (티어 3)", "plPL": "Niekończąca się otchłań (Poziom 3)", "ruRU": "Бесконечная бездна (Уровень 3)", "zhCN": "无尽深渊 (第3阶)", "zhTW": "無盡深淵 (第3階)", "esMX": "Abismo sin fin (Nivel 3)"}, "chatMessage": {"enUS": "Tier 3 Map: ÿc0Endless Abyss", "deDE": "Karte Stufe 3: ÿc0Endloser Abgrund", "esES": "Mapa nivel 3: ÿc0Abismo sin fin", "frFR": "Carte niveau 3: ÿc0Abysse sans fin", "itIT": "Mappa livello 3: ÿc0Abisso infinito", "koKR": "3단계 지도: ÿc0끝없는 심연", "plPL": "Mapa poziom 3: ÿc0Niekończąca się otchłań", "ruRU": "Карта уровня 3: ÿc0Бесконечная бездна", "zhCN": "3级地图: ÿc0无尽深渊", "zhTW": "3級地圖: ÿc0無盡深淵", "esMX": "Mapa nivel 3: ÿc0Abismo sin fin"}, "useStyle": "Map"},
+    // Tier 3 map z11: renames to Frozen Wastes and uses the Map style with a chat line.
+    {"itemCodes": ["z11"], "replaceName": {"enUS": "Frozen Wastes (Tier 3)", "deDE": "Gefrorene Ödnis (Stufe 3)", "esES": "Yermos helados (Nivel 3)", "frFR": "Terres gelées (Niveau 3)", "itIT": "Terre gelate (Livello 3)", "koKR": "얼어붙은 황무지 (티어 3)", "plPL": "Zmrożone pustkowia (Poziom 3)", "ruRU": "Замёрзшие пустоши (Уровень 3)", "zhCN": "冰封荒原 (第3阶)", "zhTW": "冰封荒原 (第3階)", "esMX": "Yermos helados (Nivel 3)"}, "chatMessage": {"enUS": "Tier 3 Map: ÿc0Frozen Wastes", "deDE": "Karte Stufe 3: ÿc0Gefrorene Ödnis", "esES": "Mapa nivel 3: ÿc0Yermos helados", "frFR": "Carte niveau 3: ÿc0Terres gelées", "itIT": "Mappa livello 3: ÿc0Terre gelate", "koKR": "3단계 지도: ÿc0얼어붙은 황무지", "plPL": "Mapa poziom 3: ÿc0Zmrożone pustkowia", "ruRU": "Карта уровня 3: ÿc0Замёрзшие пустоши", "zhCN": "3级地图: ÿc0冰封荒原", "zhTW": "3級地圖: ÿc0冰封荒原", "esMX": "Mapa nivel 3: ÿc0Yermos helados"}, "useStyle": "Map"},
+    // Tier 3 map z12: renames to Twisted Maze and uses the Map style with a chat line.
+    {"itemCodes": ["z12"], "replaceName": {"enUS": "Twisted Maze (Tier 3)", "deDE": "Verdrehtes Labyrinth (Stufe 3)", "esES": "Laberinto retorcido (Nivel 3)", "frFR": "Labyrinthe tordu (Niveau 3)", "itIT": "Labirinto contorto (Livello 3)", "koKR": "뒤틀린 미로 (티어 3)", "plPL": "Skręcony labirynt (Poziom 3)", "ruRU": "Извилистый лабиринт (Уровень 3)", "zhCN": "扭曲迷宫 (第3阶)", "zhTW": "扭曲迷宮 (第3階)", "esMX": "Laberinto retorcido (Nivel 3)"}, "chatMessage": {"enUS": "Tier 3 Map: ÿc0Twisted Maze", "deDE": "Karte Stufe 3: ÿc0Verdrehtes Labyrinth", "esES": "Mapa nivel 3: ÿc0Laberinto retorcido", "frFR": "Carte niveau 3: ÿc0Labyrinthe tordu", "itIT": "Mappa livello 3: ÿc0Labirinto contorto", "koKR": "3단계 지도: ÿc0뒤틀린 미로", "plPL": "Mapa poziom 3: ÿc0Skręcony labirynt", "ruRU": "Карта уровня 3: ÿc0Извилистый лабиринт", "zhCN": "3级地图: ÿc0扭曲迷宫", "zhTW": "3級地圖: ÿc0扭曲迷宮", "esMX": "Mapa nivel 3: ÿc0Laberinto retorcido"}, "useStyle": "Map"},
+    // Tier 4 map z13: renames to Cursed Ossuary and uses the Map style with a chat line.
+    {"itemCodes": ["z13"], "replaceName": {"enUS": "Cursed Ossuary (Tier 4)", "deDE": "Verfluchtes Beinhaus (Stufe 4)", "esES": "Osario maldito (Nivel 4)", "frFR": "Ossuaire maudit (Niveau 4)", "itIT": "Ossario maledetto (Livello 4)", "koKR": "저주받은 납골당 (티어 4)", "plPL": "Przeklęta kostnica (Poziom 4)", "ruRU": "Проклятый склеп костей (Уровень 4)", "zhCN": "诅咒骨窟 (第4阶)", "zhTW": "詛咒骨窟 (第4階)", "esMX": "Osario maldito (Nivel 4)"}, "chatMessage": {"enUS": "Tier 4 Map: ÿc0Cursed Ossuary", "deDE": "Karte Stufe 4: ÿc0Verfluchtes Beinhaus", "esES": "Mapa nivel 4: ÿc0Osario maldito", "frFR": "Carte niveau 4: ÿc0Ossuaire maudit", "itIT": "Mappa livello 4: ÿc0Ossario maledetto", "koKR": "4단계 지도: ÿc0저주받은 납골당", "plPL": "Mapa poziom 4: ÿc0Przeklęta kostnica", "ruRU": "Карта уровня 4: ÿc0Проклятый склеп костей", "zhCN": "4级地图: ÿc0诅咒骨窟", "zhTW": "4級地圖: ÿc0詛咒骨窟", "esMX": "Mapa nivel 4: ÿc0Osario maldito"}, "useStyle": "Map"},
+    // Tier 4 map z14: renames to Infernal Nexus and uses the Map style with a chat line.
+    {"itemCodes": ["z14"], "replaceName": {"enUS": "Infernal Nexus (Tier 4)", "deDE": "Höllischer Knotenpunkt (Stufe 4)", "esES": "Nexo infernal (Nivel 4)", "frFR": "Nexus infernal (Niveau 4)", "itIT": "Nesso infernale (Livello 4)", "koKR": "지옥의 중심 (티어 4)", "plPL": "Piekielne nexus (Poziom 4)", "ruRU": "Адский узел (Уровень 4)", "zhCN": "地狱中枢 (第4阶)", "zhTW": "地獄中樞 (第4階)", "esMX": "Nexo infernal (Nivel 4)"}, "chatMessage": {"enUS": "Tier 4 Map: ÿc0Infernal Nexus", "deDE": "Karte Stufe 4: ÿc0Höllischer Knotenpunkt", "esES": "Mapa nivel 4: ÿc0Nexo infernal", "frFR": "Carte niveau 4: ÿc0Nexus infernal", "itIT": "Mappa livello 4: ÿc0Nesso infernale", "koKR": "4단계 지도: ÿc0지옥의 중심", "plPL": "Mapa poziom 4: ÿc0Piekielne nexus", "ruRU": "Карта уровня 4: ÿc0Адский узел", "zhCN": "4级地图: ÿc0地狱中枢", "zhTW": "4級地圖: ÿc0地獄中樞", "esMX": "Mapa nivel 4: ÿc0Nexo infernal"}, "useStyle": "Map"},
+    // Tier 4 map z15: renames to Reliquary of Souls and uses the Map style with a chat line.
+    {"itemCodes": ["z15"], "replaceName": {"enUS": "Reliquary of Souls (Tier 4)", "deDE": "Seelenreliquiar (Stufe 4)", "esES": "Relicario de almas (Nivel 4)", "frFR": "Reliquaire des âmes (Niveau 4)", "itIT": "Reliquiario delle anime (Livello 4)", "koKR": "영혼의 성유물함 (티어 4)", "plPL": "Relikwiarz dusz (Poziom 4)", "ruRU": "Реликварий душ (Уровень 4)", "zhCN": "灵魂圣骨匣 (第4阶)", "zhTW": "靈魂聖骨匣 (第4階)", "esMX": "Relicario de almas (Nivel 4)"}, "chatMessage": {"enUS": "Tier 4 Map: ÿc0Reliquary of Souls", "deDE": "Karte Stufe 4: ÿc0Seelenreliquiar", "esES": "Mapa nivel 4: ÿc0Relicario de almas", "frFR": "Carte niveau 4: ÿc0Reliquaire des âmes", "itIT": "Mappa livello 4: ÿc0Reliquiario delle anime", "koKR": "4단계 지도: ÿc0영혼의 성유물함", "plPL": "Mapa poziom 4: ÿc0Relikwiarz dusz", "ruRU": "Карта уровня 4: ÿc0Реликварий душ", "zhCN": "4级地图: ÿc0灵魂圣骨匣", "zhTW": "4級地圖: ÿc0靈魂聖骨匣", "esMX": "Mapa nivel 4: ÿc0Relicario de almas"}, "useStyle": "Map"},
+    // Tier 4 map z16: renames to Shrine of Destruction and uses the Map style with a chat line.
     {
       "itemCodes": ["z16"],
-      "replaceName": "ÿc0Shrine of Destruction (Tier 4)",
-      "chatMessage": "Tier 4 Map: ÿc0Shrine of Destruction",
+      "replaceName": {"enUS": "ÿc0Shrine of Destruction (Tier 4)", "deDE": "ÿc0Schrein der Zerstörung (Stufe 4)", "esES": "ÿc0Santuario de la destrucción (Nivel 4)", "frFR": "ÿc0Sanctuaire de la destruction (Niveau 4)", "itIT": "ÿc0Santuario della distruzione (Livello 4)", "koKR": "ÿc0파괴의 성소 (티어 4)", "plPL": "ÿc0Sanktuarium Zniszczenia (Poziom 4)", "ruRU": "ÿc0Святилище разрушения (Уровень 4)", "zhCN": "ÿc0毁灭圣殿 (第4阶)", "zhTW": "ÿc0毀滅聖殿 (第4階)", "esMX": "ÿc0Santuario de la destrucción (Nivel 4)"},
+      "chatMessage": {"enUS": "Tier 4 Map: ÿc0Shrine of Destruction", "deDE": "Karte Stufe 4: ÿc0Schrein der Zerstörung", "esES": "Mapa nivel 4: ÿc0Santuario de la destrucción", "frFR": "Carte niveau 4: ÿc0Sanctuaire de la destruction", "itIT": "Mappa livello 4: ÿc0Santuario della distruzione", "koKR": "4단계 지도: ÿc0파괴의 성소", "plPL": "Mapa poziom 4: ÿc0Sanktuarium Zniszczenia", "ruRU": "Карта уровня 4: ÿc0Святилище разрушения", "zhCN": "4级地图: ÿc0毁灭圣殿", "zhTW": "4級地圖: ÿc0毀滅聖殿", "esMX": "Mapa nivel 4: ÿc0Santuario de la destrucción"},
       "useStyle": "Map"
     },
-    {"itemCodes": ["z17"], "replaceName": "ÿc6Eye of the Storm", "chatMessage": "Tier 5 Map: ÿc0Eye of the Storm", "useStyle": "MapTier5"},
-    {"itemCodes": ["z18"], "replaceName": "ÿc6Ice Crown Citadel", "chatMessage": "Tier 5 Map: ÿc0Ice Crown Citadel", "useStyle": "MapTier5"},
+    // Tier 5 map z17: renames to Eye of the Storm and uses the MapTier5 style with a chat line.
+    {"itemCodes": ["z17"], "replaceName": {"enUS": "ÿc6Eye of the Storm", "deDE": "ÿc6Auge des Sturms", "esES": "ÿc6Ojo de la tormenta", "frFR": "ÿc6Œil de la tempête", "itIT": "ÿc6Occhio della tempesta", "koKR": "ÿc6폭풍의 눈", "plPL": "ÿc6Oko Burzy", "ruRU": "ÿc6Око бури", "zhCN": "ÿc6风暴之眼", "zhTW": "ÿc6風暴之眼", "esMX": "ÿc6Ojo de la tormenta"}, "chatMessage": {"enUS": "Tier 5 Map: ÿc0Eye of the Storm", "deDE": "Karte Stufe 5: ÿc0Auge des Sturms", "esES": "Mapa nivel 5: ÿc0Ojo de la tormenta", "frFR": "Carte niveau 5: ÿc0Œil de la tempête", "itIT": "Mappa livello 5: ÿc0Occhio della tempesta", "koKR": "5단계 지도: ÿc0폭풍의 눈", "plPL": "Mapa poziom 5: ÿc0Oko Burzy", "ruRU": "Карта уровня 5: ÿc0Око бури", "zhCN": "5级地图: ÿc0风暴之眼", "zhTW": "5級地圖: ÿc0風暴之眼", "esMX": "Mapa nivel 5: ÿc0Ojo de la tormenta"}, "useStyle": "MapTier5"},
+    // Tier 5 map z18: renames to Ice Crown Citadel and uses the MapTier5 style with a chat line.
+    {"itemCodes": ["z18"], "replaceName": {"enUS": "ÿc6Ice Crown Citadel", "deDE": "ÿc6Eiskronenzitadelle", "esES": "ÿc6Ciudadela de la Corona de Hielo", "frFR": "ÿc6Citadelle de la Couronne de glace", "itIT": "ÿc6Cittadella della Corona di ghiaccio", "koKR": "ÿc6얼음 왕관 성채", "plPL": "ÿc6Cytadela Lodowej Korony", "ruRU": "ÿc6Цитадель Ледяной короны", "zhCN": "ÿc6寒冰皇冠城堡", "zhTW": "ÿc6寒冰皇冠城堡", "esMX": "ÿc6Ciudadela de la Corona de Hielo"}, "chatMessage": {"enUS": "Tier 5 Map: ÿc0Ice Crown Citadel", "deDE": "Karte Stufe 5: ÿc0Eiskronenzitadelle", "esES": "Mapa nivel 5: ÿc0Ciudadela de la Corona de Hielo", "frFR": "Carte niveau 5: ÿc0Citadelle de la Couronne de glace", "itIT": "Mappa livello 5: ÿc0Cittadella della Corona di ghiaccio", "koKR": "5단계 지도: ÿc0얼음 왕관 성채", "plPL": "Mapa poziom 5: ÿc0Cytadela Lodowej Korony", "ruRU": "Карта уровня 5: ÿc0Цитадель Ледяной короны", "zhCN": "5级地图: ÿc0寒冰皇冠城堡", "zhTW": "5級地圖: ÿc0寒冰皇冠城堡", "esMX": "Mapa nivel 5: ÿc0Ciudadela de la Corona de Hielo"}, "useStyle": "MapTier5"},
+    // Tier 5 map z19: renames to The Sanctum of the Dead and uses the MapTier5 style with a chat line.
     {
       "itemCodes": ["z19"],
-      "replaceName": "ÿc6The Sanctum of the Dead",
-      "chatMessage": "Tier 5 Map: ÿc0The Sanctum of the Dead",
+      "replaceName": {"enUS": "ÿc6The Sanctum of the Dead", "deDE": "ÿc6Heiligtum der Toten", "esES": "ÿc6Santuario de los muertos", "frFR": "ÿc6Sanctuaire des morts", "itIT": "ÿc6Santuario dei morti", "koKR": "ÿc6죽은 자의 성소", "plPL": "ÿc6Sanktuarium Umarłych", "ruRU": "ÿc6Святилище мёртвых", "zhCN": "ÿc6亡者圣所", "zhTW": "ÿc6亡者聖所", "esMX": "ÿc6Santuario de los muertos"},
+      "chatMessage": {"enUS": "Tier 5 Map: ÿc0The Sanctum of the Dead", "deDE": "Karte Stufe 5: ÿc0Heiligtum der Toten", "esES": "Mapa nivel 5: ÿc0Santuario de los muertos", "frFR": "Carte niveau 5: ÿc0Sanctuaire des morts", "itIT": "Mappa livello 5: ÿc0Santuario dei morti", "koKR": "5단계 지도: ÿc0죽은 자의 성소", "plPL": "Mapa poziom 5: ÿc0Sanktuarium Umarłych", "ruRU": "Карта уровня 5: ÿc0Святилище мёртвых", "zhCN": "5级地图: ÿc0亡者圣所", "zhTW": "5級地圖: ÿc0亡者聖所", "esMX": "Mapa nivel 5: ÿc0Santuario de los muertos"},
       "useStyle": "MapTier5"
     },
+    // Tier 5 map z20: renames to The Reliquary of False Light and uses the MapTier5 style with a chat line.
     {
       "itemCodes": ["z20"],
-      "replaceName": "ÿc6The Reliquary of False Light",
-      "chatMessage": "Tier 5 Map: ÿc0The Reliquary of False Light",
+      "replaceName": {"enUS": "ÿc6The Reliquary of False Light", "deDE": "ÿc6Reliquiar des falschen Lichts", "esES": "ÿc6Relicario de la luz falsa", "frFR": "ÿc6Reliquaire de la fausse lumière", "itIT": "ÿc6Reliquiario della falsa luce", "koKR": "ÿc6거짓 빛의 성유물함", "plPL": "ÿc6Relikwiarz Fałszywego Światła", "ruRU": "ÿc6Реликварий ложного света", "zhCN": "ÿc6虚光圣骨匣", "zhTW": "ÿc6虛光聖骨匣", "esMX": "ÿc6Relicario de la luz falsa"},
+      "chatMessage": {"enUS": "Tier 5 Map: ÿc0The Reliquary of False Light", "deDE": "Karte Stufe 5: ÿc0Reliquiar des falschen Lichts", "esES": "Mapa nivel 5: ÿc0Relicario de la luz falsa", "frFR": "Carte niveau 5: ÿc0Reliquaire de la fausse lumière", "itIT": "Mappa livello 5: ÿc0Reliquiario della falsa luce", "koKR": "5단계 지도: ÿc0거짓 빛의 성유물함", "plPL": "Mapa poziom 5: ÿc0Relikwiarz Fałszywego Światła", "ruRU": "Карта уровня 5: ÿc0Реликварий ложного света", "zhCN": "5级地图: ÿc0虚光圣骨匣", "zhTW": "5級地圖: ÿc0虛光聖骨匣", "esMX": "Mapa nivel 5: ÿc0Relicario de la luz falsa"},
       "useStyle": "MapTier5"
     },
-    {"itemCodes": ["z99"], "replaceName": "ÿc6The Hidden Vault", "chatMessage": "Unique Map: ÿc0The Hidden Vault", "useStyle": "MapTier5"}
+    // The Hidden Vault unique map (z99): renames the label and uses the MapTier5 style with a chat line.
+    {"itemCodes": ["z99"], "replaceName": {"enUS": "ÿc6The Hidden Vault", "deDE": "ÿc6Die verborgene Schatzkammer", "esES": "ÿc6La cámara oculta", "frFR": "ÿc6Le caveau caché", "itIT": "ÿc6Il caveau nascosto", "koKR": "ÿc6숨겨진 금고", "plPL": "ÿc6Ukryty skarbiec", "ruRU": "ÿc6Скрытое хранилище", "zhCN": "ÿc6隐藏宝库", "zhTW": "ÿc6隱藏寶庫", "esMX": "ÿc6La cámara oculta"}, "chatMessage": {"enUS": "Unique Map: ÿc0The Hidden Vault", "deDE": "Einzigartige Karte: ÿc0Die verborgene Schatzkammer", "esES": "Mapa única: ÿc0La cámara oculta", "frFR": "Carte unique: ÿc0Le caveau caché", "itIT": "Mappa unica: ÿc0Il caveau nascosto", "koKR": "고유 지도: ÿc0숨겨진 금고", "plPL": "Unikatowa mapa: ÿc0Ukryty skarbiec", "ruRU": "Уникальная карта: ÿc0Скрытое хранилище", "zhCN": "暗金地图: ÿc0隐藏宝库", "zhTW": "獨特地圖: ÿc0隱藏寶庫", "esMX": "Mapa única: ÿc0La cámara oculta"}, "useStyle": "MapTier5"}
 
   ]
 }

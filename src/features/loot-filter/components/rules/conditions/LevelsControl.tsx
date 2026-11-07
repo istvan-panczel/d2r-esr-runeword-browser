@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { levelName } from '../../../engine/text';
 import type { FilterLevel } from '../../../engine/types';
 import { focusAfterRemoval } from '../../pickers/focusAfterRemoval';
 
@@ -56,7 +57,7 @@ export function LevelsControl({ id, levels, value, onChange }: LevelsControlProp
                   }}
                 />
                 <Label htmlFor={checkboxId} className="font-normal">
-                  <span className="text-muted-foreground">{level.id}</span> {level.name}
+                  <span className="text-muted-foreground">{level.id}</span> {levelName(level)}
                 </Label>
               </div>
             );

@@ -27,6 +27,7 @@ import { AdvancedBadge } from './AdvancedBadge';
 import { MoreInAdvanced, ViewToggle } from './ViewToggle';
 import { ConditionField, ConditionSection } from './conditions/ConditionField';
 import { ExceptionsControl } from './conditions/ExceptionsControl';
+import { FormulaField } from './conditions/FormulaField';
 import { LevelsControl } from './conditions/LevelsControl';
 import { LocationControl } from './conditions/LocationControl';
 import { NamedMatchControl } from './conditions/NamedMatchControl';
@@ -514,6 +515,18 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
                 This rule does not hide, so its &lt;, &lt;= and != item stat checks are plain conditions (items without the stat), not
                 exceptions.
               </p>
+            )}
+            {shows('formula') && (
+              <ConditionField
+                id={fieldId('formula')}
+                label="Formula"
+                hint="Holds when the formula is not 0, together with the other conditions."
+                invalid={invalid('formula')}
+                badge={badge('formula')}
+                className="sm:col-span-2"
+              >
+                <FormulaField id={fieldId('formula')} data={data} value={rule.formula} onChange={(formula) => patch({ formula })} />
+              </ConditionField>
             )}
             <p className="text-xs text-muted-foreground sm:col-span-2">
               The game checks item stats, not affix names; Browse affixes finds the stat behind an affix (prefix + suffix values add up).

@@ -43,12 +43,15 @@ describe('parseLootFilter on Sully’s filter', () => {
       'Map',
       'MapTier5',
     ]);
-    expect(filter.leadingComments).toHaveLength(4);
-    expect(filter.leadingComments[0]).toMatch(/^\/\/ Sully's QoL Filter/);
-    expect(filter.rules.at(-1)).toEqual({
+    // v0.7.0 keeps one comment line (the volume note).
+    expect(filter.leadingComments).toHaveLength(1);
+    expect(filter.leadingComments[0]).toMatch(/^\/\/ volume can be adjusted/);
+    // v0.7.0 names its levels in 11 languages.
+    expect(filter.filterLevels?.[0]?.name).toMatchObject({ enUS: 'Leveling', deDE: 'Leveln' });
+    expect(filter.rules.at(-1)).toMatchObject({
       itemCodes: ['z99'],
-      replaceName: 'ÿc6The Hidden Vault',
-      chatMessage: 'Unique Map: ÿc0The Hidden Vault',
+      replaceName: { enUS: 'ÿc6The Hidden Vault' },
+      chatMessage: { enUS: 'Unique Map: ÿc0The Hidden Vault' },
       useStyle: 'MapTier5',
     });
   });
@@ -197,6 +200,20 @@ describe('parseLootFilter', () => {
     }
   });
 
+  it('reads the formula as a string condition; a wrong shape is kept with an error', () => {
+    const formula = "(stat('item_fastercastrate')>=10)";
+    const { filter, diagnostics } = parse({
+      formatVersion: 1,
+      rules: [
+        { itemTypes: ['ring'], formula, show: true },
+        { itemTypes: ['ring'], formula: 10, hide: true },
+      ],
+    });
+    expect(filter.rules[0]).toEqual({ itemTypes: ['ring'], formula, show: true });
+    expect(filter.rules[1]).toEqual({ itemTypes: ['ring'], hide: true, passthrough: { formula: 10 } });
+    expect(diagnostics.map((d) => [d.severity, d.path, d.message])).toEqual([['error', 'rules/1/formula', '"formula": expected a string']]);
+  });
+
   it('reads per-language texts and rejects unknown languages', () => {
     const { filter, diagnostics } = parse({
       formatVersion: 1,
@@ -340,5 +357,84 @@ describe('parseLootFilter disabledRules', () => {
     expect(again.diagnostics).toEqual([]);
     expect(serializeLootFilter(again.filter)).toBe(text);
     expect(readLootFilter(toPlainJson(filter)).filter).toEqual(filter);
+  });
+});
+
+describe('localised filter level names (plugin 1.8.2)', () => {
+  const name = { enUS: 'Leveling', deDE: 'Leveln', zhTW: '練功' };
+  const file = {
+    formatVersion: 1,
+    filterLevels: [
+      { id: 1, name },
+      { id: 2, name: 'Strict' },
+    ],
+    defaultLevel: 1,
+    rules: [{ activeInLevels: [1, 2], hide: true }],
+  };
+
+  it('reads a per-language name like any other text, without diagnostics', () => {
+    const { filter, diagnostics } = parse(file);
+    expect(diagnostics).toEqual([]);
+    expect(filter.filterLevels).toEqual([
+      { id: 1, name },
+      { id: 2, name: 'Strict' },
+    ]);
+  });
+
+  it('writes the per-language name back unchanged', () => {
+    const { filter } = parse(file);
+    const again = parseLootFilter(serializeLootFilter(filter));
+    expect(again.diagnostics).toEqual([]);
+    expect(again.filter.filterLevels).toEqual(filter.filterLevels);
+    expect(toPlainJson(filter)).toMatchObject({
+      filterLevels: [
+        { id: 1, name },
+        { id: 2, name: 'Strict' },
+      ],
+    });
+  });
+
+  it('keeps a name of another shape with an error', () => {
+    for (const bad of [3, { enUS: 4 }, { xxXX: 'a' }]) {
+      const { filter, diagnostics } = parse({ formatVersion: 1, filterLevels: [{ id: 1, name: bad }], rules: [] });
+      expect(filter.filterLevels).toBeUndefined();
+      expect(diagnostics.map((d) => [d.severity, d.path])).toEqual([['error', 'filterLevels']]);
+    }
+  });
+});
+
+describe('show (plugin 1.8.2)', () => {
+  it('reads show as an action; another shape is kept with an error', () => {
+    const { filter, diagnostics } = parse({
+      formatVersion: 1,
+      rules: [
+        { itemCodes: ['r30'], show: true },
+        { itemCodes: ['r30'], show: 'yes' },
+      ],
+    });
+    expect(filter.rules[0]).toEqual({ itemCodes: ['r30'], show: true });
+    expect(filter.rules[1]).toEqual({ itemCodes: ['r30'], passthrough: { show: 'yes' } });
+    expect(diagnostics.map((d) => [d.severity, d.path])).toEqual([['error', 'rules/1/show']]);
+  });
+});
+
+describe("Sully's v0.7.0 per-language texts", () => {
+  const first = parseLootFilter(SULLY);
+  const again = parseLootFilter(serializeLootFilter(first.filter));
+
+  it('keeps every per-language text through a save: same model, same diagnostics, same plain JSON', () => {
+    expect(again.filter).toEqual(first.filter);
+    expect(again.diagnostics).toEqual(first.diagnostics);
+    expect(toPlainJson(again.filter)).toEqual(parseJsonc(SULLY).value);
+  });
+
+  it('reads every localised field without passthrough', () => {
+    const localized = (value: unknown) => typeof value === 'object' && value !== null && 'enUS' in value;
+    const keys = ['replaceName', 'namePrefix', 'nameSuffix', 'chatMessage'] as const;
+    const counts = Object.fromEntries(keys.map((key) => [key, first.filter.rules.filter((rule) => localized(rule[key])).length]));
+    expect(counts).toEqual({ replaceName: 105, namePrefix: 38, nameSuffix: 15, chatMessage: 65 });
+    expect(Object.values(first.filter.styles ?? {}).filter((style) => localized(style.chatMessage))).toHaveLength(3);
+    expect(first.filter.filterLevels?.every((level) => localized(level.name))).toBe(true);
+    expect(first.filter.rules.filter((rule) => rule.passthrough !== undefined)).toEqual([]);
   });
 });

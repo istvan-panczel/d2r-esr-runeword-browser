@@ -155,12 +155,16 @@ export type WeaponSwapSlot = 'weapon2' | 'shield2';
  * A structured crafting annotation on an equipped item: ids into the game-data bundles, never
  * rendered text (the detail page renders the lines from the viewer's current bundles).
  * - corruption: enhance.json `corruptionOutcomes` (`slot` = the enhance slot id, e.g. `body`; `roll` 1-based)
- * - anointment: enhance.json `anointmentOutcomes` (`pool` = an anointment slot id; `roll` = the row's value)
+ * - anointment: enhance.json `anointmentOutcomes` (`itemType` = the pool, an item type code since ESR 3.3; `roll` = the
+ *   row's value). The ESR 3.2 shape `{ pool: <slot id>, roll }` (one pool per slot) is kept when loaded so the detail
+ *   page can show it as outdated; new picks never write it.
  * - forge: crafting.json `forgings` (`forge` = the kind, `key` = the option key, e.g. rune / r19)
  * - dstone / meld: crafting.json `stacking` (`material` / `switchItem` item codes); `uses` = times applied
  */
 export type CraftAnnotation =
   | { readonly kind: 'corruption'; readonly slot: string; readonly roll: number }
+  | { readonly kind: 'anointment'; readonly itemType: string; readonly roll: number }
+  /** ESR 3.2 anointment (per-slot pool): no longer resolves, shown as outdated */
   | { readonly kind: 'anointment'; readonly pool: string; readonly roll: number }
   | { readonly kind: 'forge'; readonly forge: ForgingKind; readonly key: string }
   | { readonly kind: 'dstone'; readonly material: string; readonly switchItem?: string; readonly uses: number }
@@ -371,7 +375,9 @@ export function asCraftAnnotation(value: unknown): CraftAnnotation | undefined {
     case 'corruption':
       return isCraftId(value.slot) && isPositiveInt(value.roll) ? { kind: 'corruption', slot: value.slot, roll: value.roll } : undefined;
     case 'anointment':
-      return isCraftId(value.pool) && isPositiveInt(value.roll) ? { kind: 'anointment', pool: value.pool, roll: value.roll } : undefined;
+      if (!isPositiveInt(value.roll)) return undefined;
+      if (isCraftId(value.itemType)) return { kind: 'anointment', itemType: value.itemType, roll: value.roll };
+      return isCraftId(value.pool) ? { kind: 'anointment', pool: value.pool, roll: value.roll } : undefined;
     case 'forge':
       return isForgingKind(value.forge) && isCraftId(value.key) ? { kind: 'forge', forge: value.forge, key: value.key } : undefined;
     case 'dstone':

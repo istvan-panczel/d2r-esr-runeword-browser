@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { EnhanceBundle } from '../engine/schema';
-import { ANOINTMENT_EXTRA_POOLS, filterAnointmentOutcomes, qualityList } from '../utils/enhance';
+import { ANOINTMENT_EXTRA_POOLS, anointmentGroups, filterAnointmentOutcomes, qualityList } from '../utils/enhance';
 import { BonusLines, NoMatches, Pills } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
 import { IngredientIcons } from './CellIcon';
@@ -19,6 +19,9 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
   const all = bundle.anointmentOutcomes.filter((outcome) => outcome.pool === pool);
   const outcomes = filterAnointmentOutcomes(all, search);
   const slot = anointmentSlots.find((entry) => entry.slot === pool);
+  const groups = anointmentGroups(anointmentSlots);
+  const group = groups.find((entry) => entry.group === slot?.group);
+  const groupCount = (slots: readonly { slot: string }[]) => slots.reduce((sum, entry) => sum + count(entry.slot), 0);
   const vesselRecipe = vesselRecipes.find((recipe) => recipe.anointmentRolls !== undefined);
   // Socketed items roll a shorter range, so the last outcome(s) cannot roll on them
   const socketedMax = slot?.socketedRollRange ?? null;
@@ -29,10 +32,24 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
         <p className="text-xs font-medium text-muted-foreground uppercase">Equipment</p>
         <Pills
           label="Equipment slot"
-          value={pool}
-          onChange={onPool}
-          options={anointmentSlots.map((entry) => ({ value: entry.slot, label: entry.label, count: count(entry.slot) }))}
+          value={group?.group ?? ''}
+          onChange={(value) => {
+            const first = groups.find((entry) => entry.group === value)?.slots[0];
+            if (first !== undefined) onPool(first.slot);
+          }}
+          options={groups.map((entry) => ({ value: entry.group, label: entry.label, count: groupCount(entry.slots) }))}
         />
+        {group !== undefined && group.slots.length > 1 && (
+          <>
+            <p className="pt-1 text-xs font-medium text-muted-foreground uppercase">{group.label}: item type</p>
+            <Pills
+              label={`${group.label} item type`}
+              value={pool}
+              onChange={onPool}
+              options={group.slots.map((entry) => ({ value: entry.slot, label: entry.label, count: count(entry.slot) }))}
+            />
+          </>
+        )}
         <p className="pt-1 text-xs font-medium text-muted-foreground uppercase">Other pools</p>
         <Pills
           label="Other anointment pools"
@@ -77,7 +94,19 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
                   {slot.rollRange - socketedMax === 1 ? 'outcome' : `${String(slot.rollRange - socketedMax)} outcomes`} (marked below).
                 </li>
               )}
-              <li>Cube the item with the orb, then cube the item again on its own. An item is anointed once.</li>
+              <li>
+                Each item type has its own pool; an item rolls the first pool its type belongs to, so class items use their class pool (an
+                Amazon Javelin the Amazon Javelin pool, not the Javelin one).
+              </li>
+              <li>
+                Cube the item with the orb, then cube the item again on its own. An item is anointed once
+                {slot.secondPerk !== undefined && (
+                  <>
+                    ; with the {slot.secondPerk.tree} perk {slot.secondPerk.title}, a second time
+                  </>
+                )}
+                .
+              </li>
             </ul>
           )}
           {pool === 'charm' && <p>Cube the unique charm with the three organs, then cube the charm again on its own.</p>}

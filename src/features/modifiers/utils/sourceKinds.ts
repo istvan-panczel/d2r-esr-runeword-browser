@@ -19,6 +19,12 @@ export const SOURCE_KINDS: Readonly<Record<SourceKind, { short: string; label: s
     full: "ESR game files: the mod's txt tables, strings, official docs and patch notes",
     className: 'border-sky-600/40 bg-sky-500/10 text-sky-800 dark:text-sky-300',
   },
+  'mod-author': {
+    short: 'Mod author',
+    label: 'ESR mod author',
+    full: "ESR mod author: CelestialRay's answers to our questions about the current ESR version (dated in the card's sources)",
+    className: 'border-teal-600/40 bg-teal-500/10 text-teal-800 dark:text-teal-300',
+  },
   vanilla: {
     short: 'Vanilla D2',
     label: 'Vanilla D2 behaviour, not confirmed for ESR',

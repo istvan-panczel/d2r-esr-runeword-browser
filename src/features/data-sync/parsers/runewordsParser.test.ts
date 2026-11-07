@@ -23,6 +23,7 @@ import { parseEsrRunesHtml } from './esrRunesParser';
 import { parseLodRunesHtml } from './lodRunesParser';
 import { parseKanjiRunesHtml } from './kanjiRunesParser';
 import { DEFAULT_ESR_RUNE_POINTS, DEFAULT_LOD_RUNE_POINTS } from '../constants/defaultRunePoints';
+import type { Runeword } from '@/core/db';
 
 // Helper to create a DOM element from HTML string
 function createElementFromHtml(html: string): Element {
@@ -819,14 +820,15 @@ describe('parseRunewordsHtml integration', () => {
     expect(moonlight!.jewelInfo).toBe('(0-3) Jewels');
   });
 
-  it('should parse the per-socket-count Moonlight rows with required jewels', () => {
+  it('should parse the per-required-jewel Moonlight rows with their required and optional jewels', () => {
     const runewords = parseRunewordsHtml(html);
     const rows = runewords.filter((r) => r.name === 'Moonlight' && r.variant > 1);
 
-    // ESR 3.2 lists "(4 Socket)", "(5 Socket)", "(6 Socket)" rows with 1-3 "Jewel" lines below the range row
+    // ESR 3.3 lists "(4-6 Socket)" with "(0-2) Jewels" + 1 "Jewel" line, "(5-6 Socket)" with "(0-1) Jewels" + 2,
+    // and "(6 Socket)" with 3 "Jewel" lines below the range row
     expect(rows.map((r) => [r.sockets, r.socketsMax, r.jewelInfo])).toEqual([
-      [4, undefined, '(1) Jewel'],
-      [5, undefined, '(2) Jewels'],
+      [4, 6, '(1-3) Jewels'],
+      [5, 6, '(2-3) Jewels'],
       [6, undefined, '(3) Jewels'],
     ]);
     for (const row of rows) {
@@ -989,6 +991,13 @@ describe('runeword category classification integration', () => {
     }
   });
 
+  it('takes the required level the page prints over the rune lookup (the lookup reads Ko as the LoD rune)', () => {
+    // Fortune: Ko U U N; ESR Ko is level 27, LoD Ko 39. The page says "Req Lvl: 27"
+    const fortune = runewords.find((r) => r.name === 'Fortune' && r.variant === 1);
+    expect(fortune?.reqLevel).toBe(27);
+    expect(fortune?.sortKey).toBe(27);
+  });
+
   it('should classify Gold Scarab (Ko, Metal, Mu, Shi) as ESR, not LoD', () => {
     const goldScarab = runewords.find((r) => r.name === 'Gold Scarab');
     expect(goldScarab).toBeDefined();
@@ -1055,5 +1064,118 @@ describe('hard-wrapped runeword affixes (fixture)', () => {
         }
       }
     }
+  });
+});
+
+describe('parseRunewordsHtml: ESR 3.3 Bonuses / Socketable Bonuses columns', () => {
+  const runewords = parseRunewordsHtml(readFileSync(resolve(__dirname, '../../../../test-fixtures/runewords.htm'), 'utf-8'));
+  const find = (name: string, variant = 1) => runewords.find((r) => r.name === name && r.variant === variant);
+  const groupTexts = (name: string, variant = 1) =>
+    find(name, variant)?.socketableBonuses?.map((group) => [group.label, group.affixes.map((affix) => affix.rawText)]);
+
+  it('reads the required level the page prints when no lookups are given', () => {
+    expect(find('Boar')?.reqLevel).toBe(2);
+    expect(find('Stone')?.reqLevel).toBe(4);
+    expect(find('Moonlight')?.reqLevel).toBe(60);
+  });
+
+  it('keeps the runeword bonuses in every column its bases use, and leaves the others empty', () => {
+    const boar = find('Boar');
+    const texts = [
+      '+10 to Minimum Damage to Attacks',
+      '+20 to Maximum Damage to Attacks',
+      '+15% Chance of Crushing Blow',
+      '+20 to Strength',
+    ];
+    expect(boar?.affixes.map((affix) => affix.rawText)).toEqual(texts);
+    expect(boar?.columnAffixes.weaponsGloves.map((affix) => affix.rawText)).toEqual(texts);
+    expect(boar?.columnAffixes.helmsBoots.map((affix) => affix.rawText)).toEqual(texts);
+    expect(boar?.columnAffixes.armorShieldsBelts).toEqual([]);
+  });
+
+  it('keeps every group of the Bonuses column (Able: "Requirements -100%" after a blank line)', () => {
+    expect(find('Able')?.affixes.at(-1)?.rawText).toBe('Requirements -100%');
+  });
+
+  it('stores the three socketable bonus groups of Stone', () => {
+    expect(groupTexts('Stone')).toEqual([
+      ['Any Shield / Body Armor / Belt', ['+30 Defense', '+5 to Mana after each Kill']],
+      ['Helm / Boots', ['+30 Defense', '+5 to Mana after each Kill']],
+      ['Gloves', ['+15% Enhanced Damage', '+5 to Mana after each Kill']],
+    ]);
+  });
+
+  it('stores the Boar groups with their item types and exceptions', () => {
+    expect(groupTexts('Boar')).toEqual([
+      ['Weapon (except Orb, Staff, Wand) / Missile / Mythical Arcane Staff', ['+15% Enhanced Damage']],
+      ['Staff / Wand / Orb', ['+30 Defense']],
+    ]);
+    expect(find('Boar')?.socketableBonuses?.map((group) => group.itemTypes)).toEqual([
+      [
+        { name: 'Weapon', except: ['Orb', 'Staff', 'Wand'] },
+        { name: 'Missile', except: [] },
+        { name: 'Mythical Arcane Staff', except: [] },
+      ],
+      [
+        { name: 'Staff', except: [] },
+        { name: 'Wand', except: [] },
+        { name: 'Orb', except: [] },
+      ],
+    ]);
+  });
+
+  it('stores one unlabelled group when the bonuses apply to every allowed base (Moonlight)', () => {
+    expect(groupTexts('Moonlight')).toEqual([
+      [
+        '',
+        [
+          '+1 to All Skills',
+          '+75% Damage to Undead',
+          '+75 to Attack Rating against Undead',
+          '+15% to Magic Spell Damage',
+          '+50 to Strength',
+        ],
+      ],
+    ]);
+  });
+
+  it('gives every runeword at least one socketable bonus group', () => {
+    for (const runeword of runewords) {
+      expect(runeword.socketableBonuses?.length, `${runeword.name} #${String(runeword.variant)}`).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('parseRunewordsHtml: pre-ESR 3.3 layout (per-category bonus columns)', () => {
+  const previous = parseRunewordsHtml(readFileSync(resolve(__dirname, '../../../../test-fixtures/previous/runewords.htm'), 'utf-8'));
+  const current = parseRunewordsHtml(readFileSync(resolve(__dirname, '../../../../test-fixtures/runewords.htm'), 'utf-8'));
+
+  it('parses the same rows in the same order, so saved runeword:Name:N ids stay valid', () => {
+    expect(previous).toHaveLength(409);
+    expect(previous.map((r) => `${r.name}:${String(r.variant)}`)).toEqual(current.map((r) => `${r.name}:${String(r.variant)}`));
+  });
+
+  it('keeps only the runeword bonuses of each column and stores no socketable bonus groups', () => {
+    const boar = previous.find((r) => r.name === 'Boar' && r.variant === 1);
+    expect(boar?.columnAffixes.weaponsGloves.map((affix) => affix.rawText)).not.toContain('+15% Enhanced Damage');
+    expect(boar?.columnAffixes.armorShieldsBelts).toEqual([]);
+    expect(boar?.socketableBonuses).toBeUndefined();
+    expect(boar?.reqLevel).toBe(0);
+  });
+
+  it('reads the ESR 3.2 per-count Moonlight rows as required jewels only', () => {
+    const rows = previous.filter((r) => r.name === 'Moonlight');
+    expect(rows.map((r) => [r.sockets, r.socketsMax, r.jewelInfo])).toEqual([
+      [3, 6, '(0-3) Jewels'],
+      [4, undefined, '(1) Jewel'],
+      [5, undefined, '(2) Jewels'],
+      [6, undefined, '(3) Jewels'],
+    ]);
+  });
+
+  it('fills the same bonus columns as the ESR 3.3 layout (builds compare saved column snapshots)', () => {
+    const filled = (r: Runeword) =>
+      (['weaponsGloves', 'helmsBoots', 'armorShieldsBelts'] as const).map((c) => r.columnAffixes[c].length > 0);
+    expect(current.map(filled)).toEqual(previous.map(filled));
   });
 });

@@ -5,6 +5,7 @@
  */
 import { decodeTabLayer, MAX_STAT_PARAM, skillTabLayer, statLayerKind, type StatLayerKind } from '../../game-data/engine/statLayers.ts';
 import { effectiveActions } from './actions.ts';
+import { FORMULA_QUOTE, formulaReferences, formulaSkillKey, parseFormula, type FormulaCall, type FormulaStatArg } from './formula.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
 import { isUntouchedLevelNumber } from './serialize.ts';
@@ -170,14 +171,17 @@ function isPresenceCheck(check: StatCheck): boolean {
   );
 }
 
+/** The highest skill level a charge can have (its param keeps the level in 6 bits). */
+const MAX_CHARGE_LEVEL = 63;
+
 /**
- * Whether an `item_charged_skill` value reads sensibly (it is `max charges << 8 | charges left`): a presence check
- * (or its exception), or `>=` / `<` a multiple of 256 (at least / fewer than N max charges).
+ * Whether an `item_charged_skill` check can hold: plugin 1.8.2 reads charges as the skill level (the guide, "Stat
+ * values"), so `>=`, `>` or `==` a number above 63 never holds (plugin 1.5.3 read `max charges << 8 | charges left`).
  */
 function isChargedValueCheck(check: StatCheck): boolean {
-  if (typeof check.value !== 'number') return true;
+  if (typeof check.value !== 'number') return check.value[0] <= MAX_CHARGE_LEVEL;
   const op = check.op ?? '>=';
-  return isPresenceCheck(check) || ((op === '>=' || op === '<') && check.value % 256 === 0);
+  return !((op === '>=' || op === '>' || op === '==') && check.value > MAX_CHARGE_LEVEL);
 }
 
 /** Verified in game (2026-11-01): without param the plugin reads only the param-0 entry (`OMITTED_PARAM` in evaluate.ts). */
@@ -279,7 +283,7 @@ function checkStatParam(
     report(
       'warning',
       `${path}/value`,
-      'The value of "item_charged_skill" is max charges × 256 + charges left (5/5 charges = 1285): check ≥ 1 for "has the charges" or ≥ a multiple of 256 (≥ 1280 = at least 5 max charges)'
+      `Plugin 1.8.2 reads "item_charged_skill" as the skill level of the charges (the guide), at most ${String(MAX_CHARGE_LEVEL)}, so this check never holds: check ≥ 1 for "has the charges" or ≥ a level`
     );
   }
 }
@@ -312,10 +316,11 @@ function checkStats(
     // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
     const quirk = rule === undefined ? undefined : statQuirk(check.stat);
     if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
-    // Every list: Life, Mana and Stamina are stored ×256 and the per-level stats in eighths (not verified in game). A
-    // presence check (`>= 1`, `< 1`…) holds either way, so only a check whose number matters gets the warning.
+    // Every list: plugin 1.8.2 reads the tooltip number (the guide); a per-level stat reads it at the character's level,
+    // so a check whose number matters depends on the level (a presence check is left alone, as before).
     const scale = statScale(check.stat);
-    if (scale !== undefined && !isPresenceCheck(check)) report('warning', `${path}/value`, statScaleMessage(scale, check.value));
+    const scaleMessage = scale === undefined || isPresenceCheck(check) ? undefined : statScaleMessage(scale);
+    if (scaleMessage !== undefined) report('warning', `${path}/value`, scaleMessage);
     checkStatParam(report, path, check, reference, tabNumbers.has(index));
     if (!reference) return;
     if (typeof check.stat === 'number') {
@@ -327,6 +332,124 @@ function checkStats(
       report('warning', `${path}/stat`, `Unknown stat "${check.stat}"${hint}`);
     }
   });
+}
+
+// ---------------------------------------------------------------------------
+// Formula (plugin 1.8.2; assumptions in engine/formula.ts)
+// ---------------------------------------------------------------------------
+
+/** "character 12" (1-based) of the formula. */
+const at = (offset: number): string => `character ${String(offset + 1)}`;
+
+/** The itemstatcost name of a formula's stat (by name, or by id through the reference). */
+function formulaStatName(stat: FormulaStatArg, reference: LootFilterReference | undefined): string | undefined {
+  return stat.kind === 'name' ? stat.name : reference?.statNamesById.get(stat.id);
+}
+
+/** Unknown stat names and ids (a case-only difference named), when the reference knows the stats. */
+function checkFormulaStat(warn: (message: string) => void, call: FormulaCall, reference: LootFilterReference | undefined): void {
+  const { stat } = call;
+  if (!reference) return;
+  if (stat.kind === 'id') {
+    if (reference.statIds.size > 0 && !reference.statIds.has(stat.id)) warn(`Unknown stat id ${String(stat.id)} at ${at(stat.start)}`);
+    return;
+  }
+  if (reference.statNames.size === 0 || reference.statNames.has(stat.name)) return;
+  const lower = stat.name.toLowerCase();
+  const other = [...reference.statNames].find((name) => name.toLowerCase() === lower);
+  const hint = other === undefined ? '' : `; stat names are taken to be case-sensitive: "${other}"`;
+  warn(`Unknown stat "${stat.name}" at ${at(stat.start)}${hint}. A name the mod's itemstatcost.txt lacks switches the rule off in game`);
+}
+
+/** The param of one call: its range, the layered stats' encodings, and skill names. */
+function checkFormulaParam(warn: (message: string) => void, call: FormulaCall, reference: LootFilterReference | undefined): void {
+  const name = formulaStatName(call.stat, reference);
+  const kind = name === undefined ? undefined : statLayerKind(name);
+  const { param } = call;
+  if (param === undefined) {
+    if (kind !== undefined && name !== undefined && (call.fn === 'stat' || call.fn === 'playerStat')) {
+      const noun = LAYER_NOUNS[kind];
+      warn(
+        `${call.fn}('${name}') at ${at(call.nameStart)} is taken to read only the entry with param 0, but "${name}" has one entry per ${noun}: use statMax or statSum for any ${noun}, or add a param`
+      );
+    }
+    return;
+  }
+  const where = `at ${at(param.start)}`;
+  if (param.kind === 'number') {
+    const { value } = param;
+    if (param.quoted) warn(`The param ${String(value)} ${where} is in quotes; write a number param without them`);
+    if (value > MAX_STAT_PARAM) {
+      warn(
+        `The param ${String(value)} ${where} is above ${String(MAX_STAT_PARAM)}: a stat's layer is assumed to be 16 bits in memory, so it likely reads 0`
+      );
+    } else if (kind === 'tab' && decodeTabLayer(value) === undefined) {
+      warn(`The param ${String(value)} ${where} names no skill tab as the game numbers them (class × 8 + tab 0 to 2)`);
+    } else if ((kind === 'event' || kind === 'charged') && (value < 64 || value % 64 === 0)) {
+      warn(
+        `The param ${String(value)} ${where} names ${value < 64 ? 'skill 0' : 'level 0'}: the param of "${name ?? ''}" is skill id × 64 + level; a skill name in quotes matches any level`
+      );
+    }
+    return;
+  }
+  if (reference && reference.skillIds.size > 0 && !reference.skillIds.has(formulaSkillKey(param.name))) {
+    const internal = reference.skillDisplayNames.get(formulaSkillKey(param.name));
+    const hint =
+      internal === undefined
+        ? ' (formulas take the skills.txt skill column)'
+        : `: that is the in-game name; formulas take the skills.txt name, ${internal.map((entry) => `'${entry}'`).join(' or ')}`;
+    warn(`Unknown skill '${param.name}' ${where}${hint}. A skill the mod's skills.txt lacks switches the rule off in game`);
+    return;
+  }
+  // A name the game data does not know gets its own warning; without the data only the layered stats are known.
+  if (name === undefined || (kind === undefined && reference?.statNames.has(name) !== true)) return;
+  // Chance-to-cast and charge stats: a skill name matches the skill at any level (the guide).
+  if (kind !== 'skill' && kind !== 'event' && kind !== 'charged') {
+    warn(`"${name}" has no skill param: the skill name '${param.name}' ${where} is taken to be read as the skill's id`);
+  }
+}
+
+/**
+ * The `formula` condition: a syntax error is an error (the plugin checks formulas when the filter loads and switches a
+ * rule with a bad one off), every reference problem a warning, as for the stat lists (the game data may lag).
+ */
+function checkFormula(report: Report, rule: LootFilterRule, reference: LootFilterReference | undefined): void {
+  const { formula } = rule;
+  if (formula === undefined) return;
+  const parsed = parseFormula(formula);
+  if (!parsed.ok) {
+    report(
+      'error',
+      'formula',
+      `Formula: ${parsed.error.message} (${at(parsed.error.offset)}). The game switches a rule with a bad formula off when the filter loads`
+    );
+    return;
+  }
+  const warnings = new Set<string>();
+  const warn = (message: string) => warnings.add(message);
+  const calls = formulaReferences(parsed.ast);
+  const doubleQuoted = calls.some((call) => call.stat.doubleQuoted || (call.param !== undefined && call.param.doubleQuoted));
+  if (doubleQuoted) {
+    warn(
+      `Write names in single quotes (${FORMULA_QUOTE}): the plugin's log says "names go in single quotes", so double quotes most likely switch the rule off`
+    );
+  }
+  for (const call of calls) {
+    for (const arg of [call.stat, call.param]) {
+      const name = arg?.kind === 'name' || arg?.kind === 'skill' ? arg.name : undefined;
+      if (arg !== undefined && name !== undefined && name !== name.trim()) {
+        warn(`The name '${name}' at ${at(arg.start)} has spaces around it; names are taken as written, so it likely matches nothing`);
+      }
+    }
+    checkFormulaStat(warn, call, reference);
+    if (call.stat.kind === 'id' && call.stat.quoted)
+      warn(`The stat id ${String(call.stat.id)} at ${at(call.stat.start)} is in quotes; a row number needs none`);
+    checkFormulaParam(warn, call, reference);
+    // Item stats only: the plugin reads these as 0 on some items (verified for the stat lists with plugin 1.5.3).
+    const quirk = call.fn === 'playerStat' ? undefined : statQuirk(call.stat.kind === 'id' ? call.stat.id : call.stat.name);
+    if (quirk !== undefined && mayHitQuirk(rule, quirk, reference)) warn(quirk.message);
+  }
+  for (const message of warnings) report('warning', 'formula', message);
 }
 
 function checkKnown<T extends string | number>(
@@ -360,6 +483,18 @@ function checkSound(report: Report, sound: string | number | undefined, referenc
   if (!reference.soundNames.has(sound)) {
     report('warning', 'sound', `"${sound}" is neither a sounds.txt sound nor a .wav, .mp3 or .flac file`);
   }
+}
+
+const SHOW_AND_HIDE_MESSAGE = 'A rule cannot both show and hide an item: the game switches the rule off';
+
+/**
+ * `show` and `hide` together (plugin 1.8.2: "a rule cannot both show and hide an item"). On a rule they are its own
+ * actions with its style's under them; the error points at the rule's own `show`, else its `hide`, else `useStyle`.
+ */
+function checkShowAndHide(report: Report, own: RuleActions, effective: RuleActions = own): void {
+  if (effective.show !== true || effective.hide !== true) return;
+  const key = own.show === true ? 'show' : own.hide === true ? 'hide' : 'useStyle';
+  report('error', key, own.show === true && own.hide === true ? SHOW_AND_HIDE_MESSAGE : `${SHOW_AND_HIDE_MESSAGE} (with its style)`);
 }
 
 function checkActions(report: Report, actions: RuleActions, reference: LootFilterReference | undefined): void {
@@ -547,6 +682,7 @@ function checkRule(
     report('error', 'useStyle', `There is no style named "${rule.useStyle}"`);
   }
   checkHideIfFail(report, rule);
+  checkShowAndHide(report, rule, effectiveActions(rule, filter));
   checkEmptyLists(report, rule);
 
   checkNamedMatch(report, 'quality', rule.quality, QUALITIES, 1, 'quality');
@@ -566,6 +702,7 @@ function checkRule(
 
   for (const key of ['itemStats', 'itemStatsAnyOf'] as const) checkStats(report, key, rule[key], reference, rule);
   for (const key of ['playerStats', 'playerStatsAnyOf'] as const) checkStats(report, key, rule[key], reference);
+  checkFormula(report, rule, reference);
 
   if (rule.location !== undefined && !rule.location.includes('onGround')) {
     const actions = effectiveActions(rule, filter);
@@ -610,6 +747,7 @@ export function validateLootFilter(filter: LootFilter, reference?: LootFilterRef
   for (const [name, style] of Object.entries(filter.styles ?? {})) {
     const report = reporter(diagnostics, { path: `styles/${name}`, style: name });
     if (style.useStyle !== undefined) report('error', 'useStyle', 'Styles hold actions only; a style cannot use another style');
+    checkShowAndHide(report, style);
     checkActions(report, style, reference);
   }
 

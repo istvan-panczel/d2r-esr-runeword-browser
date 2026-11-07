@@ -1,14 +1,9 @@
-import type { Affix, ColumnBonusPools, Gemword, SocketableBonuses } from '@/core/db';
+import type { Gemword } from '@/core/db';
 import { extractName, extractSockets, extractAllowedItems, type GemReqLevelLookup } from './runewordsParser';
 import { isGemName } from './gemsParser';
-import { parseRecipeAffixes, parseRecipeBonusPools } from './shared/parserUtils';
+import { parseReqLevel } from './shared/parserUtils';
+import { extractRecipeRowBonuses, recipeRowLayout } from './shared/recipeRowBonuses';
 import { stripHtmlTags } from '@/lib/html';
-
-interface ExtractedGemwordAffixes {
-  readonly affixes: Affix[];
-  readonly columnAffixes: SocketableBonuses;
-  readonly columnBonusPools: ColumnBonusPools;
-}
 
 export interface ExtractedGemwordIngredients {
   readonly gems: string[];
@@ -43,25 +38,11 @@ export function calculateGemwordReqLevel(gems: readonly string[], gemReqLevelLoo
   return maxReqLevel;
 }
 
-function extractGemwordAffixes(cells: NodeListOf<Element>): ExtractedGemwordAffixes {
-  // Gemword cells contain [gemword bonuses]<br><br>[gem bonuses]; keep only the gemword's own bonuses.
-  // Since ESR 3.2 most non-Charm rows also list "1-2 of the following:" random pools in between
-  const weaponsGloves = parseRecipeAffixes(cells[3]);
-  const helmsBoots = parseRecipeAffixes(cells[4]);
-  const armorShieldsBelts = parseRecipeAffixes(cells[5]);
-  const affixes = weaponsGloves.length > 0 ? weaponsGloves : helmsBoots.length > 0 ? helmsBoots : armorShieldsBelts;
-
-  return {
-    affixes,
-    columnAffixes: { weaponsGloves, helmsBoots, armorShieldsBelts },
-    columnBonusPools: {
-      weaponsGloves: parseRecipeBonusPools(cells[3]),
-      helmsBoots: parseRecipeBonusPools(cells[4]),
-      armorShieldsBelts: parseRecipeBonusPools(cells[5]),
-    },
-  };
-}
-
+/**
+ * Parses gemwords.htm in either table layout (see `RecipeTableLayout`; the ESR 3.3+ one adds the "Socketable Bonuses"
+ * groups). Old layout: each bonus column holds [gemword bonuses]<br><br>[random pools]<br><br>[gem bonuses], of which
+ * only the gemword's own bonuses and pools are kept; 3.3+: the "Bonuses" column holds just the bonuses and pools.
+ */
 export function parseGemwordsHtml(html: string, gemReqLevelLookup?: GemReqLevelLookup): Gemword[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
@@ -76,7 +57,7 @@ export function parseGemwordsHtml(html: string, gemReqLevelLookup?: GemReqLevelL
     seenRows.add(row.innerHTML);
 
     const cells = row.querySelectorAll('td');
-    if (cells.length < 6) continue;
+    if (recipeRowLayout(cells) === null) continue;
 
     const name = extractName(cells[0]);
     if (!name) continue;
@@ -87,8 +68,10 @@ export function parseGemwordsHtml(html: string, gemReqLevelLookup?: GemReqLevelL
     const sockets = extractSockets(cells[0]);
     const { gems, jewelInfo } = extractGemwordIngredients(cells[1]);
     const { allowedItems } = extractAllowedItems(cells[2]);
-    const { affixes, columnAffixes, columnBonusPools } = extractGemwordAffixes(cells);
-    const reqLevel = calculateGemwordReqLevel(gems, gemReqLevelLookup);
+    const { affixes, columnAffixes, columnBonusPools, socketableBonuses } = extractRecipeRowBonuses(cells, allowedItems);
+    // The level the ESR 3.3+ page prints ("Req Lvl: N"; it matches the gems' highest on every row), else the gems' highest
+    const pageReqLevel = parseReqLevel(cells[0].textContent);
+    const reqLevel = pageReqLevel > 0 ? pageReqLevel : calculateGemwordReqLevel(gems, gemReqLevelLookup);
 
     gemwords.push({
       name,
@@ -103,6 +86,7 @@ export function parseGemwordsHtml(html: string, gemReqLevelLookup?: GemReqLevelL
       columnAffixes,
       columnBonusPools,
       ...(jewelInfo !== undefined && { jewelInfo }),
+      ...(socketableBonuses !== undefined && { socketableBonuses }),
     });
   }
 

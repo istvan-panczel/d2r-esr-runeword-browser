@@ -257,8 +257,10 @@ const readSound: Reader<string | number> = (raw) =>
 const readFilterLevels = listOf(
   objectReader<FilterLevel>('a level object { "id", "name" }', ['id', 'name'], (raw) => {
     if (!isFiniteNumber(raw.id)) return fail('"id" must be a number');
-    if (typeof raw.name !== 'string') return fail('"name" must be a string');
-    return ok({ id: raw.id, name: raw.name });
+    // A string or a per-language object, like every text (Sully's QoL filter v0.7.0 localises its level names).
+    const name = readText(raw.name);
+    if (!name.ok) return fail(`"name": ${name.reason}`);
+    return ok({ id: raw.id, name: name.value });
   }),
   'levels'
 );
@@ -311,6 +313,7 @@ const CONDITION_READERS: FieldReaders<RuleConditions> = {
   itemStatsAnyOf: readStatChecks,
   playerStats: readStatChecks,
   playerStatsAnyOf: readStatChecks,
+  formula: readString,
   location: readLocations,
   difficulty: namedMatch(DIFFICULTIES, 'difficulty'),
   areas: readNumberList,
@@ -321,6 +324,7 @@ const CONDITION_READERS: FieldReaders<RuleConditions> = {
 const ACTION_READERS: FieldReaders<RuleActions> = {
   hide: readBoolean,
   hideIfOtherConditionsFail: readBoolean,
+  show: readBoolean,
   replaceName: readText,
   namePrefix: readText,
   nameSuffix: readText,

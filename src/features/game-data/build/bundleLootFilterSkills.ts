@@ -14,7 +14,7 @@
  *   ParMin–ParMax range is one entry per param).
  * - `knownLayers`: per skill, event and charged stat the distinct params of all sources. `skills`: the class tree
  *   skills (a class `charclass` and skilldesc `SkillPage` 1-3) plus every skill a known layer names; name via the stat
- *   renderer's skill lookup.
+ *   renderer's skill lookup. `skillNames`: the skills.txt `skill` column of every row (formula skill names).
  * - Warnings: unknown skills, event / charged levels outside 1-63, skill ids above 1023 (the layer would exceed 65535),
  *   and itemstatcost rows that look layered (`Encode` 2/3, a skill descfunc) but are not in STAT_LAYER_KINDS.
  */
@@ -173,7 +173,7 @@ export interface LootFilterSkillsInput {
 }
 
 export interface LootFilterSkillsResult {
-  bundle: Required<Pick<LootFilterDataBundle, 'skills' | 'knownLayers'>>;
+  bundle: Required<Pick<LootFilterDataBundle, 'skills' | 'knownLayers' | 'skillNames'>>;
   warnings: string[];
 }
 
@@ -230,5 +230,6 @@ export function buildLootFilterSkills(input: LootFilterSkillsInput): LootFilterS
   const knownLayers = [...known.entries()]
     .sort(([a], [b]) => a - b)
     .map(([stat, params]) => ({ stat, layers: [...params].sort((a, b) => a - b) }));
-  return { bundle: { skills, knownLayers }, warnings: [...warnings] };
+  const skillNames = input.skills.rows.map((row) => row.str('skill'));
+  return { bundle: { skills, knownLayers, skillNames }, warnings: [...warnings] };
 }

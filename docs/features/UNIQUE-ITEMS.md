@@ -46,12 +46,16 @@ interface HtmUniqueItem {
   readonly properties: readonly string[]; // Human-readable property strings
   readonly isAncientCoupon: boolean; // True if coupon-only item
   readonly gambleItem: string; // Gamble item identifier
-  readonly notes: string; // "Notes" column (ESR 3.12+), e.g. "Blessed Edge Variant"; '' for most items
+  readonly notes: string; // "Notes" column (ESR 3.12+); '' for almost every item
 }
 ```
 
 `notes` is not indexed, so adding it did not require a Dexie schema version bump. It is empty for the
-vast majority of items (16 of ~1031 items carry a note in ESR 3.12) and is only rendered when non-empty.
+vast majority of items and is only rendered when non-empty. ESR 3.12–3.2 put the weapon mastery variant of the 15
+mastery uniques there ("Blessed Edge Variant", with a "Weapon Mastery Applied" property line); since ESR 3.3 the
+property line names it instead ("Weapon Mastery (Blessed Edge Variant)", "Weapon Mastery (Sorceress Orb: Tripled
+Cooldowns)"; 17 weapons) and the Notes cell is empty for them. The parser keeps the line as a property, as the site
+shows it (search and the card show it; no duplicate note), so in 3.3 only one item (others page) has a note.
 
 ## Category System
 

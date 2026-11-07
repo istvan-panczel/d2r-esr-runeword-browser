@@ -1,15 +1,24 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { describe, expect, it } from 'vitest';
-import { CRAFTING_SLOTS, type CraftingBundle, type EnhanceBundle } from '@/features/game-data/engine/schema';
-import { CRAFTS_MAX_PER_SLOT, type CraftAnnotation } from '../buildData';
+import {
+  CRAFTING_SLOTS,
+  type BaseItem,
+  type BasesBundle,
+  type CraftingBundle,
+  type EnhanceBundle,
+} from '@/features/game-data/engine/schema';
+import { CRAFTS_MAX_PER_SLOT, type CraftAnnotation, type ItemRef } from '../buildData';
 import {
   ENHANCE_SLOT_BY_FAMILY,
+  OUTDATED_ANOINTMENT,
   addCraft,
+  anointmentPoolFor,
   compactCrafts,
   craftLookups,
   craftPickerGroups,
   enhanceSlotFor,
+  itemBase,
   removeCraft,
   renderCraft,
   setCraftUses,
@@ -18,7 +27,8 @@ import {
 const gameData = <T>(file: string): T => JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data', file), 'utf-8')) as T;
 const crafting = gameData<CraftingBundle>('crafting.json');
 const enhance = gameData<EnhanceBundle>('enhance.json');
-const lookups = craftLookups(crafting, enhance);
+const bases = gameData<BasesBundle>('bases.json').bases;
+const lookups = craftLookups(crafting, enhance, bases);
 
 // Small hand-made bundles so the rendering tests do not depend on ESR balance values.
 const fakeCrafting: CraftingBundle = {
@@ -52,22 +62,44 @@ const fakeEnhance = {
     },
     { slot: 'weapon', roll: 1, mods: [], lines: ['+(150 to 200)% Enhanced Damage'] },
   ],
+  // ESR 3.3: one pool per item type, class types first
+  anointmentSlots: [
+    { slot: 'ajav', typeCode: 'ajav', label: 'Amazon Javelin', group: 'weapon', rollRange: 1, socketedRollRange: null },
+    { slot: 'jave', typeCode: 'jave', label: 'Javelin', group: 'weapon', rollRange: 1, socketedRollRange: null },
+    { slot: 'helm', typeCode: 'helm', label: 'Helm', group: 'helm', rollRange: 1, socketedRollRange: null },
+  ],
   anointmentOutcomes: [
-    { pool: 'weapon', roll: 1, label: 'of Abyss', mods: [], lines: ['20% Chance to Cast Level 60 Abyss on Melee Attack'] },
+    { pool: 'ajav', roll: 1, label: 'of Abyss', mods: [], lines: ['20% Chance to Cast Level 60 Abyss on Melee Attack'] },
+    { pool: 'jave', roll: 1, label: 'of Storms', mods: [], lines: ['+5 to Lightning Fury'] },
+    { pool: 'helm', roll: 1, label: 'of the Wizard', mods: [], lines: ['+30% Faster Cast Rate'] },
     { pool: 'charm', roll: 2, mods: [], lines: ['+1 to All Skills'] },
   ],
 } as unknown as EnhanceBundle;
-const fake = craftLookups(fakeCrafting, fakeEnhance);
+const fakeBases = [
+  { code: 'am5', name: 'Maiden Javelin', ancestors: ['ajav', 'jave', 'weap'] },
+  { code: 'jav', name: 'Javelin', ancestors: ['jave', 'weap'] },
+] as unknown as BaseItem[];
+const fake = craftLookups(fakeCrafting, fakeEnhance, fakeBases);
+const maidenJavelin = { type: 'unique', id: 1, snapshot: { name: 'Titan', baseItem: 'Maiden Javelin' } } as unknown as ItemRef;
 
 describe('enhance slot mapping', () => {
-  it('maps every builds slot family to an existing corruption slot and anointment pool in the committed enhance.json', () => {
+  it('maps every builds slot family to an existing corruption slot in the committed enhance.json', () => {
     const corruptionSlots = new Set(enhance.corruptionSlots.map((slot) => slot.slot));
-    const anointmentSlots = new Set(enhance.anointmentSlots.map((slot) => slot.slot));
-    for (const family of CRAFTING_SLOTS) {
-      const id = ENHANCE_SLOT_BY_FAMILY[family];
-      expect(corruptionSlots.has(id), `corruption slot for ${family}`).toBe(true);
-      expect(anointmentSlots.has(id), `anointment slot for ${family}`).toBe(true);
-    }
+    for (const family of CRAFTING_SLOTS)
+      expect(corruptionSlots.has(ENHANCE_SLOT_BY_FAMILY[family]), `corruption slot for ${family}`).toBe(true);
+  });
+
+  it('picks the anointment pool from the base type (class types first), else the slot generic type', () => {
+    expect(anointmentPoolFor(itemBase(maidenJavelin, fake), 'weapon', fake)?.slot).toBe('ajav');
+    expect(anointmentPoolFor(fake.baseByCode.get('jav'), 'weapon', fake)?.slot).toBe('jave');
+    // No base: helmets fall back to the plain helm pool, weapons have no single pool
+    expect(anointmentPoolFor(undefined, 'helmet', fake)?.slot).toBe('helm');
+    expect(anointmentPoolFor(undefined, 'weapon', fake)).toBeUndefined();
+    // Committed bundles: a circlet rolls the circlet pool, a plain ring the ring pool, gloves / belts / boots / body armor
+    const tiara = { type: 'unique', id: 1, snapshot: { baseItem: 'Tiara' } } as unknown as ItemRef;
+    expect(anointmentPoolFor(itemBase(tiara, lookups), 'helmet', lookups)?.slot).toBe('circ');
+    for (const family of ['helmet', 'armor', 'gloves', 'boots', 'belt', 'amulet', 'ring'] as const)
+      expect(anointmentPoolFor(undefined, family, lookups), family).toBeDefined();
   });
 
   it('maps the families to slots of the same item type', () => {
@@ -111,13 +143,19 @@ describe('renderCraft', () => {
     });
   });
 
-  it('renders an anointment with its label', () => {
-    expect(renderCraft({ kind: 'anointment', pool: 'weapon', roll: 1 }, 'weapon', fake)).toEqual({
+  it('renders an anointment with its label; an ESR 3.2 per-slot anointment is outdated', () => {
+    expect(renderCraft({ kind: 'anointment', itemType: 'ajav', roll: 1 }, 'weapon', fake)).toEqual({
       title: 'Anointment · of Abyss',
       lines: ['20% Chance to Cast Level 60 Abyss on Melee Attack'],
       stale: false,
     });
-    expect(renderCraft({ kind: 'anointment', pool: 'charm', roll: 2 }, 'weapon', fake).title).toBe('Anointment');
+    expect(renderCraft({ kind: 'anointment', itemType: 'charm', roll: 2 }, 'weapon', fake).title).toBe('Anointment');
+    // Even when the old pool id is also a 3.3 type code (helm, ring): the rolls mean other outcomes now
+    expect(renderCraft({ kind: 'anointment', pool: 'helm', roll: 1 }, 'helmet', fake)).toEqual({
+      title: OUTDATED_ANOINTMENT,
+      lines: [],
+      stale: true,
+    });
   });
 
   it('renders a forging with the slot family line', () => {
@@ -154,7 +192,7 @@ describe('renderCraft', () => {
   it('marks unknown ids, a slot family without a row and missing bundles as stale, titled from the ids', () => {
     const cases: [CraftAnnotation, string][] = [
       [{ kind: 'corruption', slot: 'body', roll: 7 }, 'Corruption (roll 7)'],
-      [{ kind: 'anointment', pool: 'helm', roll: 4 }, 'Anointment (roll 4)'],
+      [{ kind: 'anointment', itemType: 'helm', roll: 4 }, 'Anointment (roll 4)'],
       [{ kind: 'forge', forge: 'rune', key: 'r99' }, 'Forging (rune r99)'],
       [{ kind: 'forge', forge: 'aura', key: 'au1' }, 'Forging (aura au1)'],
       [{ kind: 'dstone', material: 'ppp', switchItem: 'vps', uses: 2 }, 'D-stoning (ppp + vps) ×2'],
@@ -227,8 +265,11 @@ describe('crafting list edits', () => {
 
 describe('craftPickerGroups', () => {
   it('lists the options for the slot family and hides the single-use groups once set', () => {
-    const groups = craftPickerGroups('weapon', fake, []);
-    expect(groups.map((group) => group.heading)).toEqual(['Corruption', 'Anointment', 'Forging', 'D-stoning']);
+    const groups = craftPickerGroups('weapon', fake, [], maidenJavelin);
+    expect(groups.map((group) => group.heading)).toEqual(['Corruption', 'Anointment · Amazon Javelin', 'Forging', 'D-stoning']);
+    expect(groups[1]?.options.map((option) => option.craft)).toEqual([{ kind: 'anointment', itemType: 'ajav', roll: 1 }]);
+    // Without a known base a weapon has no anointment pool
+    expect(craftPickerGroups('weapon', fake, []).map((group) => group.heading)).toEqual(['Corruption', 'Forging', 'D-stoning']);
     expect(groups.find((group) => group.heading === 'Forging')?.options.map((option) => option.label)).toEqual(['Rune Forging · Ko Rune']);
     expect(groups.find((group) => group.heading === 'D-stoning')?.options.map((option) => option.craft)).toEqual([
       { kind: 'dstone', material: 'ppp', uses: 1 },
@@ -238,12 +279,25 @@ describe('craftPickerGroups', () => {
       '+5% IAS, cap +121% IAS',
       '+2% to Fire Spell Damage',
     ]);
-    const withSingles = craftPickerGroups('weapon', fake, [
-      { kind: 'forge', forge: 'rune', key: 'r19' },
-      { kind: 'corruption', slot: 'weapon', roll: 1 },
-      { kind: 'anointment', pool: 'weapon', roll: 1 },
-    ]);
+    const withSingles = craftPickerGroups(
+      'weapon',
+      fake,
+      [
+        { kind: 'forge', forge: 'rune', key: 'r19' },
+        { kind: 'corruption', slot: 'weapon', roll: 1 },
+        { kind: 'anointment', itemType: 'ajav', roll: 1 },
+      ],
+      maidenJavelin
+    );
     expect(withSingles.map((group) => group.heading)).toEqual(['D-stoning']);
+    // An outdated anointment does not hide the group: a new pick replaces it
+    const outdated: CraftAnnotation = { kind: 'anointment', pool: 'weapon', roll: 1 };
+    expect(craftPickerGroups('weapon', fake, [outdated], maidenJavelin).map((group) => group.heading)).toContain(
+      'Anointment · Amazon Javelin'
+    );
+    expect(addCraft([outdated], { kind: 'anointment', itemType: 'ajav', roll: 1 })).toEqual([
+      { kind: 'anointment', itemType: 'ajav', roll: 1 },
+    ]);
   });
 
   it('uses the enhance slot of the family and the outcome lines for search', () => {
@@ -251,13 +305,15 @@ describe('craftPickerGroups', () => {
     const corruption = armor.find((group) => group.heading === 'Corruption');
     expect(corruption?.options.map((option) => option.craft)).toEqual([{ kind: 'corruption', slot: 'body', roll: 15 }]);
     expect(corruption?.options[0]?.search).toContain('magic resist');
-    expect(craftPickerGroups('helmet', fake, []).map((group) => group.heading)).toEqual(['Gem melding']);
+    expect(craftPickerGroups('helmet', fake, []).map((group) => group.heading)).toEqual(['Anointment · Helm', 'Gem melding']);
   });
 
   it('offers options for every slot family from the committed bundles', () => {
     for (const slot of ['helmet', 'armor', 'weapon', 'shield', 'gloves', 'boots', 'belt', 'amulet', 'ring1'] as const) {
-      const headings = craftPickerGroups(slot, lookups, []).map((group) => group.heading);
-      expect(headings, slot).toEqual(expect.arrayContaining(['Corruption', 'Anointment', 'Forging', 'D-stoning']));
+      const headings = craftPickerGroups(slot, lookups, []).map((group) => group.heading.replace(/ · .*$/, ''));
+      // Weapons and shields need the item's base to pick their pool (one per weapon / shield type)
+      const anointment = slot === 'weapon' || slot === 'shield' ? [] : ['Anointment'];
+      expect(headings, slot).toEqual(expect.arrayContaining(['Corruption', ...anointment, 'Forging', 'D-stoning']));
     }
   });
 });

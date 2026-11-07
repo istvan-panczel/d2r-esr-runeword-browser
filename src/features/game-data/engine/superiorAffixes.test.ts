@@ -126,7 +126,14 @@ describe('weights and chances', () => {
   });
 
   it('limits throwing / nodurability items to rows 0-3 when the stock rule is on', () => {
-    const superior: SuperiorAffixes = { enabled: true, defaultWeight: 100, firstFourRowBases: ['ob1'], rows, pools: [] };
+    const superior: SuperiorAffixes = {
+      enabled: true,
+      weightSource: 'config',
+      defaultWeight: 100,
+      firstFourRowBases: ['ob1'],
+      rows,
+      pools: [],
+    };
     expect(superiorRollsForBase(superior, orb).rolls.map((roll) => roll.row.row)).toEqual([1, 3]);
     expect(superiorRollsForBase({ ...superior, firstFourRowBases: undefined }, orb).rolls).toHaveLength(3);
   });

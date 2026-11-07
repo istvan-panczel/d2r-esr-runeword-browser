@@ -43,6 +43,13 @@ export function EnhanceSanctification({ bundle, search }: EnhanceSanctificationP
             outcomes below.
             {sanctification.once && ` A ${item} is sanctified once.`}
           </p>
+          {sanctification.perkItems !== undefined && (
+            <p>
+              With the {sanctification.perkItems.perk.tree} perk {sanctification.perkItems.perk.title}, you can also sanctify{' '}
+              {sanctification.perkItems.items.map((entry) => `${entry.name.toLowerCase()}s`).join(' and ')} the same way, with the same
+              outcomes.
+            </p>
+          )}
           {bonuses.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase">How often each bonus comes up (outcomes with it)</p>

@@ -1,15 +1,18 @@
 /**
- * Stats the game stores scaled (ESR 3.2.24 itemstatcost.txt). Not verified in game: whether the loot filter plugin
- * compares (and prints with `{stat:ID}`) the stored value or the value the tooltip shows.
- * - `ValShift` 8: Life, Mana and Stamina (current and max) are stored ×256, so +40 Life is 10240 in memory.
- * - The `*_perlevel` stats (`op` 2, 4 or 5 with `op param` 3, `op base` level) store the per-level amount in eighths:
- *   the tooltip shows stored × character level / 8, and +1 per level is stored as 8.
- * - `item_hp_perlevel`, `item_mana_perlevel` and `item_stamina_perlevel` have both (`ValShift` 8 too): +1 per level
- *   may be 8 × 256 = 2048 in memory.
+ * Stats the game stores scaled (ESR itemstatcost.txt), and what the loot filter plugin reads for them. Plugin 1.8.2 (ESR
+ * 3.3 guide, "Stat values"): "Every stat a filter reads is the number the item tooltip prints, in itemStats,
+ * playerStats, formulas and the {stat:} placeholders."
+ * - `ValShift` 8: Life, Mana and Stamina (current and max) are stored in 256ths; +40 Life reads 40.
+ * - The `*_perlevel` stats (`op` 2, 4 or 5 with `op param` 3, `op base` level) store the per-level amount in eighths;
+ *   they read the value at the character's level, as "(Based on Character Level)" shows: 0.5 per level reads 0 at level
+ *   1 and 49 at level 99. `item_hp_perlevel`, `item_mana_perlevel` and `item_stamina_perlevel` have both.
+ * - `item_howl` and `item_fear` are stored in 128ths; they read the percent.
+ * - Charges read the skill level (`utils/statParams.ts` `CHARGED_VALUE_HINT`). Everything else reads as stored.
+ * Plugin 1.5.3 (ESR 3.2.x) was never checked for these; the 1.8.2 readings are the guide's, not yet verified in game.
  */
 import type { StatCheck } from './types.ts';
 
-export type StatScaleKind = 'shift' | 'perLevel' | 'shiftPerLevel';
+export type StatScaleKind = 'shift' | 'perLevel' | 'shiftPerLevel' | 'percent';
 
 export interface StatScale {
   /** itemstatcost.txt row */
@@ -23,6 +26,7 @@ export interface StatScale {
 
 const shift = (id: number, name: string, label: string): StatScale => ({ id, name, label, kind: 'shift' });
 const perLevel = (id: number, name: string, label: string): StatScale => ({ id, name, label, kind: 'perLevel' });
+const percent = (id: number, name: string, label: string): StatScale => ({ id, name, label, kind: 'percent' });
 
 export const STAT_SCALES: readonly StatScale[] = [
   shift(6, 'hitpoints', 'Life'),
@@ -31,6 +35,8 @@ export const STAT_SCALES: readonly StatScale[] = [
   shift(9, 'maxmana', 'Mana'),
   shift(10, 'stamina', 'Stamina'),
   shift(11, 'maxstamina', 'Stamina'),
+  percent(112, 'item_howl', 'Hit Causes Monster to Flee'),
+  percent(213, 'item_fear', 'Fear'),
   perLevel(214, 'item_armor_perlevel', 'Defense'),
   perLevel(215, 'item_armorpercent_perlevel', 'Enhanced Defense'),
   { id: 216, name: 'item_hp_perlevel', label: 'Life', kind: 'shiftPerLevel' },
@@ -59,6 +65,23 @@ export const STAT_SCALES: readonly StatScale[] = [
   perLevel(247, 'item_crushingblow_perlevel', 'Crushing Blow'),
   perLevel(250, 'item_deadlystrike_perlevel', 'Deadly Strike'),
   perLevel(365, 'item_magic_damagemax_perlevel', 'Maximum Magic Damage'),
+  // ESR 3.3 (itemstatcost.txt 1030 to 1056)
+  perLevel(1030, 'item_criticaldamage_perlevel', 'Critical Damage'),
+  perLevel(1031, 'item_summmastery_perlevel', 'Summon Mastery'),
+  perLevel(1032, 'item_summlife_perlevel', 'Summon Life'),
+  perLevel(1033, 'item_acvsmissiles_perlevel', 'Defense vs. Missiles'),
+  perLevel(1034, 'item_magpierce_perlevel', 'Magic Pierce'),
+  perLevel(1036, 'item_extramag_perlevel', 'Magic Skill Damage'),
+  perLevel(1037, 'item_piercefire_perlevel', 'Fire Pierce'),
+  perLevel(1038, 'item_piercecold_perlevel', 'Cold Pierce'),
+  perLevel(1039, 'item_pierceltng_perlevel', 'Lightning Pierce'),
+  perLevel(1042, 'item_fasterattackrate_perlevel', 'Attack Speed'),
+  perLevel(1043, 'item_absorb_ltng_perlevel', 'Lightning Absorb'),
+  perLevel(1048, 'item_damage_demon_perlevel', 'Damage to Demons'),
+  perLevel(1049, 'item_maxmana_percent_perlevel', 'Maximum Mana %'),
+  perLevel(1052, 'item_piercedmg_perlevel', 'Pierce Damage'),
+  perLevel(1055, 'rune_effect_current_item_perlevel', 'Socketed Effect'),
+  perLevel(1056, 'item_maxhp_percent_perlevel', 'Maximum Life %'),
 ];
 
 /** The scale of a check's stat (an itemstatcost name or id), if the game stores it scaled. */
@@ -66,26 +89,16 @@ export function statScale(stat: StatCheck['stat']): StatScale | undefined {
   return STAT_SCALES.find((scale) => (typeof stat === 'number' ? scale.id === stat : scale.name === stat));
 }
 
-/** The number a check compares with, for the example: the low end of a range. */
-function checkNumber(value: StatCheck['value']): number {
-  return typeof value === 'number' ? value : value[0];
+/** Whether the stat reads the value at the character's level (a per-level stat). */
+export function isPerLevel(scale: StatScale): boolean {
+  return scale.kind === 'perLevel' || scale.kind === 'shiftPerLevel';
 }
 
-const SUFFIX = 'Not verified in game; use "Check in game" on this rule to see what the plugin reads.';
-
 /**
- * The validator's warning: how the stat is stored and what the check's number would be as the stored value. The example
- * uses the check's value when it is above 1 (a presence check `>= 1` says nothing about the scale), else +40 / +1.
+ * The validator's warning for a check on a per-level stat: what it reads depends on the character's level, so the check
+ * holds from some level on (or up to some level). Undefined for the other scaled stats, which read the tooltip number.
  */
-export function statScaleMessage(scale: StatScale, value: StatCheck['value']): string {
-  const number = checkNumber(value);
-  const { label, name } = scale;
-  if (scale.kind === 'shift') {
-    const shown = number > 1 ? number : 40;
-    return `The game stores "${name}" ×256: +${String(shown)} ${label} may read as ${String(shown * 256)}. ${SUFFIX}`;
-  }
-  const shown = number > 1 ? number : 1;
-  const stored = scale.kind === 'shiftPerLevel' ? shown * 8 * 256 : shown * 8;
-  const how = scale.kind === 'shiftPerLevel' ? 'in eighths per character level, ×256' : 'in eighths per character level';
-  return `The game stores "${name}" ${how} (the tooltip shows stored × level / 8): +${String(shown)} ${label} per level may read as ${String(stored)}. ${SUFFIX}`;
+export function statScaleMessage(scale: StatScale): string | undefined {
+  if (!isPerLevel(scale)) return undefined;
+  return `"${scale.name}" (${scale.label} per level) reads the value at your character's level, as the tooltip's "(Based on Character Level)" shows: 0.5 per level reads 0 at level 1 and 49 at level 99, so this check depends on the character level (plugin 1.8.2, the guide).`;
 }

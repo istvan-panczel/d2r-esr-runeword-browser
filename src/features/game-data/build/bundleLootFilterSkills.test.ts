@@ -202,6 +202,8 @@ describe('buildLootFilterSkills', () => {
       { id: 2, name: 'Fire Bolt', cls: 'sor' },
       { id: 3, name: 'Teleport', cls: 'sor' },
     ]);
+    // The skills.txt names of every row, for formula skill names
+    expect(bundle.skillNames).toEqual(['Attack', 'Critical Strike', 'Fire Bolt', 'Teleport']);
   });
 
   it('collects the distinct known params of the skill, event and charged stats, sorted', () => {

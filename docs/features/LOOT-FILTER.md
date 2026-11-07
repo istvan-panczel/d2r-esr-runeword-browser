@@ -56,7 +56,8 @@ for this app (`<shape>_<colour>`, e.g. `star_gold`, see [Generated icons](#gener
 and the bundled files it references into one archive to unzip into `LootFilters\` (see Library screen).
 
 Troubleshooting (also in the library how-to): if a sound or icon does not work, check the `sounds`/`icons` folders next
-to the filter; if chat lines do not print, run `lootfilter` in the game console and read
+to the filter; if chat lines do not print, first check the launcher's chat notifications (Enable chat notifications),
+then run `lootfilter` in the game console and read
 `d2rloader\logs\celestialrayone.loot-filter.log` (set `debug_log = true` in the plugin's TOML to log every chat line).
 
 ## Storage model
@@ -125,7 +126,7 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   another edit flushes it (a reload in between loses it: `addRules` and `chooseRuleStyle` both shipped that way and
   were added on 2026-11-05). `lootFilterSaga.test.ts` fails while a slice action is neither in that list nor in its
   list of known non-edits (library actions, `selectRule`), so a new reducer has to be classified.
-- **Reading is lenient, writing strict**: `engine/jsonc.ts` reads what the ESR loot filter plugin (v1.5.3) reads, so
+- **Reading is lenient, writing strict**: `engine/jsonc.ts` reads what the ESR loot filter plugin (v1.5.3, unchanged in the 1.8.2 guide) reads, so
   besides `//` line comments it accepts `/* */` block comments and a single trailing comma before `]` or `}` (Sully's
   launcher filter ends its rules with `},` + `]`); `[1,,2]`, `[,]` and an unclosed `/*` stay syntax errors. Comments and
   trailing commas are blanked to spaces, so `JSON.parse` offsets are the source's; when the engine's message has no
@@ -139,6 +140,17 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   not touch is downloaded as it was (the key moves to its canonical place, before the actions); once the levels are
   edited the list is written and the warning goes away. The validator checks the number like a list entry (an unknown
   level is an error at `activeInLevels`).
+- **Localised level names** (plugin 1.8.2, ESR 3.3): a `filterLevels` name is a `FilterText` like every other text
+  (the guide: "Any text can be one string or one string per language"); Sully's v0.7.0 names its four levels in 11
+  languages. Before, the parser accepted only a string, so the whole `filterLevels` went to `passthrough` with an error
+  and every `activeInLevels` then errored (96 diagnostics on v0.7.0). `levelName` (`engine/text.ts`) gives the enUS
+  name for the level pickers (rule editor, Test tab in its game language, default level) and the library cards; the
+  Settings name field edits the enUS text of a per-language name and keeps the other languages ("enUS; +10
+  languages", the rest in the JSON tab). Every other text field (names, chat lines, notifications) has a language
+  select instead (`ColorTextField`, `withLanguage`): it edits one language, keeps the others and the key order, and
+  "Add <lang>" starts from the enUS text.
+  Shared filters keep the object in `loot_filters.levels` (`levelJson`; `readLevels` accepts a string or an object of
+  known languages; the 4 KB check counts the nested object's separators as Postgres prints them).
 - **Text notes** (`textNotes` in `engine/parse.ts`, returned by `parseLootFilter` as `notes`, apart from `diagnostics`):
   root-path warnings about the text itself, one per kind: "Trailing commas were accepted (first at line N); the game
   reads them, but downloads are written without them", "Block comments (/\* _/) were accepted (first at line N); …
@@ -186,17 +198,16 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   the validator's exported `mayHitQuirk`, so only when the rule's codes and types can match an affected item; always
   without item data) says so; `RuleDiagnostics` puts the headline in red before a confirmed quirk's warning
   (`quirkOfMessage`) and colours its icon red.
-  A check (any of the four stat lists, by name or
-  id) on a stat the game stores scaled (`engine/statScale.ts`, from itemstatcost.txt): Life, Mana and Stamina
-  (`hitpoints`, `maxhp`, `mana`, `maxmana`, `stamina`, `maxstamina`, ids 6 to 11, `ValShift` 8) are stored ×256, the
-  per-level stats (214–233, 238–240, 242, 244, 247, 250, 365: `op` 2, 4 or 5 with `op param` 3 on `level`) in eighths
-  per character level, and Life, Mana and Stamina per level (216, 217, 242) both; whether the plugin compares the
-  stored or the shown value is not verified, so the warning (at `<list>/<n>/value`) gives the stored number of the
-  check ("The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this
-  rule…"). A presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) holds either way and
-  gets none, so Sully's template (rules 29 and 30,
-  stats 218 and 219 `>= 1`) stays clean; those rules print `{stat:218}/8` in the name, which suggests the plugin prints
-  the stored eighths. Disabled rules are validated like the
+  Stat values (`engine/statScale.ts`, from itemstatcost.txt): plugin 1.8.2 reads every stat as the number the
+  tooltip prints (the 3.3 guide, "Stat values"): Life, Mana and Stamina (ids 6 to 11, stored in 256ths) read 40 for
+  +40, `item_howl` (112) and `item_fear` (213, stored in 128ths) read the percent, charges read the skill level, and
+  the per-level stats (214–233, 238–240, 242, 244, 247, 250, 365: `op` 2, 4 or 5 with `op param` 3 on `level`) read the
+  value at the character's level. So only a per-level check whose number matters gets a warning (at
+  `<list>/<n>/value`: "… reads the value at your character's level, as the tooltip's "(Based on Character Level)"
+  shows: 0.5 per level reads 0 at level 1 and 49 at level 99, so this check depends on the character level"); a
+  presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) gets none, so Sully's template
+  (rules 29 and 30, stats 218 and 219 `>= 1`) stays clean. Up to ESR 3.2.24 (plugin 1.5.3) the editor warned about
+  the stored ×256 and eighths values, which nobody had checked in game. Disabled rules are validated like the
   others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
@@ -205,9 +216,9 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
   likely never matches); warnings for a skill, skill tab, class, event or charged stat without `param` (at
   `<list>/<n>`, also for a hide rule's exceptions: "has one entry per skill tab; without "param" the plugin reads only
   the entry with param 0 (verified in game), not any skill tab. Pick a skill tab to check one"), an event or charged
-  param below 64 (skill 0) or with level 0, and an `item_charged_skill` value that is neither a presence check (`>= 1`,
-  `> 0`, `!= 0`, or their exceptions) nor `>=` / `<` a multiple of 256 (the value is
-  `max charges << 8 | charges left`, 5/5 = 1285).
+  param below 64 (skill 0) or with level 0, and an `item_charged_skill` check that can never hold: plugin 1.8.2 reads
+  charges as the skill level (the guide), at most 63, so `>=`, `>` or `==` a number above 63 gets a warning (plugin
+  1.5.3 read `max charges << 8 | charges left`, 5/5 = 1285).
   - _Skill tab numbering_: the game stores a tab as `class << 3 | tab` (Assassin Martial Arts = 50) and the plugin
     compares `param` with that (verified in game on 2026-11-01: +4 to Fire Skills, Sorceress, showed in
     `{stat:188,8}`); properties.txt numbers them `class × 3 + tab` (Martial Arts = 20, Fire Skills = 3). The warnings
@@ -218,7 +229,7 @@ to the filter; if chat lines do not print, run `lootfilter` in the game console 
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.6.13) gets 6 warnings against the ESR 3.2.24 data: its three +3/4/5
+    Skills, which is param 56"). Sully's template (v0.7.0) gets 6 warnings against the ESR 3.3 data (as v0.6.13 did against 3.2.24): its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -327,8 +338,8 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
   entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.6.13 from github.com/Thisisnotsully/QoL-Filter, verbatim (225 rules, 12 styles, 4
-  levels, `soundVolume` 25, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
+  is `Sullys-QoL-Filter.json` v0.7.0 from github.com/Thisisnotsully/QoL-Filter, verbatim (225 rules, 12 styles, 4
+  levels, `soundVolume` 25, his `updateUrl` and `//` comment kept), the filter the ESR launcher pulls live since
   3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
   fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
   (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25; v0.6.7 (2026-10-31) adds a +1 All Skills base highlight (chat
@@ -340,13 +351,17 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
   and `14e` (Nightwing's Veil) the other way; v0.6.12 and v0.6.13 (2026-11-04) add two Legendary
   Materials to the `STierMaterial` group, Lucion's Relic of Sanctification (`u18`) and Inarius' Everburning Halo
-  (`u40`), with the existing `redD` icon (no new assets, no new warnings). The v0.6.9 hide rule (rule 98) writes
+  (`u40`), with the existing `redD` icon (no new assets, no new warnings); v0.7.0 (2026-11-05, ESR 3.3) localises
+  `replaceName`, `namePrefix`, `nameSuffix`, the chat lines and the `filterLevels` names into 11 languages (no jaJP or
+  ptBR), keeps one `//` comment line (the volume note) and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); no
+  new assets or rules, and the parser had to learn per-language level names first (plugin 1.8.2, "Localised level
+  names" below). The v0.6.9 hide rule (rule 98) writes
   `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
   reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
   single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
   Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
   The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
-  in `utils/template.ts`): "Sully's QoL filter v0.6.13, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  in `utils/template.ts`): "Sully's QoL filter v0.7.0, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
@@ -582,8 +597,8 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
   list, splitter, editor. Hidden on the stacked layout.
 
 - **Toolbar**: search box (every term must appear in `ruleSearchText`: summary, codes and their names, types, unique/set
-  and area names, stat names and the names of their params (skill, tab, class), comment, style, name changes and chat
-  lines), **Add rule** (an empty rule after the
+  and area names, stat names and the names of their params (skill, tab, class), comment, the whole formula, style, name
+  changes and chat lines), **Add rule** (an empty rule after the
   selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
   The search text includes `disabled` for a disabled rule, so searching "disabled" lists them. An empty rule list says
   "No rules yet. …" and points to the example rules and to Sully's QoL filter (a link to the library).
@@ -734,8 +749,8 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
 - **Editor** (`RuleEditor`, remounted per rule): "Rule N" (with a "disabled" badge), an **Enabled** checkbox (hint:
   kept in the file under `disabledRules`, which the game ignores; the repo has no Switch component), the `comment` field, the rule's diagnostics (paths relative to
   the rule), a collapsed "How rules combine (AND, OR, hide)" note (`HowRulesCombine`: conditions AND, list values OR,
-  codes and types both checked, top to bottom with hide stopping and no "show", a "Tip:" that hiding is the only way
-  to filter and anything a hide rule matches loses its ground label for good (whether earlier rules' sounds and chat
+  codes and types both checked, top to bottom with hide stopping, Show protecting the item from later hides (plugin
+  1.8.2), a "Tip:" that anything a hide rule matches (and no Show rule above protects) loses its ground label for good (whether earlier rules' sounds and chat
   lines still fire is one of the "Verify in game" assumptions, so the tip does not say), so several narrow hide rules
   (one item type and quality each) beat one broad one, to be tried in the Test tab, exceptions written as negated
   conditions in the hide rule, `hideIfOtherConditionsFail` the other way round, and that it counts every other
@@ -942,7 +957,8 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
   button that opens the unique and set browser.
 - **Data**: `useLootFilterData()` → `{ status, data, types, lookup, options, params, reference }`; `lookup`
   (`utils/lookup.ts`) has `item`, `itemName`, `itemType`, `typeName`, `statName`, `statId`, `statParamLabel`,
-  `areaName`, `uniqueOrSetName` (all `undefined` for unknown keys or missing data); the lookup and option lists are built once per loaded bundle pair (module cache). An item
+  `areaName`, `uniqueOrSetName`, `skillName` (the skills.txt name of a skill id, for formulas) (all `undefined` for
+  unknown keys or missing data), and the `statIds` / `skillIds` maps the evaluator's context takes; the lookup and option lists are built once per loaded bundle pair (module cache). An item
   option's type search leaves out the `merc` type: ESR names that mercenary-equipment umbrella type "Helm" and makes it
   a parent of gloves, boots, belts and more, so `helm` would list them all.
 
@@ -1155,8 +1171,9 @@ removes the key); `passthrough` is never patched. Sections:
   (`StyleSummary`; its `comment` is shown but not counted). A rule's
   `comment` belongs to the rule editor; a style's is a one-line field under **Notes** ("A note for yourself; the plugin
   ignores it.").
-- **Visibility**: `hide` (hint: no later rule runs, and no rule can show it again), `hideIfOtherConditionsFail`
-  (checkboxes; unchecked removes the key), `chatMessageWhenHidden`.
+- **Visibility**: `hide` (hint: the item cannot be picked up; no later rule runs; a Show rule above protects the item),
+  `show` (Advanced; plugin 1.8.2: "no later rule can hide it; later rules still change its looks, chat lines and
+  sounds. Not with Hide."), `hideIfOtherConditionsFail` (checkboxes; unchecked removes the key), `chatMessageWhenHidden`.
 - **Name**: `replaceName`, `namePrefix`, `nameSuffix`. **Chat**: `chatMessage`, `notify` (the hint shows the filter's
   effective drop line).
 - **Label** (`LabelSection`): `labelBackground` (colour + alpha, default alpha 242), `labelBorder` (colour + alpha, width; "Add border" /
@@ -1431,6 +1448,100 @@ picked one (see [Style first, then tweak](#style-first-then-tweak)).
   deepest part of the path in the current text (the draft when there is one) and the editor selects it and scrolls it,
   and the page, to the centre; a path that is not in the text any more toasts "Not found in the current text".
 
+## Show action (plugin 1.8.2)
+
+The 3.3 guide: "show protects: after a rule with `"show": true` matches, later rules cannot hide the item, by hide,
+hideIfOtherConditionsFail or hideUnmatchedItems. Their colors, names, sounds and chat lines still apply." and "A rule
+cannot both show and hide." Up to ESR 3.2.24 (plugin 1.5.3) the key did not exist.
+
+- **Model**: `show?: boolean` is an action (`RuleActions`, after `hideIfOtherConditionsFail` in the canonical key order),
+  so styles can hold it too and it counts as an effect (a rule with only `show` has actions).
+- **Validator** (`checkShowAndHide`): an error when a rule's effective actions (its own over its style's) or a style both
+  show and hide ("A rule cannot both show and hide an item: the game switches the rule off", at the rule's own `show`,
+  else `hide`, else `useStyle`, with "(with its style)" when the style brings one of them).
+- **Evaluator**: `EvaluationResult.shownBy` is the first applied rule with `show`. After it, a matching `hide` rule
+  applies like a rule without `hide` (its looks, chat line and sound; the trace entry carries `hideBlockedBy`), a
+  `hideIfOtherConditionsFail` rule whose gate holds is skipped (`hideBlockedBy` too) and `hideUnmatchedItems` does not
+  hide. A rule that both shows and hides is `switchedOff` (`SHOW_AND_HIDE`). Where the guide is silent: whether the rules
+  after a blocked `hide` still run (assumed yes) and whether its `chatMessageWhenHidden` prints (assumed no; the item is
+  not hidden).
+- **Editor**: a Show checkbox next to Hide (Advanced view; Basic shows it when set, tagged), a green "show" badge in the
+  rule list, `show` in the rule summary, How rules combine and the AI format reference ("show protects").
+- **Test tab**: "Shown by rule N: no later rule can hide it." under the label; trace rows "Would hide the item, but rule
+  N shows it" and "switched off: error".
+
+## Formula condition (`engine/formula.ts`, plugin 1.8.2)
+
+Plugin 1.8.2 (ESR 3.3) has the `formula` condition; the code was first built as a preview on `feat/loot-filter-formulas`
+(2026-10-31, from a guide excerpt) and ported to the 3.3 guide. The guide: "formula is a condition that holds when its
+formula is not 0. It is written like a txt calc and checked when the filter loads", e.g. `{ "itemTypes": ["ring"],
+"quality": "magic", "formula":
+"((stat('item_fastercastrate')>=10)&&((stat('fireresist')+stat('coldresist')+stat('lightresist'))>=40))",
+"hideIfOtherConditionsFail": true }`. Parts: `stat('name')` (an itemstatcost `Stat` or its row number),
+`stat('name', param)` (a number or a skills.txt skill name such as `'Teleport'`), `playerStat('name')` /
+`playerStat('name', param)`, `statMax('name')` / `statSum('name')` (highest value / total over every param of the item's
+stat), `+ - * /` on whole numbers (division rounds toward 0, division by 0 gives 0), `== != < <= > >=` (1 or 0),
+`&& || !`, `a ? b : c`. "Skill names on chance-to-cast and charges: these stats keep the skill and its level in the
+param, so a skill name matches that skill at any level, e.g. `stat('item_charged_skill', 'Teleport')` gives the level of
+its Teleport charges." "Mistakes: a bad name or bad syntax switches the rule off, and the log gives the rule number,
+line and character." Stats read the tooltip number and an unidentified item skips a rule that reads an item stat (see
+"Stat values" in the Test tab section).
+
+- **Engine** (`engine/formula.ts`): a tokenizer and a precedence-climbing parser to a syntax tree with source offsets
+  (`parseFormula` → `{ ok, ast }` or `{ ok: false, error: { message, offset } }`; messages name look-alikes: `=`, `&`,
+  `|`, decimals, a function name in the wrong case), `formulaReferences` (the calls in source order, for the validator)
+  and `evaluateFormula` (signed 32-bit integers). Editor limits of 512 parts and 64 nesting levels keep huge formulas
+  from overflowing the stack (the plugin has its own: "the formula is too long", "the formula nests too deep").
+- **Model**: `formula?: string` is a rule condition (`RuleConditions`, after the stat lists in the canonical key order);
+  another shape stays in `passthrough` with an error like any other condition.
+- **Validator** (`checkFormula` in `engine/validate.ts`, all at `rules/N/formula`, positions as "character N"): a
+  syntax error is an **error** ("…The game switches a rule with a bad formula off when the filter loads"); warnings (as
+  for the stat lists, since the game data may lag) for unknown stat names (naming a case-only match) and ids, unknown
+  skill names (an in-game name such as 'Hex: Bane' names its skills.txt name 'Hex Bane'), each saying the game switches
+  the rule off for a name the mod lacks; `stat('name')` without a param on a skill, tab, class, event or charged stat
+  (reads param 0 only: use `statMax` / `statSum` or a param), a skill name on a stat without a skill param, a param
+  above 65535, a tab param that names no tab, an event/charged number param naming skill 0 or level 0, a quoted number,
+  double quotes (the plugin's log says "names go in single quotes"), and the Enhanced Damage / Defense / durability
+  quirk on item stats (as the stat lists). The preview's "plugin 1.5.3 ignores formula" warning, the "any level is
+  assumed" warning and the "hideIfOtherConditionsFail would hide unidentified items" warning are gone.
+- **Evaluator** (`engine/evaluate.ts`): the formula is ANDed with the other conditions and is an "other condition" for
+  `hideIfOtherConditionsFail` (assumed). It reads the test item's stat entries (`stat`, `statMax`, `statSum`) and the
+  character's (`playerStat`, character level = stat 12) like the stat lists; skill names resolve through
+  `TestContext.skillIds` (lootfilter.json `skillNames`, `buildSkillIds`). A syntax error makes the rule `switchedOff`
+  ("its formula has an error"; it never runs, nor hides). On an unidentified item a formula that reads an item stat
+  other than `STATS_WHILE_UNIDENTIFIED` gives `{ status: 'unidentified' }` and the whole rule is skipped. Each trace
+  entry carries `formula`: its value, `unidentified` or the error; the Test tab trace prints it ("formula = 1, holds").
+- **Rule editor** (`components/rules/conditions/FormulaField.tsx`): "Formula" (Advanced view; Basic shows it when set)
+  spans the Stats section after the stat lists. A monospace text area (an emptied one removes the key), the live syntax
+  check ("Character N: message" and the text around it with the character marked, or "Syntax OK"), an insert helper
+  (function select, `StatPicker`, `StatParamField` for `stat` / `playerStat`, Insert: `formulaCallText` in
+  `utils/formulaText.ts` writes `stat('name')`, `stat(39)`, `stat('item_nonclassskill', 'Teleport')` (a skill stat's
+  param by its skills.txt name), `stat('item_skillonhit', 30233)` (event and charged stats keep the exact skill and
+  level; the hint says a quoted skill name matches any level) or `statMax('name')` at the caret), and a collapsed
+  "Formula parts and assumptions" block (the guide's table and `FORMULA_ASSUMPTIONS`). The rule summary shows
+  `formula: …` cut at 40 characters (`formulaSummary`); the Test tab's assumptions note lists the formula assumptions.
+- **AI help**: the format reference has a `formula` condition row, a "Formulas" section (the guide's parts table, the
+  example, single quotes, when to prefer a formula) and skills.csv a `formulaName` column (the skills.txt name).
+- **Data**: lootfilter.json `skillNames` (the skills.txt `skill` column by row, GAME-DATA.md), because the guide names
+  skills by skills.txt name; the display names of `skills` differ for 84 skills and 25 of them are shared, the
+  skills.txt names are unique (1566 rows in ESR 3.2.24, 1628 in 3.3).
+
+**Assumptions** where the guide is silent (`FORMULA_ASSUMPTIONS` and the constants beside it in `engine/formula.ts` are
+the one source: the field's help and the Test tab show that list):
+
+- Operators bind like C (`BINARY_PRECEDENCE`): unary `!` and `-`, then `* /`, then `+ -`, then `< <= > >=`, then
+  `== !=`, then `&&`, then `||`, then `a ? b : c` (right-associative); the binary operators are left-associative.
+- Numbers are whole, non-negative literals; a `-` in front negates. Values are signed 32-bit integers (`| 0`,
+  `Math.imul`); a literal above 2147483647 is a syntax error; `-2147483648 / -1` wraps.
+- Names in single quotes (`FORMULA_QUOTE`); double quotes are read with a warning. Quotes have no escapes.
+- Function names are case-sensitive (`FORMULA_FUNCTIONS`; the DLL has lowercase copies of the names, so the plugin may
+  accept other cases); stat names must match exactly; skill names ignore case (`SKILL_NAMES_IGNORE_CASE`).
+- `stat('name')` without a param reads the entry with param 0, as the stat lists do; `statMax` and `statSum` read every
+  param. A stat the item or character lacks is 0.
+- A skill name on an event or charged stat reads the highest of the entries for that skill; on any other stat that is not
+  a skill stat it is read as the skill id.
+- Enhanced Damage, Enhanced Defense and Increased Maximum Durability are taken to read 0 where the stat lists do.
+
 ## Test tab (`components/TestTab.tsx`, `components/test/`, `utils/testItemForm.ts`)
 
 Runs the engine's `evaluateFilter` against an item the user describes. Two columns from `lg` up (form left, result
@@ -1451,7 +1562,15 @@ tab switches; it is not saved.
   switches to its base and name, and sets the quality to unique or set unless the user chose a quality) and item stat
   rows (stat, param, value; incomplete rows are ignored; the param is the rule rows' `StatParamField` without "Any
   known level", and charged rows show the same value hint; a layered row without param says the test takes the entry
-  as param 0, as the evaluator does).
+  as param 0, as the evaluator does). A hint above the rows asks for the tooltip numbers and says what an unidentified
+  item skips.
+- **Stat values** (plugin 1.8.2, the guide): every stat reads the number the tooltip prints (+40 Life = 40, per-level
+  stats at the character's level, `item_howl` / `item_fear` the percent, charges the skill level). The test compares
+  the values as entered, so they are the tooltip numbers. **Unidentified items**: a rule whose item stat lists or
+  formula check a stat other than gold, armorclass, quantity, durability, maxdurability or item_numsockets
+  (`STATS_WHILE_UNIDENTIFIED`) skips an unidentified item entirely (no actions, cannot hide it); the trace row says so
+  ("Skipped: the item is unidentified and the rule checks an item stat…") and is shown without "Show skipped rules".
+  No validator warning (it would flag every Sully hide rule with stat exceptions); the AI reference explains it.
 - **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
   filter level (the filter's levels, default marked) and more character stat rows.
 - **Conversion** (`utils/testItemForm.ts`): `toTestItem(form, lookup)` (type ancestors from the `types` bundle via the
@@ -1463,8 +1582,10 @@ tab switches; it is not saved.
   `LabelPreview` with default colour `ÿc0`); sounds with volume (play button for the bundled files); minimap icon and
   droplight. The evaluation runs on every change; above 1500 rules a Run button runs it instead.
 - **Rule trace**: one row per rule that ran, in order: number, outcome badge (applied green, hidden and "hidden: other
-  conditions" red, skipped muted, disabled muted with a dashed border and the row dimmed), style, `ruleSummary`, and
-  the failed condition keys as chips. Skipped and disabled rules are hidden unless "Show skipped rules (N skipped, M
+  conditions" red, skipped muted, disabled muted with a dashed border and the row dimmed), style, `ruleSummary`, the
+  formula's value or why it was not evaluated ("Formula condition" above), the unidentified skip, a hide blocked by a
+  Show rule ("Would hide the item, but rule N shows it"), a switched-off rule (a formula error or show + hide: "switched
+  off: error" badge), and the failed condition keys as chips. Skipped and disabled rules are hidden unless "Show skipped rules (N skipped, M
   disabled)" is ticked. A row opens the rule in the Rules tab (`selectRule` + `?tab=rules`).
   After a hiding rule the note says how many rules did not run.
 - **Wrong-shaped rules**: a rule with a known key (condition or action) whose file value had the wrong shape (kept in
@@ -1472,7 +1593,7 @@ tab switches; it is not saved.
   with the outcome `wrongShape`: it never applies or hides, not even with `hideIfOtherConditionsFail`. The guide says
   "a rule with an error is switched off and logged", and the plugin's message for such a value is an error; not
   verified in game. Unknown keys sit in `passthrough` too but do not switch a rule off (the plugin logs "unknown
-  setting, ignored"; a future `formula` key stays ignored as before), and neither does a wrong-shaped `comment` (the
+  setting, ignored"), and neither does a wrong-shaped `comment` (the
   guide: "Ignored; notes for the author"). The trace badge reads "skipped: wrong shape"
   (amber) with the line "activeInLevels has the wrong shape; the plugin most likely ignores this rule (not
   verified)." and the failed conditions of the rest of the rule; the row is shown without "Show skipped rules" when
@@ -1483,8 +1604,9 @@ tab switches; it is not saved.
 - **Assumptions (verify in game)**: a collapsed, shortened list of the evaluator's assumptions that points here for the
   full list ("Verify in game" below); a "Verified in game" part (a missing stat counts as 0; `OMITTED_PARAM_RULE`: a
   check or `{stat:ID}` without param reads only the param-0 entry; skill tabs are numbered class × 8 + tab; Enhanced
-  Damage reads 0 on weapons and Enhanced Defense on armour, Enhanced Damage on a jewel correctly); a "Not yet verified"
-  part (Life, Mana and Stamina ×256; per-level stats in eighths; wrong-shaped rules skipped); how to use Check in game
+  Damage reads 0 on weapons and Enhanced Defense on armour, Enhanced Damage on a jewel correctly; all with plugin
+  1.5.3); a "Not yet verified" part (the 1.8.2 tooltip-number stat values; the unidentified skip; wrong-shaped rules
+  skipped; the single-number level); the formula assumptions; how to use Check in game
   ("If a number differs from the tooltip, the plugin reads that stat differently; tell us"); and the note that
   `{string:KEY}` is shown as written.
 - While the bundles load (or when they fail) a hint says that typed codes work but item-type conditions only see the
@@ -1624,10 +1746,70 @@ example rules: of the request), else of the request's first line, else "ai-filte
 | 6     | Sharing: saved filters in Supabase, library tabs, profile and home blocks                     | built (FEATURE-LOOT-FILTER-SHARING.md)                    |
 | 7     | AI help: LLM prompt package, Import AI answer, Copy problems for the AI                       | built (see "AI help")                                     |
 
+## The 3.3 guide against the editor (checklist)
+
+The source of truth for the 3.3 format is `LootFilters/ESR Loot Filter Guide.pdf` in the ESR repository (tag 3.3,
+plugin 1.8.2). ESR ships no separate JSON schema: the clone at 3.3 has only the PDF, `LootFilters/sources.json`, the
+DLL and `d2rloader/config/celestialrayone.loot-filter.toml`. The PDF text was extracted twice (a zlib + ToUnicode
+extractor and macOS PDFKit) and the two agree word for word, tables included (colour RGBs checked line by line).
+Transcription: `builds-feature-docs/loot-filter/ESR-LOOT-FILTER-GUIDE.md`. Commits are on `chore/esr-3.3`.
+
+| Guide item                                                                                                                                                                                                              | Support                                                                                                                                       | Where / commit                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Top-level keys: formatVersion, title, author, version, description, updateUrl, filterLevels, defaultLevel, hideUnmatchedItems, soundVolume, notifications, qualityColors, styles, rules                                 | yes                                                                                                                                           | `HEADER_READERS`                              |
+| filterLevels `{ id, name }`, name a string or per language                                                                                                                                                              | yes                                                                                                                                           | 6589dad (localised level names)               |
+| title, author, version, description as per-language objects ("any text")                                                                                                                                                | partial: read as strings only; an object is a wrong-shaped key (error). No known filter does it, and the launcher, not the plugin, shows them | follow-up (owner question)                    |
+| Conditions table (codes, types, quality 1–9, baseTier 0–2, itemLevel 0–999, sockets / maxSockets 0–99, the four flags, unique/set ids, the four stat lists, location, difficulty 0–2, areas, activeInLevels)            | yes                                                                                                                                           | `CONDITION_READERS`, validator ranges         |
+| Number shapes: one value, a list, `{ min, max }`; named values by name or number                                                                                                                                        | yes                                                                                                                                           | `readNumberMatch`, `namedMatch`               |
+| Stat check `{ stat, param, op, value }`, ops `== != > >= < <= between`                                                                                                                                                  | yes                                                                                                                                           | `readStatCheck`                               |
+| `formula` condition, every part of the grammar, skill names, any level on chance-to-cast and charges, bad name or syntax switches the rule off                                                                          | yes (precedence, 32-bit wrap, case rules are assumptions)                                                                                     | 004efc3, 0085482 (skillNames)                 |
+| Stat values: tooltip numbers, per-level at the character level, howl/fear percent, charges = skill level                                                                                                                | yes (warnings, hints, AI text; the Test tab takes tooltip numbers as entered)                                                                 | fcd106d, c14d2d3 (16 new 3.3 per-level stats) |
+| Unidentified items skip rules that check an item stat (gold, armorclass, quantity, durability, maxdurability, item_numsockets exempt)                                                                                   | yes (evaluator, Test tab)                                                                                                                     | fcd106d                                       |
+| Actions table: hide, hideIfOtherConditionsFail, replaceName / namePrefix / nameSuffix, labelBackground, labelBorder, chatMessage, chatMessageWhenHidden, notify, sound, soundVolume, icon, droplight, useStyle, comment | yes                                                                                                                                           | `ACTION_READERS`                              |
+| `show` (protects from later hides; not with hide)                                                                                                                                                                       | yes                                                                                                                                           | f52a116                                       |
+| hide makes the item unpickable (gold excepted)                                                                                                                                                                          | doc only (nothing to model)                                                                                                                   | e6197ff                                       |
+| Texts: one string or per language (13 languages), `{string:KEY}`, `ÿc` codes, `\u00ffc`                                                                                                                                 | yes; per-language texts are editable per language                                                                                             | 313aa57                                       |
+| `comment` as a per-language text ("text" in the actions table)                                                                                                                                                          | partial: read as a string only; the plugin ignores comments, so the rule still runs (our Test tab too)                                        | follow-up                                     |
+| Placeholders `{name} {code} {quality} {baseTier} {itemLevel} {sockets} {maxSockets} {ethereal} {uniqueOrSetId} {qualityColor} {stat:} {playerStat:} {string:} {link} {level} {filter}`                                  | yes                                                                                                                                           | `PLACEHOLDERS` (`engine/text.ts`)             |
+| notifications dropFormat / levelChangeFormat with defaults                                                                                                                                                              | yes                                                                                                                                           | `readNotifications`                           |
+| Chat off switch (`chatNotifications` in selection.json), once per item                                                                                                                                                  | doc and help text (the editor writes no selection.json)                                                                                       | 7aa6c64                                       |
+| Sounds: sounds.txt name or row, `.wav` `.mp3` `.flac`, volume chain                                                                                                                                                     | yes                                                                                                                                           | validator, Test tab                           |
+| Minimap icons: iconName (`.sprite`, first frame), iconSize 4–256, color with fade                                                                                                                                       | yes                                                                                                                                           | `readIcon`, validator                         |
+| Droplight `{ color }` or `{}`                                                                                                                                                                                           | yes                                                                                                                                           | `readDroplight`                               |
+| qualityColors: the nine qualities, one code each                                                                                                                                                                        | yes                                                                                                                                           | `readQualityColors`                           |
+| Colour codes ÿc0 to ÿcV with RGB (ÿc3 110,110,255; ÿcM light purple 192,128,242; N–V exact)                                                                                                                             | yes                                                                                                                                           | 285e6f1                                       |
+| JSON with `//` comments                                                                                                                                                                                                 | yes (also block comments and trailing commas, as the 1.5.3 reader did)                                                                        | `engine/jsonc.ts`                             |
+| selection.json, TOML settings, other-mod setup                                                                                                                                                                          | doc only (outside the filter file)                                                                                                            | transcription                                 |
+
 ## Verify in game
 
 Assumptions the engine makes where the guide is silent (from the engine file headers). This is the one full list; the
 research doc and the Test tab's note link here.
+The `formula` condition has its own list under "Formula condition" above (`FORMULA_ASSUMPTIONS`).
+
+**Plugin 1.8.2 (ESR 3.3) checks.** `LOOT_FILTER_PLUGIN_VERSION` stays 1.5.3 until the owner bumps it; the editor
+already follows the 1.8.2 guide. To verify in game with 1.8.2:
+
+1. Localised level names: Sully's v0.7.0 shows its level names in the game language (level key, launcher).
+2. `show`: a show rule above a broad hide keeps the item (also against `hideIfOtherConditionsFail` and
+   `hideUnmatchedItems`); the later hide rule's colours, chat line and sound still apply; the rules after it still run
+   (assumed); its `chatMessageWhenHidden` does not print (assumed); show + hide in one rule (or through its style) is
+   logged as an error and the rule is off.
+3. `formula`: the guide example on magic rings; operator precedence (`1+2*3==7`, `!0+1`); skill names (`'Teleport'`,
+   case `'teleport'`), any level on `item_charged_skill` / `item_skillonhit`; `statMax` / `statSum` on
+   `item_addskill_tab`; double quotes (assumed rejected); `StatMax` in another case (assumed rejected); a bad stat name
+   switches the rule off; `hideIfOtherConditionsFail` with a formula giving 0 hides.
+4. Stat values: `{stat:7}` on a +40 Life item reads 40; a per-level stat at two character levels; `{stat:112}`
+   (howl) the percent; `{stat:204,<layer>}` on charges reads the skill level; `item_replenish_durability` as stored.
+5. Whether Enhanced Damage still reads 0 on weapons and Enhanced Defense on armour now that stats read tooltip
+   numbers (`STAT_QUIRKS`, verified with 1.5.3 only).
+6. A stat check without `param` still reads param 0 (`OMITTED_PARAM`).
+7. Unidentified items: a hide rule with stat exceptions does not hide unidentified magic items; a rule on
+   `item_numsockets` or `quantity` still works on them; `playerStats` rules still run.
+8. Chat lines and sounds once per item (also when the item leaves and re-enters view); the launcher's Enable chat
+   notifications off silences item lines but not the level change line.
+9. `"activeInLevels": 4` as a bare number; JSONC comments and trailing commas still accepted.
+10. The `ÿcM` colour (light purple 192, 128, 242) and N to V as listed.
 
 - `activeInLevels` is a precondition: a rule inactive at the current level is skipped and never hides, not even with
   `hideIfOtherConditionsFail`.
@@ -1657,7 +1839,8 @@ research doc and the Test tab's note link here.
 - In `{stat:ID}`, ID may also be an itemstatcost name.
 - `{ethereal}` expands to `Ethereal` for ethereal items and to nothing otherwise.
 - `hideUnmatchedItems` hides an on-ground item no rule applied to.
-- Colour codes `ÿcN` to `ÿcV` use preview approximations (the guide gives no RGB for them).
+- Colour codes: the RGB values are the 3.3 guide's (`ÿc3` 110, 110, 255; `ÿcM` light purple 192, 128, 242; N to V
+  exact); the label preview draws them flat, the game in HD shades.
 - `.sprite` icons: header layout and RGBA pixel order as observed in `goldstar.sprite` (Sully's other eleven icons decode
   the same way); only the first frame is drawn. The plugin's reader (v1.5.3 disassembly) confirms the fields it uses
   and takes the first frame of a strip; see [Generated icons](#generated-icons).
@@ -1673,9 +1856,8 @@ research doc and the Test tab's note link here.
 - `"activeInLevels": 4` (one number instead of a list) works in game (verified with the template's Ancient Scroll
   hide rule, which hides them at level 4). We read it as `[4]`; still to check: are the scrolls shown at levels 1 to 3, i.e. the plugin
   reads `[4]` rather than ignoring the key (backlog)?
-- Stats stored scaled (`engine/statScale.ts`): whether the plugin compares and prints the stored value (Life ×256,
-  per-level stats in eighths) or the tooltip's. The validator warns about such checks; Check in game shows it
-  (`{stat:7}` on a +40 Life item: 40 or 10240?). Sully's `{stat:218}/8` labels suggest the stored value.
+- Stat values (`engine/statScale.ts`): plugin 1.8.2 reads the tooltip number (the 3.3 guide); not yet checked in
+  game (item 4 above). Sully's older `{stat:218}/8` labels were written for plugin 1.5.3.
 - `uniqueOrSetIds` are 0-based row numbers of uniqueitems.txt / setitems.txt (equal to `*ID` in ESR 3.2.12).
 - A numeric `sound` is a 0-based data row of sounds.txt (`*Index` is unreliable: it repeats for the Leoric taunt rows).
 - An item with a `type2` counts as both types for item-type conditions (the Test tab and the never-matches warnings use
@@ -1701,9 +1883,14 @@ research doc and the Test tab's note link here.
 
 ### Troubleshooting in game
 
-- **Chat lines do not print:** run `lootfilter` in the console; its output lists the hooks, "drop alerts" among them.
+- **Chat lines do not print:** first check the launcher's "Enable chat notifications" (selection.json
+  `"chatNotifications": false` turns off every chat line about an item; the filter announce, level changes and Show
+  Hidden Items still print; with `debug_log = true` the log says "chat line not printed (chat notifications are off in
+  the launcher)"). Then run `lootfilter` in the console; its output lists the hooks, "drop alerts" among them.
   Then read `d2rloader\logs\celestialrayone.loot-filter.log`: a feature the plugin switched off after its D2RLoader
   version check is named there. `debug_log = true` in `celestialrayone.loot-filter.toml` logs every chat line printed
   (and every item decision).
-- A `notify` / `chatMessage` line prints when the item drops or comes into view.
+- A `notify` / `chatMessage` line prints once per item, when it drops or first comes into view; plugin 1.8.2 does not
+  repeat it (or the sound) when the item comes back into view (the 3.3 patch notes and the plugin's TOML; the guide's
+  chat paragraph still says "every time").
 - A sound or icon the filter names but its folder lacks is logged; the rule keeps working without it.

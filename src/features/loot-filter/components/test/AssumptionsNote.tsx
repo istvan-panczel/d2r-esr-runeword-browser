@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { OMITTED_PARAM_RULE } from '../../engine/evaluate';
 import { REPORT_STAT_URL } from '../../utils/inGameCheck';
+import { FORMULA_ASSUMPTIONS } from '../../engine/formula';
 
 /** The full list: the "Verify in game" section of docs/features/LOOT-FILTER.md. */
 const FULL_LIST_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser/blob/master/docs/features/LOOT-FILTER.md#verify-in-game';
@@ -16,10 +17,11 @@ const ASSUMPTIONS: readonly string[] = [
   'In {stat:ID}, ID may also be a stat name.',
   '{ethereal} becomes "Ethereal" for ethereal items and nothing otherwise.',
   '"Hide unmatched items" hides an item on the ground that no rule applied to.',
+  'After a Show rule, a later hide rule applies like a rule without hide (its looks, chat line and sound) and the rules after it still run; its chat line when hidden does not print.',
   'Items without a normal/exceptional/elite family (rings, amulets, charms, jewels, arrows, mythical bases) match no base-tier condition.',
 ];
 
-/** What an in-game test confirmed (engine/evaluate.ts header, engine/statQuirks.ts). */
+/** What an in-game test confirmed with plugin 1.5.3 (engine/evaluate.ts header, engine/statQuirks.ts); recheck with 1.8.2. */
 const VERIFIED: readonly string[] = [
   'A stat the item lacks counts as 0.',
   OMITTED_PARAM_RULE,
@@ -29,8 +31,8 @@ const VERIFIED: readonly string[] = [
 
 /** Stat readings nobody has checked in game yet; each is a validator warning too. */
 const NOT_VERIFIED: readonly string[] = [
-  'Life, Mana and Stamina are stored ×256 in the game (+40 Life = 10240): whether the plugin reads 40 or 10240 is not known.',
-  'Per-level stats (Strength per level…) are stored in eighths per character level (+1 per level = 8; Life and Mana per level also ×256): whether the plugin reads the stored or the shown value is not known.',
+  'Plugin 1.8.2 reads every stat as the tooltip number (the guide): +40 Life reads 40, per-level stats read the value at the character level, Hit Causes Monster to Flee and Fear read the percent, charges read the skill level. Enter those numbers here.',
+  'A rule that checks an item stat skips an unidentified item entirely (the guide): no actions, and it cannot hide it; gold, armorclass, quantity, durability, maxdurability and item_numsockets still work.',
   'A rule with a wrong-shaped condition or action (e.g. "sockets": "2" instead of 2) is most likely switched off by the plugin, so the test skips it.',
   '"activeInLevels": 4 (a number instead of [4]) works in game; the test reads it as [4], but whether the plugin also leaves the rule off at the other levels is not known.',
 ];
@@ -48,7 +50,7 @@ export function AssumptionsNote() {
           <li key={assumption}>{assumption}</li>
         ))}
       </ul>
-      <p className="mt-2 text-xs font-medium">Verified in game</p>
+      <p className="mt-2 text-xs font-medium">Verified in game (plugin 1.5.3)</p>
       <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
         {VERIFIED.map((fact) => (
           <li key={fact}>{fact}</li>
@@ -58,6 +60,12 @@ export function AssumptionsNote() {
       <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
         {NOT_VERIFIED.map((fact) => (
           <li key={fact}>{fact}</li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs font-medium">Formulas</p>
+      <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+        {FORMULA_ASSUMPTIONS.map((assumption) => (
+          <li key={assumption}>{assumption}</li>
         ))}
       </ul>
       <p className="mt-2 text-xs text-muted-foreground">

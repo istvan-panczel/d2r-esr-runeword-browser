@@ -80,7 +80,7 @@ export function SlotCell({
         {item !== null && <ItemChoicesEditor item={item} slot={slot} disabled={disabled} onChange={onChange} />}
         {item !== null && <BuildItemCard item={item} slot={slot} setPieces={setPieces} showChoices={false} />}
         {item !== null && onCraftsChange !== undefined && (
-          <CraftsEditor slot={slot} crafts={crafts} craftData={craftData} disabled={disabled} onChange={onCraftsChange} />
+          <CraftsEditor slot={slot} item={item} crafts={crafts} craftData={craftData} disabled={disabled} onChange={onCraftsChange} />
         )}
         {item !== null && onNoteChange !== undefined && (
           <Textarea

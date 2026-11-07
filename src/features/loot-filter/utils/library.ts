@@ -1,3 +1,4 @@
+import { levelName } from '../engine/text';
 import type { SharedFilterLevel, SharedFilterSummary, SourceRevision } from '../sharing/types';
 import type { LootFilterEntry } from '../store/types';
 import { BUNDLED_TEMPLATES, bundledTemplate, type BundledTemplate, type BundledTemplateId } from './template';
@@ -115,9 +116,9 @@ export function ruleCountLabel(count: number): string {
   return `${String(count)} ${count === 1 ? 'rule' : 'rules'}`;
 }
 
-/** The level names in file order, blanks left out. */
+/** The level names in file order (enUS of a per-language name), blanks left out. */
 export function levelNames(levels: readonly SharedFilterLevel[] | null): string[] {
-  return (levels ?? []).map((level) => level.name.trim()).filter((name) => name !== '');
+  return (levels ?? []).map((level) => levelName(level).trim()).filter((name) => name !== '');
 }
 
 // --- Copies and updates ---

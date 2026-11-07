@@ -54,6 +54,8 @@ const reference: LootFilterReference = {
     ['axe', new Set(['axe', 'weap'])],
     ['rune', new Set(['rune', 'misc'])],
   ]),
+  skillIds: new Map(),
+  skillDisplayNames: new Map(),
 };
 
 /** The messages of the rule's diagnostics (`null` validates without a reference). */
@@ -285,12 +287,12 @@ describe('validateLootFilter', () => {
       expect(messages({ itemStats: [onHit((472 << 6) | 25)], hide: true })).toEqual([]);
     });
 
-    it('warns about a charged value that is neither presence nor a multiple of 256', () => {
+    it('warns about a charged value above the highest skill level (plugin 1.8.2 reads the skill level)', () => {
       const charged = (check: Partial<StatCheck>): StatCheck => ({ stat: 204, param: (472 << 6) | 25, value: 1, ...check });
       const flagged = (check: Partial<StatCheck>) => checkRule({ itemStats: [charged(check)], hide: true }, reference);
-      for (const ok of [{}, { op: '>', value: 0 }, { op: '<', value: 1 }, { value: 1280 }, { op: '<', value: 2560 }] as const)
+      for (const ok of [{}, { op: '>', value: 0 }, { op: '<', value: 1 }, { value: 5 }, { value: 63 }, { op: '<', value: 2560 }] as const)
         expect(flagged(ok)).toEqual([]);
-      expect(flagged({ value: 5 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
+      expect(flagged({ value: 1280 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
       expect(flagged({ op: '==', value: 1285 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
     });
   });
@@ -342,26 +344,31 @@ describe('validateLootFilter', () => {
     });
   });
 
-  describe('stats the game stores scaled (not verified in game)', () => {
+  describe('stats the game stores scaled', () => {
     const scaled = (rule: LootFilterRule) => messages(rule, null);
 
-    it('warns about Life, Mana and Stamina (×256) in every stat list, by name or id', () => {
-      expect(scaled({ itemStats: [{ stat: 'maxhp', value: 40 }], hide: true })).toEqual([
-        'rules/0/itemStats/0/value: The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this rule to see what the plugin reads.',
-      ]);
+    it('says nothing about Life, Mana, Stamina, howl and fear: plugin 1.8.2 reads the tooltip number', () => {
+      expect(
+        scaled({
+          itemStats: [
+            { stat: 'maxhp', value: 40 },
+            { stat: 'item_howl', value: 25 },
+          ],
+          hide: true,
+        })
+      ).toEqual([]);
       expect(
         scaled({ itemStatsAnyOf: [{ stat: 9, value: 20 }], playerStats: [{ stat: 'hitpoints', op: '<', value: 100 }], namePrefix: 'x' })
-      ).toEqual([
-        expect.stringMatching(/^rules\/0\/itemStatsAnyOf\/0\/value: .*\+20 Mana may read as 5120/),
-        expect.stringMatching(/^rules\/0\/playerStats\/0\/value: .*\+100 Life/),
-      ]);
+      ).toEqual([]);
     });
 
-    it('warns about per-level stats (eighths), and Life per level as both', () => {
+    it('warns about per-level stats, which read the value at the character level', () => {
       expect(scaled({ itemStats: [{ stat: 'item_strength_perlevel', value: 2 }], hide: true })).toEqual([
-        expect.stringMatching(/item_strength_perlevel" in eighths per character level .* \+2 Strength per level may read as 16\./),
+        expect.stringMatching(
+          /^rules\/0\/itemStats\/0\/value: "item_strength_perlevel" \(Strength per level\) reads the value at your character's level/
+        ),
       ]);
-      expect(scaled({ itemStats: [{ stat: 216, value: 3 }], hide: true })).toEqual([expect.stringMatching(/may read as 6144/)]);
+      expect(scaled({ itemStats: [{ stat: 216, value: 3 }], hide: true })).toEqual([expect.stringMatching(/Life per level/)]);
       expect(scaled({ itemStats: [{ stat: 'strength', value: 40 }], hide: true })).toEqual([]);
     });
 
@@ -388,7 +395,7 @@ describe('validateLootFilter', () => {
           namePrefix: 'x',
         })
       ).toEqual([]);
-      expect(scaled({ itemStats: [{ stat: 'maxhp', op: '==', value: 40 }], namePrefix: 'x' })).toHaveLength(1);
+      expect(scaled({ itemStats: [{ stat: 218, op: '==', value: 40 }], namePrefix: 'x' })).toHaveLength(1);
     });
   });
 
@@ -550,5 +557,138 @@ describe('hideIfOtherConditionsFail, empty lists and disabled rules', () => {
       ['rules/0/hide', 1, 'Hides every ground item; the rule after it never runs for ground items'],
       ['disabledRules/1/rule/useStyle', 3, 'There is no style named "Missing"'],
     ]);
+  });
+});
+
+describe('show (plugin 1.8.2)', () => {
+  it('accepts show as an action', () => {
+    expect(checkRule({ itemCodes: ['r01'], show: true })).toEqual([]);
+  });
+
+  it('reports a rule or style that both shows and hides', () => {
+    expect(checkRule({ itemCodes: ['r01'], show: true, hide: true })).toEqual([['error', 'rules/0/show']]);
+    const styled = validateLootFilter({
+      ...base,
+      styles: { H: { hide: true } },
+      rules: [{ itemCodes: ['r01'], useStyle: 'H', show: true }],
+    });
+    expect(styled.map((d) => [d.severity, d.path])).toEqual([['error', 'rules/0/show']]);
+    const style = validateLootFilter({ ...base, styles: { B: { hide: true, show: true } } });
+    expect(style.map((d) => [d.severity, d.path])).toEqual([['error', 'styles/B/show']]);
+  });
+});
+
+describe('validateLootFilter: formula', () => {
+  const formulaReference: LootFilterReference = {
+    ...reference,
+    statNames: new Set([...reference.statNames, 'fireresist', 'item_nonclassskill', 'item_maxdamage_percent']),
+    statIds: new Set([...reference.statIds, 39, 97, 17]),
+    statNamesById: new Map([...reference.statNamesById, [39, 'fireresist'], [97, 'item_nonclassskill'], [17, 'item_maxdamage_percent']]),
+    skillIds: new Map([
+      ['teleport', 54],
+      ['hex bane', 666],
+    ]),
+    skillDisplayNames: new Map([['hex: bane', ['Hex Bane']]]),
+  };
+  const said = (rule: LootFilterRule, ref: LootFilterReference | null = formulaReference) => messages(rule, ref);
+  const severities = (rule: LootFilterRule) =>
+    validateLootFilter({ ...base, rules: [rule] }, formulaReference).map((d) => [d.severity, d.path]);
+  const ring = (formula: string, extra: LootFilterRule = {}): LootFilterRule => ({ itemTypes: ['rune'], formula, hide: true, ...extra });
+
+  it('accepts the guide example and the author’s oskill example', () => {
+    expect(said(ring("((stat('fireresist')>=10)&&((stat('fireresist')+stat(39))>=40))"))).toEqual([]);
+    expect(said(ring("stat('item_nonclassskill','Teleport')>10"))).toEqual([]);
+    expect(said(ring("stat('item_nonclassskill','teleport')>10"))).toEqual([]);
+  });
+
+  it('reports a syntax error with its position, and says the rule is switched off', () => {
+    expect(said(ring("stat('fireresist') = 1"))).toEqual([
+      "rules/0/formula: Formula: '=' is not an operator; compare with '==' (character 20). The game switches a rule with a bad formula off when the filter loads",
+    ]);
+    expect(severities(ring(''))).toEqual([['error', 'rules/0/formula']]);
+  });
+
+  it('reports huge formulas as syntax errors instead of overflowing the stack', () => {
+    for (const formula of [`${'('.repeat(3000)}1${')'.repeat(3000)}`, `${'!'.repeat(10000)}1`, Array<string>(10000).fill('1').join('+')]) {
+      expect(checkRule(ring(formula))).toContainEqual(['error', 'rules/0/formula']);
+    }
+  });
+
+  it('warns about unknown stats (naming a case-only difference) and stat ids', () => {
+    expect(said(ring("stat('FireResist') + stat(4000) + stat('nope')"))).toEqual([
+      'rules/0/formula: Unknown stat "FireResist" at character 6; stat names are taken to be case-sensitive: "fireresist". A name the mod\'s itemstatcost.txt lacks switches the rule off in game',
+      'rules/0/formula: Unknown stat id 4000 at character 27',
+      'rules/0/formula: Unknown stat "nope" at character 40. A name the mod\'s itemstatcost.txt lacks switches the rule off in game',
+    ]);
+    // Without a reference only the syntax is checked
+    expect(said(ring("stat('nope', 'Nope')"), null)).toEqual([]);
+  });
+
+  it('takes names as written and warns about spaces around them', () => {
+    expect(said(ring("stat(' 39 ') + stat('item_nonclassskill', ' Teleport')"))).toEqual([
+      "rules/0/formula: The name ' 39 ' at character 6 has spaces around it; names are taken as written, so it likely matches nothing",
+      'rules/0/formula: Unknown stat " 39 " at character 6. A name the mod\'s itemstatcost.txt lacks switches the rule off in game',
+      "rules/0/formula: The name ' Teleport' at character 43 has spaces around it; names are taken as written, so it likely matches nothing",
+      "rules/0/formula: Unknown skill ' Teleport' at character 43 (formulas take the skills.txt skill column). A skill the mod's skills.txt lacks switches the rule off in game",
+    ]);
+  });
+
+  it('warns about unknown skills, naming the skills.txt name of an in-game name', () => {
+    expect(said(ring("stat('item_nonclassskill', 'Hex: Bane') + stat('item_nonclassskill', 'Nope')"))).toEqual([
+      "rules/0/formula: Unknown skill 'Hex: Bane' at character 28: that is the in-game name; formulas take the skills.txt name, 'Hex Bane'. A skill the mod's skills.txt lacks switches the rule off in game",
+      "rules/0/formula: Unknown skill 'Nope' at character 70 (formulas take the skills.txt skill column). A skill the mod's skills.txt lacks switches the rule off in game",
+    ]);
+  });
+
+  it('warns about params: layered stats without one, skill names on other stats, encodings, range', () => {
+    expect(said(ring("stat('item_nonclassskill') + statMax('item_nonclassskill') + playerStat('item_addskill_tab')"))).toEqual([
+      'rules/0/formula: stat(\'item_nonclassskill\') at character 1 is taken to read only the entry with param 0, but "item_nonclassskill" has one entry per skill: use statMax or statSum for any skill, or add a param',
+      'rules/0/formula: playerStat(\'item_addskill_tab\') at character 62 is taken to read only the entry with param 0, but "item_addskill_tab" has one entry per skill tab: use statMax or statSum for any skill tab, or add a param',
+    ]);
+    // The position is the function name's, also inside parentheses
+    expect(said(ring("1 + (stat('item_nonclassskill'))"))).toEqual([
+      expect.stringMatching(/^rules\/0\/formula: stat\('item_nonclassskill'\) at character 6 is taken/),
+    ]);
+    expect(said(ring("stat('fireresist', 'Teleport')"))).toEqual([
+      "rules/0/formula: \"fireresist\" has no skill param: the skill name 'Teleport' at character 20 is taken to be read as the skill's id",
+    ]);
+    // Chance-to-cast and charges: a skill name matches any level (the guide)
+    expect(said(ring("stat(198, 'Teleport') + stat('item_charged_skill', 'Teleport')"))).toEqual([]);
+    expect(said(ring("stat('item_skillonhit', 3456) + stat('item_skillonhit', 12) + stat('item_addskill_tab', 20)"))).toEqual([
+      expect.stringMatching(
+        /^rules\/0\/formula: The param 3456 at character 25 names level 0: the param of "item_skillonhit" is skill id × 64/
+      ),
+      expect.stringMatching(/^rules\/0\/formula: The param 12 at character 57 names skill 0/),
+      'rules/0/formula: The param 20 at character 89 names no skill tab as the game numbers them (class × 8 + tab 0 to 2)',
+    ]);
+    expect(said(ring("stat('fireresist', 70000) + stat('fireresist', '1') + stat('39')"))).toEqual([
+      expect.stringMatching(/^rules\/0\/formula: The param 70000 at character 20 is above 65535/),
+      'rules/0/formula: The param 1 at character 48 is in quotes; write a number param without them',
+      'rules/0/formula: The stat id 39 at character 60 is in quotes; a row number needs none',
+    ]);
+  });
+
+  it('warns about double quotes and the Enhanced Damage quirk on item stats; a too big number is an error', () => {
+    expect(said(ring('stat("fireresist") > 3'))).toEqual([
+      'rules/0/formula: Write names in single quotes (\'): the plugin\'s log says "names go in single quotes", so double quotes most likely switch the rule off',
+    ]);
+    expect(severities(ring("stat('fireresist') > 3000000000"))).toEqual([['error', 'rules/0/formula']]);
+    expect(said(ring("statMax('item_maxdamage_percent') + stat(17)", { itemTypes: ['weap'] }))).toEqual([
+      expect.stringMatching(/^rules\/0\/formula: The game keeps Enhanced Damage off a weapon's stats/),
+    ]);
+    expect(said(ring("playerStat('item_maxdamage_percent')", { itemTypes: ['weap'] }))).toEqual([]);
+  });
+
+  it('counts the formula as a condition: no "no actions" change, and a hide rule with only a formula hides no more than it', () => {
+    expect(said({ itemTypes: ['rune'], formula: '1' })).toEqual(['rules/0: The rule has conditions but no actions, so it does nothing']);
+    expect(said({ formula: '1' }, null)).toEqual(['rules/0: The rule has conditions but no actions, so it does nothing']);
+    const diagnostics = validateLootFilter({
+      ...base,
+      rules: [
+        { formula: '1', hide: true },
+        { itemCodes: ['r01'], namePrefix: 'x' },
+      ],
+    });
+    expect(diagnostics).toEqual([]);
   });
 });

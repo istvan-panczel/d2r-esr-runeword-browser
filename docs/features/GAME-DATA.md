@@ -121,13 +121,17 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 When an item rolls Superior, the server picks ONE `qualityitems.txt` row the item may use and applies its mod1 and mod2
 (mod2 only when mod1code is set); each value is rolled once and stays on the item as an ordinary stat, so a superior
 white base keeps it when a runeword is made in it. ESR's D2RLoader plugin
-`d2rloader/config/celestialrayone.superior-affixes.toml` replaces the stock equal odds with a weight per row
-(`[superior_affixes.weights]`, `row = weight`, rows numbered from 0 = the first line under the header; unlisted rows
-weigh `default_weight`, 100) and removes the stock 10-row limit. `build/bundleSuperior.ts` writes three top-level keys
+(`d2rloader/config/celestialrayone.superior-affixes.toml`) replaces the stock equal odds with a weight per row and
+removes the stock 10-row limit. Since ESR 3.3 the weight is the row's `frequency` column in qualityitems.txt (a whole
+number 0-65535, like magicprefix frequency; 0 or an empty cell: never rolls; anything else never rolls and is a
+`superior:` warning); without that column the generator falls back to the 3.2 toml table (`[superior_affixes.weights]`,
+`row = weight`, rows numbered from 0 = the first line under the header; unlisted rows weigh `default_weight`).
+`build/bundleSuperior.ts` writes three top-level keys
 into `bases.json` (separate keys so the rows serialize one per line; `engine/superiorAffixes.ts` →
 `readSuperiorAffixes(bundle)` joins them into a `SuperiorAffixes`):
 
-- `superior` (`SuperiorRules`): `enabled`, `defaultWeight`, and `firstFourRowBases` (only when the plugin's
+- `superior` (`SuperiorRules`): `enabled`, `weightSource` (`frequency` / `config` / `equal`), `defaultWeight` (0 for
+  `frequency`: an empty cell; the toml's `default_weight` for `config`), and `firstFourRowBases` (only when the plugin's
   `first_four_rows_for_throwing_and_nodurability` is true: the gear whose own type is `Throwable` or that has
   `nodurability`, which then only use rows 0-3; ESR 3.2.24: false, omitted). Without the config file, or with
   `enabled = false`, every row weighs 100 (stock equal odds) and a warning says so.
@@ -147,27 +151,34 @@ Amazon bows, orbs and claws use it), `armor` = every armor except own type shie,
 heads, helms, circlets, pelts), `bow` = own type bow or xbow (not abow), the other columns own type exactly. The pages
 compute a base's rows in the browser with `superiorRollsForBase`.
 
-ESR 3.2.24: 83 rows, every one with itypes (the stock columns are blank, so the own-type exceptions play no part: an
-Amazon bow matches `bow` and `weap` rows through its ancestors), 74 rows with a listed weight; 12 pools: Weapon (other
-types) 31 rows / total 969, Wand 15 / 217, Staff 16 / 220, Claw 32 / 994, Orb 10 / 173, Druid Club 10 / 200,
-Necromancer Dagger 11 / 203, Helm 19 / 549, Any Armor (other types: body armor, shields, heads, cloaks, robes,
-grimoires) 21 / 439, Gloves 20 / 523, Boots 18 / 473, Belt 18 / 473. Arrows and Bolts (weapons.txt `arrm` / `boqm`)
-roll no row. +1 to All Skills (row 23, weight 1) is 0.10% on a sword, 0.23% on body armor, 0.58% on an orb; max
-resists (22) and elemental absorb (24) 0.23% on body armor and shields. The toml also weighs rows 83-86, which
-qualityitems.txt does not have (warning `superior: superior-affixes.toml has weights for rows 83, 84, 85, 86; …`).
-Other `superior:` warnings: unknown item type codes, a row no base rolls, an unreadable weight line. Counts:
-`superiorRows`, `superiorPools`, `superiorWeightedRows`. `bundleIntegrity.test.ts` checks every row's weight, itypes,
-etypes and text against the "Grouped" view of `docs/quality_affixes.htm` and the rows of all 52 item type sections of
-its "Expanded" view against `superiorRollsFor` (the page shows the Enhanced Defense rows with their max only and orders
-the -enemy resist lines differently; both are normalised). Adding the keys did not bump `GAME_DATA_SCHEMA`.
+ESR 3.3: 150 rows, every one with itypes (the stock columns are blank, so the own-type exceptions play no part: an
+Amazon bow matches `bow` and `weap` rows through its ancestors), every row with a frequency (125 ×40, 25 ×29, 5 ×27,
+500 ×17, 15 ×14, 1 ×12, 250 ×7, 50 ×4); 15 pools: Weapon (other types) 37 rows / total 5362, Wand 39 / 5005, Staff
+40 / 5010, Bow 40 / 5517, Crossbow 43 / 5520, Claw 38 / 5367, Orb 34 / 4785, Druid Club 34 / 4930, Necromancer Dagger
+35 / 4945, Helm 52 / 7242, Armor 53 / 7075, Any Shield 53 / 6576, Gloves 55 / 6922, Boots 50 / 6721, Belt 49 / 6716.
+Arrows and Bolts (weapons.txt `arrm` / `boqm`) roll no row. +1 to All Skills (row 29, frequency 5) is 0.093% on a
+sword, 0.071% on body armor, 0.10% on an orb. (ESR 3.2.24: 83 rows, 12 pools, weights in the toml.) Other `superior:`
+warnings: unknown item type codes, a row no base rolls, an unreadable weight line or frequency cell. Counts:
+`superiorRows`, `superiorPools`, `superiorWeightedRows` (rows whose weight is not `defaultWeight`).
+`bundleIntegrity.test.ts` checks every row's itypes, etypes and text against the "Grouped" view of
+`docs/quality_affixes.htm` and the rows of all 52 item type sections of its "Expanded" view against `superiorRollsFor`
+(the page shows the Enhanced Defense rows with their max only, orders the -enemy resist lines differently and prints
+the bleed duration as a literal `%.2f`; all normalised). Not the weights: the 3.3 page's Rarity column still prints the
+3.2.24 toml weights by row number on the new 150-row table (e.g. +1 to All Skills: 100, frequency 5), an upstream page
+issue. Adding the keys did not bump `GAME_DATA_SCHEMA`.
 
 #### Weapon mastery
 
-`build/bundleMasteries.ts` → `masteries.json` (`MasteriesBundle`). The cubemain rows whose output mod is
-`weapon-mastery` (stat `weaponmastery`) are grouped by its value, one per specialisation (ESR 3.2.24: 1-14 one per base
-family, 15 / 17 Orb + Chipped Ruby / Skull, 20 / 25 Claw + Chipped Ruby / Skull, 55 / 60 Void Blade + Chipped Obsidian /
-Sapphire, Warlock, not on `docs/weapon_mastery.html`); negative values are the Remove rows. Per `WeaponMastery`:
-`value`, `label` (the row description after " - ", trailing number dropped), `cls`, `type` (orb, claw, wswd: the rows take
+`build/bundleMasteries.ts` → `masteries.json` (`MasteriesBundle`). Since ESR 3.3 every apply row sets its own
+property `weapon-mastery-<weapon>` to 1 (properties.txt 757-776: stats `weapon_mastery_<weapon>` 991-1010 plus
+`weapon_mastery_flag` 1011); the rows are grouped by that property, one per specialisation, in cubemain order (the 3.2
+`weapon-mastery` values 1-60: 1-14 one per base family, Orb + Chipped Ruby / Skull, Claw + Chipped Ruby / Skull, Void
+Blade + Chipped Obsidian / Sapphire). The "Remove Weapon Mastery - X" rows (any weapon, the property −1) are the remove
+recipes; the legacy "Remove Awaken …" rows (`weapon-mastery` −N, for weapons mastered before 3.3) are not read. "True
+Master - Apply …" rows take any weapon (`weap`): they give no bases, and the bundle's `anyWeaponPerk` names the perk
+their trap rows check (Blacksmith "True Master", cube/perks.ts); the Bases and skill cards say any weapon takes any
+specialisation with it. Per `WeaponMastery`:
+`property`, `label` (the row description after " - ", trailing number dropped), `cls`, `type` (orb, claw, wswd: the rows take
 any item of the type), `bases` (input 1 codes, an item type expanded to its bases; codes that are not spawnable bases,
 ESR's LoD `q..` copies and some mythicals, are skipped), `token` (input 2), `inputs` (the rest, Anvil Stone included),
 `remove` (the Remove row's inputs after the weapon: the Dragon Stone form + 3 Thawing Potions), `noRemove` / `noAwaken`
@@ -183,13 +194,15 @@ line; the string table strips colours). `joinEffectLines` joins wrapped lines (a
 Tokens with two specialisations have two blocks, paired with their rows by the ingredients the recipe line names.
 `resolveEffectSkills` maps a skills line to class skill ids: every part a skill name or id ("Poison, Immolation,
 Freezing, Lightning Arrow" shares "Arrow"; "Wolves" → the skills with the word Wolf), else a `GROUP_RULES` entry
-(Magic Spells, Sorceress Spells, Sorceress Exclusives, Elemental Charge-up Skills; skills.txt EType, reqlevel,
-aurastate, itypea1), else the class tab of that name (Curses); plus the class skills the effect text names, capitalised
+(Magic Spells, Spells, Sorceress Exclusives, Elemental Charge-up Skills; skills.txt EType, aurastate, itypea1; "Spells"
+(ESR 3.3 Orb + Chipped Ruby, "direct damage dealing spells") = the class skills whose skills.txt formulas read the
+specialisation's stat `weapon_mastery_orb_1`, the cooldown ×3 in calc6: Conflagrate, Rain of Fire, Lightning Hydra,
+Storm Nexus, Time Stop, Blizzard, Orb of Winter, Permafrost), else the class tab of that name (Curses); plus the class skills the effect text names, capitalised
 ("Fire and Magic Skills": Hellfire Lance … Abyss), and `LOWER_CASE_MENTIONS` (Oak Branch: "contagion").
 `skillNames` carries the display names. Warnings (`masteries:`): a recipe line naming another weapon or other ingredients
-than the rows (3.2.24: u28desc says Maiden Spear for the Pike; u39desc's Chipped Skull block says Crushed Gem, the rows
-take a Dragon Stone), the Celestial Blade Awaken and Remove rows taking `0bs` (so `0be` has neither recipe), a mod
-without item text, a skills line naming no skill. Counts: `masteries`,
+than the rows (ESR 3.3: u39desc's Chipped Skull block says Crushed Gem, the rows take a Dragon Stone; 3.2.24's u28desc
+slip is fixed), the Celestial Blade Awaken row taking `0bs` (so `0be` has no awaken recipe; the 3.2.24 remove-row slip
+is fixed), a mod without item text (Wretched Scythe), a skills line naming no skill. Counts: `masteries`,
 `masteryBases`, `masteryEffects`, `masterySkills`. Shown on the Bases page cards and on the Skills page cards
 ([SKILLS.md](./SKILLS.md)).
 
@@ -368,6 +381,10 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   runes.txt recipes, cube outputs and every propertygroups.txt entry (a numeric
   ParMin–ParMax range = one entry per param). Tab and class stats are left out (every tab and class is listed anyway).
   ESR 3.2.24: 11 stats, 2790 params, at most 30 levels per stat and skill; 59004 is the highest.
+- `skillNames` (optional): the skills.txt `skill` column of every row, by row (`skillNames[id]`, `''` for a blank
+  one), the names a loot filter formula takes (`stat('item_nonclassskill', 'Teleport')`, plugin 1.8.2,
+  LOOT-FILTER.md "Formula condition"). Unlike the display names of `skills` they are unique (84 of the 752 listed skills show another
+  name in game, e.g. `Hex Bane` / "Hex: Bane"). ESR 3.2.24: 1566 rows; ESR 3.3: 1628; Teleport = 479.
 
 #### Stat layers
 
@@ -399,8 +416,9 @@ with `Encode` 2/3 or descfunc 13/14/15/16/24/27/28 that is missing from `STAT_LA
 
 Counts: `counts.lootFilterItems`, `lootFilterStats`, `lootFilterAreas`, `lootFilterSounds`, `lootFilterUniques`,
 `lootFilterSets` (ESR 3.2.12: 2292 / 923 / 215 / 12103 / 1390 / 270), `lootFilterSkills`, `lootFilterKnownLayers`
-(params summed over the stats; ESR 3.2.24: 752 / 2790). Adding the file did not bump `GAME_DATA_SCHEMA`: older
-clients ignore files they do not load; neither did adding `skills` and `knownLayers`.
+(params summed over the stats; ESR 3.2.24: 752 / 2790), `lootFilterSkillNames` (non-blank rows; 1566, ESR 3.3: 1628). Adding the
+file did not bump `GAME_DATA_SCHEMA`: older clients ignore files they do not load; neither did adding `skills`,
+`knownLayers` and `skillNames`.
 
 ### Enhance
 
@@ -432,13 +450,22 @@ Derivation (rows are classified by their data, not their descriptions):
   item with its own roll and an `op=15` "already corrupted N times" blocker is repeatable (The Triune's Harbinger, 10
   times, same list as weapons); a non-`wss` row whose `corrupted` mod is negative removes the marker (Astrogha's
   Petrified Heart); a `void` Vessel + `wss` row on the soul counter means the Vessel cannot be corrupted with souls.
-- **Anointment**: equipment slots from the `um7` roll rows (`<slot>,nru`), `socketedRollRange` from the `,sock` roll
-  rows (one shorter, so the last outcome, "(Sockets)", cannot roll on socketed items); `blockedQualities` from the
-  `void` "<slot>,uni + um7" rows; `noRunewords` when every roll row has `nru`. Pools: `weapon` … `amulet`, `charm`
-  (unique charm + three organs) and `vessel` (rows on the Vessel alone, rolled by the tier 4 anointment recipe).
-  `roll` is the row's `value`, not the number in the description; `label` is the description's last `(…)`.
-- **Sanctification** (Lucion's Relic, `u18`): the `sanctified-dummy` roll row "item + reagent" (the first with two
-  inputs) gives the `item` (`jewl`), the `reagent` and `rollRange`; the outcome rows are the `op=18` rows on the dummy
+- **Anointment**: since ESR 3.3 one pool per item type ("Orb of Anointment now respects the item type it anoints"):
+  every `um7` roll row `<type>,nru` + `um7` whose type is equipment is a pool, keyed by the type code (`ajav`, `axe`,
+  `circ`, `zrin` …), in cubemain order (class types before their generic types: the game takes the first row an item
+  matches, so an item's pool is the first one its type descends from), with `group` = its slot (weapon, helm, shield,
+  body, gloves, belt, boots, ring, amulet: the first of weap, helm, shld, tors, glov, belt, boot, ring, amul it is),
+  `label` = the type's name; `socketedRollRange` from the `,sock` roll rows (one shorter, so the last outcome,
+  "(Sockets)", cannot roll on socketed items); `secondPerk` from the "… - Sanctimonious" roll rows (`op 3`, a perk stat
+  ≥ 1: the Blacksmith perk allows a second anointment of weapons and armor); `blockedQualities` from the `void`
+  "<slot>,uni + um7" rows; `noRunewords` when every roll row has `nru`. Other pools: `charm` (unique charm + three
+  organs) and `vessel` (rows on the Vessel alone, rolled by the tier 4 anointment recipe). `roll` is the row's `value`,
+  not the number in the description; `label` is the description's last `(…)`. The 3.2 slot ids (`weapon`, `helm` …)
+  are gone, so saved builds' 3.2 anointments no longer resolve (owner decision: no migration).
+- **Sanctification** (Lucion's Relic, `u18`): the `sanctified-dummy` roll row "item + reagent" without a perk trap (a
+  `void` row with the same item and reagent and an `op 4` / `op 6` perk stat = 0 before it) gives the `item` (`jewl`),
+  the `reagent` and `rollRange`; the perk-gated roll rows with the same outcomes are `perkItems` (ESR 3.3: Amulet and
+  Ring, Jeweler perk Hallowed Accessories; other perk or outcome sets are a warning); the outcome rows are the `op=18` rows on the dummy
   stat with that item alone (`roll` = `value`), sorted by roll. Every roll is one outcome, so each is equally likely
   (1 / `rollRange`; the rows carry no weight). `once`: a `void` "item + reagent" row checking a stat `= 1` (the
   "already sanctified" blocker). `sanctificationBonuses` = each distinct bonus (property, param and range) rendered on
@@ -457,11 +484,13 @@ Derivation (rows are classified by their data, not their descriptions):
     "oskill shuriken trap" contain the word). Completion: `op=18`, value 0 rows whose output is an item (`m21,mod`, the
     `,mod` qualifier = `keepsMods`).
 
-Counts (`enhance*` in the manifest), ESR 3.2.24: 11 corruption slots with 272 outcomes (weapon and quiver 30 of 40
-rolls, unique charm 20 of 30, the others 24 of 32: 75 % success, unique charm 66.7 %); 790 equipment anointments
-(weapon 179, body 85, helm 96, shield 58, gloves 59, belt 48, boots 48, ring 101, amulet 116), 30 unique charm and 178
+Counts (`enhance*` in the manifest), ESR 3.3: 11 corruption slots with 272 outcomes (weapon and quiver 30 of 40
+rolls, unique charm 20 of 30, the others 24 of 32: 75 % success, unique charm 66.7 %); 4,793 equipment anointments in
+63 item type pools (33 weapon types, 4 helm, 4 shield, 9 ring and 9 amulet types, body, gloves, belt, boots; e.g. axe
+63, circlet 96, helm 74, body armor 85, ring 101, amulet 116; ESR 3.2.24: 790 in 9 slot pools), 30 unique charm and 178
 Vessel anointments; 217 jewel sanctifications (rolls 1–217, three bonuses each: a maximum resist or Physical
-Resist, an attribute bonus and one other; `+1 to All Skills` in 7, each single maximum resist in 36); 380 Vessel recipes (tier 1: 200 × 350 + 17 × 700 souls, tier 2: 36 × 42, tier 3: 23 × 7, tier 4:
+Resist, an attribute bonus and one other; `+1 to All Skills` in 7, each single maximum resist in 36; the same 217 for
+amulets and rings with the perk); 382 Vessel recipes (tier 1: 202 × 350 + 17 × 700 souls, tier 2: 36 × 42, tier 3: 23 × 7, tier 4:
 6 × 1, 74 × 2, 4 × 3, 20 × 5 including the anointment recipe), 63 with a cap, and 29 transforms. Adding the file did
 not bump `GAME_DATA_SCHEMA`.
 
@@ -501,17 +530,24 @@ Food points per unique, Jewel and quiver points from set, crafted and unique ite
 and quiver rerolls for the points of the can's gem). ESR 3.2.24: 625 rows in 5 families, 119 merged rows.
 
 **Families** (first match wins): a numbered secret recipe (`[SECRETnn]`) always goes to `secret` (Secret Recipes 26,
-27, 28 and 40 also match `maple-leaf` / `charm-reroll`, which keep them for the guide); then the 33 guide families
+27, 28 and 40 also match `maple-leaf` / `charm-reroll`, which keep them for the guide), except the ESR 3.3
+"[SECRETnn] Crucible - …" forgings; then the 33 guide families
 (`CUBE_FAMILIES`, sections in `GUIDE_FAMILY_SECTIONS`; `CUBE_FAMILY_OVERRIDES` changes `class-craft` for the cube page
 only: every slot's bonuses, one group per class), then 25 cube-only families (`EXTRA_FAMILIES`: the 5 stocker families,
 unique rerolls, set conversions / cycles / rerolls, rune forging on the other
 slots, legacy crafts, base upgrades, normal items, magic/rare rerolls and starter weapons, ring and amulet recipes,
 jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Might boon, Primordial Soulstones, quest
 items, Blemished gems / Mi Rune, secret recipes grouped per number), then a fallback `other:<prefix>` per description
-prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.2.24: 67 families, 9 fallback families with 41 rows
-(Introductory Book Cycle 9, Weapons Crate 8, Negative MF Charm 8, Opener Size Change 6, Anya's Gift 6 + 1 + 1,
-Randomize Stone 1, Morph Charm Refund 1); the integrity test fails past 60 fallback rows or 12 fallback families, and
-when a defined family has no row.
+prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.3 additions: `crucible` (section Forging: the 884 "Crucible - …"
+rows and the 4 "[SECRET08/09] Crucible - …" rows of the Blacksmith perk The Secret Crucible, a second forging, worded
+by the matching forging family's rewrite, bonuses hidden), `specializations` (Mystical Tesseract), the Alchemist Gem
+Infusion rows in `potions`, the Orb of Anointment recycle to Dragon Stones in `materials`, True Master and "Remove Weapon
+Mastery" rows in `weapon-mastery`, the "… - Jeweler 15 Special" / "… - Archaeology 13 Special" perk rows as their own
+groups of `unsocket` / `socket`, amulet and ring sanctification in `legendary-consumables`. ESR 3.3 (as 3.2.24): 9
+fallback families with 41 rows (Introductory Book Cycle 9, Weapons Crate 8, Negative MF Charm 8, Opener Size Change 6,
+Anya's Gift 6 + 1 + 1, Randomize Stone 1, Morph Charm Refund 1); the integrity test fails past 60 fallback rows or 12
+fallback families, and when a defined family has no row (except `maple-leaf`: since 3.3 its rows, the unique charm
+recycle and Secret Recipes 26 / 40, are all claimed earlier; the guide still lists it).
 
 **Shape.** Top-level arrays: `sections` (official Cube Recipes page anchors in page order, then the Ascendancies, Kill
 Ledger, Weapon Mastery and Vessel of Souls pages, then `other`; only sections with families; `notes` = short rewrites of
@@ -608,7 +644,18 @@ recorded <boss> kill" (`kill_check`, op 6, the boss named after the Kill Ledger 
 `bundleCube.ts`). The ops as ESR uses them: 3 and 15 "≥", 16 "≤", 17 "≠", 18 "=" ("Unsocket" needs sockets ≥ 1,
 "Adds Socket(4)" sockets ≤ 3, tinkering needs points ≥ 2 before the row takes 2); op 28 (no stat: the vanilla quest and portal recipes, Horadric
 Staff, Khalim's Will, Cow Portal and the Pandemonium portals) reads "Game rules of the original recipe apply (quest
-state, act or difficulty)"; unknown ops are skipped. Named checks: `item_craftflag` "No forging mod" / "Has a forging mod", `item_craftflag2` "No jewel forging" /
+state, act or difficulty)"; unknown ops are skipped. Specialisation perks (ESR 3.3, `cube/perks.ts`): a perk stat
+(`alchemy_n`, `blacksmithing_n`, `jeweler_n`, `archaeology_n`; perk n = row ⌈n/3⌉, column (n−1) mod 3 + 1, named by
+`Specializations<Tree><row>_<col>Title`, the numbering the d2rloader configs name) with op 6 / op 3 and value ≥ 1
+reads "Needs the <Tree> perk <Title>", op 6 / op 4 with value 0 "Only without the <Tree> perk <Title>" (op 4 only
+appears with 0, on the Alchemist rows; the only reading under which the Gem Infusion trap lets anyone use the recipe;
+not checked in game). A row also needs the perk an earlier row takes away when that earlier row catches all its items
+(same inputs, each with the same token and quantity, the earlier row's qualifiers a subset; item type trees are not
+walked): the "Crucible Trap" / "True Master Trap" `void` rows before the perk recipes, Gem Infusion (No Excellence)
+before Alchemical Excellence. The guide's `::recipes` rows note the perk a merged row needs; `::secret-recipes` skips
+`void` rows and the Crucible rows and notes the perk rows (Secret Recipes 47 / 48, Jeweler perk Perfect Form). Named
+checks: `item_craftflag` "No forging mod" / "Has a forging mod", `craftflag_crucible` "No crucible forging" / "Has a
+crucible forging", `item_craftflag2` "No jewel forging" /
 "Has a jewel forging", `item_mercflag` "Not merc-only" / "Merc-only item", `weaponmastery` "No weapon mastery token
 applied" / "Weapon mastery token applied" (= 0 / nonzero), `item_upgraded` ≠ 1 "Not upgraded yet", `item_levelreq` = 0
 "Only items without an added level requirement", `kill_base` op 3 "Kill count ≥ N", `soul_counter` = 0 "No souls
@@ -1705,12 +1752,16 @@ under the panel, with each tab's content):
   built by `brickSummary`, the rates with a "Computed from the recipe rows" tooltip; the corruptible qualities, the
   qualities without rows, roll-only qualities and the notes; then the outcome list (roll number, lines, variants as
   "Superior, Normal and Low Quality: …").
-- **Anointment** (`components/EnhanceAnointment.tsx`): Equipment pills (weapon … amulet) and Other pools (Unique
-  Charm, Vessel of Souls), the rules above the list (not on uniques, not on runewords, socketed range), each outcome
-  with its label; the outcomes socketed items cannot roll are marked.
+- **Anointment** (`components/EnhanceAnointment.tsx`): Equipment pills by slot (Weapons … Amulets,
+  `utils/enhance.ts` `anointmentGroups`; picking one opens its first pool), then the slot's item type pills when it has
+  more than one (Amazon Javelin … Hand to Hand 2, Circlet …, Amazonian Loop … Ring), and Other pools (Unique Charm,
+  Vessel of Souls); the rules above the list (not on uniques, not on runewords, socketed range, an item rolls the first
+  pool its type belongs to, the second-anointment perk), each outcome with its label; the outcomes socketed items cannot
+  roll are marked.
 - **Sanctification** (`components/EnhanceSanctification.tsx`): no pills; a header "Jewel + Lucion's Relic of
   Sanctification", "217 outcomes, one per roll of 217: 0.5% chance each" (computed, as the corruption rates), the
-  two-step recipe and "sanctified once" rule, and "How often each bonus comes up" (`sanctificationBonuses`: each
+  two-step recipe and "sanctified once" rule, the perk items ("With the Jeweler perk Hallowed Accessories, you can also
+  sanctify amulets and rings …"), and "How often each bonus comes up" (`sanctificationBonuses`: each
   bonus with its share of the outcomes and count); then the outcome list (roll number, lines). The cube page's folded
   sanctification row links here.
 - **Vessel of Souls** (`components/EnhanceVessel.tsx`): tier pills plus Completion; a tier header (start → end souls,
@@ -1723,12 +1774,12 @@ under the panel, with each tab's content):
 
 State lives in the URL (read on every render, written with `replace`), parsed and encoded by `utils/enhance.ts`:
 
-| Param    | Meaning                                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
-| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`                                              |
-| `slot`   | corruption slot / anointment pool (`weapon` default; `charm`, `vessel` on Anointment); none on Sanctification |
-| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                             |
-| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names)                   |
+| Param    | Meaning                                                                                                                     |
+| -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`                                                            |
+| `slot`   | corruption slot / anointment pool (an item type code, the first pool by default; `charm`, `vessel`); none on Sanctification |
+| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                           |
+| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names)                                 |
 
 Invalid values fall back to the tab's first option; Copy Link encodes only the non-default values the tab uses.
 
@@ -1967,18 +2018,18 @@ in the rune-bonus group.
 Warnings are printed and stored in `manifest.warnings`; string conflicts are printed only (their number is in
 `counts.stringConflicts`). Warnings do not fail the build.
 
-| Warning                                                  | Meaning                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `string "<key>": kept … ignored …` (console only)        | The same string key exists in several `strings/*.json` files with different English text. The kept value comes from the higher-priority file: `item-runes` > `item-nameaffixes` > `item-modifiers` > `item-names` > `skills` > other files alphabetically > `chinese-overlay` (the censored names of the Chinese release). Expected: ~85, almost all from `chinese-overlay`.                     |
-| `bases: <code> … is not in its own tier family`          | The base's code is not listed in its `normcode/ubercode/ultracode`; treated as normal tier. ESR 3.2.10: `q86` Scissors Suwayyah, `qdf` Hunter's Guise.                                                                                                                                                                                                                                           |
-| `bases: <code> is mythical but its name string is …`     | Mythical accessories `mam`/`mrn`/`mjw` reuse the plain amu/rin/jew name strings; the `name` column ("Mythical Amulet") is used instead.                                                                                                                                                                                                                                                          |
-| `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms). `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                                      |
-| `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                                             |
-| `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                                          |
-| `superior: superior-affixes.toml has weights for rows …` | The superior-affixes plugin config weighs rows qualityitems.txt does not have (ESR 3.2.24: rows 83-86; the plugin ignores them). Other `superior:` warnings: a missing config (stock equal odds), an unreadable weight line, an unknown item type code, a row no base rolls. See "Superior affixes".                                                                                             |
-| `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                                        |
-| `modifiers: crushing-blow.toml unique = 25 gives …`      | A plugin config comment ("50 -> 12.5 %") disagrees with the value the plugin reads; the fact keeps the value and notes the comment. ESR 3.2.24: `unique = 25` (6.25 % of current life, the comment says 12.5 %). Other `modifiers:` warnings: a key kind naming a stat itemstatcost.txt lacks, an unknown item event function, a missing config file or key. See [MODIFIERS.md](./MODIFIERS.md). |
-| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".                           |
+| Warning                                                  | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `string "<key>": kept … ignored …` (console only)        | The same string key exists in several `strings/*.json` files with different English text. The kept value comes from the higher-priority file: `item-runes` > `item-nameaffixes` > `item-modifiers` > `item-names` > `skills` > other files alphabetically > `chinese-overlay` (the censored names of the Chinese release). Expected: ~85, almost all from `chinese-overlay`.                                                                   |
+| `bases: <code> … is not in its own tier family`          | The base's code is not listed in its `normcode/ubercode/ultracode`; treated as normal tier. ESR 3.2.10: `q86` Scissors Suwayyah, `qdf` Hunter's Guise.                                                                                                                                                                                                                                                                                         |
+| `bases: <code> is mythical but its name string is …`     | Mythical accessories `mam`/`mrn`/`mjw` reuse the plain amu/rin/jew name strings; the `name` column ("Mythical Amulet") is used instead.                                                                                                                                                                                                                                                                                                        |
+| `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms). `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                                                                                    |
+| `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                                                                                           |
+| `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `superior: superior-affixes.toml has weights for rows …` | Without a qualityitems.txt `frequency` column (ESR ≤ 3.2), the superior-affixes plugin config weighs rows qualityitems.txt does not have (ESR 3.2.24: rows 83-86; the plugin ignores them); ESR 3.3 has the column, so the toml is not read for weights. Other `superior:` warnings: a missing config (stock equal odds), an unreadable weight line or frequency cell, an unknown item type code, a row no base rolls. See "Superior affixes". |
+| `itemtypes: … unknown parent / duplicate code`           | Broken Equiv references in itemtypes.txt.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `modifiers: crushing-blow.toml unique = 25 gives …`      | A plugin config comment ("50 -> 12.5 %") disagrees with the value the plugin reads; the fact keeps the value and notes the comment. ESR 3.2.24: `unique = 25` (6.25 % of current life, the comment says 12.5 %). Other `modifiers:` warnings: a key kind naming a stat itemstatcost.txt lacks, an unknown item event function, a missing config file or key. See [MODIFIERS.md](./MODIFIERS.md).                                               |
+| `skillcalc: <token> in N lines (<skill> <line>, …)`      | A skill formula uses a code, function, skill or missile the calculator refuses (unknown, broken in the data, or ambiguous in the engine); those tooltip lines are not shown. ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, missile `rad`, `m2eo`/`m2ey`/`me3o`/`me3y`, mastery `mael`, Plague Javelin's missing descmissile. See [SKILLS.md](./SKILLS.md) "Skill levels".                                                                         |
 
 ## Code layout
 

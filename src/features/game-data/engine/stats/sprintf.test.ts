@@ -35,4 +35,10 @@ describe('sprintf', () => {
     expect(hasFormat('%+d to Strength')).toBe(true);
     expect(hasFormat('.%1%0')).toBe(true);
   });
+
+  it('writes %.Nf with fixed decimals, as C printf does (ESR 3.3 bleed duration)', () => {
+    expect(sprintf('Adds %d%%-%d%% Bleed Damage over %.2f seconds', [400, 500, 2])).toBe('Adds 400%-500% Bleed Damage over 2.00 seconds');
+    expect(sprintf('over %.2f seconds', [{ min: 1.5, max: 2 }])).toBe('over (1.50 to 2.00) seconds');
+    expect(hasFormat('Reload Time: %.2f seconds')).toBe(true);
+  });
 });

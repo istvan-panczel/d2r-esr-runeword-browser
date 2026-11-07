@@ -11,14 +11,16 @@ mentions: [Anvil Stone, White Aura Stone, Kill Ledger]
 officialDocs:
   - label: Maps and special areas
     href: 'docs:Eastern Sun Resurrected Maps.html'
-sources: [esr-txt, official-docs, official-cube, esru-wiki]
+sources: [esr-txt, official-docs, official-cube, esru-wiki, mod-author]
 ---
 
 ESR's campaign is harder than vanilla, and the jump from late Nightmare into Hell is the steepest part. These are the difficulty penalties straight from the game files:
 
 ::difficulty-penalties
 
-In short: your resistances drop sharply, monsters get extra skill levels, and your freezes, chills and some curses on them wear off sooner. :term[Leech] is divided by the numbers above, so most item leech is close to nothing in Hell; [Life on Striking](page:/modifiers?kind=on-striking) and Life after each Kill are not reduced. You and your summons deal less damage to :term[Prime evil]{label="prime evils"} in Nightmare and Hell, and your mercenary deals less to bosses in every difficulty.
+Normal's small positive resistance value offsets hidden Kill Ledger effects and cancels out while the Kill Ledger is equipped; the mod author plans to set it to 0 in the next patch.
+
+In short: your resistances drop sharply, monsters get extra skill levels, and your freezes, chills and some curses on them wear off sooner. :term[Leech] is divided by the numbers above, so most item leech is close to nothing in Hell, and only physical weapon damage leeches; [Life on Striking](page:/modifiers?kind=on-striking) and Life after each Kill are not reduced. You and your summons deal less damage to :term[Prime evil]{label="prime evils"} in Nightmare and Hell, and your mercenary deals less to bosses in every difficulty.
 
 ### Before you enter Hell
 

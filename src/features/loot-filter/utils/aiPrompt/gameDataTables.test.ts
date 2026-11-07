@@ -75,8 +75,8 @@ describe('gameDataTables', () => {
     expect(row(107)).toContain('skill id (skills.csv)');
     expect(row(17)).toContain('reads 0 on weapons');
     expect(row(16)).toContain('reads 0');
-    expect(row(7)).toContain('stored ×256');
-    expect(row(220)).toContain('eighths per character level');
+    expect(row(7)).toContain('reads the tooltip number');
+    expect(row(220)).toContain("the character's level");
     expect(row(127)).toBe('127,item_allskills,All Skills,,');
   });
 

@@ -27,7 +27,7 @@ mentions:
 officialDocs:
   - label: Cube Recipes – Cubing Materials
     href: 'docs:Eastern Sun Resurrected Cube Recipes.html#mat'
-sources: [esru-wiki, official-cube, esr-txt]
+sources: [esru-wiki, official-cube, official-docs, esr-txt]
 ---
 
 Early on, pick up more than feels sensible. Most ESR materials become points in :term[Stocker]s, so they cost almost no space ([[stockers]]). Later you will stop picking up the cheap ones. Found something you don't recognise? Look it up on the [Materials page](page:/game-data/materials): where it comes from and which recipes use it.
@@ -42,6 +42,7 @@ Early on, pick up more than feels sensible. Most ESR materials become points in 
 - :term[Organ]s: tinkering, the Vessel of Souls and many conversions. Steaks, Cookbooks and Flags are not organs but are also recipe inputs.
 - Socket Donuts, Thawing Potions, Keys and Worldstone Shards.
 - Unique charms: never sell them ([[unique-charms]]).
+- Mystical Shards (3.3, from strong monsters in endgame-level zones): ten make a Mystical Tesseract, which unlocks a specialization.
 - Ores: sell them for gold or smash them for crystals.
 
 ### Keep while you learn

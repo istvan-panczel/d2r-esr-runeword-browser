@@ -1,6 +1,6 @@
 # ESR Loot Filter Guide (reference copy)
 
-> Markdown transcription of the mod author's PDF guide, the copy shipped with ESR 3.2.20 (its date line still reads Oct 11, 2026), published in the ESR repository as [`LootFilters/ESR Loot Filter Guide.pdf`](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/blob/main/LootFilters/ESR%20Loot%20Filter%20Guide.pdf). The PDF is authoritative where they differ.
+> Markdown transcription of the mod author's PDF guide, the copy shipped with ESR 3.3, plugin 1.8.2 (16 pages; its date line still reads Oct 11, 2026), published in the ESR repository as [`LootFilters/ESR Loot Filter Guide.pdf`](https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/blob/main/LootFilters/ESR%20Loot%20Filter%20Guide.pdf). The PDF is authoritative where they differ.
 
 Oct 11, 2026 · @Bogdan
 
@@ -60,12 +60,14 @@ Every rule whose conditions all hold applies, top to bottom, until one hides the
 
 - **AND and OR:** all conditions of a rule must hold; values inside one list are alternatives (`"itemCodes": ["r30", "r31"]` matches either).
 - **Later wins:** a later rule's background, border, name change, icon or droplight replaces an earlier one's. Chat lines and sounds add up.
-- **hide stops:** a rule with `"hide": true` hides the ground label, and no rule after it runs.
+- **hide stops:** a rule with `"hide": true` hides the ground label and makes the item impossible to pick up (gold excepted, since it is picked up automatically), and no rule after it runs. Show Hidden Items, or the game's own loot filter toggle off, shows hidden items again and lets them be picked up.
 - **hideIfOtherConditionsFail:** when the codes, types and location match but another condition fails, the item is hidden. Good for "show this base only with sockets".
 - **Where:** rules look at ground items unless `location` says otherwise.
 - **Levels:** `activeInLevels` limits a rule to some filter levels; without it the rule is active at every level.
 - **Styles:** `useStyle` pulls in a style's actions; the rule's own actions win over the style's. Styles hold actions only.
 - **Mistakes:** a rule with an error is switched off and logged with its number and line; the rest of the filter keeps working.
+- **show protects:** after a rule with `"show": true` matches, later rules cannot hide the item, by `hide`, `hideIfOtherConditionsFail` or `hideUnmatchedItems`. Their colors, names, sounds and chat lines still apply.
+- **Unidentified items:** a rule that checks an item stat skips them entirely (see Stat values).
 
 ## Conditions
 
@@ -90,24 +92,68 @@ Numbers take one value (`5`), a list (`[1, 2]`) or a range (`{ "min": 3, "max": 
 
 A stat check is `{ "stat": "item_numsockets", "param": 0, "op": ">=", "value": 2 }`. `stat` is an itemstatcost.txt name or id, `param` is optional, `op` is `==`, `!=`, `>`, `>=` (the default), `<`, `<=` or `between` with `"value": [low, high]`.
 
+## Formulas
+
+`formula` is a condition that holds when its formula is not 0. It is written like a txt calc and checked when the filter loads.
+
+```json
+{
+  "itemTypes": ["ring"],
+  "quality": "magic",
+  "formula": "((stat('item_fastercastrate')>=10)&&((stat('fireresist')+stat('coldresist')+stat('lightresist'))>=40))",
+  "hideIfOtherConditionsFail": true
+}
+```
+
+| Key     | Value                   | Holds when           |
+| ------- | ----------------------- | -------------------- |
+| formula | a formula, see Formulas | the formula is not 0 |
+
+| Part                                              | What it gives                                                               |
+| ------------------------------------------------- | --------------------------------------------------------------------------- |
+| `stat('name')`                                    | The item's stat. `name` is an itemstatcost.txt Stat, or its row number.     |
+| `stat('name', param)`                             | One param of it: a number, or a skills.txt skill name such as `'Teleport'`. |
+| `playerStat('name')`, `playerStat('name', param)` | Your character's stat.                                                      |
+| `statMax('name')`, `statSum('name')`              | The highest value, or the total, over every param of the item's stat.       |
+| `+ - * /`                                         | Whole numbers; division rounds toward 0, and division by 0 gives 0.         |
+| `== != < <= > >=`                                 | Comparisons give 1 or 0.                                                    |
+| `&& \|\| !`                                       | And, or, not.                                                               |
+| `a ? b : c`                                       | b when a is not 0, else c.                                                  |
+
+- **Skill names on chance-to-cast and charges:** these stats keep the skill and its level in the param, so a skill name matches that skill at any level, e.g. `stat('item_charged_skill', 'Teleport')` gives the level of its Teleport charges.
+- **Names in single quotes:** they need no escaping inside the JSON.
+- **Mistakes:** a bad name or bad syntax switches the rule off, and the log gives the rule number, line and character.
+
+## Stat values
+
+Every stat a filter reads is the number the item tooltip prints, in `itemStats`, `playerStats`, formulas and the `{stat:}` placeholders.
+
+- **Life, mana and stamina:** stored in 256ths, so +40 life reads 40.
+- **Per-level stats:** the value at your character's level, as "(Based on Character Level)" shows it. 0.5 per level reads 0 at level 1 and 49 at level 99.
+- **item_howl and item_fear:** stored in 128ths; they read the percent.
+- **Charges:** the skill level.
+- **Everything else reads as stored,** including the stats whose line only flips the sign, item_replenish_durability and poison damage.
+- **Unidentified items:** the client gets no modifiers until an item is identified, so a rule that checks any item stat skips an unidentified item: none of its actions run and it cannot hide it. gold, armorclass, quantity, durability, maxdurability and item_numsockets still work, because every item carries them. Items that drop identified, like quality items, work as usual.
+
 ## Actions
 
-| Key                                 | Value                                         | Effect                                                               |
-| ----------------------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
-| hide                                | true                                          | Hides the ground label; no later rule runs.                          |
-| hideIfOtherConditionsFail           | true                                          | See How rules match.                                                 |
-| replaceName, namePrefix, nameSuffix | text                                          | A new name, or text before or after it. `{name}` is the game's name. |
-| labelBackground                     | `[r, g, b]` or `[r, g, b, a]`, 0 to 255       | Fills the ground label; alpha defaults to 242.                       |
-| labelBorder                         | `{ "color": [r, g, b], "width": 2 }`          | Outlines the ground label.                                           |
-| chatMessage                         | text                                          | A chat line when the item drops.                                     |
-| chatMessageWhenHidden               | text                                          | A chat line when this rule hides the item.                           |
-| notify                              | true                                          | Prints the filter's drop line (see Chat notifications).              |
-| sound                               | sounds.txt name or row, or a file in `sounds` | Plays when the item drops.                                           |
-| soundVolume                         | 0 to 100                                      | This rule's sound volume.                                            |
-| icon                                | `{ "iconName", "iconSize", "color" }`         | A minimap icon (see Minimap icons).                                  |
-| droplight                           | `{ "color": [r, g, b] }`, or `{}`             | The droplight effect on the item (see Droplight).                    |
-| useStyle                            | a style's name                                | Pulls in that style's actions.                                       |
-| comment                             | text                                          | Ignored; notes for the author.                                       |
+| Key                                 | Value                                         | Effect                                                                                                                                                               |
+| ----------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| hide                                | true                                          | Hides the ground label, and while hidden the item cannot be hovered, targeted or picked up, with the mouse or a controller; gold stays pickable. No later rule runs. |
+| hideIfOtherConditionsFail           | true                                          | See How rules match.                                                                                                                                                 |
+| replaceName, namePrefix, nameSuffix | text                                          | A new name, or text before or after it. `{name}` is the game's name.                                                                                                 |
+| labelBackground                     | `[r, g, b]` or `[r, g, b, a]`, 0 to 255       | Fills the ground label; alpha defaults to 242.                                                                                                                       |
+| labelBorder                         | `{ "color": [r, g, b], "width": 2 }`          | Outlines the ground label.                                                                                                                                           |
+| chatMessage                         | text                                          | A chat line when the item drops.                                                                                                                                     |
+| chatMessageWhenHidden               | text                                          | A chat line when this rule hides the item.                                                                                                                           |
+| notify                              | true                                          | Prints the filter's drop line (see Chat notifications).                                                                                                              |
+| sound                               | sounds.txt name or row, or a file in `sounds` | Plays when the item drops.                                                                                                                                           |
+| soundVolume                         | 0 to 100                                      | This rule's sound volume.                                                                                                                                            |
+| icon                                | `{ "iconName", "iconSize", "color" }`         | A minimap icon (see Minimap icons).                                                                                                                                  |
+| droplight                           | `{ "color": [r, g, b] }`, or `{}`             | The droplight effect on the item (see Droplight).                                                                                                                    |
+| useStyle                            | a style's name                                | Pulls in that style's actions.                                                                                                                                       |
+| comment                             | text                                          | Ignored; notes for the author.                                                                                                                                       |
+| show                                | true                                          | Keeps the item visible: no later rule can hide it, and their other actions still apply. A rule cannot both show and hide.                                            |
 
 ## Texts, placeholders and translations
 
@@ -139,6 +185,10 @@ A rule with `"notify": true` prints the filter's drop line every time the item d
 **levelChangeFormat:** printed when the level changes in game, by the key or in the launcher. Takes `{level}` and `{filter}`. Default `ÿc4Loot filter level: ÿc0{level}`.
 
 Both take per-language texts and `{string:KEY}`.
+
+**Off switch:** `"chatNotifications": false` in selection.json turns off every chat line about an item: drop lines, `chatMessage` and `chatMessageWhenHidden`. The filter announce, level changes and Show Hidden Items still print.
+
+> Note (ours): the 3.3 patch notes and the plugin's TOML say chat lines and sounds play once per item now (an item coming back into view does not repeat them); the first paragraph above is the guide's text as written.
 
 ```json
 "notifications": {
@@ -203,51 +253,51 @@ Only a quality's plain color changes. Runes, quest items, socketed or ethereal g
 
 A color code is `ÿc` plus one character, from `ÿc0` to `ÿcV` in ASCII order; the text after it keeps that color until the next code.
 
-| Code  | Color      | RGB           | The game uses it for                   |
-| ----- | ---------- | ------------- | -------------------------------------- |
-| `ÿc0` | white      | 255, 255, 255 | plain text, normal items               |
-| `ÿc1` | red        | 255, 77, 77   | broken items, warnings                 |
-| `ÿc2` | green      | 0, 255, 0     | set items (tooltips)                   |
-| `ÿc3` | blue       | 105, 105, 255 | magic items (tooltips)                 |
-| `ÿc4` | gold       | 199, 179, 119 | unique items (tooltips)                |
-| `ÿc5` | gray       | 105, 105, 105 | socketed and ethereal items (tooltips) |
-| `ÿc6` | black      | 0, 0, 0       |                                        |
-| `ÿc7` | tan        | 208, 194, 125 |                                        |
-| `ÿc8` | orange     | 255, 168, 0   | crafted items (tooltips)               |
-| `ÿc9` | yellow     | 255, 255, 100 | rare items (tooltips)                  |
-| `ÿc:` | dark green | 0, 128, 0     | tempered items (tooltips)              |
-| `ÿc;` | purple     | 174, 0, 255   |                                        |
-| `ÿc<` | green      | 0, 200, 0     |                                        |
-| `ÿc=` | white      | 240, 240, 240 | plain item labels                      |
-| `ÿc>` | gold       | 199, 179, 119 | quest item labels                      |
-| `ÿc?` | yellow     | 255, 255, 100 | rare labels                            |
-| `ÿc@` | orange     | 255, 168, 0   | crafted labels                         |
-| `ÿcA` | dark green | 0, 128, 0     | tempered labels                        |
-| `ÿcB` | blue       | 110, 110, 255 | magic labels                           |
-| `ÿcC` | green      | 0, 252, 0     | set labels                             |
-| `ÿcD` | gold       | 199, 179, 119 | unique labels                          |
-| `ÿcE` | white      | 240, 240, 240 | health potion labels                   |
-| `ÿcF` | white      | 240, 240, 240 | mana potion labels                     |
-| `ÿcG` | white      | 240, 240, 240 | rejuvenation potion labels             |
-| `ÿcH` | white      | 240, 240, 240 | gold labels                            |
-| `ÿcI` | gray       | 99, 99, 99    | ethereal labels                        |
-| `ÿcJ` | orange     | 255, 168, 0   | rune labels                            |
-| `ÿcK` | gray       | 99, 99, 99    | socketed labels                        |
-| `ÿcL` | orange     | 255, 168, 0   | event item labels                      |
-| `ÿcM` | black      | 0, 0, 1       | desecrated (draws black)               |
-| `ÿcN` | turquoise  |               |                                        |
-| `ÿcO` | pink       |               |                                        |
-| `ÿcP` | light blue |               |                                        |
-| `ÿcQ` | green      |               |                                        |
-| `ÿcR` | yellow     |               |                                        |
-| `ÿcS` | dark red   |               |                                        |
-| `ÿcT` | sky blue   |               |                                        |
-| `ÿcU` | red        |               |                                        |
-| `ÿcV` | red        |               |                                        |
+| Code  | Color        | RGB           | The game uses it for                   |
+| ----- | ------------ | ------------- | -------------------------------------- |
+| `ÿc0` | white        | 255, 255, 255 | plain text, normal items               |
+| `ÿc1` | red          | 255, 77, 77   | broken items, warnings                 |
+| `ÿc2` | green        | 0, 255, 0     | set items (tooltips)                   |
+| `ÿc3` | blue         | 110, 110, 255 | magic items (tooltips)                 |
+| `ÿc4` | gold         | 199, 179, 119 | unique items (tooltips)                |
+| `ÿc5` | gray         | 105, 105, 105 | socketed and ethereal items (tooltips) |
+| `ÿc6` | black        | 0, 0, 0       |                                        |
+| `ÿc7` | tan          | 208, 194, 125 |                                        |
+| `ÿc8` | orange       | 255, 168, 0   | crafted items (tooltips)               |
+| `ÿc9` | yellow       | 255, 255, 100 | rare items (tooltips)                  |
+| `ÿc:` | dark green   | 0, 128, 0     | tempered items (tooltips)              |
+| `ÿc;` | purple       | 174, 0, 255   |                                        |
+| `ÿc<` | green        | 0, 200, 0     |                                        |
+| `ÿc=` | white        | 240, 240, 240 | plain item labels                      |
+| `ÿc>` | gold         | 199, 179, 119 | quest item labels                      |
+| `ÿc?` | yellow       | 255, 255, 100 | rare labels                            |
+| `ÿc@` | orange       | 255, 168, 0   | crafted labels                         |
+| `ÿcA` | dark green   | 0, 128, 0     | tempered labels                        |
+| `ÿcB` | blue         | 110, 110, 255 | magic labels                           |
+| `ÿcC` | green        | 0, 252, 0     | set labels                             |
+| `ÿcD` | gold         | 199, 179, 119 | unique labels                          |
+| `ÿcE` | white        | 240, 240, 240 | health potion labels                   |
+| `ÿcF` | white        | 240, 240, 240 | mana potion labels                     |
+| `ÿcG` | white        | 240, 240, 240 | rejuvenation potion labels             |
+| `ÿcH` | white        | 240, 240, 240 | gold labels                            |
+| `ÿcI` | gray         | 99, 99, 99    | ethereal labels                        |
+| `ÿcJ` | orange       | 255, 168, 0   | rune labels                            |
+| `ÿcK` | gray         | 99, 99, 99    | socketed labels                        |
+| `ÿcL` | orange       | 255, 168, 0   | event item labels                      |
+| `ÿcM` | light purple | 192, 128, 242 | desecrated labels                      |
+| `ÿcN` | turquoise    | 6, 165, 221   |                                        |
+| `ÿcO` | pink         | 255, 128, 255 |                                        |
+| `ÿcP` | light blue   | 170, 170, 255 |                                        |
+| `ÿcQ` | green        | 0, 255, 0     |                                        |
+| `ÿcR` | yellow       | 255, 255, 118 |                                        |
+| `ÿcS` | dark red     | 208, 62, 62   |                                        |
+| `ÿcT` | sky blue     | 130, 197, 255 |                                        |
+| `ÿcU` | red          | 255, 0, 0     |                                        |
+| `ÿcV` | red          | 255, 0, 0     |                                        |
 
-- **0 to <:** the classic palette, RGB as in legacy graphics; HD draws the same colors in its own shades.
-- **= to M:** fixed in the game exe; the HD profile's tooltip style colors do not change them.
-- **N to V:** chat colors with ESR's `color-codes-2x-letters` patch, which keeps the 2.x letters. Stock 3.3 shifts them one letter: N is light gold (238, 214, 141), O turquoise, P pink, Q light blue, R green, S yellow, T dark red, U sky blue, V red.
+- **0 to <:** the `baseColors` list in `globaldatahd.json`, its 13 entries in order. They match the legacy palette except `ÿc3`, which HD draws as 110, 110, 255.
+- **= to M:** the label colors of `TooltipStyle` in `_profilehd.json`: = Default, > Quest, ? Rare, @ Crafted, A Tempered, B Magic, C Set, D Unique, E HealthPotion, F ManaPotion, G RejuvPotion, H Gold, I Ethereal, J Rune, K Socketed, L EventItems, M Desecrated. Changing an entry there changes its code.
+- **N to V:** chat colors fixed in the game exe. ESR's `color-codes-2x-letters` patch keeps their 2.x letters, so the light gold (238, 214, 141) that stock 3.3 puts on N is not reachable in ESR. Stock 3.3 shifts them one letter: N light gold, O turquoise, P pink, Q light blue, R green, S yellow, T dark red, U sky blue, V red.
 
 ## Finding problems
 
@@ -289,11 +339,12 @@ The plugin is not tied to ESR. It works for whichever mod the game runs: it find
 }
 ```
 
-| Key          | Value                                                                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| activeFilter | `shipped:<file>` for a filter in the mod's folder, `user:<file>` for one in the players' folder, or `none` for no filter.                   |
-| levels       | The level each filter is at, by the same id: one of the `id` numbers of its `filterLevels`. A filter left out starts at its `defaultLevel`. |
-| playSounds   | `false` silences every filter sound.                                                                                                        |
+| Key               | Value                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| activeFilter      | `shipped:<file>` for a filter in the mod's folder, `user:<file>` for one in the players' folder, or `none` for no filter.                   |
+| levels            | The level each filter is at, by the same id: one of the `id` numbers of its `filterLevels`. A filter left out starts at its `defaultLevel`. |
+| playSounds        | `false` silences every filter sound.                                                                                                        |
+| chatNotifications | `false` turns off every chat line about an item. Missing means on.                                                                          |
 
 - **Console:** `lootfilter` shows the active filter, its level and its problems; `lootfilter reload` reads the selection and the filter again.
 

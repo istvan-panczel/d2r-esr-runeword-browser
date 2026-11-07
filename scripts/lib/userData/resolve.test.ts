@@ -98,7 +98,7 @@ describe('checkBuild', () => {
         { kind: 'dstone', material: 'sss', switchItem: 'cap', uses: 2 },
         { kind: 'meld', material: 'gpv', uses: 1 },
       ],
-      ring1: [{ kind: 'anointment', pool: 'ring', roll: 2 }],
+      ring1: [{ kind: 'anointment', itemType: 'ring', roll: 2 }],
     },
     skillPoints: { Zeal: 20 },
     ascendancy: 'Battlemage',
@@ -173,7 +173,8 @@ describe('checkBuild', () => {
         'oops',
         {
           items: { ring1: gone },
-          itemCrafts: { ring1: [{ kind: 'anointment', pool: 'ring', roll: 9 }] },
+          // ESR 3.2 shape (per-slot pool): outdated whatever its roll
+          itemCrafts: { ring1: [{ kind: 'anointment', pool: 'ring', roll: 2 }] },
           skillPoints: { Zeal: 1, 'Old Skill': 1 },
           ascendancy: 'Gone',
         },
@@ -182,7 +183,7 @@ describe('checkBuild', () => {
     const result = checkBuild('Paladin', variants, DATA);
     expect(result.problems.map((problem) => `${problem.kind}: ${problem.ref}`)).toEqual([
       'unique: variants[1].items.ring1 "Gone Ring"',
-      'craft: variants[1].itemCrafts.ring1 anointment ring:9',
+      'craft: variants[1].itemCrafts.ring1 anointment ring:2',
       'skill: variants[1] Old Skill',
       'ascendancy: variants[1] Gone',
     ]);

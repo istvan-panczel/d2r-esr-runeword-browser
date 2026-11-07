@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { MasteryRecipe } from '@/features/game-data/components/MasteryParts';
 import { useMasteries } from '@/features/game-data/hooks/useMasteries';
-import { MASTERY_GUIDE_PATH, masteryBasesUrl } from '@/features/game-data/utils/masteries';
+import { anyWeaponPerkText, MASTERY_GUIDE_PATH, masteryBasesUrl } from '@/features/game-data/utils/masteries';
 
 const LINK = 'font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary';
 
@@ -24,7 +24,7 @@ export function SkillMasteries({ skillId, skillName }: { readonly skillId: strin
         {entries.map(({ mastery, effects }) => {
           const firstBase = mastery.bases.at(0);
           return (
-            <li key={mastery.value} className="space-y-1 border-l-2 border-muted pl-2">
+            <li key={mastery.property} className="space-y-1 border-l-2 border-muted pl-2">
               <div className="flex items-center gap-1.5">
                 {firstBase !== undefined && <ItemIcon item={{ kind: 'base', code: firstBase }} size={28} />}
                 <Link to={masteryBasesUrl(mastery)} className={LINK}>
@@ -48,7 +48,7 @@ export function SkillMasteries({ skillId, skillName }: { readonly skillId: strin
         })}
       </ul>
       <p className="text-xs text-muted-foreground">
-        One mastery per weapon; the token is lost when you remove it.{' '}
+        One mastery per weapon; the token is lost when you remove it. {anyWeaponPerkText(index.bundle)}{' '}
         <Link to={MASTERY_GUIDE_PATH} className="text-primary underline-offset-2 hover:underline">
           How to get one
         </Link>

@@ -8,7 +8,7 @@
  *   ## <key> — <title>
  *   stats: <the stats it covers, free text>
  *   summary: <one line>
- *   body: <paragraph with inline source tags [ESR config] / [ESR files] / [Vanilla] / [Community 3.9]>
+ *   body: <paragraph with inline source tags [ESR config] / [ESR files] / [Mod author] / [Vanilla] / [Community 3.9]>
  *   facts: (a bullet list, or inline text)
  *   caveats: (a bullet list, or inline text; "none…" = no caveats)
  *   sources: <entries separated by "; ">
@@ -169,7 +169,7 @@ export function parseOpenQuestions(text: string): OpenQuestion[] {
 
 // --- inline text --------------------------------------------------------------------------------------------------------
 
-export type SourceKind = 'esr-config' | 'esr-files' | 'vanilla' | 'community';
+export type SourceKind = 'esr-config' | 'esr-files' | 'mod-author' | 'vanilla' | 'community';
 
 export interface SourceTag {
   readonly kind: SourceKind;
@@ -189,13 +189,14 @@ export type InlineToken =
 const TAG_KINDS: Readonly<Partial<Record<string, SourceKind>>> = {
   'ESR config': 'esr-config',
   'ESR files': 'esr-files',
+  'Mod author': 'mod-author',
   Vanilla: 'vanilla',
   Community: 'community',
 };
 
 /** `code`, **bold**, [text](url), bare URLs and the source tags */
 const INLINE =
-  /`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s;,)]+[^\s;,).])|\[(ESR config|ESR files|Vanilla|Community)(?: (\d+(?:\.\d+)*))?(?:,\s*([^\]]+))?\]/g;
+  /`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s;,)]+[^\s;,).])|\[(ESR config|ESR files|Mod author|Vanilla|Community)(?: (\d+(?:\.\d+)*))?(?:,\s*([^\]]+))?\]/g;
 
 export function parseSourceTag(name: string, version?: string, detail?: string): SourceTag | null {
   const kind = TAG_KINDS[name];

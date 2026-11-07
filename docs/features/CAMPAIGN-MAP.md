@@ -111,13 +111,19 @@ a tiered map zone (the same summary on the entry, the middle levels and the aren
   Chaos Rift), else its own (`zoneArena`). `<details>`, open on its own arena or when the zone has one boss; Chaos Rift's start closed): the
   fight in a few words, how to hurt the invincible tier 5 bosses (amber box), the rewards in Hell at players 1 with
   players 8 in brackets, "up to N more" generic loot rolls (a per-kill drop cap may cut them), the terrorized Worldstone
-  Shards (and a roll the terrorized table skips; tier 5 gives the files' figure next to the page's "none, engine limit"
-  and Lucion's blank terrorized TC reads "likely his normal table", both labelled unconfirmed; the page's "always a
-  shard" for tiers 1–4 is not a count and is not compared), a loot table shared with another zone's boss (Herald of Doom uses Avatar of the Night's), the launcher plugin
-  set drop (Eternal Hourglass), and the players 8 (uber) variant.
+  Shards (and a roll the terrorized table skips; tier 5 gives the files' figure next to the page's "none, engine limit",
+  labelled unconfirmed; a blank terrorized TC would read "likely his normal table", none in ESR 3.3 since Lucion got his
+  own; the page's "always a shard" for tiers 1–4 is not a count and is not compared), a loot table shared with another
+  zone's boss (`sameTableAs`; none in ESR 3.3: Herald of Doom has his own Endless Abyss table since then), the launcher
+  plugin set drop (Eternal Hourglass), and the players 8 (uber) variant.
 - Where the official page lists another figure or name, the reward row says "Official page: …" (amber text): computed
   at runtime by comparing the files' chances with the page figures kept in `data/mapBosses.ts` (`page`), so the note
-  disappears by itself when ESR fixes the files or the page.
+  disappears by itself when ESR fixes the files or the page. A page item name the files lack ("Mephisto's Demonic
+  Horn") is paired with the files' item the page does not name only when there is exactly one; the perk drops below are
+  left out of that pairing.
+- Since ESR 3.3 every map boss rolls a 2% Alien Artefact (treasureclassex.txt `Artefact Chance`, no condition). The
+  Specializations page lists "Alien Artefacts" as an Archaeologist perk, so that row reads "Official page: Archaeologist
+  perk only (…)" (`PERK_DROPS` in `data/mapBosses.ts`, shown for every boss, curated or not).
 - A link to the guide note `/guide/endgame-bosses`; the note links back to every arena (`page:/campaign-map?area=…`).
 
 Rewards and chances are computed at build time from the treasure classes (areas.json `mapBosses`, GAME-DATA.md

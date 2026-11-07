@@ -1,5 +1,6 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DIFFICULTIES, type LootFilter } from '../../engine/types';
+import { levelName } from '../../engine/text';
+import { DIFFICULTIES, LANGUAGES, type LootFilter } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
 import { defaultFilterLevel, isTown, type TestItemForm } from '../../utils/testItemForm';
 import { NumberInput } from '../NumberInput';
@@ -106,12 +107,38 @@ export function TestContextFields({ data, filter, form, onChange }: TestContextF
               {!levelKnown && <SelectItem value={String(level)}>{`${String(level)} (not a level of this filter)`}</SelectItem>}
               {levels.map((entry) => (
                 <SelectItem key={entry.id} value={String(entry.id)}>
-                  {`${String(entry.id)}: ${entry.name}${entry.id === defaultFilterLevel(filter) ? ' (default)' : ''}`}
+                  {`${String(entry.id)}: ${levelName(entry, form.language)}${entry.id === defaultFilterLevel(filter) ? ' (default)' : ''}`}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         )}
+      </Field>
+
+      <Field
+        id={`${ID}-language`}
+        label="Game language"
+        hint="Per-language names and chat lines show in it; a missing one falls back to enUS."
+        dense
+      >
+        <Select
+          value={form.language}
+          onValueChange={(value) => {
+            const language = LANGUAGES.find((entry) => entry === value);
+            if (language !== undefined) update({ language });
+          }}
+        >
+          <SelectTrigger id={`${ID}-language`} size="sm" className="w-full font-mono">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {LANGUAGES.map((language) => (
+              <SelectItem key={language} value={language} className="font-mono">
+                {language}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
       <div className="flex flex-col gap-1">

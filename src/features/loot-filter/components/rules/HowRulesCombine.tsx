@@ -21,14 +21,16 @@ export function HowRulesCombine() {
           Item codes and item types are both checked: <code className={CODE}>cap</code> with type <code className={CODE}>helm</code>{' '}
           matches, <code className={CODE}>cap</code> with type <code className={CODE}>ring</code> never does.
         </li>
+        <li>Rules run top to bottom; every matching rule applies and later ones override labels. Hide stops: nothing after it runs.</li>
         <li>
-          Rules run top to bottom; every matching rule applies and later ones override labels. Hide stops: nothing after it runs, and there
-          is no &quot;show&quot; action, so an earlier rule cannot protect an item from a later hide.
+          Show protects: once a rule with <span className="font-medium text-foreground">Show</span> matches, no later rule can hide the item
+          (hide, hide if other conditions fail, hide unmatched items), but later rules still change its looks, chat lines and sounds. Put
+          the show rules for what you never want hidden first, then the broad hide rules. A rule cannot both show and hide.
         </li>
         <li>
-          <span className="font-medium text-foreground">Tip:</span> hiding is the only way to filter, and anything a hide rule matches loses
-          its ground label for good. Prefer several narrow hide rules (one item type and quality each) over one broad rule, and try the
-          broad ones on a few items in the Test tab.
+          <span className="font-medium text-foreground">Tip:</span> anything a hide rule matches (and no show rule above protects) loses its
+          ground label for good. Prefer several narrow hide rules (one item type and quality each) over one broad rule, and try the broad
+          ones on a few items in the Test tab.
         </li>
         <li>
           To hide most of a group but keep exceptions, put the exceptions into the hide rule as negated conditions. &quot;Hide caps, except

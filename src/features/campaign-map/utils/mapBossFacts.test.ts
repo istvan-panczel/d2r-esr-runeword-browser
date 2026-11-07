@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { Area, MapBoss } from '@/features/game-data/engine/schema';
-import type { MapBossFacts } from '../data/mapBosses';
-import { chanceText, zoneBossSummary } from './mapBossFacts';
+import type { Area, MapBoss, MapBossReward } from '@/features/game-data/engine/schema';
+import { PERK_DROPS, type MapBossFacts } from '../data/mapBosses';
+import { bossCard, chanceText, zoneBossSummary } from './mapBossFacts';
 import { mockCampaignArea, mockMap } from './testMap.mock';
 
 const herald: MapBoss = {
@@ -30,6 +30,7 @@ const mephisto: MapBoss = {
   treasureClass: 'Mephisto the Invincible Boss',
   rewards: [
     { kind: 'item', label: "Mephisto's Demonic Brain", chance: [1, 1] },
+    { kind: 'item', label: 'Alien Artefact', chance: [0.02, 0.02] },
     { kind: 'key', label: 'Pandemonium key', chance: [0.5, 0.9545] },
   ],
   otherRolls: 26,
@@ -41,7 +42,7 @@ const lucion: MapBoss = {
   id: 'lucion',
   name: 'Lucion',
   arenas: [211],
-  rewards: [],
+  rewards: [{ kind: 'item', label: 'Alien Artefact', chance: [0.02, 0.02] }],
   terrorShards: null,
   terrorMissing: undefined,
 };
@@ -126,10 +127,14 @@ describe('zoneBossSummary', () => {
     expect(card?.uncurated).toBe(false);
   });
 
-  it('pairs a renamed item, flags a key set the files do not drop, and terrorized tables that skip a roll', () => {
+  it('pairs a renamed item past a perk drop, flags the perk, a key set the files do not drop, and terrorized tables that skip a roll', () => {
     const card = summaryOf(193)?.bosses[0];
     expect(card?.damage?.text).toBe('Pick up a light orb');
-    expect(card?.rewards.map((line) => line.official)).toEqual(["calls it Mephisto's Demonic Horn", 'a whole key set, 50%']);
+    expect(card?.rewards.map((line) => [line.label, line.chance, line.official])).toEqual([
+      ["Mephisto's Demonic Brain", 'always', "calls it Mephisto's Demonic Horn"],
+      ['Alien Artefact', '2%', PERK_DROPS['Alien Artefact']],
+      ['Pandemonium key', '50%', 'a whole key set, 50%'],
+    ]);
     expect(card?.terror).toBe(
       "the files list +3 Worldstone Shards, without the Mephisto's Demonic Brain roll; the official page says tier 5 bosses drop none (an engine limit)"
     );
@@ -139,8 +144,29 @@ describe('zoneBossSummary', () => {
   it('marks a boss without hand-written facts and a boss without a terrorized table', () => {
     const card = summaryOf(211)?.bosses[0];
     expect(card?.uncurated).toBe(true);
+    // The perk note comes from the Specializations page, not from the boss's hand-written page figures
+    expect(card?.rewards.map((line) => line.official)).toEqual([PERK_DROPS['Alien Artefact']]);
     expect(card?.terror).toBe('monstats sets no terrorized loot table for this boss, so he likely drops his normal one');
     expect(card?.terrorUnconfirmed).toBe(true);
+  });
+
+  it('names a page item only against the one file item the page does not name', () => {
+    const card = (rewards: MapBoss['rewards'], items: readonly string[]) =>
+      bossCard({ ...mephisto, rewards }, { fight: [], page: { items, terror: 'none' } }, true, (id) => id).rewards.map(
+        (line) => line.official
+      );
+    const brain: MapBossReward = { kind: 'item', label: "Mephisto's Demonic Brain", chance: [1, 1] };
+    const artefact: MapBossReward = { kind: 'item', label: 'Alien Artefact', chance: [0.02, 0.02] };
+    const skull: MapBossReward = { kind: 'item', label: "Rathma's Eternal Skull", chance: [1, 1] };
+    // The perk drop does not count as a second unnamed item, in either order
+    expect(card([artefact, brain], ["Mephisto's Demonic Horn"])).toEqual([
+      PERK_DROPS['Alien Artefact'],
+      "calls it Mephisto's Demonic Horn",
+    ]);
+    // A file item the page names keeps no note; the other one is paired
+    expect(card([skull, brain], ["Rathma's Eternal Skull", "Mephisto's Demonic Horn"])).toEqual([null, "calls it Mephisto's Demonic Horn"]);
+    // Two unnamed file items: no guess
+    expect(card([brain, { ...skull, label: 'Frostmourne' }], ["Mephisto's Demonic Horn"])).toEqual([null, null]);
   });
 
   it('links a boss to its arena inside the selected zone (Chaos Rift), else to its own', () => {

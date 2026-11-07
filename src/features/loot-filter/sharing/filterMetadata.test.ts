@@ -14,7 +14,7 @@ describe('filterMetadata', () => {
     expect(meta.file_version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(meta.rule_count).toBe(225);
     expect(meta.levels).toHaveLength(4);
-    expect(meta.levels?.[0]).toEqual({ id: 1, name: 'Leveling' });
+    expect(meta.levels?.[0]).toMatchObject({ id: 1, name: { enUS: 'Leveling', deDE: 'Leveln' } });
   });
 
   it('accepts trailing commas and maps missing or blank header fields to null', () => {
@@ -51,5 +51,24 @@ describe('filterMetadata', () => {
 
   it('throws on text that is not JSON', () => {
     expect(() => filterMetadata('{ nope')).toThrow(JsoncSyntaxError);
+  });
+});
+
+describe('filterMetadata with per-language level names', () => {
+  it('keeps the per-language names', () => {
+    const name = { enUS: 'Strict', deDE: 'Streng' };
+    const meta = filterMetadata(JSON.stringify({ formatVersion: 1, filterLevels: [{ id: 1, name }], rules: [] }));
+    expect(meta.levels).toEqual([{ id: 1, name }]);
+  });
+
+  it('counts the per-language objects in the 4 KB limit', () => {
+    const name = Object.fromEntries(['enUS', 'deDE', 'esES', 'frFR', 'itIT'].map((language) => [language, 'n'.repeat(60)]));
+    const filterLevels = Array.from({ length: 30 }, (_, index) => ({ id: index + 1, name }));
+    const levels = filterMetadata(JSON.stringify({ formatVersion: 1, filterLevels, rules: [] })).levels ?? [];
+    expect(levels.length).toBeGreaterThan(0);
+    expect(levels.length).toBeLessThan(30);
+    // Postgres prints jsonb with a space after every ':' and ','.
+    const printed = JSON.stringify(levels).replace(/([:,])/g, '$1 ');
+    expect(new TextEncoder().encode(printed).length).toBeLessThanOrEqual(4096);
   });
 });

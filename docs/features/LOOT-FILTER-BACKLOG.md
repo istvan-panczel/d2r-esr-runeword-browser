@@ -31,12 +31,10 @@ rule without an error either way.
 
 ### Life, Mana and per-level stats: stored or shown value
 
-Open question: **does `{stat:7}` show 40 or 10240 on a +40 Life item?** (Use "Check in game" on a rule
-that checks `maxhp`, or a `namePrefix` `"[Life {stat:7} | Mana {stat:9} | Str/lvl {stat:220}] "`.) The game stores
-Life, Mana and Stamina ×256 (`ValShift` 8) and the per-level stats in eighths per character level; the validator warns
-about every such check that is not a presence check (`engine/statScale.ts`). With the answer: drop the warnings for
-what reads as shown, or turn them into firm "write ×256" hints (and maybe let the stat row take the shown number).
-Sully's rules 29 and 30 print `{stat:218}/8`, which suggests the stored eighths for the per-level stats.
+Answered by the ESR 3.3 guide (plugin 1.8.2, "Stat values"): every stat reads the number the tooltip prints (+40 Life
+reads 40, per-level stats at the character's level, howl and fear the percent, charges the skill level). The editor
+follows it (`engine/statScale.ts`, LOOT-FILTER.md "Stat values"); still to see in game with 1.8.2:
+`"[Life {stat:7} | Mana {stat:9} | Str/lvl {stat:220}] "` on a +40 Life item reads 40.
 
 ### Plugin tier of tier-less items
 
@@ -59,12 +57,13 @@ never match. See LOOT-FILTER.md "Verify in game". The template's Ancient Scroll 
 writes `4` where the format documents `[4]`; it works in game, so the editor accepts the number with a warning (see
 "A single-number level" above).
 
-## Planned format changes to watch
+## Shipped format changes (ESR 3.3, plugin 1.8.2)
 
-### Formula conditions and a show action
-
-A formula/show syntax is planned upstream; revisit when it ships. ESR 3.2.24's plugin (1.5.3) has neither, and the
-editor treats such keys like any other unknown key.
+`show`, `formula`, localised level names, tooltip-number stat values, the unidentified-item skip, once-per-item chat
+and sounds and the launcher's chat switch shipped with ESR 3.3; the editor follows the 3.3 guide (LOOT-FILTER.md "Show
+action", "Formula condition", "Localised level names", "Verify in game" → "Plugin 1.8.2 checks"). The formula preview
+branch `feat/loot-filter-formulas` was ported onto the 3.3 update. Open: the in-game checks listed there, then bump
+`LOOT_FILTER_PLUGIN_VERSION` (owner).
 
 ## Needs the plugin or the mod (requests for the mod author)
 

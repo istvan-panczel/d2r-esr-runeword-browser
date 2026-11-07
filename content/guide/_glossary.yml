@@ -62,7 +62,7 @@
   definition: A random bonus added with an Orb of Anointment (non-unique, non-runeword gear) or the three Demonic organs of the Prime Evils (unique charms); it cannot brick the item.
   note: corruption-anointment
 - term: Sanctify
-  definition: Using Lucion's Relic of Sanctification on a jewel for a one-time bonus that cannot be undone.
+  definition: Using Lucion's Relic of Sanctification on a jewel (since 3.3 also a ring or amulet) for a one-time bonus that cannot be undone.
   note: enhancement-order
 - term: Branded
   definition: A modifier on the copy that Inarius' Everburning Halo makes of an item (the original comes back unchanged); a Branded item can no longer be changed by any recipe.
@@ -107,7 +107,7 @@
   definition: A book from the Starter Pack that counts kills and takes permanent bonuses at kill milestones and after endgame boss kills.
   note: kill-ledger
 - term: Terror zone
-  definition: An area currently terrorized, with stronger monsters; terrorized champions and uniques can drop Worldstone Shards, and terrorized superuniques and act bosses at monster level 96 can drop Endgame Maps.
+  definition: An area currently terrorized, with stronger monsters; terrorized champions and uniques can drop Worldstone Shards, and terrorized superuniques and act bosses at monster level 96 can drop Endgame Maps. Since 3.3 every zone belongs to a terror group, and each group includes one Endgame Map.
   note: endgame-roadmap
 - term: Endgame map
   definition: A consumable item that, transmuted alone in Act 5 Hell, opens a high-level zone, most of them with a boss; maps come in five tiers.
@@ -152,7 +152,7 @@
   definition: ESR's own damage over time, in place of vanilla's Open Wounds; physical hits make the target lose a percent of that hit's physical damage over a few seconds. The strongest bleed wins and it stacks with poison.
   link: page:/modifiers?kind=bleed
 - term: Leech
-  definition: Life or mana gained from a percent of the physical damage you deal ("Physical Damage Leeched as Life/Mana"); for players it is divided by {fact:difficulty.LifeStealDivisor:nightmare} and {fact:difficulty.LifeStealDivisor:hell} (life) or {fact:difficulty.ManaStealDivisor:nightmare} and {fact:difficulty.ManaStealDivisor:hell} (mana) in Nightmare and Hell.
+  definition: Life or mana gained from a percent of the physical weapon damage you deal ("Physical Damage Leeched as Life/Mana"; elemental damage does not leech); for players it is divided by {fact:difficulty.LifeStealDivisor:nightmare} and {fact:difficulty.LifeStealDivisor:hell} (life) or {fact:difficulty.ManaStealDivisor:nightmare} and {fact:difficulty.ManaStealDivisor:hell} (mana) in Nightmare and Hell.
   link: page:/modifiers?kind=life-leech
 - term: Life on Striking
   definition: An ESR stat that gives flat life (or mana) on every hit that lands, melee or missile; unlike leech it has no difficulty penalty.
@@ -189,7 +189,7 @@
   definition: ESR's grouped line for Dodge (melee, standing), Avoid (missiles, standing) and Evade (both, while moving); each is capped at {fact:dodge.cap:dodge}%.
   link: page:/modifiers?kind=dodge
 - term: Magic Find
-  definition: Raises the chance that drops are magic, rare, set or unique; rare, set and unique get diminishing returns, plus an ESR bonus of {fact:magicFind.tail:unique}% of your raw Magic Find.
+  definition: Raises the chance that drops are magic, rare, set or unique, never the number of drops; rare, set and unique get diminishing returns, plus an ESR bonus of {fact:magicFind.tail:unique}% of your raw Magic Find. Items without a rarity (gems, runes, crystals, organs, keys, maps, Worldstone Shards) ignore it.
   link: page:/modifiers?kind=magic-find
 - term: Item Quantity
   definition: An ESR stat ("Increased Quantity of Items Found") that adds extra picks from a monster's own drops; 100% is one extra pick. Not on prime evils.
@@ -198,5 +198,5 @@
   definition: Shortens skill cooldowns; each skill stops at a floor, on most skills 20% of the base cooldown.
   link: page:/modifiers?kind=skill-cooldown
 - term: Prime evil
-  definition: A monster flagged primeevil in the game files (act bosses, ubers, endgame map bosses and a few others); players and their summons deal only {fact:difficulty.PlayerDamagePercentVSPrimeEvil:nightmare}% damage to them in Nightmare and {fact:difficulty.PlayerDamagePercentVSPrimeEvil:hell}% in Hell.
+  definition: A monster flagged primeevil in the game files (act bosses, ubers, endgame map bosses and a few others); players and their summons deal only {fact:difficulty.PlayerDamagePercentVSPrimeEvil:nightmare}% damage to them in Nightmare and {fact:difficulty.PlayerDamagePercentVSPrimeEvil:hell}% in Hell. Since 3.3 a launcher plugin makes terror zone heralds count as prime evils and bosses too.
   note: hell-survival

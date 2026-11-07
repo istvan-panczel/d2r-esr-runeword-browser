@@ -43,7 +43,7 @@ officialDocs:
 sources: [official-cube, esr-txt, esru-wiki]
 ---
 
-The :term[Dragon Stone] is ESR's workhorse material. It drops, and eight Ancient Decipherers cube into one. Keep every one you find in a Multi Stocker ([[stockers]]).
+The :term[Dragon Stone] is ESR's workhorse material. It drops, eight Ancient Decipherers cube into one, and since 3.3 a spare Orb of Anointment and a Key cube into two ([[corruption-anointment]]). Keep every one you find in a Multi Stocker ([[stockers]]).
 
 ### The forms
 

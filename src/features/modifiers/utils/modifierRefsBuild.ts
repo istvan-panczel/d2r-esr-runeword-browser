@@ -34,7 +34,7 @@ const VALUE_AFTER = 2;
 const EXTRA_TEMPLATES: readonly (readonly [string, string])[] = [['%+d%% Enhanced Damage', 'enhanced-damage']];
 
 /** A source tag's weight when several kinds tie: the more ESR-specific one wins */
-const SOURCE_ORDER: readonly SourceKind[] = ['esr-config', 'esr-files', 'community', 'vanilla'];
+const SOURCE_ORDER: readonly SourceKind[] = ['esr-config', 'esr-files', 'mod-author', 'community', 'vanilla'];
 
 export interface ModifierRefsBuild {
   readonly data: ModifierRefsData;

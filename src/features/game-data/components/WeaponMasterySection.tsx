@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { BaseItem } from '../engine/schema';
-import { inputText, MASTERY_GUIDE_PATH, masterySummary, type MasteryIndex } from '../utils/masteries';
+import { anyWeaponPerkText, inputText, MASTERY_GUIDE_PATH, masterySummary, type MasteryIndex } from '../utils/masteries';
 import { MasteryEffectText, MasteryRecipe } from './MasteryParts';
 
 interface WeaponMasterySectionProps {
@@ -18,7 +18,7 @@ export function WeaponMasterySection({ masteries, base }: WeaponMasterySectionPr
   const { names, skillNames } = masteries.bundle;
   const [first] = own;
   const remove = first.remove.map((input) => inputText(input, names)).join(' + ');
-  // Steps the game files have no recipe for on this base (ESR 3.2.24: Celestial Blade's awaken and remove rows take 0bs)
+  // Steps the game files have no recipe for on this base (ESR 3.3: Celestial Blade's awaken row takes 0bs)
   const missing = [
     own.some((mastery) => mastery.noAwaken?.includes(base.code) === true) && 'awaken',
     own.some((mastery) => mastery.noRemove?.includes(base.code) === true) && 'remove',
@@ -31,7 +31,7 @@ export function WeaponMasterySection({ masteries, base }: WeaponMasterySectionPr
       </summary>
       <div className="mt-1 space-y-2">
         {own.map((mastery) => (
-          <div key={mastery.value} className="space-y-1 border-l-2 border-muted pl-2">
+          <div key={mastery.property} className="space-y-1 border-l-2 border-muted pl-2">
             <div className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
               {own.length > 1 && <span className="font-medium text-foreground">Option {own.indexOf(mastery) + 1}:</span>}
               <span>Weapon +</span>
@@ -48,6 +48,7 @@ export function WeaponMasterySection({ masteries, base }: WeaponMasterySectionPr
           bosses{missing.includes('awaken') ? '.' : '; awaken one by cubing it with this weapon.'}
           {remove !== '' && !missing.includes('remove') && <> Weapon + {remove} removes the mastery; the token is lost.</>}
           {missing.length > 0 && <> The game files have no {missing.join(' or ')} recipe for this base (likely a data slip).</>}{' '}
+          {anyWeaponPerkText(masteries.bundle)}{' '}
           <Link to={MASTERY_GUIDE_PATH} className="text-primary underline-offset-2 hover:underline">
             Weapon mastery guide
           </Link>

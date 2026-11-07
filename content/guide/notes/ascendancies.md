@@ -12,14 +12,14 @@ mentions:
 officialDocs:
   - label: Ascendancies
     href: docs:ascendancies.htm#challenge
-sources: [official-docs]
+sources: [official-docs, esr-txt, patchnotes]
 ---
 
 An :term[Ascendancy] is a subclass granted by an Ascendancy Stone, a charm with its own skills and bonuses. To get one, kill the five special superuniques on Hell, cube their five elemental orbs into an Orb of Creation, then cube the orb with Blemished gems; the colours pick the ascendancy ([[gems-crystals]]).
 
 ### Where the five orbs drop
 
-Each orb drops from one superunique on Hell. The official page only says which acts have one; the places below were checked in game.
+Each orb drops from one superunique on Hell. The official page only says which acts have one; the places below were checked in game. Since 3.3 the five orbs and the Orb of Creation cannot be put in the shared stash, so farm them with the character that will wear the stone.
 
 **Orb of Storms:** Act 1, The Hole level 2, below the Black Marsh.
 

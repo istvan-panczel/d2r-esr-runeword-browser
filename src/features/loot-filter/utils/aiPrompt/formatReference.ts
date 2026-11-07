@@ -8,11 +8,11 @@
  */
 import { STAT_LAYER_KINDS, type StatLayerKind } from '@/features/game-data/engine/statLayers';
 import { COLOR_CODES } from '../../engine/colors';
-import { OMITTED_PARAM_RULE } from '../../engine/evaluate';
+import { OMITTED_PARAM_RULE, STATS_WHILE_UNIDENTIFIED } from '../../engine/evaluate';
 import { ACTION_KEYS, CONDITION_KEYS, readLootFilter, TOP_LEVEL_KEYS } from '../../engine/parse';
 import { serializeLootFilter, toPlainJson } from '../../engine/serialize';
 import { STAT_QUIRKS } from '../../engine/statQuirks';
-import { STAT_SCALES } from '../../engine/statScale';
+import { isPerLevel, STAT_SCALES } from '../../engine/statScale';
 import { PLACEHOLDERS, type PlaceholderContext } from '../../engine/text';
 import {
   BASE_TIERS,
@@ -93,7 +93,8 @@ const TOP_LEVEL: Readonly<Record<TopLevelKey, string>> = {
   version: 'Shown in the launcher, e.g. "1.0.0".',
   description: 'One or two sentences the launcher shows.',
   updateUrl: 'Where newer copies are published. Leave it out.',
-  filterLevels: 'Strictness levels, `[{ "id": 1, "name": "Leveling" }, { "id": 2, "name": "Strict" }]`; whole-number ids, unique.',
+  filterLevels:
+    'Strictness levels, `[{ "id": 1, "name": "Leveling" }, { "id": 2, "name": "Strict" }]`; whole-number ids, unique. A name is a string or a per-language object like any text.',
   defaultLevel: 'The level id a new player starts on; must be one of the filterLevels ids.',
   hideUnmatchedItems: '`true` hides every ground item no rule matched. Very strict; leave it out unless the user wants it.',
   soundVolume: '0 to 100: the volume for rules that set none.',
@@ -131,6 +132,7 @@ const CONDITIONS: Readonly<Record<keyof RuleConditions, readonly [value: string,
   itemStatsAnyOf: ['stat checks', 'at least one check holds for the item (OR)'],
   playerStats: ['stat checks', "every check holds for the player's character"],
   playerStatsAnyOf: ['stat checks', "at least one check holds for the player's character"],
+  formula: ['a formula text (see "Formulas"), e.g. `"stat(\'item_fastercastrate\') >= 10"`', 'the formula is not 0'],
   location: [`a list of ${list(LOCATIONS)}`, 'the item is there; without the key a rule looks at onGround only'],
   difficulty: [`${list(DIFFICULTIES)} (0 to 2); ${NAMED}`, "the game's difficulty matches"],
   areas: ['area ids, e.g. `[39]` (areas.csv)', 'the player is in one of those areas'],
@@ -149,12 +151,16 @@ const ACTIONS: Readonly<Record<keyof RuleActions, readonly [value: string, effec
     'true',
     'When the codes, types and location match but any other condition fails, the item is hidden (see "Hide rules").',
   ],
+  show: [
+    'true',
+    'Keeps the item visible: no later rule can hide it (hide, hideIfOtherConditionsFail, hideUnmatchedItems); later rules still change its looks, chat lines and sounds. A rule cannot both show and hide.',
+  ],
   replaceName: ['text', 'A new name. `{name}` is the game name.'],
   namePrefix: ['text', 'Text before the name.'],
   nameSuffix: ['text', 'Text after the name.'],
   labelBackground: [COLOR, `Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`],
   labelBorder: [`\`{ "color": ${COLOR.replace(/`/g, '')}, "width": 2 }\``, 'Outlines the ground label; width 1 to 3 reads well.'],
-  chatMessage: ['text', 'A chat line when the item drops (replaces the notify line).'],
+  chatMessage: ['text', 'A chat line when the item drops, once per item (replaces the notify line).'],
   chatMessageWhenHidden: ['text', 'A chat line when this rule hides the item.'],
   notify: ['true', 'Prints the filter\'s drop line (notifications.dropFormat, default "{qualityColor}{name}").'],
   sound: [
@@ -200,8 +206,7 @@ const LAYER_TEXT: Readonly<Record<StatLayerKind, string>> = {
   class: 'the class id 0 to 7 (classes.csv)',
   skill: 'the skill id (skills.csv)',
   event: 'skill id × 64 + skill level (skill 54 level 10 = 3466)',
-  charged:
-    'skill id × 64 + skill level; its value is max charges × 256 + charges left (5/5 charges = 1285): check `>= 1` for "has charges"',
+  charged: 'skill id × 64 + skill level; its value is the skill level of the charges: check `>= 1` for "has charges"',
 };
 
 function layeredStats(): string[] {
@@ -229,6 +234,45 @@ function statChecksSection(): string {
   ].join('\n');
 }
 
+function formulaSection(): string {
+  return [
+    '## Formulas',
+    '',
+    '`formula` is a condition that holds when its formula is not 0, written like a txt calc and checked when the filter loads. A bad name or bad syntax switches the rule off.',
+    '',
+    '```json',
+    `{ "itemTypes": ["ring"], "quality": "magic", "formula": "((stat('item_fastercastrate')>=10)&&((stat('fireresist')+stat('coldresist')+stat('lightresist'))>=40))", "hideIfOtherConditionsFail": true }`,
+    '```',
+    '',
+    markdownTable(
+      ['Part', 'What it gives'],
+      [
+        [
+          "`stat('name')`",
+          "The item's stat: a stats.csv `name` in single quotes, or its id. Without a param it reads param 0, like a stat check.",
+        ],
+        [
+          "`stat('name', param)`",
+          "One param of it: a number, or a skills.txt skill name in single quotes such as `'Teleport'` (skills.csv `formulaName`). On chance-to-cast and charge stats a skill name matches that skill at any level.",
+        ],
+        ["`playerStat('name')`, `playerStat('name', param)`", "The character's stat."],
+        [
+          "`statMax('name')`, `statSum('name')`",
+          "The highest value, or the total, over every param of the item's stat (any skill, tab or class).",
+        ],
+        ['`+ - * /`', 'Whole numbers; division rounds toward 0, division by 0 gives 0.'],
+        ['`== != < <= > >=`', 'Comparisons give 1 or 0.'],
+        ['`&& || !`', 'And, or, not.'],
+        ['`a ? b : c`', 'b when a is not 0, else c.'],
+      ]
+    ),
+    '',
+    '- Names go in single quotes (no escaping inside the JSON string); double quotes are most likely rejected.',
+    '- A formula is one more condition: the rule still needs its other conditions, and `hideIfOtherConditionsFail` counts a formula that gives 0 as a failed "other condition".',
+    '- Prefer a formula over several stat checks when the rule adds stats up ("total resists >= 40") or mixes AND and OR.',
+  ].join('\n');
+}
+
 function actionsSection(): string {
   return [
     '## Actions',
@@ -248,8 +292,9 @@ function combineSection(): string {
     '- All conditions of a rule must hold (AND); values inside one list are alternatives (OR): `"itemCodes": ["r30", "r31"]` matches either.',
     '- `itemCodes` and `itemTypes` both apply: a code that is not of a listed type never matches.',
     "- Later wins: a later rule's name change, background, border, icon or droplight replaces an earlier one's. Chat lines and sounds add up.",
-    '- `hide` stops: nothing after the hiding rule runs, and the highlights of the rules above it are gone too. There is no "show" action, so an earlier rule cannot protect an item from a later hide.',
-    "- So the order cannot protect an item from a hide rule; only the hide rule's own exceptions can. Order matters for the looks: put broad looks first and the specific ones after them (later wins).",
+    '- `hide` stops: nothing after the hiding rule runs, and the highlights of the rules above it are gone too.',
+    '- `show` protects: after a rule with `"show": true` matches, later rules cannot hide the item (`hide`, `hideIfOtherConditionsFail`, `hideUnmatchedItems`); their colours, names, sounds and chat lines still apply. Put the show rules for what must never be hidden (high runes, uniques) first, then the broad hide rules. A rule cannot both show and hide.',
+    '- Order matters for the looks too: put broad looks first and the specific ones after them (later wins).',
     '- A rule with an error is switched off by the game (logged with its number); the rest of the filter works.',
     '- Rules look at ground items unless `location` says otherwise. Labels, icons and droplights show on ground items only.',
     "- Styles: `useStyle` pulls in a style's actions; the rule's own actions win key by key. Styles cannot hold conditions or use another style.",
@@ -290,7 +335,6 @@ const CONTEXT_TEXT: Readonly<Record<PlaceholderContext, string>> = {
 };
 
 function textsSection(): string {
-  const shown = COLOR_CODES.filter((entry) => !entry.approximate || entry.usedFor !== '');
   return [
     '## Texts, placeholders and colours',
     '',
@@ -309,21 +353,22 @@ function textsSection(): string {
     '',
     markdownTable(
       ['Code', 'Colour', 'The game uses it for'],
-      shown.map((entry) => [code(`ÿc${entry.code}`), entry.name, entry.usedFor])
+      COLOR_CODES.map((entry) => [code(`ÿc${entry.code}`), entry.name, entry.usedFor])
     ),
   ].join('\n');
 }
 
 function limitsSection(): string {
-  const scaleNames = (kind: 'shift' | 'perLevel' | 'shiftPerLevel') =>
-    list(STAT_SCALES.filter((scale) => scale.kind === kind).map((scale) => scale.name));
+  const perLevel = list(STAT_SCALES.filter(isPerLevel).map((scale) => scale.name));
   return [
     `## Known plugin limits (plugin ${LOOT_FILTER_PLUGIN_VERSION})`,
     '',
     ...STAT_QUIRKS.map((quirk) => `- ${code(quirk.name)} (${String(quirk.id)}): ${quirk.headline}. ${quirk.message}`),
     `- ${OMITTED_PARAM_RULE}`,
-    `- Stored scaled (not verified whether the plugin compares the stored or the shown value; use presence checks \`>= 1\` / \`< 1\` with them): ×256 ${scaleNames('shift')}; eighths per character level ${scaleNames('perLevel')}; both ${scaleNames('shiftPerLevel')}.`,
-    '- There is no "show" action and no formula condition.',
+    '- Stat values: every stat reads the number the item tooltip prints (stat checks, formulas, `{stat:}`): +40 Life reads 40, `item_howl` and `item_fear` read the percent, charges read the skill level; everything else as stored.',
+    `- Per-level stats read the value at the character's level (0.5 per level reads 0 at level 1 and 49 at level 99), so their checks depend on the level: ${perLevel}.`,
+    `- Unidentified items: a rule that checks an item stat (stat lists or a formula) skips an unidentified item entirely: none of its actions run and it cannot hide it. ${list(STATS_WHILE_UNIDENTIFIED)} still work. Magic and rare drops are unidentified, so a hide rule with stat exceptions does not hide them until identified.`,
+    '- Chat lines and sounds play once per item. The launcher\'s "Enable chat notifications" (selection.json `chatNotifications`) turns every item chat line off, and "Play sounds" every sound.',
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
     `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
   ].join('\n');
@@ -389,9 +434,9 @@ export const MISTAKE_SAMPLES: readonly MistakeSample[] = [
     fix: 'the param is class × 8 + tab (skill-tabs.csv)',
   },
   {
-    what: 'a Life value check',
-    rules: [{ itemTypes: ['ring'], itemStats: [{ stat: 'maxhp', op: '>=', value: 40 }], labelBorder: BORDER }],
-    fix: 'use a presence check (`>= 1`), or tell the user the number is not verified',
+    what: 'a per-level stat value check',
+    rules: [{ itemTypes: ['ring'], itemStats: [{ stat: 'item_strength_perlevel', op: '>=', value: 40 }], labelBorder: BORDER }],
+    fix: 'it reads the value at the character level; tell the user the check depends on the level, or use a presence check (`>= 1`)',
   },
   {
     what: 'a level the filter does not have',
@@ -437,7 +482,12 @@ export const MISTAKE_SAMPLES: readonly MistakeSample[] = [
     fix: 'give every hide rule conditions',
   },
   { what: 'a colour out of range', rules: [{ itemCodes: ['r83'], labelBackground: [300, 0, 0] }], fix: 'whole numbers 0 to 255' },
-  { what: 'a key the format does not have', rules: [{ itemCodes: ['r83'], show: true }], fix: 'there is no show action; remove it' },
+  { what: 'a key the format does not have', rules: [{ itemCodes: ['r83'], highlight: true }], fix: 'use only the keys above; remove it' },
+  {
+    what: 'show and hide in one rule',
+    rules: [{ itemCodes: ['r83'], show: true, hide: true }],
+    fix: 'a rule either shows or hides; use two rules',
+  },
 ];
 
 /** What the app reports for one sample: the parser's and the validator's messages on its first rule. */
@@ -552,6 +602,8 @@ export function buildFormatReference({ reference, examples, esrVersion }: Format
     conditionsSection(),
     '',
     statChecksSection(),
+    '',
+    formulaSection(),
     '',
     actionsSection(),
     '',

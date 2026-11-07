@@ -78,6 +78,31 @@ describe('buildLootFilterReference', () => {
     expect([...(reference.typeAncestors.get('club') ?? [])]).toEqual(['club', 'blun', 'weap']);
   });
 
+  it('looks formula skill names up by their skills.txt name (any case), and maps in-game names that differ', () => {
+    const withSkills: LootFilterDataBundle = {
+      ...data,
+      skills: [
+        { id: 1, name: 'Teleport', cls: 'sor' },
+        { id: 2, name: 'Hex: Bane', cls: 'war' },
+        { id: 3, name: 'Empowered Enchant' },
+        { id: 4, name: 'Empowered Enchant' },
+      ],
+      skillNames: ['Attack', 'Teleport', 'Hex Bane', 'Empowered Enchant Fire', 'Empowered Enchant Cold', ''],
+    };
+    const reference = buildLootFilterReference(withSkills, { types: [], classes: [] });
+    expect([...reference.skillIds]).toEqual([
+      ['attack', 0],
+      ['teleport', 1],
+      ['hex bane', 2],
+      ['empowered enchant fire', 3],
+      ['empowered enchant cold', 4],
+    ]);
+    expect([...reference.skillDisplayNames]).toEqual([
+      ['hex: bane', ['Hex Bane']],
+      ['empowered enchant', ['Empowered Enchant Fire', 'Empowered Enchant Cold']],
+    ]);
+  });
+
   it('has an empty fallback', () => {
     expect(EMPTY_LOOT_FILTER_REFERENCE.itemCodes.size).toBe(0);
     expect(EMPTY_LOOT_FILTER_REFERENCE.soundRowCount).toBe(0);

@@ -86,10 +86,10 @@ describe('extractFilterFromAnswer', () => {
   });
 
   it('keeps the parser diagnostics of a filter with mistakes (it imports, the editor lists them)', () => {
-    const result = success(extractFilterFromAnswer('```json\n{ "rules": [{ "show": true }] }\n```'));
+    const result = success(extractFilterFromAnswer('```json\n{ "rules": [{ "highlight": true }] }\n```'));
     expect(result.diagnostics.map((diagnostic) => diagnostic.message)).toEqual([
       'Missing "formatVersion" (it is always 1)',
-      'Unknown key "show"; it is kept as is',
+      'Unknown key "highlight"; it is kept as is',
     ]);
   });
 

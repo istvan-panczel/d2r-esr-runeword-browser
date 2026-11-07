@@ -16,6 +16,7 @@ import {
   type CorruptionSlot,
   type EnhanceBonus,
   type EnhanceBundle,
+  type EnhanceItemRef,
   type EnhanceMod,
   type EnhanceQuality,
   type SanctificationBonus,
@@ -26,6 +27,7 @@ import {
   type VesselTransform,
 } from '../engine/schema.ts';
 import type { ModsRenderer } from './bundleRunewords.ts';
+import type { Perk } from './cube/perks.ts';
 import type { TsvRow, TsvTable } from './tsv.ts';
 
 export interface EnhanceTables {
@@ -42,6 +44,8 @@ export interface EnhanceContext {
   /** itemstatcost ids a property sets (for joining the Vessel cap rows); [] when unknown */
   statIdsOf: (property: string) => number[];
   renderMods: ModsRenderer;
+  /** The specialisation perk of an itemstatcost id (cube/perks.ts), null for other stats; omitted: no perks */
+  perkOf?: (statId: number) => Perk | null;
 }
 
 export interface EnhanceBuildResult {
@@ -84,6 +88,22 @@ const SLOTS: readonly { typeCode: string; slot: string; label: string }[] = [
   { typeCode: 'amul', slot: 'amulet', label: 'Amulet' },
   { typeCode: 'misl', slot: 'quiver', label: 'Quiver' },
   { typeCode: 'char', slot: 'charm', label: 'Unique Charm' },
+];
+
+/**
+ * Anointment pool groups (ESR 3.3 rolls one pool per item type: "axe", "circ", "zrin" …): the equipment slot a pool's
+ * item type belongs to, first match in this order. The anointment trap rows ("weap,uni") use these parents too.
+ */
+const ANOINTMENT_GROUPS: readonly { parent: string; group: string }[] = [
+  { parent: 'weap', group: 'weapon' },
+  { parent: 'helm', group: 'helm' },
+  { parent: 'shld', group: 'shield' },
+  { parent: 'tors', group: 'body' },
+  { parent: 'glov', group: 'gloves' },
+  { parent: 'belt', group: 'belt' },
+  { parent: 'boot', group: 'boots' },
+  { parent: 'ring', group: 'ring' },
+  { parent: 'amul', group: 'amulet' },
 ];
 
 const QUALITY_WORDS: Record<EnhanceQuality, string> = {
@@ -400,29 +420,44 @@ function buildAnointment(
   );
   const poolRows = (cell: string) => outcomeRows.filter((recipe) => recipe.inputs[0]?.cell === cell);
 
-  // Equipment: the item type of a slot plus one reagent
-  const equipmentRolls = rolls.filter(
-    (roll) => roll.recipe.inputs.length === 2 && SLOTS.some((def) => def.typeCode === roll.recipe.inputs[0]?.code)
-  );
+  // Equipment: one pool per item type (ESR 3.3; 3.2 had one per slot), an item type plus one reagent, in cubemain
+  // order (the game takes the first row an item matches: class types come before the generic ones)
+  const groupOf = (code: string) => ANOINTMENT_GROUPS.find((def) => ctx.isA(code, def.parent))?.group;
+  const equipmentRolls = rolls.filter((roll) => {
+    const item = roll.recipe.inputs.at(0);
+    return roll.recipe.inputs.length === 2 && item !== undefined && item.code !== 'char' && groupOf(item.code) !== undefined;
+  });
   const reagentCode = equipmentRolls.at(0)?.recipe.inputs[1]?.code ?? '';
+  // "Add Anointment Dummy Stat - <type> - Sanctimonious": a second anointment with a perk (`op 3` perk stat ≥ 1)
+  const secondPerks = new Map<string, Perk>();
+  for (const recipe of recipes) {
+    const item = recipe.inputs.at(0);
+    const perk = recipe.op === 3 && recipe.value >= 1 ? (ctx.perkOf?.(recipe.param) ?? null) : null;
+    if (perk !== null && item !== undefined && modOf(recipe, ANOINT_DUMMY) !== undefined) secondPerks.set(item.code, perk);
+  }
   const slots: AnointmentSlot[] = [];
   const outcomes: AnointmentOutcome[] = [];
-  for (const def of SLOTS) {
-    const slotRolls = equipmentRolls.filter((roll) => roll.recipe.inputs[0]?.code === def.typeCode);
-    const plain = slotRolls.find((roll) => !roll.recipe.inputs[0]?.qualifiers.includes('sock'));
-    const socketed = slotRolls.find((roll) => roll.recipe.inputs[0]?.qualifiers.includes('sock'));
-    if (plain === undefined) continue;
-    const list = anointmentOutcomes(def.slot, poolRows(plain.recipe.inputs[0]?.cell ?? ''), renderLines);
+  for (const plain of equipmentRolls.filter((roll) => roll.recipe.inputs.at(0)?.qualifiers.includes('sock') === false)) {
+    const typeCode = plain.recipe.inputs[0]?.code ?? '';
+    if (slots.some((slot) => slot.typeCode === typeCode)) continue;
+    const socketed = equipmentRolls.find(
+      (roll) => roll.recipe.inputs[0]?.code === typeCode && roll.recipe.inputs[0].qualifiers.includes('sock')
+    );
+    const label = ctx.nameOf(typeCode);
+    const list = anointmentOutcomes(typeCode, poolRows(plain.recipe.inputs[0]?.cell ?? ''), renderLines);
     const rollRange = plain.max - plain.min + 1;
     if (list.length !== rollRange)
-      warnings.add(`enhance: ${def.label} anointment has ${String(list.length)} outcome rows for ${String(rollRange)} rolls`);
+      warnings.add(`enhance: ${label} anointment has ${String(list.length)} outcome rows for ${String(rollRange)} rolls`);
     outcomes.push(...list);
+    const secondPerk = secondPerks.get(typeCode);
     slots.push({
-      slot: def.slot,
-      typeCode: def.typeCode,
-      label: def.label,
+      slot: typeCode,
+      typeCode,
+      label,
+      group: groupOf(typeCode) ?? '',
       rollRange,
       socketedRollRange: socketed === undefined ? null : socketed.max - socketed.min + 1,
+      ...(secondPerk === undefined ? {} : { secondPerk }),
     });
   }
   // `void` rows "<slot>,<quality> + reagent" without a condition block that quality
@@ -431,7 +466,7 @@ function buildAnointment(
       const item = recipe.inputs.at(0);
       const reagent = recipe.inputs.at(1);
       if (!isVoid(recipe) || recipe.op !== 0 || reagent?.code !== reagentCode || item === undefined) return [];
-      const quality = SLOTS.some((def) => def.typeCode === item.code) ? qualityOf(item) : undefined;
+      const quality = ANOINTMENT_GROUPS.some((def) => def.parent === item.code) ? qualityOf(item) : undefined;
       return quality === undefined ? [] : [quality];
     })
   );
@@ -476,22 +511,56 @@ function buildSanctification(
   renderLines: LineRenderer,
   warnings: Set<string>
 ): SanctificationResult | null {
-  const roll = dummyRolls(recipes, SANCTIFY_DUMMY).find((entry) => entry.recipe.inputs.length === 2);
+  const allRolls = dummyRolls(recipes, SANCTIFY_DUMMY).filter((entry) => entry.recipe.inputs.length === 2);
+  // A roll row behind a perk: an earlier `void` row with the same item and reagent that matches without the perk
+  // (ESR 3.3 "Trap Amulet Sanctification - Requires Jewelcrafting 11": op 6, perk stat = 0)
+  const perkOfRoll = (roll: DummyRoll): Perk | null => {
+    const item = roll.recipe.inputs.at(0);
+    const reagent = roll.recipe.inputs.at(1);
+    const trap = recipes.find(
+      (recipe) =>
+        isVoid(recipe) &&
+        (recipe.op === 4 || recipe.op === 6) &&
+        recipe.value === 0 &&
+        recipe.inputs[0]?.cell === item?.cell &&
+        recipe.inputs[1]?.code === reagent?.code
+    );
+    return trap === undefined ? null : (ctx.perkOf?.(trap.param) ?? null);
+  };
+  const roll = allRolls.find((entry) => perkOfRoll(entry) === null) ?? allRolls.at(0);
   const item = roll?.recipe.inputs[0];
   const reagent = roll?.recipe.inputs[1];
   // No roll row: no sanctification (the integrity test checks the ESR count)
   if (roll === undefined || item === undefined || reagent === undefined) return null;
   const dummyParam = outcomeParam(recipes, SANCTIFY_DUMMY);
-  const rows = recipes
-    .filter(
-      (recipe) =>
-        recipe.op === 18 &&
-        recipe.param === dummyParam &&
-        recipe.output === 'useitem' &&
-        recipe.inputs.length === 1 &&
-        recipe.inputs[0]?.cell === item.cell
-    )
-    .sort((a, b) => a.value - b.value);
+  const rowsOf = (cell: string) =>
+    recipes
+      .filter(
+        (recipe) =>
+          recipe.op === 18 &&
+          recipe.param === dummyParam &&
+          recipe.output === 'useitem' &&
+          recipe.inputs.length === 1 &&
+          recipe.inputs[0]?.cell === cell
+      )
+      .sort((a, b) => a.value - b.value);
+  const rows = rowsOf(item.cell);
+  const sameOutcomes = (cell: string) =>
+    JSON.stringify(rowsOf(cell).map((recipe) => [recipe.value, recipe.mods])) ===
+    JSON.stringify(rows.map((recipe) => [recipe.value, recipe.mods]));
+  // The other items: listed when a perk gates them and their outcomes are the same (else a warning: not modelled)
+  let perkItems: { items: EnhanceItemRef[]; perk: Perk } | undefined;
+  for (const other of allRolls) {
+    const code = other.recipe.inputs.at(0);
+    if (other === roll || code === undefined) continue;
+    const perk = perkOfRoll(other);
+    if (perk === null || (perkItems !== undefined && perkItems.perk.title !== perk.title) || !sameOutcomes(code.cell)) {
+      warnings.add(`enhance: sanctification of ${ctx.nameOf(code.code)} (cubemain "${other.recipe.description}") is not shown`);
+      continue;
+    }
+    perkItems ??= { items: [], perk };
+    perkItems.items.push({ code: code.code, name: ctx.nameOf(code.code) });
+  }
   const outcomes = rows.map((recipe): SanctificationOutcome => ({ roll: recipe.value, ...renderLines(recipe.mods) }));
   const rollRange = roll.max - roll.min + 1;
   const rolls = new Set(outcomes.map((outcome) => outcome.roll));
@@ -522,6 +591,7 @@ function buildSanctification(
     sanctification: {
       reagent: { code: reagent.code, name: ctx.nameOf(reagent.code) },
       item: { code: item.code, name: ctx.nameOf(item.code) },
+      ...(perkItems === undefined ? {} : { perkItems }),
       rollRange,
       once,
     },

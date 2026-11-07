@@ -452,6 +452,22 @@ describe('matchesSearch', () => {
     expect(matchesSearch(runeword, ['fire damage'], runeBonusMap)).toBe(true);
   });
 
+  it("should search the page's socketable bonus groups instead of the rune table when present (ESR 3.3+)", () => {
+    const runeBonusMap: RuneBonusMap = new Map([
+      ['El Rune', { weaponsGloves: [createAffix('+50% Fire Damage')], helmsBoots: [], armorShieldsBelts: [] }],
+    ]);
+    const runeword = createRuneword({
+      name: 'Test',
+      runes: ['El Rune'],
+      allowedItems: ['All Weapons'],
+      socketableBonuses: [
+        { label: 'Staff / Wand / Orb', itemTypes: [{ name: 'Staff', except: [] }], affixes: [createAffix('+30 Defense')] },
+      ],
+    });
+    expect(matchesSearch(runeword, ['30 defense'], runeBonusMap)).toBe(true);
+    expect(matchesSearch(runeword, ['fire damage'], runeBonusMap)).toBe(false);
+  });
+
   it('should not match gem or rune names in search', () => {
     const runeword = createRuneword({
       name: 'Richesdotcom',

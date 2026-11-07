@@ -188,7 +188,10 @@
     {"code":"astn","name":"Ascendancy Stone","parents":["scha"],"ancestors":["astn","scha","char","misc"],"sockets":[0,0,0],"thresholds":[25,40],"cls":null,"ui":null,"rwCats":[],"magic":true,"rare":true,"normal":false,"bodyLoc":null},
     {"code":"srkn","name":"Shuriken","parents":["comb","tkni"],"ancestors":["srkn","comb","tkni","mele","thro","knif","weap","blde"],"sockets":[3,4,4],"thresholds":[25,40],"cls":null,"ui":null,"rwCats":[],"magic":false,"rare":true,"normal":false,"bodyLoc":"rarm"},
     {"code":"helm","name":"Helm","parents":["armo","merc"],"ancestors":["helm","armo","merc"],"sockets":[3,3,4],"thresholds":[25,40],"cls":null,"ui":"helms","rwCats":["r_hel"],"magic":false,"rare":true,"normal":false,"bodyLoc":"head"},
-    {"code":"upot","name":"Utility Potions","parents":["poti"],"ancestors":["upot","poti","misc"],"sockets":[0,0,0],"thresholds":[25,40],"cls":null,"ui":"potis","rwCats":[],"magic":false,"rare":false,"normal":true,"bodyLoc":null}
+    {"code":"upot","name":"Utility Potions","parents":["poti"],"ancestors":["upot","poti","misc"],"sockets":[0,0,0],"thresholds":[25,40],"cls":null,"ui":"potis","rwCats":[],"magic":false,"rare":false,"normal":true,"bodyLoc":null},
+    {"code":"relx","name":"Regular Elixirs","parents":["poti","upot"],"ancestors":["relx","poti","upot","misc"],"sockets":[0,0,0],"thresholds":[25,40],"cls":null,"ui":"potis","rwCats":[],"magic":false,"rare":false,"normal":true,"bodyLoc":null},
+    {"code":"gelx","name":"Greater Elixirs","parents":["poti","upot"],"ancestors":["gelx","poti","upot","misc"],"sockets":[0,0,0],"thresholds":[25,40],"cls":null,"ui":"potis","rwCats":[],"magic":false,"rare":false,"normal":true,"bodyLoc":null},
+    {"code":"arte","name":"Alien Artefacts","parents":["misc"],"ancestors":["arte","misc"],"sockets":[0,0,0],"thresholds":[25,40],"cls":null,"ui":null,"rwCats":[],"magic":false,"rare":false,"normal":true,"bodyLoc":null}
   ],
   "classes": [
     {"code":"ama","name":"Amazon","tabs":["Bow and Crossbow Skills","Passive and Magic Skills","Javelin and Spear Skills"]},

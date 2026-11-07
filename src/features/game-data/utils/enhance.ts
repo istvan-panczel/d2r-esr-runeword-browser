@@ -7,6 +7,7 @@ import { parseSearchTerms } from '@/core/utils/searchTerms';
 import {
   ENHANCE_QUALITIES,
   type AnointmentOutcome,
+  type AnointmentSlot,
   type CorruptionBrickResult,
   type CorruptionOutcome,
   type CorruptionSlot,
@@ -34,6 +35,37 @@ export const ANOINTMENT_EXTRA_POOLS = [
   { pool: 'charm', label: 'Unique Charm' },
   { pool: 'vessel', label: 'Vessel of Souls' },
 ] as const;
+
+/** Equipment slot of the anointment pools (`AnointmentSlot.group`) → label */
+const ANOINTMENT_GROUP_LABELS: Readonly<Partial<Record<string, string>>> = {
+  weapon: 'Weapons',
+  helm: 'Helms',
+  shield: 'Shields',
+  body: 'Body Armor',
+  gloves: 'Gloves',
+  belt: 'Belts',
+  boots: 'Boots',
+  ring: 'Rings',
+  amulet: 'Amulets',
+};
+
+export interface AnointmentGroup {
+  readonly group: string;
+  readonly label: string;
+  /** Its item type pools, in bundle (cubemain) order */
+  readonly slots: readonly AnointmentSlot[];
+}
+
+/** The anointment pools by equipment slot (ESR 3.3 has one pool per item type), groups in first-pool order */
+export function anointmentGroups(slots: readonly AnointmentSlot[]): AnointmentGroup[] {
+  const groups: { group: string; label: string; slots: AnointmentSlot[] }[] = [];
+  for (const slot of slots) {
+    const entry = groups.find((group) => group.group === slot.group);
+    if (entry !== undefined) entry.slots.push(slot);
+    else groups.push({ group: slot.group, label: ANOINTMENT_GROUP_LABELS[slot.group] ?? slot.group, slots: [slot] });
+  }
+  return groups;
+}
 
 /** The Vessel tab's completion section (tier param value) */
 export const VESSEL_COMPLETION = 'completion';

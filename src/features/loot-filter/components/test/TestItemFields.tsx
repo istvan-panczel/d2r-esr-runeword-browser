@@ -262,6 +262,10 @@ export function TestItemFields({ data, form, onChange }: TestItemFieldsProps) {
 
       <div className="flex flex-col gap-1">
         <span className="text-xs font-medium">Item stats</span>
+        <p className="text-xs text-muted-foreground">
+          Enter the numbers the tooltip shows (+40 Life = 40; a per-level stat at the character&apos;s level). An unidentified item skips
+          every rule that checks an item stat other than gold, armorclass, quantity, durability, maxdurability and item_numsockets.
+        </p>
         <StatRowsEditor
           data={data}
           idPrefix={`${ID}-item-stat`}

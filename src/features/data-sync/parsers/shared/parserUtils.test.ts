@@ -11,6 +11,9 @@ import {
   normalizeRuneName,
   parseRecipeAffixes,
   parseRecipeBonusPools,
+  parseRecipeBonusesCell,
+  parseSocketableBonusGroups,
+  parseSocketableGroupLabel,
   isWrappedContinuation,
   mergeWrappedLines,
   mergeWrappedCellLines,
@@ -456,5 +459,64 @@ describe('parseAffixes with hard-wrapped lines', () => {
   it('joins wrapped lines', () => {
     const cell = cellFrom('+10% Enhanced Damage and<br>+5 to Strength<br>+1 to Light Radius');
     expect(parseAffixes(cell).map((a) => a.rawText)).toEqual(['+10% Enhanced Damage and +5 to Strength', '+1 to Light Radius']);
+  });
+});
+
+describe('parseRecipeBonusesCell (ESR 3.3 "Bonuses" column)', () => {
+  it('keeps every pool (no trailing ingredient group) and every non-pool group as the recipe bonuses', () => {
+    const cell = cellFrom(
+      '<font color="8080E6">+1 to All Skills<br><FONT COLOR="LIGHTGRAY">Socketables cannot be removed</FONT><br><br>' +
+        '<FONT COLOR="WHITE">1-2 of the following:</FONT><br>+(20 to 30) Defense <br><br>' +
+        '<FONT COLOR="WHITE">1-2 of the following:</FONT><br>+(10 to 15) to Life <br><br>Requirements -100% </font>'
+    );
+    const { affixes, pools } = parseRecipeBonusesCell(cell);
+    expect(affixes.map((a) => a.rawText)).toEqual(['+1 to All Skills', 'Socketables cannot be removed', 'Requirements -100%']);
+    expect(pools.map((pool) => [pool.label, pool.affixes.map((a) => a.rawText)])).toEqual([
+      ['1-2 of the following:', ['+(20 to 30) Defense']],
+      ['1-2 of the following:', ['+(10 to 15) to Life']],
+    ]);
+  });
+});
+
+describe('parseSocketableGroupLabel', () => {
+  it("splits the item types and keeps each one's exceptions", () => {
+    expect(parseSocketableGroupLabel('Weapon (except Orb, Staff, Wand) / Missile / Mythical Arcane Staff')).toEqual([
+      { name: 'Weapon', except: ['Orb', 'Staff', 'Wand'] },
+      { name: 'Missile', except: [] },
+      { name: 'Mythical Arcane Staff', except: [] },
+    ]);
+    expect(parseSocketableGroupLabel('Spear / Blunt (except Staff) / Polearm')).toEqual([
+      { name: 'Spear', except: [] },
+      { name: 'Blunt', except: ['Staff'] },
+      { name: 'Polearm', except: [] },
+    ]);
+    expect(parseSocketableGroupLabel('')).toEqual([]);
+  });
+});
+
+describe('parseSocketableBonusGroups (ESR 3.3 "Socketable Bonuses" column)', () => {
+  it('reads one labelled group per rws-group', () => {
+    const cell = cellFrom(
+      '<div class="rws-groups">' +
+        '<div class="rws-group"><div class="rws-label"><span>Weapon</span> (<span>except</span> <span>Orb</span>, <span>Staff</span>, <span>Wand</span>) / <span>Missile</span></div><font color="8080E6">+15% Enhanced Damage<br>+10 to Strength </font></div>' +
+        '<div class="rws-group"><div class="rws-label"><span>Staff</span> / <span>Wand</span> / <span>Orb</span></div><font color="8080E6">+30 Defense </font></div>' +
+        '</div>'
+    );
+    expect(
+      parseSocketableBonusGroups(cell).map((group) => [group.label, group.itemTypes.length, group.affixes.map((a) => a.rawText)])
+    ).toEqual([
+      ['Weapon (except Orb, Staff, Wand) / Missile', 2, ['+15% Enhanced Damage', '+10 to Strength']],
+      ['Staff / Wand / Orb', 3, ['+30 Defense']],
+    ]);
+  });
+
+  it('reads a plain list as one unlabelled group, and an empty cell as none', () => {
+    const groups = parseSocketableBonusGroups(
+      cellFrom('\n<font><font color="8080E6">+1 to All Skills <br>+50 to Strength </font></font>\n')
+    );
+    expect(groups.map((group) => [group.label, group.itemTypes, group.affixes.map((a) => a.rawText)])).toEqual([
+      ['', [], ['+1 to All Skills', '+50 to Strength']],
+    ]);
+    expect(parseSocketableBonusGroups(cellFrom('\n'))).toEqual([]);
   });
 });

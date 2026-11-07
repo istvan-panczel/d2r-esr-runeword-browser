@@ -160,8 +160,9 @@ function parseStatsCell(cell: Element): ParsedStatsCell {
 }
 
 /**
- * Parses the "Notes" cell (ESR 3.12+). Usually empty; a handful of items carry a short
- * annotation such as "Blessed Edge Variant". Multi-line notes are joined with a space.
+ * Parses the "Notes" cell (ESR 3.12+). Usually empty; ESR 3.12–3.2 put the weapon mastery variant here
+ * ("Blessed Edge Variant"), which ESR 3.3 prints as a "Weapon Mastery (Blessed Edge Variant)" property line
+ * instead (kept as a property). Multi-line notes are joined with a space.
  */
 function parseNotesCell(cell: Element): string {
   const html = cell.innerHTML;

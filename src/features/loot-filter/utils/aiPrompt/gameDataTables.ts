@@ -48,17 +48,18 @@ export const PARAM_KIND_TEXT: Readonly<Record<StatLayerKind, string>> = {
   class: 'class id 0-7 (classes.csv)',
   skill: 'skill id (skills.csv)',
   event: 'skill id × 64 + skill level',
-  charged: 'skill id × 64 + skill level; value = max charges × 256 + charges left',
+  charged: 'skill id × 64 + skill level; value = the skill level of the charges',
 };
 
 function scaleNote(scale: StatScale): string {
   switch (scale.kind) {
     case 'shift':
-      return 'stored ×256 (+40 may read as 10240; not verified): prefer presence checks (>= 1, < 1)';
+      return 'reads the tooltip number (+40 Life reads 40)';
+    case 'percent':
+      return 'reads the percent the tooltip shows';
     case 'perLevel':
-      return 'stored in eighths per character level (not verified): prefer presence checks (>= 1, < 1)';
     case 'shiftPerLevel':
-      return 'stored in eighths per character level and ×256 (not verified): prefer presence checks (>= 1, < 1)';
+      return "reads the value at the character's level, as the tooltip (0.5 per level: 0 at level 1, 49 at level 99)";
   }
 }
 
@@ -256,11 +257,11 @@ function skillsTable(data: LootFilterDataBundle, size: GameDataSize): GameDataTa
     path: 'skills.csv',
     summary:
       size === 'full'
-        ? 'every skill a stat param can name: id, name, class (empty: an item or monster skill)'
-        : 'the class skills: id (the "param" of item_singleskill and the skill part of event and charged params), name, class',
+        ? 'every skill a stat param can name: id, name, class (empty: an item or monster skill), formulaName (the skills.txt name a formula takes)'
+        : 'the class skills: id (the "param" of item_singleskill and the skill part of event and charged params), name, class, formulaName (the skills.txt name a formula takes)',
     text: toCsv(
-      ['id', 'name', 'class'],
-      skills.map((skill) => [skill.id, skill.name, skill.cls])
+      ['id', 'name', 'class', 'formulaName'],
+      skills.map((skill) => [skill.id, skill.name, skill.cls, data.skillNames?.[skill.id]])
     ),
   };
 }

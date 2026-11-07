@@ -37,13 +37,16 @@ export function parseJewelInfo(jewelInfo: string | undefined): number {
 /**
  * How many sockets of a runeword take a jewel (the only sockets the author can fill): the
  * largest `jewels` of the matched txt rows when there are any, else from the HTM recipe
- * (socket range width, or the "(N) Jewels" line).
+ * (the most jewels of its "(N) Jewels" / "(N-M) Jewels" line, which counts the required and
+ * optional ones, e.g. ESR 3.3 Moonlight "(4-6 Socket)" "(1-3) Jewels" → 3; else the socket range width).
  */
 export function runewordJewelSockets(
-  runeword: Pick<Runeword, 'sockets' | 'socketsMax' | 'jewelInfo'>,
+  runeword: Pick<Runeword, 'sockets' | 'socketsMax'> & Partial<Pick<Runeword, 'jewelInfo'>>,
   matchedRows?: readonly Pick<TxtRunewordRow, 'jewels'>[]
 ): number {
   if (matchedRows !== undefined && matchedRows.length > 0) return Math.max(...matchedRows.map((row) => row.jewels));
+  const fromInfo = parseJewelInfo(runeword.jewelInfo);
+  if (fromInfo > 0) return fromInfo;
   if (runeword.socketsMax !== undefined) return Math.max(0, runeword.socketsMax - runeword.sockets);
-  return parseJewelInfo(runeword.jewelInfo);
+  return 0;
 }

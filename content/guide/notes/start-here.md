@@ -10,7 +10,7 @@ officialDocs:
     href: docs:index.html
   - label: Installation guide
     href: docs:installation_guide.html
-sources: [official-docs, esru-wiki]
+sources: [official-docs, patchnotes, esru-wiki]
 ---
 
 Eastern Sun Resurrected (ESR) is a total conversion of Diablo II Resurrected by CelestialRayOne. If you know vanilla D2R, these are the five things that will surprise you:
@@ -25,6 +25,6 @@ Eastern Sun Resurrected (ESR) is a total conversion of Diablo II Resurrected by 
 
 The five steps above follow a first character from town to the endgame. Read them in order the first time; every note is short, lists what to know first, and points to the next one. Before you leave the Rogue Encampment, read [[starter-pack]] and [[avoid-disasters]].
 
-When you pick up something strange, use the "I found something" row or [[loot-triage]]. Unknown words are underlined and collected in the [[glossary]].
+When you pick up something strange, use the "I found something" row or [[loot-triage]]. Unknown words are underlined and collected in the [[glossary]]. Since 3.3 the game also has Sully's wiki built in: open it from the cube button or the main menu, or set a hotkey.
 
 Lists and numbers in these notes come from the game files, so they update with each ESR release. The official site stays the full reference; each note links to the matching page.

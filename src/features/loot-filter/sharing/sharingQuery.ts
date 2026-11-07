@@ -1,5 +1,6 @@
 import { descendingKeysetFilter, type KeysetColumn } from '@/core/supabase/query';
 import type { Json, LootFilterRow } from '@/core/supabase/types';
+import { LANGUAGES, type FilterText } from '../engine/types';
 import type { SharedFilterDetail, SharedFilterLevel, SharedFilterSort, SharedFilterSummary } from './types';
 
 export { isUuid } from '@/core/supabase/query';
@@ -84,19 +85,36 @@ export function nameSearchPattern(searchText: string): string | null {
   return trimmed.length > 0 ? `%${trimmed}%` : null;
 }
 
+/** A level name as stored: a string, or a per-language object of strings (non-string entries dropped). */
+function readLevelName(name: Json | undefined): FilterText | undefined {
+  if (typeof name === 'string') return name;
+  if (typeof name !== 'object' || name === null || Array.isArray(name)) return undefined;
+  const text: Record<string, string> = {};
+  for (const [language, value] of Object.entries(name)) {
+    if (typeof value === 'string' && (LANGUAGES as readonly string[]).includes(language)) text[language] = value;
+  }
+  return Object.keys(text).length > 0 ? text : undefined;
+}
+
 /**
  * Reads the `levels` column defensively: rows are written by clients, so anything that is not a list of `{ id: number,
- * name: string }` is dropped (a list left empty becomes null) rather than reaching the cards.
+ * name: string | { enUS: string, … } }` is dropped (a list left empty becomes null) rather than reaching the cards.
  */
 export function readLevels(value: Json | null | undefined): SharedFilterLevel[] | null {
   if (!Array.isArray(value)) return null;
   const levels: SharedFilterLevel[] = [];
   for (const entry of value) {
     if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) continue;
-    const { id, name } = entry;
-    if (typeof id === 'number' && Number.isFinite(id) && typeof name === 'string') levels.push({ id, name });
+    const { id } = entry;
+    const name = readLevelName(entry.name);
+    if (typeof id === 'number' && Number.isFinite(id) && name !== undefined) levels.push({ id, name });
   }
   return levels.length > 0 ? levels : null;
+}
+
+/** A level as the `levels` column stores it (a per-language name as an object). */
+export function levelJson(level: SharedFilterLevel): Json {
+  return { id: level.id, name: typeof level.name === 'string' ? level.name : { ...level.name } };
 }
 
 /** A list row as PostgREST returns it (levels still raw JSON). */
@@ -115,5 +133,5 @@ export function toSharedFilterDetail(row: SharedFilterDetailRow): SharedFilterDe
 /** The table row of a fetched filter (without the embedded author), as the editor's `openSaved` / `saveSucceeded` take it. */
 export function detailToRow(detail: SharedFilterDetail): LootFilterRow {
   const { profiles: _profiles, levels, ...row } = detail;
-  return { ...row, levels: levels === null ? null : levels.map((level): Json => ({ id: level.id, name: level.name })) };
+  return { ...row, levels: levels === null ? null : levels.map(levelJson) };
 }

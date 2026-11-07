@@ -1,4 +1,5 @@
 import type { LootFilterRow } from '@/core/supabase/types';
+import type { FilterText } from '../engine/types';
 
 /** Sort orders of the Shared tab, each backed by a keyset cursor ending with `(created_at, id)`. */
 export type SharedFilterSort = 'newest' | 'most_liked' | 'most_downloaded';
@@ -10,10 +11,10 @@ export interface SharedFilterAuthor {
   readonly avatar_url: string | null;
 }
 
-/** One entry of a filter's `filterLevels`, as stored in `loot_filters.levels`. */
+/** One entry of a filter's `filterLevels`, as stored in `loot_filters.levels`; the name may be per language. */
 export interface SharedFilterLevel {
   readonly id: number;
-  readonly name: string;
+  readonly name: FilterText;
 }
 
 /** A saved filter as the lists fetch it: every column but `content`, with `levels` checked and the author embedded. */

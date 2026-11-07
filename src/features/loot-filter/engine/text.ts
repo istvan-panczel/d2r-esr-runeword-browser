@@ -1,10 +1,43 @@
 /** Helpers for the texts a filter prints: per-language resolution, colour runs and placeholders. */
-import type { FilterText, Language } from './types.ts';
+import { LANGUAGES, type FilterText, type Language, type LocalizedText } from './types.ts';
 
 /** The language's text, else enUS, else the first one given. */
 export function resolveText(text: FilterText | undefined, language: Language = 'enUS'): string | undefined {
   if (text === undefined || typeof text === 'string') return text;
   return text[language] ?? text.enUS ?? Object.values(text)[0];
+}
+
+/** The languages a per-language text has, in the guide's order (enUS first). */
+export function textLanguages(text: LocalizedText): Language[] {
+  return LANGUAGES.filter((language) => text[language] !== undefined);
+}
+
+/**
+ * `text` with `language` set to `value`, the others kept. An edited language keeps its place (the file's key order), an
+ * added one goes last, and an emptied one stays (as `''`) while it is edited: `pruneEmptyLanguages` drops it afterwards.
+ */
+export function withLanguage(text: LocalizedText, language: Language, value: string): LocalizedText {
+  const entries = Object.entries(text).map(([key, current]) => [key, key === language ? value : current]);
+  if (!(language in text)) entries.push([language, value]);
+  return Object.fromEntries(entries) as LocalizedText;
+}
+
+/** `text` without its empty languages (the editor's emptied fields); undefined when none is left. */
+export function pruneEmptyLanguages(text: LocalizedText): LocalizedText | undefined {
+  const entries = Object.entries(text).filter(([, value]) => value !== '');
+  if (entries.length === Object.keys(text).length) return text;
+  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+}
+
+/** The language a per-language text shows by default (`resolveText` without a language): enUS, else its first one. */
+export function shownLanguage(text: LocalizedText): Language {
+  if (text.enUS !== undefined) return 'enUS';
+  return LANGUAGES.find((language) => language === Object.keys(text)[0]) ?? 'enUS';
+}
+
+/** A filter level's name in the language (enUS by default), `''` when it has none. */
+export function levelName(level: { readonly name: FilterText }, language?: Language): string {
+  return resolveText(level.name, language) ?? '';
 }
 
 /**
