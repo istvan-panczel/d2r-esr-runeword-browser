@@ -1209,7 +1209,8 @@ export interface ElixirRecipe {
   /** cubemain line */
   id: number;
   description: string;
-  inputs: { text: string; code?: string; qty: number }[];
+  /** `type`: the code is an item type (any item of it) */
+  inputs: { text: string; code?: string; qty: number; type?: true }[];
   /** Output texts: an elixir name or "Regular Elixirs" / "Greater Elixirs" (a random elixir of the type) */
   outputs: { text: string; code?: string }[];
   conditions: string[];

@@ -226,9 +226,9 @@
     ]
   },
   "recipes": [
-    {"id":2308,"description":"Alchemist - Gem Infusion (No Excellence)","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Only without the Alchemist perk Alchemical Excellence"]},
-    {"id":2309,"description":"Alchemist - Alchemical Excellence","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1}],"outputs":[{"text":"Greater Elixirs","code":"gelx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence","Random roll ≥ 384 (of 0 to 511)"]},
-    {"id":2310,"description":"Alchemist - Gem Infusion","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence"]}
+    {"id":2308,"description":"Alchemist - Gem Infusion (No Excellence)","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Only without the Alchemist perk Alchemical Excellence"]},
+    {"id":2309,"description":"Alchemist - Alchemical Excellence","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Greater Elixirs","code":"gelx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence","Random roll ≥ 384 (of 0 to 511)"]},
+    {"id":2310,"description":"Alchemist - Gem Infusion","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence"]}
   ],
   "otherUtilityPotions": [
     "Stamina Potion",

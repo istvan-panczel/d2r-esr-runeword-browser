@@ -479,7 +479,12 @@ export function buildElixirsBundle(input: ElixirsInputs): ElixirsResult {
     .map((recipe) => ({
       id: recipe.id,
       description: recipe.description,
-      inputs: recipe.inputs.map((entry) => ({ text: entry.text, ...(entry.code === '' ? {} : { code: entry.code }), qty: entry.qty })),
+      inputs: recipe.inputs.map((entry) => ({
+        text: entry.text,
+        ...(entry.code === '' ? {} : { code: entry.code }),
+        qty: entry.qty,
+        ...(entry.kind === 'type' ? { type: true as const } : {}),
+      })),
       outputs: recipe.outputs.map((output) => ({ text: output.text, ...(output.code === null ? {} : { code: output.code }) })),
       conditions: recipe.conditions,
     }));
