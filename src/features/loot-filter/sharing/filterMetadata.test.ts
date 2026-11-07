@@ -53,3 +53,22 @@ describe('filterMetadata', () => {
     expect(() => filterMetadata('{ nope')).toThrow(JsoncSyntaxError);
   });
 });
+
+describe('filterMetadata with per-language level names', () => {
+  it('keeps the per-language names', () => {
+    const name = { enUS: 'Strict', deDE: 'Streng' };
+    const meta = filterMetadata(JSON.stringify({ formatVersion: 1, filterLevels: [{ id: 1, name }], rules: [] }));
+    expect(meta.levels).toEqual([{ id: 1, name }]);
+  });
+
+  it('counts the per-language objects in the 4 KB limit', () => {
+    const name = Object.fromEntries(['enUS', 'deDE', 'esES', 'frFR', 'itIT'].map((language) => [language, 'n'.repeat(60)]));
+    const filterLevels = Array.from({ length: 30 }, (_, index) => ({ id: index + 1, name }));
+    const levels = filterMetadata(JSON.stringify({ formatVersion: 1, filterLevels, rules: [] })).levels ?? [];
+    expect(levels.length).toBeGreaterThan(0);
+    expect(levels.length).toBeLessThan(30);
+    // Postgres prints jsonb with a space after every ':' and ','.
+    const printed = JSON.stringify(levels).replace(/([:,])/g, '$1 ');
+    expect(new TextEncoder().encode(printed).length).toBeLessThanOrEqual(4096);
+  });
+});

@@ -342,3 +342,46 @@ describe('parseLootFilter disabledRules', () => {
     expect(readLootFilter(toPlainJson(filter)).filter).toEqual(filter);
   });
 });
+
+describe('localised filter level names (plugin 1.8.2)', () => {
+  const name = { enUS: 'Leveling', deDE: 'Leveln', zhTW: '練功' };
+  const file = {
+    formatVersion: 1,
+    filterLevels: [
+      { id: 1, name },
+      { id: 2, name: 'Strict' },
+    ],
+    defaultLevel: 1,
+    rules: [{ activeInLevels: [1, 2], hide: true }],
+  };
+
+  it('reads a per-language name like any other text, without diagnostics', () => {
+    const { filter, diagnostics } = parse(file);
+    expect(diagnostics).toEqual([]);
+    expect(filter.filterLevels).toEqual([
+      { id: 1, name },
+      { id: 2, name: 'Strict' },
+    ]);
+  });
+
+  it('writes the per-language name back unchanged', () => {
+    const { filter } = parse(file);
+    const again = parseLootFilter(serializeLootFilter(filter));
+    expect(again.diagnostics).toEqual([]);
+    expect(again.filter.filterLevels).toEqual(filter.filterLevels);
+    expect(toPlainJson(filter)).toMatchObject({
+      filterLevels: [
+        { id: 1, name },
+        { id: 2, name: 'Strict' },
+      ],
+    });
+  });
+
+  it('keeps a name of another shape with an error', () => {
+    for (const bad of [3, { enUS: 4 }, { xxXX: 'a' }]) {
+      const { filter, diagnostics } = parse({ formatVersion: 1, filterLevels: [{ id: 1, name: bad }], rules: [] });
+      expect(filter.filterLevels).toBeUndefined();
+      expect(diagnostics.map((d) => [d.severity, d.path])).toEqual([['error', 'filterLevels']]);
+    }
+  });
+});

@@ -26,11 +26,21 @@ function columnText(value: string | undefined): string | null {
 
 const encoder = new TextEncoder();
 
-/** The size of the levels as Postgres prints jsonb (`[{"id": 1, "name": "x"}, …]`: a space after each `:` and `,`). */
+/** The `:` and `,` of a JSON value's structure (not inside strings): Postgres prints a space after each. */
+function separators(value: unknown): number {
+  if (Array.isArray(value)) return Math.max(value.length - 1, 0) + value.reduce((sum: number, entry) => sum + separators(entry), 0);
+  if (typeof value !== 'object' || value === null) return 0;
+  const entries = Object.values(value);
+  // Per key a ": ", between keys a ", ".
+  return entries.length + Math.max(entries.length - 1, 0) + entries.reduce((sum: number, entry) => sum + separators(entry), 0);
+}
+
+/**
+ * The size of the levels as Postgres prints jsonb (`[{"id": 1, "name": "x"}, …]` or a per-language name object: a space
+ * after each `:` and `,`).
+ */
 function jsonbTextBytes(levels: readonly SharedFilterLevel[]): number {
-  const compact = JSON.stringify(levels);
-  // Per level: ", " after the id, ": " twice; between levels: ", ".
-  return encoder.encode(compact).length + levels.length * 3 + Math.max(levels.length - 1, 0);
+  return encoder.encode(JSON.stringify(levels)).length + separators(levels);
 }
 
 /** The file's levels, dropping trailing ones until they fit the column (a real filter has a handful). */

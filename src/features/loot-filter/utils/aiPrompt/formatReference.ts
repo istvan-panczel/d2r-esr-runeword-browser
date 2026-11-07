@@ -93,7 +93,8 @@ const TOP_LEVEL: Readonly<Record<TopLevelKey, string>> = {
   version: 'Shown in the launcher, e.g. "1.0.0".',
   description: 'One or two sentences the launcher shows.',
   updateUrl: 'Where newer copies are published. Leave it out.',
-  filterLevels: 'Strictness levels, `[{ "id": 1, "name": "Leveling" }, { "id": 2, "name": "Strict" }]`; whole-number ids, unique.',
+  filterLevels:
+    'Strictness levels, `[{ "id": 1, "name": "Leveling" }, { "id": 2, "name": "Strict" }]`; whole-number ids, unique. A name is a string or a per-language object like any text.',
   defaultLevel: 'The level id a new player starts on; must be one of the filterLevels ids.',
   hideUnmatchedItems: '`true` hides every ground item no rule matched. Very strict; leave it out unless the user wants it.',
   soundVolume: '0 to 100: the volume for rules that set none.',

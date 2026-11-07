@@ -7,6 +7,11 @@ export function resolveText(text: FilterText | undefined, language: Language = '
   return text[language] ?? text.enUS ?? Object.values(text)[0];
 }
 
+/** A filter level's name in the language (enUS by default), `''` when it has none. */
+export function levelName(level: { readonly name: FilterText }, language?: Language): string {
+  return resolveText(level.name, language) ?? '';
+}
+
 /**
  * A piece of a text: a run in one colour, or a line break (`\n` in the text).
  * `color` is the character after `ÿc` (e.g. `'4'`), or `null` before the first colour code, meaning the

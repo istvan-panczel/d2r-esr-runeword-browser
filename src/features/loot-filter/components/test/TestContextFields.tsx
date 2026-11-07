@@ -1,4 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { levelName } from '../../engine/text';
 import { DIFFICULTIES, type LootFilter } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
 import { defaultFilterLevel, isTown, type TestItemForm } from '../../utils/testItemForm';
@@ -106,7 +107,7 @@ export function TestContextFields({ data, filter, form, onChange }: TestContextF
               {!levelKnown && <SelectItem value={String(level)}>{`${String(level)} (not a level of this filter)`}</SelectItem>}
               {levels.map((entry) => (
                 <SelectItem key={entry.id} value={String(entry.id)}>
-                  {`${String(entry.id)}: ${entry.name}${entry.id === defaultFilterLevel(filter) ? ' (default)' : ''}`}
+                  {`${String(entry.id)}: ${levelName(entry)}${entry.id === defaultFilterLevel(filter) ? ' (default)' : ''}`}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -102,7 +102,8 @@ export interface Droplight {
 
 export interface FilterLevel {
   readonly id: number;
-  readonly name: string;
+  /** One string or one per language (plugin 1.8.2: "Any text can be one string or one string per language"). */
+  readonly name: FilterText;
 }
 
 export interface Notifications {
