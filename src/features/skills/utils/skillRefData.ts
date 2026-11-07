@@ -4,14 +4,14 @@
  * calculator.
  */
 
-/** Which item property template the line matched */
-export type SkillRefKind = 'plus' | 'aura' | 'charges' | 'chance';
+/** Which item property template the line matched; `mention`: a skill named in other text (a weapon mastery effect) */
+export type SkillRefKind = 'plus' | 'aura' | 'charges' | 'chance' | 'mention';
 
 export interface SkillRef {
   /** skills.txt id (skilldetails.json id) */
   readonly id: string;
   readonly kind: SkillRefKind;
-  /** The skill level the item gives (aura, charges, chance to cast) or the +levels (plus), as [min, max] */
+  /** The skill level the item gives (aura, charges, chance to cast) or the +levels (plus), as [min, max]; unused by mention */
   readonly level: readonly [number, number];
   /** chance: % chance to cast */
   readonly chance?: number;
@@ -25,7 +25,7 @@ export interface SkillRef {
 export const SKILL_REF_ATTRIBUTE = 'data-skill-ref';
 export const SKILL_REF_SELECTOR = `[${SKILL_REF_ATTRIBUTE}]`;
 
-const KINDS: ReadonlySet<string> = new Set<SkillRefKind>(['plus', 'aura', 'charges', 'chance']);
+const KINDS: ReadonlySet<string> = new Set<SkillRefKind>(['plus', 'aura', 'charges', 'chance', 'mention']);
 
 export function encodeSkillRef(ref: SkillRef): string {
   return JSON.stringify(ref);

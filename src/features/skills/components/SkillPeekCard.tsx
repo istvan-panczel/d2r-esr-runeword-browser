@@ -31,8 +31,8 @@ export function SkillPeekCard({ skillRef, newTab = false }: { readonly skillRef:
   const suffix = disambiguation(skill, index.duplicates);
   const at = skillRefLevel(skillRef, skill);
   const record = calc.index?.record(skill.id);
-  // Item grants give levels, never hard points; a +levels line on a class skill is shown as a maxed skill (the default)
-  const hardPoints = skillRef.kind === 'plus' ? undefined : 0;
+  // Item grants give levels, never hard points; a +levels line or a mention (weapon mastery text) shows a maxed skill
+  const hardPoints = skillRef.kind === 'plus' || skillRef.kind === 'mention' ? undefined : 0;
   const values = calc.index === undefined || record === undefined ? [] : headlineValues(record, calc.index, at.level, hardPoints);
   // Item skills without a skilldesc description: the first sentence of ESR's skill information page
   const infoText = skill.description.length === 0 ? skill.infoPage?.text[0] : undefined;
@@ -49,7 +49,7 @@ export function SkillPeekCard({ skillRef, newTab = false }: { readonly skillRef:
           <p className="text-xs text-muted-foreground">{skill.cls === null ? 'Item skill' : CLASS_NAMES[skill.cls]}</p>
         </div>
       </div>
-      <p className="text-xs">{skillRefText(skillRef)}</p>
+      {skillRef.kind !== 'mention' && <p className="text-xs">{skillRefText(skillRef)}</p>}
       {infoText !== undefined && <p className="text-xs text-muted-foreground">{firstSentence(infoText)}</p>}
       {calc.status === 'loading' && <p className="text-xs text-muted-foreground">Loading the values…</p>}
       {values.length > 0 && (

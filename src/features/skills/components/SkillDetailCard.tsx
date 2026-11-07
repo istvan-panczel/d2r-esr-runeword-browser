@@ -50,6 +50,7 @@ import {
 } from '../utils/skills';
 import { LevelStepper } from './LevelInput';
 import { SkillIcon } from './SkillIcon';
+import { SkillMasteries } from './SkillMasteries';
 import { SkillLevelBar, SkillLevelValues, type SkillLevelsConfig } from './SkillLevelValues';
 
 /** Grants shown per group before "Show all" */
@@ -443,6 +444,7 @@ export function SkillDetailCard({ view, skill, mythicals, onSelect, onClose, cla
               ))}
             </ul>
           )}
+          <SkillMasteries skillId={skill.id} skillName={skill.name} />
         </TabsContent>
       </Tabs>
     </article>
