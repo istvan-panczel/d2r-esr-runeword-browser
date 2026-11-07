@@ -31,7 +31,7 @@ export interface CubeFamilyBlock {
 }
 
 /** What families read: the cube rows, display names and the item list (internal names, e.g. a coupon's tier) */
-export type FamilyTables = Pick<CubeTables, 'cube' | 'nameOf' | 'items' | 'renderMods'>;
+export type FamilyTables = Pick<CubeTables, 'cube' | 'nameOf' | 'anyType' | 'items' | 'renderMods' | 'counterName'>;
 
 export interface CubeFamily {
   id: string;
@@ -57,6 +57,11 @@ export interface CubeFamily {
   outputBonus?: 'show' | 'hide';
   /** Rows the block shows before the caption counts the rest (default MAX_FAMILY_ROWS), for lookup lists */
   maxRows?: number;
+  /**
+   * Cube page group header of a collapse group (its rows, in file order); omitted: the first row's description shape,
+   * or the group's shared ingredients when the description names an ingredient the rows do not take (bundleCube.ts)
+   */
+  groupLabel?: (rows: readonly CubeRow[], esr: FamilyTables) => string;
 }
 
 /** A family block shows at most this many rows; the caption counts the rest. */
@@ -749,7 +754,7 @@ const CRAFT_CLASSES: Readonly<Partial<Record<string, string>>> = {
   warlock: 'Warlock',
 };
 
-function craftClass(row: CubeRow): string {
+export function craftClass(row: CubeRow): string {
   const tag = /-> (\w+) \w+$/.exec(row.description)?.[1] ?? '';
   return CRAFT_CLASSES[tag] ?? tag;
 }
@@ -1071,10 +1076,28 @@ export function familyRows(family: CubeFamily, esr: Pick<CubeTables, 'cube'>): C
   return esr.cube.filter((row) => family.match.test(row.description) && (family.filter?.(row) ?? true));
 }
 
-/** Output text; an item handed back unchanged (an output equal to an input) is left out, repeats are counted. */
+/** Output qualifiers that make a new random item (an output cell `cx1,mag` equal to its input is a reroll) */
+const NEW_ITEM_QUALIFIERS = new Set(['low', 'nor', 'hiq', 'mag', 'set', 'rar', 'uni', 'crf', 'tmp']);
+
+/**
+ * The outputs that are inputs handed back unchanged (a Key, a Scroll of Identify, an Ancient Scroll): outputs equal
+ * to an input that name a plain item code, unless every output is one. An output with a quality (`cx1,mag`) or a
+ * unique name equal to an input is a new item (a reroll), not the input handed back.
+ */
+export function returnedOutputs(row: CubeRow): CubeRow['outputs'] {
+  const returned = row.outputs.filter((output) => {
+    if (!row.inputs.includes(output.spec)) return false;
+    const { token, qualifiers } = parseCubeCell(output.spec);
+    return /^[a-z0-9]{3,4}$/.test(token) && !qualifiers.some((part) => NEW_ITEM_QUALIFIERS.has(part));
+  });
+  return returned.length === row.outputs.length ? [] : returned;
+}
+
+/** Output text; an item handed back unchanged (returnedOutputs) is left out, repeats are counted. */
 function rowOutput(row: CubeRow, esr: OutputTables, bonus: boolean): string {
-  const kept = row.outputs.filter((output) => !row.inputs.includes(output.spec));
-  const texts = (kept.length > 0 ? kept : row.outputs).map((output) => formatOutput(output, esr, { bonus }));
+  const returned = returnedOutputs(row);
+  const kept = row.outputs.filter((output) => !returned.includes(output));
+  const texts = kept.map((output) => formatOutput(output, esr, { bonus }));
   return [...countValues(texts)].map(([text, count]) => (count > 1 ? `${String(count)}× ${text}` : text)).join(' + ');
 }
 

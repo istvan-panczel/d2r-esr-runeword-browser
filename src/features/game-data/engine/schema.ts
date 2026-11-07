@@ -587,6 +587,10 @@ export interface CubeSection {
   doc: string | null;
   /** Anchor on that page */
   anchor: string | null;
+  /** Short notes from the official page's footnotes for the section; omitted: none */
+  notes?: string[];
+  /** Guide note slugs that explain the section; omitted: none */
+  guide?: string[];
 }
 
 export interface CubeFamilyInfo {
@@ -600,6 +604,8 @@ export interface CubeFamilyInfo {
   rowCount: number;
   /** True when `recipes` holds every row of the family (small families); false: only the merged `rows` */
   raw: boolean;
+  /** Short notes: the official page's rules for the family and limits read from the rows (fail-safes); omitted: none */
+  notes?: string[];
 }
 
 /** Recipes of one family that merge into the same rows (one recipe shape) */
@@ -644,6 +650,15 @@ export interface CubeMergedRow {
   dstoneCaps?: string[];
   /** The Enhance tab listing every outcome behind this row (the sanctification pool); omitted otherwise */
   enhanceTab?: MaterialEnhanceTab;
+  /**
+   * Conditions of this row that its group does not show (all its cubemain rows share them; those only some have end
+   * in "(some variants)"); omitted when none
+   */
+  conditions?: string[];
+  /** Ingredients handed back unchanged ("Key", "Ancient Scroll 38"), options joined with " / "; omitted when none */
+  returned?: string;
+  /** Odds of a random pool read from its rolls ("50%: Ore Shards"), one line per band; omitted otherwise */
+  odds?: string[];
   /** Qualities of the outputs (quality qualifiers and named unique / set items), for the quality filter */
   qualities: CubeQuality[];
 }

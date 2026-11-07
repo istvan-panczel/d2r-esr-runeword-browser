@@ -29,7 +29,7 @@ import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts'
 import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
-import { buildCubeNames, modRendererFor, readCube, readCubeItem } from './cube/cubeRows.ts';
+import { buildCubeNames, modRendererFor, readCube, readCubeItem, stockerCounterNames } from './cube/cubeRows.ts';
 import { buildLootFilterBundle } from './bundleLootFilter.ts';
 import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources, setBonusSources } from './bundleLootFilterSkills.ts';
 import { buildRunewordsBundle } from './bundleRunewords.ts';
@@ -236,12 +236,15 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       .rows.filter((row) => row.str('Id') !== '')
       .map((row) => [row.num('Id'), resolveName(strings, row.str('LevelName'), row.str('Name'))])
   );
+  const cubeRows = readCube(table('cubemain'));
+  const counterNames = stockerCounterNames(statTables.stats, statTables.properties, strings, cubeRows);
   const cubeTables = {
-    cube: readCube(table('cubemain')),
+    cube: cubeRows,
     items: cubeItems,
     ...buildCubeNames(cubeItems, itemtypes, strings),
     renderMods: modRendererFor(() => renderer),
     levelName: (id: number) => levelNames.get(id) ?? null,
+    counterName: (modOrStat: string) => counterNames.get(modOrStat) ?? null,
   };
   const cube = buildCubeBundle({
     tables: cubeTables,

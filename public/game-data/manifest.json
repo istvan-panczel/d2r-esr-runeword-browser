@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-07T10:10:41.304Z",
+  "generatedAt": "2026-11-07T10:49:09.126Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -18,31 +18,31 @@
       "bytes": 201515
     },
     "affixes": {
-      "hash": "8fc3f16042d6ab94eba868375e755cc3968b875b8e148985fd14894c5a157d74",
-      "bytes": 915636
+      "hash": "36a376a87e791300ebff8b8999ac5b30e631fffb4ad663e9af9a441de7e5f485",
+      "bytes": 915631
     },
     "sources": {
       "hash": "76c930caea0f9d2a96828c384e71fae56b6a0b29bbb1b9af9ae7095de0c9943d",
       "bytes": 305793
     },
     "lootfilter": {
-      "hash": "f6be125aea158b0c7146c2ca19d8d4dfd813bbd66e67f2053de0a5b4af8af8f2",
-      "bytes": 849085
+      "hash": "48346ef5fcaaed30273cdd7f8a502ec16251f0188399053e55b5aa86681e4b4c",
+      "bytes": 849074
     },
     "enhance": {
-      "hash": "577ffb8fc9d26c2c3d565d2f20230eb2ce9147b5a48aa51871e4458c0d9d0cfb",
-      "bytes": 426041
+      "hash": "2ddff06f2cf3df5abcdd013dc51056120f04e85b600d902c1f98a39858d00195",
+      "bytes": 426065
     },
     "cube": {
-      "hash": "a763ff130572ef2f5309a4d214eaf02b482a12c32ad610527defb8c9af503a04",
-      "bytes": 662256
+      "hash": "19a54e9103a6418502bea42ab67effb6a44aa5892c9380478bfbe81c036cbbc9",
+      "bytes": 760060
     },
     "materials": {
-      "hash": "9d505a5956b8cb354fdf211bc55c1de04961c7c2f1b6197c81785ad214b66c0a",
-      "bytes": 169174
+      "hash": "9bdb74f7a183b12aa925a2364d0ae796994c0e840ff37f5faea9c857b99f9acf",
+      "bytes": 172248
     },
     "sets": {
-      "hash": "c5a7e134c544e19960af110135a4394848750c237a9d119a15e99fed53689cde",
+      "hash": "27c09f0ac7a20409b32f7f7189d5590a855953e058e0b82a49e4a26f2a5cf250",
       "bytes": 153731
     },
     "skills": {
@@ -58,8 +58,8 @@
       "bytes": 389234
     },
     "crafting": {
-      "hash": "1d4344ac6d40bb6db4df349f69599d8aab9a7b666a19b8c27814d5dc535431a5",
-      "bytes": 64871
+      "hash": "8d73174b88651f2b04b73c7a3c9cdf19bd4c7c90b8af2baf8d0c87876a55f70d",
+      "bytes": 64880
     },
     "tiers": {
       "hash": "bbff23c87b9b225f261e06d02970b951299e06ae85e5a8761f4848ec7f979b31",
@@ -78,16 +78,16 @@
       "bytes": 301535
     },
     "itemtext": {
-      "hash": "ec4bc6eb2769317685bdb64eae2baab13ef9f13880e772af10c9b3ed4df38a56",
-      "bytes": 495103
+      "hash": "50e6f865eff5704f6d6de009dd7c77db4f5538a256a495001916b520a856fda7",
+      "bytes": 495159
     },
     "terrorzones": {
       "hash": "856d432135a37296646e52d08c1a75147c52e14386ab7bac609774ea95bca6d8",
       "bytes": 9099
     },
     "modifiers": {
-      "hash": "4587686fe40e45c844a563fd7acedd9932a18a4bf6226c71af04cf007c318fc1",
-      "bytes": 303098
+      "hash": "25909034155ad1d8bb4c7f114095954706b7081d729ecb950552a3abf467734d",
+      "bytes": 303087
     },
     "icons": {
       "hash": "18352925c1f8c739d3271b06ed630738ef723eea3ce6e0b12ba71a4a1499e509",
@@ -140,23 +140,23 @@
     "enhanceSanctificationOutcomes": 217,
     "enhanceVesselRecipes": 380,
     "enhanceVesselTransforms": 29,
-    "cubeRecipes": 9121,
-    "cubeFamilies": 62,
+    "cubeRecipes": 9747,
+    "cubeFamilies": 67,
     "cubeFallbackFamilies": 9,
     "cubeFallbackRows": 41,
-    "cubeMergedRows": 1364,
-    "cubeRawRecipes": 441,
+    "cubeMergedRows": 1556,
+    "cubeRawRecipes": 449,
     "cubeHiddenEnhance": 4007,
-    "cubeHiddenTraps": 401,
+    "cubeHiddenTraps": 400,
     "cubeHiddenOld": 80,
-    "cubeHiddenStockers": 4167,
+    "cubeHiddenStockers": 3542,
     "cubeHiddenDummy": 0,
     "materialsItems": 395,
     "materialsGroups": 16,
     "materialsCollapsed": 654,
-    "materialsUsedInCube": 364,
-    "materialsMadeByCube": 296,
-    "materialsUnknownSource": 38,
+    "materialsUsedInCube": 369,
+    "materialsMadeByCube": 299,
+    "materialsUnknownSource": 37,
     "materialsExcludedBases": 37,
     "materialsExcludedGold": 1,
     "materialsExcludedUnlisted": 111,
@@ -238,7 +238,7 @@
     "stashRunewords": 391,
     "stashGemwords": 9,
     "itemTextStats": 666,
-    "itemTextStrings": 388,
+    "itemTextStrings": 389,
     "itemTextSkills": 897,
     "itemTextMonsters": 393,
     "itemTextMagicPrefixes": 920,

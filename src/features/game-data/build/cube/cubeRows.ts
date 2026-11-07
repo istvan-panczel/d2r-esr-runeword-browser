@@ -5,6 +5,7 @@
  */
 import { createStatRenderer, readStatTables, type StatRenderer, type StatTableName } from '../stats/statRenderer.ts';
 import { buildStringTable, type StringsFile } from '../strings.ts';
+import type { PropertyDef, StatDef } from '../stats/tables.ts';
 import { parseTsv, type TsvRow, type TsvTable } from '../tsv.ts';
 
 export interface CubeMod {
@@ -70,6 +71,11 @@ export interface CubeItem {
 export interface CubeNames {
   /** Display name of an item code, item type code, unique/set name or string key; falls back to the token */
   nameOf: (token: string) => string;
+  /**
+   * True for an item type an ingredient should read as "Any …": its name is also an item's name ("Helm", "Healing
+   * Potion", "Club"), it was renamed (`tors` "Body Armor") or it already reads "Any Armor". Omitted: none.
+   */
+  anyType?: (token: string) => boolean;
   /** True when the token is a known item code, item type code or string key */
   isKnown: (token: string) => boolean;
   /** Lower-cased item names (display, internal and the name line of multi-line names) and item type names */
@@ -84,6 +90,61 @@ export interface CubeTables extends CubeNames {
   renderMods: ModRenderer;
   /** levels.txt name of a level id (the map a Red Portal opens); without it the `lvl=` reads "item level N" */
   levelName?: (id: number) => string | null;
+  /**
+   * What a stocker counter counts, by property code or itemstatcost stat (`junk-01` / `junk_01` → "Magic Ring Point",
+   * `item-02` → "Ancient Decipherer", `rune-01` → "I Rune"); null for other stats. Omitted: no counter names.
+   */
+  counterName?: (modOrStat: string) => string | null;
+}
+
+/** Stocker counters by itemstatcost stat (`item_02` Decipherers in a Multi Stocker, `junk_09`, `xtal_03`, `rune_12`, `gem_r`) */
+export const STOCKER_STAT = /^(?:(?:item|junk|xtal|rune)_\d+|gem_[a-z])$/;
+
+/** Quality qualifiers of the items a Rerolling Orb stores as points */
+const POINT_QUALITIES: Readonly<Partial<Record<string, string>>> = { mag: 'Magic', rar: 'Rare' };
+
+/**
+ * The counter names of the stocker stats (STOCKER_STAT) from their itemstatcost `descstrpos` string (the string
+ * table has no colour codes), keyed by stat and by every property code that sets the stat (`junk-01`). The Rerolling
+ * Orb keeps magic and rare items apart under one name ("Ring Point"): a point counter gets the quality of the item its
+ * first storing row takes (`ring,mag` → "Magic Ring Point"), from `cube` (omitted: none).
+ */
+export function stockerCounterNames(
+  stats: ReadonlyMap<string, Pick<StatDef, 'descstrpos'>>,
+  properties: ReadonlyMap<string, PropertyDef>,
+  strings: ReadonlyMap<string, string>,
+  cube: readonly CubeRow[] = []
+): Map<string, string> {
+  const names = new Map<string, string>();
+  for (const [stat, def] of stats) {
+    if (!STOCKER_STAT.test(stat)) continue;
+    const text = strings.get(def.descstrpos)?.trim() ?? '';
+    if (text !== '') names.set(stat, text);
+  }
+  const statOf = new Map<string, string>();
+  for (const [code, property] of properties) {
+    const stat = property.slots.find((slot) => names.has(slot.stat))?.stat;
+    if (stat !== undefined) statOf.set(code, stat);
+  }
+  const qualified = new Set<string>();
+  for (const row of cube) {
+    const mods = row.outputs.flatMap((output) => output.mods);
+    const stored = row.inputs.at(1);
+    const only = mods.length === 1 ? mods.at(0) : undefined;
+    const stat = only !== undefined && only.max === 1 ? statOf.get(only.mod) : undefined;
+    const name = stat === undefined ? undefined : names.get(stat);
+    if (stat === undefined || name === undefined || stored === undefined || qualified.has(stat) || !/ Point$/.test(name)) continue;
+    const [, ...qualifiers] = stored.split(',');
+    const quality = qualifiers.map((part) => POINT_QUALITIES[part]).find((found) => found !== undefined);
+    if (quality === undefined || row.inputs.length !== 2 || qualifiers.some((part) => part.startsWith('qty='))) continue;
+    names.set(stat, `${quality} ${name}`);
+    qualified.add(stat);
+  }
+  for (const [code, stat] of statOf) {
+    const name = names.get(stat);
+    if (name !== undefined) names.set(code, name);
+  }
+  return names;
 }
 
 export const CUBE_TABLES = ['cubemain', 'misc', 'armor', 'weapons', 'itemtypes'] as const;
@@ -187,6 +248,12 @@ export function readCubeItem(row: TsvRow, kind: CubeItem['kind'], strings: Reado
   };
 }
 
+/**
+ * Item types whose itemtypes.txt name misleads in a recipe: `tors` is "Armor" there, but it is only body armor (the
+ * official page's "Torso"; `armo` is "Any Armor").
+ */
+const TYPE_NAMES: Readonly<Partial<Record<string, string>>> = { tors: 'Body Armor' };
+
 /** Item, item type and string-key names for the cube cells */
 export function buildCubeNames(items: readonly CubeItem[], itemtypes: TsvTable, strings: ReadonlyMap<string, string>): CubeNames {
   const itemNames = new Map<string, string>();
@@ -203,12 +270,18 @@ export function buildCubeNames(items: readonly CubeItem[], itemtypes: TsvTable, 
     typeItemNames.set(item.type, names);
   }
   const typeNames = new Map<string, string>();
+  // Types that read as "Any …" as an ingredient: renamed, already "Any …", or named like an item
+  const anyTypes = new Set<string>();
+  const itemDisplayNames = new Set([...itemNames.values()].map((name) => name.toLowerCase()));
   for (const row of itemtypes.rows) {
     const code = row.str('Code');
     if (code === '' || typeNames.has(code)) continue;
     const names = [...(typeItemNames.get(code) ?? [])];
     const only = names.length === 1 ? names.at(0) : undefined;
-    typeNames.set(code, only ?? row.str('ItemType'));
+    const renamed = TYPE_NAMES[code];
+    const name = renamed ?? only ?? row.str('ItemType');
+    typeNames.set(code, name);
+    if (only === undefined && (renamed !== undefined || /^Any /.test(name) || itemDisplayNames.has(name.toLowerCase()))) anyTypes.add(code);
   }
 
   const stringOf = (token: string): string | undefined => {
@@ -217,6 +290,7 @@ export function buildCubeNames(items: readonly CubeItem[], itemtypes: TsvTable, 
   };
   return {
     nameOf: (token) => itemNames.get(token) ?? typeNames.get(token) ?? stringOf(token) ?? token,
+    anyType: (token) => !itemNames.has(token) && anyTypes.has(token),
     isKnown: (token) => itemNames.has(token) || typeNames.has(token) || strings.has(token),
     names: new Set(
       [

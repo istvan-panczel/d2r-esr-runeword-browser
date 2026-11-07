@@ -691,6 +691,96 @@ describe('committed game-data bundles', () => {
     expect(cube.sections.map((section) => section.id)).toEqual([...new Set(cube.families.map((family) => family.section))]);
   });
 
+  it('pin the cube page fixes of the official-page audit (ESR 3.2.24)', () => {
+    const groups = new Map(cube.groups.map((group) => [group.id, group]));
+    const rowsOf = (family: string) => cube.rows.filter((row) => row.family === family);
+    const find = (family: string, pick: (text: string) => boolean) =>
+      rowsOf(family).find((row) => pick(`${row.inputs.join(' + ')} => ${row.output}`));
+    // The Trap Assassin starter weapon (cubemain L8918) is listed, with its 1-2 sockets
+    const trap = find('magic-rare-reroll', (text) => text.includes('Throwing Knife') && text.includes('Assassin Skill Levels'));
+    expect(trap?.output).toContain('1-2 sockets');
+    expect(rowsOf('magic-rare-reroll').some((row) => /\(2 sockets, \+\(1 to 2\) to Bow/.test(row.output))).toBe(false);
+    // Removals read as removals: Astrogha's Petrified Heart, Secret Recipe 38 and 8
+    expect(find('legendary-consumables', (text) => text.includes("Astrogha's"))?.output).toBe(
+      'The same item (Removes the corruption status, so the item can be corrupted again)'
+    );
+    const secret = rowsOf('secret').map((row) => row.output);
+    expect(secret).toContain('The same item (Removes Slain Monsters Rest in Peace)');
+    expect(secret).toContain('The same item (Removes Knockback)');
+    expect(secret).toContain('The same item (Removes +25% to Experience Gained) + Ancient Scroll 8');
+    // Durability repair as the game writes it (Secret Recipe 37: rep-dur 5), app-wide
+    expect(secret).toContain('The same item (Repairs 1 durability in 20 seconds)');
+    for (const [name, text] of [
+      ['cube', cubeText],
+      ['affixes', affixesText],
+      ['enhance', enhanceText],
+      ['crafting', craftingText],
+      ['sets', setsText],
+    ] as const) {
+      expect(text, name).not.toMatch(/Repairs \d+ durability per second/);
+    }
+    expect(setsText).toContain('Repairs 1 durability in 1 seconds');
+    // Class crafts: one group per class, each slot with its stats (L9914: the Amazon helm)
+    expect(rowsOf('class-craft')).toHaveLength(80);
+    expect(new Set(rowsOf('class-craft').map((row) => groups.get(row.group)?.label)).size).toBe(8);
+    expect(find('class-craft', (text) => text.startsWith('Any Magic Helm') && text.includes('Amazon'))?.output).toBe(
+      'Crafted item of the same type (+(1 to 2) to Amazon Skill Levels, +(80 to 100)% Enhanced Defense, +(30 to 45) to Energy, All Resists +(15 to 25))'
+    );
+    // Per-row conditions: the Rerolling Orb point requirements and Tyrael's boon
+    expect(rowsOf('ring-amulet').filter((row) => row.conditions?.includes('Stored Magic Ring Points ≥ 7') === true).length).toBeGreaterThan(
+      0
+    );
+    // 11 of its 12 rows check it (L2316 does not: an ESR data issue)
+    const notUpgraded = rowsOf('tyrael-boon').filter((row) => row.conditions?.includes('Not upgraded yet') === true);
+    expect(notUpgraded.reduce((sum, row) => sum + row.variants, 0)).toBe(11);
+    // Returned ingredients: Mythical Map + Key gives the Key back
+    expect(find('map-portals', (text) => text.startsWith('Mythical Map + Key'))?.returned).toBe('Key');
+    // Readable stocker and roll conditions, no raw labels
+    const conditionTexts = [...cube.groups.flatMap((group) => group.conditions), ...cube.rows.flatMap((row) => row.conditions ?? [])];
+    expect(conditionTexts.filter((text) => /Stocker count|Randomize counter|junk_|item_\d/.test(text))).toEqual([]);
+    expect(rowsOf('secret').some((row) => row.conditions?.includes("Stored Devil's Food Points ≥ 25") === true)).toBe(true);
+    // Item types read as types
+    expect(find('quest-items', (text) => text.includes('Cow Portal'))?.inputs).toEqual(['Any Club', 'Tome of Town Portal']);
+    expect(find('dstoning', (text) => text.startsWith('Gloves, Belt or Boots'))).toBeDefined();
+    // The player-facing stocker rows: Rune Stocker upgrades, Multi Stocker, Rerolling Orb, Gem Can
+    expect(find('stocker-upgrades', (text) => text.startsWith('Rune Stocker'))?.output).toBe(
+      'The same Rune Stocker (2 points of that rune → 1 point of the next rune)'
+    );
+    for (const family of ['multi-stocker', 'rerolling-orb', 'gem-can-rerolls', 'crystal-can'])
+      expect(rowsOf(family).length, family).toBeGreaterThan(0);
+    expect(cube.hidden.stockers).toBeLessThan(3700);
+    // D-stoning notes: fail-safe limits and the 500% ceiling; Secret Recipe 25's odds
+    const notes = (id: string) => cube.families.find((family) => family.id === id)?.notes ?? [];
+    expect(notes('dstoning')).toContain(
+      "Fail-safe: does nothing once the item's added level requirement is at least 58 (elite), 79 (exceptional) or 99 (normal tier, rings, amulets)."
+    );
+    expect(notes('dstoning').some((note) => note.includes('500%'))).toBe(true);
+    expect(notes('gem-meld').some((note) => note.includes('55 (elite), 78 (exceptional) or 99 (normal tier)'))).toBe(true);
+    expect(find('secret', (text) => text.startsWith('Ore + Ancient Scroll 25'))?.odds?.map((line) => line.split(':')[0])).toEqual([
+      '50%',
+      '30%',
+      '20%',
+    ]);
+    // Section notes and guide links; Secret Recipes 26, 27, 28 and 40 in the secret family
+    expect(cube.sections.find((section) => section.id === 'legendary')?.notes?.some((note) => note.includes('engine bug'))).toBe(true);
+    const secretGroups = cube.groups.filter((group) => group.family === 'secret').map((group) => group.label);
+    for (const n of [26, 27, 28, 40]) expect(secretGroups, String(n)).toContain(`Secret Recipe ${String(n)}`);
+    // Group labels from the ingredients where the description names another (Caster craft takes a Perfect Sapphire)
+    expect(cube.groups.filter((group) => group.family === 'legacy-craft').map((group) => group.label)).toEqual([
+      'Hit Power craft',
+      'Blood craft',
+      'Caster craft',
+      'Safety craft',
+    ]);
+    expect(cube.groups.some((group) => group.label === 'Belt Upgrade: Sash + Thawing Potion')).toBe(false);
+  });
+
+  it('link the cube sections to guide notes that exist', () => {
+    const slugs = new Set(readdirSync(resolve(__dirname, '../../../content/guide/notes')).map((file) => file.replace(/\.md$/, '')));
+    for (const section of cube.sections)
+      for (const slug of section.guide ?? []) expect(slugs.has(slug), `${section.id} → ${slug}`).toBe(true);
+  });
+
   it('list the materials with known families, enhance roles and groups, without equipment bases', () => {
     const families = new Set(cube.families.map((family) => family.id));
     const listed = new Set(materials.families.map((family) => family.id));

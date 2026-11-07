@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { buildCubeBundle, RAW_ROW_LIMIT, statConditionText, type CubeContext } from './bundleCube.ts';
-import { fallbackFamilyId, fallbackPrefix } from './cube/cubeCatalog.ts';
+import {
+  buildCubeBundle,
+  failSafeNotes,
+  GAME_CHECK_TEXT,
+  labelDisagrees,
+  RAW_ROW_LIMIT,
+  rollOdds,
+  statConditionText,
+  type CubeContext,
+} from './bundleCube.ts';
+import { fallbackFamilyId, fallbackPrefix, hiddenReason } from './cube/cubeCatalog.ts';
 import { buildCubeTables, type CubeMod } from './cube/cubeRows.ts';
 
 function tsv(rows: string[][]): string {
@@ -88,6 +97,14 @@ const MISC = tsv([
   ['Map', 'map', 'map', 'misc'],
   ['Weapons Crate', 'u22', 'u22', 'misc'],
   ['Socket Donut', 'sdn', 'sdn', 'misc'],
+  ['Rune Stocker Low', 's01', 's01', 'can2'],
+  ['Rune Stocker Low', 's02', 's02', 'can2'],
+  ['Scroll of Identify', 'isc', 'isc', 'scro'],
+  ['Spider Silk', 'sss', 'sss', 'dstn'],
+  ['Perfect Emerald', 'ggb', 'ggb', 'gem5'],
+  ['Jewel', 'jew', 'jew', 'jewl'],
+  ['Helm', 'cap', 'cap', 'helm'],
+  ['Skull Cap', 'skp', 'skp', 'helm'],
 ]);
 const ARMOR = tsv([
   ['name', 'code', 'namestr', 'type'],
@@ -105,6 +122,9 @@ const ITEMTYPES = tsv([
   ['Perfect Gem', 'gem5'],
   ['Charm', 'char'],
   ['Gem Can 8', 'can9'],
+  ['Rune Can', 'can2'],
+  ['Jewel', 'jewl'],
+  ['Helm', 'helm'],
 ]);
 const STRINGS = JSON.stringify(
   [
@@ -120,6 +140,14 @@ const STRINGS = JSON.stringify(
     ['ssd', 'Short Sword'],
     ['lbw', 'Long Bow'],
     ['Red Portal', 'Red Portal'],
+    ['s01', 'Rune Stocker'],
+    ['s02', 'Rune Stocker'],
+    ['isc', 'Scroll of Identify'],
+    ['sss', "Spider's Silk"],
+    ['ggb', 'Perfect Emerald'],
+    ['jew', 'Jewel'],
+    ['cap', 'Helm'],
+    ['skp', 'Skull Cap'],
   ].map(([Key, enUS]) => ({ Key, enUS }))
 );
 
@@ -128,13 +156,24 @@ function stubRenderMods(mods: readonly CubeMod[]): string[] {
   return mods.map((mod) => `${mod.mod} +${String(mod.max)}`);
 }
 
-/** itemstatcost rows by id: 92 item_levelreq, 508 kill_check, 470 some hidden marker, 236 the sanctification roll */
+/**
+ * itemstatcost rows by id: 92 item_levelreq, 508 kill_check, 470 some hidden marker, 236 the sanctification roll,
+ * 431 the random roll, 836 / 837 rune stocker counters, 280 the forging flag, 284 item_upgraded
+ */
 const STAT_NAMES = new Map([
   [92, 'item_levelreq'],
   [236, 'item_sanctification_dummy'],
+  [280, 'item_craftflag'],
+  [284, 'item_upgraded'],
+  [431, 'item_randomize'],
   [470, 'item_corrupted_dummy'],
   [508, 'kill_check'],
+  [836, 'rune_01'],
+  [837, 'rune_02'],
 ]);
+
+/** Stocker counters of the fixture: rune points by property code */
+const COUNTERS: Readonly<Partial<Record<string, string>>> = { 'rune-01': 'I Rune', 'rune-02': 'U Rune', 'rune-03': 'Shi Rune' };
 
 function build(rows: string[][]) {
   const tables = buildCubeTables(
@@ -145,8 +184,8 @@ function build(rows: string[][]) {
     stubRenderMods
   );
   const ctx: CubeContext = {
-    tables: { ...tables, levelName: (id) => (id === 147 ? 'Cellar of Pain' : null) },
-    typeCodes: new Set(['weap', 'tors', 'gem5', 'char', 'can9']),
+    tables: { ...tables, levelName: (id) => (id === 147 ? 'Cellar of Pain' : null), counterName: (mod) => COUNTERS[mod] ?? null },
+    typeCodes: new Set(['weap', 'tors', 'gem5', 'char', 'can9', 'can2', 'jewl', 'helm']),
     statNames: STAT_NAMES,
     setNames: new Set(["Tal Rasha's Lidless Eye"]),
     uniqueNames: new Set(['Hacker', 'Axe of the Elements']),
@@ -329,7 +368,7 @@ describe('buildCubeBundle', () => {
     ]);
     const rows = bundle.rows.filter((entry) => entry.family === 'legendary-consumables');
     expect(rows.map((entry) => [entry.inputs, entry.enhanceTab])).toEqual([
-      [['jewl', 'u18'], undefined],
+      [['Jewel', 'u18'], undefined],
       [['That jewel, on its own'], 'sanctification'],
     ]);
   });
@@ -371,5 +410,171 @@ describe('buildCubeBundle', () => {
     expect(group?.inputNames).toHaveLength(RAW_ROW_LIMIT + 1);
     expect(group?.outputNames).toHaveLength(RAW_ROW_LIMIT + 1);
     expect(bundle.sections.map((section) => section.id)).toEqual(['uni', 'tyrael']);
+  });
+
+  it('lists the Trap Assassin starter weapon: only "Trap" blockers are hidden as traps', () => {
+    const starter = {
+      line: 2,
+      description: 'Starter Weapon for Trap Assassin:',
+      cls: '',
+      minDiff: 0,
+      inputs: ['tkni,mag'],
+      outputs: [{ spec: 'usetype,mag', mods: [] }],
+      condition: null,
+    };
+    expect(hiddenReason(starter, false)).toBeNull();
+    expect(hiddenReason({ ...starter, description: 'Kill Ledger Trap' }, false)).toBe('traps');
+    expect(hiddenReason({ ...starter, description: 'Trap Too High Req Lvl' }, false)).toBe('traps');
+    const { bundle } = build([row('Starter Weapon for Trap Assassin:', ['"weap,mag"', 'gpv'], 'usetype,mag', { mod: ['ass', 1] })]);
+    expect(bundle.families.map((family) => family.id)).toEqual(['magic-rare-reroll']);
+  });
+
+  it('words stocker counters, random rolls, the use counter and op 28 for players', () => {
+    const names = (stat: string) => (stat === 'junk_09' ? "Devil's Food Point" : stat === 'item_02' ? 'Ancient Decipherer' : null);
+    expect(statConditionText(15, 'junk_09', 25, names)).toBe("Stored Devil's Food Points ≥ 25");
+    expect(statConditionText(15, 'item_02', 32, names)).toBe('Stored Ancient Decipherer points ≥ 32');
+    expect(statConditionText(18, 'item_randomize', 0)).toBe('Not used yet');
+    expect(statConditionText(18, 'item_randomize', 9)).toBe('Use counter = 9');
+    expect(statConditionText(16, 'item_randomize', 254)).toBe('Random roll ≤ 254 (of 0 to 511)');
+    expect(statConditionText(18, 'stancedancecontrol', 0)).toBe('Not applied to this stone yet');
+    const { bundle } = build([row('Cow Portal: Club + 1 TP Tome', ['key', 'map'], 'Red Portal', { condition: [28, 0, 0] })]);
+    expect(bundle.recipes[0]?.conditions).toEqual([GAME_CHECK_TEXT]);
+  });
+
+  it('shows the conditions a merged row does not share with its group, and the ingredients handed back', () => {
+    const { bundle } = build([
+      row('Tyrael Might Aura str to dex', ["Tyrael's Might", 'gpv', 'key'], 'useitem', { condition: [17, 284, 1], outputB: 'key' }),
+      row('Tyrael Might Aura dex to str', ["Tyrael's Might", 'gpr', 'key'], 'useitem', { condition: [17, 284, 1], outputB: 'key' }),
+      row('Tyrael Might Aura enr to vit', ["Tyrael's Might", 'gpr', 'map'], 'useitem'),
+    ]);
+    const rows = bundle.rows.filter((entry) => entry.family === 'tyrael-boon');
+    expect(bundle.groups.find((group) => group.family === 'tyrael-boon')?.conditions).toEqual([]);
+    expect(rows.map((entry) => [entry.inputs.join(' + '), entry.conditions, entry.returned])).toEqual([
+      ["Tyrael's Might + Perfect Amethyst / Perfect Ruby + Key", ['Not upgraded yet'], 'Key'],
+      ["Tyrael's Might + Perfect Ruby + Map", undefined, undefined],
+    ]);
+  });
+
+  it('marks a condition only some merged variants have, and leaves out per-variant selectors past three', () => {
+    const { bundle } = build([
+      row('Secret thing [SECRET50] a', ['key', 'gpv'], 'useitem'),
+      row('[SECRET50] Armor', ['"weap,mag"', 'gpv'], 'useitem', { condition: [18, 92, 1] }),
+      row('[SECRET50] Armor', ['"tors,mag"', 'gpv'], 'useitem', { condition: [3, 92, 1] }),
+    ]);
+    const merged = bundle.rows.find((entry) => entry.family === 'secret' && entry.variants === 2);
+    expect(merged?.conditions).toEqual(['Added level requirement = 1 (some variants)', 'Added level requirement ≥ 1 (some variants)']);
+  });
+
+  it('shows class crafts per slot with their bonuses, one group per class', () => {
+    const craft = (slot: string, mod: string) =>
+      row(
+        `magic ${slot} + jewel + spider's silk + perfect emerald -> amazon ${slot}`,
+        [`"${slot},mag"`, 'jew', 'sss', 'ggb'],
+        'usetype,crf',
+        {
+          mod: ['ama', 1],
+          mod2: [mod, 30],
+        }
+      );
+    const { bundle } = build([craft('helm', 'enr'), craft('weap', 'dmg%')]);
+    expect(bundle.groups.filter((group) => group.family === 'class-craft').map((group) => group.label)).toEqual(['Amazon craft']);
+    expect(bundle.rows.filter((entry) => entry.family === 'class-craft').map((entry) => [entry.inputs[0], entry.output])).toEqual([
+      ['Any Magic Helm', 'Crafted item of the same type (ama +1, enr +30)'],
+      ['Magic Weapon', 'Crafted item of the same type (ama +1, dmg% +30)'],
+    ]);
+  });
+
+  it('lists the stocker upgrades in their own family and keeps storing hidden', () => {
+    const { bundle } = build([
+      row('Rune Stocker Input', ['s01', 'r01'], 'useitem', { mod: ['rune-01', 1] }),
+      row('Rune Stocker Upgrade', ['s01', 'isc'], 'useitem', {
+        condition: [15, 836, 2],
+        mod: ['rune-01', -2],
+        mod2: ['rune-02', 1],
+        outputB: 'isc',
+      }),
+      row('Rune Stocker Upgrade', ['s02', 'isc'], 'useitem', {
+        condition: [15, 837, 2],
+        mod: ['rune-02', -2],
+        mod2: ['rune-03', 1],
+        outputB: 'isc',
+      }),
+    ]);
+    expect(bundle.hidden.stockers).toBe(1);
+    expect(bundle.families.map((family) => [family.id, family.section, family.notes])).toEqual([
+      ['stocker-upgrades', 'gem', ['Cube the stocker alone to cycle the selected rune or decal.']],
+    ]);
+    expect(bundle.rows.map((entry) => [entry.inputs, entry.output, entry.returned, entry.variants])).toEqual([
+      [
+        ['Rune Stocker (set to the rune to upgrade)', 'Scroll of Identify'],
+        'The same Rune Stocker (2 points of that rune → 1 point of the next rune)',
+        'Scroll of Identify',
+        2,
+      ],
+    ]);
+  });
+
+  it('puts every numbered secret recipe in the secret family', () => {
+    const { bundle } = build([
+      row('[SECRET26] 16 DS + 16 P-Gems -> Maple Leaf', ['"gem5,qty=16"', 'key'], 'map'),
+      row('Maple Leaf: Unique Charm + Key + any rejuv pot', ['"char,uni"', 'key'], 'map'),
+    ]);
+    expect(bundle.families.map((family) => [family.id, family.rowCount])).toEqual([
+      ['unique-charm-upgrades', 1],
+      ['secret', 1],
+    ]);
+  });
+
+  it('reads the odds of a random roll pool from its thresholds (Secret Recipe 25: 50 / 30 / 20)', () => {
+    const ore = (output: string, value: number) => row('[SECRET25] Smash Ore', ['map', 'key'], output, { condition: [16, 431, value] });
+    const { bundle } = build([ore('gpv', 254), ore('gpr', 407), ore('qqq', 511)]);
+    expect(bundle.rows[0]?.odds).toEqual(['50%: Perfect Amethyst', '30%: Perfect Ruby', '20%: Anvil Stone']);
+    // A threshold range that is not 2^n (an unknown roll range) gives no odds
+    const ctx = { statNames: STAT_NAMES } as unknown as CubeContext;
+    const rows = (values: number[]) =>
+      values.map((value, i) => ({
+        line: i,
+        description: '',
+        cls: '',
+        minDiff: 0,
+        inputs: [],
+        outputs: [],
+        condition: { op: 16, param: 431, value },
+      }));
+    expect(rollOdds(rows([10, 20]), ctx)).toBeUndefined();
+    expect(rollOdds(rows([511]), ctx)).toBeUndefined();
+  });
+
+  it('reads the fail-safe level requirement limits from the blockers', () => {
+    const blocker = (line: number, target: string, reagent: string, value: number) => ({
+      line,
+      description: 'Trap Too High Req Lvl',
+      cls: '',
+      minDiff: 0,
+      inputs: [target, reagent],
+      outputs: [{ spec: 'void', mods: [] }],
+      condition: { op: 15, param: 92, value },
+    });
+    const notes = failSafeNotes(
+      [
+        blocker(1, 'weap,eli', 'dstn', 58),
+        blocker(2, 'weap,exc', 'dstn', 79),
+        blocker(3, 'weap,bas', 'dstn', 99),
+        blocker(4, 'ring', 'dstn', 99),
+        blocker(5, 'armo,eli', 'gem5', 55),
+      ],
+      STAT_NAMES
+    );
+    expect(notes.get('dstoning')).toBe(
+      "Fail-safe: does nothing once the item's added level requirement is at least 58 (elite), 79 (exceptional) or 99 (normal tier, rings)."
+    );
+    expect(notes.get('gem-meld')).toBe("Fail-safe: does nothing once the item's added level requirement is at least 55 (elite).");
+  });
+
+  it('replaces a group label that names an ingredient the rows do not take', () => {
+    expect(labelDisagrees('Belt Upgrade: Sash + Thawing Potion', ['Sash', 'Stamina Potion'])).toBe(true);
+    expect(labelDisagrees('magic mask + jewel + rune # + perfect amethyst -> caster helm', ['Magic Mask', 'Perfect Sapphire'])).toBe(true);
+    expect(labelDisagrees('Magic Jewel Reroll: B-Gem', ['Magic Jewel', 'Perfect Gem'])).toBe(true);
+    expect(labelDisagrees('Unique Jewel: # P-Gem + Key', ['Unique Jewel', '5× Perfect Gem', 'Key'])).toBe(false);
   });
 });
