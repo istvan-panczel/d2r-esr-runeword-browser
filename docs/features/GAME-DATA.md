@@ -1359,8 +1359,11 @@ that fails. Sections, in order:
 8. **Everything else**: the remaining changed files with line counts.
 
 A launcher-versions line under the header shows `modVersion`, D2RLoader, game version/build, the save mode and the
-loot-filter plugin DLL version, old → new; tables the generators read are marked "(read by the app)". `--out <file>`
-writes the text (or the JSON with `--json`).
+loot-filter plugin DLL version, old → new; tables the generators read are marked "(read by the app)", and docs pages,
+launcher configs and other files the app follows get an `app [kind]: …` line naming what depends on them
+(`ESR_REFERENCES` in `scripts/lib/esrReferences.ts`: `hand-kept` = hand-written app data such as the map boss page
+figures, the mastery group rules, the cube section notes, the orb spots or the modifier prose; `generated`; `tested`;
+`runtime`). `--out <file>` writes the text (or the JSON with `--json`).
 
 Exit codes: 0 (also when nothing changed), 1 (missing clone, bad `--to`, git failure), 2 (`--from` not available).
 Helpers and tests: `scripts/lib/releaseDiff.ts`, `scripts/lib/esrGit.ts`, `scripts/lib/launcherInfo.ts` and their tests.
@@ -1381,11 +1384,15 @@ npm run esr:review -- --offline                 # skip the network checks
 Checks (ids as in the report): versions (manifest, clone tag, `metadata.json` modVersion vs tag, D2RLoader and game
 build), manifest counts and warnings, changed entries per bundle by key, skill ids, unknown sources, id shifts
 (lootfilter, stashnames, itemtext, stash save widths), build crafts (`slot:roll` / `kind:key`), cube fallback rows and
-ops, guide `::recipes` blocks and notes whose data changed, icons (missing, vanilla art folder, inputs), runeword and
+ops, map boss rewards vs the Endgame Maps page figures in `campaign-map/data/mapBosses.ts` (`mapbosses.page`: new
+differences), guide `::recipes` blocks and notes whose data changed, icons (missing, cube.json `icons` tokens that
+resolve to no icon, vanilla art folder, inputs), runeword and
 gemword `name:variant` shifts (old vs new docs pages), loot filter (plugin DLL version vs `LOOT_FILTER_PLUGIN_VERSION`,
 `LootFilters/sources.json`, Sully's upstream template and assets, bundled filters validated against old and new
 data), tables vs the generated docs pages the app parses (`runes.txt`, `gems.txt` and `uniqueitems.txt` changed but
-their pages were not regenerated), the docs site vs the clone's `docs/`, external links and the Discord invite, docs quoting the old version, and
+their pages were not regenerated), changed docs pages and D2RLoader configs the app follows (`refs.followed`:
+`ESR_REFERENCES` plus the files `content/` cites by file name; a finding when hand-written data or a note follows
+one), the docs site vs the clone's `docs/`, external links and the Discord invite, docs quoting the old version, and
 a self-check: bundle files, count keys or warning classes it does not know, and feature commits since the skill or
 the review script last changed. Exit 0 when it ran (findings are not a failure), 2 when it cannot run. Logic and
 tests: `scripts/lib/esrReview/`; `scripts/lib/srcImport.ts` loads app modules (the `@/` alias) from Node.

@@ -6,6 +6,7 @@ import { ESR_EXCEL_DIR, ESR_STRINGS_DIR, TABLES as GENERATOR_TABLES } from '../.
 import { STAT_TABLES } from '../../src/features/game-data/build/stats/statRenderer.ts';
 import { GUIDE_TABLES } from '../../src/features/guide/build/esrGuideSources.ts';
 import { stripHtmlTags } from '../../src/lib/html.ts';
+import { esrReferenceFor } from './esrReferences.ts';
 import { formatLauncherVersions, type LauncherVersions } from './launcherInfo.ts';
 
 /** How many keys/strings the text output lists per file before "… and N more". */
@@ -341,6 +342,12 @@ function heading(out: string[], title: string): void {
   out.push('', `=== ${title} ===`, '');
 }
 
+/** `    app [hand-kept]: …` under a file the app follows (scripts/lib/esrReferences.ts); nothing for other files. */
+export function referenceLines(path: string): string[] {
+  const reference = esrReferenceFor(path);
+  return reference === undefined ? [] : [`    app [${reference.kind}]: ${reference.follows}`];
+}
+
 const indent = (text: string, prefix = '    ') =>
   text
     .replace(/\n$/, '')
@@ -509,12 +516,13 @@ export function formatReleaseDiff(diff: ReleaseDiff): string[] {
     const locales =
       page.locales.length === 1 && page.locales[0] === 'enUS' ? '' : ` (${shown.join(', ')} ${plural(page.locales.length, 'locale')})`;
     out.push(`[${page.status}] ${page.path} (${size}) ${page.kind === 'hand-written' ? '[HAND-WRITTEN]' : `[${page.kind}]`}${locales}`);
+    out.push(...referenceLines(page.path));
   }
 
   heading(out, '6. Launcher configs (d2rloader/)');
   if (diff.launcher.length === 0) out.push('(no changes)');
   for (const change of diff.launcher) {
-    out.push(`[${change.status}] ${change.path} (${formatLines(change)})`);
+    out.push(`[${change.status}] ${change.path} (${formatLines(change)})`, ...referenceLines(change.path));
     if (change.diff !== null) out.push(...indent(change.diff), '');
   }
 
@@ -530,6 +538,6 @@ export function formatReleaseDiff(diff: ReleaseDiff): string[] {
 
   heading(out, '8. Everything else');
   if (diff.other.length === 0) out.push('(no changes)');
-  for (const change of diff.other) out.push(`[${change.status}] ${change.path} (${formatLines(change)})`);
+  for (const change of diff.other) out.push(`[${change.status}] ${change.path} (${formatLines(change)})`, ...referenceLines(change.path));
   return out;
 }

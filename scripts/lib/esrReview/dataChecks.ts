@@ -447,6 +447,58 @@ export function missingIconsCheck(head: IconInputs, working: IconInputs): Check 
   return ok('icons.missing', 'Items without an icon', `No new item without an icon (${String(after.size)} without one, as at HEAD).`);
 }
 
+/** icons.json sections a cube.json `icons` token is looked up in, by its prefix (engine/cubeIcons.ts, useItemIcons) */
+const CUBE_TOKEN_SECTIONS: Readonly<Record<string, readonly string[]>> = {
+  i: ['bases', 'quest', 'items'],
+  t: ['types'],
+  u: ['uniques'],
+  s: ['sets'],
+};
+
+/**
+ * The cube.json `icons` tokens no icons.json entry resolves, each with the first cell text that uses it. Keyed by token,
+ * so a new cell naming a broad type that has no art by design (`t:armo`) is not new.
+ */
+export function unresolvedCubeIcons(cube: Doc | null, icons: Doc | null): Map<string, string> {
+  const map = cube?.icons;
+  const result = new Map<string, string>();
+  if (typeof map !== 'object' || map === null) return result;
+  const has = (section: string, key: string) => {
+    const value = icons?.[section];
+    return typeof value === 'object' && value !== null && Object.hasOwn(value, key);
+  };
+  for (const [cell, token] of Object.entries(map as Doc)) {
+    const value = text(token);
+    const sections = CUBE_TOKEN_SECTIONS[value.slice(0, 1)] ?? [];
+    const key = value.slice(2);
+    if (!result.has(value) && !sections.some((section) => has(section, key))) result.set(value, cell);
+  }
+  return result;
+}
+
+export function cubeIconsCheck(head: { cube: Doc | null; icons: Doc | null }, working: { cube: Doc | null; icons: Doc | null }): Check {
+  const title = 'Cube cells without an icon';
+  const before = unresolvedCubeIcons(head.cube, head.icons);
+  const after = unresolvedCubeIcons(working.cube, working.icons);
+  const added = [...after].filter(([token]) => !before.has(token)).map(([token, cell]) => `+ ${token} (${cell})`);
+  const removed = [...before].filter(([token]) => !after.has(token)).map(([token, cell]) => `- ${token} (${cell})`);
+  if (added.length > 0) {
+    return finding(
+      'icons.cube',
+      title,
+      `${String(added.length)} cube icon tokens newly resolve to no icons.json entry (${String(after.size)} in all)`,
+      'the Cube Recipes page cells naming them show no picture; an item code (i:) or a unique / set name (u: / s:) the icon generator missed, or a renamed item',
+      capLines([...added, ...removed])
+    );
+  }
+  if (removed.length > 0) return info('icons.cube', title, `${String(removed.length)} tokens gained an icon.`, capLines(removed));
+  return ok(
+    'icons.cube',
+    title,
+    `No new cube icon token without an icon (${String(after.size)} without one, as at HEAD; broad types have none by design).`
+  );
+}
+
 export function vanillaArtCheck(dir: string, exists: boolean, versionChanged: boolean): Check {
   if (exists) return ok('icons.vanilla-art', 'Vanilla art folder', `${dir} exists.`);
   if (versionChanged) {

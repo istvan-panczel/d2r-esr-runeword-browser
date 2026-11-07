@@ -34,6 +34,8 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'skillGrant',
   'skillCalc',
   'skillIcons',
+  // the official skill information page (docs/skill_information.htm) parsed into skilldetails.json
+  'skillInfo',
   'crafting',
   'tierCodes',
   'areas',
@@ -48,6 +50,10 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'uniqueIcons',
   'setIcons',
   'miscIcons',
+  // icons.json quest / items / types (campaign map quest items, cube and materials cells, type ingredients)
+  'questIcons',
+  'itemCodeIcons',
+  'typeIcons',
   'vanillaIcon',
   'tintedIcon',
 ];
