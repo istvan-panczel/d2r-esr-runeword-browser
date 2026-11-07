@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SuperiorAffixes, SuperiorRow } from '../engine/schema';
-import { filterSuperiorPools, superiorTypeOptions } from './superiorView';
+import { filterSuperiorPools, superiorTypeOptions, superiorWeightNote } from './superiorView';
 
 const row = (index: number, weight: number, text: string): SuperiorRow => ({
   row: index,
@@ -14,7 +14,8 @@ const row = (index: number, weight: number, text: string): SuperiorRow => ({
 
 const superior: SuperiorAffixes = {
   enabled: true,
-  defaultWeight: 100,
+  weightSource: 'frequency',
+  defaultWeight: 0,
   rows: [row(0, 100, '+(50 to 100) to Attack Rating'), row(1, 1, '+1 to All Skills'), row(2, 99, '+(5 to 10)% to Spell Damage')],
   pools: [
     { label: 'Weapon (other types)', types: ['axe', 'abow'], bases: 20, rows: [0, 1], total: 101 },
@@ -60,5 +61,13 @@ describe('filterSuperiorPools', () => {
   it('keeps only the pools of the selected item type', () => {
     const views = filterSuperiorPools(superior, { search: '', superiorType: 'orb' }, typeNames);
     expect(views.map((view) => view.pool.label)).toEqual(['Orb']);
+  });
+});
+
+describe('superiorWeightNote', () => {
+  it('names where the weights come from', () => {
+    expect(superiorWeightNote(superior)).toMatch(/frequency in qualityitems\.txt/);
+    expect(superiorWeightNote({ enabled: true, weightSource: 'config', defaultWeight: 100 })).toMatch(/unlisted rows weigh 100/);
+    expect(superiorWeightNote({ enabled: false, weightSource: 'equal', defaultWeight: 100 })).toBe(' (equal odds)');
   });
 });

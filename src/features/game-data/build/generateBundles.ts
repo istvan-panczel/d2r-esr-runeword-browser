@@ -596,6 +596,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       lootFilterCouponUniques: lootfilter.bundle.uniques.filter((unique) => unique.coupon === true).length,
       lootFilterSkills: lootFilterSkills.bundle.skills.length,
       lootFilterKnownLayers: lootFilterSkills.bundle.knownLayers.reduce((sum, entry) => sum + entry.layers.length, 0),
+      lootFilterSkillNames: lootFilterSkills.bundle.skillNames.filter((name) => name !== '').length,
       enhanceCorruptionSlots: corruptionSlots.length,
       enhanceCorruptionOutcomes: corruptionOutcomes.length,
       enhanceAnointmentOutcomes: anointmentOutcomes.length - countPool('charm') - countPool('vessel'),

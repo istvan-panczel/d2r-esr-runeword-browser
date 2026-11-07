@@ -181,7 +181,7 @@ export function buildLootFilterBundle(
   tables: LootFilterTables,
   strings: ReadonlyMap<string, string>,
   /** The skill pickers' data (build/bundleLootFilterSkills.ts), appended to the bundle */
-  skillData: Pick<LootFilterDataBundle, 'skills' | 'knownLayers'> = {},
+  skillData: Pick<LootFilterDataBundle, 'skills' | 'knownLayers' | 'skillNames'> = {},
   /** The stats affixes write, with the affix browser's labels (affixes.json `stats`), for the stat labels */
   affixStats: readonly AffixStat[] = []
 ): BuildResult<LootFilterDataBundle> {

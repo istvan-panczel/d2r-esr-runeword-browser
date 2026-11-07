@@ -368,6 +368,10 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   runes.txt recipes, cube outputs and every propertygroups.txt entry (a numeric
   ParMin–ParMax range = one entry per param). Tab and class stats are left out (every tab and class is listed anyway).
   ESR 3.2.24: 11 stats, 2790 params, at most 30 levels per stat and skill; 59004 is the highest.
+- `skillNames` (optional): the skills.txt `skill` column of every row, by row (`skillNames[id]`, `''` for a blank
+  one), the names a loot filter formula takes (`stat('item_nonclassskill', 'Teleport')`, plugin 1.8.2,
+  LOOT-FILTER.md "Formula condition"). Unlike the display names of `skills` they are unique (84 of the 752 listed skills show another
+  name in game, e.g. `Hex Bane` / "Hex: Bane"). ESR 3.2.24: 1566 rows; ESR 3.3: 1628; Teleport = 479.
 
 #### Stat layers
 
@@ -399,8 +403,9 @@ with `Encode` 2/3 or descfunc 13/14/15/16/24/27/28 that is missing from `STAT_LA
 
 Counts: `counts.lootFilterItems`, `lootFilterStats`, `lootFilterAreas`, `lootFilterSounds`, `lootFilterUniques`,
 `lootFilterSets` (ESR 3.2.12: 2292 / 923 / 215 / 12103 / 1390 / 270), `lootFilterSkills`, `lootFilterKnownLayers`
-(params summed over the stats; ESR 3.2.24: 752 / 2790). Adding the file did not bump `GAME_DATA_SCHEMA`: older
-clients ignore files they do not load; neither did adding `skills` and `knownLayers`.
+(params summed over the stats; ESR 3.2.24: 752 / 2790), `lootFilterSkillNames` (non-blank rows; 1566, ESR 3.3: 1628). Adding the
+file did not bump `GAME_DATA_SCHEMA`: older clients ignore files they do not load; neither did adding `skills`,
+`knownLayers` and `skillNames`.
 
 ### Enhance
 

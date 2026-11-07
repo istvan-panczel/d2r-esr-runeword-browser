@@ -10,6 +10,7 @@ import { generateBundles } from './build/generateBundles.ts';
 import { COLORMAP_FILES, TINT_COLORS, untintedFile } from './build/itemTint.ts';
 import { serializeBundle } from './build/writeBundle.ts';
 import { defaultContext, evaluateSkill, indexSkillCalc, maxSynergyPoints, skillTable, synergyInputs } from './engine/skillCalc/index.ts';
+import { formulaSkillKey } from '../loot-filter/engine/formula.ts';
 import { decodeSkillLevelLayer, decodeTabLayer, MAX_STAT_PARAM, statLayerKind } from './engine/statLayers.ts';
 import { readSuperiorAffixes, superiorRollsFor, superiorRollsForBase } from './engine/superiorAffixes.ts';
 import {
@@ -507,6 +508,17 @@ describe('committed game-data bundles', () => {
         .sort()
     ).toEqual(treeSkills.sort());
     expect(skillById.get(472)).toEqual({ id: 472, name: 'Orb of Winter', cls: 'sor' });
+
+    // skills.txt names (formula skill names): every row, unique, and every listed skill has one
+    const { skillNames = [] } = lootfilter;
+    expect(manifest.counts.lootFilterSkillNames).toBe(skillNames.filter((name) => name !== '').length);
+    // Unique as formulas look them up (case-insensitive, formulaSkillKey) over the non-blank names
+    const named = skillNames.filter((name) => name !== '');
+    expect(new Set(named.map(formulaSkillKey)).size).toBe(named.length);
+    expect(filterSkills.every((skill) => (skillNames[skill.id] ?? '') !== '')).toBe(true);
+    expect(skillNames.indexOf('Teleport')).toBe(479);
+    expect(skillById.get(666)?.name).toBe('Hex: Bane');
+    expect(skillNames[666]).toBe('Hex Bane');
 
     // Tab layer 50 = Assassin Martial Arts (properties.txt tab 20); class layers are the types.json class order
     const tab = decodeTabLayer(50);

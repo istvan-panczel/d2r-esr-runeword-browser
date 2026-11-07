@@ -390,6 +390,11 @@ export interface LootFilterDataBundle {
   skills?: LootFilterSkill[];
   /** Params the game data puts on items, per layered stat (skill, event and charged stats; see engine/statLayers.ts) */
   knownLayers?: LootFilterKnownLayers[];
+  /**
+   * skills.txt `skill` column by row (`skillNames[id]`, every row, '' for a blank one): the names a loot filter formula's
+   * `stat('name', 'Skill')` takes. Unlike the display names of `skills` they are unique.
+   */
+  skillNames?: string[];
 }
 
 export interface LootFilterSkill {
