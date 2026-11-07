@@ -75,3 +75,4 @@
 - **"when Taking Damage" vs "when Struck"** (`chance-to-cast`): stat 376 fires on every damage instance, but for poison and bleed only when they are applied.
 - **Magic Find exclusions** (`magic-find`): crystals, organs, keys, maps and Worldstone Shards ignore MF too. Only items with a rarity are affected; MF raises the rarity (unique, set, rare, magic), never the quantity.
 - **Spell crits from items** (`deadly-strike`): plain item Deadly Strike does not make spells crit without the hidden "<element> Damage Crit" auras. The weapon-mastery part is question 3.
+- **Dodge on the Elixir of Quickness** (`dodge`): its tooltip names only Dodge, but it gives Dodge, Avoid and Evade. Not a bug: in ESR, Dodge is the three pooled together (Dodge for melee, Avoid for missiles, Evade for both while running, "as far as I know"), so it works like a chance to avoid any attack.
