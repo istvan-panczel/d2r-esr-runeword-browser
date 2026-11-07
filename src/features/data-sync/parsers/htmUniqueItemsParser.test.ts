@@ -224,21 +224,36 @@ describe('Notes column', () => {
     }
   });
 
-  it('should extract notes for a known annotated item', () => {
-    const item = weapons.find((w) => w.name === 'Barbaric Devastator');
-    expect(item).toBeDefined();
-    expect(item?.notes).toBe('Blessed Edge Variant');
+  it('keeps the weapon mastery as a property line since ESR 3.3 (the Notes cell is empty for it)', () => {
+    // ESR 3.3 prints "Weapon Mastery (Blessed Edge Variant)" in the properties; 3.2 had "Weapon Mastery Applied"
+    // there and "Blessed Edge Variant" in the Notes cell
+    const item = weapons.find((w) => w.name === "Koth's Cudgel");
+    expect(item?.properties[0]).toBe('Weapon Mastery (Blessed Edge Variant)');
+    expect(item?.notes).toBe('');
   });
 
-  it('should find several "... Variant" notes', () => {
-    const variants = withNotes.filter((item) => item.notes.endsWith('Variant'));
-    expect(variants.length).toBeGreaterThanOrEqual(5);
-    console.log('[Test] Items with notes:', withNotes.length, '| variant notes:', variants.length);
+  it('names the mastery of every mastery unique in its property line (17 in ESR 3.3)', () => {
+    const masteryLines = weapons.flatMap((item) => item.properties.filter((line) => /^Weapon Mastery \(.+\)$/.test(line)));
+    expect(masteryLines).toHaveLength(17);
+    expect(masteryLines).toContain('Weapon Mastery (Sorceress Orb: Tripled Cooldowns)');
+    expect(weapons.some((item) => item.properties.includes('Weapon Mastery Applied'))).toBe(false);
   });
 
-  it('the vast majority of items should have empty notes', () => {
+  it('still reads other notes (Notes column kept in ESR 3.3)', () => {
     expect(withNotes.length / allItems.length).toBeLessThan(0.1);
     expect(withNotes.length).toBeGreaterThan(0);
+    expect(withNotes.every((item) => item.page === 'other')).toBe(true);
+  });
+
+  it('reads the ESR 3.2 "... Variant" notes from the previous pages', () => {
+    const previousWeapons = parseHtmUniqueItems(
+      readFileSync(resolve(__dirname, '../../../../test-fixtures/previous/unique_weapons.htm'), 'utf-8'),
+      'weapons'
+    );
+    const item = previousWeapons.find((w) => w.name === 'Barbaric Devastator');
+    expect(item?.notes).toBe('Blessed Edge Variant');
+    expect(item?.properties).toContain('Weapon Mastery Applied');
+    expect(previousWeapons.filter((w) => w.notes.endsWith('Variant'))).toHaveLength(15);
   });
 
   it('items without a note should have notes === "" (not undefined)', () => {
@@ -428,7 +443,8 @@ describe('Hard-wrapped properties', () => {
 
   it('Death Cleaver: a 3-line orange property becomes one entry', () => {
     expect(findIn(weapons, 'Death Cleaver').properties).toContain(
-      'On melee attack, gain 150% base attack speed. Every attack lowers your base attack speed by 10% and increases your total physical attack damage by 2%. Maximum stacks: 25'
+      // ESR 3.3 added "for 2 seconds"
+      'On melee attack, gain 150% base attack speed. Every attack lowers your base attack speed by 10% and increases your total physical attack damage by 2% for 2 seconds. Maximum stacks: 25'
     );
   });
 

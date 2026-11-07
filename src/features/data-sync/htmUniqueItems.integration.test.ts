@@ -135,9 +135,10 @@ describe('Known item verification from DB', () => {
   });
 
   it('should round-trip the notes field through IndexedDB', async () => {
-    const items = await testDb.htmUniqueItems.where('name').equals('Barbaric Devastator').toArray();
+    // ESR 3.3 moved the "... Variant" notes into "Weapon Mastery (...)" property lines; one note is left (others page)
+    const items = await testDb.htmUniqueItems.where('name').equals("Koth's Cudgel").toArray();
     expect(items.length).toBeGreaterThan(0);
-    expect(items.map((i) => i.notes)).toContain('Blessed Edge Variant');
+    expect(items[0]?.properties).toContain('Weapon Mastery (Blessed Edge Variant)');
 
     const stored = await testDb.htmUniqueItems.toArray();
     const withNotes = stored.filter((i) => i.notes !== '');
