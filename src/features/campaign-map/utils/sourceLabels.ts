@@ -17,6 +17,7 @@ export interface FactLabel {
 
 const SOURCE_LABELS: Record<FactSource, FactLabel> = {
   official: { text: 'Official Maps page', title: 'From the official ESR Maps page', tone: 'official' },
+  endgame: { text: 'Official Endgame Maps page', title: 'From the official ESR Endgame Maps page', tone: 'official' },
   tables: { text: 'Game files', title: 'Read from the ESR game files (txt tables)', tone: 'neutral' },
   vanilla: {
     text: 'Vanilla, unconfirmed in ESR',

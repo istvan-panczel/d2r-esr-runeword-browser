@@ -7,15 +7,18 @@ import { Button } from '@/components/ui/button';
 import { DROP_FINDER_URL } from '@/core/navigation/navConfig';
 import { GAME_DATA_URL_PARAM_KEYS } from '@/features/game-data/constants/urlParams';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
-import type { PerDifficulty } from '@/features/game-data/engine/schema';
+import type { MapBoss, PerDifficulty } from '@/features/game-data/engine/schema';
 import { officialDocsUrl } from '@/features/guide/engine/linkSchemes';
 import { cn } from '@/lib/utils';
 import type { CampaignArea, CampaignMap, CampaignSectionKey, QuestFact } from '../engine/types';
+import { MAP_BOSS_FACTS } from '../data/mapBosses';
 import { areaBosses, areaEyebrow, headsUpLines, plainNotes, type HeadsUpLine } from '../utils/areaFacts';
+import { zoneBossSummary } from '../utils/mapBossFacts';
 import { areaConnections, areaName, entryRoutes, nearestWaypoints, type AreaConnection } from '../utils/nearestWaypoint';
 import { EDGE_KIND_LABELS, terrainLabel } from '../utils/sourceLabels';
 import { AreaLink } from './AreaLink';
 import { FactSourceLabel } from './FactSourceLabel';
+import { MapBossSection } from './MapBossSection';
 import { EDGE_TEXT_CLASS, ONE_WAY_TEXT_CLASS, WARNING_BOX_CLASS, WAYPOINT_CHIP_CLASS } from './mapStyles';
 
 const OFFICIAL_MAPS_URL = officialDocsUrl('Eastern Sun Resurrected Maps.html');
@@ -26,6 +29,8 @@ const MORE_LINK_CLASS = 'inline-flex items-center gap-1.5 text-primary hover:und
 interface AreaDetailPanelProps {
   readonly map: CampaignMap;
   readonly area: CampaignArea;
+  /** areas.json `mapBosses`: the boss section of the endgame map zones */
+  readonly mapBosses: readonly MapBoss[];
   /** Item names by code (null while loading) */
   readonly itemNames: ReadonlyMap<string, string> | null;
   readonly sectionTitle: (key: CampaignSectionKey) => string;
@@ -40,11 +45,22 @@ interface AreaDetailPanelProps {
  * The selected area: header, quest items, heads up, notes, getting there, monsters, more links. Every curated fact
  * carries its source label. Sections without content are left out.
  */
-export function AreaDetailPanel({ map, area, itemNames, sectionTitle, areaHref, onSelect, onClose, getShareUrl }: AreaDetailPanelProps) {
+export function AreaDetailPanel({
+  map,
+  area,
+  mapBosses,
+  itemNames,
+  sectionTitle,
+  areaHref,
+  onSelect,
+  onClose,
+  getShareUrl,
+}: AreaDetailPanelProps) {
   const nameOf = (id: number) => areaName(map.areas, id);
   const bosses = areaBosses(area);
   const headsUp = headsUpLines(area, map.edges, nameOf);
   const notes = plainNotes(area);
+  const bossSummary = zoneBossSummary(map, area, mapBosses, MAP_BOSS_FACTS);
   const headingId = `campaign-area-${String(area.id)}`;
 
   return (
@@ -105,6 +121,12 @@ export function AreaDetailPanel({ map, area, itemNames, sectionTitle, areaHref, 
               <HeadsUpRow key={line.key} line={line} />
             ))}
           </ul>
+        </PanelSection>
+      )}
+
+      {bossSummary !== null && (
+        <PanelSection title={bossSummary.bosses.length > 1 ? 'Bosses' : 'Boss'}>
+          <MapBossSection summary={bossSummary} nameOf={nameOf} areaHref={areaHref} onSelect={onSelect} areaId={area.id} />
         </PanelSection>
       )}
 

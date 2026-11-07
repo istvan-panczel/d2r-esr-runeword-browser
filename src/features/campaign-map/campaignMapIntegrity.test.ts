@@ -8,10 +8,11 @@ import { describe, expect, it } from 'vitest';
 import type { AreasBundle, LootFilterDataBundle } from '@/features/game-data/engine/schema';
 import { CURATED_AREAS } from './data/areas';
 import { CURATED_LINKS } from './data/links';
+import { MAP_BOSS_FACTS } from './data/mapBosses';
 import { buildCampaignMap, ROGUE_ENCAMPMENT_ID } from './engine/buildCampaignMap';
 
 const GAME_DATA = resolve(__dirname, '../../../public/game-data');
-const { areas } = JSON.parse(readFileSync(resolve(GAME_DATA, 'areas.json'), 'utf-8')) as AreasBundle;
+const { areas, mapBosses } = JSON.parse(readFileSync(resolve(GAME_DATA, 'areas.json'), 'utf-8')) as AreasBundle;
 const lootfilter = JSON.parse(readFileSync(resolve(GAME_DATA, 'lootfilter.json'), 'utf-8')) as LootFilterDataBundle;
 const map = buildCampaignMap(areas);
 
@@ -66,6 +67,22 @@ describe('campaign map integrity', () => {
     }
     const unreachable = [...map.areas.values()].filter((area) => !seen.has(area.id) && area.entryUnknown !== true);
     expect(unreachable.map((area) => `${String(area.id)} ${area.name}`)).toEqual([]);
+  });
+
+  it('has hand-written facts for every map boss, and only for map bosses', () => {
+    const ids = mapBosses.map((boss) => boss.id);
+    expect(ids.filter((id) => !Object.hasOwn(MAP_BOSS_FACTS, id))).toEqual([]);
+    expect(Object.keys(MAP_BOSS_FACTS).filter((id) => !ids.includes(id))).toEqual([]);
+  });
+
+  it('gives every boss arena of a tiered map its bosses, each with rewards and generic loot rolls', () => {
+    const arenas = areas.filter((area) => area.tier !== undefined && area.boss !== undefined);
+    expect(arenas.length).toBeGreaterThan(10);
+    expect(arenas.filter((area) => (area.mapBosses ?? []).length === 0).map((area) => `${String(area.id)} ${area.name}`)).toEqual([]);
+    for (const boss of mapBosses) {
+      expect(boss.rewards.length, boss.id).toBeGreaterThan(0);
+      expect(boss.otherRolls, boss.id).toBeGreaterThan(0);
+    }
   });
 
   it('fits every drawn tab into the ~880 px canvas', () => {

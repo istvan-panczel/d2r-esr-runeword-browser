@@ -9,6 +9,7 @@ import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/n
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
+import type { MapBoss } from '@/features/game-data/engine/schema';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
 import { useManifest } from '@/features/game-data/hooks/useManifest';
 import { cn } from '@/lib/utils';
@@ -59,7 +60,9 @@ export function CampaignMapScreen() {
     >
       {gameData.status === 'loading' && <GameDataLoading />}
       {gameData.status === 'error' && <GameDataError error={gameData.error} onRetry={gameData.retry} />}
-      {gameData.status === 'ready' && <CampaignMapBrowser map={buildCampaignMap(gameData.data.areas.areas)} version={version} />}
+      {gameData.status === 'ready' && (
+        <CampaignMapBrowser map={buildCampaignMap(gameData.data.areas.areas)} mapBosses={gameData.data.areas.mapBosses} version={version} />
+      )}
     </PageShell>
   );
 }
@@ -83,11 +86,13 @@ function focusArea(root: HTMLElement | null, id: number): void {
 
 interface CampaignMapBrowserProps {
   readonly map: CampaignMap;
+  /** areas.json `mapBosses` (the endgame map zones' boss section) */
+  readonly mapBosses: readonly MapBoss[];
   readonly version: string | undefined;
 }
 
 /** The page state (tab, selected area, Map / List) lives in the URL; selecting an area replaces the entry. */
-function CampaignMapBrowser({ map, version }: CampaignMapBrowserProps) {
+function CampaignMapBrowser({ map, mapBosses, version }: CampaignMapBrowserProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const state = resolveCampaignMapState(readCampaignMapUrlState(searchParams), map);
   const itemNames = useItemNamesByCode();
@@ -301,6 +306,7 @@ function CampaignMapBrowser({ map, version }: CampaignMapBrowserProps) {
               key={selectedArea.id}
               map={map}
               area={selectedArea}
+              mapBosses={mapBosses}
               itemNames={itemNames}
               sectionTitle={sectionTitle}
               areaHref={areaHref}
