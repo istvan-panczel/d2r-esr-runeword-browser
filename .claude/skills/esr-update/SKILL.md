@@ -82,7 +82,13 @@ Apply what the findings call for; reference.md says how for each kind. Do not co
 7. Ascendancy orb table (`src/features/ascendancies/data/orbLocations.ts`, hand-maintained, checked in game): when
    `orbLocations.test.ts` fails or the release diff touches the orbs (misc.txt u11–u15), their superuniques or those
    areas, propose the fix and ask the owner to re-check the spots in game; keep `content/guide/notes/ascendancies.md` in step.
-8. Do **not** apply without asking: a `LOOT_FILTER_PLUGIN_VERSION` bump, generator or app code changes, skill edits.
+8. Hand-kept data (`refs.followed`, `mapbosses.page`, new `masteries:` / `areas:` / `crafting:` warnings): official
+   pages and launcher configs the app keeps hand-written copies of (map boss page figures and fight notes, weapon
+   mastery group rules, cube section notes, modifier prose) changed, or the files moved away from them. Edit the data
+   files and `content/`; propose generator constants (`GROUP_RULES`, `HIDDEN_MOD_LABELS`, `CUBE_SECTIONS`,
+   `FAMILY_NOTES`, `NAME_ALIASES`, `NAME_OVERRIDES`). Upstream data bugs and page-vs-files differences become questions
+   for the mod author (reference.md "Hand-kept data").
+9. Do **not** apply without asking: a `LOOT_FILTER_PLUGIN_VERSION` bump, generator or app code changes, skill edits.
 
 Then `npx prettier --write` on the touched files, `npm run guide:generate`, `npm run guide:check` and `npm run test`;
 all must pass.
@@ -96,7 +102,8 @@ First print the numbered list of applied edits (from `$S/findings.md`) and the s
    question): commit / leave uncommitted / reject (revert the working tree only after a second confirmation).
 2. **Applied edits**: keep all / keep none / Other: the numbers to drop.
 3. **Loot filter**: the plugin version bump (and what to re-verify in game), when the plugin changed.
-4. **Skill update and follow-ups** (multi-select): the proposals from step 8 and the unresolved findings.
+4. **Skill update and follow-ups** (multi-select): the proposals from step 8 and the unresolved findings (generator
+   constants from step 5.8 included).
 
 ## 7. Commit (only if question 1 said so)
 
@@ -109,8 +116,10 @@ a hook failure is a finding to fix, never a reason for `--no-verify`. Never push
 From `self.coverage` (bundles, count keys or warning classes esr:review does not know) and `self.commits` (feature
 commits since this skill or the review script last changed): read the commits and decide whether they add ESR-dependent
 data, pages or saved user data this procedure does not cover. Propose concrete edits to `SKILL.md`, `reference.md` or
-`scripts/esr-update-review.ts` (question 4 above). Apply only after approval, as a separate
-`chore(esr-update): …` commit.
+the review scripts (question 4 above): a new bundle section → `BUNDLE_SPECS` (`scripts/lib/esrReview/bundles.ts`), a
+new count or warning class → `KNOWN_COUNT_PREFIXES` / `KNOWN_WARNING_CLASSES` (`selfCheck.ts`) with an explanation in
+reference.md, an official page or launcher config a feature follows → `ESR_REFERENCES` (`scripts/lib/esrReferences.ts`).
+Apply only after approval, as a separate `chore(esr-update): …` commit.
 
 ## 9. Final report
 
@@ -119,8 +128,9 @@ skills or ids, variant shifts, user-data impact); guide and doc edits; template,
 art folder, `metadata.json` and the docs site were at the new version; commits (hashes) or "uncommitted"; everything
 deferred. Next steps for the owner: merge into `master`, `npm run release`, `git push --follow-tags`, then the Deploy
 workflow. Deploy soon: until then players see the old data, new item codes fail stash uploads, and the loot filter
-editor flags new codes as unknown. Guide notes still needing in-game checks: the `draft` / `review` / `old` lists of
-`npm run guide:report`; the owner runs `npm run guide:verify -- <slug>` after checking.
+editor flags new codes as unknown. Questions for the mod author: new ones ready to paste and the ones in the owner's
+latest `docs/owner-checks-*.md` this release answers. Guide notes still needing in-game checks: the `draft` / `review` /
+`old` lists of `npm run guide:report`; the owner runs `npm run guide:verify -- <slug>` after checking.
 
 ## Do not
 

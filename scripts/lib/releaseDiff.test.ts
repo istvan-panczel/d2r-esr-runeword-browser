@@ -14,6 +14,7 @@ import {
   parseChangelogEntries,
   parseChanges,
   patchNoteVersion,
+  referenceLines,
   type ReleaseDiff,
 } from './releaseDiff.ts';
 
@@ -267,5 +268,18 @@ describe('releaseDiff', () => {
     expect(lines[2]).toBe(
       'Launcher versions: metadata.modVersion 3.2.20 → 3.2.24, d2rloader.version 1.3.1, bins.gameVersion 3.3.0, bins.gameBuild 93847, save_format mode extended, loot filter plugin 1.5.1 → 1.5.3'
     );
+  });
+});
+
+describe('referenceLines', () => {
+  it('names what in the app follows a docs page or launcher config', () => {
+    expect(referenceLines('docs/endgame_maps.htm')[0]).toMatch(/^ {4}app \[hand-kept\]: .*mapBosses\.ts/);
+    expect(referenceLines('d2rloader/config/celestialrayone.superior-affixes.toml')[0]).toContain('app [generated]: bases.json superior');
+    expect(referenceLines('d2rloader/config/celestialrayone.crushing-blow.toml')[0]).toContain('content/modifiers/modifiers.md');
+  });
+
+  it('has nothing for other files and locale copies', () => {
+    expect(referenceLines('docs/prefixes.htm')).toEqual([]);
+    expect(referenceLines('docs/deDE/endgame_maps.htm')).toEqual([]);
   });
 });

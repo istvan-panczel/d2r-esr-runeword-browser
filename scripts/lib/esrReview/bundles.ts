@@ -76,6 +76,8 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     rows: list((entry) => `${field(entry, 'family')}: ${codes(entry.inputs)} → ${field(entry, 'output')}`),
     recipes: list((entry) => `${field(entry, 'family')}: ${field(entry, 'description')}`),
     hidden: MAP,
+    // cell text → icon token (i:/t:/u:/s:); a removed key or a changed token changes a cell's picture (icons.cube checks they resolve)
+    icons: MAP,
   },
   'enhance.json': {
     corruption: VALUE,
@@ -87,12 +89,31 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
       (entry) => `${field(entry, 'pool')}:${field(entry, 'roll')}`,
       (entry) => `${field(entry, 'pool')}:${field(entry, 'roll')} ${field(entry, 'label')}`
     ),
+    // jewel sanctification (Lucion's Relic): each roll is one equally likely outcome; builds do not store it
+    sanctification: VALUE,
+    sanctificationOutcomes: list(
+      (entry) => `roll ${field(entry, 'roll')}`,
+      (entry) => `roll ${field(entry, 'roll')} (${Array.isArray(entry.lines) ? entry.lines.map(str).join(' / ') : ''})`
+    ),
+    sanctificationBonuses: byField('line', (entry) => `${field(entry, 'line')} (${field(entry, 'outcomes')} outcomes)`),
     vessel: VALUE,
     vesselTiers: byField('tier'),
     vesselRecipes: list((entry) => `tier ${field(entry, 'tier')}: ${codes(entry.materials)}`),
     vesselTransforms: list((entry) => `${codes(entry.materials)} → ${field(entry, 'output', 'code')}`),
   },
-  'icons.json': { esrVersion: VALUE, esrTag: VALUE, vanilla: VALUE, bases: MAP, uniques: MAP, sets: MAP, misc: MAP, quest: MAP },
+  // items: every other item by code (cube, materials, enhance, loot filter browser); types: type ingredients' art
+  'icons.json': {
+    esrVersion: VALUE,
+    esrTag: VALUE,
+    vanilla: VALUE,
+    bases: MAP,
+    uniques: MAP,
+    sets: MAP,
+    misc: MAP,
+    quest: MAP,
+    items: MAP,
+    types: MAP,
+  },
   'itemtext.json': {
     stats: list((entry, index) => `${String(index)} ${field(entry, 'stat')}`),
     strings: MAP,

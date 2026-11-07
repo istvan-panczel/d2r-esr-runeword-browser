@@ -3,6 +3,7 @@ import { EMPTY_LAUNCHER_VERSIONS } from '../launcherInfo.ts';
 import {
   craftsCheck,
   cubeFallbackCheck,
+  cubeIconsCheck,
   cubeOps,
   cubeOpsCheck,
   iconInputsCheck,
@@ -10,6 +11,7 @@ import {
   missingIconsCheck,
   skillIdCheck,
   unknownSourcesCheck,
+  unresolvedCubeIcons,
   vanillaArtCheck,
   versionChecks,
 } from './dataChecks.ts';
@@ -240,5 +242,30 @@ describe('icons', () => {
       'hd/global/ui/items/ (item sprites): 1 files',
       'hd/global/ui/spells/ (skill icon sheets): 1 files',
     ]);
+  });
+});
+
+describe('cube icons', () => {
+  const icons = { bases: { hax: {} }, quest: {}, items: { r12: {} }, types: { ring: {} }, uniques: { Ore: {} }, sets: {} };
+  const cube = (map: Record<string, string>) => ({ icons: map });
+
+  it('resolves each token prefix in its icons.json sections', () => {
+    const map = { 'Hand Axe': 'i:hax', 'A Rune': 'i:r12', Ring: 't:ring', Ore: 'u:Ore', 'Any Armor': 't:armo', Sigon: 's:Sigon' };
+    expect([...unresolvedCubeIcons(cube(map), icons)]).toEqual([
+      ['t:armo', 'Any Armor'],
+      ['s:Sigon', 'Sigon'],
+    ]);
+  });
+
+  it('keys by token, so a new cell naming a type without art is not new', () => {
+    const head = { cube: cube({ 'Any Armor': 't:armo' }), icons };
+    expect(cubeIconsCheck(head, { cube: cube({ 'Any Armor': 't:armo', 'Any Armor (ethereal)': 't:armo' }), icons }).status).toBe('ok');
+  });
+
+  it('flags tokens that newly resolve to nothing', () => {
+    const head = { cube: cube({ 'A Rune': 'i:r12' }), icons };
+    const working = { cube: cube({ 'A Rune': 'i:r12', 'Hu Rune': 'i:r48' }), icons };
+    expect(cubeIconsCheck(head, working)).toMatchObject({ status: 'finding', details: ['+ i:r48 (Hu Rune)'] });
+    expect(cubeIconsCheck(working, head)).toMatchObject({ status: 'info', details: ['- i:r48 (Hu Rune)'] });
   });
 });

@@ -83,4 +83,18 @@ describe('bundle entry diff', () => {
     expect(check.details[0]).toBe('codes (0 → 50): +50 -0 ~0');
     expect(check.details.at(-1)).toBe('… +10 more');
   });
+
+  it('keys sanctification outcomes by roll and labels them with their lines', () => {
+    const outcome = (roll: number, lines: string[]) => ({ roll, mods: [], lines });
+    const diff = diffBundle(
+      'enhance.json',
+      { sanctificationOutcomes: [outcome(1, ['+1 to Strength']), outcome(2, ['+1 to Life'])] },
+      { sanctificationOutcomes: [outcome(1, ['+2 to Strength'])] }
+    );
+    expect(diff.unknownSections).toEqual([]);
+    expect(diff.sections.find((section) => section.section === 'sanctificationOutcomes')).toMatchObject({
+      changed: ['roll 1 (+2 to Strength) [lines]'],
+      removed: ['roll 2 (+1 to Life)'],
+    });
+  });
 });

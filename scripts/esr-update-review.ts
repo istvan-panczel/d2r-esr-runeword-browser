@@ -17,6 +17,7 @@ import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { REMOTE_URLS } from '../src/core/api/remoteConfig.ts';
 import { STAT_OPS } from '../src/features/game-data/build/bundleCube.ts';
+import { ESR_DESECRATED_ZONES_FILE } from '../src/features/game-data/build/esrSources.ts';
 import { parseTsv } from '../src/features/game-data/build/tsv.ts';
 import type { LootFilterDataBundle, TypesBundle } from '../src/features/game-data/engine/schema.ts';
 import { versionFromPatchNoteFile, type PatchNote } from '../src/features/guide/build/staleness.ts';
@@ -31,6 +32,7 @@ import { BUNDLE_SPECS, bundleCheck, diffBundle } from './lib/esrReview/bundles.t
 import {
   craftsCheck,
   cubeFallbackCheck,
+  cubeIconsCheck,
   cubeOps,
   cubeOpsCheck,
   iconInputsCheck,
@@ -63,6 +65,8 @@ import { countByStatus, formatMarkdown, formatText, skipped, type Check, type Re
 import { commitsCheck, coverageCheck, featureCommits, warningClassesInSource } from './lib/esrReview/selfCheck.ts';
 import { importSrc } from './lib/srcImport.ts';
 import { DOCS_PAGES_BY_TABLE, docsLagCheck } from './lib/esrReview/docsLag.ts';
+import { mapBossesOf, mapBossPageCheck, mapBossPageLines, type BossCardOf } from './lib/esrReview/mapBosses.ts';
+import { citationsIn, isReferenceCandidate, referencesCheck } from './lib/esrReview/references.ts';
 import { variantMap, variantsCheck, type ParsedRecipe } from './lib/esrReview/variants.ts';
 
 type Doc = Readonly<Record<string, unknown>>;
@@ -444,6 +448,22 @@ async function main(): Promise<void> {
       ? skipped('cube.ops', 'Cube condition ops', noOld)
       : cubeOpsCheck(cubeOpsAt(esrDir, oldCommit), cubeOpsAt(esrDir, newCommit), knownOps)
   );
+  // 8b. Map boss rewards vs the Endgame Maps page figures kept in campaign-map/data/mapBosses.ts
+  try {
+    const { MAP_BOSS_FACTS } = await importSrc<{ MAP_BOSS_FACTS: Readonly<Record<string, unknown>> }>(
+      'features/campaign-map/data/mapBosses.ts'
+    );
+    const { bossCard } = await importSrc<{ bossCard: BossCardOf<unknown> }>('features/campaign-map/utils/mapBossFacts.ts');
+    checks.push(
+      mapBossPageCheck(
+        mapBossPageLines(mapBossesOf(h('areas.json')), MAP_BOSS_FACTS, bossCard),
+        mapBossPageLines(mapBossesOf(w('areas.json')), MAP_BOSS_FACTS, bossCard)
+      )
+    );
+  } catch (error) {
+    const reason = `campaign-map mapBosses.ts / mapBossFacts.ts could not be loaded: ${error instanceof Error ? error.message : String(error)}`;
+    checks.push(skipped('mapbosses.page', 'Map bosses vs the Endgame Maps page', reason));
+  }
 
   // 9. Guide
   const headGuide = parseJson(headText(GUIDE_FILE)) as GuideBundle | null;
@@ -466,6 +486,7 @@ async function main(): Promise<void> {
     lootfilter: get('lootfilter.json'),
   });
   checks.push(missingIconsCheck(iconInputs(h), iconInputs(w)));
+  checks.push(cubeIconsCheck({ cube: h('cube.json'), icons: h('icons.json') }, { cube: w('cube.json'), icons: w('icons.json') }));
   const vanillaDir = resolveVanillaArtDir(undefined);
   checks.push(
     vanillaArtCheck(
@@ -499,6 +520,19 @@ async function main(): Promise<void> {
           changedPaths(esrDir, oldCommit, newCommit, ['docs/'])
         )
   );
+
+  // 11c. Docs pages and D2RLoader configs that hand-written app data or content/ notes follow
+  if (oldCommit === null) checks.push(skipped('refs.followed', 'Changed ESR files the app follows', noOld));
+  else {
+    const changed = changedPaths(esrDir, oldCommit, newCommit, ['docs/', 'd2rloader/', ESR_DESECRATED_ZONES_FILE]).filter(
+      isReferenceCandidate
+    );
+    const contentFiles = listFiles(join(REPO_ROOT, 'content'), (path) => /\.(md|ya?ml)$/.test(path)).map((path) => ({
+      path: relative(REPO_ROOT, path),
+      text: readFileSync(path, 'utf8'),
+    }));
+    checks.push(referencesCheck(changed, citationsIn(changed, contentFiles)));
+  }
 
   // 14. Loot filter (offline)
   const constants = await importSrc<TemplateConstants>('features/loot-filter/utils/template.ts').catch(() => null);
