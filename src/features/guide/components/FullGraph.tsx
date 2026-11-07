@@ -1,3 +1,5 @@
+// NOT RENDERED (kept on purpose, 2026-11-07): only screens/GuideMapScreen.tsx uses this graph and that screen is no
+// longer routed (`/guide/map` redirects to the `/guide` overview). Kept with its layout (engine/fullGraph.ts) and tests.
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';

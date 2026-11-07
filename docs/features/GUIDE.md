@@ -9,12 +9,12 @@ directives that regenerate with the game data), and the official docs stay canon
 
 ## Routes
 
-| Path              | Screen           | Notes                                                                                                                                                                                       |
-| ----------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/guide` (layout) | GuideLayout      | Every guide page shows a small amber "Experimental" notice at the top: the guide is still being written and reviewed                                                                        |
-| `/guide`          | GuideSpineScreen | Entry cards, search, "Start here": the five-step journey spine (each step expands to its note cards), an "I found something" row, then the "Official reference" strip (see below)           |
-| `/guide/map`      | GuideMapScreen   | Every note on one page: a graph on `lg+` and a list grouped by spine step (see Full map under Note anatomy); linked from the spine screen header and the note screen's "Connections" column |
-| `/guide/:slug`    | GuideNoteScreen  | One note (anatomy below); unknown slug shows a "note not found" block with a link back to `/guide`                                                                                          |
+| Path              | Screen              | Notes                                                                                                                                                            |
+| ----------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/guide` (layout) | GuideLayout         | Every guide page shows a small amber "Experimental" notice at the top: the guide is still being written and reviewed                                             |
+| `/guide`          | GuideOverviewScreen | The guide's only overview: search, then every note grouped by spine step plus "Other topics" (see Overview below), read progress, the "Official reference" strip |
+| `/guide/map`      | (redirect)          | Redirects to `/guide` (`<Navigate replace>`, query dropped) so old bookmarks keep working; the old map screen is kept in the code, unrouted (see Full map)       |
+| `/guide/:slug`    | GuideNoteScreen     | One note (anatomy below); unknown slug shows a "note not found" block with a link back to `/guide`                                                               |
 
 Guide routes render **before** the HTM data sync finishes (`AppLayout` skips the "Loading data..." gate for paths
 under `/guide`). The guide bundle is static JSON and needs no Dexie data.
@@ -47,7 +47,19 @@ arrowhead, the next edge is dashed, the current note is filled with the primary 
 Nodes are links (keyboard focusable, same hover/focus peek as note links). Below `lg` the graph is hidden; the chips and
 the next link carry every edge, so the graph is never the only way to reach a note.
 
-**Full map** (`/guide/map`, `screens/GuideMapScreen.tsx`): every note on one page. The graph (`lg+` only;
+**Overview** (`/guide`, `screens/GuideOverviewScreen.tsx`): since 2026-11-07 the guide has a single entry view (the
+owner's request: "only 1 view, where we show all the guide pages, like what the user can see in the map view"). Below
+the title and the note count sits the search (`GuideSearch`, cmdk palette), then `components/GuideNoteGroups.tsx`: the
+list of the old map (every note of the bundle once, from `groupNotesForMap()`, see the end of Full map), one card per
+spine step (number, title, summary, its notes) and a final "Other topics" card. Note cards show the title, ✓ when read,
+the freshness marker, the summary and the tags. A reading column (`max-w-2xl`) below `lg`; from `lg` the Page width
+setting (`PAGE_WIDE_LG_CLASS`) with two groups per row, three from 1536 px and all six from 2880 px. Then "N of M notes
+read · Reset progress" and the "Official reference" strip. The spine's `questions` ("I found something") and the entry
+cards are no longer rendered (see Spine screen extras).
+
+**Full map** (NOT ROUTED since 2026-11-07, kept in the code with its tests: `screens/GuideMapScreen.tsx`, not exported
+from `index.ts` so d3-force stays out of the bundle; `/guide/map` redirects to `/guide`; the note screen's "Full map"
+link is gone, its local graph stays): every note on one page. The graph (`lg+` only;
 `components/FullGraph.tsx`, layout in `engine/fullGraph.ts`) sits in a bordered panel with a fixed aspect ratio (height
 0.6 × width). `fullGraphEdges()` collects knowFirst (arrowhead), next (dashed; the notes' `next` plus the spine order)
 and related (plain, fainter) edges, one per pair of notes in either direction (knowFirst > next > related).
@@ -65,14 +77,15 @@ list order. No pan/zoom. **d3-force** was chosen because it is small and tree-sh
 dependencies, in the guide chunk), has no DOM coupling and can be ticked by hand. Fallback if the picture is not
 liked: fixed "spine columns" (one column per step, off-spine notes in an extra column), no dependency. The list
 (always; alone below `lg`): `groupNotesForMap()` (`utils/guideMap.ts`) gives one card per spine step (title, summary,
-notes in spine order) and a final "Other topics" card (alphabetical, glossary last); rows reuse the spine screen's note
+notes in spine order) and a final "Other topics" card (alphabetical, glossary last); rows are the overview's note
 cards (title, ✓ when read, freshness marker, summary, tags).
 
-**Spine screen extras** (`utils/guideHome.ts`, `components/GuideStartCards.tsx`, `components/GuideOfficialReference.tsx`):
-above the search, `START_CARDS` are four task-shaped entry cards (two columns from `sm`, one below): "I found an item,
+**Spine screen extras** (`utils/guideHome.ts`, `components/GuideStartCards.tsx`, `components/GuideOfficialReference.tsx`;
+the old `/guide` spine screen became the overview on 2026-11-07: the entry cards and the "I found something" row are
+no longer rendered, the cards' code and tests are kept, the official reference strip is still shown): above the search, `START_CARDS` were four task-shaped entry cards (two columns from `sm`, one below): "I found an item,
 what is it?" → `loot-triage`, "What can I make in the cube?" → `cube-basics`, "Where do I go next?" → `start-here`,
 "Which base for my runeword?" → `/game-data/best-base`. A card whose note is missing from the bundle is hidden
-(`visibleStartCards`). Below "I found something", `OFFICIAL_REFERENCES` lists the official docs pages (Cube Recipes,
+(`visibleStartCards`). At the bottom of `/guide`, `OFFICIAL_REFERENCES` lists the official docs pages (Cube Recipes,
 Maps, Endgame Maps, Kill Ledger, Weapon Mastery, Skill Information, Ascendancies, Specializations, Frame Table, Changelog; the Frame Table,
 `ias-calculator.html`, has the IAS and FCR breakpoints and is not linked from the official site's nav), each with a one-line
 description, opening in a new tab (`ExternalLink`, `rel="noopener noreferrer"`, ↗ icon). The URLs come from
@@ -84,7 +97,7 @@ page cards against `APP_PAGES` (`build/links.ts`), docs files against the ESR cl
 
 **Visited notes**: `useVisitedNotes()` keeps the slugs the viewer has opened in localStorage (`guide.visited`, string
 array, most recent last, capped at 200; pure helpers in `utils/visited.ts`). Opening a note marks it read; chips and
-spine cards show a ✓, graph nodes are filled. "Reset progress" at the bottom of `/guide` clears the list (after a
+overview cards show a ✓, graph nodes are filled. "Reset progress" near the bottom of `/guide` clears the list (after a
 confirm). Per browser only, never synced.
 
 Version badge states (`noteFreshness(verified, manifest.esrVersion, note.staleReasons)` in `engine/freshness.ts`):
@@ -94,7 +107,7 @@ Version badge states (`noteFreshness(verified, manifest.esrVersion, note.staleRe
 
 ```
 content/guide/
-  spine.yml          journey spine + "I found something" questions
+  spine.yml          journey spine (the overview's step groups) + "I found something" questions (not rendered)
   _glossary.yml      terms for the glossary note and :term[] hovers
   _sources.yml       attribution entries referenced by notes' `sources`
   notes/<slug>.md    one note per file; the slug is the file name (kebab-case, [a-z0-9-])
@@ -160,7 +173,9 @@ formats the notes too and splits the cell at a bare pipe. `page:` only accepts t
 `/runewords`, `/gemwords`, `/socketables`, `/uniques`, `/mythicals`, `/ascendancies`, `/skills`, `/modifiers`,
 `/game-data/{bases,sets,best-base,affixes,types,enhance,cube,materials,areas}`, `/campaign-map`, `/guide`; a query string
 is allowed). A `page:/modifiers?kind=<key>` link must name a kind key of `public/game-data/modifiers.json` (the page
-resolves a kind key to the entry that explains it, e.g. `resist-fire` → the resists entry).
+resolves a kind key to the entry that explains it, e.g. `resist-fire` → the resists entry). A page that is not a route yet (the
+`specializations` and `elixirs` notes wait for `/specializations` and `/elixirs`) is linked in an HTML comment marked
+`TODO` until the route joins `APP_PAGES`.
 
 Leaf directives (`::name[arg]`) must stand alone on a line. Directive arguments are resolved at build time against the
 ESR clone and the committed game-data bundles; the browser only renders the resulting data block.
@@ -272,7 +287,7 @@ src/features/guide/
   engine/notes.ts               findNote(), noteTitle(), findSourceRef()
   engine/linkSchemes.ts         LINK_SCHEMES, NAME_FOCUS_PAGES, OFFICIAL_SITE, officialDocsUrl(), DROP_FINDER_URL (shared by the generator and the app)
   engine/localGraph.ts          layoutLocalGraph()
-  engine/fullGraph.ts           fullGraphEdges(), layoutFullGraph() (d3-force, run synchronously)
+  engine/fullGraph.ts           fullGraphEdges(), layoutFullGraph() (d3-force, run synchronously; kept, not routed)
   engine/browser/loadGuide.ts   browser loader (promise cache, schema check)
   build/                        generator-only code (excluded from the app tsconfig, included in tsconfig.scripts)
   build/generateGuide.ts        content + game data + ESR tables → bundle (pure; fs reads in readGuideInputs.ts)
@@ -288,7 +303,7 @@ src/features/guide/
   build/verifyLock.ts           .verify-lock.json, the guide:verify frontmatter edit
   build/report.ts               guide:report
   hooks/                        useGuide, useLoadedGuide (context), useVisitedNotes (the peek: src/components/PeekPopover + useHoverPopover)
-  utils/                        pure screen helpers (app links, search, source cells, card lookup, visited list, map groups, spine entry cards + official reference list)
+  utils/                        pure screen helpers (app links, search, source cells, card lookup, visited list, overview groups, unrendered entry cards + official reference list)
   screens/, components/
   index.ts                      lazy-route exports
 scripts/generate-guide.ts       thin CLI
@@ -405,7 +420,7 @@ Logic only (no component tests), colocated `*.test.ts`:
   (`staleness`), the lock file and the byte-preserving `verified:` edit (`verifyLock`), the report (`report`), the
   manifest (`writeGuide`), whole-guide generation on fixtures (`generateGuide`).
 - engine: link schemes (`linkSchemes`), freshness states, note lookups, local-graph layout, full-map edges and layout (dedupe, determinism, bounds, no label overlap on a guide-sized fixture), the browser loader (cache eviction, schema error).
-- utils: app links, search, source cells, card name matching, the visited list, the map's grouping into spine steps and other topics, the spine screen's entry cards and official reference list (`guideHome`: targets exist, hrefs match `docs:` URLs).
+- utils: app links, search, source cells, card name matching, the visited list, the overview's grouping into spine steps and other topics (`guideMap`), the unrendered entry cards and official reference list (`guideHome`: targets exist, hrefs match `docs:` URLs).
 - `guideIntegrity.test.ts`: manifest schema and sha256 of the committed files always; regenerating from `content/` in
   memory and comparing is skipped when the ESR clone or sources.json is missing.
 

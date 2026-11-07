@@ -10,7 +10,7 @@ stats: item_deadlystrike (141), item_deadlystrike_perlevel (250); resolved in on
 
 summary: A chance per hit to multiply the hit's physical damage, ×{derived.critical-multiplier.0} by default and more with Deadly Strike Damage.
 
-body: Each hit rolls against your total Deadly Strike. On success the physical damage is multiplied by {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->% plus your Deadly Strike Damage, for melee and missiles alike [ESR config]. Weapon-mastery Critical, Critical Strike and Deadly Strike are resolved in that order and only one can succeed, so they never multiply each other [ESR config]. Fire thorns, which ESR keeps in the vanilla Critical Strike stat's row, give no crit chance [Mod author]. Only physical damage is multiplied [Vanilla]. Physical damage that a skill converts to an element can still crit [Community 3.9]. At 100% every hit crits [Vanilla]. Two unique weapons, Demon Limb and Lacerator, give extra bonuses for each 1% Deadly Strike above 100, so going past 100 pays on those [ESR files]. D-stoning raises Deadly Strike against its own cap, which counts only what the stones added: a 50% Deadly Strike item can be D-stoned to 150% [Mod author] [ESR files]. A few uniques (Voidrend, Dwarf Star, Earthshifter, Gargoyle's Bite, Icing Death, Raven Frost) carry hidden auras that use your Deadly Strike as the chance for one element's damage to crit, boosted by Deadly Strike Damage [ESR files]. Without such an aura, item Deadly Strike does not make spells crit [Mod author].
+body: Each hit rolls against your total Deadly Strike. On success the physical damage is multiplied by {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->% plus your Deadly Strike Damage, for melee and missiles alike [ESR config] [Mod author]. Weapon-mastery Critical, Critical Strike and Deadly Strike are resolved in that order and only one can succeed, so they never multiply each other [ESR config]. Fire thorns, which ESR keeps in the vanilla Critical Strike stat's row, give no crit chance [Mod author]. Only physical damage is multiplied [Vanilla]. Physical damage that a skill converts to an element can still crit [Community 3.9]. At 100% every hit crits [Vanilla]. Two unique weapons, Demon Limb and Lacerator, give extra bonuses for each 1% Deadly Strike above 100, so going past 100 pays on those [ESR files]. D-stoning raises Deadly Strike against its own cap, which counts only what the stones added: a 50% Deadly Strike item can be D-stoned to 150% [Mod author] [ESR files]. A few uniques (Voidrend, Dwarf Star, Earthshifter, Gargoyle's Bite, Icing Death, Raven Frost) carry hidden auras that use your Deadly Strike as the chance for one element's damage to crit, boosted by Deadly Strike Damage [ESR files]. Without such an aura, item Deadly Strike does not make spells crit [Mod author].
 
 facts:
 
@@ -39,25 +39,26 @@ stats: criticaldamage (434)
 
 summary: Raises the damage multiplier of every crit and Deadly Strike: +50% turns ×{derived.critical-multiplier.0} into ×{derived.critical-multiplier.50}.
 
-body: ESR-only stat. It adds straight to the base crit multiplier of {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->%, so +50% Deadly Strike Damage makes each crit deal ×{derived.critical-multiplier.50} physical damage instead of ×{derived.critical-multiplier.0} [ESR config]. It works for weapon-mastery crits, Critical Strike and Deadly Strike, melee and missiles [ESR config]. It does nothing on its own: you still need a crit chance. It is rare on items [ESR files]. Some skills and auras also read it for their own crit bonuses, for example the "Magic Damage Crit" rows [ESR files].
+body: ESR-only stat. It adds straight to the base crit multiplier of {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->%, so +50% Deadly Strike Damage makes each crit deal ×{derived.critical-multiplier.50} physical damage instead of ×{derived.critical-multiplier.0} [ESR config]. The mod author confirmed the addition: with 100% Deadly Strike and +25% Deadly Strike Damage, each crit adds 125% extra physical damage instead of 100%, a ×{derived.critical-multiplier.25} hit [Mod author]. It works for weapon-mastery crits, Critical Strike and Deadly Strike, melee and missiles [ESR config]. It does nothing on its own: you still need a crit chance. It is rare on items [ESR files]. Some skills and auras also read it for their own crit bonuses, for example the "Magic Damage Crit" rows [ESR files].
 
 facts:
 
 - Stat id `{config.critical-strike-damage.critical_strike_damage.stat_id}`<!-- 434 -->; added to `base_percent = {…base_percent}`<!-- 200 -->; cap `max_percent = {…max_percent}`<!-- 100000 -->. Source: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`.
 - Missiles: "the bonus is used when any of [the three sources] is enabled", because missiles only carry a yes/no crit flag (same file).
 - Tooltip `+%d%% Deadly Strike Damage` (`strings/item-modifiers.json` key `critdamage`).
+- The mod author (2026-11-07), asked whether +25% Deadly Strike Damage at 100% Deadly Strike raises the extra double damage to 125%: "125% yes".
 
 caveats:
 
 - Whether skill-side crits (Magic Damage Crit and similar) add the item stat once or twice is a skill-formula question; check per skill.
 
-sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `excel/itemstatcost.txt` row 434; `excel/skills.txt` ("Magic Damage Crit" aurastatcalc1); `strings/item-modifiers.json`
+sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `excel/itemstatcost.txt` row 434; `excel/skills.txt` ("Magic Damage Crit" aurastatcalc1); `strings/item-modifiers.json`; ESR mod author (Discord, 2026-11-07)
 
 ---
 
 ## crushing-blow — Crushing Blow
 
-stats: item_crushingblow (136), item_crushingblow_perlevel (247)
+stats: item_crushingblow (136), item_crushingblow_perlevel (247), crushingblow_damage (1045)
 
 summary: A chance on hit to remove a share of the target's current life. ESR halves it against most targets and cuts it hardest against bosses.
 
@@ -605,7 +606,7 @@ facts:
 - `absorbdamage` is triggered in SUNITDMG_CalculateTotalDamage before resistances are applied (D2MOO SUnitDmg.cpp:874) [Vanilla].
 - Cast on cast: `ESR/d2rloader/config/celestialrayone.cast-on-cast.toml` ("the caster is in the cast animation (mode 10)", "the skill is not an aura", "a real cast that pays its cost"); `server_proc_aim = true` applies to every item proc.
 - Restrict: `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml` — item procs are checked only when the skill row has `ItemUseRestrict = 1`.
-- Crossbows put all skills on cooldown while equipped [Community 3.9].
+- Crossbows (`ESR/d2rloader/config/celestialrayone.crossbow-charges.toml`): procs never spend crossbow bolts; what the hits of a crossbow skill trigger (chance to cast on attack, on striking and on kill) also gets the crossbow damage bonus, chance to cast when struck never does.
 - The mod author (2026-11-07): item procs do not respect the cast skill's cooldown, there is no internal proc cooldown and none is planned; "when Taking Damage" (376) fires on every damage instance, but for poison and bleed only on application.
 - Patch 3.3 (`ESR/patchnotes/3.3.md` line 34): "Fixed a bug where whirlwind would proc “every x attack” procs all the time. Now every attack in whirlwind is counted as a third of a regular attack for the purpose of those procs (so every 15 swings in whirlwind will proc 3 “every 5 attacks” procs)."
 
@@ -615,7 +616,7 @@ caveats:
 - "on Melee Attack" with bows and crossbows: the table says yes, the old wiki says no. Check in game.
 - Whether attack skills (attack animation, not cast animation) ever trigger "on Casting a Skill": by the config, no.
 
-sources: `excel/itemstatcost.txt`; `ESR/d2rloader/config/celestialrayone.cast-on-cast.toml`; `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml`; `ESR/patchnotes/3.3.md`; ESR mod author (Discord, 2026-11-07); D2MOO/D2Game/src/SKILLS/SkillItem.cpp:1664–1780; wiki "Chance to Cast (CtC)" (quotes Amazon Basin), "Crossbows and cooldown"
+sources: `excel/itemstatcost.txt`; `ESR/d2rloader/config/celestialrayone.cast-on-cast.toml`; `ESR/d2rloader/config/celestialrayone.restrict-state-block.toml`; `ESR/patchnotes/3.3.md`; ESR mod author (Discord, 2026-11-07); D2MOO/D2Game/src/SKILLS/SkillItem.cpp:1664–1780; `ESR/d2rloader/config/celestialrayone.crossbow-charges.toml`; wiki "Chance to Cast (CtC)" (quotes Amazon Basin)
 
 ---
 
@@ -817,20 +818,21 @@ sources: `ESR/d2rloader/config/celestialrayone.magic-find-soft-tail.toml`; `ESR/
 
 ## gold-find — Extra Gold from Monsters
 
-stats: item_goldbonus (79), item_find_gold_perlevel (239)
+stats: item_goldbonus (79), item_find_gold_perlevel (239), total_gold_found (1025)
 
 summary: Raises the gold in each gold drop by the percent.
 
-body: Gold drops are multiplied by 100% plus your Gold Find [Vanilla]. There are no diminishing returns [Vanilla]. A minion's kill adds its owner's Gold Find [Vanilla]. Patch 3.2.17 fixed culling strike kills not counting gold find [ESR files]. No loader config changes it [ESR config].
+body: Gold drops are multiplied by 100% plus your Gold Find [Vanilla]. There are no diminishing returns [Vanilla]. A minion's kill adds its owner's Gold Find [Vanilla]. Patch 3.2.17 fixed culling strike kills not counting gold find [ESR files]. No loader config changes Gold Find itself [ESR config]. ESR 3.3 adds "Total Gold from Monsters": every gold pile that drops for you from a kill or an opened container holds that percent more, applied after Gold Find so the two multiply, added up with the Archaeologist perk Gold Find; a minion's kill uses its owner's value, and gold from vendors, quests or the cube is not raised [ESR config].
 
 facts:
 
 - `gold × (100 + GF) / 100`, plus the minion owner's GF (D2MOO D2Game/src/ITEMS/Items.cpp:2596–2605) [Vanilla].
 - `ESR/patchnotes/3.2.17.md` L10 (culling strike, gold find and magic find).
+- Total Gold from Monsters: `ESR/d2rloader/config/celestialrayone.archaeology.toml` `[total_gold_found]` `stat_id = 1025`: "Every gold pile dropped for the character holds the character's value of this stat in percent more gold. It joins the Gold Find perk above: the two add up and multiply the pile after the game's Gold Find"; "only monster kills and opened containers count, and Sell Value piles are left alone"; at −100% or less a pile holds nothing.
 
 caveats: none.
 
-sources: D2MOO/D2Game/src/ITEMS/Items.cpp:2596–2605; `ESR/patchnotes/3.2.17.md`
+sources: D2MOO/D2Game/src/ITEMS/Items.cpp:2596–2605; `ESR/patchnotes/3.2.17.md`; `ESR/d2rloader/config/celestialrayone.archaeology.toml`
 
 ---
 
@@ -860,7 +862,7 @@ stats: item_skill_cooldown (371)
 
 summary: Shortens skill cooldowns by the percent; each skill has a floor, usually 20% of its base cooldown (an 80% cap).
 
-body: ESR-only stat [ESR files]. It adds up from all sources [Community 3.9]. Each skill's cooldown formula subtracts your reduction from its base and stops at a floor [ESR files]. On most skills the floor is one fifth of the base, so reduction past 80% does nothing [ESR files]. A few have no floor or a lower one, some skills say "ignores cooldown reduction cap", and one uses Strength instead [ESR files]. Equipping a crossbow puts all skills on cooldown [Community 3.9].
+body: ESR-only stat [ESR files]. It adds up from all sources [Community 3.9]. Each skill's cooldown formula subtracts your reduction from its base and stops at a floor [ESR files]. On most skills the floor is one fifth of the base, so reduction past 80% does nothing [ESR files]. A few have no floor or a lower one, some skills say "ignores cooldown reduction cap", and one uses Strength instead [ESR files]. Crossbow skills fire from a pool of bolts instead, and their reload does not read this stat (see Crossbows) [ESR config] [ESR files].
 
 facts:
 
@@ -873,7 +875,7 @@ caveats:
 
 - "Cap 80%" is the wiki's (3.9) wording; in ESR 3.3 (as in 3.2.24) it is per-skill floors, which mostly equal 80%. The app can compute each skill's floor from skills.txt.
 
-sources: `excel/skills.txt` (calc4–7, auralencalc); `strings/skills.json`; wiki "+X% Skill Cooldown Reduction", "Crossbows and cooldown"
+sources: `excel/skills.txt` (calc4–7, auralencalc); `strings/skills.json`; `ESR/d2rloader/config/celestialrayone.crossbow-charges.toml`; wiki "+X% Skill Cooldown Reduction"
 
 ---
 
@@ -925,11 +927,11 @@ sources: `excel/itemstatcost.txt` rows 398, 482, 483; `excel/skills.txt`; wiki Q
 
 ## summon-stats — Summon Damage, Life, Resists and Limit
 
-stats: passive_summ_mastery (486), passive_summ_mastery_total (303), passive_summ_life (266), item_summlife_perlevel (1032), passive_summ_elemental_resist (265), passive_summ_phys_resist (267), passive_summ_limit (379), summonexceedcap (511)
+stats: passive_summ_mastery (486), passive_summ_mastery_total (303), passive_summ_life (266), item_summlife_perlevel (1032), passive_summ_elemental_resist (265), passive_summ_phys_resist (267), passive_summ_limit (379), summonexceedcap (511), raven_limit (1026), spirit_wolf_limit (1027), dire_wolf_limit (1028)
 
 summary: ESR stats that strengthen your summons: damage, life, resistances and how many non-unique summons you can have.
 
-body: Summon skills read these stats in their formulas [ESR files]. "+% to Summon Damage" counts when the summon is created; re-summon after changing gear [Community 3.9]. Summon resists are capped like a player's: 75% plus maximum resist, 95% at most, physical 50% [ESR config]. Summons get no difficulty resist penalty [ESR config]. One stat lifts the cap for one summon, the Heart of Wolverine spirit [ESR config]. Summons get their attack rating and defense only from their own data and skills, not from monster level [ESR config]. Against prime evils, pets deal the same reduced damage as players [ESR config].
+body: Summon skills read these stats in their formulas [ESR files]. "+% to Summon Damage" counts when the summon is created; re-summon after changing gear [Community 3.9]. Summon resists are capped like a player's: 75% plus maximum resist, 95% at most, physical 50% [ESR config]. Summons get no difficulty resist penalty [ESR config]. One stat lifts the cap for one summon, the Heart of Wolverine spirit [ESR config]. Summons get their attack rating and defense only from their own data and skills, not from monster level [ESR config]. Against prime evils, pets deal the same reduced damage as players [ESR config]. Since 3.3 three stats raise the Raven, Spirit Wolf and Dire Wolf limits; Head of the Cerberus and Ravenlore still hold the wolves at one [ESR files].
 
 facts:
 
@@ -937,13 +939,14 @@ facts:
 - 303 is op 1 on 486: `+X% Total Multiplier to Summon Damage Stat`.
 - Cap: `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml` (Align = 1 monsters: "summons, Valkyrie, golems, Revives, hirelings"; `pairs = [423, 511]`: monstats *hcIdx 423 = heartofwolverine is uncapped while the owner has stat 511 summonexceedcap, which is on a runeword).
 - `ESR/d2rloader/patches/summon-no-monlvl-stats.json`; `ESR/d2rloader/patches/pet-damage-vs-prime-evil.json` (`PlayerDamagePercentVSPrimeEvil` `{difficulty.*.playerDamagePercentVSPrimeEvil}`<!-- 100/50/25 -->, vanilla {vanilla.difficulty.*.playerDamagePercentVSPrimeEvil}).
+- Druid limits: `excel/skills.txt` `petmax` of Raven (`… + stat('raven_limit'.accr)`), Summon Spirit Wolf and Summon Dire Wolf (`… + stat('spirit_wolf_limit'.accr)` / `dire_wolf_limit`, but 1 while Head of the Cerberus or Ravenlore Passive is on); patch 3.3 fixed those two items not limiting the wolves to 1.
 - `ESR/patchnotes/3.2.19.md` line 4: "Fixed a bug where summons would still show up as immune to elements in certain cases, despite their resistances capping at 75% (50% for phys)."
 
 caveats:
 
 - "Only at summoning" is a 3.9 author answer; formulas evaluated in aurastat columns may update live. Check by swapping gear with summons out.
 
-sources: `excel/skills.txt`; `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml`; `ESR/d2rloader/patches/summon-no-monlvl-stats.json`, `pet-damage-vs-prime-evil.json`; `ESR/patchnotes/3.2.19.md`; wiki Q&A
+sources: `excel/skills.txt`; `excel/itemstatcost.txt` rows 1026–1028; `ESR/patchnotes/3.3.md`; `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml`; `ESR/d2rloader/patches/summon-no-monlvl-stats.json`, `pet-damage-vs-prime-evil.json`; `ESR/patchnotes/3.2.19.md`; wiki Q&A
 
 ---
 
@@ -1075,3 +1078,99 @@ facts:
 caveats: none.
 
 sources: `excel/itemstatcost.txt`; `excel/magicprefix.txt`, `magicsuffix.txt`, `setitems.txt`; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:2454
+
+---
+
+## crossbows — Crossbows: Bolts, Reload and Damage Bonus
+
+stats: item_crossbowpassive (296), crossbowreloadspeed (299), totalcrossbowbolts (513), totalcrossbowdamage (515), crossbowreloadspeedlimit (518)
+
+summary: Crossbow skills fire from a small pool of bolts that reload one at a time, and crossbow hits deal extra damage after resistances.
+
+body: Every crossbow carries a hidden crossbow marker from its automatic modifier, and crossbow uniques carry it too [ESR files]. While you hold one, the basic Attack and every skill whose cooldown reads the crossbow reload (the Amazon bow skills, Strafe, Holy Rain, Mirrored Blades and a few item skills) fire from a pool of {config.crossbow-charges.crossbow_charges.default_max_bolts}<!-- 3 --> bolts instead of going on cooldown [ESR config] [ESR files]. A cast spends one bolt however many projectiles it fires; spent bolts reload one at a time, in the order they were spent; with no bolts left, crossbow skills cannot be cast [ESR config]. Other skills keep their own cooldowns, and procs never spend bolts [ESR config]. "+N to Maximum Crossbow Bolts" adds bolts [ESR config]. Crossbow attacks always take {config.crossbow-charges.crossbow_charges.default_attack_frames}<!-- 5 --> frames: attack speed shortens the reload instead [ESR config] [ESR files]. Without attack speed the reload is {derived.crossbow-reload-seconds.base}<!-- 2.4 --> seconds (the official Weapons page lists each crossbow's own base reload), and it never goes below {derived.crossbow-reload-seconds.min}<!-- 1 --> second [ESR files]. "Faster Crossbow Reload Time" shortens it further, "Crossbow Reload Speed Limit Reduced" lowers that floor, and Skill Cooldown Reduction does not touch it [ESR files]. Since 3.3 bolts reload {config.crossbow-charges.crossbow_charges.standing_reload_bonus}<!-- 25 -->% faster while you stand still, even past the floor: {derived.crossbow-reload-seconds.min} second becomes {derived.crossbow-standing-seconds.min}<!-- 0.8 --> [ESR config]. Moving, attacking, casting or getting hit reloads at the normal speed [ESR config]. The basic Attack skill shows your current reload time [ESR files]. Hits of crossbow skills, and of everything those hits trigger (chance to cast on attack, on striking and on kill), deal {derived.crossbow-damage.0}<!-- 200% --> of their final damage, after resistances and absorb; "+N% Total Crossbow Damage" adds to that [ESR config]. Physical, elemental, magic and poison damage scale; Crushing Blow, Open Wounds and Bleed do not, and neither do when-struck procs or aura pulses [ESR config]. Patch 3.3 lowered the bonus (it was +150%) and the base reload (it was 3 seconds), and fixed the bonus shown on the Weapons page [ESR files].
+
+facts:
+
+- `ESR/d2rloader/config/celestialrayone.crossbow-charges.toml` `[crossbow_charges]`: `default_max_bolts = {config.crossbow-charges.crossbow_charges.default_max_bolts}`, `standing_reload_bonus = {…standing_reload_bonus}`, `default_attack_frames = {…default_attack_frames}`, `damage_base = {…damage_base}`; stat ids max bolts `{…max_bolts_stat_id}`, current bolts `{…current_bolts_stat_id}` (written by the plugin), damage `{…damage_stat_id}`, attack frames `{…attack_frames_stat_id}`. Damage = (100 + `damage_base` + damage stat) % of the final damage. "A skill whose skills.txt `globaldelay` works out above 0 while the player holds a crossbow" is a crossbow skill; "Casts triggered by items (chance to cast) never spend bolts"; the standing bonus "speeds up the reload itself, after `globaldelay` was worked out, so it goes past any limit inside the `globaldelay` formula".
+- Reload, `excel/skills.txt` Attack: calc4 `max({skills.attack.crossbow-reload.min-frames}*(100-stat('crossbowreloadspeedlimit'.accr))/100,({…base-frames}-clc5/3+(clc5*clc5)/8000)*(100-stat('crossbowreloadspeed'.accr))/100)` frames (25 a second), calc5 `120 × IAS / (120 + IAS) + (attackrate − 100)`, calc6 (the global delay) is calc4 only while `item_crossbowpassive` is above 0; the other crossbow skills' `globaldelay` is `skill('Attack'.clc6)`. ESR 3.2.24 had a base of 75 frames.
+- `excel/automagic.txt`: the `xbow` row adds `crossbow-passive` (`item_crossbowpassive`) and tinkering points to every crossbow.
+- `ESR/docs/weapons.htm` (crossbow table note): bolts, "+100%" damage, 5-frame attacks, the 1 second minimum ("lower with the ironbolt ascendancy"), the standing-still bonus; a "Base Reload" column per crossbow. `ESR/docs/skill_information.htm`: the Surge procs "inherit the bonus damage from crossbows".
+- Patch 3.3 Crossbows: "reload 25% faster overall while standing still (also goes above the reload cap)", "Fixed a display bug where the damage bonus displayed as 50% instead of 150%", "Reduced total damage granted by crossbows from 150% to 100%", "Reduced minimum base reload speed from 3 seconds to 2.4 seconds".
+
+caveats:
+
+- What the reload's attack rate term includes besides IAS: the Weapons page's base reloads differ per crossbow (2.16 s for the Light Crossbow), so the weapon's speed seems to count. Compare with the Attack skill's tooltip in game.
+- The old wiki (3.9) said crossbows put every skill on cooldown; with the bolt plugin only crossbow skills reload.
+
+sources: `ESR/d2rloader/config/celestialrayone.crossbow-charges.toml`; `excel/skills.txt` (Attack calc4–6, `globaldelay`); `excel/automagic.txt`; `excel/itemstatcost.txt` rows 296, 299, 513–518; `ESR/docs/weapons.htm`; `ESR/docs/skill_information.htm`; `ESR/docs/ias-calculator.html`; `ESR/patchnotes/3.3.md`
+
+---
+
+## extra-curses — Maximum Curses
+
+stats: extra_curse (1016)
+
+summary: Each point lets you keep one more of your curses on the same target; without it a new curse replaces the old one.
+
+body: ESR 3.3 stat [ESR files]. A target can carry 1 + your Maximum Curses of your curses at once [ESR config]. Recasting a curse the target already has refreshes it as before and never needs a free slot [ESR config]. A new curse on a full target replaces one curse, the one applied first: refreshing a curse does not make it newer [ESR config]. The replaced curse ends as if it had run out [ESR config]. The count belongs to the caster: hirelings, summons and monsters that have the stat get it too, and a monster without it still keeps a single curse on you [ESR config]. Curse Duration Reduced still shortens every curse and blocks it at 100% [ESR config]. Only the newest curse's graphic shows over the target; the others stay active [ESR config]. It comes on a few uniques and a superior affix [ESR files].
+
+facts:
+
+- `ESR/d2rloader/config/celestialrayone.extra-curses.toml` `[curses]`: `stat_id = {config.extra-curses.curses.stat_id}`<!-- 1016 -->, `replace = "{…replace}"` (the other choice, "shortest_remaining", replaces the curse with the least time left). "curses a caster can keep on one target = 1 + the caster's value of the stat"; "A curse that lands never removes more than one curse"; stat 109 (Curse Duration Reduced) and state 57 still apply.
+- The plugin answers the game's one question "which curse does this target already have?" from the caster's stat, so every curse, also from item procs, goes through it (same file, "HOW IT WORKS").
+- `excel/properties.txt` `extra-curse`; `excel/qualityitems.txt` (a superior affix); tooltip `+%d to Maximum Curses` (`strings/item-modifiers.json` key `extracurse`).
+- Patch 3.3 Stats: "+x to Maximum Curses - allows you to apply more curses".
+
+caveats:
+
+- Monster curses since 3.3 use their own curse skills; which monsters (if any) carry the stat is not documented.
+
+sources: `ESR/d2rloader/config/celestialrayone.extra-curses.toml`; `excel/itemstatcost.txt` row 1016; `excel/properties.txt`; `excel/qualityitems.txt`; `strings/item-modifiers.json`; `ESR/patchnotes/3.3.md`
+
+---
+
+## socket-effect — Increased Effect of Socketed Gems, Runes and Jewels
+
+stats: gem_effect (1022), rune_effect (1023), gem_effect_current_item (1047), rune_effect_current_item (1046), jewel_effect_current_item (1044); also jewel_effect 1041 and the per-level 1055, which no 3.3 item carries
+
+summary: Raises the bonuses of the gems, runes or jewels socketed in your gear by the percent; the "in this Item" stats only those in their own item.
+
+body: ESR 3.3 stats [ESR files]. "Increased Effect of Socketed Gems" raises the modifiers of every gem socketed in your counting gear by your total of the stat, in percent: at +10, a gem's +100 life gives +110 [ESR config]. The rune and jewel stats do the same for runes and jewels [ESR config]. Your total from every source counts, so they work without a Jeweler perk [ESR config]. The "Socketed in this Item" stats raise only the socketables in the item that carries them [ESR files]. What rises is the socketable's own modifiers, from a list of {config.jeweler.socketed_gems.stats.count}<!-- 209 --> stats: attributes, life, resists, damage, skills, procs, speed and more [ESR config]. For the matching perks (Amplification, Runic Insight) the configs say outright that a runeword's or gemword's bonus is not raised; for these stats they only name the socketed items' modifiers [ESR config]. A socketable that matches several of these stats gets their values added up [ESR config]. They add to the Jeweler's Amplification, Prismatic Resonance and Six Peas in a Pod and are pooled with them: the bonus is summed per stat over all items and rounded once, toward zero, so small values are not lost item by item [ESR config]. A negative value lowers the effect; at −100% or less the socketable gives nothing, never the opposite [ESR config]. The rune stats count every socketed item of the rune type, which in misc.txt also covers the crystals; the Runic Insight perk lists its runes by code to leave the crystals out [ESR config].
+
+facts:
+
+- `ESR/d2rloader/config/celestialrayone.jeweler.toml` `[[gem_effect]]`: gems `{config.jeweler.gem_effect.gems}`, runes `{…runes}`, jewels `{…jewels}`; with `own_sockets = true`: gems `{…gemsInItem}`, runes `{…runesInItem}`, jewels `{…jewelsInItem}`. "A gem effect stat raises the modifiers of the socketed items of its types by the character's value of the stat, in percent … as stat('...'.accr) reads it, so it works without any Jeweler perk"; "It raises the stats in Amplification's stats list, never a gem effect stat itself". The comment does not explain `own_sockets`; patch 3.3: "same as the stats above, except those affect only the item the stat spawns on".
+- The raised stats: `[socketed_gems] stats` ({config.jeweler.socketed_gems.stats.count} itemstatcost ids, Amplification's list). Amplification: "Only the jewels' and gems' own modifiers count, never the host item's or a gemword's bonus"; `ESR/d2rloader/config/celestialrayone.archaeology.toml` `[socketed_runes]` (Runic Insight): "Only the runes' own modifiers (gems.txt) count, never a runeword's bonus", and its `item_codes` leave out the crystals, which "carry the same misc.txt type rune". The Jeweler perk Steady Pliers is the one that raises gemword bonuses.
+- `excel/itemstatcost.txt`: jewel_effect 1041 (no item carries it); rune_effect_current_item_perlevel 1055 (op 4, level-based, on 1046; no item carries it).
+- Superior affixes with gem-effect and rune-effect: `excel/qualityitems.txt`. Tooltips: `strings/item-modifiers.json` keys `gemeffect`, `runeeffect`, `jeweleffect`, `gemeffectcurrentitem`, `runeeffectcurrentitem`, `jeweleffectcurrentitem`.
+
+caveats:
+
+- Whether a runeword's own bonus rises with the rune stats (the config names only the socketed items' modifiers). Test with a runeword in an item with "Increased Effect of Runes Socketed in this Item".
+- Whether crystals count for the rune stats (by item type they do).
+- Whether the rune stats pool with the Archaeologist's Runic Insight, which another plugin applies.
+
+sources: `ESR/d2rloader/config/celestialrayone.jeweler.toml`; `ESR/d2rloader/config/celestialrayone.archaeology.toml`; `excel/itemstatcost.txt` rows 1022, 1023, 1041, 1044, 1046, 1047, 1055; `excel/qualityitems.txt`; `ESR/docs/specializations.htm`; `ESR/patchnotes/3.3.md`
+
+---
+
+## utility-potions — Utility Potion Effectiveness and Duration
+
+stats: utilitypotionmultiplier (925), utilitypotionduration (1019)
+
+summary: Make utility potions (the drinkable elixirs and Stamina, Antidote and Thawing Potions) stronger or last longer by the percent.
+
+body: ESR 3.3 stats [ESR files]. Utility potions are the drinkable elixirs plus the Stamina, Antidote and Thawing Potions [ESR files]. Each one's strength is its base value × (100 + Utility Potion Effectiveness) / 100, and the Alchemist perk Volatile Concoctions adds {misc.utility-potion.perk-percent}<!-- 5 -->% to that sum [ESR files]. Its length is the base length × (100 + Utility Potion Duration) / 100: {derived.utility-potion-seconds.elixir}<!-- 45 --> seconds for elixirs, {derived.utility-potion-seconds.stamina}<!-- 90 --> for a Stamina Potion and {derived.utility-potion-seconds.antidote}<!-- 45 --> for Antidote and Thawing Potions [ESR files]. An elixir's base value also grows with your character level, and a Greater Elixir is ×{derived.greater-elixir-multiplier}<!-- 1.25 --> its regular elixir [ESR files]. The Elixir of Reincarnation lasts until it saves you, so neither stat changes it [ESR files]. Life and Mana Potion Effectiveness is a separate stat for healing and mana potions [ESR files]. Every elixir and its effect: [Elixirs](/elixirs); where they drop and the perks: [the guide's Elixirs note](/guide/elixirs).
+
+facts:
+
+- `excel/misc.txt` utility potions (type or type2 `upot`): `len` `1125*(100+stat('utilitypotionduration'.accr))/100` (frames, 25 a second; the Stamina Potion 2250), every `calcN` `…*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/100`, e.g. Elixir of Luck `(50+stat('level'.accr)*3)*(100+…)/100` Magic and Gold Find. Greater Elixirs (type2 `gelx`): the same formula `*{misc.greater-elixir.percent}*(…)/10000`. Elixir of Reincarnation `35p`: `len` 2000000000.
+- Volatile Concoctions = `alchemy_2` ("Increase the effect of utility potions by 5%", `ESR/docs/specializations.htm`). Other Alchemist perks on utility potions (`ESR/d2rloader/config/celestialrayone.alchemy.toml`): Savvy Elixirs (a chance not to use the potion up), Serendipity (a chance of a shrine effect), Compounded Synergy (stronger per running potion effect).
+- `excel/properties.txt` `utility-potion-multiplier`, `utility-potion-duration`; tooltips `%+d%% Utility Potion Effectiveness`, `%+d%% to Utility Potion Duration` (`strings/item-modifiers.json`).
+- Patch 3.3 Stats: "increases the effect of utility potions (elixirs)", "increases the duration of utility potions (elixirs)"; Elixirs: "Elixir effects scale with character level and last 45 seconds".
+
+caveats:
+
+- The formulas run when the potion is drunk; whether a running effect changes when you swap gear is not documented. Check by drinking with and without the item.
+
+sources: `excel/misc.txt`; `excel/itemstatcost.txt` rows 925, 1019; `excel/properties.txt`; `ESR/d2rloader/config/celestialrayone.alchemy.toml`; `ESR/docs/specializations.htm`; `strings/item-modifiers.json`; `ESR/patchnotes/3.3.md`

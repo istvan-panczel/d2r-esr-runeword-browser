@@ -1,5 +1,6 @@
 /**
- * The top of the guide's spine screen (`/guide`): task-shaped entry cards and the strip of official docs pages.
+ * The guide overview's extras (`/guide`): the strip of official docs pages, and the task-shaped entry cards that are no
+ * longer rendered (kept on purpose with GuideStartCards, 2026-11-07: `/guide` is a single overview of every note).
  * Kept in code, not in content/guide: the cards mix note and app-page targets, and the docs strip is a fixed list of
  * official pages; both are checked by guideHome.test.ts (note slugs against the committed bundle, docs files against the
  * ESR clone).

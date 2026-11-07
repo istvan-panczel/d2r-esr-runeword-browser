@@ -93,6 +93,15 @@ describe('tokenizeInline', () => {
     ]);
   });
 
+  it('keeps app paths as links', () => {
+    expect(tokenizeInline('See [Elixirs](/elixirs) and [x](javascript:alert(1)).')).toEqual([
+      { type: 'text', text: 'See ' },
+      { type: 'link', text: 'Elixirs', href: '/elixirs' },
+      { type: 'text', text: ' and [x](javascript:alert(1)).' },
+    ]);
+    expect(tokenizeInline('[x](//example.com)')).toEqual([{ type: 'text', text: '[x](//example.com)' }]);
+  });
+
   it('reads the mod author tag', () => {
     expect(tokenizeInline('No crit [Mod author].')[1]).toEqual({ type: 'tag', tag: { kind: 'mod-author' } });
   });
@@ -174,6 +183,19 @@ describe('placeholders', () => {
     expect(resolvePlaceholder('derived.max-resist-headroom', facts)?.text).toBe('20');
     expect(resolvePlaceholder('derived.attack-rating-table', facts)?.text).toMatch(/^1 → 0, 2 → 1, .* 104 → 100$/);
     expect(resolvePlaceholder('engine.absorb.percent-cap', facts)?.text).toBe('40');
+    expect(resolvePlaceholder('config.crossbow-charges.crossbow_charges.default_max_bolts', facts)?.text).toBe('3');
+    expect(resolvePlaceholder('skills.attack.crossbow-reload.base-frames', facts)?.text).toBe('60');
+    expect(resolvePlaceholder('derived.crossbow-reload-seconds.base', facts)?.text).toBe('2.4');
+    expect(resolvePlaceholder('derived.crossbow-standing-seconds.min', facts)?.text).toBe('0.8');
+    expect(resolvePlaceholder('derived.crossbow-damage.0', facts)?.text).toBe('200%');
+    expect(resolvePlaceholder('derived.crossbow-damage.50', facts)?.text).toBe('250%');
+    expect(resolvePlaceholder('derived.crossbow-reload-seconds.nope', facts)).toBeNull();
+    expect(resolvePlaceholder('config.extra-curses.curses.replace', facts)?.text).toBe('oldest');
+    expect(resolvePlaceholder('config.jeweler.gem_effect.runesInItem', facts)?.text).toBe('1046');
+    expect(resolvePlaceholder('derived.utility-potion-seconds.elixir', facts)?.text).toBe('45');
+    expect(resolvePlaceholder('derived.utility-potion-seconds.stamina', facts)?.text).toBe('90');
+    expect(resolvePlaceholder('derived.greater-elixir-multiplier', facts)?.text).toBe('1.25');
+    expect(resolvePlaceholder('misc.utility-potion.perk-percent', facts)?.text).toBe('5');
     expect(resolvePlaceholder('vanilla.difficulty.*.lifeStealDivisor', facts)?.text).toBe('1 / 2 / 3');
     expect(resolvePlaceholder('vanilla.config.cast-rate-cap.cast-rate-cap.fcr_cap', facts)?.text).toBe('200');
     expect(resolvePlaceholder('vanilla.config.crushing-blow.targets.unique', facts)).toBeNull();

@@ -41,7 +41,7 @@ PageShell "Campaign Map"   meta: what it covers, ESR version
   kind swatch, name, official name, bosses, quest item icons, a heads-up mark, WP, Hell monster level, "Not curated
   yet" / "Not on the map yet". Endgame Maps group the list by tier and zone. Twin rows (Tal Rasha's Tomb ×7) are one
   row, like one station on the map; a twin id (`?area=67`) selects that row and station (`twinRepresentative`).
-- **Below `lg`** the map is hidden (CSS only, like the guide map) and the list is shown with the side column above it;
+- **Below `lg`** the map is hidden (CSS only, like the old guide map) and the list is shown with the side column above it;
   a tap on a row (or a panel chip) scrolls the panel into view (`hooks/usePanelScroll.ts`); the search-hit pulse then
   does not scroll the list.
 - **Special areas** and **Ubers & portals** have no map (`layout: null`): a card grid of the section's areas. A card of

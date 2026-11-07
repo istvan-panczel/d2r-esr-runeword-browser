@@ -148,6 +148,57 @@ max_chance = 100
 level_scaling = false
 `;
 
+const CROSSBOW_CHARGES = `
+[crossbow_charges]
+enabled = true
+default_max_bolts = 3
+standing_reload_bonus = 25
+default_attack_frames = 5
+max_bolts_stat_id = 513
+current_bolts_stat_id = 514
+damage_stat_id = 515
+attack_frames_stat_id = 517
+damage_base = 100
+`;
+
+const EXTRA_CURSES = `
+[curses]
+stat_id = 1016
+replace = "oldest"
+`;
+
+const JEWELER = `
+[socketed_gems]
+stats = [
+  0,    # strength
+  7,    # maxhp
+]
+
+[[gem_effect]]
+enabled = true
+stat_id = 1022
+item_types = ["gem"]
+
+[[gem_effect]]
+enabled = false
+stat_id = 1023
+item_types = ["rune"]
+
+[[gem_effect]]
+enabled = true
+stat_id = 1046
+item_types = ["rune"]
+own_sockets = true
+
+[[gem_effect]]
+enabled = true
+stat_id = 1099
+item_types = ["gem", "jewl"]
+`;
+
+const ELIXIR_LEN = "1125*(100+stat('utilitypotionduration'.accr))/100";
+const ELIXIR_EFFECT = "(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)";
+
 function input(overrides: Partial<ModifiersInput> = {}): ModifiersInput {
   return {
     itemstatcost: parseTsv(ISC_ROWS.map((row) => row.join('\t')).join('\n'), 'itemstatcost.txt', { keepExpansionRows: true }),
@@ -175,7 +226,28 @@ function input(overrides: Partial<ModifiersInput> = {}): ModifiersInput {
       ['zakarum', '1', '10', '10', '10'],
       ['disabled', '0', '', '', ''],
     ]),
-    configs: { 'crushing-blow': CRUSHING_BLOW, 'attack-rating': ATTACK_RATING },
+    misc: tsv([
+      ['name', 'code', 'type', 'type2', 'len', 'calc1'],
+      ['Stamina Potion', 'vps', 'spot', 'upot', "2250*(100+stat('utilitypotionduration'.accr))/100", `5000*${ELIXIR_EFFECT}/100`],
+      ['Elixir of Luck', '08p', 'upot', 'relx', ELIXIR_LEN, `(50+stat('level'.accr)*3)*${ELIXIR_EFFECT}/100`],
+      ['Greater Elixir of Luck', '25p', 'upot', 'gelx', ELIXIR_LEN, `(50+stat('level'.accr)*3)*125*${ELIXIR_EFFECT}/10000`],
+      ['Elixir of Reincarnation', '35p', 'upot', '', '2000000000', '1'],
+      ['Healing Potion', 'hp3', 'hpot', '', '', ''],
+    ]),
+    skills: tsv([
+      ['skill', 'calc4'],
+      [
+        'Attack',
+        "max(25*(100-stat('crossbowreloadspeedlimit'.accr))/100,(60-clc5/3+(clc5*clc5)/8000)*(100-stat('crossbowreloadspeed'.accr))/100)",
+      ],
+    ]),
+    configs: {
+      'crushing-blow': CRUSHING_BLOW,
+      'attack-rating': ATTACK_RATING,
+      'crossbow-charges': CROSSBOW_CHARGES,
+      'extra-curses': EXTRA_CURSES,
+      jeweler: JEWELER,
+    },
     patches: {
       'esr-resistance-floor-minus-1000': JSON.stringify({
         name: 'Resistance Floor -1000',
@@ -300,6 +372,56 @@ describe('buildModifiersBundle', () => {
     expect(fact('attackRating.curve')?.value).toMatchObject({ pivotRatio: 5, steepness: 5, tail: 3, lateTail: 1, levelScaling: 0 });
     expect(fact('attackRating.table')?.value).toEqual({ '1': 0, '5': 50, '104': 100 });
     expect(warnings).toContain('modifiers: d2rloader/config/celestialrayone.dodge-avoid-evade-cap.toml is missing; its facts are left out');
+  });
+
+  it('reads the crossbow, extra curses and socketed effect configs', () => {
+    expect(fact('crossbow.bolts')).toMatchObject({ value: 3, unit: 'count', origin: 'esr-config' });
+    expect(fact('crossbow.damageBase')?.value).toBe(100);
+    expect(fact('crossbow.standingReloadBonus')?.value).toBe(25);
+    expect(fact('crossbow.attackFrames')?.value).toBe(5);
+    expect(fact('crossbow.stats')?.value).toEqual({ maxBolts: 513, currentBolts: 514, damage: 515, attackFrames: 517 });
+    expect(fact('curses.extraStat')).toMatchObject({ value: 1016, unit: 'stat' });
+    expect(fact('curses.replace')?.value).toBe('oldest');
+    // A switched-off block is left out; a block with several item types is a warning
+    expect(fact('socketEffect.stats')?.value).toEqual({ gems: 1022, runesInItem: 1046 });
+    expect(warnings).toContain(
+      'modifiers: d2rloader/config/celestialrayone.jeweler.toml gem_effect[3] has item types other than one of gem, rune, jewl'
+    );
+    expect(fact('socketEffect.statCount')?.value).toBe(2);
+  });
+
+  it('reads the utility potion formulas of misc.txt and the crossbow reload of skills.txt', () => {
+    expect(fact('utilityPotion.duration')).toMatchObject({
+      value: { stamina: 2250, elixir: 1125 },
+      unit: 'frames',
+      origin: 'game-files',
+      source: { file: 'misc.txt', key: 'len' },
+    });
+    expect(fact('utilityPotion.greaterPercent')?.value).toBe(125);
+    expect(fact('utilityPotion.perkPercent')?.value).toBe(5);
+    expect(fact('crossbow.reload')).toMatchObject({
+      value: { baseFrames: 60, minFrames: 25 },
+      source: { file: 'skills.txt', key: 'Attack calc4' },
+    });
+  });
+
+  it('warns when the utility potion or crossbow formulas change shape', () => {
+    const { bundle: changed, warnings: changedWarnings } = buildModifiersBundle(
+      input({
+        misc: tsv([['name', 'code', 'type', 'type2', 'len', 'calc1']]),
+        skills: tsv([
+          ['skill', 'calc4'],
+          ['Attack', 'clc5'],
+        ]),
+      })
+    );
+    expect(changed.facts.filter((entry) => /^(utilityPotion|crossbow\.reload)/.test(entry.key))).toEqual([]);
+    expect(changedWarnings).toEqual(
+      expect.arrayContaining([
+        'modifiers: misc.txt has no utility elixir with a utilitypotionduration length',
+        'modifiers: skills.txt Attack calc4 is not the crossbow reload formula',
+      ])
+    );
   });
 
   it('decodes the resistance floor from the patch bytes and adds the engine constants', () => {

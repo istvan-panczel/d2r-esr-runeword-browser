@@ -219,10 +219,6 @@ function Note({ guide, note, visited }: NoteProps) {
         )}
       </article>
       <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
-        {/* On the "Connections" label's line (the sticky aside is the positioning context). */}
-        <Link to="/guide/map" className={cn('absolute top-0 right-0 rounded-sm text-xs text-primary hover:underline', FOCUS_RING)}>
-          Full map
-        </Link>
         <LocalGraph note={note} visited={visited} />
       </aside>
     </div>
