@@ -73,7 +73,7 @@ import { BASE_TIERS, DEFAULT_LABEL_BACKGROUND_ALPHA, DIFFICULTIES, QUALITIES } f
 import { statLayerKind } from '../../game-data/engine/statLayers.ts';
 import { effectiveActions } from './actions.ts';
 import { ACTION_KEYS, CONDITION_KEYS } from './parse.ts';
-import { evaluateFormula, formulaReferences, parseFormula, resolveFormulaStat, type FormulaContext, type FormulaNode } from './formula.ts';
+import { evaluateFormula, formulaReferences, formulaSkillKey, parseFormula, type FormulaContext, type FormulaNode } from './formula.ts';
 import { DEFAULT_QUALITY_COLORS } from './colors.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { resolveText } from './text.ts';
@@ -125,7 +125,7 @@ export type FormulaOutcome =
   | { readonly status: 'value'; readonly value: number }
   /** The item is unidentified and the formula reads an item stat: the plugin skips the whole rule. */
   | { readonly status: 'unidentified' }
-  /** A syntax error: the plugin switches the rule off when the filter loads. */
+  /** A syntax error, or a stat or skill name the loaded game data lacks: the plugin switches the rule off when the filter loads. */
   | { readonly status: 'error'; readonly message: string; readonly offset: number };
 
 export interface RuleTrace {
@@ -310,51 +310,70 @@ function formulaContext(item: TestItem, context: TestContext): FormulaContext {
 }
 
 /**
- * The item stats an unidentified item still has (the guide: "every item carries them"); a rule that checks any other
- * item stat skips an unidentified item.
+ * The item stats an unidentified item still has (the guide: "every item carries them"), by name with their
+ * itemstatcost.txt rows (the same in ESR 3.2 and 3.3), so a check by name or id is known before the game data loads; a
+ * rule that checks any other item stat skips an unidentified item.
  */
-export const STATS_WHILE_UNIDENTIFIED: readonly string[] = [
-  'gold',
-  'armorclass',
-  'quantity',
-  'durability',
-  'maxdurability',
-  'item_numsockets',
-];
+const STAT_ROWS_WHILE_UNIDENTIFIED: Readonly<Record<string, number>> = {
+  gold: 14,
+  armorclass: 31,
+  quantity: 70,
+  durability: 72,
+  maxdurability: 73,
+  item_numsockets: 194,
+};
+export const STATS_WHILE_UNIDENTIFIED: readonly string[] = Object.keys(STAT_ROWS_WHILE_UNIDENTIFIED);
 
-/** Whether a stat (an id, unresolved = undefined) is one an unidentified item does not carry. */
-function needsIdentified(id: number | undefined, statIds: ReadonlyMap<string, number>): boolean {
-  // An unknown stat name is still an item stat check.
-  if (id === undefined) return true;
-  return !STATS_WHILE_UNIDENTIFIED.some((name) => statIds.get(name) === id);
+/** Whether a checked stat (a name or an id) is one an unidentified item does not carry. */
+function needsIdentified(stat: string | number, statIds: ReadonlyMap<string, number>): boolean {
+  if (typeof stat === 'string') return !STATS_WHILE_UNIDENTIFIED.includes(stat);
+  return !STATS_WHILE_UNIDENTIFIED.some((name) => (statIds.get(name) ?? STAT_ROWS_WHILE_UNIDENTIFIED[name]) === stat);
 }
 
 /** Whether a formula reads an item stat an unidentified item lacks (`stat`, `statMax`, `statSum`; not `playerStat`). */
 function formulaReadsItemStat(ast: FormulaNode, statIds: ReadonlyMap<string, number>): boolean {
   return formulaReferences(ast).some(
-    (call) => call.fn !== 'playerStat' && needsIdentified(resolveFormulaStat(call.stat, statIds), statIds)
+    (call) => call.fn !== 'playerStat' && needsIdentified(call.stat.kind === 'name' ? call.stat.name : call.stat.id, statIds)
   );
 }
 
 /** Whether the rule's item stat lists check a stat an unidentified item lacks (its player stat lists do not count). */
 function statListsReadItemStat(rule: LootFilterRule, statIds: ReadonlyMap<string, number>): boolean {
-  return [...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? [])].some((check) =>
-    needsIdentified(resolveStatId(check.stat, statIds), statIds)
-  );
+  return [...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? [])].some((check) => needsIdentified(check.stat, statIds));
+}
+
+/**
+ * A stat or skill name the loaded game data does not know: the guide says "a bad name … switches the rule off", as the
+ * validator warns. Nothing is checked while the data is not loaded (an empty map).
+ */
+function unknownFormulaName(ast: FormulaNode, context: TestContext): { readonly message: string; readonly offset: number } | undefined {
+  for (const call of formulaReferences(ast)) {
+    if (call.stat.kind === 'name' && context.statIds.size > 0 && !context.statIds.has(call.stat.name)) {
+      return { message: `Unknown stat '${call.stat.name}'`, offset: call.stat.start };
+    }
+    const { param } = call;
+    const skillIds = context.skillIds;
+    if (param?.kind === 'skill' && skillIds !== undefined && skillIds.size > 0 && !skillIds.has(formulaSkillKey(param.name))) {
+      return { message: `Unknown skill '${param.name}'`, offset: param.start };
+    }
+  }
+  return undefined;
 }
 
 /** The rule's formula outcome (undefined without a formula); `formulaContext` is built on first use. */
 function formulaOutcome(
   formula: string | undefined,
   item: TestItem,
-  context: () => FormulaContext,
-  statIds: ReadonlyMap<string, number>
+  formulaContextOf: () => FormulaContext,
+  context: TestContext
 ): FormulaOutcome | undefined {
   if (formula === undefined) return undefined;
   const parsed = parseFormula(formula);
   if (!parsed.ok) return { status: 'error', ...parsed.error };
-  if (!item.isIdentified && formulaReadsItemStat(parsed.ast, statIds)) return { status: 'unidentified' };
-  return { status: 'value', value: evaluateFormula(parsed.ast, context()) };
+  const unknown = unknownFormulaName(parsed.ast, context);
+  if (unknown !== undefined) return { status: 'error', ...unknown };
+  if (!item.isIdentified && formulaReadsItemStat(parsed.ast, context.statIds)) return { status: 'unidentified' };
+  return { status: 'value', value: evaluateFormula(parsed.ast, formulaContextOf()) };
 }
 
 function formulaHolds(outcome: FormulaOutcome | undefined): boolean {
@@ -502,16 +521,12 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       trace.push({ index, outcome: 'disabled', failed: [], actions: {} });
       continue;
     }
-    const formula = formulaOutcome(rule.formula, item, sharedFormulaContext, context.statIds);
+    const formula = formulaOutcome(rule.formula, item, sharedFormulaContext, context);
     /** The trace entry's formula outcome, when the rule has one. */
     const formulaTrace = formula === undefined ? {} : { formula };
     if (formula?.status === 'error') {
-      // The plugin switches a rule with a formula error off when the filter loads: it never runs, nor hides.
+      // The plugin switches a rule with a formula error (syntax or an unknown name) off when the filter loads.
       trace.push({ index, outcome: 'switchedOff', failed: [], actions: {}, reason: 'its formula has an error', ...formulaTrace });
-      continue;
-    }
-    if (formula?.status === 'unidentified' || (!item.isIdentified && statListsReadItemStat(rule, context.statIds))) {
-      trace.push({ index, outcome: 'skipped', failed: [], actions: {}, unidentified: true, ...formulaTrace });
       continue;
     }
     const failed = failedConditions(rule, item, context, formula);
@@ -522,7 +537,12 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
     }
     const actions = effectiveActions(rule, filter);
     if (actions.show === true && actions.hide === true) {
-      trace.push({ index, outcome: 'switchedOff', failed, actions: {}, reason: SHOW_AND_HIDE });
+      trace.push({ index, outcome: 'switchedOff', failed, actions: {}, reason: SHOW_AND_HIDE, ...formulaTrace });
+      continue;
+    }
+    // A rule switched off when the filter loads is that whatever the item; the unidentified skip is per item.
+    if (formula?.status === 'unidentified' || (!item.isIdentified && statListsReadItemStat(rule, context.statIds))) {
+      trace.push({ index, outcome: 'skipped', failed: [], actions: {}, unidentified: true, ...formulaTrace });
       continue;
     }
     if (failed.length > 0) {

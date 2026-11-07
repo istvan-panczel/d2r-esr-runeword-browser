@@ -1508,9 +1508,12 @@ line and character." Stats read the tooltip number and an unidentified item skip
 - **Evaluator** (`engine/evaluate.ts`): the formula is ANDed with the other conditions and is an "other condition" for
   `hideIfOtherConditionsFail` (assumed). It reads the test item's stat entries (`stat`, `statMax`, `statSum`) and the
   character's (`playerStat`, character level = stat 12) like the stat lists; skill names resolve through
-  `TestContext.skillIds` (lootfilter.json `skillNames`, `buildSkillIds`). A syntax error makes the rule `switchedOff`
-  ("its formula has an error"; it never runs, nor hides). On an unidentified item a formula that reads an item stat
-  other than `STATS_WHILE_UNIDENTIFIED` gives `{ status: 'unidentified' }` and the whole rule is skipped. Each trace
+  `TestContext.skillIds` (lootfilter.json `skillNames`, `buildSkillIds`). A syntax error, or a stat or skill name the
+  loaded game data lacks (the validator's "switches the rule off in game" warnings; not checked before the data loads),
+  makes the rule `switchedOff` ("its formula has an error"; it never runs, nor hides). Load-time switches (formula
+  error, wrong shape, show + hide) come before the per-item unidentified skip. On an unidentified item a formula that
+  reads an item stat other than `STATS_WHILE_UNIDENTIFIED` gives `{ status: 'unidentified' }` and the whole rule is
+  skipped; those stats are known by name and by their itemstatcost row before the game data loads. Each trace
   entry carries `formula`: its value, `unidentified` or the error; the Test tab trace prints it ("formula = 1, holds").
 - **Rule editor** (`components/rules/conditions/FormulaField.tsx`): "Formula" (Advanced view; Basic shows it when set)
   spans the Stats section after the stat lists. A monospace text area (an emptied one removes the key), the live syntax

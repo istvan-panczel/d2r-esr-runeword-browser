@@ -724,6 +724,8 @@ describe('evaluateFilter: formula', () => {
     statIds: new Map([
       ['item_fastercastrate', FCR],
       ['fireresist', 39],
+      ['lightresist', 41],
+      ['coldresist', 43],
       ['item_nonclassskill', 97],
       ['item_skillonhit', 201],
       ['item_numsockets', 194],
@@ -847,5 +849,68 @@ describe('unidentified items (plugin 1.8.2)', () => {
     ];
     const result = evaluateFilter(makeFilter(rules), ring(false), context);
     expect(result.trace.map((entry) => entry.outcome)).toEqual(['applied', 'applied', 'hidden']);
+  });
+});
+
+describe('unknown formula names, unidentified items without game data, trace order', () => {
+  const context = makeContext({
+    statIds: new Map([
+      ['fireresist', 39],
+      ['item_nonclassskill', 97],
+      ['item_numsockets', 194],
+      ['level', 12],
+    ]),
+    skillIds: new Map([['teleport', 54]]),
+  });
+  const ring = (overrides: Partial<TestItem> = {}) => makeItem({ code: 'rin', typeAncestors: ['ring', 'misc'], quality: 4, ...overrides });
+
+  it('switches a rule off when its formula names a stat or skill the game data lacks, as the validator says', () => {
+    const typo = evaluateFilter(makeFilter([{ itemCodes: ['rin'], formula: "!stat('firresist')", hide: true }]), ring(), context);
+    expect(typo.hidden).toBe(false);
+    expect(typo.trace[0]).toMatchObject({
+      outcome: 'switchedOff',
+      formula: { status: 'error', message: "Unknown stat 'firresist'", offset: 6 },
+    });
+    const skill = evaluateFilter(
+      makeFilter([{ itemCodes: ['rin'], formula: "stat('item_nonclassskill', 'Hex: Bane') < 1", hide: true }]),
+      ring(),
+      context
+    );
+    expect(skill.trace[0]).toMatchObject({ outcome: 'switchedOff', formula: { status: 'error', message: "Unknown skill 'Hex: Bane'" } });
+    // Without game data nothing is unknown
+    const noData = evaluateFilter(
+      makeFilter([{ itemCodes: ['rin'], formula: "!stat('firresist')", hide: true }]),
+      ring(),
+      makeContext({ statIds: new Map() })
+    );
+    expect(noData.hidden).toBe(true);
+  });
+
+  it('knows the stats every item carries before the game data loads, by name or id', () => {
+    const noData = makeContext({ statIds: new Map() });
+    for (const stat of ['gold', 'quantity', 'item_numsockets', 194, 14] as const) {
+      const rule: LootFilterRule = { itemCodes: ['rin'], itemStats: [{ stat, op: '<', value: 1 }], hide: true };
+      expect(evaluateFilter(makeFilter([rule]), ring({ isIdentified: false }), noData).trace[0], String(stat)).not.toHaveProperty(
+        'unidentified'
+      );
+    }
+    const other: LootFilterRule = { itemCodes: ['rin'], itemStats: [{ stat: 'fireresist', op: '<', value: 1 }], hide: true };
+    expect(evaluateFilter(makeFilter([other]), ring({ isIdentified: false }), noData).trace[0]).toMatchObject({ unidentified: true });
+  });
+
+  it('reports a wrong shape or show + hide before the unidentified skip', () => {
+    const stats = [{ stat: 'fireresist', value: 1 }] as const;
+    const wrong = evaluateFilter(
+      makeFilter([{ itemStats: stats, namePrefix: 'x', passthrough: { sockets: 'two' } }]),
+      ring({ isIdentified: false }),
+      context
+    );
+    expect(wrong.trace[0]?.outcome).toBe('wrongShape');
+    const both = evaluateFilter(
+      makeFilter([{ itemStats: stats, show: true, hide: true, formula: '1' }]),
+      ring({ isIdentified: false }),
+      context
+    );
+    expect(both.trace[0]).toMatchObject({ outcome: 'switchedOff', formula: { status: 'value', value: 1 } });
   });
 });
