@@ -76,6 +76,8 @@ check, and an item the root class drops that is not an elixir. Counts: `elixirs*
 - Perk cards with the facts, the Gem Infusion recipes (link to the Cube page's potions family), a note on the other
   "Elixir" items (Secret Recipe 1's cube ingredient, the starter Elixir of Skill) and a link to the guide's `elixirs`
   note.
+- The header links the guide's `elixirs` note (`/guide/elixirs`; the note links back with `page:/elixirs`, listed in
+  `APP_PAGES`) and the Modifiers page's `utility-potions` block (`/modifiers?kind=utility-potions`).
 - URL: `name` (slug; only that elixir), `search`, `avail`, `variant`, `lvl`, `eff`, `dur`, `perks` (slugs). The route
   skips the HTM startup gate (`staticBundleRoutes.ts`).
 

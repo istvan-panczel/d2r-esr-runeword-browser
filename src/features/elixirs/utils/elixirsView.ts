@@ -11,11 +11,14 @@ import { FILTER_URL_PARAM_KEYS, parseBoundedIntParam } from '@/core/utils/filter
 import { parseSearchTerms } from '@/core/utils/searchTerms';
 import { ELIXIR_STATS, evaluateElixirCalc, fillValue, framesToSeconds, type ElixirStats } from '@/features/game-data/engine/elixirs';
 import type { ElixirInfo, ElixirPerk, ElixirsBundle } from '@/features/game-data/engine/schema';
+import { MODIFIERS_ROUTE, MODIFIERS_URL_PARAMS } from '@/features/modifiers/utils/modifierRoutes';
 
 export const ELIXIRS_ROUTE = 'elixirs';
 /** The Specializations page (another feature); `tree` and `perk` are lower-case kebab names */
 export const SPECIALIZATIONS_ROUTE = '/specializations';
 export const ELIXIRS_GUIDE_NOTE = '/guide/elixirs';
+/** The Modifiers page's Utility Potion Effectiveness and Duration block */
+export const UTILITY_POTIONS_MODIFIER = `/${MODIFIERS_ROUTE}?${new URLSearchParams({ [MODIFIERS_URL_PARAMS.KIND]: 'utility-potions' }).toString()}`;
 
 export const ELIXIRS_URL_PARAMS = {
   NAME: FILTER_URL_PARAM_KEYS.NAME,

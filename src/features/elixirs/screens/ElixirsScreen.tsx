@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { FilterPanel } from '@/components/FilterPanel';
@@ -21,6 +21,7 @@ import { DropsPanel, NameClashNote, PerksSection, RecipesSection } from '../comp
 import {
   defaultState,
   elixirValues,
+  ELIXIRS_GUIDE_NOTE,
   ELIXIRS_ROUTE,
   encodeElixirsState,
   filterElixirs,
@@ -28,6 +29,7 @@ import {
   oddsFor,
   readElixirsState,
   togglePerks,
+  UTILITY_POTIONS_MODIFIER,
   type ElixirsState,
 } from '../utils/elixirsView';
 
@@ -36,6 +38,7 @@ const SEARCH_DEBOUNCE_MS = 250;
 const ALL = '';
 /** Quick character levels next to the level input (the top level is added) */
 const QUICK_LEVELS = [1, 30, 60, 90] as const;
+const META_LINK = 'font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary';
 
 export function ElixirsScreen() {
   const gameData = useGameData(ELIXIR_FILES);
@@ -46,7 +49,15 @@ export function ElixirsScreen() {
       meta={
         <>
           The drinkable utility elixirs{version === null ? '' : ` of ESR ${version}`}, read from the game files: what each one gives at your
-          level, how they drop and which Alchemist perks change them.
+          level, how they drop and which Alchemist perks change them. Read more in the guide&apos;s{' '}
+          <Link to={ELIXIRS_GUIDE_NOTE} className={META_LINK}>
+            Elixirs note
+          </Link>{' '}
+          and on the Modifiers page&apos;s{' '}
+          <Link to={UTILITY_POTIONS_MODIFIER} className={META_LINK}>
+            Utility Potion Effectiveness and Duration
+          </Link>
+          .
         </>
       }
     >
