@@ -30,6 +30,6 @@ The [Runewords](page:/runewords) and [Gemwords](page:/gemwords) pages here list 
 
 - Get a base with exactly the right sockets ([[socketing]]). The [Best Base](bestbase:Enigma) tool compares bases for a runeword.
 - Trying a runeword is free: a Key in the cube returns the base and every rune.
-- Since 3.3 the Archaeologist specialization perk Power Overwhelming also lets you make runewords in magic items.
+- Since 3.3 the Archaeologist specialization perk [Power Overwhelming](page:/specializations?tree=archaeologist&perk=power-overwhelming) also lets you make runewords in magic items.
 - You cannot forge a runeword, but you can D-stone it. D-stoning done before you make the runeword survives removing the runes; D-stoning done after is lost when you remove them ([[dstoning-and-mapling]]).
 - Early on, farm the Countess: she has her own rune drop, ES runes and Decals, on every difficulty. Cube up the low runes you find as well ([[rune-families]]).
