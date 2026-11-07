@@ -21,7 +21,7 @@
   note: Release notes from 3.2.04 onwards.
 - id: mod-author
   title: ESR mod author (Discord, 2026-11-07)
-  note: CelestialRay's answers to our mechanics questions about ESR 3.2.24 / 3.3 (leech, poison length, the Normal resistance penalty, item procs, Magic Find, D-stoning caps).
+  note: CelestialRay's answers to our mechanics questions about ESR 3.2.24 / 3.3 (leech, poison length, the Normal resistance penalty, item procs, Magic Find, D-stoning caps, dodge, and the 3.3 perks Elixir of Reincarnation, Deep Pockets and Alien Artefacts).
 - id: esr-loader
   title: ESR launcher plugins and memory patches
   url: https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/tree/main/d2rloader

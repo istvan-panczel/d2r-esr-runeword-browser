@@ -7,14 +7,14 @@ aliases: [elixir, utility potion, utility elixir, greater elixir, elixir of rein
 related: [specializations, secret-recipes, starter-pack]
 volatility: high
 mentions: [Elixir of Luck, Greater Elixir of Luck, Elixir, Dragon Stone]
-sources: [patchnotes, esr-txt, esr-loader, official-docs]
+sources: [patchnotes, esr-txt, esr-loader, official-docs, mod-author]
 ---
 
 Since ESR 3.3 a potion drop is sometimes a utility elixir instead: from 1% early in the game up to 5% later. An elixir's effect lasts 45 seconds and grows with your character level. Items with [Utility Potion Effectiveness](page:/modifiers?kind=stat-utilitypotionmultiplier) make it stronger and [Utility Potion Duration](page:/modifiers?kind=stat-utilitypotionduration) makes it last longer; both also work on Stamina, Antidote and Thawing Potions. The [Elixirs](page:/elixirs) page shows every elixir's effect at your level, with these stats and the Alchemist perks.
 
 - Thirteen elixirs drop for everyone. The Elixirs of the Giant, the Feline, the Gorilla and the Raven drop only for an Alchemist with the [Hidden Elixirs](page:/specializations?tree=alchemist&perk=hidden-elixirs) perk ([[specializations]]).
 - Every elixir has a stronger **Greater** variant. With the [Alchemical Excellence](page:/specializations?tree=alchemist&perk=alchemical-excellence) perk, a quarter of the elixirs an Alchemist finds or crafts are Greater; without it none drop.
-- The **Elixir of Reincarnation** comes with the [Alchemist perk of the same name](page:/specializations?tree=alchemist&perk=elixir-of-reincarnation); the official page says you cube it from Dragon Stones. On a fatal hit it restores full life and mana and gives a moment of invincibility, then needs five minutes before it works again. <!-- verify: the 3.3 cubemain.txt has no row that makes 35p; check the recipe in game -->
+- The **Elixir of Reincarnation** comes with the [Alchemist perk of the same name](page:/specializations?tree=alchemist&perk=elixir-of-reincarnation); the official page says you cube it from five Dragon Stones, but ESR 3.3 has no such recipe. The mod author says the recipe is missing by mistake and comes in the next patch, so until then you cannot get it. On a fatal hit it restores full life and mana and gives a moment of invincibility, then needs five minutes before it works again.
 
 ::source[Elixir of Luck]
 
