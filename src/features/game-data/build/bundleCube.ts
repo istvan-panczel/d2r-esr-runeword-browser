@@ -143,6 +143,7 @@ export function statConditionText(op: number, stat: string, value: number, count
   let named: string | null = null;
   if (stat === 'item_craftflag') named = flag('No forging mod', 'Has a forging mod');
   else if (stat === 'item_craftflag2') named = flag('No jewel forging', 'Has a jewel forging');
+  else if (stat === 'craftflag_crucible') named = flag('No crucible forging', 'Has a crucible forging');
   else if (stat === 'item_mercflag') named = flag('Not merc-only', 'Merc-only item');
   else if (stat === 'weaponmastery') named = flag('No weapon mastery token applied', 'Weapon mastery token applied');
   else if (stat === 'item_upgraded' && value === 1) named = op === 17 ? 'Not upgraded yet' : op === 18 ? 'Already upgraded' : null;
@@ -523,8 +524,9 @@ export function assignCubeRows(tables: Pick<CubeTables, 'cube' | 'items' | 'name
       hidden[reason]++;
       continue;
     }
-    // Every numbered secret recipe is in the secret family, also those a guide family lists (26, 27, 28, 40)
-    const numbered = secretNumber(row.description) === null ? undefined : secret;
+    // Every numbered secret recipe is in the secret family, also those a guide family lists (26, 27, 28, 40); not the
+    // ESR 3.3 "[SECRET08] Crucible - …" forgings, which the secret family's match leaves to the crucible family
+    const numbered = secretNumber(row.description) === null || secret === undefined || !matches(secret, row) ? undefined : secret;
     let family: CubeFamily | undefined = numbered ?? guide ?? EXTRA_FAMILIES.find((extra) => matches(extra, row));
     if (family === undefined) {
       const prefix = fallbackPrefix(row.description);

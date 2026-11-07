@@ -17,6 +17,7 @@ import {
 } from '../../game-data/build/cube/cubeRows.ts';
 import { STAT_TABLES, type StatTableName } from '../../game-data/build/stats/statRenderer.ts';
 import { buildStringTable, type StringsFile } from '../../game-data/build/strings.ts';
+import { perkChecks } from '../../game-data/build/cube/perks.ts';
 import { parseTsv, type TsvTable } from '../../game-data/build/tsv.ts';
 
 export const GUIDE_TABLES = ['cubemain', 'misc', 'armor', 'weapons', 'itemtypes', 'difficultylevels'] as const;
@@ -132,8 +133,16 @@ export function buildEsrGuideTables(
     aiCurseDivisor: numberOf(row, 'AiCurseDivisor'),
   }));
 
+  const cube = readCube(parseTsv(sources.tables.cubemain, 'cubemain.txt'));
+  // Specialisation perk conditions (ESR 3.3), by itemstatcost id; none without the stat tables (small fixtures)
+  const statNames =
+    sources.statTables === undefined
+      ? []
+      : parseTsv(sources.statTables.itemstatcost, 'itemstatcost.txt', { keepExpansionRows: true }).rows.map((row) => row.str('Stat'));
+  const perks = perkChecks(cube, (id) => statNames[id], strings);
   return {
-    cube: readCube(parseTsv(sources.tables.cubemain, 'cubemain.txt')),
+    cube,
+    perkChecks: (row) => perks.get(row) ?? [],
     items,
     npcs,
     difficulties,

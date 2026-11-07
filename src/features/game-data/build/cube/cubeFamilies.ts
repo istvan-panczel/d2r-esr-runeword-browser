@@ -22,6 +22,7 @@ import {
   type RecipeVariant,
 } from './cubeText.ts';
 import type { CubeRow, CubeTables } from './cubeRows.ts';
+import { perkCheckText } from './perks.ts';
 
 /** A family as a guide `recipes` block (structurally the guide schema's RecipesBlock) */
 export interface CubeFamilyBlock {
@@ -31,7 +32,7 @@ export interface CubeFamilyBlock {
 }
 
 /** What families read: the cube rows, display names and the item list (internal names, e.g. a coupon's tier) */
-export type FamilyTables = Pick<CubeTables, 'cube' | 'nameOf' | 'anyType' | 'items' | 'renderMods' | 'counterName'>;
+export type FamilyTables = Pick<CubeTables, 'cube' | 'nameOf' | 'anyType' | 'items' | 'renderMods' | 'counterName' | 'perkChecks'>;
 
 export interface CubeFamily {
   id: string;
@@ -166,6 +167,9 @@ const SOCKET_QUALITY: Readonly<Partial<Record<string, string>>> = {
 };
 const BASE_TIER: Readonly<Partial<Record<string, string>>> = { bas: 'normal', exc: 'exceptional', eli: 'elite' };
 const SMALL_PARTS = new Set(['belt', 'boot', 'glov']);
+
+/** ESR 3.3 perk-only copies of a recipe ("… - Archaeology 13 Special", "… - Jeweler 15 Special") */
+const PERK_ROW = / - (?:Alchemy|Blacksmithing|Jeweler|Archaeology) \d+ Special$/;
 
 /** "Rare or Crafted belt, boots or gloves", "Magic item", "Normal quiver"; null for other rows (charms, donuts) */
 function socketBase(row: CubeRow): { label: string; tier: string | null } | null {
@@ -517,10 +521,16 @@ function genericMercOnly(recipe: RecipeVariant, row: CubeRow): RecipeVariant {
 
 // --- weapon mastery ----------------------------------------------------------------------------------------------
 
-const MASTERY_VERB = /^(Awaken|Apply Awaken|Remove Awaken|Unawaken) Weapon Mastery Token/;
+/**
+ * ESR 3.3 added "True Master - Apply Awaken …" (any weapon, Blacksmith perk) and "Remove Weapon Mastery - …" (any
+ * weapon with that mastery); the "Remove Awaken …" rows still clear the ESR 3.2 `weaponmastery` stat.
+ */
+const MASTERY_VERB =
+  /^(Awaken|Apply Awaken|Remove Awaken|Unawaken|True Master - Apply Awaken) Weapon Mastery Token|^(Remove) Weapon Mastery - /;
 
 function masteryVerb(row: CubeRow): string {
-  return MASTERY_VERB.exec(row.description)?.[1] ?? row.description;
+  const match = MASTERY_VERB.exec(row.description);
+  return match?.[1] ?? match?.[2] ?? row.description;
 }
 
 /**
@@ -536,14 +546,20 @@ function genericMastery(recipe: RecipeVariant, row: CubeRow, esr: FamilyTables):
     (candidate) => masteryVerb(candidate) === 'Awaken',
     (candidate) => [parseCubeCell(candidate.inputs[0] ?? '').token]
   );
+  const applies = verb === 'Apply Awaken' || verb === 'True Master - Apply Awaken';
+  const first: Readonly<Record<string, string>> = {
+    Awaken: `A class weapon (any of ${String(bases.length)} bases)`,
+    'True Master - Apply Awaken': 'Any weapon (no runeword)',
+    Remove: 'A weapon with that mastery',
+  };
   const inputs = recipe.inputs.map((text, i) => {
-    if (i === 0) return verb === 'Awaken' ? `A class weapon (any of ${String(bases.length)} bases)` : 'The class weapon (no runeword)';
-    if (verb !== 'Awaken' && i === (verb === 'Apply Awaken' ? 2 : 1)) return "Its class's Dragon Stone form";
+    if (i === 0) return first[verb] ?? 'The class weapon (no runeword)';
+    if (verb !== 'Awaken' && i === (applies ? 2 : 1)) return "Its class's Dragon Stone form";
     return text;
   });
   if (verb === 'Awaken')
     return { inputs, output: recipe.output.replace(/^The same item \+ (.+)$/, 'The same weapon + $1 (for that weapon type)') };
-  if (verb === 'Apply Awaken') return { inputs, output: 'The same weapon with its mastery' };
+  if (applies) return { inputs, output: 'The same weapon with its mastery' };
   return { inputs, output: 'The same weapon without the mastery (the token is not returned)' };
 }
 
@@ -723,24 +739,6 @@ function genericCharmUpgrade(recipe: RecipeVariant, row: CubeRow): RecipeVariant
   return recipe;
 }
 
-/** The Orb of Anointment batches (1 to 3 at a time) as one row */
-function genericMapleLeaf(recipe: RecipeVariant, row: CubeRow, esr: FamilyTables): RecipeVariant {
-  if (!/^Orb of Anointment Recycle/.test(row.description)) return recipe;
-  const counts = valuesOver(
-    esr,
-    'anointment recycle',
-    (candidate) => /^Orb of Anointment Recycle/.test(candidate.description),
-    (candidate) => [String(parseCubeCell(candidate.inputs[0] ?? '').qty)]
-  );
-  const strip = (text: string) => text.replace(/^\d+× /, '');
-  return {
-    inputs: recipe.inputs.map((input, i) =>
-      i === 0 ? `N× ${strip(input)} (N = ${numberRange(counts.map(Number))})` : `N× ${strip(input)}`
-    ),
-    output: `N× ${strip(recipe.output.split(' + ')[0] ?? recipe.output)}`,
-  };
-}
-
 // --- class crafts, gem melding -----------------------------------------------------------------------------------
 
 const CRAFT_CLASSES: Readonly<Partial<Record<string, string>>> = {
@@ -830,10 +828,13 @@ function genericVessel(recipe: RecipeVariant): RecipeVariant {
  * becomes one of the "Jewel Sanctification N" rows (N being the roll).
  */
 function genericSanctification(recipe: RecipeVariant, row: CubeRow): RecipeVariant {
+  // ESR 3.3: amulets and rings too, with the Jeweler perk Hallowed Accessories
+  const item = /(Jewel|Amulet|Ring)(?: Sanctification \d+)?$/.exec(row.description)?.[1]?.toLowerCase() ?? 'jewel';
   if (/^Add Sanctification Dummy Stat/.test(row.description)) {
-    return { inputs: recipe.inputs, output: 'The same jewel, ready to sanctify (transmute it again on its own)' };
+    return { inputs: recipe.inputs, output: `The same ${item}, ready to sanctify (transmute it again on its own)` };
   }
-  if (/^Jewel Sanctification \d+$/.test(row.description)) return { inputs: ['That jewel, on its own'], output: recipe.output };
+  if (/^(?:Jewel|Amulet|Ring) Sanctification \d+$/.test(row.description))
+    return { inputs: [`That ${item}, on its own`], output: recipe.output };
   return recipe;
 }
 
@@ -896,7 +897,9 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
     match: /^(?:Adds Socket\(\d+\): .*Socket Donut|Socket Donut: )/,
     rewrite: genericSockets,
     // The odd charm rows (one more socket per use) differ only in a hidden socket-count condition: one pooled row.
-    collapse: (row) => socketBase(row)?.label ?? (/Odd Charm/.test(row.description) ? 'odd charm' : row.description),
+    // The ESR 3.3 "… - Archaeology 13 Special" rows (magic items as if normal, Archaeologist perk) are their own groups
+    collapse: (row) =>
+      `${socketBase(row)?.label ?? (/Odd Charm/.test(row.description) ? 'odd charm' : row.description)}${PERK_ROW.test(row.description) ? ' (perk)' : ''}`,
   },
   {
     id: 'coupon-tiers',
@@ -924,7 +927,7 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
     id: 'legendary-consumables',
     label: 'Legendary consumables',
     match:
-      /^(?:Inarius' Everburning Halo|Astrogha's Petrified Heart|Lilith's Crystallized Tear|Tyrael's Eternal Feather|Add Sanctification Dummy Stat|Jewel Sanctification \d+$)/,
+      /^(?:Inarius' Everburning Halo|Astrogha's Petrified Heart|Lilith's Crystallized Tear|Tyrael's Eternal Feather|Add Sanctification Dummy Stat|(?:Jewel|Amulet|Ring) Sanctification \d+$)/,
     rewrite: genericSanctification,
     // The sanctifications (one per value of the Relic's hidden roll) are one random pool
     collapse: (row) =>
@@ -981,7 +984,8 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
   {
     id: 'weapon-mastery',
     label: 'Weapon mastery',
-    match: /^(?:(?:Apply |Remove )?Awaken Weapon Mastery Token - .+|Unawaken Weapon Mastery Token)$/,
+    match:
+      /^(?:(?:Apply |Remove |True Master - Apply )?Awaken Weapon Mastery Token - .+|Unawaken Weapon Mastery Token|Remove Weapon Mastery - .+)$/,
     rewrite: genericMastery,
     // One row per step (the bases merged); applying with a chipped gem (orbs, Voidblades) is its own row.
     collapse: masteryVerb,
@@ -989,8 +993,10 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
   {
     id: 'unsocket',
     label: 'Removing socketables with a Key',
-    match: /^Unsocket (?:Weap|Armo|Ring|Amulet|Charm|Quiver)$/,
+    // "… - Jeweler 15 Special": the Jeweler perk Steady Pliers (gemwords keep their gems), its own group
+    match: /^Unsocket (?:Weap|Armo|Ring|Amulet|Charm|Quiver)(?: - Jeweler 15 Special)?$/,
     rewrite: genericUnsocket,
+    collapse: (row) => (PERK_ROW.test(row.description) ? 'perk' : 'plain'),
   },
   {
     id: 'lucion-essence',
@@ -1030,9 +1036,7 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
   {
     id: 'maple-leaf',
     label: 'Making Maple Leaves',
-    match:
-      /^(?:Maple Leaf: Unique Charm \+ Key \+ any rejuv pot|Orb of Anointment Recycle to Maple Leaf(?: x\d)?|\[SECRET(?:26|40)\] .*Maple Leaf.*)$/,
-    rewrite: genericMapleLeaf,
+    match: /^(?:Maple Leaf: Unique Charm \+ Key \+ any rejuv pot|\[SECRET(?:26|40)\] .*Maple Leaf.*)$/,
   },
   {
     id: 'class-craft',
@@ -1154,11 +1158,27 @@ export function groupFamily(
  * bonuses would split it past MAX_GROUP_ROWS is shown without them (clusterWithBonus).
  */
 export function collectFamily(family: CubeFamily, esr: FamilyTables): CubeRecipeRow[] {
-  return groupFamily(family, esr).flatMap(({ merged }) => {
+  return groupFamily(family, esr).flatMap(({ rows, merged }) => {
     const variants = merged.map(({ variant }) => variant);
-    if (family.collapse === undefined) return variants.map((row) => ({ ...row, note: null }));
-    return capGroup(variants, () => null);
+    const note = (i: number) =>
+      perkNote(
+        (merged[i]?.indices ?? []).flatMap((index) => rows[index] ?? []),
+        esr
+      );
+    if (family.collapse === undefined) return variants.map((row, i) => ({ ...row, note: note(i) }));
+    return capGroup(variants, note);
   });
+}
+
+/**
+ * The perk a merged row needs (ESR 3.3 specialisation perks, cube/perks.ts): "Needs the Jeweler perk Steady Pliers"
+ * when every row it merges needs it, null otherwise (or without perk data)
+ */
+function perkNote(rows: readonly CubeRow[], esr: FamilyTables): string | null {
+  if (esr.perkChecks === undefined || rows.length === 0) return null;
+  const lists = rows.map((row) => esr.perkChecks?.(row).filter((check) => check.has) ?? []);
+  const shared = (lists[0] ?? []).filter((check) => lists.every((list) => list.some((other) => other.perk.title === check.perk.title)));
+  return shared.length === 0 ? null : shared.map(perkCheckText).join('; ');
 }
 
 /** The `recipes` block of a family: at most `maxRows` (default MAX_FAMILY_ROWS) rows, the caption counting the rest. */

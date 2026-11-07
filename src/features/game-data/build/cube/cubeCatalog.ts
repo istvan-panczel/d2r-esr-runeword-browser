@@ -515,9 +515,34 @@ export const STOCKER_FAMILIES: readonly ExtraFamily[] = [
   },
 ];
 
+const CRUCIBLE_PREFIX = /^(?:\[SECRET\d+\] )?Crucible - /;
+
+/**
+ * ESR 3.3 "Crucible - <forging>" rows (Blacksmith perk The Secret Crucible): a second forging, the same recipe as the
+ * forging family that matches the rest of the description; that family's rewrite words it.
+ */
+function crucibleForging(recipe: RecipeVariant, row: CubeRow, esr: FamilyTables): RecipeVariant {
+  const description = row.description.replace(CRUCIBLE_PREFIX, '');
+  const base = CUBE_FAMILIES.find((family) => family.match.test(description));
+  return base?.rewrite === undefined ? recipe : base.rewrite(recipe, { ...row, description }, esr);
+}
+
 /** Families of the cube reference after CUBE_FAMILIES (first match wins), grouped by description shape unless set */
 export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
   ...STOCKER_FAMILIES,
+  {
+    id: 'crucible',
+    label: 'Crucible forging (a second forging)',
+    section: 'for',
+    match: CRUCIBLE_PREFIX,
+    rewrite: crucibleForging,
+    // Each rune and gem has its own bonus (hundreds of rows): the forging families list them
+    outputBonus: 'hide',
+    collapse: (row) =>
+      /\[SECRET\d+\]/.test(row.description)
+        ? 'secret'
+        : (/(?:Remove )?(?:All Skill|Skill|Stat|Rune|Aura) Forging/.exec(row.description)?.[0] ?? row.description),
+  },
   {
     id: 'unique-reroll',
     label: 'Unique rerolls',
@@ -602,8 +627,9 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
     id: 'materials',
     label: 'Organs, Decipherers, Steaks and Dragon Stones',
     section: 'mat',
+    // ESR 3.3: a spare Orb of Anointment recycles into 2 Dragon Stones with a Key (3.2: into Maple Leaves)
     match:
-      /^(?:Decipherer: |\d+ Decipherers: \d+ Steaks|\d+ (?:Brains|Eyes|Scalps|Horns|Fangs|Jawbones|Spleens|Quills|Tails|Flags): |Steak: |Cookbook: |DS: |Dstone Transformation x\d)/,
+      /^(?:Decipherer: |\d+ Decipherers: \d+ Steaks|\d+ (?:Brains|Eyes|Scalps|Horns|Fangs|Jawbones|Spleens|Quills|Tails|Flags): |Steak: |Cookbook: |DS: |Dstone Transformation x\d|Orb of Anointment Recycle to Dragon Stones$)/,
     collapse: byShape,
   },
   {
@@ -620,10 +646,17 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
   },
   {
     id: 'potions',
-    label: 'Potions and rejuvenations',
+    label: 'Potions, rejuvenations and elixirs',
     section: 'mis',
-    match: /potion upgrade$|^(?:Full )?Rejuv Pot: |^\d+ Rejuv Pots: /,
+    // ESR 3.3 "Alchemist - Gem Infusion": a Perfect Gem and a Randomizing Stone into an elixir (Alchemist perks)
+    match: /potion upgrade$|^(?:Full )?Rejuv Pot: |^\d+ Rejuv Pots: |^Alchemist - /,
     collapse: byShape,
+  },
+  {
+    id: 'specializations',
+    label: 'Mystical Tesseract (specialization points)',
+    section: 'mis',
+    match: /^Mystical Tesseract: /,
   },
   {
     id: 'repair',
@@ -669,7 +702,8 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
     id: 'secret',
     label: 'Secret recipes',
     section: 'sec',
-    match: /^\[SECRET\d+\]/,
+    // Not the ESR 3.3 "[SECRET08] Crucible - …" forgings (the crucible family)
+    match: /^\[SECRET\d+\] (?!Crucible\b)/,
     collapse: (row) => secretNumber(row.description)?.toString() ?? row.description,
   },
 ];
@@ -733,6 +767,9 @@ export const FAMILY_NOTES: Readonly<Partial<Record<string, readonly string[]>>> 
   ],
   'stocker-upgrades': ['Cube the stocker alone to cycle the selected rune or decal.'],
   'multi-stocker': ['Cube the Multi Stocker alone to cycle the selected item; storing and taking items out is left out.'],
+  crucible: [
+    'With the Blacksmith perk The Secret Crucible, a weapon or armor takes one more forging on top of its first: the same recipes and bonuses as the forging families above, removed the same way.',
+  ],
   'rerolling-orb': [
     'The orb stores magic and rare rings, amulets, jewels, charms and quivers as points (one per item); cube it alone to pick which points it spends.',
   ],

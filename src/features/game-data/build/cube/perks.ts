@@ -65,14 +65,36 @@ export function ownPerkCheck(
   return null;
 }
 
-/** "Needs the True Master perk (Blacksmith)" / "Only without the … perk" */
+/** "Needs the Blacksmith perk True Master" / "Only without the Blacksmith perk …" */
 export function perkCheckText({ perk, has }: PerkCheck): string {
-  return `${has ? 'Needs' : 'Only without'} the ${perk.title} perk (${perk.tree})`;
+  return `${has ? 'Needs' : 'Only without'} the ${perk.tree} perk ${perk.title}`;
+}
+
+/** "weap,nru,qty=2" → token, quantity and the other qualifiers */
+function cell(spec: string): { token: string; qty: string; qualifiers: string[] } {
+  const [token = '', ...parts] = spec.split(',').map((part) => part.trim());
+  return { token, qty: parts.find((part) => part.startsWith('qty=')) ?? '', qualifiers: parts.filter((part) => !part.startsWith('qty=')) };
 }
 
 /**
- * Every row's perk checks: its own, then the perks an earlier row with the same inputs takes away (see above), in
- * file order. Rows without a perk check are not in the map.
+ * Whether every item `row` takes also matches `earlier`: the same number of inputs, each with the same token and
+ * quantity and the earlier row's qualifiers a subset ("weap,nru" catches "weap,low,sock,nru"). Item type trees are not
+ * walked (a "weap" row is not taken to catch an "axe" row), so this errs on the side of no perk.
+ */
+function covers(earlier: readonly string[], row: readonly string[]): boolean {
+  return (
+    earlier.length === row.length &&
+    earlier.every((spec, i) => {
+      const a = cell(spec);
+      const b = cell(row[i] ?? '');
+      return a.token === b.token && a.qty === b.qty && a.qualifiers.every((part) => b.qualifiers.includes(part));
+    })
+  );
+}
+
+/**
+ * Every row's perk checks: its own, then the perks an earlier row that catches all of its items takes away (see
+ * above), in file order. Rows without a perk check are not in the map.
  */
 export function perkChecks(
   rows: readonly CubeRow[],
@@ -80,16 +102,20 @@ export function perkChecks(
   strings: ReadonlyMap<string, string>
 ): Map<CubeRow, PerkCheck[]> {
   const checks = new Map<CubeRow, PerkCheck[]>();
-  const without = new Map<string, Perk[]>();
+  // Rows that only match without a perk, by their first input's token
+  const without = new Map<string, { inputs: readonly string[]; perk: Perk }[]>();
   for (const row of [...rows].sort((a, b) => a.line - b.line)) {
-    const key = row.inputs.join(' ; ');
+    const key = cell(row.inputs[0] ?? '').token;
     const own = ownPerkCheck(row, statName, strings);
-    const inherited = (without.get(key) ?? [])
-      .filter((perk) => perk.title !== own?.perk.title)
-      .map((perk): PerkCheck => ({ perk, has: true, inherited: true }));
+    const inherited: PerkCheck[] = [];
+    for (const entry of without.get(key) ?? []) {
+      const { title } = entry.perk;
+      if (title === own?.perk.title || inherited.some((check) => check.perk.title === title) || !covers(entry.inputs, row.inputs)) continue;
+      inherited.push({ perk: entry.perk, has: true, inherited: true });
+    }
     const list = [...inherited, ...(own === null ? [] : [own])];
     if (list.length > 0) checks.set(row, list);
-    if (own !== null && !own.has) without.set(key, [...(without.get(key) ?? []), own.perk]);
+    if (own !== null && !own.has) without.set(key, [...(without.get(key) ?? []), { inputs: row.inputs, perk: own.perk }]);
   }
   return checks;
 }

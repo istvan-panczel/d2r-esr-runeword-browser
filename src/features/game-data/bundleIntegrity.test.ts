@@ -337,31 +337,38 @@ describe('committed game-data bundles', () => {
     expect(bases.find((base) => base.code === 'hax')?.range).toBeGreaterThan(0);
   });
 
-  it('carry the superior affix rows, weights and pools (ESR 3.2.24)', () => {
+  it('carry the superior affix rows, weights and pools (ESR 3.3)', () => {
     const superior = readSuperiorAffixes(basesBundle);
     expect(superior).not.toBeNull();
     if (superior === null) return;
     expect(superior.enabled).toBe(true);
-    expect(superior.defaultWeight).toBe(100);
+    // ESR 3.3 moved the weights into the qualityitems.txt frequency column (the toml's weights table is gone)
+    expect(superior.weightSource).toBe('frequency');
+    expect(superior.defaultWeight).toBe(0);
     expect(superior.firstFourRowBases).toBeUndefined();
     expect(superior.rows.map((row) => row.row)).toEqual(superior.rows.map((_, index) => index));
-    expect(superior.rows).toHaveLength(83);
-    expect(manifest.counts.superiorRows).toBe(83);
+    // ESR 3.3: 83 → 150 rows ("added more quality affixes")
+    expect(superior.rows).toHaveLength(150);
+    expect(manifest.counts.superiorRows).toBe(150);
+    expect(superior.rows.every((row) => row.weight > 0)).toBe(true);
     // Every ESR row uses itype / etype; the stock item-class columns are blank
     expect(superior.rows.every((row) => row.itypes.length > 0 && row.columns.length === 0)).toBe(true);
     expect(superior.pools.map((pool) => [pool.label, pool.rows.length, pool.total])).toEqual([
-      ['Weapon (other types)', 31, 969],
-      ['Wand', 15, 217],
-      ['Staff', 16, 220],
-      ['Claw', 32, 994],
-      ['Orb', 10, 173],
-      ['Druid Club', 10, 200],
-      ['Necromancer Dagger', 11, 203],
-      ['Helm', 19, 549],
-      ['Any Armor (other types)', 21, 439],
-      ['Gloves', 20, 523],
-      ['Boots', 18, 473],
-      ['Belt', 18, 473],
+      ['Weapon (other types)', 37, 5362],
+      ['Wand', 39, 5005],
+      ['Staff', 40, 5010],
+      ['Bow', 40, 5517],
+      ['Crossbow', 43, 5520],
+      ['Claw', 38, 5367],
+      ['Orb', 34, 4785],
+      ['Druid Club', 34, 4930],
+      ['Necromancer Dagger', 35, 4945],
+      ['Helm', 52, 7242],
+      ['Armor', 53, 7075],
+      ['Any Shield', 53, 6576],
+      ['Gloves', 55, 6922],
+      ['Boots', 50, 6721],
+      ['Belt', 49, 6716],
     ]);
     for (const pool of superior.pools) {
       expect(pool.total, pool.label).toBe(pool.rows.reduce((sum, row) => sum + (superior.rows[row]?.weight ?? 0), 0));
@@ -374,19 +381,20 @@ describe('committed game-data bundles', () => {
       const rows = superiorRollsForBase(superior, base).rolls.map((roll) => roll.row.row);
       expect(rows.join(','), base.code).toBe(poolRows.get(base.type) ?? '');
     }
-    // The rare rows players chase: +1 to All Skills (row 23), max resists (22), -enemy resists (32)
+    // The rare rows players chase (qualityitems.txt frequency): +1 to All Skills (row 29, 5), max resists (28, 5),
+    // -enemy resists (37, 125); the Stag Bow (am1) rolls the Bow pool since 3.3
     const chance = (code: string, row: number) => {
       const base = bases.find((entry) => entry.code === code);
       return base === undefined ? undefined : superiorRollsForBase(superior, base).rolls.find((roll) => roll.row.row === row)?.chance;
     };
-    expect(superior.rows[23]?.text).toEqual(['+1 to All Skills']);
-    expect(chance('9ss', 23)).toBeCloseTo(1 / 969);
-    expect(chance('xui', 23)).toBeCloseTo(1 / 439);
-    expect(chance('xui', 22)).toBeCloseTo(1 / 439);
-    expect(chance('9ss', 32)).toBeCloseTo(5 / 969);
-    expect(chance('am1', 23)).toBeCloseTo(1 / 969);
-    expect(chance('ob1', 23)).toBeCloseTo(1 / 173);
-    expect(chance('ci0', 22)).toBeUndefined();
+    expect(superior.rows[29]?.text).toEqual(['+1 to All Skills']);
+    expect(chance('9ss', 29)).toBeCloseTo(5 / 5362);
+    expect(chance('xui', 29)).toBeCloseTo(5 / 7075);
+    expect(chance('xui', 28)).toBeCloseTo(5 / 7075);
+    expect(chance('9ss', 37)).toBeCloseTo(125 / 5362);
+    expect(chance('am1', 29)).toBeCloseTo(5 / 5517);
+    expect(chance('ob1', 29)).toBeCloseTo(5 / 4785);
+    expect(chance('ci0', 28)).toBeUndefined();
   });
 
   it('only reference family codes that exist among the bases or are reported as warnings', () => {
@@ -399,11 +407,13 @@ describe('committed game-data bundles', () => {
       ).toBe(true);
   });
 
-  it('contain every runes.txt Runeword* key with its rows (391 keys / 449 rows in ESR 3.2.12)', () => {
+  // ESR 3.3: runes.txt +72 rows (Gold Scarab, Shinigami, Moonlight, Tourbillion, Dragon Master, Storm Earth and Fire:
+  // "kanji runewords could not be made with certain jewels")
+  it('contain every runes.txt Runeword* key with its rows (391 keys / 521 rows in ESR 3.3)', () => {
     expect(runewords).toHaveLength(391);
-    expect(runewords.flatMap((runeword) => runeword.rows)).toHaveLength(449);
+    expect(runewords.flatMap((runeword) => runeword.rows)).toHaveLength(521);
     expect(manifest.counts.runewords).toBe(runewords.length);
-    expect(manifest.counts.runewordRows).toBe(449);
+    expect(manifest.counts.runewordRows).toBe(521);
     const codes = new Set(types.map((type) => type.code));
     for (const runeword of runewords) {
       for (const row of runeword.rows) {
@@ -598,25 +608,56 @@ describe('committed game-data bundles', () => {
     expect(enhance.corruption.notes).toHaveLength(3);
   });
 
-  it('contain the anointment pools and rules', () => {
+  it('contain the anointment pools and rules (ESR 3.3: one pool per item type)', () => {
     const pool = (name: string) => enhance.anointmentOutcomes.filter((outcome) => outcome.pool === name);
     expect(pool('charm')).toHaveLength(30);
     expect(pool('vessel')).toHaveLength(178);
-    expect(Object.fromEntries(enhance.anointmentSlots.map((slot) => [slot.slot, pool(slot.slot).length]))).toEqual({
-      weapon: 179,
-      shield: 58,
-      body: 85,
-      helm: 96,
-      gloves: 59,
-      belt: 48,
-      boots: 48,
-      ring: 101,
-      amulet: 116,
+    // cubemain 3.3: 63 "Add Anointment Dummy Stat - <type>" rows, 4,793 outcomes ("Orb of Anointment now respects the
+    // item type it anoints"); 3.2.24 had one pool per slot (weapon 179, shield 58, helm 96 …)
+    expect(enhance.anointmentSlots).toHaveLength(63);
+    expect(manifest.counts.enhanceAnointmentOutcomes).toBe(4793);
+    const groups = new Map<string, number>();
+    for (const slot of enhance.anointmentSlots) groups.set(slot.group, (groups.get(slot.group) ?? 0) + 1);
+    expect(Object.fromEntries(groups)).toEqual({
+      weapon: 33,
+      body: 1,
+      helm: 4,
+      shield: 4,
+      gloves: 1,
+      belt: 1,
+      boots: 1,
+      ring: 9,
+      amulet: 9,
     });
+    expect(
+      Object.fromEntries(
+        ['axe', 'ajav', 'orb', 'tors', 'helm', 'circ', 'shie', 'glov', 'ring', 'amul'].map((code) => [code, pool(code).length])
+      )
+    ).toEqual({
+      axe: 63,
+      ajav: 79,
+      orb: 34,
+      tors: 85,
+      helm: 74,
+      circ: 96,
+      shie: 58,
+      glov: 59,
+      ring: 101,
+      amul: 116,
+    });
+    // Class types come before their generic types (the game takes the first pool an item matches)
+    const order = enhance.anointmentSlots.map((slot) => slot.slot);
+    expect(order.indexOf('ajav')).toBeLessThan(order.indexOf('jave'));
+    expect(order.indexOf('zrin')).toBeLessThan(order.indexOf('ring'));
     for (const slot of enhance.anointmentSlots) {
+      expect(pool(slot.slot), slot.slot).toHaveLength(slot.rollRange);
       if (slot.socketedRollRange !== null) expect(slot.socketedRollRange, slot.slot).toBe(slot.rollRange - 1);
+      // Weapons and armor: the last roll adds sockets; the Blacksmith perk Sanctimonious allows a second anointment
+      if (!['ring', 'amulet'].includes(slot.group)) {
+        expect(pool(slot.slot).at(-1), slot.slot).toMatchObject({ roll: slot.rollRange, label: 'Sockets' });
+        expect(slot.secondPerk, slot.slot).toEqual({ title: 'Sanctimonious', tree: 'Blacksmith' });
+      }
     }
-    expect(pool('weapon').at(-1)).toMatchObject({ roll: 179, label: 'Sockets' });
     expect(enhance.anointment).toMatchObject({ blockedQualities: ['uni'], noRunewords: true });
     expect(enhance.vesselRecipes.find((recipe) => recipe.anointmentRolls !== undefined)).toMatchObject({
       tier: 4,
@@ -625,11 +666,19 @@ describe('committed game-data bundles', () => {
     });
   });
 
-  it('contain the jewel sanctification outcomes, one per roll of the Relic (ESR 3.2.24: 217)', () => {
+  it('contain the jewel sanctification outcomes, one per roll of the Relic (ESR 3.3: 217)', () => {
     const { sanctification, sanctificationOutcomes, sanctificationBonuses } = enhance;
+    // ESR 3.3 added amulet and ring rows (same 217 outcomes) behind the Jeweler perk, listed before the jewel's
     expect(sanctification).toEqual({
       reagent: { code: 'u18', name: "Lucion's Relic of Sanctification" },
       item: { code: 'jewl', name: 'Jewel' },
+      perkItems: {
+        items: [
+          { code: 'amul', name: 'Amulet' },
+          { code: 'ring', name: 'Ring' },
+        ],
+        perk: { title: 'Hallowed Accessories', tree: 'Jeweler' },
+      },
       rollRange: 217,
       once: true,
     });
@@ -645,8 +694,8 @@ describe('committed game-data bundles', () => {
     expect(sanctificationBonuses.reduce((sum, bonus) => sum + bonus.outcomes, 0)).toBe(3 * 217);
     expect(sanctificationBonuses.find((bonus) => bonus.line === '+1 to All Skills')?.outcomes).toBe(7);
     expect(sanctificationBonuses.find((bonus) => bonus.line === '+1% to Maximum Fire Resist')?.outcomes).toBe(36);
-    // The cube page folds the pool into one row that links here
-    expect(cube.rows.filter((row) => row.enhanceTab === 'sanctification').map((row) => row.variants)).toEqual([217]);
+    // The cube page folds each item's pool into one row that links here (amulet, ring, jewel)
+    expect(cube.rows.filter((row) => row.enhanceTab === 'sanctification').map((row) => row.variants)).toEqual([217, 217, 217]);
   });
 
   it('contain the Vessel of Souls tiers, recipes and transforms', () => {
@@ -665,7 +714,8 @@ describe('committed game-data bundles', () => {
       [3, 40, 5],
       [4, 5, 0],
     ]);
-    expect(costs(1)).toEqual({ 350: 200, 700: 17 });
+    // ESR 3.3: +2 Tier 1 recipes (cubemain hit-skill Poison Enhanced Axe, kill-skill Spike Nova Poison; vessel_of_souls.htm)
+    expect(costs(1)).toEqual({ 350: 202, 700: 17 });
     expect(costs(2)).toEqual({ 42: 36 });
     expect(costs(3)).toEqual({ 7: 23 });
     expect(costs(4)).toEqual({ 1: 6, 2: 74, 3: 4, 5: 20 });
@@ -680,8 +730,11 @@ describe('committed game-data bundles', () => {
   it('list every cube family with rows, few fallback rows and the enhance rows hidden', () => {
     const counts = new Map(cube.families.map((family) => [family.id, family.rowCount]));
     // Every guide and cube-only family keeps at least one row after the hidden rows and the earlier families
-    for (const family of [...CUBE_FAMILIES, ...EXTRA_FAMILIES]) expect(counts.get(family.id) ?? 0, family.id).toBeGreaterThan(0);
-    // ESR 3.2.24: 41 rows in 9 fallback families; a release that adds new recipe shapes shows up here
+    // Except maple-leaf: since ESR 3.3 (Orbs of Anointment recycle into Dragon Stones instead) every row it lists for the
+    // guide is claimed first by the unique charm upgrades and the secret recipes
+    for (const family of [...CUBE_FAMILIES, ...EXTRA_FAMILIES].filter((entry) => entry.id !== 'maple-leaf'))
+      expect(counts.get(family.id) ?? 0, family.id).toBeGreaterThan(0);
+    // ESR 3.2.24 and 3.3: 41 rows in 9 fallback families; a release that adds new recipe shapes shows up here
     const fallback = cube.families.filter((family) => family.id.startsWith('other:'));
     expect(fallback.reduce((sum, family) => sum + family.rowCount, 0)).toBeLessThanOrEqual(60);
     expect(fallback.length).toBeLessThanOrEqual(12);
@@ -723,7 +776,8 @@ describe('committed game-data bundles', () => {
     const secret = rowsOf('secret').map((row) => row.output);
     expect(secret).toContain('The same item (Removes Slain Monsters Rest in Peace)');
     expect(secret).toContain('The same item (Removes Knockback)');
-    expect(secret).toContain('The same item (Removes +25% to Experience Gained) + Ancient Scroll 8');
+    // ESR 3.3: the SR8 remove row (cubemain "[SECRET08] Remove Forging Exp +25%") no longer returns the scroll
+    expect(secret).toContain('The same item (Removes +25% to Experience Gained)');
     // Durability repair as the game writes it (Secret Recipe 37: rep-dur 5), app-wide
     expect(secret).toContain('The same item (Repairs 1 durability in 20 seconds)');
     for (const [name, text] of [
@@ -1355,7 +1409,12 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.masteries)).toBe(masteriesText);
   });
 
-  it('rolls the superior rows of docs/quality_affixes.htm with its rarities, per row and per item type (ESR 3.2.24)', () => {
+  // ESR 3.3: the page's Rarity column is stale. It still prints the 3.2.24 superior-affixes.toml weights by row
+  // number (0 mismatches against the old table), while 3.3 inserted rows mid-file and moved the weights into the
+  // qualityitems.txt frequency column (e.g. +1 to All Skills, row 29: page 100, frequency 5). An upstream page issue
+  // (question for the mod author), so the rows, their text, itypes / etypes and every item type section's row set are
+  // still checked against the page, the weights are not.
+  it('rolls the superior rows of docs/quality_affixes.htm, per row and per item type (ESR 3.3; weights not compared)', () => {
     const superior = readSuperiorAffixes(generated.bases);
     expect(superior).not.toBeNull();
     if (superior === null) return;
@@ -1369,7 +1428,6 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(page.grouped).toHaveLength(superior.rows.length);
     superior.rows.forEach((row, index) => {
       const doc = page.grouped[index];
-      expect(doc?.weight, `row ${String(index)} weight`).toBe(row.weight);
       expect(doc?.itypes, `row ${String(index)} itypes`).toEqual(row.itypes);
       expect(doc?.etypes, `row ${String(index)} etypes`).toEqual(row.etypes);
       expect(doc === undefined ? [] : lines(doc), `row ${String(index)} text`).toEqual(lines(row));
@@ -1385,9 +1443,9 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
       const kind = type.ancestors.includes('weap') ? 'weapon' : 'armor';
       const { rolls } = superiorRollsFor(superior.rows, { kind, type: type.code, ancestors: type.ancestors });
       expect(
-        rolls.map((roll) => [roll.row.weight, lines(roll.row)]),
+        rolls.map((roll) => lines(roll.row)),
         name
-      ).toEqual(docRows.map((row) => [row.weight, lines(row)]));
+      ).toEqual(docRows.map((row) => lines(row)));
     }
   });
 
@@ -1631,7 +1689,8 @@ describe('committed skillcalc bundle', () => {
       }),
       { skills: 0, inputs: 0 }
     );
-    expect(counts).toEqual({ skills: 73, inputs: 235 });
+    // ESR 3.3: Shuriken Trap's unlisted "Shuriken" synergy became a listed one (patch: added synergy for damage bonus)
+    expect(counts).toEqual({ skills: 72, inputs: 234 });
     // Blizzard's tooltip lists Orb of Winter twice: one input
     const blizzard = index.record('Blizzard');
     expect(blizzard === undefined ? [] : synergyInputs(blizzard, index).map((input) => input.id)).toEqual([
@@ -1769,11 +1828,9 @@ describe('committed modifiers bundle (ESR 3.2.24)', () => {
       mercenary: 5,
       player: 5,
     });
-    // The config comment of `unique = 25` says 12.5 %; the value is kept, the note and a warning say so
-    expect(fact('crushingBlow.share')?.note).toContain('unique = 25 gives 6.25 %');
-    expect(manifest.warnings.filter((warning) => warning.startsWith('modifiers:'))).toEqual([
-      'modifiers: crushing-blow.toml unique = 25 gives 6.25 % of current life, but its config comment says "50 -> 12.5 %"',
-    ]);
+    // ESR 3.3 corrected the config comment of `unique = 25` ("25 -> 6.25 % of current life"; 3.2.24 said 12.5 %), so the
+    // comment/value mismatch note and warning are gone
+    expect(manifest.warnings.filter((warning) => warning.startsWith('modifiers:'))).toEqual([]);
     expect(fact('crushingBlow.ranged')?.value).toBe(100);
     expect(fact('criticalDamage.stat')?.value).toBe(434);
     expect(fact('criticalDamage.basePercent')?.value).toBe(200);
@@ -1798,32 +1855,44 @@ describe('committed modifiers bundle (ESR 3.2.24)', () => {
 
 // --- masteries.json ------------------------------------------------------------------------------------------------
 
-describe('committed masteries bundle (ESR 3.2.24)', () => {
+describe('committed masteries bundle (ESR 3.3)', () => {
   const baseByCode = new Map(bases.map((base) => [base.code, base]));
   const skillById = new Map(skillDetails.skills.map((skill) => [skill.id, skill]));
 
-  it('has the 16 specialisations of docs/weapon_mastery.html plus the Warlock Void Blade, each with effects', () => {
-    expect(masteries.masteries.map((mastery) => `${String(mastery.value)} ${mastery.label}`)).toEqual([
-      '1 Stag Bow',
-      '2 Reflex Bow',
-      '3 Precision Bow',
-      '4 Maiden Spear',
-      '5 Maiden Pike',
-      '6 Maiden Javelin',
-      '7 Ninja To',
-      '8 Tribal Hatchet',
-      '9 Oak Branch',
-      '10 Soul Hunter',
-      '11 Ritualistic Dagger',
-      '12 Wretched Scythe',
-      '13 Blessed Edge',
-      '14 Mana Blade',
-      '15 Orb',
-      '17 Orb',
-      '20 Claw',
-      '25 Claw',
-      '55 Void Blade',
-      '60 Void Blade',
+  // ESR 3.3: one weapon-mastery-<weapon> property per specialisation (was the weaponmastery value 1 … 60); the page
+  // now lists the Warlock Void Blade too
+  it('has the 20 specialisations of docs/weapon_mastery.html, each with effects', () => {
+    expect(masteries.masteries.map((mastery) => `${mastery.property.replace('weapon-mastery-', '')} ${mastery.label}`)).toEqual([
+      'stag-bow Stag Bow',
+      'reflex-bow Reflex Bow',
+      'precision-bow Precision Bow',
+      'maiden-spear Maiden Spear',
+      'maiden-pike Maiden Pike',
+      'maiden-javelin Maiden Javelin',
+      'ninja-to Ninja To',
+      'tribal-hatchet Tribal Hatchet',
+      'oak-branch Oak Branch',
+      'soul-hunter Soul Hunter',
+      'ritualistic-dagger Ritualistic Dagger',
+      'wretched-scythe Wretched Scythe',
+      'blessed-edge Blessed Edge',
+      'mana-blade Mana Blade',
+      'orb-1 Orb',
+      'orb-2 Orb',
+      'claws-1 Claw',
+      'claws-2 Claw',
+      'void-blade-1 Void Blade',
+      'void-blade-2 Void Blade',
+    ]);
+    // ESR 3.3: the Blacksmith perk True Master lets any weapon take any specialisation
+    expect(masteries.anyWeaponPerk).toEqual({ title: 'True Master', tree: 'Blacksmith' });
+    // Orb + Chipped Ruby: the skills whose formulas read weapon_mastery_orb_1 (the cooldown ×3)
+    expect(
+      masteries.masteries
+        .find((mastery) => mastery.property === 'weapon-mastery-orb-1')
+        ?.effects.map((effect) => [effect.heading, effect.skills])
+    ).toEqual([
+      ['Spells', ['Conflagrate', 'Rain of Fire', 'Lightning Hydra', 'Storm Nexus', 'Time Stop', 'Blizzard', 'Orb of Winter', 'Permafrost']],
     ]);
     for (const mastery of masteries.masteries) {
       expect(mastery.effects.length, mastery.label).toBeGreaterThan(0);
@@ -1857,14 +1926,12 @@ describe('committed masteries bundle (ESR 3.2.24)', () => {
   });
 
   it('records the known string and row slips as warnings', () => {
+    // ESR 3.3 fixed the 3.2.24 Celestial Blade remove row (0be) and u28desc (Maiden Pike)
     expect(manifest.warnings.filter((warning) => warning.startsWith('masteries:'))).toEqual([
-      'masteries: Wretched Scythe (value 12): mod total-magic-resist -100 has no item text; shown as "-100% Magic Resist (no item line; why your magic resist is always 0)"',
-      'masteries: cubemain line 2523 "Remove Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
-      'masteries: Blessed Edge (value 13): no remove row takes 0be',
-      'masteries: u28desc (Maiden Pike, value 5) names the weapon "Maiden Spear", the rows take Maiden Pike',
-      'masteries: u39desc (Claw, value 25) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
-      'masteries: cubemain line 2373 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
-      'masteries: Blessed Edge (value 13): no awaken row takes 0be',
+      'masteries: Wretched Scythe (weapon-mastery-wretched-scythe): mod total-magic-resist -100 has no item text; shown as "-100% Magic Resist (no item line; why your magic resist is always 0)"',
+      'masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
+      'masteries: cubemain line 2379 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
+      'masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be',
     ]);
   });
 });
