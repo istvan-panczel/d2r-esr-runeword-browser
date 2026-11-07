@@ -1,10 +1,13 @@
 export type BonusCategory = 'weaponsGloves' | 'helmsBoots' | 'armorShieldsBelts';
 
-// Keywords to match item types to bonus columns (case-insensitive).
-// Matches runewords.htm column headers:
-//   Col 4: "Weapons / Gloves"
-//   Col 5: "Helms / Boots / Staves / Orbs / Wands" (also used by Charms)
-//   Col 6: "Armor / Shields / Belts"
+/** The three bonus columns in the order the ESR pages show them. */
+export const BONUS_CATEGORIES: readonly BonusCategory[] = ['weaponsGloves', 'helmsBoots', 'armorShieldsBelts'];
+
+// Keywords to match item types to bonus columns (case-insensitive, first category wins).
+// Matches the gems.htm column headers (ESR 3.3):
+//   Col 1: "Weapon (except Orb, Staff, Wand) / Gloves / Missile / Mythical Arcane Staff"
+//   Col 2: "Helm / Boots / Staff / Wand / Orb / Amulet / Ring / Charm"
+//   Col 3: "Any Shield / Body Armor / Belt"
 const CATEGORY_KEYWORDS: Record<BonusCategory, readonly string[]> = {
   weaponsGloves: [
     'weapon',
@@ -29,16 +32,25 @@ const CATEGORY_KEYWORDS: Record<BonusCategory, readonly string[]> = {
     'shuriken',
     'blunt',
     'hand to hand',
+    'knuckle',
   ],
-  helmsBoots: ['helm', 'boot', 'circlet', 'cap', 'mask', 'crown', 'staff', 'orb', 'wand', 'charm', 'pelt'],
+  helmsBoots: ['helm', 'boot', 'circlet', 'cap', 'mask', 'crown', 'staff', 'orb', 'wand', 'charm', 'pelt', 'amulet', 'ring'],
   armorShieldsBelts: ['armor', 'shield', 'belt', 'plate', 'paladin item'],
+};
+
+// Item types whose keyword match would pick the wrong column (lower-cased exact names)
+const CATEGORY_OVERRIDES: Readonly<Partial<Record<string, BonusCategory>>> = {
+  // A staff, but gems.htm lists it with the weapons
+  'mythical arcane staff': 'weaponsGloves',
+  // The Barbarian ring type, not the Knuckle weapon
+  'barbaric knuckle': 'helmsBoots',
 };
 
 // Fallback display labels for each category (used when dynamic labels can't be generated)
 export const CATEGORY_LABELS: Record<BonusCategory, string> = {
   weaponsGloves: 'Weapons/Gloves',
-  helmsBoots: 'Helms/Boots/Staves/Orbs/Wands',
-  armorShieldsBelts: 'Armor/Shields/Belts',
+  helmsBoots: 'Helms/Boots/Staves/Wands/Orbs/Amulets/Rings/Charms',
+  armorShieldsBelts: 'Shields/Body Armor/Belts',
 };
 
 /**
@@ -46,6 +58,8 @@ export const CATEGORY_LABELS: Record<BonusCategory, string> = {
  */
 export function getItemCategory(itemType: string): BonusCategory | null {
   const lowerItem = itemType.toLowerCase();
+  const override = CATEGORY_OVERRIDES[lowerItem.trim()];
+  if (override) return override;
 
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS) as [BonusCategory, readonly string[]][]) {
     if (keywords.some((keyword) => lowerItem.includes(keyword))) {
@@ -71,8 +85,7 @@ export function getRelevantCategories(allowedItems: readonly string[]): BonusCat
   }
 
   // Return in consistent order
-  const order: BonusCategory[] = ['weaponsGloves', 'helmsBoots', 'armorShieldsBelts'];
-  return order.filter((cat) => categories.has(cat));
+  return BONUS_CATEGORIES.filter((cat) => categories.has(cat));
 }
 
 /**

@@ -1,4 +1,7 @@
 import type { Runeword } from '@/core/db/models';
+import { formatJewelInfo } from '@/features/data-sync/parsers/runewordsParser';
+
+export { formatJewelInfo };
 
 /** The recipe's runes and gems in order (old cached rows without `ingredients` fall back to the runes). */
 function ingredientsOf(runeword: Pick<Runeword, 'runes'> & Partial<Pick<Runeword, 'ingredients'>>): readonly string[] {
@@ -11,8 +14,9 @@ function recipeKey(runeword: Runeword): string {
 }
 
 /**
- * Everything a card shows except the jewel-count bookkeeping (`variant`, `sockets`, `socketsMax`, `jewelInfo`). The
- * other fields (`reqLevel`, `sortKey`, `isLod`, `tierPointTotals`) follow from the runes and gems.
+ * Everything a card shows except the jewel-count bookkeeping (`variant`, `sockets`, `socketsMax`, `jewelInfo`) and the
+ * socketable bonus group labels. The other fields (`reqLevel`, `sortKey`, `isLod`, `tierPointTotals`) follow from the
+ * runes and gems.
  */
 function contentKey(runeword: Runeword): string {
   return JSON.stringify([
@@ -24,22 +28,19 @@ function contentKey(runeword: Runeword): string {
     runeword.excludedItems,
     runeword.affixes,
     runeword.columnAffixes,
+    // Bonus texts only: the group labels narrow as the socket count grows (no 4-socket wands: Storm, Earth and Fire's
+    // "Staff / Wand" group is "Staff" on its 4-6 socket row), and the entry keeps its lowest variant's labels
+    runeword.socketableBonuses?.map((group) => group.affixes.map((affix) => affix.rawText)),
   ]);
-}
-
-/** The jewel info text in the parser's formats: "(0-3) Jewels" for a range, "(1) Jewel" / "(2) Jewels" for a count. */
-export function formatJewelInfo(minJewels: number, maxJewels: number): string | undefined {
-  if (maxJewels <= 0) return undefined;
-  if (minJewels === maxJewels) return `(${String(maxJewels)}) Jewel${maxJewels > 1 ? 's' : ''}`;
-  return `(${String(minJewels)}-${String(maxJewels)}) Jewels`;
 }
 
 /**
  * Folds the rows a jewel recipe has per jewel count into one entry per distinct content, for the runewords list.
  *
- * The game has no optional sockets, so ESR adds one runes.txt row per jewel count (jewels first: `r93 r33 r43`,
- * `jew r93 r33 r43`, `jew jew …`, plus the same with `mjw`). The site shows a range row ("(3-6 Socket)",
- * "(0-3) Jewels", the no-jewel recipe) followed by one row per count ("(4 Socket)" with a "Jewel" line, …). Rows of the
+ * The game has no optional sockets, so ESR adds one runes.txt row per jewel combination (jewels first: `r93 r33 r43`,
+ * `jew r93 r33 r43`, `jew mjw …`, …). The site shows a range row ("(3-6 Socket)", "(0-3) Jewels", the no-jewel
+ * recipe) followed by one row per required jewel count: ESR 3.2 "(4 Socket)" with a "Jewel" line, …; ESR 3.3
+ * "(4-6 Socket)" with "(0-2) Jewels" and a "Jewel" line (parsed as "(1-3) Jewels"), …, "(6 Socket)". Rows of the
  * same runeword with the same content become one entry: the lowest variant (so favourites keep its id) with the
  * group's socket range and jewel counts. A range row only covers the counts no per-count row of its recipe lists, so
  * when those rows differ (Tourbillion, Wooden Colossus) its own `socketsMax` does not leak into its entry. Order is

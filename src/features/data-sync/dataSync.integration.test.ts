@@ -224,6 +224,12 @@ describe('Data Sync Integration', () => {
       expect(stone!.sockets).toBe(2);
       expect(stone!.runes).toEqual(['I Rune', 'Shi Rune']);
       expect(stone!.affixes.length).toBeGreaterThan(0);
+      // ESR 3.3: the page's socketable bonuses, one group per item-type label, survive the round trip
+      expect(stone!.socketableBonuses?.map((group) => group.label)).toEqual(['Any Shield / Body Armor / Belt', 'Helm / Boots', 'Gloves']);
+      expect(stone!.socketableBonuses?.[2]?.affixes.map((affix) => affix.rawText)).toEqual([
+        '+15% Enhanced Damage',
+        '+5 to Mana after each Kill',
+      ]);
     });
 
     it('should store Airship with correct runes array', async () => {

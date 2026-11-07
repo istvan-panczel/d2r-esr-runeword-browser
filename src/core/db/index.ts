@@ -5,6 +5,8 @@ export type {
   SocketableBonuses,
   BonusPool,
   ColumnBonusPools,
+  SocketableBonusGroup,
+  SocketableBonusGroupType,
   Gem,
   GemType,
   GemQuality,

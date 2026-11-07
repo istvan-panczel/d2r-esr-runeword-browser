@@ -213,7 +213,9 @@ describe('runewordBaseCandidates on the committed game data', () => {
         real,
         runewords.filter((entry) => entry.name === 'Moonlight')
       );
-      expect(runewordJewelSockets(runeword, rows)).toBe((runeword.socketsMax ?? runeword.sockets) - runeword.sockets);
+      // Required plus optional jewels (ESR 3.3 "(4-6 Socket)": 1 required + "(0-2) Jewels" → 3)
+      expect(runewordJewelSockets(runeword, rows)).toBe((runeword.socketsMax ?? runeword.sockets) - runeword.ingredients.length);
+      expect(runewordJewelSockets(runeword)).toBe((runeword.socketsMax ?? runeword.sockets) - runeword.ingredients.length);
     }
     expect(typesOf(find('Spirit', 'Any Shield').result.candidates).size).toBeGreaterThan(1);
   });

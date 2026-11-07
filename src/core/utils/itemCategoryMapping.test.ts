@@ -139,6 +139,21 @@ describe('getRelevantCategories', () => {
 });
 
 describe('getItemCategory', () => {
+  it('follows the ESR 3.3 gems.htm column headers', () => {
+    // Col 1: "Weapon (except Orb, Staff, Wand) / Gloves / Missile / Mythical Arcane Staff"
+    for (const type of ['Weapon', 'Gloves', 'Missile', 'Mythical Arcane Staff', 'Knuckle', 'Sorceress Mana Blade']) {
+      expect(getItemCategory(type), type).toBe('weaponsGloves');
+    }
+    // Col 2: "Helm / Boots / Staff / Wand / Orb / Amulet / Ring / Charm"
+    for (const type of ['Helm', 'Boots', 'Staff', 'Wand', 'Orb', 'Amulet', 'Ring', 'Charm', 'Barbaric Knuckle']) {
+      expect(getItemCategory(type), type).toBe('helmsBoots');
+    }
+    // Col 3: "Any Shield / Body Armor / Belt"
+    for (const type of ['Any Shield', 'Body Armor', 'Belt', 'Auric Shields']) {
+      expect(getItemCategory(type), type).toBe('armorShieldsBelts');
+    }
+  });
+
   it('should return correct category for each item type', () => {
     expect(getItemCategory('Sword')).toBe('weaponsGloves');
     expect(getItemCategory('Helm')).toBe('helmsBoots');
@@ -167,6 +182,6 @@ describe('getCategoryLabel', () => {
 
   it('should fall back to default labels when no items match', () => {
     expect(getCategoryLabel(['Charm'], 'weaponsGloves')).toBe('Weapons/Gloves');
-    expect(getCategoryLabel(['Sword'], 'armorShieldsBelts')).toBe('Armor/Shields/Belts');
+    expect(getCategoryLabel(['Sword'], 'armorShieldsBelts')).toBe('Shields/Body Armor/Belts');
   });
 });

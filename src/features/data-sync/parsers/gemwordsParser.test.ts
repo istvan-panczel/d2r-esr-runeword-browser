@@ -5,8 +5,11 @@ import { parseGemsHtml } from './gemsParser';
 import { parseGemwordsHtml, calculateGemwordReqLevel } from './gemwordsParser';
 import type { BonusPool, Gemword } from '@/core/db';
 import type { GemReqLevelLookup } from './runewordsParser';
+import { firstNonEmptyPools } from '@/core/utils/columnAffixes';
 
 const gemwordsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/gemwords.htm'), 'utf-8');
+// The pre-ESR 3.3 page (per-category bonus columns), still parsed in case a cached or lagging page is served
+const previousGemwordsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/previous/gemwords.htm'), 'utf-8');
 const gemsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
 describe('parseGemwordsHtml', () => {
@@ -181,8 +184,11 @@ describe('parseGemwordsHtml', () => {
       0
     );
 
+    // The ESR 3.3 "Bonuses" column lists each pool once per row (the old layout once per bonus column)
     expect(rawHeaderCount).toBeGreaterThan(1000);
-    expect(gemwords.flatMap(allPools)).toHaveLength(rawHeaderCount);
+    expect(gemwords.flatMap((gemword) => (gemword.columnBonusPools ? firstNonEmptyPools(gemword.columnBonusPools) : []))).toHaveLength(
+      rawHeaderCount
+    );
   });
 
   it('captures the jewel requirement for recipes that need one', () => {
@@ -228,6 +234,81 @@ describe('parseGemwordsHtml', () => {
   it('calculates required level from the highest required gem', () => {
     expect(calculateGemwordReqLevel(['Chipped Diamond'], gemReqLevelLookup)).toBe(1);
     expect(calculateGemwordReqLevel(['Perfect Diamond', 'Flawed Diamond'], gemReqLevelLookup)).toBe(35);
+  });
+});
+
+describe('parseGemwordsHtml: ESR 3.3 Socketable Bonuses column', () => {
+  const gemwords = parseGemwordsHtml(gemwordsHtml);
+  const holyArmor = gemwords.find(
+    (gemword) => gemword.name === 'Holy' && gemword.allowedItems.includes('Body Armor') && gemword.gems.join() === 'Chipped Diamond'
+  );
+
+  it('reads the required level the page prints when no gem lookup is given', () => {
+    expect(holyArmor?.reqLevel).toBe(1);
+    expect(gemwords.find((gemword) => gemword.name === 'America')?.reqLevel).toBe(35);
+  });
+
+  it('keeps both "1-2 of the following:" pools of the Holy armor row (no trailing gem group to drop)', () => {
+    const pools = holyArmor?.columnBonusPools ? firstNonEmptyPools(holyArmor.columnBonusPools) : [];
+    expect(pools.map((pool) => [pool.label, pool.affixes.length])).toEqual([
+      ['1-2 of the following:', 6],
+      ['1-2 of the following:', 7],
+    ]);
+    expect(pools[1]?.affixes.at(-1)?.rawText).toBe('+(11 to 12)% to All Speeds');
+  });
+
+  it('stores the gem bonuses per item-type group', () => {
+    expect(holyArmor?.socketableBonuses?.map((group) => [group.label, group.affixes.map((affix) => affix.rawText)])).toEqual([
+      ['Any Shield / Body Armor / Belt', ['Magic Resist +2%', 'All Resists +5', 'Damage Reduced by 2']],
+      ['Helm / Boots', ['-5% Target Defense', '+4% Chance of Crushing Blow', '+20 Defense']],
+    ]);
+  });
+
+  it('stores one unlabelled group for a Charm row', () => {
+    const holyCharm = gemwords.find((gemword) => gemword.name === 'Holy' && gemword.variant === 1);
+    expect(holyCharm?.socketableBonuses).toEqual([
+      {
+        label: '',
+        itemTypes: [],
+        affixes: expect.arrayContaining([expect.objectContaining({ rawText: '-5% Target Defense' })]) as unknown,
+      },
+    ]);
+  });
+
+  it('gives every gemword at least one socketable bonus group', () => {
+    for (const gemword of gemwords) {
+      expect(gemword.socketableBonuses?.length, `${gemword.name} #${String(gemword.variant)}`).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('parseGemwordsHtml: pre-ESR 3.3 layout (per-category bonus columns)', () => {
+  const previous = parseGemwordsHtml(previousGemwordsHtml);
+  const current = parseGemwordsHtml(gemwordsHtml);
+
+  it('parses the same rows in the same order (variant numbers stay stable across the layouts)', () => {
+    expect(previous.length).toBeGreaterThanOrEqual(720);
+    expect(previous.map((gemword) => `${gemword.name}:${String(gemword.variant)}`)).toEqual(
+      current.map((gemword) => `${gemword.name}:${String(gemword.variant)}`)
+    );
+  });
+
+  it('drops the trailing gem bonus group, keeps the pools and stores no socketable bonus groups', () => {
+    const holyArmor = previous.find(
+      (gemword) => gemword.name === 'Holy' && gemword.allowedItems.includes('Body Armor') && gemword.gems.join() === 'Chipped Diamond'
+    );
+    expect(holyArmor?.affixes.map((affix) => affix.rawText)).toEqual([
+      '5% Chance to Cast Level 5 Magic Surge when Struck',
+      'Socketables cannot be removed',
+    ]);
+    expect(poolTexts(holyArmor?.columnBonusPools?.armorShieldsBelts)?.map((pool) => pool.lines.length)).toEqual([6, 7]);
+    expect(holyArmor?.socketableBonuses).toBeUndefined();
+  });
+
+  it('fills the same bonus columns as the ESR 3.3 layout (builds compare saved column snapshots)', () => {
+    const filled = (gemword: Gemword) =>
+      (['weaponsGloves', 'helmsBoots', 'armorShieldsBelts'] as const).map((c) => gemword.columnAffixes[c].length > 0);
+    expect(current.map(filled)).toEqual(previous.map(filled));
   });
 });
 

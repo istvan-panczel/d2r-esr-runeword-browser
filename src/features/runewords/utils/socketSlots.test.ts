@@ -82,15 +82,19 @@ describe('buildSocketSlots', () => {
       }
     });
 
-    it('splits Moonlight into optional jewels (ranged row) and required jewels (per-count rows)', () => {
+    it('splits Moonlight into optional jewels (ranged row) and required + optional jewels (per-required-count rows)', () => {
       const moonlight = runewords.filter((runeword) => runeword.name === 'Moonlight');
-      const ranged = moonlight.find((runeword) => runeword.socketsMax !== undefined);
-      const fourSockets = moonlight.find((runeword) => runeword.socketsMax === undefined && runeword.sockets === 4);
+      const ranged = moonlight.find((runeword) => runeword.sockets === 3);
+      const fourSockets = moonlight.find((runeword) => runeword.sockets === 4);
+      const sixSockets = moonlight.find((runeword) => runeword.sockets === 6);
+      // ESR 3.3: "(3-6 Socket)" "(0-3) Jewels"; "(4-6 Socket)" "(0-2) Jewels" + one "Jewel" line; "(6 Socket)" three
       expect(ranged?.jewelInfo).toBe('(0-3) Jewels');
-      expect(fourSockets?.jewelInfo).toBe('(1) Jewel');
-      if (ranged === undefined || fourSockets === undefined) return;
+      expect(fourSockets?.jewelInfo).toBe('(1-3) Jewels');
+      expect(sixSockets?.jewelInfo).toBe('(3) Jewels');
+      if (ranged === undefined || fourSockets === undefined || sixSockets === undefined) return;
       expect(buildSocketSlots(ranged).filter((slot) => slot.kind === 'jewel')).toEqual([jewel(true), jewel(true), jewel(true)]);
-      expect(buildSocketSlots(fourSockets).filter((slot) => slot.kind === 'jewel')).toEqual([jewel(false)]);
+      expect(buildSocketSlots(fourSockets).filter((slot) => slot.kind === 'jewel')).toEqual([jewel(false), jewel(true), jewel(true)]);
+      expect(buildSocketSlots(sixSockets).filter((slot) => slot.kind === 'jewel')).toEqual([jewel(false), jewel(false), jewel(false)]);
     });
 
     it('matches the jewel counts of the jewelInfo text', () => {

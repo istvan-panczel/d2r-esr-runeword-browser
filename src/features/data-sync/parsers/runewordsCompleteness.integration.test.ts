@@ -200,26 +200,29 @@ function rawExtractIngredients(cell: Element): RawIngredients {
       }
     }
   }
-  // Optional jewels: "(0-3) Jewels" text (same logic as parser)
+  // Optional jewels: "(0-3) Jewels" text; required jewels: bare "Jewel" text nodes in the wrapper font, counted via
+  // the DOM rather than the parser's innerHTML split. ESR 3.3 rows may have both ("(0-2) Jewels" + one "Jewel" line):
+  // the parser reports the row's whole jewel range, "(1-3) Jewels"
   const cellText = (cell.textContent ?? '').replace(/\s+/g, ' ');
-  const jewelMatch = /\(\d+(?:-\d+)?\) Jewels?/.exec(cellText);
-  // Required jewels (ESR 3.2+): bare "Jewel" text nodes in the wrapper font, counted via the DOM
-  // rather than the parser's innerHTML split
+  const jewelMatch = /\((\d+)(?:-(\d+))?\) Jewels?/.exec(cellText);
   const wrapper = cell.querySelector('font');
   const requiredJewels = wrapper
     ? [...wrapper.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim() === 'Jewel').length
     : 0;
-  const jewelInfo = jewelMatch
-    ? jewelMatch[0]
-    : requiredJewels > 0
-      ? `(${String(requiredJewels)}) Jewel${requiredJewels > 1 ? 's' : ''}`
-      : undefined;
+  const minJewels = requiredJewels + (jewelMatch ? parseInt(jewelMatch[1], 10) : 0);
+  const maxJewels = requiredJewels + (jewelMatch ? parseInt(jewelMatch[2] ?? jewelMatch[1], 10) : 0);
+  const jewelInfo =
+    maxJewels === 0
+      ? undefined
+      : minJewels === maxJewels
+        ? `(${String(maxJewels)}) Jewel${maxJewels > 1 ? 's' : ''}`
+        : `(${String(minJewels)}-${String(maxJewels)}) Jewels`;
   return { runes, gems: gemsList, ingredients, jewelInfo };
 }
 
-/** Number of required jewels from a "(N) Jewels" string (no range), or 0. */
+/** Number of required jewels: the "(N) Jewels" count, or the lower end of a "(N-M) Jewels" range; 0 without jewels. */
 function requiredJewelsFrom(jewelInfo: string | undefined): number {
-  const m = jewelInfo === undefined ? null : /^\((\d+)\) Jewels?$/.exec(jewelInfo);
+  const m = jewelInfo === undefined ? null : /^\((\d+)(?:-\d+)?\) Jewels?$/.exec(jewelInfo);
   return m ? parseInt(m[1], 10) : 0;
 }
 
@@ -234,17 +237,29 @@ function rawExtractAllowedItems(cell: Element): { allowedItems: string[]; exclud
   return { allowedItems: items.slice(0, exIdx), excludedItems: items.slice(exIdx + 1) };
 }
 
-function rawExtractCellAffixes(cell: Element): string[] {
+/** The raw <br> lines of a bonus cell: the first <br><br> group only (`firstGroupOnly`, pre-3.3 columns) or all. */
+function rawExtractCellAffixes(cell: Element, firstGroupOnly = true): string[] {
   const html = cell.innerHTML;
   if (!html.trim()) return [];
   const parts = html.split(/<br\s*\/?>\s*<br\s*\/?>/i);
-  const runewordPart = parts[0] ?? '';
+  const runewordPart = firstGroupOnly ? (parts[0] ?? '') : parts.join('<br>');
   return runewordPart
     .split(/<br\s*\/?>/i)
     .map((line) => stripHtmlTags(line))
     .map((line) => decodeHtmlEntities(line))
     .map((line) => norm(line))
     .filter((line) => line.length > 0);
+}
+
+/** ESR 3.3+: 5 cells ("Bonuses" + "Socketable Bonuses"); before: 6 (one bonus column per item category). */
+function isSocketableBonusesLayout(cells: NodeListOf<Element>): boolean {
+  return cells.length === 5;
+}
+
+/** "Req Lvl: N" as the ESR 3.3+ page prints it in the name cell; undefined on the old layout. */
+function rawExtractReqLevel(cell: Element): number | undefined {
+  const m = /Req Lvl:\s*(\d+)/i.exec(cell.textContent ?? '');
+  return m ? parseInt(m[1], 10) : undefined;
 }
 
 /**
@@ -270,6 +285,8 @@ function regroupRawLines(rawLines: readonly string[], parsedLines: readonly stri
 }
 
 function rawExtractAffixes(cells: NodeListOf<Element>): string[] {
+  // ESR 3.3+: the whole "Bonuses" cell is the runeword's (runewords have no random pools)
+  if (isSocketableBonusesLayout(cells)) return rawExtractCellAffixes(cells[3], false);
   for (const cell of [cells[3], cells[4], cells[5]]) {
     const lines = rawExtractCellAffixes(cell);
     if (lines.length > 0) return lines;
@@ -340,6 +357,15 @@ describe('Per-runeword completeness check (every runeword vs HTML source)', () =
       });
 
       it('per-column affixes match HTML columns', () => {
+        if (isSocketableBonusesLayout(cells)) {
+          // One "Bonuses" list, copied into the columns the row's bases use (the others stay empty)
+          const { weaponsGloves, helmsBoots, armorShieldsBelts } = parsedRunewords[i].columnAffixes;
+          const columns = [weaponsGloves, helmsBoots, armorShieldsBelts].map((column) => column.map((a) => a.rawText));
+          const filled = columns.filter((column) => column.length > 0);
+          expect(filled.length).toBeGreaterThan(0);
+          for (const column of filled) expect(column).toEqual(regroupRawLines(rawAffixLines, column));
+          return;
+        }
         const rawWeapon = rawExtractCellAffixes(cells[3]);
         const rawHelm = rawExtractCellAffixes(cells[4]);
         const rawArmor = rawExtractCellAffixes(cells[5]);
@@ -369,6 +395,31 @@ describe('Per-runeword completeness check (every runeword vs HTML source)', () =
         expect(parsedRunewords[i].ingredients.length + requiredJewels).toBe(parsedRunewords[i].sockets);
       });
 
+      it('reqLevel is the one the page prints (ESR 3.3+)', () => {
+        const rawReqLevel = rawExtractReqLevel(cells[0]);
+        if (rawReqLevel !== undefined) expect(parsedRunewords[i].reqLevel).toBe(rawReqLevel);
+      });
+
+      it('socketable bonus groups match the "Socketable Bonuses" cell (ESR 3.3+)', () => {
+        if (!isSocketableBonusesLayout(cells)) return;
+        const groupCells = [...cells[4].querySelectorAll('.rws-group')];
+        const groups = parsedRunewords[i].socketableBonuses ?? [];
+        if (groupCells.length === 0) {
+          expect(groups.map((group) => group.label)).toEqual(['']);
+          const parsed = groups[0]?.affixes.map((a) => a.rawText) ?? [];
+          expect(parsed).toEqual(regroupRawLines(rawExtractCellAffixes(cells[4], false), parsed));
+          return;
+        }
+        expect(groups.map((group) => group.label)).toEqual(
+          groupCells.map((group) => norm(group.querySelector('.rws-label')?.textContent ?? ''))
+        );
+        groups.forEach((group, index) => {
+          const font = groupCells[index]?.querySelector('font');
+          const parsed = group.affixes.map((a) => a.rawText);
+          expect(parsed).toEqual(regroupRawLines(font ? rawExtractCellAffixes(font, false) : [], parsed));
+        });
+      });
+
       it('runes + gems equals ingredients', () => {
         expect(parsedRunewords[i].runes.length + parsedRunewords[i].gems.length).toBe(parsedRunewords[i].ingredients.length);
       });
@@ -389,7 +440,10 @@ describe('Calculated fields (reqLevel, sortKey, isLod, tierPointTotals)', () => 
     });
 
     it('reqLevel should equal the max reqLevel among its runes and gems', () => {
+      // The page's "Req Lvl" wins; the name-keyed lookup reads shared Ko as the LoD rune (39, ESR Ko is 27)
+      const sharedRunes = new Set([...esrRuneNames].filter((name) => lodRuneNames.has(name)));
       for (const rw of parsedRunewords) {
+        if (!rw.isLod && rw.runes.some((rune) => sharedRunes.has(rune))) continue;
         const runeReqLevels = rw.runes.map((r) => runeReqLevelLookup.get(r) ?? 0);
         const gemReqLevels = rw.gems.map((g) => gemReqLevelLookup.get(g) ?? 0);
         const allReqLevels = [...runeReqLevels, ...gemReqLevels];
@@ -949,16 +1003,17 @@ describe('Data quality invariants', () => {
       const label = `${rw.name} v${String(rw.variant)}`;
       expect(rw.jewelInfo, `${label}: jewelInfo format`).toMatch(/^\(\d+(-\d+)?\) Jewels?$/);
 
+      // "(N) Jewels" (required only) or "(N-M) Jewels" (N required, up to M with the optional ones)
       const maxJewels = maxJewelsFrom(rw.jewelInfo);
       const requiredJewels = requiredJewelsFrom(rw.jewelInfo);
-      expect(maxJewels + requiredJewels, `${label}: jewel count`).toBeGreaterThan(0);
+      expect(Math.max(maxJewels, requiredJewels), `${label}: jewel count`).toBeGreaterThan(0);
+      // Required jewels fill sockets next to the listed runes
+      expect(rw.ingredients.length + requiredJewels, `${label}: sockets`).toBe(rw.sockets);
       if (maxJewels > 0) {
-        // Optional jewels widen the socket count: base sockets (the listed runes) + max jewels
-        expect(rw.socketsMax, `${label}: socketsMax`).toBe(rw.sockets + maxJewels);
+        // Optional jewels widen the socket count up to the listed runes + max jewels
+        expect(rw.socketsMax, `${label}: socketsMax`).toBe(rw.ingredients.length + maxJewels);
       } else {
-        // Required jewels fill a fixed socket count next to the listed runes
         expect(rw.socketsMax, `${label}: socketsMax`).toBeUndefined();
-        expect(rw.ingredients.length + requiredJewels, `${label}: sockets`).toBe(rw.sockets);
       }
     }
   });
@@ -1051,9 +1106,11 @@ describe('Data snapshot counts (detect ESR version changes)', () => {
     expect(charmRunewords, 'charm runewords').toBeGreaterThanOrEqual(30);
     // Recipes accepting optional jewels are shown as "(N-M Socket)" — 12 in 3.12, 11 in 3.2 (Void became a fixed 2-socket recipe)
     expect(withSocketRange, 'runewords with a socket range').toBeGreaterThanOrEqual(11);
-    // Since 3.2 each extra socket count of those recipes is also listed as a row with required jewels — 25 in 3.2
+    // Since 3.2 each extra socket count of those recipes is also listed as a row with required jewels — 25 in 3.2;
+    // since 3.3 most of those rows take further optional jewels too ("(4-6 Socket)": 1 required + "(0-2) Jewels")
     expect(withRequiredJewels, 'runewords with required jewels').toBeGreaterThanOrEqual(25);
-    expect(withJewels, 'runewords with jewelInfo').toBe(withSocketRange + withRequiredJewels);
+    const withRangeOrRequired = parsedRunewords.filter((rw) => rw.socketsMax !== undefined || requiredJewelsFrom(rw.jewelInfo) > 0).length;
+    expect(withJewels, 'runewords with jewelInfo').toBe(withRangeOrRequired);
 
     // Log counts for debugging when an ESR update changes things
     console.log('[Test] Data snapshot:', {

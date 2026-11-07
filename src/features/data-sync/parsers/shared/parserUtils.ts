@@ -1,4 +1,4 @@
-import type { Affix, BonusPool, SocketableBonuses } from '@/core/db';
+import type { Affix, BonusPool, SocketableBonusGroup, SocketableBonusGroupType, SocketableBonuses } from '@/core/db';
 
 /** The entity decoder lives in `@/lib/html` (shared with the Node scripts); re-exported for the parsers. */
 export { decodeHtmlEntities } from '@/lib/html';
@@ -172,27 +172,114 @@ export function parseRecipeAffixes(cell: Element): Affix[] {
 /** Header line that starts a random bonus pool, e.g. "1-2 of the following:". */
 const BONUS_POOL_HEADER = /\bof the following:?$/i;
 
-/**
- * Parses the random bonus pools of a recipe bonus cell (gemwords since ESR 3.2).
- *
- * Such cells contain: [recipe bonuses]<br><br>[pool]<br><br>...[pool]<br><br>[ingredient bonuses],
- * where each pool starts with an "N-M of the following:" header line. A pool is any group between
- * the first (recipe bonuses) and last (ingredient bonuses) non-empty groups whose first line is
- * such a header. Cells without pools return [].
- */
-export function parseRecipeBonusPools(cell: Element): BonusPool[] {
-  const groups = splitCellLineGroups(extractCellLines(cell))
+/** The non-empty <br><br> groups of a cell, hard-wrapped lines re-joined. */
+function cellTextGroups(cell: Element): string[][] {
+  return splitCellLineGroups(extractCellLines(cell))
     .map((group) =>
       mergeWrappedCellLines(group)
         .map((line) => line.text)
         .filter((text) => text.length > 0)
     )
     .filter((group) => group.length > 0);
+}
 
-  return groups
-    .slice(1, -1)
-    .filter(([header]) => BONUS_POOL_HEADER.test(header))
-    .map(([label, ...lines]) => ({ label, affixes: lines.map(toAffix) }));
+const isPoolGroup = (group: readonly string[]): boolean => group.length > 0 && BONUS_POOL_HEADER.test(group[0]);
+
+const toPool = ([label, ...lines]: readonly string[]): BonusPool => ({ label, affixes: lines.map(toAffix) });
+
+/**
+ * Parses the random bonus pools of a pre-ESR 3.3 recipe bonus cell (gemwords since ESR 3.2).
+ *
+ * Such cells contain: [recipe bonuses]<br><br>[pool]<br><br>...[pool]<br><br>[ingredient bonuses],
+ * where each pool starts with an "N-M of the following:" header line. A pool is any group between
+ * the first (recipe bonuses) and last (ingredient bonuses) non-empty groups whose first line is
+ * such a header. Cells without pools return []. The ESR 3.3 "Bonuses" cell has no ingredient
+ * group: see {@link parseRecipeBonusesCell}.
+ */
+export function parseRecipeBonusPools(cell: Element): BonusPool[] {
+  return cellTextGroups(cell).slice(1, -1).filter(isPoolGroup).map(toPool);
+}
+
+export interface RecipeBonusesCell {
+  readonly affixes: Affix[];
+  readonly pools: BonusPool[];
+}
+
+/**
+ * Parses the ESR 3.3+ "Bonuses" cell of a runewords.htm / gemwords.htm row: only the recipe's own bonuses (the rune /
+ * gem bonuses moved to the "Socketable Bonuses" cell), so no group is dropped. Groups starting with an
+ * "N-M of the following:" header are random bonus pools (gemwords); every other group is the recipe's own bonuses,
+ * e.g. Able's "+500% Enhanced Defense ...<br><br>Requirements -100%".
+ */
+export function parseRecipeBonusesCell(cell: Element): RecipeBonusesCell {
+  const groups = cellTextGroups(cell);
+  return {
+    affixes: groups.filter((group) => !isPoolGroup(group)).flatMap((group) => group.map(toAffix)),
+    pools: groups.filter(isPoolGroup).map(toPool),
+  };
+}
+
+/**
+ * Splits a socketable bonus group label into its item types, e.g.
+ * "Weapon (except Orb, Staff, Wand) / Missile / Mythical Arcane Staff" →
+ * Weapon (except Orb, Staff, Wand), Missile (no exceptions), Mythical Arcane Staff (no exceptions).
+ * The "/" separators inside the "(except ...)" parentheses (none so far) are not split on.
+ */
+export function parseSocketableGroupLabel(label: string): SocketableBonusGroupType[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const char of label) {
+    if (char === '(') depth++;
+    if (char === ')') depth = Math.max(0, depth - 1);
+    if (char === '/' && depth === 0) {
+      parts.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  parts.push(current);
+
+  return parts
+    .map((part) => normalizeWhitespace(part))
+    .filter((part) => part.length > 0)
+    .map((part) => {
+      const match = /^(.*?)\s*\(\s*except\s+(.*?)\s*\)$/i.exec(part);
+      if (!match) return { name: part, except: [] };
+      return {
+        name: match[1].trim(),
+        except: match[2]
+          .split(',')
+          .map((name) => name.trim())
+          .filter((name) => name.length > 0),
+      };
+    });
+}
+
+/**
+ * Parses the ESR 3.3+ "Socketable Bonuses" cell of a runewords.htm / gemwords.htm row: the combined rune / gem
+ * bonuses, either one plain list (one unlabelled group: every allowed base gets it) or one
+ * `<div class="rws-group">` per item-type label (`<div class="rws-label">`) followed by its list. Groups without
+ * any bonus line are dropped; a cell without any returns [].
+ */
+export function parseSocketableBonusGroups(cell: Element): SocketableBonusGroup[] {
+  const groupElements = Array.from(cell.querySelectorAll('.rws-group'));
+  if (groupElements.length === 0) {
+    const affixes = parseAffixes(cell);
+    return affixes.length > 0 ? [{ label: '', itemTypes: [], affixes }] : [];
+  }
+
+  return groupElements.flatMap((groupElement): SocketableBonusGroup[] => {
+    const labelElement = groupElement.querySelector('.rws-label');
+    const label = normalizeWhitespace(labelElement?.textContent ?? '');
+    // The bonus lines are the group's content after its label
+    const content = groupElement.cloneNode(true) as Element;
+    content.querySelector('.rws-label')?.remove();
+    const affixes = parseAffixes(content);
+    if (affixes.length === 0) return [];
+    return [{ label, itemTypes: parseSocketableGroupLabel(label), affixes }];
+  });
 }
 
 /**

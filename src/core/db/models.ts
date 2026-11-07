@@ -19,6 +19,27 @@ export interface BonusPool {
   readonly affixes: readonly Affix[];
 }
 
+/** One item type of a socketable bonus group label, e.g. "Weapon" with `except: ['Orb', 'Staff', 'Wand']`. */
+export interface SocketableBonusGroupType {
+  readonly name: string;
+  /** Item types excluded from this one only ("Weapon (except Orb, Staff, Wand)"); [] when none */
+  readonly except: readonly string[];
+}
+
+/**
+ * The combined bonuses of a recipe's runes / gems for some of its bases, as the ESR 3.3+ runewords.htm and
+ * gemwords.htm list them in their "Socketable Bonuses" column. A row has either one unlabelled group (`label` '',
+ * `itemTypes` []: applies to every allowed base) or one group per item-type label, e.g.
+ * "Weapon (except Orb, Staff, Wand) / Missile / Mythical Arcane Staff" and "Staff / Wand / Orb".
+ */
+export interface SocketableBonusGroup {
+  /** The label as the site shows it; '' for the single group that applies to every allowed base */
+  readonly label: string;
+  /** The label's item types, each with its own exceptions; [] for the unlabelled group */
+  readonly itemTypes: readonly SocketableBonusGroupType[];
+  readonly affixes: readonly Affix[];
+}
+
 export interface ColumnBonusPools {
   readonly weaponsGloves: readonly BonusPool[];
   readonly helmsBoots: readonly BonusPool[];
@@ -123,7 +144,8 @@ export interface Runeword {
   readonly affixes: readonly Affix[]; // Runeword bonuses from first non-empty column (backward compat)
   readonly columnAffixes: SocketableBonuses; // Per-column runeword bonuses (weapon/helm/armor)
   readonly tierPointTotals: readonly TierPointTotal[]; // Pre-calculated tier point totals
-  readonly jewelInfo?: string; // Jewels: optional "(0-3) Jewels" (with socketsMax) or required "(2) Jewels" (fixed sockets)
+  readonly jewelInfo?: string; // Jewels: "(0-3) Jewels" / "(1-3) Jewels" (with socketsMax) or required "(2) Jewels" (fixed sockets)
+  readonly socketableBonuses?: readonly SocketableBonusGroup[]; // The site's rune/gem bonuses per item-type group (ESR 3.3+); undefined for old cached data
 }
 
 // Gemword types
@@ -141,6 +163,7 @@ export interface Gemword {
   readonly columnAffixes: SocketableBonuses; // Per-column gemword bonuses (weapon/helm/armor)
   readonly columnBonusPools?: ColumnBonusPools; // Per-column random bonus pools (ESR 3.2+); undefined for old cached data
   readonly jewelInfo?: string; // Optional jewel requirement, e.g. "Jewel" (America, Canada, China)
+  readonly socketableBonuses?: readonly SocketableBonusGroup[]; // The site's gem bonuses per item-type group (ESR 3.3+); undefined for old cached data
 }
 
 // HTM Unique Items

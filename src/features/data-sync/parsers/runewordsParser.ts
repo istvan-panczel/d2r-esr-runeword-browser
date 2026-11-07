@@ -1,5 +1,6 @@
-import type { Runeword, Affix, SocketableBonuses, TierPointTotal, RuneCategory } from '@/core/db';
-import { parseRecipeAffixes } from './shared/parserUtils';
+import type { Runeword, Affix, SocketableBonusGroup, SocketableBonuses, TierPointTotal, RuneCategory } from '@/core/db';
+import { parseRecipeAffixes, parseReqLevel } from './shared/parserUtils';
+import { extractRecipeRowBonuses, recipeRowLayout } from './shared/recipeRowBonuses';
 import { isGemName } from './gemsParser';
 import { stripHtmlTags } from '@/lib/html';
 
@@ -45,6 +46,7 @@ interface RawRuneword {
   columnAffixes: SocketableBonuses;
   tierPointTotals: TierPointTotal[];
   jewelInfo?: string;
+  socketableBonuses?: SocketableBonusGroup[];
 }
 
 interface AllowedItemsResult {
@@ -164,24 +166,35 @@ export function extractIngredients(cell: Element): ExtractedIngredients {
   return { runes, gems, ingredients, jewelInfo: extractJewelInfo(cell) };
 }
 
+/** The jewel info text: "(0-3) Jewels" for a range, "(1) Jewel" / "(2) Jewels" for a count; undefined without jewels. */
+export function formatJewelInfo(minJewels: number, maxJewels: number): string | undefined {
+  if (maxJewels <= 0) return undefined;
+  if (minJewels === maxJewels) return `(${String(maxJewels)}) Jewel${maxJewels > 1 ? 's' : ''}`;
+  return `(${String(minJewels)}-${String(maxJewels)}) Jewels`;
+}
+
 /**
- * Extracts the jewel info from the ingredients cell.
+ * Extracts the jewel info from the ingredients cell, as the range of jewels the row takes.
  *
- * Two formats exist:
- * 1. Optional jewels: a "(0-3) Jewels" line on a "(N-M Socket)" recipe — returned as is.
- * 2. Required jewels: one plain "Jewel" line per jewel. Since ESR 3.2 the site lists every socket count
- *    of a ranged recipe as its own "(N Socket)" row with the extra sockets filled by jewels.
- *    Returned as "(2) Jewels" so both formats read alike; sockets = runes + gems + jewels.
+ * The cell lists jewels two ways, alone or (since ESR 3.3) together:
+ * 1. Optional jewels: a "(0-K) Jewels" line on a "(N-M Socket)" row.
+ * 2. Required jewels: one plain "Jewel" line per jewel (sockets = runes + gems + required jewels).
+ * E.g. ESR 3.3 Moonlight "(4-6 Socket)": "(0-2) Jewels" + one "Jewel" line → "(1-3) Jewels"; ESR 3.2 Moonlight
+ * "(5 Socket)": two "Jewel" lines → "(2) Jewels"; "(3-6 Socket)": "(0-3) Jewels" → "(0-3) Jewels".
  */
 function extractJewelInfo(cell: Element): string | undefined {
   const cellText = cell.textContent.replace(/\s+/g, ' ');
-  const optionalMatch = /\(\d+(?:-\d+)?\) Jewels?/.exec(cellText);
-  if (optionalMatch) return optionalMatch[0];
+  // "(0-2) Jewels", or a single count "(2) Jewels"
+  const optionalBounds = /\((\d+(?:-\d+)?)\) Jewels?/
+    .exec(cellText)?.[1]
+    .split('-')
+    .map((bound) => parseInt(bound, 10)) ?? [0];
+  const optionalMin = Math.min(...optionalBounds);
+  const optionalMax = Math.max(...optionalBounds);
 
   const lines = cell.innerHTML.split(/<br\s*\/?>/i).map((line) => stripHtmlTags(line).trim());
   const requiredJewels = lines.filter((line) => line === 'Jewel').length;
-  if (requiredJewels === 0) return undefined;
-  return `(${String(requiredJewels)}) Jewel${requiredJewels > 1 ? 's' : ''}`;
+  return formatJewelInfo(requiredJewels + optionalMin, requiredJewels + optionalMax);
 }
 
 /**
@@ -222,14 +235,11 @@ interface ExtractedAffixes {
 }
 
 /**
- * Extracts runeword affixes from all 3 bonus columns (weapon/helm/armor).
- * Columns 4-6 contain bonuses for different item types.
+ * Extracts runeword affixes from the 3 bonus columns (weapon/helm/armor) of the pre-ESR 3.3 layout
+ * (`extractRecipeRowBonuses` reads both layouts).
  *
  * Returns both the legacy `affixes` (first non-empty column, for backward compat)
  * and `columnAffixes` with all 3 columns separately.
- *
- * Most runewords have identical bonuses across columns, but 9 runewords
- * have item-type-specific bonuses (e.g., Machine, Lightning, Gluttony).
  */
 export function extractAffixes(cells: NodeListOf<Element>): ExtractedAffixes {
   // Cells 3, 4, 5 are columns 4-6 (0-indexed)
@@ -340,8 +350,10 @@ export function isLodRuneword(runes: readonly string[], runePriorityLookup: Rune
 }
 
 /**
- * Parses runewords from runewords.htm HTML.
- * Each row becomes a separate runeword entry with its variant number.
+ * Parses runewords from runewords.htm HTML, in either table layout (see `RecipeTableLayout`: the ESR 3.3+ "Bonuses" /
+ * "Socketable Bonuses" layout, or the older per-category bonus columns, kept for a cached or lagging page).
+ * Each row becomes a separate runeword entry with its variant number (page order, so saved `[name, variant]` ids stay
+ * valid across both layouts).
  * @param html The runewords.htm HTML content
  * @param runePointsLookup Optional lookup map for calculating tier point totals
  * @param runeReqLevelLookup Optional lookup map for calculating required level
@@ -364,9 +376,8 @@ export function parseRunewordsHtml(
 
   for (const row of rows) {
     const cells = row.querySelectorAll('td');
-    if (cells.length < 6) continue;
+    if (recipeRowLayout(cells) === null) continue;
 
-    // We've verified length >= 6, so indices 0-5 are valid
     const nameCell = cells[0];
     const ingredientsCell = cells[1];
     const allowedItemsCell = cells[2];
@@ -381,10 +392,13 @@ export function parseRunewordsHtml(
     const { sockets, socketsMax } = extractSocketRange(nameCell);
     const { runes, gems, ingredients, jewelInfo } = extractIngredients(ingredientsCell);
     const { allowedItems, excludedItems } = extractAllowedItems(allowedItemsCell);
-    const { affixes, columnAffixes } = extractAffixes(cells);
+    const { affixes, columnAffixes, socketableBonuses } = extractRecipeRowBonuses(cells, allowedItems);
 
-    // Calculate required level (highest reqLevel among all runes and gems)
-    const reqLevel = runeReqLevelLookup ? calculateReqLevel(runes, runeReqLevelLookup, gems, gemReqLevelLookup) : 0;
+    // Required level: the one the ESR 3.3+ page prints ("Req Lvl: N"), else the highest among the runes and gems. The
+    // page wins because the name-keyed lookup cannot tell ESR Ko (level 27) from LoD Ko (39); otherwise they agree
+    const pageReqLevel = parseReqLevel(nameCell.textContent);
+    const reqLevel =
+      pageReqLevel > 0 ? pageReqLevel : runeReqLevelLookup ? calculateReqLevel(runes, runeReqLevelLookup, gems, gemReqLevelLookup) : 0;
 
     // LoD runewords (with a LoD-exclusive rune) are listed among the others; the flag picks the rune variant
     const isLod = runePriorityLookup ? isLodRuneword(runes, runePriorityLookup) : false;
@@ -411,6 +425,7 @@ export function parseRunewordsHtml(
       columnAffixes,
       tierPointTotals,
       jewelInfo,
+      socketableBonuses,
     });
   }
 
@@ -432,6 +447,7 @@ export function parseRunewordsHtml(
     tierPointTotals: rw.tierPointTotals,
     ...(rw.socketsMax !== undefined && { socketsMax: rw.socketsMax }),
     ...(rw.jewelInfo !== undefined && { jewelInfo: rw.jewelInfo }),
+    ...(rw.socketableBonuses !== undefined && { socketableBonuses: rw.socketableBonuses }),
   }));
 
   console.log(`Parsed ${String(runewords.length)} runewords`);
