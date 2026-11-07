@@ -1,6 +1,6 @@
 {
   "entries": [
-    {"key":"deadly-strike","title":"Deadly Strike","category":"offense","summary":"A chance per hit to multiply the hit's physical damage, ×2 by default and more with Deadly Strike Damage.","source":"esr-files"},
+    {"key":"deadly-strike","title":"Deadly Strike","category":"offense","summary":"A chance per hit to multiply the hit's physical damage, ×2 by default and more with Deadly Strike Damage.","source":"mod-author"},
     {"key":"critical-damage","title":"Deadly Strike Damage","category":"offense","summary":"Raises the damage multiplier of every crit and Deadly Strike: +50% turns ×2 into ×2.5.","source":"esr-config"},
     {"key":"crushing-blow","title":"Crushing Blow","category":"offense","summary":"A chance on hit to remove a share of the target's current life. ESR halves it against most targets and cuts it hardest against bosses.","source":"esr-config"},
     {"key":"bleed","title":"Bleed","category":"offense","summary":"Physical hits make the target lose a percent of that hit's physical damage over a few seconds, like poison.","source":"esr-config"},

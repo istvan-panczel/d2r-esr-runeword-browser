@@ -10,7 +10,7 @@ stats: item_deadlystrike (141), item_deadlystrike_perlevel (250); resolved in on
 
 summary: A chance per hit to multiply the hit's physical damage, ×{derived.critical-multiplier.0} by default and more with Deadly Strike Damage.
 
-body: Each hit rolls against your total Deadly Strike. On success the physical damage is multiplied by {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->% plus your Deadly Strike Damage, for melee and missiles alike [ESR config]. Weapon-mastery Critical, Critical Strike and Deadly Strike are resolved in that order and only one can succeed, so they never multiply each other [ESR config]. Fire thorns, which ESR keeps in the vanilla Critical Strike stat's row, give no crit chance [Mod author]. Only physical damage is multiplied [Vanilla]. Physical damage that a skill converts to an element can still crit [Community 3.9]. At 100% every hit crits [Vanilla]. Two unique weapons, Demon Limb and Lacerator, give extra bonuses for each 1% Deadly Strike above 100, so going past 100 pays on those [ESR files]. D-stoning raises Deadly Strike against its own cap, which counts only what the stones added: a 50% Deadly Strike item can be D-stoned to 150% [Mod author] [ESR files]. A few uniques (Voidrend, Dwarf Star, Earthshifter, Gargoyle's Bite, Icing Death, Raven Frost) carry hidden auras that use your Deadly Strike as the chance for one element's damage to crit, boosted by Deadly Strike Damage [ESR files]. Without such an aura, item Deadly Strike does not make spells crit [Mod author].
+body: Each hit rolls against your total Deadly Strike. On success the physical damage is multiplied by {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->% plus your Deadly Strike Damage, for melee and missiles alike [ESR config] [Mod author]. Weapon-mastery Critical, Critical Strike and Deadly Strike are resolved in that order and only one can succeed, so they never multiply each other [ESR config]. Fire thorns, which ESR keeps in the vanilla Critical Strike stat's row, give no crit chance [Mod author]. Only physical damage is multiplied [Vanilla]. Physical damage that a skill converts to an element can still crit [Community 3.9]. At 100% every hit crits [Vanilla]. Two unique weapons, Demon Limb and Lacerator, give extra bonuses for each 1% Deadly Strike above 100, so going past 100 pays on those [ESR files]. D-stoning raises Deadly Strike against its own cap, which counts only what the stones added: a 50% Deadly Strike item can be D-stoned to 150% [Mod author] [ESR files]. A few uniques (Voidrend, Dwarf Star, Earthshifter, Gargoyle's Bite, Icing Death, Raven Frost) carry hidden auras that use your Deadly Strike as the chance for one element's damage to crit, boosted by Deadly Strike Damage [ESR files]. Without such an aura, item Deadly Strike does not make spells crit [Mod author].
 
 facts:
 
@@ -39,19 +39,20 @@ stats: criticaldamage (434)
 
 summary: Raises the damage multiplier of every crit and Deadly Strike: +50% turns ×{derived.critical-multiplier.0} into ×{derived.critical-multiplier.50}.
 
-body: ESR-only stat. It adds straight to the base crit multiplier of {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->%, so +50% Deadly Strike Damage makes each crit deal ×{derived.critical-multiplier.50} physical damage instead of ×{derived.critical-multiplier.0} [ESR config]. It works for weapon-mastery crits, Critical Strike and Deadly Strike, melee and missiles [ESR config]. It does nothing on its own: you still need a crit chance. It is rare on items [ESR files]. Some skills and auras also read it for their own crit bonuses, for example the "Magic Damage Crit" rows [ESR files].
+body: ESR-only stat. It adds straight to the base crit multiplier of {config.critical-strike-damage.critical_strike_damage.base_percent}<!-- 200 -->%, so +50% Deadly Strike Damage makes each crit deal ×{derived.critical-multiplier.50} physical damage instead of ×{derived.critical-multiplier.0} [ESR config]. The mod author confirmed the addition: with 100% Deadly Strike and +25% Deadly Strike Damage, each crit adds 125% extra physical damage instead of 100%, a ×{derived.critical-multiplier.25} hit [Mod author]. It works for weapon-mastery crits, Critical Strike and Deadly Strike, melee and missiles [ESR config]. It does nothing on its own: you still need a crit chance. It is rare on items [ESR files]. Some skills and auras also read it for their own crit bonuses, for example the "Magic Damage Crit" rows [ESR files].
 
 facts:
 
 - Stat id `{config.critical-strike-damage.critical_strike_damage.stat_id}`<!-- 434 -->; added to `base_percent = {…base_percent}`<!-- 200 -->; cap `max_percent = {…max_percent}`<!-- 100000 -->. Source: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`.
 - Missiles: "the bonus is used when any of [the three sources] is enabled", because missiles only carry a yes/no crit flag (same file).
 - Tooltip `+%d%% Deadly Strike Damage` (`strings/item-modifiers.json` key `critdamage`).
+- The mod author (2026-11-07), asked whether +25% Deadly Strike Damage at 100% Deadly Strike raises the extra double damage to 125%: "125% yes".
 
 caveats:
 
 - Whether skill-side crits (Magic Damage Crit and similar) add the item stat once or twice is a skill-formula question; check per skill.
 
-sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `excel/itemstatcost.txt` row 434; `excel/skills.txt` ("Magic Damage Crit" aurastatcalc1); `strings/item-modifiers.json`
+sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `excel/itemstatcost.txt` row 434; `excel/skills.txt` ("Magic Damage Crit" aurastatcalc1); `strings/item-modifiers.json`; ESR mod author (Discord, 2026-11-07)
 
 ---
 
