@@ -145,10 +145,12 @@ then run `lootfilter` in the game console and read
   languages. Before, the parser accepted only a string, so the whole `filterLevels` went to `passthrough` with an error
   and every `activeInLevels` then errored (96 diagnostics on v0.7.0). `levelName` (`engine/text.ts`) gives the enUS
   name for the level pickers (rule editor, Test tab in its game language, default level) and the library cards; the
-  Settings name field edits the enUS text of a per-language name and keeps the other languages ("enUS; +10
-  languages", the rest in the JSON tab). Every other text field (names, chat lines, notifications) has a language
-  select instead (`ColorTextField`, `withLanguage`): it edits one language, keeps the others and the key order, and
-  "Add <lang>" starts from the enUS text.
+  Settings name field edits the language a per-language name shows (`shownLanguage`: enUS, else the file's first) and
+  keeps the other languages ("enUS; +10 languages", the rest in the JSON tab). Every other text field (names, chat
+  lines, notifications) has a language select instead (`ColorTextField`, `withLanguage`): it edits one language, keeps
+  the others and the key order, and "Add <lang>" starts from the enUS text. An emptied language stays in the model as
+  `''`, so the field stays on it while typing; the file leaves it out (`pruneEmptyLanguages` in `toPlainJson`), and a
+  text whose languages are all empty stays an object (`{ "enUS": "" }`).
   Shared filters keep the object in `loot_filters.levels` (`levelJson`; `readLevels` accepts a string or an object of
   known languages; the 4 KB check counts the nested object's separators as Postgres prints them).
 - **Text notes** (`textNotes` in `engine/parse.ts`, returned by `parseLootFilter` as `notes`, apart from `diagnostics`):
@@ -569,8 +571,7 @@ fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 Settings changes dispatch the slice reducers directly; the only local state is what a half-typed number needs
 (`NumberInput`: a text input with a numeric keyboard that commits only valid numbers, so "-" or "1." is kept as typed
 and does not clear the key). Form rows share `Field` (label, control, hint; `dense` in the Test tab) and `CheckField`
-(`components/Field.tsx`); the actions editor and the test result share `actions/Section.tsx`. A per-language text (`{ "enUS": …, "deDE": … }`) is shown read-only with "multi-language text, edit in
-the JSON tab". Unknown keys appear in the problems list as warnings: they travel through unchanged, but only the JSON tab
+(`components/Field.tsx`); the actions editor and the test result share `actions/Section.tsx`. A per-language text (`{ "enUS": …, "deDE": … }`) gets a language select (see Settings above). Unknown keys appear in the problems list as warnings: they travel through unchanged, but only the JSON tab
 can edit them.
 
 ## Rules tab (`components/RulesTab.tsx`, `components/rules/`, `components/pickers/`)
@@ -808,12 +809,15 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
   index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
   test rule (`inGameCheckRule`):
-  - copies every condition of the rule except the four stat lists (codes, types, quality, tier, flags, ids, location,
-    difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not, and no action (no
-    `hide`, `hideIfOtherConditionsFail`, style, sound…);
+  - copies every condition of the rule except the four stat lists and the `formula` (codes, types, quality, tier,
+    flags, ids, location, difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not,
+    and no action (no `hide`, `hideIfOtherConditionsFail`, style, sound…);
   - prints each stat the four lists check (exceptions included), once per stat and param, in list order:
     `Label {stat:ID}`, `Label:param {stat:ID,param}` for a check with a param, `Char Label {playerStat:ID}` for a
-    character stat (`checkedStats`, `checkText`): `[ED {stat:17} | Tab:8 {stat:188,8}] `. Labels are short
+    character stat (`checkedStats`, `checkText`): `[ED {stat:17} | Tab:8 {stat:188,8}] `. Then the stats the formula
+    reads (`formulaStat`), so a formula-only rule gets a check too: a number param as is, a skill name as the skill's
+    id; where the formula reads any entry (`statMax`, `statSum`, a skill name on a chance-to-cast or charge stat) the
+    placeholder prints param 0 and the comment says so. Labels are short
     (`SHORT_LABELS`: ED, Def%, FCR, MF, Tab, Sock…; other stats their name without `item_`, `#ID` for an id without
     data); ids come from the bundle, a name the bundle does not know stays a name. The guide documents no length
     limit for names;
@@ -1210,7 +1214,7 @@ and the placeholders of the field's context (`names` for names, `chat` for chat 
 `levelChangeFormat` for the Settings tab's notification lines); the token goes in at the caret
 (`utils/insertAtCaret.ts`) and, once the menu has closed, the field gets the focus back with the caret after the token
 (the popover's `onCloseAutoFocus` is prevented, else Radix would focus the menu button). Below the field a small preview; a `{...}` token the guide does not know, or one that does
-not work in that context, gets a hint. Per-language texts are read-only ("multi-language text, edit in the JSON tab").
+not work in that context, gets a hint. Per-language texts get a language select.
 `ColorControl` is a native colour input + optional alpha slider + `[r, g, b(, a)]` readout + clear
 (`utils/colorValues.ts`).
 
@@ -1507,9 +1511,12 @@ line and character." Stats read the tooltip number and an unidentified item skip
 - **Evaluator** (`engine/evaluate.ts`): the formula is ANDed with the other conditions and is an "other condition" for
   `hideIfOtherConditionsFail` (assumed). It reads the test item's stat entries (`stat`, `statMax`, `statSum`) and the
   character's (`playerStat`, character level = stat 12) like the stat lists; skill names resolve through
-  `TestContext.skillIds` (lootfilter.json `skillNames`, `buildSkillIds`). A syntax error makes the rule `switchedOff`
-  ("its formula has an error"; it never runs, nor hides). On an unidentified item a formula that reads an item stat
-  other than `STATS_WHILE_UNIDENTIFIED` gives `{ status: 'unidentified' }` and the whole rule is skipped. Each trace
+  `TestContext.skillIds` (lootfilter.json `skillNames`, `buildSkillIds`). A syntax error, or a stat or skill name the
+  loaded game data lacks (the validator's "switches the rule off in game" warnings; not checked before the data loads),
+  makes the rule `switchedOff` ("its formula has an error"; it never runs, nor hides). Load-time switches (formula
+  error, wrong shape, show + hide) come before the per-item unidentified skip. On an unidentified item a formula that
+  reads an item stat other than `STATS_WHILE_UNIDENTIFIED` gives `{ status: 'unidentified' }` and the whole rule is
+  skipped; those stats are known by name and by their itemstatcost row before the game data loads. Each trace
   entry carries `formula`: its value, `unidentified` or the error; the Test tab trace prints it ("formula = 1, holds").
 - **Rule editor** (`components/rules/conditions/FormulaField.tsx`): "Formula" (Advanced view; Basic shows it when set)
   spans the Stats section after the stat lists. A monospace text area (an emptied one removes the key), the live syntax

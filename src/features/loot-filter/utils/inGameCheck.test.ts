@@ -94,6 +94,33 @@ describe('inGameCheckRule', () => {
     expect(both.ok && both.rule.chatMessage).toBe('{name} [ED {stat:item_maxdamage_percent}]');
   });
 
+  it('leaves the formula out and prints the stats it reads, a formula-only rule too', () => {
+    const lookup = { ...TEST_LOOKUP, skillIds: new Map([['teleport', 54]]) };
+    const formula =
+      "stat('item_numsockets') >= 2 && stat(188, 8) > 0 && stat('item_singleskill', 'Teleport') > 0 && statMax(204) > 0 && " +
+      "stat('item_skillonhit', 'Teleport') > 0 && playerStat('strength') > 50 && stat(194) < 6";
+    const rule: LootFilterRule = { itemTypes: ['ring'], formula, hide: true };
+    const result = inGameCheckRule(filterOf([rule]), 0, lookup);
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.rule).not.toHaveProperty('formula');
+    expect(result.rule.itemTypes).toEqual(['ring']);
+    expect(result.rule.namePrefix).toBe(
+      '[Sock {stat:194} | Tab:8 {stat:188,8} | Skill:54 {stat:107,54} | Charges {stat:204} | CtcHit {stat:198} | Char Str {playerStat:0}] '
+    );
+    const stats = checkedStats(rule, lookup);
+    expect(stats.find((stat) => stat.label === 'Charges')?.description).toBe(
+      'item_charged_skill (204); the formula reads the highest of its entries, this prints param 0'
+    );
+    expect(stats.find((stat) => stat.label === 'CtcHit')?.description).toBe(
+      "item_skillonhit (198); the formula reads 'Teleport' at any level, this prints param 0"
+    );
+    // The stat lists come first; a stat both check is printed once
+    const both = checkedStats({ itemStats: [{ stat: 194, value: 1 }], formula: "stat('item_numsockets') > 1" }, lookup);
+    expect(both.map((stat) => stat.label)).toEqual(['Sock']);
+    // A formula with a syntax error prints nothing
+    expect(inGameCheckRule(filterOf([{ formula: "stat('x' >", hide: true }]), 0, lookup)).toEqual({ ok: false, reason: NO_STATS_REASON });
+  });
+
   it('refuses a rule without stat checks', () => {
     expect(inGameCheckRule(filterOf([{ itemCodes: ['r33'], hide: true }]), 0, TEST_LOOKUP)).toEqual({ ok: false, reason: NO_STATS_REASON });
     expect(inGameCheckRule(filterOf([]), 0, TEST_LOOKUP).ok).toBe(false);

@@ -13,10 +13,13 @@
  *   disabled rules no `disabledRules` key is written.
  * - a rule whose file wrote `"activeInLevels": 4` keeps the bare number while its levels are still `[4]`
  *   (`LootFilterRule.activeInLevelsNumber`); edited levels are written as a list.
+ * - a per-language text drops the languages emptied in the editor (`pruneEmptyLanguages`): the editor keeps them as `''`
+ *   while they are edited, so the field stays on its language.
  * Comments between rules in the source are not kept.
  */
 import { ACTION_KEYS, CONDITION_KEYS, TOP_LEVEL_KEYS, isPlainObject } from './parse.ts';
-import type { LootFilter, LootFilterRule, LootFilterStyle, Passthrough } from './types.ts';
+import { fileText } from './text.ts';
+import type { FilterText, LootFilter, LootFilterRule, LootFilterStyle, Passthrough, RuleActions } from './types.ts';
 
 /** Longest line a rule or style is kept on as a whole. */
 const ONE_LINE_RULE_WIDTH = 150;
@@ -34,9 +37,23 @@ function addPassthrough(out: PlainObject, passthrough: Passthrough | undefined):
   }
 }
 
+/** The rule and style keys that hold a `FilterText`. */
+const TEXT_ACTION_KEYS = [
+  'replaceName',
+  'namePrefix',
+  'nameSuffix',
+  'chatMessage',
+  'chatMessageWhenHidden',
+] as const satisfies readonly (keyof RuleActions)[];
+
 function plainActions(source: LootFilterStyle | LootFilterRule, out: PlainObject): void {
   for (const key of ACTION_KEYS) {
     if (source[key] !== undefined) out[key] = source[key];
+  }
+  // Same keys, same place: only the emptied languages go.
+  for (const key of TEXT_ACTION_KEYS) {
+    const text = source[key];
+    if (text !== undefined) out[key] = fileText(text);
   }
 }
 
@@ -84,6 +101,16 @@ export function toPlainJson(filter: LootFilter): PlainObject {
         if (disabled.length > 0) out.disabledRules = disabled;
         break;
       }
+      case 'filterLevels':
+        if (filter.filterLevels) out.filterLevels = filter.filterLevels.map((level) => ({ ...level, name: fileText(level.name) }));
+        break;
+      case 'notifications':
+        if (filter.notifications) {
+          out.notifications = Object.fromEntries(
+            Object.entries(filter.notifications).map(([name, text]: [string, FilterText]) => [name, fileText(text)])
+          );
+        }
+        break;
       default:
         if (filter[key] !== undefined) out[key] = filter[key];
     }

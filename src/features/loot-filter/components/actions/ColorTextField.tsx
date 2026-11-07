@@ -9,7 +9,6 @@ import {
   PLACEHOLDERS,
   findPlaceholder,
   listPlaceholders,
-  pruneEmptyLanguages,
   resolveText,
   shownLanguage,
   textLanguages,
@@ -75,8 +74,8 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   const [chosenLanguage, setChosenLanguage] = useState<Language | null>(null);
   const localized = typeof value === 'object' ? value : undefined;
   const present = localized === undefined ? [] : textLanguages(localized);
-  // The language the user picked while the text has it (an emptied one stays as '' until the field loses focus), else
-  // the one the text shows by default.
+  // The language the user picked while the text has it (an emptied one stays as '' until the file is written), else the
+  // one the text shows by default.
   const language =
     localized === undefined
       ? 'enUS'
@@ -87,12 +86,6 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   const setText = (next: string) => {
     if (localized === undefined) onChange(next === '' ? undefined : next);
     else onChange(withLanguage(localized, language, next));
-  };
-  /** Leaving the field drops the languages emptied in it (all of them: the key goes). */
-  const pruneOnBlur = () => {
-    if (localized === undefined) return;
-    const pruned = pruneEmptyLanguages(localized);
-    if (pruned !== localized) onChange(pruned);
   };
   const insert = (token: string) => {
     const input = inputRef.current;
@@ -152,7 +145,6 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
           onChange={(event) => {
             setText(event.target.value);
           }}
-          onBlur={pruneOnBlur}
         />
         <Popover open={colorsOpen} onOpenChange={setColorsOpen}>
           <PopoverTrigger asChild>
@@ -233,7 +225,7 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
       {localized !== undefined && (
         <p className="text-xs text-muted-foreground">
           {present.length} {present.length === 1 ? 'language' : 'languages'} ({present.join(', ')}); a missing one falls back to enUS. A
-          language left empty is removed when you leave the field.
+          language left empty is left out of the file.
         </p>
       )}
       {problems.map((problem) => (

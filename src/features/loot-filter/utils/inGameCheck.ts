@@ -3,15 +3,17 @@
  * rule checks (`{stat:ID}` / `{stat:ID,param}`), so a player can compare it with the tooltip. A power user found that
  * Enhanced Damage reads 0 on weapons this way.
  *
- * The test rule goes right before its rule, with the rule's conditions but none of its stat checks (so it shows the
- * values whether the checks pass or not) and no actions but the printed text: it never hides and changes nothing but
+ * The test rule goes right before its rule, with the rule's conditions but none of its stat checks or its formula (so it
+ * shows the values whether the checks pass or not; the stats the formula reads are printed too) and no actions but the printed text: it never hides and changes nothing but
  * the name. Name parts are "later wins" in the plugin, so the text goes where the rule (style included) writes nothing:
  * `namePrefix`, else `nameSuffix`, else a `chatMessage` (chat lines add up). A later rule that also sets that name part
  * replaces it, and an item the rule (or an earlier rule) hides shows no label at all.
  */
 import { effectiveActions } from '../engine/actions';
 import { wrongShapedKeys } from '../engine/evaluate';
+import { formulaReferences, formulaSkillKey, parseFormula, type FormulaCall } from '../engine/formula';
 import { CONDITION_KEYS } from '../engine/parse';
+import { statLayerKind } from '@/features/game-data/engine/statLayers';
 import type { LootFilter, LootFilterRule, RuleConditions, StatCheck } from '../engine/types';
 import type { LootFilterLookup } from './lookup';
 
@@ -24,6 +26,8 @@ export const IN_GAME_CHECK_MARK = 'In-game check';
 
 /** The stat lists a test rule leaves out; their stats are what it prints. */
 const STAT_LISTS = ['itemStats', 'itemStatsAnyOf', 'playerStats', 'playerStatsAnyOf'] as const satisfies readonly (keyof RuleConditions)[];
+/** The conditions a test rule leaves out: the stat lists and the formula, whose stats it prints. */
+const LEFT_OUT: readonly string[] = [...STAT_LISTS, 'formula'];
 
 /** Short labels by itemstatcost name, for the stats filters check most; others show their name without `item_`. */
 const SHORT_LABELS: Readonly<Record<string, string>> = {
@@ -93,7 +97,12 @@ function baseLabel(name: string | undefined, stat: string | number): string {
   return SHORT_LABELS[name] ?? name.replace(/^item_/, '');
 }
 
-function checkedStat(owner: CheckedStat['owner'], check: StatCheck, lookup: LootFilterLookup): CheckedStat {
+function checkedStat(
+  owner: CheckedStat['owner'],
+  check: Pick<StatCheck, 'stat' | 'param'>,
+  lookup: LootFilterLookup,
+  note = ''
+): CheckedStat {
   const name = lookup.statName(check.stat) ?? (typeof check.stat === 'string' ? check.stat : undefined);
   const id = lookup.statId(check.stat) ?? (typeof check.stat === 'number' ? check.stat : undefined);
   const { param } = check;
@@ -103,24 +112,56 @@ function checkedStat(owner: CheckedStat['owner'], check: StatCheck, lookup: Loot
   const what = [name, id === undefined || name === undefined ? undefined : `(${String(id)})`]
     .filter((part) => part !== undefined)
     .join(' ');
-  const description = `${what || String(check.stat)}${param === undefined ? '' : ` param ${String(param)}${paramName === undefined ? '' : ` ${paramName}`}`}`;
+  const description = `${what || String(check.stat)}${param === undefined ? '' : ` param ${String(param)}${paramName === undefined ? '' : ` ${paramName}`}`}${note}`;
   return { owner, stat: id ?? check.stat, param, label, description };
 }
 
-/** The stats the rule's four stat lists check (exceptions included), in list order, each stat and param once. */
+/**
+ * A formula call as a printed value. A skill name param prints that skill's entry (its id, as the evaluator reads it);
+ * where the formula reads any entry (`statMax`, `statSum`, a skill name on a chance-to-cast or charge stat) the
+ * placeholder can only print one, param 0, and the description says so.
+ */
+function formulaStat(call: FormulaCall, lookup: LootFilterLookup): CheckedStat {
+  const owner = call.fn === 'playerStat' ? 'player' : 'item';
+  const stat = call.stat.kind === 'name' ? call.stat.name : call.stat.id;
+  const anyEntry = `; the formula reads ${call.fn === 'statSum' ? 'the sum of' : 'the highest of'} its entries, this prints param 0`;
+  if (call.fn === 'statMax' || call.fn === 'statSum') return checkedStat(owner, { stat }, lookup, anyEntry);
+  const { param } = call;
+  if (param === undefined) return checkedStat(owner, { stat }, lookup);
+  if (param.kind === 'number') return checkedStat(owner, { stat, param: param.value }, lookup);
+  const name = lookup.statName(stat) ?? (typeof stat === 'string' ? stat : undefined);
+  const kind = name === undefined ? undefined : statLayerKind(name);
+  if (kind === 'event' || kind === 'charged') {
+    return checkedStat(owner, { stat }, lookup, `; the formula reads '${param.name}' at any level, this prints param 0`);
+  }
+  // As the evaluator: any other stat takes the skill name as the skill's id.
+  const skill = lookup.skillIds.get(formulaSkillKey(param.name));
+  if (skill !== undefined) return checkedStat(owner, { stat, param: skill }, lookup);
+  return checkedStat(owner, { stat }, lookup, `; the skill '${param.name}' is not known, this prints param 0`);
+}
+
+/**
+ * The stats the rule's four stat lists check (exceptions included), in list order, then the ones its formula reads, each
+ * stat and param once.
+ */
 export function checkedStats(rule: LootFilterRule, lookup: LootFilterLookup): readonly CheckedStat[] {
   const seen = new Set<string>();
   const result: CheckedStat[] = [];
+  const add = (entry: CheckedStat) => {
+    const key = `${entry.owner}|${String(entry.stat)}|${String(entry.param)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    result.push(entry);
+  };
   for (const list of STAT_LISTS) {
     const owner = list.startsWith('player') ? 'player' : 'item';
     for (const check of rule[list] ?? []) {
-      if (check.stat === '') continue;
-      const entry = checkedStat(owner, check, lookup);
-      const key = `${owner}|${String(entry.stat)}|${String(entry.param)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      result.push(entry);
+      if (check.stat !== '') add(checkedStat(owner, check, lookup));
     }
+  }
+  const parsed = rule.formula === undefined ? undefined : parseFormula(rule.formula);
+  if (parsed?.ok === true) {
+    for (const call of formulaReferences(parsed.ast)) add(formulaStat(call, lookup));
   }
   return result;
 }
@@ -139,7 +180,7 @@ export type InGameCheckResult =
   | { readonly ok: false; readonly reason: string };
 
 /** Why a rule gets no test rule; shown on the disabled button. */
-export const NO_STATS_REASON = 'This rule checks no stats; the check prints the values of the stats a rule checks.';
+export const NO_STATS_REASON = 'This rule checks no stats; the check prints the values of the stats a rule checks (stat lists or formula).';
 
 /**
  * Why a rule with wrong-shaped keys gets no test rule: the copy would leave them out and apply while the plugin (and
@@ -151,7 +192,7 @@ export function wrongShapeReason(keys: readonly string[]): string {
 
 /**
  * The test rule for the rule at `index` (it goes at `index`, so the rule moves to `index + 1`): the rule's conditions
- * without the stat lists, the printed values (`checkText`) in the first name part the rule leaves free, and a comment
+ * without the stat lists and the formula, the printed values (`checkText`) in the first name part the rule leaves free, and a comment
  * that starts with `IN_GAME_CHECK_MARK` and spells out the labels. The comment says "the rule below" rather than a rule
  * number, which would go stale when rules move. A rule with wrong-shaped keys gets none (`wrongShapeReason`).
  */
@@ -165,7 +206,7 @@ export function inGameCheckRule(filter: LootFilter, index: number, lookup: LootF
 
   const conditions: Record<string, unknown> = {};
   for (const key of CONDITION_KEYS) {
-    if ((STAT_LISTS as readonly string[]).includes(key)) continue;
+    if (LEFT_OUT.includes(key)) continue;
     if (source[key] !== undefined) conditions[key] = source[key];
   }
 
