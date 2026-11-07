@@ -14,7 +14,7 @@ officialDocs:
 sources: [official-docs]
 ---
 
-The :term[Vessel of Souls] is a mythical unique amulet that drops in Endgame Maps ([[maps-keys-ascendancy]]). It cannot be worn as an amulet: the official page says to finish its crafting and turn it into a weapon first. Its earlier warning that wearing it sets your life to 1 is gone from the 3.2.24 page ([[avoid-disasters]]).
+The :term[Vessel of Souls] is a mythical unique amulet that drops in Endgame Maps ([[maps-keys-ascendancy]]). It cannot be worn as an amulet: the official page says to finish its crafting and turn it into a weapon first. Its earlier warning that wearing it sets your life to 1 has been gone from the page since 3.2.24 ([[avoid-disasters]]).
 
 Instead you cube it with five :term[Organ]s at a time (some recipes take a Flag as one of the five). Each recipe adds a bonus and spends some of the vessel's souls. The recipes come in four tiers that must be finished in order; the official page lists which organs give which bonus. Every recipe per tier with its organs, soul cost and limits: [Vessel of Souls recipes](page:/game-data/enhance?tab=vessel).
 
