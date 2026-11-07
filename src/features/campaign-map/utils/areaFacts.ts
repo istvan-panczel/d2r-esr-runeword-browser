@@ -63,9 +63,10 @@ export function plainNotes(area: CampaignArea): CampaignNote[] {
   return area.notes.filter((note) => !isHeadsUpNote(note));
 }
 
-/** The curated bosses plus the map boss of the game files, without repeats */
+/** The curated bosses plus the map boss of the game files, without repeats ("Double T1 Bosses" reads "Two tier 1 bosses") */
 export function areaBosses(area: CampaignArea): string[] {
-  return [...new Set([...area.bosses, ...(area.area.boss === undefined ? [] : [area.area.boss])])];
+  const bosses = [...area.bosses, ...(area.area.boss === undefined ? [] : [area.area.boss])];
+  return [...new Set(bosses.map((boss) => boss.replace(/^Double T(\d) Bosses$/i, 'Two tier $1 bosses')))];
 }
 
 /** "Act III · Dungeon", "Endgame Maps · Tier 5 · Eye of the Storm" */

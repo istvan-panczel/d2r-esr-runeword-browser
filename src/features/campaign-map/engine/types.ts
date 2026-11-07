@@ -14,6 +14,8 @@ export type CampaignSectionKey = 'act1' | 'act2' | 'act3' | 'act4' | 'act5' | 's
 export type FactSource =
   /** The official ESR Maps page */
   | 'official'
+  /** The official Endgame Maps page (the map bosses' fights and rewards) */
+  | 'endgame'
   /** Read from the txt tables, with a human-written label */
   | 'tables'
   /** Unchanged Diablo II behaviour, not confirmed in ESR */

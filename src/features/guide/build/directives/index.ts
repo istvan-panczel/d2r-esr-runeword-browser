@@ -2,6 +2,7 @@ import { resolveCardDirective } from './card.ts';
 import { resolveDifficultyPenalties } from './difficultyPenalties.ts';
 import { resolveDstoneCaps } from './dstoneCaps.ts';
 import { resolveGlossary } from './glossary.ts';
+import { resolveMapBosses } from './mapBosses.ts';
 import { resolveRecipeOutput } from './recipeOutput.ts';
 import { resolveRecipes } from './recipes.ts';
 import { resolveSecretRecipe, resolveSecretRecipes } from './secretRecipes.ts';
@@ -22,6 +23,7 @@ export type LeafDirectiveName =
   | 'vendor'
   | 'difficulty-penalties'
   | 'dstone-caps'
+  | 'map-bosses'
   | 'glossary'
   | 'card';
 
@@ -35,6 +37,7 @@ export const LEAF_DIRECTIVES: Readonly<Record<LeafDirectiveName, DirectiveResolv
   vendor: resolveVendor,
   'difficulty-penalties': resolveDifficultyPenalties,
   'dstone-caps': resolveDstoneCaps,
+  'map-bosses': resolveMapBosses,
   glossary: resolveGlossary,
   card: resolveCardDirective,
 };

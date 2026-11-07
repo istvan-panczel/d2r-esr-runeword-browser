@@ -40,7 +40,7 @@ Unique charms only work from the charm inventory, and ESR limits how many count 
 
 ::source[Hellfire Torch]
 
-The Eternal Ancients in their tier 5 Endgame Map drop the pieces of the **Eternal Hourglass of the Timeless Sands**; kill all of them and cube the Broken hourglass with both shards. [Rathma's Eternal Skull](<dropfinder:Rathma's Eternal Skull>) comes from Rathma's tier 5 map ([[endgame-roadmap]]).
+The **Eternal Hourglass of the Timeless Sands** drops finished from the Guardians of Time in the Icecrown Citadel, a tier 5 Endgame Map: kill Talic, Madawc and Korlic in one game and a launcher plugin rule drops it from the last one ([[endgame-bosses]]). Its old pieces and their cube recipe are still in the files, but nothing drops them. [Rathma's Eternal Skull](<dropfinder:Rathma's Eternal Skull>) comes from Rathma's tier 5 map ([[endgame-roadmap]]).
 
 ::source[Eternal Hourglass of the Timeless Sands]
 

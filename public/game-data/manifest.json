@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-07T12:41:04.946Z",
+  "generatedAt": "2026-11-07T13:02:52.581Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -22,8 +22,8 @@
       "bytes": 915631
     },
     "sources": {
-      "hash": "76c930caea0f9d2a96828c384e71fae56b6a0b29bbb1b9af9ae7095de0c9943d",
-      "bytes": 305793
+      "hash": "2334e18abc20aeb878bb7876f2a14d743cc696dd2e016f106a5c8ff876892c35",
+      "bytes": 305810
     },
     "lootfilter": {
       "hash": "48346ef5fcaaed30273cdd7f8a502ec16251f0188399053e55b5aa86681e4b4c",
@@ -38,8 +38,8 @@
       "bytes": 760060
     },
     "materials": {
-      "hash": "9bdb74f7a183b12aa925a2364d0ae796994c0e840ff37f5faea9c857b99f9acf",
-      "bytes": 172248
+      "hash": "a835cf446fc89f38e118be00d832b04e0c492130a932765d8a153d13694f39be",
+      "bytes": 172265
     },
     "sets": {
       "hash": "27c09f0ac7a20409b32f7f7189d5590a855953e058e0b82a49e4a26f2a5cf250",
@@ -66,8 +66,8 @@
       "bytes": 23850
     },
     "areas": {
-      "hash": "f0224f8e2c237444f898659662f5360c88a580581f547c2fef6507c070e140cc",
-      "bytes": 39562
+      "hash": "c2f92b5807826cd83ce6648ad384edf6bd7583f2ca7063d0823c899d3714218d",
+      "bytes": 52650
     },
     "stash": {
       "hash": "eb05ad3d17c8bf0ad93566d06e5361887048c86595e314f4c96246f00565ebde",
@@ -232,6 +232,8 @@
     "areasOneWayVis": 2,
     "areasWithMapItem": 21,
     "areasUniquesMinsThenMaxes": 59,
+    "areasMapBosses": 19,
+    "areasMapBossArenas": 18,
     "stashItemCodes": 2309,
     "stashSavedStats": 666,
     "stashCoupons": 385,

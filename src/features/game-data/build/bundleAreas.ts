@@ -88,7 +88,8 @@ export interface AreasInput {
   strings: ReadonlyMap<string, string>;
 }
 
-export interface AreasBuildResult extends BuildResult<AreasBundle> {
+/** The map bosses are added afterwards (bundleMapBosses.ts) */
+export interface AreasBuildResult extends BuildResult<Omit<AreasBundle, 'mapBosses'>> {
   /** Rows left out: map entrances (prep zones), removed levels (REMOVED_LEVELS) and the null row */
   hidden: { prepZones: number; removed: number; other: number };
   /** Vis links dropped because the target row does not list the source (expected ones included) */

@@ -52,6 +52,9 @@ describe('headsUpLines', () => {
 it('areaBosses merges the curated and the map boss without repeats', () => {
   const area = mockCampaignArea(1, 'X', 'maps', { bosses: ['Diablo the Invincible', 'Other'], area: { boss: 'Diablo the Invincible' } });
   expect(areaBosses(area)).toEqual(['Diablo the Invincible', 'Other']);
+  expect(areaBosses(mockCampaignArea(159, 'Chaos Rift Level 4', 'maps', { area: { boss: 'Double T1 Bosses' } }))).toEqual([
+    'Two tier 1 bosses',
+  ]);
 });
 
 it('areaEyebrow names the section, tier, zone and terrain', () => {

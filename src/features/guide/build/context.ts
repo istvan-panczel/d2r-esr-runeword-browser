@@ -7,6 +7,7 @@ import type {
   BasesBundle,
   CraftingBundle,
   ItemSource,
+  MapBoss,
   ModifierFact,
   ModifiersBundle,
   SourcesBundle,
@@ -25,6 +26,8 @@ export interface GameDataInputs {
   modifiers: Pick<ModifiersBundle, 'kinds' | 'facts'>;
   /** crafting.json D-stoning options with their caps (`::dstone-caps`); omitted: the directive fails */
   crafting?: Pick<CraftingBundle, 'stacking'>;
+  /** areas.json map bosses (`::map-bosses`); omitted: the directive fails */
+  mapBosses?: readonly MapBoss[];
 }
 
 /** File name → anchors of the official docs pages (the clone's docs/ folder) */
@@ -47,6 +50,8 @@ export interface GuideContext {
   modifierFacts: ReadonlyMap<string, ModifierFact>;
   /** crafting.json stacking options (D-stoning caps); null when not loaded */
   crafting: Pick<CraftingBundle, 'stacking'> | null;
+  /** areas.json map bosses with their rewards; null when not loaded */
+  mapBosses: readonly MapBoss[] | null;
   /** null when the ESR clone is missing (ESR-backed directives then fail) */
   esr: EsrGuideTables | null;
   /** null when the clone (or its docs/ folder) is missing; docs: links are then not checked */
@@ -112,6 +117,7 @@ export function createGuideContext(input: ContextInput): GuideContext {
     modifierKinds: new Set(input.gameData.modifiers.kinds.map((kind) => kind.key)),
     modifierFacts: new Map(input.gameData.modifiers.facts.map((fact) => [fact.key, fact])),
     crafting: input.gameData.crafting ?? null,
+    mapBosses: input.gameData.mapBosses ?? null,
     esr: input.esr,
     docs: input.docs,
   };

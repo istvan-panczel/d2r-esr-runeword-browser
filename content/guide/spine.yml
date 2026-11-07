@@ -13,7 +13,7 @@ steps:
     notes: [hell-survival, enhancement-order, dragon-stones]
   - title: After Hell Baal
     summary: The endgame loop of special areas, ubers and Endgame Maps, plus corruptions, anointments and the boss charms.
-    notes: [endgame-roadmap, maps-keys-ascendancy, ascendancies, corruption-anointment, unique-charms]
+    notes: [endgame-roadmap, maps-keys-ascendancy, endgame-bosses, ascendancies, corruption-anointment, unique-charms]
 questions:
   - label: I found an item I don't recognise
     note: loot-triage

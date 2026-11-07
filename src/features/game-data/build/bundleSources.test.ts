@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { ItemSource } from '../engine/schema.ts';
 import { buildSourcesBundle, type SourceTables } from './bundleSources.ts';
 import { displayName } from './itemNames.ts';
-import { readBossSetUniqueDrops } from './pluginUniques.ts';
+import { readBossSetRules, readBossSetUniqueDrops } from './pluginUniques.ts';
 import { parseTsv } from './tsv.ts';
 
 const table = (rows: string[][]) => parseTsv(rows.map((row) => row.join('\t')).join('\n'));
@@ -32,6 +32,7 @@ const tables: SourceTables = {
     ['Mana Potion', 'mp1', 'mp1', 'mpot', '1', '', '', '', '', '2'],
     ['Unused', 'zzz', 'zzz', 'misc', '1', '', '', '', '', ''],
     ['Big Ruby', 'grb', 'grb', 'gemr', '1', '', '', '', '', ''],
+    ['Essence', 'ess', 'ess', 'ques', '1', '', '', '', '', ''],
   ]),
   uniqueitems: table([
     ['index', 'disabled', 'spawnable', 'rarity', 'lvl', 'code'],
@@ -70,11 +71,14 @@ const tables: SourceTables = {
     ['Hammer TC', 'hh2', '', ''],
     ['Orb Tier 1', 'orb', '', ''],
     ['EGM Boss', 'Orb Tier 1', '', ''],
+    ['Uber Lucion Unique', 'ess', '', ''],
   ]),
   monstats: table([
     ['Id', 'NameStr', 'TreasureClass', 'TreasureClass(H)'],
     ['lich', 'TheLichKing', 'Lich TC', ''],
     ['diabloclone', 'Diablo', '', 'ROP (H)'],
+    // Uber Lucion's loot dummy reuses Diablo's name string
+    ['extralucionloot', 'Diablo', '', 'Uber Lucion Unique'],
     ...monsterIds.map((id) => [id, id, 'Act Junk', '']),
     ...monsterIds.map((id) => [`map${id}`, `map${id}`, '', 'EGM Boss']),
   ]),
@@ -131,6 +135,7 @@ describe('buildSourcesBundle', () => {
   it('labels uniques named in a few monsters’ treasure classes as boss drops, bypassing rarity', () => {
     expect(texts('Frost')).toEqual(['Drops from The Lich King']);
     expect(texts('Anni')).toEqual(['Drops from Diablo Clone']);
+    expect(texts('Essence')).toEqual(['Drops from Uber Lucion (players 8)']);
   });
 
   it('labels plugin uniques and falls back to Unknown', () => {
@@ -176,6 +181,7 @@ describe('buildSourcesBundle', () => {
       'hh2',
       'sdo',
       'grb',
+      'ess',
     ]);
     expect(texts('Ancient Coupon (Buckler, Pelta Lunata)')).toEqual(['Unknown']);
   });
@@ -198,6 +204,36 @@ describe('readBossSetUniqueDrops', () => {
   it('returns nothing for a missing or disabled config', () => {
     expect(readBossSetUniqueDrops(null).size).toBe(0);
     expect(readBossSetUniqueDrops('enabled = false\nunique = "Hellfire Torch"').size).toBe(0);
+  });
+});
+
+describe('readBossSetRules', () => {
+  it('reads each rule block: its monsters (one line or several, comments allowed) and unique', () => {
+    const toml = `[boss_set_unique_drop]
+enabled = true
+[[boss_set_unique_drop.rule]]
+monsters = [704, 705, 709]
+unique = "Hellfire Torch"
+
+[[boss_set_unique_drop.rule]]
+monsters = [
+  976, # Talic
+  977, 978, 978,
+]
+unique = 'Eternal Hourglass'
+
+[[boss_set_unique_drop.rule]]
+unique = "No monsters"
+`;
+    expect(readBossSetRules(toml)).toEqual([
+      { monsters: [704, 705, 709], unique: 'Hellfire Torch' },
+      { monsters: [976, 977, 978], unique: 'Eternal Hourglass' },
+    ]);
+  });
+
+  it('returns nothing for a missing or disabled config', () => {
+    expect(readBossSetRules(null)).toEqual([]);
+    expect(readBossSetRules('enabled = false\n[[boss_set_unique_drop.rule]]\nmonsters = [1]\nunique = "X"')).toEqual([]);
   });
 });
 

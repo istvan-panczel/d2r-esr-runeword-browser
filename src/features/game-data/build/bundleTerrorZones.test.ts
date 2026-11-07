@@ -39,6 +39,7 @@ const AREAS: AreasBundle = {
     connections: [],
     terrain: 'dungeon' as const,
   })),
+  mapBosses: [],
 };
 
 const difficulty = (boost: number, xp: number) => ({

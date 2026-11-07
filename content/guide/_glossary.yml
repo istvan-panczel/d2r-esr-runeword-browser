@@ -107,10 +107,10 @@
   definition: A book from the Starter Pack that counts kills and takes permanent bonuses at kill milestones and after endgame boss kills.
   note: kill-ledger
 - term: Terror zone
-  definition: An area currently terrorized, with stronger monsters; terrorized champions and uniques can drop Worldstone Shards, and level 96 ones can drop Endgame Maps.
+  definition: An area currently terrorized, with stronger monsters; terrorized champions and uniques can drop Worldstone Shards, and terrorized superuniques and act bosses at monster level 96 can drop Endgame Maps.
   note: endgame-roadmap
 - term: Endgame map
-  definition: A consumable item that, transmuted alone in Act 5 Hell, opens a high-level zone with a boss; maps come in five tiers.
+  definition: A consumable item that, transmuted alone in Act 5 Hell, opens a high-level zone, most of them with a boss; maps come in five tiers.
   note: maps-keys-ascendancy
 - term: Ascendancy
   definition: A subclass specialisation granted by an Ascendancy Stone, upgraded through five tiers of challenges.

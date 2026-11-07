@@ -1271,6 +1271,52 @@ export interface ItemIconInfo {
 export interface AreasBundle {
   /** In levels.txt row order */
   areas: Area[];
+  /** The endgame map bosses with their Hell rewards, in the order of their arenas (see MapBoss) */
+  mapBosses: MapBoss[];
+}
+
+/**
+ * An endgame map boss (a monstats row named by a boss arena's `*Map Boss` comment) and what its Hell treasure class
+ * gives. Chances are worked out from treasureclassex.txt (`build/treasureClassOdds.ts`).
+ */
+export interface MapBoss {
+  /** monstats `Id` */
+  id: string;
+  /** In-game name (`NameStr` through the string table) */
+  name: string;
+  /** levels.txt ids of the arenas it fights in (its own, plus a shared arena such as Chaos Rift's) */
+  arenas: number[];
+  /** The map tier of its own arena */
+  tier: number;
+  /** `TreasureClass(H)` */
+  treasureClass: string;
+  /** Map bosses of another zone with the same `TreasureClass(H)` (monstats ids): this boss drops their rewards */
+  sameTableAs?: string[];
+  rewards: MapBossReward[];
+  /** Rolls of the generic loot table (gold, gear, jewellery, runes, gems, crafting materials) */
+  otherRolls: number;
+  /** Worldstone Shards a terrorized kill adds (`TreasureClassDesecrated(H)`); null when that column is blank */
+  terrorShards: number | null;
+  /** Rewards (`MapBossReward.label`) the terrorized table leaves out */
+  terrorMissing?: string[];
+  /** Launcher plugin set drop (boss-set-unique-drop): the unique the last of these monsters to die drops */
+  setDrop?: { unique: string; with: string[] };
+}
+
+export type MapBossRewardKind = 'orb' | 'map' | 'key' | 'token' | 'soulstone' | 'item';
+
+export interface MapBossReward {
+  kind: MapBossRewardKind;
+  /** Item name ("Orb of Anointment", "Frostmourne"); maps: "Tier 3 map"; keys: "Pandemonium key" */
+  label: string;
+  /** Chance of at least one, 0–1 (4 decimals), at players 1 and players 8 */
+  chance: [number, number];
+  /** Expected count at players 1, only when a drop can be more than one item (a whole key set: 3 × its chance) */
+  expected?: number;
+  /** Map rewards: the tiers the map can be */
+  tiers?: number[];
+  /** `ConditionCalc` of the roll (the Primordial Soulstone stops at ten) */
+  condition?: string;
 }
 
 /** Normal, Nightmare, Hell */
@@ -1310,6 +1356,12 @@ export interface Area {
   questGate?: number;
   /** Item code of the endgame map item whose cube portal (cubemain `Red Portal,lvl=`) leads into this map's entry level */
   mapItem?: string;
+  /** In-game name of `mapItem` */
+  mapItemName?: string;
+  /** Boss arenas: the map bosses fighting here (MapBoss ids); Chaos Rift lists every boss that may come */
+  mapBosses?: string[];
+  /** Only this many of `mapBosses` come (the `*Map Boss` comment "Double T1 Bosses") */
+  mapBossPick?: number;
   /** The level name ends in ESR's " (Endgame Zone)" (an ESR special zone; the suffix stays in `name`) */
   endgameZone?: true;
 }
