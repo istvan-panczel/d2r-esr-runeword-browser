@@ -8,7 +8,7 @@ import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { ItemSourceLine } from '@/features/game-data/components/ItemSourceLine';
 import type { SourceIndex } from '@/features/game-data/engine/sourceLookup';
 import { SkillRefText } from '@/features/skills/components/SkillRefText';
-import { CATEGORY_LABELS } from '@/core/utils/itemCategoryMapping';
+import { wrappableCategoryLabel } from '@/core/utils/itemCategoryMapping';
 
 interface SocketableCardProps {
   readonly socketable: UnifiedSocketable;
@@ -43,7 +43,7 @@ export function SocketableCard({ socketable, sourceIndex }: SocketableCardProps)
         {/* Weapons/Gloves bonuses */}
         {bonuses.weaponsGloves.length > 0 && (
           <div>
-            <p className="font-medium text-muted-foreground mb-1">{CATEGORY_LABELS.weaponsGloves}:</p>
+            <p className="font-medium text-muted-foreground mb-1">{wrappableCategoryLabel('weaponsGloves')}:</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.weaponsGloves.map((affix) => (
                 <li key={affix.rawText}>
@@ -57,7 +57,7 @@ export function SocketableCard({ socketable, sourceIndex }: SocketableCardProps)
         {/* Helms/Boots/Staves/Wands/Orbs/Jewelry/Charms bonuses */}
         {bonuses.helmsBoots.length > 0 && (
           <div>
-            <p className="font-medium text-muted-foreground mb-1">{CATEGORY_LABELS.helmsBoots}:</p>
+            <p className="font-medium text-muted-foreground mb-1">{wrappableCategoryLabel('helmsBoots')}:</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.helmsBoots.map((affix) => (
                 <li key={affix.rawText}>
@@ -71,7 +71,7 @@ export function SocketableCard({ socketable, sourceIndex }: SocketableCardProps)
         {/* Shields/Body Armor/Belts bonuses */}
         {bonuses.armorShieldsBelts.length > 0 && (
           <div>
-            <p className="font-medium text-muted-foreground mb-1">{CATEGORY_LABELS.armorShieldsBelts}:</p>
+            <p className="font-medium text-muted-foreground mb-1">{wrappableCategoryLabel('armorShieldsBelts')}:</p>
             <ul className="space-y-0.5 text-[#8080E6]">
               {bonuses.armorShieldsBelts.map((affix) => (
                 <li key={affix.rawText}>

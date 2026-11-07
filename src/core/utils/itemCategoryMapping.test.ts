@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getRelevantCategories, getItemCategory, getCategoryLabel } from './itemCategoryMapping';
+import { getRelevantCategories, getItemCategory, getCategoryLabel, wrappableCategoryLabel } from './itemCategoryMapping';
 
 describe('getRelevantCategories', () => {
   describe('single item type', () => {
@@ -183,5 +183,13 @@ describe('getCategoryLabel', () => {
   it('should fall back to default labels when no items match', () => {
     expect(getCategoryLabel(['Charm'], 'weaponsGloves')).toBe('Weapons/Gloves');
     expect(getCategoryLabel(['Sword'], 'armorShieldsBelts')).toBe('Shields/Body Armor/Belts');
+  });
+});
+
+describe('wrappableCategoryLabel', () => {
+  it('puts spaces around every slash so the long 3.3 label can wrap', () => {
+    expect(wrappableCategoryLabel('helmsBoots')).toBe('Helms / Boots / Staves / Wands / Orbs / Jewelry / Charms');
+    expect(wrappableCategoryLabel('armorShieldsBelts')).toBe('Shields / Body Armor / Belts');
+    expect(wrappableCategoryLabel('weaponsGloves')).toBe('Weapons / Gloves');
   });
 });

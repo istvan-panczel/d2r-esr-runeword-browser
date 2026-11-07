@@ -55,6 +55,14 @@ export const CATEGORY_LABELS: Record<BonusCategory, string> = {
 };
 
 /**
+ * A category label for a narrow column (the socketable cards): spaces around each "/" so the 3.3 label
+ * "Helms/Boots/Staves/Wands/Orbs/Jewelry/Charms" can wrap instead of running past the card edge.
+ */
+export function wrappableCategoryLabel(category: BonusCategory): string {
+  return CATEGORY_LABELS[category].replaceAll('/', ' / ');
+}
+
+/**
  * Determines which bonus category an item type belongs to.
  */
 export function getItemCategory(itemType: string): BonusCategory | null {
