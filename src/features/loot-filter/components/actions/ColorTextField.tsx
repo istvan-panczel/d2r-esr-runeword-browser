@@ -3,9 +3,18 @@ import { Braces, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { COLOR_CODES } from '../../engine/colors';
-import { PLACEHOLDERS, findPlaceholder, listPlaceholders, resolveText, type PlaceholderContext } from '../../engine/text';
-import type { FilterText } from '../../engine/types';
+import {
+  PLACEHOLDERS,
+  findPlaceholder,
+  listPlaceholders,
+  resolveText,
+  textLanguages,
+  withLanguage,
+  type PlaceholderContext,
+} from '../../engine/text';
+import { LANGUAGES, type FilterText, type Language } from '../../engine/types';
 import { previewPlaceholders } from '../../utils/effectiveActions';
 import { insertAtCaret } from '../../utils/insertAtCaret';
 import { Field } from '../Field';
@@ -15,8 +24,11 @@ interface ColorTextFieldProps {
   readonly id: string;
   readonly label: string;
   readonly value: FilterText | undefined;
-  /** The new plain string, or undefined when emptied. */
-  readonly onChange: (value: string | undefined) => void;
+  /**
+   * The new text, or undefined when emptied. A per-language text stays one: the field edits one language and keeps the
+   * others (an emptied language is removed; the text is undefined once no language is left).
+   */
+  readonly onChange: (value: FilterText | undefined) => void;
   /** Which placeholders the insert menu offers and the field accepts. */
   readonly context: PlaceholderContext;
   readonly placeholder?: string;
@@ -47,7 +59,8 @@ function placeholderProblems(text: string, context: PlaceholderContext): string[
 /**
  * A text field for a `FilterText` with raw `ÿc` colour codes: insert menus for colour codes and the
  * placeholders of its context, a small live preview, and hints for unknown placeholders. A per-language
- * text is shown read-only (it is edited in the JSON tab).
+ * text (plugin 1.8.2: "Any text can be one string or one string per language") gets a language select: the field
+ * edits that language and keeps the others; "Add …" adds a language.
  */
 export function ColorTextField({ id, label, value, onChange, context, placeholder, hint, defaultColor = '=', badge }: ColorTextFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,27 +70,21 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   // (after the close animation) would otherwise move the focus back to the menu button.
   const pendingCaret = useRef<number | null>(null);
 
-  if (typeof value === 'object') {
-    const enUS = resolveText(value);
-    return (
-      <Field id={id} label={label} badge={badge}>
-        <div id={id} className="rounded-md border border-dashed px-3 py-2 text-sm">
-          <p className="text-muted-foreground">Multi-language text, edit in the JSON tab.</p>
-          {enUS !== undefined && <p className="mt-1 break-all font-mono text-xs">enUS: {enUS}</p>}
-        </div>
-        {enUS !== undefined && (
-          <LabelPreview text={previewPlaceholders(enUS)} defaultColor={defaultColor} className="px-2 py-1.5 text-sm" />
-        )}
-      </Field>
-    );
-  }
-
-  const text = value ?? '';
+  const [chosenLanguage, setChosenLanguage] = useState<Language>('enUS');
+  const localized = typeof value === 'object' ? value : undefined;
+  const present = localized === undefined ? [] : textLanguages(localized);
+  // The chosen language while the text has it (or it was just added), else the first one it has.
+  const language = localized === undefined || localized[chosenLanguage] !== undefined || present.length === 0 ? chosenLanguage : present[0];
+  const text = localized === undefined ? (typeof value === 'string' ? value : '') : (localized[language] ?? resolveText(localized) ?? '');
+  const setText = (next: string) => {
+    if (localized === undefined) onChange(next === '' ? undefined : next);
+    else onChange(withLanguage(localized, language, next));
+  };
   const insert = (token: string) => {
     const input = inputRef.current;
     const result = insertAtCaret(text, token, input?.selectionStart ?? null, input?.selectionEnd ?? null);
     pendingCaret.current = result.caret;
-    onChange(result.text);
+    setText(result.text);
   };
   // The menu has closed: after an insert, focus the field with the caret right after the inserted token instead of
   // letting Radix refocus the menu button. Closing without an insert (Escape, outside click) keeps Radix's behaviour.
@@ -97,6 +104,29 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
   return (
     <Field id={id} label={label} hint={hint} badge={badge}>
       <div className="flex gap-1">
+        {localized !== undefined && (
+          <Select
+            value={language}
+            onValueChange={(selected) => {
+              const next = LANGUAGES.find((entry) => entry === selected);
+              if (next === undefined) return;
+              setChosenLanguage(next);
+              // An added language starts as a copy of the enUS text, so the text keeps it.
+              if (localized[next] === undefined) onChange({ ...localized, [next]: resolveText(localized) ?? '' });
+            }}
+          >
+            <SelectTrigger className="w-24 shrink-0 font-mono" aria-label={`Language of ${label}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((entry) => (
+                <SelectItem key={entry} value={entry} className="font-mono">
+                  {localized[entry] === undefined ? `Add ${entry}` : entry}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Input
           ref={inputRef}
           id={id}
@@ -106,7 +136,7 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
           autoComplete="off"
           spellCheck={false}
           onChange={(event) => {
-            onChange(event.target.value === '' ? undefined : event.target.value);
+            setText(event.target.value);
           }}
         />
         <Popover open={colorsOpen} onOpenChange={setColorsOpen}>
@@ -185,6 +215,12 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
         </Popover>
       </div>
       {text !== '' && <LabelPreview text={previewPlaceholders(text)} defaultColor={defaultColor} className="px-2 py-1.5 text-sm" />}
+      {localized !== undefined && (
+        <p className="text-xs text-muted-foreground">
+          {present.length} {present.length === 1 ? 'language' : 'languages'} ({present.join(', ')}); a missing one falls back to enUS.
+          Emptying a language removes it.
+        </p>
+      )}
       {problems.map((problem) => (
         <p key={problem} className="text-xs text-amber-600 dark:text-amber-400">
           {problem}

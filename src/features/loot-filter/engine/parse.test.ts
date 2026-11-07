@@ -417,3 +417,24 @@ describe('show (plugin 1.8.2)', () => {
     expect(diagnostics.map((d) => [d.severity, d.path])).toEqual([['error', 'rules/1/show']]);
   });
 });
+
+describe("Sully's v0.7.0 per-language texts", () => {
+  const first = parseLootFilter(SULLY);
+  const again = parseLootFilter(serializeLootFilter(first.filter));
+
+  it('keeps every per-language text through a save: same model, same diagnostics, same plain JSON', () => {
+    expect(again.filter).toEqual(first.filter);
+    expect(again.diagnostics).toEqual(first.diagnostics);
+    expect(toPlainJson(again.filter)).toEqual(parseJsonc(SULLY).value);
+  });
+
+  it('reads every localised field without passthrough', () => {
+    const localized = (value: unknown) => typeof value === 'object' && value !== null && 'enUS' in value;
+    const keys = ['replaceName', 'namePrefix', 'nameSuffix', 'chatMessage'] as const;
+    const counts = Object.fromEntries(keys.map((key) => [key, first.filter.rules.filter((rule) => localized(rule[key])).length]));
+    expect(counts).toEqual({ replaceName: 105, namePrefix: 38, nameSuffix: 15, chatMessage: 65 });
+    expect(Object.values(first.filter.styles ?? {}).filter((style) => localized(style.chatMessage))).toHaveLength(3);
+    expect(first.filter.filterLevels?.every((level) => localized(level.name))).toBe(true);
+    expect(first.filter.rules.filter((rule) => rule.passthrough !== undefined)).toEqual([]);
+  });
+});

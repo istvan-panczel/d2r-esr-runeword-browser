@@ -1,4 +1,4 @@
-import { PLACEHOLDERS, findPlaceholder, listPlaceholders, resolveText, splitColorRuns } from './text.ts';
+import { PLACEHOLDERS, findPlaceholder, listPlaceholders, resolveText, splitColorRuns, textLanguages, withLanguage } from './text.ts';
 
 describe('resolveText', () => {
   it('resolves strings and per-language texts with fallbacks', () => {
@@ -45,5 +45,20 @@ describe('placeholders', () => {
     expect(findPlaceholder('{level}')?.contexts).toEqual(['levelChangeFormat']);
     expect(findPlaceholder('{red}')).toBeUndefined();
     expect(PLACEHOLDERS.map((p) => p.token)).toContain('{link}');
+  });
+});
+
+describe('per-language texts', () => {
+  it('edits one language and keeps the others', () => {
+    const text = { enUS: 'Rune', deDE: 'Rune', frFR: 'Rune' };
+    expect(withLanguage(text, 'enUS', 'High rune')).toEqual({ enUS: 'High rune', deDE: 'Rune', frFR: 'Rune' });
+    expect(withLanguage(text, 'zhTW', '符文')).toEqual({ ...text, zhTW: '符文' });
+    expect(withLanguage(text, 'deDE', '')).toEqual({ enUS: 'Rune', frFR: 'Rune' });
+    expect(withLanguage({ enUS: 'x' }, 'enUS', '')).toBeUndefined();
+    expect(Object.keys(withLanguage({ deDE: 'a', enUS: 'b' }, 'deDE', 'c') ?? {})).toEqual(['deDE', 'enUS']);
+  });
+
+  it('lists the languages in the guide order', () => {
+    expect(textLanguages({ zhTW: 'a', enUS: 'b', deDE: 'c' })).toEqual(['enUS', 'deDE', 'zhTW']);
   });
 });

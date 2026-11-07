@@ -1,10 +1,24 @@
 /** Helpers for the texts a filter prints: per-language resolution, colour runs and placeholders. */
-import type { FilterText, Language } from './types.ts';
+import { LANGUAGES, type FilterText, type Language, type LocalizedText } from './types.ts';
 
 /** The language's text, else enUS, else the first one given. */
 export function resolveText(text: FilterText | undefined, language: Language = 'enUS'): string | undefined {
   if (text === undefined || typeof text === 'string') return text;
   return text[language] ?? text.enUS ?? Object.values(text)[0];
+}
+
+/** The languages a per-language text has, in the guide's order (enUS first). */
+export function textLanguages(text: LocalizedText): Language[] {
+  return LANGUAGES.filter((language) => text[language] !== undefined);
+}
+
+/** `text` with `language` set to `value` (the others kept), or removed when `value` is empty; undefined once none is left. */
+export function withLanguage(text: LocalizedText, language: Language, value: string): LocalizedText | undefined {
+  // An edited language keeps its place (the file's key order); an added one goes last.
+  const entries = Object.entries(text).map(([key, current]): [string, string | undefined] => [key, key === language ? value : current]);
+  if (!(language in text)) entries.push([language, value]);
+  const next: LocalizedText = Object.fromEntries(entries.filter(([, entry]) => entry !== undefined && entry !== ''));
+  return Object.keys(next).length === 0 ? undefined : next;
 }
 
 /** A filter level's name in the language (enUS by default), `''` when it has none. */

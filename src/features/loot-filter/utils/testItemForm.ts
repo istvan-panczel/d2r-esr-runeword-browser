@@ -4,7 +4,7 @@
  */
 import type { LootFilterDataBundle } from '@/features/game-data/engine/schema';
 import type { ItemStatEntry, TestContext, TestItem } from '../engine/evaluate';
-import { BASE_TIERS, type ItemLocation, type LootFilter } from '../engine/types';
+import { BASE_TIERS, type ItemLocation, type Language, type LootFilter } from '../engine/types';
 import type { LootFilterLookup } from './lookup';
 
 /** levels.txt ids of the five towns (Rogue Encampment, Lut Gholein, Kurast Docks, Pandemonium Fortress, Harrogath). */
@@ -70,9 +70,11 @@ export interface TestItemForm {
   readonly playerLevel: number | undefined;
   /** More player stats beside the level. */
   readonly playerStats: readonly StatRow[];
+  /** The game language per-language texts are shown in (a missing one falls back to enUS). */
+  readonly language: Language;
 }
 
-type ItemFields = Omit<TestItemForm, 'difficulty' | 'area' | 'filterLevel' | 'playerLevel' | 'playerStats'>;
+type ItemFields = Omit<TestItemForm, 'difficulty' | 'area' | 'filterLevel' | 'playerLevel' | 'playerStats' | 'language'>;
 
 let lastRowKey = 0;
 
@@ -105,7 +107,7 @@ function defaultItemFields(): ItemFields {
 
 /** An empty item in Rogue Encampment, normal difficulty, player level 1, at the filter's default level. */
 export function defaultTestItem(): TestItemForm {
-  return { ...defaultItemFields(), difficulty: 0, area: 1, filterLevel: null, playerLevel: 1, playerStats: [] };
+  return { ...defaultItemFields(), difficulty: 0, area: 1, filterLevel: null, playerLevel: 1, playerStats: [], language: 'enUS' };
 }
 
 /** The game data's base tier of a code (0 normal to 2 elite); null for an unknown code or one without a tier family. */
@@ -245,6 +247,7 @@ export function toTestContext(form: TestItemForm, filter: LootFilter, lookup: Lo
     filterLevel: form.filterLevel ?? defaultFilterLevel(filter),
     statIds: lookup.statIds,
     skillIds: lookup.skillIds,
+    language: form.language,
   };
 }
 
