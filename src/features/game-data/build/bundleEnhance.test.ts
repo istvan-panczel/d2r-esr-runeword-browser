@@ -73,7 +73,20 @@ const NAMES: Record<string, string> = {
 
 const ctx: EnhanceContext = {
   nameOf: (token) => NAMES[token] ?? token,
-  isA: (code, parent) => code === parent || (code === 'ocha' && parent === 'char'),
+  isA: (code, parent) =>
+    code === parent ||
+    (code === 'ocha' && parent === 'char') ||
+    (
+      [
+        ['ajav', 'weap'],
+        ['jave', 'weap'],
+        ['ajav', 'jave'],
+        ['circ', 'helm'],
+      ] as const
+    ).some(([own, of]) => own === code && of === parent),
+  // Two ESR 3.3 perks (itemstatcost ids): Sanctimonious and Hallowed Accessories
+  perkOf: (statId) =>
+    ({ 960: { title: 'Sanctimonious', tree: 'Blacksmith' }, 971: { title: 'Hallowed Accessories', tree: 'Jeweler' } })[statId] ?? null,
   statIdsOf: (property) => ({ str: [0], dex: [2] })[property] ?? [],
   renderMods: (mods) => ({
     lines: mods.map((mod) => `${mod.code} ${String(mod.min)}-${String(mod.max)}`),
@@ -186,21 +199,25 @@ describe('buildEnhanceBundle: anointment', () => {
     output: 'useitem',
     mods: [['anointed', 1, 1], ['anointed_dummy', -value, -value], ...bonus],
   });
+  // ESR 3.3: one pool per item type, class types first; a perk allows a second anointment
   const { bundle } = build([
-    { description: 'Check if Already Anointed', cond: [18, 285, 1], inputs: ['any', 'um7'], output: 'void' },
     { description: 'Trap Anointment - Unique Weapon', inputs: ['weap,uni', 'um7'], output: 'void' },
-    { cond: [16, 286, 0], inputs: ['weap,nru,sock', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 1]] },
-    { cond: [16, 286, 0], inputs: ['weap,nru', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 2]] },
-    anoint('weap,nru', 1, 'Anointment - Weapon 1 (of Abyss)', [['str', 5, 10]]),
-    anoint('weap,nru', 2, 'Anointment - Weapon 3 (Sockets)', [['sock', 3, 3]]),
+    { cond: [3, 960, 1], inputs: ['ajav,nru', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 2]] },
+    { description: 'Check if Already Anointed', cond: [18, 285, 1], inputs: ['any', 'um7'], output: 'void' },
+    { cond: [16, 286, 0], inputs: ['ajav,nru,sock', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 1]] },
+    { cond: [16, 286, 0], inputs: ['ajav,nru', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 2]] },
+    { cond: [16, 286, 0], inputs: ['jave,nru', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 1]] },
+    { cond: [16, 286, 0], inputs: ['circ,nru', 'um7'], output: 'useitem', mods: [['anointed_dummy', 1, 1]] },
+    anoint('ajav,nru', 1, 'Anointment - Amazon Javelin 1 (of Abyss)', [['str', 5, 10]]),
+    anoint('ajav,nru', 2, 'Anointment - Amazon Javelin 2 (Sockets)', [['sock', 3, 3]]),
+    anoint('jave,nru', 1, 'Anointment - Javelin 1 (of Abyss)', [['str', 5, 10]]),
+    anoint('circ,nru', 1, 'Anointment - Circlet 1 (of the Wizard)', [['cast2', 30, 30]]),
     { cond: [16, 286, 0], inputs: ['char,uni', 'um1', 'um2', 'um3'], output: 'useitem', mods: [['anointed_dummy', 1, 1]] },
     anoint('char,uni', 1, 'Anointment - Unique Charm 1', [['dmg%', 40, 50]]),
   ]);
 
   it('uses the row value as the roll and the description suffix as the label', () => {
-    expect(
-      bundle.anointmentOutcomes.filter((outcome) => outcome.pool === 'weapon').map((outcome) => [outcome.roll, outcome.label])
-    ).toEqual([
+    expect(bundle.anointmentOutcomes.filter((outcome) => outcome.pool === 'ajav').map((outcome) => [outcome.roll, outcome.label])).toEqual([
       [1, 'of Abyss'],
       [2, 'Sockets'],
     ]);
@@ -209,7 +226,19 @@ describe('buildEnhanceBundle: anointment', () => {
   });
 
   it('derives the rules: blocked uniques, no runewords, a shorter socketed range', () => {
-    expect(bundle.anointmentSlots).toEqual([{ slot: 'weapon', typeCode: 'weap', label: 'Weapon', rollRange: 2, socketedRollRange: 1 }]);
+    expect(bundle.anointmentSlots).toEqual([
+      {
+        slot: 'ajav',
+        typeCode: 'ajav',
+        label: 'ajav',
+        group: 'weapon',
+        rollRange: 2,
+        socketedRollRange: 1,
+        secondPerk: { title: 'Sanctimonious', tree: 'Blacksmith' },
+      },
+      { slot: 'jave', typeCode: 'jave', label: 'jave', group: 'weapon', rollRange: 1, socketedRollRange: null },
+      { slot: 'circ', typeCode: 'circ', label: 'circ', group: 'helm', rollRange: 1, socketedRollRange: null },
+    ]);
     expect(bundle.anointment).toMatchObject({ reagent: { code: 'um7' }, blockedQualities: ['uni'], noRunewords: true });
     expect(bundle.anointment.charmReagents.map((reagent) => reagent.code)).toEqual(['um1', 'um2', 'um3']);
   });
@@ -384,6 +413,21 @@ describe('buildEnhanceBundle: sanctification', () => {
       { line: 'str 15-25', outcomes: 2 },
       { line: 'dex 15-25', outcomes: 2 },
     ]);
+  });
+
+  it('takes the item without a perk trap and lists the perk-gated items with the same outcomes (ESR 3.3)', () => {
+    const amulet = (row: Row): Row => ({ ...row, inputs: row.inputs.map((input) => (input === 'jewl' ? 'amul' : input)) });
+    const perkRows: Row[] = [
+      { description: 'Trap Amulet Sanctification', cond: [6, 971, 0], inputs: ['amul', 'u18'], output: 'void' },
+      ...rows.slice(0, 6).map(amulet),
+    ];
+    const result = build([...perkRows, ...rows]);
+    expect(result.bundle.sanctification.item).toEqual({ code: 'jewl', name: 'jewl' });
+    expect(result.bundle.sanctification.perkItems).toEqual({
+      items: [{ code: 'amul', name: 'amul' }],
+      perk: { title: 'Hallowed Accessories', tree: 'Jeweler' },
+    });
+    expect(result.warnings).toEqual([]);
   });
 
   it('warns when the outcome rows do not cover the roll range; without a roll row there is no sanctification', () => {

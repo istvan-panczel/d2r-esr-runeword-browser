@@ -483,13 +483,24 @@ export interface CorruptionSlot {
   brick: { rolls: number; rate: number; results: CorruptionBrickResult[] };
 }
 
+/**
+ * An equipment anointment pool. ESR 3.3 rolls one pool per item type (`axe`, `circ`, `zrin` …, 61 pools; ESR 3.2 had
+ * one per equipment slot). Listed in cubemain order: the game takes the first pool whose type an item is (class types
+ * before generic ones), so an item's pool is the first entry its type descends from.
+ */
 export interface AnointmentSlot {
+  /** Pool id = the item type code */
   slot: string;
   typeCode: string;
+  /** The item type's name ("Axe", "Circlet") */
   label: string;
+  /** The equipment slot the type belongs to (`weapon`, `helm`, `shield`, `body`, `gloves`, `belt`, `boots`, `ring`, `amulet`) */
+  group: string;
   rollRange: number;
   /** Roll range of socketed items ("… Socketed" dummy rows); null when the slot has none */
   socketedRollRange: number | null;
+  /** The specialisation perk that allows a second anointment of this type (ESR 3.3 "Sanctimonious"); omitted: none */
+  secondPerk?: { title: string; tree: string };
 }
 
 export interface AnointmentOutcome extends EnhanceBonus {
@@ -573,8 +584,13 @@ export interface EnhanceBundle {
   sanctification: {
     /** Lucion's Relic of Sanctification */
     reagent: EnhanceItemRef;
-    /** The item type it works on (Jewel) */
+    /** The item type it works on without a perk (Jewel) */
     item: EnhanceItemRef;
+    /**
+     * Item types a specialisation perk lets you sanctify too, with the same outcomes (ESR 3.3: amulets and rings,
+     * Jeweler perk "Hallowed Accessories"); omitted when none
+     */
+    perkItems?: { items: EnhanceItemRef[]; perk: { title: string; tree: string } };
     /** Size of the `sanctified-dummy` roll range; one outcome per roll */
     rollRange: number;
     /** A `void` "item + reagent" row blocks a second sanctification */

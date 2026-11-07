@@ -30,7 +30,7 @@ import { readBossSetRules } from './pluginUniques.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
 import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
-import { perkChecks } from './cube/perks.ts';
+import { perkChecks, perkOfStat } from './cube/perks.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
@@ -760,6 +760,7 @@ function enhanceContext(
     isA: (code, parent) => isType(code, parent) || (itemTypes.get(code) ?? []).some((type) => isType(type, parent)),
     statIdsOf: propertyStatIds(properties, itemstatcost),
     renderMods,
+    perkOf: (statId) => perkOfStat(itemstatcost.rows[statId]?.str('Stat') ?? '', strings),
   };
 }
 
