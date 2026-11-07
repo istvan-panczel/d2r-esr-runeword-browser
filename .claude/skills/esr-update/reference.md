@@ -86,12 +86,13 @@ change as its source. data-review: in the `skillcalc.json` entry diff, list ever
 
 **Modifiers**: `modifiers.json` regenerates from itemstatcost.txt, properties.txt, propertygroups.txt, every item list
 (uniques, set items and bonuses, runewords, gemwords, affixes, qualityitems.txt, gems.txt, cubemain.txt),
-difficultylevels.txt, charstats.txt, monstats.txt and the D2RLoader plugin configs / patches listed in
+difficultylevels.txt, charstats.txt, monstats.txt, misc.txt (the utility potion `len` / `calc1` formulas), skills.txt (the
+Attack row's crossbow reload `calc4`) and the D2RLoader plugin configs / patches listed in
 `ESR_MODIFIER_CONFIGS` / `ESR_MODIFIER_PATCHES` (`build/esrSources.ts`; `esr:diff` section 6 shows their diffs). The
 `facts` are what the /modifiers explanations, the guide's difficulty-penalties table and the calculators quote: **a
 changed `facts` entry (a difficultylevels.txt value such as LifeStealDivisor / ResistPenalty, or a TOML value such as
 crushing-blow `[targets]`, `cast-rate-cap` `fcr_cap`, `dodge-avoid-evade-cap`, `magic-find-soft-tail`, the
-`attack-rating` curve) means every explanation text quoting it must be re-checked** (`content/modifiers/modifiers.md`:
+`attack-rating` curve, `crossbow-charges` `damage_base` / `standing_reload_bonus`, the `jeweler` `[[gem_effect]]` stats) means every explanation text quoting it must be re-checked** (`content/modifiers/modifiers.md`:
 its `{placeholders}` show the new value on their own, but the prose around them, hard-coded numbers in `facts:` lines
 and `open-questions.md` may now be wrong; and the guide notes; list them for the owner). `modifierContent.test.ts`
 fails when a placeholder no longer resolves, a content key has no `CONTENT_KINDS` entry or a key kind has no text

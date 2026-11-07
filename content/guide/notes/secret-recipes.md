@@ -28,7 +28,7 @@ Scrolls live in the stash's currency tab, and since 3.2.11 their description sho
 
 ### The ones to look for first
 
-- **1** makes Elixirs from a Cookbook and a Steak. This plain Elixir is a cube ingredient that feeds several of the recipes below, not one of the drinkable elixirs that drop since 3.3.
+- **1** makes Elixirs from a Cookbook and a Steak. This plain Elixir is a cube ingredient that feeds several of the recipes below, not one of the drinkable elixirs that drop since 3.3 ([[elixirs]]).
 - **16 and 17** add sockets to white weapons and armor while keeping ethereal, superior and staff bonuses ([[socketing]]).
 - **25** smashes an Ore for a chance at a crystal ([[gems-crystals]]).
 - **26 and 40** make Maple Leaves from Dragon Stones and Perfect Gems, or from Devil's Food.

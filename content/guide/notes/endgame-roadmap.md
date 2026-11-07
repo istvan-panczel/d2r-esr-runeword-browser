@@ -28,7 +28,7 @@ Along the way:
 
 - A :term[Terror zone] raises its monsters' level. Terrorized champions and uniques have a small chance at a [Worldstone Shard](<dropfinder:Worldstone Shard>) for [[corruption-anointment]], and terrorized superuniques and act bosses at the highest monster level (96) can also drop tier 1 maps; terrorized map bosses add several shards ([[endgame-bosses]]). Since 3.3 every zone belongs to a terror group, each group also terrorizes one Endgame Map, and terrorized campaign zones hold more monsters.
 - **Heralds** in terror zones no longer wait for part of the zone to be cleared (3.3); they count as bosses and prime evils ([[hell-survival]]) and gain a rare affix every tier.
-- Since 3.3 levels above 100 need far more experience.
+- Since 3.3 you gain less experience from level 70 on, and far less past level 100; each level still needs the same experience.
 - **Corrupted Zakarum** appear at random in Nightmare and Hell and can drop [Weapon Mastery Tokens](<dropfinder:Weapon Mastery Token>) ([[weapon-mastery]]).
 - After an endgame boss kill you have 60 seconds to cube your Kill Ledger with the listed materials for a permanent bonus ([[kill-ledger]]).
 - The [Vessel of Souls](<dropfinder:Vessel of Souls>), a map drop, turns organs into bonuses and later a mythical weapon ([[vessel-of-souls]]).

@@ -13,7 +13,7 @@ Guide notes for the Act 2, 3 and 5 quest lines: where each quest area is in ESR 
 quest needs, and what to skip. New players lose time on these more than on anything the data pages answer. Written in
 our own words, with our own diagrams, and checked in game before they leave draft.
 
-Touches: `content/guide/notes/` (new notes), `content/guide/spine.yml` (a spine step or entry card), the guide map,
+Touches: `content/guide/notes/` (new notes), `content/guide/spine.yml` (a spine step), the `/guide` overview,
 and links to the Areas page (`/game-data/areas`) for area levels and connections. Needs an owner decision on scope and
 someone to verify the routes in game.
 
@@ -77,7 +77,7 @@ Touches: the screens under `src/features/*/screens/`, `index.html` (the fallback
 
 ## Open checks
 
-- **Guide notes are all draft.** None of the 31 notes has a `verified:` stamp and `content/guide/.verify-lock.json`
+- **Guide notes are all draft.** None of the 34 notes has a `verified:` stamp and `content/guide/.verify-lock.json`
   does not exist yet. Verify notes in game and record them with `npm run guide:verify` ([GUIDE.md](./GUIDE.md)).
 
 ## Decided against

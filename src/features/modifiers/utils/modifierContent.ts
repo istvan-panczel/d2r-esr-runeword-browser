@@ -194,9 +194,9 @@ const TAG_KINDS: Readonly<Partial<Record<string, SourceKind>>> = {
   Community: 'community',
 };
 
-/** `code`, **bold**, [text](url), bare URLs and the source tags */
+/** `code`, **bold**, [text](url) (an https URL or an app path), bare URLs and the source tags */
 const INLINE =
-  /`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s;,)]+[^\s;,).])|\[(ESR config|ESR files|Mod author|Vanilla|Community)(?: (\d+(?:\.\d+)*))?(?:,\s*([^\]]+))?\]/g;
+  /`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/(?!\/)[^)\s]*)\)|(https?:\/\/[^\s;,)]+[^\s;,).])|\[(ESR config|ESR files|Mod author|Vanilla|Community)(?: (\d+(?:\.\d+)*))?(?:,\s*([^\]]+))?\]/g;
 
 export function parseSourceTag(name: string, version?: string, detail?: string): SourceTag | null {
   const kind = TAG_KINDS[name];

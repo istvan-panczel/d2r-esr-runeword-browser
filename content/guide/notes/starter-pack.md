@@ -25,7 +25,7 @@ The official cube page also lists a :term[Character Augmenter] in the pack. The 
 Your starting inventory also holds:
 
 - a **Weapons Crate**: cube it alone for a set of class starter weapons;
-- an **Elixir of Skill**: drink it for one permanent skill point (the Elixir of Skill that drops since 3.3 is a different, 45-second utility elixir);
+- an **Elixir of Skill**: drink it for one permanent skill point (the Elixir of Skill that drops since 3.3 is a different, 45-second utility elixir, see [[elixirs]]);
 - an **Introductory Book**: a few pages of tips; cube it alone to turn the page;
 - your class's chipped gem, which Skill Forging uses later.
 
