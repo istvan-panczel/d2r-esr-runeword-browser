@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CRAFT_USES_MAX, CRAFTS_MAX_PER_SLOT, type CraftAnnotation, type EquipmentSlot, type WeaponSwapSlot } from '../buildData';
+import {
+  CRAFT_USES_MAX,
+  CRAFTS_MAX_PER_SLOT,
+  type CraftAnnotation,
+  type EquipmentSlot,
+  type ItemRef,
+  type WeaponSwapSlot,
+} from '../buildData';
 import type { CraftDataState } from '../hooks/useCraftData';
 import { addCraft, craftIdentity, craftPickerGroups, removeCraft, renderCraft, setCraftUses, type CraftLookups } from '../utils/crafts';
 import { slotGroup } from '../utils/slotFit';
@@ -14,6 +21,8 @@ const MAX_OPTIONS_PER_GROUP = 40;
 
 interface CraftsEditorProps {
   readonly slot: EquipmentSlot | WeaponSwapSlot;
+  /** The slot's item: its base type picks the anointment pool */
+  readonly item: ItemRef;
   readonly crafts: readonly CraftAnnotation[];
   readonly craftData: CraftDataState;
   readonly onChange: (crafts: readonly CraftAnnotation[]) => void;
@@ -21,7 +30,7 @@ interface CraftsEditorProps {
 }
 
 /** "Crafting": a chip per annotation (− / + uses on D-stoning and melds) and an "Add…" picker. */
-export function CraftsEditor({ slot, crafts, craftData, onChange, disabled }: CraftsEditorProps) {
+export function CraftsEditor({ slot, item, crafts, craftData, onChange, disabled }: CraftsEditorProps) {
   const family = slotGroup(slot);
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -80,6 +89,7 @@ export function CraftsEditor({ slot, crafts, craftData, onChange, disabled }: Cr
       {crafts.length < CRAFTS_MAX_PER_SLOT && (
         <CraftPicker
           slot={slot}
+          item={item}
           crafts={crafts}
           craftData={craftData}
           disabled={disabled}
@@ -94,13 +104,14 @@ export function CraftsEditor({ slot, crafts, craftData, onChange, disabled }: Cr
 
 interface CraftPickerProps {
   readonly slot: EquipmentSlot | WeaponSwapSlot;
+  readonly item: ItemRef;
   readonly crafts: readonly CraftAnnotation[];
   readonly craftData: CraftDataState;
   readonly disabled?: boolean;
   readonly onSelect: (craft: CraftAnnotation) => void;
 }
 
-function CraftPicker({ slot, crafts, craftData, disabled, onSelect }: CraftPickerProps) {
+function CraftPicker({ slot, item, crafts, craftData, disabled, onSelect }: CraftPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -129,7 +140,7 @@ function CraftPicker({ slot, crafts, craftData, disabled, onSelect }: CraftPicke
           <CommandInput placeholder="Forging, D-stone, meld, corruption..." value={query} onValueChange={setQuery} />
           <CommandList>
             {craftData.status === 'ready' ? (
-              <CraftOptions slot={slot} crafts={crafts} lookups={craftData.lookups} query={query} onSelect={select} />
+              <CraftOptions slot={slot} item={item} crafts={crafts} lookups={craftData.lookups} query={query} onSelect={select} />
             ) : (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 {craftData.status === 'error' ? 'Game data unavailable.' : 'Loading…'}
@@ -144,15 +155,16 @@ function CraftPicker({ slot, crafts, craftData, disabled, onSelect }: CraftPicke
 
 interface CraftOptionsProps {
   readonly slot: EquipmentSlot | WeaponSwapSlot;
+  readonly item: ItemRef;
   readonly crafts: readonly CraftAnnotation[];
   readonly lookups: CraftLookups;
   readonly query: string;
   readonly onSelect: (craft: CraftAnnotation) => void;
 }
 
-function CraftOptions({ slot, crafts, lookups, query, onSelect }: CraftOptionsProps) {
+function CraftOptions({ slot, item, crafts, lookups, query, onSelect }: CraftOptionsProps) {
   const q = query.trim().toLowerCase();
-  const groups = craftPickerGroups(slot, lookups, crafts)
+  const groups = craftPickerGroups(slot, lookups, crafts, item)
     .map((group) => {
       const matches = group.options.filter((option) => q === '' || option.search.includes(q));
       return { ...group, total: matches.length, options: matches.slice(0, MAX_OPTIONS_PER_GROUP) };

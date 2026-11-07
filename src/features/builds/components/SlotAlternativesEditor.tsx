@@ -170,6 +170,7 @@ export function SlotAlternativesEditor({
                     <BuildItemCard item={ref} slot={slot} setPieces={setPieces} showChoices={false} />
                     <CraftsEditor
                       slot={slot}
+                      item={ref}
                       crafts={alternative.crafts}
                       craftData={craftData}
                       disabled={disabled}
