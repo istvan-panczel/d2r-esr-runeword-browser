@@ -139,6 +139,7 @@ export function BuildSkillTrees({ view, cls, skillPoints, tabCounts, onChange, d
             setSelected(null);
           }}
           levels={levelsOf(current)}
+          comboPoints={pointsOf}
         >
           {onChange === undefined ? (
             <p>
