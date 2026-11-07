@@ -134,6 +134,8 @@ const TYPE_SLOTS: Readonly<Partial<Record<string, readonly SlotGroup[]>>> = {
   spear: TWO_HAND,
   'amazon spear': TWO_HAND,
   staff: TWO_HAND,
+  // ESR 3.3 runewords.htm names this one base as an item type (bases.json m11: type staf, a two-handed staff)
+  'mythical arcane staff': TWO_HAND,
   'assassin 2h katana': TWO_HAND,
   // Not gear
   charm: NONE,

@@ -123,6 +123,14 @@ function unmappedTypes(types: Iterable<string>): string[] {
   return [...unmapped].sort();
 }
 
+describe('typeSlots', () => {
+  // ESR 3.3 runewords.htm socketable bonus groups name this base as a type ("Weapon (except Staff) / Mythical Arcane
+  // Staff"); unknown would make such a group fit every slot
+  it('maps the Mythical Arcane Staff (a two-handed staff) to the weapon slot only', () => {
+    expect(typeSlots('Mythical Arcane Staff')).toEqual(['weapon']);
+  });
+});
+
 describe('slot mapping covers the real data', () => {
   it('maps every unique category to a slot (or deliberately to none)', () => {
     const uniques = [
