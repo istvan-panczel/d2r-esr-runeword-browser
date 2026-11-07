@@ -1846,10 +1846,13 @@ describe('committed masteries bundle (ESR 3.2.24)', () => {
 
   it('records the known string and row slips as warnings', () => {
     expect(manifest.warnings.filter((warning) => warning.startsWith('masteries:'))).toEqual([
+      'masteries: Wretched Scythe (value 12): mod total-magic-resist -100 has no item text; shown as "-100% Magic Resist (no item line; why your magic resist is always 0)"',
       'masteries: cubemain line 2523 "Remove Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
-      'masteries: Blessed Edge: no remove row takes 0be',
+      'masteries: Blessed Edge (value 13): no remove row takes 0be',
       'masteries: u28desc (Maiden Pike, value 5) names the weapon "Maiden Spear", the rows take Maiden Pike',
       'masteries: u39desc (Claw, value 25) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
+      'masteries: cubemain line 2373 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
+      'masteries: Blessed Edge (value 13): no awaken row takes 0be',
     ]);
   });
 });

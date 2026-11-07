@@ -12,6 +12,7 @@ export const BASE_FILTER_PARAM_KEYS: readonly string[] = [
   GAME_DATA_URL_PARAM_KEYS.KIND,
   GAME_DATA_URL_PARAM_KEYS.TIER,
   GAME_DATA_URL_PARAM_KEYS.TYPE,
+  GAME_DATA_URL_PARAM_KEYS.CODES,
   GAME_DATA_URL_PARAM_KEYS.CLS,
   GAME_DATA_URL_PARAM_KEYS.SORT,
   GAME_DATA_URL_PARAM_KEYS.VIEW,
@@ -42,6 +43,7 @@ export function encodeBaseFilters(filters: BaseFilters): URLSearchParams {
   if (filters.kinds.length > 0) params.set(GAME_DATA_URL_PARAM_KEYS.KIND, filters.kinds.join(','));
   if (filters.tiers.length > 0) params.set(GAME_DATA_URL_PARAM_KEYS.TIER, filters.tiers.join(','));
   if (filters.types.length > 0) params.set(GAME_DATA_URL_PARAM_KEYS.TYPE, filters.types.join(','));
+  if (filters.codes.length > 0) params.set(GAME_DATA_URL_PARAM_KEYS.CODES, filters.codes.join(','));
   if (filters.classOnly !== 'any') params.set(GAME_DATA_URL_PARAM_KEYS.CLS, filters.classOnly);
   if (filters.sort !== DEFAULT_BASE_FILTERS.sort || filters.sortDir !== DEFAULT_BASE_FILTERS.sortDir) {
     params.set(GAME_DATA_URL_PARAM_KEYS.SORT, `${filters.sortDir === 'desc' ? '-' : ''}${filters.sort}`);
@@ -81,6 +83,7 @@ export function decodeBaseFilters(params: URLSearchParams, knownTypes?: Readonly
     kinds: pickKnown(splitList(params.get(GAME_DATA_URL_PARAM_KEYS.KIND)), BASE_KINDS),
     tiers: pickKnown(splitList(params.get(GAME_DATA_URL_PARAM_KEYS.TIER)), BASE_TIERS),
     types,
+    codes: [...new Set(splitList(params.get(GAME_DATA_URL_PARAM_KEYS.CODES)))],
     minSockets: parseBoundedIntParam(params.get(FILTER_URL_PARAM_KEYS.SOCKETS), SOCKET_COUNT_RANGE),
     maxReqLvl: parseBoundedIntParam(params.get(FILTER_URL_PARAM_KEYS.MAXLVL), MAX_REQ_LEVEL_RANGE),
     classOnly: decodeClassFilter(params.get(GAME_DATA_URL_PARAM_KEYS.CLS)),

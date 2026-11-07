@@ -170,9 +170,11 @@ Sapphire, Warlock, not on `docs/weapon_mastery.html`); negative values are the R
 `value`, `label` (the row description after " - ", trailing number dropped), `cls`, `type` (orb, claw, wswd: the rows take
 any item of the type), `bases` (input 1 codes, an item type expanded to its bases; codes that are not spawnable bases,
 ESR's LoD `q..` copies and some mythicals, are skipped), `token` (input 2), `inputs` (the rest, Anvil Stone included),
-`remove` (the Remove row's inputs after the weapon: the Dragon Stone form + 3 Thawing Potions), `noRemove` (bases no
-Remove row takes), `mods` (the apply rows' other mods, rendered; Orb 1: "+20% Total Spell Damage"; the Scythe's
-`total-magic-resist` -100 renders nothing, its text says "Your magic resist is always 0") and `effects`.
+`remove` (the Remove row's inputs after the weapon: the Dragon Stone form + 3 Thawing Potions), `noRemove` / `noAwaken`
+(bases no Remove row / no Awaken row (weapon + unawakened token → that token) takes), `mods` (the apply rows' other mods,
+rendered one at a time; Orb 1: "+20% Total Spell Damage"; a mod the renderer gives no text, such as the Scythe's
+`total-magic-resist` -100 (no descfunc), is written out from `HIDDEN_MOD_LABELS` or as its code, with a warning) and
+`effects`.
 
 Effects come from the awakened token's `<token>desc` string (u24-u39, u41). Item descriptions render bottom-up, so
 `parseMasteryDescription` reverses the lines: each block is "Transmute this with a <weapon> variant, a <ingredient>" /
@@ -186,7 +188,8 @@ aurastate, itypea1), else the class tab of that name (Curses); plus the class sk
 ("Fire and Magic Skills": Hellfire Lance … Abyss), and `LOWER_CASE_MENTIONS` (Oak Branch: "contagion").
 `skillNames` carries the display names. Warnings (`masteries:`): a recipe line naming another weapon or other ingredients
 than the rows (3.2.24: u28desc says Maiden Spear for the Pike; u39desc's Chipped Skull block says Crushed Gem, the rows
-take a Dragon Stone), the Celestial Blade Remove row taking `0bs`, a skills line naming no skill. Counts: `masteries`,
+take a Dragon Stone), the Celestial Blade Awaken and Remove rows taking `0bs` (so `0be` has neither recipe), a mod
+without item text, a skills line naming no skill. Counts: `masteries`,
 `masteryBases`, `masteryEffects`, `masterySkills`. Shown on the Bases page cards and on the Skills page cards
 ([SKILLS.md](./SKILLS.md)).
 
@@ -1472,7 +1475,8 @@ weapons that take a weapon mastery get a collapsed "Weapon mastery: <skills line
 Blade; `components/WeaponMasterySection.tsx`, masteries.json loads with the page): per specialisation the recipe with
 icons (Weapon + Awakened token + ingredients), the skills lines with the skill names linked (skill peek, ref kind
 `mention`), the effect sentences and the other mods, then one note (one per weapon, no runeword, drops, the remove
-recipe, the guide link). The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
+recipe, the guide link; a base in `noAwaken` / `noRemove` reads "The game files have no awaken or remove recipe for this
+base (likely a data slip)" instead of those steps). The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
 
 #### Families view
 
@@ -1500,17 +1504,18 @@ Read once on mount by `hooks/useBasesUrlState.ts` (same pattern as runewords `us
 present, the decoded params replace the whole filter state (missing ones fall back to defaults) and are removed from the
 URL. The Copy Link button builds the URL from the current filters (`encodeBaseFilters`, only non-default values).
 
-| Param     | Field          | Format                                           |
-| --------- | -------------- | ------------------------------------------------ |
-| `search`  | search         | text (shared key)                                |
-| `sockets` | minSockets     | 1–6 (shared key)                                 |
-| `maxlvl`  | maxReqLvl      | 1–999 (shared key)                               |
-| `kind`    | kinds          | comma list                                       |
-| `tier`    | tiers          | comma list                                       |
-| `type`    | types          | comma list of type codes (unknown codes dropped) |
-| `cls`     | classOnly      | `none` or a class code                           |
-| `sort`    | sort + sortDir | `dmg` ascending, `-dmg` descending               |
-| `view`    | view           | `families` (cards, the default, is omitted)      |
+| Param     | Field          | Format                                                                                                         |
+| --------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
+| `search`  | search         | text (shared key)                                                                                              |
+| `sockets` | minSockets     | 1–6 (shared key)                                                                                               |
+| `maxlvl`  | maxReqLvl      | 1–999 (shared key)                                                                                             |
+| `kind`    | kinds          | comma list                                                                                                     |
+| `tier`    | tiers          | comma list                                                                                                     |
+| `type`    | types          | comma list of type codes (unknown codes dropped)                                                               |
+| `codes`   | codes          | comma list of base codes (no picker; a chip under the search clears it; the skill cards' weapon mastery links) |
+| `cls`     | classOnly      | `none` or a class code                                                                                         |
+| `sort`    | sort + sortDir | `dmg` ascending, `-dmg` descending                                                                             |
+| `view`    | view           | `families` (cards, the default, is omitted)                                                                    |
 
 Keys are per page (`constants/urlParams.ts`; `search`, `sockets` and `maxlvl` are the app-wide shared keys; `sockets` is a plain
 minimum here, while the recipe screens accept a range), so `cls`, `type`

@@ -101,6 +101,7 @@ describe('base filter URL params', () => {
       kinds: ['weapon', 'armor'],
       tiers: ['elite'],
       types: ['axe', 'mele'],
+      codes: ['am2', 'am7'],
       minSockets: 4,
       maxReqLvl: 60,
       classOnly: 'none',

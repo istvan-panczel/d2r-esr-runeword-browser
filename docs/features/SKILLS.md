@@ -391,7 +391,7 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
     more skills), "Used by mercenaries: Desert Mercenary (Comb – Normal, …)" (`mercenaries` grouped by hireling, with a
     Source link), the notes and **Weapon mastery** (`SkillMasteries.tsx`; masteries.json, loaded lazily by
     `useMasteries` with the first card): per specialisation whose effect names the skill, the weapon (base icon, link to
-    its Bases page entry), the recipe icons, the effect (with the skills line when it is a group such as "Curses") and
+    every base it applies to on the Bases page: `?codes=` for a base family, `?type=` for Orb / Claw / Void Blade), the recipe icons, the effect (with the skills line when it is a group such as "Curses") and
     the apply rows' other mods; Spearstorm, Fend and Dance of Death have two (Maiden Spear and Maiden Pike), the
     Assassin charge-ups two (Claw + Chipped Ruby / Skull). Builds share the card. Mapping: GAME-DATA.md "Weapon mastery".
 

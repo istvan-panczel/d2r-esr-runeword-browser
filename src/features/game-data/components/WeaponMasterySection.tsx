@@ -18,6 +18,11 @@ export function WeaponMasterySection({ masteries, base }: WeaponMasterySectionPr
   const { names, skillNames } = masteries.bundle;
   const [first] = own;
   const remove = first.remove.map((input) => inputText(input, names)).join(' + ');
+  // Steps the game files have no recipe for on this base (ESR 3.2.24: Celestial Blade's awaken and remove rows take 0bs)
+  const missing = [
+    own.some((mastery) => mastery.noAwaken?.includes(base.code) === true) && 'awaken',
+    own.some((mastery) => mastery.noRemove?.includes(base.code) === true) && 'remove',
+  ].filter((step) => step !== false);
 
   return (
     <details className="mt-2 text-sm">
@@ -40,9 +45,9 @@ export function WeaponMasterySection({ masteries, base }: WeaponMasterySectionPr
         ))}
         <p className="text-xs text-muted-foreground">
           One mastery per weapon, on any tier; the weapon cannot be a runeword when you apply it. Tokens drop from Corrupted Zakarum and map
-          bosses; awaken one by cubing it with this weapon.
-          {remove !== '' && <> Weapon + {remove} removes the mastery; the token is lost.</>}
-          {first.noRemove?.includes(base.code) === true && <> No remove recipe takes this base (an ESR data slip).</>}{' '}
+          bosses{missing.includes('awaken') ? '.' : '; awaken one by cubing it with this weapon.'}
+          {remove !== '' && !missing.includes('remove') && <> Weapon + {remove} removes the mastery; the token is lost.</>}
+          {missing.length > 0 && <> The game files have no {missing.join(' or ')} recipe for this base (likely a data slip).</>}{' '}
           <Link to={MASTERY_GUIDE_PATH} className="text-primary underline-offset-2 hover:underline">
             Weapon mastery guide
           </Link>

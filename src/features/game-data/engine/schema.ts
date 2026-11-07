@@ -1032,9 +1032,14 @@ export interface WeaponMastery {
   remove: MasteryInput[];
   /** Bases the rows can apply the mastery to but no remove row takes (an ESR data slip); omitted when none */
   noRemove?: string[];
+  /** Bases the rows can apply the mastery to but no awaken row takes (no token for them; a data slip); omitted when none */
+  noAwaken?: string[];
   /** The token description's effect blocks, in display order */
   effects: MasteryEffect[];
-  /** Other mods the apply rows add, rendered ("Magic Resist -100%"); omitted when none */
+  /**
+   * Other mods the apply rows add, rendered ("+20% Total Spell Damage"); a mod without item text (no descfunc) as a
+   * written-out line ("-100% Magic Resist (no item line; …)") and a `masteries:` warning. Omitted when none
+   */
   mods?: string[];
 }
 

@@ -261,6 +261,15 @@ function masteryValue(row: CubeRow): number | null {
   return mod === undefined || mod.min !== mod.max || mod.min === 0 ? null : mod.min;
 }
 
+/**
+ * Mods the stat renderer gives no text (the stat has no descfunc, so the game shows no line either), by property: what
+ * the panels say instead. Any other such mod is shown by its property code; every one is a `masteries:` warning.
+ */
+const HIDDEN_MOD_LABELS: Readonly<Partial<Record<string, string>>> = {
+  // Wretched Scythe: total_magic_resist -100, what makes the text's "Your magic resist is always 0"
+  'total-magic-resist': '% Magic Resist (no item line; why your magic resist is always 0)',
+};
+
 const TIER_ORDER: readonly BaseItem['tier'][] = ['normal', 'exceptional', 'elite', 'mythical'];
 
 const sameInputs = (a: readonly MasteryInput[], b: readonly MasteryInput[]) => JSON.stringify(a) === JSON.stringify(b);
@@ -387,7 +396,18 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     }
     const noRemove = ordered.filter((base) => !removable.has(base.code)).map((base) => base.code);
     const typeCode = weaponCodes.every((code) => typeByCode.has(code) && !baseByCode.has(code)) ? weaponCodes[0] : undefined;
-    const mods = input.renderMods(first.outputs[0]?.mods.filter((mod) => mod.mod !== MASTERY_PROPERTY) ?? []);
+    // One mod at a time: a mod without item text is shown anyway (and warned about), not silently left out
+    const mods = (first.outputs[0]?.mods ?? [])
+      .filter((mod) => mod.mod !== MASTERY_PROPERTY)
+      .flatMap((mod) => {
+        const lines = input.renderMods([mod]);
+        if (lines.length > 0) return lines;
+        const amount = mod.min === mod.max ? String(mod.min) : `${String(mod.min)} to ${String(mod.max)}`;
+        const label = HIDDEN_MOD_LABELS[mod.mod];
+        const text = label === undefined ? `${mod.mod} ${amount}` : `${amount}${label}`;
+        warn(`${labelOf(first)} (value ${String(value)}): mod ${mod.mod} ${amount} has no item text; shown as "${text}"`);
+        return [text];
+      });
     masteries.push({
       value,
       label: labelOf(first),
@@ -402,7 +422,7 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
       ...(mods.length === 0 ? {} : { mods }),
     });
     if (remove.length === 0) warn(`value ${String(value)} (${labelOf(first)}) has no remove row`);
-    else if (noRemove.length > 0) warn(`${labelOf(first)}: no remove row takes ${noRemove.join(', ')}`);
+    else if (noRemove.length > 0) warn(`${labelOf(first)} (value ${String(value)}): no remove row takes ${noRemove.join(', ')}`);
   }
 
   // Effects: each token's description, block by block
@@ -440,6 +460,31 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
   const tokens = new Set(masteries.map((mastery) => mastery.token));
   const unawakened = input.cube.find((row) => row.inputs.length === 1 && tokens.has(readInput(row.inputs[0]).code))?.outputs[0]?.spec ?? '';
   if (unawakened === '') warn('no "Unawaken" row: the unawakened token is unknown');
+
+  // Awaken rows: a class weapon + the unawakened token give that weapon's awakened token (output b)
+  const awakenable = new Map<string, Set<string>>();
+  for (const row of input.cube) {
+    if (unawakened === '' || row.inputs.length !== 2 || readInput(row.inputs[1]).code !== unawakened) continue;
+    const token = row.outputs.map((output) => output.spec).find((spec) => tokens.has(spec));
+    if (token === undefined) continue;
+    const code = readInput(row.inputs[0]).code;
+    const taken = basesOf(code);
+    const own = masteries.filter((mastery) => mastery.token === token);
+    // A non-spawnable copy (LoD q.., some mythicals) is fine; a base of another family is a data slip
+    const fits = taken.some((base) => own.some((mastery) => mastery.bases.includes(base.code)));
+    if (!fits && (taken.length > 0 || !input.itemCodes.has(code))) {
+      warn(`cubemain line ${String(row.line)} "${row.description}" takes "${code}", which cannot get this mastery`);
+    }
+    const set = awakenable.get(token) ?? new Set<string>();
+    for (const base of taken) set.add(base.code);
+    awakenable.set(token, set);
+  }
+  for (const mastery of masteries) {
+    const noAwaken = mastery.bases.filter((code) => awakenable.get(mastery.token)?.has(code) !== true);
+    if (noAwaken.length === 0) continue;
+    mastery.noAwaken = noAwaken;
+    warn(`${mastery.label} (value ${String(mastery.value)}): no awaken row takes ${noAwaken.join(', ')}`);
+  }
   const codes = new Set([
     unawakened,
     ...masteries.flatMap((mastery) => [

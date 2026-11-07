@@ -57,6 +57,7 @@ function compareBases(a: BaseItem, b: BaseItem, sort: BaseSortKey, dir: 1 | -1):
  * Whether a base passes every filter (they combine with AND; empty lists mean "no filter"). `terms` are the parsed search.
  * - search: every term (see parseSearchTerms) must appear in name, type name(s) or code
  * - types: any selected code is among `base.ancestors` (so a parent type such as `mele` matches all its subtypes)
+ * - codes: the base's own code is listed
  * - minSockets: `max(socketCaps) ≥ n`; maxReqLvl: `reqLvl ≤ n`
  * - classOnly: 'none' = only unrestricted bases, a class code = only that class's bases
  */
@@ -66,10 +67,11 @@ export function baseMatchesFilters(
   terms: readonly string[],
   typeNames: ReadonlyMap<string, string>
 ): boolean {
-  const { kinds, tiers, types, minSockets, maxReqLvl, classOnly } = filters;
+  const { kinds, tiers, types, codes, minSockets, maxReqLvl, classOnly } = filters;
   if (kinds.length > 0 && !kinds.includes(base.kind)) return false;
   if (tiers.length > 0 && !tiers.includes(base.tier)) return false;
   if (types.length > 0 && !types.some((code) => base.ancestors.includes(code))) return false;
+  if (codes.length > 0 && !codes.includes(base.code)) return false;
   if (minSockets !== null && maxSockets(base) < minSockets) return false;
   if (maxReqLvl !== null && base.reqLvl > maxReqLvl) return false;
   if (classOnly === 'none' && base.cls !== null) return false;

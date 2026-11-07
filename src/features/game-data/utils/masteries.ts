@@ -1,4 +1,3 @@
-import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
 import type { MasteriesBundle, MasteryEffect, MasteryInput, WeaponMastery } from '../engine/schema';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import type { ItemIconRef } from '../hooks/useItemIcons';
@@ -51,14 +50,14 @@ export function inputText(input: MasteryInput, names: Readonly<Record<string, st
 }
 
 /**
- * The Bases page showing the mastery's weapon: an item type's bases (Orb, Claw, Void Blade) by the type filter, a base
- * family by its label (the cube rows name a family by its normal base: "Stag Bow").
+ * The Bases page showing every base the mastery applies to (all tiers, mythical included): an item type's bases (Orb,
+ * Claw, Void Blade) by the type filter, a base family by the `codes` list.
  */
 export function masteryBasesUrl(mastery: WeaponMastery): string {
   const params =
     mastery.type !== undefined
       ? new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.TYPE]: mastery.type })
-      : new URLSearchParams({ [FILTER_URL_PARAM_KEYS.SEARCH]: `"${mastery.label}"` });
+      : new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.CODES]: mastery.bases.join(',') });
   return `/game-data/bases?${params.toString()}`;
 }
 

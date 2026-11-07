@@ -38,7 +38,9 @@ describe('weapon mastery helpers', () => {
     expect(masterySummary([orb1])).toBe('Sorceress Spells');
     expect(masteryRecipe(orb1, bundle.names).map((entry) => entry.text)).toEqual(['Awakened token', 'Crushed Gem', 'Anvil Stone']);
     expect(masteryBasesUrl(orb1)).toBe('/game-data/bases?type=orb');
-    expect(masteryBasesUrl(mastery(2, 'Reflex Bow', []))).toBe('/game-data/bases?search=%22Reflex+Bow%22');
+    expect(masteryBasesUrl(mastery(2, 'Reflex Bow', [], { bases: ['am2', 'am7', 'amc', 'm54'] }))).toBe(
+      '/game-data/bases?codes=am2%2Cam7%2Camc%2Cm54'
+    );
   });
 
   it('links a skills line itself only when it names one skill', () => {

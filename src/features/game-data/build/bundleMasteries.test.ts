@@ -208,6 +208,14 @@ const cubeRow = (line: number, description: string, inputs: string[], mods: [str
   condition: null,
 });
 
+const awakenRow = (line: number, description: string, weapon: string, token: string): CubeRow => ({
+  ...cubeRow(line, description, [weapon, 'u23'], []),
+  outputs: [
+    { spec: 'useitem', mods: [] },
+    { spec: token, mods: [] },
+  ],
+});
+
 const NAMES: Record<string, string> = {
   sss: "Spider's Silk",
   ggg: 'Crushed Gem',
@@ -246,11 +254,25 @@ describe('buildMasteriesBundle', () => {
         ['generic-total-multiplier', 20],
       ]
     ),
-    cubeRow(14, 'Apply Awaken Weapon Mastery Token - Orb 2', ['orb,nru', 'u38', 'ggg', 'qqq', 'skc'], [['weapon-mastery', 17]]),
+    // A mod without item text: shown by its code, with a warning
+    cubeRow(
+      14,
+      'Apply Awaken Weapon Mastery Token - Orb 2',
+      ['orb,nru', 'u38', 'ggg', 'qqq', 'skc'],
+      [
+        ['weapon-mastery', 17],
+        ['hidden-mod', -5],
+      ]
+    ),
     cubeRow(20, 'Remove Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'sss', 'wms,qty=3'], [['weapon-mastery', -2]]),
     cubeRow(21, 'Remove Awaken Weapon Mastery Token - Orb 1', ['orb,nru', 'ggg', 'wms,qty=3'], [['weapon-mastery', -15]]),
     cubeRow(22, 'Remove Awaken Weapon Mastery Token - Orb 2', ['orb,nru', 'ggg', 'wms,qty=3'], [['weapon-mastery', -17]]),
     cubeRow(30, 'Unawaken Weapon Mastery Token', ['u25'], [], 'u23'),
+    // Awaken rows: none for the Ceremonial Bow; one names a base of another family (like ESR's Celestial Blade row)
+    awakenRow(40, 'Awaken Weapon Mastery Token - Reflex Bow', 'am2', 'u25'),
+    awakenRow(41, 'Awaken Weapon Mastery Token - Ceremonial Bow', 'ob1', 'u25'),
+    awakenRow(42, 'Awaken Weapon Mastery Token - Ceremonial Bow LoD', 'q77', 'u25'),
+    awakenRow(43, 'Awaken Weapon Mastery Token - Orb', 'orb', 'u38'),
   ];
   const skills = [
     skill('Strafe', 'ama', 1),
@@ -271,7 +293,7 @@ describe('buildMasteriesBundle', () => {
       ['u38desc', ORB.replace('an Orb, a Crushed Gem, a Chipped Skull', 'an Orb, a Dragon Stone, a Chipped Skull')],
     ]),
     skills,
-    renderMods: (mods) => mods.map((mod) => `+${String(mod.min)}% ${mod.mod}`),
+    renderMods: (mods) => mods.filter((mod) => mod.mod !== 'hidden-mod').map((mod) => `+${String(mod.min)}% ${mod.mod}`),
   });
 
   it('groups the rows by stat value, bases by tier, and pairs each orb block by its ingredients', () => {
@@ -284,8 +306,11 @@ describe('buildMasteriesBundle', () => {
     const [reflex, orb1, orb2] = bundle.masteries;
     expect(reflex.inputs).toEqual([{ code: 'sss' }, { code: 'qqq' }]);
     expect(reflex.remove).toEqual([{ code: 'sss' }, { code: 'wms', qty: 3 }]);
-    // No remove row takes the exceptional bow
+    // No remove row and no awaken row takes the exceptional bow
     expect(reflex.noRemove).toEqual(['am7']);
+    expect(reflex.noAwaken).toEqual(['am7']);
+    expect(orb1.noAwaken).toBeUndefined();
+    expect(orb2.mods).toEqual(['hidden-mod -5']);
     expect(reflex.effects.map((effect) => [effect.heading, effect.skills])).toEqual([
       ['Strafe', ['Strafe']],
       ['Multiple Shot', ['Multiple Shot']],
@@ -312,8 +337,11 @@ describe('buildMasteriesBundle', () => {
 
   it('warns about rows and strings that disagree, but not about bases that do not spawn', () => {
     expect(warnings).toEqual([
-      'masteries: Reflex Bow: no remove row takes am7',
+      'masteries: Reflex Bow (value 2): no remove row takes am7',
+      'masteries: Orb (value 17): mod hidden-mod -5 has no item text; shown as "hidden-mod -5"',
       'masteries: u38desc (Orb, value 17) names Dragon Stone, Chipped Skull, Anvil Stone; the rows take Crushed Gem, Anvil Stone, Chipped Skull',
+      'masteries: cubemain line 41 "Awaken Weapon Mastery Token - Ceremonial Bow" takes "ob1", which cannot get this mastery',
+      'masteries: Reflex Bow (value 2): no awaken row takes am7',
     ]);
   });
 });

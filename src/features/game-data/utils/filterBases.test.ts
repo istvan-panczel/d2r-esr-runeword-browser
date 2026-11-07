@@ -149,6 +149,10 @@ describe('filterBases', () => {
     expect(run({ types: ['2hsw', 'ring'] })).toEqual(['rin', 'gax']);
   });
 
+  it('filters by a list of base codes', () => {
+    expect(run({ codes: ['gax', 'jav'] })).toEqual(['jav', 'gax']);
+  });
+
   it('filters by min sockets using the highest band', () => {
     expect(run({ minSockets: 4 })).toEqual(['plt', 'gax']);
     expect(run({ minSockets: 5 })).toEqual(['gax']);
