@@ -1,4 +1,7 @@
 /**
+ * NOT USED (kept on purpose, 2026-11-07): the full map is no longer routed (`/guide/map` redirects to the `/guide`
+ * overview); this layout, components/FullGraph.tsx and screens/GuideMapScreen.tsx stay so it can come back.
+ *
  * Layout of the full guide map (`/guide/map`, desktop only): every note as a node, every knowFirst / related / next
  * connection as an edge, placed by a d3-force simulation that is run to completion synchronously.
  *

@@ -1,4 +1,5 @@
-import { matchRoutes } from 'react-router-dom';
+import { isValidElement } from 'react';
+import { matchRoutes, Navigate } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { router } from '@/core/router';
 import {
@@ -75,6 +76,11 @@ describe('navConfig', () => {
     expect(isNavGroupActive('/stash/coupons', stash)).toBe(true);
     expect(stash.items.map((item) => item.to)).toEqual(['/stash', '/stash/coupons', '/stash/items']);
     expect(isNavItemActive('/stash/items', overview)).toBe(false);
+  });
+
+  it('redirects the old guide note map to the guide overview', () => {
+    const element = matchRoutes(router.routes, '/guide/map')?.at(-1)?.route.element;
+    expect(isValidElement<{ to: string }>(element) && element.type === Navigate && element.props.to).toBe('/guide');
   });
 
   describe('OFFICIAL_LINKS', () => {

@@ -25,7 +25,7 @@ export const PAGE_WIDE_CLASS: Record<PageWidthMode, string> = {
   full: 'max-w-none',
 };
 
-/** The same page widths from the `lg` breakpoint only, for a page that is a narrow column below `lg` (the guide map). */
+/** The same page widths from the `lg` breakpoint only, for a page that is a narrow column below `lg` (the guide overview). */
 export const PAGE_WIDE_LG_CLASS: Record<PageWidthMode, string> = {
   standard: 'lg:max-w-7xl',
   wide: 'lg:max-w-9xl',
@@ -35,8 +35,8 @@ export const PAGE_WIDE_LG_CLASS: Record<PageWidthMode, string> = {
 /**
  * Page widths of `PageShell`. `wide` is the width of every browser page (lists, Game Data, Builds, Loot filters, guide
  * notes) and follows the Page width setting: Standard 1280 px (three result cards per row, no edge-to-edge stretch on
- * large monitors), Wide 1920 px, Full no cap (the side gutters of `<main>` only). `narrow` is the reading column of the
- * guide spine and stays narrow in every mode.
+ * large monitors), Wide 1920 px, Full no cap (the side gutters of `<main>` only). `narrow` is a reading column that
+ * stays narrow in every mode (it was the old guide spine screen's; no page uses it now).
  */
 export type PageWidth = 'wide' | 'narrow';
 
