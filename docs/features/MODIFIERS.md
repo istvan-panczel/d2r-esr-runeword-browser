@@ -410,7 +410,7 @@ badge is the source kind the entry's body tags name most (ties: the more ESR-spe
 kinds without text.
 
 **Data** (`src/features/modifiers/data/modifierRefs.json`, 35 KB raw / 9.3 KB gzip): the entries (key, title,
-category, summary with its placeholders filled in, source), 137 templates, 4 wildcard patterns, the 17 facts of
+category, summary with its placeholders filled in, source), 138 templates, 4 wildcard patterns, the 17 facts of
 `PEEK_FACT_KEYS` and the home search's kind titles (`searchNames`, [title, kind key], ~12 KB raw). Written by
 `npm run modifiers:refs` (`scripts/generate-modifier-refs.ts`, from the committed `public/game-data/modifiers.json` and
 `content/modifiers/modifiers.md`); `generate-game-data.ts` writes it too, from the bundle it just generated (so
@@ -422,13 +422,13 @@ content chunk (49 KB gzip) loads for the peek. The card (`components/ModifierPee
 lazy chunk inside the shared popover host; the host and both cards are prefetched on idle once a ref index has loaded
 (`features/skills/components/peekChunks.ts`), so the first peek opens without a "Loading…" step.
 
-**Coverage** (lines that are not skill links; ESR 3.3 for the first four, ESR 3.2.24 for the rest, not re-measured):
-runewords 2,005 of 3,944 lines, uniques 4,771 of 9,786, mythicals 208 of 412, ascendancies 110 of 226, gemwords 324 +
-8,420 random-pool lines, socketables 605 of 958, affixes 1,270 of 3,092, sets 1,117 of 2,404 (items, partial and set
-bonuses), enhance / cube outputs 839 of 2,270. The unlinked
+**Coverage** (ESR 3.3; lines that are not skill links): runewords 2,005 of 3,944 lines, uniques 4,771 of 9,786,
+mythicals 208 of 412, ascendancies 110 of 226, gemwords 324 of 2,498 + 8,420 of 15,104 random-pool lines, socketables
+605 of 958, affixes 1,270 of 3,108, sets 1,117 of 2,404 (items, partial and set bonuses), enhance outcomes (corruption,
+anointment, sanctification, Vessel recipes) 2,302 of 7,708 (1,020 distinct lines), cube output bonuses 204 of 303. The unlinked
 lines with a modifier word are generated kinds (Enhanced Defense 1,008, Defense 559, "+24% Base Attack Speed"), the
 "+N to Curses (Necromancer Only)" tab line (no "Skills" in it), unresolved skill lines ("Lower Resist", "Amplify Damage"
-are the skill peek's) and prose. Of 262 distinct prose lines that name a modifier (sentences with "you", "gain",
+are the skill peek's) and prose. Of 243 distinct prose lines (ESR 3.3, the integration test's filter) that name a modifier (sentences with "you", "gain",
 "for every", "per", "while" …) none is linked; `modifierRefs.integration.test.ts` pins that and the coverage per page.
 
 ## Guide
