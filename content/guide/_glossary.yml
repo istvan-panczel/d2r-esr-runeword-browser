@@ -62,7 +62,7 @@
   definition: A random bonus added with an Orb of Anointment (non-unique, non-runeword gear) or the three Demonic organs of the Prime Evils (unique charms); it cannot brick the item.
   note: corruption-anointment
 - term: Sanctify
-  definition: Using Lucion's Relic of Sanctification on a jewel (since 3.3 also a ring or amulet) for a one-time bonus that cannot be undone.
+  definition: Using Lucion's Relic of Sanctification on a jewel (since 3.3 also a ring or amulet, with the Jeweler perk Hallowed Accessories) for a one-time bonus that cannot be undone.
   note: enhancement-order
 - term: Branded
   definition: A modifier on the copy that Inarius' Everburning Halo makes of an item (the original comes back unchanged); a Branded item can no longer be changed by any recipe.

@@ -160,7 +160,9 @@ formats the notes too and splits the cell at a bare pipe. `page:` only accepts t
 `/runewords`, `/gemwords`, `/socketables`, `/uniques`, `/mythicals`, `/ascendancies`, `/skills`, `/modifiers`,
 `/game-data/{bases,sets,best-base,affixes,types,enhance,cube,materials,areas}`, `/campaign-map`, `/guide`; a query string
 is allowed). A `page:/modifiers?kind=<key>` link must name a kind key of `public/game-data/modifiers.json` (the page
-resolves a kind key to the entry that explains it, e.g. `resist-fire` → the resists entry).
+resolves a kind key to the entry that explains it, e.g. `resist-fire` → the resists entry). A page that is not a route yet (the
+`specializations` and `elixirs` notes wait for `/specializations` and `/elixirs`) is linked in an HTML comment marked
+`TODO` until the route joins `APP_PAGES`.
 
 Leaf directives (`::name[arg]`) must stand alone on a line. Directive arguments are resolved at build time against the
 ESR clone and the committed game-data bundles; the browser only renders the resulting data block.

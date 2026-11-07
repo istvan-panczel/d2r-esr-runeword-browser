@@ -21,7 +21,7 @@ sources: [official-docs]
 
 A weapon holds one mastery, on any tier, mythical bases included. A class Dragon Stone form and three Thawing Potions remove it, but the token is lost ([[enhancement-order]]).
 
-The Warlock's Void Blade has two specialisations (Black Magic, or Fire and Magic Skills); the official page lists them since 3.3. The Blacksmith specialization perk True Master (3.3) also lets a token go on any weapon type. Each class weapon's card on the [Bases](page:/game-data/bases) page shows its specialisation and recipe, and each affected skill's card on the [Skills](page:/skills) page shows it under About.
+The Warlock's Void Blade has two specialisations (Black Magic, or Fire and Magic Skills); the official page lists them since 3.3. The Blacksmith specialization perk True Master (3.3) also lets a token go on any weapon type ([[specializations]]). Each class weapon's card on the [Bases](page:/game-data/bases) page shows its specialisation and recipe, and each affected skill's card on the [Skills](page:/skills) page shows it under About.
 
 ::recipes[weapon-mastery]
 
