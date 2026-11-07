@@ -43,6 +43,10 @@
  * `hideIfOtherConditionsFail`, assumed); a syntax error switches the rule off (`switchedOff`: it never runs, nor hides).
  * Every other guess is in `FORMULA_ASSUMPTIONS` (engine/formula.ts).
  *
+ * Stat values (the guide, plugin 1.8.2): every stat reads the number the tooltip prints (+40 Life reads 40, per-level
+ * stats at the character's level, item_howl / item_fear the percent, charges the skill level). The test compares the
+ * values as entered, so the Test tab asks for the tooltip numbers (`STAT_SCALES` in statScale.ts lists the scaled stats).
+ *
  * Unidentified items (the guide, "Stat values"): "a rule that checks any item stat skips an unidentified item: none of
  * its actions run and it cannot hide it"; gold, armorclass, quantity, durability, maxdurability and item_numsockets
  * still work (`STATS_WHILE_UNIDENTIFIED`). Such a rule is `skipped` with `unidentified: true`.
@@ -332,6 +336,13 @@ function formulaReadsItemStat(ast: FormulaNode, statIds: ReadonlyMap<string, num
   );
 }
 
+/** Whether the rule's item stat lists check a stat an unidentified item lacks (its player stat lists do not count). */
+function statListsReadItemStat(rule: LootFilterRule, statIds: ReadonlyMap<string, number>): boolean {
+  return [...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? [])].some((check) =>
+    needsIdentified(resolveStatId(check.stat, statIds), statIds)
+  );
+}
+
 /** The rule's formula outcome (undefined without a formula); `formulaContext` is built on first use. */
 function formulaOutcome(
   formula: string | undefined,
@@ -499,7 +510,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       trace.push({ index, outcome: 'switchedOff', failed: [], actions: {}, reason: 'its formula has an error', ...formulaTrace });
       continue;
     }
-    if (formula?.status === 'unidentified') {
+    if (formula?.status === 'unidentified' || (!item.isIdentified && statListsReadItemStat(rule, context.statIds))) {
       trace.push({ index, outcome: 'skipped', failed: [], actions: {}, unidentified: true, ...formulaTrace });
       continue;
     }

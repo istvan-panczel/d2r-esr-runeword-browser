@@ -8,11 +8,11 @@
  */
 import { STAT_LAYER_KINDS, type StatLayerKind } from '@/features/game-data/engine/statLayers';
 import { COLOR_CODES } from '../../engine/colors';
-import { OMITTED_PARAM_RULE } from '../../engine/evaluate';
+import { OMITTED_PARAM_RULE, STATS_WHILE_UNIDENTIFIED } from '../../engine/evaluate';
 import { ACTION_KEYS, CONDITION_KEYS, readLootFilter, TOP_LEVEL_KEYS } from '../../engine/parse';
 import { serializeLootFilter, toPlainJson } from '../../engine/serialize';
 import { STAT_QUIRKS } from '../../engine/statQuirks';
-import { STAT_SCALES } from '../../engine/statScale';
+import { isPerLevel, STAT_SCALES } from '../../engine/statScale';
 import { PLACEHOLDERS, type PlaceholderContext } from '../../engine/text';
 import {
   BASE_TIERS,
@@ -206,8 +206,7 @@ const LAYER_TEXT: Readonly<Record<StatLayerKind, string>> = {
   class: 'the class id 0 to 7 (classes.csv)',
   skill: 'the skill id (skills.csv)',
   event: 'skill id × 64 + skill level (skill 54 level 10 = 3466)',
-  charged:
-    'skill id × 64 + skill level; its value is max charges × 256 + charges left (5/5 charges = 1285): check `>= 1` for "has charges"',
+  charged: 'skill id × 64 + skill level; its value is the skill level of the charges: check `>= 1` for "has charges"',
 };
 
 function layeredStats(): string[] {
@@ -361,14 +360,15 @@ function textsSection(): string {
 }
 
 function limitsSection(): string {
-  const scaleNames = (kind: 'shift' | 'perLevel' | 'shiftPerLevel') =>
-    list(STAT_SCALES.filter((scale) => scale.kind === kind).map((scale) => scale.name));
+  const perLevel = list(STAT_SCALES.filter(isPerLevel).map((scale) => scale.name));
   return [
     `## Known plugin limits (plugin ${LOOT_FILTER_PLUGIN_VERSION})`,
     '',
     ...STAT_QUIRKS.map((quirk) => `- ${code(quirk.name)} (${String(quirk.id)}): ${quirk.headline}. ${quirk.message}`),
     `- ${OMITTED_PARAM_RULE}`,
-    `- Stored scaled (not verified whether the plugin compares the stored or the shown value; use presence checks \`>= 1\` / \`< 1\` with them): ×256 ${scaleNames('shift')}; eighths per character level ${scaleNames('perLevel')}; both ${scaleNames('shiftPerLevel')}.`,
+    '- Stat values: every stat reads the number the item tooltip prints (stat checks, formulas, `{stat:}`): +40 Life reads 40, `item_howl` and `item_fear` read the percent, charges read the skill level; everything else as stored.',
+    `- Per-level stats read the value at the character's level (0.5 per level reads 0 at level 1 and 49 at level 99), so their checks depend on the level: ${perLevel}.`,
+    `- Unidentified items: a rule that checks an item stat (stat lists or a formula) skips an unidentified item entirely: none of its actions run and it cannot hide it. ${list(STATS_WHILE_UNIDENTIFIED)} still work. Magic and rare drops are unidentified, so a hide rule with stat exceptions does not hide them until identified.`,
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
     `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
   ].join('\n');
@@ -434,9 +434,9 @@ export const MISTAKE_SAMPLES: readonly MistakeSample[] = [
     fix: 'the param is class × 8 + tab (skill-tabs.csv)',
   },
   {
-    what: 'a Life value check',
-    rules: [{ itemTypes: ['ring'], itemStats: [{ stat: 'maxhp', op: '>=', value: 40 }], labelBorder: BORDER }],
-    fix: 'use a presence check (`>= 1`), or tell the user the number is not verified',
+    what: 'a per-level stat value check',
+    rules: [{ itemTypes: ['ring'], itemStats: [{ stat: 'item_strength_perlevel', op: '>=', value: 40 }], labelBorder: BORDER }],
+    fix: 'it reads the value at the character level; tell the user the check depends on the level, or use a presence check (`>= 1`)',
   },
   {
     what: 'a level the filter does not have',

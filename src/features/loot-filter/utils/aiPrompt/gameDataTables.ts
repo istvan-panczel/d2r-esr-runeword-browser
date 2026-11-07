@@ -48,17 +48,18 @@ export const PARAM_KIND_TEXT: Readonly<Record<StatLayerKind, string>> = {
   class: 'class id 0-7 (classes.csv)',
   skill: 'skill id (skills.csv)',
   event: 'skill id × 64 + skill level',
-  charged: 'skill id × 64 + skill level; value = max charges × 256 + charges left',
+  charged: 'skill id × 64 + skill level; value = the skill level of the charges',
 };
 
 function scaleNote(scale: StatScale): string {
   switch (scale.kind) {
     case 'shift':
-      return 'stored ×256 (+40 may read as 10240; not verified): prefer presence checks (>= 1, < 1)';
+      return 'reads the tooltip number (+40 Life reads 40)';
+    case 'percent':
+      return 'reads the percent the tooltip shows';
     case 'perLevel':
-      return 'stored in eighths per character level (not verified): prefer presence checks (>= 1, < 1)';
     case 'shiftPerLevel':
-      return 'stored in eighths per character level and ×256 (not verified): prefer presence checks (>= 1, < 1)';
+      return "reads the value at the character's level, as the tooltip (0.5 per level: 0 at level 1, 49 at level 99)";
   }
 }
 

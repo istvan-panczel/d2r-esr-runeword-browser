@@ -1,4 +1,4 @@
-import { STAT_SCALES, statScale, statScaleMessage } from './statScale';
+import { isPerLevel, STAT_SCALES, statScale, statScaleMessage } from './statScale';
 
 describe('statScale', () => {
   it('finds a stat by name or id', () => {
@@ -6,6 +6,8 @@ describe('statScale', () => {
     expect(statScale(7)?.name).toBe('maxhp');
     expect(statScale(220)?.kind).toBe('perLevel');
     expect(statScale('item_hp_perlevel')?.kind).toBe('shiftPerLevel');
+    expect(statScale('item_howl')?.kind).toBe('percent');
+    expect(statScale(213)?.name).toBe('item_fear');
     expect(statScale('strength')).toBeUndefined();
     expect(statScale('7')).toBeUndefined();
   });
@@ -16,26 +18,22 @@ describe('statScale', () => {
   });
 });
 
-describe('statScaleMessage', () => {
+describe('statScaleMessage (plugin 1.8.2 reads tooltip numbers)', () => {
   const scale = (stat: string | number) => {
     const found = statScale(stat);
     if (found === undefined) throw new Error(`no scale for ${String(stat)}`);
     return found;
   };
 
-  it('gives the stored value of the check for a ×256 stat, or +40 for a presence check', () => {
-    expect(statScaleMessage(scale('maxhp'), 40)).toBe(
-      'The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this rule to see what the plugin reads.'
-    );
-    expect(statScaleMessage(scale(9), 1)).toContain('+40 Mana may read as 10240');
-    expect(statScaleMessage(scale(9), [100, 200])).toContain('+100 Mana may read as 25600');
+  it('says nothing for the stats that read the tooltip number', () => {
+    expect(statScaleMessage(scale('maxhp'))).toBeUndefined();
+    expect(statScaleMessage(scale('item_howl'))).toBeUndefined();
   });
 
-  it('gives eighths for a per-level stat, and both for Life per level', () => {
-    expect(statScaleMessage(scale('item_strength_perlevel'), 1)).toBe(
-      'The game stores "item_strength_perlevel" in eighths per character level (the tooltip shows stored × level / 8): +1 Strength per level may read as 8. Not verified in game; use "Check in game" on this rule to see what the plugin reads.'
+  it('warns that a per-level stat reads the value at the character level', () => {
+    expect(isPerLevel(scale(216))).toBe(true);
+    expect(statScaleMessage(scale('item_strength_perlevel'))).toBe(
+      '"item_strength_perlevel" (Strength per level) reads the value at your character\'s level, as the tooltip\'s "(Based on Character Level)" shows: 0.5 per level reads 0 at level 1 and 49 at level 99, so this check depends on the character level (plugin 1.8.2, the guide).'
     );
-    expect(statScaleMessage(scale(216), 2)).toContain('in eighths per character level, ×256');
-    expect(statScaleMessage(scale(216), 2)).toContain('+2 Life per level may read as 4096');
   });
 });

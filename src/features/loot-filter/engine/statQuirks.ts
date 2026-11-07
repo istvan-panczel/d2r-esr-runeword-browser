@@ -5,7 +5,8 @@
  * 1.5.3): Enhanced Damage reads 0 on weapons (a magic Cruel weapon with +214% fails `>= 1` and matches `< 1`) and
  * Enhanced Defense reads 0 on armour (a Godly Body Shield with +201–300% showed `{stat:16}` = 0, 2026-11-01), while
  * Enhanced Damage on a jewel reads correctly (a rare jewel showed `{stat:17}` = 58). Increased Maximum Durability
- * follows from the same rule but is not tested.
+ * follows from the same rule but is not tested. Plugin 1.8.2 (ESR 3.3) reads tooltip numbers (itemstatcost descfunc,
+ * op, ValShift); its guide does not say whether that fixes these, so they stay until checked in game again.
  */
 import type { StatCheck } from './types.ts';
 

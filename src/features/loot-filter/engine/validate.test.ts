@@ -287,12 +287,12 @@ describe('validateLootFilter', () => {
       expect(messages({ itemStats: [onHit((472 << 6) | 25)], hide: true })).toEqual([]);
     });
 
-    it('warns about a charged value that is neither presence nor a multiple of 256', () => {
+    it('warns about a charged value above the highest skill level (plugin 1.8.2 reads the skill level)', () => {
       const charged = (check: Partial<StatCheck>): StatCheck => ({ stat: 204, param: (472 << 6) | 25, value: 1, ...check });
       const flagged = (check: Partial<StatCheck>) => checkRule({ itemStats: [charged(check)], hide: true }, reference);
-      for (const ok of [{}, { op: '>', value: 0 }, { op: '<', value: 1 }, { value: 1280 }, { op: '<', value: 2560 }] as const)
+      for (const ok of [{}, { op: '>', value: 0 }, { op: '<', value: 1 }, { value: 5 }, { value: 63 }, { op: '<', value: 2560 }] as const)
         expect(flagged(ok)).toEqual([]);
-      expect(flagged({ value: 5 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
+      expect(flagged({ value: 1280 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
       expect(flagged({ op: '==', value: 1285 })).toEqual([['warning', 'rules/0/itemStats/0/value']]);
     });
   });
@@ -344,26 +344,31 @@ describe('validateLootFilter', () => {
     });
   });
 
-  describe('stats the game stores scaled (not verified in game)', () => {
+  describe('stats the game stores scaled', () => {
     const scaled = (rule: LootFilterRule) => messages(rule, null);
 
-    it('warns about Life, Mana and Stamina (×256) in every stat list, by name or id', () => {
-      expect(scaled({ itemStats: [{ stat: 'maxhp', value: 40 }], hide: true })).toEqual([
-        'rules/0/itemStats/0/value: The game stores "maxhp" ×256: +40 Life may read as 10240. Not verified in game; use "Check in game" on this rule to see what the plugin reads.',
-      ]);
+    it('says nothing about Life, Mana, Stamina, howl and fear: plugin 1.8.2 reads the tooltip number', () => {
+      expect(
+        scaled({
+          itemStats: [
+            { stat: 'maxhp', value: 40 },
+            { stat: 'item_howl', value: 25 },
+          ],
+          hide: true,
+        })
+      ).toEqual([]);
       expect(
         scaled({ itemStatsAnyOf: [{ stat: 9, value: 20 }], playerStats: [{ stat: 'hitpoints', op: '<', value: 100 }], namePrefix: 'x' })
-      ).toEqual([
-        expect.stringMatching(/^rules\/0\/itemStatsAnyOf\/0\/value: .*\+20 Mana may read as 5120/),
-        expect.stringMatching(/^rules\/0\/playerStats\/0\/value: .*\+100 Life/),
-      ]);
+      ).toEqual([]);
     });
 
-    it('warns about per-level stats (eighths), and Life per level as both', () => {
+    it('warns about per-level stats, which read the value at the character level', () => {
       expect(scaled({ itemStats: [{ stat: 'item_strength_perlevel', value: 2 }], hide: true })).toEqual([
-        expect.stringMatching(/item_strength_perlevel" in eighths per character level .* \+2 Strength per level may read as 16\./),
+        expect.stringMatching(
+          /^rules\/0\/itemStats\/0\/value: "item_strength_perlevel" \(Strength per level\) reads the value at your character's level/
+        ),
       ]);
-      expect(scaled({ itemStats: [{ stat: 216, value: 3 }], hide: true })).toEqual([expect.stringMatching(/may read as 6144/)]);
+      expect(scaled({ itemStats: [{ stat: 216, value: 3 }], hide: true })).toEqual([expect.stringMatching(/Life per level/)]);
       expect(scaled({ itemStats: [{ stat: 'strength', value: 40 }], hide: true })).toEqual([]);
     });
 
@@ -390,7 +395,7 @@ describe('validateLootFilter', () => {
           namePrefix: 'x',
         })
       ).toEqual([]);
-      expect(scaled({ itemStats: [{ stat: 'maxhp', op: '==', value: 40 }], namePrefix: 'x' })).toHaveLength(1);
+      expect(scaled({ itemStats: [{ stat: 218, op: '==', value: 40 }], namePrefix: 'x' })).toHaveLength(1);
     });
   });
 

@@ -109,7 +109,7 @@ export function statParamLabel(kind: StatLayerKind, param: number, d: StatParamD
 
 /** Under a charged skill row: how its value is stored (`chargedValue` in statLayers.ts). */
 export const CHARGED_VALUE_HINT =
-  'Value = max charges × 256 + charges left (5/5 = 1285): ≥ 1 = has the charges, ≥ 1280 = at least 5 max charges.';
+  'Value = the skill level of the charges (plugin 1.8.2 reads charges as the skill level, the guide): ≥ 1 = has the charges.';
 
 const ENTRY_NOUNS: Readonly<Record<StatLayerKind, string>> = {
   tab: 'skill tab',

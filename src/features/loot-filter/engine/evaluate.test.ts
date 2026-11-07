@@ -809,3 +809,43 @@ describe('evaluateFilter: formula', () => {
     expect(run([{ itemTypes: ['ring'], namePrefix: 'x' }]).trace[0]).not.toHaveProperty('formula');
   });
 });
+
+describe('unidentified items (plugin 1.8.2)', () => {
+  const context = makeContext({
+    statIds: new Map([
+      ['item_numsockets', 194],
+      ['item_allskills', 127],
+      ['level', 12],
+    ]),
+  });
+  const ring = (isIdentified: boolean) => makeItem({ code: 'rin', typeAncestors: ['ring', 'misc'], quality: 4, isIdentified });
+
+  it('skips a rule that checks an item stat: no actions, and it cannot hide the item', () => {
+    const rule: LootFilterRule = {
+      itemTypes: ['ring'],
+      quality: 'magic',
+      itemStats: [{ stat: 'item_allskills', op: '<', value: 1 }],
+      hide: true,
+    };
+    const unidentified = evaluateFilter(makeFilter([rule]), ring(false), context);
+    expect(unidentified.hidden).toBe(false);
+    expect(unidentified.trace[0]).toEqual({ index: 0, outcome: 'skipped', failed: [], actions: {}, unidentified: true });
+    expect(evaluateFilter(makeFilter([rule]), ring(true), context).hidden).toBe(true);
+    const anyOf = evaluateFilter(
+      makeFilter([{ itemTypes: ['ring'], itemStatsAnyOf: [{ stat: 127, value: 1 }], namePrefix: 'x' }]),
+      ring(false),
+      context
+    );
+    expect(anyOf.trace[0]).toMatchObject({ outcome: 'skipped', unidentified: true });
+  });
+
+  it('runs rules on the stats every item carries, player stats and no stats', () => {
+    const rules: LootFilterRule[] = [
+      { itemTypes: ['ring'], itemStats: [{ stat: 'item_numsockets', op: '<', value: 1 }], namePrefix: 'a ' },
+      { itemTypes: ['ring'], playerStats: [{ stat: 'level', op: '<', value: 99 }], namePrefix: 'b ' },
+      { itemTypes: ['ring'], hide: true },
+    ];
+    const result = evaluateFilter(makeFilter(rules), ring(false), context);
+    expect(result.trace.map((entry) => entry.outcome)).toEqual(['applied', 'applied', 'hidden']);
+  });
+});

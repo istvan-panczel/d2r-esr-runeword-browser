@@ -171,14 +171,17 @@ function isPresenceCheck(check: StatCheck): boolean {
   );
 }
 
+/** The highest skill level a charge can have (its param keeps the level in 6 bits). */
+const MAX_CHARGE_LEVEL = 63;
+
 /**
- * Whether an `item_charged_skill` value reads sensibly (it is `max charges << 8 | charges left`): a presence check
- * (or its exception), or `>=` / `<` a multiple of 256 (at least / fewer than N max charges).
+ * Whether an `item_charged_skill` check can hold: plugin 1.8.2 reads charges as the skill level (the guide, "Stat
+ * values"), so `>=`, `>` or `==` a number above 63 never holds (plugin 1.5.3 read `max charges << 8 | charges left`).
  */
 function isChargedValueCheck(check: StatCheck): boolean {
-  if (typeof check.value !== 'number') return true;
+  if (typeof check.value !== 'number') return check.value[0] <= MAX_CHARGE_LEVEL;
   const op = check.op ?? '>=';
-  return isPresenceCheck(check) || ((op === '>=' || op === '<') && check.value % 256 === 0);
+  return !((op === '>=' || op === '>' || op === '==') && check.value > MAX_CHARGE_LEVEL);
 }
 
 /** Verified in game (2026-11-01): without param the plugin reads only the param-0 entry (`OMITTED_PARAM` in evaluate.ts). */
@@ -280,7 +283,7 @@ function checkStatParam(
     report(
       'warning',
       `${path}/value`,
-      'The value of "item_charged_skill" is max charges × 256 + charges left (5/5 charges = 1285): check ≥ 1 for "has the charges" or ≥ a multiple of 256 (≥ 1280 = at least 5 max charges)'
+      `Plugin 1.8.2 reads "item_charged_skill" as the skill level of the charges (the guide), at most ${String(MAX_CHARGE_LEVEL)}, so this check never holds: check ≥ 1 for "has the charges" or ≥ a level`
     );
   }
 }
@@ -313,10 +316,11 @@ function checkStats(
     // Item stat lists only (`rule` given): the plugin reads these stats as 0 on some items.
     const quirk = rule === undefined ? undefined : statQuirk(check.stat);
     if (quirk !== undefined && rule !== undefined && mayHitQuirk(rule, quirk, reference)) report('warning', `${path}/stat`, quirk.message);
-    // Every list: Life, Mana and Stamina are stored ×256 and the per-level stats in eighths (not verified in game). A
-    // presence check (`>= 1`, `< 1`…) holds either way, so only a check whose number matters gets the warning.
+    // Every list: plugin 1.8.2 reads the tooltip number (the guide); a per-level stat reads it at the character's level,
+    // so a check whose number matters depends on the level (a presence check is left alone, as before).
     const scale = statScale(check.stat);
-    if (scale !== undefined && !isPresenceCheck(check)) report('warning', `${path}/value`, statScaleMessage(scale, check.value));
+    const scaleMessage = scale === undefined || isPresenceCheck(check) ? undefined : statScaleMessage(scale);
+    if (scaleMessage !== undefined) report('warning', `${path}/value`, scaleMessage);
     checkStatParam(report, path, check, reference, tabNumbers.has(index));
     if (!reference) return;
     if (typeof check.stat === 'number') {
