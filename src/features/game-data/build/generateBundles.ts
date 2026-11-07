@@ -25,6 +25,8 @@ import type {
 import { readStatIndex } from './affixStats.ts';
 import { buildAffixesBundle } from './bundleAffixes.ts';
 import { buildAreasBundle } from './bundleAreas.ts';
+import { buildMapBosses } from './bundleMapBosses.ts';
+import { readBossSetRules } from './pluginUniques.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
 import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
@@ -49,7 +51,7 @@ import { buildTerrorZonesBundle } from './bundleTerrorZones.ts';
 import { buildTiersBundle } from './bundleTiers.ts';
 import { buildTypesBundle } from './bundleTypes.ts';
 import type { EsrSources } from './esrSources.ts';
-import { resolveName } from './itemNames.ts';
+import { itemRowName, readUniqueOrSetRows, resolveName } from './itemNames.ts';
 import { readAffixes, readCharStats, readItems, readItemTypes, readRuneRecipes, type ItemRow } from './model.ts';
 import type { ModsRenderer } from './bundleRunewords.ts';
 import type { EnhanceContext } from './bundleEnhance.ts';
@@ -382,7 +384,21 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   const countTier = (tier: string) => tierCodes.filter((value) => value === tier).length;
 
   // --- areas.json ---
-  const areas = buildAreasBundle({ levelsText: sources.tables.levels, cubemainText: sources.tables.cubemain, strings });
+  const areasOnly = buildAreasBundle({ levelsText: sources.tables.levels, cubemainText: sources.tables.cubemain, strings });
+  const bosses = buildMapBosses({
+    areas: areasOnly.bundle.areas,
+    monstats: table('monstats'),
+    treasureclassex: table('treasureclassex'),
+    itemNames: new Map(items.map((item) => [item.code, itemRowName(strings, item.namestr, item.name)])),
+    uniqueNames: new Map(readUniqueOrSetRows(table('uniqueitems'), 'code', strings).map((row) => [row.index, row.name])),
+    strings,
+    setRules: readBossSetRules(sources.plugins.bossSetUniqueDrop),
+  });
+  const areas = {
+    ...areasOnly,
+    bundle: { areas: bosses.areas, mapBosses: bosses.mapBosses },
+    warnings: [...areasOnly.warnings, ...bosses.warnings],
+  };
   const countAreas = (pick: (area: AreasBundle['areas'][number]) => boolean) => areas.bundle.areas.filter(pick).length;
   const areaCounts = {
     areas: areas.bundle.areas.length,
@@ -397,6 +413,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     areasOneWayVis: areas.oneWayVis,
     areasWithMapItem: countAreas((area) => area.mapItem !== undefined),
     areasUniquesMinsThenMaxes: areas.uniquesMinsThenMaxes,
+    areasMapBosses: bosses.mapBosses.length,
+    areasMapBossArenas: countAreas((area) => area.mapBosses !== undefined),
   };
   // --- end areas.json ---
 

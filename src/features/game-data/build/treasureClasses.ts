@@ -33,8 +33,14 @@ const MAP_TC = /^(EGM |Endgame Map |Uber Loot Map Boss)/;
 /** treasureclassex.txt has `Item1` … `Item10` */
 const TC_ITEM_COLUMNS = 10;
 
-/** Monster display names that would be ambiguous (the clone reuses Diablo's name string). */
-const NAME_OVERRIDES: Readonly<Record<string, string>> = { diabloclone: 'Diablo Clone' };
+/**
+ * Monster display names that would be ambiguous or wrong: the clone reuses Diablo's name string, and so does the loot
+ * dummy uber Lucion spawns when he dies on players 8 (his "Lucion Essence Drop" death skill; it drops Lucion's Essence).
+ */
+const NAME_OVERRIDES: Readonly<Partial<Record<string, string>>> = {
+  diabloclone: 'Diablo Clone',
+  extralucionloot: 'Uber Lucion (players 8)',
+};
 
 /** First comma-separated token of a cell, without quotes (`"01c,qty=3"` → `01c`). */
 export function refOf(cell: string): string {

@@ -2160,7 +2160,7 @@
     {"name":"Orb of Creation","code":"u16","item":"misc","labels":[{"kind":"cube","text":"Cube"}]},
     {"name":"The Sanctum of the Dead (Tier 5)","code":"z19","item":"misc","labels":[{"kind":"cube","text":"Cube"},{"kind":"maps","text":"Drops in Endgame Maps"}]},
     {"name":"The Reliquary of False Light (Tier 5)","code":"z20","item":"misc","labels":[{"kind":"cube","text":"Cube"},{"kind":"maps","text":"Drops in Endgame Maps"}]},
-    {"name":"Lucion's Essence","code":"u17","item":"misc","labels":[{"kind":"boss","text":"Drops from Diablo"}]},
+    {"name":"Lucion's Essence","code":"u17","item":"misc","labels":[{"kind":"boss","text":"Drops from Uber Lucion (players 8)"}]},
     {"name":"Lucion's Relic of Sanctification","code":"u18","item":"misc","labels":[{"kind":"boss","text":"Drops from Lucion"}]},
     {"name":"Primordial Soulstone","code":"u19","item":"misc","labels":[{"kind":"maps","text":"Drops in Endgame Maps"}]},
     {"name":"Astrogha's Petrified Heart","code":"u20","item":"misc","labels":[{"kind":"drop","text":"Drops (random)"}]},

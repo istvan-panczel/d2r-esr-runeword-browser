@@ -52,7 +52,8 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     ),
     stats: byField('id', named('id')),
   },
-  'areas.json': { areas: byField('id', named('id')) },
+  // map bosses: a changed reward chance, table or shard count means the campaign map panels and the bosses note read differently
+  'areas.json': { areas: byField('id', named('id')), mapBosses: byField('id', named('id')) },
   'bases.json': {
     bases: byField('code', named('code')),
     automods: byField('id', named('id')),
