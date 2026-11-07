@@ -38,6 +38,14 @@
  * param 0, not any entry (`OMITTED_PARAM` = 'layerZero'): `{stat:188}` showed 0 on an item whose only skill tab entry
  * is Fire Skills (Sorceress, param 8), while `{stat:188,8}` showed 4. An entry without param has param 0. ID may also
  * be an itemstatcost name.
+ *
+ * `formula` (plugin 1.8.2, the guide): ANDed with the other conditions (an "other condition" for
+ * `hideIfOtherConditionsFail`, assumed); a syntax error switches the rule off (`switchedOff`: it never runs, nor hides).
+ * Every other guess is in `FORMULA_ASSUMPTIONS` (engine/formula.ts).
+ *
+ * Unidentified items (the guide, "Stat values"): "a rule that checks any item stat skips an unidentified item: none of
+ * its actions run and it cannot hide it"; gold, armorclass, quantity, durability, maxdurability and item_numsockets
+ * still work (`STATS_WHILE_UNIDENTIFIED`). Such a rule is `skipped` with `unidentified: true`.
  */
 
 import type {
@@ -58,8 +66,10 @@ import type {
   StatCheck,
 } from './types.ts';
 import { BASE_TIERS, DEFAULT_LABEL_BACKGROUND_ALPHA, DIFFICULTIES, QUALITIES } from './types.ts';
+import { statLayerKind } from '../../game-data/engine/statLayers.ts';
 import { effectiveActions } from './actions.ts';
 import { ACTION_KEYS, CONDITION_KEYS } from './parse.ts';
+import { evaluateFormula, formulaReferences, parseFormula, resolveFormulaStat, type FormulaContext, type FormulaNode } from './formula.ts';
 import { DEFAULT_QUALITY_COLORS } from './colors.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { resolveText } from './text.ts';
@@ -101,8 +111,18 @@ export interface TestContext {
   readonly filterLevel: number;
   /** itemstatcost.txt name → id, for stat checks written with names. */
   readonly statIds: ReadonlyMap<string, number>;
+  /** skills.txt `skill` → id keyed by `formulaSkillKey`, for formula skill names; absent = no skill name resolves. */
+  readonly skillIds?: ReadonlyMap<string, number>;
   readonly language?: Language;
 }
+
+/** What the rule's formula gave: its value, or why it was not evaluated. */
+export type FormulaOutcome =
+  | { readonly status: 'value'; readonly value: number }
+  /** The item is unidentified and the formula reads an item stat: the plugin skips the whole rule. */
+  | { readonly status: 'unidentified' }
+  /** A syntax error: the plugin switches the rule off when the filter loads. */
+  | { readonly status: 'error'; readonly message: string; readonly offset: number };
 
 export interface RuleTrace {
   readonly index: number;
@@ -117,6 +137,8 @@ export interface RuleTrace {
   readonly reason?: string;
   /** The rule would have hidden the item, but the `show` rule at this index protects it. */
   readonly hideBlockedBy?: number;
+  /** `skipped` only: the item is unidentified and the rule checks an item stat, so the plugin skips the rule. */
+  readonly unidentified?: true;
   /**
    * Condition keys that did not hold; empty when applied or disabled. For `wrongShape`, the ones of the rest of the
    * rule (so the trace can tell whether the rule would have matched).
@@ -126,6 +148,8 @@ export interface RuleTrace {
   readonly actions: RuleActions;
   /** `wrongShape` only: the wrong-shaped keys. */
   readonly wrongShaped?: readonly string[];
+  /** The rule's formula, when it has one. */
+  readonly formula?: FormulaOutcome;
 }
 
 export interface EvaluatedSound {
@@ -265,8 +289,69 @@ type ConditionKey = keyof LootFilterRule;
 /** Keys that decide whether `hideIfOtherConditionsFail` may hide the item. */
 const GATE_KEYS: ReadonlySet<string> = new Set(['itemCodes', 'excludeItemCodes', 'itemTypes', 'excludeItemTypes', 'location']);
 
+/** The formula context of one item; layered stats are known by their itemstatcost name. */
+function formulaContext(item: TestItem, context: TestContext): FormulaContext {
+  const names = new Map([...context.statIds].map(([name, id]) => [id, name]));
+  return {
+    itemStats: item.stats,
+    playerStats: context.playerStats,
+    statIds: context.statIds,
+    skillIds: context.skillIds ?? new Map(),
+    paramKind: (stat) => {
+      const kind = statLayerKind(names.get(stat) ?? '');
+      if (kind === 'skill') return 'skill';
+      return kind === 'event' || kind === 'charged' ? 'skillLevel' : 'other';
+    },
+  };
+}
+
+/**
+ * The item stats an unidentified item still has (the guide: "every item carries them"); a rule that checks any other
+ * item stat skips an unidentified item.
+ */
+export const STATS_WHILE_UNIDENTIFIED: readonly string[] = [
+  'gold',
+  'armorclass',
+  'quantity',
+  'durability',
+  'maxdurability',
+  'item_numsockets',
+];
+
+/** Whether a stat (an id, unresolved = undefined) is one an unidentified item does not carry. */
+function needsIdentified(id: number | undefined, statIds: ReadonlyMap<string, number>): boolean {
+  // An unknown stat name is still an item stat check.
+  if (id === undefined) return true;
+  return !STATS_WHILE_UNIDENTIFIED.some((name) => statIds.get(name) === id);
+}
+
+/** Whether a formula reads an item stat an unidentified item lacks (`stat`, `statMax`, `statSum`; not `playerStat`). */
+function formulaReadsItemStat(ast: FormulaNode, statIds: ReadonlyMap<string, number>): boolean {
+  return formulaReferences(ast).some(
+    (call) => call.fn !== 'playerStat' && needsIdentified(resolveFormulaStat(call.stat, statIds), statIds)
+  );
+}
+
+/** The rule's formula outcome (undefined without a formula); `formulaContext` is built on first use. */
+function formulaOutcome(
+  formula: string | undefined,
+  item: TestItem,
+  context: () => FormulaContext,
+  statIds: ReadonlyMap<string, number>
+): FormulaOutcome | undefined {
+  if (formula === undefined) return undefined;
+  const parsed = parseFormula(formula);
+  if (!parsed.ok) return { status: 'error', ...parsed.error };
+  if (!item.isIdentified && formulaReadsItemStat(parsed.ast, statIds)) return { status: 'unidentified' };
+  return { status: 'value', value: evaluateFormula(parsed.ast, context()) };
+}
+
+function formulaHolds(outcome: FormulaOutcome | undefined): boolean {
+  return outcome === undefined || outcome.status !== 'value' || outcome.value !== 0;
+}
+
 /** Returns the keys of the rule's conditions that do not hold, in a stable order. */
-function failedConditions(rule: LootFilterRule, item: TestItem, context: TestContext): readonly string[] {
+function failedConditions(rule: LootFilterRule, item: TestItem, context: TestContext, formula?: FormulaOutcome): readonly string[] {
   const failed: ConditionKey[] = [];
   /** Records `key` when the rule sets it (`value` is defined) and `holds` says it does not hold. */
   const check = <T>(key: ConditionKey, value: T | undefined, holds: (value: T) => boolean): void => {
@@ -296,6 +381,7 @@ function failedConditions(rule: LootFilterRule, item: TestItem, context: TestCon
   check('itemStatsAnyOf', rule.itemStatsAnyOf, (checks) => checks.some((stat) => statCheckHolds(stat, item.stats, statIds)));
   check('playerStats', rule.playerStats, (checks) => checks.every((stat) => statCheckHolds(stat, playerStats, statIds)));
   check('playerStatsAnyOf', rule.playerStatsAnyOf, (checks) => checks.some((stat) => statCheckHolds(stat, playerStats, statIds)));
+  check('formula', rule.formula, () => formulaHolds(formula));
   check('location', rule.location ?? DEFAULT_LOCATIONS, (locations) => locations.includes(item.location));
   check('difficulty', rule.difficulty, (difficulty) => matchesNamed(difficulty, context.difficulty, DIFFICULTIES, 0));
   check('areas', rule.areas, (areas) => areas.includes(context.area));
@@ -397,16 +483,30 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
   let notified = false;
   const chatMessages: string[] = [];
   const sounds: EvaluatedSound[] = [];
+  let builtFormulaContext: FormulaContext | undefined;
+  const sharedFormulaContext = (): FormulaContext => (builtFormulaContext ??= formulaContext(item, context));
 
   for (const [index, rule] of filter.rules.entries()) {
     if (rule.disabled === true) {
       trace.push({ index, outcome: 'disabled', failed: [], actions: {} });
       continue;
     }
-    const failed = failedConditions(rule, item, context);
+    const formula = formulaOutcome(rule.formula, item, sharedFormulaContext, context.statIds);
+    /** The trace entry's formula outcome, when the rule has one. */
+    const formulaTrace = formula === undefined ? {} : { formula };
+    if (formula?.status === 'error') {
+      // The plugin switches a rule with a formula error off when the filter loads: it never runs, nor hides.
+      trace.push({ index, outcome: 'switchedOff', failed: [], actions: {}, reason: 'its formula has an error', ...formulaTrace });
+      continue;
+    }
+    if (formula?.status === 'unidentified') {
+      trace.push({ index, outcome: 'skipped', failed: [], actions: {}, unidentified: true, ...formulaTrace });
+      continue;
+    }
+    const failed = failedConditions(rule, item, context, formula);
     const wrongShaped = wrongShapedKeys(rule);
     if (wrongShaped.length > 0) {
-      trace.push({ index, outcome: 'wrongShape', failed, actions: {}, wrongShaped });
+      trace.push({ index, outcome: 'wrongShape', failed, actions: {}, wrongShaped, ...formulaTrace });
       continue;
     }
     const actions = effectiveActions(rule, filter);
@@ -421,18 +521,18 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
         continue;
       }
       if (actions.hideIfOtherConditionsFail === true && gateHolds) {
-        trace.push({ index, outcome: 'hiddenByOtherConditions', failed, actions });
+        trace.push({ index, outcome: 'hiddenByOtherConditions', failed, actions, ...formulaTrace });
         hiddenBy = index;
         if (actions.chatMessageWhenHidden !== undefined) hiddenMessage = text(actions.chatMessageWhenHidden);
         break;
       }
-      trace.push({ index, outcome: 'skipped', failed, actions: {} });
+      trace.push({ index, outcome: 'skipped', failed, actions: {}, ...formulaTrace });
       continue;
     }
 
     matched = true;
     if (actions.hide === true && shownBy === null) {
-      trace.push({ index, outcome: 'hidden', failed, actions });
+      trace.push({ index, outcome: 'hidden', failed, actions, ...formulaTrace });
       hiddenBy = index;
       if (actions.chatMessageWhenHidden !== undefined) hiddenMessage = text(actions.chatMessageWhenHidden);
       break;
@@ -443,6 +543,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       outcome: 'applied',
       failed,
       actions,
+      ...formulaTrace,
       ...(actions.hide === true && shownBy !== null ? { hideBlockedBy: shownBy } : {}),
     });
     if (actions.show === true) shownBy ??= index;

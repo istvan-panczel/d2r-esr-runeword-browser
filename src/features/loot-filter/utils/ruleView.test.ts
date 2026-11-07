@@ -35,7 +35,7 @@ describe('ruleFieldGate, Basic view', () => {
       'itemStats',
     ]);
     expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
-    expect(gate.hiddenConditions).toBe(17);
+    expect(gate.hiddenConditions).toBe(18);
     expect(gate.hiddenActions).toBe(8);
   });
 
@@ -48,7 +48,7 @@ describe('ruleFieldGate, Basic view', () => {
     expect(gate.condition('itemCodes')).toBe('shown');
     expect(gate.action('droplight')).toBe('advanced');
     expect(gate.action('useStyle')).toBe('shown');
-    expect(gate.hiddenConditions).toBe(15);
+    expect(gate.hiddenConditions).toBe(16);
     expect(gate.hiddenActions).toBe(7);
   });
 

@@ -132,6 +132,7 @@ const CONDITIONS: Readonly<Record<keyof RuleConditions, readonly [value: string,
   itemStatsAnyOf: ['stat checks', 'at least one check holds for the item (OR)'],
   playerStats: ['stat checks', "every check holds for the player's character"],
   playerStatsAnyOf: ['stat checks', "at least one check holds for the player's character"],
+  formula: ['a formula text (see "Formulas"), e.g. `"stat(\'item_fastercastrate\') >= 10"`', 'the formula is not 0'],
   location: [`a list of ${list(LOCATIONS)}`, 'the item is there; without the key a rule looks at onGround only'],
   difficulty: [`${list(DIFFICULTIES)} (0 to 2); ${NAMED}`, "the game's difficulty matches"],
   areas: ['area ids, e.g. `[39]` (areas.csv)', 'the player is in one of those areas'],
@@ -234,6 +235,45 @@ function statChecksSection(): string {
   ].join('\n');
 }
 
+function formulaSection(): string {
+  return [
+    '## Formulas',
+    '',
+    '`formula` is a condition that holds when its formula is not 0, written like a txt calc and checked when the filter loads. A bad name or bad syntax switches the rule off.',
+    '',
+    '```json',
+    `{ "itemTypes": ["ring"], "quality": "magic", "formula": "((stat('item_fastercastrate')>=10)&&((stat('fireresist')+stat('coldresist')+stat('lightresist'))>=40))", "hideIfOtherConditionsFail": true }`,
+    '```',
+    '',
+    markdownTable(
+      ['Part', 'What it gives'],
+      [
+        [
+          "`stat('name')`",
+          "The item's stat: a stats.csv `name` in single quotes, or its id. Without a param it reads param 0, like a stat check.",
+        ],
+        [
+          "`stat('name', param)`",
+          "One param of it: a number, or a skills.txt skill name in single quotes such as `'Teleport'` (skills.csv `formulaName`). On chance-to-cast and charge stats a skill name matches that skill at any level.",
+        ],
+        ["`playerStat('name')`, `playerStat('name', param)`", "The character's stat."],
+        [
+          "`statMax('name')`, `statSum('name')`",
+          "The highest value, or the total, over every param of the item's stat (any skill, tab or class).",
+        ],
+        ['`+ - * /`', 'Whole numbers; division rounds toward 0, division by 0 gives 0.'],
+        ['`== != < <= > >=`', 'Comparisons give 1 or 0.'],
+        ['`&& || !`', 'And, or, not.'],
+        ['`a ? b : c`', 'b when a is not 0, else c.'],
+      ]
+    ),
+    '',
+    '- Names go in single quotes (no escaping inside the JSON string); double quotes are most likely rejected.',
+    '- A formula is one more condition: the rule still needs its other conditions, and `hideIfOtherConditionsFail` counts a formula that gives 0 as a failed "other condition".',
+    '- Prefer a formula over several stat checks when the rule adds stats up ("total resists >= 40") or mixes AND and OR.',
+  ].join('\n');
+}
+
 function actionsSection(): string {
   return [
     '## Actions',
@@ -329,7 +369,6 @@ function limitsSection(): string {
     ...STAT_QUIRKS.map((quirk) => `- ${code(quirk.name)} (${String(quirk.id)}): ${quirk.headline}. ${quirk.message}`),
     `- ${OMITTED_PARAM_RULE}`,
     `- Stored scaled (not verified whether the plugin compares the stored or the shown value; use presence checks \`>= 1\` / \`< 1\` with them): ×256 ${scaleNames('shift')}; eighths per character level ${scaleNames('perLevel')}; both ${scaleNames('shiftPerLevel')}.`,
-    '- There is no formula condition.',
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
     `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
   ].join('\n');
@@ -563,6 +602,8 @@ export function buildFormatReference({ reference, examples, esrVersion }: Format
     conditionsSection(),
     '',
     statChecksSection(),
+    '',
+    formulaSection(),
     '',
     actionsSection(),
     '',

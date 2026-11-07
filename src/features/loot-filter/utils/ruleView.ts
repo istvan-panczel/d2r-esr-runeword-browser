@@ -32,6 +32,7 @@ export const BASIC_CONDITIONS = {
   itemStatsAnyOf: false,
   playerStats: false,
   playerStatsAnyOf: false,
+  formula: false,
   areas: false,
   excludeAreas: false,
   location: false,

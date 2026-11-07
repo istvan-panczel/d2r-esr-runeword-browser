@@ -244,6 +244,7 @@ export function toTestContext(form: TestItemForm, filter: LootFilter, lookup: Lo
     area: form.area,
     filterLevel: form.filterLevel ?? defaultFilterLevel(filter),
     statIds: lookup.statIds,
+    skillIds: lookup.skillIds,
   };
 }
 

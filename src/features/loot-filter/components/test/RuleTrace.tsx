@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import type { EvaluationResult, RuleTrace as RuleTraceEntry } from '../../engine/evaluate';
+import type { EvaluationResult, FormulaOutcome, RuleTrace as RuleTraceEntry } from '../../engine/evaluate';
 import { effectiveActions } from '../../engine/actions';
 import type { LootFilter } from '../../engine/types';
 import type { LootFilterLookup } from '../../utils/lookup';
@@ -29,12 +29,24 @@ const OUTCOMES: Readonly<Record<RuleTraceEntry['outcome'], { readonly label: str
   },
 };
 
+/** The formula's line in a trace row. */
+function formulaText(outcome: FormulaOutcome): string {
+  switch (outcome.status) {
+    case 'value':
+      return `formula = ${String(outcome.value)}${outcome.value === 0 ? ', fails' : ', holds'}`;
+    case 'unidentified':
+      return 'formula not evaluated: it reads an item stat and the item is unidentified';
+    case 'error':
+      return `formula error at character ${String(outcome.offset + 1)}: ${outcome.message}`;
+  }
+}
+
 /**
  * Rules that did nothing; listed only with "Show skipped rules". A rule skipped for its wrong shape is listed when the
  * rest of it holds (it would have applied or hidden).
  */
 const isQuiet = (entry: RuleTraceEntry): boolean =>
-  (entry.outcome === 'skipped' && entry.hideBlockedBy === undefined) ||
+  (entry.outcome === 'skipped' && entry.hideBlockedBy === undefined && entry.unidentified !== true) ||
   entry.outcome === 'disabled' ||
   ((entry.outcome === 'wrongShape' || entry.outcome === 'switchedOff') && entry.failed.length > 0);
 
@@ -137,9 +149,24 @@ export function RuleTrace({ filter, result, lookup, onShowRule }: RuleTraceProps
                     {entry.reason !== undefined && (
                       <span className="text-xs text-red-700 dark:text-red-400">The plugin switches this rule off: {entry.reason}.</span>
                     )}
+                    {entry.unidentified === true && (
+                      <span className="text-[0.7rem] text-muted-foreground">
+                        Skipped: the item is unidentified and the rule checks an item stat, so the game runs none of its actions.
+                      </span>
+                    )}
                     {entry.hideBlockedBy !== undefined && (
                       <span className="text-[0.7rem] text-muted-foreground">
                         Would hide the item, but rule {entry.hideBlockedBy + 1} shows it (show protects it from later hides).
+                      </span>
+                    )}
+                    {entry.formula !== undefined && (
+                      <span
+                        className={cn(
+                          'text-[0.7rem]',
+                          entry.formula.status === 'error' ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'
+                        )}
+                      >
+                        {formulaText(entry.formula)}
                       </span>
                     )}
                     {entry.failed.length > 0 && (

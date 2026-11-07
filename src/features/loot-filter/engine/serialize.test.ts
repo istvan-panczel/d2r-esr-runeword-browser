@@ -145,6 +145,36 @@ describe('serializeLootFilter', () => {
     );
   });
 
+  it('round-trips the previewed formula next to the stat lists', () => {
+    const text = [
+      '{',
+      '  "formatVersion": 1,',
+      '  "rules": [',
+      '    {"location": ["onGround"], "formula": "(stat(\'item_fastercastrate\')>=10)", "itemTypes": ["ring"], "playerStats": [{"stat": "level", "value": 10}], "hide": true}',
+      '  ]',
+      '}',
+    ].join('\n');
+    const written = serializeLootFilter(parseLootFilter(text).filter);
+    expect(written).toBe(
+      [
+        '{',
+        '  "formatVersion": 1,',
+        '  "rules": [',
+        '    {',
+        '      "itemTypes": ["ring"],',
+        '      "playerStats": [{"stat": "level", "value": 10}],',
+        '      "formula": "(stat(\'item_fastercastrate\')>=10)",',
+        '      "location": ["onGround"],',
+        '      "hide": true',
+        '    }',
+        '  ]',
+        '}',
+        '',
+      ].join('\n')
+    );
+    expect(serializeLootFilter(parseLootFilter(written).filter)).toBe(written);
+  });
+
   it('writes no disabledRules key without disabled rules, and keeps a wrong-shaped one until a rule is disabled', () => {
     expect(toPlainJson({ ...base, rules: [{ itemCodes: ['r01'] }] })).not.toHaveProperty('disabledRules');
     const wrong: LootFilter = { ...base, rules: [{ itemCodes: ['r01'] }], passthrough: { disabledRules: 'x' } };

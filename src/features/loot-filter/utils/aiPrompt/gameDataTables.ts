@@ -256,11 +256,11 @@ function skillsTable(data: LootFilterDataBundle, size: GameDataSize): GameDataTa
     path: 'skills.csv',
     summary:
       size === 'full'
-        ? 'every skill a stat param can name: id, name, class (empty: an item or monster skill)'
-        : 'the class skills: id (the "param" of item_singleskill and the skill part of event and charged params), name, class',
+        ? 'every skill a stat param can name: id, name, class (empty: an item or monster skill), formulaName (the skills.txt name a formula takes)'
+        : 'the class skills: id (the "param" of item_singleskill and the skill part of event and charged params), name, class, formulaName (the skills.txt name a formula takes)',
     text: toCsv(
-      ['id', 'name', 'class'],
-      skills.map((skill) => [skill.id, skill.name, skill.cls])
+      ['id', 'name', 'class', 'formulaName'],
+      skills.map((skill) => [skill.id, skill.name, skill.cls, data.skillNames?.[skill.id]])
     ),
   };
 }

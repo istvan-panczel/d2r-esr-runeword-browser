@@ -148,6 +148,11 @@ export interface RuleConditions {
   readonly itemStatsAnyOf?: readonly StatCheck[];
   readonly playerStats?: readonly StatCheck[];
   readonly playerStatsAnyOf?: readonly StatCheck[];
+  /**
+   * PREVIEW (announced by the mod author, not in plugin 1.5.3): an expression that holds when it is not 0, e.g.
+   * `(stat('item_fastercastrate')>=10)`; see engine/formula.ts.
+   */
+  readonly formula?: string;
   readonly location?: readonly ItemLocation[];
   readonly difficulty?: NamedMatch<DifficultyName>;
   /** levels.txt Id numbers */
@@ -282,4 +287,8 @@ export interface LootFilterReference {
   readonly itemCodeTypes: ReadonlyMap<string, ReadonlySet<string>>;
   /** Item type → its ancestors, including itself. */
   readonly typeAncestors: ReadonlyMap<string, ReadonlySet<string>>;
+  /** skills.txt `skill` → id, keyed by `formulaSkillKey` (formula skill names). */
+  readonly skillIds: ReadonlyMap<string, number>;
+  /** In-game skill name (`formulaSkillKey`) → the skills.txt names of the skills that show it, for the formula hints. */
+  readonly skillDisplayNames: ReadonlyMap<string, readonly string[]>;
 }

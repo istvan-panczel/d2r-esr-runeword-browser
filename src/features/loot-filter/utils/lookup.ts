@@ -1,5 +1,6 @@
 /** Name lookups and picker options built from the `lootfilter` and `types` game-data bundles. */
 import type { ItemTypeInfo, LootFilterDataBundle, LootFilterItem, TypesBundle } from '@/features/game-data/engine/schema';
+import { buildSkillIds } from '../engine/reference';
 import { searchText, type PickerOption } from './pickerSearch';
 import { buildStatParamData, statParamKind, statParamLabel, type StatParamData } from './statParams';
 
@@ -15,6 +16,10 @@ export interface LootFilterLookup {
   readonly statId: (stat: string | number) => number | undefined;
   /** itemstatcost name → id (the evaluator's context takes it as is); empty without the data. */
   readonly statIds: ReadonlyMap<string, number>;
+  /** skills.txt `skill` → id keyed by `formulaSkillKey` (the evaluator's context takes it as is); empty without the data. */
+  readonly skillIds: ReadonlyMap<string, number>;
+  /** The skills.txt `skill` name of a skill id (what a formula names it by). */
+  readonly skillName: (id: number) => string | undefined;
   /** The param's name for a layered stat (`item_addskill_tab` 50 → "Martial Arts (Assassin)"); see `statParamLabel`. */
   readonly statParamLabel: (stat: string | number, param: number) => string | undefined;
   readonly areaName: (id: number) => string | undefined;
@@ -32,6 +37,8 @@ export const EMPTY_LOOKUP: LootFilterLookup = {
   statName: none,
   statId: none,
   statIds: new Map(),
+  skillIds: new Map(),
+  skillName: none,
   statParamLabel: none,
   areaName: none,
   uniqueOrSetName: none,
@@ -63,6 +70,8 @@ export function buildLookup(
       return statByName.get(stat);
     },
     statIds: statByName,
+    skillIds: buildSkillIds(data.skillNames),
+    skillName: (id) => data.skillNames?.[id] || undefined,
     statParamLabel: (stat, param) => {
       const kind = statParamKind(stat, params);
       return kind === undefined ? undefined : statParamLabel(kind, param, params);

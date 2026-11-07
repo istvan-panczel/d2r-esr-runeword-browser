@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { OMITTED_PARAM_RULE } from '../../engine/evaluate';
 import { REPORT_STAT_URL } from '../../utils/inGameCheck';
+import { FORMULA_ASSUMPTIONS } from '../../engine/formula';
 
 /** The full list: the "Verify in game" section of docs/features/LOOT-FILTER.md. */
 const FULL_LIST_URL = 'https://github.com/istvan-panczel/d2r-esr-runeword-browser/blob/master/docs/features/LOOT-FILTER.md#verify-in-game';
@@ -59,6 +60,12 @@ export function AssumptionsNote() {
       <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
         {NOT_VERIFIED.map((fact) => (
           <li key={fact}>{fact}</li>
+        ))}
+      </ul>
+      <p className="mt-2 text-xs font-medium">Formulas</p>
+      <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+        {FORMULA_ASSUMPTIONS.map((assumption) => (
+          <li key={assumption}>{assumption}</li>
         ))}
       </ul>
       <p className="mt-2 text-xs text-muted-foreground">

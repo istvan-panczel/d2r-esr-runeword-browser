@@ -197,6 +197,20 @@ describe('parseLootFilter', () => {
     }
   });
 
+  it('reads the formula as a string condition; a wrong shape is kept with an error', () => {
+    const formula = "(stat('item_fastercastrate')>=10)";
+    const { filter, diagnostics } = parse({
+      formatVersion: 1,
+      rules: [
+        { itemTypes: ['ring'], formula, show: true },
+        { itemTypes: ['ring'], formula: 10, hide: true },
+      ],
+    });
+    expect(filter.rules[0]).toEqual({ itemTypes: ['ring'], formula, show: true });
+    expect(filter.rules[1]).toEqual({ itemTypes: ['ring'], hide: true, passthrough: { formula: 10 } });
+    expect(diagnostics.map((d) => [d.severity, d.path, d.message])).toEqual([['error', 'rules/1/formula', '"formula": expected a string']]);
+  });
+
   it('reads per-language texts and rejects unknown languages', () => {
     const { filter, diagnostics } = parse({
       formatVersion: 1,

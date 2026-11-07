@@ -127,6 +127,15 @@ describe('ruleSearchText', () => {
     for (const term of ['martial arts (assassin)', 'orb of winter lvl 25', 'item_addskill_tab']) expect(text).toContain(term);
   });
 
+  it('holds the whole formula, which the summary shows truncated', () => {
+    const formula = "(stat('item_fastercastrate')>=10)&&(stat('fireresist')>=40)";
+    const rule = { itemTypes: ['ring'], formula, hideIfOtherConditionsFail: true };
+    expect(ruleSummary(rule, EMPTY_LOOKUP)).toBe(
+      "ring · formula: (stat('item_fastercastrate')>=10)&&(sta… · hide if other conditions fail"
+    );
+    expect(ruleSearchText(rule, EMPTY_LOOKUP)).toContain("stat('fireresist')>=40");
+  });
+
   it('reuses a given summary', () => {
     expect(ruleSearchText({ itemCodes: ['r33'] }, TEST_LOOKUP, 'Precomputed')).toBe('precomputed r33 zod rune');
   });

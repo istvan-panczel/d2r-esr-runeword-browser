@@ -105,7 +105,7 @@ describe('inGameCheckRule', () => {
     expect(wrongShapeReason(['activeInLevels'])).toBe('This rule has a wrong-shaped key (activeInLevels); fix it first.');
     expect(wrongShapeReason(['sockets', 'sound'])).toBe('This rule has wrong-shaped keys (sockets, sound); fix it first.');
     // A wrong-shaped comment does not count (the plugin ignores comments), nor does an unknown key.
-    expect(inGameCheckRule(filterOf([{ ...source, passthrough: { comment: 1, formula: 'x' } }]), 0, TEST_LOOKUP).ok).toBe(true);
+    expect(inGameCheckRule(filterOf([{ ...source, passthrough: { comment: 1, highlight: 'x' } }]), 0, TEST_LOOKUP).ok).toBe(true);
   });
 
   it('accepts a rule whose file wrote a single-number activeInLevels, keeping the level', () => {

@@ -313,6 +313,7 @@ const CONDITION_READERS: FieldReaders<RuleConditions> = {
   itemStatsAnyOf: readStatChecks,
   playerStats: readStatChecks,
   playerStatsAnyOf: readStatChecks,
+  formula: readString,
   location: readLocations,
   difficulty: namedMatch(DIFFICULTIES, 'difficulty'),
   areas: readNumberList,

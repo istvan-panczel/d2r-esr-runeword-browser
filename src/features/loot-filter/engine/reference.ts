@@ -1,5 +1,6 @@
 import { CLASS_CODES, type LootFilterDataBundle, type TypesBundle } from '../../game-data/engine/schema.ts';
 import { tabLayer } from '../../game-data/engine/statLayers.ts';
+import { formulaSkillKey } from './formula.ts';
 import type { LootFilterReference } from './types.ts';
 
 /** Reference for validating without game data (every lookup fails, no sound rows). */
@@ -16,6 +17,8 @@ export const EMPTY_LOOT_FILTER_REFERENCE: LootFilterReference = {
   uniqueOrSetIds: new Set(),
   itemCodeTypes: new Map(),
   typeAncestors: new Map(),
+  skillIds: new Map(),
+  skillDisplayNames: new Map(),
 };
 
 /** Item code → the union of the ancestors of its `type` and `type2`; a type types.json lacks counts as itself only. */
@@ -44,6 +47,28 @@ function buildSkillTabNames(types: TypesBundle): Map<number, string> {
   return names;
 }
 
+/** skills.txt `skill` → id for every named row (the first row of a name, though ESR's are unique). */
+export function buildSkillIds(skillNames: readonly string[] | undefined): Map<string, number> {
+  const ids = new Map<string, number>();
+  (skillNames ?? []).forEach((name, id) => {
+    const key = formulaSkillKey(name);
+    if (name !== '' && !ids.has(key)) ids.set(key, id);
+  });
+  return ids;
+}
+
+/** In-game name → the skills.txt names of the listed skills whose skills.txt name differs from it. */
+function buildSkillDisplayNames(data: LootFilterDataBundle): Map<string, string[]> {
+  const names = new Map<string, string[]>();
+  for (const skill of data.skills ?? []) {
+    const internal = data.skillNames?.[skill.id];
+    if (internal === undefined || internal === '' || formulaSkillKey(internal) === formulaSkillKey(skill.name)) continue;
+    const key = formulaSkillKey(skill.name);
+    names.set(key, [...(names.get(key) ?? []), internal]);
+  }
+  return names;
+}
+
 /** Validator lookups from lootfilter.json and types.json. */
 export function buildLootFilterReference(data: LootFilterDataBundle, types: TypesBundle): LootFilterReference {
   const typeAncestors = new Map(types.types.map((type) => [type.code, new Set([type.code, ...type.ancestors])]));
@@ -60,5 +85,7 @@ export function buildLootFilterReference(data: LootFilterDataBundle, types: Type
     uniqueOrSetIds: new Set([...data.uniques.map((entry) => entry.id), ...data.sets.map((entry) => entry.id)]),
     itemCodeTypes: buildItemCodeTypes(data, typeAncestors),
     typeAncestors,
+    skillIds: buildSkillIds(data.skillNames),
+    skillDisplayNames: buildSkillDisplayNames(data),
   };
 }
