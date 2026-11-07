@@ -26,7 +26,7 @@ export function withLanguage(text: LocalizedText, language: Language, value: str
 export function pruneEmptyLanguages(text: LocalizedText): LocalizedText | undefined {
   const entries = Object.entries(text).filter(([, value]) => value !== '');
   if (entries.length === Object.keys(text).length) return text;
-  return entries.length === 0 ? undefined : (Object.fromEntries(entries));
+  return entries.length === 0 ? undefined : Object.fromEntries(entries);
 }
 
 /** The language a per-language text shows by default (`resolveText` without a language): enUS, else its first one. */
