@@ -11,6 +11,7 @@ import { COLORMAP_FILES, TINT_COLORS, untintedFile } from './build/itemTint.ts';
 import { serializeBundle } from './build/writeBundle.ts';
 import { defaultContext, evaluateSkill, indexSkillCalc, maxSynergyPoints, skillTable, synergyInputs } from './engine/skillCalc/index.ts';
 import { decodeSkillLevelLayer, decodeTabLayer, MAX_STAT_PARAM, statLayerKind } from './engine/statLayers.ts';
+import { readSuperiorAffixes, superiorRollsFor, superiorRollsForBase } from './engine/superiorAffixes.ts';
 import {
   CLASS_CODES,
   GAME_DATA_SCHEMA,
@@ -73,7 +74,8 @@ const terrorZonesText = readText('terrorzones');
 const modifiersText = readText('modifiers');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
-const { bases, automods: baseAutomods = [] } = JSON.parse(basesText) as BasesBundle;
+const basesBundle = JSON.parse(basesText) as BasesBundle;
+const { bases, automods: baseAutomods = [] } = basesBundle;
 const { runewords } = JSON.parse(runewordsText) as TxtRunewordsBundle;
 const { affixes } = JSON.parse(affixesText) as AffixesBundle;
 const { items: sourceItems } = JSON.parse(sourcesText) as SourcesBundle;
@@ -285,6 +287,58 @@ describe('committed game-data bundles', () => {
     expect(eagleOrb?.staffMods).toBe('sor');
     expect(eagleOrb?.automods?.length).toBeGreaterThan(1);
     expect(bases.find((base) => base.code === 'hax')?.range).toBeGreaterThan(0);
+  });
+
+  it('carry the superior affix rows, weights and pools (ESR 3.2.24)', () => {
+    const superior = readSuperiorAffixes(basesBundle);
+    expect(superior).not.toBeNull();
+    if (superior === null) return;
+    expect(superior.enabled).toBe(true);
+    expect(superior.defaultWeight).toBe(100);
+    expect(superior.firstFourRowBases).toBeUndefined();
+    expect(superior.rows.map((row) => row.row)).toEqual(superior.rows.map((_, index) => index));
+    expect(superior.rows).toHaveLength(83);
+    expect(manifest.counts.superiorRows).toBe(83);
+    // Every ESR row uses itype / etype; the stock item-class columns are blank
+    expect(superior.rows.every((row) => row.itypes.length > 0 && row.columns.length === 0)).toBe(true);
+    expect(superior.pools.map((pool) => [pool.label, pool.rows.length, pool.total])).toEqual([
+      ['Weapon (other types)', 31, 969],
+      ['Wand', 15, 217],
+      ['Staff', 16, 220],
+      ['Claw', 32, 994],
+      ['Orb', 10, 173],
+      ['Druid Club', 10, 200],
+      ['Necromancer Dagger', 11, 203],
+      ['Helm', 19, 549],
+      ['Any Armor (other types)', 21, 439],
+      ['Gloves', 20, 523],
+      ['Boots', 18, 473],
+      ['Belt', 18, 473],
+    ]);
+    for (const pool of superior.pools) {
+      expect(pool.total, pool.label).toBe(pool.rows.reduce((sum, row) => sum + (superior.rows[row]?.weight ?? 0), 0));
+    }
+    // Every weapon and armor base is in exactly one pool, and its own rows are the pool's (Arrows / Bolts roll nothing)
+    const gear = bases.filter((base) => base.kind !== 'misc');
+    expect(superior.pools.reduce((sum, pool) => sum + pool.bases, 0)).toBe(gear.length - 2);
+    const poolRows = new Map(superior.pools.flatMap((pool) => pool.types.map((code) => [code, pool.rows.join(',')])));
+    for (const base of gear) {
+      const rows = superiorRollsForBase(superior, base).rolls.map((roll) => roll.row.row);
+      expect(rows.join(','), base.code).toBe(poolRows.get(base.type) ?? '');
+    }
+    // The rare rows players chase: +1 to All Skills (row 23), max resists (22), -enemy resists (32)
+    const chance = (code: string, row: number) => {
+      const base = bases.find((entry) => entry.code === code);
+      return base === undefined ? undefined : superiorRollsForBase(superior, base).rolls.find((roll) => roll.row.row === row)?.chance;
+    };
+    expect(superior.rows[23]?.text).toEqual(['+1 to All Skills']);
+    expect(chance('9ss', 23)).toBeCloseTo(1 / 969);
+    expect(chance('xui', 23)).toBeCloseTo(1 / 439);
+    expect(chance('xui', 22)).toBeCloseTo(1 / 439);
+    expect(chance('9ss', 32)).toBeCloseTo(5 / 969);
+    expect(chance('am1', 23)).toBeCloseTo(1 / 969);
+    expect(chance('ob1', 23)).toBeCloseTo(1 / 173);
+    expect(chance('ci0', 22)).toBeUndefined();
   });
 
   it('only reference family codes that exist among the bases or are reported as warnings', () => {
@@ -1012,6 +1066,70 @@ function readHtmBaseNames(file: string): Map<string, string> {
   return names;
 }
 
+interface QualityAffixRow {
+  weight: number;
+  lines: string[];
+  /** Grouped view only: the "Item Type" cell (itypes) and its "Excluded:" list (etypes) */
+  itypes?: string[];
+  etypes?: string[];
+}
+
+/** One stat cell of docs/quality_affixes.htm as lines (`<br>`-separated, tags stripped, blank lines dropped) */
+function htmLines(cell: Element): string[] {
+  return cell.innerHTML
+    .split(/<br\s*\/?>/)
+    .map((part) => stripHtmlTags(part).replace(/\s+/g, ' ').trim())
+    .filter((line) => line !== '');
+}
+
+/**
+ * docs/quality_affixes.htm: the "Grouped" view (every qualityitems.txt row in file order with its rarity, item types and
+ * exclusions) and the "Expanded" view (one table per item type with the rarity of every row it can roll).
+ */
+function readQualityAffixesPage(file: string): {
+  grouped: QualityAffixRow[];
+  sections: Map<string, QualityAffixRow[]>;
+  /** Section name → item type code, from the expanded view's "[Name]" jump links (`#code`) */
+  sectionTypes: Map<string, string>;
+} {
+  const doc = new DOMParser().parseFromString(readFileSync(file, 'utf-8'), 'text/html');
+  const dataRows = (view: Element | null) =>
+    [...(view?.querySelectorAll('tr') ?? [])].filter(
+      (row) => row.cells.length >= 2 && /^\d+$/.test(row.cells[0]?.textContent.trim() ?? '')
+    );
+  const grouped = dataRows(doc.getElementById('affix-view-grouped')).map((row) => {
+    const [types = '', excluded = ''] = (row.cells[2]?.textContent ?? '').split('Excluded:');
+    const codes = (text: string) =>
+      text
+        .split(',')
+        .map((code) => code.trim())
+        .filter((code) => code !== '');
+    return {
+      weight: Number(row.cells[0]?.textContent.trim()),
+      lines: htmLines(row.cells[1]),
+      itypes: codes(types),
+      etypes: codes(excluded),
+    };
+  });
+  const expanded = doc.getElementById('affix-view-expanded');
+  const sectionTypes = new Map(
+    [...(expanded?.querySelectorAll('a[href^="#"]') ?? [])].map((link) => [
+      link.textContent.trim().replace(/^\[|\]$/g, ''),
+      link.getAttribute('href')?.slice(1) ?? '',
+    ])
+  );
+  const sections = new Map<string, QualityAffixRow[]>();
+  for (const table of expanded?.querySelectorAll('table') ?? []) {
+    const name = table.querySelector('td[colspan="2"]')?.textContent.trim();
+    if (name === undefined) continue;
+    sections.set(
+      name,
+      dataRows(table).map((row) => ({ weight: Number(row.cells[0]?.textContent.trim()), lines: htmLines(row.cells[1]) }))
+    );
+  }
+  return { grouped, sections, sectionTypes };
+}
+
 /** The official D-Stoning section's sections and the builds slot families they cover */
 const DSTONE_DOC_SLOTS: Readonly<Record<string, readonly CraftingSlot[]>> = {
   Weapon: ['weapon'],
@@ -1085,6 +1203,42 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
     expect(serializeBundle(generated.terrorzones)).toBe(terrorZonesText);
     expect(serializeBundle(generated.modifiers)).toBe(modifiersText);
+  });
+
+  it('rolls the superior rows of docs/quality_affixes.htm with its rarities, per row and per item type (ESR 3.2.24)', () => {
+    const superior = readSuperiorAffixes(generated.bases);
+    expect(superior).not.toBeNull();
+    if (superior === null) return;
+    const page = readQualityAffixesPage(resolve(ESR_DIR, 'docs/quality_affixes.htm'));
+    // The page shows Enhanced Defense rows with their max only ("+40%" for ac% 20-40)
+    const lines = (row: QualityAffixRow | { text: string[] }) =>
+      ('text' in row ? row.text : row.lines)
+        .map((line) => line.replace(/^\+\(\d+ to (\d+)\)% Enhanced Defense$/, '+$1% Enhanced Defense'))
+        .sort();
+
+    expect(page.grouped).toHaveLength(superior.rows.length);
+    superior.rows.forEach((row, index) => {
+      const doc = page.grouped[index];
+      expect(doc?.weight, `row ${String(index)} weight`).toBe(row.weight);
+      expect(doc?.itypes, `row ${String(index)} itypes`).toEqual(row.itypes);
+      expect(doc?.etypes, `row ${String(index)} etypes`).toEqual(row.etypes);
+      expect(doc === undefined ? [] : lines(doc), `row ${String(index)} text`).toEqual(lines(row));
+    });
+
+    // Every item type section: the rows a base of exactly that type rolls, in row order
+    const typeByCode = new Map(generated.types.types.map((type) => [type.code, type]));
+    expect(page.sections.size).toBe(52);
+    for (const [name, docRows] of page.sections) {
+      const type = typeByCode.get(page.sectionTypes.get(name) ?? '');
+      expect(type, name).toBeDefined();
+      if (type === undefined) continue;
+      const kind = type.ancestors.includes('weap') ? 'weapon' : 'armor';
+      const { rolls } = superiorRollsFor(superior.rows, { kind, type: type.code, ancestors: type.ancestors });
+      expect(
+        rolls.map((roll) => [roll.row.weight, lines(roll.row)]),
+        name
+      ).toEqual(docRows.map((row) => [row.weight, lines(row)]));
+    }
   });
 
   it('caps the D-stonings like the official D-Stoning Caps, within one step (ESR 3.2.24)', () => {

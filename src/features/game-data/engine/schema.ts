@@ -77,6 +77,71 @@ export interface BasesBundle {
    * optional only so hand-built test bundles can leave it out.
    */
   automods?: BaseAutomod[];
+  /**
+   * Superior affixes (see `SuperiorAffixes`, which these three keys make up): the plugin rules, the qualityitems.txt
+   * rows with ESR's weights and the pools of rows the bases can roll. Separate top-level keys so the rows serialize one
+   * per line. Always written by the generator; optional only so hand-built test bundles can leave them out.
+   */
+  superior?: SuperiorRules;
+  superiorRows?: SuperiorRow[];
+  superiorPools?: SuperiorPool[];
+}
+
+/** The stock item-class columns of qualityitems.txt, in file order (tested against the item's own `type`). */
+export const SUPERIOR_COLUMNS = ['armor', 'weapon', 'shield', 'scepter', 'wand', 'staff', 'bow', 'boots', 'gloves', 'belt'] as const;
+export type SuperiorColumn = (typeof SUPERIOR_COLUMNS)[number];
+
+/**
+ * Superior quality affixes: a Superior item rolls ONE qualityitems.txt row it may use, weighted by the D2RLoader
+ * superior-affixes plugin (`celestialrayone.superior-affixes.toml`); the row's mods are rolled once and kept.
+ */
+export interface SuperiorAffixes extends SuperiorRules {
+  rows: SuperiorRow[];
+  /** Groups of bases that roll exactly the same rows, in bases.json order of their first base */
+  pools: SuperiorPool[];
+}
+
+/** The superior-affixes plugin settings the rows' odds depend on */
+export interface SuperiorRules {
+  /** `[superior_affixes] enabled`; false (or no config) = the stock picker with equal odds */
+  enabled: boolean;
+  /** `default_weight`: the weight of rows the weights table does not list */
+  defaultWeight: number;
+  /**
+   * Base codes that only use rows 0-3 (`first_four_rows_for_throwing_and_nodurability = true`: own type Throwable or
+   * nodurability). Omitted when the rule is off (ESR 3.2.24).
+   */
+  firstFourRowBases?: string[];
+}
+
+export interface SuperiorRow {
+  /** 0-based qualityitems.txt row (row 0 = the first line under the header), the key of the weights table */
+  row: number;
+  /** Plugin weight (0 = never rolls) */
+  weight: number;
+  /** mod1 and mod2 (mod2 only when mod1code is set); empty for a row without a bonus */
+  mods: AffixMod[];
+  /** Rendered stat lines (the same renderer as affixes.json) */
+  text: string[];
+  /** Stock item-class columns set to 1 (used only when `itypes` is empty) */
+  columns: SuperiorColumn[];
+  /** `itype1-7`: the row rolls only on items whose type or type2 is one of these or below one (Equiv walk) */
+  itypes: string[];
+  /** `etype1-5`: never on items matching one of these */
+  etypes: string[];
+}
+
+export interface SuperiorPool {
+  /** Short name: the deepest type all its bases share, "(other types)" when that type also covers other pools */
+  label: string;
+  /** Own `type` codes of the pool's bases, in bases.json order */
+  types: string[];
+  /** Number of bases in the pool */
+  bases: number;
+  /** `SuperiorRow.row` values the pool rolls, ascending */
+  rows: number[];
+  /** Sum of the rows' weights: a row's chance is weight / total */
+  total: number;
 }
 
 /** One automagic.txt row as shown on base cards (a subset of the affixes.json `Affix` with kind `a`). */

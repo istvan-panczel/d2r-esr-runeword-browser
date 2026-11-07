@@ -3,7 +3,7 @@ import type { RootState } from '@/core/store/store';
 import { readPersistentJson, writePersistentJson, type PersistentStorage } from '@/core/hooks/usePersistentState';
 import type { ClassCode } from '../engine/schema';
 import type { BaseKind, BaseSortKey, BaseTier, BaseView, SortDir } from '../constants/bases';
-import { AFFIX_LEVEL_RANGE, type AffixKind, type AffixQuality, type AffixSortKey } from '../constants/affixes';
+import { AFFIX_LEVEL_RANGE, type AffixKind, type AffixQuality, type AffixSortKey, type AffixView } from '../constants/affixes';
 import { CHARACTER_STORAGE_KEY, DEFAULT_CHARACTER, isCharacter, patchCharacter, type Character } from './character';
 
 /** 'any' = no class filter, 'none' = only bases without a class restriction, ClassCode = only that class's bases. */
@@ -43,6 +43,9 @@ export interface BestBaseOptions {
 }
 
 export interface AffixFilters {
+  /** Magic / rare affixes (browse or what-can-roll) or the superior rows */
+  readonly view: AffixView;
+  /** Search of either view */
   readonly search: string;
   /** Empty = all kinds */
   readonly kinds: readonly AffixKind[];
@@ -62,6 +65,8 @@ export interface AffixFilters {
   readonly includeAutomagic: boolean;
   readonly sort: AffixSortKey;
   readonly sortDir: SortDir;
+  /** Superior view: only the pool(s) of this own item type (a base's `type`); null = every pool */
+  readonly superiorType: string | null;
 }
 
 interface GameDataState {
@@ -93,6 +98,7 @@ export const DEFAULT_BEST_BASE_OPTIONS: BestBaseOptions = {
 };
 
 export const DEFAULT_AFFIX_FILTERS: AffixFilters = {
+  view: 'affixes',
   search: '',
   kinds: [],
   rareOnly: false,
@@ -106,6 +112,7 @@ export const DEFAULT_AFFIX_FILTERS: AffixFilters = {
   includeAutomagic: true,
   sort: 'lvl',
   sortDir: 'asc',
+  superiorType: null,
 };
 
 function clampLevel(value: number): number {
@@ -201,10 +208,16 @@ const gameDataSlice = createSlice({
     setAffixFilters(state, action: PayloadAction<AffixFilters>) {
       return { ...state, affixes: action.payload };
     },
-    /** Resets every affix filter but stays in the current mode (base, item level, quality, automods are kept). */
+    /** Resets every affix filter but stays in the current view and mode (base, item level, quality, automods are kept). */
     resetAffixFilters(state) {
-      const { base, ilvl, quality, includeAutomagic } = state.affixes;
-      return { ...state, affixes: { ...DEFAULT_AFFIX_FILTERS, base, ilvl, quality, includeAutomagic } };
+      const { view, base, ilvl, quality, includeAutomagic } = state.affixes;
+      return { ...state, affixes: { ...DEFAULT_AFFIX_FILTERS, view, base, ilvl, quality, includeAutomagic } };
+    },
+    setAffixView(state, action: PayloadAction<AffixView>) {
+      state.affixes.view = action.payload;
+    },
+    setAffixSuperiorType(state, action: PayloadAction<string | null>) {
+      state.affixes.superiorType = action.payload;
     },
     setAffixSearch(state, action: PayloadAction<string>) {
       state.affixes.search = action.payload;
@@ -273,6 +286,8 @@ export const {
   setTxtKeyOverride,
   setAffixFilters,
   resetAffixFilters,
+  setAffixView,
+  setAffixSuperiorType,
   setAffixSearch,
   toggleAffixKind,
   setAffixRareOnly,

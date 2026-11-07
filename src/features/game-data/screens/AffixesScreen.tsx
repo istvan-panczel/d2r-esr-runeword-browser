@@ -1,8 +1,13 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ResultsBar } from '@/components/ResultsBar';
-import type { Affix, BaseItem, TypesBundle } from '../engine/schema';
+import { ToolbarCard } from '@/components/ToolbarCard';
+import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
+import { cn } from '@/lib/utils';
+import type { Affix, BaseItem, SuperiorAffixes, TypesBundle } from '../engine/schema';
 import { eligibleAffixes } from '../engine/affixEligibility';
+import { readSuperiorAffixes } from '../engine/superiorAffixes';
+import { AFFIX_VIEWS, AFFIX_VIEW_LABELS } from '../constants/affixes';
 import type { ComboOption } from '../components/ComboPicker';
 import { AffixCard } from '../components/AffixCard';
 import { AffixFilters } from '../components/AffixFilters';
@@ -11,9 +16,10 @@ import { AffixRollPanel } from '../components/AffixRollPanel';
 import { AffixRollResults } from '../components/AffixRollResults';
 import { GameDataError } from '../components/GameDataError';
 import { GameDataLoading } from '../components/GameDataLoading';
+import { SuperiorAffixesView } from '../components/SuperiorAffixesView';
 import { useGameData } from '../hooks/useGameData';
 import { useAffixesUrlState } from '../hooks/useAffixesUrlState';
-import { selectAffixFilters } from '../store/gameDataSlice';
+import { selectAffixFilters, setAffixView } from '../store/gameDataSlice';
 import { affixTypeCodes, filterAffixes } from '../utils/filterAffixes';
 
 const AFFIXES_FILES = ['types', 'bases', 'affixes'] as const;
@@ -22,12 +28,21 @@ export function AffixesScreen() {
   const gameData = useGameData(AFFIXES_FILES);
   if (gameData.status === 'loading') return <GameDataLoading />;
   if (gameData.status === 'error') return <GameDataError error={gameData.error} onRetry={gameData.retry} />;
-  return <AffixesBrowser typesBundle={gameData.data.types} bases={gameData.data.bases.bases} affixes={gameData.data.affixes.affixes} />;
+  return (
+    <AffixesBrowser
+      typesBundle={gameData.data.types}
+      bases={gameData.data.bases.bases}
+      superior={readSuperiorAffixes(gameData.data.bases)}
+      affixes={gameData.data.affixes.affixes}
+    />
+  );
 }
 
 interface AffixesBrowserProps {
   readonly typesBundle: TypesBundle;
   readonly bases: readonly BaseItem[];
+  /** null for a bases bundle without the superior keys (the view is then hidden) */
+  readonly superior: SuperiorAffixes | null;
   readonly affixes: readonly Affix[];
 }
 
@@ -45,7 +60,8 @@ function baseOptions(bases: readonly BaseItem[], typeNames: ReadonlyMap<string, 
     });
 }
 
-function AffixesBrowser({ typesBundle, bases, affixes }: AffixesBrowserProps) {
+function AffixesBrowser({ typesBundle, bases, superior, affixes }: AffixesBrowserProps) {
+  const dispatch = useDispatch();
   const filters = useSelector(selectAffixFilters);
   const { types, classes } = typesBundle;
 
@@ -73,8 +89,37 @@ function AffixesBrowser({ typesBundle, bases, affixes }: AffixesBrowserProps) {
           includeAutomagic: filters.includeAutomagic,
         });
 
+  const viewTabs = superior !== null && (
+    <ToolbarCard className="mb-4">
+      <nav className="flex flex-wrap gap-1" aria-label="Affix lists">
+        {AFFIX_VIEWS.map((view) => (
+          <button
+            key={view}
+            type="button"
+            aria-pressed={filters.view === view}
+            onClick={() => dispatch(setAffixView(view))}
+            className={cn(SUBTAB_BASE, filters.view === view ? SUBTAB_ACTIVE : SUBTAB_INACTIVE)}
+          >
+            {AFFIX_VIEW_LABELS[view]}
+          </button>
+        ))}
+      </nav>
+    </ToolbarCard>
+  );
+
+  if (superior !== null && filters.view === 'superior') {
+    return (
+      <div>
+        {viewTabs}
+        <SuperiorAffixesView superior={superior} typeNames={typeNames} getShareUrl={getShareUrl} />
+        <ScrollToTopButton />
+      </div>
+    );
+  }
+
   return (
     <div>
+      {viewTabs}
       <AffixRollPanel baseOptions={baseOptions(bases, typeNames)} base={base} alvl={eligible?.alvl ?? null} />
       <AffixFilters classes={classes} typeOptions={typeOptions} rollMode={base !== undefined} getShareUrl={getShareUrl} />
 

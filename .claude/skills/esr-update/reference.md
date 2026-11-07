@@ -105,6 +105,14 @@ when the match is certain, add it to `NAME_ALIASES` (otherwise report it to the 
 3.2.24 and the integrity test pins it. "a skills.txt skill not in skilldetails.json" means no item grants that skill
 any more: report, no fix.
 
+**Superior affixes**: `bases.json` `superior` / `superiorRows` / `superiorPools` regenerate from qualityitems.txt and
+`d2rloader/config/celestialrayone.superior-affixes.toml` (weights by 0-based row number; `build/bundleSuperior.ts`,
+`docs/features/GAME-DATA.md` "Superior affixes"). The integrity test checks every row against
+`docs/quality_affixes.htm` and pins the 3.2.24 pools (12, e.g. Weapon 31 rows / total 969): a row inserted mid-file
+shifts every weight below it, so a new mismatch with the page means the toml and the txt disagree (report it to the
+owner). The `superior: … has weights for rows 83, 84, 85, 86` warning is genuine 3.2.24 data (weights for rows the
+file does not have).
+
 Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
