@@ -22,9 +22,9 @@ describe.skipIf(!existsSync(MODERN) || !existsSync(BUNDLE) || !existsSync(TYPES)
   const { rows, summary } = collectCoupons(result.stash, bundle, types);
   const search = (text: string) => filterCouponRows(rows, { ...DEFAULT_COUPONS_STATE, search: text }, types);
 
-  it('finds 541 coupons of 217 codes, every one with a recipe', () => {
-    expect(summary.total).toBe(541);
-    expect(summary.distinct).toBe(217);
+  it('finds 696 coupons of 281 codes, every one with a recipe', () => {
+    expect(summary.total).toBe(696);
+    expect(summary.distinct).toBe(281);
     expect(summary.blanks).toBe(0);
     for (const row of rows) {
       expect(row.locations, row.code).toHaveLength(row.have);
@@ -46,7 +46,7 @@ describe.skipIf(!existsSync(MODERN) || !existsSync(BUNDLE) || !existsSync(TYPES)
     console.log(`Stash fixture belt coupons: ${found.map((row) => `${row.unique.name} (${row.base?.name ?? '?'})`).join(', ')}`);
     expect(belts.length).toBeGreaterThan(0);
     expect(found.map((row) => row.code).sort()).toEqual(belts.map((row) => row.code).sort());
-    expect(found).toHaveLength(8);
+    expect(found).toHaveLength(10);
     expect(found.some((row) => !(row.base?.name ?? '').toLowerCase().includes('belt'))).toBe(true);
     // "sash" is no type name, so it matches as text: the Sash and the Demonhide Sash, not the other belts
     const sashes = search('sash');
