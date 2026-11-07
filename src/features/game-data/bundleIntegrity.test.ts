@@ -2012,9 +2012,10 @@ describe('committed specializations bundle (ESR 3.3)', () => {
   });
 
   it('records the perks the files do not back as warnings', () => {
+    // Both are 3.3 bugs the mod author says the next patch fixes (2026-11-07); Deep Pockets (archaeology_4) is no
+    // warning: nothing in the files reads it, but the mod author says the plugin grants it directly
     expect(manifest.warnings.filter((warning) => warning.startsWith('specializations:'))).toEqual([
       'specializations: Alchemist › Elixir of Reincarnation (alchemy_13): no cubemain row makes Elixir of Reincarnation (35p), nothing else reads the stat',
-      'specializations: Archaeologist › Deep Pockets (archaeology_4): no table or launcher config reads it',
       'specializations: Archaeologist › Alien Artefacts (archaeology_15): Alien Artefact (aa1, aa2, aa3, aa4, aa5) drop from 572 monsters with no perk condition',
     ]);
   });

@@ -260,19 +260,40 @@ describe('buildSpecializationsBundle', () => {
     });
   });
 
-  it('notes a perk nothing reads and the item claims the files do not back', () => {
+  it('notes the item claims the files do not back, with the mod author answer; a plugin-granted perk is no gap', () => {
+    // Deep Pockets: nothing in the files reads archaeology_4, but the mod author says the plugin grants it
     expect(perk('deep-pockets')?.notes).toEqual([
-      'Nothing in the game tables or the launcher configs reads its stat (archaeology_4), so the files do not show how it works.',
+      'The mod author (2026-11-07): the plugin grants it directly, outside the game tables, so the perk works.',
     ]);
     expect(perk('alien-artefacts')?.notes).toEqual([
       'In the files, Alien Artefact drops from 1 monster without the perk: no treasure class checks its stat (archaeology_15).',
+      'The mod author (2026-11-07): dropping without the perk is a bug of 3.3; the next patch makes Alien Artefacts need the perk.',
     ]);
     expect(warnings).toEqual([
       'specializations: celestialrayone.alchemy.toml missing in the ESR clone',
-      'specializations: Archaeologist › Deep Pockets (archaeology_4): no table or launcher config reads it',
       'specializations: Archaeologist › Alien Artefacts (archaeology_15): Alien Artefact (aa1, aa2, aa3, aa4, aa5) drop from 1 monster with no perk condition',
       'specializations: Archaeologist: no icon sheet archaeologist.sprite',
     ]);
+  });
+
+  it('notes and warns about a perk nothing reads', () => {
+    const stats = STATS.map((stat) => (stat === 'archaeology_4' ? 'archaeology_5' : stat));
+    const result = buildSpecializationsBundle(
+      input({
+        itemstatcost: tsv(
+          'itemstatcost',
+          ['Stat'],
+          stats.map((stat) => [stat])
+        ),
+      })
+    );
+    const unread = result.bundle.trees.flatMap((tree) => tree.perks).find((entry) => entry.slug === 'deep-pockets');
+    expect(unread?.notes).toEqual([
+      'Nothing in the game tables or the launcher configs reads its stat (archaeology_5), so the files do not show how it works.',
+    ]);
+    expect(result.warnings).toContain(
+      'specializations: Archaeologist › Deep Pockets (archaeology_5): no table or launcher config reads it'
+    );
   });
 
   it('records where the official page reads differently (the files win)', () => {

@@ -29,6 +29,7 @@ import type {
 import type { StatEntry } from '../engine/stats/types.ts';
 import type { CubeRow } from './cube/cubeRows.ts';
 import { itemRowName, resolveName } from './itemNames.ts';
+import { modAuthorNote } from './modAuthorAnswers.ts';
 import { parseToml, type TomlEntry, type TomlValue } from './toml.ts';
 import { readTcRows, type TcRow } from './treasureClassOdds.ts';
 import type { TsvTable } from './tsv.ts';
@@ -552,6 +553,9 @@ export function buildElixirsBundle(input: ElixirsInputs): ElixirsResult {
         ? 'cubemain.txt has no recipe that makes it and no treasure class drops it.'
         : `cubemain lines ${elixir.recipes.join(', ')} make it.`;
     addFact(key, `Gives the ${elixir.name}; ${recipeNote}`);
+    // Elixir of Reincarnation (ESR 3.3): the mod author called the missing recipe a bug
+    const bug = elixir.recipes === undefined ? modAuthorNote(key, 'bug') : undefined;
+    if (bug !== undefined) addFact(key, bug);
   }
   for (let i = 0; entries.has(`reincarnation[${String(i)}].state`); i++) {
     const prefix = `reincarnation[${String(i)}]`;
