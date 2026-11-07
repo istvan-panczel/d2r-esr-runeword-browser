@@ -5,32 +5,30 @@ export interface ColorCode {
   /** The character after `ÿc`. */
   readonly code: string;
   readonly name: string;
-  /** The colour as the guide lists it; see the note on N–V. */
+  /** The colour as the guide lists it. */
   readonly rgb: readonly [number, number, number];
-  /** True when `rgb` is a preview approximation the guide does not give. */
-  readonly approximate: boolean;
   readonly usedFor: string;
 }
 
-const code = (c: string, name: string, rgb: readonly [number, number, number], usedFor = '', approximate = false): ColorCode => ({
+const code = (c: string, name: string, rgb: readonly [number, number, number], usedFor = ''): ColorCode => ({
   code: c,
   name,
   rgb,
-  approximate,
   usedFor,
 });
 
 /**
- * ÿc0 to ÿcV in ASCII order. 0 to < are the classic palette (HD draws its own shades of them); = to M
- * are fixed in the game exe. N to V are chat colours with ESR's `color-codes-2x-letters` patch, which
- * keeps the 2.x letters (stock 3.3 shifts them one letter: N light gold, O turquoise, …). The guide
- * gives no RGB for N to V, so those values are approximations for the preview only.
+ * ÿc0 to ÿcV in ASCII order, with the RGB values of the guide (ESR 3.3, plugin 1.8.2). 0 to < are the `baseColors` of
+ * `globaldatahd.json` (the legacy palette except ÿc3, which HD draws as 110, 110, 255); = to M are the label colours of
+ * `TooltipStyle` in `_profilehd.json` (a mod that changes an entry there changes its code); N to V are chat colours
+ * fixed in the game exe, kept on their 2.x letters by ESR's `color-codes-2x-letters` patch (stock 3.3 shifts them one
+ * letter: N light gold, O turquoise, …).
  */
 export const COLOR_CODES: readonly ColorCode[] = [
   code('0', 'white', [255, 255, 255], 'plain text, normal items'),
   code('1', 'red', [255, 77, 77], 'broken items, warnings'),
   code('2', 'green', [0, 255, 0], 'set items (tooltips)'),
-  code('3', 'blue', [105, 105, 255], 'magic items (tooltips)'),
+  code('3', 'blue', [110, 110, 255], 'magic items (tooltips)'),
   code('4', 'gold', [199, 179, 119], 'unique items (tooltips)'),
   code('5', 'gray', [105, 105, 105], 'socketed and ethereal items (tooltips)'),
   code('6', 'black', [0, 0, 0]),
@@ -56,16 +54,16 @@ export const COLOR_CODES: readonly ColorCode[] = [
   code('J', 'orange', [255, 168, 0], 'rune labels'),
   code('K', 'gray', [99, 99, 99], 'socketed labels'),
   code('L', 'orange', [255, 168, 0], 'event item labels'),
-  code('M', 'black', [0, 0, 1], 'desecrated (draws black)'),
-  code('N', 'turquoise', [64, 224, 208], 'chat', true),
-  code('O', 'pink', [255, 135, 200], 'chat', true),
-  code('P', 'light blue', [140, 190, 255], 'chat', true),
-  code('Q', 'green', [0, 200, 0], 'chat', true),
-  code('R', 'yellow', [255, 255, 100], 'chat', true),
-  code('S', 'dark red', [160, 0, 0], 'chat', true),
-  code('T', 'sky blue', [100, 200, 255], 'chat', true),
-  code('U', 'red', [255, 77, 77], 'chat', true),
-  code('V', 'red', [255, 0, 0], 'chat', true),
+  code('M', 'light purple', [192, 128, 242], 'desecrated labels'),
+  code('N', 'turquoise', [6, 165, 221]),
+  code('O', 'pink', [255, 128, 255]),
+  code('P', 'light blue', [170, 170, 255]),
+  code('Q', 'green', [0, 255, 0]),
+  code('R', 'yellow', [255, 255, 118]),
+  code('S', 'dark red', [208, 62, 62]),
+  code('T', 'sky blue', [130, 197, 255]),
+  code('U', 'red', [255, 0, 0]),
+  code('V', 'red', [255, 0, 0]),
 ];
 
 const BY_CODE = new Map(COLOR_CODES.map((entry) => [entry.code, entry]));

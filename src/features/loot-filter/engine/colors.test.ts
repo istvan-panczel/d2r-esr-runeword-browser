@@ -5,17 +5,14 @@ describe('colour codes', () => {
   it('lists ÿc0 to ÿcV in ASCII order', () => {
     const codes = COLOR_CODES.map((entry) => entry.code).join('');
     expect(codes).toBe('0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV');
-    expect(COLOR_CODES.filter((entry) => entry.approximate).map((entry) => entry.code)).toEqual([
-      'N',
-      'O',
-      'P',
-      'Q',
-      'R',
-      'S',
-      'T',
-      'U',
-      'V',
-    ]);
+  });
+
+  it('has the RGB values of the 3.3 guide', () => {
+    expect(colorCodeRgb('3')).toEqual([110, 110, 255]);
+    expect(findColorCode('M')).toMatchObject({ name: 'light purple', rgb: [192, 128, 242], usedFor: 'desecrated labels' });
+    expect(colorCodeRgb('N')).toEqual([6, 165, 221]);
+    expect(colorCodeRgb('S')).toEqual([208, 62, 62]);
+    expect(colorCodeRgb('V')).toEqual([255, 0, 0]);
   });
 
   it('looks colours up by code or full prefix', () => {

@@ -335,7 +335,6 @@ const CONTEXT_TEXT: Readonly<Record<PlaceholderContext, string>> = {
 };
 
 function textsSection(): string {
-  const shown = COLOR_CODES.filter((entry) => !entry.approximate || entry.usedFor !== '');
   return [
     '## Texts, placeholders and colours',
     '',
@@ -354,7 +353,7 @@ function textsSection(): string {
     '',
     markdownTable(
       ['Code', 'Colour', 'The game uses it for'],
-      shown.map((entry) => [code(`ÿc${entry.code}`), entry.name, entry.usedFor])
+      COLOR_CODES.map((entry) => [code(`ÿc${entry.code}`), entry.name, entry.usedFor])
     ),
   ].join('\n');
 }

@@ -144,14 +144,10 @@ export function ColorTextField({ id, label, value, onChange, context, placeholde
                     aria-hidden
                   />
                   <span className="font-mono">ÿc{entry.code}</span>
-                  <span className="truncate text-muted-foreground">
-                    {entry.name}
-                    {entry.approximate ? ' ≈' : ''}
-                  </span>
+                  <span className="truncate text-muted-foreground">{entry.name}</span>
                 </button>
               ))}
             </div>
-            <p className="mt-2 px-2 text-xs text-muted-foreground">≈: preview colour approximated (chat colours N to V).</p>
           </PopoverContent>
         </Popover>
         <Popover open={placeholdersOpen} onOpenChange={setPlaceholdersOpen}>
