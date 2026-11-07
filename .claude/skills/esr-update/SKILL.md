@@ -129,7 +129,7 @@ art folder, `metadata.json` and the docs site were at the new version; commits (
 deferred. Next steps for the owner: merge into `master`, `npm run release`, `git push --follow-tags`, then the Deploy
 workflow. Deploy soon: until then players see the old data, new item codes fail stash uploads, and the loot filter
 editor flags new codes as unknown. Questions for the mod author: new ones ready to paste and the ones in the owner's
-latest `docs/owner-checks-*.md` this release answers. Guide notes still needing in-game checks: the `draft` / `review` /
+latest `owner-notes/owner-checks-*.md` (gitignored) this release answers. Guide notes still needing in-game checks: the `draft` / `review` /
 `old` lists of `npm run guide:report`; the owner runs `npm run guide:verify -- <slug>` after checking.
 
 ## Do not

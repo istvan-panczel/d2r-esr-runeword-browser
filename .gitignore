@@ -35,3 +35,6 @@ temp-txt
 .claude/worktrees/
 supabase/.temp/
 supabase/.branches/
+
+# Owner-only notes (checklists, Discord drafts); never committed
+owner-notes/

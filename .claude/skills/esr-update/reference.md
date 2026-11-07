@@ -173,7 +173,7 @@ A new feature that follows an official page or launcher config adds it to `ESR_R
 
 **Questions for the mod author**: page-vs-files differences (`mapbosses.page`, the cube page), genuine data warnings
 (`masteries:`, `superior:`, `modifiers:`) and other upstream data bugs are not fixed in the app. The owner keeps them in
-"Questions for the mod author" of the latest `docs/owner-checks-*.md` (the owner's file: do not edit it). In the
+"Questions for the mod author" of the latest `owner-notes/owner-checks-*.md` (gitignored) (the owner's file: do not edit it). In the
 final report, list new questions ready to paste and the existing ones this release answers (the difference or warning
 is gone).
 
