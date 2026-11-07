@@ -43,6 +43,7 @@ export const APP_PAGES: readonly string[] = [
   '/ascendancies',
   '/skills',
   '/modifiers',
+  '/specializations',
   '/game-data/bases',
   '/game-data/sets',
   '/game-data/best-base',

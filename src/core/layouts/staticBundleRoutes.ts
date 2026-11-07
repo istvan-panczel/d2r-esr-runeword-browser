@@ -19,6 +19,7 @@ const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/stash',
   '/terror-zones',
   '/modifiers',
+  '/specializations',
 ];
 
 export function isStaticBundlePath(pathname: string): boolean {

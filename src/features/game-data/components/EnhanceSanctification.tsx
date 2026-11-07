@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { EnhanceBundle } from '../engine/schema';
+import { specializationHref } from '../engine/specializationLinks';
 import { filterSanctificationOutcomes, formatRate } from '../utils/enhance';
 import { BonusLines, ComputedRate, NoMatches } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
@@ -45,9 +47,15 @@ export function EnhanceSanctification({ bundle, search }: EnhanceSanctificationP
           </p>
           {sanctification.perkItems !== undefined && (
             <p>
-              With the {sanctification.perkItems.perk.tree} perk {sanctification.perkItems.perk.title}, you can also sanctify{' '}
-              {sanctification.perkItems.items.map((entry) => `${entry.name.toLowerCase()}s`).join(' and ')} the same way, with the same
-              outcomes.
+              With the {sanctification.perkItems.perk.tree} perk{' '}
+              <Link
+                to={specializationHref(sanctification.perkItems.perk.tree, sanctification.perkItems.perk.title)}
+                className="underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+              >
+                {sanctification.perkItems.perk.title}
+              </Link>
+              , you can also sanctify {sanctification.perkItems.items.map((entry) => `${entry.name.toLowerCase()}s`).join(' and ')} the same
+              way, with the same outcomes.
             </p>
           )}
           {bonuses.length > 0 && (
