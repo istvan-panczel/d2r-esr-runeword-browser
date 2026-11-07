@@ -154,7 +154,7 @@ not check." Then:
 
 - Every fact comes from the release diff, the game files or an existing `_sources.yml` source; no invention.
 - Never type a number a directive can provide (`::recipes`, `::source`, `::vendor`, `::secret-recipes`,
-  `::difficulty-penalties`, `::card`); link to the data instead.
+  `::difficulty-penalties`, `::dstone-caps`, `::card`); link to the data instead.
 - Prose telling the player to farm or find an item may carry one `[label](<dropfinder:Item Name>)` link per paragraph.
 - Launcher facts: notes cite launcher plugins and patches (`esr-loader` in `_sources.yml`, e.g.
   `d2rloader/patches/auto-collect-corpse.json`); a changed patch/config changes the note

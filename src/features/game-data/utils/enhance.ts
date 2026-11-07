@@ -1,5 +1,5 @@
 /**
- * Enhance page (corruption, anointment, Vessel of Souls): URL state, search and the summary texts built from
+ * Enhance page (corruption, anointment, sanctification, Vessel of Souls): URL state, search and the summary texts built from
  * enhance.json.
  */
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
@@ -12,18 +12,20 @@ import {
   type CorruptionSlot,
   type EnhanceBundle,
   type EnhanceQuality,
+  type SanctificationOutcome,
   type VesselMaterial,
   type VesselRecipe,
   type VesselTransform,
 } from '../engine/schema';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 
-export const ENHANCE_TABS = ['corruption', 'anointment', 'vessel'] as const;
+export const ENHANCE_TABS = ['corruption', 'anointment', 'sanctification', 'vessel'] as const;
 export type EnhanceTab = (typeof ENHANCE_TABS)[number];
 
 export const ENHANCE_TAB_LABELS: Record<EnhanceTab, string> = {
   corruption: 'Corruption',
   anointment: 'Anointment',
+  sanctification: 'Sanctification',
   vessel: 'Vessel of Souls',
 };
 
@@ -97,8 +99,10 @@ export function encodeEnhanceState(state: EnhanceState, bundle: EnhanceBundle): 
   if (state.tab !== 'corruption') params.set(KEYS.TAB, state.tab);
   if (state.tab === 'vessel') {
     if (state.tier !== tierOptions(bundle)[0]) params.set(KEYS.TIER, state.tier);
-  } else if (state.slot !== slotOptions(bundle, state.tab)[0]) {
-    params.set(KEYS.SLOT, state.slot);
+  } else {
+    const slots = slotOptions(bundle, state.tab);
+    // Sanctification has no slots
+    if (slots.length > 0 && state.slot !== slots[0]) params.set(KEYS.SLOT, state.slot);
   }
   if (state.search.trim() !== '') params.set(KEYS.SEARCH, state.search.trim());
   return params;
@@ -122,6 +126,11 @@ export function filterCorruptionOutcomes(outcomes: readonly CorruptionOutcome[],
 export function filterAnointmentOutcomes(outcomes: readonly AnointmentOutcome[], search: string): AnointmentOutcome[] {
   const terms = parseSearchTerms(search);
   return outcomes.filter((outcome) => matchesTerms([outcome.label ?? '', ...outcome.lines], terms));
+}
+
+export function filterSanctificationOutcomes(outcomes: readonly SanctificationOutcome[], search: string): SanctificationOutcome[] {
+  const terms = parseSearchTerms(search);
+  return outcomes.filter((outcome) => matchesTerms(outcome.lines, terms));
 }
 
 export function filterVesselRecipes(recipes: readonly VesselRecipe[], search: string): VesselRecipe[] {

@@ -3,7 +3,7 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-06T21:54:35.273Z",
+  "generatedAt": "2026-11-07T09:03:11.420Z",
   "files": {
     "types": {
       "hash": "cab8a44704bcb77dd1d552147ce4b2e16d2d30517780f10d4d1b55de7c1e294d",
@@ -30,16 +30,16 @@
       "bytes": 849085
     },
     "enhance": {
-      "hash": "cfc51920fb2bf6bfee53e3c96d4fd70b78414a529448b17d1ec9d81aba1bda6e",
-      "bytes": 365523
+      "hash": "577ffb8fc9d26c2c3d565d2f20230eb2ce9147b5a48aa51871e4458c0d9d0cfb",
+      "bytes": 426041
     },
     "cube": {
-      "hash": "1db582844965c81cfc541b1b5019b5b437c193c5935c84bc5c70bd55c2164b02",
-      "bytes": 608931
+      "hash": "382251d5c6ae1830f22dd7cb387d877f91efd712b360a893aaddde55587df348",
+      "bytes": 615458
     },
     "materials": {
-      "hash": "f2bd9a4ab80fb419677b4cc1042e04b4d7769ad851b22f14fce1b6fe9d2657b9",
-      "bytes": 169104
+      "hash": "9d505a5956b8cb354fdf211bc55c1de04961c7c2f1b6197c81785ad214b66c0a",
+      "bytes": 169174
     },
     "sets": {
       "hash": "c5a7e134c544e19960af110135a4394848750c237a9d119a15e99fed53689cde",
@@ -58,8 +58,8 @@
       "bytes": 389234
     },
     "crafting": {
-      "hash": "c60369006f5669ab5cd122256b21f956cff89f39c4a4173c631175e3808028be",
-      "bytes": 56620
+      "hash": "1d4344ac6d40bb6db4df349f69599d8aab9a7b666a19b8c27814d5dc535431a5",
+      "bytes": 64871
     },
     "tiers": {
       "hash": "bbff23c87b9b225f261e06d02970b951299e06ae85e5a8761f4848ec7f979b31",
@@ -134,6 +134,7 @@
     "enhanceAnointmentOutcomes": 790,
     "enhanceCharmAnointments": 30,
     "enhanceVesselAnointments": 178,
+    "enhanceSanctificationOutcomes": 217,
     "enhanceVesselRecipes": 380,
     "enhanceVesselTransforms": 29,
     "cubeRecipes": 9121,

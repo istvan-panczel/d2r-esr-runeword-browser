@@ -4,7 +4,7 @@
  * - Forgings (one per class, all skills, chipped gem, rune, aura stone): the rows of the guide's cube families
  *   (`skill-forging`, `all-skill-forging`, `stat-forging`, `rune-forging` + `rune-forging-slots`, `aura-forging`).
  * - Stacking crafts: D-stoning (family `dstoning`: a Dragon Stone form, sometimes with a switch item, repeated while a
- *   cap stat grows) and gem melding (family `gem-meld`).
+ *   cap stat grows; the total it stops at from `cube/dstoneCaps.ts`) and gem melding (family `gem-meld`).
  * - Slots: the item input's type maps to the builds slot families (`weap` → weapon, `armo` → every armour slot,
  *   `any` → every slot). Like the game, the first row in file order that accepts a slot decides its bonus, so the
  *   weapon row of a stat forging beats its `any` row and the glove rune forging row beats the `armo` row.
@@ -28,6 +28,7 @@ import type { ModsRenderer } from './bundleRunewords.ts';
 import { EXTRA_FAMILIES } from './cube/cubeCatalog.ts';
 import { CUBE_FAMILIES } from './cube/cubeFamilies.ts';
 import type { CubeMod, CubeRow } from './cube/cubeRows.ts';
+import { dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
 import { parseCubeCell } from './cube/cubeText.ts';
 
 export interface CraftingInput {
@@ -39,6 +40,8 @@ export interface CraftingInput {
   /** Item type ancestry of every base, to tell a weapon subtype (wand) or a jewel type from an unknown type */
   bases: readonly Pick<BaseItem, 'ancestors'>[];
   renderMods: ModsRenderer;
+  /** itemstatcost ids a property sets, for the D-stoning cap stats; omitted: a cap mod raises its row's condition stat */
+  statIdsOf?: (property: string) => readonly number[];
 }
 
 export interface CraftingBuildResult {
@@ -68,7 +71,7 @@ const LEVEL_REQ = 'levelreq';
 
 /** Markers and caps: they only gate the recipe, never a bonus */
 function isMarker(mod: string): boolean {
-  return /^(?:item_)?craftflag/.test(mod) || mod === 'meldflag' || /-cap(?:-group)?$/.test(mod);
+  return /^(?:item_)?craftflag/.test(mod) || mod === 'meldflag' || isCapMod(mod);
 }
 
 type SlotMatch =
@@ -253,15 +256,12 @@ export function buildCraftingBundle(input: CraftingInput): CraftingBuildResult {
         bySlot: {},
       };
       options.set(optionKey, option);
-      const step = stackingStep(group.rows, kind, render, bonusMods, warnings);
-      let used = false;
-      for (const slot of group.slots) {
-        if (option.bySlot[slot] !== undefined) continue;
-        option.bySlot[slot] = step;
-        used = true;
-      }
-      if (used) rowsUsed += group.rows.length;
-      else {
+      const free = group.slots.filter((slot) => option.bySlot[slot] === undefined);
+      if (free.length > 0) {
+        const step = stackingStep(group.rows, kind, render, bonusMods, input.statIdsOf ?? (() => []), warnings);
+        for (const slot of free) option.bySlot[slot] = step;
+        rowsUsed += group.rows.length;
+      } else {
         const first = group.rows[0];
         warnings.push(
           `crafting: cubemain line ${String(first.line)} "${first.description}" is shadowed by an earlier ${kind} row with the same ingredients`
@@ -277,12 +277,16 @@ export function buildCraftingBundle(input: CraftingInput): CraftingBuildResult {
   return { bundle: { forgings, stacking }, rowsUsed, rowsSkipped, warnings };
 }
 
-/** One slot of a stacking craft: the first row's lines and level requirement, the D-stoning amounts per use */
+/**
+ * One slot of a stacking craft: the first row's lines and level requirement; for D-stoning the amounts per use and the
+ * total it stops at (omitted when a row has no cap condition)
+ */
 function stackingStep(
   rows: readonly CubeRow[],
   kind: StackingCraftOption['kind'],
   render: (row: CubeRow, mods: readonly CubeMod[]) => string[],
   bonusMods: (row: CubeRow) => CubeMod[],
+  statIdsOf: (property: string) => readonly number[],
   warnings: string[]
 ): StackingCraftStep {
   const first = rows[0];
@@ -304,7 +308,12 @@ function stackingStep(
       `crafting: D-stoning "${first.description}" (cubemain line ${String(first.line)}) steps ${amounts.join(', ')} are not decreasing`
     );
   }
-  return { ...step, steps: amounts };
+  const result = dstoneCap(rows, bonusMods, statIdsOf);
+  if (result.kind === 'unknown')
+    warnings.push(`crafting: D-stoning "${first.description}" (cubemain line ${String(first.line)}): ${result.reason}`);
+  if (result.kind !== 'capped') return { ...step, steps: amounts };
+  const capMods = result.cap.mods;
+  return { ...step, steps: amounts, cap: capMods.at(0)?.min ?? 0, capLines: render(first, capMods) };
 }
 
 function sortSlots<T>(bySlot: Partial<Record<CraftingSlot, T>>): Partial<Record<CraftingSlot, T>> {

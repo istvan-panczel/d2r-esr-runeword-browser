@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { GuideContext } from '../context.ts';
 import { fixtureContext, fixtureEsr } from '../testContext.mock.ts';
 import { formatInput } from '../../../game-data/build/cube/cubeText.ts';
 import { isLeafDirective, LEAF_DIRECTIVES, resolveTerm } from './index.ts';
@@ -99,6 +100,69 @@ describe('vendor', () => {
   it('rejects unknown NPCs (TMog is not a vendor)', () => {
     expect(resolve('vendor', 'TMog')).toHaveProperty('error');
     expect(resolve('vendor', null)).toHaveProperty('error');
+  });
+});
+
+describe('dstone-caps', () => {
+  const step = (lines: string[], capLines?: string[]) => ({ lines, levelReq: 2, steps: [5], ...(capLines ? { cap: 1, capLines } : {}) });
+  const ctx = (): GuideContext => ({
+    ...fixtureContext(),
+    crafting: {
+      stacking: [
+        {
+          kind: 'dstone',
+          material: { code: 'ppp', label: 'Dragon Stone' },
+          bySlot: {
+            weapon: step(['+5% IAS'], ['+121% IAS']),
+            ...Object.fromEntries(
+              ['shield', 'helmet', 'armor', 'gloves', 'boots', 'belt'].map((slot) => [slot, step(['+5% IAS'], ['+120% IAS'])])
+            ),
+            amulet: step(['+5% IAS'], ['+120% IAS']),
+            ring: step(['+3% DS'], ['+102% DS']),
+          },
+        },
+        {
+          kind: 'dstone',
+          material: { code: 'hh2', label: 'Forging Hammer' },
+          switchItem: { code: 'key', label: 'Key' },
+          bySlot: { weapon: step(['+12% ED']) },
+        },
+        { kind: 'meld', material: { code: 'ggb', label: 'Perfect Emerald' }, bySlot: { helmet: { lines: ['+5 Dex'], levelReq: 3 } } },
+      ],
+    },
+  });
+
+  it('lists one row per ingredients and cap, the slots with that cap joined, melds left out', () => {
+    expect(resolve('dstone-caps', null, ctx())).toEqual({
+      kind: 'table',
+      caption: 'D-stoning caps (what D-stoning adds at most)',
+      header: ['Ingredients', 'Item', 'Cap'],
+      rows: [
+        ['Dragon Stone', 'Weapon', '+121% IAS'],
+        ['Dragon Stone', 'Any armor, Amulet', '+120% IAS'],
+        ['Dragon Stone', 'Ring', '+102% DS'],
+        ['Forging Hammer + Key', 'Weapon', '+12% ED per use, no cap'],
+      ],
+    });
+    // Only some armour slots: listed one by one
+    const some: GuideContext = {
+      ...fixtureContext(),
+      crafting: {
+        stacking: [
+          {
+            kind: 'dstone',
+            material: { code: 'ppp', label: 'Dragon Stone' },
+            bySlot: { shield: step(['x'], ['y']), belt: step(['x'], ['y']) },
+          },
+        ],
+      },
+    };
+    expect(resolve('dstone-caps', null, some)).toMatchObject({ rows: [['Dragon Stone', 'Shield, Belt', 'y']] });
+  });
+
+  it('needs crafting.json and takes no argument', () => {
+    expect(resolve('dstone-caps', null, { ...fixtureContext(), crafting: null })).toHaveProperty('error');
+    expect(resolve('dstone-caps', 'weapon', ctx())).toHaveProperty('error');
   });
 });
 

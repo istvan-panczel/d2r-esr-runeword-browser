@@ -101,7 +101,7 @@ export function craftLookups(crafting: CraftingBundle | undefined, enhance: Enha
 export interface RenderedCraft {
   readonly title: string;
   readonly lines: readonly string[];
-  /** A muted extra line (D-stoning per-use steps, corruption quality variants) */
+  /** A muted extra line (D-stoning per-use steps and cap, corruption quality variants) */
   readonly note?: string;
   /** The ids no longer resolve in the current bundles (or the bundles are unavailable): title from the ids, no lines */
   readonly stale: boolean;
@@ -147,11 +147,15 @@ export function renderCraft(craft: CraftAnnotation, family: CraftingSlot, lookup
       }
       const switchLabel = option.switchItem !== undefined ? ` + ${option.switchItem.label}` : '';
       const steps = step.steps ?? [];
+      // Per-use amounts and the cap, never a summed total: the amount per use shrinks as the cap stat grows
+      const note = [
+        ...(steps.length > 1 ? [`per use: ${steps.join(', ')}`] : []),
+        ...(step.capLines !== undefined ? [`cap: ${step.capLines.join(', ')}`] : []),
+      ].join(' · ');
       return {
         title: `${kindLabel} · ${option.material.label}${switchLabel}${uses}`,
         lines: [...step.lines, levelLine(step.levelReq, craft.uses)],
-        // Per-use amounts only: the game caps the stat, so a summed total would be a guess.
-        ...(steps.length > 1 ? { note: `per use: ${steps.join(', ')}` } : {}),
+        ...(note !== '' ? { note } : {}),
         stale: false,
       };
     }
@@ -302,7 +306,8 @@ export function craftPickerGroups(
         kind === 'dstone'
           ? { kind: 'dstone', material: stack.material.code, ...(switchItem !== undefined ? { switchItem: switchItem.code } : {}), uses: 1 }
           : { kind: 'meld', material: stack.material.code, uses: 1 };
-      return [option(stackingId(kind, stack.material.code, switchItem?.code), label, step.lines, craft)];
+      const cap = step.capLines !== undefined ? [`cap ${step.capLines.join(', ')}`] : [];
+      return [option(stackingId(kind, stack.material.code, switchItem?.code), label, [...step.lines, ...cap], craft)];
     });
 
   return [

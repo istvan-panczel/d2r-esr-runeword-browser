@@ -38,7 +38,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `affixes.json`      | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                               |
 | `sources.json`      | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                              |
 | `lootfilter.json`   | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                    |
-| `enhance.json`      | corruption, anointment and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                                 |
+| `enhance.json`      | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                           |
 | `cube.json`         | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                         |
 | `materials.json`    | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                       |
 | `sets.json`         | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                          |
@@ -67,14 +67,14 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `affixes.json`      | 795 KB / 61 KB (ESR 3.2.24 with `stats`: 852 KB / 67 KB, + `layers`: 894 / 72)                                  |
 | `sources.json`      | 298 KB / 29 KB                                                                                                  |
 | `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills)                                  |
-| `enhance.json`      | ESR 3.2.24: 357 KB / 32 KB                                                                                      |
+| `enhance.json`      | ESR 3.2.24: 416 KB / 35 KB (357 KB / 32 KB before sanctification)                                               |
 | `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                                                      |
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                      |
 | `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
 | `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
 | `skilldetails.json` | ESR 3.2.24: 406 KB / 64 KB (+ `icons/skills/`: 325 WebP files, 433 KB)                                          |
 | `skillcalc.json`    | ESR 3.2.24: 380 KB / 52 KB (skills + lines 186 KB, rows 143 KB, texts 32 KB, missiles 9 KB)                     |
-| `crafting.json`     | ESR 3.2.24: 55 KB / 6 KB                                                                                        |
+| `crafting.json`     | ESR 3.2.24: 63 KB / 7 KB (55 KB / 6 KB before the caps)                                                         |
 | `tiers.json`        | ESR 3.2.24: 23 KB / 3 KB                                                                                        |
 | `areas.json`        | ESR 3.2.24: 39 KB / 5 KB                                                                                        |
 | `stash.json`        | ESR 3.2.24: 143 KB / 21 KB (437 KB / 71 KB while it carried the names; 88 KB / 14 KB before the coupon recipes) |
@@ -325,18 +325,19 @@ clients ignore files they do not load; neither did adding `skills` and `knownLay
 `enhance.json` (`EnhanceBundle`, built by `build/bundleEnhance.ts` from enabled `cubemain.txt` rows, with
 `uniqueitems.txt` for the Vessel's starting souls) feeds the Enhance page. Top-level arrays (one outcome or recipe per
 line): `corruption` (reagent, notes) + `corruptionSlots` + `corruptionOutcomes`, `anointment` (reagent, rules, charm
-reagents, vessel item) + `anointmentSlots` + `anointmentOutcomes`, `vessel` (item, start souls) + `vesselTiers` +
-`vesselRecipes` + `vesselTransforms`. Every outcome and recipe has its visible `mods` (raw cubemain properties, with
+reagents, vessel item) + `anointmentSlots` + `anointmentOutcomes`, `sanctification` (reagent, item, roll range, once) +
+`sanctificationOutcomes` + `sanctificationBonuses`, `vessel` (item, start souls) + `vesselTiers` + `vesselRecipes` +
+`vesselTransforms`. Every outcome and recipe has its visible `mods` (raw cubemain properties, with
 `chance` when the `mod N chance` column is below 100) and the `lines` rendered by the stat renderer; a property with a
 chance gets its own line ending in "(25% chance)". Mods the renderer warns about are dropped with a warning.
 
 Derivation (rows are classified by their data, not their descriptions):
 
 - **Two-step dummy pattern.** A roll row ("Add … Dummy Stat": `op=16`, `value=0`, output `useitem` with
-  `corrupted_dummy` / `anointed_dummy` `min..max`) gives the roll range; the outcome rows (`op=18`, `param` = the dummy
+  `corrupted_dummy` / `anointed_dummy` / `sanctified-dummy` `min..max`) gives the roll range; the outcome rows (`op=18`, `param` = the dummy
   stat id, `value` = the roll, the item alone as input) add the marker, clear the dummy and add the bonus. The dummy
   stat id is read from the outcome rows (the ones with a negative dummy mod). `void` outputs are blockers.
-- **Hidden mods**: `corrupted`, `anointed`, both dummies, `soul-counter`, `mythicaldesc`, `unusable-item`,
+- **Hidden mods**: `corrupted`, `anointed`, `sanctified`, the three dummies, `soul-counter`, `mythicaldesc`, `unusable-item`,
   `tinkerflag2`, `craftflag`, `craftflag2`, `item-upgraded`. `trap-limit` is a real Vessel bonus ("+1 to trap limit")
   and stays visible.
 - **Corruption** (`wss`): one slot per item type in the fixed slot list (weapon, shield, body, helm, gloves, belt,
@@ -354,6 +355,14 @@ Derivation (rows are classified by their data, not their descriptions):
   `void` "<slot>,uni + um7" rows; `noRunewords` when every roll row has `nru`. Pools: `weapon` … `amulet`, `charm`
   (unique charm + three organs) and `vessel` (rows on the Vessel alone, rolled by the tier 4 anointment recipe).
   `roll` is the row's `value`, not the number in the description; `label` is the description's last `(…)`.
+- **Sanctification** (Lucion's Relic, `u18`): the `sanctified-dummy` roll row "item + reagent" (the first with two
+  inputs) gives the `item` (`jewl`), the `reagent` and `rollRange`; the outcome rows are the `op=18` rows on the dummy
+  stat with that item alone (`roll` = `value`), sorted by roll. Every roll is one outcome, so each is equally likely
+  (1 / `rollRange`; the rows carry no weight). `once`: a `void` "item + reagent" row checking a stat `= 1` (the
+  "already sanctified" blocker). `sanctificationBonuses` = each distinct bonus (property, param and range) rendered on
+  its own with the number of outcomes carrying it, ordered by its column in the rows (max resist, attribute, other),
+  so the page can show how often each comes up. A count other than the roll range is a warning; no roll row means an
+  empty list.
 - **Vessel of Souls**: the Vessel is input 1 of the conditional rows with a negative `soul-counter` mod; its `param` is
   the soul counter stat. Tier gates are the `void` "Vessel + any" rows (`op=15` on the soul counter, 260/42/6 in ESR
   3.2.24): a recipe's tier = 1 + the number of gates above its condition value. Each bonus has an `op=15` (at least N
@@ -369,7 +378,8 @@ Derivation (rows are classified by their data, not their descriptions):
 Counts (`enhance*` in the manifest), ESR 3.2.24: 11 corruption slots with 272 outcomes (weapon and quiver 30 of 40
 rolls, unique charm 20 of 30, the others 24 of 32: 75 % success, unique charm 66.7 %); 790 equipment anointments
 (weapon 179, body 85, helm 96, shield 58, gloves 59, belt 48, boots 48, ring 101, amulet 116), 30 unique charm and 178
-Vessel anointments; 380 Vessel recipes (tier 1: 200 × 350 + 17 × 700 souls, tier 2: 36 × 42, tier 3: 23 × 7, tier 4:
+Vessel anointments; 217 jewel sanctifications (rolls 1–217, three bonuses each: a maximum resist or Physical
+Resist, an attribute bonus and one other; `+1 to All Skills` in 7, each single maximum resist in 36); 380 Vessel recipes (tier 1: 200 × 350 + 17 × 700 souls, tier 2: 36 × 42, tier 3: 23 × 7, tier 4:
 6 × 1, 74 × 2, 4 × 3, 20 × 5 including the anointment recipe), 63 with a cap, and 29 transforms. Adding the file did
 not bump `GAME_DATA_SCHEMA`.
 
@@ -409,10 +419,21 @@ Ledger, Weapon Mastery and Vessel of Souls pages, then `other`; only sections wi
 `inputNames` / `outputNames` = the unique / set names its rows take / give, only for families without raw rows, for the
 ingredient / result searches), `rows` (the merged rows of `groupFamily(…, 'full')`: the guide's text, uncapped, always
 with the output bonuses unless the family hides them, `variants` = the cubemain rows merged into it, `outputLevel`,
-`qualities`) and `recipes` (every row of the families with at most 40 rows: `id` = cubemain line, `description`, parsed
+`dstoneCaps`, `enhanceTab`, `qualities`) and `recipes` (every row of the families with at most 40 rows: `id` = cubemain line, `description`, parsed
 `inputs` (`text`, `code`, `qty`, `quals`, `kind` item / type / unique / any), `outputs` (`text`, `code` or null for
 useitem/usetype/cloneitem, `bonus` lines, `details` such as "socketed items come out" for `rem`, "item level N" or "to
 <map>" for the `lvl=` qualifier, `level`), `conditions`, `qualities`).
+
+**D-stoning caps** (`dstoneCaps` on the merged rows of the `dstoning` family): the family's rows with the same inputs
+and bonus stats are one D-stoning; `dstoneCap` (`build/cube/dstoneCaps.ts`, as in crafting.json "Caps") applies them
+from zero and the summed bonus is rendered ("+121% Increased Attack Speed"); a merged row lists the distinct caps of
+the D-stonings it merges (the tiered weapon rows share +300%). Rows without a cap condition, or with the elemental
+half-point counter (`op 18`), get none. ESR 3.2.24: 151 of 152 merged rows have one (not the weapon Forging Hammer).
+
+**Enhance link** (`enhanceTab`): a merged row whose cubemain rows are all sanctification outcomes (`op 18` on
+`item_sanctification_dummy`) is `sanctification`; the page links it to `/game-data/enhance?tab=sanctification` ("All
+217 outcomes on the Enhance page"). The roll row ("Add Sanctification Dummy Stat", whose "Not marked for sanctification"
+condition `statConditionText` names) stays a plain row.
 
 **Bonus lines** (`bonus` on recipe outputs, the parenthesis of a merged row's output) leave out the markers and
 counters of `isHiddenMod` (`cubeText.ts`: forging, tinkering and merc flags, dummies, soul and stocker counters, tier
@@ -488,8 +509,8 @@ ancestry, the bases, the enabled cubemain rows (all of them for the inclusion, t
   six "Buy:" labels). A `cube` label is dropped when no listed family makes the item (it then comes from taking the
   item out of a stocker). 38 rows end up `Unknown` (unreleased elixirs, Khalim's parts, the cans …).
 - **enhance**: `Corruption reagent` (`corruption.reagent`), `Anointment reagent` (`anointment.reagent`), `Unique charm
-anointment` (the charm reagents, slot `charm`) and `Vessel of Souls material` (every Vessel recipe and transform
-  material).
+anointment` (the charm reagents, slot `charm`), `Sanctification reagent` (`sanctification.reagent`, Lucion's Relic) and
+  `Vessel of Souls material` (every Vessel recipe and transform material).
 - **Guide notes** are not in the bundle: the guide build reads the game-data bundles, so game-data reading guide.json
   would be a cycle (`game-data:update` regenerates game data first). The page joins guide.json's `itemNotes` and
   `familyNotes` in the browser (GUIDE.md "Bundle shape"). For the same reason cube.json families carry no guide notes.
@@ -799,7 +820,8 @@ Warnings start with `modifiers:`.
 
 `crafting.json` (`CraftingBundle`, built by `build/bundleCrafting.ts` from the cubemain rows of `readCube`, after the
 bases and types) lists what an equipped item of a build can be annotated with: ids plus rendered lines (`renderMods`),
-never text the UI has to parse. Corruption and anointment outcomes are in enhance.json, not here. No page shows it.
+never text the UI has to parse. Corruption and anointment outcomes are in enhance.json, not here. The builds crafting
+picker and the guide's `::dstone-caps` table read it.
 
 - **Rows**: the guide's cube families decide which rows count (their `match` patterns, `build/cube/cubeFamilies.ts` and
   `cubeCatalog.ts`): `skill-forging`, `all-skill-forging`, `stat-forging`, `rune-forging` + `rune-forging-slots`,
@@ -824,6 +846,23 @@ never text the UI has to parse. Corruption and anointment outcomes are in enhanc
   the row as the cap stat grows: Dragon Stone on a weapon is 5, 4, 3, 2, 1). Rows repeating the same bonus under
   another cap condition count once (Holy Symbol on a weapon has one row per cap stat). Steps that do not decrease are a
   warning. Meld options have no `steps`. Options without a switch item come first.
+- **Caps** (`cap`, `capLines`; `build/cube/dstoneCaps.ts`, shared with cube.json): each D-stoning row checks a cap
+  stat (`op 16`, at most `value`; the light radius reduction `op 15`, at least a negative value) and raises it by the
+  same amount as its bonus (the `*-cap` mod, or a `*-cap-group` property group whose PickMode 0 entries raise several
+  cap stats: `str-dex-enr-cap-group` raises the strength, dexterity, energy and shared caps). Only D-stoning raises
+  these stats, so a cap counts only what D-stoning added, as the official page says. The cap is found by applying the
+  group's rows from zero like the game (each use takes the first row whose condition holds) until none applies: `cap`
+  is the summed amount of the first bonus stat, `capLines` the bonus lines at that total ("+121% Increased Attack
+  Speed"). Property → stat ids come from properties.txt / propertygroups.txt and the itemstatcost row numbers; a cap
+  mod without known stats raises the row's condition stat. The total can pass the condition value by up to one step,
+  so it can differ a little from the page's round number (Spider's Silk on a weapon: +12% while at most 500, so 504;
+  Dragon Stone on a weapon: 121, page 120). No cap: a row without a condition (Forging Hammer on a weapon), a
+  condition other than op 15 / 16 (the elemental half-point counter) or no stop within 1,000 uses (warned). The
+  integrity test reads the page's "(Capped at N)" per D-Stoning row (75 rows in four sections) and allows one step of
+  difference; the known disagreements (ESR 3.2.24) are listed there: weapon Forging Hammer (no cap condition, page
+  500%), Blackmoor + Key on a weapon (60 mana after each kill, page 150), Holy Symbol on armour (100 all resists, page
+  150), Forging Hammer + Stamina Potion on jewelry (300% gold, page 400%) and Void Shard + Stamina Potion on a weapon
+  (no such option: the rows name the Forging Hammer, see below).
 - **Skipped** (`craftingRowsSkipped`; not warned unless said): jewel and charm rows (not equipment slots); rows for a
   weapon subtype, which the builds slot cannot tell apart from other weapons: the wand and staff rune forging rows, the
   wand / staff / orb gem meld rows and the two-handed (`2hsw`) D-stoning rows; tiered D-stoning variants (`weap,exc`,
@@ -831,8 +870,7 @@ never text the UI has to parse. Corruption and anointment outcomes are in enhanc
   (material, switch, slot) an earlier group already took (warned). An item type that maps to no slot and is not a known
   subtype, jewel or charm is a warning.
 - **Known limitations**: the wand / staff / orb overrides and the per-tier summon and elemental D-stoning amounts are
-  not represented. The cap a D-stoning stops at (the `op 16` value, e.g. 500 for Spider's Silk on a weapon) is not
-  stored, only the per-use amounts. ESR has no rune forging rows for the LoD runes (only the ES runes I … Wo, r01–r46,
+  not represented. ESR has no rune forging rows for the LoD runes (only the ES runes I … Wo, r01–r46,
   and the Kanji runes Moon … God, r84–r97). Switch item labels are the misc.txt names: `vps` reads "Stamina Potion"
   (the descriptions say "+ vps"), `yps` "Antidote Potion".
 
@@ -1176,7 +1214,7 @@ The script warns when the clone has uncommitted changes, because the output woul
 | `/game-data/best-base` | `BestBaseScreen`  | Best base finder                                                  |
 | `/game-data/affixes`   | `AffixesScreen`   | Affix browser and what-can-roll                                   |
 | `/game-data/types`     | `ItemTypesScreen` | Item type tree and socket-cap table                               |
-| `/game-data/enhance`   | `EnhanceScreen`   | Corruption, anointment and Vessel of Souls outcomes               |
+| `/game-data/enhance`   | `EnhanceScreen`   | Corruption, anointment, sanctification and Vessel outcomes        |
 | `/game-data/cube`      | `CubeScreen`      | Every cube recipe, grouped by family                              |
 | `/game-data/materials` | `MaterialsScreen` | Misc items: sources, cube families, Enhance roles, guide notes    |
 | `/game-data/areas`     | `AreasScreen`     | Area levels, density, unique packs, waypoints, map tiers          |
@@ -1420,7 +1458,7 @@ the non-default values. Invalid values fall back to the defaults; unknown type a
 ### Enhance page
 
 `/game-data/enhance` (`screens/EnhanceScreen.tsx`) loads only `enhance.json`, so it is a static-bundle route that skips
-the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Three tabs (`SUBTAB_*`
+the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Four tabs (`SUBTAB_*`
 `aria-pressed` buttons, the first row of the filter panel above the search and Copy Link; the slot / pool / tier pills stay
 under the panel, with each tab's content):
 
@@ -1432,18 +1470,23 @@ under the panel, with each tab's content):
 - **Anointment** (`components/EnhanceAnointment.tsx`): Equipment pills (weapon … amulet) and Other pools (Unique
   Charm, Vessel of Souls), the rules above the list (not on uniques, not on runewords, socketed range), each outcome
   with its label; the outcomes socketed items cannot roll are marked.
+- **Sanctification** (`components/EnhanceSanctification.tsx`): no pills; a header "Jewel + Lucion's Relic of
+  Sanctification", "217 outcomes, one per roll of 217: 0.5% chance each" (computed, as the corruption rates), the
+  two-step recipe and "sanctified once" rule, and "How often each bonus comes up" (`sanctificationBonuses`: each
+  bonus with its share of the outcomes and count); then the outcome list (roll number, lines). The cube page's folded
+  sanctification row links here.
 - **Vessel of Souls** (`components/EnhanceVessel.tsx`): tier pills plus Completion; a tier header (start → end souls,
   costs), one row per recipe: soul cost badge, "max N×" badge, materials → bonus lines (the anointment recipe links to
   the Vessel pool on the Anointment tab); Completion lists the 29 transforms.
 
 State lives in the URL (read on every render, written with `replace`), parsed and encoded by `utils/enhance.ts`:
 
-| Param    | Meaning                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------- |
-| `tab`    | `corruption` (default), `anointment`, `vessel`                                              |
-| `slot`   | corruption slot / anointment pool (`weapon` default; `charm`, `vessel` on Anointment)       |
-| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                           |
-| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names) |
+| Param    | Meaning                                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------------------------- |
+| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`                                              |
+| `slot`   | corruption slot / anointment pool (`weapon` default; `charm`, `vessel` on Anointment); none on Sanctification |
+| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                             |
+| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names)                   |
 
 Invalid values fall back to the tab's first option; Copy Link encodes only the non-default values the tab uses.
 
@@ -1464,7 +1507,8 @@ menu entry "Cube Recipes", layout tab "Cube".
 - **Family sections** by official section (`components/CubeFamilySection.tsx`): label (a button that focuses it), row
   count, "Official: <section>" link; per group a header (the recipe shape, a dev label, with its conditions as badges)
   unless one group holds the whole family; the merged rows (inputs → output, the output item level as a muted note,
-  "N cubemain rows" when merged). Families
+  "Cap: …" on D-stoning rows (`dstoneCaps`), "N cubemain rows" when merged, and for `enhanceTab` rows a link "All N
+  outcomes on the Enhance page" in the Enhance page link style). Families
   with raw rows offer "Show all N cubemain rows" (every row with its outputs, bonus lines, conditions, description and
   line number, the item level under an output); a filter that only matches raw rows shows them directly.
 - Empty state: "No cube recipe matches the filters", with the official Cube Recipes page link.
@@ -1748,6 +1792,7 @@ UI files (Enhance):
 screens/EnhanceScreen.tsx              loader, tabs, search, Copy Link (URL state)
 components/EnhanceCorruption.tsx       slot pills, rates, qualities, notes, outcome list
 components/EnhanceAnointment.tsx       pool pills, rules, outcome list
+components/EnhanceSanctification.tsx   recipe, per-bonus shares, outcome list
 components/EnhanceVessel.tsx           tier pills, recipes, completion
 components/EnhanceParts.tsx            Pills, EnhanceSearch, BonusLines, ComputedRate
 utils/enhance.ts                       URL state, search, brickSummary, texts (+ test)
@@ -1788,15 +1833,19 @@ utils/sets.ts                          URL state, options, order, search / focus
 
 - Build: `build/tsv.test.ts`, `build/strings.test.ts`, `build/bundleEnhance.test.ts` (two-step dummy pattern, dedupe
   across qualities with variants, rates, chance lines, subtype bricks, repeatable note, anointment labels and rules,
-  Vessel op=15/op=18 dedupe, tiers from gates, cap join, trap/disabled-row exclusion, transforms), `build/bundleCube.test.ts`
-  (hide rules, family precedence, fallback grouping, raw vs merged rows, rem / lvl=, readable conditions),
+  Vessel op=15/op=18 dedupe, tiers from gates, cap join, trap/disabled-row exclusion, transforms, sanctification roll
+  range, outcomes, bonus counts and the once blocker), `build/bundleCube.test.ts`
+  (hide rules, family precedence, fallback grouping, raw vs merged rows, rem / lvl=, readable conditions, D-stoning
+  caps, the sanctification Enhance link), `build/cube/dstoneCaps.test.ts` (op 16 / op 15 caps, two condition stats,
+  cap mods without stats, no cap: no condition, op 18, endless),
   `build/bundleMaterials.test.ts` (inclusion and exclusion rules, container / same-name / coupon collapsing, uses via
   item types but not `any` or base types, returned inputs, source joins and the dropped stocker Cube label, enhance
   roles), `build/bundleSets.test.ts` (hidden `_old`, itemless and unknown-set rows, group N → pieces, a/b merge, class
   resolution, level range, warnings), `build/bundleSkills.test.ts` (class / page filter, row-column order, tab names,
   level cap, missing desc / name / required skill / shared cell warnings), `build/bundleCrafting.test.ts` (first row per
   slot, class from the bonus, the differing ingredient as key, glove over armo, wand / jewel / charm / tier / void skips,
-  D-stoning steps and cap-duplicate rows, shadowed groups, gem meld without steps, row counts),
+  D-stoning steps and cap-duplicate rows, caps (and none without a condition), shadowed groups, gem meld without steps,
+  row counts),
   `build/cube/cubeText.test.ts` (rem, lvl=, counted merging), `build/bundleBases.test.ts` (staffmods, range, smite/kick,
   automod eligibility and attachment on inline TSV), `build/bundleRunewords.test.ts`, `build/bundleAffixes.test.ts`,
   `build/bundleSources.test.ts` (each label rule on inline TSV; with the ESR clone, the verified examples Pelta Lunata,
@@ -1822,7 +1871,10 @@ utils/sets.ts                          URL state, options, order, search / focus
   sources.json, and Arcanna's Tricks / Harbinger of Ruin checked against docs/sets.htm; for skills.json: 8 classes × 3
   tabs, 280 skills, level cap 110, unique cells, required skills within the class, the Warlock tabs and Summon Tainted;
   for crafting.json: one skill forging per class on every slot, all-skills, the 7 stat forgings (Chipped Amethyst
-  checked), 60 rune forgings (46 ES + 14 Kanji), 8 amulet-only aura forgings, Dragon Stone weapon steps, 8 gem melds;
+  checked), 60 rune forgings (46 ES + 14 Kanji), 8 amulet-only aura forgings, Dragon Stone weapon steps, 8 gem melds,
+  the D-stoning caps of known groups (only the weapon Forging Hammer uncapped) and, with the ESR clone, every cap
+  against the official page's D-Stoning section (one step of tolerance, the known disagreements listed); for
+  enhance.json: the 217 sanctification outcomes, their bonus counts and the cube page's link;
   for areas.json: unique ids, resolvable and mutual connections, 5 tiers × 4 zones on the level ladder, the unique map,
   the five towns with a waypoint, no level and town terrain, no removed level, one map item per zone (each with a
   quest icon), no waypoint on map rows; for the lootfilter.json skills: every skills.json tree skill with its class, 472

@@ -512,6 +512,30 @@ describe('committed game-data bundles', () => {
     });
   });
 
+  it('contain the jewel sanctification outcomes, one per roll of the Relic (ESR 3.2.24: 217)', () => {
+    const { sanctification, sanctificationOutcomes, sanctificationBonuses } = enhance;
+    expect(sanctification).toEqual({
+      reagent: { code: 'u18', name: "Lucion's Relic of Sanctification" },
+      item: { code: 'jewl', name: 'Jewel' },
+      rollRange: 217,
+      once: true,
+    });
+    expect(sanctificationOutcomes).toHaveLength(217);
+    expect(manifest.counts.enhanceSanctificationOutcomes).toBe(217);
+    expect(sanctificationOutcomes.map((outcome) => outcome.roll)).toEqual(Array.from({ length: 217 }, (_, i) => i + 1));
+    for (const outcome of sanctificationOutcomes) {
+      expect(outcome.mods, String(outcome.roll)).toHaveLength(3);
+      expect(outcome.lines.length, String(outcome.roll)).toBeGreaterThanOrEqual(3);
+      for (const mod of outcome.mods) expect(['sanctified', 'sanctified-dummy']).not.toContain(mod.code);
+    }
+    // Every outcome has one bonus of each of the three columns
+    expect(sanctificationBonuses.reduce((sum, bonus) => sum + bonus.outcomes, 0)).toBe(3 * 217);
+    expect(sanctificationBonuses.find((bonus) => bonus.line === '+1 to All Skills')?.outcomes).toBe(7);
+    expect(sanctificationBonuses.find((bonus) => bonus.line === '+1% to Maximum Fire Resist')?.outcomes).toBe(36);
+    // The cube page folds the pool into one row that links here
+    expect(cube.rows.filter((row) => row.enhanceTab === 'sanctification').map((row) => row.variants)).toEqual([217]);
+  });
+
   it('contain the Vessel of Souls tiers, recipes and transforms', () => {
     const tier = (n: number) => enhance.vesselRecipes.filter((recipe) => recipe.tier === n);
     const costs = (n: number) =>
@@ -578,6 +602,7 @@ describe('committed game-data bundles', () => {
     const reagents = new Set([
       enhance.corruption.reagent.code,
       enhance.anointment.reagent.code,
+      enhance.sanctification.reagent.code,
       ...enhance.anointment.charmReagents.map((reagent) => reagent.code),
       ...enhance.vesselRecipes.flatMap((recipe) => recipe.materials.map((material) => material.code)),
       ...enhance.vesselTransforms.flatMap((transform) => transform.materials.map((material) => material.code)),
@@ -604,6 +629,7 @@ describe('committed game-data bundles', () => {
     const roles = new Set(materials.items.filter((item) => item.enhance !== undefined).map((item) => item.code));
     expect(roles.has(enhance.corruption.reagent.code)).toBe(true);
     expect(roles.has(enhance.anointment.reagent.code)).toBe(true);
+    expect(roles.has(enhance.sanctification.reagent.code)).toBe(true);
     // Spot checks: a rune, a gem, an organ, a Dragon Stone, the coupon tiers
     const byCode = new Map(materials.items.map((item) => [item.code, item]));
     expect(byCode.get('r01')?.usedIn.map((use) => use.family)).toContain('rune-forging');
@@ -790,7 +816,13 @@ describe('committed game-data bundles', () => {
       (option) => option.kind === 'dstone' && option.material.code === 'ppp' && option.switchItem === undefined
     );
     expect(dragonStone?.material.label).toBe('Dragon Stone');
-    expect(dragonStone?.bySlot.weapon).toEqual({ lines: ['+5% Increased Attack Speed'], steps: [5, 4, 3, 2, 1], levelReq: 2 });
+    expect(dragonStone?.bySlot.weapon).toEqual({
+      lines: ['+5% Increased Attack Speed'],
+      steps: [5, 4, 3, 2, 1],
+      levelReq: 2,
+      cap: 121,
+      capLines: ['+121% Increased Attack Speed'],
+    });
     const melds = stacking.filter((option) => option.kind === 'meld');
     expect(melds).toHaveLength(8);
     for (const option of melds) {
@@ -803,8 +835,38 @@ describe('committed game-data bundles', () => {
         expect(step.lines.length, option.material.code).toBeGreaterThan(0);
         expect(step.levelReq).toBeGreaterThan(0);
         expect(step.steps?.length).toBeGreaterThan(0);
+        expect(step.capLines?.length, option.material.code).toBe(step.cap === undefined ? undefined : step.lines.length);
       }
     }
+  });
+
+  it('cap every D-stoning but Forging Hammer on a weapon, counting only what D-stoning adds (ESR 3.2.24)', () => {
+    const dstone = (material: string, switchItem?: string) =>
+      crafting.stacking.find(
+        (entry) => entry.kind === 'dstone' && entry.material.code === material && entry.switchItem?.code === switchItem
+      );
+    // ≤ 116 +5 … ≤ 120 +1: 115 → 120 → 121
+    expect(dstone('ppp')?.bySlot.weapon).toMatchObject({ cap: 121, capLines: ['+121% Increased Attack Speed'] });
+    expect(dstone('ppp')?.bySlot.armor).toMatchObject({ cap: 120 });
+    // +12% while at most 500: 492 → 504
+    expect(dstone('sss')?.bySlot.weapon).toMatchObject({ cap: 504, capLines: ['+504% Bonus to Attack Rating'] });
+    expect(dstone('hly')?.bySlot.armor).toMatchObject({ cap: 100, capLines: ['All Resists +100'] });
+    expect(dstone('ttt', 'key')?.bySlot.helmet).toMatchObject({ cap: 256, capLines: ['+256 to Life'] });
+    // The str-dex-enr-cap-group property group raises the shared cap stat
+    expect(dstone('eee', 'key')?.bySlot.armor?.cap).toBe(200);
+    // Light radius reduction: op 15, at least -4
+    expect(dstone('eee', 'vps')?.bySlot.armor?.cap).toBe(-6);
+    // The weapon Forging Hammer row has no cap condition
+    expect(dstone('hh2')?.bySlot.weapon?.cap).toBeUndefined();
+    const uncapped = crafting.stacking
+      .filter((entry) => entry.kind === 'dstone')
+      .flatMap((entry) =>
+        Object.entries(entry.bySlot).flatMap(([slot, step]) => (step.cap === undefined ? [`${entry.material.code} ${slot}`] : []))
+      );
+    expect(uncapped).toEqual(['hh2 weapon']);
+    // The cube page's D-stoning rows carry the same caps
+    const weaponDragonStone = cube.rows.find((row) => row.family === 'dstoning' && row.inputs.join(' + ') === 'Weapon + Dragon Stone');
+    expect(weaponDragonStone?.dstoneCaps).toEqual(['+121% Increased Attack Speed']);
   });
 
   it('list the tier of every weapon and armor row, non-spawnable unique bases and mythicals included (ESR 3.2.24)', () => {
@@ -950,6 +1012,49 @@ function readHtmBaseNames(file: string): Map<string, string> {
   return names;
 }
 
+/** The official D-Stoning section's sections and the builds slot families they cover */
+const DSTONE_DOC_SLOTS: Readonly<Record<string, readonly CraftingSlot[]>> = {
+  Weapon: ['weapon'],
+  'Torso/Helm/Shield': ['armor', 'helmet', 'shield'],
+  'Gloves/Belt/Boots': ['gloves', 'belt', 'boots'],
+  'Ring/Amulet': ['ring', 'amulet'],
+};
+
+interface DstoneDocCap {
+  section: string;
+  material: string;
+  switchItem: string | undefined;
+  cap: number;
+}
+
+/** The "(Capped at N)" of every D-stoning row of the Cube Recipes page, with its section and ingredients */
+function readDstoneDocCaps(file: string): DstoneDocCap[] {
+  const doc = new DOMParser().parseFromString(readFileSync(file, 'utf-8'), 'text/html');
+  const caps: DstoneDocCap[] = [];
+  // The section header row and the table it heads (the Tinkering table follows the Ring/Amulet one)
+  let section: { name: string; table: Element | null } | null = null;
+  for (const row of doc.querySelectorAll('tr')) {
+    const text = row.textContent.replace(/\s+/g, ' ').trim();
+    const header = /^D-Stoning (.+)$/.exec(text)?.[1];
+    if (header !== undefined && row.cells.length === 1) {
+      section = header in DSTONE_DOC_SLOTS ? { name: header, table: row.closest('table') } : null;
+      continue;
+    }
+    const [inputCell, outputCell] = [...row.cells];
+    if (section === null || row.closest('table') !== section.table) continue;
+    if (row.cells.length !== 2 || inputCell === undefined || outputCell === undefined) continue;
+    // A row of an outer layout table holds whole nested tables
+    if (row.querySelector('table') !== null) continue;
+    const cap = /Capped at (-?\d+)/.exec(outputCell.textContent)?.[1];
+    if (cap === undefined) continue;
+    const [, material = '', switchItem] = inputCell.innerHTML
+      .split(/<br\s*\/?>/)
+      .map((part) => stripHtmlTags(part).replace(/\s+/g, ' ').trim());
+    caps.push({ section: section.name, material, switchItem: switchItem === '' ? undefined : switchItem, cap: Number(cap) });
+  }
+  return caps;
+}
+
 describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', () => {
   const generated = generateBundles(readEsrSources(ESR_DIR));
   const htm = new Map([
@@ -980,6 +1085,46 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.itemtext)).toBe(itemTextText);
     expect(serializeBundle(generated.terrorzones)).toBe(terrorZonesText);
     expect(serializeBundle(generated.modifiers)).toBe(modifiersText);
+  });
+
+  it('caps the D-stonings like the official D-Stoning Caps, within one step (ESR 3.2.24)', () => {
+    const docCaps = readDstoneDocCaps(resolve(ESR_DIR, 'docs/Eastern Sun Resurrected Cube Recipes.html'));
+    // 22 weapon, 16 torso / helm / shield, 16 gloves / belt / boots and 21 ring / amulet rows
+    expect(docCaps).toHaveLength(75);
+    const mismatches: string[] = [];
+    for (const entry of docCaps) {
+      const option = crafting.stacking.find(
+        (candidate) =>
+          candidate.kind === 'dstone' && candidate.material.label === entry.material && candidate.switchItem?.label === entry.switchItem
+      );
+      const name = `${entry.section}: ${[entry.material, entry.switchItem].filter((part) => part !== undefined).join(' + ')}`;
+      for (const slot of DSTONE_DOC_SLOTS[entry.section] ?? []) {
+        const step = option?.bySlot[slot];
+        if (step === undefined) {
+          mismatches.push(`${name} on ${slot}: no option`);
+          continue;
+        }
+        // The page rounds: the D-stoning stops once its total passes the condition value, up to one step past it
+        const largest = Math.max(...(step.steps ?? []).map(Math.abs));
+        if (step.cap === undefined || Math.abs(step.cap - entry.cap) > largest)
+          mismatches.push(`${name} on ${slot}: ${step.cap === undefined ? 'no cap' : String(step.cap)}, page ${String(entry.cap)}`);
+      }
+    }
+    // Where the rows disagree with the page (ESR 3.2.24); the bundle follows the rows
+    expect(mismatches).toEqual([
+      'Weapon: Forging Hammer on weapon: no cap, page 500',
+      'Weapon: Blackmoor + Key on weapon: 60, page 150',
+      // The "VS + Any Weapon + vps" rows name the Forging Hammer (hh2), shadowed by the earlier Forging Hammer + vps rows
+      'Weapon: Void Shard + Stamina Potion on weapon: no option',
+      'Torso/Helm/Shield: Holy Symbol on armor: 100, page 150',
+      'Torso/Helm/Shield: Holy Symbol on helmet: 100, page 150',
+      'Torso/Helm/Shield: Holy Symbol on shield: 100, page 150',
+      'Gloves/Belt/Boots: Holy Symbol on gloves: 100, page 150',
+      'Gloves/Belt/Boots: Holy Symbol on belt: 100, page 150',
+      'Gloves/Belt/Boots: Holy Symbol on boots: 100, page 150',
+      'Ring/Amulet: Forging Hammer + Stamina Potion on ring: 300, page 400',
+      'Ring/Amulet: Forging Hammer + Stamina Potion on amulet: 300, page 400',
+    ]);
   });
 
   it('numbers uniques, sets, stats and sounds like the *ID / *Index comment columns where those are consistent', () => {

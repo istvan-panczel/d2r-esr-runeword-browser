@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MaterialItem, SourceLabel } from '../engine/schema.ts';
-import { buildMaterialsBundle, CONTAINER_GROUP, type MaterialsInput } from './bundleMaterials.ts';
+import { buildMaterialsBundle, CONTAINER_GROUP, enhanceRolesByCode, type MaterialsInput } from './bundleMaterials.ts';
 import type { CubeRow } from './cube/cubeRows.ts';
 import { parseTsv } from './tsv.ts';
 
@@ -237,6 +237,14 @@ describe('buildMaterialsBundle', () => {
     expect(item('hp1')?.sources.map((entry) => entry.text)).toEqual(['Buy: Akara']);
     // The unique named Heart is not the misc Heart
     expect(item('hrt')?.sources.map((entry) => entry.text)).toEqual(['Unknown']);
+  });
+
+  it('gives the sanctification reagent its Enhance role', () => {
+    const roles = enhanceRolesByCode({
+      ...input.enhance,
+      sanctification: { reagent: { code: 'u18', name: 'Relic' }, item: { code: 'jewl', name: 'Jewel' }, rollRange: 2, once: true },
+    });
+    expect(roles.get('u18')).toEqual([{ tab: 'sanctification', label: 'Sanctification reagent' }]);
   });
 
   it('lists enhance roles and the referenced families in cube order', () => {

@@ -25,6 +25,14 @@ sources: [official-cube, esr-txt, esru-wiki]
 
 D-stoning cannot be removed. It works on runewords too: done to the white base before you make the runeword, it survives removing the runes; done afterwards, it is lost with the runes.
 
+### D-stoning caps
+
+Each cap counts only what D-stoning added: 190% fire spell damage from affixes still leaves room for the full +300%. A use applies while the D-stoned total is at or below the cap in the recipe, so the last use can go a few points past the official page's round number.
+
+::dstone-caps
+
+On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps. The official page differs (ESR 3.2.24) on the weapon Forging Hammer (no cap check in the recipe; page 500%), Blackmoor + Key on weapons (page 150), Holy Symbol on armor (page 150) and Forging Hammer + Stamina Potion on jewelry (page 400%). Its Void Shard + Stamina Potion elemental damage recipe takes a Forging Hammer in the game files, where the physical spell damage recipe comes first.
+
 ### Gem melding
 
 :term[Gem melding] uses a Perfect Gem and Ancient Decipherers to add that colour's chipped-gem bonus for the item's slot. It also raises the level requirement and has a per-item limit, higher for weapons.

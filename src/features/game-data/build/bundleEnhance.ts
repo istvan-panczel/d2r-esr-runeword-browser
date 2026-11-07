@@ -1,7 +1,7 @@
 /**
- * enhance.json: corruption, anointment and Vessel of Souls outcomes from cubemain.txt.
+ * enhance.json: corruption, anointment, sanctification and Vessel of Souls outcomes from cubemain.txt.
  *
- * Corruption and anointment use a two-step trick: cubing the item with the reagent adds a hidden dummy stat with a
+ * Corruption, anointment and sanctification use a two-step trick: cubing the item with the reagent adds a hidden dummy stat with a
  * random roll (`op=16` "dummy is 0", output `useitem` with `<x>_dummy min..max`); cubing the item alone then matches
  * one outcome row per roll value (`op=18` "dummy equals N"), which adds the marker, clears the dummy and adds the bonus.
  * Rows whose output is `void` are blockers ("already corrupted", traps). Everything is derived from row data; the
@@ -18,6 +18,8 @@ import {
   type EnhanceBundle,
   type EnhanceMod,
   type EnhanceQuality,
+  type SanctificationBonus,
+  type SanctificationOutcome,
   type VesselMaterial,
   type VesselRecipe,
   type VesselTier,
@@ -53,6 +55,8 @@ const HIDDEN_MODS = new Set([
   'corrupted_dummy',
   'anointed',
   'anointed_dummy',
+  'sanctified',
+  'sanctified-dummy',
   'soul-counter',
   'mythicaldesc',
   'unusable-item',
@@ -64,6 +68,7 @@ const HIDDEN_MODS = new Set([
 
 const CORRUPT_DUMMY = 'corrupted_dummy';
 const ANOINT_DUMMY = 'anointed_dummy';
+const SANCTIFY_DUMMY = 'sanctified-dummy';
 const SOUL_COUNTER = 'soul-counter';
 
 /** Equipment slots by cubemain item type, in display order */
@@ -453,6 +458,78 @@ function buildAnointment(
   };
 }
 
+// --- sanctification ------------------------------------------------------------------------------------------------
+
+interface SanctificationResult {
+  sanctification: EnhanceBundle['sanctification'];
+  outcomes: SanctificationOutcome[];
+  bonuses: SanctificationBonus[];
+}
+
+/**
+ * Lucion's Relic: "item + Relic" adds the `sanctified-dummy` roll, "item alone" then matches one outcome row per roll
+ * value (every roll is one outcome, so each is equally likely). `bonuses` counts how many outcomes carry each bonus.
+ */
+function buildSanctification(
+  recipes: readonly CubeRecipe[],
+  ctx: EnhanceContext,
+  renderLines: LineRenderer,
+  warnings: Set<string>
+): SanctificationResult | null {
+  const roll = dummyRolls(recipes, SANCTIFY_DUMMY).find((entry) => entry.recipe.inputs.length === 2);
+  const item = roll?.recipe.inputs[0];
+  const reagent = roll?.recipe.inputs[1];
+  // No roll row: no sanctification (the integrity test checks the ESR count)
+  if (roll === undefined || item === undefined || reagent === undefined) return null;
+  const dummyParam = outcomeParam(recipes, SANCTIFY_DUMMY);
+  const rows = recipes
+    .filter(
+      (recipe) =>
+        recipe.op === 18 &&
+        recipe.param === dummyParam &&
+        recipe.output === 'useitem' &&
+        recipe.inputs.length === 1 &&
+        recipe.inputs[0]?.cell === item.cell
+    )
+    .sort((a, b) => a.value - b.value);
+  const outcomes = rows.map((recipe): SanctificationOutcome => ({ roll: recipe.value, ...renderLines(recipe.mods) }));
+  const rollRange = roll.max - roll.min + 1;
+  const rolls = new Set(outcomes.map((outcome) => outcome.roll));
+  if (outcomes.length !== rollRange || ![...rolls].every((value) => value >= roll.min && value <= roll.max))
+    warnings.add(`enhance: sanctification has ${String(outcomes.length)} outcome rows for ${String(rollRange)} rolls`);
+
+  // One entry per distinct bonus (property, param and range) with its outcome count, by its column in the rows (the
+  // outcomes combine one bonus of each column), then first seen
+  const bonuses = new Map<string, SanctificationBonus & { column: number }>();
+  for (const outcome of outcomes) {
+    outcome.mods.forEach((mod, column) => {
+      const key = JSON.stringify(mod);
+      const entry = bonuses.get(key);
+      if (entry !== undefined) entry.outcomes++;
+      else bonuses.set(key, { line: renderLines([mod]).lines.join(', '), outcomes: 1, column });
+    });
+  }
+  // A `void` "item + Relic" row on a stat being 1: the item can be sanctified once
+  const once = recipes.some(
+    (recipe) =>
+      isVoid(recipe) &&
+      recipe.op === 18 &&
+      recipe.value === 1 &&
+      recipe.inputs[0]?.cell === item.cell &&
+      recipe.inputs[1]?.code === reagent.code
+  );
+  return {
+    sanctification: {
+      reagent: { code: reagent.code, name: ctx.nameOf(reagent.code) },
+      item: { code: item.code, name: ctx.nameOf(item.code) },
+      rollRange,
+      once,
+    },
+    outcomes,
+    bonuses: [...bonuses.values()].sort((a, b) => a.column - b.column).map(({ line, outcomes: count }) => ({ line, outcomes: count })),
+  };
+}
+
 // --- Vessel of Souls ----------------------------------------------------------------------------------------------
 
 function startSoulsOf(uniqueitems: TsvTable, item: string): number | null {
@@ -620,6 +697,7 @@ export function buildEnhanceBundle(tables: EnhanceTables, ctx: EnhanceContext): 
   );
   if (blocked) corruption.corruption.notes.push(`${vessel.vessel.item} cannot be corrupted while it still has souls.`);
   const anointment = buildAnointment(recipes, ctx, renderLines, vessel.vessel.item, warnings);
+  const sanctification = buildSanctification(recipes, ctx, renderLines, warnings);
 
   return {
     bundle: {
@@ -629,6 +707,14 @@ export function buildEnhanceBundle(tables: EnhanceTables, ctx: EnhanceContext): 
       anointment: anointment.anointment,
       anointmentSlots: anointment.slots,
       anointmentOutcomes: anointment.outcomes,
+      sanctification: sanctification?.sanctification ?? {
+        reagent: { code: '', name: '' },
+        item: { code: '', name: '' },
+        rollRange: 0,
+        once: false,
+      },
+      sanctificationOutcomes: sanctification?.outcomes ?? [],
+      sanctificationBonuses: sanctification?.bonuses ?? [],
       vessel: vessel.vessel,
       vesselTiers: vessel.tiers,
       vesselRecipes: vessel.recipes,

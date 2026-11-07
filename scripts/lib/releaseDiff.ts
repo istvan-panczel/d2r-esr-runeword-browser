@@ -17,8 +17,10 @@ export const LAUNCHER_DIFF_MAX_LINES = 200;
 const HAND_WRITTEN_DOCS = [
   'cube recipes',
   'endgame_maps',
+  // corruptions / anointments: orphaned since 3.2.21 (merged into special_crafting_outcomes), kept for older revisions
   'corruptions',
   'anointments',
+  'special_crafting_outcomes',
   'vessel_of_souls',
   'kill_ledger',
   'weapon_mastery',

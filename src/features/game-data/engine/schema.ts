@@ -425,6 +425,19 @@ export interface AnointmentOutcome extends EnhanceBonus {
   label?: string;
 }
 
+/** One sanctification roll: the bonus of the outcome row the hidden roll picks (every roll equally likely) */
+export interface SanctificationOutcome extends EnhanceBonus {
+  /** The row's dummy `value` (1..rollRange) */
+  roll: number;
+}
+
+/** A distinct sanctification bonus (property, param and range) and how many outcomes carry it */
+export interface SanctificationBonus {
+  /** The bonus rendered on its own, e.g. "+1% to Maximum Fire Resist" */
+  line: string;
+  outcomes: number;
+}
+
 export interface VesselMaterial {
   code: string;
   name: string;
@@ -457,7 +470,7 @@ export interface VesselTransform {
 }
 
 /**
- * enhance.json: corruption, anointment and Vessel of Souls outcomes from cubemain.txt. Flat top-level arrays so the
+ * enhance.json: corruption, anointment, sanctification and Vessel of Souls outcomes from cubemain.txt. Flat top-level arrays so the
  * serializer writes one outcome / recipe per line.
  */
 export interface EnhanceBundle {
@@ -481,6 +494,18 @@ export interface EnhanceBundle {
   };
   anointmentSlots: AnointmentSlot[];
   anointmentOutcomes: AnointmentOutcome[];
+  sanctification: {
+    /** Lucion's Relic of Sanctification */
+    reagent: EnhanceItemRef;
+    /** The item type it works on (Jewel) */
+    item: EnhanceItemRef;
+    /** Size of the `sanctified-dummy` roll range; one outcome per roll */
+    rollRange: number;
+    /** A `void` "item + reagent" row blocks a second sanctification */
+    once: boolean;
+  };
+  sanctificationOutcomes: SanctificationOutcome[];
+  sanctificationBonuses: SanctificationBonus[];
   vessel: { item: string; startSouls: number };
   vesselTiers: VesselTier[];
   vesselRecipes: VesselRecipe[];
@@ -547,6 +572,13 @@ export interface CubeMergedRow {
    * level"); variants with different levels are joined with " / "; omitted when no variant sets one
    */
   outputLevel?: string;
+  /**
+   * D-stoning family: what the row's D-stoning adds in total before its cap condition stops it, read like the bonus
+   * ("+120% Increased Attack Speed"); one entry per distinct cap of the merged rows. Omitted when none has a cap
+   */
+  dstoneCaps?: string[];
+  /** The Enhance tab listing every outcome behind this row (the sanctification pool); omitted otherwise */
+  enhanceTab?: MaterialEnhanceTab;
   /** Qualities of the outputs (quality qualifiers and named unique / set items), for the quality filter */
   qualities: CubeQuality[];
 }
@@ -629,7 +661,7 @@ export interface MaterialFamilyUse {
   recipes: number;
 }
 
-export type MaterialEnhanceTab = 'corruption' | 'anointment' | 'vessel';
+export type MaterialEnhanceTab = 'corruption' | 'anointment' | 'sanctification' | 'vessel';
 
 /** The item's role on the Enhance page (corruption reagent, anointment reagent, Vessel of Souls material) */
 export interface MaterialEnhanceRole {
@@ -969,6 +1001,14 @@ export interface StackingCraftStep {
   lines: string[];
   /** dstone: the per-use amounts in row order as the cap stat grows, e.g. [5,4,3,2,1]; omitted for meld */
   steps?: number[];
+  /**
+   * dstone: the most D-stoning adds to the bonus (its first stat), counting only what D-stoning added: the rows applied
+   * from zero until no cap condition holds (e.g. 120 for Dragon Stone on a weapon). Omitted for meld and for a D-stoning
+   * whose rows have no cap condition (Forging Hammer on a weapon)
+   */
+  cap?: number;
+  /** dstone: `lines` at the cap, e.g. ["+120% Increased Attack Speed"]; present with `cap` */
+  capLines?: string[];
   /** Added level requirement per use (`levelreq` mod) */
   levelReq: number;
 }

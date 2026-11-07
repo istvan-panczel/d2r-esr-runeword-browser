@@ -1,5 +1,6 @@
 import { resolveCardDirective } from './card.ts';
 import { resolveDifficultyPenalties } from './difficultyPenalties.ts';
+import { resolveDstoneCaps } from './dstoneCaps.ts';
 import { resolveGlossary } from './glossary.ts';
 import { resolveRecipeOutput } from './recipeOutput.ts';
 import { resolveRecipes } from './recipes.ts';
@@ -13,7 +14,16 @@ export { resolveTerm } from './glossary.ts';
 export type { DirectiveResolver } from './types.ts';
 
 export type LeafDirectiveName =
-  'source' | 'secret-recipes' | 'secret-recipe' | 'recipe-output' | 'recipes' | 'vendor' | 'difficulty-penalties' | 'glossary' | 'card';
+  | 'source'
+  | 'secret-recipes'
+  | 'secret-recipe'
+  | 'recipe-output'
+  | 'recipes'
+  | 'vendor'
+  | 'difficulty-penalties'
+  | 'dstone-caps'
+  | 'glossary'
+  | 'card';
 
 /** Leaf directives (`::name[arg]`) by name */
 export const LEAF_DIRECTIVES: Readonly<Record<LeafDirectiveName, DirectiveResolver>> = {
@@ -24,6 +34,7 @@ export const LEAF_DIRECTIVES: Readonly<Record<LeafDirectiveName, DirectiveResolv
   recipes: resolveRecipes,
   vendor: resolveVendor,
   'difficulty-penalties': resolveDifficultyPenalties,
+  'dstone-caps': resolveDstoneCaps,
   glossary: resolveGlossary,
   card: resolveCardDirective,
 };
