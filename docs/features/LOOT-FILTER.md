@@ -809,12 +809,15 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
   index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
   test rule (`inGameCheckRule`):
-  - copies every condition of the rule except the four stat lists (codes, types, quality, tier, flags, ids, location,
-    difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not, and no action (no
-    `hide`, `hideIfOtherConditionsFail`, style, sound…);
+  - copies every condition of the rule except the four stat lists and the `formula` (codes, types, quality, tier,
+    flags, ids, location, difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not,
+    and no action (no `hide`, `hideIfOtherConditionsFail`, style, sound…);
   - prints each stat the four lists check (exceptions included), once per stat and param, in list order:
     `Label {stat:ID}`, `Label:param {stat:ID,param}` for a check with a param, `Char Label {playerStat:ID}` for a
-    character stat (`checkedStats`, `checkText`): `[ED {stat:17} | Tab:8 {stat:188,8}] `. Labels are short
+    character stat (`checkedStats`, `checkText`): `[ED {stat:17} | Tab:8 {stat:188,8}] `. Then the stats the formula
+    reads (`formulaStat`), so a formula-only rule gets a check too: a number param as is, a skill name as the skill's
+    id; where the formula reads any entry (`statMax`, `statSum`, a skill name on a chance-to-cast or charge stat) the
+    placeholder prints param 0 and the comment says so. Labels are short
     (`SHORT_LABELS`: ED, Def%, FCR, MF, Tab, Sock…; other stats their name without `item_`, `#ID` for an id without
     data); ids come from the bundle, a name the bundle does not know stays a name. The guide documents no length
     limit for names;
