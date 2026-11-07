@@ -389,9 +389,9 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
   muted facts line "Req 12 · Max 20 · Mana 5 (+0.5 per level) · Fire · Aura"), the builds pages' point controls, the
   description (or the **ESR skill information page** text when skilldesc has none, with "From the ESR skill information
   page" under it), the **combo bonuses** (`SkillComboBonuses.tsx`, owner request 2026-11-07: the tooltip's "If both A
-  and B have 20 levels:" rules matter, so they sit above the tabs instead of muted in About): one amber box ("Combo
-  bonus" / "Combo bonuses", `border-amber-500/50 bg-amber-500/10` like the app's other amber boxes, amber-800 / -300
-  label, amber-900 / -200 condition), per bonus the condition with the other skills as links that select them (the
+  and B have 20 levels:" rules matter, so they sit above the tabs instead of muted in About): one amber box (no icon or
+  heading, owner 2026-11-07: "too much"; `border-amber-500/50 bg-amber-500/10` like the app's other amber boxes,
+  amber-900 / -200 condition), per bonus the condition with the other skills as links that select them (the
   card's own skill bold, a name without an id plain) and the bonus lines (hand-broken lines joined like the
   description), then "Hard points only: +skills from items do not count." Only the skill whose tooltip lists the bonus
   shows it (Eagle Eye's card has none for Splintering Javelin's), as in game. Then three **tabs** (Radix Tabs; the tab is card state, not in the URL, and starts at Values for

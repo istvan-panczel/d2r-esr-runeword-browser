@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CircleCheck, CircleDashed, CircleQuestionMark, Sparkles } from 'lucide-react';
+import { CircleCheck, CircleDashed, CircleQuestionMark } from 'lucide-react';
 import type { SkillComboBonus, SkillComboSkill } from '@/features/game-data/engine/schema';
 import { cn } from '@/lib/utils';
 import { comboSegments, comboStatus, type ComboStatus } from '../utils/comboBonuses';
@@ -27,10 +27,6 @@ export function SkillComboBonuses({ combos, skillId, renderSkill, pointsOf, comp
       aria-label={combos.length === 1 ? 'Combo bonus' : 'Combo bonuses'}
       className={cn('space-y-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2', compact ? 'text-xs' : 'text-sm')}
     >
-      <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-amber-800 uppercase dark:text-amber-300">
-        <Sparkles className="size-3.5 shrink-0" aria-hidden />
-        {combos.length === 1 ? 'Combo bonus' : 'Combo bonuses'}
-      </p>
       {keyed(combos, (combo) => combo.condition).map(({ key, value: combo }, i) => (
         <div key={key} className={cn('space-y-0.5', i > 0 && 'border-t border-amber-500/30 pt-2')}>
           <p className="text-amber-900 dark:text-amber-200">
