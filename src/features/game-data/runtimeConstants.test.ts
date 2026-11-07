@@ -14,7 +14,7 @@ import { resolve } from 'path';
 import { HANDLED_DESCFUNCS } from './engine/stats/descfunc.ts';
 import { DAMAGE_PAIRS } from './engine/stats/renderLines.ts';
 import { STAT_QUIRKS } from '@/features/loot-filter/engine/statQuirks';
-import { STAT_SCALES } from '@/features/loot-filter/engine/statScale';
+import { isPerLevel, STAT_SCALES } from '@/features/loot-filter/engine/statScale';
 import { PAIRED_STATS, STAT } from '@/features/stash/parser/parseItem';
 import { LEVEL_REQ, REQ_PERCENT } from '@/features/stash/engine/items/baseLines';
 import { DAMAGE_GROUPS } from '@/features/stash/engine/items/statValues';
@@ -156,7 +156,7 @@ describe('loot filter stat constants', () => {
     const perLevel = itemTextRows
       .filter((row) => row.op !== undefined && perLevelOps.has(row.op) && row.opParam === 3 && !row.stat.startsWith('unused'))
       .map((row) => row.id);
-    const scaled = STAT_SCALES.filter((scale) => scale.kind !== 'shift').map((scale) => scale.id);
+    const scaled = STAT_SCALES.filter(isPerLevel).map((scale) => scale.id);
     expect(perLevel.sort((a, b) => a - b)).toEqual(scaled.sort((a, b) => a - b));
   });
 });

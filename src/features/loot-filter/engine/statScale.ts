@@ -65,6 +65,23 @@ export const STAT_SCALES: readonly StatScale[] = [
   perLevel(247, 'item_crushingblow_perlevel', 'Crushing Blow'),
   perLevel(250, 'item_deadlystrike_perlevel', 'Deadly Strike'),
   perLevel(365, 'item_magic_damagemax_perlevel', 'Maximum Magic Damage'),
+  // ESR 3.3 (itemstatcost.txt 1030 to 1056)
+  perLevel(1030, 'item_criticaldamage_perlevel', 'Critical Damage'),
+  perLevel(1031, 'item_summmastery_perlevel', 'Summon Mastery'),
+  perLevel(1032, 'item_summlife_perlevel', 'Summon Life'),
+  perLevel(1033, 'item_acvsmissiles_perlevel', 'Defense vs. Missiles'),
+  perLevel(1034, 'item_magpierce_perlevel', 'Magic Pierce'),
+  perLevel(1036, 'item_extramag_perlevel', 'Magic Skill Damage'),
+  perLevel(1037, 'item_piercefire_perlevel', 'Fire Pierce'),
+  perLevel(1038, 'item_piercecold_perlevel', 'Cold Pierce'),
+  perLevel(1039, 'item_pierceltng_perlevel', 'Lightning Pierce'),
+  perLevel(1042, 'item_fasterattackrate_perlevel', 'Attack Speed'),
+  perLevel(1043, 'item_absorb_ltng_perlevel', 'Lightning Absorb'),
+  perLevel(1048, 'item_damage_demon_perlevel', 'Damage to Demons'),
+  perLevel(1049, 'item_maxmana_percent_perlevel', 'Maximum Mana %'),
+  perLevel(1052, 'item_piercedmg_perlevel', 'Pierce Damage'),
+  perLevel(1055, 'rune_effect_current_item_perlevel', 'Socketed Effect'),
+  perLevel(1056, 'item_maxhp_percent_perlevel', 'Maximum Life %'),
 ];
 
 /** The scale of a check's stat (an itemstatcost name or id), if the game stores it scaled. */
