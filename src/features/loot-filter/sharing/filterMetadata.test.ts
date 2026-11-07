@@ -14,7 +14,7 @@ describe('filterMetadata', () => {
     expect(meta.file_version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(meta.rule_count).toBe(225);
     expect(meta.levels).toHaveLength(4);
-    expect(meta.levels?.[0]).toEqual({ id: 1, name: 'Leveling' });
+    expect(meta.levels?.[0]).toMatchObject({ id: 1, name: { enUS: 'Leveling', deDE: 'Leveln' } });
   });
 
   it('accepts trailing commas and maps missing or blank header fields to null', () => {

@@ -111,9 +111,10 @@ describe('serializeLootFilter', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const text = serializeLootFilter(parseLootFilter(source).filter);
     const oneLineRules = (s: string) => s.split('\n').filter((line) => line.startsWith('    {"')).length;
-    expect(text.startsWith("// Sully's QoL Filter")).toBe(true);
-    // Sully writes some one-line rules and styles longer than the serializer's line width (12 of 113 when last checked).
-    expect(Math.abs(oneLineRules(text) - oneLineRules(source))).toBeLessThanOrEqual(15);
+    expect(text.startsWith('// volume can be adjusted')).toBe(true);
+    // Sully writes one-line rules and styles longer than the serializer's line width: 12 of 113 up to v0.6.13, 91 of 115
+    // since v0.7.0 localised the names and chat lines (11 languages on one line).
+    expect(Math.abs(oneLineRules(text) - oneLineRules(source))).toBeLessThanOrEqual(95);
     // The Ancient Scroll hide rule keeps its single-number `"activeInLevels": 4`, now in canonical key order.
     expect(text).toMatch(/\n {6}"activeInLevels": 4,\n {6}"hide": true\n/);
     expect(text.split('"activeInLevels": 4').length - 1).toBe(source.split('"activeInLevels": 4').length - 1);

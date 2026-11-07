@@ -43,12 +43,15 @@ describe('parseLootFilter on Sully’s filter', () => {
       'Map',
       'MapTier5',
     ]);
-    expect(filter.leadingComments).toHaveLength(4);
-    expect(filter.leadingComments[0]).toMatch(/^\/\/ Sully's QoL Filter/);
-    expect(filter.rules.at(-1)).toEqual({
+    // v0.7.0 keeps one comment line (the volume note).
+    expect(filter.leadingComments).toHaveLength(1);
+    expect(filter.leadingComments[0]).toMatch(/^\/\/ volume can be adjusted/);
+    // v0.7.0 names its levels in 11 languages.
+    expect(filter.filterLevels?.[0]?.name).toMatchObject({ enUS: 'Leveling', deDE: 'Leveln' });
+    expect(filter.rules.at(-1)).toMatchObject({
       itemCodes: ['z99'],
-      replaceName: 'ÿc6The Hidden Vault',
-      chatMessage: 'Unique Map: ÿc0The Hidden Vault',
+      replaceName: { enUS: 'ÿc6The Hidden Vault' },
+      chatMessage: { enUS: 'Unique Map: ÿc0The Hidden Vault' },
       useStyle: 'MapTier5',
     });
   });
