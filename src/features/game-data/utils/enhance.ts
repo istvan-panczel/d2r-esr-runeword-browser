@@ -109,6 +109,14 @@ export function tierOptions(bundle: EnhanceBundle): string[] {
   return [...bundle.vesselTiers.map((tier) => String(tier.tier)), VESSEL_COMPLETION];
 }
 
+/**
+ * The anointment pool of an ESR 3.2 link's slot id (`slot=weapon`, `slot=body` …, one pool per slot then): the first
+ * pool of the slot's group, as picking that slot does. Undefined for anything else.
+ */
+function legacyAnointmentPool(bundle: EnhanceBundle, slot: string): string | undefined {
+  return bundle.anointmentSlots.find((entry) => entry.group === slot)?.slot;
+}
+
 /** URL → state; unknown values fall back to the tab's first option */
 export function readEnhanceState(params: URLSearchParams, bundle: EnhanceBundle): EnhanceState {
   const tabParam = params.get(KEYS.TAB);
@@ -117,9 +125,12 @@ export function readEnhanceState(params: URLSearchParams, bundle: EnhanceBundle)
   const slotParam = params.get(KEYS.SLOT) ?? '';
   const tiers = tierOptions(bundle);
   const tierParam = params.get(KEYS.TIER) ?? '';
+  const slot = slots.includes(slotParam)
+    ? slotParam
+    : ((tab === 'anointment' ? legacyAnointmentPool(bundle, slotParam) : undefined) ?? slots.at(0) ?? '');
   return {
     tab,
-    slot: slots.includes(slotParam) ? slotParam : (slots[0] ?? ''),
+    slot,
     tier: tiers.includes(tierParam) ? tierParam : (tiers[0] ?? ''),
     search: params.get(KEYS.SEARCH) ?? '',
   };

@@ -1784,7 +1784,8 @@ State lives in the URL (read on every render, written with `replace`), parsed an
 | `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                           |
 | `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names)                                 |
 
-Invalid values fall back to the tab's first option; Copy Link encodes only the non-default values the tab uses.
+Invalid values fall back to the tab's first option (an ESR 3.2 anointment link's slot id, `slot=weapon`, `body` …, opens
+that slot group's first pool); Copy Link encodes only the non-default values the tab uses.
 
 ### Cube page
 
