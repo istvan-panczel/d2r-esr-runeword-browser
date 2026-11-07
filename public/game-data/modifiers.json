@@ -129,7 +129,7 @@
     {"key":"stat-item-sanctification","title":"Sanctified","category":"other","stats":[234],"generated":true,"items":217},
     {"key":"stat-item-sanctification-dummy","title":"Transmute to Sanctify Item","category":"other","stats":[236],"generated":true,"items":218},
     {"key":"stat-item-meldflag","title":"item_meldflag","category":"other","stats":[251],"generated":true,"items":80},
-    {"key":"stat-item-replenish-durability","title":"Repairs durability per second","category":"resources","stats":[252],"generated":true,"items":29},
+    {"key":"stat-item-replenish-durability","title":"Repairs Durability","category":"resources","stats":[252],"generated":true,"items":29},
     {"key":"stat-gem-v","title":"Amethyst","category":"other","stats":[261],"generated":true,"items":431},
     {"key":"stat-gem-y","title":"Topaz","category":"other","stats":[262],"generated":true,"items":431},
     {"key":"stat-gem-b","title":"Sapphire","category":"other","stats":[263],"generated":true,"items":431},

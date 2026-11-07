@@ -87,6 +87,21 @@ export const HANDLED_DESCFUNCS: ReadonlySet<number> = new Set([
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 27, 28,
 ]);
 
+/** The vanilla string descfunc 11 switches to for slow repair: "Repairs %d durability in %d seconds" */
+export const REPAIR_SLOW_STRING = 'ModStre9u';
+
+/**
+ * Descfunc 11 (`item_replenish_durability`): the item repairs 1 durability every 100 / V seconds, as the game writes
+ * it: "Repairs 1 durability in 20 seconds" (V = 5; 100 / 3 → 33), with ModStre9u; V ≥ 100 would repair V / 100 per
+ * second (S1, ModStre9t "Repairs %d durability per second"). ESR's docs pages agree ("in 1 seconds" for V = 100).
+ */
+function repairText(value: number, s1: string, ctx: DescContext): string {
+  if (value <= 0) return '';
+  const seconds = Math.floor(100 / value);
+  if (seconds >= 1) return sprintf(ctx.strings.get(REPAIR_SLOW_STRING) ?? 'Repairs %d durability in %d seconds', [1, seconds]);
+  return sprintf(s1, [Math.floor(value / 100)]);
+}
+
 export function renderStat(entry: StatEntry, def: StatDef, ctx: DescContext): string[] {
   if (def.descfunc === 0) return [];
   const value = statValue(entry, def);
@@ -116,7 +131,7 @@ export function renderStat(entry: StatEntry, def: StatDef, ctx: DescContext): st
       return lines(withS2(layout(s1, `${formatValue(percent)}%`, dv, [percent]), s2));
     }
     case 11:
-      return lines(sprintf(s1, [value, Math.round(100 / Math.max(1, value.max))]));
+      return lines(repairText(value.max, s1, ctx));
     case 13: {
       const cls = ctx.skills.classText(Number(entry.param));
       const format = cls?.allSkills ?? s1;

@@ -104,6 +104,8 @@ const STAT_LABELS: Readonly<Record<string, string>> = {
   item_aura: 'Aura When Equipped',
   item_charged_skill: 'Charged Skill',
   item_numsockets: 'Sockets',
+  // "Repairs %d durability per second", but the game repairs 1 durability every 100 / value seconds (descfunc 11)
+  item_replenish_durability: 'Repairs Durability',
   coldlength: 'Cold Length',
   poisonlength: 'Poison Length',
   bleedlength: 'Bleed Length',

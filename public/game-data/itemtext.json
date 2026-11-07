@@ -1045,6 +1045,7 @@
     "ModStre9i": "Increased Stack Size",
     "ModStre9s": "Indestructible",
     "ModStre9t": "Repairs %d durability per second",
+    "ModStre9u": "Repairs %d durability in %d seconds",
     "ModStre9v": "Replenishes quantity",
     "ModStrfireskill": "to Fire Skills",
     "ModStrlightningskill": "to Lightning Skills",

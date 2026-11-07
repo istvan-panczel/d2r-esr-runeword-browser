@@ -2563,7 +2563,7 @@
     {"id":249,"name":"unused249"},
     {"id":250,"name":"item_deadlystrike_perlevel","label":"Deadly Strike (per level)"},
     {"id":251,"name":"item_meldflag"},
-    {"id":252,"name":"item_replenish_durability","label":"Repairs durability per second"},
+    {"id":252,"name":"item_replenish_durability","label":"Repairs Durability"},
     {"id":253,"name":"item_replenish_quantity"},
     {"id":254,"name":"item_extra_stack"},
     {"id":255,"name":"strengthpercent","label":"Bonus to Strength %"},

@@ -987,6 +987,12 @@ const EXAMPLE_ORDER: readonly ModifierItemKind[] = [
 ];
 const MAX_EXAMPLES = 12;
 
+/**
+ * Titles of generated kinds whose description string misleads: `item_replenish_durability` reads "Repairs %d durability
+ * per second", but the game repairs 1 durability every 100 / value seconds (descfunc 11)
+ */
+const GENERATED_TITLES: Readonly<Partial<Record<string, string>>> = { item_replenish_durability: 'Repairs Durability' };
+
 /** A category for a generated kind, from its stat name */
 export function generatedCategory(stat: string): ModifierCategory {
   if (/skill|aura|_tab|classskills|elemskill/.test(stat)) return 'skills';
@@ -1073,7 +1079,7 @@ export function buildModifiersBundle(input: ModifiersInput): ModifiersResult {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')}`;
-    const label = description === undefined ? '' : labelFromDescription(description);
+    const label = GENERATED_TITLES[stat] ?? (description === undefined ? '' : labelFromDescription(description));
     generatedKinds.set(key, {
       key,
       // A description without a word (".%1%0", item_mythicaldesc) is no title: the stat name is

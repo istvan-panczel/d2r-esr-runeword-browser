@@ -9,7 +9,7 @@
  * 3. render the rest with their descfunc; stats with descfunc 0 (e.g. `tinkerflag2`) are hidden
  * 4. sort by `descpriority`, highest first (stable)
  */
-import { renderStat, statValue, type DescContext } from './descfunc.ts';
+import { REPAIR_SLOW_STRING, renderStat, statValue, type DescContext } from './descfunc.ts';
 import { formatSigned, sprintf, type Range } from './sprintf.ts';
 import type { StatDef, StatEntry } from './types.ts';
 
@@ -39,7 +39,11 @@ export const DAMAGE_PAIRS: readonly DamagePair[] = [
 ];
 
 /** The string-table keys renderLines reads itself (besides the stat descriptions) */
-export const RENDER_LINES_STRINGS: readonly string[] = [...DAMAGE_PAIRS.map((pair) => pair.rangeKey), 'strModEnhancedDamage'];
+export const RENDER_LINES_STRINGS: readonly string[] = [
+  ...DAMAGE_PAIRS.map((pair) => pair.rangeKey),
+  'strModEnhancedDamage',
+  REPAIR_SLOW_STRING,
+];
 
 interface Line {
   priority: number;
