@@ -65,8 +65,26 @@ same-name rows such as the 20 Ember of Creation variants share one entry) and `s
   params filled in and `?` for formulas ("+12% Fire Damage per Level", "+?% …"). `id` links to the skill when the name
   resolves (same class first) and differs from the name; the page links `id ?? name` when the bundle has that skill
   ("Any Other Curse" and "All sentries" stay plain text). A dsc3 line that is just a skill name is a synergy without a
-  bonus. Other dsc3 texts without placeholders are `notes` (the "If both A and B have 20 levels: …" rules), read
-  bottom-up like the lines.
+  bonus. The old synergy layouts are synergies too, with texta = the skill name and textb the bonus: line function 63
+  ("Fists of Fire: +6% All Damage per Level", Phoenix Strike), 67 ("Lycanthropy: +1 Second per Level", Feral Rage, Maul,
+  Hurricane) and 25 (a + b: "Inner Sight" + ": +0.20 Seconds per Level", Petrify; "Holy Ward", Summon Holy Defender);
+  until 2026-11 they were read as bare-name `notes` and lost their bonus. A one-line text "Skill: bonus" whose name is
+  a skill is a synergy written out (Dance of Death's type-18 "Spearstorm: +0.5% Chance to Deal Double Damage"). A dsc3
+  line without a line function (blank or 0) is not shown in game and is skipped (Skeleton Mastery's orphan "Magi,
+  Skeleton King").
+- **comboBonuses**: the dsc3 texts (read bottom-up like the lines) split at each condition line "If both A and B have 20
+  levels:" (or "If All Elemental Armors have 20 levels:"): `{ condition, skills: [{ name, id? }], level, text: [lines] }`
+  (`splitComboBonuses`). "If both" names two skills, any other wording one group as written. `id` is the skill whose
+  display name it is (same class first, then a class skill, so the Proc copies link the class skill: Ricochet →
+  `Shuriken`, Levitation Mastery → `Levitate`); "All Elemental Armors" (Fanatic Swing) and "Any Finishing Move" (Blade
+  Nova) have none. One text can hold two conditions (Fanatic Swing); a skill can have two texts (Meteor Shower,
+  Overwhelm, Storm of the Old Gods, Dragon Fury, Execute, Blade Nova). ESR 3.3: 63 bonuses on 56 skills (two are the
+  item skills Maelstrom Cascade Proc and Reap Souls Proc, which share the class skill's skilldesc row). **What "have 20
+  levels" means**: ESR's formulas test the sum of both skills' hard points, `(skill('Splintering Javelin'.blvl)+
+skill('Eagle Eye'.blvl))>39` (80 such formulas in skills.txt; Fanatic Swing's armors: `(skill('Fire Armor'.blvl)+
+skill('Shiver Armor'.blvl)+skill('Shock Armor'.blvl))==60`). `blvl` is the base level, the points spent (the
+  calculator's "hard points"), capped at `maxlvl` 20, so both need 20 hard points: +skills from items do not count.
+  Other dsc3 texts without placeholders are `notes` (none in ESR 3.3).
 - **icon**: `<class prefix>-<IconCel>` or `gen-<IconCel>` (see "Icons").
 - **grantedBy**: `{ item, how, level, chance?, charges?, partial? }` per granting property (deduplicated):
 
@@ -86,7 +104,7 @@ invisible on the item, mostly internal mechanics), random skills (`skill-rand`, 
 pools and the set-wide bonuses of sets.txt.
 
 Counts (manifest, ESR 3.3): `skillDetails` 465, `skillDetailsItemSkills` 185, `skillDetailsWithGrants` 445,
-`skillDetailsWithSynergies` 226, `skillDetailsWithoutDescription` 96 (mostly item skills: ESR's surges, masteries,
+`skillDetailsWithSynergies` 231, `skillComboBonuses` 63, `skillDetailsWithoutDescription` 96 (mostly item skills: ESR's surges, masteries,
 trophies; 63 of them get the skill information page's text, see below), `skillGrantItems` 1194, `skillGrants` 3168,
 `skillGrantsUndescribed` 1 (grants of class-less skills without a skilldesc row, not listed), `skillIcons` 325.
 Size: 410 KB / 62 KB gzip.

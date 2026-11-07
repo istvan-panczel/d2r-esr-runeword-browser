@@ -993,6 +993,48 @@ describe('committed game-data bundles', () => {
     expect(fireBolt?.description[0]).toBe('Create a magical flaming missile to scorch your target');
     expect(fireBolt?.synergies?.map((synergy) => synergy.name)).toEqual(['Fire Ball', 'Rain of Fire', 'Molten Focus']);
     expect(fireBolt?.synergies?.[2]?.text).toBe('+12% Fire Damage per Level');
+    // The old synergy layouts (dsc3 63 / 67 / 25) are synergies, not notes
+    expect(details.find((skill) => skill.id === 'Phoenix Strike')?.synergies).toEqual(
+      ['Fists of Fire', 'Claws of Thunder', 'Blades of Ice', 'Blade Nova'].map((name) => ({ name, text: '+6% All Damage per Level' }))
+    );
+    expect(details.find((skill) => skill.id === 'Feral Rage')?.synergies?.[0]).toEqual({
+      name: 'Lycanthropy',
+      text: '+1 Second per Level',
+    });
+    expect(details.find((skill) => skill.id === 'Petrify')?.synergies?.[0]).toEqual({
+      name: 'Inner Sight',
+      text: '+0.20 Seconds per Level',
+    });
+
+    // Combo bonuses: "If both A and B have 20 levels:" (ESR 3.3: 63 on 56 skills, 2 of them item skills); no other dsc3 notes left
+    const combos = details.flatMap((skill) => (skill.comboBonuses ?? []).map((combo) => ({ skill, combo })));
+    expect(manifest.counts.skillComboBonuses).toBe(combos.length);
+    expect(combos.length).toBeGreaterThan(50);
+    expect(details.filter((skill) => skill.notes !== undefined).map((skill) => skill.id)).toEqual([]);
+    expect(details.find((skill) => skill.id === 'Splintering Javelin')?.comboBonuses).toEqual([
+      {
+        condition: 'If both Splintering Javelin and Eagle Eye have 20 levels',
+        skills: [
+          { name: 'Splintering Javelin', id: 'Splintering Javelin' },
+          { name: 'Eagle Eye', id: 'Eagle Eye' },
+        ],
+        level: 20,
+        text: ['Splintering Javelin has a 50% chance to release twice more splinters'],
+      },
+    ]);
+    const unresolved: string[] = [];
+    for (const { skill, combo } of combos) {
+      expect(combo.level, skill.id).toBe(20);
+      expect(combo.text.length, skill.id).toBeGreaterThan(0);
+      for (const entry of combo.skills) {
+        if (entry.id === undefined) unresolved.push(entry.name);
+        // A class skill's combo names skills of its own class
+        else if (skill.cls !== null)
+          expect(details.find((other) => other.id === entry.id)?.cls, `${skill.id} → ${entry.id}`).toBe(skill.cls);
+      }
+    }
+    // Groups the files do not name as one skill (Fanatic Swing, Blade Nova)
+    expect(unresolved.sort()).toEqual(['All Elemental Armors', 'Any Finishing Move']);
     const grantOf = (skill: string, item: string) =>
       details.find((entry) => entry.id === skill)?.grantedBy?.filter((grant) => items[grant.item]?.name === item);
     expect(grantOf('Teleport', 'Cactus Petal')).toEqual([expect.objectContaining({ how: 'charged', charges: 7, level: 1 })]);
@@ -1699,8 +1741,10 @@ describe('committed skillcalc bundle', () => {
       }),
       { skills: 0, inputs: 0 }
     );
-    // ESR 3.3: Shuriken Trap's unlisted "Shuriken" synergy became a listed one (patch: added synergy for damage bonus)
-    expect(counts).toEqual({ skills: 72, inputs: 234 });
+    // ESR 3.3: Shuriken Trap's unlisted "Shuriken" synergy became a listed one (patch: added synergy for damage bonus).
+    // The old synergy layouts (dsc3 line functions 63 / 67 / 25) and Dance of Death's written-out Spearstorm line are
+    // listed synergies since they are read as such (Maul's Lycanthropy, Dance of Death's Spearstorm, …)
+    expect(counts).toEqual({ skills: 65, inputs: 224 });
     // Blizzard's tooltip lists Orb of Winter twice: one input
     const blizzard = index.record('Blizzard');
     expect(blizzard === undefined ? [] : synergyInputs(blizzard, index).map((input) => input.id)).toEqual([
