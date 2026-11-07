@@ -77,6 +77,7 @@ const terrorZonesText = readText('terrorzones');
 const modifiersText = readText('modifiers');
 const masteriesText = readText('masteries');
 const specializationsText = readText('specializations');
+const elixirsText = readText('elixirs');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const basesBundle = JSON.parse(basesText) as BasesBundle;
@@ -133,6 +134,7 @@ describe('committed game-data bundles', () => {
       ['modifiers', modifiersText],
       ['masteries', masteriesText],
       ['specializations', specializationsText],
+      ['elixirs', elixirsText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));

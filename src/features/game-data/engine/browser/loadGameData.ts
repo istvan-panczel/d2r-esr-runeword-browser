@@ -12,6 +12,7 @@ import {
   type BasesBundle,
   type CraftingBundle,
   type CubeBundle,
+  type ElixirsBundle,
   type EnhanceBundle,
   type GameDataFile,
   type GameDataManifest,
@@ -59,6 +60,7 @@ export interface GameDataBundles {
   modifiers: ModifiersBundle;
   masteries: MasteriesBundle;
   specializations: SpecializationsBundle;
+  elixirs: ElixirsBundle;
   icons: IconsBundle;
 }
 

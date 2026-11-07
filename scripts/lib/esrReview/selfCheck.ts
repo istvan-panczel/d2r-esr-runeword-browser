@@ -48,6 +48,8 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'mastery',
   // specializationTrees, specializationPerks, specializationIcons, …
   'specialization',
+  // elixirs, elixirsRegular … elixirsNoSource, elixirPerks, elixirDropSources, elixirRecipes
+  'elixir',
   'itemIcons',
   'uniqueIcons',
   'setIcons',
@@ -87,6 +89,7 @@ export const KNOWN_WARNING_CLASSES: readonly string[] = [
   'modifiers',
   'masteries',
   'specializations',
+  'elixirs',
 ];
 
 /** `lootfilter skills: …` → `lootfilter skills`; null when the text has no lower-case class prefix. */

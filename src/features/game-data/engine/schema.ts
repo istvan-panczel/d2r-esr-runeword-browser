@@ -36,6 +36,7 @@ export type GameDataFile =
   | 'modifiers'
   | 'masteries'
   | 'specializations'
+  | 'elixirs'
   | 'icons';
 
 export interface GameDataManifest {
@@ -1093,6 +1094,127 @@ export interface MasteryEffect {
   skills: string[];
   /** The effect, one sentence group per entry */
   text: string[];
+}
+
+// --- elixirs.json ------------------------------------------------------------------------------------------------
+
+/**
+ * elixirs.json (ESR 3.3): the drinkable utility elixirs. misc.txt gives the items (type `upot`; `relx` regular, `gelx`
+ * greater), their formulas and tooltips; treasureclassex.txt the drop chances and the Alchemist perks that gate them;
+ * cubemain.txt the recipes; celestialrayone.alchemy.toml the perks that work in plugin code. The Elixirs page evaluates
+ * the formulas (`engine/elixirs.ts`) at the chosen character level.
+ */
+export interface ElixirsBundle {
+  /** experience.txt `MaxLvl`: the top character level */
+  maxLevel: number;
+  /** In misc.txt order */
+  elixirs: ElixirInfo[];
+  /** The Alchemist perks that change elixirs, in perk order (row, then column) */
+  perks: ElixirPerk[];
+  drops: ElixirDrops;
+  /** The cube recipes that make elixirs (cube.json raw recipes, conditions included) */
+  recipes: ElixirRecipe[];
+  /** The other utility potions the same stats and perks act on (Stamina, Antidote, Thawing): misc names */
+  otherUtilityPotions: string[];
+}
+
+export type ElixirVariant = 'regular' | 'greater' | 'special';
+
+export interface ElixirInfo {
+  code: string;
+  name: string;
+  /** Lower-case kebab name (`?name=` on the page): "greater-elixir-of-luck" */
+  slug: string;
+  /** `relx` regular, `gelx` greater, else special (Elixir of Reincarnation) */
+  variant: ElixirVariant;
+  /** The other variant: the regular / greater elixir with the same state (they share one effect); omitted when none */
+  pair?: string;
+  /** states.txt state the effect runs as */
+  state: string;
+  /** The tooltip line (`spelldescstr`), with `%d` where the value of `tooltipFormula` goes */
+  tooltip: string;
+  /** `calc1` when the tooltip shows a value (`spelldesc` 2); omitted when it shows none */
+  tooltipFormula?: string;
+  /** One entry per distinct formula, in stat order */
+  effects: ElixirEffect[];
+  /** `len`: the effect's length in frames (25 per second), a formula */
+  duration: string;
+  /** Seconds at no Utility Potion Duration (omitted for an effect that lasts until it triggers) */
+  seconds?: number;
+  /** `UsageConditionCalc`: drinkable only while it is not 0; omitted when blank */
+  usageCondition?: string;
+  /**
+   * The perk keys (`alchemy_4`) a killer needs for it to drop; [] = drops for everyone; omitted when no treasure class
+   * drops it
+   */
+  dropPerks?: string[];
+  /** The perk named like the item (Elixir of Reincarnation); omitted when none */
+  perk?: string;
+  /** cubemain lines (`ElixirRecipe.id`) whose output can be this elixir; omitted when none */
+  recipes?: number[];
+}
+
+export interface ElixirEffect {
+  /** Item lines as the stat renderer writes them, `{v}` where the value goes; a fixed line has none */
+  lines: string[];
+  /** The `calcN` formula of the value; null for a fixed value (the line has no `{v}`) */
+  formula: string | null;
+  /** itemstatcost names of the stats, in misc.txt order */
+  stats: string[];
+  /** The value at level 1 and at `maxLevel`, without effectiveness or perks; null for a fixed value */
+  values: [number, number] | null;
+}
+
+export interface ElixirPerk {
+  /** itemstatcost name: `alchemy_4` */
+  key: string;
+  /** "Hidden Elixirs" */
+  title: string;
+  /** "Alchemist" */
+  tree: string;
+  /** Lower-case kebab title: "hidden-elixirs" (the Specializations page's `perk` param) */
+  slug: string;
+  /** Perk row (1 to 5) and column (1 to 3) */
+  row: number;
+  column: number;
+  /** The perk description string */
+  description: string;
+  /** What the files do with it, one sentence each (numbers from the tables and the alchemy plugin config) */
+  facts: string[];
+}
+
+export interface ElixirDrops {
+  /** The treasure class every elixir drop goes through ("Utility Elixir") */
+  root: string;
+  /** The potion picks that can become an elixir instead, by treasure class */
+  sources: ElixirDropSource[];
+  /**
+   * The chance of each elixir when an elixir drops, per set of perks (every combination of the perks the drop classes
+   * check, none first): code → fraction. A class whose perk the killer lacks is left out of the roll.
+   */
+  odds: { perks: string[]; chances: Record<string, number> }[];
+}
+
+export interface ElixirDropSource {
+  /** "Potion 1 Single" */
+  tc: string;
+  /** Where it drops, from the classes above it: "Normal Act 1", "Nightmare", "Endgame maps" */
+  label: string;
+  /** Percent of its picks that go to the elixir roll */
+  chance: number;
+  /** A perk the killer needs for this source (Unstable Mixtures on rejuvenation potions); omitted when none */
+  perk?: string;
+}
+
+export interface ElixirRecipe {
+  /** cubemain line */
+  id: number;
+  description: string;
+  /** `type`: the code is an item type (any item of it) */
+  inputs: { text: string; code?: string; qty: number; type?: true }[];
+  /** Output texts: an elixir name or "Regular Elixirs" / "Greater Elixirs" (a random elixir of the type) */
+  outputs: { text: string; code?: string }[];
+  conditions: string[];
 }
 
 // --- skillcalc.json -----------------------------------------------------------------------------------------------

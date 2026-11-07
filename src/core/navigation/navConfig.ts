@@ -228,7 +228,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     key: 'database',
     label: 'Database',
     description:
-      'Uniques, mythicals, sets, ascendancies, skills, specializations, item modifiers, every base item, material and area, the campaign map',
+      'Uniques, mythicals, sets, ascendancies, skills, specializations, item modifiers, every base item, material, elixir and area, the campaign map',
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
@@ -253,6 +253,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         to: '/game-data/materials',
         label: 'Materials',
         description: 'Runes, gems, organs, coupons and every other misc item',
+      },
+      {
+        key: 'elixirs',
+        to: '/elixirs',
+        label: 'Elixirs',
+        description: 'Utility elixirs: effects at your level, drop chances and the Alchemist perks',
       },
       {
         key: 'areas',

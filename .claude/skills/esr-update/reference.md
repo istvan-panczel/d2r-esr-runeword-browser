@@ -186,6 +186,13 @@ the owner's OK.
   rules, the 8 cube-linked perks, an empty `pageDiffs` and the 3 warnings of 3.3 (Elixir of Reincarnation, Deep
   Pockets, Alien Artefacts). The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
   its slug (check `content/guide` for `page:/specializations` links).
+- **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
+  `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
+  (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact
+  shows in the `elixirs.json` diff; re-read the guide's `elixirs` note and docs/features/ELIXIRS.md against it. New
+  `elixirs:` warnings: a line that renders without its value (a stat whose descfunc divides or hides it), a
+  ConditionCalc that is no perk check, a missing root class or config → read the change, then propose a rule. Known
+  page-vs-files gap (3.3): the Elixir of Reincarnation perk names a 5 Dragon Stone recipe cubemain.txt does not have.
 - **Cube page** (`docs/Eastern Sun Resurrected Cube Recipes.html`): `CUBE_SECTIONS` in `build/cube/cubeCatalog.ts` (the
   page's anchors, `notes` rewritten from its footnotes, guide slugs) and `FAMILY_NOTES`. A renamed anchor breaks the
   "Official: <section>" links. The page lagged the files in about 31 places at 3.2.24 (cube audit 2026-11-07), so read

@@ -3,7 +3,7 @@
   "esrVersion": "3.3",
   "esrTag": "3.3",
   "esrCommit": "d6f5996c2b64636917feac8991be3ac04d21e01e",
-  "generatedAt": "2026-11-07T18:39:03.432Z",
+  "generatedAt": "2026-11-07T18:45:55.269Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -34,8 +34,8 @@
       "bytes": 1214962
     },
     "cube": {
-      "hash": "b1a5663177c4f01b9ac01f8981c2953c0f9ae8c547fb7720003d816d70d9cf48",
-      "bytes": 775645
+      "hash": "9ac15162118f7a8ea08fd4c51bbed5428a04150b648e1c1b6f956777b9847f3f",
+      "bytes": 775673
     },
     "materials": {
       "hash": "1037de0123cc2d1553393621dca4757395d1fe42ce1fb2abd12c644dda975291",
@@ -96,6 +96,10 @@
     "specializations": {
       "hash": "0a6c079c132455f3ff3548eb039052316745bb9ec6c153840107601067f56151",
       "bytes": 29614
+    },
+    "elixirs": {
+      "hash": "7c3dbe4f8c9d3743bc8e46485132ad60de552b62a39250fc1fad1c1256b8a702",
+      "bytes": 34573
     },
     "icons": {
       "hash": "b712a00e99568e491ccdee3fc78a66797772848b61a61ec2c441adb88bd38126",
@@ -281,6 +285,16 @@
     "specializationPluginPerks": 42,
     "specializationShardMonsters": 9,
     "specializationPageDiffs": 0,
+    "elixirs": 35,
+    "elixirsRegular": 17,
+    "elixirsGreater": 17,
+    "elixirsSpecial": 1,
+    "elixirsForEveryone": 13,
+    "elixirsPerkGated": 21,
+    "elixirsNoSource": 1,
+    "elixirPerks": 10,
+    "elixirDropSources": 10,
+    "elixirRecipes": 3,
     "itemIcons": 653,
     "uniqueIcons": 1114,
     "setIcons": 270,
