@@ -172,6 +172,13 @@ the owner's OK.
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
   specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
   formulas read `weapon_mastery_orb_1`) and the 4 warnings of 3.3.
+- **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
+  `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
+  (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact
+  shows in the `elixirs.json` diff; re-read the guide's `elixirs` note and docs/features/ELIXIRS.md against it. New
+  `elixirs:` warnings: a line that renders without its value (a stat whose descfunc divides or hides it), a
+  ConditionCalc that is no perk check, a missing root class or config → read the change, then propose a rule. Known
+  page-vs-files gap (3.3): the Elixir of Reincarnation perk names a 5 Dragon Stone recipe cubemain.txt does not have.
 - **Cube page** (`docs/Eastern Sun Resurrected Cube Recipes.html`): `CUBE_SECTIONS` in `build/cube/cubeCatalog.ts` (the
   page's anchors, `notes` rewritten from its footnotes, guide slugs) and `FAMILY_NOTES`. A renamed anchor breaks the
   "Official: <section>" links. The page lagged the files in about 31 places at 3.2.24 (cube audit 2026-11-07), so read
