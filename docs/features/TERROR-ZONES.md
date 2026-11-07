@@ -115,13 +115,15 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 - Users star whole zone groups (not single areas). Stored in this browser only: `terrorZones.watched` (zone ids) in
   localStorage, through one shared store (`store/preferences.ts`) so the widget and the page stay in sync; other tabs
   follow through the `storage` event. Ids the current bundle does not have are ignored (`knownWatched`).
-- **Reset when ESR regroups the zones**: an id can survive with another meaning (3.3 turned `ESR-Zone19` / `ESR-Zone20`
-  from endgame-map groups into Act 1 groups), so `terrorZones.watchedZoneSet` keeps the `zoneSetFingerprint` of the
-  groups the list was starred against: the zone count and an FNV-1a hash of every group's id and area ids in file order
-  (not the labels, seed, start or durations). When a bundle loads (`scheduleStore`, before anything renders it)
-  `syncWatchedZoneSet` compares it: a different or missing fingerprint with a non-empty list clears the list once
-  (`reconcileWatched`; a missing one means a list starred with ESR 3.2.24, before the key existed), then the new
-  fingerprint is stored. Any release that adds or moves an area clears every star, not only the changed groups'.
+- **Stars dropped when ESR regroups the zones**: an id can survive with another meaning (3.3 turned `ESR-Zone19` /
+  `ESR-Zone20` from endgame-map groups into Act 1 groups), so `terrorZones.watchedZoneSet` keeps the
+  `zoneGroupHashes` of the groups the list was starred against: per group id, an FNV-1a hash of its sorted area ids
+  (not the labels, the group order, seed, start or durations). When a bundle loads (`scheduleStore`, before anything
+  renders it) `syncWatchedZoneSet` compares them per group (`reconcileWatched`): a starred id whose areas changed, or
+  which the bundle no longer has, is dropped; the stars of unchanged groups stay. Then the new hashes are stored.
+  Older stored values: v1.59.0 stored one `zoneSetFingerprint` string (every id and area in file order) — the list is
+  kept only when it still matches the bundle; nothing stored means a list starred with ESR 3.2.24, which loses
+  `ESR-Zone19` / `ESR-Zone20` (reused) and the removed ids, and keeps the rest (3.3 only added areas to the others).
 - Watched groups are highlighted with the `warning` token (`WATCHED_ROW_CLASS`: brown-orange in light, yellow in dark)
   and the favourites' amber star.
 - **Notifications** (opt-in, `terrorZones.notify`): the page's toggle asks for permission on the click only, then shows
@@ -146,6 +148,6 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 
 Logic only: `engine/sha1.test.ts`, `engine/schedule.test.ts` (retail and ESR 3.3 ground truth, the ESR bundle's consistency, cache,
 edges: before the start, breaks, an end time), `utils/utils.test.ts` (countdown and wait formatting, watched alert /
-filter / toggle, zone-set fingerprint and watch-list reset, notification decision, boost summary, widget lift),
-`store/preferences.test.ts` (the stored watch list cleared once when the fingerprint changes), `build/bundleTerrorZones.test.ts` (seed precision, names, duplicate
+filter / toggle, per-group zone hashes and the stars they drop (all stored formats), notification decision, boost summary, widget lift),
+`store/preferences.test.ts` (stars of changed groups dropped, unchanged ones kept, older stored formats), `build/bundleTerrorZones.test.ts` (seed precision, names, duplicate
 ids, invalid configs) and the committed-bundle checks in `bundleIntegrity.test.ts`.

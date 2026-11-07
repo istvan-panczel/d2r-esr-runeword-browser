@@ -1,10 +1,14 @@
 import { useSyncExternalStore } from 'react';
 import { readPersistentJson, writePersistentJson, type PersistentStorage } from '@/core/hooks/usePersistentState';
-import { reconcileWatched, toggleWatched } from '../utils/watched';
+import type { TerrorZoneGroup } from '@/features/game-data/engine/schema';
+import { reconcileWatched, sameZoneGroupHashes, toggleWatched, zoneGroupHashes, type ZoneGroupHashes } from '../utils/watched';
 
 /** localStorage keys (this browser only; nothing is synced to an account) */
 export const WATCHED_STORAGE_KEY = 'terrorZones.watched';
-/** `zoneSetFingerprint` of the zone groups the watch list was starred against (cleared once when ESR regroups them) */
+/**
+ * `zoneGroupHashes` of the zone groups the watch list was starred against (a star is dropped when its group's areas
+ * change); v1.59.0 stored one `zoneSetFingerprint` string here
+ */
 export const WATCHED_ZONE_SET_STORAGE_KEY = 'terrorZones.watchedZoneSet';
 export const NOTIFY_STORAGE_KEY = 'terrorZones.notify';
 /**
@@ -15,8 +19,13 @@ export const LAST_NOTIFIED_STORAGE_KEY = 'terrorZones.lastNotifiedStart';
 export const WIDGET_OPEN_STORAGE_KEY = 'terrorZones.widgetOpen';
 
 const isStringList = (value: unknown): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-const isString = (value: unknown): value is string => typeof value === 'string';
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
+const isStoredZoneSet = (value: unknown): value is ZoneGroupHashes | string =>
+  typeof value === 'string' ||
+  (typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value as Record<string, unknown>).every((hash) => typeof hash === 'string'));
 const isSeconds = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value);
 
 export interface TerrorZonePrefs {
@@ -82,22 +91,23 @@ export function toggleWatchedZone(id: string): void {
 }
 
 /**
- * Called once per loaded bundle, before anything shows the watch list: when the zone groups changed since the list was
- * starred (`fingerprint` differs from the stored one), the list is cleared, since a kept id may now name another group.
- * Then the fingerprint is stored.
+ * Called once per loaded bundle, before anything shows the watch list: a starred group whose areas changed since it
+ * was starred, or which is gone, is dropped (`reconcileWatched`), since its id may now name another group; the others
+ * stay. Then the groups' hashes are stored.
  */
-export function syncWatchedZoneSet(fingerprint: string): void {
+export function syncWatchedZoneSet(zones: readonly TerrorZoneGroup[]): void {
   const store = storage();
-  const stored = readPersistentJson<string | null>(store, WATCHED_ZONE_SET_STORAGE_KEY, null, isString);
-  if (stored === fingerprint) return;
+  const stored = readPersistentJson<ZoneGroupHashes | string | null>(store, WATCHED_ZONE_SET_STORAGE_KEY, null, isStoredZoneSet);
+  const hashes = zoneGroupHashes(zones);
+  if (stored !== null && typeof stored !== 'string' && sameZoneGroupHashes(stored, hashes)) return;
   const prefs = read();
-  const watched = reconcileWatched(prefs.watched, stored, fingerprint);
+  const watched = reconcileWatched(prefs.watched, stored, zones);
   if (watched !== prefs.watched) {
-    console.info('Terror zone groups changed with this ESR version: starred groups cleared');
+    console.info('Terror zone groups changed with this ESR version: stars of changed groups cleared');
     writePersistentJson(store, WATCHED_STORAGE_KEY, watched);
     emit({ ...prefs, watched });
   }
-  writePersistentJson(store, WATCHED_ZONE_SET_STORAGE_KEY, fingerprint);
+  writePersistentJson(store, WATCHED_ZONE_SET_STORAGE_KEY, hashes);
 }
 
 export function setNotifyEnabled(notify: boolean): void {

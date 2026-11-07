@@ -3,7 +3,17 @@ import type { TerrorZoneBoost, TerrorZoneGroup } from '@/features/game-data/engi
 import type { TerrorZoneSlot } from '../engine/schedule';
 import { formatBoostLines, sameCaps, summariseBoosts, formatVersionBoost } from './boosts';
 import { formatClockRange, formatCountdown, formatDayLabel, formatIn, formatWhen, localDayKey } from './format';
-import { filterSlots, knownWatched, reconcileWatched, shouldNotify, toggleWatched, watchAlert, zoneSetFingerprint } from './watched';
+import {
+  filterSlots,
+  knownWatched,
+  reconcileWatched,
+  sameZoneGroupHashes,
+  shouldNotify,
+  toggleWatched,
+  watchAlert,
+  zoneGroupHashes,
+  zoneSetFingerprint,
+} from './watched';
 import { isWidgetHidden, widgetLift } from './widgetPosition';
 
 const zone = (id: string): TerrorZoneGroup => ({ id, labels: [id], areas: [] });
@@ -86,12 +96,13 @@ describe('watched helpers', () => {
     expect([...knownWatched(['ESR-Zone03', 'Old-Zone'], ['ESR-Zone03'])]).toEqual(['ESR-Zone03']);
   });
 
-  it('fingerprints what the groups mean: ids and areas in order, not labels', () => {
-    const group = (id: string, areaIds: number[]): TerrorZoneGroup => ({
-      id,
-      labels: [id],
-      areas: areaIds.map((areaId) => ({ id: areaId, name: String(areaId) })),
-    });
+  const group = (id: string, areaIds: number[]): TerrorZoneGroup => ({
+    id,
+    labels: [id],
+    areas: areaIds.map((areaId) => ({ id: areaId, name: String(areaId) })),
+  });
+
+  it('fingerprints what the groups mean: ids and areas in order, not labels (the v1.59.0 stored format)', () => {
     const before = [group('ESR-Zone19', [140, 141]), group('ESR-Zone20', [142])];
     const fingerprint = zoneSetFingerprint(before);
     expect(fingerprint).toMatch(/^2-[0-9a-f]{8}$/);
@@ -103,14 +114,41 @@ describe('watched helpers', () => {
     expect(zoneSetFingerprint([group('ESR-Zone19', [140, 141])])).not.toBe(fingerprint);
   });
 
-  it('keeps the watch list only while the zone groups are the ones it was starred against', () => {
-    const list = ['ESR-Zone19', 'ESR-Zone03'];
-    expect(reconcileWatched(list, 'fp-a', 'fp-a')).toBe(list);
-    expect(reconcileWatched(list, 'fp-a', 'fp-b')).toEqual([]);
-    // starred before the fingerprint existed (ESR 3.2.24's groups)
-    expect(reconcileWatched(list, null, 'fp-b')).toEqual([]);
+  it('hashes each group by its area set: not its labels, area order or the other groups', () => {
+    const hashes = zoneGroupHashes([group('ESR-Zone19', [140, 141]), group('ESR-Zone20', [142])]);
+    expect(Object.keys(hashes)).toEqual(['ESR-Zone19', 'ESR-Zone20']);
+    const reordered = zoneGroupHashes([group('ESR-Zone20', [142]), { ...group('ESR-Zone19', [141, 140]), labels: ['Renamed'] }]);
+    expect(sameZoneGroupHashes(hashes, reordered)).toBe(true);
+    const moved = zoneGroupHashes([group('ESR-Zone19', [28, 29]), group('ESR-Zone20', [142])]);
+    expect(moved['ESR-Zone19']).not.toBe(hashes['ESR-Zone19']);
+    expect(moved['ESR-Zone20']).toBe(hashes['ESR-Zone20']);
+    expect(sameZoneGroupHashes(hashes, moved)).toBe(false);
+    expect(sameZoneGroupHashes(hashes, zoneGroupHashes([group('ESR-Zone19', [140, 141])]))).toBe(false);
+  });
+
+  it('keeps the stars of unchanged groups and drops those whose areas changed or which are gone', () => {
+    const before = [group('ESR-Zone03', [39]), group('ESR-Zone19', [140, 141]), group('ESR-Zone21', [145])];
+    const after = [group('ESR-Zone03', [39]), group('ESR-Zone19', [27, 28]), group('ESR-Zone22', [148])];
+    const stored = zoneGroupHashes(before);
+    const list = ['ESR-Zone19', 'ESR-Zone03', 'ESR-Zone21'];
+    expect(reconcileWatched(list, stored, before)).toBe(list);
+    expect(reconcileWatched(list, stored, after)).toEqual(['ESR-Zone03']);
+    // a new group (another release) does not touch the others
+    const list03 = ['ESR-Zone03'];
+    expect(reconcileWatched(list03, stored, [...before, group('ESR-Zone23', [1])])).toBe(list03);
+    // an id missing from the stored hashes (never seen with its areas) is dropped
+    expect(reconcileWatched(['ESR-Zone22'], stored, after)).toEqual([]);
     const empty: string[] = [];
-    expect(reconcileWatched(empty, null, 'fp-b')).toBe(empty);
+    expect(reconcileWatched(empty, null, after)).toBe(empty);
+  });
+
+  it('reads the older stored formats: the v1.59.0 fingerprint and none (ESR 3.2.24)', () => {
+    const zones = [group('ESR-Zone03', [39]), group('ESR-Zone19', [27, 28]), group('ESR-Zone20', [3])];
+    const list = ['ESR-Zone19', 'ESR-Zone03'];
+    expect(reconcileWatched(list, zoneSetFingerprint(zones), zones)).toBe(list);
+    expect(reconcileWatched(list, 'fp-other', zones)).toEqual([]);
+    // starred before the fingerprint existed: only the ids ESR 3.3 reused or removed go
+    expect(reconcileWatched(['ESR-Zone19', 'ESR-Zone03', 'ESR-Zone20', 'ESR-Zone22'], null, zones)).toEqual(['ESR-Zone03']);
   });
 
   it('notifies only for a slot change to a watched group, once across tabs', () => {
