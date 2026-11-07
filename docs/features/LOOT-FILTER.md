@@ -973,7 +973,8 @@ share one draft, one search box, one "N selected" counter and one Apply / Cancel
   mythical bases follow under their own "Mythical" checkbox. A base that is not its family's member for its tier
   (ESR's duplicates such as `q86`, `qdf`) gets a row of its own; a family spanning two types (the claws, `h2h1` /
   `h2h2`) sits under its lowest member's type. Types without exceptional or elite bases (accessories, quivers, throwing
-  potions) are a plain list. A cell: checkbox, name, code, one stat line (damage or defense, block, speed for weapons,
+  potions) are a plain list. A cell: checkbox, the item's icon (24 px, `ItemIcon` by code, both tabs; the
+  uniques / sets browser has none: its cells are row ids), name, code, one stat line (damage or defense, block, speed for weapons,
   required level/str/dex, max sockets as `N os` with the per-ilvl caps in the tooltip, qlvl). The toolbar adds
   tri-state toggles for Normal / Exceptional / Elite / Mythical (this tab only).
 - **Misc tab**: every `kind: 'misc'` item with `drops` (spawnable, or non-spawnable but named by a treasure class:

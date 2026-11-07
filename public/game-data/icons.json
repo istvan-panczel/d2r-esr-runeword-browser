@@ -29,7 +29,18 @@
       "belt_sash_l.webp",
       "body_part_brain.webp",
       "body_part_eye.webp",
+      "body_part_fang.webp",
+      "body_part_flag.webp",
       "body_part_heart.webp",
+      "body_part_horn.webp",
+      "body_part_jawbone.webp",
+      "body_part_player_ear.webp",
+      "body_part_quill.webp",
+      "body_part_soul.webp",
+      "body_part_spleen.webp",
+      "body_part_tail.webp",
+      "book_identify_book.webp",
+      "book_town_portal_book.webp",
       "boot_heavy_boots.webp",
       "boot_leather_boots.webp",
       "bow_composite_bow.webp",
@@ -100,6 +111,7 @@
       "gem_topaz.webp",
       "glove_gloves_l.webp",
       "glove_heavy_gloves.webp",
+      "gold_gold.webp",
       "grimoires_ars_aldiablolos.webp",
       "grimoires_codex.webp",
       "grimoires_compendium.webp",
@@ -127,9 +139,11 @@
       "helmet_rockstopper.webp",
       "helmet_skull_cap.webp",
       "helmet_war_bonnet.webp",
+      "herb_herb.webp",
       "javelin_glaive.webp",
       "javelin_maiden_javelin.webp",
       "javelin_short_spear.webp",
+      "key_skeleton_key.webp",
       "knife_balanced_knife.webp",
       "knife_banes_spire.webp",
       "knife_decoy_dagger.webp",
@@ -151,13 +165,32 @@
       "pelt_wolf_head.webp",
       "polearm_athenas_wrath.webp",
       "polearm_voulge.webp",
+      "potion_antidote_potion.webp",
       "potion_choking_gas_potion.webp",
       "potion_elixir.webp",
       "potion_exploding_potion.webp",
+      "potion_full_healing_potion.webp",
+      "potion_full_mana_potion.webp",
+      "potion_full_rejuv_potion.webp",
       "potion_fulminating_potion.webp",
+      "potion_greater_healing_potion.webp",
+      "potion_greater_mana_potion.webp",
+      "potion_healing_potion.webp",
+      "potion_healing_potion2.webp",
+      "potion_lesser_healing_potion.webp",
+      "potion_lesser_mana_potion.webp",
+      "potion_light_healing_potion.webp",
+      "potion_light_mana_potion.webp",
+      "potion_mana_potion.webp",
+      "potion_mana_potion2.webp",
       "potion_oil_potion.webp",
       "potion_rancid_gas_potion.webp",
+      "potion_rejuv_potion.webp",
+      "potion_stamina_potion.webp",
       "potion_strangling_gas_potion.webp",
+      "potion_strong_healing_potion.webp",
+      "potion_strong_mana_potion.webp",
+      "potion_thawing_potion.webp",
       "quest_bark_scroll.webp",
       "quest_book_of_skill.webp",
       "quest_burning_essence_of_terror.webp",
@@ -170,6 +203,7 @@
       "quest_mephisto_soul_stone.webp",
       "quest_scroll_of_horadric_quest_info.webp",
       "quest_scroll_of_self_resurrect.webp",
+      "quest_token_of_absolution.webp",
       "quest_twisted_essence_of_suffering.webp",
       "ring_ring4.webp",
       "rune_amn_rune.webp",
@@ -205,7 +239,8 @@
       "rune_vex_rune.webp",
       "rune_zod_rune.webp",
       "scepter_scepter.webp",
-      "scroll_deciphered_bark_scroll.webp",
+      "scroll_identify_scroll.webp",
+      "scroll_town_portal_scroll.webp",
       "shield_buckler.webp",
       "shield_bverrit_keep.webp",
       "shield_gothic_shield.webp",
@@ -3151,7 +3186,7 @@
       "h": 128
     },
     "xrb": {
-      "file": "armor_robe.webp",
+      "file": "armor_cape.webp",
       "w": 64,
       "h": 128
     },
@@ -7367,7 +7402,7 @@
       }
     },
     "Wisdom's Wrap": {
-      "file": "armor_robe__invgreybrown-whit.webp",
+      "file": "armor_cape__invgreybrown-whit.webp",
       "w": 64,
       "h": 128,
       "tint": {
@@ -11723,7 +11758,7 @@
       }
     },
     "Rotting Fissure": {
-      "file": "charm_charm_large__invgreybrown-lgrn.webp",
+      "file": "charm_charm_large__invgreybrown-dgrn.webp",
       "w": 45,
       "h": 128,
       "tint": {
@@ -13078,7 +13113,7 @@
       }
     },
     "Divada's Shawl": {
-      "file": "armor_robe__invgreybrown-dblu.webp",
+      "file": "armor_cape__invgreybrown-dblu.webp",
       "w": 64,
       "h": 128,
       "tint": {
@@ -13443,7 +13478,7 @@
       "h": 128
     },
     "Iron Wolf's Robes-N (merc only)": {
-      "file": "armor_robe__invgreybrown-cred.webp",
+      "file": "armor_cape__invgreybrown-cred.webp",
       "w": 64,
       "h": 128,
       "tint": {
@@ -13528,7 +13563,7 @@
       }
     },
     "Iron Wolf's Robes-NM (merc only)": {
-      "file": "armor_robe__invgreybrown-cred.webp",
+      "file": "armor_cape__invgreybrown-cred.webp",
       "w": 64,
       "h": 128,
       "tint": {
@@ -13609,7 +13644,7 @@
       "h": 128
     },
     "Iron Wolf's Robes-H (merc only)": {
-      "file": "armor_robe__invgreybrown-cred.webp",
+      "file": "armor_cape__invgreybrown-cred.webp",
       "w": 64,
       "h": 128,
       "tint": {
@@ -14812,7 +14847,7 @@
       "name": "Scroll of Inifuss"
     },
     "bkd": {
-      "file": "scroll_deciphered_bark_scroll.webp",
+      "file": "quest_bark_scroll.webp",
       "w": 128,
       "h": 125,
       "name": "Key to the Cairn Stones"
@@ -15260,6 +15295,7655 @@
       "w": 89,
       "h": 128,
       "name": "Khalim's Will"
+    }
+  },
+  "items": {
+    "7ha": {
+      "file": "axe_hand_axe.webp",
+      "w": 58,
+      "h": 128
+    },
+    "7ax": {
+      "file": "axe_axe.webp",
+      "w": 76,
+      "h": 128
+    },
+    "72a": {
+      "file": "axe_double_axe.webp",
+      "w": 59,
+      "h": 128
+    },
+    "7mp": {
+      "file": "axe_military_pick.webp",
+      "w": 77,
+      "h": 128
+    },
+    "7wa": {
+      "file": "axe_war_axe.webp",
+      "w": 74,
+      "h": 128
+    },
+    "7la": {
+      "file": "axe_large_axe.webp",
+      "w": 78,
+      "h": 128
+    },
+    "7ba": {
+      "file": "axe_broad_axe.webp",
+      "w": 79,
+      "h": 128
+    },
+    "7bt": {
+      "file": "axe_battle_axe.webp",
+      "w": 60,
+      "h": 128
+    },
+    "7ga": {
+      "file": "axe_great_axe.webp",
+      "w": 66,
+      "h": 128
+    },
+    "7gi": {
+      "file": "axe_giant_axe.webp",
+      "w": 68,
+      "h": 128
+    },
+    "7wn": {
+      "file": "wand_wand.webp",
+      "w": 57,
+      "h": 128
+    },
+    "7yw": {
+      "file": "wand_yew_wand.webp",
+      "w": 56,
+      "h": 128
+    },
+    "7bw": {
+      "file": "wand_bone_wand.webp",
+      "w": 61,
+      "h": 128
+    },
+    "7gw": {
+      "file": "wand_grim_wand.webp",
+      "w": 64,
+      "h": 128
+    },
+    "7cl": {
+      "file": "club_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "7sc": {
+      "file": "scepter_scepter.webp",
+      "w": 35,
+      "h": 128
+    },
+    "7qs": {
+      "file": "scepter_grand_scepter.webp",
+      "w": 39,
+      "h": 128
+    },
+    "7ws": {
+      "file": "scepter_war_scepter.webp",
+      "w": 80,
+      "h": 128
+    },
+    "7sp": {
+      "file": "club_spiked_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "7ma": {
+      "file": "mace_mace.webp",
+      "w": 32,
+      "h": 128
+    },
+    "7mt": {
+      "file": "mace_morning_star.webp",
+      "w": 45,
+      "h": 128
+    },
+    "7fl": {
+      "file": "mace_flail.webp",
+      "w": 71,
+      "h": 128
+    },
+    "7wh": {
+      "file": "hammer_war_hammer.webp",
+      "w": 67,
+      "h": 128
+    },
+    "7m7": {
+      "file": "hammer_maul.webp",
+      "w": 52,
+      "h": 128
+    },
+    "7gm": {
+      "file": "hammer_great_maul.webp",
+      "w": 68,
+      "h": 128
+    },
+    "7ss": {
+      "file": "sword_short_sword.webp",
+      "w": 31,
+      "h": 128
+    },
+    "7sm": {
+      "file": "sword_scimitar.webp",
+      "w": 33,
+      "h": 128
+    },
+    "7sb": {
+      "file": "sword_saber.webp",
+      "w": 39,
+      "h": 128
+    },
+    "7fc": {
+      "file": "sword_falchion.webp",
+      "w": 34,
+      "h": 128
+    },
+    "7cr": {
+      "file": "sword_crystal_sword.webp",
+      "w": 71,
+      "h": 128
+    },
+    "7bs": {
+      "file": "sword_broad_sword.webp",
+      "w": 68,
+      "h": 128
+    },
+    "7ls": {
+      "file": "sword_long_sword.webp",
+      "w": 64,
+      "h": 128
+    },
+    "7wd": {
+      "file": "sword_war_sword.webp",
+      "w": 35,
+      "h": 128
+    },
+    "72h": {
+      "file": "sword_two_handed_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "7cm": {
+      "file": "sword_claymore.webp",
+      "w": 28,
+      "h": 128
+    },
+    "7gs": {
+      "file": "sword_giant_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "7b7": {
+      "file": "sword_bastard_sword.webp",
+      "w": 26,
+      "h": 128
+    },
+    "7fb": {
+      "file": "sword_flamberge.webp",
+      "w": 52,
+      "h": 128
+    },
+    "7gd": {
+      "file": "sword_great_sword.webp",
+      "w": 47,
+      "h": 128
+    },
+    "7dg": {
+      "file": "knife_dagger.webp",
+      "w": 59,
+      "h": 128
+    },
+    "7di": {
+      "file": "knife_dirk.webp",
+      "w": 60,
+      "h": 128
+    },
+    "7kr": {
+      "file": "knife_kriss.webp",
+      "w": 41,
+      "h": 128
+    },
+    "7bl": {
+      "file": "knife_blade.webp",
+      "w": 36,
+      "h": 128
+    },
+    "7tk": {
+      "file": "knife_throwing_knife.webp",
+      "w": 69,
+      "h": 128
+    },
+    "7ta": {
+      "file": "axe_throwing_axe.webp",
+      "w": 69,
+      "h": 128
+    },
+    "7bk": {
+      "file": "knife_balanced_knife.webp",
+      "w": 59,
+      "h": 128
+    },
+    "7b8": {
+      "file": "axe_balanced_axe.webp",
+      "w": 125,
+      "h": 128
+    },
+    "7ja": {
+      "file": "javelin_javelin.webp",
+      "w": 41,
+      "h": 128
+    },
+    "7pi": {
+      "file": "javelin_pilum.webp",
+      "w": 24,
+      "h": 128
+    },
+    "7s7": {
+      "file": "javelin_short_spear.webp",
+      "w": 27,
+      "h": 128
+    },
+    "7gl": {
+      "file": "javelin_glaive.webp",
+      "w": 25,
+      "h": 128
+    },
+    "7ts": {
+      "file": "javelin_throwing_spear.webp",
+      "w": 28,
+      "h": 128
+    },
+    "7sr": {
+      "file": "spear_spear.webp",
+      "w": 57,
+      "h": 128
+    },
+    "7tr": {
+      "file": "spear_trident.webp",
+      "w": 52,
+      "h": 128
+    },
+    "7br": {
+      "file": "spear_brandistock.webp",
+      "w": 58,
+      "h": 128
+    },
+    "7st": {
+      "file": "spear_spetum.webp",
+      "w": 58,
+      "h": 128
+    },
+    "7p7": {
+      "file": "spear_pike.webp",
+      "w": 59,
+      "h": 128
+    },
+    "7o7": {
+      "file": "polearm_bardiche.webp",
+      "w": 54,
+      "h": 128
+    },
+    "7vo": {
+      "file": "polearm_voulge.webp",
+      "w": 56,
+      "h": 128
+    },
+    "7s8": {
+      "file": "polearm_scythe.webp",
+      "w": 54,
+      "h": 128
+    },
+    "7pa": {
+      "file": "polearm_poleaxe.webp",
+      "w": 60,
+      "h": 128
+    },
+    "7h7": {
+      "file": "polearm_halberd.webp",
+      "w": 54,
+      "h": 128
+    },
+    "7wc": {
+      "file": "polearm_war_scythe.webp",
+      "w": 62,
+      "h": 128
+    },
+    "6ss": {
+      "file": "staff_short_staff.webp",
+      "w": 25,
+      "h": 128
+    },
+    "6ls": {
+      "file": "staff_long_staff.webp",
+      "w": 26,
+      "h": 128
+    },
+    "6cs": {
+      "file": "staff_gnarled_staff.webp",
+      "w": 29,
+      "h": 128
+    },
+    "6bs": {
+      "file": "staff_battle_staff.webp",
+      "w": 28,
+      "h": 128
+    },
+    "6ws": {
+      "file": "staff_war_staff.webp",
+      "w": 58,
+      "h": 128
+    },
+    "6sb": {
+      "file": "bow_short_bow.webp",
+      "w": 86,
+      "h": 128
+    },
+    "6hb": {
+      "file": "bow_hunters_bow.webp",
+      "w": 84,
+      "h": 128
+    },
+    "6lb": {
+      "file": "bow_long_bow.webp",
+      "w": 59,
+      "h": 128
+    },
+    "6cb": {
+      "file": "bow_composite_bow.webp",
+      "w": 67,
+      "h": 128
+    },
+    "6s7": {
+      "file": "bow_short_battle_bow.webp",
+      "w": 79,
+      "h": 128
+    },
+    "6l7": {
+      "file": "bow_long_battle_bow.webp",
+      "w": 63,
+      "h": 128
+    },
+    "6sw": {
+      "file": "bow_short_war_bow.webp",
+      "w": 78,
+      "h": 128
+    },
+    "6lw": {
+      "file": "bow_long_war_bow.webp",
+      "w": 60,
+      "h": 128
+    },
+    "6lx": {
+      "file": "bow_light_crossbow.webp",
+      "w": 96,
+      "h": 128
+    },
+    "6mx": {
+      "file": "bow_crossbow.webp",
+      "w": 87,
+      "h": 128
+    },
+    "6hx": {
+      "file": "bow_heavy_crossbow.webp",
+      "w": 65,
+      "h": 128
+    },
+    "6rx": {
+      "file": "bow_repeating_crossbow.webp",
+      "w": 73,
+      "h": 128
+    },
+    "aq0": {
+      "file": "bow_arrows2.webp",
+      "w": 37,
+      "h": 128
+    },
+    "cq0": {
+      "file": "bow_bolts2.webp",
+      "w": 42,
+      "h": 128
+    },
+    "p01": {
+      "file": "axe_hand_axe.webp",
+      "w": 58,
+      "h": 128
+    },
+    "p02": {
+      "file": "axe_axe.webp",
+      "w": 76,
+      "h": 128
+    },
+    "p03": {
+      "file": "axe_double_axe.webp",
+      "w": 59,
+      "h": 128
+    },
+    "p04": {
+      "file": "axe_military_pick.webp",
+      "w": 77,
+      "h": 128
+    },
+    "p05": {
+      "file": "axe_war_axe.webp",
+      "w": 74,
+      "h": 128
+    },
+    "p06": {
+      "file": "axe_large_axe.webp",
+      "w": 78,
+      "h": 128
+    },
+    "p07": {
+      "file": "axe_broad_axe.webp",
+      "w": 79,
+      "h": 128
+    },
+    "p08": {
+      "file": "axe_battle_axe.webp",
+      "w": 60,
+      "h": 128
+    },
+    "p09": {
+      "file": "axe_great_axe.webp",
+      "w": 66,
+      "h": 128
+    },
+    "p10": {
+      "file": "axe_giant_axe.webp",
+      "w": 68,
+      "h": 128
+    },
+    "p11": {
+      "file": "wand_wand.webp",
+      "w": 57,
+      "h": 128
+    },
+    "p12": {
+      "file": "wand_yew_wand.webp",
+      "w": 56,
+      "h": 128
+    },
+    "p13": {
+      "file": "wand_bone_wand.webp",
+      "w": 61,
+      "h": 128
+    },
+    "p14": {
+      "file": "wand_grim_wand.webp",
+      "w": 64,
+      "h": 128
+    },
+    "p15": {
+      "file": "club_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "p16": {
+      "file": "scepter_scepter.webp",
+      "w": 35,
+      "h": 128
+    },
+    "p17": {
+      "file": "scepter_grand_scepter.webp",
+      "w": 39,
+      "h": 128
+    },
+    "p18": {
+      "file": "scepter_war_scepter.webp",
+      "w": 80,
+      "h": 128
+    },
+    "p19": {
+      "file": "club_spiked_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "p20": {
+      "file": "mace_mace.webp",
+      "w": 32,
+      "h": 128
+    },
+    "p21": {
+      "file": "mace_morning_star.webp",
+      "w": 45,
+      "h": 128
+    },
+    "p22": {
+      "file": "mace_flail.webp",
+      "w": 71,
+      "h": 128
+    },
+    "p23": {
+      "file": "hammer_war_hammer.webp",
+      "w": 67,
+      "h": 128
+    },
+    "p24": {
+      "file": "hammer_maul.webp",
+      "w": 52,
+      "h": 128
+    },
+    "p25": {
+      "file": "hammer_great_maul.webp",
+      "w": 68,
+      "h": 128
+    },
+    "p26": {
+      "file": "sword_short_sword.webp",
+      "w": 31,
+      "h": 128
+    },
+    "p27": {
+      "file": "sword_scimitar.webp",
+      "w": 33,
+      "h": 128
+    },
+    "p28": {
+      "file": "sword_saber.webp",
+      "w": 39,
+      "h": 128
+    },
+    "p29": {
+      "file": "sword_falchion.webp",
+      "w": 34,
+      "h": 128
+    },
+    "p30": {
+      "file": "sword_crystal_sword.webp",
+      "w": 71,
+      "h": 128
+    },
+    "p31": {
+      "file": "sword_broad_sword.webp",
+      "w": 68,
+      "h": 128
+    },
+    "p32": {
+      "file": "sword_long_sword.webp",
+      "w": 64,
+      "h": 128
+    },
+    "p33": {
+      "file": "sword_war_sword.webp",
+      "w": 35,
+      "h": 128
+    },
+    "p34": {
+      "file": "sword_two_handed_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "p35": {
+      "file": "sword_claymore.webp",
+      "w": 28,
+      "h": 128
+    },
+    "p36": {
+      "file": "sword_giant_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "p37": {
+      "file": "sword_bastard_sword.webp",
+      "w": 26,
+      "h": 128
+    },
+    "p38": {
+      "file": "sword_flamberge.webp",
+      "w": 52,
+      "h": 128
+    },
+    "p39": {
+      "file": "sword_great_sword.webp",
+      "w": 47,
+      "h": 128
+    },
+    "p40": {
+      "file": "knife_dagger.webp",
+      "w": 59,
+      "h": 128
+    },
+    "p41": {
+      "file": "knife_dirk.webp",
+      "w": 60,
+      "h": 128
+    },
+    "p42": {
+      "file": "knife_kriss.webp",
+      "w": 41,
+      "h": 128
+    },
+    "p43": {
+      "file": "knife_blade.webp",
+      "w": 36,
+      "h": 128
+    },
+    "p44": {
+      "file": "spear_spear.webp",
+      "w": 57,
+      "h": 128
+    },
+    "p45": {
+      "file": "spear_trident.webp",
+      "w": 52,
+      "h": 128
+    },
+    "p46": {
+      "file": "spear_brandistock.webp",
+      "w": 58,
+      "h": 128
+    },
+    "p47": {
+      "file": "spear_spetum.webp",
+      "w": 58,
+      "h": 128
+    },
+    "p48": {
+      "file": "spear_pike.webp",
+      "w": 59,
+      "h": 128
+    },
+    "p49": {
+      "file": "polearm_bardiche.webp",
+      "w": 54,
+      "h": 128
+    },
+    "p50": {
+      "file": "polearm_voulge.webp",
+      "w": 56,
+      "h": 128
+    },
+    "p51": {
+      "file": "polearm_scythe.webp",
+      "w": 54,
+      "h": 128
+    },
+    "p52": {
+      "file": "polearm_poleaxe.webp",
+      "w": 60,
+      "h": 128
+    },
+    "p53": {
+      "file": "polearm_halberd.webp",
+      "w": 54,
+      "h": 128
+    },
+    "p54": {
+      "file": "polearm_war_scythe.webp",
+      "w": 62,
+      "h": 128
+    },
+    "p55": {
+      "file": "staff_short_staff.webp",
+      "w": 25,
+      "h": 128
+    },
+    "p56": {
+      "file": "staff_long_staff.webp",
+      "w": 26,
+      "h": 128
+    },
+    "p57": {
+      "file": "staff_gnarled_staff.webp",
+      "w": 29,
+      "h": 128
+    },
+    "p58": {
+      "file": "staff_battle_staff.webp",
+      "w": 28,
+      "h": 128
+    },
+    "p59": {
+      "file": "staff_war_staff.webp",
+      "w": 58,
+      "h": 128
+    },
+    "p60": {
+      "file": "bow_short_bow.webp",
+      "w": 86,
+      "h": 128
+    },
+    "p61": {
+      "file": "bow_hunters_bow.webp",
+      "w": 84,
+      "h": 128
+    },
+    "p62": {
+      "file": "bow_long_bow.webp",
+      "w": 59,
+      "h": 128
+    },
+    "p63": {
+      "file": "bow_composite_bow.webp",
+      "w": 67,
+      "h": 128
+    },
+    "p64": {
+      "file": "bow_short_battle_bow.webp",
+      "w": 79,
+      "h": 128
+    },
+    "p65": {
+      "file": "bow_long_battle_bow.webp",
+      "w": 63,
+      "h": 128
+    },
+    "p66": {
+      "file": "bow_short_war_bow.webp",
+      "w": 78,
+      "h": 128
+    },
+    "p67": {
+      "file": "bow_long_war_bow.webp",
+      "w": 60,
+      "h": 128
+    },
+    "p68": {
+      "file": "bow_light_crossbow.webp",
+      "w": 96,
+      "h": 128
+    },
+    "p69": {
+      "file": "bow_crossbow.webp",
+      "w": 87,
+      "h": 128
+    },
+    "p70": {
+      "file": "bow_heavy_crossbow.webp",
+      "w": 65,
+      "h": 128
+    },
+    "p71": {
+      "file": "bow_repeating_crossbow.webp",
+      "w": 73,
+      "h": 128
+    },
+    "q00": {
+      "file": "axe_hand_axe.webp",
+      "w": 58,
+      "h": 128
+    },
+    "q01": {
+      "file": "axe_axe.webp",
+      "w": 76,
+      "h": 128
+    },
+    "q02": {
+      "file": "axe_double_axe.webp",
+      "w": 59,
+      "h": 128
+    },
+    "q03": {
+      "file": "axe_military_pick.webp",
+      "w": 77,
+      "h": 128
+    },
+    "q04": {
+      "file": "axe_war_axe.webp",
+      "w": 74,
+      "h": 128
+    },
+    "q05": {
+      "file": "axe_large_axe.webp",
+      "w": 78,
+      "h": 128
+    },
+    "q06": {
+      "file": "axe_broad_axe.webp",
+      "w": 79,
+      "h": 128
+    },
+    "q07": {
+      "file": "axe_battle_axe.webp",
+      "w": 60,
+      "h": 128
+    },
+    "q08": {
+      "file": "axe_great_axe.webp",
+      "w": 66,
+      "h": 128
+    },
+    "q09": {
+      "file": "axe_giant_axe.webp",
+      "w": 68,
+      "h": 128
+    },
+    "q10": {
+      "file": "wand_wand.webp",
+      "w": 57,
+      "h": 128
+    },
+    "q11": {
+      "file": "wand_yew_wand.webp",
+      "w": 56,
+      "h": 128
+    },
+    "q12": {
+      "file": "wand_bone_wand.webp",
+      "w": 61,
+      "h": 128
+    },
+    "q13": {
+      "file": "wand_grim_wand.webp",
+      "w": 64,
+      "h": 128
+    },
+    "q14": {
+      "file": "club_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "q15": {
+      "file": "scepter_scepter.webp",
+      "w": 35,
+      "h": 128
+    },
+    "q16": {
+      "file": "scepter_grand_scepter.webp",
+      "w": 39,
+      "h": 128
+    },
+    "q17": {
+      "file": "scepter_war_scepter.webp",
+      "w": 80,
+      "h": 128
+    },
+    "q18": {
+      "file": "club_spiked_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "q19": {
+      "file": "mace_mace.webp",
+      "w": 32,
+      "h": 128
+    },
+    "q20": {
+      "file": "mace_morning_star.webp",
+      "w": 45,
+      "h": 128
+    },
+    "q21": {
+      "file": "mace_flail.webp",
+      "w": 71,
+      "h": 128
+    },
+    "q22": {
+      "file": "hammer_war_hammer.webp",
+      "w": 67,
+      "h": 128
+    },
+    "q23": {
+      "file": "hammer_maul.webp",
+      "w": 52,
+      "h": 128
+    },
+    "q24": {
+      "file": "hammer_great_maul.webp",
+      "w": 68,
+      "h": 128
+    },
+    "q25": {
+      "file": "sword_short_sword.webp",
+      "w": 31,
+      "h": 128
+    },
+    "q26": {
+      "file": "sword_scimitar.webp",
+      "w": 33,
+      "h": 128
+    },
+    "q27": {
+      "file": "sword_saber.webp",
+      "w": 39,
+      "h": 128
+    },
+    "q28": {
+      "file": "sword_falchion.webp",
+      "w": 34,
+      "h": 128
+    },
+    "q29": {
+      "file": "sword_crystal_sword.webp",
+      "w": 71,
+      "h": 128
+    },
+    "q30": {
+      "file": "sword_broad_sword.webp",
+      "w": 68,
+      "h": 128
+    },
+    "q31": {
+      "file": "sword_long_sword.webp",
+      "w": 64,
+      "h": 128
+    },
+    "q32": {
+      "file": "sword_war_sword.webp",
+      "w": 35,
+      "h": 128
+    },
+    "q33": {
+      "file": "sword_two_handed_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "q34": {
+      "file": "sword_claymore.webp",
+      "w": 28,
+      "h": 128
+    },
+    "q35": {
+      "file": "sword_giant_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "q36": {
+      "file": "sword_bastard_sword.webp",
+      "w": 26,
+      "h": 128
+    },
+    "q37": {
+      "file": "sword_flamberge.webp",
+      "w": 52,
+      "h": 128
+    },
+    "q38": {
+      "file": "sword_great_sword.webp",
+      "w": 47,
+      "h": 128
+    },
+    "q39": {
+      "file": "knife_dagger.webp",
+      "w": 59,
+      "h": 128
+    },
+    "q40": {
+      "file": "knife_dirk.webp",
+      "w": 60,
+      "h": 128
+    },
+    "q41": {
+      "file": "knife_kriss.webp",
+      "w": 41,
+      "h": 128
+    },
+    "q42": {
+      "file": "knife_blade.webp",
+      "w": 36,
+      "h": 128
+    },
+    "q43": {
+      "file": "spear_spear.webp",
+      "w": 57,
+      "h": 128
+    },
+    "q44": {
+      "file": "spear_trident.webp",
+      "w": 52,
+      "h": 128
+    },
+    "q45": {
+      "file": "spear_brandistock.webp",
+      "w": 58,
+      "h": 128
+    },
+    "q46": {
+      "file": "spear_spetum.webp",
+      "w": 58,
+      "h": 128
+    },
+    "q47": {
+      "file": "spear_pike.webp",
+      "w": 59,
+      "h": 128
+    },
+    "q48": {
+      "file": "polearm_bardiche.webp",
+      "w": 54,
+      "h": 128
+    },
+    "q49": {
+      "file": "polearm_voulge.webp",
+      "w": 56,
+      "h": 128
+    },
+    "q50": {
+      "file": "polearm_scythe.webp",
+      "w": 54,
+      "h": 128
+    },
+    "q51": {
+      "file": "polearm_poleaxe.webp",
+      "w": 60,
+      "h": 128
+    },
+    "q52": {
+      "file": "polearm_halberd.webp",
+      "w": 54,
+      "h": 128
+    },
+    "q53": {
+      "file": "polearm_war_scythe.webp",
+      "w": 62,
+      "h": 128
+    },
+    "q54": {
+      "file": "staff_short_staff.webp",
+      "w": 25,
+      "h": 128
+    },
+    "q55": {
+      "file": "staff_long_staff.webp",
+      "w": 26,
+      "h": 128
+    },
+    "q56": {
+      "file": "staff_gnarled_staff.webp",
+      "w": 29,
+      "h": 128
+    },
+    "q57": {
+      "file": "staff_battle_staff.webp",
+      "w": 28,
+      "h": 128
+    },
+    "q58": {
+      "file": "staff_war_staff.webp",
+      "w": 58,
+      "h": 128
+    },
+    "q59": {
+      "file": "bow_short_bow.webp",
+      "w": 86,
+      "h": 128
+    },
+    "q60": {
+      "file": "bow_hunters_bow.webp",
+      "w": 84,
+      "h": 128
+    },
+    "q61": {
+      "file": "bow_long_bow.webp",
+      "w": 59,
+      "h": 128
+    },
+    "q62": {
+      "file": "bow_composite_bow.webp",
+      "w": 67,
+      "h": 128
+    },
+    "q63": {
+      "file": "bow_short_battle_bow.webp",
+      "w": 79,
+      "h": 128
+    },
+    "q64": {
+      "file": "bow_long_battle_bow.webp",
+      "w": 63,
+      "h": 128
+    },
+    "q65": {
+      "file": "bow_short_war_bow.webp",
+      "w": 78,
+      "h": 128
+    },
+    "q66": {
+      "file": "bow_long_war_bow.webp",
+      "w": 60,
+      "h": 128
+    },
+    "q67": {
+      "file": "bow_light_crossbow.webp",
+      "w": 96,
+      "h": 128
+    },
+    "q68": {
+      "file": "bow_crossbow.webp",
+      "w": 87,
+      "h": 128
+    },
+    "q69": {
+      "file": "bow_heavy_crossbow.webp",
+      "w": 65,
+      "h": 128
+    },
+    "q70": {
+      "file": "bow_repeating_crossbow.webp",
+      "w": 73,
+      "h": 128
+    },
+    "q73": {
+      "file": "h2h_claws.webp",
+      "w": 45,
+      "h": 128
+    },
+    "q74": {
+      "file": "h2h_katar.webp",
+      "w": 46,
+      "h": 128
+    },
+    "q75": {
+      "file": "h2h_hatchet_hands.webp",
+      "w": 75,
+      "h": 128
+    },
+    "q76": {
+      "file": "h2h_claws.webp",
+      "w": 45,
+      "h": 128
+    },
+    "q77": {
+      "file": "bow_reflex_bow.webp",
+      "w": 73,
+      "h": 128
+    },
+    "q78": {
+      "file": "spear_maiden_spear.webp",
+      "w": 34,
+      "h": 128
+    },
+    "q79": {
+      "file": "javelin_maiden_javelin.webp",
+      "w": 52,
+      "h": 128
+    },
+    "q80": {
+      "file": "bow_stag_bow.webp",
+      "w": 78,
+      "h": 128
+    },
+    "q81": {
+      "file": "spear_maiden_spear.webp",
+      "w": 34,
+      "h": 128
+    },
+    "q82": {
+      "file": "javelin_maiden_javelin.webp",
+      "w": 52,
+      "h": 128
+    },
+    "q83": {
+      "file": "orb_dragon_stone.webp",
+      "w": 45,
+      "h": 128
+    },
+    "q84": {
+      "file": "orb_sacred_globe.webp",
+      "w": 52,
+      "h": 128
+    },
+    "q85": {
+      "file": "orb_dragon_stone.webp",
+      "w": 45,
+      "h": 128
+    },
+    "q71": {
+      "file": "knife_throwing_knife.webp",
+      "w": 69,
+      "h": 128
+    },
+    "q72": {
+      "file": "axe_throwing_axe.webp",
+      "w": 69,
+      "h": 128
+    },
+    "q3a": {
+      "file": "sword_two_handed_sword.webp",
+      "w": 27,
+      "h": 128
+    },
+    "dd1": {
+      "file": "sword_great_sword.webp",
+      "w": 47,
+      "h": 128
+    },
+    "cr2": {
+      "file": "sword_crystal_sword.webp",
+      "w": 71,
+      "h": 128
+    },
+    "m21": {
+      "file": "axe_military_pick.webp",
+      "w": 77,
+      "h": 128
+    },
+    "m22": {
+      "file": "sword_flamberge.webp",
+      "w": 52,
+      "h": 128
+    },
+    "m23": {
+      "file": "wand_yew_wand.webp",
+      "w": 56,
+      "h": 128
+    },
+    "m24": {
+      "file": "bow_long_bow.webp",
+      "w": 59,
+      "h": 128
+    },
+    "m25": {
+      "file": "bow_crossbow.webp",
+      "w": 87,
+      "h": 128
+    },
+    "m26": {
+      "file": "axe_balanced_axe.webp",
+      "w": 125,
+      "h": 128
+    },
+    "m27": {
+      "file": "knife_balanced_knife.webp",
+      "w": 59,
+      "h": 128
+    },
+    "m28": {
+      "file": "javelin_throwing_spear.webp",
+      "w": 28,
+      "h": 128
+    },
+    "m40": {
+      "file": "axe_giant_axe.webp",
+      "w": 68,
+      "h": 128
+    },
+    "m41": {
+      "file": "club_spiked_club.webp",
+      "w": 40,
+      "h": 128
+    },
+    "m42": {
+      "file": "scepter_war_scepter.webp",
+      "w": 80,
+      "h": 128
+    },
+    "m43": {
+      "file": "mace_flail.webp",
+      "w": 71,
+      "h": 128
+    },
+    "m44": {
+      "file": "hammer_war_hammer.webp",
+      "w": 67,
+      "h": 128
+    },
+    "m45": {
+      "file": "hammer_maul.webp",
+      "w": 52,
+      "h": 128
+    },
+    "m46": {
+      "file": "sword_crystal_sword.webp",
+      "w": 71,
+      "h": 128
+    },
+    "m47": {
+      "file": "knife_blade.webp",
+      "w": 36,
+      "h": 128
+    },
+    "m48": {
+      "file": "spear_pike.webp",
+      "w": 59,
+      "h": 128
+    },
+    "m49": {
+      "file": "polearm_war_scythe.webp",
+      "w": 62,
+      "h": 128
+    },
+    "m50": {
+      "file": "staff_long_staff.webp",
+      "w": 26,
+      "h": 128
+    },
+    "m51": {
+      "file": "h2h_brass_knuckle.webp",
+      "w": 75,
+      "h": 128
+    },
+    "m52": {
+      "file": "h2h_arm.webp",
+      "w": 80,
+      "h": 128
+    },
+    "m53": {
+      "file": "bow_stag_bow.webp",
+      "w": 78,
+      "h": 128
+    },
+    "m54": {
+      "file": "bow_reflex_bow.webp",
+      "w": 73,
+      "h": 128
+    },
+    "m55": {
+      "file": "bow_pullspite.webp",
+      "w": 70,
+      "h": 128
+    },
+    "m56": {
+      "file": "spear_maiden_spear.webp",
+      "w": 34,
+      "h": 128
+    },
+    "m57": {
+      "file": "spear_maiden_pike.webp",
+      "w": 57,
+      "h": 128
+    },
+    "m58": {
+      "file": "h2h_claws.webp",
+      "w": 45,
+      "h": 128
+    },
+    "m59": {
+      "file": "polearm_necroscythe2.webp",
+      "w": 61,
+      "h": 128
+    },
+    "uap": {
+      "file": "helmet_cap_hat.webp",
+      "w": 89,
+      "h": 128
+    },
+    "ukp": {
+      "file": "helmet_skull_cap.webp",
+      "w": 128,
+      "h": 111
+    },
+    "ulm": {
+      "file": "helmet_helm.webp",
+      "w": 102,
+      "h": 128
+    },
+    "uhl": {
+      "file": "helmet_full_helm.webp",
+      "w": 95,
+      "h": 128
+    },
+    "uhm": {
+      "file": "helmet_great_helm.webp",
+      "w": 70,
+      "h": 128
+    },
+    "urn": {
+      "file": "helmet_crown.webp",
+      "w": 91,
+      "h": 128
+    },
+    "usk": {
+      "file": "helmet_mask.webp",
+      "w": 128,
+      "h": 110
+    },
+    "uui": {
+      "file": "armor_quilted_armor.webp",
+      "w": 96,
+      "h": 128
+    },
+    "uea": {
+      "file": "armor_leather_armor.webp",
+      "w": 110,
+      "h": 128
+    },
+    "ula": {
+      "file": "armor_hard_leather_armor.webp",
+      "w": 119,
+      "h": 128
+    },
+    "utu": {
+      "file": "armor_studded_leather.webp",
+      "w": 83,
+      "h": 128
+    },
+    "ung": {
+      "file": "armor_ring_mail.webp",
+      "w": 112,
+      "h": 128
+    },
+    "ucl": {
+      "file": "armor_scale_mail.webp",
+      "w": 127,
+      "h": 128
+    },
+    "uhn": {
+      "file": "armor_chain_mail.webp",
+      "w": 84,
+      "h": 128
+    },
+    "urs": {
+      "file": "armor_breast_plate.webp",
+      "w": 93,
+      "h": 128
+    },
+    "upl": {
+      "file": "armor_splint_mail.webp",
+      "w": 92,
+      "h": 128
+    },
+    "ult": {
+      "file": "armor_plate_mail.webp",
+      "w": 128,
+      "h": 121
+    },
+    "uld": {
+      "file": "armor_field_plate.webp",
+      "w": 83,
+      "h": 128
+    },
+    "uth": {
+      "file": "armor_gothic_plate.webp",
+      "w": 75,
+      "h": 128
+    },
+    "uul": {
+      "file": "armor_full_plate_mail.webp",
+      "w": 79,
+      "h": 128
+    },
+    "uar": {
+      "file": "armor_ancient_armor.webp",
+      "w": 93,
+      "h": 128
+    },
+    "utp": {
+      "file": "armor_light_plate.webp",
+      "w": 94,
+      "h": 128
+    },
+    "uuc": {
+      "file": "shield_buckler.webp",
+      "w": 113,
+      "h": 128
+    },
+    "uml": {
+      "file": "shield_small_shield.webp",
+      "w": 114,
+      "h": 128
+    },
+    "urg": {
+      "file": "shield_large_shield.webp",
+      "w": 106,
+      "h": 128
+    },
+    "uit": {
+      "file": "shield_kite_shield.webp",
+      "w": 99,
+      "h": 128
+    },
+    "uow": {
+      "file": "shield_tower_shield.webp",
+      "w": 69,
+      "h": 128
+    },
+    "uts": {
+      "file": "shield_gothic_shield.webp",
+      "w": 48,
+      "h": 128
+    },
+    "ulg": {
+      "file": "glove_gloves_l.webp",
+      "w": 128,
+      "h": 110
+    },
+    "uvg": {
+      "file": "glove_heavy_gloves.webp",
+      "w": 128,
+      "h": 108
+    },
+    "umg": {
+      "file": "glove_bracers_m.webp",
+      "w": 128,
+      "h": 114
+    },
+    "utg": {
+      "file": "glove_light_gauntlets.webp",
+      "w": 128,
+      "h": 119
+    },
+    "uhg": {
+      "file": "glove_gaunlets_h.webp",
+      "w": 127,
+      "h": 128
+    },
+    "ulb": {
+      "file": "boot_leather_boots.webp",
+      "w": 128,
+      "h": 113
+    },
+    "uvb": {
+      "file": "boot_heavy_boots.webp",
+      "w": 117,
+      "h": 128
+    },
+    "umb": {
+      "file": "boot_chain_boots.webp",
+      "w": 121,
+      "h": 128
+    },
+    "utb": {
+      "file": "boot_light_plate_boots.webp",
+      "w": 109,
+      "h": 128
+    },
+    "uhb": {
+      "file": "boot_plate_boots.webp",
+      "w": 113,
+      "h": 128
+    },
+    "ulc": {
+      "file": "belt_sash_l.webp",
+      "w": 128,
+      "h": 58
+    },
+    "uvc": {
+      "file": "belt_light_belt.webp",
+      "w": 128,
+      "h": 48
+    },
+    "umc": {
+      "file": "belt_belt_m.webp",
+      "w": 128,
+      "h": 56
+    },
+    "utc": {
+      "file": "belt_heavy_belt.webp",
+      "w": 128,
+      "h": 62
+    },
+    "uhc": {
+      "file": "belt_girdle_h.webp",
+      "w": 128,
+      "h": 71
+    },
+    "uh9": {
+      "file": "helmet_bone_helm.webp",
+      "w": 128,
+      "h": 76
+    },
+    "ush": {
+      "file": "shield_bone_shield.webp",
+      "w": 64,
+      "h": 128
+    },
+    "upk": {
+      "file": "shield_spiked_shield.webp",
+      "w": 94,
+      "h": 128
+    },
+    "2ap": {
+      "file": "helmet_cap_hat.webp",
+      "w": 89,
+      "h": 128
+    },
+    "2kp": {
+      "file": "helmet_skull_cap.webp",
+      "w": 128,
+      "h": 111
+    },
+    "2lm": {
+      "file": "helmet_helm.webp",
+      "w": 102,
+      "h": 128
+    },
+    "2hl": {
+      "file": "helmet_full_helm.webp",
+      "w": 95,
+      "h": 128
+    },
+    "2hm": {
+      "file": "helmet_great_helm.webp",
+      "w": 70,
+      "h": 128
+    },
+    "2rn": {
+      "file": "helmet_crown.webp",
+      "w": 91,
+      "h": 128
+    },
+    "2sk": {
+      "file": "helmet_mask.webp",
+      "w": 128,
+      "h": 110
+    },
+    "2ui": {
+      "file": "armor_quilted_armor.webp",
+      "w": 96,
+      "h": 128
+    },
+    "2ea": {
+      "file": "armor_leather_armor.webp",
+      "w": 110,
+      "h": 128
+    },
+    "2la": {
+      "file": "armor_hard_leather_armor.webp",
+      "w": 119,
+      "h": 128
+    },
+    "2tu": {
+      "file": "armor_studded_leather.webp",
+      "w": 83,
+      "h": 128
+    },
+    "2ng": {
+      "file": "armor_ring_mail.webp",
+      "w": 112,
+      "h": 128
+    },
+    "2cl": {
+      "file": "armor_scale_mail.webp",
+      "w": 127,
+      "h": 128
+    },
+    "2hn": {
+      "file": "armor_chain_mail.webp",
+      "w": 84,
+      "h": 128
+    },
+    "2rs": {
+      "file": "armor_breast_plate.webp",
+      "w": 93,
+      "h": 128
+    },
+    "2pl": {
+      "file": "armor_splint_mail.webp",
+      "w": 92,
+      "h": 128
+    },
+    "2lt": {
+      "file": "armor_plate_mail.webp",
+      "w": 128,
+      "h": 121
+    },
+    "2ld": {
+      "file": "armor_field_plate.webp",
+      "w": 83,
+      "h": 128
+    },
+    "2th": {
+      "file": "armor_gothic_plate.webp",
+      "w": 75,
+      "h": 128
+    },
+    "2ul": {
+      "file": "armor_full_plate_mail.webp",
+      "w": 79,
+      "h": 128
+    },
+    "2ar": {
+      "file": "armor_ancient_armor.webp",
+      "w": 93,
+      "h": 128
+    },
+    "2tp": {
+      "file": "armor_light_plate.webp",
+      "w": 94,
+      "h": 128
+    },
+    "2uc": {
+      "file": "shield_buckler.webp",
+      "w": 113,
+      "h": 128
+    },
+    "2ml": {
+      "file": "shield_small_shield.webp",
+      "w": 114,
+      "h": 128
+    },
+    "2rg": {
+      "file": "shield_large_shield.webp",
+      "w": 106,
+      "h": 128
+    },
+    "2it": {
+      "file": "shield_kite_shield.webp",
+      "w": 99,
+      "h": 128
+    },
+    "2ow": {
+      "file": "shield_tower_shield.webp",
+      "w": 69,
+      "h": 128
+    },
+    "2ts": {
+      "file": "shield_gothic_shield.webp",
+      "w": 48,
+      "h": 128
+    },
+    "2lg": {
+      "file": "glove_gloves_l.webp",
+      "w": 128,
+      "h": 110
+    },
+    "2vg": {
+      "file": "glove_heavy_gloves.webp",
+      "w": 128,
+      "h": 108
+    },
+    "2mg": {
+      "file": "glove_bracers_m.webp",
+      "w": 128,
+      "h": 114
+    },
+    "2tg": {
+      "file": "glove_light_gauntlets.webp",
+      "w": 128,
+      "h": 119
+    },
+    "2hg": {
+      "file": "glove_gaunlets_h.webp",
+      "w": 127,
+      "h": 128
+    },
+    "2lb": {
+      "file": "boot_leather_boots.webp",
+      "w": 128,
+      "h": 113
+    },
+    "2vb": {
+      "file": "boot_heavy_boots.webp",
+      "w": 117,
+      "h": 128
+    },
+    "2mb": {
+      "file": "boot_chain_boots.webp",
+      "w": 121,
+      "h": 128
+    },
+    "2tb": {
+      "file": "boot_light_plate_boots.webp",
+      "w": 109,
+      "h": 128
+    },
+    "2hb": {
+      "file": "boot_plate_boots.webp",
+      "w": 113,
+      "h": 128
+    },
+    "3lb": {
+      "file": "belt_sash_l.webp",
+      "w": 128,
+      "h": 58
+    },
+    "3vb": {
+      "file": "belt_light_belt.webp",
+      "w": 128,
+      "h": 48
+    },
+    "3mb": {
+      "file": "belt_belt_m.webp",
+      "w": 128,
+      "h": 56
+    },
+    "3tb": {
+      "file": "belt_heavy_belt.webp",
+      "w": 128,
+      "h": 62
+    },
+    "3hb": {
+      "file": "belt_girdle_h.webp",
+      "w": 128,
+      "h": 71
+    },
+    "2h9": {
+      "file": "helmet_bone_helm.webp",
+      "w": 128,
+      "h": 76
+    },
+    "2sh": {
+      "file": "shield_bone_shield.webp",
+      "w": 64,
+      "h": 128
+    },
+    "2pk": {
+      "file": "shield_spiked_shield.webp",
+      "w": 94,
+      "h": 128
+    },
+    "4ap": {
+      "file": "helmet_cap_hat.webp",
+      "w": 89,
+      "h": 128
+    },
+    "4kp": {
+      "file": "helmet_skull_cap.webp",
+      "w": 128,
+      "h": 111
+    },
+    "4lm": {
+      "file": "helmet_helm.webp",
+      "w": 102,
+      "h": 128
+    },
+    "4hl": {
+      "file": "helmet_full_helm.webp",
+      "w": 95,
+      "h": 128
+    },
+    "4hm": {
+      "file": "helmet_great_helm.webp",
+      "w": 70,
+      "h": 128
+    },
+    "4rn": {
+      "file": "helmet_crown.webp",
+      "w": 91,
+      "h": 128
+    },
+    "4sk": {
+      "file": "helmet_mask.webp",
+      "w": 128,
+      "h": 110
+    },
+    "4ui": {
+      "file": "armor_quilted_armor.webp",
+      "w": 96,
+      "h": 128
+    },
+    "4ea": {
+      "file": "armor_leather_armor.webp",
+      "w": 110,
+      "h": 128
+    },
+    "4la": {
+      "file": "armor_hard_leather_armor.webp",
+      "w": 119,
+      "h": 128
+    },
+    "4tu": {
+      "file": "armor_studded_leather.webp",
+      "w": 83,
+      "h": 128
+    },
+    "4ng": {
+      "file": "armor_ring_mail.webp",
+      "w": 112,
+      "h": 128
+    },
+    "4cl": {
+      "file": "armor_scale_mail.webp",
+      "w": 127,
+      "h": 128
+    },
+    "4hn": {
+      "file": "armor_chain_mail.webp",
+      "w": 84,
+      "h": 128
+    },
+    "4rs": {
+      "file": "armor_breast_plate.webp",
+      "w": 93,
+      "h": 128
+    },
+    "4pl": {
+      "file": "armor_splint_mail.webp",
+      "w": 92,
+      "h": 128
+    },
+    "4lt": {
+      "file": "armor_plate_mail.webp",
+      "w": 128,
+      "h": 121
+    },
+    "4ld": {
+      "file": "armor_field_plate.webp",
+      "w": 83,
+      "h": 128
+    },
+    "4th": {
+      "file": "armor_gothic_plate.webp",
+      "w": 75,
+      "h": 128
+    },
+    "4ul": {
+      "file": "armor_full_plate_mail.webp",
+      "w": 79,
+      "h": 128
+    },
+    "4ar": {
+      "file": "armor_ancient_armor.webp",
+      "w": 93,
+      "h": 128
+    },
+    "4tp": {
+      "file": "armor_light_plate.webp",
+      "w": 94,
+      "h": 128
+    },
+    "4uc": {
+      "file": "shield_buckler.webp",
+      "w": 113,
+      "h": 128
+    },
+    "4ml": {
+      "file": "shield_small_shield.webp",
+      "w": 114,
+      "h": 128
+    },
+    "4rg": {
+      "file": "shield_large_shield.webp",
+      "w": 106,
+      "h": 128
+    },
+    "4it": {
+      "file": "shield_kite_shield.webp",
+      "w": 99,
+      "h": 128
+    },
+    "4ow": {
+      "file": "shield_tower_shield.webp",
+      "w": 69,
+      "h": 128
+    },
+    "4ts": {
+      "file": "shield_gothic_shield.webp",
+      "w": 48,
+      "h": 128
+    },
+    "4lg": {
+      "file": "glove_gloves_l.webp",
+      "w": 128,
+      "h": 110
+    },
+    "4vg": {
+      "file": "glove_heavy_gloves.webp",
+      "w": 128,
+      "h": 108
+    },
+    "4mg": {
+      "file": "glove_bracers_m.webp",
+      "w": 128,
+      "h": 114
+    },
+    "4tg": {
+      "file": "glove_light_gauntlets.webp",
+      "w": 128,
+      "h": 119
+    },
+    "4hg": {
+      "file": "glove_gaunlets_h.webp",
+      "w": 127,
+      "h": 128
+    },
+    "4lb": {
+      "file": "boot_leather_boots.webp",
+      "w": 128,
+      "h": 113
+    },
+    "4vb": {
+      "file": "boot_heavy_boots.webp",
+      "w": 117,
+      "h": 128
+    },
+    "4mb": {
+      "file": "boot_chain_boots.webp",
+      "w": 121,
+      "h": 128
+    },
+    "4tb": {
+      "file": "boot_light_plate_boots.webp",
+      "w": 109,
+      "h": 128
+    },
+    "4hb": {
+      "file": "boot_plate_boots.webp",
+      "w": 113,
+      "h": 128
+    },
+    "5lb": {
+      "file": "belt_sash_l.webp",
+      "w": 128,
+      "h": 58
+    },
+    "5vb": {
+      "file": "belt_light_belt.webp",
+      "w": 128,
+      "h": 48
+    },
+    "5mb": {
+      "file": "belt_belt_m.webp",
+      "w": 128,
+      "h": 56
+    },
+    "5tb": {
+      "file": "belt_heavy_belt.webp",
+      "w": 128,
+      "h": 62
+    },
+    "5hb": {
+      "file": "belt_girdle_h.webp",
+      "w": 128,
+      "h": 71
+    },
+    "4h9": {
+      "file": "helmet_bone_helm.webp",
+      "w": 128,
+      "h": 76
+    },
+    "4sh": {
+      "file": "shield_bone_shield.webp",
+      "w": 64,
+      "h": 128
+    },
+    "4pk": {
+      "file": "shield_spiked_shield.webp",
+      "w": 94,
+      "h": 128
+    },
+    "qi2": {
+      "file": "circlet_tiara.webp",
+      "w": 128,
+      "h": 95
+    },
+    "qi3": {
+      "file": "circlet_diadem.webp",
+      "w": 128,
+      "h": 91
+    },
+    "qba": {
+      "file": "helmet_assault_helmet.webp",
+      "w": 104,
+      "h": 128
+    },
+    "qda": {
+      "file": "pelt_spirit_mask.webp",
+      "w": 123,
+      "h": 128
+    },
+    "qna": {
+      "file": "voodoo_head_gargoyle_head.webp",
+      "w": 106,
+      "h": 128
+    },
+    "qp9": {
+      "file": "shield_heraldic_shield.webp",
+      "w": 57,
+      "h": 128
+    },
+    "qbc": {
+      "file": "helmet_fanged_helm.webp",
+      "w": 122,
+      "h": 128
+    },
+    "qbd": {
+      "file": "helmet_horned_helm.webp",
+      "w": 71,
+      "h": 128
+    },
+    "qbe": {
+      "file": "helmet_avenger_guard.webp",
+      "w": 92,
+      "h": 128
+    },
+    "qdb": {
+      "file": "pelt_wolf_head.webp",
+      "w": 123,
+      "h": 128
+    },
+    "qdd": {
+      "file": "pelt_antlers.webp",
+      "w": 128,
+      "h": 125
+    },
+    "qde": {
+      "file": "pelt_falcon_mask.webp",
+      "w": 88,
+      "h": 128
+    },
+    "qne": {
+      "file": "voodoo_head_demon_head.webp",
+      "w": 109,
+      "h": 128
+    },
+    "qnf": {
+      "file": "voodoo_head_demon_head.webp",
+      "w": 109,
+      "h": 128
+    },
+    "qpc": {
+      "file": "shield_rondache.webp",
+      "w": 121,
+      "h": 128
+    },
+    "qpe": {
+      "file": "shield_aerin_shield.webp",
+      "w": 55,
+      "h": 128
+    },
+    "br2": {
+      "file": "armor_breast_plate.webp",
+      "w": 93,
+      "h": 128
+    },
+    "sp2": {
+      "file": "shield_spiked_shield.webp",
+      "w": 94,
+      "h": 128
+    },
+    "w1a": {
+      "file": "grimoires_oldbook.webp",
+      "w": 103,
+      "h": 128
+    },
+    "w1b": {
+      "file": "grimoires_tome_book.webp",
+      "w": 103,
+      "h": 128
+    },
+    "w1c": {
+      "file": "grimoires_compendium.webp",
+      "w": 108,
+      "h": 128
+    },
+    "w1d": {
+      "file": "grimoires_grimoire.webp",
+      "w": 103,
+      "h": 128
+    },
+    "elx": {
+      "file": "potion_elixir.webp",
+      "w": 85,
+      "h": 93
+    },
+    "hpo": {
+      "file": "potion_healing_potion.webp",
+      "w": 72,
+      "h": 92
+    },
+    "mpo": {
+      "file": "potion_mana_potion.webp",
+      "w": 72,
+      "h": 92
+    },
+    "hpf": {
+      "file": "potion_full_healing_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "mpf": {
+      "file": "potion_full_mana_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "vps": {
+      "file": "potion_stamina_potion.webp",
+      "w": 29,
+      "h": 90
+    },
+    "yps": {
+      "file": "potion_antidote_potion.webp",
+      "w": 46,
+      "h": 88
+    },
+    "rvs": {
+      "file": "potion_rejuv_potion.webp",
+      "w": 69,
+      "h": 90
+    },
+    "rvl": {
+      "file": "potion_full_rejuv_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "wms": {
+      "file": "potion_thawing_potion.webp",
+      "w": 29,
+      "h": 90
+    },
+    "tbk": {
+      "file": "book_town_portal_book.webp",
+      "w": 66,
+      "h": 128
+    },
+    "ibk": {
+      "file": "book_identify_book.webp",
+      "w": 67,
+      "h": 128
+    },
+    "gld": {
+      "file": "gold_gold.webp",
+      "w": 96,
+      "h": 59
+    },
+    "aqv": {
+      "file": "bow_arrows2.webp",
+      "w": 37,
+      "h": 128
+    },
+    "tch": {
+      "file": "torch_torch.webp",
+      "w": 34,
+      "h": 128
+    },
+    "cqv": {
+      "file": "bow_bolts2.webp",
+      "w": 42,
+      "h": 128
+    },
+    "tsc": {
+      "file": "scroll_town_portal_scroll.webp",
+      "w": 68,
+      "h": 90
+    },
+    "isc": {
+      "file": "scroll_identify_scroll.webp",
+      "w": 74,
+      "h": 91
+    },
+    "hrt": {
+      "file": "body_part_heart.webp",
+      "w": 72,
+      "h": 87
+    },
+    "brz": {
+      "file": "body_part_brain.webp",
+      "w": 88,
+      "h": 73
+    },
+    "jaw": {
+      "file": "body_part_jawbone.webp",
+      "w": 97,
+      "h": 80
+    },
+    "eyz": {
+      "file": "body_part_eye.webp",
+      "w": 76,
+      "h": 90
+    },
+    "hrn": {
+      "file": "body_part_horn.webp",
+      "w": 75,
+      "h": 85
+    },
+    "tal": {
+      "file": "body_part_tail.webp",
+      "w": 80,
+      "h": 91
+    },
+    "flg": {
+      "file": "body_part_flag.webp",
+      "w": 79,
+      "h": 94
+    },
+    "fng": {
+      "file": "body_part_fang.webp",
+      "w": 47,
+      "h": 79
+    },
+    "qll": {
+      "file": "body_part_quill.webp",
+      "w": 73,
+      "h": 82
+    },
+    "sol": {
+      "file": "body_part_spleen.webp",
+      "w": 90,
+      "h": 95
+    },
+    "scz": {
+      "file": "quest_scalp.webp",
+      "w": 96,
+      "h": 66
+    },
+    "spe": {
+      "file": "body_part_soul.webp",
+      "w": 64,
+      "h": 93
+    },
+    "key": {
+      "file": "key_skeleton_key.webp",
+      "w": 82,
+      "h": 88
+    },
+    "ear": {
+      "file": "body_part_player_ear.webp",
+      "w": 56,
+      "h": 92
+    },
+    "hp1": {
+      "file": "potion_lesser_healing_potion.webp",
+      "w": 56,
+      "h": 79
+    },
+    "hp2": {
+      "file": "potion_light_healing_potion.webp",
+      "w": 65,
+      "h": 81
+    },
+    "hp3": {
+      "file": "potion_healing_potion2.webp",
+      "w": 72,
+      "h": 89
+    },
+    "hp4": {
+      "file": "potion_strong_healing_potion.webp",
+      "w": 66,
+      "h": 92
+    },
+    "hp5": {
+      "file": "potion_greater_healing_potion.webp",
+      "w": 76,
+      "h": 94
+    },
+    "mp1": {
+      "file": "potion_lesser_mana_potion.webp",
+      "w": 56,
+      "h": 79
+    },
+    "mp2": {
+      "file": "potion_light_mana_potion.webp",
+      "w": 65,
+      "h": 81
+    },
+    "mp3": {
+      "file": "potion_mana_potion2.webp",
+      "w": 72,
+      "h": 89
+    },
+    "mp4": {
+      "file": "potion_strong_mana_potion.webp",
+      "w": 66,
+      "h": 92
+    },
+    "mp5": {
+      "file": "potion_greater_mana_potion.webp",
+      "w": 76,
+      "h": 94
+    },
+    "gcv": {
+      "file": "gem_chipped_amethyst.webp",
+      "w": 41,
+      "h": 42
+    },
+    "gfv": {
+      "file": "gem_flawed_amethyst.webp",
+      "w": 47,
+      "h": 52
+    },
+    "gsv": {
+      "file": "gem_amethyst.webp",
+      "w": 49,
+      "h": 57
+    },
+    "gzv": {
+      "file": "gem_flawless_amethyst.webp",
+      "w": 68,
+      "h": 69
+    },
+    "gpv": {
+      "file": "gem_blemished_amethyst.webp",
+      "w": 65,
+      "h": 87
+    },
+    "gvb": {
+      "file": "gem_perfect_amethyst.webp",
+      "w": 67,
+      "h": 80
+    },
+    "gcy": {
+      "file": "gem_chipped_topaz.webp",
+      "w": 41,
+      "h": 42
+    },
+    "gfy": {
+      "file": "gem_flawed_topaz.webp",
+      "w": 47,
+      "h": 52
+    },
+    "gsy": {
+      "file": "gem_topaz.webp",
+      "w": 49,
+      "h": 57
+    },
+    "gly": {
+      "file": "gem_flawless_topaz.webp",
+      "w": 68,
+      "h": 69
+    },
+    "gpy": {
+      "file": "gem_blemished_topaz.webp",
+      "w": 65,
+      "h": 86
+    },
+    "gyb": {
+      "file": "gem_perfect_topaz.webp",
+      "w": 67,
+      "h": 80
+    },
+    "gcb": {
+      "file": "gem_chipped_saphire.webp",
+      "w": 41,
+      "h": 42
+    },
+    "gfb": {
+      "file": "gem_flawed_saphire.webp",
+      "w": 47,
+      "h": 52
+    },
+    "gsb": {
+      "file": "gem_saphire.webp",
+      "w": 49,
+      "h": 57
+    },
+    "glb": {
+      "file": "gem_flawless_saphire.webp",
+      "w": 68,
+      "h": 69
+    },
+    "gpb": {
+      "file": "gem_blemished_saphire.webp",
+      "w": 65,
+      "h": 86
+    },
+    "gbb": {
+      "file": "gem_perfect_saphire.webp",
+      "w": 67,
+      "h": 80
+    },
+    "gcg": {
+      "file": "gem_chipped_emerald.webp",
+      "w": 43,
+      "h": 36
+    },
+    "gfg": {
+      "file": "gem_flawed_emerald.webp",
+      "w": 56,
+      "h": 54
+    },
+    "gsg": {
+      "file": "gem_emerald.webp",
+      "w": 49,
+      "h": 57
+    },
+    "glg": {
+      "file": "gem_flawless_emerald.webp",
+      "w": 72,
+      "h": 73
+    },
+    "gpg": {
+      "file": "gem_blemished_emerald.webp",
+      "w": 57,
+      "h": 76
+    },
+    "ggb": {
+      "file": "gem_perfect_emerald.webp",
+      "w": 59,
+      "h": 79
+    },
+    "gcr": {
+      "file": "gem_chipped_ruby.webp",
+      "w": 43,
+      "h": 36
+    },
+    "gfr": {
+      "file": "gem_flawed_ruby.webp",
+      "w": 56,
+      "h": 54
+    },
+    "gsr": {
+      "file": "gem_ruby.webp",
+      "w": 49,
+      "h": 57
+    },
+    "glr": {
+      "file": "gem_flawless_ruby.webp",
+      "w": 72,
+      "h": 73
+    },
+    "gpr": {
+      "file": "gem_blemished_ruby.webp",
+      "w": 57,
+      "h": 76
+    },
+    "grb": {
+      "file": "gem_perfect_ruby.webp",
+      "w": 59,
+      "h": 79
+    },
+    "gcw": {
+      "file": "gem_chipped_diamond.webp",
+      "w": 43,
+      "h": 36
+    },
+    "gfw": {
+      "file": "gem_flawed_diamond.webp",
+      "w": 56,
+      "h": 54
+    },
+    "gsw": {
+      "file": "gem_diamond.webp",
+      "w": 81,
+      "h": 69
+    },
+    "glw": {
+      "file": "gem_flawless_diamond.webp",
+      "w": 72,
+      "h": 73
+    },
+    "gpw": {
+      "file": "gem_blemished_diamond.webp",
+      "w": 55,
+      "h": 76
+    },
+    "gwb": {
+      "file": "gem_perfect_diamond.webp",
+      "w": 59,
+      "h": 79
+    },
+    "skc": {
+      "file": "gem_chipped_skull.webp",
+      "w": 68,
+      "h": 75
+    },
+    "skf": {
+      "file": "gem_flawed_skull.webp",
+      "w": 67,
+      "h": 90
+    },
+    "sku": {
+      "file": "gem_skull.webp",
+      "w": 67,
+      "h": 91
+    },
+    "skl": {
+      "file": "gem_flawless_skull.webp",
+      "w": 67,
+      "h": 89
+    },
+    "skz": {
+      "file": "gem_blemished_skull.webp",
+      "w": 67,
+      "h": 90
+    },
+    "skb": {
+      "file": "gem_perfect_skull.webp",
+      "w": 67,
+      "h": 90
+    },
+    "gck": {
+      "file": "gem_chipped_onyx.webp",
+      "w": 43,
+      "h": 36
+    },
+    "gfk": {
+      "file": "gem_flawed_onyx.webp",
+      "w": 56,
+      "h": 54
+    },
+    "gsk": {
+      "file": "gem_onyx.webp",
+      "w": 81,
+      "h": 69
+    },
+    "gzk": {
+      "file": "gem_flawless_onyx.webp",
+      "w": 72,
+      "h": 73
+    },
+    "gpk": {
+      "file": "gem_blemished_onyx.webp",
+      "w": 58,
+      "h": 77
+    },
+    "gbk": {
+      "file": "gem_perfect_onyx.webp",
+      "w": 59,
+      "h": 79
+    },
+    "hrb": {
+      "file": "herb_herb.webp",
+      "w": 96,
+      "h": 90
+    },
+    "rps": {
+      "file": "potion_healing_potion.webp",
+      "w": 72,
+      "h": 92
+    },
+    "rpl": {
+      "file": "potion_full_healing_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "bps": {
+      "file": "potion_mana_potion.webp",
+      "w": 72,
+      "h": 92
+    },
+    "bpl": {
+      "file": "potion_full_mana_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "r51": {
+      "file": "rune_el_rune.webp",
+      "w": 87,
+      "h": 86
+    },
+    "r52": {
+      "file": "rune_eld_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r53": {
+      "file": "rune_tir_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r54": {
+      "file": "rune_nef_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r55": {
+      "file": "rune_eth_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r56": {
+      "file": "rune_ith_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r57": {
+      "file": "rune_tal_rune.webp",
+      "w": 87,
+      "h": 86
+    },
+    "r58": {
+      "file": "rune_ral_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r59": {
+      "file": "rune_ort_rune.webp",
+      "w": 88,
+      "h": 89
+    },
+    "r60": {
+      "file": "rune_thul_rune.webp",
+      "w": 88,
+      "h": 91
+    },
+    "r61": {
+      "file": "rune_amn_rune.webp",
+      "w": 90,
+      "h": 90
+    },
+    "r62": {
+      "file": "rune_sol_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r63": {
+      "file": "rune_shael_rune.webp",
+      "w": 88,
+      "h": 89
+    },
+    "r64": {
+      "file": "rune_dol_rune.webp",
+      "w": 92,
+      "h": 87
+    },
+    "r65": {
+      "file": "rune_hel_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r66": {
+      "file": "rune_io_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r67": {
+      "file": "rune_lum_rune.webp",
+      "w": 87,
+      "h": 86
+    },
+    "r68": {
+      "file": "rune_ko_lod_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r69": {
+      "file": "rune_fal_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r70": {
+      "file": "rune_lem_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r71": {
+      "file": "rune_pul_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r72": {
+      "file": "rune_um_rune.webp",
+      "w": 87,
+      "h": 86
+    },
+    "r73": {
+      "file": "rune_mal_rune.webp",
+      "w": 87,
+      "h": 86
+    },
+    "r74": {
+      "file": "rune_ist_rune.webp",
+      "w": 87,
+      "h": 86
+    },
+    "r75": {
+      "file": "rune_gul_rune.webp",
+      "w": 90,
+      "h": 87
+    },
+    "r76": {
+      "file": "rune_vex_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r77": {
+      "file": "rune_ohm_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r78": {
+      "file": "rune_lo_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r79": {
+      "file": "rune_sur_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r80": {
+      "file": "rune_ber_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r81": {
+      "file": "rune_jah_rune.webp",
+      "w": 88,
+      "h": 86
+    },
+    "r82": {
+      "file": "rune_cham_rune.webp",
+      "w": 87,
+      "h": 85
+    },
+    "r83": {
+      "file": "rune_zod_rune.webp",
+      "w": 88,
+      "h": 89
+    },
+    "0sc": {
+      "file": "scroll_identify_scroll.webp",
+      "w": 74,
+      "h": 91
+    },
+    "toa": {
+      "file": "quest_token_of_absolution.webp",
+      "w": 81,
+      "h": 87
+    },
+    "map": {
+      "file": "quest_maple_leaf.webp",
+      "w": 91,
+      "h": 89
+    },
+    "sss": {
+      "file": "quest_spider_silk.webp",
+      "w": 100,
+      "h": 100
+    },
+    "ggg": {
+      "file": "quest_crushed_gem.webp",
+      "w": 76,
+      "h": 88
+    },
+    "eee": {
+      "file": "quest_blackmoore.webp",
+      "w": 97,
+      "h": 82
+    },
+    "hly": {
+      "file": "quest_holy_symbol.webp",
+      "w": 86,
+      "h": 95
+    },
+    "hh2": {
+      "file": "quest_forging_hammer.webp",
+      "w": 69,
+      "h": 85
+    },
+    "ttt": {
+      "file": "quest_tyranium_ore.webp",
+      "w": 86,
+      "h": 84
+    },
+    "vvv": {
+      "file": "quest_void_shard.webp",
+      "w": 54,
+      "h": 95
+    },
+    "ppp": {
+      "file": "quest_dragonstone.webp",
+      "w": 90,
+      "h": 88
+    },
+    "ddd": {
+      "file": "amulet_amulet.webp",
+      "w": 88,
+      "h": 86
+    },
+    "sdo": {
+      "file": "quest_socket_donut.webp",
+      "w": 95,
+      "h": 92
+    },
+    "rnd": {
+      "file": "quest_randomize_stone.webp",
+      "w": 94,
+      "h": 97
+    },
+    "an0": {
+      "file": "quest_invustone1.webp",
+      "w": 94,
+      "h": 96
+    },
+    "an1": {
+      "file": "quest_invustone2.webp",
+      "w": 94,
+      "h": 96
+    },
+    "an2": {
+      "file": "quest_invustone3.webp",
+      "w": 94,
+      "h": 96
+    },
+    "an3": {
+      "file": "gem_aurastone_green.webp",
+      "w": 94,
+      "h": 95
+    },
+    "an4": {
+      "file": "gem_aurastone_red.webp",
+      "w": 94,
+      "h": 95
+    },
+    "an5": {
+      "file": "gem_aurastone_violet.webp",
+      "w": 94,
+      "h": 95
+    },
+    "an6": {
+      "file": "gem_aurastone_yellow.webp",
+      "w": 94,
+      "h": 95
+    },
+    "an7": {
+      "file": "gem_aurastone_black.webp",
+      "w": 94,
+      "h": 95
+    },
+    "an8": {
+      "file": "gem_aurastone_white.webp",
+      "w": 94,
+      "h": 95
+    },
+    "an9": {
+      "file": "gem_aurastone_blue.webp",
+      "w": 94,
+      "h": 95
+    },
+    "a10": {
+      "file": "gem_aurastone_orange.webp",
+      "w": 94,
+      "h": 95
+    },
+    "yyy": {
+      "file": "quest_cookbook.webp",
+      "w": 94,
+      "h": 90
+    },
+    "zzz": {
+      "file": "quest_steak.webp",
+      "w": 87,
+      "h": 85
+    },
+    "fkn": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "po1": {
+      "file": "potion_full_healing_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "po2": {
+      "file": "potion_full_healing_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "po3": {
+      "file": "potion_flask_of_renewal.webp",
+      "w": 64,
+      "h": 93
+    },
+    "po4": {
+      "file": "herb_herb.webp",
+      "w": 96,
+      "h": 90
+    },
+    "rn9": {
+      "file": "ring_ring.webp",
+      "w": 87,
+      "h": 85
+    },
+    "au9": {
+      "file": "amulet_amulet.webp",
+      "w": 88,
+      "h": 86
+    },
+    "cm5": {
+      "file": "charm_square_charm.webp",
+      "w": 128,
+      "h": 117
+    },
+    "cm6": {
+      "file": "charm_odd_charm.webp",
+      "w": 59,
+      "h": 128
+    },
+    "cm9": {
+      "file": "charm_odd_charm.webp",
+      "w": 59,
+      "h": 128
+    },
+    "r01": {
+      "file": "rune_i_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r02": {
+      "file": "rune_u_rune.webp",
+      "w": 86,
+      "h": 86
+    },
+    "r03": {
+      "file": "rune_shi_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r04": {
+      "file": "rune_ka_rune.webp",
+      "w": 86,
+      "h": 86
+    },
+    "r05": {
+      "file": "rune_n_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r06": {
+      "file": "rune_ku_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r07": {
+      "file": "rune_yo_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r08": {
+      "file": "rune_ki_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r09": {
+      "file": "rune_ri_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r10": {
+      "file": "rune_mi_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r11": {
+      "file": "rune_ya_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r12": {
+      "file": "rune_a_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r13": {
+      "file": "rune_tsu_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r14": {
+      "file": "rune_chi_rune.webp",
+      "w": 90,
+      "h": 93
+    },
+    "r15": {
+      "file": "rune_sa_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r16": {
+      "file": "rune_yu_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r17": {
+      "file": "rune_ke_rune.webp",
+      "w": 93,
+      "h": 88
+    },
+    "r18": {
+      "file": "rune_e_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r19": {
+      "file": "rune_ko_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r20": {
+      "file": "rune_ra_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r21": {
+      "file": "rune_o_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r22": {
+      "file": "rune_ho_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r23": {
+      "file": "rune_me_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r24": {
+      "file": "rune_ru_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r25": {
+      "file": "rune_ta_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r26": {
+      "file": "rune_to_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r27": {
+      "file": "rune_wa_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r28": {
+      "file": "rune_ha_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r29": {
+      "file": "rune_na_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r30": {
+      "file": "rune_ni_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r31": {
+      "file": "rune_se_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r32": {
+      "file": "rune_fu_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r33": {
+      "file": "rune_ma_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r34": {
+      "file": "rune_hi_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r35": {
+      "file": "rune_mo_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r36": {
+      "file": "rune_no_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r37": {
+      "file": "rune_te_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r38": {
+      "file": "rune_ro_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r39": {
+      "file": "rune_so_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r40": {
+      "file": "rune_mu_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r41": {
+      "file": "rune_ne_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r42": {
+      "file": "rune_re_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r43": {
+      "file": "rune_su_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r44": {
+      "file": "rune_he_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r45": {
+      "file": "rune_nu_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r46": {
+      "file": "rune_wo_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "kv0": {
+      "file": "quest_gemcan_amethyst.webp",
+      "w": 86,
+      "h": 95
+    },
+    "ky0": {
+      "file": "quest_gemcan_topaz.webp",
+      "w": 86,
+      "h": 95
+    },
+    "kb0": {
+      "file": "quest_gemcan_sapphire.webp",
+      "w": 86,
+      "h": 95
+    },
+    "kg0": {
+      "file": "quest_gemcan_emerald.webp",
+      "w": 86,
+      "h": 95
+    },
+    "kr0": {
+      "file": "quest_gemcan_ruby.webp",
+      "w": 86,
+      "h": 95
+    },
+    "kw0": {
+      "file": "quest_gemcan_diamond.webp",
+      "w": 86,
+      "h": 95
+    },
+    "ks0": {
+      "file": "quest_gemcan_skull.webp",
+      "w": 86,
+      "h": 95
+    },
+    "kk0": {
+      "file": "quest_gemcan_obsidian.webp",
+      "w": 86,
+      "h": 95
+    },
+    "xu0": {
+      "file": "quest_can_frozensoul.webp",
+      "w": 92,
+      "h": 94
+    },
+    "xu1": {
+      "file": "quest_can_shadowquartz.webp",
+      "w": 92,
+      "h": 94
+    },
+    "xu2": {
+      "file": "quest_can_bleedingstone.webp",
+      "w": 91,
+      "h": 94
+    },
+    "xu3": {
+      "file": "quest_can_burningsulphur.webp",
+      "w": 92,
+      "h": 94
+    },
+    "xu4": {
+      "file": "quest_can_darkazurite.webp",
+      "w": 91,
+      "h": 94
+    },
+    "xu5": {
+      "file": "quest_can_bitterperidot.webp",
+      "w": 92,
+      "h": 94
+    },
+    "xu6": {
+      "file": "quest_can_pulsingopal.webp",
+      "w": 91,
+      "h": 94
+    },
+    "xu7": {
+      "file": "quest_can_cinnabar.webp",
+      "w": 92,
+      "h": 95
+    },
+    "xu8": {
+      "file": "quest_can_tombjade.webp",
+      "w": 92,
+      "h": 94
+    },
+    "xu9": {
+      "file": "quest_can_solidmercury.webp",
+      "w": 91,
+      "h": 94
+    },
+    "xux": {
+      "file": "quest_can_stormamber.webp",
+      "w": 92,
+      "h": 94
+    },
+    "xuy": {
+      "file": "quest_can_tourmaline.webp",
+      "w": 92,
+      "h": 94
+    },
+    "ko0": {
+      "file": "quest_can_opener.webp",
+      "w": 95,
+      "h": 70
+    },
+    "ko1": {
+      "file": "quest_can_opener.webp",
+      "w": 95,
+      "h": 70
+    },
+    "ko2": {
+      "file": "quest_can_opener.webp",
+      "w": 95,
+      "h": 70
+    },
+    "ko3": {
+      "file": "quest_can_opener.webp",
+      "w": 95,
+      "h": 70
+    },
+    "ko4": {
+      "file": "quest_can_opener.webp",
+      "w": 95,
+      "h": 70
+    },
+    "ko5": {
+      "file": "quest_can_opener.webp",
+      "w": 95,
+      "h": 70
+    },
+    "s01": {
+      "file": "rune_stocker_i_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s02": {
+      "file": "rune_stocker_u_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s03": {
+      "file": "rune_stocker_shi_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s04": {
+      "file": "rune_stocker_ka_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s05": {
+      "file": "rune_stocker_n_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s06": {
+      "file": "rune_stocker_ku_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s07": {
+      "file": "rune_stocker_yo_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s08": {
+      "file": "rune_stocker_ki_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s09": {
+      "file": "rune_stocker_ri_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s10": {
+      "file": "rune_stocker_mi_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s11": {
+      "file": "rune_stocker_ya_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s12": {
+      "file": "rune_stocker_a_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s13": {
+      "file": "rune_stocker_tsu_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s14": {
+      "file": "rune_stocker_chi_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s15": {
+      "file": "rune_stocker_sa_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s16": {
+      "file": "rune_stocker_yu_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s17": {
+      "file": "rune_stocker_ke_rune.webp",
+      "w": 98,
+      "h": 99
+    },
+    "s18": {
+      "file": "rune_stocker_e_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s19": {
+      "file": "rune_stocker_ko_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s20": {
+      "file": "rune_stocker_ra_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s21": {
+      "file": "rune_stocker_o_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s22": {
+      "file": "rune_stocker_ho_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s23": {
+      "file": "rune_stocker_me_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s24": {
+      "file": "rune_stocker_ru_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s25": {
+      "file": "rune_stocker_ta_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s26": {
+      "file": "rune_stocker_to_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s27": {
+      "file": "rune_stocker_wa_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s28": {
+      "file": "rune_stocker_ha_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s29": {
+      "file": "rune_stocker_na_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s30": {
+      "file": "rune_stocker_ni_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s31": {
+      "file": "rune_stocker_se_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s32": {
+      "file": "rune_stocker_fu_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s33": {
+      "file": "rune_stocker_ma_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s34": {
+      "file": "rune_stocker_hi_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s35": {
+      "file": "rune_stocker_mo_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s36": {
+      "file": "rune_stocker_no_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s37": {
+      "file": "rune_stocker_te_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s38": {
+      "file": "rune_stocker_ro_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s39": {
+      "file": "rune_stocker_so_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s40": {
+      "file": "rune_stocker_mu_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s41": {
+      "file": "rune_stocker_ne_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s42": {
+      "file": "rune_stocker_re_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s43": {
+      "file": "rune_stocker_su_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s44": {
+      "file": "rune_stocker_he_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s45": {
+      "file": "rune_stocker_nu_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s46": {
+      "file": "rune_stocker_wo_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s50": {
+      "file": "rune_stocker_null_rune.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t01": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t02": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t03": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t04": {
+      "file": "quest_reroll5.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t05": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t06": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t07": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t08": {
+      "file": "quest_reroll5.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t09": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t10": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t11": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t12": {
+      "file": "quest_reroll5.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t13": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t14": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t15": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t16": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t51": {
+      "file": "quest_multistocker_maple_leaf.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t52": {
+      "file": "quest_multistocker_dragonstone.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t53": {
+      "file": "quest_multistocker_decipherer.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t54": {
+      "file": "quest_multistocker_cookbook.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t55": {
+      "file": "quest_multistocker_steak.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t56": {
+      "file": "quest_multistocker_brain.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t57": {
+      "file": "quest_multistocker_eye.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t58": {
+      "file": "quest_multistocker_quill.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t59": {
+      "file": "quest_multistocker_spleen.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t60": {
+      "file": "quest_multistocker_tail.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t61": {
+      "file": "quest_multistocker_jawbone.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t62": {
+      "file": "quest_multistocker_fang.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t63": {
+      "file": "quest_multistocker_horn.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t64": {
+      "file": "quest_multistocker_scalp.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t65": {
+      "file": "quest_multistocker_heart.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t66": {
+      "file": "quest_multistocker_soul.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t67": {
+      "file": "quest_multistocker_worldstone.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t68": {
+      "file": "quest_multistocker_flag.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t69": {
+      "file": "quest_multistocker_socket_donut.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t70": {
+      "file": "quest_multistocker_coupon_nor.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t71": {
+      "file": "quest_multistocker_coupon_exc.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t72": {
+      "file": "quest_multistocker_coupon_eli.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t73": {
+      "file": "quest_multistocker_coupon_wildcard.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t74": {
+      "file": "quest_multistocker_full_rejuv_potion.webp",
+      "w": 96,
+      "h": 97
+    },
+    "t75": {
+      "file": "quest_multistocker_anvil_stone.webp",
+      "w": 96,
+      "h": 97
+    },
+    "cx1": {
+      "file": "charm_charm_small.webp",
+      "w": 87,
+      "h": 89
+    },
+    "cx2": {
+      "file": "charm_charm_medium.webp",
+      "w": 56,
+      "h": 128
+    },
+    "cx3": {
+      "file": "charm_charm_large.webp",
+      "w": 45,
+      "h": 128
+    },
+    "qqq": {
+      "file": "quest_anvil_stone.webp",
+      "w": 92,
+      "h": 63
+    },
+    "dfc": {
+      "file": "body_part_devils_food.webp",
+      "w": 98,
+      "h": 84
+    },
+    "t17": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "ag0": {
+      "file": "quest_gift.webp",
+      "w": 98,
+      "h": 99
+    },
+    "ag1": {
+      "file": "quest_gift.webp",
+      "w": 98,
+      "h": 99
+    },
+    "ag2": {
+      "file": "quest_gift.webp",
+      "w": 98,
+      "h": 99
+    },
+    "ag8": {
+      "file": "quest_gift.webp",
+      "w": 98,
+      "h": 99
+    },
+    "xr0": {
+      "file": "gem_chipped_frozensoul.webp",
+      "w": 46,
+      "h": 63
+    },
+    "xr1": {
+      "file": "gem_chipped_shadowquartz.webp",
+      "w": 50,
+      "h": 58
+    },
+    "xr2": {
+      "file": "gem_chipped_bleedingstone.webp",
+      "w": 48,
+      "h": 58
+    },
+    "xr3": {
+      "file": "gem_chipped_sulphur.webp",
+      "w": 44,
+      "h": 53
+    },
+    "xr4": {
+      "file": "gem_chipped_azurite.webp",
+      "w": 50,
+      "h": 58
+    },
+    "xr5": {
+      "file": "gem_chipped_bitterperidot.webp",
+      "w": 50,
+      "h": 58
+    },
+    "xr6": {
+      "file": "gem_chipped_opal.webp",
+      "w": 46,
+      "h": 63
+    },
+    "xr7": {
+      "file": "gem_chipped_cinnabar.webp",
+      "w": 51,
+      "h": 70
+    },
+    "xr8": {
+      "file": "gem_chipped_tombjade.webp",
+      "w": 51,
+      "h": 70
+    },
+    "xr9": {
+      "file": "gem_chipped_mercury.webp",
+      "w": 46,
+      "h": 63
+    },
+    "xrx": {
+      "file": "gem_chipped_stormamber.webp",
+      "w": 44,
+      "h": 56
+    },
+    "xry": {
+      "file": "gem_chipped_tourmaline.webp",
+      "w": 39,
+      "h": 60
+    },
+    "xt0": {
+      "file": "gem_normal_frozensoul.webp",
+      "w": 64,
+      "h": 91
+    },
+    "xt1": {
+      "file": "gem_normal_shadowquartz.webp",
+      "w": 79,
+      "h": 92
+    },
+    "xt2": {
+      "file": "gem_normal_bleedingstone.webp",
+      "w": 74,
+      "h": 88
+    },
+    "xt3": {
+      "file": "gem_normal_sulphur.webp",
+      "w": 67,
+      "h": 78
+    },
+    "xt4": {
+      "file": "gem_normal_azurite.webp",
+      "w": 74,
+      "h": 88
+    },
+    "xt5": {
+      "file": "gem_normal_bitterperidot.webp",
+      "w": 74,
+      "h": 88
+    },
+    "xt6": {
+      "file": "gem_normal_opal.webp",
+      "w": 64,
+      "h": 91
+    },
+    "xt7": {
+      "file": "gem_normal_cinnabar.webp",
+      "w": 66,
+      "h": 94
+    },
+    "xt8": {
+      "file": "gem_normal_tombjade.webp",
+      "w": 66,
+      "h": 94
+    },
+    "xt9": {
+      "file": "gem_normal_mercury.webp",
+      "w": 64,
+      "h": 91
+    },
+    "xtx": {
+      "file": "gem_normal_stormamber.webp",
+      "w": 65,
+      "h": 81
+    },
+    "xty": {
+      "file": "gem_normal_tourmaline.webp",
+      "w": 62,
+      "h": 82
+    },
+    "ore": {
+      "file": "quest_ore.webp",
+      "w": 95,
+      "h": 80
+    },
+    "r50": {
+      "file": "rune_null_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r84": {
+      "file": "rune_moon_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r85": {
+      "file": "rune_fire_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r86": {
+      "file": "rune_water_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r87": {
+      "file": "rune_wood_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r88": {
+      "file": "rune_metal_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r89": {
+      "file": "rune_earth_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r90": {
+      "file": "rune_sun_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r91": {
+      "file": "rune_thunder_rune.webp",
+      "w": 86,
+      "h": 86
+    },
+    "r92": {
+      "file": "rune_wind_rune.webp",
+      "w": 88,
+      "h": 88
+    },
+    "r93": {
+      "file": "rune_dragon_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r94": {
+      "file": "rune_life_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r95": {
+      "file": "rune_death_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r96": {
+      "file": "rune_heaven_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "r97": {
+      "file": "rune_god_rune.webp",
+      "w": 85,
+      "h": 86
+    },
+    "t18": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t19": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t20": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t21": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t22": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t23": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t24": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t25": {
+      "file": "quest_reroll5.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t26": {
+      "file": "quest_reroll1.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t27": {
+      "file": "quest_reroll2.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t28": {
+      "file": "quest_reroll4.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t29": {
+      "file": "quest_reroll5.webp",
+      "w": 65,
+      "h": 92
+    },
+    "t30": {
+      "file": "quest_reroll3.webp",
+      "w": 65,
+      "h": 92
+    },
+    "6gv": {
+      "file": "gem_6pack_amethyst.webp",
+      "w": 67,
+      "h": 80
+    },
+    "6gy": {
+      "file": "gem_6pack_topaz.webp",
+      "w": 67,
+      "h": 80
+    },
+    "6gb": {
+      "file": "gem_6pack_saphire.webp",
+      "w": 67,
+      "h": 80
+    },
+    "6gg": {
+      "file": "gem_6pack_emerald.webp",
+      "w": 59,
+      "h": 79
+    },
+    "6gr": {
+      "file": "gem_6pack_ruby.webp",
+      "w": 59,
+      "h": 79
+    },
+    "6gw": {
+      "file": "gem_6pack_diamond.webp",
+      "w": 59,
+      "h": 79
+    },
+    "6sk": {
+      "file": "gem_6pack_skull.webp",
+      "w": 62,
+      "h": 86
+    },
+    "6gk": {
+      "file": "gem_6pack_onyx.webp",
+      "w": 59,
+      "h": 79
+    },
+    "cx0": {
+      "file": "charm_small_charm2.webp",
+      "w": 94,
+      "h": 91
+    },
+    "xl0": {
+      "file": "gem_flawed_frozensoul.webp",
+      "w": 54,
+      "h": 77
+    },
+    "xl1": {
+      "file": "gem_flawed_shadowquartz.webp",
+      "w": 67,
+      "h": 79
+    },
+    "xl2": {
+      "file": "gem_flawed_bleedingstone.webp",
+      "w": 67,
+      "h": 79
+    },
+    "xl3": {
+      "file": "gem_flawed_sulphur.webp",
+      "w": 54,
+      "h": 65
+    },
+    "xl4": {
+      "file": "gem_flawed_azurite.webp",
+      "w": 67,
+      "h": 79
+    },
+    "xl5": {
+      "file": "gem_flawed_bitterperidot.webp",
+      "w": 67,
+      "h": 79
+    },
+    "xl6": {
+      "file": "gem_flawed_opal.webp",
+      "w": 54,
+      "h": 77
+    },
+    "xl7": {
+      "file": "gem_flawed_cinnabar.webp",
+      "w": 58,
+      "h": 80
+    },
+    "xl8": {
+      "file": "gem_flawed_tombjade.webp",
+      "w": 58,
+      "h": 80
+    },
+    "xl9": {
+      "file": "gem_flawed_mercury.webp",
+      "w": 54,
+      "h": 77
+    },
+    "xlx": {
+      "file": "gem_flawed_stormamber.webp",
+      "w": 54,
+      "h": 72
+    },
+    "xly": {
+      "file": "gem_flawed_tourmaline.webp",
+      "w": 55,
+      "h": 74
+    },
+    "cm7n": {
+      "file": "charm_charm_medium.webp",
+      "w": 56,
+      "h": 128
+    },
+    "01l": {
+      "file": "rune_el_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "02l": {
+      "file": "rune_eld_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "03l": {
+      "file": "rune_tir_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "04l": {
+      "file": "rune_nef_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "05l": {
+      "file": "rune_eth_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "06l": {
+      "file": "rune_ith_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "07l": {
+      "file": "rune_tal_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "08l": {
+      "file": "rune_ral_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "09l": {
+      "file": "rune_ort_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "10l": {
+      "file": "rune_thul_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "11l": {
+      "file": "rune_amn_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "12l": {
+      "file": "rune_sol_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "13l": {
+      "file": "rune_shael_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "14l": {
+      "file": "rune_dol_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "15l": {
+      "file": "rune_hel_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "16l": {
+      "file": "rune_io_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "17l": {
+      "file": "rune_lum_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "18l": {
+      "file": "rune_ko_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "19l": {
+      "file": "rune_fal_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "20l": {
+      "file": "rune_lem_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "21l": {
+      "file": "rune_pul_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "22l": {
+      "file": "rune_um_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "23l": {
+      "file": "rune_mal_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "24l": {
+      "file": "rune_ist_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "25l": {
+      "file": "rune_gul_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "26l": {
+      "file": "rune_vex_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "27l": {
+      "file": "rune_ohm_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "28l": {
+      "file": "rune_lo_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "29l": {
+      "file": "rune_sur_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "30l": {
+      "file": "rune_ber_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "31l": {
+      "file": "rune_jah_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "32l": {
+      "file": "rune_cham_rune3.webp",
+      "w": 91,
+      "h": 90
+    },
+    "33l": {
+      "file": "rune_zod_rune3.webp",
+      "w": 90,
+      "h": 90
+    },
+    "01a": {
+      "file": "quest_scroll01.webp",
+      "w": 93,
+      "h": 90
+    },
+    "02a": {
+      "file": "quest_scroll02.webp",
+      "w": 93,
+      "h": 90
+    },
+    "03a": {
+      "file": "quest_scroll03.webp",
+      "w": 93,
+      "h": 90
+    },
+    "04a": {
+      "file": "quest_scroll04.webp",
+      "w": 93,
+      "h": 90
+    },
+    "05a": {
+      "file": "quest_scroll05.webp",
+      "w": 93,
+      "h": 90
+    },
+    "06a": {
+      "file": "quest_scroll06.webp",
+      "w": 93,
+      "h": 90
+    },
+    "07a": {
+      "file": "quest_scroll07.webp",
+      "w": 93,
+      "h": 90
+    },
+    "08a": {
+      "file": "quest_scroll08.webp",
+      "w": 93,
+      "h": 90
+    },
+    "09a": {
+      "file": "quest_scroll09.webp",
+      "w": 93,
+      "h": 90
+    },
+    "10a": {
+      "file": "quest_scroll10.webp",
+      "w": 93,
+      "h": 90
+    },
+    "11a": {
+      "file": "quest_scroll11.webp",
+      "w": 93,
+      "h": 90
+    },
+    "12a": {
+      "file": "quest_scroll12.webp",
+      "w": 93,
+      "h": 90
+    },
+    "13a": {
+      "file": "quest_scroll13.webp",
+      "w": 93,
+      "h": 90
+    },
+    "14a": {
+      "file": "quest_scroll14.webp",
+      "w": 93,
+      "h": 90
+    },
+    "15a": {
+      "file": "quest_scroll15.webp",
+      "w": 93,
+      "h": 90
+    },
+    "16a": {
+      "file": "quest_scroll16.webp",
+      "w": 93,
+      "h": 90
+    },
+    "17a": {
+      "file": "quest_scroll17.webp",
+      "w": 93,
+      "h": 90
+    },
+    "18a": {
+      "file": "quest_scroll18.webp",
+      "w": 93,
+      "h": 90
+    },
+    "19a": {
+      "file": "quest_scroll19.webp",
+      "w": 93,
+      "h": 90
+    },
+    "20a": {
+      "file": "quest_scroll20.webp",
+      "w": 93,
+      "h": 90
+    },
+    "21a": {
+      "file": "quest_scroll21.webp",
+      "w": 93,
+      "h": 90
+    },
+    "22a": {
+      "file": "quest_scroll22.webp",
+      "w": 93,
+      "h": 90
+    },
+    "23a": {
+      "file": "quest_scroll23.webp",
+      "w": 93,
+      "h": 90
+    },
+    "24a": {
+      "file": "quest_scroll24.webp",
+      "w": 93,
+      "h": 90
+    },
+    "25a": {
+      "file": "quest_scroll25.webp",
+      "w": 93,
+      "h": 90
+    },
+    "26a": {
+      "file": "quest_scroll26.webp",
+      "w": 93,
+      "h": 90
+    },
+    "27a": {
+      "file": "quest_scroll27.webp",
+      "w": 93,
+      "h": 90
+    },
+    "28a": {
+      "file": "quest_scroll28.webp",
+      "w": 93,
+      "h": 90
+    },
+    "29a": {
+      "file": "quest_scroll29.webp",
+      "w": 93,
+      "h": 90
+    },
+    "30a": {
+      "file": "quest_scroll30.webp",
+      "w": 93,
+      "h": 90
+    },
+    "31a": {
+      "file": "quest_scroll31.webp",
+      "w": 93,
+      "h": 90
+    },
+    "32a": {
+      "file": "quest_scroll32.webp",
+      "w": 93,
+      "h": 90
+    },
+    "33a": {
+      "file": "quest_scroll33.webp",
+      "w": 93,
+      "h": 90
+    },
+    "34a": {
+      "file": "quest_scroll34.webp",
+      "w": 93,
+      "h": 90
+    },
+    "35a": {
+      "file": "quest_scroll35.webp",
+      "w": 93,
+      "h": 90
+    },
+    "36a": {
+      "file": "quest_scroll36.webp",
+      "w": 93,
+      "h": 90
+    },
+    "37a": {
+      "file": "quest_scroll37.webp",
+      "w": 93,
+      "h": 90
+    },
+    "38a": {
+      "file": "quest_scroll38.webp",
+      "w": 93,
+      "h": 90
+    },
+    "39a": {
+      "file": "quest_scroll39.webp",
+      "w": 93,
+      "h": 90
+    },
+    "40a": {
+      "file": "quest_scroll40.webp",
+      "w": 93,
+      "h": 90
+    },
+    "41a": {
+      "file": "quest_scroll41.webp",
+      "w": 93,
+      "h": 90
+    },
+    "42a": {
+      "file": "quest_scroll42.webp",
+      "w": 93,
+      "h": 90
+    },
+    "43a": {
+      "file": "quest_scroll43.webp",
+      "w": 93,
+      "h": 90
+    },
+    "44a": {
+      "file": "quest_scroll44.webp",
+      "w": 93,
+      "h": 90
+    },
+    "45a": {
+      "file": "quest_scroll45.webp",
+      "w": 93,
+      "h": 90
+    },
+    "46a": {
+      "file": "quest_scroll46.webp",
+      "w": 93,
+      "h": 90
+    },
+    "47a": {
+      "file": "quest_scroll47.webp",
+      "w": 93,
+      "h": 90
+    },
+    "48a": {
+      "file": "quest_scroll48.webp",
+      "w": 93,
+      "h": 90
+    },
+    "49a": {
+      "file": "quest_scroll49.webp",
+      "w": 93,
+      "h": 90
+    },
+    "50a": {
+      "file": "quest_scroll50.webp",
+      "w": 93,
+      "h": 90
+    },
+    "01b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "02b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "03b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "04b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "05b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "06b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "07b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "08b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "09b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "10b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "11b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "12b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "13b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "14b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "15b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "16b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "17b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "18b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "19b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "20b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "21b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "22b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "23b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "24b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "25b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "26b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "27b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "28b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "29b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "30b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "31b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "32b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "33b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "34b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "35b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "36b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "37b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "38b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "39b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "40b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "41b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "42b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "43b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "44b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "45b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "46b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "47b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "48b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "49b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "50b": {
+      "file": "quest_ancient_scroll.webp",
+      "w": 96,
+      "h": 92
+    },
+    "01c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03c": {
+      "file": "quest_coupon_nor_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04c": {
+      "file": "quest_coupon_nor_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06c": {
+      "file": "quest_coupon_nor_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08c": {
+      "file": "quest_coupon_nor_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09c": {
+      "file": "quest_coupon_nor_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11c": {
+      "file": "quest_coupon_nor_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "12c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "13c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "14c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "15c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "16c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "17c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "18c": {
+      "file": "quest_coupon_nor_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "19c": {
+      "file": "quest_coupon_nor_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "20c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "21c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "22c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "23c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "24c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "25c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "26c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "27c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "28c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "29c": {
+      "file": "quest_coupon_nor_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "30c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "31c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "32c": {
+      "file": "quest_coupon_nor_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "33c": {
+      "file": "quest_coupon_nor_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "34c": {
+      "file": "quest_coupon_nor_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "35c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "36c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "37c": {
+      "file": "quest_coupon_nor_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "38c": {
+      "file": "quest_coupon_nor_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "39c": {
+      "file": "quest_coupon_nor_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "40c": {
+      "file": "quest_coupon_nor_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "41c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "42c": {
+      "file": "quest_coupon_nor_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "43c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "44c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "45c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "46c": {
+      "file": "quest_coupon_nor_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04d": {
+      "file": "quest_coupon_exc_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05d": {
+      "file": "quest_coupon_exc_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06d": {
+      "file": "quest_coupon_exc_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11d": {
+      "file": "quest_coupon_exc_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "12d": {
+      "file": "quest_coupon_exc_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "13d": {
+      "file": "quest_coupon_exc_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "14d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "15d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "16d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "17d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "18d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "19d": {
+      "file": "quest_coupon_exc_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "20d": {
+      "file": "quest_coupon_exc_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "21d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "22d": {
+      "file": "quest_coupon_exc_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "23d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "24d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "25d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "26d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "27d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "28d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "29d": {
+      "file": "quest_coupon_exc_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "30d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "31d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "32d": {
+      "file": "quest_coupon_exc_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "33d": {
+      "file": "quest_coupon_exc_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "34d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "35d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "36d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "37d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "38d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "39d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "40d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "41d": {
+      "file": "quest_coupon_exc_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "42d": {
+      "file": "quest_coupon_exc_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "43d": {
+      "file": "quest_coupon_exc_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "44d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "45d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "46d": {
+      "file": "quest_coupon_exc_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "47d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "48d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "49d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "50d": {
+      "file": "quest_coupon_exc_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "51d": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02e": {
+      "file": "quest_coupon_eli_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06e": {
+      "file": "quest_coupon_eli_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08e": {
+      "file": "quest_coupon_eli_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "12e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "13e": {
+      "file": "quest_coupon_eli_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "14e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "15e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "16e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "17e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "18e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "19e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "20e": {
+      "file": "quest_coupon_eli_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "21e": {
+      "file": "quest_coupon_eli_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "22e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "23e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "24e": {
+      "file": "quest_coupon_eli_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "25e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "26e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "27e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "28e": {
+      "file": "quest_coupon_eli_gloves.webp",
+      "w": 89,
+      "h": 79
+    },
+    "29e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "30e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "31e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "32e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "33e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "34e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "35e": {
+      "file": "quest_coupon_exc_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "36e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "37e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "38e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "39e": {
+      "file": "quest_coupon_eli_helm.webp",
+      "w": 89,
+      "h": 79
+    },
+    "40e": {
+      "file": "quest_coupon_eli_body_armor.webp",
+      "w": 89,
+      "h": 79
+    },
+    "41e": {
+      "file": "quest_coupon_eli_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "42e": {
+      "file": "quest_coupon_eli_boots.webp",
+      "w": 89,
+      "h": 79
+    },
+    "43e": {
+      "file": "quest_coupon_eli_belt.webp",
+      "w": 89,
+      "h": 79
+    },
+    "44e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "45e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "46e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "47e": {
+      "file": "quest_coupon_eli_shield.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02f": {
+      "file": "quest_coupon_nor_club.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03f": {
+      "file": "quest_coupon_nor_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04f": {
+      "file": "quest_coupon_nor_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05f": {
+      "file": "quest_coupon_nor_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06f": {
+      "file": "quest_coupon_nor_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07f": {
+      "file": "quest_coupon_nor_club.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08f": {
+      "file": "quest_coupon_nor_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11f": {
+      "file": "quest_coupon_nor_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "12f": {
+      "file": "quest_coupon_nor_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "13f": {
+      "file": "quest_coupon_nor_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "14f": {
+      "file": "quest_coupon_nor_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "15f": {
+      "file": "quest_coupon_nor_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "16f": {
+      "file": "quest_coupon_nor_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "17f": {
+      "file": "quest_coupon_nor_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "18f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "19f": {
+      "file": "quest_coupon_nor_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "20f": {
+      "file": "quest_coupon_nor_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "21f": {
+      "file": "quest_coupon_nor_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "22f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "23f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "24f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "25f": {
+      "file": "quest_coupon_nor_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "26f": {
+      "file": "quest_coupon_nor_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "27f": {
+      "file": "quest_coupon_nor_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "28f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "29f": {
+      "file": "quest_coupon_nor_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "30f": {
+      "file": "quest_coupon_nor_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "31f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "32f": {
+      "file": "quest_coupon_nor_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "33f": {
+      "file": "quest_coupon_nor_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "34f": {
+      "file": "quest_coupon_nor_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "35f": {
+      "file": "quest_coupon_nor_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "36f": {
+      "file": "quest_coupon_nor_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "37f": {
+      "file": "quest_coupon_nor_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "38f": {
+      "file": "quest_coupon_nor_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "39f": {
+      "file": "quest_coupon_nor_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "40f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "41f": {
+      "file": "quest_coupon_nor_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "42f": {
+      "file": "quest_coupon_nor_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "43f": {
+      "file": "quest_coupon_nor_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "44f": {
+      "file": "quest_coupon_nor_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "45f": {
+      "file": "quest_coupon_nor_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "46f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "47f": {
+      "file": "quest_coupon_nor_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "48f": {
+      "file": "quest_coupon_nor_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "49f": {
+      "file": "quest_coupon_nor_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "50f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "51f": {
+      "file": "quest_coupon_nor_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "52f": {
+      "file": "quest_coupon_nor_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "53f": {
+      "file": "quest_coupon_nor_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "54f": {
+      "file": "quest_coupon_nor_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "55f": {
+      "file": "quest_coupon_nor_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "56f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "57f": {
+      "file": "quest_coupon_nor_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "58f": {
+      "file": "quest_coupon_nor_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "59f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "60f": {
+      "file": "quest_coupon_nor_hammer.webp",
+      "w": 89,
+      "h": 79
+    },
+    "61f": {
+      "file": "quest_coupon_nor_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "62f": {
+      "file": "quest_coupon_nor_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "63f": {
+      "file": "quest_coupon_nor_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "64f": {
+      "file": "quest_coupon_nor_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "65f": {
+      "file": "quest_coupon_nor_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "66f": {
+      "file": "quest_coupon_nor_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "67f": {
+      "file": "quest_coupon_nor_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "68f": {
+      "file": "quest_coupon_nor_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "69f": {
+      "file": "quest_coupon_nor_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "70f": {
+      "file": "quest_coupon_nor_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "71f": {
+      "file": "quest_coupon_nor_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01g": {
+      "file": "quest_coupon_exc_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05g": {
+      "file": "quest_coupon_exc_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "06g": {
+      "file": "quest_coupon_exc_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08g": {
+      "file": "quest_coupon_exc_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09g": {
+      "file": "quest_coupon_exc_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10g": {
+      "file": "quest_coupon_exc_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "11g": {
+      "file": "quest_coupon_exc_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "12g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "13g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "14g": {
+      "file": "quest_coupon_exc_club.webp",
+      "w": 89,
+      "h": 79
+    },
+    "15g": {
+      "file": "quest_coupon_exc_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "16g": {
+      "file": "quest_coupon_exc_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "17g": {
+      "file": "quest_coupon_exc_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "18g": {
+      "file": "quest_coupon_exc_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "19g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "20g": {
+      "file": "quest_coupon_exc_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "21g": {
+      "file": "quest_coupon_exc_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "22g": {
+      "file": "quest_coupon_exc_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "23g": {
+      "file": "quest_coupon_exc_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "24g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "25g": {
+      "file": "quest_coupon_exc_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "26g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "27g": {
+      "file": "quest_coupon_exc_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "28g": {
+      "file": "quest_coupon_exc_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "29g": {
+      "file": "quest_coupon_exc_club.webp",
+      "w": 89,
+      "h": 79
+    },
+    "30g": {
+      "file": "quest_coupon_exc_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "31g": {
+      "file": "quest_coupon_exc_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "32g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "33g": {
+      "file": "quest_coupon_exc_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "34g": {
+      "file": "quest_coupon_exc_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "35g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "36g": {
+      "file": "quest_coupon_exc_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "37g": {
+      "file": "quest_coupon_exc_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "38g": {
+      "file": "quest_coupon_exc_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "39g": {
+      "file": "quest_coupon_exc_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "40g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "41g": {
+      "file": "quest_coupon_exc_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "42g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "43g": {
+      "file": "quest_coupon_exc_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "44g": {
+      "file": "quest_coupon_exc_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "45g": {
+      "file": "quest_coupon_exc_javelin.webp",
+      "w": 89,
+      "h": 79
+    },
+    "46g": {
+      "file": "quest_coupon_exc_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "47g": {
+      "file": "quest_coupon_exc_orb.webp",
+      "w": 89,
+      "h": 79
+    },
+    "48g": {
+      "file": "quest_coupon_exc_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "49g": {
+      "file": "quest_coupon_exc_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "50g": {
+      "file": "quest_coupon_exc_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "51g": {
+      "file": "quest_coupon_exc_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "52g": {
+      "file": "quest_coupon_exc_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "53g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "54g": {
+      "file": "quest_coupon_exc_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "55g": {
+      "file": "quest_coupon_exc_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "56g": {
+      "file": "quest_coupon_exc_claws.webp",
+      "w": 89,
+      "h": 79
+    },
+    "57g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "58g": {
+      "file": "quest_coupon_exc_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "59g": {
+      "file": "quest_coupon_exc_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "60g": {
+      "file": "quest_coupon_exc_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "61g": {
+      "file": "quest_coupon_exc_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "62g": {
+      "file": "quest_coupon_exc_throwing_knife.webp",
+      "w": 89,
+      "h": 79
+    },
+    "63g": {
+      "file": "quest_coupon_exc_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "64g": {
+      "file": "quest_coupon_exc_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "65g": {
+      "file": "quest_coupon_exc_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "66g": {
+      "file": "quest_coupon_exc_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "67g": {
+      "file": "quest_coupon_exc_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "68g": {
+      "file": "quest_coupon_exc_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "69g": {
+      "file": "quest_coupon_exc_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "70g": {
+      "file": "quest_coupon_exc_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "71g": {
+      "file": "quest_coupon_exc_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "72g": {
+      "file": "quest_coupon_exc_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "73g": {
+      "file": "quest_coupon_exc_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "74g": {
+      "file": "quest_coupon_exc_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "75g": {
+      "file": "quest_coupon_exc_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "76g": {
+      "file": "quest_coupon_exc_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "77g": {
+      "file": "quest_coupon_exc_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "78g": {
+      "file": "quest_coupon_exc_throwing_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01h": {
+      "file": "quest_coupon_eli_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02k": {
+      "file": "quest_coupon_eli_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03h": {
+      "file": "quest_coupon_eli_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04h": {
+      "file": "quest_coupon_eli_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05h": {
+      "file": "quest_coupon_eli_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06h": {
+      "file": "quest_coupon_eli_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07h": {
+      "file": "quest_coupon_eli_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08h": {
+      "file": "quest_coupon_eli_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09h": {
+      "file": "quest_coupon_eli_club.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10h": {
+      "file": "quest_coupon_eli_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11h": {
+      "file": "quest_coupon_eli_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "12k": {
+      "file": "quest_coupon_eli_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "13h": {
+      "file": "quest_coupon_eli_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "14h": {
+      "file": "quest_coupon_eli_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "15h": {
+      "file": "quest_coupon_eli_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "16h": {
+      "file": "quest_coupon_eli_claws.webp",
+      "w": 89,
+      "h": 79
+    },
+    "17h": {
+      "file": "quest_coupon_eli_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "18h": {
+      "file": "quest_coupon_eli_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "19h": {
+      "file": "quest_coupon_eli_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "20h": {
+      "file": "quest_coupon_eli_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "21h": {
+      "file": "quest_coupon_eli_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "22k": {
+      "file": "quest_coupon_eli_claws.webp",
+      "w": 89,
+      "h": 79
+    },
+    "23h": {
+      "file": "quest_coupon_eli_throwing_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "24h": {
+      "file": "quest_coupon_eli_hammer.webp",
+      "w": 89,
+      "h": 79
+    },
+    "25h": {
+      "file": "quest_coupon_eli_club.webp",
+      "w": 89,
+      "h": 79
+    },
+    "26h": {
+      "file": "quest_coupon_eli_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "27h": {
+      "file": "quest_coupon_eli_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "28h": {
+      "file": "quest_coupon_eli_javelin.webp",
+      "w": 89,
+      "h": 79
+    },
+    "29h": {
+      "file": "quest_coupon_eli_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "30h": {
+      "file": "quest_coupon_eli_javelin.webp",
+      "w": 89,
+      "h": 79
+    },
+    "31h": {
+      "file": "quest_coupon_eli_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "32k": {
+      "file": "quest_coupon_eli_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "33h": {
+      "file": "quest_coupon_eli_throwing_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "34h": {
+      "file": "quest_coupon_eli_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "35h": {
+      "file": "quest_coupon_eli_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "36h": {
+      "file": "quest_coupon_eli_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "37h": {
+      "file": "quest_coupon_eli_javelin.webp",
+      "w": 89,
+      "h": 79
+    },
+    "38h": {
+      "file": "quest_coupon_eli_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "39h": {
+      "file": "quest_coupon_eli_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "40h": {
+      "file": "quest_coupon_eli_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "41h": {
+      "file": "quest_coupon_eli_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "42k": {
+      "file": "quest_coupon_eli_1h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "43h": {
+      "file": "quest_coupon_eli_bow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "44h": {
+      "file": "quest_coupon_eli_scepter.webp",
+      "w": 89,
+      "h": 79
+    },
+    "45h": {
+      "file": "quest_coupon_eli_orb.webp",
+      "w": 89,
+      "h": 79
+    },
+    "46h": {
+      "file": "quest_coupon_eli_orb.webp",
+      "w": 89,
+      "h": 79
+    },
+    "47h": {
+      "file": "quest_coupon_eli_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "48h": {
+      "file": "quest_coupon_eli_hammer.webp",
+      "w": 89,
+      "h": 79
+    },
+    "49h": {
+      "file": "quest_coupon_eli_throwing_knife.webp",
+      "w": 89,
+      "h": 79
+    },
+    "50h": {
+      "file": "quest_coupon_eli_2h_axe.webp",
+      "w": 89,
+      "h": 79
+    },
+    "51h": {
+      "file": "quest_coupon_eli_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "52k": {
+      "file": "quest_coupon_eli_wand.webp",
+      "w": 89,
+      "h": 79
+    },
+    "53h": {
+      "file": "quest_coupon_eli_crossbow.webp",
+      "w": 89,
+      "h": 79
+    },
+    "54h": {
+      "file": "quest_coupon_eli_javelin.webp",
+      "w": 89,
+      "h": 79
+    },
+    "55h": {
+      "file": "quest_coupon_eli_2h_maul.webp",
+      "w": 89,
+      "h": 79
+    },
+    "56h": {
+      "file": "quest_coupon_eli_claws.webp",
+      "w": 89,
+      "h": 79
+    },
+    "57h": {
+      "file": "quest_coupon_eli_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "58h": {
+      "file": "quest_coupon_eli_spear.webp",
+      "w": 89,
+      "h": 88
+    },
+    "59h": {
+      "file": "quest_coupon_eli_polearm.webp",
+      "w": 89,
+      "h": 88
+    },
+    "60h": {
+      "file": "quest_coupon_eli_mace.webp",
+      "w": 89,
+      "h": 79
+    },
+    "61h": {
+      "file": "quest_coupon_eli_staff.webp",
+      "w": 89,
+      "h": 79
+    },
+    "62k": {
+      "file": "quest_coupon_eli_1h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "63k": {
+      "file": "quest_coupon_eli_2h_sword.webp",
+      "w": 89,
+      "h": 79
+    },
+    "64k": {
+      "file": "quest_coupon_eli_dagger.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01i": {
+      "file": "quest_coupon_nor_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02i": {
+      "file": "quest_coupon_nor_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03i": {
+      "file": "quest_coupon_nor_amulet3.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04i": {
+      "file": "quest_coupon_exc_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05i": {
+      "file": "quest_coupon_exc_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06i": {
+      "file": "quest_coupon_exc_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07i": {
+      "file": "quest_coupon_exc_amulet3.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08i": {
+      "file": "quest_coupon_exc_amulet3.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09i": {
+      "file": "quest_coupon_eli_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10i": {
+      "file": "quest_coupon_eli_amulet1.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11i": {
+      "file": "quest_coupon_eli_amulet3.webp",
+      "w": 89,
+      "h": 79
+    },
+    "12i": {
+      "file": "quest_coupon_eli_amulet3.webp",
+      "w": 89,
+      "h": 79
+    },
+    "13i": {
+      "file": "quest_coupon_eli_amulet3.webp",
+      "w": 89,
+      "h": 79
+    },
+    "01j": {
+      "file": "quest_coupon_nor_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "02j": {
+      "file": "quest_coupon_nor_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "03j": {
+      "file": "quest_coupon_nor_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "04j": {
+      "file": "quest_coupon_exc_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "05j": {
+      "file": "quest_coupon_exc_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "06j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "07j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "08j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "09j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "10j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "11j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "12j": {
+      "file": "quest_coupon_eli_ring.webp",
+      "w": 89,
+      "h": 79
+    },
+    "96j": {
+      "file": "quest_coupon_nor_blank.webp",
+      "w": 89,
+      "h": 79
+    },
+    "97j": {
+      "file": "quest_coupon_exc_blank.webp",
+      "w": 89,
+      "h": 79
+    },
+    "98j": {
+      "file": "quest_coupon_eli_blank.webp",
+      "w": 89,
+      "h": 79
+    },
+    "99j": {
+      "file": "quest_wild_card.webp",
+      "w": 89,
+      "h": 79
+    },
+    "s51": {
+      "file": "rune_el_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s52": {
+      "file": "rune_eld_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s53": {
+      "file": "rune_tir_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s54": {
+      "file": "rune_nef_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s55": {
+      "file": "rune_eth_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s56": {
+      "file": "rune_ith_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s57": {
+      "file": "rune_tal_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s58": {
+      "file": "rune_ral_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s59": {
+      "file": "rune_ort_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s60": {
+      "file": "rune_thul_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s61": {
+      "file": "rune_amn_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s62": {
+      "file": "rune_sol_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s63": {
+      "file": "rune_shael_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s64": {
+      "file": "rune_dol_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s65": {
+      "file": "rune_hel_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s66": {
+      "file": "rune_io_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s67": {
+      "file": "rune_lum_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s68": {
+      "file": "rune_ko_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s69": {
+      "file": "rune_fal_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s70": {
+      "file": "rune_lem_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s71": {
+      "file": "rune_pul_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s72": {
+      "file": "rune_um_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s73": {
+      "file": "rune_mal_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s74": {
+      "file": "rune_ist_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s75": {
+      "file": "rune_gul_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s76": {
+      "file": "rune_vex_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s77": {
+      "file": "rune_ohm_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s78": {
+      "file": "rune_lo_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s79": {
+      "file": "rune_sur_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s80": {
+      "file": "rune_ber_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s81": {
+      "file": "rune_jah_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s82": {
+      "file": "rune_cham_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "s83": {
+      "file": "rune_zod_rune2.webp",
+      "w": 96,
+      "h": 97
+    },
+    "6hrt": {
+      "file": "body_part_heart.webp",
+      "w": 72,
+      "h": 87
+    },
+    "6brz": {
+      "file": "body_part_brain.webp",
+      "w": 88,
+      "h": 73
+    },
+    "6jaw": {
+      "file": "body_part_jawbone.webp",
+      "w": 97,
+      "h": 80
+    },
+    "6eyz": {
+      "file": "body_part_eye.webp",
+      "w": 76,
+      "h": 90
+    },
+    "6hrn": {
+      "file": "body_part_horn.webp",
+      "w": 75,
+      "h": 85
+    },
+    "6tal": {
+      "file": "body_part_tail.webp",
+      "w": 80,
+      "h": 91
+    },
+    "6flg": {
+      "file": "body_part_flag.webp",
+      "w": 79,
+      "h": 94
+    },
+    "6fng": {
+      "file": "body_part_fang.webp",
+      "w": 47,
+      "h": 79
+    },
+    "6qll": {
+      "file": "body_part_quill.webp",
+      "w": 73,
+      "h": 82
+    },
+    "6sol": {
+      "file": "body_part_spleen.webp",
+      "w": 90,
+      "h": 95
+    },
+    "6scz": {
+      "file": "quest_scalp.webp",
+      "w": 96,
+      "h": 66
+    },
+    "6spe": {
+      "file": "body_part_soul.webp",
+      "w": 64,
+      "h": 93
+    },
+    "6qqq": {
+      "file": "quest_anvil_stone.webp",
+      "w": 92,
+      "h": 63
+    },
+    "6ddd": {
+      "file": "amulet_amulet.webp",
+      "w": 88,
+      "h": 86
+    },
+    "6yyy": {
+      "file": "quest_cookbook.webp",
+      "w": 94,
+      "h": 90
+    },
+    "699j": {
+      "file": "quest_wild_card.webp",
+      "w": 89,
+      "h": 79
+    },
+    "6sdo": {
+      "file": "quest_socket_donut.webp",
+      "w": 95,
+      "h": 92
+    },
+    "6ear": {
+      "file": "body_part_player_ear.webp",
+      "w": 56,
+      "h": 92
+    },
+    "6map": {
+      "file": "quest_maple_leaf.webp",
+      "w": 91,
+      "h": 89
+    },
+    "6ppp": {
+      "file": "quest_dragonstone.webp",
+      "w": 90,
+      "h": 88
+    },
+    "6rvl": {
+      "file": "potion_full_rejuv_potion.webp",
+      "w": 89,
+      "h": 94
+    },
+    "6zzz": {
+      "file": "quest_steak.webp",
+      "w": 87,
+      "h": 85
+    },
+    "wss": {
+      "file": "quest_worldstone_shard.webp",
+      "w": 63,
+      "h": 91
+    },
+    "um8": {
+      "file": "quest_liliths_crystallized_tear.webp",
+      "w": 64,
+      "h": 128
+    },
+    "um9": {
+      "file": "quest_tyraels_eternal_feather.webp",
+      "w": 51,
+      "h": 128
+    },
+    "u11": {
+      "file": "quest_orb_of_storm.webp",
+      "w": 126,
+      "h": 128
+    },
+    "u12": {
+      "file": "quest_orb_of_earth.webp",
+      "w": 125,
+      "h": 128
+    },
+    "u13": {
+      "file": "quest_orb_of_water.webp",
+      "w": 128,
+      "h": 127
+    },
+    "u14": {
+      "file": "quest_orb_of_fire.webp",
+      "w": 127,
+      "h": 128
+    },
+    "u15": {
+      "file": "quest_orb_of_wind.webp",
+      "w": 127,
+      "h": 128
+    },
+    "u16": {
+      "file": "quest_orb_of_creation.webp",
+      "w": 127,
+      "h": 128
+    },
+    "u20": {
+      "file": "quest_astrogha_petrified_heart.webp",
+      "w": 98,
+      "h": 78
+    },
+    "u21": {
+      "file": "quest_ore_shards.webp",
+      "w": 98,
+      "h": 63
+    },
+    "c12": {
+      "file": "charm_odd_charm.webp",
+      "w": 59,
+      "h": 128
+    },
+    "ib1": {
+      "file": "quest_introductory_book_1.webp",
+      "w": 128,
+      "h": 120
+    },
+    "ib2": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib3": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib4": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib5": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib6": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib7": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib8": {
+      "file": "quest_introductory_book_2.webp",
+      "w": 128,
+      "h": 75
+    },
+    "ib9": {
+      "file": "quest_introductory_book_3.webp",
+      "w": 103,
+      "h": 128
+    },
+    "u23": {
+      "file": "quest_weapon_mastery_token.webp",
+      "w": 96,
+      "h": 96
+    },
+    "u24": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u25": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u26": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u27": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u28": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u29": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u30": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u31": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u32": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u33": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u34": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u35": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u36": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u37": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u38": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u39": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u41": {
+      "file": "quest_weapon_mastery_token_activated.webp",
+      "w": 90,
+      "h": 89
+    },
+    "u40": {
+      "file": "quest_inarius_everburning_halo.webp",
+      "w": 87,
+      "h": 97
+    },
+    "rel": {
+      "file": "quest_relic_of_knowledge.webp",
+      "w": 94,
+      "h": 95
+    },
+    "01p": {
+      "file": "potion_elixir_of_attributes.webp",
+      "w": 67,
+      "h": 97
+    },
+    "02p": {
+      "file": "potion_elixir_of_skill.webp",
+      "w": 65,
+      "h": 96
+    },
+    "03p": {
+      "file": "potion_elixir_of_phasing.webp",
+      "w": 51,
+      "h": 96
+    },
+    "04p": {
+      "file": "potion_elixir_of_shielding.webp",
+      "w": 65,
+      "h": 94
+    },
+    "05p": {
+      "file": "potion_elixir_of_slaughter.webp",
+      "w": 65,
+      "h": 87
+    },
+    "06p": {
+      "file": "potion_elixir_of_knowledge.webp",
+      "w": 67,
+      "h": 95
+    },
+    "07p": {
+      "file": "potion_elixir_of_speed.webp",
+      "w": 33,
+      "h": 96
+    },
+    "08p": {
+      "file": "potion_elixir_of_luck.webp",
+      "w": 66,
+      "h": 93
+    },
+    "09p": {
+      "file": "potion_elixir_of_steal.webp",
+      "w": 34,
+      "h": 97
+    },
+    "10p": {
+      "file": "potion_elixir_of_deadly_crits.webp",
+      "w": 65,
+      "h": 98
+    },
+    "11p": {
+      "file": "potion_elixir_of_quickness.webp",
+      "w": 63,
+      "h": 97
+    },
+    "12p": {
+      "file": "potion_elixir_of_absolution.webp",
+      "w": 66,
+      "h": 97
+    },
+    "13p": {
+      "file": "potion_elixir_of_potency.webp",
+      "w": 49,
+      "h": 96
+    },
+    "14p": {
+      "file": "potion_elixir_of_the_giant.webp",
+      "w": 58,
+      "h": 97
+    },
+    "15p": {
+      "file": "potion_elixir_of_the_feline.webp",
+      "w": 59,
+      "h": 97
+    },
+    "16p": {
+      "file": "potion_elixir_of_the_gorilla.webp",
+      "w": 58,
+      "h": 96
+    },
+    "17p": {
+      "file": "potion_elixir_of_the_raven.webp",
+      "w": 58,
+      "h": 97
+    }
+  },
+  "types": {
+    "ajav": {
+      "file": "javelin_maiden_javelin.webp",
+      "w": 52,
+      "h": 128
+    },
+    "arrm": {
+      "file": "bow_arrows2.webp",
+      "w": 37,
+      "h": 128
+    },
+    "bowq": {
+      "file": "bow_arrows2.webp",
+      "w": 37,
+      "h": 128
+    },
+    "boqm": {
+      "file": "bow_bolts2.webp",
+      "w": 42,
+      "h": 128
+    },
+    "xboq": {
+      "file": "bow_bolts2.webp",
+      "w": 42,
+      "h": 128
+    },
+    "asnx": {
+      "file": "sword_katana.webp",
+      "w": 82,
+      "h": 128
+    },
+    "bjav": {
+      "file": "axe_barbarian_taxe.webp",
+      "w": 30,
+      "h": 128
+    },
+    "dclb": {
+      "file": "club_druid_club.webp",
+      "w": 46,
+      "h": 128
+    },
+    "ndgr": {
+      "file": "knife_ceremonial_dagger.webp",
+      "w": 42,
+      "h": 128
+    },
+    "npol": {
+      "file": "polearm_necroscythe2.webp",
+      "w": 61,
+      "h": 128
+    },
+    "bedg": {
+      "file": "sword_paladin_sword.webp",
+      "w": 30,
+      "h": 128
+    },
+    "mana": {
+      "file": "sword_mana_blade.webp",
+      "w": 59,
+      "h": 128
+    },
+    "srkn": {
+      "file": "knife_shuriken.webp",
+      "w": 121,
+      "h": 128
+    },
+    "wswd": {
+      "file": "sword_warlock_blade.webp",
+      "w": 37,
+      "h": 128
+    },
+    "scrn": {
+      "file": "circlet_spirit_crown.webp",
+      "w": 95,
+      "h": 128
+    },
+    "clok": {
+      "file": "armor_cloak.webp",
+      "w": 75,
+      "h": 128
+    },
+    "spot": {
+      "file": "potion_stamina_potion.webp",
+      "w": 29,
+      "h": 90
+    },
+    "apot": {
+      "file": "potion_antidote_potion.webp",
+      "w": 46,
+      "h": 88
+    },
+    "wpot": {
+      "file": "potion_thawing_potion.webp",
+      "w": 29,
+      "h": 90
+    },
+    "gold": {
+      "file": "gold_gold.webp",
+      "w": 96,
+      "h": 59
+    },
+    "key": {
+      "file": "key_skeleton_key.webp",
+      "w": 82,
+      "h": 88
+    },
+    "mcha": {
+      "file": "charm_charm_medium.webp",
+      "w": 56,
+      "h": 128
+    },
+    "jewl": {
+      "file": "gem_perfect_diamond.webp",
+      "w": 59,
+      "h": 79
+    },
+    "rstn": {
+      "file": "quest_randomize_stone.webp",
+      "w": 94,
+      "h": 97
+    },
+    "zrin": {
+      "file": "ring_ama_ring.webp",
+      "w": 97,
+      "h": 95
+    },
+    "srin": {
+      "file": "ring_sorceress_ring.webp",
+      "w": 92,
+      "h": 65
+    },
+    "nrin": {
+      "file": "ring_necro_ring.webp",
+      "w": 89,
+      "h": 89
+    },
+    "prin": {
+      "file": "ring_pala_ring.webp",
+      "w": 90,
+      "h": 84
+    },
+    "brin": {
+      "file": "ring_barb_ring.webp",
+      "w": 97,
+      "h": 76
+    },
+    "drin": {
+      "file": "ring_druid_ring.webp",
+      "w": 87,
+      "h": 100
+    },
+    "arin": {
+      "file": "ring_assassin_ring.webp",
+      "w": 71,
+      "h": 82
+    },
+    "wrin": {
+      "file": "ring_warlock_ring.webp",
+      "w": 86,
+      "h": 91
+    },
+    "zamu": {
+      "file": "amulet_ama_amulet.webp",
+      "w": 66,
+      "h": 97
+    },
+    "samu": {
+      "file": "amulet_sorceress_amulet.webp",
+      "w": 72,
+      "h": 94
+    },
+    "namu": {
+      "file": "amulet_necro_amulet.webp",
+      "w": 90,
+      "h": 93
+    },
+    "pamu": {
+      "file": "amulet_pala_amulet.webp",
+      "w": 98,
+      "h": 97
+    },
+    "bamu": {
+      "file": "amulet_barb_amulet.webp",
+      "w": 98,
+      "h": 79
+    },
+    "damu": {
+      "file": "amulet_druid_amulet.webp",
+      "w": 66,
+      "h": 97
+    },
+    "aamu": {
+      "file": "amulet_assassin_amulet.webp",
+      "w": 87,
+      "h": 97
+    },
+    "wamu": {
+      "file": "amulet_warlock_amulet.webp",
+      "w": 51,
+      "h": 98
+    },
+    "ocha": {
+      "file": "charm_odd_charm.webp",
+      "w": 59,
+      "h": 128
+    },
+    "astn": {
+      "file": "charm_ascendancy_stone.webp",
+      "w": 89,
+      "h": 91
+    },
+    "ring": {
+      "file": "ring_ring.webp",
+      "w": 87,
+      "h": 85
+    },
+    "amul": {
+      "file": "amulet_amulet.webp",
+      "w": 88,
+      "h": 86
+    },
+    "char": {
+      "file": "charm_charm_small.webp",
+      "w": 87,
+      "h": 89
+    },
+    "scha": {
+      "file": "charm_charm_small.webp",
+      "w": 87,
+      "h": 89
+    },
+    "lcha": {
+      "file": "charm_charm_large.webp",
+      "w": 45,
+      "h": 128
+    },
+    "gem0": {
+      "file": "gem_chipped_diamond.webp",
+      "w": 43,
+      "h": 36
+    },
+    "gem1": {
+      "file": "gem_flawed_diamond.webp",
+      "w": 56,
+      "h": 54
+    },
+    "gem2": {
+      "file": "gem_diamond.webp",
+      "w": 81,
+      "h": 69
+    },
+    "gem3": {
+      "file": "gem_flawless_diamond.webp",
+      "w": 72,
+      "h": 73
+    },
+    "gem4": {
+      "file": "gem_blemished_diamond.webp",
+      "w": 55,
+      "h": 76
+    },
+    "gem5": {
+      "file": "gem_perfect_diamond.webp",
+      "w": 59,
+      "h": 79
+    },
+    "gm6p": {
+      "file": "gem_6pack_diamond.webp",
+      "w": 59,
+      "h": 79
+    },
+    "cpn1": {
+      "file": "quest_coupon_nor_blank.webp",
+      "w": 89,
+      "h": 79
+    },
+    "cpn2": {
+      "file": "quest_coupon_exc_blank.webp",
+      "w": 89,
+      "h": 79
+    },
+    "cpn3": {
+      "file": "quest_coupon_eli_blank.webp",
+      "w": 89,
+      "h": 79
     }
   }
 }

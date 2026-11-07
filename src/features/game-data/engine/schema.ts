@@ -709,6 +709,13 @@ export interface CubeBundle {
   rows: CubeMergedRow[];
   recipes: CubeRecipe[];
   hidden: CubeHiddenCounts;
+  /**
+   * Item icons of the cells: the text of an ingredient or result without its count ("Heart", "Unique Ring",
+   * "Assassin's Choker") → what it names, `i:<item code>` / `t:<item type code>` / `u:<unique name>` /
+   * `s:<set item name>` (engine/cubeIcons.ts). Only the texts the rows and recipes show; a text that names different
+   * things in different rows keeps the first (an item beats an item type). Omitted in older bundles.
+   */
+  icons?: Record<string, string>;
 }
 
 // --- materials.json -----------------------------------------------------------------------------------------------
@@ -1134,6 +1141,19 @@ export interface IconsBundle {
    * campaign quest items, portal keys, organs, essences and endgame map items). Codes without art have no entry.
    */
   quest: Record<string, QuestIconInfo>;
+  /**
+   * Every other item by item code (codes `bases` or `quest` key are left out): the misc.txt items (organs, cube
+   * materials, potions, scrolls, coupons, stockers, gems and runes again) and the weapons / armor.txt rows bases.json
+   * leaves out (ESR's non-spawnable shadow bases and mythical weapons). A "(6 Pack)" row without art of its own has the
+   * single item's (`6hrt` → Heart). Codes without art have no entry.
+   */
+  items: Record<string, ItemIconInfo>;
+  /**
+   * By item type code: the art every spawnable item of the type shares (`mcha` Large Charm, `jewl` Jewel), else a
+   * curated representative item's (`ring` → Ring, `gem5` → Perfect Diamond; build/itemIcons.ts
+   * `TYPE_ICON_REPRESENTATIVES`). Broad equipment types (Weapon, Any Armor …) have none.
+   */
+  types: Record<string, ItemIconInfo>;
 }
 
 /** A `quest` entry: the icon and the item's display name (as stashnames.json `bases` names it: `vip` "Top of the Horadric Staff") */

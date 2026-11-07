@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { EnhanceBundle } from '../engine/schema';
+import type { EnhanceBundle, VesselMaterial } from '../engine/schema';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { VESSEL_COMPLETION, filterVesselRecipes, filterVesselTransforms, materialText } from '../utils/enhance';
+import { CELL_ICON_SIZE, IconList } from './CellIcon';
+import { ItemIcon } from './ItemIcon';
 import { BonusLines, NoMatches, Pills } from './EnhanceParts';
 import { LIST_CARD_CLASS, ROW_LIST_COLUMNS } from './rowListColumns';
 
@@ -90,7 +92,7 @@ function VesselTierList({ bundle, tier, search }: { readonly bundle: EnhanceBund
                     max {recipe.maxTimes}×
                   </Badge>
                 )}
-                <span className="text-muted-foreground">{recipe.materials.map(materialText).join(' + ')}</span>
+                <MaterialList materials={recipe.materials} />
               </div>
               <div className="min-w-0">
                 {recipe.anointmentRolls !== undefined ? (
@@ -109,6 +111,16 @@ function VesselTierList({ bundle, tier, search }: { readonly bundle: EnhanceBund
         </ul>
       )}
     </div>
+  );
+}
+
+/** A recipe's materials with their icons ("2× Heart + Brain + …") */
+function MaterialList({ materials, className }: { readonly materials: readonly VesselMaterial[]; readonly className?: string }) {
+  return (
+    <IconList
+      className={cn('text-muted-foreground', className)}
+      items={materials.map((material) => ({ item: { kind: 'item', code: material.code }, text: materialText(material) }))}
+    />
   );
 }
 
@@ -137,8 +149,12 @@ function VesselCompletion({ transforms, item, search }: VesselCompletionProps) {
         <ul className={cn('divide-y', LIST_CARD_CLASS, ROW_LIST_COLUMNS)}>
           {shown.map((transform) => (
             <li key={transform.output.code} className="flex flex-col gap-1 px-3 py-2 text-sm sm:flex-row sm:gap-4">
-              <span className="text-muted-foreground sm:w-72 sm:shrink-0">{transform.materials.map(materialText).join(' + ')}</span>
-              <span className="font-medium">→ {transform.output.name}</span>
+              <MaterialList materials={transform.materials} className="sm:w-72 sm:shrink-0" />
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <span aria-hidden="true">→</span>
+                <ItemIcon item={{ kind: 'item', code: transform.output.code }} size={CELL_ICON_SIZE} />
+                {transform.output.name}
+              </span>
             </li>
           ))}
         </ul>

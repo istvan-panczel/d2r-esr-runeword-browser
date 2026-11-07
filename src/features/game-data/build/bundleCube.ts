@@ -39,6 +39,7 @@ import type { CubeRow, CubeTables } from './cube/cubeRows.ts';
 import { bonusLines, describeOutput, describeOutputLevel, distinct, formatInput, isHiddenMod, parseCubeCell } from './cube/cubeText.ts';
 import { dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
 import type { TsvTable } from './tsv.ts';
+import { cubeCellKeys, withoutCount, type CubeIconToken } from '../engine/cubeIcons.ts';
 
 /** Families with at most this many rows keep every row (`recipes`); larger ones only their merged rows */
 export const RAW_ROW_LIMIT = 40;
@@ -437,6 +438,11 @@ export function buildCubeBundle(ctx: CubeContext): CubeBuildResult {
   });
 
   const usedSections = new Set(families.map((family) => family.section));
+  const shown = [
+    ...rows.flatMap((row) => [...row.inputs, row.output]),
+    ...recipes.flatMap((recipe) => [...recipe.inputs.map((input) => input.text), ...recipe.outputs.map((output) => output.text)]),
+  ];
+  const listed = [...assigned.values()].flatMap((entry) => entry.rows);
   return {
     bundle: {
       sections: CUBE_SECTIONS.filter((section) => usedSections.has(section.id)).map((section) => ({ ...section })),
@@ -445,10 +451,54 @@ export function buildCubeBundle(ctx: CubeContext): CubeBuildResult {
       rows,
       recipes,
       hidden: { ...hidden },
+      icons: cubeIconMap(listed, shown, ctx, itemCodes),
     },
     fallback: fallbacks.map((family) => ({ id: family.id, rows: assigned.get(family.id)?.rows.length ?? 0 })),
     warnings,
   };
+}
+
+/**
+ * The icon token of a cell token: an item code, an item type code, or a unique / set item name (by its display name);
+ * null for `any`, the special outputs and other string keys (Red Portal …).
+ */
+function iconToken(token: string, ctx: CubeContext, itemCodes: ReadonlySet<string>): CubeIconToken | null {
+  if (SPECIAL_OUTPUTS.has(token)) return null;
+  const kind = inputKind(token, ctx, itemCodes);
+  if (kind === 'item') return `i:${token}`;
+  if (kind === 'type') return `t:${token}`;
+  if (kind === 'any') return null;
+  if (ctx.setNames?.has(token) === true) return `s:${ctx.tables.nameOf(token)}`;
+  if (ctx.uniqueNames === undefined || ctx.uniqueNames.has(token)) return `u:${ctx.tables.nameOf(token)}`;
+  return null;
+}
+
+/**
+ * cube.json `icons`: the cell texts of the listed rows (inputs as formatInput writes them, outputs by their name) →
+ * their icon token, kept only for the keys the shown texts (`shown`: merged rows and raw recipes) are looked up by.
+ * The first row naming a text wins, except that an item replaces an item type ("Ring" is the base and the type).
+ */
+export function cubeIconMap(
+  rows: readonly CubeRow[],
+  shown: readonly string[],
+  ctx: CubeContext,
+  itemCodes: ReadonlySet<string>
+): Record<string, string> {
+  const tokens = new Map<string, CubeIconToken>();
+  const add = (text: string, token: CubeIconToken | null) => {
+    if (token === null) return;
+    const key = withoutCount(text);
+    const existing = tokens.get(key);
+    if (existing === undefined || (existing.startsWith('t:') && token.startsWith('i:'))) tokens.set(key, token);
+  };
+  for (const row of rows) {
+    for (const spec of row.inputs) add(formatInput(spec, ctx.tables), iconToken(parseCubeCell(spec).token, ctx, itemCodes));
+    for (const output of row.outputs) {
+      add(describeOutput(output, ctx.tables, { bonus: false }).name, iconToken(parseCubeCell(output.spec).token, ctx, itemCodes));
+    }
+  }
+  const wanted = new Set(shown.flatMap(cubeCellKeys));
+  return Object.fromEntries([...tokens].filter(([key]) => wanted.has(key)).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 }
 
 /** Item type codes of itemtypes.txt */

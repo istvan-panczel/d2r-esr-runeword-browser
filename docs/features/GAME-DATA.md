@@ -53,7 +53,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `itemtext.json`     | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")           |
 | `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))    |
 | `modifiers.json`    | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md)) |
-| `icons.json`        | item icon index (base / quest item code, unique / set item / socketable name → WebP file under `icons/`, size); own generator ("Item icons")                          |
+| `icons.json`        | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")             |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -68,7 +68,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `sources.json`      | 298 KB / 29 KB                                                                                                  |
 | `lootfilter.json`   | ESR 3.2.24: 829 KB / 118 KB (825 / 117 before labels, 771 / 103 before skills)                                  |
 | `enhance.json`      | ESR 3.2.24: 416 KB / 35 KB (357 KB / 32 KB before sanctification)                                               |
-| `cube.json`         | ESR 3.2.24: 517 KB / 55 KB                                                                                      |
+| `cube.json`         | ESR 3.2.24: 647 KB / 68 KB (+ `icons`: 46 KB / 10 KB)                                                           |
 | `materials.json`    | ESR 3.2.24: 165 KB / 11 KB                                                                                      |
 | `sets.json`         | ESR 3.2.24: 150 KB / 21 KB                                                                                      |
 | `skills.json`       | ESR 3.2.24: 31 KB / 4 KB                                                                                        |
@@ -82,7 +82,7 @@ the manifest itself is always revalidated. The shape is defined in `src/features
 | `itemtext.json`     | ESR 3.2.24: 484 KB / 58 KB (monsters, i.e. ESR's mythical texts: 13 KB, bases 10 KB, sockets + levels 5 KB)     |
 | `terrorzones.json`  | ESR 3.2.24: 9 KB / 2 KB                                                                                         |
 | `modifiers.json`    | ESR 3.2.24: 293 KB / 50 KB (stats 251 KB, of which example items 113 KB; kinds 51 KB; facts 19 KB)              |
-| `icons.json`        | ESR 3.2.24: 318 KB / 39 KB (+ `icons/`: 1,434 WebP files, 5.7 MB)                                               |
+| `icons.json`        | ESR 3.2.24: 451 KB / 52 KB (+ `icons/`: 1,842 WebP, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB)            |
 
 ### Bases and types
 
@@ -997,6 +997,31 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   item's display name (`readItemNames`: `namestr`, else `name`, the way stashnames.json `bases` names a code; the
   campaign map shows it without loading stashnames.json). Counts (3.2.24): 78 codes, 46 from ESR art, 31 from vanilla art (the vanilla quest
   items), 1 without art (ek2, no items.json entry); 77 entries, 73 new files (+0.32 MB), icons.json +8 KB.
+- **Every other item by code** (`items`, for the Cube, Materials and Enhance pages and the loot filter item browser):
+  `selectItemCodeRows` takes every lootfilter.json row (misc.txt, and the weapons / armor.txt rows bases.json leaves
+  out: ESR's non-spawnable shadow bases such as Armet `ulm` and the mythical weapons `m21`…, which cube recipes and
+  the Vessel of Souls name by code), without the codes `bases` or `quest` already key. Each code gets its items.json
+  art (mod first, vanilla fallback). A "(6 Pack)" row (type `or6p`) without art of its own uses the single item's
+  (`sixPackSingleCode`: the code without its leading `6`, `6hrt` → `hrt`, `6ppp` → `ppp` Dragon Stone, `699j` → `99j`
+  Wild Card; misc.txt has no column linking the two, and 7 of the 22 names differ from the single item's, "DragonStone",
+  "Anvil", "Decipherer"), so it points at the same file. A gem's or rune's code entry points at the same file as its
+  name entry in `misc` (same asset slug). Counts (3.2.24): 1,579 codes, 1,134 from ESR art, 338 from vanilla art, 107
+  without art (22 "(6 Pack)" rows on the single item's art); 1,472 entries.
+- **Item types** (`types`, for type ingredients such as "Ring" or "5× Perfect Gem"): the art every spawnable item of
+  the type (by `type` / `type2` ancestry) shares (`mcha` Large Charm, `jewl` Jewel, `ocha`, the class rings and
+  amulets: 42 types), else the item of `TYPE_ICON_REPRESENTATIVES` (15): `ring` Ring, `amul` Amulet, `char` / `scha`
+  Small Charm, `mcha` / `lcha` Large / Grand Charm, the gem grades `gem0` … `gem5` the Diamond of the grade (a neutral
+  white gem), `gm6p` the Perfect Diamond 6-pack, the coupon tiers `cpn1` … `cpn3` the blank coupon of the tier. Broad
+  equipment types (Weapon, Any Armor, Helm, Two-Handed Melee Weapon …) have none on purpose: one base would read as
+  "this base only". The pages title a type icon "Example art: any item of this type works".
+- **No duplicate art**: files are shared by asset slug, and byte-identical images of different slugs share one file
+  too (`duplicateImageAliases`: the alphabetically first slug's file; the arrow / bolt quivers equal `bow/arrows2` /
+  `bolts2`, Robe equals Cape, the deciphered bark scroll the bark scroll, two Large Charm colour variants). Images merge
+  only within their source (`esr`, `vanilla`) or among the recoloured variants, so a run without the vanilla folder
+  makes the same choices for the clone's art; the recoloured variants are planned from the shared untinted files, so a
+  variant's untinted file always exists. The integrity test fails on two files with the same bytes. Adding `items`
+  and `types` wrote 408 files (+1.43 MB: 5,829,142 → 7,324,296 bytes) and merged 5 pre-existing duplicates; icons.json
+  +140 KB raw / +13 KB gzip.
 - **Scope and counts** (ESR 3.2.24, vanilla root `06a0ca43…` extracted 2026-10-25; the generator prints them per
   section): bases: 653 codes, 356 from ESR art, 297 from vanilla art (Jewel, Boots, Leather Armor, Short Spear, …),
   0 without art. Uniques: 1,390 rows → 1,114 names; 695 from ESR art, 419 from vanilla art, 0 without art (392 own art,
@@ -1009,7 +1034,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   names; 153 from ESR art, 117 from vanilla art, 0 without art (83 own art; 3 from the vanilla sets.json: Bane's
   Oathmaker, Wraithskin, Authority); 108 mod sets.json keys match no row — all vanilla sets ESR replaced (Civerb's,
   Isenhart's, Tal Rasha's, …). 2182 items.json entries, 993 sprites in the clone, 444 in the vanilla folder; 492
-  untinted files (138 from vanilla sprites; 2.0 MB WebP) plus 692 recoloured ones (see "Colour transforms"), 0 decode
+  untinted files (138 from vanilla sprites; 2.0 MB WebP) plus 692 recoloured ones (690 files since byte-identical images share one) (see "Colour transforms"), 0 decode
   failures. Vanilla art also replaced the base art of 25 names whose own entry pointed at vanilla art (Twinkle →
   Blood Crescent's art, Stormguild, Athena's Wrath, …).
 - **Colour transforms**: the game recolours a unique / set item's inventory art at draw time with the legacy palette
@@ -1033,7 +1058,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   the colour maps were made for the 8-bit inventory art, so a light grey under `cred` turns brick red rather than a
   saturated red, some colours (`lgrn`, `dgrn`, `lpur`, `dpur` on greys) barely change, and partially coloured own art
   (5 < chroma) stays untinted. ESR 3.2.24: 869 entries recoloured (668 uniques, 40 of them own art; 201 set items,
-  19 own art), 692 files (2.9 MB); with a colour code but a base that never recolours: 12 uniques, 4 set items; own
+  19 own art), 692 variants in 690 files (2.9 MB; two byte-identical pairs share a file); with a colour code but a base that never recolours: 12 uniques, 4 set items; own
   art left untinted because it is coloured: 130 uniques, 45 set items; no unknown codes. Without the vanilla folder no
   entry is recoloured ("no palette data" count).
 - **Pipeline** per distinct asset: decode, crop to the pixels with any alpha (`opaqueBounds` / `cropRgba`), fit inside
@@ -1050,10 +1075,11 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   `items[].name`. Stale `.webp` files in `icons/`
   are deleted.
 - **Manifest**: `generate-game-data.ts` does not build icons.json; it lists the committed file in the manifest as is
-  (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178) / `questIcons` (77), plus
-  `vanillaIcons` = entries (all sections) pointing at a vanilla file, recoloured ones through their untinted file (931),
-  `vanillaIconFiles` (232), `tintedIcons` (869) and
-  `tintedIconFiles` (692)) so `loadGameDataFile('icons')` works like every other
+  (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178) / `questIcons` (77) /
+  `itemCodeIcons` (1,472) / `typeIcons` (57), plus
+  `vanillaIcons` = entries (all sections) pointing at a vanilla file, recoloured ones through their untinted file (1,281),
+  `vanillaIconFiles` (267), `tintedIcons` (869) and
+  `tintedIconFiles` (690)) so `loadGameDataFile('icons')` works like every other
   bundle. Hence `game-data:icons` runs the icon generator, then `generate-game-data.ts`; `game-data:update` runs
   generate → icons → generate (the icons follow the fresh bases.json).
 - **Check**: `--check` regenerates in memory and compares icons.json and every WebP byte for byte (plus orphans).
@@ -1073,7 +1099,8 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   null while loading or after a failed load (a warning, no error card). `findItemIcon` takes a ref
   `{ kind: 'base', code }` or `{ kind: 'unique' | 'set', name, code? }`: the name, then the name without a trailing
   parenthetical (the mythicals page lists "Tathamet's Awakening (Fire Variant)" and its siblings), then the optional base
-  `code`. `{ kind: 'quest', code }` looks up the quest section by code. `{ kind: 'misc', name, code? }` looks up `name#code` when a code is given, then the plain name (a trailing
+  `code`. `{ kind: 'quest', code }` looks up the quest section by code. `{ kind: 'item', code }` looks up any item by
+  code: `bases`, then `quest`, then `items`. `{ kind: 'type', code }` looks up `types` (none for broad types). `{ kind: 'misc', name, code? }` looks up `name#code` when a code is given, then the plain name (a trailing
   parenthetical dropped; the socketable parsers already strip the rune "(N points)" suffix); a split name without a
   matching code finds nothing. The Socketables page and the runeword cards build the ref with `socketableIconRef`
   (`src/features/socketables/utils/socketableIcon.ts`): the name, plus a code from `SHARED_NAME_CODES` for the names
@@ -1098,11 +1125,16 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   and the runeword cards the Guide and Builds embed; the rune filter has no icons), runes through `socketableIconRef`
   with the category the card resolves (`runeIconRef` in `features/runewords/utils/socketSlots.ts`, Ko by the
   runeword); jewel sockets stay empty (no jewel art yet). The builds' socket fillers stay names (jewels have no misc
-  icon yet, and a filler name alone cannot tell the two Ko Runes apart).
+  icon yet, and a filler name alone cannot tell the two Ko Runes apart). Cube page: 28 px before every ingredient and
+  result that names an item (`components/CellIcon.tsx`, see "Cube page"); Materials page: 28 px before each name;
+  Enhance page: the ingredients' icons in each card title (slot type when it has one, the reagent), 22 px before each
+  Vessel of Souls material and 28 px before each mythical weapon of the Completion list; the loot filter item browser
+  (bases and misc tabs): 24 px in each cell. All through `ItemIcon` (decorative `alt=""`, width / height set, lazy).
 - **Credits**: the home footer credits the item art to Blizzard Entertainment and the ESR team (used with permission).
 
-Next steps (not built): more misc items (jewels, charms; widen `MISC_ICON_TYPES`); icon tiles in the pickers
-(loot filter, builds, best base); the families table draws long weapons (spears, staves) as 6–8 px slivers in its
+Next steps (not built): icon tiles in the other pickers (builds, best base); the builds crafting picker (its options
+are crafts, not items: the material behind a D-stoning or forging is not in crafting.json); icons in the guide's
+`::recipes` blocks (their texts are the cube texts, but the guide would have to load cube.json for the `icons` map); the families table draws long weapons (spears, staves) as 6–8 px slivers in its
 32 px box (height-bound, so a wider box would not help).
 
 ## Regenerating
@@ -1543,8 +1575,12 @@ under the panel, with each tab's content):
   bonus with its share of the outcomes and count); then the outcome list (roll number, lines). The cube page's folded
   sanctification row links here.
 - **Vessel of Souls** (`components/EnhanceVessel.tsx`): tier pills plus Completion; a tier header (start → end souls,
-  costs), one row per recipe: soul cost badge, "max N×" badge, materials → bonus lines (the anointment recipe links to
-  the Vessel pool on the Anointment tab); Completion lists the 29 transforms.
+  costs), one row per recipe: soul cost badge, "max N×" badge, materials (each with its 22 px icon) → bonus lines (the
+  anointment recipe links to the Vessel pool on the Anointment tab); Completion lists the 29 transforms (Blemished gem
+  icons → the mythical weapon's icon).
+- **Icons in the card titles** (`IngredientIcons`): the slot's type icon when it has one (Ring, Amulet, Charm, Jewel;
+  not Weapon, Body Armor …) and the reagent's (Worldstone Shard, Orb of Anointment, the three Demonic organs, Lucion's
+  Relic); the Vessel pool shows the Vessel of Souls (a unique, by name).
 
 State lives in the URL (read on every render, written with `replace`), parsed and encoded by `utils/enhance.ts`:
 
@@ -1578,6 +1614,20 @@ menu entry "Cube Recipes", layout tab "Cube".
   outcomes on the Enhance page" in the Enhance page link style). Families
   with raw rows offer "Show all N cubemain rows" (every row with its outputs, bonus lines, conditions, description and
   line number, the item level under an output); a filter that only matches raw rows shows them directly.
+- **Icons** (28 px, `components/CellIcon.tsx` around `ItemIcon`): each ingredient and result of a merged or raw row
+  gets the icon of what it names, through cube.json `icons` (`engine/cubeIcons.ts`). The build
+  (`bundleCube.ts` `cubeIconMap`) keys the cell texts of every listed row, without their count (inputs as
+  `formatInput` writes them, outputs by name), to `i:<item code>` / `t:<item type code>` / `u:<unique name>` /
+  `s:<set item name>`, keeping only the keys the shown texts are looked up by (1,256 in 3.2.24); the first row naming a
+  text wins, an item over an item type. The page splits a cell into its options ("A / B / … (7 variants)", counts
+  dropped) and looks each up by its text, then without a trailing parenthetical ("Assassin's Choker (Unique)"); the
+  cell gets an icon only when every option resolves to the same token, so "Normal Weapon (elite tier) / Superior
+  Weapon (elite tier)" shows the Weapon type's (none: a broad type) and "Bul-Kathos' Wedding Band / Nature's Peace / …"
+  none rather than the first one's; a cell with several outputs ("A + B") and the special outputs ("The same item",
+  "Magic item of the same type", Red Portal) have none. Type ingredients use the `types` art (shared art or a
+  representative, titled "Example art: any item of this type works"); broad equipment types have none. A list
+  reserves the 28 px slot on every line when any of its cells has an icon, so names line up; the lines under a result
+  with an icon are indented to its name.
 - Empty state: "No cube recipe matches the filters", with the official Cube Recipes page link.
 
 URL state (read on every render, `utils/cube.ts`):
@@ -1603,7 +1653,8 @@ from the same bundle's `families`, the cube family labels as "Cube recipes" (→
 - Search, Copy Link and the group pills (All + each group with its row count) in the filter panel; with `?name=` the
   pills are hidden and the exact-name chip sits in the "Showing N of M items" line under the panel.
 - One section per group, a small heading per block when the group has several, and one compact row per item
-  (`components/MaterialRow.tsx`): name, code (muted), "N variants" for merged rows, levels ("lvl 11 · req 11"); **How
+  (`components/MaterialRow.tsx`): the item's icon (28 px, by code: `{ kind: 'item', code }`; an empty slot without
+  art), name, code (muted), "N variants" for merged rows, levels ("lvl 11 · req 11"); **How
   to get**: one "Cube: <family> N" chip per madeBy family (→ `/game-data/cube?family=`), then the other source labels;
   **Used in**: amber Enhance chips (→ `/game-data/enhance?tab=…&slot=…`) and family chips with recipe counts (the first
   6, then "+N more"); **Guide**: the notes of `itemNotes[code]` plus the notes of the first madeBy family

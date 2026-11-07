@@ -242,6 +242,29 @@ describe('buildCubeBundle', () => {
     expect(box?.outputs[0]?.bonus).toEqual(['hp +5']);
   });
 
+  it('maps the shown cell texts to icon tokens: items and types by code, uniques and sets by name, none for the rest', () => {
+    const { bundle } = build([
+      row('Unique Reroll ES Weapon Exc', ['Axe of the Elements', 'gpv'], 'Axe of the Elements'),
+      row('Unique Reroll ES Weapon Exc', ['Hacker', 'gpv'], 'Hacker'),
+      row('Unsocket Weap', ['"weap,sock"', 'key'], 'useitem,rem'),
+      row('Mystery Box: 2 Gems', ['"gem5,qty=2"', 'any'], "Tal Rasha's Lidless Eye"),
+      row('Tier 1 Map Cellar of Pain', ['map'], 'Red Portal,lvl=147,qty=1'),
+      row('Something New: 3 Keys', ['"key,qty=3"'], '"qui,nor"'),
+    ]);
+    // Keyed without the count; `any`, `useitem` and string keys (Red Portal) get none
+    expect(bundle.icons).toEqual({
+      'Axe of the Elements': 'u:Axe of the Elements',
+      Hacker: 'u:Hacker',
+      Key: 'i:key',
+      Map: 'i:map',
+      'Perfect Amethyst': 'i:gpv',
+      'Perfect Gem': 't:gem5',
+      'Quilted Armor': 'i:qui',
+      "Tal Rasha's Lidless Eye": "s:Tal Rasha's Lidless Eye",
+      'Weapon (socketed)': 't:weap',
+    });
+  });
+
   it('words the stat checks: named flags first, then "{stat} {op} {value}"', () => {
     expect(statConditionText(18, 'item_craftflag', 0)).toBe('No forging mod');
     expect(statConditionText(18, 'item_craftflag', 12)).toBe('Has a forging mod');

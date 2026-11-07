@@ -44,6 +44,28 @@ describe('item icon lookup', () => {
     expect(findItemIcon(buildItemIconIndex({ bases: {}, uniques: {}, sets: {} }), { kind: 'misc', name: 'El Rune' })).toBeUndefined();
   });
 
+  it('finds any item by code (bases, quest items, then the other items) and item types by type code', () => {
+    const heart = { file: 'body_part_heart.webp', w: 72, h: 87 };
+    const ring = { file: 'ring_ring.webp', w: 87, h: 85 };
+    const withCodes = buildItemIconIndex({
+      bases: { hax: axe, rin: ring },
+      uniques: {},
+      sets: {},
+      quest: { vip: viper },
+      // A 6-pack shares the single item's file
+      items: { hrt: heart, '6hrt': heart },
+      types: { ring },
+    });
+    expect(findItemIcon(withCodes, { kind: 'item', code: 'hax' })).toBe(axe);
+    expect(findItemIcon(withCodes, { kind: 'item', code: 'vip' })).toBe(viper);
+    expect(findItemIcon(withCodes, { kind: 'item', code: '6hrt' })?.file).toBe(heart.file);
+    expect(findItemIcon(withCodes, { kind: 'item', code: 'w31' })).toBeUndefined();
+    expect(findItemIcon(withCodes, { kind: 'type', code: 'ring' })).toBe(ring);
+    // Broad types have no entry
+    expect(findItemIcon(withCodes, { kind: 'type', code: 'weap' })).toBeUndefined();
+    expect(findItemIcon(index, { kind: 'item', code: 'hrt' })).toBeUndefined();
+  });
+
   it('finds quest items by code only', () => {
     expect(findItemIcon(index, { kind: 'quest', code: 'vip' })).toBe(viper);
     expect(index.quest.get('vip')?.name).toBe('Top of the Horadric Staff');

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createHash } from 'crypto';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { EXTRA_FAMILIES } from './build/cube/cubeCatalog.ts';
 import { CUBE_FAMILIES } from './build/cube/cubeFamilies.ts';
@@ -135,12 +135,14 @@ describe('committed game-data bundles', () => {
     expect(manifest.files.icons?.hash).toBe(createHash('sha256').update(iconsText, 'utf8').digest('hex'));
     const icons = JSON.parse(iconsText) as IconsBundle;
     expect(icons.esrVersion).toBe(manifest.esrVersion);
-    expect(Object.keys(icons)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest']);
+    expect(Object.keys(icons)).toEqual(['esrVersion', 'esrTag', 'vanilla', 'bases', 'uniques', 'sets', 'misc', 'quest', 'items', 'types']);
     expect(manifest.counts.itemIcons).toBe(Object.keys(icons.bases).length);
     expect(manifest.counts.uniqueIcons).toBe(Object.keys(icons.uniques).length);
     expect(manifest.counts.setIcons).toBe(Object.keys(icons.sets).length);
     expect(manifest.counts.miscIcons).toBe(Object.keys(icons.misc).length);
     expect(manifest.counts.questIcons).toBe(Object.keys(icons.quest).length);
+    expect(manifest.counts.itemCodeIcons).toBe(Object.keys(icons.items).length);
+    expect(manifest.counts.typeIcons).toBe(Object.keys(icons.types).length);
     // With the vanilla art as the second source almost every item has an icon (ESR 3.2.24: all of them)
     expect(Object.keys(icons.bases).length).toBeGreaterThan(640);
     expect(Object.keys(icons.uniques).length).toBeGreaterThan(1100);
@@ -172,6 +174,20 @@ describe('committed game-data bundles', () => {
       expect(icons.quest[code], code).toBeDefined();
     for (const area of areas) if (area.mapItem !== undefined) expect(icons.quest[area.mapItem], area.mapItem).toBeDefined();
 
+    // Every other item by code (ESR 3.2.24: 1,472 of 1,579 codes), not repeating a base or quest code; the "(6 Pack)"
+    // rows share the single item's file, and a gem / rune's code shares its name entry's file
+    expect(Object.keys(icons.items).length).toBeGreaterThan(1400);
+    for (const code of Object.keys(icons.items))
+      expect(Object.hasOwn(icons.bases, code) || Object.hasOwn(icons.quest, code), code).toBe(false);
+    expect(icons.items['6hrt']?.file).toBe(icons.items.hrt?.file);
+    expect(icons.items['6ppp']?.file).toBe(icons.items.ppp?.file);
+    expect(icons.items.gsw?.file).toBe(icons.misc.Diamond?.file);
+    // Item types: shared art or a representative (Ring, Perfect Gem); none for the broad equipment types
+    expect(icons.types.ring?.file).toBe(icons.bases.rin?.file);
+    expect(icons.types.gem5?.file).toBe(icons.misc['Perfect Diamond']?.file);
+    expect(icons.types.weap).toBeUndefined();
+    expect(icons.types.armo).toBeUndefined();
+
     // Vanilla provenance: the Steam build's root hash, the extraction date and the files made from vanilla sprites
     const vanilla = icons.vanilla;
     expect(vanilla?.rootHash).toMatch(/^[0-9a-f]{32}$/);
@@ -181,7 +197,9 @@ describe('committed game-data bundles', () => {
     expect(vanillaFiles).toEqual([...new Set(vanillaFiles)].sort());
     for (const file of vanillaFiles) expect(existsSync(resolve(OUTPUT_DIR, 'icons', file)), file).toBe(true);
     expect(manifest.counts.vanillaIconFiles).toBe(vanillaFiles.length);
-    const entries = [icons.bases, icons.uniques, icons.sets, icons.misc, icons.quest].flatMap((section) => Object.values(section));
+    const entries = [icons.bases, icons.uniques, icons.sets, icons.misc, icons.quest, icons.items, icons.types].flatMap((section) =>
+      Object.values(section)
+    );
     // A vanilla file is used directly or through a recoloured variant made from it
     const usedFiles = new Set(entries.map((icon) => untintedFile(icon.file)));
     for (const file of vanillaFiles) expect(usedFiles.has(file), file).toBe(true);
@@ -189,12 +207,15 @@ describe('committed game-data bundles', () => {
 
     // Inventory colour transforms: only unique / set entries, file named after the untinted file, map and colour
     expect(
-      [icons.bases, icons.misc, icons.quest].flatMap((section) => Object.values(section)).some((icon) => icon.tint !== undefined)
+      [icons.bases, icons.misc, icons.quest, icons.items, icons.types]
+        .flatMap((section) => Object.values(section))
+        .some((icon) => icon.tint !== undefined)
     ).toBe(false);
     const tinted = [icons.uniques, icons.sets].flatMap((section) => Object.values(section)).filter((icon) => icon.tint !== undefined);
     for (const icon of tinted) {
       const tint = icon.tint ?? { map: '', color: '' };
-      expect(icon.file).toBe(`${untintedFile(icon.file).replace(/\.webp$/, '')}__${tint.map}-${tint.color}.webp`);
+      // A variant byte-identical to another colour's shares that file (lgrn / dgrn on the Large Charm art)
+      expect(icon.file).toMatch(new RegExp(`^${untintedFile(icon.file).replace(/\.webp$/, '')}__${tint.map}-[a-z]{4}\\.webp$`));
       expect(COLORMAP_FILES as readonly string[]).toContain(tint.map);
       expect(TINT_COLORS as readonly string[]).toContain(tint.color);
       expect(existsSync(resolve(OUTPUT_DIR, 'icons', untintedFile(icon.file))), icon.file).toBe(true);
@@ -205,6 +226,28 @@ describe('committed game-data bundles', () => {
     expect(manifest.counts.tintedIconFiles).toBe(new Set(tinted.map((icon) => icon.file)).size);
     expect(icons.sets["Alaziel's Grip"]?.tint).toEqual({ map: 'invgreybrown', color: 'cred' });
     expect(icons.sets["Alaziel's Protector"]?.tint).toBeUndefined();
+
+    // No duplicate art: byte-identical images share one file (duplicateImageAliases)
+    const iconFiles = readdirSync(resolve(OUTPUT_DIR, 'icons')).filter((name) => name.endsWith('.webp'));
+    const byHash = new Map<string, string>();
+    for (const name of iconFiles) {
+      const hash = createHash('sha256')
+        .update(readFileSync(resolve(OUTPUT_DIR, 'icons', name)))
+        .digest('hex');
+      expect(byHash.get(hash), `${name} has the same bytes as ${byHash.get(hash) ?? ''}`).toBeUndefined();
+      byHash.set(hash, name);
+    }
+
+    const itemCodes = new Set(lootfilter.items.map((item) => item.code));
+    for (const [section, known] of [
+      ['items', itemCodes],
+      ['types', new Set(types.map((type) => type.code))],
+    ] as const) {
+      for (const [key, icon] of Object.entries(icons[section])) {
+        expect(known.has(key), `${section}: ${key}`).toBe(true);
+        expect(existsSync(resolve(OUTPUT_DIR, 'icons', icon.file)), icon.file).toBe(true);
+      }
+    }
 
     const codes = new Set(bases.map((base) => base.code));
     const uniqueNames = new Set(lootfilter.uniques.map((unique) => unique.name));

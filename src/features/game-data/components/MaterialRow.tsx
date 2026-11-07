@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { MaterialFamilyUse, MaterialItem } from '../engine/schema';
 import { formatCount } from '../utils/cube';
 import { cubeFamilyHref, enhanceHref, levelText } from '../utils/materials';
+import { CellIcon } from './CellIcon';
 
 /** Used-in chips shown before "+N more" */
 const USED_IN_SHOWN = 6;
@@ -49,8 +50,11 @@ export function MaterialRow({ item, familyLabel, notes }: MaterialRowProps) {
 
   return (
     <li className="space-y-1.5 px-3 py-2.5 text-sm">
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="font-medium">{item.name}</span>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <CellIcon item={{ kind: 'item', code: item.code }} />
+          <span className="font-medium">{item.name}</span>
+        </span>
         <code className="text-xs text-muted-foreground">{item.code}</code>
         {item.variants !== undefined && (
           <span className="text-xs text-muted-foreground" title="Rows of misc.txt shown as this one">
@@ -59,7 +63,7 @@ export function MaterialRow({ item, familyLabel, notes }: MaterialRowProps) {
         )}
         {level !== '' && <span className="ml-auto text-xs text-muted-foreground">{level}</span>}
       </div>
-      <dl className="space-y-1">
+      <dl className="space-y-1 sm:pl-[2.125rem]">
         <Line label="How to get">
           {item.madeBy.map((use) => (
             <FamilyChip key={use.family} use={use} label={familyLabel(use.family)} prefix="Cube: " />

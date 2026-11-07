@@ -203,6 +203,7 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
                   view={view}
                   section={section}
                   searching={filtering}
+                  icons={bundle.icons}
                   onFocus={(family) => {
                     focus(family);
                   }}

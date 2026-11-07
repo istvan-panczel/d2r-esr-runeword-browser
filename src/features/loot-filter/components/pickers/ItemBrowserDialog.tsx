@@ -134,7 +134,7 @@ function ItemBrowserForm({ bases, misc, values, onApply, onCancel }: BrowserForm
             No {noun} match “{query.trim()}”.
           </p>
         ) : (
-          groups.map((group) => <BrowserGroupSection key={group.label} group={group} selected={draft} onToggle={toggle} />)
+          groups.map((group) => <BrowserGroupSection key={group.label} group={group} selected={draft} onToggle={toggle} codeIcons />)
         )}
       </div>
       <DialogFooter className="border-t px-4 py-3 sm:px-6">
