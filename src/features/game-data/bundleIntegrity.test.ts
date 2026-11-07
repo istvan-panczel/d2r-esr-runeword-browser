@@ -1419,10 +1419,12 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(superior).not.toBeNull();
     if (superior === null) return;
     const page = readQualityAffixesPage(resolve(ESR_DIR, 'docs/quality_affixes.htm'));
-    // The page shows Enhanced Defense rows with their max only ("+40%" for ac% 20-40)
+    // The page shows Enhanced Defense rows with their max only ("+40%" for ac% 20-40); since ESR 3.3 it prints the bleed
+    // string's "over %.2f seconds" unformatted (upstream docs generator), so the duration is not compared
     const lines = (row: QualityAffixRow | { text: string[] }) =>
       ('text' in row ? row.text : row.lines)
         .map((line) => line.replace(/^\+\(\d+ to (\d+)\)% Enhanced Defense$/, '+$1% Enhanced Defense'))
+        .map((line) => line.replace(/ Bleed Damage over (?:%\.2f|[\d.]+) seconds$/, ' Bleed Damage over # seconds'))
         .sort();
 
     expect(page.grouped).toHaveLength(superior.rows.length);
