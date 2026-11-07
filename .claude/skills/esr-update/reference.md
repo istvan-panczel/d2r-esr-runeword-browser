@@ -111,13 +111,14 @@ when the match is certain, add it to `NAME_ALIASES` (otherwise report it to the 
 3.2.24 and the integrity test pins it. "a skills.txt skill not in skilldetails.json" means no item grants that skill
 any more: report, no fix.
 
-**Superior affixes**: `bases.json` `superior` / `superiorRows` / `superiorPools` regenerate from qualityitems.txt and
-`d2rloader/config/celestialrayone.superior-affixes.toml` (weights by 0-based row number; `build/bundleSuperior.ts`,
-`docs/features/GAME-DATA.md` "Superior affixes"). The integrity test checks every row against
-`docs/quality_affixes.htm` (`refs.followed` lists it as `tested`) and pins the 3.2.24 pools (12, e.g. Weapon 31 rows / total 969): a row inserted mid-file
-shifts every weight below it, so a new mismatch with the page means the toml and the txt disagree (report it to the
-owner). The `superior: … has weights for rows 83, 84, 85, 86` warning is genuine 3.2.24 data (weights for rows the
-file does not have).
+**Superior affixes**: `bases.json` `superior` / `superiorRows` / `superiorPools` regenerate from qualityitems.txt
+(since ESR 3.3 the weights are its `frequency` column; `d2rloader/config/celestialrayone.superior-affixes.toml` keeps the
+rules, and its weights table is only the fallback without the column; `build/bundleSuperior.ts`,
+`docs/features/GAME-DATA.md` "Superior affixes"). The integrity test checks every row's text and item types and every
+item type section against `docs/quality_affixes.htm` (`refs.followed` lists it as `tested`) and pins the 3.3 pools (15,
+e.g. Weapon (other types) 37 rows / total 5362). It does not compare the weights: the 3.3 page's Rarity column still
+prints the 3.2.24 toml weights by row number (an upstream page issue, asked of the mod author). When ESR fixes the page,
+compare the weights again.
 
 **Icons** (`questIcons`, `itemCodeIcons`, `typeIcons`): icons.json `quest` (campaign map quest items), `items` (every
 other item by code: Cube, Materials and Enhance cells, the loot filter item browser) and `types` (type ingredients;
@@ -151,15 +152,16 @@ the owner's OK.
   damage and uber notes and the page's `page` figures. A new or renamed boss fails `campaignMapIntegrity.test.ts`; an
   `areas:` map boss warning (no monstats row, no generic loot roll, a set-drop unique not in uniqueitems.txt) is a
   finding. ESR 3.2.24: 32 known differences (owner-checks questions 24–28).
-- **Weapon masteries** (`docs/weapon_mastery.html`): masteries.json comes from the cubemain "Apply / Remove Awaken Weapon
-  Mastery Token" rows (grouped by the `weapon-mastery` value) and the awakened tokens' `u24desc` … `u41desc` strings
+- **Weapon masteries** (`docs/weapon_mastery.html`): masteries.json comes from the cubemain "Apply Awaken Weapon Mastery
+  Token" / "Remove Weapon Mastery" rows (grouped by their `weapon-mastery-<weapon>` property since ESR 3.3; "True
+  Master" any-weapon rows give the bundle's `anyWeaponPerk`) and the awakened tokens' `u24desc` … `u41desc` strings
   (`build/bundleMasteries.ts`); the Bases page (`codes`), the skill cards and the skill peek read it. Hand-kept:
   `GROUP_RULES` (skills lines naming a group), `LOWER_CASE_MENTIONS`, `HIDDEN_MOD_LABELS` (mods without item text). New
   `masteries:` warnings: "names no <class> skill" → a new group heading (propose a rule); "has no item text" → a label
   (propose); "takes <code>, which cannot get this mastery", "no awaken / remove row takes", a description naming other
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
-  specialisation values (the page's weapons plus the Warlock Void Blade, which the page lacks) and the 7 warnings of
-  3.2.24.
+  specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
+  formulas read `weapon_mastery_orb_1`) and the 4 warnings of 3.3.
 - **Cube page** (`docs/Eastern Sun Resurrected Cube Recipes.html`): `CUBE_SECTIONS` in `build/cube/cubeCatalog.ts` (the
   page's anchors, `notes` rewritten from its footnotes, guide slugs) and `FAMILY_NOTES`. A renamed anchor breaks the
   "Official: <section>" links. The page lagged the files in about 31 places at 3.2.24 (cube audit 2026-11-07), so read
