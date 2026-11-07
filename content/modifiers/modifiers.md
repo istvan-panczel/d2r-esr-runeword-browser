@@ -1,4 +1,4 @@
-# Item modifier explanations (ESR 3.2.24)
+# Item modifier explanations (ESR 3.3)
 
 The format, source tags and placeholders are documented in docs/features/MODIFIERS.md "Content".
 
@@ -19,8 +19,8 @@ facts:
 - Roll order and exclusivity: weapon mastery → critical strike → deadly strike, each only if the previous failed (same file, lines 24–28: "mutually exclusive and resolved in the order weapon mastery -> critical strike -> deadly strike"; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp:326–352 [Vanilla]). Combined chance = 1 − (1−a)(1−b)(1−c).
 - Roll: `rand % 100 < chance` [Vanilla, D2MOO SUnitDmg.cpp:330, 340, 348].
 - Critical Strike (`passive_critical_strike`): the mod author (2026-11-07) says the game gates such hard-coded stats by name and ESR replaced this one with a custom stat, so a fire-thorns item (row 337) gives no crit chance.
-- "Over the cap" formulas subtract 100: `excel/skills.txt` "Demon Limb Aura" aurastatcalc1–6 `…stat('item_deadlystrike'.accr)+stat('passive_mastery_melee_crit'.accr)-100…`; "Lacerator Aura" aurastatcalc1 (deadly strike − 100) and aurastatcalc2 (+ throw crit − 100). Both are unique weapons (`excel/uniqueitems.txt` Demonlimb, Lacerator; `docs/unique_weapons.htm`), not mythicals.
-- Element crit auras: `excel/skills.txt` "Magic/Fire/Cold/Lightning/Poison Damage Crit" calc1 `stat('randomgenerator'.accr)>(1000-stat('item_deadlystrike'.accr)*10)`, aurastatcalc1 `(100+stat('criticaldamage'.accr))*(100+mastery)/100`; granted as `aura-hidden` by the uniques named above (`excel/uniqueitems.txt`).
+- "Over the cap" formulas subtract 100: `excel/skills.txt` "Demon Limb Aura" aurastatcalc1–6 `…max(0,(stat('item_deadlystrike'.accr)+stat('passive_mastery_melee_crit'.accr)-100))…`; "Lacerator Aura" aurastatcalc1 (deadly strike − 100) and aurastatcalc2 (+ throw crit − 100). Since ESR 3.3 both use `max(0, …)` (was `max(1, …)`) and multiply by 1.1 for each of the Blacksmith perks `blacksmithing_1` and `blacksmithing_9` (Tempered Steel and One's Favorite, `docs/specializations.htm`). Both are unique weapons (`excel/uniqueitems.txt` Demonlimb, Lacerator; `docs/unique_weapons.htm`), not mythicals.
+- Element crit auras: `excel/skills.txt` "Magic/Fire/Cold/Lightning/Poison Damage Crit" calc1 `stat('randomgenerator'.accr)>(1000-stat('item_deadlystrike'.accr)*10)`; granted as `aura-hidden` by the uniques named above (`excel/uniqueitems.txt`). aurastatcalc1 since ESR 3.3: Fire `(100+stat('total_elemental_min_damage'.accr)+stat('total_fire_damage'.accr))*(100+stat('criticaldamage'.accr))/100` (Cold the same with `total_cold_damage`, Lightning with `total_elemental_min_damage` only, Poison with `total_poison_magic_min_damage`), × 1.1 with the Blacksmith perk `blacksmithing_9`; the element mastery factor `(100+mastery)/100` of ESR 3.2 is gone. Magic keeps `(100+stat('criticaldamage'.accr))*(100+stat('passive_mag2_mastery'.accr))/100`. Patch 3.3: element crits "no longer double dip on spell damage", and every element can crit at any Deadly Strike value (`ESR/patchnotes/3.3.md`, Items).
 - `excel/itemstatcost.txt` also has `item_deadlystrike_cap` (605, no tooltip, property `deadly-cap`). The D-stoning rows `excel/cubemain.txt` "HS + Any Weapon + key", "DS + Any Amulet", "DS + Any Ring" add it together with Deadly Strike (+3 each) and apply only while it is at most 99 (op 16). The mod author (2026-11-07): it separates the Deadly Strike already on the item from what D-stoning gives, so a 50% item can be stoned to 150% instead of capping at 100%.
 - Tooltip `%+d%% Deadly Strike` (`excel/itemstatcost.txt` row 141 descstrpos ModStr5q, `strings/item-modifiers.json`).
 
@@ -29,7 +29,7 @@ caveats:
 - D2MOO is 1.10/1.14 code; the roll order is confirmed for ESR only by the plugin comment, not by a test.
 - No ESR skills.txt row grants `passive_mastery_melee_crit` (344) or `passive_mastery_throw_crit` (347) as a passivestat/aurastat; where weapon-mastery crit comes from in ESR is unclear (the question to the mod author needs rephrasing, open-questions.md).
 
-sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `excel/skills.txt` (Demon Limb Aura, Lacerator Aura, Gimmershred Aura, * Damage Crit); `excel/uniqueitems.txt`; `strings/item-modifiers.json` (demonlimbdesc, laceratordesc); D2MOO/D2Game/src/UNIT/SUnitDmg.cpp; ESR mod author (Discord, 2026-11-07); wiki "Q&A With the Mod Creator"; https://maxroll.gg/d2/resources/attack-modifiers
+sources: `ESR/d2rloader/config/celestialrayone.critical-strike-damage.toml`; `excel/skills.txt` (Demon Limb Aura, Lacerator Aura, Gimmershred Aura, * Damage Crit); `excel/uniqueitems.txt`; `strings/item-modifiers.json` (demonlimbdesc, laceratordesc); `ESR/patchnotes/3.3.md`; `ESR/docs/specializations.htm`; D2MOO/D2Game/src/UNIT/SUnitDmg.cpp; ESR mod author (Discord, 2026-11-07); wiki "Q&A With the Mod Creator"; https://maxroll.gg/d2/resources/attack-modifiers
 
 ---
 
@@ -870,7 +870,7 @@ facts:
 
 caveats:
 
-- "Cap 80%" is the wiki's (3.9) wording; in 3.2.24 it is per-skill floors, which mostly equal 80%. The app can compute each skill's floor from skills.txt.
+- "Cap 80%" is the wiki's (3.9) wording; in ESR 3.3 (as in 3.2.24) it is per-skill floors, which mostly equal 80%. The app can compute each skill's floor from skills.txt.
 
 sources: `excel/skills.txt` (calc4–7, auralencalc); `strings/skills.json`; wiki "+X% Skill Cooldown Reduction", "Crossbows and cooldown"
 
@@ -882,12 +882,12 @@ stats: passive_fire_mastery (329), passive_cold_mastery (331), passive_ltng_mast
 
 summary: Raises your damage of that element by the percent, for skills and for that element's damage added to attacks.
 
-body: These raise your damage of one element by the percent [Vanilla]. ESR shows "+N% to Spell Damage" when these four and the magic and physical spell damage stats are all equal [ESR files]. They also apply to that element's "damage to attacks" from items [ESR config], as in the 1.10 code [Vanilla]. Skills that add elemental damage to attacks, such as Enchant, divide out the mastery so it is not counted twice [ESR files]. They are separate from "Total Spell Damage", which some skills multiply on top [ESR files].
+body: These raise your damage of one element by the percent [Vanilla]. ESR shows "+N% to Spell Damage" when these four and the magic and physical spell damage stats are all equal [ESR files]. They also apply to that element's "damage to attacks" from items [ESR config], as in the 1.10 code [Vanilla]. Skills that add elemental damage to attacks, such as Venom, divide out the mastery so it is not counted twice [ESR files]. They are separate from "Total Spell Damage", which some skills multiply on top [ESR files].
 
 facts:
 
 - Damage-overflow-fix debug log lists "each element to attacks with its mastery" (`ESR/d2rloader/config/celestialrayone.damage-overflow-fix.toml` line 302, debug_log section). D2MOO rolls attack fire, lightning, cold, magic and poison damage with the matching mastery as a percent bonus (SUnitDmg.cpp:356–486, 603) [Vanilla].
-- `excel/skills.txt` Enchant aurastatcalc1 `enma*100/(100+stat('passive_fire_mastery'.accr))` (aurastatcalc2 the same for max).
+- `excel/skills.txt` Venom aurastatcalc1 `clc1?0:(enms*100/(100+stat('passive_pois_mastery'.accr)))` (aurastatcalc2 the same for max); Blood Boil's EDmgSymPerCalc ends in `*100/(100+stat('passive_fire_mastery'.accr))-100`. Enchant did the same up to ESR 3.2.24 (`enma*100/(100+stat('passive_fire_mastery'.accr))`); since 3.3 its aurastatcalc1/2 are plain `edmn` / `edmx`.
 - Grouped line: dgrp 4 `strModSpellDamage` "%+d%% to Spell Damage" has six members: 329–332, 482 (magic) and 483 (physical).
 
 caveats:
@@ -895,7 +895,7 @@ caveats:
 - Exact order with skill synergies (additive or multiplicative) per skill: read each skill's EDmgSymPerCalc.
 - Whether they boost elemental damage from procs and summons: unknown.
 
-sources: `excel/itemstatcost.txt` rows 329–332; `excel/skills.txt` (Enchant, Blood Boil); `ESR/d2rloader/config/celestialrayone.damage-overflow-fix.toml`
+sources: `excel/itemstatcost.txt` rows 329–332; `excel/skills.txt` (Venom, Blood Boil, Enchant); `ESR/d2rloader/config/celestialrayone.damage-overflow-fix.toml`
 
 ---
 
@@ -958,7 +958,7 @@ facts:
 
 - Merge: `ESR/d2rloader/config/celestialrayone.skill-line-merge.toml` — only rows 97 and 107, same skill, same tooltip block; merged text uses string key `allclasses`.
 - Synergy formulas (`excel/skills.txt` DmgSymPerCalc, EDmgSymPerCalc, ELenSymPerCalc): 306 `.blvl` references, 25 `.lvl`.
-- The old wiki (3.9) gives a +32 per-item cap for all skills and for class skills. In 3.2.24 `excel/itemstatcost.txt` saves item_allskills with 16 bits / SaveAdd 1000 and item_addclassskills with 10 bits / SaveAdd 50, so that cap does not come from the save format; treat it as outdated.
+- The old wiki (3.9) gives a +32 per-item cap for all skills and for class skills. In ESR 3.3 (as in 3.2.24) `excel/itemstatcost.txt` saves item_allskills with 16 bits / SaveAdd 1000 and item_addclassskills with 10 bits / SaveAdd 50, so that cap does not come from the save format; treat it as outdated.
 
 caveats: none.
 

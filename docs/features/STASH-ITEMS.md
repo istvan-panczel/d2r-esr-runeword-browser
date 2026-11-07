@@ -124,13 +124,13 @@ count, sockets inside parents, search basics).
 ## Data
 
 - `stashnames.json` (built by `build/bundleStash.ts` with stash.json, [GAME-DATA.md → Stash](./GAME-DATA.md#stash);
-  lazy, this page only, ESR 3.2.24: 294 KB / 49 KB gzip): `bases` (name, `type` / `type2`, tier per code), `uniques` /
+  lazy, this page only, ESR 3.3: 297 KB / 49 KB gzip): `bases` (name, `type` / `type2`, tier per code), `uniques` /
   `setItems` by the row a save stores (coupon / unnamed flags, set index), `sets`, `runewords` by the string-table id
   an item's runeword field holds (gemwords flagged). The page joins it to stash.json (`withNames`, one object per pair)
   for the catalog; the summary counts (page chips, home card) need stash.json only (`gemwords`).
 - Base names: ESR's belt abbreviations ("\*HP1", "\*Thaw", "+TP") read as the misc.txt `name` column
   ("Minor Healing Potion"; 17 potion / scroll codes).
-- `itemtext.json` (built by `build/bundleItemText.ts`, lazy, this page only, ESR 3.2.24: 218 KB / 39 KB gzip): the
+- `itemtext.json` (built by `build/bundleItemText.ts`, lazy, this page only, ESR 3.3: 495 KB / 60 KB gzip): the
   display columns of every saved stat, their strings, skill / class / monster names, the magic / automagic / rare name
   tables, set bonus pieces. Shape: `ItemTextBundle` in `engine/schema.ts`
   ([GAME-DATA.md → Item text](./GAME-DATA.md#item-text)).
@@ -161,7 +161,7 @@ fed by `items/textData.ts` (saved stats → renderer entries) and `items/statVal
   Darkflight Hand's N Rune is "-25% Target Defense", not the "Regenerate Mana +40%" of helms and armor). They are shown
   under the socketed item and count in the stat values, also on runeword and gemword items: the game applies the stats
   of every socketed item (a runeword's total is its own stats plus its runes' bonuses; gemwords the same). A gems.txt
-  random pool would have no saved roll (none in ESR 3.2.24). Jewels give their saved stats.
+  random pool would have no saved roll (none in ESR 3.3). Jewels give their saved stats.
 - **Base lines** (tooltip order): Throw / One-Hand / Two-Hand Damage (weapons.txt `minmisdam` for throwable item
   types only, itemtypes.txt `Throwable`, as ESR fills `maxmisdam` on some wands, orbs and claws; `mindam` / `2handmindam`
   by the one- / two-handed flags; ×1.5 when ethereal, × (100 + enhanced min / max damage %) / 100, + min /

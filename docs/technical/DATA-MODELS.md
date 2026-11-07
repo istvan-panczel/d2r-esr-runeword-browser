@@ -183,7 +183,7 @@ Stores unique items parsed from HTM pages.
 
 ### ascendancies
 
-Stores the ascendancies parsed from `ascendancies.htm` (15 at ESR 3.2.24).
+Stores the ascendancies parsed from `ascendancies.htm` (15 at ESR 3.3).
 
 | Column       | Type             | Index   | Description                                                                                                                                      |
 | ------------ | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -195,7 +195,7 @@ Stores the ascendancies parsed from `ascendancies.htm` (15 at ESR 3.2.24).
 
 ### ascendancyChallenges
 
-Stores the "Tier N Challenge" sections of `ascendancies.htm` (5 at ESR 3.2.24). Not sanity-checked: empty when the
+Stores the "Tier N Challenge" sections of `ascendancies.htm` (5 at ESR 3.3). Not sanity-checked: empty when the
 page has no readable challenge section (the Ascendancies page then hides its tier steps).
 
 | Column      | Type               | Index   | Description                                                                                                                                                                                      |
@@ -215,7 +215,7 @@ Key-value store for app metadata.
 
 **Used Keys:**
 
-- `esrVersion` - ESR version of the synced docs data (e.g., "3.2.24"), from GitHub `d2rloader/metadata.json`
+- `esrVersion` - ESR version of the synced docs data (e.g., "3.3"), from GitHub `d2rloader/metadata.json`
   (`metadata.modVersion`), or the changelog page's first header as a fallback
 - `docsLastModified` - ISO `Last-Modified` of the docs site's `runewords.htm` at the last sync (absent when not sent)
 - `lastUpdated` - ISO timestamp of the last successful store

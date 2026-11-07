@@ -44,7 +44,7 @@ same-name rows such as the 20 Ember of Creation variants share one entry) and `s
 
 - **Which skills**: every class skill of the trees (skills.txt `charclass` set, a skilldesc row on page 1..3), in class /
   tab / row / column order, then the **item skills**: skills.txt rows without a `charclass` that have a skilldesc row
-  and that at least one item grants. ESR 3.2.24: 280 + 181 = 461.
+  and that at least one item grants. ESR 3.3: 280 + 185 = 465.
 - **Scalars**: `reqLevel` (`reqlevel`), `maxLevel` (`maxlvl`), `reqSkills` (`reqskill1..3`), `type` (`aura` column = 1 →
   aura, else `passive` = 1 → passive), `element` (`EType` as a label: fire → Fire, ltng → Lightning, …), `mana`
   = `[mana, lvlmana] × 2^manashift / 256` (cost at level 1 and per extra level; Fire Bolt 8 / 2 / shift 6 → 2 + 0.5 per
@@ -85,13 +85,13 @@ then a numeric row id). Not followed: the hidden variants (`oskill-hidden`, `aur
 invisible on the item, mostly internal mechanics), random skills (`skill-rand`, `oskill-rand`), propertygroups.txt
 pools and the set-wide bonuses of sets.txt.
 
-Counts (manifest, ESR 3.2.24): `skillDetails` 461, `skillDetailsItemSkills` 181, `skillDetailsWithGrants` 438,
-`skillDetailsWithSynergies` 226, `skillDetailsWithoutDescription` 93 (mostly item skills: ESR's surges, masteries,
-trophies; 63 of them get the skill information page's text, see below), `skillGrantItems` 1185, `skillGrants` 3122,
-`skillGrantsUndescribed` 0 (grants of class-less skills without a skilldesc row, not listed), `skillIcons` 325.
-Size: 406 KB / 64 KB gzip.
+Counts (manifest, ESR 3.3): `skillDetails` 465, `skillDetailsItemSkills` 185, `skillDetailsWithGrants` 445,
+`skillDetailsWithSynergies` 226, `skillDetailsWithoutDescription` 96 (mostly item skills: ESR's surges, masteries,
+trophies; 63 of them get the skill information page's text, see below), `skillGrantItems` 1194, `skillGrants` 3168,
+`skillGrantsUndescribed` 1 (grants of class-less skills without a skilldesc row, not listed), `skillIcons` 325.
+Size: 410 KB / 62 KB gzip.
 
-Warnings (manifest): `skilldetails: unknown skill in <prop> "<par>" (<item>)` (ESR 3.2.24: one, Ember of Creation's
+Warnings (manifest): `skilldetails: unknown skill in <prop> "<par>" (<item>)` (ESR 3.3: one, Ember of Creation's
 `oskill Axe Swarm`), missing name / description / dsc3 strings, duplicate skills.txt ids.
 
 ### ESR skill information page
@@ -124,7 +124,7 @@ https://easternsunresurrected.com/skill_information.htm, also tracked by `esr:di
 skill not in skilldetails.json` when no item grants it); a missing table, an empty row, a skill described by two
   entries and a missing file are warnings too.
 
-Counts (manifest, ESR 3.2.24): `skillInfoEntries` 38 (Oskills rows), `skillInfoNames` 68 (names they expand to),
+Counts (manifest, ESR 3.3): `skillInfoEntries` 38 (Oskills rows), `skillInfoNames` 68 (names they expand to),
 `skillInfoSkills` 68, `skillInfoOnlyDescription` 63 (skills whose only description is the page's), `skillInfoMercenaryRows` 16,
 `skillInfoMercenarySkills` 44, `skillInfoMercenaryLinks` 70, `skillInfoUnmatched` 0.
 
@@ -144,7 +144,7 @@ what the game files reference.
 
 `npm run game-data:skill-icons` (also the last step of `npm run game-data:icons`) reads the icon keys of the committed
 `skilldetails.json`, crops each cel, scales it to 64 × 63 and writes `icons/skills/<key>.webp` (WebP quality 80;
-ESR 3.2.24: 325 files, 433 KB). The key names the file, so there is no separate index; the manifest count
+ESR 3.3: 325 files, 433 KB). The key names the file, so there is no separate index; the manifest count
 `skillIcons` is the number of keys. `--check` (part of `npm run game-data:check`) fails on a changed, missing or
 orphaned file and on a key whose cel is outside its sheet. No vanilla art is needed.
 
@@ -170,7 +170,7 @@ is shown.
   listing them (Weaken reads every curse's hard points through Attack's `calc1`; Werewolf reads Lycanthropy), kept only
   when that skill alone at its cap (the other inputs at 0, ascendancy gates at 0) changes a shown line at a sample
   level: Fire Ball reads Zap, Conduit, Storm Nexus and Static Focus only behind `skill('Eschuta Temper Passive'.lvl)>0`,
-  so it has none. ESR 3.2.24: 73 skills, 235 inputs (104 / 343 before the filter). Other classes' skills are left out
+  so it has none. ESR 3.3: 72 skills, 234 inputs (3.2.24: 73 / 235; 104 / 343 unfiltered). Other classes' skills are left out
   (only Elemental Nova and Fist of the Heavens read any), as are `*Passive` / `*Control` rows and item skills. Flags: `scalesWithCharLevel`, `scalesWithHardPointsOnly`, `hiddenStatLines`, `hiddenOtherLines`, `itemEffect`.
 - **rows** / **missiles**: the skills.txt / missiles.txt rows the shown lines' formulas can read on any branch
   (`collectFormulaRefs`: formula columns, `skill()` / `sklvl()` / `miss()` targets and skilldesc descmissiles,
@@ -345,8 +345,11 @@ Other assumptions, not checked yet:
 - The old line functions 3 / 4 / 63 (one community guide, "a first pass") and the D2R 79 (inferred from its texts).
 - Refused, left for round 2: `m2eo` / `m2ey` / `me3o` / `me3y` (D2MOO picks descmissile1 / 2 for them, a copy-paste bug
   D2R may have fixed: Overseer Volley), `m1nm` / `m1xm` (not in the Data Guide: Miasma Chains, Abyss), missile `rad`, the
-  broken `clc0` (Frenzy, Mirrored Blades), `ln43` (Bind Demon), the mastery code `mael` (Meteor Sentry), Plague
-  Javelin's descmissile that is not in missiles.txt, and the two lines whose strings are missing.
+  broken `clc0` (Frenzy, Mirrored Blades; since ESR 3.3 also Tornado Shot and Legendary Arrow, whose Weapon Damage
+  lines read `clc0*100/128`), `ln43` (Bind Demon), `ps10` / `ps11` (Bind Demon's 3.3 rework), the mastery code `mael`
+  (Meteor Sentry), Plague Javelin's descmissile that is not in missiles.txt, and the three lines whose strings are
+  missing (`shurikennumber`, Flurry of Shurikens; `StrSkillManaCostPerSecond`, Bind Demon;
+  `physicaldamagewhilewwdesc`, Fire Whirlwind).
 
 ## Page
 
@@ -540,8 +543,8 @@ its name is scrolled out or removed from the page.
 
 Not covered: base automods (`BaseCard` joins the lines with " · "), the loot filter browsers, the cube's "Magic item of
 the same type (…)" and "The same item (Level 10 Blessed Aim Aura When Equipped)" outputs (the skill line is
-parenthesised inside another text, not a whole-line template) and guide prose. Fixture numbers (ESR 3.2.24 HTM pages): runewords
-924 linked lines, uniques 1561, gemwords 936, mythicals 84, ascendancies 15; every line whose template names a known
+parenthesised inside another text, not a whole-line template) and guide prose. Fixture numbers (ESR 3.3 HTM pages): runewords
+924 linked lines, uniques 1606, gemwords 936, mythicals 83, ascendancies 15; every line whose template names a known
 skill is linked except Lich King's Essence "+(5 to 15) To Empowered Enchant" (it grants all six variants). Checked
 against skilldetails.json grants: every linked chance-to-cast / charges line and all but ESR's random auras (Ars
 Tor'Baalos) match a grant of that item with the same property, level and chance.

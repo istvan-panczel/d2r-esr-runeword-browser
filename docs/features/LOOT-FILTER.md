@@ -693,7 +693,7 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
     `initialState`, `existingStyles`: the Rules tab passes the filter's styles) has no store dependency (the AI page's
     "Pick example rules" starter uses it without `existingStyles`, reopening on the `selection` it got back), and
     `starterRulesFor(ids, existing?)` builds a set without a picker, for starters outside the editor.
-  - _Rules_: real ESR 3.2.24 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
+  - _Rules_: real ESR 3.3 codes, types and stat names only; no `activeInLevels` (examples apply at every level); no
     Enhanced Damage/Defense check (see "Known plugin limits"); hide rules wait for a character level
     (`playerStats` `level`) and leave the town areas out (`excludeAreas` 1, 40, 75, 103, 109). The level gates are
     the ones of Sully's matching v0.6.13 hides (owner, 2026-11-05): inferior gear 10, white gear with at most one
@@ -927,7 +927,7 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
     in an any-of list; a rule has one any-of list" / "for a <, <= or != check only in an all-of list"). There is no
     "move to the any-of list" button and no collapsed display of the expanded rows (kept simple).
   - Names (`statParamLabel`, `LootFilterLookup.statParamLabel`): "Martial Arts (Assassin)", "Sorceress", "Fire
-    Ball", "Orb of Winter lvl 25"; a skill name that several skills share (25 in ESR 3.2.24, a class skill and its
+    Ball", "Orb of Winter lvl 25"; a skill name that several skills share (25 in ESR 3.3, a class skill and its
     item copy) carries the id ("Chain Lightning #124"). `formatStatCheck` uses them, so the rule summary, the
     "unless" part and the Except control's "Kept:" line read `item_addskill_tab[Martial Arts (Assassin)] ≥1`; an
     unknown or undecodable param stays a number.
@@ -1039,14 +1039,14 @@ counter and one Apply / Cancel.
 - **Data**: `bases.json`, `types.json`, `lootfilter.json` (`uniques` / `sets` with `reqLvl`, `set`, `disabled` and
   `coupon`, see GAME-DATA.md) and `tiers.json`, loaded when the dialog opens; the model is built once per bundle set
   (`getUniqueBrowserModel`). Uniques on non-spawnable shadow bases (about 400) are listed like the others.
-- **Coupon uniques are not listed** (`coupon: true` rows, ESR 3.2.24: 382, #699–1069 without Annihilus #1059 and
+- **Coupon uniques are not listed** (`coupon: true` rows, ESR 3.3: 382, #699–1069 without Annihilus #1059 and
   #1377–1388): they are cubed from three Ancient Coupons and never drop, so they only clutter the tables. The Uniques
   tab's footer says so ("382 coupon uniques are not listed: they are cubed from Ancient Coupons and never drop. Add one
   by name or id with "Add unique or set item"; ids already in the rule stay on Apply"); the picker still offers them.
   A coupon id already in the rule is not in the browser's codes, so Apply keeps it like any unlisted id. The shared-id
-  warning still knows coupon uniques (a set item's id also matches the coupon unique with that id; none in 3.2.24).
+  warning still knows coupon uniques (a set item's id also matches the coupon unique with that id; none in 3.3).
 - **Cells**: name, base code (tag), then base name · `Lvl N` (required level) · `#id`. Rows of one table with the same
-  name, base and disabled flag are one cell that selects all their ids (ESR 3.2.24: Ember of Creation ×230 on the
+  name, base and disabled flag are one cell that selects all their ids (ESR 3.3: Ember of Creation ×230 on the
   Mythical Jewel, Ore ×16, Lich King's Essence ×6, The Ties That Bind ×7, two ×3); a cell of more than 10 rows shows the
   row count and lists the id runs in its tooltip. Disabled rows (`disabled` in the txt: The Perfect Cello #0 and the
   six Rupture charms #690–695) are greyed with "disabled in the game files" and cannot be ticked; an id typed into the
@@ -1066,7 +1066,7 @@ counter and one Apply / Cancel.
 - **Search**: every whitespace term must match the cell's name, base name, base code, set name, type name or code,
   group label, column label or one of its ids. Tab counts while searching as in the item browser.
 - **Shared ids**: unique and set item ids are one id space (`uniqueOrSetIds` matches the row number of either table and
-  the plugin ignores the quality when matching; ESR 3.2.24: all 270 set ids are also unique ids), so a ticked id is
+  the plugin ignores the quality when matching; ESR 3.3: all 270 set ids are also unique ids), so a ticked id is
   ticked on both tabs. While a ticked id is in both tables and the edited rule's `quality` does not let through exactly
   one of set and unique (`qualityTellsApart`: no quality, `magic` and up, `[set, unique]`…), the footer warns
   "id N is both unique X and set item Y; set the rule's quality to unique or set" (three ids named, then a count). The
@@ -1091,7 +1091,7 @@ focus returns to the button).
   are shown, "+N more" / "Show less" toggles the rest; a search that matches an affix past the first 8 shows the whole
   list, and matching affix names are emphasised.
 - **Enhanced damage**: `dmg%` writes both `item_maxdamage_percent` (17) and `item_mindamage_percent` (18). The browser
-  shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.2.24), so
+  shows one "Enhanced Damage" row on 17 and hides 18 wherever an affix writes both (every ED affix in ESR 3.3, 44), so
   a tick writes one check on `item_maxdamage_percent`; an affix writing only one of them would keep it as its own row.
 - **Stats the plugin reads as 0**: the Enhanced Damage and Enhanced Defense rows carry their quirk from `STAT_QUIRKS`
   in red, text-sm, medium weight, headline first ("Currently only works on jewels and charms (reads 0 on weapons).

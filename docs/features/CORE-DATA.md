@@ -24,7 +24,7 @@ Remote URLs are configured in `src/core/api/remoteConfig.ts`.
 
 **Version Checking** (`fetchLatestVersion` in `src/core/api/versionApi.ts`): the ESR version comes from the mod's
 launcher metadata on GitHub, `https://raw.githubusercontent.com/CelestialRayOne/Eastern_Sun_Resurrected/main/d2rloader/metadata.json`
-(`metadata.modVersion`, e.g. `3.2.24`; CORS `*`, cached 5 minutes by GitHub), validated as `X.Y` or `X.Y.Z`. The
+(`metadata.modVersion`, e.g. `3.3`; CORS `*`, cached 5 minutes by GitHub), validated as `X.Y` or `X.Y.Z`. The
 changelog page is only a **fallback** when that fetch fails or does not parse: its first header
 `Eastern Sun Resurrected X.Y.ZZ - DD/MM/YYYY` (the author stopped adding dated headers there after 3.2.02, so the fallback
 can be stale). Both sources failing counts as a network failure. The console logs which source was used
@@ -32,7 +32,7 @@ can be stale). Both sources failing counts as a network failure. The console log
 
 **Docs freshness:** the data sync reads the `Last-Modified` header of `runewords.htm` (`fetchRunewordsPage`; the site
 regenerates every page at once) and stores it as Dexie `metadata.docsLastModified` (ISO). The UI shows
-"Docs data: ESR 3.2.24 (site updated 21 Oct 2026)" (`useDocsDataLine` / `formatDocsDataLine`).
+"Docs data: ESR 3.3 (site updated 7 Nov 2026)" (`useDocsDataLine` / `formatDocsDataLine`).
 
 ### gems.htm Contents
 

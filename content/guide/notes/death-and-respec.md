@@ -27,7 +27,7 @@ The official cube page still shows an older recipe with two Tomes; the game file
 
 - You lose some experience and gold, but no corpse is left behind: you respawn in town with all your gear.
 - Dying in an Endgame Map boss area costs no experience (gold is still lost).
-- After a death, check your Ascendancy Stone: older official pages said its bonuses stay off until you re-equip it, and the 3.2.24 page no longer says so ([[ascendancies]]).
+- After a death, check your Ascendancy Stone: older official pages said its bonuses stay off until you re-equip it, and the page has not said so since 3.2.24 ([[ascendancies]]).
 
 ### Undoing gear choices
 

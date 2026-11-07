@@ -33,7 +33,7 @@ numbers and ids that matter.
 | `ids.stash`                                          | a stat's save width changed                                                                                                                                                                                                   | old stash files parse differently: the stash fixture test must still pass; ask for a fresh save                                                                                                                 |
 | `builds.crafts`                                      | a corruption / anointment / forging outcome changed at the same `slot:roll` / `kind:key`                                                                                                                                      | saved builds silently show another outcome: report with the user-data scan                                                                                                                                      |
 | `cube.fallback`                                      | rows no cube family regex matched grew                                                                                                                                                                                        | a cubemain `description` changed shape: follow-up for `src/features/game-data/build/cube/cubeFamilies.ts`                                                                                                       |
-| `cube.ops`                                           | a cube condition `op` the app does not know                                                                                                                                                                                   | the Cube page skips it silently: follow-up (`STAT_OPS` in `bundleCube.ts`)                                                                                                                                      |
+| `cube.ops`                                           | a cube condition `op` the app does not know (ESR 3.3 added `op 4`; ops 3 / 4 / 6 on a specialisation perk stat are worded "Needs / Only without the <Tree> perk <Title>", `cube/perks.ts`)                                    | the Cube page skips it silently: follow-up (`STAT_OPS` in `bundleCube.ts`); a perk stat outside `alchemy_` / `blacksmithing_` / `jeweler_` / `archaeology_` 1–15 is a new tree                                  |
 | `mapbosses.page`                                     | the files' map boss rewards newly differ from the Endgame Maps page figures kept in `campaign-map/data/mapBosses.ts` (`page`)                                                                                                 | if `docs/endgame_maps.htm` changed too (`refs.followed`): update `page` and the fight notes from it; else the files moved: a question for the mod author. Gone differences: check `endgame-bosses.md`           |
 | `icons.cube`                                         | a cube.json `icons` token (item code, unique or set name) newly resolves to no icons.json entry                                                                                                                               | a renamed item or art the icon generator missed: rerun `game-data:icons`; otherwise list it for the owner                                                                                                       |
 | `guide.recipes`                                      | a `::recipes` block newly hit its cap or lost rows                                                                                                                                                                            | a finding to report, never to hide; check the expected shapes below                                                                                                                                             |
@@ -56,7 +56,10 @@ so `esr:diff` lists it under "other files"; names from levels.txt / levelgroups.
 duration, zone list or zone order (`bundle.terrorzones.json` `config` / `zones`) changes **every** slot of the schedule:
 say so in the release summary, check the ESR ground truth in `src/features/terror-zones/engine/schedule.test.ts`
 (it fails then: re-check the zones in game and replace the dated ESR slots) and note that players' watched groups
-(`terrorZones.watched`, zone ids in localStorage) are ignored for ids that no longer exist. **More than one config** in
+(`terrorZones.watched`, zone ids in localStorage) are ignored for ids that no longer exist; since ESR 3.3 a stored
+`zoneSetFingerprint` clears every star once when any group's areas change, because ESR reuses ids (3.3: 22 → 20 groups,
+every zone in a group with one Endgame Map each, `ESR-Zone19` / `ESR-Zone20` reused for Act 1 groups; the dated ESR
+slots in `schedule.test.ts` are the owner's 3.3 in-game observations). **More than one config** in
 desecratedzones.json makes `game-data:generate` fail (`terrorzones: … configs, the app schedules only one`): the app
 schedules only one. Ask the owner; supporting it means choosing the config covering each time (the game uses the first
 in file order with `start <= t < end`) in `src/features/terror-zones/engine/schedule.ts` and the bundle shape. An
@@ -69,12 +72,14 @@ with the schedule although desecratedzones.json did not change, the game's algor
 **Skill levels**: `skillcalc.json` regenerates from skills.txt, skilldesc.txt and missiles.txt (the formulas behind the
 Skills page's per-level values, `docs/features/SKILLS.md` "Skill levels"). Explain changes of the `skillCalc*` counts:
 `skillCalcHidden*` going up means lines the calculator now refuses. A `skillcalc: <token> in N lines` warning names a
-formula code, function, skill or missile it cannot evaluate (ESR 3.2.24: `clc0`, `ln43`, `m1nm`/`m1xm`, `rad`, the
-ambiguous `m2eo`/`me3o` codes, the mastery code `mael`, Plague Javelin's missing descmissile): a new one is a follow-up for the owner, never a
-code mapped by guess. `skillcalc: the cut rows change …` means the row cutting lost a column: a generator bug, report it.
+formula code, function, skill or missile it cannot evaluate (ESR 3.3: `clc0` in 4 lines (Tornado Shot and Legendary
+Arrow joined Frenzy and Mirrored Blades), `ln43`, `ps10` / `ps11` (Bind Demon), `m1nm`/`m1xm`, `rad`, the ambiguous
+`m2eo`/`m2ey`/`me3o`/`me3y` codes, the mastery code `mael`, Plague Javelin's missing descmissile `m1en`/`m1ex`; plus the
+missing strings `shurikennumber`, `StrSkillManaCostPerSecond`, `physicaldamagewhilewwdesc`): a new one is a follow-up
+for the owner, never a code mapped by guess. `skillcalc: the cut rows change …` means the row cutting lost a column: a generator bug, report it.
 The integrity test pins Fire Ball, Blizzard, Fanaticism, Might, Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot,
-Cloak of Shadows and Sharpened Focus (compiler quirks), Weaken and Werewolf (unlisted synergies, 73 skills / 235
-inputs) and `skillcalc.json` < 450 KB (ESR 3.2.24: 389,234 bytes). A changed value needs the release diff's formula
+Cloak of Shadows and Sharpened Focus (compiler quirks), Weaken and Werewolf (unlisted synergies, ESR 3.3: 72 skills /
+234 inputs) and `skillcalc.json` < 450 KB (ESR 3.3: 396,951 bytes). A changed value needs the release diff's formula
 change as its source. data-review: in the `skillcalc.json` entry diff, list every skill whose `hiddenOtherLines` /
 `hiddenStatLines` rose or that lost a `desc*` line (a class skill must keep per-level lines), and every new
 `skillcalc:` warning token (incl. `mastery:`); never map a token by guess. Near 450 KB: report, do not raise the cap.
@@ -93,8 +98,8 @@ fails when a placeholder no longer resolves, a content key has no `CONTENT_KINDS
 (`src/features/modifiers/utils/modifierContentKinds.ts`) and the pinned values in `bundleIntegrity.test.ts` ("committed modifiers
 bundle") updated with the release diff as the source. A new `modifiers:` warning is a finding: a key kind naming a stat
 ESR removed, an unknown item event function, a missing or changed config key, or a config comment that disagrees with
-its value. Expected at 3.2.24: one, `crushing-blow.toml unique = 25 gives 6.25 % … comment says "50 -> 12.5 %"` (the
-value wins; when ESR fixes either side the warning disappears, say which). A changed `attack-rating.toml` table or curve
+its value (the value wins; when ESR fixes either side the warning disappears, say which). Expected at 3.3: none (ESR
+3.3 corrected the crushing-blow.toml comment to "25 -> 6.25 %", which ended the one 3.2.24 warning). A changed `attack-rating.toml` table or curve
 must still pass `modifierMath.test.ts` (it reproduces the table). data-review: in the `modifiers.json` entry diff, list
 changed facts with old → new values and the kinds whose stats or item counts changed a lot. The modifier peek's
 templates (`src/features/modifiers/data/modifierRefs.json`) regenerate from modifiers.json and modifiers.md with
@@ -108,7 +113,7 @@ skilldetails.json's `infoPage` (hand-written oskill descriptions) and `mercenari
 OnlyDescription, MercenaryRows / Skills / Links, Unmatched) with the page's diff (`esr:diff` docs section). A `skilldetails: skill_information.htm … names "<name>": no such skill` warning is a
 renamed skill or a new entry whose name differs from the game's: find the skill in skills.txt / the strings and, only
 when the match is certain, add it to `NAME_ALIASES` (otherwise report it to the owner); `skillInfoUnmatched` is 0 at
-3.2.24 and the integrity test pins it. "a skills.txt skill not in skilldetails.json" means no item grants that skill
+3.3 and the integrity test pins it. "a skills.txt skill not in skilldetails.json" means no item grants that skill
 any more: report, no fix.
 
 **Superior affixes**: `bases.json` `superior` / `superiorRows` / `superiorPools` regenerate from qualityitems.txt
@@ -127,16 +132,19 @@ broad types have no art by design) grow with new items. A drop means items lost 
 
 **Sanctification and D-stoning caps**: enhance.json `sanctification` / `sanctificationOutcomes` /
 `sanctificationBonuses` come from cubemain (the `sanctified-dummy` roll row and its `op 18` outcome rows, Lucion's
-Relic `u18` on a jewel; `build/bundleEnhance.ts`); an `enhance:` warning that the outcome count differs from the roll
-range is a finding. Builds do not store sanctifications. The D-stoning caps (crafting.json `stacking` `cap` /
+Relic `u18` on a jewel, since ESR 3.3 also on amulets and rings with the Jeweler perk Hallowed Accessories as
+`perkItems`; `build/bundleEnhance.ts`); an `enhance:` warning that the outcome count differs from the roll range, or
+another perk / outcome set, is a finding. Anointments are pooled per item type since ESR 3.3 (63 pools, 4,793
+equipment outcomes; the 3.2 per-slot pools are gone and saved builds' 3.2 anointments show as outdated, owner decision:
+no migration): a new or vanished pool shows in `bundle.enhance` and `builds.crafts`. Builds do not store sanctifications. The D-stoning caps (crafting.json `stacking` `cap` /
 `capLines`, cube.json rows `dstoneCaps`, the `::dstone-caps` directive) are applied from the rows' `op 16` cap
 conditions (`op 15` for light radius; `build/cube/dstoneCaps.ts`): a changed cap shows in `bundle.crafting` and
 `builds.crafts` (saved builds show the cap next to their D-stoning). A cap condition with another op, or one that
 never stops, leaves the D-stoning uncapped with a `crafting: D-stoning "…": …` warning (a finding to explain). The official `docs/special_crafting_outcomes.htm` (corruptions, anointments,
 sanctifications) is a cross-check only.
 
-Known genuine data, not findings: Sully's template validates with 6 warnings at 3.2.24 (`item_addskill_tab` on rules
-31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
+Known genuine data, not findings: Sully's template (v0.7.0) validates with 6 warnings at 3.3, as v0.6.13 did at
+3.2.24 (`item_addskill_tab` on rules 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
 
 ### Hand-kept data (SKILL step 5.8)
@@ -151,7 +159,9 @@ the owner's OK.
   `celestialrayone.boss-set-unique-drop.toml`. Hand-written in `src/features/campaign-map/data/mapBosses.ts`: fight,
   damage and uber notes and the page's `page` figures. A new or renamed boss fails `campaignMapIntegrity.test.ts`; an
   `areas:` map boss warning (no monstats row, no generic loot roll, a set-drop unique not in uniqueitems.txt) is a
-  finding. ESR 3.2.24: 32 known differences (owner-checks questions 24–28).
+  finding. ESR 3.3: 49 known differences (3.2.24: 32, owner-checks questions 24–28; 3.3 added the 19 "Alien Artefact
+  2% in the files, page: Archaeologist perk only" lines and Lucion's terrorized +5 shards, and fixed Herald of Doom's
+  orb and map and Lucion's missing terrorized table).
 - **Weapon masteries** (`docs/weapon_mastery.html`): masteries.json comes from the cubemain "Apply Awaken Weapon Mastery
   Token" / "Remove Weapon Mastery" rows (grouped by their `weapon-mastery-<weapon>` property since ESR 3.3; "True
   Master" any-weapon rows give the bundle's `anyWeaponPerk`) and the awakened tokens' `u24desc` … `u41desc` strings
@@ -234,7 +244,8 @@ not check." Then:
 - Expected `::recipes` shapes: `rune-conversion` (rune-families) has one "Ancient Decal (X -> Y) + X Rune → Y Rune"
   row and one "An LoD rune … → The ES rune and the Ancient Decal" row; `rune-forging` (forging) 3 rows;
   `legendary-consumables` (enhancement-order) shows the Halo as "The same item + A copy of the item (Branded)". At
-  3.2.24 the coupons, noobs-charm and rune-families blocks sit at the 12-row cap.
+  3.3 the coupons, noobs-charm, rune-families and socketing (`socket`, 10 → 12 rows with the Archaeologist perk rows)
+  blocks sit at the 12-row cap.
 
 ## Commits (SKILL step 7)
 

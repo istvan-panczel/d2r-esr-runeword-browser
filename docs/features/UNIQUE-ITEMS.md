@@ -111,13 +111,13 @@ Single-select chip group `Acquisition: All | Coupon only | Gambleable | Drop onl
 replaced the exclude-only "Include Coupon Items" checkbox. The logic is in `utils/acquisition.ts`
 (`matchesAcquisition`) and reads two parsed fields:
 
-| Chip        | Shows                                                                         | ESR 3.2.24 count |
-| ----------- | ----------------------------------------------------------------------------- | ---------------- |
-| All         | everything                                                                    | 1065             |
-| Coupon only | `isAncientCoupon` ("Ancient Coupon Unique": cubed from a coupon, never drops) | 383              |
-| Gambleable  | `gambleItem` is a real base, i.e. not empty and not `N/A`                     | 658              |
-| Drop only   | neither of the two (the "Gamble Item: N/A" uniques)                           | 24               |
-| No coupon   | `!isAncientCoupon`, the old checkbox switched off (Gambleable + Drop only)    | 682              |
+| Chip        | Shows                                                                         | ESR 3.3 count |
+| ----------- | ----------------------------------------------------------------------------- | ------------- |
+| All         | everything                                                                    | 1065          |
+| Coupon only | `isAncientCoupon` ("Ancient Coupon Unique": cubed from a coupon, never drops) | 383           |
+| Gambleable  | `gambleItem` is a real base, i.e. not empty and not `N/A`                     | 658           |
+| Drop only   | neither of the two (the "Gamble Item: N/A" uniques)                           | 24            |
+| No coupon   | `!isAncientCoupon`, the old checkbox switched off (Gambleable + Drop only)    | 682           |
 
 - Every non-coupon unique on the HTM pages has a "Gamble Item:" line; 24 of them say `N/A`. Treating any non-empty
   line as gambleable would leave "Drop only" empty, so `N/A` (also `none`, `-`, empty) counts as not gambleable.
@@ -142,7 +142,7 @@ filter), and a tier badge next to the base name on every card (`TierBadge` from 
 - The screen loads `tiers.json` once and passes the index to the cards and to `useFilteredHtmUniqueItems`. Cards show
   no badge until it has loaded; with a tier filter active the list shows the spinner meanwhile, and if the bundle fails
   to load the tier filter is ignored. Other users of the card (guide, builds) pass no index and show no badge.
-- ESR 3.2.24 counts (of 1065): Normal 310, Exceptional 325, Elite 303, Mythical 0 (the mythical uniques are on their
+- ESR 3.3 counts (of 1065): Normal 310, Exceptional 325, Elite 303, Mythical 0 (the mythical uniques are on their
   own page, so the row has no Mythical checkbox), 127 without a tier.
 - URL: `tier=normal,elite` (the Bases page format, Normal → Mythical order, unknown values dropped; omitted when none
   is checked).
