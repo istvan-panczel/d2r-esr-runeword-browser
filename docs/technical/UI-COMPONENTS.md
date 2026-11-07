@@ -128,12 +128,12 @@ PageShell            one centred width + the title row
   `LIST_CARD_HEADER_CLASS` header (title, count, links) and its sub-blocks (Gem, Rune…, a recipe shape) as
   `LIST_CARD_SUBHEAD_CLASS` bands above their rows; an Enhance outcome list is a card on its own.
 - Screens that set their own frame: the home page (`max-w-5xl`), the guide note (`max-w-2xl`, `lg:max-w-7xl` in every
-  mode: a reading column plus the graph aside), the guide map (`max-w-2xl`, from `lg` the setting via
+  mode: a reading column plus the graph aside), the guide overview (`max-w-2xl`, from `lg` the setting via
   `PAGE_WIDE_LG_CLASS`) and the build detail with the player sidebar (Standard: breaks out of the container to a 1920 px
   cap; Wide and Full: fills the app frame, so it lines up with the header, and is itself the `page` container: from
   `@10xl` a weapon swap sits beside the player gear, and without one the gear column stops at 120rem). The user profile
-  uses a width-only `PageShell`. The guide map graph is never taller than the window minus 15rem (never capped below
-  48rem, the Standard graph height), so a Full page does not get a graph taller than the screen.
+  uses a width-only `PageShell`. The guide map graph (kept in the code, no longer routed) is never taller than the window minus
+  15rem (never capped below 48rem, the Standard graph height), so a Full page does not get a graph taller than the screen.
 - `title` omitted: the shell only sets the width. Layout routes use this (`GuideLayout`, `LootFilterLayout`) and their
   children render their own headers (the loot filter editor's inline-editable name, the guide note's breadcrumb card).
   Nested shells are harmless (the same `mx-auto max-w-*`; `/page` container queries resolve to the innermost one).

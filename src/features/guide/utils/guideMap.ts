@@ -1,4 +1,4 @@
-/** Pure helpers of the guide map screen (`/guide/map`). */
+/** Pure helpers of the guide overview (`/guide`; first written for the old note map, `/guide/map`). */
 import type { GuideBundle, GuideNote, GuideSpineStep } from '../engine/schema';
 
 export type GuideMapGroup =
@@ -9,7 +9,7 @@ export type GuideMapGroup =
 const LAST_OTHER = 'glossary';
 
 /**
- * The map's list: one group per spine step (notes in spine order, slugs missing from the bundle skipped, a note listed
+ * The overview's list (every note of the bundle, once): one group per spine step (notes in spine order, slugs missing from the bundle skipped, a note listed
  * on two steps shown on the first only), then the notes on no step as "Other topics", alphabetical by title with the
  * glossary last. The "other" group is left out when it would be empty.
  */

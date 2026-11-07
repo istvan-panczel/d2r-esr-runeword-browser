@@ -13,8 +13,8 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/`                     | HomeScreen              | [Home page](#home-page): search, section cards, latest builds, guide pointer, official links, community tools                          | any query: redirects to `/runewords` with the same query                                               |
 | `/runewords`            | RunewordsScreen         | Browse and filter runewords (was `/` before the home page)                                                                             | `search`, `sockets`, `maxlvl`, `items`, `runes`, `runemode`, `tierpts`, `name`                         |
 | `/guide`                | GuideLayout             | Guide frame: a small "Experimental" notice above every guide page, then the child route                                                |                                                                                                        |
-| `/guide` (index)        | GuideSpineScreen        | New-player guide: "Start here" journey spine, note search, "I found something" row                                                     |                                                                                                        |
-| `/guide/map`            | GuideMapScreen          | All notes: link graph (large screens) and a list grouped by spine step                                                                 |                                                                                                        |
+| `/guide` (index)        | GuideOverviewScreen     | New-player guide: the only overview, every note grouped by spine step plus "Other topics", note search                                 |                                                                                                        |
+| `/guide/map`            | (redirect)              | Redirects to `/guide` (the old note map; its screen is kept in the code, unrouted)                                                     |                                                                                                        |
 | `/guide/:slug`          | GuideNoteScreen         | One guide note; unknown slug shows a "Note not found" block linking back to `/guide`                                                   |                                                                                                        |
 | `/gemwords`             | GemwordsScreen          | Gem-based socket recipes with filters                                                                                                  | `search`, `sockets`, `maxlvl`, `items`, `gems`, `name`                                                 |
 | `/socketables`          | SocketablesScreen       | All socketables with category filters & search                                                                                         | `search`, `categories`, `onlyHighest`, `name`                                                          |
@@ -48,8 +48,8 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/user/:userId`         | UserProfileScreen       | A user's public builds                                                                                                                 |                                                                                                        |
 | `*`                     | NotFoundScreen          | Catch-all for unknown URLs, with a link back home                                                                                      |                                                                                                        |
 
-`map` is a static segment, so the router ranks `/guide/map` above `/guide/:slug` (a note with the slug `map` would
-be shadowed). `/guide/:slug` slugs are the file names in `content/guide/notes/`.
+`map` is a static segment, so the router ranks the `/guide/map` redirect above `/guide/:slug` (a note with the slug
+`map` would be shadowed). `/guide/:slug` slugs are the file names in `content/guide/notes/`.
 
 **Query params.** The shared keys are `FILTER_URL_PARAM_KEYS` in `src/core/utils/filterUrlParams.ts` (`search`, `sockets`,
 `maxlvl`, `items`, `runes`, `tierpts`, `gems`, `name`); `sockets` takes an exact count or a range (`4`, `2-4`, `-4`, `4-`). The
@@ -96,8 +96,8 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
    first row, selected by default, is "Search runewords for “…”", so Enter without picking a result goes to
    `/runewords?search=<query>`.
 3. **Section cards** (`HomeSections`): one card per `NAV_ENTRIES` entry (`getHomeSections` in `utils/homeSections.ts`):
-   a group's `description` and its pages as chips; a plain link's `description` and its `homeLinks` chips (Guide: Start
-   here, Note map) or the page itself. Builds only when Supabase is configured. A test checks every nav page appears once.
+   a group's `description` and its pages as chips; a plain link's `description` and its `homeLinks` chips (none use them
+   now) or the page itself (Guide links `/guide` only). Builds only when Supabase is configured. A test checks every nav page appears once.
 4. **Latest builds** (`LatestBuilds`, Supabase only): the 3 newest builds as `BuildCard`s plus "Browse all". The
    component awaits `startBuilds()` before dispatching `fetchRecentBuildsRequested`, a separate query in the builds saga
    that writes `recentBuilds` / `recentStatus` only, so the `/builds` list, its filters and paging are untouched. One
@@ -345,8 +345,8 @@ export const router = createBrowserRouter(
           path: 'guide',
           element: routeElement(GuideLayout),
           children: [
-            { index: true, element: routeElement(GuideSpineScreen) },
-            { path: 'map', element: routeElement(GuideMapScreen) },
+            { index: true, element: routeElement(GuideOverviewScreen) },
+            { path: 'map', element: <Navigate to="/guide" replace /> },
             { path: ':slug', element: routeElement(GuideNoteScreen) },
           ],
         },

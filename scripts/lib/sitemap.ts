@@ -3,7 +3,8 @@
  * guide:check) so new notes land in the sitemap without a hand edit. No <lastmod>: the output stays deterministic.
  *
  * Left out on purpose: routes that need sign-in or point at user data (/builds/new, /builds/:id/edit, /build/:id,
- * /user/:id, /loot-filters/:id; the public /builds list is included) and /game-data (it only redirects to /game-data/bases).
+ * /user/:id, /loot-filters/:id; the public /builds list is included), /game-data (it only redirects to /game-data/bases)
+ * and /guide/map (it only redirects to /guide).
  */
 export const SITE_URL = 'https://istvan-panczel.github.io/d2r-esr-runeword-browser/';
 
@@ -13,11 +14,10 @@ interface SitemapEntry {
   readonly priority: string;
 }
 
-/** Static routes, in output order; the guide notes follow /guide/map. */
+/** Static routes, in output order; the guide notes follow /guide (/guide/map only redirects there now). */
 const ROUTES_BEFORE_NOTES: readonly SitemapEntry[] = [
   { path: '', changefreq: 'weekly', priority: '1.0' },
   { path: 'guide', changefreq: 'weekly', priority: '0.9' },
-  { path: 'guide/map', changefreq: 'weekly', priority: '0.6' },
 ];
 
 const NOTE_ENTRY: Omit<SitemapEntry, 'path'> = { changefreq: 'weekly', priority: '0.7' };

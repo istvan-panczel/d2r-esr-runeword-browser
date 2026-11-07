@@ -29,19 +29,14 @@ const GuideLayout = lazy(async () => {
   return { default: module.GuideLayout };
 });
 
-const GuideSpineScreen = lazy(async () => {
+const GuideOverviewScreen = lazy(async () => {
   const module = await import('@/features/guide');
-  return { default: module.GuideSpineScreen };
+  return { default: module.GuideOverviewScreen };
 });
 
 const GuideNoteScreen = lazy(async () => {
   const module = await import('@/features/guide');
   return { default: module.GuideNoteScreen };
-});
-
-const GuideMapScreen = lazy(async () => {
-  const module = await import('@/features/guide');
-  return { default: module.GuideMapScreen };
 });
 
 const SocketablesScreen = lazy(async () => {
@@ -239,9 +234,10 @@ export const router = createBrowserRouter(
           path: 'guide',
           element: routeElement(GuideLayout),
           children: [
-            { index: true, element: routeElement(GuideSpineScreen) },
+            { index: true, element: routeElement(GuideOverviewScreen) },
+            // The old note map: `/guide` is the only overview now, so old links and bookmarks land there (query dropped).
             // Static segment: the router ranks it above ':slug' (a note with the slug 'map' would be shadowed).
-            { path: 'map', element: routeElement(GuideMapScreen) },
+            { path: 'map', element: <Navigate to="/guide" replace /> },
             { path: ':slug', element: routeElement(GuideNoteScreen) },
           ],
         },
