@@ -1,9 +1,11 @@
 /**
  * masteries.json: ESR's weapon mastery specialisations (docs/weapon_mastery.html).
  *
- * - cubemain.txt: every "Apply Awaken Weapon Mastery Token" row sets the `weapon-mastery` property to one value per
- *   specialisation (input 1 the base or item type, input 2 the awakened token, then the ingredients); the "Remove" rows
- *   set the negative value. Rows are grouped by that value, not by their descriptions.
+ * - cubemain.txt (ESR 3.3): every "Apply Awaken Weapon Mastery Token" row sets one `weapon-mastery-<weapon>` property per
+ *   specialisation to 1 (input 1 the base or item type, input 2 the awakened token, then the ingredients); the
+ *   "Remove Weapon Mastery" rows (input 1 any weapon) set it to -1. Rows are grouped by that property, not by their
+ *   descriptions. Apply rows that take any weapon (the Blacksmith perk "True Master") give no bases; the legacy
+ *   "Remove Awaken" rows (the 3.2 `weapon-mastery` stat, for weapons mastered before 3.3) are left out.
  * - The awakened token's description string (`<token>desc`, item-modifiers.json) holds the effects. Item descriptions
  *   render bottom-up, so its lines are in reverse display order; each block reads "Transmute this with a <weapon>
  *   variant, a <ingredient>" / "and an Anvil Stone …" then, after each blank line, a skills line (coloured ÿc@ in the
@@ -24,10 +26,14 @@ import type {
   WeaponMastery,
 } from '../engine/schema.ts';
 import type { CubeRow, ModRenderer } from './cube/cubeRows.ts';
+import type { Perk, PerkCheck } from './cube/perks.ts';
 import type { TsvTable } from './tsv.ts';
 
-/** The cube property that sets the `weaponmastery` stat */
-export const MASTERY_PROPERTY = 'weapon-mastery';
+/** The cube properties that set a specialisation's stat (`weapon-mastery-stag-bow` → `weapon_mastery_stag_bow`) */
+const MASTERY_PROPERTY = /^weapon-mastery-./;
+
+/** The item type of "any weapon" (the True Master and Remove Weapon Mastery rows take it) */
+const ANY_WEAPON = 'weap';
 
 // --- token descriptions ---------------------------------------------------------------------------------------------
 
@@ -115,7 +121,11 @@ export interface MasterySkill {
   passive: boolean;
   /** skills.txt itypea1 set: the skill needs a weapon type (melee and weapon skills) */
   weaponSkill: boolean;
+  /** The specialisation stats (`weapon_mastery_orb_1` …) the skills.txt formulas of the skill read */
+  masteryStats: string[];
 }
+
+const MASTERY_STAT_READ = /stat\('(weapon_mastery_\w+)'/g;
 
 /** Class skills in skilldetails.json order (class, tab, row, column) with their skills.txt columns */
 export function readMasterySkills(skills: TsvTable, details: readonly SkillDetail[]): MasterySkill[] {
@@ -134,6 +144,9 @@ export function readMasterySkills(skills: TsvTable, details: readonly SkillDetai
         aurastate: row.str('aurastate'),
         passive: detail.type !== undefined,
         weaponSkill: row.str('itypea1') !== '',
+        masteryStats: [
+          ...new Set(skills.columns.flatMap((column) => [...row.str(column).matchAll(MASTERY_STAT_READ)].map((match) => match[1]))),
+        ],
       },
     ];
   });
@@ -142,6 +155,8 @@ export function readMasterySkills(skills: TsvTable, details: readonly SkillDetai
 /** What a group rule sees: the skill and the effect it is tested against */
 interface GroupContext {
   readonly text: string;
+  /** The specialisation's stat (`weapon_mastery_orb_1`); undefined when unknown */
+  readonly stat: string | undefined;
 }
 
 /**
@@ -155,12 +170,10 @@ const GROUP_RULES: Readonly<Record<string, (skill: MasterySkill, context: GroupC
   // Explosion is left out: its damage is magic only when "50% or more of the damage is converted to magic" (its
   // description), so whether the repeat applies is unclear
   'Magic Spells': (skill) => skill.etype === 'mag' && !skill.weaponSkill && !skill.passive && skill.id !== 'Corpse Explosion',
-  // Orb + Chipped Ruby, "Triples the cooldown of your level 24 Sorceress spells and adds a 2 second cooldown to
-  // Hydra": the level is read from the text (Lightning Hydra is a level 24 skill too)
-  'Sorceress Spells': (skill, { text }) => {
-    const level = /level (\d+) Sorceress spells/i.exec(text);
-    return level !== null && skill.reqLevel === Number(level[1]);
-  },
+  // Orb + Chipped Ruby (ESR 3.3), "Triples the cooldown of your direct damage dealing spells and adds a 2 second
+  // cooldown to Hydra": the skills whose skills.txt formulas read the specialisation's stat (`weapon_mastery_orb_1`
+  // triples their cooldown, calc6; Lightning Hydra's cooldown and Aegis line)
+  Spells: (skill, { stat }) => stat !== undefined && skill.masteryStats.includes(stat),
   // Orb + Chipped Skull: ESR's exclusive skills (Omnipotence: "Only one exclusive skill can be active at one time")
   // share the `exclusiveskill` aura state
   'Sorceress Exclusives': (skill) => skill.aurastate === 'exclusiveskill',
@@ -212,7 +225,8 @@ export function resolveEffectSkills(
   heading: string,
   text: readonly string[],
   classSkills: readonly MasterySkill[],
-  tabs: readonly string[]
+  tabs: readonly string[],
+  stat?: string
 ): { skills: string[]; how: 'names' | 'rule' | 'tab' | 'text' | 'none' } {
   const parts = heading.split(/\s*,\s*|\s+and\s+/).filter(Boolean);
   const resolved = parts.map((part, i) => {
@@ -228,7 +242,7 @@ export function resolveEffectSkills(
     how = 'names';
   } else if (heading in GROUP_RULES) {
     const rule = GROUP_RULES[heading];
-    picked = classSkills.filter((skill) => rule(skill, { text: joined }));
+    picked = classSkills.filter((skill) => rule(skill, { text: joined, stat }));
     how = 'rule';
   } else {
     const tab = tabs.findIndex((name) => same(name, heading));
@@ -255,10 +269,10 @@ export function readInput(cell: string): MasteryInput {
   return count > 1 ? { code, qty: count } : { code };
 }
 
-/** The `weapon-mastery` value a row sets (negative: removes); null for other rows */
-function masteryValue(row: CubeRow): number | null {
-  const mod = row.outputs[0]?.mods.find((entry) => entry.mod === MASTERY_PROPERTY);
-  return mod === undefined || mod.min !== mod.max || mod.min === 0 ? null : mod.min;
+/** The specialisation property a row sets (`apply`) or clears (`remove`); null for other rows */
+function masteryMod(row: CubeRow): { property: string; apply: boolean } | null {
+  const mod = row.outputs[0]?.mods.find((entry) => MASTERY_PROPERTY.test(entry.mod));
+  return mod === undefined || mod.min !== mod.max || mod.min === 0 ? null : { property: mod.mod, apply: mod.min > 0 };
 }
 
 /**
@@ -292,6 +306,10 @@ export interface MasteryBuildInput {
   skills: readonly MasterySkill[];
   /** Renders the apply rows' other mods */
   renderMods: ModRenderer;
+  /** The stat a specialisation property sets (properties.txt `stat1`: `weapon_mastery_orb_1`); omitted: unknown */
+  statOf?: (property: string) => string | undefined;
+  /** The specialisation perks a cube row needs (cube/perks.ts); omitted: none */
+  perkChecks?: (row: CubeRow) => readonly PerkCheck[];
 }
 
 /** Pairs each specialisation of a token with its description block, by the ingredients the recipe lines name */
@@ -299,22 +317,22 @@ function pairBlocks(
   masteries: readonly WeaponMastery[],
   blocks: readonly DescriptionBlock[],
   nameOf: (code: string) => string
-): Map<number, DescriptionBlock> {
-  const pairs = new Map<number, DescriptionBlock>();
+): Map<string, DescriptionBlock> {
+  const pairs = new Map<string, DescriptionBlock>();
   if (masteries.length === 1 && blocks.length === 1) {
-    pairs.set(masteries[0].value, blocks[0]);
+    pairs.set(masteries[0].property, blocks[0]);
     return pairs;
   }
   for (const block of blocks) {
     const named = new Set(block.ingredients.map((name) => name.toLowerCase()));
     const scored = masteries
-      .filter((mastery) => !pairs.has(mastery.value))
+      .filter((mastery) => !pairs.has(mastery.property))
       .map((mastery) => ({ mastery, score: mastery.inputs.filter((input) => named.has(nameOf(input.code).toLowerCase())).length }))
       .sort((a, b) => b.score - a.score);
     const best = scored.at(0);
     const next = scored.at(1);
     if (best === undefined || best.score === 0 || (next !== undefined && next.score === best.score)) continue;
-    pairs.set(best.mastery.value, block);
+    pairs.set(best.mastery.property, block);
   }
   return pairs;
 }
@@ -348,30 +366,36 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     return typeByCode.has(code) ? input.bases.filter((base) => isOfType(base, code)) : [];
   };
 
-  const applyRows = new Map<number, CubeRow[]>();
-  const removeRows = new Map<number, CubeRow[]>();
+  const applyRows = new Map<string, CubeRow[]>();
+  const removeRows = new Map<string, CubeRow[]>();
+  let anyWeaponPerk: Perk | undefined;
   for (const row of input.cube) {
-    const value = masteryValue(row);
-    if (value === null) continue;
-    const target = value > 0 ? applyRows : removeRows;
-    const key = Math.abs(value);
-    target.set(key, [...(target.get(key) ?? []), row]);
+    const mod = masteryMod(row);
+    if (mod === null) continue;
+    // "True Master - Apply …": any weapon takes any specialisation with the perk; not one class's bases
+    if (mod.apply && readInput(row.inputs[0] ?? '').code === ANY_WEAPON) {
+      anyWeaponPerk ??= input.perkChecks?.(row).find((check) => check.has)?.perk;
+      continue;
+    }
+    const target = mod.apply ? applyRows : removeRows;
+    target.set(mod.property, [...(target.get(mod.property) ?? []), row]);
   }
 
   const masteries: WeaponMastery[] = [];
-  for (const [value, rows] of [...applyRows].sort(([a], [b]) => a - b)) {
+  // In cubemain order (the specialisations' old stat values 1 … 60 followed it)
+  for (const [property, rows] of applyRows) {
     const [first] = rows;
     const token = readInput(first.inputs[1] ?? '').code;
     const inputs = first.inputs.slice(2).map(readInput);
     const weaponCodes = rows.map((row) => readInput(row.inputs[0] ?? '').code);
     for (const row of rows) {
       if (readInput(row.inputs[1] ?? '').code !== token || !sameInputs(row.inputs.slice(2).map(readInput), inputs)) {
-        warn(`cubemain line ${String(row.line)} (value ${String(value)}) takes other inputs than line ${String(first.line)}`);
+        warn(`cubemain line ${String(row.line)} (${property}) takes other inputs than line ${String(first.line)}`);
       }
     }
     const bases = new Set(weaponCodes.flatMap((code) => basesOf(code).map((base) => base.code)));
     for (const code of weaponCodes) {
-      if (basesOf(code).length === 0 && !input.itemCodes.has(code)) warn(`value ${String(value)}: unknown item "${code}"`);
+      if (basesOf(code).length === 0 && !input.itemCodes.has(code)) warn(`${property}: unknown item "${code}"`);
     }
     // Normal, exceptional, elite, then mythical (bases.json order within a tier)
     const ordered = input.bases
@@ -382,11 +406,11 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     const classes = new Set(ordered.map((base) => base.cls));
     const cls = ordered.at(0)?.cls ?? null;
     if (classes.size !== 1 || cls === null) {
-      warn(`value ${String(value)} (${first.description}): its bases are not of one class; left out`);
+      warn(`${property} (${first.description}): its bases are not of one class; left out`);
       continue;
     }
 
-    const remove = removeRows.get(value) ?? [];
+    const remove = removeRows.get(property) ?? [];
     const removable = new Set(remove.flatMap((row) => basesOf(readInput(row.inputs[0] ?? '').code).map((base) => base.code)));
     for (const row of remove) {
       const code = readInput(row.inputs[0] ?? '').code;
@@ -398,18 +422,18 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     const typeCode = weaponCodes.every((code) => typeByCode.has(code) && !baseByCode.has(code)) ? weaponCodes[0] : undefined;
     // One mod at a time: a mod without item text is shown anyway (and warned about), not silently left out
     const mods = (first.outputs[0]?.mods ?? [])
-      .filter((mod) => mod.mod !== MASTERY_PROPERTY)
+      .filter((mod) => !MASTERY_PROPERTY.test(mod.mod))
       .flatMap((mod) => {
         const lines = input.renderMods([mod]);
         if (lines.length > 0) return lines;
         const amount = mod.min === mod.max ? String(mod.min) : `${String(mod.min)} to ${String(mod.max)}`;
         const label = HIDDEN_MOD_LABELS[mod.mod];
         const text = label === undefined ? `${mod.mod} ${amount}` : `${amount}${label}`;
-        warn(`${labelOf(first)} (value ${String(value)}): mod ${mod.mod} ${amount} has no item text; shown as "${text}"`);
+        warn(`${labelOf(first)} (${property}): mod ${mod.mod} ${amount} has no item text; shown as "${text}"`);
         return [text];
       });
     masteries.push({
-      value,
+      property,
       label: labelOf(first),
       cls,
       ...(typeCode === undefined ? {} : { type: typeCode }),
@@ -421,8 +445,8 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
       effects: [],
       ...(mods.length === 0 ? {} : { mods }),
     });
-    if (remove.length === 0) warn(`value ${String(value)} (${labelOf(first)}) has no remove row`);
-    else if (noRemove.length > 0) warn(`${labelOf(first)} (value ${String(value)}): no remove row takes ${noRemove.join(', ')}`);
+    if (remove.length === 0) warn(`${property} (${labelOf(first)}) has no remove row`);
+    else if (noRemove.length > 0) warn(`${labelOf(first)} (${property}): no remove row takes ${noRemove.join(', ')}`);
   }
 
   // Effects: each token's description, block by block
@@ -439,17 +463,22 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     const pairs = pairBlocks(own, blocks, nameOf);
     if (blocks.length !== own.length) warn(`${token}desc has ${String(blocks.length)} blocks for ${String(own.length)} specialisations`);
     for (const mastery of own) {
-      const block = pairs.get(mastery.value);
+      const block = pairs.get(mastery.property);
       if (block === undefined) {
-        warn(`${token}desc: no block matches ${mastery.label} (value ${String(mastery.value)})`);
+        warn(`${token}desc: no block matches ${mastery.label} (${mastery.property})`);
         continue;
       }
-      for (const issue of recipeMismatches(mastery, block, nameOf))
-        warn(`${token}desc (${mastery.label}, value ${String(mastery.value)}) ${issue}`);
+      for (const issue of recipeMismatches(mastery, block, nameOf)) warn(`${token}desc (${mastery.label}, ${mastery.property}) ${issue}`);
       const classSkills = input.skills.filter((skill) => skill.cls === mastery.cls);
       mastery.effects = block.effects.map((effect): MasteryEffect => {
         const sentences = joinEffectLines(effect.lines);
-        const { skills } = resolveEffectSkills(effect.heading, sentences, classSkills, tabsOf.get(mastery.cls) ?? []);
+        const { skills } = resolveEffectSkills(
+          effect.heading,
+          sentences,
+          classSkills,
+          tabsOf.get(mastery.cls) ?? [],
+          input.statOf?.(mastery.property)
+        );
         if (skills.length === 0) warn(`${token}desc: "${effect.heading}" (${mastery.label}) names no ${mastery.cls} skill`);
         for (const id of skills) skillNames[id] = classSkills.find((skill) => skill.id === id)?.name ?? id;
         return { heading: effect.heading, skills, text: sentences };
@@ -483,7 +512,7 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     const noAwaken = mastery.bases.filter((code) => awakenable.get(mastery.token)?.has(code) !== true);
     if (noAwaken.length === 0) continue;
     mastery.noAwaken = noAwaken;
-    warn(`${mastery.label} (value ${String(mastery.value)}): no awaken row takes ${noAwaken.join(', ')}`);
+    warn(`${mastery.label} (${mastery.property}): no awaken row takes ${noAwaken.join(', ')}`);
   }
   const codes = new Set([
     unawakened,
@@ -500,5 +529,14 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
       .map((code) => [code, nameOf(code)])
   );
   const sortedSkillNames = Object.fromEntries(Object.entries(skillNames).sort(([a], [b]) => a.localeCompare(b)));
-  return { bundle: { token: unawakened, names, skillNames: sortedSkillNames, masteries }, warnings };
+  return {
+    bundle: {
+      token: unawakened,
+      names,
+      skillNames: sortedSkillNames,
+      masteries,
+      ...(anyWeaponPerk === undefined ? {} : { anyWeaponPerk }),
+    },
+    warnings,
+  };
 }

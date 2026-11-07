@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ItemTypeInfo } from '../engine/schema.ts';
 import { base, type } from '../utils/testBases.mock.ts';
-import { buildSuperiorAffixes, readSuperiorConfig } from './bundleSuperior.ts';
+import { buildSuperiorAffixes, frequencyColumn, readSuperiorConfig } from './bundleSuperior.ts';
 import type { ModsRenderer } from './bundleRunewords.ts';
 import { parseTsv } from './tsv.ts';
 
@@ -175,5 +175,30 @@ describe('buildSuperiorAffixes', () => {
 
   it('gives every row the same weight when the plugin is off', () => {
     expect(new Set(build(null).superior.rows.map((row) => row.weight))).toEqual(new Set([100]));
+  });
+
+  it('reads the ESR 3.3 frequency column instead of the toml weights (empty: never rolls)', () => {
+    const lines = qualityitems.rows.map((_, i) => HEADER.map((column) => qualityitems.rows[i].str(column)).join('\t'));
+    const withFrequency = parseTsv(
+      [[...HEADER, 'frequency'].join('\t'), ...lines.map((line, i) => `${line}\t${['125', '5', '', '500', 'x', '25'][i] ?? ''}`)].join(
+        '\n'
+      ),
+      'qualityitems.txt'
+    );
+    const result = buildSuperiorAffixes({
+      qualityitems: withFrequency,
+      config: CONFIG,
+      bases,
+      types,
+      throwableTypes: new Set(),
+      renderMods,
+    });
+    expect(result.superior.weightSource).toBe('frequency');
+    expect(result.superior.defaultWeight).toBe(0);
+    expect(result.superior.rows.map((row) => row.weight)).toEqual([125, 5, 0, 500, 0, 25]);
+    // The toml weights table is not read (no orphan-row warning); the bad cell is
+    expect(result.warnings).toEqual(['superior: qualityitems.txt row 4: frequency "x" is not 0-65535; the row never rolls']);
+    expect(frequencyColumn(qualityitems, [])).toBeNull();
+    expect(superior.weightSource).toBe('config');
   });
 });

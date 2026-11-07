@@ -6,6 +6,7 @@
 import { createStatRenderer, readStatTables, type StatRenderer, type StatTableName } from '../stats/statRenderer.ts';
 import { buildStringTable, type StringsFile } from '../strings.ts';
 import type { PropertyDef, StatDef } from '../stats/tables.ts';
+import type { PerkCheck } from './perks.ts';
 import { parseTsv, type TsvRow, type TsvTable } from '../tsv.ts';
 
 export interface CubeMod {
@@ -95,6 +96,8 @@ export interface CubeTables extends CubeNames {
    * `item-02` → "Ancient Decipherer", `rune-01` → "I Rune"); null for other stats. Omitted: no counter names.
    */
   counterName?: (modOrStat: string) => string | null;
+  /** The specialisation perks a row needs or excludes (perks.ts); omitted: no perk conditions */
+  perkChecks?: (row: CubeRow) => readonly PerkCheck[];
 }
 
 /** Stocker counters by itemstatcost stat (`item_02` Decipherers in a Multi Stocker, `junk_09`, `xtal_03`, `rune_12`, `gem_r`) */

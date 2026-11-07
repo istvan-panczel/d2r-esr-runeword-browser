@@ -1,7 +1,9 @@
 /**
  * The superior affix rows of bases.json (`BasesBundle.superior`): qualityitems.txt with the weights of ESR's D2RLoader
- * plugin config `d2rloader/config/celestialrayone.superior-affixes.toml`, and the pools of rows the bases roll. The
- * eligibility rules live in engine/superiorAffixes.ts (the pages compute a base's rows with the same code).
+ * plugin (`d2rloader/config/celestialrayone.superior-affixes.toml`), and the pools of rows the bases roll. ESR 3.3 moved
+ * the weights into a qualityitems.txt `frequency` column (0 or empty: never rolls); without that column the toml's
+ * `[superior_affixes.weights]` table and `default_weight` (ESR ≤ 3.2) are read. The eligibility rules live in
+ * engine/superiorAffixes.ts (the pages compute a base's rows with the same code).
  */
 import {
   SUPERIOR_COLUMNS,
@@ -71,6 +73,25 @@ export function readSuperiorConfig(text: string | null, warnings: string[]): Sup
   return config;
 }
 
+/**
+ * The qualityitems.txt `frequency` column (ESR 3.3) as a row → weight reader, null when the file has none. A whole
+ * number 0 to 65535; an empty cell is 0 (never rolls); anything else never rolls too (the plugin logs it), warned.
+ */
+export function frequencyColumn(table: TsvTable, warnings: string[]): ((row: number) => number) | null {
+  if (!table.columns.includes('frequency')) return null;
+  const weights = table.rows.map((row, index) => {
+    const cell = row.str('frequency').trim();
+    if (cell === '') return 0;
+    const weight = /^\d+$/.test(cell) ? Number(cell) : NaN;
+    if (Number.isNaN(weight) || weight > MAX_WEIGHT) {
+      warnings.push(`superior: qualityitems.txt row ${String(index)}: frequency "${cell}" is not 0-65535; the row never rolls`);
+      return 0;
+    }
+    return weight;
+  });
+  return (row) => weights[row] ?? 0;
+}
+
 /** One qualityitems.txt row as the bundle stores it, without the rendered text and weight. */
 function readRow(table: TsvTable, index: number): Omit<SuperiorRow, 'weight' | 'text'> & { renderMods: PropertyMod[] } {
   const row = table.rows[index];
@@ -128,7 +149,9 @@ export interface SuperiorBuildInput {
 
 export function buildSuperiorAffixes(input: SuperiorBuildInput): { superior: SuperiorAffixes; warnings: string[] } {
   const warnings: string[] = [];
-  const config = readSuperiorConfig(input.config, warnings);
+  const frequency = frequencyColumn(input.qualityitems, warnings);
+  const config = readSuperiorConfig(input.config, frequency === null ? warnings : []);
+  const weightSource: SuperiorAffixes['weightSource'] = !config.enabled ? 'equal' : frequency !== null ? 'frequency' : 'config';
   const typeByCode = new Map(input.types.map((type) => [type.code, type]));
 
   const rows: SuperiorRow[] = input.qualityitems.rows.map((_, index) => {
@@ -139,11 +162,15 @@ export function buildSuperiorAffixes(input: SuperiorBuildInput): { superior: Sup
       if (!typeByCode.has(code))
         warnings.push(`superior: row ${String(index)} names unknown item type "${code}" (the plugin ignores the columns)`);
     }
-    const weight = config.enabled ? (config.weights.get(index) ?? config.defaultWeight) : STOCK_WEIGHT;
+    const weight = !config.enabled
+      ? STOCK_WEIGHT
+      : frequency !== null
+        ? frequency(index)
+        : (config.weights.get(index) ?? config.defaultWeight);
     const { row: rowIndex, mods, columns, itypes, etypes } = row;
     return { row: rowIndex, weight, mods, text: rendered.lines, columns, itypes, etypes };
   });
-  const orphans = [...config.weights.keys()].filter((row) => row >= rows.length).sort((a, b) => a - b);
+  const orphans = [...(frequency === null ? config.weights.keys() : [])].filter((row) => row >= rows.length).sort((a, b) => a - b);
   if (orphans.length > 0) {
     warnings.push(
       `superior: superior-affixes.toml has weights for rows ${orphans.join(', ')}; qualityitems.txt has ${String(rows.length)} rows (0-${String(rows.length - 1)})`
@@ -156,7 +183,8 @@ export function buildSuperiorAffixes(input: SuperiorBuildInput): { superior: Sup
     : [];
   const superior: SuperiorAffixes = {
     enabled: config.enabled,
-    defaultWeight: config.defaultWeight,
+    weightSource,
+    defaultWeight: weightSource === 'frequency' ? 0 : config.defaultWeight,
     ...(firstFourRowBases.length > 0 && { firstFourRowBases }),
     rows,
     pools: [],

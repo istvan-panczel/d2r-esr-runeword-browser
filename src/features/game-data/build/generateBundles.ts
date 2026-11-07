@@ -30,10 +30,11 @@ import { readBossSetRules } from './pluginUniques.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
 import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
+import { perkChecks } from './cube/perks.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
-import { buildCubeNames, modRendererFor, readCube, readCubeItem, stockerCounterNames } from './cube/cubeRows.ts';
+import { buildCubeNames, modRendererFor, readCube, readCubeItem, stockerCounterNames, type CubeRow } from './cube/cubeRows.ts';
 import { buildLootFilterBundle } from './bundleLootFilter.ts';
 import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources, setBonusSources } from './bundleLootFilterSkills.ts';
 import { buildRunewordsBundle } from './bundleRunewords.ts';
@@ -244,6 +245,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   );
   const cubeRows = readCube(table('cubemain'));
   const counterNames = stockerCounterNames(statTables.stats, statTables.properties, strings, cubeRows);
+  const statNameById = new Map(rowTable('itemstatcost').rows.map((row, id) => [id, row.str('Stat')]));
+  const cubePerks = perkChecks(cubeRows, (id) => statNameById.get(id), strings);
   const cubeTables = {
     cube: cubeRows,
     items: cubeItems,
@@ -251,11 +254,12 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     renderMods: modRendererFor(() => renderer),
     levelName: (id: number) => levelNames.get(id) ?? null,
     counterName: (modOrStat: string) => counterNames.get(modOrStat) ?? null,
+    perkChecks: (row: CubeRow) => cubePerks.get(row) ?? [],
   };
   const cube = buildCubeBundle({
     tables: cubeTables,
     typeCodes: itemTypeCodes(itemtypes),
-    statNames: new Map(rowTable('itemstatcost').rows.map((row, id) => [id, row.str('Stat')])),
+    statNames: statNameById,
     setNames: new Set(table('setitems').rows.map((row) => row.str('index'))),
     uniqueNames: new Set(table('uniqueitems').rows.map((row) => row.str('index'))),
     statIdsOf: propertyStatIds(statTables.properties, rowTable('itemstatcost'), statTables.groups),
@@ -328,6 +332,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     strings,
     skills: readMasterySkills(table('skills'), skillDetails.bundle.skills),
     renderMods: cubeTables.renderMods,
+    perkChecks: cubeTables.perkChecks,
+    statOf: (property) => statTables.properties.get(property)?.slots[0]?.stat,
   });
   // --- end masteries.json ---
 
@@ -573,6 +579,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       basesWithStaffMods: basesBundle.bases.filter((base) => base.staffMods !== undefined).length,
       superiorRows: superior.superior.rows.length,
       superiorPools: superior.superior.pools.length,
+      // Rows with a weight of their own (ESR 3.3: every frequency cell; 0 = never rolls)
       superiorWeightedRows: superior.superior.rows.filter((row) => row.weight !== superior.superior.defaultWeight).length,
       runewords: runewords.bundle.runewords.length,
       runewordRows: runewords.bundle.runewords.reduce((sum, runeword) => sum + runeword.rows.length, 0),

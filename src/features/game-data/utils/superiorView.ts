@@ -60,3 +60,11 @@ export function superiorAffixesPath(type?: string): string {
   if (type !== undefined) params.set(GAME_DATA_URL_PARAM_KEYS.SUPERIOR_TYPE, type);
   return `/game-data/affixes?${params.toString()}`;
 }
+
+/** How the rows are weighted, for the Superior view's intro: " (…)" after "picked by weight" */
+export function superiorWeightNote(superior: Pick<SuperiorAffixes, 'enabled' | 'weightSource' | 'defaultWeight'>): string {
+  if (!superior.enabled || superior.weightSource === 'equal') return ' (equal odds)';
+  if (superior.weightSource === 'frequency')
+    return " (ESR's superior-affixes plugin: the row's frequency in qualityitems.txt; 0 never rolls)";
+  return ` (ESR's superior-affixes plugin; unlisted rows weigh ${String(superior.defaultWeight)})`;
+}

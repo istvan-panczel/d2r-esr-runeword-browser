@@ -167,7 +167,9 @@ describe('resolveEffectSkills', () => {
       skill('Lightning Hydra', 'sor', 2, { masteryStats: ['weapon_mastery_orb_1'] }),
       skill('Omnipotence', 'sor', 1, { aurastate: 'exclusiveskill', masteryStats: ['weapon_mastery_orb_2'] }),
     ];
-    expect(resolveEffectSkills('Spells', ['Triples the cooldown of your direct damage dealing spells.'], sorc, tabs, 'weapon_mastery_orb_1')).toEqual({
+    expect(
+      resolveEffectSkills('Spells', ['Triples the cooldown of your direct damage dealing spells.'], sorc, tabs, 'weapon_mastery_orb_1')
+    ).toEqual({
       skills: ['Meteor Shower', 'Lightning Hydra'],
       how: 'rule',
     });
@@ -248,7 +250,12 @@ describe('buildMasteriesBundle', () => {
     cubeRow(10, 'Apply Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
     cubeRow(11, 'Apply Awaken Weapon Mastery Token - Ceremonial Bow', ['am7,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
     // Not spawnable (no base): skipped without a warning
-    cubeRow(12, 'Apply Awaken Weapon Mastery Token - Ceremonial Bow LoD', ['q77,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
+    cubeRow(
+      12,
+      'Apply Awaken Weapon Mastery Token - Ceremonial Bow LoD',
+      ['q77,nru', 'u25', 'sss', 'qqq'],
+      [['weapon-mastery-reflex-bow', 1]]
+    ),
     cubeRow(
       13,
       'Apply Awaken Weapon Mastery Token - Orb 1',
@@ -273,7 +280,12 @@ describe('buildMasteriesBundle', () => {
     cubeRow(20, 'Remove Weapon Mastery - Reflex Bow', ['weap,nru', 'sss', 'wms,qty=3'], [['weapon-mastery-reflex-bow', -1]]),
     cubeRow(21, 'Remove Weapon Mastery - Orb 1', ['weap,nru', 'ggg', 'wms,qty=3'], [['weapon-mastery-orb-1', -1]]),
     // True Master: any weapon, behind the perk trap; gives no bases
-    cubeRow(23, 'True Master - Apply Awaken Weapon Mastery Token - Orb 1', ['weap,nru', 'u38', 'ggg', 'qqq', 'gcr'], [['weapon-mastery-orb-1', 1]]),
+    cubeRow(
+      23,
+      'True Master - Apply Awaken Weapon Mastery Token - Orb 1',
+      ['weap,nru', 'u38', 'ggg', 'qqq', 'gcr'],
+      [['weapon-mastery-orb-1', 1]]
+    ),
     cubeRow(30, 'Unawaken Weapon Mastery Token', ['u25'], [], 'u23'),
     // Awaken rows: none for the Ceremonial Bow; one names a base of another family (like ESR's Celestial Blade row)
     awakenRow(40, 'Awaken Weapon Mastery Token - Reflex Bow', 'am2', 'u25'),
@@ -284,7 +296,7 @@ describe('buildMasteriesBundle', () => {
   const skills = [
     skill('Strafe', 'ama', 1),
     skill('Multiple Shot', 'ama', 1),
-    skill('Meteor Shower', 'sor', 1, { reqLevel: 24 }),
+    skill('Meteor Shower', 'sor', 1, { masteryStats: ['weapon_mastery_orb_1'] }),
     skill('Omnipotence', 'sor', 1, { aurastate: 'exclusiveskill' }),
   ];
   const { bundle, warnings } = buildMasteriesBundle({
@@ -292,7 +304,7 @@ describe('buildMasteriesBundle', () => {
     nameOf: (code) => NAMES[code] ?? code,
     itemCodes: new Set(['q77']),
     bases,
-    types: [type('abow', 'Amazon Bow', 'ama'), orbType],
+    types: [{ ...type('abow', 'Amazon Bow', 'ama'), ancestors: ['abow', 'weap'] }, orbType, type('weap', 'Weapon', null)],
     classes: CLASSES,
     strings: new Map([
       ['u25desc', REFLEX],
@@ -301,20 +313,23 @@ describe('buildMasteriesBundle', () => {
     ]),
     skills,
     renderMods: (mods) => mods.filter((mod) => mod.mod !== 'hidden-mod').map((mod) => `+${String(mod.min)}% ${mod.mod}`),
+    statOf: (property) => property.replace(/-/g, '_'),
+    perkChecks: (row) => (row.line === 23 ? [{ perk: { title: 'True Master', tree: 'Blacksmith' }, has: true, inherited: true }] : []),
   });
 
-  it('groups the rows by stat value, bases by tier, and pairs each orb block by its ingredients', () => {
+  it('groups the rows by property, bases by tier, and pairs each orb block by its ingredients', () => {
     expect(bundle.token).toBe('u23');
-    expect(bundle.masteries.map((mastery) => [mastery.value, mastery.label, mastery.cls, mastery.type, mastery.bases])).toEqual([
-      [2, 'Reflex Bow', 'ama', undefined, ['am2', 'am7']],
-      [15, 'Orb', 'sor', 'orb', ['ob1']],
-      [17, 'Orb', 'sor', 'orb', ['ob1']],
+    expect(bundle.masteries.map((mastery) => [mastery.property, mastery.label, mastery.cls, mastery.type, mastery.bases])).toEqual([
+      ['weapon-mastery-reflex-bow', 'Reflex Bow', 'ama', undefined, ['am2', 'am7']],
+      ['weapon-mastery-orb-1', 'Orb', 'sor', 'orb', ['ob1']],
+      ['weapon-mastery-orb-2', 'Orb', 'sor', 'orb', ['ob1']],
     ]);
+    expect(bundle.anyWeaponPerk).toEqual({ title: 'True Master', tree: 'Blacksmith' });
     const [reflex, orb1, orb2] = bundle.masteries;
     expect(reflex.inputs).toEqual([{ code: 'sss' }, { code: 'qqq' }]);
     expect(reflex.remove).toEqual([{ code: 'sss' }, { code: 'wms', qty: 3 }]);
-    // No remove row and no awaken row takes the exceptional bow
-    expect(reflex.noRemove).toEqual(['am7']);
+    // The remove row takes any weapon; no awaken row takes the exceptional bow
+    expect(reflex.noRemove).toBeUndefined();
     expect(reflex.noAwaken).toEqual(['am7']);
     expect(orb1.noAwaken).toBeUndefined();
     expect(orb2.mods).toEqual(['hidden-mod -5']);
@@ -344,11 +359,11 @@ describe('buildMasteriesBundle', () => {
 
   it('warns about rows and strings that disagree, but not about bases that do not spawn', () => {
     expect(warnings).toEqual([
-      'masteries: Reflex Bow (value 2): no remove row takes am7',
-      'masteries: Orb (value 17): mod hidden-mod -5 has no item text; shown as "hidden-mod -5"',
-      'masteries: u38desc (Orb, value 17) names Dragon Stone, Chipped Skull, Anvil Stone; the rows take Crushed Gem, Anvil Stone, Chipped Skull',
+      'masteries: Orb (weapon-mastery-orb-2): mod hidden-mod -5 has no item text; shown as "hidden-mod -5"',
+      'masteries: weapon-mastery-orb-2 (Orb) has no remove row',
+      'masteries: u38desc (Orb, weapon-mastery-orb-2) names Dragon Stone, Chipped Skull, Anvil Stone; the rows take Crushed Gem, Anvil Stone, Chipped Skull',
       'masteries: cubemain line 41 "Awaken Weapon Mastery Token - Ceremonial Bow" takes "ob1", which cannot get this mastery',
-      'masteries: Reflex Bow (value 2): no awaken row takes am7',
+      'masteries: Reflex Bow (weapon-mastery-reflex-bow): no awaken row takes am7',
     ]);
   });
 });

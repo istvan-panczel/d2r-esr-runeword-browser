@@ -10,7 +10,7 @@ import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { cn } from '@/lib/utils';
 import type { SuperiorAffixes } from '../engine/schema';
 import { resetAffixFilters, selectAffixFilters, setAffixSearch, setAffixSuperiorType } from '../store/gameDataSlice';
-import { filterSuperiorPools, superiorTypeOptions } from '../utils/superiorView';
+import { filterSuperiorPools, superiorTypeOptions, superiorWeightNote } from '../utils/superiorView';
 import { EnhanceSearch, NoMatches } from './EnhanceParts';
 import { LIST_CARD_CLASS, LIST_CARD_HEADER_CLASS } from './rowListColumns';
 import { SuperiorRollList } from './SuperiorRollList';
@@ -91,8 +91,8 @@ export function SuperiorAffixesView({ superior, typeNames, getShareUrl }: Superi
         <p>
           A Superior weapon or armor rolls <span className="font-medium text-foreground">one</span> of the rows its base may use, picked by
           weight: a row's chance is its weight divided by the summed weights of every row that base may use
-          {superior.enabled ? ` (ESR's superior-affixes plugin; unlisted rows weigh ${String(superior.defaultWeight)})` : ' (equal odds)'}.
-          Each value is rolled once between min and max and stays on the item, also when you make a runeword in a superior white base.
+          {superiorWeightNote(superior)}. Each value is rolled once between min and max and stays on the item, also when you make a runeword
+          in a superior white base.
         </p>
         <p>
           {stockColumnsUsed

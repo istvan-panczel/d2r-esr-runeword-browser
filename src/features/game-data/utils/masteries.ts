@@ -73,3 +73,9 @@ export function masterySummary(masteries: readonly WeaponMastery[]): string {
   const list = headings.join(masteries.length > 1 ? ' or ' : ', ');
   return masteries.length > 1 ? `one of ${String(masteries.length)} (${list})` : list;
 }
+
+/** "With the Blacksmith perk True Master, any weapon takes any specialisation." (ESR 3.3); '' when the bundle has none */
+export function anyWeaponPerkText(bundle: MasteriesBundle): string {
+  const perk = bundle.anyWeaponPerk;
+  return perk === undefined ? '' : `With the ${perk.tree} perk ${perk.title}, any weapon takes any specialisation.`;
+}

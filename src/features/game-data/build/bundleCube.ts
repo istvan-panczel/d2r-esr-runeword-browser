@@ -51,6 +51,7 @@ import {
   parseCubeCell,
 } from './cube/cubeText.ts';
 import { dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
+import { perkCheckText } from './cube/perks.ts';
 import type { TsvTable } from './tsv.ts';
 import { cubeCellKeys, withoutCount, type CubeIconToken } from '../engine/cubeIcons.ts';
 
@@ -182,8 +183,12 @@ function conditionsOf(row: CubeRow, ctx: CubeContext, bosses: ReadonlyMap<number
   if (cls !== undefined) conditions.push(`${cls} only`);
   if (row.minDiff === 2) conditions.push('Hell only');
   else if (row.minDiff === 1) conditions.push('Nightmare or Hell');
+  const perks = ctx.tables.perkChecks?.(row) ?? [];
+  conditions.push(...perks.map(perkCheckText));
   const condition = row.condition;
-  if (condition !== null) {
+  // A perk check on the row itself is worded above
+  const ownPerk = condition !== null && perks.some((check) => !check.inherited);
+  if (condition !== null && !ownPerk) {
     const stat = ctx.statNames.get(condition.param) ?? '';
     if (stat === 'kill_check') {
       const boss = bosses.get(condition.value);

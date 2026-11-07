@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { MasteriesBundle, WeaponMastery } from '../engine/schema';
-import { buildMasteryIndex, masteryBasesUrl, masteryRecipe, masterySummary, namesOneSkill } from './masteries';
+import { anyWeaponPerkText, buildMasteryIndex, masteryBasesUrl, masteryRecipe, masterySummary, namesOneSkill } from './masteries';
 
-const mastery = (value: number, label: string, effects: WeaponMastery['effects'], extra: Partial<WeaponMastery> = {}): WeaponMastery => ({
-  value,
+const mastery = (
+  property: string,
+  label: string,
+  effects: WeaponMastery['effects'],
+  extra: Partial<WeaponMastery> = {}
+): WeaponMastery => ({
+  property,
   label,
   cls: 'sor',
   bases: ['ob1', 'ob6'],
@@ -14,10 +19,12 @@ const mastery = (value: number, label: string, effects: WeaponMastery['effects']
   ...extra,
 });
 
-const orb1 = mastery(15, 'Orb', [{ heading: 'Sorceress Spells', skills: ['Meteor Shower', 'Teleport'], text: ['Triples …'] }], {
+const orb1 = mastery('weapon-mastery-orb-1', 'Orb', [{ heading: 'Spells', skills: ['Meteor Shower', 'Teleport'], text: ['Triples …'] }], {
   type: 'orb',
 });
-const orb2 = mastery(17, 'Orb', [{ heading: 'Sorceress Exclusives', skills: ['Omnipotence'], text: ['Increases …'] }], { type: 'orb' });
+const orb2 = mastery('weapon-mastery-orb-2', 'Orb', [{ heading: 'Sorceress Exclusives', skills: ['Omnipotence'], text: ['Increases …'] }], {
+  type: 'orb',
+});
 const bundle: MasteriesBundle = {
   token: 'u23',
   names: { ggg: 'Crushed Gem', qqq: 'Anvil Stone', u38: 'Awakened Weapon Mastery Token', wms: 'Thawing Potion' },
@@ -34,11 +41,11 @@ describe('weapon mastery helpers', () => {
   });
 
   it('words the panel summary, the recipe and the Bases page link', () => {
-    expect(masterySummary([orb1, orb2])).toBe('one of 2 (Sorceress Spells or Sorceress Exclusives)');
-    expect(masterySummary([orb1])).toBe('Sorceress Spells');
+    expect(masterySummary([orb1, orb2])).toBe('one of 2 (Spells or Sorceress Exclusives)');
+    expect(masterySummary([orb1])).toBe('Spells');
     expect(masteryRecipe(orb1, bundle.names).map((entry) => entry.text)).toEqual(['Awakened token', 'Crushed Gem', 'Anvil Stone']);
     expect(masteryBasesUrl(orb1)).toBe('/game-data/bases?type=orb');
-    expect(masteryBasesUrl(mastery(2, 'Reflex Bow', [], { bases: ['am2', 'am7', 'amc', 'm54'] }))).toBe(
+    expect(masteryBasesUrl(mastery('weapon-mastery-reflex-bow', 'Reflex Bow', [], { bases: ['am2', 'am7', 'amc', 'm54'] }))).toBe(
       '/game-data/bases?codes=am2%2Cam7%2Camc%2Cm54'
     );
   });
@@ -46,5 +53,12 @@ describe('weapon mastery helpers', () => {
   it('links a skills line itself only when it names one skill', () => {
     expect(namesOneSkill({ heading: 'Omnipotence', skills: ['Omnipotence'], text: [] }, bundle.skillNames)).toBe(true);
     expect(namesOneSkill(orb1.effects[0], bundle.skillNames)).toBe(false);
+  });
+
+  it('words the perk with which any weapon takes any specialisation', () => {
+    expect(anyWeaponPerkText(bundle)).toBe('');
+    expect(anyWeaponPerkText({ ...bundle, anyWeaponPerk: { title: 'True Master', tree: 'Blacksmith' } })).toBe(
+      'With the Blacksmith perk True Master, any weapon takes any specialisation.'
+    );
   });
 });
