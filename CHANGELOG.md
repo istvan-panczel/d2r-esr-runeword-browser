@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.60.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.59.0...v1.60.0) (2026-11-07)
+
+### Features
+
+* **elixirs:** add the elixirs page with level, bonus and perk values ([7e871a6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7e871a6f08b402f52ffc4a21d788278fb53d3654))
+* **elixirs:** link the page with the guide note and the modifiers block ([85ee7eb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/85ee7eb72df2cb9abb5b2e1dbd8f3f6ac9dc39f2))
+* **game-data:** generate elixirs.json from the esr 3.3 utility potions ([bc4482c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bc4482cfec77924bcaef0c84b03b74c1fa6c1598))
+* **game-data:** specializations bundle and perk icons from the esr 3.3 files ([ded1a83](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ded1a83a8942685f29c787aab31bf7d372cc71a0))
+* **guide:** link the official specializations page ([691fbf7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/691fbf737d559425f961ffa476ceac38094a413b))
+* **guide:** make /guide the single overview of every note ([c22d712](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c22d712d3264d717d2537ce50625f0943392a0c1))
+* **modifiers:** crushing blow damage input in the crushing blow calculator ([a5b8119](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a5b8119d14864f2724b75bfdfd79186f2cf1920a))
+* **modifiers:** explain crossbows, maximum curses, socketed effect and utility potion stats ([01763a4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/01763a4c452aa0a7159c1bf3b4a84b750fd549e2))
+* **specializations:** link elixir names on the perk cards to the elixirs page ([a547a56](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a547a56d06414b4bc6f8dc81c9beec71e64dff16))
+* **specializations:** specializations page with perk deep links ([c017021](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c0170211fa329e9eba2c645541b7b294e64f1f3e))
+
+### Bug Fixes
+
+* **builds:** map the mythical arcane staff to the weapon slot ([96d4624](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/96d4624dec2d7c3749afe914dd1d1793365fdd9a))
+* **builds:** outdated anointment on item change, item type pick for unknown bases ([d002134](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d002134832a07b587210b61904666e65f6e0b947))
+* **data-sync:** read the unfilled esr 3.3 bleed duration as over time ([5617c80](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5617c802a85b9d7b9ee32349453e949ac995a2ae))
+* **game-data:** bump the bundle schema for the esr 3.3 shapes ([b8cc957](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b8cc957b8f422989d869175335c5bca59622c04d))
+* **game-data:** open the slot group's first pool for esr 3.2 anointment links ([671db5c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/671db5cfc3bdfc18390292d9e2c37fa8c41820c7))
+* **game-data:** readable crucible group titles and families for the other cube recipes ([a99e67c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a99e67cf3a3cf721529514a5507c2314b6f04e1c))
+* **home:** the esr wiki overlay is built into the game since esr 3.3 ([4906db3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4906db36cb9d08ebd44a83ed0d0a82a6f97a1d5d))
+* **loot-filter:** check in game prints the stats a formula reads ([04db50e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/04db50e183b0e101271692617e56e7b88633c604))
+* **loot-filter:** prune emptied languages when the file is written ([06507e0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/06507e0f2c755fafe5a88ba116476b2d2690bfc4))
+* **loot-filter:** test tab switches off rules with unknown formula names ([c5c1ab0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c5c1ab0571ceb5bcf4079513211d3930cf91b077))
+* **socketables:** let the long esr 3.3 bonus label wrap on the cards ([1e7fb24](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1e7fb246854f40193684a622085180ce7b61137d))
+* **terror-zones:** keep the stars of unchanged zone groups ([6477856](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/647785689598394468a624f13e8876d5ed309bbd))
+
+### Documentation
+
+* **elixirs:** document the elixirs page, bundle and open questions ([8c87a49](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8c87a49b85efa9bd92de59b9b4e1486a330c32a4))
+* esr 3.3 counts, sizes and examples in the feature docs ([30d96fb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/30d96fbfb4cc1e067573916ce3118f6130451c96))
+* esr 3.3 coverage, prompt sizes, picker names and icon counts ([cb0f3a0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cb0f3a0d16220b461383c5ade69e3c73682c3aeb))
+* **guide:** add the specializations and elixirs notes ([a5546eb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a5546eb7a26ed1c27ff493274bd5fb23824e3191))
+* **guide:** date the page-change remarks and per-type anointments for esr 3.3 ([5a44aea](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5a44aead2050099b2182e53272c59165dfd44d96))
+* **guide:** describe the 3.3 monster overhaul and experience curve ([dcd88df](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/dcd88dfffa683f0c90022db7a170aceb9fd0a2a4))
+* **guide:** describe the single /guide overview and the unrouted map ([ab55268](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ab55268ae5c4bd1896ba43e26413c5a2c911a0e9))
+* **guide:** link the specializations page and the perks the notes name ([ffa648a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ffa648a9188239d531c9400b01e62174697670e8))
+* **guide:** point the start here note at the overview, not the removed row ([d75dc9f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d75dc9ffa94e1940b548b2e94093a7a350d00f1e))
+* **modifiers:** cite the mod author on additive deadly strike damage ([05cce0c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/05cce0c3ef7434ddd1f7cd611941234c45858e7a))
+* **modifiers:** document the 3.3 stat blocks, their facts and open questions ([5e97ed2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5e97ed2a8a09cad01897a9b3487df7862bd414ca))
+* **modifiers:** esr 3.3 element crit, demon limb and enchant formulas ([84608ea](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/84608ea54e5de536b43a47e9efcac37aa9cccb63))
+* **modifiers:** whirlwind hits count as a third of an attack for every-n-attacks procs ([bfe5f8a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bfe5f8a839418a9bb6a30e217c409492fae23124))
+* **specializations:** feature doc, bundle and route listings, esr-update notes ([a858084](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a858084855f7ae5cbda8588596d659904bd63110))
+
+### Chores
+
+* **esr-update:** reference expectations at esr 3.3 ([7fdef70](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7fdef701c78153b48f0cddd0a803da1ccc7e7f85))
+
 ## [1.59.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.58.0...v1.59.0) (2026-11-07)
 
 ### Features
