@@ -18,8 +18,8 @@ export interface OfficialBossRewards {
   readonly key?: { readonly chance: number; readonly set?: true };
   /** Named drops, as the page names them */
   readonly items?: readonly string[];
-  /** Worldstone Shards when terrorized: 'one' (T1–T4: "always a shard"), 'none' (T5: "engine limitation") */
-  readonly terror: 'one' | 'none';
+  /** Worldstone Shards when terrorized: 'always' (T1–T4: "always drop a shard", not a count), 'none' (T5: "engine limitation") */
+  readonly terror: 'always' | 'none';
 }
 
 export interface MapBossFacts {
@@ -34,10 +34,10 @@ export interface MapBossFacts {
 
 const PIERCE: CampaignNote = { text: 'pierces your elemental resistances: overcap them', source: 'tables' };
 
-const T1_PAGE: OfficialBossRewards = { orb: 5, map: { tier: 2, chance: 25 }, key: { chance: 25 }, terror: 'one' };
-const T2_PAGE: OfficialBossRewards = { orb: 10, map: { tier: 3, chance: 25 }, key: { chance: 35 }, terror: 'one' };
-const T3_PAGE: OfficialBossRewards = { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 }, terror: 'one' };
-const T4_PAGE: OfficialBossRewards = { orb: 20, map: { tier: 5, chance: 25 }, key: { chance: 100 }, terror: 'one' };
+const T1_PAGE: OfficialBossRewards = { orb: 5, map: { tier: 2, chance: 25 }, key: { chance: 25 }, terror: 'always' };
+const T2_PAGE: OfficialBossRewards = { orb: 10, map: { tier: 3, chance: 25 }, key: { chance: 35 }, terror: 'always' };
+const T3_PAGE: OfficialBossRewards = { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 }, terror: 'always' };
+const T4_PAGE: OfficialBossRewards = { orb: 20, map: { tier: 5, chance: 25 }, key: { chance: 100 }, terror: 'always' };
 const EYE_PAGE = (item: string): OfficialBossRewards => ({
   orb: 25,
   map: { tier: 5, chance: 25 },

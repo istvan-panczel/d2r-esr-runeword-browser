@@ -24,7 +24,7 @@ const cell = (rewards: readonly MapBossReward[], text: (reward: MapBossReward) =
 
 function sharedText(reward: MapBossReward): string {
   const limit = reward.condition === undefined ? undefined : /<\s*(\d+)\s*$/.exec(reward.condition)?.[1];
-  return `${reward.label} ${chances(reward)}${limit === undefined ? '' : ` (until you have collected ${limit})`}`;
+  return `${reward.label} ${chances(reward)}${limit === undefined ? '' : ` (until your Ascendancy Stone holds ${limit})`}`;
 }
 
 export const resolveMapBosses: DirectiveResolver = (arg, ctx) => {
@@ -43,7 +43,11 @@ export const resolveMapBosses: DirectiveResolver = (arg, ctx) => {
       cell(ofKind(boss, 'map'), (reward) => `${reward.label.replace(/ map$/, '')} ${chances(reward)}`),
       cell(ofKind(boss, 'key'), (reward) => `${chances(reward)}${reward.expected === undefined ? '' : ' (a set)'}`),
       ...(withItems ? [cell(ofKind(boss, 'item'), (reward) => `${reward.label} ${chances(reward)}`)] : []),
-      boss.terrorShards === null ? 'no terrorized table' : `+${String(boss.terrorShards)}`,
+      boss.terrorShards === null
+        ? 'none set (likely the normal table)'
+        : tier >= 5
+          ? `+${String(boss.terrorShards)} in the files (page: none)`
+          : `+${String(boss.terrorShards)}`,
     ];
     const same = rows.find((row) => row.cells.join('|') === cells.join('|'));
     if (same === undefined) rows.push({ names: [boss.name], cells });

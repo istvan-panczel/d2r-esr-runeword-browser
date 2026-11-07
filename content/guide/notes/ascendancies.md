@@ -43,7 +43,7 @@ Each orb drops from one superunique on Hell. The official page only says which a
 
 ### Making and upgrading the stone
 
-Each later tier is a challenge finished in the cube: Nihlathak on Hell, all three Uber Tristram bosses within a minute, [Primordial Soulstones](<dropfinder:Primordial Soulstone>) from map bosses (since 3.2.22 they stop dropping once you have collected ten), and a tier 5 map boss ([[maps-keys-ascendancy]]). Tiers can be done in any order.
+Each later tier is a challenge finished in the cube: Nihlathak on Hell, all three Uber Tristram bosses within a minute, [Primordial Soulstones](<dropfinder:Primordial Soulstone>) from map bosses (since 3.2.22 they stop dropping once your Ascendancy Stone holds ten), and a tier 5 map boss ([[maps-keys-ascendancy]]). Tiers can be done in any order.
 
 ::recipes[ascendancy]
 

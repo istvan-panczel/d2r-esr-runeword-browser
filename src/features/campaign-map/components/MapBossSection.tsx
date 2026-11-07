@@ -51,9 +51,8 @@ export function MapBossSection({ summary, nameOf, areaHref, onSelect, areaId }: 
       )}
       {summary.pick !== null && (
         <p>
-          Two of these tier 1 bosses come, each with its own tier 1 rewards; the game files do not say which pair (the map’s layout
-          decides).
-          <FactSourceLabel source="tables" />
+          Two of these tier 1 bosses come, each with its own tier 1 rewards; neither the page nor the game files say which pair.
+          <FactSourceLabel source="endgame" />
         </p>
       )}
       {summary.bosses.map((boss) => (
@@ -91,7 +90,7 @@ interface BossDetailsProps {
 }
 
 function BossDetails({ boss, open, areaId, nameOf, areaHref, onSelect }: BossDetailsProps) {
-  const arena = boss.arenaIds.at(0);
+  const arena = boss.zoneArena;
   return (
     <details open={open} className="group rounded-md border bg-background/50">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 px-2.5 py-1.5 font-medium [&::-webkit-details-marker]:hidden">
@@ -100,7 +99,7 @@ function BossDetails({ boss, open, areaId, nameOf, areaHref, onSelect }: BossDet
         <span className="ml-auto text-xs font-normal text-muted-foreground group-open:hidden">show</span>
       </summary>
       <div className="space-y-2.5 border-t px-2.5 pt-2 pb-2.5">
-        {arena !== undefined && arena !== areaId && !boss.arenaIds.includes(areaId) && (
+        {arena !== null && !boss.arenaIds.includes(areaId) && (
           <p className="text-xs text-muted-foreground">
             Fights in{' '}
             <AreaLink id={arena} href={areaHref(arena)} onSelect={onSelect} className={LINK_CLASS}>
@@ -141,7 +140,7 @@ function BossDetails({ boss, open, areaId, nameOf, areaHref, onSelect }: BossDet
             ))}
             {boss.otherRolls > 0 && (
               <li className="text-muted-foreground">
-                and {boss.otherRolls} rolls of gold, gear, jewellery, runes, gems and crafting materials
+                and up to {boss.otherRolls} more rolls of gold, gear, jewellery, runes, gems and crafting materials
               </li>
             )}
           </ul>
@@ -162,8 +161,7 @@ function BossDetails({ boss, open, areaId, nameOf, areaHref, onSelect }: BossDet
         <p>
           <span className={SUBHEAD_CLASS}>Terrorized: </span>
           {boss.terror}.
-          <FactSourceLabel source="tables" />
-          {boss.terrorOfficial !== null && <span className={cn('ml-1', OFFICIAL_CLASS)}>Official page: {boss.terrorOfficial}.</span>}
+          <FactSourceLabel source="tables" verify={boss.terrorUnconfirmed} />
         </p>
         {boss.uber.length > 0 && (
           <div>

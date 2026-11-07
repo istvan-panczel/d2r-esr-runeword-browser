@@ -14,7 +14,7 @@ export interface BossRewardLine {
   readonly chance: string;
   /** The players-8 chance when it differs ("50%") */
   readonly players8: string | null;
-  /** Extra words after the chance ("until you have collected 10", "one at random") */
+  /** Extra words after the chance ("until your Ascendancy Stone holds 10", "one at random") */
   readonly note: string | null;
   /** What the official page says instead, when it differs ("35%", "a whole key set") */
   readonly official: string | null;
@@ -25,6 +25,8 @@ export interface BossCard {
   readonly name: string;
   /** The arenas it fights in (its own first) */
   readonly arenaIds: readonly number[];
+  /** The arena to link to: the one inside the selected zone (Chaos Rift Level 4 for its tier 1 bosses), else its own */
+  readonly zoneArena: number | null;
   /** It fights in the selected area */
   readonly here: boolean;
   readonly fight: readonly CampaignNote[];
@@ -32,10 +34,10 @@ export interface BossCard {
   readonly uber: readonly CampaignNote[];
   readonly rewards: readonly BossRewardLine[];
   readonly otherRolls: number;
-  /** "+2 Worldstone Shards", "no terrorized loot table in the files" */
+  /** "+2 Worldstone Shards"; tier 5: the files' figure next to the page's "none (engine limit)" */
   readonly terror: string;
-  /** What the official page says about terrorized shards, when it differs */
-  readonly terrorOfficial: string | null;
+  /** The terrorized line is not settled (the files and the page disagree on runtime behaviour) */
+  readonly terrorUnconfirmed: boolean;
   /** Bosses of other zones whose loot table it uses (names) */
   readonly sameTableAs: readonly string[];
   /** "Eternal Hourglass of the Timeless Sands": dropped by the last of the set to die (launcher plugin) */
@@ -67,11 +69,14 @@ export function chanceText(chance: number): string {
 
 const percentsDiffer = (files: number, page: number) => Math.abs(files * 100 - page) > 0.5;
 
-/** "stat('…')<10" → "until you have collected 10" */
+/**
+ * "stat('ascendancy_tier_4_count_new'.accr)<10" → "until your Ascendancy Stone holds 10": the stat counts the soulstones
+ * cubed into the stone, not the ones picked up
+ */
 function conditionNote(condition: string | undefined): string | null {
   if (condition === undefined) return null;
   const limit = /<\s*(\d+)\s*$/.exec(condition)?.[1];
-  return limit === undefined ? 'only while a condition in the files holds' : `until you have collected ${limit}`;
+  return limit === undefined ? 'only while a condition in the files holds' : `until your Ascendancy Stone holds ${limit}`;
 }
 
 function officialFor(reward: MapBossReward, page: OfficialBossRewards, pageItem: string | undefined): string | null {
@@ -127,35 +132,49 @@ function rewardLines(boss: MapBoss, page: OfficialBossRewards | undefined): Boss
   });
 }
 
-function terrorText(boss: MapBoss): string {
-  if (boss.terrorShards === null) return 'no terrorized loot table in the files';
+/**
+ * The terrorized line. A blank `TreasureClassDesecrated(H)` (Lucion) is just unset: he likely drops his normal table. The
+ * official page says tier 5 bosses drop no shards (an engine limit, runtime behaviour the files cannot show): then both
+ * are given and the line is unconfirmed. The page's "always a shard" for tiers 1-4 is not a count, so not compared.
+ */
+function terrorLine(boss: MapBoss, page: OfficialBossRewards | undefined): { text: string; unconfirmed: boolean } {
+  if (boss.terrorShards === null) {
+    return { text: 'monstats sets no terrorized loot table for this boss, so he likely drops his normal one', unconfirmed: true };
+  }
   const shards = boss.terrorShards;
-  const base = shards === 0 ? 'no Worldstone Shards' : `+${String(shards)} Worldstone Shard${shards === 1 ? '' : 's'}`;
+  const shardText = `${String(shards)} Worldstone Shard${shards === 1 ? '' : 's'}`;
   const missing = boss.terrorMissing ?? [];
-  return missing.length === 0 ? base : `${base}, but without the ${missing.join(' or ')} roll`;
+  const without = missing.length === 0 ? '' : `, without the ${missing.join(' or ')} roll`;
+  if (page?.terror === 'none' && shards > 0) {
+    return {
+      text: `the files list +${shardText}${without}; the official page says tier 5 bosses drop none (an engine limit)`,
+      unconfirmed: true,
+    };
+  }
+  return { text: shards === 0 ? `no Worldstone Shards${without}` : `+${shardText}${without}`, unconfirmed: false };
 }
 
-function terrorOfficial(boss: MapBoss, page: OfficialBossRewards | undefined): string | null {
-  if (page === undefined) return null;
-  const shards = boss.terrorShards ?? 0;
-  if (page.terror === 'one' && shards !== 1) return 'one shard';
-  if (page.terror === 'none' && shards > 0) return 'no shards from tier 5 bosses';
-  return null;
-}
-
-export function bossCard(boss: MapBoss, facts: MapBossFacts | undefined, here: boolean, nameOfBoss: (id: string) => string): BossCard {
+export function bossCard(
+  boss: MapBoss,
+  facts: MapBossFacts | undefined,
+  here: boolean,
+  nameOfBoss: (id: string) => string,
+  zoneAreaIds: ReadonlySet<number> = new Set()
+): BossCard {
+  const terror = terrorLine(boss, facts?.page);
   return {
     id: boss.id,
     name: boss.name,
     arenaIds: boss.arenas,
+    zoneArena: boss.arenas.find((id) => zoneAreaIds.has(id)) ?? boss.arenas.at(0) ?? null,
     here,
     fight: facts?.fight ?? [],
     damage: facts?.damage ?? null,
     uber: facts?.uber ?? [],
     rewards: rewardLines(boss, facts?.page),
     otherRolls: boss.otherRolls,
-    terror: terrorText(boss),
-    terrorOfficial: terrorOfficial(boss, facts?.page),
+    terror: terror.text,
+    terrorUnconfirmed: terror.unconfirmed,
     sameTableAs: (boss.sameTableAs ?? []).map(nameOfBoss),
     setDrop: boss.setDrop === undefined ? null : { unique: boss.setDrop.unique, with: boss.setDrop.with.map(nameOfBoss) },
     uncurated: facts === undefined,
@@ -177,11 +196,20 @@ export function zoneBossSummary(
   const ids = [...new Set(zoneAreas.flatMap((other) => other.area.mapBosses ?? []))];
   const entry = zoneAreas.find((other) => other.area.mapItem !== undefined);
   const pick = zoneAreas.find((other) => other.area.mapBossPick !== undefined)?.area.mapBossPick ?? null;
+  const zoneAreaIds = new Set(zoneAreas.map((other) => other.id));
   const cards = ids.flatMap((id) => {
     const boss = byId.get(id);
     return boss === undefined
       ? []
-      : [bossCard(boss, Object.hasOwn(facts, id) ? facts[id] : undefined, (area.area.mapBosses ?? []).includes(id), nameOfBoss)];
+      : [
+          bossCard(
+            boss,
+            Object.hasOwn(facts, id) ? facts[id] : undefined,
+            (area.area.mapBosses ?? []).includes(id),
+            nameOfBoss,
+            zoneAreaIds
+          ),
+        ];
   });
   const hellPacks = zoneAreas.flatMap((other) => (other.area.uniques === null ? [] : [other.area.uniques[2]]));
   const uniques: readonly [number, number] | null =

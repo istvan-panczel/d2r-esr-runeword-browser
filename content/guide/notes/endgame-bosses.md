@@ -52,7 +52,7 @@ Each of the five map tiers has four maps, and 14 of the 20 have a boss; the othe
 
 ### What they drop
 
-Every boss rolls an Orb of Anointment ([[corruption-anointment]]), a map of the next tier, a Pandemonium key ([[maps-keys-ascendancy]]), a Weapon Mastery Token ([[weapon-mastery]]) and a Primordial Soulstone for [[ascendancies]], plus many rolls of ordinary loot. Raising the players setting to 8 roughly doubles the orb, map and key chances (in brackets); the token and the named drops stay the same. A terrorized boss adds Worldstone Shards, more at higher tiers.
+Every boss rolls an Orb of Anointment ([[corruption-anointment]]), a map of the next tier, a Pandemonium key ([[maps-keys-ascendancy]]), a Weapon Mastery Token ([[weapon-mastery]]) and a Primordial Soulstone for [[ascendancies]], plus many rolls of ordinary loot. Raising the players setting to 8 roughly doubles the orb, map and key chances (in brackets); the token and the named drops stay the same. A terrorized tier 1 to 4 boss adds Worldstone Shards, more at higher tiers.
 
 ::map-bosses[1]
 
@@ -64,7 +64,7 @@ Every boss rolls an Orb of Anointment ([[corruption-anointment]]), a map of the 
 
 ::map-bosses[5]
 
-Where the official page says otherwise, the files win: it promises higher key chances from tier 2 up and a whole key set from tier 5 bosses (the files drop one random key), a 50% map from Rathma and Lucion, one shard per terrorized boss and none from tier 5. Herald of Doom uses the same loot table as the tier 2 Avatar of the Night, so he drops tier 3 maps, not tier 4. The page also calls the Eye of the Storm drops Demonic Horns; in game they are Diablo's Demonic Horn, Mephisto's Demonic Brain and Baal's Demonic Eye, used to anoint unique charms. Killed while terrorized, the Lich King loses his Frostmourne and Essence roll.
+Where the official page lists other drop chances, the tables above follow the files: the page promises higher key chances from tier 2 up and a whole key set from tier 5 bosses (the files drop one random key), and a 50% map from Rathma and Lucion. Shards are different: the files give terrorized tier 5 bosses shards too, but the page says they drop none because of an engine limit, which the files cannot show; until someone checks in game, expect none. Lucion has no terrorized loot table set at all, so he likely drops his normal one. Herald of Doom uses the same loot table as the tier 2 Avatar of the Night, so he drops tier 3 maps, not tier 4. The page also calls the Eye of the Storm drops Demonic Horns; in game they are Diablo's Demonic Horn, Mephisto's Demonic Brain and Baal's Demonic Eye, used to anoint unique charms. Killed while terrorized, the Lich King loses his Frostmourne and Essence roll.
 
 ### Tiers 1 to 4
 

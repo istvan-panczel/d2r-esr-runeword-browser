@@ -49,7 +49,7 @@ const lucion: MapBoss = {
 const FACTS: Record<string, MapBossFacts> = {
   herald: {
     fight: [{ text: 'meteors', source: 'endgame' }],
-    page: { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 }, terror: 'one' },
+    page: { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 }, terror: 'always' },
   },
   meph: {
     fight: [],
@@ -74,9 +74,14 @@ const map = mockMap([
       [60, 80],
     ],
   }),
+  zone(148, 'Cellar of Pain Level 1', 'Cellar of Pain', 1, { mapItem: 'z01' }),
+  zone(149, 'Cellar of Pain Level 2', 'Cellar of Pain', 1, { mapBosses: ['whisper'] }),
+  zone(156, 'Chaos Rift Level 1', 'Chaos Rift', 2, { mapItem: 'z06' }),
+  zone(159, 'Chaos Rift Level 4', 'Chaos Rift', 2, { mapBosses: ['whisper'], mapBossPick: 2 }),
   mockCampaignArea(1, 'Rogue Encampment'),
 ]);
-const BOSSES = [herald, avatar, mephisto, lucion];
+const whisper: MapBoss = { ...herald, id: 'whisper', name: "Lucion's Whisper", arenas: [149, 159], tier: 1, sameTableAs: undefined };
+const BOSSES = [herald, avatar, mephisto, lucion, whisper];
 const summaryOf = (id: number) => {
   const area = map.areas.get(id);
   if (area === undefined) throw new Error(`no area ${String(id)}`);
@@ -112,11 +117,12 @@ describe('zoneBossSummary', () => {
       ['Tier 3 map', '25%', '50%', null, 'tier 4 map, 25%'],
       ['Pandemonium key', '25%', '50%', 'one of the three, at random', '50%'],
       ['Weapon Mastery Token', '25%', null, 'players setting does not raise it', null],
-      ['Primordial Soulstone', 'always', null, 'until you have collected 10', null],
+      ['Primordial Soulstone', 'always', null, 'until your Ascendancy Stone holds 10', null],
     ]);
     expect(card?.sameTableAs).toEqual(['Avatar Of The Night']);
+    // The page's "always a shard" is not a count: no comparison
     expect(card?.terror).toBe('+2 Worldstone Shards');
-    expect(card?.terrorOfficial).toBe('one shard');
+    expect(card?.terrorUnconfirmed).toBe(false);
     expect(card?.uncurated).toBe(false);
   });
 
@@ -124,14 +130,25 @@ describe('zoneBossSummary', () => {
     const card = summaryOf(193)?.bosses[0];
     expect(card?.damage?.text).toBe('Pick up a light orb');
     expect(card?.rewards.map((line) => line.official)).toEqual(["calls it Mephisto's Demonic Horn", 'a whole key set, 50%']);
-    expect(card?.terror).toBe("+3 Worldstone Shards, but without the Mephisto's Demonic Brain roll");
-    expect(card?.terrorOfficial).toBe('no shards from tier 5 bosses');
+    expect(card?.terror).toBe(
+      "the files list +3 Worldstone Shards, without the Mephisto's Demonic Brain roll; the official page says tier 5 bosses drop none (an engine limit)"
+    );
+    expect(card?.terrorUnconfirmed).toBe(true);
   });
 
   it('marks a boss without hand-written facts and a boss without a terrorized table', () => {
     const card = summaryOf(211)?.bosses[0];
     expect(card?.uncurated).toBe(true);
-    expect(card?.terror).toBe('no terrorized loot table in the files');
+    expect(card?.terror).toBe('monstats sets no terrorized loot table for this boss, so he likely drops his normal one');
+    expect(card?.terrorUnconfirmed).toBe(true);
+  });
+
+  it('links a boss to its arena inside the selected zone (Chaos Rift), else to its own', () => {
+    const rift = summaryOf(156);
+    expect(rift?.pick).toBe(2);
+    expect(rift?.bosses[0]?.zoneArena).toBe(159);
+    expect(summaryOf(148)?.bosses[0]?.zoneArena).toBe(149);
+    expect(summaryOf(166)?.bosses[0]?.zoneArena).toBe(175);
   });
 
   it('says a zone has no boss, with its Hell unique packs', () => {

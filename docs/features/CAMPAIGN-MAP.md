@@ -107,10 +107,13 @@ a tiered map zone (the same summary on the entry, the middle levels and the aren
   zone's entry level; Act V is the official page's word, the files only say Hell).
 - A zone without a boss says so, with its Hell unique pack range. Chaos Rift ("Double T1 Bosses") lists the three tier 1
   bosses and says two of them come (the map preset decides which; the files do not say).
-- A card per boss (`<details>`, open on its own arena or when the zone has one boss; Chaos Rift's start closed): the
+- A card per boss links to its arena inside the selected zone (Chaos Rift Level 4 for the tier 1 bosses seen from
+  Chaos Rift), else its own (`zoneArena`). `<details>`, open on its own arena or when the zone has one boss; Chaos Rift's start closed): the
   fight in a few words, how to hurt the invincible tier 5 bosses (amber box), the rewards in Hell at players 1 with
-  players 8 in brackets, the generic loot rolls, the terrorized Worldstone Shards (and a roll the terrorized table
-  skips), a loot table shared with another zone's boss (Herald of Doom uses Avatar of the Night's), the launcher plugin
+  players 8 in brackets, "up to N more" generic loot rolls (a per-kill drop cap may cut them), the terrorized Worldstone
+  Shards (and a roll the terrorized table skips; tier 5 gives the files' figure next to the page's "none, engine limit"
+  and Lucion's blank terrorized TC reads "likely his normal table", both labelled unconfirmed; the page's "always a
+  shard" for tiers 1–4 is not a count and is not compared), a loot table shared with another zone's boss (Herald of Doom uses Avatar of the Night's), the launcher plugin
   set drop (Eternal Hourglass), and the players 8 (uber) variant.
 - Where the official page lists another figure or name, the reward row says "Official page: …" (amber text): computed
   at runtime by comparing the files' chances with the page figures kept in `data/mapBosses.ts` (`page`), so the note

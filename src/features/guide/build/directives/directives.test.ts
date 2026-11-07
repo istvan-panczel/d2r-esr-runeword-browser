@@ -311,11 +311,11 @@ describe('map-bosses', () => {
     expect(resolve('map-bosses', '1', ctx())).toEqual({
       kind: 'table',
       caption:
-        'Tier 1 map bosses in Hell, players 1 (players 8). Each also drops: Weapon Mastery Token 25%; Primordial Soulstone always (until you have collected 10)',
+        'Tier 1 map bosses in Hell, players 1 (players 8). Each also drops: Weapon Mastery Token 25%; Primordial Soulstone always (until your Ascendancy Stone holds 10)',
       header: ['Boss', 'Orb of Anointment', 'Map', 'Key', 'Shards when terrorized'],
       rows: [
         ['Whisper, Hellhound (each)', '5% (9.8%)', 'Tier 2 25% (50%)', '25% (50%)', '+1'],
-        ['Angel', '5% (9.8%)', 'Tier 2 25% (50%)', '25% (50%)', 'no terrorized table'],
+        ['Angel', '5% (9.8%)', 'Tier 2 25% (50%)', '25% (50%)', 'none set (likely the normal table)'],
       ],
     });
   });
@@ -323,7 +323,7 @@ describe('map-bosses', () => {
   it('adds a named-drop column and marks key sets', () => {
     expect(resolve('map-bosses', '5', ctx())).toMatchObject({
       header: ['Boss', 'Orb of Anointment', 'Map', 'Key', 'Named drop', 'Shards when terrorized'],
-      rows: [['Mephisto', '–', '–', '50% (95.5%) (a set)', 'Demonic Brain always', '+1']],
+      rows: [['Mephisto', '–', '–', '50% (95.5%) (a set)', 'Demonic Brain always', '+1 in the files (page: none)']],
     });
   });
 
