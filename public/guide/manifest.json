@@ -3,17 +3,17 @@
   "esrVersion": "3.2.24",
   "esrTag": "3.2.24",
   "esrCommit": "b0622767314f9bf65f9c3a2cdeacded0b2e04a7e",
-  "generatedAt": "2026-11-07T10:41:22.901Z",
+  "generatedAt": "2026-11-07T12:22:35.086Z",
   "files": {
     "guide": {
-      "hash": "b463254af09b214baf3c63afefa4ee95f5a6d7b4a3cb38e40c01425630d0b80e",
-      "bytes": 215162
+      "hash": "28af09a77fba3e2946131d134c4e63e91028f925933352ce048ad52d252ed312",
+      "bytes": 215763
     }
   },
   "counts": {
     "notes": 31,
     "drafts": 31,
-    "words": 7265,
+    "words": 7317,
     "dataBlocks": 59,
     "spineSteps": 5,
     "questions": 6,
