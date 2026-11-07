@@ -57,8 +57,8 @@ describe('data/modifierRefs.json', () => {
 
   it('carries the facts the peek reads and stays small', () => {
     expect(committed.facts.map((fact) => fact.key)).toEqual(PEEK_FACT_KEYS);
-    // ~34 KB raw / 9 KB gzip, of which the home search names ~12 KB raw
-    expect(committedText.length).toBeLessThan(40_000);
+    // ~40 KB raw / 10 KB gzip (ESR 3.3, 54 entries), of which the home search names ~12 KB raw
+    expect(committedText.length).toBeLessThan(45_000);
   });
 
   it('copies the route and param of modifierRoutes.ts', () => {

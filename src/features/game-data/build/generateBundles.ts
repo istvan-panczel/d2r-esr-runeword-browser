@@ -535,6 +535,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     difficultylevels: table('difficultylevels'),
     charstats: table('charstats'),
     monstats: table('monstats'),
+    misc: table('misc'),
+    skills: table('skills'),
     configs: sources.modifierConfigs,
     patches: sources.modifierPatches,
   });

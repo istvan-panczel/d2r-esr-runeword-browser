@@ -85,7 +85,32 @@ export const PLACEHOLDER_FACTS: Readonly<Partial<Record<string, FactRef>>> = {
   'engine.magic-find.dim.set': { fact: 'magicFind.dim', field: 'set' },
   'engine.magic-find.dim.rare': { fact: 'magicFind.dim', field: 'rare' },
   'derived.fcr-ceiling': { fact: 'castRate.maxRate' },
+  'config.crossbow-charges.crossbow_charges.default_max_bolts': { fact: 'crossbow.bolts' },
+  'config.crossbow-charges.crossbow_charges.damage_base': { fact: 'crossbow.damageBase' },
+  'config.crossbow-charges.crossbow_charges.standing_reload_bonus': { fact: 'crossbow.standingReloadBonus' },
+  'config.crossbow-charges.crossbow_charges.default_attack_frames': { fact: 'crossbow.attackFrames' },
+  'config.crossbow-charges.crossbow_charges.max_bolts_stat_id': { fact: 'crossbow.stats', field: 'maxBolts' },
+  'config.crossbow-charges.crossbow_charges.current_bolts_stat_id': { fact: 'crossbow.stats', field: 'currentBolts' },
+  'config.crossbow-charges.crossbow_charges.damage_stat_id': { fact: 'crossbow.stats', field: 'damage' },
+  'config.crossbow-charges.crossbow_charges.attack_frames_stat_id': { fact: 'crossbow.stats', field: 'attackFrames' },
+  'skills.attack.crossbow-reload.base-frames': { fact: 'crossbow.reload', field: 'baseFrames' },
+  'skills.attack.crossbow-reload.min-frames': { fact: 'crossbow.reload', field: 'minFrames' },
+  'config.extra-curses.curses.stat_id': { fact: 'curses.extraStat' },
+  'config.extra-curses.curses.replace': { fact: 'curses.replace' },
+  'config.jeweler.gem_effect.gems': { fact: 'socketEffect.stats', field: 'gems' },
+  'config.jeweler.gem_effect.runes': { fact: 'socketEffect.stats', field: 'runes' },
+  'config.jeweler.gem_effect.jewels': { fact: 'socketEffect.stats', field: 'jewels' },
+  'config.jeweler.gem_effect.gemsInItem': { fact: 'socketEffect.stats', field: 'gemsInItem' },
+  'config.jeweler.gem_effect.runesInItem': { fact: 'socketEffect.stats', field: 'runesInItem' },
+  'config.jeweler.gem_effect.jewelsInItem': { fact: 'socketEffect.stats', field: 'jewelsInItem' },
+  'config.jeweler.socketed_gems.stats.count': { fact: 'socketEffect.statCount' },
+  'misc.greater-elixir.percent': { fact: 'utilityPotion.greaterPercent' },
+  'misc.utility-potion.perk-percent': { fact: 'utilityPotion.perkPercent' },
 };
+
+/** Game frames per second: table and plugin durations are in frames */
+const FRAMES_PER_SECOND = 25;
+const CROSSBOW_RELOAD: Readonly<Partial<Record<string, string>>> = { base: 'baseFrames', min: 'minFrames' };
 
 const DIFFICULTIES: Readonly<Partial<Record<string, Difficulty>>> = { normal: 0, nightmare: 1, hell: 2 };
 
@@ -214,6 +239,38 @@ const DERIVED: Readonly<Partial<Record<string, Derive>>> = {
     args.length > 0
       ? null
       : { text: formatNumber(numberFact(facts, 'resist.hardCap') - numberFact(facts, 'resist.maxBase')), fact: 'resist.hardCap' },
+  /** `utility-potion-seconds.<elixir|stamina|antidote|thawing>`: a utility potion's base duration in seconds */
+  'utility-potion-seconds': ([group], facts) => {
+    const frames = recordFact(facts, 'utilityPotion.duration');
+    if (group === undefined || !Object.hasOwn(frames, group)) return null;
+    return { text: formatNumber(frames[group] / FRAMES_PER_SECOND, 2), fact: 'utilityPotion.duration' };
+  },
+  /** `crossbow-reload-seconds.<base|min>`: the crossbow reload before attack speed, or its floor, in seconds */
+  'crossbow-reload-seconds': ([which], facts) => {
+    const field = CROSSBOW_RELOAD[which ?? ''];
+    const frames = recordFact(facts, 'crossbow.reload');
+    if (field === undefined || !Object.hasOwn(frames, field)) return null;
+    return { text: formatNumber(frames[field] / FRAMES_PER_SECOND, 2), fact: 'crossbow.reload' };
+  },
+  /** `crossbow-standing-seconds.<base|min>`: the same reload while standing still the whole time, in seconds */
+  'crossbow-standing-seconds': ([which], facts) => {
+    const field = CROSSBOW_RELOAD[which ?? ''];
+    const frames = recordFact(facts, 'crossbow.reload');
+    if (field === undefined || !Object.hasOwn(frames, field)) return null;
+    const speed = 1 + numberFact(facts, 'crossbow.standingReloadBonus') / 100;
+    return { text: formatNumber(frames[field] / FRAMES_PER_SECOND / speed, 2), fact: 'crossbow.standingReloadBonus' };
+  },
+  /** `crossbow-damage.<Total Crossbow Damage>`: the share of their final damage crossbow hits deal, with "%" */
+  'crossbow-damage': ([bonus], facts) => {
+    const value = numberPart(bonus);
+    if (!Number.isFinite(value)) return null;
+    return { text: `${formatNumber(100 + numberFact(facts, 'crossbow.damageBase') + value)}%`, fact: 'crossbow.damageBase' };
+  },
+  /** `greater-elixir-multiplier`: a Greater Elixir's effect as a multiple of the regular one, without "×" */
+  'greater-elixir-multiplier': (args, facts) =>
+    args.length > 0
+      ? null
+      : { text: formatNumber(numberFact(facts, 'utilityPotion.greaterPercent') / 100), fact: 'utilityPotion.greaterPercent' },
   /** `attack-rating-table`: the plugin author's own table, "ratio → chance, …" */
   'attack-rating-table': (args, facts) => {
     if (args.length > 0) return null;

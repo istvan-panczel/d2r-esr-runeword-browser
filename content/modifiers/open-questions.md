@@ -54,6 +54,15 @@
 15. **Elemental mastery on item elemental damage (Test)** — `elemental-mastery`
     The overflow-fix config says elemental damage "to attacks" goes through its mastery, as the 1.10 code does. Test: a melee character with +fire damage to attacks; does +% Fire Spell Damage raise the fire part of the weapon hit on the character screen?
 
+16. **Do the "Increased Effect of Socketed Runes" stats raise runeword bonuses? (Ask)** — `socket-effect`
+    jeweler.toml says the gem effect stats raise "the modifiers of the socketed items of its types"; for the Amplification and Runic Insight perks it says outright that a runeword's or gemword's bonus is not raised. Does the same hold for the rune stats (Rune Master, Lenymo, the superior affix)? Do crystals, which share the rune item type, count? Does the stat pool with Runic Insight? And what does `own_sockets` read: the item's own value of the stat, or the character's total?
+
+17. **Crossbow reload and weapon speed (Test)** — `crossbows`
+    The Attack skill's reload is (60 − e/3 + e²/8000) frames with e = 120 × IAS / (120 + IAS) + (attack rate − 100). The official Weapons page gives each crossbow its own base reload (Light Crossbow 2.16 seconds, not 2.4). Test: with no IAS, read the reload on the Attack skill with two crossbows of different speed.
+
+18. **Utility potion stats on a running elixir (Test)** — `utility-potions`
+    The misc.txt formulas read Utility Potion Effectiveness and Duration; are they read once when you drink, or do they follow gear swaps? Drink an Elixir of Luck, then equip or remove a Utility Potion Effectiveness item and watch the Magic Find on the character screen.
+
 ## Answered by the mod author (2026-11-07)
 
 - **Which damage leeches?** (`life-leech`, `mana-leech`): only physical damage, and only damage that goes through `srcdam` (weapon damage). (The damage-overflow-fix config, line 325, describes a "physical + fire + lightning + cold + magic" sum.)

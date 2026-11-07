@@ -21,7 +21,7 @@ To refill the counter, cube Dragon Stones into a :term[Token of Absolution] and 
 
 ::recipes[respec-token]
 
-The official cube page still shows an older recipe with two Tomes; the game files use the one above. Akara's quest reset still works and is not counted. Unlearning a specialization perk (3.3, shift-click the perk) takes five respecs from the same counter.
+The official cube page still shows an older recipe with two Tomes; the game files use the one above. Akara's quest reset still works and is not counted. Unlearning a specialization perk (3.3, shift-click the perk) takes five respecs from the same counter ([[specializations]]).
 
 ### Dying
 

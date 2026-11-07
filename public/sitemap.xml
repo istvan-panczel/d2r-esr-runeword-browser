@@ -56,6 +56,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/guide/elixirs</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/guide/endgame-bosses</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -132,6 +137,11 @@
   </url>
   <url>
     <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/guide/socketing</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/guide/specializations</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -50,9 +50,9 @@ ESR stacks many upgrades on one item. Some can be undone, some are random, and s
 4. **D-stone or gem meld, then Maple and repeat** on items you will keep ([[dstoning-and-mapling]]).
 5. **:term[Tinkering]** with organs, until the item's tinkering points run out ([[tinkering]]).
 6. **:term[Corruption]**, then **:term[Anointment]** ([[corruption-anointment]]). Corruption can turn the item into a random rare, so only corrupt what you can afford to lose.
-7. **Legendary consumables last:** Tyrael's Eternal Feather (ethereal), Lilith's Crystallized Tear (Spell Mastery), :term[Sanctify] for jewels and, since 3.3, rings and amulets (one random bonus, once per item), and Inarius' Everburning Halo, which gives back your item plus a :term[Branded] copy that can never be changed again.
+7. **Legendary consumables last:** Tyrael's Eternal Feather (ethereal), Lilith's Crystallized Tear (Spell Mastery), :term[Sanctify] for jewels and, since 3.3, with a Jeweler perk ([[specializations]]) rings and amulets (one random bonus, once per item), and Inarius' Everburning Halo, which gives back your item plus a :term[Branded] copy that can never be changed again.
 
-The recipe lists Tyrael's Eternal Feather for non-ethereal melee and thrown weapons, but an engine bug lets it work on an item that is already ethereal too, so check the item first or the feather is wasted. It does not work on missile weapons. <!-- verify: the 3.3 Specializations page makes ring and amulet sanctification the Jeweler perk Hallowed Accessories, but the cubemain Ring/Amulet Sanctification rows carry no perk condition; check in game without the perk -->
+The recipe lists Tyrael's Eternal Feather for non-ethereal melee and thrown weapons, but an engine bug lets it work on an item that is already ethereal too, so check the item first or the feather is wasted. It does not work on missile weapons. <!-- verify: cubemain.txt gates ring and amulet sanctification with the trap rows "Trap Ring/Amulet Sanctification - Requires Jewelcrafting 11" (op 6 on jeweler_11, output void); check in game that the relic does nothing on a ring without the perk -->
 
 ::recipes[legendary-consumables]
 
