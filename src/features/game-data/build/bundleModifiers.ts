@@ -53,6 +53,10 @@ export interface ModifiersInput {
   /** charstats.txt without its Expansion row */
   charstats: TsvTable;
   monstats: TsvTable;
+  /** misc.txt (the utility potions' duration and strength formulas) */
+  misc: TsvTable;
+  /** skills.txt (the Attack row's crossbow reload formula) */
+  skills: TsvTable;
   configs: Readonly<Partial<Record<EsrModifierConfig, string | null>>>;
   patches: Readonly<Partial<Record<EsrModifierPatch, string | null>>>;
 }
@@ -848,7 +852,183 @@ function configFacts(input: ModifiersInput, warnings: string[]): ModifierFact[] 
       });
   }
 
+  // crossbow-charges.toml: the bolt pool, the damage bonus, the fixed attack frames and the standing-still reload bonus
+  const xbow = read('crossbow-charges');
+  if (xbow !== null) {
+    numFact(xbow, 'crossbow_charges.default_max_bolts', {
+      key: 'crossbow.bolts',
+      label: 'Crossbow bolts',
+      unit: 'count',
+      note: 'Every crossbow skill cast spends one bolt; spent bolts reload one at a time. The max bolts stat adds to it (at least 1).',
+    });
+    numFact(xbow, 'crossbow_charges.damage_base', {
+      key: 'crossbow.damageBase',
+      label: 'Crossbow damage bonus',
+      unit: 'percent',
+      note: 'Hits of crossbow skills and what they trigger deal (100 + this + Total Crossbow Damage) % of their final damage.',
+    });
+    numFact(xbow, 'crossbow_charges.standing_reload_bonus', {
+      key: 'crossbow.standingReloadBonus',
+      label: 'Faster bolt reload while standing still',
+      unit: 'percent',
+      note: 'Applied after the reload time is worked out, so it goes past the minimum reload time.',
+    });
+    numFact(xbow, 'crossbow_charges.default_attack_frames', {
+      key: 'crossbow.attackFrames',
+      label: 'Crossbow attack frames',
+      unit: 'frames',
+      note: 'Every crossbow attack (and Mirrored Blades with a crossbow) takes this many frames whatever the attack speed.',
+    });
+    const stats = record(xbow, {
+      maxBolts: 'crossbow_charges.max_bolts_stat_id',
+      currentBolts: 'crossbow_charges.current_bolts_stat_id',
+      damage: 'crossbow_charges.damage_stat_id',
+      attackFrames: 'crossbow_charges.attack_frames_stat_id',
+    });
+    if (stats !== null) push(xbow, 'crossbow_charges', { key: 'crossbow.stats', label: 'Crossbow stat ids', value: stats, unit: 'stat' });
+  }
+
+  // extra-curses.toml: curses per target = 1 + the caster's stat
+  const curses = read('extra-curses');
+  if (curses !== null) {
+    numFact(curses, 'curses.stat_id', {
+      key: 'curses.extraStat',
+      label: 'Maximum Curses stat id',
+      unit: 'stat',
+      note: "Curses a caster can keep on one target = 1 + the caster's value of this stat. -1 = off.",
+    });
+    const replace = value(curses, 'curses.replace');
+    if (typeof replace === 'string')
+      push(curses, 'curses.replace', {
+        key: 'curses.replace',
+        label: 'Curse replaced on a full target',
+        value: replace,
+        note: '"oldest": the curse applied first (refreshing does not make it newer); "shortest_remaining": the one with the least time left.',
+      });
+    else if (replace !== undefined) warnings.push(`modifiers: ${curses.file} curses.replace is not a string`);
+  }
+
+  // jeweler.toml: the [[gem_effect]] stats (Increased Effect of Socketed Gems / Runes / Jewels) and the stats they raise
+  const jeweler = read('jeweler');
+  if (jeweler !== null) {
+    const typeNames: Readonly<Partial<Record<string, string>>> = { gem: 'gems', rune: 'runes', jewl: 'jewels' };
+    const effects: Record<string, number> = {};
+    for (let i = 0; jeweler.doc.has(`gem_effect[${String(i)}].stat_id`); i++) {
+      const at = (key: string) => jeweler.doc.get(`gem_effect[${String(i)}].${key}`)?.value;
+      const stat = at('stat_id');
+      const types = at('item_types');
+      if (at('enabled') === false || typeof stat !== 'number' || stat < 0) continue;
+      const type = Array.isArray(types) && types.length === 1 && typeof types[0] === 'string' ? typeNames[types[0]] : undefined;
+      if (type === undefined) {
+        warnings.push(`modifiers: ${jeweler.file} gem_effect[${String(i)}] has item types other than one of gem, rune, jewl`);
+        continue;
+      }
+      effects[at('own_sockets') === true ? `${type}InItem` : type] = stat;
+    }
+    if (Object.keys(effects).length > 0)
+      push(jeweler, 'gem_effect', {
+        key: 'socketEffect.stats',
+        label: 'Increased Effect of Socketed … stat ids',
+        value: effects,
+        unit: 'stat',
+        note: "Each raises the modifiers of the socketed items of its type by the character's value of the stat, in percent; …InItem only in the item that carries it.",
+      });
+    else warnings.push(`modifiers: ${jeweler.file} has no [[gem_effect]] stat`);
+    const raised = value(jeweler, 'socketed_gems.stats');
+    if (Array.isArray(raised))
+      push(jeweler, 'socketed_gems.stats', {
+        key: 'socketEffect.statCount',
+        label: 'Stats a socketed item effect raises',
+        value: raised.length,
+        unit: 'count',
+        note: "Amplification's stats list, which the gem effect stats and the gem perks share.",
+      });
+  }
+
   return facts;
+}
+
+/** Frames per second of the game: plugin and table durations are in frames */
+const FRAMES_PER_SECOND = 25;
+
+/** misc.txt utility potions (type or type2 `upot`): base duration, the Greater multiplier and the Alchemist perk bonus */
+function utilityPotionFacts(misc: TsvTable, warnings: string[]): ModifierFact[] {
+  const potions = misc.rows.filter((row) => row.str('type') === 'upot' || row.str('type2') === 'upot');
+  const durations = new Map<string, number>();
+  let greater: number | null = null;
+  let perk: number | null = null;
+  for (const row of potions) {
+    const name = row.str('name');
+    const len = /^(\d+)\*\(100\+stat\('utilitypotionduration'\.accr\)\)\/100$/.exec(row.str('len'));
+    // The Elixir of Reincarnation lasts until it triggers (len 2000000000): no utility duration
+    if (len === null) continue;
+    const group = ['relx', 'gelx'].includes(row.str('type2')) ? 'elixir' : name.replace(/ Potion$/, '').toLowerCase();
+    const frames = Number(len[1]);
+    const known = durations.get(group);
+    if (known === undefined) durations.set(group, frames);
+    else if (known !== frames)
+      warnings.push(`modifiers: misc.txt ${name} lasts ${String(frames)} frames, other ${group}s ${String(known)}`);
+    const calc = row.str('calc1');
+    const perkMatch = /\(stat\('alchemy_2'\.accr\)>0\)\*(\d+)/.exec(calc);
+    if (perkMatch !== null) perk ??= Number(perkMatch[1]);
+    const greaterMatch = /\)\*(\d+)\*\(100\+stat\('utilitypotionmultiplier'/.exec(calc);
+    if (row.str('type2') === 'gelx' && greaterMatch !== null) greater ??= Number(greaterMatch[1]);
+  }
+  const source = (key: string) => ({ origin: 'game-files' as const, source: { file: 'misc.txt', key } });
+  const facts: ModifierFact[] = [];
+  if (!durations.has('elixir')) warnings.push('modifiers: misc.txt has no utility elixir with a utilitypotionduration length');
+  else
+    facts.push({
+      key: 'utilityPotion.duration',
+      label: 'Utility potion duration',
+      value: Object.fromEntries(durations),
+      unit: 'frames',
+      ...source('len'),
+      note: `Frames (${String(FRAMES_PER_SECOND)} a second) × (100 + Utility Potion Duration) / 100.`,
+    });
+  if (greater === null) warnings.push('modifiers: misc.txt Greater Elixirs have no multiplier in calc1');
+  else
+    facts.push({
+      key: 'utilityPotion.greaterPercent',
+      label: 'Greater Elixir strength, % of the regular elixir',
+      value: greater,
+      unit: 'percent',
+      ...source('calc1'),
+    });
+  if (perk === null) warnings.push('modifiers: misc.txt utility potions do not read the alchemy_2 perk');
+  else
+    facts.push({
+      key: 'utilityPotion.perkPercent',
+      label: 'Volatile Concoctions perk bonus to utility potions',
+      value: perk,
+      unit: 'percent',
+      ...source('calc1'),
+      note: 'Added to Utility Potion Effectiveness while the Alchemist perk (alchemy_2) is learned.',
+    });
+  return facts;
+}
+
+/** skills.txt Attack calc4: the crossbow reload (frames) every crossbow skill's global delay reads */
+function crossbowReloadFacts(skills: TsvTable, warnings: string[]): ModifierFact[] {
+  const attack = skills.rows.find((row) => row.str('skill') === 'Attack');
+  const match = /^max\((\d+)\*\(100-stat\('crossbowreloadspeedlimit'\.accr\)\)\/100,\((\d+)-clc5\/3/.exec(attack?.str('calc4') ?? '');
+  if (match === null) {
+    warnings.push('modifiers: skills.txt Attack calc4 is not the crossbow reload formula');
+    return [];
+  }
+  return [
+    {
+      key: 'crossbow.reload',
+      label: 'Crossbow reload time',
+      value: { baseFrames: Number(match[2]), minFrames: Number(match[1]) },
+      unit: 'frames',
+      origin: 'game-files',
+      source: { file: 'skills.txt', key: 'Attack calc4' },
+      note:
+        'max(minFrames × (100 − reload limit reduction) / 100, (baseFrames − e / 3 + e² / 8000) × (100 − faster reload) / 100), ' +
+        'e = 120 × IAS / (120 + IAS) + attack rate bonus.',
+    },
+  ];
 }
 
 function patchFacts(input: ModifiersInput, warnings: string[]): ModifierFact[] {
@@ -1220,6 +1400,8 @@ export function buildModifiersBundle(input: ModifiersInput): ModifiersResult {
     ...difficultyFacts(input.difficultylevels, warnings),
     ...charStatsFacts(input.charstats, warnings),
     ...monsterFacts(input.monstats),
+    ...utilityPotionFacts(input.misc, warnings),
+    ...crossbowReloadFacts(input.skills, warnings),
     ...configFacts(input, warnings),
     ...patchFacts(input, warnings),
     ...engineFacts(),

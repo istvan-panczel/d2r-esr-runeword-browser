@@ -17,7 +17,7 @@ export interface ContentKinds {
 export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
   'deadly-strike': { kinds: ['deadly-strike'] },
   'critical-damage': { kinds: ['critical-damage'] },
-  'crushing-blow': { kinds: ['crushing-blow'] },
+  'crushing-blow': { kinds: ['crushing-blow', 'stat-crushingblow-damage'] },
   bleed: { kinds: ['bleed', 'open-wounds'] },
   'life-leech': { kinds: ['life-leech'] },
   'mana-leech': { kinds: ['mana-leech'] },
@@ -50,7 +50,7 @@ export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
   frw: { kinds: ['frw'] },
   dodge: { kinds: ['dodge'] },
   'magic-find': { kinds: ['magic-find'] },
-  'gold-find': { kinds: ['gold-find'] },
+  'gold-find': { kinds: ['gold-find', 'stat-total-gold-found'] },
   'item-quantity': { kinds: ['extra-items'] },
   'cooldown-reduction': { kinds: ['skill-cooldown'] },
   'elemental-mastery': { kinds: ['elemental-mastery'] },
@@ -64,6 +64,9 @@ export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
       'stat-passive-summ-phys-resist',
       'stat-passive-summ-limit',
       'stat-summonexceedcap',
+      'stat-raven-limit',
+      'stat-spirit-wolf-limit',
+      'stat-dire-wolf-limit',
     ],
     category: 'skills',
   },
@@ -83,6 +86,27 @@ export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
   'light-radius': { kinds: ['stat-item-lightradius'], category: 'other' },
   requirements: { kinds: ['stat-item-req-percent', 'stat-item-levelreq'], category: 'other' },
   'rare-procs': { kinds: ['prevent-heal', 'stat-item-stupidity', 'monster-flee'] },
+  crossbows: {
+    kinds: [
+      'stat-item-crossbowpassive',
+      'stat-crossbowreloadspeed',
+      'stat-totalcrossbowbolts',
+      'stat-totalcrossbowdamage',
+      'stat-crossbowreloadspeedlimit',
+    ],
+    category: 'offense',
+  },
+  'extra-curses': { kinds: ['stat-extra-curse'], category: 'skills' },
+  'socket-effect': {
+    kinds: [
+      'stat-gem-effect',
+      'stat-rune-effect',
+      'stat-gem-effect-current-item',
+      'stat-rune-effect-current-item',
+      'stat-jewel-effect-current-item',
+    ],
+  },
+  'utility-potions': { kinds: ['stat-utilitypotionmultiplier', 'stat-utilitypotionduration'], category: 'resources' },
 };
 
 /** Key kinds that have no hand-written text yet: they get the generated entry */
@@ -127,6 +151,16 @@ export const KIND_FACTS: Readonly<Partial<Record<string, readonly string[]>>> = 
   'curse-resist': ['difficulty.AiCurseDivisor'],
   'stat-item-addexperience': ['difficulty.DeathExpPenalty'],
   'stat-passive-summ-elemental-resist': ['summonResistCap.enabled', 'summons.primeEvilDamage', 'difficulty.PlayerDamagePercentVSPrimeEvil'],
+  'stat-item-crossbowpassive': [
+    'crossbow.bolts',
+    'crossbow.damageBase',
+    'crossbow.standingReloadBonus',
+    'crossbow.reload',
+    'crossbow.stats',
+  ],
+  'stat-extra-curse': ['curses.extraStat', 'curses.replace'],
+  'stat-gem-effect': ['socketEffect.stats', 'socketEffect.statCount'],
+  'stat-utilitypotionmultiplier': ['utilityPotion.duration', 'utilityPotion.greaterPercent', 'utilityPotion.perkPercent'],
 };
 
 export type ModifierCalculator = 'leech' | 'magic-find' | 'hit-chance' | 'crushing-blow';

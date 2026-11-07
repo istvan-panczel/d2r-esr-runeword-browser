@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom';
 import { ExternalLink } from '@/components/ExternalLink';
 import type { RichLine } from '../utils/modifiersView';
 import { SourceBadge } from './SourceBadge';
 
 /**
- * One resolved content line: text, `code`, **bold**, links and the source badges after each claim. `badgeDetails`:
+ * One resolved content line: text, `code`, **bold**, links (an app path as a router link) and the source badges after each claim. `badgeDetails`:
  * a badge with a detail ("D2MOO SUnitDmg.cpp:…") opens it on click or tap; off inside a link (the list cards).
  */
 export function RichText({ line, badgeDetails = true }: { readonly line: RichLine; readonly badgeDetails?: boolean }) {
@@ -28,6 +29,13 @@ export function RichText({ line, badgeDetails = true }: { readonly line: RichLin
               </strong>
             );
           case 'link':
+            // An app path (`[Elixirs](/elixirs)`) stays in the app; anything else opens in a new tab
+            if (token.href.startsWith('/'))
+              return (
+                <Link key={key} to={token.href} className="break-words text-primary hover:underline">
+                  {token.text}
+                </Link>
+              );
             return (
               <ExternalLink key={key} href={token.href} className="break-words text-primary hover:underline" iconClassName="inline size-3">
                 {token.text}
