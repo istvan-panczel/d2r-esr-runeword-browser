@@ -26,9 +26,15 @@ In ESR almost every upgrade is a cube recipe. The official Cube Recipes page is 
 
 - **Forging:** most recipes that reroll the input ignore items with a Forging; remove it first ([[forging]]).
 - **Level limits:** D-stoning stops once the item's level requirement penalty is too high ([[dstoning-and-mapling]]).
-- **Order:** base-upgraded uniques cannot be rerolled (sets must be converted back first), and uniques lose added sockets when rerolled ([[enhancement-order]]).
+- **Order:** base-upgraded uniques cannot be rerolled (sets must be converted back first), and uniques lose added sockets when rerolled ([[enhancement-order]]). Level 92 unique jewels and quivers cannot be rerolled at all.
 - **Branded** items cannot be changed by any recipe.
 - **Too much in the cube:** older guides warn that more than 100 items can crash the game ([[avoid-disasters]]).
+
+### Rerolling rings and amulets
+
+- When several rings or amulets go in together, the last one you put in the cube decides the type: a ring, an Amazon ring and a Sorceress ring, in that order, give a new Sorceress ring.
+- The new item's level comes from your character level; if it is below the level of the unique it rolled, you get a rare instead.
+- A non-class unique ring or amulet needs a character level above 15, a class-specific one above 57.
 
 ### Faster cubing
 
