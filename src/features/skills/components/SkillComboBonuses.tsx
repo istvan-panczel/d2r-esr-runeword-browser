@@ -13,19 +13,17 @@ interface SkillComboBonusesProps {
   readonly renderSkill?: (skill: SkillComboSkill & { readonly id: string }) => ReactNode;
   /** A build's hard points per skill id: each bonus says whether the build reaches it */
   readonly pointsOf?: (id: string) => number;
-  /** Smaller text (the skill peek) */
-  readonly compact?: boolean;
 }
 
 /**
  * The tooltip's "If both A and B have 20 levels:" bonuses in an amber box: the condition (other skills as links), the
  * bonus, on a build whether it is reached. ESR's formulas read the skills' hard points (docs/features/SKILLS.md).
  */
-export function SkillComboBonuses({ combos, skillId, renderSkill, pointsOf, compact = false }: SkillComboBonusesProps) {
+export function SkillComboBonuses({ combos, skillId, renderSkill, pointsOf }: SkillComboBonusesProps) {
   return (
     <section
       aria-label={combos.length === 1 ? 'Combo bonus' : 'Combo bonuses'}
-      className={cn('space-y-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2', compact ? 'text-xs' : 'text-sm')}
+      className={'space-y-2 rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm'}
     >
       {keyed(combos, (combo) => combo.condition).map(({ key, value: combo }, i) => (
         <div key={key} className={cn('space-y-0.5', i > 0 && 'border-t border-amber-500/30 pt-2')}>

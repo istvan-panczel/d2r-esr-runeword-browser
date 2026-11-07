@@ -496,8 +496,7 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
 Skill names in item property lines are links with a peek (`utils/skillRefs.ts`, `components/SkillRefText.tsx`): hover
 (mouse), focus (keyboard) or a first tap (touch) opens a small card with the skill's icon, name (+ the id suffix of
 same-name skills), class or "Item skill", what the line gives, the first sentence of the ESR skill information page
-when the skill has no description (`firstSentence`: Warm Up, the surges, …), the combo bonuses (the card's amber box in
-`text-xs`, names as plain text), the first one or two per-level values that vary (as in
+when the skill has no description (`firstSentence`: Warm Up, the surges, …), the first one or two per-level values that vary (as in
 "Granted by": mana left out, no synergies, character level 110) and "Open in Skills →". A click (or a second tap on the
 same name) opens `/skills?skill=<id>&lvl=<N>` (`lvl` omitted at 20). The values are picked like "Granted by"'s
 (`headlineKeys`: damage lines first).
@@ -598,7 +597,7 @@ src/features/skills/
   components/SkillTreeTab.tsx      one tab grid (optional point count in the title)
   components/SkillTile.tsx         one tile (optional corner badge, dimmed state)
   components/SkillDetailCard.tsx   the card: header, combo bonuses, Values / Items / About tabs, pinned level bar (optional slot after the header, optional `levels` config, optional `comboPoints`)
-  components/SkillComboBonuses.tsx the amber combo bonus box (card, peek; a build's active / not active line)
+  components/SkillComboBonuses.tsx the amber combo bonus box (card only, not the peek: owner 2026-11-07; a build's active / not active line)
   utils/comboBonuses.ts            comboSegments (condition around the skill names), comboStatus (a build's hard points)
   components/SkillLevelValues.tsx  the Values tab: level bar, character level, synergies slot, values list, All levels dialog
   components/LevelInput.tsx        compact integer input and the − / + LevelStepper (levels, synergy points, +skills from gear)

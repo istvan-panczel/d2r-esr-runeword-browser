@@ -6,7 +6,6 @@ import { useSkillRefIndex } from '../hooks/useSkillRefIndex';
 import { headlineKeys, headlineTexts, QUICK_LEVELS } from '../utils/skillLevels';
 import { disambiguation, firstSentence } from '../utils/skills';
 import { CLASS_NAMES, skillRefLevel, skillRefText, skillRefUrl, type SkillRef } from '../utils/skillRefs';
-import { SkillComboBonuses } from './SkillComboBonuses';
 import { SkillIcon } from './SkillIcon';
 
 /** The first one or two per-level lines that vary (mana left out) at a level, as the Skills page's "Granted by" shows them */
@@ -19,7 +18,7 @@ function headlineValues(record: SkillCalcSkill, index: SkillCalcIndex, level: nu
 
 /**
  * The skill peek of an item line: icon, name, class, what the line gives, the first sentence of ESR's skill information
- * page when the skill has no description, its combo bonuses, the headline values at its level (the
+ * page when the skill has no description, the headline values at its level (the
  * calculator; skillcalc.json loads with the first peek) and a link to the Skills page at that level (`newTab`: in a new
  * tab, for names inside a form whose edits would be lost).
  */
@@ -52,7 +51,6 @@ export function SkillPeekCard({ skillRef, newTab = false }: { readonly skillRef:
       </div>
       {skillRef.kind !== 'mention' && <p className="text-xs">{skillRefText(skillRef)}</p>}
       {infoText !== undefined && <p className="text-xs text-muted-foreground">{firstSentence(infoText)}</p>}
-      {skill.comboBonuses !== undefined && <SkillComboBonuses combos={skill.comboBonuses} skillId={skill.id} compact />}
       {calc.status === 'loading' && <p className="text-xs text-muted-foreground">Loading the values…</p>}
       {values.length > 0 && (
         <div className="text-xs">
