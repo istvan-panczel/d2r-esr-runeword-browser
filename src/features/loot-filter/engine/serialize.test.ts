@@ -184,4 +184,23 @@ describe('serializeLootFilter', () => {
       { at: 0, rule: { itemCodes: ['r01'] } },
     ]);
   });
+
+  it('leaves the languages emptied in the editor out of the file, keeping a per-language text an object', () => {
+    const filter: LootFilter = {
+      ...base,
+      filterLevels: [{ id: 1, name: { enUS: '', deDE: 'Leveln' } }],
+      notifications: { dropFormat: { enUS: 'x', frFR: '' }, levelChangeFormat: 'Level {level}' },
+      styles: { Rune: { namePrefix: { enUS: '' } } },
+      rules: [{ itemCodes: ['r01'], hide: false, chatMessage: { enUS: 'Rune', deDE: '' }, nameSuffix: 'plain' }],
+    };
+    const plain = toPlainJson(filter);
+    expect(plain.filterLevels).toEqual([{ id: 1, name: { deDE: 'Leveln' } }]);
+    expect(plain.notifications).toEqual({ dropFormat: { enUS: 'x' }, levelChangeFormat: 'Level {level}' });
+    expect(plain.styles).toEqual({ Rune: { namePrefix: { enUS: '' } } });
+    const [rule] = plain.rules as Record<string, unknown>[];
+    expect(rule).toEqual({ itemCodes: ['r01'], hide: false, chatMessage: { enUS: 'Rune' }, nameSuffix: 'plain' });
+    // The keys keep their canonical place
+    const asStrings = toPlainJson({ ...filter, rules: [{ itemCodes: ['r01'], hide: false, chatMessage: 'Rune', nameSuffix: 'plain' }] });
+    expect(Object.keys(rule ?? {})).toEqual(Object.keys((asStrings.rules as Record<string, unknown>[])[0] ?? {}));
+  });
 });

@@ -73,11 +73,12 @@ describe('per-language texts', () => {
     expect(Object.keys(withLanguage({ deDE: 'a', enUS: 'b' }, 'deDE', 'c'))).toEqual(['deDE', 'enUS']);
   });
 
-  it('prunes the emptied languages, keeping the object when nothing is empty', () => {
+  it('prunes the emptied languages, keeping the object when nothing is empty and an object when all are', () => {
     const full = { enUS: 'a', deDE: 'b' };
     expect(pruneEmptyLanguages(full)).toBe(full);
     expect(pruneEmptyLanguages({ enUS: '', deDE: 'b' })).toEqual({ deDE: 'b' });
-    expect(pruneEmptyLanguages({ enUS: '' })).toBeUndefined();
+    expect(pruneEmptyLanguages({ enUS: '' })).toEqual({ enUS: '' });
+    expect(pruneEmptyLanguages({ deDE: '', frFR: '' })).toEqual({ deDE: '' });
   });
 
   it('shows enUS, else the first language of the file', () => {

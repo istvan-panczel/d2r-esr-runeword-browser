@@ -22,11 +22,19 @@ export function withLanguage(text: LocalizedText, language: Language, value: str
   return Object.fromEntries(entries) as LocalizedText;
 }
 
-/** `text` without its empty languages (the editor's emptied fields); undefined when none is left. */
-export function pruneEmptyLanguages(text: LocalizedText): LocalizedText | undefined {
+/**
+ * `text` without its empty languages (the editor's emptied fields), as the file is written. A text whose languages are
+ * all empty stays an object with its shown language as `''`.
+ */
+export function pruneEmptyLanguages(text: LocalizedText): LocalizedText {
   const entries = Object.entries(text).filter(([, value]) => value !== '');
   if (entries.length === Object.keys(text).length) return text;
-  return entries.length === 0 ? undefined : Object.fromEntries(entries);
+  return entries.length === 0 ? { [shownLanguage(text)]: '' } : Object.fromEntries(entries);
+}
+
+/** A text as the file writes it: a string as is, a per-language one without its emptied languages. */
+export function fileText(text: FilterText): FilterText {
+  return typeof text === 'string' ? text : pruneEmptyLanguages(text);
 }
 
 /** The language a per-language text shows by default (`resolveText` without a language): enUS, else its first one. */

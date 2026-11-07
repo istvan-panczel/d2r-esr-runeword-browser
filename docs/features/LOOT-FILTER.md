@@ -145,10 +145,12 @@ then run `lootfilter` in the game console and read
   languages. Before, the parser accepted only a string, so the whole `filterLevels` went to `passthrough` with an error
   and every `activeInLevels` then errored (96 diagnostics on v0.7.0). `levelName` (`engine/text.ts`) gives the enUS
   name for the level pickers (rule editor, Test tab in its game language, default level) and the library cards; the
-  Settings name field edits the enUS text of a per-language name and keeps the other languages ("enUS; +10
-  languages", the rest in the JSON tab). Every other text field (names, chat lines, notifications) has a language
-  select instead (`ColorTextField`, `withLanguage`): it edits one language, keeps the others and the key order, and
-  "Add <lang>" starts from the enUS text.
+  Settings name field edits the language a per-language name shows (`shownLanguage`: enUS, else the file's first) and
+  keeps the other languages ("enUS; +10 languages", the rest in the JSON tab). Every other text field (names, chat
+  lines, notifications) has a language select instead (`ColorTextField`, `withLanguage`): it edits one language, keeps
+  the others and the key order, and "Add <lang>" starts from the enUS text. An emptied language stays in the model as
+  `''`, so the field stays on it while typing; the file leaves it out (`pruneEmptyLanguages` in `toPlainJson`), and a
+  text whose languages are all empty stays an object (`{ "enUS": "" }`).
   Shared filters keep the object in `loot_filters.levels` (`levelJson`; `readLevels` accepts a string or an object of
   known languages; the 4 KB check counts the nested object's separators as Postgres prints them).
 - **Text notes** (`textNotes` in `engine/parse.ts`, returned by `parseLootFilter` as `notes`, apart from `diagnostics`):
@@ -569,8 +571,7 @@ fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 Settings changes dispatch the slice reducers directly; the only local state is what a half-typed number needs
 (`NumberInput`: a text input with a numeric keyboard that commits only valid numbers, so "-" or "1." is kept as typed
 and does not clear the key). Form rows share `Field` (label, control, hint; `dense` in the Test tab) and `CheckField`
-(`components/Field.tsx`); the actions editor and the test result share `actions/Section.tsx`. A per-language text (`{ "enUS": …, "deDE": … }`) is shown read-only with "multi-language text, edit in
-the JSON tab". Unknown keys appear in the problems list as warnings: they travel through unchanged, but only the JSON tab
+(`components/Field.tsx`); the actions editor and the test result share `actions/Section.tsx`. A per-language text (`{ "enUS": …, "deDE": … }`) gets a language select (see Settings above). Unknown keys appear in the problems list as warnings: they travel through unchanged, but only the JSON tab
 can edit them.
 
 ## Rules tab (`components/RulesTab.tsx`, `components/rules/`, `components/pickers/`)
@@ -1210,7 +1211,7 @@ and the placeholders of the field's context (`names` for names, `chat` for chat 
 `levelChangeFormat` for the Settings tab's notification lines); the token goes in at the caret
 (`utils/insertAtCaret.ts`) and, once the menu has closed, the field gets the focus back with the caret after the token
 (the popover's `onCloseAutoFocus` is prevented, else Radix would focus the menu button). Below the field a small preview; a `{...}` token the guide does not know, or one that does
-not work in that context, gets a hint. Per-language texts are read-only ("multi-language text, edit in the JSON tab").
+not work in that context, gets a hint. Per-language texts get a language select.
 `ColorControl` is a native colour input + optional alpha slider + `[r, g, b(, a)]` readout + clear
 (`utils/colorValues.ts`).
 
