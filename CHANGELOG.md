@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.61.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.60.1...v1.61.0) (2026-11-07)
+
+### Features
+
+* **game-data:** read skill combo bonuses and the old synergy layouts from skilldesc ([e15607f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e15607f0080ed4b87f20431d1a8cada28e54e273))
+* **game-data:** resolve fanatic swing's elemental armors combo to the three armors ([fffca25](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fffca2539155d41437a41fbab0fccfed621861d5))
+* **skills:** show skill combo bonuses in an amber box above the card tabs ([19f5571](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/19f5571a5ee9f12ff079abacb6ee414f69093b70))
+
+### Bug Fixes
+
+* **skills:** drop the icon and heading from the combo bonus box ([640726f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/640726f6999bd98843b5bcedd74a5e8e8feb9979))
+* **skills:** leave the combo bonuses out of the skill peek ([d10a3ca](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d10a3cae65665a8ed884ca155cce7d05d2a991a1))
+
 ## [1.60.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.60.0...v1.60.1) (2026-11-07)
 
 ### Bug Fixes
