@@ -5,7 +5,7 @@ summary: Endgame Maps, their tiers and bosses, and the Pandemonium keys that lea
 tags: [endgame]
 aliases: [maps, endgame maps, map tiers, keys, pandemonium keys, uber keys, uber tristram, mythical, mythicals]
 knowFirst: [endgame-roadmap]
-related: [ascendancies, corruption-anointment, vessel-of-souls, weapon-mastery, kill-ledger]
+related: [endgame-bosses, ascendancies, corruption-anointment, vessel-of-souls, weapon-mastery]
 volatility: high
 mentions:
   [
@@ -25,11 +25,11 @@ officialDocs:
 sources: [official-docs, official-cube, esr-txt]
 ---
 
-An :term[Endgame map] is an item you cube alone in Act 5 Hell to open a high-level zone with a boss. There are five tiers, and maps upgrade and reroll in the cube:
+An :term[Endgame map] is an item you cube alone in Act 5 Hell to open a high-level zone, most of them with a boss ([[endgame-bosses]]). There are five tiers, and maps upgrade and reroll in the cube:
 
 ::recipes[map-upgrade]
 
-Map bosses drop higher maps, [Orbs of Anointment](<dropfinder:Orb of Anointment>) ([[corruption-anointment]]), Weapon Mastery Tokens ([[weapon-mastery]]) and Primordial Soulstones for [[ascendancies]], and each boss kill can feed your [[kill-ledger]]. Maps are also the only source of :term[Mythical unique]s; some come from one boss only, such as Frostmourne from the Lich King:
+Map bosses drop higher maps, [Orbs of Anointment](<dropfinder:Orb of Anointment>) ([[corruption-anointment]]), Weapon Mastery Tokens ([[weapon-mastery]]) and Primordial Soulstones for [[ascendancies]], and each boss kill can feed your [[kill-ledger]]; [[endgame-bosses]] lists every boss with its chances. Maps are also the only source of :term[Mythical unique]s; some come from one boss only, such as Frostmourne from the Lich King:
 
 ::card[mythical:Frostmourne]
 

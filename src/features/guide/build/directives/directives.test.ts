@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { MapBoss } from '../../../game-data/engine/schema.ts';
 import type { GuideContext } from '../context.ts';
 import { fixtureContext, fixtureEsr } from '../testContext.mock.ts';
 import { formatInput } from '../../../game-data/build/cube/cubeText.ts';
@@ -270,5 +271,65 @@ describe('card', () => {
     expect(resolve('card', 'rw:')).toHaveProperty('error');
     expect(resolve('card', null)).toHaveProperty('error');
     expect(resolve('card', 'rw:Enigma', fixtureContext(), { size: 'big' })).toHaveProperty('error');
+  });
+});
+
+describe('map-bosses', () => {
+  const boss = (id: string, name: string, tier: number, extra: Partial<MapBoss> = {}): MapBoss => ({
+    id,
+    name,
+    arenas: [1],
+    tier,
+    treasureClass: 'TC',
+    rewards: [
+      { kind: 'orb', label: 'Orb of Anointment', chance: [0.05, 0.098] },
+      { kind: 'map', label: 'Tier 2 map', chance: [0.25, 0.5], tiers: [2] },
+      { kind: 'key', label: 'Pandemonium key', chance: [0.25, 0.5] },
+      { kind: 'token', label: 'Weapon Mastery Token', chance: [0.25, 0.25] },
+      { kind: 'soulstone', label: 'Primordial Soulstone', chance: [1, 1], condition: "stat('x')<10" },
+    ],
+    otherRolls: 6,
+    terrorShards: 1,
+    ...extra,
+  });
+  const ctx = (): GuideContext => ({
+    ...fixtureContext(),
+    mapBosses: [
+      boss('a', 'Whisper', 1),
+      boss('b', 'Hellhound', 1),
+      boss('c', 'Angel', 1, { terrorShards: null }),
+      boss('d', 'Mephisto', 5, {
+        rewards: [
+          { kind: 'item', label: 'Demonic Brain', chance: [1, 1] },
+          { kind: 'key', label: 'Pandemonium key', chance: [0.5, 0.9545], expected: 1.5 },
+        ],
+      }),
+    ],
+  });
+
+  it('lists a tier’s bosses, sharing a row when the rewards match, the shared drops in the caption', () => {
+    expect(resolve('map-bosses', '1', ctx())).toEqual({
+      kind: 'table',
+      caption:
+        'Tier 1 map bosses in Hell, players 1 (players 8). Each also drops: Weapon Mastery Token 25%; Primordial Soulstone always (until you have collected 10)',
+      header: ['Boss', 'Orb of Anointment', 'Map', 'Key', 'Shards when terrorized'],
+      rows: [
+        ['Whisper, Hellhound (each)', '5% (9.8%)', 'Tier 2 25% (50%)', '25% (50%)', '+1'],
+        ['Angel', '5% (9.8%)', 'Tier 2 25% (50%)', '25% (50%)', 'no terrorized table'],
+      ],
+    });
+  });
+
+  it('adds a named-drop column and marks key sets', () => {
+    expect(resolve('map-bosses', '5', ctx())).toMatchObject({
+      header: ['Boss', 'Orb of Anointment', 'Map', 'Key', 'Named drop', 'Shards when terrorized'],
+      rows: [['Mephisto', '–', '–', '50% (95.5%) (a set)', 'Demonic Brain always', '+1']],
+    });
+  });
+
+  it('needs a tier with bosses and areas.json', () => {
+    expect(resolve('map-bosses', null, ctx())).toHaveProperty('error');
+    expect(resolve('map-bosses', '3', ctx())).toHaveProperty('error');
+    expect(resolve('map-bosses', '1', { ...fixtureContext(), mapBosses: null })).toHaveProperty('error');
   });
 });
