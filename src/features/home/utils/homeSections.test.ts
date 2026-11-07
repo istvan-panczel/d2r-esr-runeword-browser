@@ -26,12 +26,9 @@ describe('getHomeSections', () => {
     }
   });
 
-  it('shows the guide card as Start here + Note map', () => {
+  it('shows the guide card with its one overview link', () => {
     const guide = getHomeSections(true).find((s) => s.key === 'guide');
-    expect(guide?.links.map((l) => [l.label, l.to])).toEqual([
-      ['Start here', '/guide'],
-      ['Note map', '/guide/map'],
-    ]);
+    expect(guide?.links.map((l) => [l.label, l.to])).toEqual([['Guide', '/guide']]);
   });
 
   it('drops Builds without Supabase', () => {

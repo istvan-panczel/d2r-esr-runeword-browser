@@ -16,7 +16,10 @@ interface GuideStartCardsProps {
   readonly bundle: GuideBundle;
 }
 
-/** Task-shaped entry cards at the top of `/guide`: the questions new players arrive with, each linked to a note or page. */
+/**
+ * NOT RENDERED (kept on purpose, 2026-11-07): `/guide` became a single overview of every note, without entry cards.
+ *
+ * Task-shaped entry cards that sat at the top of `/guide`: the questions new players arrive with, each linked to a note or page. */
 export function GuideStartCards({ bundle }: GuideStartCardsProps) {
   const cards = visibleStartCards(bundle);
   if (cards.length === 0) return null;

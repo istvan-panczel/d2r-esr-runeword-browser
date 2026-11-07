@@ -316,10 +316,6 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
   {
     kind: 'link',
     item: { key: 'guide', to: '/guide', label: 'Guide', description: 'New-player guide: what ESR changes and where to go next' },
-    homeLinks: [
-      { key: 'guide', to: '/guide', label: 'Start here' },
-      { key: 'guide-map', to: '/guide/map', label: 'Note map' },
-    ],
   },
   {
     kind: 'link',

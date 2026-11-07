@@ -6,9 +6,10 @@ function locs(xml: string): string[] {
 }
 
 describe('buildSitemap', () => {
-  it('lists the static routes with the notes sorted after /guide/map', () => {
+  it('lists the static routes with the notes sorted after /guide', () => {
     const paths = locs(buildSitemap(['start-here', 'glossary']));
-    expect(paths.slice(0, 5)).toEqual(['/', '/guide', '/guide/map', '/guide/glossary', '/guide/start-here']);
+    expect(paths.slice(0, 4)).toEqual(['/', '/guide', '/guide/glossary', '/guide/start-here']);
+    expect(paths).not.toContain('/guide/map');
     expect(paths).toContain('/runewords');
     expect(paths).toContain('/loot-filters');
     expect(paths).toContain('/game-data/bases');
