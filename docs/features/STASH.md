@@ -103,10 +103,10 @@ Per row (`CouponTable`):
 | Tier            | the shared `TierBadge` of the coupon type's base tier (`couponTiers[].tier`, from the bases' tier families; the itemtypes name as text without one)                                |
 | Where           | every location, "Page N · row R, col C" (1-based: page = section + 1, row = y + 1, col = x + 1); just "Materials tab" there                                                        |
 
-- **Need** comes from the data (`qty` of the coupon-only recipe, 3 for every ESR 3.2.24 coupon), never a constant.
+- **Need** comes from the data (`qty` of the coupon-only recipe, 3 for every ESR 3.3 coupon), never a constant.
 - **Crafts** = ⌊have / need⌋. **Ready with Wild Cards**: no craft with coupons alone, but have ≥ the alternative's
   coupons and the stash has at least its Wild Cards, and the recipe is not `suspect` (stash.json flags a row whose
-  `numinputs` differs from its item count: ESR 3.2.24's `06j`). Each row is judged on its own; rows marked this way
+  `numinputs` differs from its item count: none in ESR 3.3, 3.2.24's `06j`). Each row is judged on its own; rows marked this way
   share the same Wild Cards.
 - **Materials tab**: its items have no grid cell; their x / y mostly spell the stack count (x + 16 · y equals
   `stackSize` for 229 of 253 items in the fixture, and is 1–9 lower for the rest), so only the tab is shown.

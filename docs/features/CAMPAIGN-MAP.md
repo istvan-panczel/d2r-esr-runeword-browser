@@ -30,7 +30,7 @@ PageShell "Campaign Map"   meta: what it covers, ESR version
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ┌ map card ───────────────────────────────┐ ┌ side column, sticky, 20rem ──┐
 │ CampaignMapCanvas (role: engine + SVG)  │ │ area detail (selected)       │
-│ stamp "Act III · ESR 3.2.24 · …"        │ │ or the section's notes       │
+│ stamp "Act III · ESR 3.3 · …"           │ │ or the section's notes       │
 │ legend: areas · paths · marks           │ │                              │
 └─────────────────────────────────────────┘ └──────────────────────────────┘
 ```

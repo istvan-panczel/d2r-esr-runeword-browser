@@ -275,8 +275,8 @@ Opens from the right side when the cog icon is clicked.
 │                             │  [Force Refresh Data]         │
 │                             │                               │
 │                             │  App Version: 1.12.1          │
-│                             │  Game files: ESR 3.2.24 (...) │
-│                             │  Docs data: ESR 3.2.24 · ...  │
+│                             │  Game files: ESR 3.3 (...)    │
+│                             │  Docs data: ESR 3.3 · ...     │
 │                             │  Last updated: 12/21/2025     │
 │                             │─────────────────────────────── │
 │                             │  Credits                      │
