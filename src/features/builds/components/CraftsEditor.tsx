@@ -36,7 +36,7 @@ export function CraftsEditor({ slot, item, crafts, craftData, onChange, disabled
     <div className="flex flex-wrap items-center gap-1.5">
       <span className="text-xs font-medium text-muted-foreground">Crafting</span>
       {crafts.map((craft, index) => {
-        const rendered = renderCraft(craft, family, craftData.lookups);
+        const rendered = renderCraft(craft, family, craftData.lookups, item);
         const stacking = craft.kind === 'dstone' || craft.kind === 'meld';
         return (
           <Badge
@@ -114,11 +114,14 @@ interface CraftPickerProps {
 function CraftPicker({ slot, item, crafts, craftData, disabled, onSelect }: CraftPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  // The anointment pool picked first when the item's base is unknown (several item type pools)
+  const [pool, setPool] = useState<string | undefined>(undefined);
 
   const select = (craft: CraftAnnotation) => {
     onSelect(craft);
     setOpen(false);
     setQuery('');
+    setPool(undefined);
   };
 
   return (
@@ -126,7 +129,10 @@ function CraftPicker({ slot, item, crafts, craftData, disabled, onSelect }: Craf
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) setQuery('');
+        if (!next) {
+          setQuery('');
+          setPool(undefined);
+        }
       }}
     >
       <PopoverTrigger asChild>
@@ -140,7 +146,19 @@ function CraftPicker({ slot, item, crafts, craftData, disabled, onSelect }: Craf
           <CommandInput placeholder="Forging, D-stone, meld, corruption..." value={query} onValueChange={setQuery} />
           <CommandList>
             {craftData.status === 'ready' ? (
-              <CraftOptions slot={slot} item={item} crafts={crafts} lookups={craftData.lookups} query={query} onSelect={select} />
+              <CraftOptions
+                slot={slot}
+                item={item}
+                crafts={crafts}
+                lookups={craftData.lookups}
+                query={query}
+                pool={pool}
+                onSelect={select}
+                onPool={(next) => {
+                  setPool(next);
+                  setQuery('');
+                }}
+              />
             ) : (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 {craftData.status === 'error' ? 'Game data unavailable.' : 'Loading…'}
@@ -159,12 +177,15 @@ interface CraftOptionsProps {
   readonly crafts: readonly CraftAnnotation[];
   readonly lookups: CraftLookups;
   readonly query: string;
+  /** The anointment pool picked for an item with an unknown base */
+  readonly pool: string | undefined;
   readonly onSelect: (craft: CraftAnnotation) => void;
+  readonly onPool: (pool: string) => void;
 }
 
-function CraftOptions({ slot, item, crafts, lookups, query, onSelect }: CraftOptionsProps) {
+function CraftOptions({ slot, item, crafts, lookups, query, pool, onSelect, onPool }: CraftOptionsProps) {
   const q = query.trim().toLowerCase();
-  const groups = craftPickerGroups(slot, lookups, crafts, item)
+  const groups = craftPickerGroups(slot, lookups, crafts, item, pool)
     .map((group) => {
       const matches = group.options.filter((option) => q === '' || option.search.includes(q));
       return { ...group, total: matches.length, options: matches.slice(0, MAX_OPTIONS_PER_GROUP) };
@@ -184,7 +205,8 @@ function CraftOptions({ slot, item, crafts, lookups, query, onSelect }: CraftOpt
           key={option.id}
           value={`${group.heading}:${option.id}`}
           onSelect={() => {
-            onSelect(option.craft);
+            if (option.craft !== null) onSelect(option.craft);
+            else if (option.pool !== undefined) onPool(option.pool);
           }}
         >
           <span className="min-w-0">

@@ -156,7 +156,7 @@ export function SlotCell({
         </div>
       )}
 
-      {item !== null && <CraftsDisplay slot={slot} crafts={crafts} craftData={craftData} />}
+      {item !== null && <CraftsDisplay slot={slot} item={item} crafts={crafts} craftData={craftData} />}
 
       {item !== null && noteText !== undefined && noteText.length > 0 && (
         <div className="rounded-md bg-muted/40 p-2">

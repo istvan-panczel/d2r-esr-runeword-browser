@@ -1,17 +1,19 @@
 import { cn } from '@/lib/utils';
-import type { CraftAnnotation, EquipmentSlot, WeaponSwapSlot } from '../buildData';
+import type { CraftAnnotation, EquipmentSlot, ItemRef, WeaponSwapSlot } from '../buildData';
 import type { CraftDataState } from '../hooks/useCraftData';
 import { craftIdentity, renderCraft } from '../utils/crafts';
 import { slotGroup } from '../utils/slotFit';
 
 interface CraftsDisplayProps {
   readonly slot: EquipmentSlot | WeaponSwapSlot;
+  /** The slot's item: an anointment it cannot roll reads as outdated */
+  readonly item: ItemRef;
   readonly crafts: readonly CraftAnnotation[];
   readonly craftData: CraftDataState;
 }
 
 /** Read-only crafting annotations under an item card: each title with its bonus lines from the current bundles. */
-export function CraftsDisplay({ slot, crafts, craftData }: CraftsDisplayProps) {
+export function CraftsDisplay({ slot, item, crafts, craftData }: CraftsDisplayProps) {
   if (crafts.length === 0) return null;
   const family = slotGroup(slot);
   return (
@@ -22,7 +24,7 @@ export function CraftsDisplay({ slot, crafts, craftData }: CraftsDisplayProps) {
       </p>
       <ul className="space-y-0.5">
         {crafts.map((craft, index) => {
-          const rendered = renderCraft(craft, family, craftData.lookups);
+          const rendered = renderCraft(craft, family, craftData.lookups, item);
           return (
             <li key={`${String(index)}:${craftIdentity(craft)}`}>
               <span className={cn(rendered.stale && craftData.status === 'ready' && 'text-muted-foreground')}>{rendered.title}</span>
