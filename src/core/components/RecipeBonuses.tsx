@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import type { Affix, BonusPool, ColumnBonusPools, SocketableBonuses } from '@/core/db/models';
+import type { Affix, BonusPool, ColumnBonusPools, SocketableBonusGroup, SocketableBonuses } from '@/core/db/models';
 import { getCategoryLabel, type BonusCategory } from '@/core/utils/itemCategoryMapping';
 import { firstNonEmptyPools, hasColumnDifferences, hasPoolColumnDifferences } from '@/core/utils/columnAffixes';
 import type { BonusTextsByCategory } from '@/core/utils/socketableLookup';
@@ -121,6 +121,44 @@ export function SocketableBonusesSection({ title, bonuses, allowedItems, categor
   );
 }
 
+interface SocketableBonusGroupsSectionProps {
+  readonly title: string;
+  /** The page's socketable bonus groups (ESR 3.3+) */
+  readonly groups: readonly SocketableBonusGroup[];
+  /** Indexes of the groups to show (a build slot or base); all when omitted */
+  readonly shown?: readonly number[];
+}
+
+/**
+ * The recipe's socketable (rune / gem) bonuses as the ESR page lists them: one list when one group applies (labelled
+ * when it has a label), else one labelled list per item-type group.
+ */
+export function SocketableBonusGroupsSection({ title, groups, shown }: SocketableBonusGroupsSectionProps) {
+  const visible = groups.filter((group, index) => group.affixes.length > 0 && (shown === undefined || shown.includes(index)));
+  if (visible.length === 0) return null;
+
+  const [only] = visible;
+  return (
+    <div className="border-t pt-3">
+      <p className="font-medium text-muted-foreground mb-2 text-center">{title}</p>
+      {visible.length === 1 ? (
+        <div className="text-center">
+          {only.label && <p className="font-medium text-muted-foreground text-xs mb-1">{only.label}:</p>}
+          <BonusList lines={only.affixes.map((affix) => affix.rawText)} />
+        </div>
+      ) : (
+        <LabelledColumns
+          columns={visible.map((group, index) => ({
+            key: `${String(index)}-${group.label}`,
+            label: group.label,
+            lines: group.affixes.map((affix) => affix.rawText),
+          }))}
+        />
+      )}
+    </div>
+  );
+}
+
 interface BonusListProps {
   readonly lines: readonly string[];
   readonly className?: string;
@@ -150,13 +188,37 @@ interface BonusColumnsProps {
 /** Two-column grid with one labelled list per category; empty categories are skipped. */
 function BonusColumns({ allowedItems, categories, linesFor, skillItem }: BonusColumnsProps) {
   return (
+    <LabelledColumns
+      columns={categories.map((category) => ({
+        key: category,
+        label: getCategoryLabel(allowedItems, category),
+        lines: linesFor(category),
+      }))}
+      skillItem={skillItem}
+    />
+  );
+}
+
+interface LabelledColumn {
+  readonly key: string;
+  readonly label: string;
+  readonly lines: readonly string[];
+}
+
+interface LabelledColumnsProps {
+  readonly columns: readonly LabelledColumn[];
+  readonly skillItem?: SkillRefItem;
+}
+
+/** Two-column grid with one labelled list per column; empty columns are skipped. */
+function LabelledColumns({ columns, skillItem }: LabelledColumnsProps) {
+  return (
     <div className="grid grid-cols-2 gap-3 text-sm">
-      {categories.map((category) => {
-        const lines = linesFor(category);
+      {columns.map(({ key, label, lines }) => {
         if (lines.length === 0) return null;
         return (
-          <div key={category}>
-            <p className="font-medium text-muted-foreground text-xs mb-1">{getCategoryLabel(allowedItems, category)}:</p>
+          <div key={key}>
+            <p className="font-medium text-muted-foreground text-xs mb-1">{label}:</p>
             <ul className="space-y-0.5 text-[#8080E6] text-xs">
               {lines.map((line, index) => (
                 <li key={`${String(index)}-${line}`}>

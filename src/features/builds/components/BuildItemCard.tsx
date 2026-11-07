@@ -1,13 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Card } from '@/components/ui/card';
-import type { Gemword } from '@/core/db';
+import type { Gemword, Runeword } from '@/core/db';
 import { HtmUniqueItemCard } from '@/features/htm-unique-items';
 import { MythicalUniqueCard } from '@/features/mythical-uniques';
 import { RunewordCard } from '@/features/runewords';
 import { GemwordCard, useGemBonusMap } from '@/features/gemwords';
-import type { EquipmentSlot, ItemRef, WeaponSwapSlot } from '../buildData';
+import type { EquipmentSlot, ItemRef, RunewordItemRef, WeaponSwapSlot } from '../buildData';
+import { useRunewordBases } from '../hooks/useRunewordBases';
 import { hasItemChoices } from '../utils/itemChoices';
 import { itemRefKey, resolveFullItem } from '../utils/resolveItem';
+import { socketableGroupsFor } from '../utils/socketableGroups';
 import { ItemChoicesDisplay } from './ItemChoicesDisplay';
 import { ItemRefDisplay } from './ItemRefDisplay';
 import { SetItemBuildCard } from './SetItemBuildCard';
@@ -15,9 +17,31 @@ import { SetItemBuildCard } from './SetItemBuildCard';
 // Gemwords need a gem-bonus map; load it here so callers don't have to thread it
 // through the slot grids. A build has only a handful of gemwords, so the per-card
 // load (vs. the browse screen's shared map) is negligible.
-function GemwordSlotCard({ gemword }: { readonly gemword: Gemword }) {
+function GemwordSlotCard({ gemword, slot }: { readonly gemword: Gemword; readonly slot: EquipmentSlot | WeaponSwapSlot }) {
   const gemBonusMap = useGemBonusMap();
-  return <GemwordCard gemword={gemword} gemBonusMap={gemBonusMap} />;
+  return (
+    <GemwordCard gemword={gemword} gemBonusMap={gemBonusMap} socketableGroups={socketableGroupsFor(gemword.socketableBonuses, { slot })} />
+  );
+}
+
+interface RunewordSlotCardProps {
+  readonly runeword: Runeword;
+  readonly item: ItemRef;
+  readonly slot: EquipmentSlot | WeaponSwapSlot;
+}
+
+/** A runeword card showing the socketable bonus groups of its chosen base (else of its slot). */
+function RunewordSlotCard({ runeword, item, slot }: RunewordSlotCardProps) {
+  if (item.type === 'runeword' && item.base !== undefined) return <RunewordBaseCard runeword={runeword} item={item} slot={slot} />;
+  return <RunewordCard runeword={runeword} socketableGroups={socketableGroupsFor(runeword.socketableBonuses, { slot })} />;
+}
+
+/** Loads the game-data bundles only for a runeword with a chosen base (bases.json resolves its item types). */
+function RunewordBaseCard({ runeword, item, slot }: RunewordSlotCardProps & { readonly item: RunewordItemRef }) {
+  const state = useRunewordBases(item, slot);
+  const context =
+    state.status === 'ready' && state.chosenBase !== undefined ? { slot, base: state.chosenBase, typeNames: state.typeNames } : { slot };
+  return <RunewordCard runeword={runeword} socketableGroups={socketableGroupsFor(runeword.socketableBonuses, context)} />;
 }
 
 interface BuildItemCardProps {
@@ -54,9 +78,9 @@ function ItemCard({ item, slot, setPieces }: Omit<BuildItemCardProps, 'showChoic
       case 'mythical':
         return <MythicalUniqueCard item={resolved.item} />;
       case 'runeword':
-        return <RunewordCard runeword={resolved.runeword} />;
+        return <RunewordSlotCard runeword={resolved.runeword} item={item} slot={slot} />;
       case 'gemword':
-        return <GemwordSlotCard gemword={resolved.gemword} />;
+        return <GemwordSlotCard gemword={resolved.gemword} slot={slot} />;
       case 'set':
         return <SetItemBuildCard item={resolved.item} set={resolved.set} equippedPieces={setPieces} />;
     }

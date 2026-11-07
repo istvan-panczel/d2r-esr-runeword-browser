@@ -31,9 +31,9 @@ const ORB = reversed(
   'Transmute this with an Orb, a Crushed Gem, a Chipped Ruby',
   'and an Anvil Stone to empower it with as following',
   '',
-  'Sorceress Spells',
-  'Triples the cooldown of your level 24 Sorceress spells',
-  'and adds a 2 second cooldown to Hydra,',
+  'Spells',
+  'Triples the cooldown of your direct damage dealing',
+  'spells and adds a 2 second cooldown to Hydra,',
   'but increases your total spell damage by 20%',
   '',
   'Transmute this with an Orb, a Crushed Gem, a Chipped Skull',
@@ -67,10 +67,10 @@ describe('parseMasteryDescription', () => {
   });
 
   it('splits a token with two specialisations into two blocks and strips colour codes', () => {
-    const coloured = ORB.replace('Sorceress Spells', 'ÿc@Sorceress Spellsÿc0').replace('Chipped Ruby', 'ÿc1Chipped Rubyÿc0');
+    const coloured = ORB.replace('Spells\n', 'ÿc@Spellsÿc0\n').replace('Chipped Ruby', 'ÿc1Chipped Rubyÿc0');
     const blocks = parseMasteryDescription(coloured);
     expect(blocks.map((block) => [block.weapon, block.ingredients, block.effects.map((effect) => effect.heading)])).toEqual([
-      ['Orb', ['Crushed Gem', 'Chipped Ruby', 'Anvil Stone'], ['Sorceress Spells']],
+      ['Orb', ['Crushed Gem', 'Chipped Ruby', 'Anvil Stone'], ['Spells']],
       ['Orb', ['Crushed Gem', 'Chipped Skull', 'Anvil Stone'], ['Sorceress Exclusives']],
     ]);
   });
@@ -111,6 +111,7 @@ const skill = (id: string, cls: MasterySkill['cls'], page: number, extra: Partia
   aurastate: '',
   passive: false,
   weaponSkill: false,
+  masteryStats: [],
   ...extra,
 });
 
@@ -159,15 +160,18 @@ describe('resolveEffectSkills', () => {
     });
     expect(resolveEffectSkills('Magic Spells', [], necro, tabs)).toEqual({ skills: ['Bone Spear'], how: 'rule' });
 
+    // "Spells": the skills whose formulas read the specialisation's stat
     const sorc = [
-      skill('Fire Ball', 'sor', 1, { reqLevel: 12 }),
-      skill('Meteor Shower', 'sor', 1, { reqLevel: 24 }),
-      skill('Lightning Hydra', 'sor', 2, { reqLevel: 24 }),
-      skill('Omnipotence', 'sor', 1, { reqLevel: 30, aurastate: 'exclusiveskill' }),
+      skill('Fire Ball', 'sor', 1),
+      skill('Meteor Shower', 'sor', 1, { masteryStats: ['weapon_mastery_orb_1'] }),
+      skill('Lightning Hydra', 'sor', 2, { masteryStats: ['weapon_mastery_orb_1'] }),
+      skill('Omnipotence', 'sor', 1, { aurastate: 'exclusiveskill', masteryStats: ['weapon_mastery_orb_2'] }),
     ];
-    expect(resolveEffectSkills('Sorceress Spells', ['Triples the cooldown of your level 24 Sorceress spells.'], sorc, tabs).skills).toEqual(
-      ['Meteor Shower', 'Lightning Hydra']
-    );
+    expect(resolveEffectSkills('Spells', ['Triples the cooldown of your direct damage dealing spells.'], sorc, tabs, 'weapon_mastery_orb_1')).toEqual({
+      skills: ['Meteor Shower', 'Lightning Hydra'],
+      how: 'rule',
+    });
+    expect(resolveEffectSkills('Spells', [], sorc, tabs).skills).toEqual([]);
     expect(resolveEffectSkills('Sorceress Exclusives', [], sorc, tabs).skills).toEqual(['Omnipotence']);
 
     const assassin = [
@@ -241,16 +245,16 @@ describe('buildMasteriesBundle', () => {
     base('ob1', 'Eagle Orb', 'orb', 'normal', ['ob1', 'ob6', 'obb'], 5, { cls: 'sor' }),
   ];
   const cube = [
-    cubeRow(10, 'Apply Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery', 2]]),
-    cubeRow(11, 'Apply Awaken Weapon Mastery Token - Ceremonial Bow', ['am7,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery', 2]]),
+    cubeRow(10, 'Apply Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
+    cubeRow(11, 'Apply Awaken Weapon Mastery Token - Ceremonial Bow', ['am7,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
     // Not spawnable (no base): skipped without a warning
-    cubeRow(12, 'Apply Awaken Weapon Mastery Token - Ceremonial Bow LoD', ['q77,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery', 2]]),
+    cubeRow(12, 'Apply Awaken Weapon Mastery Token - Ceremonial Bow LoD', ['q77,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
     cubeRow(
       13,
       'Apply Awaken Weapon Mastery Token - Orb 1',
       ['orb,nru', 'u38', 'ggg', 'qqq', 'gcr'],
       [
-        ['weapon-mastery', 15],
+        ['weapon-mastery-orb-1', 1],
         ['generic-total-multiplier', 20],
       ]
     ),
@@ -260,13 +264,16 @@ describe('buildMasteriesBundle', () => {
       'Apply Awaken Weapon Mastery Token - Orb 2',
       ['orb,nru', 'u38', 'ggg', 'qqq', 'skc'],
       [
-        ['weapon-mastery', 17],
+        ['weapon-mastery-orb-2', 1],
         ['hidden-mod', -5],
       ]
     ),
-    cubeRow(20, 'Remove Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'sss', 'wms,qty=3'], [['weapon-mastery', -2]]),
-    cubeRow(21, 'Remove Awaken Weapon Mastery Token - Orb 1', ['orb,nru', 'ggg', 'wms,qty=3'], [['weapon-mastery', -15]]),
-    cubeRow(22, 'Remove Awaken Weapon Mastery Token - Orb 2', ['orb,nru', 'ggg', 'wms,qty=3'], [['weapon-mastery', -17]]),
+    // ESR 3.3 removes take any weapon; the legacy 3.2 rows (`weapon-mastery` -N, here only for the Reflex Bow) are ignored
+    cubeRow(19, 'Remove Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'sss', 'wms,qty=3'], [['weapon-mastery', -2]]),
+    cubeRow(20, 'Remove Weapon Mastery - Reflex Bow', ['weap,nru', 'sss', 'wms,qty=3'], [['weapon-mastery-reflex-bow', -1]]),
+    cubeRow(21, 'Remove Weapon Mastery - Orb 1', ['weap,nru', 'ggg', 'wms,qty=3'], [['weapon-mastery-orb-1', -1]]),
+    // True Master: any weapon, behind the perk trap; gives no bases
+    cubeRow(23, 'True Master - Apply Awaken Weapon Mastery Token - Orb 1', ['weap,nru', 'u38', 'ggg', 'qqq', 'gcr'], [['weapon-mastery-orb-1', 1]]),
     cubeRow(30, 'Unawaken Weapon Mastery Token', ['u25'], [], 'u23'),
     // Awaken rows: none for the Ceremonial Bow; one names a base of another family (like ESR's Celestial Blade row)
     awakenRow(40, 'Awaken Weapon Mastery Token - Reflex Bow', 'am2', 'u25'),
@@ -318,10 +325,10 @@ describe('buildMasteriesBundle', () => {
     expect(orb1.mods).toEqual(['+20% generic-total-multiplier']);
     expect(orb1.effects).toEqual([
       {
-        heading: 'Sorceress Spells',
+        heading: 'Spells',
         skills: ['Meteor Shower'],
         text: [
-          'Triples the cooldown of your level 24 Sorceress spells and adds a 2 second cooldown to Hydra, but increases your total spell damage by 20%.',
+          'Triples the cooldown of your direct damage dealing spells and adds a 2 second cooldown to Hydra, but increases your total spell damage by 20%.',
         ],
       },
     ]);

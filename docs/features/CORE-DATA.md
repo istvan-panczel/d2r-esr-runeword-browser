@@ -162,7 +162,7 @@ When a full parse is triggered:
    c. Extract LoD Runes (35 items)
    d. Extract Kanji Runes (~14 items)
    e. Extract Crystals (12 types x 3 tiers = 36 items)
-3. Parse runewords.htm and gemwords.htm (multi-variant, per-column bonuses, gems)
+3. Parse runewords.htm and gemwords.htm (multi-variant, bonuses, socketable bonus groups, gems; the ESR 3.3 "Bonuses" / "Socketable Bonuses" layout and the older per-category columns, see RUNEWORDS.md "Source layout")
 4. Parse unique item pages (weapons, armors, others), mythical uniques, and ascendancies (the cards plus the Tier 1–5 challenges, `parseAscendanciesPage`)
 5. Store everything in IndexedDB (separate tables per category)
 6. Store version string and timestamp in metadata
@@ -176,6 +176,8 @@ Single IndexedDB database: **`d2r-esr-runeword-browser`** (version 15)
 Tables: `gems`, `esrRunes`, `lodRunes`, `kanjiRunes`, `crystals`, `runewords`, `gemwords`, `htmUniqueItems`, `mythicalUniques`, `ascendancies`, `ascendancyChallenges`, `metadata`
 
 Version 15 added `ascendancyChallenges`; its upgrade deletes the stored `appVersion`, so the next online startup refetches and re-parses (existing caches get the challenges and `Ascendancy.unlockInputs` without waiting for an app release).
+
+ESR 3.3 (new runewords.htm / gemwords.htm layout) needed no Dexie version: `socketableBonuses` is an unindexed field and old rows without it still render. Caches refresh on their own: the old parser read no row of the 3.3 pages, so the sanity check kept the 3.2.24 cache and never wrote the 3.3 `esrVersion` (the next startup refetches), and the release with the new parser changes `appVersion`, which refetches too. A parse that fails the sanity check still never replaces the cache.
 
 The startup check opens the database first via `openDatabase()` (`src/core/db/openDatabase.ts`). If Dexie cannot upgrade the stored schema (`UpgradeError`, e.g. a very old install with a different primary key) or the stored version is newer (`VersionError`), the database is deleted and recreated empty; it is only a cache, so the startup check then refetches everything.
 
@@ -327,11 +329,15 @@ helpers in `parsers/shared/parserUtils.ts` instead of splitting `innerHTML` on `
   `<font color="orange">` element (attribute value matched case-insensitively, quoted or not) — even
   when that font spans several `<br>`-separated lines or starts with a `<br>`. The mythical uniques
   parser uses this flag to route every orange line to `specialProperties` and the rest to `properties`.
-- `splitCellLineGroups(lines)` splits on `<br><br>` (recipe bonuses vs. ingredient bonuses in
-  runeword/gemword cells; `parseRecipeAffixes` keeps only the first group). Since ESR 3.2, gemword
+- `splitCellLineGroups(lines)` splits on `<br><br>` (recipe bonuses vs. ingredient bonuses in the
+  pre-ESR 3.3 runeword/gemword cells; `parseRecipeAffixes` keeps only the first group). Since ESR 3.2, gemword
   cells for most non-Charm items also list "1-2 of the following:" random bonus pools between the two;
   `parseRecipeBonusPools` returns every group between the first and last non-empty group that starts
-  with an "… of the following:" header (stored as `Gemword.columnBonusPools`).
+  with an "… of the following:" header (stored as `Gemword.columnBonusPools`). The ESR 3.3 "Bonuses" cell has
+  no trailing ingredient group: `parseRecipeBonusesCell` keeps every pool group as a pool and every other group
+  as the recipe's bonuses; `parseSocketableBonusGroups` reads the "Socketable Bonuses" cell (one plain list or
+  one `.rws-group` per `.rws-label`), `parseSocketableGroupLabel` splits a label into item types with their own
+  "(except …)" lists. `shared/recipeRowBonuses.ts` picks the layout per row (6 cells: old, 5: 3.3).
 - `mergeWrappedCellLines(lines)` / `mergeWrappedLines(strings)` re-join affixes that the ESR pages
   hard-wrap with `<br>` mid-sentence (mostly long orange "special" affixes, e.g. Obsession, Death
   Cleaver, Tal Rasha's Final Whisper).

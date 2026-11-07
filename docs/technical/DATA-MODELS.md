@@ -121,45 +121,47 @@ Stores all crystals (12 types x 3 tiers = 36 items).
 
 Stores all runeword definitions.
 
-| Column          | Type              | Index        | Description                                                                    |
-| --------------- | ----------------- | ------------ | ------------------------------------------------------------------------------ |
-| [name+variant]  | [string, number]  | Compound PK  | Primary key                                                                    |
-| name            | string            | Yes          | "Stone", "Spirit"                                                              |
-| variant         | number            | (part of PK) | 1, 2, 3... for multi-variant runewords                                         |
-| sockets         | number            | Yes          | Base/minimum socket count (= ingredients + required jewels)                    |
-| socketsMax      | number?           | No           | Only when the source shows a range, e.g. "(2-3 Socket)" for optional jewels    |
-| reqLevel        | number            | Yes          | Highest req level among ingredients                                            |
-| sortKey         | number            | Yes          | = reqLevel (legacy cached rows: LoD = 10000 + reqLevel); the list sorts in JS  |
-| isLod           | boolean           | No           | Has a LoD-exclusive rune (Ko alone does not count); absent on old cached rows  |
-| runes           | string[]          | No           | Rune names in order                                                            |
-| gems            | string[]          | No           | Gem names in recipe                                                            |
-| ingredients     | string[]          | No           | All items in original order                                                    |
-| allowedItems    | string[]          | No           | "Any Armor", "Weapon"                                                          |
-| excludedItems   | string[]          | No           | Items excluded from variant                                                    |
-| affixes         | Affix[]           | No           | Backward compat: first non-empty column                                        |
-| columnAffixes   | SocketableBonuses | No           | Per-column bonuses (weapon/helm/armor)                                         |
-| tierPointTotals | TierPointTotal[]  | No           | Pre-calculated tier point totals                                               |
-| jewelInfo       | string?           | No           | Jewel info: optional "(0-3) Jewels" (with socketsMax) or required "(2) Jewels" |
+| Column            | Type                    | Index        | Description                                                                                                                               |
+| ----------------- | ----------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [name+variant]    | [string, number]        | Compound PK  | Primary key                                                                                                                               |
+| name              | string                  | Yes          | "Stone", "Spirit"                                                                                                                         |
+| variant           | number                  | (part of PK) | 1, 2, 3... for multi-variant runewords                                                                                                    |
+| sockets           | number                  | Yes          | Base/minimum socket count (= ingredients + required jewels)                                                                               |
+| socketsMax        | number?                 | No           | Only when the source shows a range, e.g. "(2-3 Socket)" for optional jewels                                                               |
+| reqLevel          | number                  | Yes          | Page "Req Lvl" (3.3+), else highest ingredient                                                                                            |
+| sortKey           | number                  | Yes          | = reqLevel (legacy cached rows: LoD = 10000 + reqLevel); the list sorts in JS                                                             |
+| isLod             | boolean                 | No           | Has a LoD-exclusive rune (Ko alone does not count); absent on old cached rows                                                             |
+| runes             | string[]                | No           | Rune names in order                                                                                                                       |
+| gems              | string[]                | No           | Gem names in recipe                                                                                                                       |
+| ingredients       | string[]                | No           | All items in original order                                                                                                               |
+| allowedItems      | string[]                | No           | "Any Armor", "Weapon"                                                                                                                     |
+| excludedItems     | string[]                | No           | Items excluded from variant                                                                                                               |
+| affixes           | Affix[]                 | No           | Backward compat: first non-empty column                                                                                                   |
+| columnAffixes     | SocketableBonuses       | No           | Per-column bonuses (weapon/helm/armor)                                                                                                    |
+| tierPointTotals   | TierPointTotal[]        | No           | Pre-calculated tier point totals                                                                                                          |
+| jewelInfo         | string?                 | No           | Jewel info: optional "(0-3) Jewels" (with socketsMax) or required "(2) Jewels"                                                            |
+| socketableBonuses | SocketableBonusGroup[]? | No           | The site's rune bonuses per item-type group (ESR 3.3+): `{ label, itemTypes: { name, except }[], affixes }`; undefined on old cached rows |
 
 ### gemwords
 
 Stores all gemword definitions (gem-based socket recipes, analogous to runewords).
 
-| Column           | Type              | Index        | Description                                                                                                                                      |
-| ---------------- | ----------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [name+variant]   | [string, number]  | Compound PK  | Primary key                                                                                                                                      |
-| name             | string            | Yes          | "Holy", "Razor"                                                                                                                                  |
-| variant          | number            | (part of PK) | 1, 2, 3... for multi-variant gemwords                                                                                                            |
-| sockets          | number            | Yes          | Socket count required                                                                                                                            |
-| reqLevel         | number            | Yes          | Highest req level among the recipe's gems                                                                                                        |
-| sortKey          | number            | Yes          | Pre-calculated sort key (= reqLevel)                                                                                                             |
-| gems             | string[]          | No           | Gem names in recipe                                                                                                                              |
-| ingredients      | string[]          | No           | Same as gems (model symmetry with Runeword)                                                                                                      |
-| allowedItems     | string[]          | No           | "Body Armor", "Any Shield"                                                                                                                       |
-| affixes          | Affix[]           | No           | Backward compat: first non-empty column                                                                                                          |
-| columnAffixes    | SocketableBonuses | No           | Per-column bonuses (weapon/helm/armor)                                                                                                           |
-| columnBonusPools | ColumnBonusPools? | No           | Per-column random bonus pools (ESR 3.2+): `{ label: "1-2 of the following:", affixes }[]` per column; undefined in data cached before it existed |
-| jewelInfo        | string?           | No           | Optional jewel requirement, e.g. "Jewel" (America, Canada, China)                                                                                |
+| Column            | Type                    | Index        | Description                                                                                                                                      |
+| ----------------- | ----------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [name+variant]    | [string, number]        | Compound PK  | Primary key                                                                                                                                      |
+| name              | string                  | Yes          | "Holy", "Razor"                                                                                                                                  |
+| variant           | number                  | (part of PK) | 1, 2, 3... for multi-variant gemwords                                                                                                            |
+| sockets           | number                  | Yes          | Socket count required                                                                                                                            |
+| reqLevel          | number                  | Yes          | Page "Req Lvl" (3.3+), else highest gem level                                                                                                    |
+| sortKey           | number                  | Yes          | Pre-calculated sort key (= reqLevel)                                                                                                             |
+| gems              | string[]                | No           | Gem names in recipe                                                                                                                              |
+| ingredients       | string[]                | No           | Same as gems (model symmetry with Runeword)                                                                                                      |
+| allowedItems      | string[]                | No           | "Body Armor", "Any Shield"                                                                                                                       |
+| affixes           | Affix[]                 | No           | Backward compat: first non-empty column                                                                                                          |
+| columnAffixes     | SocketableBonuses       | No           | Per-column bonuses (weapon/helm/armor)                                                                                                           |
+| columnBonusPools  | ColumnBonusPools?       | No           | Per-column random bonus pools (ESR 3.2+): `{ label: "1-2 of the following:", affixes }[]` per column; undefined in data cached before it existed |
+| jewelInfo         | string?                 | No           | Optional jewel requirement, e.g. "Jewel" (America, Canada, China)                                                                                |
+| socketableBonuses | SocketableBonusGroup[]? | No           | The site's gem bonuses per item-type group (ESR 3.3+); undefined on old cached rows                                                              |
 
 ### htmUniqueItems
 

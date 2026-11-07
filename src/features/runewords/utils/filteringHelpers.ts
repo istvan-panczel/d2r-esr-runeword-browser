@@ -80,9 +80,12 @@ export function matchesSearch(
   const allColumnAffixes = [...weaponsGloves, ...helmsBoots, ...armorShieldsBelts];
   const affixText =
     allColumnAffixes.length > 0 ? allColumnAffixes.map((a) => a.rawText).join(' ') : runeword.affixes.map((a) => a.rawText).join(' ');
-  const runeBonusText = getRuneBonusesText(runeword, runeBonusMap);
-  const gemBonusText = gemBonusMap ? getGemBonusesText(runeword, gemBonusMap) : '';
-  const searchableText = `${runeword.name} ${affixText} ${runeBonusText} ${gemBonusText}`.toLowerCase();
+  // The page's socketable bonuses (ESR 3.3+); old cached rows: the rune / gem bonuses of the relevant categories
+  const socketableText =
+    runeword.socketableBonuses !== undefined && runeword.socketableBonuses.length > 0
+      ? runeword.socketableBonuses.flatMap((group) => group.affixes.map((a) => a.rawText)).join(' ')
+      : `${getRuneBonusesText(runeword, runeBonusMap)} ${gemBonusMap ? getGemBonusesText(runeword, gemBonusMap) : ''}`;
+  const searchableText = `${runeword.name} ${affixText} ${socketableText}`.toLowerCase();
 
   return searchTerms.every((term) => searchableText.includes(term));
 }

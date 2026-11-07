@@ -11,7 +11,7 @@ import { FavoriteButton } from '@/core/components/FavoriteButton';
 import { SocketableLookupScope } from '@/core/components/SocketableLookupScope';
 import { useSocketableLookup } from '@/core/hooks/useSocketableLookup';
 import { aggregateBonusTexts, resolveRune } from '@/core/utils/socketableLookup';
-import { RecipeAffixes, SocketableBonusesSection } from '@/core/components/RecipeBonuses';
+import { RecipeAffixes, SocketableBonusGroupsSection, SocketableBonusesSection } from '@/core/components/RecipeBonuses';
 import { getRelevantCategories } from '@/core/utils/itemCategoryMapping';
 import { isGemName } from '@/features/data-sync/parsers/gemsParser';
 import { runewordIsLod } from '@/features/data-sync/parsers/runewordsParser';
@@ -28,6 +28,8 @@ interface RunewordCardProps {
   readonly favoriteCount?: number;
   readonly favoritePending?: boolean;
   readonly onToggleFavorite?: (runeword: Runeword) => void;
+  /** Builds: indexes of the page's socketable bonus groups that apply to the slot / chosen base; all when omitted */
+  readonly socketableGroups?: readonly number[];
 }
 
 export function RunewordCard(props: RunewordCardProps) {
@@ -45,6 +47,7 @@ function RunewordCardContent({
   favoriteCount = 0,
   favoritePending = false,
   onToggleFavorite,
+  socketableGroups,
 }: RunewordCardProps) {
   const { name, sockets, runes, allowedItems, excludedItems, affixes, tierPointTotals } = runeword;
   // Handle backwards compatibility for cached runewords without reqLevel
@@ -56,13 +59,17 @@ function RunewordCardContent({
   const socketsMax = 'socketsMax' in runeword ? runeword.socketsMax : undefined;
   const socketLabel = socketsMax === undefined ? String(sockets) : `${String(sockets)}-${String(socketsMax)}`;
   const ingredientsList = 'ingredients' in runeword && runeword.ingredients.length > 0 ? runeword.ingredients : runes;
+  // The page's socketable bonuses per item-type group (ESR 3.3+); old cached rows fall back to the rune / gem tables
+  const pageSocketableBonuses =
+    runeword.socketableBonuses !== undefined && runeword.socketableBonuses.length > 0 ? runeword.socketableBonuses : null;
   const lookup = useSocketableLookup();
-  const runeBonuses = lookup
-    ? aggregateBonusTexts([
-        ...runes.flatMap((rune) => resolveRune(lookup, rune, isLod)?.rune.bonuses ?? []),
-        ...(gems ?? []).flatMap((gem) => lookup.gems.get(gem)?.bonuses ?? []),
-      ])
-    : undefined;
+  const runeBonuses =
+    lookup && pageSocketableBonuses === null
+      ? aggregateBonusTexts([
+          ...runes.flatMap((rune) => resolveRune(lookup, rune, isLod)?.rune.bonuses ?? []),
+          ...(gems ?? []).flatMap((gem) => lookup.gems.get(gem)?.bonuses ?? []),
+        ])
+      : undefined;
   const relevantCategories = getRelevantCategories(allowedItems);
 
   // Old cached runewords may lack per-column affixes
@@ -116,9 +123,11 @@ function RunewordCardContent({
             )}
           </div>
 
-          {/* ESR has a runes.txt row per jewel count, each with plain Jewels (jew) and with Mythical Jewels (mjw) */}
+          {/* ESR has a runes.txt row per jewel combination: plain (jew) and Mythical (mjw) jewels, mixed since ESR 3.3 */}
           {hasJewelSlots(runeword) && (
-            <p className="text-xs text-muted-foreground">Jewels or Mythical Jewels (not mixed); jewels go in the first sockets.</p>
+            <p className="text-xs text-muted-foreground">
+              Each jewel socket takes a Jewel or a Mythical Jewel; jewels go in the first sockets.
+            </p>
           )}
         </div>
 
@@ -140,12 +149,16 @@ function RunewordCardContent({
           skillItem={{ kind: 'runeword', name }}
         />
 
-        <SocketableBonusesSection
-          title="Socketable Bonuses:"
-          bonuses={runeBonuses}
-          allowedItems={allowedItems}
-          categories={relevantCategories}
-        />
+        {pageSocketableBonuses ? (
+          <SocketableBonusGroupsSection title="Socketable Bonuses:" groups={pageSocketableBonuses} shown={socketableGroups} />
+        ) : (
+          <SocketableBonusesSection
+            title="Socketable Bonuses:"
+            bonuses={runeBonuses}
+            allowedItems={allowedItems}
+            categories={relevantCategories}
+          />
+        )}
       </CardContent>
     </Card>
   );

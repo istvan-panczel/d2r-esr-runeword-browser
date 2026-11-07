@@ -6,7 +6,7 @@ The primary feature - browse and filter all Eastern Sun Resurrected runewords.
 
 - View all runewords with complete data
 - Filter by runes, text search, sockets (exact count or range), item types, required level, and tier points
-- See runeword bonuses (per-column: weapon/helm/armor) AND rune contributions
+- See runeword bonuses AND the rune contributions per item-type group (the site's "Socketable Bonuses" column, ESR 3.3+)
 - Share filtered views via URL
 
 ## List Order
@@ -19,30 +19,37 @@ compares names by code unit (the source's lowercase "hand of Justice" would land
 
 ## Jewel Recipes (folded on the list)
 
-The game has no optional sockets, so ESR adds one runes.txt row per jewel count, jewels first and either plain
-Jewels (`jew`) or Mythical Jewels (`mjw`), never mixed. Dragon Master: `r93 r33 r43`, `jew r93 r33 r43`,
-`jew jew …`, `jew jew jew …`, then the same three with `mjw`. The site (our source) shows a range row
-("(3-6 Socket)", "(0-3) Jewels", the no-jewel recipe) followed by one row per jewel count ("(4 Socket)" with a
-"Jewel" line, "(5 Socket)" with two, …); it lists no `mjw` rows. The parser and the database keep every row (builds and
-guide refs, favourites and the Best Base finder use `[name, variant]`).
+The game has no optional sockets, so ESR adds one runes.txt row per jewel combination, jewels first: plain Jewels
+(`jew`) or Mythical Jewels (`mjw`). Since ESR 3.3 they mix ("Fixed a bug where certain kanji runewords could not be made
+with certain jewels"): Moonlight has 14 rows, `jew r84 r19 r02`, `mjw …`, `jew mjw …`, `mjw jew …`, …, `mjw mjw mjw …`.
+The site (our source) shows a range row ("(3-6 Socket)", "(0-3) Jewels", the no-jewel recipe) followed by one row
+per required jewel count. ESR 3.3: "(4-6 Socket)" with "(0-2) Jewels" and one "Jewel" line, "(5-6 Socket)" with
+"(0-1) Jewels" and two, "(6 Socket)" with three; the parser reads them as "(1-3) Jewels", "(2-3) Jewels", "(3) Jewels"
+(required … required + optional). ESR 3.2 listed "(4 Socket)" with one "Jewel" line, "(5 Socket)" with two, … It lists
+no `mjw` rows. The parser and the database keep every row (builds and guide refs, favourites and the Best Base finder use
+`[name, variant]`).
 
 The Runewords list folds them (`foldJewelVariants`, `utils/foldJewelVariants.ts`, in `useFilteredRunewords` on the
 sorted rows, before the column expansion and the filters; order kept): rows of the same runeword with the same content
-(runes, gems, ingredients, allowed / excluded items, affixes, column affixes; everything except `variant`, `sockets`,
-`socketsMax`, `jewelInfo`) become one entry. It is the lowest variant (so the favourite id stays), with the socket range
-min `sockets` … max covered count of the group and a regenerated `jewelInfo` in the parser's formats (`formatJewelInfo`:
-"(0-3) Jewels", "(1-2) Jewels", "(1) Jewel"). A range row only covers the counts no per-count row of its recipe lists,
-so its own `socketsMax` does not leak into an entry those rows are not part of. ESR 3.2.24 fixture: 409 rows → 386
-entries; most jewel runewords become one card (Dragon Master, Moonlight, Storm Earth and Fire 3-6 "(0-3) Jewels";
-Gold Scarab 4-6; Sunlight 3-4; Might of the Earth and Work of God 5-6). Two differ by jewel count:
+(runes, gems, ingredients, allowed / excluded items, affixes, column affixes, socketable bonus texts; everything except
+`variant`, `sockets`, `socketsMax`, `jewelInfo` and the socketable bonus group labels, which narrow as the socket count
+grows: no 4-socket wands, so Storm, Earth and Fire's "Staff / Wand" group is "Staff" on its 4-6 row) become one entry.
+It is the lowest variant (so the favourite id and its group labels stay), with the socket range min `sockets` … max
+covered count of the group and a regenerated `jewelInfo` in the parser's formats (`formatJewelInfo`: "(0-3) Jewels",
+"(1-2) Jewels", "(1) Jewel"). A row only covers the counts no higher row of its recipe lists, so its own `socketsMax`
+does not leak into an entry those rows are not part of. ESR 3.3 fixture: 409 rows → 387 entries; most jewel runewords
+become one card (Dragon Master, Moonlight, Storm Earth and Fire 3-6 "(0-3) Jewels"; Sunlight 3-4; Might of the Earth and
+Work of God 5-6). Three differ by jewel count:
 
 - **Tourbillion**: "4 Socket" without jewels (Bleed 250-500) and "5-6 Socket" "(1-2) Jewels" (Inner Sight on hit
   instead)
 - **Wooden Colossus**: "5 Socket" (+300 Strength) and "6 Socket" "(1) Jewel" (+150 Strength)
+- **Gold Scarab** (ESR 3.3): "4 Socket" (+25% item quantity) and "5-6 Socket" "(1-2) Jewels" (+50%)
 
 Shinigami's rows differ by item type (two-handed vs other melee), not by jewel count: two cards, each "2-6 Socket"
 "(0-4) Jewels". The socket filter reads the folded range (a 5-socket filter finds Dragon Master and Tourbillion 5-6).
-Cards with any jewel socket add a muted line: "Jewels or Mythical Jewels (not mixed); jewels go in the first sockets."
+Cards with any jewel socket add a muted line: "Each jewel socket takes a Jewel or a Mythical Jewel; jewels go in the
+first sockets."
 
 ## Filters
 
@@ -115,7 +122,7 @@ interface Runeword {
   readonly variant: number; // 1, 2, 3... for multi-variant runewords
   readonly sockets: number; // Base/minimum socket count (= ingredients + required jewels)
   readonly socketsMax?: number; // Only set when the source shows a range, e.g. "(2-3 Socket)"
-  readonly reqLevel: number; // Highest required level among all runes and gems
+  readonly reqLevel: number; // The page's "Req Lvl" (ESR 3.3+), else the highest among the runes and gems
   readonly sortKey: number; // = reqLevel (old cached rows: LoD = 10000 + reqLevel)
   readonly isLod: boolean; // Has a LoD-exclusive rune
   readonly runes: readonly string[]; // Rune names in order
@@ -123,10 +130,17 @@ interface Runeword {
   readonly ingredients: readonly string[]; // All items in original order (runes + gems interleaved)
   readonly allowedItems: readonly string[];
   readonly excludedItems: readonly string[]; // Items excluded from this variant
-  readonly affixes: readonly Affix[]; // Backward compat: bonuses from first non-empty column
+  readonly affixes: readonly Affix[]; // The runeword's own bonuses (old layout: first non-empty column)
   readonly columnAffixes: SocketableBonuses; // Per-column bonuses (weapon/helm/armor)
   readonly tierPointTotals: readonly TierPointTotal[];
-  readonly jewelInfo?: string; // Jewel info, e.g. "(0-3) Jewels" (optional) or "(2) Jewels" (required)
+  readonly jewelInfo?: string; // Jewel info, e.g. "(0-3) Jewels", "(1-3) Jewels" or "(2) Jewels" (required)
+  readonly socketableBonuses?: readonly SocketableBonusGroup[]; // The site's rune bonuses per item-type group (ESR 3.3+)
+}
+
+interface SocketableBonusGroup {
+  readonly label: string; // "Weapon (except Orb, Staff, Wand) / Missile / Mythical Arcane Staff"; '' = every allowed base
+  readonly itemTypes: readonly { readonly name: string; readonly except: readonly string[] }[];
+  readonly affixes: readonly Affix[];
 }
 ```
 
@@ -135,7 +149,26 @@ interface Runeword {
 - **Compound primary key**: `[name+variant]` - some runewords have multiple variants with different recipes
 - **gems**: Runewords can require gems in addition to runes (added in v1.4.0)
 - **ingredients**: The original order of runes + gems interleaved in the recipe
-- **columnAffixes**: Per-column bonuses displayed as split cards (weapon/helm/armor)
+- **Source layout** (`parsers/shared/recipeRowBonuses.ts`, `recipeRowLayout` by cell count): since ESR 3.3
+  runewords.htm (and gemwords.htm) has 5 cells per row: name (with "Req Lvl: N"), ingredients, allowed items,
+  **Bonuses** (the runeword's own bonuses, one list for every base; every `<br><br>` group is kept, e.g. Able's
+  "Requirements -100%") and **Socketable Bonuses** (the combined rune bonuses: one plain list, or one
+  `<div class="rws-group">` per item-type label). Before 3.3 it had 6: one bonus column per item category
+  ("Weapons / Gloves", "Helms / Boots", "Armor / Shields / Belts"), each [runeword bonuses]<br><br>[rune bonuses].
+  Both layouts are parsed (a cached or lagging page may still serve the old one); rows, order and variants are the
+  same in both (fixtures: `test-fixtures/runewords.htm` = 3.3, `test-fixtures/previous/runewords.htm` = 3.2.24).
+- **columnAffixes**: Per-column bonuses (weapon/helm/armor). In the 3.3 layout the one Bonuses list goes into every
+  column the row's bases use (the categories of its socketable bonus group types, else of its allowed items) and the
+  others stay empty, which reproduces the old columns on every 3.2.24 row, so builds whose snapshots hold the columns
+  do not all read as changed. No runeword's bonuses differ between columns since ESR 3.12.
+- **socketableBonuses**: the Socketable Bonuses groups. A label's item types each carry their own exceptions
+  (`parseSocketableGroupLabel`): in "Weapon (except Orb, Staff, Wand) / Mythical Arcane Staff" the exceptions apply
+  to Weapon only, so the Mythical Arcane Staff (a staff) still belongs to the group. Undefined on rows cached from the
+  old layout; the card then shows the bonuses computed from the gems.htm rune tables. Stored in IndexedDB as a plain
+  field (no index, no Dexie version bump).
+- **reqLevel**: the page's "Req Lvl" when present (ESR 3.3+), else the highest rune / gem level. They agree except
+  for runewords with Ko: the saga's name-keyed level lookup holds the LoD Ko (39), ESR Ko is 27 (Fortune, Faith,
+  Journey, … read 39 before 3.3).
 - **sortKey**: `= reqLevel` for every runeword (same as gemwords). Up to v1.44.0 LoD runewords
   stored `10000 + reqLevel` so they sorted after ESR/Kanji; the list now sorts by `reqLevel`, so
   rows still cached in that format sort the same way.
@@ -143,10 +176,11 @@ interface Runeword {
   runes like Ko (in both ESR and LoD) do not count on their own. Picks which rune variant the card
   shows (badges, rune bonuses) and the tier-point category. Old cached rows lack it; the card then
   reads it from the legacy sort key (`runewordIsLod`).
-- **jewelInfo**: e.g. "(0-3) Jewels" — recipes that accept optional jewels on top of their runes.
-  Since ESR 3.2 the source also lists each socket count of such a recipe as its own row with plain
-  "Jewel" lines; those rows get e.g. "(2) Jewels" and `sockets` = runes + gems + jewels. The database keeps
-  the rows as the site lists them; the list folds them (see [Jewel Recipes](#jewel-recipes-folded-on-the-list)).
+- **jewelInfo**: the row's jewel range: "(0-3) Jewels" — recipes that accept optional jewels on top of their runes.
+  Since ESR 3.2 the source also lists each required jewel count of such a recipe as its own row with plain
+  "Jewel" lines (3.3: plus the remaining optional "(0-K) Jewels"); those rows get "(1-3) Jewels" (1 required, up to 3)
+  or "(2) Jewels" (required only), and `sockets` = runes + gems + required jewels. The database keeps the rows as the
+  site lists them; the list folds them (see [Jewel Recipes](#jewel-recipes-folded-on-the-list)).
 - **socketsMax**: Set only for the optional-jewel recipes, which the source shows as a range,
   e.g. Moonlight `(3-6 Socket)`. `sockets` stays the base count; the socket filter matches when
   its range overlaps `[sockets, socketsMax]` and the card shows "3-6 Socket".
@@ -176,7 +210,19 @@ interface Runeword {
   coloured, with tooltips)
 - On cards with jewel sockets (`hasJewelSlots`): the muted Mythical Jewel note (see [Jewel Recipes](#jewel-recipes-folded-on-the-list))
 - Allowed item types
-- **Per-column bonuses** (split card layout): Shows bonuses specific to weapon/helm/armor columns
+- **Bonuses**: one list, or one column per category when the runeword's own bonuses differ between them (none since
+  ESR 3.12)
+- **Socketable Bonuses** (`SocketableBonusGroupsSection` in `core/components/RecipeBonuses.tsx`): the page's groups,
+  one centred list for a single group, else a two-column grid with one list per group under its label (Stone: "Any
+  Shield / Body Armor / Belt", "Helm / Boots", "Gloves"). Rows cached before ESR 3.3 (no `socketableBonuses`) show the
+  rune / gem bonuses computed from the gems.htm tables per relevant category instead (`SocketableBonusesSection`). On
+  the Builds pages the card shows only the groups of the chosen base, else of the slot
+  (`builds/utils/socketableGroups.ts`: a base fits a label item type by its bases.json name or one of its type
+  ancestors, minus the type's exceptions; naming the base beats naming its type, so the Mythical Arcane Staff gets
+  Boar's weapon group, not "Staff / Wand / Orb"; slots use `typeSlots`; all groups when nothing narrows)
+- Gemword cards (`GemwordCard`) show the page's groups the same way under "Gem Bonuses:" (their Bonuses cell also
+  holds the random "N-M of the following:" pools, all kept as `columnBonusPools`)
+- Text search reads the page's socketable bonuses when present, else the computed rune / gem bonuses
 - Tier point totals per category
 
 ## State Management
