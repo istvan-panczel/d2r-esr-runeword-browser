@@ -120,6 +120,9 @@ player = 50
 
 [attack]
 ranged = 100
+
+[effectiveness]
+stat_id = 1045
 `;
 
 const ATTACK_RATING = `
@@ -289,6 +292,11 @@ describe('buildModifiersBundle', () => {
       'modifiers: crushing-blow.toml unique = 25 gives 6.25 % of current life, but its config comment says "50 -> 12.5 %"'
     );
     expect(fact('crushingBlow.ranged')).toMatchObject({ value: 100, vanilla: 50 });
+    expect(fact('crushingBlow.effectivenessStat')).toMatchObject({ value: 1045, unit: 'stat' });
+    expect(fact('crushingBlow.effectivenessStat')?.source).toEqual({
+      file: 'd2rloader/config/celestialrayone.crushing-blow.toml',
+      key: 'effectiveness.stat_id',
+    });
     expect(fact('attackRating.curve')?.value).toMatchObject({ pivotRatio: 5, steepness: 5, tail: 3, lateTail: 1, levelScaling: 0 });
     expect(fact('attackRating.table')?.value).toEqual({ '1': 0, '5': 50, '104': 100 });
     expect(warnings).toContain('modifiers: d2rloader/config/celestialrayone.dodge-avoid-evade-cap.toml is missing; its facts are left out');

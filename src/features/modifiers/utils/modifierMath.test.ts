@@ -115,4 +115,24 @@ describe('crushingBlow (committed ESR facts)', () => {
     expect(crushingBlow({ currentLife: 1000, target: 'monster', physicalResist: -50 }, facts).damage).toBe(125);
     expect(crushingBlow({ currentLife: 1000, target: 'monster', physicalResist: 150 }, facts).damage).toBe(0);
   });
+
+  it('scales every share by +x% Crushing Blow Damage (crushing-blow.toml [effectiveness])', () => {
+    // the toml's own examples: +25 → ×1.25, a monster at 50 goes from 12.5 % to 15.6 %, an act boss at 16 from 2 % to 2.5 %
+    expect(crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: 25 }, facts).share).toBe(15.625);
+    expect(crushingBlow({ currentLife: 1000, target: 'act_boss', crushingBlowDamage: 25 }, facts).share).toBe(2.5);
+    expect(crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: -50 }, facts).share).toBe(6.25);
+    // -100 or lower: the attacker's Crushing Blow does nothing
+    expect(crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: -100 }, facts).damage).toBe(0);
+    expect(crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: -250 }, facts).damage).toBe(0);
+    // stacks with ranged, /players and physical resist: 12.5 × 2 ÷ 2 × 0.5
+    expect(
+      crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: 100, players: 3, physicalResist: 50 }, facts).share
+    ).toBe(6.25);
+    // stat_id = -1 leaves it off
+    expect(
+      crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: 25 }, withFact('crushingBlow.effectivenessStat', -1)).share
+    ).toBe(12.5);
+    // never more than the current life
+    expect(crushingBlow({ currentLife: 1000, target: 'monster', crushingBlowDamage: 1000 }, facts).damage).toBe(1000);
+  });
 });

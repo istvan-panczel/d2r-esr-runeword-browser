@@ -176,6 +176,7 @@ Hell]` or a record per class / target / setting), `vanilla` in the same shape wh
 | `crushingBlow.settings`                                                           | monster 50, champion 50, unique 25, super_unique 16, act_boss 16, minion 50, mercenary 50, player 50 (% of vanilla) | 100                                               | crushing-blow.toml `[targets]`                     |
 | `crushingBlow.share`                                                              | 12.5 / 12.5 / 6.25 / 2 / 2 / 12.5 / 5 / 5 % of current life                                                         | 25 / 25 / 25 / 12.5 / 12.5 / 25 / 10 / 10         | derived: vanilla share × setting / 100             |
 | `crushingBlow.ranged`, `.enabled`                                                 | 100 (ranged = melee), true                                                                                          | 50                                                | crushing-blow.toml `[attack] ranged`               |
+| `crushingBlow.effectivenessStat`                                                  | 1045 (`crushingblow_damage`, ESR 3.3; -1 = off)                                                                     | —                                                 | crushing-blow.toml `[effectiveness] stat_id`       |
 | `criticalDamage.stat` / `.basePercent` / `.maxPercent` / `.enabled` / `.missiles` | 434 / 200 / 100000 / true / true                                                                                    | — / 200                                           | critical-strike-damage.toml                        |
 | `dodge.cap`                                                                       | dodge 75, avoid 75, evade 75                                                                                        | 100 (no cap)                                      | dodge-avoid-evade-cap.toml (per-stat -1 = inherit) |
 | `castRate.cap`, `castRate.maxRate`                                                | 500 FCR, rate 196 (derived: 100 + floor(120 × cap / (cap + 120)))                                                   | 200, 175                                          | cast-rate-cap.toml `fcr_cap`                       |
@@ -224,9 +225,11 @@ changes these tables.
   pivot^s), above 50 + 50 × d / (d + tail), the late tail blended in with a smoothstep weight between blendStart and
   blendEnd, floored to a whole percent, snapped to 100 at 99.5, then level scaling (vanilla only) and min / max. The test
   reproduces the config's own table; the vanilla curve gives 100 × AR / (AR + DEF) × 2 alvl / (alvl + dlvl), 5–95.
-- `crushingBlow({ currentLife, target, ranged?, players?, physicalResist? }, facts)`: share = `crushingBlow.share`
-  [target] (× ranged / 100 for missiles), divided by 1 + 50 % × (players − 1) against monsters (not mercenaries or
-  players), × (100 − physical resist clamped to 0–100) / 100; damage = current life × share / 100.
+- `crushingBlow({ currentLife, target, ranged?, players?, physicalResist?, crushingBlowDamage? }, facts)`: share =
+  `crushingBlow.share` [target] (× ranged / 100 for missiles), × max(0, 100 + "+x% Crushing Blow Damage") / 100 when
+  `crushingBlow.effectivenessStat` is not -1 (crushing-blow.toml `[effectiveness]`: "+25 multiplies every share by 1.25",
+  "-100 or lower ... does nothing"), divided by 1 + 50 % × (players − 1) against monsters (not mercenaries or players),
+  × (100 − physical resist clamped to 0–100) / 100; damage = current life × share / 100, at most the current life.
 
 ## Content: `content/modifiers/`
 
@@ -350,7 +353,8 @@ bundle's order. A generated title that is only a stat name or a stray word ("to"
   divisor, exact, engine 1/64 %, per 1000 damage, vanilla; the smallest item leech that is not 0 in Hell; the rounding
   caveat), Magic Find (per quality: ESR effective MF, the tail's part, vanilla, the diminishing constant), hit chance
   (AR and defense → ratio, ESR, vanilla at equal levels, the AR needed for 50 / 75 / 90 / 95 %), Crushing Blow (current
-  life, physical resist, /players, melee / ranged → share and life removed per target class, vanilla). Local state, not
+  life, physical resist, /players, +% Crushing Blow Damage (hidden when the config's stat is -1; ESR only, the vanilla
+  column ignores it), melee / ranged → share and life removed per target class, vanilla). Local state, not
   in the URL.
 
 Mobile: one column at 375 px without horizontal page scroll; wide tables scroll inside their box.

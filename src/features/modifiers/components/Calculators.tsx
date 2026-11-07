@@ -3,7 +3,15 @@ import { Calculator } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Pills } from '@/features/game-data/components/EnhanceParts';
 import type { ModifierFact } from '@/features/game-data/engine/schema';
-import { crushingBlowRows, hitChanceView, leechRows, magicFindRows, minimumUsefulLeech, parseNumberInput } from '../utils/calculatorViews';
+import {
+  crushingBlowDamageStat,
+  crushingBlowRows,
+  hitChanceView,
+  leechRows,
+  magicFindRows,
+  minimumUsefulLeech,
+  parseNumberInput,
+} from '../utils/calculatorViews';
 import type { ModifierCalculator } from '../utils/modifierContentKinds';
 import { hitCurve } from '../utils/modifierMath';
 import { formatNumber, formatSmallPercent } from '../utils/modifierPlaceholders';
@@ -222,11 +230,14 @@ function CrushingBlowCalculator({ facts }: { readonly facts: readonly ModifierFa
   const [resistText, setResistText] = useState('0');
   const [playersText, setPlayersText] = useState('1');
   const [ranged, setRanged] = useState(false);
+  const [bonusText, setBonusText] = useState('0');
+  const bonusStat = crushingBlowDamageStat(facts);
   const inputs = {
     currentLife: parseNumberInput(lifeText, 0, 1_000_000_000, 0),
     physicalResist: parseNumberInput(resistText, -1000, 100, 0),
     players: parseNumberInput(playersText, 1, 8, 1),
     ranged,
+    crushingBlowDamage: bonusStat === null ? 0 : parseNumberInput(bonusText, -1000, 10_000, 0),
   };
   const rows = crushingBlowRows(inputs, facts);
   const commentMismatch = facts.find((fact) => fact.key === 'crushingBlow.share')?.note?.includes('disagree') === true;
@@ -236,6 +247,14 @@ function CrushingBlowCalculator({ facts }: { readonly facts: readonly ModifierFa
         <NumberField label="Target current life" value={lifeText} onChange={setLifeText} />
         <NumberField label="Target physical resist %" value={resistText} onChange={setResistText} hint="negative does not add" />
         <NumberField label="Players (/players)" value={playersText} onChange={setPlayersText} hint="1–8, monsters only" />
+        {bonusStat !== null && (
+          <NumberField
+            label="+% Crushing Blow Damage"
+            value={bonusText}
+            onChange={setBonusText}
+            hint={`stat ${String(bonusStat)}, yours (−100 = none)`}
+          />
+        )}
       </div>
       <Pills
         label="Attack"
@@ -275,6 +294,7 @@ function CrushingBlowCalculator({ facts }: { readonly facts: readonly ModifierFa
       <p className="text-xs text-muted-foreground">
         One successful Crushing Blow. Against monsters the share is divided by the /players life bonus; physical resist reduces it (vanilla
         rule, kept by ESR).
+        {bonusStat !== null && ' +% Crushing Blow Damage multiplies every ESR share by (100 + value) / 100; vanilla D2R has no such stat.'}
         {commentMismatch && (
           <>
             {' '}

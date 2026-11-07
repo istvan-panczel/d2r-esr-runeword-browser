@@ -1834,6 +1834,8 @@ describe('committed modifiers bundle (ESR 3.2.24)', () => {
     // comment/value mismatch note and warning are gone
     expect(manifest.warnings.filter((warning) => warning.startsWith('modifiers:'))).toEqual([]);
     expect(fact('crushingBlow.ranged')?.value).toBe(100);
+    // ESR 3.3: crushing-blow.toml [effectiveness] reads "+x% Crushing Blow Damage" (itemstatcost.txt crushingblow_damage)
+    expect(fact('crushingBlow.effectivenessStat')?.value).toBe(1045);
     expect(fact('criticalDamage.stat')?.value).toBe(434);
     expect(fact('criticalDamage.basePercent')?.value).toBe(200);
     expect(fact('dodge.cap')?.value).toEqual({ dodge: 75, avoid: 75, evade: 75 });

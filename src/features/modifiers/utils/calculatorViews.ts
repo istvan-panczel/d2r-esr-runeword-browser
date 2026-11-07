@@ -159,6 +159,8 @@ export interface CrushingBlowInputs {
   readonly physicalResist: number;
   readonly players: number;
   readonly ranged: boolean;
+  /** "+x% Crushing Blow Damage"; ESR only (vanilla D2R has no such stat) */
+  readonly crushingBlowDamage?: number;
 }
 
 export interface CrushingBlowRow {
@@ -171,12 +173,18 @@ export interface CrushingBlowRow {
   readonly vanillaDamage: number;
 }
 
+/** The stat id crushing-blow.toml `[effectiveness] stat_id` names, or null when it is off (-1) or not in the bundle */
+export function crushingBlowDamageStat(facts: Facts): number | null {
+  const value = facts.find((fact) => fact.key === 'crushingBlow.effectivenessStat')?.value;
+  return typeof value === 'number' && value >= 0 ? value : null;
+}
+
 export function crushingBlowRows(inputs: CrushingBlowInputs, facts: Facts): CrushingBlowRow[] {
   const vanillaSet = vanillaFacts(facts, ['crushingBlow.share', 'crushingBlow.ranged']);
   return CRUSHING_BLOW_TARGETS.map(({ target, label }) => {
     const input = { ...inputs, target };
     const esr = crushingBlow(input, facts);
-    const vanilla = crushingBlow(input, vanillaSet);
+    const vanilla = crushingBlow({ ...input, crushingBlowDamage: 0 }, vanillaSet);
     return { target, label, share: esr.share, damage: esr.damage, vanillaShare: vanilla.share, vanillaDamage: vanilla.damage };
   });
 }

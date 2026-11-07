@@ -590,6 +590,14 @@ function configFacts(input: ModifiersInput, warnings: string[]): ModifierFact[] 
       unit: 'percent',
       note: 'Missile and thrown hits; vanilla halves Crushing Blow for them.',
     });
+    numFact(cb, 'effectiveness.stat_id', {
+      key: 'crushingBlow.effectivenessStat',
+      label: 'Crushing Blow Damage stat id',
+      unit: 'stat',
+      note:
+        "Its value (the attacker's own) raises every share by that percent: +25 multiplies it by 1.25; -100 or lower turns Crushing " +
+        'Blow off. -1 = no such stat.',
+    });
   }
 
   // critical-strike-damage.toml: stat 434 adds to the x2 critical multiplier
