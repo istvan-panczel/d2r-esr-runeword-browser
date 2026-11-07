@@ -54,6 +54,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `terrorzones.json`  | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))     |
 | `modifiers.json`    | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))  |
 | `masteries.json`    | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery") |
+| `elixirs.json`      | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                     |
 | `icons.json`        | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")              |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
@@ -87,6 +88,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `terrorzones.json`  | ESR 3.3: 12 KB / 3 KB                                                                                                              |
 | `modifiers.json`    | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
 | `masteries.json`    | ESR 3.3: 15 KB / 4 KB                                                                                                              |
+| `elixirs.json`      | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `icons.json`        | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types

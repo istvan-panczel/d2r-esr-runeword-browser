@@ -25,6 +25,8 @@ export interface RenderResult {
 
 export interface StatRenderer {
   renderMods(mods: readonly ModInput[]): RenderResult;
+  /** Stat entries straight to lines (stats a misc.txt row sets itself, no property in between) */
+  renderStats(entries: readonly StatEntry[]): string[];
 }
 
 export type StatTableName =
@@ -94,6 +96,9 @@ export function createStatRenderer(tables: StatTables, strings: ReadonlyMap<stri
       const lines = renderLines(expandAll(resolved.mods, warnings), renderContext);
       for (const pool of resolved.pools) lines.push(...renderPool(pool, warnings));
       return { lines, warnings };
+    },
+    renderStats(entries) {
+      return renderLines(entries, renderContext);
     },
   };
 }

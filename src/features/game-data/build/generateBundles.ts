@@ -4,6 +4,7 @@ import type {
   BasesBundle,
   CraftingBundle,
   CubeBundle,
+  ElixirsBundle,
   EnhanceBundle,
   ItemTextBundle,
   LootFilterDataBundle,
@@ -34,6 +35,7 @@ import { perkChecks, perkOfStat } from './cube/perks.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
+import { buildElixirsBundle } from './bundleElixirs.ts';
 import { buildCubeNames, modRendererFor, readCube, readCubeItem, stockerCounterNames, type CubeRow } from './cube/cubeRows.ts';
 import { buildLootFilterBundle } from './bundleLootFilter.ts';
 import { buildLootFilterSkills, createPropertyLayerResolver, propertyGroupSources, setBonusSources } from './bundleLootFilterSkills.ts';
@@ -93,6 +95,8 @@ export interface GeneratedBundles {
   modifiers: ModifiersBundle;
   // masteries.json
   masteries: MasteriesBundle;
+  // elixirs.json
+  elixirs: ElixirsBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -337,6 +341,22 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   });
   // --- end masteries.json ---
 
+  // --- elixirs.json ---
+  const elixirs = buildElixirsBundle({
+    misc: table('misc'),
+    treasureclassex: table('treasureclassex'),
+    itemstatcost: rowTable('itemstatcost'),
+    experience: table('experience'),
+    shrines: table('shrines'),
+    strings,
+    cubeRows: cubeTables.cube,
+    cubeRecipes: cube.bundle.recipes,
+    alchemyConfig: sources.plugins.alchemy,
+    renderStats: (entries) => renderer.renderStats(entries),
+  });
+  const countElixirs = (pick: (elixir: ElixirsBundle['elixirs'][number]) => boolean) => elixirs.bundle.elixirs.filter(pick).length;
+  // --- end elixirs.json ---
+
   // --- skillcalc.json ---
   const skillCalc = buildSkillCalcBundle({
     skills: table('skills'),
@@ -566,6 +586,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     terrorzones: terrorZones.bundle,
     modifiers: modifiers.bundle,
     masteries: masteries.bundle,
+    elixirs: elixirs.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -698,6 +719,16 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       masteryBases: new Set(masteries.bundle.masteries.flatMap((mastery) => mastery.bases)).size,
       masteryEffects: masteries.bundle.masteries.reduce((sum, mastery) => sum + mastery.effects.length, 0),
       masterySkills: Object.keys(masteries.bundle.skillNames).length,
+      elixirs: elixirs.bundle.elixirs.length,
+      elixirsRegular: countElixirs((elixir) => elixir.variant === 'regular'),
+      elixirsGreater: countElixirs((elixir) => elixir.variant === 'greater'),
+      elixirsSpecial: countElixirs((elixir) => elixir.variant === 'special'),
+      elixirsForEveryone: countElixirs((elixir) => elixir.dropPerks?.length === 0),
+      elixirsPerkGated: countElixirs((elixir) => (elixir.dropPerks?.length ?? 0) > 0),
+      elixirsNoSource: countElixirs((elixir) => elixir.dropPerks === undefined && elixir.recipes === undefined),
+      elixirPerks: elixirs.bundle.perks.length,
+      elixirDropSources: elixirs.bundle.drops.sources.length,
+      elixirRecipes: elixirs.bundle.recipes.length,
     },
     warnings: [
       ...types.warnings,
@@ -725,6 +756,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...terrorZones.warnings,
       ...modifiers.warnings,
       ...masteries.warnings,
+      ...elixirs.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

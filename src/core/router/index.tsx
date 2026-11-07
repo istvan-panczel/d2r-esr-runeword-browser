@@ -100,6 +100,11 @@ const UserProfileScreen = lazy(async () => {
   return { default: module.UserProfileScreen };
 });
 
+const ElixirsScreen = lazy(async () => {
+  const module = await import('@/features/elixirs');
+  return { default: module.ElixirsScreen };
+});
+
 const CampaignMapScreen = lazy(async () => {
   const module = await import('@/features/campaign-map');
   return { default: module.CampaignMapScreen };
@@ -248,6 +253,7 @@ export const router = createBrowserRouter(
         { path: 'ascendancies', element: routeElement(AscendanciesScreen) },
         { path: 'skills', element: routeElement(SkillsScreen) },
         { path: 'modifiers', element: routeElement(ModifiersScreen) },
+        { path: 'elixirs', element: routeElement(ElixirsScreen) },
         { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
         { path: 'terror-zones', element: routeElement(TerrorZonesScreen) },
         {

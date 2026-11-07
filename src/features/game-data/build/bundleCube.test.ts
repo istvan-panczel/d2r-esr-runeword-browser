@@ -436,6 +436,9 @@ describe('buildCubeBundle', () => {
     expect(statConditionText(18, 'item_randomize', 0)).toBe('Not used yet');
     expect(statConditionText(18, 'item_randomize', 9)).toBe('Use counter = 9');
     expect(statConditionText(16, 'item_randomize', 254)).toBe('Random roll ≤ 254 (of 0 to 511)');
+    // Alchemical Excellence: a Randomizing Stone roll of 384 … 511; on Anya's Gift op 15 is the use counter
+    expect(statConditionText(15, 'item_randomize', 384, undefined, true)).toBe('Random roll ≥ 384 (of 0 to 511)');
+    expect(statConditionText(15, 'item_randomize', 2)).toBe('Use counter ≥ 2');
     expect(statConditionText(18, 'stancedancecontrol', 0)).toBe('Not applied to this stone yet');
     const { bundle } = build([row('Cow Portal: Club + 1 TP Tome', ['key', 'map'], 'Red Portal', { condition: [28, 0, 0] })]);
     expect(bundle.recipes[0]?.conditions).toEqual([GAME_CHECK_TEXT]);

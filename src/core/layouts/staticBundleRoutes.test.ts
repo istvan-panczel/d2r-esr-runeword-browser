@@ -29,6 +29,7 @@ describe('isStaticBundlePath', () => {
     '/stash/items',
     '/terror-zones',
     '/modifiers',
+    '/elixirs',
   ])('matches the prefix route %s', (pathname) => {
     expect(isStaticBundlePath(pathname)).toBe(true);
   });

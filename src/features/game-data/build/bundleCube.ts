@@ -126,6 +126,8 @@ const STAT_LABELS: Readonly<Partial<Record<string, string>>> = {
 
 /** The hidden random roll some pools read (`item_randomize` ≤ N picks a band of 0 … 511): shown as odds instead */
 const ROLL_STAT = 'item_randomize';
+/** The Randomizing Stone (misc code): as a recipe's first input, its `item_randomize` is the roll */
+const RANDOMIZING_STONE = 'rnd';
 
 /** `op 28`: no stat; the vanilla quest and portal recipes (Horadric Staff, Khalim's Will, Cow Portal, Pandemonium) */
 const GAME_CHECK_OP = 28;
@@ -138,7 +140,14 @@ export const GAME_CHECK_TEXT = 'Game rules of the original recipe apply (quest s
  * The ops, read from how ESR uses them: 3 and 15 "at least", 16 "at most", 17 "not equal", 18 "equal"
  * ("Unsocket" needs sockets ≥ 1, "Adds Socket(4)" sockets ≤ 3, tinkering points ≥ 2 before the recipe takes 2).
  */
-export function statConditionText(op: number, stat: string, value: number, counterName?: (stat: string) => string | null): string | null {
+export function statConditionText(
+  op: number,
+  stat: string,
+  value: number,
+  counterName?: (stat: string) => string | null,
+  /** The row's first input is a Randomizing Stone, whose `item_randomize` is the 0 … 511 roll (not a use counter) */
+  rollInput = false
+): string | null {
   const flag = (unset: string, set: string) => (op === 18 ? (value === 0 ? unset : set) : op === 17 && value === 0 ? set : null);
   let named: string | null = null;
   if (stat === 'item_craftflag') named = flag('No forging mod', 'Has a forging mod');
@@ -154,6 +163,7 @@ export function statConditionText(op: number, stat: string, value: number, count
   else if (stat === 'stancedancecontrol' && op === 18 && value === 0) named = 'Not applied to this stone yet';
   else if (stat === ROLL_STAT && op === 18 && value === 0) named = 'Not used yet';
   else if (stat === ROLL_STAT && op === 16) named = `Random roll ≤ ${formatValue(value)} (of 0 to 511)`;
+  else if (stat === ROLL_STAT && op === 15 && rollInput) named = `Random roll ≥ ${formatValue(value)} (of 0 to 511)`;
   if (named !== null) return named;
   const symbol = STAT_OPS[op];
   if (symbol === undefined || stat === '') return null;
@@ -197,7 +207,8 @@ function conditionsOf(row: CubeRow, ctx: CubeContext, bosses: ReadonlyMap<number
     } else if (condition.op === GAME_CHECK_OP) {
       conditions.push(GAME_CHECK_TEXT);
     } else {
-      const text = statConditionText(condition.op, stat, condition.value, ctx.tables.counterName);
+      const rollInput = (row.inputs[0] ?? '').split(',')[0]?.trim() === RANDOMIZING_STONE;
+      const text = statConditionText(condition.op, stat, condition.value, ctx.tables.counterName, rollInput);
       if (text !== null) conditions.push(text);
     }
   }
