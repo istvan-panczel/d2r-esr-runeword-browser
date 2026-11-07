@@ -58,12 +58,17 @@ function commonTrailingWords(names: readonly (readonly string[])[]): number {
 
 /**
  * The quality ladder: the item types the candidates use as `type2` (the gem grades), each labelled with its type name
- * minus the words all of them share ("Chipped Gem" → "Chipped").
+ * minus the words all of them share ("Chipped Gem" → "Chipped"). Only the largest set of sibling types (one parent)
+ * counts: ESR 3.3 also gives potions and elixirs a `type2` (`upot`, `relx`, `gelx`, under `poti`), which are no grades.
  */
 function buildLadder(items: readonly LootFilterItem[], typeByCode: ReadonlyMap<string, ItemTypeInfo>): Ladder {
-  const codes = [...new Set(items.flatMap((item) => (item.type2 === undefined ? [] : [item.type2])))].filter((code) =>
-    typeByCode.has(code)
-  );
+  const used = [...new Set(items.flatMap((item) => (item.type2 === undefined ? [] : [item.type2])))].filter((code) => typeByCode.has(code));
+  const siblings = new Map<string, string[]>();
+  for (const code of used) {
+    const parent = typeByCode.get(code)?.parents[0] ?? '';
+    siblings.set(parent, [...(siblings.get(parent) ?? []), code]);
+  }
+  const codes = [...siblings.values()].reduce<string[]>((largest, group) => (group.length > largest.length ? group : largest), []);
   if (codes.length < 2) return EMPTY_LADDER;
   const words = codes.map((code) => (typeByCode.get(code)?.name ?? code).split(/\s+/));
   const shared = commonTrailingWords(words);

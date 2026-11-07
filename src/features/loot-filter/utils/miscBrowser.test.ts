@@ -164,6 +164,21 @@ describe('buildMiscBrowserModel', () => {
   });
 });
 
+describe('buildMiscBrowserModel with other type2 users (ESR 3.3)', () => {
+  it('keeps the gem grades as the ladder when potions and elixirs carry a type2 too', () => {
+    const types = [...TYPES, type('upot', 'Utility Potions', ['poti']), type('relx', 'Regular Elixirs', ['poti', 'upot'])];
+    const items = [
+      ...ITEMS,
+      item('vps', 'Stamina Potion', 'hpot', { type2: 'upot' }),
+      item('01p', 'Elixir of Attributes', 'upot', { type2: 'relx' }),
+    ];
+    const gem = buildMiscBrowserModel(items, types, new Set(['amu']))
+      .groups.flatMap((group) => group.types)
+      .find((t) => t.code === 'gem');
+    expect(gem?.columns.map((column) => column.label)).toEqual(['Chipped', 'Flawed', 'Standard', 'Perfect']);
+  });
+});
+
 describe('the misc model on the shipped bundles', () => {
   const read = (path: string): unknown => JSON.parse(readFileSync(resolve(process.cwd(), path), 'utf8'));
   const model = getMiscBrowserModel(
