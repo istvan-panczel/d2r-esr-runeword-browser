@@ -182,7 +182,7 @@ export interface HtmUniqueItem {
   readonly properties: readonly string[];
   readonly isAncientCoupon: boolean;
   readonly gambleItem: string;
-  readonly notes: string; // "Notes" column (ESR 3.12+), e.g. "Blessed Edge Variant"; empty for most items
+  readonly notes: string; // "Notes" column (ESR 3.12+); empty for most items (ESR 3.3 moved the "... Variant" notes into "Weapon Mastery (...)" property lines)
 }
 
 // Mythical Unique Items
