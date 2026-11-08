@@ -62,6 +62,8 @@ export interface OfficialReference {
   /** File name in the ESR repository's docs/ folder (served at the site root) */
   readonly file: string;
   readonly description: string;
+  /** This app's page on the same topic, shown next to the official one; omitted: none */
+  readonly page?: { readonly path: string; readonly label: string };
 }
 
 /** The official ESR documentation pages, in reading order; the changelog last. */
@@ -77,7 +79,12 @@ export const OFFICIAL_REFERENCES: readonly OfficialReference[] = [
     description: 'Special dungeons and areas, and where teleporting is blocked.',
   },
   { label: 'Endgame Maps', file: 'endgame_maps.htm', description: 'How to open map zones, the map tiers and their bosses.' },
-  { label: 'Kill Ledger', file: 'kill_ledger.htm', description: 'The book that counts your kills: milestone and map boss bonuses.' },
+  {
+    label: 'Kill Ledger',
+    file: 'kill_ledger.htm',
+    description: 'The book that counts your kills: milestone and map boss bonuses.',
+    page: { path: '/kill-ledger', label: 'Kill Ledger page' },
+  },
   { label: 'Weapon Mastery', file: 'weapon_mastery.html', description: 'How a Weapon Mastery Token changes class weapons and skills.' },
   { label: 'Skill Information', file: 'skill_information.htm', description: "Every mercenary type's skills, and how oskills work." },
   {

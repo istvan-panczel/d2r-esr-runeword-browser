@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { OFFICIAL_REFERENCES, officialReferenceHref } from '../utils/guideHome';
 import { ExternalLink } from '@/components/ExternalLink';
@@ -29,6 +30,11 @@ export function GuideOfficialReference({ description = DEFAULT_DESCRIPTION }: Gu
             >
               {reference.label}
             </ExternalLink>
+            {reference.page !== undefined && (
+              <Link to={reference.page.path} className={cn('ml-2 rounded-sm text-xs font-medium text-primary hover:underline', FOCUS_RING)}>
+                {reference.page.label}
+              </Link>
+            )}
             <span className={cn('block text-xs text-muted-foreground', GUIDE_PROSE_FONT)}>{reference.description}</span>
           </li>
         ))}

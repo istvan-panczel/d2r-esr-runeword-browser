@@ -208,6 +208,16 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
                 <SectionHeader title={section.label} />
                 {section.notes !== undefined && <CubeNotes notes={section.notes} className="text-sm" />}
                 <GuideLinks notes={guideNotes((section.guide ?? []).filter((slug) => known.has(slug)))} />
+                {section.page !== undefined && (
+                  <p className="text-xs">
+                    <Link
+                      to={section.page.path}
+                      className="font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+                    >
+                      {section.page.label}
+                    </Link>
+                  </p>
+                )}
               </div>
               {families.map((view) => (
                 <CubeFamilySection

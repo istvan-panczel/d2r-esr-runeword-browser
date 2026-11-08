@@ -20,6 +20,7 @@ const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/terror-zones',
   '/modifiers',
   '/specializations',
+  '/kill-ledger',
   '/elixirs',
 ];
 
