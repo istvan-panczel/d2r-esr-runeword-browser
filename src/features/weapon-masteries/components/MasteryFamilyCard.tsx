@@ -75,7 +75,7 @@ function OptionBlock({
       ))}
       {diffs.map((diff) => (
         <p key={diff.subject} className={NOTE_CLASS}>
-          The official page reads differently: &ldquo;{diff.page}&rdquo;. The game files: &ldquo;{diff.files}&rdquo;.
+          The official page reads differently: &ldquo;{diff.page}&rdquo;. The game files: &ldquo;{diff.files}&rdquo;
         </p>
       ))}
     </div>

@@ -105,7 +105,7 @@ function MasteriesBrowser({ bundle }: { readonly bundle: MasteriesBundle }) {
 
       {state.unknown !== null && (
         <p role="status" className="rounded-md border border-amber-600/40 bg-amber-500/10 px-3 py-2 text-sm">
-          No class or mastery named &ldquo;{state.unknown}&rdquo;. Showing everything instead.
+          No class or mastery named &ldquo;{state.unknown}&rdquo;.
         </p>
       )}
 

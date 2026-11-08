@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { MasteriesBundle, WeaponMastery } from '../engine/schema';
-import { anyWeaponPerkText, buildMasteryIndex, masteryBasesUrl, masteryRecipe, masterySummary, namesOneSkill } from './masteries';
+import {
+  anyWeaponPerkText,
+  buildMasteryIndex,
+  masteryBasesUrl,
+  masteryHref,
+  masteryRecipe,
+  masterySummary,
+  namesOneSkill,
+} from './masteries';
 
 const mastery = (
   property: string,
@@ -9,6 +17,7 @@ const mastery = (
   extra: Partial<WeaponMastery> = {}
 ): WeaponMastery => ({
   property,
+  slug: property.replace('weapon-mastery-', ''),
   label,
   cls: 'sor',
   bases: ['ob1', 'ob6'],
@@ -30,6 +39,11 @@ const bundle: MasteriesBundle = {
   names: { ggg: 'Crushed Gem', qqq: 'Anvil Stone', u38: 'Awakened Weapon Mastery Token', wms: 'Thawing Potion' },
   skillNames: { 'Meteor Shower': 'Meteor Shower', Teleport: 'Teleport', Omnipotence: 'Omnipotence' },
   masteries: [orb1, orb2],
+  baseNames: {},
+  noRunewords: true,
+  noMasteryBases: [],
+  pageRules: {},
+  pageDiffs: [],
 };
 
 describe('weapon mastery helpers', () => {
@@ -45,6 +59,7 @@ describe('weapon mastery helpers', () => {
     expect(masterySummary([orb1])).toBe('Spells');
     expect(masteryRecipe(orb1, bundle.names).map((entry) => entry.text)).toEqual(['Awakened token', 'Crushed Gem', 'Anvil Stone']);
     expect(masteryBasesUrl(orb1)).toBe('/game-data/bases?type=orb');
+    expect(masteryHref('orb-1')).toBe('/weapon-masteries?mastery=orb-1');
     expect(masteryBasesUrl(mastery('weapon-mastery-reflex-bow', 'Reflex Bow', [], { bases: ['am2', 'am7', 'amc', 'm54'] }))).toBe(
       '/game-data/bases?codes=am2%2Cam7%2Camc%2Cm54'
     );

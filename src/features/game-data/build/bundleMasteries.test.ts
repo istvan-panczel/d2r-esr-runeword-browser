@@ -322,7 +322,7 @@ describe('buildMasteriesBundle', () => {
     base('am7', 'Ceremonial Bow', 'abow', 'exceptional', ['am2', 'am7', 'amc'], 30, { cls: 'ama' }),
     base('am2', 'Reflex Bow', 'abow', 'normal', ['am2', 'am7', 'amc'], 10, { cls: 'ama' }),
     base('ob1', 'Eagle Orb', 'orb', 'normal', ['ob1', 'ob6', 'obb'], 5, { cls: 'sor' }),
-    base('kkl', 'Brass Knuckle', 'knuc', 'normal', ['kkl'], 2, { kind: 'weapon', cls: 'ass' }),
+    base('kkl', 'Brass Knuckle', 'knuc', 'normal', ['kkl', '9kl', '0kl'], 2, { kind: 'weapon', cls: 'ass' }),
   ];
   const cube = [
     cubeRow(10, 'Apply Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
