@@ -6,6 +6,7 @@ import {
   SPECIALIZATIONS_CONFIG_FILE,
   type SpecializationsSources,
 } from './bundleSpecializations.ts';
+import { MASTERY_PAGE_FILE } from './masteryPage.ts';
 import { SKILL_INFO_PAGE_FILE } from './skillInfoPage.ts';
 import { SPECIALIZATIONS_PAGE_FILE } from './specializationsPage.ts';
 import type { StringsFile } from './strings.ts';
@@ -109,6 +110,8 @@ export interface EsrSources {
   desecratedZones: string;
   /** Raw docs/skill_information.htm (the official mercenary and oskill page); null when the file is missing */
   skillInfoPage: string | null;
+  /** Raw docs/weapon_mastery.html (the official weapon mastery page); null when the file is missing */
+  masteryPage: string | null;
   /** specializations.json: the plugin configs, the official page and the icon sheet names */
   specializations: SpecializationsSources;
 }
@@ -176,6 +179,7 @@ export function readEsrSources(esrDir: string): EsrSources {
     modifierPatches,
     desecratedZones,
     skillInfoPage,
+    masteryPage: optional(MASTERY_PAGE_FILE),
     specializations,
   };
 }

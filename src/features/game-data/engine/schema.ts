@@ -1075,11 +1075,31 @@ export interface MasteriesBundle {
    * "True Master - Apply …" rows); omitted when the rows have none
    */
   anyWeaponPerk?: { title: string; tree: string };
+  /** Display names of every base code the masteries and `noMasteryBases` name (the Weapon Masteries page has no bases.json) */
+  baseNames: Record<string, string>;
+  /** Every apply row needs a non-runeword weapon (the cube's `nru` qualifier) */
+  noRunewords: boolean;
+  /** Class weapon bases with no apply row (ESR 3.3: the 6 Assassin knuckles), by class */
+  noMasteryBases: { code: string; cls: ClassCode }[];
+  /** What docs/weapon_mastery.html states that the files cannot show; a field is omitted when its sentence is missing */
+  pageRules: { mapBossChance?: number; zakarumChance?: number };
+  /** Where the official page reads differently from the rows and strings (the files win) */
+  pageDiffs: MasteryPageDiff[];
+}
+
+export interface MasteryPageDiff {
+  subject: string;
+  files: string;
+  page: string;
+  /** The mastery's `slug`; omitted when it is about the page as a whole */
+  mastery?: string;
 }
 
 export interface WeaponMastery {
   /** The cube property the apply rows set (`weapon-mastery-stag-bow`): one per specialisation */
   property: string;
+  /** The URL key of `/weapon-masteries?mastery=` (`stag-bow`, `orb-1`): the property without its prefix */
+  slug: string;
   /** The weapon as the cube rows name it ("Stag Bow", "Orb", "Void Blade") */
   label: string;
   cls: ClassCode;
@@ -1087,6 +1107,8 @@ export interface WeaponMastery {
   type?: string;
   /** Every base the apply rows take, in bases.json order */
   bases: string[];
+  /** Apply-row codes that are not spawnable bases (ESR's LoD `q..` copies, some mythicals); omitted when none */
+  otherBases?: { code: string; kind: 'lod' | 'mythical' | 'other' }[];
   /** The awakened token (misc code) the apply rows take */
   token: string;
   /** Apply: the inputs after the weapon and the token, in cube order */
@@ -1104,6 +1126,8 @@ export interface WeaponMastery {
    * written-out line ("-100% Magic Resist (no item line; …)") and a `masteries:` warning. Omitted when none
    */
   mods?: string[];
+  /** Rules only the official page states for this mastery (a footnote), without its "*"; omitted when none */
+  pageNotes?: string[];
 }
 
 export interface MasteryInput {

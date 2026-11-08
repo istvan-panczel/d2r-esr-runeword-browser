@@ -3,7 +3,7 @@
   "esrVersion": "3.3.02",
   "esrTag": "3.3.02",
   "esrCommit": "4237a00984d9e9a874afde8ecdf361b88c55d9b8",
-  "generatedAt": "2026-11-08T14:19:04.905Z",
+  "generatedAt": "2026-11-08T16:07:21.948Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -90,8 +90,8 @@
       "bytes": 342662
     },
     "masteries": {
-      "hash": "f70d909b2b3132c23dfaf6ed44b4ea4a42f0f95dd2272e75f4024a906255c447",
-      "bytes": 15199
+      "hash": "2ba572260bd84d5557c1ece3b29f7d026ab7d3c4df4414abf9eeb28b609b3fac",
+      "bytes": 20547
     },
     "specializations": {
       "hash": "1e2e786b01617f4cf5ec66de255865e455ea746b71ceea4e0d4fd7e4db4b0b2e",
@@ -278,6 +278,8 @@
     "masteryBases": 93,
     "masteryEffects": 30,
     "masterySkills": 68,
+    "masteryOtherBases": 12,
+    "masteryPageDiffs": 3,
     "specializationTrees": 4,
     "specializationPerks": 60,
     "specializationIcons": 60,
@@ -361,6 +363,10 @@
     "masteries: Wretched Scythe (weapon-mastery-wretched-scythe): mod total-magic-resist -100 has no item text; shown as \"-100% Magic Resist (no item line; why your magic resist is always 0)\"",
     "masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull",
     "masteries: cubemain line 2380 \"Awaken Weapon Mastery Token - Celestial Blade\" takes \"0bs\", which cannot get this mastery",
-    "masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be"
+    "masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be",
+    "masteries: Oak Branch (weapon-mastery-oak-branch): the formulas of Twin Fangs, Ferocious Bite, Thunderclaws read weapon_mastery_oak_branch, the text does not name them",
+    "masteries: Oak Branch (weapon-mastery-oak-branch): the text names Contagion, whose formulas do not read weapon_mastery_oak_branch",
+    "masteries: Ritualistic Dagger (weapon-mastery-ritualistic-dagger): the text names Terror, Confuse, whose formulas do not read weapon_mastery_ritualistic_dagger",
+    "masteries: Blessed Edge (weapon-mastery-blessed-edge): the formulas of Crucify, Vengeance, Judgement read weapon_mastery_blessed_edge, the text does not name them"
   ]
 }

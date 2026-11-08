@@ -13,6 +13,10 @@
  * - The skills line names skills ("Strafe", "Poison, Immolation, Freezing, Lightning Arrow") or a group ("Curses",
  *   "Sorceress Exclusives"); `resolveEffectSkills` maps both to skill ids, with the few groups the data cannot name in
  *   GROUP_RULES.
+ * - docs/weapon_mastery.html (masteryPage.ts) gives the drop odds and footnotes only the page states; its wording is
+ *   compared with the rows and strings (the files win) into `pageDiffs`.
+ * - `masteries:` warnings also report where the effect text and the skills.txt formulas disagree on which skills a
+ *   mastery changes; the page shows what the text names.
  */
 import type {
   BaseItem,
@@ -22,15 +26,19 @@ import type {
   MasteriesBundle,
   MasteryEffect,
   MasteryInput,
+  MasteryPageDiff,
   SkillDetail,
   WeaponMastery,
 } from '../engine/schema.ts';
 import type { CubeRow, ModRenderer } from './cube/cubeRows.ts';
 import type { Perk, PerkCheck } from './cube/perks.ts';
+import { parseMasteryPage, type MasteryPage } from './masteryPage.ts';
 import type { TsvTable } from './tsv.ts';
 
 /** The cube properties that set a specialisation's stat (`weapon-mastery-stag-bow` → `weapon_mastery_stag_bow`) */
 const MASTERY_PROPERTY = /^weapon-mastery-./;
+
+const MASTERY_PROPERTY_PREFIX = /^weapon-mastery-/;
 
 /** The item type of "any weapon" (the True Master and Remove Weapon Mastery rows take it) */
 const ANY_WEAPON = 'weap';
@@ -261,6 +269,9 @@ export function resolveEffectSkills(
 
 // --- cube rows ------------------------------------------------------------------------------------------------------
 
+/** The `nru` qualifier of a cube input: the item must not be a runeword */
+const needsNoRuneword = (cell: string) => cell.split(',').some((part) => part.trim() === 'nru');
+
 /** "wms,qty=3" → { code: 'wms', qty: 3 }; "am1,nru" → { code: 'am1' } */
 export function readInput(cell: string): MasteryInput {
   const [code, ...qualifiers] = cell.split(',').map((part) => part.trim());
@@ -288,6 +299,12 @@ const TIER_ORDER: readonly BaseItem['tier'][] = ['normal', 'exceptional', 'elite
 
 const sameInputs = (a: readonly MasteryInput[], b: readonly MasteryInput[]) => JSON.stringify(a) === JSON.stringify(b);
 
+/** Why an apply row's code is no spawnable base, from the row's own name ("… - Matriarchal Bow LoD", "… - Mythical Elven Bow") */
+function otherBaseKind(row: CubeRow): 'lod' | 'mythical' | 'other' {
+  if (/\bLoD$/i.test(row.description)) return 'lod';
+  return /\bMythical\b/i.test(row.description) ? 'mythical' : 'other';
+}
+
 /** "Apply Awaken Weapon Mastery Token - Orb 1" → "Orb" */
 function labelOf(row: CubeRow): string {
   return row.description.replace(/^.* - /, '').replace(/\s+\d+$/, '');
@@ -310,6 +327,79 @@ export interface MasteryBuildInput {
   statOf?: (property: string) => string | undefined;
   /** The specialisation perks a cube row needs (cube/perks.ts); omitted: none */
   perkChecks?: (row: CubeRow) => readonly PerkCheck[];
+  /** Raw docs/weapon_mastery.html; null when the file is missing, omitted to skip the comparison */
+  page?: string | null;
+}
+
+/** Case, curly quotes, full stops and the page's footnote marks do not count as a different wording */
+const comparable = (text: string) => text.toLowerCase().replace(/[’‘]/g, "'").replace(/[.*]/g, '').replace(/\s+/g, ' ').trim();
+
+/** Where the page's Specializations table differs from the rows and strings, and the footnotes of each specialisation */
+export function compareMasteryPage(
+  page: MasteryPage,
+  masteries: readonly WeaponMastery[],
+  nameOf: (code: string) => string
+): { diffs: MasteryPageDiff[]; notes: Map<string, string[]> } {
+  const diffs: MasteryPageDiff[] = [];
+  const notes = new Map<string, string[]>();
+  const used = new Set<string>();
+  const add = (subject: string, files: string, pageValue: string, mastery?: string) => {
+    if (comparable(files) !== comparable(pageValue)) {
+      diffs.push({ subject, files, page: pageValue, ...(mastery === undefined ? {} : { mastery }) });
+    }
+  };
+  for (const row of page.rows) {
+    const weapon = row.weapon.replace(/\s+Variant$/i, '').toLowerCase();
+    const named = new Set(row.ingredients.map((name) => name.toLowerCase()));
+    const mastery = masteries
+      .filter((entry) => !used.has(entry.property))
+      .filter((entry) => weapon === entry.label.toLowerCase() || weapon.endsWith(` ${entry.label.toLowerCase()}`))
+      .map((entry) => ({ entry, score: entry.inputs.filter((input) => named.has(nameOf(input.code).toLowerCase())).length }))
+      .sort((a, b) => b.score - a.score)
+      .at(0)?.entry;
+    if (mastery === undefined) {
+      diffs.push({ subject: `Row "${row.weapon}"`, files: 'no such specialisation', page: row.ingredients.join(', ') });
+      continue;
+    }
+    used.add(mastery.property);
+    if (row.notes.length > 0) notes.set(mastery.property, row.notes);
+    const inputNames = mastery.inputs.map((input) => nameOf(input.code));
+    add(`${mastery.label} ingredients`, [...inputNames].sort().join(', '), [...row.ingredients].sort().join(', '), mastery.slug);
+    if (row.effects.length !== mastery.effects.length) {
+      add(`${mastery.label} skills lines`, String(mastery.effects.length), String(row.effects.length), mastery.slug);
+    }
+    for (const [i, effect] of mastery.effects.entries()) {
+      const pageEffect = row.effects.at(i);
+      if (pageEffect === undefined) continue;
+      add(`${mastery.label} › skills line ${String(i + 1)}`, effect.heading, pageEffect.heading, mastery.slug);
+      add(`${mastery.label} › ${effect.heading}`, effect.text.join(' '), pageEffect.lines.join(' '), mastery.slug);
+    }
+  }
+  for (const mastery of masteries) {
+    if (!used.has(mastery.property))
+      diffs.push({ subject: mastery.label, files: 'a specialisation', page: 'no row', mastery: mastery.slug });
+  }
+  return { diffs, notes };
+}
+
+/**
+ * Where the skills.txt formulas and the effect text disagree on the skills a mastery changes (`masteries:` warnings
+ * only; the page shows what the text names). A mastery no formula reads works elsewhere (plugins, missiles): nothing to
+ * compare.
+ */
+export function formulaMismatches(mastery: WeaponMastery, classSkills: readonly MasterySkill[], stat: string | undefined): string[] {
+  if (stat === undefined) return [];
+  const readers = classSkills.filter((skill) => skill.masteryStats.includes(stat));
+  if (readers.length === 0) return [];
+  const named = new Set(mastery.effects.flatMap((effect) => effect.skills));
+  const nameList = (skills: readonly MasterySkill[]) => skills.map((skill) => skill.name).join(', ');
+  const unnamed = readers.filter((skill) => !named.has(skill.id));
+  const nonReaders = classSkills.filter((skill) => named.has(skill.id) && !skill.masteryStats.includes(stat));
+  const where = `${mastery.label} (${mastery.property})`;
+  return [
+    ...(unnamed.length === 0 ? [] : [`${where}: the formulas of ${nameList(unnamed)} read ${stat}, the text does not name them`]),
+    ...(nonReaders.length === 0 ? [] : [`${where}: the text names ${nameList(nonReaders)}, whose formulas do not read ${stat}`]),
+  ];
 }
 
 /** Pairs each specialisation of a token with its description block, by the ingredients the recipe lines name */
@@ -397,6 +487,10 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
     for (const code of weaponCodes) {
       if (basesOf(code).length === 0 && !input.itemCodes.has(code)) warn(`${property}: unknown item "${code}"`);
     }
+    const otherBases = rows.flatMap((row) => {
+      const code = readInput(row.inputs[0] ?? '').code;
+      return basesOf(code).length === 0 && input.itemCodes.has(code) ? [{ code, kind: otherBaseKind(row) }] : [];
+    });
     // Normal, exceptional, elite, then mythical (bases.json order within a tier)
     const ordered = input.bases
       .filter((base) => bases.has(base.code))
@@ -434,10 +528,12 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
       });
     masteries.push({
       property,
+      slug: property.replace(MASTERY_PROPERTY_PREFIX, ''),
       label: labelOf(first),
       cls,
       ...(typeCode === undefined ? {} : { type: typeCode }),
       bases: ordered.map((base) => base.code),
+      ...(otherBases.length === 0 ? {} : { otherBases }),
       token,
       inputs,
       remove: remove.length === 0 ? [] : remove[0].inputs.slice(1).map(readInput),
@@ -529,6 +625,44 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
       .map((code) => [code, nameOf(code)])
   );
   const sortedSkillNames = Object.fromEntries(Object.entries(skillNames).sort(([a], [b]) => a.localeCompare(b)));
+
+  for (const mastery of masteries) {
+    const classSkills = input.skills.filter((skill) => skill.cls === mastery.cls);
+    for (const issue of formulaMismatches(mastery, classSkills, input.statOf?.(mastery.property))) warn(issue);
+  }
+
+  const applyRowCells = [...applyRows.values()].flat().map((row) => row.inputs[0] ?? '');
+  const noRunewords = applyRowCells.length > 0 && applyRowCells.every(needsNoRuneword);
+  if (!noRunewords) warn('some apply rows take runeword weapons (no `nru` on input 1)');
+
+  const masteryBases = new Set(masteries.flatMap((mastery) => mastery.bases));
+  const noMasteryBases = input.bases.flatMap((base) =>
+    base.kind === 'weapon' && base.cls !== null && !masteryBases.has(base.code) ? [{ code: base.code, cls: base.cls }] : []
+  );
+  const baseCodes = [
+    ...masteries.flatMap((mastery) => [...mastery.bases, ...(mastery.otherBases ?? []).map((entry) => entry.code)]),
+    ...noMasteryBases.map((entry) => entry.code),
+  ];
+  const baseNames = Object.fromEntries([...new Set(baseCodes)].sort().map((code) => [code, baseByCode.get(code)?.name ?? nameOf(code)]));
+
+  let pageRules: MasteriesBundle['pageRules'] = {};
+  let pageDiffs: MasteryPageDiff[] = [];
+  if (input.page === null) warn('docs/weapon_mastery.html missing in the ESR clone');
+  else if (input.page !== undefined) {
+    const page = parseMasteryPage(input.page);
+    for (const warning of page.warnings) warn(warning);
+    pageRules = {
+      ...(page.mapBossChance === undefined ? {} : { mapBossChance: page.mapBossChance }),
+      ...(page.zakarumChance === undefined ? {} : { zakarumChance: page.zakarumChance }),
+    };
+    const compared = compareMasteryPage(page, masteries, nameOf);
+    pageDiffs = compared.diffs;
+    for (const mastery of masteries) {
+      const notes = compared.notes.get(mastery.property);
+      if (notes !== undefined) mastery.pageNotes = notes;
+    }
+  }
+
   return {
     bundle: {
       token: unawakened,
@@ -536,6 +670,11 @@ export function buildMasteriesBundle(input: MasteryBuildInput): { bundle: Master
       skillNames: sortedSkillNames,
       masteries,
       ...(anyWeaponPerk === undefined ? {} : { anyWeaponPerk }),
+      baseNames,
+      noRunewords,
+      noMasteryBases,
+      pageRules,
+      pageDiffs,
     },
     warnings,
   };

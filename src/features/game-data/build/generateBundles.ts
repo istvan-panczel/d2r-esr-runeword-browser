@@ -342,6 +342,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     renderMods: cubeTables.renderMods,
     perkChecks: cubeTables.perkChecks,
     statOf: (property) => statTables.properties.get(property)?.slots[0]?.stat,
+    page: sources.masteryPage,
   });
   // --- end masteries.json ---
 
@@ -747,6 +748,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       masteryBases: new Set(masteries.bundle.masteries.flatMap((mastery) => mastery.bases)).size,
       masteryEffects: masteries.bundle.masteries.reduce((sum, mastery) => sum + mastery.effects.length, 0),
       masterySkills: Object.keys(masteries.bundle.skillNames).length,
+      masteryOtherBases: masteries.bundle.masteries.reduce((sum, mastery) => sum + (mastery.otherBases?.length ?? 0), 0),
+      masteryPageDiffs: masteries.bundle.pageDiffs.length,
       ...specializations.counts,
       elixirs: elixirs.bundle.elixirs.length,
       elixirsRegular: countElixirs((elixir) => elixir.variant === 'regular'),
