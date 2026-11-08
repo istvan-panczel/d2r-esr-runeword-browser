@@ -44,7 +44,7 @@ I use [Cloudflare Web Analytics](https://www.cloudflare.com/web-analytics/) to s
 - I do not collect your IP address, precise location, or individual device information for my own purposes. Cloudflare Web Analytics only gives me aggregated country, browser and device-type counts.
 - I do not use cookies for tracking. The app only uses session tokens necessary for authentication.
 - Loot filters you have not saved (drafts) stay in your browser's local storage and are never sent to me. Only the **Save** button sends a filter to the server.
-- **Stash files** you open on the My Stash pages are read in your browser and kept in its local database (IndexedDB) so the page remembers them. They are never uploaded to me or anyone else.
+- **Stash files and character saves** you open on the My Stash pages are read in your browser and kept in its local database (IndexedDB) so the pages remember them. They are never uploaded to me or anyone else.
 
 ## Why I Collect This Data
 

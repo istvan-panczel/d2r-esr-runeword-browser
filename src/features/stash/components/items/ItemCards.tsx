@@ -41,8 +41,8 @@ function Lines({ lines, className }: { readonly lines: readonly string[]; readon
   );
 }
 
-/** One item's tooltip-style card: the "Show all item information" cards and the item table's hover peek */
-export function ItemCard({ row, className }: { readonly row: ItemRow; readonly className?: string }) {
+/** One item's tooltip-style card: the "Show all item information" cards, the item table's hover peek, the character page (`where` replaces the stash place) */
+export function ItemCard({ row, className, where }: { readonly row: ItemRow; readonly className?: string; readonly where?: string }) {
   const { text } = row;
   const facts = [kindLabel(row), row.item.level === null ? null : `Item level ${String(row.item.level)}`].filter((fact) => fact !== null);
   return (
@@ -83,7 +83,7 @@ export function ItemCard({ row, className }: { readonly row: ItemRow; readonly c
         <span>{facts.join(' · ')}</span>
         {row.info.tier !== null && <TierBadge tier={row.info.tier} />}
         {row.item.ethereal && <EtherealBadge />}
-        <span className="basis-full tabular-nums">{formatLocation(row.location)}</span>
+        <span className="basis-full tabular-nums">{where ?? formatLocation(row.location)}</span>
       </footer>
     </article>
   );

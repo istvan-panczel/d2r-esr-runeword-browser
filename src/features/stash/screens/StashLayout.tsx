@@ -5,21 +5,22 @@ import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/n
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
+import { CharacterProvider } from '@/features/character/hooks/CharacterProvider';
 import { StashProvider } from '../hooks/StashProvider';
 import { STASH_PAGES } from './stashPages';
 
 const STASH_FILES = ['stash'] as const;
 
 /**
- * Frame of the My Stash pages: title, sub-page tabs, and the shared stash state (StashProvider) once stash.json is
- * loaded, so the upload survives moving between the pages.
+ * Frame of the My Stash pages: title, sub-page tabs, and the shared stash and character state (StashProvider, CharacterProvider) once stash.json is
+ * loaded, so the uploads survive moving between the pages.
  */
 export function StashLayout() {
   const gameData = useGameData(STASH_FILES);
   return (
     <PageShell
       title="My Stash"
-      meta="Your ESR shared stash, read in your browser: the file is never sent anywhere."
+      meta="Your ESR shared stash and characters, read in your browser: the files are never sent anywhere."
       nav={
         <nav className="flex flex-wrap gap-1" aria-label="My Stash pages">
           {STASH_PAGES.map((page) => (
@@ -39,7 +40,9 @@ export function StashLayout() {
       {gameData.status === 'error' && <GameDataError error={gameData.error} onRetry={gameData.retry} />}
       {gameData.status === 'ready' && (
         <StashProvider bundle={gameData.data.stash}>
-          <Outlet />
+          <CharacterProvider bundle={gameData.data.stash}>
+            <Outlet />
+          </CharacterProvider>
         </StashProvider>
       )}
     </PageShell>

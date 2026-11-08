@@ -27,6 +27,7 @@ describe('isStaticBundlePath', () => {
     '/stash',
     '/stash/coupons',
     '/stash/items',
+    '/stash/character',
     '/terror-zones',
     '/modifiers',
     '/elixirs',

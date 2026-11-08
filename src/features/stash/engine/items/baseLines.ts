@@ -7,8 +7,9 @@
  *   apply type (0 weapon, 1 helm, 2 shield; per item code, ESR sets body armor to 2, boots to 1 …); jewels give their
  *   saved stats. They count on runeword and gemword items too: the game applies socketed stats to every item.
  * - **Damage** (weapons): base damage (one-hand / two-hand / throw), ×1.5 when ethereal, × (100 + enhanced min / max
- *   damage %) / 100, + min / max damage; a max below the min becomes min + 1. Per-level damage depends on the
- *   character and is left out.
+ *   damage %) / 100, + min / max damage; a max below the min becomes min + 1. Per-level max damage (% and flat) and
+ *   per-level defense need the character: added with a `characterLevel` (the character page), left out without one (the
+ *   stash). VERIFIED on Thunder Star at level 102 against the in-game tooltip: 74 × (100 + 3 × 102) / 100 + 97 = 397.
  * - **Requirements**: strength / dexterity = base × (100 + requirements %) / 100, −10 when ethereal; level = the highest
  *   of the base, the unique / set item, the magic / rare affixes, the automagic affix and the socketed items, + the
  *   item's "required level" stat; crafted items: the affix level + 10 + 3 per affix (D2's rule, unverified in ESR).
@@ -17,7 +18,7 @@
 import type { ItemTextBase, ItemTextSavedStat } from '@/features/game-data/engine/schema';
 import type { StashItem, StashStat } from '../../parser/types';
 import type { StatValue } from './itemText';
-import { foldSecondary, STAT_ID, type TextData } from './textData';
+import { foldSecondary, perLevelAmount, STAT_ID, type TextData } from './textData';
 
 export const REQ_PERCENT = 91;
 export const LEVEL_REQ = 92;
@@ -92,15 +93,23 @@ const value = (key: string, label: string, shown: number, range?: { min: number;
 });
 
 /** The base lines (tooltip order) and their filter values (`b.*` keys); without data the saved fields only */
-export function baseText(item: StashItem, data: TextData | null): BaseText {
+export function baseText(item: StashItem, data: TextData | null, characterLevel?: number): BaseText {
   const lines: string[] = [];
   const values: StatValue[] = [];
   const stats = data === null ? [] : totalStats(item, data);
   const base = data?.bundle.bases[item.code];
+  /** A per-level stat's amount at the character's level, its sources added up first; 0 without a level or a definition */
+  const atLevel = (id: number): number => {
+    const def = data?.defs[id];
+    return def === undefined || characterLevel === undefined ? 0 : perLevelAmount(sumOf(stats, id), def, characterLevel);
+  };
 
   if (data !== null && base !== undefined) {
-    const ed = { min: sumOf(stats, STAT_ID.minDamagePercent), max: sumOf(stats, STAT_ID.maxDamagePercent) };
-    const flat = { min: sumOf(stats, STAT_ID.minDamage), max: sumOf(stats, STAT_ID.maxDamage) };
+    const ed = {
+      min: sumOf(stats, STAT_ID.minDamagePercent),
+      max: sumOf(stats, STAT_ID.maxDamagePercent) + atLevel(STAT_ID.maxDamagePercentPerLevel),
+    };
+    const flat = { min: sumOf(stats, STAT_ID.minDamage), max: sumOf(stats, STAT_ID.maxDamage) + atLevel(STAT_ID.maxDamagePerLevel) };
     const damage = (range: [number, number] | undefined, key: string, label: string) => {
       if (range === undefined) return;
       const [baseMin, baseMax] = item.ethereal ? range.map((part) => Math.floor(part * 1.5)) : range;
@@ -117,7 +126,8 @@ export function baseText(item: StashItem, data: TextData | null): BaseText {
   }
 
   if (item.defense !== null) {
-    const defense = Math.floor((item.defense * (100 + sumOf(stats, STAT_ID.armorPercent))) / 100) + sumOf(stats, STAT_ID.armorClass);
+    const percent = sumOf(stats, STAT_ID.armorPercent) + atLevel(STAT_ID.armorPercentPerLevel);
+    const defense = Math.floor((item.defense * (100 + percent)) / 100) + sumOf(stats, STAT_ID.armorClass) + atLevel(STAT_ID.armorPerLevel);
     lines.push(`Defense: ${String(defense)}`);
     if (data !== null) values.push(value('b.def', 'Defense: #', defense));
   }

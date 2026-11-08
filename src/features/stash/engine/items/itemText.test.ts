@@ -75,6 +75,43 @@ const STATS: Record<number, ItemTextStatDef> = {
     descstrpos: 'ModStr1u',
     descstr2: 'increaseswithplaylevelX',
   },
+  214: {
+    stat: 'item_armor_perlevel',
+    op: 4,
+    opParam: 3,
+    descpriority: 72,
+    descfunc: 19,
+    descstrpos: 'ModStr1i',
+    descstr2: 'increaseswithplaylevelX',
+  },
+  215: {
+    stat: 'item_armorpercent_perlevel',
+    op: 5,
+    opParam: 3,
+    descpriority: 73,
+    descfunc: 19,
+    descstrpos: 'Modstr2v',
+    descstr2: 'increaseswithplaylevelX',
+  },
+  218: {
+    stat: 'item_maxdamage_perlevel',
+    op: 4,
+    opParam: 3,
+    descpriority: 125,
+    descfunc: 19,
+    descstrpos: 'ModStr1f',
+    descstr2: 'increaseswithplaylevelX',
+  },
+  219: {
+    stat: 'item_maxdamage_percent_perlevel',
+    op: 5,
+    opParam: 3,
+    descpriority: 128,
+    descfunc: 19,
+    descstrpos: 'ModStr2j',
+    descstr2: 'increaseswithplaylevelX',
+  },
+  302: { stat: 'kill_display', op: 2, descpriority: 10, descfunc: 3, descstrpos: 'killtracker' },
   375: { stat: 'item_mythicaldesc', descpriority: 330, descfunc: 23, descstrpos: 'mythicalitemdesc' },
 };
 
@@ -108,6 +145,7 @@ const STRINGS: Record<string, string> = {
   Modstr2v: '%+d%% Enhanced Defense',
   StrSklTabItem1: '%+d to Javelin and Spear Skills',
   increaseswithplaylevelX: '(Based on Character Level)',
+  killtracker: 'Kills:',
   mythicalitemdesc: '.%1%0',
   strModAllResistances: 'All Resists %+d',
   strModColdDamageRange: 'Adds %d-%d Cold Damage to Attacks',
@@ -474,5 +512,51 @@ describe('socket fillers, damage and requirements', () => {
     expect(level({ stats: [s(92, 2)], socketed: [jewel] })).toBe(25);
     expect(level({ stats: [s(92, 30)], socketed: [jewel] })).toBe(33);
     expect(value(statValues(makeItem('cap', { defense: 10, stats: [s(31, 5)] }), ctx), 'b.def')?.value).toBe(15);
+  });
+});
+
+describe('item text at a character level', () => {
+  const atLevel = (characterLevel: number) => ({ characterLevel });
+
+  it('shows a per-level stat at the level, in integer arithmetic, and the rate without one', () => {
+    const item = makeItem('cap', { stats: [s(216, 5)] });
+    expect(renderItemText(item, ctx).stats).toEqual(['+0.625 to Life (Based on Character Level)']);
+    // 5 / 8 × 102 = 63.75: the game truncates
+    expect(renderItemText(item, ctx, atLevel(102)).stats).toEqual(['+63 to Life (Based on Character Level)']);
+    expect(renderItemText(item, ctx, atLevel(1)).stats).toEqual(['+0 to Life (Based on Character Level)']);
+  });
+
+  it('leaves op-2 stats that are not per character level alone (kill_display)', () => {
+    const item = makeItem('cap', { stats: [s(302, 3)] });
+    expect(renderItemText(item, ctx, atLevel(99)).stats).toEqual(renderItemText(item, ctx).stats);
+  });
+
+  it('adds per-level max damage to the damage line: enhanced % of the base, then flat', () => {
+    // Thunder Star's numbers: 74 base max, +97 flat, stored rate 3 (24 / 8) at level 102
+    const bases = { ...BUNDLE.bases, flail: { d1: [25, 74] as [number, number] } };
+    const star = createItemTextContext({ ...BUNDLE, bases }, catalog);
+    const item = makeItem('flail', { stats: [s(22, 97), s(219, 24)] });
+    expect(renderItemText(item, star).base[0]).toBe('One-Hand Damage: 25 to 171');
+    const leveled = renderItemText(item, star, atLevel(102));
+    expect(leveled.base[0]).toBe('One-Hand Damage: 25 to 397');
+    expect(leveled.stats).toContain('+306% Enhanced Maximum Damage (Based on Character Level)');
+    // flat per level: 24 / 8 × 10 = 30
+    expect(renderItemText(makeItem('flail', { stats: [s(218, 24)] }), star, atLevel(10)).base[0]).toBe('One-Hand Damage: 25 to 104');
+  });
+
+  it('adds per-level defense (percent of the base, then flat), and does nothing without a level', () => {
+    const item = makeItem('cap', { defense: 100, stats: [s(215, 8), s(214, 16)] });
+    expect(renderItemText(item, ctx).base[0]).toBe('Defense: 100');
+    // 10% enhanced + 20 flat at level 10
+    expect(renderItemText(item, ctx, atLevel(10)).base[0]).toBe('Defense: 130');
+  });
+
+  it('applies to runeword stats, set bonuses and socketed jewels too', () => {
+    const jewel = makeItem('jew', { stats: [s(216, 8)] });
+    const item = makeItem('cap', { runewordStats: [s(216, 16)], setBonusStats: [[s(216, 8)]], socketed: [jewel] });
+    const text = renderItemText(item, ctx, atLevel(10));
+    expect(text.runeword).toEqual(['+20 to Life (Based on Character Level)']);
+    expect(text.setBonuses[0]?.lines).toEqual(['+10 to Life (Based on Character Level)']);
+    expect(text.socketed[0]?.lines).toEqual(['+10 to Life (Based on Character Level)']);
   });
 });

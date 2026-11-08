@@ -96,6 +96,10 @@ describe('stash item text stat ids', () => {
       secondaryMaxDamage: 'secondary_maxdamage',
       armorClass: 'armorclass',
       coldLength: 'coldlength',
+      armorPerLevel: 'item_armor_perlevel',
+      armorPercentPerLevel: 'item_armorpercent_perlevel',
+      maxDamagePerLevel: 'item_maxdamage_perlevel',
+      maxDamagePercentPerLevel: 'item_maxdamage_percent_perlevel',
     });
   });
 

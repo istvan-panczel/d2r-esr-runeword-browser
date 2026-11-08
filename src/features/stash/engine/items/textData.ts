@@ -12,7 +12,8 @@
  * - class skills (13), oskills / single skills (27, 28), auras (16), monster types (22), monster texts (23): the param
  *   is the id the renderer looks up
  * - values are raw: the save stores the unshifted value (ValShift is not applied), per-level stats keep their
- *   `2^op param` fraction (the renderer divides)
+ *   `2^op param` fraction (the renderer divides); with a character level they are resolved to the amount at that level
+ *   (`resolvePerLevel`), since the stash itself has no character
  * - `coldlength` is left out: the tooltip writes "Adds 10-20 Cold Damage" without the duration (the generator's docs
  *   style appends one)
  * - `secondary_mindamage` / `secondary_maxdamage` (two-hand damage): a two-hander stores its + min / max damage
@@ -70,7 +71,24 @@ export const STAT_ID = {
   secondaryMaxDamage: 24,
   armorClass: 31,
   coldLength: 56,
+  armorPerLevel: 214,
+  armorPercentPerLevel: 215,
+  maxDamagePerLevel: 218,
+  maxDamagePercentPerLevel: 219,
 } as const;
+
+/** The string key of "(Based on Character Level)": a per-level stat (kill_display has op 2 but counts kills) */
+const PER_LEVEL_DESC = 'increaseswithplaylevelX';
+
+/** A stat the game multiplies by the character's level: `value × level >> op param` */
+export function isPerLevel(def: Pick<StatDef, 'op' | 'descstr2'>): boolean {
+  return (def.op === 2 || def.op === 4 || def.op === 5) && def.descstr2 === PER_LEVEL_DESC;
+}
+
+/** The amount of a per-level stat at a character level, in the game's integer arithmetic (3 × 102, 5/8 × 102 = 63) */
+export function perLevelAmount(raw: number, def: Pick<StatDef, 'opParam'>, level: number): number {
+  return Math.floor((raw * level) / 2 ** def.opParam);
+}
 
 /** dgrp sets named for the stat filters; the others are named by their dgrpstrpos key */
 const DGRP_NAMES: Readonly<Record<string, string>> = { strModAllResistances: 'allres', Moditem2allattrib: 'allattr' };
@@ -194,9 +212,10 @@ export function chargesText(stat: StashStat, def: StatDef, data: TextData): stri
 
 /**
  * Saved stats → renderer entries. `unknown` collects the stats itemtext.json does not know (rendered as
- * `unknownStatText`).
+ * `unknownStatText`). With a `characterLevel` a per-level stat becomes its amount at that level (kept in the raw
+ * fixed-point form: the renderer divides by `2^op param`); without one it stays the rate.
  */
-export function toEntries(stats: readonly StashStat[], data: TextData): StatEntry[] {
+export function toEntries(stats: readonly StashStat[], data: TextData, characterLevel?: number): StatEntry[] {
   const entries: StatEntry[] = [];
   for (const stat of foldSecondary(stats)) {
     const def = data.defs[stat.id];
@@ -217,8 +236,11 @@ export function toEntries(stats: readonly StashStat[], data: TextData): StatEntr
       case 14:
         entries.push({ stat: def.stat, param: String(tabNumber(stat.param)), min: stat.value, max: stat.value });
         break;
-      default:
-        entries.push({ stat: def.stat, param: stat.param === 0 ? '' : String(layerOf(stat.param)), min: stat.value, max: stat.value });
+      default: {
+        const value =
+          characterLevel !== undefined && isPerLevel(def) ? perLevelAmount(stat.value, def, characterLevel) * 2 ** def.opParam : stat.value;
+        entries.push({ stat: def.stat, param: stat.param === 0 ? '' : String(layerOf(stat.param)), min: value, max: value });
+      }
     }
   }
   return entries;
