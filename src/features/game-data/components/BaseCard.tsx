@@ -6,7 +6,7 @@ import { BASE_TIER_LABELS, TIER_BADGE_CLASS } from '../constants/bases';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { baseAutomodView, baseDamageLabel, type BaseAutomodView } from '../utils/baseAutomods';
 import { formatAffixLevel } from '../utils/filterAffixes';
-import { formatRange, formatSocketCaps } from '../utils/format';
+import { formatArmorRunWalk, formatRange, formatSocketCaps } from '../utils/format';
 import type { MasteryIndex } from '../utils/masteries';
 import { ItemIcon } from './ItemIcon';
 import { SuperiorRollsSection } from './SuperiorRollsSection';
@@ -166,6 +166,7 @@ export function BaseCard({ base, typeByCode, baseByCode, automodById, classNames
           {base.def !== null && <Stat label="Defense">{formatRange(base.def)}</Stat>}
           {base.block !== null && <Stat label="Block">{base.block}%</Stat>}
           {base.kind === 'weapon' && <Stat label="Speed">{base.speed}</Stat>}
+          {base.kind === 'armor' && base.speed !== 0 && <Stat label="Run/Walk">{formatArmorRunWalk(base.speed)}</Stat>}
           {base.range !== undefined && (
             <Stat label="Range">
               <span title="weapons.txt rangeadder">+{base.range}</span>

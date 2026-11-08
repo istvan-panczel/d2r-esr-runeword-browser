@@ -6,7 +6,7 @@ import type { BaseItem, ItemTypeInfo, SuperiorAffixes } from '../engine/schema';
 import type { EligibleBase } from '../engine/bestBase';
 import { minIlvlForSockets } from '../engine/sockets';
 import { BASE_TIER_LABELS, TIER_BADGE_CLASS } from '../constants/bases';
-import { formatRange } from '../utils/format';
+import { formatArmorRunWalk, formatRange } from '../utils/format';
 import { collapseRowsBySockets, formatSocketOption } from '../utils/bestBaseResults';
 import { SuperiorRollsSection } from './SuperiorRollsSection';
 
@@ -81,6 +81,7 @@ export function EligibleBaseCard({ result, type, classNames, upgrade, superior }
           {result.def !== null && <Stat label="Defense">{formatRange(result.def)}</Stat>}
           {base.block !== null && <Stat label="Block">{base.block}%</Stat>}
           {base.kind === 'weapon' && <Stat label="Speed">{base.speed}</Stat>}
+          {base.kind === 'armor' && base.speed !== 0 && <Stat label="Run/Walk">{formatArmorRunWalk(base.speed)}</Stat>}
           <Stat label="Required">
             <span className="flex flex-wrap gap-x-2">
               <Requirement label="Lvl" value={result.effectiveReqLvl} deficit={deficits.lvl} />
