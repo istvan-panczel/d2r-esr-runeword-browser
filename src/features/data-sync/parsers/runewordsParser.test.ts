@@ -1147,7 +1147,7 @@ describe('parseRunewordsHtml: ESR 3.3 Bonuses / Socketable Bonuses columns', () 
 });
 
 describe('parseRunewordsHtml: pre-ESR 3.3 layout (per-category bonus columns)', () => {
-  const previous = parseRunewordsHtml(readFileSync(resolve(__dirname, '../../../../test-fixtures/previous/runewords.htm'), 'utf-8'));
+  const previous = parseRunewordsHtml(readFileSync(resolve(__dirname, '../../../../test-fixtures/layout-3.2.24/runewords.htm'), 'utf-8'));
   const current = parseRunewordsHtml(readFileSync(resolve(__dirname, '../../../../test-fixtures/runewords.htm'), 'utf-8'));
 
   it('parses the same rows in the same order, so saved runeword:Name:N ids stay valid', () => {

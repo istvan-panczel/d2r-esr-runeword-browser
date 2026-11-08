@@ -245,9 +245,9 @@ describe('Notes column', () => {
     expect(withNotes.every((item) => item.page === 'other')).toBe(true);
   });
 
-  it('reads the ESR 3.2 "... Variant" notes from the previous pages', () => {
+  it('reads the ESR 3.2 "... Variant" notes from the 3.2.24 pages', () => {
     const previousWeapons = parseHtmUniqueItems(
-      readFileSync(resolve(__dirname, '../../../../test-fixtures/previous/unique_weapons.htm'), 'utf-8'),
+      readFileSync(resolve(__dirname, '../../../../test-fixtures/layout-3.2.24/unique_weapons.htm'), 'utf-8'),
       'weapons'
     );
     const item = previousWeapons.find((w) => w.name === 'Barbaric Devastator');

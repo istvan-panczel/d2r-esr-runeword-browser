@@ -156,7 +156,7 @@ interface SocketableBonusGroup {
   `<div class="rws-group">` per item-type label). Before 3.3 it had 6: one bonus column per item category
   ("Weapons / Gloves", "Helms / Boots", "Armor / Shields / Belts"), each [runeword bonuses]<br><br>[rune bonuses].
   Both layouts are parsed (a cached or lagging page may still serve the old one); rows, order and variants are the
-  same in both (fixtures: `test-fixtures/runewords.htm` = 3.3, `test-fixtures/previous/runewords.htm` = 3.2.24).
+  same in both (fixtures: `test-fixtures/runewords.htm` = 3.3, `test-fixtures/layout-3.2.24/runewords.htm` = 3.2.24).
 - **columnAffixes**: Per-column bonuses (weapon/helm/armor). In the 3.3 layout the one Bonuses list goes into every
   column the row's bases use (the categories of its socketable bonus group types, else of its allowed items) and the
   others stay empty, which reproduces the old columns on every 3.2.24 row, so builds whose snapshots hold the columns
