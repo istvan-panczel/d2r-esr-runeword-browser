@@ -11,4 +11,9 @@ export const STASH_PAGES = [
     label: 'All Items',
     description: 'Every item on your stash pages with its name, quality, tier and place: search names and stats, filter and sort',
   },
+  {
+    to: '/stash/character',
+    label: 'My Character',
+    description: 'Upload a character save: base stats, skills, gear by slot with both weapon sets, mercenary gear and carried items',
+  },
 ] as const;

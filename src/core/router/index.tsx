@@ -229,6 +229,11 @@ const StashItemsScreen = lazy(async () => {
   return { default: module.StashItemsScreen };
 });
 
+const CharacterScreen = lazy(async () => {
+  const module = await import('@/features/character');
+  return { default: module.CharacterScreen };
+});
+
 const routeLoadingFallback = (
   <div className="flex min-h-80 flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
     <Spinner className="size-8" />
@@ -317,6 +322,7 @@ export const router = createBrowserRouter(
             { index: true, element: routeElement(StashHomeScreen) },
             { path: 'coupons', element: routeElement(StashCouponsScreen) },
             { path: 'items', element: routeElement(StashItemsScreen) },
+            { path: 'character', element: routeElement(CharacterScreen) },
           ],
         },
         { path: 'builds', element: routeElement(BuildsScreen) },

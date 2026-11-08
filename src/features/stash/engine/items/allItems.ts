@@ -119,7 +119,14 @@ const allLines = (text: ItemTextGroups): string[] => [
   ...text.socketed.flatMap((entry) => entry.lines),
 ];
 
-function buildRow(item: StashItem, location: StashLocation, catalog: StashCatalog, ctx: ItemTextContext, engine: ItemTextEngine): ItemRow {
+/** One item's row: its description, name, text and search fields. Shared with the My Character page (features/character). */
+export function buildItemRow(
+  item: StashItem,
+  location: StashLocation,
+  catalog: StashCatalog,
+  ctx: ItemTextContext,
+  engine: ItemTextEngine
+): ItemRow {
   const info = describeStashItem(item, catalog);
   const name = itemDisplayName(item, catalog, ctx, info);
   const text = engine.render(item, ctx);
@@ -169,7 +176,7 @@ export function createItemRows(
   engine: ItemTextEngine = DEFAULT_ENGINE
 ): ItemRow[] {
   const ctx = text ?? placeholderContext(catalog);
-  return walkStashItems(stash, { tabs: 'pages' }).map(({ item, location }) => buildRow(item, location, catalog, ctx, engine));
+  return walkStashItems(stash, { tabs: 'pages' }).map(({ item, location }) => buildItemRow(item, location, catalog, ctx, engine));
 }
 
 const placeholders = new WeakMap<StashCatalog, ItemTextContext>();
