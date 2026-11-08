@@ -147,6 +147,11 @@ Void Shard stops at 300 on those, its own condition reads a stat nothing raises;
 never stops, leaves the D-stoning uncapped with a `crafting: D-stoning "…": …` warning (a finding to explain). The official `docs/special_crafting_outcomes.htm` (corruptions, anointments,
 sanctifications) is a cross-check only.
 
+**Standard of Heroes**: enhance.json `standardOfHeroes` / `standardOfHeroesOutcomes` come from the two-input cubemain
+rows with output `useitem` adding the hidden `item-upgraded` (`std` plus a unique charm, 12 rows). An `enhance:` warning
+about another reagent or a row no longer gated on `item_upgraded` (`op 17`) is a finding; so is a new charm upgrade
+outside that shape (Tyrael's Might's four-input rows set the same marker on purpose and are not listed).
+
 Known genuine data, not findings: Sully's template (v0.7.0) validates with 7 warnings at 3.3: 6 for `item_addskill_tab` on rules 31–33 (as v0.6.13 did at 3.2.24) and 1 for the stat-based hide at `rules/73`, which cannot reach unidentified items (`docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
 

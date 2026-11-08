@@ -6,6 +6,7 @@ import {
   encodeEnhanceState,
   filterCorruptionOutcomes,
   filterSanctificationOutcomes,
+  filterStandardOutcomes,
   filterVesselRecipes,
   formatRate,
   readEnhanceState,
@@ -31,6 +32,11 @@ const bundle = {
   sanctificationOutcomes: [
     { roll: 1, mods: [], lines: ['+(15 to 25) to Strength', '+1% to Maximum Fire Resist'] },
     { roll: 2, mods: [], lines: ['+(15 to 25) to Dexterity', '+1% to Maximum Fire Resist'] },
+  ],
+  standardOfHeroes: { reagent: { code: 'std', name: 'Standard of Heroes' }, once: true },
+  standardOfHeroesOutcomes: [
+    { charm: { code: 'Hellfire Torch', name: 'Hellfire Torch' }, mods: [], lines: ['+(2 to 3)% Bonus to All Attributes'] },
+    { charm: { code: 'Annihilus', name: 'Annihilus' }, mods: [], lines: ['Increase Maximum Life +(6 to 9)%'] },
   ],
   vessel: { item: 'Vessel', startSouls: 2000 },
   vesselTiers: [{ tier: 1 }, { tier: 2 }],
@@ -84,6 +90,12 @@ describe('enhance URL state', () => {
     expect(encodeEnhanceState({ tab: 'vessel', slot: 'weapon', tier: '2', search: '' }, bundle).toString()).toBe('tab=vessel&tier=2');
   });
 
+  it('reads and writes the Standard of Heroes tab, which has no slot', () => {
+    const state = readEnhanceState(new URLSearchParams('tab=standard&slot=ring&search=life'), bundle);
+    expect(state).toEqual({ tab: 'standard', slot: '', tier: '1', search: 'life' });
+    expect(encodeEnhanceState(state, bundle).toString()).toBe('tab=standard&search=life');
+  });
+
   it('reads and writes the sanctification tab, which has no slot', () => {
     const state = readEnhanceState(new URLSearchParams('tab=sanctification&slot=ring&search=fire'), bundle);
     expect(state).toEqual({ tab: 'sanctification', slot: '', tier: '1', search: 'fire' });
@@ -96,6 +108,15 @@ describe('enhance search and texts', () => {
     expect(filterCorruptionOutcomes(bundle.corruptionOutcomes, 'attack rating').map((outcome) => outcome.roll)).toEqual([2]);
     expect(filterCorruptionOutcomes(bundle.corruptionOutcomes, '"magic resist"').map((outcome) => outcome.roll)).toEqual([2]);
     expect(filterCorruptionOutcomes(bundle.corruptionOutcomes, '')).toHaveLength(2);
+  });
+
+  it('matches Standard of Heroes outcomes by the charm name and the lines', () => {
+    expect(filterStandardOutcomes(bundle.standardOfHeroesOutcomes, 'annihilus').map((outcome) => outcome.charm.code)).toEqual([
+      'Annihilus',
+    ]);
+    expect(filterStandardOutcomes(bundle.standardOfHeroesOutcomes, 'attributes').map((outcome) => outcome.charm.code)).toEqual([
+      'Hellfire Torch',
+    ]);
   });
 
   it('matches sanctification outcomes by their lines', () => {
