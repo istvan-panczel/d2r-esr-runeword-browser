@@ -89,7 +89,8 @@ function OptionBlock({
 export function MasteryFamilyCard({ family, bundle, cls, focused }: MasteryFamilyCardProps) {
   const [first] = family.options;
   const firstBase = first.bases.at(0);
-  const baseNames = first.bases.map((code) => bundle.baseNames[code] ?? code);
+  // Two codes can share a name (Scissors Suwayyah)
+  const baseNames = [...new Set(first.bases.map((code) => bundle.baseNames[code] ?? code))];
   const href = `?${masteriesParams(cls, first.slug).toString()}`;
   const remove = first.remove.map((input) => inputText(input, bundle.names)).join(' + ');
   const missing = (key: 'noAwaken' | 'noRemove') => [...new Set(family.options.flatMap((option) => option[key] ?? []))];
@@ -107,7 +108,7 @@ export function MasteryFamilyCard({ family, bundle, cls, focused }: MasteryFamil
             </Link>
           </h3>
           <p className="text-xs text-muted-foreground">
-            {first.bases.length} {first.bases.length === 1 ? 'base' : 'bases'}
+            {baseNames.length} {baseNames.length === 1 ? 'base' : 'bases'}
             {family.options.length > 1 && ` · pick 1 of ${String(family.options.length)}`}
           </p>
         </div>
