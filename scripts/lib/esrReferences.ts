@@ -83,7 +83,8 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
   {
     path: SKILL_INFO_PAGE_FILE,
     kind: 'generated',
-    follows: 'skilldetails.json infoPage / mercenaries (build/skillInfoPage.ts; NAME_ALIASES for renamed skills)',
+    follows:
+      'skilldetails.json infoPage / mercenaries (build/skillInfoPage.ts; NAME_ALIASES for renamed skills) and mercenaries.json (build/bundleMercenaries.ts, the Mercenaries table joined to hireling.txt)',
   },
   {
     path: SPECIALIZATIONS_PAGE_FILE,

@@ -21,6 +21,7 @@ import {
   type LootFilterDataBundle,
   type MasteriesBundle,
   type MaterialsBundle,
+  type MercenariesBundle,
   type ModifiersBundle,
   type SetsBundle,
   type SkillCalcBundle,
@@ -60,6 +61,7 @@ export interface GameDataBundles {
   modifiers: ModifiersBundle;
   masteries: MasteriesBundle;
   specializations: SpecializationsBundle;
+  mercenaries: MercenariesBundle;
   elixirs: ElixirsBundle;
   icons: IconsBundle;
 }

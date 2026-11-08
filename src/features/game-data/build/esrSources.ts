@@ -73,6 +73,8 @@ export const TABLES = [
   'treasureclassex',
   'superuniques',
   'gamble',
+  // mercenaries.json
+  'hireling',
   // sets.json
   'sets',
   // lootfilter.json (levels: also areas.json and the cube's level names)
