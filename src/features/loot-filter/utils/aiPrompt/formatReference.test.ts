@@ -19,6 +19,7 @@ import {
   DEFAULT_PROMPT_ASSETS,
   DEFAULT_PROMPT_STYLE_PRESETS,
   examplesWithPresentation,
+  markdownTable,
   MISTAKE_SAMPLES,
   mistakeMessages,
   ruleJson,
@@ -33,6 +34,16 @@ const format = buildFormatReference({ reference, examples: EXAMPLE_RULES, esrVer
 
 /** The JSON code blocks of a markdown text. */
 const jsonBlocks = (text: string) => [...text.matchAll(/```json\n([\s\S]*?)\n```/g)].map((match) => match[1] ?? '');
+
+describe('markdownTable', () => {
+  it('escapes backslashes before pipes, so a cell cannot end its own escape', () => {
+    expect(
+      markdownTable(['a'], [['x|y'], ['x\\|y'], ['one\ntwo']])
+        .split('\n')
+        .slice(2)
+    ).toEqual(['| x\\|y |', '| x\\\\\\|y |', '| one two |']);
+  });
+});
 
 describe('buildFormatReference', () => {
   it('has a table row for every top-level key, condition and action of the parser', () => {

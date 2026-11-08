@@ -7,6 +7,17 @@ import { CONTENT_KINDS, KEY_KINDS_WITHOUT_TEXT, KIND_CALCULATORS, KIND_FACTS } f
 import { formatFactValue, resolvePlaceholder, resolveText } from './modifierPlaceholders';
 import { buildModifiersView } from './modifiersView';
 
+/** Removes HTML comments, repeating until none is left (CodeQL js/incomplete-multi-character-sanitization) */
+function withoutComments(text: string): string {
+  let previous: string;
+  let current = text;
+  do {
+    previous = current;
+    current = current.replace(/<!--[\s\S]*?-->/g, '');
+  } while (current !== previous);
+  return current;
+}
+
 const ROOT = process.cwd();
 const bundle = JSON.parse(readFileSync(resolve(ROOT, 'public/game-data/modifiers.json'), 'utf8')) as ModifiersBundle;
 const contentText = readFileSync(resolve(ROOT, 'content/modifiers/modifiers.md'), 'utf8');
@@ -320,7 +331,7 @@ describe('committed modifier content', () => {
           .flatMap((value) => [value, value / 100])
           .filter((value) => Math.abs(value) > 1)
       );
-      const text = block.summary.replace(/\{[^{}\s]+\}/g, '').replace(/<!--[\s\S]*?-->/g, '');
+      const text = withoutComments(block.summary.replace(/\{[^{}\s]+\}/g, ''));
       return [...text.matchAll(/\d+(?:\.\d+)?/g)].flatMap((match) => (values.has(Number(match[0])) ? [`${block.key}: ${match[0]}`] : []));
     });
     expect(typed).toEqual([]);

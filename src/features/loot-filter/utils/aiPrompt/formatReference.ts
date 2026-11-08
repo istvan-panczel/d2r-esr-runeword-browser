@@ -75,9 +75,9 @@ const code = (text: string) => `\`${text}\``;
 const list = (values: readonly string[]) => values.map(code).join(', ');
 const json = (value: unknown) => JSON.stringify(value);
 
-/** A markdown table; cells have their pipes escaped. */
+/** A markdown table; cells have their backslashes and pipes escaped. */
 export function markdownTable(header: readonly string[], rows: readonly (readonly string[])[]): string {
-  const cell = (text: string) => text.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+  const cell = (text: string) => text.replace(/[\\|]/g, '\\$&').replace(/\r?\n/g, ' ');
   const line = (cells: readonly string[]) => `| ${cells.map(cell).join(' | ')} |`;
   return [line(header), line(header.map(() => '---')), ...rows.map(line)].join('\n');
 }
