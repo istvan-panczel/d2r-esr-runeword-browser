@@ -15,6 +15,7 @@ import {
   type SlotPicks,
 } from '../utils/displayedSection';
 import type { ItemDiff, VariantItemDiffs } from '../utils/itemDiff';
+import { splitCharmLine } from '../utils/charms';
 import { hasSetItems } from '../utils/setBonuses';
 import { hasSkillPoints } from '../utils/skillTree';
 import { AscendancyDisplay } from './AscendancyDisplay';
@@ -289,11 +290,20 @@ export function VariantDetail({
                 <section>
                   <SectionHeader title="Charms" />
                   <div className="flex flex-wrap gap-2">
-                    {charms.map((charm, index) => (
-                      <Badge key={`${String(index)}-${charm}`} variant="secondary">
-                        {charm}
-                      </Badge>
-                    ))}
+                    {charms.map((charm, index) => {
+                      const key = `${String(index)}-${charm}`;
+                      const { name, stats } = splitCharmLine(charm);
+                      return stats === null ? (
+                        <Badge key={key} variant="secondary">
+                          {charm}
+                        </Badge>
+                      ) : (
+                        <div key={key} className="w-full min-w-0 text-sm">
+                          <div className="font-medium break-words">{name}</div>
+                          <div className="text-muted-foreground break-words">{stats}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </section>
               )}
