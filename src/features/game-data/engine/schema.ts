@@ -525,6 +525,12 @@ export interface SanctificationOutcome extends EnhanceBonus {
   roll: number;
 }
 
+/** What a Standard of Heroes adds to one unique charm: fixed stat ranges, one outcome per charm */
+export interface StandardOfHeroesOutcome extends EnhanceBonus {
+  /** `code` is the cubemain cell without its qualifiers (a unique's txt name) */
+  charm: EnhanceItemRef;
+}
+
 /** A distinct sanctification bonus (property, param and range) and how many outcomes carry it */
 export interface SanctificationBonus {
   /** The bonus rendered on its own, e.g. "+1% to Maximum Fire Resist" */
@@ -564,8 +570,8 @@ export interface VesselTransform {
 }
 
 /**
- * enhance.json: corruption, anointment, sanctification and Vessel of Souls outcomes from cubemain.txt. Flat top-level arrays so the
- * serializer writes one outcome / recipe per line.
+ * enhance.json: corruption, anointment, sanctification, Vessel of Souls and Standard of Heroes outcomes from cubemain.txt. Flat
+ * top-level arrays so the serializer writes one outcome / recipe per line.
  */
 export interface EnhanceBundle {
   corruption: {
@@ -609,6 +615,12 @@ export interface EnhanceBundle {
   vesselTiers: VesselTier[];
   vesselRecipes: VesselRecipe[];
   vesselTransforms: VesselTransform[];
+  standardOfHeroes: {
+    reagent: EnhanceItemRef;
+    /** Every row is gated on the `item_upgraded` marker not being set: one upgrade per charm */
+    once: boolean;
+  };
+  standardOfHeroesOutcomes: StandardOfHeroesOutcome[];
 }
 
 // --- cube.json ----------------------------------------------------------------------------------------------------
@@ -782,7 +794,7 @@ export interface MaterialFamilyUse {
   recipes: number;
 }
 
-export type MaterialEnhanceTab = 'corruption' | 'anointment' | 'sanctification' | 'vessel';
+export type MaterialEnhanceTab = 'corruption' | 'anointment' | 'sanctification' | 'vessel' | 'standard';
 
 /** The item's role on the Enhance page (corruption reagent, anointment reagent, Vessel of Souls material) */
 export interface MaterialEnhanceRole {

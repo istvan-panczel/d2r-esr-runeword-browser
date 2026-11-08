@@ -660,6 +660,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       enhanceCharmAnointments: countPool('charm'),
       enhanceVesselAnointments: countPool('vessel'),
       enhanceSanctificationOutcomes: enhance.bundle.sanctificationOutcomes.length,
+      enhanceStandardOfHeroesOutcomes: enhance.bundle.standardOfHeroesOutcomes.length,
       enhanceVesselRecipes: vesselRecipes.length,
       enhanceVesselTransforms: vesselTransforms.length,
       cubeRecipes: cube.bundle.families.reduce((sum, family) => sum + family.rowCount, 0),

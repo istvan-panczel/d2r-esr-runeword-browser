@@ -247,6 +247,11 @@ describe('buildMaterialsBundle', () => {
     expect(roles.get('u18')).toEqual([{ tab: 'sanctification', label: 'Sanctification reagent' }]);
   });
 
+  it('gives the Standard of Heroes its Enhance role', () => {
+    const roles = enhanceRolesByCode({ ...input.enhance, standardOfHeroes: { reagent: { code: 'std', name: 'Standard' }, once: true } });
+    expect(roles.get('std')).toEqual([{ tab: 'standard', label: 'Unique charm upgrade' }]);
+  });
+
   it('lists enhance roles and the referenced families in cube order', () => {
     expect(item('gpy')?.enhance).toEqual([{ tab: 'corruption', label: 'Corruption reagent' }]);
     expect(item('key')?.enhance).toEqual([{ tab: 'anointment', label: 'Anointment reagent' }]);

@@ -6084,5 +6084,26 @@
     {"materials":[{"code":"gpk","name":"Blemished Obsidian","qty":1},{"code":"gpw","name":"Blemished Diamond","qty":1},{"code":"gpy","name":"Blemished Topaz","qty":1}],"output":{"code":"m57","name":"Mythical Matriarchal Pike"},"keepsMods":true},
     {"materials":[{"code":"gpr","name":"Blemished Ruby","qty":1},{"code":"gpw","name":"Blemished Diamond","qty":1},{"code":"skz","name":"Blemished Skull","qty":1}],"output":{"code":"m58","name":"Mythical Runic Talons"},"keepsMods":true},
     {"materials":[{"code":"gpv","name":"Blemished Amethyst","qty":1},{"code":"gpw","name":"Blemished Diamond","qty":1},{"code":"gpy","name":"Blemished Topaz","qty":1}],"output":{"code":"m59","name":"Mythical Demonic Scythe"},"keepsMods":true}
+  ],
+  "standardOfHeroes": {
+    "reagent": {
+      "code": "std",
+      "name": "Standard of Heroes"
+    },
+    "once": true
+  },
+  "standardOfHeroesOutcomes": [
+    {"charm":{"code":"Hellfire Torch","name":"Hellfire Torch"},"mods":[{"code":"all-stats-percent","param":null,"min":2,"max":3}],"lines":["+(2 to 3)% Bonus to All Attributes"]},
+    {"charm":{"code":"The Perfect Cell","name":"The Perfect Cell"},"mods":[{"code":"hp","param":null,"min":30,"max":40},{"code":"mana","param":null,"min":30,"max":40}],"lines":["+(30 to 40) to Life","+(30 to 40) to Mana"]},
+    {"charm":{"code":"Yello Jello","name":"Yello Jello"},"mods":[{"code":"res-all","param":null,"min":8,"max":12}],"lines":["All Resists +(8 to 12)"]},
+    {"charm":{"code":"Lothar's Will","name":"Lothar's Will"},"mods":[{"code":"red-dmg","param":null,"min":8,"max":12},{"code":"red-mag","param":null,"min":8,"max":12}],"lines":["Damage Reduced by (8 to 12)","Magic Damage Reduced by (8 to 12)"]},
+    {"charm":{"code":"Deviant Cell","name":"Deviant Cell"},"mods":[{"code":"mag%","param":null,"min":30,"max":40},{"code":"gold%","param":null,"min":30,"max":40}],"lines":["+(30 to 40)% Extra Gold from Monsters","+(30 to 40)% Better Chance of Getting Magic Items"]},
+    {"charm":{"code":"Vlad Tepe's Sustenance","name":"Vlad Tepe's Sustenance"},"mods":[{"code":"regen","param":null,"min":300,"max":400},{"code":"regen-mana","param":null,"min":30,"max":40}],"lines":["Replenish Life +(300 to 400)","Regenerate Mana +(30 to 40)%"]},
+    {"charm":{"code":"Something Wicked","name":"Something Wicked"},"mods":[{"code":"all-stats","param":null,"min":10,"max":15}],"lines":["+(10 to 15) to All Attributes"]},
+    {"charm":{"code":"The Unknown Hero","name":"The Unknown Hero"},"mods":[{"code":"all-speeds","param":null,"min":8,"max":12}],"lines":["+(8 to 12)% to All Speeds"]},
+    {"charm":{"code":"Gheed's Fortune","name":"Gheed's Fortune"},"mods":[{"code":"dodge","param":null,"min":3,"max":5}],"lines":["+(3 to 5)% Dodge Chance"]},
+    {"charm":{"code":"Annihilus","name":"Annihilus"},"mods":[{"code":"hp%","param":null,"min":6,"max":9},{"code":"mana%","param":null,"min":6,"max":9}],"lines":["Increase Maximum Life +(6 to 9)%","Increase Maximum Mana +(6 to 9)%"]},
+    {"charm":{"code":"Eternal Hourglass","name":"Eternal Hourglass of the Timeless Sands"},"mods":[{"code":"item-skill-cooldown","param":null,"min":6,"max":9}],"lines":["+(6 to 9)% Skill Cooldown Reduction"]},
+    {"charm":{"code":"Rathma Eternal Skull","name":"Rathma's Eternal Skull"},"mods":[{"code":"curse-res","param":null,"min":10,"max":15}],"lines":["Curse Duration Reduced by (10 to 15)%"]}
   ]
 }

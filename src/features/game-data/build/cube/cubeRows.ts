@@ -202,7 +202,17 @@ function readCondition(row: TsvRow): CubeCondition | null {
   return { op, param: numberOf(row, 'param'), value: numberOf(row, 'value') };
 }
 
-/** The enabled rows of cubemain.txt, quotes stripped from the cells */
+/** The `upg` qualifier of a cell removed */
+const withoutUpgraded = (cell: string) =>
+  cell
+    .split(',')
+    .filter((part) => part.trim() !== 'upg')
+    .join(',');
+
+/**
+ * The enabled rows of cubemain.txt, quotes stripped from the cells. Rows adding the hidden `item-upgraded` marker (Standard of
+ * Heroes) lose `upg` from their inputs: their gate is "not upgraded yet", so "(upgraded)" would contradict it.
+ */
 export function readCube(table: TsvTable): CubeRow[] {
   const rows: CubeRow[] = [];
   for (const row of table.rows) {
@@ -222,6 +232,7 @@ export function readCube(table: TsvTable): CubeRow[] {
       }
       outputs.push(output);
     }
+    const addsUpgrade = outputs.some((output) => output.mods.some((mod) => mod.mod === 'item-upgraded'));
     rows.push({
       line: row.line,
       description: row.str('description'),
@@ -229,7 +240,8 @@ export function readCube(table: TsvTable): CubeRow[] {
       minDiff: numberOf(row, 'min diff'),
       inputs: [1, 2, 3, 4, 5, 6, 7]
         .map((i) => (row.has(`input ${String(i)}`) ? unquote(row.str(`input ${String(i)}`)) : ''))
-        .filter((cell) => cell !== ''),
+        .filter((cell) => cell !== '')
+        .map((cell) => (addsUpgrade ? withoutUpgraded(cell) : cell)),
       outputs,
       condition: readCondition(row),
     });

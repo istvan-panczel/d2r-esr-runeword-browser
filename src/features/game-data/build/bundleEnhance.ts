@@ -1,9 +1,10 @@
 /**
- * enhance.json: corruption, anointment, sanctification and Vessel of Souls outcomes from cubemain.txt.
+ * enhance.json: corruption, anointment, sanctification, Vessel of Souls and Standard of Heroes outcomes from cubemain.txt.
  *
  * Corruption, anointment and sanctification use a two-step trick: cubing the item with the reagent adds a hidden dummy stat with a
  * random roll (`op=16` "dummy is 0", output `useitem` with `<x>_dummy min..max`); cubing the item alone then matches
  * one outcome row per roll value (`op=18` "dummy equals N"), which adds the marker, clears the dummy and adds the bonus.
+ * Standard of Heroes has no roll: "charm + Standard" directly adds the charm's own bonus.
  * Rows whose output is `void` are blockers ("already corrupted", traps). Everything is derived from row data; the
  * descriptions are only read for anointment labels ("(of Abyss)") and the vessel cap counts ("max 2 trap").
  */
@@ -21,6 +22,7 @@ import {
   type EnhanceQuality,
   type SanctificationBonus,
   type SanctificationOutcome,
+  type StandardOfHeroesOutcome,
   type VesselMaterial,
   type VesselRecipe,
   type VesselTier,
@@ -76,6 +78,7 @@ const CORRUPT_DUMMY = 'corrupted_dummy';
 const ANOINT_DUMMY = 'anointed_dummy';
 const SANCTIFY_DUMMY = 'sanctified-dummy';
 const SOUL_COUNTER = 'soul-counter';
+const UPGRADE_MARKER = 'item-upgraded';
 
 /** Equipment slots by cubemain item type, in display order */
 const SLOTS: readonly { typeCode: string; slot: string; label: string }[] = [
@@ -603,6 +606,47 @@ function buildSanctification(
   };
 }
 
+// --- Standard of Heroes -------------------------------------------------------------------------------------------
+
+interface StandardResult {
+  standardOfHeroes: EnhanceBundle['standardOfHeroes'];
+  outcomes: StandardOfHeroesOutcome[];
+}
+
+/**
+ * "Charm + Standard": two inputs, `useitem`, adding the hidden `item-upgraded` marker plus the charm's fixed bonus. Tyrael's
+ * Might sets the same marker through a four-input gem recipe, so the input count tells them apart. The charm's qualifiers
+ * (`upg` on some rows) are ignored.
+ */
+function buildStandardOfHeroes(
+  recipes: readonly CubeRecipe[],
+  ctx: EnhanceContext,
+  renderLines: LineRenderer,
+  warnings: Set<string>
+): StandardResult {
+  const rows = recipes.filter(
+    (recipe) => recipe.output === 'useitem' && recipe.inputs.length === 2 && modOf(recipe, UPGRADE_MARKER) !== undefined
+  );
+  const reagent = rows.at(0)?.inputs[1]?.code ?? '';
+  const own = rows.filter((recipe) => recipe.inputs[1]?.code === reagent);
+  for (const recipe of rows) {
+    if (!own.includes(recipe)) warnings.add(`enhance: Standard of Heroes row "${recipe.description}" has another reagent and is not shown`);
+  }
+  // `op 17`: the stat must differ from `value`, here "the marker is not 1 yet"
+  const markerStats = ctx.statIdsOf(UPGRADE_MARKER);
+  const gated = (recipe: CubeRecipe) => recipe.op === 17 && recipe.value === 1 && markerStats.includes(recipe.param);
+  for (const recipe of own) {
+    if (!gated(recipe)) warnings.add(`enhance: Standard of Heroes row "${recipe.description}" is not gated on its marker`);
+  }
+  return {
+    standardOfHeroes: { reagent: { code: reagent, name: ctx.nameOf(reagent) }, once: own.length > 0 && own.every(gated) },
+    outcomes: own.map((recipe): StandardOfHeroesOutcome => {
+      const code = recipe.inputs[0]?.code ?? '';
+      return { charm: { code, name: ctx.nameOf(code) }, ...renderLines(recipe.mods) };
+    }),
+  };
+}
+
 // --- Vessel of Souls ----------------------------------------------------------------------------------------------
 
 function startSoulsOf(uniqueitems: TsvTable, item: string): number | null {
@@ -771,6 +815,7 @@ export function buildEnhanceBundle(tables: EnhanceTables, ctx: EnhanceContext): 
   if (blocked) corruption.corruption.notes.push(`${vessel.vessel.item} cannot be corrupted while it still has souls.`);
   const anointment = buildAnointment(recipes, ctx, renderLines, vessel.vessel.item, warnings);
   const sanctification = buildSanctification(recipes, ctx, renderLines, warnings);
+  const standard = buildStandardOfHeroes(recipes, ctx, renderLines, warnings);
 
   return {
     bundle: {
@@ -792,6 +837,8 @@ export function buildEnhanceBundle(tables: EnhanceTables, ctx: EnhanceContext): 
       vesselTiers: vessel.tiers,
       vesselRecipes: vessel.recipes,
       vesselTransforms: vessel.transforms,
+      standardOfHeroes: standard.standardOfHeroes,
+      standardOfHeroesOutcomes: standard.outcomes,
     },
     warnings: [...warnings],
   };

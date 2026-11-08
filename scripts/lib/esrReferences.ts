@@ -57,7 +57,7 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     path: 'docs/special_crafting_outcomes.htm',
     kind: 'hand-kept',
     follows:
-      'the Enhance page lists (corruption, anointment, sanctification) come from cubemain: compare the page with bundle.enhance; the Enhance page and guide wording that paraphrases its rules',
+      'the Enhance page lists (corruption, anointment, sanctification, Standard of Heroes) come from cubemain: compare the page with bundle.enhance; the Enhance page and guide wording that paraphrases its rules',
   },
   {
     path: 'docs/Eastern Sun Resurrected Maps.html',

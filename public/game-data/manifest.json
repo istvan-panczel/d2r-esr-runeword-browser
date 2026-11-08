@@ -3,7 +3,7 @@
   "esrVersion": "3.3.02",
   "esrTag": "3.3.02",
   "esrCommit": "4237a00984d9e9a874afde8ecdf361b88c55d9b8",
-  "generatedAt": "2026-11-08T14:19:04.905Z",
+  "generatedAt": "2026-11-08T16:03:04.520Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -30,16 +30,16 @@
       "bytes": 900559
     },
     "enhance": {
-      "hash": "216d9a879ebcf7fc5ee20bbcdb86730efed300620afd621f2e5c120ba295771e",
-      "bytes": 1214962
+      "hash": "9d04c563b3208ce08b644ac0f3930a261b9b32360faf8f733775b470853914e1",
+      "bytes": 1217589
     },
     "cube": {
-      "hash": "e13759bae93ba475bd9ead9c2e5571f17a0964127c209af244b03464182ef33c",
-      "bytes": 776844
+      "hash": "4f8e44ca4bc68f89aeba352a416482a941ca570db7d5e204535dadcca0a16a78",
+      "bytes": 776503
     },
     "materials": {
-      "hash": "87a88fc3a2df605a0a793d0b1cd0baa0d8db517d90d6ff3086ecc6f675e59547",
-      "bytes": 183537
+      "hash": "0b669efa54928d9df6954b27fd2ea9aad8b3107a8983f02c59c28501264a4476",
+      "bytes": 183599
     },
     "sets": {
       "hash": "27c09f0ac7a20409b32f7f7189d5590a855953e058e0b82a49e4a26f2a5cf250",
@@ -151,6 +151,7 @@
     "enhanceCharmAnointments": 30,
     "enhanceVesselAnointments": 178,
     "enhanceSanctificationOutcomes": 217,
+    "enhanceStandardOfHeroesOutcomes": 12,
     "enhanceVesselRecipes": 382,
     "enhanceVesselTransforms": 29,
     "cubeRecipes": 11158,

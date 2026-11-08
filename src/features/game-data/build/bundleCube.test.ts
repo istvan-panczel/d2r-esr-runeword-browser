@@ -373,6 +373,36 @@ describe('buildCubeBundle', () => {
     ]);
   });
 
+  it("links the Standard of Heroes rows to the Enhance tab without the charms' (upgraded), but not Tyrael's rows", () => {
+    const { bundle } = build([
+      row('Standard of Heroes Hellfire Torch', ['Hellfire Torch', 'std'], 'useitem', {
+        condition: [17, 284, 1],
+        mod: ['item-upgraded', 1],
+      }),
+      row('Standard of Heroes The Perfect Cell', ['"The Perfect Cell,upg"', 'std'], 'useitem', {
+        condition: [17, 284, 1],
+        mod: ['item-upgraded', 1],
+      }),
+      row('Tyrael Might Aura str to dex', ["Tyrael's Might", 'gpv', 'key'], 'useitem', {
+        condition: [17, 284, 1],
+        mod: ['item-upgraded', 1],
+      }),
+      row('Tyrael Might Aura dex to str', ["Tyrael's Might", 'gpr', 'key'], 'useitem', {
+        condition: [17, 284, 1],
+        mod: ['item-upgraded', 1],
+      }),
+    ]);
+    const charms = bundle.rows.filter((entry) => entry.family === 'unique-charm-upgrades');
+    expect(charms.map((entry) => [entry.inputs, entry.enhanceTab])).toEqual([[['Hellfire Torch / The Perfect Cell', 'std'], 'standard']]);
+    expect(bundle.recipes.find((recipe) => recipe.description.endsWith('The Perfect Cell'))?.inputs[0]?.text).toBe('The Perfect Cell');
+    expect(bundle.rows.filter((entry) => entry.family === 'tyrael-boon').map((entry) => entry.enhanceTab)).toEqual([undefined]);
+  });
+
+  it('keeps "(upgraded)" on rows that do not set the upgrade marker', () => {
+    const { bundle } = build([row('Standard of Heroes Skull', ['"The Perfect Cell,upg"', 'std'], 'useitem', { mod: ['str', 1] })]);
+    expect(bundle.rows.map((entry) => entry.inputs[0])).toEqual(['The Perfect Cell (upgraded)']);
+  });
+
   it('renders the readable conditions: class, difficulty, boss kills and the stat checks', () => {
     const { bundle } = build([
       row('Kill Ledger Rathma', ['kl0', 'gpv'], 'useitem', { condition: [6, 508, 99] }),
