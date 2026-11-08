@@ -27,6 +27,8 @@ interface WeaponSwapGridProps {
   readonly renderSlotFooter?: (slot: WeaponSwapSlot) => ReactNode;
   /** Read-only only: extra content at the end of a slot's label row. */
   readonly renderSlotLabelExtra?: (slot: WeaponSwapSlot) => ReactNode;
+  /** Editable only: the DOM id of a slot's cell. */
+  readonly slotAnchorId?: (slot: WeaponSwapSlot) => string;
 }
 
 export function WeaponSwapGrid({
@@ -41,6 +43,7 @@ export function WeaponSwapGrid({
   craftData,
   renderSlotFooter,
   renderSlotLabelExtra,
+  slotAnchorId,
 }: WeaponSwapGridProps) {
   return (
     <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
@@ -57,6 +60,7 @@ export function WeaponSwapGrid({
           craftData={craftData}
           footer={renderSlotFooter?.(slot)}
           labelExtra={renderSlotLabelExtra?.(slot)}
+          anchorId={slotAnchorId?.(slot)}
           onChange={
             onChange === undefined
               ? undefined

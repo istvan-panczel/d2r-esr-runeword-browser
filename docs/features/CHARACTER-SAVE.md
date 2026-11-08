@@ -1,7 +1,7 @@
 # Character save parser
 
-Reads the ESR character save (`.d2s`) and its optional `.d2rl` sidecar in the browser. **Parser and data only**: there is
-no page, route or build import yet; later phases build on the exports below.
+Reads the ESR character save (`.d2s`) and its optional `.d2rl` sidecar in the browser. The exports below are used by
+[Start a build from a save](#start-a-build-from-a-save) on `/builds/new`.
 
 Code: `src/features/character/parser/`. Data: `stash.json` `characterStats` / `characterClasses`
 ([GAME-DATA.md → Stash](./GAME-DATA.md#stash)), and `manifest.json` `esrDate` for the old-save hint. Fixtures:
@@ -138,3 +138,41 @@ sidecar it compares its ESR version with the bundle's; without one it compares `
 an old install after a release is missed). Item stats are stored on the item, so an old item legitimately shows values the
 current tables would no longer roll; names and computed text use the current tables. Boundary checks cannot catch a
 same-width renumbered row; none happened from 3.2.10 to 3.3.02 (and the loader warns against changing CSvBits).
+
+## Start a build from a save
+
+`/builds/new` has a "Start from a save file" card: pick or drop a `.d2s` and the normal build form opens pre-filled as an
+**editable draft**. The file is parsed in the browser and not stored; nothing is saved until the user saves the form. No schema
+or database change. A parse failure shows the failure point (no item data) and leaves the form usable.
+
+Code: `src/features/character/engine/buildDraft.ts` (`createBuildDraft`, pure), `buildDraftItems.ts` (the item bridge),
+`buildDraftRead.ts` (upload check, never throws); `src/features/builds/hooks/useSaveDraftData.ts`,
+`components/SaveFileCard.tsx`, `components/SaveImportPanel.tsx`, `utils/saveImportReview.ts`. The game data is fetched only once
+a file is picked (`lootfilter.json` `skillNames` maps a saved skill row to its `skills.json` id).
+
+| Draft field                           | From the save                                                                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build name, class, level, hard points | Character name (editable), class, level, `skills` (zero entries dropped)                                                                    |
+| Skills text                           | One line from the hand skills and hotkeys: `Attack` and duplicates dropped, item-granted skills kept, swap pair only when it differs        |
+| Player, Weapon Swap, Mercenary gear   | `gear` (`weaponSets[1]` = swap) and `mercGear`, all included by default. The slot is always the slot the item is in                         |
+| Runeword base, socket fillers         | The item's own code and name; fillers are all sockets on uniques, mythicals and sets, jewels only on runewords, none on gemwords            |
+| Charms                                | Charm inventory only, identical names merged ("9x Grand Charm of Vita"); Kill Ledger skipped, charms anywhere else are inactive and skipped |
+| Ascendancy                            | The Ascendancy Stone in the charm inventory; not a charm line                                                                               |
+
+**The bridge** branches on quality first, then matches name + the txt row's base code (never a save id across tables: all 270 set
+ids are also unique ids, and a ref's `id` is the local table's). Rares, crafted and tempered items become custom items labelled with
+their base ("Havoc Finger (Ring)"); magic names already hold it. An equipped quest item (unique id null) is a custom item.
+
+**A unique row and its base can disagree** (SpinToWin's belt is `bmb` on row 554, Death's Grip, `ymg`): the row is identity only. The
+item stays in the slot it is in, gets the note "On Merchant Belt" and an amber review row, because unique refs have no base field.
+Same-name variants (Tathamet's Awakening, Ember of Creation, a runeword tie after the socket count) are pre-filled with the closest
+one by the item's stats and flagged the same way.
+
+**The review panel** (top of `BuildForm`) lists each unmatched or guessed item with its slot, name, base and rolled stats (session
+only, never saved), plus Go to slot, Keep as custom and Clear. A row resolves itself when its slot no longer holds the imported item;
+saving is never blocked. Banners, not blocks: a save from before the current ESR release (`assessSaveAge`), `incomplete` naming what
+stayed empty, and a corpse being present (equipped gear may be on it; INFERRED, no real sample).
+
+Measured over the 11 real saves (`buildDraft.fixture.integration.test.ts`): 79 of 99 equipped items match a named item; every unique,
+set, runeword and gemword matched, and the 20 others are rares and magics. Not imported: exact rolls, attributes, mercenary type and
+inventory; there is no field for them.

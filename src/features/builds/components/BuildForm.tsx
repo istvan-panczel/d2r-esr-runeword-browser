@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { BUILD_DESCRIPTION_MAX_LENGTH, BUILD_NAME_MAX_LENGTH, CHARACTER_CLASSES,
 import { useCraftData } from '../hooks/useCraftData';
 import { EquipmentPickerDataContext, useEquipmentPickerDataQuery } from '../hooks/useEquipmentPickerData';
 import { useUnsavedChangesPrompt } from '../hooks/useUnsavedChangesPrompt';
+import type { DraftReviewRow, SaveImportReport } from '@/features/character/engine/buildDraft';
 import {
   draftLabel,
   draftLevelValid,
@@ -17,9 +18,10 @@ import {
   variantDraftsReducer,
   type VariantDraftAction,
 } from '../utils/variantDrafts';
+import { SaveImportPanel } from './SaveImportPanel';
 import { VariantEditor } from './VariantEditor';
 import { VariantToolbar } from './VariantToolbar';
-import type { BuildFormSubmit, BuildFormValues } from './buildFormModel';
+import { slotAnchorId, type BuildFormSubmit, type BuildFormValues } from './buildFormModel';
 
 interface BuildFormProps {
   readonly initialValues: BuildFormValues;
@@ -31,9 +33,23 @@ interface BuildFormProps {
   readonly saved: boolean;
   readonly onSubmit: (payload: BuildFormSubmit) => void;
   readonly onCancel: () => void;
+  /** Set when the initial values came from a save file: shows the review panel, and the draft counts as unsaved work. */
+  readonly importReport?: SaveImportReport | null;
+  /** Called on every edit of the form. */
+  readonly onTouched?: () => void;
 }
 
-export function BuildForm({ initialValues, initialVariant = 0, submitLabel, saving, saved, onSubmit, onCancel }: BuildFormProps) {
+export function BuildForm({
+  initialValues,
+  initialVariant = 0,
+  submitLabel,
+  saving,
+  saved,
+  onSubmit,
+  onCancel,
+  importReport = null,
+  onTouched,
+}: BuildFormProps) {
   const [name, setName] = useState(initialValues.name);
   const [description, setDescription] = useState(initialValues.description);
   const [characterClass, setCharacterClass] = useState<CharacterClass | ''>(initialValues.characterClass);
@@ -44,10 +60,14 @@ export function BuildForm({ initialValues, initialVariant = 0, submitLabel, savi
   const craftData = useCraftData(true);
   // One item scan for every slot picker of the form (main items and alternatives).
   const pickerData = useEquipmentPickerDataQuery();
-  const [touched, setTouched] = useState(false);
+  // An imported draft is unsaved work from the start: leaving must warn even before the first edit.
+  const [touched, setTouched] = useState(importReport !== null);
+  // The import fills the first variant; its key keeps finding it after a reorder.
+  const [importedKey] = useState(drafts[0].key);
 
   const markTouched = () => {
     setTouched(true);
+    onTouched?.();
   };
 
   /** Every variant edit goes through here, so it marks the form changed. */
@@ -65,6 +85,33 @@ export function BuildForm({ initialValues, initialVariant = 0, submitLabel, savi
   const canSave = nameValid && invalidLabels.length === 0 && characterClass !== '' && !saving;
 
   useUnsavedChangesPrompt(touched && !saved);
+
+  const importedIndex = drafts.findIndex((draft) => draft.key === importedKey);
+
+  const scrollToSlot = (anchorId: string) => {
+    const cell = document.getElementById(anchorId);
+    cell?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    cell?.querySelector<HTMLElement>('button, input')?.focus({ preventScroll: true });
+  };
+
+  // Only the active variant is mounted, so a slot of another variant can be reached once its tab has rendered.
+  const pendingSlot = useRef<string | null>(null);
+  useEffect(() => {
+    if (pendingSlot.current === null) return;
+    scrollToSlot(pendingSlot.current);
+    pendingSlot.current = null;
+  }, [active]);
+
+  const goToSlot = (row: DraftReviewRow) => {
+    if (importedIndex === -1) return;
+    const anchorId = slotAnchorId(row.section, row.slot);
+    if (importedIndex === active) {
+      scrollToSlot(anchorId);
+    } else {
+      pendingSlot.current = anchorId;
+      setActiveIndex(importedIndex);
+    }
+  };
 
   const handleSubmit = (event: React.SyntheticEvent) => {
     event.preventDefault();
@@ -133,6 +180,18 @@ export function BuildForm({ initialValues, initialVariant = 0, submitLabel, savi
             {description.length}/{BUILD_DESCRIPTION_MAX_LENGTH}
           </p>
         </div>
+
+        {importReport !== null && (
+          <SaveImportPanel
+            report={importReport}
+            draft={importedIndex === -1 ? undefined : drafts[importedIndex]}
+            disabled={saving}
+            onGoToSlot={goToSlot}
+            onClearSlot={(row) => {
+              update({ type: 'setSlot', variant: importedIndex, section: row.section, slot: row.slot, ref: null });
+            }}
+          />
+        )}
 
         <Tabs
           value={activeDraft.key}

@@ -5,7 +5,7 @@ import { SKILLS_MAX_LENGTH, type CharacterClass } from '../constants';
 import type { CraftDataState } from '../hooks/useCraftData';
 import type { SlotTarget, VariantDraftAction } from '../utils/variantDrafts';
 import { AscendancyPicker } from './AscendancyPicker';
-import type { GearSection, SectionDraft, VariantDraft } from './buildFormModel';
+import { slotAnchorId, type GearSection, type SectionDraft, type VariantDraft } from './buildFormModel';
 import { CharmsEditor } from './CharmsEditor';
 import { EquipmentGrid } from './EquipmentGrid';
 import { SkillTreeEditor } from './SkillTreeEditor';
@@ -38,6 +38,7 @@ export function VariantEditor({ draft, index, characterClass, craftData, disable
     crafts: maps.crafts,
     craftData,
     disabled,
+    slotAnchorId: (slot: K) => slotAnchorId(section, slot),
     onChange: (slot: K, ref: ItemRef | null) => {
       dispatch({ ...target(section, slot), type: 'setSlot', ref });
     },

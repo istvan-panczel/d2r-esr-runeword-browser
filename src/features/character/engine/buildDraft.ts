@@ -159,7 +159,7 @@ function mapSection<K extends DraftSlot>(
       name: itemDisplayName(item, data.catalog, data.text, described),
       base: described.baseName,
       kindLabel: KIND_LABELS[match.kind],
-      stats: [...text.stats, ...text.runeword],
+      stats: [...new Set([...text.stats, ...text.runeword])],
       message: match.message,
       ref: match.ref,
     });
@@ -210,7 +210,7 @@ export function skillsInUseLine(bindings: Pick<CharacterFile, 'hotkeys' | 'handS
   const main = [rowOf(left), rowOf(right)];
   const swap = [rowOf(swapLeft), rowOf(swapRight)];
   const swapDiffers = swap[0] !== main[0] || swap[1] !== main[1];
-  const labelled: readonly [string, number | null][] = [
+  const labelled: readonly (readonly [string, number | null])[] = [
     ['Left', main[0]],
     ['Right', main[1]],
     ...(swapDiffers
