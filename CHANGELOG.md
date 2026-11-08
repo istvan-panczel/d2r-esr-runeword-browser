@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.61.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.61.0...v1.61.1) (2026-11-08)
+
+### Bug Fixes
+
+* **game-data:** keep amulet and ring sanctification with the new jewelry marker ([6718a0e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6718a0ecdf49e90124e156aec7dd78eea00e9ba5))
+* **game-data:** read elixir recipe quantities once and drop the answered perk bugs ([aa9253e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/aa9253e46f2e3e203afb63909bc9c8bb3fd66850))
+* **game-data:** stop D-stoning at its void blocker rows ([ec6f41a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ec6f41ae6ff68fd12784552f9e6f51dad33f3ab2))
+
+### Documentation
+
+* **guide:** reflect the ESR 3.3.02 fixes to elixirs, perks and D-stoning ([f82ce53](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f82ce53fd1b9f76d1e402382ca7eab83fb6a194f))
+
+### Chores
+
+* **esr-update:** add the patch-note check PDF and cover the new data sections ([42657a5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/42657a5bf20a911289ea02d1e961f6ae27110934))
+* **game-data:** update to ESR 3.3.02 ([4317b69](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4317b6987742646d332a776676dc4a5ebe9ee55f))
+* **loot-filter:** bump the loot filter plugin version to 1.8.2 ([d50d959](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d50d95949b675938e218501b6d5e5a7fed815c21))
+
+### Tests
+
+* **data-sync:** read the pre-3.3 page layouts from frozen 3.2.24 fixtures ([08cad61](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/08cad614ad9001b05baf2bea674100d97485a0d7))
+
 ## [1.61.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.60.1...v1.61.0) (2026-11-07)
 
 ### Features
