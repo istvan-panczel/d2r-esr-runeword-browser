@@ -87,7 +87,7 @@ export function bundledTemplate(id: string | null | undefined): BundledTemplate 
 }
 
 /** The ESR loot filter plugin version the editor targets; shared filters record it. Bump when the editor follows a new plugin. */
-export const LOOT_FILTER_PLUGIN_VERSION = '1.5.3';
+export const LOOT_FILTER_PLUGIN_VERSION = '1.8.2';
 
 /** A file under `public/loot-filters/` (the templates, bundled sounds and icons). */
 export function lootFilterAssetUrl(path: string): string {

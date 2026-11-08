@@ -1794,8 +1794,8 @@ Assumptions the engine makes where the guide is silent (from the engine file hea
 research doc and the Test tab's note link here.
 The `formula` condition has its own list under "Formula condition" above (`FORMULA_ASSUMPTIONS`).
 
-**Plugin 1.8.2 (ESR 3.3) checks.** `LOOT_FILTER_PLUGIN_VERSION` stays 1.5.3 until the owner bumps it; the editor
-already follows the 1.8.2 guide. To verify in game with 1.8.2:
+**Plugin 1.8.2 (ESR 3.3) checks.** `LOOT_FILTER_PLUGIN_VERSION` is 1.8.2 since ESR 3.3.02 and the editor follows the
+1.8.2 guide, but these are still open. To verify in game with 1.8.2:
 
 1. Localised level names: Sully's v0.7.0 shows its level names in the game language (level key, launcher).
 2. `show`: a show rule above a broad hide keeps the item (also against `hideIfOtherConditionsFail` and
