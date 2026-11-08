@@ -19,6 +19,7 @@ import {
 } from '../../src/features/game-data/build/esrSources.ts';
 import { PERK_CONFIG_FILES, SPECIALIZATIONS_CONFIG_FILE } from '../../src/features/game-data/build/bundleSpecializations.ts';
 import { SKILL_INFO_PAGE_FILE } from '../../src/features/game-data/build/skillInfoPage.ts';
+import { KILL_LEDGER_PAGE_FILE } from '../../src/features/game-data/build/killLedgerPage.ts';
 import { SPECIALIZATIONS_PAGE_FILE } from '../../src/features/game-data/build/specializationsPage.ts';
 
 export type EsrReferenceKind = 'hand-kept' | 'generated' | 'tested' | 'runtime';
@@ -90,6 +91,11 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     kind: 'generated',
     follows:
       'specializations.json pageDiffs (the page compared with the files) and the tree summaries (build/specializationsPage.ts); the Specializations page shows both',
+  },
+  {
+    path: KILL_LEDGER_PAGE_FILE,
+    kind: 'generated',
+    follows: 'killledger.json pageDiffs (the page compared with the files; build/killLedgerPage.ts); the Kill Ledger page shows them',
   },
   ...[SPECIALIZATIONS_CONFIG_FILE, ...PERK_CONFIG_FILES].map((file): EsrReference => ({
     path: specializationConfigPath(file),
