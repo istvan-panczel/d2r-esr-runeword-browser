@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.62.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.61.1...v1.62.0) (2026-11-08)
+
+### Features
+
+* **game-data:** show the armor Run/Walk effect on base cards ([bec052f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bec052f217d1bd321cb469843183f01d8526b702))
+
+### Bug Fixes
+
+* **loot-filter:** warn about what the plugin skips or ignores ([c85d2df](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c85d2df88ce794dc789fa40d60b4c0083718c3de))
+* **security:** escape backslashes in prompt tables and strip test comments to a fixpoint ([23cb4e5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/23cb4e553225e155633bfc6730f11bf55631fb06))
+
 ## [1.61.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.61.0...v1.61.1) (2026-11-08)
 
 ### Bug Fixes
