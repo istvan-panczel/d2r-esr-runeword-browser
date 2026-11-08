@@ -11,7 +11,8 @@ export const RECENT_BUILDS_COUNT = 3;
 // Validation limits (mirror the DB CHECK constraints in migration 001).
 export const BUILD_NAME_MAX_LENGTH = 100;
 export const BUILD_DESCRIPTION_MAX_LENGTH = 2000;
-export const CHARM_MAX_LENGTH = 100;
+/** Form limit of one charm line. Lines imported from a save hold the name and stats; the longest real one is 220. */
+export const CHARM_MAX_LENGTH = 300;
 export const SKILLS_MAX_LENGTH = 2000;
 /** Max length of a per-item crafting/corruption note (stored inside build_data JSONB). */
 export const ITEM_NOTE_MAX_LENGTH = 500;

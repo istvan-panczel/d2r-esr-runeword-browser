@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import type { RunewordItemRef, SetItemRef, UniqueItemRef } from '@/features/builds/buildData';
+import { CHARM_MAX_LENGTH } from '@/features/builds/constants';
 import type {
   ItemTextBundle,
   LootFilterDataBundle,
@@ -133,9 +134,16 @@ describe.skipIf(!READY)('build draft from the real saves', () => {
   it('merges charms of the charm inventory by name, without the ledger or the stone', () => {
     const charms = spinVariant.charms ?? [];
     expect(charms.length).toBeGreaterThan(0);
-    expect(charms.length).toBeLessThan(28);
-    expect(charms.some((line) => /^\d+x /.test(line))).toBe(true);
+    expect(charms.length).toBeLessThanOrEqual(28);
     expect(charms.some((line) => /ledger|ascendancy stone/i.test(line))).toBe(false);
+    // The stats come with the name, per-level ones at the character's level (102)
+    expect(charms).toContain('Coral Small Charm: Lightning Resist +11%');
+    expect(charms).toContain('Grand Charm of the Angel: +51 to Life (Based on Character Level)');
+    // Same name, different rolls: both stay
+    expect(charms.filter((line) => line.startsWith('Bitter Eye: '))).toHaveLength(2);
+    expect(charms.filter((line) => line.startsWith('Grim Eye: '))).toHaveLength(2);
+    // Nothing to roll: the name alone
+    expect(charms).toContain('Abandon');
     const total = charms.reduce((sum, line) => sum + Number(/^(\d+)x /.exec(line)?.[1] ?? 1), 0);
     expect(total).toBe(28);
   });
@@ -158,6 +166,6 @@ describe.skipIf(!READY)('build draft from the real saves', () => {
   it.each(SAVES)('%s fits the build form limits', (save) => {
     const variant = (drafts.get(save) as BuildDraft).values.variants[0];
     expect((variant.skills ?? '').length).toBeLessThanOrEqual(2000);
-    for (const charm of variant.charms ?? []) expect(charm.length).toBeLessThanOrEqual(100);
+    for (const charm of variant.charms ?? []) expect(charm.length).toBeLessThanOrEqual(CHARM_MAX_LENGTH);
   });
 });

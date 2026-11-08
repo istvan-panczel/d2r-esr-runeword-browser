@@ -198,14 +198,14 @@ Code: `src/features/character/engine/buildDraft.ts` (`createBuildDraft`, pure), 
 `components/SaveFileCard.tsx`, `components/SaveImportPanel.tsx`, `utils/saveImportReview.ts`. The game data is fetched only once
 a file is picked (`lootfilter.json` `skillNames` maps a saved skill row to its `skills.json` id).
 
-| Draft field                           | From the save                                                                                                                               |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build name, class, level, hard points | Character name (editable), class, level, `skills` (zero entries dropped)                                                                    |
-| Skills text                           | One line from the hand skills and hotkeys: `Attack` and duplicates dropped, item-granted skills kept, swap pair only when it differs        |
-| Player, Weapon Swap, Mercenary gear   | `gear` (`weaponSets[1]` = swap) and `mercGear`, all included by default. The slot is always the slot the item is in                         |
-| Runeword base, socket fillers         | The item's own code and name; fillers are all sockets on uniques, mythicals and sets, jewels only on runewords, none on gemwords            |
-| Charms                                | Charm inventory only, identical names merged ("9x Grand Charm of Vita"); Kill Ledger skipped, charms anywhere else are inactive and skipped |
-| Ascendancy                            | The Ascendancy Stone in the charm inventory; not a charm line                                                                               |
+| Draft field                           | From the save                                                                                                                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build name, class, level, hard points | Character name (editable), class, level, `skills` (zero entries dropped)                                                                                                                      |
+| Skills text                           | One line from the hand skills and hotkeys: `Attack` and duplicates dropped, item-granted skills kept, swap pair only when it differs                                                          |
+| Player, Weapon Swap, Mercenary gear   | `gear` (`weaponSets[1]` = swap) and `mercGear`, all included by default. The slot is always the slot the item is in                                                                           |
+| Runeword base, socket fillers         | The item's own code and name; fillers are all sockets on uniques, mythicals and sets, jewels only on runewords, none on gemwords                                                              |
+| Charms                                | Charm inventory only, one text line with the name and stats at the character's level; only identical rolls merge ("2x …"); Kill Ledger skipped, charms anywhere else are inactive and skipped |
+| Ascendancy                            | The Ascendancy Stone in the charm inventory; not a charm line                                                                                                                                 |
 
 **The bridge** branches on quality first, then matches name + the txt row's base code (never a save id across tables: all 270 set
 ids are also unique ids, and a ref's `id` is the local table's). Rares, crafted and tempered items become custom items labelled with

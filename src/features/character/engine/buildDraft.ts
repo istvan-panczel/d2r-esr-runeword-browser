@@ -169,16 +169,23 @@ function mapSection<K extends DraftSlot>(
 
 const isCharmInventory = (item: CharacterItem): boolean => item.location.kind === 'charm';
 
-/** One line per charm name of the charm inventory, identical names merged: "9x Grand Charm of Vita". */
-function charmLines(items: readonly CharacterItem[], data: BuildDraftData): string[] {
+/** A charm as one text line: its name and its stats at the character's level ("Coral Small Charm: Lightning Resist +11%"). */
+function charmLine(item: CharacterItem, level: number, data: BuildDraftData): string {
+  const name = itemDisplayName(item, data.catalog, data.text);
+  const { stats } = renderItemText(item, data.text, { characterLevel: level });
+  return stats.length > 0 ? `${name}: ${stats.join(', ')}` : name;
+}
+
+/** One line per charm of the charm inventory. Only charms with the same name and the same rolls are merged ("2x …"). */
+function charmLines(items: readonly CharacterItem[], level: number, data: BuildDraftData): string[] {
   const counts = new Map<string, number>();
   for (const item of items) {
     if (!isCharmInventory(item) || item.code === KILL_LEDGER_CODE || item.code === ASCENDANCY_STONE_CODE) continue;
     if (describeStashItem(item, data.catalog).category !== 'charm') continue;
-    const name = itemDisplayName(item, data.catalog, data.text);
-    counts.set(name, (counts.get(name) ?? 0) + 1);
+    const line = charmLine(item, level, data);
+    counts.set(line, (counts.get(line) ?? 0) + 1);
   }
-  return [...counts].map(([name, count]) => (count > 1 ? `${String(count)}x ${name}` : name));
+  return [...counts].map(([line, count]) => (count > 1 ? `${String(count)}x ${line}` : line));
 }
 
 /** The ascendancy of the stone in the charm inventory (a stone anywhere else does nothing). */
@@ -259,7 +266,7 @@ export function createBuildDraft(file: CharacterFile, data: BuildDraftData, file
   const player = mapSection('player', mainSlots(file.gear), index, data);
   const swap = mapSection('swap', swapSlots(file.gear), index, data);
   const merc = mapSection('merc', mainSlots(file.mercGear), index, data);
-  const charms = charmLines(file.items.player, data);
+  const charms = charmLines(file.items.player, file.level, data);
   const ascendancy = ascendancyOf(file.items.player, data);
   const skillPoints = skillPointsOf(file, data);
   const skills = skillsInUseLine(file, data.skillNames);
