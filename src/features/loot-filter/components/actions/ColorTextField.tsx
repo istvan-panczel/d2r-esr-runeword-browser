@@ -7,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COLOR_CODES } from '../../engine/colors';
 import {
   PLACEHOLDERS,
-  findPlaceholder,
-  listPlaceholders,
+  placeholderProblems,
   resolveText,
   shownLanguage,
   textLanguages,
@@ -38,23 +37,6 @@ interface ColorTextFieldProps {
   readonly defaultColor?: string;
   /** Shown after the label (the rule editor's "advanced" tag). */
   readonly badge?: React.ReactNode;
-}
-
-const CONTEXT_NAMES: Readonly<Record<PlaceholderContext, string>> = {
-  names: 'item names',
-  chat: 'chat lines',
-  dropFormat: 'the drop line',
-  levelChangeFormat: 'the level change line',
-};
-
-function placeholderProblems(text: string, context: PlaceholderContext): string[] {
-  const problems: string[] = [];
-  for (const token of new Set(listPlaceholders(text))) {
-    const known = findPlaceholder(token);
-    if (!known) problems.push(`${token} is not a placeholder the plugin knows; it is printed as written.`);
-    else if (!known.contexts.includes(context)) problems.push(`${token} does not work in ${CONTEXT_NAMES[context]}.`);
-  }
-  return problems;
 }
 
 /**

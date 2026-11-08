@@ -3,7 +3,7 @@ import { FlaskConical, Info, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { evaluateFilter, type EvaluationResult } from '../engine/evaluate';
-import type { LootFilter } from '../engine/types';
+import { QUALITIES, type LootFilter } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
 import { applyPreset, defaultTestItem, TEST_PRESETS, toTestContext, toTestItem, type TestItemForm } from '../utils/testItemForm';
 import { AssumptionsNote } from './test/AssumptionsNote';
@@ -28,7 +28,11 @@ interface ManualRun {
   readonly form: TestItemForm;
   readonly filter: LootFilter;
   readonly result: EvaluationResult;
+  readonly hiddenWhileUnidentified: boolean | null;
 }
+
+/** Magic and above can drop unidentified */
+const FIRST_UNIDENTIFIED_QUALITY = QUALITIES.indexOf('magic') + 1;
 
 /** "Test an item": describe an item and where it drops, and see what the filter does with it, rule by rule. */
 export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showRule }: TestTabProps) {
@@ -38,9 +42,21 @@ export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showR
 
   const evaluate = (): EvaluationResult => evaluateFilter(filter, toTestItem(form, lookup), toTestContext(form, filter, lookup));
 
+  /** What the identified result hides from view: the same item unidentified, when the filter treats it the other way. */
+  const hiddenWhenUnidentified = (identified: EvaluationResult): boolean | null => {
+    if (!form.isIdentified || form.quality < FIRST_UNIDENTIFIED_QUALITY) return null;
+    const unidentified = evaluateFilter(filter, { ...toTestItem(form, lookup), isIdentified: false }, toTestContext(form, filter, lookup));
+    return unidentified.hidden === identified.hidden ? null : unidentified.hidden;
+  };
+
   const live = filter.rules.length <= LIVE_RULE_LIMIT;
   const hasItem = form.code.trim() !== '';
   const result = live ? (hasItem ? evaluate() : null) : (manualRun?.result ?? null);
+  const hiddenWhileUnidentified = live
+    ? result === null
+      ? null
+      : hiddenWhenUnidentified(result)
+    : (manualRun?.hiddenWhileUnidentified ?? null);
   const stale = !live && manualRun !== null && (manualRun.form !== form || manualRun.filter !== filter);
   // The label colour follows the quality of the item that was evaluated.
   const resultQuality = live ? form.quality : (manualRun?.form.quality ?? form.quality);
@@ -126,7 +142,8 @@ export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showR
                 className="w-fit"
                 disabled={!hasItem}
                 onClick={() => {
-                  setManualRun({ form, filter, result: evaluate() });
+                  const run = evaluate();
+                  setManualRun({ form, filter, result: run, hiddenWhileUnidentified: hiddenWhenUnidentified(run) });
                 }}
               >
                 <Play />
@@ -140,7 +157,13 @@ export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showR
               </p>
             ) : (
               <>
-                <TestResult data={data} result={result} quality={resultQuality} onShowRule={showRule} />
+                <TestResult
+                  data={data}
+                  result={result}
+                  quality={resultQuality}
+                  hiddenWhileUnidentified={hiddenWhileUnidentified}
+                  onShowRule={showRule}
+                />
                 <RuleTrace filter={live ? filter : (manualRun?.filter ?? filter)} result={result} lookup={lookup} onShowRule={showRule} />
               </>
             )}

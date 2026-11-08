@@ -338,6 +338,7 @@
       "itemTypes": ["weap"],
       "excludeItemTypes": ["clas"],
       "quality": ["magic", "rare"],
+      "isIdentified": true,
       "itemStats": [
         {"stat": "item_allskills", "op": "<", "value": 1},
         {"stat": "item_fastercastrate", "op": "<", "value": 1},
@@ -392,6 +393,7 @@
       "itemTypes": ["armo"],
       "excludeItemTypes": ["clas"],
       "quality": "magic",
+      "isIdentified": true,
       "itemStats": [
         {"stat": "item_allskills", "op": "<", "value": 1},
         {"stat": "item_fastercastrate", "op": "<", "value": 1},

@@ -159,7 +159,10 @@ const ACTIONS: Readonly<Record<keyof RuleActions, readonly [value: string, effec
   namePrefix: ['text', 'Text before the name.'],
   nameSuffix: ['text', 'Text after the name.'],
   labelBackground: [COLOR, `Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`],
-  labelBorder: [`\`{ "color": ${COLOR.replace(/`/g, '')}, "width": 2 }\``, 'Outlines the ground label; width 1 to 3 reads well.'],
+  labelBorder: [
+    `\`{ "color": ${COLOR.replace(/`/g, '')}, "width": 2 }\``,
+    'Outlines the ground label; width is a whole number from 1 to 8, and 1 to 3 reads well.',
+  ],
   chatMessage: ['text', 'A chat line when the item drops, once per item (replaces the notify line).'],
   chatMessageWhenHidden: ['text', 'A chat line when this rule hides the item.'],
   notify: ['true', 'Prints the filter\'s drop line (notifications.dropFormat, default "{qualityColor}{name}").'],

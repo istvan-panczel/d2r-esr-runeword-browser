@@ -147,8 +147,7 @@ Void Shard stops at 300 on those, its own condition reads a stat nothing raises;
 never stops, leaves the D-stoning uncapped with a `crafting: D-stoning "…": …` warning (a finding to explain). The official `docs/special_crafting_outcomes.htm` (corruptions, anointments,
 sanctifications) is a cross-check only.
 
-Known genuine data, not findings: Sully's template (v0.7.0) validates with 6 warnings at 3.3, as v0.6.13 did at
-3.2.24 (`item_addskill_tab` on rules 31–33, `docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
+Known genuine data, not findings: Sully's template (v0.7.0) validates with 7 warnings at 3.3: 6 for `item_addskill_tab` on rules 31–33 (as v0.6.13 did at 3.2.24) and 1 for the stat-based hide at `rules/73`, which cannot reach unidentified items (`docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
 
 ### Hand-kept data (SKILL step 5.8)

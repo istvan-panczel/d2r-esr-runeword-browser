@@ -1556,7 +1556,7 @@ accessories; nothing selected means all types. Codes selected via a link that ar
 
 Each base is a Card (grid like the runewords page): name, tier badge, type (and type2) name and code, class-only /
 indestructible badges, damage 1H / 2H / throw (armor: "Smite" for shields, "Kick" for boots), defense, block, speed
-(weapons), range (`+rangeadder`, when set), durability (when > 0 and not indestructible), requirements, str/dex damage
+(weapons), Run/Walk (armor with a non-zero `speed`: 5 shows as −5%, a cloak's −10 as +10%; the official Armors page prints the raw number as FRW), range (`+rangeadder`, when set), durability (when > 0 and not indestructible), requirements, str/dex damage
 bonus, socket caps as "N (ilvl ≤ t1) / N (≤ t2) / N" using the thresholds of the base's own type (one number when
 all bands are equal), quality level, "Staffmods: + to random <Class> skills" (when `staffMods` is set), and the N/X/E
 family where other members are clickable and set the search to `"<name>"`.

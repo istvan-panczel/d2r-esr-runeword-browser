@@ -107,10 +107,11 @@ export function LabelSection({ idPrefix, background, border, onChange }: LabelSe
                 <NumberInput
                   id={widthId}
                   className="w-20"
-                  min={0}
+                  integer
                   value={shownBorder.width}
                   onCommit={(width) => {
-                    onChange({ labelBorder: { ...shownBorder, width: width ?? 0 } });
+                    // The plugin takes a whole number from 1 to 8; emptying the field keeps the current width
+                    if (width !== undefined) onChange({ labelBorder: { ...shownBorder, width: Math.min(8, Math.max(1, width)) } });
                   }}
                 />
               </div>
