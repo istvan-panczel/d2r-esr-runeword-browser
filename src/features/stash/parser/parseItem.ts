@@ -226,10 +226,10 @@ function readFields(reading: Reading, item: StashItem): ItemFields {
     item.x = reader.read(16);
     item.y = reader.read(16);
   } else {
-    reader.skip(4); // body location
+    item.bodyLocation = reader.read(4);
     item.x = reader.read(4);
     item.y = reader.read(4);
-    reader.skip(3); // store page + 1
+    item.storePage = reader.read(3);
   }
 
   const isEar = (flags & ITEM_FLAG.ear) !== 0;
@@ -320,6 +320,8 @@ export function emptyItem(context: ItemContext, bitOffset: number): StashItem {
     bitOffset,
     flags: 0,
     mode: 0,
+    bodyLocation: 0,
+    storePage: 0,
     x: 0,
     y: 0,
     width: null,

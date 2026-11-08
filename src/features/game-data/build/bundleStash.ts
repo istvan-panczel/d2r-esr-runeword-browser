@@ -106,7 +106,7 @@ export function buildStashBundle(
   strings: ReadonlyMap<string, string>,
   /** String-table ids by key (strings.ts `ids`): an item's runeword field is the id of its runes.txt key */
   stringIds: ReadonlyMap<string, number>
-): BuildResult<StashBundle> & { names: StashNamesBundle } {
+): BuildResult<Omit<StashBundle, 'characterStats' | 'characterClasses'>> & { names: StashNamesBundle } {
   const warnings: string[] = [];
 
   const stats: (StashStatInfo | null)[] = input.itemstatcost.rows.map((row) => {

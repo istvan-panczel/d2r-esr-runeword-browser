@@ -36,6 +36,10 @@ export interface StashItem {
   flags: number;
   /** Location mode (ITEM_MODE) */
   mode: number;
+  /** Raw 4-bit body location (0 for items not equipped; not read for ground / dropping items) */
+  bodyLocation: number;
+  /** Raw 3-bit store page: 1 inventory, 4 cube, 5 personal stash, 7 ESR charm inventory; 0 when not stored */
+  storePage: number;
   /** Grid column (socketed items: the socket) */
   x: number;
   /** Grid row */

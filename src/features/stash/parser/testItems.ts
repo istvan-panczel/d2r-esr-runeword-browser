@@ -52,6 +52,10 @@ export interface TestItem {
   y?: number;
   /** ITEM_MODE; default stored */
   mode?: number;
+  /** Raw body location; default 0 */
+  body?: number;
+  /** Raw store page; default 5 (0 when socketed) */
+  store?: number;
   compact?: boolean;
   /** Quality id (2 normal, 5 set, 7 unique …); complete items only */
   quality?: number;
@@ -136,10 +140,10 @@ export function writeItem(writer: BitWriter, data: StashData, item: TestItem): v
   writer.write(0b101, 3); // item format 101
   writer.write(160, L.headerExtraBits);
   writer.write(item.mode ?? 0, 3);
-  writer.write(0, 4);
+  writer.write(item.body ?? 0, 4);
   writer.write(item.x ?? 0, 4);
   writer.write(item.y ?? 0, 4);
-  writer.write(item.mode === 6 ? 0 : 5, 3);
+  writer.write(item.store ?? (item.mode === 6 ? 0 : 5), 3);
   writeItemCode(writer, item.code);
   const def = data.item(item.code);
   if (def === undefined) throw new Error(`no item ${item.code}`);

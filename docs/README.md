@@ -34,6 +34,7 @@ Architecture decisions, coding guidelines, tech stack documentation, and impleme
 - [Loot Filter backlog](./features/LOOT-FILTER-BACKLOG.md) - Deferred loot filter requests: what waits for an in-game check, what needs the plugin or the mod, what was decided against
 - [My Stash](./features/STASH.md) - Upload the ESR shared stash (.d2i), parsed and remembered in the browser only; Ancient Coupons page (`/stash`, `/stash/coupons`)
   - [All Items](./features/STASH-ITEMS.md) - Every stash page item, searchable by name and stats (`/stash/items`); [roadmap](./features/STASH-ROADMAP.md)
+- [Character save parser](./features/CHARACTER-SAVE.md) - The ESR character save (.d2s) and `.d2rl` sidecar format, what is verified or inferred, error and old-save policy (parser only, no page yet)
 - [Elixirs](./features/ELIXIRS.md) - ESR 3.3 utility elixirs from the game files: effects at a character level with Utility Potion Effectiveness / Duration and Alchemist perks, drop chances per area, perk-gated odds, Gem Infusion recipes, `?name=` links (`/elixirs`)
 - [Terror Zones](./features/TERROR-ZONES.md) - Offline terror zone schedule from desecratedzones.json: floating widget on every page, schedule page, watched groups, notifications (`/terror-zones`)
 - [Guide](./features/GUIDE.md) - New-player guide: markdown notes compiled into a static bundle, journey spine, data directives, staleness tracking

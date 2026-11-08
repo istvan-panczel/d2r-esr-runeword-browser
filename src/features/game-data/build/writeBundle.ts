@@ -27,6 +27,8 @@ export interface ManifestInput {
   esrVersion: string;
   esrTag: string | null;
   esrCommit: string;
+  /** Committer date of `esrCommit` (ISO 8601), null when unknown */
+  esrDate?: string | null;
   /** Serialized bundle files */
   files: Partial<Record<GameDataFile, string>>;
   counts: Record<string, number>;
@@ -54,6 +56,7 @@ export function buildManifest(input: ManifestInput): GameDataManifest {
     esrVersion: input.esrVersion,
     esrTag: input.esrTag,
     esrCommit: input.esrCommit,
+    esrDate: input.esrDate ?? null,
     generatedAt: unchanged ? previous.generatedAt : input.now.toISOString(),
     files,
     counts: input.counts,

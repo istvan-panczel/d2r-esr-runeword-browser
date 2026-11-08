@@ -1275,7 +1275,16 @@ describe('committed game-data bundles', () => {
     expect(stashNames.runewords.filter((entry) => entry.gemword === true)).toHaveLength(9);
     expect(stash.gemwords).toEqual(stashNames.runewords.filter((entry) => entry.gemword === true).map((entry) => entry.id));
     // the coupons and home pages load stash.json only: no names in it
-    expect(Object.keys(stash)).toEqual(['grid', 'stats', 'items', 'coupons', 'couponTiers', 'gemwords']);
+    expect(Object.keys(stash)).toEqual([
+      'grid',
+      'stats',
+      'items',
+      'coupons',
+      'couponTiers',
+      'gemwords',
+      'characterStats',
+      'characterClasses',
+    ]);
   });
 
   it('give the stash item text every saved stat, its strings and the name tables by the ids a save stores (ESR 3.2.24)', () => {
