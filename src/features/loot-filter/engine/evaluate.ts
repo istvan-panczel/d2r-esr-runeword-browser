@@ -342,6 +342,14 @@ function statListsReadItemStat(rule: LootFilterRule, statIds: ReadonlyMap<string
   return [...(rule.itemStats ?? []), ...(rule.itemStatsAnyOf ?? [])].some((check) => needsIdentified(check.stat, statIds));
 }
 
+/** Whether the game skips the rule on an unidentified item: its stat lists or its formula read an item stat that item lacks. */
+export function ruleNeedsIdentifiedItem(rule: LootFilterRule, statIds: ReadonlyMap<string, number> = new Map()): boolean {
+  if (statListsReadItemStat(rule, statIds)) return true;
+  if (rule.formula === undefined) return false;
+  const parsed = parseFormula(rule.formula);
+  return parsed.ok && formulaReadsItemStat(parsed.ast, statIds);
+}
+
 /**
  * A stat or skill name the loaded game data does not know: the guide says "a bad name … switches the rule off", as the
  * validator warns. Nothing is checked while the data is not loaded (an empty map).

@@ -14,6 +14,8 @@ interface TestResultProps {
   readonly result: EvaluationResult;
   /** 1 to 9: the game colours a label by quality before any `ÿc` code. */
   readonly quality: number;
+  /** Whether the same item would be hidden while unidentified, when that differs from this result; null otherwise. */
+  readonly hiddenWhileUnidentified: boolean | null;
   /** Shows "Rule N" for the hiding rule. */
   readonly onShowRule: (index: number) => void;
 }
@@ -29,7 +31,7 @@ function Swatch({ color }: { readonly color: LabelColor }) {
 }
 
 /** What the filter does to the item: the ground label, chat lines, sounds, minimap icon and droplight. */
-export function TestResult({ data, result, quality, onShowRule }: TestResultProps) {
+export function TestResult({ data, result, quality, hiddenWhileUnidentified, onShowRule }: TestResultProps) {
   const preview = useSoundPreview();
   const qualityName = quality >= 1 ? QUALITIES.at(quality - 1) : undefined;
   const defaultColor = qualityName === undefined ? '=' : DEFAULT_QUALITY_COLORS[qualityName].slice(2);
@@ -38,6 +40,12 @@ export function TestResult({ data, result, quality, onShowRule }: TestResultProp
 
   return (
     <div className="flex flex-col gap-3">
+      {hiddenWhileUnidentified !== null && (
+        <p className="rounded-md border border-amber-600/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200">
+          This result is for an identified item. While it is unidentified, the filter {hiddenWhileUnidentified ? 'hides' : 'shows'} it:
+          rules that check an item stat are skipped until then. Untick Identified to see that result.
+        </p>
+      )}
       {result.hidden ? (
         <div className="flex flex-col gap-2 rounded-md border border-red-600/40 bg-red-500/10 p-3 text-sm">
           <span className="flex items-center gap-2 font-medium text-red-700 dark:text-red-300">

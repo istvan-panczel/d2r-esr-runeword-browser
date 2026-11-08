@@ -5,12 +5,15 @@
  */
 import { decodeTabLayer, MAX_STAT_PARAM, skillTabLayer, statLayerKind, type StatLayerKind } from '../../game-data/engine/statLayers.ts';
 import { effectiveActions } from './actions.ts';
+import { COLOR_CODES } from './colors.ts';
+import { ruleNeedsIdentifiedItem } from './evaluate.ts';
 import { FORMULA_QUOTE, formulaReferences, formulaSkillKey, parseFormula, type FormulaCall, type FormulaStatArg } from './formula.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { CONDITION_KEYS, EFFECT_KEYS, ruleFilePaths } from './parse.ts';
 import { isUntouchedLevelNumber } from './serialize.ts';
 import { statQuirk, type StatQuirk } from './statQuirks.ts';
 import { statScale, statScaleMessage } from './statScale.ts';
+import { placeholderProblems, type PlaceholderContext } from './text.ts';
 import {
   BASE_TIERS,
   DIFFICULTIES,
@@ -18,6 +21,7 @@ import {
   STAT_OPS,
   type Diagnostic,
   type DiagnosticSeverity,
+  type FilterText,
   type LabelColor,
   type LootFilter,
   type LootFilterReference,
@@ -497,12 +501,34 @@ function checkShowAndHide(report: Report, own: RuleActions, effective: RuleActio
   report('error', key, own.show === true && own.hide === true ? SHOW_AND_HIDE_MESSAGE : `${SHOW_AND_HIDE_MESSAGE} (with its style)`);
 }
 
+const COLOR_CODE_CHARS: ReadonlySet<string> = new Set(COLOR_CODES.map((entry) => entry.code));
+
+/** The `ÿc` codes of a text the game does not know, as written (`ÿc` alone at the end of the text included). */
+function unknownColorCodes(text: string): string[] {
+  return [...new Set([...text.matchAll(/ÿc(.?)/gsu)].filter((match) => !COLOR_CODE_CHARS.has(match[1])).map((match) => match[0]))];
+}
+
+/** Warnings for one text, every language of it: placeholders that print as written and colour codes the game lacks. */
+function checkText(report: Report, key: string, text: FilterText | undefined, context: PlaceholderContext): void {
+  if (text === undefined) return;
+  const strings = typeof text === 'string' ? [text] : Object.values(text).filter((value) => typeof value === 'string');
+  for (const problem of new Set(strings.flatMap((value) => placeholderProblems(value, context)))) report('warning', key, problem);
+  for (const code of new Set(strings.flatMap(unknownColorCodes))) report('warning', key, `"${code}" is not a colour code the game knows`);
+}
+
 function checkActions(report: Report, actions: RuleActions, reference: LootFilterReference | undefined): void {
   checkColor(report, 'labelBackground', actions.labelBackground, [3, 4]);
   if (actions.labelBorder) {
     checkColor(report, 'labelBorder/color', actions.labelBorder.color, [3, 4]);
-    if (actions.labelBorder.width < 0) report('error', 'labelBorder/width', 'The border width cannot be negative');
+    const { width } = actions.labelBorder;
+    if (!Number.isInteger(width) || width < 1 || width > 8)
+      report('error', 'labelBorder/width', 'The border width must be a whole number from 1 to 8');
   }
+  checkText(report, 'replaceName', actions.replaceName, 'names');
+  checkText(report, 'namePrefix', actions.namePrefix, 'names');
+  checkText(report, 'nameSuffix', actions.nameSuffix, 'names');
+  checkText(report, 'chatMessage', actions.chatMessage, 'chat');
+  checkText(report, 'chatMessageWhenHidden', actions.chatMessageWhenHidden, 'chat');
   if (actions.icon) {
     const { iconSize } = actions.icon;
     if (iconSize !== undefined && (iconSize < 4 || iconSize > 256))
@@ -682,6 +708,7 @@ function checkRule(
     report('error', 'useStyle', `There is no style named "${rule.useStyle}"`);
   }
   checkHideIfFail(report, rule);
+  checkHideOfUnidentified(report, rule, filter);
   checkShowAndHide(report, rule, effectiveActions(rule, filter));
   checkEmptyLists(report, rule);
 
@@ -724,6 +751,31 @@ function checkRule(
   checkKnown(report, 'excludeUniqueOrSetIds', rule.excludeUniqueOrSetIds, reference?.uniqueOrSetIds, 'unique or set id');
 }
 
+/** Qualities that are never unidentified on the ground: a rule limited to them loses nothing to the unidentified skip. */
+const ALWAYS_IDENTIFIED_QUALITIES: ReadonlySet<NamedValue<(typeof QUALITIES)[number]>> = new Set([
+  'inferior',
+  'normal',
+  'superior',
+  1,
+  2,
+  3,
+]);
+
+/**
+ * The game skips a rule that reads an item stat on an unidentified item, so a hide on such a rule does not reach those
+ * items (the guide: "none of its actions run and it cannot hide it"). Basic's "Except items with…" is exactly this rule.
+ */
+function checkHideOfUnidentified(report: Report, rule: LootFilterRule, filter: LootFilter): void {
+  const actions = effectiveActions(rule, filter);
+  if (actions.hide !== true && actions.hideIfOtherConditionsFail !== true) return;
+  if (rule.isIdentified !== undefined || !ruleNeedsIdentifiedItem(rule)) return;
+  const { quality } = rule;
+  if (quality !== undefined && isNamedList(quality) && quality.every((entry) => ALWAYS_IDENTIFIED_QUALITIES.has(entry))) return;
+  if (typeof quality === 'string' || typeof quality === 'number') if (ALWAYS_IDENTIFIED_QUALITIES.has(quality)) return;
+  const key = rule.itemStats !== undefined ? 'itemStats' : rule.itemStatsAnyOf !== undefined ? 'itemStatsAnyOf' : 'formula';
+  report('warning', key, 'Does not hide unidentified items: the game skips a rule that checks an item stat until the item is identified');
+}
+
 /** Semantic diagnostics for a parsed (or edited) filter. */
 export function validateLootFilter(filter: LootFilter, reference?: LootFilterReference): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
@@ -742,6 +794,14 @@ export function validateLootFilter(filter: LootFilter, reference?: LootFilterRef
   }
   if (filter.soundVolume !== undefined && (filter.soundVolume < 0 || filter.soundVolume > 100)) {
     top('error', 'soundVolume', `"soundVolume" ${String(filter.soundVolume)} is outside 0 to 100`);
+  }
+
+  checkText(top, 'notifications/dropFormat', filter.notifications?.dropFormat, 'dropFormat');
+  checkText(top, 'notifications/levelChangeFormat', filter.notifications?.levelChangeFormat, 'levelChangeFormat');
+  for (const [quality, value] of Object.entries(filter.qualityColors ?? {})) {
+    if (!/^ÿc.$/su.test(value) || !COLOR_CODE_CHARS.has(value.slice(2))) {
+      top('warning', `qualityColors/${quality}`, `"${value}" is not one colour code; the plugin ignores it`);
+    }
   }
 
   for (const [name, style] of Object.entries(filter.styles ?? {})) {

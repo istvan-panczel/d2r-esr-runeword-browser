@@ -2,9 +2,13 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { parseLootFilter } from './parse.ts';
 import type { Diagnostic, LootFilter, LootFilterReference, LootFilterRule, StatCheck } from './types.ts';
-import { validateLootFilter } from './validate.ts';
+import { validateLootFilter as validate } from './validate.ts';
 import { buildLootFilterReference } from './reference.ts';
 import type { LootFilterDataBundle, TypesBundle } from '../../game-data/engine/schema.ts';
+
+/** Most rules below use `hide` as a handy action: the unidentified warning has its own tests, on `validate`. */
+const validateLootFilter: typeof validate = (filter, ref) =>
+  validate(filter, ref).filter((diagnostic) => !diagnostic.message.startsWith('Does not hide unidentified items'));
 
 const base: LootFilter = {
   formatVersion: 1,
@@ -690,5 +694,85 @@ describe('validateLootFilter: formula', () => {
       ],
     });
     expect(diagnostics).toEqual([]);
+  });
+});
+
+describe('hide rules on unidentified items', () => {
+  const said = (rule: LootFilterRule) => validate({ ...base, rules: [rule] }).map((d) => [d.severity, d.path]);
+  const armour = { itemTypes: ['armo'], quality: 'magic' } as const;
+  const check = { stat: 'item_magicbonus', op: '<', value: 1 } as StatCheck;
+
+  it('warns on a hide that reads an item stat, by stat list, formula or hide-if-fail', () => {
+    expect(said({ ...armour, itemStats: [check], hide: true })).toEqual([['warning', 'rules/0/itemStats']]);
+    expect(said({ ...armour, itemStatsAnyOf: [check], hide: true })).toEqual([['warning', 'rules/0/itemStatsAnyOf']]);
+    expect(said({ ...armour, formula: "stat('item_magicbonus') < 1", hide: true })).toEqual([['warning', 'rules/0/formula']]);
+    expect(said({ ...armour, itemStats: [check], hideIfOtherConditionsFail: true }).at(-1)).toEqual(['warning', 'rules/0/itemStats']);
+    expect(
+      validate({ ...base, styles: { H: { hide: true } }, rules: [{ ...armour, itemStats: [check], useStyle: 'H' }] }).map((d) => d.path)
+    ).toEqual(['rules/0/itemStats']);
+  });
+
+  it('stays quiet when nothing is lost', () => {
+    expect(said({ ...armour, itemStats: [{ stat: 'quantity', op: '<', value: 1 }], hide: true })).toEqual([]);
+    expect(said({ ...armour, playerStats: [check], hide: true })).toEqual([]);
+    expect(said({ ...armour, formula: "playerStat('item_magicbonus') < 1", hide: true })).toEqual([]);
+    expect(said({ ...armour, isIdentified: true, itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ itemTypes: ['armo'], quality: ['normal', 'superior'], itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ itemTypes: ['armo'], quality: 'normal', itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ ...armour, itemStats: [check], namePrefix: 'x' })).toEqual([]);
+  });
+
+  it('flags only rule 73 of Sully’s filter', () => {
+    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    expect(validate(parseLootFilter(source).filter).map((d) => d.path)).toEqual(['rules/73/itemStats']);
+  });
+});
+
+describe('label border width', () => {
+  const widths = (width: number) =>
+    validate({ ...base, rules: [{ labelBorder: { color: [0, 0, 0], width }, itemCodes: ['r01'] }] }).map((d) => [d.severity, d.path]);
+
+  it('takes a whole number from 1 to 8, as the plugin does', () => {
+    expect(widths(1)).toEqual([]);
+    expect(widths(8)).toEqual([]);
+    for (const width of [0, 9, 1.5, -1]) expect(widths(width)).toEqual([['error', 'rules/0/labelBorder/width']]);
+  });
+});
+
+describe('text checks', () => {
+  const said = (filter: Partial<LootFilter>) => validate({ ...base, ...filter }).map((d) => `${d.path}: ${d.message}`);
+
+  it('warns about placeholders and colour codes in rule and style texts, every language included', () => {
+    expect(said({ rules: [{ itemCodes: ['r01'], replaceName: '{red}{name}', chatMessage: 'ÿcZ{level}' }] })).toEqual([
+      'rules/0/replaceName: {red} is not a placeholder the plugin knows; it is printed as written.',
+      'rules/0/chatMessage: {level} does not work in chat lines.',
+      'rules/0/chatMessage: "ÿcZ" is not a colour code the game knows',
+    ]);
+    expect(said({ styles: { S: { namePrefix: { enUS: 'ÿc0', deDE: '{nope}' } } } })).toEqual([
+      'styles/S/namePrefix: {nope} is not a placeholder the plugin knows; it is printed as written.',
+    ]);
+    expect(said({ rules: [{ itemCodes: ['r01'], nameSuffix: 'ÿc' }] })).toEqual([
+      'rules/0/nameSuffix: "ÿc" is not a colour code the game knows',
+    ]);
+  });
+
+  it('accepts every documented colour code and placeholder', () => {
+    expect(
+      said({ rules: [{ itemCodes: ['r01'], chatMessage: 'ÿc0 ÿc; ÿc= ÿcA ÿcV {link} {stat:7} {string:r01}', replaceName: 'ÿc4{name}' }] })
+    ).toEqual([]);
+  });
+
+  it('checks the notification lines in their own context', () => {
+    expect(said({ notifications: { levelChangeFormat: '{level} {filter}', dropFormat: '{link}' } })).toEqual([]);
+    expect(said({ notifications: { dropFormat: '{level}' } })).toEqual([
+      'notifications/dropFormat: {level} does not work in the drop line.',
+    ]);
+  });
+
+  it('warns about a qualityColors value that is not one colour code', () => {
+    expect(said({ qualityColors: { magic: 'ÿc3', rare: 'notacode', unique: 'ÿcZ' } })).toEqual([
+      'qualityColors/rare: "notacode" is not one colour code; the plugin ignores it',
+      'qualityColors/unique: "ÿcZ" is not one colour code; the plugin ignores it',
+    ]);
   });
 });

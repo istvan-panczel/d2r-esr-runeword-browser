@@ -146,6 +146,24 @@ export function listPlaceholders(text: string): string[] {
   return text.match(/\{[^{}]*\}/g) ?? [];
 }
 
+const CONTEXT_NAMES: Readonly<Record<PlaceholderContext, string>> = {
+  names: 'item names',
+  chat: 'chat lines',
+  dropFormat: 'the drop line',
+  levelChangeFormat: 'the level change line',
+};
+
+/** What is wrong with the placeholders of a text in this context: unknown ones, and known ones that do not work there. */
+export function placeholderProblems(text: string, context: PlaceholderContext): string[] {
+  const problems: string[] = [];
+  for (const token of new Set(listPlaceholders(text))) {
+    const known = findPlaceholder(token);
+    if (!known) problems.push(`${token} is not a placeholder the plugin knows; it is printed as written.`);
+    else if (!known.contexts.includes(context)) problems.push(`${token} does not work in ${CONTEXT_NAMES[context]}.`);
+  }
+  return problems;
+}
+
 /** The guide's description of a placeholder as written in a text, or undefined when it is not one. */
 export function findPlaceholder(token: string): PlaceholderInfo | undefined {
   return PLACEHOLDERS.find((placeholder) => placeholder.pattern.test(token));

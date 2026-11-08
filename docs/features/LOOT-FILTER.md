@@ -231,7 +231,7 @@ then run `lootfilter` in the game console and read
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.7.0) gets 6 warnings against the ESR 3.3 data (as v0.6.13 did against 3.2.24): its three +3/4/5
+    Skills, which is param 56"). Sully's template (v0.7.0) gets 7 warnings against the ESR 3.3 data: one on the stat-based hide at `rules/73` (see the Test tab's unidentified items) and 6 as v0.6.13 had against 3.2.24: its three +3/4/5
     skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
@@ -1180,8 +1180,10 @@ removes the key); `passthrough` is never patched. Sections:
   sounds. Not with Hide."), `hideIfOtherConditionsFail` (checkboxes; unchecked removes the key), `chatMessageWhenHidden`.
 - **Name**: `replaceName`, `namePrefix`, `nameSuffix`. **Chat**: `chatMessage`, `notify` (the hint shows the filter's
   effective drop line).
-- **Label** (`LabelSection`): `labelBackground` (colour + alpha, default alpha 242), `labelBorder` (colour + alpha, width; "Add border" /
-  remove).
+- **Label** (`LabelSection`): `labelBackground` (colour + alpha, default alpha 242), `labelBorder` (colour + alpha, width 1 to 8 as the
+  plugin requires, clamped, emptying keeps it; the validator errors outside that; "Add border" / remove). Texts are checked in the
+  validator too (`checkText`: placeholders per context, `ÿc` codes, `qualityColors`), so uploads, JSON edits and AI imports get the
+  same warnings as the field.
 - **Sound**: combobox in two groups: **Bundled sounds** (all 9 files, each with its label and use and its own play /
   stop button, which plays without picking, by click or by Enter / Space on the focused button: the button keeps those
   keys from the list, whose own Enter would pick the highlighted sound) and **Game sounds** (the sounds.txt names, at most 100 shown); the
@@ -1577,7 +1579,10 @@ tab switches; it is not saved.
   formula check a stat other than gold, armorclass, quantity, durability, maxdurability or item_numsockets
   (`STATS_WHILE_UNIDENTIFIED`) skips an unidentified item entirely (no actions, cannot hide it); the trace row says so
   ("Skipped: the item is unidentified and the rule checks an item stat…") and is shown without "Show skipped rules".
-  No validator warning (it would flag every Sully hide rule with stat exceptions); the AI reference explains it.
+  A hide or `hideIfOtherConditionsFail` rule of this kind gets a validator warning (`checkHideOfUnidentified`), unless it
+  sets `isIdentified` or only matches inferior, normal or superior items: 1 rule of Sully's 225. An identified test item of
+  magic quality or above is also evaluated unidentified, and a note above the result says when the filter would then
+  hide or show it the other way.
 - **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
   filter level (the filter's levels, default marked) and more character stat rows.
 - **Conversion** (`utils/testItemForm.ts`): `toTestItem(form, lookup)` (type ancestors from the `types` bundle via the

@@ -156,7 +156,7 @@ const HIDE_RULE_STAT_HINTS: Readonly<Record<'itemStats' | 'itemStatsAnyOf', stri
 };
 
 const EXCEPTIONS_HINT =
-  'The hide skips items with these stats. The file has no exception key: each one is stored as its opposite check (≥ 1 as < 1) in Item stats, all of (“any of these”) or Item stats, any of (“all of these”); switching moves them. A range (between) has no single opposite. Turning Hide off leaves them as plain < 1 conditions.';
+  'The hide skips items with these stats. The file has no exception key: each one is stored as its opposite check (≥ 1 as < 1) in Item stats, all of (“any of these”) or Item stats, any of (“all of these”); switching moves them. A range (between) has no single opposite. Turning Hide off leaves them as plain < 1 conditions. The game skips this rule until an item is identified, so unidentified items stay visible.';
 
 const isPlainCheck = (check: StatCheck) => !isExceptionCheck(check);
 

@@ -816,6 +816,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
       excludeItemTypes: ['clas'],
       excludeItemCodes: NOT_PLAIN_GEAR,
       quality: ['magic', 'rare'],
+      isIdentified: true,
       itemStats: [
         newExceptionCheck('item_allskills'),
         newExceptionCheck('item_fastercastrate'),
@@ -838,6 +839,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
       excludeItemTypes: ['clas'],
       excludeItemCodes: NOT_PLAIN_GEAR,
       quality: 'magic',
+      isIdentified: true,
       itemStats: [
         newExceptionCheck('item_allskills'),
         newExceptionCheck('item_fastercastrate'),
