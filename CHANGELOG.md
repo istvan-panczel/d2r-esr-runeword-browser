@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.63.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.62.0...v1.63.0) (2026-11-08)
+
+### Features
+
+* **game-data:** add a Standard of Heroes tab to the Enhance page ([fb8a98f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fb8a98f908d7e71fb5bef2f8d41bf3faab2cb73b))
+* **game-data:** add page data to masteries.json ([ecef199](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ecef19953c5590fcddaf0cfc5b6f3354083346e7))
+* **game-data:** add the killledger.json bundle ([10f7e9f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/10f7e9f9dc482478c1d584376e0edf1af99aba16))
+* **game-data:** add the mercenaries bundle from hireling.txt ([e03be8c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e03be8cec3da3843e3762733b23705972bd744d9))
+* **game-data:** bundle the Standard of Heroes charm upgrades ([dd57525](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/dd57525aa0ecd6cd3bcac3fab2e62f155ba3244f))
+* **kill-ledger:** add the Kill Ledger page ([6befd41](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6befd4136de4a5bfb4ebf59ed77dd04b8c5797d0))
+* **mercenaries:** add the Mercenaries page ([96120c8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/96120c8b1a81fb96826998f20ef2f03293126cd3))
+* **weapon-masteries:** add the Weapon Masteries page ([8838185](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8838185621fb94934b82e9e21d2f1ea54e4ae78c))
+
+### Bug Fixes
+
+* **esr-review:** key masteries on property and cover its new sections ([e44c588](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e44c5889d06ae4ab87890c283c6c9386c56d7c08))
+* **kill-ledger:** read page differences as one phrase ([f3789cb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f3789cbdd134cc7845ca8b56d2d61bfbd4c000a7))
+* **weapon-masteries:** list a base name once when two codes share it ([4244a9a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4244a9aa03a417a9136f207be380c42d6d9dd369))
+* **weapon-masteries:** tidy notes and test mocks ([f3155c6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f3155c684d0f8abd491beea457632b4a56358fc1))
+
+### Documentation
+
+* **kill-ledger:** document the page and its data ([54cd485](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/54cd485f2e384bbdbcdc059e7dd11cc6375839d3))
+* **mercenaries:** document the page and link it from the guide ([a7e5696](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a7e5696c50cdf724b79387c3536c22b69c0e83e6))
+* **weapon-masteries:** document the page and its data ([cecc448](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cecc448db25d6532df6ec75945ff8bf290cc2257))
+
+### Tests
+
+* **game-data:** guard killledger.json in esr-review and the integrity test ([d299d2a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d299d2ab8ceee6105ddcaba3c957ce526b996e5a))
+
 ## [1.62.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.61.1...v1.62.0) (2026-11-08)
 
 ### Features
