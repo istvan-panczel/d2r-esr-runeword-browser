@@ -642,9 +642,10 @@ peek texts / levels / URLs, the attribute round trip, the class names against sk
 - skilldetails.json synergy texts still show `?` for formula bonuses; the page replaces them with the calculator's
   values once skillcalc.json is loaded (a synergy line the calculator hides keeps the `?`).
 - Hidden grants, random-skill properties, propertygroups pools and set-wide bonuses are not listed.
-- Mercenary (hireable) skills come only from the ESR skill information page (which hireling uses which skill), not from
-  hireling.txt: no merc skill levels per hireling level and no `hireables/hrskillicon.sprite` icons. The page's subtype
-  labels ("Comb - Nightmare") are shown as written.
+- The "Used by mercenaries" line comes from the ESR skill information page (which hireling uses which skill) and links
+  to the hireling on the [Mercenaries page](./MERCENARIES.md), which has the skill levels per band from hireling.txt.
+  No `hireables/hrskillicon.sprite` icons: both pages use the class skill icons. The page's subtype labels
+  ("Comb - Nightmare") are shown as written on the skill card.
 - The skill information page is hand-written: its numbers ("2% attack speed per level") are not checked against the
   game files, and the alias table (`NAME_ALIASES`) needs a look when ESR renames a skill (an unmatched name is a
   manifest warning).

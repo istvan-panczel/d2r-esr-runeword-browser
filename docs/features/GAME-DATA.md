@@ -56,6 +56,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `modifiers.json`       | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))              |
 | `masteries.json`       | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery")             |
 | `specializations.json` | ESR 3.3 specialisation trees: rules, perks and what reads each perk stat, from the specializations plugin configs, strings and tables ([SPECIALIZATIONS.md](./SPECIALIZATIONS.md)) |
+| `mercenaries.json`     | the hirelings of the official skill information page joined to hireling.txt: act, gold, level bands, stats, skill levels ([MERCENARIES.md](./MERCENARIES.md))                      |
 | `elixirs.json`         | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                                 |
 | `icons.json`           | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")                          |
 
@@ -92,6 +93,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `modifiers.json`       | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
 | `masteries.json`       | ESR 3.3: 15 KB / 4 KB                                                                                                              |
 | `specializations.json` | ESR 3.3: 29 KB (+ `icons/specializations/`: 60 WebP, 138 KB)                                                                       |
+| `mercenaries.json`     | ESR 3.3.02: 17 KB                                                                                                                  |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 

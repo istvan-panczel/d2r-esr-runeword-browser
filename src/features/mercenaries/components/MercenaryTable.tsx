@@ -39,9 +39,6 @@ export function MercenaryTable({ rows }: { readonly rows: readonly MercenaryTabl
           <thead>
             <tr>
               <th className={TH}>Hireling</th>
-              <th className={TH}>Type</th>
-              <th className={TH}>Difficulty</th>
-              <th className={TH}>Act</th>
               <th className={TH}>Gold (file value)</th>
               <th className={TH}>Weapons</th>
               <th className={TH}>Level</th>
@@ -49,7 +46,7 @@ export function MercenaryTable({ rows }: { readonly rows: readonly MercenaryTabl
               <th className={TH}>Defense</th>
               <th className={TH}>Str</th>
               <th className={TH}>Dex</th>
-              <th className={TH}>Attack rating</th>
+              <th className={TH}>AR</th>
               <th className={TH}>Damage</th>
               <th className={TH}>Resists</th>
               <th className={TH}>Skills (level per band)</th>
@@ -58,10 +55,13 @@ export function MercenaryTable({ rows }: { readonly rows: readonly MercenaryTabl
           <tbody>
             {rows.map((row) => (
               <tr key={row.key}>
-                <td className={`${TD} font-medium`}>{row.hireling.name}</td>
-                <td className={TD}>{row.type.name}</td>
-                <td className={TD}>{row.difficulty === null ? 'All' : MERCENARY_DIFFICULTY_LABELS[row.difficulty]}</td>
-                <td className={`${TD} tabular-nums`}>{row.hireling.act}</td>
+                <td className={TD}>
+                  <div className="font-medium">{row.hireling.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {row.type.name} · {row.difficulty === null ? 'all difficulties' : MERCENARY_DIFFICULTY_LABELS[row.difficulty]} · Act{' '}
+                    {row.hireling.act}
+                  </div>
+                </td>
                 <td className={TD}>
                   <ul className="tabular-nums">
                     {row.view.gold.map(({ difficulty, gold }) => (
@@ -74,7 +74,7 @@ export function MercenaryTable({ rows }: { readonly rows: readonly MercenaryTabl
                     ))}
                   </ul>
                 </td>
-                <td className={TD}>{VANILLA_WEAPONS[row.hireling.slug]}</td>
+                <td className={`${TD} max-w-24 whitespace-normal`}>{VANILLA_WEAPONS[row.hireling.slug]}</td>
                 <td className={TD}>
                   <BandLines bands={row.view.bands} value={(band) => band.level} />
                 </td>
