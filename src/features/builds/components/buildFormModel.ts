@@ -46,6 +46,11 @@ export interface SectionDraft<K extends string> {
 
 export type GearSection = 'player' | 'swap' | 'merc';
 
+/** The DOM id of an editable slot cell, so the import panel can scroll to it. */
+export function slotAnchorId(section: GearSection, slot: EquipmentSlot | WeaponSwapSlot): string {
+  return `build-slot-${section}-${slot}`;
+}
+
 /** One variant while editing (see utils/variantDrafts for the reducer and the conversions). */
 export interface VariantDraft {
   /** Ephemeral React key, never stored. */

@@ -58,6 +58,8 @@ interface EquipmentGridProps {
   readonly renderSlotFooter?: (slot: EquipmentSlot) => ReactNode;
   /** Read-only only: extra content at the end of a slot's label row. */
   readonly renderSlotLabelExtra?: (slot: EquipmentSlot) => ReactNode;
+  /** Editable only: the DOM id of a slot's cell. */
+  readonly slotAnchorId?: (slot: EquipmentSlot) => string;
 }
 
 export function EquipmentGrid({
@@ -72,6 +74,7 @@ export function EquipmentGrid({
   craftData,
   renderSlotFooter,
   renderSlotLabelExtra,
+  slotAnchorId,
 }: EquipmentGridProps) {
   // Set pieces worn in this section only (a grid is one section: player gear or merc gear).
   const pieceCounts = setPieceCounts(items);
@@ -95,6 +98,7 @@ export function EquipmentGrid({
             craftData={craftData}
             footer={renderSlotFooter?.(slot)}
             labelExtra={renderSlotLabelExtra?.(slot)}
+            anchorId={slotAnchorId?.(slot)}
             onChange={
               onChange === undefined
                 ? undefined

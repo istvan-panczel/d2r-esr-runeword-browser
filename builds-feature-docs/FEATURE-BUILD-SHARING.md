@@ -847,6 +847,8 @@ On small screens (below `md` breakpoint), the equipment grid stacks to a **verti
 
 ## Build Creation & Editing
 
+`/builds/new` can start from a character save: see [Start a build from a save](../docs/features/CHARACTER-SAVE.md#start-a-build-from-a-save).
+
 ### Routes
 
 - **Create**: `/builds/new` — dedicated full page

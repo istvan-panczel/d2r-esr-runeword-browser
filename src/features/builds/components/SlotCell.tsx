@@ -43,6 +43,8 @@ interface SlotCellProps {
   readonly footer?: ReactNode;
   /** Read-only only: extra content at the end of the label row (e.g. which alternative is shown). */
   readonly labelExtra?: ReactNode;
+  /** Editable only: the DOM id of the cell (the import panel's "Go to slot"). */
+  readonly anchorId?: string;
 }
 
 const NO_CRAFT_DATA: CraftDataState = { status: 'idle', lookups: undefined };
@@ -63,6 +65,7 @@ export function SlotCell({
   craftData = NO_CRAFT_DATA,
   footer,
   labelExtra,
+  anchorId,
 }: SlotCellProps) {
   const [showOriginal, setShowOriginal] = useState(false);
   // A different item in the cell (an alternative swapped in on the detail page) starts with its saved snapshot hidden.
@@ -75,7 +78,7 @@ export function SlotCell({
 
   if (onChange !== undefined) {
     return (
-      <div className="flex flex-col gap-2">
+      <div id={anchorId} className="flex scroll-mt-24 flex-col gap-2">
         <EquipmentSlotPicker label={label} slot={slot} value={item} disabled={disabled} onChange={onChange} />
         {item !== null && <ItemChoicesEditor item={item} slot={slot} disabled={disabled} onChange={onChange} />}
         {item !== null && <BuildItemCard item={item} slot={slot} setPieces={setPieces} showChoices={false} />}
