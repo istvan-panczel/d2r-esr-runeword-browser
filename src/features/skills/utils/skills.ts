@@ -10,6 +10,7 @@ import type {
   SkillMercenary,
   SkillsBundle,
 } from '@/features/game-data/engine/schema';
+import { mercenaryHref } from '@/features/game-data/engine/mercenaryLinks';
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
 import { normaliseItemName } from '@/core/utils/itemName';
 import { parseSearchTerms } from '@/core/utils/searchTerms';
@@ -336,19 +337,26 @@ export function firstSentence(text: string): string {
   return text;
 }
 
+export interface MercenaryGroup {
+  hireling: string;
+  /** The hireling on the Mercenaries page */
+  href: string;
+  subtypes: { label: string; href: string }[];
+}
+
 /**
- * A skill's mercenaries grouped by hireling, in page order: "Desert Mercenary" → ["Comb – Normal", "Def – Normal"]
- * (the page's " - " shown as an en dash).
+ * A skill's mercenaries grouped by hireling, in page order: "Desert Mercenary" → "Comb – Normal", "Def – Normal"
+ * (the page's " - " shown as an en dash), each with its link to the Mercenaries page.
  */
-export function mercenaryGroups(mercenaries: readonly SkillMercenary[]): { hireling: string; subtypes: string[] }[] {
-  const groups: { hireling: string; subtypes: string[] }[] = [];
+export function mercenaryGroups(mercenaries: readonly SkillMercenary[]): MercenaryGroup[] {
+  const groups: MercenaryGroup[] = [];
   for (const { hireling, subtype } of mercenaries) {
     let group = groups.find((entry) => entry.hireling === hireling);
     if (group === undefined) {
-      group = { hireling, subtypes: [] };
+      group = { hireling, href: mercenaryHref(hireling), subtypes: [] };
       groups.push(group);
     }
-    if (subtype !== '') group.subtypes.push(subtype.replace(/ - /g, ' – '));
+    if (subtype !== '') group.subtypes.push({ label: subtype.replace(/ - /g, ' – '), href: mercenaryHref(hireling, subtype) });
   }
   return groups;
 }

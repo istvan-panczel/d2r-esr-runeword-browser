@@ -537,11 +537,26 @@ function Mercenaries({ mercenaries }: { readonly mercenaries: readonly SkillMerc
   return (
     <p>
       <span className="text-muted-foreground">Used by mercenaries: </span>
-      {mercenaryGroups(mercenaries).map(({ hireling, subtypes }, i) => (
+      {mercenaryGroups(mercenaries).map(({ hireling, href, subtypes }, i) => (
         <span key={hireling}>
           {i > 0 && ', '}
-          {hireling}
-          {subtypes.length > 0 && <span className="text-muted-foreground"> ({subtypes.join(', ')})</span>}
+          <Link to={href} className={INFO_LINK}>
+            {hireling}
+          </Link>
+          {subtypes.length > 0 && (
+            <span className="text-muted-foreground">
+              {' ('}
+              {subtypes.map((subtype, index) => (
+                <span key={subtype.href}>
+                  {index > 0 && ', '}
+                  <Link to={subtype.href} className={INFO_LINK}>
+                    {subtype.label}
+                  </Link>
+                </span>
+              ))}
+              {')'}
+            </span>
+          )}
         </span>
       ))}{' '}
       <ExternalLink href={`${ESR_SKILL_INFO_URL}#mercenaries`} className={cn(INFO_LINK, 'text-xs')} iconClassName="size-3">

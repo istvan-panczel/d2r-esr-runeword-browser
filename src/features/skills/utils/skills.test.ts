@@ -216,8 +216,19 @@ describe('texts and links', () => {
         { hireling: 'Desert Mercenary', subtype: 'Def - Hell' },
       ])
     ).toEqual([
-      { hireling: 'Desert Mercenary', subtypes: ['Comb – Normal', 'Def – Hell'] },
-      { hireling: 'Barbarian', subtypes: ['Offensive'] },
+      {
+        hireling: 'Desert Mercenary',
+        href: '/mercenaries?hireling=desert-mercenary',
+        subtypes: [
+          { label: 'Comb – Normal', href: '/mercenaries?hireling=desert-mercenary&type=combat&difficulty=normal' },
+          { label: 'Def – Hell', href: '/mercenaries?hireling=desert-mercenary&type=defensive&difficulty=hell' },
+        ],
+      },
+      {
+        hireling: 'Barbarian',
+        href: '/mercenaries?hireling=barbarian',
+        subtypes: [{ label: 'Offensive', href: '/mercenaries?hireling=barbarian&type=offensive' }],
+      },
     ]);
   });
 
