@@ -1,5 +1,5 @@
 /**
- * Enhance page (corruption, anointment, sanctification, Vessel of Souls): URL state, search and the summary texts built from
+ * Enhance page (corruption, anointment, sanctification, Vessel of Souls, Standard of Heroes): URL state, search and the summary texts built from
  * enhance.json.
  */
 import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
@@ -14,13 +14,14 @@ import {
   type EnhanceBundle,
   type EnhanceQuality,
   type SanctificationOutcome,
+  type StandardOfHeroesOutcome,
   type VesselMaterial,
   type VesselRecipe,
   type VesselTransform,
 } from '../engine/schema';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 
-export const ENHANCE_TABS = ['corruption', 'anointment', 'sanctification', 'vessel'] as const;
+export const ENHANCE_TABS = ['corruption', 'anointment', 'sanctification', 'vessel', 'standard'] as const;
 export type EnhanceTab = (typeof ENHANCE_TABS)[number];
 
 export const ENHANCE_TAB_LABELS: Record<EnhanceTab, string> = {
@@ -28,6 +29,7 @@ export const ENHANCE_TAB_LABELS: Record<EnhanceTab, string> = {
   anointment: 'Anointment',
   sanctification: 'Sanctification',
   vessel: 'Vessel of Souls',
+  standard: 'Standard of Heroes',
 };
 
 /** Anointment pools that are not equipment slots */
@@ -66,6 +68,9 @@ export function anointmentGroups(slots: readonly AnointmentSlot[]): AnointmentGr
   }
   return groups;
 }
+
+/** The cube family holding the Standard of Heroes recipes */
+export const STANDARD_CUBE_HREF = `/game-data/cube?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=unique-charm-upgrades`;
 
 /** The Vessel tab's completion section (tier param value) */
 export const VESSEL_COMPLETION = 'completion';
@@ -144,7 +149,7 @@ export function encodeEnhanceState(state: EnhanceState, bundle: EnhanceBundle): 
     if (state.tier !== tierOptions(bundle)[0]) params.set(KEYS.TIER, state.tier);
   } else {
     const slots = slotOptions(bundle, state.tab);
-    // Sanctification has no slots
+    // Sanctification and Standard of Heroes have no slots
     if (slots.length > 0 && state.slot !== slots[0]) params.set(KEYS.SLOT, state.slot);
   }
   if (state.search.trim() !== '') params.set(KEYS.SEARCH, state.search.trim());
@@ -174,6 +179,11 @@ export function filterAnointmentOutcomes(outcomes: readonly AnointmentOutcome[],
 export function filterSanctificationOutcomes(outcomes: readonly SanctificationOutcome[], search: string): SanctificationOutcome[] {
   const terms = parseSearchTerms(search);
   return outcomes.filter((outcome) => matchesTerms(outcome.lines, terms));
+}
+
+export function filterStandardOutcomes(outcomes: readonly StandardOfHeroesOutcome[], search: string): StandardOfHeroesOutcome[] {
+  const terms = parseSearchTerms(search);
+  return outcomes.filter((outcome) => matchesTerms([outcome.charm.name, ...outcome.lines], terms));
 }
 
 export function filterVesselRecipes(recipes: readonly VesselRecipe[], search: string): VesselRecipe[] {

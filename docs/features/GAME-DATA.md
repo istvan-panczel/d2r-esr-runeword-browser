@@ -39,7 +39,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `affixes.json`         | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                                            |
 | `sources.json`         | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                                           |
 | `lootfilter.json`      | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                                 |
-| `enhance.json`         | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                        |
+| `enhance.json`         | corruption, anointment, jewel sanctification, Vessel of Souls and Standard of Heroes outcomes from cubemain.txt (see "Enhance")                                                    |
 | `cube.json`            | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                                      |
 | `materials.json`       | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                                    |
 | `sets.json`            | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                                       |
@@ -437,7 +437,7 @@ file did not bump `GAME_DATA_SCHEMA`: older clients ignore files they do not loa
 line): `corruption` (reagent, notes) + `corruptionSlots` + `corruptionOutcomes`, `anointment` (reagent, rules, charm
 reagents, vessel item) + `anointmentSlots` + `anointmentOutcomes`, `sanctification` (reagent, item, roll range, once) +
 `sanctificationOutcomes` + `sanctificationBonuses`, `vessel` (item, start souls) + `vesselTiers` + `vesselRecipes` +
-`vesselTransforms`. Every outcome and recipe has its visible `mods` (raw cubemain properties, with
+`vesselTransforms`, `standardOfHeroes` (reagent, once) + `standardOfHeroesOutcomes` (charm, mods, lines). Every outcome and recipe has its visible `mods` (raw cubemain properties, with
 `chance` when the `mod N chance` column is below 100) and the `lines` rendered by the stat renderer; a property with a
 chance gets its own line ending in "(25% chance)". Mods the renderer warns about are dropped with a warning.
 
@@ -611,7 +611,8 @@ cycle a stocker).
 **Enhance link** (`enhanceTab`): a merged row whose cubemain rows are all sanctification outcomes (`op 18` on
 `item_sanctification_dummy`) is `sanctification`; the page links it to `/game-data/enhance?tab=sanctification` ("All
 217 outcomes on the Enhance page"). The roll row ("Add Sanctification Dummy Stat", whose "Not marked for sanctification"
-condition `statConditionText` names) stays a plain row.
+condition `statConditionText` names) stays a plain row. A row of two inputs gated by `op 17` on `item_upgraded` (the
+Standard of Heroes charm upgrades; Tyrael's Might has the same gate with four inputs) is `standard`.
 
 **Socket counts**: an output `sock` mod reads "N sockets", or its range ("1-2 sockets": the starter weapons, Set +
 Socket Donut) when min and max differ (`socketText`).
@@ -1490,7 +1491,7 @@ The script warns when the clone has uncommitted changes, because the output woul
 | `/game-data/best-base` | `BestBaseScreen`  | Best base finder                                                  |
 | `/game-data/affixes`   | `AffixesScreen`   | Affix browser and what-can-roll                                   |
 | `/game-data/types`     | `ItemTypesScreen` | Item type tree and socket-cap table                               |
-| `/game-data/enhance`   | `EnhanceScreen`   | Corruption, anointment, sanctification and Vessel outcomes        |
+| `/game-data/enhance`   | `EnhanceScreen`   | Corruption, anointment, sanctification, Vessel, Standard outcomes |
 | `/game-data/cube`      | `CubeScreen`      | Every cube recipe, grouped by family                              |
 | `/game-data/materials` | `MaterialsScreen` | Misc items: sources, cube families, Enhance roles, guide notes    |
 | `/game-data/areas`     | `AreasScreen`     | Area levels, density, unique packs, waypoints, map tiers          |
@@ -1762,7 +1763,7 @@ the non-default values. Invalid values fall back to the defaults; unknown type a
 ### Enhance page
 
 `/game-data/enhance` (`screens/EnhanceScreen.tsx`) loads only `enhance.json`, so it is a static-bundle route that skips
-the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Four tabs (`SUBTAB_*`
+the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Five tabs (`SUBTAB_*`
 `aria-pressed` buttons, the first row of the filter panel above the search and Copy Link; the slot / pool / tier pills stay
 under the panel, with each tab's content):
 
@@ -1787,18 +1788,25 @@ under the panel, with each tab's content):
   costs), one row per recipe: soul cost badge, "max N×" badge, materials (each with its 22 px icon) → bonus lines (the
   anointment recipe links to the Vessel pool on the Anointment tab); Completion lists the 29 transforms (Blemished gem
   icons → the mythical weapon's icon).
+- **Standard of Heroes** (`components/EnhanceStandard.tsx`): no pills; a header "Unique Charm + Standard of Heroes", the
+  once-per-charm rule, a source line linking the official Drop Finder with the hint that ESR's configs have the uber
+  bosses drop it, a link to the charm family on the Cube page; then one row per charm (icon, name, bonus lines).
+  Selected by data: two inputs, `useitem`, adding the hidden `item-upgraded` (Tyrael's Might sets that marker through a
+  four-input recipe). The `upg` qualifier on some charm inputs is ignored here and is dropped from those rows by
+  `readCube`, so the Cube page does not print "(upgraded)" next to "Not upgraded yet". An `enhance:` warning about
+  another reagent or a changed gate is a finding.
 - **Icons in the card titles** (`IngredientIcons`): the slot's type icon when it has one (Ring, Amulet, Charm, Jewel;
   not Weapon, Body Armor …) and the reagent's (Worldstone Shard, Orb of Anointment, the three Demonic organs, Lucion's
   Relic); the Vessel pool shows the Vessel of Souls (a unique, by name).
 
 State lives in the URL (read on every render, written with `replace`), parsed and encoded by `utils/enhance.ts`:
 
-| Param    | Meaning                                                                                                                     |
-| -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`                                                            |
-| `slot`   | corruption slot / anointment pool (an item type code, the first pool by default; `charm`, `vessel`); none on Sanctification |
-| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                           |
-| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material names)                                 |
+| Param    | Meaning                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`, `standard`                                                          |
+| `slot`   | corruption slot / anointment pool (an item type code, the first pool by default; `charm`, `vessel`); none on Sanctification, Standard |
+| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                                     |
+| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material / charm names)                                   |
 
 Invalid values fall back to the tab's first option (an ESR 3.2 anointment link's slot id, `slot=weapon`, `body` …, opens
 that slot group's first pool); Copy Link encodes only the non-default values the tab uses.

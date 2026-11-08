@@ -12,6 +12,7 @@ import { EnhanceAnointment } from '../components/EnhanceAnointment';
 import { EnhanceCorruption } from '../components/EnhanceCorruption';
 import { EnhanceSearch } from '../components/EnhanceParts';
 import { EnhanceSanctification } from '../components/EnhanceSanctification';
+import { EnhanceStandard } from '../components/EnhanceStandard';
 import { EnhanceVessel } from '../components/EnhanceVessel';
 import { GameDataError } from '../components/GameDataError';
 import { GameDataLoading } from '../components/GameDataLoading';
@@ -34,6 +35,7 @@ const SEARCH_PLACEHOLDERS: Record<EnhanceState['tab'], string> = {
   anointment: 'Search anointments...',
   sanctification: 'Search sanctifications...',
   vessel: 'Search materials or bonuses...',
+  standard: 'Search charms or bonuses...',
 };
 
 /** The page state lives in the URL (tab, slot, tier, search), so links and the back button keep it. */
@@ -61,8 +63,8 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Every outcome of corrupting, anointing, sanctifying jewels and filling the Vessel of Souls, read from the cube recipes of the game
-        files.
+        Every outcome of corrupting, anointing, sanctifying jewels, filling the Vessel of Souls and upgrading unique charms, read from the
+        cube recipes of the game files.
       </p>
 
       <FilterPanel>
@@ -132,6 +134,7 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
           }}
         />
       )}
+      {state.tab === 'standard' && <EnhanceStandard bundle={bundle} search={state.search} />}
       <ScrollToTopButton />
     </div>
   );

@@ -87,7 +87,7 @@ const ctx: EnhanceContext = {
   // Two ESR 3.3 perks (itemstatcost ids): Sanctimonious and Hallowed Accessories
   perkOf: (statId) =>
     ({ 960: { title: 'Sanctimonious', tree: 'Blacksmith' }, 971: { title: 'Hallowed Accessories', tree: 'Jeweler' } })[statId] ?? null,
-  statIdsOf: (property) => ({ str: [0], dex: [2] })[property] ?? [],
+  statIdsOf: (property) => ({ str: [0], dex: [2], 'item-upgraded': [284] })[property] ?? [],
   renderMods: (mods) => ({
     lines: mods.map((mod) => `${mod.code} ${String(mod.min)}-${String(mod.max)}`),
     warnings: mods.filter((mod) => mod.code === 'unreadable').map((mod) => `unknown property "${mod.code}"`),
@@ -433,5 +433,83 @@ describe('buildEnhanceBundle: sanctification', () => {
   it('warns when the outcome rows do not cover the roll range; without a roll row there is no sanctification', () => {
     expect(build(rows.slice(0, 4)).warnings).toEqual(['enhance: sanctification has 2 outcome rows for 4 rolls']);
     expect(build([]).bundle.sanctificationOutcomes).toEqual([]);
+  });
+});
+
+describe('buildEnhanceBundle: Standard of Heroes', () => {
+  const upgrade = (charm: string, bonus: Mod[], cond: Row['cond'] = [17, 284, 1], reagent = 'std'): Row => ({
+    description: `Standard of Heroes ${charm}`,
+    cond,
+    inputs: [charm, reagent],
+    output: 'useitem',
+    mods: [['item-upgraded', 1, 1], ...bonus],
+  });
+  const rows: Row[] = [
+    upgrade('Hellfire Torch', [['all-stats-percent', 2, 3]]),
+    upgrade('The Perfect Cell,upg', [
+      ['hp', 30, 40],
+      ['mana', 30, 40],
+    ]),
+  ];
+
+  it('lists one outcome per charm with the marker hidden and the upg qualifier ignored', () => {
+    const { bundle, warnings } = build(rows);
+    expect(bundle.standardOfHeroes).toEqual({ reagent: { code: 'std', name: 'std' }, once: true });
+    expect(bundle.standardOfHeroesOutcomes).toEqual([
+      {
+        charm: { code: 'Hellfire Torch', name: 'Hellfire Torch' },
+        mods: [{ code: 'all-stats-percent', param: null, min: 2, max: 3 }],
+        lines: ['all-stats-percent 2-3'],
+      },
+      {
+        charm: { code: 'The Perfect Cell', name: 'The Perfect Cell' },
+        mods: [
+          { code: 'hp', param: null, min: 30, max: 40 },
+          { code: 'mana', param: null, min: 30, max: 40 },
+        ],
+        lines: ['hp 30-40', 'mana 30-40'],
+      },
+    ]);
+    expect(warnings).toEqual([]);
+  });
+
+  it("leaves out Tyrael's Might, which sets the same marker with four inputs, and rows without the marker", () => {
+    const tyrael: Row = {
+      description: 'Tyrael Might Aura str to dex',
+      cond: [17, 284, 1],
+      inputs: ["Tyrael's Might", 'gbk', 'ggb', 'hh2'],
+      output: 'useitem',
+      mods: [['item-upgraded', 1, 1]],
+    };
+    const plain: Row = {
+      description: 'Not an upgrade',
+      cond: [17, 284, 1],
+      inputs: ['Yello Jello', 'std'],
+      output: 'useitem',
+      mods: [['str', 1, 1]],
+    };
+    expect(build([tyrael, plain, ...rows]).bundle.standardOfHeroesOutcomes.map((outcome) => outcome.charm.code)).toEqual([
+      'Hellfire Torch',
+      'The Perfect Cell',
+    ]);
+  });
+
+  it('warns about a second reagent, not showing its row', () => {
+    const { bundle, warnings } = build([...rows, upgrade('Annihilus', [['str', 1, 1]], [17, 284, 1], 'xyz')]);
+    expect(bundle.standardOfHeroesOutcomes).toHaveLength(2);
+    expect(warnings).toEqual(['enhance: Standard of Heroes row "Standard of Heroes Annihilus" has another reagent and is not shown']);
+  });
+
+  it('warns when a row is no longer gated on the marker, and then does not claim once', () => {
+    const { bundle, warnings } = build([...rows, upgrade('Annihilus', [['str', 1, 1]], [18, 284, 0])]);
+    expect(bundle.standardOfHeroes.once).toBe(false);
+    expect(bundle.standardOfHeroesOutcomes).toHaveLength(3);
+    expect(warnings).toEqual(['enhance: Standard of Heroes row "Standard of Heroes Annihilus" is not gated on its marker']);
+  });
+
+  it('is empty without any row', () => {
+    const { bundle } = build([]);
+    expect(bundle.standardOfHeroes).toEqual({ reagent: { code: '', name: '' }, once: false });
+    expect(bundle.standardOfHeroesOutcomes).toEqual([]);
   });
 });

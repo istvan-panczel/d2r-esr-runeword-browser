@@ -374,11 +374,17 @@ function dstoneCapTexts(rows: readonly CubeRow[], ctx: CubeContext): Map<CubeRow
   return texts;
 }
 
-/** The Enhance tab that lists a merged row's outcomes: the sanctification rows (`item_sanctification_dummy` = roll) */
+/**
+ * The Enhance tab that lists a merged row's outcomes: the sanctification rows (`item_sanctification_dummy` = roll) and the
+ * Standard of Heroes rows ("charm + Standard" while `item_upgraded` is unset; Tyrael's Might has the same gate but 4 inputs)
+ */
 function enhanceTabOf(rows: readonly CubeRow[], ctx: CubeContext): MaterialEnhanceTab | undefined {
-  const isOutcome = (row: CubeRow) =>
-    row.condition !== null && row.condition.op === 18 && ctx.statNames.get(row.condition.param) === 'item_sanctification_dummy';
-  return rows.length > 0 && rows.every(isOutcome) ? 'sanctification' : undefined;
+  const isCondition = (row: CubeRow, op: number, stat: string) =>
+    row.condition !== null && row.condition.op === op && ctx.statNames.get(row.condition.param) === stat;
+  if (rows.length === 0) return undefined;
+  if (rows.every((row) => isCondition(row, 18, 'item_sanctification_dummy'))) return 'sanctification';
+  if (rows.every((row) => row.inputs.length === 2 && isCondition(row, 17, 'item_upgraded'))) return 'standard';
+  return undefined;
 }
 
 /** Families whose descriptions are dev labels that do not say what tells the groups apart: labelled by their ingredients */

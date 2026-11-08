@@ -109,6 +109,8 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     vesselTiers: byField('tier'),
     vesselRecipes: list((entry) => `tier ${field(entry, 'tier')}: ${codes(entry.materials)}`),
     vesselTransforms: list((entry) => `${codes(entry.materials)} → ${field(entry, 'output', 'code')}`),
+    standardOfHeroes: VALUE,
+    standardOfHeroesOutcomes: list((entry) => field(entry, 'charm', 'code')),
   },
   // items: every other item by code (cube, materials, enhance, loot filter browser); types: type ingredients' art
   'icons.json': {

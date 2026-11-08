@@ -675,6 +675,27 @@ describe('committed game-data bundles', () => {
     });
   });
 
+  it('contain the Standard of Heroes upgrades, one per unique charm (ESR 3.3: 12)', () => {
+    const { standardOfHeroes, standardOfHeroesOutcomes } = enhance;
+    expect(standardOfHeroes).toEqual({ reagent: { code: 'std', name: 'Standard of Heroes' }, once: true });
+    expect(standardOfHeroesOutcomes).toHaveLength(12);
+    expect(manifest.counts.enhanceStandardOfHeroesOutcomes).toBe(12);
+    expect(standardOfHeroesOutcomes.find((outcome) => outcome.charm.name === 'Annihilus')?.lines).toEqual([
+      'Increase Maximum Life +(6 to 9)%',
+      'Increase Maximum Mana +(6 to 9)%',
+    ]);
+    // Tyrael's Might sets the same marker but is not a charm upgrade, and the marker itself never shows
+    expect(standardOfHeroesOutcomes.map((outcome) => outcome.charm.name)).not.toContain("Tyrael's Might");
+    for (const outcome of standardOfHeroesOutcomes) {
+      expect(outcome.lines.length).toBeGreaterThan(0);
+      expect(outcome.mods.map((mod) => mod.code)).not.toContain('item-upgraded');
+    }
+    const row = cube.rows.find((entry) => entry.enhanceTab === 'standard');
+    expect(row?.variants).toBe(12);
+    expect(row?.inputs.join(' + ')).not.toContain('(upgraded)');
+    expect(materials.items.find((item) => item.code === 'std')?.enhance?.map((role) => role.tab)).toEqual(['standard']);
+  });
+
   it('contain the jewel sanctification outcomes, one per roll of the Relic (ESR 3.3: 217)', () => {
     const { sanctification, sanctificationOutcomes, sanctificationBonuses } = enhance;
     // ESR 3.3 added amulet and ring rows (same 217 outcomes) behind the Jeweler perk, listed before the jewel's
@@ -870,6 +891,7 @@ describe('committed game-data bundles', () => {
       enhance.corruption.reagent.code,
       enhance.anointment.reagent.code,
       enhance.sanctification.reagent.code,
+      enhance.standardOfHeroes.reagent.code,
       ...enhance.anointment.charmReagents.map((reagent) => reagent.code),
       ...enhance.vesselRecipes.flatMap((recipe) => recipe.materials.map((material) => material.code)),
       ...enhance.vesselTransforms.flatMap((transform) => transform.materials.map((material) => material.code)),
