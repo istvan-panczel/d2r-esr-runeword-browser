@@ -47,7 +47,7 @@ export interface CharacterParseErrorDetails {
   unverified: UnverifiedFeature | null;
 }
 
-/** Any structural failure reading a .d2s: the file is rejected with the failure point, never partly parsed. */
+/** A structural failure reading a .d2s, with the failure point. parseCharacter turns some into `incomplete` (see there). */
 export class CharacterParseError extends Error {
   readonly reason: CharacterParseReason;
   readonly details: CharacterParseErrorDetails;

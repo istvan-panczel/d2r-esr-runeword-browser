@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ITEM_FLAG } from '../../stash/parser/parseItem.ts';
+import type { TestItem } from '../../stash/parser/testItems.ts';
 import { CharacterParseError } from './errors.ts';
 import { parseCharacter } from './parseCharacter.ts';
 import { buildSave, indexOfMarker, testData, withChecksum } from './testCharacter.ts';
@@ -156,6 +157,79 @@ describe('weapon-swap normalisation in the file', () => {
   });
 });
 
+const gearOnPlayer: TestItem[] = [
+  { code: 'hax', mode: 1, body: 4, quality: 2 },
+  { code: 'xlm', mode: 1, body: 3, quality: 2 },
+];
+
+function sectionStart(bytes: Uint8Array, name: string): number {
+  const start = parseCharacter(bytes, testData).sections.find((section) => section.name === name)?.start;
+  if (start === undefined) throw new Error(`no section ${name}`);
+  return start;
+}
+
+describe('a failure in a never-seen part after the player items', () => {
+  const mercGear: TestItem[] = [{ code: 'xlm', mode: 1, body: 3, quality: 2 }];
+
+  it('a bound demon keeps the player and merc gear and names the block', () => {
+    const character = parseCharacter(
+      buildSave({ player: gearOnPlayer, mercSeed: 42, merc: mercGear, demonFlag: 1, trailing: [9, 9, 9] }),
+      testData
+    );
+    expect(character.incomplete).toMatchObject({ section: 'bound-demon', unverified: 'bound-demon' });
+    expect(character.gear.weaponSets[0].rightHand?.code).toBe('hax');
+    expect(character.gear.torso?.code).toBe('xlm');
+    expect(character.mercGear.torso?.code).toBe('xlm');
+    expect(character.items.golem).toBeNull();
+    expect(character.summons).toEqual([]);
+  });
+
+  it('a corpse failure keeps the player gear, names the corpse and leaves the merc empty', () => {
+    const bytes = buildSave({ player: gearOnPlayer, corpses: [{ items: [{ code: 'hax', quality: 2 }] }], merc: mercGear });
+    bytes[sectionStart(bytes, 'corpses') + 4 + 12] = 0; // the corpse's own JM
+    const character = parseCharacter(withChecksum(bytes), testData);
+    expect(character.incomplete).toMatchObject({ section: 'corpses', unverified: 'corpse' });
+    expect(character.gear.torso?.code).toBe('xlm');
+    expect(character.items.corpses).toEqual([]);
+    expect(character.items.merc).toEqual([]);
+    expect(character.mercGear.torso).toBeNull();
+  });
+
+  it('a truncation inside a corpse counts as the corpse, not as a hard error', () => {
+    const bytes = buildSave({ player: gearOnPlayer, corpses: [{ items: [] }] });
+    const cut = bytes.slice(0, sectionStart(bytes, 'corpses') + 4 + 6);
+    new DataView(cut.buffer).setUint32(8, cut.length, true);
+    const character = parseCharacter(withChecksum(cut), testData);
+    expect(character.incomplete).toMatchObject({ section: 'corpses', unverified: 'corpse' });
+    expect(character.gear.torso?.code).toBe('xlm');
+  });
+
+  it('a golem failure keeps the merc gear and names the golem', () => {
+    const bytes = buildSave({ player: gearOnPlayer, merc: mercGear, golem: { code: 'hax', quality: 2 } });
+    const at = sectionStart(bytes, 'golem') + 3;
+    bytes[at + 8] = 0xff;
+    bytes[at + 9] = 0xff;
+    const character = parseCharacter(withChecksum(bytes), testData);
+    expect(character.incomplete).toMatchObject({ section: 'golem', unverified: 'golem' });
+    expect(character.items.golem).toBeNull();
+    expect(character.mercGear.torso?.code).toBe('xlm');
+  });
+
+  it('an ear in the merc list stops the walk, the player gear is kept', () => {
+    const character = parseCharacter(
+      buildSave({ player: gearOnPlayer, merc: [{ code: 'hax', quality: 2, extraFlags: ITEM_FLAG.ear }] }),
+      testData
+    );
+    expect(character.incomplete).toMatchObject({ section: 'merc-items', unverified: 'ear' });
+    expect(character.items.merc).toEqual([]);
+    expect(character.gear.torso?.code).toBe('xlm');
+  });
+
+  it('a full parse has no incomplete marker', () => {
+    expect(parseCharacter(buildSave({ player: gearOnPlayer }), testData).incomplete).toBeNull();
+  });
+});
+
 describe('parseCharacter errors', () => {
   const clean = () => buildSave({ stats: [{ id: 0, value: 10 }] });
 
@@ -227,29 +301,12 @@ describe('parseCharacter errors', () => {
     expect(error.details).toMatchObject({ section: 'player-items', item: 0, path: 'item 0' });
   });
 
-  it('names corpses when a corpse list fails', () => {
-    const bytes = buildSave({ corpses: [{ items: [{ code: 'hax', quality: 2 }] }] });
-    const corpse = indexOfMarker(bytes, 'JM');
-    const at = indexOfMarker(bytes.subarray(corpse + 2), 'JM') + corpse + 2 + 16;
-    bytes[at] = 0xff;
-    bytes[at + 1] = 0xff;
+  it('still throws on a failure after the player list that is not in a never-seen part', () => {
+    const bytes = buildSave({ player: gearOnPlayer });
+    const jf = sectionStart(bytes, 'merc-items');
+    bytes[jf] = 0;
     const error = parseError(withChecksum(bytes));
-    expect(error.details).toMatchObject({ section: 'corpses', unverified: 'corpse' });
-  });
-
-  it('names the golem when its item fails', () => {
-    const bytes = buildSave({ golem: { code: 'hax', quality: 2 } });
-    const at = indexOfMarker(bytes, 'kf') + 3;
-    bytes[at + 8] = 0xff;
-    bytes[at + 9] = 0xff;
-    const error = parseError(withChecksum(bytes));
-    expect(error.details).toMatchObject({ section: 'golem', unverified: 'golem' });
-  });
-
-  it('refuses a bound demon, naming the block, instead of reading garbage', () => {
-    const error = parseError(buildSave({ demonFlag: 1 }));
-    expect(error.reason).toBe('unsupported-block');
-    expect(error.details).toMatchObject({ section: 'bound-demon', unverified: 'bound-demon' });
+    expect(error).toMatchObject({ reason: 'section-boundary', details: { section: 'corpses', unverified: null } });
   });
 
   it('names ears when an ear item fails or leaves its list off the boundary', () => {

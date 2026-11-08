@@ -9,14 +9,14 @@ Code: `src/features/character/parser/`. Data: `stash.json` `characterStats` / `c
 
 ## Exports
 
-| Export                                                           | File                | Purpose                                                                                                                       |
-| ---------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `parseCharacter(bytes, data)`                                    | `parseCharacter.ts` | Parses a `.d2s` to a `CharacterFile`, or throws `CharacterParseError`; also `SAVE_FORMAT_VERSION`, `computeCharacterChecksum` |
-| `createCharacterData(bundle)`                                    | `characterData.ts`  | Builds the `CharacterData` lookups from `stash.json` (superset of the stash parser's `StashData`)                             |
-| `locationOf`, `toCharacterItem`, `equippedGear`, `NO_UNIQUE_ROW` | `location.ts`       | Item locations, the weapon-swap normalisation, the slot view                                                                  |
-| `parseD2rl(bytes)`, `d2rlMatchesSave(sidecar, saveBytes)`        | `d2rl.ts`           | The sidecar's ESR version, and a WebCrypto SHA-256 check against a given `.d2s`                                               |
-| `assessSaveAge(input)`                                           | `saveAge.ts`        | What the UI needs for an old-save warning                                                                                     |
-| `CharacterParseError`, `D2rlParseError`                          | `errors.ts`         | Typed errors with the failure point                                                                                           |
+| Export                                                           | File                | Purpose                                                                                                                                                              |
+| ---------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `parseCharacter(bytes, data)`                                    | `parseCharacter.ts` | Parses a `.d2s` to a `CharacterFile` (`incomplete` set if it stopped early), or throws `CharacterParseError`; also `SAVE_FORMAT_VERSION`, `computeCharacterChecksum` |
+| `createCharacterData(bundle)`                                    | `characterData.ts`  | Builds the `CharacterData` lookups from `stash.json` (superset of the stash parser's `StashData`)                                                                    |
+| `locationOf`, `toCharacterItem`, `equippedGear`, `NO_UNIQUE_ROW` | `location.ts`       | Item locations, the weapon-swap normalisation, the slot view                                                                                                         |
+| `parseD2rl(bytes)`, `d2rlMatchesSave(sidecar, saveBytes)`        | `d2rl.ts`           | The sidecar's ESR version, and a WebCrypto SHA-256 check against a given `.d2s`                                                                                      |
+| `assessSaveAge(input)`                                           | `saveAge.ts`        | What the UI needs for an old-save warning                                                                                                                            |
+| `CharacterParseError`, `D2rlParseError`                          | `errors.ts`         | Typed errors with the failure point                                                                                                                                  |
 
 `CharacterFile` holds the name, class id and name (Warlock = 7), level, last-saved time (Unix seconds), active weapon, the raw
 `gf` stats (`attributes`, by stat id, including ESR's) and the 16 vanilla ones by name (`baseAttributes`, ValShift applied), hard
@@ -108,16 +108,24 @@ the byte after it is the low byte of the plugin count, which reads as a letter w
 
 ## Error policy
 
-`parseCharacter` either returns a complete, boundary-checked result or throws `CharacterParseError` with `reason` and `details`
-(section, byte and bit offsets, item path and code). There is no partial result and no fallback parser. Reasons: `bad-magic`,
+`parseCharacter` returns a boundary-checked result or throws `CharacterParseError` with `reason` and `details` (section, byte
+and bit offsets, item path and code). There is no fallback parser. Reasons: `bad-magic`,
 `unsupported-version`, `size-mismatch`, `checksum-mismatch`, `truncated`, `section-boundary`, `unknown-stat`, `unknown-class`,
 `skill-count-mismatch`, `invalid-value`, `item`, `unsupported-block`, `trailing-bytes`.
 
 Boundary checks are the safety net: a section ending anywhere else than the next marker throws with the section that did not
 end. A failure in, or right after, a part no real save has exercised also sets `details.unverified`
 (`corpse`, `golem`, `bound-demon`, `ear`) so it can never be mistaken for a good parse or a generic error.
-A bound demon (`hasDemon` ≠ 0) is rejected outright: its block layout under the extended format is unknown, so a Warlock with
-a bound demon cannot be read until a real fixture exists. Capture one before relying on these paths.
+
+Once the player item list has ended on its verified boundary, a failure with `details.unverified` set no longer throws:
+`parseCharacter` returns what it read so far with `incomplete: { section, message, unverified }` (null on a full parse). A part
+whose end could not be confirmed stays empty, as does everything after it (merc gear, golem, summons), and the exact end of the
+file is not checked; size and checksum were already validated up front. The main case is a bound demon (`hasDemon` ≠ 0): Bind
+Demon is an ordinary Warlock skill, its block comes after every section the app uses and its layout under the extended format is
+unknown, so the walk stops there with the player and merc items intact.
+
+Still hard errors: any failure before the end of the player list, an ear inside the player list included, and any failure after
+it with `unverified` null (real format drift, e.g. a missing `jf`, or trailing bytes after a full walk).
 
 `parseD2rl` throws `D2rlParseError`; callers should drop the sidecar then, never the save.
 

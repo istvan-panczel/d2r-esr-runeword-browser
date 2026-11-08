@@ -56,6 +56,7 @@ describe.skipIf(!existsSync(resolve(FIXTURE_DIR, 'SpinToWin.d2s')) || !existsSyn
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     expect(view.getUint32(12, true)).toBe(computeCharacterChecksum(bytes));
     expect(file.fileSize).toBe(bytes.length);
+    expect(file.incomplete).toBeNull();
     expect(file.sections[0]?.start).toBe(0);
     expect(file.sections.at(-1)?.end).toBe(bytes.length);
     file.sections.forEach((section, i) => {

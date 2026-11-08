@@ -1,17 +1,25 @@
 /**
  * Reads a D2R ESR character save (.d2s, D2RLoader's extended format, revision 0x44520005). Every section is walked to
- * its boundary and the file must end exactly there; anything else throws CharacterParseError naming the failure point.
+ * its boundary and the file must end exactly there; anything else throws CharacterParseError naming the failure point,
+ * except a failure in a never-seen part after the player items, which ends the walk early (`incomplete`).
  * Format notes and what is verified vs inferred: docs/features/CHARACTER-SAVE.md.
  */
 import { BitReader, BitReaderEofError } from '../../stash/parser/bitReader.ts';
 import { ESR_EXTENDED_LAYOUT, ITEM_FLAG, ItemReadError, readItem } from '../../stash/parser/parseItem.ts';
 import type { StashItem } from '../../stash/parser/types.ts';
 import type { CharacterClassDef, CharacterData } from './characterData.ts';
-import { CharacterParseError, type CharacterParseErrorDetails, type CharacterParseReason, type CharacterSectionName } from './errors.ts';
+import {
+  CharacterParseError,
+  type CharacterParseErrorDetails,
+  type CharacterParseReason,
+  type CharacterSectionName,
+  type UnverifiedFeature,
+} from './errors.ts';
 import { equippedGear, toCharacterItem } from './location.ts';
 import type {
   BaseAttributes,
   CharacterFile,
+  CharacterIncomplete,
   CharacterItem,
   CharacterSectionRange,
   CharacterSkillPoints,
@@ -64,6 +72,8 @@ class SaveWalker {
   readonly #view: DataView;
   /** The section being read; a failure is reported against it */
   section: CharacterSectionName = 'header';
+  /** The never-seen part being read: any failure, a truncation included, is attributed to it */
+  suspect: UnverifiedFeature | null = null;
   readonly ranges: CharacterSectionRange[] = [];
 
   constructor(bytes: Uint8Array, data: CharacterData) {
@@ -73,7 +83,7 @@ class SaveWalker {
   }
 
   fail(reason: CharacterParseReason, message: string, details: Partial<CharacterParseErrorDetails> = {}): never {
-    throw new CharacterParseError(reason, message, { section: this.section, ...details });
+    throw new CharacterParseError(reason, message, { section: this.section, ...details, unverified: details.unverified ?? this.suspect });
   }
 
   #check(offset: number, count: number): void {
@@ -403,10 +413,101 @@ function readSummons(walker: SaveWalker, start: number): { summons: SavedSummon[
   return { summons, end: start + 8 + 4 * count };
 }
 
+/** What the walk after the player items has confirmed: a part is only stored once the next section's marker was found. */
+interface AfterPlayerItems {
+  corpses: CorpseItems[];
+  merc: StashItem[];
+  golem: CharacterItem | null;
+  summons: SavedSummon[];
+}
+
+/** Everything after the player item list, up to the exact end of the file. */
+function walkAfterPlayerItems(walker: SaveWalker, start: number, tail: AfterPlayerItems): void {
+  const { bytes, data } = walker;
+  let offset = start;
+
+  const corpseStart = offset;
+  const corpseCount = walker.u16(offset + 2);
+  if (corpseCount > 0) walker.suspect = 'corpse';
+  offset += 4;
+  const corpses: CorpseItems[] = [];
+  for (let i = 0; i < corpseCount; i++) {
+    const headerBytes = bytes.subarray(offset, offset + CORPSE_HEADER_BYTES);
+    offset += CORPSE_HEADER_BYTES;
+    walker.requireMarker(offset, ITEM_LIST_MARKER, `"JM" (corpse ${String(i)} items)`);
+    const list = readItemList(walker, offset, { unverified: 'corpse' });
+    corpses.push({ headerBytes, items: list.items.map((item) => toCharacterItem(item, false)) });
+    offset = list.end;
+  }
+  walker.requireMarker(offset, MERC_ITEMS_MARKER, '"jf"');
+  walker.suspect = null;
+  tail.corpses = corpses;
+  walker.close(corpseStart, offset, 'merc-items');
+
+  const mercStart = offset;
+  offset += 2;
+  let mercItems: StashItem[] = [];
+  if (walker.u16(offset) === ITEM_LIST_MARKER) {
+    const list = readItemList(walker, offset);
+    mercItems = list.items;
+    offset = list.end;
+  }
+  if (mercItems.some(isEar)) walker.suspect = 'ear';
+  walker.requireMarker(offset, GOLEM_MARKER, '"kf"');
+  walker.suspect = null;
+  tail.merc = mercItems;
+  walker.close(mercStart, offset, 'golem');
+
+  const golemStart = offset;
+  const golemPresent = walker.u8(offset + 2) !== 0;
+  offset += 3;
+  let golem: CharacterItem | null = null;
+  if (golemPresent) {
+    walker.suspect = 'golem';
+    const reader = new BitReader(bytes, offset * 8);
+    try {
+      golem = toCharacterItem(readItem(reader, data, { section: 0, index: 0 }, ESR_EXTENDED_LAYOUT), false);
+    } catch (error) {
+      if (error instanceof ItemReadError) itemFailure(walker, error, 0, false, { unverified: 'golem' });
+      throw error;
+    }
+    offset = reader.position / 8;
+  }
+  if (walker.u16(offset) !== 1 || walker.u16(offset + 2) !== DEMON_MARKER) {
+    walker.fail('section-boundary', `golem did not end on its boundary: expected 01 00 "lf", found ${hex(bytes, offset, 8)}`, {
+      byteOffset: offset,
+    });
+  }
+  walker.suspect = null;
+  tail.golem = golem;
+  walker.close(golemStart, offset, 'bound-demon');
+
+  const demonStart = offset;
+  offset = readDemonBlock(walker, offset);
+  walker.close(demonStart, offset, 'summons');
+
+  if (walker.available(offset, 4) && walker.u32(offset) === SUMMON_MAGIC) {
+    const summonsStart = offset;
+    const read = readSummons(walker, offset);
+    offset = read.end;
+    tail.summons = read.summons;
+    walker.ranges.push({ name: 'summons', start: summonsStart, end: offset });
+  }
+
+  if (offset !== bytes.length) {
+    walker.fail('trailing-bytes', `${String(bytes.length - offset)} bytes left over after the last section`, { byteOffset: offset });
+  }
+}
+
 /**
  * Parses a .d2s. Throws CharacterParseError on a structural problem: bad magic, a checksum mismatch, a section not ending
- * on its boundary, an unknown stat id, or a part of the format no real save has exercised (corpses, golem, bound demon,
- * ears) failing to parse.
+ * on its boundary, an unknown stat id, or an ear in the player list failing to parse.
+ *
+ * Once the player item list has ended on its boundary, a failure in a part of the format no real save has exercised
+ * (corpses, golem, bound demon, an ear in the merc list) no longer throws: a bound demon is ordinary Warlock data and
+ * nothing depends on it. The result holds what was read so far and `incomplete` says where the walk stopped; a part whose
+ * end could not be confirmed stays empty, and the exact end of the file is not checked. Size and checksum were validated
+ * up front. Any other failure after the player list still throws.
  */
 export function parseCharacter(bytes: Uint8Array, data: CharacterData): CharacterFile {
   const walker = new SaveWalker(bytes, data);
@@ -430,84 +531,29 @@ export function parseCharacter(bytes: Uint8Array, data: CharacterData): Characte
   const player = readItemList(walker, offset);
   requireAfterList(walker, player.end, ITEM_LIST_MARKER, '"JM" (corpse list)', player.items);
   walker.close(offset, player.end, 'corpses');
-  offset = player.end;
 
-  const corpseStart = offset;
-  const corpseCount = walker.u16(offset + 2);
-  const corpseOptions: ListOptions = corpseCount > 0 ? { unverified: 'corpse' } : {};
-  offset += 4;
-  const corpses: CorpseItems[] = [];
-  for (let i = 0; i < corpseCount; i++) {
-    const headerBytes = bytes.subarray(offset, offset + CORPSE_HEADER_BYTES);
-    offset += CORPSE_HEADER_BYTES;
-    walker.requireMarker(offset, ITEM_LIST_MARKER, `"JM" (corpse ${String(i)} items)`, 'corpse');
-    const list = readItemList(walker, offset, corpseOptions);
-    corpses.push({ headerBytes, items: list.items.map((item) => toCharacterItem(item, false)) });
-    offset = list.end;
-  }
-  walker.requireMarker(offset, MERC_ITEMS_MARKER, '"jf"', corpseCount > 0 ? 'corpse' : null);
-  walker.close(corpseStart, offset, 'merc-items');
-
-  const mercStart = offset;
-  offset += 2;
-  let mercItems: StashItem[] = [];
-  if (walker.u16(offset) === ITEM_LIST_MARKER) {
-    const list = readItemList(walker, offset);
-    mercItems = list.items;
-    offset = list.end;
-  }
-  requireAfterList(walker, offset, GOLEM_MARKER, '"kf"', mercItems);
-  walker.close(mercStart, offset, 'golem');
-
-  const golemStart = offset;
-  const golemPresent = walker.u8(offset + 2) !== 0;
-  offset += 3;
-  let golem: CharacterItem | null = null;
-  if (golemPresent) {
-    const reader = new BitReader(bytes, offset * 8);
-    try {
-      golem = toCharacterItem(readItem(reader, data, { section: 0, index: 0 }, ESR_EXTENDED_LAYOUT), false);
-    } catch (error) {
-      if (error instanceof ItemReadError) itemFailure(walker, error, 0, false, { unverified: 'golem' });
-      throw error;
-    }
-    offset = reader.position / 8;
-  }
-  if (walker.u16(offset) !== 1 || walker.u16(offset + 2) !== DEMON_MARKER) {
-    walker.fail('section-boundary', `golem did not end on its boundary: expected 01 00 "lf", found ${hex(bytes, offset, 8)}`, {
-      byteOffset: offset,
-      unverified: golemPresent ? 'golem' : null,
-    });
-  }
-  walker.close(golemStart, offset, 'bound-demon');
-
-  const demonStart = offset;
-  offset = readDemonBlock(walker, offset);
-  walker.close(demonStart, offset, 'summons');
-
-  let summons: SavedSummon[] = [];
-  if (walker.available(offset, 4) && walker.u32(offset) === SUMMON_MAGIC) {
-    const start = offset;
-    ({ summons, end: offset } = readSummons(walker, offset));
-    walker.ranges.push({ name: 'summons', start, end: offset });
-  }
-
-  if (offset !== bytes.length) {
-    walker.fail('trailing-bytes', `${String(bytes.length - offset)} bytes left over after the last section`, { byteOffset: offset });
+  const tail: AfterPlayerItems = { corpses: [], merc: [], golem: null, summons: [] };
+  let incomplete: CharacterIncomplete | null = null;
+  try {
+    walkAfterPlayerItems(walker, player.end, tail);
+  } catch (error) {
+    if (!(error instanceof CharacterParseError) || error.details.unverified === null) throw error;
+    incomplete = { section: error.details.section, message: error.message, unverified: error.details.unverified };
   }
 
   const swapped = header.activeWeapon === 1;
   const playerItems = player.items.map((item) => toCharacterItem(item, swapped));
-  const merc = mercItems.map((item) => toCharacterItem(item, false));
+  const merc = tail.merc.map((item) => toCharacterItem(item, false));
   return {
     ...header,
     attributes: stats,
     baseAttributes: baseAttributes(stats),
     skills,
-    items: { player: playerItems, corpses, merc, golem },
+    items: { player: playerItems, corpses: tail.corpses, merc, golem: tail.golem },
     gear: equippedGear(playerItems),
     mercGear: equippedGear(merc),
-    summons,
+    summons: tail.summons,
     sections: walker.ranges,
+    incomplete,
   };
 }

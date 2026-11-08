@@ -1,5 +1,5 @@
 import type { StashItem } from '../../stash/parser/types.ts';
-import type { CharacterSectionName } from './errors.ts';
+import type { CharacterSectionName, UnverifiedFeature } from './errors.ts';
 
 /** An equipment slot, weapon sets folded into the two hand slots (see `weaponSet` on the location). */
 export type EquipSlot = 'head' | 'neck' | 'torso' | 'rightHand' | 'leftHand' | 'rightRing' | 'leftRing' | 'belt' | 'feet' | 'gloves';
@@ -138,6 +138,14 @@ export interface CharacterSectionRange {
   end: number;
 }
 
+/** Why the walk stopped early, in a never-seen part after the player items. */
+export interface CharacterIncomplete {
+  /** The section the walk stopped in */
+  section: CharacterSectionName;
+  message: string;
+  unverified: UnverifiedFeature;
+}
+
 export interface CharacterFile {
   /** Save format revision (0x44520005 for every ESR version seen) */
   version: number;
@@ -183,4 +191,6 @@ export interface CharacterFile {
 
   /** Every section walked, in file order */
   sections: CharacterSectionRange[];
+  /** Null on a full parse. Otherwise the walk stopped there: what comes after it (merc gear, golem, summons …) stayed empty */
+  incomplete: CharacterIncomplete | null;
 }
