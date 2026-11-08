@@ -118,6 +118,7 @@ function main(): void {
     modifiers: serializeBundle(generated.modifiers),
     masteries: serializeBundle(generated.masteries),
     specializations: serializeBundle(generated.specializations),
+    killledger: serializeBundle(generated.killledger),
     elixirs: serializeBundle(generated.elixirs),
   };
   const icons = readIcons();

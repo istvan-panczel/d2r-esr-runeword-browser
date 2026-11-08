@@ -66,6 +66,8 @@ export interface SectionDef {
   notes?: readonly string[];
   /** Guide note slugs (content/guide/notes) that explain the section; omitted: none */
   guide?: readonly string[];
+  /** App page that covers the section (`CubeSection.page`); omitted: none */
+  page?: { path: string; label: string };
 }
 
 const cubePage = (id: string, label: string, extra: Pick<SectionDef, 'notes' | 'guide'> = {}): SectionDef => ({
@@ -187,7 +189,14 @@ export const CUBE_SECTIONS: readonly SectionDef[] = [
   }),
   cubePage('tyrael', "Tyrael's Might Extra Boon", { notes: ["Tyrael's Might takes one extra boon, once."] }),
   { id: 'ascendancy', label: 'Ascendancies', doc: 'ascendancies.htm', anchor: null, guide: ['ascendancies'] },
-  { id: 'kill-ledger', label: 'Kill Ledger', doc: 'kill_ledger.htm', anchor: null, guide: ['kill-ledger'] },
+  {
+    id: 'kill-ledger',
+    label: 'Kill Ledger',
+    doc: 'kill_ledger.htm',
+    anchor: null,
+    guide: ['kill-ledger'],
+    page: { path: '/kill-ledger', label: 'Kill Ledger page' },
+  },
   { id: 'weapon-mastery', label: 'Weapon Mastery', doc: 'weapon_mastery.html', anchor: null, guide: ['weapon-mastery'] },
   { id: 'vessel', label: 'Vessel of Souls', doc: 'vessel_of_souls.htm', anchor: null, guide: ['vessel-of-souls'] },
   { id: 'other', label: 'Other recipes', doc: null, anchor: null },

@@ -27,6 +27,7 @@ import {
   type SkillDetailsBundle,
   type SkillsBundle,
   type SourcesBundle,
+  type KillLedgerBundle,
   type SpecializationsBundle,
   type StashBundle,
   type StashNamesBundle,
@@ -60,6 +61,7 @@ export interface GameDataBundles {
   modifiers: ModifiersBundle;
   masteries: MasteriesBundle;
   specializations: SpecializationsBundle;
+  killledger: KillLedgerBundle;
   elixirs: ElixirsBundle;
   icons: IconsBundle;
 }

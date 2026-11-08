@@ -5,6 +5,7 @@ import type {
   CraftingBundle,
   CubeBundle,
   ElixirsBundle,
+  KillLedgerBundle,
   EnhanceBundle,
   ItemTextBundle,
   LootFilterDataBundle,
@@ -31,6 +32,7 @@ import { buildMapBosses } from './bundleMapBosses.ts';
 import { readBossSetRules } from './pluginUniques.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
 import { assignCubeRows, buildCubeBundle, itemTypeCodes } from './bundleCube.ts';
+import { buildKillLedgerBundle } from './bundleKillLedger.ts';
 import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
 import { buildSpecializationsBundle } from './bundleSpecializations.ts';
 import { perkChecks, perkOfStat } from './cube/perks.ts';
@@ -99,6 +101,8 @@ export interface GeneratedBundles {
   masteries: MasteriesBundle;
   // specializations.json
   specializations: SpecializationsBundle;
+  // killledger.json
+  killledger: KillLedgerBundle;
   // elixirs.json
   elixirs: ElixirsBundle;
   counts: Record<string, number>;
@@ -470,6 +474,22 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   });
   // --- end specializations.json ---
 
+  // --- killledger.json ---
+  const killledger = buildKillLedgerBundle({
+    page: sources.killLedgerPage,
+    cube: cube.bundle,
+    cubeRows: cubeTables.cube,
+    renderMods: cubeTables.renderMods,
+    monprop: table('monprop'),
+    skills: table('skills'),
+    misc: table('misc'),
+    strings,
+    areas: areas.bundle.areas,
+    mapBosses: areas.bundle.mapBosses,
+    nameOf: cubeTables.nameOf,
+  });
+  // --- end killledger.json ---
+
   // --- stash.json ---
   const stash = buildStashBundle(
     {
@@ -613,6 +633,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     modifiers: modifiers.bundle,
     masteries: masteries.bundle,
     specializations: specializations.bundle,
+    killledger: killledger.bundle,
     elixirs: elixirs.bundle,
     counts: {
       types: types.bundle.types.length,
@@ -748,6 +769,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       masteryEffects: masteries.bundle.masteries.reduce((sum, mastery) => sum + mastery.effects.length, 0),
       masterySkills: Object.keys(masteries.bundle.skillNames).length,
       ...specializations.counts,
+      ...killledger.counts,
       elixirs: elixirs.bundle.elixirs.length,
       elixirsRegular: countElixirs((elixir) => elixir.variant === 'regular'),
       elixirsGreater: countElixirs((elixir) => elixir.variant === 'greater'),
@@ -786,6 +808,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...modifiers.warnings,
       ...masteries.warnings,
       ...specializations.warnings,
+      ...killledger.warnings,
       ...elixirs.warnings,
     ],
     stringWarnings: [...stringWarnings],

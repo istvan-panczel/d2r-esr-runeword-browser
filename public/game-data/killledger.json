@@ -1,0 +1,69 @@
+{
+  "item": {
+    "name": "Kill Ledger",
+    "icon": "u:Kill Ledger",
+    "source": {
+      "pack": {
+        "name": "Starter Pack",
+        "qty": 1,
+        "icon": "i:ag8"
+      },
+      "classes": 8,
+      "remake": [
+        {
+          "name": "Tome of Identify",
+          "qty": 1,
+          "icon": "i:ibk"
+        },
+        {
+          "name": "Tome of Town Portal",
+          "qty": 1,
+          "icon": "i:tbk"
+        }
+      ]
+    },
+    "tooltip": [
+      "Tracks the amount of enemies you have slain",
+      "Unlocks unique bonuses at specific kill milestones",
+      "Used by certain skills for their random effects",
+      "Increases to Maximum Life and Mana now work on Soft Vitality and Energy Points at 50% Efficiency",
+      "+1% to Summon Damage per 50 Energy Points",
+      "+1% to Fire/Cold/Lightning/Poison Damage per 50 Energy Points",
+      "+1% to Magic/Physical per 50 Energy Points"
+    ]
+  },
+  "windowSeconds": 60,
+  "tiers": [
+    {"tier":1,"kills":500,"ingredients":[{"name":"Flawless Gem","qty":1,"icon":"t:gem3"}],"bonus":["All Resists +10"]},
+    {"tier":2,"kills":5000,"ingredients":[{"name":"Blemished Gem","qty":1,"icon":"t:gem4"}],"bonus":["+10% to All Speeds"]},
+    {"tier":3,"kills":10000,"ingredients":[{"name":"Perfect Gem","qty":1,"icon":"t:gem5"}],"bonus":["+5% Bonus to All Attributes"]},
+    {"tier":4,"kills":50000,"ingredients":[{"name":"Perfect Gem","qty":2,"icon":"t:gem5"}],"bonus":["Increase Maximum Life +10%","Increase Maximum Mana +10%"]},
+    {"tier":5,"kills":100000,"ingredients":[{"name":"Perfect Gem","qty":3,"icon":"t:gem5"}],"bonus":["+10% Physical Damage Leeched as Mana","+10% Physical Damage Leeched as Life"]},
+    {"tier":6,"kills":1000000,"ingredients":[{"name":"Perfect Gem","qty":4,"icon":"t:gem5"}],"bonus":["+10 Cold Absorb","+10 Lightning Absorb","+10 Fire Absorb"]},
+    {"tier":7,"kills":10000000,"ingredients":[{"name":"Maple Leaf","qty":1,"icon":"i:map"}],"bonus":["+1 to All Skills"]}
+  ],
+  "bosses": [
+    {"id":"lucion-whisper","name":"Lucion's Whisper","monsters":[{"id":"lucionwhisper","name":"Lucion's Whisper"}],"tier":1,"areas":[{"id":149,"name":"Cellar of Pain Level 2","tier":1},{"id":159,"name":"Chaos Rift Level 4","tier":2,"random":true}],"killValues":[50],"ingredients":[{"name":"Flawed Enigmatic Cinnabar","qty":2,"icon":"i:xl7"}],"bonus":["Replenish Life +500"]},
+    {"id":"diablo-hellhound","name":"Diablo's Hellhound","monsters":[{"id":"diablohellhound","name":"Diablo's Hellhound"}],"tier":1,"areas":[{"id":141,"name":"Chasm of Horrors Level 2","tier":1},{"id":159,"name":"Chaos Rift Level 4","tier":2,"random":true}],"killValues":[51],"ingredients":[{"name":"Flawed Tainted Tourmaline","qty":2,"icon":"i:xly"}],"bonus":["+10% to Spell Damage"]},
+    {"id":"fallen-ancient-angel","name":"Ancient Fallen Angel","monsters":[{"id":"ancientfallenangel","name":"Ancient Fallen Angel"}],"tier":1,"areas":[{"id":146,"name":"Necropolis Level 2","tier":1},{"id":159,"name":"Chaos Rift Level 4","tier":2,"random":true}],"killValues":[52],"ingredients":[{"name":"Flawed Storm Amber","qty":2,"icon":"i:xlx"}],"bonus":["+50% Enhanced Damage"]},
+    {"id":"terror-in-the-shadows","name":"Terror In The Shadows","monsters":[{"id":"terrorintheshadows","name":"Terror In The Shadows"}],"tier":2,"areas":[{"id":154,"name":"Infested Lair Level 2","tier":2}],"killValues":[53],"ingredients":[{"name":"Flawed Bitter Peridot","qty":2,"icon":"i:xl5"}],"bonus":["Poison Length Reduced by +25%"]},
+    {"id":"avatar-of-the-night","name":"Avatar Of The Night","monsters":[{"id":"avatarofthenight","name":"Avatar Of The Night"}],"tier":2,"areas":[{"id":162,"name":"Labyrinth of Suffering Level 2","tier":2}],"killValues":[54],"ingredients":[{"name":"Flawed Solid Mercury","qty":2,"icon":"i:xl9"}],"bonus":["Damage Reduced by 20"]},
+    {"id":"herald-of-doom","name":"Herald Of Doom","monsters":[{"id":"heraldofdoom","name":"Herald Of Doom"}],"tier":3,"areas":[{"id":175,"name":"Endless Abyss Level 10","tier":3}],"killValues":[55],"ingredients":[{"name":"Flawed Pulsing Opal","qty":2,"icon":"i:xl6"}],"bonus":["-5% to Enemy Elemental And Poison Resists"]},
+    {"id":"glacial-behemoth","name":"Glacial Behemoth","monsters":[{"id":"glacialbehemoth","name":"Glacial Behemoth"}],"tier":3,"areas":[{"id":180,"name":"Frozen Wastes Northern Descent","tier":3}],"killValues":[56],"ingredients":[{"name":"Flawed Frozen Soul","qty":2,"icon":"i:xl0"}],"bonus":["+5% Skill Cooldown Reduction"]},
+    {"id":"the-taskmaster","name":"The Taskmaster","monsters":[{"id":"thetaskmaster","name":"The Taskmaster"}],"tier":3,"areas":[{"id":181,"name":"Frozen Wastes Southern Descent","tier":3}],"killValues":[57],"ingredients":[{"name":"Flawed Tomb Jade","qty":2,"icon":"i:xl8"}],"bonus":["+10% to Summon Damage"]},
+    {"id":"harbinger","name":"Baal's Disfigured Harbinger of Destruction","monsters":[{"id":"baaldisfiguredharbinger","name":"Baal's Disfigured Harbinger of Destruction"}],"tier":4,"areas":[{"id":184,"name":"Shrine of Destruction Level 2","tier":4}],"killValues":[58],"ingredients":[{"name":"Flawed Shadow Quartz","qty":2,"icon":"i:xl1"}],"bonus":["Magic Damage Reduced by 20"]},
+    {"id":"arbiter-of-souls","name":"Arbiter of Souls","monsters":[{"id":"arbiterofsouls","name":"Arbiter of Souls"}],"tier":4,"areas":[{"id":190,"name":"Reliquary of Souls Level 4","tier":4}],"killValues":[59],"ingredients":[{"name":"Flawed Dark Azurite","qty":2,"icon":"i:xl4"}],"bonus":["Magic Absorb +2%"]},
+    {"id":"mephisto-the-invincible","name":"Mephisto the Invincible","monsters":[{"id":"mephistotheinvincible","name":"Mephisto the Invincible"}],"tier":5,"areas":[{"id":198,"name":"The Spiral of Souls Level 2","tier":5}],"killValues":[20],"ingredients":[{"name":"Flawed Burning Sulphur","qty":2,"icon":"i:xl3"},{"name":"Perfect Topaz","qty":1,"icon":"i:gyb"}],"bonus":["Lightning Absorb +2%"]},
+    {"id":"diablo-the-invincible","name":"Diablo the Invincible","monsters":[{"id":"diablotheinvincible","name":"Diablo the Invincible"}],"tier":5,"areas":[{"id":197,"name":"The Iron Keep Level 2","tier":5}],"killValues":[21],"ingredients":[{"name":"Flawed Bleeding Stone","qty":2,"icon":"i:xl2"},{"name":"Perfect Ruby","qty":1,"icon":"i:grb"}],"bonus":["Fire Absorb +2%"]},
+    {"id":"baal-the-invincible","name":"Baal the Invincible","monsters":[{"id":"baaltheinvincible","name":"Baal the Invincible"}],"tier":5,"areas":[{"id":199,"name":"The Rift of Perdition Level 2","tier":5}],"killValues":[22],"ingredients":[{"name":"Flawed Dark Azurite","qty":2,"icon":"i:xl4"},{"name":"Perfect Sapphire","qty":1,"icon":"i:gbb"}],"bonus":["Cold Absorb +2%"]},
+    {"id":"eternal-ancients","name":"Eternal Ancients","monsters":[{"id":"korlictheeternal","name":"Korlic The Eternal"},{"id":"talictheeternal","name":"Talic The Eternal"},{"id":"madawctheeternal","name":"Madawc The Eternal"}],"tier":5,"areas":[{"id":203,"name":"The Edge of Eternity","tier":5}],"killValues":[60],"ingredients":[{"name":"Maple Leaf","qty":1,"icon":"i:map"},{"name":"Flawed Tainted Tourmaline","qty":1,"icon":"i:xly"}],"bonus":["Physical Resist: +5%"]},
+    {"id":"the-lich-king","name":"The Lich King","monsters":[{"id":"thelichking","name":"The Lich King"}],"tier":5,"areas":[{"id":202,"name":"The Frozen Throne","tier":5}],"killValues":[40,48],"ingredients":[{"name":"Maple Leaf","qty":1,"icon":"i:map"},{"name":"Flawed Frozen Soul","qty":1,"icon":"i:xl0"}],"bonus":["Cannot Be Frozen"]},
+    {"id":"rathma","name":"Rathma","monsters":[{"id":"rathma","name":"Rathma"}],"tier":5,"areas":[{"id":206,"name":"The Crepuscular Basilica","tier":5}],"killValues":[208,210,99,100],"ingredients":[{"name":"Maple Leaf","qty":1,"icon":"i:map"},{"name":"Flawed Shadow Quartz","qty":1,"icon":"i:xl1"}],"bonus":["Curse Duration Reduced by 15%"]},
+    {"id":"lucion","name":"Lucion","monsters":[{"id":"lucion","name":"Lucion"}],"tier":5,"areas":[{"id":211,"name":"The Altar of Doomed Salvation","tier":5}],"killValues":[61],"ingredients":[{"name":"Maple Leaf","qty":1,"icon":"i:map"},{"name":"Flawed Bleeding Stone","qty":1,"icon":"i:xl2"}],"bonus":["+100 to Life"]}
+  ],
+  "pageDiffs": [
+    {"subject":"Lucion's Whisper: name","files":"Lucion's Whisper","page":"Lucion Whisper"},
+    {"subject":"Ancient Fallen Angel: name","files":"Ancient Fallen Angel","page":"Fallen Ancient Angel"},
+    {"subject":"Eternal Ancients: ingredients","files":"Maple Leaf + Flawed Tainted Tourmaline","page":"Maple Leaf + Flawed Tourmaline"}
+  ]
+}

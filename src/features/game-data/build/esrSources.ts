@@ -7,6 +7,7 @@ import {
   type SpecializationsSources,
 } from './bundleSpecializations.ts';
 import { SKILL_INFO_PAGE_FILE } from './skillInfoPage.ts';
+import { KILL_LEDGER_PAGE_FILE } from './killLedgerPage.ts';
 import { SPECIALIZATIONS_PAGE_FILE } from './specializationsPage.ts';
 import type { StringsFile } from './strings.ts';
 
@@ -92,6 +93,8 @@ export const TABLES = [
   'qualityitems',
   // elixirs.json (the shrine names of the Serendipity perk)
   'shrines',
+  // killledger.json (the death skills that record a boss kill)
+  'monprop',
 ] as const;
 export type EsrTableName = (typeof TABLES)[number];
 
@@ -111,6 +114,8 @@ export interface EsrSources {
   skillInfoPage: string | null;
   /** specializations.json: the plugin configs, the official page and the icon sheet names */
   specializations: SpecializationsSources;
+  /** Raw docs/kill_ledger.htm (killledger.json `pageDiffs`); null when the file is missing */
+  killLedgerPage: string | null;
 }
 
 /** Launcher config path of a specialisation plugin config file name */
@@ -177,5 +182,6 @@ export function readEsrSources(esrDir: string): EsrSources {
     desecratedZones,
     skillInfoPage,
     specializations,
+    killLedgerPage: optional(KILL_LEDGER_PAGE_FILE),
   };
 }
