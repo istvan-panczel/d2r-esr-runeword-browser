@@ -267,7 +267,6 @@ describe('buildSpecializationsBundle', () => {
     ]);
     expect(perk('alien-artefacts')?.notes).toEqual([
       'In the files, Alien Artefact drops from 1 monster without the perk: no treasure class checks its stat (archaeology_15).',
-      'The mod author (2026-11-07): dropping without the perk is a bug of 3.3; the next patch makes Alien Artefacts need the perk.',
     ]);
     expect(warnings).toEqual([
       'specializations: celestialrayone.alchemy.toml missing in the ESR clone',
