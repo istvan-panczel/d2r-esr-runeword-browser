@@ -149,6 +149,7 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     uniques: byField('id', named('id')),
     sets: byField('id', named('id')),
     skills: byField('id', named('id')),
+    skillNames: MAP,
     knownLayers: byField('stat'),
   },
   // weapon masteries: a changed effect text or skill list means the Bases panel and the skill cards read differently
@@ -156,6 +157,7 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     token: VALUE,
     names: MAP,
     skillNames: MAP,
+    anyWeaponPerk: VALUE,
     masteries: byField('value', (entry) => `${field(entry, 'value')} (${field(entry, 'label')})`),
   },
   'materials.json': { groups: byField('code'), families: byField('id'), items: byField('code', named('code')) },

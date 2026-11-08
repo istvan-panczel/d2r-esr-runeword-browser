@@ -121,7 +121,20 @@ new count or warning class → `KNOWN_COUNT_PREFIXES` / `KNOWN_WARNING_CLASSES` 
 reference.md, an official page or launcher config a feature follows → `ESR_REFERENCES` (`scripts/lib/esrReferences.ts`).
 Apply only after approval, as a separate `chore(esr-update): …` commit.
 
-## 9. Final report
+## 9. Patch-note check (PDF)
+
+The shareable answer to "does the ESR changelog match the actual changes?". Do this whether or not question 1 said to
+commit; follow reference.md "Patch-note check".
+
+1. `npm run esr:changelog -- --init --diff "$S/diff.json" --out "$S/changelog-check.json"` (one `pending` entry per
+   patch-note line).
+2. Fill it from the release diff and the data review: a verdict and evidence for every line, the changes no patch note
+   mentions, the official pages behind the files, what could not be checked.
+3. `npm run esr:changelog -- --in "$S/changelog-check.json" --diff "$S/diff.json" --out owner-notes/esr-<new>-changelog-check.pdf`
+   (refuses a file with a line left out; also writes the `.html`). `owner-notes/` is gitignored. Look at the result
+   before reporting it.
+
+## 10. Final report
 
 ESR old → new; what changed for players; bundles (count deltas with their explanations, warnings, icons, renamed
 skills or ids, variant shifts, user-data impact); guide and doc edits; template, links and plugin; whether the vanilla
@@ -129,7 +142,8 @@ art folder, `metadata.json` and the docs site were at the new version; commits (
 deferred. Next steps for the owner: merge into `master`, `npm run release`, `git push --follow-tags`, then the Deploy
 workflow. Deploy soon: until then players see the old data, new item codes fail stash uploads, and the loot filter
 editor flags new codes as unknown. Questions for the mod author: new ones ready to paste and the ones in the owner's
-latest `owner-notes/owner-checks-*.md` (gitignored) this release answers. Guide notes still needing in-game checks: the `draft` / `review` /
+latest `owner-notes/owner-checks-*.md` (gitignored) this release answers. The PDF's full path and its verdict counts
+(lines that are partly true, differ or are not found). Guide notes still needing in-game checks: the `draft` / `review` /
 `old` lists of `npm run guide:report`; the owner runs `npm run guide:verify -- <slug>` after checking.
 
 ## Do not

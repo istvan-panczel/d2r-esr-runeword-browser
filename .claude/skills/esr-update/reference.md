@@ -11,6 +11,7 @@ Read by the `/esr-update` skill before step 4. Background docs: `docs/features/G
 | `npm run esr:diff`                | What changed in the clone between two revisions: launcher versions, patch notes, changelog, tables (marked "read by the app"), strings, docs (once per page with its locales), launcher configs, `LootFilters/`, everything else; files the app follows get an `app [kind]: …` line. `--from/--to`, `--json`, `--out`.          |
 | `npm run esr:review`              | Read-only review of the regenerated working tree against `HEAD` (the previous version), the clone and the live sites; every check below. `--out x.md` (+ `x.json`), `--json`, `--offline`, `--from <rev>`. Exit 0 when it ran (findings included), 2 when it cannot run.                                                        |
 | `npm run esr:user-data`           | Read-only GET scan of PROD (publishable key from `.env.production`): public builds (every variant and alternative item), `favorite_counts`, public loot filters; lists references that no longer resolve in the new data. `--review <review.json>` also lists ids the review's findings mention. Exit 2 without env or network. |
+| `npm run esr:changelog`           | The shareable PDF: every patch-note line against what the files show. `--init --diff <esr:diff json> --out <json>` writes the file to fill in; `--in <json> --diff <esr:diff json> --out <pdf>` validates and renders it (headless Chrome, `CHROME_PATH`; HTML only without Chrome). See "Patch-note check".                    |
 | `npm run guide:report` / `:check` | Guide freshness report / the committed guide is current.                                                                                                                                                                                                                                                                        |
 
 The review derives every baseline from `HEAD`, so this file holds no counts to keep in sync. The integrity test
@@ -134,12 +135,14 @@ broad types have no art by design) grow with new items. A drop means items lost 
 **Sanctification and D-stoning caps**: enhance.json `sanctification` / `sanctificationOutcomes` /
 `sanctificationBonuses` come from cubemain (the `sanctified-dummy` roll row and its `op 18` outcome rows, Lucion's
 Relic `u18` on a jewel, since ESR 3.3 also on amulets and rings with the Jeweler perk Hallowed Accessories as
-`perkItems`; `build/bundleEnhance.ts`); an `enhance:` warning that the outcome count differs from the roll range, or
+`perkItems`, compared without the marker mods because amulets and rings set `sanctified-jewelry` since 3.3.02;
+`build/bundleEnhance.ts`); an `enhance:` warning that the outcome count differs from the roll range, or
 another perk / outcome set, is a finding. Anointments are pooled per item type since ESR 3.3 (63 pools, 4,793
 equipment outcomes; the 3.2 per-slot pools are gone and saved builds' 3.2 anointments show as outdated, owner decision:
 no migration): a new or vanished pool shows in `bundle.enhance` and `builds.crafts`. Builds do not store sanctifications. The D-stoning caps (crafting.json `stacking` `cap` /
 `capLines`, cube.json rows `dstoneCaps`, the `::dstone-caps` directive) are applied from the rows' `op 16` cap
-conditions (`op 15` for light radius; `build/cube/dstoneCaps.ts`): a changed cap shows in `bundle.crafting` and
+conditions (`op 15` for light radius) and the earlier `void` `op 15` blockers with the same ingredients (the elemental
+Void Shard stops at 300 on those, its own condition reads a stat nothing raises; `build/cube/dstoneCaps.ts`): a changed cap shows in `bundle.crafting` and
 `builds.crafts` (saved builds show the cap next to their D-stoning). A cap condition with another op, or one that
 never stops, leaves the D-stoning uncapped with a `crafting: D-stoning "…": …` warning (a finding to explain). The official `docs/special_crafting_outcomes.htm` (corruptions, anointments,
 sanctifications) is a cross-check only.
@@ -183,10 +186,10 @@ the owner's OK.
   `specializations:` warnings: "no table or launcher config reads it", "no cubemain row makes", "drop from N monsters
   with no perk condition", "the description says N %, the files …" → genuine data, a question for the mod author; a
   missing config, string or icon sheet → a rename to follow. `bundleIntegrity.test.ts` pins 4 trees × 15 perks, the
-  rules, the 8 cube-linked perks, an empty `pageDiffs` and the 2 warnings of 3.3 (Elixir of Reincarnation, Alien
-  Artefacts: bugs the mod author says the next patch fixes, so expect both to go; then drop the `bug` answers in
-  `build/modAuthorAnswers.ts`, the guide's `elixirs` / `specializations` / `endgame-bosses` sentences and the
-  `PERK_DROPS` note in `src/features/campaign-map/data/mapBosses.ts`). Deep Pockets is read by nothing in the files but
+  rules, the 9 cube-linked perks, the 2 `pageDiffs` of 3.3.02 (`docs/specializations.htm` still says Transmutation 50% and
+  Unstable Mixtures 15%; the pin fails when the page catches up, then empty it) and no warnings (3.3.02 fixed the
+  Elixir of Reincarnation recipe and the Alien Artefacts gate; `PERK_DROPS` stays, because the map boss table prints the
+  2% for everyone: the gate sits one treasure class down). Deep Pockets is read by nothing in the files but
   granted by the plugin (mod author), so its `plugin` answer keeps it from warning. The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
   its slug (check `content/guide` for `page:/specializations` links).
 - **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
@@ -194,9 +197,7 @@ the owner's OK.
   (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact
   shows in the `elixirs.json` diff; re-read the guide's `elixirs` note and docs/features/ELIXIRS.md against it. New
   `elixirs:` warnings: a line that renders without its value (a stat whose descfunc divides or hides it), a
-  ConditionCalc that is no perk check, a missing root class or config → read the change, then propose a rule. Known
-  page-vs-files gap (3.3): the Elixir of Reincarnation perk names a 5 Dragon Stone recipe cubemain.txt does not have
-  (a bug the mod author says the next patch fixes).
+  ConditionCalc that is no perk check, a missing root class or config → read the change, then propose a rule.
 - **Cube page** (`docs/Eastern Sun Resurrected Cube Recipes.html`): `CUBE_SECTIONS` in `build/cube/cubeCatalog.ts` (the
   page's anchors, `notes` rewritten from its footnotes, guide slugs) and `FAMILY_NOTES`. A renamed anchor breaks the
   "Official: <section>" links. The page lagged the files in about 31 places at 3.2.24 (cube audit 2026-11-07), so read
@@ -272,6 +273,25 @@ not check." Then:
   3.3 the coupons, noobs-charm, rune-families and socketing (`socket`, 10 → 12 rows with the Archaeologist perk rows)
   blocks sit at the 12-row cap.
 
+## Patch-note check (SKILL step 9)
+
+One entry per line of the release's patch notes (`--init` lists them; the renderer refuses a file that leaves one out).
+The output is meant to be passed on, including to the mod author, so write it for someone without this repo: file names
+and values, no app internals, no player or account names.
+
+| Verdict         | Use it when                                                                             |
+| --------------- | --------------------------------------------------------------------------------------- |
+| `confirmed`     | the tables, strings or configs show the change (name the file, row and old → new value) |
+| `partial`       | something changed, but less, more or other than the line says                           |
+| `differs`       | the files show something else                                                           |
+| `not-found`     | the files that should carry it did not change                                           |
+| `not-checkable` | it lives in plugin binaries or the game client, or the line cannot be read; say why     |
+
+Compare file hashes before calling a plugin fix unverifiable or confirmed (`git diff --stat <old> <new> -- 'd2rloader/plugins/*.dll'`).
+`unlisted`: player-relevant table, string or config changes no line explains, from the data review; skip disabled rows.
+`docsLag`: official pages still showing old values (`docs.lag`, `pageDiffs`, `mapbosses.page`). `notChecked`: at least
+"not tested in game" and any changed binaries. Never resolve a patch note ambiguity by guessing; report it.
+
 ## Commits (SKILL step 7)
 
 1. `chore(game-data): update to ESR <version>`: `public/game-data/`, `public/guide/`, `public/sitemap.xml`, the
@@ -304,7 +324,8 @@ mapped`, `lootfilter skills:`, `stash:`, `itemtext:`, `skillcalc:` missing strin
 - **runtimeConstants.test.ts fails**: a stat id or descfunc the stash parser, stat text or loot filter hard-codes
   moved: report it with the release diff; the fix is app code (ask).
 - **Other tests fail** (data-sync parsers on the new HTM fixtures, loot filter, builds, stash, guide): compare with
-  `test-fixtures/previous/`; a renamed item in the docs vs the tables is a data mismatch to report, not to hide. Stash
+  `test-fixtures/previous/` (the pre-3.3 layout tests read the frozen `test-fixtures/layout-3.2.24/` instead, which
+  `npm run test:fixtures` writes once and the update never rotates); a renamed item in the docs vs the tables is a data mismatch to report, not to hide. Stash
   fixture tests skip without the owner's `.d2i` in `test-fixtures/stash/`: say so.
 - **`game-data --check` / `guide:check` fails after a rerun**: non-deterministic output; report it.
 - **Guide build errors**: unknown `rw:`/`unique:`/`socketable:`/`base:`/`dropfinder:` target or `::source` name → use

@@ -33,6 +33,7 @@
     "modifiers:refs": "node scripts/generate-modifier-refs.ts",
     "esr:diff": "node scripts/esr-release-diff.ts",
     "esr:review": "node scripts/esr-update-review.ts",
+    "esr:changelog": "node scripts/esr-changelog-check.ts",
     "esr:user-data": "node scripts/check-user-data.ts",
     "guide:generate": "node scripts/generate-guide.ts",
     "guide:check": "node scripts/generate-guide.ts --check",
