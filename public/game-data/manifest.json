@@ -3,7 +3,7 @@
   "esrVersion": "3.3.02",
   "esrTag": "3.3.02",
   "esrCommit": "4237a00984d9e9a874afde8ecdf361b88c55d9b8",
-  "generatedAt": "2026-11-08T16:03:04.520Z",
+  "generatedAt": "2026-11-08T16:22:54.864Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -96,6 +96,10 @@
     "specializations": {
       "hash": "1e2e786b01617f4cf5ec66de255865e455ea746b71ceea4e0d4fd7e4db4b0b2e",
       "bytes": 30293
+    },
+    "mercenaries": {
+      "hash": "7d0542c32a9d9e2c0b2150426b3c658d12d8f11cc84f652c353fe0556e2f83ee",
+      "bytes": 17007
     },
     "elixirs": {
       "hash": "89cd38396f1f898ee156f0a732175f7761b520ed00ed76d0420647b29a7d74cd",
@@ -287,6 +291,11 @@
     "specializationPluginPerks": 42,
     "specializationShardMonsters": 9,
     "specializationPageDiffs": 2,
+    "mercenaryHirelings": 4,
+    "mercenaryTypes": 10,
+    "mercenaryVariants": 16,
+    "mercenaryBands": 39,
+    "mercenarySkills": 44,
     "elixirs": 35,
     "elixirsRegular": 17,
     "elixirsGreater": 17,

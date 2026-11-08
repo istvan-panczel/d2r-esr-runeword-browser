@@ -30,6 +30,7 @@ import {
   type LootFilterDataBundle,
   type MasteriesBundle,
   type MaterialsBundle,
+  type MercenariesBundle,
   type ModifiersBundle,
   type SetsBundle,
   type SkillCalcBundle,
@@ -77,6 +78,7 @@ const terrorZonesText = readText('terrorzones');
 const modifiersText = readText('modifiers');
 const masteriesText = readText('masteries');
 const specializationsText = readText('specializations');
+const mercenariesText = readText('mercenaries');
 const elixirsText = readText('elixirs');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
@@ -103,6 +105,7 @@ const terrorZones = JSON.parse(terrorZonesText) as TerrorZonesBundle;
 const modifiers = JSON.parse(modifiersText) as ModifiersBundle;
 const masteries = JSON.parse(masteriesText) as MasteriesBundle;
 const specializations = JSON.parse(specializationsText) as SpecializationsBundle;
+const mercenaries = JSON.parse(mercenariesText) as MercenariesBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -134,6 +137,7 @@ describe('committed game-data bundles', () => {
       ['modifiers', modifiersText],
       ['masteries', masteriesText],
       ['specializations', specializationsText],
+      ['mercenaries', mercenariesText],
       ['elixirs', elixirsText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
@@ -1487,6 +1491,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.modifiers)).toBe(modifiersText);
     expect(serializeBundle(generated.masteries)).toBe(masteriesText);
     expect(serializeBundle(generated.specializations)).toBe(specializationsText);
+    expect(serializeBundle(generated.mercenaries)).toBe(mercenariesText);
   });
 
   // ESR 3.3: the page's Rarity column is stale. It still prints the 3.2.24 superior-affixes.toml weights by row
@@ -2092,5 +2097,74 @@ describe('committed specializations bundle (ESR 3.3)', () => {
     // ESR 3.3.02 fixed the two 3.3 warnings (Elixir of Reincarnation recipe, Alien Artefacts perk gate); Deep Pockets
     // (archaeology_4) is no warning: nothing in the files reads it, but the mod author says the plugin grants it directly
     expect(manifest.warnings.filter((warning) => warning.startsWith('specializations:'))).toEqual([]);
+  });
+});
+
+// --- mercenaries.json -----------------------------------------------------------------------------------------------
+
+describe('committed mercenaries bundle (ESR 3.3.02)', () => {
+  const variants = mercenaries.hirelings.flatMap((hireling) =>
+    hireling.types.flatMap((type) => type.variants.map((variant) => ({ hireling, type, variant })))
+  );
+  const skillIds = new Set(skillDetails.skills.map((skill) => skill.id));
+
+  it('has the 16 rows of the official page: four hirelings, their acts and types', () => {
+    expect(
+      mercenaries.hirelings.map((hireling) => [hireling.slug, hireling.name, hireling.act, hireling.types.map((type) => type.slug)])
+    ).toEqual([
+      ['rogue-scout', 'Rogue Scout', 1, ['elemental', 'physical']],
+      ['desert-mercenary', 'Desert Mercenary', 2, ['combat', 'defensive', 'offensive']],
+      ['eastern-sorcerer', 'Eastern Sorcerer', 3, ['fire', 'cold', 'lightning']],
+      ['barbarian', 'Barbarian', 5, ['defensive', 'offensive']],
+    ]);
+    expect(variants).toHaveLength(16);
+    expect(variants.filter(({ variant }) => variant.difficulty !== null)).toHaveLength(9);
+  });
+
+  it('gives every variant skills, ascending bands, offers on real bands and aligned skill levels', () => {
+    for (const { hireling, variant } of variants) {
+      const label = `${hireling.name} ${variant.subtype}`;
+      expect(variant.skills.length, label).toBeGreaterThanOrEqual(4);
+      const levels = variant.bands.map((band) => band.level);
+      expect(levels.length, label).toBeGreaterThan(0);
+      expect(levels, label).toEqual([...new Set(levels)].sort((a, b) => a - b));
+      expect(variant.offers.length, label).toBe(variant.difficulty === null ? 3 : 1);
+      for (const offer of variant.offers) {
+        expect(offer.gold, label).toBeGreaterThan(0);
+        for (const level of offer.levels) expect(levels, label).toContain(level);
+      }
+      for (const skill of variant.skills) {
+        expect(skillIds.has(skill.id), `${label} ${skill.name}`).toBe(true);
+        expect(skill.levels, `${label} ${skill.name}`).toHaveLength(levels.length);
+      }
+    }
+  });
+
+  it('reads the file values through the join (Desert Hell Combat, Barbarian level 85, Sorcerer Lightning)', () => {
+    const find = (slug: string, type: string, difficulty: string | null) =>
+      variants.find((entry) => entry.hireling.slug === slug && entry.type.slug === type && entry.variant.difficulty === difficulty)
+        ?.variant;
+    const combatHell = find('desert-mercenary', 'combat', 'hell');
+    expect(combatHell?.offers).toEqual([{ difficulty: 'hell', gold: 3500, levels: [85] }]);
+    expect(combatHell?.skills.map((skill) => [skill.name, skill.levels])).toEqual([
+      ['Conviction', [10]],
+      ['Zeal', [24]],
+      ['Vengeance', [14]],
+      ['Judgement', [27]],
+    ]);
+    expect(find('barbarian', 'offensive', null)?.bands.map((band) => band.level)).toEqual([30, 65, 85]);
+    expect(find('barbarian', 'offensive', null)?.offers.map((offer) => offer.gold)).toEqual([37, 4500, 8500]);
+    expect(find('eastern-sorcerer', 'lightning', null)?.skills.map((skill) => skill.name)).toContain('Conduit');
+  });
+
+  it('flags only the Desert Offensive Nightmare dexterity and has no warnings', () => {
+    const flagged = variants.flatMap(({ hireling, variant }) =>
+      variant.bands
+        .filter((band) => band.dexterityTypo === true)
+        .map((band) => `${hireling.name} ${variant.subtype} ${String(band.level)} ${String(band.dexterity)}`)
+    );
+    expect(flagged).toEqual(['Desert Mercenary Off - Nightmare 50 98', 'Desert Mercenary Off - Nightmare 85 97']);
+    expect(manifest.warnings.filter((warning) => warning.startsWith('mercenaries:'))).toEqual([]);
+    expect(manifest.files.mercenaries?.bytes).toBeLessThan(40_000);
   });
 });

@@ -69,6 +69,11 @@ const SpecializationsScreen = lazy(async () => {
   return { default: module.SpecializationsScreen };
 });
 
+const MercenariesScreen = lazy(async () => {
+  const module = await import('@/features/mercenaries');
+  return { default: module.MercenariesScreen };
+});
+
 const ModifiersScreen = lazy(async () => {
   const module = await import('@/features/modifiers');
   return { default: module.ModifiersScreen };
@@ -259,6 +264,7 @@ export const router = createBrowserRouter(
         { path: 'skills', element: routeElement(SkillsScreen) },
         { path: 'modifiers', element: routeElement(ModifiersScreen) },
         { path: 'specializations', element: routeElement(SpecializationsScreen) },
+        { path: 'mercenaries', element: routeElement(MercenariesScreen) },
         { path: 'elixirs', element: routeElement(ElixirsScreen) },
         { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
         { path: 'terror-zones', element: routeElement(TerrorZonesScreen) },

@@ -10,6 +10,7 @@ import type {
   LootFilterDataBundle,
   MasteriesBundle,
   MaterialsBundle,
+  MercenariesBundle,
   ModifiersBundle,
   SetsBundle,
   SkillCalcBundle,
@@ -35,6 +36,7 @@ import { buildMasteriesBundle, readMasterySkills } from './bundleMasteries.ts';
 import { buildSpecializationsBundle } from './bundleSpecializations.ts';
 import { perkChecks, perkOfStat } from './cube/perks.ts';
 import { buildMaterialsBundle } from './bundleMaterials.ts';
+import { buildMercenariesBundle } from './bundleMercenaries.ts';
 import { buildModifiersBundle, type ModifierSource } from './bundleModifiers.ts';
 import { buildEnhanceBundle } from './bundleEnhance.ts';
 import { buildElixirsBundle } from './bundleElixirs.ts';
@@ -99,6 +101,8 @@ export interface GeneratedBundles {
   masteries: MasteriesBundle;
   // specializations.json
   specializations: SpecializationsBundle;
+  // mercenaries.json
+  mercenaries: MercenariesBundle;
   // elixirs.json
   elixirs: ElixirsBundle;
   counts: Record<string, number>;
@@ -320,15 +324,19 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     }),
   });
   // ESR's skill information page: hand-written oskill descriptions and the mercenaries' skills
+  const skillInfoPage = sources.skillInfoPage === null ? null : parseSkillInfoPage(sources.skillInfoPage);
   const skillInfo =
-    sources.skillInfoPage === null
+    skillInfoPage === null
       ? null
-      : applySkillInfoPage(
-          skillDetails.bundle.skills,
-          parseSkillInfoPage(sources.skillInfoPage),
-          new Set(table('skills').rows.map((row) => row.str('skill')))
-        );
+      : applySkillInfoPage(skillDetails.bundle.skills, skillInfoPage, new Set(table('skills').rows.map((row) => row.str('skill'))));
   const skillInfoWarnings = skillInfo?.warnings ?? ['skilldetails: docs/skill_information.htm missing in the ESR clone'];
+  // --- mercenaries.json ---
+  const mercenaries = buildMercenariesBundle({
+    hireling: table('hireling'),
+    page: skillInfoPage?.mercenaries ?? [],
+    skills: skillDetails.bundle.skills,
+  });
+  // --- end mercenaries.json ---
   // --- masteries.json ---
   const masteries = buildMasteriesBundle({
     cube: cubeTables.cube,
@@ -613,6 +621,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     modifiers: modifiers.bundle,
     masteries: masteries.bundle,
     specializations: specializations.bundle,
+    mercenaries: mercenaries.bundle,
     elixirs: elixirs.bundle,
     counts: {
       types: types.bundle.types.length,
@@ -749,6 +758,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       masteryEffects: masteries.bundle.masteries.reduce((sum, mastery) => sum + mastery.effects.length, 0),
       masterySkills: Object.keys(masteries.bundle.skillNames).length,
       ...specializations.counts,
+      ...mercenaries.counts,
       elixirs: elixirs.bundle.elixirs.length,
       elixirsRegular: countElixirs((elixir) => elixir.variant === 'regular'),
       elixirsGreater: countElixirs((elixir) => elixir.variant === 'greater'),
@@ -787,6 +797,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...modifiers.warnings,
       ...masteries.warnings,
       ...specializations.warnings,
+      ...mercenaries.warnings,
       ...elixirs.warnings,
     ],
     stringWarnings: [...stringWarnings],

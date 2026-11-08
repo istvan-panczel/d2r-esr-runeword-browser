@@ -2,6 +2,7 @@
  * Shape of the static game-data bundles under `public/game-data/`.
  * Bump GAME_DATA_SCHEMA whenever a bundle shape changes incompatibly.
  */
+import type { MercenaryDifficulty } from './mercenaryLinks.ts';
 import type { ClassText, StatDef } from './stats/types.ts';
 
 /**
@@ -36,6 +37,7 @@ export type GameDataFile =
   | 'modifiers'
   | 'masteries'
   | 'specializations'
+  | 'mercenaries'
   | 'elixirs'
   | 'icons';
 
@@ -1064,6 +1066,88 @@ export interface SkillDetailsBundle {
   items: SkillGrantItem[];
   /** Class skills (class order, tab, row, column), then item skills by name */
   skills: SkillDetail[];
+}
+
+// --- mercenaries.json ---------------------------------------------------------------------------------------------
+
+/**
+ * mercenaries.json: the hirelings of ESR's skill information page joined to hireling.txt (Version 100). One variant per
+ * row of the page's Mercenaries table: the Desert Mercenary has a row per type and difficulty, the others a row per type.
+ * See docs/features/MERCENARIES.md.
+ */
+export interface MercenariesBundle {
+  /** In the page's order */
+  hirelings: MercenaryHireling[];
+}
+
+export interface MercenaryHireling {
+  /** Lower-case kebab name (`desert-mercenary`), the `?hireling=` value */
+  slug: string;
+  /** The official page's name ("Eastern Sorcerer"; the file says "Sorceror") */
+  name: string;
+  /** hireling.txt Act (1, 2, 3, 5) */
+  act: number;
+  types: MercenaryType[];
+}
+
+export interface MercenaryType {
+  /** `combat`, the `?type=` value */
+  slug: string;
+  /** "Combat", "Elemental" */
+  name: string;
+  /** The page's rows of this type: one, or one per difficulty (Desert Mercenary) */
+  variants: MercenaryVariant[];
+}
+
+export interface MercenaryVariant {
+  /** The page's subtype cell ("Comb - Nightmare") */
+  subtype: string;
+  /** The difficulty the page's row is for; null when the row covers all three */
+  difficulty: MercenaryDifficulty | null;
+  /** Gold per difficulty, with the level bands the file publishes at that difficulty */
+  offers: MercenaryOffer[];
+  /** Every band the variant has, by ascending level */
+  bands: MercenaryBand[];
+  /** In hireling.txt slot order */
+  skills: MercenarySkill[];
+}
+
+export interface MercenaryOffer {
+  difficulty: MercenaryDifficulty;
+  /** hireling.txt Gold (whether it is the final hiring price is not verified) */
+  gold: number;
+  /** The levels of the bands available at this difficulty, ascending */
+  levels: number[];
+}
+
+/** The stats hireling.txt publishes at one mercenary level (no values exist between the bands) */
+export interface MercenaryBand {
+  level: number;
+  life: number;
+  defense: number;
+  strength: number;
+  dexterity: number;
+  attackRating: number;
+  damage: [number, number];
+  resists: { fire: number; cold: number; lightning: number; poison: number };
+  /** The file's dexterity looks like a typo (bundleMercenaries.ts SUSPECT_DEXTERITY); the value is kept as written */
+  dexterityTypo?: true;
+}
+
+export interface MercenarySkill {
+  /** skills.txt `skill` */
+  id: string;
+  name: string;
+  /** Class code, null for an item skill */
+  cls: ClassCode | null;
+  /** Skill tab 1..3, null for an item skill */
+  page: number | null;
+  /** Icon key, `icons/skills/<icon>.webp`; omitted when none */
+  icon?: string;
+  /** skills.txt aura / passive flag, omitted when neither */
+  type?: 'aura' | 'passive';
+  /** Skill level at each of the variant's bands (same order as `bands`) */
+  levels: number[];
 }
 
 // --- masteries.json -----------------------------------------------------------------------------------------------

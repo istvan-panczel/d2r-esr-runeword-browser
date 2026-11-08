@@ -164,6 +164,10 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
   },
   'materials.json': { groups: byField('code'), families: byField('id'), items: byField('code', named('code')) },
   // modifiers: a changed fact (difficultylevels.txt, a plugin config value) means the explanation text needs a re-check
+  // mercenaries: a changed skill list, level, stat band or Gold changes the cards and the comparison table
+  'mercenaries.json': {
+    hirelings: byField('slug', (entry) => `${field(entry, 'slug')} (${field(entry, 'name')})`),
+  },
   'modifiers.json': {
     kinds: byField('key', (entry) => `${field(entry, 'key')} (${field(entry, 'title')})`),
     stats: byField('id', (entry) => `${field(entry, 'id')} (${field(entry, 'stat')})`),

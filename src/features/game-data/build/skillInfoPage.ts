@@ -53,6 +53,9 @@ const NAME_ALIASES: Readonly<Partial<Record<string, string>>> = {
   'trophy of skills': 'Trophy of All Skills',
   // Mercenaries table, Barbarian Offensive: hireling.txt lists Shout of the Ancients in that slot (ESR 3.2.24)
   "ancients' presence": 'Shout of the Ancients',
+  // hireling.txt names the hirelings' own copies of a Sorceress and a Druid skill (mercenaries.json); they have no skilldesc
+  'conduit hireling': 'Conduit',
+  'whirlpool hireling': 'Whirlpool',
 };
 
 /** A cell's text: `<br>` / `<p>` break paragraphs, tags are stripped, entities decoded, whitespace collapsed. */

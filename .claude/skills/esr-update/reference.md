@@ -196,6 +196,16 @@ the owner's OK.
   2% for everyone: the gate sits one treasure class down). Deep Pockets is read by nothing in the files but
   granted by the plugin (mod author), so its `plugin` answer keeps it from warning. The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
   its slug (check `content/guide` for `page:/specializations` links).
+- **Mercenaries** (`docs/skill_information.htm`, `excel/hireling.txt`): mercenaries.json joins the page's Mercenaries
+  table (variants, names) to the Version 100 rows (`build/bundleMercenaries.ts`). Hand-kept: `HIRE_DESC` (page type
+  label → `HireDesc`), `FILE_HIRELING` ("Sorcerer" / "Sorceror"), `SUSPECT_DEXTERITY`, the aliases `conduit hireling` /
+  `whirlpool hireling` in `NAME_ALIASES`, and in the page's `mercenariesView.ts` `VANILLA_WEAPONS` and `HIRELING_SETS`.
+  `mercenaries:` warnings: "only on the page / only in hireling.txt" → a genuine difference, a question for the mod
+  author; "unknown type label", "no hireling.txt row", "is on no row of the page", "matches no skill" → a rename to
+  follow; "differs between difficulties" → the file stopped repeating a band's stats, so the merge in `buildVariant`
+  needs a look; "the suspect dexterity … is gone" → ESR fixed it, drop the `SUSPECT_DEXTERITY` entry.
+  `bundleIntegrity.test.ts` pins the 16 variants, hirelings, acts and types, and no warnings. Slugs (`desert-mercenary`,
+  `combat`) are linked from the skill cards and the guide.
 - **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
   `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
   (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact
