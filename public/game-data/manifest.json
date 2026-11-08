@@ -3,7 +3,7 @@
   "esrVersion": "3.3.02",
   "esrTag": "3.3.02",
   "esrCommit": "4237a00984d9e9a874afde8ecdf361b88c55d9b8",
-  "generatedAt": "2026-11-08T16:23:40.765Z",
+  "generatedAt": "2026-11-08T16:26:04.878Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -34,8 +34,8 @@
       "bytes": 1217589
     },
     "cube": {
-      "hash": "4f8e44ca4bc68f89aeba352a416482a941ca570db7d5e204535dadcca0a16a78",
-      "bytes": 776503
+      "hash": "2042803da9b90ad42af1384966ab47a2157631293ba6fb6cb1578d69314b2c63",
+      "bytes": 776547
     },
     "materials": {
       "hash": "0b669efa54928d9df6954b27fd2ea9aad8b3107a8983f02c59c28501264a4476",
@@ -100,6 +100,10 @@
     "mercenaries": {
       "hash": "7d0542c32a9d9e2c0b2150426b3c658d12d8f11cc84f652c353fe0556e2f83ee",
       "bytes": 17007
+    },
+    "killledger": {
+      "hash": "5be264339603c343ecaf632b667dbea9a12d0cc99fdb13956b04425fca5b36a7",
+      "bytes": 8447
     },
     "elixirs": {
       "hash": "89cd38396f1f898ee156f0a732175f7761b520ed00ed76d0420647b29a7d74cd",
@@ -298,6 +302,9 @@
     "mercenaryVariants": 16,
     "mercenaryBands": 39,
     "mercenarySkills": 44,
+    "killLedgerTiers": 7,
+    "killLedgerBosses": 17,
+    "killLedgerPageDiffs": 3,
     "elixirs": 35,
     "elixirsRegular": 17,
     "elixirsGreater": 17,

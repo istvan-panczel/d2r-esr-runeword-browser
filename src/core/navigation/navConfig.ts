@@ -228,7 +228,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     key: 'database',
     label: 'Database',
     description:
-      'Uniques, mythicals, sets, ascendancies, skills, specializations, weapon masteries, mercenaries, item modifiers, every base item, material, elixir and area, the campaign map',
+      'Uniques, mythicals, sets, ascendancies, skills, specializations, weapon masteries, the Kill Ledger, mercenaries, item modifiers, every base item, material, elixir and area, the campaign map',
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
@@ -246,6 +246,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         to: '/weapon-masteries',
         label: 'Weapon Masteries',
         description: 'How each class weapon changes your skills, its recipe and how to remove it',
+      },
+      {
+        key: 'kill-ledger',
+        to: '/kill-ledger',
+        label: 'Kill Ledger',
+        description: 'Every kill and boss bonus the book can take, and how each one unlocks',
       },
       {
         key: 'mercenaries',

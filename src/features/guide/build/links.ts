@@ -46,6 +46,7 @@ export const APP_PAGES: readonly string[] = [
   '/specializations',
   '/weapon-masteries',
   '/mercenaries',
+  '/kill-ledger',
   '/elixirs',
   '/game-data/bases',
   '/game-data/sets',

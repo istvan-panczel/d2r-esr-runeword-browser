@@ -95,6 +95,11 @@ const CLASS_NAMES: Readonly<Partial<Record<string, string>>> = {
 
 const SPECIAL_OUTPUTS = new Set(['useitem', 'usetype', 'cloneitem']);
 
+/** A boss row's label as one name: variants ("Rathma Uber", "Rathma + Kor'nac") read as their boss, "Rathma" */
+function bossNameOf(label: string): string {
+  return label.replace(/ \+ .+$/, '').replace(/ Uber$/, '');
+}
+
 /** The boss each `kill_check` value stands for, from the Kill Ledger boss rows ("Kill Ledger Rathma" → 99) */
 function killCheckNames(rows: readonly CubeRow[], killCheck: number | null): Map<number, string> {
   const names = new Map<number, string>();
@@ -102,7 +107,7 @@ function killCheckNames(rows: readonly CubeRow[], killCheck: number | null): Map
   for (const row of rows) {
     const boss = /^Kill Ledger (?!Tier )(.+)$/.exec(row.description)?.[1];
     if (boss === undefined || row.condition?.param !== killCheck || names.has(row.condition.value)) continue;
-    names.set(row.condition.value, boss);
+    names.set(row.condition.value, bossNameOf(boss));
   }
   return names;
 }

@@ -52,6 +52,8 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'specialization',
   // mercenaryHirelings, mercenaryTypes, mercenaryVariants, mercenaryBands, mercenarySkills
   'mercenar',
+  // killLedgerTiers, killLedgerBosses, killLedgerPageDiffs
+  'killLedger',
   // elixirs, elixirsRegular … elixirsNoSource, elixirPerks, elixirDropSources, elixirRecipes
   'elixir',
   'itemIcons',
@@ -94,6 +96,7 @@ export const KNOWN_WARNING_CLASSES: readonly string[] = [
   'masteries',
   'specializations',
   'mercenaries',
+  'killledger',
   'elixirs',
 ];
 

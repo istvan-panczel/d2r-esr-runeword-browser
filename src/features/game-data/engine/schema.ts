@@ -38,6 +38,7 @@ export type GameDataFile =
   | 'masteries'
   | 'specializations'
   | 'mercenaries'
+  | 'killledger'
   | 'elixirs'
   | 'icons';
 
@@ -639,6 +640,8 @@ export interface CubeSection {
   notes?: string[];
   /** Guide note slugs that explain the section; omitted: none */
   guide?: string[];
+  /** App page that covers the section; omitted: none */
+  page?: { path: string; label: string };
 }
 
 export interface CubeFamilyInfo {
@@ -2108,6 +2111,95 @@ export interface ModifiersBundle {
   kinds: ModifierKind[];
   stats: ModifierStat[];
   facts: ModifierFact[];
+}
+
+// --- killledger.json ----------------------------------------------------------------------------------------------
+
+/**
+ * killledger.json: every bonus the Kill Ledger can take and how to unlock it. Kill and boss rows, ingredients and
+ * bonuses come from cubemain.txt, the boss of a row from the monsters' death skills (monprop.txt), map tier and area
+ * from areas.json `mapBosses`, the tooltip and passive from the item's description string. The official page is
+ * compared in `pageDiffs`; the files win.
+ */
+export interface KillLedgerBundle {
+  item: KillLedgerItem;
+  /** Seconds a boss kill stays available for the transmute (the `Just Killed Boss` aura length) */
+  windowSeconds: number;
+  /** Kill count bonuses in unlock order */
+  tiers: KillLedgerTier[];
+  /** Boss bonuses in file order, one per bonus */
+  bosses: KillLedgerBoss[];
+  /** Where the official page reads differently from the files */
+  pageDiffs: KillLedgerPageDiff[];
+}
+
+/** An ingredient of a transmute, without the ledger itself */
+export interface KillLedgerIngredient {
+  name: string;
+  qty: number;
+  /** cube.json `icons` token (`i:`, `t:`, `u:`, `s:`); null when the text has no art */
+  icon: string | null;
+}
+
+export interface KillLedgerItem {
+  name: string;
+  icon: string | null;
+  source: {
+    /** The bag that holds the ledger */
+    pack: KillLedgerIngredient;
+    /** Classes with a cube row that opens the pack */
+    classes: number;
+    /** What transmutes into another pack */
+    remake: KillLedgerIngredient[];
+  };
+  /** The item's description lines: its passive bonuses, with the % signs as the game shows them */
+  tooltip: string[];
+}
+
+export interface KillLedgerTier {
+  tier: number;
+  /** Kills the ledger must have counted */
+  kills: number;
+  ingredients: KillLedgerIngredient[];
+  bonus: string[];
+}
+
+export interface KillLedgerBossMonster {
+  /** monprop.txt Id */
+  id: string;
+  name: string;
+}
+
+export interface KillLedgerBossArea {
+  /** areas.json id */
+  id: number;
+  name: string;
+  tier: number;
+  /** The area picks its boss among several; omitted when it always has this one */
+  random?: boolean;
+}
+
+export interface KillLedgerBoss {
+  /** The row's marker without `kill-ledger-`: "rathma", "harbinger" */
+  id: string;
+  /** Monster name; the row's label when several monsters share the bonus */
+  name: string;
+  /** The monsters that count. Several when any of them gives the bonus */
+  monsters: KillLedgerBossMonster[];
+  /** Map tier of the boss */
+  tier: number;
+  areas: KillLedgerBossArea[];
+  /** Every `kill_check` value of the boss's rows, for the guards */
+  killValues: number[];
+  ingredients: KillLedgerIngredient[];
+  bonus: string[];
+}
+
+export interface KillLedgerPageDiff {
+  /** What is compared ("Lucion's Whisper name", "Eternal Ancients ingredients") */
+  subject: string;
+  files: string;
+  page: string;
 }
 
 // --- specializations.json -----------------------------------------------------------------------------------------

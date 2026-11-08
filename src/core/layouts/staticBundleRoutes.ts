@@ -22,6 +22,7 @@ const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/specializations',
   '/weapon-masteries',
   '/mercenaries',
+  '/kill-ledger',
   '/elixirs',
 ];
 

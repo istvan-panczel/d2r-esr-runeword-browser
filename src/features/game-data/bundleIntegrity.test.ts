@@ -26,6 +26,7 @@ import {
   type EnhanceBundle,
   type GameDataManifest,
   type IconsBundle,
+  type KillLedgerBundle,
   type ItemTextBundle,
   type LootFilterDataBundle,
   type MasteriesBundle,
@@ -79,6 +80,7 @@ const modifiersText = readText('modifiers');
 const masteriesText = readText('masteries');
 const specializationsText = readText('specializations');
 const mercenariesText = readText('mercenaries');
+const killLedgerText = readText('killledger');
 const elixirsText = readText('elixirs');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
@@ -106,6 +108,7 @@ const modifiers = JSON.parse(modifiersText) as ModifiersBundle;
 const masteries = JSON.parse(masteriesText) as MasteriesBundle;
 const specializations = JSON.parse(specializationsText) as SpecializationsBundle;
 const mercenaries = JSON.parse(mercenariesText) as MercenariesBundle;
+const killLedger = JSON.parse(killLedgerText) as KillLedgerBundle;
 
 describe('committed game-data bundles', () => {
   it('match the app schema', () => {
@@ -138,6 +141,7 @@ describe('committed game-data bundles', () => {
       ['masteries', masteriesText],
       ['specializations', specializationsText],
       ['mercenaries', mercenariesText],
+      ['killledger', killLedgerText],
       ['elixirs', elixirsText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
@@ -1492,6 +1496,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.masteries)).toBe(masteriesText);
     expect(serializeBundle(generated.specializations)).toBe(specializationsText);
     expect(serializeBundle(generated.mercenaries)).toBe(mercenariesText);
+    expect(serializeBundle(generated.killledger)).toBe(killLedgerText);
   });
 
   // ESR 3.3: the page's Rarity column is stale. It still prints the 3.2.24 superior-affixes.toml weights by row
@@ -2069,6 +2074,67 @@ describe('committed masteries bundle (ESR 3.3)', () => {
     ]);
     expect(masteries.masteries.find((mastery) => mastery.slug === 'claws-2')?.pageNotes).toEqual([
       'this damage bonus does not apply for discharge procs',
+    ]);
+  });
+});
+
+// --- killledger.json -----------------------------------------------------------------------------------------------
+
+describe('committed killledger bundle (ESR 3.3)', () => {
+  const iconIndex = JSON.parse(readText('icons')) as IconsBundle;
+  const iconExists = (token: string) => {
+    const key = token.slice(2);
+    if (token.startsWith('i:')) return [iconIndex.items, iconIndex.bases, iconIndex.quest].some((section) => Object.hasOwn(section, key));
+    if (token.startsWith('t:')) return Object.hasOwn(iconIndex.types, key);
+    if (token.startsWith('u:')) return Object.hasOwn(iconIndex.uniques, key);
+    return false;
+  };
+  const allIngredients = [
+    ...killLedger.tiers.flatMap((tier) => tier.ingredients),
+    ...killLedger.bosses.flatMap((boss) => boss.ingredients),
+  ];
+
+  it('has the 7 kill bonuses in ascending order', () => {
+    expect(killLedger.tiers.map((tier) => tier.kills)).toEqual([500, 5000, 10_000, 50_000, 100_000, 1_000_000, 10_000_000]);
+    expect(killLedger.tiers.map((tier) => tier.tier)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    for (const tier of killLedger.tiers) expect(tier.bonus.length, String(tier.tier)).toBeGreaterThan(0);
+  });
+
+  it('has 17 bosses, each with a monster, an area, a map tier and a bonus', () => {
+    expect(killLedger.bosses).toHaveLength(17);
+    for (const boss of killLedger.bosses) {
+      expect(boss.monsters.length, boss.name).toBeGreaterThan(0);
+      expect(boss.areas.length, boss.name).toBeGreaterThan(0);
+      expect(boss.tier, boss.name).toBeGreaterThan(0);
+      expect(boss.bonus.length, boss.name).toBeGreaterThan(0);
+      expect(boss.ingredients.length, boss.name).toBeGreaterThan(0);
+    }
+    expect(killLedger.bosses.find((boss) => boss.id === 'eternal-ancients')?.monsters).toHaveLength(3);
+    expect(killLedger.bosses.find((boss) => boss.id === 'the-lich-king')?.killValues).toEqual([40, 48]);
+    expect(killLedger.bosses.find((boss) => boss.id === 'rathma')?.killValues).toEqual([208, 210, 99, 100]);
+  });
+
+  it('resolves every ingredient and the book to an icon', () => {
+    for (const ingredient of allIngredients) {
+      expect(ingredient.icon, ingredient.name).not.toBeNull();
+      expect(iconExists(ingredient.icon ?? ''), `${ingredient.name}: ${ingredient.icon ?? ''}`).toBe(true);
+    }
+    expect(iconExists(killLedger.item.icon ?? ''), killLedger.item.icon ?? '').toBe(true);
+    expect(iconExists(killLedger.item.source.pack.icon ?? ''), 'Starter Pack').toBe(true);
+  });
+
+  it('reads the 60 second window, the source and the tooltip from the files', () => {
+    expect(killLedger.windowSeconds).toBe(60);
+    expect(killLedger.item.source.classes).toBe(8);
+    expect(killLedger.item.source.pack.name).toBe('Starter Pack');
+    expect(killLedger.item.tooltip).toContain('+1% to Summon Damage per 50 Energy Points');
+  });
+
+  it('lists the known differences from the official page', () => {
+    expect(killLedger.pageDiffs).toEqual([
+      { subject: "Lucion's Whisper name", files: "Lucion's Whisper", page: 'Lucion Whisper' },
+      { subject: 'Ancient Fallen Angel name', files: 'Ancient Fallen Angel', page: 'Fallen Ancient Angel' },
+      { subject: 'Eternal Ancients ingredients', files: 'Maple Leaf + Flawed Tainted Tourmaline', page: 'Maple Leaf + Flawed Tourmaline' },
     ]);
   });
 });

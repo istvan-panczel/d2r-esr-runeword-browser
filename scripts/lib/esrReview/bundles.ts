@@ -199,6 +199,14 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     trees: byField('slug', (entry) => `${field(entry, 'slug')} (${field(entry, 'name')})`),
     pageDiffs: byField('subject'),
   },
+  // the page's kill and boss bonus tables and the "official page differs" list
+  'killledger.json': {
+    item: VALUE,
+    windowSeconds: VALUE,
+    tiers: byField('tier', (entry) => `tier ${field(entry, 'tier')} (${field(entry, 'kills')} kills)`),
+    bosses: byField('id', named('id')),
+    pageDiffs: byField('subject'),
+  },
   'sources.json': { items: list((entry) => `${field(entry, 'item')}:${field(entry, 'name')} (${field(entry, 'code')})`) },
   'stash.json': {
     grid: VALUE,

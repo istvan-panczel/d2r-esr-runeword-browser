@@ -187,6 +187,12 @@ the owner's OK.
   skills.txt formulas disagreeing with its text (the page shows the text): a question for the mod author, not a fix here.
   A new page row or heading the parser cannot pair is a `Row "…"` difference. New class weapons without apply rows land
   in `noMasteryBases` (the page's knuckle note).
+- **Kill Ledger** (`docs/kill_ledger.htm`): killledger.json comes from cubemain (tiers, the boss rows by `kill-ledger-*`
+  marker), monprop `death-skill` rows and the `Just Killed …` skills (which monster sets which `kill_check` value, the
+  60 second `auralencalc`), areas.json `mapBosses` and the `leddesc` string (`build/bundleKillLedger.ts`). The page is
+  parsed and compared: `pageDiffs` lists every difference (a question for the mod author; the files win).
+  `killledger:` warnings: "matches no monster", "unknown boss label", "not in the areas.json map bosses", a page row
+  with no boss → a renamed, moved or new boss; check the rows and add it to `bundleIntegrity.test.ts`.
 - **Specializations** (`docs/specializations.htm`): specializations.json comes from
   `celestialrayone.specializations.toml` (rules, perk stats and string keys per tree), the strings, misc.txt / cubemain
   (Tesseract, Token of Absolution), the treasure classes (shard drops, perk-gated drops) and the perk plugin configs
