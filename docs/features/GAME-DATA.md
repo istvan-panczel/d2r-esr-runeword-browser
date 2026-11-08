@@ -29,35 +29,36 @@ A Node script converts a local clone of `CelestialRayOne/Eastern_Sun_Resurrected
 `public/game-data/`. The browser never parses txt files and never stores this data in IndexedDB; it fetches the JSON
 lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 
-| File                   | Contents                                                                                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| -------------------    | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------             |
-| `manifest.json`        | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                                        |
-| `types.json`           | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                                   |
-| `bases.json`           | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools                         |
-| `runewords.json`       | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                                |
-| `affixes.json`         | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                                            |
-| `sources.json`         | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                                           |
-| `lootfilter.json`      | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                                 |
-| `enhance.json`         | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                        |
-| `cube.json`            | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                                      |
-| `materials.json`       | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                                    |
-| `sets.json`            | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                                       |
-| `skills.json`          | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                             |
-| `skilldetails.json`    | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))                       |
-| `skillcalc.json`       | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))                       |
-| `crafting.json`        | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                                   |
-| `tiers.json`           | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                                   |
-| `areas.json`           | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                                |
-| `stash.json`           | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                                   |
-| `stashnames.json`      | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                                          |
-| `itemtext.json`        | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")                        |
-| `terrorzones.json`     | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))                 |
-| `modifiers.json`       | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))              |
-| `masteries.json`       | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery")             |
-| `specializations.json` | ESR 3.3 specialisation trees: rules, perks and what reads each perk stat, from the specializations plugin configs, strings and tables ([SPECIALIZATIONS.md](./SPECIALIZATIONS.md)) |
-| `elixirs.json`         | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                                 |
-| `icons.json`           | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")                          |
+| File                   | Contents                                                                                                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------    | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                              |
+| `manifest.json`        | schema, ESR version / tag / commit, `generatedAt`, sha256 + size per file, counts, warnings                                                                                                         |
+| `types.json`           | item types (Equiv parents, ancestors, socket caps per ilvl band, class, UI/runeword categories) + 8 classes with skill-tab names                                                                    |
+| `bases.json`           | spawnable weapons (369) and armors (255) plus 29 equippable accessories (rings, amulets, charms, jewels); superior affix rows with their weights and pools                                          |
+| `runewords.json`       | runes.txt runeword recipes: 391 `Runeword*` keys with 449 rows and rendered stats (see "Runewords")                                                                                                 |
+| `affixes.json`         | 2532 spawnable magic prefixes, suffixes and automods with rendered text (see "Affixes")                                                                                                             |
+| `sources.json`         | "where does it come from" labels for uniques, set items and crafting-relevant misc items (see "Sources")                                                                                            |
+| `lootfilter.json`      | loot-filter editor reference data: every item code, stats, areas, sounds, uniques and sets with their ids (see "Loot filter data")                                                                  |
+| `enhance.json`         | corruption, anointment, jewel sanctification and Vessel of Souls outcomes from cubemain.txt (see "Enhance")                                                                                         |
+| `cube.json`            | every other player-facing cubemain.txt recipe, grouped into families by official section (see "Cube recipes")                                                                                       |
+| `materials.json`       | every misc item worth looking up, with its sources, the cube families using / making it and its Enhance roles (see "Materials")                                                                     |
+| `sets.json`            | every set with its items, own lines, per-item and set-wide partial bonuses and full-set bonuses (see "Sets")                                                                                        |
+| `skills.json`          | the class skill trees (tabs, grid position, level and skill requirements) and the level cap, for builds (see "Skills")                                                                              |
+| `skilldetails.json`    | details of every class and item-granted skill, the items granting it, the official skill information page's texts and mercenaries ([SKILLS.md](./SKILLS.md))                                        |
+| `skillcalc.json`       | per-level skill values: each skilldetails skill's tooltip lines with the formulas and skills.txt / missiles.txt columns they read ([SKILLS.md](./SKILLS.md))                                        |
+| `crafting.json`        | forging, D-stoning and gem meld options with rendered lines per slot family, for builds (see "Crafting options")                                                                                    |
+| `tiers.json`           | base tier of every weapons.txt / armor.txt row with one, spawnable or not, for the unique and set item tier badges (see "Tiers")                                                                    |
+| `areas.json`           | every area of levels.txt: monster level, density and unique packs per difficulty, waypoint, terrain, connections, map tiers and items (see "Areas")                                                 |
+| `stash.json`           | shared stash (.d2i) parser data: stat widths, item kinds and sizes, page grid; Ancient Coupon recipes; gemword ids (see "Stash")                                                                    |
+| `stashnames.json`      | item, unique, set item and runeword names by the ids a save stores (lazy, /stash/items only; see "Stash")                                                                                           |
+| `itemtext.json`        | stash item text (lazy, /stash/items only): saved stats' display columns, their strings, skill / class / monster names, magic / rare names (see "Item text")                                         |
+| `terrorzones.json`     | the offline terror zone rotation of `hd/global/excel/desecratedzones.json`: config, seed, zone groups in file order, boosts ([TERROR-ZONES.md](./TERROR-ZONES.md))                                  |
+| `modifiers.json`       | what item modifiers do: every stat ESR items carry, modifier kinds, numbers with provenance from the tables and ESR's plugin configs ([MODIFIERS.md](./MODIFIERS.md))                               |
+| `masteries.json`       | weapon mastery specialisations: bases, token and ingredients from cubemain.txt, effects from the awakened tokens' descriptions, affected skills (see "Weapon mastery")                              |
+| `specializations.json` | ESR 3.3 specialisation trees: rules, perks and what reads each perk stat, from the specializations plugin configs, strings and tables ([SPECIALIZATIONS.md](./SPECIALIZATIONS.md))                  |
+| `killledger.json`      | Kill Ledger bonuses and how each unlocks: kill and boss rows from cubemain, the bosses from monprop death skills, map tiers from areas.json, the page compared ([KILL-LEDGER.md](./KILL-LEDGER.md)) |
+| `elixirs.json`         | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                                                  |
+| `icons.json`           | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")                                           |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
 the manifest itself is always revalidated. The shape is defined in `src/features/game-data/engine/schema.ts`
@@ -92,6 +93,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `modifiers.json`       | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
 | `masteries.json`       | ESR 3.3: 15 KB / 4 KB                                                                                                              |
 | `specializations.json` | ESR 3.3: 29 KB (+ `icons/specializations/`: 60 WebP, 138 KB)                                                                       |
+| `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
@@ -654,8 +656,8 @@ item cubed into itself reads "The same item, rerolled"; "Unique: 3 Sets" / "Set:
 base → A unique item of that base".
 
 **Conditions** shown: "<Class> only" (`class`), "Hell only" / "Nightmare or Hell" (`min diff` 2 / 1), "Needs a
-recorded <boss> kill" (`kill_check`, op 6, the boss named after the Kill Ledger row with the same value; unknown values
-"(#N)") and every other stat check (`op` / `param` = itemstatcost row / `value`, `statConditionText` in
+recorded <boss> kill" (`kill_check`, op 6, the boss named after the Kill Ledger row with the same value, its form or pair
+folded into one name ("Rathma Uber", "Rathma + Kor'nac" → Rathma); unknown values "(#N)") and every other stat check (`op` / `param` = itemstatcost row / `value`, `statConditionText` in
 `bundleCube.ts`). The ops as ESR uses them: 3 and 15 "≥", 16 "≤", 17 "≠", 18 "=" ("Unsocket" needs sockets ≥ 1,
 "Adds Socket(4)" sockets ≤ 3, tinkering needs points ≥ 2 before the row takes 2); op 28 (no stat: the vanilla quest and portal recipes, Horadric
 Staff, Khalim's Will, Cow Portal and the Pandemonium portals) reads "Game rules of the original recipe apply (quest

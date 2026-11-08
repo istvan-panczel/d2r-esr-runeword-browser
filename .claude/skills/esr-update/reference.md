@@ -175,6 +175,12 @@ the owner's OK.
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
   specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
   formulas read `weapon_mastery_orb_1`) and the 4 warnings of 3.3.
+- **Kill Ledger** (`docs/kill_ledger.htm`): killledger.json comes from cubemain (tiers, the boss rows by `kill-ledger-*`
+  marker), monprop `death-skill` rows and the `Just Killed …` skills (which monster sets which `kill_check` value, the
+  60 second `auralencalc`), areas.json `mapBosses` and the `leddesc` string (`build/bundleKillLedger.ts`). The page is
+  parsed and compared: `pageDiffs` lists every difference (a question for the mod author; the files win).
+  `killledger:` warnings: "matches no monster", "unknown boss label", "not in the areas.json map bosses", a page row
+  with no boss → a renamed, moved or new boss; check the rows and add it to `bundleIntegrity.test.ts`.
 - **Specializations** (`docs/specializations.htm`): specializations.json comes from
   `celestialrayone.specializations.toml` (rules, perk stats and string keys per tree), the strings, misc.txt / cubemain
   (Tesseract, Token of Absolution), the treasure classes (shard drops, perk-gated drops) and the perk plugin configs
