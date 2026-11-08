@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CubeMod, CubeRow } from './cubeRows.ts';
-import { dstoneCap, MAX_DSTONE_USES } from './dstoneCaps.ts';
+import { dstoneBlockers, dstoneCap, MAX_DSTONE_USES } from './dstoneCaps.ts';
 
 type Mod = [mod: string, min: number];
 
@@ -21,6 +21,30 @@ const STATS: Record<string, number[]> = { 'swing2-cap': [584], 'dmg-undead-cap':
 const statIdsOf = (property: string) => STATS[property] ?? [];
 
 describe('dstoneCap', () => {
+  it('stops on an earlier void blocker when the row condition never turns false (ESR 3.3.02 elemental Void Shard)', () => {
+    const blocker = (param: number, value: number, line: number, inputs = ['weap', 'ppp']): CubeRow => ({
+      ...row([], [15, param, value], line),
+      inputs,
+      outputs: [{ spec: 'void', mods: [] }],
+    });
+    const stacking = row(
+      [
+        ['extra-ele', 1],
+        ['swing2-cap', 1],
+      ],
+      [16, 827, 3],
+      10
+    );
+    expect(dstoneCap([stacking], bonusMods, statIdsOf, [blocker(584, 5, 3)])).toMatchObject({
+      kind: 'capped',
+      cap: { uses: 5, mods: [{ mod: 'extra-ele', min: 5, max: 5 }] },
+    });
+    // Later in the file, other ingredients or a stat this D-stoning does not raise: no stop
+    for (const other of [blocker(584, 5, 20), blocker(584, 5, 3, ['weap', 'vvv']), blocker(597, 5, 3)])
+      expect(dstoneCap([stacking], bonusMods, statIdsOf, [other]).kind).toBe('unknown');
+    expect(dstoneBlockers([stacking, blocker(584, 5, 3)]).map((entry) => entry.line)).toEqual([3]);
+  });
+
   it('applies the first row whose cap condition holds until none does (op 16: at most)', () => {
     const rows = [5, 4, 3, 2, 1].map((amount, i) =>
       row(

@@ -28,7 +28,7 @@ import type { ModsRenderer } from './bundleRunewords.ts';
 import { EXTRA_FAMILIES } from './cube/cubeCatalog.ts';
 import { CUBE_FAMILIES } from './cube/cubeFamilies.ts';
 import type { CubeMod, CubeRow } from './cube/cubeRows.ts';
-import { dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
+import { dstoneBlockers, dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
 import { parseCubeCell } from './cube/cubeText.ts';
 
 export interface CraftingInput {
@@ -218,6 +218,7 @@ export function buildCraftingBundle(input: CraftingInput): CraftingBuildResult {
 
   // --- D-stoning and gem melding ---
   const stacking: StackingCraftOption[] = [];
+  const blockers = dstoneBlockers(input.cube);
   for (const { kind, ids } of [
     { kind: 'dstone', ids: ['dstoning'] },
     { kind: 'meld', ids: ['gem-meld'] },
@@ -258,7 +259,7 @@ export function buildCraftingBundle(input: CraftingInput): CraftingBuildResult {
       options.set(optionKey, option);
       const free = group.slots.filter((slot) => option.bySlot[slot] === undefined);
       if (free.length > 0) {
-        const step = stackingStep(group.rows, kind, render, bonusMods, input.statIdsOf ?? (() => []), warnings);
+        const step = stackingStep(group.rows, kind, render, bonusMods, input.statIdsOf ?? (() => []), blockers, warnings);
         for (const slot of free) option.bySlot[slot] = step;
         rowsUsed += group.rows.length;
       } else {
@@ -287,6 +288,7 @@ function stackingStep(
   render: (row: CubeRow, mods: readonly CubeMod[]) => string[],
   bonusMods: (row: CubeRow) => CubeMod[],
   statIdsOf: (property: string) => readonly number[],
+  blockers: readonly CubeRow[],
   warnings: string[]
 ): StackingCraftStep {
   const first = rows[0];
@@ -308,7 +310,7 @@ function stackingStep(
       `crafting: D-stoning "${first.description}" (cubemain line ${String(first.line)}) steps ${amounts.join(', ')} are not decreasing`
     );
   }
-  const result = dstoneCap(rows, bonusMods, statIdsOf);
+  const result = dstoneCap(rows, bonusMods, statIdsOf, blockers);
   if (result.kind === 'unknown')
     warnings.push(`crafting: D-stoning "${first.description}" (cubemain line ${String(first.line)}): ${result.reason}`);
   if (result.kind !== 'capped') return { ...step, steps: amounts };

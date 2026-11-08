@@ -50,7 +50,7 @@ import {
   joinOptions,
   parseCubeCell,
 } from './cube/cubeText.ts';
-import { dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
+import { dstoneBlockers, dstoneCap, isCapMod } from './cube/dstoneCaps.ts';
 import { perkCheckText } from './cube/perks.ts';
 import type { TsvTable } from './tsv.ts';
 import { cubeCellKeys, withoutCount, type CubeIconToken } from '../engine/cubeIcons.ts';
@@ -364,8 +364,9 @@ function dstoneCapTexts(rows: readonly CubeRow[], ctx: CubeContext): Map<CubeRow
     chains.set(key, [...(chains.get(key) ?? []), row]);
   }
   const texts = new Map<CubeRow, string>();
+  const blockers = dstoneBlockers(ctx.tables.cube);
   for (const chain of chains.values()) {
-    const result = dstoneCap(chain, bonusMods, ctx.statIdsOf ?? (() => []));
+    const result = dstoneCap(chain, bonusMods, ctx.statIdsOf ?? (() => []), blockers);
     if (result.kind !== 'capped') continue;
     const text = ctx.tables.renderMods(result.cap.mods).join(', ');
     if (text !== '') for (const row of chain) texts.set(row, text);
