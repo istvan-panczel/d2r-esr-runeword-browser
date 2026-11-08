@@ -2057,9 +2057,9 @@ describe('committed killledger bundle (ESR 3.3)', () => {
 
   it('lists the known differences from the official page', () => {
     expect(killLedger.pageDiffs).toEqual([
-      { subject: "Lucion's Whisper: name", files: "Lucion's Whisper", page: 'Lucion Whisper' },
-      { subject: 'Ancient Fallen Angel: name', files: 'Ancient Fallen Angel', page: 'Fallen Ancient Angel' },
-      { subject: 'Eternal Ancients: ingredients', files: 'Maple Leaf + Flawed Tainted Tourmaline', page: 'Maple Leaf + Flawed Tourmaline' },
+      { subject: "Lucion's Whisper name", files: "Lucion's Whisper", page: 'Lucion Whisper' },
+      { subject: 'Ancient Fallen Angel name', files: 'Ancient Fallen Angel', page: 'Fallen Ancient Angel' },
+      { subject: 'Eternal Ancients ingredients', files: 'Maple Leaf + Flawed Tainted Tourmaline', page: 'Maple Leaf + Flawed Tourmaline' },
     ]);
   });
 });

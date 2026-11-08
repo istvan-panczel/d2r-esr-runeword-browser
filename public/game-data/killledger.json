@@ -62,8 +62,8 @@
     {"id":"lucion","name":"Lucion","monsters":[{"id":"lucion","name":"Lucion"}],"tier":5,"areas":[{"id":211,"name":"The Altar of Doomed Salvation","tier":5}],"killValues":[61],"ingredients":[{"name":"Maple Leaf","qty":1,"icon":"i:map"},{"name":"Flawed Bleeding Stone","qty":1,"icon":"i:xl2"}],"bonus":["+100 to Life"]}
   ],
   "pageDiffs": [
-    {"subject":"Lucion's Whisper: name","files":"Lucion's Whisper","page":"Lucion Whisper"},
-    {"subject":"Ancient Fallen Angel: name","files":"Ancient Fallen Angel","page":"Fallen Ancient Angel"},
-    {"subject":"Eternal Ancients: ingredients","files":"Maple Leaf + Flawed Tainted Tourmaline","page":"Maple Leaf + Flawed Tourmaline"}
+    {"subject":"Lucion's Whisper name","files":"Lucion's Whisper","page":"Lucion Whisper"},
+    {"subject":"Ancient Fallen Angel name","files":"Ancient Fallen Angel","page":"Fallen Ancient Angel"},
+    {"subject":"Eternal Ancients ingredients","files":"Maple Leaf + Flawed Tainted Tourmaline","page":"Maple Leaf + Flawed Tourmaline"}
   ]
 }

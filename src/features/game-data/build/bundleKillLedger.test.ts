@@ -263,8 +263,8 @@ describe('buildKillLedgerBundle', () => {
 
   it('lists where the official page differs', () => {
     expect(bundle.pageDiffs).toEqual([
-      { subject: "Lucion's Whisper: name", files: "Lucion's Whisper", page: 'Lucion Whisper' },
-      { subject: 'Eternal Ancients: ingredients', files: 'Maple Leaf + Flawed Tainted Tourmaline', page: 'Maple Leaf + Flawed Tourmaline' },
+      { subject: "Lucion's Whisper name", files: "Lucion's Whisper", page: 'Lucion Whisper' },
+      { subject: 'Eternal Ancients ingredients', files: 'Maple Leaf + Flawed Tainted Tourmaline', page: 'Maple Leaf + Flawed Tourmaline' },
     ]);
     expect(warnings).toEqual([]);
     expect(counts).toEqual({ killLedgerTiers: 2, killLedgerBosses: 3, killLedgerPageDiffs: 2 });

@@ -338,10 +338,10 @@ export function comparePage(
   page.tiers.forEach((pageTier, i) => {
     const tier = tiers.at(i);
     if (tier === undefined) return;
-    const where = `${tier.kills.toLocaleString('en-US')} kills`;
-    add(`${where}: kills needed`, String(tier.kills), String(pageTier.kills));
-    add(`${where}: ingredients`, ingredientsText(tier.ingredients), pageIngredients(pageTier.ingredients));
-    compareBonus(`${where}: bonus`, tier.bonus, pageTier.bonus);
+    const where = `Kill bonus ${String(tier.tier)}`;
+    add(`${where} kills needed`, String(tier.kills), String(pageTier.kills));
+    add(`${where} ingredients`, ingredientsText(tier.ingredients), pageIngredients(pageTier.ingredients));
+    compareBonus(`${where} bonus`, tier.bonus, pageTier.bonus);
   });
 
   const unmatched = new Set(bosses);
@@ -353,9 +353,9 @@ export function comparePage(
       continue;
     }
     unmatched.delete(boss);
-    if (boss.monsters.length === 1) add(`${boss.name}: name`, boss.name, pageBoss.name);
-    add(`${boss.name}: ingredients`, ingredientsText(boss.ingredients), pageIngredients(pageBoss.ingredients));
-    compareBonus(`${boss.name}: bonus`, boss.bonus, pageBoss.bonus);
+    if (boss.monsters.length === 1) add(`${boss.name} name`, boss.name, pageBoss.name);
+    add(`${boss.name} ingredients`, ingredientsText(boss.ingredients), pageIngredients(pageBoss.ingredients));
+    compareBonus(`${boss.name} bonus`, boss.bonus, pageBoss.bonus);
   }
   for (const boss of unmatched) warn(`docs/kill_ledger.htm: no boss row for ${boss.name}`);
   return diffs;
