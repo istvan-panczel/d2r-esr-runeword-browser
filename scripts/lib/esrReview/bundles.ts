@@ -158,7 +158,13 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     names: MAP,
     skillNames: MAP,
     anyWeaponPerk: VALUE,
-    masteries: byField('value', (entry) => `${field(entry, 'value')} (${field(entry, 'label')})`),
+    masteries: byField('property', (entry) => `${field(entry, 'property')} (${field(entry, 'label')})`),
+    baseNames: MAP,
+    noRunewords: VALUE,
+    noMasteryBases: byField('code'),
+    pageRules: VALUE,
+    // a changed difference means the card's "official page reads differently" note reads differently
+    pageDiffs: byField('subject'),
   },
   'materials.json': { groups: byField('code'), families: byField('id'), items: byField('code', named('code')) },
   // modifiers: a changed fact (difficultylevels.txt, a plugin config value) means the explanation text needs a re-check
