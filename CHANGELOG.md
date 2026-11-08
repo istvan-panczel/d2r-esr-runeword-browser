@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.64.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.63.0...v1.64.0) (2026-11-08)
+
+### Features
+
+* **builds:** import charm stats from a save file ([c407a24](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c407a24fab2b54188e432396af3448ad29ac79c6))
+* **builds:** start a new build from a character save file ([5e794a0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5e794a0cf36315eb49e825c5bc4b4eb100a0235b))
+* **character:** add the character save (.d2s) parser and .d2rl sidecar reader ([abec699](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/abec69917e57df5facb62b1cc97ab19ca121ed37))
+* **character:** add the My Character page ([ef2cad8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ef2cad8f72c4298efa52d25e7bc5fd576404ad6b))
+* **character:** turn a parsed save into an editable build draft ([855b180](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/855b180bdbc64c64cda62d7a8ba583d32fc6e72b))
+* **game-data:** add character save data to stash.json and the ESR date to the manifest ([2af2e90](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2af2e9024387c8b260056f5a65aa9bcf86b83315))
+* **stash:** keep body location and store page on items ([b6b9b8c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b6b9b8c71c0f51dcd324add3800c10ccd1fc6c51))
+* **stash:** show per-level item stats at a given character level ([8741252](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/87412524331b44f2fbaf206e600aad591d7f2658))
+
+### Bug Fixes
+
+* **character:** return a partial result for never-seen parts after the player items ([078f30d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/078f30d16817bc738cc94d1ce77e348abf075f7d))
+
+### Documentation
+
+* describe the character save parser ([ee3540e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ee3540e161406d3a583977cdab03d47476a633f0))
+* describe the My Character page ([091c06d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/091c06d671d499259d99e10e9cb58a82219cbaa7))
+
+### Tests
+
+* **stash:** pin the per-level stat ids to their itemstatcost rows ([e9b930c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e9b930c7089d041a84b9b035f69dacfdf4ed59f6))
+
 ## [1.63.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.62.0...v1.63.0) (2026-11-08)
 
 ### Features
