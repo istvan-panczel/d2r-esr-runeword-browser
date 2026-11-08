@@ -1,20 +1,20 @@
 {
   "schema": 2,
-  "esrVersion": "3.3",
-  "esrTag": "3.3",
-  "esrCommit": "d6f5996c2b64636917feac8991be3ac04d21e01e",
-  "generatedAt": "2026-11-07T20:18:36.813Z",
+  "esrVersion": "3.3.02",
+  "esrTag": "3.3.02",
+  "esrCommit": "4237a00984d9e9a874afde8ecdf361b88c55d9b8",
+  "generatedAt": "2026-11-08T14:19:04.905Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
       "bytes": 45724
     },
     "bases": {
-      "hash": "3c2cd1e6493b597d176e838646b1d4b557dc08167f6836897694f662bb017bca",
-      "bytes": 362732
+      "hash": "49bda29f9bc5c139953dfbb988286b57cc3dadf2b6141c0653e58d8a2473ea6c",
+      "bytes": 363593
     },
     "runewords": {
-      "hash": "e2626eaf967f15666aa32b7941060110653d72a6c2a25804ea4477091f3af05f",
+      "hash": "ace460d5d760a23fde191969408f1f75853792a83cf4ad4ce13a7f32582922a8",
       "bytes": 234724
     },
     "affixes": {
@@ -22,24 +22,24 @@
       "bytes": 921572
     },
     "sources": {
-      "hash": "b77eeb3983c7dec0c074f4078d554fa430593940a07d2992c734acbfefc549db",
-      "bytes": 310167
+      "hash": "666795cdc4fa9dc9bffc6d15b7659ab0e5d674a2b0e56fe0a04a6f13ca7e5ad4",
+      "bytes": 310275
     },
     "lootfilter": {
-      "hash": "7f15d72c34dd2e423cc9d5b1b098334398129a847c08ac52c4ec560c00379096",
-      "bytes": 900505
+      "hash": "990644a4502338816c51b10f8a05c7572ad27f27d3bc5b9f218cfd6c1739cade",
+      "bytes": 900559
     },
     "enhance": {
       "hash": "216d9a879ebcf7fc5ee20bbcdb86730efed300620afd621f2e5c120ba295771e",
       "bytes": 1214962
     },
     "cube": {
-      "hash": "9ac15162118f7a8ea08fd4c51bbed5428a04150b648e1c1b6f956777b9847f3f",
-      "bytes": 775673
+      "hash": "e13759bae93ba475bd9ead9c2e5571f17a0964127c209af244b03464182ef33c",
+      "bytes": 776844
     },
     "materials": {
-      "hash": "1037de0123cc2d1553393621dca4757395d1fe42ce1fb2abd12c644dda975291",
-      "bytes": 183477
+      "hash": "87a88fc3a2df605a0a793d0b1cd0baa0d8db517d90d6ff3086ecc6f675e59547",
+      "bytes": 183537
     },
     "sets": {
       "hash": "27c09f0ac7a20409b32f7f7189d5590a855953e058e0b82a49e4a26f2a5cf250",
@@ -58,8 +58,8 @@
       "bytes": 396995
     },
     "crafting": {
-      "hash": "0de4b4ec04c16dd56ab4cbffa4c8efa7553ae09ee4d27b2e3abd24d7b40b338f",
-      "bytes": 64880
+      "hash": "5f97ab47a994990ca0da341c0ae8cb5a7070183de1454b1fa62237ac73c5fc46",
+      "bytes": 65261
     },
     "tiers": {
       "hash": "bbff23c87b9b225f261e06d02970b951299e06ae85e5a8761f4848ec7f979b31",
@@ -70,52 +70,52 @@
       "bytes": 53751
     },
     "stash": {
-      "hash": "3a9da7b18df864d5c96c7bad87c4df90e2f0ed0e006fd59bc59ff22dc708ec76",
-      "bytes": 148327
+      "hash": "b9e1ff2b78f7296ba7bf8f789ebbd0d02a3fff4c5fb37ddeddc3677ad4643157",
+      "bytes": 148343
     },
     "stashnames": {
       "hash": "943b26d2a6e688e096ba732665413a230be7b4417b7ca12c958a9c1979e1ecc1",
       "bytes": 303761
     },
     "itemtext": {
-      "hash": "4c2507362fcb6bab34f3dce49f23017ccd3eefdfe6caa7009f2b16dd1c72c9ce",
-      "bytes": 506913
+      "hash": "f27b100071d54e87b76c4e648a4e8eed5c1418c88b9617649f900f20f96711c1",
+      "bytes": 507074
     },
     "terrorzones": {
-      "hash": "f351c2bc7707761363273d2660731c556fedf66e26e131e963e39f52b5d61632",
-      "bytes": 11929
+      "hash": "3dca7fa0e3f47cda2159286776dfa3ca414941df7af2fc609e6be952295da54c",
+      "bytes": 11932
     },
     "modifiers": {
-      "hash": "72037155cc882300399db28fd0cf85d228ebe5e03f11877162d9832cb6e1562b",
-      "bytes": 341871
+      "hash": "91b2e9ae1e9075fc487968e319e04eef9dae91d211a9d2fa4f4ec12b59f9252b",
+      "bytes": 342662
     },
     "masteries": {
       "hash": "f70d909b2b3132c23dfaf6ed44b4ea4a42f0f95dd2272e75f4024a906255c447",
       "bytes": 15199
     },
     "specializations": {
-      "hash": "66464a46c6ab3aaba81c37fbadb23608f9bbb34d15b182284c8a0d42d718549b",
-      "bytes": 29853
+      "hash": "1e2e786b01617f4cf5ec66de255865e455ea746b71ceea4e0d4fd7e4db4b0b2e",
+      "bytes": 30293
     },
     "elixirs": {
-      "hash": "9df4099768e8946788b7a3b2111eb8c67363b7a01e99e3a423c082df896feab0",
-      "bytes": 34704
+      "hash": "89cd38396f1f898ee156f0a732175f7761b520ed00ed76d0420647b29a7d74cd",
+      "bytes": 34884
     },
     "icons": {
-      "hash": "b712a00e99568e491ccdee3fc78a66797772848b61a61ec2c441adb88bd38126",
-      "bytes": 464265
+      "hash": "a338b64012e9f8d6ef88a469bb9e3cbfda0b8db258fed848774ec0e29c0f2749",
+      "bytes": 464271
     }
   },
   "counts": {
     "types": 192,
     "classes": 8,
-    "bases": 653,
+    "bases": 655,
     "weapons": 369,
     "armors": 255,
-    "misc": 29,
-    "strings": 15006,
+    "misc": 31,
+    "strings": 15007,
     "stringConflicts": 85,
-    "duplicateBases": 3,
+    "duplicateBases": 1,
     "baseAutomods": 86,
     "basesWithAutomods": 616,
     "basesWithStaffMods": 218,
@@ -132,11 +132,11 @@
     "affixesPlaceholdersDropped": 1,
     "sourcesUnique": 1107,
     "sourcesSet": 270,
-    "sourcesMisc": 832,
+    "sourcesMisc": 833,
     "sourcesMerged": 521,
     "sourcesUnknown": 12,
     "lootFilterItems": 2334,
-    "lootFilterStats": 1057,
+    "lootFilterStats": 1058,
     "lootFilterAreas": 215,
     "lootFilterSounds": 12103,
     "lootFilterUniques": 1390,
@@ -153,12 +153,12 @@
     "enhanceSanctificationOutcomes": 217,
     "enhanceVesselRecipes": 382,
     "enhanceVesselTransforms": 29,
-    "cubeRecipes": 11157,
+    "cubeRecipes": 11158,
     "cubeFamilies": 66,
     "cubeFallbackFamilies": 0,
     "cubeFallbackRows": 0,
-    "cubeMergedRows": 1590,
-    "cubeRawRecipes": 456,
+    "cubeMergedRows": 1595,
+    "cubeRawRecipes": 457,
     "cubeHiddenEnhance": 8261,
     "cubeHiddenTraps": 599,
     "cubeHiddenOld": 80,
@@ -168,8 +168,8 @@
     "materialsGroups": 16,
     "materialsCollapsed": 658,
     "materialsUsedInCube": 370,
-    "materialsMadeByCube": 334,
-    "materialsUnknownSource": 21,
+    "materialsMadeByCube": 335,
+    "materialsUnknownSource": 20,
     "materialsExcludedBases": 37,
     "materialsExcludedGold": 1,
     "materialsExcludedUnlisted": 111,
@@ -222,9 +222,9 @@
     "skillCalcMissiles": 31,
     "skillIcons": 325,
     "craftingForgings": 84,
-    "craftingStacking": 31,
-    "craftingRowsUsed": 717,
-    "craftingRowsSkipped": 245,
+    "craftingStacking": 32,
+    "craftingRowsUsed": 718,
+    "craftingRowsSkipped": 244,
     "tierCodes": 1067,
     "tierCodesNormal": 321,
     "tierCodesExceptional": 331,
@@ -245,7 +245,7 @@
     "areasMapBosses": 19,
     "areasMapBossArenas": 18,
     "stashItemCodes": 2334,
-    "stashSavedStats": 721,
+    "stashSavedStats": 722,
     "stashCoupons": 385,
     "stashCouponRecipes": 382,
     "stashCouponWildCardRecipes": 382,
@@ -253,8 +253,8 @@
     "stashSetItems": 270,
     "stashRunewords": 391,
     "stashGemwords": 9,
-    "itemTextStats": 721,
-    "itemTextStrings": 423,
+    "itemTextStats": 722,
+    "itemTextStrings": 424,
     "itemTextSkills": 915,
     "itemTextMonsters": 404,
     "itemTextMagicPrefixes": 920,
@@ -265,11 +265,11 @@
     "terrorZoneAreas": 181,
     "terrorZoneUnlistedLevels": 21,
     "terrorZoneBoosts": 6,
-    "modifierStats": 538,
-    "modifierStatsUsed": 524,
-    "modifierStatsEsrOnly": 361,
+    "modifierStats": 539,
+    "modifierStatsUsed": 525,
+    "modifierStatsEsrOnly": 362,
     "modifierStatsChanged": 11,
-    "modifierKinds": 441,
+    "modifierKinds": 442,
     "modifierKeyKinds": 60,
     "modifierFacts": 80,
     "modifierConfigFacts": 40,
@@ -281,27 +281,27 @@
     "specializationTrees": 4,
     "specializationPerks": 60,
     "specializationIcons": 60,
-    "specializationCubePerks": 8,
-    "specializationDropPerks": 7,
+    "specializationCubePerks": 9,
+    "specializationDropPerks": 8,
     "specializationPluginPerks": 42,
     "specializationShardMonsters": 9,
-    "specializationPageDiffs": 0,
+    "specializationPageDiffs": 2,
     "elixirs": 35,
     "elixirsRegular": 17,
     "elixirsGreater": 17,
     "elixirsSpecial": 1,
     "elixirsForEveryone": 13,
     "elixirsPerkGated": 21,
-    "elixirsNoSource": 1,
+    "elixirsNoSource": 0,
     "elixirPerks": 10,
     "elixirDropSources": 10,
-    "elixirRecipes": 3,
-    "itemIcons": 653,
+    "elixirRecipes": 4,
+    "itemIcons": 655,
     "uniqueIcons": 1114,
     "setIcons": 270,
     "miscIcons": 178,
     "questIcons": 84,
-    "itemCodeIcons": 1490,
+    "itemCodeIcons": 1488,
     "typeIcons": 57,
     "vanillaIcons": 1281,
     "vanillaIconFiles": 267,
@@ -314,7 +314,7 @@
     "bases: mam is mythical but its name string is \"Amulet\"; using \"Mythical Amulet\"",
     "bases: mrn is mythical but its name string is \"Ring\"; using \"Mythical Ring\"",
     "bases: mjw is mythical but its name string is \"Jewel\"; using \"Mythical Jewel\"",
-    "bases: dropped cx1 (duplicate of cm1), cx2 (duplicate of cm2), cx3 (duplicate of cm3)",
+    "bases: dropped cx2 (duplicate of cm2)",
     "affixes: p910 \"Apprentice's\" references unknown item type \"voib\"",
     "affixes: p911 \"Death Master's\" references unknown item type \"voib\"",
     "affixes: p918 \"Death Master's\" references unknown item type \"voib\"",
@@ -353,7 +353,6 @@
     "skillcalc: descmissile:m1ex in 1 line (Plague Javelin desc5)",
     "skillcalc: mastery:mael in 1 line (Meteor Sentry desc3)",
     "skillcalc: missile code:rad in 1 line (Miasma Chains dsc2-3)",
-    "crafting: cubemain line 17531 \"VS + Any Weapon + vps\" is shadowed by an earlier dstone row with the same ingredients",
     "stash: unique \"Azurewrath_old\" (row 728) has no string; named \"Azurewrath\" after coupon 24f",
     "stash: cpn3 coupons whose base is not elite: 44e (exceptional)",
     "itemtext: string \"ModStr3kSum\" (stat description) not found",
@@ -361,9 +360,7 @@
     "itemtext: string \"ModStrMagMastery\" (stat description) not found",
     "masteries: Wretched Scythe (weapon-mastery-wretched-scythe): mod total-magic-resist -100 has no item text; shown as \"-100% Magic Resist (no item line; why your magic resist is always 0)\"",
     "masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull",
-    "masteries: cubemain line 2379 \"Awaken Weapon Mastery Token - Celestial Blade\" takes \"0bs\", which cannot get this mastery",
-    "masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be",
-    "specializations: Alchemist › Elixir of Reincarnation (alchemy_13): no cubemain row makes Elixir of Reincarnation (35p), nothing else reads the stat",
-    "specializations: Archaeologist › Alien Artefacts (archaeology_15): Alien Artefact (aa1, aa2, aa3, aa4, aa5) drop from 572 monsters with no perk condition"
+    "masteries: cubemain line 2380 \"Awaken Weapon Mastery Token - Celestial Blade\" takes \"0bs\", which cannot get this mastery",
+    "masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be"
   ]
 }

@@ -121,11 +121,9 @@ a tiered map zone (the same summary on the entry, the middle levels and the aren
   disappears by itself when ESR fixes the files or the page. A page item name the files lack ("Mephisto's Demonic
   Horn") is paired with the files' item the page does not name only when there is exactly one; the perk drops below are
   left out of that pairing.
-- Since ESR 3.3 every map boss rolls a 2% Alien Artefact (treasureclassex.txt `Artefact Chance`, no condition). The
-  Specializations page lists "Alien Artefacts" as an Archaeologist perk, so that row reads "Official page: Archaeologist
-  perk only (…); in 3.3 it drops for everyone, a bug the mod author says the next patch fixes" (`PERK_DROPS` in
-  `data/mapBosses.ts`, shown for every boss, curated or not; mod author, 2026-11-07: "No, fixed in next patch"). Drop
-  the part after the semicolon once the files gate the drop.
+- Since ESR 3.3 every map boss rolls a 2% Alien Artefact (treasureclassex.txt `Artefact Chance`). The perk gate sits
+  one class down (`Artefacts`, since 3.3.02), so the rewards table still prints the 2%, and that row reads "Official
+  page: Archaeologist perk only (…)" (`PERK_DROPS` in `data/mapBosses.ts`, shown for every boss, curated or not).
 - A link to the guide note `/guide/endgame-bosses`; the note links back to every arena (`page:/campaign-map?area=…`).
 
 Rewards and chances are computed at build time from the treasure classes (areas.json `mapBosses`, GAME-DATA.md

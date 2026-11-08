@@ -229,7 +229,7 @@
     {"key":"castRate.cap","label":"Faster Cast Rate cap","vanilla":200,"unit":"points","note":"FCR past this point does nothing. Effective FCR = 120 × FCR / (FCR + 120).","value":500,"origin":"esr-config","source":{"file":"d2rloader/config/celestialrayone.cast-rate-cap.toml","key":"cast-rate-cap.fcr_cap"}},
     {"key":"dodge.cap","label":"Dodge, Avoid and Evade cap","value":{"dodge":75,"avoid":75,"evade":75},"vanilla":{"dodge":100,"avoid":100,"evade":100},"unit":"percent","note":"Per-stat overrides of -1 inherit cap_percent. The stat on items is not changed, only the roll.","origin":"esr-config","source":{"file":"d2rloader/config/celestialrayone.dodge-avoid-evade-cap.toml","key":"dodge_avoid_evade_cap.cap_percent"}},
     {"key":"resist.physicalCap","label":"Physical resist cap of players","value":50,"unit":"percent","origin":"vanilla-engine","source":{"file":"D2 engine (D2MOO)","key":"SUnitDmg.cpp SUNITDMG_ApplyResistancesAndAbsorb"}},
-    {"key":"difficulty.ResistPenalty","label":"Resistance penalty","value":[1,-80,-150],"vanilla":[0,-40,-100],"unit":"points","origin":"game-files","source":{"file":"difficultylevels.txt","key":"ResistPenalty"},"note":"Added to fire, cold, lightning and poison resist."},
+    {"key":"difficulty.ResistPenalty","label":"Resistance penalty","value":[0,-80,-150],"vanilla":[0,-40,-100],"unit":"points","origin":"game-files","source":{"file":"difficultylevels.txt","key":"ResistPenalty"},"note":"Added to fire, cold, lightning and poison resist."},
     {"key":"resist.maxBase","label":"Resistance cap before maximum resist","value":75,"unit":"percent","origin":"vanilla-engine","source":{"file":"D2 engine (D2MOO)","key":"SUnitDmg.cpp SUNITDMG_ApplyResistancesAndAbsorb"}},
     {"key":"resist.hardCap","label":"Resistance hard cap","value":95,"unit":"percent","origin":"vanilla-engine","source":{"file":"D2 engine (D2MOO)","key":"SUnitDmg.cpp SUNITDMG_ApplyResistancesAndAbsorb"}},
     {"key":"absorb.percentCap","label":"Elemental absorb % cap","value":40,"unit":"percent","origin":"vanilla-engine","source":{"file":"D2 engine (D2MOO)","key":"SUnitDmg.cpp SUNITDMG_ApplyResistancesAndAbsorb"}},
@@ -570,6 +570,7 @@
     ["Crushing Blow Damage","stat-crushingblow-damage"],
     ["Increased Effect of Runes Socketed in this Item","stat-rune-effect-current-item"],
     ["Increased Effect of Gems Socketed in this Item","stat-gem-effect-current-item"],
-    ["Enemy Physical Damage Resist","stat-item-piercedmg-perlevel"]
+    ["Enemy Physical Damage Resist","stat-item-piercedmg-perlevel"],
+    ["Sanctified (Jewelry)","stat-item-sanctification-jewelry"]
   ]
 }

@@ -35,18 +35,18 @@
     {"code":"32p","name":"Greater Elixir of the Feline","slug":"greater-elixir-of-the-feline","variant":"greater","state":"elixirofthefeline","tooltip":"Grants +%d%% Bonus to Dexterity and Deadly Strike for 45 seconds","tooltipFormula":"(5+stat('level'.accr)/4)*125*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/10000","effects":[{"lines":["+{v}% Deadly Strike","+{v}% Bonus to Dexterity"],"formula":"(5+stat('level'.accr)/4)*125*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/10000","stats":["dexteritypercent","item_deadlystrike"],"values":[6,40]}],"duration":"1125*(100+stat('utilitypotionduration'.accr))/100","seconds":45,"pair":"15p","dropPerks":["alchemy_12","alchemy_4"],"recipes":[2309]},
     {"code":"33p","name":"Greater Elixir of the Gorilla","slug":"greater-elixir-of-the-gorilla","variant":"greater","state":"elixirofthegorilla","tooltip":"Grants +%d%% Bonus to Vitality and Total Defense Bonus for 45 seconds","tooltipFormula":"(5+stat('level'.accr)/4)*125*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/10000","effects":[{"lines":["+{v}% Total Defense","+{v}% Bonus to Vitality"],"formula":"(5+stat('level'.accr)/4)*125*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/10000","stats":["vitalitypercent","armor_override_percent"],"values":[6,40]}],"duration":"1125*(100+stat('utilitypotionduration'.accr))/100","seconds":45,"pair":"16p","dropPerks":["alchemy_12","alchemy_4"],"recipes":[2309]},
     {"code":"34p","name":"Greater Elixir of the Raven","slug":"greater-elixir-of-the-raven","variant":"greater","state":"elixiroftheraven","tooltip":"Grants +%d%% Bonus to Energy and Skill Cooldown Reduction for 45 seconds","tooltipFormula":"(5+stat('level'.accr)/4)*125*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/10000","effects":[{"lines":["+{v}% Skill Cooldown Reduction","+{v}% Bonus to Energy"],"formula":"(5+stat('level'.accr)/4)*125*(100+stat('utilitypotionmultiplier'.accr)+(stat('alchemy_2'.accr)>0)*5)/10000","stats":["energypercent","item_skill_cooldown"],"values":[6,40]}],"duration":"1125*(100+stat('utilitypotionduration'.accr))/100","seconds":45,"pair":"17p","dropPerks":["alchemy_12","alchemy_4"],"recipes":[2309]},
-    {"code":"35p","name":"Elixir of Reincarnation","slug":"elixir-of-reincarnation","variant":"special","state":"elixirofreincarnation","tooltip":"Consuming this elixir brings you back to full life and mana on taking fatal damage and grants you a 1 second invincibility. Usage cooldown: 300 seconds.","effects":[{"lines":[],"formula":null,"stats":["elixir_of_reincarnation"],"values":null}],"duration":"2000000000","usageCondition":"(stat('elixir_of_reincarnation'.accr)<1)*(stat('elixir_of_reincarnation_cooldown'.accr)<1)","perk":"alchemy_13"}
+    {"code":"35p","name":"Elixir of Reincarnation","slug":"elixir-of-reincarnation","variant":"special","state":"elixirofreincarnation","tooltip":"Consuming this elixir brings you back to full life and mana on taking fatal damage and grants you a 1 second invincibility. Usage cooldown: 300 seconds.","effects":[{"lines":[],"formula":null,"stats":["elixir_of_reincarnation"],"values":null}],"duration":"2000000000","usageCondition":"(stat('elixir_of_reincarnation'.accr)<1)*(stat('elixir_of_reincarnation_cooldown'.accr)<1)","recipes":[2311],"perk":"alchemy_13"}
   ],
   "perks": [
     {"key":"alchemy_2","title":"Volatile Concoctions","tree":"Alchemist","slug":"volatile-concoctions","row":1,"column":2,"description":"Increase the effect of utility potions by 5%.","facts":["Every elixir formula in misc.txt counts it as +5% Utility Potion Effectiveness."]},
     {"key":"alchemy_4","title":"Hidden Elixirs","tree":"Alchemist","slug":"hidden-elixirs","row":2,"column":1,"description":"You can find utility potions that don't normally drop.","facts":["Drops only with it: Elixir of the Giant, Elixir of the Feline, Elixir of the Gorilla and Elixir of the Raven (treasure class Utility Elixir Regular Hidden, 4 of 17 in Utility Elixir Regular; without the perk it is left out of the roll).","Drops only with it: Greater Elixir of the Giant, Greater Elixir of the Feline, Greater Elixir of the Gorilla and Greater Elixir of the Raven (treasure class Utility Elixir Greater Hidden, 4 of 17 in Utility Elixir Greater; without the perk it is left out of the roll)."]},
-    {"key":"alchemy_5","title":"Unstable Mixtures","tree":"Alchemist","slug":"unstable-mixtures","row":2,"column":2,"description":"Rejuvenation potions have a 15% chance to drop as a random utility potion instead.","facts":["15% of the Rejuv Potion picks become an elixir roll instead (Rejuvenation Regular).","15% of the Full Rejuv Potion picks become an elixir roll instead (Rejuvenation Full).","It works on the rejuvenation potions Find Potion makes too: the alchemy plugin sends them through the same treasure classes."]},
+    {"key":"alchemy_5","title":"Unstable Mixtures","tree":"Alchemist","slug":"unstable-mixtures","row":2,"column":2,"description":"Rejuvenation potions have a 10% chance to drop as a random utility potion instead.","facts":["10% of the Rejuv Potion picks become an elixir roll instead (Rejuvenation Regular).","10% of the Full Rejuv Potion picks become an elixir roll instead (Rejuvenation Full).","It works on the rejuvenation potions Find Potion makes too: the alchemy plugin sends them through the same treasure classes."]},
     {"key":"alchemy_6","title":"Bountiful Brews","tree":"Alchemist","slug":"bountiful-brews","row":2,"column":3,"description":"Increase the quantity of potions dropped by 50%.","facts":["With it, the potion rolls (Potion 1 … Potion 8) make 1.5 picks on average instead of 1, so elixirs drop that much more often too."]},
     {"key":"alchemy_8","title":"Gem Infusion","tree":"Alchemist","slug":"gem-infusion","row":3,"column":2,"description":"You can craft a random utility potion by transmuting a perfect gem with a randomizing stone.","facts":["Needed for the cube recipe Randomizing Stone + Perfect Gem → Regular Elixirs or Greater Elixirs."]},
     {"key":"alchemy_9","title":"Compounded Synergy","tree":"Alchemist","slug":"compounded-synergy","row":3,"column":3,"description":"The effect of all potions is increased by 5% for every different potion effect you have active on you.","facts":["Every potion effect is 5% stronger for each different potion effect running on you, itself included (alchemy plugin; not in the values on this page)."]},
     {"key":"alchemy_10","title":"Savvy Elixirs","tree":"Alchemist","slug":"savvy-elixirs","row":4,"column":1,"description":"You have a 25% chance to gain the effects of an utility potion without consuming it.","facts":["25% chance that a utility potion is not used up; its effect still applies (alchemy plugin)."]},
     {"key":"alchemy_12","title":"Alchemical Excellence","tree":"Alchemist","slug":"alchemical-excellence","row":4,"column":3,"description":"Utility potions that drop or that you craft have a 25% chance to become a greater variant instead.","facts":["Drops only with it: the 17 greater elixirs (treasure class Utility Elixir Greater, 1 of 4 in Utility Elixir; without the perk it is left out of the roll).","Needed for the cube recipe Randomizing Stone + Perfect Gem → Greater Elixirs or Regular Elixirs.","With it, 25% of these transmutes give Greater Elixirs (a Randomizing Stone roll of at least 384 of 0 to 511, cubemain line 2309)."]},
-    {"key":"alchemy_13","title":"Elixir of Reincarnation","tree":"Alchemist","slug":"elixir-of-reincarnation","row":5,"column":1,"description":"You can craft Elixir of Reincarnation by transmuting 5 Dragon Stones which brings you back to full life and mana on taking fatal damage and granting you a 1 second invincibility. Usage cooldown: 300 seconds.","facts":["Gives the Elixir of Reincarnation; cubemain.txt has no recipe that makes it and no treasure class drops it.","The mod author (2026-11-07): the missing recipe is a bug of 3.3; the next patch adds it, so until then the elixir cannot be had.","On a hit that would kill you it restores full life and mana instead, makes you invulnerable for 1 s, and starts a 300 s cooldown (alchemy plugin)."]},
+    {"key":"alchemy_13","title":"Elixir of Reincarnation","tree":"Alchemist","slug":"elixir-of-reincarnation","row":5,"column":1,"description":"You can craft Elixir of Reincarnation by transmuting 5 Dragon Stones which brings you back to full life and mana on taking fatal damage and granting you a 1 second invincibility. Usage cooldown: 300 seconds.","facts":["Needed for the cube recipe 5× Dragon Stone → Elixir of Reincarnation.","Gives the Elixir of Reincarnation; cubemain lines 2311 make it.","On a hit that would kill you it restores full life and mana instead, makes you invulnerable for 1 s, and starts a 300 s cooldown (alchemy plugin)."]},
     {"key":"alchemy_15","title":"Serendipity","tree":"Alchemist","slug":"serendipity","row":5,"column":3,"description":"Your utility potions have a 15% chance to grant you the effect of a random shrine.","facts":["15% chance that a utility potion also gives the effect of one random shrine: Refilling Shrine, Armor Shrine, Combat Shrine, Resist Fire Shrine, Resist Cold Shrine, Resist Lightning Shrine, Resist Poison Shrine, Skill Shrine, Mana Recharge Shrine and Experience Shrine (alchemy plugin)."]}
   ],
   "drops": {
@@ -55,54 +55,54 @@
       {
         "tc": "Rejuvenation Regular",
         "label": "Rejuv Potion",
-        "chance": 15,
+        "chance": 10,
         "perk": "alchemy_5"
       },
       {
         "tc": "Rejuvenation Full",
         "label": "Full Rejuv Potion",
-        "chance": 15,
+        "chance": 10,
         "perk": "alchemy_5"
       },
       {
         "tc": "Potion 1 Single",
         "label": "Normal Act 1",
-        "chance": 1
+        "chance": 0.5
       },
       {
         "tc": "Potion 2 Single",
         "label": "Normal Act 2",
-        "chance": 1
+        "chance": 0.5
       },
       {
         "tc": "Potion 3 Single",
         "label": "Normal Act 3",
-        "chance": 2
+        "chance": 0.6
       },
       {
         "tc": "Potion 4 Single",
         "label": "Normal Act 4",
-        "chance": 3
+        "chance": 0.7
       },
       {
         "tc": "Potion 5 Single",
         "label": "Normal Act 5",
-        "chance": 3
+        "chance": 0.7
       },
       {
         "tc": "Potion 6 Single",
         "label": "Nightmare",
-        "chance": 4
+        "chance": 0.8
       },
       {
         "tc": "Potion 7 Single",
         "label": "Hell",
-        "chance": 5
+        "chance": 1
       },
       {
         "tc": "Potion 8 Single",
         "label": "Endgame maps",
-        "chance": 5
+        "chance": 1
       }
     ],
     "odds": [
@@ -228,7 +228,8 @@
   "recipes": [
     {"id":2308,"description":"Alchemist - Gem Infusion (No Excellence)","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Only without the Alchemist perk Alchemical Excellence"]},
     {"id":2309,"description":"Alchemist - Alchemical Excellence","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Greater Elixirs","code":"gelx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence","Random roll ≥ 384 (of 0 to 511)"]},
-    {"id":2310,"description":"Alchemist - Gem Infusion","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence"]}
+    {"id":2310,"description":"Alchemist - Gem Infusion","inputs":[{"text":"Randomizing Stone","code":"rnd","qty":1},{"text":"Perfect Gem","code":"gem5","qty":1,"type":true}],"outputs":[{"text":"Regular Elixirs","code":"relx"}],"conditions":["Needs the Alchemist perk Gem Infusion","Needs the Alchemist perk Alchemical Excellence"]},
+    {"id":2311,"description":"Alchemist - Elixir of Reincarnation","inputs":[{"text":"Dragon Stone","code":"ppp","qty":5}],"outputs":[{"text":"Elixir of Reincarnation","code":"35p"}],"conditions":["Needs the Alchemist perk Elixir of Reincarnation"]}
   ],
   "otherUtilityPotions": [
     "Stamina Potion",

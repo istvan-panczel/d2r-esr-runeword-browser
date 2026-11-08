@@ -70,7 +70,7 @@
 - **Crushing Blow against yellow uniques** (`crushing-blow`): 6.25% is right; the "50 -> 12.5 %" comment was a mistake, fixed in 3.3 (`crushing-blow.toml` line 34 now reads "25 -> 6.25 % of current life").
 - **Fire thorns as Critical Strike?** (`deadly-strike`, `thorns`): no. The game gates hard-coded stats by name, and ESR replaced passive_critical_strike with a custom stat, so a fire-thorns item (row 337) gives no crit.
 - **What does item_deadlystrike_cap (605) do?** (`deadly-strike`): it is a D-stoning cap that keeps the Deadly Strike already on the item apart from what Dragon Stones add, so a 50% Deadly Strike item can be stoned to 150% instead of capping at 100%.
-- **Resist penalty in Normal is +1** (`resists`): an offset for hidden Kill Ledger effects that cancels when the Kill Ledger is equipped; changed in 3.3, and the penalty will be zeroed in the next patch.
+- **Resist penalty in Normal was +1** (`resists`): an offset for hidden Kill Ledger effects that cancels when the Kill Ledger is equipped; changed in 3.3, zeroed in 3.3.02.
 - **Chance-to-cast and cooldowns** (`chance-to-cast`): item procs do not respect the cooldown of the skill they cast; there is no internal proc cooldown, and none is planned.
 - **"when Taking Damage" vs "when Struck"** (`chance-to-cast`): stat 376 fires on every damage instance, but for poison and bleed only when they are applied.
 - **Magic Find exclusions** (`magic-find`): crystals, organs, keys, maps and Worldstone Shards ignore MF too. Only items with a rarity are affected; MF raises the rarity (unique, set, rare, magic), never the quantity.

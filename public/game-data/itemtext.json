@@ -1056,7 +1056,8 @@
     {"stat":"item_maxdamage_percent6","op":11},
     {"stat":"item_mindamage_percent6","op":11},
     {"stat":"rune_effect_current_item_perlevel","op":4,"opParam":3,"descpriority":55,"descfunc":19,"descstrpos":"runeeffectcurrentitem","descstr2":"increaseswithplaylevelX"},
-    {"stat":"item_maxhp_percent_perlevel","op":2,"opParam":3,"descpriority":58,"descfunc":19,"descstrpos":"ModStr2g","descstr2":"increaseswithplaylevelX"}
+    {"stat":"item_maxhp_percent_perlevel","op":2,"opParam":3,"descpriority":58,"descfunc":19,"descstrpos":"ModStr2g","descstr2":"increaseswithplaylevelX"},
+    {"stat":"item_sanctification_jewelry","descpriority":300,"descfunc":20,"descstrpos":"Sanctified Jewelry"}
   ],
   "strings": {
     "99j2": "Wild Card",
@@ -1210,6 +1211,7 @@
     "Moditemskondeath": "%d%% Chance to Cast Level %d %s When you Die",
     "Modstr2v": "%+d%% Enhanced Defense",
     "Sanctified": "Sanctified",
+    "Sanctified Jewelry": "Sanctified (Jewelry)",
     "SanctifyIt": "Transmute to Sanctify Item",
     "SlamIt": "Transmute to Corrupt Item",
     "StrSkill184": "Curse Duration Reduced by %d%%",

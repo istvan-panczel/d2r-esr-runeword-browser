@@ -3392,7 +3392,8 @@
     {"id":1053,"name":"item_maxdamage_percent6"},
     {"id":1054,"name":"item_mindamage_percent6"},
     {"id":1055,"name":"rune_effect_current_item_perlevel"},
-    {"id":1056,"name":"item_maxhp_percent_perlevel"}
+    {"id":1056,"name":"item_maxhp_percent_perlevel"},
+    {"id":1057,"name":"item_sanctification_jewelry"}
   ],
   "areas": [
     {"id":0,"name":"Null","act":0},
