@@ -174,7 +174,14 @@ the owner's OK.
   (propose); "takes <code>, which cannot get this mastery", "no awaken / remove row takes", a description naming other
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
   specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
-  formulas read `weapon_mastery_orb_1`) and the 4 warnings of 3.3.
+  formulas read `weapon_mastery_orb_1`), the 17 families, the knuckle gap and the 8 warnings of 3.3.02. The
+  `/weapon-masteries` page reads the same bundle; `build/masteryPage.ts` parses the official page into `pageRules`
+  (drop odds), `pageNotes` (footnotes) and `pageDiffs` (the files win; 3 in 3.3.02: Stag Bow, Fend, Orb heading), so a
+  reworded page shows in the bundle diff and on the cards: re-read each new difference. Warnings "the formulas of …
+  read <stat>, the text does not name them" / "the text names …, whose formulas do not read <stat>" are the mastery's
+  skills.txt formulas disagreeing with its text (the page shows the text): a question for the mod author, not a fix here.
+  A new page row or heading the parser cannot pair is a `Row "…"` difference. New class weapons without apply rows land
+  in `noMasteryBases` (the page's knuckle note).
 - **Specializations** (`docs/specializations.htm`): specializations.json comes from
   `celestialrayone.specializations.toml` (rules, perk stats and string keys per tree), the strings, misc.txt / cubemain
   (Tesseract, Token of Absolution), the treasure classes (shard drops, perk-gated drops) and the perk plugin configs

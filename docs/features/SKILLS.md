@@ -424,7 +424,7 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
     `useMasteries` with the first card): per specialisation whose effect names the skill, the weapon (base icon, link to
     every base it applies to on the Bases page: `?codes=` for a base family, `?type=` for Orb / Claw / Void Blade), the recipe icons, the effect (with the skills line when it is a group such as "Curses") and
     the apply rows' other mods; Spearstorm, Fend and Dance of Death have two (Maiden Spear and Maiden Pike), the
-    Assassin charge-ups two (Claw + Chipped Ruby / Skull). Builds share the card. Mapping: GAME-DATA.md "Weapon mastery".
+    Assassin charge-ups two (Claw + Chipped Ruby / Skull). The note under it links the guide and the [Weapon Masteries page](./WEAPON-MASTERIES.md). Builds share the card. Mapping: GAME-DATA.md "Weapon mastery".
 
   The tab list and, on Values, the **level bar** under it are `sticky top-0` inside the card (the detail column scrolls
   from `lg`, the page below), so the level stays in reach while the values scroll. Fire Ball's card is about 780 px
