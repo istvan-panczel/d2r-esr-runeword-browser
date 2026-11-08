@@ -46,6 +46,8 @@ export function makeBundle(parts: Partial<StashBundle & StashNamesBundle> = {}):
     coupons: [],
     couponTiers: [],
     gemwords: [],
+    characterStats: [],
+    characterClasses: [],
     bases: [],
     uniques: [],
     setItems: [],

@@ -923,6 +923,10 @@ without length prefixes, so the parser needs every width:
   codes) the cube turns into one Wild Card (8 / 4 / 2). ESR 3.3 (as 3.2.24): one elite coupon is on an exceptional base, `44e`
   Measured Wrath (Burnt Text), the same coupon that takes 2 Wild Cards instead of 4 (a warning).
 - `gemwords`: the runeword field values of the charm gemwords (the counts of the home card need no names).
+- `characterStats`, `characterClasses` (`build/bundleCharacterSave.ts`, read by the character save parser,
+  [CHARACTER-SAVE.md](./CHARACTER-SAVE.md)): the `gf` stats as `[stat id, CSvBits, ValShift]` for every
+  itemstatcost.txt row with CSvBits > 0 (81 in ESR 3.3.02), and `[class name, first skills.txt row, skill count]`
+  per class, in the save's class byte order.
 
 `stashnames.json` (`StashNamesBundle`, the same generator) holds the names, loaded by the All items page only, so the
 Overview and Ancient Coupons pages load the small stash.json alone:

@@ -3,7 +3,8 @@
   "esrVersion": "3.3.02",
   "esrTag": "3.3.02",
   "esrCommit": "4237a00984d9e9a874afde8ecdf361b88c55d9b8",
-  "generatedAt": "2026-11-08T16:26:04.878Z",
+  "esrDate": "2026-11-08T08:37:34+02:00",
+  "generatedAt": "2026-11-08T21:11:53.305Z",
   "files": {
     "types": {
       "hash": "1ebbe2b8208cc6b0cebb0750183c909b1ce1971a0c82b850d3afbece78ad5a15",
@@ -70,8 +71,8 @@
       "bytes": 53751
     },
     "stash": {
-      "hash": "b9e1ff2b78f7296ba7bf8f789ebbd0d02a3fff4c5fb37ddeddc3677ad4643157",
-      "bytes": 148343
+      "hash": "39380fda6c934284e208b9306b2b584b72898b81dc10457e749465a175a4d0b5",
+      "bytes": 149803
     },
     "stashnames": {
       "hash": "943b26d2a6e688e096ba732665413a230be7b4417b7ca12c958a9c1979e1ecc1",
@@ -255,6 +256,7 @@
     "areasMapBossArenas": 18,
     "stashItemCodes": 2334,
     "stashSavedStats": 722,
+    "stashCharacterStats": 81,
     "stashCoupons": 385,
     "stashCouponRecipes": 382,
     "stashCouponWildCardRecipes": 382,

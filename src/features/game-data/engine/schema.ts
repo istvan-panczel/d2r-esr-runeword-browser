@@ -47,6 +47,11 @@ export interface GameDataManifest {
   esrVersion: string;
   esrTag: string | null;
   esrCommit: string;
+  /**
+   * Committer date of the ESR commit the bundles were generated from (ISO 8601): the closest thing to the release date
+   * of `esrVersion`. Null when the generator could not read it; missing on manifests written before this field existed.
+   */
+  esrDate?: string | null;
   generatedAt: string;
   files: Partial<Record<GameDataFile, { hash: string; bytes: number }>>;
   counts: Record<string, number>;
@@ -1701,6 +1706,12 @@ export type StashItemInfo = [string, number, number, number];
 /** [Save Bits, Save Add, 1 when Save Param Bits > 0 else 0] */
 export type StashStatInfo = [number, number, number];
 
+/** [stat id (itemstatcost.txt row), CSvBits, ValShift]: a stat of the character save's `gf` section */
+export type CharacterStatInfo = [number, number, number];
+
+/** [class name, skills.txt row of the class's first skill, number of skills]: by class byte of a character save */
+export type CharacterClassInfo = [string, number, number];
+
 export interface StashCoupon {
   code: string;
   /** String-table name ("Ancient Coupon (Buckler, Pelta Lunata)") */
@@ -1836,6 +1847,10 @@ export interface StashBundle {
   couponTiers: StashCouponTier[];
   /** The runeword field values of the charm gemwords (stashnames.json `runewords` with `gemword`), for the counts */
   gemwords: number[];
+  /** The character save's `gf` stats (itemstatcost.txt rows with CSvBits > 0, by id): see build/bundleCharacterSave.ts */
+  characterStats: CharacterStatInfo[];
+  /** The character save's classes, indexed by class byte */
+  characterClasses: CharacterClassInfo[];
 }
 
 /**

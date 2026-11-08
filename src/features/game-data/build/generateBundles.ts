@@ -49,6 +49,7 @@ import { buildRunewordsBundle } from './bundleRunewords.ts';
 import { buildSetsBundle } from './bundleSets.ts';
 import { buildSuperiorAffixes } from './bundleSuperior.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
+import { buildCharacterSaveData } from './bundleCharacterSave.ts';
 import { buildStashBundle } from './bundleStash.ts';
 import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
@@ -517,6 +518,11 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     strings,
     stringIds
   );
+  const characterSave = buildCharacterSaveData({
+    itemstatcost: rowTable('itemstatcost'),
+    skills: rowTable('skills'),
+    charstats: table('charstats'),
+  });
   // --- end stash.json ---
 
   // --- itemtext.json ---
@@ -635,7 +641,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     crafting: crafting.bundle,
     tiers: tiers.bundle,
     areas: areas.bundle,
-    stash: stash.bundle,
+    stash: { ...stash.bundle, ...characterSave.bundle },
     stashnames: stash.names,
     itemtext: itemText.bundle,
     terrorzones: terrorZones.bundle,
@@ -747,6 +753,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...areaCounts,
       stashItemCodes: stash.bundle.items.length,
       stashSavedStats: stash.bundle.stats.filter((stat) => stat !== null).length,
+      stashCharacterStats: characterSave.bundle.characterStats.length,
       stashCoupons: stash.bundle.coupons.filter((coupon) => coupon.wildCard !== true).length,
       stashCouponRecipes: stash.bundle.coupons.filter((coupon) => coupon.unique !== undefined).length,
       stashCouponWildCardRecipes: stash.bundle.coupons.filter((coupon) => coupon.withWildCards !== undefined).length,
@@ -817,6 +824,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...tiers.warnings,
       ...areas.warnings,
       ...stash.warnings,
+      ...characterSave.warnings,
       ...itemText.warnings,
       ...terrorZones.warnings,
       ...modifiers.warnings,

@@ -127,6 +127,7 @@ function main(): void {
     esrVersion: sources.esrVersion,
     esrTag,
     esrCommit,
+    esrDate: git(esrDir, ['log', '-1', '--format=%cI', 'HEAD']),
     files: icons === null ? files : { ...files, icons: icons.text },
     counts: icons === null ? generated.counts : { ...generated.counts, ...icons.counts },
     warnings: generated.warnings,
