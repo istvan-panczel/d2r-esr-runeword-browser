@@ -1,7 +1,7 @@
 # Character save parser
 
-Reads the ESR character save (`.d2s`) and its optional `.d2rl` sidecar in the browser. **Parser and data only**: there is
-no page, route or build import yet; later phases build on the exports below.
+Reads the ESR character save (`.d2s`) and its optional `.d2rl` sidecar in the browser. The **My Character** page
+(`/stash/character`, see below) shows what a save holds; the parser's exports are listed first.
 
 Code: `src/features/character/parser/`. Data: `stash.json` `characterStats` / `characterClasses`
 ([GAME-DATA.md → Stash](./GAME-DATA.md#stash)), and `manifest.json` `esrDate` for the old-save hint. Fixtures:
@@ -138,3 +138,50 @@ sidecar it compares its ESR version with the bundle's; without one it compares `
 an old install after a release is missed). Item stats are stored on the item, so an old item legitimately shows values the
 current tables would no longer roll; names and computed text use the current tables. Boundary checks cannot catch a
 same-width renumbered row; none happened from 3.2.10 to 3.3.02 (and the loader warns against changing CSvBits).
+
+## My Character page
+
+`/stash/character` (`src/features/character/`: `screens/CharacterScreen.tsx`, `components/`, `engine/`, `hooks/`, `db/`), a tab of
+My Stash ([STASH.md](./STASH.md)). Parsed in the browser only, never sent anywhere; no computed totals (no final resists or life, no
+defensive sheet, no Tier 1 check, no monster data), so base attributes are labelled as base.
+
+**Upload** (`CharacterUpload`, `CharacterFileButton`, `CharacterFileBar`): file picker and drag and drop take one `.d2s`, optionally
+with `.d2rl` files (multi-select, `pickCharacterFiles`). The `.d2rl` whose recorded hash is the save's gives the exact ESR version
+(`resolveSidecar`); one that does not match or cannot be read is ignored with a notice, never blocking the save. A `.d2rl` alone,
+two saves, or a stash file get an error panel, and a failed upload never replaces the loaded character.
+
+**Storage** (`db/characterDb.ts`): Dexie database `d2r-esr-character` of its own, one record `key: 'last'` with the raw `.d2s` bytes
+(re-parsed on every visit, as the stash does) and the file meta. Of the sidecar only the outcome is kept (`sidecar`: the verified ESR
+version or why it was not used). **Clear** deletes the record. `CharacterProvider` sits in `StashLayout` under `StashProvider`, so the
+character survives moving between the My Stash tabs (`useCharacter()`, the shape of `useStash()`).
+
+**What it shows** (`engine/characterSheet.ts`, `engine/characterItems.ts`): header (name, class, level, last saved from the save
+header); base attributes (`baseAttributes`, floored: life, mana and stamina are fixed-point); hard skill points grouped by the class
+tree's tabs (`skills.json`, matched by name; names from `itemtext.json` `skills`; all 11 real saves resolve) and the assigned hotkeys;
+gear by slot, weapon set I and II apart with the active set marked; the mercenary's gear (only worn slots); then Charm Inventory,
+inventory, belt, Horadric Cube and personal stash, sorted by the grid. Items no list holds (cursor, unknown place), corpse items and the
+golem item get sections of their own only when present. Every item is the All Items tooltip card (`ItemCard`, built with
+`buildItemRow`), with `where` in the footer instead of a stash page.
+
+**Banners, never blocks** (`engine/notices.ts`): save age from `assessSaveAge` (the exact version with a matching `.d2rl`, otherwise
+"may be older than ESR x" from the date); an unused `.d2rl`; `incomplete !== null` names the part that could not be read and what stays
+empty (that part and everything after it); corpses present say the equipped gear may be on the corpse (INFERRED: no real sample).
+
+**Errors**: `CharacterLoadErrorPanel`, the My Stash panel (`LoadErrorPanel`) with the failure point of a `CharacterParseError` (section,
+list position, path, item code as on the stash panel, byte / bit offsets; no stats, names or other item contents).
+
+### Item text at the character's level
+
+`renderItemText(item, ctx, { characterLevel })` (stash `engine/items/itemText.ts`): stats whose tooltip says "(Based on Character Level)"
+(`isPerLevel`: op 2/4/5 and `descstr2`; `kill_display` is op 2 but counts kills) show `floor(raw × level / 2^op param)`, and per-level
+max damage and defense (`item_maxdamage_percent_perlevel`, `item_maxdamage_perlevel`, `item_armorpercent_perlevel`, `item_armor_perlevel`)
+go into the damage and defense base lines, their sources summed first. Without the option the output is exactly the stash's. Ground truth
+from the in-game tooltip, level 102, Thunder Star (`characterItems.fixture.integration.test.ts`): stored rate 3 → "+306% Enhanced Maximum
+Damage (Based on Character Level)", base max 74 × 4.06 + 97 → "One-Hand Damage: 25 to 397".
+
+Player items, including corpse items, use the character's level. Mercenary and golem items stay at the per-level rate: the save holds no
+merc level.
+
+Known gaps: the game's "+50% Damage to Undead" line on blunt weapons is not shown (the type data has `blun`, but itemtext.json has no
+string for it and how it merges with the item's own undead damage stat is unverified); per-level defense is not confirmed in game the way
+Thunder Star's damage is; stat filter values (`statValues`) are not levelled, the page has no filters.

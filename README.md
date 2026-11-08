@@ -37,7 +37,8 @@ sites and community tools.
   save and share them with the community (sign-in required for saving)
 
 **My Stash**: open your shared stash file to see your Ancient Coupons (the uniques they make and where they are) and every
-item on your stash pages, searchable by name and stats. The file is read in your browser and never uploaded.
+item on your stash pages, searchable by name and stats, or a character save to see its stats, skills, gear and items. Files are
+read in your browser and never uploaded.
 
 **Guide**: a new-player guide to what ESR changes and where to go next, with a map of how the notes connect.
 
