@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ItemIcon } from '@/features/game-data/components/ItemIcon';
 import { MasteryRecipe } from '@/features/game-data/components/MasteryParts';
 import { useMasteries } from '@/features/game-data/hooks/useMasteries';
-import { anyWeaponPerkText, MASTERY_GUIDE_PATH, masteryBasesUrl } from '@/features/game-data/utils/masteries';
+import { anyWeaponPerkText, MASTERY_GUIDE_PATH, masteryBasesUrl, WEAPON_MASTERIES_PATH } from '@/features/game-data/utils/masteries';
 
 const LINK = 'font-medium text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary';
 
@@ -51,6 +51,10 @@ export function SkillMasteries({ skillId, skillName }: { readonly skillId: strin
         One mastery per weapon; the token is lost when you remove it. {anyWeaponPerkText(index.bundle)}{' '}
         <Link to={MASTERY_GUIDE_PATH} className="text-primary underline-offset-2 hover:underline">
           How to get one
+        </Link>
+        {' · '}
+        <Link to={WEAPON_MASTERIES_PATH} className="text-primary underline-offset-2 hover:underline">
+          All weapon masteries
         </Link>
       </p>
     </section>

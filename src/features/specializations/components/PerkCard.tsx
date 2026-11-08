@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { gameDataUrl } from '@/features/game-data/engine/browser/loadGameData';
 import type { SpecializationPageDiff, SpecializationPerk, SpecializationTree } from '@/features/game-data/engine/schema';
 import { enhanceTabHref } from '@/features/game-data/utils/cube';
-import { MASTERY_GUIDE_PATH } from '@/features/game-data/utils/masteries';
+import { MASTERY_GUIDE_PATH, WEAPON_MASTERIES_PATH } from '@/features/game-data/utils/masteries';
 import { cubeFamilyHref } from '@/features/game-data/utils/materials';
 import { LINK_CLASS } from '@/features/ascendancies/components/styles';
 import { elixirHref } from '@/features/elixirs/utils/elixirsView';
@@ -174,6 +174,10 @@ export function PerkCard({ tree, perk, focused, diffs }: PerkCardProps) {
         any weapon takes any mastery (
         <Link to={MASTERY_GUIDE_PATH} className={LINK_CLASS}>
           guide
+        </Link>
+        ,{' '}
+        <Link to={WEAPON_MASTERIES_PATH} className={LINK_CLASS}>
+          all masteries
         </Link>
         )
       </Fact>

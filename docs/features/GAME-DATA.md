@@ -214,7 +214,10 @@ Storm Nexus, Time Stop, Blizzard, Orb of Winter, Permafrost), else the class tab
 than the rows (ESR 3.3: u39desc's Chipped Skull block says Crushed Gem, the rows take a Dragon Stone; 3.2.24's u28desc
 slip is fixed), the Celestial Blade Awaken row taking `0bs` (so `0be` has no awaken recipe; the 3.2.24 remove-row slip
 is fixed), a mod without item text (Wretched Scythe), a skills line naming no skill. Counts: `masteries`,
-`masteryBases`, `masteryEffects`, `masterySkills`. Shown on the Bases page cards and on the Skills page cards
+`masteryBases`, `masteryEffects`, `masterySkills`, `masteryOtherBases`, `masteryPageDiffs`. The fields the [Weapon
+Masteries page](./WEAPON-MASTERIES.md) needs (`slug`, `baseNames`, `otherBases`, `noMasteryBases`, `noRunewords`, `pageRules`,
+`pageDiffs`, `pageNotes`, the official page parser and the text-against-formulas warnings) are described there. Shown on the
+Bases page cards and on the Skills page cards
 ([SKILLS.md](./SKILLS.md)).
 
 ### Runewords
@@ -1578,7 +1581,7 @@ Blade; `components/WeaponMasterySection.tsx`, masteries.json loads with the page
 icons (Weapon + Awakened token + ingredients), the skills lines with the skill names linked (skill peek, ref kind
 `mention`), the effect sentences and the other mods, then one note (one per weapon, no runeword, drops, the remove
 recipe, the guide link; a base in `noAwaken` / `noRemove` reads "The game files have no awaken or remove recipe for this
-base (likely a data slip)" instead of those steps). The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
+base (likely a data slip)" instead of those steps), and a link to the mastery's card on the Weapon Masteries page. The first 100 results render; "Show more" adds 100 at a time (reset when filters change).
 
 #### Families view
 

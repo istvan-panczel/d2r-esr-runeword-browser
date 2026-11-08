@@ -4,6 +4,14 @@ import type { ItemIconRef } from '../hooks/useItemIcons';
 
 /** The guide note on weapon mastery (how to get a token, remove a mastery) */
 export const MASTERY_GUIDE_PATH = '/guide/weapon-mastery';
+/** The Weapon Masteries page */
+export const WEAPON_MASTERIES_PATH = '/weapon-masteries';
+export const MASTERIES_URL_PARAMS = { CLS: 'cls', MASTERY: 'mastery' } as const;
+
+/** One mastery's card on the Weapon Masteries page (`/weapon-masteries?mastery=<slug>`) */
+export function masteryHref(slug: string): string {
+  return `${WEAPON_MASTERIES_PATH}?${new URLSearchParams({ [MASTERIES_URL_PARAMS.MASTERY]: slug }).toString()}`;
+}
 
 /** A weapon mastery with the effects that name one skill */
 export interface SkillMastery {

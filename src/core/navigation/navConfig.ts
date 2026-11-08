@@ -228,7 +228,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     key: 'database',
     label: 'Database',
     description:
-      'Uniques, mythicals, sets, ascendancies, skills, specializations, mercenaries, item modifiers, every base item, material, elixir and area, the campaign map',
+      'Uniques, mythicals, sets, ascendancies, skills, specializations, weapon masteries, mercenaries, item modifiers, every base item, material, elixir and area, the campaign map',
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
@@ -240,6 +240,12 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         to: '/specializations',
         label: 'Specializations',
         description: 'The four perk trees of ESR 3.3, how to unlock them and what each perk does',
+      },
+      {
+        key: 'weapon-masteries',
+        to: '/weapon-masteries',
+        label: 'Weapon Masteries',
+        description: 'How each class weapon changes your skills, its recipe and how to remove it',
       },
       {
         key: 'mercenaries',

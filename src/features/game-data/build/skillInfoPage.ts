@@ -74,7 +74,7 @@ const cellText = (html: string) => cellParagraphs(html).join(' ');
  * The `<td>` cells of every `<tr>` of a table's HTML. Header rows (`<th>` only) and the title row (one `colspan`
  * cell) are left out.
  */
-function tableRows(html: string): string[][] {
+export function tableRows(html: string): string[][] {
   return [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)]
     .map((row) => [...row[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((cell) => cell[1]))
     .filter((cells) => cells.length > 1);

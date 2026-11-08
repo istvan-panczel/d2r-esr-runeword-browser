@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { BaseItem } from '../engine/schema';
-import { anyWeaponPerkText, inputText, MASTERY_GUIDE_PATH, masterySummary, type MasteryIndex } from '../utils/masteries';
+import { anyWeaponPerkText, inputText, MASTERY_GUIDE_PATH, masteryHref, masterySummary, type MasteryIndex } from '../utils/masteries';
 import { MasteryEffectText, MasteryRecipe } from './MasteryParts';
 
 interface WeaponMasterySectionProps {
@@ -51,6 +51,10 @@ export function WeaponMasterySection({ masteries, base }: WeaponMasterySectionPr
           {anyWeaponPerkText(masteries.bundle)}{' '}
           <Link to={MASTERY_GUIDE_PATH} className="text-primary underline-offset-2 hover:underline">
             Weapon mastery guide
+          </Link>
+          {' · '}
+          <Link to={masteryHref(first.slug)} className="text-primary underline-offset-2 hover:underline">
+            Weapon Masteries page
           </Link>
         </p>
       </div>

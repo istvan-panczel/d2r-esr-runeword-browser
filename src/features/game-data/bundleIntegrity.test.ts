@@ -1995,7 +1995,8 @@ describe('committed masteries bundle (ESR 3.3)', () => {
         mastery.label
       ).toBe(true);
     }
-    expect(manifest.files.masteries?.bytes).toBeLessThan(20_000);
+    // baseNames (111 codes) lets the Weapon Masteries page avoid the 364 KB bases.json
+    expect(manifest.files.masteries?.bytes).toBeLessThan(24_000);
   });
 
   it('names known bases of the class, known items and class skills only', () => {
@@ -2021,6 +2022,53 @@ describe('committed masteries bundle (ESR 3.3)', () => {
       'masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
       'masteries: cubemain line 2380 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
       'masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be',
+      // The text and the skills.txt formulas disagree; the page keeps to the text, these go to esr:review
+      'masteries: Oak Branch (weapon-mastery-oak-branch): the formulas of Twin Fangs, Ferocious Bite, Thunderclaws read weapon_mastery_oak_branch, the text does not name them',
+      'masteries: Oak Branch (weapon-mastery-oak-branch): the text names Contagion, whose formulas do not read weapon_mastery_oak_branch',
+      'masteries: Ritualistic Dagger (weapon-mastery-ritualistic-dagger): the text names Terror, Confuse, whose formulas do not read weapon_mastery_ritualistic_dagger',
+      'masteries: Blessed Edge (weapon-mastery-blessed-edge): the formulas of Crucify, Vengeance, Judgement read weapon_mastery_blessed_edge, the text does not name them',
+    ]);
+  });
+
+  it('has 17 weapon families with unique slugs, and the known gaps of the rows', () => {
+    const slugs = masteries.masteries.map((mastery) => mastery.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect(new Set(masteries.masteries.map((mastery) => mastery.token)).size).toBe(17);
+    // Orb, Claw and Void Blade: one token, two options that differ by the gem
+    for (const label of ['Orb', 'Claw', 'Void Blade']) {
+      expect(masteries.masteries.filter((mastery) => mastery.label === label).length, label).toBe(2);
+    }
+    // The official page says "any class weapon", but no apply row takes the knuckles
+    expect(masteries.noMasteryBases).toEqual(['kkl', '9kl', '0kl', 'arm', '9rm', '0rm'].map((code) => ({ code, cls: 'ass' })));
+    for (const { code } of masteries.noMasteryBases) expect(masteries.baseNames[code], code).toBeDefined();
+    const others = masteries.masteries.flatMap((mastery) => mastery.otherBases ?? []);
+    expect(others.filter((entry) => entry.kind === 'lod').map((entry) => entry.code)).toEqual(['q80', 'q77', 'q81', 'q78', 'q79', 'q82']);
+    expect(others.filter((entry) => entry.kind === 'mythical').map((entry) => entry.code)).toEqual([
+      'm53',
+      'm54',
+      'm55',
+      'm56',
+      'm57',
+      'm59',
+    ]);
+    expect(others.filter((entry) => entry.kind === 'other')).toEqual([]);
+    for (const mastery of masteries.masteries) {
+      for (const code of [...mastery.bases, ...(mastery.otherBases ?? []).map((entry) => entry.code)]) {
+        expect(masteries.baseNames[code], code).toBeDefined();
+      }
+    }
+    expect(masteries.noRunewords).toBe(true);
+    expect(masteries.pageRules).toEqual({ mapBossChance: 25, zakarumChance: 75 });
+  });
+
+  it('notes where the official page reads differently', () => {
+    expect(masteries.pageDiffs.map((diff) => [diff.mastery, diff.subject])).toEqual([
+      ['stag-bow', 'Stag Bow › Poison, Immolation, Freezing, Lightning Arrow'],
+      ['maiden-spear', 'Maiden Spear › Fend'],
+      ['orb-1', 'Orb › skills line 1'],
+    ]);
+    expect(masteries.masteries.find((mastery) => mastery.slug === 'claws-2')?.pageNotes).toEqual([
+      'this damage bonus does not apply for discharge procs',
     ]);
   });
 });

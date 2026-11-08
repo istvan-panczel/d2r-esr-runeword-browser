@@ -32,6 +32,7 @@ const ROUTES_AFTER_NOTES: readonly SitemapEntry[] = [
   { path: 'skills', changefreq: 'monthly', priority: '0.7' },
   { path: 'modifiers', changefreq: 'monthly', priority: '0.7' },
   { path: 'specializations', changefreq: 'monthly', priority: '0.7' },
+  { path: 'weapon-masteries', changefreq: 'monthly', priority: '0.6' },
   { path: 'mercenaries', changefreq: 'monthly', priority: '0.7' },
   { path: 'elixirs', changefreq: 'monthly', priority: '0.6' },
   { path: 'builds', changefreq: 'weekly', priority: '0.7' },

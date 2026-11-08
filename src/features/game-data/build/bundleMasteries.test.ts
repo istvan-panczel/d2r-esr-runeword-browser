@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { ClassInfo } from '../engine/schema.ts';
+import type { ClassInfo, WeaponMastery } from '../engine/schema.ts';
 import { base, type } from '../utils/testBases.mock.ts';
 import {
   buildMasteriesBundle,
+  compareMasteryPage,
+  formulaMismatches,
   joinEffectLines,
   parseMasteryDescription,
   readInput,
@@ -10,6 +12,7 @@ import {
   type MasterySkill,
 } from './bundleMasteries.ts';
 import type { CubeRow } from './cube/cubeRows.ts';
+import type { MasteryPage } from './masteryPage.ts';
 
 /** A description as the strings file stores it: bottom-up, colours stripped by the string table */
 const reversed = (...lines: string[]) => [...lines].reverse().join('\n');
@@ -91,6 +94,80 @@ describe('joinEffectLines', () => {
       'This effect stacks.',
       'Done.',
     ]);
+  });
+});
+
+describe('page comparison', () => {
+  const mastery = (extra: Partial<WeaponMastery>): WeaponMastery => ({
+    property: 'weapon-mastery-orb-1',
+    slug: 'orb-1',
+    label: 'Orb',
+    cls: 'sor',
+    bases: [],
+    token: 'u38',
+    inputs: [{ code: 'gcr' }, { code: 'qqq' }],
+    remove: [],
+    effects: [{ heading: 'Spells', skills: [], text: ['Triples the cooldown, but adds damage.'] }],
+    ...extra,
+  });
+  const page: MasteryPage = {
+    rows: [
+      {
+        weapon: 'Sorceress Orb',
+        ingredients: ['Anvil Stone', 'Chipped Ruby'],
+        effects: [{ heading: 'Sorceress Spells', lines: ['Triples the cooldown,', 'but adds damage'] }],
+        notes: ['only once'],
+      },
+      { weapon: 'Maiden Bow Variant', ingredients: [], effects: [], notes: [] },
+    ],
+    warnings: [],
+  };
+  const NAME: Record<string, string> = { gcr: 'Chipped Ruby', qqq: 'Anvil Stone' };
+
+  it('pairs rows by weapon and gem, keeps footnotes and records differences, ignoring full stops and case', () => {
+    const { diffs, notes } = compareMasteryPage(page, [mastery({})], (code) => NAME[code] ?? code);
+    expect(diffs).toEqual([
+      { subject: 'Orb › skills line 1', files: 'Spells', page: 'Sorceress Spells', mastery: 'orb-1' },
+      { subject: 'Row "Maiden Bow Variant"', files: 'no such specialisation', page: '' },
+    ]);
+    expect(notes.get('weapon-mastery-orb-1')).toEqual(['only once']);
+  });
+
+  it('reports a specialisation the page does not list', () => {
+    const { diffs } = compareMasteryPage({ rows: [], warnings: [] }, [mastery({})], (code) => code);
+    expect(diffs).toEqual([{ subject: 'Orb', files: 'a specialisation', page: 'no row', mastery: 'orb-1' }]);
+  });
+});
+
+describe('formulaMismatches', () => {
+  const blessed: WeaponMastery = {
+    property: 'weapon-mastery-blessed-edge',
+    slug: 'blessed-edge',
+    label: 'Blessed Edge',
+    cls: 'pal',
+    bases: [],
+    token: 'u36',
+    inputs: [],
+    remove: [],
+    effects: [{ heading: 'Zeal', skills: ['Zeal', 'Sanctuary'], text: [] }],
+  };
+  const stat = 'weapon_mastery_blessed_edge';
+  const skills = [
+    skill('Zeal', 'pal', 1, { masteryStats: [stat] }),
+    skill('Vengeance', 'pal', 1, { masteryStats: [stat] }),
+    skill('Sanctuary', 'pal', 2),
+  ];
+
+  it('lists formulas reading the stat for skills the text does not name, and named skills whose formulas do not read it', () => {
+    expect(formulaMismatches(blessed, skills, stat)).toEqual([
+      'Blessed Edge (weapon-mastery-blessed-edge): the formulas of Vengeance read weapon_mastery_blessed_edge, the text does not name them',
+      'Blessed Edge (weapon-mastery-blessed-edge): the text names Sanctuary, whose formulas do not read weapon_mastery_blessed_edge',
+    ]);
+  });
+
+  it('skips a mastery no formula reads', () => {
+    expect(formulaMismatches(blessed, [skill('Zeal', 'pal', 1)], stat)).toEqual([]);
+    expect(formulaMismatches(blessed, skills, undefined)).toEqual([]);
   });
 });
 
@@ -245,6 +322,7 @@ describe('buildMasteriesBundle', () => {
     base('am7', 'Ceremonial Bow', 'abow', 'exceptional', ['am2', 'am7', 'amc'], 30, { cls: 'ama' }),
     base('am2', 'Reflex Bow', 'abow', 'normal', ['am2', 'am7', 'amc'], 10, { cls: 'ama' }),
     base('ob1', 'Eagle Orb', 'orb', 'normal', ['ob1', 'ob6', 'obb'], 5, { cls: 'sor' }),
+    base('kkl', 'Brass Knuckle', 'knuc', 'normal', ['kkl', '9kl', '0kl'], 2, { kind: 'weapon', cls: 'ass' }),
   ];
   const cube = [
     cubeRow(10, 'Apply Awaken Weapon Mastery Token - Reflex Bow', ['am2,nru', 'u25', 'sss', 'qqq'], [['weapon-mastery-reflex-bow', 1]]),
@@ -355,6 +433,17 @@ describe('buildMasteriesBundle', () => {
       Strafe: 'Strafe',
     });
     expect(bundle.names.wms).toBe('Thawing Potion');
+  });
+
+  it('adds slugs, non-spawnable bases, base names, the runeword rule and class weapons without rows', () => {
+    const [reflex] = bundle.masteries;
+    expect(reflex.slug).toBe('reflex-bow');
+    expect(reflex.otherBases).toEqual([{ code: 'q77', kind: 'lod' }]);
+    expect(bundle.baseNames).toMatchObject({ am2: 'Reflex Bow', ob1: 'Eagle Orb', q77: 'q77', kkl: 'Brass Knuckle' });
+    expect(bundle.noRunewords).toBe(true);
+    expect(bundle.noMasteryBases).toEqual([{ code: 'kkl', cls: 'ass' }]);
+    expect(bundle.pageRules).toEqual({});
+    expect(bundle.pageDiffs).toEqual([]);
   });
 
   it('warns about rows and strings that disagree, but not about bases that do not spawn', () => {

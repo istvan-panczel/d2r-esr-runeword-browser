@@ -18,6 +18,7 @@ import {
   specializationConfigPath,
 } from '../../src/features/game-data/build/esrSources.ts';
 import { PERK_CONFIG_FILES, SPECIALIZATIONS_CONFIG_FILE } from '../../src/features/game-data/build/bundleSpecializations.ts';
+import { MASTERY_PAGE_FILE } from '../../src/features/game-data/build/masteryPage.ts';
 import { SKILL_INFO_PAGE_FILE } from '../../src/features/game-data/build/skillInfoPage.ts';
 import { SPECIALIZATIONS_PAGE_FILE } from '../../src/features/game-data/build/specializationsPage.ts';
 
@@ -42,10 +43,10 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
       'src/features/campaign-map/data/mapBosses.ts: the `page` reward figures and the fight / damage / uber notes (mapbosses.page compares the figures with the files)',
   },
   {
-    path: 'docs/weapon_mastery.html',
+    path: MASTERY_PAGE_FILE,
     kind: 'hand-kept',
     follows:
-      'build/bundleMasteries.ts GROUP_RULES, LOWER_CASE_MENTIONS and HIDDEN_MOD_LABELS, and the specialisation list in bundleIntegrity.test.ts (masteries.json itself comes from cubemain and the u24desc…u41desc strings)',
+      'build/bundleMasteries.ts GROUP_RULES, LOWER_CASE_MENTIONS and HIDDEN_MOD_LABELS, the specialisation list in bundleIntegrity.test.ts, and the masteries.json parts built/compared by build/masteryPage.ts (pageDiffs, pageRules, pageNotes; a changed page shows there). The rest of masteries.json comes from cubemain and the u24desc…u41desc strings',
   },
   {
     path: 'docs/Eastern Sun Resurrected Cube Recipes.html',
