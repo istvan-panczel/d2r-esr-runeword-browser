@@ -24,27 +24,26 @@ perks change them. Route `/elixirs` (Database menu), data `public/game-data/elix
   2026-11-07; the Modifiers page's `dodge` block).
 - **Top level**: experience.txt `MaxLvl` (110), so the page shows values at level 1 and 110.
 - **Drops**: every elixir drop goes through the treasure class `Utility Elixir` (Regular 3, Greater 1). `Potion N Single`
-  picks it instead of a potion: Normal Act 1 1%, Act 2 1%, Act 3 2%, Act 4 3%, Act 5 3%, Nightmare 4%, Hell 5%,
-  endgame maps 5% (the patch notes say "1/2/3/4/5%"). Regular: A (7 elixirs) 7, B (6) 6, Hidden (4, needs Hidden
+  picks it instead of a potion: Normal Act 1 0.5%, Act 2 0.5%, Act 3 0.6%, Act 4 0.7%, Act 5 0.7%, Nightmare 0.8%,
+  Hell 1%, endgame maps 1% (ESR 3.3.02; 3.3 had 1/1/2/3/3/4/5/5%, and the 3.3.02 patch note says "reduced by 2.5 - 5
+  times" while Acts 1 and 2 are 2 times). Regular: A (7 elixirs) 7, B (6) 6, Hidden (4, needs Hidden
   Elixirs) 4; Greater (needs Alchemical Excellence) has the same split. So without perks each of the 13 elixirs is 1 in
   13 of the elixir drops, with Hidden Elixirs 1 in 17, and with Alchemical Excellence a quarter of the drops are greater.
 - **Conditional classes**: a `ConditionCalc` perk check (`stat('alchemy_N'.accr)>0`) on a class is read as "left out of
   the roll when the killer lacks the perk". That is the only reading under which the perk texts' numbers come out
   (Alchemical Excellence "25%" = 1 of 3 + 1, Bountiful Brews "+50%" = Single 1 / Double 1 with 2 picks, Transmutation
-  "50%" = 12 of 24), and without it half of every potion drop would vanish for non-alchemists. The ConditionCalc Killer
+  "25%" = 4 of 16), and without it half of every potion drop would vanish for non-alchemists. The ConditionCalc Killer
   plugin makes the check read the player who got the kill (a summon's or hireling's kill reads its owner with
   `credit_minion_owner`).
-- **Unstable Mixtures**: `Rejuvenation Regular` / `Full` pick `Unstable Mixtures` 15 of 100, which leads to the elixir
+- **Unstable Mixtures**: `Rejuvenation Regular` / `Full` pick `Unstable Mixtures` 10 of 100, which leads to the elixir
   roll; the alchemy plugin's `[find_potion]` sends Find Potion's rejuvenations through the same classes.
 - **Recipes**: Gem Infusion (cubemain 2307–2310): Randomizing Stone + Perfect Gem → a random regular elixir (`relx`);
   with Alchemical Excellence a Randomizing Stone roll ≥ 384 of 0 … 511 (25%) gives a greater one (`gelx`). The cube page
   now words that check "Random roll ≥ 384 (of 0 to 511)" (`statConditionText` `rollInput`; on Anya's Gift the same op
   is a use counter). The output is any item of the type, so the four hidden elixirs can come from it without Hidden
   Elixirs.
-- **Elixir of Reincarnation**: the perk of the same name (Alchemist row 5) says it is crafted from 5 Dragon Stones, but
-  cubemain.txt has no row making `35p` and no treasure class drops it. The mod author (2026-11-07): "Fixed in next
-  patch", so in 3.3 it cannot be had; the perk's facts carry his note while no recipe makes it
-  (`build/modAuthorAnswers.ts`). The alchemy plugin's `[[reincarnation]]` gives the effect: full life and mana on a
+- **Elixir of Reincarnation**: the perk of the same name (Alchemist row 5) crafts it from 5 Dragon Stones (cubemain
+  2311, added in ESR 3.3.02; no treasure class drops it). The alchemy plugin's `[[reincarnation]]` gives the effect: full life and mana on a
   fatal hit, 25 frames (1 s) invulnerable, a 300 s cooldown.
 - **Plugin perks** (`celestialrayone.alchemy.toml`): Savvy Elixirs (25% not used up), Serendipity (15% one of ten
   shrine effects), Compounded Synergy (+5% per different potion effect running; not in the page's values). Stamina,
@@ -91,7 +90,7 @@ check, and an item the root class drops that is not an elixir. Counts: `elixirs*
 
 Answered by the mod author (2026-11-07):
 
-- Elixir of Reincarnation: how is it obtained? The perk text says "transmuting 5 Dragon Stones", cubemain.txt has no
-  such row (ESR 3.3). "Fixed in next patch": a bug; the next patch adds the recipe.
+- Elixir of Reincarnation: how is it obtained? The perk text says "transmuting 5 Dragon Stones", cubemain.txt had no
+  such row (ESR 3.3). "Fixed in next patch": ESR 3.3.02 added the recipe.
 - Elixir of Quickness's tooltip names Dodge only; the item gives Dodge, Avoid and Evade. Not a bug: "Dodge in ESR is
   dodge, avoid and evade all pooled together."

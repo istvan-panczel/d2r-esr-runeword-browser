@@ -44,6 +44,7 @@ npm run game-data:update    # After an ESR release: clone/pull ESR, generate, fe
 npm run esr:diff            # What changed in ESR since the committed game data (patch notes, tables, strings, docs, launcher, loot filters); --json, --from/--to <rev>, --out
 npm run esr:review          # Read-only review of a regenerated update vs HEAD, the clone and the live sites; --out x.md, --offline
 npm run esr:user-data       # Read-only scan of PROD's public builds/favourites/loot filters against the current data
+npm run esr:changelog       # Shareable PDF checking each ESR patch-note line against the file changes (--init, then --in; see the esr-update skill)
 
 # Testing
 npm run test:fixtures    # Fetch test fixtures (required once after checkout)
@@ -51,7 +52,7 @@ npm run test             # Run tests once (CI mode)
 npm run test:coverage    # Generate code coverage report
 ```
 
-- After an ESR release, run the `/esr-update` skill (`.claude/skills/esr-update/SKILL.md` + `reference.md`): it runs `game-data:update`, the release diff, `esr:review` and `esr:user-data`, starts parallel review agents, applies guide/doc/template/link edits, proposes updates to itself and asks before committing.
+- After an ESR release, run the `/esr-update` skill (`.claude/skills/esr-update/SKILL.md` + `reference.md`): it runs `game-data:update`, the release diff, `esr:review` and `esr:user-data`, starts parallel review agents, applies guide/doc/template/link edits, proposes updates to itself, asks before committing and ends with the patch-note check PDF in `owner-notes/`.
 
 ## React Compiler
 

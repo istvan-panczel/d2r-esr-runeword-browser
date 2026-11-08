@@ -56,21 +56,15 @@ Sources, all in the ESR clone:
   shards per Tesseract, point levels, the level 63 example, perks per tree / row, maximum points, respec points, Dragon
   Stones per unlearn). The tree summaries ("Specialized in potions.") are the only text taken from the page.
 
-Warnings start with `specializations:`. ESR 3.3 has two, pinned in `bundleIntegrity.test.ts`; the mod author
-(2026-11-07) called both bugs the next patch fixes:
-
-- Elixir of Reincarnation (alchemy_13): no cubemain row makes 35p and nothing else reads the stat (the description and
-  the page say "transmuting 5 Dragon Stones"). Mod author: "Fixed in next patch", so in 3.3 the elixir cannot be had.
-- Alien Artefacts (archaeology_15): aa1–aa5 drop from 572 monsters with no perk condition ("Artefact Chance": 1 in 50
-  per roll), while the perk says only Archaeologists get them (the campaign map's map boss notes say the same). Mod
-  author: not intended, "fixed in next patch"; in 3.3 everyone gets them.
+Warnings start with `specializations:`. ESR 3.3.02 has none, pinned in `bundleIntegrity.test.ts`: it fixed the two
+of 3.3 (no cubemain row made the Elixir of Reincarnation; Alien Artefacts dropped without the perk).
 
 Deep Pockets (archaeology_4) is read by no table or config either (the archaeology config's comment says the perk
 "gives extra_items (426)"), but the mod author says the plugin grants it directly, outside the excel files, so it is
 no warning; its note says the perk works.
 
 Every other perk description agrees with the files' numbers, and the official page agrees with the files everywhere
-(`pageDiffs` is empty).
+(`pageDiffs` lists 2 at ESR 3.3.02: the page still says Transmutation 50% and Unstable Mixtures 15%; the files say 25% and 10%).
 
 Counts: `specializationTrees` 4, `specializationPerks` 60, `specializationIcons` 60, `specializationCubePerks` 8,
 `specializationDropPerks` 7, `specializationPluginPerks` 42, `specializationShardMonsters` 9, `specializationPageDiffs` 0. Size: 29 KB.
@@ -99,10 +93,11 @@ anointment and sanctification perk lines, the guide (`page:/specializations…` 
 ## Questions (ESR 3.3)
 
 - Answered by the mod author (2026-11-07):
-  - Elixir of Reincarnation: where is the recipe? cubemain.txt has no row that makes 35p. "Fixed in next patch."
+  - Elixir of Reincarnation: where is the recipe? cubemain.txt had no row that makes 35p. "Fixed in next patch" (ESR
+    3.3.02 added it).
   - Deep Pockets: what gives the +10% item quantity? Nothing in the tables or configs reads archaeology_4. "Granted
     directly by the plugin, not in the excel files."
   - Alien Artefacts: is it intended that every player gets them (no "Artefacts" treasure class checks
-    archaeology_15)? "No, fixed in next patch": the next patch makes them need the perk.
+    archaeology_15)? "No, fixed in next patch": ESR 3.3.02 made them need the perk.
 - "Rows are taken in order, one perk per row" (specializations config): must the rows be learned top to bottom? The
   page only says one perk per row.

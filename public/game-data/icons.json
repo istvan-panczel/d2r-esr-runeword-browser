@@ -1,6 +1,6 @@
 {
-  "esrVersion": "3.3",
-  "esrTag": "3.3",
+  "esrVersion": "3.3.02",
+  "esrTag": "3.3.02",
   "vanilla": {
     "rootHash": "06a0ca43e82f06e04f7e20551513a737",
     "extractedAt": "2026-10-25",
@@ -3508,6 +3508,16 @@
     "cm4": {
       "file": "charm_odd_charm.webp",
       "w": 59,
+      "h": 128
+    },
+    "cx1": {
+      "file": "charm_charm_small.webp",
+      "w": 87,
+      "h": 89
+    },
+    "cx3": {
+      "file": "charm_charm_large.webp",
+      "w": 45,
       "h": 128
     },
     "cm7": {
@@ -19115,19 +19125,9 @@
       "w": 96,
       "h": 97
     },
-    "cx1": {
-      "file": "charm_charm_small.webp",
-      "w": 87,
-      "h": 89
-    },
     "cx2": {
       "file": "charm_charm_medium.webp",
       "w": 56,
-      "h": 128
-    },
-    "cx3": {
-      "file": "charm_charm_large.webp",
-      "w": 45,
       "h": 128
     },
     "qqq": {

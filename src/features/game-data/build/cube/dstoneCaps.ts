@@ -7,6 +7,8 @@
  * The cap is found by applying the rows from zero, like the game: each use takes the first row (file order) whose
  * condition holds, until none does. The result is what D-stoning can add in total, which can pass the condition value
  * by up to one step (Spider's Silk on a weapon: +12% while the total is at most 500, so it stops at +504%).
+ * A D-stoning can also stop on `void` blockers (the elemental Void Shard rows, ESR 3.3.02: the rows' own condition reads
+ * a stat nothing raises, and three blockers stop at 300 on the fire, lightning and cold caps).
  * Shared by crafting.json (`bundleCrafting.ts`) and the D-stoning family of cube.json (`bundleCube.ts`).
  */
 import type { CubeMod, CubeRow } from './cubeRows.ts';
@@ -43,21 +45,37 @@ export type DstoneCapResult =
   /** A condition that is not a cap (op other than 15 / 16), or no stop within MAX_DSTONE_USES */
   | { kind: 'unknown'; reason: string };
 
+/** The `void` rows that stop a D-stoning once a stat is high enough (`op 15`), out of all cubemain rows */
+export function dstoneBlockers(rows: readonly CubeRow[]): CubeRow[] {
+  return rows.filter((row) => row.condition?.op === 15 && row.outputs.some((output) => output.spec === 'void'));
+}
+
 /**
  * Applies a D-stoning's rows from zero until none applies.
  * @param rows the rows of one D-stoning in file order (same item type, ingredients and bonus stats)
  * @param bonusMods the bonus mods of a row (cap mods, markers and `levelreq` removed)
  * @param statIdsOf itemstatcost ids a property sets; a cap mod with none (a property group) raises the row's condition stat
+ * @param blockers `dstoneBlockers` of the table; those earlier in the file with the same other ingredients apply
  */
 export function dstoneCap(
   rows: readonly CubeRow[],
   bonusMods: (row: CubeRow) => readonly CubeMod[],
-  statIdsOf: (property: string) => readonly number[]
+  statIdsOf: (property: string) => readonly number[],
+  blockers: readonly CubeRow[] = []
 ): DstoneCapResult {
   if (rows.length === 0 || rows.some((row) => row.condition === null)) return { kind: 'uncapped' };
+  const first = rows[0];
+  const ingredients = (row: CubeRow) => row.inputs.slice(1).join('|');
+  const ownBlockers = blockers.filter((row) => row.line < first.line && ingredients(row) === ingredients(first));
   const stats = new Map<number, number>();
   const totals = new Map<string, CubeMod>();
   for (let uses = 0; uses < MAX_DSTONE_USES; uses++) {
+    // Only a stat this D-stoning raised can stop it
+    const blocked = ownBlockers.some(({ condition }) => {
+      const current = condition === null ? undefined : stats.get(condition.param);
+      return condition !== null && current !== undefined && current >= condition.value;
+    });
+    if (blocked) return { kind: 'capped', cap: { uses, mods: [...totals.values()] } };
     let next: CubeRow | undefined;
     for (const row of rows) {
       const condition = row.condition;

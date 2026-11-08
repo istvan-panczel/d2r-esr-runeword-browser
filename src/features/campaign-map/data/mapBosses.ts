@@ -35,13 +35,13 @@ export interface MapBossFacts {
 /**
  * Drops another official page makes a perk, keyed by the files' item label, with the note shown on that reward of every
  * map boss. The Specializations page (docs/specializations.htm) lists "Alien Artefacts" as an Archaeologist perk ("Every
- * rare monster and boss you kill has a 2% chance to drop a very powerful ancient artefact"), while treasureclassex.txt
- * gives every map boss a 2% Alien Artefact (`Artefact Chance`) with no condition. The mod author (2026-11-07): not
- * intended, "fixed in next patch". The Endgame Maps page never names these, so they stay out of its item-name pairing.
+ * rare monster and boss you kill has a 2% chance to drop a very powerful ancient artefact"). treasureclassex.txt gives
+ * every map boss a 2% Alien Artefact (`Artefact Chance`), gated by the perk one class down (the `Artefacts` class has
+ * the ConditionCalc since ESR 3.3.02), so the map boss table still prints the 2% for everyone. The Endgame Maps page
+ * never names these, so they stay out of its item-name pairing.
  */
 export const PERK_DROPS: Readonly<Record<string, string>> = {
-  'Alien Artefact':
-    'Archaeologist perk only (Specializations page, perk “Alien Artefacts”); in 3.3 it drops for everyone, a bug the mod author says the next patch fixes',
+  'Alien Artefact': 'Archaeologist perk only (Specializations page, perk “Alien Artefacts”)',
 };
 
 const PIERCE: CampaignNote = { text: 'pierces your elemental resistances: overcap them', source: 'tables' };

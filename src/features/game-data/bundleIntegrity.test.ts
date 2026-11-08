@@ -295,13 +295,16 @@ describe('committed game-data bundles', () => {
   it('contain the player-facing weapons and armors', () => {
     expect(bases.filter((base) => base.kind === 'weapon')).toHaveLength(369);
     expect(bases.filter((base) => base.kind === 'armor')).toHaveLength(255);
-    expect(bases.filter((base) => base.kind === 'misc')).toHaveLength(29);
+    expect(bases.filter((base) => base.kind === 'misc')).toHaveLength(31);
     expect(manifest.counts.bases).toBe(bases.length);
   });
 
-  it('drop exact duplicate bases (cx1-3 copies of cm1-3)', () => {
-    expect(manifest.counts.duplicateBases).toBe(3);
-    expect(bases.some((base) => ['cx1', 'cx2', 'cx3'].includes(base.code))).toBe(false);
+  it('drop exact duplicate bases (cx2 copies cm2; cx1 and cx3 differ since ESR 3.3.02)', () => {
+    expect(manifest.counts.duplicateBases).toBe(1);
+    expect(bases.some((base) => base.code === 'cx2')).toBe(false);
+    for (const code of ['cx1', 'cx3']) expect(bases.some((base) => base.code === code)).toBe(true);
+    // ESR 3.3.02 gave the charm bases of unique charms a gem socket, for the Perfect Form perk
+    expect(bases.find((base) => base.code === 'cm1')?.gemSockets).toBe(1);
     expect(bases.some((base) => base.code === 'c11')).toBe(true);
   });
 
@@ -807,9 +810,9 @@ describe('committed game-data bundles', () => {
     expect(rowsOf('ring-amulet').filter((row) => row.conditions?.includes('Stored Magic Ring Points ≥ 7') === true).length).toBeGreaterThan(
       0
     );
-    // 11 of its 12 rows check it (L2316 does not: an ESR data issue)
-    const notUpgraded = rowsOf('tyrael-boon').filter((row) => row.conditions?.includes('Not upgraded yet') === true);
-    expect(notUpgraded.reduce((sum, row) => sum + row.variants, 0)).toBe(11);
+    // ESR 3.3.02: all 12 rows check it, so the condition moved to the group
+    expect(cube.groups.find((group) => group.family === 'tyrael-boon')).toMatchObject({ rowCount: 12, conditions: ['Not upgraded yet'] });
+    expect(rowsOf('tyrael-boon').every((row) => row.conditions === undefined)).toBe(true);
     // Returned ingredients: Mythical Map + Key gives the Key back
     expect(find('map-portals', (text) => text.startsWith('Mythical Map + Key'))?.returned).toBe('Key');
     // Readable stocker and roll conditions, no raw labels
@@ -1533,8 +1536,6 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(mismatches).toEqual([
       'Weapon: Forging Hammer on weapon: no cap, page 500',
       'Weapon: Blackmoor + Key on weapon: 60, page 150',
-      // The "VS + Any Weapon + vps" rows name the Forging Hammer (hh2), shadowed by the earlier Forging Hammer + vps rows
-      'Weapon: Void Shard + Stamina Potion on weapon: no option',
       'Torso/Helm/Shield: Holy Symbol on armor: 100, page 150',
       'Torso/Helm/Shield: Holy Symbol on helmet: 100, page 150',
       'Torso/Helm/Shield: Holy Symbol on shield: 100, page 150',
@@ -1875,7 +1876,7 @@ describe('committed modifiers bundle (ESR 3.2.24)', () => {
   it('pins the difficulty and plugin facts', () => {
     expect(fact('difficulty.LifeStealDivisor')).toMatchObject({ value: [1, 25, 150], vanilla: [1, 2, 3] });
     expect(fact('difficulty.ManaStealDivisor')?.value).toEqual([1, 15, 75]);
-    expect(fact('difficulty.ResistPenalty')?.value).toEqual([1, -80, -150]);
+    expect(fact('difficulty.ResistPenalty')?.value).toEqual([0, -80, -150]);
     expect(fact('difficulty.PlayerDamagePercentVSPrimeEvil')?.value).toEqual([100, 50, 25]);
     expect(fact('crushingBlow.share')?.value).toEqual({
       monster: 12.5,
@@ -1991,7 +1992,7 @@ describe('committed masteries bundle (ESR 3.3)', () => {
     expect(manifest.warnings.filter((warning) => warning.startsWith('masteries:'))).toEqual([
       'masteries: Wretched Scythe (weapon-mastery-wretched-scythe): mod total-magic-resist -100 has no item text; shown as "-100% Magic Resist (no item line; why your magic resist is always 0)"',
       'masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
-      'masteries: cubemain line 2379 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
+      'masteries: cubemain line 2380 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
       'masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be',
     ]);
   });
@@ -2048,6 +2049,7 @@ describe('committed specializations bundle (ESR 3.3)', () => {
     expect(cubePerks).toEqual([
       'Gem Infusion',
       'Alchemical Excellence',
+      'Elixir of Reincarnation',
       'True Master',
       'The Secret Crucible',
       'Hallowed Accessories',
@@ -2056,16 +2058,17 @@ describe('committed specializations bundle (ESR 3.3)', () => {
       'Power Overwhelming',
     ]);
     for (const { perk } of perks) for (const link of perk.cube ?? []) expect(familyIds.has(link.family), link.family).toBe(true);
-    // ESR 3.3: the page is a copy of the in-game window; every title, description and rule agrees with the files
-    expect(specializations.pageDiffs).toEqual([]);
+    // ESR 3.3.02 changed these two chances (strings and treasure classes) without regenerating docs/specializations.htm
+    // (50% / 15%): this fails when the page catches up; everything else on the page agrees with the files
+    expect(specializations.pageDiffs.map((diff) => diff.subject)).toEqual([
+      'Alchemist › Transmutation description',
+      'Alchemist › Unstable Mixtures description',
+    ]);
   });
 
   it('records the perks the files do not back as warnings', () => {
-    // Both are 3.3 bugs the mod author says the next patch fixes (2026-11-07); Deep Pockets (archaeology_4) is no
-    // warning: nothing in the files reads it, but the mod author says the plugin grants it directly
-    expect(manifest.warnings.filter((warning) => warning.startsWith('specializations:'))).toEqual([
-      'specializations: Alchemist › Elixir of Reincarnation (alchemy_13): no cubemain row makes Elixir of Reincarnation (35p), nothing else reads the stat',
-      'specializations: Archaeologist › Alien Artefacts (archaeology_15): Alien Artefact (aa1, aa2, aa3, aa4, aa5) drop from 572 monsters with no perk condition',
-    ]);
+    // ESR 3.3.02 fixed the two 3.3 warnings (Elixir of Reincarnation recipe, Alien Artefacts perk gate); Deep Pockets
+    // (archaeology_4) is no warning: nothing in the files reads it, but the mod author says the plugin grants it directly
+    expect(manifest.warnings.filter((warning) => warning.startsWith('specializations:'))).toEqual([]);
   });
 });

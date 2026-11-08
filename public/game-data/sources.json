@@ -2208,6 +2208,7 @@
     {"name":"Greater Elixir of the Raven","code":"34p","item":"misc","labels":[{"kind":"drop","text":"Drops (random)"}]},
     {"name":"Mystical Shard","code":"u42","item":"misc","labels":[{"kind":"drop","text":"Drops (random)"}]},
     {"name":"Mystical Tesseract","code":"u43","item":"misc","labels":[{"kind":"cube","text":"Cube"}]},
+    {"name":"Elixir of Reincarnation","code":"35p","item":"misc","labels":[{"kind":"cube","text":"Cube"}]},
     {"name":"Alien Artefact","code":"aa1","item":"misc","labels":[{"kind":"drop","text":"Drops (random)"}]}
   ]
 }

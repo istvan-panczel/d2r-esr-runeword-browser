@@ -9,7 +9,7 @@ import { firstNonEmptyPools } from '@/core/utils/columnAffixes';
 
 const gemwordsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/gemwords.htm'), 'utf-8');
 // The pre-ESR 3.3 page (per-category bonus columns), still parsed in case a cached or lagging page is served
-const previousGemwordsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/previous/gemwords.htm'), 'utf-8');
+const previousGemwordsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/layout-3.2.24/gemwords.htm'), 'utf-8');
 const gemsHtml = readFileSync(resolve(__dirname, '../../../../test-fixtures/gems.htm'), 'utf-8');
 
 describe('parseGemwordsHtml', () => {

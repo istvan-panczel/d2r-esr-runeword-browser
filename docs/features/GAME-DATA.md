@@ -317,8 +317,8 @@ Limitations (the help popover says "Derived from the ESR game files (ESR x.y.z);
 - No replica of the engine auto-TCs (`weapN` / `armoN` level bands) or of `lvl ≤ mlvl`: a random unique drop only
   checks the flags above, and level ≥ 100 is the only level rule (→ maps).
 - Only one launcher plugin config is parsed; other plugins (cow set drops, drop caps, shrines) and DLL hard-codes are
-  invisible. Items given by `useitem` cube rows (Starter's Pack → Character Augmenter) and drop-only duplicates (the
-  `cx1-3` charms) show as `Unknown`.
+  invisible. Items given by `useitem` cube rows (Starter's Pack → Character Augmenter) and drop-only charms (`cx1-3`)
+  show as `Unknown`.
 
 ### Loot filter data
 
@@ -447,7 +447,7 @@ Derivation (rows are classified by their data, not their descriptions):
   `corrupted_dummy` / `anointed_dummy` / `sanctified-dummy` `min..max`) gives the roll range; the outcome rows (`op=18`, `param` = the dummy
   stat id, `value` = the roll, the item alone as input) add the marker, clear the dummy and add the bonus. The dummy
   stat id is read from the outcome rows (the ones with a negative dummy mod). `void` outputs are blockers.
-- **Hidden mods**: `corrupted`, `anointed`, `sanctified`, the three dummies, `soul-counter`, `mythicaldesc`, `unusable-item`,
+- **Hidden mods**: `corrupted`, `anointed`, `sanctified`, `sanctified-jewelry`, the three dummies, `soul-counter`, `mythicaldesc`, `unusable-item`,
   `tinkerflag2`, `craftflag`, `craftflag2`, `item-upgraded`. `trap-limit` is a real Vessel bonus ("+1 to trap limit")
   and stays visible.
 - **Corruption** (`wss`): one slot per item type in the fixed slot list (weapon, shield, body, helm, gloves, belt,
@@ -521,8 +521,8 @@ Weapon for Trap Assassin", a real recipe); `old` = "OLD (Delete later)"; `stocke
 Can / Xtal Can / Rerolling Orb, or an input that is a stocker or can item (the Crystal Can rows are labelled "Moon Rune"
 … "God Rune"; the Rerolling Orb is an input of the real custom ring rerolls and is not a can); `dummy` = other "Add …
 Dummy Stat" rows. A row a guide family or a stocker family (`STOCKER_FAMILIES`, below) claims (the Anvil Stone's Multi
-Stocker row, the Sanctification roll, the Rune Stocker upgrades) is never stocker or dummy bookkeeping. ESR 3.3:
-11,157 of 23,639 enabled rows are listed; hidden 8,261 enhance (the per-item-type anointment pools), 599 traps, 80 old,
+Stocker row, the Sanctification roll, the Rune Stocker upgrades) is never stocker or dummy bookkeeping. ESR 3.3.02:
+11,158 of 23,640 enabled rows are listed; hidden 8,261 enhance (the per-item-type anointment pools), 599 traps, 80 old,
 3,542 stockers (storing, taking out, cycling the selected item), 0 dummy (3.2.24: 9,747 of 17,776; 4,007 enhance, 400
 traps).
 
@@ -643,7 +643,7 @@ qualifier: "Item level 99" (fixed), "Item level 60% of character level" (`plvl`)
 level" (`ilvl`), both added: "Item level 60% of character level + 60% of input item level". It is a separate field so
 it does not split the merged rows (they cluster on the output text; `clusterVariantsCounted` returns the indices of the
 variants each merged row stands for). A merged row lists the distinct levels of its variants joined with " / "
-(variants without one do not count). ESR 3.3: 624 of 1,590 merged rows have a level, none disagree. The guide's
+(variants without one do not count). ESR 3.3.02: 624 of 1,595 merged rows have a level, none disagree. The guide's
 `::recipes` blocks do not show it (their rows are built by `collectFamily`, a separate path without this field).
 
 **Qualities** (`qualities`, the page's quality filter, order unique / set / rare / magic / crafted): from the outputs a
@@ -725,8 +725,8 @@ anointment` (the charm reagents, slot `charm`), `Sanctification reagent` (`sanct
   would be a cycle (`game-data:update` regenerates game data first). The page joins guide.json's `itemNotes` and
   `familyNotes` in the browser (GUIDE.md "Bundle shape"). For the same reason cube.json families carry no guide notes.
 
-Counts: `materialsItems` 416, `materialsGroups` 16, `materialsUsedInCube` 370, `materialsMadeByCube` 334,
-`materialsUnknownSource` 21 (ESR 3.3; 177 socket fillers, 55 potions, 52 Ancient Scrolls, 48 cube materials, 24 quest
+Counts: `materialsItems` 416, `materialsGroups` 16, `materialsUsedInCube` 370, `materialsMadeByCube` 335,
+`materialsUnknownSource` 20 (ESR 3.3.02; 177 socket fillers, 55 potions, 52 Ancient Scrolls, 48 cube materials, 24 quest
 items, 21 maps, 14 organs, 7 containers, 5 coupon rows and a few small groups; 3.2.24: 395 items). Adding the file did not bump
 `GAME_DATA_SCHEMA`.
 
@@ -945,7 +945,7 @@ starting with `*` or `+` reads as the misc.txt `name` column ("Minor Healing Pot
 (`cube/cubeRows.ts`). 17 codes in ESR 3.3 (hp1–hp5, mp1–mp5, vps, yps, rvs, rvl, wms, tsc, isc; `hp5` keeps ESR's
 "Supeer Healing Potion"). lootfilter.json keeps the in-game abbreviations (what a filter author sees on the ground).
 
-Counts (ESR 3.3): `stashItemCodes` 2334, `stashSavedStats` 721, `stashCoupons` 385, `stashCouponRecipes` 382,
+Counts (ESR 3.3.02): `stashItemCodes` 2334, `stashSavedStats` 722, `stashCoupons` 385, `stashCouponRecipes` 382,
 `stashCouponWildCardRecipes` 382, `stashUniques` 1390, `stashSetItems` 270, `stashRunewords` 391, `stashGemwords` 9. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
 `44e` Measured Wrath, takes 2).
 
@@ -992,7 +992,7 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `levels`: required levels by the ids a save stores: uniqueitems / setitems `lvl req`, magicprefix / magicsuffix /
   automagic `levelreq` (1-based like the names).
 
-Counts (ESR 3.3): `itemTextStats` 721, `itemTextStrings` 423, `itemTextSkills` 915, `itemTextMonsters` 404,
+Counts (ESR 3.3.02): `itemTextStats` 722, `itemTextStrings` 424, `itemTextSkills` 915, `itemTextMonsters` 404,
 `itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
 
 ### Skills
@@ -1047,8 +1047,8 @@ paths); `build/toml.ts` reads the TOML. Vanilla reference values: `build/data/va
 and qualityitems.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
 Details, facts and open questions: [MODIFIERS.md](./MODIFIERS.md).
 
-Counts (ESR 3.3): `modifierStats` 538, `modifierStatsUsed` 524, `modifierStatsEsrOnly` 361, `modifierStatsChanged` 11,
-`modifierKinds` 441, `modifierKeyKinds` 60, `modifierFacts` 66, `modifierConfigFacts` 30, `modifierSources` 24079.
+Counts (ESR 3.3.02): `modifierStats` 539, `modifierStatsUsed` 525, `modifierStatsEsrOnly` 362, `modifierStatsChanged` 11,
+`modifierKinds` 442, `modifierKeyKinds` 60, `modifierFacts` 66, `modifierConfigFacts` 30, `modifierSources` 24079.
 Warnings start with `modifiers:`.
 
 ### Crafting options
@@ -1109,11 +1109,10 @@ picker and the guide's `::dstone-caps` table read it.
   and the Kanji runes Moon … God, r84–r97). Switch item labels are the misc.txt names: `vps` reads "Stamina Potion"
   (the descriptions say "+ vps"), `yps` "Antidote Potion".
 
-Counts (ESR 3.3, as 3.2.24): `craftingForgings` 84 (8 skill, 1 all, 7 stat, 60 rune, 8 aura), `craftingStacking` 31 (23
-D-stoning, 8 gem meld), `craftingRowsUsed` 717, `craftingRowsSkipped` 245. One expected warning: cubemain line 17531 (11716 in 3.2.24) "VS
-\+ Any Weapon + vps" (Forging Hammer + Stamina Potion → elemental damage) is shadowed by the earlier "FH + Any Weapon +
-vps" row with the same ingredients (the VS rows name `hh2`, not the Void Shard). Adding the file did not bump
-`GAME_DATA_SCHEMA`.
+Counts (ESR 3.3.02): `craftingForgings` 84 (8 skill, 1 all, 7 stat, 60 rune, 8 aura), `craftingStacking` 32 (24
+D-stoning, 8 gem meld), `craftingRowsUsed` 718, `craftingRowsSkipped` 244. Through 3.3 the "VS + Any Weapon + vps" rows
+named the Forging Hammer (`hh2`) and were shadowed by the earlier "FH + Any Weapon + vps" rows; ESR 3.3.02 made them take
+the Void Shard. Adding the file did not bump `GAME_DATA_SCHEMA`.
 
 ### Item icons
 
@@ -1196,7 +1195,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   Wild Card; misc.txt has no column linking the two, and 7 of the 22 names differ from the single item's, "DragonStone",
   "Anvil", "Decipherer"), so it points at the same file. A gem's or rune's code entry points at the same file as its
   name entry in `misc` (same asset slug). Counts (ESR 3.3): 1,597 codes, 1,152 from ESR art, 338 from vanilla art, 107
-  without art (22 "(6 Pack)" rows on the single item's art); 1,490 entries (3.2.24: 1,579 codes, 1,134 from ESR art,
+  without art (22 "(6 Pack)" rows on the single item's art); 1,488 entries (3.2.24: 1,579 codes, 1,134 from ESR art,
   1,472 entries).
 - **Item types** (`types`, for type ingredients such as "Ring" or "5× Perfect Gem"): the art every spawnable item of
   the type (by `type` / `type2` ancestry) shares (`mcha` Large Charm, `jewl` Jewel, `ocha`, the class rings and
@@ -1214,7 +1213,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   and `types` wrote 408 files (+1.43 MB: 5,829,142 → 7,324,296 bytes) and merged 5 pre-existing duplicates; icons.json
   +140 KB raw / +13 KB gzip.
 - **Scope and counts** (ESR 3.3, vanilla root `06a0ca43…` extracted 2026-10-25; the generator prints them per
-  section, `--check` too; the bases, uniques and set items split as in 3.2.24): bases: 653 codes, 356 from ESR art, 297 from vanilla art (Jewel, Boots, Leather Armor, Short Spear, …),
+  section, `--check` too; the bases, uniques and set items split as in 3.2.24): bases: 655 codes, 358 from ESR art, 297 from vanilla art (Jewel, Boots, Leather Armor, Short Spear, …),
   0 without art. Uniques: 1,390 rows → 1,114 names; 695 from ESR art, 419 from vanilla art, 0 without art (392 own art,
   722 base art only). Two own entries of the mod's uniques.json point at art neither source has
   (`armor/deflective_spikes`, `amulet/BlackKnights_Holy_Signet`, ESR art missing from the repo); those items show
@@ -1268,7 +1267,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
   are deleted.
 - **Manifest**: `generate-game-data.ts` does not build icons.json; it lists the committed file in the manifest as is
   (hash, bytes, `counts.itemIcons` / `uniqueIcons` / `setIcons` / `miscIcons` (178) / `questIcons` (84) /
-  `itemCodeIcons` (1,490) / `typeIcons` (57), plus
+  `itemCodeIcons` (1,488) / `typeIcons` (57), plus
   `vanillaIcons` = entries (all sections) pointing at a vanilla file, recoloured ones through their untinted file (1,281),
   `vanillaIconFiles` (267), `tintedIcons` (869) and
   `tintedIconFiles` (690)) so `loadGameDataFile('icons')` works like every other
@@ -1355,7 +1354,7 @@ npm run game-data:update -- --esr <dir>        # use another clone directory
    manifest lists the new icons.json), then `generate-skill-icons.ts` (the cels of the fresh skilldetails.json). A
    failure skips the verify step and exits 1.
 4. Copies the current HTM fixtures to `test-fixtures/previous/`, then runs `fetch-test-fixtures.js` (both skipped with
-   `--no-fixtures`). A download failure is only a warning; tests that need a missing fixture skip themselves.
+   `--no-fixtures`). A download failure is only a warning; tests that need a missing fixture skip themselves. `test-fixtures/layout-3.2.24/` (the pre-3.3 page layouts the parser tests read) is written once by `fetch-test-fixtures.js` and never rotated.
 5. Runs `--check` (game data, item icons and skill icons), `guide:generate` and `guide:check`, then the **full** test
    suite (`npx vitest run`, `ESR_SOURCE_DIR` set to the clone): parsers, loot filter, stash, builds and guide tests read
    the regenerated bundles and fixtures too. Failing test files are listed in the summary.
@@ -2044,7 +2043,7 @@ Warnings are printed and stored in `manifest.warnings`; string conflicts are pri
 | `string "<key>": kept … ignored …` (console only)        | The same string key exists in several `strings/*.json` files with different English text. The kept value comes from the higher-priority file: `item-runes` > `item-nameaffixes` > `item-modifiers` > `item-names` > `skills` > other files alphabetically > `chinese-overlay` (the censored names of the Chinese release). Expected: ~85, almost all from `chinese-overlay`.                                                                                                                                                                                                                                                      |
 | `bases: <code> … is not in its own tier family`          | The base's code is not listed in its `normcode/ubercode/ultracode`; treated as normal tier. ESR 3.2.10: `q86` Scissors Suwayyah, `qdf` Hunter's Guise.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `bases: <code> is mythical but its name string is …`     | Mythical accessories `mam`/`mrn`/`mjw` reuse the plain amu/rin/jew name strings; the `name` column ("Mythical Amulet") is used instead.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms). `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                                                                                                                                                                                                                                                                       |
+| `bases: dropped X (duplicate of Y)`                      | A base identical to an earlier one in every field except `code`/`family` is dropped (first in file order wins; count in `counts.duplicateBases`). ESR 3.2.10: `cx1`-`cx3` (copies of the `cm1`-`cm3` charms); since 3.3.02 only `cx2`, because `cm1` and `cm3` gained a gem socket. `cm8`/`c11` Noob's Charms differ in reqLvl and are both kept.                                                                                                                                                                                                                                                                                 |
 | `bases: <code> name string … not found`                  | `namestr` has no string; the internal `name` column is used instead.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `bases: … family code … does not exist` / `unknown type` | Broken references in the txt files; check the ESR data.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `superior: superior-affixes.toml has weights for rows …` | Without a qualityitems.txt `frequency` column (ESR ≤ 3.2), the superior-affixes plugin config weighs rows qualityitems.txt does not have (ESR 3.2.24: rows 83-86; the plugin ignores them); ESR 3.3 has the column, so the toml is not read for weights. Other `superior:` warnings: a missing config (stock equal odds), an unreadable weight line or frequency cell, an unknown item type code, a row no base rolls. See "Superior affixes".                                                                                                                                                                                    |

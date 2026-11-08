@@ -45,7 +45,7 @@ mentions:
 officialDocs:
   - label: Endgame Maps
     href: docs:endgame_maps.htm
-sources: [official-docs, esr-txt, esr-loader, mod-author]
+sources: [official-docs, esr-txt, esr-loader]
 ---
 
 Each of the five map tiers has four maps, and 14 of the 20 have a boss; the other six are horde maps whose loot comes from their many unique packs. The [Campaign Map](page:/campaign-map?tab=maps) shows every zone with its boss, rewards and fight notes. The fight descriptions below come from the official Endgame Maps page, in our words; the drop chances come from the game files, so they can differ from the page.
@@ -64,7 +64,7 @@ Every boss rolls an Orb of Anointment ([[corruption-anointment]]), a map of the 
 
 ::map-bosses[5]
 
-Where the official page lists other drop chances, the tables above follow the files: the page promises higher key chances from tier 2 up and a whole key set from tier 5 bosses (the files drop one random key), and a 50% map from Rathma and Lucion. Shards are different: the files give terrorized tier 5 bosses shards too, but the page says they drop none because of an engine limit, which the files cannot show; until someone checks in game, expect none. The page also calls the Eye of the Storm drops Demonic Horns; in game they are Diablo's Demonic Horn, Mephisto's Demonic Brain and Baal's Demonic Eye, used to anoint unique charms. Killed while terrorized, the Lich King loses his Frostmourne and Essence roll. The Alien Artefact in every table is new in 3.3: the official Specializations page makes it the Archaeologist perk Alien Artefacts, but in 3.3 it drops for everyone, perk or not. The mod author says that is a bug the next patch fixes; after it, only Archaeologists with the perk get them.
+Where the official page lists other drop chances, the tables above follow the files: the page promises higher key chances from tier 2 up and a whole key set from tier 5 bosses (the files drop one random key), and a 50% map from Rathma and Lucion. Shards are different: the files give terrorized tier 5 bosses shards too, but the page says they drop none because of an engine limit, which the files cannot show; until someone checks in game, expect none. The page also calls the Eye of the Storm drops Demonic Horns; in game they are Diablo's Demonic Horn, Mephisto's Demonic Brain and Baal's Demonic Eye, used to anoint unique charms. Killed while terrorized, the Lich King loses his Frostmourne and Essence roll. The Alien Artefact in every table is new in 3.3; since ESR 3.3.02 only Archaeologists with the [Alien Artefacts](page:/specializations?tree=archaeologist&perk=alien-artefacts) perk get it.
 
 ### Tiers 1 to 4
 

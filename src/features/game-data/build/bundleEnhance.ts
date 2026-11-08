@@ -60,6 +60,8 @@ const HIDDEN_MODS = new Set([
   'anointed',
   'anointed_dummy',
   'sanctified',
+  // ESR 3.3.02: the marker of sanctified amulets and rings, so a socketed sanctified jewel does not count as one
+  'sanctified-jewelry',
   'sanctified-dummy',
   'soul-counter',
   'mythicaldesc',
@@ -545,9 +547,10 @@ function buildSanctification(
       )
       .sort((a, b) => a.value - b.value);
   const rows = rowsOf(item.cell);
-  const sameOutcomes = (cell: string) =>
-    JSON.stringify(rowsOf(cell).map((recipe) => [recipe.value, recipe.mods])) ===
-    JSON.stringify(rows.map((recipe) => [recipe.value, recipe.mods]));
+  // Compared without the markers: amulets and rings get another one since ESR 3.3.02 (sanctified-jewelry)
+  const outcomeKey = (recipes: typeof rows) =>
+    JSON.stringify(recipes.map((recipe) => [recipe.value, recipe.mods.filter((mod) => !HIDDEN_MODS.has(mod.code))]));
+  const sameOutcomes = (cell: string) => outcomeKey(rowsOf(cell)) === outcomeKey(rows);
   // The other items: listed when a perk gates them and their outcomes are the same (else a warning: not modelled)
   let perkItems: { items: EnhanceItemRef[]; perk: Perk } | undefined;
   for (const other of allRolls) {

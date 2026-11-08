@@ -33,6 +33,8 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'skillDetails',
   'skillGrant',
   'skillCalc',
+  // skillComboBonuses: the "20/20 combo" lines of skilldesc.txt on the skill cards
+  'skillCombo',
   'skillIcons',
   // the official skill information page (docs/skill_information.htm) parsed into skilldetails.json
   'skillInfo',

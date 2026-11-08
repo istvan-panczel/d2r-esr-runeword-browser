@@ -481,7 +481,8 @@ export function buildElixirsBundle(input: ElixirsInputs): ElixirsResult {
       id: recipe.id,
       description: recipe.description,
       inputs: recipe.inputs.map((entry) => ({
-        text: entry.text,
+        // The cube text already says "5× Dragon Stone"; the page and the perk facts add the quantity themselves
+        text: entry.text.replace(/^\d+× /, ''),
         ...(entry.code === '' ? {} : { code: entry.code }),
         qty: entry.qty,
         ...(entry.kind === 'type' ? { type: true as const } : {}),

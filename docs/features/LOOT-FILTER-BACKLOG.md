@@ -62,8 +62,8 @@ writes `4` where the format documents `[4]`; it works in game, so the editor acc
 `show`, `formula`, localised level names, tooltip-number stat values, the unidentified-item skip, once-per-item chat
 and sounds and the launcher's chat switch shipped with ESR 3.3; the editor follows the 3.3 guide (LOOT-FILTER.md "Show
 action", "Formula condition", "Localised level names", "Verify in game" → "Plugin 1.8.2 checks"). The formula preview
-branch `feat/loot-filter-formulas` was ported onto the 3.3 update. Open: the in-game checks listed there, then bump
-`LOOT_FILTER_PLUGIN_VERSION` (owner).
+branch `feat/loot-filter-formulas` was ported onto the 3.3 update. Open: the in-game checks listed there
+(`LOOT_FILTER_PLUGIN_VERSION` is already 1.8.2 since ESR 3.3.02).
 
 ## Needs the plugin or the mod (requests for the mod author)
 
