@@ -138,8 +138,8 @@ export function createItemTextContext(bundle: ItemTextBundle | null, catalog: St
 }
 
 /** The display lines of a stat list (game order: summed, damage pairs and dgrp sets merged, by descpriority) */
-export function statLines(stats: readonly StashStat[], data: TextData): string[] {
-  return stats.length === 0 ? [] : renderLines(toEntries(stats, data), data.render);
+export function statLines(stats: readonly StashStat[], data: TextData, characterLevel?: number): string[] {
+  return stats.length === 0 ? [] : renderLines(toEntries(stats, data, characterLevel), data.render);
 }
 
 /** The items of the set worn for each set bonus list of a set item (2, 3, … unless itemtext.json says otherwise) */
@@ -149,8 +149,18 @@ function bonusPieces(item: StashItem, data: TextData): (index: number) => number
   return (index) => (pieces === undefined ? index + 2 : (pieces[index] ?? null));
 }
 
+/** Options of `renderItemText` */
+export interface ItemTextOptions {
+  /**
+   * The level of the character holding the item: per-level stats and the damage / defense they add are shown at that
+   * level, like the game's tooltip. Omitted (the stash has no character): the per-level rate, left out of the base lines.
+   */
+  readonly characterLevel?: number;
+}
+
 /** The tooltip lines of an item; the placeholder context has the base lines only. */
-export function renderItemText(item: StashItem, ctx: ItemTextContext): ItemTextGroups {
+export function renderItemText(item: StashItem, ctx: ItemTextContext, options: ItemTextOptions = {}): ItemTextGroups {
+  const { characterLevel } = options;
   const data = textDataOf(ctx);
   if (data === null) {
     return {
@@ -163,12 +173,12 @@ export function renderItemText(item: StashItem, ctx: ItemTextContext): ItemTextG
   }
   const pieces = bonusPieces(item, data);
   return {
-    base: baseText(item, data).lines,
-    stats: statLines(item.stats, data),
-    runeword: statLines(item.runewordStats, data),
-    setBonuses: item.setBonusStats.map((stats, index) => ({ pieces: pieces(index), lines: statLines(stats, data) })),
+    base: baseText(item, data, characterLevel).lines,
+    stats: statLines(item.stats, data, characterLevel),
+    runeword: statLines(item.runewordStats, data, characterLevel),
+    setBonuses: item.setBonusStats.map((stats, index) => ({ pieces: pieces(index), lines: statLines(stats, data, characterLevel) })),
     // runes and gems: their gems.txt column for this item's gem apply type; jewels: their saved stats
-    socketed: item.socketed.map((child) => ({ item: child, lines: statLines(socketStats(child, item, data), data) })),
+    socketed: item.socketed.map((child) => ({ item: child, lines: statLines(socketStats(child, item, data), data, characterLevel) })),
   };
 }
 
