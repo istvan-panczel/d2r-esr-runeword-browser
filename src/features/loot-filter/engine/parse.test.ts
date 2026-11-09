@@ -96,8 +96,8 @@ describe('parseLootFilter on the launcher filter shape', () => {
     expect(diagnostics).toEqual([]);
     expect(filter.leadingComments).toEqual(["// Sully's QoL Filter", '// second header line']);
     expect(filter.rules).toEqual([
-      { itemCodes: ['r01'], hide: true },
-      { itemCodes: ['gcv'], labelBorder: { color: [255, 0, 0], width: 2 } },
+      { itemCodes: ['r01'], hide: true, commentsBefore: ['// ===== Runes ====='] },
+      { itemCodes: ['gcv'], labelBorder: { color: [255, 0, 0], width: 2 }, commentsBefore: ['// ===== Gems ====='] },
     ]);
   });
 
@@ -116,23 +116,23 @@ describe('parseLootFilter on the launcher filter shape', () => {
       {
         severity: 'warning',
         path: '',
-        message:
-          '3 comments inside the file (section notes between rules) are dropped on the first edit; only the comment lines before the opening brace are kept',
+        message: '1 comment (line 9) is dropped on the first edit; only whole-line // comments above a rule, a style or a setting are kept',
       },
     ]);
   });
 
-  it('serializes to strict JSON without the notes', () => {
+  it('serializes to strict JSON that keeps the section comments', () => {
     const text = serializeLootFilter(filter);
     expect(text).not.toMatch(/,\s*[\]}]/);
-    expect(text).not.toMatch(/=====|\/\*/);
+    expect(text).not.toMatch(/\/\*/);
+    expect(text).toContain('// ===== Gems =====');
     expect(parseLootFilter(text).notes).toEqual([]);
   });
 
   it('names the line of a single inner comment', () => {
     expect(parseLootFilter('{"formatVersion": 1,\n "rules": [] // none yet\n}').notes).toEqual([
       expect.objectContaining({
-        message: expect.stringMatching(/^1 comment inside the file \(a section note between rules, line 2\) is dropped/) as unknown,
+        message: expect.stringMatching(/^1 comment \(line 2\) is dropped/) as unknown,
       }),
     ]);
   });

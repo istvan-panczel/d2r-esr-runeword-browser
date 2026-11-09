@@ -599,7 +599,6 @@ describe('text notes', () => {
     const state = openWith('upload');
     expect(state.editor.textNotes.map((note) => note.message)).toEqual([
       expect.stringMatching(/^Trailing commas were accepted \(first at line 6\)/),
-      expect.stringMatching(/^1 comment inside the file/),
     ]);
     expect(state.editor.parseDiagnostics).toEqual([]);
     expect(selectDiagnostics({ lootFilter: state })).toEqual(state.editor.textNotes);
@@ -607,10 +606,11 @@ describe('text notes', () => {
 
   it('the notes stay through edits and go once the model is written back', () => {
     const edited = reducer(openWith('upload'), setHeader({ author: 'Me' }));
-    expect(edited.editor.textNotes).toHaveLength(2);
+    expect(edited.editor.textNotes).toHaveLength(1);
     const flushed = reducer(edited, { type: editorFlushed.type, payload: { now: LATER } });
     expect(flushed.editor.textNotes).toEqual([]);
-    expect(flushed.library.entries[0].text).not.toMatch(/section|,\s*\]/);
+    expect(flushed.library.entries[0].text).not.toMatch(/,\s*\]/);
+    expect(flushed.library.entries[0].text).toContain('    // section\n');
   });
 
   it('template entries get no notes', () => {
@@ -622,5 +622,44 @@ describe('text notes', () => {
     const applied = reducer(openState(), replaceFilter({ filter, diagnostics, notes }));
     expect(applied.editor.textNotes).toBe(notes);
     expect(reducer(applied, replaceFilter({ filter, diagnostics })).editor.textNotes).toEqual([]);
+  });
+});
+
+describe('comments above rules belong to their place', () => {
+  const heading = ['// ==== Part'];
+  const rule = (comment: string, commentsBefore?: readonly string[]): LootFilterRule => ({
+    comment,
+    hide: true,
+    ...(commentsBefore ? { commentsBefore } : {}),
+  });
+  const openRules = (...rules: LootFilterRule[]) => openState({ formatVersion: 1, rules, leadingComments: [] });
+  const view = (state: LootFilterState) => state.editor.filter?.rules.map((entry) => [entry.comment, entry.commentsBefore]);
+
+  it('hands the comments of a deleted rule to the next one', () => {
+    const state = reducer(openRules(rule('a', heading), rule('b', ['// note'])), removeRule(0));
+    expect(view(state)).toEqual([['b', ['// ==== Part', '// note']]]);
+  });
+
+  it('keeps the comments of a deleted last rule after the list', () => {
+    const state = reducer(openRules(rule('a'), rule('b', heading)), removeRule(1));
+    expect(view(state)).toEqual([['a', undefined]]);
+    expect(state.editor.filter?.rulesEndComments).toEqual(heading);
+  });
+
+  it('leaves the comments in place when a rule moves', () => {
+    const state = reducer(openRules(rule('a'), rule('b', heading), rule('c')), moveRule({ from: 1, to: 0 }));
+    expect(view(state)).toEqual([
+      ['b', undefined],
+      ['a', heading],
+      ['c', undefined],
+    ]);
+  });
+
+  it('does not copy the comments to a duplicate', () => {
+    const state = reducer(openRules(rule('a', heading)), duplicateRule(0));
+    expect(view(state)).toEqual([
+      ['a', heading],
+      ['a', undefined],
+    ]);
   });
 });

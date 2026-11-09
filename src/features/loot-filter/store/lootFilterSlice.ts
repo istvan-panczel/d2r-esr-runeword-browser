@@ -180,14 +180,23 @@ function editRules(
   state: State,
   update: (
     rules: readonly LootFilterRule[]
-  ) => { readonly rules: readonly LootFilterRule[]; readonly selectedRule?: number | null } | undefined
+  ) =>
+    | { readonly rules: readonly LootFilterRule[]; readonly selectedRule?: number | null; readonly endComments?: readonly string[] }
+    | undefined
 ): State {
   const filter = state.editor.filter;
   if (filter === null) return state;
   const result = update(filter.rules);
   if (result === undefined) return state;
   const selectedRule = result.selectedRule === undefined ? state.editor.selectedRule : result.selectedRule;
-  return withEditor(state, { filter: { ...filter, rules: result.rules }, dirty: true, selectedRule });
+  const edited = { ...filter, rules: result.rules, ...(result.endComments === undefined ? {} : { rulesEndComments: result.endComments }) };
+  return withEditor(state, { filter: edited, dirty: true, selectedRule });
+}
+
+/** `rule` with exactly these comments above it (none: the key is gone). */
+function withCommentsBefore(rule: LootFilterRule, comments: readonly string[] | undefined): LootFilterRule {
+  const { commentsBefore: _old, ...rest } = rule;
+  return comments === undefined || comments.length === 0 ? rest : { ...rest, commentsBefore: comments };
 }
 
 function isIndex(index: number, length: number): boolean {
@@ -773,12 +782,19 @@ const lootFilterSlice = createSlice({
     removeRule(state, action: PayloadAction<number>): State {
       const index = action.payload;
       const selected = state.editor.selectedRule;
+      const filter = state.editor.filter;
       return editRules(state, (rules) => {
         if (!isIndex(index, rules.length)) return undefined;
         let selectedRule = selected;
         if (selected === index) selectedRule = null;
         else if (selected !== null && selected > index) selectedRule = selected - 1;
-        return { rules: rules.filter((_, position) => position !== index), selectedRule };
+        const next = rules.filter((_, position) => position !== index);
+        // The comments above a rule belong to the place: a deleted section's first rule must not take the heading along.
+        const above = rules[index].commentsBefore;
+        if (above === undefined) return { rules: next, selectedRule };
+        if (index === next.length) return { rules: next, selectedRule, endComments: [...above, ...(filter?.rulesEndComments ?? [])] };
+        next[index] = withCommentsBefore(next[index], [...above, ...(next[index].commentsBefore ?? [])]);
+        return { rules: next, selectedRule };
       });
     },
 
@@ -791,11 +807,13 @@ const lootFilterSlice = createSlice({
         const next = [...rules];
         const [moved] = next.splice(from, 1);
         next.splice(to, 0, moved);
+        // The comments stay at their position, so a rule moved past a heading changes section.
+        const placed = next.map((rule, position) => withCommentsBefore(rule, rules[position].commentsBefore));
         let selectedRule = selected;
         if (selected === from) selectedRule = to;
         else if (selected !== null && from < selected && selected <= to) selectedRule = selected - 1;
         else if (selected !== null && to <= selected && selected < from) selectedRule = selected + 1;
-        return { rules: next, selectedRule };
+        return { rules: placed, selectedRule };
       });
     },
 
@@ -805,7 +823,7 @@ const lootFilterSlice = createSlice({
       return editRules(state, (rules) => {
         if (!isIndex(index, rules.length)) return undefined;
         const next = [...rules];
-        next.splice(index + 1, 0, rules[index]);
+        next.splice(index + 1, 0, withCommentsBefore(rules[index], undefined));
         return { rules: next, selectedRule: index + 1 };
       });
     },

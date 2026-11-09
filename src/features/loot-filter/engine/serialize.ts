@@ -15,7 +15,8 @@
  *   (`LootFilterRule.activeInLevelsNumber`); edited levels are written as a list.
  * - a per-language text drops the languages emptied in the editor (`pruneEmptyLanguages`): the editor keeps them as `''`
  *   while they are edited, so the field stays on its language.
- * Comments between rules in the source are not kept.
+ * - whole-line `//` comments above a top-level key, a rule, a disabled rule or a style are written back above it, after
+ *   a blank line (none above the first entry of a list); the comments after the last rule go before the closing bracket.
  */
 import { ACTION_KEYS, CONDITION_KEYS, TOP_LEVEL_KEYS, isPlainObject } from './parse.ts';
 import { fileText } from './text.ts';
@@ -162,17 +163,41 @@ function packedList(list: readonly unknown[], indent: number): string {
   return `[\n${lines.map((entry) => pad(indent + 2) + entry).join('\n')}\n${pad(indent)}]`;
 }
 
-function expandedList(list: readonly unknown[], indent: number, layout: Layout): string {
-  if (list.length === 0) return '[]';
-  return `[\n${list.map((entry) => pad(indent + 2) + layout(entry, indent + 2, 0)).join(',\n')}\n${pad(indent)}]`;
+/** The comment lines above an entry at `indent`, after a blank line unless the entry is its container's first. */
+function commentBlock(comments: readonly string[] | undefined, indent: number, first: boolean): string {
+  if (comments === undefined || comments.length === 0) return '';
+  return `${first ? '' : '\n'}${comments.map((line) => `${pad(indent)}${line}\n`).join('')}`;
 }
 
-function expandedObject(object: Readonly<Record<string, unknown>>, indent: number, layout: Layout): string {
+function expandedList(
+  list: readonly unknown[],
+  indent: number,
+  layout: Layout,
+  commentsAt?: (index: number) => readonly string[] | undefined,
+  endComments?: readonly string[]
+): string {
+  const hasEnd = endComments !== undefined && endComments.length > 0;
+  if (list.length === 0 && !hasEnd) return '[]';
+  const inner = pad(indent + 2);
+  const entries = list.map(
+    (entry, index) => commentBlock(commentsAt?.(index), indent + 2, index === 0) + inner + layout(entry, indent + 2, 0)
+  );
+  // The block ends with a line break; the closing bracket's own line adds it back.
+  const end = hasEnd ? `${list.length > 0 ? '\n' : ''}${commentBlock(endComments, indent + 2, list.length === 0)}`.slice(0, -1) : '';
+  return `[\n${entries.join(',\n')}${end}\n${pad(indent)}]`;
+}
+
+function expandedObject(
+  object: Readonly<Record<string, unknown>>,
+  indent: number,
+  layout: Layout,
+  commentsAt?: (key: string) => readonly string[] | undefined
+): string {
   const entries = Object.entries(object);
   if (entries.length === 0) return '{}';
-  const lines = entries.map(([key, value]) => {
+  const lines = entries.map(([key, value], index) => {
     const prefix = `${JSON.stringify(key)}: `;
-    return pad(indent + 2) + prefix + layout(value, indent + 2, prefix.length);
+    return commentBlock(commentsAt?.(key), indent + 2, index === 0) + pad(indent + 2) + prefix + layout(value, indent + 2, prefix.length);
   });
   return `{\n${lines.join(',\n')}\n${pad(indent)}}`;
 }
@@ -197,20 +222,36 @@ const layoutEntry: Layout = (value, indent) => {
   return expandedObject(value, indent, layoutValue);
 };
 
-const layoutTop: Layout = (value, indent) => {
-  if (!isPlainObject(value)) return layoutValue(value, indent, 0);
-  return expandedObject(value, indent, (entry, entryIndent, prefix) => {
-    if (Array.isArray(entry) && entry.length > 0 && entry.every(isPlainObject)) {
-      // filterLevels and rules: one entry per line.
-      return expandedList(entry, entryIndent, layoutEntry);
-    }
-    if (entry === value.styles && isPlainObject(entry)) return expandedObject(entry, entryIndent, layoutEntry);
-    return layoutValue(entry, entryIndent, prefix);
-  });
-};
+/** The top-level object; `filter` supplies the comments, which the plain JSON does not hold. */
+function layoutTop(value: Readonly<Record<string, unknown>>, filter: LootFilter): string {
+  const enabled = filter.rules.filter((rule) => rule.disabled !== true);
+  const disabled = filter.rules.filter((rule) => rule.disabled === true);
+  return expandedObject(
+    value,
+    0,
+    (entry, entryIndent, prefix) => {
+      // A wrong-shaped list waits in passthrough and is laid out as plain JSON below.
+      if (entry === value.rules && Array.isArray(entry) && entry.every(isPlainObject)) {
+        return expandedList(entry, entryIndent, layoutEntry, (index) => enabled.at(index)?.commentsBefore, filter.rulesEndComments);
+      }
+      if (entry === value.disabledRules && Array.isArray(entry) && entry.every(isPlainObject)) {
+        return expandedList(entry, entryIndent, layoutEntry, (index) => disabled.at(index)?.commentsBefore);
+      }
+      if (Array.isArray(entry) && entry.length > 0 && entry.every(isPlainObject)) {
+        // filterLevels: one entry per line.
+        return expandedList(entry, entryIndent, layoutEntry);
+      }
+      if (entry === value.styles && isPlainObject(entry)) {
+        return expandedObject(entry, entryIndent, layoutEntry, (name) => filter.styles?.[name]?.commentsBefore);
+      }
+      return layoutValue(entry, entryIndent, prefix);
+    },
+    (key) => filter.keyComments?.[key]
+  );
+}
 
 /** The filter file: leading comments, the JSON object, a trailing newline. */
 export function serializeLootFilter(filter: LootFilter): string {
   const comments = filter.leadingComments.map((line) => `${line}\n`).join('');
-  return `${comments}${layoutTop(toPlainJson(filter), 0, 0)}\n`;
+  return `${comments}${layoutTop(toPlainJson(filter), filter)}\n`;
 }

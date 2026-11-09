@@ -12,6 +12,7 @@ import { useLootFilterData } from '../hooks/useLootFilterData';
 import { addRule, duplicateRule, moveRule, removeRule, selectRule, setRuleDisabled } from '../store/lootFilterSlice';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
 import { readRuleListWidth, writeRuleListWidth } from '../utils/ruleListWidth';
+import { buildRuleListRows, commentLinesText, headingKeys } from '../utils/ruleSections';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
@@ -35,6 +36,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const dispatch = useDispatch();
   const data = useLootFilterData();
   const [query, setQuery] = useState('');
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   // The list width (rem) once the splitter has moved, remembered per browser; null = the per-page-width default.
@@ -62,6 +64,23 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
     disabledCount > 0 ? `${String(disabledCount)} disabled` : undefined,
     hiddenCount > 0 ? `${String(hiddenCount)} hidden by search` : undefined,
   ].filter((note) => note !== undefined);
+
+  // A search lists the matching rules on their own: a heading whose rules are filtered out says nothing.
+  const endComments = filter.rulesEndComments ?? [];
+  const rows = searching
+    ? entries.map((entry) => ({ kind: 'rule' as const, entry }))
+    : buildRuleListRows(entries, endComments, collapsed, selectedRule);
+  const allHeadings = headingKeys(all, endComments);
+  const usesSections = allHeadings.length > 0;
+  const fileNotes = usesSections ? commentLinesText(filter.leadingComments) : '';
+
+  const toggleHeading = (key: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  };
 
   const pendingEntry = pendingDelete === null ? undefined : all.at(pendingDelete);
 
@@ -134,6 +153,34 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             {all.length} {all.length === 1 ? 'rule' : 'rules'}
             {countNotes.length > 0 && ` (${countNotes.join(', ')})`}
           </p>
+          {usesSections && !searching && (
+            <div className="flex gap-3 text-xs">
+              <button
+                type="button"
+                className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                onClick={() => {
+                  setCollapsed(new Set(allHeadings));
+                }}
+              >
+                Collapse all
+              </button>
+              <button
+                type="button"
+                className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                onClick={() => {
+                  setCollapsed(new Set());
+                }}
+              >
+                Expand all
+              </button>
+            </div>
+          )}
+          {fileNotes !== '' && (
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer hover:text-foreground">About this filter</summary>
+              <p className="mt-1 max-h-48 overflow-y-auto break-words whitespace-pre-line">{fileNotes}</p>
+            </details>
+          )}
           <ExampleRulesButton
             filter={filter}
             insertAt={selectedRule === null ? undefined : selectedRule + 1}
@@ -155,7 +202,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
         ) : (
           <RuleList
             className="max-h-[45vh] divide-y overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1"
-            entries={entries}
+            rows={rows}
             ruleCount={all.length}
             canMove={!searching}
             selectedRule={selectedRule}
@@ -167,6 +214,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
               setPendingDelete(index);
               setDeleteOpen(true);
             }}
+            onToggleHeading={toggleHeading}
           />
         )}
         {/* Last in the pane, so the tab order runs list, splitter, editor. */}

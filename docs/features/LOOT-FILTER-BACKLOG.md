@@ -122,9 +122,6 @@ does not pass yet.
 
 ## Decided against or parked
 
-- **Preserving `//` comments between rules.** Sully's filter has section comments inside the rules array; the
-  serializer keeps only the leading comment block. The editor now warns on upload that they are dropped on the first
-  edit. Preserving positions would need the JSONC reader to attach comments to rules (M, fragile with hand edits).
 - **Listing the Vessel of Souls transform bases** (`m44` and 27 other non-spawnable mythical weapons) on the Bases
   tab with a badge. "Add item" takes them; the dialog hint explains why they are not listed.
 - **Affix browser writing the picked affix's minimum roll.** Prefix, suffix and automagic values add up on the item,

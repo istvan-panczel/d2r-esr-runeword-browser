@@ -12,6 +12,7 @@ import type { Diagnostic, LootFilter, LootFilterStyle, RuleActions } from '../en
 import { removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
 import { countActions, countStyleUsers } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
+import { commentLinesText } from '../utils/ruleSections';
 import { actionFieldGate } from '../utils/ruleView';
 import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
@@ -58,6 +59,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
   const styles = filter.styles ?? {};
   const entries = Object.entries(styles);
   const names = entries.map(([name]) => name);
+  const stylesNotes = commentLinesText(filter.keyComments?.styles ?? []);
   const [selected, setSelected] = useState<string | null>(null);
   const [nameDialog, setNameDialog] = useState<NameDialogState>(null);
   // The style being deleted stays set while the dialog closes, so its text does not change during the animation.
@@ -107,7 +109,9 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
 
   const handleDuplicate = (name: string, style: LootFilterStyle) => {
     const copy = freeName(`${name} (copy)`, names);
-    dispatch(setStyle({ name: copy, style }));
+    // The comments above a style describe that place in the file; the copy goes at the end.
+    const { commentsBefore: _comments, ...content } = style;
+    dispatch(setStyle({ name: copy, style: content }));
     setSelected(copy);
   };
 
@@ -134,6 +138,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
         <CardHeader>
           <CardTitle>Styles</CardTitle>
           <CardDescription>Named sets of actions; a rule pulls one in with Use style.</CardDescription>
+          {stylesNotes !== '' && <p className="text-xs break-words whitespace-pre-line text-muted-foreground">{stylesNotes}</p>}
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {names.length === 0 && <p className="text-sm text-muted-foreground">No styles yet.</p>}

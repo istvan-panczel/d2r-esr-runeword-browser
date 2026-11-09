@@ -208,11 +208,18 @@ export interface LootFilterRule extends RuleConditions, RuleActions {
    * unchanged; once the levels are edited the list form is written.
    */
   readonly activeInLevelsNumber?: number;
+  /**
+   * Editor-only, never a key inside the rule: the whole-line `//` comments above the rule in the file, verbatim. They
+   * belong to the place, not the rule: moving a rule leaves them where they are, deleting one hands them to the next rule.
+   */
+  readonly commentsBefore?: readonly string[];
 }
 
 /** A named set of actions that rules pull in with `useStyle`. Styles hold actions only. */
 export interface LootFilterStyle extends RuleActions {
   readonly passthrough?: Passthrough;
+  /** Editor-only, never a key inside the style: the whole-line `//` comments above the style in the file, verbatim. */
+  readonly commentsBefore?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -241,6 +248,10 @@ export interface LootFilter {
   readonly rules: readonly LootFilterRule[];
   /** The `//` comment lines that precede the JSON object, verbatim (without the line break). */
   readonly leadingComments: readonly string[];
+  /** Whole-line `//` comments above a top-level key (e.g. a note above `styles`), verbatim. */
+  readonly keyComments?: Readonly<Record<string, readonly string[]>>;
+  /** Whole-line `//` comments after the last rule, verbatim. */
+  readonly rulesEndComments?: readonly string[];
   readonly passthrough?: Passthrough;
 }
 

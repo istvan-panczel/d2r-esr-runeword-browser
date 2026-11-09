@@ -7,14 +7,32 @@
  * always writes strict JSON ("accept on read, write strict").
  */
 
+import { locateJsoncChildren, locateJsoncPath } from './jsoncLocate.ts';
+
 export interface JsoncParseResult {
   readonly value: unknown;
   /** The `//` comment lines before the opening value, verbatim (including `//`, without the line break). */
   readonly leadingComments: string[];
   /** Trailing commas and block comments that were accepted, in file order. */
   readonly tolerated: readonly JsoncTolerance[];
-  /** Where each comment (`//` or block) after the opening value starts: the ones a re-serialized file loses. */
+  /** Where each comment (`//` or block) after the opening value starts that has no place in {@link PlacedComments}: the ones a re-serialized file loses. */
   readonly innerComments: readonly JsoncLocation[];
+  /** The whole-line `//` comments the model keeps, by what they stand above. */
+  readonly placedComments: PlacedComments;
+}
+
+/** The whole-line `//` comments after the opening brace, verbatim (including `//`, without the indentation), by place. */
+export interface PlacedComments {
+  /** Above a top-level key. */
+  readonly keys: Readonly<Record<string, readonly string[]>>;
+  /** Above the entry of `rules` at that index. */
+  readonly rules: Readonly<Record<number, readonly string[]>>;
+  /** Above the entry of `disabledRules` at that index. */
+  readonly disabledRules: Readonly<Record<number, readonly string[]>>;
+  /** Above a named style in `styles`. */
+  readonly styles: Readonly<Record<string, readonly string[]>>;
+  /** After the last rule, before the closing bracket of `rules`. */
+  readonly rulesEnd: readonly string[];
 }
 
 /**
@@ -50,6 +68,13 @@ interface Blanked {
   readonly blockComments: number[];
   /** Start offsets of the comments (line or block) after the opening value started. */
   readonly innerComments: number[];
+  /** The `//` comments after the opening value that have nothing but indentation before them on their line. */
+  readonly ownLineComments: readonly OwnLineComment[];
+}
+
+interface OwnLineComment {
+  readonly offset: number;
+  readonly text: string;
 }
 
 /** Spaces for every character of `text` except line breaks, so offsets and line numbers stay those of the source. */
@@ -62,6 +87,7 @@ function blankComments(text: string): Blanked {
   const leadingComments: string[] = [];
   const blockComments: number[] = [];
   const innerComments: number[] = [];
+  const ownLineComments: OwnLineComment[] = [];
   let out = '';
   let inString = false;
   let seenValue = false;
@@ -83,8 +109,11 @@ function blankComments(text: string): Blanked {
       let end = text.indexOf('\n', i);
       if (end === -1) end = text.length;
       const comment = text.slice(i, end).replace(/\r$/, '');
-      if (seenValue) innerComments.push(i);
-      else leadingComments.push(comment);
+      if (!seenValue) leadingComments.push(comment);
+      else {
+        innerComments.push(i);
+        if (text.slice(text.lastIndexOf('\n', i - 1) + 1, i).trim() === '') ownLineComments.push({ offset: i, text: comment.trimEnd() });
+      }
       out += ' '.repeat(end - i);
       i = end;
       continue;
@@ -106,7 +135,7 @@ function blankComments(text: string): Blanked {
     out += ch;
     i++;
   }
-  return { stripped: out, leadingComments, blockComments, innerComments };
+  return { stripped: out, leadingComments, blockComments, innerComments, ownLineComments };
 }
 
 function isWhitespace(ch: string): boolean {
@@ -295,13 +324,95 @@ function errorReason(message: string): string {
     .replace(/\s*at line \d+ column \d+ of the JSON data$/, '');
 }
 
+const NO_PLACED_COMMENTS: PlacedComments = { keys: {}, rules: {}, disabledRules: {}, styles: {}, rulesEnd: [] };
+
+/** A stretch of text between two neighbouring entries: a comment in it stands above the entry that follows. */
+interface CommentGap {
+  readonly from: number;
+  readonly to: number;
+  readonly add: (comment: string) => void;
+}
+
+function appendTo<K extends string | number>(record: Partial<Record<K, string[]>>, key: K, comment: string): void {
+  (record[key] ??= []).push(comment);
+}
+
+/** Gaps before each child of the container at `path`, the first one starting at `start`; returns where the last child ends. */
+function childGaps(
+  text: string,
+  path: string,
+  start: number,
+  gaps: CommentGap[],
+  add: (key: string | number, comment: string) => void
+): number {
+  let from = start;
+  for (const { key, range } of locateJsoncChildren(text, path) ?? []) {
+    gaps.push({
+      from,
+      to: range.from,
+      add: (comment) => {
+        add(key, comment);
+      },
+    });
+    from = range.to;
+  }
+  return from;
+}
+
+/**
+ * Sorts the whole-line comments into the places the model keeps (above a top-level key, a rule, a disabled rule or a
+ * style, or at the end of `rules`). `text` is the source; the walk runs only when there are comments to place.
+ */
+function placeComments(
+  text: string,
+  comments: readonly OwnLineComment[]
+): { readonly placed: PlacedComments; readonly offsets: ReadonlySet<number> } {
+  if (comments.length === 0) return { placed: NO_PLACED_COMMENTS, offsets: new Set() };
+  const keys: Record<string, string[]> = {};
+  const rules: Record<number, string[]> = {};
+  const disabledRules: Record<number, string[]> = {};
+  const styles: Record<string, string[]> = {};
+  const rulesEnd: string[] = [];
+  const gaps: CommentGap[] = [];
+  childGaps(text, '', 0, gaps, (key, comment) => {
+    appendTo(keys, String(key), comment);
+  });
+  const stringKey = (key: string | number) => String(key);
+  const numberKey = (key: string | number) => Number(key);
+  const styleRange = locateJsoncPath(text, 'styles');
+  if (styleRange)
+    childGaps(text, 'styles', styleRange.from, gaps, (key, comment) => {
+      appendTo(styles, stringKey(key), comment);
+    });
+  const disabledRange = locateJsoncPath(text, 'disabledRules');
+  if (disabledRange)
+    childGaps(text, 'disabledRules', disabledRange.from, gaps, (key, comment) => {
+      appendTo(disabledRules, numberKey(key), comment);
+    });
+  const rulesRange = locateJsoncPath(text, 'rules');
+  if (rulesRange) {
+    const end = childGaps(text, 'rules', rulesRange.from, gaps, (key, comment) => {
+      appendTo(rules, numberKey(key), comment);
+    });
+    gaps.push({ from: end, to: rulesRange.to, add: (comment) => rulesEnd.push(comment) });
+  }
+  const offsets = new Set<number>();
+  for (const { offset, text: comment } of comments) {
+    const gap = gaps.find(({ from, to }) => from <= offset && offset < to);
+    if (!gap) continue;
+    gap.add(comment);
+    offsets.add(offset);
+  }
+  return { placed: { keys, rules, disabledRules, styles, rulesEnd }, offsets };
+}
+
 /**
  * Parses JSON with comments, as the ESR loot filter plugin reads it; throws {@link JsoncSyntaxError} on invalid JSON.
  * Block comments and trailing commas are accepted and listed in `tolerated`.
  */
 export function parseJsonc(text: string): JsoncParseResult {
   const source = text.startsWith('\uFEFF') ? text.slice(1) : text;
-  const { stripped, leadingComments, blockComments, innerComments } = blankComments(source);
+  const { stripped, leadingComments, blockComments, innerComments, ownLineComments } = blankComments(source);
   const { text: json, commas } = blankTrailingCommas(stripped);
   try {
     const value = JSON.parse(json) as unknown;
@@ -311,7 +422,14 @@ export function parseJsonc(text: string): JsoncParseResult {
     ]
       .sort((a, b) => a.offset - b.offset)
       .map(({ kind, offset }) => ({ kind, ...lineAndColumn(source, offset) }));
-    return { value, leadingComments, tolerated, innerComments: innerComments.map((offset) => lineAndColumn(source, offset)) };
+    const { placed, offsets } = placeComments(source, ownLineComments);
+    return {
+      value,
+      leadingComments,
+      tolerated,
+      innerComments: innerComments.filter((offset) => !offsets.has(offset)).map((offset) => lineAndColumn(source, offset)),
+      placedComments: placed,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const location = errorLocation(message, json);
