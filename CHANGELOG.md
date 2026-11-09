@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.66.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.65.2...v1.66.0) (2026-11-09)
+
+### Features
+
+* **loot-filter:** edit sections and notes in the rule and style lists ([fc77530](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fc77530254227517a3192c60b561c6183384c532))
+* **loot-filter:** keep // comments and show them as rule sections ([dfb12ed](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/dfb12ed8b0b1ca11eb8a1d880604340f68cfc3b2))
+* **loot-filter:** publish a static agent pack for AI agents writing filters ([b70ee5d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b70ee5d7a46f536bcd39e24454680dfbea74a406))
+* **loot-filter:** section headings in the example filter and example rules ([c54b5d3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c54b5d3f7b60481910f50b0c78fedc058162077d))
+* **loot-filter:** teach the section comments ruleset in the AI help prompt ([44269dd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/44269dd9cc7f1cc968afbd3868aba6f25729e5eb))
+
+### Bug Fixes
+
+* **loot-filter:** match section titles in the rule search, round style headings ([5ddc6e1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5ddc6e12233ae75aad9d9a7d12a46d84996880f3))
+
+### Documentation
+
+* **loot-filter:** section editing, search and the example filter v2.2.0 ([a172d64](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/a172d64c28a32cd53ac62cd009c3ce16792574f0))
+
+### Chores
+
+* **loot-filter:** regenerate the agent pack for the example filter v2.2.0 ([d8fae1c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d8fae1cfad154431a90d8911fa81c5b52772e530))
+
 ## [1.65.2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.65.1...v1.65.2) (2026-11-09)
 
 ### Bug Fixes
