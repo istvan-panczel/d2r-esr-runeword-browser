@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { APP_FRAME_CLASS } from '@/components/pageWidthClasses';
 import { openDrawer, selectPageWidth, selectTheme, setTheme } from '@/features/settings';
 import { AuthControls, selectAuthIsConfigured } from '@/features/auth';
+import { GlobalSearch } from '@/features/global-search/components/GlobalSearch';
 import {
   COMMUNITY_TOOLS,
   GITHUB_URL,
@@ -170,6 +171,7 @@ export function Header() {
           <div className="flex-1 @desktop-nav/header:hidden" aria-hidden />
 
           <div className="flex shrink-0 items-center gap-1">
+            <GlobalSearch />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -208,12 +210,12 @@ export function Header() {
               {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
             </Button>
             {/* GitHub and the sign-in control live in the sheet when a phone row has no room for them. */}
-            <Button variant="ghost" size="icon" className="hidden @sm/header:inline-flex" asChild aria-label="View source on GitHub">
+            <Button variant="ghost" size="icon" className="hidden @md/header:inline-flex" asChild aria-label="View source on GitHub">
               <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 <GitHubIcon className="size-5" />
               </a>
             </Button>
-            <div className="hidden @sm/header:contents">
+            <div className="hidden @md/header:contents">
               <AuthControls />
             </div>
             <Button variant="ghost" size="icon" onClick={() => dispatch(openDrawer())} aria-label="Open settings">

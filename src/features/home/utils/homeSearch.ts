@@ -50,6 +50,14 @@ export const HOME_SEARCH_CATEGORIES: readonly HomeSearchCategoryInfo[] = [
 /** Results shown per group. */
 export const HOME_SEARCH_GROUP_LIMIT = 6;
 
+/** cmdk value of the "Search runewords for …" row */
+export const SEARCH_RUNEWORDS_VALUE = '__search-runewords';
+
+/** cmdk value of an item result row */
+export function homeSearchRowValue(category: HomeSearchCategory, href: string): string {
+  return `${category}:${href}`;
+}
+
 /**
  * A searchable name: the plain name, or a display name with the id its page link needs (a skill id, a cube family id).
  * Names are what is matched and shown; the id only feeds `homeResultHref`.

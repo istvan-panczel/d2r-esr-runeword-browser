@@ -109,7 +109,8 @@ of the bundles, unrelated to these URLs.
    and tab); Cube `/cube-recipes?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
    panel links the Area Levels page row); Bases have no exact-name focus, so `?search="<name>"`. The
    first row, selected by default, is "Search runewords for “…”", so Enter without picking a result goes to
-   `/runewords?search=<query>`.
+   `/runewords?search=<query>`. The data and the rows (`useHomeSearch`, `HomeSearchRows`) are shared with the
+   [global search dialog](#global-search).
 3. **Section cards** (`HomeSections`): one card per `NAV_ENTRIES` entry (`getHomeSections` in `utils/homeSections.ts`):
    a group's `description` and its pages as chips; a plain link's `description` and its `homeLinks` chips (none use them
    now) or the page itself (Guide links `/guide` only). Builds only when Supabase is configured. A test checks every nav page appears once.
@@ -137,7 +138,7 @@ The page skips the startup loading gate (exact match on `/`, see below), so it r
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│ D2R ESR  Recipes▾ Items▾ Character▾ Areas▾ My Stash▾ Guide Builds Loot Filters … │
+│ D2R ESR Recipes▾ Items▾ Character▾ Areas▾ My Stash▾ Guide Builds Loot Filters ⌕ …│
 │ Uniques  Mythicals  Sets  [Bases]  Item Types  Affixes  Modifiers  Elixirs       │  <- page row of the current menu group
 ├──────────────────────────────────────────────────────────────────────────────────┤     (none on Home, Guide, Builds, Loot Filters)
 │                                                                                  │
@@ -212,8 +213,7 @@ cards render from the same config (group `description`, link `homeLinks`):
   (`--container-desktop-nav: 79.5rem` in `src/index.css`) swap the hamburger for the desktop nav, the book and page-width
   icons when the row has the room. A container query in `rem` follows the Text size setting and the Page width setting's
   actual frame, which a viewport breakpoint cannot: a media query's `rem` ignores the `<html>` font size, and Standard's
-  `container` frame steps from 1024 px to 1280 px at a 1280 px window. 79.5rem holds the brand, the eight entries, the icon cluster with a spare 36 px icon
-  (the coming search), and the widest account control, a 14-character signed-in tag (needs 78.5rem at 16 px; the Diablo font's wider
+  `container` frame steps from 1024 px to 1280 px at a 1280 px window. 79.5rem holds the brand, the eight entries, the icon cluster with the search icon, and the widest account control, a 14-character signed-in tag (needs 78.5rem at 16 px; the Diablo font's wider
   tag is capped at 12 characters in `UserMenu`). At the default 16 px text size Standard shows the desktop nav from a 1280 px window (1272 px in Wide and Full); at 20 px from 1590 px.
   Below that the hamburger shows. Item, group and link labels do not wrap (`whitespace-nowrap`).
 - **Desktop nav**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
@@ -225,13 +225,14 @@ cards render from the same config (group `description`, link `homeLinks`):
   accent background and a semibold label; Radix sets `data-active` (empty value), so the classes are `data-active:`, not `data-[active=true]:`. Active links
   get `aria-current="page"`. Keyboard (Radix): triggers are in the tab order, Enter/Space/ArrowDown opens, arrows and
   Tab move through the items, Escape closes; choosing a link closes the menu.
-- **Right side**: ESR links dropdown (book icon, desktop nav only: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
+- **Right side**: the [global search](#global-search) magnifier (every width), ESR links dropdown (book icon, desktop nav only: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
   Frame Table, Patch notes, Changelog, Releases, ESR Discord, ESR on GitHub, then a "Community tools" label with ESR Wiki Overlay, ESR Docs,
   ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), the page width menu (↔ `MoveHorizontal` icon, desktop nav only,
   `PageWidthMenu.tsx`: a radio list Standard 1280 px / Wide 1920 px / Full screen, the same setting as the Settings
   drawer), theme toggle, GitHub link,
-  `AuthControls` (Sign In / user menu, Supabase only), settings cog. Below a 24rem row (`@sm/header`) the GitHub link and the
-  account control move to the hamburger sheet so a 320 px phone row holds the coming search icon too.
+  `AuthControls` (Sign In / user menu, Supabase only), settings cog. Below a 28rem row (`@md/header`, 448 px at the default text size) the GitHub
+  link and the account control move to the hamburger sheet, so a phone row holds the hamburger, brand, search, theme and settings (at 24rem,
+  Sign In pushed the cog off a 390 px row).
 - **Page row** (`GroupPagesBar.tsx`, inside `<header>` under the main row, same frame): the pages of the current menu group
   (`getActiveNavGroup`) as a `<nav aria-label="{group} pages">`, active page `aria-current="page"` and a `PAGE_ROW_LINK_*` underline
   (`navTabClasses.ts`). None on Home, Guide, Builds, Loot Filters or a build page; not sticky, like the header. It is one sideways-scrolling
@@ -244,6 +245,33 @@ cards render from the same config (group `description`, link `homeLinks`):
 `navConfig.test.ts` checks that every config path resolves to a real route of the router (not the `*` catch-all), that
 labels, keys and paths are unique, that Builds is hidden without Supabase, the agreed menu order, the active-state rules and
 `getActiveNavGroup` / `getActiveNavItem`.
+
+### Global search
+
+A magnifier in the header's right cluster (visible at every width) and Ctrl+K (Cmd+K on a Mac) open a centred modal with
+the input and the results. It searches what the [home page search](#home-page) searches, plus the site's pages.
+
+- **Shell and lazy chunk**: `GlobalSearch.tsx` (in the entry bundle) is the button and the one `window` keydown listener;
+  `GlobalSearchDialog.tsx` is a lazy chunk (with cmdk and the search code) requested on the first open and kept mounted after it.
+  A shortcut pressed while the chunk loads still counts: it toggles the open state the dialog renders from when it arrives.
+- **Results**: Pages first (`searchPages` in `utils/pageSearch.ts`: `rankNames` over the labels of `getNavEntries`, so Builds
+  stays hidden without Supabase; the row shows its menu group), then the home search's groups, then "Search runewords for “…”" last.
+  Data and rows are the home page's: `useHomeSearch` (nothing loads before the first keystroke, each game-data file settles on its
+  own, the "still loading" note before the startup sync has initialized) and `HomeSearchResults` / `SearchRunewordsRow` / `HomeSearchRow`
+  (`src/features/home/`). Results are computed synchronously from the current query and the names loaded so far, so a slow earlier query cannot
+  overwrite a newer one. `shouldFilter={false}` keeps cmdk from filtering or reordering. The list has a fixed height: the dialog is centred,
+  so a growing list would move the input while typing.
+- **Enter**: runs the selected row, by default the first (a page when one matches, else the best item, else the runewords search). cmdk keeps its
+  selection when rows appear above it and the names arrive after the first render, so the row that is currently first carries the
+  value `FIRST_ROW_VALUE` (`utils/searchRows.ts`) and the selection follows it. Controlling cmdk's `value` would make it scroll to the previously selected row.
+- **Closing**: choosing a result navigates and closes; Escape and clicking outside close. Radix returns focus only to a `DialogTrigger`, so the
+  shell remembers the element that was focused when it opened and `onCloseAutoFocus` restores it. Reopening starts empty: the panel
+  lives inside `DialogContent`, which unmounts on close.
+- **Shortcut** (`isSearchShortcut` in `utils/searchShortcut.ts`, pure): Cmd+K on a Mac, Ctrl+K elsewhere, no other modifier. Ctrl+K on a Mac
+  stays the system's delete-to-end-of-line, in text fields and in the CodeMirror JSON tab (`emacsStyleKeymap`, the editor has no `Mod-k`, so nothing conflicts).
+  The dialog sets `vimBindings={false}`, or cmdk's own Ctrl+K "move up" would fire together with the close. While another modal is open
+  (`[data-slot="dialog-content"]` or `[data-slot="sheet-content"]` with `data-state="open"`: settings drawer, mobile sheet, any dialog) the shortcut is
+  ignored, like the button behind its backdrop; `preventDefault` still runs, so the browser's own Ctrl+K never fires.
 
 ### Nested sections
 
@@ -458,6 +486,20 @@ src/core/
     ├── navTabClasses.ts    # Header nav (TAB_*), page row (PAGE_ROW_LINK_*) and in-page tab (SUBTAB_*) classes
     └── SettingsDrawer.tsx  # Settings slide-out panel
 
+src/features/global-search/
+├── components/
+│   ├── GlobalSearch.tsx        # Header button + the Ctrl+K / Cmd+K listener (entry bundle)
+│   └── GlobalSearchDialog.tsx  # The dialog and its results (lazy chunk)
+└── utils/
+    ├── searchShortcut.ts       # Pure key test, platform helpers (entry bundle)
+    ├── pageSearch.ts           # Pure page-label search
+    └── searchRows.ts           # First-row value, page row values
+
+src/features/home/              # Search shared with the dialog
+├── hooks/useHomeSearch.ts      # Activation, sources, groups, pending flags
+├── components/HomeSearchRows.tsx # Result rows and loading notes
+└── utils/homeSearch.ts         # searchHome, rankNames, homeResultHref
+
 src/features/settings/
 ├── components/
 │   └── ThemeInitializer.tsx  # Apply theme on initial render
@@ -475,5 +517,6 @@ src/features/settings/
 
 - Navigation links have proper `aria-current` for active state; the desktop menu and the mobile sheet are `<nav aria-label="Main">`, the page row `<nav aria-label="{group} pages">`
 - Group triggers are keyboard operable (Enter/Space/arrows open, Escape closes) via Radix NavigationMenu
+- The search button has an `aria-label`, `aria-keyshortcuts` and a `title` naming the shortcut; the search dialog has a screen-reader title and description and returns focus on close
 - Settings drawer uses `aria-hidden` and focus trap when open
 - Close button and Escape key close the drawer

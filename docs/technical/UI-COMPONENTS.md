@@ -39,6 +39,11 @@ Location: `src/core/components/`
 - `Header.tsx` - Top bar: brand, grouped navigation (Recipes / Items / Character / Areas / My Stash menus, Guide, Builds, Loot
   Filters) rendered from `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; hamburger sheet
   with an accordion below the desktop switch (a container query, see [NAVIGATION.md](./NAVIGATION.md#header-components)).
+- `GlobalSearch` (`src/features/global-search/components/GlobalSearch.tsx`) - The header's magnifier button and the Ctrl+K / Cmd+K listener, which
+  open the lazy `GlobalSearchDialog`: pages, then the home search's groups, then the runewords search row. Uses `Dialog` + `Command` directly, like
+  `GuideSearch`, because the state that drives `Command` lives under `DialogContent` (so it resets on close); `CommandDialog` in `ui/command.tsx` owns its `Command`
+  and stays unused. Dialogs are `z-50` in a portal at the end of `<body>`, so they cover the header (`relative z-50`) and the floating elements (`z-40`).
+  See [NAVIGATION.md](./NAVIGATION.md#global-search).
 - `GroupPagesBar.tsx` - The page row inside `<header>`: the pages of the current menu group, an underlined scrolling strip at every width.
   No row on pages outside a group.
 - `SettingsDrawer.tsx` - Settings sheet (theme, font, text size, data refresh, versions, credits).
