@@ -32,7 +32,7 @@ interface ItemTypesBrowserProps {
 }
 
 function basesLink(code: string): string {
-  return `/game-data/bases?${GAME_DATA_URL_PARAM_KEYS.TYPE}=${encodeURIComponent(code)}`;
+  return `/bases?${GAME_DATA_URL_PARAM_KEYS.TYPE}=${encodeURIComponent(code)}`;
 }
 
 function socketsLabel(type: ItemTypeInfo): string {

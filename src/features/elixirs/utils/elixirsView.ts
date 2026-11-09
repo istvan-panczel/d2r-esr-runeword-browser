@@ -108,9 +108,9 @@ export function perkHref(perk: Pick<ElixirPerk, 'tree' | 'slug'>): string {
   return `${SPECIALIZATIONS_ROUTE}?${new URLSearchParams({ tree, perk: perk.slug }).toString()}`;
 }
 
-/** `/game-data/materials?name=Elixir%20of%20Luck` */
+/** `/materials?name=Elixir%20of%20Luck` */
 export function materialsHref(name: string): string {
-  return `/game-data/materials?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.NAME]: name }).toString()}`;
+  return `/materials?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.NAME]: name }).toString()}`;
 }
 
 // --- values -------------------------------------------------------------------------------------------------------

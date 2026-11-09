@@ -793,7 +793,7 @@ describe('::recipes', () => {
       kind: 'recipes',
       caption: family('dstone-cycle').label,
       rows,
-      link: { label: `All ${String(rows.length)} recipes`, href: '/game-data/cube?family=dstone-cycle' },
+      link: { label: `All ${String(rows.length)} recipes`, href: '/cube-recipes?family=dstone-cycle' },
     });
   });
 

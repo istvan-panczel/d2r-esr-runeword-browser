@@ -12,7 +12,7 @@ describe('buildSitemap', () => {
     expect(paths).not.toContain('/guide/map');
     expect(paths).toContain('/runewords');
     expect(paths).toContain('/loot-filters');
-    expect(paths).toContain('/game-data/bases');
+    expect(paths).toContain('/bases');
   });
 
   it('leaves out sign-in, user-data and redirect-only routes', () => {

@@ -36,7 +36,7 @@ describe('collectAppLinks', () => {
         items: [[{ type: 'paragraph', children: [{ type: 'emphasis', children: [appLink('/uniques', 'Uniques')] }] }]],
       },
       { type: 'blockquote', children: [{ type: 'paragraph', children: [appLink('/runewords?name=Enigma', 'again')] }] },
-      { type: 'table', header: [[text('h')]], rows: [[[appLink('/game-data/bases', 'Bases')]]] },
+      { type: 'table', header: [[text('h')]], rows: [[[appLink('/bases', 'Bases')]]] },
       { type: 'heading', depth: 3, children: [appLink('/gemwords', 'Gemwords')] },
       {
         type: 'paragraph',
@@ -46,7 +46,7 @@ describe('collectAppLinks', () => {
     expect(collectAppLinks(body)).toEqual([
       { href: '/runewords?name=Enigma', label: 'Enigma' },
       { href: '/uniques', label: 'Uniques' },
-      { href: '/game-data/bases', label: 'Bases' },
+      { href: '/bases', label: 'Bases' },
       { href: '/gemwords', label: 'Gemwords' },
     ]);
     expect(collectAppLinks(body, 10)).toHaveLength(5);

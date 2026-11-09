@@ -9,11 +9,11 @@ const SUB_PAGES = [
   { to: 'sets', label: 'Sets' },
   { to: 'best-base', label: 'Best Base' },
   { to: 'affixes', label: 'Affixes' },
-  { to: 'types', label: 'Item Types' },
+  { to: 'item-types', label: 'Item Types' },
   { to: 'enhance', label: 'Enhance' },
-  { to: 'cube', label: 'Cube' },
+  { to: 'cube-recipes', label: 'Cube' },
   { to: 'materials', label: 'Materials' },
-  { to: 'areas', label: 'Areas' },
+  { to: 'area-levels', label: 'Areas' },
 ] as const;
 
 export function GameDataLayout() {

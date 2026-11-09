@@ -5,8 +5,8 @@ Documentation for routing, layout, and navigation patterns.
 ## Routes
 
 All routes are children of `AppLayout` in `src/core/router/index.tsx`; every screen and layout is lazy (see
-[Router Setup](#router-setup)). Three sections are nested layouts with child routes: `/guide`, `/game-data` and
-`/loot-filters` (see [Nested sections](#nested-sections)).
+[Router Setup](#router-setup)). `/guide` and `/loot-filters` are nested layouts with child routes, and the Game Data pages
+share a pathless layout route (see [Nested sections](#nested-sections)).
 
 | Path                    | Screen                  | Description                                                                                                                                                                                       | Query params                                                                                           |
 | ----------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -22,16 +22,16 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/mythicals`            | MythicalUniquesScreen   | Mythical unique items                                                                                                                                                                             | `search`, `maxlvl`, `cats`, `name`                                                                     |
 | `/ascendancies`         | AscendanciesScreen      | Ascendancies with their tier bonuses                                                                                                                                                              | `search`                                                                                               |
 | `/skills`               | SkillsScreen            | Class skill trees and item-granted skills with details and "Granted by" ([SKILLS.md](../features/SKILLS.md))                                                                                      | `class` (code or `items`), `tab`, `skill`, `search` (kept in the URL)                                  |
-| `/game-data`            | GameDataLayout          | Game-file data section; index redirects to `bases`                                                                                                                                                |                                                                                                        |
-| `/game-data/bases`      | BasesScreen             | Base items browser (txt game files)                                                                                                                                                               | `search`, `sockets` (min.), `maxlvl`, `kind`, `tier`, `type`, `cls`, `sort` (`-<key>` = desc.), `view` |
-| `/game-data/best-base`  | BestBaseScreen          | Best base finder for a runeword and a persisted character                                                                                                                                         | `rw`, `v`, `cls`, `lvl`, `str`, `dex`                                                                  |
-| `/game-data/affixes`    | AffixesScreen           | Affix browser + "what can roll" on a base                                                                                                                                                         | `search`, `aff`, `rare`, `minlvl`, `maxlvl`, `cls`, `type`, `base`, `ilvl`, `q`, `auto`, `sort`        |
-| `/game-data/types`      | ItemTypesScreen         | Item type tree + socket caps                                                                                                                                                                      | `type` (focused node)                                                                                  |
-| `/game-data/enhance`    | EnhanceScreen           | Corruption, anointment, sanctification and Vessel of Souls outcomes (cube recipes)                                                                                                                | `tab`, `slot`, `tier`, `search` (kept in the URL)                                                      |
-| `/game-data/cube`       | CubeScreen              | Every cube recipe from cubemain.txt, grouped by family and official section                                                                                                                       | `search`, `family` (focused family; kept in the URL)                                                   |
-| `/game-data/materials`  | MaterialsScreen         | Every misc item: how to get it, the cube families and Enhance recipes using it, guide notes                                                                                                       | `search`, `group`, `name` (kept in the URL)                                                            |
-| `/game-data/areas`      | AreasScreen             | Every area: monster level, density and unique packs per difficulty, waypoint, connections; maps by tier                                                                                           | `search`, `minlvl`, `maxlvl` (kept in the URL)                                                         |
-| `/game-data/sets`       | SetsScreen              | Every set: items, per-item and set-wide partial bonuses, full-set bonuses, item sources                                                                                                           | `search`, `maxlvl`, `pieces`, `cls`, `name` (kept in the URL)                                          |
+| (pathless layout)       | GameDataLayout          | Shared shell of the game-file data pages (the nine rows below); adds nothing to the URL                                                                                                           |                                                                                                        |
+| `/bases`                | BasesScreen             | Base items browser (txt game files)                                                                                                                                                               | `search`, `sockets` (min.), `maxlvl`, `kind`, `tier`, `type`, `cls`, `sort` (`-<key>` = desc.), `view` |
+| `/best-base`            | BestBaseScreen          | Best base finder for a runeword and a persisted character                                                                                                                                         | `rw`, `v`, `cls`, `lvl`, `str`, `dex`                                                                  |
+| `/affixes`              | AffixesScreen           | Affix browser + "what can roll" on a base                                                                                                                                                         | `search`, `aff`, `rare`, `minlvl`, `maxlvl`, `cls`, `type`, `base`, `ilvl`, `q`, `auto`, `sort`        |
+| `/item-types`           | ItemTypesScreen         | Item type tree + socket caps                                                                                                                                                                      | `type` (focused node)                                                                                  |
+| `/enhance`              | EnhanceScreen           | Corruption, anointment, sanctification and Vessel of Souls outcomes (cube recipes)                                                                                                                | `tab`, `slot`, `tier`, `search` (kept in the URL)                                                      |
+| `/cube-recipes`         | CubeScreen              | Every cube recipe from cubemain.txt, grouped by family and official section                                                                                                                       | `search`, `family` (focused family; kept in the URL)                                                   |
+| `/materials`            | MaterialsScreen         | Every misc item: how to get it, the cube families and Enhance recipes using it, guide notes                                                                                                       | `search`, `group`, `name` (kept in the URL)                                                            |
+| `/area-levels`          | AreasScreen             | Every area: monster level, density and unique packs per difficulty, waypoint, connections; maps by tier                                                                                           | `search`, `minlvl`, `maxlvl` (kept in the URL)                                                         |
+| `/sets`                 | SetsScreen              | Every set: items, per-item and set-wide partial bonuses, full-set bonuses, item sources                                                                                                           | `search`, `maxlvl`, `pieces`, `cls`, `name` (kept in the URL)                                          |
 | `/campaign-map`         | CampaignMapScreen       | Act maps, special areas, ubers & portals, endgame maps ([CAMPAIGN-MAP](../features/CAMPAIGN-MAP.md))                                                                                              | `tab`, `area` (alone: its home tab), `view=list`, `act` (alias) (kept in the URL)                      |
 | `/loot-filters`         | LootFilterLayout        | Loot filter frame: an "Under development" notice above every loot-filter page, then the child route                                                                                               |                                                                                                        |
 | `/loot-filters` (index) | LootFilterLibraryScreen | Loot filter library: new, upload, Sully's QoL filter template, download (.json or .zip)                                                                                                           |                                                                                                        |
@@ -79,6 +79,14 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
 `/runewords` with the same query and hash; only a bare `/` renders the home page. The decision is
 `runewordsRedirectTarget` in `src/core/router/homeRedirect.ts` (tested), applied by `HomeRoute` around the index route.
 
+**Old Game Data links.** The Game Data pages lived under `/game-data/` until they became top-level URLs. One route,
+`game-data/*`, sends the old URLs to the new ones (`replace`) with the same query and hash, so shared Copy Link URLs keep
+their filters: `bases`, `sets`, `best-base`, `affixes`, `enhance` and `materials` keep their names, `types` is now
+`/item-types`, `cube` `/cube-recipes`, `areas` `/area-levels`, and a bare `/game-data` goes to `/bases`. Any other
+`/game-data/...` path shows the not-found page. The mapping is `gameDataRedirectTarget` in
+`src/core/router/gameDataRedirect.ts` (tested), applied by `GameDataRedirectRoute`. `public/game-data/` is the data folder
+of the bundles, unrelated to these URLs.
+
 ### Home page
 
 `src/features/home/` (`HomeScreen`, lazy). Sections, top to bottom, in a `max-w-5xl` column:
@@ -96,7 +104,7 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
    suffix, "Amplify Damage (Aura)"), `materials.json` (item names, plus its `families` labels for Cube recipes, so
    `cube.json` is not fetched) and `areas.json`. A result opens its page focused on it (`homeResultHref`):
    `?name=<exact name>` on the item list pages, Sets and Materials; Skills `/skills?skill=<id>` (the page picks the class
-   and tab); Cube `/game-data/cube?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
+   and tab); Cube `/cube-recipes?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
    panel links the Areas page row); Bases have no exact-name focus, so `?search="<name>"`. The
    first row, selected by default, is "Search runewords for “…”", so Enter without picking a result goes to
    `/runewords?search=<query>`.
@@ -155,7 +163,8 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 - `/guide`: the guide is a static JSON bundle (`public/guide/`), see [GUIDE.md](../features/GUIDE.md);
 - `/loot-filters`: the editor uses the game-data bundles, `public/loot-filters/` and localStorage, see
   [LOOT-FILTER.md](../features/LOOT-FILTER.md);
-- `/game-data/enhance`, `/game-data/cube`, `/game-data/materials`, `/game-data/sets` and `/game-data/areas`: only
+- `/game-data`: only the redirect of the old URLs, which needs no data (the page it lands on applies its own gate);
+- `/enhance`, `/cube-recipes`, `/materials`, `/sets` and `/area-levels`: only
   `enhance.json` / `cube.json` / `materials.json` / `sets.json` / `areas.json` (+ the guide bundle, or sources.json for Sets) (the other Game Data pages stay behind the gate: Best Base matches the HTM
   runewords), see [GAME-DATA.md](../features/GAME-DATA.md).
 - `/campaign-map`: `areas.json`, `icons.json` and `stashnames.json` (quest item names), see
@@ -184,14 +193,14 @@ should be added there.
 (groups of `NavItem`s with a label, a one-line description and a path, plus plain links). The home page's section
 cards render from the same config (group `description`, link `homeLinks`):
 
-| Entry      | Kind  | Pages                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                                                                                                                                                                                                                           |
-| Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/game-data/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Kill Ledger (`/kill-ledger`), Mercenaries (`/mercenaries`), Bases (`/game-data/bases`), Materials (`/game-data/materials`), Elixirs (`/elixirs`), Areas (`/game-data/areas`), Campaign Map (`/campaign-map`) |
-| Tools ▾    | group | Best Base (`/game-data/best-base`), Affixes (`/game-data/affixes`), Item Types (`/game-data/types`), Enhance (`/game-data/enhance`), Cube Recipes (`/game-data/cube`), Loot Filters (`/loot-filters`), Terror Zones (`/terror-zones`)                                                                                                                                                                                    |
-| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                                                                                                                                                                                                                                                |
-| Guide      | link  | `/guide`                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                                                                                                                                                                                                                            |
+| Entry      | Kind  | Pages                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                                                                                                                                                                                         |
+| Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Kill Ledger (`/kill-ledger`), Mercenaries (`/mercenaries`), Bases (`/bases`), Materials (`/materials`), Elixirs (`/elixirs`), Areas (`/area-levels`), Campaign Map (`/campaign-map`) |
+| Tools ▾    | group | Best Base (`/best-base`), Affixes (`/affixes`), Item Types (`/item-types`), Enhance (`/enhance`), Cube Recipes (`/cube-recipes`), Loot Filters (`/loot-filters`), Terror Zones (`/terror-zones`)                                                                                                                                                                                       |
+| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                                                                                                                                                                                                              |
+| Guide      | link  | `/guide`                                                                                                                                                                                                                                                                                                                                                                               |
+| Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                                                                                                                                                                                          |
 
 - **Brand**: "D2R ESR", a link to `/` (the home page).
 - **Desktop (md and up)**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
@@ -214,14 +223,14 @@ labels, keys and paths are unique, that Builds is hidden without Supabase, and t
 
 ### Nested sections
 
-`/guide`, `/game-data` and `/loot-filters` are nested routes with a lazy layout that renders a frame above an `<Outlet />`:
+`/guide` and `/loot-filters` are nested routes, and the Game Data pages are children of a pathless route; each has a lazy layout that renders a frame above an `<Outlet />`:
 
 - `GuideLayout`: a width-only `PageShell` with the "Experimental" `DevNotice`, then the spine (index, its own narrow
   `PageShell` with the title), the map (`map`) or a note (`:slug`);
 - `LootFilterLayout`: a width-only `PageShell` with the "Under development" `DevNotice`, then the library (index) or the
   editor (`:id`);
 - `GameDataLayout`: a `PageShell` with the title, the game-file version lines as its meta line and the sub-tabs as its
-  tab row (below); its index redirects to `bases`.
+  tab row (below). Its route has no path, so the pages keep top-level URLs and the tabs' relative links resolve to them (`to="item-types"` is `/item-types`).
 
 `GameDataLayout` renders:
 
@@ -363,15 +372,14 @@ export const router = createBrowserRouter(
         { path: 'gemwords', element: routeElement(GemwordsScreen) },
         { path: 'socketables', element: routeElement(SocketablesScreen) },
         {
-          path: 'game-data',
-          element: routeElement(GameDataLayout),
+          element: routeElement(GameDataLayout), // pathless: the pages are top-level URLs
           children: [
-            { index: true, element: <Navigate to="bases" replace /> },
             { path: 'bases', element: routeElement(GameDataBasesScreen) },
-            // ... sets, best-base, affixes, types, enhance, cube, materials, areas
+            // ... sets, best-base, affixes, item-types, enhance, cube-recipes, materials, area-levels
           ],
         },
-        // ... uniques, mythicals, ascendancies (before game-data),
+        { path: 'game-data/*', element: <GameDataRedirectRoute /> }, // old URLs, query and hash kept
+        // ... uniques, mythicals, ascendancies (before the Game Data pages),
         //     loot-filters (layout: index + ':id'), builds, builds/new,
         //     builds/:buildId/edit, build/:buildId, user/:userId
         { path: '*', element: <NotFoundScreen /> },

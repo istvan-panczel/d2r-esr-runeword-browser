@@ -96,7 +96,7 @@ export function kindLabel(row: Pick<ItemRow, 'info'>): string {
   return row.info.kind === 'runeword' && row.info.runeword?.gemword === true ? 'Gemword' : ITEM_KIND_LABELS[row.info.kind];
 }
 
-const SETS_PAGE = '/game-data/sets';
+const SETS_PAGE = '/sets';
 
 /**
  * The app page of a row's unique, set item, runeword or gemword (the exact-name focus, `?name=`); null for other

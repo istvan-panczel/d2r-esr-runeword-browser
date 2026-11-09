@@ -5,7 +5,7 @@ import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { selectBaseFilters, setBaseFilters } from '../store/gameDataSlice';
 import { BASE_FILTER_PARAM_KEYS, decodeBaseFilters, encodeBaseFilters, hasBaseFilterParams } from '../store/baseFiltersUrl';
 
-const BASES_ROUTE = 'game-data/bases';
+const BASES_ROUTE = 'bases';
 
 /**
  * URL ↔ Redux for the Bases page, following the runewords `useUrlInitialize` / `useShareUrl` pattern:

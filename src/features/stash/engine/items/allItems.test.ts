@@ -179,7 +179,7 @@ describe('item rows', () => {
   it('links uniques, set items, runewords and gemwords to their pages', () => {
     expect(rows.map(itemPageUrl)).toEqual([
       '/uniques?name=Harlequin+Crest',
-      '/game-data/sets?name=Civerb%27s+Ward',
+      '/sets?name=Civerb%27s+Ward',
       null,
       '/runewords?name=Spirit',
       null,

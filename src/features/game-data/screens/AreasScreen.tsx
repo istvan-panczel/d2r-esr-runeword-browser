@@ -28,7 +28,7 @@ import {
 import { formatCount } from '../utils/cube';
 
 const AREAS_FILES = ['areas'] as const;
-const AREAS_ROUTE = 'game-data/areas';
+const AREAS_ROUTE = 'area-levels';
 const SEARCH_DEBOUNCE_MS = 300;
 const LEVEL_DEBOUNCE_MS = 400;
 const COLUMN_COUNT = 6;

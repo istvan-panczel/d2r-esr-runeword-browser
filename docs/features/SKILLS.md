@@ -414,7 +414,7 @@ same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills
     items" returns to the Items tab at the scroll position it had (`saveScroll` / `restoreScroll` in
     `useDetailScroll.ts`; the Items tab stays mounted while hidden, so expanded "Show all" groups survive too). Builds: a level below the allocated points is plain text, "Below this build's N points".
     Item links: uniques → `/uniques?name=`, or `/mythicals?name=` when the HTM mythicals list in IndexedDB has the
-    name; set items → `/game-data/sets?name=`; runewords → `/runewords?name=`; gemwords → `/gemwords?name=`.
+    name; set items → `/sets?name=`; runewords → `/runewords?name=`; gemwords → `/gemwords?name=`.
   - **About**: the facts as a list (skill, required / max level, mana, damage element, aura / passive, Requires and
     Unlocks links, the skills.txt id when it differs from the name), the calculator's scaling tags written out ("Scales
     with character level", "Scales with hard points only": +skills do not raise that part), the ESR skill information

@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { startBuilds, startLootFilterSharing } from '@/core/startup';
 import { loadAfter } from './loadAfter';
 import { HomeRoute } from './HomeRoute';
+import { GameDataRedirectRoute } from './GameDataRedirectRoute';
 
 const HomeScreen = lazy(async () => {
   const module = await import('@/features/home');
@@ -284,22 +285,23 @@ export const router = createBrowserRouter(
         { path: 'elixirs', element: routeElement(ElixirsScreen) },
         { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
         { path: 'terror-zones', element: routeElement(TerrorZonesScreen) },
+        // The Game Data pages share one shell through this pathless layout; their URLs are top-level.
         {
-          path: 'game-data',
           element: routeElement(GameDataLayout),
           children: [
-            { index: true, element: <Navigate to="bases" replace /> },
             { path: 'bases', element: routeElement(GameDataBasesScreen) },
             { path: 'sets', element: routeElement(GameDataSetsScreen) },
             { path: 'best-base', element: routeElement(GameDataBestBaseScreen) },
             { path: 'affixes', element: routeElement(GameDataAffixesScreen) },
-            { path: 'types', element: routeElement(GameDataItemTypesScreen) },
+            { path: 'item-types', element: routeElement(GameDataItemTypesScreen) },
             { path: 'enhance', element: routeElement(GameDataEnhanceScreen) },
-            { path: 'cube', element: routeElement(GameDataCubeScreen) },
+            { path: 'cube-recipes', element: routeElement(GameDataCubeScreen) },
             { path: 'materials', element: routeElement(GameDataMaterialsScreen) },
-            { path: 'areas', element: routeElement(GameDataAreasScreen) },
+            { path: 'area-levels', element: routeElement(GameDataAreasScreen) },
           ],
         },
+        // Old `/game-data/...` links (shared Copy Link URLs carry filters) redirect with their query and hash.
+        { path: 'game-data/*', element: <GameDataRedirectRoute /> },
         {
           path: 'loot-filters',
           element: routeElement(LootFilterLayout),

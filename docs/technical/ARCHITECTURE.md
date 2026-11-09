@@ -132,7 +132,7 @@ The app has two data systems. The main one is HTM-based: data is fetched from th
 
 ### Game-file data
 
-The Game Data pages (`/game-data/*`) read static JSON bundles generated at build time from the ESR txt game tables:
+The Game Data pages (`/bases`, `/sets`, `/enhance`, … see [NAVIGATION.md](./NAVIGATION.md#routes)) read static JSON bundles generated at build time from the ESR txt game tables:
 
 ```
 ESR clone (excel/*.txt, strings/*.json)

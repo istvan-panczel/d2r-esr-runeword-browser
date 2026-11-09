@@ -111,9 +111,9 @@ describe('materials tree and search', () => {
 
 describe('materials links', () => {
   it('links cube families and Enhance tabs', () => {
-    expect(cubeFamilyHref('other:anya-s-gift')).toBe('/game-data/cube?family=other%3Aanya-s-gift');
-    expect(enhanceHref({ tab: 'anointment', slot: 'charm', label: 'x' })).toBe('/game-data/enhance?tab=anointment&slot=charm');
-    expect(enhanceHref({ tab: 'vessel', label: 'x' })).toBe('/game-data/enhance?tab=vessel');
+    expect(cubeFamilyHref('other:anya-s-gift')).toBe('/cube-recipes?family=other%3Aanya-s-gift');
+    expect(enhanceHref({ tab: 'anointment', slot: 'charm', label: 'x' })).toBe('/enhance?tab=anointment&slot=charm');
+    expect(enhanceHref({ tab: 'vessel', label: 'x' })).toBe('/enhance?tab=vessel');
   });
 
   it('joins the guide notes of the item and of the family making most of it, known notes only', () => {

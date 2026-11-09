@@ -226,7 +226,7 @@ export function BaseCard({ base, typeByCode, baseByCode, automodById, classNames
         {superior !== null && <SuperiorRollsSection superior={superior} base={base} />}
         {masteries !== null && <WeaponMasterySection masteries={masteries} base={base} />}
         <Link
-          to={`/game-data/affixes?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.BASE]: base.code }).toString()}`}
+          to={`/affixes?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.BASE]: base.code }).toString()}`}
           className="mt-2 inline-block text-sm text-primary underline-offset-2 hover:underline"
         >
           What can roll

@@ -13,11 +13,11 @@ describe('resolveLink', () => {
     ['mythical:Frostmourne', 'app', '/mythicals?name=Frostmourne'],
     ['socketable:El%20Rune', 'app', '/socketables?name=El%20Rune'],
     ['gw:A%26B', 'app', '/gemwords?name=A%26B'],
-    ['base:crs', 'app', '/game-data/bases?search=%22Crystal%20Sword%22'],
-    ['type:swor', 'app', '/game-data/types?type=swor'],
-    ['bestbase:Enigma', 'app', '/game-data/best-base?rw=Enigma'],
-    ['affixes:base=7cr&ilvl=85', 'app', '/game-data/affixes?base=7cr&ilvl=85'],
-    ['page:/game-data/bases', 'app', '/game-data/bases'],
+    ['base:crs', 'app', '/bases?search=%22Crystal%20Sword%22'],
+    ['type:swor', 'app', '/item-types?type=swor'],
+    ['bestbase:Enigma', 'app', '/best-base?rw=Enigma'],
+    ['affixes:base=7cr&ilvl=85', 'app', '/affixes?base=7cr&ilvl=85'],
+    ['page:/bases', 'app', '/bases'],
     ['https://example.com/x', 'external', 'https://example.com/x'],
     [
       'docs:Eastern%20Sun%20Resurrected%20Cube%20Recipes.html#special',
@@ -62,7 +62,7 @@ describe('resolveLink', () => {
     expect(resolveLink('relative/path', ctx)).toHaveProperty('error');
     expect(resolveLink('page:game-data', ctx)).toHaveProperty('error');
     expect(resolveLink('page:/builds', ctx)).toHaveProperty('error');
-    expect(resolveLink('page:/game-data/bases?search=x', ctx)).toEqual({ kind: 'app', href: '/game-data/bases?search=x' });
+    expect(resolveLink('page:/bases?search=x', ctx)).toEqual({ kind: 'app', href: '/bases?search=x' });
   });
 
   it('checks the kind of a page:/modifiers link against modifiers.json', () => {

@@ -58,7 +58,7 @@ export function filterSuperiorPools(
 export function superiorAffixesPath(type?: string): string {
   const params = new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.VIEW]: 'superior' });
   if (type !== undefined) params.set(GAME_DATA_URL_PARAM_KEYS.SUPERIOR_TYPE, type);
-  return `/game-data/affixes?${params.toString()}`;
+  return `/affixes?${params.toString()}`;
 }
 
 /** How the rows are weighted, for the Superior view's intro: " (…)" after "picked by weight" */

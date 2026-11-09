@@ -30,7 +30,7 @@ officialDocs:
 sources: [esru-wiki, official-cube, official-docs, esr-txt]
 ---
 
-Early on, pick up more than feels sensible. Most ESR materials become points in :term[Stocker]s, so they cost almost no space ([[stockers]]). Later you will stop picking up the cheap ones. Found something you don't recognise? Look it up on the [Materials page](page:/game-data/materials): where it comes from and which recipes use it.
+Early on, pick up more than feels sensible. Most ESR materials become points in :term[Stocker]s, so they cost almost no space ([[stockers]]). Later you will stop picking up the cheap ones. Found something you don't recognise? Look it up on the [Materials page](page:/materials): where it comes from and which recipes use it.
 
 ### Always keep
 

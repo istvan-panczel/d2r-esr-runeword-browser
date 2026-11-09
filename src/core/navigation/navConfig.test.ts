@@ -57,7 +57,7 @@ describe('navConfig', () => {
     const recipes = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'recipes');
     if (!tools || !recipes) throw new Error('missing group');
     expect(isNavGroupActive('/loot-filters/abc', tools)).toBe(true);
-    expect(isNavGroupActive('/game-data/bases', tools)).toBe(false);
+    expect(isNavGroupActive('/bases', tools)).toBe(false);
     expect(isNavGroupActive('/guide', recipes)).toBe(false);
     expect(isNavGroupActive('/runewords', recipes)).toBe(true);
     expect(isNavGroupActive('/', recipes)).toBe(false);

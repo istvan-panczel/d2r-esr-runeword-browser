@@ -6,7 +6,7 @@ describe('isStaticBundlePath', () => {
     expect(isStaticBundlePath('/')).toBe(true);
   });
 
-  it.each(['/runewords', '/gemwords', '/uniques', '/builds', '/game-data/bases', '/game-data', '/nope'])(
+  it.each(['/runewords', '/gemwords', '/uniques', '/builds', '/bases', '/best-base', '/affixes', '/item-types', '/nope'])(
     'keeps %s behind the loading gate (/ is not a prefix)',
     (pathname) => {
       expect(isStaticBundlePath(pathname)).toBe(false);
@@ -19,10 +19,14 @@ describe('isStaticBundlePath', () => {
     '/guide/start-here',
     '/loot-filters',
     '/loot-filters/abc',
+    '/enhance',
+    '/cube-recipes',
+    '/materials',
+    '/sets',
+    '/area-levels',
+    '/game-data',
     '/game-data/enhance',
-    '/game-data/cube',
-    '/game-data/materials',
-    '/game-data/sets',
+    '/game-data/bases',
     '/campaign-map',
     '/stash',
     '/stash/coupons',
@@ -38,5 +42,8 @@ describe('isStaticBundlePath', () => {
   it('does not match a path that only shares the prefix text', () => {
     expect(isStaticBundlePath('/guides')).toBe(false);
     expect(isStaticBundlePath('/loot-filtersx')).toBe(false);
+    expect(isStaticBundlePath('/setsx')).toBe(false);
+    expect(isStaticBundlePath('/skills')).toBe(false);
+    expect(isStaticBundlePath('/enhanced')).toBe(false);
   });
 });

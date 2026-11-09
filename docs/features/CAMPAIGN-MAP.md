@@ -94,7 +94,7 @@ Examples: `/campaign-map?area=93` (Sewers Level 2 on Act III), `/campaign-map?ta
    dashed for portals and unconfirmed edges, `→` / `←` for one way). A chip selects that area (another tab when it lives
    there), so the map can be walked from the panel.
 7. **Monsters**: level, density and unique packs for Normal / Nightmare / Hell, or "No monsters".
-8. **More**: Areas page row (`/game-data/areas?search="<name>"`), cube recipe families (quest items, map portals,
+8. **More**: Areas page row (`/area-levels?search="<name>"`), cube recipe families (quest items, map portals,
    Pandemonium keys) when they apply, the official Drop Finder (no deep link: its hash is positional) when the area
    has monsters, the official Maps page (Endgame Maps page for maps), the levels.txt Id and Copy Link of this area.
 

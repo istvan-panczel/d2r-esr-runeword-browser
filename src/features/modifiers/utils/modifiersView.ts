@@ -388,7 +388,7 @@ export function exampleItemUrl(kind: ModifierItemKind, name: string, mythicals: 
       return `${mythicals.has(normaliseItemName(name)) ? NAME_FOCUS_PAGES.mythical : NAME_FOCUS_PAGES.unique}?${exact}`;
     case 'set':
     case 'setBonus':
-      return `/game-data/sets?${exact}`;
+      return `/sets?${exact}`;
     case 'runeword':
       return `${NAME_FOCUS_PAGES.rw}?${exact}`;
     case 'gemword':
@@ -398,7 +398,7 @@ export function exampleItemUrl(kind: ModifierItemKind, name: string, mythicals: 
     case 'prefix':
     case 'suffix':
     case 'automagic':
-      return `/game-data/affixes?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.SEARCH]: `"${name}"` }).toString()}`;
+      return `/affixes?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.SEARCH]: `"${name}"` }).toString()}`;
     case 'superior':
     case 'cube':
       return null;

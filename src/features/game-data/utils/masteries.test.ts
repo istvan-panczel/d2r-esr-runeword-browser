@@ -58,10 +58,10 @@ describe('weapon mastery helpers', () => {
     expect(masterySummary([orb1, orb2])).toBe('one of 2 (Spells or Sorceress Exclusives)');
     expect(masterySummary([orb1])).toBe('Spells');
     expect(masteryRecipe(orb1, bundle.names).map((entry) => entry.text)).toEqual(['Awakened token', 'Crushed Gem', 'Anvil Stone']);
-    expect(masteryBasesUrl(orb1)).toBe('/game-data/bases?type=orb');
+    expect(masteryBasesUrl(orb1)).toBe('/bases?type=orb');
     expect(masteryHref('orb-1')).toBe('/weapon-masteries?mastery=orb-1');
     expect(masteryBasesUrl(mastery('weapon-mastery-reflex-bow', 'Reflex Bow', [], { bases: ['am2', 'am7', 'amc', 'm54'] }))).toBe(
-      '/game-data/bases?codes=am2%2Cam7%2Camc%2Cm54'
+      '/bases?codes=am2%2Cam7%2Camc%2Cm54'
     );
   });
 

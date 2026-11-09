@@ -19,7 +19,7 @@ import { useGameData } from '../hooks/useGameData';
 import { ENHANCE_TABS, ENHANCE_TAB_LABELS, encodeEnhanceState, readEnhanceState, slotOptions, type EnhanceState } from '../utils/enhance';
 
 const ENHANCE_FILES = ['enhance'] as const;
-const ENHANCE_ROUTE = 'game-data/enhance';
+const ENHANCE_ROUTE = 'enhance';
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function EnhanceScreen() {

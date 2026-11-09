@@ -232,7 +232,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
-      { key: 'sets', to: '/game-data/sets', label: 'Sets', description: 'Set items with their partial and full-set bonuses' },
+      { key: 'sets', to: '/sets', label: 'Sets', description: 'Set items with their partial and full-set bonuses' },
       { key: 'ascendancies', to: '/ascendancies', label: 'Ascendancies', description: 'Ascendancies and their tier bonuses' },
       { key: 'skills', to: '/skills', label: 'Skills', description: 'Class skill trees and the items that grant each skill' },
       {
@@ -265,10 +265,10 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         label: 'Modifiers',
         description: 'What item modifiers do in ESR: leech, crushing blow, resists, procs, speed, magic find',
       },
-      { key: 'bases', to: '/game-data/bases', label: 'Bases', description: 'Base items from the game files' },
+      { key: 'bases', to: '/bases', label: 'Bases', description: 'Base items from the game files' },
       {
         key: 'materials',
-        to: '/game-data/materials',
+        to: '/materials',
         label: 'Materials',
         description: 'Runes, gems, organs, coupons and every other misc item',
       },
@@ -280,7 +280,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
       },
       {
         key: 'areas',
-        to: '/game-data/areas',
+        to: '/area-levels',
         label: 'Areas',
         description: "Every area's monster level per difficulty, density, waypoints and the endgame map tiers",
       },
@@ -298,16 +298,16 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     label: 'Tools',
     description: 'Pick a base, check affix rolls, plan enhancements, write loot filters and track terror zones',
     items: [
-      { key: 'best-base', to: '/game-data/best-base', label: 'Best Base', description: 'Best base for a runeword and character' },
-      { key: 'affixes', to: '/game-data/affixes', label: 'Affixes', description: 'Affixes and what can roll on a base' },
-      { key: 'item-types', to: '/game-data/types', label: 'Item Types', description: 'Item type tree and socket caps' },
+      { key: 'best-base', to: '/best-base', label: 'Best Base', description: 'Best base for a runeword and character' },
+      { key: 'affixes', to: '/affixes', label: 'Affixes', description: 'Affixes and what can roll on a base' },
+      { key: 'item-types', to: '/item-types', label: 'Item Types', description: 'Item type tree and socket caps' },
       {
         key: 'enhance',
-        to: '/game-data/enhance',
+        to: '/enhance',
         label: 'Enhance',
         description: 'Corruption, anointment, sanctification and Vessel of Souls outcomes',
       },
-      { key: 'cube', to: '/game-data/cube', label: 'Cube Recipes', description: 'Every cube recipe, grouped by family' },
+      { key: 'cube', to: '/cube-recipes', label: 'Cube Recipes', description: 'Every cube recipe, grouped by family' },
       { key: 'loot-filters', to: '/loot-filters', label: 'Loot Filters', description: 'Build and test loot filters' },
       {
         key: 'terror-zones',

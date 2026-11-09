@@ -46,7 +46,7 @@ The **Eternal Hourglass of the Timeless Sands** drops finished from the Guardian
 
 ### Making them stronger
 
-- A **Standard of Heroes**, [dropped by the uber bosses](<dropfinder:Standard of Heroes>), upgrades one unique charm once with a small bonus: [every charm's bonus](page:/game-data/enhance?tab=standard).
+- A **Standard of Heroes**, [dropped by the uber bosses](<dropfinder:Standard of Heroes>), upgrades one unique charm once with a small bonus: [every charm's bonus](page:/enhance?tab=standard).
 - [Diablo's Demonic Horn](<dropfinder:Diablo's Demonic Horn>), Baal's Demonic Eye and Mephisto's Demonic Brain together anoint a unique charm once ([[corruption-anointment]]).
 - Most unique charms reroll with Perfect Gems; the cost depends on the charm's required level.
 - Skill and Stat :term[Forging] accept unique charms ([[forging]]).

@@ -123,11 +123,11 @@ describe('display helpers', () => {
     const mythicals = new Set(['bul-kathos']);
     expect(exampleItemUrl('unique', 'Shako', mythicals)).toBe('/uniques?name=Shako');
     expect(exampleItemUrl('unique', 'Bul-Kathos', mythicals)).toBe('/mythicals?name=Bul-Kathos');
-    expect(exampleItemUrl('set', "Achilles' Girdle", mythicals)).toBe('/game-data/sets?name=Achilles%27+Girdle');
+    expect(exampleItemUrl('set', "Achilles' Girdle", mythicals)).toBe('/sets?name=Achilles%27+Girdle');
     expect(exampleItemUrl('runeword', 'Boar', mythicals)).toBe('/runewords?name=Boar');
     expect(exampleItemUrl('gemword', 'Holy', mythicals)).toBe('/gemwords?name=Holy');
     expect(exampleItemUrl('socketable', 'Chipped Emerald', mythicals)).toBe('/socketables?name=Chipped+Emerald');
-    expect(exampleItemUrl('prefix', 'Bloodlust', mythicals)).toBe('/game-data/affixes?search=%22Bloodlust%22');
+    expect(exampleItemUrl('prefix', 'Bloodlust', mythicals)).toBe('/affixes?search=%22Bloodlust%22');
     expect(exampleItemUrl('cube', 'Odd recipe', mythicals)).toBeNull();
   });
 

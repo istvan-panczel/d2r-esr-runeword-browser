@@ -10,7 +10,7 @@ const recipes = (family: string, rows: number, caption = 'Rune upgrades') => ({
     kind: 'recipes',
     caption,
     rows: Array.from({ length: rows }, (_, i) => ({ inputs: [`r${String(i)}`], output: 'x', note: null })),
-    link: { label: 'All', href: `/game-data/cube?family=${family}` },
+    link: { label: 'All', href: `/cube-recipes?family=${family}` },
   },
 });
 const guide = (...notes: NoteInput[]) => ({ notes, glossary: [] }) as unknown as GuideBundle;

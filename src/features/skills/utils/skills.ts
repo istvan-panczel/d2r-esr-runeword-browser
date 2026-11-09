@@ -275,7 +275,7 @@ export function itemPageUrl(item: SkillGrantItem, mythicals: ReadonlySet<string>
     case 'unique':
       return `${mythicals.has(normaliseItemName(item.name)) ? '/mythicals' : '/uniques'}?${query}`;
     case 'set':
-      return `/game-data/sets?${query}`;
+      return `/sets?${query}`;
     case 'runeword':
       return `/runewords?${query}`;
     case 'gemword':

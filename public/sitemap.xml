@@ -251,47 +251,47 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/bases</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/bases</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/sets</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/sets</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/best-base</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/best-base</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/affixes</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/affixes</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/types</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/item-types</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/enhance</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/enhance</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/cube</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/cube-recipes</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/materials</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/materials</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/game-data/areas</loc>
+    <loc>https://istvan-panczel.github.io/d2r-esr-runeword-browser/area-levels</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
