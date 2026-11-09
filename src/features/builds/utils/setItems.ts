@@ -31,5 +31,5 @@ export const SET_NAME_CLASS = 'text-green-700 dark:text-green-400';
 
 /** The Sets page focused on this item's set, with the item highlighted (`?name=` takes a set or set item name). */
 export function setItemPageUrl(itemName: string): string {
-  return `/game-data/sets?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.NAME]: itemName }).toString()}`;
+  return `/sets?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.NAME]: itemName }).toString()}`;
 }

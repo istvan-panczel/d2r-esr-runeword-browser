@@ -37,7 +37,7 @@ describe('START_CARDS', () => {
 describe('startCardHref', () => {
   it('maps notes to /guide/<slug> and keeps page paths', () => {
     expect(startCardHref({ kind: 'note', slug: 'cube-basics' })).toBe('/guide/cube-basics');
-    expect(startCardHref({ kind: 'page', path: '/game-data/best-base' })).toBe('/game-data/best-base');
+    expect(startCardHref({ kind: 'page', path: '/best-base' })).toBe('/best-base');
   });
 });
 
@@ -45,7 +45,7 @@ describe('visibleStartCards', () => {
   const cards: StartCard[] = [
     { id: 'found-item', question: 'a', description: '', target: { kind: 'note', slug: 'present' } },
     { id: 'cube', question: 'b', description: '', target: { kind: 'note', slug: 'missing' } },
-    { id: 'best-base', question: 'c', description: '', target: { kind: 'page', path: '/game-data/best-base' } },
+    { id: 'best-base', question: 'c', description: '', target: { kind: 'page', path: '/best-base' } },
   ];
 
   it('drops cards whose note is not in the bundle and keeps page cards', () => {

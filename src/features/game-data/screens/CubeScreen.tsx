@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FilterPanel } from '@/components/FilterPanel';
@@ -34,7 +33,7 @@ import {
 } from '../utils/cube';
 
 const CUBE_FILES = ['cube'] as const;
-const CUBE_ROUTE = 'game-data/cube';
+const CUBE_ROUTE = 'cube-recipes';
 const SEARCH_DEBOUNCE_MS = 300;
 /** The "Show all families" line above a focused family, scrolled into view */
 const FOCUS_ANCHOR = 'cube-family-focus';
@@ -236,7 +235,6 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
           ))}
         </div>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }
@@ -295,7 +293,7 @@ function HiddenRowsCards({ bundle }: { readonly bundle: CubeBundle }) {
           <p className="font-medium">Corruption, anointment and the Vessel of Souls</p>
           <p className="text-muted-foreground">
             Their {formatCount(hidden.enhance)} rows (one per roll) are summarised as outcome lists on the{' '}
-            <Link to="/game-data/enhance" className="font-medium text-primary underline decoration-primary/40 underline-offset-2">
+            <Link to="/enhance" className="font-medium text-primary underline decoration-primary/40 underline-offset-2">
               Enhance page
             </Link>
             .

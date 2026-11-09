@@ -1,7 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
 import { ExactNameChip } from '@/core/components/ExactNameChip';
@@ -29,7 +28,7 @@ import {
 } from '../utils/materials';
 
 const MATERIALS_FILES = ['materials'] as const;
-const MATERIALS_ROUTE = 'game-data/materials';
+const MATERIALS_ROUTE = 'materials';
 const SEARCH_DEBOUNCE_MS = 300;
 const ALL_GROUPS = '';
 
@@ -80,7 +79,7 @@ function MaterialsBrowser({ bundle }: { readonly bundle: MaterialsBundle }) {
       <p className="text-sm text-muted-foreground">
         Every rune, gem, organ, Dragon Stone, coupon, potion and other misc item from the game files ({formatCount(bundle.items.length)}{' '}
         rows for {formatCount(variants)} items; stockers, cans and coupons are folded together): where it comes from, which{' '}
-        <Link to="/game-data/cube" className="font-medium text-primary underline decoration-primary/40 underline-offset-2">
+        <Link to="/cube-recipes" className="font-medium text-primary underline decoration-primary/40 underline-offset-2">
           cube recipes
         </Link>{' '}
         use it and the guide notes about it. Sources are derived from the game files and may be incomplete.
@@ -171,7 +170,6 @@ function MaterialsBrowser({ bundle }: { readonly bundle: MaterialsBundle }) {
           ))}
         </div>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }

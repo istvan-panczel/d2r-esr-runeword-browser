@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
@@ -20,7 +19,7 @@ import { useGameData } from '../hooks/useGameData';
 import { ENHANCE_TABS, ENHANCE_TAB_LABELS, encodeEnhanceState, readEnhanceState, slotOptions, type EnhanceState } from '../utils/enhance';
 
 const ENHANCE_FILES = ['enhance'] as const;
-const ENHANCE_ROUTE = 'game-data/enhance';
+const ENHANCE_ROUTE = 'enhance';
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function EnhanceScreen() {
@@ -135,7 +134,6 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
         />
       )}
       {state.tab === 'standard' && <EnhanceStandard bundle={bundle} search={state.search} />}
-      <ScrollToTopButton />
     </div>
   );
 }

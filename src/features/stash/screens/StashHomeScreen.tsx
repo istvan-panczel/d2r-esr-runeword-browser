@@ -35,7 +35,7 @@ export function StashHomeScreen() {
           What the pages show
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2">
-          {STASH_PAGES.filter((page) => page.to !== '/stash').map((page) => {
+          {STASH_PAGES.map((page) => {
             const summary = summaryOf(page.to);
             return (
               <li key={page.to}>

@@ -5,7 +5,6 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { SectionHeader } from '@/components/SectionHeader';
 import { NumberFilterInput } from '@/core/components/RecipeCommonFilters';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
@@ -29,7 +28,7 @@ import {
 import { formatCount } from '../utils/cube';
 
 const AREAS_FILES = ['areas'] as const;
-const AREAS_ROUTE = 'game-data/areas';
+const AREAS_ROUTE = 'area-levels';
 const SEARCH_DEBOUNCE_MS = 300;
 const LEVEL_DEBOUNCE_MS = 400;
 const COLUMN_COUNT = 6;
@@ -153,7 +152,6 @@ function AreasBrowser({ bundle }: { readonly bundle: AreasBundle }) {
           ))}
         </div>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }

@@ -19,7 +19,7 @@ import type { Runeword } from '@/core/db/models';
 
 /** Best Base finder link (game-data feature; plain path so the runewords chunk does not import it). */
 function bestBasePath(runeword: Pick<Runeword, 'name' | 'variant'>): string {
-  return `/game-data/best-base?${new URLSearchParams({ rw: runeword.name, v: String(runeword.variant) }).toString()}`;
+  return `/best-base?${new URLSearchParams({ rw: runeword.name, v: String(runeword.variant) }).toString()}`;
 }
 
 interface RunewordCardProps {

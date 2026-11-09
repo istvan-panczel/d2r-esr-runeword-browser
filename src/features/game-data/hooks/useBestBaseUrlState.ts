@@ -5,7 +5,7 @@ import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { selectBestBaseOptions, selectCharacter, setBestBaseRuneword, updateCharacter } from '../store/gameDataSlice';
 import { BEST_BASE_PARAM_KEYS, decodeBestBaseParams, encodeBestBaseParams, hasBestBaseParams } from '../store/bestBaseUrl';
 
-const BEST_BASE_ROUTE = 'game-data/best-base';
+const BEST_BASE_ROUTE = 'best-base';
 
 /**
  * URL ↔ Redux for the Best Base page (runewords `useUrlInitialize` / `useShareUrl` pattern): on mount, `rw`/`v`

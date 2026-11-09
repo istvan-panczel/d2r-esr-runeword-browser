@@ -10,11 +10,13 @@ const STATIC_BUNDLE_EXACT_ROUTES: readonly string[] = ['/'];
 const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/guide',
   '/loot-filters',
-  '/game-data/enhance',
-  '/game-data/cube',
-  '/game-data/materials',
-  '/game-data/sets',
-  '/game-data/areas',
+  '/enhance',
+  '/cube-recipes',
+  '/materials',
+  '/sets',
+  '/area-levels',
+  // Only the old-URL redirect lives here and it needs no data: the page it lands on applies its own gate.
+  '/game-data',
   '/campaign-map',
   '/stash',
   '/terror-zones',

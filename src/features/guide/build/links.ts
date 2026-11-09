@@ -48,15 +48,15 @@ export const APP_PAGES: readonly string[] = [
   '/mercenaries',
   '/kill-ledger',
   '/elixirs',
-  '/game-data/bases',
-  '/game-data/sets',
-  '/game-data/best-base',
-  '/game-data/affixes',
-  '/game-data/types',
-  '/game-data/enhance',
-  '/game-data/cube',
-  '/game-data/materials',
-  '/game-data/areas',
+  '/bases',
+  '/sets',
+  '/best-base',
+  '/affixes',
+  '/item-types',
+  '/enhance',
+  '/cube-recipes',
+  '/materials',
+  '/area-levels',
   '/campaign-map',
   '/guide',
 ];
@@ -108,15 +108,15 @@ export function resolveLink(url: string, ctx: GuideContext): ResolvedLink | Buil
     case 'base': {
       const name = ctx.baseNames.get(target);
       if (name === undefined) return { error: `unknown base code "${target}" (base:)` };
-      return { kind: 'app', href: search('/game-data/bases', name) };
+      return { kind: 'app', href: search('/bases', name) };
     }
     case 'type':
       if (!ctx.typeCodes.has(target)) return { error: `unknown item type code "${target}" (type:)` };
-      return { kind: 'app', href: `/game-data/types?type=${encodeURIComponent(target)}` };
+      return { kind: 'app', href: `/item-types?type=${encodeURIComponent(target)}` };
     case 'bestbase':
-      return { kind: 'app', href: `/game-data/best-base?rw=${encodeURIComponent(target)}` };
+      return { kind: 'app', href: `/best-base?rw=${encodeURIComponent(target)}` };
     case 'affixes':
-      return { kind: 'app', href: `/game-data/affixes?${target}` };
+      return { kind: 'app', href: `/affixes?${target}` };
     case 'page': {
       const path = target.split(/[?#]/)[0] ?? '';
       if (!APP_PAGES.includes(path)) {

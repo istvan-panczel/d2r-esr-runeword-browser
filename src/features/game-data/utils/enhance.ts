@@ -70,7 +70,7 @@ export function anointmentGroups(slots: readonly AnointmentSlot[]): AnointmentGr
 }
 
 /** The cube family holding the Standard of Heroes recipes */
-export const STANDARD_CUBE_HREF = `/game-data/cube?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=unique-charm-upgrades`;
+export const STANDARD_CUBE_HREF = `/cube-recipes?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=unique-charm-upgrades`;
 
 /** The Vessel tab's completion section (tier param value) */
 export const VESSEL_COMPLETION = 'completion';

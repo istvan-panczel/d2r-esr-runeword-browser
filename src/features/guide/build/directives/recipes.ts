@@ -23,5 +23,5 @@ export const resolveRecipes: DirectiveResolver = (arg, ctx) => {
 export function withCubeLink(block: RecipesBlock, familyId: string, esr: Parameters<typeof assignCubeRows>[0]): RecipesBlock {
   const count = assignCubeRows(esr).assigned.get(familyId)?.rows.length ?? 0;
   if (count === 0) return block;
-  return { ...block, link: { label: `All ${count.toLocaleString('en-US')} recipes`, href: `/game-data/cube?family=${familyId}` } };
+  return { ...block, link: { label: `All ${count.toLocaleString('en-US')} recipes`, href: `/cube-recipes?family=${familyId}` } };
 }

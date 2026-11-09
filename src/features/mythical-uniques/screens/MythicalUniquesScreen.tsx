@@ -6,7 +6,6 @@ import { selectExactName } from '../store';
 import { useSelector } from 'react-redux';
 import { ExactNameChip } from '@/core/components/ExactNameChip';
 import { Spinner } from '@/components/ui/spinner';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { PageShell } from '@/components/PageShell';
 import { ResultsBar } from '@/components/ResultsBar';
 import { useItemSources } from '@/features/game-data/hooks/useItemSources';
@@ -46,8 +45,6 @@ export function MythicalUniquesScreen() {
           ))}
         </div>
       )}
-
-      <ScrollToTopButton />
     </PageShell>
   );
 }

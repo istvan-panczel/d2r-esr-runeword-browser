@@ -6,18 +6,18 @@ per-phase implementation notes live in `builds-feature-docs/FEATURE-GAME-DATA.md
 
 ## Overview
 
-| Route                  | Tab        | Status               |
-| ---------------------- | ---------- | -------------------- |
-| `/game-data`           | —          | redirects to `bases` |
-| `/game-data/bases`     | Bases      | done                 |
-| `/game-data/sets`      | Sets       | done                 |
-| `/game-data/types`     | Item Types | done                 |
-| `/game-data/best-base` | Best Base  | done                 |
-| `/game-data/affixes`   | Affixes    | done                 |
-| `/game-data/enhance`   | Enhance    | done                 |
-| `/game-data/cube`      | Cube       | done                 |
-| `/game-data/materials` | Materials  | done                 |
-| `/game-data/areas`     | Areas      | done                 |
+| Route           | Tab        | Status                                |
+| --------------- | ---------- | ------------------------------------- |
+| `/game-data/*`  | —          | old URLs, redirect to the pages below |
+| `/bases`        | Bases      | done                                  |
+| `/sets`         | Sets       | done                                  |
+| `/item-types`   | Item Types | done                                  |
+| `/best-base`    | Best Base  | done                                  |
+| `/affixes`      | Affixes    | done                                  |
+| `/enhance`      | Enhance    | done                                  |
+| `/cube-recipes` | Cube       | done                                  |
+| `/materials`    | Materials  | done                                  |
+| `/area-levels`  | Areas      | done                                  |
 
 The game-file data is a second data system next to the HTM pipeline: it is never stored in IndexedDB and never parsed
 in the browser. Uniques, gemwords and the runeword list stay on the HTM pipeline (sets come from the game files, see
@@ -616,7 +616,7 @@ Blemished 81, Perfect 243). `FAMILY_NOTES` adds the hand-written ones (the uncap
 cycle a stocker).
 
 **Enhance link** (`enhanceTab`): a merged row whose cubemain rows are all sanctification outcomes (`op 18` on
-`item_sanctification_dummy`) is `sanctification`; the page links it to `/game-data/enhance?tab=sanctification` ("All
+`item_sanctification_dummy`) is `sanctification`; the page links it to `/enhance?tab=sanctification` ("All
 217 outcomes on the Enhance page"). The roll row ("Add Sanctification Dummy Stat", whose "Not marked for sanctification"
 condition `statConditionText` names) stays a plain row. A row of two inputs gated by `op 17` on `item_upgraded` (the
 Standard of Heroes charm upgrades; Tyrael's Might has the same gate with four inputs) is `standard`.
@@ -1494,26 +1494,25 @@ The script warns when the clone has uncommitted changes, because the output woul
 
 ### Routes, layout and loading
 
-| Route                  | Screen            | Notes                                                             |
-| ---------------------- | ----------------- | ----------------------------------------------------------------- |
-| `/game-data`           | `GameDataLayout`  | Redirects to `bases`. Title, version banner, sub-tabs, `<Outlet>` |
-| `/game-data/bases`     | `BasesScreen`     | Base item browser                                                 |
-| `/game-data/sets`      | `SetsScreen`      | Sets: items, per-item and set-wide partial bonuses, full set      |
-| `/game-data/best-base` | `BestBaseScreen`  | Best base finder                                                  |
-| `/game-data/affixes`   | `AffixesScreen`   | Affix browser and what-can-roll                                   |
-| `/game-data/types`     | `ItemTypesScreen` | Item type tree and socket-cap table                               |
-| `/game-data/enhance`   | `EnhanceScreen`   | Corruption, anointment, sanctification, Vessel, Standard outcomes |
-| `/game-data/cube`      | `CubeScreen`      | Every cube recipe, grouped by family                              |
-| `/game-data/materials` | `MaterialsScreen` | Misc items: sources, cube families, Enhance roles, guide notes    |
-| `/game-data/areas`     | `AreasScreen`     | Area levels, density, unique packs, waypoints, map tiers          |
+| Route           | Screen            | Notes                                                              |
+| --------------- | ----------------- | ------------------------------------------------------------------ |
+| (pathless)      | `GameDataLayout`  | Page title (the menu label), version note, `<Outlet>` around below |
+| `/bases`        | `BasesScreen`     | Base item browser                                                  |
+| `/sets`         | `SetsScreen`      | Sets: items, per-item and set-wide partial bonuses, full set       |
+| `/best-base`    | `BestBaseScreen`  | Best base finder                                                   |
+| `/affixes`      | `AffixesScreen`   | Affix browser and what-can-roll                                    |
+| `/item-types`   | `ItemTypesScreen` | Item type tree and socket-cap table                                |
+| `/enhance`      | `EnhanceScreen`   | Corruption, anointment, sanctification, Vessel, Standard outcomes  |
+| `/cube-recipes` | `CubeScreen`      | Every cube recipe, grouped by family                               |
+| `/materials`    | `MaterialsScreen` | Misc items: sources, cube families, Enhance roles, guide notes     |
+| `/area-levels`  | `AreasScreen`     | Area levels, density, unique packs, waypoints, map tiers           |
 
-One header entry ("Game Data", `end: false`). All screens are lazy-loaded from `@/features/game-data` (the route
-code-splitting guard test covers it). The child routes are in `public/sitemap.xml`.
+Each page is its own menu item (see NAVIGATION.md "Header Components"), the header's page row links them. All screens are lazy-loaded from `@/features/game-data` (the route
+code-splitting guard test covers it). The child routes are in `public/sitemap.xml`. The pages were under `/game-data/` until
+they became top-level URLs; the old URLs (`game-data/*`) still redirect, see NAVIGATION.md "Old Game Data links".
 
-**Version banner** (`components/GameDataVersionBanner.tsx`): "Game files: ESR {esrVersion} (tag {esrTag} @ {commit7},
-generated {YYYY-MM-DD})" from `loadManifest()`, then "Docs data: ESR X (site updated D Mon YYYY)" from Dexie metadata
-(`esrVersion`, `docsLastModified`; the line is left out while the docs version is unknown). When the docs version differs
-from the manifest's, an amber note says "Docs data is ESR X; game-file data is ESR Y — some details may differ." Both
+**Version note** (`components/GameDataVersionBanner.tsx`): renders nothing unless the docs version (Dexie metadata `esrVersion`)
+differs from the manifest's (`loadManifest()`); then an amber note says "Docs data is ESR X; game-file data is ESR Y — some details may differ." Both
 normally come from `metadata.modVersion` of `d2rloader/metadata.json` (the clone's copy vs the live GitHub copy), so they
 compare like with like; the docs side may fall back to the changelog page, so the note never says which is newer.
 
@@ -1581,7 +1580,7 @@ are pulled out into "Every option also: …". More than 5 options start collapse
 has no visible rows keeps the "Automod N" badge instead. Then a collapsed "Superior rolls: one of N, kept in runewords" (`components/SuperiorRollsSection.tsx`, also on the
 Best Base cards): the superior rows this base rolls (`superiorRollsForBase`), each with its chance (rows under 1% in
 amber; weight and row number in the tooltip) and the rendered lines, and an "All superior rows" link to
-`/game-data/affixes?view=superior&stype=<own type>`. Hidden for bases that roll no row (misc, Arrows, Bolts). Class
+`/affixes?view=superior&stype=<own type>`. Hidden for bases that roll no row (misc, Arrows, Bolts). Class
 weapons that take a weapon mastery get a collapsed "Weapon mastery: <skills lines>" ("one of 2 (…)" for Orb, Claw, Void
 Blade; `components/WeaponMasterySection.tsx`, masteries.json loads with the page): per specialisation the recipe with
 icons (Weapon + Awakened token + ingredients), the skills lines with the skill names linked (skill peek, ref kind
@@ -1643,7 +1642,7 @@ lists every type that has at least one base.
 
 ### Best Base page
 
-`/game-data/best-base` (`screens/BestBaseScreen.tsx`) loads the `types`, `bases` and `runewords` bundles via `useGameData`
+`/best-base` (`screens/BestBaseScreen.tsx`) loads the `types`, `bases` and `runewords` bundles via `useGameData`
 and the HTM runewords from Dexie (`useLiveQuery(() => db.runewords.toArray())`). Gemwords are not loaded: the docs list
 734 gemword rows, almost none of which are txt runewords, so they would flood the consistency list; the 12 gem-only txt
 recipes therefore show up as "unmatched txt".
@@ -1668,7 +1667,7 @@ with its socket counts; rune bonuses not included), then the results:
 defense/block after the ethereal estimate, speed, requirements (effective level = max(base, runeword), Str/Dex after
 the ethereal −10) with deficits in red "(+12)", sockets as one line per socket count — rows for Jewel and Mythical
 Jewel are collapsed (`collapseRowsBySockets`: "4 sockets (1 Jewel or 1 Mythical Jewel)") with "needs ilvl ≥ N for N"
-when the base needs a higher item level — "Upgrade: <next tier>" linking to `/game-data/bases?search="<name>"`, and
+when the base needs a higher item level — "Upgrade: <next tier>" linking to `/bases?search="<name>"`, and
 the collapsed "Superior rolls" panel of the Bases page (a superior base's bonus stays in the runeword).
 Unusable bases (only listed with the toggle) are dimmed.
 
@@ -1694,15 +1693,15 @@ character, the rest is kept.
 | `dex` | character.dex    | 0–999                                 |
 
 Copy Link writes `rw` + `v` and the character fields that differ from the defaults. Every runeword card has a hammer
-icon ("Find best base") linking to `/game-data/best-base?rw=<name>&v=<variant>`; it carries no character params, so the
+icon ("Find best base") linking to `/best-base?rw=<name>&v=<variant>`; it carries no character params, so the
 stored character is kept.
 
 ### Affixes page
 
-`/game-data/affixes` (`screens/AffixesScreen.tsx`) loads `types`, `bases` and `affixes`. Sub-tabs at the top (`view`)
+`/affixes` (`screens/AffixesScreen.tsx`) loads `types`, `bases` and `affixes`. Sub-tabs at the top (`view`)
 switch between **Magic & rare** (the affix lists below) and **Superior** (see "Superior view"). The Magic & rare view
 has two modes, switched by the selected base (`base` in the slice / URL). Every Bases page card links to
-`/game-data/affixes?base=<code>` ("What can roll").
+`/affixes?base=<code>` ("What can roll").
 
 State (`gameData.affixes`): `view` (`affixes` default / `superior`), `superiorType` (own type code or null), `search` (shared by both views), `kinds` (`p`/`s`/`a`, empty = all), `rareOnly`, `minLvl`/`maxLvl` (1–99 or
 null), `cls` (`any` / `none` / class code), `types` (item-type codes), `base` (base code or null), `ilvl` (1–99, default
@@ -1773,7 +1772,7 @@ the non-default values. Invalid values fall back to the defaults; unknown type a
 
 ### Enhance page
 
-`/game-data/enhance` (`screens/EnhanceScreen.tsx`) loads only `enhance.json`, so it is a static-bundle route that skips
+`/enhance` (`screens/EnhanceScreen.tsx`) loads only `enhance.json`, so it is a static-bundle route that skips
 the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundleRoutes.ts`). Five tabs (`SUBTAB_*`
 `aria-pressed` buttons, the first row of the filter panel above the search and Copy Link; the slot / pool / tier pills stay
 under the panel, with each tab's content):
@@ -1824,8 +1823,8 @@ that slot group's first pool); Copy Link encodes only the non-default values the
 
 ### Cube page
 
-`/game-data/cube` (`screens/CubeScreen.tsx`) loads only `cube.json` and is a static-bundle route like Enhance. Tools
-menu entry "Cube Recipes", layout tab "Cube".
+`/cube-recipes` (`screens/CubeScreen.tsx`) loads only `cube.json` and is a static-bundle route like Enhance. Recipes
+menu entry "Cube Recipes".
 
 - **Filters**: two searches, "Ingredient" (inputs only) and "Result" (the output text and a merged row's `odds`, and on
   raw rows the output code, bonus lines and details), and "Result quality" checkboxes (Unique, Set, Rare, Magic, Crafted; any of them).
@@ -1875,23 +1874,23 @@ URL state (read on every render, `utils/cube.ts`):
 | `search` | Legacy (old links; the page has no box for it, a notice with "Clear" shows it): AND terms over either side; a family whose label matches every term stays whole, else a group whose header (shape, names, conditions) matches, else merged rows and raw recipes are filtered one by one |
 | `family` | focused family id (unknown ids show all); shows only that family, scrolls to it, "← Show all families"                                                                                                                                                                                  |
 
-The guide's `::recipes[family]` and `::secret-recipes` blocks link to `/game-data/cube?family=<id>` ("All N recipes on
+The guide's `::recipes[family]` and `::secret-recipes` blocks link to `/cube-recipes?family=<id>` ("All N recipes on
 the Cube Recipes page", N = the family's rows in cube.json).
 
 ### Materials page
 
-`/game-data/materials` (`screens/MaterialsScreen.tsx`) loads only `materials.json` (a static-bundle route like Enhance
+`/materials` (`screens/MaterialsScreen.tsx`) loads only `materials.json` (a static-bundle route like Enhance
 and Cube) plus the guide bundle (`useGuide`); the page works without the guide, only the Guide lines are then missing.
-Database menu entry "Materials", layout tab "Materials". The home search lists the item names (→ `?name=`) and,
-from the same bundle's `families`, the cube family labels as "Cube recipes" (→ `/game-data/cube?family=<id>`).
+Recipes menu entry "Materials". The home search lists the item names (→ `?name=`) and,
+from the same bundle's `families`, the cube family labels as "Cube recipes" (→ `/cube-recipes?family=<id>`).
 
 - Search, Copy Link and the group pills (All + each group with its row count) in the filter panel; with `?name=` the
   pills are hidden and the exact-name chip sits in the "Showing N of M items" line under the panel.
 - One section per group, a small heading per block when the group has several, and one compact row per item
   (`components/MaterialRow.tsx`): the item's icon (28 px, by code: `{ kind: 'item', code }`; an empty slot without
   art), name, code (muted), "N variants" for merged rows, levels ("lvl 11 · req 11"); **How
-  to get**: one "Cube: <family> N" chip per madeBy family (→ `/game-data/cube?family=`), then the other source labels;
-  **Used in**: amber Enhance chips (→ `/game-data/enhance?tab=…&slot=…`) and family chips with recipe counts (the first
+  to get**: one "Cube: <family> N" chip per madeBy family (→ `/cube-recipes?family=`), then the other source labels;
+  **Used in**: amber Enhance chips (→ `/enhance?tab=…&slot=…`) and family chips with recipe counts (the first
   6, then "+N more"); **Guide**: the notes of `itemNotes[code]` plus the notes of the first madeBy family
   (`familyNotes`), linking to `/guide/<slug>`.
 - Empty state: "No item matches." with a button that clears the search, group and name.
@@ -1906,8 +1905,8 @@ URL state (read on every render, written with `replace`; `utils/materials.ts`):
 
 ### Areas page
 
-`/game-data/areas` (`screens/AreasScreen.tsx`) loads only `areas.json` (a static-bundle route). Database menu entry
-"Areas", layout tab "Areas". The home search lists the area names and links to `?search="<name>"` (the page has no
+`/area-levels` (`screens/AreasScreen.tsx`) loads only `areas.json` (a static-bundle route). Areas menu entry
+"Area Levels". The home search lists the area names and links to `?search="<name>"` (the page has no
 exact-name focus; the two duplicated names, Jail Level 2 and Catacombs Level 3, show both rows).
 
 - Filter panel: search, min / max monster level (an area matches when its Normal, Nightmare or Hell level is inside the
@@ -1929,10 +1928,10 @@ URL state (read on every render, written with `replace`; `utils/areas.ts`):
 
 ### Sets page
 
-`/game-data/sets` (`screens/SetsScreen.tsx`) loads only `sets.json` (a static-bundle route like Enhance, Cube and
+`/sets` (`screens/SetsScreen.tsx`) loads only `sets.json` (a static-bundle route like Enhance, Cube and
 Materials) plus sources.json through `useItemSources` and tiers.json through `useBaseTiers` (the source lines and
-tier badges are a bonus: missing while their bundle loads or when it fails). Database menu entry "Sets" (after Mythicals), layout tab "Sets" (after Bases). The home search lists set names
-("Sets") and set item names ("Set items"), both linking to `/game-data/sets?name=`.
+tier badges are a bonus: missing while their bundle loads or when it fails). Items menu entry "Sets" (after Mythicals). The home search lists set names
+("Sets") and set item names ("Set items"), both linking to `/sets?name=`.
 
 - Search, "Max required level" input, Copy Link; Pieces pills (All + each item count with its set count) and Class
   pills (All, Any class, then the classes by name), all in the filter panel; with `?name=` the pills are hidden and the

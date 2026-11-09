@@ -10,7 +10,7 @@ import { disambiguation, duplicateNames, SKILLS_ROUTE, SKILLS_URL_PARAMS } from 
 import { campaignMapAreaPath } from '@/features/campaign-map/utils/urlState';
 import { MODIFIERS_ROUTE, MODIFIERS_URL_PARAMS } from '@/features/modifiers/utils/modifierRoutes';
 
-const SETS_PAGE = '/game-data/sets';
+const SETS_PAGE = '/sets';
 
 export type HomeSearchCategory =
   | 'runewords'
@@ -49,6 +49,14 @@ export const HOME_SEARCH_CATEGORIES: readonly HomeSearchCategoryInfo[] = [
 
 /** Results shown per group. */
 export const HOME_SEARCH_GROUP_LIMIT = 6;
+
+/** cmdk value of the "Search runewords for …" row */
+export const SEARCH_RUNEWORDS_VALUE = '__search-runewords';
+
+/** cmdk value of an item result row */
+export function homeSearchRowValue(category: HomeSearchCategory, href: string): string {
+  return `${category}:${href}`;
+}
 
 /**
  * A searchable name: the plain name, or a display name with the id its page link needs (a skill id, a cube family id).
@@ -122,7 +130,7 @@ const NAME_FOCUS_PATHS: Record<Exclude<HomeSearchCategory, 'bases' | 'skills' | 
   // The Sets page focuses a set, or the set of an item with that item highlighted
   sets: SETS_PAGE,
   setItems: SETS_PAGE,
-  materials: '/game-data/materials',
+  materials: '/materials',
 };
 
 /**
@@ -138,17 +146,17 @@ export function homeResultHref(category: HomeSearchCategory, entry: HomeSearchNa
   const id = typeof entry === 'string' ? name : entry.id;
   switch (category) {
     case 'bases':
-      return `/game-data/bases?search=${encodeURIComponent(`"${name}"`)}`;
+      return `/bases?search=${encodeURIComponent(`"${name}"`)}`;
     case 'areas':
       return typeof entry === 'string' || !/^\d+$/.test(entry.id)
-        ? `/game-data/areas?search=${encodeURIComponent(`"${name}"`)}`
+        ? `/area-levels?search=${encodeURIComponent(`"${name}"`)}`
         : campaignMapAreaPath(Number(entry.id));
     case 'skills':
       return `/${SKILLS_ROUTE}?${SKILLS_URL_PARAMS.SKILL}=${encodeURIComponent(id)}`;
     case 'modifiers':
       return `/${MODIFIERS_ROUTE}?${MODIFIERS_URL_PARAMS.KIND}=${encodeURIComponent(id)}`;
     case 'cube':
-      return `/game-data/cube?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=${encodeURIComponent(id)}`;
+      return `/cube-recipes?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=${encodeURIComponent(id)}`;
     default:
       return `${NAME_FOCUS_PATHS[category]}?name=${encodeURIComponent(name)}`;
   }

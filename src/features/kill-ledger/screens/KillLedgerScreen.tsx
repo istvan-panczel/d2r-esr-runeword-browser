@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ExternalLink } from '@/components/ExternalLink';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { SectionHeader } from '@/components/SectionHeader';
 import { AMBER_HEADING_CLASS, EXTERNAL_ICON_CLASS, LINK_CLASS } from '@/features/ascendancies/components/styles';
 import { CellIcon } from '@/features/game-data/components/CellIcon';
@@ -66,7 +65,6 @@ function KillLedger({ bundle }: { readonly bundle: KillLedgerBundle }) {
           </ul>
         </section>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }

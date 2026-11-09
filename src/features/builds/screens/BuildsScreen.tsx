@@ -4,7 +4,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/PageShell';
 import { Spinner } from '@/components/ui/spinner';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { db } from '@/core/db';
 import { BuildCard } from '../components/BuildCard';
 import { CreateBuildButton } from '../components/CreateBuildButton';
@@ -108,8 +107,6 @@ export function BuildsScreen() {
           )}
         </>
       )}
-
-      <ScrollToTopButton />
     </PageShell>
   );
 }

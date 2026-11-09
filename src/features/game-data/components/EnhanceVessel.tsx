@@ -17,7 +17,7 @@ interface EnhanceVesselProps {
   readonly onTier: (tier: string) => void;
 }
 
-const VESSEL_ANOINTMENTS_LINK = `/game-data/enhance?${GAME_DATA_URL_PARAM_KEYS.TAB}=anointment&${GAME_DATA_URL_PARAM_KEYS.SLOT}=vessel`;
+const VESSEL_ANOINTMENTS_LINK = `/enhance?${GAME_DATA_URL_PARAM_KEYS.TAB}=anointment&${GAME_DATA_URL_PARAM_KEYS.SLOT}=vessel`;
 
 export function EnhanceVessel({ bundle, tier, search, onTier }: EnhanceVesselProps) {
   const { vessel, vesselTiers, vesselRecipes, vesselTransforms } = bundle;

@@ -56,6 +56,6 @@ The recipe lists Tyrael's Eternal Feather for non-ethereal melee and thrown weap
 
 ::recipes[legendary-consumables]
 
-Every sanctification outcome, with how often each bonus comes up: [Sanctification outcomes](page:/game-data/enhance?tab=sanctification).
+Every sanctification outcome, with how often each bonus comes up: [Sanctification outcomes](page:/enhance?tab=sanctification).
 
 Most players only need steps 1 to 4 before Hell ([[hell-survival]]).

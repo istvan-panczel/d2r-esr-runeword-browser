@@ -4,7 +4,6 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { cn } from '@/lib/utils';
 import type { BaseItem, ItemTypeInfo, TypesBundle } from '../engine/schema';
 import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
@@ -33,7 +32,7 @@ interface ItemTypesBrowserProps {
 }
 
 function basesLink(code: string): string {
-  return `/game-data/bases?${GAME_DATA_URL_PARAM_KEYS.TYPE}=${encodeURIComponent(code)}`;
+  return `/bases?${GAME_DATA_URL_PARAM_KEYS.TYPE}=${encodeURIComponent(code)}`;
 }
 
 function socketsLabel(type: ItemTypeInfo): string {
@@ -162,8 +161,6 @@ function ItemTypesBrowser({ typesBundle, bases, focus }: ItemTypesBrowserProps) 
           </table>
         </CardContent>
       </Card>
-
-      <ScrollToTopButton />
     </div>
   );
 }

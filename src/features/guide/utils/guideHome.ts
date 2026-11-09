@@ -42,7 +42,7 @@ export const START_CARDS: readonly StartCard[] = [
     id: 'best-base',
     question: 'Which base for my runeword?',
     description: 'Pick a runeword and your stats to see the bases you can use, best first.',
-    target: { kind: 'page', path: '/game-data/best-base' },
+    target: { kind: 'page', path: '/best-base' },
   },
 ];
 

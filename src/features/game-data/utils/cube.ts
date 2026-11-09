@@ -285,7 +285,7 @@ export const CUBE_DOCS_URL = `${ESR_DOCS_URL}${encodeURIComponent(CUBE_DOCS_PAGE
 
 /** The Enhance page tab that lists a merged row's outcomes (`CubeMergedRow.enhanceTab`) */
 export function enhanceTabHref(tab: MaterialEnhanceTab): string {
-  return `/game-data/enhance?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.TAB]: tab }).toString()}`;
+  return `/enhance?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.TAB]: tab }).toString()}`;
 }
 
 /** DOM id of a family's section */

@@ -38,7 +38,7 @@ function Requirement({ label, value, deficit }: { readonly label: string; readon
 }
 
 function basesSearchPath(name: string): string {
-  return `/game-data/bases?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.SEARCH]: `"${name}"` }).toString()}`;
+  return `/bases?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.SEARCH]: `"${name}"` }).toString()}`;
 }
 
 /** Compact base card for the Best Base results: stats after the ethereal estimate, requirement deficits, sockets. */

@@ -17,7 +17,7 @@ import type { SetInfo, SetItemInfo, SetsBundle } from '../engine/schema';
 
 /** `cls` value of the sets without a class */
 export const ANY_CLASS = 'any';
-export const SETS_ROUTE = 'game-data/sets';
+export const SETS_ROUTE = 'sets';
 const SETS_DOCS_PAGE = 'sets.htm';
 
 export interface SetsState {

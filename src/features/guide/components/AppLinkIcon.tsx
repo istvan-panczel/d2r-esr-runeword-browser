@@ -6,9 +6,22 @@ interface AppLinkIconProps {
   readonly className?: string;
 }
 
+/** The Game Data section's pages, top-level URLs that share no prefix. */
+const GAME_DATA_PAGES: readonly string[] = [
+  '/bases',
+  '/sets',
+  '/best-base',
+  '/affixes',
+  '/item-types',
+  '/enhance',
+  '/cube-recipes',
+  '/materials',
+  '/area-levels',
+];
+
 /** Icon for an in-app link by its target section (runewords is the fallback). */
 export function AppLinkIcon({ href, className }: AppLinkIconProps) {
-  if (href.startsWith('/game-data')) return <Database className={className} aria-hidden />;
+  if (GAME_DATA_PAGES.includes(href.split(/[?#]/)[0] ?? '')) return <Database className={className} aria-hidden />;
   if (href.startsWith(NAME_FOCUS_PAGES.gw)) return <Gem className={className} aria-hidden />;
   if (href.startsWith(NAME_FOCUS_PAGES.socketable)) return <CircleDot className={className} aria-hidden />;
   if (href.startsWith(NAME_FOCUS_PAGES.unique)) return <Crown className={className} aria-hidden />;

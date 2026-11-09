@@ -3,7 +3,7 @@
  * guide:check) so new notes land in the sitemap without a hand edit. No <lastmod>: the output stays deterministic.
  *
  * Left out on purpose: routes that need sign-in or point at user data (/builds/new, /builds/:id/edit, /build/:id,
- * /user/:id, /loot-filters/:id; the public /builds list is included), /game-data (it only redirects to /game-data/bases)
+ * /user/:id, /loot-filters/:id; the public /builds list is included), /game-data (it only redirects to /bases)
  * and /guide/map (it only redirects to /guide).
  */
 export const SITE_URL = 'https://istvan-panczel.github.io/d2r-esr-runeword-browser/';
@@ -37,15 +37,15 @@ const ROUTES_AFTER_NOTES: readonly SitemapEntry[] = [
   { path: 'kill-ledger', changefreq: 'monthly', priority: '0.6' },
   { path: 'elixirs', changefreq: 'monthly', priority: '0.6' },
   { path: 'builds', changefreq: 'weekly', priority: '0.7' },
-  { path: 'game-data/bases', changefreq: 'monthly', priority: '0.7' },
-  { path: 'game-data/sets', changefreq: 'monthly', priority: '0.7' },
-  { path: 'game-data/best-base', changefreq: 'monthly', priority: '0.6' },
-  { path: 'game-data/affixes', changefreq: 'monthly', priority: '0.6' },
-  { path: 'game-data/types', changefreq: 'monthly', priority: '0.6' },
-  { path: 'game-data/enhance', changefreq: 'monthly', priority: '0.6' },
-  { path: 'game-data/cube', changefreq: 'monthly', priority: '0.6' },
-  { path: 'game-data/materials', changefreq: 'monthly', priority: '0.6' },
-  { path: 'game-data/areas', changefreq: 'monthly', priority: '0.6' },
+  { path: 'bases', changefreq: 'monthly', priority: '0.7' },
+  { path: 'sets', changefreq: 'monthly', priority: '0.7' },
+  { path: 'best-base', changefreq: 'monthly', priority: '0.6' },
+  { path: 'affixes', changefreq: 'monthly', priority: '0.6' },
+  { path: 'item-types', changefreq: 'monthly', priority: '0.6' },
+  { path: 'enhance', changefreq: 'monthly', priority: '0.6' },
+  { path: 'cube-recipes', changefreq: 'monthly', priority: '0.6' },
+  { path: 'materials', changefreq: 'monthly', priority: '0.6' },
+  { path: 'area-levels', changefreq: 'monthly', priority: '0.6' },
   { path: 'campaign-map', changefreq: 'monthly', priority: '0.7' },
   { path: 'loot-filters', changefreq: 'monthly', priority: '0.6' },
   { path: 'terror-zones', changefreq: 'monthly', priority: '0.6' },

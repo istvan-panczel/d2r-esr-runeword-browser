@@ -31,7 +31,8 @@ export function ConsentGate() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm">
+    // data-modal-gate: the global search shortcut treats this like an open dialog (it is not a Radix one)
+    <div data-modal-gate className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-lg border bg-card p-6 shadow-lg">
         <h2 className="text-lg font-bold">Welcome — one quick step</h2>
         <p className="mt-1 text-sm text-muted-foreground">Set your public display name and accept the privacy policy to continue.</p>

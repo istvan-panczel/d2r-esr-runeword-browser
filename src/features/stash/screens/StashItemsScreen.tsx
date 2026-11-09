@@ -3,7 +3,6 @@ import { RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
@@ -271,7 +270,6 @@ function ItemsBrowser({ stash, bundle, types }: ItemsBrowserProps) {
         from 1 at the top left of a stash page. The copy button copies the name for the in-game shared stash search. In the table, hover a
         row, tab to its name or tap the name to peek at all its information.
       </p>
-      <ScrollToTopButton />
     </div>
   );
 }

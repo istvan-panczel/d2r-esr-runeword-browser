@@ -36,7 +36,7 @@ Lucion's Essence, a legendary consumable, adds a fixed number of sockets to magi
 ### Limits
 
 - An item never gets more sockets than its base allows, and an existing socket count cannot be changed.
-- Items from Normal and Nightmare Act 1 may be too low level to reach the base's maximum. The [Bases](page:/game-data/bases) page shows socket limits by item level.
+- Items from Normal and Nightmare Act 1 may be too low level to reach the base's maximum. The [Bases](page:/bases) page shows socket limits by item level.
 - Rerolling a unique removes sockets added before the reroll, so reroll first.
 - A socketed quiver no longer shows its quantity (a game bug); the arrows or bolts are still there.
 

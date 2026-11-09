@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { EnhanceSearch, NoMatches, Pills } from '@/features/game-data/components/EnhanceParts';
@@ -182,7 +181,6 @@ function ModifiersBrowser({ view, facts }: { readonly view: ModifiersView; reado
           </section>
         </>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }

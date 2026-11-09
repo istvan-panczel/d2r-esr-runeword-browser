@@ -2,8 +2,8 @@ import { ESR_REPO_SLUG } from '@/core/api/remoteConfig';
 import { DROP_FINDER_URL, officialDocsUrl } from '@/features/guide/engine/linkSchemes';
 
 /**
- * Navigation config: the header's grouped desktop menus, its mobile accordion and the home page's section cards all
- * render from `NAV_ENTRIES`, so they never drift. `navConfig.test.ts` checks every path against the router and that
+ * Navigation config: the header's grouped desktop menus, its page row, its mobile accordion and the home page's section
+ * cards all render from `NAV_ENTRIES`, so they never drift. `navConfig.test.ts` checks every path against the router and that
  * labels are unique.
  */
 
@@ -216,25 +216,61 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     kind: 'group',
     key: 'recipes',
     label: 'Recipes',
-    description: 'Runeword and gemword recipes, and the runes, gems and jewels that go in them',
+    description: 'Runewords, gemwords, cube recipes, item enhancements and the materials they use',
     items: [
       { key: 'runewords', to: '/runewords', label: 'Runewords', description: 'Rune recipes by base, sockets and level' },
       { key: 'gemwords', to: '/gemwords', label: 'Gemwords', description: 'Gem and jewel socket recipes' },
       { key: 'socketables', to: '/socketables', label: 'Socketables', description: 'Runes, gems and jewels with their bonuses' },
+      { key: 'best-base', to: '/best-base', label: 'Best Base', description: 'Best base for a runeword and character' },
+      { key: 'cube', to: '/cube-recipes', label: 'Cube Recipes', description: 'Every cube recipe, grouped by family' },
+      {
+        key: 'enhance',
+        to: '/enhance',
+        label: 'Enhance',
+        description: 'Corruption, anointment, sanctification and Vessel of Souls outcomes',
+      },
+      {
+        key: 'materials',
+        to: '/materials',
+        label: 'Materials',
+        description: 'Runes, gems, organs, coupons and every other misc item',
+      },
     ],
   },
   {
     kind: 'group',
-    key: 'database',
-    label: 'Database',
-    description:
-      'Uniques, mythicals, sets, ascendancies, skills, specializations, weapon masteries, the Kill Ledger, mercenaries, item modifiers, every base item, material, elixir and area, the campaign map',
+    key: 'items',
+    label: 'Items',
+    description: 'Uniques, mythicals, sets and bases, the affixes and modifiers on them, and elixirs',
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
-      { key: 'sets', to: '/game-data/sets', label: 'Sets', description: 'Set items with their partial and full-set bonuses' },
-      { key: 'ascendancies', to: '/ascendancies', label: 'Ascendancies', description: 'Ascendancies and their tier bonuses' },
+      { key: 'sets', to: '/sets', label: 'Sets', description: 'Set items with their partial and full-set bonuses' },
+      { key: 'bases', to: '/bases', label: 'Bases', description: 'Base items from the game files' },
+      { key: 'item-types', to: '/item-types', label: 'Item Types', description: 'Item type tree and socket caps' },
+      { key: 'affixes', to: '/affixes', label: 'Affixes', description: 'Affixes and what can roll on a base' },
+      {
+        key: 'modifiers',
+        to: '/modifiers',
+        label: 'Modifiers',
+        description: 'What item modifiers do in ESR: leech, crushing blow, resists, procs, speed, magic find',
+      },
+      {
+        key: 'elixirs',
+        to: '/elixirs',
+        label: 'Elixirs',
+        description: 'Utility elixirs: effects at your level, drop chances and the Alchemist perks',
+      },
+    ],
+  },
+  {
+    kind: 'group',
+    key: 'character',
+    label: 'Character',
+    description: 'Skills, ascendancies, specializations, weapon masteries, mercenaries and the Kill Ledger',
+    items: [
       { key: 'skills', to: '/skills', label: 'Skills', description: 'Class skill trees and the items that grant each skill' },
+      { key: 'ascendancies', to: '/ascendancies', label: 'Ascendancies', description: 'Ascendancies and their tier bonuses' },
       {
         key: 'specializations',
         to: '/specializations',
@@ -248,67 +284,37 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         description: 'How each class weapon changes your skills, its recipe and how to remove it',
       },
       {
-        key: 'kill-ledger',
-        to: '/kill-ledger',
-        label: 'Kill Ledger',
-        description: 'Every kill and boss bonus the book can take, and how each one unlocks',
-      },
-      {
         key: 'mercenaries',
         to: '/mercenaries',
         label: 'Mercenaries',
         description: 'Every hireling: act, gold, skill levels and stats at each level band',
       },
       {
-        key: 'modifiers',
-        to: '/modifiers',
-        label: 'Modifiers',
-        description: 'What item modifiers do in ESR: leech, crushing blow, resists, procs, speed, magic find',
+        key: 'kill-ledger',
+        to: '/kill-ledger',
+        label: 'Kill Ledger',
+        description: 'Every kill and boss bonus the book can take, and how each one unlocks',
       },
-      { key: 'bases', to: '/game-data/bases', label: 'Bases', description: 'Base items from the game files' },
-      {
-        key: 'materials',
-        to: '/game-data/materials',
-        label: 'Materials',
-        description: 'Runes, gems, organs, coupons and every other misc item',
-      },
-      {
-        key: 'elixirs',
-        to: '/elixirs',
-        label: 'Elixirs',
-        description: 'Utility elixirs: effects at your level, drop chances and the Alchemist perks',
-      },
-      {
-        key: 'areas',
-        to: '/game-data/areas',
-        label: 'Areas',
-        description: "Every area's monster level per difficulty, density, waypoints and the endgame map tiers",
-      },
+    ],
+  },
+  {
+    kind: 'group',
+    key: 'areas',
+    label: 'Areas',
+    description: "The campaign map, every area's monster levels and the terror zone schedule",
+    items: [
       {
         key: 'campaign-map',
         to: '/campaign-map',
         label: 'Campaign Map',
         description: 'Acts, quest items, special areas, uber portals and endgame maps on one map per act',
       },
-    ],
-  },
-  {
-    kind: 'group',
-    key: 'tools',
-    label: 'Tools',
-    description: 'Pick a base, check affix rolls, plan enhancements, write loot filters and track terror zones',
-    items: [
-      { key: 'best-base', to: '/game-data/best-base', label: 'Best Base', description: 'Best base for a runeword and character' },
-      { key: 'affixes', to: '/game-data/affixes', label: 'Affixes', description: 'Affixes and what can roll on a base' },
-      { key: 'item-types', to: '/game-data/types', label: 'Item Types', description: 'Item type tree and socket caps' },
       {
-        key: 'enhance',
-        to: '/game-data/enhance',
-        label: 'Enhance',
-        description: 'Corruption, anointment, sanctification and Vessel of Souls outcomes',
+        key: 'area-levels',
+        to: '/area-levels',
+        label: 'Area Levels',
+        description: "Every area's monster level per difficulty, density, waypoints and the endgame map tiers",
       },
-      { key: 'cube', to: '/game-data/cube', label: 'Cube Recipes', description: 'Every cube recipe, grouped by family' },
-      { key: 'loot-filters', to: '/loot-filters', label: 'Loot Filters', description: 'Build and test loot filters' },
       {
         key: 'terror-zones',
         to: '/terror-zones',
@@ -359,6 +365,10 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     item: { key: 'builds', to: '/builds', label: 'Builds', description: 'Character builds shared by other players' },
     requiresSupabase: true,
   },
+  {
+    kind: 'link',
+    item: { key: 'loot-filters', to: '/loot-filters', label: 'Loot Filters', description: 'Build, test and share loot filters' },
+  },
 ];
 
 /** The entries to render: drops the backend-only ones when Supabase is not configured. */
@@ -371,10 +381,27 @@ export function getAllNavItems(entries: readonly NavEntry[] = NAV_ENTRIES): read
   return entries.flatMap((entry) => (entry.kind === 'group' ? entry.items : [entry.item]));
 }
 
+/** `/stash/` is the same page as `/stash` to the router; `/` stays `/`. */
+function withoutTrailingSlash(pathname: string): string {
+  const trimmed = pathname.replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
+}
+
 export function isNavItemActive(pathname: string, item: NavItem): boolean {
-  return pathname === item.to || (item.exact !== true && pathname.startsWith(`${item.to}/`));
+  const path = withoutTrailingSlash(pathname);
+  return path === item.to || (item.exact !== true && path.startsWith(`${item.to}/`));
 }
 
 export function isNavGroupActive(pathname: string, group: NavGroup): boolean {
   return group.items.some((item) => isNavItemActive(pathname, item));
+}
+
+/** The menu group the path belongs to: the page row shows its pages. Undefined on the plain links (Guide, Builds, Loot Filters) and off the menu. */
+export function getActiveNavGroup(pathname: string, entries: readonly NavEntry[] = NAV_ENTRIES): NavGroup | undefined {
+  return entries.find((entry): entry is NavGroup => entry.kind === 'group' && isNavGroupActive(pathname, entry));
+}
+
+/** The menu page the path belongs to (its label is the shared title of the Game Data pages). */
+export function getActiveNavItem(pathname: string, entries: readonly NavEntry[] = NAV_ENTRIES): NavItem | undefined {
+  return getAllNavItems(entries).find((item) => isNavItemActive(pathname, item));
 }

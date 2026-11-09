@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ResultsBar } from '@/components/ResultsBar';
 import { ToolbarCard } from '@/components/ToolbarCard';
 import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
@@ -112,7 +111,6 @@ function AffixesBrowser({ typesBundle, bases, superior, affixes }: AffixesBrowse
       <div>
         {viewTabs}
         <SuperiorAffixesView superior={superior} typeNames={typeNames} getShareUrl={getShareUrl} />
-        <ScrollToTopButton />
       </div>
     );
   }
@@ -128,8 +126,6 @@ function AffixesBrowser({ typesBundle, bases, superior, affixes }: AffixesBrowse
       ) : (
         <BrowseResults affixes={affixes} typeNames={typeNames} classNames={classNames} />
       )}
-
-      <ScrollToTopButton />
     </div>
   );
 }

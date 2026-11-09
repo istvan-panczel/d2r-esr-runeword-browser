@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { db } from '@/core/db';
 import type { Runeword } from '@/core/db/models';
@@ -178,7 +177,6 @@ function BestBaseFinder({ typesBundle, bases, superior, txtBundle, htmRunewords 
       )}
 
       <DataConsistency result={matchResult} />
-      <ScrollToTopButton />
     </div>
   );
 }

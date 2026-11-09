@@ -66,7 +66,7 @@ export function masteryBasesUrl(mastery: WeaponMastery): string {
     mastery.type !== undefined
       ? new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.TYPE]: mastery.type })
       : new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.CODES]: mastery.bases.join(',') });
-  return `/game-data/bases?${params.toString()}`;
+  return `/bases?${params.toString()}`;
 }
 
 /** The skills line reads like the one skill it names ("Strafe"): the line itself is the link */

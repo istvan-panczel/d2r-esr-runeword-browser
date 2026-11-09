@@ -4,7 +4,6 @@ import { AscendancyCard } from '../components/AscendancyCard';
 import { useFilteredAscendancies } from '../hooks/useFilteredAscendancies';
 import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { Spinner } from '@/components/ui/spinner';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { PageShell } from '@/components/PageShell';
 import { ResultsBar } from '@/components/ResultsBar';
 
@@ -38,8 +37,6 @@ export function AscendanciesScreen() {
           ))}
         </div>
       )}
-
-      <ScrollToTopButton />
     </PageShell>
   );
 }

@@ -64,15 +64,15 @@ describe('searchHome', () => {
       cube: [{ name: 'Upgrading, rerolling and recycling unique charms', id: 'unique-charm-upgrades' }],
     });
     expect(group?.results).toEqual([
-      { name: 'Upgrading, rerolling and recycling unique charms', href: '/game-data/cube?family=unique-charm-upgrades' },
+      { name: 'Upgrading, rerolling and recycling unique charms', href: '/cube-recipes?family=unique-charm-upgrades' },
     ]);
   });
 
   it('collapses duplicated area names to one result', () => {
     const [group] = searchHome('jail', { areas: ['Jail Level 1', 'Jail Level 2', 'Jail Level 2'] });
     expect(group?.results).toEqual([
-      { name: 'Jail Level 1', href: '/game-data/areas?search=%22Jail%20Level%201%22' },
-      { name: 'Jail Level 2', href: '/game-data/areas?search=%22Jail%20Level%202%22' },
+      { name: 'Jail Level 1', href: '/area-levels?search=%22Jail%20Level%201%22' },
+      { name: 'Jail Level 2', href: '/area-levels?search=%22Jail%20Level%202%22' },
     ]);
   });
 });
@@ -130,19 +130,19 @@ describe('result links', () => {
     expect(homeResultHref('gemwords', 'America')).toBe('/gemwords?name=America');
     expect(homeResultHref('uniques', "Artemis' Wrath")).toBe("/uniques?name=Artemis'%20Wrath");
     expect(homeResultHref('mythicals', 'X')).toBe('/mythicals?name=X');
-    expect(homeResultHref('sets', "Arcanna's Tricks")).toBe("/game-data/sets?name=Arcanna's%20Tricks");
-    expect(homeResultHref('setItems', "Arcanna's Sign")).toBe("/game-data/sets?name=Arcanna's%20Sign");
-    expect(homeResultHref('bases', 'Ring Mail')).toBe('/game-data/bases?search=%22Ring%20Mail%22');
+    expect(homeResultHref('sets', "Arcanna's Tricks")).toBe("/sets?name=Arcanna's%20Tricks");
+    expect(homeResultHref('setItems', "Arcanna's Sign")).toBe("/sets?name=Arcanna's%20Sign");
+    expect(homeResultHref('bases', 'Ring Mail')).toBe('/bases?search=%22Ring%20Mail%22');
   });
 
   it('focuses a skill id, a material name, a cube family id, opens an area on the campaign map (phrase search without an id)', () => {
     expect(homeResultHref('skills', { name: 'Amplify Damage (Aura)', id: 'Amplify Damage Aura' })).toBe(
       '/skills?skill=Amplify%20Damage%20Aura'
     );
-    expect(homeResultHref('materials', 'Small Charm')).toBe('/game-data/materials?name=Small%20Charm');
-    expect(homeResultHref('areas', 'Catacombs Level 3')).toBe('/game-data/areas?search=%22Catacombs%20Level%203%22');
+    expect(homeResultHref('materials', 'Small Charm')).toBe('/materials?name=Small%20Charm');
+    expect(homeResultHref('areas', 'Catacombs Level 3')).toBe('/area-levels?search=%22Catacombs%20Level%203%22');
     expect(homeResultHref('areas', { name: 'Sewers Level 2', id: '93' })).toBe('/campaign-map?area=93');
-    expect(homeResultHref('cube', { name: 'Opening map portals', id: 'map-portals' })).toBe('/game-data/cube?family=map-portals');
+    expect(homeResultHref('cube', { name: 'Opening map portals', id: 'map-portals' })).toBe('/cube-recipes?family=map-portals');
   });
 
   it('sends a free-text Enter to the runewords search', () => {

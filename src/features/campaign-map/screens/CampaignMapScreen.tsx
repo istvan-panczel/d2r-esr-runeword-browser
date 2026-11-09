@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { Link, NavigationType, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 import { List, Map as MapIcon } from 'lucide-react';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { PageShell } from '@/components/PageShell';
@@ -91,6 +91,9 @@ interface CampaignMapBrowserProps {
   readonly version: string | undefined;
 }
 
+/** `location.state` of this page's own navigations, which select and pulse an area themselves */
+const OWN_NAVIGATION = 'campaign-map';
+
 /** The page state (tab, selected area, Map / List) lives in the URL; selecting an area replaces the entry. */
 function CampaignMapBrowser({ map, mapBosses, version }: CampaignMapBrowserProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -98,6 +101,15 @@ function CampaignMapBrowser({ map, mapBosses, version }: CampaignMapBrowserProps
   const itemNames = useItemNamesByCode();
   // Arriving with an area in the URL (a link from another page, a shared link) shows it like a search hit
   const [highlightId, setHighlightId] = useState<number | null>(() => state.area);
+  // A link to this page from outside it (the global search) leaves it mounted: it counts as arriving, like a fresh visit
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const outsideArrival = navigationType === NavigationType.Push && location.state !== OWN_NAVIGATION;
+  const [seenKey, setSeenKey] = useState(location.key);
+  if (location.key !== seenKey) {
+    setSeenKey(location.key);
+    if (outsideArrival && state.area !== null) setHighlightId(state.area);
+  }
   const rootRef = useRef<HTMLDivElement>(null);
   const { panelRef, requestScroll } = usePanelScroll(state.area);
   const { peek, peekId, wrapperProps, close: closePeek } = useAreaPeek();
@@ -114,7 +126,7 @@ function CampaignMapBrowser({ map, mapBosses, version }: CampaignMapBrowserProps
     return `/${CAMPAIGN_MAP_ROUTE}${params === '' ? '' : `?${params}`}`;
   };
   const go = (next: CampaignMapState, replace: boolean) => {
-    setSearchParams(encodeCampaignMapState(next, homeOf), { replace });
+    setSearchParams(encodeCampaignMapState(next, homeOf), { replace, state: OWN_NAVIGATION });
   };
   /** The area on this tab when it belongs here, else on its home tab */
   const targetFor = (id: number): CampaignMapState => ({
@@ -164,15 +176,20 @@ function CampaignMapBrowser({ map, mapBosses, version }: CampaignMapBrowserProps
     console.warn(`[Campaign map] ${String(map.problems.length)} problem(s) in the curated data:`, map.problems);
   }, [map]);
 
-  // On arrival below `lg` the detail panel (above the list) is what to scroll to, not the list row. Once per mount.
+  // On arrival below `lg` the detail panel (above the list) is what to scroll to, not the list row.
   const arrived = useRef(false);
-  useEffect(() => {
-    if (arrived.current) return;
+  const showPanelOnArrival = useEffectEvent(() => {
+    const firstVisit = !arrived.current;
     arrived.current = true;
-    if (state.area === null || isWideScreen()) return;
-    scrollToHighlight.current = false;
-    panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!firstVisit && !outsideArrival) return;
+    if (state.area === null) return;
+    const wide = isWideScreen();
+    scrollToHighlight.current = wide;
+    if (!wide) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+  useEffect(() => {
+    showPanelOnArrival();
+  }, [location.key]);
 
   // Search hit / jump: scroll the area into view once the tab has rendered, then stop the pulse.
   useEffect(() => {

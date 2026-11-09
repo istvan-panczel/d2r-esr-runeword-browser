@@ -14,7 +14,7 @@ quest needs, and what to skip. New players lose time on these more than on anyth
 our own words, with our own diagrams, and checked in game before they leave draft.
 
 Touches: `content/guide/notes/` (new notes), `content/guide/spine.yml` (a spine step), the `/guide` overview,
-and links to the Areas page (`/game-data/areas`) for area levels and connections. Needs an owner decision on scope and
+and links to the Areas page (`/area-levels`) for area levels and connections. Needs an owner decision on scope and
 someone to verify the routes in game.
 
 ### Icon-tile category pickers (M)
@@ -34,7 +34,7 @@ A compact "input + input → result" layout for mechanics that are a single cube
 item with a random affix"), as an alternative to the table rows. It reads faster than a table for one or two recipes.
 
 Touches: the guide recipe directives (`::recipes`, `::recipe-output`, `::secret-recipe` in `src/features/guide/`) and
-possibly the Cube and Enhance pages (`/game-data/cube`, `/game-data/enhance`). Value is low while the tables work.
+possibly the Cube and Enhance pages (`/cube-recipes`, `/enhance`). Value is low while the tables work.
 
 ### Paperdoll and charm grid for builds (L)
 

@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
 import { ExactNameChip } from '@/core/components/ExactNameChip';
@@ -193,7 +192,6 @@ function SetsBrowser({ bundle }: { readonly bundle: SetsBundle }) {
           ))}
         </div>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }

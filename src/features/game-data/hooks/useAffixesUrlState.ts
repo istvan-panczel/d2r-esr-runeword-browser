@@ -5,7 +5,7 @@ import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { selectAffixFilters, setAffixFilters } from '../store/gameDataSlice';
 import { AFFIX_FILTER_PARAM_KEYS, decodeAffixFilters, encodeAffixFilters, hasAffixFilterParams } from '../store/affixFiltersUrl';
 
-const AFFIXES_ROUTE = 'game-data/affixes';
+const AFFIXES_ROUTE = 'affixes';
 
 /**
  * URL ↔ Redux for the Affixes page (same pattern as `useBasesUrlState`): on mount, URL params (if any) replace the whole

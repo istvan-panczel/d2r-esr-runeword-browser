@@ -14,7 +14,7 @@ import {
   zoneGroupHashes,
   zoneSetFingerprint,
 } from './watched';
-import { isWidgetHidden, widgetLift } from './widgetPosition';
+import { isWidgetHidden } from './widgetPosition';
 
 const zone = (id: string): TerrorZoneGroup => ({ id, labels: [id], areas: [] });
 const slot = (n: number, id: string): TerrorZoneSlot => ({ slot: n, start: n * 3600, end: (n + 1) * 3600, zoneIndex: 0, zone: zone(id) });
@@ -195,17 +195,7 @@ describe('boost summary', () => {
   });
 });
 
-describe('widgetLift', () => {
-  it('lifts the widget above the builds form bar and the guide note phone bar', () => {
-    expect(widgetLift('/builds/new')).toBe('formBar');
-    expect(widgetLift('/builds/abc-123/edit')).toBe('formBar');
-    expect(widgetLift('/builds')).toBe('none');
-    expect(widgetLift('/guide/terror-zones')).toBe('phoneBar');
-    expect(widgetLift('/guide/map')).toBe('none');
-    expect(widgetLift('/guide')).toBe('none');
-    expect(widgetLift('/runewords')).toBe('none');
-  });
-
+describe('isWidgetHidden', () => {
   it('hides the widget on the schedule page only', () => {
     expect(isWidgetHidden('/terror-zones')).toBe(true);
     expect(isWidgetHidden('/terror-zones/')).toBe(true);

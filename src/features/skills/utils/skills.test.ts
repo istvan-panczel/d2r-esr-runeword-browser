@@ -187,7 +187,7 @@ describe('texts and links', () => {
     const [hellmouth, talRasha, arcanna, enigma, glow] = details.items;
     expect(hellmouth && itemPageUrl(hellmouth, mythicals)).toBe('/uniques?name=Hellmouth');
     expect(talRasha && itemPageUrl(talRasha, mythicals)).toBe('/mythicals?name=Tal+Rasha%27s+Final+Whisper');
-    expect(arcanna && itemPageUrl(arcanna, mythicals)).toBe('/game-data/sets?name=Arcanna%27s+Head');
+    expect(arcanna && itemPageUrl(arcanna, mythicals)).toBe('/sets?name=Arcanna%27s+Head');
     expect(enigma && itemPageUrl(enigma, mythicals)).toBe('/runewords?name=Enigma');
     expect(glow && itemPageUrl(glow, mythicals)).toBe('/gemwords?name=Glow');
   });

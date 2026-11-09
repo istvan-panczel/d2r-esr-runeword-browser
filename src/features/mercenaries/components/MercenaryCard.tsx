@@ -122,7 +122,7 @@ export function MercenaryCard({ entry }: { readonly entry: MercenaryCardEntry })
       {setName !== undefined && (
         <p>
           <span className="text-muted-foreground">Set: </span>
-          <Link to={`/game-data/sets?${setFocusParams({ name: setName }).toString()}`} className={LINK_CLASS}>
+          <Link to={`/sets?${setFocusParams({ name: setName }).toString()}`} className={LINK_CLASS}>
             {setName}
           </Link>
         </p>

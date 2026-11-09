@@ -36,18 +36,25 @@ All Radix primitives come from the unified `radix-ui` package, so a new shadcn c
 
 Location: `src/core/components/`
 
-- `Header.tsx` - Top bar: brand, grouped navigation (Recipes / Database / Tools menus, Guide, Builds) rendered from
-  `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; mobile sheet with an accordion.
-  See [NAVIGATION.md](./NAVIGATION.md#header-components).
+- `Header.tsx` - Top bar: brand, grouped navigation (Recipes / Items / Character / Areas / My Stash menus, Guide, Builds, Loot
+  Filters) rendered from `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; hamburger sheet
+  with an accordion below the desktop switch (a container query, see [NAVIGATION.md](./NAVIGATION.md#header-components)).
+- `GlobalSearch` (`src/features/global-search/components/GlobalSearch.tsx`) - The header's magnifier button and the Ctrl+K / Cmd+K listener, which
+  open the lazy `GlobalSearchDialog`: pages, then the home search's groups, then the runewords search row. Uses `Dialog` + `Command` directly, like
+  `GuideSearch`, because the state that drives `Command` lives under `DialogContent` (so it resets on close); `CommandDialog` in `ui/command.tsx` owns its `Command`
+  and stays unused. Dialogs are `z-50` in a portal at the end of `<body>`, so they cover the header (`relative z-50`) and the floating elements (`z-40`).
+  See [NAVIGATION.md](./NAVIGATION.md#global-search).
+- `GroupPagesBar.tsx` - The page row inside `<header>`: the pages of the current menu group, an underlined scrolling strip at every width.
+  No row on pages outside a group.
 - `SettingsDrawer.tsx` - Settings sheet (theme, font, text size, data refresh, versions, credits).
 - The terror zone widget (`src/features/terror-zones/components/TerrorZoneWidget.tsx`) - Floating tracker, bottom-left
   on every page but `/terror-zones`, mounted once by `AppLayout` (lazy). Open: a card with the current zone group, a countdown, the next 3
   (12 with "Show more"), star toggles, the boost line and a link to `/terror-zones`; minimised: a round outline icon
-  button like `ScrollToTopButton`, with a `warning` ring and dot when a watched group is up. `z-40` (dialogs and sheets
+  button in the same glass as `ScrollToTopButton`, with a `warning` ring and dot when a watched group is up. `z-40` (dialogs and sheets
   cover it), safe-area insets, lifted above the app's fixed bottom bars. See
   [TERROR-ZONES.md](../features/TERROR-ZONES.md#widget).
-- `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `SUBTAB_BASE` / `SUBTAB_INACTIVE` /
-  `SUBTAB_ACTIVE` for the page sub-tabs (see [Toolbar card and sub-tabs](#toolbarcard-and-sub-tabs)).
+- `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `PAGE_ROW_LINK_*` for the page row,
+  `SUBTAB_BASE` / `SUBTAB_INACTIVE` / `SUBTAB_ACTIVE` for the in-page mode tabs (see [Toolbar card and sub-tabs](#toolbarcard-and-sub-tabs)).
 
 ### Shared Components
 
@@ -57,7 +64,7 @@ Reusable components used across features:
 
 - `PageShell.tsx` - Page width + title row (see [Page pattern](#page-pattern))
 - `pageWidthClasses.ts` - The Page width setting's classes: app frame, `PageShell` `wide` width (see [`PageShell`](#pageshell))
-- `PageHeader.tsx` - The title row itself: title (+ count), actions, meta line, tab row
+- `PageHeader.tsx` - The title row itself: title (+ count), actions, meta line
 - `FilterPanel.tsx` - Card surface around a page's filter controls
 - `ToolbarCard.tsx` - The same card surface, compact, around a page's sub-tab row and top controls
 - `FilterGroup.tsx` - `FilterGroup` (one labelled checkbox row), `FilterGroupList`, `FilterGroupHeader`
@@ -65,7 +72,8 @@ Reusable components used across features:
 - `SectionHeader.tsx` - In-page section heading with a hairline (Build detail, Cube and Materials sections)
 - `CopyLinkButton.tsx` - Copy shareable URL to clipboard
 - `CopyLinkHelpButton.tsx` - Help info for copy link
-- `ScrollToTopButton.tsx` - Floating action button to scroll to top (bottom-right; the terror zone widget takes bottom-left)
+- `ScrollToTopButton.tsx` - Floating action button to scroll to top, mounted once by `AppLayout` so screens never add it (bottom-right, `z-40`; the terror zone widget takes bottom-left)
+- `floatingElements.ts` - What `ScrollToTopButton` and the terror zone widget share: the glass button classes and the lift above the app's fixed bottom bars
 - `SearchHelpButton.tsx` - Search syntax help (quoted phrases, AND logic)
 - `PeekPopover.tsx` + `useHoverPopover.ts` - The hover / focus "peek" popover (mouse and `:focus-visible` only, 300 ms
   delay, so a touch tap never traps): one popover per trigger (`trigger` + `peek.triggerProps`: guide note links, glossary
@@ -75,15 +83,14 @@ Reusable components used across features:
 
 ## Page pattern
 
-Every browser page (Runewords, Gemwords, Unique Items, Mythicals, Ascendancies, Socketables, the Game Data tabs, Builds,
+Every browser page (Runewords, Gemwords, Unique Items, Mythicals, Ascendancies, Socketables, the Game Data pages, Builds,
 Loot filters, guide notes) is built the same way, top to bottom:
 
 ```
 PageShell            one centred width + the title row
   PageHeader         "Title (count)"                         [actions]
-                     meta line (e.g. the Game Data version lines)
-                     ToolbarCard: sub-tab row (Game Data, My Stash)
-  (intro paragraph)  optional, e.g. the Game Data tab descriptions
+                     meta line
+  (intro paragraph)  optional, e.g. the Game Data page descriptions
   FilterPanel        rounded-xl card: search row first, then option rows / FilterGroup rows
   ResultsBar         "Showing N …" · ExactNameChip            [Favorites only]
   results            card grid / sections (SectionHeader)
@@ -92,7 +99,7 @@ PageShell            one centred width + the title row
 ### `PageShell`
 
 ```tsx
-<PageShell title="Runewords" count={shown.length} actions={…} meta={…} nav={…} width="wide">
+<PageShell title="Runewords" count={shown.length} actions={…} meta={…} width="wide">
   …
 </PageShell>
 ```
@@ -121,7 +128,7 @@ PageShell            one centred width + the title row
   (`grid sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5`): a Standard page is never wider
   than 1280 px, so it never matches them. Always name the container (`/page`); a bare `@8xl:` queries the nearest
   container of any kind (shadcn's `CardHeader` is one). `container-type: inline-size` leaves `position: fixed`
-  (`ScrollToTopButton`, the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
+  (the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
   (Enhance outcomes, cube rows, materials) use CSS columns instead: `ROW_LIST_COLUMNS` in
   `src/features/game-data/components/rowListColumns.ts`. Those lists sit on the card surface, never on the bare page:
   `LIST_CARD_CLASS` (same file) is the card; a Materials group or a cube family is one card with a
@@ -139,8 +146,7 @@ PageShell            one centred width + the title row
   Nested shells are harmless (the same `mx-auto max-w-*`; `/page` container queries resolve to the innermost one).
 - `count` renders as "Title (N)" inside the `h1`, so the accessible name stays "Runewords (409)".
 - `actions` sit right of the title and wrap under it on phones (Builds: "Create Build"; Guide: the map link).
-- `meta` is a muted line under the title; `nav` is a sub-tab row, rendered on a `ToolbarCard` (`GameDataLayout`,
-  `StashLayout`).
+- `meta` is a muted line under the title.
 
 `PageHeader` is the same title row without the width, for a screen whose layout route already sets it.
 
@@ -181,13 +187,12 @@ aria-label` / `role="tablist"` / labels); pass `className` to lay the children o
   `aria-pressed` buttons, the loot filter editor tabs a `role="tablist"`.
 - Where they are used:
 
-  | Page                          | In the card                                                                                   |
-  | ----------------------------- | --------------------------------------------------------------------------------------------- |
-  | Game Data, My Stash (layouts) | the sub-page tabs (`PageShell` `nav`)                                                         |
-  | Enhance                       | Corruption / Anointment / Vessel of Souls in the same `FilterPanel` as search + Copy Link     |
-  | Campaign map                  | search + Copy Link, the section tabs (scroll sideways on phones), Map \| List + the key hint  |
-  | Loot filter library           | the Shared / My filters switch with the Shared tab's search + sort (`SharedFiltersToolbar`)   |
-  | Loot filter editor            | the Rules / Styles / Settings / JSON / Test tab row (the title row and buttons stay above it) |
+  | Page                | In the card                                                                                   |
+  | ------------------- | --------------------------------------------------------------------------------------------- |
+  | Enhance             | Corruption / Anointment / Vessel of Souls in the same `FilterPanel` as search + Copy Link     |
+  | Campaign map        | search + Copy Link, the section tabs (scroll sideways on phones), Map \| List + the key hint  |
+  | Loot filter library | the Shared / My filters switch with the Shared tab's search + sort (`SharedFiltersToolbar`)   |
+  | Loot filter editor  | the Rules / Styles / Settings / JSON / Test tab row (the title row and buttons stay above it) |
 
   A page whose tabs already sit in a `FilterPanel` (Enhance) puts them in that panel instead of a second card. The
   loot filter library's how-to text is a plain card (`rounded-xl border bg-card p-4 shadow-sm`), always shown. The

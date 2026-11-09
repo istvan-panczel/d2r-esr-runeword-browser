@@ -126,13 +126,13 @@ function keepItems(tree: readonly MaterialGroupView[], keep: (item: MaterialItem
 // --- links --------------------------------------------------------------------------------------------------------
 
 export function cubeFamilyHref(family: string): string {
-  return `/game-data/cube?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.FAMILY]: family }).toString()}`;
+  return `/cube-recipes?${new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.FAMILY]: family }).toString()}`;
 }
 
 export function enhanceHref(role: MaterialEnhanceRole): string {
   const params = new URLSearchParams({ [GAME_DATA_URL_PARAM_KEYS.TAB]: role.tab });
   if (role.slot !== undefined) params.set(GAME_DATA_URL_PARAM_KEYS.SLOT, role.slot);
-  return `/game-data/enhance?${params.toString()}`;
+  return `/enhance?${params.toString()}`;
 }
 
 export interface GuideNoteIndex {

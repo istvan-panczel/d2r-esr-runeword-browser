@@ -5,8 +5,8 @@ Documentation for routing, layout, and navigation patterns.
 ## Routes
 
 All routes are children of `AppLayout` in `src/core/router/index.tsx`; every screen and layout is lazy (see
-[Router Setup](#router-setup)). Three sections are nested layouts with child routes: `/guide`, `/game-data` and
-`/loot-filters` (see [Nested sections](#nested-sections)).
+[Router Setup](#router-setup)). `/guide` and `/loot-filters` are nested layouts with child routes, and the Game Data pages
+share a pathless layout route (see [Nested sections](#nested-sections)).
 
 | Path                    | Screen                  | Description                                                                                                                                                                                       | Query params                                                                                           |
 | ----------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -22,16 +22,16 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/mythicals`            | MythicalUniquesScreen   | Mythical unique items                                                                                                                                                                             | `search`, `maxlvl`, `cats`, `name`                                                                     |
 | `/ascendancies`         | AscendanciesScreen      | Ascendancies with their tier bonuses                                                                                                                                                              | `search`                                                                                               |
 | `/skills`               | SkillsScreen            | Class skill trees and item-granted skills with details and "Granted by" ([SKILLS.md](../features/SKILLS.md))                                                                                      | `class` (code or `items`), `tab`, `skill`, `search` (kept in the URL)                                  |
-| `/game-data`            | GameDataLayout          | Game-file data section; index redirects to `bases`                                                                                                                                                |                                                                                                        |
-| `/game-data/bases`      | BasesScreen             | Base items browser (txt game files)                                                                                                                                                               | `search`, `sockets` (min.), `maxlvl`, `kind`, `tier`, `type`, `cls`, `sort` (`-<key>` = desc.), `view` |
-| `/game-data/best-base`  | BestBaseScreen          | Best base finder for a runeword and a persisted character                                                                                                                                         | `rw`, `v`, `cls`, `lvl`, `str`, `dex`                                                                  |
-| `/game-data/affixes`    | AffixesScreen           | Affix browser + "what can roll" on a base                                                                                                                                                         | `search`, `aff`, `rare`, `minlvl`, `maxlvl`, `cls`, `type`, `base`, `ilvl`, `q`, `auto`, `sort`        |
-| `/game-data/types`      | ItemTypesScreen         | Item type tree + socket caps                                                                                                                                                                      | `type` (focused node)                                                                                  |
-| `/game-data/enhance`    | EnhanceScreen           | Corruption, anointment, sanctification and Vessel of Souls outcomes (cube recipes)                                                                                                                | `tab`, `slot`, `tier`, `search` (kept in the URL)                                                      |
-| `/game-data/cube`       | CubeScreen              | Every cube recipe from cubemain.txt, grouped by family and official section                                                                                                                       | `search`, `family` (focused family; kept in the URL)                                                   |
-| `/game-data/materials`  | MaterialsScreen         | Every misc item: how to get it, the cube families and Enhance recipes using it, guide notes                                                                                                       | `search`, `group`, `name` (kept in the URL)                                                            |
-| `/game-data/areas`      | AreasScreen             | Every area: monster level, density and unique packs per difficulty, waypoint, connections; maps by tier                                                                                           | `search`, `minlvl`, `maxlvl` (kept in the URL)                                                         |
-| `/game-data/sets`       | SetsScreen              | Every set: items, per-item and set-wide partial bonuses, full-set bonuses, item sources                                                                                                           | `search`, `maxlvl`, `pieces`, `cls`, `name` (kept in the URL)                                          |
+| (pathless layout)       | GameDataLayout          | Shared shell of the game-file data pages (the nine rows below); adds nothing to the URL                                                                                                           |                                                                                                        |
+| `/bases`                | BasesScreen             | Base items browser (txt game files)                                                                                                                                                               | `search`, `sockets` (min.), `maxlvl`, `kind`, `tier`, `type`, `cls`, `sort` (`-<key>` = desc.), `view` |
+| `/best-base`            | BestBaseScreen          | Best base finder for a runeword and a persisted character                                                                                                                                         | `rw`, `v`, `cls`, `lvl`, `str`, `dex`                                                                  |
+| `/affixes`              | AffixesScreen           | Affix browser + "what can roll" on a base                                                                                                                                                         | `search`, `aff`, `rare`, `minlvl`, `maxlvl`, `cls`, `type`, `base`, `ilvl`, `q`, `auto`, `sort`        |
+| `/item-types`           | ItemTypesScreen         | Item type tree + socket caps                                                                                                                                                                      | `type` (focused node)                                                                                  |
+| `/enhance`              | EnhanceScreen           | Corruption, anointment, sanctification and Vessel of Souls outcomes (cube recipes)                                                                                                                | `tab`, `slot`, `tier`, `search` (kept in the URL)                                                      |
+| `/cube-recipes`         | CubeScreen              | Every cube recipe from cubemain.txt, grouped by family and official section                                                                                                                       | `search`, `family` (focused family; kept in the URL)                                                   |
+| `/materials`            | MaterialsScreen         | Every misc item: how to get it, the cube families and Enhance recipes using it, guide notes                                                                                                       | `search`, `group`, `name` (kept in the URL)                                                            |
+| `/area-levels`          | AreasScreen             | Every area: monster level, density and unique packs per difficulty, waypoint, connections; maps by tier                                                                                           | `search`, `minlvl`, `maxlvl` (kept in the URL)                                                         |
+| `/sets`                 | SetsScreen              | Every set: items, per-item and set-wide partial bonuses, full-set bonuses, item sources                                                                                                           | `search`, `maxlvl`, `pieces`, `cls`, `name` (kept in the URL)                                          |
 | `/campaign-map`         | CampaignMapScreen       | Act maps, special areas, ubers & portals, endgame maps ([CAMPAIGN-MAP](../features/CAMPAIGN-MAP.md))                                                                                              | `tab`, `area` (alone: its home tab), `view=list`, `act` (alias) (kept in the URL)                      |
 | `/loot-filters`         | LootFilterLayout        | Loot filter frame: an "Under development" notice above every loot-filter page, then the child route                                                                                               |                                                                                                        |
 | `/loot-filters` (index) | LootFilterLibraryScreen | Loot filter library: new, upload, Sully's QoL filter template, download (.json or .zip)                                                                                                           |                                                                                                        |
@@ -41,11 +41,13 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 | `/mercenaries`          | MercenariesScreen       | Every hireling: act, gold, skill levels and stats at each level band, cards or a comparison table ([MERCENARIES](../features/MERCENARIES.md))                                                     | `hireling`, `type`, `difficulty`, `view`                                                               |
 | `/kill-ledger`          | KillLedgerScreen        | Every Kill Ledger bonus and how each unlocks: kill and boss tables, reference only ([KILL-LEDGER](../features/KILL-LEDGER.md))                                                                    |
 | `/terror-zones`         | TerrorZonesScreen       | Offline terror zone schedule: now / next, upcoming slots, zone groups with stars, boosts ([TERROR-ZONES](../features/TERROR-ZONES.md))                                                            |                                                                                                        |
+| `/modifiers`            | ModifiersScreen         | What item modifiers do in ESR, one card per kind ([MODIFIERS](../features/MODIFIERS.md))                                                                                                          | focused modifier, category, search and Key / All (kept in the URL)                                     |
 | `/elixirs`              | ElixirsScreen           | The 35 utility elixirs: effects at a character level with Utility Potion Effectiveness / Duration and Alchemist perks, drop chances, perk-gated odds, recipes ([ELIXIRS](../features/ELIXIRS.md)) | `name`, `search`, `avail`, `variant`, `lvl`, `eff`, `dur`, `perks`                                     |
-| `/stash`                | StashLayout             | My Stash frame: Overview / Ancient Coupons / All Items tabs, shared upload state ([STASH](../features/STASH.md))                                                                                  |                                                                                                        |
+| `/stash`                | StashLayout             | My Stash frame: title and shared upload state; the header's page row links the pages ([STASH](../features/STASH.md))                                                                              |                                                                                                        |
 | `/stash` (index)        | StashHomeScreen         | Upload (or the loaded file) and the stash pages with a one-line summary each                                                                                                                      |                                                                                                        |
 | `/stash/coupons`        | StashCouponsScreen      | Ancient Coupons in the uploaded stash: unique, have / need, Wild Card recipe, where                                                                                                               | `search`, `status`, `tier`, `page`, `sort`, `dir` (kept in the URL)                                    |
 | `/stash/items`          | StashItemsScreen        | All Items: every item on the stash pages ([STASH-ITEMS](../features/STASH-ITEMS.md))                                                                                                              |                                                                                                        |
+| `/stash/character`      | CharacterScreen         | My Character: upload a character save ([CHARACTER-SAVE](../features/CHARACTER-SAVE.md#my-character-page))                                                                                         |                                                                                                        |
 | `/builds`               | BuildsScreen            | Shared builds list (Supabase only)                                                                                                                                                                |                                                                                                        |
 | `/builds/new`           | CreateBuildScreen       | Create a build (sign-in required)                                                                                                                                                                 |                                                                                                        |
 | `/builds/:buildId/edit` | EditBuildScreen         | Edit an own build                                                                                                                                                                                 |                                                                                                        |
@@ -60,17 +62,22 @@ All routes are children of `AppLayout` in `src/core/router/index.tsx`; every scr
 `maxlvl`, `items`, `runes`, `tierpts`, `gems`, `name`); `sockets` takes an exact count or a range (`4`, `2-4`, `-4`, `4-`). The
 feature-specific keys live next to each feature's `useUrlInitialize` hook, and `GAME_DATA_URL_PARAM_KEYS` in
 `src/features/game-data/constants/urlParams.ts`. The filter screens (runewords, gemwords, socketables, uniques, mythicals,
-ascendancies, bases, best base, affixes) read their params once on mount, put them into Redux and remove them from the URL;
+ascendancies, bases, best base, affixes) read their params on mount, put them into Redux and remove them from the URL. Runewords,
+gemwords, socketables, uniques, mythicals and bases (`useUrlArrival` in `src/core/hooks/`) read them again whenever the URL later
+carries params they recognise, so a link to the page you are on (the [global search](#global-search)) behaves like arriving from
+another page; the bare URL left by that cleanup is ignored, and a `?name=` arrival on runewords and gemwords keeps the current filter
+selection (the defaults or stored filters run only on mount, so clearing the focus brings the page's filters back);
 Copy Link rebuilds a URL from the current state (non-default values only). Item Types (`type`), Enhance (`tab`, `slot`,
-`tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Areas (`search`, `minlvl`, `maxlvl`), the Campaign Map (`tab`, `area`, `view`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
+`tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Area Levels (`search`, `minlvl`, `maxlvl`), the Campaign Map (`tab`, `area`, `view`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
 Redux only.
 
 **`?name=<Name>` focus** (runewords, gemwords, socketables, uniques, mythicals): shows only the items whose name equals `<Name>`
 (`normaliseItemName` in `src/core/utils/itemName.ts`: case, whitespace, quotes/apostrophes and dashes unified; all variants of a
 runeword), unlike `?search=`, which also matches affix text. While it is set, every other filter of the screen (search, sockets,
 level, types, runes/gems, categories, coupon, highest quality) is ignored but kept, so the item is always visible and clearing
-the focus brings the previous filters back; the favourites-only toggle still applies. It is read on mount like the other params
-(the URL is then cleaned) and cleared by any visit whose URL has no `name`, so it never outlives the deep link. The search box
+the focus brings the previous filters back; the favourites-only toggle still applies. It is read on mount and on a same-page
+arrival like the other params (the URL is then cleaned) and cleared by any visit or arrival whose URL carries no `name`, so it never
+outlives the deep link; the URL cleaned of its params does not clear it. The search box
 does not change it. A dismissible "Showing: <Name> ×" chip shows it and scrolls into view only right after the deep link.
 Copy Link keeps it. Guide `rw:`/`gw:`/`unique:`/`mythical:`/`socketable:` links use it.
 
@@ -78,6 +85,14 @@ Copy Link keeps it. Guide `rw:`/`gw:`/`unique:`/`mythical:`/`socketable:` links 
 string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide deep links) redirects (`replace`) to
 `/runewords` with the same query and hash; only a bare `/` renders the home page. The decision is
 `runewordsRedirectTarget` in `src/core/router/homeRedirect.ts` (tested), applied by `HomeRoute` around the index route.
+
+**Old Game Data links.** The Game Data pages lived under `/game-data/` until they became top-level URLs. One route,
+`game-data/*`, sends the old URLs to the new ones (`replace`) with the same query and hash, so shared Copy Link URLs keep
+their filters: `bases`, `sets`, `best-base`, `affixes`, `enhance` and `materials` keep their names, `types` is now
+`/item-types`, `cube` `/cube-recipes`, `areas` `/area-levels`, and a bare `/game-data` goes to `/bases`. Any other
+`/game-data/...` path shows the not-found page. The mapping is `gameDataRedirectTarget` in
+`src/core/router/gameDataRedirect.ts` (tested), applied by `GameDataRedirectRoute`. `public/game-data/` is the data folder
+of the bundles, unrelated to these URLs.
 
 ### Home page
 
@@ -96,10 +111,11 @@ string (`/?name=Enigma`, `/?search=x&sockets=4`: old Copy Link URLs and guide de
    suffix, "Amplify Damage (Aura)"), `materials.json` (item names, plus its `families` labels for Cube recipes, so
    `cube.json` is not fetched) and `areas.json`. A result opens its page focused on it (`homeResultHref`):
    `?name=<exact name>` on the item list pages, Sets and Materials; Skills `/skills?skill=<id>` (the page picks the class
-   and tab); Cube `/game-data/cube?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
-   panel links the Areas page row); Bases have no exact-name focus, so `?search="<name>"`. The
+   and tab); Cube `/cube-recipes?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
+   panel links the Area Levels page row); Bases have no exact-name focus, so `?search="<name>"`. The
    first row, selected by default, is "Search runewords for “…”", so Enter without picking a result goes to
-   `/runewords?search=<query>`.
+   `/runewords?search=<query>`. The data and the rows (`useHomeSearch`, `HomeSearchRows`) are shared with the
+   [global search dialog](#global-search).
 3. **Section cards** (`HomeSections`): one card per `NAV_ENTRIES` entry (`getHomeSections` in `utils/homeSections.ts`):
    a group's `description` and its pages as chips; a plain link's `description` and its `homeLinks` chips (none use them
    now) or the page itself (Guide links `/guide` only). Builds only when Supabase is configured. A test checks every nav page appears once.
@@ -126,17 +142,18 @@ The page skips the startup loading gate (exact match on `/`, see below), so it r
 ## App Shell Layout
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ D2R ESR  Recipes▾ Database▾ Tools▾ Guide Builds [📖][↔][☀][GH][⚙] │
-├───────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│                         Main Content Area                             │
-│                        (Feature Screens)                              │
-│                                                                       │
-└───────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ D2R ESR Recipes▾ Items▾ Character▾ Areas▾ My Stash▾ Guide Builds Loot Filters ⌕ …│
+│ Uniques  Mythicals  Sets  [Bases]  Item Types  Affixes  Modifiers  Elixirs       │  <- page row of the current menu group
+├──────────────────────────────────────────────────────────────────────────────────┤     (none on Home, Guide, Builds, Loot Filters)
+│                                                                                  │
+│                              Main Content Area                                   │
+│                             (Feature Screens)                                    │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The header row and `<main>` share one frame width, `APP_FRAME_CLASS` in `src/components/pageWidthClasses.ts`,
+The header row, the page row and `<main>` share one frame width, `APP_FRAME_CLASS` in `src/components/pageWidthClasses.ts`,
 picked by the Page width setting: Standard keeps Tailwind's `container` (the look from before the setting: the
 header spans the 1536 px container, the 1280 px pages sit centred inside it), Wide is the 1920 px page plus the
 gutters and Full is the whole window, so in Wide and Full the header edges line up with the page. `PageShell` sets the
@@ -155,7 +172,8 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 - `/guide`: the guide is a static JSON bundle (`public/guide/`), see [GUIDE.md](../features/GUIDE.md);
 - `/loot-filters`: the editor uses the game-data bundles, `public/loot-filters/` and localStorage, see
   [LOOT-FILTER.md](../features/LOOT-FILTER.md);
-- `/game-data/enhance`, `/game-data/cube`, `/game-data/materials`, `/game-data/sets` and `/game-data/areas`: only
+- `/game-data`: only the redirect of the old URLs, which needs no data (the page it lands on applies its own gate);
+- `/enhance`, `/cube-recipes`, `/materials`, `/sets` and `/area-levels`: only
   `enhance.json` / `cube.json` / `materials.json` / `sets.json` / `areas.json` (+ the guide bundle, or sources.json for Sets) (the other Game Data pages stay behind the gate: Best Base matches the HTM
   runewords), see [GAME-DATA.md](../features/GAME-DATA.md).
 - `/campaign-map`: `areas.json`, `icons.json` and `stashnames.json` (quest item names), see
@@ -172,9 +190,10 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 
 `AppLayout` also mounts the **terror zone widget** once, below `<main>` (lazy, `Suspense` with no fallback; see
 [TERROR-ZONES.md](../features/TERROR-ZONES.md#widget)). It is on every page that renders the shell (not on the startup
-spinner or the fatal-error screen), fixed bottom-left at `z-40` (hidden on `/terror-zones`, which shows the same schedule); ScrollToTopButton (per page) and the toasts are
-bottom-right. Fixed bottom elements the widget moves up for (`src/features/terror-zones/utils/widgetPosition.ts`): the
-builds form's sticky Save / Cancel bar and the guide note's phone "Next on your path" bar. A new fixed bottom element
+spinner or the fatal-error screen), fixed bottom-left at `z-40` (hidden on `/terror-zones`, which shows the same schedule).
+**`ScrollToTopButton`** is mounted once next to it, on the same pages, fixed bottom-right at `z-40` once the window has
+scrolled 400 px; the toasts are bottom-right too. Fixed bottom elements both move up for (`src/components/floatingElements.ts`):
+the builds form's sticky Save / Cancel bar and the guide note's phone "Next on your path" bar. A new fixed bottom element
 should be added there.
 
 ### Header Components
@@ -183,69 +202,116 @@ should be added there.
 (groups of `NavItem`s with a label, a one-line description and a path, plus plain links). The home page's section
 cards render from the same config (group `description`, link `homeLinks`):
 
-| Entry      | Kind  | Pages                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                                                                                                                                                                                                                           |
-| Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/game-data/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Kill Ledger (`/kill-ledger`), Mercenaries (`/mercenaries`), Bases (`/game-data/bases`), Materials (`/game-data/materials`), Elixirs (`/elixirs`), Areas (`/game-data/areas`), Campaign Map (`/campaign-map`) |
-| Tools ▾    | group | Best Base (`/game-data/best-base`), Affixes (`/game-data/affixes`), Item Types (`/game-data/types`), Enhance (`/game-data/enhance`), Cube Recipes (`/game-data/cube`), Loot Filters (`/loot-filters`), Terror Zones (`/terror-zones`)                                                                                                                                                                                    |
-| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                                                                                                                                                                                                                                                |
-| Guide      | link  | `/guide`                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                                                                                                                                                                                                                            |
+| Entry        | Kind  | Pages                                                                                                                                                                                        |
+| ------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recipes ▾    | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`), Best Base (`/best-base`), Cube Recipes (`/cube-recipes`), Enhance (`/enhance`), Materials (`/materials`)     |
+| Items ▾      | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/sets`), Bases (`/bases`), Item Types (`/item-types`), Affixes (`/affixes`), Modifiers (`/modifiers`), Elixirs (`/elixirs`)           |
+| Character ▾  | group | Skills (`/skills`), Ascendancies (`/ascendancies`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Mercenaries (`/mercenaries`), Kill Ledger (`/kill-ledger`) |
+| Areas ▾      | group | Campaign Map (`/campaign-map`), Area Levels (`/area-levels`), Terror Zones (`/terror-zones`)                                                                                                 |
+| My Stash ▾   | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`), My Character (`/stash/character`)                                 |
+| Guide        | link  | `/guide`                                                                                                                                                                                     |
+| Builds       | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                |
+| Loot Filters | link  | `/loot-filters` (prefix-matched, so it stays active on the editor pages)                                                                                                                     |
 
 - **Brand**: "D2R ESR", a link to `/` (the home page).
-- **Desktop (md and up)**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
-  each dropdown opens under its own trigger). Each group trigger opens a list of label + description links. Active state:
-  an item is active when the path equals its `to` or starts with `to/` (only the former for an `exact` item; no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). Active links
+- **Desktop and hamburger switch**: the header frame is the `header` size container, and the `@desktop-nav/header:` classes
+  (`--container-desktop-nav: 79.5rem` in `src/index.css`) swap the hamburger for the desktop nav, the book and page-width
+  icons when the row has the room. A container query in `rem` follows the Text size setting and the Page width setting's
+  actual frame, which a viewport breakpoint cannot: a media query's `rem` ignores the `<html>` font size, and Standard's
+  `container` frame steps from 1024 px to 1280 px at a 1280 px window. 79.5rem holds the brand, the eight entries, the icon cluster with the search icon, and the widest account control, a 14-character signed-in tag (needs 78.5rem at 16 px; the Diablo font's wider
+  tag is capped at 12 characters in `UserMenu`). At the default 16 px text size Standard shows the desktop nav from a 1280 px window (1272 px in Wide and Full); at 20 px from 1590 px.
+  Below that the hamburger shows. Item, group and link labels do not wrap (`whitespace-nowrap`).
+- **Desktop nav**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
+  each dropdown opens under its own trigger). Each group trigger opens a panel of label + description links: one column
+  (`w-72`) for up to 4 pages, two equal columns (`w-[36rem]`, filled downwards, the same order the keyboard moves in) for more. The two-column
+  groups are the first three triggers, so their panels stay on screen at the narrowest desktop width (the rightmost panel edge
+  is 879 px at a 1280 px window, Character). Active state:
+  an item is active when the path equals its `to` or starts with `to/` (only the former for an `exact` item; no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). The active page in a panel has the
+  accent background and a semibold label; Radix sets `data-active` (empty value), so the classes are `data-active:`, not `data-[active=true]:`. Active links
   get `aria-current="page"`. Keyboard (Radix): triggers are in the tab order, Enter/Space/ArrowDown opens, arrows and
   Tab move through the items, Escape closes; choosing a link closes the menu.
-- **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
+- **Right side**: the [global search](#global-search) magnifier (every width), ESR links dropdown (book icon, desktop nav only: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
   Frame Table, Patch notes, Changelog, Releases, ESR Discord, ESR on GitHub, then a "Community tools" label with ESR Wiki Overlay, ESR Docs,
-  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), the page width menu (↔ `MoveHorizontal` icon, md and up,
+  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), the page width menu (↔ `MoveHorizontal` icon, desktop nav only,
   `PageWidthMenu.tsx`: a radio list Standard 1280 px / Wide 1920 px / Full screen, the same setting as the Settings
   drawer), theme toggle, GitHub link,
-  `AuthControls` (Sign In / user menu, Supabase only), settings cog.
-- **Mobile (below md)**: hamburger opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
-  the group of the current route starts open, Guide and Builds are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
-  community links, and the auth control. Choosing a page closes the sheet.
+  `AuthControls` (Sign In / user menu, Supabase only), settings cog. Below a 28rem row (`@md/header`, 448 px at the default text size) the GitHub
+  link and the account control move to the hamburger sheet, so a phone row holds the hamburger, brand, search, theme and settings (at 24rem,
+  Sign In pushed the cog off a 390 px row).
+- **Page row** (`GroupPagesBar.tsx`, inside `<header>` under the main row, same frame): the pages of the current menu group
+  (`getActiveNavGroup`) as a `<nav aria-label="{group} pages">`, active page `aria-current="page"` and a `PAGE_ROW_LINK_*` underline
+  (`navTabClasses.ts`). None on Home, Guide, Builds, Loot Filters or a build page; not sticky, like the header. It is one sideways-scrolling
+  strip at every width; on a route change the strip centres the active link by setting its own `scrollLeft` (`centeredScrollLeft`), because `scrollIntoView`
+  would move the window too.
+- **Hamburger (below the switch)**: opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
+  the group of the current route starts open, Guide, Builds and Loot Filters are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
+  community links, "Source on GitHub", and the auth control. Choosing a page closes the sheet.
 
 `navConfig.test.ts` checks that every config path resolves to a real route of the router (not the `*` catch-all), that
-labels, keys and paths are unique, that Builds is hidden without Supabase, and the active-state rules.
+labels, keys and paths are unique, that Builds is hidden without Supabase, the agreed menu order, the active-state rules and
+`getActiveNavGroup` / `getActiveNavItem`.
+
+### Global search
+
+A magnifier in the header's right cluster (visible at every width) and Ctrl+K (Cmd+K on a Mac) open a centred modal with
+the input and the results. It searches what the [home page search](#home-page) searches, plus the site's pages.
+
+- **Shell and lazy chunk**: `GlobalSearch.tsx` (in the entry bundle) is the button and the one `window` keydown listener;
+  `GlobalSearchDialog.tsx` is a chunk of its own (with cmdk and the search code) imported on the first open and kept mounted after it.
+  A shortcut pressed while the chunk loads still counts: it toggles the open state the dialog renders from when it arrives.
+  A failed import closes the request and shows a toast (search could not load, reload the page); the next open tries again. The import
+  is by hand, not `React.lazy`, which caches a rejected load and would fail every later open; nothing reaches the root error screen.
+- **Results**: Pages first (`searchPages` in `utils/pageSearch.ts`: `rankNames` over the labels of `getNavEntries`, so Builds
+  stays hidden without Supabase, then the pages of the menu groups whose label matches, up to the same limit of 6; the row shows its menu group), then the home search's groups, then "Search runewords for “…”" last.
+  Data and rows are the home page's: `useHomeSearch` (nothing loads before the first keystroke, each game-data file settles on its
+  own, the "still loading" note before the startup sync has initialized) and `HomeSearchResults` / `SearchRunewordsRow` / `HomeSearchRow`
+  (`src/features/home/`). Results are computed synchronously from the current query and the names loaded so far, so a slow earlier query cannot
+  overwrite a newer one. `shouldFilter={false}` keeps cmdk from filtering or reordering. The list has a fixed height: the dialog is centred,
+  so a growing list would move the input while typing.
+- **Enter**: runs the selected row, by default the first (a page when one matches, else the best item, else the runewords search). cmdk keeps its
+  selection when rows appear above it and the names arrive after the first render, so the row that is currently first carries the
+  value `FIRST_ROW_VALUE` (`utils/searchRows.ts`) and the selection follows it. Controlling cmdk's `value` would make it scroll to the previously selected row.
+- **Closing**: choosing a result navigates and closes; Escape and clicking outside close. Radix returns focus only to a `DialogTrigger`, so the
+  shell remembers the element that was focused when it opened and `onCloseAutoFocus` restores it. Reopening starts empty: the panel
+  lives inside `DialogContent`, which unmounts on close.
+- **Shortcut** (`isSearchShortcut` in `utils/searchShortcut.ts`, pure): Cmd+K on a Mac, Ctrl+K elsewhere, no other modifier. Ctrl+K on a Mac
+  stays the system's delete-to-end-of-line, in text fields and in the CodeMirror JSON tab (`emacsStyleKeymap`, the editor has no `Mod-k`, so nothing conflicts).
+  The dialog sets `vimBindings={false}`, or cmdk's own Ctrl+K "move up" would fire together with the close. While another modal is open
+  (`[data-slot="dialog-content"]` or `[data-slot="sheet-content"]` with `data-state="open"`: settings drawer, mobile sheet, any dialog; or the sign-in consent gate, `[data-modal-gate]`) the shortcut is
+  ignored, like the button behind its backdrop; `preventDefault` still runs, so the browser's own Ctrl+K never fires.
 
 ### Nested sections
 
-`/guide`, `/game-data` and `/loot-filters` are nested routes with a lazy layout that renders a frame above an `<Outlet />`:
+`/guide` and `/loot-filters` are nested routes, and the Game Data pages are children of a pathless route; each has a lazy layout that renders a frame above an `<Outlet />`:
 
 - `GuideLayout`: a width-only `PageShell` with the "Experimental" `DevNotice`, then the spine (index, its own narrow
   `PageShell` with the title), the map (`map`) or a note (`:slug`);
 - `LootFilterLayout`: a width-only `PageShell` with the "Under development" `DevNotice`, then the library (index) or the
   editor (`:id`);
-- `GameDataLayout`: a `PageShell` with the title, the game-file version lines as its meta line and the sub-tabs as its
-  tab row (below); its index redirects to `bases`.
+- `GameDataLayout`: a `PageShell` titled with the menu label of the current page (`getActiveNavItem`), then the version
+  note. Its route has no path, so the pages keep top-level URLs.
 
 `GameDataLayout` renders:
 
 ```
-Game Data
-Game files: ESR 3.2.10 (tag 3.2.10 @ 10b540e, generated 2026-10-09)
-Docs data: ESR 3.2.10 (site updated 9 Oct 2026)
-[amber note when the HTM docs ESR version differs]
-╭────────────────────────────────────────────────╮
-│ [Bases] Sets  Best Base  Affixes  Item Types … │ <- NavLinks on a ToolbarCard (SUBTAB_* in navTabClasses.ts)
-╰────────────────────────────────────────────────╯
+Bases                                            <- menu label of the current page
+[amber note when the HTM docs ESR version differs from the game files; nothing otherwise]
 <Outlet />                                        <- child route screen
 ```
 
 Each child route is its own lazy screen wrapped in `<Suspense>` (each section's screens come from one feature module
 (`@/features/guide`, `@/features/game-data`, `@/features/loot-filter`), so they share its chunk).
-The version line comes from `public/game-data/manifest.json`; the docs line from Dexie `metadata.esrVersion` and
-`metadata.docsLastModified`. Both versions normally come from `metadata.modVersion` of ESR's `d2rloader/metadata.json`;
+The note compares `public/game-data/manifest.json` with Dexie `metadata.esrVersion`. Both versions normally come from `metadata.modVersion` of ESR's `d2rloader/metadata.json`;
 the docs version may fall back to the changelog page's header, so the note never says which version is newer.
 
-The Game Data child pages are separate header items (Bases, Sets, Materials and Areas under Database, next to the top-level Campaign Map; Best Base, Affixes, Item Types, Enhance and Cube Recipes under Tools).
-Guide and Loot Filters items are prefix-matched, so they stay active on every child page.
+The Game Data child pages are ordinary menu items spread over the Recipes, Items and Areas groups (see the table above); the
+header's page row links them, not the layout. A section may have its own page tab row only if the pages it links do not
+cut across menu groups (the header's page row covers a group's pages, so a row of them on the page would be a duplicate, and a
+row across groups would fight the menu).
+Guide and Loot Filters are prefix-matched, so they stay active on every child page.
 
-The header triggers and links use `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` (`src/core/components/navTabClasses.ts`). The
-page sub-tabs (Game Data, My Stash, Enhance sections, campaign map sections, the loot filter editor's tabs) use
+The header triggers and links use `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` (`src/core/components/navTabClasses.ts`), the page row `PAGE_ROW_LINK_*`. The
+in-page mode tabs (Enhance sections, campaign map sections, the loot filter editor's tabs) use
 `SUBTAB_BASE` / `SUBTAB_INACTIVE` / `SUBTAB_ACTIVE` (a filled `bg-primary` active pill) and sit in a `ToolbarCard` (see
 [UI-COMPONENTS.md](./UI-COMPONENTS.md#toolbarcard-and-sub-tabs)). The editor's tabs are not routes but
 buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=`. The amber notices of `GuideLayout` and
@@ -253,8 +319,8 @@ buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=`. 
 
 ### Navigation Style
 
-- Active route highlighted in nav (item and its group trigger)
-- Mobile: Sheet-based slide-out menu with an accordion of the groups
+- Active route highlighted in nav (item, its group trigger and the page row's underline)
+- Below the desktop switch: Sheet-based slide-out menu with an accordion of the groups
 
 ## Settings Drawer
 
@@ -310,8 +376,8 @@ Opens from the right side when the cog icon is clicked.
 - **Text Size**: 4-step slider (small / normal / large / extralarge), persisted in localStorage
 - **Diablo Font**: Toggle for thematic font rendering, persisted in localStorage
 - **Page width**: Standard (default, 1280 px pages) / Wide (1920 px) / Full (the whole window minus the side gutters),
-  persisted in localStorage (`pageWidth`, an unknown value reads as Standard). Also in the header's ↔ menu (md and
-  up). It widens the `PageShell` `wide` pages and the header row; the guide spine's reading column, the guide note and
+  persisted in localStorage (`pageWidth`, an unknown value reads as Standard). Also in the header's ↔ menu (desktop nav
+  only). It widens the `PageShell` `wide` pages and the header row; the guide spine's reading column, the guide note and
   the home page keep their widths
 - **Refresh Data**: Force re-fetch and parse all data
 - **Version display**: App version, game-file ESR version (manifest, generated date) and the docs data line
@@ -362,15 +428,14 @@ export const router = createBrowserRouter(
         { path: 'gemwords', element: routeElement(GemwordsScreen) },
         { path: 'socketables', element: routeElement(SocketablesScreen) },
         {
-          path: 'game-data',
-          element: routeElement(GameDataLayout),
+          element: routeElement(GameDataLayout), // pathless: the pages are top-level URLs
           children: [
-            { index: true, element: <Navigate to="bases" replace /> },
             { path: 'bases', element: routeElement(GameDataBasesScreen) },
-            // ... sets, best-base, affixes, types, enhance, cube, materials, areas
+            // ... sets, best-base, affixes, item-types, enhance, cube-recipes, materials, area-levels
           ],
         },
-        // ... uniques, mythicals, ascendancies (before game-data),
+        { path: 'game-data/*', element: <GameDataRedirectRoute /> }, // old URLs, query and hash kept
+        // ... uniques, mythicals, ascendancies (before the Game Data pages),
         //     loot-filters (layout: index + ':id'), builds, builds/new,
         //     builds/:buildId/edit, build/:buildId, user/:userId
         { path: '*', element: <NotFoundScreen /> },
@@ -422,9 +487,25 @@ src/core/
 │   └── navConfig.test.ts   # Paths exist in the router, unique labels
 └── components/
     ├── Header.tsx          # Top navigation bar (NavigationMenu groups, mobile accordion)
-    ├── PageWidthMenu.tsx   # Header quick control for the Page width setting (md and up)
-    ├── navTabClasses.ts    # Header nav link (TAB_*) and page sub-tab (SUBTAB_*) classes
+    ├── GroupPagesBar.tsx   # Page row: the pages of the current menu group
+    ├── centeredScrollLeft.ts # Pure helper of the page row's centring
+    ├── PageWidthMenu.tsx   # Header quick control for the Page width setting (desktop nav only)
+    ├── navTabClasses.ts    # Header nav (TAB_*), page row (PAGE_ROW_LINK_*) and in-page tab (SUBTAB_*) classes
     └── SettingsDrawer.tsx  # Settings slide-out panel
+
+src/features/global-search/
+├── components/
+│   ├── GlobalSearch.tsx        # Header button + the Ctrl+K / Cmd+K listener (entry bundle)
+│   └── GlobalSearchDialog.tsx  # The dialog and its results (lazy chunk)
+└── utils/
+    ├── searchShortcut.ts       # Pure key test, platform helpers (entry bundle)
+    ├── pageSearch.ts           # Pure page-label search
+    └── searchRows.ts           # First-row value, page row values
+
+src/features/home/              # Search shared with the dialog
+├── hooks/useHomeSearch.ts      # Activation, sources, groups, pending flags
+├── components/HomeSearchRows.tsx # Result rows and loading notes
+└── utils/homeSearch.ts         # searchHome, rankNames, homeResultHref
 
 src/features/settings/
 ├── components/
@@ -441,7 +522,8 @@ src/features/settings/
 
 ## Accessibility
 
-- Navigation links have proper `aria-current` for active state; the desktop menu and the mobile sheet are `<nav aria-label="Main">`
+- Navigation links have proper `aria-current` for active state; the desktop menu and the mobile sheet are `<nav aria-label="Main">`, the page row `<nav aria-label="{group} pages">`
 - Group triggers are keyboard operable (Enter/Space/arrows open, Escape closes) via Radix NavigationMenu
+- The search button has an `aria-label`, `aria-keyshortcuts` and a `title` naming the shortcut; the search dialog has a screen-reader title and description and returns focus on close
 - Settings drawer uses `aria-hidden` and focus trap when open
 - Close button and Escape key close the drawer

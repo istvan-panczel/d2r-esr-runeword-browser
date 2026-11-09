@@ -152,9 +152,9 @@ export function AreaDetailPanel({
       <PanelSection title="More">
         <ul className="space-y-1.5">
           <li>
-            <Link to={`/game-data/areas?search=${encodeURIComponent(`"${area.area.name}"`)}`} className={MORE_LINK_CLASS}>
+            <Link to={`/area-levels?search=${encodeURIComponent(`"${area.area.name}"`)}`} className={MORE_LINK_CLASS}>
               <List className="size-3.5" aria-hidden />
-              Areas page row
+              Area Levels page row
             </Link>
           </li>
           {area.quests.some((quest) => quest.itemCode !== undefined) && <CubeLink family="quest-items" label="Quest item cube recipes" />}
@@ -209,7 +209,7 @@ function Chip({ children, className, title }: { readonly children: ReactNode; re
 function CubeLink({ family, label }: { readonly family: string; readonly label: string }) {
   return (
     <li>
-      <Link to={`/game-data/cube?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=${encodeURIComponent(family)}`} className={MORE_LINK_CLASS}>
+      <Link to={`/cube-recipes?${GAME_DATA_URL_PARAM_KEYS.FAMILY}=${encodeURIComponent(family)}`} className={MORE_LINK_CLASS}>
         <ArrowRight className="size-3.5" aria-hidden />
         {label}
       </Link>
