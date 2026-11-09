@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Copy, Power, PowerOff, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Heading, Power, PowerOff, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,12 +22,14 @@ export interface RuleRowProps {
   readonly onToggle: (index: number, disabled: boolean) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
+  /** Add a section heading or a note right above this rule. */
+  readonly onAddComment: (index: number) => void;
 }
 
 /**
  * One rule: number, the comment as the main line with the summary in small grey under it (no comment: the summary is
  * the main line), badges and a problem dot (a disabled rule is dimmed with a "disabled" badge); move, disable/enable,
- * duplicate and delete on hover/focus (always on touch).
+ * duplicate, add a heading above and delete on hover/focus (always on touch).
  */
 export function RuleRow({
   index,
@@ -43,6 +45,7 @@ export function RuleRow({
   onToggle,
   onDuplicate,
   onDelete,
+  onAddComment,
 }: RuleRowProps) {
   const disabled = rule.disabled === true;
   const levels = levelsBadge(rule.activeInLevels);
@@ -211,6 +214,19 @@ export function RuleRow({
           }}
         >
           <Copy />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="size-7"
+          aria-label={`Add a heading or note above rule ${number}`}
+          title="Add a section heading or a note above this rule"
+          onClick={() => {
+            onAddComment(index);
+          }}
+        >
+          <Heading />
         </Button>
         <Button
           type="button"

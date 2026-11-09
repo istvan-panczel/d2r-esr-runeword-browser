@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { DiagnosticSeverity, LootFilterRule } from '../../engine/types';
-import type { RuleListRow } from '../../utils/ruleSections';
+import type { CommentAddress, HeadingRow, NoteRow, SectionRow } from '../../utils/sections';
+import { HeadingRowView, NoteRowView } from '../sections/SectionRows';
 import { RuleRow } from './RuleRow';
-import { RuleHeadingRow, RuleNoteRow } from './RuleSectionRows';
 
 export interface RuleListEntry {
   readonly index: number;
@@ -13,7 +13,7 @@ export interface RuleListEntry {
 
 interface RuleListProps {
   /** The rows to show (after the search and the folded sections): rules with their position in the filter, headings, notes. */
-  readonly rows: readonly RuleListRow<RuleListEntry>[];
+  readonly rows: readonly SectionRow<RuleListEntry>[];
   readonly ruleCount: number;
   /** False while a search filters the list: moving next to a hidden rule would be confusing. */
   readonly canMove: boolean;
@@ -23,8 +23,21 @@ interface RuleListProps {
   readonly onToggle: (index: number, disabled: boolean) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
-  readonly onToggleHeading: (key: string) => void;
+  readonly sections: RuleListSectionHandlers;
   readonly className?: string;
+}
+
+/** What the heading and note rows (and each rule's Add heading above) do. */
+export interface RuleListSectionHandlers {
+  readonly onToggle: (key: string) => void;
+  readonly onEditHeading: (row: HeadingRow) => void;
+  readonly onMove: (address: CommentAddress, direction: -1 | 1) => void;
+  readonly onRemoveHeading: (address: CommentAddress) => void;
+  readonly onAddRule: (address: CommentAddress) => void;
+  readonly onEditNote: (row: NoteRow) => void;
+  readonly onRemoveNote: (row: NoteRow) => void;
+  /** Add a heading or note above rule `index`. */
+  readonly onAddAbove: (index: number) => void;
 }
 
 /** The rules in file order; keeps the selected row in view when the selection changes (e.g. from the JSON tab). */
@@ -38,7 +51,7 @@ export function RuleList({
   onToggle,
   onDuplicate,
   onDelete,
-  onToggleHeading,
+  sections,
   className,
 }: RuleListProps) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -61,8 +74,23 @@ export function RuleList({
   return (
     <ul ref={listRef} className={className} aria-label="Rules">
       {rows.map((row) => {
-        if (row.kind === 'heading') return <RuleHeadingRow key={row.key} row={row} onToggle={onToggleHeading} />;
-        if (row.kind === 'note') return <RuleNoteRow key={row.key} row={row} />;
+        if (row.kind === 'heading') {
+          return (
+            <HeadingRowView
+              key={row.key}
+              row={row}
+              noun="rules"
+              canMove={canMove}
+              onToggle={sections.onToggle}
+              onEdit={sections.onEditHeading}
+              onMove={sections.onMove}
+              onRemove={sections.onRemoveHeading}
+              onAddItem={sections.onAddRule}
+            />
+          );
+        }
+        if (row.kind === 'note')
+          return <NoteRowView key={row.key} row={row} onEdit={sections.onEditNote} onRemove={sections.onRemoveNote} />;
         const { entry } = row;
         return (
           <RuleRow
@@ -80,6 +108,7 @@ export function RuleList({
             onToggle={onToggle}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
+            onAddComment={sections.onAddAbove}
           />
         );
       })}

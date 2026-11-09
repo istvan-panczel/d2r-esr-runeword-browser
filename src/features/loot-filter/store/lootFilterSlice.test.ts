@@ -15,6 +15,9 @@ import reducer, {
   createBlank,
   duplicate,
   duplicateRule,
+  addRuleToSection,
+  editRuleComments,
+  editStyleComments,
   editorFlushed,
   hydrate,
   importText,
@@ -661,5 +664,56 @@ describe('comments above rules belong to their place', () => {
       ['a', heading],
       ['a', undefined],
     ]);
+  });
+});
+
+describe('section comment reducers', () => {
+  const rules: LootFilterRule[] = [
+    { comment: 'a', hide: true, commentsBefore: ['// ---- One'] },
+    { comment: 'b', hide: true },
+    { comment: 'c', hide: true, commentsBefore: ['// ---- Two'] },
+  ];
+  const opened = () => openState({ formatVersion: 1, rules, leadingComments: [] });
+
+  it('editRuleComments moves a section and the selection follows its rule', () => {
+    const selected = reducer(opened(), selectRule(2));
+    const moved = reducer(selected, editRuleComments({ kind: 'move', address: { at: 2, line: 0 }, direction: -1 }));
+    expect(moved.editor.filter?.rules.map((rule) => [rule.comment, rule.commentsBefore])).toEqual([
+      ['c', ['// ---- Two']],
+      ['a', ['// ---- One']],
+      ['b', undefined],
+    ]);
+    expect(moved.editor.selectedRule).toBe(0);
+    expect(moved.editor.dirty).toBe(true);
+    expect(reducer(selected, editRuleComments({ kind: 'move', address: { at: 0, line: 0 }, direction: -1 }))).toBe(selected);
+  });
+
+  it('editRuleComments writes comments after the last rule', () => {
+    const state = reducer(opened(), editRuleComments({ kind: 'insert', at: 3, lines: ['// ---- Later'] }));
+    expect(state.editor.filter?.rulesEndComments).toEqual(['// ---- Later']);
+  });
+
+  it('addRuleToSection adds an empty rule at the end of the section and selects it', () => {
+    const state = reducer(opened(), addRuleToSection({ at: 0, line: 0 }));
+    expect(state.editor.filter?.rules.map((rule) => rule.comment)).toEqual(['a', 'b', undefined, 'c']);
+    expect(state.editor.selectedRule).toBe(2);
+  });
+
+  it('editStyleComments edits the comments above a style and refuses the end of the list', () => {
+    const withStyles = openState({ formatVersion: 1, rules: [], leadingComments: [], styles: { A: { hide: true }, B: { hide: true } } });
+    const state = reducer(withStyles, editStyleComments({ kind: 'insert', at: 1, lines: ['// ---- Bs'] }));
+    expect(state.editor.filter?.styles?.B).toEqual({ hide: true, commentsBefore: ['// ---- Bs'] });
+    expect(Object.keys(state.editor.filter?.styles ?? {})).toEqual(['A', 'B']);
+    expect(reducer(withStyles, editStyleComments({ kind: 'insert', at: 2, lines: ['// x'] }))).toBe(withStyles);
+  });
+
+  it('removeStyle hands the comments to the next style', () => {
+    const withStyles = openState({
+      formatVersion: 1,
+      rules: [],
+      leadingComments: [],
+      styles: { A: { hide: true, commentsBefore: ['// ---- Looks'] }, B: { hide: true } },
+    });
+    expect(reducer(withStyles, removeStyle('A')).editor.filter?.styles).toEqual({ B: { hide: true, commentsBefore: ['// ---- Looks'] } });
   });
 });

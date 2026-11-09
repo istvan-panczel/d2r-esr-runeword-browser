@@ -20,6 +20,7 @@ import type { LootFilterRow } from '@/core/supabase/types';
 import { basedOnFromRow, sharedBasedOn } from '../utils/basedOn';
 import { createBlankFilter } from '../utils/blankFilter';
 import { newEntryId } from '../utils/ids';
+import { addToSection, applySectionEdit, type CommentAccess, type CommentAddress, type SectionEdit } from '../utils/sections';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
 import type { StyleChoiceEdit } from '../utils/styleChoice';
 import type { EditorTarget, LootFilterBasedOn, LootFilterEditorState, LootFilterEntry, LootFilterSource, LootFilterState } from './types';
@@ -193,10 +194,28 @@ function editRules(
   return withEditor(state, { filter: edited, dirty: true, selectedRule });
 }
 
-/** `rule` with exactly these comments above it (none: the key is gone). */
-function withCommentsBefore(rule: LootFilterRule, comments: readonly string[] | undefined): LootFilterRule {
-  const { commentsBefore: _old, ...rest } = rule;
-  return comments === undefined || comments.length === 0 ? rest : { ...rest, commentsBefore: comments };
+/** `item` (a rule or a style) with exactly these comments above it (none: the key is gone). */
+function withCommentsBefore<T extends { readonly commentsBefore?: readonly string[] }>(
+  item: T,
+  comments: readonly string[] | undefined
+): T {
+  const { commentsBefore: _old, ...rest } = item;
+  return (comments === undefined || comments.length === 0 ? rest : { ...rest, commentsBefore: comments }) as T;
+}
+
+const RULE_COMMENTS: CommentAccess<LootFilterRule> = { get: (rule) => rule.commentsBefore, set: withCommentsBefore };
+
+type StyleEntry = readonly [name: string, style: LootFilterStyle];
+const STYLE_COMMENTS: CommentAccess<StyleEntry> = {
+  get: ([, style]) => style.commentsBefore,
+  set: ([name, style], comments) => [name, withCommentsBefore(style, comments)],
+};
+
+/** The selection after an edit that reordered the rules: the same rule (`from` maps new index → old index). */
+function followSelection(selected: number | null, from: readonly number[]): number | null {
+  if (selected === null) return null;
+  const index = from.indexOf(selected);
+  return index === -1 ? null : index;
 }
 
 function isIndex(index: number, length: number): boolean {
@@ -828,6 +847,43 @@ const lootFilterSlice = createSlice({
       });
     },
 
+    /**
+     * A section comment edit in the rule list (`utils/sections.ts`): add, change or remove headings and notes, or move
+     * a section with its rules. The selection follows its rule. No-op when the edit changes nothing.
+     */
+    editRuleComments(state, action: PayloadAction<SectionEdit>): State {
+      const filter = state.editor.filter;
+      if (filter === null) return state;
+      const result = applySectionEdit({ items: filter.rules, end: filter.rulesEndComments ?? [] }, RULE_COMMENTS, action.payload);
+      if (result === undefined) return state;
+      return editRules(state, () => ({
+        rules: result.items,
+        endComments: result.end,
+        selectedRule: followSelection(state.editor.selectedRule, result.from),
+      }));
+    },
+
+    /** Adds a new empty rule as the last rule of the section whose heading is at the address, and selects it. */
+    addRuleToSection(state, action: PayloadAction<CommentAddress>): State {
+      const filter = state.editor.filter;
+      if (filter === null) return state;
+      const result = addToSection({ items: filter.rules, end: filter.rulesEndComments ?? [] }, RULE_COMMENTS, action.payload, {});
+      if (result === undefined) return state;
+      return editRules(state, () => ({ rules: result.items, endComments: result.end, selectedRule: result.index }));
+    },
+
+    /** A section comment edit in the style list (no comments after the last style: an insert there is a no-op). */
+    editStyleComments(state, action: PayloadAction<SectionEdit>): State {
+      const edit = action.payload;
+      return editFilter(state, (filter) => {
+        const entries = Object.entries(filter.styles ?? {});
+        if (edit.kind === 'insert' && edit.at >= entries.length) return undefined;
+        const result = applySectionEdit({ items: entries, end: [] }, STYLE_COMMENTS, edit);
+        if (result === undefined) return undefined;
+        return { ...filter, styles: Object.fromEntries(result.items) };
+      });
+    },
+
     /** Selects a rule (or none). Not an edit: `dirty` is unchanged. */
     selectRule(state, action: PayloadAction<number | null>): State {
       const index = action.payload;
@@ -861,8 +917,15 @@ const lootFilterSlice = createSlice({
       const name = action.payload;
       return editFilter(state, (filter) => {
         if (!filter.styles || !Object.hasOwn(filter.styles, name)) return undefined;
-        const styles = Object.fromEntries(Object.entries(filter.styles).filter(([key]) => key !== name));
-        return applyPatch(filter, { styles: nonEmpty(styles) });
+        const entries = Object.entries(filter.styles);
+        const index = entries.findIndex(([key]) => key === name);
+        const above = entries[index][1].commentsBefore;
+        const rest = entries.filter(([key]) => key !== name);
+        // As with rules: the comments above a deleted style go to the next one (after the last style they are dropped).
+        const next = rest.at(index);
+        if (above !== undefined && next !== undefined)
+          rest[index] = [next[0], withCommentsBefore(next[1], [...above, ...(next[1].commentsBefore ?? [])])];
+        return applyPatch(filter, { styles: nonEmpty(Object.fromEntries(rest)) });
       });
     },
 
@@ -917,6 +980,9 @@ export const {
   setRuleDisabled,
   removeRule,
   moveRule,
+  editRuleComments,
+  addRuleToSection,
+  editStyleComments,
   duplicateRule,
   selectRule,
   setStyle,
