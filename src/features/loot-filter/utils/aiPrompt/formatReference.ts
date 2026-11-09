@@ -381,8 +381,10 @@ function jsonStyleSection(): string {
   return [
     '## Writing the file for the app',
     '',
-    '- Strict JSON: double quotes, no trailing commas. `//` comment lines are allowed only before the opening `{`; the app drops comments between rules on its first edit, so put explanations in each rule\'s `"comment"`.',
-    '- Give every rule a `"comment"`: a short title the app lists ("Hide magic weapons without +skills (Strict)").',
+    "- Strict JSON: double quotes, no trailing commas. Comments are whole `//` lines: the plugin skips them anywhere, and the app keeps them on every edit above the opening `{` (the filter's header), above a top-level key, a rule, a disabled rule or a style, and after the last rule. It drops, on its first edit and with a warning, a comment on the same line as a rule, a comment inside a rule or style object and every `/* */` block.",
+    '- Sections: `// ==== Title` starts a part and `// ---- Title` a section inside it (four or more `=` or `-` right after `//`; a run of three or more after the title is decoration; a line of markers only is a separator). Other `//` lines right under a heading describe it; other `//` lines between rules are notes. A section runs to the next heading of the same or a higher level; the same works between styles. Rule numbers (`R###` in the plugin log) do not change. A file without headings shows no comment rows in the app (its comments are still kept).',
+    '- Give every rule a `"comment"` too: a short title the app lists ("R012 | Gold < 1000 | hide at L3", "Hide magic weapons without +skills (Strict)"). Section comments group rules; they do not replace it.',
+    '- To switch a rule off, do not comment it out (a commented-out rule is only a note): the app\'s rule toggle moves it to `disabledRules` (`{ "at": <index>, "rule": {…} }`), which the plugin ignores.',
     '- Keys inside a rule: conditions, then actions, then nothing else. Unknown keys are kept but ignored by the game.',
     '- Reuse styles for repeated looks (a "Valuable" style for top items, "Good" for useful ones, or the style presets in examples.md) instead of copying actions. Every `useStyle` name must be defined under `"styles"`.',
   ].join('\n');
@@ -558,8 +560,15 @@ export const SKELETON_FILTER: LootFilter = {
       itemCodes: HIGH_RUNES,
       useStyle: 'Valuable',
       chatMessage: 'ÿc8High rune: {name}',
+      commentsBefore: ['// ==== Show ====', '// Label rules first: later rules change the looks of earlier ones.', '// ---- Runes'],
     },
-    { comment: 'Hide health and mana potions (Strict only)', itemTypes: ['hpot', 'mpot'], activeInLevels: [2], hide: true },
+    {
+      comment: 'Hide health and mana potions (Strict only)',
+      itemTypes: ['hpot', 'mpot'],
+      activeInLevels: [2],
+      hide: true,
+      commentsBefore: ['// ==== Hide ====', '// Narrow hide rules last, each with its own exceptions.'],
+    },
   ],
   leadingComments: ['// My ESR filter, written with an AI assistant and checked in the D2R ESR Runeword Browser.'],
 };

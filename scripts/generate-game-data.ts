@@ -7,7 +7,8 @@
  * Source: --esr <dir> | ESR_SOURCE_DIR | ../Eastern_Sun_Resurrected (relative to the repo root).
  * --check regenerates in memory and exits 1 when the committed files are stale.
  * Also writes (--check: checks) src/features/modifiers/data/modifierRefs.json from the fresh modifiers bundle
- * (scripts/lib/modifierRefsFile.ts; `npm run modifiers:refs` does that step alone).
+ * (scripts/lib/modifierRefsFile.ts; `npm run modifiers:refs` does that step alone), and after the bundles the loot filter
+ * agent pack, public/loot-filters/agent/ (scripts/lib/lootFilterAgentPack.ts; `npm run loot-filter:agent-pack` alone).
  * icons.json comes from scripts/generate-item-icons.ts; when present it is only listed in the manifest (hash, counts).
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -19,6 +20,7 @@ import { generateBundles } from '../src/features/game-data/build/generateBundles
 import { untintedFile } from '../src/features/game-data/build/itemTint.ts';
 import { buildManifest, serializeBundle } from '../src/features/game-data/build/writeBundle.ts';
 import { git, REPO_ROOT, resolveEsrDir } from './lib/esrClone.ts';
+import { updateLootFilterAgentPack } from './lib/lootFilterAgentPack.ts';
 import { updateModifierRefs } from './lib/modifierRefsFile.ts';
 
 const OUTPUT_DIR = join(REPO_ROOT, 'public', 'game-data');
@@ -65,7 +67,7 @@ function readIcons(): { text: string; counts: Record<string, number> } | null {
   };
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
       esr: { type: 'string' },
@@ -153,11 +155,13 @@ function main(): void {
     });
     console.log('');
     const refsOk = updateModifierRefs(modifiers, true);
+    // Built from the committed bundles: meaningful only when they are fresh (checked first)
+    const packOk = stale.length > 0 || (await updateLootFilterAgentPack(true));
     if (stale.length > 0) {
       console.error(`\nStale game data: ${stale.map(([name]) => `${name}.json`).join(', ')}. Run npm run game-data:generate.`);
       process.exit(1);
     }
-    if (!refsOk) process.exit(1);
+    if (!refsOk || !packOk) process.exit(1);
     console.log('\nGame data is up to date.');
     return;
   }
@@ -170,6 +174,9 @@ function main(): void {
   }
   console.log('');
   if (!updateModifierRefs(modifiers, false)) process.exit(1);
+  console.log('');
+  // The pack reads the bundles just written, as the browser does
+  if (!(await updateLootFilterAgentPack(false))) process.exit(1);
 }
 
-main();
+await main();

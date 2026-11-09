@@ -128,6 +128,11 @@ describe('buildPromptPackage', () => {
     expect(pkg.prompt).toContain('the first time on the AI help page, step 3');
   });
 
+  it('allows whole-line section comments between rules (the app keeps them)', () => {
+    expect(pkg.prompt).toContain('`// ==== Title` and `// ---- Title` lines');
+    expect(pkg.prompt).not.toContain('comment lines only at the top of the file');
+  });
+
   it('builds the single .md: the prompt for one document, then every file under its heading', () => {
     const { markdown } = pkg;
     expect(markdown.startsWith('# Build an ESR loot filter with me')).toBe(true);

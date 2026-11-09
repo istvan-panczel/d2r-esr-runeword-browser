@@ -1,0 +1,25 @@
+param,class,tab
+0,Amazon,Bow and Crossbow Skills
+1,Amazon,Passive and Magic Skills
+2,Amazon,Javelin and Spear Skills
+8,Sorceress,Fire Skills
+9,Sorceress,Lightning Skills
+10,Sorceress,Cold Skills
+16,Necromancer,Curses
+17,Necromancer,Poison and Bone Skills
+18,Necromancer,Summoning Skills
+24,Paladin,Combat Skills
+25,Paladin,Offensive Auras
+26,Paladin,Defensive Auras
+32,Barbarian,Combat Skills
+33,Barbarian,Masteries
+34,Barbarian,Warcries
+40,Druid,Summoning Skills
+41,Druid,Shape Shifting Skills
+42,Druid,Elemental Skills
+48,Assassin,Traps
+49,Assassin,Shadow Disciplines
+50,Assassin,Martial Arts
+56,Warlock,Demon Skills
+57,Warlock,Eldritch Skills
+58,Warlock,Chaos Skills
