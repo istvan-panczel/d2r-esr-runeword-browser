@@ -81,7 +81,7 @@ describe('extractFilterFromAnswer', () => {
     expect(result.notes.map((note) => note.message)).toEqual([
       expect.stringContaining('Trailing commas were accepted'),
       expect.stringContaining('Block comments'),
-      expect.stringContaining('comment inside the file'),
+      expect.stringContaining('is dropped on the first edit'),
     ]);
   });
 

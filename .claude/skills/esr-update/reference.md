@@ -287,6 +287,12 @@ not check." Then:
   upstream, update `SULLYS_QOL_TEMPLATE.version` / `.credit` in `src/features/loot-filter/utils/template.ts` and the
   version in `docs/features/LOOT-FILTER.md`, then rerun `npm run esr:review -- --offline` (`lootfilter.validate` must
   not gain diagnostics) and `npx vitest run src/features/loot-filter`.
+- **Loot filter agent pack** (`public/loot-filters/agent/`: README.md plus the AI help page's FORMAT.md, examples.md,
+  assets.md and full game data tables, for AI agents writing filters; `docs/features/LOOT-FILTER.md` "AI help"):
+  `game-data:generate` rewrites it from the new `lootfilter.json` / `types.json` and the manifest's ESR version, and
+  `game-data --check` and `scripts/lib/lootFilterAgentPack.test.ts` fail when it is stale. After a template, plugin
+  version or prompt change run `npm run loot-filter:agent-pack`; commit the pack with the bundles (it carries the ESR
+  version, so every release changes it).
 - **Official links**: `OFFICIAL_LINKS` / URL constants in `src/core/navigation/navConfig.ts`, `OFFICIAL_REFERENCES` in
   `src/features/guide/utils/guideHome.ts`, `docs:` links in `content/guide`. Community tools: report only.
 

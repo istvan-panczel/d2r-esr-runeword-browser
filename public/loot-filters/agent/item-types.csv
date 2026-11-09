@@ -1,0 +1,193 @@
+code,name,parents
+none,None,
+shie,Shield,shld
+tors,Armor,armo
+gold,Gold,misc
+bowq,Bow Quiver,misl seco
+xboq,Crossbow Quiver,misl seco
+play,Player Body Part,misc
+herb,Herb,misc
+poti,Potion,misc
+ring,Ring,misc merc
+elix,Elixir,misc
+amul,Amulet,misc merc
+char,Charm,misc
+boot,Boots,armo merc
+glov,Gloves,armo merc
+book,Book,misc
+belt,Belt,armo merc
+gem,Gem,sock
+torc,Torch,misc
+scro,Scroll,misc
+scep,Scepter,rod
+wand,Wand,rod
+staf,Staff,rod
+bow,Bow,miss
+axe,Axe,mele
+club,Club,blun
+swor,Sword,blde
+hamm,Hammer,blun
+knif,Knife,blde
+spea,Spear,sppl
+pole,Polearm,sppl
+xbow,Crossbow,miss
+mace,Mace,blun
+merc,Helm (merc),
+tpot,Missile Potion,thro
+ques,Quest,
+body,Body Part,misc
+key,Key,misc
+tkni,Throwing Knife,comb knif
+taxe,Throwing Axe,comb axe
+jave,Javelin,comb spea
+weap,Weapon,
+mele,Melee Weapon,weap
+miss,Missile Weapon,weap
+thro,Thrown Weapon,weap
+comb,Combo Weapon,mele thro
+armo,Any Armor,
+shld,Any Shield,armo seco
+misc,Miscellaneous,
+sock,Socket Filler,misc
+seco,Second Hand,
+rod,Staves And Rods,blun
+misl,Missile,misc
+blun,Blunt,mele
+jewl,Jewel,sock
+clas,Class Specific,
+amaz,Amazon Item,clas
+barb,Barbarian Item,clas
+necr,Necromancer Item,clas
+pala,Paladin Item,clas
+sorc,Sorceress Item,clas
+assn,Assassin Item,clas
+drui,Druid Item,clas
+warl,Warlock Item,clas
+h2h,Hand to Hand,mele assn
+orb,Orb,weap sorc
+head,Voodoo Heads,shld necr
+ashd,Auric Shields,shld pala
+phlm,Primal Helm,helm barb
+pelt,Pelt,helm drui
+cloa,Cloak (old),tors
+rune,Rune,sock
+circ,Circlet,helm
+hpot,Healing Potion,poti
+mpot,Mana Potion,poti
+rpot,Rejuv Potion,hpot mpot
+spot,Stamina Potion,poti
+apot,Antidote Potion,poti
+wpot,Thawing Potion,poti
+scha,Small Charm,char
+mcha,Medium Charm,char
+lcha,Large Charm,char
+abow,Amazon Bow,bow amaz
+aspe,Amazon Spear,spea amaz
+ajav,Amazon Javelin,jave amaz
+h2h1,Hand to Hand 1,claw assn
+arrm,Bow Quiver2,bowq seco
+boqm,Crossbow Quiver2,xboq seco
+gem0,Chipped Gem,gem
+gem1,Flawed Gem,gem
+gem2,Standard Gem,gem
+gem3,Flawless Gem,gem
+gem5,Perfect Gem,gem
+gema,Amethyst,gem
+gemd,Diamond,gem
+geme,Emerald,gem
+gemr,Ruby,gem
+gems,Sapphire,gem
+gemt,Topaz,gem
+gemz,Skull,gem
+blde,Swords and Knives,mele
+sppl,Spears and Polearms,mele
+grim,Grimoire,shld warl
+cjwl,Colossal Jewel,jewl
+csch,Crafted Sunder Charm,char
+gem4,Blemished Gem,gem
+gemk,Obsidian,gem
+zrin,Amazonian Loop,amaz ring
+srin,Sorcerer's Band,sorc ring
+nrin,Necromancer's Stone,necr ring
+prin,Paladic Halo,pala ring
+brin,Barbaric Knuckle,barb ring
+drin,Druid's Seal,drui ring
+arin,Assassin's Jewel,assn ring
+wrin,Warlock Sigil,warl ring
+zamu,Amazonian Pin,amaz amul
+samu,Sorcerer's Talisman,sorc amul
+namu,Death's Locket,necr amul
+pamu,Holy Pendant,pala amul
+bamu,Primal Charm,barb amul
+damu,Druidic Necklace,drui amul
+aamu,Assassin's Choker,assn amul
+wamu,Warlock Pendant,warl amul
+mana,Sorceress Mana Blade,swor sorc
+ndgr,Necromancer Dagger,knif necr
+npol,Necromancer Polearm,pole necr
+bedg,Paladin Sword,swor pala
+bjav,Barbarian Javs,taxe barb
+dclb,Druid Club,club drui
+asns,Assassin 1H Katana,swor assn
+asnx,Assassin 2H Katana,swor assn
+wswd,Voidblade,swor warl
+2hsw,Two-Handed Melee Weapon,
+scrl,Ancient Scroll,
+asc1,Ancient Scroll Low,scrl
+asc2,Ancient Scroll High,scrl
+coup,Coupon,misc
+cpn1,Coupon norm,coup
+cpn2,Coupon excep,coup
+cpn3,Coupon elite,coup
+qcha,Square Charm,lcha
+ocha,Odd Charm,lcha
+xcha,Extra Charm,char
+cube,Cube Materials,misc
+dstn,Dragon Stones,cube
+can1,Gem Can 1 (can1),misc
+can2,Gem Can 2,misc
+can3,Gem Can 3,misc
+can4,Gem Can 4,misc
+can5,Gem Can 5,misc
+can6,Gem Can 6,misc
+can7,Gem Can 7,misc
+can8,Gem Can 8,misc
+zcha,Morph Charm,char
+rstn,Random Stone,cube
+chw1,Chit Weapon nor,cube
+cha1,Chit Armor nor,cube
+chw2,Chit Weapon nm,cube
+cha2,Chit Armor nm,cube
+chw3,Chit Weapon hell,cube
+cha3,Chit Armor hell,cube
+claw,Claw,h2h mele
+knuc,Knuckle,h2h blun
+h2h2,Hand to Hand 2,claw assn
+robe,Robe,tors
+scrn,Spirit Crown,helm
+mrn0,Monster Ring 0,
+mrn1,Monster Ring 1,
+mrn2,Monster Ring 2,
+mrn3,Monster Ring 3,
+mrn4,Monster Ring 4,
+vamu,Viper Amulet,misc
+ycha,Passive Enabler,char
+rock,Ore,
+can9,Gem Can 1 (can9),misc
+clok,Cloak,tors
+eras,Magic Eraser,cube
+gm6p,Gem 6 Pack,cube
+or6p,Organ 6 Pack,cube
+casce,Caster Scepter,
+cosce,Combat Scepter,
+csta,Combat Staff,
+1hsw,One-Handed Melee Weapon,
+a5we,A5 Hireling Weapons,axe blde
+mmap,Mythical Map,
+astn,Ascendancy Stone,scha
+srkn,Shuriken,comb tkni
+helm,Helm,armo merc
+upot,Utility Potions,poti
+relx,Regular Elixirs,poti upot
+gelx,Greater Elixirs,poti upot
+arte,Alien Artefacts,misc

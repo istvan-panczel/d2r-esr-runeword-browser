@@ -20,9 +20,9 @@ describe('parseJsonc', () => {
       tolerated: [],
       innerComments: [
         { line: 2, column: 36 },
-        { line: 3, column: 3 },
         { line: 6, column: 1 },
       ],
+      placedComments: { keys: { n: ['// own line'] }, rules: {}, disabledRules: {}, styles: {}, rulesEnd: [] },
     });
   });
 

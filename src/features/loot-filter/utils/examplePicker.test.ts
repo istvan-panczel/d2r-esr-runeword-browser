@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { EXAMPLE_GROUPS, EXAMPLE_RULES, findExample, isHideExample, STYLE_ICON } from './exampleRules';
 import {
   buildStarterRules,
+  headingTitles,
+  withGroupHeadings,
   effectiveChoices,
   groupBulkKind,
   groupExamples,
@@ -215,5 +217,37 @@ describe('mergeStyles', () => {
     expect(merge).toEqual({ add: { [unique.name]: unique.style }, reused: [map.name] });
     expect(mergeStyles(undefined, { [high.name]: high.style }).add).toEqual({ [high.name]: high.style });
     expect(findExample('high-runes')).toBeDefined();
+  });
+});
+
+describe('withGroupHeadings', () => {
+  const ids = ['high-runes', 'mid-runes', 'perfect-gems', 'hide-inferior', 'hide-minor-potions'];
+  const examples = ids.map((id) => {
+    const example = findExample(id);
+    if (example === undefined) throw new Error(id);
+    return example;
+  });
+  const rules = examples.map((example) => ({ comment: example.title }));
+
+  it('writes a section heading above the first rule of each group, hide rules under one', () => {
+    expect(withGroupHeadings(examples, rules, new Set()).map((rule) => rule.commentsBefore)).toEqual([
+      ['// ---- Runes'],
+      undefined,
+      ['// ---- Gems'],
+      ['// ---- Hide rules'],
+      undefined,
+    ]);
+  });
+
+  it('skips a title the filter already has as a heading, in any case', () => {
+    const existing = headingTitles(['// ==== RUNES', '// a note', '// ---- Hide rules ----']);
+    expect(existing).toEqual(new Set(['runes', 'hide rules']));
+    expect(withGroupHeadings(examples, rules, existing).map((rule) => rule.commentsBefore)).toEqual([
+      undefined,
+      undefined,
+      ['// ---- Gems'],
+      undefined,
+      undefined,
+    ]);
   });
 });

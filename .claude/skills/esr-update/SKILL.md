@@ -27,9 +27,10 @@ into the repo.
 ## 1. Regenerate and test
 
 `npm run game-data:update -- --tag <tag> 2>&1 | tee "$S/update.log"` (several minutes). It pulls the clone, keeps the
-previous HTM fixtures in `test-fixtures/previous/`, generates every bundle, the item and skill icons, the guide and the
-sitemap, refreshes the fixtures, runs `game-data --check`, `guide:check` and the **full** test suite, and prints a
-summary. It never commits.
+previous HTM fixtures in `test-fixtures/previous/`, generates every bundle (and with them the loot filter agent pack,
+`public/loot-filters/agent/`), the item and skill icons, the guide and the sitemap, refreshes the fixtures, runs
+`game-data --check` (it covers the pack), `guide:check` and the **full** test suite, and prints a summary. It never
+commits.
 
 - Generation itself failed (clone, manifest, generator crash) → stop, show the step, diagnose with reference.md
   "When things go wrong", ask before changing anything.

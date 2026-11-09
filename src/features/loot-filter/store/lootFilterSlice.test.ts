@@ -15,6 +15,9 @@ import reducer, {
   createBlank,
   duplicate,
   duplicateRule,
+  addRuleToSection,
+  editRuleComments,
+  editStyleComments,
   editorFlushed,
   hydrate,
   importText,
@@ -599,7 +602,6 @@ describe('text notes', () => {
     const state = openWith('upload');
     expect(state.editor.textNotes.map((note) => note.message)).toEqual([
       expect.stringMatching(/^Trailing commas were accepted \(first at line 6\)/),
-      expect.stringMatching(/^1 comment inside the file/),
     ]);
     expect(state.editor.parseDiagnostics).toEqual([]);
     expect(selectDiagnostics({ lootFilter: state })).toEqual(state.editor.textNotes);
@@ -607,10 +609,11 @@ describe('text notes', () => {
 
   it('the notes stay through edits and go once the model is written back', () => {
     const edited = reducer(openWith('upload'), setHeader({ author: 'Me' }));
-    expect(edited.editor.textNotes).toHaveLength(2);
+    expect(edited.editor.textNotes).toHaveLength(1);
     const flushed = reducer(edited, { type: editorFlushed.type, payload: { now: LATER } });
     expect(flushed.editor.textNotes).toEqual([]);
-    expect(flushed.library.entries[0].text).not.toMatch(/section|,\s*\]/);
+    expect(flushed.library.entries[0].text).not.toMatch(/,\s*\]/);
+    expect(flushed.library.entries[0].text).toContain('    // section\n');
   });
 
   it('template entries get no notes', () => {
@@ -622,5 +625,95 @@ describe('text notes', () => {
     const applied = reducer(openState(), replaceFilter({ filter, diagnostics, notes }));
     expect(applied.editor.textNotes).toBe(notes);
     expect(reducer(applied, replaceFilter({ filter, diagnostics })).editor.textNotes).toEqual([]);
+  });
+});
+
+describe('comments above rules belong to their place', () => {
+  const heading = ['// ==== Part'];
+  const rule = (comment: string, commentsBefore?: readonly string[]): LootFilterRule => ({
+    comment,
+    hide: true,
+    ...(commentsBefore ? { commentsBefore } : {}),
+  });
+  const openRules = (...rules: LootFilterRule[]) => openState({ formatVersion: 1, rules, leadingComments: [] });
+  const view = (state: LootFilterState) => state.editor.filter?.rules.map((entry) => [entry.comment, entry.commentsBefore]);
+
+  it('hands the comments of a deleted rule to the next one', () => {
+    const state = reducer(openRules(rule('a', heading), rule('b', ['// note'])), removeRule(0));
+    expect(view(state)).toEqual([['b', ['// ==== Part', '// note']]]);
+  });
+
+  it('keeps the comments of a deleted last rule after the list', () => {
+    const state = reducer(openRules(rule('a'), rule('b', heading)), removeRule(1));
+    expect(view(state)).toEqual([['a', undefined]]);
+    expect(state.editor.filter?.rulesEndComments).toEqual(heading);
+  });
+
+  it('leaves the comments in place when a rule moves', () => {
+    const state = reducer(openRules(rule('a'), rule('b', heading), rule('c')), moveRule({ from: 1, to: 0 }));
+    expect(view(state)).toEqual([
+      ['b', undefined],
+      ['a', heading],
+      ['c', undefined],
+    ]);
+  });
+
+  it('does not copy the comments to a duplicate', () => {
+    const state = reducer(openRules(rule('a', heading)), duplicateRule(0));
+    expect(view(state)).toEqual([
+      ['a', heading],
+      ['a', undefined],
+    ]);
+  });
+});
+
+describe('section comment reducers', () => {
+  const rules: LootFilterRule[] = [
+    { comment: 'a', hide: true, commentsBefore: ['// ---- One'] },
+    { comment: 'b', hide: true },
+    { comment: 'c', hide: true, commentsBefore: ['// ---- Two'] },
+  ];
+  const opened = () => openState({ formatVersion: 1, rules, leadingComments: [] });
+
+  it('editRuleComments moves a section and the selection follows its rule', () => {
+    const selected = reducer(opened(), selectRule(2));
+    const moved = reducer(selected, editRuleComments({ kind: 'move', address: { at: 2, line: 0 }, direction: -1 }));
+    expect(moved.editor.filter?.rules.map((rule) => [rule.comment, rule.commentsBefore])).toEqual([
+      ['c', ['// ---- Two']],
+      ['a', ['// ---- One']],
+      ['b', undefined],
+    ]);
+    expect(moved.editor.selectedRule).toBe(0);
+    expect(moved.editor.dirty).toBe(true);
+    expect(reducer(selected, editRuleComments({ kind: 'move', address: { at: 0, line: 0 }, direction: -1 }))).toBe(selected);
+  });
+
+  it('editRuleComments writes comments after the last rule', () => {
+    const state = reducer(opened(), editRuleComments({ kind: 'insert', at: 3, lines: ['// ---- Later'] }));
+    expect(state.editor.filter?.rulesEndComments).toEqual(['// ---- Later']);
+  });
+
+  it('addRuleToSection adds an empty rule at the end of the section and selects it', () => {
+    const state = reducer(opened(), addRuleToSection({ at: 0, line: 0 }));
+    expect(state.editor.filter?.rules.map((rule) => rule.comment)).toEqual(['a', 'b', undefined, 'c']);
+    expect(state.editor.selectedRule).toBe(2);
+  });
+
+  it('editStyleComments edits the comments above a style and refuses the end of the list', () => {
+    const withStyles = openState({ formatVersion: 1, rules: [], leadingComments: [], styles: { A: { hide: true }, B: { hide: true } } });
+    const state = reducer(withStyles, editStyleComments({ kind: 'insert', at: 1, lines: ['// ---- Bs'] }));
+    expect(state.editor.filter?.styles?.B).toEqual({ hide: true, commentsBefore: ['// ---- Bs'] });
+    expect(Object.keys(state.editor.filter?.styles ?? {})).toEqual(['A', 'B']);
+    expect(reducer(withStyles, editStyleComments({ kind: 'insert', at: 2, lines: ['// x'] }))).toBe(withStyles);
+  });
+
+  it('removeStyle hands the comments to the next style', () => {
+    const withStyles = openState({
+      formatVersion: 1,
+      rules: [],
+      leadingComments: [],
+      styles: { A: { hide: true, commentsBefore: ['// ---- Looks'] }, B: { hide: true } },
+    });
+    expect(reducer(withStyles, removeStyle('A')).editor.filter?.styles).toEqual({ B: { hide: true, commentsBefore: ['// ---- Looks'] } });
   });
 });

@@ -20,7 +20,7 @@
  *   warning; any other shape makes the whole list wrong-shaped (top-level `passthrough`).
  * - A rule's diagnostics carry its file path (`rules/<n>` or `disabledRules/<n>/rule`) and its index in the full list.
  */
-import { parseJsonc, type JsoncParseResult } from './jsonc.ts';
+import { parseJsonc, type JsoncParseResult, type PlacedComments } from './jsonc.ts';
 import {
   BASE_TIERS,
   DIFFICULTIES,
@@ -504,6 +504,8 @@ interface PlacedRule {
   readonly raw: Readonly<Record<string, unknown>>;
   readonly path: string;
   readonly disabled: boolean;
+  /** The whole-line comments above the entry in the file. */
+  readonly comments?: readonly string[];
 }
 
 interface DisabledEntry {
@@ -523,7 +525,12 @@ function isDisabledEntry(value: unknown): value is DisabledEntry {
 }
 
 /** Inserts the `disabledRules` entries into `placed` (the enabled rules) at their `at`, ascending; warns about moved ones. */
-function placeDisabledRules(context: Context, entries: readonly DisabledEntry[], placed: PlacedRule[]): void {
+function placeDisabledRules(
+  context: Context,
+  entries: readonly DisabledEntry[],
+  placed: PlacedRule[],
+  comments: Readonly<Record<number, readonly string[]>>
+): void {
   const order = entries.map((entry, position) => ({ entry, position })).sort((a, b) => a.entry.at - b.entry.at);
   let previous = -1;
   for (const { entry, position } of order) {
@@ -544,7 +551,7 @@ function placeDisabledRules(context: Context, entries: readonly DisabledEntry[],
         message: `"at" ${String(entry.at)} is past the end of the rule list; the disabled rule goes last (at ${String(at)})`,
       });
     }
-    placed.splice(at, 0, { raw: entry.rule, path: `${path}/rule`, disabled: true });
+    placed.splice(at, 0, { raw: entry.rule, path: `${path}/rule`, disabled: true, comments: comments[position] });
     previous = at;
   }
 }
@@ -568,7 +575,7 @@ export interface ParseLootFilterResult {
 }
 
 /** Builds the typed model from an already parsed JSON value. */
-export function readLootFilter(value: unknown, leadingComments: readonly string[] = []): ParseLootFilterResult {
+export function readLootFilter(value: unknown, leadingComments: readonly string[] = [], comments?: PlacedComments): ParseLootFilterResult {
   const context: Context = { diagnostics: [] };
   const top: Owner = { path: '' };
   const topReport = (severity: Diagnostic['severity'], key: string, message: string): void => {
@@ -610,7 +617,10 @@ export function readLootFilter(value: unknown, leadingComments: readonly string[
     if (isPlainObject(rawStyles) && Object.values(rawStyles).every(isPlainObject)) {
       styles = {};
       for (const [name, rawStyle] of Object.entries(rawStyles)) {
-        if (isPlainObject(rawStyle)) styles[name] = parseStyle(context, rawStyle, name);
+        if (!isPlainObject(rawStyle)) continue;
+        const style = parseStyle(context, rawStyle, name);
+        const above = comments?.styles[name];
+        styles[name] = above === undefined ? style : { ...style, commentsBefore: above };
       }
     } else {
       passthrough.styles = rawStyles;
@@ -624,7 +634,8 @@ export function readLootFilter(value: unknown, leadingComments: readonly string[
     const rawRules = value.rules;
     if (Array.isArray(rawRules) && rawRules.every(isPlainObject)) {
       for (const [index, rawRule] of rawRules.entries()) {
-        if (isPlainObject(rawRule)) placed.push({ raw: rawRule, path: `rules/${String(index)}`, disabled: false });
+        if (isPlainObject(rawRule))
+          placed.push({ raw: rawRule, path: `rules/${String(index)}`, disabled: false, comments: comments?.rules[index] });
       }
     } else {
       passthrough.rules = rawRules;
@@ -633,15 +644,16 @@ export function readLootFilter(value: unknown, leadingComments: readonly string[
   }
   if ('disabledRules' in value) {
     const rawDisabled = value.disabledRules;
-    if (Array.isArray(rawDisabled) && rawDisabled.every(isDisabledEntry)) placeDisabledRules(context, rawDisabled, placed);
+    if (Array.isArray(rawDisabled) && rawDisabled.every(isDisabledEntry))
+      placeDisabledRules(context, rawDisabled, placed, comments?.disabledRules ?? {});
     else {
       passthrough.disabledRules = rawDisabled;
       topReport('error', 'disabledRules', '"disabledRules" must be a list of { "at": <rule index>, "rule": { … } } entries');
     }
   }
-  const rules = placed.map(({ raw, path, disabled }, index): LootFilterRule => {
+  const rules = placed.map(({ raw, path, disabled, comments: above }, index): LootFilterRule => {
     const rule = parseRule(context, raw, index, path);
-    return disabled ? { ...rule, disabled: true } : rule;
+    return { ...rule, ...(disabled ? { disabled: true as const } : {}), ...(above === undefined ? {} : { commentsBefore: above }) };
   });
 
   const ordered = inFileOrder(value, passthrough);
@@ -651,6 +663,8 @@ export function readLootFilter(value: unknown, leadingComments: readonly string[
     ...(styles === undefined ? {} : { styles }),
     rules,
     leadingComments: [...leadingComments],
+    ...(comments === undefined || Object.keys(comments.keys).length === 0 ? {} : { keyComments: comments.keys }),
+    ...(comments === undefined || comments.rulesEnd.length === 0 ? {} : { rulesEndComments: comments.rulesEnd }),
     ...(ordered === undefined ? {} : { passthrough: ordered }),
   };
   return { filter, diagnostics: context.diagnostics };
@@ -659,7 +673,7 @@ export function readLootFilter(value: unknown, leadingComments: readonly string[
 /**
  * Warnings about the file text rather than the model: trailing commas and block comments that were accepted (the game's
  * plugin reads them too, the serializer writes strict JSON) and comments after the opening brace (the serializer keeps
- * only the leading `//` lines). One warning per kind, path root. The editor shows them until the model is re-serialized.
+ * the leading `//` lines and the whole-line ones above a rule, style or setting). One warning per kind, path root. The editor shows them until the model is re-serialized.
  */
 export function textNotes({ tolerated, innerComments }: Pick<JsoncParseResult, 'tolerated' | 'innerComments'>): Diagnostic[] {
   const notes: Diagnostic[] = [];
@@ -686,8 +700,8 @@ export function textNotes({ tolerated, innerComments }: Pick<JsoncParseResult, '
       path: '',
       message:
         inner === 1
-          ? `1 comment inside the file (a section note between rules, line ${String(innerComments[0].line)}) is dropped on the first edit; only the comment lines before the opening brace are kept`
-          : `${String(inner)} comments inside the file (section notes between rules) are dropped on the first edit; only the comment lines before the opening brace are kept`,
+          ? `1 comment (line ${String(innerComments[0].line)}) is dropped on the first edit; only whole-line // comments above a rule, a style or a setting are kept`
+          : `${String(inner)} comments are dropped on the first edit (first at line ${String(innerComments[0].line)}); only whole-line // comments above a rule, a style or a setting are kept`,
     });
   }
   return notes;
@@ -704,5 +718,5 @@ export interface ParseLootFilterTextResult extends ParseLootFilterResult {
  */
 export function parseLootFilter(text: string): ParseLootFilterTextResult {
   const jsonc = parseJsonc(text);
-  return { ...readLootFilter(jsonc.value, jsonc.leadingComments), notes: textNotes(jsonc) };
+  return { ...readLootFilter(jsonc.value, jsonc.leadingComments, jsonc.placedComments), notes: textNotes(jsonc) };
 }

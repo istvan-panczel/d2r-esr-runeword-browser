@@ -9,14 +9,26 @@ import { cn } from '@/lib/utils';
 import { effectiveActions } from '../engine/actions';
 import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
-import { addRule, duplicateRule, moveRule, removeRule, selectRule, setRuleDisabled } from '../store/lootFilterSlice';
+import {
+  addRule,
+  addRuleToSection,
+  duplicateRule,
+  editRuleComments,
+  moveRule,
+  removeRule,
+  selectRule,
+  setRuleDisabled,
+} from '../store/lootFilterSlice';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
 import { readRuleListWidth, writeRuleListWidth } from '../utils/ruleListWidth';
+import { buildSectionRows, commentLinesText, hasHeadings, headingKeys, type SectionEdit } from '../utils/sections';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
 import { ExampleRulesButton } from './rules/ExampleRulesButton';
-import { RuleList, type RuleListEntry } from './rules/RuleList';
+import { RuleList, type RuleListEntry, type RuleListSectionHandlers } from './rules/RuleList';
+import { SectionDialog, type SectionDialogState } from './sections/SectionDialog';
+import { SectionToolbar } from './sections/SectionRows';
 import { RuleListSplitter } from './rules/RuleListSplitter';
 
 /** Below this width the list and the editor are stacked. */
@@ -35,6 +47,9 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const dispatch = useDispatch();
   const data = useLootFilterData();
   const [query, setQuery] = useState('');
+  // Folds last while the tab is open (owner decision: no memory across tab switches or reloads).
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  const [sectionDialog, setSectionDialog] = useState<SectionDialogState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   // The list width (rem) once the splitter has moved, remembered per browser; null = the per-page-width default.
@@ -55,13 +70,62 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
     severity: severities.get(index),
   }));
   const searching = query.trim() !== '';
-  const entries = searching ? all.filter((entry) => ruleMatchesSearch(ruleSearchText(entry.rule, data.lookup, entry.summary), query)) : all;
-  const hiddenCount = all.length - entries.length;
+  const matches = (index: number) => {
+    const entry = all[index];
+    return ruleMatchesSearch(ruleSearchText(entry.rule, data.lookup, entry.summary), query);
+  };
+  const endComments = filter.rulesEndComments ?? [];
+  const commentsOf = (entry: RuleListEntry) => entry.rule.commentsBefore;
+  // A search lists the matching rules under their headings; a heading whose title matches lists its whole section.
+  const rows = buildSectionRows(all, commentsOf, endComments, {
+    collapsed,
+    keep: selectedRule,
+    search: searching ? { matches, headingMatches: (title) => ruleMatchesSearch(title.toLowerCase(), query) } : undefined,
+  });
+  const shownRules = rows.filter((row) => row.kind === 'item').length;
+  const hiddenCount = searching ? all.length - shownRules : 0;
   const disabledCount = filter.rules.filter((entry) => entry.disabled === true).length;
   const countNotes = [
     disabledCount > 0 ? `${String(disabledCount)} disabled` : undefined,
     hiddenCount > 0 ? `${String(hiddenCount)} hidden by search` : undefined,
   ].filter((note) => note !== undefined);
+  const usesSections = hasHeadings(all, commentsOf, endComments);
+  const fileNotes = usesSections ? commentLinesText(filter.leadingComments) : '';
+
+  const editComments = (edit: SectionEdit) => {
+    dispatch(editRuleComments(edit));
+  };
+  const sections: RuleListSectionHandlers = {
+    onToggle: (key) => {
+      setCollapsed((current) => {
+        const next = new Set(current);
+        if (!next.delete(key)) next.add(key);
+        return next;
+      });
+    },
+    onEditHeading: (row) => {
+      setSectionDialog({ kind: 'heading', row });
+    },
+    onMove: (address, direction) => {
+      editComments({ kind: 'move', address, direction });
+    },
+    onRemoveHeading: (address) => {
+      editComments({ kind: 'removeHeading', address });
+    },
+    onAddRule: (address) => {
+      setQuery('');
+      dispatch(addRuleToSection(address));
+    },
+    onEditNote: (row) => {
+      setSectionDialog({ kind: 'note', row });
+    },
+    onRemoveNote: (row) => {
+      editComments({ kind: 'replace', address: row.address, count: row.count, lines: [] });
+    },
+    onAddAbove: (index) => {
+      setSectionDialog({ kind: 'add', at: index, where: `above rule ${String(index + 1)}` });
+    },
+  };
 
   const pendingEntry = pendingDelete === null ? undefined : all.at(pendingDelete);
 
@@ -134,6 +198,38 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             {all.length} {all.length === 1 ? 'rule' : 'rules'}
             {countNotes.length > 0 && ` (${countNotes.join(', ')})`}
           </p>
+          {!searching && (
+            <SectionToolbar
+              addWhere={selectedRule === null ? 'after the last rule' : 'above the selected rule'}
+              onAdd={() => {
+                setSectionDialog(
+                  selectedRule === null
+                    ? { kind: 'add', at: all.length, where: 'after the last rule' }
+                    : { kind: 'add', at: selectedRule, where: `above rule ${String(selectedRule + 1)}` }
+                );
+              }}
+              onCollapseAll={
+                usesSections
+                  ? () => {
+                      setCollapsed(new Set(headingKeys(all, commentsOf, endComments)));
+                    }
+                  : undefined
+              }
+              onExpandAll={
+                usesSections
+                  ? () => {
+                      setCollapsed(new Set());
+                    }
+                  : undefined
+              }
+            />
+          )}
+          {fileNotes !== '' && (
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer hover:text-foreground">About this filter</summary>
+              <p className="mt-1 max-h-48 overflow-y-auto break-words whitespace-pre-line">{fileNotes}</p>
+            </details>
+          )}
           <ExampleRulesButton
             filter={filter}
             insertAt={selectedRule === null ? undefined : selectedRule + 1}
@@ -150,12 +246,12 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             </Link>{' '}
             instead and adapt it.
           </p>
-        ) : entries.length === 0 ? (
+        ) : shownRules === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">No rule matches the search.</p>
         ) : (
           <RuleList
             className="max-h-[45vh] divide-y overflow-y-auto lg:max-h-none lg:min-h-0 lg:flex-1"
-            entries={entries}
+            rows={rows}
             ruleCount={all.length}
             canMove={!searching}
             selectedRule={selectedRule}
@@ -167,6 +263,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
               setPendingDelete(index);
               setDeleteOpen(true);
             }}
+            sections={sections}
           />
         )}
         {/* Last in the pane, so the tab order runs list, splitter, editor. */}
@@ -205,6 +302,14 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
           </Card>
         )}
       </div>
+
+      <SectionDialog
+        state={sectionDialog}
+        onClose={() => {
+          setSectionDialog(null);
+        }}
+        onEdit={editComments}
+      />
 
       <ConfirmDeleteDialog
         open={deleteOpen}

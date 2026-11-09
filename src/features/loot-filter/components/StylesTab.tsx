@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Copy, Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Copy, Heading, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { selectRuleView } from '@/features/settings';
 import { Badge } from '@/components/ui/badge';
@@ -9,14 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { cn } from '@/lib/utils';
 import { CONDITION_KEYS } from '../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
-import { removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
+import { editStyleComments, removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
 import { countActions, countStyleUsers } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
+import { buildSectionRows, commentLinesText, hasHeadings, headingKeys, type SectionEdit } from '../utils/sections';
 import { actionFieldGate } from '../utils/ruleView';
 import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { NameDialog } from './NameDialog';
+import { SectionDialog, type SectionDialogState } from './sections/SectionDialog';
+import { HeadingRowView, NoteRowView, SectionToolbar } from './sections/SectionRows';
 import { MoreInAdvanced, ViewToggle } from './rules/ViewToggle';
 import { StylePresetMenu } from './StylePresetMenu';
 import { StylePreview } from './StylePreview';
@@ -58,6 +61,22 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
   const styles = filter.styles ?? {};
   const entries = Object.entries(styles);
   const names = entries.map(([name]) => name);
+  const stylesNotes = commentLinesText(filter.keyComments?.styles ?? []);
+  // The same section comments as the rule list (utils/sections.ts); folds last while the tab is open.
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  const [sectionDialog, setSectionDialog] = useState<SectionDialogState | null>(null);
+  const commentsOf = ([, style]: readonly [string, LootFilterStyle]) => style.commentsBefore;
+  const usesSections = hasHeadings(entries, commentsOf);
+  const editComments = (edit: SectionEdit) => {
+    dispatch(editStyleComments(edit));
+  };
+  const toggleHeading = (key: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  };
   const [selected, setSelected] = useState<string | null>(null);
   const [nameDialog, setNameDialog] = useState<NameDialogState>(null);
   // The style being deleted stays set while the dialog closes, so its text does not change during the animation.
@@ -107,7 +126,9 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
 
   const handleDuplicate = (name: string, style: LootFilterStyle) => {
     const copy = freeName(`${name} (copy)`, names);
-    dispatch(setStyle({ name: copy, style }));
+    // The comments above a style describe that place in the file; the copy goes at the end.
+    const { commentsBefore: _comments, ...content } = style;
+    dispatch(setStyle({ name: copy, style: content }));
     setSelected(copy);
   };
 
@@ -134,11 +155,70 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
         <CardHeader>
           <CardTitle>Styles</CardTitle>
           <CardDescription>Named sets of actions; a rule pulls one in with Use style.</CardDescription>
+          {stylesNotes !== '' && <p className="text-xs break-words whitespace-pre-line text-muted-foreground">{stylesNotes}</p>}
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {names.length === 0 && <p className="text-sm text-muted-foreground">No styles yet.</p>}
+          {entries.length > 0 && current !== null && (
+            <SectionToolbar
+              addWhere="above the selected style"
+              onAdd={() => {
+                setSectionDialog({ kind: 'add', at: names.indexOf(current), where: `above the style ${current}` });
+              }}
+              onCollapseAll={
+                usesSections
+                  ? () => {
+                      setCollapsed(new Set(headingKeys(entries, commentsOf)));
+                    }
+                  : undefined
+              }
+              onExpandAll={
+                usesSections
+                  ? () => {
+                      setCollapsed(new Set());
+                    }
+                  : undefined
+              }
+            />
+          )}
           <ul className="flex flex-col gap-1">
-            {entries.map(([name, style]) => {
+            {buildSectionRows(entries, commentsOf, [], { collapsed, keep: current === null ? null : names.indexOf(current) }).map((row) => {
+              if (row.kind === 'heading') {
+                return (
+                  <HeadingRowView
+                    key={row.key}
+                    row={row}
+                    noun="styles"
+                    className="overflow-hidden rounded-md"
+                    canMove
+                    onToggle={toggleHeading}
+                    onEdit={(heading) => {
+                      setSectionDialog({ kind: 'heading', row: heading });
+                    }}
+                    onMove={(address, direction) => {
+                      editComments({ kind: 'move', address, direction });
+                    }}
+                    onRemove={(address) => {
+                      editComments({ kind: 'removeHeading', address });
+                    }}
+                  />
+                );
+              }
+              if (row.kind === 'note') {
+                return (
+                  <NoteRowView
+                    key={row.key}
+                    row={row}
+                    onEdit={(note) => {
+                      setSectionDialog({ kind: 'note', row: note });
+                    }}
+                    onRemove={(note) => {
+                      editComments({ kind: 'replace', address: note.address, count: note.count, lines: [] });
+                    }}
+                  />
+                );
+              }
+              const [name, style] = row.entry;
               const count = countActions(style);
               return (
                 <li key={name}>
@@ -200,6 +280,17 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
                   }}
                 >
                   <Pencil />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Add a heading or note above ${current}`}
+                  title="Add a section heading or a note above this style"
+                  onClick={() => {
+                    setSectionDialog({ kind: 'add', at: names.indexOf(current), where: `above the style ${current}` });
+                  }}
+                >
+                  <Heading />
                 </Button>
                 <Button
                   variant="ghost"
@@ -281,6 +372,13 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
         }}
       />
 
+      <SectionDialog
+        state={sectionDialog}
+        onClose={() => {
+          setSectionDialog(null);
+        }}
+        onEdit={editComments}
+      />
       <ConfirmDeleteDialog
         open={deleteOpen}
         name={deleting}

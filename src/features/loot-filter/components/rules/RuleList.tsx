@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { DiagnosticSeverity, LootFilterRule } from '../../engine/types';
+import type { CommentAddress, HeadingRow, NoteRow, SectionRow } from '../../utils/sections';
+import { HeadingRowView, NoteRowView } from '../sections/SectionRows';
 import { RuleRow } from './RuleRow';
 
 export interface RuleListEntry {
@@ -10,8 +12,8 @@ export interface RuleListEntry {
 }
 
 interface RuleListProps {
-  /** The rules to show (after the search), with their position in the filter. */
-  readonly entries: readonly RuleListEntry[];
+  /** The rows to show (after the search and the folded sections): rules with their position in the filter, headings, notes. */
+  readonly rows: readonly SectionRow<RuleListEntry>[];
   readonly ruleCount: number;
   /** False while a search filters the list: moving next to a hidden rule would be confusing. */
   readonly canMove: boolean;
@@ -21,12 +23,26 @@ interface RuleListProps {
   readonly onToggle: (index: number, disabled: boolean) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
+  readonly sections: RuleListSectionHandlers;
   readonly className?: string;
+}
+
+/** What the heading and note rows (and each rule's Add heading above) do. */
+export interface RuleListSectionHandlers {
+  readonly onToggle: (key: string) => void;
+  readonly onEditHeading: (row: HeadingRow) => void;
+  readonly onMove: (address: CommentAddress, direction: -1 | 1) => void;
+  readonly onRemoveHeading: (address: CommentAddress) => void;
+  readonly onAddRule: (address: CommentAddress) => void;
+  readonly onEditNote: (row: NoteRow) => void;
+  readonly onRemoveNote: (row: NoteRow) => void;
+  /** Add a heading or note above rule `index`. */
+  readonly onAddAbove: (index: number) => void;
 }
 
 /** The rules in file order; keeps the selected row in view when the selection changes (e.g. from the JSON tab). */
 export function RuleList({
-  entries,
+  rows,
   ruleCount,
   canMove,
   selectedRule,
@@ -35,6 +51,7 @@ export function RuleList({
   onToggle,
   onDuplicate,
   onDelete,
+  sections,
   className,
 }: RuleListProps) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -56,24 +73,45 @@ export function RuleList({
 
   return (
     <ul ref={listRef} className={className} aria-label="Rules">
-      {entries.map((entry) => (
-        <RuleRow
-          key={entry.index}
-          index={entry.index}
-          rule={entry.rule}
-          summary={entry.summary}
-          severity={entry.severity}
-          selected={entry.index === selectedRule}
-          isFirst={entry.index === 0}
-          isLast={entry.index === ruleCount - 1}
-          canMove={canMove}
-          onSelect={onSelect}
-          onMove={handleMove}
-          onToggle={onToggle}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-        />
-      ))}
+      {rows.map((row) => {
+        if (row.kind === 'heading') {
+          return (
+            <HeadingRowView
+              key={row.key}
+              row={row}
+              noun="rules"
+              canMove={canMove}
+              onToggle={sections.onToggle}
+              onEdit={sections.onEditHeading}
+              onMove={sections.onMove}
+              onRemove={sections.onRemoveHeading}
+              onAddItem={sections.onAddRule}
+            />
+          );
+        }
+        if (row.kind === 'note')
+          return <NoteRowView key={row.key} row={row} onEdit={sections.onEditNote} onRemove={sections.onRemoveNote} />;
+        const { entry } = row;
+        return (
+          <RuleRow
+            key={entry.index}
+            index={entry.index}
+            rule={entry.rule}
+            summary={entry.summary}
+            severity={entry.severity}
+            selected={entry.index === selectedRule}
+            isFirst={entry.index === 0}
+            isLast={entry.index === ruleCount - 1}
+            canMove={canMove}
+            onSelect={onSelect}
+            onMove={handleMove}
+            onToggle={onToggle}
+            onDuplicate={onDuplicate}
+            onDelete={onDelete}
+            onAddComment={sections.onAddAbove}
+          />
+        );
+      })}
     </ul>
   );
 }

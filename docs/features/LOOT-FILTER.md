@@ -156,8 +156,7 @@ then run `lootfilter` in the game console and read
 - **Text notes** (`textNotes` in `engine/parse.ts`, returned by `parseLootFilter` as `notes`, apart from `diagnostics`):
   root-path warnings about the text itself, one per kind: "Trailing commas were accepted (first at line N); the game
   reads them, but downloads are written without them", "Block comments (/\* _/) were accepted (first at line N); â€¦
-  they are not kept", and "N comments inside the file (section notes between rules) are dropped on the first edit; only
-  the comment lines before the opening brace are kept" (every `//` or `/_ \*/`after the opening brace).`open`stores
+  they are not kept", and "N comments are dropped on the first edit (first at line L); only whole-line // comments above a rule, a style or a setting are kept" (same-line comments, comments inside a rule, block comments; see "Section comments").`open`stores
   them in`editor.textNotes`(none for`template`entries: the shipped template's section comments are ours) and`replaceFilter`takes the applied text's. They are not sticky:`flushEditor` clears them when it writes the model back,
   because the written text no longer has what they describe (so after the first edit they go with the debounced save).
 - Patches are shallow: an `undefined` value removes the key, and a patched key is also dropped from the object's
@@ -250,6 +249,55 @@ then run `lootfilter` in the game console and read
 - The evaluator skips a disabled rule with the trace outcome `disabled` (it never applies or hides), and a rule with a
   wrong-shaped key with `wrongShape` (see "Wrong-shaped rules" under Test tab).
 
+### Section comments
+
+A filter author can group rules with ordinary `//` lines. The plugin skips comments, so this needs no format change and
+the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
+
+| Line in the file                 | Shown as                                |
+| -------------------------------- | --------------------------------------- |
+| `// ==== Title`                  | A part: a heading in the Rules list     |
+| `// ---- Title`                  | A section inside a part                 |
+| Other `//` right under a heading | That heading's description              |
+| Other `//` between rules         | A note row, in place                    |
+| `// ===========` (markers only)  | Nothing: a visual separator in the file |
+
+- A marker is four or more `=` or `-` after `//`; a run of three or more of them after the title is decoration.
+- A section runs to the next heading of the same or a higher level; a heading folds what it runs over.
+- The comment lines above the opening `{` show as "About this filter", and the ones above `"styles"` on the Styles tab.
+- **Opt-in:** a file with no heading shows no comment rows, so older files (Sully's QoL template has 242 per-rule comment
+  lines) look as before. Their comments are still kept.
+- **Kept:** whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
+  **Dropped on the first edit, with a warning:** a comment on the same line as a rule, inside a rule object, and every
+  `/* */` block.
+- A comment belongs to its place, not its rule: moving a rule past a heading changes its section, deleting a rule hands
+  its comments to the next one, duplicating does not copy them.
+- Model: editor-only `commentsBefore` on rules and styles, `keyComments` and `rulesEndComments` on the filter (never keys
+  in the file). `parseJsonc` places the comments (`placedComments`), the serializer writes them back after a blank line.
+- A disabled rule's comments are written above its `disabledRules` entry, so they come back with the rule.
+- **The same in the Styles list**: comments above a style inside `"styles"` group and fold the style list by the same
+  ruleset. There is nowhere to keep a comment after the last style, so the editor adds headings above a style only.
+- **Editing** (Rules and Styles lists): "Add section" under the list header adds a part, section or note above the
+  selected rule or style (after the last rule when none is selected); the H button of a rule row (or of the style
+  editor's toolbar) adds one right above that rule or style. A heading row folds on click and has, on hover or focus,
+  Edit (title, level and description), Add rule (an empty rule as the last rule of the section; Rules list only), Move
+  up and Move down (the section with its rules and subsections, past the neighbouring section of the same level inside
+  its part; off while searching) and Remove (the heading and its description; the rules stay). A note row has Edit
+  (empty removes it) and Remove. The dialog shows the comment lines the file gets. Renaming keeps the file's markers
+  and decoration (`// ---- Styles ----------`); a note line that would read as a heading or separator is written
+  `// Note: â€¦`. Collapse all / Expand all fold every heading; folds reset when the tab changes (owner decision).
+- **Search**: matching rules are listed under the headings they sit in (notes left out); a query that matches a
+  heading's title lists its whole section. Folds do not apply while searching.
+- **Our files**: the example filter (v2.2.0) has a `// ---- <group>` heading per example group and one for the hide
+  rules; the Example rules dialog writes the same headings above the rules it adds, unless the filter already has a
+  heading of that title (`withGroupHeadings`, `headingTitles` in `utils/examplePicker.ts`).
+- A commented-out rule shows as a note: the rule toggle (`disabledRules`) is the way to switch one off.
+- Code: `utils/sections.ts` reads the lines (`readCommentLine`), builds the list rows (`buildSectionRows`) and applies
+  every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`); the reducers
+  `editRuleComments`, `addRuleToSection` and `editStyleComments` wrap it, and `removeStyle` hands a deleted style's
+  comments to the next style as `removeRule` does. The rows are `components/sections/SectionRows.tsx`, the dialog
+  `SectionDialog.tsx`.
+
 `lootFilterSaga` (registered by `src/features/loot-filter/index.ts` when the route chunk first loads):
 
 1. reads the library and dispatches `hydrate`;
@@ -335,7 +383,7 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
 - **Upload**: a `.json` file read as UTF-8, as leniently as the game reads it (`//` and `/* */` comments, trailing
   commas). A JSON syntax error shows a toast with the line and column and imports nothing; a file with diagnostics
   (unknown keys, wrong shapes) is imported and the editor lists them. The success toast counts the problems and spells
-  out the text notes (accepted trailing commas or block comments, comments between rules that the first edit drops),
+  out the text notes (accepted trailing commas or block comments, comments the first edit drops),
   which the editor's problems chip and list show first. The entry name is
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
@@ -369,10 +417,13 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
   filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '2.1.0', label: 'Example filter (with explanations) v2.1.0' }`. Our own
+  `basedOn { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' }`. Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "Ã¿c4Drop: {qualityColor}{name}".
-  - _v2.1.0_ (2026-11-05, current) is built from the example rules (Rules tab, below): 28 of them, exactly as the
+  - _v2.2.0_ (2026-11-09, current) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
+    example group and `// ---- Hide rules` above the hide rules (12 headings; see "Section comments"), and a header
+    line saying what they are. The rules and styles are unchanged.
+  - _v2.1.0_ (2026-11-05) is built from the example rules (Rules tab, below): 28 of them, exactly as the
     picker adds them together with their default choices (`buildExampleSet` over the examples with `defaultChoices`:
     the style preset, which now brings its generated icon, Sully's sound, the chat line), plus `notify: true` on the
     unique rule and `activeInLevels: [2]` on four hide rules. Its `styles` are the 13 presets the rules use (HighRune,
@@ -407,7 +458,7 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
     regenerated from v2.0.0 with a throwaway script that serializes the parsed file with the new styles, rules and
     comments and moves each `comment` line first, which reproduces v2.0.0 byte for byte when nothing changes) and is
     kept byte-stable: `public/loot-filters/` is Prettier-ignored.
-  - Credit line: "Example filter v2.1.0, built for this site from its example rules to show how rules work; sounds by
+  - Credit line: "Example filter v2.2.0, built for this site from its example rules to show how rules work; sounds by
     Sully, icons generated for this app".
 - **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
   (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
@@ -560,13 +611,13 @@ that template's bundled version (or of unknown version) reads "<name> v<version>
 from vâ€¦" and offers the same two actions with that template's bundled file (`{ kind: 'template', template,
 fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
 
-| Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Styles   | Style list (name, action count, "used by N rules", its look as a `StylePreview` with the minimap icon), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor, with the Basic / Advanced toggle (see the Rules tab). Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Only the `//` comment lines at the top of the file are kept: comments between rules are not shown here (the text is the serialized model) and are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
-| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Styles   | Style list (name, action count, "used by N rules", its look as a `StylePreview` with the minimap icon), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor, with the Basic / Advanced toggle (see the Rules tab). Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Whole-line `//` comments above a rule, style or setting are kept and show here (see "Section comments"); other comments are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
+| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 Settings changes dispatch the slice reducers directly; the only local state is what a half-typed number needs
 (`NumberInput`: a text input with a numeric keyboard that commits only valid numbers, so "-" or "1." is kept as typed
@@ -1311,7 +1362,7 @@ fails while the folders and the registry disagree, and decodes every icon.
 | `star_white`, `diamond_white`, `circle_white` | any colour through the icon's tint (`color` multiplies the colours) |
 
 The style presets carry them (see [Style presets](#style-presets)), the example rules show them through their presets
-(_Icons_ under the Rules tab's example rules), and so the example filter v2.1.0 has them in its styles; Sully's filter keeps his own.
+(_Icons_ under the Rules tab's example rules), and so the example filter (since v2.1.0) has them in its styles; Sully's filter keeps his own.
 
 Drawing: every shape is a signed distance function on the 128 px canvas; a pixel's distance gives the fill, a dark
 outline 6 px wide (about 2 px at the usual 40 minimap pixels; the colour Ã— 0.16) and the transparent outside, each edge
@@ -1735,6 +1786,30 @@ example rules: of the request), else of the request's first line, else "ai-filte
   `- Rule 12 "High runes" (rules/11/itemCodes/3): Unknown item code "r99"` (style problems name the style), at most 80
   lines with the rest counted, and ends with "Fix these and keep everything else; reply with the complete filter as one
   json block."
+- **Section comments in the prompt**: FORMAT.md "Writing the file for the app" teaches the short form of the ruleset
+  (see "Section comments": whole-line `//` comments above a top-level key, rule, disabled rule or style and after the
+  last rule are kept; same-line, inside-object and `/* */` comments are dropped on the first edit; `// ====` parts and
+  `// ----` sections; every rule still gets its `"comment"`; switch a rule off with `disabledRules`, not by commenting
+  it out), PROMPT.md's "Rules for the filter" points there, and `SKELETON_FILTER` shows two parts and a section.
+- **Agent pack** (`utils/aiPrompt/agentPack.ts`, `scripts/generate-loot-filter-agent-pack.ts`,
+  `scripts/lib/lootFilterAgentPack.ts`): static files for AI agents (e.g. a filter author working with Claude agents)
+  in `public/loot-filters/agent/`, served at `https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/agent/<file>`.
+  `README.md` is the entry point to hand an agent: what ESR loot filters are, how to work (write or edit the `.json`,
+  keep it JSONC the plugin reads, check it by uploading it at `/loot-filters` and reading the JSON tab's problems list,
+  or have the person paste Copy problems for the AI back), the PROMPT.md rules for writing filters without the chat
+  parts (request, starter, language, attached files, import reminder), the Section comments ruleset in full with an
+  example (the test parses and validates it), every file with a one-line summary and its URL, the ESR version, the
+  plugin version and the bundled templates' URLs. Then `referenceFiles` at the **full** size under the AI page's
+  names: `FORMAT.md`, `examples.md`, `assets.md`, `item-types.csv`, `items.csv`, `stats.csv`, `uniques-sets.csv`,
+  `areas.csv`, `skills.csv`, `skill-tabs.csv`, `classes.csv` (about 360 KB in all on ESR 3.3.03). The generator loads
+  `lootfilter.json`, `types.json` and the manifest's `esrVersion` from `public/game-data/` as the page does (through
+  `importSrc`), with `SITE_URL` from `scripts/lib/sitemap.ts`; no dates, so the output is deterministic.
+  `npm run loot-filter:agent-pack` writes it (and removes files it no longer makes); `game-data:generate` writes it after the
+  bundles, `game-data:generate --check` (so `game-data:check` and `game-data:update`) checks it when the bundles are
+  fresh, `node scripts/generate-loot-filter-agent-pack.ts --check` checks it alone (no ESR clone needed), and
+  `scripts/lib/lootFilterAgentPack.test.ts` fails when the committed pack differs from a fresh build. Prettier skips
+  the folder. A change to the prompt text, the example rules, the presets, the bundled assets or the templates makes
+  the pack stale: regenerate and commit it.
 - **Inputs with defaults**: `PromptReferenceInput.examples` (default `EXAMPLE_RULES`), `.stylePresets` (default
   `DEFAULT_PROMPT_STYLE_PRESETS`) and `.assets` (default `DEFAULT_PROMPT_ASSETS`); the page passes none of them, so
   the reference cache keys stay stable.
@@ -1856,7 +1931,7 @@ The `formula` condition has its own list under "Formula condition" above (`FORMU
 - `.sprite` icons: header layout and RGBA pixel order as observed in `goldstar.sprite` (Sully's other eleven icons decode
   the same way); only the first frame is drawn. The plugin's reader (v1.5.3 disassembly) confirms the fields it uses
   and takes the first frame of a strip; see [Generated icons](#generated-icons).
-- The serializer does not keep comments between rules (only the `//` lines before the object) and writes no trailing
+- The serializer keeps only whole-line `//` comments (see "Section comments") and writes no trailing
   commas or block comments; the reader accepts both, as the plugin does (v1.5.3, from its disassembly). A warning says
   so when a file has them.
 - `disabledRules` is ignored by the plugin with one "unknown setting, ignored" log line (from the plugin's strings,

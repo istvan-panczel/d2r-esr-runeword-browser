@@ -56,20 +56,21 @@ export const SULLYS_QOL_TEMPLATE: BundledTemplate = {
  * with their default presentation and the style presets they use) over two levels (Leveling, Strict), each comment
  * starting with the example's title and then explaining the rule. It uses Sully's sounds and the generated icons.
  * v2.0.0 (2026-11-05) replaced the hand-written v1.0.0 (21 rules, two custom styles, Sully's icons); v2.1.0 (2026-11-05)
- * moved the icons into the styles with the presets (plus MidRuneNoIcon for Hel to Um, which keep none). Drafts started
+ * moved the icons into the styles with the presets (plus MidRuneNoIcon for Hel to Um, which keep none); v2.2.0 (2026-11-09)
+ * adds a `// ---- <group>` section heading per example group (docs/features/LOOT-FILTER.md "Section comments"). Drafts started
  * from an earlier version see "Update available". exampleFilter.test.ts checks every rule against its example.
  */
 export const EXAMPLE_TEMPLATE: BundledTemplate = {
   id: 'example',
   name: 'Example filter (with explanations)',
   author: 'D2R ESR Runeword Browser',
-  version: '2.1.0',
+  version: '2.2.0',
   file: 'example-filter.json',
   sandboxPath: '/loot-filters/example',
   startLabel: 'Start from the example',
   summary: 'A small filter to learn from: every rule says in its comment what it does and what to change.',
   credit:
-    'Example filter v2.1.0, built for this site from its example rules to show how rules work; sounds by Sully, icons generated for this app',
+    'Example filter v2.2.0, built for this site from its example rules to show how rules work; sounds by Sully, icons generated for this app',
 };
 
 /** The bundled templates by id. */

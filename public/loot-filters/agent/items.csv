@@ -1,0 +1,2335 @@
+code,name,kind,type,type2,tier,drops
+hax,Hand Axe,weapon,axe,1hsw,normal,yes
+axe,Axe,weapon,axe,1hsw,normal,yes
+2ax,Double Axe,weapon,axe,1hsw,normal,yes
+mpi,Military Pick,weapon,axe,1hsw,normal,yes
+wax,War Axe,weapon,axe,1hsw,normal,yes
+lax,Large Axe,weapon,axe,2hsw,normal,yes
+bax,Broad Axe,weapon,axe,2hsw,normal,yes
+btx,Battle Axe,weapon,axe,2hsw,normal,yes
+gax,Great Axe,weapon,axe,2hsw,normal,yes
+gix,Giant Axe,weapon,axe,2hsw,normal,yes
+wnd,Wand,weapon,wand,1hsw,normal,yes
+ywn,Yew Wand,weapon,wand,1hsw,normal,yes
+bwn,Bone Wand,weapon,wand,1hsw,normal,yes
+gwn,Grim Wand,weapon,wand,1hsw,normal,yes
+clb,Club,weapon,club,1hsw,normal,yes
+scp,Scepter,weapon,scep,1hsw,normal,yes
+gsc,Grand Scepter,weapon,scep,1hsw,normal,yes
+wsp,War Scepter,weapon,scep,1hsw,normal,yes
+spc,Spiked Club,weapon,club,1hsw,normal,yes
+mac,Mace,weapon,mace,1hsw,normal,yes
+mst,Morning Star,weapon,mace,1hsw,normal,yes
+fla,Flail,weapon,mace,1hsw,normal,yes
+whm,War Hammer,weapon,hamm,1hsw,normal,yes
+mau,Maul,weapon,hamm,2hsw,normal,yes
+gma,Great Maul,weapon,hamm,2hsw,normal,yes
+ssd,Short Sword,weapon,swor,1hsw,normal,yes
+scm,Scimitar,weapon,swor,1hsw,normal,yes
+sbr,Sabre,weapon,swor,1hsw,normal,yes
+flc,Falchion,weapon,swor,1hsw,normal,yes
+crs,Crystal Sword,weapon,swor,1hsw,normal,yes
+bsd,Broad Sword,weapon,swor,1hsw,normal,yes
+lsd,Long Sword,weapon,swor,1hsw,normal,yes
+wsd,War Sword,weapon,swor,1hsw,normal,yes
+2hs,Two-Handed Sword,weapon,swor,2hsw,normal,yes
+clm,Claymore,weapon,swor,2hsw,normal,yes
+gis,Giant Sword,weapon,swor,2hsw,normal,yes
+bsw,Bastard Sword,weapon,swor,2hsw,normal,yes
+flb,Flamberge,weapon,swor,2hsw,normal,yes
+gsd,Great Sword,weapon,swor,2hsw,normal,yes
+dgr,Dagger,weapon,knif,1hsw,normal,yes
+dir,Dirk,weapon,knif,1hsw,normal,yes
+kri,Kris,weapon,knif,1hsw,normal,yes
+bld,Blade,weapon,knif,1hsw,normal,yes
+tkf,Throwing Knife,weapon,tkni,1hsw,normal,yes
+tax,Throwing Axe,weapon,taxe,1hsw,normal,yes
+bkf,Balanced Knife,weapon,tkni,1hsw,normal,yes
+bal,Balanced Axe,weapon,taxe,1hsw,normal,yes
+jav,Javelin,weapon,jave,1hsw,normal,yes
+pil,Pilum,weapon,jave,1hsw,normal,yes
+ssp,Short Spear,weapon,jave,1hsw,normal,yes
+glv,Glaive,weapon,jave,1hsw,normal,yes
+tsp,Throwing Spear,weapon,jave,1hsw,normal,yes
+spr,Spear,weapon,spea,2hsw,normal,yes
+tri,Trident,weapon,spea,2hsw,normal,yes
+brn,Brandistock,weapon,spea,2hsw,normal,yes
+spt,Spetum,weapon,spea,2hsw,normal,yes
+pik,Pike,weapon,spea,2hsw,normal,yes
+bar,Bardiche,weapon,pole,2hsw,normal,yes
+vou,Voulge,weapon,pole,2hsw,normal,yes
+scy,Scythe,weapon,pole,2hsw,normal,yes
+pax,Poleaxe,weapon,pole,2hsw,normal,yes
+hal,Halberd,weapon,pole,2hsw,normal,yes
+wsc,War Scythe,weapon,pole,2hsw,normal,yes
+sst,Short Staff,weapon,staf,2hsw,normal,yes
+lst,Long Staff,weapon,staf,2hsw,normal,yes
+cst,Gnarled Staff,weapon,staf,2hsw,normal,yes
+bst,Battle Staff,weapon,staf,2hsw,normal,yes
+wst,War Staff,weapon,staf,2hsw,normal,yes
+sbw,Short Bow,weapon,bow,,normal,yes
+hbw,Hunter's Bow,weapon,bow,,normal,yes
+lbw,Long Bow,weapon,bow,,normal,yes
+cbw,Composite Bow,weapon,bow,,normal,yes
+sbb,Short Battle Bow,weapon,bow,,normal,yes
+lbb,Long Battle Bow,weapon,bow,,normal,yes
+swb,Short War Bow,weapon,bow,,normal,yes
+lwb,Long War Bow,weapon,bow,,normal,yes
+lxb,Light Crossbow,weapon,xbow,,normal,yes
+mxb,Crossbow,weapon,xbow,,normal,yes
+hxb,Heavy Crossbow,weapon,xbow,,normal,yes
+rxb,Repeating Crossbow,weapon,xbow,,normal,yes
+gps,Rancid Gas Potion,weapon,tpot,,,yes
+ops,Oil Potion,weapon,tpot,,,yes
+gpm,Choking Gas Potion,weapon,tpot,,,yes
+opm,Exploding Potion,weapon,tpot,,,yes
+gpl,Strangling Gas Potion,weapon,tpot,,,yes
+opl,Fulminating Potion,weapon,tpot,,,yes
+d33,Decoy Gidbinn,weapon,knif,,,no
+g33,The Gidbinn,weapon,knif,,,no
+leg,Wirt's Leg,weapon,club,,,no
+hdm,Horadric Malus,weapon,hamm,,,no
+hfh,Hell Forge Hammer,weapon,hamm,,,no
+hst,Horadric Staff,weapon,staf,2hsw,,no
+msf,Shaft of the Horadric Staff,weapon,staf,2hsw,,no
+9ha,Hatchet,weapon,axe,1hsw,exceptional,yes
+9ax,Cleaver,weapon,axe,1hsw,exceptional,yes
+92a,Twin Axe,weapon,axe,1hsw,exceptional,yes
+9mp,Crowbill,weapon,axe,1hsw,exceptional,yes
+9wa,Naga,weapon,axe,1hsw,exceptional,yes
+9la,Military Axe,weapon,axe,2hsw,exceptional,yes
+9ba,Bearded Axe,weapon,axe,2hsw,exceptional,yes
+9bt,Tabar,weapon,axe,2hsw,exceptional,yes
+9ga,Gothic Axe,weapon,axe,2hsw,exceptional,yes
+9gi,Ancient Axe,weapon,axe,2hsw,exceptional,yes
+9wn,Burnt Wand,weapon,wand,1hsw,exceptional,yes
+9yw,Petrified Wand,weapon,wand,1hsw,exceptional,yes
+9bw,Tomb Wand,weapon,wand,1hsw,exceptional,yes
+9gw,Grave Wand,weapon,wand,1hsw,exceptional,yes
+9cl,Cudgel,weapon,club,1hsw,exceptional,yes
+9sc,Rune Scepter,weapon,scep,1hsw,exceptional,yes
+9qs,Holy Water Sprinkler,weapon,scep,1hsw,exceptional,yes
+9ws,Divine Scepter,weapon,scep,1hsw,exceptional,yes
+9sp,Barbed Club,weapon,club,1hsw,exceptional,yes
+9ma,Flanged Mace,weapon,mace,1hsw,exceptional,yes
+9mt,Jagged Star,weapon,mace,1hsw,exceptional,yes
+9fl,Knout,weapon,mace,1hsw,exceptional,yes
+9wh,Battle Hammer,weapon,hamm,1hsw,exceptional,yes
+9m9,War Club,weapon,hamm,2hsw,exceptional,yes
+9gm,Martel de Fer,weapon,hamm,2hsw,exceptional,yes
+9ss,Gladius,weapon,swor,1hsw,exceptional,yes
+9sm,Cutlass,weapon,swor,1hsw,exceptional,yes
+9sb,Shamshir,weapon,swor,1hsw,exceptional,yes
+9fc,Tulwar,weapon,swor,1hsw,exceptional,yes
+9cr,Dimensional Blade,weapon,swor,1hsw,exceptional,yes
+9bs,Battle Sword,weapon,swor,1hsw,exceptional,yes
+9ls,Rune Sword,weapon,swor,1hsw,exceptional,yes
+9wd,Ancient Sword,weapon,swor,1hsw,exceptional,yes
+92h,Espandon,weapon,swor,2hsw,exceptional,yes
+9cm,Dacian Falx,weapon,swor,2hsw,exceptional,yes
+9gs,Tusk Sword,weapon,swor,2hsw,exceptional,yes
+9b9,Gothic Sword,weapon,swor,2hsw,exceptional,yes
+9fb,Zweihander,weapon,swor,2hsw,exceptional,yes
+9gd,Executioner Sword,weapon,swor,2hsw,exceptional,yes
+9dg,Poignard,weapon,knif,1hsw,exceptional,yes
+9di,Rondel,weapon,knif,1hsw,exceptional,yes
+9kr,Cinquedeas,weapon,knif,1hsw,exceptional,yes
+9bl,Stiletto,weapon,knif,1hsw,exceptional,yes
+9tk,Battle Dart,weapon,tkni,1hsw,exceptional,yes
+9ta,Francisca,weapon,taxe,1hsw,exceptional,yes
+9bk,War Dart,weapon,tkni,1hsw,exceptional,yes
+9b8,Hurlbat,weapon,taxe,1hsw,exceptional,yes
+9ja,War Javelin,weapon,jave,1hsw,exceptional,yes
+9pi,Great Pilum,weapon,jave,1hsw,exceptional,yes
+9s9,Simbilan,weapon,jave,1hsw,exceptional,yes
+9gl,Spiculum,weapon,jave,1hsw,exceptional,yes
+9ts,Harpoon,weapon,jave,1hsw,exceptional,yes
+9sr,War Spear,weapon,spea,2hsw,exceptional,yes
+9tr,Fuscina,weapon,spea,2hsw,exceptional,yes
+9br,War Fork,weapon,spea,2hsw,exceptional,yes
+9st,Yari,weapon,spea,2hsw,exceptional,yes
+9p9,Lance,weapon,spea,2hsw,exceptional,yes
+9b7,Lochaber Axe,weapon,pole,2hsw,exceptional,yes
+9vo,Bill,weapon,pole,2hsw,exceptional,yes
+9s8,Battle Scythe,weapon,pole,2hsw,exceptional,yes
+9pa,Partizan,weapon,pole,2hsw,exceptional,yes
+9h9,Bec-de-Corbin,weapon,pole,2hsw,exceptional,yes
+9wc,Grim Scythe,weapon,pole,2hsw,exceptional,yes
+8ss,Jo Staff,weapon,staf,2hsw,exceptional,yes
+8ls,Quarterstaff,weapon,staf,2hsw,exceptional,yes
+8cs,Cedar Staff,weapon,staf,2hsw,exceptional,yes
+8bs,Gothic Staff,weapon,staf,2hsw,exceptional,yes
+8ws,Rune Staff,weapon,staf,2hsw,exceptional,yes
+8sb,Edge Bow,weapon,bow,,exceptional,yes
+8hb,Razor Bow,weapon,bow,,exceptional,yes
+8lb,Cedar Bow,weapon,bow,,exceptional,yes
+8cb,Double Bow,weapon,bow,,exceptional,yes
+8s8,Short Siege Bow,weapon,bow,,exceptional,yes
+8l8,Large Siege Bow,weapon,bow,,exceptional,yes
+8sw,Rune Bow,weapon,bow,,exceptional,yes
+8lw,Gothic Bow,weapon,bow,,exceptional,yes
+8lx,Arbalest,weapon,xbow,,exceptional,yes
+8mx,Siege Crossbow,weapon,xbow,,exceptional,yes
+8hx,Ballista,weapon,xbow,,exceptional,yes
+8rx,Chu-Ko-Nu,weapon,xbow,,exceptional,yes
+qf1,Khalim's Flail,weapon,mace,,,no
+qf2,Khalim's Will,weapon,mace,,,no
+ktr,Katar,weapon,h2h1,1hsw,normal,yes
+wrb,Wrist Blade,weapon,h2h1,1hsw,normal,yes
+axf,Hatchet Hands,weapon,h2h1,1hsw,normal,yes
+ces,Cestus,weapon,h2h1,1hsw,normal,yes
+clw,Claws,weapon,h2h1,1hsw,normal,yes
+btl,Blade Talons,weapon,h2h1,1hsw,normal,yes
+skr,Scissors Katar,weapon,h2h1,1hsw,normal,yes
+9ar,Quhab,weapon,h2h1,1hsw,exceptional,yes
+9wb,Wrist Spike,weapon,h2h1,1hsw,exceptional,yes
+9xf,Fascia,weapon,h2h1,1hsw,exceptional,yes
+9cs,Hand Scythe,weapon,h2h2,1hsw,exceptional,yes
+9lw,Greater Claws,weapon,h2h2,1hsw,exceptional,yes
+9tw,Greater Talons,weapon,h2h2,1hsw,exceptional,yes
+9qr,Scissors Quhab,weapon,h2h2,1hsw,exceptional,yes
+7ar,Suwayyah,weapon,h2h2,1hsw,elite,yes
+7wb,Wrist Sword,weapon,h2h2,1hsw,elite,yes
+7xf,War Fist,weapon,h2h2,1hsw,elite,yes
+7cs,Battle Cestus,weapon,h2h2,1hsw,elite,yes
+7lw,Feral Claws,weapon,h2h2,1hsw,elite,yes
+7tw,Runic Talons,weapon,h2h2,1hsw,elite,yes
+7qr,Scissors Suwayyah,weapon,h2h2,1hsw,elite,yes
+7ha,Tomahawk,weapon,axe,1hsw,elite,no
+7ax,Small Crescent,weapon,axe,1hsw,elite,no
+72a,Ettin Axe,weapon,axe,1hsw,elite,no
+7mp,War Spike,weapon,axe,1hsw,elite,no
+7wa,Berserker Axe,weapon,axe,1hsw,elite,no
+7la,Feral Axe,weapon,axe,2hsw,elite,no
+7ba,Silver-edged Axe,weapon,axe,2hsw,elite,no
+7bt,Decapitator,weapon,axe,2hsw,elite,no
+7ga,Champion Axe,weapon,axe,2hsw,elite,no
+7gi,Glorious Axe,weapon,axe,2hsw,elite,no
+7wn,Polished Wand,weapon,wand,1hsw,elite,no
+7yw,Ghost Wand,weapon,wand,1hsw,elite,no
+7bw,Lich Wand,weapon,wand,1hsw,elite,no
+7gw,Unearthed Wand,weapon,wand,1hsw,elite,no
+7cl,Truncheon,weapon,club,1hsw,elite,no
+7sc,Mighty Scepter,weapon,scep,1hsw,elite,no
+7qs,Seraph Rod,weapon,scep,1hsw,elite,no
+7ws,Caduceus,weapon,scep,1hsw,elite,no
+7sp,Tyrant Club,weapon,club,1hsw,elite,no
+7ma,Reinforced Mace,weapon,mace,1hsw,elite,no
+7mt,Devil Star,weapon,mace,1hsw,elite,no
+7fl,Scourge,weapon,mace,1hsw,elite,no
+7wh,Legendary Mallet,weapon,hamm,1hsw,elite,no
+7m7,Ogre Maul,weapon,hamm,2hsw,elite,no
+7gm,Thunder Maul,weapon,hamm,2hsw,elite,no
+7ss,Falcata,weapon,swor,1hsw,elite,no
+7sm,Ataghan,weapon,swor,1hsw,elite,no
+7sb,Elegant Blade,weapon,swor,1hsw,elite,no
+7fc,Hydra Edge,weapon,swor,1hsw,elite,no
+7cr,Phase Blade,weapon,swor,1hsw,elite,no
+7bs,Conquest Sword,weapon,swor,1hsw,elite,no
+7ls,Cryptic Sword,weapon,swor,1hsw,elite,no
+7wd,Mythical Sword,weapon,swor,1hsw,elite,no
+72h,Legend Sword,weapon,swor,2hsw,elite,no
+7cm,Highland Blade,weapon,swor,2hsw,elite,no
+7gs,Balrog Blade,weapon,swor,2hsw,elite,no
+7b7,Champion Sword,weapon,swor,2hsw,elite,no
+7fb,Colossus Sword,weapon,swor,2hsw,elite,no
+7gd,Colossus Blade,weapon,swor,2hsw,elite,no
+7dg,Bone Knife,weapon,knif,1hsw,elite,no
+7di,Mithril Point,weapon,knif,1hsw,elite,no
+7kr,Fanged Knife,weapon,knif,1hsw,elite,no
+7bl,Legend Spike,weapon,knif,1hsw,elite,no
+7tk,Flying Knife,weapon,tkni,1hsw,elite,no
+7ta,Flying Axe,weapon,taxe,1hsw,elite,no
+7bk,Winged Knife,weapon,tkni,1hsw,elite,no
+7b8,Winged Axe,weapon,taxe,1hsw,elite,no
+7ja,Hyperion Javelin,weapon,jave,1hsw,elite,no
+7pi,Stygian Pilum,weapon,jave,1hsw,elite,no
+7s7,Balrog Spear,weapon,jave,1hsw,elite,no
+7gl,Ghost Glaive,weapon,jave,1hsw,elite,no
+7ts,Winged Harpoon,weapon,jave,1hsw,elite,no
+7sr,Hyperion Spear,weapon,spea,2hsw,elite,no
+7tr,Stygian Pike,weapon,spea,2hsw,elite,no
+7br,Mancatcher,weapon,spea,2hsw,elite,no
+7st,Ghost Spear,weapon,spea,2hsw,elite,no
+7p7,War Pike,weapon,spea,2hsw,elite,no
+7o7,Ogre Axe,weapon,pole,2hsw,elite,no
+7vo,Colossus Voulge,weapon,pole,2hsw,elite,no
+7s8,Thresher,weapon,pole,2hsw,elite,no
+7pa,Cryptic Axe,weapon,pole,2hsw,elite,no
+7h7,Great Poleaxe,weapon,pole,2hsw,elite,no
+7wc,Giant Thresher,weapon,pole,2hsw,elite,no
+6ss,Walking Stick,weapon,staf,2hsw,elite,no
+6ls,Stalagmite,weapon,staf,2hsw,elite,no
+6cs,Elder Staff,weapon,staf,2hsw,elite,no
+6bs,Shillelagh,weapon,staf,2hsw,elite,no
+6ws,Archon Staff,weapon,staf,2hsw,elite,no
+6sb,Spider Bow,weapon,bow,,elite,no
+6hb,Blade Bow,weapon,bow,,elite,no
+6lb,Shadow Bow,weapon,bow,,elite,no
+6cb,Great Bow,weapon,bow,,elite,no
+6s7,Diamond Bow,weapon,bow,,elite,no
+6l7,Crusader Bow,weapon,bow,,elite,no
+6sw,Ward Bow,weapon,bow,,elite,no
+6lw,Hydra Bow,weapon,bow,,elite,no
+6lx,Pellet Bow,weapon,xbow,,elite,no
+6mx,Gorgon Crossbow,weapon,xbow,,elite,no
+6hx,Colossus Crossbow,weapon,xbow,,elite,no
+6rx,Demon Crossbow,weapon,xbow,,elite,no
+ob1,Eagle Orb,weapon,orb,1hsw,normal,yes
+ob2,Sacred Globe,weapon,orb,1hsw,normal,yes
+ob3,Smoked Sphere,weapon,orb,1hsw,normal,yes
+ob4,Clasped Orb,weapon,orb,1hsw,normal,yes
+ob5,Jared's Stone,weapon,orb,1hsw,normal,yes
+am1,Stag Bow,weapon,abow,,normal,yes
+am2,Reflex Bow,weapon,abow,,normal,yes
+am3,Maiden Spear,weapon,aspe,2hsw,normal,yes
+am4,Maiden Pike,weapon,aspe,2hsw,normal,yes
+am5,Maiden Javelin,weapon,ajav,1hsw,normal,yes
+ob6,Glowing Orb,weapon,orb,1hsw,exceptional,yes
+ob7,Crystalline Globe,weapon,orb,1hsw,exceptional,yes
+ob8,Cloudy Sphere,weapon,orb,1hsw,exceptional,yes
+ob9,Sparkling Ball,weapon,orb,1hsw,exceptional,yes
+oba,Swirling Crystal,weapon,orb,1hsw,exceptional,yes
+am6,Ashwood Bow,weapon,abow,,exceptional,yes
+am7,Ceremonial Bow,weapon,abow,,exceptional,yes
+am8,Ceremonial Spear,weapon,aspe,2hsw,exceptional,yes
+am9,Ceremonial Pike,weapon,aspe,2hsw,exceptional,yes
+ama,Ceremonial Javelin,weapon,ajav,1hsw,exceptional,yes
+obb,Heavenly Stone,weapon,orb,1hsw,elite,yes
+obc,Eldritch Orb,weapon,orb,1hsw,elite,yes
+obd,Demon Heart,weapon,orb,1hsw,elite,yes
+obe,Vortex Orb,weapon,orb,1hsw,elite,yes
+obf,Dimensional Shard,weapon,orb,1hsw,elite,yes
+amb,Matriarchal Bow,weapon,abow,,elite,yes
+amc,Grand Matron Bow,weapon,abow,,elite,yes
+amd,Matriarchal Spear,weapon,aspe,2hsw,elite,yes
+ame,Matriarchal Pike,weapon,aspe,2hsw,elite,yes
+amf,Matriarchal Javelin,weapon,ajav,1hsw,elite,yes
+0ha,Barbarian Tomahawk,weapon,axe,1hsw,elite,yes
+0ax,Precision Cleaver,weapon,axe,1hsw,elite,yes
+82a,Duo Axe,weapon,axe,1hsw,elite,yes
+0mp,Razor Axe,weapon,axe,1hsw,elite,yes
+0wa,Viking Axe,weapon,axe,1hsw,elite,yes
+0la,Brawn Axe,weapon,axe,2hsw,elite,yes
+0ba,Heavy Axe,weapon,axe,2hsw,elite,yes
+0bt,Split Axe,weapon,axe,2hsw,elite,yes
+0ga,Guillotine Axe,weapon,axe,2hsw,elite,yes
+0gi,Slayer Axe,weapon,axe,2hsw,elite,yes
+0wn,Sacred Wand,weapon,wand,1hsw,elite,yes
+0yw,Sepulcher Wand,weapon,wand,1hsw,elite,yes
+0bw,Callous Wand,weapon,wand,1hsw,elite,yes
+0gw,Demonic Wand,weapon,wand,1hsw,elite,yes
+0cl,Cranium Basher,weapon,club,1hsw,elite,yes
+5sc,Celestial Scepter,weapon,scep,1hsw,elite,yes
+0qs,Holy Scepter,weapon,scep,1hsw,elite,yes
+0ws,Blessed Scepter,weapon,scep,1hsw,elite,yes
+0sp,Thorned Club,weapon,club,1hsw,elite,yes
+0ma,Arcane Mace,weapon,mace,1hsw,elite,yes
+0mt,Serrated Star,weapon,mace,1hsw,elite,yes
+0fl,Dire Flail,weapon,mace,1hsw,elite,yes
+0wh,Military Hammer,weapon,hamm,1hsw,elite,yes
+0m0,Ancient Maul,weapon,hamm,2hsw,elite,yes
+0gm,Titan's Maul,weapon,hamm,2hsw,elite,yes
+0ss,Gladiator Blade,weapon,swor,1hsw,elite,yes
+0sm,Desert Sword,weapon,swor,1hsw,elite,yes
+0sb,Rapier,weapon,swor,1hsw,elite,yes
+0fc,Okrist,weapon,swor,1hsw,elite,yes
+0cr,Jeweled Edge,weapon,swor,1hsw,elite,yes
+0bs,Viking Sword,weapon,swor,1hsw,elite,yes
+0ls,Arcane Sword,weapon,swor,1hsw,elite,yes
+0wd,Trojan Sword,weapon,swor,1hsw,elite,yes
+02h,Judgement Blade,weapon,swor,2hsw,elite,yes
+0cm,Titan's Dagger,weapon,swor,2hsw,elite,yes
+0gs,Lithe Blade,weapon,swor,2hsw,elite,yes
+0b0,Dark Sword,weapon,swor,2hsw,elite,yes
+0fb,Hellfire Sword,weapon,swor,2hsw,elite,yes
+0gd,Death Blade,weapon,swor,2hsw,elite,yes
+0dg,Carved Bone,weapon,knif,1hsw,elite,yes
+0di,Mithral Knife,weapon,knif,1hsw,elite,yes
+0kr,Fang Knife,weapon,knif,1hsw,elite,yes
+0bl,Ancient Spike,weapon,knif,1hsw,elite,yes
+0tk,Throwing Dagger,weapon,tkni,1hsw,elite,yes
+0ta,Throwing Hatchet,weapon,taxe,1hsw,elite,yes
+0bk,Balanced Dagger,weapon,tkni,1hsw,elite,yes
+0b6,Balanced Hatchet,weapon,taxe,1hsw,elite,yes
+0ja,Ancient Shards,weapon,jave,1hsw,elite,yes
+0pi,Dire Pilum,weapon,jave,1hsw,elite,yes
+0s9,Lissom Spear,weapon,jave,1hsw,elite,yes
+0gl,Ahab Spear,weapon,jave,1hsw,elite,yes
+0ts,Whale Hunter,weapon,jave,1hsw,elite,yes
+0sr,Guisarme,weapon,spea,2hsw,elite,yes
+0tr,Grapnel,weapon,spea,2hsw,elite,yes
+0br,Dragon Spear,weapon,spea,2hsw,elite,yes
+0st,Ranseur,weapon,spea,2hsw,elite,yes
+0p0,Impaler,weapon,spea,2hsw,elite,yes
+0b7,Urgrosh,weapon,pole,2hsw,elite,yes
+0vo,Pole Gauche,weapon,pole,2hsw,elite,yes
+0s8,Shadow Scythe,weapon,pole,2hsw,elite,yes
+0pa,Royal Partizan,weapon,pole,2hsw,elite,yes
+0h0,Guardian,weapon,pole,2hsw,elite,yes
+0wc,Death Reaper,weapon,pole,2hsw,elite,yes
+1ss,Elder Cane,weapon,staf,2hsw,elite,yes
+1ls,Mystic Staff,weapon,staf,2hsw,elite,yes
+1cs,Petrified Staff,weapon,staf,2hsw,elite,yes
+1bs,Mage Staff,weapon,staf,2hsw,elite,yes
+1ws,Arcane Staff,weapon,staf,2hsw,elite,yes
+1sb,Spiderwoven Bow,weapon,bow,,elite,yes
+1hb,Sharp Bow,weapon,bow,,elite,yes
+1lb,Shade Bow,weapon,bow,,elite,yes
+1cb,Dark Bow,weapon,bow,,elite,yes
+1s8,Rogue Bow,weapon,bow,,elite,yes
+1l8,Marksman Bow,weapon,bow,,elite,yes
+1sw,Arcane Bow,weapon,bow,,elite,yes
+1lw,Ancient Bow,weapon,bow,,elite,yes
+1lx,Choice Crossbow,weapon,xbow,,elite,yes
+1mx,Marksman Crossbow,weapon,xbow,,elite,yes
+1hx,Odysseus Crossbow,weapon,xbow,,elite,yes
+1rx,Assassin Crossbow,weapon,xbow,,elite,yes
+aq2,Arrows,weapon,arrm,,,yes
+cq2,Bolts,weapon,boqm,,,yes
+aq0,Arrows,weapon,arrm,,,no
+cq0,Bolts,weapon,boqm,,,no
+gsp,Great Scepter,weapon,scep,1hsw,normal,yes
+9gp,Consecrated Scepter,weapon,scep,1hsw,exceptional,yes
+0gp,Seraphic Scepter,weapon,scep,1hsw,elite,yes
+apb,Precision Bow,weapon,abow,,normal,yes
+9pb,Tuigan Bow,weapon,abow,,exceptional,yes
+0pb,Elven Bow,weapon,abow,,elite,yes
+nin,Ninja To,weapon,asns,,normal,no
+9nn,Wakizashi,weapon,asns,,exceptional,no
+0nn,Katana,weapon,asnx,2hsw,elite,yes
+bts,Tribal Hatchet,weapon,bjav,1hsw,normal,yes
+9xb,Highland Hatchet,weapon,bjav,1hsw,exceptional,yes
+0xb,Arreat's Hatchet,weapon,bjav,1hsw,elite,yes
+shc,Oak Branch,weapon,dclb,1hsw,normal,yes
+9sh,Shaman Wand,weapon,dclb,1hsw,exceptional,yes
+0sh,Shillelagh,weapon,dclb,1hsw,elite,yes
+nrd,Ritualistic Dagger,weapon,ndgr,1hsw,normal,yes
+9rd,Sacrificial Dagger,weapon,ndgr,1hsw,exceptional,yes
+0rd,Ceremonial Dagger,weapon,ndgr,1hsw,elite,yes
+nsy,Wretched Scythe,weapon,npol,2hsw,normal,yes
+9ns,Dire Scythe,weapon,npol,2hsw,exceptional,yes
+0ns,Demonic Scythe,weapon,npol,2hsw,elite,yes
+syn,Soul Hunter,weapon,npol,2hsw,normal,yes
+9sy,Soul Burner,weapon,npol,2hsw,exceptional,yes
+0sy,Soul Destroyer,weapon,npol,2hsw,elite,yes
+pbe,Blessed Edge,weapon,bedg,2hsw,normal,yes
+9be,Divine Blade,weapon,bedg,2hsw,exceptional,yes
+0be,Celestial Blade,weapon,bedg,2hsw,elite,yes
+mnb,Mana Blade,weapon,mana,1hsw,normal,yes
+9mn,Energy Blade,weapon,mana,1hsw,exceptional,yes
+0mn,Magic Blade,weapon,mana,1hsw,elite,yes
+p01,Hand Axe,weapon,axe,1hsw,normal,no
+p02,Axe,weapon,axe,1hsw,normal,no
+p03,Double Axe,weapon,axe,1hsw,normal,no
+p04,Military Pick,weapon,axe,1hsw,normal,no
+p05,War Axe,weapon,axe,1hsw,normal,no
+p06,Large Axe,weapon,axe,2hsw,normal,no
+p07,Broad Axe,weapon,axe,2hsw,normal,no
+p08,Battle Axe,weapon,axe,2hsw,normal,no
+p09,Great Axe,weapon,axe,2hsw,normal,no
+p10,Giant Axe,weapon,axe,2hsw,normal,no
+p11,Wand,weapon,wand,1hsw,normal,no
+p12,Yew Wand,weapon,wand,1hsw,normal,no
+p13,Bone Wand,weapon,wand,1hsw,normal,no
+p14,Grim Wand,weapon,wand,1hsw,normal,no
+p15,Club,weapon,club,1hsw,normal,no
+p16,Scepter,weapon,scep,1hsw,normal,no
+p17,Grand Scepter,weapon,scep,1hsw,normal,no
+p18,War Scepter,weapon,scep,1hsw,normal,no
+p19,Spiked Club,weapon,club,1hsw,normal,no
+p20,Mace,weapon,mace,1hsw,normal,no
+p21,Morning Star,weapon,mace,1hsw,normal,no
+p22,Flail,weapon,mace,1hsw,normal,no
+p23,War Hammer,weapon,hamm,1hsw,normal,no
+p24,Maul,weapon,hamm,2hsw,normal,no
+p25,Great Maul,weapon,hamm,2hsw,normal,no
+p26,Short Sword,weapon,swor,1hsw,normal,no
+p27,Scimitar,weapon,swor,1hsw,normal,no
+p28,Sabre,weapon,swor,1hsw,normal,no
+p29,Falchion,weapon,swor,1hsw,normal,no
+p30,Crystal Sword,weapon,swor,1hsw,normal,no
+p31,Broad Sword,weapon,swor,1hsw,normal,no
+p32,Long Sword,weapon,swor,1hsw,normal,no
+p33,War Sword,weapon,swor,1hsw,normal,no
+p34,Two-Handed Sword,weapon,swor,2hsw,normal,no
+p35,Claymore,weapon,swor,2hsw,normal,no
+p36,Giant Sword,weapon,swor,2hsw,normal,no
+p37,Bastard Sword,weapon,swor,2hsw,normal,no
+p38,Flamberge,weapon,swor,2hsw,normal,no
+p39,Great Sword,weapon,swor,2hsw,normal,no
+p40,Dagger,weapon,knif,1hsw,normal,no
+p41,Dirk,weapon,knif,1hsw,normal,no
+p42,Kris,weapon,knif,1hsw,normal,no
+p43,Blade,weapon,knif,1hsw,normal,no
+p44,Spear,weapon,spea,2hsw,normal,no
+p45,Trident,weapon,spea,2hsw,normal,no
+p46,Brandistock,weapon,spea,2hsw,normal,no
+p47,Spetum,weapon,spea,2hsw,normal,no
+p48,Pike,weapon,spea,2hsw,normal,no
+p49,Bardiche,weapon,pole,2hsw,normal,no
+p50,Voulge,weapon,pole,2hsw,normal,no
+p51,Scythe,weapon,pole,2hsw,normal,no
+p52,Poleaxe,weapon,pole,2hsw,normal,no
+p53,Halberd,weapon,pole,2hsw,normal,no
+p54,War Scythe,weapon,pole,2hsw,normal,no
+p55,Short Staff,weapon,staf,2hsw,normal,no
+p56,Long Staff,weapon,staf,2hsw,normal,no
+p57,Gnarled Staff,weapon,staf,2hsw,normal,no
+p58,Battle Staff,weapon,staf,2hsw,normal,no
+p59,War Staff,weapon,staf,2hsw,normal,no
+p60,Short Bow,weapon,bow,,normal,no
+p61,Hunter's Bow,weapon,bow,,normal,no
+p62,Long Bow,weapon,bow,,normal,no
+p63,Composite Bow,weapon,bow,,normal,no
+p64,Short Battle Bow,weapon,bow,,normal,no
+p65,Long Battle Bow,weapon,bow,,normal,no
+p66,Short War Bow,weapon,bow,,normal,no
+p67,Long War Bow,weapon,bow,,normal,no
+p68,Light Crossbow,weapon,xbow,,normal,no
+p69,Crossbow,weapon,xbow,,normal,no
+p70,Heavy Crossbow,weapon,xbow,,normal,no
+p71,Repeating Crossbow,weapon,xbow,,normal,no
+q00,Hatchet,weapon,axe,1hsw,exceptional,no
+q01,Cleaver,weapon,axe,1hsw,exceptional,no
+q02,Twin Axe,weapon,axe,1hsw,exceptional,no
+q03,Crowbill,weapon,axe,1hsw,exceptional,no
+q04,Naga,weapon,axe,1hsw,exceptional,no
+q05,Military Axe,weapon,axe,2hsw,exceptional,no
+q06,Bearded Axe,weapon,axe,2hsw,exceptional,no
+q07,Tabar,weapon,axe,2hsw,exceptional,no
+q08,Gothic Axe,weapon,axe,2hsw,exceptional,no
+q09,Ancient Axe,weapon,axe,2hsw,exceptional,no
+q10,Burnt Wand,weapon,wand,1hsw,exceptional,no
+q11,Petrified Wand,weapon,wand,1hsw,exceptional,no
+q12,Tomb Wand,weapon,wand,1hsw,exceptional,no
+q13,Grave Wand,weapon,wand,1hsw,exceptional,no
+q14,Cudgel,weapon,club,1hsw,exceptional,no
+q15,Rune Scepter,weapon,scep,1hsw,exceptional,no
+q16,Holy Water Sprinkler,weapon,scep,1hsw,exceptional,no
+q17,Divine Scepter,weapon,scep,1hsw,exceptional,no
+q18,Barbed Club,weapon,club,1hsw,exceptional,no
+q19,Flanged Mace,weapon,mace,1hsw,exceptional,no
+q20,Jagged Star,weapon,mace,1hsw,exceptional,no
+q21,Knout,weapon,mace,1hsw,exceptional,no
+q22,Battle Hammer,weapon,hamm,1hsw,exceptional,no
+q23,War Club,weapon,hamm,2hsw,exceptional,no
+q24,Martel de Fer,weapon,hamm,2hsw,exceptional,no
+q25,Gladius,weapon,swor,1hsw,exceptional,no
+q26,Cutlass,weapon,swor,1hsw,exceptional,no
+q27,Shamshir,weapon,swor,1hsw,exceptional,no
+q28,Tulwar,weapon,swor,1hsw,exceptional,no
+q29,Dimensional Blade,weapon,swor,1hsw,exceptional,no
+q30,Battle Sword,weapon,swor,1hsw,exceptional,no
+q31,Rune Sword,weapon,swor,1hsw,exceptional,no
+q32,Ancient Sword,weapon,swor,1hsw,exceptional,no
+q33,Espandon,weapon,swor,2hsw,exceptional,no
+q34,Dacian Falx,weapon,swor,2hsw,exceptional,no
+q35,Tusk Sword,weapon,swor,2hsw,exceptional,no
+q36,Gothic Sword,weapon,swor,2hsw,exceptional,no
+q37,Zweihander,weapon,swor,2hsw,exceptional,no
+q38,Executioner Sword,weapon,swor,2hsw,exceptional,no
+q39,Poignard,weapon,knif,1hsw,exceptional,no
+q40,Rondel,weapon,knif,1hsw,exceptional,no
+q41,Cinquedeas,weapon,knif,1hsw,exceptional,no
+q42,Stiletto,weapon,knif,1hsw,exceptional,no
+q43,War Spear,weapon,spea,2hsw,exceptional,no
+q44,Fuscina,weapon,spea,2hsw,exceptional,no
+q45,War Fork,weapon,spea,2hsw,exceptional,no
+q46,Yari,weapon,spea,2hsw,exceptional,no
+q47,Lance,weapon,spea,2hsw,exceptional,no
+q48,Lochaber Axe,weapon,pole,2hsw,exceptional,no
+q49,Bill,weapon,pole,2hsw,exceptional,no
+q50,Battle Scythe,weapon,pole,2hsw,exceptional,no
+q51,Partizan,weapon,pole,2hsw,exceptional,no
+q52,Bec-de-Corbin,weapon,pole,2hsw,exceptional,no
+q53,Grim Scythe,weapon,pole,2hsw,exceptional,no
+q54,Jo Staff,weapon,staf,2hsw,exceptional,no
+q55,Quarterstaff,weapon,staf,2hsw,exceptional,no
+q56,Cedar Staff,weapon,staf,2hsw,exceptional,no
+q57,Gothic Staff,weapon,staf,2hsw,exceptional,no
+q58,Rune Staff,weapon,staf,2hsw,exceptional,no
+q59,Edge Bow,weapon,bow,,exceptional,no
+q60,Razor Bow,weapon,bow,,exceptional,no
+q61,Cedar Bow,weapon,bow,,exceptional,no
+q62,Double Bow,weapon,bow,,exceptional,no
+q63,Short Siege Bow,weapon,bow,,exceptional,no
+q64,Large Siege Bow,weapon,bow,,exceptional,no
+q65,Rune Bow,weapon,bow,,exceptional,no
+q66,Gothic Bow,weapon,bow,,exceptional,no
+q67,Arbalest,weapon,xbow,,exceptional,no
+q68,Siege Crossbow,weapon,xbow,,exceptional,no
+q69,Ballista,weapon,xbow,,exceptional,no
+q70,Chu-Ko-Nu,weapon,xbow,,exceptional,no
+q73,Greater Talons,weapon,h2h2,1hsw,exceptional,no
+q74,Wrist Sword,weapon,h2h2,1hsw,elite,no
+q75,Battle Cestus,weapon,h2h2,1hsw,elite,no
+q76,Feral Claws,weapon,h2h2,1hsw,elite,no
+q77,Ceremonial Bow,weapon,abow,,exceptional,no
+q78,Ceremonial Pike,weapon,aspe,2hsw,exceptional,no
+q79,Ceremonial Javelin,weapon,ajav,1hsw,exceptional,no
+q80,Matriarchal Bow,weapon,abow,,elite,no
+q81,Matriarchal Spear,weapon,aspe,2hsw,elite,no
+q82,Matriarchal Javelin,weapon,ajav,1hsw,elite,no
+q83,Swirling Crystal,weapon,orb,1hsw,exceptional,no
+q84,Eldritch Orb,weapon,orb,1hsw,elite,no
+q85,Dimensional Shard,weapon,orb,1hsw,elite,no
+q71,Battle Dart,weapon,tkni,1hsw,exceptional,no
+q72,Francisca,weapon,taxe,1hsw,exceptional,no
+njt,Ninja To,weapon,asnx,2hsw,normal,yes
+9nj,Wakizashi,weapon,asnx,2hsw,exceptional,yes
+kkl,Brass Knuckle,weapon,knuc,1hsw,normal,yes
+9kl,Tekko,weapon,knuc,1hsw,exceptional,yes
+0kl,Raging Knuckle,weapon,knuc,1hsw,elite,yes
+arm,Battering Arm,weapon,knuc,2hsw,normal,yes
+9rm,Rock Buster,weapon,knuc,2hsw,exceptional,yes
+0rm,Wrecking Arm,weapon,knuc,2hsw,elite,yes
+q1a,Two-Handed Sword,weapon,swor,2hsw,normal,no
+q1b,Claymore,weapon,swor,2hsw,normal,no
+q1c,Giant Sword,weapon,swor,2hsw,normal,no
+q1d,Bastard Sword,weapon,swor,2hsw,normal,no
+q1e,Flamberge,weapon,swor,2hsw,normal,no
+q1f,Great Sword,weapon,swor,2hsw,normal,no
+q2a,Espandon,weapon,swor,2hsw,exceptional,no
+q2b,Dacian Falx,weapon,swor,2hsw,exceptional,no
+q2c,Tusk Sword,weapon,swor,2hsw,exceptional,no
+q2d,Gothic Sword,weapon,swor,2hsw,exceptional,no
+q2e,Zweihander,weapon,swor,2hsw,exceptional,no
+q2f,Executioner Sword,weapon,swor,2hsw,exceptional,no
+q3a,Judgement Blade,weapon,swor,2hsw,elite,no
+q3b,Titan's Dagger,weapon,swor,2hsw,elite,no
+q3c,Lithe Blade,weapon,swor,2hsw,elite,no
+q3d,Dark Sword,weapon,swor,2hsw,elite,no
+q3e,Hellfire Sword,weapon,swor,2hsw,elite,no
+q3f,Death Blade,weapon,swor,2hsw,elite,no
+q4a,Legend Sword,weapon,swor,2hsw,elite,no
+q4b,Highland Blade,weapon,swor,2hsw,elite,no
+q4c,Balrog Blade,weapon,swor,2hsw,elite,no
+q4d,Champion Sword,weapon,swor,2hsw,elite,no
+q4e,Colossus Sword,weapon,swor,2hsw,elite,no
+q4f,Colossus Blade,weapon,swor,2hsw,elite,no
+q86,Scissors Suwayyah,weapon,h2h2,1hsw,,yes
+m01,Mythical Marksman Bow,weapon,bow,,,yes
+m02,Mythical Odysseus Crossbow,weapon,xbow,,,yes
+m03,Mythical Titan's Maul,weapon,hamm,2hsw,,yes
+m04,Mythical Demonic Wand,weapon,wand,1hsw,,yes
+m05,Mythical Soul Destroyer,weapon,npol,2hsw,,yes
+m07,Mythical Dimensional Shard,weapon,orb,1hsw,,yes
+m08,Mythical Balanced Dagger,weapon,tkni,1hsw,,yes
+m09,Mythical Magic Blade,weapon,mana,1hsw,,yes
+m11,Mythical Arcane Staff,weapon,staf,2hsw,,yes
+m12,Mythical Seraphic Scepter,weapon,scep,1hsw,,yes
+m13,Mythical Scissors Suwayyah,weapon,h2h2,1hsw,,yes
+m14,Mythical Ceremonial Dagger,weapon,ndgr,1hsw,,yes
+m16,Mythical Rapier,weapon,swor,1hsw,,yes
+m17,Mythical Celestial Scepter,weapon,scep,1hsw,,yes
+m18,Mythical Death Blade,weapon,swor,2hsw,,yes
+dd1,Mythical Death Blade,weapon,swor,2hsw,,yes
+cr2,Crystal Sword,weapon,swor,1hsw,normal,no
+m21,Mythical Razor Axe,weapon,axe,1hsw,,no
+m22,Mythical Hellfire Sword,weapon,swor,2hsw,,no
+m23,Mythical Sepulcher Wand,weapon,wand,1hsw,,no
+m24,Mythical Shade Bow,weapon,bow,,,no
+m25,Mythical Marksman Crossbow,weapon,xbow,,,no
+m26,Mythical Balanced Hatchet,weapon,taxe,1hsw,,no
+m27,Mythical Balanced Dagger,weapon,tkni,1hsw,,no
+m28,Mythical Whale Hunter,weapon,jave,1hsw,,no
+m29,Mythical Petrified Staff,weapon,staf,2hsw,,yes
+m30,Mythical Ancient Bow,weapon,bow,,,yes
+m31,Mythical Matriarchal Javelin,weapon,ajav,1hsw,,yes
+m32,Mythical Whale Hunter,weapon,jave,1hsw,,yes
+m33,Mythical Ancient Shards,weapon,jave,1hsw,,yes
+m34,Mythical Shillelagh,weapon,dclb,1hsw,,yes
+m35,Mythical Celestial Sword,weapon,bedg,2hsw,,yes
+m36,Mythical Mage Staff,weapon,staf,2hsw,,yes
+m37,Mythical Katana,weapon,asnx,2hsw,,yes
+m38,Mythical Arreat's Hatchet,weapon,bjav,1hsw,,yes
+srk,Shuriken,weapon,srkn,1hsw,normal,yes
+fsk,Fūma Shuriken,weapon,srkn,1hsw,exceptional,yes
+kgk,Kagekiri,weapon,srkn,1hsw,elite,yes
+m39,Mythical Kagekiri,weapon,srkn,1hsw,,yes
+m40,Mythical Slayer Axe,weapon,axe,2hsw,,no
+m41,Mythical Thorned Club,weapon,club,1hsw,,no
+m42,Mythical Blessed Scepter,weapon,scep,1hsw,,no
+m43,Mythical Dire Flail,weapon,mace,1hsw,,no
+m44,Mythical Military Hammer,weapon,hamm,1hsw,,no
+m45,Mythical Ancient Maul,weapon,hamm,2hsw,,no
+m46,Mythical Jeweled Edge,weapon,swor,1hsw,,no
+m47,Mythical Ancient Spike,weapon,knif,1hsw,,no
+m48,Mythical Impaler,weapon,spea,2hsw,,no
+m49,Mythical Death Reaper,weapon,pole,2hsw,,no
+m50,Mythical Mystic Staff,weapon,staf,2hsw,,no
+m51,Mythical Raging Knuckle,weapon,knuc,1hsw,,no
+m52,Mythical Wrecking Arm,weapon,knuc,2hsw,,no
+m53,Mythical Matriarchal Bow,weapon,abow,,,no
+m54,Mythical Grand Matron Bow,weapon,abow,,,no
+m55,Mythical Elven Bow,weapon,abow,,,no
+m56,Mythical Matriarchal Spear,weapon,aspe,2hsw,,no
+m57,Mythical Matriarchal Pike,weapon,aspe,2hsw,,no
+m58,Mythical Runic Talons,weapon,h2h2,1hsw,,no
+m59,Mythical Demonic Scythe,weapon,npol,2hsw,,no
+vob,Void Blade,weapon,wswd,2hsw,normal,yes
+nsw,Nether Sword,weapon,wswd,2hsw,exceptional,yes
+abb,Abyssal Blade,weapon,wswd,2hsw,elite,yes
+m61,Mythical Abyssal Blade,weapon,wswd,2hsw,,yes
+cap,Cap,armor,helm,,normal,yes
+skp,Skull Cap,armor,helm,,normal,yes
+hlm,Helm,armor,helm,,normal,yes
+fhl,Full Helm,armor,helm,,normal,yes
+ghm,Great Helm,armor,helm,,normal,yes
+crn,Crown,armor,helm,,normal,yes
+msk,Mask,armor,helm,,normal,yes
+qui,Quilted Armor,armor,tors,,normal,yes
+lea,Leather Armor,armor,tors,,normal,yes
+hla,Hard Leather Armor,armor,tors,,normal,yes
+stu,Studded Leather,armor,tors,,normal,yes
+rng,Ring Mail,armor,tors,,normal,yes
+scl,Scale Mail,armor,tors,,normal,yes
+chn,Chain Mail,armor,tors,,normal,yes
+brs,Breast Plate,armor,tors,,normal,yes
+spl,Splint Mail,armor,tors,,normal,yes
+plt,Plate Mail,armor,tors,,normal,yes
+fld,Field Plate,armor,tors,,normal,yes
+gth,Gothic Plate,armor,tors,,normal,yes
+ful,Full Plate Mail,armor,tors,,normal,yes
+aar,Ancient Armor,armor,tors,,normal,yes
+ltp,Light Plate,armor,tors,,normal,yes
+buc,Buckler,armor,shie,,normal,yes
+sml,Small Shield,armor,shie,,normal,yes
+lrg,Large Shield,armor,shie,,normal,yes
+kit,Kite Shield,armor,shie,,normal,yes
+tow,Tower Shield,armor,shie,,normal,yes
+gts,Gothic Shield,armor,shie,,normal,yes
+lgl,Leather Gloves,armor,glov,,normal,yes
+vgl,Heavy Gloves,armor,glov,,normal,yes
+mgl,Chain Gloves,armor,glov,,normal,yes
+tgl,Light Gauntlets,armor,glov,,normal,yes
+hgl,Gauntlets,armor,glov,,normal,yes
+lbt,Boots,armor,boot,,normal,yes
+vbt,Heavy Boots,armor,boot,,normal,yes
+mbt,Chain Boots,armor,boot,,normal,yes
+tbt,Light Plated Boots,armor,boot,,normal,yes
+hbt,Greaves,armor,boot,,normal,yes
+lbl,Sash,armor,belt,,normal,yes
+vbl,Light Belt,armor,belt,,normal,yes
+mbl,Belt,armor,belt,,normal,yes
+tbl,Heavy Belt,armor,belt,,normal,yes
+hbl,Plated Belt,armor,belt,,normal,yes
+bhm,Bone Helm,armor,helm,,normal,yes
+bsh,Bone Shield,armor,shie,,normal,yes
+spk,Spiked Shield,armor,shie,,normal,yes
+xap,War Hat,armor,helm,,exceptional,yes
+xkp,Sallet,armor,helm,,exceptional,yes
+xlm,Casque,armor,helm,,exceptional,yes
+xhl,Basinet,armor,helm,,exceptional,yes
+xhm,Winged Helm,armor,helm,,exceptional,yes
+xrn,Grand Crown,armor,helm,,exceptional,yes
+xsk,Death Mask,armor,helm,,exceptional,yes
+xui,Ghost Armor,armor,tors,,exceptional,yes
+xea,Serpentskin Armor,armor,tors,,exceptional,yes
+xla,Demonhide Armor,armor,tors,,exceptional,yes
+xtu,Trellised Armor,armor,tors,,exceptional,yes
+xng,Linked Mail,armor,tors,,exceptional,yes
+xcl,Tigulated Mail,armor,tors,,exceptional,yes
+xhn,Mesh Armor,armor,tors,,exceptional,yes
+xrs,Cuirass,armor,tors,,exceptional,yes
+xpl,Russet Armor,armor,tors,,exceptional,yes
+xlt,Templar Coat,armor,tors,,exceptional,yes
+xld,Sharktooth Armor,armor,tors,,exceptional,yes
+xth,Embossed Plate,armor,tors,,exceptional,yes
+xul,Chaos Armor,armor,tors,,exceptional,yes
+xar,Ornate Plate,armor,tors,,exceptional,yes
+xtp,Mage Plate,armor,tors,,exceptional,yes
+xuc,Defender,armor,shie,,exceptional,yes
+xml,Round Shield,armor,shie,,exceptional,yes
+xrg,Scutum,armor,shie,,exceptional,yes
+xit,Dragon Shield,armor,shie,,exceptional,yes
+xow,Pavise,armor,shie,,exceptional,yes
+xts,Ancient Shield,armor,shie,,exceptional,yes
+xlg,Demonhide Gloves,armor,glov,,exceptional,yes
+xvg,Sharkskin Gloves,armor,glov,,exceptional,yes
+xmg,Heavy Bracers,armor,glov,,exceptional,yes
+xtg,Battle Gauntlets,armor,glov,,exceptional,yes
+xhg,War Gauntlets,armor,glov,,exceptional,yes
+xlb,Demonhide Boots,armor,boot,,exceptional,yes
+xvb,Sharkskin Boots,armor,boot,,exceptional,yes
+xmb,Mesh Boots,armor,boot,,exceptional,yes
+xtb,Battle Boots,armor,boot,,exceptional,yes
+xhb,War Boots,armor,boot,,exceptional,yes
+zlb,Demonhide Sash,armor,belt,,exceptional,yes
+zvb,Sharkskin Belt,armor,belt,,exceptional,yes
+zmb,Mesh Belt,armor,belt,,exceptional,yes
+ztb,Battle Belt,armor,belt,,exceptional,yes
+zhb,War Belt,armor,belt,,exceptional,yes
+xh9,Grim Helm,armor,helm,,exceptional,yes
+xsh,Grim Shield,armor,shie,,exceptional,yes
+xpk,Barbed Shield,armor,shie,,exceptional,yes
+dr1,Wolf Head,armor,pelt,,normal,yes
+dr2,Hawk Helm,armor,pelt,,normal,yes
+dr3,Antlers,armor,pelt,,normal,yes
+dr4,Falcon Mask,armor,pelt,,normal,yes
+dr5,Spirit Mask,armor,pelt,,normal,yes
+ba1,Jawbone Cap,armor,phlm,,normal,yes
+ba2,Fanged Helm,armor,phlm,,normal,yes
+ba3,Horned Helm,armor,phlm,,normal,yes
+ba4,Assault Helmet,armor,phlm,,normal,yes
+ba5,Avenger Guard,armor,phlm,,normal,yes
+pa1,Targe,armor,ashd,,normal,yes
+pa2,Rondache,armor,ashd,,normal,yes
+pa3,Heraldic Shield,armor,ashd,,normal,yes
+pa4,Aerin Shield,armor,ashd,,normal,yes
+pa5,Crown Shield,armor,ashd,,normal,yes
+ne1,Preserved Head,armor,head,,normal,yes
+ne2,Zombie Head,armor,head,,normal,yes
+ne3,Unraveller Head,armor,head,,normal,yes
+ne4,Gargoyle Head,armor,head,,normal,yes
+ne5,Demon Head,armor,head,,normal,yes
+ci0,Circlet,armor,circ,,normal,yes
+ci1,Coronet,armor,circ,,exceptional,yes
+ci2,Tiara,armor,circ,,elite,yes
+ci3,Diadem,armor,circ,,elite,yes
+uap,Shako,armor,helm,,elite,no
+ukp,Hydraskull,armor,helm,,elite,no
+ulm,Armet,armor,helm,,elite,no
+uhl,Giant Conch,armor,helm,,elite,no
+uhm,Spired Helm,armor,helm,,elite,no
+urn,Corona,armor,helm,,elite,no
+usk,Demonhead,armor,helm,,elite,no
+uui,Dusk Shroud,armor,tors,,elite,no
+uea,Wyrmhide,armor,tors,,elite,no
+ula,Scarab Husk,armor,tors,,elite,no
+utu,Wire Fleece,armor,tors,,elite,no
+ung,Diamond Mail,armor,tors,,elite,no
+ucl,Loricated Mail,armor,tors,,elite,no
+uhn,Boneweave,armor,tors,,elite,no
+urs,Great Hauberk,armor,tors,,elite,no
+upl,Balrog Skin,armor,tors,,elite,no
+ult,Hellforge Plate,armor,tors,,elite,no
+uld,Kraken Shell,armor,tors,,elite,no
+uth,Lacquered Plate,armor,tors,,elite,no
+uul,Shadow Plate,armor,tors,,elite,no
+uar,Sacred Armor,armor,tors,,elite,no
+utp,Archon Plate,armor,tors,,elite,no
+uuc,Heater,armor,shie,,elite,no
+uml,Luna,armor,shie,,elite,no
+urg,Hyperion,armor,shie,,elite,no
+uit,Monarch,armor,shie,,elite,no
+uow,Aegis,armor,shie,,elite,no
+uts,Ward,armor,shie,,elite,no
+ulg,Bramble Mitts,armor,glov,,elite,no
+uvg,Vampirebone Gloves,armor,glov,,elite,no
+umg,Vambraces,armor,glov,,elite,no
+utg,Crusader Gauntlets,armor,glov,,elite,no
+uhg,Ogre Gauntlets,armor,glov,,elite,no
+ulb,Wyrmhide Boots,armor,boot,,elite,no
+uvb,Scarabshell Boots,armor,boot,,elite,no
+umb,Boneweave Boots,armor,boot,,elite,no
+utb,Mirrored Boots,armor,boot,,elite,no
+uhb,Myrmidon Greaves,armor,boot,,elite,no
+ulc,Spiderweb Sash,armor,belt,,elite,no
+uvc,Vampirefang Belt,armor,belt,,elite,no
+umc,Mithril Coil,armor,belt,,elite,no
+utc,Troll Belt,armor,belt,,elite,no
+uhc,Colossus Girdle,armor,belt,,elite,no
+uh9,Bone Visage,armor,helm,,elite,no
+ush,Troll Nest,armor,shie,,elite,no
+upk,Blade Barrier,armor,shie,,elite,no
+dr6,Alpha Helm,armor,pelt,,exceptional,yes
+dr7,Griffon Headdress,armor,pelt,,exceptional,yes
+dr8,Hunter's Guise,armor,pelt,,exceptional,yes
+dr9,Sacred Feathers,armor,pelt,,exceptional,yes
+dra,Totemic Mask,armor,pelt,,exceptional,yes
+ba6,Jawbone Visor,armor,phlm,,exceptional,yes
+ba7,Lion Helm,armor,phlm,,exceptional,yes
+ba8,Rage Mask,armor,phlm,,exceptional,yes
+ba9,Savage Helmet,armor,phlm,,exceptional,yes
+baa,Slayer Guard,armor,phlm,,exceptional,yes
+pa6,Akaran Targe,armor,ashd,,exceptional,yes
+pa7,Akaran Rondache,armor,ashd,,exceptional,yes
+pa8,Protector Shield,armor,ashd,,exceptional,yes
+pa9,Gilded Shield,armor,ashd,,exceptional,yes
+paa,Royal Shield,armor,ashd,,exceptional,yes
+ne6,Mummified Trophy,armor,head,,exceptional,yes
+ne7,Fetish Trophy,armor,head,,exceptional,yes
+ne8,Sexton Trophy,armor,head,,exceptional,yes
+ne9,Cantor Trophy,armor,head,,exceptional,yes
+nea,Hierophant Trophy,armor,head,,exceptional,yes
+drb,Blood Spirit,armor,pelt,,elite,yes
+drc,Sun Spirit,armor,pelt,,elite,yes
+drd,Earth Spirit,armor,pelt,,elite,yes
+dre,Sky Spirit,armor,pelt,,elite,yes
+drf,Dream Spirit,armor,pelt,,elite,yes
+bab,Carnage Helm,armor,phlm,,elite,yes
+bac,Fury Visor,armor,phlm,,elite,yes
+bad,Destroyer Helm,armor,phlm,,elite,yes
+bae,Conqueror Crown,armor,phlm,,elite,yes
+baf,Guardian Crown,armor,phlm,,elite,yes
+pab,Sacred Targe,armor,ashd,,elite,yes
+pac,Sacred Rondache,armor,ashd,,elite,yes
+pad,Kurast Shield,armor,ashd,,elite,yes
+pae,Zakarum Shield,armor,ashd,,elite,yes
+paf,Vortex Shield,armor,ashd,,elite,yes
+neb,Minion Skull,armor,head,,elite,yes
+neg,Hellspawn Skull,armor,head,,elite,yes
+ned,Overseer Skull,armor,head,,elite,yes
+nee,Succubus Skull,armor,head,,elite,yes
+nef,Bloodlord Skull,armor,head,,elite,yes
+yap,Hood,armor,helm,,elite,yes
+ykp,Fedora,armor,helm,,elite,yes
+ylm,Guardian Helm,armor,helm,,elite,yes
+yhl,Gladiator Helm,armor,helm,,elite,yes
+yhm,Tusk Helm,armor,helm,,elite,yes
+yrn,Royal Crown,armor,helm,,elite,yes
+ysk,Devil Mask,armor,helm,,elite,yes
+yui,Padded Armor,armor,tors,,elite,yes
+yea,Viper Skin,armor,tors,,elite,yes
+yla,Demon Carapace,armor,tors,,elite,yes
+ytu,Gemstoned Armor,armor,tors,,elite,yes
+yng,Heavy Mail,armor,tors,,elite,yes
+ycl,Dragon Scale,armor,tors,,elite,yes
+yhn,Chain Shirt,armor,tors,,elite,yes
+yrs,Chest Guard,armor,tors,,elite,yes
+ypl,Demon Fleece,armor,tors,,elite,yes
+ylt,Plated Cuirass,armor,tors,,elite,yes
+yld,Combat Plate,armor,tors,,elite,yes
+yth,Royal Armor,armor,tors,,elite,yes
+yul,Ceremonial Armor,armor,tors,,elite,yes
+yar,Archaic Armor,armor,tors,,elite,yes
+ytp,Archmage Plate,armor,tors,,elite,yes
+yuc,Petrified Buckler,armor,shie,,elite,yes
+yml,Desert Shield,armor,shie,,elite,yes
+yrg,Giant Buckler,armor,shie,,elite,yes
+yit,Military Shield,armor,shie,,elite,yes
+yow,Royal Guard,armor,shie,,elite,yes
+yts,Body Shield,armor,shie,,elite,yes
+ylg,Spellcaster Gloves,armor,glov,,elite,yes
+yvg,Viper Hands,armor,glov,,elite,yes
+ymg,Sepulcher Gloves,armor,glov,,elite,yes
+ytg,Gladiator Gauntlets,armor,glov,,elite,yes
+yhg,Titan Gauntlets,armor,glov,,elite,yes
+ylb,Rogue Boots,armor,boot,,elite,yes
+yvb,Viper Boots,armor,boot,,elite,yes
+ymb,Sepulcher Boots,armor,boot,,elite,yes
+ytb,Gladiator Boots,armor,boot,,elite,yes
+yhb,Titan Boots,armor,boot,,elite,yes
+alb,Hemp Band,armor,belt,,elite,yes
+avb,Rogue Belt,armor,belt,,elite,yes
+bmb,Merchant Belt,armor,belt,,elite,yes
+atb,Military Belt,armor,belt,,elite,yes
+ahb,Titan Belt,armor,belt,,elite,yes
+yh9,Demon Skull,armor,helm,,elite,yes
+ysh,Demon Shield,armor,shie,,elite,yes
+ypk,Thorned Shield,armor,shie,,elite,yes
+cix,Hachigane,armor,circ,,normal,yes
+eht,Spirit Crown,armor,scrn,,normal,yes
+xht,Ethereal Crown,armor,scrn,,exceptional,yes
+yht,Enchanted Crown,armor,scrn,,elite,yes
+dwc,Dwarven Circlet,armor,helm,,normal,yes
+xdw,Dwarven Faceguard,armor,helm,,exceptional,yes
+ydw,Dwarven Faceplate,armor,helm,,elite,yes
+clk,Cloak,armor,clok,,normal,yes
+xlk,Summoner's Cloak,armor,clok,,exceptional,yes
+ylk,Enchanted Cloak,armor,clok,,elite,yes
+rob,Robe,armor,robe,,normal,yes
+xrb,Mage Robe,armor,robe,,exceptional,yes
+yrb,Archmage Robe,armor,robe,,elite,yes
+shl,Spiked Shoulder,armor,tors,,normal,yes
+xhh,Thorned Armor,armor,tors,,exceptional,yes
+yhh,Spiked Armor,armor,tors,,elite,yes
+elv,Elven Chain,armor,tors,,normal,yes
+xlv,Drow Adamantite Chain,armor,tors,,exceptional,yes
+ylv,Sylvan Chain,armor,tors,,elite,yes
+fts,Fortress Shield,armor,shie,,normal,yes
+xft,Reflection Shield,armor,shie,,exceptional,yes
+yft,Ceremonial Shield,armor,shie,,elite,yes
+irg,Iron Guards,armor,glov,,normal,yes
+xig,Military Guards,armor,glov,,exceptional,yes
+yig,Royal Guards,armor,glov,,elite,yes
+dbt,Crystal Boots,armor,boot,,normal,yes
+xbt,Dimensional Boots,armor,boot,,exceptional,yes
+ybt,Phase Boots,armor,boot,,elite,yes
+msb,Muscle Wrap,armor,belt,,normal,yes
+xms,Giant Wrap,armor,belt,,exceptional,yes
+yms,Herculean Wrap,armor,belt,,elite,yes
+2ap,Cap,armor,helm,,normal,no
+2kp,Skull Cap,armor,helm,,normal,no
+2lm,Helm,armor,helm,,normal,no
+2hl,Full Helm,armor,helm,,normal,no
+2hm,Great Helm,armor,helm,,normal,no
+2rn,Crown,armor,helm,,normal,no
+2sk,Mask,armor,helm,,normal,no
+2ui,Quilted Armor,armor,tors,,normal,no
+2ea,Leather Armor,armor,tors,,normal,no
+2la,Hard Leather Armor,armor,tors,,normal,no
+2tu,Studded Leather,armor,tors,,normal,no
+2ng,Ring Mail,armor,tors,,normal,no
+2cl,Scale Mail,armor,tors,,normal,no
+2hn,Chain Mail,armor,tors,,normal,no
+2rs,Breast Plate,armor,tors,,normal,no
+2pl,Splint Mail,armor,tors,,normal,no
+2lt,Plate Mail,armor,tors,,normal,no
+2ld,Field Plate,armor,tors,,normal,no
+2th,Gothic Plate,armor,tors,,normal,no
+2ul,Full Plate Mail,armor,tors,,normal,no
+2ar,Ancient Armor,armor,tors,,normal,no
+2tp,Light Plate,armor,tors,,normal,no
+2uc,Buckler,armor,shie,,normal,no
+2ml,Small Shield,armor,shie,,normal,no
+2rg,Large Shield,armor,shie,,normal,no
+2it,Kite Shield,armor,shie,,normal,no
+2ow,Tower Shield,armor,shie,,normal,no
+2ts,Gothic Shield,armor,shie,,normal,no
+2lg,Leather Gloves,armor,glov,,normal,no
+2vg,Heavy Gloves,armor,glov,,normal,no
+2mg,Chain Gloves,armor,glov,,normal,no
+2tg,Light Gauntlets,armor,glov,,normal,no
+2hg,Gauntlets,armor,glov,,normal,no
+2lb,Boots,armor,boot,,normal,no
+2vb,Heavy Boots,armor,boot,,normal,no
+2mb,Chain Boots,armor,boot,,normal,no
+2tb,Light Plated Boots,armor,boot,,normal,no
+2hb,Greaves,armor,boot,,normal,no
+3lb,Sash,armor,belt,,normal,no
+3vb,Light Belt,armor,belt,,normal,no
+3mb,Belt,armor,belt,,normal,no
+3tb,Heavy Belt,armor,belt,,normal,no
+3hb,Plated Belt,armor,belt,,normal,no
+2h9,Bone Helm,armor,helm,,normal,no
+2sh,Bone Shield,armor,shie,,normal,no
+2pk,Spiked Shield,armor,shie,,normal,no
+4ap,War Hat,armor,helm,,exceptional,no
+4kp,Sallet,armor,helm,,exceptional,no
+4lm,Casque,armor,helm,,exceptional,no
+4hl,Basinet,armor,helm,,exceptional,no
+4hm,Winged Helm,armor,helm,,exceptional,no
+4rn,Grand Crown,armor,helm,,exceptional,no
+4sk,Death Mask,armor,helm,,exceptional,no
+4ui,Ghost Armor,armor,tors,,exceptional,no
+4ea,Serpentskin Armor,armor,tors,,exceptional,no
+4la,Demonhide Armor,armor,tors,,exceptional,no
+4tu,Trellised Armor,armor,tors,,exceptional,no
+4ng,Linked Mail,armor,tors,,exceptional,no
+4cl,Tigulated Mail,armor,tors,,exceptional,no
+4hn,Mesh Armor,armor,tors,,exceptional,no
+4rs,Cuirass,armor,tors,,exceptional,no
+4pl,Russet Armor,armor,tors,,exceptional,no
+4lt,Templar Coat,armor,tors,,exceptional,no
+4ld,Sharktooth Armor,armor,tors,,exceptional,no
+4th,Embossed Plate,armor,tors,,exceptional,no
+4ul,Chaos Armor,armor,tors,,exceptional,no
+4ar,Ornate Plate,armor,tors,,exceptional,no
+4tp,Mage Plate,armor,tors,,exceptional,no
+4uc,Defender,armor,shie,,exceptional,no
+4ml,Round Shield,armor,shie,,exceptional,no
+4rg,Scutum,armor,shie,,exceptional,no
+4it,Dragon Shield,armor,shie,,exceptional,no
+4ow,Pavise,armor,shie,,exceptional,no
+4ts,Ancient Shield,armor,shie,,exceptional,no
+4lg,Demonhide Gloves,armor,glov,,exceptional,no
+4vg,Sharkskin Gloves,armor,glov,,exceptional,no
+4mg,Heavy Bracers,armor,glov,,exceptional,no
+4tg,Battle Gauntlets,armor,glov,,exceptional,no
+4hg,War Gauntlets,armor,glov,,exceptional,no
+4lb,Demonhide Boots,armor,boot,,exceptional,no
+4vb,Sharkskin Boots,armor,boot,,exceptional,no
+4mb,Mesh Boots,armor,boot,,exceptional,no
+4tb,Battle Boots,armor,boot,,exceptional,no
+4hb,War Boots,armor,boot,,exceptional,no
+5lb,Demonhide Sash,armor,belt,,exceptional,no
+5vb,Sharkskin Belt,armor,belt,,exceptional,no
+5mb,Mesh Belt,armor,belt,,exceptional,no
+5tb,Battle Belt,armor,belt,,exceptional,no
+5hb,War Belt,armor,belt,,exceptional,no
+4h9,Grim Helm,armor,helm,,exceptional,no
+4sh,Grim Shield,armor,shie,,exceptional,no
+4pk,Barbed Shield,armor,shie,,exceptional,no
+qi2,Tiara,armor,circ,,exceptional,no
+qi3,Diadem,armor,circ,,elite,no
+qba,Slayer Guard,armor,phlm,,exceptional,no
+qda,Totemic Mask,armor,pelt,,exceptional,no
+qna,Hierophant Trophy,armor,head,,exceptional,no
+qp9,Gilded Shield,armor,ashd,,exceptional,no
+qbc,Fury Visor,armor,phlm,,elite,no
+qbd,Destroyer Helm,armor,phlm,,elite,no
+qbe,Conqueror Crown,armor,phlm,,elite,no
+qdb,Blood Spirit,armor,pelt,,elite,no
+qdd,Earth Spirit,armor,pelt,,elite,no
+qde,Sky Spirit,armor,pelt,,elite,no
+qne,Succubus Skull,armor,head,,elite,no
+qnf,Bloodlord Skull,armor,head,,elite,no
+qpc,Sacred Rondache,armor,ashd,,elite,no
+qpe,Zakarum Shield,armor,ashd,,elite,no
+ci4,Faceguard,armor,circ,,exceptional,yes
+qdf,Hunter's Guise,armor,pelt,,,yes
+m06,Mythical Gemstoned Armor,armor,tors,,,yes
+m10,Mythical Hemp Band,armor,belt,,,yes
+m15,Mythical Dream Spirit,armor,pelt,,,yes
+m20,Mythical Diadem,armor,circ,,,yes
+br2,Breast Plate,armor,tors,,normal,no
+sp2,Spiked Shield,armor,shie,,normal,no
+m60,Mythical Light Plate,armor,tors,,,yes
+wa1,Old Book,armor,grim,,normal,yes
+wa2,Tome,armor,grim,,normal,yes
+wa3,Codex,armor,grim,,normal,yes
+wa4,Compendium,armor,grim,,normal,yes
+wa5,Grimoire,armor,grim,,normal,yes
+wa6,Burnt Text,armor,grim,,exceptional,yes
+wa7,Dark Tome,armor,grim,,exceptional,yes
+wa8,Dark Codex,armor,grim,,exceptional,yes
+wa9,Possessed Compendium,armor,grim,,exceptional,yes
+waa,Possessed Grimoire,armor,grim,,exceptional,yes
+wab,Forgotten Volume,armor,grim,,elite,yes
+wac,Occult Tome,armor,grim,,elite,yes
+wad,Occult Codex,armor,grim,,elite,yes
+wae,Blasphemous Compendium,armor,grim,,elite,yes
+waf,Blasphemous Grimoire,armor,grim,,elite,yes
+w1a,Burnt Text,armor,grim,,exceptional,no
+w1b,Occult Tome,armor,grim,,elite,no
+w1c,Blasphemous Compendium,armor,grim,,elite,no
+w1d,Blasphemous Grimoire,armor,grim,,elite,no
+elx,Elixir,misc,cube,,,yes
+hpo,Elixir,misc,hpot,,,no
+mpo,Elixir,misc,mpot,,,no
+hpf,Elixir,misc,hpot,,,no
+mpf,Elixir,misc,mpot,,,no
+vps,*Stam,misc,spot,upot,,yes
+yps,*Anti,misc,apot,upot,,yes
+rvs,*25%,misc,rpot,,,yes
+rvl,*50%,misc,rpot,,,yes
+wms,*Thaw,misc,wpot,upot,,yes
+tbk,Tome of Town Portal,misc,book,,,yes
+ibk,Tome of Identify,misc,book,,,yes
+amu,Amulet,misc,amul,,,yes
+vip,Top of the Horadric Staff,misc,vamu,,,no
+rin,Ring,misc,ring,,,yes
+gld,Gold,misc,gold,,,yes
+bks,Scroll of Inifuss,misc,ques,,,no
+bkd,Key to the Cairn Stones,misc,ques,,,no
+aqv,Arrows,misc,bowq,,,no
+tch,Torch,misc,torc,,,no
+cqv,Bolts,misc,xboq,,,no
+tsc,+TP,misc,scro,,,yes
+isc,+ID,misc,scro,,,yes
+hrt,Heart,misc,body,,,yes
+brz,Brain,misc,body,,,yes
+jaw,Jawbone,misc,body,,,yes
+eyz,Eye,misc,body,,,yes
+hrn,Horn,misc,body,,,yes
+tal,Tail,misc,body,,,yes
+flg,Flag,misc,body,,,yes
+fng,Fang,misc,body,,,yes
+qll,Quill,misc,body,,,yes
+sol,Soul,misc,body,,,yes
+scz,Scalp,misc,body,,,yes
+spe,Spleen,misc,body,,,yes
+key,Key,misc,key,,,yes
+luv,The Black Tower Key,misc,key,,,no
+xyz,Potion of Life,misc,ques,,,no
+j34,A Jade Figurine,misc,ques,,,no
+g34,The Golden Bird,misc,ques,,,no
+bbb,Lam Esen's Tome,misc,ques,,,no
+box,Horadric Cube,misc,ques,,,no
+tr1,Horadric Scroll,misc,ques,,,no
+mss,Mephisto's Soulstone,misc,ques,,,no
+ass,Book of Skill,misc,ques,,,no
+qey,Khalim's Eye,misc,ques,,,no
+qhr,Khalim's Heart,misc,ques,,,no
+qbr,Khalim's Brain,misc,ques,,,no
+ear,Ear,misc,play,,,no
+hp1,*HP1,misc,hpot,,,yes
+hp2,*HP2,misc,hpot,,,yes
+hp3,*HP3,misc,hpot,,,yes
+hp4,*HP4,misc,hpot,,,yes
+hp5,*HP5,misc,hpot,,,yes
+mp1,*MP1,misc,mpot,,,yes
+mp2,*MP2,misc,mpot,,,yes
+mp3,*MP3,misc,mpot,,,yes
+mp4,*MP4,misc,mpot,,,yes
+mp5,*MP5,misc,mpot,,,yes
+gcv,Chipped Amethyst,misc,gema,gem0,,yes
+gfv,Flawed Amethyst,misc,gema,gem1,,yes
+gsv,Amethyst,misc,gema,gem2,,yes
+gzv,Flawless Amethyst,misc,gema,gem3,,yes
+gpv,Blemished Amethyst,misc,gema,gem4,,yes
+gvb,Perfect Amethyst,misc,gema,gem5,,yes
+gcy,Chipped Topaz,misc,gemt,gem0,,yes
+gfy,Flawed Topaz,misc,gemt,gem1,,yes
+gsy,Topaz,misc,gemt,gem2,,yes
+gly,Flawless Topaz,misc,gemt,gem3,,yes
+gpy,Blemished Topaz,misc,gemt,gem4,,yes
+gyb,Perfect Topaz,misc,gemt,gem5,,yes
+gcb,Chipped Sapphire,misc,gems,gem0,,yes
+gfb,Flawed Sapphire,misc,gems,gem1,,yes
+gsb,Sapphire,misc,gems,gem2,,yes
+glb,Flawless Sapphire,misc,gems,gem3,,yes
+gpb,Blemished Sapphire,misc,gems,gem4,,yes
+gbb,Perfect Sapphire,misc,gems,gem5,,yes
+gcg,Chipped Emerald,misc,geme,gem0,,yes
+gfg,Flawed Emerald,misc,geme,gem1,,yes
+gsg,Emerald,misc,geme,gem2,,yes
+glg,Flawless Emerald,misc,geme,gem3,,yes
+gpg,Blemished Emerald,misc,geme,gem4,,yes
+ggb,Perfect Emerald,misc,geme,gem5,,yes
+gcr,Chipped Ruby,misc,gemr,gem0,,yes
+gfr,Flawed Ruby,misc,gemr,gem1,,yes
+gsr,Ruby,misc,gemr,gem2,,yes
+glr,Flawless Ruby,misc,gemr,gem3,,yes
+gpr,Blemished Ruby,misc,gemr,gem4,,yes
+grb,Perfect Ruby,misc,gemr,gem5,,yes
+gcw,Chipped Diamond,misc,gemd,gem0,,yes
+gfw,Flawed Diamond,misc,gemd,gem1,,yes
+gsw,Diamond,misc,gemd,gem2,,yes
+glw,Flawless Diamond,misc,gemd,gem3,,yes
+gpw,Blemished Diamond,misc,gemd,gem4,,yes
+gwb,Perfect Diamond,misc,gemd,gem5,,yes
+skc,Chipped Skull,misc,gemz,gem0,,yes
+skf,Flawed Skull,misc,gemz,gem1,,yes
+sku,Skull,misc,gemz,gem2,,yes
+skl,Flawless Skull,misc,gemz,gem3,,yes
+skz,Blemished Skull,misc,gemz,gem4,,yes
+skb,Perfect Skull,misc,gemz,gem5,,yes
+gck,Chipped Obsidian,misc,gemk,gem0,,yes
+gfk,Flawed Obsidian,misc,gemk,gem1,,yes
+gsk,Obsidian,misc,gemk,gem2,,yes
+gzk,Flawless Obsidian,misc,gemk,gem3,,yes
+gpk,Blemished Obsidian,misc,gemk,gem4,,yes
+gbk,Perfect Obsidian,misc,gemk,gem5,,yes
+hrb,Herb,misc,herb,,,no
+cm1,Small Charm,misc,scha,,,yes
+cm2,Large Charm,misc,mcha,,,yes
+cm3,Grand Charm,misc,lcha,,,yes
+rps,Elixir,misc,hpot,,,no
+rpl,Elixir,misc,hpot,,,no
+bps,Elixir,misc,mpot,,,no
+bpl,Elixir,misc,mpot,,,no
+r51,El Rune,misc,rune,,,yes
+r52,Eld Rune,misc,rune,,,yes
+r53,Tir Rune,misc,rune,,,yes
+r54,Nef Rune,misc,rune,,,yes
+r55,Eth Rune,misc,rune,,,yes
+r56,Ith Rune,misc,rune,,,yes
+r57,Tal Rune,misc,rune,,,yes
+r58,Ral Rune,misc,rune,,,yes
+r59,Ort Rune,misc,rune,,,yes
+r60,Thul Rune,misc,rune,,,yes
+r61,Amn Rune,misc,rune,,,yes
+r62,Sol Rune,misc,rune,,,yes
+r63,Shael Rune,misc,rune,,,yes
+r64,Dol Rune,misc,rune,,,yes
+r65,Hel Rune,misc,rune,,,yes
+r66,Io Rune,misc,rune,,,yes
+r67,Lum Rune,misc,rune,,,yes
+r68,Ko Rune,misc,rune,,,yes
+r69,Fal Rune,misc,rune,,,yes
+r70,Lem Rune,misc,rune,,,yes
+r71,Pul Rune,misc,rune,,,yes
+r72,Um Rune,misc,rune,,,yes
+r73,Mal Rune,misc,rune,,,yes
+r74,Ist Rune,misc,rune,,,yes
+r75,Gul Rune,misc,rune,,,yes
+r76,Vex Rune,misc,rune,,,yes
+r77,Ohm Rune,misc,rune,,,yes
+r78,Lo Rune,misc,rune,,,yes
+r79,Sur Rune,misc,rune,,,yes
+r80,Ber Rune,misc,rune,,,yes
+r81,Jah Rune,misc,rune,,,yes
+r82,Cham Rune,misc,rune,,,yes
+r83,Zod Rune,misc,rune,,,yes
+jew,Jewel,misc,jewl,,,yes
+ice,Malah's Potion,misc,ques,,,no
+0sc,Scroll of Knowledge,misc,scro,,,yes
+tr2,Scroll of Resistance,misc,ques,,,no
+pk1,Key of Terror,misc,ques,,,yes
+pk2,Key of Hate,misc,ques,,,yes
+pk3,Key of Destruction,misc,ques,,,yes
+dhn,Diablo's Horn,misc,ques,,,yes
+bey,Baal's Eye,misc,ques,,,yes
+mbr,Mephisto's Brain,misc,ques,,,yes
+toa,Token of Absolution,misc,hpot,,,yes
+tes,Twisted Essence of Suffering,misc,ques,,,yes
+ceh,Charged Essence of Hatred,misc,ques,,,yes
+bet,Burning Essence of Terror,misc,ques,,,yes
+fed,Festering Essence of Destruction,misc,ques,,,yes
+std,Standard of Heroes,misc,ques,,,yes
+map,Maple Leaf,misc,cube,,,yes
+sss,Spider's Silk,misc,dstn,,,yes
+ggg,Crushed Gem,misc,dstn,,,yes
+eee,Blackmoor,misc,dstn,,,yes
+hly,Holy Symbol,misc,dstn,,,yes
+hh2,Forging Hammer,misc,dstn,,,yes
+ttt,Tyranium Ore,misc,dstn,,,yes
+vvv,Void Shard,misc,dstn,,,yes
+ppp,Dragon Stone,misc,dstn,,,yes
+ddd,Ancient Decipherer,misc,cube,,,yes
+sdo,Socket Donut,misc,cube,,,yes
+rnd,Randomizing Stone,misc,rstn,,,yes
+an0,Unique Stone (nor),misc,cube,,,yes
+an1,Unique Stone (exc),misc,cube,,,yes
+an2,Unique Stone (eli),misc,cube,,,yes
+an3,Green Aura Stone,misc,cube,,,yes
+an4,Red Aura Stone,misc,cube,,,yes
+an5,Violet Aura Stone,misc,cube,,,yes
+an6,Yellow Aura Stone,misc,cube,,,yes
+an7,Black Aura Stone,misc,cube,,,yes
+an8,White Aura Stone,misc,cube,,,yes
+an9,Blue Aura Stone,misc,cube,,,yes
+a10,Orange Aura Stone,misc,cube,,,yes
+yyy,Cookbook,misc,body,,,yes
+zzz,Steak,misc,body,,,yes
+00g,Griswold's Hand,misc,cube,,,no
+00t,Treehead WoodFist's Arm,misc,cube,,,no
+00r,Radament's Head,misc,cube,,,no
+00h,Hephasto's Hand,misc,cube,,,no
+fkn,Fake Note,misc,cube,,,yes
+po1,Potion of Heroism,misc,poti,,,yes
+po2,Potion of Super-Heroism,misc,poti,,,yes
+po3,Flask of Renewal,misc,poti,,,yes
+po4,Nirvana Grass,misc,poti,,,yes
+rn2,Ring,misc,ring,,,no
+au2,Amulet,misc,amul,,,no
+rn9,Ring,misc,ring,,,no
+au9,Amulet,misc,amul,,,yes
+zrn,Amazonian Loop,misc,zrin,,,yes
+srn,Sorcerer's Band,misc,srin,,,yes
+nrn,Necromancer's Stone,misc,nrin,,,yes
+prn,Paladic Halo,misc,prin,,,yes
+brg,Barbaric Hoop,misc,brin,,,yes
+drn,Druid's Seal,misc,drin,,,yes
+arn,Assassin's Spiral,misc,arin,,,yes
+wrn,Warlock's Sigil,misc,wrin,,,yes
+zam,Amazonian Pin,misc,zamu,,,yes
+sam,Sorcerer's Talisman,misc,samu,,,yes
+nam,Death's Locket,misc,namu,,,yes
+pam,Holy Pendant,misc,pamu,,,yes
+bam,Totemic Pebble,misc,bamu,,,yes
+dam,Druidic Necklace,misc,damu,,,yes
+aam,Assassin's Choker,misc,aamu,,,yes
+wam,Warlock's Pendant,misc,wamu,,,yes
+cm4,Odd Charm,misc,ocha,,,yes
+cm5,Square Charm,misc,qcha,,,no
+cm6,Odd Charm,misc,ocha,,,no
+cm9,Veteran's Odd Charm,misc,xcha,,,no
+r01,I Rune,misc,rune,,,yes
+r02,U Rune,misc,rune,,,yes
+r03,Shi Rune,misc,rune,,,yes
+r04,Ka Rune,misc,rune,,,yes
+r05,N Rune,misc,rune,,,yes
+r06,Ku Rune,misc,rune,,,yes
+r07,Yo Rune,misc,rune,,,yes
+r08,Ki Rune,misc,rune,,,yes
+r09,Ri Rune,misc,rune,,,yes
+r10,Mi Rune,misc,rune,,,yes
+r11,Ya Rune,misc,rune,,,yes
+r12,A Rune,misc,rune,,,yes
+r13,Tsu Rune,misc,rune,,,yes
+r14,Chi Rune,misc,rune,,,yes
+r15,Sa Rune,misc,rune,,,yes
+r16,Yu Rune,misc,rune,,,yes
+r17,Ke Rune,misc,rune,,,yes
+r18,E Rune,misc,rune,,,yes
+r19,Ko Rune,misc,rune,,,yes
+r20,Ra Rune,misc,rune,,,yes
+r21,O Rune,misc,rune,,,yes
+r22,Ho Rune,misc,rune,,,yes
+r23,Me Rune,misc,rune,,,yes
+r24,Ru Rune,misc,rune,,,yes
+r25,Ta Rune,misc,rune,,,yes
+r26,To Rune,misc,rune,,,yes
+r27,Wa Rune,misc,rune,,,yes
+r28,Ha Rune,misc,rune,,,yes
+r29,Na Rune,misc,rune,,,yes
+r30,Ni Rune,misc,rune,,,yes
+r31,Se Rune,misc,rune,,,yes
+r32,Fu Rune,misc,rune,,,yes
+r33,Ma Rune,misc,rune,,,yes
+r34,Hi Rune,misc,rune,,,yes
+r35,Mo Rune,misc,rune,,,yes
+r36,No Rune,misc,rune,,,yes
+r37,Te Rune,misc,rune,,,yes
+r38,Ro Rune,misc,rune,,,yes
+r39,So Rune,misc,rune,,,yes
+r40,Mu Rune,misc,rune,,,yes
+r41,Ne Rune,misc,rune,,,yes
+r42,Re Rune,misc,rune,,,yes
+r43,Su Rune,misc,rune,,,yes
+r44,He Rune,misc,rune,,,yes
+r45,Nu Rune,misc,rune,,,yes
+r46,Wo Rune,misc,rune,,,yes
+kv0,Gem Can,misc,can1,,,yes
+ky0,Gem Can,misc,can1,,,yes
+kb0,Gem Can,misc,can1,,,yes
+kg0,Gem Can,misc,can1,,,yes
+kr0,Gem Can,misc,can1,,,yes
+kw0,Gem Can,misc,can1,,,yes
+ks0,Gem Can,misc,can1,,,yes
+kk0,Gem Can,misc,can1,,,yes
+xu0,Crystal Can,misc,can9,,,yes
+xu1,Crystal Can,misc,can9,,,yes
+xu2,Crystal Can,misc,can9,,,yes
+xu3,Crystal Can,misc,can9,,,yes
+xu4,Crystal Can,misc,can9,,,yes
+xu5,Crystal Can,misc,can9,,,yes
+xu6,Crystal Can,misc,can9,,,yes
+xu7,Crystal Can,misc,can9,,,yes
+xu8,Crystal Can,misc,can9,,,yes
+xu9,Crystal Can,misc,can9,,,yes
+xux,Crystal Can,misc,can9,,,yes
+xuy,Crystal Can,misc,can9,,,yes
+ko0,Can Opener,misc,cube,,,yes
+ko1,Can Opener,misc,cube,,,yes
+ko2,Can Opener,misc,cube,,,yes
+ko3,Can Opener,misc,cube,,,yes
+ko4,Can Opener,misc,cube,,,yes
+ko5,Can Opener,misc,cube,,,yes
+s01,Rune Stocker,misc,can2,,,yes
+s02,Rune Stocker,misc,can2,,,yes
+s03,Rune Stocker,misc,can2,,,yes
+s04,Rune Stocker,misc,can2,,,yes
+s05,Rune Stocker,misc,can2,,,yes
+s06,Rune Stocker,misc,can2,,,yes
+s07,Rune Stocker,misc,can2,,,yes
+s08,Rune Stocker,misc,can2,,,yes
+s09,Rune Stocker,misc,can2,,,yes
+s10,Rune Stocker,misc,can2,,,yes
+s11,Rune Stocker,misc,can2,,,yes
+s12,Rune Stocker,misc,can2,,,yes
+s13,Rune Stocker,misc,can2,,,yes
+s14,Rune Stocker,misc,can2,,,yes
+s15,Rune Stocker,misc,can2,,,yes
+s16,Rune Stocker,misc,can2,,,yes
+s17,Rune Stocker,misc,can2,,,yes
+s18,Rune Stocker,misc,can2,,,yes
+s19,Rune Stocker,misc,can2,,,yes
+s20,Rune Stocker,misc,can2,,,yes
+s21,Rune Stocker,misc,can2,,,yes
+s22,Rune Stocker,misc,can2,,,yes
+s23,Rune Stocker,misc,can2,,,yes
+s24,Rune Stocker,misc,can2,,,yes
+s25,Rune Stocker,misc,can2,,,yes
+s26,Rune Stocker,misc,can2,,,yes
+s27,Rune Stocker,misc,can2,,,yes
+s28,Rune Stocker,misc,can2,,,yes
+s29,Rune Stocker,misc,can2,,,yes
+s30,Rune Stocker,misc,can2,,,yes
+s31,Rune Stocker,misc,can2,,,yes
+s32,Rune Stocker,misc,can2,,,yes
+s33,Rune Stocker,misc,can2,,,yes
+s34,Rune Stocker,misc,can2,,,yes
+s35,Rune Stocker,misc,can2,,,yes
+s36,Rune Stocker,misc,can2,,,yes
+s37,Rune Stocker,misc,can2,,,yes
+s38,Rune Stocker,misc,can2,,,yes
+s39,Rune Stocker,misc,can2,,,yes
+s40,Rune Stocker,misc,can2,,,yes
+s41,Rune Stocker,misc,can2,,,yes
+s42,Rune Stocker,misc,can2,,,yes
+s43,Rune Stocker,misc,can2,,,yes
+s44,Rune Stocker,misc,can2,,,yes
+s45,Rune Stocker,misc,can2,,,yes
+s46,Rune Stocker,misc,can2,,,yes
+s50,Rune Stocker,misc,can2,,,yes
+t01,Rerolling Orb,misc,can7,,,yes
+t02,Rerolling Orb,misc,can7,,,yes
+t03,Rerolling Orb,misc,can7,,,yes
+t04,Rerolling Orb,misc,can7,,,yes
+t05,Rerolling Orb,misc,can7,,,yes
+t06,Rerolling Orb,misc,can7,,,yes
+t07,Rerolling Orb,misc,can7,,,yes
+t08,Rerolling Orb,misc,can7,,,yes
+t09,Rerolling Orb,misc,can7,,,yes
+t10,Rerolling Orb,misc,can7,,,yes
+t11,Rerolling Orb,misc,can7,,,yes
+t12,Rerolling Orb,misc,can7,,,yes
+t13,Rerolling Orb,misc,can7,,,yes
+t14,Rerolling Orb,misc,can7,,,yes
+t15,Rerolling Orb,misc,can7,,,yes
+t16,Rerolling Orb,misc,can7,,,yes
+t51,Multi Stocker,misc,can8,,,yes
+t52,Multi Stocker,misc,can8,,,yes
+t53,Multi Stocker,misc,can8,,,yes
+t54,Multi Stocker,misc,can8,,,yes
+t55,Multi Stocker,misc,can8,,,yes
+t56,Multi Stocker,misc,can8,,,yes
+t57,Multi Stocker,misc,can8,,,yes
+t58,Multi Stocker,misc,can8,,,yes
+t59,Multi Stocker,misc,can8,,,yes
+t60,Multi Stocker,misc,can8,,,yes
+t61,Multi Stocker,misc,can8,,,yes
+t62,Multi Stocker,misc,can8,,,yes
+t63,Multi Stocker,misc,can8,,,yes
+t64,Multi Stocker,misc,can8,,,yes
+t65,Multi Stocker,misc,can8,,,yes
+t66,Multi Stocker,misc,can8,,,yes
+t67,Multi Stocker,misc,can8,,,yes
+t68,Multi Stocker,misc,can8,,,yes
+t69,Multi Stocker,misc,can8,,,yes
+t70,Multi Stocker,misc,can8,,,yes
+t71,Multi Stocker,misc,can8,,,yes
+t72,Multi Stocker,misc,can8,,,yes
+t73,Multi Stocker,misc,can8,,,yes
+t74,Multi Stocker,misc,can8,,,yes
+t75,Multi Stocker,misc,can8,,,yes
+t76,Multi Stocker,misc,can8,,,yes
+cx1,Small Charm,misc,scha,,,yes
+cx2,Large Charm,misc,mcha,,,yes
+cx3,Grand Charm,misc,lcha,,,yes
+qqq,Anvil Stone,misc,cube,,,yes
+cm7,Large Charm,misc,xcha,,,yes
+dfc,Devil's Food,misc,cube,,,yes
+t17,Rerolling Orb,misc,can7,,,yes
+cm8,Noob's Odd Charm,misc,xcha,,,yes
+ag0,Ancient's Gift,misc,cube,,,yes
+ag1,Ancient's Gift,misc,cube,,,yes
+ag2,Ancient's Gift,misc,cube,,,yes
+ag8,Starter Pack,misc,cube,,,yes
+ag9,Small Charm,misc,cube,,,yes
+xr0,Chipped Frozen Soul,misc,rune,,,yes
+xr1,Chipped Shadow Quartz,misc,rune,,,yes
+xr2,Chipped Bleeding Stone,misc,rune,,,yes
+xr3,Chipped Burning Sulphur,misc,rune,,,yes
+xr4,Chipped Dark Azurite,misc,rune,,,yes
+xr5,Chipped Bitter Peridot,misc,rune,,,yes
+xr6,Chipped Pulsing Opal,misc,rune,,,yes
+xr7,Chipped Enigmatic Cinnabar,misc,rune,,,yes
+xr8,Chipped Tomb Jade,misc,rune,,,yes
+xr9,Chipped Solid Mercury,misc,rune,,,yes
+xrx,Chipped Storm Amber,misc,rune,,,yes
+xry,Chipped Tainted Tourmaline,misc,rune,,,yes
+xt0,Frozen Soul,misc,rune,,,yes
+xt1,Shadow Quartz,misc,rune,,,yes
+xt2,Bleeding Stone,misc,rune,,,yes
+xt3,Burning Sulphur,misc,rune,,,yes
+xt4,Dark Azurite,misc,rune,,,yes
+xt5,Bitter Peridot,misc,rune,,,yes
+xt6,Pulsing Opal,misc,rune,,,yes
+xt7,Enigmatic Cinnabar,misc,rune,,,yes
+xt8,Tomb Jade,misc,rune,,,yes
+xt9,Solid Mercury,misc,rune,,,yes
+xtx,Storm Amber,misc,rune,,,yes
+xty,Tainted Tourmaline,misc,rune,,,yes
+ore,Ore,misc,rock,,,yes
+r48,Fu Rune,misc,rune,,,no
+r50,Null Rune,misc,rune,,,yes
+r84,Moon Rune,misc,rune,,,yes
+r85,Fire Rune,misc,rune,,,yes
+r86,Water Rune,misc,rune,,,yes
+r87,Wood Rune,misc,rune,,,yes
+r88,Metal Rune,misc,rune,,,yes
+r89,Earth Rune,misc,rune,,,yes
+r90,Sun Rune,misc,rune,,,yes
+r91,Thunder Rune,misc,rune,,,yes
+r92,Wind Rune,misc,rune,,,yes
+r93,Dragon Rune,misc,rune,,,yes
+r94,Life Rune,misc,rune,,,yes
+r95,Death Rune,misc,rune,,,yes
+r96,Heaven Rune,misc,rune,,,yes
+r97,God Rune,misc,rune,,,yes
+me0,Magic Eraser,misc,cube,,,no
+me1,Magic Eraser,misc,cube,,,yes
+me2,Magic Eraser,misc,cube,,,yes
+me3,Magic Eraser,misc,cube,,,yes
+me4,Magic Eraser,misc,cube,,,yes
+me5,Magic Eraser,misc,cube,,,yes
+me6,Magic Eraser,misc,cube,,,yes
+me7,Magic Eraser,misc,cube,,,yes
+me8,Magic Eraser,misc,cube,,,yes
+t18,Rerolling Orb,misc,can7,,,yes
+t19,Rerolling Orb,misc,can7,,,yes
+t20,Rerolling Orb,misc,can7,,,yes
+t21,Rerolling Orb,misc,can7,,,yes
+t22,Rerolling Orb,misc,can7,,,yes
+t23,Rerolling Orb,misc,can7,,,yes
+t24,Rerolling Orb,misc,can7,,,yes
+t25,Rerolling Orb,misc,can7,,,yes
+t26,Rerolling Orb,misc,can7,,,yes
+t27,Rerolling Orb,misc,can7,,,yes
+t28,Rerolling Orb,misc,can7,,,yes
+t29,Rerolling Orb,misc,can7,,,yes
+t30,Rerolling Orb,misc,can7,,,yes
+6gv,Perfect Amethyst (6 Pack),misc,gm6p,,,yes
+6gy,Perfect Topaz (6 Pack),misc,gm6p,,,yes
+6gb,Perfect Sapphire (6 Pack),misc,gm6p,,,yes
+6gg,Perfect Emerald (6 Pack),misc,gm6p,,,yes
+6gr,Perfect Ruby (6 Pack),misc,gm6p,,,yes
+6gw,Perfect Diamond (6 Pack),misc,gm6p,,,yes
+6sk,Perfect Skull (6 Pack),misc,gm6p,,,yes
+6gk,Perfect Obsidian (6 Pack),misc,gm6p,,,yes
+cx0,Small Charm,misc,xcha,,,no
+xl0,Flawed Frozen Soul,misc,rune,,,yes
+xl1,Flawed Shadow Quartz,misc,rune,,,yes
+xl2,Flawed Bleeding Stone,misc,rune,,,yes
+xl3,Flawed Burning Sulphur,misc,rune,,,yes
+xl4,Flawed Dark Azurite,misc,rune,,,yes
+xl5,Flawed Bitter Peridot,misc,rune,,,yes
+xl6,Flawed Pulsing Opal,misc,rune,,,yes
+xl7,Flawed Enigmatic Cinnabar,misc,rune,,,yes
+xl8,Flawed Tomb Jade,misc,rune,,,yes
+xl9,Flawed Solid Mercury,misc,rune,,,yes
+xlx,Flawed Storm Amber,misc,rune,,,yes
+xly,Flawed Tainted Tourmaline,misc,rune,,,yes
+cm7n,Damage Augmenter,misc,xcha,,,no
+elk,Elixir of Skill,misc,ques,,,yes
+el2,Elixir of Skill,misc,ques,,,yes
+ek2,Elixir of Skill2,misc,ques,,,yes
+01l,Ancient Decal (I -> El),misc,coup,,,yes
+02l,Ancient Decal (U -> Eld),misc,coup,,,yes
+03l,Ancient Decal (Shi -> Tir),misc,coup,,,yes
+04l,Ancient Decal (Ka -> Nef),misc,coup,,,yes
+05l,Ancient Decal (N -> Eth),misc,coup,,,yes
+06l,Ancient Decal (Ku -> Ith),misc,coup,,,yes
+07l,Ancient Decal (Yo -> Tal),misc,coup,,,yes
+08l,Ancient Decal (Ki -> Ral),misc,coup,,,yes
+09l,Ancient Decal (Ri -> Ort),misc,coup,,,yes
+10l,Ancient Decal (Mi -> Thul),misc,coup,,,yes
+11l,Ancient Decal (Ya -> Amn),misc,coup,,,yes
+12l,Ancient Decal (A -> Sol),misc,coup,,,yes
+13l,Ancient Decal (Tsu -> Shael),misc,coup,,,yes
+14l,Ancient Decal (Chi -> Dol),misc,coup,,,yes
+15l,Ancient Decal (Sa -> Hel),misc,coup,,,yes
+16l,Ancient Decal (Yu -> Io),misc,coup,,,yes
+17l,Ancient Decal (Ke -> Lum),misc,coup,,,yes
+18l,Ancient Decal (E -> Ko),misc,coup,,,yes
+19l,Ancient Decal (Ko -> Fal),misc,coup,,,yes
+20l,Ancient Decal (Ra -> Lem),misc,coup,,,yes
+21l,Ancient Decal (Ho -> Pul),misc,coup,,,yes
+22l,Ancient Decal (Ru -> Um),misc,coup,,,yes
+23l,Ancient Decal (To -> Mal),misc,coup,,,yes
+24l,Ancient Decal (Ha -> Ist),misc,coup,,,yes
+25l,Ancient Decal (Ni -> Gul),misc,coup,,,yes
+26l,Ancient Decal (Fu -> Vex),misc,coup,,,yes
+27l,Ancient Decal (Hi -> Ohm),misc,coup,,,yes
+28l,Ancient Decal (No -> Lo),misc,coup,,,yes
+29l,Ancient Decal (Ro -> Sur),misc,coup,,,yes
+30l,Ancient Decal (Mu -> Ber),misc,coup,,,yes
+31l,Ancient Decal (Re -> Jah),misc,coup,,,yes
+32l,Ancient Decal (He -> Cham),misc,coup,,,yes
+33l,Ancient Decal (Wo -> Zod),misc,coup,,,yes
+01a,Ancient Scroll 1,misc,asc1,,,no
+02a,Ancient Scroll 2,misc,asc1,,,no
+03a,Ancient Scroll 3,misc,asc1,,,no
+04a,Ancient Scroll 4,misc,asc1,,,no
+05a,Ancient Scroll 5,misc,asc1,,,no
+06a,Ancient Scroll 6,misc,asc1,,,no
+07a,Ancient Scroll 7,misc,asc1,,,no
+08a,Ancient Scroll 8,misc,asc1,,,no
+09a,Ancient Scroll 9,misc,asc1,,,no
+10a,Ancient Scroll 10,misc,asc1,,,no
+11a,Ancient Scroll 11,misc,asc1,,,no
+12a,Ancient Scroll 12,misc,asc1,,,no
+13a,Ancient Scroll 13,misc,asc1,,,no
+14a,Ancient Scroll 14,misc,asc1,,,no
+15a,Ancient Scroll 15,misc,asc1,,,no
+16a,Ancient Scroll 16,misc,asc1,,,no
+17a,Ancient Scroll 17,misc,asc1,,,no
+18a,Ancient Scroll 18,misc,asc1,,,no
+19a,Ancient Scroll 19,misc,asc1,,,no
+20a,Ancient Scroll 20,misc,asc1,,,no
+21a,Ancient Scroll 21,misc,asc1,,,no
+22a,Ancient Scroll 22,misc,asc1,,,no
+23a,Ancient Scroll 23,misc,asc1,,,no
+24a,Ancient Scroll 24,misc,asc1,,,no
+25a,Ancient Scroll 25,misc,asc1,,,no
+26a,Ancient Scroll 26,misc,asc2,,,no
+27a,Ancient Scroll 27,misc,asc2,,,no
+28a,Ancient Scroll 28,misc,asc2,,,no
+29a,Ancient Scroll 29,misc,asc2,,,no
+30a,Ancient Scroll 30,misc,asc2,,,no
+31a,Ancient Scroll 31,misc,asc2,,,no
+32a,Ancient Scroll 32,misc,asc2,,,no
+33a,Ancient Scroll 33,misc,asc2,,,no
+34a,Ancient Scroll 34,misc,asc2,,,no
+35a,Ancient Scroll 35,misc,asc2,,,no
+36a,Ancient Scroll 36,misc,asc2,,,no
+37a,Ancient Scroll 37,misc,asc2,,,no
+38a,Ancient Scroll 38,misc,asc2,,,no
+39a,Ancient Scroll 39,misc,asc2,,,no
+40a,Ancient Scroll 40,misc,asc2,,,no
+41a,Ancient Scroll 41,misc,asc2,,,no
+42a,Ancient Scroll 42,misc,asc2,,,no
+43a,Ancient Scroll 43,misc,asc2,,,no
+44a,Ancient Scroll 44,misc,asc2,,,no
+45a,Ancient Scroll 45,misc,asc2,,,no
+46a,Ancient Scroll 46,misc,asc2,,,no
+47a,Ancient Scroll 47,misc,asc2,,,no
+48a,Ancient Scroll 48,misc,asc2,,,no
+49a,Ancient Scroll 49,misc,asc2,,,no
+50a,Ancient Scroll 50,misc,asc2,,,no
+01b,Ancient Scroll,misc,scrl,,,yes
+02b,Ancient Scroll,misc,scrl,,,yes
+03b,Ancient Scroll,misc,scrl,,,yes
+04b,Ancient Scroll,misc,scrl,,,yes
+05b,Ancient Scroll,misc,scrl,,,yes
+06b,Ancient Scroll,misc,scrl,,,yes
+07b,Ancient Scroll,misc,scrl,,,yes
+08b,Ancient Scroll,misc,scrl,,,yes
+09b,Ancient Scroll,misc,scrl,,,yes
+10b,Ancient Scroll,misc,scrl,,,yes
+11b,Ancient Scroll,misc,scrl,,,yes
+12b,Ancient Scroll,misc,scrl,,,yes
+13b,Ancient Scroll,misc,scrl,,,yes
+14b,Ancient Scroll,misc,scrl,,,yes
+15b,Ancient Scroll,misc,scrl,,,yes
+16b,Ancient Scroll,misc,scrl,,,yes
+17b,Ancient Scroll,misc,scrl,,,yes
+18b,Ancient Scroll,misc,scrl,,,yes
+19b,Ancient Scroll,misc,scrl,,,yes
+20b,Ancient Scroll,misc,scrl,,,yes
+21b,Ancient Scroll,misc,scrl,,,yes
+22b,Ancient Scroll,misc,scrl,,,yes
+23b,Ancient Scroll,misc,scrl,,,yes
+24b,Ancient Scroll,misc,scrl,,,yes
+25b,Ancient Scroll,misc,scrl,,,yes
+26b,Ancient Scroll,misc,scrl,,,yes
+27b,Ancient Scroll,misc,scrl,,,yes
+28b,Ancient Scroll,misc,scrl,,,yes
+29b,Ancient Scroll,misc,scrl,,,yes
+30b,Ancient Scroll,misc,scrl,,,yes
+31b,Ancient Scroll,misc,scrl,,,yes
+32b,Ancient Scroll,misc,scrl,,,yes
+33b,Ancient Scroll,misc,scrl,,,yes
+34b,Ancient Scroll,misc,scrl,,,yes
+35b,Ancient Scroll,misc,scrl,,,yes
+36b,Ancient Scroll,misc,scrl,,,yes
+37b,Ancient Scroll,misc,scrl,,,yes
+38b,Ancient Scroll,misc,scrl,,,yes
+39b,Ancient Scroll,misc,scrl,,,yes
+40b,Ancient Scroll,misc,scrl,,,yes
+41b,Ancient Scroll,misc,scrl,,,yes
+42b,Ancient Scroll,misc,scrl,,,yes
+43b,Ancient Scroll,misc,scrl,,,yes
+44b,Ancient Scroll,misc,scrl,,,yes
+45b,Ancient Scroll,misc,scrl,,,yes
+46b,Ancient Scroll,misc,scrl,,,yes
+47b,Ancient Scroll,misc,scrl,,,yes
+48b,Ancient Scroll,misc,scrl,,,yes
+49b,Ancient Scroll,misc,scrl,,,yes
+50b,Ancient Scroll,misc,scrl,,,yes
+01c,"Ancient Coupon (Buckler, Pelta Lunata)",misc,cpn1,,,yes
+02c,"Ancient Coupon (Cap, Biggin's Bonnet)",misc,cpn1,,,yes
+03c,"Ancient Coupon (Leather Gloves, The Hand of Broc)",misc,cpn1,,,yes
+04c,"Ancient Coupon (Boots, Hotspur)",misc,cpn1,,,yes
+05c,"Ancient Coupon (Quilted Armor, Greyform)",misc,cpn1,,,yes
+06c,"Ancient Coupon (Sash, Lenymo)",misc,cpn1,,,yes
+07c,"Ancient Coupon (Small Shield, Umbral Disk)",misc,cpn1,,,yes
+08c,"Ancient Coupon (Heavy Gloves, Bloodfist)",misc,cpn1,,,yes
+09c,"Ancient Coupon (Heavy Boots, Gorefoot)",misc,cpn1,,,yes
+10c,"Ancient Coupon (Leather Armor, Blinkbat's Form)",misc,cpn1,,,yes
+11c,"Ancient Coupon (Light Belt, Snakecord)",misc,cpn1,,,yes
+12c,"Ancient Coupon (Large Shield, Stormguild)",misc,cpn1,,,yes
+13c,"Ancient Coupon (Hard Leather Armor, The Centurion)",misc,cpn1,,,yes
+14c,"Ancient Coupon (Helm, Coif of Glory)",misc,cpn1,,,yes
+15c,"Ancient Coupon (Ring Mail, Darkglow)",misc,cpn1,,,yes
+16c,"Ancient Coupon (Skull Cap, Tarnhelm)",misc,cpn1,,,yes
+17c,"Ancient Coupon (Spiked Shield, Swordback Hold)",misc,cpn1,,,yes
+18c,"Ancient Coupon (Chain Gloves, Chance Guards)",misc,cpn1,,,yes
+19c,"Ancient Coupon (Chain Boots, Treads of Cthon)",misc,cpn1,,,yes
+20c,"Ancient Coupon (Scale Mail, Hawkmail)",misc,cpn1,,,yes
+21c,"Ancient Coupon (Studded Leather, Twitchthroe)",misc,cpn1,,,yes
+22c,"Ancient Coupon (Full Helm, Duskdeep)",misc,cpn1,,,yes
+23c,"Ancient Coupon (Kite Shield, Steelclash)",misc,cpn1,,,yes
+24c,"Ancient Coupon (Chain Mail, Sparking Mail)",misc,cpn1,,,yes
+25c,"Ancient Coupon (Tower Shield, Bverrit Keep)",misc,cpn1,,,yes
+26c,"Ancient Coupon (Mask, The Face of Horror)",misc,cpn1,,,yes
+27c,"Ancient Coupon (Breast Plate, Venom Ward)",misc,cpn1,,,yes
+28c,"Ancient Coupon (Bone Shield, Wall of the Eyeless)",misc,cpn1,,,yes
+29c,"Ancient Coupon (Belt, Nightsmoke)",misc,cpn1,,,yes
+30c,"Ancient Coupon (Bone Helm, Wormskull)",misc,cpn1,,,yes
+31c,"Ancient Coupon (Splint Mail, Iceblink)",misc,cpn1,,,yes
+32c,"Ancient Coupon (Light Gauntlets, Magefist)",misc,cpn1,,,yes
+33c,"Ancient Coupon (Light Plated Boots, Goblin Toe)",misc,cpn1,,,yes
+34c,"Ancient Coupon (Heavy Belt, Goldwrap)",misc,cpn1,,,yes
+35c,"Ancient Coupon (Great Helm, Howltusk)",misc,cpn1,,,yes
+36c,"Ancient Coupon (Plate Mail, Boneflesh)",misc,cpn1,,,yes
+37c,"Ancient Coupon (Gauntlets, Frostburn)",misc,cpn1,,,yes
+38c,"Ancient Coupon (Greaves, Tearhaunch)",misc,cpn1,,,yes
+39c,"Ancient Coupon (Plated Belt, Bladebuckle)",misc,cpn1,,,yes
+40c,"Ancient Coupon (Crown, Undead Crown)",misc,cpn1,,,yes
+41c,"Ancient Coupon (Field Plate, Rockfleece)",misc,cpn1,,,yes
+42c,"Ancient Coupon (Gothic Shield, The Ward)",misc,cpn1,,,yes
+43c,"Ancient Coupon (Gothic Plate, Rattlecage)",misc,cpn1,,,yes
+44c,"Ancient Coupon (Light Plate, Heavenly Garb)",misc,cpn1,,,yes
+45c,"Ancient Coupon (Full Plate Mail, Goldskin)",misc,cpn1,,,yes
+46c,"Ancient Coupon (Ancient Armor, Silks of the Victor)",misc,cpn1,,,yes
+01d,"Ancient Coupon (War Hat, Peasant Crown)",misc,cpn2,,,yes
+02d,"Ancient Coupon (Ghost Armor, The Spirit Shroud)",misc,cpn2,,,yes
+03d,"Ancient Coupon (Defender, Visceratuant)",misc,cpn2,,,yes
+04d,"Ancient Coupon (Demonhide Gloves, Venom Grip)",misc,cpn2,,,yes
+05d,"Ancient Coupon (Demonhide Boots, Infernostride)",misc,cpn2,,,yes
+06d,"Ancient Coupon (Demonhide Sash, String of Ears)",misc,cpn2,,,yes
+07d,"Ancient Coupon (Serpentskin Armor, Skin of the Vipermagi)",misc,cpn2,,,yes
+08d,"Ancient Coupon (Sallet, Rockstopper)",misc,cpn2,,,yes
+09d,"Ancient Coupon (Demonhide Armor, Skin of the Flayed One)",misc,cpn2,,,yes
+10d,"Ancient Coupon (Round Shield, Moser's Blessed Circle)",misc,cpn2,,,yes
+11d,"Ancient Coupon (Sharkskin Gloves, Gravepalm)",misc,cpn2,,,yes
+12d,"Ancient Coupon (Sharkskin Belt, Razortail)",misc,cpn2,,,yes
+13d,"Ancient Coupon (Sharkskin Boots, Waterwalk)",misc,cpn2,,,yes
+14d,"Ancient Coupon (Trellised Armor, Iron Pelt)",misc,cpn2,,,yes
+15d,"Ancient Coupon (Casque, Stealskull)",misc,cpn2,,,yes
+16d,"Ancient Coupon (Linked Mail, Spirit Forge)",misc,cpn2,,,yes
+17d,"Ancient Coupon (Scutum, Stormchaser)",misc,cpn2,,,yes
+18d,"Ancient Coupon (Barbed Shield, Lance Guard)",misc,cpn2,,,yes
+19d,"Ancient Coupon (Heavy Bracers, Ghoulhide)",misc,cpn2,,,yes
+20d,"Ancient Coupon (Mesh Boots, Silkweave)",misc,cpn2,,,yes
+21d,"Ancient Coupon (Tigulated Mail, Crow Caw)",misc,cpn2,,,yes
+22d,"Ancient Coupon (Mesh Belt, Gloom's Trap)",misc,cpn2,,,yes
+23d,"Ancient Coupon (Basinet, Darksight Helm)",misc,cpn2,,,yes
+24d,"Ancient Coupon (Mesh Armor, Shaftstop)",misc,cpn2,,,yes
+25d,"Ancient Coupon (Dragon Shield, Tiamat's Rebuke)",misc,cpn2,,,yes
+26d,"Ancient Coupon (Death Mask I, Blackhorn's Face)",misc,cpn2,,,yes
+27d,"Ancient Coupon (Cuirass, Duriel's Shell)",misc,cpn2,,,yes
+28d,"Ancient Coupon (Grim Shield, Lidless Wall)",misc,cpn2,,,yes
+29d,"Ancient Coupon (Battle Belt, Snowclash)",misc,cpn2,,,yes
+30d,"Ancient Coupon (Grim Helm, Vampire Gaze)",misc,cpn2,,,yes
+31d,"Ancient Coupon (Russet Armor, Skullder's Ire)",misc,cpn2,,,yes
+32d,"Ancient Coupon (Battle Gauntlets, Lava Gout)",misc,cpn2,,,yes
+33d,"Ancient Coupon (Battle Boots, War Traveler)",misc,cpn2,,,yes
+34d,"Ancient Coupon (Slayer Guard, Arreat's Face)",misc,cpn2,,,yes
+35d,"Ancient Coupon (Hierophant Trophy, Homunculus)",misc,cpn2,,,yes
+36d,"Ancient Coupon (Gilded Shield, Herald of Zakarum)",misc,cpn2,,,yes
+37d,"Ancient Coupon (Totemic Mask, Jalal's Mane)",misc,cpn2,,,yes
+38d,"Ancient Coupon (Winged Helm, Valkyrie Wing)",misc,cpn2,,,yes
+39d,"Ancient Coupon (Pavise, Gerke's Sanctuary)",misc,cpn2,,,yes
+40d,"Ancient Coupon (Templar Coat, Guardian Angel)",misc,cpn2,,,yes
+41d,"Ancient Coupon (War Gauntlets, Hellmouth)",misc,cpn2,,,yes
+42d,"Ancient Coupon (War Boots, Gore Rider)",misc,cpn2,,,yes
+43d,"Ancient Coupon (War Belt, Thundergod's Vigor)",misc,cpn2,,,yes
+44d,"Ancient Coupon (Sharktooth Armor, Toothrow)",misc,cpn2,,,yes
+45d,"Ancient Coupon (Grand Crown, Crown of Thieves)",misc,cpn2,,,yes
+46d,"Ancient Coupon (Ancient Shield, Radament's Sphere)",misc,cpn2,,,yes
+47d,"Ancient Coupon (Embossed Plate, Atma's Wail)",misc,cpn2,,,yes
+48d,"Ancient Coupon (Mage Plate, Que-Hegan's Wisdom)",misc,cpn2,,,yes
+49d,"Ancient Coupon (Chaos Armor, Black Hades)",misc,cpn2,,,yes
+50d,"Ancient Coupon (Ornate Plate, Corpsemourn)",misc,cpn2,,,yes
+51d,"Ancient Coupon (Death Mask II, Hellwarden's Will)",misc,cpn2,,,yes
+01e,"Ancient Coupon (Luna, Blackoak Shield)",misc,cpn3,,,yes
+02e,"Ancient Coupon (Vampirefang Belt, Nosferatu's Coil)",misc,cpn3,,,yes
+03e,"Ancient Coupon (Shako, Harlequin Crest)",misc,cpn3,,,yes
+04e,"Ancient Coupon (Destroyer Helm, Demonhorn's Edge)",misc,cpn3,,,yes
+05e,"Ancient Coupon (Armet, Steel Shade)",misc,cpn3,,,yes
+06e,"Ancient Coupon (Mithril Coil, Verdungo's Hearty Cord)",misc,cpn3,,,yes
+07e,"Ancient Coupon (Blood Spirit, Cerebus' Bite)",misc,cpn3,,,yes
+08e,"Ancient Coupon (Scarabshell Boots, Sandstorm Trek)",misc,cpn3,,,yes
+09e,"Ancient Coupon (Bloodlord Skull, Darkforce Spawn)",misc,cpn3,,,yes
+10e,"Ancient Coupon (Bone Visage, Giant Skull)",misc,cpn3,,,yes
+11e,"Ancient Coupon (Kraken Shell, Leviathan)",misc,cpn3,,,yes
+12e,"Ancient Coupon (Shadow Plate, Steel Carapace)",misc,cpn3,,,yes
+13e,"Ancient Coupon (Boneweave Boots, Marrowwalk)",misc,cpn3,,,yes
+14e,"Ancient Coupon (Spired Helm I, Nightwing's Veil)",misc,cpn3,,,yes
+15e,"Ancient Coupon (Earth Spirit, Spirit Keeper)",misc,cpn3,,,yes
+16e,"Ancient Coupon (Ward, Spirit Ward)",misc,cpn3,,,yes
+17e,"Ancient Coupon (Spired Helm II, Veil of Steel)",misc,cpn3,,,yes
+18e,"Ancient Coupon (Monarch, Stormshield)",misc,cpn3,,,yes
+19e,"Ancient Coupon (Blade Barrier, Spike Thorn)",misc,cpn3,,,yes
+20e,"Ancient Coupon (Ogre Gauntlets, Steelrend)",misc,cpn3,,,yes
+21e,"Ancient Coupon (Myrmidon Greaves, Shadow Dancer)",misc,cpn3,,,yes
+22e,"Ancient Coupon (Succubus Skull, Boneflame)",misc,cpn3,,,yes
+23e,"Ancient Coupon (Sacred Armor I, Templar's Might)",misc,cpn3,,,yes
+24e,"Ancient Coupon (Vambraces, Soul Drainer)",misc,cpn3,,,yes
+25e,"Ancient Coupon (Sky Spirit, Ravenlore)",misc,cpn3,,,yes
+26e,"Ancient Coupon (Dusk Shroud, Ormus' Robes)",misc,cpn3,,,yes
+27e,"Ancient Coupon (Troll Nest, Head Hunter's Glory)",misc,cpn3,,,yes
+28e,"Ancient Coupon (Vampirebone Gloves, Dracul's Grasp)",misc,cpn3,,,yes
+29e,"Ancient Coupon (Aegis, Medusa's Gaze)",misc,cpn3,,,yes
+30e,"Ancient Coupon (Diadem, Griffon's Eye)",misc,cpn3,,,yes
+31e,"Ancient Coupon (Zakarum Shield, Dragonscale)",misc,cpn3,,,yes
+32e,"Ancient Coupon (Demonhead, Andariel's Visage)",misc,cpn3,,,yes
+33e,"Ancient Coupon (Wire Fleece, The Gladiator's Bane)",misc,cpn3,,,yes
+34e,"Ancient Coupon (Balrog Skin, Arkaine's Valor)",misc,cpn3,,,yes
+35e,"Ancient Coupon (Tiara, Kira's Guardian)",misc,cpn2,,,yes
+36e,"Ancient Coupon (Fury Visor, Wolfhowl)",misc,cpn3,,,yes
+37e,"Ancient Coupon (Conqueror Crown, Halaberd's Reign)",misc,cpn3,,,yes
+38e,"Ancient Coupon (Sacred Rondache, Alma Negra)",misc,cpn3,,,yes
+39e,"Ancient Coupon (Corona, Crown of Ages)",misc,cpn3,,,yes
+40e,"Ancient Coupon (Sacred Armor II, Tyrael's Might)",misc,cpn3,,,yes
+41e,"Ancient Coupon (Spiderweb Sash, Arachnid Mesh)",misc,cpn3,,,yes
+42e,"Ancient Coupon (Mirrored Boots, Wraithstep)",misc,cpn3,,,yes
+43e,"Ancient Coupon (Troll Belt, Gheed's Wager)",misc,cpn3,,,yes
+44e,"Ancient Coupon (Burnt Text, Measured Wrath)",misc,cpn3,,,yes
+45e,"Ancient Coupon (Occult Tome, Ars Dul'Mephistos)",misc,cpn3,,,yes
+46e,"Ancient Coupon (Blasphemous Grimoire, Ars Al'Diabolos)",misc,cpn3,,,yes
+47e,"Ancient Coupon (Blasphemous Compendium, Ars Tor'Baalos)",misc,cpn3,,,yes
+01f,"Ancient Coupon (Short Sword, Rixot's Keen)",misc,cpn1,,,yes
+02f,"Ancient Coupon (Club, Felloak)",misc,cpn1,,,yes
+03f,"Ancient Coupon (Dagger, Gull)",misc,cpn1,,,yes
+04f,"Ancient Coupon (Wand, Torch of Iro)",misc,cpn1,,,yes
+05f,"Ancient Coupon (Short Staff, Bane Ash)",misc,cpn1,,,yes
+06f,"Ancient Coupon (Hand Axe, The Gnasher)",misc,cpn1,,,yes
+07f,"Ancient Coupon (Spiked Club, Stoutnail)",misc,cpn1,,,yes
+08f,"Ancient Coupon (Scepter, Knell Striker)",misc,cpn1,,,yes
+09f,"Ancient Coupon (Short Bow, Pluckeye)",misc,cpn1,,,yes
+10f,"Ancient Coupon (Scimitar, Blood Crescent)",misc,cpn1,,,yes
+11f,"Ancient Coupon (Spear, The Dragon Chang)",misc,cpn1,,,yes
+12f,"Ancient Coupon (Large Axe, Axe of Fechmar)",misc,cpn1,,,yes
+13f,"Ancient Coupon (Bardiche, Dimoak's Hew)",misc,cpn1,,,yes
+14f,"Ancient Coupon (Axe, Deathspade)",misc,cpn1,,,yes
+15f,"Ancient Coupon (Light Crossbow, Leadcrow)",misc,cpn1,,,yes
+16f,"Ancient Coupon (Mace, Crushflange)",misc,cpn1,,,yes
+17f,"Ancient Coupon (Long Staff, Serpent Lord)",misc,cpn1,,,yes
+18f,"Ancient Coupon (Sabre, Skewer of Krintiz)",misc,cpn1,,,yes
+19f,"Ancient Coupon (Dirk, The Diggler)",misc,cpn1,,,yes
+20f,"Ancient Coupon (Two-Handed Sword, Shadowfang)",misc,cpn1,,,yes
+21f,"Ancient Coupon (Trident, Razortine)",misc,cpn1,,,yes
+22f,"Ancient Coupon (Falchion, Gleamscythe)",misc,cpn1,,,yes
+23f,"Ancient Coupon (Hunter's Bow, Witherstring)",misc,cpn1,,,yes
+24f,"Ancient Coupon (Crystal Sword, Azurewrath)",misc,cpn1,,,yes
+25f,"Ancient Coupon (Voulge, Steelgoad)",misc,cpn1,,,yes
+26f,"Ancient Coupon (Broad Axe, Goreshovel)",misc,cpn1,,,yes
+27f,"Ancient Coupon (Yew Wand, Maelstrom)",misc,cpn1,,,yes
+28f,"Ancient Coupon (Long Bow, Raven Claw)",misc,cpn1,,,yes
+29f,"Ancient Coupon (Morning Star, Bloodrise)",misc,cpn1,,,yes
+30f,"Ancient Coupon (Double Axe, Bladebone)",misc,cpn1,,,yes
+31f,"Ancient Coupon (Broad Sword, Griswold's Edge)",misc,cpn1,,,yes
+32f,"Ancient Coupon (Brandistock, Bloodthief)",misc,cpn1,,,yes
+33f,"Ancient Coupon (Grand Scepter, Rusthandle)",misc,cpn1,,,yes
+34f,"Ancient Coupon (Gnarled Staff, Spire of Lazarus)",misc,cpn1,,,yes
+35f,"Ancient Coupon (Crossbow, Ichorsting)",misc,cpn1,,,yes
+36f,"Ancient Coupon (Claymore, Soulflay)",misc,cpn1,,,yes
+37f,"Ancient Coupon (Scythe, Soul Harvest)",misc,cpn1,,,yes
+38f,"Ancient Coupon (Kris, The Jade Tan Do)",misc,cpn1,,,yes
+39f,"Ancient Coupon (Battle Axe, The Chieftain)",misc,cpn1,,,yes
+40f,"Ancient Coupon (Composite Bow, Rogue's Bow)",misc,cpn1,,,yes
+41f,"Ancient Coupon (Bone Wand, Gravenspine)",misc,cpn1,,,yes
+42f,"Ancient Coupon (Battle Staff, The Salamander)",misc,cpn1,,,yes
+43f,"Ancient Coupon (Flail, The General's Tan Do Li Ga)",misc,cpn1,,,yes
+44f,"Ancient Coupon (Military Pick, Skull Splitter)",misc,cpn1,,,yes
+45f,"Ancient Coupon (Spetum, Lance of Yaggai)",misc,cpn1,,,yes
+46f,"Ancient Coupon (Long Sword, Hellplague)",misc,cpn1,,,yes
+47f,"Ancient Coupon (War Scepter, Stormeye)",misc,cpn1,,,yes
+48f,"Ancient Coupon (Giant Sword, Kinemil's Awl)",misc,cpn1,,,yes
+49f,"Ancient Coupon (Maul, Bonesnap)",misc,cpn1,,,yes
+50f,"Ancient Coupon (Short Battle Bow, Stormstrike)",misc,cpn1,,,yes
+51f,"Ancient Coupon (Blade, Spectral Shard)",misc,cpn1,,,yes
+52f,"Ancient Coupon (Poleaxe, The Battlebranch)",misc,cpn1,,,yes
+53f,"Ancient Coupon (Great Axe, Brainhew)",misc,cpn1,,,yes
+54f,"Ancient Coupon (Flamberge, Ripsaw)",misc,cpn1,,,yes
+55f,"Ancient Coupon (Bastard Sword, Blacktongue)",misc,cpn1,,,yes
+56f,"Ancient Coupon (Long Battle Bow, Wizendraw)",misc,cpn1,,,yes
+57f,"Ancient Coupon (Heavy Crossbow, Hellcast)",misc,cpn1,,,yes
+58f,"Ancient Coupon (Pike, The Tannr Gorerod)",misc,cpn1,,,yes
+59f,"Ancient Coupon (Short War Bow, Hellclap)",misc,cpn1,,,yes
+60f,"Ancient Coupon (War Hammer, Ironstone)",misc,cpn1,,,yes
+61f,"Ancient Coupon (War Axe, Rakescar)",misc,cpn1,,,yes
+62f,"Ancient Coupon (Long War Bow, Blastbark)",misc,cpn1,,,yes
+63f,"Ancient Coupon (Repeating Crossbow, Doomslinger)",misc,cpn1,,,yes
+64f,"Ancient Coupon (Halberd, Woestave)",misc,cpn1,,,yes
+65f,"Ancient Coupon (Grim Wand, Ume's Lament)",misc,cpn1,,,yes
+66f,"Ancient Coupon (War Staff, The Iron Jang Bong)",misc,cpn1,,,yes
+67f,"Ancient Coupon (Giant Axe, Humongous)",misc,cpn1,,,yes
+68f,"Ancient Coupon (War Sword, Culwen's Point)",misc,cpn1,,,yes
+69f,"Ancient Coupon (War Scythe, The Grim Reaper)",misc,cpn1,,,yes
+70f,"Ancient Coupon (Great Maul, Steeldriver)",misc,cpn1,,,yes
+71f,"Ancient Coupon (Great Sword, The Patriarch)",misc,cpn1,,,yes
+01g,"Ancient Coupon (Jo Staff, Razorswitch)",misc,cpn2,,,yes
+02g,"Ancient Coupon (Edge Bow, Skystrike)",misc,cpn2,,,yes
+03g,"Ancient Coupon (Gladius, Bloodletter)",misc,cpn2,,,yes
+04g,"Ancient Coupon (Razor Bow, Riphook)",misc,cpn2,,,yes
+05g,"Ancient Coupon (War Spear, The Impaler)",misc,cpn2,,,yes
+06g,"Ancient Coupon (Quarterstaff, Ribcracker)",misc,cpn2,,,yes
+07g,"Ancient Coupon (Cutlass, Coldsteel Eye)",misc,cpn2,,,yes
+08g,"Ancient Coupon (Poignard, Spineripper)",misc,cpn2,,,yes
+09g,"Ancient Coupon (Arbalest, Langer Briser)",misc,cpn2,,,yes
+10g,"Ancient Coupon (Fuscina, Kelpie Snare)",misc,cpn2,,,yes
+11g,"Ancient Coupon (Burnt Wand, Suicide Branch)",misc,cpn2,,,yes
+12g,"Ancient Coupon (Cedar Bow, Kuko Shakaku)",misc,cpn2,,,yes
+13g,"Ancient Coupon (Shamshir, Hexfire)",misc,cpn2,,,yes
+14g,"Ancient Coupon (Cudgel, Dark Clan Crusher)",misc,cpn2,,,yes
+15g,"Ancient Coupon (Military Axe, Warlord's Trust)",misc,cpn2,,,yes
+16g,"Ancient Coupon (Cedar Staff, Chromatic Ire)",misc,cpn2,,,yes
+17g,"Ancient Coupon (War Fork, Soulfeast Tine)",misc,cpn2,,,yes
+18g,"Ancient Coupon (Petrified Wand, Carin Shard)",misc,cpn2,,,yes
+19g,"Ancient Coupon (Tulwar, Blade of Ali Baba)",misc,cpn2,,,yes
+20g,"Ancient Coupon (Siege Crossbow, Pus Spitter)",misc,cpn2,,,yes
+21g,"Ancient Coupon (Rondel, Heart Carver)",misc,cpn2,,,yes
+22g,"Ancient Coupon (Hatchet, Coldkill)",misc,cpn2,,,yes
+23g,"Ancient Coupon (Tomb Wand, Arm of King Leoric)",misc,cpn2,,,yes
+24g,"Ancient Coupon (Double Bow, Endlesshail)",misc,cpn2,,,yes
+25g,"Ancient Coupon (Yari, Hone Sundan)",misc,cpn2,,,yes
+26g,"Ancient Coupon (Dimensional Blade, Ginther's Rift)",misc,cpn2,,,yes
+27g,"Ancient Coupon (Rune Scepter, Zakarum's Hand)",misc,cpn2,,,yes
+28g,"Ancient Coupon (Cinquedeas, Blackbog's Sharp)",misc,cpn2,,,yes
+29g,"Ancient Coupon (Barbed Club, Fleshrender)",misc,cpn2,,,yes
+30g,"Ancient Coupon (Holy Water Sprinkler, The Fetid Sprinkler)",misc,cpn2,,,yes
+31g,"Ancient Coupon (Lance, Spire of Honor)",misc,cpn2,,,yes
+32g,"Ancient Coupon (Short Siege Bow, Witchwild String)",misc,cpn2,,,yes
+33g,"Ancient Coupon (Gothic Staff, Warpspear)",misc,cpn2,,,yes
+34g,"Ancient Coupon (Cleaver, Butcher's Pupil)",misc,cpn2,,,yes
+35g,"Ancient Coupon (Battle Sword, Headstriker)",misc,cpn2,,,yes
+36g,"Ancient Coupon (Bearded Axe, Spellsteel)",misc,cpn2,,,yes
+37g,"Ancient Coupon (Flanged Mace, Sureshrill Frost)",misc,cpn2,,,yes
+38g,"Ancient Coupon (Lochaber Axe, The Meat Scraper)",misc,cpn2,,,yes
+39g,"Ancient Coupon (Tabar, Stormrider)",misc,cpn2,,,yes
+40g,"Ancient Coupon (Rune Sword, Plague Bearer)",misc,cpn2,,,yes
+41g,"Ancient Coupon (Rune Staff, Skull Collector)",misc,cpn2,,,yes
+42g,"Ancient Coupon (Large Siege Bow, Cliffkiller)",misc,cpn2,,,yes
+43g,"Ancient Coupon (Stiletto, Stormspike)",misc,cpn2,,,yes
+44g,"Ancient Coupon (Grave Wand, Blackhand Key)",misc,cpn2,,,yes
+45g,"Ancient Coupon (Ceremonial Javelin, Titan's Revenge)",misc,cpn2,,,yes
+46g,"Ancient Coupon (Jagged Star, Moonfall)",misc,cpn2,,,yes
+47g,"Ancient Coupon (Swirling Crystal, The Oculus)",misc,cpn2,,,yes
+48g,"Ancient Coupon (Divine Scepter, Hand of Blessed Light)",misc,cpn2,,,yes
+49g,"Ancient Coupon (Ancient Sword, The Atlantean)",misc,cpn2,,,yes
+50g,"Ancient Coupon (Bill, Blackleach Blade)",misc,cpn2,,,yes
+51g,"Ancient Coupon (Battle Scythe, Athena's Wrath)",misc,cpn2,,,yes
+52g,"Ancient Coupon (Ceremonial Pike, Lycander's Flank)",misc,cpn2,,,yes
+53g,"Ancient Coupon (Ceremonial Bow, Lycander's Aim)",misc,cpn2,,,yes
+54g,"Ancient Coupon (Espandon, Crainte Vomir)",misc,cpn2,,,yes
+55g,"Ancient Coupon (Gothic Axe, Boneslayer Blade)",misc,cpn2,,,yes
+56g,"Ancient Coupon (Greater Talons, Bartuc's Cut-Throat)",misc,cpn2,,,yes
+57g,"Ancient Coupon (Rune Bow, Magewrath)",misc,cpn2,,,yes
+58g,"Ancient Coupon (Partizan, Pierre Tombale Couant)",misc,cpn2,,,yes
+59g,"Ancient Coupon (Dacian Falx, Bing Sz Wang)",misc,cpn2,,,yes
+60g,"Ancient Coupon (Battle Hammer, Earthshaker)",misc,cpn2,,,yes
+61g,"Ancient Coupon (Twin Axe, Islestrike)",misc,cpn2,,,yes
+62g,"Ancient Coupon (Battle Dart, Deathbit)",misc,cpn2,,,yes
+63g,"Ancient Coupon (Grim Scythe, Grim's Burning Dead)",misc,cpn2,,,yes
+64g,"Ancient Coupon (Bec-de-Corbin, Husoldal Evo)",misc,cpn2,,,yes
+65g,"Ancient Coupon (Tusk Sword, The Vile Husk)",misc,cpn2,,,yes
+66g,"Ancient Coupon (Gothic Sword, Cloudcrack)",misc,cpn2,,,yes
+67g,"Ancient Coupon (Crowbill, Pompeii's Wrath)",misc,cpn2,,,yes
+68g,"Ancient Coupon (Ancient Axe, The Minotaur)",misc,cpn2,,,yes
+69g,"Ancient Coupon (Martel de Fer, The Gavel of Pain)",misc,cpn2,,,yes
+70g,"Ancient Coupon (Knout, Baezil's Vortex)",misc,cpn2,,,yes
+71g,"Ancient Coupon (Gothic Bow, Goldstrike Arch)",misc,cpn2,,,yes
+72g,"Ancient Coupon (Zweihander, Todesfaelle Flamme)",misc,cpn2,,,yes
+73g,"Ancient Coupon (Executioner Sword, Swordguard)",misc,cpn2,,,yes
+74g,"Ancient Coupon (Naga, Guardian Naga)",misc,cpn2,,,yes
+75g,"Ancient Coupon (War Club, Bloodtree Stump)",misc,cpn2,,,yes
+76g,"Ancient Coupon (Chu-Ko-Nu, Demon Machine)",misc,cpn2,,,yes
+77g,"Ancient Coupon (Ballista, Buriza-Do Kyanon)",misc,cpn2,,,yes
+78g,"Ancient Coupon (Francisca, The Scalper)",misc,cpn2,,,yes
+01h,"Ancient Coupon (Phase Blade I, Lightsabre)",misc,cpn3,,,yes
+02k,"Ancient Coupon (Caduceus, Astreon's Iron Ward)",misc,cpn3,,,yes
+03h,"Ancient Coupon (Bone Knife, Wizardspike)",misc,cpn3,,,yes
+04h,"Ancient Coupon (Mighty Scepter I, Heaven's Light)",misc,cpn3,,,yes
+05h,"Ancient Coupon (Elegant Blade, Bloodmoon)",misc,cpn3,,,yes
+06h,"Ancient Coupon (Legend Spike, Ghostflame)",misc,cpn3,,,yes
+07h,"Ancient Coupon (Devil Star, Baranar's Star)",misc,cpn3,,,yes
+08h,"Ancient Coupon (Decapitator, Hellslayer)",misc,cpn3,,,yes
+09h,"Ancient Coupon (Tyrant Club, Demon Limb)",misc,cpn3,,,yes
+10h,"Ancient Coupon (War Spike, Cranebeak)",misc,cpn3,,,yes
+11h,"Ancient Coupon (Matriarchal Spear, Stoneraven)",misc,cpn3,,,yes
+12k,"Ancient Coupon (Ogre Axe, Bonehew)",misc,cpn3,,,yes
+13h,"Ancient Coupon (Scourge I, Horizon's Tornado)",misc,cpn3,,,yes
+14h,"Ancient Coupon (Ataghan, Djinn Slayer)",misc,cpn3,,,yes
+15h,"Ancient Coupon (Ward Bow, Widowmaker)",misc,cpn3,,,yes
+16h,"Ancient Coupon (Wrist Sword, Jade Talon)",misc,cpn3,,,yes
+17h,"Ancient Coupon (Unearthed Wand, Death's Web)",misc,cpn3,,,yes
+18h,"Ancient Coupon (Elder Staff, Ondal's Wisdom)",misc,cpn3,,,yes
+19h,"Ancient Coupon (Champion Sword, Doombringer)",misc,cpn3,,,yes
+20h,"Ancient Coupon (Tomahawk, Razor's Edge)",misc,cpn3,,,yes
+21h,"Ancient Coupon (Champion Axe, Messerschmidt's Reaver)",misc,cpn3,,,yes
+22k,"Ancient Coupon (Feral Claws, Firelizard's Talons)",misc,cpn3,,,yes
+23h,"Ancient Coupon (Winged Axe, Lacerator)",misc,cpn3,,,yes
+24h,"Ancient Coupon (Legendary Mallet I, Stone Crusher)",misc,cpn3,,,yes
+25h,"Ancient Coupon (Truncheon, Nord's Tenderizer)",misc,cpn3,,,yes
+26h,"Ancient Coupon (Fanged Knife, Fleshripper)",misc,cpn3,,,yes
+27h,"Ancient Coupon (Ogre Maul, Windhammer)",misc,cpn3,,,yes
+28h,"Ancient Coupon (Balrog Spear, Demon's Arch)",misc,cpn3,,,yes
+29h,"Ancient Coupon (Thunder Maul I, Earth Shifter)",misc,cpn3,,,yes
+30h,"Ancient Coupon (Matriarchal Javelin, Thunderstroke)",misc,cpn3,,,yes
+31h,"Ancient Coupon (War Pike, Steel Pillar)",misc,cpn3,,,yes
+32k,"Ancient Coupon (Crusader Bow, Eaglehorn)",misc,cpn3,,,yes
+33h,"Ancient Coupon (Flying Axe, Gimmershred)",misc,cpn3,,,yes
+34h,"Ancient Coupon (Cryptic Sword, Frostwind)",misc,cpn3,,,yes
+35h,"Ancient Coupon (Berserker Axe, Death Cleaver)",misc,cpn3,,,yes
+36h,"Ancient Coupon (Giant Thresher, Stormspire)",misc,cpn3,,,yes
+37h,"Ancient Coupon (Winged Harpoon, Gargoyle's Bite)",misc,cpn3,,,yes
+38h,"Ancient Coupon (Demon Crossbow, Gut Siphon)",misc,cpn3,,,yes
+39h,"Ancient Coupon (Matriarchal Bow, Blood Raven's Charge)",misc,cpn3,,,yes
+40h,"Ancient Coupon (Balrog Blade, Flamebellow)",misc,cpn3,,,yes
+41h,"Ancient Coupon (Mancatcher, Viperfork)",misc,cpn3,,,yes
+42k,"Ancient Coupon (Ettin Axe, Rune Master)",misc,cpn3,,,yes
+43h,"Ancient Coupon (Hydra Bow, Windforce)",misc,cpn3,,,yes
+44h,"Ancient Coupon (Mighty Scepter II, The Redeemer)",misc,cpn3,,,yes
+45h,"Ancient Coupon (Eldritch Orb, Eschuta's Temper)",misc,cpn3,,,yes
+46h,"Ancient Coupon (Dimensional Shard, Death's Fathom)",misc,cpn3,,,yes
+47h,"Ancient Coupon (Silver-edged Axe, Ethereal Edge)",misc,cpn3,,,yes
+48h,"Ancient Coupon (Legendary Mallet II, Schaefer's Hammer)",misc,cpn3,,,yes
+49h,"Ancient Coupon (Winged Knife, Warshrike)",misc,cpn3,,,yes
+50h,"Ancient Coupon (Glorious Axe, Executioner's Justice)",misc,cpn3,,,yes
+51h,"Ancient Coupon (Thresher, The Reaper's Toll)",misc,cpn3,,,yes
+52k,"Ancient Coupon (Lich Wand, Boneshade)",misc,cpn3,,,yes
+53h,"Ancient Coupon (Colossus Crossbow, Hellrack)",misc,cpn3,,,yes
+54h,"Ancient Coupon (Ghost Glaive, Wraith Flight)",misc,cpn3,,,yes
+55h,"Ancient Coupon (Thunder Maul II, The Cranium Basher)",misc,cpn3,,,yes
+56h,"Ancient Coupon (Battle Cestus, Shadow Killer)",misc,cpn3,,,yes
+57h,"Ancient Coupon (Colossus Blade, The Grandfather)",misc,cpn3,,,yes
+58h,"Ancient Coupon (Hyperion Spear, Arioc's Needle)",misc,cpn3,,,yes
+59h,"Ancient Coupon (Cryptic Axe, Tomb Reaver)",misc,cpn3,,,yes
+60h,"Ancient Coupon (Scourge II, Stormlash)",misc,cpn3,,,yes
+61h,"Ancient Coupon (Archon Staff, Mang Song's Lesson)",misc,cpn3,,,yes
+62k,"Ancient Coupon (Phase Blade II, Azurewrath)",misc,cpn3,,,yes
+63k,"Ancient Coupon (Legend Sword, Dreadfang)",misc,cpn3,,,yes
+64k,"Ancient Coupon (Mithril Point, Bloodpact Shard)",misc,cpn3,,,yes
+01i,Ancient Coupon Amulet I (Nokozan Relic),misc,cpn1,,,yes
+02i,Ancient Coupon Amulet II (The Eye of Etlich),misc,cpn1,,,yes
+03i,Ancient Coupon Amulet III (The Mahim-Oak Curio),misc,cpn1,,,yes
+04i,Ancient Coupon Amulet IV (Saracen's Chance),misc,cpn2,,,yes
+05i,Ancient Coupon Amulet V (The Cat's Eye),misc,cpn2,,,yes
+06i,Ancient Coupon Amulet VI (Crescent Moon),misc,cpn2,,,yes
+07i,Ancient Coupon Amulet VII (Atma's Scarab),misc,cpn2,,,yes
+08i,Ancient Coupon Amulet VIII (The Rising Sun),misc,cpn2,,,yes
+09i,Ancient Coupon Amulet IX (Highlord's Wrath),misc,cpn3,,,yes
+10i,Ancient Coupon Amulet X (Mara's Kaleidoscope),misc,cpn3,,,yes
+11i,Ancient Coupon Amulet XI (Seraph's Hymn),misc,cpn3,,,yes
+12i,Ancient Coupon Amulet XII (Metalgrid),misc,cpn3,,,yes
+13i,Ancient Coupon Amulet XIII (Entropy Locket),misc,cpn3,,,yes
+01j,Ancient Coupon Ring I (Nagelring),misc,cpn1,,,yes
+02j,Ancient Coupon Ring II (Manald Heal),misc,cpn1,,,yes
+03j,Ancient Coupon Ring III (The Stone of Jordan),misc,cpn1,,,yes
+04j,Ancient Coupon Ring IV (Dwarf Star),misc,cpn2,,,yes
+05j,Ancient Coupon Ring V (Raven Frost),misc,cpn2,,,yes
+06j,Ancient Coupon Ring VI (Bul-Kathos' Wedding Band),misc,cpn3,,,yes
+07j,Ancient Coupon Ring VII (Carrion Wind),misc,cpn3,,,yes
+08j,Ancient Coupon Ring VIII (Nature's Peace),misc,cpn3,,,yes
+09j,Ancient Coupon Ring IX (Wisp Projector),misc,cpn3,,,yes
+10j,Ancient Coupon Ring X (Constricting Ring),misc,cpn3,,,yes
+11j,Ancient Coupon Ring XI (Opalvein),misc,cpn3,,,yes
+12j,Ancient Coupon Ring XII (Sling),misc,cpn3,,,yes
+96j,Ancient Coupon (nor),misc,cpn1,,,yes
+97j,Ancient Coupon (exc),misc,cpn2,,,yes
+98j,Ancient Coupon (eli),misc,cpn3,,,yes
+99j,Ancient Coupon (Wild Card),misc,coup,,,yes
+s51,Decal Stocker,misc,can4,,,yes
+s52,Decal Stocker,misc,can4,,,yes
+s53,Decal Stocker,misc,can4,,,yes
+s54,Decal Stocker,misc,can4,,,yes
+s55,Decal Stocker,misc,can4,,,yes
+s56,Decal Stocker,misc,can4,,,yes
+s57,Decal Stocker,misc,can4,,,yes
+s58,Decal Stocker,misc,can4,,,yes
+s59,Decal Stocker,misc,can4,,,yes
+s60,Decal Stocker,misc,can4,,,yes
+s61,Decal Stocker,misc,can4,,,yes
+s62,Decal Stocker,misc,can4,,,yes
+s63,Decal Stocker,misc,can4,,,yes
+s64,Decal Stocker,misc,can4,,,yes
+s65,Decal Stocker,misc,can4,,,yes
+s66,Decal Stocker,misc,can4,,,yes
+s67,Decal Stocker,misc,can4,,,yes
+s68,Decal Stocker,misc,can4,,,yes
+s69,Decal Stocker,misc,can4,,,yes
+s70,Decal Stocker,misc,can4,,,yes
+s71,Decal Stocker,misc,can4,,,yes
+s72,Decal Stocker,misc,can4,,,yes
+s73,Decal Stocker,misc,can4,,,yes
+s74,Decal Stocker,misc,can4,,,yes
+s75,Decal Stocker,misc,can4,,,yes
+s76,Decal Stocker,misc,can4,,,yes
+s77,Decal Stocker,misc,can4,,,yes
+s78,Decal Stocker,misc,can4,,,yes
+s79,Decal Stocker,misc,can4,,,yes
+s80,Decal Stocker,misc,can4,,,yes
+s81,Decal Stocker,misc,can4,,,yes
+s82,Decal Stocker,misc,can4,,,yes
+s83,Decal Stocker,misc,can4,,,yes
+w31,Secret Tome 1,misc,can5,,,no
+w32,Secret Tome 1,misc,can5,,,no
+w33,Secret Tome 1,misc,can5,,,no
+w34,Secret Tome 1,misc,can5,,,no
+w35,Secret Tome 1,misc,can5,,,no
+w36,Secret Tome 1,misc,can5,,,no
+w37,Secret Tome 1,misc,can5,,,no
+w38,Secret Tome 1,misc,can5,,,no
+w39,Secret Tome 1,misc,can5,,,no
+w40,Secret Tome 1,misc,can5,,,no
+w41,Secret Tome 1,misc,can5,,,no
+w42,Secret Tome 1,misc,can5,,,no
+w43,Secret Tome 1,misc,can5,,,no
+w44,Secret Tome 1,misc,can5,,,no
+w45,Secret Tome 1,misc,can5,,,no
+w46,Secret Tome 1,misc,can5,,,no
+w47,Secret Tome 1,misc,can5,,,no
+w48,Secret Tome 1,misc,can5,,,no
+w49,Secret Tome 1,misc,can5,,,no
+w50,Secret Tome 1,misc,can5,,,no
+w51,Secret Tome 1,misc,can5,,,no
+w52,Secret Tome 1,misc,can5,,,no
+w53,Secret Tome 1,misc,can5,,,no
+w54,Secret Tome 1,misc,can5,,,no
+w55,Secret Tome 1,misc,can5,,,no
+w56,Secret Tome 2,misc,can6,,,no
+w57,Secret Tome 2,misc,can6,,,no
+w58,Secret Tome 2,misc,can6,,,no
+w59,Secret Tome 2,misc,can6,,,no
+w60,Secret Tome 2,misc,can6,,,no
+w61,Secret Tome 2,misc,can6,,,no
+w62,Secret Tome 2,misc,can6,,,no
+w63,Secret Tome 2,misc,can6,,,no
+w64,Secret Tome 2,misc,can6,,,no
+w65,Secret Tome 2,misc,can6,,,no
+w66,Secret Tome 2,misc,can6,,,no
+w67,Secret Tome 2,misc,can6,,,no
+w68,Secret Tome 2,misc,can6,,,no
+w69,Secret Tome 2,misc,can6,,,no
+w70,Secret Tome 2,misc,can6,,,no
+w71,Secret Tome 2,misc,can6,,,no
+w72,Secret Tome 2,misc,can6,,,no
+w73,Secret Tome 2,misc,can6,,,no
+w74,Secret Tome 2,misc,can6,,,no
+w75,Secret Tome 2,misc,can6,,,no
+w76,Secret Tome 2,misc,can6,,,no
+w77,Secret Tome 2,misc,can6,,,no
+w78,Secret Tome 2,misc,can6,,,no
+w79,Secret Tome 2,misc,can6,,,no
+w80,Secret Tome 2,misc,can6,,,no
+tkz,Tokenizer,misc,cube,,,no
+6hrt,Heart (6 Pack),misc,or6p,,,no
+6brz,Brain (6 Pack),misc,or6p,,,no
+6jaw,Jawbone (6 Pack),misc,or6p,,,no
+6eyz,Eye (6 Pack),misc,or6p,,,no
+6hrn,Horn (6 Pack),misc,or6p,,,no
+6tal,Tail (6 Pack),misc,or6p,,,no
+6flg,Flag (6 Pack),misc,or6p,,,no
+6fng,Fang (6 Pack),misc,or6p,,,no
+6qll,Quill (6 Pack),misc,or6p,,,no
+6sol,Soul (6 Pack),misc,or6p,,,no
+6scz,Scalp (6 Pack),misc,or6p,,,no
+6spe,Spleen (6 Pack),misc,or6p,,,no
+6qqq,Anvil (6 Pack),misc,or6p,,,no
+6ddd,Decipherer (6 Pack),misc,or6p,,,no
+6yyy,Cook Book (6 Pack),misc,or6p,,,no
+699j,Wild Card (6 Pack),misc,or6p,,,no
+6sdo,Socket Donut (6 Pack),misc,or6p,,,no
+6ear,Player Ear (6 Pack),misc,or6p,,,no
+6map,Maple Leaf (6 Pack),misc,or6p,,,no
+6ppp,DragonStone (6 Pack),misc,or6p,,,no
+6rvl,Full Rejuv Potion (6 Pack),misc,or6p,,,no
+6zzz,Steak (6 Pack),misc,or6p,,,no
+rib,Commander's Ribbon,misc,cube,,,no
+md0,Commander's Medallion 1,misc,aamu,,,no
+md1,Commander's Medallion 1 (soc),misc,aamu,,,no
+md2,Commander's Medallion 2,misc,aamu,,,no
+md3,Commander's Medallion 2 (soc),misc,aamu,,,no
+md4,Commander's Medallion 3,misc,aamu,,,no
+md5,Commander's Medallion 3 (soc),misc,aamu,,,no
+mr0,Ring,misc,mrn0,,,no
+mr1,Ring,misc,mrn1,,,no
+mr2,Ring,misc,mrn2,,,no
+mr3,Ring,misc,mrn3,,,no
+mr4,Ring,misc,mrn4,,,no
+wss,Worldstone Shard,misc,cube,,,yes
+ht1,Diablo's Enhanced Horn,misc,ques,,,yes
+ht2,Baal's Enhanced Eye,misc,ques,,,yes
+ht3,Mephisto's Enhanced Brain,misc,ques,,,yes
+z01,Cellar of Pain (Tier 1),misc,mmap,,,yes
+z02,Chasm of Horrors (Tier 1),misc,mmap,,,yes
+z03,Crypt of Damnation (Tier 1),misc,mmap,,,yes
+z04,Necropolis (Tier 1),misc,mmap,,,yes
+z05,Ancient Tomb (Tier 2),misc,mmap,,,yes
+z06,Chaos Rift (Tier 2),misc,mmap,,,yes
+z07,Infested Lair (Tier 2),misc,mmap,,,yes
+z08,Labyrinth of Suffering (Tier 2),misc,mmap,,,yes
+z09,Decaying Depths (Tier 3),misc,mmap,,,yes
+z10,Endless Abyss (Tier 3),misc,mmap,,,yes
+z11,Frozen Wastes (Tier 3),misc,mmap,,,yes
+z12,Twisted Maze (Tier 3),misc,mmap,,,yes
+z13,Cursed Ossuary (Tier 4),misc,mmap,,,yes
+z14,Infernal Nexus (Tier 4),misc,mmap,,,yes
+z15,Reliquary of Souls (Tier 4),misc,mmap,,,yes
+z16,Shrine of Destruction (Tier 4),misc,mmap,,,yes
+z17,The Eye of the Storm (Tier 5),misc,mmap,,,yes
+z18,The Icecrown Citadel (Tier 5),misc,mmap,,,yes
+um1,Diablo's Demonic Horn,misc,ques,,,yes
+um2,Baal's Demonic Eye,misc,ques,,,yes
+um3,Mephisto's Demonic Brain,misc,ques,,,yes
+um4,Broken hourglass shard,misc,ques,,,yes
+um5,Broken hourglass shard,misc,ques,,,yes
+um6,Broken hourglass,misc,ques,,,yes
+um7,Orb of Anointment,misc,ques,,,yes
+mam,Amulet,misc,amul,,,yes
+um8,Lilith's Crystallized Tear,misc,cube,,,yes
+um9,Tyrael's Eternal Feather,misc,cube,,,yes
+u10,Pandemonium Key Set,misc,ques,,,yes
+ast,Ascendancy Stone,misc,astn,,,yes
+u11,Orb of Storms,misc,ques,,,yes
+u12,Orb of Earth,misc,ques,,,yes
+u13,Orb of Water,misc,ques,,,yes
+u14,Orb of Fire,misc,ques,,,yes
+u15,Orb of Wind,misc,ques,,,yes
+u16,Orb of Creation,misc,ques,,,yes
+led,Kill Ledger,misc,xcha,,,yes
+z19,The Sanctum of the Dead (Tier 5),misc,mmap,,,yes
+mrn,Ring,misc,ring,,,yes
+z20,The Reliquary of False Light (Tier 5),misc,mmap,,,yes
+u17,Lucion's Essence,misc,ques,,,yes
+u18,Lucion's Relic of Sanctification,misc,ques,,,yes
+u19,Primordial Soulstone,misc,cube,,,yes
+u20,Astrogha's Petrified Heart,misc,cube,,,yes
+u21,Ore Shards,misc,rock,,,no
+u22,Weapons Crate,misc,ques,,,yes
+c11,Noob's Odd Charm,misc,xcha,,,yes
+c12,Veteran's Odd Charm,misc,xcha,,,no
+ib1,Introductory Book,misc,scrl,,,yes
+ib2,Introductory Book,misc,scrl,,,yes
+ib3,Introductory Book,misc,scrl,,,yes
+ib4,Introductory Book,misc,scrl,,,yes
+ib5,Introductory Book,misc,scrl,,,yes
+ib6,Introductory Book,misc,scrl,,,yes
+ib7,Introductory Book,misc,scrl,,,yes
+ib8,Introductory Book,misc,scrl,,,yes
+ib9,Introductory Book,misc,scrl,,,yes
+u23,Weapon Mastery Token,misc,cube,,,yes
+u24,Awakened Weapon Mastery Token,misc,cube,,,yes
+u25,Awakened Weapon Mastery Token,misc,cube,,,yes
+u26,Awakened Weapon Mastery Token,misc,cube,,,yes
+u27,Awakened Weapon Mastery Token,misc,cube,,,yes
+u28,Awakened Weapon Mastery Token,misc,cube,,,yes
+u29,Awakened Weapon Mastery Token,misc,cube,,,yes
+u30,Awakened Weapon Mastery Token,misc,cube,,,yes
+u31,Awakened Weapon Mastery Token,misc,cube,,,yes
+u32,Awakened Weapon Mastery Token,misc,cube,,,yes
+u33,Awakened Weapon Mastery Token,misc,cube,,,yes
+u34,Awakened Weapon Mastery Token,misc,cube,,,yes
+u35,Awakened Weapon Mastery Token,misc,cube,,,yes
+u36,Awakened Weapon Mastery Token,misc,cube,,,yes
+u37,Awakened Weapon Mastery Token,misc,cube,,,yes
+u38,Awakened Weapon Mastery Token,misc,cube,,,yes
+u39,Awakened Weapon Mastery Token,misc,cube,,,yes
+u41,Awakened Weapon Mastery Token,misc,cube,,,yes
+z99,The Hidden Vault,misc,mmap,,,yes
+mjw,Jewel,misc,jewl,,,yes
+u40,Inarius' Everburning Halo,misc,cube,,,yes
+rel,Relic of Knowledge,misc,cube,,,yes
+01p,Elixir of Attributes,misc,upot,relx,,yes
+02p,Elixir of Skill,misc,upot,relx,,yes
+03p,Elixir of Phasing,misc,upot,relx,,yes
+04p,Elixir of Shielding,misc,upot,relx,,yes
+05p,Elixir of Slaughter,misc,upot,relx,,yes
+06p,Elixir of Knowledge,misc,upot,relx,,yes
+07p,Elixir of Speed,misc,upot,relx,,yes
+08p,Elixir of Luck,misc,upot,relx,,yes
+09p,Elixir of Steal,misc,upot,relx,,yes
+10p,Elixir of Deadly Crits,misc,upot,relx,,yes
+11p,Elixir of Quickness,misc,upot,relx,,yes
+12p,Elixir of Absolution,misc,upot,relx,,yes
+13p,Elixir of Potency,misc,upot,relx,,yes
+14p,Elixir of the Giant,misc,upot,relx,,yes
+15p,Elixir of the Feline,misc,upot,relx,,yes
+16p,Elixir of the Gorilla,misc,upot,relx,,yes
+17p,Elixir of the Raven,misc,upot,relx,,yes
+18p,Greater Elixir of Attributes,misc,upot,gelx,,yes
+19p,Greater Elixir of Skill,misc,upot,gelx,,yes
+20p,Greater Elixir of Phasing,misc,upot,gelx,,yes
+21p,Greater Elixir of Shielding,misc,upot,gelx,,yes
+22p,Greater Elixir of Slaughter,misc,upot,gelx,,yes
+23p,Greater Elixir of Knowledge,misc,upot,gelx,,yes
+24p,Greater Elixir of Speed,misc,upot,gelx,,yes
+25p,Greater Elixir of Luck,misc,upot,gelx,,yes
+26p,Greater Elixir of Steal,misc,upot,gelx,,yes
+27p,Greater Elixir of Deadly Crits,misc,upot,gelx,,yes
+28p,Greater Elixir of Quickness,misc,upot,gelx,,yes
+29p,Greater Elixir of Absolution,misc,upot,gelx,,yes
+30p,Greater Elixir of Potency,misc,upot,gelx,,yes
+31p,Greater Elixir of the Giant,misc,upot,gelx,,yes
+32p,Greater Elixir of the Feline,misc,upot,gelx,,yes
+33p,Greater Elixir of the Gorilla,misc,upot,gelx,,yes
+34p,Greater Elixir of the Raven,misc,upot,gelx,,yes
+u42,Mystical Shard,misc,ques,,,yes
+u43,Mystical Tesseract,misc,cube,,,yes
+35p,Elixir of Reincarnation,misc,upot,,,yes
+aa1,Alien Artefact,misc,arte,,,yes
+aa2,Alien Artefact,misc,arte,,,yes
+aa3,Alien Artefact,misc,arte,,,yes
+aa4,Alien Artefact,misc,arte,,,yes
+aa5,Alien Artefact,misc,arte,,,yes
