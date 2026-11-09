@@ -16,7 +16,7 @@ interface EnhanceAnointmentProps {
 }
 
 export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnointmentProps) {
-  const { anointment, anointmentSlots, vesselRecipes } = bundle;
+  const { anointment, anointmentSlots } = bundle;
   const count = (name: string) => bundle.anointmentOutcomes.filter((outcome) => outcome.pool === name).length;
   const all = bundle.anointmentOutcomes.filter((outcome) => outcome.pool === pool);
   const outcomes = filterAnointmentOutcomes(all, search);
@@ -24,7 +24,6 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
   const groups = anointmentGroups(anointmentSlots);
   const group = groups.find((entry) => entry.group === slot?.group);
   const groupCount = (slots: readonly { slot: string }[]) => slots.reduce((sum, entry) => sum + count(entry.slot), 0);
-  const vesselRecipe = vesselRecipes.find((recipe) => recipe.anointmentRolls !== undefined);
   // Socketed items roll a shorter range, so the last outcome(s) cannot roll on them
   const socketedMax = slot?.socketedRollRange ?? null;
 
@@ -71,17 +70,14 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
                       { kind: 'type', code: slot.typeCode },
                       { kind: 'item', code: anointment.reagent.code },
                     ]
-                  : pool === 'charm'
-                    ? [
-                        { kind: 'type', code: 'char' },
-                        ...anointment.charmReagents.map((reagent) => ({ kind: 'item' as const, code: reagent.code })),
-                      ]
-                    : [{ kind: 'unique', name: anointment.vesselItem }]
+                  : [
+                      { kind: 'type', code: 'char' },
+                      ...anointment.charmReagents.map((reagent) => ({ kind: 'item' as const, code: reagent.code })),
+                    ]
               }
             />
             {slot !== undefined && `${slot.label} + ${anointment.reagent.name}`}
             {pool === 'charm' && `Unique Charm + ${anointment.charmReagents.map((reagent) => reagent.name).join(' + ')}`}
-            {pool === 'vessel' && `${anointment.vesselItem} (tier 4 recipe)`}
           </CardTitle>
           <p className="text-sm">{all.length} outcomes, one per roll; every roll is a success (no brick rows).</p>
         </CardHeader>
@@ -119,12 +115,6 @@ export function EnhanceAnointment({ bundle, pool, search, onPool }: EnhanceAnoin
             </ul>
           )}
           {pool === 'charm' && <p>Cube the unique charm with the three organs, then cube the charm again on its own.</p>}
-          {pool === 'vessel' && (
-            <p>
-              The Vessel's tier 4 anointment recipe ({vesselRecipe?.materials.map((material) => material.name).join(' + ')},{' '}
-              {vesselRecipe?.soulCost} souls) rolls one of these {vesselRecipe?.anointmentRolls ?? all.length}.
-            </p>
-          )}
         </CardContent>
       </Card>
 

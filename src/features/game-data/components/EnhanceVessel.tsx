@@ -1,9 +1,7 @@
-import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { EnhanceBundle, VesselMaterial } from '../engine/schema';
-import { GAME_DATA_URL_PARAM_KEYS } from '../constants/urlParams';
 import { VESSEL_COMPLETION, filterVesselRecipes, filterVesselTransforms, materialText } from '../utils/enhance';
 import { CELL_ICON_SIZE, IconList } from './CellIcon';
 import { ItemIcon } from './ItemIcon';
@@ -16,8 +14,6 @@ interface EnhanceVesselProps {
   readonly search: string;
   readonly onTier: (tier: string) => void;
 }
-
-const VESSEL_ANOINTMENTS_LINK = `/enhance?${GAME_DATA_URL_PARAM_KEYS.TAB}=anointment&${GAME_DATA_URL_PARAM_KEYS.SLOT}=vessel`;
 
 export function EnhanceVessel({ bundle, tier, search, onTier }: EnhanceVesselProps) {
   const { vessel, vesselTiers, vesselRecipes, vesselTransforms } = bundle;
@@ -95,12 +91,10 @@ function VesselTierList({ bundle, tier, search }: { readonly bundle: EnhanceBund
                 <MaterialList materials={recipe.materials} />
               </div>
               <div className="min-w-0">
-                {recipe.anointmentRolls !== undefined ? (
+                {recipe.storesAnointment === true ? (
                   <p>
-                    Rolls one of the{' '}
-                    <Link to={VESSEL_ANOINTMENTS_LINK} className="text-primary underline underline-offset-2">
-                      {recipe.anointmentRolls} Vessel of Souls anointments
-                    </Link>
+                    Stores an anointment. It is applied when the Vessel is transformed into a mythical weapon, rolling that weapon type's
+                    pool.
                   </p>
                 ) : (
                   <BonusLines lines={recipe.lines} />
