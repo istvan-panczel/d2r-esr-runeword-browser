@@ -275,9 +275,28 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
 - Model: editor-only `commentsBefore` on rules and styles, `keyComments` and `rulesEndComments` on the filter (never keys
   in the file). `parseJsonc` places the comments (`placedComments`), the serializer writes them back after a blank line.
 - A disabled rule's comments are written above its `disabledRules` entry, so they come back with the rule.
-- POC limits: headings are added or renamed in the JSON tab only; a search lists rules without headings; folding resets
-  when the tab changes; comments above a single style are kept but not shown; a commented-out rule shows as a note (the
-  rule toggle is the way to switch one off).
+- **The same in the Styles list**: comments above a style inside `"styles"` group and fold the style list by the same
+  ruleset. There is nowhere to keep a comment after the last style, so the editor adds headings above a style only.
+- **Editing** (Rules and Styles lists): "Add section" under the list header adds a part, section or note above the
+  selected rule or style (after the last rule when none is selected); the H button of a rule row (or of the style
+  editor's toolbar) adds one right above that rule or style. A heading row folds on click and has, on hover or focus,
+  Edit (title, level and description), Add rule (an empty rule as the last rule of the section; Rules list only), Move
+  up and Move down (the section with its rules and subsections, past the neighbouring section of the same level inside
+  its part; off while searching) and Remove (the heading and its description; the rules stay). A note row has Edit
+  (empty removes it) and Remove. The dialog shows the comment lines the file gets. Renaming keeps the file's markers
+  and decoration (`// ---- Styles ----------`); a note line that would read as a heading or separator is written
+  `// Note: â€¦`. Collapse all / Expand all fold every heading; folds reset when the tab changes (owner decision).
+- **Search**: matching rules are listed under the headings they sit in (notes left out); a query that matches a
+  heading's title lists its whole section. Folds do not apply while searching.
+- **Our files**: the example filter (v2.2.0) has a `// ---- <group>` heading per example group and one for the hide
+  rules; the Example rules dialog writes the same headings above the rules it adds, unless the filter already has a
+  heading of that title (`withGroupHeadings`, `headingTitles` in `utils/examplePicker.ts`).
+- A commented-out rule shows as a note: the rule toggle (`disabledRules`) is the way to switch one off.
+- Code: `utils/sections.ts` reads the lines (`readCommentLine`), builds the list rows (`buildSectionRows`) and applies
+  every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`); the reducers
+  `editRuleComments`, `addRuleToSection` and `editStyleComments` wrap it, and `removeStyle` hands a deleted style's
+  comments to the next style as `removeRule` does. The rows are `components/sections/SectionRows.tsx`, the dialog
+  `SectionDialog.tsx`.
 
 `lootFilterSaga` (registered by `src/features/loot-filter/index.ts` when the route chunk first loads):
 
@@ -398,10 +417,13 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
   filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '2.1.0', label: 'Example filter (with explanations) v2.1.0' }`. Our own
+  `basedOn { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' }`. Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "Ã¿c4Drop: {qualityColor}{name}".
-  - _v2.1.0_ (2026-11-05, current) is built from the example rules (Rules tab, below): 28 of them, exactly as the
+  - _v2.2.0_ (2026-11-09, current) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
+    example group and `// ---- Hide rules` above the hide rules (12 headings; see "Section comments"), and a header
+    line saying what they are. The rules and styles are unchanged.
+  - _v2.1.0_ (2026-11-05) is built from the example rules (Rules tab, below): 28 of them, exactly as the
     picker adds them together with their default choices (`buildExampleSet` over the examples with `defaultChoices`:
     the style preset, which now brings its generated icon, Sully's sound, the chat line), plus `notify: true` on the
     unique rule and `activeInLevels: [2]` on four hide rules. Its `styles` are the 13 presets the rules use (HighRune,
@@ -436,7 +458,7 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
     regenerated from v2.0.0 with a throwaway script that serializes the parsed file with the new styles, rules and
     comments and moves each `comment` line first, which reproduces v2.0.0 byte for byte when nothing changes) and is
     kept byte-stable: `public/loot-filters/` is Prettier-ignored.
-  - Credit line: "Example filter v2.1.0, built for this site from its example rules to show how rules work; sounds by
+  - Credit line: "Example filter v2.2.0, built for this site from its example rules to show how rules work; sounds by
     Sully, icons generated for this app".
 - **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
   (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
@@ -1340,7 +1362,7 @@ fails while the folders and the registry disagree, and decodes every icon.
 | `star_white`, `diamond_white`, `circle_white` | any colour through the icon's tint (`color` multiplies the colours) |
 
 The style presets carry them (see [Style presets](#style-presets)), the example rules show them through their presets
-(_Icons_ under the Rules tab's example rules), and so the example filter v2.1.0 has them in its styles; Sully's filter keeps his own.
+(_Icons_ under the Rules tab's example rules), and so the example filter (since v2.1.0) has them in its styles; Sully's filter keeps his own.
 
 Drawing: every shape is a signed distance function on the 128 px canvas; a pixel's distance gives the fill, a dark
 outline 6 px wide (about 2 px at the usual 40 minimap pixels; the colour Ã— 0.16) and the transparent outside, each edge
