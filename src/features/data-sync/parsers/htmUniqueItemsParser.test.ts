@@ -232,9 +232,9 @@ describe('Notes column', () => {
     expect(item?.notes).toBe('');
   });
 
-  it('names the mastery of every mastery unique in its property line (17 in ESR 3.3)', () => {
+  it('names the mastery of every mastery unique in its property line (18 in ESR 3.3.03)', () => {
     const masteryLines = weapons.flatMap((item) => item.properties.filter((line) => /^Weapon Mastery \(.+\)$/.test(line)));
-    expect(masteryLines).toHaveLength(17);
+    expect(masteryLines).toHaveLength(18);
     expect(masteryLines).toContain('Weapon Mastery (Sorceress Orb: Tripled Cooldowns)');
     expect(weapons.some((item) => item.properties.includes('Weapon Mastery Applied'))).toBe(false);
   });

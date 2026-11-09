@@ -94,7 +94,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `modifiers.json`       | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
 | `masteries.json`       | ESR 3.3: 15 KB / 4 KB                                                                                                              |
 | `specializations.json` | ESR 3.3: 29 KB (+ `icons/specializations/`: 60 WebP, 138 KB)                                                                       |
-| `mercenaries.json`     | ESR 3.3.02: 17 KB                                                                                                                  |
+| `mercenaries.json`     | ESR 3.3.03: 17 KB                                                                                                                  |
 | `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
@@ -458,12 +458,17 @@ Derivation (rows are classified by their data, not their descriptions):
   `tinkerflag2`, `craftflag`, `craftflag2`, `item-upgraded`. `trap-limit` is a real Vessel bonus ("+1 to trap limit")
   and stays visible.
 - **Corruption** (`wss`): one slot per item type in the fixed slot list (weapon, shield, body, helm, gloves, belt,
-  boots, ring, amulet, quiver, unique charm). `qualities` = qualities with outcome rows; `rollOnlyQualities` = a roll
-  row but no outcome rows (Low/Normal/Superior rings and amulets); Magic has no rows at all. The outcome list is
-  deduplicated across qualities by roll position; a quality whose row at that roll has other values becomes a
-  `variant` of that outcome (ESR 3.3, as 3.2.24: Low/Normal/Superior body armor roll 15 and belt roll 18). `successRate` =
-  outcomes / rollRange, `brick.rate` = brick rows / rollRange, brick `results` per quality plus more specific subtype
-  rows (Odd Charm → Grand Charm, Square Charm → Large Charm; `isA` follows item types and item codes). Notes: a named
+  boots, ring, amulet, quiver, unique charm). ESR 3.3.03 has one roll row per slot group without a quality (`weap,nru`,
+  `armo,nru`, `ring,nru`, `amul,nru`, `misl,nru`; `rollsOfSlot` reads it as one roll per quality on the slot's own cell),
+  so every quality rolls the same list, Magic included; `char,uni` keeps its quality and stays unique-only. `qualities` =
+  qualities with outcome rows; `rollOnlyQualities` = a roll row but no outcome rows (none since 3.3.03). The outcome list
+  is deduplicated across qualities by roll position; a quality whose own row at that roll has other values becomes a
+  `variant` of that outcome (Low/Normal/Superior body armor roll 15 and belt roll 18: the `<type>,<quality>,nru` rows, which
+  come before the shared row). `successRate` = outcomes / rollRange, `brick.rate` = brick rolls / rollRange. The bricks are
+  one `op 15` "dummy at least N" row per slot since 3.3.03 (every quality bricks to a Rare of the same type) next to the
+  old `op 18` rows; brick `results` per quality plus more specific subtype rows (ESR 3.3.03: Odd Charm → Rare Odd Charm,
+  Square Charm → Rare Square Charm, with a socket; `isA` follows item types and item codes). `Corruption Legacy Roll` rows
+  (an unspent old roll moved into the new range) are `useitem`, so no bricks, and stay hidden. Notes: a named
   item with its own roll and an `op=15` "already corrupted N times" blocker is repeatable (The Triune's Harbinger, 10
   times, same list as weapons); a non-`wss` row whose `corrupted` mod is negative removes the marker (Astrogha's
   Petrified Heart); a `void` Vessel + `wss` row on the soul counter means the Vessel cannot be corrupted with souls.
@@ -475,8 +480,11 @@ Derivation (rows are classified by their data, not their descriptions):
   `label` = the type's name; `socketedRollRange` from the `,sock` roll rows (one shorter, so the last outcome,
   "(Sockets)", cannot roll on socketed items); `secondPerk` from the "… - Sanctimonious" roll rows (`op 3`, a perk stat
   ≥ 1: the Blacksmith perk allows a second anointment of weapons and armor); `blockedQualities` from the `void`
-  "<slot>,uni + um7" rows; `noRunewords` when every roll row has `nru`. Other pools: `charm` (unique charm + three
-  organs) and `vessel` (rows on the Vessel alone, rolled by the tier 4 anointment recipe). `roll` is the row's `value`,
+  "<slot>,uni + um7" rows; `noRunewords` when every roll row has `nru`. Other pool: `charm` (unique charm + three
+  organs). The `vessel` pool (rows on the Vessel alone) is empty since ESR 3.3.03: the Vessel tier 4 anointment recipe sets
+  `anointed_dummy` to a fixed 200 (`storesAnointment` on the recipe, no `anointmentRolls`), and the Vessel keeps it until it
+  is transformed into a mythical weapon, where the "Vessel of Souls Transform to Mythical … - Anointed" rows (hidden on the
+  Cube page) turn it into that weapon type's normal pool. `roll` is the row's `value`,
   not the number in the description; `label` is the description's last `(…)`. The 3.2 slot ids (`weapon`, `helm` …)
   are gone, so saved builds' 3.2 anointments no longer resolve (owner decision: no migration).
 - **Sanctification** (Lucion's Relic, `u18`): the `sanctified-dummy` roll row "item + reagent" without a perk trap (a
@@ -504,8 +512,8 @@ Derivation (rows are classified by their data, not their descriptions):
 Counts (`enhance*` in the manifest), ESR 3.3: 11 corruption slots with 272 outcomes (weapon and quiver 30 of 40
 rolls, unique charm 20 of 30, the others 24 of 32: 75 % success, unique charm 66.7 %); 4,793 equipment anointments in
 63 item type pools (33 weapon types, 4 helm, 4 shield, 9 ring and 9 amulet types, body, gloves, belt, boots; e.g. axe
-63, circlet 96, helm 74, body armor 85, ring 101, amulet 116; ESR 3.2.24: 790 in 9 slot pools), 30 unique charm and 178
-Vessel anointments; 217 jewel sanctifications (rolls 1–217, three bonuses each: a maximum resist or Physical
+63, circlet 96, helm 74, body armor 85, ring 101, amulet 116; ESR 3.2.24: 790 in 9 slot pools), 30 unique charm
+anointments (the Vessel has had no pool of its own since 3.3.03; 178 in 3.3.02); 217 jewel sanctifications (rolls 1–217, three bonuses each: a maximum resist or Physical
 Resist, an attribute bonus and one other; `+1 to All Skills` in 7, each single maximum resist in 36; the same 217 for
 amulets and rings with the perk); 382 Vessel recipes (tier 1: 202 × 350 + 17 × 700 souls, tier 2: 36 × 42, tier 3: 23 × 7, tier 4:
 6 × 1, 74 × 2, 4 × 3, 20 × 5 including the anointment recipe), 63 with a cap, and 29 transforms. Adding the file did
@@ -521,16 +529,16 @@ output bonuses, variant merging), `cubeFamilies.ts` (the guide's `::recipes` fam
 `cubeCatalog.ts` (hide rules, cube-only families, fallback, sections).
 
 **Hidden rows** (`hidden`, counted by reason, first match): `enhance` = corruption, anointment and Vessel tier rows
-with their roll rows and blockers, matched by description (`Corruption[ Brick] - `, `Add Corruption|Anointment Dummy
-Stat`, `Anointment - `, `Vessel of Souls Tier N - `, `Check if already Corrupted|Anointed`, `Prevent Vessel of Souls
+with their roll rows and blockers, matched by description (`Corruption[ Brick| Legacy Roll] - `, `Add Corruption|Anointment Dummy
+Stat`, `Anointment - `, `Vessel of Souls Tier N - `, `Vessel of Souls Transform to Mythical … - Anointed`, `Check if already Corrupted|Anointed`, `Prevent Vessel of Souls
 Corrupt`; the Enhance page shows them); `traps` = `void` outputs and descriptions with the word "Trap" (not "Starter
 Weapon for Trap Assassin", a real recipe); `old` = "OLD (Delete later)"; `stockers` = descriptions with Stocker / Gem
 Can / Xtal Can / Rerolling Orb, or an input that is a stocker or can item (the Crystal Can rows are labelled "Moon Rune"
 … "God Rune"; the Rerolling Orb is an input of the real custom ring rerolls and is not a can); `dummy` = other "Add …
 Dummy Stat" rows. A row a guide family or a stocker family (`STOCKER_FAMILIES`, below) claims (the Anvil Stone's Multi
-Stocker row, the Sanctification roll, the Rune Stocker upgrades) is never stocker or dummy bookkeeping. ESR 3.3.02:
-11,158 of 23,640 enabled rows are listed; hidden 8,261 enhance (the per-item-type anointment pools), 599 traps, 80 old,
-3,542 stockers (storing, taking out, cycling the selected item), 0 dummy (3.2.24: 9,747 of 17,776; 4,007 enhance, 400
+Stocker row, the Sanctification roll, the Rune Stocker upgrades) is never stocker or dummy bookkeeping. ESR 3.3.03:
+11,572 of 22,149 enabled rows are listed; hidden 6,327 enhance (the per-item-type anointment pools), 616 traps, 80 old,
+3,554 stockers (storing, taking out, cycling the selected item), 0 dummy (3.2.24: 9,747 of 17,776; 4,007 enhance, 400
 traps).
 
 **Stocker families** (`STOCKER_FAMILIES` in `cubeCatalog.ts`, first in `EXTRA_FAMILIES`): the stocker rows a player
@@ -587,9 +595,10 @@ useitem/usetype/cloneitem, `bonus` lines, `details` such as "socketed items come
 
 **D-stoning caps** (`dstoneCaps` on the merged rows of the `dstoning` family): the family's rows with the same inputs
 and bonus stats are one D-stoning; `dstoneCap` (`build/cube/dstoneCaps.ts`, as in crafting.json "Caps") applies them
-from zero and the summed bonus is rendered ("+121% Increased Attack Speed"); a merged row lists the distinct caps of
+from zero and the summed bonus is rendered ("+120% Increased Attack Speed"); a merged row lists the distinct caps of
 the D-stonings it merges (the tiered weapon rows share +300%). Rows without a cap condition, or with the elemental
-half-point counter (`op 18`), get none. ESR 3.3 (as 3.2.24): 151 of 152 merged rows have one (not the weapon Forging Hammer).
+half-point counter (`op 18`), get none. ESR 3.3.03: 153 of 156 merged rows have one (not the weapon Forging Hammer and the
+two Void Shard + Stamina Potion tier rows that merge a half-point counter chain).
 
 **Group labels**: "Secret Recipe N"; the family's `groupLabel` (class crafts "Amazon craft", legacy crafts "Caster craft",
 D-stoning by slot, the stocker families); for `skill-forging`, `stat-forging`, `rune-forging-slots` and `tinkering` the
@@ -651,7 +660,7 @@ qualifier: "Item level 99" (fixed), "Item level 60% of character level" (`plvl`)
 level" (`ilvl`), both added: "Item level 60% of character level + 60% of input item level". It is a separate field so
 it does not split the merged rows (they cluster on the output text; `clusterVariantsCounted` returns the indices of the
 variants each merged row stands for). A merged row lists the distinct levels of its variants joined with " / "
-(variants without one do not count). ESR 3.3.02: 624 of 1,595 merged rows have a level, none disagree. The guide's
+(variants without one do not count). ESR 3.3.03: 641 of 1,646 merged rows have a level, none disagree. The guide's
 `::recipes` blocks do not show it (their rows are built by `collectFamily`, a separate path without this field).
 
 **Qualities** (`qualities`, the page's quality filter, order unique / set / rare / magic / crafted): from the outputs a
@@ -734,7 +743,7 @@ anointment` (the charm reagents, slot `charm`), `Sanctification reagent` (`sanct
   `familyNotes` in the browser (GUIDE.md "Bundle shape"). For the same reason cube.json families carry no guide notes.
 
 Counts: `materialsItems` 416, `materialsGroups` 16, `materialsUsedInCube` 370, `materialsMadeByCube` 335,
-`materialsUnknownSource` 20 (ESR 3.3.02; 177 socket fillers, 55 potions, 52 Ancient Scrolls, 48 cube materials, 24 quest
+`materialsUnknownSource` 20 (ESR 3.3.03; 177 socket fillers, 55 potions, 52 Ancient Scrolls, 48 cube materials, 24 quest
 items, 21 maps, 14 organs, 7 containers, 5 coupon rows and a few small groups; 3.2.24: 395 items). Adding the file did not bump
 `GAME_DATA_SCHEMA`.
 
@@ -925,7 +934,7 @@ without length prefixes, so the parser needs every width:
 - `gemwords`: the runeword field values of the charm gemwords (the counts of the home card need no names).
 - `characterStats`, `characterClasses` (`build/bundleCharacterSave.ts`, read by the character save parser,
   [CHARACTER-SAVE.md](./CHARACTER-SAVE.md)): the `gf` stats as `[stat id, CSvBits, ValShift]` for every
-  itemstatcost.txt row with CSvBits > 0 (81 in ESR 3.3.02), and `[class name, first skills.txt row, skill count]`
+  itemstatcost.txt row with CSvBits > 0 (81 in ESR 3.3.03), and `[class name, first skills.txt row, skill count]`
   per class, in the save's class byte order.
 
 `stashnames.json` (`StashNamesBundle`, the same generator) holds the names, loaded by the All items page only, so the
@@ -957,7 +966,7 @@ starting with `*` or `+` reads as the misc.txt `name` column ("Minor Healing Pot
 (`cube/cubeRows.ts`). 17 codes in ESR 3.3 (hp1–hp5, mp1–mp5, vps, yps, rvs, rvl, wms, tsc, isc; `hp5` keeps ESR's
 "Supeer Healing Potion"). lootfilter.json keeps the in-game abbreviations (what a filter author sees on the ground).
 
-Counts (ESR 3.3.02): `stashItemCodes` 2334, `stashSavedStats` 722, `stashCoupons` 385, `stashCouponRecipes` 382,
+Counts (ESR 3.3.03): `stashItemCodes` 2334, `stashSavedStats` 722, `stashCoupons` 385, `stashCouponRecipes` 382,
 `stashCouponWildCardRecipes` 382, `stashUniques` 1390, `stashSetItems` 270, `stashRunewords` 391, `stashGemwords` 9. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
 `44e` Measured Wrath, takes 2).
 
@@ -1004,7 +1013,7 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `levels`: required levels by the ids a save stores: uniqueitems / setitems `lvl req`, magicprefix / magicsuffix /
   automagic `levelreq` (1-based like the names).
 
-Counts (ESR 3.3.02): `itemTextStats` 722, `itemTextStrings` 424, `itemTextSkills` 915, `itemTextMonsters` 404,
+Counts (ESR 3.3.03): `itemTextStats` 722, `itemTextStrings` 424, `itemTextSkills` 917, `itemTextMonsters` 406,
 `itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
 
 ### Skills
@@ -1059,8 +1068,8 @@ paths); `build/toml.ts` reads the TOML. Vanilla reference values: `build/data/va
 and qualityitems.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
 Details, facts and open questions: [MODIFIERS.md](./MODIFIERS.md).
 
-Counts (ESR 3.3.02): `modifierStats` 539, `modifierStatsUsed` 525, `modifierStatsEsrOnly` 362, `modifierStatsChanged` 11,
-`modifierKinds` 442, `modifierKeyKinds` 60, `modifierFacts` 66, `modifierConfigFacts` 30, `modifierSources` 24079.
+Counts (ESR 3.3.03): `modifierStats` 538, `modifierStatsUsed` 524, `modifierStatsEsrOnly` 361, `modifierStatsChanged` 11,
+`modifierKinds` 441, `modifierKeyKinds` 60, `modifierFacts` 80, `modifierConfigFacts` 40, `modifierSources` 22503.
 Warnings start with `modifiers:`.
 
 ### Crafting options
@@ -1096,20 +1105,21 @@ picker and the guide's `::dstone-caps` table read it.
 - **Caps** (`cap`, `capLines`; `build/cube/dstoneCaps.ts`, shared with cube.json): each D-stoning row checks a cap
   stat (`op 16`, at most `value`; the light radius reduction `op 15`, at least a negative value) and raises it by the
   same amount as its bonus (the `*-cap` mod, or a `*-cap-group` property group whose PickMode 0 entries raise several
-  cap stats: `str-dex-enr-cap-group` raises the strength, dexterity, energy and shared caps). Only D-stoning raises
+  cap stats: `str-dex-enr-cap-group` raises the strength, dexterity, energy and shared caps; a numbered group,
+  `extra-ele-cap-group-2`, by that step per roll of 1). `void` `op 15` blockers earlier in the file with the same first input and
+  ingredients also stop a D-stoning, and since ESR 3.3.03 a chain can end on blockers with a last row without a condition
+  (Blackmoor + Key on the 6 armor slots 200, Void Shard + Stamina Potion on a weapon 300). Only D-stoning raises
   these stats, so a cap counts only what D-stoning added, as the official page says. The cap is found by applying the
   group's rows from zero like the game (each use takes the first row whose condition holds) until none applies: `cap`
-  is the summed amount of the first bonus stat, `capLines` the bonus lines at that total ("+121% Increased Attack
+  is the summed amount of the first bonus stat, `capLines` the bonus lines at that total ("+120% Increased Attack
   Speed"). Property → stat ids come from properties.txt / propertygroups.txt and the itemstatcost row numbers; a cap
   mod without known stats raises the row's condition stat. The total can pass the condition value by up to one step,
-  so it can differ a little from the page's round number (Spider's Silk on a weapon: +12% while at most 500, so 504;
-  Dragon Stone on a weapon: 121, page 120). No cap: a row without a condition (Forging Hammer on a weapon), a
+  so it can differ a little from the page's round number (none since ESR 3.3.03: the rows end exactly on the page caps,
+  Spider's Silk on a weapon 500, Dragon Stone on a weapon 120). No cap: a row without a condition and no own blockers (Forging Hammer on a weapon), a
   condition other than op 15 / 16 (the elemental half-point counter) or no stop within 1,000 uses (warned). The
   integrity test reads the page's "(Capped at N)" per D-Stoning row (75 rows in four sections) and allows one step of
-  difference; the known disagreements (ESR 3.3, as 3.2.24) are listed there: weapon Forging Hammer (no cap condition, page
-  500%), Blackmoor + Key on a weapon (60 mana after each kill, page 150), Holy Symbol on armour (100 all resists, page
-  150), Forging Hammer + Stamina Potion on jewelry (300% gold, page 400%) and Void Shard + Stamina Potion on a weapon
-  (no such option: the rows name the Forging Hammer, see below).
+  difference; the known disagreements (ESR 3.3.03) are listed there: weapon Forging Hammer (no cap condition, page 500%) and Holy
+  Symbol on armor, helmet and shield (100 all resists, page 150).
 - **Skipped** (`craftingRowsSkipped`; not warned unless said): jewel and charm rows (not equipment slots); rows for a
   weapon subtype, which the builds slot cannot tell apart from other weapons: the wand and staff rune forging rows, the
   wand / staff / orb gem meld rows and the two-handed (`2hsw`) D-stoning rows; tiered D-stoning variants (`weap,exc`,
@@ -1121,8 +1131,8 @@ picker and the guide's `::dstone-caps` table read it.
   and the Kanji runes Moon … God, r84–r97). Switch item labels are the misc.txt names: `vps` reads "Stamina Potion"
   (the descriptions say "+ vps"), `yps` "Antidote Potion".
 
-Counts (ESR 3.3.02): `craftingForgings` 84 (8 skill, 1 all, 7 stat, 60 rune, 8 aura), `craftingStacking` 32 (24
-D-stoning, 8 gem meld), `craftingRowsUsed` 718, `craftingRowsSkipped` 244. Through 3.3 the "VS + Any Weapon + vps" rows
+Counts (ESR 3.3.03): `craftingForgings` 84 (8 skill, 1 all, 7 stat, 60 rune, 8 aura), `craftingStacking` 32 (24
+D-stoning, 8 gem meld), `craftingRowsUsed` 756, `craftingRowsSkipped` 414. Through 3.3 the "VS + Any Weapon + vps" rows
 named the Forging Hammer (`hh2`) and were shadowed by the earlier "FH + Any Weapon + vps" rows; ESR 3.3.02 made them take
 the Void Shard. Adding the file did not bump `GAME_DATA_SCHEMA`.
 
@@ -1778,7 +1788,7 @@ the startup loading gate (`isStaticBundlePath` in `src/core/layouts/staticBundle
 under the panel, with each tab's content):
 
 - **Corruption** (`components/EnhanceCorruption.tsx`): slot pills with outcome counts; a header "N outcomes · 75%
-  success, 25% brick → Rare item of the same type (Crafted, Superior, Normal and Low Quality keep their quality)"
+  success, 25% brick → Rare item of the same type (since ESR 3.3.03 no quality keeps its own)"
   built by `brickSummary`, the rates with a "Computed from the recipe rows" tooltip; the corruptible qualities, the
   qualities without rows, roll-only qualities and the notes; then the outcome list (roll number, lines, variants as
   "Superior, Normal and Low Quality: …").
@@ -1796,7 +1806,7 @@ under the panel, with each tab's content):
   sanctification row links here.
 - **Vessel of Souls** (`components/EnhanceVessel.tsx`): tier pills plus Completion; a tier header (start → end souls,
   costs), one row per recipe: soul cost badge, "max N×" badge, materials (each with its 22 px icon) → bonus lines (the
-  anointment recipe links to the Vessel pool on the Anointment tab); Completion lists the 29 transforms (Blemished gem
+  tier 4 anointment recipe reads that it stores an anointment, applied when the Vessel is transformed into a mythical weapon); Completion lists the 29 transforms (Blemished gem
   icons → the mythical weapon's icon).
 - **Standard of Heroes** (`components/EnhanceStandard.tsx`): no pills; a header "Unique Charm + Standard of Heroes", the
   once-per-charm rule, a source line linking the official Drop Finder with the hint that ESR's configs have the uber
@@ -1811,12 +1821,12 @@ under the panel, with each tab's content):
 
 State lives in the URL (read on every render, written with `replace`), parsed and encoded by `utils/enhance.ts`:
 
-| Param    | Meaning                                                                                                                               |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`, `standard`                                                          |
-| `slot`   | corruption slot / anointment pool (an item type code, the first pool by default; `charm`, `vessel`); none on Sanctification, Standard |
-| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                                     |
-| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material / charm names)                                   |
+| Param    | Meaning                                                                                                                     |
+| -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `tab`    | `corruption` (default), `anointment`, `sanctification`, `vessel`, `standard`                                                |
+| `slot`   | corruption slot / anointment pool (an item type code, the first pool by default; `charm`); none on Sanctification, Standard |
+| `tier`   | Vessel tier `1`–`4` (default `1`) or `completion`                                                                           |
+| `search` | text (shared key, debounced 300 ms); AND terms over the lines (and labels / material / charm names)                         |
 
 Invalid values fall back to the tab's first option (an ESR 3.2 anointment link's slot id, `slot=weapon`, `body` …, opens
 that slot group's first pool); Copy Link encodes only the non-default values the tab uses.

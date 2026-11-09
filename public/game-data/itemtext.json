@@ -1057,7 +1057,8 @@
     {"stat":"item_mindamage_percent6","op":11},
     {"stat":"rune_effect_current_item_perlevel","op":4,"opParam":3,"descpriority":55,"descfunc":19,"descstrpos":"runeeffectcurrentitem","descstr2":"increaseswithplaylevelX"},
     {"stat":"item_maxhp_percent_perlevel","op":2,"opParam":3,"descpriority":58,"descfunc":19,"descstrpos":"ModStr2g","descstr2":"increaseswithplaylevelX"},
-    {"stat":"item_sanctification_jewelry","descpriority":300,"descfunc":20,"descstrpos":"Sanctified Jewelry"}
+    {"stat":"item_sanctification_jewelry","descpriority":300,"descfunc":20,"descstrpos":"Sanctified Jewelry"},
+    null
   ],
   "strings": {
     "99j2": "Wild Card",
@@ -2400,7 +2401,9 @@
     {"id":1624,"name":"Dreamflange Aura"},
     {"id":1625,"name":"Agent of the Light Aura"},
     {"id":1626,"name":"Lightning Enhanced Leap Attack"},
-    {"id":1627,"name":"Chain Lightning"}
+    {"id":1627,"name":"Chain Lightning"},
+    {"id":1628,"name":"Horn of Balor Aura"},
+    {"id":1629,"name":"Famine Dagger Buff"}
   ],
   "classes": [
     {"name":"Amazon","allSkills":"%+d to Amazon Skill Levels","tabs":["%+d to Bow and Crossbow Skills","%+d to Passive and Magic Skills","%+d to Javelin and Spear Skills"],"only":"(Amazon Only)"},
@@ -3854,7 +3857,9 @@
     "but lose 1% physical resist for every 10% life steal\nGain 1% deadly strike damage for every 5% life steal",
     "You gain 1% spell damage per 2000 mana per 25 levels",
     "Bonuses reset on hit\nbonus per second while you charge, up to 600%\nGain 200% total physical damage and total defense",
-    "deals 100% weapon damage as lightning\nThe chain lightning coming from this weapon"
+    "deals 100% weapon damage as lightning\nThe chain lightning coming from this weapon",
+    "Gain 1% fire spell damage for every 5% fire resist over the cap",
+    "0.5% of maximum life every second. Maximum stacks: 20\nstriking for 1 second when you hit an enemy, but lose\nGain 15%-25% bleed damage over 1 second and 1 life on"
   ],
   "monTypes": [
     null,
@@ -14943,6 +14948,12 @@
     },
     "gbk": {
       "lvl": 35
+    },
+    "cm1": {
+      "gem": 1
+    },
+    "cm3": {
+      "gem": 1
     },
     "r51": {
       "lvl": 11

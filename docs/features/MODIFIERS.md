@@ -61,7 +61,7 @@ once per stat (`usage` per list, `items` = their sum). Per stat:
   source (the automagic / suffix rows of `item_randomize`) counts in `usage` but is no example; the page's `entryExamples`
   skips empty names too.
 
-ESR 3.3.02: 539 stats, 525 carried by an item, 362 not in vanilla, 11 vanilla stats changed: `item_armor_percent`,
+ESR 3.3.03: 538 stats, 524 carried by an item, 361 not in vanilla, 11 vanilla stats changed: `item_armor_percent`,
 `item_maxhp_percent`, `item_maxmana_percent` (extra op stats: per-level defense / life / mana), `item_attackertakesdamage`
 (also fires on missile hits), `item_attackertakeslightdamage` (attacked in melee + missiles), `item_openwounds` (no item
 events: bleed replaces it), `item_skillonkill` (func 30, the on-death cast), `item_tohit_perlevel` and
@@ -142,7 +142,7 @@ Key kinds (ESR 3.3; items = rows of the item lists above):
 | `skill-cooldown`        | Skill Cooldown Reduction                  | skills     | `item_skill_cooldown` (371)                                                                                                                                                                                                                | 194   |
 | `attribute-percent`     | % Bonus to Attributes                     | attributes | `strengthpercent` (255), `dexteritypercent` (256), `vitalitypercent` (257), `energypercent` (258)                                                                                                                                          | 651   |
 
-ESR 3.3.02: 442 kinds, 60 key kinds, 382 generated.
+ESR 3.3.03: 441 kinds, 60 key kinds, 381 generated.
 
 ### `facts`
 
