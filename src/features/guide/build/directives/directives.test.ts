@@ -323,7 +323,7 @@ describe('map-bosses', () => {
   it('adds a named-drop column and marks key sets', () => {
     expect(resolve('map-bosses', '5', ctx())).toMatchObject({
       header: ['Boss', 'Orb of Anointment', 'Map', 'Key', 'Named drop', 'Shards when terrorized'],
-      rows: [['Mephisto', '–', '–', '50% (95.5%) (a set)', 'Demonic Brain always', '+1 in the files (page: none)']],
+      rows: [['Mephisto', '–', '–', '50% (95.5%) (a set)', 'Demonic Brain always', '+1']],
     });
   });
 

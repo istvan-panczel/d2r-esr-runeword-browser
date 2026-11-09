@@ -43,11 +43,7 @@ export const resolveMapBosses: DirectiveResolver = (arg, ctx) => {
       cell(ofKind(boss, 'map'), (reward) => `${reward.label.replace(/ map$/, '')} ${chances(reward)}`),
       cell(ofKind(boss, 'key'), (reward) => `${chances(reward)}${reward.expected === undefined ? '' : ' (a set)'}`),
       ...(withItems ? [cell(ofKind(boss, 'item'), (reward) => `${reward.label} ${chances(reward)}`)] : []),
-      boss.terrorShards === null
-        ? 'none set (likely the normal table)'
-        : tier >= 5
-          ? `+${String(boss.terrorShards)} in the files (page: none)`
-          : `+${String(boss.terrorShards)}`,
+      boss.terrorShards === null ? 'none set (likely the normal table)' : `+${String(boss.terrorShards)}`,
     ];
     const same = rows.find((row) => row.cells.join('|') === cells.join('|'));
     if (same === undefined) rows.push({ names: [boss.name], cells });

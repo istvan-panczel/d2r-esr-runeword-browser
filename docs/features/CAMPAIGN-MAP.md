@@ -111,9 +111,9 @@ a tiered map zone (the same summary on the entry, the middle levels and the aren
   Chaos Rift), else its own (`zoneArena`). `<details>`, open on its own arena or when the zone has one boss; Chaos Rift's start closed): the
   fight in a few words, how to hurt the invincible tier 5 bosses (amber box), the rewards in Hell at players 1 with
   players 8 in brackets, "up to N more" generic loot rolls (a per-kill drop cap may cut them), the terrorized Worldstone
-  Shards (and a roll the terrorized table skips; tier 5 gives the files' figure next to the page's "none, engine limit",
-  labelled unconfirmed; a blank terrorized TC would read "likely his normal table", none in ESR 3.3 since Lucion got his
-  own; the page's "always a shard" for tiers 1–4 is not a count and is not compared), a loot table shared with another
+  Shards from the files (and a roll the terrorized table skips; a blank terrorized TC would read "likely his normal
+  table", labelled unconfirmed, none in ESR 3.3 since Lucion got his own; the official page dropped its terror paragraph
+  in ESR 3.3.03, so nothing is compared), a loot table shared with another
   zone's boss (`sameTableAs`; none in ESR 3.3: Herald of Doom has his own Endless Abyss table since then), the launcher
   plugin set drop (Eternal Hourglass), and the players 8 (uber) variant.
 - Where the official page lists another figure or name, the reward row says "Official page: …" (amber text): computed
