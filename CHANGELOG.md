@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.65.2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.65.1...v1.65.2) (2026-11-09)
+
+### Bug Fixes
+
+* **app:** recover from a stale page after a deploy ([b14e67d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b14e67de5ba8aa012f998c8ae60ab59307f2e2d7))
+* **guide:** show the 500% limit on the weapon Forging Hammer D-stoning ([60f7e05](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/60f7e05ed96436744ea6850c6ce988a7e289d2f4))
+
 ## [1.65.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.65.0...v1.65.1) (2026-11-09)
 
 ### Bug Fixes
