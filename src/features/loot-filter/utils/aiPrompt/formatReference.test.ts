@@ -62,7 +62,17 @@ describe('buildFormatReference', () => {
     expect(skeleton).toBe(serializeLootFilter(SKELETON_FILTER).trimEnd());
     const parsed = parseLootFilter(skeleton ?? '');
     expect(parsed.diagnostics).toEqual([]);
+    expect(parsed.notes).toEqual([]);
     expect(validateLootFilter(parsed.filter, reference)).toEqual([]);
+    // Its section comments come back on their rules
+    expect(parsed.filter.rules.map((rule) => rule.commentsBefore)).toEqual(SKELETON_FILTER.rules.map((rule) => rule.commentsBefore));
+  });
+
+  it('teaches the section comments ruleset instead of "comments are dropped"', () => {
+    expect(format).toContain('`// ==== Title` starts a part and `// ---- Title` a section inside it');
+    expect(format).toContain('`disabledRules`');
+    expect(format).not.toContain('allowed only before the opening');
+    expect(format).not.toContain('drops comments between rules');
   });
 
   it('prints what the app reports for every common mistake (the validator against the game data)', () => {

@@ -111,7 +111,7 @@ export function buildInstructions(input: InstructionsInput): string {
     '- Styles: every `useStyle` must name a style defined under `"styles"` in the same file. For a ready-made look, copy a style preset from examples.md into `"styles"` under its name.',
     '- Mind the known plugin limits in FORMAT.md: Enhanced Damage and Enhanced Defense read 0 on weapons and armour, a stat check without "param" reads only param 0, stats read the tooltip number (+40 Life = 40), per-level stats read at the character level, and rules with item stat checks skip unidentified items.',
     '- A matching hide rule hides the item whatever the rules before it did, so every hide rule is narrow and carries its own exceptions ("< 1" stat checks, except lists, a quality list).',
-    '- Strict JSON between the braces: no comments, no trailing commas (notes belong in the rules\' "comment"). `//` comment lines only at the top of the file, before the opening brace.',
+    '- Strict JSON between the braces: no trailing commas, no comment on the same line as a rule or inside a rule or style object, no `/* */` blocks. Whole `//` lines above a rule, a style or a top-level key are fine and the app keeps them: group the rules into parts and sections with `// ==== Title` and `// ---- Title` lines as FORMAT.md "Writing the file for the app" says. Every rule still gets its "comment" (the title the app lists), and a rule to switch off is not commented out.',
     '',
     ...referenceSection(input),
     '',
