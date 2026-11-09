@@ -37,11 +37,11 @@ interface PageShellProps extends Partial<Omit<PageHeaderProps, 'className'>> {
  * still position against the viewport and `sticky` columns still stick (checked in Chrome).
  * The shell must keep a width that does not depend on its content (`w-full`), which it has.
  */
-export function PageShell({ title, count, actions, meta, nav, width = 'wide', className, children }: PageShellProps) {
+export function PageShell({ title, count, actions, meta, width = 'wide', className, children }: PageShellProps) {
   const mode = useSelector(selectPageWidth);
   return (
     <div className={cn('@container/page mx-auto w-full', pageShellWidthClass(width, mode), className)}>
-      {title !== undefined && <PageHeader title={title} count={count} actions={actions} meta={meta} nav={nav} />}
+      {title !== undefined && <PageHeader title={title} count={count} actions={actions} meta={meta} />}
       {children}
     </div>
   );

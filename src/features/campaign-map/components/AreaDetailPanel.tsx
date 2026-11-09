@@ -154,7 +154,7 @@ export function AreaDetailPanel({
           <li>
             <Link to={`/area-levels?search=${encodeURIComponent(`"${area.area.name}"`)}`} className={MORE_LINK_CLASS}>
               <List className="size-3.5" aria-hidden />
-              Areas page row
+              Area Levels page row
             </Link>
           </li>
           {area.quests.some((quest) => quest.itemCode !== undefined) && <CubeLink family="quest-items" label="Quest item cube recipes" />}

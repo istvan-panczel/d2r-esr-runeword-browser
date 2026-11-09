@@ -37,6 +37,7 @@ import {
 } from '@/core/navigation/navConfig';
 // Shared nav-link styling (also the page sub-tabs), so the group triggers and the plain links look the same.
 import { TAB_ACTIVE, TAB_BASE, TAB_INACTIVE } from './navTabClasses';
+import { GroupPagesBar } from './GroupPagesBar';
 import { PageWidthMenu } from './PageWidthMenu';
 
 const DROPDOWN_LINK_CLASS = 'flex w-full cursor-pointer items-center justify-between gap-2';
@@ -52,14 +53,19 @@ function GitHubIcon({ className }: { readonly className?: string }) {
   );
 }
 
+/** A group with more items than this opens as two columns. */
+const MAX_SINGLE_COLUMN_ITEMS = 4;
+
 /** One dropdown entry: label plus a one-line description. */
 function GroupItemLink({ item, active }: { readonly item: NavItem; readonly active: boolean }) {
   return (
     <li>
-      <NavigationMenuLink asChild active={active}>
+      <NavigationMenuLink asChild active={active} className="data-active:bg-accent data-active:text-accent-foreground">
         <Link to={item.to}>
-          <span className="text-sm font-medium leading-none">{item.label}</span>
-          <span className="text-xs leading-snug text-muted-foreground">{item.description}</span>
+          <span className={cn('text-sm leading-none', active ? 'font-semibold' : 'font-medium')}>{item.label}</span>
+          <span className={cn('text-xs leading-snug', active ? 'text-accent-foreground/80' : 'text-muted-foreground')}>
+            {item.description}
+          </span>
         </Link>
       </NavigationMenuLink>
     </li>
@@ -68,6 +74,7 @@ function GroupItemLink({ item, active }: { readonly item: NavItem; readonly acti
 
 function DesktopGroup({ group, pathname }: { readonly group: NavGroup; readonly pathname: string }) {
   const groupActive = isNavGroupActive(pathname, group);
+  const twoColumns = group.items.length > MAX_SINGLE_COLUMN_ITEMS;
   return (
     <NavigationMenuItem>
       <NavigationMenuTrigger
@@ -77,7 +84,11 @@ function DesktopGroup({ group, pathname }: { readonly group: NavGroup; readonly 
         {group.label}
       </NavigationMenuTrigger>
       <NavigationMenuContent className="z-50">
-        <ul className="grid w-72 gap-1">
+        {/* Two columns fill downwards (the rows come from the item count), the order the keyboard moves in. */}
+        <ul
+          className={cn('grid gap-1', twoColumns ? 'w-[36rem] grid-flow-col grid-cols-2' : 'w-72')}
+          style={twoColumns ? { gridTemplateRows: `repeat(${String(Math.ceil(group.items.length / 2))}, auto)` } : undefined}
+        >
           {group.items.map((item) => (
             <GroupItemLink key={item.key} item={item} active={isNavItemActive(pathname, item)} />
           ))}
@@ -113,88 +124,106 @@ export function Header() {
   };
 
   return (
-    <header className="border-b bg-card">
-      {/* Same frame as <main> (Page width setting), so in Wide and Full the logo and the icons line up with the page edges. */}
-      <div className={cn(APP_FRAME_CLASS[pageWidth], 'flex h-14 items-center gap-3 px-4 md:gap-4')}>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0 md:hidden"
-          onClick={() => {
-            setMobileMenuOpen(true);
-          }}
-          aria-label="Open navigation menu"
-        >
-          <Menu className="size-5" />
-        </Button>
-        <Link to="/" className="shrink-0 text-lg font-bold">
-          D2R ESR
-        </Link>
-
-        <NavigationMenu viewport={false} aria-label="Main" className="hidden max-w-none flex-1 justify-start md:flex">
-          <NavigationMenuList className="justify-start">
-            {entries.map((entry) => {
-              if (entry.kind === 'group') return <DesktopGroup key={entry.key} group={entry} pathname={pathname} />;
-              const active = isNavItemActive(pathname, entry.item);
-              return (
-                <NavigationMenuItem key={entry.item.key}>
-                  <NavigationMenuLink asChild active={active}>
-                    <Link to={entry.item.to} className={cn(TAB_BASE, 'block', active ? TAB_ACTIVE : TAB_INACTIVE)}>
-                      {entry.item.label}
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              );
-            })}
-          </NavigationMenuList>
-        </NavigationMenu>
-
-        {/* On mobile the nav is hidden, so this spacer right-aligns the controls below the md breakpoint. */}
-        <div className="flex-1 md:hidden" aria-hidden />
-
-        <div className="flex shrink-0 items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hidden md:inline-flex" aria-label="ESR and community links" title="ESR links">
-                <BookOpen className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {OFFICIAL_LINKS.map((link) => (
-                <DropdownMenuItem key={link.key} asChild>
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" className={DROPDOWN_LINK_CLASS}>
-                    {link.label}
-                    <ExternalLink className="size-3" />
-                  </a>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Community tools</DropdownMenuLabel>
-              {COMMUNITY_TOOLS.map((tool) => (
-                <DropdownMenuItem key={tool.key} asChild>
-                  <a href={tool.href} target="_blank" rel="noopener noreferrer" className={DROPDOWN_LINK_CLASS}>
-                    {tool.label}
-                    <ExternalLink className="size-3" />
-                  </a>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <PageWidthMenu />
-          <Button variant="ghost" size="icon" onClick={handleThemeToggle} aria-label="Toggle theme">
-            {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+    <header className="relative z-50 border-b bg-card">
+      {/*
+        Same frame as <main> (Page width setting), so in Wide and Full the logo and the icons line up with the page edges.
+        The frame is the `header` size container: the `@desktop-nav/header:` classes swap the hamburger for the desktop nav
+        when this row really has the room. A viewport breakpoint cannot do it: the row's content grows with the Text size
+        setting, and a media query's rem ignores that setting.
+      */}
+      <div className={cn(APP_FRAME_CLASS[pageWidth], '@container/header')}>
+        <div className="flex h-14 items-center gap-3 px-4 @desktop-nav/header:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 @desktop-nav/header:hidden"
+            onClick={() => {
+              setMobileMenuOpen(true);
+            }}
+            aria-label="Open navigation menu"
+          >
+            <Menu className="size-5" />
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="View source on GitHub">
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-              <GitHubIcon className="size-5" />
-            </a>
-          </Button>
-          <AuthControls />
-          <Button variant="ghost" size="icon" onClick={() => dispatch(openDrawer())} aria-label="Open settings">
-            <Settings className="size-5" />
-          </Button>
+          <Link to="/" className="shrink-0 text-lg font-bold">
+            D2R ESR
+          </Link>
+
+          <NavigationMenu viewport={false} aria-label="Main" className="hidden max-w-none flex-1 justify-start @desktop-nav/header:flex">
+            <NavigationMenuList className="justify-start">
+              {entries.map((entry) => {
+                if (entry.kind === 'group') return <DesktopGroup key={entry.key} group={entry} pathname={pathname} />;
+                const active = isNavItemActive(pathname, entry.item);
+                return (
+                  <NavigationMenuItem key={entry.item.key}>
+                    <NavigationMenuLink asChild active={active}>
+                      <Link to={entry.item.to} className={cn(TAB_BASE, 'block whitespace-nowrap', active ? TAB_ACTIVE : TAB_INACTIVE)}>
+                        {entry.item.label}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                );
+              })}
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          {/* While the nav is hidden, this spacer right-aligns the controls. */}
+          <div className="flex-1 @desktop-nav/header:hidden" aria-hidden />
+
+          <div className="flex shrink-0 items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden @desktop-nav/header:inline-flex"
+                  aria-label="ESR and community links"
+                  title="ESR links"
+                >
+                  <BookOpen className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {OFFICIAL_LINKS.map((link) => (
+                  <DropdownMenuItem key={link.key} asChild>
+                    <a href={link.href} target="_blank" rel="noopener noreferrer" className={DROPDOWN_LINK_CLASS}>
+                      {link.label}
+                      <ExternalLink className="size-3" />
+                    </a>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Community tools</DropdownMenuLabel>
+                {COMMUNITY_TOOLS.map((tool) => (
+                  <DropdownMenuItem key={tool.key} asChild>
+                    <a href={tool.href} target="_blank" rel="noopener noreferrer" className={DROPDOWN_LINK_CLASS}>
+                      {tool.label}
+                      <ExternalLink className="size-3" />
+                    </a>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <PageWidthMenu />
+            <Button variant="ghost" size="icon" onClick={handleThemeToggle} aria-label="Toggle theme">
+              {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            </Button>
+            {/* GitHub and the sign-in control live in the sheet when a phone row has no room for them. */}
+            <Button variant="ghost" size="icon" className="hidden @sm/header:inline-flex" asChild aria-label="View source on GitHub">
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                <GitHubIcon className="size-5" />
+              </a>
+            </Button>
+            <div className="hidden @sm/header:contents">
+              <AuthControls />
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => dispatch(openDrawer())} aria-label="Open settings">
+              <Settings className="size-5" />
+            </Button>
+          </div>
         </div>
       </div>
+
+      <GroupPagesBar />
 
       {/* Mobile navigation: the same groups as an accordion (the active route's group starts open). */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -256,6 +285,10 @@ export function Header() {
                   <ExternalLink className="size-3" />
                 </a>
               ))}
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={MOBILE_EXTERNAL_LINK_CLASS}>
+                Source on GitHub
+                <ExternalLink className="size-3" />
+              </a>
             </div>
             {isSupabaseEnabled && (
               <div className="mt-2 border-t px-1 pt-3">

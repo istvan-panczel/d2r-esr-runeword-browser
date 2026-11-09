@@ -30,7 +30,7 @@ export function UserMenu() {
             <ProfileAvatarImage url={avatarUrl} />
             <AvatarFallback className="text-xs">{avatarInitials(displayName ?? '')}</AvatarFallback>
           </Avatar>
-          <span className="hidden max-w-[14ch] truncate text-sm font-medium sm:inline">{tag}</span>
+          <span className="hidden max-w-[14ch] truncate text-sm font-medium sm:inline [.diablo-font_&]:max-w-[12ch]">{tag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

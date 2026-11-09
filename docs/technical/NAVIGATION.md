@@ -41,11 +41,13 @@ share a pathless layout route (see [Nested sections](#nested-sections)).
 | `/mercenaries`          | MercenariesScreen       | Every hireling: act, gold, skill levels and stats at each level band, cards or a comparison table ([MERCENARIES](../features/MERCENARIES.md))                                                     | `hireling`, `type`, `difficulty`, `view`                                                               |
 | `/kill-ledger`          | KillLedgerScreen        | Every Kill Ledger bonus and how each unlocks: kill and boss tables, reference only ([KILL-LEDGER](../features/KILL-LEDGER.md))                                                                    |
 | `/terror-zones`         | TerrorZonesScreen       | Offline terror zone schedule: now / next, upcoming slots, zone groups with stars, boosts ([TERROR-ZONES](../features/TERROR-ZONES.md))                                                            |                                                                                                        |
+| `/modifiers`            | ModifiersScreen         | What item modifiers do in ESR, one card per kind ([MODIFIERS](../features/MODIFIERS.md))                                                                                                          | focused modifier, category, search and Key / All (kept in the URL)                                     |
 | `/elixirs`              | ElixirsScreen           | The 35 utility elixirs: effects at a character level with Utility Potion Effectiveness / Duration and Alchemist perks, drop chances, perk-gated odds, recipes ([ELIXIRS](../features/ELIXIRS.md)) | `name`, `search`, `avail`, `variant`, `lvl`, `eff`, `dur`, `perks`                                     |
-| `/stash`                | StashLayout             | My Stash frame: Overview / Ancient Coupons / All Items tabs, shared upload state ([STASH](../features/STASH.md))                                                                                  |                                                                                                        |
+| `/stash`                | StashLayout             | My Stash frame: title and shared upload state; the header's page row links the pages ([STASH](../features/STASH.md))                                                                              |                                                                                                        |
 | `/stash` (index)        | StashHomeScreen         | Upload (or the loaded file) and the stash pages with a one-line summary each                                                                                                                      |                                                                                                        |
 | `/stash/coupons`        | StashCouponsScreen      | Ancient Coupons in the uploaded stash: unique, have / need, Wild Card recipe, where                                                                                                               | `search`, `status`, `tier`, `page`, `sort`, `dir` (kept in the URL)                                    |
 | `/stash/items`          | StashItemsScreen        | All Items: every item on the stash pages ([STASH-ITEMS](../features/STASH-ITEMS.md))                                                                                                              |                                                                                                        |
+| `/stash/character`      | CharacterScreen         | My Character: upload a character save ([CHARACTER-SAVE](../features/CHARACTER-SAVE.md#my-character-page))                                                                                         |                                                                                                        |
 | `/builds`               | BuildsScreen            | Shared builds list (Supabase only)                                                                                                                                                                |                                                                                                        |
 | `/builds/new`           | CreateBuildScreen       | Create a build (sign-in required)                                                                                                                                                                 |                                                                                                        |
 | `/builds/:buildId/edit` | EditBuildScreen         | Edit an own build                                                                                                                                                                                 |                                                                                                        |
@@ -62,7 +64,7 @@ feature-specific keys live next to each feature's `useUrlInitialize` hook, and `
 `src/features/game-data/constants/urlParams.ts`. The filter screens (runewords, gemwords, socketables, uniques, mythicals,
 ascendancies, bases, best base, affixes) read their params once on mount, put them into Redux and remove them from the URL;
 Copy Link rebuilds a URL from the current state (non-default values only). Item Types (`type`), Enhance (`tab`, `slot`,
-`tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Areas (`search`, `minlvl`, `maxlvl`), the Campaign Map (`tab`, `area`, `view`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
+`tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Area Levels (`search`, `minlvl`, `maxlvl`), the Campaign Map (`tab`, `area`, `view`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
 Redux only.
 
 **`?name=<Name>` focus** (runewords, gemwords, socketables, uniques, mythicals): shows only the items whose name equals `<Name>`
@@ -105,7 +107,7 @@ of the bundles, unrelated to these URLs.
    `cube.json` is not fetched) and `areas.json`. A result opens its page focused on it (`homeResultHref`):
    `?name=<exact name>` on the item list pages, Sets and Materials; Skills `/skills?skill=<id>` (the page picks the class
    and tab); Cube `/cube-recipes?family=<id>`; Areas open the Campaign Map on the area (`/campaign-map?area=<levels.txt Id>`, its
-   panel links the Areas page row); Bases have no exact-name focus, so `?search="<name>"`. The
+   panel links the Area Levels page row); Bases have no exact-name focus, so `?search="<name>"`. The
    first row, selected by default, is "Search runewords for “…”", so Enter without picking a result goes to
    `/runewords?search=<query>`.
 3. **Section cards** (`HomeSections`): one card per `NAV_ENTRIES` entry (`getHomeSections` in `utils/homeSections.ts`):
@@ -134,17 +136,18 @@ The page skips the startup loading gate (exact match on `/`, see below), so it r
 ## App Shell Layout
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ D2R ESR  Recipes▾ Database▾ Tools▾ Guide Builds [📖][↔][☀][GH][⚙] │
-├───────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│                         Main Content Area                             │
-│                        (Feature Screens)                              │
-│                                                                       │
-└───────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ D2R ESR  Recipes▾ Items▾ Character▾ Areas▾ My Stash▾ Guide Builds Loot Filters … │
+│ Uniques  Mythicals  Sets  [Bases]  Item Types  Affixes  Modifiers  Elixirs       │  <- page row of the current menu group
+├──────────────────────────────────────────────────────────────────────────────────┤     (none on Home, Guide, Builds, Loot Filters)
+│                                                                                  │
+│                              Main Content Area                                   │
+│                             (Feature Screens)                                    │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The header row and `<main>` share one frame width, `APP_FRAME_CLASS` in `src/components/pageWidthClasses.ts`,
+The header row, the page row and `<main>` share one frame width, `APP_FRAME_CLASS` in `src/components/pageWidthClasses.ts`,
 picked by the Page width setting: Standard keeps Tailwind's `container` (the look from before the setting: the
 header spans the 1536 px container, the 1280 px pages sit centred inside it), Wide is the 1920 px page plus the
 gutters and Full is the whole window, so in Wide and Full the header edges line up with the page. `PageShell` sets the
@@ -193,33 +196,54 @@ should be added there.
 (groups of `NavItem`s with a label, a one-line description and a path, plus plain links). The home page's section
 cards render from the same config (group `description`, link `homeLinks`):
 
-| Entry      | Kind  | Pages                                                                                                                                                                                                                                                                                                                                                                                  |
-| ---------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Recipes ▾  | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`)                                                                                                                                                                                                                                                                                                         |
-| Database ▾ | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/sets`), Ascendancies (`/ascendancies`), Skills (`/skills`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Kill Ledger (`/kill-ledger`), Mercenaries (`/mercenaries`), Bases (`/bases`), Materials (`/materials`), Elixirs (`/elixirs`), Areas (`/area-levels`), Campaign Map (`/campaign-map`) |
-| Tools ▾    | group | Best Base (`/best-base`), Affixes (`/affixes`), Item Types (`/item-types`), Enhance (`/enhance`), Cube Recipes (`/cube-recipes`), Loot Filters (`/loot-filters`), Terror Zones (`/terror-zones`)                                                                                                                                                                                       |
-| My Stash ▾ | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                                                                                                                                                                                                              |
-| Guide      | link  | `/guide`                                                                                                                                                                                                                                                                                                                                                                               |
-| Builds     | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                                                                                                                                                                                                          |
+| Entry        | Kind  | Pages                                                                                                                                                                                        |
+| ------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Recipes ▾    | group | Runewords (`/runewords`), Gemwords (`/gemwords`), Socketables (`/socketables`), Best Base (`/best-base`), Cube Recipes (`/cube-recipes`), Enhance (`/enhance`), Materials (`/materials`)     |
+| Items ▾      | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/sets`), Bases (`/bases`), Item Types (`/item-types`), Affixes (`/affixes`), Modifiers (`/modifiers`), Elixirs (`/elixirs`)           |
+| Character ▾  | group | Skills (`/skills`), Ascendancies (`/ascendancies`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Mercenaries (`/mercenaries`), Kill Ledger (`/kill-ledger`) |
+| Areas ▾      | group | Campaign Map (`/campaign-map`), Area Levels (`/area-levels`), Terror Zones (`/terror-zones`)                                                                                                 |
+| My Stash ▾   | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`), My Character (`/stash/character`)                                 |
+| Guide        | link  | `/guide`                                                                                                                                                                                     |
+| Builds       | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                |
+| Loot Filters | link  | `/loot-filters` (prefix-matched, so it stays active on the editor pages)                                                                                                                     |
 
 - **Brand**: "D2R ESR", a link to `/` (the home page).
-- **Desktop (md and up)**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
-  each dropdown opens under its own trigger). Each group trigger opens a list of label + description links. Active state:
-  an item is active when the path equals its `to` or starts with `to/` (only the former for an `exact` item; no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). Active links
+- **Desktop and hamburger switch**: the header frame is the `header` size container, and the `@desktop-nav/header:` classes
+  (`--container-desktop-nav: 79.5rem` in `src/index.css`) swap the hamburger for the desktop nav, the book and page-width
+  icons when the row has the room. A container query in `rem` follows the Text size setting and the Page width setting's
+  actual frame, which a viewport breakpoint cannot: a media query's `rem` ignores the `<html>` font size, and Standard's
+  `container` frame steps from 1024 px to 1280 px at a 1280 px window. 79.5rem holds the brand, the eight entries, the icon cluster with a spare 36 px icon
+  (the coming search), and the widest account control, a 14-character signed-in tag (needs 78.5rem at 16 px; the Diablo font's wider
+  tag is capped at 12 characters in `UserMenu`). At the default 16 px text size Standard shows the desktop nav from a 1280 px window (1272 px in Wide and Full); at 20 px from 1590 px.
+  Below that the hamburger shows. Item, group and link labels do not wrap (`whitespace-nowrap`).
+- **Desktop nav**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
+  each dropdown opens under its own trigger). Each group trigger opens a panel of label + description links: one column
+  (`w-72`) for up to 4 pages, two equal columns (`w-[36rem]`, filled downwards, the same order the keyboard moves in) for more. The two-column
+  groups are the first three triggers, so their panels stay on screen at the narrowest desktop width (the rightmost panel edge
+  is 879 px at a 1280 px window, Character). Active state:
+  an item is active when the path equals its `to` or starts with `to/` (only the former for an `exact` item; no item is active on the home page); a group trigger is highlighted when any of its items is active (`isNavGroupActive`). The active page in a panel has the
+  accent background and a semibold label; Radix sets `data-active` (empty value), so the classes are `data-active:`, not `data-[active=true]:`. Active links
   get `aria-current="page"`. Keyboard (Radix): triggers are in the tab order, Enter/Space/ArrowDown opens, arrows and
   Tab move through the items, Escape closes; choosing a link closes the menu.
-- **Right side**: ESR links dropdown (book icon, md and up: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
+- **Right side**: ESR links dropdown (book icon, desktop nav only: the `OFFICIAL_LINKS` Official site, Installation Guide, Documentation, Drop Finder,
   Frame Table, Patch notes, Changelog, Releases, ESR Discord, ESR on GitHub, then a "Community tools" label with ESR Wiki Overlay, ESR Docs,
-  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), the page width menu (↔ `MoveHorizontal` icon, md and up,
+  ESR Tools, Unofficial ESR Wiki from `COMMUNITY_TOOLS`), the page width menu (↔ `MoveHorizontal` icon, desktop nav only,
   `PageWidthMenu.tsx`: a radio list Standard 1280 px / Wide 1920 px / Full screen, the same setting as the Settings
   drawer), theme toggle, GitHub link,
-  `AuthControls` (Sign In / user menu, Supabase only), settings cog.
-- **Mobile (below md)**: hamburger opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
-  the group of the current route starts open, Guide and Builds are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
-  community links, and the auth control. Choosing a page closes the sheet.
+  `AuthControls` (Sign In / user menu, Supabase only), settings cog. Below a 24rem row (`@sm/header`) the GitHub link and the
+  account control move to the hamburger sheet so a 320 px phone row holds the coming search icon too.
+- **Page row** (`GroupPagesBar.tsx`, inside `<header>` under the main row, same frame): the pages of the current menu group
+  (`getActiveNavGroup`) as a `<nav aria-label="{group} pages">`, active page `aria-current="page"` and a `PAGE_ROW_LINK_*` underline
+  (`navTabClasses.ts`). None on Home, Guide, Builds, Loot Filters or a build page; not sticky, like the header. It is one sideways-scrolling
+  strip at every width; on a route change the strip centres the active link by setting its own `scrollLeft` (`centeredScrollLeft`), because `scrollIntoView`
+  would move the window too.
+- **Hamburger (below the switch)**: opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
+  the group of the current route starts open, Guide, Builds and Loot Filters are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
+  community links, "Source on GitHub", and the auth control. Choosing a page closes the sheet.
 
 `navConfig.test.ts` checks that every config path resolves to a real route of the router (not the `*` catch-all), that
-labels, keys and paths are unique, that Builds is hidden without Supabase, and the active-state rules.
+labels, keys and paths are unique, that Builds is hidden without Supabase, the agreed menu order, the active-state rules and
+`getActiveNavGroup` / `getActiveNavItem`.
 
 ### Nested sections
 
@@ -229,33 +253,30 @@ labels, keys and paths are unique, that Builds is hidden without Supabase, and t
   `PageShell` with the title), the map (`map`) or a note (`:slug`);
 - `LootFilterLayout`: a width-only `PageShell` with the "Under development" `DevNotice`, then the library (index) or the
   editor (`:id`);
-- `GameDataLayout`: a `PageShell` with the title, the game-file version lines as its meta line and the sub-tabs as its
-  tab row (below). Its route has no path, so the pages keep top-level URLs and the tabs' relative links resolve to them (`to="item-types"` is `/item-types`).
+- `GameDataLayout`: a `PageShell` titled with the menu label of the current page (`getActiveNavItem`), then the version
+  note. Its route has no path, so the pages keep top-level URLs.
 
 `GameDataLayout` renders:
 
 ```
-Game Data
-Game files: ESR 3.2.10 (tag 3.2.10 @ 10b540e, generated 2026-10-09)
-Docs data: ESR 3.2.10 (site updated 9 Oct 2026)
-[amber note when the HTM docs ESR version differs]
-╭────────────────────────────────────────────────╮
-│ [Bases] Sets  Best Base  Affixes  Item Types … │ <- NavLinks on a ToolbarCard (SUBTAB_* in navTabClasses.ts)
-╰────────────────────────────────────────────────╯
+Bases                                            <- menu label of the current page
+[amber note when the HTM docs ESR version differs from the game files; nothing otherwise]
 <Outlet />                                        <- child route screen
 ```
 
 Each child route is its own lazy screen wrapped in `<Suspense>` (each section's screens come from one feature module
 (`@/features/guide`, `@/features/game-data`, `@/features/loot-filter`), so they share its chunk).
-The version line comes from `public/game-data/manifest.json`; the docs line from Dexie `metadata.esrVersion` and
-`metadata.docsLastModified`. Both versions normally come from `metadata.modVersion` of ESR's `d2rloader/metadata.json`;
+The note compares `public/game-data/manifest.json` with Dexie `metadata.esrVersion`. Both versions normally come from `metadata.modVersion` of ESR's `d2rloader/metadata.json`;
 the docs version may fall back to the changelog page's header, so the note never says which version is newer.
 
-The Game Data child pages are separate header items (Bases, Sets, Materials and Areas under Database, next to the top-level Campaign Map; Best Base, Affixes, Item Types, Enhance and Cube Recipes under Tools).
-Guide and Loot Filters items are prefix-matched, so they stay active on every child page.
+The Game Data child pages are ordinary menu items spread over the Recipes, Items and Areas groups (see the table above); the
+header's page row links them, not the layout. A section may have its own page tab row only if the pages it links do not
+cut across menu groups (the header's page row covers a group's pages, so a row of them on the page would be a duplicate, and a
+row across groups would fight the menu).
+Guide and Loot Filters are prefix-matched, so they stay active on every child page.
 
-The header triggers and links use `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` (`src/core/components/navTabClasses.ts`). The
-page sub-tabs (Game Data, My Stash, Enhance sections, campaign map sections, the loot filter editor's tabs) use
+The header triggers and links use `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` (`src/core/components/navTabClasses.ts`), the page row `PAGE_ROW_LINK_*`. The
+in-page mode tabs (Enhance sections, campaign map sections, the loot filter editor's tabs) use
 `SUBTAB_BASE` / `SUBTAB_INACTIVE` / `SUBTAB_ACTIVE` (a filled `bg-primary` active pill) and sit in a `ToolbarCard` (see
 [UI-COMPONENTS.md](./UI-COMPONENTS.md#toolbarcard-and-sub-tabs)). The editor's tabs are not routes but
 buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=`. The amber notices of `GuideLayout` and
@@ -263,8 +284,8 @@ buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=`. 
 
 ### Navigation Style
 
-- Active route highlighted in nav (item and its group trigger)
-- Mobile: Sheet-based slide-out menu with an accordion of the groups
+- Active route highlighted in nav (item, its group trigger and the page row's underline)
+- Below the desktop switch: Sheet-based slide-out menu with an accordion of the groups
 
 ## Settings Drawer
 
@@ -320,8 +341,8 @@ Opens from the right side when the cog icon is clicked.
 - **Text Size**: 4-step slider (small / normal / large / extralarge), persisted in localStorage
 - **Diablo Font**: Toggle for thematic font rendering, persisted in localStorage
 - **Page width**: Standard (default, 1280 px pages) / Wide (1920 px) / Full (the whole window minus the side gutters),
-  persisted in localStorage (`pageWidth`, an unknown value reads as Standard). Also in the header's ↔ menu (md and
-  up). It widens the `PageShell` `wide` pages and the header row; the guide spine's reading column, the guide note and
+  persisted in localStorage (`pageWidth`, an unknown value reads as Standard). Also in the header's ↔ menu (desktop nav
+  only). It widens the `PageShell` `wide` pages and the header row; the guide spine's reading column, the guide note and
   the home page keep their widths
 - **Refresh Data**: Force re-fetch and parse all data
 - **Version display**: App version, game-file ESR version (manifest, generated date) and the docs data line
@@ -431,8 +452,10 @@ src/core/
 │   └── navConfig.test.ts   # Paths exist in the router, unique labels
 └── components/
     ├── Header.tsx          # Top navigation bar (NavigationMenu groups, mobile accordion)
-    ├── PageWidthMenu.tsx   # Header quick control for the Page width setting (md and up)
-    ├── navTabClasses.ts    # Header nav link (TAB_*) and page sub-tab (SUBTAB_*) classes
+    ├── GroupPagesBar.tsx   # Page row: the pages of the current menu group
+    ├── centeredScrollLeft.ts # Pure helper of the page row's centring
+    ├── PageWidthMenu.tsx   # Header quick control for the Page width setting (desktop nav only)
+    ├── navTabClasses.ts    # Header nav (TAB_*), page row (PAGE_ROW_LINK_*) and in-page tab (SUBTAB_*) classes
     └── SettingsDrawer.tsx  # Settings slide-out panel
 
 src/features/settings/
@@ -450,7 +473,7 @@ src/features/settings/
 
 ## Accessibility
 
-- Navigation links have proper `aria-current` for active state; the desktop menu and the mobile sheet are `<nav aria-label="Main">`
+- Navigation links have proper `aria-current` for active state; the desktop menu and the mobile sheet are `<nav aria-label="Main">`, the page row `<nav aria-label="{group} pages">`
 - Group triggers are keyboard operable (Enter/Space/arrows open, Escape closes) via Radix NavigationMenu
 - Settings drawer uses `aria-hidden` and focus trap when open
 - Close button and Escape key close the drawer

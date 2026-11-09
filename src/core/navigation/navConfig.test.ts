@@ -8,6 +8,8 @@ import {
   ESR_WIKI_OVERLAY_NOTE_URL,
   NAV_ENTRIES,
   OFFICIAL_LINKS,
+  getActiveNavGroup,
+  getActiveNavItem,
   getAllNavItems,
   getNavEntries,
   isNavGroupActive,
@@ -53,17 +55,62 @@ describe('navConfig', () => {
   });
 
   it('marks the item and its group active on its own and child paths, never on the home page', () => {
-    const tools = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'tools');
+    const itemsGroup = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'items');
     const recipes = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'recipes');
-    if (!tools || !recipes) throw new Error('missing group');
-    expect(isNavGroupActive('/loot-filters/abc', tools)).toBe(true);
-    expect(isNavGroupActive('/bases', tools)).toBe(false);
+    if (!itemsGroup || !recipes) throw new Error('missing group');
+    expect(isNavGroupActive('/bases', itemsGroup)).toBe(true);
+    expect(isNavGroupActive('/cube-recipes', itemsGroup)).toBe(false);
     expect(isNavGroupActive('/guide', recipes)).toBe(false);
     expect(isNavGroupActive('/runewords', recipes)).toBe(true);
     expect(isNavGroupActive('/', recipes)).toBe(false);
     const runewords = recipes.items[0];
     expect(isNavItemActive('/gemwords', runewords)).toBe(false);
-    expect(isNavItemActive('/loot-filtersx', tools.items[3])).toBe(false);
+    expect(isNavItemActive('/runewordsx', runewords)).toBe(false);
+  });
+
+  it('keeps the menu groups and pages in the agreed order', () => {
+    const summary = NAV_ENTRIES.map((e) => (e.kind === 'group' ? [e.label, e.items.map((i) => i.label)] : e.item.label));
+    expect(summary).toEqual([
+      ['Recipes', ['Runewords', 'Gemwords', 'Socketables', 'Best Base', 'Cube Recipes', 'Enhance', 'Materials']],
+      ['Items', ['Uniques', 'Mythicals', 'Sets', 'Bases', 'Item Types', 'Affixes', 'Modifiers', 'Elixirs']],
+      ['Character', ['Skills', 'Ascendancies', 'Specializations', 'Weapon Masteries', 'Mercenaries', 'Kill Ledger']],
+      ['Areas', ['Campaign Map', 'Area Levels', 'Terror Zones']],
+      ['My Stash', ['Overview', 'Ancient Coupons', 'All Items', 'My Character']],
+      'Guide',
+      'Builds',
+      'Loot Filters',
+    ]);
+  });
+
+  describe('getActiveNavGroup', () => {
+    it('finds the group of a page and of a sub-page', () => {
+      expect(getActiveNavGroup('/bases')?.key).toBe('items');
+      expect(getActiveNavGroup('/stash/coupons')?.key).toBe('stash');
+      expect(getActiveNavGroup('/area-levels')?.key).toBe('areas');
+    });
+
+    it.each(['/', '/guide', '/guide/some-note', '/builds', '/build/abc', '/loot-filters', '/loot-filters/abc', '/no-such-page'])(
+      'has no group on %s',
+      (path) => {
+        expect(getActiveNavGroup(path)).toBeUndefined();
+      }
+    );
+  });
+
+  describe('getActiveNavItem', () => {
+    it('finds the menu page, also from a child path', () => {
+      expect(getActiveNavItem('/bases')?.label).toBe('Bases');
+      expect(getActiveNavItem('/cube-recipes')?.label).toBe('Cube Recipes');
+      expect(getActiveNavItem('/area-levels')?.label).toBe('Area Levels');
+      expect(getActiveNavItem('/loot-filters/abc')?.label).toBe('Loot Filters');
+    });
+
+    it('prefers the sub-page over the stash overview and finds nothing off the menu', () => {
+      expect(getActiveNavItem('/stash/coupons')?.label).toBe('Ancient Coupons');
+      expect(getActiveNavItem('/stash')?.label).toBe('Overview');
+      expect(getActiveNavItem('/')).toBeUndefined();
+      expect(getActiveNavItem('/nope')).toBeUndefined();
+    });
   });
 
   it('keeps an exact item (the stash overview) inactive on its sibling pages below it', () => {

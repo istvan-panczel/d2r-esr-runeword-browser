@@ -1,7 +1,7 @@
 # Elixirs
 
 The drinkable utility elixirs ESR 3.3 added: what each one gives at a character level, how they drop, which Alchemist
-perks change them. Route `/elixirs` (Database menu), data `public/game-data/elixirs.json`, code `src/features/elixirs/`
+perks change them. Route `/elixirs` (Items menu), data `public/game-data/elixirs.json`, code `src/features/elixirs/`
 (page) and `src/features/game-data/build/bundleElixirs.ts` (generator).
 
 ## Data facts (ESR 3.3)

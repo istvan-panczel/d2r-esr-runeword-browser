@@ -1,7 +1,7 @@
 # Terror Zones
 
 A tracker for the **offline** (single-player) terror zone rotation of ESR: a floating widget at the bottom left of
-every page and a full schedule page at `/terror-zones` (Tools menu). Code: `src/features/terror-zones/`; data:
+every page and a full schedule page at `/terror-zones` (Areas menu). Code: `src/features/terror-zones/`; data:
 `public/game-data/terrorzones.json` (see [Game Data](./GAME-DATA.md#terror-zones)).
 
 ## How the game picks the zone

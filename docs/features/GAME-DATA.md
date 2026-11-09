@@ -1496,7 +1496,7 @@ The script warns when the clone has uncommitted changes, because the output woul
 
 | Route           | Screen            | Notes                                                              |
 | --------------- | ----------------- | ------------------------------------------------------------------ |
-| (pathless)      | `GameDataLayout`  | Title, version banner, sub-tabs, `<Outlet>` around the pages below |
+| (pathless)      | `GameDataLayout`  | Page title (the menu label), version note, `<Outlet>` around below |
 | `/bases`        | `BasesScreen`     | Base item browser                                                  |
 | `/sets`         | `SetsScreen`      | Sets: items, per-item and set-wide partial bonuses, full set       |
 | `/best-base`    | `BestBaseScreen`  | Best base finder                                                   |
@@ -1507,14 +1507,12 @@ The script warns when the clone has uncommitted changes, because the output woul
 | `/materials`    | `MaterialsScreen` | Misc items: sources, cube families, Enhance roles, guide notes     |
 | `/area-levels`  | `AreasScreen`     | Area levels, density, unique packs, waypoints, map tiers           |
 
-One header entry ("Game Data", `end: false`). All screens are lazy-loaded from `@/features/game-data` (the route
+Each page is its own menu item (see NAVIGATION.md "Header Components"), the header's page row links them. All screens are lazy-loaded from `@/features/game-data` (the route
 code-splitting guard test covers it). The child routes are in `public/sitemap.xml`. The pages were under `/game-data/` until
 they became top-level URLs; the old URLs (`game-data/*`) still redirect, see NAVIGATION.md "Old Game Data links".
 
-**Version banner** (`components/GameDataVersionBanner.tsx`): "Game files: ESR {esrVersion} (tag {esrTag} @ {commit7},
-generated {YYYY-MM-DD})" from `loadManifest()`, then "Docs data: ESR X (site updated D Mon YYYY)" from Dexie metadata
-(`esrVersion`, `docsLastModified`; the line is left out while the docs version is unknown). When the docs version differs
-from the manifest's, an amber note says "Docs data is ESR X; game-file data is ESR Y — some details may differ." Both
+**Version note** (`components/GameDataVersionBanner.tsx`): renders nothing unless the docs version (Dexie metadata `esrVersion`)
+differs from the manifest's (`loadManifest()`); then an amber note says "Docs data is ESR X; game-file data is ESR Y — some details may differ." Both
 normally come from `metadata.modVersion` of `d2rloader/metadata.json` (the clone's copy vs the live GitHub copy), so they
 compare like with like; the docs side may fall back to the changelog page, so the note never says which is newer.
 
@@ -1825,8 +1823,8 @@ that slot group's first pool); Copy Link encodes only the non-default values the
 
 ### Cube page
 
-`/cube-recipes` (`screens/CubeScreen.tsx`) loads only `cube.json` and is a static-bundle route like Enhance. Tools
-menu entry "Cube Recipes", layout tab "Cube".
+`/cube-recipes` (`screens/CubeScreen.tsx`) loads only `cube.json` and is a static-bundle route like Enhance. Recipes
+menu entry "Cube Recipes".
 
 - **Filters**: two searches, "Ingredient" (inputs only) and "Result" (the output text and a merged row's `odds`, and on
   raw rows the output code, bonus lines and details), and "Result quality" checkboxes (Unique, Set, Rare, Magic, Crafted; any of them).
@@ -1883,7 +1881,7 @@ the Cube Recipes page", N = the family's rows in cube.json).
 
 `/materials` (`screens/MaterialsScreen.tsx`) loads only `materials.json` (a static-bundle route like Enhance
 and Cube) plus the guide bundle (`useGuide`); the page works without the guide, only the Guide lines are then missing.
-Database menu entry "Materials", layout tab "Materials". The home search lists the item names (→ `?name=`) and,
+Recipes menu entry "Materials". The home search lists the item names (→ `?name=`) and,
 from the same bundle's `families`, the cube family labels as "Cube recipes" (→ `/cube-recipes?family=<id>`).
 
 - Search, Copy Link and the group pills (All + each group with its row count) in the filter panel; with `?name=` the
@@ -1907,8 +1905,8 @@ URL state (read on every render, written with `replace`; `utils/materials.ts`):
 
 ### Areas page
 
-`/area-levels` (`screens/AreasScreen.tsx`) loads only `areas.json` (a static-bundle route). Database menu entry
-"Areas", layout tab "Areas". The home search lists the area names and links to `?search="<name>"` (the page has no
+`/area-levels` (`screens/AreasScreen.tsx`) loads only `areas.json` (a static-bundle route). Areas menu entry
+"Area Levels". The home search lists the area names and links to `?search="<name>"` (the page has no
 exact-name focus; the two duplicated names, Jail Level 2 and Catacombs Level 3, show both rows).
 
 - Filter panel: search, min / max monster level (an area matches when its Normal, Nightmare or Hell level is inside the
@@ -1932,7 +1930,7 @@ URL state (read on every render, written with `replace`; `utils/areas.ts`):
 
 `/sets` (`screens/SetsScreen.tsx`) loads only `sets.json` (a static-bundle route like Enhance, Cube and
 Materials) plus sources.json through `useItemSources` and tiers.json through `useBaseTiers` (the source lines and
-tier badges are a bonus: missing while their bundle loads or when it fails). Database menu entry "Sets" (after Mythicals), layout tab "Sets" (after Bases). The home search lists set names
+tier badges are a bonus: missing while their bundle loads or when it fails). Items menu entry "Sets" (after Mythicals). The home search lists set names
 ("Sets") and set item names ("Set items"), both linking to `/sets?name=`.
 
 - Search, "Max required level" input, Copy Link; Pieces pills (All + each item count with its set count) and Class

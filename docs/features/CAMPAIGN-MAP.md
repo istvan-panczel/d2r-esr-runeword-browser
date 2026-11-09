@@ -94,7 +94,7 @@ Examples: `/campaign-map?area=93` (Sewers Level 2 on Act III), `/campaign-map?ta
    dashed for portals and unconfirmed edges, `→` / `←` for one way). A chip selects that area (another tab when it lives
    there), so the map can be walked from the panel.
 7. **Monsters**: level, density and unique packs for Normal / Nightmare / Hell, or "No monsters".
-8. **More**: Areas page row (`/area-levels?search="<name>"`), cube recipe families (quest items, map portals,
+8. **More**: Area Levels page row (`/area-levels?search="<name>"`), cube recipe families (quest items, map portals,
    Pandemonium keys) when they apply, the official Drop Finder (no deep link: its hash is positional) when the area
    has monsters, the official Maps page (Endgame Maps page for maps), the levels.txt Id and Copy Link of this area.
 
@@ -195,10 +195,10 @@ Plain game-file facts that need no label (the monster table, the waypoint chip) 
 
 ## Links in
 
-- Header and home: Database group, "Campaign Map" next to Areas (`navConfig.ts`).
-- Areas page: "Show on map" under every row's name (`campaignMapAreaPath`).
-- Home search: an Areas result opens `/campaign-map?area=<id>` (the panel links back to the Areas page row); a name
-  without an id still falls back to the Areas page search. Names shared across acts carry the act (`areaSearchNames`:
+- Header and home: Areas group, "Campaign Map" next to Area Levels (`navConfig.ts`).
+- Area Levels page: "Show on map" under every row's name (`campaignMapAreaPath`).
+- Home search: an Areas result opens `/campaign-map?area=<id>` (the panel links back to the Area Levels page row); a name
+  without an id still falls back to the Area Levels page search. Names shared across acts carry the act (`areaSearchNames`:
   "Sewers Level 1 (Act II)", "Tristram (Act V)"), so each opens its own area; twins stay one result.
 - Guide: `page:/campaign-map?area=<id>` links (`/campaign-map` is in the `APP_PAGES` allowlist).
 - `public/sitemap.xml` (`scripts/lib/sitemap.ts`).

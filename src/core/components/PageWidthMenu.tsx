@@ -24,7 +24,7 @@ export function PageWidthMenu() {
         <Button
           variant="ghost"
           size="icon"
-          className="hidden md:inline-flex"
+          className="hidden @desktop-nav/header:inline-flex"
           aria-label={`Page width: ${current?.label ?? pageWidth}`}
           title="Page width"
         >

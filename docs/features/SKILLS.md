@@ -375,8 +375,8 @@ Other assumptions, not checked yet:
 
 ## Page
 
-Route `/skills` (`SkillsScreen`, lazy-loaded), nav: Database ▾ → Skills (after Ascendancies), also a chip on the home
-page's Database card. The home search lists every skill name (class and item skills from `skilldetails.json`,
+Route `/skills` (`SkillsScreen`, lazy-loaded), nav: Character ▾ → Skills (first), also a chip on the home
+page's Character card. The home search lists every skill name (class and item skills from `skilldetails.json`,
 same-named variants suffixed like "Amplify Damage (Aura)") and links to `/skills?skill=<id>`.
 
 - **Class pills**: the 8 classes in types.json order plus "Item skills" (with its count).

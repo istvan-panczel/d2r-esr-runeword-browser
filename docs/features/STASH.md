@@ -24,7 +24,7 @@ Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/
 
 | Route              | Screen               | Contents                                                                                                            |
 | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `/stash`           | `StashLayout`        | Title, Overview / Ancient Coupons / All Items tabs, loads `stash.json`, shared upload state                         |
+| `/stash`           | `StashLayout`        | Title, loads `stash.json`, shared upload state (the header's page row links the pages)                              |
 | `/stash` (index)   | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each                         |
 | `/stash/coupons`   | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded                                      |
 | `/stash/items`     | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md))                                       |
@@ -85,7 +85,7 @@ then the file bar and `children(stash, file)`.
    (`catalog.ts`, `describeItem.ts`, `walk.ts`, `locations.ts`, `search.ts`, `urlState.ts`), the shared UI in
    `components/shared/` and the hooks `useStashTypes` / `useUrlState`; test helpers in `testing/` (`makeItem`,
    `makeStash`, `makeBundle`, `describeWithFixture`). See [STASH-ITEMS.md → Engine](./STASH-ITEMS.md#engine-shared-srcfeaturesstashengine).
-2. A route child of `stash` in `src/core/router/index.tsx`, an entry in `screens/stashPages.ts` (layout tab + overview
+2. A route child of `stash` in `src/core/router/index.tsx`, an entry in `screens/stashPages.ts` (overview
    card) and in the My Stash nav group.
 
 ## Ancient Coupons page

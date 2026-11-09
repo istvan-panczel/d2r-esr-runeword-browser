@@ -36,9 +36,11 @@ All Radix primitives come from the unified `radix-ui` package, so a new shadcn c
 
 Location: `src/core/components/`
 
-- `Header.tsx` - Top bar: brand, grouped navigation (Recipes / Database / Tools menus, Guide, Builds) rendered from
-  `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; mobile sheet with an accordion.
-  See [NAVIGATION.md](./NAVIGATION.md#header-components).
+- `Header.tsx` - Top bar: brand, grouped navigation (Recipes / Items / Character / Areas / My Stash menus, Guide, Builds, Loot
+  Filters) rendered from `src/core/navigation/navConfig.ts`, ESR links, theme, GitHub, auth and settings controls; hamburger sheet
+  with an accordion below the desktop switch (a container query, see [NAVIGATION.md](./NAVIGATION.md#header-components)).
+- `GroupPagesBar.tsx` - The page row inside `<header>`: the pages of the current menu group, an underlined scrolling strip at every width.
+  No row on pages outside a group.
 - `SettingsDrawer.tsx` - Settings sheet (theme, font, text size, data refresh, versions, credits).
 - The terror zone widget (`src/features/terror-zones/components/TerrorZoneWidget.tsx`) - Floating tracker, bottom-left
   on every page but `/terror-zones`, mounted once by `AppLayout` (lazy). Open: a card with the current zone group, a countdown, the next 3
@@ -46,8 +48,8 @@ Location: `src/core/components/`
   button in the same glass as `ScrollToTopButton`, with a `warning` ring and dot when a watched group is up. `z-40` (dialogs and sheets
   cover it), safe-area insets, lifted above the app's fixed bottom bars. See
   [TERROR-ZONES.md](../features/TERROR-ZONES.md#widget).
-- `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `SUBTAB_BASE` / `SUBTAB_INACTIVE` /
-  `SUBTAB_ACTIVE` for the page sub-tabs (see [Toolbar card and sub-tabs](#toolbarcard-and-sub-tabs)).
+- `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `PAGE_ROW_LINK_*` for the page row,
+  `SUBTAB_BASE` / `SUBTAB_INACTIVE` / `SUBTAB_ACTIVE` for the in-page mode tabs (see [Toolbar card and sub-tabs](#toolbarcard-and-sub-tabs)).
 
 ### Shared Components
 
@@ -76,15 +78,14 @@ Reusable components used across features:
 
 ## Page pattern
 
-Every browser page (Runewords, Gemwords, Unique Items, Mythicals, Ascendancies, Socketables, the Game Data tabs, Builds,
+Every browser page (Runewords, Gemwords, Unique Items, Mythicals, Ascendancies, Socketables, the Game Data pages, Builds,
 Loot filters, guide notes) is built the same way, top to bottom:
 
 ```
 PageShell            one centred width + the title row
   PageHeader         "Title (count)"                         [actions]
-                     meta line (e.g. the Game Data version lines)
-                     ToolbarCard: sub-tab row (Game Data, My Stash)
-  (intro paragraph)  optional, e.g. the Game Data tab descriptions
+                     meta line
+  (intro paragraph)  optional, e.g. the Game Data page descriptions
   FilterPanel        rounded-xl card: search row first, then option rows / FilterGroup rows
   ResultsBar         "Showing N …" · ExactNameChip            [Favorites only]
   results            card grid / sections (SectionHeader)
@@ -140,8 +141,7 @@ PageShell            one centred width + the title row
   Nested shells are harmless (the same `mx-auto max-w-*`; `/page` container queries resolve to the innermost one).
 - `count` renders as "Title (N)" inside the `h1`, so the accessible name stays "Runewords (409)".
 - `actions` sit right of the title and wrap under it on phones (Builds: "Create Build"; Guide: the map link).
-- `meta` is a muted line under the title; `nav` is a sub-tab row, rendered on a `ToolbarCard` (`GameDataLayout`,
-  `StashLayout`).
+- `meta` is a muted line under the title.
 
 `PageHeader` is the same title row without the width, for a screen whose layout route already sets it.
 
@@ -182,13 +182,12 @@ aria-label` / `role="tablist"` / labels); pass `className` to lay the children o
   `aria-pressed` buttons, the loot filter editor tabs a `role="tablist"`.
 - Where they are used:
 
-  | Page                          | In the card                                                                                   |
-  | ----------------------------- | --------------------------------------------------------------------------------------------- |
-  | Game Data, My Stash (layouts) | the sub-page tabs (`PageShell` `nav`)                                                         |
-  | Enhance                       | Corruption / Anointment / Vessel of Souls in the same `FilterPanel` as search + Copy Link     |
-  | Campaign map                  | search + Copy Link, the section tabs (scroll sideways on phones), Map \| List + the key hint  |
-  | Loot filter library           | the Shared / My filters switch with the Shared tab's search + sort (`SharedFiltersToolbar`)   |
-  | Loot filter editor            | the Rules / Styles / Settings / JSON / Test tab row (the title row and buttons stay above it) |
+  | Page                | In the card                                                                                   |
+  | ------------------- | --------------------------------------------------------------------------------------------- |
+  | Enhance             | Corruption / Anointment / Vessel of Souls in the same `FilterPanel` as search + Copy Link     |
+  | Campaign map        | search + Copy Link, the section tabs (scroll sideways on phones), Map \| List + the key hint  |
+  | Loot filter library | the Shared / My filters switch with the Shared tab's search + sort (`SharedFiltersToolbar`)   |
+  | Loot filter editor  | the Rules / Styles / Settings / JSON / Test tab row (the title row and buttons stay above it) |
 
   A page whose tabs already sit in a `FilterPanel` (Enhance) puts them in that panel instead of a second card. The
   loot filter library's how-to text is a plain card (`rounded-xl border bg-card p-4 shadow-sm`), always shown. The

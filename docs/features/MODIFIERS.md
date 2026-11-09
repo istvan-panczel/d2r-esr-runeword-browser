@@ -3,7 +3,7 @@
 What the item modifiers do in ESR: deadly strike, crushing blow, leech, resists, procs, speed stats, Magic Find, bleed,
 dodge and every other stat ESR items carry. Owner decisions (2026-11-06):
 
-- a `/modifiers` reference page (Database menu) with one card per modifier kind: what it does in ESR, the numbers per
+- a `/modifiers` reference page (Items menu) with one card per modifier kind: what it does in ESR, the numbers per
   difficulty / target from the game files and ESR's loader plugin configs, a source badge ("ESR config", "game files" or
   "Vanilla D2 behaviour, not confirmed for ESR") and the items that have it;
 - a hover peek on item property lines, like the skill peek ([SKILLS.md](./SKILLS.md) "Skill peek on item lines");
@@ -338,7 +338,7 @@ re-read (`.claude/skills/esr-update/reference.md` "Modifiers").
 
 ## Page: `/modifiers`
 
-Database menu entry, home Database card chip, lazy route (`src/features/modifiers/`), a static-bundle route (no HTM
+Items menu entry, home Items card chip, lazy route (`src/features/modifiers/`), a static-bundle route (no HTM
 gate), in the sitemap and the guide's `page:` targets. The model is `utils/modifiersView.ts` (`buildModifiersView`):
 one entry per content block, then one generated entry per remaining kind, ordered by category (offense, defense,
 speed, procs, resources "Life and mana", find, skills, attributes, other), hand-written and key entries first, then the
