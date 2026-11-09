@@ -24,7 +24,7 @@ Each :term[Secret Recipe] has a number, and it only works with the identified :t
 
 ::recipes[ancient-scrolls]
 
-Scrolls live in the stash's currency tab, and since 3.2.11 their description shows there. Since 3.2.19 a scroll goes down one number only in the stash; the cube recipe for that is gone, so a wrong transmute cannot ruin it.
+Scrolls live in the stash's currency tab, and since 3.2.11 their description shows there. A scroll steps down one number with Alt + click in the stash or, since 3.3.03, when you cube it on its own (the block above), so never transmute a lone scroll by accident.
 
 ### The ones to look for first
 

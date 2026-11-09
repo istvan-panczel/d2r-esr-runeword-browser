@@ -32,7 +32,7 @@ You need Ancient Scroll 49 (it comes back after the recipe), seven rare charms, 
 - A Thawing Potion resets the charm to one socket and returns one Perfect Gem per added socket; empty the sockets first.
 - Forging recipes do not work on it.
 
-The reset is listed with the other charm recipes, which also reroll the magic and rare charms you find:
+The reset is listed with the other charm recipes, which also reroll the magic and rare charms you find (since 3.3.03 the result is the same charm type you put in):
 
 ::recipes[charm-reroll]
 

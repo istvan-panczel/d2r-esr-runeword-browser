@@ -27,11 +27,11 @@ D-stoning cannot be removed. It works on runewords too: done to the white base b
 
 ### D-stoning caps
 
-Each cap counts only what D-stoning added: 190% fire spell damage from affixes still leaves room for the full +300%. A use applies while the D-stoned total is at or below the cap in the recipe, so the last use can go a few points past the official page's round number.
+Each cap counts only what D-stoning added: 190% fire spell damage from affixes still leaves room for the full +300%. Since 3.3.03 the last uses add less where needed, so a D-stoning stops on its cap instead of past it.
 
 ::dstone-caps
 
-On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps. The official page differs (ESR 3.3) on the weapon Forging Hammer (no cap check in the recipe; page 500%), Blackmoor + Key on weapons (page 150), Holy Symbol on armor (page 150) and Forging Hammer + Stamina Potion on jewelry (page 400%).
+On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps, and stops once any of the three is full. The official page differs (ESR 3.3.03) on the weapon Forging Hammer (no cap check in the recipe; page 500%) and Holy Symbol on body armor, helms and shields (page 150).
 
 ### Gem melding
 
