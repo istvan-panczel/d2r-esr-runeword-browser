@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.65.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.64.0...v1.65.0) (2026-11-09)
+
+### Features
+
+* **ui:** add a global search dialog to the header ([c6dca93](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c6dca935ed6835009fae43c20e540af5fc99ca85))
+* **ui:** move the Game Data pages to top-level URLs ([f4e8ad7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f4e8ad7888f4767b11708c0ea4866aaaef013de8))
+* **ui:** regroup the menu, add a page row and name each Game Data page ([e3ed107](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e3ed107e54bfc002b11100f855eca9e51dc20fdd))
+* **ui:** show the scroll-to-top button on every page ([e366a19](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e366a190b9c15241718541d085450804212fd932))
+
+### Bug Fixes
+
+* **ui:** apply search results for the page you are on and contain a failed search chunk ([267fd06](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/267fd066cc120bb13897202d1a8837a5ee7b6b00))
+
 ## [1.64.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.63.0...v1.64.0) (2026-11-08)
 
 ### Features
