@@ -37,6 +37,7 @@ npm run game-data:generate  # Regenerate the static game-data bundles (and the m
 npm run modifiers:refs      # Regenerate src/features/modifiers/data/modifierRefs.json from modifiers.json + content/modifiers/modifiers.md (--check)
 npm run game-data:icons     # Item icons from the ESR HD sprites, vanilla art (../d2r-vanilla-art, not in git) as fallback → public/game-data/icons/*.webp + icons.json (then the manifest)
 npm run game-data:skill-icons  # Skill icons cropped from the ESR HD skill icon sheets → public/game-data/icons/skills/*.webp (keys from skilldetails.json; also run by game-data:icons)
+npm run loot-filter:agent-pack  # Regenerate the loot filter agent pack for AI agents (public/loot-filters/agent/*.md + full game data CSVs, from the committed bundles; also run by game-data:generate, --check by game-data:check)
 npm run loot-filter:icons   # Regenerate the generated loot filter minimap icons (public/loot-filters/icons/<shape>_<colour>.sprite) from scripts/lib/lootFilterIcons.ts
 npm run loot-filter:icons -- --check  # Exit 1 if a generated icon is stale, missing or no longer listed
 npm run game-data:check     # Exit 1 if the committed bundles, modifierRefs.json, item icons or skill icons are stale (without ../d2r-vanilla-art: vanilla-derived icons skipped with a warning)

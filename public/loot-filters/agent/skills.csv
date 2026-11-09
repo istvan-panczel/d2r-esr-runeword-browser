@@ -1,0 +1,769 @@
+id,name,class,formulaName
+7,Conduit,,Conduit Proc
+11,Maelstrom Cascade,,Maelstrom Cascade Proc
+15,Lightning Flash,,Lightning Flash
+16,Fire Flash,,Fire Flash
+17,Cold Flash,,Cold Flash
+18,Shackles,,Shackles
+19,Absolute Zero,,Absolute Zero
+26,Death's Web,,Death Web
+29,Devastating Shock Wave,,Devastating Shock Wave
+33,Rift Shot,,Rift Shot
+36,Lightning Cascade,,Lightning Cascade
+37,Iron Salvo,,Iron Salvo
+38,Rebounding Javelin,,Ricochet Javelin
+42,Glacial Inferno,,Glacial Inferno
+44,Thunder Star,,Thunder Star
+45,Singularity,,Singularity
+46,Spiritstorm,,Spiritstorm
+48,Dragon's Breath,,Dragon Breath
+49,Redemption Buff,,Redemption Buff
+54,Yoyo Sanity Buff,,Yoyo Sanity Buff
+59,Twinkle,,Twinkle
+71,Phoenix Strike,,Phoenix Strike Cold Discharge
+73,Phoenix Strike,,Phoenix Strike Discharge
+80,Hell's Pendulum,,Hell Pendulum
+83,Genghis Khan Counter,,Genghis Khan Counter
+85,Frozen Soul,,Frozen Soul
+90,Hellrust,,Hellrust
+97,Soul Tide,,Soul Tide
+116,Mythical Decrepify,,Mythical Decrepify
+119,Dragon Fury Discharge,,Dragon Fury Discharge
+124,Chain Lightning,,Stormshield Chain Lightning
+126,Spike Nova,,Spike Nova Proc
+127,Thrown Axe,,Axe Proc
+129,Fire Enhanced Arrow,,Fire Enhanced Arrow
+130,Cold Enhanced Arrow,,Cold Enhanced Arrow
+131,Lightning Enhanced Arrow,,Lightning Enhanced Arrow
+132,Magic Enhanced Arrow,,Magic Enhanced Arrow
+134,Fire Enhanced Axe,,Fire Enhanced Axe
+135,Cold Enhanced Axe,,Cold Enhanced Axe
+136,Lightning Enhanced Axe,,Lightning Enhanced Axe
+137,Poison Enhanced Axe,,Poison Enhanced Axe
+138,Magic Enhanced Axe,,Magic Enhanced Axe
+149,Movement Speed Buff Mon Uber,,Movement Speed Buff Mon Uber
+153,Summon Resistance Passive Ele,,Summon Resistance Passive Ele
+155,Fist of the Heavens,,Fist of the Heavens Weapon Damage
+164,Fire Swarm,,Fire Swarm
+166,Chain Lightning,,Chain Lightning Djinn
+190,Raven Damage,,Bloodraven Charge Raven
+191,Multiple Shot Ballista,,Multiple Shot Ballista
+192,Harpoon Ballista,,Harpoon Ballista
+224,Heat Death,,Heat Death
+225,Overload,,Overload
+246,Scorch,,Scorch Weapon Damage
+248,Ice Explosion,,Ice Explosion
+249,Word of God,,Word of God
+254,Elemental Surge,,Elemental Surge
+271,Fire Nova Golem Mon,,Fire Nova Golem Mon
+350,Delirium,,Delerium Change
+365,Blood Empowerment,,Blood Empowerment
+366,Celestial Empowerment,,Celestial Empowerment
+367,Bloody Spear,,Bloody Spear
+368,Holy Bolt,,Holy Bolt Weapon Damage
+369,Blessed Hammer,,Blessed Hammer Weapon Damage
+373,Arrow,,Arrow Hit Skill
+374,Poison Mastery,,Poison Mastery
+375,Cold Enchant,,Cold Enchant
+376,Physical Mastery,,Wind Mastery
+385,Raise Kor'nac,,Raise Kornac
+386,Underworld Empowerment,,Underworld Empowerment
+387,Execute Discharge,,Execute Discharge
+400,Judgement,,Judgement Proc
+402,Crucify,,Crucify Proc
+406,Concentrate,,Concentrate Proc
+413,Freezing Claws,,Freezing Claws Proc
+416,Reap Souls,,Reap Souls Proc
+417,Spectral Maim,,Spectral Maim
+418,Magic Arrow,ama,Magic Arrow
+419,Critical Strike,ama,Critical Strike
+420,Splintering Javelin,ama,Splintering Javelin
+421,Poison Arrow,ama,Poison Arrow
+422,Spearstorm,ama,Spearstorm
+423,Petrify,ama,Petrify
+424,Athulua's Power,ama,Power of Athulua
+425,Multiple Shot,ama,Multiple Shot
+426,Inner Sight,ama,Inner Sight
+427,Pyre Javelin,ama,Pyre Javelin
+428,Sway,ama,Sway
+429,Immolation Arrow,ama,Immolation Arrow
+430,Fend,ama,Fend
+431,Dodge,ama,Dodge
+432,Cold Arrow,ama,Cold Arrow
+433,Sharpened Focus,ama,Sharpened Focus
+434,Inferno Fury,ama,Inferno Fury
+435,Plague Javelin,ama,Plague Javelin
+436,Athulua's Wisdom,ama,Wisdom of Athulua
+437,Tornado Shot,ama,Tornado Shot
+438,Penetrate,ama,Penetrate
+439,Freezing Arrow,ama,Freezing Arrow
+440,Valkyrie,ama,Valkyrie
+441,Frost Javelin,ama,Frost Javelin
+442,Hailstorm,ama,Hailstorm
+443,Exploding Arrow,ama,Exploding Arrow
+444,Legendary Arrow,ama,Legendary Arrow
+445,Eagle Eye,ama,Eagle Eye
+446,Dance of Death,ama,Dance of Death
+447,Lightning Arrow,ama,Lightning Arrow
+448,Strafe,ama,Strafe
+449,Valkyrie Mastery,ama,Valkyrie Mastery
+450,Pierce,ama,Pierce
+451,Maelstrom Cascade,ama,Maelstrom Cascade
+452,Lightning Fury,ama,Lightning Fury
+453,Fire Bolt,sor,Fire Bolt
+454,Raging Gale,sor,Raging Gale
+455,Scorch,sor,Scorch
+456,Ice Bolt,sor,Ice Bolt
+457,Shock Armor,sor,Shock Armor
+458,Fire Armor,sor,Fire Armor
+459,Shiver Armor,sor,Shiver Armor
+460,Zap,sor,Zap
+461,Telekinesis,sor,Telekinesis
+462,Soul Shiver,sor,Soul Shiver
+463,Blizzard,sor,Blizzard
+464,Glacial Spike,sor,Glacial Spike
+465,Fire Ball,sor,Fire Ball
+466,Static Field,sor,Static Field
+467,Blaze,sor,Blaze
+468,Fanatic Swing,sor,Fanatic Swing
+469,Energy Shield,sor,Energy Shield
+470,Conduit,sor,Conduit
+471,Enchant,sor,Enchant
+472,Orb of Winter,sor,Orb of Winter
+473,Permafrost,sor,Permafrost
+474,Conflagrate,sor,Conflagrate
+475,Rain of Fire,sor,Rain of Fire
+476,Storm Nexus,sor,Storm Nexus
+477,Meteor Shower,sor,Meteor Shower
+478,Lightning Hydra,sor,Lightning Hydra
+479,Teleport,sor,Teleport
+480,Power Overwhelming,sor,Power Overwhelming
+481,Time Stop,sor,Time Stop
+482,Omnipotence,sor,Omnipotence
+483,Elemental Nova,sor,Elemental Nova
+484,Molten Focus,sor,Molten Focus
+485,Glacial Focus,sor,Glacial Focus
+486,Static Focus,sor,Static Focus
+487,Elemental Fury,sor,Elemental Fury
+488,Bone Armor,nec,Bone Armor
+489,Skeleton Mastery,nec,Skeleton Mastery
+490,Weaken,nec,Weaken
+491,Poison Weapon,nec,Poison Weapon
+492,Terror,nec,Terror
+493,Raise Skeleton,nec,Raise Skeleton
+494,Reap Souls,nec,Reap Souls
+495,Amplify Damage,nec,Amplify Damage
+496,Bone Wave,nec,Bone Wave
+497,Dim Vision,nec,Dim Vision
+498,Clay Golem,nec,Clay Golem
+499,Confuse,nec,Confuse
+500,Corpse Explosion,nec,Corpse Explosion
+501,Soul Reaper Mastery,nec,Soul Reaper Mastery
+502,Iron Maiden,nec,Iron Maiden
+503,Golem Mastery,nec,Golem Mastery
+504,Raise Skeletal Mage,nec,Raise Skeletal Mage
+505,Bone Spear,nec,Bone Spear
+506,Blood Golem,nec,Blood Golem
+507,Poison Nova,nec,Poison Nova
+508,Decrepify,nec,Decrepify
+509,Bone Prison,nec,Bone Prison
+510,Iron Golem,nec,Iron Golem
+511,Life Tap,nec,Life Tap
+512,Summon Resist,nec,Summon Resist
+513,Bone Spirit,nec,Bone Spirit
+514,Fire Golem,nec,Fire Golem
+515,Pierce Flesh & Bone,nec,Pierce Flesh and Bone
+516,Hell's Gate,nec,Hells Gate
+517,Undead Frenzy,nec,Undead Frenzy
+518,Summon Skeleton King,nec,Summon Skeleton King
+519,Bone Mastery,nec,Bone Mastery
+520,Lower Resist,nec,Lower Resist
+521,Poison Explosion,nec,Poison Explosion
+522,Sacrificial Offering,nec,Sacrificial Offering
+523,Holy Rain,pal,Holy Rain
+524,Zeal,pal,Zeal
+525,Smite,pal,Smite
+526,Prayer,pal,Prayer
+527,Resist Fire,pal,Resist Fire
+528,Resist Cold,pal,Resist Cold
+529,Blessed Aim,pal,Blessed Aim
+530,Resist Lightning,pal,Resist Lightning
+531,Sanctuary,pal,Sanctuary
+532,Thorns,pal,Thorns
+533,Defiance,pal,Defiance
+534,Holy Bolt,pal,Holy Bolt
+535,Holy Fire,pal,Holy Fire
+536,Charge,pal,Charge
+537,Cleansing,pal,Cleansing
+538,Crucify,pal,Crucify
+539,Holy Ward,pal,Holy Ward
+540,Might,pal,Might
+541,Vengeance,pal,Vengeance
+542,Blessed Hammer,pal,Blessed Hammer
+543,Concentration,pal,Concentration
+544,Holy Freeze,pal,Holy Freeze
+545,Vigor,pal,Vigor
+546,Holy Armor,pal,Holy Armor
+547,Judgement,pal,Judgement
+548,Holy Shock,pal,Holy Shock
+549,Meditation,pal,Meditation
+550,Divinity,pal,Divinity
+551,Trinity,pal,Trinity
+552,Summon Holy Defender,pal,Summon Holy Defender
+553,Fist of the Heavens,pal,Fist of the Heavens
+554,Fanaticism,pal,Fanaticism
+555,Conviction,pal,Conviction
+556,Redemption,pal,Redemption
+557,Salvation,pal,Salvation
+558,Combat Mastery,bar,Combat Mastery
+559,Thunder Strike,bar,Thunder Strike
+560,Leap,bar,Leap
+561,Warpath,bar,Warpath
+562,Precision Mastery,bar,Precision Mastery
+563,Shout,bar,Shout
+564,Stun,bar,Stun
+565,Hatchet Flurry,bar,Hatchet Flurry
+566,War Cry,bar,War Cry
+567,Phantom Hatchets,bar,Phantom Hatchets
+568,Strength of the Ancients,bar,Strength of the Ancients
+569,Concentrate,bar,Concentrate
+570,Battle Orders,bar,Battle Orders
+571,Nova,bar,Nova
+572,Luck of the Ancients,bar,Luck of the Ancients
+573,Leap Attack,bar,Leap Attack
+574,Frenzy,bar,Frenzy
+575,Vigor of the Ancients,bar,Vigor of the Ancients
+576,Overwhelm,bar,Overwhelm
+577,Taunt,bar,Taunt
+578,Call of the Ancients,bar,Call of the Ancients
+579,Find Treasure,bar,Find Treasure
+580,Iron Skin,bar,Iron Skin
+581,Stampede,bar,Stampede
+582,Battle Command,bar,Battle Command
+583,Plasma Rain,bar,Plasma Rain
+584,Find Rejuvenation,bar,Find Rejuvenation
+585,Howl,bar,Howl
+586,Berserk,bar,Berserk
+587,Shout of the Ancients,bar,Shout of the Ancients
+588,Wrath of the Ancients,bar,Wrath of the Ancients
+589,Berserk Fury,bar,Berserk Fury
+590,Whirlwind,bar,Whirlwind
+591,Storm of the Old Gods,bar,Storm of the Old Gods
+592,Natural Resistance,bar,Natural Resistance
+593,Raven,dru,Raven
+594,Summon Spirit Wolf,dru,Summon Spirit Wolf
+595,Werewolf,dru,Werewolf
+596,Werebear,dru,Werebear
+597,Elemental Form,dru,Elemental Form
+598,Cyclone Armor,dru,Cyclone Armor
+599,Twister,dru,Twister
+600,Summon Dire Wolf,dru,Summon Dire Wolf
+601,Frozen Blast,dru,Frozen Blast
+602,Lycanthropy,dru,Lycanthropy
+603,Twin Fangs,dru,Twin Fangs
+604,Ferocious Bite,dru,Ferocious Bite
+605,Flameburst,dru,Flameburst
+606,Thunderclaws,dru,Thunderclaws
+607,Sandstorm,dru,Sandstorm
+608,Feral Rage,dru,Feral Rage
+609,Maul,dru,Maul
+610,Primal Savagery,dru,Primal Savagery
+611,Firestorm,dru,Firestorm
+612,Spirit of Nature,dru,Spirit of Nature
+613,Contagion,dru,Contagion
+614,Fire Claws,dru,Fire Claws
+615,Hurricane,dru,Hurricane
+616,Freezing Claws,dru,Freezing Claws
+617,Whirlpool,dru,Whirlpool
+618,Rabies,dru,Rabies
+619,Shock Wave,dru,Shock Wave
+620,Cataclysm,dru,Cataclysm
+621,Feral Mastery,dru,Feral Mastery
+622,Charged Claws,dru,Charged Claws
+623,Volcano,dru,Volcano
+624,Monsoon,dru,Monsoon
+625,Call of the Wild,dru,Call of the Wild
+626,Summon Grizzly,dru,Summon Grizzly
+627,Fury,dru,Fury
+628,Flurry of Shurikens,ass,Flurry of Shurikens
+629,Weapon Block,ass,Weapon Block
+630,Cloak of Shadows,ass,Cloak of Shadows
+631,Dragon Tail,ass,Dragon Tail
+632,Cold Blast,ass,Cold Blast
+633,Weapon Mastery,ass,Weapon Mastery
+634,Dragon Blade,ass,Dragon Blade
+635,Tiger Strike,ass,Tiger Strike
+636,Shock Web,ass,Shock Web
+637,Iaigiri,ass,Iaigiri
+638,Burst of Speed,ass,Burst of Speed
+639,Fists of Fire,ass,Fists of Fire
+640,Wake of Destruction Sentry,ass,Wake of Destruction Sentry
+641,Shadow Warrior,ass,Shadow Warrior
+642,Ice Fangs,ass,Ice Fangs
+643,Shuriken Trap,ass,Shuriken Trap
+644,Shadow Master,ass,Shadow Master
+645,Dragon Talon,ass,Dragon Talon
+646,Psychic Hammer,ass,Psychic Hammer
+647,Fade,ass,Fade
+648,Dragon Fury,ass,Dragon Fury
+649,Claws of Thunder,ass,Claws of Thunder
+650,Lightning Sentry,ass,Lightning Sentry
+651,Ricochet,ass,Shuriken
+652,Meteor Sentry,ass,Meteor Sentry
+653,Blades of Ice,ass,Blades of Ice
+654,Execute,ass,Execute
+655,Venom,ass,Venom
+656,Command Mastery,ass,Command Mastery
+657,Cold Wave,ass,Cold Wave
+658,Death Sentry,ass,Death Sentry
+659,Blade Nova,ass,Blade Nova
+660,Phoenix Strike,ass,Phoenix Strike
+661,Mind Blast,ass,Mind Blast
+662,Shade Armor,ass,Shade Armor
+663,Summon Goatman,war,Summon Goatman
+664,Demonic Mastery,war,Demonic Mastery
+665,Levitation Mastery,war,Levitate
+666,Hex: Bane,war,Hex Bane
+667,Miasma Bolt,war,Miasma Bolt
+668,Hellfire Lance,war,Hellfire Lance
+669,Cleave,war,Cleave
+670,Sigil: Lethargy,war,Sigil Lethargy
+671,Blood Boil,war,Blood Boil
+672,Blood Oath,war,Blood Oath
+673,Flame Wave,war,Flame Wave
+674,Sigil: Rancor,war,Sigil Rancor
+675,Summon Tainted,war,Summon Tainted
+676,Echoing Strike,war,Echoing Strike
+677,Hex: Purge,war,Hex Purge
+678,Miasma Chain,war,Miasma Chains
+679,Psychic Ward,war,Psychic Ward
+680,Summon Defiler,war,Summon Defiler
+681,Engorge,war,Engorge
+682,Blade Warp,war,Blade Warp
+683,Seeking Flames,war,Seeking Flames
+684,Hex: Siphon,war,Hex Siphon
+685,Gluttony,war,Gluttony
+686,Abyss,war,Abyss
+687,Sigil: Death,war,Sigil Death
+688,Abyss Knight,war,Summon Abyss Knight
+689,Death Mark,war,Death Mark
+690,Eldritch Blast,war,Eldritch Blast
+691,Consume,war,Consume
+692,Bind Monster,war,Bind Demon
+693,Mirrored Blades,war,Mirrored Blades
+694,Apocalypse,war,Apocalypse
+695,Enhanced Entropy,war,Enhanced Entropy
+696,Eldritch Mastery,war,Eldritch Mastery
+697,Black Magic,war,Black Magic
+726,Blizzard Cannon,,Blizzard Cannon
+727,Mythical Chaos Lightning,,Mjolnir Chaos Lightning
+728,Mjolnir Passive,,Mjolnir Passive
+730,Tal Rasha Last Whisper Power,,Tal Rasha Last Whisper Power
+731,Trophy of Speed,,Headhunter Speed
+732,Trophy of Physical Damage,,Headhunter Physical Damage
+733,Trophy of Spell Damage,,Headhunter Elemental Damage
+734,Trophy of Sustenance,,Headhunter Health
+735,Trophy of Resistances,,Headhunter Resistances
+736,Trophy of Stats,,Headhunter Stats
+737,Trophy of All Skills,,Headhunter Skills
+738,Monkey King's Leap,,Monkey King Leap
+739,Monkey King's Wrath,,Monkey King Slam
+742,Blink Strike,,Blink Strike
+743,Starfall,,Starfall
+744,Eternal Winter,,Eternal Winter
+745,Permafrost Storm,,Permafrost Storm
+752,Empowered Enchant,,Empowered Enchant Fire
+753,Empowered Enchant,,Empowered Enchant Cold
+754,Empowered Enchant,,Empowered Enchant Lightning
+755,Empowered Enchant,,Empowered Enchant Poison
+756,Empowered Enchant,,Empowered Enchant Magic
+757,Empowered Enchant,,Empowered Enchant Physical
+760,Bone Wall,,Bone Wall
+766,Buckshot,,Buckshot
+767,Fire Enhanced Fury,,Fire Enhanced Fury
+770,Fire Enhanced Spike Nova,,Spike Nova Fire
+771,Poison Enhanced Spike Nova,,Spike Nova Poison
+772,Magic Mastery,,Magic Mastery
+775,Prismatic Shot,,Prismatic Shot
+780,Cold Enhanced Spike Nova,,Spike Nova Cold
+781,Lightning Enhanced Spike Nova,,Spike Nova Lightning
+782,Magic Enhanced Spike Nova,,Spike Nova Magic
+783,Super Teleport,,Super Teleport
+784,Death Sentry,,Death Sentry Physical
+786,Spell Mastery,,Spell Mastery
+787,Battlemage Ascendancy,,Battlemage Ascendancy
+788,Awakened Ascendancy,,Awakened Ascendancy
+789,Blademaster Ascendancy,,Blademaster Ascendancy
+790,Nomad Ascendancy,,Nomad Ascendancy
+791,Ironbolt Ascendancy,,Ironbolt Ascendancy
+792,Arcanist Ascendancy,,Arcanist Ascendancy
+793,Soul Warden Ascendancy,,Soul Warden Ascendancy
+794,Sharpshooter Ascendancy,,Sharpshooter Ascendancy
+795,Starborn Ascendancy,,Starborn Ascendancy
+796,Bloodmage Ascendancy,,Bloodmage Ascendancy
+797,Lifebreaker Ascendancy,,Lifebreaker Ascendancy
+798,Worldshaper Ascendancy,,Worldshaper Ascendancy
+799,Stance Dancer Ascendancy,,Stance Dancer Ascendancy
+800,Mana Warden Ascendancy,,Mana Warden Ascendancy
+801,Berserker Ascendancy,,Berserker Ascendancy
+815,Annihilation,,Annihilation
+822,Scurry,,Scurry
+823,Life Pact,,Life Pact
+824,Fury of Creation,,Fury of Creation
+825,Ravage,,Ravage
+827,DamageAugment New,,DamageAugment New
+829,Mana Shards,,Mana Shards
+832,Plasma Swarm,,Plasma Swarm
+838,Whirlpool,,Whirlpool Proc
+852,DamageAugment New 2,,DamageAugment New 2
+854,Delayed Teleport,,Slow Teleport
+855,Ice Blink,,Ice Blink
+862,Supernova,,Super Nova
+864,Fire Surge,,Fire Surge
+865,Cold Surge,,Cold Surge
+866,Lightning Surge,,Lightning Surge
+867,Poison Surge,,Poison Surge
+868,Magic Surge,,Magic Surge
+869,Wind Surge,,Wind Surge
+873,Time Lapse,,Time Lapse
+874,Lightning Damage Aura,,Lightning Damage Aura
+875,Fire Damage Aura,,Fire Damage Aura
+876,Cold Damage Aura,,Cold Damage Aura
+877,Cold Pierce,,Cold Pierce Aura
+878,Lightning Strafe,,Lightning Strafe
+879,Summon Curse Immunity,,Summon Curse Immunity
+880,Emberquake,,Emberquake
+881,Incinerate,,Incinerate
+882,Trap Augmentation,,Trap Augmentation
+883,Lightning Pierce Aura,,Lightning Pierce Aura
+884,Lightning Warp,,Lightning Warp
+885,Incinerate,,Incinerate Proc
+886,Fire Pierce Aura,,Fire Pierce Aura
+887,Strafe Magic Conversion,,Strafe Magic Conversion
+888,Curse Enhancement,,Curse Enhancement
+889,Fire Brand,,Fire Brand
+890,Cold Brand,,Cold Brand
+891,Lightning Brand,,Lightning Brand
+893,Magic Brand,,Magic Brand
+894,Wind Brand,,Wind Brand
+895,Fire Cascade,,Fire Cascade
+896,Raise Skeletal Mage Level Bonus,,Raise Skeletal Mage Level Bonus
+897,Orb of the Mist,,Orb of the Mist
+899,Shared Savagery,,Shared Savagery
+900,Wooden Skin,,Wooden Skin
+901,Devastating Overwhelm,,Devastating Overwhelm
+902,Lothar's Wrath,,Lothar Wrath
+903,Fists of Fire Discharge,,Fists of Fire Discharge
+904,Claws of Thunder Discharge,,Claws of Thunder Discharge
+905,Blades of Ice Discharge,,Blades of Ice Discharge
+906,Corrupted Poison Nova,,Corrupted Poison Nova
+907,Warm Up,,Warm Up
+908,Spirit of Nature Mastery,,Spirit of Nature Mastery
+909,Icon of Sin Passive,,Icon of Sin Passive
+911,Blaze Synergy Enhancement,,Blaze Synergy Enhancement
+912,Frozen Blast Lightning Enhancement,,Frozen Blast Lightning Enhancement
+913,Cataclysm Enhancement,,Cataclysm Enhancement
+914,Monsoon Enhancement,,Monsoon Enhancement
+915,Winged Embrace,,Winged Embrace
+916,Umbral Flight,,Umbral Flight
+917,Holy Auras Enhancement,,Holy Auras Enhancement
+918,Fist of the Heavens Enhancement,,Fist of the Heavens Enhancement
+919,Holy Freeze Enhancement,,Holy Freeze Enhancement
+921,Lightning Hydra,,Hydra Baal's Vile Whisper
+932,Triumvirate Orb,,Triumvirate Orb
+1026,Chaos Aura,,Chaos Aura
+1027,Rain of Stars,,Rain of Stars
+1028,Star Rupture,,Rupture of Stars
+1029,Celestial Resonance,,Celestial Resonance
+1031,Triple Damage Aura,,Triple Damage Aura
+1032,Athulua Final Hunt Passive,,Athulua Final Hunt Passive
+1033,Scosglen Resonance,,Scosglen Resonance
+1034,Scosglen Empowerment,,Scosglen Empowerment
+1035,Eldruin Blessing,,Eldruin Blessing
+1044,Travel to the Underworld,,Travel to the Underworld
+1045,Orpheus Aura,,Orpheus Aura
+1046,Shadow Descent,,Shadow Descent
+1048,Ties That Bind Fire,,Ties That Bind Fire
+1049,Ties That Bind Cold,,Ties That Bind Cold
+1050,Ties That Bind Lightning,,Ties That Bind Lightning
+1051,Ties That Bind Poison,,Ties That Bind Poison
+1052,Ties That Bind Magic,,Ties That Bind Magic
+1053,Ties That Bind Physical,,Ties That Bind Physical
+1054,Ties That Bind Summon,,Ties That Bind Summon
+1055,Ties That Bind Fire Passive,,Ties That Bind Fire Passive
+1056,Ties That Bind Cold Passive,,Ties That Bind Cold Passive
+1057,Ties That Bind Lightning Passive,,Ties That Bind Lightning Passive
+1058,Ties That Bind Poison Passive,,Ties That Bind Poison Passive
+1059,Ties That Bind Magic Passive,,Ties That Bind Magic Passive
+1060,Ties That Bind Physical Passive,,Ties That Bind Physical Passive
+1061,Ties That Bind Summon Passive,,Ties That Bind Summon Passive
+1112,Doomfletch Passive,,Doomfletch Passive
+1133,Aegis of Corruption Passive,,Aegis of Corruption Passive
+1134,Baal Vile Whisper Passive,,Baal Vile Whisper Passive
+1135,Inarius Rod Passive,,Inarius Rod Passive
+1137,Rathma Eternal Reign Passive,,Rathma Eternal Reign Passive
+1138,Avatar of Nature Passive,,Avatar of Nature Passive
+1139,Tathamet Awakening Passive,,Tathamet Awakening Passive
+1140,Baal Vile Whisper Shuriken Passive,,Baal Vile Whisper Shuriken Passive
+1143,Fire Mastery,,Fire Mastery
+1144,Cold Mastery,,Cold Mastery
+1145,Lightning Mastery,,Lightning Mastery
+1146,Odd Charm Hidden Aura,,Odd Charm Hidden Aura
+1148,Vengeful Spirit,,Vengeful Spirit
+1149,Cold Resist Accr Aura,,Cold Resist Accr Aura
+1152,Tal Rasha Passive,,Tal Rasha Passive
+1153,Poison Cold Enhancement,,Poison Cold Enhancement
+1165,Cloak of Shadows,,Cloak of Shadows Aura
+1166,Hunger Enhancement,,Hunger Enhancement
+1167,Saracen Chance Aura,,Saracen Chance Aura
+1168,Leap Attack Enhancement,,Leap Attack Enhancement
+1169,Broadhead,,Broadhead
+1170,Cyclone Armor Enhancement,,Cyclone Armor Enhancement
+1171,Penta Damage Aura,,Penta Damage Aura
+1173,Life Bane Aura,,Life Bane Aura
+1174,Griswold Revenge Aura,,Griswold Revenge Aura
+1175,Self Attack Speed Slow Aura,,Self Attack Speed Slow Aura
+1176,Wild Airs of the Elements,,Wild Airs of the Elements
+1180,Glacial Form Aura,,Glacial Form Aura
+1181,Blade of Righteousness Aura,,Blade of Righteousness Aura
+1182,Reigns of Power Aura,,Reigns of Power Aura
+1183,The Grandfather Aura,,The Grandfather Aura
+1184,Death Ritual,,Death Ritual
+1185,Secret of the Ooze Aura,,Secret of the Ooze Aura
+1186,Robin Hood Precision Aura,,Robin Hood Precision Aura
+1187,Goldfinger Aura,,Goldfinger Aura
+1188,Artemis Wrath Aura,,Artemis Wrath Aura
+1189,Maija Menace Aura,,Maija Menace Aura
+1190,Zeus Bolts Aura,,Zeus Bolts Aura
+1191,Lightfoot Aura,,Lightfoot Aura
+1192,Fangs of the King Cobra Aura,,Fangs of the King Cobra Aura
+1193,Clavo Platino Aura,,Clavo Platino Aura
+1194,Reap Thunder,,Reap Thunder
+1195,Freedom of Imprisonment Aura,,Freedom of Imprisonment Aura
+1196,Heart of the Succubi Aura,,Heart of the Succubi Aura
+1197,Orb of the Horadrim Aura,,Orb of the Horadrim Aura
+1198,Arreat Faceplate Aura,,Arreat Faceplate Aura
+1199,Corrupted Sanctuary Aura,,Corrupted Sanctuary Aura
+1200,Cottonmouth Jacket Aura,,Cottonmouth Jacket Aura
+1201,Righteous Fire,,Righteous Fire
+1202,Atlastrust Slam,,Atlastrust Slam
+1203,Kaija Gown Aura,,Kaija Gown Aura
+1205,Amplify Damage,,Amplify Damage Aura
+1206,Izeal Vise Contraptions,,Izeal Vise Contraptions
+1207,Cyclop Protector Aura,,Cyclop Protector Aura
+1208,Drain Soul,,Drain Soul
+1209,Iron Fist Aura,,Iron Fist Aura
+1211,Jackpot Explosion Control,,Jackpot Explosion Control
+1212,The Heel of Blood Aura,,The Heel of Blood Aura
+1213,Band of Constriction Aura,,Band of Constriction Aura
+1214,Girdle of Giant Strength Aura,,Girdle of Giant Strength Aura
+1215,The Belt of Zeus Novas,,The Belt of Zeus Novas
+1216,Coldfist Icy Stare Aura,,Coldfist Icy Stare Aura
+1217,Eye of the Storm,,Wyrm Wrap Chain Lightning
+1218,Shocking Leap Attack,,Shocking Leap Attack
+1219,Brilliance Aura,,Brilliance Aura
+1220,The Ancients Blessing Control,,The Ancients Blessing Control
+1221,Lower Resist,,Lower Resist Aura
+1222,Minion Explode Control,,Minion Explode Control
+1223,Head of the Cerberus,,Head of the Cerberus
+1224,Overseer Volley,,Overseer Volley
+1225,Shenk Mask Aura,,Shenk Mask Aura
+1226,Nightfall,,Nightfall
+1227,Heaven's Gate,,Heaven Gate
+1229,Leader of the Light Passive,,Leader of the Light Passive
+1230,Spellcaster Aide Aura,,Spellcaster Aide Aura
+1231,Eye of the Beholder Aura,,Eye of the Beholder Aura
+1232,Arm of King Leoric Passive,,Arm of King Leoric Passive
+1233,Hone Sudan Aura,,Hone Sudan Aura
+1234,Goldstrike Arch Aura,,Goldstrike Arch Aura
+1235,Peasant Crown Aura,,Peasant Crown Aura
+1236,Stormchaser Aura,,Stormchaser Aura
+1237,Gerke Sanctuary Aura,,Gerke Sanctuary Aura
+1238,Radament Sphere Aura,,Radament Sphere Aura
+1239,Lidless Wall Aura,,Lidless Wall Aura
+1240,Infernostride Aura,,Infernostride Aura
+1241,Waterwalk Aura,,Waterwalk Aura
+1242,Slikweave Webs,,Slikweave Webs
+1243,War Traveler Aura,,War Traveler Aura
+1244,Gore Rider Aura,,Gore Rider Aura
+1245,String of Ears Aura,,String of Ears Aura
+1246,Thundergod Vigor Aura,,Thundergod Vigor Aura
+1247,Veil of Steel Aura,,Veil of Steel Aura
+1248,Arkaine Valor Aura,,Arkaine Valor Aura
+1249,Blackoak Shield Aura,,Blackoak Shield Aura
+1250,Fire Whirlwind,,Fire Whirlwind
+1254,Fire Whirlwind Fire Trails,,Fire Whirlwind Fire Trails
+1255,Messerschmidt Reaver Aura,,Messerschmidt Reaver Aura
+1256,Cranium Basher Aura,,Cranium Basher Aura
+1257,Doombringer Passive,,Doombringer Passive
+1258,Poison Sentry Passive,,Poison Sentry Passive
+1260,The Grandfather Lod Aura,,The Grandfather Lod Aura
+1261,Wizardspike Lod Aura,,Wizardspike Lod Aura
+1265,Eaglehorn Lod Aura,,Eaglehorn Lod Aura
+1266,Windforce Lod Tornadoes,,Windforce Lod Tornadoes
+1267,Windforce Lod Aura,,Windforce Lod Aura
+1268,Dual Attunement,,Djinn Slayer Attunement
+1271,Demon Limb Aura,,Demon Limb Aura
+1276,Fleshripper Aura,,Fleshripper Aura
+1277,Horizon Tornado,,Horizon Tornado
+1279,Poison Sentry,,Poison Sentry
+1283,Shadow Dance,,Shadow Dance
+1284,Shadow Dancer Aura,,Shadow Dancer Aura
+1285,Cerebus Bite Aura,,Cerebus Bite Aura
+1286,Tyrael Might Aura,,Tyrael Might Aura
+1287,Tyrael Might Aura str to dex,,Tyrael Might Aura str to dex
+1288,Tyrael Might Aura str to vit,,Tyrael Might Aura str to vit
+1289,Tyrael Might Aura str to enr,,Tyrael Might Aura str to enr
+1290,Tyrael Might Aura dex to str,,Tyrael Might Aura dex to str
+1291,Tyrael Might Aura dex to vit,,Tyrael Might Aura dex to vit
+1292,Tyrael Might Aura dex to enr,,Tyrael Might Aura dex to enr
+1293,Tyrael Might Aura vit to str,,Tyrael Might Aura vit to str
+1294,Tyrael Might Aura vit to dex,,Tyrael Might Aura vit to dex
+1295,Tyrael Might Aura vit to enr,,Tyrael Might Aura vit to enr
+1296,Tyrael Might Aura enr to str,,Tyrael Might Aura enr to str
+1297,Tyrael Might Aura enr to dex,,Tyrael Might Aura enr to dex
+1298,Tyrael Might Aura enr to vit,,Tyrael Might Aura enr to vit
+1299,Rune Master Breakpoint Aura,,Rune Master Breakpoint Aura
+1300,Rune Master Aura,,Rune Master Aura
+1302,Stoneraven Aura,,Stoneraven Aura
+1304,Leviathan Shockwaves,,Leviathan Shockwaves
+1305,Gargoyle Bite Aura,,Gargoyle Bite Aura
+1306,Lacerator Aura,,Lacerator Aura
+1308,Mang Song Lesson,,Mang Song Lesson
+1309,Lunge,,Viperfork Charge
+1310,Ethereal Edge Aura Control,,Ethereal Edge Aura Control
+1311,Ethereal Edge Aura Bonus,,Ethereal Edge Aura Bonus
+1312,Demonhorn Edge Aura,,Demonhorn Edge Aura
+1313,The Reaper Toll Aura,,The Reaper Toll Aura
+1316,Spirit Keeper Control,,Spirit Keeper Control
+1329,Alma Negra Aura,,Alma Negra Aura
+1330,Darkforce Spawn Aura,,Darkforce Spawn Aura
+1331,Widowmaker,,Widowmaker
+1332,Widowmaker Aura,,Widowmaker Aura
+1333,Ghostflame Aura,,Ghostflame Aura
+1334,Shadow Killer Aura,,Shadow Killer Aura
+1335,Gimmershred Aura,,Gimmershred Aura
+1336,Griffon Eye Aura,,Griffon Eye Aura
+1337,Windhammer Tornadoes,,Windhammer Tornadoes
+1338,Windhammer Aura,,Windhammer Aura
+1339,Typhoon,,Typhoon
+1340,Thunderstroke Passive,,Thunderstroke Passive
+1341,Thunderstroke Aura,,Thunderstroke Aura
+1342,Demon Arch Portals,,Demon Arch Portals
+1344,Steel Pillar Aura,,Steel Pillar Aura
+1349,Nightwing Veil Aura,,Nightwing Veil Aura
+1350,Crown of Ages Aura,,Crown of Ages Aura
+1351,Dragonscale Fires,,Dragonscale Fires
+1352,Steel Carapace Aura,,Steel Carapace Aura
+1354,Ravenlore Passive,,Ravenlore Passive
+1355,Boneshade Passive,,Boneshade Passive
+1356,Flamebellow Aura,,Flamebellow Aura
+1368,Pulverize,,Pulverize
+1369,Wolfhowl Aura,,Wolfhowl Aura
+1370,Ormus Robes Aura,,Ormus Robes Aura
+1371,Stormlash,,Stormlash
+1372,Halaberd Reign Novas,,Halaberd Reign Novas
+1373,Spike Thorn Aura,,Spike Thorn Aura
+1374,Templar Might Aura,,Templar Might Aura
+1375,Eschuta Temper Passive,,Eschuta Temper Passive
+1376,Firelizard Talon Passive,,Firelizard Talon Passive
+1377,Sandstorm Trek Aura,,Sandstorm Trek Aura
+1378,Death Walk,,Marrow Walking
+1379,Heaven Light Passive,,Heaven Light Passive
+1380,Arachnid Mesh Passive,,Arachnid Mesh Passive
+1381,Verdungo Hearty Cord Aura,,Verdungo Hearty Cord Aura
+1382,Giant Skull Aura,,Giant Skull Aura
+1383,Astreon Iron Ward Aura,,Astreon Iron Ward Aura
+1384,Arioc Needle Aura,,Arioc Needle Aura
+1385,Cranebeak Aura,,Cranebeak Aura
+1386,Nord Tenderizer Aura,,Nord Tenderizer Aura
+1387,Earth Shifter Shakes,,Earth Shifter Shakes
+1388,Release Pressure,,Release Pressure
+1389,Earth Shifter Aura,,Earth Shifter Aura
+1390,Bonehew Aura,,Bonehew Aura
+1391,Ondal Wisdom Aura,,Ondal Wisdom Aura
+1392,Steelrend Aura,,Steelrend Aura
+1393,Death Game Shurikens,,Death Game Shurikens
+1394,Flame Rift,,Flame Rift
+1395,Venom Veil,,Venom Veil
+1396,Wind Walk,,Wind Walk
+1397,Eagle Eye,,Eagle Eye Aura
+1398,Wealth Aura,,Wealth Aura
+1399,Shout,,Shout Aura
+1400,Hypothermia,,Hypothermia
+1401,Energy Shield,,Energy Shield Aura
+1402,Poison Immunity Aura,,Poison Immunity Aura
+1403,Enlightenment Aura,,Enlightenment Aura
+1408,Exile Passive,,Exile Passive
+1409,Weaken,,Weaken Aura
+1414,Kingslayer Passive,,Kingslayer Passive
+1415,Prudence Aura,,Prudence Aura
+1416,Sanctuary Passive,,Sanctuary Passive
+1417,Whirlwind Tornadoes,,Whirlwind Tornadoes
+1418,Destruction Aura,,Destruction Aura
+1419,Dream Passive,,Dream Passive
+1420,Ice Aura,,Ice Aura
+1424,Bone Armor Aura,,Bone Armor Aura
+1425,Enlightenment Passive,,Enlightenment Passive
+1426,Shout of the Ancients Aura,,Shout of the Ancients Aura
+1427,Eagle Eye Elemental Aura,,Eagle Eye Elemental Aura
+1428,Principle Passive,,Principle Passive
+1429,Rain Passive,,Rain Passive
+1432,Moonstorm,,Moonstorm
+1433,Moonstorm Arrows,,Moonstorm Arrows
+1439,Moonlight Aura,,Moonlight Aura
+1494,Abyss Passive,,Abyss Passive
+1495,Bind Demon Passive,,Bind Demon Passive
+1496,Flame Wave Passive,,Flame Wave Passive
+1497,Missile Speed Aura,,Missile Speed Aura
+1498,Magic Damage Crit,,Magic Damage Crit
+1499,Litany of Scorched Earth Passive,,Litany of Scorched Earth Passive
+1500,The Grand Sacrifice Passive,,The Grand Sacrifice Passive
+1501,Ars Dul'Mephistos Aura,,Ars Dul'Mephistos Aura
+1504,Dreadfang Passive,,Dreadfang Passive
+1505,Wraithstep,,Wraithstep Damage
+1506,Bloodpact Shard Aura,,Bloodpact Shard Aura
+1507,Town Portal,,Townportal Oskill
+1508,Battlemage Ascendancy Tier 4,,Battlemage Ascendancy Tier 4
+1509,Awakened Ascendancy Tier 4,,Awakened Ascendancy Tier 4
+1510,Blademaster Ascendancy Tier 4,,Blademaster Ascendancy Tier 4
+1511,Nomad Ascendancy Tier 4,,Nomad Ascendancy Tier 4
+1512,Ironbolt Ascendancy Tier 4,,Ironbolt Ascendancy Tier 4
+1513,Arcanist Ascendancy Tier 4,,Arcanist Ascendancy Tier 4
+1514,Soul Warden Ascendancy Tier 4,,Soul Warden Ascendancy Tier 4
+1515,Sharpshooter Ascendancy Tier 4,,Sharpshooter Ascendancy Tier 4
+1516,Starborn Ascendancy Tier 4,,Starborn Ascendancy Tier 4
+1517,Bloodmage Ascendancy Tier 4,,Bloodmage Ascendancy Tier 4
+1518,Lifebreaker Ascendancy Tier 4,,Lifebreaker Ascendancy Tier 4
+1519,Worldshaper Ascendancy Tier 4,,Worldshaper Ascendancy Tier 4
+1520,Stance Dancer Ascendancy Tier 4,,Stance Dancer Ascendancy Tier 4
+1521,Mana Warden Ascendancy Tier 4,,Mana Warden Ascendancy Tier 4
+1522,Berserker Ascendancy Tier 4,,Berserker Ascendancy Tier 4
+1523,Opalvein Aura Enhanced Damage,,Opalvein Aura Enhanced Damage
+1524,Opalvein Aura Spell Damage,,Opalvein Aura Spell Damage
+1525,Entropy Locket Aura,,Entropy Locket Aura
+1527,Gheed Wager Aura,,Gheed Wager Aura
+1529,Fire Damage Crit,,Fire Damage Crit
+1530,Cold Damage Crit,,Cold Damage Crit
+1531,Lightning Damage Crit,,Lightning Damage Crit
+1532,Poison Damage Crit,,Poison Damage Crit
+1536,Iris Elemental Convergence,,Iris Elemental Convergence
+1537,Alaziel Passive,,Alaziel Passive
+1539,Arcane Poison Nova,,Arcane Poison Nova
+1540,Ihsan Passive,,Ihsan Passive
+1543,Icing Death Cold Damage Crit,,Icing Death Cold Damage Crit
+1554,Voidforge Aura,,Voidforge Aura
+1558,Delirium Aura,,Delirium Aura
+1577,Resist Fire Shrine,,Resist Fire Shrine
+1578,Resist Cold Shrine,,Resist Cold Shrine
+1579,Resist Lightning Shrine,,Resist Lightning Shrine
+1580,Resist Poison Shrine,,Resist Poison Shrine
+1618,Wall of the Crusader Aura,,Wall of the Crusader Aura
+1619,Imperial War Guard Aura,,Imperial War Guard Aura
+1620,Herald of Zakarum Passive,,Herald of Zakarum Passive
+1621,Arthur Crown Aura,,Arthur Crown Aura
+1623,Barbaric Devastator Aura,,Barbaric Devastator Aura
+1624,Dreamflange Aura,,Dreamflange Aura
+1625,Agent of the Light Aura,,Agent of the Light Aura
+1626,Lightning Enhanced Leap Attack,,Lightning Enhanced Leap Attack
+1628,Horn of Balor Aura,,Horn of Balor Aura

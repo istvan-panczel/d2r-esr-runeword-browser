@@ -1764,6 +1764,30 @@ example rules: of the request), else of the request's first line, else "ai-filte
   `- Rule 12 "High runes" (rules/11/itemCodes/3): Unknown item code "r99"` (style problems name the style), at most 80
   lines with the rest counted, and ends with "Fix these and keep everything else; reply with the complete filter as one
   json block."
+- **Section comments in the prompt**: FORMAT.md "Writing the file for the app" teaches the short form of the ruleset
+  (see "Section comments": whole-line `//` comments above a top-level key, rule, disabled rule or style and after the
+  last rule are kept; same-line, inside-object and `/* */` comments are dropped on the first edit; `// ====` parts and
+  `// ----` sections; every rule still gets its `"comment"`; switch a rule off with `disabledRules`, not by commenting
+  it out), PROMPT.md's "Rules for the filter" points there, and `SKELETON_FILTER` shows two parts and a section.
+- **Agent pack** (`utils/aiPrompt/agentPack.ts`, `scripts/generate-loot-filter-agent-pack.ts`,
+  `scripts/lib/lootFilterAgentPack.ts`): static files for AI agents (e.g. a filter author working with Claude agents)
+  in `public/loot-filters/agent/`, served at `https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/agent/<file>`.
+  `README.md` is the entry point to hand an agent: what ESR loot filters are, how to work (write or edit the `.json`,
+  keep it JSONC the plugin reads, check it by uploading it at `/loot-filters` and reading the JSON tab's problems list,
+  or have the person paste Copy problems for the AI back), the PROMPT.md rules for writing filters without the chat
+  parts (request, starter, language, attached files, import reminder), the Section comments ruleset in full with an
+  example (the test parses and validates it), every file with a one-line summary and its URL, the ESR version, the
+  plugin version and the bundled templates' URLs. Then `referenceFiles` at the **full** size under the AI page's
+  names: `FORMAT.md`, `examples.md`, `assets.md`, `item-types.csv`, `items.csv`, `stats.csv`, `uniques-sets.csv`,
+  `areas.csv`, `skills.csv`, `skill-tabs.csv`, `classes.csv` (about 360 KB in all on ESR 3.3.03). The generator loads
+  `lootfilter.json`, `types.json` and the manifest's `esrVersion` from `public/game-data/` as the page does (through
+  `importSrc`), with `SITE_URL` from `scripts/lib/sitemap.ts`; no dates, so the output is deterministic.
+  `npm run loot-filter:agent-pack` writes it (and removes files it no longer makes); `game-data:generate` writes it after the
+  bundles, `game-data:generate --check` (so `game-data:check` and `game-data:update`) checks it when the bundles are
+  fresh, `node scripts/generate-loot-filter-agent-pack.ts --check` checks it alone (no ESR clone needed), and
+  `scripts/lib/lootFilterAgentPack.test.ts` fails when the committed pack differs from a fresh build. Prettier skips
+  the folder. A change to the prompt text, the example rules, the presets, the bundled assets or the templates makes
+  the pack stale: regenerate and commit it.
 - **Inputs with defaults**: `PromptReferenceInput.examples` (default `EXAMPLE_RULES`), `.stylePresets` (default
   `DEFAULT_PROMPT_STYLE_PRESETS`) and `.assets` (default `DEFAULT_PROMPT_ASSETS`); the page passes none of them, so
   the reference cache keys stay stable.

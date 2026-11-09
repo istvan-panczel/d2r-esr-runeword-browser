@@ -1,0 +1,1661 @@
+kind,id,name,baseCode,baseName,reqLvl,set,notes
+unique,0,The Perfect Cello,cm1,Small Charm,40,,disabled (never created)
+unique,1,Yello Jello,cm2,Large Charm,40,,
+unique,2,Lothar's Will,cm3,Grand Charm,40,,
+unique,3,Deviant Cell,cm4,Odd Charm,40,,
+unique,4,Vlad Tepe's Sustenance,cm1,Small Charm,80,,
+unique,5,Something Wicked,cm2,Large Charm,80,,
+unique,6,The Unknown Hero,cm3,Grand Charm,80,,
+unique,7,Fallen Star,rin,Ring,5,,
+unique,8,Dragon Eye,rin,Ring,10,,
+unique,9,Ring of Vengeance,rin,Ring,20,,
+unique,10,Elemental Jewel,rin,Ring,30,,
+unique,11,Iron Thimble,rin,Ring,40,,
+unique,12,Zodiac Band,rin,Ring,50,,
+unique,13,The One Ring,rin,Ring,60,,
+unique,14,Lily Petal,zrn,Amazonian Loop,45,,
+unique,15,Forget-Me-Not Petal,srn,Sorcerer's Band,45,,
+unique,16,Cactus Petal,nrn,Necromancer's Stone,45,,
+unique,17,White Rose Petal,prn,Paladic Halo,45,,
+unique,18,Violet Petal,brg,Barbaric Hoop,45,,
+unique,19,Dandelion Petal,drn,Druid's Seal,45,,
+unique,20,Red Rose Petal,arn,Assassin's Spiral,45,,
+unique,21,Wilting Petal,wrn,Warlock's Sigil,45,,
+unique,22,Elven Blessing,zrn,Amazonian Loop,60,,
+unique,23,Khelek's Crystal Band,srn,Sorcerer's Band,60,,
+unique,24,Vorador's Essence,nrn,Necromancer's Stone,60,,
+unique,25,Rock of Aadeyen,prn,Paladic Halo,60,,
+unique,26,Madawc's Frenzy,brg,Barbaric Hoop,60,,
+unique,27,Alakashar Rahl,drn,Druid's Seal,60,,
+unique,28,Lilith's Heart,arn,Assassin's Spiral,60,,
+unique,29,Fellstone,wrn,Warlock's Sigil,60,,
+unique,30,Dfuzzz's Fingerguard,zrn,Amazonian Loop,75,,
+unique,31,Killashandra Ree's Black Crystal,srn,Sorcerer's Band,75,,
+unique,32,BlackMage's Knucklebone,nrn,Necromancer's Stone,75,,
+unique,33,The Tipsy Donut,prn,Paladic Halo,75,,
+unique,34,The Mad Celt's Shining Sparkly,brg,Barbaric Hoop,75,,
+unique,35,Yagul's Wrath,drn,Druid's Seal,75,,
+unique,36,Killjoy's Attitude,arn,Assassin's Spiral,75,,
+unique,37,Wanderer's Omen,wrn,Warlock's Sigil,75,,
+unique,38,Lovers' Pendant,amu,Amulet,5,,
+unique,39,Eye of the Witch,amu,Amulet,10,,
+unique,40,Collar of the Minotaur,amu,Amulet,20,,
+unique,41,Beads of the Guardian,amu,Amulet,30,,
+unique,42,Roaring Thunder,amu,Amulet,40,,
+unique,43,Eye of the Beholder,amu,Amulet,50,,
+unique,44,Spellcasters Aide,amu,Amulet,60,,
+unique,45,Talisman of Benzaiten,zam,Amazonian Pin,45,,
+unique,46,Talisman of Fukurokuju,sam,Sorcerer's Talisman,45,,
+unique,47,Talisman of Ebisu,nam,Death's Locket,45,,
+unique,48,Talisman of Daikokuten,pam,Holy Pendant,45,,
+unique,49,Talisman of Bishamonten,bam,Totemic Pebble,45,,
+unique,50,Talisman of Hotei,dam,Druidic Necklace,45,,
+unique,51,Talisman of Kisshoten,aam,Assassin's Choker,45,,
+unique,52,Talisman of Izanami,wam,Warlock's Pendant,45,,
+unique,53,Valhalla's Pendant,zam,Amazonian Pin,60,,
+unique,54,Jade's Locket,sam,Sorcerer's Talisman,60,,
+unique,55,Daeveran's Stone,nam,Death's Locket,60,,
+unique,56,Holy Deviant,pam,Holy Pendant,60,,
+unique,57,Khisanth,bam,Totemic Pebble,60,,
+unique,58,Grim Creaper,dam,Druidic Necklace,60,,
+unique,59,Sub Sanity,aam,Assassin's Choker,60,,
+unique,60,Black Lotus,wam,Warlock's Pendant,60,,
+unique,61,Plague's Last Arrowhead,zam,Amazonian Pin,75,,
+unique,62,The Mistress' Leather Collar,sam,Sorcerer's Talisman,75,,
+unique,63,The Cursed Donut,nam,Death's Locket,75,,
+unique,64,BlackKnight's Holy Signet,pam,Holy Pendant,75,,
+unique,65,Smaqdoun's Painful Pride,bam,Totemic Pebble,75,,
+unique,66,Yagul's Bloody Rage,dam,Druidic Necklace,75,,
+unique,67,Dweia's Revenge,aam,Assassin's Choker,75,,
+unique,68,Morgoth's Unbound Madness,wam,Warlock's Pendant,75,,
+unique,69,Jindujun,jew,Jewel,40,,
+unique,70,Bohemian Stone,jew,Jewel,45,,
+unique,71,Icestorm Shard,jew,Jewel,50,,
+unique,72,Lady Eboshi's Greed,jew,Jewel,45,,
+unique,73,Salamander Stone,jew,Jewel,50,,
+unique,74,Nexus Star,jew,Jewel,45,,
+unique,75,Smiiiff Stone,jew,Jewel,55,,
+unique,76,Larias' Licentious Lament,jew,Jewel,55,,
+unique,77,Sescheronya's Spark,jew,Jewel,50,,
+unique,78,Ideal Craft,jew,Jewel,40,,
+unique,79,Frozen Apocalypse,jew,Jewel,50,,
+unique,80,Infernal Gemstone,jew,Jewel,50,,
+unique,81,Electrifying Vortex,jew,Jewel,50,,
+unique,82,Intoxicating Crystal,jew,Jewel,50,,
+unique,83,Celestial Shard,jew,Jewel,50,,
+unique,84,Demonic Voidstone,jew,Jewel,50,,
+unique,85,Kenji's Winged Arrows,aq2,Arrows,18,,
+unique,86,Delthanes' Enchanted Bolts,cq2,Bolts,18,,
+unique,87,Sting of the Scorpion King,aq2,Arrows,28,,
+unique,88,Pandora's Quiver,cq2,Bolts,28,,
+unique,89,Quiver of Prince Ashitaka,aq2,Arrows,36,,
+unique,90,Casca's Deadly Bolts,cq2,Bolts,36,,
+unique,91,Arrows of the Ice Queen,aq2,Arrows,45,,
+unique,92,Infernal Apocalypse,cq2,Bolts,45,,
+unique,93,Legolas' Quiver,aq2,Arrows,54,,
+unique,94,Borgoff's Bolts,cq2,Bolts,54,,
+unique,95,Tanaris' Judgement,aq2,Arrows,70,,
+unique,96,Daedalus' Bolts,cq2,Bolts,70,,
+unique,97,Hijikata's Heart-blood,cix,Hachigane,12,,
+unique,98,The Diamond Hairband,ci0,Circlet,30,,
+unique,99,Zan-Esus' Commitment,ci1,Coronet,40,,
+unique,100,Lunar Charm,ci2,Tiara,60,,
+unique,101,Heart of Jewels,ci3,Diadem,70,,
+unique,102,Krok's Basher,hax,Hand Axe,5,,
+unique,103,Treefeller,axe,Axe,9,,
+unique,104,The Skeleton Hunter,2ax,Double Axe,15,,
+unique,105,High-General's Pick,mpi,Military Pick,21,,
+unique,106,Axe of Souls,wax,War Axe,27,,
+unique,107,Glowblast,lax,Large Axe,8,,
+unique,108,Murderous Axe,bax,Broad Axe,14,,
+unique,109,Lord of Carnage,btx,Battle Axe,19,,
+unique,110,Raka's Folly,gax,Great Axe,25,,
+unique,111,The Annihilator,gix,Giant Axe,29,,
+unique,112,Axe of the Elements,9ha,Hatchet,36,,
+unique,113,The Butcher's Cleaver,9ax,Cleaver,39,,
+unique,114,Double Bite,92a,Twin Axe,43,,
+unique,115,Sadistic Warlord,9mp,Crowbill,45,,
+unique,116,Hacker,9wa,Naga,48,,
+unique,117,Wolf Claw,9la,Military Axe,35,,
+unique,118,Lifebane,9ba,Bearded Axe,39,,
+unique,119,Fleshchew,9bt,Tabar,41,,
+unique,120,Griswold's Revenge,9ga,Gothic Axe,42,,
+unique,121,Lifecleaver,9gi,Ancient Axe,45,,
+unique,122,Rohmshun,0ha,Barbarian Tomahawk,63,,
+unique,123,Alea Jacta Est,0ax,Precision Cleaver,60,,
+unique,124,Thorgrim's Saviour,82a,Duo Axe,64,,
+unique,125,Gold Digger,0mp,Razor Axe,68,,
+unique,126,Iceshard,0wa,Viking Axe,73,,
+unique,127,Focus of Unlife,0la,Brawn Axe,61,,
+unique,128,Wicked Axe,0ba,Heavy Axe,63,,
+unique,129,Meat Cleaver,0bt,Split Axe,65,,
+unique,130,Wings of the Fallen Phoenix,0ga,Guillotine Axe,70,,
+unique,131,Barbaric Devastator,0gi,Slayer Axe,72,,
+unique,132,Frostarc,sbw,Short Bow,3,,
+unique,133,Firebrander,hbw,Hunter's Bow,9,,
+unique,134,Bakou's Sharpshooter,lbw,Long Bow,14,,
+unique,135,Ancient Piercer,sbb,Short Battle Bow,25,,
+unique,136,Plaguebearer,cbw,Composite Bow,20,,
+unique,137,Quiveraiden,lbb,Long Battle Bow,26,,
+unique,138,Sparkraven,swb,Short War Bow,27,,
+unique,139,Bow of the Stars,lwb,Long War Bow,28,,
+unique,140,Rotstring,8sb,Edge Bow,28,,
+unique,141,Raven's Cord,8hb,Razor Bow,31,,
+unique,142,Titan's Wake,8lb,Cedar Bow,33,,
+unique,143,The Harp of Souls,8cb,Double Bow,36,,
+unique,144,The Keening,8s8,Short Siege Bow,39,,
+unique,145,Eaglehorn,8l8,Large Siege Bow,41,,
+unique,146,Zerae's Gift,8sw,Rune Bow,43,,
+unique,147,Heartseeker,8lw,Gothic Bow,46,,
+unique,148,Karaniis' Bow of Incandescence,1sb,Spiderwoven Bow,59,,
+unique,149,Gnat Sting,1hb,Sharp Bow,61,,
+unique,150,Bloodraven's Arch,1lb,Shade Bow,62,,
+unique,151,Moonbeam,1cb,Dark Bow,65,,
+unique,152,Undead's Blight,1s8,Rogue Bow,67,,
+unique,153,Wild Airs of the Elements,1l8,Marksman Bow,70,,
+unique,154,The Guardian,1sw,Arcane Bow,73,,
+unique,155,Enigma,1lw,Ancient Bow,77,,
+unique,156,Rapid Frenzy,lxb,Light Crossbow,9,,
+unique,157,Firespitter,mxb,Crossbow,18,,
+unique,158,Polar Boltcaster,hxb,Heavy Crossbow,27,,
+unique,159,Unholy Dartgun,rxb,Repeating Crossbow,28,,
+unique,160,The Needler,8lx,Arbalest,32,,
+unique,161,Cataclysm,8mx,Siege Crossbow,36,,
+unique,162,Magnium,8hx,Ballista,41,,
+unique,163,Qoto's Bow of Fortuitous Battle,8rx,Chu-Ko-Nu,49,,
+unique,164,Deadly Hunter,1lx,Choice Crossbow,61,,
+unique,165,Scope of the Hawk,1mx,Marksman Crossbow,78,,
+unique,166,Chaos Launcher,1hx,Odysseus Crossbow,66,,
+unique,167,Deadly Precision,1rx,Assassin Crossbow,71,,
+unique,168,Yegg's Firedagger,dgr,Dagger,4,,
+unique,169,Requier's Skill,dir,Dirk,11,,
+unique,170,The Golden Spike,kri,Kris,19,,
+unique,171,Anguirel,bld,Blade,25,,
+unique,172,Sirian's Infinite Knives,9dg,Poignard,32,,
+unique,173,Trang'Oul's Claw,9di,Rondel,36,,
+unique,174,Wizardspike,9kr,Cinquedeas,38,,
+unique,175,Throatslitter,9bl,Stiletto,41,,
+unique,176,The Horn of Balor,0dg,Carved Bone,60,,
+unique,177,Rathma's Blade,0di,Mithral Knife,61,,
+unique,178,Famine,0kr,Fang Knife,65,,
+unique,179,Mordenkainen's Dagger,0bl,Ancient Spike,69,,
+unique,180,Hail of Bolts,jav,Javelin,1,,
+unique,181,LED,pil,Pilum,4,,
+unique,182,Ric's Faith,ssp,Short Spear,9,,
+unique,183,Free Lance,glv,Glaive,14,,
+unique,184,Flying Impaler,tsp,Throwing Spear,19,,
+unique,185,Gilded Spikes,9ja,War Javelin,25,,
+unique,186,Septic Needle,9pi,Great Pilum,32,,
+unique,187,Revenant's Spear of the Vampyr,9s9,Simbilan,35,,
+unique,188,Futurebreeze,9gl,Spiculum,41,,
+unique,189,Olympus Hand,9ts,Harpoon,46,,
+unique,190,The Opilus Apprentice,0ja,Ancient Shards,57,,
+unique,191,Olympian's Javelin,0pi,Dire Pilum,59,,
+unique,192,Johan's Picket,0s9,Lissom Spear,63,,
+unique,193,Rainbow Rocket,0gl,Ahab Spear,68,,
+unique,194,Moby's Demise,0ts,Whale Hunter,71,,
+unique,195,Inifuss Branch,clb,Club,3,,
+unique,196,The Horror,spc,Spiked Club,5,,
+unique,197,Bonemash,mac,Mace,9,,
+unique,198,Arc's Skewer,mst,Morning Star,15,,
+unique,199,Grimbold's Flail,fla,Flail,21,,
+unique,200,Silver Rule,whm,War Hammer,27,,
+unique,201,Bul-Kathos' Rage,mau,Maul,24,,
+unique,202,Arreat's Peak,gma,Great Maul,29,,
+unique,203,Koth's Cudgel,9cl,Cudgel,34,,
+unique,204,Blood Splinter,9sp,Barbed Club,38,,
+unique,205,Dreamflange,9ma,Flanged Mace,39,,
+unique,206,Starshine,9mt,Jagged Star,42,,
+unique,207,Demonfever,9fl,Knout,45,,
+unique,208,Schaefer's Hammer,9wh,Battle Hammer,43,,
+unique,209,Vulcan's Piledriver,9m9,War Club,48,,
+unique,210,Justicar Militiari,9gm,Martel de Fer,45,,
+unique,211,Caveman's Fury,0cl,Cranium Basher,58,,
+unique,212,Darth Maul,0sp,Thorned Club,60,,
+unique,213,Caesar's Revenge,0ma,Arcane Mace,63,,
+unique,214,Butcher's Tenderizer,0mt,Serrated Star,65,,
+unique,215,Thunder Star,0fl,Dire Flail,69,,
+unique,216,Miller's Hammer,0wh,Military Hammer,79,,
+unique,217,Hammer of Bogardan,0m0,Ancient Maul,71,,
+unique,218,Thor's Hammer,0gm,Titan's Maul,74,,
+unique,219,Eron's Bardiche,bar,Bardiche,8,,
+unique,220,Lawful Arm,vou,Voulge,14,,
+unique,221,Blade of Oblivion,scy,Scythe,19,,
+unique,222,Hewson's Poleaxe,pax,Poleaxe,25,,
+unique,223,Infidel's Rule,hal,Halberd,28,,
+unique,224,Eternal Rest,wsc,War Scythe,29,,
+unique,225,Defender of the Highlands,9b7,Lochaber Axe,41,,
+unique,226,Bill of the Crane Shamans,9vo,Bill,42,,
+unique,227,Reaver of Darkness,9s8,Battle Scythe,42,,
+unique,228,Partizan of Light,9pa,Partizan,43,,
+unique,229,The Will of Hatred,9h9,Bec-de-Corbin,44,,
+unique,230,Instrument of Destruction,9wc,Grim Scythe,45,,
+unique,231,Call of the Guardian,0b7,Urgrosh,60,,
+unique,232,Nine Lives Stealer,0vo,Pole Gauche,64,,
+unique,233,Soul Reaver,0s8,Shadow Scythe,61,,
+unique,234,Sultan's Conqueror,0pa,Royal Partizan,67,,
+unique,235,Keeper of the Tides,0h0,Guardian,70,,
+unique,236,Eternal Reign,0wc,Death Reaper,71,,
+unique,237,Holy Icon,scp,Scepter,5,,
+unique,238,Blessed Avenger,gsc,Grand Scepter,13,,
+unique,239,Redeemer of the Light,gsp,Great Scepter,21,,
+unique,240,Demon Bane,wsp,War Scepter,23,,
+unique,241,Righteous Avenger,9sc,Rune Scepter,37,,
+unique,242,Demon Slayer,9qs,Holy Water Sprinkler,38,,
+unique,243,Liberation,9gp,Consecrated Scepter,42,,
+unique,244,Redemption,9ws,Divine Scepter,42,,
+unique,245,Agent of the Light,5sc,Celestial Scepter,64,,
+unique,246,Judgement,0qs,Holy Scepter,67,,
+unique,247,Instrument of Purification,0gp,Seraphic Scepter,71,,
+unique,248,Scepter of the Sorcerer-Kings,0ws,Blessed Scepter,76,,
+unique,249,Supercharged Rod,spr,Spear,8,,
+unique,250,Poseidon's Trident,tri,Trident,12,,
+unique,251,Forzan's Rage,brn,Brandistock,17,,
+unique,252,Rogerio's Lance,spt,Spetum,22,,
+unique,253,Uthuala's Crest,pik,Pike,27,,
+unique,254,Zerae's Point,9sr,War Spear,31,,
+unique,255,Gift of the Sea,9tr,Fuscina,33,,
+unique,256,Kaihlanna's Pride,9br,War Fork,35,,
+unique,257,Tears of Pain,9st,Yari,37,,
+unique,258,Illusionary Pain,9p9,Lance,39,,
+unique,259,Backbiter,0sr,Guisarme,61,,
+unique,260,Defense of Atlantis,0tr,Grapnel,64,,
+unique,261,Dragon's Breath,0br,Dragon Spear,66,,
+unique,262,Storm Seeker,0st,Ranseur,70,,
+unique,263,Rotting Splinter,0p0,Impaler,75,,
+unique,264,Zann Esu's Raiment,sst,Short Staff,5,,
+unique,265,The Fradstik,lst,Long Staff,9,,
+unique,266,Phenom's Rule,cst,Gnarled Staff,18,,
+unique,267,Morquan's Aura,bst,Battle Staff,21,,
+unique,268,Yoyo's Sanity,wst,War Staff,28,,
+unique,269,Staff of the Horadrim,8ss,Jo Staff,28,,
+unique,270,The Staff of Aesculapius,8ls,Quarterstaff,31,,
+unique,271,Doomspire,8cs,Cedar Staff,35,,
+unique,272,The Staff of Erana,8bs,Gothic Staff,39,,
+unique,273,Tal Rasha's Walking Stick,8ws,Rune Staff,41,,
+unique,274,Burning Sands,1ss,Elder Cane,59,,
+unique,275,Magelord's Assistant,1ls,Mystic Staff,63,,
+unique,276,The Protector,1cs,Petrified Staff,67,,
+unique,277,Dragon Staff,1bs,Mage Staff,71,,
+unique,278,Vizjereis' Knowledge,1ws,Arcane Staff,75,,
+unique,279,Umbar's Blade,ssd,Short Sword,2,,
+unique,280,The Rising Sun,scm,Scimitar,7,,
+unique,281,Tavern's Blade,sbr,Sabre,10,,
+unique,282,Ironslice,flc,Falchion,13,,
+unique,283,Rainbow's Power,crs,Crystal Sword,13,,
+unique,284,Numenorean Iron,bsd,Broad Sword,17,,
+unique,285,Storm's Charge,lsd,Long Sword,22,,
+unique,286,Tribesman's Focus,wsd,War Sword,29,,
+unique,287,Darkteflan,2hs,Two-Handed Sword,12,,
+unique,288,Devilish Fear,clm,Claymore,19,,
+unique,289,Falcon's Pride,gis,Giant Sword,23,,
+unique,290,Gonnermouth's Blade,bsw,Bastard Sword,26,,
+unique,291,Blizzard's Sword,flb,Flamberge,26,,
+unique,292,The Barbaric Totem,gsd,Great Sword,29,,
+unique,293,Magma Spike,9ss,Gladius,30,,
+unique,294,Scourge of the Twin Seas,9sm,Cutlass,31,,
+unique,295,Soulforge,9sb,Shamshir,33,,
+unique,296,The Desert Wind,9fc,Tulwar,35,,
+unique,297,Frost Shard,9cr,Dimensional Blade,37,,
+unique,298,Zakarum Blade,9bs,Battle Sword,39,,
+unique,299,Celestial Avenger,9ls,Rune Sword,41,,
+unique,300,Mithril Sword,9wd,Ancient Sword,42,,
+unique,301,The Vampire,92h,Espandon,42,,
+unique,302,Black Death,9cm,Dacian Falx,43,,
+unique,303,Stone Brenner,9gs,Tusk Sword,44,,
+unique,304,Jeldaria's Focus,9b9,Gothic Sword,45,,
+unique,305,Inarius' Fall,9fb,Zweihander,46,,
+unique,306,Terminus Est,9gd,Executioner Sword,48,,
+unique,307,Slave Warrior's Edge,0ss,Gladiator Blade,58,,
+unique,308,Twinkle,0sm,Desert Sword,59,,
+unique,309,Icing Death,0sb,Rapier,61,,
+unique,310,The Executioner's Blade,0fc,Okrist,62,,
+unique,311,Diamondedge,0cr,Jeweled Edge,64,,
+unique,312,Glacial Form,0bs,Viking Sword,66,,
+unique,313,Soul Singer,0ls,Arcane Sword,69,,
+unique,314,Rome's Victory,0wd,Trojan Sword,70,,
+unique,315,Blade of Righteousness,02h,Judgement Blade,64,,
+unique,316,Reins of Power,0cm,Titan's Dagger,67,,
+unique,317,Mitsurugi's Aide,0gs,Lithe Blade,74,,
+unique,318,Blackened Blade of Arkanon,0b0,Dark Sword,70,,
+unique,319,The Fires of Sunlight,0fb,Hellfire Sword,73,,
+unique,320,The Grandfather,0gd,Death Blade,80,,
+unique,321,The Trainee's Shuriken,tkf,Throwing Knife,3,,
+unique,322,The Lumberjack's Toy,tax,Throwing Axe,5,,
+unique,323,The Surgeon,bkf,Balanced Knife,9,,
+unique,324,The Miner,bal,Balanced Axe,12,,
+unique,325,Morgue,9tk,Battle Dart,24,,
+unique,326,Battle Hymn,9ta,Francisca,27,,
+unique,327,The Hurricane,9bk,War Dart,30,,
+unique,328,Minotaur's Sidearm,9b8,Hurlbat,32,,
+unique,329,The Assassin's Stiletto,0tk,Throwing Dagger,54,,
+unique,330,Dark Knight's Dread,0ta,Throwing Hatchet,57,,
+unique,331,Unicorn's Horn,0bk,Balanced Dagger,64,,
+unique,332,Hephasto's Last Project,0b6,Balanced Hatchet,67,,
+unique,333,The Green Lantern,wnd,Wand,5,,
+unique,334,Necromonic Tool,ywn,Yew Wand,14,,
+unique,335,Lucrecius' Power,bwn,Bone Wand,20,,
+unique,336,Wand of Spirits,gwn,Grim Wand,28,,
+unique,337,Cinderspark,9wn,Burnt Wand,33,,
+unique,338,Rusalka's Femur,9yw,Petrified Wand,35,,
+unique,339,Wand of Rathma,9bw,Tomb Wand,36,,
+unique,340,Skull of Horazon,9gw,Grave Wand,43,,
+unique,341,Arm of the Skeleton,0wn,Sacred Wand,73,,
+unique,342,Secret of the Ooze,0yw,Sepulcher Wand,75,,
+unique,343,Essence of Trang-Oul,0bw,Callous Wand,77,,
+unique,344,Song of the Damned,0gw,Demonic Wand,80,,
+unique,345,Fuego,am1,Stag Bow,14,,
+unique,346,Scilla's Nimbleness,am2,Reflex Bow,22,,
+unique,347,Kashya's Issue,apb,Precision Bow,30,,
+unique,348,Fluffy Rabbit's Hare-y Javelin,am5,Maiden Javelin,17,,
+unique,349,Rod of Zerae,am3,Maiden Spear,14,,
+unique,350,Lance of Celestia,am4,Maiden Pike,22,,
+unique,351,Oxhorn,am6,Ashwood Bow,29,,
+unique,352,Lycander's Aim,am7,Ceremonial Bow,42,,
+unique,353,Robin Hood's Precision,9pb,Tuigan Bow,52,,
+unique,354,Titan's Revenge,ama,Ceremonial Javelin,42,,
+unique,355,The Dragoon Shaft,am8,Ceremonial Spear,32,,
+unique,356,Lycander's Flank,am9,Ceremonial Pike,42,,
+unique,357,Goldfinger,amb,Matriarchal Bow,56,,
+unique,358,Artemis' Wrath,amc,Grand Matron Bow,62,,
+unique,359,Maija's Menace,0pb,Elven Bow,71,,
+unique,360,Zeus' Bolts,amf,Matriarchal Javelin,62,,
+unique,361,Lightfoot,amd,Matriarchal Spear,60,,
+unique,362,Raiden's Staff,ame,Matriarchal Pike,70,,
+unique,363,Ghoul's Touch,ktr,Katar,5,,
+unique,364,Diamond Cuff,wrb,Wrist Blade,9,,
+unique,365,Shadow Slice,axf,Hatchet Hands,12,,
+unique,366,Soulsear,ces,Cestus,13,,
+unique,367,Scratch of Persia,clw,Claws,15,,
+unique,368,Threaded Spines,btl,Blade Talons,19,,
+unique,369,Royal Grapple,skr,Scissors Katar,22,,
+unique,370,Phalzyr's Frenzy,njt,Ninja To,29,,
+unique,371,Ensnare,9ar,Quhab,32,,
+unique,372,Quill Giant's Spine,9wb,Wrist Spike,29,,
+unique,373,Sparkmonger,9xf,Fascia,32,,
+unique,374,Doom's Apprentice,9cs,Hand Scythe,35,,
+unique,375,Scratch of the Elements,9lw,Greater Claws,38,,
+unique,376,Fangs of the King Cobra,9tw,Greater Talons,42,,
+unique,377,Warpfist,9qr,Scissors Quhab,45,,
+unique,378,Solistus' Masamune Edge,9nj,Wakizashi,58,,
+unique,379,Clavo Platino,7ar,Suwayyah,55,,
+unique,380,Excalibria,7wb,Wrist Sword,56,,
+unique,381,Polar Edge,7xf,War Fist,58,,
+unique,382,The Freedom of Imprisonment,7cs,Battle Cestus,61,,
+unique,383,Raja's Majesty,7lw,Feral Claws,65,,
+unique,384,Viz-Jaq'taar's Invention,7tw,Runic Talons,70,,
+unique,385,Sleight of Hand,7qr,Scissors Suwayyah,68,,
+unique,386,Muramasa Sword,0nn,Katana,80,,
+unique,387,Ace in the Hole,vob,Void Blade,15,,
+unique,388,The Penitent,nsw,Nether Sword,58,,
+unique,389,Delirium,abb,Abyssal Blade,80,,
+unique,390,Larzuk's Aim,bts,Tribal Hatchet,20,,
+unique,391,Malah's Aid,9xb,Highland Hatchet,40,,
+unique,392,Rising Sun,0xb,Arreat's Hatchet,64,,
+unique,393,Woodfist's Arm,shc,Oak Branch,10,,
+unique,394,Rakanishu's Staff,9sh,Shaman Wand,25,,
+unique,395,Spirit of the Forest,0sh,Shillelagh,55,,
+unique,396,Jugalator,nrd,Ritualistic Dagger,26,,
+unique,397,Master of Puppets,nsy,Wretched Scythe,19,,
+unique,398,The Touch of Death,syn,Soul Hunter,29,,
+unique,399,Jr Eyes,9rd,Sacrificial Dagger,50,,
+unique,400,Blade of the Reaper,9ns,Dire Scythe,42,,
+unique,401,Death's Scythe,9sy,Soul Burner,45,,
+unique,402,The Last Rites,0rd,Ceremonial Dagger,74,,
+unique,403,Bone Reaver,0ns,Demonic Scythe,61,,
+unique,404,Blade of Corruption,0sy,Soul Destroyer,71,,
+unique,405,Sunblade,pbe,Blessed Edge,27,,
+unique,406,Excalibur,9be,Divine Blade,55,,
+unique,407,Holy Avenger,0be,Celestial Blade,76,,
+unique,408,Xiao Ji Ji,ob1,Eagle Orb,7,,
+unique,409,Cruel Heart,ob2,Sacred Globe,10,,
+unique,410,Hell's Torment,ob3,Smoked Sphere,16,,
+unique,411,Drannor's Claw,ob4,Clasped Orb,19,,
+unique,412,Orb of the Red Dragon,ob5,Jared's Stone,22,,
+unique,413,Infinite Thought,mnb,Mana Blade,31,,
+unique,414,Azimuth's Regard,ob6,Glowing Orb,30,,
+unique,415,Apocalypse Stone,ob7,Crystalline Globe,34,,
+unique,416,Magica Strife,ob8,Cloudy Sphere,33,,
+unique,417,Auraura's Jewel,ob9,Sparkling Ball,40,,
+unique,418,The Oculus,oba,Swirling Crystal,42,,
+unique,419,The Secret of Mana,9mn,Energy Blade,52,,
+unique,420,Orb of the Horadrim,obb,Heavenly Stone,55,,
+unique,421,Wrath of Asmodeus,obc,Eldritch Orb,57,,
+unique,422,Heart of the Succubi,obd,Demon Heart,61,,
+unique,423,Baal's Eye,obe,Vortex Orb,66,,
+unique,424,Spatial Distortion,obf,Dimensional Shard,70,,
+unique,425,Blade of the Fallen Angel,0mn,Magic Blade,71,,
+unique,426,Cap of the Raven,cap,Cap,4,,
+unique,427,Warriors Coif,skp,Skull Cap,15,,
+unique,428,Obsidian Helm,hlm,Helm,14,,
+unique,429,Sparhawk's Spirit,eht,Spirit Crown,21,,
+unique,430,The Wanderer's Guard,fhl,Full Helm,17,,
+unique,431,Fearful Bane,msk,Mask,20,,
+unique,432,Albrieght's Bonemask,bhm,Bone Helm,21,,
+unique,433,Raging Wolf,ghm,Great Helm,27,,
+unique,434,Leoric's Rule,crn,Crown,29,,
+unique,435,Crown of the Mountain King,dwc,Dwarven Circlet,31,,
+unique,436,Cap of the Blessed,xap,War Hat,28,,
+unique,437,Knowledge,xkp,Sallet,31,,
+unique,438,The Eagle Helm,xlm,Casque,35,,
+unique,439,Spirit of Life,xht,Ethereal Crown,58,,
+unique,440,Veil of Steel,xhl,Basinet,38,,
+unique,441,Burial Mask of Marduuk,xsk,Death Mask,41,,
+unique,442,The Borgov's Skull,xh9,Grim Helm,41,,
+unique,443,Gotterdammerung,xhm,Winged Helm,44,,
+unique,444,Royal Circlet,xrn,Grand Crown,49,,
+unique,445,Dwarven Spirits,xdw,Dwarven Faceguard,48,,
+unique,446,Servant's Leathers,yap,Hood,58,,
+unique,447,Beowulf's Mask,ykp,Fedora,59,,
+unique,448,Golem Shell,ylm,Guardian Helm,60,,
+unique,449,Arthur's Crown,yht,Enchanted Crown,75,,
+unique,450,Visor of the Tropics,yhl,Gladiator Helm,61,,
+unique,451,Diablo's Horns,ysk,Devil Mask,65,,
+unique,452,Death's Cowl,yh9,Demon Skull,69,,
+unique,453,Spirit of Genghis Khan,yhm,Tusk Helm,62,,
+unique,454,Arreat's Faceplate,yrn,Royal Crown,63,,
+unique,455,Bruenor's Cranium,ydw,Dwarven Faceplate,73,,
+unique,456,The Rainbow Cloak,clk,Cloak,2,,
+unique,457,Zuez' Padding,qui,Quilted Armor,7,,
+unique,458,Gecko's Leather,lea,Leather Armor,12,,
+unique,459,Ragegarb,hla,Hard Leather Armor,14,,
+unique,460,Rathma's Protector,stu,Studded Leather,16,,
+unique,461,Mail of the Shadows,rng,Ring Mail,14,,
+unique,462,Fearless Garb,scl,Scale Mail,15,,
+unique,463,Mail of the Sun,chn,Chain Mail,17,,
+unique,464,Rasputin's Chestplate,brs,Breast Plate,20,,
+unique,465,Darkmage's Robe,rob,Robe,26,,
+unique,466,Krujoy's Mail,spl,Splint Mail,22,,
+unique,467,Flashpoint Armor,plt,Plate Mail,26,,
+unique,468,Ironlord's Plate,fld,Field Plate,28,,
+unique,469,Plate of Spikes,gth,Gothic Plate,29,,
+unique,470,Frozen Soulbearer,ltp,Light Plate,29,,
+unique,471,Spikes of the Rhyno,shl,Spiked Shoulder,24,,
+unique,472,Lightbringer's Revenge,ful,Full Plate Mail,28,,
+unique,473,Corrupted Sanctuary,elv,Elven Chain,30,,
+unique,474,Steel of Legends,aar,Ancient Armor,28,,
+unique,475,Shroud of Azalin,xlk,Summoner's Cloak,41,,
+unique,476,Robe of the White Mage,xui,Ghost Armor,28,,
+unique,477,Black Armor,xea,Serpentskin Armor,29,,
+unique,478,Demon Skin,xla,Demonhide Armor,31,,
+unique,479,Palashia's Defense,xtu,Trellised Armor,33,,
+unique,480,Robe of the Phoenix,xng,Linked Mail,35,,
+unique,481,Ancient Guardian,xcl,Tigulated Mail,37,,
+unique,482,Armor of the Wind,xhn,Mesh Armor,38,,
+unique,483,Scarab Demon Carapace,xrs,Cuirass,41,,
+unique,484,Wisdom's Wrap,xrb,Mage Robe,50,,
+unique,485,Mountain's Skin,xpl,Russet Armor,42,,
+unique,486,Arkaine's Valor,xlt,Templar Coat,45,,
+unique,487,Armor of the Deep,xld,Sharktooth Armor,48,,
+unique,488,Piotyr's Plate,xth,Embossed Plate,51,,
+unique,489,Templar Protector,xtp,Mage Plate,51,,
+unique,490,The Iron Maiden,xhh,Thorned Armor,49,,
+unique,491,Armor of the Dragon Mage,xul,Chaos Armor,53,,
+unique,492,Drizzt's Mithril,xlv,Drow Adamantite Chain,50,,
+unique,493,Demonspike Coat,xar,Ornate Plate,55,,
+unique,494,Lothar's Cape,ylk,Enchanted Cloak,76,,
+unique,495,Nightscape,yui,Padded Armor,60,,
+unique,496,Cottonmouth Jacket,yea,Viper Skin,63,,
+unique,497,Hellrust,yla,Demon Carapace,64,,
+unique,498,Brilliance,ytu,Gemstoned Armor,68,,
+unique,499,Chains of Binding,yng,Heavy Mail,72,,
+unique,500,Acero Frio,ycl,Dragon Scale,69,,
+unique,501,Vulcanguard,yhn,Chain Shirt,70,,
+unique,502,Atlastrust,yrs,Chest Guard,78,,
+unique,503,Kaija's Gown,yrb,Archmage Robe,69,,
+unique,504,Hellforge's Finest,ypl,Demon Fleece,71,,
+unique,505,Blanchwood Vest,ylt,Plated Cuirass,71,,
+unique,506,Aakta's Defense,yld,Combat Plate,72,,
+unique,507,Leoric's Plate,yth,Royal Armor,74,,
+unique,508,Robes of Power,ytp,Archmage Plate,75,,
+unique,509,Deflective Spikes,yhh,Spiked Armor,71,,
+unique,510,Izeal's Vise,yul,Ceremonial Armor,75,,
+unique,511,Silvasa's Dress,ylv,Sylvan Chain,77,,
+unique,512,The Guardian of Time,yar,Archaic Armor,80,,
+unique,513,Romanary Pelt,buc,Buckler,2,,
+unique,514,Stargate,sml,Small Shield,9,,
+unique,515,Mercenary's Brace,lrg,Large Shield,13,,
+unique,516,Spikes of Rajamir,spk,Spiked Shield,15,,
+unique,517,Raven's Shield,kit,Kite Shield,17,,
+unique,518,Skullbear's Soul,bsh,Bone Shield,20,,
+unique,519,Stormwynd's Mania,tow,Tower Shield,19,,
+unique,520,Phrozen Heart,fts,Fortress Shield,28,,
+unique,521,Defender of Justice,gts,Gothic Shield,26,,
+unique,522,The Deflector,xuc,Defender,28,,
+unique,523,Karcheus' Ward,xml,Round Shield,31,,
+unique,524,The Face of the Sun,xrg,Scutum,35,,
+unique,525,Spikewall,xpk,Barbed Shield,35,,
+unique,526,The Shield of Pain,xit,Dragon Shield,38,,
+unique,527,Tortured Souls,xsh,Grim Shield,41,,
+unique,528,Wall of the Ancient Oak,xow,Pavise,44,,
+unique,529,Link's Mirror,xft,Reflection Shield,54,,
+unique,530,Mithril Shield,xts,Ancient Shield,50,,
+unique,531,Lady Raven's Power,yuc,Petrified Buckler,64,,
+unique,532,Elzix's Treasure,yml,Desert Shield,58,,
+unique,533,Cyclop's Protector,yrg,Giant Buckler,62,,
+unique,534,The Seduction of Pain,ypk,Thorned Shield,66,,
+unique,535,Dragon's Breach,yit,Military Shield,70,,
+unique,536,Icon of Sin,ysh,Demon Shield,68,,
+unique,537,The Barricade,yow,Royal Guard,72,,
+unique,538,Guardian Angel,yft,Ceremonial Shield,75,,
+unique,539,Stonewall,yts,Body Shield,73,,
+unique,540,Leather of Luck,lgl,Leather Gloves,5,,
+unique,541,Hand of Grog,vgl,Heavy Gloves,9,,
+unique,542,Gloves of Firebrand,mgl,Chain Gloves,15,,
+unique,543,Darkflight Hand,tgl,Light Gauntlets,23,,
+unique,544,Heartrand's Gaunts,hgl,Gauntlets,29,,
+unique,545,Fireheart's Hand,irg,Iron Guards,29,,
+unique,546,Hands of the Assassin,xlg,Demonhide Gloves,29,,
+unique,547,Gloves of Nor Tiraj,xvg,Sharkskin Gloves,32,,
+unique,548,Shiva's Touch,xmg,Heavy Bracers,36,,
+unique,549,Runefusion,xtg,Battle Gauntlets,42,,
+unique,550,Suffocation of Indifference,xhg,War Gauntlets,47,,
+unique,551,Lockheart's Grip,xig,Military Guards,55,,
+unique,552,Gloves of the Dark Mage,ylg,Spellcaster Gloves,58,,
+unique,553,The Hands of Atlas,yvg,Viper Hands,60,,
+unique,554,Death's Grip,ymg,Sepulcher Gloves,62,,
+unique,555,Iron Fist,ytg,Gladiator Gauntlets,65,,
+unique,556,Herculean Grip,yhg,Titan Gauntlets,68,,
+unique,557,Greiz's Legion,yig,Royal Guards,73,,
+unique,558,Boots of Firewalk,lbt,Boots,5,,
+unique,559,Icelander's Wear,vbt,Heavy Boots,9,,
+unique,560,Orcish Walkgarb,mbt,Chain Boots,15,,
+unique,561,Vindalay's Sole,tbt,Light Plated Boots,22,,
+unique,562,Lightmaster's Walk,hbt,Greaves,29,,
+unique,563,Zhoul's Slippers,dbt,Crystal Boots,23,,
+unique,564,Demonspeed,xlb,Demonhide Boots,29,,
+unique,565,Flickerheel,xvb,Sharkskin Boots,32,,
+unique,566,Chillcobble,xmb,Mesh Boots,36,,
+unique,567,Boots of the Valiant,xtb,Battle Boots,42,,
+unique,568,Haste of Athulua,xhb,War Boots,47,,
+unique,569,Wren's Reinforced Tech Boots,xbt,Dimensional Boots,53,,
+unique,570,Heart of the Moon,ylb,Rogue Boots,67,,
+unique,571,Boots of the Serpent,yvb,Viper Boots,71,,
+unique,572,Boots of Aether,ymb,Sepulcher Boots,62,,
+unique,573,Hermes' Gift,ytb,Gladiator Boots,70,,
+unique,574,The Heel of Blood,yhb,Titan Boots,68,,
+unique,575,Spirits of the Dead,ybt,Phase Boots,73,,
+unique,576,Imperial Sash,lbl,Sash,7,,
+unique,577,Raimen's Belt of Fear,vbl,Light Belt,12,,
+unique,578,Glowharness,mbl,Belt,20,,
+unique,579,Blustone's Belt,tbl,Heavy Belt,27,,
+unique,580,Harness of the Gods,hbl,Plated Belt,29,,
+unique,581,Goldark's Strap,msb,Muscle Wrap,25,,
+unique,582,Smiles of Fortune,zlb,Demonhide Sash,29,,
+unique,583,Rumour of Pain,zvb,Sharkskin Belt,32,,
+unique,584,Strap of Cythys,zmb,Mesh Belt,36,,
+unique,585,Battlecharge,ztb,Battle Belt,42,,
+unique,586,Timeloop,zhb,War Belt,47,,
+unique,587,Circle of the Ancients,xms,Giant Wrap,57,,
+unique,588,Blazeband,alb,Hemp Band,59,,
+unique,589,Band of Constriction,avb,Rogue Belt,69,,
+unique,590,Laertes' Treasure,bmb,Merchant Belt,64,,
+unique,591,Spartacus' Defense,atb,Military Belt,62,,
+unique,592,Girdle of Giant Strength,ahb,Titan Belt,71,,
+unique,593,The Belt of Zeus,yms,Herculean Wrap,73,,
+unique,594,Hinge of Sinnew,ba1,Jawbone Cap,7,,
+unique,595,Crusheye,ba2,Fanged Helm,10,,
+unique,596,The Raging Bull,ba3,Horned Helm,16,,
+unique,597,Army of One,ba4,Assault Helmet,19,,
+unique,598,The Augmentor,ba5,Avenger Guard,22,,
+unique,599,Helm of the Dead King,ba6,Jawbone Visor,30,,
+unique,600,Savannah's Pride,ba7,Lion Helm,34,,
+unique,601,The Crimson Faceplate,ba8,Rage Mask,33,,
+unique,602,Phase Visor,ba9,Savage Helmet,36,,
+unique,603,Arreat's Face,baa,Slayer Guard,42,,
+unique,604,Coldfist's Icy Stare,bab,Carnage Helm,45,,
+unique,605,Adrenaline Rush,bac,Fury Visor,55,,
+unique,606,Wyrm's Wrap,bad,Destroyer Helm,61,,
+unique,607,Larzuk's Innovation,bae,Conqueror Crown,66,,
+unique,608,The Ancients' Blessing,baf,Guardian Crown,70,,
+unique,609,Fang's Valor,dr1,Wolf Head,7,,
+unique,610,Shadow Crow,dr2,Hawk Helm,10,,
+unique,611,Alizee's Flaming Horns,dr3,Antlers,16,,
+unique,612,Razor Beak,dr4,Falcon Mask,19,,
+unique,613,Starwolf's Facade,dr5,Spirit Mask,24,,
+unique,614,Con Dar Warpaint,dr6,Alpha Helm,30,,
+unique,615,Ravenlord,dr7,Griffon Headdress,34,,
+unique,616,Horns of Allesthir,dr8,Hunter's Guise,33,,
+unique,617,Phoenix Tail,dr9,Sacred Feathers,40,,
+unique,618,Jalal's Mane,dra,Totemic Mask,42,,
+unique,619,Necromancer's Essense,drb,Blood Spirit,46,,
+unique,620,Mojabi's Face,drc,Sun Spirit,55,,
+unique,621,Tetonic Horns,drd,Earth Spirit,61,,
+unique,622,Aire Libre,dre,Sky Spirit,66,,
+unique,623,Beast of the Night,drf,Dream Spirit,70,,
+unique,624,Wirt's Skull,ne1,Preserved Head,7,,
+unique,625,Corpsefire's Head,ne2,Zombie Head,10,,
+unique,626,Radament's Rotting Skull,ne3,Unraveller Head,16,,
+unique,627,Pitspawn's Gaze,ne4,Gargoyle Head,19,,
+unique,628,Andariel's Face,ne5,Demon Head,22,,
+unique,629,Ancient Kaa's Soul,ne6,Mummified Trophy,30,,
+unique,630,Red Death's Madness,ne7,Fetish Trophy,34,,
+unique,631,The Grim Compass,ne8,Sexton Trophy,33,,
+unique,632,Disturbing Visions,ne9,Cantor Trophy,36,,
+unique,633,Homunculus,nea,Hierophant Trophy,42,,
+unique,634,Splitskull Shield,neb,Minion Skull,45,,
+unique,635,Head of the Cerberus,neg,Hellspawn Skull,55,,
+unique,636,Shenk's Mask,ned,Overseer Skull,61,,
+unique,637,Winged Embrace,nee,Succubus Skull,66,,
+unique,638,Dracula's Wit,nef,Bloodlord Skull,70,,
+unique,639,Dogma,pa1,Targe,8,,
+unique,640,Archer's Bane,pa2,Rondache,10,,
+unique,641,Diablo's Crest,pa3,Heraldic Shield,16,,
+unique,642,The Bishop,pa4,Aerin Shield,19,,
+unique,643,King's Blessing,pa5,Crown Shield,32,,
+unique,644,Gorgon Slayer,pa6,Akaran Targe,30,,
+unique,645,Hadriel's Barricade,pa7,Akaran Rondache,34,,
+unique,646,Wall of the Crusader,pa8,Protector Shield,38,,
+unique,647,Herald of Zakarum,pa9,Gilded Shield,42,,
+unique,648,Imperial War Guard,paa,Royal Shield,42,,
+unique,649,Faith,pab,Sacred Targe,51,,
+unique,650,Godspeed,pac,Sacred Rondache,56,,
+unique,651,Heaven's Gate,pad,Kurast Shield,59,,
+unique,652,Leader of the Light,pae,Zakarum Shield,65,,
+unique,653,Black Hole,paf,Vortex Shield,70,,
+unique,654,Tome of Nightmares,wa1,Old Book,7,,
+unique,655,Hidden Knowledge,wa2,Tome,10,,
+unique,656,Searing Rites,wa3,Codex,16,,
+unique,657,Paper Cuts,wa4,Compendium,19,,
+unique,658,Book of Mirrors,wa5,Grimoire,22,,
+unique,659,Spark of Death,wa6,Burnt Text,30,,
+unique,660,Word of Malediction,wa7,Dark Tome,34,,
+unique,661,Voice of the Abyss,wa8,Dark Codex,33,,
+unique,662,Stillness of the Heart,wa9,Possessed Compendium,36,,
+unique,663,Triune's Last Resort,waa,Possessed Grimoire,42,,
+unique,664,Voidrend,wab,Forgotten Volume,45,,
+unique,665,Litany of Scorched Earth,wac,Occult Tome,55,,
+unique,666,Chains of the Damned,wad,Occult Codex,61,,
+unique,667,Tabula Rasa,wae,Blasphemous Compendium,66,,
+unique,668,The Grand Sacrifice,waf,Blasphemous Grimoire,70,,
+unique,669,Sightless Archer,ci4,Faceguard,35,,
+unique,670,Manifer of Slugger,kkl,Brass Knuckle,20,,
+unique,671,Tattooed Palm,9kl,Tekko,42,,
+unique,672,Thundergod's Anger,0kl,Raging Knuckle,67,,
+unique,673,Character Augmenter,cm7,Large Charm,130,,
+unique,674,Ore,ore,Ore,1,,
+unique,675,Ore,ore,Ore,1,,
+unique,676,Ore,ore,Ore,1,,
+unique,677,Ore,ore,Ore,1,,
+unique,678,Ore,ore,Ore,1,,
+unique,679,Ore,ore,Ore,1,,
+unique,680,Ore,ore,Ore,1,,
+unique,681,Ore,ore,Ore,1,,
+unique,682,Ore,ore,Ore,1,,
+unique,683,Ore,ore,Ore,1,,
+unique,684,Ore,ore,Ore,1,,
+unique,685,Ore,ore,Ore,1,,
+unique,686,Ore,ore,Ore,1,,
+unique,687,Ore,ore,Ore,1,,
+unique,688,Ore,ore,Ore,1,,
+unique,689,Ore,ore,Ore,1,,
+unique,690,Cold Rupture,cm3,Grand Charm,75,,disabled (never created)
+unique,691,Flame Rift,cm3,Grand Charm,75,,disabled (never created)
+unique,692,Crack of the Heavens,cm3,Grand Charm,75,,disabled (never created)
+unique,693,Rotting Fissure,cm3,Grand Charm,75,,disabled (never created)
+unique,694,Bone Break,cm3,Grand Charm,75,,disabled (never created)
+unique,695,Black Cleft,cm3,Grand Charm,75,,disabled (never created)
+unique,696,Burning Sleeve,arm,Battering Arm,27,,
+unique,697,Black Gypsum,9rm,Rock Buster,46,,
+unique,698,Protection Circuit,0rm,Wrecking Arm,70,,
+unique,699,The Gnasher,p01,Hand Axe,3,,"Ancient Coupon row (cubed, never drops)"
+unique,700,Deathspade,p02,Axe,6,,"Ancient Coupon row (cubed, never drops)"
+unique,701,Bladebone,p03,Double Axe,10,,"Ancient Coupon row (cubed, never drops)"
+unique,702,Skull Splitter,p04,Military Pick,14,,"Ancient Coupon row (cubed, never drops)"
+unique,703,Rakescar,p05,War Axe,18,,"Ancient Coupon row (cubed, never drops)"
+unique,704,Axe of Fechmar,p06,Large Axe,5,,"Ancient Coupon row (cubed, never drops)"
+unique,705,Goreshovel,p07,Broad Axe,9,,"Ancient Coupon row (cubed, never drops)"
+unique,706,The Chieftain,p08,Battle Axe,13,,"Ancient Coupon row (cubed, never drops)"
+unique,707,Brainhew,p09,Great Axe,17,,"Ancient Coupon row (cubed, never drops)"
+unique,708,Humongous,p10,Giant Axe,20,,"Ancient Coupon row (cubed, never drops)"
+unique,709,Torch of Iro,p11,Wand,3,,"Ancient Coupon row (cubed, never drops)"
+unique,710,Maelstrom,p12,Yew Wand,9,,"Ancient Coupon row (cubed, never drops)"
+unique,711,Gravenspine,p13,Bone Wand,14,,"Ancient Coupon row (cubed, never drops)"
+unique,712,Ume's Lament,p14,Grim Wand,23,,"Ancient Coupon row (cubed, never drops)"
+unique,713,Felloak,p15,Club,2,,"Ancient Coupon row (cubed, never drops)"
+unique,714,Knell Striker,p16,Scepter,3,,"Ancient Coupon row (cubed, never drops)"
+unique,715,Rusthandle,p17,Grand Scepter,11,,"Ancient Coupon row (cubed, never drops)"
+unique,716,Stormeye,p18,War Scepter,16,,"Ancient Coupon row (cubed, never drops)"
+unique,717,Stoutnail,p19,Spiked Club,3,,"Ancient Coupon row (cubed, never drops)"
+unique,718,Crushflange,p20,Mace,6,,"Ancient Coupon row (cubed, never drops)"
+unique,719,Bloodrise,p21,Morning Star,10,,"Ancient Coupon row (cubed, never drops)"
+unique,720,The General's Tan Do Li Ga,p22,Flail,14,,"Ancient Coupon row (cubed, never drops)"
+unique,721,Ironstone,p23,War Hammer,18,,"Ancient Coupon row (cubed, never drops)"
+unique,722,Bonesnap,p24,Maul,16,,"Ancient Coupon row (cubed, never drops)"
+unique,723,Steeldriver,p25,Great Maul,20,,"Ancient Coupon row (cubed, never drops)"
+unique,724,Rixot's Keen,p26,Short Sword,1,,"Ancient Coupon row (cubed, never drops)"
+unique,725,Blood Crescent,p27,Scimitar,4,,"Ancient Coupon row (cubed, never drops)"
+unique,726,Skewer of Krintiz,p28,Sabre,7,,"Ancient Coupon row (cubed, never drops)"
+unique,727,Gleamscythe,p29,Falchion,9,,"Ancient Coupon row (cubed, never drops)"
+unique,728,Azurewrath_old,p30,Crystal Sword,9,,"Ancient Coupon row (cubed, never drops)"
+unique,729,Griswold's Edge,p31,Broad Sword,11,,"Ancient Coupon row (cubed, never drops)"
+unique,730,Hellplague,p32,Long Sword,15,,"Ancient Coupon row (cubed, never drops)"
+unique,731,Culwen's Point,p33,War Sword,20,,"Ancient Coupon row (cubed, never drops)"
+unique,732,Shadowfang,p34,Two-Handed Sword,8,,"Ancient Coupon row (cubed, never drops)"
+unique,733,Soulflay,p35,Claymore,13,,"Ancient Coupon row (cubed, never drops)"
+unique,734,Kinemil's Awl,p36,Giant Sword,16,,"Ancient Coupon row (cubed, never drops)"
+unique,735,Blacktongue,p37,Bastard Sword,18,,"Ancient Coupon row (cubed, never drops)"
+unique,736,Ripsaw,p38,Flamberge,18,,"Ancient Coupon row (cubed, never drops)"
+unique,737,The Patriarch,p39,Great Sword,20,,"Ancient Coupon row (cubed, never drops)"
+unique,738,Gull,p40,Dagger,4,,"Ancient Coupon row (cubed, never drops)"
+unique,739,The Diggler,p41,Dirk,7,,"Ancient Coupon row (cubed, never drops)"
+unique,740,The Jade Tan Do,p42,Kris,13,,"Ancient Coupon row (cubed, never drops)"
+unique,741,Spectral Shard,p43,Blade,17,,"Ancient Coupon row (cubed, never drops)"
+unique,742,The Dragon Chang,p44,Spear,5,,"Ancient Coupon row (cubed, never drops)"
+unique,743,Razortine,p45,Trident,8,,"Ancient Coupon row (cubed, never drops)"
+unique,744,Bloodthief,p46,Brandistock,11,,"Ancient Coupon row (cubed, never drops)"
+unique,745,Lance of Yaggai,p47,Spetum,15,,"Ancient Coupon row (cubed, never drops)"
+unique,746,The Tannr Gorerod,p48,Pike,18,,"Ancient Coupon row (cubed, never drops)"
+unique,747,Dimoak's Hew,p49,Bardiche,5,,"Ancient Coupon row (cubed, never drops)"
+unique,748,Steelgoad,p50,Voulge,9,,"Ancient Coupon row (cubed, never drops)"
+unique,749,Soul Harvest,p51,Scythe,13,,"Ancient Coupon row (cubed, never drops)"
+unique,750,The Battlebranch,p52,Poleaxe,17,,"Ancient Coupon row (cubed, never drops)"
+unique,751,Woestave,p53,Halberd,19,,"Ancient Coupon row (cubed, never drops)"
+unique,752,The Grim Reaper,p54,War Scythe,20,,"Ancient Coupon row (cubed, never drops)"
+unique,753,Bane Ash,p55,Short Staff,3,,"Ancient Coupon row (cubed, never drops)"
+unique,754,Serpent Lord,p56,Long Staff,6,,"Ancient Coupon row (cubed, never drops)"
+unique,755,Spire of Lazarus,p57,Gnarled Staff,12,,"Ancient Coupon row (cubed, never drops)"
+unique,756,The Salamander,p58,Battle Staff,14,,"Ancient Coupon row (cubed, never drops)"
+unique,757,The Iron Jang Bong,p59,War Staff,19,,"Ancient Coupon row (cubed, never drops)"
+unique,758,Pluckeye,p60,Short Bow,4,,"Ancient Coupon row (cubed, never drops)"
+unique,759,Witherstring,p61,Hunter's Bow,9,,"Ancient Coupon row (cubed, never drops)"
+unique,760,Raven Claw,p62,Long Bow,10,,"Ancient Coupon row (cubed, never drops)"
+unique,761,Rogue's Bow,p63,Composite Bow,14,,"Ancient Coupon row (cubed, never drops)"
+unique,762,Stormstrike,p64,Short Battle Bow,17,,"Ancient Coupon row (cubed, never drops)"
+unique,763,Wizendraw,p65,Long Battle Bow,18,,"Ancient Coupon row (cubed, never drops)"
+unique,764,Hellclap,p66,Short War Bow,18,,"Ancient Coupon row (cubed, never drops)"
+unique,765,Blastbark,p67,Long War Bow,19,,"Ancient Coupon row (cubed, never drops)"
+unique,766,Leadcrow,p68,Light Crossbow,6,,"Ancient Coupon row (cubed, never drops)"
+unique,767,Ichorsting,p69,Crossbow,12,,"Ancient Coupon row (cubed, never drops)"
+unique,768,Hellcast,p70,Heavy Crossbow,18,,"Ancient Coupon row (cubed, never drops)"
+unique,769,Doomslinger,p71,Repeating Crossbow,19,,"Ancient Coupon row (cubed, never drops)"
+unique,770,Biggin's Bonnet,2ap,Cap,2,,"Ancient Coupon row (cubed, never drops)"
+unique,771,Tarnhelm,2kp,Skull Cap,13,,"Ancient Coupon row (cubed, never drops)"
+unique,772,Coif of Glory,2lm,Helm,9,,"Ancient Coupon row (cubed, never drops)"
+unique,773,Duskdeep,2hl,Full Helm,11,,"Ancient Coupon row (cubed, never drops)"
+unique,774,Wormskull,2h9,Bone Helm,14,,"Ancient Coupon row (cubed, never drops)"
+unique,775,Howltusk,2hm,Great Helm,17,,"Ancient Coupon row (cubed, never drops)"
+unique,776,Undead Crown,2rn,Crown,20,,"Ancient Coupon row (cubed, never drops)"
+unique,777,The Face of Horror,2sk,Mask,14,,"Ancient Coupon row (cubed, never drops)"
+unique,778,Greyform,2ui,Quilted Armor,4,,"Ancient Coupon row (cubed, never drops)"
+unique,779,Blinkbat's Form,2ea,Leather Armor,8,,"Ancient Coupon row (cubed, never drops)"
+unique,780,The Centurion,2la,Hard Leather Armor,9,,"Ancient Coupon row (cubed, never drops)"
+unique,781,Twitchthroe,2tu,Studded Leather,11,,"Ancient Coupon row (cubed, never drops)"
+unique,782,Darkglow,2ng,Ring Mail,9,,"Ancient Coupon row (cubed, never drops)"
+unique,783,Hawkmail,2cl,Scale Mail,10,,"Ancient Coupon row (cubed, never drops)"
+unique,784,Sparking Mail,2hn,Chain Mail,11,,"Ancient Coupon row (cubed, never drops)"
+unique,785,Venom Ward,2rs,Breast Plate,14,,"Ancient Coupon row (cubed, never drops)"
+unique,786,Iceblink,2pl,Splint Mail,15,,"Ancient Coupon row (cubed, never drops)"
+unique,787,Boneflesh,2lt,Plate Mail,18,,"Ancient Coupon row (cubed, never drops)"
+unique,788,Rockfleece,2ld,Field Plate,19,,"Ancient Coupon row (cubed, never drops)"
+unique,789,Rattlecage,2th,Gothic Plate,20,,"Ancient Coupon row (cubed, never drops)"
+unique,790,Goldskin,2ul,Full Plate Mail,24,,"Ancient Coupon row (cubed, never drops)"
+unique,791,Silks of the Victor,2ar,Ancient Armor,24,,"Ancient Coupon row (cubed, never drops)"
+unique,792,Heavenly Garb,2tp,Light Plate,20,,"Ancient Coupon row (cubed, never drops)"
+unique,793,Pelta Lunata,2uc,Buckler,1,,"Ancient Coupon row (cubed, never drops)"
+unique,794,Umbral Disk,2ml,Small Shield,6,,"Ancient Coupon row (cubed, never drops)"
+unique,795,Stormguild,2rg,Large Shield,9,,"Ancient Coupon row (cubed, never drops)"
+unique,796,Wall of the Eyeless,2sh,Bone Shield,14,,"Ancient Coupon row (cubed, never drops)"
+unique,797,Swordback Hold,2pk,Spiked Shield,10,,"Ancient Coupon row (cubed, never drops)"
+unique,798,Steelclash,2it,Kite Shield,11,,"Ancient Coupon row (cubed, never drops)"
+unique,799,Bverrit Keep,2ow,Tower Shield,13,,"Ancient Coupon row (cubed, never drops)"
+unique,800,The Ward,2ts,Gothic Shield,18,,"Ancient Coupon row (cubed, never drops)"
+unique,801,The Hand of Broc,2lg,Leather Gloves,3,,"Ancient Coupon row (cubed, never drops)"
+unique,802,Bloodfist,2vg,Heavy Gloves,6,,"Ancient Coupon row (cubed, never drops)"
+unique,803,Chance Guards,2mg,Chain Gloves,13,,"Ancient Coupon row (cubed, never drops)"
+unique,804,Magefist,2tg,Light Gauntlets,20,,"Ancient Coupon row (cubed, never drops)"
+unique,805,Frostburn,2hg,Gauntlets,25,,"Ancient Coupon row (cubed, never drops)"
+unique,806,Hotspur,2lb,Boots,3,,"Ancient Coupon row (cubed, never drops)"
+unique,807,Gorefoot,2vb,Heavy Boots,6,,"Ancient Coupon row (cubed, never drops)"
+unique,808,Treads of Cthon,2mb,Chain Boots,10,,"Ancient Coupon row (cubed, never drops)"
+unique,809,Goblin Toe,2tb,Light Plated Boots,19,,"Ancient Coupon row (cubed, never drops)"
+unique,810,Tearhaunch,2hb,Greaves,20,,"Ancient Coupon row (cubed, never drops)"
+unique,811,Lenymo,3lb,Sash,4,,"Ancient Coupon row (cubed, never drops)"
+unique,812,Snakecord,3vb,Light Belt,8,,"Ancient Coupon row (cubed, never drops)"
+unique,813,Nightsmoke,3mb,Belt,14,,"Ancient Coupon row (cubed, never drops)"
+unique,814,Goldwrap,3tb,Heavy Belt,18,,"Ancient Coupon row (cubed, never drops)"
+unique,815,Bladebuckle,3hb,Plated Belt,20,,"Ancient Coupon row (cubed, never drops)"
+unique,816,Nokozan Relic,au9,Amulet,10,,"Ancient Coupon row (cubed, never drops)"
+unique,817,The Eye of Etlich,au9,Amulet,15,,"Ancient Coupon row (cubed, never drops)"
+unique,818,The Mahim-Oak Curio,au9,Amulet,25,,"Ancient Coupon row (cubed, never drops)"
+unique,819,Nagelring,rn9,Ring,7,,"Ancient Coupon row (cubed, never drops)"
+unique,820,Manald Heal,rn9,Ring,15,,"Ancient Coupon row (cubed, never drops)"
+unique,821,The Stone of Jordan,rn9,Ring,45,,"Ancient Coupon row (cubed, never drops)"
+unique,822,Coldkill,q00,Hatchet,25,,"Ancient Coupon row (cubed, never drops)"
+unique,823,Butcher's Pupil,q01,Cleaver,27,,"Ancient Coupon row (cubed, never drops)"
+unique,824,Islestrike,q02,Twin Axe,30,,"Ancient Coupon row (cubed, never drops)"
+unique,825,Pompeii's Wrath,q03,Crowbill,31,,"Ancient Coupon row (cubed, never drops)"
+unique,826,Guardian Naga,q04,Naga,33,,"Ancient Coupon row (cubed, never drops)"
+unique,827,Warlord's Trust,q05,Military Axe,24,,"Ancient Coupon row (cubed, never drops)"
+unique,828,Spellsteel,q06,Bearded Axe,27,,"Ancient Coupon row (cubed, never drops)"
+unique,829,Stormrider,q07,Tabar,28,,"Ancient Coupon row (cubed, never drops)"
+unique,830,Boneslayer Blade,q08,Gothic Axe,29,,"Ancient Coupon row (cubed, never drops)"
+unique,831,The Minotaur,q09,Ancient Axe,31,,"Ancient Coupon row (cubed, never drops)"
+unique,832,Suicide Branch,q10,Burnt Wand,23,,"Ancient Coupon row (cubed, never drops)"
+unique,833,Carin Shard,q11,Petrified Wand,25,,"Ancient Coupon row (cubed, never drops)"
+unique,834,Arm of King Leoric,q12,Tomb Wand,25,,"Ancient Coupon row (cubed, never drops)"
+unique,835,Blackhand Key,q13,Grave Wand,34,,"Ancient Coupon row (cubed, never drops)"
+unique,836,Dark Clan Crusher,q14,Cudgel,23,,"Ancient Coupon row (cubed, never drops)"
+unique,837,Zakarum's Hand,q15,Rune Scepter,25,,"Ancient Coupon row (cubed, never drops)"
+unique,838,The Fetid Sprinkler,q16,Holy Water Sprinkler,26,,"Ancient Coupon row (cubed, never drops)"
+unique,839,Hand of Blessed Light,q17,Divine Scepter,29,,"Ancient Coupon row (cubed, never drops)"
+unique,840,Fleshrender,q18,Barbed Club,26,,"Ancient Coupon row (cubed, never drops)"
+unique,841,Sureshrill Frost,q19,Flanged Mace,27,,"Ancient Coupon row (cubed, never drops)"
+unique,842,Moonfall,q20,Jagged Star,29,,"Ancient Coupon row (cubed, never drops)"
+unique,843,Baezil's Vortex,q21,Knout,31,,"Ancient Coupon row (cubed, never drops)"
+unique,844,Earthshaker,q22,Battle Hammer,30,,"Ancient Coupon row (cubed, never drops)"
+unique,845,Bloodtree Stump,q23,War Club,33,,"Ancient Coupon row (cubed, never drops)"
+unique,846,The Gavel of Pain,q24,Martel de Fer,31,,"Ancient Coupon row (cubed, never drops)"
+unique,847,Bloodletter,q25,Gladius,25,,"Ancient Coupon row (cubed, never drops)"
+unique,848,Coldsteel Eye,q26,Cutlass,25,,"Ancient Coupon row (cubed, never drops)"
+unique,849,Hexfire,q27,Shamshir,23,,"Ancient Coupon row (cubed, never drops)"
+unique,850,Blade of Ali Baba,q28,Tulwar,35,,"Ancient Coupon row (cubed, never drops)"
+unique,851,Ginther's Rift,q29,Dimensional Blade,25,,"Ancient Coupon row (cubed, never drops)"
+unique,852,Headstriker,q30,Battle Sword,27,,"Ancient Coupon row (cubed, never drops)"
+unique,853,Plague Bearer,q31,Rune Sword,28,,"Ancient Coupon row (cubed, never drops)"
+unique,854,The Atlantean,q32,Ancient Sword,29,,"Ancient Coupon row (cubed, never drops)"
+unique,855,Crainte Vomir,q33,Espandon,29,,"Ancient Coupon row (cubed, never drops)"
+unique,856,Bing Sz Wang,q34,Dacian Falx,30,,"Ancient Coupon row (cubed, never drops)"
+unique,857,The Vile Husk,q35,Tusk Sword,30,,"Ancient Coupon row (cubed, never drops)"
+unique,858,Cloudcrack,q36,Gothic Sword,31,,"Ancient Coupon row (cubed, never drops)"
+unique,859,Todesfaelle Flamme,q37,Zweihander,32,,"Ancient Coupon row (cubed, never drops)"
+unique,860,Swordguard,q38,Executioner Sword,33,,"Ancient Coupon row (cubed, never drops)"
+unique,861,Spineripper,q39,Poignard,22,,"Ancient Coupon row (cubed, never drops)"
+unique,862,Heart Carver,q40,Rondel,25,,"Ancient Coupon row (cubed, never drops)"
+unique,863,Blackbog's Sharp,q41,Cinquedeas,26,,"Ancient Coupon row (cubed, never drops)"
+unique,864,Stormspike,q42,Stiletto,28,,"Ancient Coupon row (cubed, never drops)"
+unique,865,The Impaler,q43,War Spear,21,,"Ancient Coupon row (cubed, never drops)"
+unique,866,Kelpie Snare,q44,Fuscina,23,,"Ancient Coupon row (cubed, never drops)"
+unique,867,Soulfeast Tine,q45,War Fork,25,,"Ancient Coupon row (cubed, never drops)"
+unique,868,Hone Sundan,q46,Yari,31,,"Ancient Coupon row (cubed, never drops)"
+unique,869,Spire of Honor,q47,Lance,33,,"Ancient Coupon row (cubed, never drops)"
+unique,870,The Meat Scraper,q48,Lochaber Axe,28,,"Ancient Coupon row (cubed, never drops)"
+unique,871,Blackleach Blade,q49,Bill,29,,"Ancient Coupon row (cubed, never drops)"
+unique,872,Athena's Wrath,q50,Battle Scythe,29,,"Ancient Coupon row (cubed, never drops)"
+unique,873,Pierre Tombale Couant,q51,Partizan,30,,"Ancient Coupon row (cubed, never drops)"
+unique,874,Husoldal Evo,q52,Bec-de-Corbin,30,,"Ancient Coupon row (cubed, never drops)"
+unique,875,Grim's Burning Dead,q53,Grim Scythe,31,,"Ancient Coupon row (cubed, never drops)"
+unique,876,Razorswitch,q54,Jo Staff,21,,"Ancient Coupon row (cubed, never drops)"
+unique,877,Ribcracker,q55,Quarterstaff,31,,"Ancient Coupon row (cubed, never drops)"
+unique,878,Chromatic Ire,q56,Cedar Staff,25,,"Ancient Coupon row (cubed, never drops)"
+unique,879,Warpspear,q57,Gothic Staff,27,,"Ancient Coupon row (cubed, never drops)"
+unique,880,Skull Collector,q58,Rune Staff,28,,"Ancient Coupon row (cubed, never drops)"
+unique,881,Skystrike,q59,Edge Bow,21,,"Ancient Coupon row (cubed, never drops)"
+unique,882,Riphook,q60,Razor Bow,22,,"Ancient Coupon row (cubed, never drops)"
+unique,883,Kuko Shakaku,q61,Cedar Bow,23,,"Ancient Coupon row (cubed, never drops)"
+unique,884,Endlesshail,q62,Double Bow,25,,"Ancient Coupon row (cubed, never drops)"
+unique,885,Witchwild String,q63,Short Siege Bow,33,,"Ancient Coupon row (cubed, never drops)"
+unique,886,Cliffkiller,q64,Large Siege Bow,28,,"Ancient Coupon row (cubed, never drops)"
+unique,887,Magewrath,q65,Rune Bow,30,,"Ancient Coupon row (cubed, never drops)"
+unique,888,Goldstrike Arch,q66,Gothic Bow,32,,"Ancient Coupon row (cubed, never drops)"
+unique,889,Langer Briser,q67,Arbalest,22,,"Ancient Coupon row (cubed, never drops)"
+unique,890,Pus Spitter,q68,Siege Crossbow,25,,"Ancient Coupon row (cubed, never drops)"
+unique,891,Buriza-Do Kyanon,q69,Ballista,41,,"Ancient Coupon row (cubed, never drops)"
+unique,892,Demon Machine,q70,Chu-Ko-Nu,34,,"Ancient Coupon row (cubed, never drops)"
+unique,893,Peasant Crown,4ap,War Hat,22,,"Ancient Coupon row (cubed, never drops)"
+unique,894,Rockstopper,4kp,Sallet,25,,"Ancient Coupon row (cubed, never drops)"
+unique,895,Stealskull,4lm,Casque,25,,"Ancient Coupon row (cubed, never drops)"
+unique,896,Darksight Helm,4hl,Basinet,26,,"Ancient Coupon row (cubed, never drops)"
+unique,897,Valkyrie Wing,4hm,Winged Helm,30,,"Ancient Coupon row (cubed, never drops)"
+unique,898,Crown of Thieves,4rn,Grand Crown,34,,"Ancient Coupon row (cubed, never drops)"
+unique,899,Blackhorn's Face,4sk,Death Mask,28,,"Ancient Coupon row (cubed, never drops)"
+unique,900,Vampire Gaze,4h9,Grim Helm,41,,"Ancient Coupon row (cubed, never drops)"
+unique,901,The Spirit Shroud,4ui,Ghost Armor,24,,"Ancient Coupon row (cubed, never drops)"
+unique,902,Skin of the Vipermagi,4ea,Serpentskin Armor,29,,"Ancient Coupon row (cubed, never drops)"
+unique,903,Skin of the Flayed One,4la,Demonhide Armor,25,,"Ancient Coupon row (cubed, never drops)"
+unique,904,Iron Pelt,4tu,Trellised Armor,25,,"Ancient Coupon row (cubed, never drops)"
+unique,905,Spirit Forge,4ng,Linked Mail,25,,"Ancient Coupon row (cubed, never drops)"
+unique,906,Crow Caw,4cl,Tigulated Mail,25,,"Ancient Coupon row (cubed, never drops)"
+unique,907,Shaftstop,4hn,Mesh Armor,38,,"Ancient Coupon row (cubed, never drops)"
+unique,908,Duriel's Shell,4rs,Cuirass,34,,"Ancient Coupon row (cubed, never drops)"
+unique,909,Skullder's Ire,4pl,Russet Armor,35,,"Ancient Coupon row (cubed, never drops)"
+unique,910,Guardian Angel,4lt,Templar Coat,38,,"Ancient Coupon row (cubed, never drops)"
+unique,911,Toothrow,4ld,Sharktooth Armor,33,,"Ancient Coupon row (cubed, never drops)"
+unique,912,Atma's Wail,4th,Embossed Plate,35,,"Ancient Coupon row (cubed, never drops)"
+unique,913,Black Hades,4ul,Chaos Armor,37,,"Ancient Coupon row (cubed, never drops)"
+unique,914,Corpsemourn,4ar,Ornate Plate,38,,"Ancient Coupon row (cubed, never drops)"
+unique,915,Que-Hegan's Wisdom,4tp,Mage Plate,35,,"Ancient Coupon row (cubed, never drops)"
+unique,916,Visceratuant,4uc,Defender,25,,"Ancient Coupon row (cubed, never drops)"
+unique,917,Moser's Blessed Circle,4ml,Round Shield,31,,"Ancient Coupon row (cubed, never drops)"
+unique,918,Stormchaser,4rg,Scutum,25,,"Ancient Coupon row (cubed, never drops)"
+unique,919,Tiamat's Rebuke,4it,Dragon Shield,26,,"Ancient Coupon row (cubed, never drops)"
+unique,920,Gerke's Sanctuary,4ow,Pavise,30,,"Ancient Coupon row (cubed, never drops)"
+unique,921,Radament's Sphere,4ts,Ancient Shield,35,,"Ancient Coupon row (cubed, never drops)"
+unique,922,Lidless Wall,4sh,Grim Shield,28,,"Ancient Coupon row (cubed, never drops)"
+unique,923,Lance Guard,4pk,Barbed Shield,25,,"Ancient Coupon row (cubed, never drops)"
+unique,924,Venom Grip,4lg,Demonhide Gloves,25,,"Ancient Coupon row (cubed, never drops)"
+unique,925,Gravepalm,4vg,Sharkskin Gloves,25,,"Ancient Coupon row (cubed, never drops)"
+unique,926,Ghoulhide,4mg,Heavy Bracers,25,,"Ancient Coupon row (cubed, never drops)"
+unique,927,Lava Gout,4tg,Battle Gauntlets,29,,"Ancient Coupon row (cubed, never drops)"
+unique,928,Hellmouth,4hg,War Gauntlets,32,,"Ancient Coupon row (cubed, never drops)"
+unique,929,Infernostride,4lb,Demonhide Boots,25,,"Ancient Coupon row (cubed, never drops)"
+unique,930,Waterwalk,4vb,Sharkskin Boots,25,,"Ancient Coupon row (cubed, never drops)"
+unique,931,Silkweave,4mb,Mesh Boots,25,,"Ancient Coupon row (cubed, never drops)"
+unique,932,War Traveler,4tb,Battle Boots,35,,"Ancient Coupon row (cubed, never drops)"
+unique,933,Gore Rider,4hb,War Boots,39,,"Ancient Coupon row (cubed, never drops)"
+unique,934,String of Ears,5lb,Demonhide Sash,29,,"Ancient Coupon row (cubed, never drops)"
+unique,935,Razortail,5vb,Sharkskin Belt,25,,"Ancient Coupon row (cubed, never drops)"
+unique,936,Gloom's Trap,5mb,Mesh Belt,25,,"Ancient Coupon row (cubed, never drops)"
+unique,937,Snowclash,5tb,Battle Belt,29,,"Ancient Coupon row (cubed, never drops)"
+unique,938,Thundergod's Vigor,5hb,War Belt,39,,"Ancient Coupon row (cubed, never drops)"
+unique,939,Harlequin Crest,uap,Shako,55,,"Ancient Coupon row (cubed, never drops)"
+unique,940,Veil of Steel,uhm,Spired Helm,58,,"Ancient Coupon row (cubed, never drops)"
+unique,941,The Gladiator's Bane,utu,Wire Fleece,68,,"Ancient Coupon row (cubed, never drops)"
+unique,942,Arkaine's Valor,upl,Balrog Skin,76,,"Ancient Coupon row (cubed, never drops)"
+unique,943,Blackoak Shield,uml,Luna,48,,"Ancient Coupon row (cubed, never drops)"
+unique,944,Stormshield,uit,Monarch,65,,"Ancient Coupon row (cubed, never drops)"
+unique,945,Hellslayer,7bt,Decapitator,52,,"Ancient Coupon row (cubed, never drops)"
+unique,946,Messerschmidt's Reaver,7ga,Champion Axe,56,,"Ancient Coupon row (cubed, never drops)"
+unique,947,Baranar's Star,7mt,Devil Star,52,,"Ancient Coupon row (cubed, never drops)"
+unique,948,Schaefer's Hammer,7wh,Legendary Mallet,71,,"Ancient Coupon row (cubed, never drops)"
+unique,949,The Cranium Basher,7gm,Thunder Maul,69,,"Ancient Coupon row (cubed, never drops)"
+unique,950,Lightsabre,7cr,Phase Blade,46,,"Ancient Coupon row (cubed, never drops)"
+unique,951,Doombringer,7b7,Champion Sword,55,,"Ancient Coupon row (cubed, never drops)"
+unique,952,The Grandfather,7gd,Colossus Blade,72,,"Ancient Coupon row (cubed, never drops)"
+unique,953,Wizardspike,7dg,Bone Knife,58,,"Ancient Coupon row (cubed, never drops)"
+unique,954,Constricting Ring,rn9,Ring,95,,"Ancient Coupon row (cubed, never drops)"
+unique,955,Stormspire,7wc,Giant Thresher,76,,"Ancient Coupon row (cubed, never drops)"
+unique,956,Eaglehorn,6l7,Crusader Bow,55,,"Ancient Coupon row (cubed, never drops)"
+unique,957,Windforce,6lw,Hydra Bow,65,,"Ancient Coupon row (cubed, never drops)"
+unique,958,Bul-Kathos' Wedding Band,rn9,Ring,58,,"Ancient Coupon row (cubed, never drops)"
+unique,959,The Cat's Eye,au9,Amulet,50,,"Ancient Coupon row (cubed, never drops)"
+unique,960,The Rising Sun,au9,Amulet,65,,"Ancient Coupon row (cubed, never drops)"
+unique,961,Crescent Moon,au9,Amulet,50,,"Ancient Coupon row (cubed, never drops)"
+unique,962,Mara's Kaleidoscope,au9,Amulet,67,,"Ancient Coupon row (cubed, never drops)"
+unique,963,Atma's Scarab,au9,Amulet,60,,"Ancient Coupon row (cubed, never drops)"
+unique,964,Dwarf Star,rn9,Ring,45,,"Ancient Coupon row (cubed, never drops)"
+unique,965,Raven Frost,rn9,Ring,45,,"Ancient Coupon row (cubed, never drops)"
+unique,966,Highlord's Wrath,au9,Amulet,65,,"Ancient Coupon row (cubed, never drops)"
+unique,967,Saracen's Chance,au9,Amulet,47,,"Ancient Coupon row (cubed, never drops)"
+unique,968,Arreat's Face,qba,Slayer Guard,42,,"Ancient Coupon row (cubed, never drops)"
+unique,969,Homunculus,qna,Hierophant Trophy,42,,"Ancient Coupon row (cubed, never drops)"
+unique,970,Titan's Revenge,q79,Ceremonial Javelin,42,,"Ancient Coupon row (cubed, never drops)"
+unique,971,Lycander's Aim,q77,Ceremonial Bow,42,,"Ancient Coupon row (cubed, never drops)"
+unique,972,Lycander's Flank,q78,Ceremonial Pike,42,,"Ancient Coupon row (cubed, never drops)"
+unique,973,The Oculus,q83,Swirling Crystal,42,,"Ancient Coupon row (cubed, never drops)"
+unique,974,Herald of Zakarum,qp9,Gilded Shield,42,,"Ancient Coupon row (cubed, never drops)"
+unique,975,Bartuc's Cut-Throat,q73,Greater Talons,42,,"Ancient Coupon row (cubed, never drops)"
+unique,976,Jalal's Mane,qda,Totemic Mask,42,,"Ancient Coupon row (cubed, never drops)"
+unique,977,The Scalper,q72,Francisca,45,,"Ancient Coupon row (cubed, never drops)"
+unique,978,Bloodmoon,7sb,Elegant Blade,48,,"Ancient Coupon row (cubed, never drops)"
+unique,979,Djinn Slayer,7sm,Ataghan,52,,"Ancient Coupon row (cubed, never drops)"
+unique,980,Deathbit,q71,Battle Dart,35,,"Ancient Coupon row (cubed, never drops)"
+unique,981,Warshrike,7bk,Winged Knife,60,,"Ancient Coupon row (cubed, never drops)"
+unique,982,Gut Siphon,6rx,Demon Crossbow,56,,"Ancient Coupon row (cubed, never drops)"
+unique,983,Razor's Edge,7ha,Tomahawk,53,,"Ancient Coupon row (cubed, never drops)"
+unique,984,Demon Limb,7sp,Tyrant Club,50,,"Ancient Coupon row (cubed, never drops)"
+unique,985,Steel Shade,ulm,Armet,49,,"Ancient Coupon row (cubed, never drops)"
+unique,986,Tomb Reaver,7pa,Cryptic Axe,84,,"Ancient Coupon row (cubed, never drops)"
+unique,987,Death's Web,7gw,Unearthed Wand,72,,"Ancient Coupon row (cubed, never drops)"
+unique,988,Nature's Peace,rn9,Ring,69,,"Ancient Coupon row (cubed, never drops)"
+unique,989,Azurewrath,7cr,Phase Blade,76,,"Ancient Coupon row (cubed, never drops)"
+unique,990,Seraph's Hymn,au9,Amulet,65,,"Ancient Coupon row (cubed, never drops)"
+unique,991,Fleshripper,7kr,Fanged Knife,54,,"Ancient Coupon row (cubed, never drops)"
+unique,992,Horizon's Tornado,7fl,Scourge,51,,"Ancient Coupon row (cubed, never drops)"
+unique,993,Stone Crusher,7wh,Legendary Mallet,54,,"Ancient Coupon row (cubed, never drops)"
+unique,994,Jade Talon,q74,Wrist Sword,52,,"Ancient Coupon row (cubed, never drops)"
+unique,995,Shadow Dancer,uhb,Myrmidon Greaves,56,,"Ancient Coupon row (cubed, never drops)"
+unique,996,Cerebus' Bite,qdb,Blood Spirit,50,,"Ancient Coupon row (cubed, never drops)"
+unique,997,Tyrael's Might,uar,Sacred Armor,67,,"Ancient Coupon row (cubed, never drops)"
+unique,998,Soul Drainer,umg,Vambraces,59,,"Ancient Coupon row (cubed, never drops)"
+unique,999,Rune Master,72a,Ettin Axe,72,,"Ancient Coupon row (cubed, never drops)"
+unique,1000,Death Cleaver,7wa,Berserker Axe,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1001,Executioner's Justice,7gi,Glorious Axe,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1002,Stoneraven,q81,Matriarchal Spear,51,,"Ancient Coupon row (cubed, never drops)"
+unique,1003,Leviathan,uld,Kraken Shell,52,,"Ancient Coupon row (cubed, never drops)"
+unique,1004,Wisp Projector,rn9,Ring,76,,"Ancient Coupon row (cubed, never drops)"
+unique,1005,Gargoyle's Bite,7ts,Winged Harpoon,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1006,Lacerator,7b8,Winged Axe,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1007,Mang Song's Lesson,6ws,Archon Staff,65,,"Ancient Coupon row (cubed, never drops)"
+unique,1008,Viperfork,7br,Mancatcher,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1009,Ethereal Edge,7ba,Silver-edged Axe,59,,"Ancient Coupon row (cubed, never drops)"
+unique,1010,Demonhorn's Edge,qbd,Destroyer Helm,48,,"Ancient Coupon row (cubed, never drops)"
+unique,1011,The Reaper's Toll,7s8,Thresher,67,,"Ancient Coupon row (cubed, never drops)"
+unique,1012,Spirit Keeper,qdd,Earth Spirit,53,,"Ancient Coupon row (cubed, never drops)"
+unique,1013,Hellrack,6hx,Colossus Crossbow,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1014,Alma Negra,qpc,Sacred Rondache,61,,"Ancient Coupon row (cubed, never drops)"
+unique,1015,Darkforce Spawn,qnf,Bloodlord Skull,51,,"Ancient Coupon row (cubed, never drops)"
+unique,1016,Widowmaker,6sw,Ward Bow,52,,"Ancient Coupon row (cubed, never drops)"
+unique,1017,Blood Raven's Charge,q80,Matriarchal Bow,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1018,Ghostflame,7bl,Legend Spike,66,,"Ancient Coupon row (cubed, never drops)"
+unique,1019,Shadow Killer,q75,Battle Cestus,62,,"Ancient Coupon row (cubed, never drops)"
+unique,1020,Gimmershred,7ta,Flying Axe,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1021,Griffon's Eye,qi3,Diadem,68,,"Ancient Coupon row (cubed, never drops)"
+unique,1022,Windhammer,7m7,Ogre Maul,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1023,Thunderstroke,q82,Matriarchal Javelin,55,,"Ancient Coupon row (cubed, never drops)"
+unique,1024,Demon's Arch,7s7,Balrog Spear,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1025,Boneflame,qne,Succubus Skull,57,,"Ancient Coupon row (cubed, never drops)"
+unique,1026,Steel Pillar,7p7,War Pike,55,,"Ancient Coupon row (cubed, never drops)"
+unique,1027,Nightwing's Veil,uhm,Spired Helm,53,,"Ancient Coupon row (cubed, never drops)"
+unique,1028,Crown of Ages,urn,Corona,82,,"Ancient Coupon row (cubed, never drops)"
+unique,1029,Andariel's Visage,usk,Demonhead,66,,"Ancient Coupon row (cubed, never drops)"
+unique,1030,Dragonscale,qpe,Zakarum Shield,64,,"Ancient Coupon row (cubed, never drops)"
+unique,1031,Steel Carapace,uul,Shadow Plate,72,,"Ancient Coupon row (cubed, never drops)"
+unique,1032,Medusa's Gaze,uow,Aegis,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1033,Ravenlore,qde,Sky Spirit,59,,"Ancient Coupon row (cubed, never drops)"
+unique,1034,Boneshade,7bw,Lich Wand,63,,"Ancient Coupon row (cubed, never drops)"
+unique,1035,Flamebellow,7gs,Balrog Blade,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1036,Death's Fathom,q85,Dimensional Shard,65,,"Ancient Coupon row (cubed, never drops)"
+unique,1037,Wolfhowl,qbc,Fury Visor,63,,"Ancient Coupon row (cubed, never drops)"
+unique,1038,Spirit Ward,uts,Ward,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1039,Kira's Guardian,qi2,Tiara,61,,"Ancient Coupon row (cubed, never drops)"
+unique,1040,Ormus' Robes,uui,Dusk Shroud,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1041,Stormlash,7fl,Scourge,73,,"Ancient Coupon row (cubed, never drops)"
+unique,1042,Halaberd's Reign,qbe,Conqueror Crown,61,,"Ancient Coupon row (cubed, never drops)"
+unique,1043,Spike Thorn,upk,Blade Barrier,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1044,Dracul's Grasp,uvg,Vampirebone Gloves,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1045,Frostwind,7ls,Cryptic Sword,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1046,Templar's Might,uar,Sacred Armor,69,,"Ancient Coupon row (cubed, never drops)"
+unique,1047,Eschuta's Temper,q84,Eldritch Orb,57,,"Ancient Coupon row (cubed, never drops)"
+unique,1048,Firelizard's Talons,q76,Feral Claws,53,,"Ancient Coupon row (cubed, never drops)"
+unique,1049,Sandstorm Trek,uvb,Scarabshell Boots,51,,"Ancient Coupon row (cubed, never drops)"
+unique,1050,Marrowwalk,umb,Boneweave Boots,59,,"Ancient Coupon row (cubed, never drops)"
+unique,1051,Heaven's Light,7sc,Mighty Scepter,48,,"Ancient Coupon row (cubed, never drops)"
+unique,1052,Arachnid Mesh,ulc,Spiderweb Sash,64,,"Ancient Coupon row (cubed, never drops)"
+unique,1053,Nosferatu's Coil,uvc,Vampirefang Belt,40,,"Ancient Coupon row (cubed, never drops)"
+unique,1054,Metalgrid,au9,Amulet,81,,"Ancient Coupon row (cubed, never drops)"
+unique,1055,Verdungo's Hearty Cord,umc,Mithril Coil,50,,"Ancient Coupon row (cubed, never drops)"
+unique,1056,Carrion Wind,rn9,Ring,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1057,Giant Skull,uh9,Bone Visage,65,,"Ancient Coupon row (cubed, never drops)"
+unique,1058,Astreon's Iron Ward,7ws,Caduceus,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1059,Annihilus,cm1,Small Charm,85,,
+unique,1060,Arioc's Needle,7sr,Hyperion Spear,64,,"Ancient Coupon row (cubed, never drops)"
+unique,1061,Cranebeak,7mp,War Spike,50,,"Ancient Coupon row (cubed, never drops)"
+unique,1062,Nord's Tenderizer,7cl,Truncheon,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1063,Earth Shifter,7gm,Thunder Maul,55,,"Ancient Coupon row (cubed, never drops)"
+unique,1064,Wraith Flight,7gl,Ghost Glaive,60,,"Ancient Coupon row (cubed, never drops)"
+unique,1065,Bonehew,7o7,Ogre Axe,51,,"Ancient Coupon row (cubed, never drops)"
+unique,1066,Ondal's Wisdom,6cs,Elder Staff,52,,"Ancient Coupon row (cubed, never drops)"
+unique,1067,The Redeemer,7sc,Mighty Scepter,64,,"Ancient Coupon row (cubed, never drops)"
+unique,1068,Head Hunter's Glory,ush,Troll Nest,75,,"Ancient Coupon row (cubed, never drops)"
+unique,1069,Steelrend,uhg,Ogre Gauntlets,56,,"Ancient Coupon row (cubed, never drops)"
+unique,1070,Randomizing Stone,rnd,Randomizing Stone,1,,
+unique,1071,The Perfect Cell,cm1,Small Charm,40,,
+unique,1072,Doomfletch's Prism,m01,Mythical Marksman Bow,90,,
+unique,1073,Buriza-Do Kyanon,m02,Mythical Odysseus Crossbow,90,,
+unique,1074,Mjolnir,m03,Mythical Titan's Maul,90,,
+unique,1075,Mephisto's Will,m04,Mythical Demonic Wand,90,,
+unique,1076,The Grim Reaper's Harvester,m05,Mythical Soul Destroyer,90,,
+unique,1077,Aegis of Corruption,m06,Mythical Gemstoned Armor,90,,
+unique,1078,Imperius' Undying Wrath,m07,Mythical Dimensional Shard,90,,
+unique,1079,Tal Rasha's Final Whisper,m08,Mythical Balanced Dagger,90,,
+unique,1080,Mephisto's Nightmare,m09,Mythical Magic Blade,90,,
+unique,1081,Headhunter,m10,Mythical Hemp Band,90,,
+unique,1082,Monkey King's Bar,m11,Mythical Arcane Staff,90,,
+unique,1083,Inarius' Rod of Infinite Thought,m12,Mythical Seraphic Scepter,90,,
+unique,1084,Duriel's Claws of Festering Agony,m13,Mythical Scissors Suwayyah,90,,
+unique,1085,Rathma's Eternal Reign,m14,Mythical Ceremonial Dagger,90,,
+unique,1086,Avatar of Nature's Infused Horns,m15,Mythical Dream Spirit,90,,
+unique,1087,Natalya's Bloodied Executioner,m16,Mythical Rapier,90,,
+unique,1088,"Lux Aeterna, Hope of Dawn",m17,Mythical Celestial Scepter,90,,
+unique,1089,Frostmourne,dd1,Mythical Death Blade,90,,
+unique,1090,Lich King's Essence,au9,Amulet,90,,
+unique,1091,Lich King's Essence,au9,Amulet,90,,
+unique,1092,Lich King's Essence,au9,Amulet,90,,
+unique,1093,Lich King's Essence,au9,Amulet,90,,
+unique,1094,Lich King's Essence,au9,Amulet,90,,
+unique,1095,Lich King's Essence,au9,Amulet,90,,
+unique,1096,Eternal Hourglass of the Timeless Sands,cm2,Large Charm,90,,
+unique,1097,Tathamet's Awakening,m20,Mythical Diadem,90,,
+unique,1098,Mythical Highlord's Wrath,mam,Amulet,90,,
+unique,1099,Vessel of Souls,mam,Amulet,90,,
+unique,1100,Battlemage Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1101,Awakened Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1102,Blademaster Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1103,Nomad Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1104,Ironbolt Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1105,Arcanist Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1106,Soul Warden Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1107,Sharpshooter Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1108,Starborn Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1109,Bloodmage Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1110,Lifebreaker Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1111,Worldshaper Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1112,Stance Dancer Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1113,Mana Warden Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1114,Berserker Ascendancy Stone,ast,Ascendancy Stone,1,,
+unique,1115,Iris of End Times,aq2,Arrows,80,,
+unique,1116,Rain of Pain,cq2,Bolts,80,,
+unique,1117,Kill Ledger,led,Kill Ledger,1,,
+unique,1118,Gheed's Fortune,cm3,Grand Charm,62,,
+unique,1119,The Triune's Harbinger of Apocalypse,m29,Mythical Petrified Staff,90,,
+unique,1120,Orion,m30,Mythical Ancient Bow,90,,
+unique,1121,Athulua's Final Hunt,m31,Mythical Matriarchal Javelin,90,,
+unique,1122,Rathma's Endlessly Bleeding Spine,m32,Mythical Whale Hunter,90,,
+unique,1123,Yaerius' Celestial Beacon,m33,Mythical Ancient Shards,90,,
+unique,1124,Ancient Totem of Scosglen,m34,Mythical Shillelagh,90,,
+unique,1125,"El'druin, Excalibur of the Light",m35,Mythical Celestial Sword,90,,
+unique,1126,Rathma's Eternal Skull,cm1,Small Charm,90,,
+unique,1127,Orpheus' Pillar of Hope,m36,Mythical Mage Staff,90,,
+unique,1128,Tsukuyomi's Dying Light,m37,Mythical Katana,90,,
+unique,1129,The Ties That Bind,mrn,Ring,90,,
+unique,1130,The Ties That Bind,mrn,Ring,90,,
+unique,1131,The Ties That Bind,mrn,Ring,90,,
+unique,1132,The Ties That Bind,mrn,Ring,90,,
+unique,1133,The Ties That Bind,mrn,Ring,90,,
+unique,1134,The Ties That Bind,mrn,Ring,90,,
+unique,1135,The Ties That Bind,mrn,Ring,90,,
+unique,1136,Void Crescent of a Thousand Cuts,m38,Mythical Arreat's Hatchet,90,,
+unique,1137,Hellfire Torch,cm2,Large Charm,85,,
+unique,1138,Quick Death,srk,Shuriken,7,,
+unique,1139,Sunset of the Eastern Sun,fsk,Fūma Shuriken,49,,
+unique,1140,Death's Game,kgk,Kagekiri,73,,
+unique,1141,Baal's Vile Whisper,m39,Mythical Kagekiri,90,,
+unique,1142,Orpheus' Pillar of Hope,m36,Mythical Mage Staff,90,,
+unique,1143,Orpheus' Pillar of Hope,m36,Mythical Mage Staff,90,,
+unique,1144,Tathamet's Awakening,m20,Mythical Diadem,90,,
+unique,1145,Tathamet's Awakening,m20,Mythical Diadem,90,,
+unique,1146,Ember of Creation,mjw,Jewel,60,,
+unique,1147,Ember of Creation,mjw,Jewel,60,,
+unique,1148,Ember of Creation,mjw,Jewel,60,,
+unique,1149,Ember of Creation,mjw,Jewel,60,,
+unique,1150,Ember of Creation,mjw,Jewel,60,,
+unique,1151,Ember of Creation,mjw,Jewel,60,,
+unique,1152,Ember of Creation,mjw,Jewel,60,,
+unique,1153,Ember of Creation,mjw,Jewel,60,,
+unique,1154,Ember of Creation,mjw,Jewel,60,,
+unique,1155,Ember of Creation,mjw,Jewel,60,,
+unique,1156,Ember of Creation,mjw,Jewel,60,,
+unique,1157,Ember of Creation,mjw,Jewel,60,,
+unique,1158,Ember of Creation,mjw,Jewel,60,,
+unique,1159,Ember of Creation,mjw,Jewel,60,,
+unique,1160,Ember of Creation,mjw,Jewel,60,,
+unique,1161,Ember of Creation,mjw,Jewel,60,,
+unique,1162,Ember of Creation,mjw,Jewel,60,,
+unique,1163,Ember of Creation,mjw,Jewel,60,,
+unique,1164,Ember of Creation,mjw,Jewel,60,,
+unique,1165,Ember of Creation,mjw,Jewel,60,,
+unique,1166,Ember of Creation,mjw,Jewel,60,,
+unique,1167,Ember of Creation,mjw,Jewel,60,,
+unique,1168,Ember of Creation,mjw,Jewel,60,,
+unique,1169,Ember of Creation,mjw,Jewel,60,,
+unique,1170,Ember of Creation,mjw,Jewel,60,,
+unique,1171,Ember of Creation,mjw,Jewel,60,,
+unique,1172,Ember of Creation,mjw,Jewel,60,,
+unique,1173,Ember of Creation,mjw,Jewel,60,,
+unique,1174,Ember of Creation,mjw,Jewel,60,,
+unique,1175,Ember of Creation,mjw,Jewel,60,,
+unique,1176,Ember of Creation,mjw,Jewel,60,,
+unique,1177,Ember of Creation,mjw,Jewel,60,,
+unique,1178,Ember of Creation,mjw,Jewel,60,,
+unique,1179,Ember of Creation,mjw,Jewel,60,,
+unique,1180,Ember of Creation,mjw,Jewel,60,,
+unique,1181,Ember of Creation,mjw,Jewel,60,,
+unique,1182,Ember of Creation,mjw,Jewel,60,,
+unique,1183,Ember of Creation,mjw,Jewel,60,,
+unique,1184,Ember of Creation,mjw,Jewel,60,,
+unique,1185,Ember of Creation,mjw,Jewel,60,,
+unique,1186,Ember of Creation,mjw,Jewel,60,,
+unique,1187,Ember of Creation,mjw,Jewel,60,,
+unique,1188,Ember of Creation,mjw,Jewel,60,,
+unique,1189,Ember of Creation,mjw,Jewel,60,,
+unique,1190,Ember of Creation,mjw,Jewel,60,,
+unique,1191,Ember of Creation,mjw,Jewel,60,,
+unique,1192,Ember of Creation,mjw,Jewel,60,,
+unique,1193,Ember of Creation,mjw,Jewel,60,,
+unique,1194,Ember of Creation,mjw,Jewel,60,,
+unique,1195,Ember of Creation,mjw,Jewel,60,,
+unique,1196,Ember of Creation,mjw,Jewel,60,,
+unique,1197,Ember of Creation,mjw,Jewel,60,,
+unique,1198,Ember of Creation,mjw,Jewel,60,,
+unique,1199,Ember of Creation,mjw,Jewel,60,,
+unique,1200,Ember of Creation,mjw,Jewel,60,,
+unique,1201,Ember of Creation,mjw,Jewel,60,,
+unique,1202,Ember of Creation,mjw,Jewel,60,,
+unique,1203,Ember of Creation,mjw,Jewel,60,,
+unique,1204,Ember of Creation,mjw,Jewel,60,,
+unique,1205,Ember of Creation,mjw,Jewel,60,,
+unique,1206,Ember of Creation,mjw,Jewel,60,,
+unique,1207,Ember of Creation,mjw,Jewel,60,,
+unique,1208,Ember of Creation,mjw,Jewel,60,,
+unique,1209,Ember of Creation,mjw,Jewel,60,,
+unique,1210,Ember of Creation,mjw,Jewel,60,,
+unique,1211,Ember of Creation,mjw,Jewel,60,,
+unique,1212,Ember of Creation,mjw,Jewel,60,,
+unique,1213,Ember of Creation,mjw,Jewel,60,,
+unique,1214,Ember of Creation,mjw,Jewel,60,,
+unique,1215,Ember of Creation,mjw,Jewel,60,,
+unique,1216,Ember of Creation,mjw,Jewel,60,,
+unique,1217,Ember of Creation,mjw,Jewel,60,,
+unique,1218,Ember of Creation,mjw,Jewel,60,,
+unique,1219,Ember of Creation,mjw,Jewel,60,,
+unique,1220,Ember of Creation,mjw,Jewel,60,,
+unique,1221,Ember of Creation,mjw,Jewel,60,,
+unique,1222,Ember of Creation,mjw,Jewel,60,,
+unique,1223,Ember of Creation,mjw,Jewel,60,,
+unique,1224,Ember of Creation,mjw,Jewel,60,,
+unique,1225,Ember of Creation,mjw,Jewel,60,,
+unique,1226,Ember of Creation,mjw,Jewel,60,,
+unique,1227,Ember of Creation,mjw,Jewel,60,,
+unique,1228,Ember of Creation,mjw,Jewel,60,,
+unique,1229,Ember of Creation,mjw,Jewel,60,,
+unique,1230,Ember of Creation,mjw,Jewel,60,,
+unique,1231,Ember of Creation,mjw,Jewel,60,,
+unique,1232,Ember of Creation,mjw,Jewel,60,,
+unique,1233,Ember of Creation,mjw,Jewel,60,,
+unique,1234,Ember of Creation,mjw,Jewel,60,,
+unique,1235,Ember of Creation,mjw,Jewel,60,,
+unique,1236,Ember of Creation,mjw,Jewel,60,,
+unique,1237,Ember of Creation,mjw,Jewel,60,,
+unique,1238,Ember of Creation,mjw,Jewel,60,,
+unique,1239,Ember of Creation,mjw,Jewel,60,,
+unique,1240,Ember of Creation,mjw,Jewel,60,,
+unique,1241,Ember of Creation,mjw,Jewel,60,,
+unique,1242,Ember of Creation,mjw,Jewel,60,,
+unique,1243,Ember of Creation,mjw,Jewel,60,,
+unique,1244,Ember of Creation,mjw,Jewel,60,,
+unique,1245,Ember of Creation,mjw,Jewel,60,,
+unique,1246,Ember of Creation,mjw,Jewel,60,,
+unique,1247,Ember of Creation,mjw,Jewel,60,,
+unique,1248,Ember of Creation,mjw,Jewel,60,,
+unique,1249,Ember of Creation,mjw,Jewel,60,,
+unique,1250,Ember of Creation,mjw,Jewel,60,,
+unique,1251,Ember of Creation,mjw,Jewel,60,,
+unique,1252,Ember of Creation,mjw,Jewel,60,,
+unique,1253,Ember of Creation,mjw,Jewel,60,,
+unique,1254,Ember of Creation,mjw,Jewel,60,,
+unique,1255,Ember of Creation,mjw,Jewel,60,,
+unique,1256,Ember of Creation,mjw,Jewel,60,,
+unique,1257,Ember of Creation,mjw,Jewel,60,,
+unique,1258,Ember of Creation,mjw,Jewel,60,,
+unique,1259,Ember of Creation,mjw,Jewel,60,,
+unique,1260,Ember of Creation,mjw,Jewel,60,,
+unique,1261,Ember of Creation,mjw,Jewel,60,,
+unique,1262,Ember of Creation,mjw,Jewel,60,,
+unique,1263,Ember of Creation,mjw,Jewel,60,,
+unique,1264,Ember of Creation,mjw,Jewel,60,,
+unique,1265,Ember of Creation,mjw,Jewel,60,,
+unique,1266,Ember of Creation,mjw,Jewel,60,,
+unique,1267,Ember of Creation,mjw,Jewel,60,,
+unique,1268,Ember of Creation,mjw,Jewel,60,,
+unique,1269,Ember of Creation,mjw,Jewel,60,,
+unique,1270,Ember of Creation,mjw,Jewel,60,,
+unique,1271,Ember of Creation,mjw,Jewel,60,,
+unique,1272,Ember of Creation,mjw,Jewel,60,,
+unique,1273,Ember of Creation,mjw,Jewel,60,,
+unique,1274,Ember of Creation,mjw,Jewel,60,,
+unique,1275,Ember of Creation,mjw,Jewel,60,,
+unique,1276,Ember of Creation,mjw,Jewel,60,,
+unique,1277,Ember of Creation,mjw,Jewel,60,,
+unique,1278,Ember of Creation,mjw,Jewel,60,,
+unique,1279,Ember of Creation,mjw,Jewel,60,,
+unique,1280,Ember of Creation,mjw,Jewel,60,,
+unique,1281,Ember of Creation,mjw,Jewel,60,,
+unique,1282,Ember of Creation,mjw,Jewel,60,,
+unique,1283,Ember of Creation,mjw,Jewel,60,,
+unique,1284,Ember of Creation,mjw,Jewel,60,,
+unique,1285,Ember of Creation,mjw,Jewel,60,,
+unique,1286,Ember of Creation,mjw,Jewel,60,,
+unique,1287,Ember of Creation,mjw,Jewel,60,,
+unique,1288,Ember of Creation,mjw,Jewel,60,,
+unique,1289,Ember of Creation,mjw,Jewel,60,,
+unique,1290,Ember of Creation,mjw,Jewel,60,,
+unique,1291,Ember of Creation,mjw,Jewel,60,,
+unique,1292,Ember of Creation,mjw,Jewel,60,,
+unique,1293,Ember of Creation,mjw,Jewel,60,,
+unique,1294,Ember of Creation,mjw,Jewel,60,,
+unique,1295,Ember of Creation,mjw,Jewel,60,,
+unique,1296,Ember of Creation,mjw,Jewel,60,,
+unique,1297,Ember of Creation,mjw,Jewel,60,,
+unique,1298,Ember of Creation,mjw,Jewel,60,,
+unique,1299,Ember of Creation,mjw,Jewel,60,,
+unique,1300,Ember of Creation,mjw,Jewel,60,,
+unique,1301,Ember of Creation,mjw,Jewel,60,,
+unique,1302,Ember of Creation,mjw,Jewel,60,,
+unique,1303,Ember of Creation,mjw,Jewel,60,,
+unique,1304,Ember of Creation,mjw,Jewel,60,,
+unique,1305,Ember of Creation,mjw,Jewel,60,,
+unique,1306,Ember of Creation,mjw,Jewel,60,,
+unique,1307,Ember of Creation,mjw,Jewel,60,,
+unique,1308,Ember of Creation,mjw,Jewel,60,,
+unique,1309,Ember of Creation,mjw,Jewel,60,,
+unique,1310,Ember of Creation,mjw,Jewel,60,,
+unique,1311,Ember of Creation,mjw,Jewel,60,,
+unique,1312,Ember of Creation,mjw,Jewel,60,,
+unique,1313,Ember of Creation,mjw,Jewel,60,,
+unique,1314,Ember of Creation,mjw,Jewel,60,,
+unique,1315,Ember of Creation,mjw,Jewel,60,,
+unique,1316,Ember of Creation,mjw,Jewel,60,,
+unique,1317,Ember of Creation,mjw,Jewel,60,,
+unique,1318,Ember of Creation,mjw,Jewel,60,,
+unique,1319,Ember of Creation,mjw,Jewel,60,,
+unique,1320,Ember of Creation,mjw,Jewel,60,,
+unique,1321,Ember of Creation,mjw,Jewel,60,,
+unique,1322,Ember of Creation,mjw,Jewel,60,,
+unique,1323,Ember of Creation,mjw,Jewel,60,,
+unique,1324,Ember of Creation,mjw,Jewel,60,,
+unique,1325,Ember of Creation,mjw,Jewel,60,,
+unique,1326,Ember of Creation,mjw,Jewel,60,,
+unique,1327,Ember of Creation,mjw,Jewel,60,,
+unique,1328,Ember of Creation,mjw,Jewel,60,,
+unique,1329,Ember of Creation,mjw,Jewel,60,,
+unique,1330,Ember of Creation,mjw,Jewel,60,,
+unique,1331,Ember of Creation,mjw,Jewel,60,,
+unique,1332,Ember of Creation,mjw,Jewel,60,,
+unique,1333,Ember of Creation,mjw,Jewel,60,,
+unique,1334,Ember of Creation,mjw,Jewel,60,,
+unique,1335,Ember of Creation,mjw,Jewel,60,,
+unique,1336,Ember of Creation,mjw,Jewel,60,,
+unique,1337,Ember of Creation,mjw,Jewel,60,,
+unique,1338,Ember of Creation,mjw,Jewel,60,,
+unique,1339,Ember of Creation,mjw,Jewel,60,,
+unique,1340,Ember of Creation,mjw,Jewel,60,,
+unique,1341,Ember of Creation,mjw,Jewel,60,,
+unique,1342,Ember of Creation,mjw,Jewel,60,,
+unique,1343,Ember of Creation,mjw,Jewel,60,,
+unique,1344,Ember of Creation,mjw,Jewel,60,,
+unique,1345,Ember of Creation,mjw,Jewel,60,,
+unique,1346,Ember of Creation,mjw,Jewel,60,,
+unique,1347,Ember of Creation,mjw,Jewel,60,,
+unique,1348,Ember of Creation,mjw,Jewel,60,,
+unique,1349,Ember of Creation,mjw,Jewel,60,,
+unique,1350,Ember of Creation,mjw,Jewel,60,,
+unique,1351,Ember of Creation,mjw,Jewel,60,,
+unique,1352,Ember of Creation,mjw,Jewel,60,,
+unique,1353,Ember of Creation,mjw,Jewel,60,,
+unique,1354,Ember of Creation,mjw,Jewel,60,,
+unique,1355,Ember of Creation,mjw,Jewel,60,,
+unique,1356,Ember of Creation,mjw,Jewel,60,,
+unique,1357,Ember of Creation,mjw,Jewel,60,,
+unique,1358,Ember of Creation,mjw,Jewel,60,,
+unique,1359,Ember of Creation,mjw,Jewel,60,,
+unique,1360,Ember of Creation,mjw,Jewel,60,,
+unique,1361,Ember of Creation,mjw,Jewel,60,,
+unique,1362,Ember of Creation,mjw,Jewel,60,,
+unique,1363,Ember of Creation,mjw,Jewel,60,,
+unique,1364,Ember of Creation,mjw,Jewel,60,,
+unique,1365,Ember of Creation,mjw,Jewel,60,,
+unique,1366,Ember of Creation,mjw,Jewel,60,,
+unique,1367,Ember of Creation,mjw,Jewel,60,,
+unique,1368,Ember of Creation,mjw,Jewel,60,,
+unique,1369,Ember of Creation,mjw,Jewel,60,,
+unique,1370,Ember of Creation,mjw,Jewel,60,,
+unique,1371,Ember of Creation,mjw,Jewel,60,,
+unique,1372,Ember of Creation,mjw,Jewel,60,,
+unique,1373,Ember of Creation,mjw,Jewel,60,,
+unique,1374,Ember of Creation,mjw,Jewel,60,,
+unique,1375,Ember of Creation,mjw,Jewel,60,,
+unique,1376,The Soul Engine,m60,Mythical Light Plate,90,,
+unique,1377,Measured Wrath,w1a,Burnt Text,52,,"Ancient Coupon row (cubed, never drops)"
+unique,1378,Ars Dul'Mephistos,w1b,Occult Tome,78,,"Ancient Coupon row (cubed, never drops)"
+unique,1379,Ars Al'Diabolos,w1d,Blasphemous Grimoire,80,,"Ancient Coupon row (cubed, never drops)"
+unique,1380,Ars Tor'Baalos,w1c,Blasphemous Compendium,73,,"Ancient Coupon row (cubed, never drops)"
+unique,1381,Dreadfang,72h,Legend Sword,61,,"Ancient Coupon row (cubed, never drops)"
+unique,1382,Wraithstep,utb,Mirrored Boots,67,,"Ancient Coupon row (cubed, never drops)"
+unique,1383,Bloodpact Shard,7di,Mithril Point,67,,"Ancient Coupon row (cubed, never drops)"
+unique,1384,Sling,rn9,Ring,57,,"Ancient Coupon row (cubed, never drops)"
+unique,1385,Opalvein,rn9,Ring,57,,"Ancient Coupon row (cubed, never drops)"
+unique,1386,Entropy Locket,au9,Amulet,54,,"Ancient Coupon row (cubed, never drops)"
+unique,1387,Gheed's Wager,utc,Troll Belt,71,,"Ancient Coupon row (cubed, never drops)"
+unique,1388,Hellwarden's Will,4sk,Death Mask,50,,"Ancient Coupon row (cubed, never drops)"
+unique,1389,Voidforge,m61,Mythical Abyssal Blade,90,,
+set,0,Autolycus' Robes,qui,Quilted Armor,3,Autolycus' Magic Tools,
+set,1,Autolycus' Thieving Tools,vbl,Light Belt,3,Autolycus' Magic Tools,
+set,2,Boots of Sneaking,lbt,Boots,3,Autolycus' Magic Tools,
+set,3,Achilles' Force,hgl,Gauntlets,20,Achilles' Advantage,
+set,4,Achilles' Girdle,hbl,Plated Belt,20,Achilles' Advantage,
+set,5,Achilles' Heel,hbt,Greaves,20,Achilles' Advantage,
+set,6,Helm of Spirits,fhl,Full Helm,25,Diablo's End,
+set,7,Optic Amulet,amu,Amulet,25,Diablo's End,
+set,8,Armor of Gloom,ful,Full Plate Mail,25,Diablo's End,
+set,9,Stormshield,tow,Tower Shield,25,Diablo's End,
+set,10,Tharn's Ward,xhl,Basinet,35,Planet's Veneration,
+set,11,Bard's Graceful Hand,xvg,Sharkskin Gloves,35,Planet's Veneration,
+set,12,The Acolyte's Spirit,rin,Ring,35,Planet's Veneration,
+set,13,Root's Banded Restraint,zlb,Demonhide Sash,35,Planet's Veneration,
+set,14,Wanderer's Waltz,dbt,Crystal Boots,35,Planet's Veneration,
+set,15,Band of War,amu,Amulet,45,Waves of Ascension,
+set,16,Band of Death,rin,Ring,45,Waves of Ascension,
+set,17,Band of Famine,zmb,Mesh Belt,45,Waves of Ascension,
+set,18,Band of Pestilence,rin,Ring,45,Waves of Ascension,
+set,19,Crook of the Darkest Valley,1cs,Petrified Staff,60,Shepherd's Delight,
+set,20,Shepherd's Blessing,ytg,Gladiator Gauntlets,60,Shepherd's Delight,
+set,21,Shepherd's Invocation,yrs,Chest Guard,60,Shepherd's Delight,
+set,22,Tasselhoff's Jerkin,ylv,Sylvan Chain,70,Tasselhoff's Traveling Gear,
+set,23,Tasselhoff's Pouches,bmb,Merchant Belt,70,Tasselhoff's Traveling Gear,
+set,24,Tasselhoff's Breaches,ytb,Gladiator Boots,70,Tasselhoff's Traveling Gear,
+set,25,Arctic Horn,hbw,Hunter's Bow,1,Arctic Gear,
+set,26,Arctic Mitts,vgl,Heavy Gloves,1,Arctic Gear,
+set,27,Arctic Binding,vbl,Light Belt,1,Arctic Gear,
+set,28,Gabrielle's Pointed Staff,am3,Maiden Spear,16,Gabrielle's Innocence,
+set,29,Gabrielle's Defense,scl,Scale Mail,16,Gabrielle's Innocence,
+set,30,Gabrielle's Revelation,eht,Spirit Crown,16,Gabrielle's Innocence,
+set,31,Lixo's Flight,ci4,Faceguard,30,Lixo's Feathers,
+set,32,Lixo's Harp,8lw,Gothic Bow,30,Lixo's Feathers,
+set,33,Lixo's Coat,xla,Demonhide Armor,30,Lixo's Feathers,
+set,34,Lixo's Jewel,rin,Ring,30,Lixo's Feathers,
+set,35,Aanna's Touch,9p9,Lance,45,Aanna's Battle Dress,
+set,36,Aanna's Dress,xlt,Templar Coat,45,Aanna's Battle Dress,
+set,37,Aanna's Skill,xtg,Battle Gauntlets,45,Aanna's Battle Dress,
+set,38,Aanna's March,xtb,Battle Boots,45,Aanna's Battle Dress,
+set,39,Alaziel's Point,ama,Ceremonial Javelin,55,Alaziel's Abstraction,
+set,40,Alaziel's Protector,xlv,Drow Adamantite Chain,55,Alaziel's Abstraction,
+set,41,Alaziel's Buckler,yml,Desert Shield,55,Alaziel's Abstraction,
+set,42,Alaziel's Grip,ymg,Sepulcher Gloves,55,Alaziel's Abstraction,
+set,43,Noir's Anticipation,yht,Enchanted Crown,60,Noir's Tranquility,
+set,44,Noir's Focus,9pb,Tuigan Bow,60,Noir's Tranquility,
+set,45,Noir's Tenacity,xig,Military Guards,60,Noir's Tranquility,
+set,46,Noir's Stride,xbt,Dimensional Boots,60,Noir's Tranquility,
+set,47,Milea's Crown,ci3,Diadem,70,Milea's Majesty,
+set,48,Milea's Maim,amd,Matriarchal Spear,70,Milea's Majesty,
+set,49,Milea's Mail,yng,Heavy Mail,70,Milea's Majesty,
+set,50,Death's Touch,ktr,Katar,1,Death's Disguise,
+set,51,Death's Hand,lgl,Leather Gloves,1,Death's Disguise,
+set,52,Death's Guard,clk,Cloak,1,Death's Disguise,
+set,53,Vega's Beauty,cix,Hachigane,16,Vega's Elegance,
+set,54,Grace,clw,Claws,16,Vega's Elegance,
+set,55,Power,btl,Blade Talons,16,Vega's Elegance,
+set,56,Vega's Sash,tbl,Heavy Belt,16,Vega's Elegance,
+set,57,Motoko's Power,njt,Ninja To,30,Motoko's Captivation,
+set,58,Motoko's Kimono,shl,Spiked Shoulder,30,Motoko's Captivation,
+set,59,Motoko's Charm,amu,Amulet,30,Motoko's Captivation,
+set,60,Alora's Veil,xap,War Hat,45,Alora's Shadow,
+set,61,Alora's Silent Assault,9cs,Hand Scythe,45,Alora's Shadow,
+set,62,Alora's Silhouette,xlk,Summoner's Cloak,45,Alora's Shadow,
+set,63,Alora's Vestige,xmb,Mesh Boots,45,Alora's Shadow,
+set,64,Sascha's Deadly Point,7wb,Wrist Sword,55,Sascha's Jaded Kiss,
+set,65,Sascha's Bosom,xhh,Thorned Armor,55,Sascha's Jaded Kiss,
+set,66,Sascha's Jagged Strike,9qr,Scissors Quhab,55,Sascha's Jaded Kiss,
+set,67,Sascha's Black Slipper,ylb,Rogue Boots,55,Sascha's Jaded Kiss,
+set,68,Ihsan's Gaze,yap,Hood,60,Ihsan's Shade,
+set,69,Ihsan's Spine,ylk,Enchanted Cloak,60,Ihsan's Shade,
+set,70,Ihsan's Clutch,xhg,War Gauntlets,60,Ihsan's Shade,
+set,71,Ihsan's Coil,xms,Giant Wrap,60,Ihsan's Shade,
+set,72,Borik's Nightblade,0nn,Katana,70,Borik's Deceit,
+set,73,Borik's Dark Binding,yhh,Spiked Armor,70,Borik's Deceit,
+set,74,Borik's Black Hand,yvg,Viper Hands,70,Borik's Deceit,
+set,75,Infernal Cranium,cap,Cap,1,Infernal Tools,
+set,76,Infernal Torch,wnd,Wand,1,Infernal Tools,
+set,77,Infernal Sign,mbl,Belt,1,Infernal Tools,
+set,78,Rathol's Gaze,msk,Mask,16,Rathol's Disease,
+set,79,Rathol's Touch,nsy,Wretched Scythe,16,Rathol's Disease,
+set,80,Rathol's Fear,rng,Ring Mail,16,Rathol's Disease,
+set,81,Wrathamon's Skull,bhm,Bone Helm,30,Wrathamon's Omens,
+set,82,Ebola,amu,Amulet,30,Wrathamon's Omens,
+set,83,Wrathamon's Scythe of Doom,syn,Soul Hunter,30,Wrathamon's Omens,
+set,84,Wrathamon's Cloak of Night,xng,Linked Mail,30,Wrathamon's Omens,
+set,85,The Hands of Wier,xlg,Demonhide Gloves,30,Wrathamon's Omens,
+set,86,The Lich's Pate,xsk,Death Mask,45,The Lich's Form,
+set,87,The Lich's Curse,9yw,Petrified Wand,45,The Lich's Form,
+set,88,The Lich's Cage,xrs,Cuirass,45,The Lich's Form,
+set,89,The Lich's Clutch,xmg,Heavy Bracers,45,The Lich's Form,
+set,90,The Lich's Sole,zvb,Sharkskin Belt,45,The Lich's Form,
+set,91,Nupraptor's Skull,xh9,Grim Helm,55,Nupraptor's Keep,
+set,92,Nupraptor's Eradicator,9rd,Sacrificial Dagger,55,Nupraptor's Keep,
+set,93,Nupraptor's Servant,nea,Hierophant Trophy,55,Nupraptor's Keep,
+set,94,Lim-Dul's Hex,9gw,Grave Wand,60,Lim-Dul's Legion,
+set,95,Lim Dul's High Guardian,neb,Minion Skull,60,Lim-Dul's Legion,
+set,96,Lim Dul's Vault,alb,Hemp Band,60,Lim-Dul's Legion,
+set,97,Lim Dul's Oath,ymb,Sepulcher Boots,60,Lim-Dul's Legion,
+set,98,Mask of the Angel of Death,yh9,Demon Skull,70,Ordinance of the Dark Brotherhood,
+set,99,Flesh of the Angel of Chaos,yth,Royal Armor,70,Ordinance of the Dark Brotherhood,
+set,100,Reaver of the Angel of Annihilation,0sy,Soul Destroyer,70,Ordinance of the Dark Brotherhood,
+set,101,Berserker's Headgear,cap,Cap,1,Berserker's Arsenal,
+set,102,Berserker's Hatchet,hax,Hand Axe,1,Berserker's Arsenal,
+set,103,Berserker's Hauberk,hla,Hard Leather Armor,1,Berserker's Arsenal,
+set,104,Messerschmidt's Reaver,btx,Battle Axe,16,Messerschmidt's Rule,
+set,105,Messerschmidt's Burning Palm,mgl,Chain Gloves,16,Messerschmidt's Rule,
+set,106,Messerschmidt's Brace,tbt,Light Plated Boots,16,Messerschmidt's Rule,
+set,107,Blood Baron,gsd,Great Sword,30,Kain's Means of Destruction,
+set,108,Kain's Fear,aar,Ancient Armor,30,Kain's Means of Destruction,
+set,109,Kain's Sentinel,gts,Gothic Shield,30,Kain's Means of Destruction,
+set,110,Kain's Wings,irg,Iron Guards,30,Kain's Means of Destruction,
+set,111,Kain's Life,rin,Ring,30,Kain's Means of Destruction,
+set,112,Krakerag's Point,9wd,Ancient Sword,45,Krakerag's Rage,
+set,113,Krakerag's Chestplate,xld,Sharktooth Armor,45,Krakerag's Rage,
+set,114,Krakerag's Slay,9gs,Tusk Sword,45,Krakerag's Rage,
+set,115,Darkshade's Haze,ba9,Savage Helmet,55,Darkshade's Ruin,
+set,116,Darkshade's Skewer,9mt,Jagged Star,55,Darkshade's Ruin,
+set,117,Darkshade's Spined Sheath,xar,Ornate Plate,55,Darkshade's Ruin,
+set,118,Darkshade's Evisceration,9fl,Knout,55,Darkshade's Ruin,
+set,119,Darkshade's Binding,zhb,War Belt,55,Darkshade's Ruin,
+set,120,Sarevok's Malicious Stare,bae,Conqueror Crown,70,Sarevok's Sacrilege,
+set,121,Sarevok's Master,0gd,Death Blade,70,Sarevok's Sacrilege,
+set,122,Sarevok's Savage Heart,yld,Combat Plate,70,Sarevok's Sacrilege,
+set,123,Crown of the Northern Tribes,baf,Guardian Crown,70,Hurja's Harmonic Rage,
+set,124,Harrogath's Heirloom,yul,Ceremonial Armor,70,Hurja's Harmonic Rage,
+set,125,Worldstone Shard,brg,Barbaric Hoop,70,Hurja's Harmonic Rage,
+set,126,Milabrega's Ironsoles,vbt,Heavy Boots,1,Milabrega's Regalia,
+set,127,Milabrega's Rod,scp,Scepter,1,Milabrega's Regalia,
+set,128,Milabrega's Orb,sml,Small Shield,1,Milabrega's Regalia,
+set,129,Tyrael's Halo_old,br2,Breast Plate,16,Tyrael's Sanctuary_old,
+set,130,Tyrael's Virtue_old,cr2,Crystal Sword,16,Tyrael's Sanctuary_old,
+set,131,Tyrael's Faith_old,sp2,Spiked Shield,16,Tyrael's Sanctuary_old,
+set,132,Anduin's Vision,crn,Crown,30,Anduin's Honor,
+set,133,Anduin's Vanquisher,whm,War Hammer,30,Anduin's Honor,
+set,134,Anduin's Protector,pa4,Aerin Shield,30,Anduin's Honor,
+set,135,Malek's Sight,xrn,Grand Crown,45,Malek's Charge,
+set,136,Malek's Strike,pbe,Blessed Edge,45,Malek's Charge,
+set,137,Malek's Pride,elv,Elven Chain,45,Malek's Charge,
+set,138,Malek's Defense,sp2,Spiked Shield,45,Malek's Charge_old,
+set,139,Malek's Grip,msb,Muscle Wrap,45,Malek's Charge,
+set,140,Lancelot's Prediction,9be,Divine Blade,55,Lancelot's Courage,
+set,141,Lancelot's Security,xul,Chaos Armor,55,Lancelot's Courage,
+set,142,Lancelot's Heraldic Lion,yrn,Royal Crown,55,Lancelot's Courage,
+set,143,Griffith's Stare,ysk,Devil Mask,60,Griffith's Cunning,
+set,144,Griffith's Charm,pam,Holy Pendant,60,Griffith's Cunning,
+set,145,Griffith's Parry,0sb,Rapier,60,Griffith's Cunning,
+set,146,Griffith's Protection,xth,Embossed Plate,60,Griffith's Cunning,
+set,147,Darien's Wit,yhl,Gladiator Helm,70,Darien's Glory,
+set,148,Darien's Faith,ycl,Dragon Scale,70,Darien's Glory,
+set,149,Darien's Band,ahb,Titan Belt,70,Darien's Glory,
+set,150,Arcanna's Sign,amu,Amulet,1,Arcanna's Tricks,
+set,151,Arcanna's Deathwand,sst,Short Staff,1,Arcanna's Tricks,
+set,152,Arcanna's Flesh,lbl,Sash,1,Arcanna's Tricks,
+set,153,Tara's Vision,ci0,Circlet,16,Tara's Calling,
+set,154,Tara's Eye,ob3,Smoked Sphere,16,Tara's Calling,
+set,155,Tara's Gown,rob,Robe,16,Tara's Calling,
+set,156,Tara's Mirror,lrg,Large Shield,16,Tara's Calling,
+set,157,Naj's Puzzler,wst,War Staff,30,Naj's Mastery,
+set,158,Naj's Light Plate,ltp,Light Plate,30,Naj's Mastery,
+set,159,Naj's Fireward,xlb,Demonhide Boots,30,Naj's Mastery,
+set,160,Divada's Tiara,ci1,Coronet,45,Divada's Trickery,
+set,161,Divada's Focus,mnb,Mana Blade,45,Divada's Trickery,
+set,162,Divada's Shawl,xrb,Mage Robe,45,Divada's Trickery,
+set,163,Divada's Screen,xuc,Defender,45,Divada's Trickery,
+set,164,Raistlin's Glance,ci2,Tiara,55,Raistlin's Salvation,
+set,165,Raistlin's Mark,amu,Amulet,55,Raistlin's Salvation,
+set,166,The Staff of the Magi,8ws,Rune Staff,55,Raistlin's Salvation,
+set,167,Robes of the Arch-Magi,xtp,Mage Plate,55,Raistlin's Salvation,
+set,168,Jade Star,sam,Sorcerer's Talisman,60,Jade Accoutrement,
+set,169,Jade Wrap,yla,Demon Carapace,60,Jade Accoutrement,
+set,170,Jade Crest,srn,Sorcerer's Band,60,Jade Accoutrement,
+set,171,Jade Slipper,yvb,Viper Boots,60,Jade Accoutrement,
+set,172,Arion's Eye,obc,Eldritch Orb,70,Arion's Augury,
+set,173,Arion's Heart,yrb,Archmage Robe,70,Arion's Augury,
+set,174,Arion's Hand,ylg,Spellcaster Gloves,70,Arion's Augury,
+set,175,Hsaru's Iron Arm,clb,Club,1,Hsarus' Defense,
+set,176,Hsarus' Iron Fist,buc,Buckler,1,Hsarus' Defense,
+set,177,Hsarus' Iron Heel,lbt,Boots,1,Hsarus' Defense,
+set,178,Blackwing's Will,dr2,Hawk Helm,16,Blackwing's Impudence,
+set,179,Blackwing's Force,gis,Giant Sword,16,Blackwing's Impudence,
+set,180,Blackwing's Clench,tgl,Light Gauntlets,16,Blackwing's Impudence,
+set,181,Blackwing's Icewoven Strap,mbt,Chain Boots,16,Blackwing's Impudence,
+set,182,Danarak's Spirit,dr4,Falcon Mask,30,Danarak's Divinity,
+set,183,Danarak's Mallet,mau,Maul,30,Danarak's Divinity,
+set,184,Danarak's Wrap,xui,Ghost Armor,30,Danarak's Divinity,
+set,185,Horns of Power,dr8,Hunter's Guise,45,Merlin's Legacy,
+set,186,Keeper of the Fire,9cr,Dimensional Blade,45,Merlin's Legacy,
+set,187,Robes of Earth and Water,xcl,Tigulated Mail,45,Merlin's Legacy,
+set,188,Sandals of the Wind,xvb,Sharkskin Boots,45,Merlin's Legacy,
+set,189,Terra's Clairvoyance,drb,Blood Spirit,55,Nature's Passage,
+set,190,Fyrre's Deception,9gm,Martel de Fer,55,Nature's Passage,
+set,191,Gaia's Carapace,yui,Padded Armor,55,Nature's Passage,
+set,192,Persephone's Heel,xhb,War Boots,55,Nature's Passage,
+set,193,Jaheira's Force,dam,Druidic Necklace,60,Jaheira's Tenacity,
+set,194,Jaheira's Volition,ylt,Plated Cuirass,60,Jaheira's Tenacity,
+set,195,Jaheira's Caress,yhg,Titan Gauntlets,60,Jaheira's Tenacity,
+set,196,Jaheira's Girdle,ztb,Battle Belt,60,Jaheira's Tenacity,
+set,197,Branch of the Ents,1ls,Mystic Staff,70,Nature's Rule,
+set,198,Hide of the Tarrasque,ytp,Archmage Plate,70,Nature's Rule,
+set,199,Claws of the Dragon,yig,Royal Guards,70,Nature's Rule,
+set,200,Rogue's Bow-N (merc only),sbw,Short Bow,10,Kashya's Survival Kit,
+set,201,Rogue's Suit-N (merc only),lea,Leather Armor,10,Kashya's Survival Kit,
+set,202,Rogue's Cap-N (merc only),skp,Skull Cap,10,Kashya's Survival Kit,
+set,203,Mercenary's Pike-N (merc only),spt,Spetum,15,Greiz's Desert Pride,
+set,204,Mercenary's Wraps-N (merc only),stu,Studded Leather,15,Greiz's Desert Pride,
+set,205,Mercenary's Shiek-N (merc only),hlm,Helm,15,Greiz's Desert Pride,
+set,206,Iron Wolf's Broad Sword-N (merc only),bsd,Broad Sword,20,Asheara's Iron Wolf Division,
+set,207,Iron Wolf's Robes-N (merc only),chn,Chain Mail,20,Asheara's Iron Wolf Division,
+set,208,Iron Wolf's Coif-N (merc only),ghm,Great Helm,20,Asheara's Iron Wolf Division,
+set,209,Iron Wolf's Guard-N (merc only),kit,Kite Shield,20,Asheara's Iron Wolf Division,
+set,210,Barbarian's Point-N (merc only),bsw,Bastard Sword,25,Qual-Kehk's Barbaric Gear,
+set,211,Barbarian's Shelter-N (merc only),spl,Splint Mail,25,Qual-Kehk's Barbaric Gear,
+set,212,Barbarian's Visage-N (merc only),ba3,Horned Helm,25,Qual-Kehk's Barbaric Gear,
+set,213,Rogue's Bow-NM (merc only),8sb,Edge Bow,30,Kashya's Survival Kit,
+set,214,Rogue's Suit-NM (merc only),xea,Serpentskin Armor,30,Kashya's Survival Kit,
+set,215,Rogue's Cap-NM (merc only),xkp,Sallet,30,Kashya's Survival Kit,
+set,216,Mercenary's Pike-NM (merc only),9st,Yari,35,Greiz's Desert Pride,
+set,217,Mercenary's Wraps-NM (merc only),xtu,Trellised Armor,35,Greiz's Desert Pride,
+set,218,Mercenary's Shiek-NM (merc only),xlm,Casque,35,Greiz's Desert Pride,
+set,219,Iron Wolf's Broad Sword-NM (merc only),9bs,Battle Sword,40,Asheara's Iron Wolf Division,
+set,220,Iron Wolf's Robes-NM (merc only),xhn,Mesh Armor,40,Asheara's Iron Wolf Division,
+set,221,Iron Wolf's Coif-NM (merc only),xhm,Winged Helm,40,Asheara's Iron Wolf Division,
+set,222,Iron Wolf's Guard-NM (merc only),xit,Dragon Shield,40,Asheara's Iron Wolf Division,
+set,223,Barbarian's Point-NM (merc only),9b9,Gothic Sword,45,Qual-Kehk's Barbaric Gear,
+set,224,Barbarian's Shelter-NM (merc only),xpl,Russet Armor,45,Qual-Kehk's Barbaric Gear,
+set,225,Barbarian's Visage-NM (merc only),ba8,Rage Mask,45,Qual-Kehk's Barbaric Gear,
+set,226,Rogue's Bow-H (merc only),1sb,Spiderwoven Bow,50,Kashya's Survival Kit,
+set,227,Rogue's Suit-H (merc only),yea,Viper Skin,50,Kashya's Survival Kit,
+set,228,Rogue's Cap-H (merc only),ykp,Fedora,50,Kashya's Survival Kit,
+set,229,Mercenary's Pike-H (merc only),0st,Ranseur,55,Greiz's Desert Pride,
+set,230,Mercenary's Wraps-H (merc only),ytu,Gemstoned Armor,55,Greiz's Desert Pride,
+set,231,Mercenary's Shiek-H (merc only),ylm,Guardian Helm,55,Greiz's Desert Pride,
+set,232,Iron Wolf's Broad Sword-H (merc only),0bs,Viking Sword,60,Asheara's Iron Wolf Division,
+set,233,Iron Wolf's Robes-H (merc only),yhn,Chain Shirt,60,Asheara's Iron Wolf Division,
+set,234,Iron Wolf's Coif-H (merc only),yhm,Tusk Helm,60,Asheara's Iron Wolf Division,
+set,235,Iron Wolf's Guard-H (merc only),yit,Military Shield,60,Asheara's Iron Wolf Division,
+set,236,Barbarian's Point-H (merc only),0b0,Dark Sword,65,Qual-Kehk's Barbaric Gear,
+set,237,Barbarian's Shelter-H (merc only),ypl,Demon Fleece,65,Qual-Kehk's Barbaric Gear,
+set,238,Barbarian's Visage-H (merc only),bad,Destroyer Helm,65,Qual-Kehk's Barbaric Gear,
+set,239,Cow King's Steel Horns,ydw,Dwarven Faceplate,75,Cow King's Steels,
+set,240,Cow King's Steel Hide,yar,Archaic Armor,75,Cow King's Steels,
+set,241,Cow King's Steel Hoofs,ybt,Phase Boots,75,Cow King's Steels,
+set,242,Tyrael's Halo,brs,Breast Plate,16,Tyrael's Sanctuary,
+set,243,Tyrael's Virtue,crs,Crystal Sword,16,Tyrael's Sanctuary,
+set,244,Tyrael's Faith,spk,Spiked Shield,16,Tyrael's Sanctuary,
+set,245,Bane's Oathmaker,kri,Kris,1,Bane's Garments,
+set,246,Bane's Wraithskin,hla,Hard Leather Armor,1,Bane's Garments,
+set,247,Bane's Authority,vbl,Light Belt,1,Bane's Garments,
+set,248,The Dark One's Slicer,vob,Void Blade,16,The Darkened Veil,
+set,249,The Dark One's Lie,wa3,Codex,16,The Darkened Veil,
+set,250,The Dark One's Shroud,rob,Robe,16,The Darkened Veil,
+set,251,The Dark One's Mind,hlm,Helm,16,The Darkened Veil,
+set,252,Blade of the Kingslayer,nsw,Nether Sword,30,Regalia of Endless Despair,
+set,253,The Secret of Grief,rin,Ring,30,Regalia of Endless Despair,
+set,254,The Future Undone,xmg,Heavy Bracers,30,Regalia of Endless Despair,
+set,255,Book of the Dead,wa8,Dark Codex,45,Secrets of the Black Magic,
+set,256,Phylactery,amu,Amulet,45,Secrets of the Black Magic,
+set,257,Rathma's Command,8cs,Cedar Staff,45,Secrets of the Black Magic,
+set,258,Dark Carapace,xul,Chaos Armor,45,Secrets of the Black Magic,
+set,259,Power of the Void,9yw,Petrified Wand,55,Legacy of the Void,
+set,260,Knowledge of the Void,wab,Forgotten Volume,55,Legacy of the Void,
+set,261,Memory of the Void,ci1,Coronet,55,Legacy of the Void,
+set,262,Harness of the Void,zlb,Demonhide Sash,55,Legacy of the Void,
+set,263,Bible of the Abyssal Dominion,wae,Blasphemous Compendium,60,Abyssal Dominion,
+set,264,Eye of the Abyssal Dominion,wrn,Warlock's Sigil,60,Abyssal Dominion,
+set,265,March of the Abyssal Dominion,yhb,Titan Boots,60,Abyssal Dominion,
+set,266,Harbinger of Ruin's Merciless Rule,abb,Abyssal Blade,60,Harbinger of Ruin,
+set,267,Harbinger of Ruin's Smoldering Gemstone,wam,Warlock's Pendant,70,Harbinger of Ruin,
+set,268,Harbinger of Ruin's Inevitable Conquest,yms,Herculean Wrap,70,Harbinger of Ruin,
+set,269,Harbinger of Ruin's Soul Compendium,waf,Blasphemous Grimoire,70,Harbinger of Ruin,
