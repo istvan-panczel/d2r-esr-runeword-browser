@@ -1118,7 +1118,8 @@ picker and the guide's `::dstone-caps` table read it.
   Spider's Silk on a weapon 500, Dragon Stone on a weapon 120). No cap: a row without a condition and no own blockers (Forging Hammer on a weapon), a
   condition other than op 15 / 16 (the elemental half-point counter) or no stop within 1,000 uses (warned). The
   integrity test reads the page's "(Capped at N)" per D-Stoning row (75 rows in four sections) and allows one step of
-  difference; the known disagreements (ESR 3.3.03) are listed there: weapon Forging Hammer (no cap condition, page 500%) and Holy
+  difference; the known disagreements (ESR 3.3.03) are listed there: weapon Forging Hammer (no cap condition, page 500%; the mod
+  author confirmed 500% is the absolute cap, set by save bits, and the guide's `::dstone-caps` table prints it) and Holy
   Symbol on armor, helmet and shield (100 all resists, page 150).
 - **Skipped** (`craftingRowsSkipped`; not warned unless said): jewel and charm rows (not equipment slots); rows for a
   weapon subtype, which the builds slot cannot tell apart from other weapons: the wand and staff rune forging rows, the

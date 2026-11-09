@@ -161,6 +161,27 @@ describe('dstone-caps', () => {
     expect(resolve('dstone-caps', null, some)).toMatchObject({ rows: [['Dragon Stone', 'Shield, Belt', 'y']] });
   });
 
+  it('shows the 500% limit for enhanced damage on a weapon, which no recipe row caps', () => {
+    const uncapped: GuideContext = {
+      ...fixtureContext(),
+      crafting: {
+        stacking: [
+          {
+            kind: 'dstone',
+            material: { code: 'hh2', label: 'Forging Hammer' },
+            bySlot: { weapon: step(['+12% Enhanced Damage']), shield: step(['+12% Enhanced Damage']) },
+          },
+        ],
+      },
+    };
+    expect(resolve('dstone-caps', null, uncapped)).toMatchObject({
+      rows: [
+        ['Forging Hammer', 'Weapon', "+500% Enhanced Damage (the game's absolute limit)"],
+        ['Forging Hammer', 'Shield', '+12% Enhanced Damage per use, no cap'],
+      ],
+    });
+  });
+
   it('needs crafting.json and takes no argument', () => {
     expect(resolve('dstone-caps', null, { ...fixtureContext(), crafting: null })).toHaveProperty('error');
     expect(resolve('dstone-caps', 'weapon', ctx())).toHaveProperty('error');

@@ -30,6 +30,17 @@ function slotsText(slots: readonly CraftingSlot[]): string {
   return labels.join(', ');
 }
 
+/**
+ * A D-stoning with no cap in its recipe rows. Enhanced damage on a weapon still stops: the mod author confirmed (2026-11-09)
+ * that the stat's save bits make 500% the absolute cap.
+ */
+function noRecipeCapText(lines: readonly string[], slot: CraftingSlot): string {
+  if (slot === 'weapon' && lines.length === 1 && lines[0].endsWith('% Enhanced Damage')) {
+    return "+500% Enhanced Damage (the game's absolute limit)";
+  }
+  return `${lines.join(', ')} per use, no cap`;
+}
+
 export const resolveDstoneCaps: DirectiveResolver = (arg, ctx) => {
   if (arg !== null) return { error: '::dstone-caps takes no argument' };
   if (ctx.crafting === null) return { error: '::dstone-caps needs crafting.json (run npm run game-data:generate)' };
@@ -41,7 +52,7 @@ export const resolveDstoneCaps: DirectiveResolver = (arg, ctx) => {
     for (const slot of CRAFTING_SLOTS) {
       const step = option.bySlot[slot];
       if (step === undefined) continue;
-      const cap = step.capLines === undefined ? `${step.lines.join(', ')} per use, no cap` : step.capLines.join(', ');
+      const cap = step.capLines === undefined ? noRecipeCapText(step.lines, slot) : step.capLines.join(', ');
       slotsByCap.set(cap, [...(slotsByCap.get(cap) ?? []), slot]);
     }
     for (const [cap, slots] of slotsByCap) rows.push([ingredients, slotsText(slots), cap]);
