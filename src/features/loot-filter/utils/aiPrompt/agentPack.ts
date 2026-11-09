@@ -24,7 +24,7 @@ function sectionCommentsSection(): string[] {
   return [
     '## Section comments',
     '',
-    'Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comments anywhere, so sections need no format change and the rule numbers (the `R###` numbers the plugin log reports) stay the same. The app shows them as foldable headings and notes in its Rules list.',
+    'Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comments anywhere, so sections need no format change and the rule numbers (the `R###` numbers the plugin log reports) stay the same. The app shows them as foldable headings and notes in its Rules and Styles lists, where a person can also add, rename, move and remove them, so keep to these lines when you write them.',
     '',
     '| Line in the file | What it is |',
     '| --- | --- |',

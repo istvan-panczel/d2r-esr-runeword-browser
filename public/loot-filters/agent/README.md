@@ -32,7 +32,7 @@ Players import a filter in the ESR launcher (Loot Filter tab, Import). Own filte
 
 ## Section comments
 
-Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comments anywhere, so sections need no format change and the rule numbers (the `R###` numbers the plugin log reports) stay the same. The app shows them as foldable headings and notes in its Rules list.
+Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comments anywhere, so sections need no format change and the rule numbers (the `R###` numbers the plugin log reports) stay the same. The app shows them as foldable headings and notes in its Rules and Styles lists, where a person can also add, rename, move and remove them, so keep to these lines when you write them.
 
 | Line in the file | What it is |
 | --- | --- |
@@ -96,4 +96,4 @@ The tables are the full game data: every item code, type, stat, unique and set r
 Complete filters to read (the app bundles them as templates):
 
 - Sully's QoL Filter v0.7.0: The filter the ESR launcher gives every player, bundled with this site. Start from it to change its rules. https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/sullys-qol-filter.json
-- Example filter (with explanations) v2.1.0: A small filter to learn from: every rule says in its comment what it does and what to change. https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/example-filter.json
+- Example filter (with explanations) v2.2.0: A small filter to learn from: every rule says in its comment what it does and what to change. https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/example-filter.json
