@@ -50,12 +50,12 @@ const lucion: MapBoss = {
 const FACTS: Record<string, MapBossFacts> = {
   herald: {
     fight: [{ text: 'meteors', source: 'endgame' }],
-    page: { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 }, terror: 'always' },
+    page: { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 } },
   },
   meph: {
     fight: [],
     damage: { text: 'Pick up a light orb', source: 'endgame' },
-    page: { key: { chance: 50, set: true }, items: ["Mephisto's Demonic Horn"], terror: 'none' },
+    page: { key: { chance: 50, set: true }, items: ["Mephisto's Demonic Horn"] },
   },
 };
 
@@ -135,10 +135,8 @@ describe('zoneBossSummary', () => {
       ['Alien Artefact', '2%', PERK_DROPS['Alien Artefact']],
       ['Pandemonium key', '50%', 'a whole key set, 50%'],
     ]);
-    expect(card?.terror).toBe(
-      "the files list +3 Worldstone Shards, without the Mephisto's Demonic Brain roll; the official page says tier 5 bosses drop none (an engine limit)"
-    );
-    expect(card?.terrorUnconfirmed).toBe(true);
+    expect(card?.terror).toBe("+3 Worldstone Shards, without the Mephisto's Demonic Brain roll");
+    expect(card?.terrorUnconfirmed).toBe(false);
   });
 
   it('marks a boss without hand-written facts and a boss without a terrorized table', () => {
@@ -152,9 +150,7 @@ describe('zoneBossSummary', () => {
 
   it('names a page item only against the one file item the page does not name', () => {
     const card = (rewards: MapBoss['rewards'], items: readonly string[]) =>
-      bossCard({ ...mephisto, rewards }, { fight: [], page: { items, terror: 'none' } }, true, (id) => id).rewards.map(
-        (line) => line.official
-      );
+      bossCard({ ...mephisto, rewards }, { fight: [], page: { items } }, true, (id) => id).rewards.map((line) => line.official);
     const brain: MapBossReward = { kind: 'item', label: "Mephisto's Demonic Brain", chance: [1, 1] };
     const artefact: MapBossReward = { kind: 'item', label: 'Alien Artefact', chance: [0.02, 0.02] };
     const skull: MapBossReward = { kind: 'item', label: "Rathma's Eternal Skull", chance: [1, 1] };

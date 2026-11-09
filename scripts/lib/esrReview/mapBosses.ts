@@ -28,8 +28,8 @@ export function mapBossesOf(areas: Readonly<Record<string, unknown>> | null): Ma
 }
 
 /**
- * One line per place the files and the page disagree: a reward whose chance or tier differs from `page`, a terrorized
- * line the page contradicts, and a boss without a hand-written entry.
+ * One line per place the files and the page disagree: a reward whose chance or tier differs from `page`, a boss without a
+ * terrorized loot table, and a boss without a hand-written entry.
  */
 export function mapBossPageLines<F>(bosses: readonly MapBoss[], facts: Readonly<Record<string, F>>, bossCard: BossCardOf<F>): string[] {
   const names = new Map(bosses.map((boss) => [boss.id, boss.name]));

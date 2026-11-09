@@ -97,10 +97,10 @@ describe('foldJewelVariants', () => {
     const folded = foldJewelVariants(runewords);
     const entries = (name: string) => folded.filter((entry) => entry.name === name);
 
-    it('folds 409 rows into 387 entries; runewords without jewels stay as they are', () => {
+    it('folds 409 rows into 386 entries; runewords without jewels stay as they are', () => {
       expect(runewords).toHaveLength(409);
-      // 386 in ESR 3.2; ESR 3.3 gives Gold Scarab's no-jewel row its own bonuses (+25% instead of +50% item quantity)
-      expect(folded).toHaveLength(387);
+      // ESR 3.3's docs page had 387 (Gold Scarab +50% with jewels); the 3.3.03 page prints +25% on every row, as runes.txt always did
+      expect(folded).toHaveLength(386);
       const jewelNames = new Set(runewords.filter((entry) => entry.jewelInfo !== undefined).map((entry) => entry.name));
       expect(folded.filter((entry) => !jewelNames.has(entry.name))).toEqual(runewords.filter((entry) => !jewelNames.has(entry.name)));
     });
@@ -141,14 +141,10 @@ describe('foldJewelVariants', () => {
       expect(new Set(shinigami.map((entry) => entry.allowedItems.join())).size).toBe(2);
     });
 
-    it('splits Gold Scarab into the 4-socket recipe (+25% item quantity) and the 5-6 one with 1 required jewel (+50%)', () => {
+    it('shows Gold Scarab as one 4-6 card with +25% item quantity (ESR 3.3.03 docs page)', () => {
       const scarab = entries('Gold Scarab');
-      expect(scarab.map(summary)).toEqual([
-        { sockets: '4', jewelInfo: undefined },
-        { sockets: '5-6', jewelInfo: '(1-2) Jewels' },
-      ]);
+      expect(scarab.map(summary)).toEqual([{ sockets: '4-6', jewelInfo: '(0-2) Jewels' }]);
       expect(scarab[0]?.affixes.map((entry) => entry.rawText)).toContain('+25% Increased Quantity of Items Found');
-      expect(scarab[1]?.affixes.map((entry) => entry.rawText)).toContain('+50% Increased Quantity of Items Found');
     });
 
     it("keeps the lowest variant's socketable bonus groups (labels narrow with the socket count: no 4-socket wands)", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CubeMod, CubeRow } from './cubeRows.ts';
-import { dstoneBlockers, dstoneCap, MAX_DSTONE_USES } from './dstoneCaps.ts';
+import { dstoneBlockers, dstoneCap, isCapMod, MAX_DSTONE_USES } from './dstoneCaps.ts';
 
 type Mod = [mod: string, min: number];
 
@@ -21,6 +21,53 @@ const STATS: Record<string, number[]> = { 'swing2-cap': [584], 'dmg-undead-cap':
 const statIdsOf = (property: string) => STATS[property] ?? [];
 
 describe('dstoneCap', () => {
+  describe('ESR 3.3.03: void blockers and a last row without a condition', () => {
+    const blocker = (param: number, value: number, line: number, inputs = ['weap', 'ppp']): CubeRow => ({
+      ...row([], [15, param, value], line),
+      inputs,
+      outputs: [{ spec: 'void', mods: [] }],
+    });
+    const open = row(
+      [
+        ['ac%', 10],
+        ['swing2-cap', 10],
+      ],
+      null,
+      10
+    );
+
+    it('stops an unconditional row on its own blockers', () => {
+      expect(dstoneCap([open], bonusMods, statIdsOf, [blocker(584, 200, 3)])).toEqual({
+        kind: 'capped',
+        cap: { uses: 20, mods: [{ mod: 'ac%', param: '', min: 200, max: 200 }] },
+      });
+    });
+
+    it('stays uncapped without own blockers: the same first input and ingredients, earlier in the file', () => {
+      for (const other of [blocker(584, 200, 3, ['armo', 'ppp']), blocker(584, 200, 3, ['weap', 'vvv']), blocker(584, 200, 20)])
+        expect(dstoneCap([open], bonusMods, statIdsOf, [other])).toEqual({ kind: 'uncapped' });
+    });
+
+    it('raises a numbered cap group by its own step', () => {
+      const group = row(
+        [
+          ['extra-ele', 1],
+          ['extra-ele-cap-group-2', 1],
+        ],
+        [16, 827, 3],
+        10
+      );
+      const stats = (property: string) => (property === 'extra-ele-cap-group-2' ? [584] : []);
+      const noCapMods = (entry: CubeRow) => (entry.outputs[0]?.mods ?? []).filter((mod) => !isCapMod(mod.mod));
+      expect(dstoneCap([group], noCapMods, stats, [blocker(584, 6, 3)])).toMatchObject({
+        kind: 'capped',
+        cap: { uses: 3, mods: [{ mod: 'extra-ele', min: 3 }] },
+      });
+      expect(['swing2-cap', 'str-dex-enr-cap-group', 'extra-ele-cap-group-3'].every(isCapMod)).toBe(true);
+      expect(isCapMod('extra-ele')).toBe(false);
+    });
+  });
+
   it('stops on an earlier void blocker when the row condition never turns false (ESR 3.3.02 elemental Void Shard)', () => {
     const blocker = (param: number, value: number, line: number, inputs = ['weap', 'ppp']): CubeRow => ({
       ...row([], [15, param, value], line),

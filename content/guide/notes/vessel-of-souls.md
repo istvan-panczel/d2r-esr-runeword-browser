@@ -18,7 +18,7 @@ The :term[Vessel of Souls] is a mythical unique amulet that drops in Endgame Map
 
 Instead you cube it with five :term[Organ]s at a time (some recipes take a Flag as one of the five). Each recipe adds a bonus and spends some of the vessel's souls. The recipes come in four tiers that must be finished in order; the official page lists which organs give which bonus. Every recipe per tier with its organs, soul cost and limits: [Vessel of Souls recipes](page:/enhance?tab=vessel).
 
-Once the souls are spent, cube it with three Blemished gems to turn it into one of several mythical weapons. It keeps every bonus and gets extra tinkering points ([[tinkering]]). It is the only unique an Orb of Anointment works on, and it cannot be corrupted while souls remain ([[corruption-anointment]]).
+Once the souls are spent, cube it with three Blemished gems to turn it into one of several mythical weapons. It keeps every bonus and gets extra tinkering points ([[tinkering]]). It is the only unique an Orb of Anointment works on (the amulet only stores the bonus; you get it when you transform it into a weapon), and it cannot be corrupted while souls remain ([[corruption-anointment]]).
 
 ::recipes[vessel-transform]
 

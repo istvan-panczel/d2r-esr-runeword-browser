@@ -589,7 +589,7 @@ describe('committed game-data bundles', () => {
     expect(affixes.find((affix) => affix.kind === 'p' && affix.id === 892)?.layers).toContainEqual({ stat: 188, param: 56 });
   });
 
-  it('contain the corruption outcomes per slot with the computed rates (ESR 3.2.24)', () => {
+  it('contain the corruption outcomes per slot with the computed rates (ESR 3.3.03)', () => {
     const { corruptionSlots, corruptionOutcomes } = enhance;
     expect(corruptionSlots.map((slot) => slot.slot)).toEqual([
       'weapon',
@@ -613,10 +613,12 @@ describe('committed game-data bundles', () => {
       ).toHaveLength(slot.outcomes);
       expect(slot.outcomes + slot.brick.rolls, slot.slot).toBe(slot.rollRange);
       expect(slot.successRate, slot.slot).toBeCloseTo(slot.slot === 'charm' ? 2 / 3 : 0.75);
-      expect(slot.qualities, slot.slot).not.toContain('mag');
     }
+    // ESR 3.3.03: one shared pool per slot for every quality, magic included (unique charms stay unique-only)
+    for (const slot of corruptionSlots.filter((entry) => entry.slot !== 'charm'))
+      expect(slot.qualities, slot.slot).toEqual(['uni', 'set', 'rar', 'crf', 'mag', 'hiq', 'nor', 'low']);
     expect(corruptionSlots.find((slot) => slot.slot === 'weapon')).toMatchObject({ outcomes: 30, rollRange: 40 });
-    expect(corruptionSlots.find((slot) => slot.slot === 'quiver')).toMatchObject({ outcomes: 30, qualities: ['uni', 'rar', 'crf'] });
+    expect(corruptionSlots.find((slot) => slot.slot === 'quiver')).toMatchObject({ outcomes: 30, rollRange: 40 });
     expect(corruptionSlots.find((slot) => slot.slot === 'charm')).toMatchObject({ outcomes: 20, qualities: ['uni'] });
     for (const outcome of corruptionOutcomes) {
       expect(outcome.lines.length, `${outcome.slot} ${String(outcome.roll)}`).toBeGreaterThan(0);
@@ -628,7 +630,8 @@ describe('committed game-data bundles', () => {
   it('contain the anointment pools and rules (ESR 3.3: one pool per item type)', () => {
     const pool = (name: string) => enhance.anointmentOutcomes.filter((outcome) => outcome.pool === name);
     expect(pool('charm')).toHaveLength(30);
-    expect(pool('vessel')).toHaveLength(178);
+    // ESR 3.3.03: no Vessel pool; the anointment is stored and rolled on the mythical weapon
+    expect(pool('vessel')).toHaveLength(0);
     // cubemain 3.3: 63 "Add Anointment Dummy Stat - <type>" rows, 4,793 outcomes ("Orb of Anointment now respects the
     // item type it anoints"); 3.2.24 had one pool per slot (weapon 179, shield 58, helm 96 …)
     expect(enhance.anointmentSlots).toHaveLength(63);
@@ -676,11 +679,8 @@ describe('committed game-data bundles', () => {
       }
     }
     expect(enhance.anointment).toMatchObject({ blockedQualities: ['uni'], noRunewords: true });
-    expect(enhance.vesselRecipes.find((recipe) => recipe.anointmentRolls !== undefined)).toMatchObject({
-      tier: 4,
-      soulCost: 5,
-      anointmentRolls: 178,
-    });
+    expect(enhance.vesselRecipes.find((recipe) => recipe.storesAnointment === true)).toMatchObject({ tier: 4, soulCost: 5 });
+    expect(enhance.vesselRecipes.some((recipe) => recipe.anointmentRolls !== undefined)).toBe(false);
   });
 
   it('contain the Standard of Heroes upgrades, one per unique charm (ESR 3.3: 12)', () => {
@@ -1164,8 +1164,8 @@ describe('committed game-data bundles', () => {
       lines: ['+5% Increased Attack Speed'],
       steps: [5, 4, 3, 2, 1],
       levelReq: 2,
-      cap: 121,
-      capLines: ['+121% Increased Attack Speed'],
+      cap: 120,
+      capLines: ['+120% Increased Attack Speed'],
     });
     const melds = stacking.filter((option) => option.kind === 'meld');
     expect(melds).toHaveLength(8);
@@ -1184,16 +1184,16 @@ describe('committed game-data bundles', () => {
     }
   });
 
-  it('cap every D-stoning but Forging Hammer on a weapon, counting only what D-stoning adds (ESR 3.2.24)', () => {
+  it('cap every D-stoning but Forging Hammer on a weapon, counting only what D-stoning adds (ESR 3.3.03)', () => {
     const dstone = (material: string, switchItem?: string) =>
       crafting.stacking.find(
         (entry) => entry.kind === 'dstone' && entry.material.code === material && entry.switchItem?.code === switchItem
       );
-    // ≤ 116 +5 … ≤ 120 +1: 115 → 120 → 121
-    expect(dstone('ppp')?.bySlot.weapon).toMatchObject({ cap: 121, capLines: ['+121% Increased Attack Speed'] });
+    // ≤ 115 +5 … ≤ 119 +1: 120 → stops at 120
+    expect(dstone('ppp')?.bySlot.weapon).toMatchObject({ cap: 120, capLines: ['+120% Increased Attack Speed'] });
     expect(dstone('ppp')?.bySlot.armor).toMatchObject({ cap: 120 });
-    // +12% while at most 500: 492 → 504
-    expect(dstone('sss')?.bySlot.weapon).toMatchObject({ cap: 504, capLines: ['+504% Bonus to Attack Rating'] });
+    // +12 while < 500, +8 at 492: 500
+    expect(dstone('sss')?.bySlot.weapon).toMatchObject({ cap: 500, capLines: ['+500% Bonus to Attack Rating'] });
     expect(dstone('hly')?.bySlot.armor).toMatchObject({ cap: 100, capLines: ['All Resists +100'] });
     expect(dstone('ttt', 'key')?.bySlot.helmet).toMatchObject({ cap: 256, capLines: ['+256 to Life'] });
     // The str-dex-enr-cap-group property group raises the shared cap stat
@@ -1210,7 +1210,7 @@ describe('committed game-data bundles', () => {
     expect(uncapped).toEqual(['hh2 weapon']);
     // The cube page's D-stoning rows carry the same caps
     const weaponDragonStone = cube.rows.find((row) => row.family === 'dstoning' && row.inputs.join(' + ') === 'Weapon + Dragon Stone');
-    expect(weaponDragonStone?.dstoneCaps).toEqual(['+121% Increased Attack Speed']);
+    expect(weaponDragonStone?.dstoneCaps).toEqual(['+120% Increased Attack Speed']);
   });
 
   it('list the tier of every weapon and armor row, non-spawnable unique bases and mythicals included (ESR 3.2.24)', () => {
@@ -1550,7 +1550,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     }
   });
 
-  it('caps the D-stonings like the official D-Stoning Caps, within one step (ESR 3.2.24)', () => {
+  it('caps the D-stonings like the official D-Stoning Caps, within one step (ESR 3.3.03)', () => {
     const docCaps = readDstoneDocCaps(resolve(ESR_DIR, 'docs/Eastern Sun Resurrected Cube Recipes.html'));
     // 22 weapon, 16 torso / helm / shield, 16 gloves / belt / boots and 21 ring / amulet rows
     expect(docCaps).toHaveLength(75);
@@ -1573,18 +1573,12 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
           mismatches.push(`${name} on ${slot}: ${step.cap === undefined ? 'no cap' : String(step.cap)}, page ${String(entry.cap)}`);
       }
     }
-    // Where the rows disagree with the page (ESR 3.2.24); the bundle follows the rows
+    // Where the rows disagree with the page (ESR 3.3.03); the bundle follows the rows
     expect(mismatches).toEqual([
       'Weapon: Forging Hammer on weapon: no cap, page 500',
-      'Weapon: Blackmoor + Key on weapon: 60, page 150',
       'Torso/Helm/Shield: Holy Symbol on armor: 100, page 150',
       'Torso/Helm/Shield: Holy Symbol on helmet: 100, page 150',
       'Torso/Helm/Shield: Holy Symbol on shield: 100, page 150',
-      'Gloves/Belt/Boots: Holy Symbol on gloves: 100, page 150',
-      'Gloves/Belt/Boots: Holy Symbol on belt: 100, page 150',
-      'Gloves/Belt/Boots: Holy Symbol on boots: 100, page 150',
-      'Ring/Amulet: Forging Hammer + Stamina Potion on ring: 300, page 400',
-      'Ring/Amulet: Forging Hammer + Stamina Potion on amulet: 300, page 400',
     ]);
   });
 
@@ -2030,12 +2024,10 @@ describe('committed masteries bundle (ESR 3.3)', () => {
   });
 
   it('records the known string and row slips as warnings', () => {
-    // ESR 3.3 fixed the 3.2.24 Celestial Blade remove row (0be) and u28desc (Maiden Pike)
+    // ESR 3.3 fixed the 3.2.24 Celestial Blade remove row (0be) and u28desc (Maiden Pike), ESR 3.3.03 the awaken row (0bs → 0be)
     expect(manifest.warnings.filter((warning) => warning.startsWith('masteries:'))).toEqual([
       'masteries: Wretched Scythe (weapon-mastery-wretched-scythe): mod total-magic-resist -100 has no item text; shown as "-100% Magic Resist (no item line; why your magic resist is always 0)"',
       'masteries: u39desc (Claw, weapon-mastery-claws-2) names Crushed Gem, Chipped Skull, Anvil Stone; the rows take Dragon Stone, Anvil Stone, Chipped Skull',
-      'masteries: cubemain line 2380 "Awaken Weapon Mastery Token - Celestial Blade" takes "0bs", which cannot get this mastery',
-      'masteries: Blessed Edge (weapon-mastery-blessed-edge): no awaken row takes 0be',
       // The text and the skills.txt formulas disagree; the page keeps to the text, these go to esr:review
       'masteries: Oak Branch (weapon-mastery-oak-branch): the formulas of Twin Fangs, Ferocious Bite, Thunderclaws read weapon_mastery_oak_branch, the text does not name them',
       'masteries: Oak Branch (weapon-mastery-oak-branch): the text names Contagion, whose formulas do not read weapon_mastery_oak_branch',
@@ -2208,12 +2200,8 @@ describe('committed specializations bundle (ESR 3.3)', () => {
       'Power Overwhelming',
     ]);
     for (const { perk } of perks) for (const link of perk.cube ?? []) expect(familyIds.has(link.family), link.family).toBe(true);
-    // ESR 3.3.02 changed these two chances (strings and treasure classes) without regenerating docs/specializations.htm
-    // (50% / 15%): this fails when the page catches up; everything else on the page agrees with the files
-    expect(specializations.pageDiffs.map((diff) => diff.subject)).toEqual([
-      'Alchemist › Transmutation description',
-      'Alchemist › Unstable Mixtures description',
-    ]);
+    // ESR 3.3.03 regenerated docs/specializations.htm (Transmutation 25%, Unstable Mixtures 10%): the page agrees with the files
+    expect(specializations.pageDiffs.map((diff) => diff.subject)).toEqual([]);
   });
 
   it('records the perks the files do not back as warnings', () => {

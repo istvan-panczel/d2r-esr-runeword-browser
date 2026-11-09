@@ -181,8 +181,9 @@ describeWithFixture('item text of the stash fixture', (fixture) => {
     );
     expect(total).toBeGreaterThan(1000);
     // 94 since the ESR 3.3 save (2026-11-07): many owned uniques dropped before 3.3 and keep their old rolls
-    // (e.g. "Weapon Mastery Applied" on the old stat 399), while the docs pages show the reworked 3.3 uniques
-    expect(share).toBeGreaterThanOrEqual(94);
+    // (e.g. "Weapon Mastery Applied" on the old stat 399), while the docs pages show the reworked 3.3 uniques;
+    // 93.5 since ESR 3.3.03 reworked 10 more uniques (Requier's Skill, Wizardspike, ...) and the save predates that
+    expect(share).toBeGreaterThanOrEqual(93.5);
   });
 
   it.skipIf(!existsSync(RUNEWORDS))('writes the runeword lines like runewords.json (numbers masked)', () => {

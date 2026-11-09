@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { ENHANCE_QUALITIES } from '../engine/schema.ts';
 import { buildEnhanceBundle, type EnhanceContext } from './bundleEnhance.ts';
 import { parseTsv } from './tsv.ts';
 
@@ -69,6 +70,8 @@ const NAMES: Record<string, string> = {
   m21: 'Mythical Razor Axe',
   lcha: 'Grand Charm',
   ocha: 'Odd Charm',
+  cm4: 'Odd Charm',
+  cm6: 'Odd Charm',
 };
 
 const ctx: EnhanceContext = {
@@ -82,6 +85,9 @@ const ctx: EnhanceContext = {
         ['jave', 'weap'],
         ['ajav', 'jave'],
         ['circ', 'helm'],
+        ['cm4', 'char'],
+        ['cm6', 'char'],
+        ['shld', 'armo'],
       ] as const
     ).some(([own, of]) => own === code && of === parent),
   // Two ESR 3.3 perks (itemstatcost ids): Sanctimonious and Hallowed Accessories
@@ -175,6 +181,62 @@ describe('buildEnhanceBundle: corruption', () => {
     expect(charm).toMatchObject({ outcomes: 2, rollRange: 3 });
     expect(charm?.successRate).toBeCloseTo(2 / 3);
     expect(charm?.brick.results).toContainEqual({ quality: 'uni', type: 'ocha', typeName: 'Odd Charm', result: 'Rare Grand Charm' });
+  });
+
+  it('lists a subtype brick once when two item codes share its name and result', () => {
+    const charm = build([
+      { cond: [16, 504, 0], inputs: ['char,uni', 'wss'], output: 'useitem', mods: [['corrupted_dummy', 1, 3]] },
+      corrupt('char,uni', 1, [['dmg%', 10, 20]]),
+      corrupt('char,uni', 2, [['str', 1, 2]]),
+      corrupt('cm6,uni', 3, [], 'cm6,rar'),
+      corrupt('cm4,uni', 3, [], 'cm4,rar'),
+      corrupt('char,uni', 3, [], 'usetype,rar'),
+    ]).bundle.corruptionSlots.find((slot) => slot.slot === 'charm');
+    expect(charm?.brick.results.filter((result) => result.typeName === 'Odd Charm')).toEqual([
+      { quality: 'uni', type: 'cm6', typeName: 'Odd Charm', result: 'Rare Odd Charm' },
+    ]);
+  });
+
+  describe('ESR 3.3.03: a quality-less roll row and an op 15 brick row', () => {
+    const brick = (input: string, value: number): Row => ({ ...corrupt(input, value, [], 'usetype,rar'), cond: [15, 504, value] });
+    const { bundle: wide, warnings: wideWarnings } = build([
+      { cond: [16, 504, 0], inputs: ['weap,nru', 'wss'], output: 'useitem', mods: [['corrupted_dummy', 1, 4]] },
+      { cond: [16, 504, 0], inputs: ['armo,nru', 'wss'], output: 'useitem', mods: [['corrupted_dummy', 1, 4]] },
+      corrupt('weap,nru', 1, [['dmg%', 150, 200]]),
+      corrupt('weap,nru', 2, [['att', 400, 500]]),
+      corrupt('weap,nru', 3, [['allskills', 1, 1]]),
+      brick('weap,nru', 4),
+      corrupt('shld,low,nru', 2, [['str', 1, 1]]),
+      corrupt('shld,nru', 1, [['dmg%', 10, 20]]),
+      corrupt('shld,nru', 2, [['str', 5, 5]]),
+      corrupt('shld,nru', 3, [['dex', 5, 5]]),
+      brick('shld,nru', 4),
+      // Corruption Legacy Roll: op 15, but `useitem`, so no brick
+      { cond: [15, 504, 41], inputs: ['shld,nru'], output: 'useitem', mods: [['corrupted_dummy', -40, -40]] },
+    ]);
+
+    it('reads the shared roll as every quality, joined to the slot cell, with the brick rate from the op 15 row', () => {
+      const weapon = wide.corruptionSlots.find((slot) => slot.slot === 'weapon');
+      expect(weapon).toMatchObject({
+        qualities: [...ENHANCE_QUALITIES],
+        rollOnlyQualities: [],
+        rollRange: 4,
+        outcomes: 3,
+        successRate: 0.75,
+        brick: { rolls: 1, rate: 0.25 },
+      });
+      expect(weapon?.brick.results).toHaveLength(ENHANCE_QUALITIES.length);
+      expect(new Set(weapon?.brick.results.map((result) => result.result))).toEqual(new Set(['Rare item of the same type']));
+      expect(wideWarnings).toEqual([]);
+    });
+
+    it('applies a quality-less roll of a parent type to its slots and keeps a quality row as a variant of its roll', () => {
+      const shield = wide.corruptionSlots.find((slot) => slot.slot === 'shield');
+      expect(shield).toMatchObject({ rollRange: 4, outcomes: 3, brick: { rolls: 1, rate: 0.25 } });
+      const second = wide.corruptionOutcomes.find((outcome) => outcome.slot === 'shield' && outcome.roll === 2);
+      expect(second?.lines).toEqual(['str 5-5']);
+      expect(second?.variants).toEqual([{ qualities: ['low'], mods: [{ code: 'str', param: null, min: 1, max: 1 }], lines: ['str 1-1'] }]);
+    });
   });
 
   it('derives the repeatable-corruption note from a named item with its own roll and an op=15 blocker', () => {
@@ -331,6 +393,23 @@ describe('buildEnhanceBundle: Vessel of Souls', () => {
       soulCost: 10,
     });
     expect(bundle.vesselRecipes.at(-1)?.anointmentRolls).toBe(178);
+  });
+
+  it('flags a fixed anointment roll as stored instead of giving a roll count (ESR 3.3.03)', () => {
+    const stored = build([
+      recipe(18, 90, 10, ['hrt'], [['str', 5, 10]], true),
+      {
+        cond: [18, 507, 100],
+        inputs: [V, 'um7'],
+        output: 'useitem',
+        mods: [
+          ['anointed_dummy', 200, 200],
+          ['soul-counter', -10, -10],
+        ],
+      },
+    ]).bundle.vesselRecipes.at(-1);
+    expect(stored?.storesAnointment).toBe(true);
+    expect(stored?.anointmentRolls).toBeUndefined();
   });
 
   it('joins a cap row on the same materials and one of the recipe stats', () => {

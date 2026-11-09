@@ -34,9 +34,9 @@ export interface BossCard {
   readonly uber: readonly CampaignNote[];
   readonly rewards: readonly BossRewardLine[];
   readonly otherRolls: number;
-  /** "+2 Worldstone Shards"; tier 5: the files' figure next to the page's "none (engine limit)" */
+  /** "+2 Worldstone Shards" */
   readonly terror: string;
-  /** The terrorized line is not settled (the files and the page disagree on runtime behaviour) */
+  /** The terrorized line is not settled (the boss has no terrorized loot table in the files) */
   readonly terrorUnconfirmed: boolean;
   /** Bosses of other zones whose loot table it uses (names) */
   readonly sameTableAs: readonly string[];
@@ -139,11 +139,9 @@ function rewardLines(boss: MapBoss, page: OfficialBossRewards | undefined): Boss
 
 /**
  * The terrorized line. A blank `TreasureClassDesecrated(H)` (none in ESR 3.3; Lucion's until 3.2.24) is just unset: the
- * boss likely drops his normal table. The
- * official page says tier 5 bosses drop no shards (an engine limit, runtime behaviour the files cannot show): then both
- * are given and the line is unconfirmed. The page's "always a shard" for tiers 1-4 is not a count, so not compared.
+ * boss likely drops his normal table.
  */
-function terrorLine(boss: MapBoss, page: OfficialBossRewards | undefined): { text: string; unconfirmed: boolean } {
+function terrorLine(boss: MapBoss): { text: string; unconfirmed: boolean } {
   if (boss.terrorShards === null) {
     return { text: 'monstats sets no terrorized loot table for this boss, so he likely drops his normal one', unconfirmed: true };
   }
@@ -151,12 +149,6 @@ function terrorLine(boss: MapBoss, page: OfficialBossRewards | undefined): { tex
   const shardText = `${String(shards)} Worldstone Shard${shards === 1 ? '' : 's'}`;
   const missing = boss.terrorMissing ?? [];
   const without = missing.length === 0 ? '' : `, without the ${missing.join(' or ')} roll`;
-  if (page?.terror === 'none' && shards > 0) {
-    return {
-      text: `the files list +${shardText}${without}; the official page says tier 5 bosses drop none (an engine limit)`,
-      unconfirmed: true,
-    };
-  }
   return { text: shards === 0 ? `no Worldstone Shards${without}` : `+${shardText}${without}`, unconfirmed: false };
 }
 
@@ -167,7 +159,7 @@ export function bossCard(
   nameOfBoss: (id: string) => string,
   zoneAreaIds: ReadonlySet<number> = new Set()
 ): BossCard {
-  const terror = terrorLine(boss, facts?.page);
+  const terror = terrorLine(boss);
   return {
     id: boss.id,
     name: boss.name,

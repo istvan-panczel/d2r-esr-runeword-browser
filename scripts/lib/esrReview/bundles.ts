@@ -215,6 +215,10 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     coupons: byField('code', named('code')),
     couponTiers: byField('type'),
     gemwords: VALUES,
+    // the .d2s `gf` reader: [stat id, CSvBits, ValShift]; a changed width or a new CSvBits stat misreads saves from that field on
+    characterStats: list((entry) => (Array.isArray(entry) ? `stat ${str(entry[0])}` : '')),
+    // by class byte: [name, first skills.txt row, skill count]; the index is in the key so a reorder shows
+    characterClasses: list((entry, index) => `${String(index)}:${Array.isArray(entry) ? str(entry[0]) : ''}`),
   },
   'stashnames.json': {
     bases: byField('code', named('code')),

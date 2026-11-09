@@ -33,10 +33,7 @@ export const ENHANCE_TAB_LABELS: Record<EnhanceTab, string> = {
 };
 
 /** Anointment pools that are not equipment slots */
-export const ANOINTMENT_EXTRA_POOLS = [
-  { pool: 'charm', label: 'Unique Charm' },
-  { pool: 'vessel', label: 'Vessel of Souls' },
-] as const;
+export const ANOINTMENT_EXTRA_POOLS = [{ pool: 'charm', label: 'Unique Charm' }] as const;
 
 /** Equipment slot of the anointment pools (`AnointmentSlot.group`) → label */
 const ANOINTMENT_GROUP_LABELS: Readonly<Partial<Record<string, string>>> = {

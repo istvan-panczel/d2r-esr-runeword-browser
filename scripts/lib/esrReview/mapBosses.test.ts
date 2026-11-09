@@ -19,7 +19,7 @@ const boss = (orb: number, terrorShards: number | null = 1): MapBoss => ({
 });
 
 const facts: Record<string, MapBossFacts> = {
-  hound: { fight: [], page: { orb: 5, map: { tier: 2, chance: 25 }, terror: 'always' } },
+  hound: { fight: [], page: { orb: 5, map: { tier: 2, chance: 25 } } },
 };
 
 describe('mapBossPageLines', () => {
@@ -31,10 +31,9 @@ describe('mapBossPageLines', () => {
     expect(mapBossPageLines([boss(0.1)], facts, bossCard)).toEqual(["Diablo's Hellhound: Orb of Anointment 10% in the files, page: 5%"]);
   });
 
-  it('names a terrorized line the page contradicts and a boss without facts', () => {
-    const tier5: Record<string, MapBossFacts> = { hound: { fight: [], page: { orb: 5, map: { tier: 2, chance: 25 }, terror: 'none' } } };
-    expect(mapBossPageLines([boss(0.05, 2)], tier5, bossCard)[0]).toMatch(
-      /^Diablo's Hellhound: terrorized: the files list \+2 Worldstone Shards/
+  it('names a boss without a terrorized table and a boss without facts', () => {
+    expect(mapBossPageLines([boss(0.05, null)], facts, bossCard)[0]).toMatch(
+      /^Diablo's Hellhound: terrorized: monstats sets no terrorized/
     );
     expect(mapBossPageLines([boss(0.05)], {}, bossCard)).toEqual(["Diablo's Hellhound (hound): no entry in data/mapBosses.ts"]);
   });

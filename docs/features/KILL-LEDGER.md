@@ -40,7 +40,7 @@ with three monsters (all value 60); the entry takes its name from the row's labe
 Differences go to `pageDiffs` (the files win, the page lists them under "Official page differs"): counts and window
 seconds as numbers, tier and boss ingredients, boss names (`bossKey` ignores spelling so rows still match, then the
 exact name is compared; group bosses have no file name to compare), bonus numbers (wording differs, numbers count).
-At ESR 3.3.02: "Lucion Whisper" and "Fallen Ancient Angel" (files: "Lucion's Whisper" and "Ancient Fallen Angel"), and
+At ESR 3.3.03: "Lucion Whisper" and "Fallen Ancient Angel" (files: "Lucion's Whisper" and "Ancient Fallen Angel"), and
 "Flawed Tourmaline" on the Eternal Ancients row (files: Flawed Tainted Tourmaline). The page has 17 boss rows and the
 files 21 (see the two-form bosses above); the bundle has 17 bosses, so the count does not differ.
 

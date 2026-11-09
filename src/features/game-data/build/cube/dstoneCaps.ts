@@ -8,7 +8,8 @@
  * condition holds, until none does. The result is what D-stoning can add in total, which can pass the condition value
  * by up to one step (Spider's Silk on a weapon: +12% while the total is at most 500, so it stops at +504%).
  * A D-stoning can also stop on `void` blockers (the elemental Void Shard rows, ESR 3.3.02: the rows' own condition reads
- * a stat nothing raises, and three blockers stop at 300 on the fire, lightning and cold caps).
+ * a stat nothing raises, and three blockers stop at 300 on the fire, lightning and cold caps). Since ESR 3.3.03 a chain can
+ * end on such blockers with a last row that has no condition at all (Blackmoor + Key on armor), which applies until they stop it.
  * Shared by crafting.json (`bundleCrafting.ts`) and the D-stoning family of cube.json (`bundleCube.ts`).
  */
 import type { CubeMod, CubeRow } from './cubeRows.ts';
@@ -16,9 +17,9 @@ import type { CubeMod, CubeRow } from './cubeRows.ts';
 /** A D-stoning that does not stop after this many uses has no usable cap */
 export const MAX_DSTONE_USES = 1000;
 
-/** The cap mods that raise the cap stat (`swing2-cap`, `str-dex-enr-cap-group`) */
+/** The cap mods that raise the cap stat (`swing2-cap`, `str-dex-enr-cap-group`, `extra-ele-cap-group-2`) */
 export function isCapMod(mod: string): boolean {
-  return /-cap(?:-group)?$/.test(mod);
+  return /-cap(?:-group(?:-\d+)?)?$/.test(mod);
 }
 
 /**
@@ -40,7 +41,7 @@ export interface DstoneCap {
 
 export type DstoneCapResult =
   | { kind: 'capped'; cap: DstoneCap }
-  /** A row without a condition: it always applies (Forging Hammer on a weapon) */
+  /** A row without a condition and no blocker to stop it: it always applies (Forging Hammer on a weapon) */
   | { kind: 'uncapped' }
   /** A condition that is not a cap (op other than 15 / 16), or no stop within MAX_DSTONE_USES */
   | { kind: 'unknown'; reason: string };
@@ -63,10 +64,14 @@ export function dstoneCap(
   statIdsOf: (property: string) => readonly number[],
   blockers: readonly CubeRow[] = []
 ): DstoneCapResult {
-  if (rows.length === 0 || rows.some((row) => row.condition === null)) return { kind: 'uncapped' };
+  if (rows.length === 0) return { kind: 'uncapped' };
   const first = rows[0];
   const ingredients = (row: CubeRow) => row.inputs.slice(1).join('|');
-  const ownBlockers = blockers.filter((row) => row.line < first.line && ingredients(row) === ingredients(first));
+  // ESR 3.3.03: blockers per item type (`weap` / `2hsw,eli`), so only those on the same first input
+  const ownBlockers = blockers.filter(
+    (row) => row.line < first.line && row.inputs[0] === first.inputs[0] && ingredients(row) === ingredients(first)
+  );
+  if (ownBlockers.length === 0 && rows.some((row) => row.condition === null)) return { kind: 'uncapped' };
   const stats = new Map<number, number>();
   const totals = new Map<string, CubeMod>();
   for (let uses = 0; uses < MAX_DSTONE_USES; uses++) {
@@ -79,7 +84,10 @@ export function dstoneCap(
     let next: CubeRow | undefined;
     for (const row of rows) {
       const condition = row.condition;
-      if (condition === null) continue;
+      if (condition === null) {
+        next = row;
+        break;
+      }
       const holds = capHolds(condition.op, stats.get(condition.param) ?? 0, condition.value);
       if (holds === null)
         return { kind: 'unknown', reason: `op ${String(condition.op)} on cubemain line ${String(row.line)} is not a cap condition` };
@@ -93,7 +101,9 @@ export function dstoneCap(
     for (const mod of mods) {
       if (!isCapMod(mod.mod)) continue;
       const ids = statIdsOf(mod.mod);
-      for (const id of ids.length > 0 ? ids : [next.condition?.param ?? -1]) stats.set(id, (stats.get(id) ?? 0) + mod.min);
+      // A cap group's own amount: "extra-ele-cap-group-2" raises each cap by 2 per roll of 1
+      const step = Number(/-cap-group-(\d+)$/.exec(mod.mod)?.[1] ?? 1);
+      for (const id of ids.length > 0 ? ids : [next.condition?.param ?? -1]) stats.set(id, (stats.get(id) ?? 0) + mod.min * step);
     }
     for (const mod of bonusMods(next)) {
       const key = `${mod.mod}|${mod.param}`;

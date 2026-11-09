@@ -265,6 +265,27 @@ function brickText(output: string, nameOf: EnhanceContext['nameOf']): string {
   return `${word}${nameOf(input.code)}`;
 }
 
+/**
+ * The roll rows of one slot, one per quality. ESR 3.3.03 has one roll row per slot group without a quality ("armo,nru"),
+ * shared by every quality and by the slot's outcome rows ("shld,nru"): it reads as one roll per quality on that cell.
+ */
+function rollsOfSlot(rolls: readonly DummyRoll[], typeCode: string, ctx: EnhanceContext): DummyRoll[] {
+  return rolls.flatMap((roll) => {
+    const input = roll.recipe.inputs.at(0);
+    if (input === undefined) return [];
+    if (qualityOf(input) !== undefined) return input.code === typeCode ? [roll] : [];
+    if (!ctx.isA(typeCode, input.code)) return [];
+    const cell = [typeCode, ...input.qualifiers].join(',');
+    return ENHANCE_QUALITIES.map((quality) => ({
+      ...roll,
+      recipe: {
+        ...roll.recipe,
+        inputs: [{ ...input, code: typeCode, cell, qualifiers: [...input.qualifiers, quality] }, ...roll.recipe.inputs.slice(1)],
+      },
+    }));
+  });
+}
+
 interface CorruptionResult {
   corruption: EnhanceBundle['corruption'];
   slots: CorruptionSlot[];
@@ -281,13 +302,15 @@ function buildCorruption(
   const dummyParam = outcomeParam(recipes, CORRUPT_DUMMY);
   const reagentCode = rolls.at(0)?.recipe.inputs[1]?.code ?? '';
   const outcomeRows = recipes.filter((recipe) => recipe.op === 18 && recipe.param === dummyParam && recipe.inputs.length === 1);
+  // ESR 3.3.03: one brick row per slot, `op 15` "dummy at least N" (the Corruption Legacy Roll rows are op 15 too, but `useitem`)
+  const brickRows = recipes.filter(
+    (recipe) => recipe.op === 15 && recipe.param === dummyParam && recipe.inputs.length === 1 && recipe.output !== 'useitem'
+  );
 
   const slots: CorruptionSlot[] = [];
   const outcomes: CorruptionOutcome[] = [];
   for (const def of SLOTS) {
-    const slotRolls = rolls.filter(
-      (roll) => roll.recipe.inputs[0]?.code === def.typeCode && qualityOf(roll.recipe.inputs[0]) !== undefined
-    );
+    const slotRolls = rollsOfSlot(rolls, def.typeCode, ctx);
     const qualities: EnhanceQuality[] = [];
     const rollOnly: EnhanceQuality[] = [];
     let list: CorruptionOutcome[] | null = null;
@@ -299,7 +322,15 @@ function buildCorruption(
       const quality = input === undefined ? undefined : qualityOf(input);
       if (input === undefined || quality === undefined) continue;
       const inRange = (recipe: CubeRecipe) => recipe.value >= roll.min && recipe.value <= roll.max;
-      const own = outcomeRows.filter((recipe) => recipe.inputs[0]?.cell === input.cell && inRange(recipe));
+      // A quality's own row replaces the shared one at its roll (Low / Normal / Superior body armor 15, belts 18)
+      const qualityCell = `${def.typeCode},${quality},nru`;
+      const cellRows = [
+        ...outcomeRows.filter((recipe) => recipe.inputs[0]?.cell === input.cell),
+        ...outcomeRows.filter((recipe) => recipe.inputs[0]?.cell === qualityCell),
+      ].filter(inRange);
+      const own = [...new Map(cellRows.map((recipe) => [recipe.value, recipe])).values()];
+      const wideBricks = brickRows.filter((recipe) => recipe.inputs[0]?.cell === input.cell && recipe.value <= roll.max);
+      const wideRolls = wideBricks.reduce((sum, recipe) => sum + roll.max - Math.max(recipe.value, roll.min) + 1, 0);
       const success = own.filter((recipe) => recipe.output === 'useitem').sort((a, b) => a.value - b.value);
       if (success.length === 0) {
         rollOnly.push(quality);
@@ -312,7 +343,7 @@ function buildCorruption(
       if (list === null) {
         list = rendered.map(({ roll: index, bonus }) => ({ slot: def.slot, roll: index, ...bonus }));
         rollRange = range;
-        brickRolls = bricks.length;
+        brickRolls = bricks.length + wideRolls;
       } else if (range !== rollRange || rendered.length !== list.length) {
         warnings.add(`enhance: ${QUALITY_WORDS[quality]} ${def.label} corruption has another roll range or outcome count`);
       } else {
@@ -326,11 +357,10 @@ function buildCorruption(
           else variant.qualities.push(quality);
         });
       }
-      if (success.length + bricks.length !== range)
-        warnings.add(
-          `enhance: ${QUALITY_WORDS[quality]} ${def.label} corruption covers ${String(success.length + bricks.length)} of ${String(range)} rolls`
-        );
-      for (const output of new Set(bricks.map((recipe) => recipe.output))) {
+      const covered = success.length + bricks.length + wideRolls;
+      if (covered !== range)
+        warnings.add(`enhance: ${QUALITY_WORDS[quality]} ${def.label} corruption covers ${String(covered)} of ${String(range)} rolls`);
+      for (const output of new Set([...bricks, ...wideBricks].map((recipe) => recipe.output))) {
         results.push({ quality, type: null, typeName: null, result: brickText(output, ctx.nameOf) });
       }
       // More specific brick rows (Odd Charm → Grand Charm): a subtype of the slot with the same quality, in the range
@@ -339,11 +369,12 @@ function buildCorruption(
         const sub = recipe.inputs.at(0);
         if (sub === undefined || sub.code === def.typeCode || !ctx.isA(sub.code, def.typeCode)) continue;
         if (qualityOf(sub) !== quality || !inRange(recipe) || recipe.output === 'useitem') continue;
-        // Item codes of an already listed subtype (Odd Charm item `cm4` of type `ocha`) repeat the same result
-        const key = `${ctx.nameOf(sub.code)}|${recipe.output}`;
+        // Item codes of an already listed subtype (Odd Charm items `cm4` and `cm6` share the name) repeat the same result
+        const result = brickText(recipe.output, ctx.nameOf);
+        const key = `${ctx.nameOf(sub.code)}|${result}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        results.push({ quality, type: sub.code, typeName: ctx.nameOf(sub.code), result: brickText(recipe.output, ctx.nameOf) });
+        results.push({ quality, type: sub.code, typeName: ctx.nameOf(sub.code), result });
       }
     }
     if (list === null) continue;
@@ -735,7 +766,12 @@ function buildVessel(
         materials: materialsOf(recipe, ctx),
         soulCost: cost,
         ...bonus,
-        ...(anoint === undefined ? {} : { anointmentRolls: anoint.max - anoint.min + 1 }),
+        // ESR 3.3.03: a fixed roll only stores the anointment, it is rolled when the Vessel becomes a mythical weapon
+        ...(anoint === undefined
+          ? {}
+          : anoint.min === anoint.max
+            ? { storesAnointment: true }
+            : { anointmentRolls: anoint.max - anoint.min + 1 }),
       },
     });
   }

@@ -58,8 +58,12 @@ describe('enhance URL state', () => {
   });
 
   it('reads the anointment extra pools and the vessel completion', () => {
-    expect(readEnhanceState(new URLSearchParams('tab=anointment&slot=vessel'), bundle).slot).toBe('vessel');
+    expect(readEnhanceState(new URLSearchParams('tab=anointment&slot=charm'), bundle).slot).toBe('charm');
     expect(readEnhanceState(new URLSearchParams(`tab=vessel&tier=${VESSEL_COMPLETION}`), bundle).tier).toBe(VESSEL_COMPLETION);
+  });
+
+  it('falls back to the default pool for the Vessel pool link (no such pool since ESR 3.3.03)', () => {
+    expect(readEnhanceState(new URLSearchParams('tab=anointment&slot=vessel'), bundle).slot).toBe('weapon');
   });
 
   it('maps an ESR 3.2 anointment slot id to the first pool of that slot group', () => {

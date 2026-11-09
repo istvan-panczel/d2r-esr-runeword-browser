@@ -18,8 +18,6 @@ export interface OfficialBossRewards {
   readonly key?: { readonly chance: number; readonly set?: true };
   /** Named drops, as the page names them */
   readonly items?: readonly string[];
-  /** Worldstone Shards when terrorized: 'always' (T1–T4: "always drop a shard", not a count), 'none' (T5: "engine limitation") */
-  readonly terror: 'always' | 'none';
 }
 
 export interface MapBossFacts {
@@ -46,24 +44,22 @@ export const PERK_DROPS: Readonly<Record<string, string>> = {
 
 const PIERCE: CampaignNote = { text: 'pierces your elemental resistances: overcap them', source: 'tables' };
 
-const T1_PAGE: OfficialBossRewards = { orb: 5, map: { tier: 2, chance: 25 }, key: { chance: 25 }, terror: 'always' };
-const T2_PAGE: OfficialBossRewards = { orb: 10, map: { tier: 3, chance: 25 }, key: { chance: 35 }, terror: 'always' };
-const T3_PAGE: OfficialBossRewards = { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 }, terror: 'always' };
-const T4_PAGE: OfficialBossRewards = { orb: 20, map: { tier: 5, chance: 25 }, key: { chance: 100 }, terror: 'always' };
+const T1_PAGE: OfficialBossRewards = { orb: 5, map: { tier: 2, chance: 25 }, key: { chance: 25 } };
+const T2_PAGE: OfficialBossRewards = { orb: 10, map: { tier: 3, chance: 25 }, key: { chance: 35 } };
+const T3_PAGE: OfficialBossRewards = { orb: 15, map: { tier: 4, chance: 25 }, key: { chance: 50 } };
+const T4_PAGE: OfficialBossRewards = { orb: 20, map: { tier: 5, chance: 25 }, key: { chance: 100 } };
 const EYE_PAGE = (item: string): OfficialBossRewards => ({
   orb: 25,
   map: { tier: 5, chance: 25 },
   key: { chance: 50, set: true },
   items: [item],
-  terror: 'none',
 });
-const ANCIENT_PAGE: OfficialBossRewards = { orb: 16.67, map: { tier: 5, chance: 17 }, key: { chance: 100 }, terror: 'none' };
+const ANCIENT_PAGE: OfficialBossRewards = { orb: 16.67, map: { tier: 5, chance: 17 }, key: { chance: 100 } };
 const T5_FINAL_PAGE = (items: readonly string[] = []): OfficialBossRewards => ({
   orb: 50,
   map: { tier: 5, chance: 50 },
   key: { chance: 100, set: true },
   items,
-  terror: 'none',
 });
 
 const ANCIENTS_DAMAGE: CampaignNote = {
@@ -185,7 +181,7 @@ export const MAP_BOSS_FACTS: Readonly<Record<string, MapBossFacts>> = {
       text: 'Immune until you pick up one of the light orbs that sometimes appear when he is hit: you and your summons can then hurt him for a short while.',
       source: 'endgame',
     },
-    page: EYE_PAGE("Mephisto's Demonic Horn"),
+    page: EYE_PAGE("Mephisto's Demonic Brain"),
   },
   diablotheinvincible: {
     fight: [
@@ -210,7 +206,7 @@ export const MAP_BOSS_FACTS: Readonly<Record<string, MapBossFacts>> = {
       text: 'Immune until you destroy one of the towers he raises every 13 seconds or so: it empowers the players and minions near it.',
       source: 'endgame',
     },
-    page: EYE_PAGE("Baal's Demonic Horn"),
+    page: EYE_PAGE("Baal's Demonic Eye"),
   },
 
   // --- Tier 5: Icecrown Citadel -------------------------------------------------------------------------------------
@@ -298,6 +294,6 @@ export const MAP_BOSS_FACTS: Readonly<Record<string, MapBossFacts>> = {
       },
       { text: 'Killed on players 8, he also drops Lucion’s Essence, a stronger socketing consumable.', source: 'tables' },
     ],
-    page: T5_FINAL_PAGE(["Lucion's Fiery Relic"]),
+    page: T5_FINAL_PAGE(["Lucion's Relic of Sanctification"]),
   },
 };

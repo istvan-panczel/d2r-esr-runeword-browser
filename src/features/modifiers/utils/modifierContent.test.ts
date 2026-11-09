@@ -181,7 +181,7 @@ describe('placeholders', () => {
     expect(resolvePlaceholder('config.crushing-blow.targets.unique', facts)).toEqual({ text: '25', fact: 'crushingBlow.settings' });
     expect(resolvePlaceholder('config.attack-rating.chance.level_scaling', facts)?.text).toBe('false');
     expect(resolvePlaceholder('patch.esr-resistance-floor-minus-1000.floor', facts)?.text).toBe('-1000');
-    expect(resolvePlaceholder('monstats.drainH.blankCount', facts)?.text).toBe('659');
+    expect(resolvePlaceholder('monstats.drainH.blankCount', facts)?.text).toBe('661');
     expect(resolvePlaceholder('derived.crushing-blow.unique', facts)?.text).toBe('6.25%');
     expect(resolvePlaceholder('derived.leech.life.20.hell', facts)?.text).toBe('0.125%');
     expect(resolvePlaceholder('derived.leech.mana.10.nightmare', facts)?.text).toBe('0.656%');
