@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.65.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.65.0...v1.65.1) (2026-11-09)
+
+### Bug Fixes
+
+* **campaign-map:** follow the ESR 3.3.03 Endgame Maps page ([d3c0a10](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d3c0a100c7df64c7754997496adb154c9f0d5d85))
+* **enhance:** show that the Vessel of Souls stores its anointment ([05d1a7f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/05d1a7fee769186408da186558208b51ef8c0b3a))
+* **game-data:** read the ESR 3.3.03 corruption, D-stoning and cube rows ([4d01a6e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4d01a6e9b7c79b85fd2f983e4bb8488f2e29d219))
+
+### Documentation
+
+* **guide:** update notes for ESR 3.3.03 ([7ddd907](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7ddd907f69604685b895a41704b5e2b2be909fb5))
+* **modifiers:** note the ESR 3.3.03 op 1 item fix ([c34f1f6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c34f1f6bbc545f543d91698e1d22b4073b821f15))
+
+### Chores
+
+* **esr-update:** cover the character save data and 3.3.03 pins ([6a91f1d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6a91f1d711df263ce0aee660e810c49f63708346))
+* **game-data:** update to ESR 3.3.03 ([3670b93](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3670b9385c93fb595fef4cedb893529589e3cd8c))
+
 ## [1.65.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.64.0...v1.65.0) (2026-11-09)
 
 ### Features
