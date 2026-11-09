@@ -7,21 +7,24 @@ import { startDataSync, startAuth, startBuilds, startFavorites } from '@/core/st
 import { ThemeInitializer } from '@/features/settings';
 import { Toaster } from '@/components/ui/sonner';
 import { router } from '@/core/router';
+import { mayReloadAfterChunkError } from '@/core/utils/chunkReload';
 import './index.css';
 
 // After a deploy, a browser that still holds the previous index.html (GitHub Pages caches it for 10 minutes) asks for
 // chunk files whose hashes are gone, so every lazily loaded route fails. Vite reports that as `vite:preloadError`;
-// reloading once fetches the current index.html. The session flag stops a reload loop when the server itself is broken.
+// reloading fetches the current index.html. The timestamp stops a reload loop when the server itself is broken, and expires
+// so that a tab left open can recover from the next deploy too.
 const RELOADED_FLAG = 'chunk-reload';
 window.addEventListener('vite:preloadError', (event) => {
-  let reloaded = false;
+  const now = Date.now();
+  let mayReload = true;
   try {
-    reloaded = sessionStorage.getItem(RELOADED_FLAG) !== null;
-    if (!reloaded) sessionStorage.setItem(RELOADED_FLAG, String(Date.now()));
+    mayReload = mayReloadAfterChunkError(sessionStorage.getItem(RELOADED_FLAG), now);
+    if (mayReload) sessionStorage.setItem(RELOADED_FLAG, String(now));
   } catch {
     // Storage blocked: reload once anyway; the loop guard is lost but the page is unusable without the chunk.
   }
-  if (reloaded) return;
+  if (!mayReload) return;
   event.preventDefault();
   window.location.reload();
 });

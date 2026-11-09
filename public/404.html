@@ -7,15 +7,21 @@
       // GitHub Pages SPA fallback: Pages serves this 404.html for any unknown path
       // (e.g. a hard refresh / shared link to /build/:id, /user/:id) with the original
       // URL kept in the address bar. Stash it, then bounce to the app root; index.html
-      // restores the path before React Router boots.
+      // restores the path (and drops the query below) before React Router boots.
       // Source: https://github.com/orgs/community/discussions/55673
+      //
+      // The unique query skips the browser's copy of index.html (GitHub Pages lets it live for 10 minutes): a plain redirect
+      // reuses that copy even on a reload, and after a deploy it points to chunk files that no longer exist.
+      var target = '/d2r-esr-runeword-browser/';
       try {
         sessionStorage.redirect = location.href;
+        target += '?r=' + Date.now();
       } catch (e) {
-        // Storage blocked (rare privacy modes): fall through to the root redirect.
+        // Storage blocked (rare privacy modes): nothing could remove the query later, so use the plain root.
       }
+      location.replace(target);
     </script>
-    <meta http-equiv="refresh" content="0;URL='/d2r-esr-runeword-browser/'" />
+    <noscript><meta http-equiv="refresh" content="0;URL='/d2r-esr-runeword-browser/'" /></noscript>
   </head>
   <body>
     Redirecting...
