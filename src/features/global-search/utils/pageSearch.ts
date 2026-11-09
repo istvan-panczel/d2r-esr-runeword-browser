@@ -20,7 +20,17 @@ function pageNames(entries: readonly NavEntry[]): PageName[] {
   );
 }
 
-/** The menu pages whose label matches `query`, ranked like the item results (`rankNames`). */
+/**
+ * The menu pages matching `query`, at most `limit`: those whose own label matches, ranked like the item results (`rankNames`),
+ * then the pages of the menu groups whose label matches, in menu order ("stash" lists the My Stash pages).
+ */
 export function searchPages(query: string, entries: readonly NavEntry[], limit = HOME_SEARCH_GROUP_LIMIT): PageSearchResult[] {
-  return rankNames(pageNames(entries), query, limit).map(({ name, id, section }) => ({ name, href: id, section }));
+  const pages = pageNames(entries);
+  const byLabel = rankNames(pages, query, limit);
+  const listed = new Set(byLabel.map((page) => page.id));
+  const groupLabels = entries.flatMap((entry) => (entry.kind === 'group' ? [entry.label] : []));
+  const byGroup = rankNames(groupLabels, query, limit).flatMap((label) =>
+    pages.filter((page) => page.section === label && !listed.has(page.id))
+  );
+  return [...byLabel, ...byGroup].slice(0, limit).map(({ name, id, section }) => ({ name, href: id, section }));
 }

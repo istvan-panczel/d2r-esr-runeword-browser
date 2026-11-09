@@ -381,8 +381,15 @@ export function getAllNavItems(entries: readonly NavEntry[] = NAV_ENTRIES): read
   return entries.flatMap((entry) => (entry.kind === 'group' ? entry.items : [entry.item]));
 }
 
+/** `/stash/` is the same page as `/stash` to the router; `/` stays `/`. */
+function withoutTrailingSlash(pathname: string): string {
+  const trimmed = pathname.replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
+}
+
 export function isNavItemActive(pathname: string, item: NavItem): boolean {
-  return pathname === item.to || (item.exact !== true && pathname.startsWith(`${item.to}/`));
+  const path = withoutTrailingSlash(pathname);
+  return path === item.to || (item.exact !== true && path.startsWith(`${item.to}/`));
 }
 
 export function isNavGroupActive(pathname: string, group: NavGroup): boolean {

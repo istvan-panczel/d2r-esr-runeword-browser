@@ -64,7 +64,7 @@ Reusable components used across features:
 
 - `PageShell.tsx` - Page width + title row (see [Page pattern](#page-pattern))
 - `pageWidthClasses.ts` - The Page width setting's classes: app frame, `PageShell` `wide` width (see [`PageShell`](#pageshell))
-- `PageHeader.tsx` - The title row itself: title (+ count), actions, meta line, tab row
+- `PageHeader.tsx` - The title row itself: title (+ count), actions, meta line
 - `FilterPanel.tsx` - Card surface around a page's filter controls
 - `ToolbarCard.tsx` - The same card surface, compact, around a page's sub-tab row and top controls
 - `FilterGroup.tsx` - `FilterGroup` (one labelled checkbox row), `FilterGroupList`, `FilterGroupHeader`
@@ -99,7 +99,7 @@ PageShell            one centred width + the title row
 ### `PageShell`
 
 ```tsx
-<PageShell title="Runewords" count={shown.length} actions={…} meta={…} nav={…} width="wide">
+<PageShell title="Runewords" count={shown.length} actions={…} meta={…} width="wide">
   …
 </PageShell>
 ```

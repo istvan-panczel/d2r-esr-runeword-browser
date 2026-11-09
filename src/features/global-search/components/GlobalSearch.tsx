@@ -1,31 +1,45 @@
-import { lazy, Suspense, useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { isMacUserAgent, isSearchShortcut, searchShortcutLabel } from '../utils/searchShortcut';
 
-// cmdk and the search code stay out of the entry bundle: the chunk loads on the first open
-const GlobalSearchDialog = lazy(async () => {
-  const module = await import('./GlobalSearchDialog');
-  return { default: module.GlobalSearchDialog };
-});
+type GlobalSearchDialogModule = typeof import('./GlobalSearchDialog');
 
 const IS_MAC = isMacUserAgent(navigator.userAgent);
 const SHORTCUT_LABEL = searchShortcutLabel(IS_MAC);
 
 /** Another modal already holds the page (its backdrop blocks the button too); popovers do not count. */
-const OPEN_MODAL_SELECTOR = '[data-slot="dialog-content"][data-state="open"], [data-slot="sheet-content"][data-state="open"]';
+const OPEN_MODAL_SELECTOR =
+  '[data-slot="dialog-content"][data-state="open"], [data-slot="sheet-content"][data-state="open"], [data-modal-gate]';
 
 /** The header's search button and the global Ctrl+K / Cmd+K shortcut. The dialog mounts on the first open and stays mounted. */
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
-  const [requested, setRequested] = useState(false);
+  // cmdk and the search code stay out of the entry bundle: the chunk loads on the first open. Imported by hand because
+  // React.lazy caches a rejected load, so after a failed chunk (a deploy replaced it) search could never be tried again.
+  const [dialogModule, setDialogModule] = useState<GlobalSearchDialogModule | null>(null);
+  const loading = useRef(false);
   // Radix returns focus only to a DialogTrigger, which this dialog does not have (the shortcut opens it too)
   const returnFocusTo = useRef<Element | null>(null);
 
   const openFrom = (origin: Element | null) => {
     returnFocusTo.current = origin;
-    setRequested(true);
     setOpen(true);
+    if (dialogModule !== null || loading.current) return;
+    loading.current = true;
+    import('./GlobalSearchDialog')
+      .then((module) => {
+        setDialogModule(module);
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to load the search dialog', error);
+        setOpen(false);
+        toast.error('Search could not load. Please reload the page.', { id: 'global-search-load-failed' });
+      })
+      .finally(() => {
+        loading.current = false;
+      });
   };
 
   const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -63,11 +77,7 @@ export function GlobalSearch() {
       >
         <Search className="size-5" />
       </Button>
-      {requested && (
-        <Suspense fallback={null}>
-          <GlobalSearchDialog open={open} onOpenChange={setOpen} onCloseAutoFocus={restoreFocus} />
-        </Suspense>
-      )}
+      {dialogModule !== null && <dialogModule.GlobalSearchDialog open={open} onOpenChange={setOpen} onCloseAutoFocus={restoreFocus} />}
     </>
   );
 }

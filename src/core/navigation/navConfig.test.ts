@@ -118,6 +118,11 @@ describe('navConfig', () => {
     if (!stash) throw new Error('missing group');
     const [overview, coupons] = stash.items;
     expect(isNavItemActive('/stash', overview)).toBe(true);
+    expect(isNavItemActive('/stash/', overview)).toBe(true);
+    expect(isNavItemActive('/stash//', overview)).toBe(true);
+    expect(isNavItemActive('/stash/coupons/', coupons)).toBe(true);
+    expect(getActiveNavGroup('/stash/')?.key).toBe('stash');
+    expect(getActiveNavGroup('/')).toBeUndefined();
     expect(isNavItemActive('/stash/coupons', overview)).toBe(false);
     expect(isNavItemActive('/stash/coupons', coupons)).toBe(true);
     expect(isNavGroupActive('/stash/coupons', stash)).toBe(true);

@@ -33,6 +33,29 @@ describe('searchPages', () => {
     expect(searchPages('builds', getNavEntries(true)).map((page) => page.href)).toEqual(['/builds']);
   });
 
+  it('finds the pages of a menu group by the group name, in menu order', () => {
+    expect(searchPages('stash', NAV_ENTRIES).map((page) => page.href)).toEqual([
+      '/stash',
+      '/stash/coupons',
+      '/stash/items',
+      '/stash/character',
+    ]);
+  });
+
+  it('ranks group matches below direct label matches and stays within the limit', () => {
+    const results = searchPages('recipes', NAV_ENTRIES);
+    expect(results.at(0)).toEqual({ name: 'Cube Recipes', href: '/cube-recipes', section: 'Recipes' });
+    expect(results.map((page) => page.name).slice(1)).toEqual(['Runewords', 'Gemwords', 'Socketables', 'Best Base', 'Enhance']);
+    expect(results).toHaveLength(6);
+    expect(searchPages('recipes', NAV_ENTRIES, 2)).toHaveLength(2);
+  });
+
+  it('does not list a page twice when it matches by label and by group', () => {
+    const results = searchPages('items', NAV_ENTRIES);
+    expect(new Set(results.map((page) => page.href)).size).toBe(results.length);
+    expect(results.at(0)?.name).toBe('All Items');
+  });
+
   it('returns nothing for an empty query and honours the limit', () => {
     expect(searchPages('  ', NAV_ENTRIES)).toEqual([]);
     expect(searchPages('s', NAV_ENTRIES, 2)).toHaveLength(2);

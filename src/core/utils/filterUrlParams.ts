@@ -1,4 +1,5 @@
 import { NO_CATEGORIES_MARKER } from '@/core/constants/categoryFilter';
+import { parseExactNameParam } from '@/core/utils/exactName';
 import { formatSocketRange, parseSocketRange, type SocketRange } from '@/core/utils/socketRange';
 
 /**
@@ -30,6 +31,11 @@ export interface CommonFilterState {
 }
 
 /** Adds the `name` exact-name focus param when one is set. */
+/** Whether the URL carries a usable exact-name focus (`name`, not blank). */
+export function hasExactNameParam(params: URLSearchParams): boolean {
+  return parseExactNameParam(params.get(FILTER_URL_PARAM_KEYS.NAME)) !== null;
+}
+
 export function appendExactNameParam(params: URLSearchParams, exactName: string | null): void {
   if (exactName !== null) params.set(FILTER_URL_PARAM_KEYS.NAME, exactName);
 }

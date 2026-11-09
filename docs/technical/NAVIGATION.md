@@ -62,7 +62,11 @@ share a pathless layout route (see [Nested sections](#nested-sections)).
 `maxlvl`, `items`, `runes`, `tierpts`, `gems`, `name`); `sockets` takes an exact count or a range (`4`, `2-4`, `-4`, `4-`). The
 feature-specific keys live next to each feature's `useUrlInitialize` hook, and `GAME_DATA_URL_PARAM_KEYS` in
 `src/features/game-data/constants/urlParams.ts`. The filter screens (runewords, gemwords, socketables, uniques, mythicals,
-ascendancies, bases, best base, affixes) read their params once on mount, put them into Redux and remove them from the URL;
+ascendancies, bases, best base, affixes) read their params on mount, put them into Redux and remove them from the URL. Runewords,
+gemwords, socketables, uniques, mythicals and bases (`useUrlArrival` in `src/core/hooks/`) read them again whenever the URL later
+carries params they recognise, so a link to the page you are on (the [global search](#global-search)) behaves like arriving from
+another page; the bare URL left by that cleanup is ignored, and a `?name=` arrival on runewords and gemwords keeps the current filter
+selection (the defaults or stored filters run only on mount, so clearing the focus brings the page's filters back);
 Copy Link rebuilds a URL from the current state (non-default values only). Item Types (`type`), Enhance (`tab`, `slot`,
 `tier`, `search`), Cube Recipes (`search`, `family`), Materials (`search`, `group`, `name`), Area Levels (`search`, `minlvl`, `maxlvl`), the Campaign Map (`tab`, `area`, `view`) and the loot filter editor (`tab`) read their params on every render and keep them in the URL. The builds screens keep their search, class and sort in
 Redux only.
@@ -71,8 +75,9 @@ Redux only.
 (`normaliseItemName` in `src/core/utils/itemName.ts`: case, whitespace, quotes/apostrophes and dashes unified; all variants of a
 runeword), unlike `?search=`, which also matches affix text. While it is set, every other filter of the screen (search, sockets,
 level, types, runes/gems, categories, coupon, highest quality) is ignored but kept, so the item is always visible and clearing
-the focus brings the previous filters back; the favourites-only toggle still applies. It is read on mount like the other params
-(the URL is then cleaned) and cleared by any visit whose URL has no `name`, so it never outlives the deep link. The search box
+the focus brings the previous filters back; the favourites-only toggle still applies. It is read on mount and on a same-page
+arrival like the other params (the URL is then cleaned) and cleared by any visit or arrival whose URL carries no `name`, so it never
+outlives the deep link; the URL cleaned of its params does not clear it. The search box
 does not change it. A dismissible "Showing: <Name> ×" chip shows it and scrolls into view only right after the deep link.
 Copy Link keeps it. Guide `rw:`/`gw:`/`unique:`/`mythical:`/`socketable:` links use it.
 
@@ -252,10 +257,12 @@ A magnifier in the header's right cluster (visible at every width) and Ctrl+K (C
 the input and the results. It searches what the [home page search](#home-page) searches, plus the site's pages.
 
 - **Shell and lazy chunk**: `GlobalSearch.tsx` (in the entry bundle) is the button and the one `window` keydown listener;
-  `GlobalSearchDialog.tsx` is a lazy chunk (with cmdk and the search code) requested on the first open and kept mounted after it.
+  `GlobalSearchDialog.tsx` is a chunk of its own (with cmdk and the search code) imported on the first open and kept mounted after it.
   A shortcut pressed while the chunk loads still counts: it toggles the open state the dialog renders from when it arrives.
+  A failed import closes the request and shows a toast (search could not load, reload the page); the next open tries again. The import
+  is by hand, not `React.lazy`, which caches a rejected load and would fail every later open; nothing reaches the root error screen.
 - **Results**: Pages first (`searchPages` in `utils/pageSearch.ts`: `rankNames` over the labels of `getNavEntries`, so Builds
-  stays hidden without Supabase; the row shows its menu group), then the home search's groups, then "Search runewords for “…”" last.
+  stays hidden without Supabase, then the pages of the menu groups whose label matches, up to the same limit of 6; the row shows its menu group), then the home search's groups, then "Search runewords for “…”" last.
   Data and rows are the home page's: `useHomeSearch` (nothing loads before the first keystroke, each game-data file settles on its
   own, the "still loading" note before the startup sync has initialized) and `HomeSearchResults` / `SearchRunewordsRow` / `HomeSearchRow`
   (`src/features/home/`). Results are computed synchronously from the current query and the names loaded so far, so a slow earlier query cannot
@@ -270,7 +277,7 @@ the input and the results. It searches what the [home page search](#home-page) s
 - **Shortcut** (`isSearchShortcut` in `utils/searchShortcut.ts`, pure): Cmd+K on a Mac, Ctrl+K elsewhere, no other modifier. Ctrl+K on a Mac
   stays the system's delete-to-end-of-line, in text fields and in the CodeMirror JSON tab (`emacsStyleKeymap`, the editor has no `Mod-k`, so nothing conflicts).
   The dialog sets `vimBindings={false}`, or cmdk's own Ctrl+K "move up" would fire together with the close. While another modal is open
-  (`[data-slot="dialog-content"]` or `[data-slot="sheet-content"]` with `data-state="open"`: settings drawer, mobile sheet, any dialog) the shortcut is
+  (`[data-slot="dialog-content"]` or `[data-slot="sheet-content"]` with `data-state="open"`: settings drawer, mobile sheet, any dialog; or the sign-in consent gate, `[data-modal-gate]`) the shortcut is
   ignored, like the button behind its backdrop; `preventDefault` still runs, so the browser's own Ctrl+K never fires.
 
 ### Nested sections
