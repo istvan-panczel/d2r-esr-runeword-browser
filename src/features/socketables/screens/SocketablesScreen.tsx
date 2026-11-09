@@ -6,7 +6,6 @@ import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { selectEnabledCategories, selectExactName } from '../store/socketablesSlice';
 import { ExactNameChip } from '@/core/components/ExactNameChip';
 import { Spinner } from '@/components/ui/spinner';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { PageShell } from '@/components/PageShell';
 import { ResultsBar } from '@/components/ResultsBar';
 import { useItemSources } from '@/features/game-data/hooks/useItemSources';
@@ -52,8 +51,6 @@ export function SocketablesScreen() {
           ))}
         </div>
       )}
-
-      <ScrollToTopButton />
     </PageShell>
   );
 }

@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
@@ -135,7 +134,6 @@ function EnhanceBrowser({ bundle }: { readonly bundle: EnhanceBundle }) {
         />
       )}
       {state.tab === 'standard' && <EnhanceStandard bundle={bundle} search={state.search} />}
-      <ScrollToTopButton />
     </div>
   );
 }

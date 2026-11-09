@@ -4,7 +4,6 @@ import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { PageShell } from '@/components/PageShell';
 import { ResultsBar } from '@/components/ResultsBar';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ExactNameChip } from '@/core/components/ExactNameChip';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
@@ -289,7 +288,6 @@ function ElixirsBrowser({ bundle }: { readonly bundle: ElixirsBundle }) {
       <PerksSection perks={bundle.perks} />
       <RecipesSection recipes={bundle.recipes} />
       <NameClashNote otherUtilityPotions={bundle.otherUtilityPotions} />
-      <ScrollToTopButton />
     </div>
   );
 }

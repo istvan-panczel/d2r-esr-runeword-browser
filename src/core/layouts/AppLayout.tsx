@@ -6,6 +6,7 @@ import { SettingsDrawer } from '@/core/components/SettingsDrawer';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { APP_FRAME_CLASS } from '@/components/pageWidthClasses';
+import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { cn } from '@/lib/utils';
 import { selectIsInitialized, selectError } from '@/core/store';
 import { startDataSync } from '@/core/startup';
@@ -73,6 +74,7 @@ export function AppLayout() {
       <Suspense fallback={null}>
         <TerrorZoneWidget />
       </Suspense>
+      <ScrollToTopButton />
       {isSupabaseEnabled && <AuthOverlays />}
     </div>
   );

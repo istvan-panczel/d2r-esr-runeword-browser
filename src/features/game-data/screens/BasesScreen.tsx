@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ResultsBar } from '@/components/ResultsBar';
 import type { BaseAutomod, BaseItem, SuperiorAffixes, TypesBundle } from '../engine/schema';
 import { readSuperiorAffixes } from '../engine/superiorAffixes';
@@ -80,7 +79,6 @@ function BasesBrowser({ typesBundle, bases, automods, superior, masteries }: Bas
             handleSearch(`"${base.name}"`);
           }}
         />
-        <ScrollToTopButton />
       </div>
     );
   }
@@ -114,8 +112,6 @@ function BasesBrowser({ typesBundle, bases, automods, superior, masteries }: Bas
           )}
         />
       )}
-
-      <ScrollToTopButton />
     </div>
   );
 }

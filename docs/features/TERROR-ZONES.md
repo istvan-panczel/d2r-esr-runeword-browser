@@ -82,7 +82,7 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
   star toggles, a link to the page, the terror boost in larger bold text in the terror colour, one line per game
   version (`LoD: +4 monster levels, +50% XP`, `RotW: +2 monster levels, +25% XP`, then `Monster level cap 45 / 71 /
 96`; `formatBoostLines` in `utils/boosts.ts`), and the ESR version.
-- **Minimised**: a round outline button with a bold "TZ" (`TzMark`) in the terror colour, the ScrollToTopButton style. A watched group terrorized now gives
+- **Minimised**: a round outline button with a bold "TZ" (`TzMark`) in the terror colour, in the same glass as ScrollToTopButton (`FLOATING_GLASS_BUTTON_CLASS`, `src/components/floatingElements.ts`). A watched group terrorized now gives
   it a `warning` ring and a pulsing dot; a watched group next, a softer ring and a still dot (`watchAlert`).
 - **Colour**: `--terror` / `text-terror` (`src/index.css`), the in-game terror zone purple-pink, lighter in dark mode.
 - **Focus**: after a click on minimise the circle gets the focus, after opening the card's minimise button (never on
@@ -90,9 +90,9 @@ itself (`isWidgetHidden`; the page shows it all), where it still runs the notifi
 - **Open or minimised** is remembered in this browser (`terrorZones.widgetOpen`, `usePersistentState`); without a stored
   choice it starts open, and minimised below `sm` (phones).
 - **Position**: `fixed`, bottom-left, `z-40` (dialogs and sheets are z-50 and cover it), with the safe-area insets. It
-  moves up where the app has fixed bottom elements (`utils/widgetPosition.ts`): the builds form's sticky Save / Cancel
-  bar (`/builds/new`, `/builds/:id/edit`) and the guide note's phone "Next on your path" bar (`/guide/:slug`, below
-  `sm`). ScrollToTopButton and the toasts are bottom-right.
+  moves up where the app has fixed bottom elements (`src/components/floatingElements.ts`, shared with ScrollToTopButton):
+  the builds form's sticky Save / Cancel bar (`/builds/new`, `/builds/:id/edit`) and the guide note's phone "Next on your
+  path" bar (`/guide/:slug`, below `sm`). ScrollToTopButton and the toasts are bottom-right.
 
 ## Page (`/terror-zones`)
 

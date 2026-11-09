@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FilterPanel } from '@/components/FilterPanel';
@@ -236,7 +235,6 @@ function CubeBrowser({ bundle }: { readonly bundle: CubeBundle }) {
           ))}
         </div>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }

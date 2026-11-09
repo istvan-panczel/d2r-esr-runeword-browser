@@ -3,7 +3,6 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { ExternalLink } from '@/components/ExternalLink';
 import { FilterPanel } from '@/components/FilterPanel';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { FRAME_TABLE_URL } from '@/core/navigation/navConfig';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
@@ -176,7 +175,6 @@ function SkillsBrowser({ view }: { readonly view: SkillsView }) {
           <ItemSkills view={view} markOf={markOf} onSelect={select} />
         )}
       </SkillTreesLayout>
-      <ScrollToTopButton />
     </div>
   );
 }

@@ -43,7 +43,7 @@ Location: `src/core/components/`
 - The terror zone widget (`src/features/terror-zones/components/TerrorZoneWidget.tsx`) - Floating tracker, bottom-left
   on every page but `/terror-zones`, mounted once by `AppLayout` (lazy). Open: a card with the current zone group, a countdown, the next 3
   (12 with "Show more"), star toggles, the boost line and a link to `/terror-zones`; minimised: a round outline icon
-  button like `ScrollToTopButton`, with a `warning` ring and dot when a watched group is up. `z-40` (dialogs and sheets
+  button in the same glass as `ScrollToTopButton`, with a `warning` ring and dot when a watched group is up. `z-40` (dialogs and sheets
   cover it), safe-area insets, lifted above the app's fixed bottom bars. See
   [TERROR-ZONES.md](../features/TERROR-ZONES.md#widget).
 - `navTabClasses.ts` - `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` for the header nav, `SUBTAB_BASE` / `SUBTAB_INACTIVE` /
@@ -65,7 +65,8 @@ Reusable components used across features:
 - `SectionHeader.tsx` - In-page section heading with a hairline (Build detail, Cube and Materials sections)
 - `CopyLinkButton.tsx` - Copy shareable URL to clipboard
 - `CopyLinkHelpButton.tsx` - Help info for copy link
-- `ScrollToTopButton.tsx` - Floating action button to scroll to top (bottom-right; the terror zone widget takes bottom-left)
+- `ScrollToTopButton.tsx` - Floating action button to scroll to top, mounted once by `AppLayout` so screens never add it (bottom-right, `z-40`; the terror zone widget takes bottom-left)
+- `floatingElements.ts` - What `ScrollToTopButton` and the terror zone widget share: the glass button classes and the lift above the app's fixed bottom bars
 - `SearchHelpButton.tsx` - Search syntax help (quoted phrases, AND logic)
 - `PeekPopover.tsx` + `useHoverPopover.ts` - The hover / focus "peek" popover (mouse and `:focus-visible` only, 300 ms
   delay, so a touch tap never traps): one popover per trigger (`trigger` + `peek.triggerProps`: guide note links, glossary
@@ -121,7 +122,7 @@ PageShell            one centred width + the title row
   (`grid sm:grid-cols-2 lg:grid-cols-3 @8xl/page:grid-cols-4 @9xl/page:grid-cols-5`): a Standard page is never wider
   than 1280 px, so it never matches them. Always name the container (`/page`); a bare `@8xl:` queries the nearest
   container of any kind (shadcn's `CardHeader` is one). `container-type: inline-size` leaves `position: fixed`
-  (`ScrollToTopButton`, the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
+  (the guide note's phone bar) and `sticky` columns working. Bordered `divide-y` row lists
   (Enhance outcomes, cube rows, materials) use CSS columns instead: `ROW_LIST_COLUMNS` in
   `src/features/game-data/components/rowListColumns.ts`. Those lists sit on the card surface, never on the bare page:
   `LIST_CARD_CLASS` (same file) is the card; a Materials group or a cube family is one card with a

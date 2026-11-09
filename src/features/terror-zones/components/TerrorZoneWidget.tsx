@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type Ref } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ExternalLink, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FLOATING_BOTTOM_CLASS, FLOATING_GLASS_BUTTON_CLASS, floatingLift } from '@/components/floatingElements';
 import { usePersistentState } from '@/core/hooks/usePersistentState';
 import { cn } from '@/lib/utils';
 import type { TerrorZoneSchedule } from '../engine/schedule';
@@ -14,7 +15,7 @@ import { useTerrorZoneSchedule } from '../store/scheduleStore';
 import { formatBoostLines, sameCaps, summariseBoosts } from '../utils/boosts';
 import { formatWhen } from '../utils/format';
 import { knownWatched, watchAlert, type WatchAlert } from '../utils/watched';
-import { isWidgetHidden, TERROR_ZONES_PATH, WIDGET_BOTTOM_CLASS, widgetLift } from '../utils/widgetPosition';
+import { isWidgetHidden, TERROR_ZONES_PATH } from '../utils/widgetPosition';
 import { Countdown, TzMark, WatchButton } from './ZoneParts';
 import { CURRENT_ROW_CLASS, WATCHED_ROW_CLASS, zoneTitle } from '../utils/zoneDisplay';
 
@@ -66,7 +67,7 @@ function WidgetFrame({ schedule }: { readonly schedule: TerrorZoneSchedule }) {
     focusAfterToggle.current = true;
     setOpenChoice(value);
   };
-  const position = cn('fixed left-[max(1.5rem,env(safe-area-inset-left))] z-40', WIDGET_BOTTOM_CLASS[widgetLift(pathname)]);
+  const position = cn('fixed left-[max(1.5rem,env(safe-area-inset-left))] z-40', FLOATING_BOTTOM_CLASS[floatingLift(pathname)]);
 
   // The schedule page shows all of it: nothing visible there, but the notifications above keep running
   if (isWidgetHidden(pathname)) return null;
@@ -109,7 +110,7 @@ interface MinimisedButtonProps {
   readonly onOpen: () => void;
 }
 
-/** The minimised widget: a round button like ScrollToTopButton, with a ring and a dot when a watched group is up. */
+/** The minimised widget: a round button in the same glass as ScrollToTopButton, with a ring and a dot when a watched group is up. */
 function MinimisedButton({ className, alert, buttonRef, onOpen }: MinimisedButtonProps) {
   return (
     <Button
@@ -117,7 +118,8 @@ function MinimisedButton({ className, alert, buttonRef, onOpen }: MinimisedButto
       variant="outline"
       size="icon"
       className={cn(
-        'relative rounded-full shadow-lg backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-background/55',
+        'relative',
+        FLOATING_GLASS_BUTTON_CLASS,
         alert === 'active' && 'ring-2 ring-warning ring-offset-2 ring-offset-background',
         alert === 'next' && 'ring-2 ring-warning/50',
         className

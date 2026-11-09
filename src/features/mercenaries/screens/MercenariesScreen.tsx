@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { ExternalLink } from '@/components/ExternalLink';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ToolbarCard } from '@/components/ToolbarCard';
 import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { ESR_SKILL_INFO_URL } from '@/core/navigation/navConfig';
@@ -176,7 +175,6 @@ function MercenariesBrowser({ bundle }: { readonly bundle: MercenariesBundle }) 
           </li>
         </ul>
       </section>
-      <ScrollToTopButton />
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
 import { EnhanceSearch, Pills } from '@/features/game-data/components/EnhanceParts';
@@ -209,7 +208,6 @@ function CouponsBrowser({ stash, bundle, types }: CouponsBrowserProps) {
         Rows and columns count from 1 at the top left of a stash page. The copy button copies the unique&apos;s name for the in-game shared
         stash search. Only coupons you own are listed; the blank coupons have no recipe of their own and are left out.
       </p>
-      <ScrollToTopButton />
     </div>
   );
 }

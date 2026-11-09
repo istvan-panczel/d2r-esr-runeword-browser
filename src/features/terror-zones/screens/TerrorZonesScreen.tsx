@@ -3,7 +3,6 @@ import { CalendarClock, Info, Layers, Star, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from '@/components/ExternalLink';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ToolbarCard } from '@/components/ToolbarCard';
 import { cn } from '@/lib/utils';
@@ -179,7 +178,6 @@ function TerrorZonesPage({ schedule }: { readonly schedule: TerrorZoneSchedule }
           </section>
         </div>
       </div>
-      <ScrollToTopButton />
     </PageShell>
   );
 }

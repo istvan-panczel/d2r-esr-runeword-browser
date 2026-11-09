@@ -172,9 +172,10 @@ match every path), the others are prefixes (a path matches its prefix exactly or
 
 `AppLayout` also mounts the **terror zone widget** once, below `<main>` (lazy, `Suspense` with no fallback; see
 [TERROR-ZONES.md](../features/TERROR-ZONES.md#widget)). It is on every page that renders the shell (not on the startup
-spinner or the fatal-error screen), fixed bottom-left at `z-40` (hidden on `/terror-zones`, which shows the same schedule); ScrollToTopButton (per page) and the toasts are
-bottom-right. Fixed bottom elements the widget moves up for (`src/features/terror-zones/utils/widgetPosition.ts`): the
-builds form's sticky Save / Cancel bar and the guide note's phone "Next on your path" bar. A new fixed bottom element
+spinner or the fatal-error screen), fixed bottom-left at `z-40` (hidden on `/terror-zones`, which shows the same schedule).
+**`ScrollToTopButton`** is mounted once next to it, on the same pages, fixed bottom-right at `z-40` once the window has
+scrolled 400 px; the toasts are bottom-right too. Fixed bottom elements both move up for (`src/components/floatingElements.ts`):
+the builds form's sticky Save / Cancel bar and the guide note's phone "Next on your path" bar. A new fixed bottom element
 should be added there.
 
 ### Header Components

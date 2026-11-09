@@ -4,7 +4,6 @@ import { useFilteredHtmUniqueItems } from '../hooks/useFilteredHtmUniqueItems';
 import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { buildHtmUniqueItemFavoriteId } from '../utils/htmUniqueItemFavorites';
 import { Spinner } from '@/components/ui/spinner';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { PageShell } from '@/components/PageShell';
 import { ResultsBar } from '@/components/ResultsBar';
 import { FavoritesToggleButton } from '@/core/components/FavoritesToggleButton';
@@ -86,8 +85,6 @@ export function HtmUniqueItemsScreen() {
           ))}
         </div>
       )}
-
-      <ScrollToTopButton />
     </PageShell>
   );
 }

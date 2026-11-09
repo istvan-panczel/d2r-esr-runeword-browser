@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ToolbarCard } from '@/components/ToolbarCard';
 import { SUBTAB_ACTIVE, SUBTAB_BASE, SUBTAB_INACTIVE } from '@/core/components/navTabClasses';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
@@ -93,7 +92,6 @@ function SpecializationsBrowser({ bundle }: { readonly bundle: SpecializationsBu
           </>
         )}
       </section>
-      <ScrollToTopButton />
     </div>
   );
 }

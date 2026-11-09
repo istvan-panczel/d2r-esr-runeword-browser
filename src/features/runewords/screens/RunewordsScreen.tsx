@@ -4,7 +4,6 @@ import { useFilteredRunewords } from '../hooks/useFilteredRunewords';
 import { useUrlInitialize } from '../hooks/useUrlInitialize';
 import { Spinner } from '@/components/ui/spinner';
 import { SocketableLookupContext, useSocketableLookupQuery } from '@/core/hooks/useSocketableLookup';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { PageShell } from '@/components/PageShell';
 import { ResultsBar } from '@/components/ResultsBar';
 import { FavoritesToggleButton } from '@/core/components/FavoritesToggleButton';
@@ -81,8 +80,6 @@ export function RunewordsScreen() {
           </div>
         </SocketableLookupContext>
       )}
-
-      <ScrollToTopButton />
     </PageShell>
   );
 }

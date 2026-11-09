@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { PageShell } from '@/components/PageShell';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { ToolbarCard } from '@/components/ToolbarCard';
 import { buildShareUrl } from '@/core/utils/filterUrlParams';
 import { EnhanceSearch, NoMatches, Pills, type PillOption } from '@/features/game-data/components/EnhanceParts';
@@ -125,7 +124,6 @@ function MasteriesBrowser({ bundle }: { readonly bundle: MasteriesBundle }) {
       )}
 
       <MasteriesNotes bundle={bundle} />
-      <ScrollToTopButton />
     </div>
   );
 }

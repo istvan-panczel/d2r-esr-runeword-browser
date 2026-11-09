@@ -5,7 +5,6 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { CopyLinkHelpButton } from '@/components/CopyLinkHelpButton';
 import { FilterPanel } from '@/components/FilterPanel';
 import { ResultsBar } from '@/components/ResultsBar';
-import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import { SectionHeader } from '@/components/SectionHeader';
 import { NumberFilterInput } from '@/core/components/RecipeCommonFilters';
 import { useDebouncedFilterValue } from '@/core/hooks/useDebouncedFilterValue';
@@ -153,7 +152,6 @@ function AreasBrowser({ bundle }: { readonly bundle: AreasBundle }) {
           ))}
         </div>
       )}
-      <ScrollToTopButton />
     </div>
   );
 }
