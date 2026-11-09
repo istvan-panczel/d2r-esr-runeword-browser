@@ -933,7 +933,7 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
     collapse: (row) =>
       row.description.replace(/\s*(?:-\s*)?(?:Weapon|Armor|Ring|Amulet|Arrow Quiver|Bolt Quiver|Melee|Throw|Jewel|\d+)$/, ''),
   },
-  { id: 'respec-token', label: 'Token of Absolution', match: /^Token of Absolution$/ },
+  { id: 'respec-token', label: 'Token of Absolution', match: /^Token of Absolution(?: x\d+)?$/ },
   { id: 'starter-pack', label: "Adventurer's Pack", match: /^(?:Another )?Adventurer's Pack$/ },
   {
     id: 'map-upgrade',
@@ -1066,7 +1066,7 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
   {
     id: 'vessel-transform',
     label: 'Turning the Vessel of Souls into a mythical weapon',
-    match: /^Vessel of Souls Transform to Mythical (?!.*Trap)/,
+    match: /^Vessel of Souls Transform to Mythical (?!.*(?:Trap|- Anointed))/,
     rewrite: genericVessel,
     pool: sharedSuffixPool,
   },

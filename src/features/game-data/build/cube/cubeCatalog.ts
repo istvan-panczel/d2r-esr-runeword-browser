@@ -19,7 +19,7 @@ export const HIDDEN_REASONS: readonly HiddenReason[] = ['enhance', 'traps', 'old
 
 /** The rows enhance.json covers (matched by description; bundleEnhance classifies the same rows by their data) */
 export const ENHANCE_ROW =
-  /Corruption(?: Brick)? - |^Add (?:Corruption|Anointment) Dummy Stat|^Anointment - |^Vessel of Souls Tier \d+ - |^Check if already (?:Corrupted|Anointed)|^Prevent Vessel of Souls Corrupt/i;
+  /Corruption(?: Brick| Legacy Roll)? - |^Vessel of Souls Transform to Mythical .* - Anointed$|^Add (?:Corruption|Anointment) Dummy Stat|^Anointment - |^Vessel of Souls Tier \d+ - |^Check if already (?:Corrupted|Anointed)|^Prevent Vessel of Souls Corrupt/i;
 /** "Trap" blockers ("Kill Ledger Trap", "Trap Too High Req Lvl"), not "Starter Weapon for Trap Assassin" */
 const TRAP_ROW = /\bTrap\b(?! Assassin)/i;
 const OLD_ROW = /OLD \(Delete later\)/;
@@ -91,7 +91,7 @@ export const CUBE_SECTIONS: readonly SectionDef[] = [
     ],
     guide: ['enhancement-order', 'corruption-anointment'],
   }),
-  cubePage('mis', 'Misc / Repair', { guide: ['cube-basics', 'starter-pack'] }),
+  cubePage('mis', 'Misc', { guide: ['cube-basics', 'starter-pack'] }),
   cubePage('gem', 'Gems / Runes', { guide: ['gems-crystals', 'rune-families', 'stockers'] }),
   cubePage('rel', 'Ancient Relics', {
     notes: ['LoD uniques are reworked in ESR: stronger than in vanilla and, being harder to get, generally stronger than ESR uniques.'],
@@ -592,9 +592,19 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
   },
   {
     id: 'rune-forging-slots',
-    label: 'Rune forging on wands, staves, gloves, body armor, shields and belts',
+    label: 'Rune forging on wands, staves, orbs, gloves, body armor, shields and belts',
     section: 'for',
-    match: /^Rune Forging (?:wand|staf|glov|tors|shld|belt)$/,
+    match: /^Rune Forging (?:wand|staf|orb|glov|tors|shld|belt)$/,
+    rewrite: genericRuneForging,
+    outputBonus: 'hide',
+    collapse: true,
+  },
+  {
+    // Not in rune-forging-slots: crafting.json has no slot for the one item code `m11`
+    id: 'rune-forging-mythical-staff',
+    label: 'Rune forging on the Mythical Arcane Staff',
+    section: 'for',
+    match: /^Rune Forging Mythical Arcane Staff$/,
     rewrite: genericRuneForging,
     outputBonus: 'hide',
     collapse: true,

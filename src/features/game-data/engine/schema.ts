@@ -519,7 +519,7 @@ export interface AnointmentSlot {
 }
 
 export interface AnointmentOutcome extends EnhanceBonus {
-  /** An `AnointmentSlot.slot`, `charm` (unique charm) or `vessel` (Vessel of Souls) */
+  /** An `AnointmentSlot.slot`, `charm` (unique charm) or `vessel` (Vessel of Souls; no rows since ESR 3.3.03) */
   pool: string;
   /** The row's dummy `value` (not the number in the description) */
   roll: number;
@@ -559,8 +559,10 @@ export interface VesselRecipe extends EnhanceBonus {
   soulCost: number;
   /** From the recipe's `void` cap row (same materials, checks one of the recipe's stats) */
   maxTimes?: number;
-  /** Rolls one of the Vessel anointments (`anointed_dummy` 1..N) */
+  /** Rolls one of the Vessel anointments (`anointed_dummy` 1..N); ESR 3.3.03 has none, see `storesAnointment` */
   anointmentRolls?: number;
+  /** ESR 3.3.03: stores an anointment, applied when the Vessel is transformed into a mythical weapon (that weapon type's pool) */
+  storesAnointment?: boolean;
 }
 
 export interface VesselTier {
@@ -597,7 +599,7 @@ export interface EnhanceBundle {
     noRunewords: boolean;
     /** Reagents of the unique charm anointment */
     charmReagents: EnhanceItemRef[];
-    /** The item of the `vessel` pool (rolled by the Vessel tier 4 anointment recipe) */
+    /** The item of the `vessel` pool (empty since ESR 3.3.03: the Vessel stores its anointment) */
     vesselItem: string;
   };
   anointmentSlots: AnointmentSlot[];
