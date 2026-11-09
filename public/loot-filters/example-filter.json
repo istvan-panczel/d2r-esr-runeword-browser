@@ -1,6 +1,8 @@
 // Example filter (with explanations), from the D2R ESR Runeword Browser. Use it as it is, or copy rules into your own.
 // Its rules are examples from the editor (Rules tab > Example rules): each comment starts with the example’s title.
 // How to read it:
+// - Lines like "// ---- Runes" are section headings: the editor's rule list groups and folds the rules
+//   under them. The game ignores every // line.
 // - Rules run from top to bottom. Every rule whose conditions all hold applies to the item.
 // - The conditions of a rule must all hold; a list (item codes, item types, qualities) means any of them.
 //   "itemStats" needs every check, "itemStatsAnyOf" one of them.
@@ -21,7 +23,7 @@
   "formatVersion": 1,
   "title": "Example filter (with explanations)",
   "author": "D2R ESR Runeword Browser",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A small filter to learn from, built from the editor’s example rules: highlights runes, gems, uniques, sets, mythicals, coupons, runeword bases, charms, jewels, keys, maps and big gold piles, and hides junk with exceptions. Leveling shows more, Strict hides more.",
   "filterLevels": [
     {"id": 1, "name": "Leveling"},
@@ -102,6 +104,7 @@
     }
   },
   "rules": [
+    // ---- Runes
     {
       "comment": "High runes: Vex to Zod. useStyle HighRune (a style preset from the Styles tab) gives the white plate, the red border, the red beam (droplight) and a red diamond on the minimap; the rule adds the tink and a chat line. Where a rule and its style set the same thing, the rule wins.",
       "itemCodes": ["r76", "r77", "r78", "r79", "r80", "r81", "r82", "r83"],
@@ -128,11 +131,15 @@
       "itemCodes": ["r65", "r66", "r67", "r68", "r69", "r70", "r71", "r72"],
       "useStyle": "MidRuneNoIcon"
     },
+
+    // ---- Gems
     {
       "comment": "Perfect gems. One item type (gem5) covers every perfect gem; itemCodes would list single items instead. The PerfectGem style is a thin gold border and a small gold gem icon (iconSize 27).",
       "itemTypes": ["gem5"],
       "useStyle": "PerfectGem"
     },
+
+    // ---- Uniques
     {
       "comment": "Unique weapons and armour. The UniqueItem look with its gold star and the unique sound; notify: true also prints the drop line set under notifications at the top of the file. excludeItemCodes leaves the mythical bases to the mythical rule.",
       "excludeItemCodes": [
@@ -166,12 +173,16 @@
       "sound": "unique.mp3",
       "useStyle": "UniqueItem"
     },
+
+    // ---- Sets
     {
       "comment": "Set items. A quality with no item code or type matches every set item: the SetItem look with its green star, and the unique sound.",
       "quality": "set",
       "sound": "unique.mp3",
       "useStyle": "SetItem"
     },
+
+    // ---- Mythical uniques
     {
       "comment": "Mythical uniques. ESR’s mythical bases by item code at quality unique: the MythicalUnique look with its purple beam and a purple star at the largest size (50), the mythical sound and a chat line (ÿc; is purple).",
       "itemCodes": [
@@ -184,6 +195,8 @@
       "sound": "mythical.mp3",
       "useStyle": "MythicalUnique"
     },
+
+    // ---- Coupons
     {
       "comment": "Elite coupons. Ancient Coupons cube into uniques, and item type cpn3 holds the elite ones: the CouponItem look with its gold scroll, a sound and a chat line.",
       "itemTypes": ["cpn3"],
@@ -191,6 +204,8 @@
       "sound": "other.mp3",
       "useStyle": "CouponItem"
     },
+
+    // ---- Runeword bases
     {
       "comment": "Show the socket count on white and grey gear. No style, sound or icon: {sockets} in nameSuffix writes the item’s sockets after its name. A later rule with its own name tag wins, as the +All Skills base rule below does.",
       "itemTypes": ["weap", "armo"],
@@ -227,6 +242,8 @@
       "sound": "other.mp3",
       "useStyle": "ValuableDrop"
     },
+
+    // ---- Charms and jewels
     {
       "comment": "Small charms with Magic Find or Faster Hit Recovery. itemStatsAnyOf needs only one of its checks, so either stat is enough. Compare the next rule.",
       "itemTypes": ["scha"],
@@ -252,6 +269,8 @@
       "sound": "other.mp3",
       "useStyle": "GoodJewel"
     },
+
+    // ---- Keys, organs and endgame items
     {
       "comment": "Pandemonium keys. The UberItem look with its purple key on the minimap, and the gong.",
       "itemCodes": ["pk1", "pk2", "pk3"],
@@ -259,6 +278,8 @@
       "sound": "gong.mp3",
       "useStyle": "UberItem"
     },
+
+    // ---- Maps
     {
       "comment": "Tier 5 maps and The Hidden Vault. The MapItem look, a larger white map (the rule’s own icon at iconSize 40 replaces the style’s 30), the tier 5 map sound and a chat line.",
       "itemCodes": ["z17", "z18", "z19", "z20", "z99"],
@@ -267,6 +288,8 @@
       "icon": {"iconName": "map_white", "iconSize": 40},
       "useStyle": "MapItem"
     },
+
+    // ---- Gold and potions
     {
       "comment": "Gold piles of 100,000 or more. The gold stat is the size of the pile. namePrefix and nameSuffix put $$ marks around the name, which keeps the amount visible; a gold coin on the minimap.",
       "itemCodes": ["gld"],
@@ -277,6 +300,8 @@
       "sound": "other.mp3",
       "icon": {"iconName": "coin_gold", "iconSize": 30}
     },
+
+    // ---- Hide rules
     {
       "comment": "Hide cracked, damaged and crude gear from character level 10. The hide rules start here. No activeInLevels, so it works at both levels; playerStats checks your character, not the item; excludeAreas leaves the five towns out, so nothing is hidden there.",
       "itemTypes": ["weap", "armo"],

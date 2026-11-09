@@ -5,7 +5,8 @@
  * Bulk selects never tick a hide rule among label rules (owner decision): Select all ticks the label rules, a group's
  * checkbox its label rules, and only the Hide junk group's checkbox, a group of hide rules alone, ticks hide rules.
  */
-import type { LootFilterStyle } from '../engine/types';
+import type { LootFilterRule, LootFilterStyle } from '../engine/types';
+import { headingLine, readCommentLine } from './sections';
 import {
   buildExampleSet,
   defaultChoices,
@@ -178,4 +179,39 @@ export function mergeStyles(
     else if (status === 'different') reused.push(name);
   }
   return { add, reused };
+}
+
+/** The heading the example rules dialog writes above the hide rules, which go in last whatever their group. */
+export const HIDE_RULES_HEADING = 'Hide rules';
+
+/** The titles of the headings in these comment lines, lower-cased (to skip a heading the filter already has). */
+export function headingTitles(lines: readonly string[]): Set<string> {
+  return new Set(
+    lines.flatMap((line) => {
+      const read = readCommentLine(line);
+      return read.kind === 'heading' ? [read.title.toLowerCase()] : [];
+    })
+  );
+}
+
+/**
+ * The starter rules with a `// ---- <group title>` section heading above the first rule of each group (all hide rules
+ * under one "Hide rules" heading), in the order `orderedSelection` gives. A title in `existing` (lower-cased heading
+ * titles of the filter) is not written again. `examples` and `rules` are the same length and order.
+ */
+export function withGroupHeadings(
+  examples: readonly ExampleRule[],
+  rules: readonly LootFilterRule[],
+  existing: ReadonlySet<string>
+): LootFilterRule[] {
+  const titles = new Map(EXAMPLE_GROUPS.map((group) => [group.id, group.title]));
+  let previous: string | undefined;
+  return rules.map((rule, index) => {
+    const example = examples.at(index);
+    const title = example === undefined ? undefined : isHideExample(example) ? HIDE_RULES_HEADING : titles.get(example.group);
+    const starts = title !== undefined && title !== previous;
+    previous = title;
+    if (!starts || existing.has(title.toLowerCase())) return rule;
+    return { ...rule, commentsBefore: [...(rule.commentsBefore ?? []), headingLine(2, title)] };
+  });
 }

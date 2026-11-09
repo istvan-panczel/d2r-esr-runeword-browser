@@ -153,10 +153,33 @@ describe('example filter', () => {
       defaultLevel: LEVELING,
       notifications: { dropFormat: 'ÿc4Drop: {qualityColor}{name}' },
     });
-    expect(EXAMPLE_TEMPLATE.version).toBe('2.1.0');
+    expect(EXAMPLE_TEMPLATE.version).toBe('2.2.0');
     expect(filter.description).toBeTruthy();
     expect(filter.updateUrl).toBeUndefined();
     expect(filter.leadingComments.length).toBeGreaterThan(0);
+  });
+
+  it('groups its rules under one // ---- heading per example group, hide rules last', () => {
+    const headings = filter.rules.flatMap((rule) => rule.commentsBefore ?? []);
+    expect(headings).toEqual(
+      [
+        'Runes',
+        'Gems',
+        'Uniques',
+        'Sets',
+        'Mythical uniques',
+        'Coupons',
+        'Runeword bases',
+        'Charms and jewels',
+        'Keys, organs and endgame items',
+        'Maps',
+        'Gold and potions',
+        'Hide rules',
+      ].map((title) => `// ---- ${title}`)
+    );
+    expect(filter.rules.findIndex((rule) => rule.commentsBefore?.includes('// ---- Hide rules') === true)).toBe(
+      filter.rules.findIndex((rule) => rule.hide === true)
+    );
   });
 
   it('is the example rules with their default presentation, in order, plus the levels and the drop line', () => {
@@ -165,7 +188,8 @@ describe('example filter', () => {
       const [id, extra = {}] = FROM_EXAMPLES[index] ?? [''];
       const example = findExample(id);
       if (example === undefined) throw new Error(`no example ${id}`);
-      expect(rule, id).toEqual({ ...fromExamples.rules[index], ...extra, comment: rule.comment });
+      const { commentsBefore: _heading, ...content } = rule;
+      expect(content, id).toEqual({ ...fromExamples.rules[index], ...extra, comment: rule.comment });
       // The comment is the rule list's title line: the example's title first, then what the rule teaches.
       expect(rule.comment?.startsWith(`${example.title}. `), id).toBe(true);
       expect(rule.comment?.length ?? 0, id).toBeGreaterThan(example.title.length + 30);

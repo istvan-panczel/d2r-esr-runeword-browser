@@ -46,7 +46,7 @@ function initialKind(state: SectionDialogState): Kind {
 }
 
 function SectionForm({ state, onClose, onEdit }: { readonly state: SectionDialogState } & Omit<SectionDialogProps, 'state'>) {
-  const [kind, setKind] = useState<Kind>(initialKind(state));
+  const [kind, setKind] = useState<Kind>(() => initialKind(state));
   const [title, setTitle] = useState(state.kind === 'heading' ? state.row.title : '');
   const [text, setText] = useState(state.kind === 'heading' ? state.row.notes.join('\n') : state.kind === 'note' ? state.row.text : '');
   const isNote = kind === 'note';

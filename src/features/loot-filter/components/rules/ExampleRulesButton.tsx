@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import type { LootFilter } from '../../engine/types';
 import { addRules } from '../../store/lootFilterSlice';
-import { mergeStyles } from '../../utils/examplePicker';
+import { headingTitles, mergeStyles, orderedSelection, withGroupHeadings } from '../../utils/examplePicker';
 import { ExampleRulesDialog } from './ExampleRulesDialog';
 
 interface ExampleRulesButtonProps {
@@ -19,7 +19,8 @@ interface ExampleRulesButtonProps {
 const names = (list: readonly string[]) => list.join(', ');
 
 /**
- * The Rules tab's "Example rules" button and dialog. Confirm adds the rules in one edit (`addRules`) and the styles the filter lacks; a style
+ * The Rules tab's "Example rules" button and dialog. Confirm adds the rules in one edit (`addRules`), each group under a
+ * `// ---- <group>` heading the filter does not have yet, and the styles the filter lacks; a style
  * name the filter already uses keeps the filter's own style, and the toast says so.
  */
 export function ExampleRulesButton({ filter, insertAt, onAdded }: ExampleRulesButtonProps) {
@@ -44,8 +45,14 @@ export function ExampleRulesButton({ filter, insertAt, onAdded }: ExampleRulesBu
         onOpenChange={setOpen}
         previewVolume={filter.soundVolume ?? 100}
         existingStyles={filter.styles}
-        onConfirm={(rules, styles) => {
+        onConfirm={(built, styles, state) => {
           const merge = mergeStyles(filter.styles, styles);
+          // A section heading per example group, unless the filter has one of that title already.
+          const existing = headingTitles([
+            ...filter.rules.flatMap((rule) => rule.commentsBefore ?? []),
+            ...(filter.rulesEndComments ?? []),
+          ]);
+          const rules = withGroupHeadings(orderedSelection(state), built, existing);
           dispatch(addRules({ rules, styles: merge.add, at: insertAt }));
           const added = Object.keys(merge.add);
           const notes = [
