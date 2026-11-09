@@ -81,6 +81,11 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     kind: 'hand-kept',
     follows: `modifiers.json facts (generated) and ${MODIFIER_PROSE}`,
   })),
+  {
+    path: 'd2rloader/config/celestialrayone.op1-item-fix.toml',
+    kind: 'hand-kept',
+    follows: 'content/modifiers/modifiers.md summon-stats: the fact line on passive_summ_mastery_total (303, op 1 on 486)',
+  },
   // Generated
   {
     path: SKILL_INFO_PAGE_FILE,

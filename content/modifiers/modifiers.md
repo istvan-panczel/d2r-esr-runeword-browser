@@ -938,6 +938,7 @@ facts:
 
 - Formulas: `excel/skills.txt` (e.g. Raise Kornac calc1 `(100+lvl*par8)*(100+stat('passive_summ_life'.accr))/100-100`; Valkyrie aurastatcalc1 with passive_summ_mastery; 14 skills' `petmax` read passive_summ_limit).
 - 303 is op 1 on 486: `+X% Total Multiplier to Summon Damage Stat`.
+- Op 1 on items: `ESR/d2rloader/config/celestialrayone.op1-item-fix.toml`. On an item, 303 only multiplies the item's own base value of 486, and items have none. A bonus a plugin puts on 303 (the Jeweler perks) or a 303 item socketed into an item that has 486 now reaches the character, where op 1 applies it once, to the character's total. Before the fix it stayed on the item.
 - Cap: `ESR/d2rloader/config/celestialrayone.summon-resist-cap.toml` (Align = 1 monsters: "summons, Valkyrie, golems, Revives, hirelings"; `pairs = [423, 511]`: monstats *hcIdx 423 = heartofwolverine is uncapped while the owner has stat 511 summonexceedcap, which is on a runeword).
 - `ESR/d2rloader/patches/summon-no-monlvl-stats.json`; `ESR/d2rloader/patches/pet-damage-vs-prime-evil.json` (`PlayerDamagePercentVSPrimeEvil` `{difficulty.*.playerDamagePercentVSPrimeEvil}`<!-- 100/50/25 -->, vanilla {vanilla.difficulty.*.playerDamagePercentVSPrimeEvil}).
 - Druid limits: `excel/skills.txt` `petmax` of Raven (`… + stat('raven_limit'.accr)`), Summon Spirit Wolf and Summon Dire Wolf (`… + stat('spirit_wolf_limit'.accr)` / `dire_wolf_limit`, but 1 while Head of the Cerberus or Ravenlore Passive is on); patch 3.3 fixed those two items not limiting the wolves to 1.
