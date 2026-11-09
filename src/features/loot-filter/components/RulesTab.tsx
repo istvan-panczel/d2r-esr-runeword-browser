@@ -80,7 +80,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const rows = buildSectionRows(all, commentsOf, endComments, {
     collapsed,
     keep: selectedRule,
-    search: searching ? { matches, headingMatches: (title) => ruleMatchesSearch(title, query) } : undefined,
+    search: searching ? { matches, headingMatches: (title) => ruleMatchesSearch(title.toLowerCase(), query) } : undefined,
   });
   const shownRules = rows.filter((row) => row.kind === 'item').length;
   const hiddenCount = searching ? all.length - shownRules : 0;

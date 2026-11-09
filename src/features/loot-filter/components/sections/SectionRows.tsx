@@ -22,15 +22,16 @@ interface HeadingRowViewProps {
   readonly onRemove: (address: CommentAddress) => void;
   /** Adds an item at the end of the section (the rule list only). */
   readonly onAddItem?: (address: CommentAddress) => void;
+  readonly className?: string;
 }
 
 /** A `// ====` part or `// ----` section: click to fold; edit, add a rule, move the section, remove the heading. */
-export function HeadingRowView({ row, noun, canMove, onToggle, onEdit, onMove, onRemove, onAddItem }: HeadingRowViewProps) {
+export function HeadingRowView({ row, noun, canMove, onToggle, onEdit, onMove, onRemove, onAddItem, className }: HeadingRowViewProps) {
   const Chevron = row.collapsed ? ChevronRight : ChevronDown;
   const part = row.level === 1;
   const kind = part ? 'part' : 'section';
   return (
-    <li data-section-heading={row.level} className={cn('group relative flex flex-wrap', part ? 'bg-muted' : 'bg-muted/40')}>
+    <li data-section-heading={row.level} className={cn('group relative flex flex-wrap', part ? 'bg-muted' : 'bg-muted/40', className)}>
       <button
         type="button"
         aria-expanded={!row.collapsed}

@@ -189,6 +189,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
                     key={row.key}
                     row={row}
                     noun="styles"
+                    className="overflow-hidden rounded-md"
                     canMove
                     onToggle={toggleHeading}
                     onEdit={(heading) => {
