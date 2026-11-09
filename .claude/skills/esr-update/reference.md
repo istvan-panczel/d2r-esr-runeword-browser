@@ -139,10 +139,14 @@ Relic `u18` on a jewel, since ESR 3.3 also on amulets and rings with the Jeweler
 `build/bundleEnhance.ts`); an `enhance:` warning that the outcome count differs from the roll range, or
 another perk / outcome set, is a finding. Anointments are pooled per item type since ESR 3.3 (63 pools, 4,793
 equipment outcomes; the 3.2 per-slot pools are gone and saved builds' 3.2 anointments show as outdated, owner decision:
-no migration): a new or vanished pool shows in `bundle.enhance` and `builds.crafts`. Builds do not store sanctifications. The D-stoning caps (crafting.json `stacking` `cap` /
+no migration): a new or vanished pool shows in `bundle.enhance` and `builds.crafts`. Since ESR 3.3.03 the Vessel of Souls has no pool of its
+own: its tier 4 row sets a fixed `anointed_dummy` (200, enhance.json `storesAnointment`), the "Transform to Mythical … - Anointed" rows turn that into the
+weapon's own pool range. Corruption since 3.3.03: one roll row per slot group without a quality (`weap,nru`, `armo,nru`, …) shared by all 8 qualities,
+one `op 15` brick row per slot, Body Armor 15 / Belts 18 keep a Low/Normal/Superior variant; `Corruption Legacy Roll` rows are maintenance, hidden. Builds do not store sanctifications. The D-stoning caps (crafting.json `stacking` `cap` /
 `capLines`, cube.json rows `dstoneCaps`, the `::dstone-caps` directive) are applied from the rows' `op 16` cap
-conditions (`op 15` for light radius) and the earlier `void` `op 15` blockers with the same ingredients (the elemental
-Void Shard stops at 300 on those, its own condition reads a stat nothing raises; `build/cube/dstoneCaps.ts`): a changed cap shows in `bundle.crafting` and
+conditions (`op 15` for light radius) and the earlier `void` `op 15` blockers with the same first input and ingredients (the elemental
+Void Shard stops at 300 on those, its own condition reads a stat nothing raises; since 3.3.03 a chain can end on blockers with a last row without a condition,
+Blackmoor + Key on armor; `build/cube/dstoneCaps.ts`): a changed cap shows in `bundle.crafting` and
 `builds.crafts` (saved builds show the cap next to their D-stoning). A cap condition with another op, or one that
 never stops, leaves the D-stoning uncapped with a `crafting: D-stoning "…": …` warning (a finding to explain). The official `docs/special_crafting_outcomes.htm` (corruptions, anointments,
 sanctifications) is a cross-check only.
@@ -167,9 +171,11 @@ the owner's OK.
   `celestialrayone.boss-set-unique-drop.toml`. Hand-written in `src/features/campaign-map/data/mapBosses.ts`: fight,
   damage and uber notes and the page's `page` figures. A new or renamed boss fails `campaignMapIntegrity.test.ts`; an
   `areas:` map boss warning (no monstats row, no generic loot roll, a set-drop unique not in uniqueitems.txt) is a
-  finding. ESR 3.3: 49 known differences (3.2.24: 32, owner-checks questions 24–28; 3.3 added the 19 "Alien Artefact
-  2% in the files, page: Archaeologist perk only" lines and Lucion's terrorized +5 shards, and fixed Herald of Doom's
-  orb and map and Lucion's missing terrorized table).
+  finding. ESR 3.3.03: 30 known differences (3.3: 49; 3.2.24: 32, owner-checks questions 24–28; 3.3 added the 19 "Alien Artefact
+  2% in the files, page: Archaeologist perk only" lines and fixed Herald of Doom's orb and map and Lucion's missing
+  terrorized table; 3.3.03 moved the Tier 2–4 key chances and Rathma's and Lucion's map chance in the files). The page's terror
+  paragraph is gone since 3.3.03, so the app no longer quotes it: tier 5 shows the files' shards and `terrorUnconfirmed`
+  only marks a boss with no terrorized table.
 - **Weapon masteries** (`docs/weapon_mastery.html`): masteries.json comes from the cubemain "Apply Awaken Weapon Mastery
   Token" / "Remove Weapon Mastery" rows (grouped by their `weapon-mastery-<weapon>` property since ESR 3.3; "True
   Master" any-weapon rows give the bundle's `anyWeaponPerk`) and the awakened tokens' `u24desc` … `u41desc` strings
@@ -179,7 +185,7 @@ the owner's OK.
   (propose); "takes <code>, which cannot get this mastery", "no awaken / remove row takes", a description naming other
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
   specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
-  formulas read `weapon_mastery_orb_1`), the 17 families, the knuckle gap and the 8 warnings of 3.3.02. The
+  formulas read `weapon_mastery_orb_1`), the 17 families, the knuckle gap and the 6 warnings of 3.3.03. The
   `/weapon-masteries` page reads the same bundle; `build/masteryPage.ts` parses the official page into `pageRules`
   (drop odds), `pageNotes` (footnotes) and `pageDiffs` (the files win; 3 in 3.3.02: Stag Bow, Fend, Orb heading), so a
   reworded page shows in the bundle diff and on the cards: re-read each new difference. Warnings "the formulas of …
@@ -203,8 +209,8 @@ the owner's OK.
   `specializations:` warnings: "no table or launcher config reads it", "no cubemain row makes", "drop from N monsters
   with no perk condition", "the description says N %, the files …" → genuine data, a question for the mod author; a
   missing config, string or icon sheet → a rename to follow. `bundleIntegrity.test.ts` pins 4 trees × 15 perks, the
-  rules, the 9 cube-linked perks, the 2 `pageDiffs` of 3.3.02 (`docs/specializations.htm` still says Transmutation 50% and
-  Unstable Mixtures 15%; the pin fails when the page catches up, then empty it) and no warnings (3.3.02 fixed the
+  rules, the 9 cube-linked perks, no `pageDiffs` (`docs/specializations.htm` caught up in 3.3.03; a new difference fails the pin: a
+  question for the mod author) and no warnings (3.3.02 fixed the
   Elixir of Reincarnation recipe and the Alien Artefacts gate; `PERK_DROPS` stays, because the map boss table prints the
   2% for everyone: the gate sits one treasure class down). Deep Pockets is read by nothing in the files but
   granted by the plugin (mod author), so its `plugin` answer keeps it from warning. The `?tree=&perk=` slugs are linked from the guide and other pages: a renamed perk changes
