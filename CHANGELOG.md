@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.67.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.67.0...v1.67.1) (2026-11-10)
+
+### Bug Fixes
+
+* **loot-filter:** keep long lines inside the heading, details and save dialogs ([53c3fbe](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/53c3fbe393db368064344cac0a06c83108537e86))
+
 ## [1.67.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.66.0...v1.67.0) (2026-11-10)
 
 ### Features
