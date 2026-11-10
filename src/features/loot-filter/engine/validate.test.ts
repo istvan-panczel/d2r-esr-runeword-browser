@@ -76,22 +76,14 @@ describe('validateLootFilter', () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it('warns once per list about Sully’s skill tab params against the real game data', () => {
+  it('finds nothing in Sully’s filter against the real game data', () => {
     const json = (file: string) => JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data', file), 'utf-8')) as unknown;
     const real = buildLootFilterReference(json('lootfilter.json') as LootFilterDataBundle, json('types.json') as TypesBundle);
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
-    const diagnostics = validateLootFilter(parseLootFilter(source).filter, real);
-    // The +3/4/5 skill tab rules (Sully v0.6.7 to v0.6.11) check stat 188 without param and with params 1 to 21, the properties.txt
-    // tab numbers: one list warning each (13 name no tab as the game numbers them), plus the paramless check.
-    expect(diagnostics.map((d) => [d.severity, d.path])).toEqual(
-      [31, 32, 33].flatMap((rule) => [
-        ['warning', `rules/${String(rule)}/itemStatsAnyOf`],
-        ['warning', `rules/${String(rule)}/itemStatsAnyOf/0`],
-      ])
-    );
-    expect(diagnostics[0].message).toMatch(
-      /^These skill tab params \(1–21\) look like properties\.txt tab numbers .* 13 of these checks match no tab and 6 match a different tab/
-    );
+    // Up to v0.7.0 the +3/4/5 skill tab rules checked stat 188 with params 1 to 21, the properties.txt tab numbers (6
+    // warnings); since v0.9.0 they read every tab with `statMax('item_addskill_tab')`, and every name, code, type and
+    // area of the 689 rules is known to the game data.
+    expect(validateLootFilter(parseLootFilter(source).filter, real)).toEqual([]);
   });
 
   it('accepts a plain valid rule', () => {
@@ -722,9 +714,9 @@ describe('hide rules on unidentified items', () => {
     expect(said({ ...armour, itemStats: [check], namePrefix: 'x' })).toEqual([]);
   });
 
-  it('flags only rule 73 of Sully’s filter', () => {
+  it('flags only rule 99 of Sully’s filter', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
-    expect(validate(parseLootFilter(source).filter).map((d) => d.path)).toEqual(['rules/73/itemStats']);
+    expect(validate(parseLootFilter(source).filter).map((d) => d.path)).toEqual(['rules/99/itemStats']);
   });
 });
 

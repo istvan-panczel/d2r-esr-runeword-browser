@@ -110,13 +110,19 @@ describe('serializeLootFilter', () => {
   it('lays Sully’s filter out like the source, apart from key order and wrapped stat lists', () => {
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
     const text = serializeLootFilter(parseLootFilter(source).filter);
-    const oneLineRules = (s: string) => s.split('\n').filter((line) => line.startsWith('    {"')).length;
-    expect(text.startsWith('// volume can be adjusted')).toBe(true);
+    const oneLineRules = (s: string) => s.split('\n').filter((line) => line.startsWith('    {"'));
+    const commentLines = (s: string) => s.split('\n').flatMap((line) => (line.trim().startsWith('//') ? [line.trim()] : []));
+    // The four leading lines (v0.9.0 on) and every section heading, description and note survive, in order.
+    expect(text.startsWith("// Sully's QoL Filter 0.9.2")).toBe(true);
+    expect(commentLines(text)).toEqual(commentLines(source));
     // Sully writes one-line rules and styles longer than the serializer's line width: 12 of 113 up to v0.6.13, 91 of 115
-    // since v0.7.0 localised the names and chat lines (11 languages on one line).
-    expect(Math.abs(oneLineRules(text) - oneLineRules(source))).toBeLessThanOrEqual(95);
+    // since v0.7.0 localised the names and chat lines (11 languages on one line), and 526 of its 528 one-line
+    // rules since v0.9.0 (13 languages). The serializer keeps the ones that fit on one line and gives the others one key per line.
+    expect(oneLineRules(source)).toHaveLength(528);
+    expect(oneLineRules(text).length).toBeGreaterThanOrEqual(2);
+    for (const line of oneLineRules(text)) expect(line.replace(/,$/, '').length).toBeLessThanOrEqual(150);
     // The Ancient Scroll hide rule keeps its single-number `"activeInLevels": 4`, now in canonical key order.
-    expect(text).toMatch(/\n {6}"activeInLevels": 4,\n {6}"hide": true\n/);
+    expect(text).toMatch(/\n {6}"activeInLevels": 4,\n {6}"hide": true,\n/);
     expect(text.split('"activeInLevels": 4').length - 1).toBe(source.split('"activeInLevels": 4').length - 1);
   });
 

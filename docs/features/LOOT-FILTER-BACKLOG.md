@@ -20,8 +20,8 @@ condition ("empty list: the game logs 'the list is empty'…", done) and the UI 
 
 ### A single-number level (`"activeInLevels": 4` in Sully's template)
 
-Open question: **with Sully's template v0.6.13, are Ancient Scrolls (`01b`–`50b`) still shown at filter levels 1 to
-3?** Rule 98 hides them with `"activeInLevels": 4` instead of `[4]`. Verified in game: the rule works (the scrolls are
+Open question: **with Sully's template v0.9.2, are Ancient Scrolls (`01b`–`50b`) still shown at filter levels 1 to
+3?** Rule 77 ("R078", rule 98 up to v0.7.0) hides them with `"activeInLevels": 4` instead of `[4]`. Verified in game: the rule works (the scrolls are
 hidden at level 4), so the editor now reads a single number as a one-level list with a warning ("A single
 number works in game; [4] is the documented form.") and the Test tab hides them at level 4 only. What is left: if the
 plugin read `4` as `[4]`, the scrolls show (gong highlight) at levels 1 to 3; if they are hidden there too, the plugin
@@ -53,7 +53,9 @@ tab rules (v0.6.7 to v0.6.11, rules 31 to 33, 0-based) list params 0 to 21 in pr
 Amazon tabs (plugin 0–2) or Sorceress tabs (plugin 8–10), and both ranges are in the list. 13 of the numbers (3–7,
 11–15, 19–21) name no tab and the paramless check repeats param 0, so the minimal lists are `[0, 1, 2]` and
 `[8, 9, 10]`; the same pattern for Paladin, Barbarian, Druid, Assassin or Warlock items (plugin 24 and up) would
-never match. See LOOT-FILTER.md "Verify in game". The template's Ancient Scroll hide rule (rule 98, since v0.6.9)
+never match. See LOOT-FILTER.md "Verify in game". Resolved upstream: since v0.9.0 the template reads every tab with
+`statMax('item_addskill_tab')` instead of the lists. The template's Ancient Scroll hide rule (since v0.6.9; rule 98,
+rule 77 since v0.9.0)
 writes `4` where the format documents `[4]`; it works in game, so the editor accepts the number with a warning (see
 "A single-number level" above).
 

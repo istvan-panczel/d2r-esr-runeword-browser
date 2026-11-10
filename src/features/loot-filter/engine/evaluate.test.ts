@@ -506,7 +506,17 @@ describe("Sully's QoL filter", () => {
   // parser reads as [4] (with a warning) instead of handing a number to the evaluator.
   const source = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
   const sully = parseLootFilter(source).filter;
-  const hell = makeContext({ filterLevel: 3, area: 2, playerStats: [{ stat: 12, value: 92 }] });
+  // v0.9.0 names the gold stat (`"stat": "gold"`), which the app resolves through the game data's stat ids.
+  const hell = makeContext({
+    filterLevel: 3,
+    area: 2,
+    playerStats: [{ stat: 12, value: 92 }],
+    statIds: new Map([
+      ['item_numsockets', 194],
+      ['level', 12],
+      ['gold', 14],
+    ]),
+  });
   const appliedNames = (items: TestItem, context: TestContext): readonly number[] =>
     evaluateFilter(sully, items, context)
       .trace.filter((rule) => rule.outcome === 'applied')
@@ -516,7 +526,9 @@ describe("Sully's QoL filter", () => {
     const zod = makeItem({ code: 'r83', name: 'Zod Rune' });
     const result = evaluateFilter(sully, zod, hell);
     expect(result.hidden).toBe(false);
-    expect(appliedNames(zod, hell)).toHaveLength(1);
+    // Since v0.9.0 the never-hide rule for high runes (rule 8) applies too, then the Zod label rule.
+    expect(appliedNames(zod, hell)).toEqual([8, 223]);
+    expect(sully.rules[223]?.itemCodes).toContain('r83');
     expect(result.name).toBe('ÿc1Zod Rune');
     expect(result.chatMessages).toEqual(['ÿc1*ÿc3*ÿc2*   ÿc8High Rune Drop: ÿc0Zod   ÿc1*ÿc3*ÿc2*']);
     // The Jackpot style's sound at the filter's soundVolume 25.
@@ -524,6 +536,8 @@ describe("Sully's QoL filter", () => {
     expect(result.labelBackground).toEqual([255, 255, 255, 255]);
     expect(result.labelBorder).toEqual({ color: [240, 0, 0, 230], width: 2 });
     expect(result.icon).toEqual({ iconName: 'rune', iconSize: 50 });
+    // v0.9.0 adds beams (droplight) to the styles.
+    expect(result.droplight).toEqual({ color: [255, 0, 0] });
   });
 
   it('hides a tier 1 map (z01) at level 4 but labels it at level 3, and leaves it alone in the stash', () => {
@@ -563,18 +577,19 @@ describe("Sully's QoL filter", () => {
     expect(evaluateFilter(sully, gold(1500), { ...hell, area: 1 }).name).toBe('ÿc0$$');
   });
 
-  it('hides Ancient Scrolls at level 4 only: rule 98\'s "activeInLevels": 4 reads as [4]', () => {
-    // Sully v0.6.9 to v0.6.11 write a number where the format wants a list; it works in game (Sully, 2026-11).
+  it('hides Ancient Scrolls at level 4 only: rule 77\'s "activeInLevels": 4 reads as [4]', () => {
+    // Sully writes a number where the format wants a list since v0.6.9 (rule 98 up to v0.7.0, rule 77 since v0.9.0); it
+    // works in game (Sully, 2026-11).
     const scroll = makeItem({ code: '01b', typeAncestors: ['misc'], name: 'Ancient Scroll' });
-    expect(wrongShapedKeys(sully.rules[98] ?? {})).toEqual([]);
+    expect(wrongShapedKeys(sully.rules[77] ?? {})).toEqual([]);
     const maps = evaluateFilter(sully, scroll, { ...hell, filterLevel: 4 });
     expect(maps.hidden).toBe(true);
-    expect(maps.hiddenBy).toBe(98);
-    // At levels 1 to 3 rule 98 is inactive and the gong highlight (rule 99) applies.
+    expect(maps.hiddenBy).toBe(77);
+    // At levels 1 to 3 rule 77 is inactive and the gong highlight (rule 136) applies.
     for (const filterLevel of [1, 2, 3]) {
       const shown = evaluateFilter(sully, scroll, { ...hell, filterLevel });
       expect(shown.hidden).toBe(false);
-      expect(shown.trace.find((entry) => entry.index === 98)).toEqual(
+      expect(shown.trace.find((entry) => entry.index === 77)).toEqual(
         expect.objectContaining({ outcome: 'skipped', failed: ['activeInLevels'] })
       );
       expect(shown.name).toBe('ÿc6Ancient Scroll');

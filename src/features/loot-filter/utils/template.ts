@@ -27,28 +27,30 @@ export interface BundledTemplate {
 }
 
 /**
- * Sully's QoL filter (v0.7.0), the filter the ESR launcher pulls live from github.com/Thisisnotsully/QoL-Filter since
+ * Sully's QoL filter (v0.9.2), the filter the ESR launcher pulls live from github.com/Thisisnotsully/QoL-Filter since
  * ESR 3.2.22 (`LootFilters/sources.json`). The copy in `public/loot-filters/` is his `Sullys-QoL-Filter.json` verbatim
  * (v0.6.2 fixed the `9pm` typo and the trailing comma we had patched in v0.6.1, v0.6.3 adds a 500k+ gold stack rule,
  * v0.6.7 a +1 all skills base highlight and "except +all skills" hide rules, v0.6.9 to v0.6.11 hide Ancient Scrolls at
  * level 4, add Mythical Jewels to the rare jewel rule and fix ancient coupon tier lists, v0.6.12 to v0.6.13 add two Legendary
  * Materials (Lucion's Relic of Sanctification `u18`, Inarius' Everburning Halo `u40`); v0.7.0 (2026-11-05) localises
- * names, chat lines and level names into 11 languages and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); its `"activeInLevels": 4` is a
- * number, not a list, which works in game, so the editor reads it as `[4]` with one warning; strict JSON apart from the
- * `//` comments). Up to ESR 3.2.21 the mod shipped an earlier conversion of the same filter as
+ * names, chat lines and level names into 11 languages and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); v0.9.0
+ * to v0.9.2 (2026-11-10) regroup it for this editor into 6 `// ====` parts and 44 `// ----` sections with an
+ * "R### | what | action" title per rule, 689 rules and 22 styles (beams, shortened coupon and organ names, 13 languages,
+ * `statMax` skill tab formulas, no new assets); its `"activeInLevels": 4` is a number, not a list, which works in game, so
+ * the editor reads it as `[4]` with one warning; strict JSON apart from the `//` comments). Up to ESR 3.2.21 the mod shipped an earlier conversion of the same filter as
  * `LootFilters/esr-default-filter.json`.
  */
 export const SULLYS_QOL_TEMPLATE: BundledTemplate = {
   id: 'sullys-qol',
   name: "Sully's QoL Filter",
   author: 'Sully',
-  version: '0.7.0',
+  version: '0.9.2',
   file: 'sullys-qol-filter.json',
   sandboxPath: '/loot-filters/sully',
   startLabel: "Start from Sully's QoL filter",
   summary: 'The filter the ESR launcher gives every player, bundled with this site. Start from it to change its rules.',
   credit:
-    "Sully's QoL filter v0.7.0, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully",
+    "Sully's QoL filter v0.9.2, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully",
 };
 
 /**

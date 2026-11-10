@@ -12,7 +12,7 @@ describe('filterMetadata', () => {
     expect(meta.title).toBe("Sully's QoL Filter");
     expect(meta.author).toBe('Sully');
     expect(meta.file_version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(meta.rule_count).toBe(225);
+    expect(meta.rule_count).toBe(689);
     expect(meta.levels).toHaveLength(4);
     expect(meta.levels?.[0]).toMatchObject({ id: 1, name: { enUS: 'Leveling', deDE: 'Leveln' } });
   });

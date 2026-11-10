@@ -205,8 +205,9 @@ describe('presets', () => {
     const result = evaluateFilter(sully, toTestItem(zod, lookup), toTestContext(zod, sully, lookup));
     const applied = result.trace.filter((rule) => rule.outcome === 'applied');
     expect(result.hidden).toBe(false);
-    expect(applied).toHaveLength(1);
-    expect(sully.rules[applied[0]?.index ?? -1]?.itemCodes).toContain('r83');
+    // Sully's never-hide rule for high runes, then his Zod label rule (v0.9.0 on).
+    expect(applied).toHaveLength(2);
+    expect(sully.rules[applied[1]?.index ?? -1]?.itemCodes).toContain('r83');
     expect(result.name).toBe('ÿc1Zod Rune');
   });
 

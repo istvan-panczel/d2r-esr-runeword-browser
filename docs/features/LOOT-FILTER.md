@@ -230,9 +230,11 @@ then run `lootfilter` in the game console and read
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.7.0) gets 7 warnings against the ESR 3.3 data: one on the stat-based hide at `rules/73` (see the Test tab's unidentified items) and 6 as v0.6.13 had against 3.2.24: its three +3/4/5
-    skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
-    warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
+    Skills, which is param 56"). Sully's template up to v0.7.0 got 6 of these against the ESR 3.3 data: its three +3/4/5
+    skill tab rules (rules 31 to 33) each checked stat 188 without param (one warning) and with params 1 to 21 (the list
+    warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). Since v0.9.0 they read every tab with
+    `statMax('item_addskill_tab')`, and v0.9.2 gets no skill tab warning; it keeps one warning, on the stat-based hide at
+    `rules/99` (see the Test tab's unidentified items; `rules/73` up to v0.7.0). A test pins this against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
   after `rules`. A filter without disabled rules has no `disabledRules` key, so existing files serialize as before. To
   enable a rule by hand, cut the inner object back into `rules`.
@@ -265,8 +267,10 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
 - A marker is four or more `=` or `-` after `//`; a run of three or more of them after the title is decoration.
 - A section runs to the next heading of the same or a higher level; a heading folds what it runs over.
 - The comment lines above the opening `{` show as "About this filter", and the ones above `"styles"` on the Styles tab.
-- **Opt-in:** a file with no heading shows no comment rows, so older files (Sully's QoL template has 242 per-rule comment
-  lines) look as before. Their comments are still kept.
+- **Opt-in:** a file with no heading shows no comment rows, so older files (Sully's QoL template had 242 per-rule comment
+  lines up to v0.7.0) look as before. Their comments are still kept. Since v0.9.0 Sully's template is grouped for the
+  editor itself: 6 parts, 44 sections, a description under each heading and 78 per-rule notes (see "Start from Sully's
+  QoL filter").
 - **Kept:** whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
   **Dropped on the first edit, with a warning:** a comment on the same line as a rule, inside a rule object, and every
   `/* */` block.
@@ -388,8 +392,8 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
 - **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
   entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.7.0 from github.com/Thisisnotsully/QoL-Filter, verbatim (225 rules, 12 styles, 4
-  levels, `soundVolume` 25, his `updateUrl` and `//` comment kept), the filter the ESR launcher pulls live since
+  is `Sullys-QoL-Filter.json` v0.9.2 from github.com/Thisisnotsully/QoL-Filter, verbatim (689 rules, 22 styles, 4
+  levels, `soundVolume` 25, 538 KB, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
   3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
   fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
   (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25; v0.6.7 (2026-10-31) adds a +1 All Skills base highlight (chat
@@ -405,13 +409,21 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   `replaceName`, `namePrefix`, `nameSuffix`, the chat lines and the `filterLevels` names into 11 languages (no jaJP or
   ptBR), keeps one `//` comment line (the volume note) and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); no
   new assets or rules, and the parser had to learn per-language level names first (plugin 1.8.2, "Localised level
-  names" below). The v0.6.9 hide rule (rule 98) writes
+  names" below); v0.9.0 to v0.9.2 (2026-11-10, "Added compatibility for Mefi's editor") regroup the whole filter into
+  6 `// ====` parts (Protection, Drop Announcements, Superior Base Stat Tags, Hide by Strictness, Highlights and Labels,
+  Name Shortening) and 44 `// ----` sections, open with 4 `//` lines (what the filter is, its layout, the rule titles,
+  the volume note), title every rule "R### | what it does | action" (the number is its place in the list, 1-based, as
+  the editor counts), grow to 689 rules and 22 styles (beams on the styles, shortened coupon and monster part names,
+  jaJP and ptBR for 13 languages, ESR currency and quest items, the skill tab bases read with
+  `statMax('item_addskill_tab')`, gold piles by the stat name `gold`), with the same icons and sounds (no new assets). Some
+  section titles repeat in different parts (Mythicals, Coupons twice, Uniques and sets three times). The v0.6.9 hide
+  rule (rule 98 up to v0.7.0, rule 77 "R078" since v0.9.0) writes
   `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
   reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
   single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
   Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
   The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
-  in `utils/template.ts`): "Sully's QoL filter v0.7.0, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
+  in `utils/template.ts`): "Sully's QoL filter v0.9.2, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
   It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
   `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
   filter through the launcher.
@@ -1762,8 +1774,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   per unique and set row with base, level and coupon/disabled notes, and every skill. Neither size lists the sounds.txt
   names (they were 263k, about half of Full, until 2026-11): the prompt and assets.md say game sounds exist and that the
   LLM asks the user for the exact name (the editor's Sound picker lists them; the validator warns on an unknown one), and
-  the page says so under the downloads. Sully's template (v0.7.0, 184k
-  characters) as the starter adds about 185k characters (Full with Sully's: about 546k).
+  the page says so under the downloads. Sully's template (v0.9.2, 472k
+  characters; 184k up to v0.7.0) as the starter adds about 473k characters (Full with Sully's: about 835k).
 - **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
   blocks (backticks or tildes, any length, an unclosed last block included) that look like JSON (info `json`, `jsonc`,
   `json5`, `js`, none, or content starting with `{` or `//`) are tried last first and the first complete filter wins (a
