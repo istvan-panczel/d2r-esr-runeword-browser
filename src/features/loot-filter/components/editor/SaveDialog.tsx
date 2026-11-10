@@ -123,7 +123,7 @@ function SaveForm({ kind, details, counts, jsonUnapplied, onClose }: Omit<SaveDi
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4">
       <DialogHeader>
         <DialogTitle>{insert ? 'Save filter' : 'Save changes'}</DialogTitle>
         <DialogDescription>

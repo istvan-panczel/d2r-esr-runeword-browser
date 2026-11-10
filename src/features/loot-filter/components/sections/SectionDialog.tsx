@@ -76,7 +76,8 @@ function SectionForm({ state, onClose, onEdit }: { readonly state: SectionDialog
           next heading; a note is a comment in place. The game ignores comments.
         </DialogDescription>
       </DialogHeader>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* min-w-0: the dialog is a grid, and a long comment line in the textarea or the preview would widen its column past the dialog. */}
+      <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4">
         {kinds.length > 0 && (
           <div className="flex gap-1" role="radiogroup" aria-label="Kind">
             {kinds.map((option) => (
