@@ -92,6 +92,16 @@ export function bundledTemplate(id: string | null | undefined): BundledTemplate 
   return BUNDLED_TEMPLATE_LIST.find((template) => template.id === id) ?? null;
 }
 
+/**
+ * A folder of a template's GitHub repository on the branch its `liveUrl` reads (`…/tree/main/icons`), for the files the
+ * site does not bundle; null without a repository.
+ */
+export function templateRepoFolderUrl(template: BundledTemplate, folder: string): string | null {
+  if (template.repoUrl === undefined) return null;
+  const branch = /\/refs\/heads\/([^/]+)\//.exec(template.liveUrl ?? '')?.[1] ?? 'main';
+  return `${template.repoUrl.replace(/\/$/, '')}/tree/${branch}/${folder}`;
+}
+
 /** The ESR loot filter plugin version the editor targets; shared filters record it. Bump when the editor follows a new plugin. */
 export const LOOT_FILTER_PLUGIN_VERSION = '1.8.2';
 

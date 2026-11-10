@@ -12,7 +12,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { downloadFilterZip, downloadTextFile, filterFileName } from '../utils/download';
 import type { ReferencedAssets } from '../utils/referencedAssets';
-import { SULLYS_QOL_TEMPLATE } from '../utils/template';
+import { SULLYS_QOL_TEMPLATE, templateRepoFolderUrl } from '../utils/template';
 
 const MISSING_SHOWN = 4;
 
@@ -27,8 +27,9 @@ interface FilterDownloadMenuProps {
   readonly onDownload?: () => void;
 }
 
-/** Sully's repository folders, where a sound or icon the site does not bundle most likely comes from (nothing is fetched from there). */
-const SULLY_REPO = SULLYS_QOL_TEMPLATE.repoUrl ?? 'https://github.com/Thisisnotsully/QoL-Filter';
+// Sully's folders, where a sound or icon the site does not bundle most likely comes from (nothing is fetched from there).
+const SULLY_ICONS = templateRepoFolderUrl(SULLYS_QOL_TEMPLATE, 'icons');
+const SULLY_SOUNDS = templateRepoFolderUrl(SULLYS_QOL_TEMPLATE, 'sounds');
 
 /**
  * Download: the filter file alone, or (when the filter uses bundled sounds or icons) a zip with the filter and
@@ -99,17 +100,19 @@ export function FilterDownloadMenu({ name, getText, assets, variant = 'default',
                 Not bundled, add them yourself: <span className="break-all font-mono">{shownMissing.join(', ')}</span>
                 {moreMissing > 0 && ` and ${String(moreMissing)} more`}.
               </p>
-              <p>
-                Sully&apos;s are in his{' '}
-                <a href={`${SULLY_REPO}/tree/main/icons`} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                  icons
-                </a>{' '}
-                and{' '}
-                <a href={`${SULLY_REPO}/tree/main/sounds`} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                  sounds
-                </a>{' '}
-                folders on GitHub.
-              </p>
+              {SULLY_ICONS !== null && SULLY_SOUNDS !== null && (
+                <p>
+                  Sully&apos;s are in his{' '}
+                  <a href={SULLY_ICONS} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                    icons
+                  </a>{' '}
+                  and{' '}
+                  <a href={SULLY_SOUNDS} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                    sounds
+                  </a>{' '}
+                  folders on GitHub.
+                </p>
+              )}
             </>
           )}
         </div>

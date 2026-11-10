@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS } from '../../src/features/loot-filter/utils/bundledAssets.ts';
-import { plural, unbundledAssets, upstreamAssetsOfTree } from './sullyTemplate.ts';
+import { SULLYS_QOL_TEMPLATE } from '../../src/features/loot-filter/utils/template.ts';
+import { githubRepoSlug, githubTreeUrl, plural, rawUrlBranch, sizeReport, unbundledAssets, upstreamAssetsOfTree } from './sullyTemplate.ts';
 
 const blob = (path: string) => ({ path, type: 'blob' });
 
@@ -33,6 +34,27 @@ describe("Sully's template script", () => {
         bundled
       )
     ).toEqual(['icons/rune.lowend.sprite', 'icons/halo.sprite', 'sounds/new.wav']);
+  });
+
+  it('derives the repository, branch and tree listing from the template URLs', () => {
+    expect(githubRepoSlug('https://github.com/Thisisnotsully/QoL-Filter')).toBe('Thisisnotsully/QoL-Filter');
+    expect(githubRepoSlug('https://github.com/Thisisnotsully/QoL-Filter/')).toBe('Thisisnotsully/QoL-Filter');
+    expect(githubRepoSlug('https://example.com/a/b')).toBeNull();
+    expect(rawUrlBranch('https://raw.githubusercontent.com/a/b/refs/heads/main/f.json')).toBe('main');
+    expect(rawUrlBranch('https://raw.githubusercontent.com/a/b/dev/f.json')).toBe('dev');
+    expect(githubTreeUrl(SULLYS_QOL_TEMPLATE.repoUrl ?? '', SULLYS_QOL_TEMPLATE.liveUrl ?? '')).toBe(
+      'https://api.github.com/repos/Thisisnotsully/QoL-Filter/git/trees/main?recursive=1'
+    );
+  });
+
+  it('reports the size against the saved-filter cap and warns from 75%', () => {
+    const cap = 2_097_152;
+    expect(sizeReport(537_684, 553_637, cap)).toEqual({
+      line: 'Size: 537,684 bytes, 553,637 as the editor writes it (26% of the 2,097,152-byte saved-filter cap)',
+      warning: null,
+    });
+    expect(sizeReport(1_500_000, 1_600_000, cap).warning).toMatch(/^WARNING: over 75% of the saved-filter cap/);
+    expect(sizeReport(1_000_000, 2_100_000, cap).warning).toMatch(/^WARNING: over the saved-filter cap/);
   });
 
   it('counts with plurals', () => {

@@ -16,10 +16,9 @@ import { parseArgs } from 'node:util';
 import type { LootFilterDataBundle, TypesBundle } from '../src/features/game-data/engine/schema.ts';
 import { REPO_ROOT } from './lib/esrClone.ts';
 import { importSrc } from './lib/srcImport.ts';
-import { plural, unbundledAssets, upstreamAssetsOfTree } from './lib/sullyTemplate.ts';
+import { githubTreeUrl, plural, sizeReport, unbundledAssets, upstreamAssetsOfTree } from './lib/sullyTemplate.ts';
 
 const BUNDLED_FILE = join(REPO_ROOT, 'public', 'loot-filters', 'sullys-qol-filter.json');
-const TREE_URL = 'https://api.github.com/repos/Thisisnotsully/QoL-Filter/git/trees/main?recursive=1';
 /** A generic client name: no personal or project details in requests to GitHub. */
 const USER_AGENT = 'loot-filter-template-check/1.0';
 const TIMEOUT_MS = 20_000;
@@ -39,7 +38,7 @@ interface Filter {
   readonly styles?: Readonly<Record<string, Actions>>;
 }
 interface TemplateModule {
-  SULLYS_QOL_TEMPLATE: { readonly liveUrl?: string };
+  SULLYS_QOL_TEMPLATE: { readonly liveUrl?: string; readonly repoUrl?: string };
 }
 interface TemplateSourceModule {
   checkTemplateText: (
@@ -58,6 +57,15 @@ interface AssetsModule {
 }
 interface ReferencedModule {
   isSoundFile: (sound: string | number | undefined) => sound is string;
+}
+interface SerializeModule {
+  serializeLootFilter: (filter: Filter) => string;
+}
+interface PresetsModule {
+  presetNameClashes: (styleNames: Iterable<string>) => string[];
+}
+interface SharingConstantsModule {
+  FILTER_CONTENT_MAX_BYTES: number;
 }
 interface ValidateModule {
   validateLootFilter: (filter: Filter, reference: object) => Diagnostic[];
@@ -90,9 +98,14 @@ const assets = await importSrc<AssetsModule>('features/loot-filter/utils/bundled
 const { isSoundFile } = await importSrc<ReferencedModule>('features/loot-filter/utils/referencedAssets.ts');
 const { validateLootFilter } = await importSrc<ValidateModule>('features/loot-filter/engine/validate.ts');
 const { buildLootFilterReference } = await importSrc<ReferenceModule>('features/loot-filter/engine/reference.ts');
+const { serializeLootFilter } = await importSrc<SerializeModule>('features/loot-filter/engine/serialize.ts');
+const { presetNameClashes } = await importSrc<PresetsModule>('features/loot-filter/utils/stylePresets.ts');
+const { FILTER_CONTENT_MAX_BYTES } = await importSrc<SharingConstantsModule>('features/loot-filter/sharing/constants.ts');
 
-const liveUrl = SULLYS_QOL_TEMPLATE.liveUrl;
-if (liveUrl === undefined) throw new Error('SULLYS_QOL_TEMPLATE has no liveUrl');
+const { liveUrl, repoUrl } = SULLYS_QOL_TEMPLATE;
+if (liveUrl === undefined || repoUrl === undefined) throw new Error('SULLYS_QOL_TEMPLATE has no liveUrl or repoUrl');
+const treeUrl = githubTreeUrl(repoUrl, liveUrl);
+if (treeUrl === null) throw new Error(`Cannot derive the GitHub tree listing from ${repoUrl} and ${liveUrl}`);
 
 const versionOf = (text: string): string => {
   try {
@@ -135,6 +148,16 @@ console.log(
 for (const diagnostic of [...parsed.diagnostics, ...parsed.notes].slice(0, 5)) {
   console.log(`  ${diagnostic.severity} ${diagnostic.path}: ${diagnostic.message}`);
 }
+const size = sizeReport(upstream.bytes.length, Buffer.byteLength(serializeLootFilter(parsed.filter), 'utf8'), FILTER_CONTENT_MAX_BYTES);
+console.log(size.line);
+if (size.warning !== null) console.warn(size.warning);
+// A style named like one of our presets makes picking that preset in his filter keep his style (the MidRune bug).
+const clashes = presetNameClashes(Object.keys(parsed.filter.styles ?? {}));
+console.log(
+  clashes.length === 0
+    ? 'No style of his is named like one of our style presets.'
+    : `WARNING: his styles use the preset names ${clashes.join(', ')}: rename those presets (utils/stylePresets.ts); stylePresets.test.ts fails until then.`
+);
 
 // What the new file names that the site does not bundle (the zip download and the sandbox lack them).
 const referencedMissing = new Set<string>();
@@ -152,7 +175,7 @@ console.log(
     : `The file references ${plural(referencedMissing.size, 'file')} the site does not bundle: ${[...referencedMissing].join(', ')}`
 );
 
-const tree = await get(TREE_URL, { Accept: 'application/vnd.github+json' });
+const tree = await get(treeUrl, { Accept: 'application/vnd.github+json' });
 const listing = 'error' in tree ? null : upstreamAssetsOfTree(JSON.parse(tree.bytes.toString('utf8')) as unknown);
 if (listing === null) {
   console.warn(`Could not list Sully's icons and sounds (${'error' in tree ? tree.error : 'not a complete tree listing'}).`);

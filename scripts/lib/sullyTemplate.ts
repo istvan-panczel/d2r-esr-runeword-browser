@@ -3,6 +3,25 @@
  * repository, and which of his icons and sounds the site does not bundle. See scripts/update-sully-template.ts.
  */
 
+/** "Thisisnotsully/QoL-Filter" for `https://github.com/Thisisnotsully/QoL-Filter`; null for any other URL. */
+export function githubRepoSlug(repoUrl: string): string | null {
+  const match = /^https:\/\/github\.com\/([^/]+\/[^/]+?)\/?$/.exec(repoUrl);
+  return match === null ? null : match[1];
+}
+
+/** The branch a raw.githubusercontent.com URL reads (`…/refs/heads/<branch>/…` or `…/<owner>/<repo>/<branch>/…`); null otherwise. */
+export function rawUrlBranch(rawUrl: string): string | null {
+  const match = /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/(?:refs\/heads\/)?([^/]+)\//.exec(rawUrl);
+  return match === null ? null : match[1];
+}
+
+/** The GitHub API's recursive tree listing of the live file's branch (one request for every icon and sound). */
+export function githubTreeUrl(repoUrl: string, liveUrl: string): string | null {
+  const slug = githubRepoSlug(repoUrl);
+  const branch = rawUrlBranch(liveUrl);
+  return slug === null || branch === null ? null : `https://api.github.com/repos/${slug}/git/trees/${branch}?recursive=1`;
+}
+
 export interface UpstreamAssets {
   /** `.sprite` file names under `icons/` (a `.lowend.sprite` variant included). */
   readonly icons: readonly string[];
@@ -54,4 +73,25 @@ export function unbundledAssets(
 /** "689 rules, 22 styles; parser: 0 errors, 1 warning" style counts. */
 export function plural(count: number, word: string): string {
   return `${String(count)} ${word}${count === 1 ? '' : 's'}`;
+}
+
+/** The share of the saved-filter cap from which `npm run loot-filter:template` warns. */
+export const SIZE_WARNING_SHARE = 0.75;
+
+/**
+ * "Size: 537,684 bytes, 553,637 as the editor writes it (26% of the 2,097,152-byte saved-filter cap)", plus a warning
+ * when either is over `SIZE_WARNING_SHARE` of the cap (a draft started from the template must stay savable).
+ */
+export function sizeReport(rawBytes: number, serializedBytes: number, capBytes: number): { line: string; warning: string | null } {
+  const largest = Math.max(rawBytes, serializedBytes);
+  const share = Math.round((largest / capBytes) * 100);
+  const line = `Size: ${rawBytes.toLocaleString('en-US')} bytes, ${serializedBytes.toLocaleString('en-US')} as the editor writes it (${String(share)}% of the ${capBytes.toLocaleString('en-US')}-byte saved-filter cap)`;
+  if (largest <= capBytes * SIZE_WARNING_SHARE) return { line, warning: null };
+  return {
+    line,
+    warning:
+      largest > capBytes
+        ? 'WARNING: over the saved-filter cap: a filter started from it cannot be saved. Raise FILTER_CONTENT_MAX_BYTES with a migration (see 007).'
+        : `WARNING: over ${String(SIZE_WARNING_SHARE * 100)}% of the saved-filter cap: raise FILTER_CONTENT_MAX_BYTES with a migration before it outgrows it (see 007).`,
+  };
 }
