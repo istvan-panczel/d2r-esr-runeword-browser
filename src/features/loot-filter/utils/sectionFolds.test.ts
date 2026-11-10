@@ -6,6 +6,8 @@ import {
   MAX_REMEMBERED_FILTERS,
   foldsIdOf,
   foldsOf,
+  startFoldsSession,
+  switchFoldsSession,
   openAfterEdit,
   parseStoredFolds,
   ruleHeadingKeys,
@@ -21,6 +23,8 @@ describe('foldsIdOf', () => {
   const sandbox = { kind: 'sandbox', revision: null, ownerId: null, name: 'x', baseText: '' } as const;
   it('names a draft by its entry, a saved or shared filter by its id, a template sandbox by its template', () => {
     expect(foldsIdOf({ kind: 'draft', entryId: 'e1' })).toBe('draft:e1');
+    // A draft holding unsaved edits of a saved filter shares the saved filter's folds (Discard keeps them).
+    expect(foldsIdOf({ kind: 'draft', entryId: 'e1' }, 's1')).toBe('saved:s1');
     const saved: EditorTarget = {
       kind: 'saved',
       savedId: 's1',
@@ -124,5 +128,34 @@ describe('headings of a rule or a style', () => {
     expect(styleHeadingKeys(filter, 'Gold')).toEqual(['2:Looks']);
     expect(styleHeadingKeys(filter, 'Plain')).toEqual([]);
     expect(styleHeadingKeys(filter, 'Missing')).toEqual([]);
+  });
+});
+
+describe('folds session', () => {
+  const stored: Record<string, ReturnType<typeof folds>> = { 'template:sullys-qol': folds(['1:T']), 'draft:e': folds(['1:E']) };
+  const read = (id: string) => stored[id] ?? folds([]);
+
+  it('reads the folds of each filter it opens', () => {
+    const session = switchFoldsSession(startFoldsSession('template:sullys-qol', read), 'draft:e', false, read);
+    expect(session).toMatchObject({ id: 'draft:e', folds: folds(['1:E']), changed: false });
+  });
+
+  it('carries the folds onto the new id of a copy or a save, to be written', () => {
+    const copied = switchFoldsSession(startFoldsSession('template:sullys-qol', read), 'draft:d', true, read);
+    expect(copied).toMatchObject({ id: 'draft:d', folds: folds(['1:T']), changed: true });
+  });
+
+  it('does not carry onto a filter shown before (browser Back after another draft opened)', () => {
+    // Copy → d (carried), the update banner opens e, Back returns to d while the copy still reads as a switch.
+    let session = switchFoldsSession(startFoldsSession('template:sullys-qol', read), 'draft:d', true, read);
+    session = switchFoldsSession(session, 'draft:e', false, read);
+    session = switchFoldsSession(session, 'draft:d', true, read);
+    expect(session).toMatchObject({ id: 'draft:d', changed: false });
+    expect(session.folds).toEqual(folds([]));
+  });
+
+  it('keeps the session for the same id', () => {
+    const session = startFoldsSession('draft:e', read);
+    expect(switchFoldsSession(session, 'draft:e', true, read)).toBe(session);
   });
 });

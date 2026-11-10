@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { NO_FOLDS, readFilterFolds, writeFilterFolds, type FilterFolds, type FoldList } from '../utils/sectionFolds';
-
-/** The open filter's folds, and whether they changed since they were read (only then are they written back). */
-interface FoldsState {
-  readonly id: string | null;
-  readonly folds: FilterFolds;
-  readonly changed: boolean;
-}
+import {
+  readFilterFolds,
+  startFoldsSession,
+  switchFoldsSession,
+  writeFilterFolds,
+  type FilterFolds,
+  type FoldList,
+  type FoldsSession,
+} from '../utils/sectionFolds';
 
 export interface SectionFoldsApi {
   readonly folds: FilterFolds;
@@ -18,17 +19,14 @@ export interface SectionFoldsApi {
  * The open headings of the filter `id` (`foldsIdOf`), for the Rules and Styles tabs: held by the editor screen so they
  * outlive a tab switch, read from this browser's storage when another filter opens and written back when they change.
  * `carry`: the open filter only moved to a new id (a draft saved, a sandbox copied to my filters), so its folds go with
- * it instead of being read for the new id.
+ * it instead of being read for the new id (`switchFoldsSession`: only onto an id not shown before).
  */
 export function useSectionFolds(id: string | null, carry: boolean): SectionFoldsApi {
-  const [state, setState] = useState<FoldsState>(() => ({ id, folds: id === null ? NO_FOLDS : readFilterFolds(id), changed: false }));
+  const [state, setState] = useState<FoldsSession>(() => startFoldsSession(id, readFilterFolds));
   let current = state;
   if (state.id !== id) {
     // Another filter: adjusted while rendering, so the first render of the new filter already has its folds.
-    current =
-      carry && state.id !== null && id !== null
-        ? { id, folds: state.folds, changed: true }
-        : { id, folds: id === null ? NO_FOLDS : readFilterFolds(id), changed: false };
+    current = switchFoldsSession(state, id, carry, readFilterFolds);
     setState(current);
   }
 

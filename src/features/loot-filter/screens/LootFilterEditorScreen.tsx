@@ -256,7 +256,7 @@ export function LootFilterEditorScreen() {
   const jsonDraft = jsonState !== null && jsonState.session === sessionKey ? jsonState.draft : null;
 
   // The Rules and Styles tabs' folds, remembered per filter; a saved draft or a copied sandbox keeps them.
-  const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target), switching);
+  const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target, draftEntry?.savedId), switching);
 
   // Leaving the screen: write pending edits back and forget a finished save.
   useEffect(

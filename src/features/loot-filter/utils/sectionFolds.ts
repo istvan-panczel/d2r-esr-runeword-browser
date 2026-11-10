@@ -44,13 +44,44 @@ interface StoredFolds {
 }
 
 /**
- * Which filter the folds belong to: a draft by its library entry, a saved or shared filter by its id (the owner's
- * editor and the sandbox of the same filter share them), a bundled template's sandbox by the template.
+ * Which filter the folds belong to: a saved or shared filter by its id (the owner's editor, a draft holding unsaved
+ * edits of it, and the sandbox of the same filter share them, so Discard on such a draft keeps them), a new draft by its
+ * library entry, a bundled template's sandbox by the template. `draftSavedId`: the saved filter a draft target belongs
+ * to (its library entry's `savedId`).
  */
-export function foldsIdOf(target: EditorTarget): string {
-  if (target.kind === 'draft') return `draft:${target.entryId}`;
+export function foldsIdOf(target: EditorTarget, draftSavedId?: string): string {
+  if (target.kind === 'draft') return draftSavedId === undefined ? `draft:${target.entryId}` : `saved:${draftSavedId}`;
   if (target.kind === 'saved' || target.savedId !== null) return `saved:${target.savedId ?? ''}`;
   return `template:${target.basedOn?.template ?? SULLYS_QOL_TEMPLATE.id}`;
+}
+
+/** The editor screen's folds: the open filter's id, its folds, whether they changed since read, the ids it has shown. */
+export interface FoldsSession {
+  readonly id: string | null;
+  readonly folds: FilterFolds;
+  readonly changed: boolean;
+  readonly seen: ReadonlySet<string>;
+}
+
+export function startFoldsSession(id: string | null, read: (id: string) => FilterFolds): FoldsSession {
+  return { id, folds: id === null ? NO_FOLDS : read(id), changed: false, seen: new Set(id === null ? [] : [id]) };
+}
+
+/**
+ * Another filter id opened: its stored folds, or the previous filter's carried over when `carry` says the open filter
+ * only moved to a new id (a draft saved, a sandbox copied). The carry applies only to an id this session has not shown
+ * yet, which a Save or Copy creates: going back to a filter opened before (browser Back) reads its own folds.
+ */
+export function switchFoldsSession(
+  session: FoldsSession,
+  id: string | null,
+  carry: boolean,
+  read: (id: string) => FilterFolds
+): FoldsSession {
+  if (id === session.id) return session;
+  const seen = id === null || session.seen.has(id) ? session.seen : new Set([...session.seen, id]);
+  if (carry && session.id !== null && id !== null && !session.seen.has(id)) return { id, folds: session.folds, changed: true, seen };
+  return { id, folds: id === null ? NO_FOLDS : read(id), changed: false, seen };
 }
 
 /** The headings rule `index` of the filter sits in (its part, then its section). */

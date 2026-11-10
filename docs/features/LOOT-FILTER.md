@@ -313,10 +313,13 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   - Storage: localStorage `loot-filters/section-folds`,
     `{ "v": 1, "filters": [{ "id": "draft:<entry id>", "rules": ["1:PART 1", "2:1.1 Gold"], "styles": [] }] }`, the
     most recently changed filter first, at most 30 filters and 500 open headings per list; anything unreadable is
-    ignored. The id is `draft:<library entry id>`, `saved:<id>` (the owner's saved filter, its pending draft and the
-    sandbox of the same shared filter share it) or `template:<template id>` (a bundled template's sandbox). Saving a draft
-    and Copy to my filters carry the folds to the new id (the editor screen's `switching`); renaming a filter does not
-    touch them. Written only when the folds change, so a filter that was only looked at is not stored.
+    ignored. The id is `saved:<id>` for a saved or shared filter (the owner's saved filter, a draft holding unsaved edits
+    of it, whether opened on the saved route or the draft route, and the sandbox of the same filter share it, so
+    Discard keeps the folds), `draft:<library entry id>` for a new draft, or `template:<template id>` (a bundled
+    template's sandbox). Saving a new draft, Save as a new filter and Copy to my filters carry the folds to the new id
+    (the editor screen's `switching`), only onto an id the screen has not shown yet (`switchFoldsSession`), so going back
+    to a filter opened before reads its own folds; renaming a filter does not touch them. Written only when the folds
+    change, so a filter that was only looked at is not stored.
   - Rule and style edits (add, move, delete, duplicate, edit, enable or disable) change no fold. A section edit carries
     them: a heading renamed or moved to the other level keeps its fold, and so do the headings a section move, an
     insert or a removal renumbers (`headingKeyChanges` matches the comment lines before and after the edit).
