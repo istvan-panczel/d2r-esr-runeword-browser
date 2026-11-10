@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.67.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.66.0...v1.67.0) (2026-11-10)
+
+### Features
+
+* **loot-filter:** add npm run loot-filter:template to refresh Sully's bundled copy ([6add734](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6add7345b7e34878867325cc539a8e92f567b8f3))
+* **loot-filter:** load Sully's template live, with the bundled copy as fallback ([84c721d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/84c721d7d7b6629fcd5afc27fd61c8055cd5aa75))
+* **loot-filter:** raise the saved filter size cap to 2 MB ([fcc403f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fcc403fc82f4b0c3e0d02a88b376b9d623d56f9a))
+* **loot-filter:** remember section folds per filter, starting folded ([111221a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/111221a36901141ec8f09a3bc67949951188eafc))
+
+### Bug Fixes
+
+* **loot-filter:** carry folds once, and key a draft of a saved filter by its id ([0161a4e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0161a4eddd4286e555cd6bb223dca323cf4b503a))
+* **loot-filter:** end a section description at a blank line ([ba61e03](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ba61e03e99b28d1379921754ce7021bcb2ebe7c7))
+* **loot-filter:** guard Sully's bundled copy and read his URLs from one place ([4db1479](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4db1479fbd6462f7a04df91a114e594d924f6678))
+* **loot-filter:** keep a note added under a heading a note of its own ([5874bea](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5874beadfc09b4ae2633adb25652822d7f23a785))
+* **loot-filter:** keep the live template on pre-release versions and hanging hosts ([3e600d7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3e600d732e54d3345095c33e5424978ad9304ea9))
+* **loot-filter:** make the Add section tooltip say where it adds ([aab9f5f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/aab9f5fd11ce496098840690331d2f2b14efd929))
+* **loot-filter:** move a rule with its own notes, over one neighbour ([7006338](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/700633851fbe39c7f41fd66e9e7ef78d24abd0f2))
+* **loot-filter:** put the Check in game test rule in the rule's section ([795f659](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/795f65950871ef2e8397b99db7b68d5de1b51d13))
+* **loot-filter:** remember only a timed-out live template fetch ([1b4128f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1b4128f27a46f6ec374d3cd0f25b8eba3cbfe82a))
+* **loot-filter:** say which comments the JSON tab keeps ([605cab1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/605cab1d6b95c83644be709c72b097c82a9cfb20))
+* **loot-filter:** scroll a rule shown from elsewhere into view ([979a7ef](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/979a7ef9d7e86e66fe394add8bf15363082e26f0))
+* **loot-filter:** show the folded headings after Collapse all ([9d7d675](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9d7d675adfb057cc6d69a11089adc6b84f27486d))
+* **loot-filter:** show the headings above a kept rule as folded ([0d4f990](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0d4f9909dea4a8e3033dcc76854cd4934a250382))
+* **loot-filter:** stop a rule step at an empty section ([92b1766](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/92b1766636240301d54c78f41e4a67b466dd8303))
+* **loot-filter:** take a quality range up to superior as never unidentified ([5f62ce3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5f62ce3ad13f1a70bdaffb8e5e5750f4492163fb))
+* **loot-filter:** tie the folded-away mark to the selected rule ([0ad682d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/0ad682de982762d8c0871d8cb792aea47c5364ae))
+
+### Documentation
+
+* list npm run loot-filter:template in CLAUDE.md ([f168ce5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f168ce55f1241ac0b59ed67a7117aa62c5ebf47f))
+* **loot-filter:** blank lines end section descriptions and notes ([df058e4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/df058e4be4095373117344cd7ea2a0cf80788ee9))
+* **loot-filter:** describe the remembered section folds ([e3e0398](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e3e039866dde36487001bd606adcb7a8237eb109))
+* **loot-filter:** document Sully's live template and its refresh script ([04561e3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/04561e3e9663e6799f65b082785bd1c0d9363ad3))
+* **loot-filter:** document the review fixes of Sully's live template ([ca89b6e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ca89b6ecd4b06506afdb404b3184260318b91fe4))
+* **loot-filter:** say in the AI texts that a blank line ends a description ([dc21dd2](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/dc21dd2d17758d688973f7e3e3e1a835357f8562))
+
+### Chores
+
+* **loot-filter:** refresh Sully's QoL template to v0.9.2 ([ea8a1e7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ea8a1e7eef02a2b2e1b3a70371fb3d20ec9541ba))
+* **loot-filter:** regenerate the agent pack for Sully's template v0.9.2 ([c0c6def](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c0c6defd2866284ec53002e0a9b49f98833c2bbd))
+
+### Refactoring
+
+* **loot-filter:** rename the MidRune style preset to MidTierRune ([6f1a526](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/6f1a52647565089f465021fa488765420508890f))
+
+### Tests
+
+* **loot-filter:** pin Sully's template facts to a frozen v0.9.2 fixture ([5a867d9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5a867d90eac0609472aa33ec04189aa8a40fd130))
+* **loot-filter:** time the label chips by the best of ten calls ([382df0d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/382df0d391af22a049d5e83235f374b9a64e2202))
+
 ## [1.66.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.65.2...v1.66.0) (2026-11-09)
 
 ### Features
