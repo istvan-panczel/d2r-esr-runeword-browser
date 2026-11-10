@@ -142,6 +142,13 @@ describe('buildSectionRows', () => {
       'B (2)',
     ]);
     expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(), keep: 5 }))).toEqual(['A (4)', 'B (2)', 5]);
+    // A section listed only for the kept item inside a folded part reads as folded, though it is open itself.
+    const kept = buildSectionRows(entries, commentsOf, [], { open: new Set(['2:A.1']), keep: 2 });
+    expect(kept.filter((row) => row.kind === 'heading').map((row) => [row.key, row.collapsed, row.partKey])).toEqual([
+      ['1:A', true, null],
+      ['2:A.1', true, '1:A'],
+      ['1:B', true, null],
+    ]);
   });
 
   it('knows the headings an item sits in', () => {

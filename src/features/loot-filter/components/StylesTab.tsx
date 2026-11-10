@@ -14,8 +14,16 @@ import { editStyleComments, removeStyle, renameStyle, setStyle } from '../store/
 import { selectEditorFilter } from '../store/selectors';
 import { countActions, countStyleUsers } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
-import { openAfterEdit, styleHeadingKeys, toggleOpen, withOpened } from '../utils/sectionFolds';
-import { buildSectionRows, commentLinesText, hasHeadings, headingKeyChanges, headingKeys, type SectionEdit } from '../utils/sections';
+import { openAfterEdit, styleHeadingKeys, toggleHeading, withOpened } from '../utils/sectionFolds';
+import {
+  buildSectionRows,
+  commentLinesText,
+  hasHeadings,
+  headingKeyChanges,
+  headingKeys,
+  type HeadingRow,
+  type SectionEdit,
+} from '../utils/sections';
 import { actionFieldGate } from '../utils/ruleView';
 import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
@@ -84,10 +92,10 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
       onOpenChange((current) => openAfterEdit(current, changes));
     }
   };
-  const toggleHeading = (key: string) => {
+  const onToggleHeading = (row: HeadingRow) => {
     // Folding by hand folds the selected style away too, when it is under that heading.
-    if (open.has(key) && selected !== null && styleHeadingKeys(filter, selected).includes(key)) setFoldedSelection(selected);
-    onOpenChange((current) => toggleOpen(current, key, headingKeys(entries, commentsOf)));
+    if (!row.collapsed && selected !== null && styleHeadingKeys(filter, selected).includes(row.key)) setFoldedSelection(selected);
+    onOpenChange((current) => toggleHeading(current, row, headingKeys(entries, commentsOf)));
   };
   // A style selected by an action (added, renamed, duplicated, a preset) shows in its section: its part and section
   // open. Read from the store, which the action has already updated.
@@ -214,7 +222,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
                     noun="styles"
                     className="overflow-hidden rounded-md"
                     canMove
-                    onToggle={toggleHeading}
+                    onToggle={onToggleHeading}
                     onEdit={(heading) => {
                       setSectionDialog({ kind: 'heading', row: heading });
                     }}

@@ -18,7 +18,7 @@ interface HeadingRowViewProps {
   readonly canMove: boolean;
   /** Folding is off while a search filters the list (a search lists its matches whatever is folded). Default true. */
   readonly canFold?: boolean;
-  readonly onToggle: (key: string) => void;
+  readonly onToggle: (row: HeadingRow) => void;
   readonly onEdit: (row: HeadingRow) => void;
   readonly onMove: (address: CommentAddress, direction: -1 | 1) => void;
   readonly onRemove: (address: CommentAddress) => void;
@@ -55,7 +55,7 @@ export function HeadingRowView({
           part ? 'pl-2 text-sm font-semibold' : 'pl-5 text-sm font-medium'
         )}
         onClick={() => {
-          onToggle(row.key);
+          onToggle(row);
         }}
       >
         <Chevron className="size-4 shrink-0 text-muted-foreground" aria-hidden />

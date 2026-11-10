@@ -334,7 +334,8 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
     state's `selectionFolded` holds that: it belongs to the selection, so it follows the rule when a rule above it is
     deleted or moved, and ends when another rule is selected, a rule is added or copied, or the selection ends. When a
     rule edit puts the selected rule inside folded headings (moving it into a folded section), it stays listed under its
-    own headings, shown folded, so it can be moved on.
+    own headings, shown folded (a section listed that way inside a folded part reads folded even when it is open
+    itself), so it can be moved on. Clicking a heading row shown folded opens it and its part.
 - **Search**: matching rules are listed under the headings they sit in (notes left out); a query that matches a
   heading's title lists its whole section. Folds do not apply while searching: the heading rows cannot be folded then,
   and a search never changes the remembered folds.

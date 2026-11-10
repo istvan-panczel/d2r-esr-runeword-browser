@@ -31,7 +31,7 @@ interface RuleListProps {
 
 /** What the heading and note rows (and each rule's Add heading above) do. */
 export interface RuleListSectionHandlers {
-  readonly onToggle: (key: string) => void;
+  readonly onToggle: (row: HeadingRow) => void;
   readonly onEditHeading: (row: HeadingRow) => void;
   readonly onMove: (address: CommentAddress, direction: -1 | 1) => void;
   readonly onRemoveHeading: (address: CommentAddress) => void;

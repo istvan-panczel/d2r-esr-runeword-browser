@@ -24,7 +24,7 @@ import {
 import { selectEditor } from '../store/selectors';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
 import { readRuleListWidth, writeRuleListWidth } from '../utils/ruleListWidth';
-import { openAfterEdit, ruleHeadingKeys, toggleOpen, withOpened } from '../utils/sectionFolds';
+import { openAfterEdit, ruleHeadingKeys, toggleHeading, withOpened } from '../utils/sectionFolds';
 import { buildSectionRows, commentLinesText, hasHeadings, headingKeyChanges, headingKeys, type SectionEdit } from '../utils/sections';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
@@ -120,10 +120,10 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
     onOpenChange((now) => withOpened(now, keys));
   };
   const sections: RuleListSectionHandlers = {
-    onToggle: (key) => {
+    onToggle: (row) => {
       // Folding by hand folds the selected rule away too, when it is under that heading.
-      if (open.has(key) && selectedRule !== null && ruleHeadingKeys(filter, selectedRule).includes(key)) dispatch(foldSelection());
-      onOpenChange((current) => toggleOpen(current, key, headingKeys(all, commentsOf, endComments)));
+      if (!row.collapsed && selectedRule !== null && ruleHeadingKeys(filter, selectedRule).includes(row.key)) dispatch(foldSelection());
+      onOpenChange((current) => toggleHeading(current, row, headingKeys(all, commentsOf, endComments)));
     },
     onEditHeading: (row) => {
       setSectionDialog({ kind: 'heading', row });

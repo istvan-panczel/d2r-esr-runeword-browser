@@ -354,8 +354,11 @@ export interface HeadingRow {
   /** The description: the notes right under the heading, up to a blank line. */
   readonly notes: readonly string[];
   readonly address: CommentAddress;
+  /** The part a section sits in; null for a part, or for a section above the first part. */
+  readonly partKey: string | null;
   /** Items until the next heading of the same or a higher level. */
   readonly itemCount: number;
+  /** Shown folded: not in the open set, or listed only above a kept item inside a folded part. */
   readonly collapsed: boolean;
   /** There is a section of the same level right before / after this one, inside the same part. */
   readonly canMoveUp: boolean;
@@ -388,6 +391,7 @@ type Draft<Entry> =
 function collect<Entry>(entries: readonly Entry[], commentsOf: (entry: Entry) => readonly string[] | undefined, end: readonly string[]) {
   const drafts: Draft<Entry>[] = [];
   const seen = new Map<string, number>();
+  let part: string | null = null;
   const addBlock = (comments: readonly string[], at: number) => {
     // What the next note line joins: the heading's description right above, the open note, or nothing.
     let open: Draft<Entry> | undefined;
@@ -397,15 +401,18 @@ function collect<Entry>(entries: readonly Entry[], commentsOf: (entry: Entry) =>
         const base = `${String(read.level)}:${read.title}`;
         const repeat = seen.get(base) ?? 0;
         seen.set(base, repeat + 1);
+        const key = headingKey(read.level, read.title, repeat);
         open = {
           kind: 'heading',
-          key: headingKey(read.level, read.title, repeat),
+          key,
+          partKey: read.level === 1 ? null : part,
           level: read.level,
           title: read.title,
           notes: [],
           address: { at, line },
         };
         drafts.push(open);
+        if (read.level === 1) part = key;
       } else if (read.kind === 'separator' || read.kind === 'blank') {
         open = undefined;
       } else if (open?.kind === 'heading') {
@@ -576,7 +583,8 @@ export function buildSectionRows<Entry>(
       for (const heading of stack) {
         if (heading.listed) continue;
         heading.listed = true;
-        rows.push(heading.row);
+        // Hidden by a folded part: it reads as folded too, whatever its own state, as the rest of it is hidden.
+        rows.push({ ...heading.row, collapsed: true });
       }
       rows.push(item(draft));
     }

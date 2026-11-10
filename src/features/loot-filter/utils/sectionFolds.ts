@@ -6,7 +6,7 @@
  */
 import type { LootFilter } from '../engine/types';
 import type { EditorTarget } from '../store/types';
-import { enclosingHeadingKeys, type HeadingKeyChanges } from './sections';
+import { enclosingHeadingKeys, type HeadingKeyChanges, type HeadingRow } from './sections';
 import { SULLYS_QOL_TEMPLATE } from './template';
 
 /** localStorage key of the remembered folds. */
@@ -130,10 +130,21 @@ export function writeFilterFolds(id: string, folds: FilterFolds): void {
 // Changes to an open set (`keys`: the headings the list has now, so keys of headings that are gone are dropped)
 // ---------------------------------------------------------------------------
 
-/** A heading clicked: open when it was folded, folded when it was open. */
-export function toggleOpen(open: ReadonlySet<string>, key: string, keys: readonly string[]): Set<string> {
+/**
+ * A heading row clicked: a row shown folded opens, with its part (a section listed above a kept item inside a folded
+ * part shows folded though it may be open itself); a row shown open folds.
+ */
+export function toggleHeading(
+  open: ReadonlySet<string>,
+  row: Pick<HeadingRow, 'key' | 'partKey' | 'collapsed'>,
+  keys: readonly string[]
+): Set<string> {
   const next = new Set(keys.filter((known) => open.has(known)));
-  if (!next.delete(key)) next.add(key);
+  if (!row.collapsed) next.delete(row.key);
+  else {
+    next.add(row.key);
+    if (row.partKey !== null) next.add(row.partKey);
+  }
   return next;
 }
 

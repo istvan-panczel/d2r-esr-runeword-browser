@@ -10,7 +10,7 @@ import {
   parseStoredFolds,
   ruleHeadingKeys,
   styleHeadingKeys,
-  toggleOpen,
+  toggleHeading,
   withFilterFolds,
   withOpened,
 } from './sectionFolds';
@@ -81,8 +81,15 @@ describe('stored folds', () => {
 
 describe('open set changes', () => {
   it('toggles a heading and drops headings the list no longer has', () => {
-    expect([...toggleOpen(new Set(['1:A', '1:Gone']), '2:S', ['1:A', '2:S'])]).toEqual(['1:A', '2:S']);
-    expect([...toggleOpen(new Set(['1:A', '2:S']), '2:S', ['1:A', '2:S'])]).toEqual(['1:A']);
+    const section = { key: '2:S', partKey: '1:A', collapsed: true };
+    expect([...toggleHeading(new Set(['1:A', '1:Gone']), section, ['1:A', '2:S'])]).toEqual(['1:A', '2:S']);
+    expect([...toggleHeading(new Set(['1:A', '2:S']), { ...section, collapsed: false }, ['1:A', '2:S'])]).toEqual(['1:A']);
+    expect([...toggleHeading(new Set(), { key: '1:A', partKey: null, collapsed: true }, ['1:A', '2:S'])]).toEqual(['1:A']);
+  });
+
+  it('opens a section shown folded inside a folded part with its part, even when the section itself is open', () => {
+    const section = { key: '2:S', partKey: '1:A', collapsed: true };
+    expect([...toggleHeading(new Set(['2:S']), section, ['1:A', '2:S'])].sort()).toEqual(['1:A', '2:S']);
   });
 
   it('opens headings around a selection, unchanged when they are open', () => {
