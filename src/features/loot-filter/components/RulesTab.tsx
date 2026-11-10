@@ -246,7 +246,8 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             </Link>{' '}
             instead and adapt it.
           </p>
-        ) : shownRules === 0 ? (
+        ) : searching && shownRules === 0 ? (
+          // Only a search can leave no rule row: folded sections still show their heading rows.
           <p className="p-4 text-sm text-muted-foreground">No rule matches the search.</p>
         ) : (
           <RuleList
