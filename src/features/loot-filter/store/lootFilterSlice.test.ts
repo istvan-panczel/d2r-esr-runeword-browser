@@ -638,9 +638,10 @@ describe('comments above rules belong to their place', () => {
   const openRules = (...rules: LootFilterRule[]) => openState({ formatVersion: 1, rules, leadingComments: [] });
   const view = (state: LootFilterState) => state.editor.filter?.rules.map((entry) => [entry.comment, entry.commentsBefore]);
 
-  it('hands the comments of a deleted rule to the next one', () => {
+  it('hands the comments of a deleted rule to the next one, a blank line apart', () => {
+    // The blank line keeps "note" the next rule's own comment, not the part's description.
     const state = reducer(openRules(rule('a', heading), rule('b', ['// note'])), removeRule(0));
-    expect(view(state)).toEqual([['b', ['// ==== Part', '// note']]]);
+    expect(view(state)).toEqual([['b', ['// ==== Part', '', '// note']]]);
   });
 
   it('keeps the comments of a deleted last rule after the list', () => {

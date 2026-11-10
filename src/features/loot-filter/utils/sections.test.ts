@@ -332,6 +332,80 @@ describe('addToSection', () => {
   });
 });
 
+describe('blank lines between comments', () => {
+  // Sully's layout: the description, a blank line (an empty string), the first rule's own comment.
+  const list: SectionList<Item> = {
+    items: [item('gold', '// ---- Gold', '// Small piles are hidden.', '', '// Piles of 500,000 or more.'), item('next', '// Next rule.')],
+    end: [],
+  };
+  const commentsOfItem = (value: Item) => value.commentsBefore;
+
+  it('reads a blank line as such', () => {
+    expect(readCommentLine('')).toEqual({ kind: 'blank' });
+  });
+
+  it('ends a heading description and a note at a blank line', () => {
+    const rows = buildSectionRows(list.items, commentsOfItem, ['// one', '', '// two']);
+    expect(
+      rows.map((row) => (row.kind === 'heading' ? `${row.title}: ${row.notes.join('|')}` : row.kind === 'note' ? row.text : row.entry.name))
+    ).toEqual(['Gold: Small piles are hidden.', 'Piles of 500,000 or more.', 'gold', 'Next rule.', 'next', 'one', 'two']);
+    const note = rows[1];
+    expect(note).toMatchObject({ kind: 'note', address: { at: 0, line: 3 }, count: 1 });
+  });
+
+  it('edits a description without touching the rule comment below it', () => {
+    const edited = applySectionEdit(list, access, {
+      kind: 'heading',
+      address: { at: 0, line: 0 },
+      level: 2,
+      title: 'Gold',
+      description: 'New text\nsecond line',
+    });
+    expect(stream(edited)?.slice(0, 6)).toEqual([
+      '// ---- Gold',
+      '// New text',
+      '// second line',
+      '',
+      '// Piles of 500,000 or more.',
+      '[gold]',
+    ]);
+    const emptied = applySectionEdit(list, access, {
+      kind: 'heading',
+      address: { at: 0, line: 0 },
+      level: 2,
+      title: 'Gold',
+      description: '',
+    });
+    expect(stream(emptied)?.slice(0, 4)).toEqual(['// ---- Gold', '', '// Piles of 500,000 or more.', '[gold]']);
+  });
+
+  it('removes a heading with its description only, without a blank line left at the start', () => {
+    const removed = applySectionEdit(list, access, { kind: 'removeHeading', address: { at: 0, line: 0 } });
+    expect(removed?.items[0].commentsBefore).toEqual(['// Piles of 500,000 or more.']);
+  });
+
+  it('removes a note and the blank line it leaves behind', () => {
+    const removed = applySectionEdit(list, access, { kind: 'replace', address: { at: 0, line: 3 }, count: 1, lines: [] });
+    expect(removed?.items[0].commentsBefore).toEqual(['// ---- Gold', '// Small piles are hidden.']);
+  });
+
+  it('keeps heading keys and their changes', () => {
+    expect(headingKeys(list.items, commentsOfItem)).toEqual(['2:Gold']);
+    const changes = headingKeyChanges(list, access, {
+      kind: 'heading',
+      address: { at: 0, line: 0 },
+      level: 1,
+      title: 'Gold',
+      description: '',
+    });
+    expect(changes?.kept).toEqual(new Map([['2:Gold', '1:Gold']]));
+  });
+
+  it('reads blank lines as paragraph breaks in the file notes', () => {
+    expect(commentLinesText(['// About', '', '// More'])).toBe('About\n\nMore');
+  });
+});
+
 describe('commentLinesText', () => {
   it('drops separators and markers', () => {
     expect(commentLinesText(['// =====', '//  Title', '// ---- Styles ---', '// =====', '// note'])).toBe('Title\nStyles\nnote');

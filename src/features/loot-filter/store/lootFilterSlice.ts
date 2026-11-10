@@ -13,6 +13,7 @@
  * - Ids and timestamps come from `prepare` callbacks, so the reducers stay pure (tests pass them in the payload).
  */
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { joinCommentBlocks } from '../engine/commentLines';
 import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
 import type { Diagnostic, FilterLevel, LootFilter, LootFilterRule, LootFilterStyle, Notifications, QualityColors } from '../engine/types';
@@ -811,8 +812,9 @@ const lootFilterSlice = createSlice({
         // The comments above a rule belong to the place: a deleted section's first rule must not take the heading along.
         const above = rules[index].commentsBefore;
         if (above === undefined) return { rules: next, selectedRule };
-        if (index === next.length) return { rules: next, selectedRule, endComments: [...above, ...(filter?.rulesEndComments ?? [])] };
-        next[index] = withCommentsBefore(next[index], [...above, ...(next[index].commentsBefore ?? [])]);
+        if (index === next.length)
+          return { rules: next, selectedRule, endComments: joinCommentBlocks(above, filter?.rulesEndComments ?? []) };
+        next[index] = withCommentsBefore(next[index], joinCommentBlocks(above, next[index].commentsBefore ?? []));
         return { rules: next, selectedRule };
       });
     },
@@ -924,7 +926,7 @@ const lootFilterSlice = createSlice({
         // As with rules: the comments above a deleted style go to the next one (after the last style they are dropped).
         const next = rest.at(index);
         if (above !== undefined && next !== undefined)
-          rest[index] = [next[0], withCommentsBefore(next[1], [...above, ...(next[1].commentsBefore ?? [])])];
+          rest[index] = [next[0], withCommentsBefore(next[1], joinCommentBlocks(above, next[1].commentsBefore ?? []))];
         return applyPatch(filter, { styles: nonEmpty(Object.fromEntries(rest)) });
       });
     },

@@ -3,7 +3,8 @@
  * the rules (or the styles) of a filter, read as parts, sections and notes, and every edit of them.
  * - `// ==== Title` is a part (level 1), `// ---- Title` a section inside it (level 2), four or more marker characters;
  *   a run of three or more markers after the title is decoration, and a line of markers only is a separator.
- * - Other comments right under a heading are its description; any other comment is a note in place.
+ * - Other comments right under a heading are its description, up to a blank line; any other comment is a note in place,
+ *   and a blank line ends a note too. A blank line is an empty string among the comment lines (engine/commentLines.ts).
  * - A section runs to the next heading of the same or a higher level.
  * - A list without a heading shows no comment rows, so the per-rule comments of older files stay out of the list.
  *
@@ -11,12 +12,16 @@
  * stream of comment lines and items, so a section moves with its rules and a heading stays where it is put.
  */
 
+import { tidyCommentBlock } from '../engine/commentLines';
+
 export type HeadingLevel = 1 | 2;
 
 export type CommentLine =
   | { readonly kind: 'heading'; readonly level: HeadingLevel; readonly title: string }
   | { readonly kind: 'note'; readonly text: string }
-  | { readonly kind: 'separator' };
+  | { readonly kind: 'separator' }
+  /** A blank line between comment lines (an empty string in the model). */
+  | { readonly kind: 'blank' };
 
 const COMMENT_START = /^\/\/\s?/;
 const MARKER_LINE = /^(={4,}|-{4,})\s*(.*?)\s*(?:={3,}|-{3,})?\s*$/;
@@ -25,6 +30,7 @@ const HEADING_PARTS = /^(\/\/\s*(?:={4,}|-{4,})\s*)(.*?)(\s*(?:={3,}|-{3,})?\s*)
 
 /** One comment line, verbatim as in the file (`// ---- 1.1 Gold`). */
 export function readCommentLine(line: string): CommentLine {
+  if (line.trim() === '') return { kind: 'blank' };
   const text = line.replace(COMMENT_START, '').trim();
   const marker = MARKER_LINE.exec(text);
   if (marker === null) return { kind: 'note', text };
@@ -33,11 +39,15 @@ export function readCommentLine(line: string): CommentLine {
   return { kind: 'heading', level: marker[1].startsWith('=') ? 1 : 2, title };
 }
 
-/** The text of comment lines for reading: no `//`, no heading markers, separators and empty lines at the ends gone. */
+/**
+ * The text of comment lines for reading: no `//`, no heading markers, separators and empty lines at the ends gone; a
+ * blank line stays an empty line between paragraphs.
+ */
 export function commentLinesText(lines: readonly string[]): string {
   const text = lines.flatMap((line) => {
     const read = readCommentLine(line);
     if (read.kind === 'separator') return [];
+    if (read.kind === 'blank') return [''];
     return [read.kind === 'heading' ? read.title : read.text];
   });
   return text.join('\n').trim();
@@ -109,6 +119,7 @@ export interface SectionEditResult<T> extends SectionList<T> {
   readonly from: readonly number[];
 }
 
+/** The items with the comment lines above each; blank lines at the start or end of a block (left by an edit) go. */
 function fromTokens<T>(tokens: readonly Token<T>[], access: CommentAccess<T>): SectionEditResult<T> {
   const items: T[] = [];
   const from: number[] = [];
@@ -118,13 +129,14 @@ function fromTokens<T>(tokens: readonly Token<T>[], access: CommentAccess<T>): S
       pending.push(token.text);
       continue;
     }
+    const block = tidyCommentBlock(pending);
     const current = access.get(token.item) ?? [];
-    const same = current.length === pending.length && current.every((line, index) => line === pending[index]);
-    items.push(same ? token.item : access.set(token.item, pending));
+    const same = current.length === block.length && current.every((line, index) => line === block[index]);
+    items.push(same ? token.item : access.set(token.item, block));
     from.push(token.from);
     pending = [];
   }
-  return { items, end: pending, from };
+  return { items, end: tidyCommentBlock(pending), from };
 }
 
 /** The token position of the comment line at `address`, or of the item `at` itself with `line` -1. */
@@ -161,7 +173,7 @@ function sectionEnd<T>(tokens: readonly Token<T>[], start: number, level: Headin
   return index;
 }
 
-/** The heading's description: the note lines right under it, up to an item, a heading or a separator. */
+/** The heading's description: the note lines right under it, up to an item, a heading, a separator or a blank line. */
 function descriptionEnd<T>(tokens: readonly Token<T>[], start: number): number {
   let index = start + 1;
   while (index < tokens.length) {
@@ -334,7 +346,7 @@ export interface HeadingRow {
   readonly key: string;
   readonly level: HeadingLevel;
   readonly title: string;
-  /** The description: the notes right under the heading. */
+  /** The description: the notes right under the heading, up to a blank line. */
   readonly notes: readonly string[];
   readonly address: CommentAddress;
   /** Items until the next heading of the same or a higher level. */
@@ -389,7 +401,7 @@ function collect<Entry>(entries: readonly Entry[], commentsOf: (entry: Entry) =>
           address: { at, line },
         };
         drafts.push(open);
-      } else if (read.kind === 'separator') {
+      } else if (read.kind === 'separator' || read.kind === 'blank') {
         open = undefined;
       } else if (open?.kind === 'heading') {
         if (read.text !== '') open.notes.push(read.text);

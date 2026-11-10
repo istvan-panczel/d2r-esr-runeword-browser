@@ -7,11 +7,15 @@
  * always writes strict JSON ("accept on read, write strict").
  */
 
+import { BLANK_COMMENT_LINE, blankLineBetween } from './commentLines.ts';
 import { locateJsoncChildren, locateJsoncPath } from './jsoncLocate.ts';
 
 export interface JsoncParseResult {
   readonly value: unknown;
-  /** The `//` comment lines before the opening value, verbatim (including `//`, without the line break). */
+  /**
+   * The `//` comment lines before the opening value, verbatim (including `//`, without the line break), with an empty
+   * string for blank lines between two of them (engine/commentLines.ts).
+   */
   readonly leadingComments: string[];
   /** Trailing commas and block comments that were accepted, in file order. */
   readonly tolerated: readonly JsoncTolerance[];
@@ -21,7 +25,10 @@ export interface JsoncParseResult {
   readonly placedComments: PlacedComments;
 }
 
-/** The whole-line `//` comments after the opening brace, verbatim (including `//`, without the indentation), by place. */
+/**
+ * The whole-line `//` comments after the opening brace, verbatim (including `//`, without the indentation), by place;
+ * an empty string stands for blank lines between two comments of the same place (engine/commentLines.ts).
+ */
 export interface PlacedComments {
   /** Above a top-level key. */
   readonly keys: Readonly<Record<string, readonly string[]>>;
@@ -91,6 +98,7 @@ function blankComments(text: string): Blanked {
   let out = '';
   let inString = false;
   let seenValue = false;
+  let lastLeading: number | undefined;
   let i = 0;
   while (i < text.length) {
     const ch = text[i];
@@ -109,8 +117,11 @@ function blankComments(text: string): Blanked {
       let end = text.indexOf('\n', i);
       if (end === -1) end = text.length;
       const comment = text.slice(i, end).replace(/\r$/, '');
-      if (!seenValue) leadingComments.push(comment);
-      else {
+      if (!seenValue) {
+        if (lastLeading !== undefined && blankLineBetween(text, lastLeading, i)) leadingComments.push(BLANK_COMMENT_LINE);
+        leadingComments.push(comment);
+        lastLeading = i;
+      } else {
         innerComments.push(i);
         if (text.slice(text.lastIndexOf('\n', i - 1) + 1, i).trim() === '') ownLineComments.push({ offset: i, text: comment.trimEnd() });
       }
@@ -397,10 +408,15 @@ function placeComments(
     gaps.push({ from: end, to: rulesRange.to, add: (comment) => rulesEnd.push(comment) });
   }
   const offsets = new Set<number>();
+  // The previous comment placed in each gap: a blank line between the two is kept as an empty line.
+  const previous = new Map<CommentGap, number>();
   for (const { offset, text: comment } of comments) {
     const gap = gaps.find(({ from, to }) => from <= offset && offset < to);
     if (!gap) continue;
+    const before = previous.get(gap);
+    if (before !== undefined && blankLineBetween(text, before, offset)) gap.add(BLANK_COMMENT_LINE);
     gap.add(comment);
+    previous.set(gap, offset);
     offsets.add(offset);
   }
   return { placed: { keys, rules, disabledRules, styles, rulesEnd }, offsets };
