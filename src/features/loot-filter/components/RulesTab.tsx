@@ -16,7 +16,7 @@ import {
   duplicateRule,
   editRuleComments,
   foldSelection,
-  moveRule,
+  stepRule,
   removeRule,
   selectRule,
   setRuleDisabled,
@@ -25,7 +25,17 @@ import { selectEditor } from '../store/selectors';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
 import { readRuleListWidth, writeRuleListWidth } from '../utils/ruleListWidth';
 import { openAfterEdit, ruleHeadingKeys, toggleHeading, withOpened } from '../utils/sectionFolds';
-import { buildSectionRows, commentLinesText, hasHeadings, headingKeyChanges, headingKeys, type SectionEdit } from '../utils/sections';
+import {
+  buildSectionRows,
+  commentLinesText,
+  hasHeadings,
+  headingKeyChanges,
+  headingKeys,
+  stepEdges,
+  stepItem,
+  type CommentAccess,
+  type SectionEdit,
+} from '../utils/sections';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
@@ -34,6 +44,9 @@ import { RuleList, type RuleListEntry, type RuleListSectionHandlers } from './ru
 import { SectionDialog, type SectionDialogState } from './sections/SectionDialog';
 import { SectionToolbar } from './sections/SectionRows';
 import { RuleListSplitter } from './rules/RuleListSplitter';
+
+/** For the index a rule step lands on (the store's reducer applies the step itself), so the comments are not written. */
+const RULE_STEP_ACCESS: CommentAccess<LootFilterRule> = { get: (rule) => rule.commentsBefore, set: (rule) => rule };
 
 /** Below this width the list and the editor are stacked. */
 const TWO_PANE_QUERY = '(min-width: 1024px)';
@@ -286,7 +299,13 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             canFold={!searching}
             selectedRule={selectedRule}
             onSelect={handleSelect}
-            onMove={(from, to) => dispatch(moveRule({ from, to }))}
+            edges={stepEdges({ items: filter.rules, end: endComments }, { get: (entry) => entry.commentsBefore })}
+            onMove={(index, direction) => {
+              const step = stepItem({ items: filter.rules, end: endComments }, RULE_STEP_ACCESS, index, direction);
+              if (step === undefined) return undefined;
+              dispatch(stepRule({ index, direction }));
+              return step.index;
+            }}
             onToggle={(index, disabled) => dispatch(setRuleDisabled({ index, disabled }))}
             onDuplicate={(index) => dispatch(duplicateRule(index))}
             onDelete={(index) => {

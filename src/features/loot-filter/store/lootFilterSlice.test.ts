@@ -25,6 +25,7 @@ import reducer, {
   initialState,
   moveRule,
   open,
+  stepRule,
   patchRule,
   remove,
   removeRule,
@@ -670,13 +671,42 @@ describe('comments above rules belong to their place', () => {
     expect(state.editor.filter?.rulesEndComments).toEqual(heading);
   });
 
-  it('leaves the comments in place when a rule moves', () => {
-    const state = reducer(openRules(rule('a'), rule('b', heading), rule('c')), moveRule({ from: 1, to: 0 }));
-    expect(view(state)).toEqual([
+  it('moves a rule with its own notes and leaves headings at their place', () => {
+    // b (the first rule of Part) moving up hops over the heading: it leaves the part, nothing else moves.
+    const hop = reducer(reducer(openRules(rule('a'), rule('b', heading), rule('c')), selectRule(1)), stepRule({ index: 1, direction: -1 }));
+    expect(view(hop)).toEqual([
+      ['a', undefined],
       ['b', undefined],
-      ['a', heading],
-      ['c', undefined],
+      ['c', heading],
     ]);
+    expect(hop.editor.selectedRule).toBe(1);
+    // c (with its own note) swaps with b; each keeps its note.
+    const swap = reducer(openRules(rule('a'), rule('b', ['// nb']), rule('c', ['// nc'])), stepRule({ index: 2, direction: -1 }));
+    expect(view(swap)).toEqual([
+      ['a', undefined],
+      ['c', ['// nc']],
+      ['b', ['// nb']],
+    ]);
+    // moveRule by index: steps until the index is reached.
+    const moved = reducer(openRules(rule('a'), rule('b', heading), rule('c')), moveRule({ from: 2, to: 0 }));
+    expect(view(moved)).toEqual([
+      ['c', undefined],
+      ['a', undefined],
+      ['b', heading],
+    ]);
+  });
+
+  it('keeps the folded-away mark on the moved rule and does nothing at an edge', () => {
+    const start = reducer(reducer(openRules(rule('a'), rule('b', heading)), selectRule(0)), foldSelection());
+    const down = reducer(start, stepRule({ index: 0, direction: 1 }));
+    expect(down.editor).toMatchObject({ selectedRule: 0, selectionFolded: true });
+    // a hops below the heading: it is now the part's first rule.
+    expect(view(down)).toEqual([
+      ['a', heading],
+      ['b', undefined],
+    ]);
+    const top = openRules(rule('a'), rule('b'));
+    expect(reducer(top, stepRule({ index: 0, direction: -1 }))).toBe(top);
   });
 
   it('does not copy the comments to a duplicate', () => {

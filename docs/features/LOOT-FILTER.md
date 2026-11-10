@@ -122,7 +122,8 @@ then run `lootfilter` in the game console and read
   `patchRule({ index, patch })`, `chooseRuleStyle({ index, patch, addStyle?, removeStyleIfUnused?, ifUseStyle? })` (the
   rule's Style dropdown, see [Style first, then tweak](#style-first-then-tweak)), `setRuleDisabled({ index, disabled })`
   (see "Disabled rules"), `removeRule(index)`,
-  `moveRule({ from, to })` and `duplicateRule(index)` (both keep the `disabled` flag with the rule), `selectRule(index)`,
+  `stepRule({ index, direction })` (one step with the rule's own notes, see "Section comments"), `moveRule({ from, to })`
+  (steps until index `to`) and `duplicateRule(index)` (all keep the `disabled` flag with the rule), `selectRule(index)`,
   `setStyle({ name, style })`, `renameStyle({ from, to })` (also re-points rules' `useStyle`), `removeStyle(name)`,
   `replaceFilter({ filter, diagnostics, notes? })`.
 - **Persistence** (`lootFilterSaga.ts`): every reducer that edits the open filter is in the saga's `isEditorMutation`
@@ -283,8 +284,25 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
 - **Kept:** whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
   **Dropped on the first edit, with a warning:** a comment on the same line as a rule, inside a rule object, and every
   `/* */` block.
-- A comment belongs to its place, not its rule: moving a rule past a heading changes its section, deleting a rule hands
-  its comments to the next one, duplicating does not copy them.
+- **Moving a rule** (Move up / Move down, `stepRule` → `stepItem` in `utils/sections.ts`): a rule moves with its own
+  notes, the note lines right above it back to a blank line, a heading's description or anything else. A heading and its
+  description belong to their place, never to a rule, and a note a blank line away from the rule stays where it is. One
+  step passes exactly one neighbour:
+  - the rule next to it: they swap, each with its own notes;
+  - a heading run (a heading with its description, or several headings in a row such as a part and its first section,
+    with separators and blank lines among them): the rule hops over the whole run and becomes the last rule of the
+    section before it (up) or the first rule of the section after it (down, placed after the description with a blank
+    line before its notes); no other rule moves. The first rule can so leave the first section and stand above the
+    first heading, and the last rule can go below headings written after it (`rulesEndComments`); a section can end up
+    empty;
+  - a free-standing note (a note that is not a rule's own, a blank line away from the next rule): the rule passes it and
+    the note stays a note row.
+  - The step back undoes a step exactly (a move and its inverse give back the same file; the blank lines are tidied by
+    `tidyCommentBlock`, so a blank line the file had at the edge of a block is not kept anyway). The selection and its
+    folded-away mark follow the moved rule. `moveRule({ from, to })` moves by such steps until the rule reaches index
+    `to`. A rule moved into a folded section is still listed under its headings while it is selected.
+- Otherwise a comment belongs to its place: deleting a rule hands its comments to the next one (a blank line apart),
+  duplicating does not copy them.
 - Model: editor-only `commentsBefore` on rules and styles, `keyComments` and `rulesEndComments` on the filter (never keys
   in the file). `parseJsonc` places the comments (`placedComments`), the serializer writes them back after a blank line.
   One or more blank lines between two comment lines of the same block (and of the header above `{`) are kept as an

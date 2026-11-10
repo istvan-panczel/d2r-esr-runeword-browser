@@ -21,7 +21,15 @@ import type { LootFilterRow } from '@/core/supabase/types';
 import { basedOnFromRow, sharedBasedOn } from '../utils/basedOn';
 import { createBlankFilter } from '../utils/blankFilter';
 import { newEntryId } from '../utils/ids';
-import { addToSection, applySectionEdit, type CommentAccess, type CommentAddress, type SectionEdit } from '../utils/sections';
+import {
+  addToSection,
+  applySectionEdit,
+  stepItem,
+  type CommentAccess,
+  type CommentAddress,
+  type SectionEdit,
+  type SectionList,
+} from '../utils/sections';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
 import type { StyleChoiceEdit } from '../utils/styleChoice';
 import type { EditorTarget, LootFilterBasedOn, LootFilterEditorState, LootFilterEntry, LootFilterSource, LootFilterState } from './types';
@@ -842,23 +850,49 @@ const lootFilterSlice = createSlice({
       });
     },
 
-    /** Moves a rule; out-of-range or equal indices are a no-op. The selection follows the rules it pointed at. */
+    /**
+     * Moves rule `index` one step up (-1) or down (1) with its own notes (`stepItem`): past the rule next to it, or over
+     * a heading run into the neighbouring section. No-op when there is nothing to pass. The selection follows its rule.
+     */
+    stepRule(state, action: PayloadAction<{ readonly index: number; readonly direction: -1 | 1 }>): State {
+      const filter = state.editor.filter;
+      if (filter === null) return state;
+      const { index, direction } = action.payload;
+      const result = stepItem({ items: filter.rules, end: filter.rulesEndComments ?? [] }, RULE_COMMENTS, index, direction);
+      if (result === undefined) return state;
+      return editRules(state, () => ({
+        rules: result.items,
+        endComments: result.end,
+        selectedRule: followSelection(state.editor.selectedRule, result.from),
+      }));
+    },
+
+    /**
+     * Moves rule `from` to index `to` by steps (`stepRule`: a rule passes a heading run without changing its index, so
+     * it ends in the section the steps reach). Out-of-range or equal indices are a no-op. The selection follows its rule.
+     */
     moveRule(state, action: PayloadAction<{ readonly from: number; readonly to: number }>): State {
       const { from, to } = action.payload;
-      const selected = state.editor.selectedRule;
-      return editRules(state, (rules) => {
-        if (from === to || !isIndex(from, rules.length) || !isIndex(to, rules.length)) return undefined;
-        const next = [...rules];
-        const [moved] = next.splice(from, 1);
-        next.splice(to, 0, moved);
-        // The comments stay at their position, so a rule moved past a heading changes section.
-        const placed = next.map((rule, position) => withCommentsBefore(rule, rules[position].commentsBefore));
-        let selectedRule = selected;
-        if (selected === from) selectedRule = to;
-        else if (selected !== null && from < selected && selected <= to) selectedRule = selected - 1;
-        else if (selected !== null && to <= selected && selected < from) selectedRule = selected + 1;
-        return { rules: placed, selectedRule };
-      });
+      const filter = state.editor.filter;
+      if (filter === null || from === to || !isIndex(from, filter.rules.length) || !isIndex(to, filter.rules.length)) return state;
+      const direction = to < from ? -1 : 1;
+      let list: SectionList<LootFilterRule> = { items: filter.rules, end: filter.rulesEndComments ?? [] };
+      // The old index of each rule of `list`.
+      let origin = filter.rules.map((_, position) => position);
+      let index = from;
+      while (index !== to) {
+        const step = stepItem(list, RULE_COMMENTS, index, direction);
+        if (step === undefined) break;
+        list = step;
+        origin = step.from.map((old) => origin[old]);
+        index = step.index;
+      }
+      if (list.items === filter.rules) return state;
+      return editRules(state, () => ({
+        rules: list.items,
+        endComments: list.end,
+        selectedRule: followSelection(state.editor.selectedRule, origin),
+      }));
     },
 
     /** Inserts a copy right after the rule and selects the copy (a disabled rule's copy is disabled too). */
@@ -1013,6 +1047,7 @@ export const {
   setRuleDisabled,
   removeRule,
   moveRule,
+  stepRule,
   editRuleComments,
   addRuleToSection,
   editStyleComments,

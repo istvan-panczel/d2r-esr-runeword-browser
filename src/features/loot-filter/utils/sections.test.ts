@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { parseLootFilter } from '../engine/parse';
+import { serializeLootFilter } from '../engine/serialize';
+import type { LootFilterRule } from '../engine/types';
 import {
   addToSection,
   applySectionEdit,
@@ -10,6 +15,8 @@ import {
   noteLines,
   readCommentLine,
   renameHeadingLine,
+  stepEdges,
+  stepItem,
   type CommentAccess,
   type SectionEditResult,
   type SectionList,
@@ -452,6 +459,167 @@ describe('blank lines between comments', () => {
     expect(commentLinesText(['// About', '', '// More'])).toBe('About\n\nMore');
   });
 });
+
+describe('stepItem', () => {
+  const step = (list: SectionList<Item>, index: number, direction: -1 | 1) => stepItem(list, access, index, direction);
+  /** Steps in order, each on the result of the one before. */
+  const steps = (list: SectionList<Item>, ...moves: (readonly [number, -1 | 1])[]) =>
+    moves.reduce<SectionList<Item> | undefined>(
+      (current, [index, direction]) => (current === undefined ? undefined : step(current, index, direction)),
+      list
+    );
+
+  const sections: SectionList<Item> = {
+    items: [
+      item('a', '// ---- S1', '// d1', '', '// na'),
+      item('b', '// nb'),
+      item('c', '// ---- S2', '// d2', '', '// nc'),
+      item('d', '// nd'),
+    ],
+    end: [],
+  };
+
+  it('swaps two items, each with its own notes', () => {
+    const up = step(sections, 1, -1);
+    expect(stream(up)?.slice(0, 7)).toEqual(['// ---- S1', '// d1', '', '// nb', '[b]', '// na', '[a]']);
+    expect(up?.index).toBe(0);
+    expect(up?.from).toEqual([1, 0, 2, 3]);
+    expect(stream(step(sections, 3, -1))?.slice(-7)).toEqual(['// ---- S2', '// d2', '', '// nd', '[d]', '// nc', '[c]']);
+  });
+
+  it('hops over a heading run into the end of the section before, and back', () => {
+    const up = step(sections, 2, -1);
+    expect(stream(up)).toEqual([
+      '// ---- S1',
+      '// d1',
+      '',
+      '// na',
+      '[a]',
+      '// nb',
+      '[b]',
+      '// nc',
+      '[c]',
+      '// ---- S2',
+      '// d2',
+      '',
+      '// nd',
+      '[d]',
+    ]);
+    expect(up?.index).toBe(2);
+    expect(up?.from).toEqual([0, 1, 2, 3]);
+    expect(stream(up && step(up, 2, 1))).toEqual(stream(sections));
+  });
+
+  it('hops down over a heading run to the start of the next section, after its description, and back', () => {
+    const down = step(sections, 1, 1);
+    expect(stream(down)).toEqual([
+      '// ---- S1',
+      '// d1',
+      '',
+      '// na',
+      '[a]',
+      '// ---- S2',
+      '// d2',
+      '',
+      '// nb',
+      '[b]',
+      '// nc',
+      '[c]',
+      '// nd',
+      '[d]',
+    ]);
+    expect(stream(down && step(down, 1, -1))).toEqual(stream(sections));
+  });
+
+  it('hops over a part heading and a section heading at once', () => {
+    const list: SectionList<Item> = {
+      items: [item('a', '// na'), item('b', '// ==== P', '// dp', '', '// ---- S', '// ds', '', '// nb')],
+      end: [],
+    };
+    const up = step(list, 1, -1);
+    expect(stream(up)).toEqual(['// na', '[a]', '// nb', '[b]', '// ==== P', '// dp', '', '// ---- S', '// ds']);
+    expect(up?.end).toEqual(['// ==== P', '// dp', '', '// ---- S', '// ds']);
+    expect(stream(up && step(up, 1, 1))).toEqual(stream(list));
+  });
+
+  it('never takes a description as an item’s own notes', () => {
+    const list: SectionList<Item> = { items: [item('a', '// ---- S', '// d'), item('b', '// nb')], end: [] };
+    // Down: b and its note go above a; the note gets a blank line so it does not join the description.
+    const down = step(list, 0, 1);
+    expect(stream(down)).toEqual(['// ---- S', '// d', '', '// nb', '[b]', '[a]']);
+    expect(stream(down && step(down, 1, -1))).toEqual(stream(list));
+  });
+
+  it('moves the first item above the first heading, and the last one below the comments after it', () => {
+    const list: SectionList<Item> = { items: [item('a', '// ---- S', '// d'), item('b')], end: ['// ---- Later'] };
+    const up = step(list, 0, -1);
+    expect(stream(up)).toEqual(['[a]', '// ---- S', '// d', '[b]', '// ---- Later']);
+    expect(up && step(up, 0, -1)).toBeUndefined();
+    const down = step(list, 1, 1);
+    expect(stream(down)).toEqual(['// ---- S', '// d', '[a]', '// ---- Later', '[b]']);
+    expect(down?.end).toEqual([]);
+    expect(down && step(down, 1, 1)).toBeUndefined();
+    expect(stepEdges(list, access)).toEqual({ firstUp: true, lastDown: true });
+    expect(stepEdges({ items: [item('a', '// own note'), item('b')], end: [] }, access)).toEqual({ firstUp: false, lastDown: false });
+  });
+
+  it('passes a free-standing note, which stays a note', () => {
+    const list: SectionList<Item> = { items: [item('a'), item('b', '// free', '', '// nb')], end: [] };
+    const up = step(list, 1, -1);
+    expect(stream(up)).toEqual(['[a]', '// nb', '[b]', '// free']);
+    expect(stream(up && step(up, 1, 1))).toEqual(stream(list));
+  });
+
+  it('leaves a section empty when its only item leaves', () => {
+    const list: SectionList<Item> = { items: [item('a', '// ---- S1'), item('b', '// ---- S2')], end: [] };
+    expect(stream(step(list, 0, 1))).toEqual(['// ---- S1', '// ---- S2', '[a]', '[b]']);
+  });
+
+  it('is undefined with nothing to pass or an index out of range', () => {
+    expect(step({ items: [item('a'), item('b')], end: [] }, 0, -1)).toBeUndefined();
+    expect(step({ items: [item('a'), item('b')], end: [] }, 1, 1)).toBeUndefined();
+    expect(step(sections, 9, 1)).toBeUndefined();
+    expect(steps(sections, [1, -1], [0, 1])).toBeDefined();
+  });
+
+  it('moves R066 of Sully’s v0.9.2 to the end of Gold and back', () => {
+    const text = readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8');
+    const { filter } = parseLootFilter(text);
+    const ruleAccess: CommentAccess<LootFilterRule> = {
+      get: (rule) => rule.commentsBefore,
+      set: (rule, comments) => {
+        const { commentsBefore: _old, ...rest } = rule;
+        return comments.length === 0 ? rest : { ...rest, commentsBefore: comments };
+      },
+    };
+    const list = { items: filter.rules, end: filter.rulesEndComments ?? [] };
+    const index = filter.rules.findIndex((rule) => rule.comment?.startsWith('R066') === true);
+    const up = stepItem(list, ruleAccess, index, -1);
+    expect(up?.index).toBe(index);
+    const moved = up?.items ?? [];
+    // R065 and its note untouched; R066 right after it, no comments of its own; Potions now opens on R067.
+    expect(moved[index - 1]).toBe(filter.rules[index - 1]);
+    expect(moved[index].comment?.startsWith('R066')).toBe(true);
+    expect(moved[index].commentsBefore).toBeUndefined();
+    expect(moved[index + 1].commentsBefore?.slice(0, 2)).toEqual(filter.rules[index].commentsBefore?.slice(0, 2));
+    expect(rowsAround(moved)).toEqual(['Gold', 'R064', 'R065', 'R066', 'Potions', 'R067']);
+    const back = up && stepItem(up, ruleAccess, index, 1);
+    const serialized = serializeLootFilter({ ...filter, rules: back?.items ?? [], rulesEndComments: back?.end });
+    expect(serialized).toBe(serializeLootFilter(filter));
+  });
+});
+
+/** The heading titles and rule numbers around a rule, as the rule list shows them (the Gold section to Potions' first rule). */
+function rowsAround(rules: readonly LootFilterRule[]): string[] {
+  const rows = buildSectionRows(rules, (rule) => rule.commentsBefore, []);
+  const at = rows.findIndex((row) => row.kind === 'heading' && row.title === 'Gold');
+  return rows
+    .slice(at)
+    .filter((row) => row.kind !== 'note')
+    .map((row) => (row.kind === 'heading' ? row.title : (row.entry.comment ?? '').slice(0, 4)))
+    .filter((label) => label === 'Gold' || label === 'Potions' || ['R064', 'R065', 'R066', 'R067'].includes(label))
+    .slice(0, 6);
+}
 
 describe('commentLinesText', () => {
   it('drops separators and markers', () => {

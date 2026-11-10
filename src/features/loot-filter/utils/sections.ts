@@ -324,6 +324,134 @@ export function headingKeyChanges<T>(
   return { kept, added };
 }
 
+// ---------------------------------------------------------------------------
+// Moving an item one step
+// ---------------------------------------------------------------------------
+
+/** What each comment line of the stream is: a heading's description is told apart from a note. Undefined for items. */
+type LineRole = 'heading' | 'description' | 'note' | 'blank' | 'separator';
+
+function lineRoles<T>(tokens: readonly Token<T>[]): (LineRole | undefined)[] {
+  let underHeading = false;
+  return tokens.map((token) => {
+    if (token.kind === 'item') {
+      underHeading = false;
+      return undefined;
+    }
+    const read = readCommentLine(token.text);
+    if (read.kind === 'heading') {
+      underHeading = true;
+      return 'heading';
+    }
+    if (read.kind !== 'note') {
+      underHeading = false;
+      return read.kind;
+    }
+    return underHeading ? 'description' : 'note';
+  });
+}
+
+/** Lines a step hops over as one: headings with their descriptions, separators and the blank lines among them. */
+const HEADING_RUN: readonly (LineRole | undefined)[] = ['heading', 'description', 'separator', 'blank'];
+
+/**
+ * Item `index` moved one step up (-1) or down (1), with its own notes: the note lines right above it, back to a blank
+ * line, a heading's description or anything else (a heading and its description belong to their place, never to an
+ * item). The neighbour it passes is
+ * - another item: they swap, each with its own notes;
+ * - a heading run (headings with their descriptions, separators, blank lines between): the item hops over the whole
+ *   run, so it becomes the last item of the section before it (up) or the first of the section after it (down), and no
+ *   other item moves;
+ * - a free-standing note (one that is not an item's own): the item passes it, and the note stays a note.
+ * Blank lines go where the new neighbours would otherwise join (a note under a description); the blocks are tidied.
+ * Undefined when nothing is there to pass (the first item with nothing above its notes, the last with nothing after it).
+ * A step and the opposite step give back the list (`stepItem` up, then down).
+ */
+export function stepItem<T>(
+  list: SectionList<T>,
+  access: CommentAccess<T>,
+  index: number,
+  direction: -1 | 1
+): (SectionEditResult<T> & { readonly index: number }) | undefined {
+  if (!Number.isInteger(index) || index < 0 || index >= list.items.length) return undefined;
+  const tokens = toTokens(list, access);
+  const roles = lineRoles(tokens);
+  const at = position(tokens, { at: index, line: -1 });
+  if (at === undefined) return undefined;
+  let start = at;
+  while (start > 0 && roles[start - 1] === 'note') start--;
+  const unit = tokens.slice(start, at + 1);
+  const blank: Token<T> = { kind: 'line', text: BLANK_COMMENT_LINE };
+  /** Where the run of notes that ends at `end` starts. */
+  const notesFrom = (end: number) => {
+    let from = end;
+    while (from > 0 && roles[from - 1] === 'note') from--;
+    return from;
+  };
+
+  if (direction === -1) {
+    let above = start - 1;
+    while (above >= 0 && roles[above] === 'blank') above--;
+    if (above < 0) return undefined;
+    const gap = tokens.slice(above + 1, start);
+    let from: number;
+    let passed: Token<T>[];
+    if (tokens[above].kind === 'item') {
+      // The item above, with its own notes.
+      from = notesFrom(above);
+      passed = [...gap, ...tokens.slice(from, above + 1)];
+    } else if (roles[above] === 'note') {
+      // A free-standing note (not an item's own: a blank line or another line separates it from the next item).
+      from = notesFrom(above);
+      passed = [blank, ...tokens.slice(from, above + 1), blank];
+    } else {
+      from = above;
+      while (from > 0 && HEADING_RUN.includes(roles[from - 1])) from--;
+      passed = [blank, ...tokens.slice(from, above + 1), blank];
+    }
+    tokens.splice(from, at + 1 - from, blank, ...unit, ...passed);
+  } else {
+    let below = at + 1;
+    while (below < tokens.length && roles[below] === 'blank') below++;
+    if (below >= tokens.length) return undefined;
+    const gap = tokens.slice(at + 1, below);
+    let to = below;
+    while (to < tokens.length && roles[to] === 'note') to++;
+    let passed: Token<T>[];
+    if (tokens[below].kind === 'item' || (roles[below] === 'note' && tokens[to]?.kind === 'item')) {
+      // The item below, with its own notes.
+      passed = tokens.slice(below, to + 1);
+      tokens.splice(start, to + 1 - start, blank, ...passed, ...gap, ...unit);
+    } else {
+      if (roles[below] !== 'note') {
+        to = below;
+        while (to + 1 < tokens.length && HEADING_RUN.includes(roles[to + 1])) to++;
+        to++;
+      }
+      passed = tokens.slice(below, to);
+      // A heading run needs no blank line above it; a free note does (it must not join a description or note above).
+      tokens.splice(start, to - start, ...(roles[below] === 'note' ? [blank] : []), ...passed, blank, ...unit);
+    }
+  }
+  const result = fromTokens(tokens, access);
+  return { ...result, index: result.from.indexOf(index) };
+}
+
+/** Whether the first item can move up and the last one down: something other than its own notes and blank lines is beyond it. */
+export function stepEdges<T>(
+  list: SectionList<T>,
+  access: Pick<CommentAccess<T>, 'get'>
+): { readonly firstUp: boolean; readonly lastDown: boolean } {
+  const first = list.items.at(0);
+  const roles = lineRoles((first === undefined ? [] : (access.get(first) ?? [])).map((text): Token<T> => ({ kind: 'line', text })));
+  let own = roles.length;
+  while (own > 0 && roles[own - 1] === 'note') own--;
+  return {
+    firstUp: roles.slice(0, own).some((role) => role !== 'blank'),
+    lastDown: list.items.length > 0 && list.end.some((line) => line.trim() !== ''),
+  };
+}
+
 /** Adds `item` as the last item of the section whose heading is at `address`; undefined when the address is gone. */
 export function addToSection<T>(
   list: SectionList<T>,

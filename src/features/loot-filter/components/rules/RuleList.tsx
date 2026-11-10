@@ -21,7 +21,10 @@ interface RuleListProps {
   readonly canFold: boolean;
   readonly selectedRule: number | null;
   readonly onSelect: (index: number) => void;
-  readonly onMove: (from: number, to: number) => void;
+  /** One step up (-1) or down (1) (`stepItem`); returns the rule's new index, undefined when it did not move. */
+  readonly onMove: (index: number, direction: -1 | 1) => number | undefined;
+  /** The first rule can still move up (a heading above it) / the last one down (comments after it). */
+  readonly edges: { readonly firstUp: boolean; readonly lastDown: boolean };
   readonly onToggle: (index: number, disabled: boolean) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
@@ -46,6 +49,7 @@ export interface RuleListSectionHandlers {
 export function RuleList({
   rows,
   ruleCount,
+  edges,
   canMove,
   canFold,
   selectedRule,
@@ -60,11 +64,12 @@ export function RuleList({
   const listRef = useRef<HTMLUListElement>(null);
 
   // Rows are keyed by position, so after a move the focused button belongs to the other rule: follow the moved one.
-  const handleMove = (from: number, to: number) => {
-    onMove(from, to);
+  const handleMove = (index: number, direction: -1 | 1) => {
+    const to = onMove(index, direction);
+    if (to === undefined) return;
     requestAnimationFrame(() => {
       const row = listRef.current?.querySelector(`[data-rule-index="${String(to)}"]`);
-      const move = row?.querySelector<HTMLButtonElement>(`[data-move="${to < from ? 'up' : 'down'}"]`);
+      const move = row?.querySelector<HTMLButtonElement>(`[data-move="${direction === -1 ? 'up' : 'down'}"]`);
       (move?.disabled === false ? move : row?.querySelector<HTMLElement>('[data-rule-main]'))?.focus();
     });
   };
@@ -104,8 +109,8 @@ export function RuleList({
             summary={entry.summary}
             severity={entry.severity}
             selected={entry.index === selectedRule}
-            isFirst={entry.index === 0}
-            isLast={entry.index === ruleCount - 1}
+            isFirst={entry.index === 0 && !edges.firstUp}
+            isLast={entry.index === ruleCount - 1 && !edges.lastDown}
             canMove={canMove}
             onSelect={onSelect}
             onMove={handleMove}
