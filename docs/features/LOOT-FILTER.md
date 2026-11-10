@@ -81,7 +81,10 @@ then run `lootfilter` in the game console and read
 - A stored value that fails the type guard (corrupt, or written by a newer version) is copied once to
   `loot-filters/library.unreadable` before the library starts empty, so the next save cannot destroy it.
 - A refused write (quota) shows one toast, "Could not save: browser storage is full", until a write succeeds again;
-  editing keeps working in memory.
+  editing keeps working in memory. The stored library stays as it was at the last good write, so what changed since
+  (a new draft, edits) is lost on reload unless saved to the account or downloaded. The whole library is one value:
+  Chrome allows 5,242,880 characters per origin (measured 2026-11-10), and a draft of Sully's v0.9.2 takes about 527k
+  of them as stored JSON, so about nine such drafts fit; the tenth start fails the write.
 - Two browser tabs editing the library overwrite each other: each writes its whole library, the last write wins. There is
   no cross-tab sync (no `storage` event listener).
 
@@ -467,7 +470,7 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   has Sully's filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' }` (the
+  `basedOn { template: 'example', version: '2.3.0', label: 'Example filter (with explanations) v2.3.0' }` (the
   file's version; the example has no live file). Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "ÿc4Drop: {qualityColor}{name}".
@@ -556,10 +559,18 @@ file every 10 minutes and keeps the last good one), with the copy in `public/loo
   requests an hour, base64) do not fit. A valid live text always wins, even when its version is lower than the bundled
   copy's. Any failure (network, timeout, HTTP status, an invalid text) loads the bundled copy instead, with the reason
   in `liveError` and a `console.warn`. A template without a `liveUrl` (the example) loads its bundled copy only.
+- **A failed live attempt is remembered for the browser session** (`sessionStorage`
+  `loot-filters/live-template-failed/<id>`: `{ at, reason }`, every access in try/catch): for the next 10 minutes a
+  load (a reload, another tab of the session, a re-check) skips the live request and goes straight to the bundled
+  copy, with the reason "<reason> (tried 3 min ago)" ("under a minute" below one). On a network where
+  raw.githubusercontent.com hangs, only the first load waits the 5 s timeout. A successful live load removes it; blocked
+  or full storage only means the next load tries again.
 - **Validation** (`checkTemplateText(id, text)`): at most 5 MB (characters); `parseLootFilter` does not throw and
   reports no error diagnostic (warnings are fine: v0.9.2 has one); at least one rule; its title or author names this
-  template (`templateOfFile` in `utils/basedOn.ts`); its `version` reads as a template version (`templateVersionOf`).
-  The result carries the version and rule count.
+  template (`templateOfFile` in `utils/basedOn.ts`); its `version` has a numeric start (`templateVersionOf`: one to
+  four numeric parts after an optional "v", or a leading-dot decimal; the rest is ignored, so "0.9.3-beta" reads as
+  0.9.3, "1.0.0-rc1" as 1.0.0 and Sully's early ".5" as 0.5, while "latest" or five parts are refused). A pre-release
+  therefore compares equal to its release. The result carries the version and rule count.
 - **Cache**: one promise per id, so the card, the start button, the sandbox and the update banner share one request.
   The next call after 10 minutes re-checks the live file; a failed re-check keeps the previous source (a live one stays
   live, with a fresh `loadedAt`); a load that fails outright (live and bundled) is forgotten so the next call retries.
@@ -586,11 +597,16 @@ file every 10 minutes and keeps the last good one), with the copy in `public/loo
   file, runs `checkTemplateText` (refuses to write an invalid one), writes it verbatim to
   `public/loot-filters/sullys-qol-filter.json`, and prints the old → new version, size, rules, styles, the parser's and
   the validator's (committed game data) error/warning counts, the files the new text references that the site does not
-  bundle, and (one call to `api.github.com/repos/Thisisnotsully/QoL-Filter/git/trees/main?recursive=1`, generic
-  User-Agent) his icons and sounds the site does not bundle. `-- --check` writes nothing and exits 1 when upstream
+  bundle, the size raw and as the editor writes it against the saved-filter cap (a warning above 75% of it), any of his
+  style names that one of our style presets uses (`presetNameClashes`), and (one call to
+  `api.github.com/repos/Thisisnotsully/QoL-Filter/git/trees/main?recursive=1`, derived from `repoUrl` and the branch of
+  `liveUrl`, generic User-Agent) his icons and sounds the site does not bundle. The script and the `esr:review` Sully
+  checks read the URLs from `SULLYS_QOL_TEMPLATE`, so the review checks the very file the app loads. `-- --check` writes nothing and exits 1 when upstream
   differs (or cannot be fetched or checked). A bump needs no constant, test or agent pack edit; a new icon or sound
   needs bundling (icons shrunk to 128 px, the `bundledAssets.ts` registry), which the bundled-file invariant in
-  `referencedAssets.test.ts` enforces. The pure parts live in `scripts/lib/sullyTemplate.ts` (tested); the
+  `referencedAssets.test.ts` enforces. Two more invariants hold for any bundled version: the file fits a saved filter
+  as read and as the editor writes it (`template.test.ts`), and no style of his is named like a preset
+  (`stylePresets.test.ts`). The pure parts live in `scripts/lib/sullyTemplate.ts` (tested); the
   `/esr-update` review (`esr:review`) still diffs upstream against the bundled copy.
 - **Privacy**: `raw.githubusercontent.com` was already contacted for the ESR version check; the privacy policy's GitHub
   row names Sully's live filter as a second purpose.
@@ -682,7 +698,8 @@ mode: 'normal' | 'overwrite' | 'asNew' })` (`takeLeading`):
 
 1. signed out → `openSignInDialog()`; privacy policy not accepted → an error;
 2. `flushNow()`, then `selectSaveRequest` (null → "No changes to save");
-3. `checkSaveText`: at most 512 KB, readable by the lenient parser, a filter object with `formatVersion` 1 (validator
+3. `checkSaveText`: at most 2 MB (`FILTER_CONTENT_MAX_BYTES`, the `loot_filters_content_size` check of migration 007;
+   512 KB up to 2026-11-10, when Sully's v0.9.2 template alone outgrew it), readable by the lenient parser, a filter object with `formatVersion` 1 (validator
    errors and warnings do not block);
 4. insert (a new draft, or `asNew`): name, description, Private, the file metadata (`filterMetadata`), `esr_version`
    from `db.metadata` `esrVersion`, `plugin_version` = `LOOT_FILTER_PLUGIN_VERSION`, `based_on_*` from the draft's
@@ -1553,8 +1570,10 @@ select only. Where a preset has two candidates, the one its sample and its examp
 A rule's own `icon` overrides its style's, but no rule can remove it: the example picker handles a rule that wants
 none with a `<Name>NoIcon` copy of the style (see _Add selected_ under the Rules tab's example rules). Names are
 PascalCase without spaces like Sully's, none equal (in any case) to one of his style names: picking a preset whose name
-his filter already uses would silently keep his style (`styleChoice.ts` never overwrites one), so `stylePresets.test.ts`
-checks the names against his v0.9.2 styles (22), and the Mid rune preset, `MidRune` until 2026-11-10, became
+his filter already uses would keep his style (`styleChoice.ts` never overwrites one; the pick's toast says "The filter
+already has a style named X", the Styles tab's and the example rules' toasts say the same), so `stylePresets.test.ts`
+checks the names and their `NoIcon` copies (`presetNameClashes`) against his v0.9.2 styles (22, the frozen fixture) and
+against the bundled copy, `npm run loot-filter:template` prints any clash, and the Mid rune preset, `MidRune` until 2026-11-10, became
 `MidTierRune` when his v0.9.0 added a `MidRune` of his own. Filters that already hold a `MidRune` style keep it. The Styles tab's **Add preset** menu shows
 each with a `PresetPreview` and its description; the menu says the preset is copied "minimap icon included".
 
