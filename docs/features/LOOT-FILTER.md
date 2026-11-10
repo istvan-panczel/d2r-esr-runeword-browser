@@ -351,8 +351,11 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   - **A rule selected from elsewhere opens its part and section**, the others stay as they are: a problem's rule link
     (header, JSON tab), the Test tab's rule link, Add rule, a heading's Add rule, example rules added, Check in game,
     and clearing a search while a rule is selected. Each of these opens the headings in its handler, after the action (no effect); a
-    click on a rule row needs none. The Styles list does the same for a style added, renamed, duplicated or picked from
-    the presets. Nothing restores a selection when the editor opens (`open` and `close` reset it), so that case does
+    click on a rule row needs none. The row is then scrolled into view in the list and the window (`block: 'nearest'`,
+    after the commit that opens its headings: the screen's `revealCount` drives RuleList's effect, which also runs again
+    when the game data arrives, since the rule summaries grow a moment after the Rules tab mounts); a click on a row
+    already in view does not scroll. The Styles list does the same for a style added, renamed, duplicated or picked from
+    the presets, and scrolls it into view. Nothing restores a selection when the editor opens (`open` and `close` reset it), so that case does
     not occur.
   - Folding the selected rule's heading by hand (or Collapse all) folds the rule away with its section. The editor
     state's `selectionFolded` holds that: it belongs to the selection, so it follows the rule when a rule above it is

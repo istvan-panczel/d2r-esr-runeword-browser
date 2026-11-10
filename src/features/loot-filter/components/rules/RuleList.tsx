@@ -20,6 +20,13 @@ interface RuleListProps {
   /** False while a search filters the list: folds do not apply to it. */
   readonly canFold: boolean;
   readonly selectedRule: number | null;
+  /** Changes when a rule is revealed by an action: the selected row is scrolled into view once it is rendered. */
+  readonly scrollRequest: number;
+  /**
+   * Changes when the rows change height (the game data arriving makes the summaries longer, a moment after the tab
+   * mounts): the selected row is brought back into view.
+   */
+  readonly layoutKey: string;
   readonly onSelect: (index: number) => void;
   /** One step up (-1) or down (1) (`stepItem`); returns the rule's new index, undefined when it did not move. */
   readonly onMove: (index: number, direction: -1 | 1) => number | undefined;
@@ -53,6 +60,8 @@ export function RuleList({
   canMove,
   canFold,
   selectedRule,
+  scrollRequest,
+  layoutKey,
   onSelect,
   onMove,
   onToggle,
@@ -74,10 +83,12 @@ export function RuleList({
     });
   };
 
+  // After the commit that shows it (a reveal opens its headings in the same update) and again when the rows above it
+  // change height, so the row ends where it stays; the nearest edge, so a row already in view (a click) does not move.
   useEffect(() => {
     if (selectedRule === null) return;
     listRef.current?.querySelector(`[data-rule-index="${String(selectedRule)}"]`)?.scrollIntoView({ block: 'nearest' });
-  }, [selectedRule]);
+  }, [selectedRule, scrollRequest, layoutKey]);
 
   return (
     <ul ref={listRef} className={className} aria-label="Rules">

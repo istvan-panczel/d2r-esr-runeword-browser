@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { Copy, Heading, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -101,11 +101,19 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
   // open. Read from the store, which the action has already updated.
   const select = (name: string) => {
     setSelected(name);
+    setRevealCount((count) => count + 1);
     const current = selectEditorFilter(store.getState());
     if (current === null) return;
     const keys = styleHeadingKeys(current, name);
     onOpenChange((now) => withOpened(now, keys));
   };
+  // A style selected by an action is scrolled into view once its headings are open (after that commit).
+  const [revealCount, setRevealCount] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    if (revealCount === 0) return;
+    listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [revealCount]);
   const [nameDialog, setNameDialog] = useState<NameDialogState>(null);
   // The style being deleted stays set while the dialog closes, so its text does not change during the animation.
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -212,7 +220,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
               }
             />
           )}
-          <ul className="flex flex-col gap-1">
+          <ul ref={listRef} className="flex flex-col gap-1">
             {buildSectionRows(entries, commentsOf, [], { open, keep: kept }).map((row) => {
               if (row.kind === 'heading') {
                 return (

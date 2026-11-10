@@ -256,6 +256,9 @@ export function LootFilterEditorScreen() {
   const jsonDraft = jsonState !== null && jsonState.session === sessionKey ? jsonState.draft : null;
 
   // The Rules and Styles tabs' folds, remembered per filter; a saved draft or a copied sandbox keeps them.
+  // Counts the rules revealed by an action (`showRule`, RulesTab's reveals): the rule list scrolls the selected rule into
+  // view once the opened headings are rendered.
+  const [revealCount, setRevealCount] = useState(0);
   const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target, draftEntry?.savedId), switching);
 
   // Leaving the screen: write pending edits back and forget a finished save.
@@ -597,6 +600,7 @@ export function LootFilterEditorScreen() {
       const keys = ruleHeadingKeys(current, selectedRule);
       sectionFolds.update('rules', (open) => withOpened(open, keys));
     }
+    setRevealCount((count) => count + 1);
     setTab('rules');
     window.scrollTo({ top: 0 });
   };
@@ -658,6 +662,10 @@ export function LootFilterEditorScreen() {
               sectionFolds.update('rules', change);
             }}
             selectionFolded={editor.selectionFolded}
+            revealCount={revealCount}
+            onReveal={() => {
+              setRevealCount((count) => count + 1);
+            }}
           />
         );
       case 'styles':

@@ -65,10 +65,13 @@ interface RulesTabProps {
    * selection inside folded headings (a rule moved into a folded section) is still listed.
    */
   readonly selectionFolded: boolean;
+  /** Bumped whenever a rule is revealed by an action; the list then scrolls the selected rule into view. */
+  readonly revealCount: number;
+  readonly onReveal: () => void;
 }
 
 /** The rule list (search, add, reorder, duplicate, delete) next to the selected rule's editor. */
-export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, selectionFolded }: RulesTabProps) {
+export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, selectionFolded, revealCount, onReveal }: RulesTabProps) {
   const dispatch = useDispatch();
   const store = useStore<RootState>();
   const data = useLootFilterData();
@@ -131,6 +134,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
     if (current === null || index === null) return;
     const keys = ruleHeadingKeys(current, index);
     onOpenChange((now) => withOpened(now, keys));
+    onReveal();
   };
   const sections: RuleListSectionHandlers = {
     onToggle: (row) => {
@@ -298,6 +302,8 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             canMove={!searching}
             canFold={!searching}
             selectedRule={selectedRule}
+            scrollRequest={revealCount}
+            layoutKey={data.status}
             onSelect={handleSelect}
             edges={stepEdges({ items: filter.rules, end: endComments }, { get: (entry) => entry.commentsBefore })}
             onMove={(index, direction) => {
