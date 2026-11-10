@@ -118,11 +118,14 @@ function filesSection(siteUrl: string, files: readonly PromptFile[]): string[] {
     '',
     'The tables are the full game data: every item code, type, stat, unique and set row, area and skill. They do not list the sounds.txt names.',
     '',
-    'Complete filters to read (the app bundles them as templates):',
+    'Complete filters to read (the app offers them as templates):',
     '',
-    ...BUNDLED_TEMPLATE_LIST.map(
-      (template) => `- ${template.name} v${template.version}: ${template.summary} ${siteUrl}loot-filters/${template.file}`
-    ),
+    ...BUNDLED_TEMPLATE_LIST.map((template) => {
+      const copy = `${siteUrl}loot-filters/${template.file}`;
+      return template.liveUrl === undefined
+        ? `- ${template.name}: ${template.summary} ${copy}`
+        : `- ${template.name}: ${template.summary} The latest: ${template.liveUrl} (the copy on this site, which can be older: ${copy})`;
+    }),
   ];
 }
 

@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { useTemplateText } from '../../hooks/useTemplateText';
+import { useTemplateSource } from '../../hooks/useTemplateSource';
 import { filterMetadata, type FilterMetadata } from '../../sharing';
 import { levelNames, ruleCountLabel } from '../../utils/library';
 import { referencedAssetsOfText } from '../../utils/referencedAssets';
 import type { BundledTemplate } from '../../utils/template';
+import { templateLiveErrorText, templateOriginText } from '../../utils/templateSource';
 import { FilterDownloadMenu } from '../FilterDownloadMenu';
 
 function readMetadata(text: string): FilterMetadata | null {
@@ -31,9 +32,12 @@ interface BundledTemplateCardProps {
 
 /** A pinned card of the Shared tab: a bundled template (Sully's QoL filter, the example filter). */
 export function BundledTemplateCard({ template, onStart, starting, disabled }: BundledTemplateCardProps) {
-  const text = useTemplateText(template.id);
-  const metadata = text.status === 'ready' ? readMetadata(text.text) : null;
+  const state = useTemplateSource(template.id);
+  const source = state.status === 'ready' ? state.source : null;
+  const metadata = source === null ? null : readMetadata(source.text);
   const levels = levelNames(metadata?.levels ?? null);
+  const origin = source === null ? null : templateOriginText(template, source);
+  const liveError = source === null ? null : templateLiveErrorText(template, source);
 
   return (
     <Card className="flex flex-col gap-3 border-primary/40 p-4">
@@ -49,10 +53,19 @@ export function BundledTemplateCard({ template, onStart, starting, disabled }: B
       <p className="line-clamp-2 text-sm text-muted-foreground">{template.summary}</p>
       <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <span className="min-w-0 truncate">by {template.author}</span>
-        <span className="shrink-0 text-xs">v{template.version}</span>
+        {source === null ? (
+          state.status === 'error' ? null : (
+            <Skeleton className="h-4 w-16 shrink-0" />
+          )
+        ) : (
+          <span className="shrink-0 text-xs" title={liveError ?? undefined}>
+            {source.version === null ? '' : `v${source.version}`}
+            {origin !== null && `${source.version === null ? '' : ' · '}${origin}`}
+          </span>
+        )}
       </div>
       <div className="text-xs text-muted-foreground">
-        {text.status === 'loading' ? (
+        {state.status === 'loading' || state.status === 'idle' ? (
           <Skeleton className="h-4 w-40" />
         ) : metadata === null ? (
           <span>Could not load the filter file.</span>
@@ -67,13 +80,19 @@ export function BundledTemplateCard({ template, onStart, starting, disabled }: B
             )}
           </p>
         )}
+        {liveError !== null && <p className="mt-1">{liveError}.</p>}
       </div>
       <div className="mt-auto flex flex-wrap items-center gap-2">
         <Button size="sm" asChild>
           <Link to={template.sandboxPath}>Open</Link>
         </Button>
-        {text.status === 'ready' ? (
-          <FilterDownloadMenu name={template.name} getText={() => text.text} assets={referencedAssetsOfText(text.text)} variant="outline" />
+        {source !== null ? (
+          <FilterDownloadMenu
+            name={template.name}
+            getText={() => source.text}
+            assets={referencedAssetsOfText(source.text)}
+            variant="outline"
+          />
         ) : (
           <Button size="sm" variant="outline" disabled>
             <Download />

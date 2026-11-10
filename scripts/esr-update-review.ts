@@ -244,7 +244,6 @@ function templateValidation(
 
 interface TemplateConstants {
   LOOT_FILTER_PLUGIN_VERSION: string;
-  SULLYS_QOL_TEMPLATE: { version: string };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -337,7 +336,7 @@ async function githubListing(folder: string): Promise<{ names: string[] | null; 
 
 const filterVersion = (text: string | null) => (text === null ? null : (parseLootFilter(text).filter.version ?? null));
 
-async function sully(constants: TemplateConstants | null): Promise<Check[]> {
+async function sully(): Promise<Check[]> {
   const bundledText = workingText(`${LOOT_FILTERS_DIR}/${SULLY_FILE}`) ?? '';
   const upstream = await get(SULLY_RAW_URL, true);
   const upstreamText = upstream.body !== null && upstream.status === 200 ? upstream.body.toString('utf8') : null;
@@ -346,7 +345,6 @@ async function sully(constants: TemplateConstants | null): Promise<Check[]> {
     upstreamVersion: filterVersion(upstreamText),
     bundledText,
     bundledVersion: filterVersion(bundledText),
-    constantVersion: constants?.SULLYS_QOL_TEMPLATE.version ?? null,
     ...(upstreamText === null ? { error: upstream.error ?? `HTTP ${String(upstream.status)}` } : {}),
   });
   const [icons, sounds] = await Promise.all([githubListing('icons'), githubListing('sounds')]);
@@ -574,7 +572,7 @@ async function main(): Promise<void> {
       const reason = `navConfig.ts / guideHome.ts could not be loaded: ${error instanceof Error ? error.message : String(error)}`;
       checks.push(skipped('net.links', 'External links', reason), skipped('net.discord', 'Discord invite', reason));
     }
-    checks.push(...(await sully(constants)));
+    checks.push(...(await sully()));
   }
 
   // 15. Docs quoting the old version

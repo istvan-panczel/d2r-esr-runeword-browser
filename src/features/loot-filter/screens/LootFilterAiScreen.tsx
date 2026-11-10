@@ -46,7 +46,8 @@ import {
 import type { ExamplePickerState } from '../utils/examplePicker';
 import { SHOW_PROBLEMS_STATE } from '../utils/editorRoute';
 import { draftPath } from '../utils/library';
-import { BUNDLED_TEMPLATES, loadTemplateText, type BundledTemplateId } from '../utils/template';
+import { BUNDLED_TEMPLATES } from '../utils/template';
+import { useTemplateSource } from '../hooks/useTemplateSource';
 
 type PromptModule = typeof import('../utils/aiPrompt/promptPackage');
 
@@ -133,8 +134,6 @@ export function LootFilterAiScreen() {
   const [request, setRequest] = useState(readStoredRequest);
   const [choice, setChoice] = useState<AiStarterChoice>(openFilter === null ? { kind: 'none' } : { kind: 'open' });
   const [upload, setUpload] = useState<{ readonly name: string; readonly text: string } | null>(null);
-  const [templateTexts, setTemplateTexts] = useState<Partial<Record<BundledTemplateId, string>>>({});
-  const [templateErrors, setTemplateErrors] = useState<Partial<Record<BundledTemplateId, string>>>({});
   // Example rules picked as the starter, with the picker's selection so "Change example rules" reopens on it.
   const [rulesStarter, setRulesStarter] = useState<ExampleRulesStarter | null>(null);
   const [rulesSelection, setRulesSelection] = useState<ExamplePickerState | undefined>(undefined);
@@ -175,27 +174,8 @@ export function LootFilterAiScreen() {
     };
   }, []);
 
-  // A bundled template starter: its file, fetched once per page load (shared with the library's start buttons).
-  const pendingTemplate =
-    choice.kind === 'template' && templateTexts[choice.template] === undefined && templateErrors[choice.template] === undefined
-      ? choice.template
-      : null;
-  useEffect(() => {
-    if (pendingTemplate === null) return;
-    let cancelled = false;
-    loadTemplateText(pendingTemplate).then(
-      (text) => {
-        if (!cancelled) setTemplateTexts((previous) => ({ ...previous, [pendingTemplate]: text }));
-      },
-      (error: unknown) => {
-        if (!cancelled)
-          setTemplateErrors((previous) => ({ ...previous, [pendingTemplate]: error instanceof Error ? error.message : String(error) }));
-      }
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [pendingTemplate]);
+  // A bundled template starter: its text in use (live or bundled), shared with the library's cards and start buttons.
+  const templateState = useTemplateSource(choice.kind === 'template' ? choice.template : null);
 
   const resolveStarter = (): StarterResult | 'loading' | null => {
     switch (choice.kind) {
@@ -203,10 +183,10 @@ export function LootFilterAiScreen() {
         return null;
       case 'template': {
         const template = BUNDLED_TEMPLATES[choice.template];
-        const text = templateTexts[choice.template];
-        const error = templateErrors[choice.template];
-        if (error !== undefined) return { ok: false, message: `Could not load ${template.name}: ${error}` };
-        return text === undefined ? 'loading' : starterFromText(`${template.name} v${template.version}`, text);
+        if (templateState.status === 'error') return { ok: false, message: `Could not load ${template.name}: ${templateState.message}` };
+        if (templateState.status !== 'ready') return 'loading';
+        const { text, version } = templateState.source;
+        return starterFromText(version === null ? template.name : `${template.name} v${version}`, text);
       }
       case 'entry': {
         const entry = drafts.find((draft) => draft.id === choice.entryId);

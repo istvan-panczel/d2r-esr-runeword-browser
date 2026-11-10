@@ -3,8 +3,10 @@ export type BundledTemplateId = 'sullys-qol' | 'example';
 
 /**
  * A filter bundled under `public/loot-filters/`: shown as a pinned card on the Shared tab, readable in its sandbox
- * (`sandboxPath`) and a starting point for drafts, which record `{ template: id, version, label }` in `basedOn` and get
- * "Update available" once a newer `version` is bundled.
+ * (`sandboxPath`) and a starting point for drafts, which record `{ template: id, version, label }` in `basedOn`. The
+ * version is never written here: it is the `version` of the text in use (`loadTemplate` in `templateSource.ts`: the
+ * live file when the template has a `liveUrl` and it passes `checkTemplateText`, else the bundled copy), and drafts
+ * started from a lower version get "Update available".
  */
 export interface BundledTemplate {
   readonly id: BundledTemplateId;
@@ -12,10 +14,15 @@ export interface BundledTemplate {
   readonly name: string;
   /** The file's `author`. */
   readonly author: string;
-  /** The file's `version` (checked against the file by a test); bump it with the file. */
-  readonly version: string;
-  /** The file under `public/loot-filters/`. */
+  /** The bundled copy under `public/loot-filters/`: the fallback when the live file cannot be used. */
   readonly file: string;
+  /**
+   * The upstream file the app loads first (a plain GET: no custom headers, so no CORS preflight); a valid live file
+   * always wins over the bundled copy, whatever its version, as in the ESR launcher.
+   */
+  readonly liveUrl?: string;
+  /** The upstream repository (the credit, the "could not load" reason, and the icons and sounds the site does not bundle). */
+  readonly repoUrl?: string;
   /** The sandbox route that shows it without copying it. */
   readonly sandboxPath: string;
   /** The library button that starts a draft from it. */
@@ -27,53 +34,49 @@ export interface BundledTemplate {
 }
 
 /**
- * Sully's QoL filter (v0.9.2), the filter the ESR launcher pulls live from github.com/Thisisnotsully/QoL-Filter since
- * ESR 3.2.22 (`LootFilters/sources.json`). The copy in `public/loot-filters/` is his `Sullys-QoL-Filter.json` verbatim
- * (v0.6.2 fixed the `9pm` typo and the trailing comma we had patched in v0.6.1, v0.6.3 adds a 500k+ gold stack rule,
- * v0.6.7 a +1 all skills base highlight and "except +all skills" hide rules, v0.6.9 to v0.6.11 hide Ancient Scrolls at
- * level 4, add Mythical Jewels to the rare jewel rule and fix ancient coupon tier lists, v0.6.12 to v0.6.13 add two Legendary
- * Materials (Lucion's Relic of Sanctification `u18`, Inarius' Everburning Halo `u40`); v0.7.0 (2026-11-05) localises
- * names, chat lines and level names into 11 languages and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); v0.9.0
- * to v0.9.2 (2026-11-10) regroup it for this editor into 6 `// ====` parts and 44 `// ----` sections with an
- * "R### | what | action" title per rule, 689 rules and 22 styles (beams, shortened coupon and organ names, 13 languages,
- * `statMax` skill tab formulas, no new assets); its `"activeInLevels": 4` is a number, not a list, which works in game, so
- * the editor reads it as `[4]` with one warning; strict JSON apart from the `//` comments). Up to ESR 3.2.21 the mod shipped an earlier conversion of the same filter as
+ * Sully's QoL filter, the filter the ESR launcher pulls live from github.com/Thisisnotsully/QoL-Filter since ESR 3.2.22
+ * (`LootFilters/sources.json`, every 10 minutes, keeping the last good file). The app does the same: it loads
+ * `Sullys-QoL-Filter.json` from his main branch and falls back to the verbatim copy in `public/loot-filters/`
+ * (`npm run loot-filter:template` refreshes it). Since v0.9.0 the file is grouped for this editor into `// ====` parts
+ * and `// ----` sections; its `"activeInLevels": 4` is a number, not a list, which works in game, so the editor reads it
+ * as `[4]` with one warning. Up to ESR 3.2.21 the mod shipped an earlier conversion of the same filter as
  * `LootFilters/esr-default-filter.json`.
  */
 export const SULLYS_QOL_TEMPLATE: BundledTemplate = {
   id: 'sullys-qol',
   name: "Sully's QoL Filter",
   author: 'Sully',
-  version: '0.9.2',
   file: 'sullys-qol-filter.json',
+  liveUrl: 'https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json',
+  repoUrl: 'https://github.com/Thisisnotsully/QoL-Filter',
   sandboxPath: '/loot-filters/sully',
   startLabel: "Start from Sully's QoL filter",
-  summary: 'The filter the ESR launcher gives every player, bundled with this site. Start from it to change its rules.',
+  summary: 'The filter the ESR launcher gives every player. Start from it to change its rules.',
   credit:
-    "Sully's QoL filter v0.9.2, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully",
+    "Sully's QoL filter, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter (this site loads his latest too, with a bundled copy as fallback); icons and sounds by Sully",
 };
 
 /**
  * Our commented example filter (`example-filter.json`): 28 of the editor's example rules (`exampleRules.ts`, built
  * with their default presentation and the style presets they use) over two levels (Leveling, Strict), each comment
- * starting with the example's title and then explaining the rule. It uses Sully's sounds and the generated icons.
- * v2.0.0 (2026-11-05) replaced the hand-written v1.0.0 (21 rules, two custom styles, Sully's icons); v2.1.0 (2026-11-05)
- * moved the icons into the styles with the presets (plus MidRuneNoIcon for Hel to Um, which keep none); v2.2.0 (2026-11-09)
- * adds a `// ---- <group>` section heading per example group (docs/features/LOOT-FILTER.md "Section comments"). Drafts started
- * from an earlier version see "Update available". exampleFilter.test.ts checks every rule against its example.
+ * starting with the example's title and then explaining the rule, under a `// ---- <group>` section heading per example
+ * group. It uses Sully's sounds and the generated icons. Bump its `version` with every change: drafts started from a
+ * lower one see "Update available". exampleFilter.test.ts checks every rule against its example.
  */
 export const EXAMPLE_TEMPLATE: BundledTemplate = {
   id: 'example',
   name: 'Example filter (with explanations)',
   author: 'D2R ESR Runeword Browser',
-  version: '2.2.0',
   file: 'example-filter.json',
   sandboxPath: '/loot-filters/example',
   startLabel: 'Start from the example',
   summary: 'A small filter to learn from: every rule says in its comment what it does and what to change.',
   credit:
-    'Example filter v2.2.0, built for this site from its example rules to show how rules work; sounds by Sully, icons generated for this app',
+    'Example filter, built for this site from its example rules to show how rules work; sounds by Sully, icons generated for this app',
 };
+
+/** The version of each template's text in use (live or bundled); a template not loaded yet is missing. */
+export type TemplateVersions = Readonly<Partial<Record<BundledTemplateId, string | null>>>;
 
 /** The bundled templates by id. */
 export const BUNDLED_TEMPLATES: Readonly<Record<BundledTemplateId, BundledTemplate>> = {
@@ -97,26 +100,9 @@ export function lootFilterAssetUrl(path: string): string {
   return `${import.meta.env.BASE_URL}loot-filters/${path}`;
 }
 
-/** Fetches a bundled template's file text. */
-export async function fetchTemplateText(id: BundledTemplateId): Promise<string> {
-  const response = await fetch(lootFilterAssetUrl(BUNDLED_TEMPLATES[id].file));
+/** Fetches a bundled template's own copy (same origin, under `public/loot-filters/`). */
+export async function fetchBundledTemplateText(id: BundledTemplateId, fetchImpl: typeof fetch = fetch): Promise<string> {
+  const response = await fetchImpl(lootFilterAssetUrl(BUNDLED_TEMPLATES[id].file));
   if (!response.ok) throw new Error(`HTTP ${String(response.status)}`);
   return response.text();
-}
-
-const templateTexts = new Map<BundledTemplateId, Promise<string>>();
-
-/**
- * A bundled template's text, fetched once per page load (its pinned card and its start button share it); a failed
- * fetch is forgotten so the next call retries.
- */
-export function loadTemplateText(id: BundledTemplateId): Promise<string> {
-  const cached = templateTexts.get(id);
-  if (cached !== undefined) return cached;
-  const loading = fetchTemplateText(id).catch((error: unknown) => {
-    templateTexts.delete(id);
-    throw error;
-  });
-  templateTexts.set(id, loading);
-  return loading;
 }

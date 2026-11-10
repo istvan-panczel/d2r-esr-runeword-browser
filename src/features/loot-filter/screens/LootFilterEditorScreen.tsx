@@ -108,7 +108,8 @@ import {
 } from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
 import { foldsIdOf, ruleHeadingKeys, withOpened } from '../utils/sectionFolds';
-import { BUNDLED_TEMPLATES, fetchTemplateText, type BundledTemplateId } from '../utils/template';
+import { BUNDLED_TEMPLATES, type BundledTemplateId } from '../utils/template';
+import { loadTemplate } from '../utils/templateSource';
 import { defaultTestItem } from '../utils/testItemForm';
 
 /** A JSON-tab draft and the editing session it belongs to (opening another filter starts a new session). */
@@ -308,11 +309,11 @@ export function LootFilterEditorScreen() {
     if (targetMatchesRoute(current, { kind: 'template', template: routeTemplate }, null)) return;
     dispatch(resetSaveStatus());
     let cancelled = false;
-    fetchTemplateText(routeTemplate).then(
-      (text) => {
+    loadTemplate(routeTemplate).then(
+      ({ text, version }) => {
         if (cancelled) return;
         const { name } = BUNDLED_TEMPLATES[routeTemplate];
-        dispatch(openSandbox({ text, name, basedOn: templateBasedOn(routeTemplate) }));
+        dispatch(openSandbox({ text, name, basedOn: templateBasedOn(routeTemplate, version) }));
       },
       (error: unknown) => {
         console.error(`[Loot filters] Could not load the template ${routeTemplate}`, error);

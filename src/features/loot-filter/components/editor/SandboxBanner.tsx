@@ -16,6 +16,7 @@ import { discardChanges } from '../../store/lootFilterSlice';
 import type { EditorTarget } from '../../store/types';
 import { authorLabelOf } from '../../utils/editorRoute';
 import { SULLYS_QOL_TEMPLATE, bundledTemplate } from '../../utils/template';
+import { peekTemplateSource, templateLiveErrorText, templateOriginText } from '../../utils/templateSource';
 
 interface SandboxBannerProps {
   readonly target: Extract<EditorTarget, { kind: 'sandbox' }>;
@@ -37,6 +38,12 @@ export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerPr
   const pending = useSelector(selectLikePendingFilterIdSet);
   const author = detail?.profiles ?? null;
   const template = bundledTemplate(target.basedOn?.template) ?? SULLYS_QOL_TEMPLATE;
+  // A template sandbox: the version of the text it opened (its basedOn) and, when it is the loaded source, where it came from.
+  const templateVersion = target.basedOn?.version ?? null;
+  const source = target.savedId === null ? peekTemplateSource(template.id) : null;
+  const sameSource = source !== null && source.version === templateVersion;
+  const origin = sameSource ? templateOriginText(template, source) : null;
+  const liveError = sameSource ? templateLiveErrorText(template, source) : null;
 
   const handleLike = () => {
     if (detail === null) return;
@@ -54,9 +61,13 @@ export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerPr
         <p className="flex-1">
           You are viewing{' '}
           {target.savedId === null ? (
-            <span className="font-semibold">
-              {template.name} v{template.version}
-            </span>
+            <>
+              <span className="font-semibold">
+                {template.name}
+                {templateVersion === null ? '' : ` v${templateVersion}`}
+              </span>
+              {origin !== null && (source?.origin === 'live' ? `, the ${origin}` : `, ${origin}`)}
+            </>
           ) : (
             <>
               <span className="font-semibold">{target.name}</span> by{' '}
@@ -72,6 +83,7 @@ export function SandboxBanner({ target, detail, dirty, onCopy }: SandboxBannerPr
           — changes are not saved. <span className="font-medium">Copy to my filters</span> to keep them.
         </p>
       </div>
+      {liveError !== null && <p className="pl-6 text-xs text-muted-foreground">{liveError}.</p>}
       <div className="flex flex-wrap items-center gap-2 pl-6">
         <Button size="sm" onClick={onCopy}>
           <Copy />

@@ -96,7 +96,7 @@ export function AiStarterPicker({
               <SelectLabel>Bundled filters</SelectLabel>
               {BUNDLED_TEMPLATE_LIST.map((template) => (
                 <SelectItem key={template.id} value={`template:${template.id}`}>
-                  {template.name} v{template.version}
+                  {template.name}
                 </SelectItem>
               ))}
             </SelectGroup>

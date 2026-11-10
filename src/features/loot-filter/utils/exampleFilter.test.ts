@@ -14,7 +14,6 @@ import { findBundledIconAsset, findBundledSound } from './bundledAssets';
 import { buildExampleSet, defaultChoices, findExample } from './exampleRules';
 import { collectReferencedAssets } from './referencedAssets';
 import { STYLE_PRESETS, styleWithoutIcon } from './stylePresets';
-import { EXAMPLE_TEMPLATE } from './template';
 
 /** The bundled example filter for new users (`public/loot-filters/example-filter.json`). */
 const text = readFileSync(resolve(process.cwd(), 'public/loot-filters/example-filter.json'), 'utf8');
@@ -140,12 +139,13 @@ describe('example filter', () => {
     expect(validateLootFilter(filter, reference)).toEqual([]);
   });
 
-  it('has the header new users see in the library, at the bundled version', () => {
+  it('has the header new users see in the library, at its current version', () => {
     expect(filter).toMatchObject({
       formatVersion: 1,
       title: 'Example filter (with explanations)',
       author: 'D2R ESR Runeword Browser',
-      version: EXAMPLE_TEMPLATE.version,
+      // Bump with every change: drafts started from a lower version get "Update available".
+      version: '2.2.0',
       filterLevels: [
         { id: LEVELING, name: 'Leveling' },
         { id: STRICT, name: 'Strict' },
@@ -153,7 +153,6 @@ describe('example filter', () => {
       defaultLevel: LEVELING,
       notifications: { dropFormat: 'ÿc4Drop: {qualityColor}{name}' },
     });
-    expect(EXAMPLE_TEMPLATE.version).toBe('2.2.0');
     expect(filter.description).toBeTruthy();
     expect(filter.updateUrl).toBeUndefined();
     expect(filter.leadingComments.length).toBeGreaterThan(0);

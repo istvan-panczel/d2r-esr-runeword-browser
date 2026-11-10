@@ -12,6 +12,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { downloadFilterZip, downloadTextFile, filterFileName } from '../utils/download';
 import type { ReferencedAssets } from '../utils/referencedAssets';
+import { SULLYS_QOL_TEMPLATE } from '../utils/template';
 
 const MISSING_SHOWN = 4;
 
@@ -26,9 +27,13 @@ interface FilterDownloadMenuProps {
   readonly onDownload?: () => void;
 }
 
+/** Sully's repository folders, where a sound or icon the site does not bundle most likely comes from (nothing is fetched from there). */
+const SULLY_REPO = SULLYS_QOL_TEMPLATE.repoUrl ?? 'https://github.com/Thisisnotsully/QoL-Filter';
+
 /**
  * Download: the filter file alone, or (when the filter uses bundled sounds or icons) a zip with the filter and
- * its `sounds`/`icons` folders, since the launcher's Import copies only the filter file.
+ * its `sounds`/`icons` folders, since the launcher's Import copies only the filter file. Files the site does not
+ * bundle are named, with links to Sully's `icons` and `sounds` folders (a newer asset of his is the usual case).
  */
 export function FilterDownloadMenu({ name, getText, assets, variant = 'default', onDownload }: FilterDownloadMenuProps) {
   const [zipping, setZipping] = useState(false);
@@ -38,7 +43,7 @@ export function FilterDownloadMenu({ name, getText, assets, variant = 'default',
     onDownload?.();
   };
 
-  if (assets.bundled.length === 0) {
+  if (assets.bundled.length === 0 && assets.missing.length === 0) {
     return (
       <Button size="sm" variant={variant} onClick={downloadJson}>
         <Download />
@@ -79,18 +84,33 @@ export function FilterDownloadMenu({ name, getText, assets, variant = 'default',
           <FileBraces />
           Download .json
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void downloadZip()}>
-          <FileArchive />
-          Download .zip with sounds and icons
-        </DropdownMenuItem>
+        {assets.bundled.length > 0 && (
+          <DropdownMenuItem onSelect={() => void downloadZip()}>
+            <FileArchive />
+            Download .zip with sounds and icons
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <div className="space-y-1 px-2 py-1.5 text-xs text-muted-foreground">
-          <p>Unzip into your LootFilters folder: the filter goes next to its sounds and icons folders.</p>
+          {assets.bundled.length > 0 && <p>Unzip into your LootFilters folder: the filter goes next to its sounds and icons folders.</p>}
           {shownMissing.length > 0 && (
-            <p>
-              Not bundled, add them yourself: <span className="break-all font-mono">{shownMissing.join(', ')}</span>
-              {moreMissing > 0 && ` and ${String(moreMissing)} more`}.
-            </p>
+            <>
+              <p>
+                Not bundled, add them yourself: <span className="break-all font-mono">{shownMissing.join(', ')}</span>
+                {moreMissing > 0 && ` and ${String(moreMissing)} more`}.
+              </p>
+              <p>
+                Sully&apos;s are in his{' '}
+                <a href={`${SULLY_REPO}/tree/main/icons`} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                  icons
+                </a>{' '}
+                and{' '}
+                <a href={`${SULLY_REPO}/tree/main/sounds`} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                  sounds
+                </a>{' '}
+                folders on GitHub.
+              </p>
+            </>
           )}
         </div>
       </DropdownMenuContent>

@@ -1,7 +1,7 @@
 import { levelName } from '../engine/text';
 import type { SharedFilterLevel, SharedFilterSummary, SourceRevision } from '../sharing/types';
 import type { LootFilterEntry } from '../store/types';
-import { BUNDLED_TEMPLATES, bundledTemplate, type BundledTemplate, type BundledTemplateId } from './template';
+import { bundledTemplate, type TemplateVersions } from './template';
 
 // --- Routes ---
 
@@ -137,19 +137,21 @@ type BasedOnFields = Pick<
 /**
  * Whether a saved filter's source has moved on: a copy of a shared filter compares its `based_on_revision` with the
  * source's revision (`sourceRevisions`, from `fetchSourceRevisionsRequested`; null there = deleted or private now); a
- * filter started from a bundled template compares its `based_on_version` with that template's bundled version
- * (`templates`, default the bundled ones; an unknown template or version never reads as an update). A copy whose source
- * was deleted has lost its `based_on_id` (`on delete set null`) but keeps its label: that is "no longer shared" too.
+ * filter started from a bundled template compares its `based_on_version` with the version of that template's text in
+ * use (`templateVersions`, live or bundled; an unknown template, a template not loaded and an unknown version never read
+ * as an update). A copy whose source was deleted has lost its `based_on_id` (`on delete set null`) but keeps its label:
+ * that is "no longer shared" too.
  */
 export function filterUpdateStatus(
   filter: BasedOnFields,
   sourceRevisions: Readonly<Record<string, SourceRevision | null>>,
-  templates: Readonly<Record<BundledTemplateId, Pick<BundledTemplate, 'version'>>> = BUNDLED_TEMPLATES
+  templateVersions: TemplateVersions
 ): FilterUpdateStatus {
   if (filter.based_on_template !== null) {
     const template = bundledTemplate(filter.based_on_template);
-    if (template === null || filter.based_on_version === null) return null;
-    return compareVersions(filter.based_on_version, templates[template.id].version) < 0 ? { kind: 'update', note: null } : null;
+    const current = template === null ? null : (templateVersions[template.id] ?? null);
+    if (current === null || filter.based_on_version === null) return null;
+    return compareVersions(filter.based_on_version, current) < 0 ? { kind: 'update', note: null } : null;
   }
   if (filter.based_on_id === null) return filter.based_on_label === null ? null : { kind: 'gone' };
   if (!(filter.based_on_id in sourceRevisions)) return null;

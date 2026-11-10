@@ -93,7 +93,7 @@ Every file of this pack, at https://istvan-panczel.github.io/d2r-esr-runeword-br
 
 The tables are the full game data: every item code, type, stat, unique and set row, area and skill. They do not list the sounds.txt names.
 
-Complete filters to read (the app bundles them as templates):
+Complete filters to read (the app offers them as templates):
 
-- Sully's QoL Filter v0.9.2: The filter the ESR launcher gives every player, bundled with this site. Start from it to change its rules. https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/sullys-qol-filter.json
-- Example filter (with explanations) v2.2.0: A small filter to learn from: every rule says in its comment what it does and what to change. https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/example-filter.json
+- Sully's QoL Filter: The filter the ESR launcher gives every player. Start from it to change its rules. The latest: https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json (the copy on this site, which can be older: https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/sullys-qol-filter.json)
+- Example filter (with explanations): A small filter to learn from: every rule says in its comment what it does and what to change. https://istvan-panczel.github.io/d2r-esr-runeword-browser/loot-filters/example-filter.json
