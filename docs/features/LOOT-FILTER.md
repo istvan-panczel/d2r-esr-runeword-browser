@@ -580,12 +580,14 @@ file every 10 minutes and keeps the last good one), with the copy in `public/loo
   requests an hour, base64) do not fit. A valid live text always wins, even when its version is lower than the bundled
   copy's. Any failure (network, timeout, HTTP status, an invalid text) loads the bundled copy instead, with the reason
   in `liveError` and a `console.warn`. A template without a `liveUrl` (the example) loads its bundled copy only.
-- **A failed live attempt is remembered for the browser session** (`sessionStorage`
+- **A timed-out live attempt is remembered for the browser session** (`sessionStorage`
   `loot-filters/live-template-failed/<id>`: `{ at, reason }`, every access in try/catch): for the next 10 minutes a
   load (a reload, another tab of the session, a re-check) skips the live request and goes straight to the bundled
-  copy, with the reason "<reason> (tried 3 min ago)" ("under a minute" below one). On a network where
-  raw.githubusercontent.com hangs, only the first load waits the 5 s timeout. A successful live load removes it; blocked
-  or full storage only means the next load tries again.
+  copy, with the reason "timed out after 5 s (tried 3 min ago)" ("under a minute" below one). On a network where
+  raw.githubusercontent.com hangs, only the first load waits the 5 s timeout. Only a `TimeoutError` is remembered: every
+  other failure (refused, an HTTP status, an invalid text, a request cut short by leaving the page, which reads "Failed
+  to fetch") fails fast, so the next load simply tries the live file again. A successful live load removes the memo;
+  blocked or full storage only means the next load tries again.
 - **Validation** (`checkTemplateText(id, text)`): at most 5 MB (characters); `parseLootFilter` does not throw and
   reports no error diagnostic (warnings are fine: v0.9.2 has one); at least one rule; its title or author names this
   template (`templateOfFile` in `utils/basedOn.ts`); its `version` has a numeric start (`templateVersionOf`: one to

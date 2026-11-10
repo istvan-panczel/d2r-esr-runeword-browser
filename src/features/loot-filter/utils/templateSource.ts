@@ -79,29 +79,36 @@ function versionOfText(text: string): string | null {
 
 /** A short reason for a failed request ("timed out after 5 s", "HTTP 404", "Failed to fetch"). */
 function requestErrorReason(error: unknown): string {
-  // A DOMException (the timeout) is not an Error in every runtime.
-  const { name, message } = typeof error === 'object' && error !== null ? (error as { name?: unknown; message?: unknown }) : {};
-  if (name === 'TimeoutError') return `timed out after ${String(TEMPLATE_LIVE_TIMEOUT_MS / 1000)} s`;
+  if (isTimeout(error)) return `timed out after ${String(TEMPLATE_LIVE_TIMEOUT_MS / 1000)} s`;
+  const { message } = typeof error === 'object' && error !== null ? (error as { message?: unknown }) : {};
   return typeof message === 'string' && message !== '' ? message : String(error);
 }
 
-type LiveResult = { readonly ok: true; readonly text: string; readonly version: string } | { readonly ok: false; readonly reason: string };
+/** The request hit `TEMPLATE_LIVE_TIMEOUT_MS` (a DOMException, which is not an Error in every runtime). */
+function isTimeout(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { name?: unknown }).name === 'TimeoutError';
+}
+
+type LiveResult =
+  | { readonly ok: true; readonly text: string; readonly version: string }
+  /** `timedOut`: the host did not answer in time (the only failure that is remembered). */
+  | { readonly ok: false; readonly reason: string; readonly timedOut: boolean };
 
 /** The live file: a plain GET (no custom headers, so no CORS preflight; the browser's HTTP cache revalidates it). */
 async function fetchLive(id: BundledTemplateId, url: string, fetchImpl: typeof fetch): Promise<LiveResult> {
   let text: string;
   try {
     const response = await fetchImpl(url, { signal: AbortSignal.timeout(TEMPLATE_LIVE_TIMEOUT_MS), referrerPolicy: 'no-referrer' });
-    if (!response.ok) return { ok: false, reason: `HTTP ${String(response.status)}` };
+    if (!response.ok) return { ok: false, reason: `HTTP ${String(response.status)}`, timedOut: false };
     text = await response.text();
   } catch (error) {
-    return { ok: false, reason: requestErrorReason(error) };
+    return { ok: false, reason: requestErrorReason(error), timedOut: isTimeout(error) };
   }
   const verdict = checkTemplateText(id, text);
-  return verdict.ok ? { ok: true, text, version: verdict.version } : { ok: false, reason: verdict.reason };
+  return verdict.ok ? { ok: true, text, version: verdict.version } : { ok: false, reason: verdict.reason, timedOut: false };
 }
 
-/** Where a failed live attempt is remembered for the browser session (`sessionStorage`; injectable for tests). */
+/** Where a timed-out live attempt is remembered for the browser session (`sessionStorage`; injectable for tests). */
 export type LiveFailureStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 interface LoadDeps {
@@ -126,7 +133,7 @@ interface LiveFailure {
   readonly reason: string;
 }
 
-/** A live attempt that failed less than `TEMPLATE_RECHECK_MS` ago in this browser session, or null. */
+/** A live attempt that timed out less than `TEMPLATE_RECHECK_MS` ago in this browser session, or null. */
 function recentLiveFailure(store: LiveFailureStore | null, id: BundledTemplateId, now: number): LiveFailure | null {
   try {
     const raw = store?.getItem(liveFailureKey(id)) ?? null;
@@ -158,9 +165,11 @@ function rememberedReason(failure: LiveFailure, now: number): string {
 /**
  * Settles a source: the live file when it is valid; else, on a re-check, the previous source (a live one is kept, a
  * bundled one gets the new reason); else the bundled copy. Rejects only when there is no previous source and the
- * bundled copy cannot be fetched either. A failed live attempt is remembered for the browser session: for the next
- * `TEMPLATE_RECHECK_MS` page loads skip the live request (a host that hangs would cost every load the full timeout) and
- * go straight to the bundled copy; a live load that works forgets it.
+ * bundled copy cannot be fetched either. A live attempt that timed out is remembered for the browser session: for the
+ * next `TEMPLATE_RECHECK_MS` page loads skip the live request (a host that hangs would cost every load the full timeout)
+ * and go straight to the bundled copy; a live load that works forgets it. Any other failure (refused, an HTTP status,
+ * an invalid file, a request cut short by leaving the page) fails fast, so it is not remembered: the next load tries
+ * the live file again.
  */
 async function settle(id: BundledTemplateId, deps: LoadDeps, previous: TemplateSource | null): Promise<TemplateSource> {
   const template = BUNDLED_TEMPLATES[id];
@@ -179,7 +188,7 @@ async function settle(id: BundledTemplateId, deps: LoadDeps, previous: TemplateS
         return { id, text: live.text, version: live.version, origin: 'live', liveError: null, loadedAt: now() };
       }
       liveError = live.reason;
-      rememberLiveFailure(store, id, { at: now(), reason: live.reason });
+      if (live.timedOut) rememberLiveFailure(store, id, { at: now(), reason: live.reason });
       console.warn(`[Loot filters] Not using the live ${template.name} (${template.liveUrl}): ${live.reason}`);
     }
     if (previous !== null) return { ...previous, liveError: previous.origin === 'live' ? null : liveError, loadedAt: now() };

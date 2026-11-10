@@ -208,20 +208,14 @@ describe('loadTemplate', () => {
     const net = fakeFetch({ [LIVE]: [new TypeError('Failed to fetch'), sully('0.9.3')], [BUNDLED]: [404, sully('0.9.2')] });
     await expect(loadTemplate('sullys-qol', { fetch: net.fetch })).rejects.toThrow('HTTP 404');
     expect(peekTemplateSource('sullys-qol')).toBeNull();
-    // The retry loads the bundled copy again; the live file waits out the remembered failure (see below).
-    expect(await loadTemplate('sullys-qol', { fetch: net.fetch })).toMatchObject({
-      origin: 'bundled',
-      version: '0.9.2',
-      liveError: 'Failed to fetch (tried under a minute ago)',
-    });
-    expect(net.count(LIVE)).toBe(1);
-    // Without a session store the retry asks the live file again.
-    resetTemplateSources();
-    expect(await loadTemplate('sullys-qol', { fetch: net.fetch, storage: null })).toMatchObject({ origin: 'live', version: '0.9.3' });
+    // "Failed to fetch" is not a timeout, so it is not remembered: the retry asks the live file again.
+    expect(await loadTemplate('sullys-qol', { fetch: net.fetch })).toMatchObject({ origin: 'live', version: '0.9.3' });
+    expect(net.count(LIVE)).toBe(2);
+    expect(sessionStorage.length).toBe(0);
   });
 });
 
-describe('loadTemplate: a failed live attempt is remembered for the session', () => {
+describe('loadTemplate: a timed-out live attempt is remembered for the session', () => {
   /** An in-memory session store. */
   function memoryStore() {
     const items = new Map<string, string>();
@@ -267,15 +261,31 @@ describe('loadTemplate: a failed live attempt is remembered for the session', ()
     expect(storage.items.size).toBe(0);
   });
 
-  it('says "under a minute" for a fresh failure, and ignores a broken or blocked store', async () => {
+  it('remembers only a timeout: an HTTP error, a refused or cut-short request and an invalid file fail fast', async () => {
     const time = clock();
     const storage = memoryStore();
-    const net = fakeFetch({ [LIVE]: [503], [BUNDLED]: [sully('0.9.2')] });
+    const net = fakeFetch({
+      [LIVE]: [503, new TypeError('Failed to fetch'), new DOMException('The user aborted a request.', 'AbortError'), 'not json'],
+      [BUNDLED]: [sully('0.9.2')],
+    });
+    for (let attempt = 0; attempt < 4; attempt++) {
+      resetTemplateSources();
+      expect(await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage })).toMatchObject({ origin: 'bundled' });
+    }
+    expect(net.count(LIVE)).toBe(4);
+    expect(storage.items.size).toBe(0);
+  });
+
+  it('says "under a minute" for a fresh timeout, and ignores a broken or blocked store', async () => {
+    const time = clock();
+    const storage = memoryStore();
+    const timeout = new DOMException('signal timed out', 'TimeoutError');
+    const net = fakeFetch({ [LIVE]: [timeout], [BUNDLED]: [sully('0.9.2')] });
     await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage });
     resetTemplateSources();
     time.advance(20_000);
     expect(await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage })).toMatchObject({
-      liveError: 'HTTP 503 (tried under a minute ago)',
+      liveError: 'timed out after 5 s (tried under a minute ago)',
     });
 
     resetTemplateSources();
@@ -295,7 +305,7 @@ describe('loadTemplate: a failed live attempt is remembered for the session', ()
     };
     expect(await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage: blocked })).toMatchObject({
       origin: 'bundled',
-      liveError: 'HTTP 503',
+      liveError: 'timed out after 5 s',
     });
   });
 });
