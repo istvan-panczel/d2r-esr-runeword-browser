@@ -132,10 +132,17 @@ describe('computeLabelChips', () => {
     });
 
     it('is quick enough to run on every edit pause', () => {
+      // The best of ten calls, so a busy machine (the full suite in parallel) does not fail it: on v0.9.2 (538 kB) one
+      // call takes about 30 ms alone and 32-64 ms under the full suite, whose best stays near 30 ms. A twice slower
+      // implementation still fails.
       computeLabelChips(text);
-      const start = performance.now();
-      for (let i = 0; i < 10; i++) computeLabelChips(text);
-      expect((performance.now() - start) / 10).toBeLessThan(50);
+      const times: number[] = [];
+      for (let i = 0; i < 10; i++) {
+        const start = performance.now();
+        computeLabelChips(text);
+        times.push(performance.now() - start);
+      }
+      expect(Math.min(...times)).toBeLessThan(50);
     });
   });
 });
