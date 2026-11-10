@@ -291,9 +291,40 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   its part; off while searching) and Remove (the heading and its description; the rules stay). A note row has Edit
   (empty removes it) and Remove. The dialog shows the comment lines the file gets. Renaming keeps the file's markers
   and decoration (`// ---- Styles ----------`); a note line that would read as a heading or separator is written
-  `// Note: …`. Collapse all / Expand all fold every heading; folds reset when the tab changes (owner decision).
+  `// Note: …`. Collapse all folds every heading (only the parts show), Expand all opens every one.
+- **Folds** (owner decisions 2026-11-10): a filter opened for the first time in a browser starts fully folded: the part
+  rows only, each with its rule count (Sully's v0.9.2: 6 rows); a section outside any part shows as a folded section row,
+  and rules and notes above the first heading stay visible. Opening a part shows its sections folded. The browser then
+  remembers the folds per filter, across tab switches, route changes and reloads, separately for the Rules and the
+  Styles list. What is stored is the set of OPEN headings, so a heading the browser has not seen for that filter (a new
+  section, a newer version of the file, a heading typed in the JSON tab) starts folded; a heading made with Add section
+  starts open.
+  - Storage: localStorage `loot-filters/section-folds`,
+    `{ "v": 1, "filters": [{ "id": "draft:<entry id>", "rules": ["1:PART 1", "2:1.1 Gold"], "styles": [] }] }`, the
+    most recently changed filter first, at most 30 filters and 500 open headings per list; anything unreadable is
+    ignored. The id is `draft:<library entry id>`, `saved:<id>` (the owner's saved filter, its pending draft and the
+    sandbox of the same shared filter share it) or `template:<template id>` (a bundled template's sandbox). Saving a draft
+    and Copy to my filters carry the folds to the new id (the editor screen's `switching`); renaming a filter does not
+    touch them. Written only when the folds change, so a filter that was only looked at is not stored.
+  - Rule and style edits (add, move, delete, duplicate, edit, enable or disable) change no fold. A section edit carries
+    them: a heading renamed or moved to the other level keeps its fold, and so do the headings a section move, an
+    insert or a removal renumbers (`headingKeyChanges` matches the comment lines before and after the edit).
+  - **Repeated titles**: a heading is known by its level and title plus `#n` for the nth repeat (`2:Misc#1`). Edits in
+    the editor follow each heading exactly, but a change made outside it (the JSON tab, a newer file) is matched by
+    title and repeat number only, so adding a heading of the same title above another one shifts the folds of the
+    later ones by one.
+  - **A rule selected from elsewhere opens its part and section**, the others stay as they are: a problem's rule link
+    (header, JSON tab), the Test tab's rule link, Add rule, a heading's Add rule, example rules added, and clearing a
+    search while a rule is selected. Each of these opens the headings in its handler, after the action (no effect); a
+    click on a rule row needs none. The Styles list does the same for a style added, renamed, duplicated or picked from
+    the presets. Nothing restores a selection when the editor opens (`open` and `close` reset it), so that case does
+    not occur.
+  - Folding the selected rule's heading by hand (or Collapse all) folds the rule away with its section. When a rule
+    edit puts the selected rule inside folded headings (moving it into a folded section), it stays listed under its own
+    headings, shown folded, so it can be moved on.
 - **Search**: matching rules are listed under the headings they sit in (notes left out); a query that matches a
-  heading's title lists its whole section. Folds do not apply while searching.
+  heading's title lists its whole section. Folds do not apply while searching: the heading rows cannot be folded then,
+  and a search never changes the remembered folds.
 - **Our files**: the example filter (v2.2.0) has a `// ---- <group>` heading per example group and one for the hide
   rules; the Example rules dialog writes the same headings above the rules it adds, unless the filter already has a
   heading of that title (`withGroupHeadings`, `headingTitles` in `utils/examplePicker.ts`).
@@ -302,7 +333,9 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`); the reducers
   `editRuleComments`, `addRuleToSection` and `editStyleComments` wrap it, and `removeStyle` hands a deleted style's
   comments to the next style as `removeRule` does. The rows are `components/sections/SectionRows.tsx`, the dialog
-  `SectionDialog.tsx`.
+  `SectionDialog.tsx`. The folds: `utils/sectionFolds.ts` (storage, the filter id, open-set changes),
+  `hooks/useSectionFolds.ts` (held by the editor screen, so they outlive a tab switch), `enclosingHeadingKeys` and
+  `headingKeyChanges` in `utils/sections.ts`.
 
 `lootFilterSaga` (registered by `src/features/loot-filter/index.ts` when the route chunk first loads):
 
