@@ -42,7 +42,8 @@
     "guide:report": "node scripts/generate-guide.ts report",
     "check:loot-filter-sharing": "node scripts/check-loot-filter-sharing.ts",
     "loot-filter:icons": "node scripts/generate-loot-filter-icons.ts",
-    "loot-filter:agent-pack": "node scripts/generate-loot-filter-agent-pack.ts"
+    "loot-filter:agent-pack": "node scripts/generate-loot-filter-agent-pack.ts",
+    "loot-filter:template": "node scripts/update-sully-template.ts"
   },
   "commit-and-tag-version": {
     "scripts": {

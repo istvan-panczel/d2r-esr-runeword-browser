@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** 2026-11-04
+**Last updated:** 2026-11-10
 
 This privacy policy explains what data I collect, why I collect it, and how you can control it. I've kept it short and written in plain language because I believe you shouldn't need a lawyer to understand how your data is handled.
 
@@ -89,12 +89,12 @@ I do not share your data with anyone else. I do not sell your data. I never will
 
 Like any website, the app is loaded from and fetches public files from a few hosts, which therefore see your IP address and browser details as part of the normal request (I receive none of this):
 
-| Host                                                | Why your browser contacts it                        |
-| --------------------------------------------------- | --------------------------------------------------- |
-| GitHub Pages (`istvan-panczel.github.io`)           | Serves the app itself                               |
-| GitHub (`raw.githubusercontent.com`)                | The ESR version check (the mod's launcher metadata) |
-| The official ESR site (`easternsunresurrected.com`) | The item, runeword and unique tables the app reads  |
-| Discord's CDN (`cdn.discordapp.com`)                | Avatar images of players who signed in with Discord |
+| Host                                                | Why your browser contacts it                                                                             |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| GitHub Pages (`istvan-panczel.github.io`)           | Serves the app itself                                                                                    |
+| GitHub (`raw.githubusercontent.com`)                | The ESR version check (the mod's launcher metadata) and Sully's live loot filter (the loot filter pages) |
+| The official ESR site (`easternsunresurrected.com`) | The item, runeword and unique tables the app reads                                                       |
+| Discord's CDN (`cdn.discordapp.com`)                | Avatar images of players who signed in with Discord                                                      |
 
 The app also links to external sites (the official ESR site, Discord and fan-made community tools) that are not operated by me and have their own privacy practices, which this policy does not cover.
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { Copy, Heading, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { selectRuleView } from '@/features/settings';
@@ -7,12 +7,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import type { RootState } from '@/core/store';
 import { CONDITION_KEYS } from '../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
 import { editStyleComments, removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
+import { selectEditorFilter } from '../store/selectors';
 import { countActions, countStyleUsers } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
-import { buildSectionRows, commentLinesText, hasHeadings, headingKeys, type SectionEdit } from '../utils/sections';
+import { openAfterEdit, styleHeadingKeys, toggleHeading, withOpened } from '../utils/sectionFolds';
+import {
+  buildSectionRows,
+  commentLinesText,
+  hasHeadings,
+  headingKeyChanges,
+  headingKeys,
+  type HeadingRow,
+  type SectionEdit,
+} from '../utils/sections';
 import { actionFieldGate } from '../utils/ruleView';
 import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
@@ -28,6 +39,9 @@ interface StylesTabProps {
   readonly filter: LootFilter;
   /** The filter's diagnostics: a style's own (`style` set) keep the fields they point at visible in the Basic view. */
   readonly diagnostics: readonly Diagnostic[];
+  /** The unfolded headings of the style list (`useSectionFolds`, remembered per filter, apart from the rule list's). */
+  readonly open: ReadonlySet<string>;
+  readonly onOpenChange: (change: (open: ReadonlySet<string>) => ReadonlySet<string>) => void;
 }
 
 const VIEW_TOGGLE_ID = 'loot-filter-style-view';
@@ -56,28 +70,50 @@ function strayConditions(style: LootFilterStyle): string[] {
 }
 
 /** Named sets of actions that rules pull in with `useStyle`: list, add, rename, duplicate, delete, edit. */
-export function StylesTab({ filter, diagnostics }: StylesTabProps) {
+export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTabProps) {
   const dispatch = useDispatch();
+  const store = useStore<RootState>();
   const styles = filter.styles ?? {};
   const entries = Object.entries(styles);
   const names = entries.map(([name]) => name);
   const stylesNotes = commentLinesText(filter.keyComments?.styles ?? []);
-  // The same section comments as the rule list (utils/sections.ts); folds last while the tab is open.
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  // The same section comments as the rule list (utils/sections.ts), with their own remembered folds.
   const [sectionDialog, setSectionDialog] = useState<SectionDialogState | null>(null);
   const commentsOf = ([, style]: readonly [string, LootFilterStyle]) => style.commentsBefore;
   const usesSections = hasHeadings(entries, commentsOf);
-  const editComments = (edit: SectionEdit) => {
-    dispatch(editStyleComments(edit));
-  };
-  const toggleHeading = (key: string) => {
-    setCollapsed((current) => {
-      const next = new Set(current);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
-  };
   const [selected, setSelected] = useState<string | null>(null);
+  // The selected style as it was when its headings were folded by hand (or by Collapse all): not listed under them.
+  const [foldedSelection, setFoldedSelection] = useState<string | null>(null);
+  // A renamed, moved or re-levelled heading keeps its fold; a heading added here starts open.
+  const editComments = (edit: SectionEdit) => {
+    const changes = headingKeyChanges({ items: entries, end: [] }, { get: commentsOf }, edit);
+    dispatch(editStyleComments(edit));
+    if (changes !== undefined) {
+      onOpenChange((current) => openAfterEdit(current, changes));
+    }
+  };
+  const onToggleHeading = (row: HeadingRow) => {
+    // Folding by hand folds the selected style away too, when it is under that heading.
+    if (!row.collapsed && selected !== null && styleHeadingKeys(filter, selected).includes(row.key)) setFoldedSelection(selected);
+    onOpenChange((current) => toggleHeading(current, row, headingKeys(entries, commentsOf)));
+  };
+  // A style selected by an action (added, renamed, duplicated, a preset) shows in its section: its part and section
+  // open. Read from the store, which the action has already updated.
+  const select = (name: string) => {
+    setSelected(name);
+    setRevealCount((count) => count + 1);
+    const current = selectEditorFilter(store.getState());
+    if (current === null) return;
+    const keys = styleHeadingKeys(current, name);
+    onOpenChange((now) => withOpened(now, keys));
+  };
+  // A style selected by an action is scrolled into view once its headings are open (after that commit).
+  const [revealCount, setRevealCount] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    if (revealCount === 0) return;
+    listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [revealCount]);
   const [nameDialog, setNameDialog] = useState<NameDialogState>(null);
   // The style being deleted stays set while the dialog closes, so its text does not change during the animation.
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -87,6 +123,8 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
 
   // A renamed, deleted or not-yet-chosen selection falls back to the first style.
   const [current, currentStyle] = entries.find(([name]) => name === selected) ?? entries.at(0) ?? [null, undefined];
+  // Only a style picked or added is kept in view inside folded headings, not the first style shown by default.
+  const kept = selected !== null && selected === current && selected !== foldedSelection ? names.indexOf(selected) : null;
 
   const handleAdd = (name: string) => {
     if (name in styles) {
@@ -94,7 +132,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
       return;
     }
     dispatch(setStyle({ name, style: {} }));
-    setSelected(name);
+    select(name);
     setNameDialog(null);
   };
 
@@ -111,7 +149,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
         description: 'Your style is kept as it is. Rename it first to add the preset.',
       });
     }
-    setSelected(preset.name);
+    select(preset.name);
   };
 
   const handleRename = (from: string, to: string) => {
@@ -120,7 +158,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
       return;
     }
     if (to !== from) dispatch(renameStyle({ from, to }));
-    setSelected(to);
+    select(to);
     setNameDialog(null);
   };
 
@@ -129,7 +167,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
     // The comments above a style describe that place in the file; the copy goes at the end.
     const { commentsBefore: _comments, ...content } = style;
     dispatch(setStyle({ name: copy, style: content }));
-    setSelected(copy);
+    select(copy);
   };
 
   const handleDelete = () => {
@@ -161,28 +199,29 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
           {names.length === 0 && <p className="text-sm text-muted-foreground">No styles yet.</p>}
           {entries.length > 0 && current !== null && (
             <SectionToolbar
-              addWhere="above the selected style"
+              addWhere={`above the style ${current}`}
               onAdd={() => {
                 setSectionDialog({ kind: 'add', at: names.indexOf(current), where: `above the style ${current}` });
               }}
               onCollapseAll={
                 usesSections
                   ? () => {
-                      setCollapsed(new Set(headingKeys(entries, commentsOf)));
+                      setFoldedSelection(selected);
+                      onOpenChange(() => new Set());
                     }
                   : undefined
               }
               onExpandAll={
                 usesSections
                   ? () => {
-                      setCollapsed(new Set());
+                      onOpenChange(() => new Set(headingKeys(entries, commentsOf)));
                     }
                   : undefined
               }
             />
           )}
-          <ul className="flex flex-col gap-1">
-            {buildSectionRows(entries, commentsOf, [], { collapsed, keep: current === null ? null : names.indexOf(current) }).map((row) => {
+          <ul ref={listRef} className="flex flex-col gap-1">
+            {buildSectionRows(entries, commentsOf, [], { open, keep: kept }).map((row) => {
               if (row.kind === 'heading') {
                 return (
                   <HeadingRowView
@@ -191,7 +230,7 @@ export function StylesTab({ filter, diagnostics }: StylesTabProps) {
                     noun="styles"
                     className="overflow-hidden rounded-md"
                     canMove
-                    onToggle={toggleHeading}
+                    onToggle={onToggleHeading}
                     onEdit={(heading) => {
                       setSectionDialog({ kind: 'heading', row: heading });
                     }}

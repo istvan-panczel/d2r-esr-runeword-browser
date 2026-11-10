@@ -13,6 +13,7 @@
  * - Ids and timestamps come from `prepare` callbacks, so the reducers stay pure (tests pass them in the payload).
  */
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { joinCommentBlocks } from '../engine/commentLines';
 import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
 import type { Diagnostic, FilterLevel, LootFilter, LootFilterRule, LootFilterStyle, Notifications, QualityColors } from '../engine/types';
@@ -20,7 +21,15 @@ import type { LootFilterRow } from '@/core/supabase/types';
 import { basedOnFromRow, sharedBasedOn } from '../utils/basedOn';
 import { createBlankFilter } from '../utils/blankFilter';
 import { newEntryId } from '../utils/ids';
-import { addToSection, applySectionEdit, type CommentAccess, type CommentAddress, type SectionEdit } from '../utils/sections';
+import {
+  addToSection,
+  applySectionEdit,
+  stepItem,
+  type CommentAccess,
+  type CommentAddress,
+  type SectionEdit,
+  type SectionList,
+} from '../utils/sections';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
 import type { StyleChoiceEdit } from '../utils/styleChoice';
 import type { EditorTarget, LootFilterBasedOn, LootFilterEditorState, LootFilterEntry, LootFilterSource, LootFilterState } from './types';
@@ -41,6 +50,7 @@ export const EMPTY_EDITOR: LootFilterEditorState = {
   parseDiagnostics: [],
   textNotes: [],
   selectedRule: null,
+  selectionFolded: false,
   dirty: false,
 };
 
@@ -191,7 +201,17 @@ function editRules(
   if (result === undefined) return state;
   const selectedRule = result.selectedRule === undefined ? state.editor.selectedRule : result.selectedRule;
   const edited = { ...filter, rules: result.rules, ...(result.endComments === undefined ? {} : { rulesEndComments: result.endComments }) };
-  return withEditor(state, { filter: edited, dirty: true, selectedRule });
+  return withEditor(state, {
+    filter: edited,
+    dirty: true,
+    selectedRule,
+    selectionFolded: selectedRule !== null && state.editor.selectionFolded,
+  });
+}
+
+/** A rule just added or copied is selected: it is not folded away (`selectionFolded`). */
+function selectedNew(state: State): State {
+  return state.editor.selectionFolded ? withEditor(state, { selectionFolded: false }) : state;
 }
 
 /** `item` (a rule or a style) with exactly these comments above it (none: the key is gone). */
@@ -693,15 +713,27 @@ const lootFilterSlice = createSlice({
 
     // ----- editor: rules -----
 
-    /** Inserts a rule (default: an empty one) at `at` (default: the end) and selects it. */
-    addRule(state, action: PayloadAction<{ readonly rule?: LootFilterRule; readonly at?: number } | undefined>): State {
-      return editRules(state, (rules) => {
-        const at = action.payload?.at;
-        const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
-        const next = [...rules];
-        next.splice(index, 0, action.payload?.rule ?? {});
-        return { rules: next, selectedRule: index };
-      });
+    /**
+     * Inserts a rule (default: an empty one) at `at` (default: the end) and selects it. The comments above rule `at`
+     * stay at their place, above the new rule's position only with `belowComments`: then the new rule goes right above
+     * rule `at` but below its comments (a section heading among them), so it is in that rule's section.
+     */
+    addRule(
+      state,
+      action: PayloadAction<{ readonly rule?: LootFilterRule; readonly at?: number; readonly belowComments?: boolean } | undefined>
+    ): State {
+      return selectedNew(
+        editRules(state, (rules) => {
+          const at = action.payload?.at;
+          const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
+          const next = [...rules];
+          const rule = action.payload?.rule ?? {};
+          const below = action.payload?.belowComments === true ? rules.at(index) : undefined;
+          if (below?.commentsBefore === undefined) next.splice(index, 0, rule);
+          else next.splice(index, 1, withCommentsBefore(rule, below.commentsBefore), withCommentsBefore(below, undefined));
+          return { rules: next, selectedRule: index };
+        })
+      );
     },
 
     /**
@@ -731,7 +763,7 @@ const lootFilterSlice = createSlice({
           ...(missing.length === 0 ? {} : { styles: { ...existing, ...Object.fromEntries(missing) } }),
         };
       });
-      return edited === state ? state : withEditor(edited, { selectedRule: index });
+      return edited === state ? state : withEditor(edited, { selectedRule: index, selectionFolded: false });
     },
 
     /** Replaces a whole rule. */
@@ -811,40 +843,69 @@ const lootFilterSlice = createSlice({
         // The comments above a rule belong to the place: a deleted section's first rule must not take the heading along.
         const above = rules[index].commentsBefore;
         if (above === undefined) return { rules: next, selectedRule };
-        if (index === next.length) return { rules: next, selectedRule, endComments: [...above, ...(filter?.rulesEndComments ?? [])] };
-        next[index] = withCommentsBefore(next[index], [...above, ...(next[index].commentsBefore ?? [])]);
+        if (index === next.length)
+          return { rules: next, selectedRule, endComments: joinCommentBlocks(above, filter?.rulesEndComments ?? []) };
+        next[index] = withCommentsBefore(next[index], joinCommentBlocks(above, next[index].commentsBefore ?? []));
         return { rules: next, selectedRule };
       });
     },
 
-    /** Moves a rule; out-of-range or equal indices are a no-op. The selection follows the rules it pointed at. */
+    /**
+     * Moves rule `index` one step up (-1) or down (1) with its own notes (`stepItem`): past the rule next to it, or over
+     * a heading run into the neighbouring section. No-op when there is nothing to pass. The selection follows its rule.
+     */
+    stepRule(state, action: PayloadAction<{ readonly index: number; readonly direction: -1 | 1 }>): State {
+      const filter = state.editor.filter;
+      if (filter === null) return state;
+      const { index, direction } = action.payload;
+      const result = stepItem({ items: filter.rules, end: filter.rulesEndComments ?? [] }, RULE_COMMENTS, index, direction);
+      if (result === undefined) return state;
+      return editRules(state, () => ({
+        rules: result.items,
+        endComments: result.end,
+        selectedRule: followSelection(state.editor.selectedRule, result.from),
+      }));
+    },
+
+    /**
+     * Moves rule `from` to index `to` by steps (`stepRule`: a rule passes a heading run without changing its index, so
+     * it ends in the section the steps reach). Out-of-range or equal indices are a no-op. The selection follows its rule.
+     */
     moveRule(state, action: PayloadAction<{ readonly from: number; readonly to: number }>): State {
       const { from, to } = action.payload;
-      const selected = state.editor.selectedRule;
-      return editRules(state, (rules) => {
-        if (from === to || !isIndex(from, rules.length) || !isIndex(to, rules.length)) return undefined;
-        const next = [...rules];
-        const [moved] = next.splice(from, 1);
-        next.splice(to, 0, moved);
-        // The comments stay at their position, so a rule moved past a heading changes section.
-        const placed = next.map((rule, position) => withCommentsBefore(rule, rules[position].commentsBefore));
-        let selectedRule = selected;
-        if (selected === from) selectedRule = to;
-        else if (selected !== null && from < selected && selected <= to) selectedRule = selected - 1;
-        else if (selected !== null && to <= selected && selected < from) selectedRule = selected + 1;
-        return { rules: placed, selectedRule };
-      });
+      const filter = state.editor.filter;
+      if (filter === null || from === to || !isIndex(from, filter.rules.length) || !isIndex(to, filter.rules.length)) return state;
+      const direction = to < from ? -1 : 1;
+      let list: SectionList<LootFilterRule> = { items: filter.rules, end: filter.rulesEndComments ?? [] };
+      // The old index of each rule of `list`.
+      let origin = filter.rules.map((_, position) => position);
+      let index = from;
+      while (index !== to) {
+        const step = stepItem(list, RULE_COMMENTS, index, direction);
+        if (step === undefined) break;
+        list = step;
+        origin = step.from.map((old) => origin[old]);
+        index = step.index;
+      }
+      if (list.items === filter.rules) return state;
+      return editRules(state, () => ({
+        rules: list.items,
+        endComments: list.end,
+        selectedRule: followSelection(state.editor.selectedRule, origin),
+      }));
     },
 
     /** Inserts a copy right after the rule and selects the copy (a disabled rule's copy is disabled too). */
     duplicateRule(state, action: PayloadAction<number>): State {
       const index = action.payload;
-      return editRules(state, (rules) => {
-        if (!isIndex(index, rules.length)) return undefined;
-        const next = [...rules];
-        next.splice(index + 1, 0, withCommentsBefore(rules[index], undefined));
-        return { rules: next, selectedRule: index + 1 };
-      });
+      return selectedNew(
+        editRules(state, (rules) => {
+          if (!isIndex(index, rules.length)) return undefined;
+          const next = [...rules];
+          next.splice(index + 1, 0, withCommentsBefore(rules[index], undefined));
+          return { rules: next, selectedRule: index + 1 };
+        })
+      );
     },
 
     /**
@@ -869,7 +930,7 @@ const lootFilterSlice = createSlice({
       if (filter === null) return state;
       const result = addToSection({ items: filter.rules, end: filter.rulesEndComments ?? [] }, RULE_COMMENTS, action.payload, {});
       if (result === undefined) return state;
-      return editRules(state, () => ({ rules: result.items, endComments: result.end, selectedRule: result.index }));
+      return selectedNew(editRules(state, () => ({ rules: result.items, endComments: result.end, selectedRule: result.index })));
     },
 
     /** A section comment edit in the style list (no comments after the last style: an insert there is a no-op). */
@@ -889,7 +950,13 @@ const lootFilterSlice = createSlice({
       const index = action.payload;
       const count = state.editor.filter?.rules.length ?? 0;
       const selectedRule = index !== null && isIndex(index, count) ? index : null;
-      return selectedRule === state.editor.selectedRule ? state : withEditor(state, { selectedRule });
+      return selectedRule === state.editor.selectedRule ? state : withEditor(state, { selectedRule, selectionFolded: false });
+    },
+
+    /** The selected rule was folded away by hand (`selectionFolded`); no-op without a selection. */
+    foldSelection(state): State {
+      if (state.editor.selectedRule === null || state.editor.selectionFolded) return state;
+      return withEditor(state, { selectionFolded: true });
     },
 
     // ----- editor: styles -----
@@ -924,7 +991,7 @@ const lootFilterSlice = createSlice({
         // As with rules: the comments above a deleted style go to the next one (after the last style they are dropped).
         const next = rest.at(index);
         if (above !== undefined && next !== undefined)
-          rest[index] = [next[0], withCommentsBefore(next[1], [...above, ...(next[1].commentsBefore ?? [])])];
+          rest[index] = [next[0], withCommentsBefore(next[1], joinCommentBlocks(above, next[1].commentsBefore ?? []))];
         return applyPatch(filter, { styles: nonEmpty(Object.fromEntries(rest)) });
       });
     },
@@ -980,11 +1047,13 @@ export const {
   setRuleDisabled,
   removeRule,
   moveRule,
+  stepRule,
   editRuleComments,
   addRuleToSection,
   editStyleComments,
   duplicateRule,
   selectRule,
+  foldSelection,
   setStyle,
   renameStyle,
   removeStyle,

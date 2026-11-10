@@ -17,7 +17,10 @@
  *   while they are edited, so the field stays on its language.
  * - whole-line `//` comments above a top-level key, a rule, a disabled rule or a style are written back above it, after
  *   a blank line (none above the first entry of a list); the comments after the last rule go before the closing bracket.
+ *   A blank line between two comment lines (an empty string in the model) is written as an empty line; blank lines at
+ *   the start or end of a block are dropped and a run of them is written as one (`tidyCommentBlock`).
  */
+import { tidyCommentBlock } from './commentLines.ts';
 import { ACTION_KEYS, CONDITION_KEYS, TOP_LEVEL_KEYS, isPlainObject } from './parse.ts';
 import { fileText } from './text.ts';
 import type { FilterText, LootFilter, LootFilterRule, LootFilterStyle, Passthrough, RuleActions } from './types.ts';
@@ -163,10 +166,18 @@ function packedList(list: readonly unknown[], indent: number): string {
   return `[\n${lines.map((entry) => pad(indent + 2) + entry).join('\n')}\n${pad(indent)}]`;
 }
 
+/** Comment lines at `indent`, each ending with a line break; a blank line is an empty line. */
+function commentLines(comments: readonly string[], indent: number): string {
+  return tidyCommentBlock(comments)
+    .map((line) => (line === '' ? '\n' : `${pad(indent)}${line}\n`))
+    .join('');
+}
+
 /** The comment lines above an entry at `indent`, after a blank line unless the entry is its container's first. */
 function commentBlock(comments: readonly string[] | undefined, indent: number, first: boolean): string {
-  if (comments === undefined || comments.length === 0) return '';
-  return `${first ? '' : '\n'}${comments.map((line) => `${pad(indent)}${line}\n`).join('')}`;
+  const lines = commentLines(comments ?? [], indent);
+  if (lines === '') return '';
+  return `${first ? '' : '\n'}${lines}`;
 }
 
 function expandedList(
@@ -176,7 +187,7 @@ function expandedList(
   commentsAt?: (index: number) => readonly string[] | undefined,
   endComments?: readonly string[]
 ): string {
-  const hasEnd = endComments !== undefined && endComments.length > 0;
+  const hasEnd = endComments !== undefined && tidyCommentBlock(endComments).length > 0;
   if (list.length === 0 && !hasEnd) return '[]';
   const inner = pad(indent + 2);
   const entries = list.map(
@@ -252,6 +263,6 @@ function layoutTop(value: Readonly<Record<string, unknown>>, filter: LootFilter)
 
 /** The filter file: leading comments, the JSON object, a trailing newline. */
 export function serializeLootFilter(filter: LootFilter): string {
-  const comments = filter.leadingComments.map((line) => `${line}\n`).join('');
+  const comments = commentLines(filter.leadingComments, 0);
   return `${comments}${layoutTop(toPlainJson(filter), filter)}\n`;
 }

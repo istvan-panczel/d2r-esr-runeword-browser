@@ -43,6 +43,7 @@ import { SandboxBanner } from '../components/editor/SandboxBanner';
 import { SaveDialog } from '../components/editor/SaveDialog';
 import { UpdateBanner } from '../components/editor/UpdateBanner';
 import { EDITOR_TABS, useEditorTab, type EditorTab } from '../hooks/useEditorTab';
+import { useSectionFolds } from '../hooks/useSectionFolds';
 import { useLootFilterReference } from '../hooks/useLootFilterReference';
 import { useSandboxLeavePrompt } from '../hooks/useSandboxLeavePrompt';
 import {
@@ -106,7 +107,9 @@ import {
   targetMatchesRoute,
 } from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
-import { BUNDLED_TEMPLATES, fetchTemplateText, type BundledTemplateId } from '../utils/template';
+import { foldsIdOf, ruleHeadingKeys, withOpened } from '../utils/sectionFolds';
+import { BUNDLED_TEMPLATES, type BundledTemplateId } from '../utils/template';
+import { loadTemplate } from '../utils/templateSource';
 import { defaultTestItem } from '../utils/testItemForm';
 
 /** A JSON-tab draft and the editing session it belongs to (opening another filter starts a new session). */
@@ -252,6 +255,12 @@ export function LootFilterEditorScreen() {
   }
   const jsonDraft = jsonState !== null && jsonState.session === sessionKey ? jsonState.draft : null;
 
+  // The Rules and Styles tabs' folds, remembered per filter; a saved draft or a copied sandbox keeps them.
+  // Counts the rules revealed by an action (`showRule`, RulesTab's reveals): the rule list scrolls the selected rule into
+  // view once the opened headings are rendered.
+  const [revealCount, setRevealCount] = useState(0);
+  const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target, draftEntry?.savedId), switching);
+
   // Leaving the screen: write pending edits back and forget a finished save.
   useEffect(
     () => () => {
@@ -298,11 +307,11 @@ export function LootFilterEditorScreen() {
     if (targetMatchesRoute(current, { kind: 'template', template: routeTemplate }, null)) return;
     dispatch(resetSaveStatus());
     let cancelled = false;
-    fetchTemplateText(routeTemplate).then(
-      (text) => {
+    loadTemplate(routeTemplate).then(
+      ({ text, version }) => {
         if (cancelled) return;
         const { name } = BUNDLED_TEMPLATES[routeTemplate];
-        dispatch(openSandbox({ text, name, basedOn: templateBasedOn(routeTemplate) }));
+        dispatch(openSandbox({ text, name, basedOn: templateBasedOn(routeTemplate, version) }));
       },
       (error: unknown) => {
         console.error(`[Loot filters] Could not load the template ${routeTemplate}`, error);
@@ -583,8 +592,15 @@ export function LootFilterEditorScreen() {
     showDiagnostics();
   };
 
+  // A rule shown from elsewhere (a problem, the Test tab, the JSON tab): its part and section open.
   const showRule = (index: number) => {
     dispatch(selectRule(index));
+    const { filter: current, selectedRule } = selectEditor(store.getState());
+    if (current !== null && selectedRule !== null) {
+      const keys = ruleHeadingKeys(current, selectedRule);
+      sectionFolds.update('rules', (open) => withOpened(open, keys));
+    }
+    setRevealCount((count) => count + 1);
     setTab('rules');
     window.scrollTo({ top: 0 });
   };
@@ -636,9 +652,33 @@ export function LootFilterEditorScreen() {
     }
     switch (active) {
       case 'rules':
-        return <RulesTab filter={filter} selectedRule={editor.selectedRule} diagnostics={diagnostics} />;
+        return (
+          <RulesTab
+            filter={filter}
+            selectedRule={editor.selectedRule}
+            diagnostics={diagnostics}
+            open={sectionFolds.folds.rules}
+            onOpenChange={(change) => {
+              sectionFolds.update('rules', change);
+            }}
+            selectionFolded={editor.selectionFolded}
+            revealCount={revealCount}
+            onReveal={() => {
+              setRevealCount((count) => count + 1);
+            }}
+          />
+        );
       case 'styles':
-        return <StylesTab filter={filter} diagnostics={diagnostics} />;
+        return (
+          <StylesTab
+            filter={filter}
+            diagnostics={diagnostics}
+            open={sectionFolds.folds.styles}
+            onOpenChange={(change) => {
+              sectionFolds.update('styles', change);
+            }}
+          />
+        );
       case 'settings':
         return <SettingsTab filter={filter} />;
       case 'test':

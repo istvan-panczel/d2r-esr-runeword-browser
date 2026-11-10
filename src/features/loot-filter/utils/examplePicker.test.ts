@@ -124,14 +124,14 @@ describe('buildStarterRules', () => {
 
   it('needs one NoIcon copy with the default choices of every example: Hel to Um, which keep no icon', () => {
     const { rules, styles } = starterRulesFor(EXAMPLE_RULES.map((example) => example.id));
-    expect(Object.keys(styles).filter((name) => name.endsWith('NoIcon'))).toEqual(['MidRuneNoIcon']);
+    expect(Object.keys(styles).filter((name) => name.endsWith('NoIcon'))).toEqual(['MidTierRuneNoIcon']);
     // The copy sits right after its base style, not where it was first used.
     const names = Object.keys(styles);
-    expect(names.indexOf('MidRuneNoIcon')).toBe(names.indexOf('MidRune') + 1);
-    expect(styles.MidRuneNoIcon).toEqual(styleWithoutIcon(stylePreset('mid-rune').style));
-    expect(rules.filter((rule) => rule.useStyle === 'MidRuneNoIcon').map((rule) => rule.comment)).toEqual(['Mid runes: Hel to Um']);
+    expect(names.indexOf('MidTierRuneNoIcon')).toBe(names.indexOf('MidTierRune') + 1);
+    expect(styles.MidTierRuneNoIcon).toEqual(styleWithoutIcon(stylePreset('mid-rune').style));
+    expect(rules.filter((rule) => rule.useStyle === 'MidTierRuneNoIcon').map((rule) => rule.comment)).toEqual(['Mid runes: Hel to Um']);
     // Every other style is a preset with its icon (Low rune and Muted have none).
-    const quiet = new Set(['MidRuneNoIcon', 'LowRune', 'MutedJunk']);
+    const quiet = new Set(['MidTierRuneNoIcon', 'LowRune', 'MutedJunk']);
     for (const [name, style] of Object.entries(styles)) if (!quiet.has(name)) expect(style.icon, name).toBeDefined();
   });
 

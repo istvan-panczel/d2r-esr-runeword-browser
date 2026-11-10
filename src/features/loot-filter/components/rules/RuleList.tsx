@@ -17,9 +17,21 @@ interface RuleListProps {
   readonly ruleCount: number;
   /** False while a search filters the list: moving next to a hidden rule would be confusing. */
   readonly canMove: boolean;
+  /** False while a search filters the list: folds do not apply to it. */
+  readonly canFold: boolean;
   readonly selectedRule: number | null;
+  /** Changes when a rule is revealed by an action: the selected row is scrolled into view once it is rendered. */
+  readonly scrollRequest: number;
+  /**
+   * Changes when the rows change height (the game data arriving makes the summaries longer, a moment after the tab
+   * mounts): the selected row is brought back into view.
+   */
+  readonly layoutKey: string;
   readonly onSelect: (index: number) => void;
-  readonly onMove: (from: number, to: number) => void;
+  /** One step up (-1) or down (1) (`stepItem`); returns the rule's new index, undefined when it did not move. */
+  readonly onMove: (index: number, direction: -1 | 1) => number | undefined;
+  /** The first rule can still move up (a heading above it) / the last one down (comments after it). */
+  readonly edges: { readonly firstUp: boolean; readonly lastDown: boolean };
   readonly onToggle: (index: number, disabled: boolean) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
@@ -29,7 +41,7 @@ interface RuleListProps {
 
 /** What the heading and note rows (and each rule's Add heading above) do. */
 export interface RuleListSectionHandlers {
-  readonly onToggle: (key: string) => void;
+  readonly onToggle: (row: HeadingRow) => void;
   readonly onEditHeading: (row: HeadingRow) => void;
   readonly onMove: (address: CommentAddress, direction: -1 | 1) => void;
   readonly onRemoveHeading: (address: CommentAddress) => void;
@@ -44,8 +56,12 @@ export interface RuleListSectionHandlers {
 export function RuleList({
   rows,
   ruleCount,
+  edges,
   canMove,
+  canFold,
   selectedRule,
+  scrollRequest,
+  layoutKey,
   onSelect,
   onMove,
   onToggle,
@@ -57,19 +73,22 @@ export function RuleList({
   const listRef = useRef<HTMLUListElement>(null);
 
   // Rows are keyed by position, so after a move the focused button belongs to the other rule: follow the moved one.
-  const handleMove = (from: number, to: number) => {
-    onMove(from, to);
+  const handleMove = (index: number, direction: -1 | 1) => {
+    const to = onMove(index, direction);
+    if (to === undefined) return;
     requestAnimationFrame(() => {
       const row = listRef.current?.querySelector(`[data-rule-index="${String(to)}"]`);
-      const move = row?.querySelector<HTMLButtonElement>(`[data-move="${to < from ? 'up' : 'down'}"]`);
+      const move = row?.querySelector<HTMLButtonElement>(`[data-move="${direction === -1 ? 'up' : 'down'}"]`);
       (move?.disabled === false ? move : row?.querySelector<HTMLElement>('[data-rule-main]'))?.focus();
     });
   };
 
+  // After the commit that shows it (a reveal opens its headings in the same update) and again when the rows above it
+  // change height, so the row ends where it stays; the nearest edge, so a row already in view (a click) does not move.
   useEffect(() => {
     if (selectedRule === null) return;
     listRef.current?.querySelector(`[data-rule-index="${String(selectedRule)}"]`)?.scrollIntoView({ block: 'nearest' });
-  }, [selectedRule]);
+  }, [selectedRule, scrollRequest, layoutKey]);
 
   return (
     <ul ref={listRef} className={className} aria-label="Rules">
@@ -81,6 +100,7 @@ export function RuleList({
               row={row}
               noun="rules"
               canMove={canMove}
+              canFold={canFold}
               onToggle={sections.onToggle}
               onEdit={sections.onEditHeading}
               onMove={sections.onMove}
@@ -100,8 +120,8 @@ export function RuleList({
             summary={entry.summary}
             severity={entry.severity}
             selected={entry.index === selectedRule}
-            isFirst={entry.index === 0}
-            isLast={entry.index === ruleCount - 1}
+            isFirst={entry.index === 0 && !edges.firstUp}
+            isLast={entry.index === ruleCount - 1 && !edges.lastDown}
             canMove={canMove}
             onSelect={onSelect}
             onMove={handleMove}

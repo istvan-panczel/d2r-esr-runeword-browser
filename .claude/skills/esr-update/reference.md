@@ -156,7 +156,7 @@ rows with output `useitem` adding the hidden `item-upgraded` (`std` plus a uniqu
 about another reagent or a row no longer gated on `item_upgraded` (`op 17`) is a finding; so is a new charm upgrade
 outside that shape (Tyrael's Might's four-input rows set the same marker on purpose and are not listed).
 
-Known genuine data, not findings: Sully's template (v0.7.0) validates with 7 warnings at 3.3: 6 for `item_addskill_tab` on rules 31–33 (as v0.6.13 did at 3.2.24) and 1 for the stat-based hide at `rules/73`, which cannot reach unidentified items (`docs/features/LOOT-FILTER.md`); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
+Known genuine data, not findings: Sully's template has long validated with few or no warnings (`docs/features/LOOT-FILTER.md`; up to v0.7.0 6 for `item_addskill_tab`, gone since its `statMax` formulas), and the parser's single-number `activeInLevels` warning on his Ancient Scroll hide rule is expected (`npm run loot-filter:template` prints the current counts); the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
 
 ### Hand-kept data (SKILL step 5.8)
@@ -282,16 +282,18 @@ not check." Then:
 - **Docs quoting the old version**: in the files `docs.old-version` lists, replace the version and update the counts
   that come straight from the new manifest or bundles; leave historical statements ("added in 3.2.20") alone; list
   what you could not derive.
-- **Sully's template**: download the upstream `Sullys-QoL-Filter.json` verbatim to
-  `public/loot-filters/sullys-qol-filter.json`, add or remove the icons / sounds under `public/loot-filters/` to match
-  upstream, update `SULLYS_QOL_TEMPLATE.version` / `.credit` in `src/features/loot-filter/utils/template.ts` and the
-  version in `docs/features/LOOT-FILTER.md`, then rerun `npm run esr:review -- --offline` (`lootfilter.validate` must
-  not gain diagnostics) and `npx vitest run src/features/loot-filter`.
+- **Sully's template**: run `npm run loot-filter:template` (it writes the upstream `Sullys-QoL-Filter.json` verbatim to
+  `public/loot-filters/sullys-qol-filter.json` when it passes the app's `checkTemplateText`, and prints the version
+  change, the counts and the icons / sounds the site does not bundle). Bundle any new icon or sound it reports (icons
+  shrunk to 128 px, registered in `src/features/loot-filter/utils/bundledAssets.ts`; see LOOT-FILTER.md "Bundled
+  sounds and icons"). No constant, test or agent-pack edit is needed: the app reads the version from the file and
+  loads his live file first anyway (the copy is the fallback). Then rerun `npm run esr:review -- --offline`
+  (`lootfilter.validate` must not gain diagnostics) and `npx vitest run src/features/loot-filter`.
 - **Loot filter agent pack** (`public/loot-filters/agent/`: README.md plus the AI help page's FORMAT.md, examples.md,
   assets.md and full game data tables, for AI agents writing filters; `docs/features/LOOT-FILTER.md` "AI help"):
   `game-data:generate` rewrites it from the new `lootfilter.json` / `types.json` and the manifest's ESR version, and
   `game-data --check` and `scripts/lib/lootFilterAgentPack.test.ts` fail when it is stale. After a template, plugin
-  version or prompt change run `npm run loot-filter:agent-pack`; commit the pack with the bundles (it carries the ESR
+  version or prompt change run `npm run loot-filter:agent-pack` (a Sully template refresh alone does not change it); commit the pack with the bundles (it carries the ESR
   version, so every release changes it).
 - **Official links**: `OFFICIAL_LINKS` / URL constants in `src/core/navigation/navConfig.ts`, `OFFICIAL_REFERENCES` in
   `src/features/guide/utils/guideHome.ts`, `docs:` links in `content/guide`. Community tools: report only.
@@ -336,7 +338,7 @@ Compare file hashes before calling a plugin fix unverifiable or confirmed (`git 
 1. `chore(game-data): update to ESR <version>`: `public/game-data/`, `public/guide/`, `public/sitemap.xml`, the
    integrity-test and other pin updates, the doc version/count updates.
 2. `docs(guide): <what changed> for ESR <version>`: `content/guide/` and the regenerated `public/guide/`.
-3. `chore(loot-filter): refresh Sully's QoL template to v<x>`: the template, its assets, `template.ts`, the docs.
+3. `chore(loot-filter): refresh Sully's QoL template to v<x>`: the bundled copy and any new assets.
 4. `fix(nav): update moved official ESR links`: link fixes.
 5. `chore(loot-filter): bump the loot filter plugin version to <x>`: only after approval.
 6. `chore(esr-update): …`: skill or review-script edits, only after approval.

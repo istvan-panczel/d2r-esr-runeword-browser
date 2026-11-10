@@ -71,8 +71,8 @@ describe('collectReferencedAssets', () => {
 });
 
 describe('referencedAssetsOfText', () => {
-  it('reads the bundled template: every sound and icon it references is bundled, and every icon decodes', () => {
-    const text = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
+  it("reads Sully's template v0.9.2: sounds, and all twelve of his bundled icons", () => {
+    const text = readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8');
     const assets = referencedAssetsOfText(text);
     expect(assets.missing).toEqual([]);
     expect(paths(assets).filter((path) => path.startsWith('sounds/')).length).toBeGreaterThan(0);
@@ -81,7 +81,15 @@ describe('referencedAssetsOfText', () => {
     const sullys = BUNDLED_ICON_ASSETS.filter((asset) => asset.credit !== 'Generated for this app');
     expect(sullys).toHaveLength(12);
     expect(icons).toHaveLength(sullys.length + 1);
-    for (const path of icons) {
+  });
+
+  // An invariant of the bundled copy, whatever version `npm run loot-filter:template` last fetched: the zip download
+  // and the sandbox need every sound and icon it names.
+  it('the bundled template: every sound and icon it references is bundled, and every icon decodes', () => {
+    const text = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
+    const assets = referencedAssetsOfText(text);
+    expect(assets.missing).toEqual([]);
+    for (const path of paths(assets).filter((name) => name.startsWith('icons/'))) {
       const sprite = decodeSprite(readFileSync(resolve(process.cwd(), 'public/loot-filters', path)));
       expect(sprite.width, path).toBeGreaterThan(0);
     }

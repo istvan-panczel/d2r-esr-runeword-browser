@@ -9,7 +9,7 @@ export { isUuid } from '@/core/supabase/query';
 // from loot_filters to profiles, so a bare `profiles` embed errors with PGRST201.
 const AUTHOR_EMBED = 'profiles!loot_filters_user_id_fkey(display_name, discriminator, avatar_url)';
 
-/** Every column the cards show. Never `content`: a file is up to 512 KB and only the detail page needs it. */
+/** Every column the cards show. Never `content`: a file is up to 2 MB and only the detail page needs it. */
 export const SHARED_FILTER_LIST_COLUMNS = [
   'id',
   'user_id',

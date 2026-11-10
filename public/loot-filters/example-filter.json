@@ -23,7 +23,7 @@
   "formatVersion": 1,
   "title": "Example filter (with explanations)",
   "author": "D2R ESR Runeword Browser",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "A small filter to learn from, built from the editor’s example rules: highlights runes, gems, uniques, sets, mythicals, coupons, runeword bases, charms, jewels, keys, maps and big gold piles, and hides junk with exceptions. Leveling shows more, Strict hides more.",
   "filterLevels": [
     {"id": 1, "name": "Leveling"},
@@ -40,13 +40,13 @@
       "icon": {"iconName": "diamond_red", "iconSize": 50},
       "droplight": {"color": [255, 40, 0]}
     },
-    "MidRune": {
+    "MidTierRune": {
       "replaceName": "ÿc8{name}",
       "labelBackground": [0, 0, 0, 230],
       "labelBorder": {"color": [255, 168, 0, 255], "width": 1},
       "icon": {"iconName": "diamond_orange", "iconSize": 40}
     },
-    "MidRuneNoIcon": {"replaceName": "ÿc8{name}", "labelBackground": [0, 0, 0, 230], "labelBorder": {"color": [255, 168, 0, 255], "width": 1}},
+    "MidTierRuneNoIcon": {"replaceName": "ÿc8{name}", "labelBackground": [0, 0, 0, 230], "labelBorder": {"color": [255, 168, 0, 255], "width": 1}},
     "PerfectGem": {"labelBorder": {"color": [200, 150, 0, 255], "width": 1}, "icon": {"iconName": "gem_gold", "iconSize": 27}},
     "UniqueItem": {
       "replaceName": "ÿc4{name}",
@@ -120,16 +120,16 @@
       "useStyle": "HighRune"
     },
     {
-      "comment": "Mal, Ist and Gul runes. The MidRune style (a black box with an orange border and a smaller orange diamond, iconSize 40), the mid sound and a chat line. In a chat line ÿc8 is orange and ÿc0 white.",
+      "comment": "Mal, Ist and Gul runes. The MidTierRune style (a black box with an orange border and a smaller orange diamond, iconSize 40), the mid sound and a chat line. In a chat line ÿc8 is orange and ÿc0 white.",
       "itemCodes": ["r73", "r74", "r75"],
       "chatMessage": "ÿc8Rune: ÿc0{name}",
       "sound": "mid.mp3",
-      "useStyle": "MidRune"
+      "useStyle": "MidTierRune"
     },
     {
-      "comment": "Mid runes: Hel to Um. MidRuneNoIcon is the MidRune look without its icon: a rule can replace its style’s icon with its own but cannot remove it, so a quieter rule uses a copy of the style without one. No sound either: a rule has only the actions you give it.",
+      "comment": "Mid runes: Hel to Um. MidTierRuneNoIcon is the MidTierRune look without its icon: a rule can replace its style’s icon with its own but cannot remove it, so a quieter rule uses a copy of the style without one. No sound either: a rule has only the actions you give it.",
       "itemCodes": ["r65", "r66", "r67", "r68", "r69", "r70", "r71", "r72"],
-      "useStyle": "MidRuneNoIcon"
+      "useStyle": "MidTierRuneNoIcon"
     },
 
     // ---- Gems

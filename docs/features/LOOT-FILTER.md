@@ -69,7 +69,8 @@ then run `lootfilter` in the game console and read
   the library is the draft store. Optional entry fields `savedId`, `savedOwnerId`, `savedRevision` (a draft holding the
   unsaved edits of a saved filter, and the revision it started from) and
   `basedOn { id?, revision?, template?, version?, label }` (a copy of a shared filter, or a start from a bundled
-  template: `{ template: 'sullys-qol' | 'example', version, label: '<name> v<version>' }`, `templateBasedOn(id)`). The
+  template: `{ template: 'sullys-qol' | 'example', version, label: '<name> v<version>' }`, `templateBasedOn(id, version)`
+  with the version of the text the start used, live or bundled). The
   guard checks only the required fields, so older tabs still read the library;
   `readLibrary` drops a malformed optional field (`normalizeEntry`) instead of rejecting the library. Old `template`
   entries without `basedOn` (written when only Sully's was bundled) get it from the file (`entryBasedOn` /
@@ -80,7 +81,10 @@ then run `lootfilter` in the game console and read
 - A stored value that fails the type guard (corrupt, or written by a newer version) is copied once to
   `loot-filters/library.unreadable` before the library starts empty, so the next save cannot destroy it.
 - A refused write (quota) shows one toast, "Could not save: browser storage is full", until a write succeeds again;
-  editing keeps working in memory.
+  editing keeps working in memory. The stored library stays as it was at the last good write, so what changed since
+  (a new draft, edits) is lost on reload unless saved to the account or downloaded. The whole library is one value:
+  Chrome allows 5,242,880 characters per origin (measured 2026-11-10), and a draft of Sully's v0.9.2 takes about 527k
+  of them as stored JSON, so about nine such drafts fit; the tenth start fails the write.
 - Two browser tabs editing the library overwrite each other: each writes its whole library, the last write wins. There is
   no cross-tab sync (no `storage` event listener).
 
@@ -118,7 +122,8 @@ then run `lootfilter` in the game console and read
   `patchRule({ index, patch })`, `chooseRuleStyle({ index, patch, addStyle?, removeStyleIfUnused?, ifUseStyle? })` (the
   rule's Style dropdown, see [Style first, then tweak](#style-first-then-tweak)), `setRuleDisabled({ index, disabled })`
   (see "Disabled rules"), `removeRule(index)`,
-  `moveRule({ from, to })` and `duplicateRule(index)` (both keep the `disabled` flag with the rule), `selectRule(index)`,
+  `stepRule({ index, direction })` (one step with the rule's own notes, see "Section comments"), `moveRule({ from, to })`
+  (steps until index `to`) and `duplicateRule(index)` (all keep the `disabled` flag with the rule), `selectRule(index)`,
   `setStyle({ name, style })`, `renameStyle({ from, to })` (also re-points rules' `useStyle`), `removeStyle(name)`,
   `replaceFilter({ filter, diagnostics, notes? })`.
 - **Persistence** (`lootFilterSaga.ts`): every reducer that edits the open filter is in the saga's `isEditorMutation`
@@ -230,9 +235,13 @@ then run `lootfilter` in the game console and read
     tab in both). A single tab param that names no tab gets its own warning at `<list>/<n>/param` ("names no skill
     tab: the plugin numbers tabs class × 8 + tab 0 to 2, as the game does (verified in game)"), naming the tab it
     would be as a properties.txt number ("; as a properties.txt tab number (class × 3 + tab) 21 is Warlock Demon
-    Skills, which is param 56"). Sully's template (v0.7.0) gets 7 warnings against the ESR 3.3 data: one on the stat-based hide at `rules/73` (see the Test tab's unidentified items) and 6 as v0.6.13 had against 3.2.24: its three +3/4/5
-    skill tab rules (rules 31 to 33) each check stat 188 without param (one warning) and with params 1 to 21 (the list
-    warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). A test pins this against the real bundles.
+    Skills, which is param 56"). Sully's template up to v0.7.0 got 6 of these against the ESR 3.3 data: its three +3/4/5
+    skill tab rules (rules 31 to 33) each checked stat 188 without param (one warning) and with params 1 to 21 (the list
+    warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). Since v0.9.0 they read every tab with
+    `statMax('item_addskill_tab')`, and v0.9.2 gets no validator warning at all (the one on its stat-based hide at
+    `rules/99`, `rules/73` up to v0.7.0, was the validator missing a `{ "max": "superior" }` range, see the Test tab's
+    unidentified items); the parser's single-number `activeInLevels` warning at `rules/77` stays. A test pins this
+    against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
   after `rules`. A filter without disabled rules has no `disabledRules` key, so existing files serialize as before. To
   enable a rule by hand, cut the inner object back into `rules`.
@@ -254,26 +263,55 @@ then run `lootfilter` in the game console and read
 A filter author can group rules with ordinary `//` lines. The plugin skips comments, so this needs no format change and
 the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
 
-| Line in the file                 | Shown as                                |
-| -------------------------------- | --------------------------------------- |
-| `// ==== Title`                  | A part: a heading in the Rules list     |
-| `// ---- Title`                  | A section inside a part                 |
-| Other `//` right under a heading | That heading's description              |
-| Other `//` between rules         | A note row, in place                    |
-| `// ===========` (markers only)  | Nothing: a visual separator in the file |
+| Line in the file                                          | Shown as                                |
+| --------------------------------------------------------- | --------------------------------------- |
+| `// ==== Title`                                           | A part: a heading in the Rules list     |
+| `// ---- Title`                                           | A section inside a part                 |
+| Other `//` right under a heading, up to a blank line      | That heading's description              |
+| Other `//` between rules (consecutive lines, up to blank) | A note row, in place                    |
+| `// ===========` (markers only)                           | Nothing: a visual separator in the file |
 
 - A marker is four or more `=` or `-` after `//`; a run of three or more of them after the title is decoration.
+- **A blank line ends a description and a note**: Sully writes the heading, its one-line description, a blank line, then
+  the first rule's own comment, which then shows as a note row above that rule (in v0.9.2 every one of the 50 headings is
+  written that way). `//` alone is an empty comment line, not a blank line: it does not end a description.
 - A section runs to the next heading of the same or a higher level; a heading folds what it runs over.
 - The comment lines above the opening `{` show as "About this filter", and the ones above `"styles"` on the Styles tab.
-- **Opt-in:** a file with no heading shows no comment rows, so older files (Sully's QoL template has 242 per-rule comment
-  lines) look as before. Their comments are still kept.
+- **Opt-in:** a file with no heading shows no comment rows, so older files (Sully's QoL template had 242 per-rule comment
+  lines up to v0.7.0) look as before. Their comments are still kept. Since v0.9.0 Sully's template is grouped for the
+  editor itself: 6 parts, 44 sections, a one-line description under each heading and 102 per-rule notes (see "Start from Sully's
+  QoL filter").
 - **Kept:** whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
   **Dropped on the first edit, with a warning:** a comment on the same line as a rule, inside a rule object, and every
   `/* */` block.
-- A comment belongs to its place, not its rule: moving a rule past a heading changes its section, deleting a rule hands
-  its comments to the next one, duplicating does not copy them.
+- **Moving a rule** (Move up / Move down, `stepRule` → `stepItem` in `utils/sections.ts`): a rule moves with its own
+  notes, the note lines right above it back to a blank line, a heading's description or anything else. A heading and its
+  description belong to their place, never to a rule, and a note a blank line away from the rule stays where it is. One
+  step passes exactly one neighbour:
+  - the rule next to it: they swap, each with its own notes;
+  - a heading run (part headings and at most one section heading, the last of them, each with its description, and the
+    separators and blank lines among them; so a part and its first section are one run): the rule hops over the whole
+    run and becomes the last rule of the section before it (up) or the first rule of the section after it (down, placed
+    after the description with a blank line before its notes); no other rule moves. An empty section is a section of
+    its own, so a rule stops in it either way (that keeps a step and the step back exact). The first rule can so leave
+    the first section and stand above the first heading, and the last rule can go below headings written after it
+    (`rulesEndComments`); a section can end up empty;
+  - a free-standing note (a note that is not a rule's own, a blank line away from the next rule): the rule passes it and
+    the note stays a note row.
+  - The step back undoes a step exactly (a move and its inverse give back the same file; the blank lines are tidied by
+    `tidyCommentBlock`, so a blank line the file had at the edge of a block is not kept anyway). The selection and its
+    folded-away mark follow the moved rule. `moveRule({ from, to })` moves by such steps until the rule reaches index
+    `to`. A rule moved into a folded section is still listed under its headings while it is selected.
+- Otherwise a comment belongs to its place: deleting a rule hands its comments to the next one (a blank line apart),
+  duplicating does not copy them.
 - Model: editor-only `commentsBefore` on rules and styles, `keyComments` and `rulesEndComments` on the filter (never keys
   in the file). `parseJsonc` places the comments (`placedComments`), the serializer writes them back after a blank line.
+  One or more blank lines between two comment lines of the same block (and of the header above `{`) are kept as an
+  empty string (`engine/commentLines.ts`) and written back as one empty line; blank lines at the start or end of a block
+  are not kept (the serializer writes the blank line before each block itself), and the section edits drop the ones an
+  edit leaves at a block's ends. Deleting a rule or style hands its comments to the next one a blank line apart
+  (`joinCommentBlocks`), so they stay that item's notes. A file without blank lines between comments reads and writes
+  as before.
 - A disabled rule's comments are written above its `disabledRules` entry, so they come back with the rule.
 - **The same in the Styles list**: comments above a style inside `"styles"` group and fold the style list by the same
   ruleset. There is nowhere to keep a comment after the last style, so the editor adds headings above a style only.
@@ -283,11 +321,52 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   Edit (title, level and description), Add rule (an empty rule as the last rule of the section; Rules list only), Move
   up and Move down (the section with its rules and subsections, past the neighbouring section of the same level inside
   its part; off while searching) and Remove (the heading and its description; the rules stay). A note row has Edit
-  (empty removes it) and Remove. The dialog shows the comment lines the file gets. Renaming keeps the file's markers
-  and decoration (`// ---- Styles ----------`); a note line that would read as a heading or separator is written
-  `// Note: …`. Collapse all / Expand all fold every heading; folds reset when the tab changes (owner decision).
+  (empty removes it) and Remove. The dialog shows the comment lines the file gets. A note added right under a heading,
+  its description or another note gets a blank line above it, so it stays a note of its own (a heading needs none).
+  Renaming keeps the file's markers and decoration (`// ---- Styles ----------`); a note line that would read as a
+  heading or separator is written `// Note: …`. Collapse all folds every heading (only the parts show), Expand all opens every one.
+- **Folds** (owner decisions 2026-11-10): a filter opened for the first time in a browser starts fully folded: the part
+  rows only, each with its rule count (Sully's v0.9.2: 6 rows); a section outside any part shows as a folded section row,
+  and rules and notes above the first heading stay visible. Opening a part shows its sections folded. The browser then
+  remembers the folds per filter, across tab switches, route changes and reloads, separately for the Rules and the
+  Styles list. What is stored is the set of OPEN headings, so a heading the browser has not seen for that filter (a new
+  section, a newer version of the file, a heading typed in the JSON tab) starts folded; a heading made with Add section
+  starts open.
+  - Storage: localStorage `loot-filters/section-folds`,
+    `{ "v": 1, "filters": [{ "id": "draft:<entry id>", "rules": ["1:PART 1", "2:1.1 Gold"], "styles": [] }] }`, the
+    most recently changed filter first, at most 30 filters and 500 open headings per list; anything unreadable is
+    ignored. The id is `saved:<id>` for a saved or shared filter (the owner's saved filter, a draft holding unsaved edits
+    of it, whether opened on the saved route or the draft route, and the sandbox of the same filter share it, so
+    Discard keeps the folds), `draft:<library entry id>` for a new draft, or `template:<template id>` (a bundled
+    template's sandbox). Saving a new draft, Save as a new filter and Copy to my filters carry the folds to the new id
+    (the editor screen's `switching`), only onto an id the screen has not shown yet (`switchFoldsSession`), so going back
+    to a filter opened before reads its own folds; renaming a filter does not touch them. Written only when the folds
+    change, so a filter that was only looked at is not stored.
+  - Rule and style edits (add, move, delete, duplicate, edit, enable or disable) change no fold. A section edit carries
+    them: a heading renamed or moved to the other level keeps its fold, and so do the headings a section move, an
+    insert or a removal renumbers (`headingKeyChanges` matches the comment lines before and after the edit).
+  - **Repeated titles**: a heading is known by its level and title plus `#n` for the nth repeat (`2:Misc#1`). Edits in
+    the editor follow each heading exactly, but a change made outside it (the JSON tab, a newer file) is matched by
+    title and repeat number only, so adding a heading of the same title above another one shifts the folds of the
+    later ones by one.
+  - **A rule selected from elsewhere opens its part and section**, the others stay as they are: a problem's rule link
+    (header, JSON tab), the Test tab's rule link, Add rule, a heading's Add rule, example rules added, Check in game,
+    and clearing a search while a rule is selected. Each of these opens the headings in its handler, after the action (no effect); a
+    click on a rule row needs none. The row is then scrolled into view in the list and the window (`block: 'nearest'`,
+    after the commit that opens its headings: the screen's `revealCount` drives RuleList's effect, which also runs again
+    when the game data arrives, since the rule summaries grow a moment after the Rules tab mounts); a click on a row
+    already in view does not scroll. The Styles list does the same for a style added, renamed, duplicated or picked from
+    the presets, and scrolls it into view. Nothing restores a selection when the editor opens (`open` and `close` reset it), so that case does
+    not occur.
+  - Folding the selected rule's heading by hand (or Collapse all) folds the rule away with its section. The editor
+    state's `selectionFolded` holds that: it belongs to the selection, so it follows the rule when a rule above it is
+    deleted or moved, and ends when another rule is selected, a rule is added or copied, or the selection ends. When a
+    rule edit puts the selected rule inside folded headings (moving it into a folded section), it stays listed under its
+    own headings, shown folded (a section listed that way inside a folded part reads folded even when it is open
+    itself), so it can be moved on. Clicking a heading row shown folded opens it and its part.
 - **Search**: matching rules are listed under the headings they sit in (notes left out); a query that matches a
-  heading's title lists its whole section. Folds do not apply while searching.
+  heading's title lists its whole section. Folds do not apply while searching: the heading rows cannot be folded then,
+  and a search never changes the remembered folds.
 - **Our files**: the example filter (v2.2.0) has a `// ---- <group>` heading per example group and one for the hide
   rules; the Example rules dialog writes the same headings above the rules it adds, unless the filter already has a
   heading of that title (`withGroupHeadings`, `headingTitles` in `utils/examplePicker.ts`).
@@ -296,7 +375,9 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`); the reducers
   `editRuleComments`, `addRuleToSection` and `editStyleComments` wrap it, and `removeStyle` hands a deleted style's
   comments to the next style as `removeRule` does. The rows are `components/sections/SectionRows.tsx`, the dialog
-  `SectionDialog.tsx`.
+  `SectionDialog.tsx`. The folds: `utils/sectionFolds.ts` (storage, the filter id, open-set changes),
+  `hooks/useSectionFolds.ts` (held by the editor screen, so they outlive a tab switch), `enclosingHeadingKeys` and
+  `headingKeyChanges` in `utils/sections.ts`.
 
 `lootFilterSaga` (registered by `src/features/loot-filter/index.ts` when the route chunk first loads):
 
@@ -323,9 +404,12 @@ tabs: the page is the My filters content without the saved section (the drafts, 
 **Shared** (`SharedFiltersTab`):
 
 - A pinned card per bundled template first, Sully's QoL filter then the example filter (`BundledTemplateCard`, one per
-  `BUNDLED_TEMPLATE_LIST` entry): name, its summary, "by <author>", its version, rule count and level names from
-  `filterMetadata` on the bundled file (fetched once per page load by `loadTemplateText(id)`, shared with its start
-  button), **Open** (its `sandboxPath`: `/loot-filters/sully` or `/loot-filters/example`), **Download** (the same menu
+  `BUNDLED_TEMPLATE_LIST` entry): name, its summary, "by <author>", the version and, for Sully's, where the text came
+  from ("v0.9.2 · latest from Sully's GitHub" or "v0.9.2 · the copy bundled with this site", with a line "Could not
+  load the latest from github.com/Thisisnotsully/QoL-Filter: <reason>." under the rule count when the live file was not
+  used; a skeleton while it loads, so no wrong version flashes), rule count and level names from `filterMetadata` on
+  the text in use (`useTemplateSource(id)`, see [Sully's template: live file, bundled
+  fallback](#sullys-template-live-file-bundled-fallback); shared with its start button), **Open** (its `sandboxPath`: `/loot-filters/sully` or `/loot-filters/example`), **Download** (the same menu
   as a draft's, with the zip) and **Start from it** (the template start below; every start button waits while one
   loads).
 - Search by name (debounced 300 ms like the builds list, server-side `ilike`) and sort **Newest** / **Most liked** /
@@ -354,8 +438,9 @@ tabs: the page is the My filters content without the saved section (the drafts, 
   first, private ones included) as shared filter cards with badges: **Unsaved changes** (a visible draft has its
   `savedId`), **Update available** (`filterUpdateStatus`: a copy whose source has a newer revision, from one
   `fetchSourceRevisionsRequested` with every `based_on_id`, the source's change note in the tooltip; a filter started
-  from a bundled template with `based_on_version` below that template's bundled version, an unknown
-  `based_on_template` never) and **Original no longer shared** (the source is
+  from a bundled template with `based_on_version` below the version of that template's text in use, live or bundled
+  (`useTemplateVersions` loads only the templates the saved filters name; not loaded yet, an unknown
+  `based_on_template` or a null version never) and **Original no longer shared** (the source is
   private or deleted; a deleted source has cleared `based_on_id`, the label stays).
 - **Unsaved in this browser** (the heading only when signed in): `selectVisibleDrafts(state, viewerId)` as draft cards
   (`LibraryEntryCard`, newest first): name, title/author and rule count, last update, "Based on …", an **Unsaved
@@ -386,48 +471,43 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   out the text notes (accepted trailing commas or block comments, comments the first edit drops),
   which the editor's problems chip and list show first. The entry name is
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
-- **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
-  entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.7.0 from github.com/Thisisnotsully/QoL-Filter, verbatim (225 rules, 12 styles, 4
-  levels, `soundVolume` 25, his `updateUrl` and `//` comment kept), the filter the ESR launcher pulls live since
-  3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
-  fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
-  (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25; v0.6.7 (2026-10-31) adds a +1 All Skills base highlight (chat
-  line, `other.mp3`, red border, `goldstar` icon), hides minor potions (`mp1`/`hp1`) from character level 12 outside
-  town, and adds `item_allskills < 1` exceptions (stat 127) to three hide rules; v0.6.9 to v0.6.11 (2026-10-31 to
-  11-01; there is no v0.6.8) add an "Ancient Scroll tiering" hide rule for the Ancient Scrolls `01b` to `50b` at level
-  4 (Uber-Strict - Maps+) and limit their gong highlight to levels 1 to 3, add the Mythical Jewel (`mjw`) to the rare
-  jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
-  and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
-  and `14e` (Nightwing's Veil) the other way; v0.6.12 and v0.6.13 (2026-11-04) add two Legendary
-  Materials to the `STierMaterial` group, Lucion's Relic of Sanctification (`u18`) and Inarius' Everburning Halo
-  (`u40`), with the existing `redD` icon (no new assets, no new warnings); v0.7.0 (2026-11-05, ESR 3.3) localises
-  `replaceName`, `namePrefix`, `nameSuffix`, the chat lines and the `filterLevels` names into 11 languages (no jaJP or
-  ptBR), keeps one `//` comment line (the volume note) and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); no
-  new assets or rules, and the parser had to learn per-language level names first (plugin 1.8.2, "Localised level
-  names" below). The v0.6.9 hide rule (rule 98) writes
-  `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
-  reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
-  single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
-  Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
-  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
-  in `utils/template.ts`): "Sully's QoL filter v0.7.0, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
-  It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
-  `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
-  filter through the launcher.
+- **Start from Sully's QoL filter**: loads Sully's filter (`loadTemplate('sullys-qol')`: his live file, else the
+  bundled copy) and opens it as a `template` entry named "Sully's QoL Filter" (the file's title; the card's byline reads
+  "Sully's QoL Filter by Sully") with `basedOn` at that text's version. It is `Sullys-QoL-Filter.json` from
+  github.com/Thisisnotsully/QoL-Filter verbatim, the filter the ESR launcher pulls live since 3.2.22 (it replaced the
+  ESR default filter, an earlier conversion of the same filter the mod shipped as `LootFilters/esr-default-filter.json`
+  up to 3.2.21). History in short: up to v0.6.13 it was one long list with per-rule comments; v0.7.0 (2026-11-05, ESR
+  3.3) localised names, chat lines and level names (the parser learned per-language level names for it); v0.9.0 to
+  v0.9.2 (2026-11-10, "Added compatibility for Mefi's editor") regrouped it into 6 `// ====` parts and 44 `// ----`
+  sections with an "R### | what | action" title per rule (689 rules, 22 styles, the same twelve icons and nine sounds).
+  Its Ancient Scroll hide rule (rule 77 "R078" in v0.9.2) writes `"activeInLevels": 4`, a number where the format wants
+  a list. Verified in game: the rule works, so the editor reads it as `[4]` with one warning ("A single number works in
+  game; [4] is the documented form.", see "A single-number level" above), writes the `4` back unchanged, and the Test
+  tab hides Ancient Scrolls at level 4 only. Whether the plugin really reads it as `[4]` (and not as "every level") is
+  the remaining check in the backlog. Tests that pin facts of his file (rule counts, sections, labels, styles) read a
+  frozen copy, `engine/__fixtures__/sullys-qol-filter-0.9.2.json` (Prettier-ignored), so a refresh of the bundled copy
+  breaks none of them. Credit line (`SULLYS_QOL_TEMPLATE.credit` in `utils/template.ts`, version-free): "Sully's QoL
+  filter, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter (this site loads his latest
+  too, with a bundled copy as fallback); icons and sounds by Sully". The library how-to adds that every player already
+  has Sully's filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' }`. Our own
+  `basedOn { template: 'example', version: '2.3.0', label: 'Example filter (with explanations) v2.3.0' }` (the
+  file's version; the example has no live file). Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "ÿc4Drop: {qualityColor}{name}".
-  - _v2.2.0_ (2026-11-09, current) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
+  - _v2.3.0_ (2026-11-10, current) is v2.2.0 with the Mid rune preset renamed `MidRune` → `MidTierRune` (and its copy
+    `MidRuneNoIcon` → `MidTierRuneNoIcon`) in the styles, the two rules' `useStyle` and their comments; nothing else
+    changed. Drafts started from v2.2.0 or earlier get "Update available"; a draft that keeps its old `MidRune` styles
+    works as before (the styles are stored in the filter).
+  - _v2.2.0_ (2026-11-09) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
     example group and `// ---- Hide rules` above the hide rules (12 headings; see "Section comments"), and a header
     line saying what they are. The rules and styles are unchanged.
   - _v2.1.0_ (2026-11-05) is built from the example rules (Rules tab, below): 28 of them, exactly as the
     picker adds them together with their default choices (`buildExampleSet` over the examples with `defaultChoices`:
     the style preset, which now brings its generated icon, Sully's sound, the chat line), plus `notify: true` on the
     unique rule and `activeInLevels: [2]` on four hide rules. Its `styles` are the 13 presets the rules use (HighRune,
-    MidRune, PerfectGem, UniqueItem, SetItem, MythicalUnique, CouponItem, RunewordBase, ValuableDrop, GoodCharm,
+    MidRune (MidTierRune since v2.3.0), PerfectGem, UniqueItem, SetItem, MythicalUnique, CouponItem, RunewordBase, ValuableDrop, GoodCharm,
     GoodJewel, UberItem, MapItem), copied as they are with their icons, plus `MidRuneNoIcon` (MidRune without its
     icon) for Hel to Um, which keep no icon as before: a rule cannot remove its style's icon, and the rule's comment
     says so. Only three rules carry an icon of their own, where it differs from the style's: unique rings and amulets
@@ -449,7 +529,8 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   - _v2.0.0_ (2026-11-05) had the same rules with the icons on the rules and icon-less presets; _v1.0.0_
     (hand-written, 21 rules, two custom styles Valuable and Good with sounds and Sully's icons in them) came before.
     Drafts started from either get "Update available".
-  - _Tests_: `exampleFilter.test.ts` parses and validates it, checks the header at `EXAMPLE_TEMPLATE.version`, every
+  - _Tests_: `exampleFilter.test.ts` parses and validates it, checks the header at its current version (written in the
+    test: bump both), every
     rule against its example (`FROM_EXAMPLES`, the ids in file order with what the file adds, built as one set; a
     changed example fails until the file follows and its version is bumped), the comments, the styles against the
     presets (icons included, the one NoIcon copy, the three rules with an icon of their own), the levels, the sounds
@@ -458,30 +539,101 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
     regenerated from v2.0.0 with a throwaway script that serializes the parsed file with the new styles, rules and
     comments and moves each `comment` line first, which reproduces v2.0.0 byte for byte when nothing changes) and is
     kept byte-stable: `public/loot-filters/` is Prettier-ignored.
-  - Credit line: "Example filter v2.2.0, built for this site from its example rules to show how rules work; sounds by
-    Sully, icons generated for this app".
+  - Credit line: "Example filter, built for this site from its example rules to show how rules work; sounds by Sully,
+    icons generated for this app".
 - **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
   (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
-  order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `version`, `file`,
-  `sandboxPath`, `startLabel`, `summary` (card text) and `credit`; `template.test.ts` checks name, author and version
-  against each bundled file, so bumping a file means bumping its entry. `bundledTemplate(id)` looks one up (null for
-  any other text), `fetchTemplateText(id)` / `loadTemplateText(id)` (cached per id per page load) read its file,
-  `useTemplateText(id)` wraps that for the cards, and `templateBasedOn(id, version?)` / `templateStartInput(id, text)`
-  (`utils/basedOn.ts`) build what a start records. Adding a template is a file, a registry entry and a route line.
+  order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `file` (the bundled copy),
+  optional `liveUrl` and `repoUrl` (Sully's only), `sandboxPath`, `startLabel`, `summary` (card text) and `credit`; no
+  version (it is always the version of the text in use). `template.test.ts` checks name and author against each bundled
+  file, that each bundled file passes `checkTemplateText`, and that no credit or summary names a version.
+  `bundledTemplate(id)` looks one up (null for any other text), `fetchBundledTemplateText(id)` reads the bundled copy,
+  `loadTemplate(id)` / `useTemplateSource(id | null)` give the text in use (below), and `templateBasedOn(id, version)` /
+  `templateStartInput(source)` (`utils/basedOn.ts`) build what a start records. Adding a template is a file, a registry
+  entry and a route line.
 - New filter, Upload and the template starts add a draft and open it on `/loot-filters/draft/:id`
   (`hooks/useStartFilter.ts`: `startFromTemplate(id)`, `loadingTemplate` is the id loading or null). Empty state ("No
   filters yet") when there are no drafts and nothing is saved.
 - **Download** (`components/FilterDownloadMenu.tsx`, shared with the editor header): a plain button saving
-  `<slug of name>.json` when the filter references no bundled sound or icon (or is not valid JSON); otherwise a menu with
-  **Download .json** and **Download .zip with sounds and icons**, plus the hint "Unzip into your LootFilters folder" and,
-  when the filter references files the app does not bundle, their paths ("add them yourself"; the first four, then
-  "and N more"). The zip (`<slug>.zip`) holds `<slug>.json` (the same text the plain download saves), `sounds/*.mp3` and
+  `<slug of name>.json` when the filter references no sound or icon file (or is not valid JSON); otherwise a menu with
+  **Download .json** and (when it uses a bundled one) **Download .zip with sounds and icons** with the hint "Unzip into
+  your LootFilters folder", and, when the filter references files the app does not bundle, their paths ("Not bundled,
+  add them yourself: …"; the first four, then "and N more") and "Sully's are in his icons and sounds folders on
+  GitHub." with links to those two folders of his repository (always, whatever the filter is based on: a file the site
+  lacks is most likely a newer asset of his; the site never fetches sprites or sounds from GitHub). The zip (`<slug>.zip`) holds `<slug>.json` (the same text the plain download saves), `sounds/*.mp3` and
   `icons/*.sprite` for the referenced bundled files (`goldstar` brings `goldstar.lowend.sprite` along). The referenced
   files come from `utils/referencedAssets.ts` (rules and styles; `sound` values ending in `.wav`/`.mp3`/`.flac`, every
   `icon.iconName`; matched case-insensitively against `utils/bundledAssets.ts` and written under the bundled file's
   own name, so a rule's `gemp` puts `icons/gemP.sprite` in the zip); the archive from `utils/zip.ts`, a
   dependency-free stored-only ZIP writer (UTF-8 names, CRC-32). A failed fetch shows a toast "Could not download the
   sounds and icons" and saves nothing.
+
+### Sully's template: live file, bundled fallback
+
+Owner decision (2026-11-10): the app always uses Sully's latest filter, as the ESR launcher does (it pulls the same
+file every 10 minutes and keeps the last good one), with the copy in `public/loot-filters/` as the fallback.
+
+- **Loading** (`utils/templateSource.ts`, `loadTemplate(id)`): a template with a `liveUrl` (Sully's:
+  `https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json`) is fetched with
+  a plain GET (`fetch(liveUrl, { signal: AbortSignal.timeout(5000), referrerPolicy: 'no-referrer' })`): no custom
+  headers, because GitHub answers a CORS preflight with 403, and the default cache mode, so the browser's HTTP cache
+  revalidates it (`max-age=300`, about 109 KB gzip on the wire). jsDelivr (12 h branch cache) and api.github.com (60
+  requests an hour, base64) do not fit. A valid live text always wins, even when its version is lower than the bundled
+  copy's. Any failure (network, timeout, HTTP status, an invalid text) loads the bundled copy instead, with the reason
+  in `liveError` and a `console.warn`. A template without a `liveUrl` (the example) loads its bundled copy only.
+- **A timed-out live attempt is remembered for the browser session** (`sessionStorage`
+  `loot-filters/live-template-failed/<id>`: `{ at, reason }`, every access in try/catch): for the next 10 minutes a
+  load (a reload, another tab of the session, a re-check) skips the live request and goes straight to the bundled
+  copy, with the reason "timed out after 5 s (tried 3 min ago)" ("under a minute" below one). On a network where
+  raw.githubusercontent.com hangs, only the first load waits the 5 s timeout. Only a `TimeoutError` is remembered: every
+  other failure (refused, an HTTP status, an invalid text, a request cut short by leaving the page, which reads "Failed
+  to fetch") fails fast, so the next load simply tries the live file again. A successful live load removes the memo;
+  blocked or full storage only means the next load tries again.
+- **Validation** (`checkTemplateText(id, text)`): at most 5 MB (characters); `parseLootFilter` does not throw and
+  reports no error diagnostic (warnings are fine: v0.9.2 has one); at least one rule; its title or author names this
+  template (`templateOfFile` in `utils/basedOn.ts`); its `version` has a numeric start (`templateVersionOf`: one to
+  four numeric parts after an optional "v", or a leading-dot decimal; the rest is ignored, so "0.9.3-beta" reads as
+  0.9.3, "1.0.0-rc1" as 1.0.0 and Sully's early ".5" as 0.5, while "latest" or five parts are refused). A pre-release
+  therefore compares equal to its release. The result carries the version and rule count.
+- **Cache**: one promise per id, so the card, the start button, the sandbox and the update banner share one request.
+  The next call after 10 minutes re-checks the live file; a failed re-check keeps the previous source (a live one stays
+  live, with a fresh `loadedAt`); a load that fails outright (live and bundled) is forgotten so the next call retries.
+  Nothing is written to localStorage (the text is 0.5 MB). `peekTemplateSource(id)` returns the last settled source
+  without a request, so a page that opens after another loaded it shows no loading state.
+- **Hooks**: `useTemplateSource(id | null)` gives `idle` (null: nothing is fetched) / `loading` / `ready` with the
+  `TemplateSource` (`text`, `version`, `origin: 'live' | 'bundled'`, `liveError`, `loadedAt`) / `error`;
+  `useTemplateVersions(ids)` the versions for the My filters badges. Only pages that need a template load it: the
+  Shared tab's pinned cards, the sandbox route, a start, the update banner of a template-based filter, the AI page's
+  template starter, and My filters only when a saved filter is template-based.
+- **What the user sees**: the pinned card "v0.9.2 · latest from Sully's GitHub", or "v0.9.2 · the copy bundled with
+  this site" plus "Could not load the latest from github.com/Thisisnotsully/QoL-Filter: <reason>." (reasons: "HTTP
+  404", "timed out after 5 s", the browser's network error such as "Failed to fetch", or the validation reason such as
+  "the file has no rules"); the sandbox banner "You are viewing Sully's QoL Filter v0.9.2, the latest from Sully's
+  GitHub — changes are not saved. …" (or ", the copy bundled with this site" with the reason on a line below); the
+  update banner "Sully's QoL Filter v<new> is out; this filter started from v<old>." The version always comes from
+  the text, so `basedOn`, "Update available" and the AI starter label follow Sully's bumps without a code change.
+  "Update available" compares version numbers only: a content change without a version bump (common for Sully) shows
+  none, and a live file with a lower version than a draft's shows none either.
+- **Assets**: only the JSON is live. Icons and sounds always come from the site; a file the site does not bundle is
+  named in the download menu with links to Sully's folders (see Download above) and plays or draws nothing in the
+  editor.
+- **Refreshing the bundled copy**: `npm run loot-filter:template` (`scripts/update-sully-template.ts`) fetches the live
+  file, runs `checkTemplateText` (refuses to write an invalid one), writes it verbatim to
+  `public/loot-filters/sullys-qol-filter.json`, and prints the old → new version, size, rules, styles, the parser's and
+  the validator's (committed game data) error/warning counts, the files the new text references that the site does not
+  bundle, the size raw and as the editor writes it against the saved-filter cap (a warning above 75% of it), any of his
+  style names that one of our style presets uses (`presetNameClashes`), and (one call to
+  `api.github.com/repos/Thisisnotsully/QoL-Filter/git/trees/main?recursive=1`, derived from `repoUrl` and the branch of
+  `liveUrl`, generic User-Agent) his icons and sounds the site does not bundle. The script and the `esr:review` Sully
+  checks read the URLs from `SULLYS_QOL_TEMPLATE`, so the review checks the very file the app loads. `-- --check` writes nothing and exits 1 when upstream
+  differs (or cannot be fetched or checked). A bump needs no constant, test or agent pack edit; a new icon or sound
+  needs bundling (icons shrunk to 128 px, the `bundledAssets.ts` registry), which the bundled-file invariant in
+  `referencedAssets.test.ts` enforces. Two more invariants hold for any bundled version: the file fits a saved filter
+  as read and as the editor writes it (`template.test.ts`), and no style of his is named like a preset
+  (`stylePresets.test.ts`). The pure parts live in `scripts/lib/sullyTemplate.ts` (tested); the
+  `/esr-update` review (`esr:review`) still diffs upstream against the bundled copy.
+- **Privacy**: `raw.githubusercontent.com` was already contacted for the ESR version check; the privacy policy's GitHub
+  row names Sully's live filter as a second purpose.
 
 ## Editor screen
 
@@ -531,8 +683,8 @@ Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-
 store at that moment so a target that already matches (the same filter after Save or Copy moved the route) is left
 alone: the draft route dispatches `open(id)`; the saved route redirects a local draft id to `/loot-filters/draft/:id`,
 else clears the sharing detail and dispatches `fetchSharedFilterRequested(id)` (without Supabase it only shows "not
-found"); a template route (`/loot-filters/sully`, `/loot-filters/example`) fetches that bundled file and dispatches
-`openSandbox` with `templateBasedOn(id)` (a failed fetch shows "Could not load <name>" with Try again, only on that
+found"); a template route (`/loot-filters/sully`, `/loot-filters/example`) loads that template (`loadTemplate`: live or
+bundled) and dispatches `openSandbox` with `templateBasedOn(id, version)` (a failed load, live and bundled shows "Could not load <name>" with Try again, only on that
 template's route). A sandbox without a saved filter matches the template route its `basedOn.template` names (Sully's
 when it names none). A second
 effect waits for the auth state and the fetched row, then dispatches `openSaved({ row, viewerId, authorLabel })`
@@ -570,7 +722,8 @@ mode: 'normal' | 'overwrite' | 'asNew' })` (`takeLeading`):
 
 1. signed out → `openSignInDialog()`; privacy policy not accepted → an error;
 2. `flushNow()`, then `selectSaveRequest` (null → "No changes to save");
-3. `checkSaveText`: at most 512 KB, readable by the lenient parser, a filter object with `formatVersion` 1 (validator
+3. `checkSaveText`: at most 2 MB (`FILTER_CONTENT_MAX_BYTES`, the `loot_filters_content_size` check of migration 007;
+   512 KB up to 2026-11-10, when Sully's v0.9.2 template alone outgrew it), readable by the lenient parser, a filter object with `formatVersion` 1 (validator
    errors and warnings do not block);
 4. insert (a new draft, or `asNew`): name, description, Private, the file metadata (`filterMetadata`), `esr_version`
    from `db.metadata` `esrVersion`, `plugin_version` = `LOOT_FILTER_PLUGIN_VERSION`, `based_on_*` from the draft's
@@ -590,7 +743,8 @@ writes name / description / is_private at once (no revision bump) and dispatches
 `fetchSourceFilterRequested(id)` loads a copy's source with its file into `sourceFilter`.
 
 **Sandbox** (someone else's filter, a signed-out visitor, or a bundled template, which reads "You are viewing <name>
-v<version>"): a banner "You are viewing X by Name#1234 — changes
+v<version>", for Sully's followed by ", the latest from Sully's GitHub" or ", the copy bundled with this site" and the
+reason on a line below, from `peekTemplateSource` when its version is the sandbox's): a banner "You are viewing X by Name#1234 — changes
 are not saved. Copy to my filters to keep them." with **Copy to my filters** (signed out with Supabase: the sign-in
 dialog; without Supabase it copies directly), **Like** (shared filters; signed out: sign-in), **Undo my changes** when
 edited, the author's profile link, the description, "Based on …" and the latest change note. Copy dispatches
@@ -604,20 +758,22 @@ revision shows the source's name and change note, prefetches its file (`fetchSou
 **Replace with the latest** (`takeUpdate` replace, as unsaved changes with the new `basedOn`; asks first when there are
 unsaved changes, which a draft always has; Discard changes then goes back to the saved version) and **Add as a new
 filter** (`takeUpdate` new, then the new draft's route). A never-saved draft is the only copy of its filter, so it gets
-only Add as a new filter (the banner says why, and the reducer refuses `replace` there). Either action applies only
-while the filter it was clicked on is still open (the template is fetched first). A missing source, or a saved copy
-that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
-that template's bundled version (or of unknown version) reads "<name> v<version> is bundled now; this filter started
-from v…" and offers the same two actions with that template's bundled file (`{ kind: 'template', template,
-fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
+only Add as a new filter (the banner says why, and the reducer refuses `replace` there). A missing source, or a saved copy
+that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A
+template `basedOn` older than the version of that template's text in use (`useTemplateSource`, live or bundled; a
+`basedOn` of unknown version counts as older) reads "<name> v<new> is out; this filter started from v<old>." (or
+"from an older version") and offers the same two actions with the very text and version the banner announced (`{ kind:
+'template', template, fromVersion, toVersion }`; the actions are synchronous, nothing is fetched on click). Nothing
+shows while the template loads or when its version is unknown, and a `basedOn.template` the registry does not know
+shows nothing.
 
-| Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Styles   | Style list (name, action count, "used by N rules", its look as a `StylePreview` with the minimap icon), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor, with the Basic / Advanced toggle (see the Rules tab). Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Whole-line `//` comments above a rule, style or setting are kept and show here (see "Section comments"); other comments are dropped by Apply and by any form edit. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
-| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules    | Rule list (summary, badges, problem dot, move up/down, duplicate, delete) with search and Add rule, next to the selected rule's editor: comment, the rule's problems, every condition with game-data pickers, then the actions editor. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Styles   | Style list (name, action count, "used by N rules", its look as a `StylePreview` with the minimap icon), Add style, Add preset (see [Style presets](#style-presets)), rename (rules' `useStyle` follow), duplicate ("Name (copy)"), delete (warns how many rules use it); the selected style opens the actions editor, with the Basic / Advanced toggle (see the Rules tab). Conditions found in a style are listed read-only ("styles hold actions only").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Settings | Title, author, version, description, update URL, hide unmatched items, sound volume; filter levels (id + name, add/remove, default level, "used by N rules", ids rules use that are missing); drop line and level change line; one colour-code select per quality.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| JSON     | The serialized file in a CodeMirror editor (JSONC highlighting, live syntax lint, folding, search, label chips): Apply (parse, as leniently as Upload; a syntax error shows line/column and selects the spot; the success toast spells out the text notes), Revert, Copy. The draft survives tab switches; leaving the page with unapplied text asks first (`beforeunload`); when an edit in another editor tab changed the filter meanwhile a note says Apply replaces those changes and Revert loads them. Whole-line `//` comments are kept and show here, with the blank lines between them: the header above `{`, comments above a setting, a rule or a style, and after the last rule (see "Section comments"); a comment at the end of a line, inside a rule, a style or another setting, and `/* */` blocks are dropped by Apply and by any form edit, with a warning. The help text under the editor says the same. Below it every problem with severity, path and message; a rule problem links to its rule (selects it, opens Rules), a problem with a path to its place in the text. See below. |
+| Test     | Describe an item (presets, item fields, unique/set, stats, location) and the context (difficulty, area, filter level, character level and stats); see the ground label, chat lines, sounds, icon and droplight, and a rule-by-rule trace. See below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 Settings changes dispatch the slice reducers directly; the only local state is what a half-typed number needs
 (`NumberInput`: a text input with a numeric keyboard that commits only valid numbers, so "-" or "1." is kept as typed
@@ -856,7 +1012,9 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
 - **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). One way to verify
   what the plugin reads is to print it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
   how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected
-  rule (so the rule becomes N + 1) and selects it; a toast says so, and keyboard focus moves to the new editor's title
+  rule (so the rule becomes N + 1), below the comments above it (`addRule` with `belowComments`: the test rule takes
+  them, so it sits in the rule's section, not at the end of the previous one), selects it and opens its headings in the
+  rule list; a toast says so, and keyboard focus moves to the new editor's title
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
   index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
   test rule (`inGameCheckRule`):
@@ -1415,7 +1573,7 @@ select only. Where a preset has two candidates, the one its sample and its examp
 | Preset            | Name              | Icon (size)                                           |
 | ----------------- | ----------------- | ----------------------------------------------------- |
 | High rune         | `HighRune`        | `diamond_red` (50)                                    |
-| Mid rune          | `MidRune`         | `diamond_orange` (40)                                 |
+| Mid rune          | `MidTierRune`     | `diamond_orange` (40)                                 |
 | Low rune          | `LowRune`         | none                                                  |
 | Unique            | `UniqueItem`      | `star_gold` (30); `crown_gold` stays a rule's choice  |
 | Set               | `SetItem`         | `star_green` (30)                                     |
@@ -1435,7 +1593,12 @@ select only. Where a preset has two candidates, the one its sample and its examp
 
 A rule's own `icon` overrides its style's, but no rule can remove it: the example picker handles a rule that wants
 none with a `<Name>NoIcon` copy of the style (see _Add selected_ under the Rules tab's example rules). Names are
-PascalCase without spaces like Sully's, none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows
+PascalCase without spaces like Sully's, none equal (in any case) to one of his style names: picking a preset whose name
+his filter already uses would keep his style (`styleChoice.ts` never overwrites one; the pick's toast says "The filter
+already has a style named X", the Styles tab's and the example rules' toasts say the same), so `stylePresets.test.ts`
+checks the names and their `NoIcon` copies (`presetNameClashes`) against his v0.9.2 styles (22, the frozen fixture) and
+against the bundled copy, `npm run loot-filter:template` prints any clash, and the Mid rune preset, `MidRune` until 2026-11-10, became
+`MidTierRune` when his v0.9.0 added a `MidRune` of his own. Filters that already hold a `MidRune` style keep it. The Styles tab's **Add preset** menu shows
 each with a `PresetPreview` and its description; the menu says the preset is copied "minimap icon included".
 
 **Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, maxIconSize?, className? })`
@@ -1631,7 +1794,9 @@ tab switches; it is not saved.
   (`STATS_WHILE_UNIDENTIFIED`) skips an unidentified item entirely (no actions, cannot hide it); the trace row says so
   ("Skipped: the item is unidentified and the rule checks an item stat…") and is shown without "Show skipped rules".
   A hide or `hideIfOtherConditionsFail` rule of this kind gets a validator warning (`checkHideOfUnidentified`), unless it
-  sets `isIdentified` or only matches inferior, normal or superior items: 1 rule of Sully's 225. An identified test item of
+  sets `isIdentified` or only matches inferior, normal or superior items (a name or number, a list of them, or a range
+  whose `max` is at most superior, like `{ "max": "superior" }`): none of Sully's 689 (up to v0.7.0 the validator missed
+  the range form and flagged his `{ "max": "superior" }` hide, rule 73, now rule 99). An identified test item of
   magic quality or above is also evaluated unidentified, and a note above the result says when the filter would then
   hide or show it the other way.
 - **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),
@@ -1687,8 +1852,9 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
   Download would save, so drafts, saved filters and sandboxes all work. Leaving the editor flushes as usual.
 - **The page** (a 1-2-3 explanation on top): (1) the request textarea (placeholder example; kept in `sessionStorage`
   `loot-filters/ai-request` so it survives a trip to the editor; storage errors are ignored) and **Start from**
-  (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, fetched with
-  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first), **My saved filters** when signed in
+  (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, listed by
+  name; the pick loads it with `useTemplateSource`, live or bundled, and the starter is labelled "<name> v<version>"),
+  a draft of this browser (`selectVisibleDrafts`, newest first), **My saved filters** when signed in
   (the sharing slice's My filters list, `fetchMyFiltersRequested` on mount and on an account switch; loading, failed and
   empty rows are disabled items; a filter with a local draft says "saved version; a draft has changes"; the list has no
   files, so a pick dispatches the sharing saga's detail fetch `fetchSharedFilterRequested` unless that filter's detail is
@@ -1742,7 +1908,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   `examples.md` (`buildExamples`): first the style presets (`DEFAULT_PROMPT_STYLE_PRESETS` from `STYLE_PRESETS`, each
   its name, description and `{ "Name": { … } }` block one key per line, icon included, with the note that a filter must
   copy every preset it uses into `styles` and that a rule's own icon replaces its style's but cannot remove it; a style
-  an example uses but the given presets lack is added: with the editor's presets that is `MidRuneNoIcon`), then the
+  an example uses but the given presets lack is added: with the editor's presets that is `MidTierRuneNoIcon`), then the
   example rules under their group headings and intros, each its title, description and the complete rule the picker
   adds with its default presentation (`examplesWithPresentation`: the examples built as one set with `buildExampleSet`
   against the shown presets, so a rule that wants no icon uses the NoIcon copy and no preset block is ever changed:
@@ -1762,8 +1928,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   per unique and set row with base, level and coupon/disabled notes, and every skill. Neither size lists the sounds.txt
   names (they were 263k, about half of Full, until 2026-11): the prompt and assets.md say game sounds exist and that the
   LLM asks the user for the exact name (the editor's Sound picker lists them; the validator warns on an unknown one), and
-  the page says so under the downloads. Sully's template (v0.7.0, 184k
-  characters) as the starter adds about 185k characters (Full with Sully's: about 546k).
+  the page says so under the downloads. Sully's template (472k
+  characters at v0.9.2; 184k up to v0.7.0) as the starter adds about 473k characters (Full with Sully's: about 835k).
 - **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
   blocks (backticks or tildes, any length, an unclosed last block included) that look like JSON (info `json`, `jsonc`,
   `json5`, `js`, none, or content starting with `{` or `//`) are tried last first and the first complete filter wins (a
@@ -1799,7 +1965,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   or have the person paste Copy problems for the AI back), the PROMPT.md rules for writing filters without the chat
   parts (request, starter, language, attached files, import reminder), the Section comments ruleset in full with an
   example (the test parses and validates it), every file with a one-line summary and its URL, the ESR version, the
-  plugin version and the bundled templates' URLs. Then `referenceFiles` at the **full** size under the AI page's
+  plugin version and the templates' URLs (for Sully's the live raw URL as the latest and the site copy as the
+  fallback; no template version, so his bumps do not change the pack). Then `referenceFiles` at the **full** size under the AI page's
   names: `FORMAT.md`, `examples.md`, `assets.md`, `item-types.csv`, `items.csv`, `stats.csv`, `uniques-sets.csv`,
   `areas.csv`, `skills.csv`, `skill-tabs.csv`, `classes.csv` (about 360 KB in all on ESR 3.3.03). The generator loads
   `lootfilter.json`, `types.json` and the manifest's `esrVersion` from `public/game-data/` as the page does (through

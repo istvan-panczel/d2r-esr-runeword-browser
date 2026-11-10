@@ -16,7 +16,9 @@ interface HeadingRowViewProps {
   readonly noun: string;
   /** Moving a section is off while a search filters the list. */
   readonly canMove: boolean;
-  readonly onToggle: (key: string) => void;
+  /** Folding is off while a search filters the list (a search lists its matches whatever is folded). Default true. */
+  readonly canFold?: boolean;
+  readonly onToggle: (row: HeadingRow) => void;
   readonly onEdit: (row: HeadingRow) => void;
   readonly onMove: (address: CommentAddress, direction: -1 | 1) => void;
   readonly onRemove: (address: CommentAddress) => void;
@@ -26,7 +28,18 @@ interface HeadingRowViewProps {
 }
 
 /** A `// ====` part or `// ----` section: click to fold; edit, add a rule, move the section, remove the heading. */
-export function HeadingRowView({ row, noun, canMove, onToggle, onEdit, onMove, onRemove, onAddItem, className }: HeadingRowViewProps) {
+export function HeadingRowView({
+  row,
+  noun,
+  canMove,
+  canFold = true,
+  onToggle,
+  onEdit,
+  onMove,
+  onRemove,
+  onAddItem,
+  className,
+}: HeadingRowViewProps) {
   const Chevron = row.collapsed ? ChevronRight : ChevronDown;
   const part = row.level === 1;
   const kind = part ? 'part' : 'section';
@@ -34,14 +47,15 @@ export function HeadingRowView({ row, noun, canMove, onToggle, onEdit, onMove, o
     <li data-section-heading={row.level} className={cn('group relative flex flex-wrap', part ? 'bg-muted' : 'bg-muted/40', className)}>
       <button
         type="button"
-        aria-expanded={!row.collapsed}
-        title={row.collapsed ? `Show the ${noun} of this ${kind}` : `Fold this ${kind}`}
+        disabled={!canFold}
+        aria-expanded={canFold ? !row.collapsed : undefined}
+        title={!canFold ? `Folds do not apply while searching` : row.collapsed ? `Show the ${noun} of this ${kind}` : `Fold this ${kind}`}
         className={cn(
-          'flex min-w-0 flex-1 basis-full items-center gap-1.5 py-1.5 pr-3 text-left hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset',
+          'flex min-w-0 flex-1 basis-full items-center gap-1.5 py-1.5 pr-3 text-left enabled:hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset',
           part ? 'pl-2 text-sm font-semibold' : 'pl-5 text-sm font-medium'
         )}
         onClick={() => {
-          onToggle(row.key);
+          onToggle(row);
         }}
       >
         <Chevron className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -190,7 +204,7 @@ interface SectionToolbarProps {
   readonly onExpandAll?: () => void;
 }
 
-/** Add section · Collapse all · Expand all, as small text buttons under a list's header. */
+/** Add section · Collapse all · Expand all, as small text buttons under a list's header (folds are remembered per filter). */
 export function SectionToolbar({ addWhere, onAdd, onCollapseAll, onExpandAll }: SectionToolbarProps) {
   const link = 'text-muted-foreground underline underline-offset-2 hover:text-foreground';
   return (
@@ -199,7 +213,7 @@ export function SectionToolbar({ addWhere, onAdd, onCollapseAll, onExpandAll }: 
         Add section
       </button>
       {onCollapseAll && (
-        <button type="button" className={link} onClick={onCollapseAll}>
+        <button type="button" className={link} title="Fold every heading: only the parts show" onClick={onCollapseAll}>
           Collapse all
         </button>
       )}

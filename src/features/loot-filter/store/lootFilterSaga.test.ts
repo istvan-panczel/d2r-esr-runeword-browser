@@ -195,6 +195,7 @@ describe('lootFilterSaga', () => {
       'copyToMyFilters',
       'takeUpdate',
       'selectRule',
+      'foldSelection',
     ]);
     // The module's action creators (functions with a `type` and `match`), by export name.
     const creators: (readonly [string, string])[] = [];

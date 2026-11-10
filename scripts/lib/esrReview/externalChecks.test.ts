@@ -50,10 +50,11 @@ describe('external checks', () => {
   });
 
   it("compares Sully's template and assets with upstream", () => {
-    const base = { upstreamText: 'x', upstreamVersion: '0.6.11', bundledText: 'x', bundledVersion: '0.6.11', constantVersion: '0.6.11' };
+    const base = { upstreamText: 'x', upstreamVersion: '0.6.11', bundledText: 'x', bundledVersion: '0.6.11' };
     expect(sullyTemplateCheck(base).status).toBe('ok');
     expect(sullyTemplateCheck({ ...base, upstreamText: 'y', upstreamVersion: '0.6.12' }).status).toBe('finding');
-    expect(sullyTemplateCheck({ ...base, constantVersion: '0.6.10' }).status).toBe('finding');
+    // Same version, other content (Sully often changes rules without a version bump): still a finding.
+    expect(sullyTemplateCheck({ ...base, upstreamText: 'y' }).status).toBe('finding');
     expect(sullyTemplateCheck({ ...base, upstreamText: null, error: 'timeout' }).status).toBe('info');
 
     const upstream = { icons: ['star.sprite'], sounds: ['gong.mp3', 'readme.txt'] };

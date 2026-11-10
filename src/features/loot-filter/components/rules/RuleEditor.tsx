@@ -216,10 +216,12 @@ interface RuleEditorProps {
   readonly rule: LootFilterRule;
   readonly diagnostics: readonly Diagnostic[];
   readonly data: LootFilterData;
+  /** After Check in game added its test rule (selected): the rule list shows it (opens its headings). */
+  readonly onRuleAdded?: () => void;
 }
 
 /** Comment, problems, every condition of the guide, then the actions. Every change dispatches `patchRule`. */
-export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEditorProps) {
+export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded }: RuleEditorProps) {
   const dispatch = useDispatch();
   const patch = (value: ShallowPatch<LootFilterRule>) => dispatch(patchRule({ index, patch: value }));
   const passthroughKeys = Object.keys(rule.passthrough ?? {});
@@ -252,7 +254,9 @@ export function RuleEditor({ filter, index, rule, diagnostics, data }: RuleEdito
   };
   const addCheck = () => {
     if (!check.ok) return;
-    dispatch(addRule({ rule: check.rule, at: index }));
+    // Right above this rule, in its section (below the comments above it), and shown there.
+    dispatch(addRule({ rule: check.rule, at: index, belowComments: true }));
+    onRuleAdded?.();
     toast.success(`Added rule ${String(index + 1)}: an in-game check for this rule (now rule ${String(index + 2)})`);
     // The test rule is selected and its editor has no Check button, so focus would fall to <body>: move it to the new
     // editor's title once it is rendered.

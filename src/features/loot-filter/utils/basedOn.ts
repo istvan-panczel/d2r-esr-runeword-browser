@@ -13,8 +13,11 @@ type BasedOnColumns = Pick<
 export const BASED_ON_VERSION_MAX_LENGTH = 50;
 export const BASED_ON_LABEL_MAX_LENGTH = 200;
 
-/** A template version as the bundled files write it ("0.6.11", optionally "v0.6.11"): one to four numeric parts. */
-const TEMPLATE_VERSION_PATTERN = /^v?\d{1,10}(\.\d{1,10}){0,3}$/i;
+/**
+ * The numeric start of a template version: optional "v", one to four numeric parts (or a leading-dot decimal such as
+ * Sully's early ".5"), then the end or anything that is not another part ("-beta", "-rc1", " (test)").
+ */
+const TEMPLATE_VERSION_PATTERN = /^v?(\d{1,10}(?:\.\d{1,10}){0,3}|\.\d{1,10})(?![\d.]*\d)/i;
 
 /** `text` cut to `max` characters (code points, so a surrogate pair is never split). */
 function clip(text: string, max: number): string {
@@ -22,20 +25,22 @@ function clip(text: string, max: number): string {
   return characters.length <= max ? text : characters.slice(0, max).join('');
 }
 
-/** `basedOn` of a filter started from a bundled template at `version` (default: the bundled one; null: unknown). */
-export function templateBasedOn(id: BundledTemplateId, version: string | null = BUNDLED_TEMPLATES[id].version): LootFilterBasedOn {
+/** `basedOn` of a filter started from a bundled template at `version` (the version of the text it started from; null: unknown). */
+export function templateBasedOn(id: BundledTemplateId, version: string | null): LootFilterBasedOn {
   const { name } = BUNDLED_TEMPLATES[id];
   return version === null ? { template: id, label: name } : { template: id, version, label: `${name} v${version}` };
 }
 
 /**
- * A file's `version` as a template version ("v0.6.3" → "0.6.3"), or null when it does not look like one (a file can
- * hold any text there; only a dotted number is compared with the bundled version and saved as `based_on_version`).
+ * A file's `version` as a template version: its numeric start ("v0.6.3" → "0.6.3", "0.9.3-beta" → "0.9.3", "1.0.0-rc1"
+ * → "1.0.0", ".5" → "0.5"), or null when it has none ("latest", "beta 2", five parts). A file can hold any text there;
+ * only this number is compared with the current template version and saved as `based_on_version` (at most 43
+ * characters, within its 50). A pre-release reads as its release: "0.9.3-beta" and "0.9.3" compare equal.
  */
 export function templateVersionOf(version: string | undefined): string | null {
-  const trimmed = version?.trim() ?? '';
-  if (trimmed.length > BASED_ON_VERSION_MAX_LENGTH || !TEMPLATE_VERSION_PATTERN.test(trimmed)) return null;
-  return trimmed.replace(/^v/i, '');
+  const match = TEMPLATE_VERSION_PATTERN.exec(version?.trim() ?? '');
+  if (match === null) return null;
+  return match[1].startsWith('.') ? `0${match[1]}` : match[1];
 }
 
 /** Folds case and outer spaces for comparing a file's title or author. */
@@ -44,7 +49,7 @@ function fold(text: string | undefined): string {
 }
 
 /** The bundled template a file is, by its `title` (or Sully's `author`); null when it names none of them. */
-function templateOfFile(title: string | undefined, author: string | undefined): BundledTemplateId | null {
+export function templateOfFile(title: string | undefined, author: string | undefined): BundledTemplateId | null {
   if (fold(title) === fold(SULLYS_QOL_TEMPLATE.name) || fold(author) === fold(SULLYS_QOL_TEMPLATE.author)) return SULLYS_QOL_TEMPLATE.id;
   if (fold(title) === fold(EXAMPLE_TEMPLATE.name)) return EXAMPLE_TEMPLATE.id;
   return null;
@@ -76,13 +81,23 @@ export interface TemplateStartInput {
 }
 
 /**
- * The draft that Start from a bundled template adds: named after the template, recording it at its bundled version.
- * Throws when the fetched `text` cannot be read as a filter (a broken deploy or an HTML error page).
+ * The draft that Start from a bundled template adds: named after the template, recording it at the version of the
+ * text it starts from (a `TemplateSource` of `loadTemplate`). Throws when the text cannot be read as a filter (a broken
+ * deploy or an HTML error page).
  */
-export function templateStartInput(id: BundledTemplateId, text: string): TemplateStartInput {
-  const check = checkFilterText(text);
+export function templateStartInput(source: {
+  readonly id: BundledTemplateId;
+  readonly text: string;
+  readonly version: string | null;
+}): TemplateStartInput {
+  const check = checkFilterText(source.text);
   if (!check.ok) throw new Error(check.message);
-  return { name: BUNDLED_TEMPLATES[id].name, text, source: 'template', basedOn: templateBasedOn(id) };
+  return {
+    name: BUNDLED_TEMPLATES[source.id].name,
+    text: source.text,
+    source: 'template',
+    basedOn: templateBasedOn(source.id, source.version),
+  };
 }
 
 /** A draft's `basedOn`, inferred for old template drafts that do not record one. */

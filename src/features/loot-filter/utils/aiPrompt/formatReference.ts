@@ -31,7 +31,7 @@ import {
   type RuleConditions,
 } from '../../engine/types';
 import { validateLootFilter } from '../../engine/validate';
-import { FILTER_CONTENT_MAX_BYTES } from '../../sharing/constants';
+import { FILTER_CONTENT_MAX_LABEL } from '../../sharing/constants';
 import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS } from '../bundledAssets';
 import { buildExampleSet, defaultChoices, EXAMPLE_GROUPS, type ExampleRule } from '../exampleRules';
 import { STYLE_PRESETS } from '../stylePresets';
@@ -373,7 +373,7 @@ function limitsSection(): string {
     `- Unidentified items: a rule that checks an item stat (stat lists or a formula) skips an unidentified item entirely: none of its actions run and it cannot hide it. ${list(STATS_WHILE_UNIDENTIFIED)} still work. Magic and rare drops are unidentified, so a hide rule with stat exceptions does not hide them until identified.`,
     '- Chat lines and sounds play once per item. The launcher\'s "Enable chat notifications" (selection.json `chatNotifications`) turns every item chat line off, and "Play sounds" every sound.',
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
-    `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
+    `- The plugin documents no size limit; the app saves filters up to ${FILTER_CONTENT_MAX_LABEL}.`,
   ].join('\n');
 }
 
@@ -382,7 +382,7 @@ function jsonStyleSection(): string {
     '## Writing the file for the app',
     '',
     "- Strict JSON: double quotes, no trailing commas. Comments are whole `//` lines: the plugin skips them anywhere, and the app keeps them on every edit above the opening `{` (the filter's header), above a top-level key, a rule, a disabled rule or a style, and after the last rule. It drops, on its first edit and with a warning, a comment on the same line as a rule, a comment inside a rule or style object and every `/* */` block.",
-    '- Sections: `// ==== Title` starts a part and `// ---- Title` a section inside it (four or more `=` or `-` right after `//`; a run of three or more after the title is decoration; a line of markers only is a separator). Other `//` lines right under a heading describe it; other `//` lines between rules are notes. A section runs to the next heading of the same or a higher level; the same works between styles. Rule numbers (`R###` in the plugin log) do not change. A file without headings shows no comment rows in the app (its comments are still kept).',
+    '- Sections: `// ==== Title` starts a part and `// ---- Title` a section inside it (four or more `=` or `-` right after `//`; a run of three or more after the title is decoration; a line of markers only is a separator). Other `//` lines right under a heading describe it, up to a blank line; other `//` lines between rules are notes (a blank line ends a description or a note; `//` alone is an empty comment line, not a blank line). A section runs to the next heading of the same or a higher level; the same works between styles. Rule numbers (`R###` in the plugin log) do not change. A file without headings shows no comment rows in the app (its comments are still kept).',
     '- Give every rule a `"comment"` too: a short title the app lists ("R012 | Gold < 1000 | hide at L3", "Hide magic weapons without +skills (Strict)"). Section comments group rules; they do not replace it.',
     '- To switch a rule off, do not comment it out (a commented-out rule is only a note): the app\'s rule toggle moves it to `disabledRules` (`{ "at": <index>, "rule": {…} }`), which the plugin ignores.',
     '- Keys inside a rule: conditions, then actions, then nothing else. Unknown keys are kept but ignored by the game.',

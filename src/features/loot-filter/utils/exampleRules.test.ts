@@ -149,7 +149,7 @@ describe('EXAMPLE_RULES', () => {
       'gem_gold 27',
       'map_white 40',
     ]);
-    // The quiet ones: low runes (a preset without an icon), Hel to Um (no icon although MidRune has one), unstyled tags.
+    // The quiet ones: low runes (a preset without an icon), Hel to Um (no icon although MidTierRune has one), unstyled tags.
     expect(['low-runes', 'kanji-runes', 'mid-runes', 'socket-count-tag', 'elite-set-chat'].map(shown)).toEqual([
       undefined,
       undefined,
@@ -327,7 +327,7 @@ describe('buildExampleSet: every rule gets exactly the icon it chose', () => {
     const ids = ['high-runes', 'upper-runes', 'mid-runes', 'unique-items', 'unique-jewellery', 'set-items'];
     const state = { ...setExamplesSelected(INITIAL_PICKER_STATE, ids, true), noIcons: true };
     const set = buildStarterRules(state);
-    expect(Object.keys(set.styles)).toEqual(['MidRune', 'HighRune', 'UniqueItem', 'SetItem']);
+    expect(Object.keys(set.styles)).toEqual(['MidTierRune', 'HighRune', 'UniqueItem', 'SetItem']);
     for (const style of Object.values(set.styles)) expect(style.icon).toBeUndefined();
     expect(outcome(set).every((rule) => rule.shows === undefined)).toBe(true);
   });

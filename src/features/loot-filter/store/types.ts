@@ -100,6 +100,12 @@ export interface LootFilterEditorState {
   readonly textNotes: readonly Diagnostic[];
   readonly selectedRule: number | null;
   /**
+   * The selected rule was folded away by hand (its heading folded, or Collapse all): the rule list does not keep it in
+   * view under its folded headings. It belongs to the selection, so it follows the rule when an edit moves its index
+   * (a rule deleted or moved above it), and ends when another rule is selected or added, or the selection ends.
+   */
+  readonly selectionFolded: boolean;
+  /**
    * True when the model has edits not yet written back (draft: to the entry's `text`; saved: to its draft). The
    * sandbox never writes, so there it means "edited since it was opened".
    */

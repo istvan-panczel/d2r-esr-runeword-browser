@@ -19,7 +19,9 @@ import {
   type SharedFilterSummary,
 } from '../../sharing';
 import { selectLibraryHydrated, selectVisibleDrafts } from '../../store/selectors';
+import { useTemplateVersions } from '../../hooks/useTemplateSource';
 import { filterUpdateStatus, sourceIdsOf, type FilterUpdateStatus } from '../../utils/library';
+import { bundledTemplate } from '../../utils/template';
 import { DraftsSection } from './DraftsSection';
 import { SharedFilterCard } from './SharedFilterCard';
 import { SharedFilterCardSkeleton } from './SharedFilterCardSkeleton';
@@ -114,6 +116,8 @@ function SavedFilters({ viewerId, drafts }: SavedFiltersProps) {
   const status = useSelector(selectMyFiltersStatus);
   const error = useSelector(selectMyFiltersError);
   const sourceRevisions = useSelector(selectSourceRevisions);
+  // The current version of the templates the saved filters started from (none loaded when no filter is template-based).
+  const templateVersions = useTemplateVersions(filters.flatMap((filter) => bundledTemplate(filter.based_on_template)?.id ?? []));
 
   useEffect(() => {
     dispatch(fetchMyFiltersRequested());
@@ -170,7 +174,11 @@ function SavedFilters({ viewerId, drafts }: SavedFiltersProps) {
               key={filter.id}
               filter={filter}
               badges={
-                <SavedFilterBadges filter={filter} edited={editedIds.has(filter.id)} status={filterUpdateStatus(filter, sourceRevisions)} />
+                <SavedFilterBadges
+                  filter={filter}
+                  edited={editedIds.has(filter.id)}
+                  status={filterUpdateStatus(filter, sourceRevisions, templateVersions)}
+                />
               }
             />
           ))}

@@ -18,13 +18,13 @@ Red name on a white plate, thick red border and a red beam: the drops worth stop
 }
 ```
 
-## MidRune
+## MidTierRune
 
 Orange name on black with an orange border: good runes you still pick up.
 
 ```json
 {
-  "MidRune": {
+  "MidTierRune": {
     "replaceName": "ÿc8{name}",
     "labelBackground": [0,0,0,230],
     "labelBorder": {"color":[255,168,0,255],"width":1},
@@ -261,11 +261,11 @@ Grey name on a faint box: shown, but out of the way (the soft alternative to hid
 }
 ```
 
-## MidRuneNoIcon
+## MidTierRuneNoIcon
 
 ```json
 {
-  "MidRuneNoIcon": {
+  "MidTierRuneNoIcon": {
     "replaceName": "ÿc8{name}",
     "labelBackground": [0,0,0,230],
     "labelBorder": {"color":[255,168,0,255],"width":1}
@@ -300,7 +300,7 @@ Hel (r65) to Um (r72) get a box and a border, still without a sound.
 ```json
 {
   "itemCodes": ["r65","r66","r67","r68","r69","r70","r71","r72"],
-  "useStyle": "MidRuneNoIcon",
+  "useStyle": "MidTierRuneNoIcon",
   "comment": "Mid runes: Hel to Um"
 }
 ```
@@ -314,7 +314,7 @@ Mal (r73), Ist (r74) and Gul (r75): the mid-rune look plus a sound, an orange di
   "itemCodes": ["r73","r74","r75"],
   "chatMessage": "ÿc8Rune: ÿc0{name}",
   "sound": "mid.mp3",
-  "useStyle": "MidRune",
+  "useStyle": "MidTierRune",
   "comment": "Mal, Ist and Gul runes"
 }
 ```
@@ -354,7 +354,7 @@ No (r36) to Re (r42), which Sully calls the gold runes: the mid-rune look with a
   "itemCodes": ["r36","r37","r38","r39","r40","r41","r42"],
   "chatMessage": "ÿc8ESR rune: ÿc0{name}",
   "sound": "mid.mp3",
-  "useStyle": "MidRune",
+  "useStyle": "MidTierRune",
   "comment": "ESR kanji runes: No to Re"
 }
 ```

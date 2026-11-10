@@ -12,11 +12,14 @@ import {
   templateStartInput,
   templateVersionOf,
 } from './basedOn';
-import { EXAMPLE_TEMPLATE, SULLYS_QOL_TEMPLATE } from './template';
 
-const bundledText = (file: string) => readFileSync(resolve(process.cwd(), 'public/loot-filters', file), 'utf8');
-const SULLY_TEXT = bundledText(SULLYS_QOL_TEMPLATE.file);
-const EXAMPLE_TEXT = bundledText(EXAMPLE_TEMPLATE.file);
+const SULLY_TEXT = readFileSync(
+  resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'),
+  'utf8'
+);
+/** The example filter's own text at version 1.5.0 (only its title and version matter here). */
+const EXAMPLE_TEXT =
+  '{"formatVersion": 1, "title": "Example filter (with explanations)", "version": "1.5.0", "rules": [{"itemCodes": ["r01"]}]}';
 
 /** A minimal file with Sully's title (old template drafts are his filter). */
 const sullyFile = (version: string | null) =>
@@ -25,23 +28,23 @@ const sullyFile = (version: string | null) =>
 const ENTRY: LootFilterEntry = { id: 'a', name: 'A', source: 'template', createdAt: 1, updatedAt: 1, text: sullyFile('0.5.0') };
 
 describe('template basedOn', () => {
-  it('defaults to the bundled version of each template', () => {
-    expect(templateBasedOn('sullys-qol')).toEqual({
+  it('records the template at the given version', () => {
+    expect(templateBasedOn('sullys-qol', '0.9.2')).toEqual({
       template: 'sullys-qol',
-      version: SULLYS_QOL_TEMPLATE.version,
-      label: `Sully's QoL Filter v${SULLYS_QOL_TEMPLATE.version}`,
+      version: '0.9.2',
+      label: "Sully's QoL Filter v0.9.2",
     });
-    expect(templateBasedOn('example')).toEqual({
+    expect(templateBasedOn('example', '2.2.0')).toEqual({
       template: 'example',
-      version: EXAMPLE_TEMPLATE.version,
-      label: `Example filter (with explanations) v${EXAMPLE_TEMPLATE.version}`,
+      version: '2.2.0',
+      label: 'Example filter (with explanations) v2.2.0',
     });
     expect(templateBasedOn('example', null)).toEqual({ template: 'example', label: 'Example filter (with explanations)' });
   });
 
-  it('infers the template of an old template draft from the bundled files', () => {
-    expect(inferTemplateBasedOn(SULLY_TEXT)).toEqual(templateBasedOn('sullys-qol'));
-    expect(inferTemplateBasedOn(EXAMPLE_TEXT)).toEqual(templateBasedOn('example'));
+  it('infers the template of an old template draft from its file', () => {
+    expect(inferTemplateBasedOn(SULLY_TEXT)).toEqual(templateBasedOn('sullys-qol', '0.9.2'));
+    expect(inferTemplateBasedOn(EXAMPLE_TEXT)).toEqual(templateBasedOn('example', '1.5.0'));
   });
 
   it("infers Sully's by its title or author, the example by its title, else no template", () => {
@@ -65,6 +68,13 @@ describe('template basedOn', () => {
     expect(inferTemplateBasedOn(sullyFile(`0.${'1'.repeat(60)}`))).toEqual(unknown);
     expect(inferTemplateBasedOn(sullyFile('1.2.3.4.5'))).toEqual(unknown);
     expect(templateVersionOf('0.6.11')).toBe('0.6.11');
+    // The numeric start of a pre-release, and a leading-dot decimal.
+    expect(templateVersionOf('0.9.3-beta')).toBe('0.9.3');
+    expect(templateVersionOf('1.0.0-rc1')).toBe('1.0.0');
+    expect(templateVersionOf('1.2 (test)')).toBe('1.2');
+    expect(templateVersionOf('.5')).toBe('0.5');
+    expect(inferTemplateBasedOn(sullyFile('0.9.3-beta'))).toEqual(templateBasedOn('sullys-qol', '0.9.3'));
+    expect(templateVersionOf('latest')).toBeNull();
     expect(templateVersionOf(undefined)).toBeNull();
     expect(templateVersionOf('')).toBeNull();
   });
@@ -77,18 +87,19 @@ describe('template basedOn', () => {
     expect(entryBasedOn({ ...ENTRY, text: '{"formatVersion": 1, "title": "Mine", "rules": []}' })).toBeNull();
   });
 
-  it('templateStartInput names the draft after the template and records it at its bundled version', () => {
-    expect(templateStartInput('example', EXAMPLE_TEXT)).toEqual({
+  it('templateStartInput names the draft after the template and records the version of the source it starts from', () => {
+    expect(templateStartInput({ id: 'example', text: EXAMPLE_TEXT, version: '1.5.0' })).toEqual({
       name: 'Example filter (with explanations)',
       text: EXAMPLE_TEXT,
       source: 'template',
-      basedOn: { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' },
+      basedOn: { template: 'example', version: '1.5.0', label: 'Example filter (with explanations) v1.5.0' },
     });
-    expect(templateStartInput('sullys-qol', SULLY_TEXT)).toMatchObject({
+    expect(templateStartInput({ id: 'sullys-qol', text: SULLY_TEXT, version: '0.9.3' })).toMatchObject({
       name: "Sully's QoL Filter",
-      basedOn: templateBasedOn('sullys-qol'),
+      basedOn: templateBasedOn('sullys-qol', '0.9.3'),
     });
-    expect(() => templateStartInput('example', '<!doctype html><html></html>')).toThrow();
+    expect(templateStartInput({ id: 'sullys-qol', text: SULLY_TEXT, version: null }).basedOn).toEqual(templateBasedOn('sullys-qol', null));
+    expect(() => templateStartInput({ id: 'example', text: '<!doctype html><html></html>', version: '1.0' })).toThrow();
   });
 });
 
@@ -108,7 +119,7 @@ describe('row mapping', () => {
 
   it('writes them back', () => {
     expect(basedOnColumns(null)).toEqual(NONE);
-    for (const template of [templateBasedOn('sullys-qol'), templateBasedOn('example')]) {
+    for (const template of [templateBasedOn('sullys-qol', '0.9.2'), templateBasedOn('example', '2.2.0')]) {
       expect(basedOnFromRow(basedOnColumns(template))).toEqual(template);
     }
   });

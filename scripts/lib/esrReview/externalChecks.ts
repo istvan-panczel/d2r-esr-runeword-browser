@@ -152,26 +152,13 @@ export interface TemplateInputs {
   upstreamVersion: string | null;
   bundledText: string;
   bundledVersion: string | null;
-  /** SULLYS_QOL_TEMPLATE.version */
-  constantVersion: string | null;
   /** The request error when upstream could not be fetched */
   error?: string;
 }
 
 export function sullyTemplateCheck(input: TemplateInputs): Check {
   const title = "Sully's template";
-  const lines = [
-    `upstream v${input.upstreamVersion ?? '—'}, bundled file v${input.bundledVersion ?? '—'}, SULLYS_QOL_TEMPLATE.version ${input.constantVersion ?? '—'}`,
-  ];
-  if (input.bundledVersion !== input.constantVersion) {
-    return finding(
-      'lootfilter.template',
-      title,
-      `The bundled file is v${input.bundledVersion ?? '—'}, SULLYS_QOL_TEMPLATE.version says ${input.constantVersion ?? '—'}`,
-      'drafts record the constant as their basedOn version, so "Update available" and the credit line are wrong (template.test.ts fails)',
-      lines
-    );
-  }
+  const lines = [`upstream v${input.upstreamVersion ?? '—'}, bundled file v${input.bundledVersion ?? '—'}`];
   if (input.upstreamText === null)
     return info('lootfilter.template', title, `Upstream could not be fetched (${input.error ?? 'error'}).`, lines);
   if (input.upstreamText !== input.bundledText) {
@@ -179,7 +166,7 @@ export function sullyTemplateCheck(input: TemplateInputs): Check {
       'lootfilter.template',
       title,
       `Upstream differs from public/loot-filters/sullys-qol-filter.json (v${input.upstreamVersion ?? '—'} vs v${input.bundledVersion ?? '—'})`,
-      "players get the upstream filter live from the launcher, so the editor's template and sandbox show an older filter: refresh the copy, the constant and the credit",
+      'the app loads the upstream file live, but falls back to this copy when GitHub cannot be reached or the file is broken: run npm run loot-filter:template',
       lines
     );
   }

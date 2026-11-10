@@ -64,6 +64,7 @@ import { get, mapLimited, MAX_PARALLEL } from './lib/esrReview/net.ts';
 import { countByStatus, formatMarkdown, formatText, skipped, type Check, type ReviewReport } from './lib/esrReview/report.ts';
 import { commitsCheck, coverageCheck, featureCommits, warningClassesInSource } from './lib/esrReview/selfCheck.ts';
 import { importSrc } from './lib/srcImport.ts';
+import { githubRepoSlug } from './lib/sullyTemplate.ts';
 import { DOCS_PAGES_BY_TABLE, docsLagCheck } from './lib/esrReview/docsLag.ts';
 import { mapBossesOf, mapBossPageCheck, mapBossPageLines, type BossCardOf } from './lib/esrReview/mapBosses.ts';
 import { citationsIn, isReferenceCandidate, referencesCheck } from './lib/esrReview/references.ts';
@@ -78,8 +79,6 @@ const LOOT_FILTERS_DIR = 'public/loot-filters';
 const SULLY_FILE = 'sullys-qol-filter.json';
 const EXAMPLE_FILE = 'example-filter.json';
 const PREVIOUS_FIXTURES_DIR = 'test-fixtures/previous';
-const SULLY_REPO = 'Thisisnotsully/QoL-Filter';
-const SULLY_RAW_URL = `https://raw.githubusercontent.com/${SULLY_REPO}/main/Sullys-QoL-Filter.json`;
 /** Folders whose files may quote the ESR version as a current fact */
 const VERSION_DOC_DIRS = ['docs', 'content', 'builds-feature-docs', '.claude'];
 /** What the skill's self-update step watches: commits after the last change to these */
@@ -244,7 +243,8 @@ function templateValidation(
 
 interface TemplateConstants {
   LOOT_FILTER_PLUGIN_VERSION: string;
-  SULLYS_QOL_TEMPLATE: { version: string };
+  /** The app's live URL and repository of Sully's filter (the review checks the same file the app loads). */
+  SULLYS_QOL_TEMPLATE: { liveUrl?: string; repoUrl?: string };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -315,8 +315,8 @@ async function discord(url: string): Promise<Check> {
   return discordCheck(code, body, error);
 }
 
-async function githubListing(folder: string): Promise<{ names: string[] | null; error: string | null }> {
-  const result = await get(`https://api.github.com/repos/${SULLY_REPO}/contents/${folder}`, true, {
+async function githubListing(repo: string, folder: string): Promise<{ names: string[] | null; error: string | null }> {
+  const result = await get(`https://api.github.com/repos/${repo}/contents/${folder}`, true, {
     Accept: 'application/vnd.github+json',
   });
   if (result.body === null || result.status !== 200) return { names: null, error: result.error ?? `HTTP ${String(result.status)}` };
@@ -337,19 +337,24 @@ async function githubListing(folder: string): Promise<{ names: string[] | null; 
 
 const filterVersion = (text: string | null) => (text === null ? null : (parseLootFilter(text).filter.version ?? null));
 
-async function sully(constants: TemplateConstants | null): Promise<Check[]> {
+async function sully(constant: TemplateConstants['SULLYS_QOL_TEMPLATE'] | undefined): Promise<Check[]> {
+  const liveUrl = constant?.liveUrl;
+  const repo = constant?.repoUrl === undefined ? null : githubRepoSlug(constant.repoUrl);
+  if (liveUrl === undefined || repo === null) {
+    const reason = 'SULLYS_QOL_TEMPLATE (utils/template.ts) could not be loaded or has no liveUrl / GitHub repoUrl.';
+    return [skipped('lootfilter.template', "Sully's template", reason), skipped('lootfilter.assets', "Sully's icons and sounds", reason)];
+  }
   const bundledText = workingText(`${LOOT_FILTERS_DIR}/${SULLY_FILE}`) ?? '';
-  const upstream = await get(SULLY_RAW_URL, true);
+  const upstream = await get(liveUrl, true);
   const upstreamText = upstream.body !== null && upstream.status === 200 ? upstream.body.toString('utf8') : null;
   const template = sullyTemplateCheck({
     upstreamText,
     upstreamVersion: filterVersion(upstreamText),
     bundledText,
     bundledVersion: filterVersion(bundledText),
-    constantVersion: constants?.SULLYS_QOL_TEMPLATE.version ?? null,
     ...(upstreamText === null ? { error: upstream.error ?? `HTTP ${String(upstream.status)}` } : {}),
   });
-  const [icons, sounds] = await Promise.all([githubListing('icons'), githubListing('sounds')]);
+  const [icons, sounds] = await Promise.all([githubListing(repo, 'icons'), githubListing(repo, 'sounds')]);
   const localNames = (folder: string) => {
     const dir = join(REPO_ROOT, LOOT_FILTERS_DIR, folder);
     return existsSync(dir) ? readdirSync(dir) : [];
@@ -574,7 +579,7 @@ async function main(): Promise<void> {
       const reason = `navConfig.ts / guideHome.ts could not be loaded: ${error instanceof Error ? error.message : String(error)}`;
       checks.push(skipped('net.links', 'External links', reason), skipped('net.discord', 'Discord invite', reason));
     }
-    checks.push(...(await sully(constants)));
+    checks.push(...(await sully(constants?.SULLYS_QOL_TEMPLATE)));
   }
 
   // 15. Docs quoting the old version

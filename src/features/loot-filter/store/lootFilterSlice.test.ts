@@ -19,11 +19,13 @@ import reducer, {
   editRuleComments,
   editStyleComments,
   editorFlushed,
+  foldSelection,
   hydrate,
   importText,
   initialState,
   moveRule,
   open,
+  stepRule,
   patchRule,
   remove,
   removeRule,
@@ -638,9 +640,29 @@ describe('comments above rules belong to their place', () => {
   const openRules = (...rules: LootFilterRule[]) => openState({ formatVersion: 1, rules, leadingComments: [] });
   const view = (state: LootFilterState) => state.editor.filter?.rules.map((entry) => [entry.comment, entry.commentsBefore]);
 
-  it('hands the comments of a deleted rule to the next one', () => {
+  it('adds a rule above another one inside its section with belowComments (Check in game)', () => {
+    const start = openRules(rule('a'), rule('b', ['// ---- Section', '// about']));
+    const below = reducer(start, addRule({ rule: rule('check'), at: 1, belowComments: true }));
+    expect(view(below)).toEqual([
+      ['a', undefined],
+      ['check', ['// ---- Section', '// about']],
+      ['b', undefined],
+    ]);
+    expect(below.editor.selectedRule).toBe(1);
+    // Without it the comments stay at their place, so the new rule ends the previous section.
+    expect(view(reducer(start, addRule({ rule: rule('new'), at: 1 })))?.[1]).toEqual(['new', undefined]);
+    // A rule without comments above it: a plain insert.
+    expect(view(reducer(start, addRule({ rule: rule('check'), at: 0, belowComments: true })))?.map(([name]) => name)).toEqual([
+      'check',
+      'a',
+      'b',
+    ]);
+  });
+
+  it('hands the comments of a deleted rule to the next one, a blank line apart', () => {
+    // The blank line keeps "note" the next rule's own comment, not the part's description.
     const state = reducer(openRules(rule('a', heading), rule('b', ['// note'])), removeRule(0));
-    expect(view(state)).toEqual([['b', ['// ==== Part', '// note']]]);
+    expect(view(state)).toEqual([['b', ['// ==== Part', '', '// note']]]);
   });
 
   it('keeps the comments of a deleted last rule after the list', () => {
@@ -649,13 +671,42 @@ describe('comments above rules belong to their place', () => {
     expect(state.editor.filter?.rulesEndComments).toEqual(heading);
   });
 
-  it('leaves the comments in place when a rule moves', () => {
-    const state = reducer(openRules(rule('a'), rule('b', heading), rule('c')), moveRule({ from: 1, to: 0 }));
-    expect(view(state)).toEqual([
+  it('moves a rule with its own notes and leaves headings at their place', () => {
+    // b (the first rule of Part) moving up hops over the heading: it leaves the part, nothing else moves.
+    const hop = reducer(reducer(openRules(rule('a'), rule('b', heading), rule('c')), selectRule(1)), stepRule({ index: 1, direction: -1 }));
+    expect(view(hop)).toEqual([
+      ['a', undefined],
       ['b', undefined],
-      ['a', heading],
-      ['c', undefined],
+      ['c', heading],
     ]);
+    expect(hop.editor.selectedRule).toBe(1);
+    // c (with its own note) swaps with b; each keeps its note.
+    const swap = reducer(openRules(rule('a'), rule('b', ['// nb']), rule('c', ['// nc'])), stepRule({ index: 2, direction: -1 }));
+    expect(view(swap)).toEqual([
+      ['a', undefined],
+      ['c', ['// nc']],
+      ['b', ['// nb']],
+    ]);
+    // moveRule by index: steps until the index is reached.
+    const moved = reducer(openRules(rule('a'), rule('b', heading), rule('c')), moveRule({ from: 2, to: 0 }));
+    expect(view(moved)).toEqual([
+      ['c', undefined],
+      ['a', undefined],
+      ['b', heading],
+    ]);
+  });
+
+  it('keeps the folded-away mark on the moved rule and does nothing at an edge', () => {
+    const start = reducer(reducer(openRules(rule('a'), rule('b', heading)), selectRule(0)), foldSelection());
+    const down = reducer(start, stepRule({ index: 0, direction: 1 }));
+    expect(down.editor).toMatchObject({ selectedRule: 0, selectionFolded: true });
+    // a hops below the heading: it is now the part's first rule.
+    expect(view(down)).toEqual([
+      ['a', heading],
+      ['b', undefined],
+    ]);
+    const top = openRules(rule('a'), rule('b'));
+    expect(reducer(top, stepRule({ index: 0, direction: -1 }))).toBe(top);
   });
 
   it('does not copy the comments to a duplicate', () => {
@@ -715,5 +766,37 @@ describe('section comment reducers', () => {
       styles: { A: { hide: true, commentsBefore: ['// ---- Looks'] }, B: { hide: true } },
     });
     expect(reducer(withStyles, removeStyle('A')).editor.filter?.styles).toEqual({ B: { hide: true, commentsBefore: ['// ---- Looks'] } });
+  });
+});
+
+describe('a selection folded away by hand', () => {
+  const rules = Array.from({ length: 12 }, (_, n): LootFilterRule => ({ comment: String(n), hide: true }));
+  const opened = (selected: number) =>
+    reducer(reducer(openState({ formatVersion: 1, rules, leadingComments: [] }), selectRule(selected)), foldSelection());
+
+  it('marks the selection, and nothing without one', () => {
+    expect(opened(5).editor.selectionFolded).toBe(true);
+    const none = reducer(openState({ formatVersion: 1, rules, leadingComments: [] }), foldSelection());
+    expect(none.editor.selectionFolded).toBe(false);
+  });
+
+  it('ends when another rule is selected, so that rule moved into the folded section stays listed', () => {
+    // Rule 5 folded away; rule 6 selected and moved up into its place: the mark is not on it.
+    const moved = reducer(reducer(opened(5), selectRule(6)), moveRule({ from: 6, to: 5 }));
+    expect(moved.editor).toMatchObject({ selectedRule: 5, selectionFolded: false });
+  });
+
+  it('follows its rule when a rule above it is deleted or moved', () => {
+    const deleted = reducer(opened(10), removeRule(3));
+    expect(deleted.editor).toMatchObject({ selectedRule: 9, selectionFolded: true });
+    const movedAbove = reducer(opened(10), moveRule({ from: 2, to: 11 }));
+    expect(movedAbove.editor).toMatchObject({ selectedRule: 9, selectionFolded: true });
+  });
+
+  it('ends when a rule is added, copied or the selection is deleted', () => {
+    expect(reducer(opened(5), addRule({ at: 6 })).editor.selectionFolded).toBe(false);
+    expect(reducer(opened(5), duplicateRule(5)).editor.selectionFolded).toBe(false);
+    expect(reducer(opened(5), addRules({ rules: [{ hide: true }] })).editor.selectionFolded).toBe(false);
+    expect(reducer(opened(5), removeRule(5)).editor).toMatchObject({ selectedRule: null, selectionFolded: false });
   });
 });

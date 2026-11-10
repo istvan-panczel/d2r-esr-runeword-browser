@@ -67,7 +67,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
   },
   {
     id: 'mid-rune',
-    name: 'MidRune',
+    name: 'MidTierRune',
     label: 'Mid rune',
     description: 'Orange name on black with an orange border: good runes you still pick up.',
     sample: 'Ist Rune',
@@ -303,6 +303,17 @@ export function presetStyleStatus(
 ): 'missing' | 'same' | 'different' {
   if (styles === undefined || !Object.hasOwn(styles, preset.name)) return 'missing';
   return sameStyle(styles[preset.name], preset.style) ? 'same' : 'different';
+}
+
+/**
+ * The preset names, and the `<Name>NoIcon` copies the example rules add, that `styleNames` already use (in any case):
+ * in a filter with such a style, picking the preset keeps the filter's style (`presetStyleStatus` 'different'). Sully's
+ * template must have none (stylePresets.test.ts on the frozen and the bundled copy; `npm run loot-filter:template`
+ * prints them), or every filter started from it gets his look for our preset.
+ */
+export function presetNameClashes(styleNames: Iterable<string>): string[] {
+  const taken = new Set([...styleNames].map((name) => name.toLowerCase()));
+  return STYLE_PRESETS.flatMap((preset) => [preset.name, `${preset.name}NoIcon`]).filter((name) => taken.has(name.toLowerCase()));
 }
 
 /**

@@ -18,7 +18,8 @@ export interface RuleRowProps {
   /** The worst diagnostic of the rule, if any. */
   readonly severity: DiagnosticSeverity | undefined;
   readonly onSelect: (index: number) => void;
-  readonly onMove: (from: number, to: number) => void;
+  /** One step up (-1) or down (1). */
+  readonly onMove: (index: number, direction: -1 | 1) => void;
   readonly onToggle: (index: number, disabled: boolean) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
@@ -170,7 +171,7 @@ export function RuleRow({
           data-move="up"
           aria-label={`Move rule ${number} up`}
           onClick={() => {
-            onMove(index, index - 1);
+            onMove(index, -1);
           }}
         >
           <ArrowUp />
@@ -184,7 +185,7 @@ export function RuleRow({
           data-move="down"
           aria-label={`Move rule ${number} down`}
           onClick={() => {
-            onMove(index, index + 1);
+            onMove(index, 1);
           }}
         >
           <ArrowDown />

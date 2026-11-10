@@ -209,7 +209,11 @@ describe('sandbox', () => {
 
   it('openSandbox opens a text that is not saved anywhere', () => {
     const text = serializeLootFilter(FILTER);
-    const state = run(initialState, hydrate([]), at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn('sullys-qol') })));
+    const state = run(
+      initialState,
+      hydrate([]),
+      at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn('sullys-qol', '0.9.2') }))
+    );
     expect(state.editor.target).toEqual({
       kind: 'sandbox',
       savedId: null,
@@ -217,7 +221,7 @@ describe('sandbox', () => {
       ownerId: null,
       name: "Sully's",
       baseText: text,
-      basedOn: templateBasedOn('sullys-qol'),
+      basedOn: templateBasedOn('sullys-qol', '0.9.2'),
     } satisfies EditorTarget);
     expect(state.editor.filter?.rules).toHaveLength(2);
   });
@@ -263,17 +267,17 @@ describe('copyToMyFilters', () => {
     const text = serializeLootFilter(FILTER);
     const fromTemplate = run(
       initialState,
-      at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn('sullys-qol') })),
+      at(openSandbox({ text, name: "Sully's", basedOn: templateBasedOn('sullys-qol', '0.9.2') })),
       at(copyToMyFilters())
     );
-    expect(fromTemplate.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn('sullys-qol') });
+    expect(fromTemplate.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn('sullys-qol', '0.9.2') });
 
     const fromExample = run(
       initialState,
-      at(openSandbox({ text, name: 'Example', basedOn: templateBasedOn('example') })),
+      at(openSandbox({ text, name: 'Example', basedOn: templateBasedOn('example', '2.2.0') })),
       at(copyToMyFilters())
     );
-    expect(fromExample.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn('example') });
+    expect(fromExample.library.entries[0]).toMatchObject({ source: 'template', basedOn: templateBasedOn('example', '2.2.0') });
   });
 
   it('is a no-op outside the sandbox', () => {
@@ -461,7 +465,7 @@ describe('draft fields in library reducers', () => {
       savedId: 'row-1',
       savedOwnerId: OWNER,
       savedRevision: 2,
-      basedOn: templateBasedOn('sullys-qol'),
+      basedOn: templateBasedOn('sullys-qol', '0.9.2'),
       source: 'template',
     });
     const state = run(initialState, hydrate([draft]), { type: duplicate.type, payload: { id: 'd', newId: 'c', now: LATER } });
@@ -482,8 +486,8 @@ describe('draft fields in library reducers', () => {
   });
 
   it("importText records Start from Sully's basedOn", () => {
-    const action = importText({ name: "Sully's", text: '{}', source: 'template', basedOn: templateBasedOn('sullys-qol') });
-    expect(reducer(initialState, action).library.entries[0].basedOn).toEqual(templateBasedOn('sullys-qol'));
+    const action = importText({ name: "Sully's", text: '{}', source: 'template', basedOn: templateBasedOn('sullys-qol', '0.9.2') });
+    expect(reducer(initialState, action).library.entries[0].basedOn).toEqual(templateBasedOn('sullys-qol', '0.9.2'));
   });
 
   it('replaceFilter works on a saved target', () => {

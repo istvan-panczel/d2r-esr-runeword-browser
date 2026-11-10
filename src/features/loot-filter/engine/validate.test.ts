@@ -69,29 +69,21 @@ function messages(rule: LootFilterRule, ref: LootFilterReference | null = refere
 
 describe('validateLootFilter', () => {
   it('finds no errors in Sully’s filter', () => {
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
     const diagnostics = validateLootFilter(parseLootFilter(source).filter);
     expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
     // It has no warnings either without a reference (stat 188 is written by id).
     expect(diagnostics).toEqual([]);
   });
 
-  it('warns once per list about Sully’s skill tab params against the real game data', () => {
+  it('finds nothing in Sully’s filter against the real game data', () => {
     const json = (file: string) => JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data', file), 'utf-8')) as unknown;
     const real = buildLootFilterReference(json('lootfilter.json') as LootFilterDataBundle, json('types.json') as TypesBundle);
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
-    const diagnostics = validateLootFilter(parseLootFilter(source).filter, real);
-    // The +3/4/5 skill tab rules (Sully v0.6.7 to v0.6.11) check stat 188 without param and with params 1 to 21, the properties.txt
-    // tab numbers: one list warning each (13 name no tab as the game numbers them), plus the paramless check.
-    expect(diagnostics.map((d) => [d.severity, d.path])).toEqual(
-      [31, 32, 33].flatMap((rule) => [
-        ['warning', `rules/${String(rule)}/itemStatsAnyOf`],
-        ['warning', `rules/${String(rule)}/itemStatsAnyOf/0`],
-      ])
-    );
-    expect(diagnostics[0].message).toMatch(
-      /^These skill tab params \(1–21\) look like properties\.txt tab numbers .* 13 of these checks match no tab and 6 match a different tab/
-    );
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
+    // Up to v0.7.0 the +3/4/5 skill tab rules checked stat 188 with params 1 to 21, the properties.txt tab numbers (6
+    // warnings); since v0.9.0 they read every tab with `statMax('item_addskill_tab')`, and every name, code, type and
+    // area of the 689 rules is known to the game data.
+    expect(validateLootFilter(parseLootFilter(source).filter, real)).toEqual([]);
   });
 
   it('accepts a plain valid rule', () => {
@@ -719,12 +711,23 @@ describe('hide rules on unidentified items', () => {
     expect(said({ ...armour, isIdentified: true, itemStats: [check], hide: true })).toEqual([]);
     expect(said({ itemTypes: ['armo'], quality: ['normal', 'superior'], itemStats: [check], hide: true })).toEqual([]);
     expect(said({ itemTypes: ['armo'], quality: 'normal', itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ itemTypes: ['armo'], quality: { max: 'superior' }, itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ itemTypes: ['armo'], quality: { min: 2, max: 3 }, itemStats: [check], hide: true })).toEqual([]);
     expect(said({ ...armour, itemStats: [check], namePrefix: 'x' })).toEqual([]);
   });
 
-  it('flags only rule 73 of Sully’s filter', () => {
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
-    expect(validate(parseLootFilter(source).filter).map((d) => d.path)).toEqual(['rules/73/itemStats']);
+  it('warns on a quality range that reaches magic or above', () => {
+    const range = (quality: LootFilterRule['quality']) => said({ itemTypes: ['armo'], quality, itemStats: [check], hide: true });
+    expect(range({ max: 'magic' })).toEqual([['warning', 'rules/0/itemStats']]);
+    expect(range({ min: 'superior' })).toEqual([['warning', 'rules/0/itemStats']]);
+    // An unknown quality name is an error of its own, and the hide is not taken as limited.
+    expect(range({ max: 'nope' as 'magic' })).toContainEqual(['warning', 'rules/0/itemStats']);
+  });
+
+  it('flags nothing in Sully’s filter', () => {
+    // Rule 99 (rule 73 up to v0.7.0) hides weapons and armour `{ "max": "superior" }` without All Skills: never unidentified.
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
+    expect(validate(parseLootFilter(source).filter)).toEqual([]);
   });
 });
 

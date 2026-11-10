@@ -151,7 +151,13 @@ describe('pure checks', () => {
     expect(checkSaveText('{ "formatVersion": 2, "rules": [] }')).toMatch(/formatVersion/);
     expect(checkSaveText('{ "rules": [] }')).toMatch(/formatVersion/);
     expect(checkSaveText('[1, 2]')).toMatch(/formatVersion/);
-    expect(checkSaveText(`{ "formatVersion": 1, "rules": [], "description": "${'x'.repeat(512 * 1024)}" }`)).toMatch(/512 KB/);
+    expect(checkSaveText(`{ "formatVersion": 1, "rules": [], "description": "${'x'.repeat(2 * 1024 * 1024)}" }`)).toMatch(
+      /larger than 2 MB/
+    );
+    // Up to 2 MB is fine (the cap was 512 KB until 2026-11-10: Sully's v0.9.2 alone is 0.54 MB).
+    expect(checkSaveText(`{ "formatVersion": 1, "rules": [], "description": "${'x'.repeat(1024 * 1024)}" }`)).toBeNull();
+    // Bytes, not characters: 700k three-byte characters are 2.1 MB.
+    expect(checkSaveText(`{ "formatVersion": 1, "rules": [], "description": "${'€'.repeat(700_000)}" }`)).toMatch(/larger than 2 MB/);
   });
 
   it('checkDetails enforces the name and description limits', () => {

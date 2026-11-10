@@ -40,6 +40,7 @@ npm run game-data:skill-icons  # Skill icons cropped from the ESR HD skill icon 
 npm run loot-filter:agent-pack  # Regenerate the loot filter agent pack for AI agents (public/loot-filters/agent/*.md + full game data CSVs, from the committed bundles; also run by game-data:generate, --check by game-data:check)
 npm run loot-filter:icons   # Regenerate the generated loot filter minimap icons (public/loot-filters/icons/<shape>_<colour>.sprite) from scripts/lib/lootFilterIcons.ts
 npm run loot-filter:icons -- --check  # Exit 1 if a generated icon is stale, missing or no longer listed
+npm run loot-filter:template  # Refresh the bundled fallback copy of Sully's QoL filter from his GitHub (validates it, reports new icons/sounds to bundle; the app itself loads his latest file live); -- --check exits 1 if upstream differs
 npm run game-data:check     # Exit 1 if the committed bundles, modifierRefs.json, item icons or skill icons are stale (without ../d2r-vanilla-art: vanilla-derived icons skipped with a warning)
 npm run game-data:update    # After an ESR release: clone/pull ESR, generate, fetch fixtures, check, guide, full test suite
 npm run esr:diff            # What changed in ESR since the committed game data (patch notes, tables, strings, docs, launcher, loot filters); --json, --from/--to <rev>, --out

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { JsoncSyntaxError } from '../engine/jsonc';
 import { filterMetadata } from './filterMetadata';
 
-const SULLY = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+const SULLY = readFileSync(resolve(__dirname, '../engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
 
 describe('filterMetadata', () => {
   it("reads the bundled Sully's QoL filter (comments included)", () => {
@@ -12,7 +12,7 @@ describe('filterMetadata', () => {
     expect(meta.title).toBe("Sully's QoL Filter");
     expect(meta.author).toBe('Sully');
     expect(meta.file_version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(meta.rule_count).toBe(225);
+    expect(meta.rule_count).toBe(689);
     expect(meta.levels).toHaveLength(4);
     expect(meta.levels?.[0]).toMatchObject({ id: 1, name: { enUS: 'Leveling', deDE: 'Leveln' } });
   });

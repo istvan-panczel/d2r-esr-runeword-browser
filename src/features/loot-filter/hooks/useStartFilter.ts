@@ -6,7 +6,8 @@ import { createBlank, importText } from '../store/lootFilterSlice';
 import { templateStartInput } from '../utils/basedOn';
 import { draftPath } from '../utils/library';
 import { checkFilterText, fileBaseName, importDescription } from '../utils/readFilterText';
-import { BUNDLED_TEMPLATES, loadTemplateText, type BundledTemplateId } from '../utils/template';
+import { BUNDLED_TEMPLATES, type BundledTemplateId } from '../utils/template';
+import { loadTemplate } from '../utils/templateSource';
 
 /**
  * The ways to start a new draft (New, Upload, Start from a bundled template): each adds a library entry and opens it in
@@ -45,8 +46,7 @@ export function useStartFilter() {
     const { name } = BUNDLED_TEMPLATES[id];
     setLoadingTemplate(id);
     try {
-      const text = await loadTemplateText(id);
-      const action = importText(templateStartInput(id, text));
+      const action = importText(templateStartInput(await loadTemplate(id)));
       dispatch(action);
       void navigate(draftPath(action.payload.id));
     } catch (error) {

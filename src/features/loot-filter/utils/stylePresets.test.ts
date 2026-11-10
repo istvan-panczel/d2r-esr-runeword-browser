@@ -9,6 +9,7 @@ import { serializeLootFilter } from '../engine/serialize';
 import { validateLootFilter } from '../engine/validate';
 import { findBundledIconAsset } from './bundledAssets';
 import {
+  presetNameClashes,
   presetPreviewText,
   presetStyleStatus,
   sameIcon,
@@ -36,11 +37,22 @@ describe('STYLE_PRESETS', () => {
     }
   });
 
-  it("uses no style name of Sully's template, so starting from it and adding a preset never meets one of his", () => {
-    const sully = parseLootFilter(readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8')).filter;
-    const his = new Set(Object.keys(sully.styles ?? {}).map((name) => name.toLowerCase()));
-    expect(his.size).toBeGreaterThan(0);
-    expect(STYLE_PRESETS.filter((preset) => his.has(preset.name.toLowerCase())).map((preset) => preset.name)).toEqual([]);
+  // A clash would make picking the preset in his filter use his style (a style of that name is never overwritten,
+  // `presetStyleStatus`): v0.9.0 added a MidRune of his own, so ours became MidTierRune. Rename the preset on a clash.
+  it.each([
+    ['the frozen v0.9.2', 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'],
+    // An invariant of the bundled copy, whatever version `npm run loot-filter:template` last fetched.
+    ['the bundled', 'public/loot-filters/sullys-qol-filter.json'],
+  ])("uses no style name of %s copy of Sully's template", (_, file) => {
+    const sully = parseLootFilter(readFileSync(resolve(process.cwd(), file), 'utf8')).filter;
+    const his = Object.keys(sully.styles ?? {});
+    expect(his.length).toBeGreaterThan(0);
+    expect(presetNameClashes(his)).toEqual([]);
+  });
+
+  it('presetNameClashes finds preset names and their NoIcon copies in any case', () => {
+    expect(presetNameClashes(['MidRune', 'Valuable'])).toEqual([]);
+    expect(presetNameClashes(['highrune', 'MidTierRuneNoIcon', 'Other'])).toEqual(['HighRune', 'MidTierRuneNoIcon']);
   });
 
   it('holds the look and an icon only (no sound or chat line), with known colour codes', () => {

@@ -11,5 +11,11 @@ export const LATEST_FILTERS_COUNT = 3;
 export const FILTER_NAME_MAX_LENGTH = 100;
 export const FILTER_DESCRIPTION_MAX_LENGTH = 2000;
 export const CHANGE_NOTE_MAX_LENGTH = 200;
-/** `octet_length(content) <= 524288`: the file's UTF-8 size. */
-export const FILTER_CONTENT_MAX_BYTES = 512 * 1024;
+/**
+ * `octet_length(content) <= 2097152` (migration 007; 512 KB up to 2026-11-10): the file's UTF-8 size. Sully's QoL
+ * filter v0.9.2 is 0.54 MB, so a filter started from it needs more than the old cap.
+ */
+export const FILTER_CONTENT_MAX_BYTES = 2 * 1024 * 1024;
+
+/** The cap as people read it ("2 MB"). */
+export const FILTER_CONTENT_MAX_LABEL = `${String(FILTER_CONTENT_MAX_BYTES / 1024 / 1024)} MB`;

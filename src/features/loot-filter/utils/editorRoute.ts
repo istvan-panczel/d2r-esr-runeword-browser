@@ -1,7 +1,14 @@
 import { compareVersions } from '@/core/utils/versionUtils';
 import type { SharedFilterAuthor, SharedFilterSummary, SourceRevision } from '../sharing/types';
 import type { EditorTarget, LootFilterBasedOn } from '../store/types';
-import { BUNDLED_TEMPLATE_LIST, SULLYS_QOL_TEMPLATE, bundledTemplate, type BundledTemplate, type BundledTemplateId } from './template';
+import {
+  BUNDLED_TEMPLATE_LIST,
+  SULLYS_QOL_TEMPLATE,
+  bundledTemplate,
+  type BundledTemplate,
+  type BundledTemplateId,
+  type TemplateVersions,
+} from './template';
 
 /**
  * What an editor URL shows: `/loot-filters/draft/:id`, `/loot-filters/:id` (a saved filter) or a bundled template's
@@ -52,18 +59,6 @@ export function targetMatchesRoute(target: EditorTarget | null, route: EditorRou
 }
 
 /**
- * Whether two targets are the same open filter (the same draft, or the same saved / shared filter in the same kind of
- * target): an action started on `before` (a fetch awaited) only applies while `now` is still that filter.
- */
-export function isSameEditorFilter(before: EditorTarget | null, now: EditorTarget | null): boolean {
-  if (before === null || now === null) return false;
-  if (before.kind === 'draft' || now.kind === 'draft') {
-    return before.kind === 'draft' && now.kind === 'draft' && before.entryId === now.entryId;
-  }
-  return before.kind === now.kind && before.savedId === now.savedId;
-}
-
-/**
  * The viewer just signed in as the owner of the filter open in the sandbox, which has edits: the editor keeps the
  * sandbox (and offers the switch to the editable version) instead of reopening it as the owner's filter, which would
  * drop those edits. A sandbox without edits switches by itself.
@@ -111,20 +106,22 @@ export type SourceUpdate =
   | { readonly kind: 'none' }
   /** A shared source has a newer revision. */
   | { readonly kind: 'shared'; readonly id: string; readonly revision: number; readonly changeNote: string | null; readonly name: string }
-  /** The bundled template (`template`) is newer than the one the filter started from. */
-  | { readonly kind: 'template'; readonly template: BundledTemplateId; readonly fromVersion: string | null }
+  /** The template (`template`, now at `toVersion`) is newer than the one the filter started from. */
+  | { readonly kind: 'template'; readonly template: BundledTemplateId; readonly fromVersion: string | null; readonly toVersion: string }
   /** The shared source was deleted or made private (`id` null: deleted, the saved copy lost its `based_on_id`). */
   | { readonly kind: 'gone'; readonly id: string | null };
 
 /**
  * Compares a filter's `basedOn` with what is known about its source: `revisions` from the source lookup (null: no longer
- * shared, absent: not looked up), the template's bundled version for template-based filters (an unknown version counts
- * as older). A copy with a label but neither a source id nor a template lost its source (`on delete set null`), as
- * `filterUpdateStatus` reads it in the library.
+ * shared, absent: not looked up), `templateVersions` (the version of each template's text in use, live or bundled; not
+ * loaded or null: no update) for template-based filters (a `basedOn` without a version counts as older). A copy with a
+ * label but neither a source id nor a template lost its source (`on delete set null`), as `filterUpdateStatus` reads it
+ * in the library.
  */
 export function sourceUpdateOf(
   basedOn: LootFilterBasedOn | null,
-  revisions: Readonly<Record<string, SourceRevision | null>>
+  revisions: Readonly<Record<string, SourceRevision | null>>,
+  templateVersions: TemplateVersions
 ): SourceUpdate {
   if (basedOn === null) return { kind: 'none' };
   if (basedOn.id !== undefined) {
@@ -137,9 +134,11 @@ export function sourceUpdateOf(
   if (basedOn.template === undefined) return { kind: 'gone', id: null };
   const template = bundledTemplate(basedOn.template);
   if (template === null) return { kind: 'none' };
+  const current = templateVersions[template.id] ?? null;
+  if (current === null) return { kind: 'none' };
   const version = basedOn.version ?? null;
-  return version === null || compareVersions(version, template.version) < 0
-    ? { kind: 'template', template: template.id, fromVersion: version }
+  return version === null || compareVersions(version, current) < 0
+    ? { kind: 'template', template: template.id, fromVersion: version, toVersion: current }
     : { kind: 'none' };
 }
 

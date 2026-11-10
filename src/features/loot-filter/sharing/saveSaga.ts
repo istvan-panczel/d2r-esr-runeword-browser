@@ -18,7 +18,13 @@ import { selectEditorTarget, selectSaveRequest, type LootFilterSaveRequest } fro
 import type { EditorTarget, LootFilterBasedOn } from '../store/types';
 import { basedOnColumns } from '../utils/basedOn';
 import { LOOT_FILTER_PLUGIN_VERSION } from '../utils/template';
-import { CHANGE_NOTE_MAX_LENGTH, FILTER_CONTENT_MAX_BYTES, FILTER_DESCRIPTION_MAX_LENGTH, FILTER_NAME_MAX_LENGTH } from './constants';
+import {
+  CHANGE_NOTE_MAX_LENGTH,
+  FILTER_CONTENT_MAX_BYTES,
+  FILTER_CONTENT_MAX_LABEL,
+  FILTER_DESCRIPTION_MAX_LENGTH,
+  FILTER_NAME_MAX_LENGTH,
+} from './constants';
 import { filterMetadata } from './filterMetadata';
 import {
   SHARED_FILTER_DETAIL_SELECT,
@@ -70,12 +76,12 @@ function characterCount(text: string): number {
 }
 
 /**
- * Why `text` cannot be saved, or null when it can: it must fit the 512 KB column, the lenient reader must read it and
+ * Why `text` cannot be saved, or null when it can: it must fit the 2 MB column, the lenient reader must read it and
  * it must be a loot filter object with `formatVersion` 1. Validator errors and warnings do not block a save.
  */
 export function checkSaveText(text: string): string | null {
   if (encoder.encode(text).length > FILTER_CONTENT_MAX_BYTES)
-    return 'The filter file is larger than 512 KB, the most a saved filter can hold.';
+    return `The filter file is larger than ${FILTER_CONTENT_MAX_LABEL}, the most a saved filter can hold.`;
   let diagnostics;
   try {
     diagnostics = parseLootFilter(text).diagnostics;

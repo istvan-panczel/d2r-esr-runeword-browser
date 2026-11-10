@@ -5,7 +5,6 @@ import {
   authorLabelOf,
   editorPathOf,
   editorRouteOf,
-  isSameEditorFilter,
   isShowProblemsState,
   keepsOwnerSandbox,
   saveDialogDetailsOf,
@@ -13,7 +12,6 @@ import {
   sourceUpdateOf,
   targetMatchesRoute,
 } from './editorRoute';
-import { SULLYS_QOL_TEMPLATE } from './template';
 
 const saved: EditorTarget = {
   kind: 'saved',
@@ -36,8 +34,8 @@ const sandbox: EditorTarget = {
   basedOn: null,
 };
 const templateSandbox = { kind: 'sandbox', savedId: null, revision: null, ownerId: null, baseText: '{}' } as const;
-const sully: EditorTarget = { ...templateSandbox, name: 'Sully', basedOn: templateBasedOn('sullys-qol') };
-const example: EditorTarget = { ...templateSandbox, name: 'Example', basedOn: templateBasedOn('example') };
+const sully: EditorTarget = { ...templateSandbox, name: 'Sully', basedOn: templateBasedOn('sullys-qol', '0.9.2') };
+const example: EditorTarget = { ...templateSandbox, name: 'Example', basedOn: templateBasedOn('example', '2.2.0') };
 /** A template sandbox that records no template: Sully's, as before there were two. */
 const unnamed: EditorTarget = { ...templateSandbox, name: 'Sully', basedOn: null };
 
@@ -91,19 +89,6 @@ describe('targetMatchesRoute', () => {
   });
 });
 
-describe('isSameEditorFilter', () => {
-  it('is the same draft, or the same saved filter in the same kind of target', () => {
-    expect(isSameEditorFilter({ kind: 'draft', entryId: 'd' }, { kind: 'draft', entryId: 'd' })).toBe(true);
-    expect(isSameEditorFilter({ kind: 'draft', entryId: 'd' }, { kind: 'draft', entryId: 'e' })).toBe(false);
-    expect(isSameEditorFilter(saved, { ...saved, draftId: 'other', revision: 3 })).toBe(true);
-    expect(isSameEditorFilter(saved, { ...saved, savedId: 'row-2' })).toBe(false);
-    expect(isSameEditorFilter(saved, sandbox)).toBe(false);
-    expect(isSameEditorFilter({ kind: 'draft', entryId: 'row-1' }, saved)).toBe(false);
-    expect(isSameEditorFilter(saved, null)).toBe(false);
-    expect(isSameEditorFilter(null, null)).toBe(false);
-  });
-});
-
 describe('keepsOwnerSandbox', () => {
   const route = { kind: 'saved', id: 'row-1' } as const;
 
@@ -145,44 +130,54 @@ describe('sourceUpdateOf', () => {
   const basedOn = { id: 'src', revision: 2, label: 'X by Y#1' };
 
   it('is nothing without a source, before the lookup or when up to date', () => {
-    expect(sourceUpdateOf(null, {})).toEqual({ kind: 'none' });
-    expect(sourceUpdateOf(basedOn, {})).toEqual({ kind: 'none' });
-    expect(sourceUpdateOf(basedOn, { src: { id: 'src', revision: 2, change_note: null, name: 'X' } })).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(null, {}, {})).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(basedOn, {}, {})).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(basedOn, { src: { id: 'src', revision: 2, change_note: null, name: 'X' } }, {})).toEqual({ kind: 'none' });
   });
 
   it('reports a newer shared revision with its note, or a source that is gone', () => {
-    expect(sourceUpdateOf(basedOn, { src: { id: 'src', revision: 3, change_note: 'More', name: 'X' } })).toEqual({
+    expect(sourceUpdateOf(basedOn, { src: { id: 'src', revision: 3, change_note: 'More', name: 'X' } }, {})).toEqual({
       kind: 'shared',
       id: 'src',
       revision: 3,
       changeNote: 'More',
       name: 'X',
     });
-    expect(sourceUpdateOf(basedOn, { src: null })).toEqual({ kind: 'gone', id: 'src' });
+    expect(sourceUpdateOf(basedOn, { src: null }, {})).toEqual({ kind: 'gone', id: 'src' });
   });
 
   it('reads a saved copy that lost its based_on_id (source deleted) as gone, like the library', () => {
-    expect(sourceUpdateOf({ revision: 2, label: 'X by Y#1' }, {})).toEqual({ kind: 'gone', id: null });
+    expect(sourceUpdateOf({ revision: 2, label: 'X by Y#1' }, {}, {})).toEqual({ kind: 'gone', id: null });
   });
 
-  it('compares a template-based filter with the bundled version', () => {
-    const sullyUpdate = { kind: 'template', template: 'sullys-qol' } as const;
-    expect(sourceUpdateOf(templateBasedOn('sullys-qol', SULLYS_QOL_TEMPLATE.version), {})).toEqual({ kind: 'none' });
-    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.5.0'), {})).toEqual({ ...sullyUpdate, fromVersion: '0.5.0' });
-    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '99.0.0'), {})).toEqual({ kind: 'none' });
-    expect(sourceUpdateOf(templateBasedOn('sullys-qol', null), {})).toEqual({ ...sullyUpdate, fromVersion: null });
+  it('compares a template-based filter with the version of the template text in use', () => {
+    const versions = { 'sullys-qol': '0.9.2', example: '2.2.0' };
+    const sullyUpdate = { kind: 'template', template: 'sullys-qol', toVersion: '0.9.2' } as const;
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.9.2'), {}, versions)).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.5.0'), {}, versions)).toEqual({ ...sullyUpdate, fromVersion: '0.5.0' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '99.0.0'), {}, versions)).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', null), {}, versions)).toEqual({ ...sullyUpdate, fromVersion: null });
+    // A live file with a lower version than the draft's (Sully went back): no update.
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.9.2'), {}, { 'sullys-qol': '0.9.1' })).toEqual({ kind: 'none' });
   });
 
-  it('compares an example-based filter with the bundled example, not with Sully', () => {
-    const exampleUpdate = { kind: 'template', template: 'example' } as const;
-    expect(sourceUpdateOf(templateBasedOn('example'), {})).toEqual({ kind: 'none' });
-    // Older than the bundled example (2.2.0), though newer than Sully's version; a draft from the old 1.0.0 file too.
-    expect(sourceUpdateOf(templateBasedOn('example', '0.9.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.9.0' });
-    expect(sourceUpdateOf(templateBasedOn('example', '1.0.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '1.0.0' });
-    expect(sourceUpdateOf(templateBasedOn('example', '2.0.0'), {})).toEqual({ ...exampleUpdate, fromVersion: '2.0.0' });
-    expect(sourceUpdateOf(templateBasedOn('example', '0.6.12'), {})).toEqual({ ...exampleUpdate, fromVersion: '0.6.12' });
-    expect(sourceUpdateOf(templateBasedOn('example', null), {})).toEqual({ ...exampleUpdate, fromVersion: null });
-    expect(sourceUpdateOf({ template: 'retired', version: '0.1', label: 'Old' }, {})).toEqual({ kind: 'none' });
+  it('shows no template update while the template is not loaded or its version is unknown', () => {
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.5.0'), {}, {})).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', null), {}, { example: '2.2.0' })).toEqual({ kind: 'none' });
+    expect(sourceUpdateOf(templateBasedOn('sullys-qol', '0.5.0'), {}, { 'sullys-qol': null })).toEqual({ kind: 'none' });
+  });
+
+  it('compares an example-based filter with the example, not with Sully', () => {
+    const versions = { 'sullys-qol': '0.9.2', example: '2.2.0' };
+    const exampleUpdate = { kind: 'template', template: 'example', toVersion: '2.2.0' } as const;
+    expect(sourceUpdateOf(templateBasedOn('example', '2.2.0'), {}, versions)).toEqual({ kind: 'none' });
+    // Older than the example (2.2.0), though newer than Sully's version; a draft from the old 1.0.0 file too.
+    expect(sourceUpdateOf(templateBasedOn('example', '0.9.0'), {}, versions)).toEqual({ ...exampleUpdate, fromVersion: '0.9.0' });
+    expect(sourceUpdateOf(templateBasedOn('example', '1.0.0'), {}, versions)).toEqual({ ...exampleUpdate, fromVersion: '1.0.0' });
+    expect(sourceUpdateOf(templateBasedOn('example', '2.0.0'), {}, versions)).toEqual({ ...exampleUpdate, fromVersion: '2.0.0' });
+    expect(sourceUpdateOf(templateBasedOn('example', '0.6.12'), {}, versions)).toEqual({ ...exampleUpdate, fromVersion: '0.6.12' });
+    expect(sourceUpdateOf(templateBasedOn('example', null), {}, versions)).toEqual({ ...exampleUpdate, fromVersion: null });
+    expect(sourceUpdateOf({ template: 'retired', version: '0.1', label: 'Old' }, {}, versions)).toEqual({ kind: 'none' });
   });
 });
 

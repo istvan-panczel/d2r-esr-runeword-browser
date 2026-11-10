@@ -14,7 +14,6 @@ import { findBundledIconAsset, findBundledSound } from './bundledAssets';
 import { buildExampleSet, defaultChoices, findExample } from './exampleRules';
 import { collectReferencedAssets } from './referencedAssets';
 import { STYLE_PRESETS, styleWithoutIcon } from './stylePresets';
-import { EXAMPLE_TEMPLATE } from './template';
 
 /** The bundled example filter for new users (`public/loot-filters/example-filter.json`). */
 const text = readFileSync(resolve(process.cwd(), 'public/loot-filters/example-filter.json'), 'utf8');
@@ -140,12 +139,13 @@ describe('example filter', () => {
     expect(validateLootFilter(filter, reference)).toEqual([]);
   });
 
-  it('has the header new users see in the library, at the bundled version', () => {
+  it('has the header new users see in the library, at its current version', () => {
     expect(filter).toMatchObject({
       formatVersion: 1,
       title: 'Example filter (with explanations)',
       author: 'D2R ESR Runeword Browser',
-      version: EXAMPLE_TEMPLATE.version,
+      // Bump with every change: drafts started from a lower version get "Update available".
+      version: '2.3.0',
       filterLevels: [
         { id: LEVELING, name: 'Leveling' },
         { id: STRICT, name: 'Strict' },
@@ -153,7 +153,6 @@ describe('example filter', () => {
       defaultLevel: LEVELING,
       notifications: { dropFormat: 'ÿc4Drop: {qualityColor}{name}' },
     });
-    expect(EXAMPLE_TEMPLATE.version).toBe('2.2.0');
     expect(filter.description).toBeTruthy();
     expect(filter.updateUrl).toBeUndefined();
     expect(filter.leadingComments.length).toBeGreaterThan(0);
@@ -203,12 +202,14 @@ describe('example filter', () => {
     expect(new Set(Object.keys(filter.styles ?? {}))).toEqual(used);
     expect(filter.styles).toEqual(fromExamples.styles);
     for (const [name, style] of Object.entries(filter.styles ?? {})) {
-      if (name === 'MidRuneNoIcon') continue;
+      if (name === 'MidTierRuneNoIcon') continue;
       expect(style, name).toEqual(STYLE_PRESETS.find((preset) => preset.name === name)?.style);
       expect(style.icon, name).toBeDefined();
     }
     // Hel to Um keep no icon (as in v2.0.0): a rule cannot remove its style's icon, so they use a copy without it.
-    expect(filter.styles?.MidRuneNoIcon).toEqual(styleWithoutIcon(STYLE_PRESETS.find((preset) => preset.id === 'mid-rune')?.style ?? {}));
+    expect(filter.styles?.MidTierRuneNoIcon).toEqual(
+      styleWithoutIcon(STYLE_PRESETS.find((preset) => preset.id === 'mid-rune')?.style ?? {})
+    );
     // A rule carries its own icon only where it differs from its style's.
     expect(filter.rules.filter((rule) => rule.icon !== undefined).map((rule) => rule.comment?.split('.')[0])).toEqual([
       'Unique rings and amulets',
@@ -266,7 +267,7 @@ describe('example filter', () => {
       expect(run(item('r90')).icon).toEqual({ iconName: 'diamond_red', iconSize: 50 });
     });
 
-    it('gives Ist the mid sound and an orange diamond, and Hel only the MidRune look', () => {
+    it('gives Ist the mid sound and an orange diamond, and Hel only the MidTierRune look', () => {
       const ist = run(item('r74'));
       expect(ist.sounds).toEqual([{ sound: 'mid.mp3', volume: 50 }]);
       expect(ist.icon).toEqual({ iconName: 'diamond_orange', iconSize: 40 });

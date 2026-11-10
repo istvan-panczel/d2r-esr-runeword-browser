@@ -168,9 +168,11 @@ export function JsonTab({
           </p>
         )}
         <p className="text-xs text-muted-foreground @8xl/page:max-w-4xl">
-          Apply reads the text like an upload. Only the <code>{'//'}</code> comment lines at the top of the file are kept; comments between
-          rules are not shown here and are dropped by Apply and by any edit in the other tabs. Syntax errors are underlined as you type; the
-          coloured chips at the left show each rule&apos;s and style&apos;s label look (hover for details); Ctrl/Cmd+F searches.
+          Apply reads the text like an upload. Whole-line <code>{'//'}</code> comments are kept, with the blank lines between them: the ones
+          at the top of the file, above a setting, a rule or a style, and after the last rule (headings among them group the Rules and
+          Styles lists). A comment at the end of a line, inside a rule, a style or another setting, and every <code>{'/* */'}</code> block
+          are dropped by Apply and by any edit in the other tabs, with a warning. Syntax errors are underlined as you type; the coloured
+          chips at the left show each rule&apos;s and style&apos;s label look (hover for details); Ctrl/Cmd+F searches.
         </p>
       </div>
 

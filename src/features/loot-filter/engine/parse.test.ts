@@ -5,7 +5,7 @@ import { parseJsonc } from './jsonc.ts';
 import { parseLootFilter, readLootFilter } from './parse.ts';
 import { serializeLootFilter, toPlainJson } from './serialize.ts';
 
-const SULLY = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+const SULLY = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
 
 const parse = (value: unknown) => parseLootFilter(JSON.stringify(value));
 const errors = (value: unknown) => parse(value).diagnostics.filter((d) => d.severity === 'error');
@@ -15,26 +15,29 @@ describe('parseLootFilter on Sully’s filter', () => {
 
   it('reads it without errors, keeping order', () => {
     // v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4` (a number, not a list), which works in game: it is
-    // read as [4] with a warning, and the number is kept for writing it back.
+    // read as [4] with a warning, and the number is kept for writing it back (rule 98 up to v0.7.0, rule 77 since v0.9.0).
     expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
-    expect(diagnostics.filter((d) => d.path.includes('activeInLevels'))).toEqual([
+    expect(diagnostics).toEqual([
       {
         severity: 'warning',
         message: 'A single number works in game; [4] is the documented form.',
-        path: 'rules/98/activeInLevels',
-        rule: 98,
+        path: 'rules/77/activeInLevels',
+        rule: 77,
       },
     ]);
-    expect(filter.rules[98]).toMatchObject({ activeInLevels: [4], activeInLevelsNumber: 4, hide: true });
-    expect(filter.rules[98]?.passthrough).toBeUndefined();
+    expect(filter.rules[77]).toMatchObject({ activeInLevels: [4], activeInLevelsNumber: 4, hide: true });
+    expect(filter.rules[77]?.passthrough).toBeUndefined();
     expect(filter.rules.flatMap((rule, index) => (wrongShapedKeys(rule).length > 0 ? [index] : []))).toEqual([]);
-    expect(filter.rules).toHaveLength(225);
+    expect(filter.rules).toHaveLength(689);
+    expect(filter.rules.filter((rule) => rule.disabled === true)).toEqual([]);
     expect(Object.keys(filter.styles ?? {})).toEqual([
+      'EtherealMythical',
       'Mythical',
       'Jackpot',
       'PurpleRune',
       'STierMaterial',
       'Valuable',
+      'Currency',
       'GoldPlate',
       'UniqueLabel',
       'SetLabel',
@@ -42,17 +45,29 @@ describe('parseLootFilter on Sully’s filter', () => {
       'MapTier1',
       'Map',
       'MapTier5',
+      'MidRune',
+      'CharmLabel',
+      'RareJewelry',
+      'BaseSockets',
+      'BaseTop',
+      'QuestLabel',
+      'CraftedLabel',
+      'TemperedLabel',
     ]);
-    // v0.7.0 keeps one comment line (the volume note).
-    expect(filter.leadingComments).toHaveLength(1);
-    expect(filter.leadingComments[0]).toMatch(/^\/\/ volume can be adjusted/);
-    // v0.7.0 names its levels in 11 languages.
-    expect(filter.filterLevels?.[0]?.name).toMatchObject({ enUS: 'Leveling', deDE: 'Leveln' });
+    // v0.9.0 opens with four comment lines (what the filter is, its layout, the rule titles, the volume note).
+    expect(filter.leadingComments).toHaveLength(4);
+    expect(filter.leadingComments[0]).toMatch(/^\/\/ Sully's QoL Filter 0\.9\.2/);
+    expect(filter.leadingComments[3]).toMatch(/^\/\/ volume can be adjusted/);
+    // v0.7.0 names its levels in 11 languages, v0.9.0 in 13.
+    expect(filter.filterLevels?.[0]?.name).toMatchObject({ enUS: 'Leveling', deDE: 'Leveln', jaJP: 'レベリング', ptBR: 'Nivelamento' });
+    // Every rule is titled "R### | what it does | action", numbered by its place in the list.
+    expect(filter.rules.filter((rule, index) => rule.comment?.startsWith(`R${String(index + 1).padStart(3, '0')} | `) !== true)).toEqual(
+      []
+    );
     expect(filter.rules.at(-1)).toMatchObject({
-      itemCodes: ['z99'],
-      replaceName: { enUS: 'ÿc6The Hidden Vault' },
-      chatMessage: { enUS: 'Unique Map: ÿc0The Hidden Vault' },
-      useStyle: 'MapTier5',
+      comment: 'R689 | Decal 22l label: Um | name',
+      itemCodes: ['22l'],
+      replaceName: { enUS: 'ÿc4Um' },
     });
   });
 
@@ -418,7 +433,7 @@ describe('show (plugin 1.8.2)', () => {
   });
 });
 
-describe("Sully's v0.7.0 per-language texts", () => {
+describe("Sully's per-language texts (v0.7.0 on)", () => {
   const first = parseLootFilter(SULLY);
   const again = parseLootFilter(serializeLootFilter(first.filter));
 
@@ -432,8 +447,8 @@ describe("Sully's v0.7.0 per-language texts", () => {
     const localized = (value: unknown) => typeof value === 'object' && value !== null && 'enUS' in value;
     const keys = ['replaceName', 'namePrefix', 'nameSuffix', 'chatMessage'] as const;
     const counts = Object.fromEntries(keys.map((key) => [key, first.filter.rules.filter((rule) => localized(rule[key])).length]));
-    expect(counts).toEqual({ replaceName: 105, namePrefix: 38, nameSuffix: 15, chatMessage: 65 });
-    expect(Object.values(first.filter.styles ?? {}).filter((style) => localized(style.chatMessage))).toHaveLength(3);
+    expect(counts).toEqual({ replaceName: 524, namePrefix: 31, nameSuffix: 19, chatMessage: 66 });
+    expect(Object.values(first.filter.styles ?? {}).filter((style) => localized(style.chatMessage))).toHaveLength(4);
     expect(first.filter.filterLevels?.every((level) => localized(level.name))).toBe(true);
     expect(first.filter.rules.filter((rule) => rule.passthrough !== undefined)).toEqual([]);
   });

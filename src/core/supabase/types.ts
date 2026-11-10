@@ -127,7 +127,7 @@ export interface Database {
           user_id: string;
           name: string;
           description: string | null;
-          // The filter file as saved (JSON, possibly with comments); up to 512 KB.
+          // The filter file as saved (JSON, possibly with comments); up to 2 MB (migration 007).
           content: string;
           is_private: boolean;
           title: string | null;

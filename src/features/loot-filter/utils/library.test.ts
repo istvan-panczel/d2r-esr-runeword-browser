@@ -11,7 +11,6 @@ import {
   sourceIdsOf,
   updatedOnLine,
 } from './library';
-import { EXAMPLE_TEMPLATE, SULLYS_QOL_TEMPLATE } from './template';
 
 const A = filterId(1);
 const B = filterId(2);
@@ -120,48 +119,48 @@ describe('filterUpdateStatus', () => {
   const copy = makeSummary(A, { based_on_id: SOURCE, based_on_revision: 2, based_on_label: 'Source by Hero#4242' });
 
   it('is nothing for a filter that is not a copy', () => {
-    expect(filterUpdateStatus(makeSummary(A), {})).toBeNull();
+    expect(filterUpdateStatus(makeSummary(A), {}, {})).toBeNull();
   });
 
   it('waits for the source lookup', () => {
-    expect(filterUpdateStatus(copy, {})).toBeNull();
+    expect(filterUpdateStatus(copy, {}, {})).toBeNull();
   });
 
   it('offers an update when the source has a newer revision, with its change note', () => {
     const sources = { [SOURCE]: { id: SOURCE, revision: 3, change_note: 'Hide more junk', name: 'Source' } };
-    expect(filterUpdateStatus(copy, sources)).toEqual({ kind: 'update', note: 'Hide more junk' });
+    expect(filterUpdateStatus(copy, sources, {})).toEqual({ kind: 'update', note: 'Hide more junk' });
   });
 
   it('is up to date at the same revision', () => {
     const sources = { [SOURCE]: { id: SOURCE, revision: 2, change_note: null, name: 'Source' } };
-    expect(filterUpdateStatus(copy, sources)).toBeNull();
+    expect(filterUpdateStatus(copy, sources, {})).toBeNull();
   });
 
   it('says no longer shared when the source is private or deleted', () => {
-    expect(filterUpdateStatus(copy, { [SOURCE]: null })).toEqual({ kind: 'gone' });
+    expect(filterUpdateStatus(copy, { [SOURCE]: null }, {})).toEqual({ kind: 'gone' });
     // Deleted: `on delete set null` cleared the id, the label stays.
-    expect(filterUpdateStatus({ ...copy, based_on_id: null }, {})).toEqual({ kind: 'gone' });
+    expect(filterUpdateStatus({ ...copy, based_on_id: null }, {}, {})).toEqual({ kind: 'gone' });
   });
 
-  it('compares a template-based filter with the bundled template version', () => {
-    const versions = { 'sullys-qol': { version: '0.6.11' }, example: { version: '1.2.0' } };
+  it('compares a template-based filter with the version of the template text in use', () => {
+    const versions = { 'sullys-qol': '0.6.11', example: '1.2.0' };
     const fromTemplate = makeSummary(A, { based_on_template: 'sullys-qol', based_on_version: '0.6.9', based_on_label: 'Sully' });
     expect(filterUpdateStatus(fromTemplate, {}, versions)).toEqual({ kind: 'update', note: null });
     expect(filterUpdateStatus({ ...fromTemplate, based_on_version: '0.6.11' }, {}, versions)).toBeNull();
     expect(filterUpdateStatus({ ...fromTemplate, based_on_version: null }, {}, versions)).toBeNull();
     expect(filterUpdateStatus({ ...fromTemplate, based_on_template: 'other' }, {}, versions)).toBeNull();
-    // The bundled versions by default.
-    expect(filterUpdateStatus({ ...fromTemplate, based_on_version: SULLYS_QOL_TEMPLATE.version }, {})).toBeNull();
+    // The template not loaded (yet), or a text without a version: no update.
+    expect(filterUpdateStatus(fromTemplate, {}, {})).toBeNull();
+    expect(filterUpdateStatus(fromTemplate, {}, { 'sullys-qol': null })).toBeNull();
   });
 
-  it('compares an example-based filter with the bundled example version, not with Sully', () => {
-    const versions = { 'sullys-qol': { version: '0.6.11' }, example: { version: '1.2.0' } };
+  it('compares an example-based filter with the example version, not with Sully', () => {
+    const versions = { 'sullys-qol': '0.6.11', example: '1.2.0' };
     const fromExample = makeSummary(A, { based_on_template: 'example', based_on_version: '1.0.0', based_on_label: 'Example v1.0.0' });
     expect(filterUpdateStatus(fromExample, {}, versions)).toEqual({ kind: 'update', note: null });
     expect(filterUpdateStatus({ ...fromExample, based_on_version: '1.2.0' }, {}, versions)).toBeNull();
     expect(filterUpdateStatus({ ...fromExample, based_on_version: '1.10.0' }, {}, versions)).toBeNull();
-    expect(filterUpdateStatus({ ...fromExample, based_on_version: EXAMPLE_TEMPLATE.version }, {})).toBeNull();
-    expect(filterUpdateStatus({ ...fromExample, based_on_version: '0.9.0' }, {})).toEqual({ kind: 'update', note: null });
+    expect(filterUpdateStatus(fromExample, {}, { 'sullys-qol': '0.6.11' })).toBeNull();
   });
 });
 
