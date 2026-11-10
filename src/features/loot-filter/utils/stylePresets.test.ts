@@ -36,15 +36,17 @@ describe('STYLE_PRESETS', () => {
     }
   });
 
-  it("uses no style name of Sully's template but MidRune, so starting from it and adding a preset rarely meets one of his", () => {
+  it("uses no style name of Sully's template, so adding a preset to a filter started from his never meets one of his", () => {
     const sully = parseLootFilter(
       readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8')
     ).filter;
     const his = new Set(Object.keys(sully.styles ?? {}).map((name) => name.toLowerCase()));
     expect(his.size).toBeGreaterThan(0);
-    // Sully's v0.9.0 added a MidRune style of his own: picking the Mid rune preset in his filter uses his style (a style
-    // of that name is never overwritten, `presetStyleStatus`). Any other clash is new: rename the preset or list it here.
-    expect(STYLE_PRESETS.filter((preset) => his.has(preset.name.toLowerCase())).map((preset) => preset.name)).toEqual(['MidRune']);
+    // A clash would make picking the preset in his filter silently use his style (a style of that name is never
+    // overwritten, `presetStyleStatus`): v0.9.0 added a MidRune of his own, so ours became MidTierRune. Rename on a clash.
+    expect(STYLE_PRESETS.filter((preset) => his.has(preset.name.toLowerCase())).map((preset) => preset.name)).toEqual([]);
+    // Nor the NoIcon copy an example rule set adds.
+    expect(his.has('midtierrunenoicon')).toBe(false);
   });
 
   it('holds the look and an icon only (no sound or chat line), with known colour codes', () => {

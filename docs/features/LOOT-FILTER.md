@@ -464,14 +464,18 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   file's version; the example has no live file). Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "ÿc4Drop: {qualityColor}{name}".
-  - _v2.2.0_ (2026-11-09, current) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
+  - _v2.3.0_ (2026-11-10, current) is v2.2.0 with the Mid rune preset renamed `MidRune` → `MidTierRune` (and its copy
+    `MidRuneNoIcon` → `MidTierRuneNoIcon`) in the styles, the two rules' `useStyle` and their comments; nothing else
+    changed. Drafts started from v2.2.0 or earlier get "Update available"; a draft that keeps its old `MidRune` styles
+    works as before (the styles are stored in the filter).
+  - _v2.2.0_ (2026-11-09) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
     example group and `// ---- Hide rules` above the hide rules (12 headings; see "Section comments"), and a header
     line saying what they are. The rules and styles are unchanged.
   - _v2.1.0_ (2026-11-05) is built from the example rules (Rules tab, below): 28 of them, exactly as the
     picker adds them together with their default choices (`buildExampleSet` over the examples with `defaultChoices`:
     the style preset, which now brings its generated icon, Sully's sound, the chat line), plus `notify: true` on the
     unique rule and `activeInLevels: [2]` on four hide rules. Its `styles` are the 13 presets the rules use (HighRune,
-    MidRune, PerfectGem, UniqueItem, SetItem, MythicalUnique, CouponItem, RunewordBase, ValuableDrop, GoodCharm,
+    MidRune (MidTierRune since v2.3.0), PerfectGem, UniqueItem, SetItem, MythicalUnique, CouponItem, RunewordBase, ValuableDrop, GoodCharm,
     GoodJewel, UberItem, MapItem), copied as they are with their icons, plus `MidRuneNoIcon` (MidRune without its
     icon) for Hel to Um, which keep no icon as before: a rule cannot remove its style's icon, and the rule's comment
     says so. Only three rules carry an icon of their own, where it differs from the style's: unique rings and amulets
@@ -1519,7 +1523,7 @@ select only. Where a preset has two candidates, the one its sample and its examp
 | Preset            | Name              | Icon (size)                                           |
 | ----------------- | ----------------- | ----------------------------------------------------- |
 | High rune         | `HighRune`        | `diamond_red` (50)                                    |
-| Mid rune          | `MidRune`         | `diamond_orange` (40)                                 |
+| Mid rune          | `MidTierRune`     | `diamond_orange` (40)                                 |
 | Low rune          | `LowRune`         | none                                                  |
 | Unique            | `UniqueItem`      | `star_gold` (30); `crown_gold` stays a rule's choice  |
 | Set               | `SetItem`         | `star_green` (30)                                     |
@@ -1539,7 +1543,10 @@ select only. Where a preset has two candidates, the one its sample and its examp
 
 A rule's own `icon` overrides its style's, but no rule can remove it: the example picker handles a rule that wants
 none with a `<Name>NoIcon` copy of the style (see _Add selected_ under the Rules tab's example rules). Names are
-PascalCase without spaces like Sully's, none equal to one of Sully's twelve. The Styles tab's **Add preset** menu shows
+PascalCase without spaces like Sully's, none equal (in any case) to one of his style names: picking a preset whose name
+his filter already uses would silently keep his style (`styleChoice.ts` never overwrites one), so `stylePresets.test.ts`
+checks the names against his v0.9.2 styles (22), and the Mid rune preset, `MidRune` until 2026-11-10, became
+`MidTierRune` when his v0.9.0 added a `MidRune` of his own. Filters that already hold a `MidRune` style keep it. The Styles tab's **Add preset** menu shows
 each with a `PresetPreview` and its description; the menu says the preset is copied "minimap icon included".
 
 **Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, maxIconSize?, className? })`
@@ -1849,7 +1856,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   `examples.md` (`buildExamples`): first the style presets (`DEFAULT_PROMPT_STYLE_PRESETS` from `STYLE_PRESETS`, each
   its name, description and `{ "Name": { … } }` block one key per line, icon included, with the note that a filter must
   copy every preset it uses into `styles` and that a rule's own icon replaces its style's but cannot remove it; a style
-  an example uses but the given presets lack is added: with the editor's presets that is `MidRuneNoIcon`), then the
+  an example uses but the given presets lack is added: with the editor's presets that is `MidTierRuneNoIcon`), then the
   example rules under their group headings and intros, each its title, description and the complete rule the picker
   adds with its default presentation (`examplesWithPresentation`: the examples built as one set with `buildExampleSet`
   against the shown presets, so a rule that wants no icon uses the NoIcon copy and no preset block is ever changed:

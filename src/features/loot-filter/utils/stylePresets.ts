@@ -67,7 +67,7 @@ export const STYLE_PRESETS: readonly StylePreset[] = [
   },
   {
     id: 'mid-rune',
-    name: 'MidRune',
+    name: 'MidTierRune',
     label: 'Mid rune',
     description: 'Orange name on black with an orange border: good runes you still pick up.',
     sample: 'Ist Rune',

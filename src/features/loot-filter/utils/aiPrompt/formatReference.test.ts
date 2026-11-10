@@ -95,7 +95,7 @@ describe('buildFormatReference', () => {
 describe('buildExamples', () => {
   const text = buildExamples(EXAMPLE_RULES, DEFAULT_PROMPT_STYLE_PRESETS);
   const blocks = jsonBlocks(text);
-  // The presets, then the one copy an example needs: MidRuneNoIcon (Hel to Um keep no icon).
+  // The presets, then the one copy an example needs: MidTierRuneNoIcon (Hel to Um keep no icon).
   const shownStyles = STYLE_PRESETS.length + 1;
   const styleBlocks = blocks.slice(0, shownStyles);
   const ruleBlocks = blocks.slice(shownStyles);
@@ -127,9 +127,9 @@ describe('buildExamples', () => {
     expect(text).toContain(styleJson('HighRune', stylePreset('high-rune').style));
     expect(text).toContain('"icon": {"iconName":"diamond_red","iconSize":50}');
     const noIcon = styleBlocks.at(-1) ?? '';
-    expect(JSON.parse(noIcon)).toEqual({ MidRuneNoIcon: styleWithoutIcon(stylePreset('mid-rune').style) });
+    expect(JSON.parse(noIcon)).toEqual({ MidTierRuneNoIcon: styleWithoutIcon(stylePreset('mid-rune').style) });
     const useStyles = built.rules.map((rule) => rule.useStyle);
-    expect(useStyles.filter((name) => name === 'MidRuneNoIcon')).toHaveLength(1);
+    expect(useStyles.filter((name) => name === 'MidTierRuneNoIcon')).toHaveLength(1);
     // The high rune rules take the icon from HighRune: no icon of their own.
     expect(built.rules[EXAMPLE_RULES.findIndex((example) => example.id === 'high-runes')]?.icon).toBeUndefined();
   });
@@ -137,8 +137,8 @@ describe('buildExamples', () => {
   it('builds the examples against the given presets: a smaller set still uses the NoIcon copy, never a changed preset', () => {
     const runes = EXAMPLE_RULES.filter((example) => example.id === 'mid-runes');
     const only = buildExamples(runes, DEFAULT_PROMPT_STYLE_PRESETS);
-    expect(only).toContain('"useStyle": "MidRuneNoIcon"');
-    expect(only).toContain(styleJson('MidRune', stylePreset('mid-rune').style));
+    expect(only).toContain('"useStyle": "MidTierRuneNoIcon"');
+    expect(only).toContain(styleJson('MidTierRune', stylePreset('mid-rune').style));
   });
 
   it('defines every style the examples use: the presets and the rules make a clean filter', () => {
