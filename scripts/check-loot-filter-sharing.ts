@@ -30,7 +30,8 @@ interface Result<T> {
 const ROOT = join(import.meta.dirname, '..');
 const PREFIX = 'check-loot-filter-sharing';
 const SMALL = '{"rules":[]}';
-const MAX_CONTENT_BYTES = 524288;
+/** `loot_filters_content_size` (migration 007; 512 KiB before). */
+const MAX_CONTENT_BYTES = 2097152;
 const MAX_FILTERS = 50;
 const EMBED = 'profiles!loot_filters_user_id_fkey(display_name, discriminator, avatar_url)';
 
@@ -400,7 +401,7 @@ async function runChecks(a: Client, b: Client, anon: Client, idA: string, idB: s
     assert((await mustRow(a, id)).download_count === before.download_count + 1, 'A could not count their own private filter');
   });
 
-  await check('9  content over 512 KiB is rejected, exactly 512 KiB is accepted', async () => {
+  await check('9  content over 2 MiB is rejected, exactly 2 MiB is accepted', async () => {
     const over = await a
       .from('loot_filters')
       .insert(filter(idA, 'too big', { content: 'x'.repeat(MAX_CONTENT_BYTES + 1) }))

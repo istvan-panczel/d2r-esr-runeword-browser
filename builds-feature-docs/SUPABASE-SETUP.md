@@ -211,6 +211,22 @@ After running, verify under **Database → Tables → builds → Constraints** (
 - `builds_build_data_size`
 - `builds_build_data_object`
 
+### Apply the Loot Filter Size Migration (007)
+
+Raises the cap on a saved loot filter (`loot_filters.content`) from 512 KB to 2 MB: Sully's QoL filter v0.9.2 alone is
+0.54 MB, so a filter started from it could not be saved. Drops and re-adds the `loot_filters_content_size` check
+(`between 1 and 2097152`) and updates the column comment. No data changes; every existing row passes; safe to run
+twice. Apply it to PROD **before** deploying the app change that raises `FILTER_CONTENT_MAX_BYTES`: the new client lets
+files of up to 2 MB through, and against the old constraint such a save fails with a check violation.
+
+1. Open `supabase/migrations/007_loot_filter_content_size.sql`.
+2. For each Supabase project (DEV first, then PROD): **SQL Editor → New query → paste → Run**, and verify no errors.
+3. On DEV, `npm run check:loot-filter-sharing` checks that 2 MiB is accepted and one byte more refused.
+
+Verify with
+`select pg_get_constraintdef(oid) from pg_constraint where conname = 'loot_filters_content_size';`: it reads
+`CHECK (((octet_length(content) >= 1) AND (octet_length(content) <= 2097152)))`.
+
 ### Future Migrations
 
 When new migration files are added to `supabase/migrations/`:

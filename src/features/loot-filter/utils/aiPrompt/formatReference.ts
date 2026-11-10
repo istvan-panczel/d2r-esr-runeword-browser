@@ -31,7 +31,7 @@ import {
   type RuleConditions,
 } from '../../engine/types';
 import { validateLootFilter } from '../../engine/validate';
-import { FILTER_CONTENT_MAX_BYTES } from '../../sharing/constants';
+import { FILTER_CONTENT_MAX_LABEL } from '../../sharing/constants';
 import { BUNDLED_ICON_ASSETS, BUNDLED_SOUND_ASSETS } from '../bundledAssets';
 import { buildExampleSet, defaultChoices, EXAMPLE_GROUPS, type ExampleRule } from '../exampleRules';
 import { STYLE_PRESETS } from '../stylePresets';
@@ -373,7 +373,7 @@ function limitsSection(): string {
     `- Unidentified items: a rule that checks an item stat (stat lists or a formula) skips an unidentified item entirely: none of its actions run and it cannot hide it. ${list(STATS_WHILE_UNIDENTIFIED)} still work. Magic and rare drops are unidentified, so a hide rule with stat exceptions does not hide them until identified.`,
     '- Chat lines and sounds play once per item. The launcher\'s "Enable chat notifications" (selection.json `chatNotifications`) turns every item chat line off, and "Play sounds" every sound.',
     "- Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.",
-    `- The plugin documents no size limit; the app saves filters up to ${String(FILTER_CONTENT_MAX_BYTES / 1024)} KB.`,
+    `- The plugin documents no size limit; the app saves filters up to ${FILTER_CONTENT_MAX_LABEL}.`,
   ].join('\n');
 }
 

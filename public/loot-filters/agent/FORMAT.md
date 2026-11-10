@@ -281,7 +281,7 @@ Example:
 - Unidentified items: a rule that checks an item stat (stat lists or a formula) skips an unidentified item entirely: none of its actions run and it cannot hide it. `gold`, `armorclass`, `quantity`, `durability`, `maxdurability`, `item_numsockets` still work. Magic and rare drops are unidentified, so a hide rule with stat exceptions does not hide them until identified.
 - Chat lines and sounds play once per item. The launcher's "Enable chat notifications" (selection.json `chatNotifications`) turns every item chat line off, and "Play sounds" every sound.
 - Sounds and icons are files next to the filter. Use only the bundled ones in assets.md: the app's .zip download ships them. Icons and droplights need HD graphics.
-- The plugin documents no size limit; the app saves filters up to 512 KB.
+- The plugin documents no size limit; the app saves filters up to 2 MB.
 
 ## Writing the file for the app
 

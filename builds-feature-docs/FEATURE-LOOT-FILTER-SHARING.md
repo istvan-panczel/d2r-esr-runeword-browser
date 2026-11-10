@@ -20,7 +20,7 @@ Status: planning (branch `feat/loot-filter-sharing`). Builds on the build sharin
 | What changed             | Saving a public filter's content takes an optional short note; copies show it in their Update available banner, the filter's card / header shows the latest one.                                                 |
 | Bundled templates        | The Shared tab starts with pinned cards for the bundled Sully's QoL filter and the commented example filter (version, rule count, Open / Download / Start from it); each has a sandbox route.                    |
 | `updateUrl`              | Not tied to sharing. A shared filter's `updateUrl` is left as the author wrote it.                                                                                                                               |
-| Limits                   | File up to 512 KB, up to 50 filters per user (private ones included), name 1–100 characters, description up to 2000, change note up to 200.                                                                      |
+| Limits                   | File up to 2 MB (512 KB until migration 007, 2026-11-10), up to 50 filters per user (private ones included), name 1–100 characters, description up to 2000, change note up to 200.                               |
 | "Under development" note | Removed from the loot filter pages: the editor is usable.                                                                                                                                                        |
 
 Defaults chosen while planning:
@@ -51,7 +51,7 @@ Applied by hand in the Supabase SQL editor, DEV first, then PROD (same as 001–
 | `user_id`                                       | `uuid`         | `references profiles(id) on delete cascade`.                                                                               |
 | `name`                                          | `text`         | 1–100 characters. The list name, not the file's `title`.                                                                   |
 | `description`                                   | `text` null    | Up to 2000 characters, plain text.                                                                                         |
-| `content`                                       | `text`         | The filter file. `octet_length(content) <= 524288`.                                                                        |
+| `content`                                       | `text`         | The filter file. `octet_length(content) <= 2097152` (migration 007; 524288 in 005).                                        |
 | `is_private`                                    | `boolean`      | Default `false`.                                                                                                           |
 | `title`, `author`, `file_version`               | `text` null    | From the file at save time (≤ 200 characters each).                                                                        |
 | `rule_count`                                    | `integer`      | From the file at save time.                                                                                                |
