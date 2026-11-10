@@ -69,8 +69,9 @@ Apply what the findings call for; reference.md says how for each kind. Do not co
 2. Integrity-test pins and other pinned numbers, only where the release diff explains the change.
 3. Docs quoting the old version (`docs.old-version`): update the version and every count you can derive from the new
    manifest or bundles; list the ones you cannot.
-4. Sully's template, when upstream is newer (`lootfilter.template` / `lootfilter.assets`): refresh the copy and its
-   assets, `SULLYS_QOL_TEMPLATE` and the docs; the validation must not gain diagnostics.
+4. Sully's template, when upstream differs (`lootfilter.template` / `lootfilter.assets`): run
+   `npm run loot-filter:template` and bundle any new icon or sound it reports (icons shrunk to 128 px); the app loads
+   his live file anyway, the copy is the fallback. The validation must not gain diagnostics.
 5. Official links (`net.links`, `net.docs-site`): fix moved or dead official URLs in `navConfig.ts`,
    `guideHome.ts` and the guide's `docs:` links. Community tools are out of scope: only report them.
 6. Campaign map (`src/features/campaign-map/campaignMapIntegrity.test.ts` failures, or new/renamed/removed areas in

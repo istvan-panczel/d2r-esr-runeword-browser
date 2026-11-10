@@ -69,7 +69,8 @@ then run `lootfilter` in the game console and read
   the library is the draft store. Optional entry fields `savedId`, `savedOwnerId`, `savedRevision` (a draft holding the
   unsaved edits of a saved filter, and the revision it started from) and
   `basedOn { id?, revision?, template?, version?, label }` (a copy of a shared filter, or a start from a bundled
-  template: `{ template: 'sullys-qol' | 'example', version, label: '<name> v<version>' }`, `templateBasedOn(id)`). The
+  template: `{ template: 'sullys-qol' | 'example', version, label: '<name> v<version>' }`, `templateBasedOn(id, version)`
+  with the version of the text the start used, live or bundled). The
   guard checks only the required fields, so older tabs still read the library;
   `readLibrary` drops a malformed optional field (`normalizeEntry`) instead of rejecting the library. Old `template`
   entries without `basedOn` (written when only Sully's was bundled) get it from the file (`entryBasedOn` /
@@ -371,9 +372,12 @@ tabs: the page is the My filters content without the saved section (the drafts, 
 **Shared** (`SharedFiltersTab`):
 
 - A pinned card per bundled template first, Sully's QoL filter then the example filter (`BundledTemplateCard`, one per
-  `BUNDLED_TEMPLATE_LIST` entry): name, its summary, "by <author>", its version, rule count and level names from
-  `filterMetadata` on the bundled file (fetched once per page load by `loadTemplateText(id)`, shared with its start
-  button), **Open** (its `sandboxPath`: `/loot-filters/sully` or `/loot-filters/example`), **Download** (the same menu
+  `BUNDLED_TEMPLATE_LIST` entry): name, its summary, "by <author>", the version and, for Sully's, where the text came
+  from ("v0.9.2 · latest from Sully's GitHub" or "v0.9.2 · the copy bundled with this site", with a line "Could not
+  load the latest from github.com/Thisisnotsully/QoL-Filter: <reason>." under the rule count when the live file was not
+  used; a skeleton while it loads, so no wrong version flashes), rule count and level names from `filterMetadata` on
+  the text in use (`useTemplateSource(id)`, see [Sully's template: live file, bundled
+  fallback](#sullys-template-live-file-bundled-fallback); shared with its start button), **Open** (its `sandboxPath`: `/loot-filters/sully` or `/loot-filters/example`), **Download** (the same menu
   as a draft's, with the zip) and **Start from it** (the template start below; every start button waits while one
   loads).
 - Search by name (debounced 300 ms like the builds list, server-side `ilike`) and sort **Newest** / **Most liked** /
@@ -402,8 +406,9 @@ tabs: the page is the My filters content without the saved section (the drafts, 
   first, private ones included) as shared filter cards with badges: **Unsaved changes** (a visible draft has its
   `savedId`), **Update available** (`filterUpdateStatus`: a copy whose source has a newer revision, from one
   `fetchSourceRevisionsRequested` with every `based_on_id`, the source's change note in the tooltip; a filter started
-  from a bundled template with `based_on_version` below that template's bundled version, an unknown
-  `based_on_template` never) and **Original no longer shared** (the source is
+  from a bundled template with `based_on_version` below the version of that template's text in use, live or bundled
+  (`useTemplateVersions` loads only the templates the saved filters name; not loaded yet, an unknown
+  `based_on_template` or a null version never) and **Original no longer shared** (the source is
   private or deleted; a deleted source has cleared `based_on_id`, the label stays).
 - **Unsaved in this browser** (the heading only when signed in): `selectVisibleDrafts(state, viewerId)` as draft cards
   (`LibraryEntryCard`, newest first): name, title/author and rule count, last update, "Based on …", an **Unsaved
@@ -434,46 +439,29 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   out the text notes (accepted trailing commas or block comments, comments the first edit drops),
   which the editor's problems chip and list show first. The entry name is
   the file's `title`, else the file name. A successful upload opens the editor, like New filter and the template.
-- **Start from Sully's QoL filter**: fetches `public/loot-filters/sullys-qol-filter.json` and opens it as a `template`
-  entry named "Sully's QoL Filter" (the file's title; the card's byline reads "Sully's QoL Filter by Sully"). The file
-  is `Sullys-QoL-Filter.json` v0.9.2 from github.com/Thisisnotsully/QoL-Filter, verbatim (689 rules, 22 styles, 4
-  levels, `soundVolume` 25, 538 KB, his `updateUrl` and `//` comments kept), the filter the ESR launcher pulls live since
-  3.2.22. Our v0.6.1 copy had patched a trailing comma after the last rule and a `9pm` typo (War Pick is `9mp`); Sully
-  fixed both in v0.6.2 on 2026-10-26, so the copy needs no edits; v0.6.3 (2026-10-27) adds a "500k+" gold stack rule
-  (`gld` with stat 14 ≥ 500000, chat message, `other.mp3`) and corrects the volume comment to the actual 25; v0.6.7 (2026-10-31) adds a +1 All Skills base highlight (chat
-  line, `other.mp3`, red border, `goldstar` icon), hides minor potions (`mp1`/`hp1`) from character level 12 outside
-  town, and adds `item_allskills < 1` exceptions (stat 127) to three hide rules; v0.6.9 to v0.6.11 (2026-10-31 to
-  11-01; there is no v0.6.8) add an "Ancient Scroll tiering" hide rule for the Ancient Scrolls `01b` to `50b` at level
-  4 (Uber-Strict - Maps+) and limit their gong highlight to levels 1 to 3, add the Mythical Jewel (`mjw`) to the rare
-  jewel rule, and fix the ancient coupon lists: `13d` (Sharkskin Boots, Waterwalk) joins the three exceptional lists
-  and leaves the elite chat list, `17e` (Veil of Steel) moves from the high tier unique coupon rule to the elite lists
-  and `14e` (Nightwing's Veil) the other way; v0.6.12 and v0.6.13 (2026-11-04) add two Legendary
-  Materials to the `STierMaterial` group, Lucion's Relic of Sanctification (`u18`) and Inarius' Everburning Halo
-  (`u40`), with the existing `redD` icon (no new assets, no new warnings); v0.7.0 (2026-11-05, ESR 3.3) localises
-  `replaceName`, `namePrefix`, `nameSuffix`, the chat lines and the `filterLevels` names into 11 languages (no jaJP or
-  ptBR), keeps one `//` comment line (the volume note) and fixes the Mythical Ring label (`mrn` said "Marksmen Bow"); no
-  new assets or rules, and the parser had to learn per-language level names first (plugin 1.8.2, "Localised level
-  names" below); v0.9.0 to v0.9.2 (2026-11-10, "Added compatibility for Mefi's editor") regroup the whole filter into
-  6 `// ====` parts (Protection, Drop Announcements, Superior Base Stat Tags, Hide by Strictness, Highlights and Labels,
-  Name Shortening) and 44 `// ----` sections, open with 4 `//` lines (what the filter is, its layout, the rule titles,
-  the volume note), title every rule "R### | what it does | action" (the number is its place in the list, 1-based, as
-  the editor counts), grow to 689 rules and 22 styles (beams on the styles, shortened coupon and monster part names,
-  jaJP and ptBR for 13 languages, ESR currency and quest items, the skill tab bases read with
-  `statMax('item_addskill_tab')`, gold piles by the stat name `gold`), with the same icons and sounds (no new assets). Some
-  section titles repeat in different parts (Mythicals, Coupons twice, Uniques and sets three times). The v0.6.9 hide
-  rule (rule 98 up to v0.7.0, rule 77 "R078" since v0.9.0) writes
-  `"activeInLevels": 4`, a number where the format wants a list. Verified in game: the rule works, so the editor
-  reads it as `[4]` with one warning ("A single number works in game; [4] is the documented form.", see "A
-  single-number level" above), writes the `4` back unchanged, and the Test tab hides Ancient Scrolls at level 4 only.
-  Whether the plugin really reads it as `[4]` (and not as "every level") is the remaining check in the backlog.
-  The `/esr-update` skill diffs the copy against upstream on every ESR release. Credit line (`SULLYS_QOL_TEMPLATE.credit`
-  in `utils/template.ts`): "Sully's QoL filter v0.9.2, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter; icons and sounds by Sully".
-  It replaced the ESR default filter (302 rules, an earlier conversion of the same filter the mod shipped as
-  `LootFilters/esr-default-filter.json` up to 3.2.21). The library how-to adds that every player already has Sully's
-  filter through the launcher.
+- **Start from Sully's QoL filter**: loads Sully's filter (`loadTemplate('sullys-qol')`: his live file, else the
+  bundled copy) and opens it as a `template` entry named "Sully's QoL Filter" (the file's title; the card's byline reads
+  "Sully's QoL Filter by Sully") with `basedOn` at that text's version. It is `Sullys-QoL-Filter.json` from
+  github.com/Thisisnotsully/QoL-Filter verbatim, the filter the ESR launcher pulls live since 3.2.22 (it replaced the
+  ESR default filter, an earlier conversion of the same filter the mod shipped as `LootFilters/esr-default-filter.json`
+  up to 3.2.21). History in short: up to v0.6.13 it was one long list with per-rule comments; v0.7.0 (2026-11-05, ESR
+  3.3) localised names, chat lines and level names (the parser learned per-language level names for it); v0.9.0 to
+  v0.9.2 (2026-11-10, "Added compatibility for Mefi's editor") regrouped it into 6 `// ====` parts and 44 `// ----`
+  sections with an "R### | what | action" title per rule (689 rules, 22 styles, the same twelve icons and nine sounds).
+  Its Ancient Scroll hide rule (rule 77 "R078" in v0.9.2) writes `"activeInLevels": 4`, a number where the format wants
+  a list. Verified in game: the rule works, so the editor reads it as `[4]` with one warning ("A single number works in
+  game; [4] is the documented form.", see "A single-number level" above), writes the `4` back unchanged, and the Test
+  tab hides Ancient Scrolls at level 4 only. Whether the plugin really reads it as `[4]` (and not as "every level") is
+  the remaining check in the backlog. Tests that pin facts of his file (rule counts, sections, labels, styles) read a
+  frozen copy, `engine/__fixtures__/sullys-qol-filter-0.9.2.json` (Prettier-ignored), so a refresh of the bundled copy
+  breaks none of them. Credit line (`SULLYS_QOL_TEMPLATE.credit` in `utils/template.ts`, version-free): "Sully's QoL
+  filter, the filter the ESR launcher ships live from github.com/Thisisnotsully/QoL-Filter (this site loads his latest
+  too, with a bundled copy as fallback); icons and sounds by Sully". The library how-to adds that every player already
+  has Sully's filter through the launcher.
 - **Start from the example**: fetches `public/loot-filters/example-filter.json` and opens it as a `template` entry
   named "Example filter (with explanations)" (the file's title) with
-  `basedOn { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' }`. Our own
+  `basedOn { template: 'example', version: '2.2.0', label: 'Example filter (with explanations) v2.2.0' }` (the
+  file's version; the example has no live file). Our own
   file (author "D2R ESR Runeword Browser"), a teaching filter over two levels, Leveling (1) and Strict (2), with
   `soundVolume` 50 and the drop line `notifications.dropFormat` "ÿc4Drop: {qualityColor}{name}".
   - _v2.2.0_ (2026-11-09, current) is v2.1.0 with a `// ---- <group>` section heading above the first rule of each
@@ -505,7 +493,8 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
   - _v2.0.0_ (2026-11-05) had the same rules with the icons on the rules and icon-less presets; _v1.0.0_
     (hand-written, 21 rules, two custom styles Valuable and Good with sounds and Sully's icons in them) came before.
     Drafts started from either get "Update available".
-  - _Tests_: `exampleFilter.test.ts` parses and validates it, checks the header at `EXAMPLE_TEMPLATE.version`, every
+  - _Tests_: `exampleFilter.test.ts` parses and validates it, checks the header at its current version (written in the
+    test: bump both), every
     rule against its example (`FROM_EXAMPLES`, the ids in file order with what the file adds, built as one set; a
     changed example fails until the file follows and its version is bumped), the comments, the styles against the
     presets (icons included, the one NoIcon copy, the three rules with an icon of their own), the levels, the sounds
@@ -514,30 +503,86 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. �
     regenerated from v2.0.0 with a throwaway script that serializes the parsed file with the new styles, rules and
     comments and moves each `comment` line first, which reproduces v2.0.0 byte for byte when nothing changes) and is
     kept byte-stable: `public/loot-filters/` is Prettier-ignored.
-  - Credit line: "Example filter v2.2.0, built for this site from its example rules to show how rules work; sounds by
-    Sully, icons generated for this app".
+  - Credit line: "Example filter, built for this site from its example rules to show how rules work; sounds by Sully,
+    icons generated for this app".
 - **Bundled templates** (`utils/template.ts`): a small registry, `BUNDLED_TEMPLATES` keyed by `BundledTemplateId`
   (`'sullys-qol' | 'example'`, the `basedOn.template` / `based_on_template` value) and `BUNDLED_TEMPLATE_LIST` (display
-  order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `version`, `file`,
-  `sandboxPath`, `startLabel`, `summary` (card text) and `credit`; `template.test.ts` checks name, author and version
-  against each bundled file, so bumping a file means bumping its entry. `bundledTemplate(id)` looks one up (null for
-  any other text), `fetchTemplateText(id)` / `loadTemplateText(id)` (cached per id per page load) read its file,
-  `useTemplateText(id)` wraps that for the cards, and `templateBasedOn(id, version?)` / `templateStartInput(id, text)`
-  (`utils/basedOn.ts`) build what a start records. Adding a template is a file, a registry entry and a route line.
+  order, Sully's first). Each `BundledTemplate` has `name` (the file's title), `author`, `file` (the bundled copy),
+  optional `liveUrl` and `repoUrl` (Sully's only), `sandboxPath`, `startLabel`, `summary` (card text) and `credit`; no
+  version (it is always the version of the text in use). `template.test.ts` checks name and author against each bundled
+  file, that each bundled file passes `checkTemplateText`, and that no credit or summary names a version.
+  `bundledTemplate(id)` looks one up (null for any other text), `fetchBundledTemplateText(id)` reads the bundled copy,
+  `loadTemplate(id)` / `useTemplateSource(id | null)` give the text in use (below), and `templateBasedOn(id, version)` /
+  `templateStartInput(source)` (`utils/basedOn.ts`) build what a start records. Adding a template is a file, a registry
+  entry and a route line.
 - New filter, Upload and the template starts add a draft and open it on `/loot-filters/draft/:id`
   (`hooks/useStartFilter.ts`: `startFromTemplate(id)`, `loadingTemplate` is the id loading or null). Empty state ("No
   filters yet") when there are no drafts and nothing is saved.
 - **Download** (`components/FilterDownloadMenu.tsx`, shared with the editor header): a plain button saving
-  `<slug of name>.json` when the filter references no bundled sound or icon (or is not valid JSON); otherwise a menu with
-  **Download .json** and **Download .zip with sounds and icons**, plus the hint "Unzip into your LootFilters folder" and,
-  when the filter references files the app does not bundle, their paths ("add them yourself"; the first four, then
-  "and N more"). The zip (`<slug>.zip`) holds `<slug>.json` (the same text the plain download saves), `sounds/*.mp3` and
+  `<slug of name>.json` when the filter references no sound or icon file (or is not valid JSON); otherwise a menu with
+  **Download .json** and (when it uses a bundled one) **Download .zip with sounds and icons** with the hint "Unzip into
+  your LootFilters folder", and, when the filter references files the app does not bundle, their paths ("Not bundled,
+  add them yourself: …"; the first four, then "and N more") and "Sully's are in his icons and sounds folders on
+  GitHub." with links to those two folders of his repository (always, whatever the filter is based on: a file the site
+  lacks is most likely a newer asset of his; the site never fetches sprites or sounds from GitHub). The zip (`<slug>.zip`) holds `<slug>.json` (the same text the plain download saves), `sounds/*.mp3` and
   `icons/*.sprite` for the referenced bundled files (`goldstar` brings `goldstar.lowend.sprite` along). The referenced
   files come from `utils/referencedAssets.ts` (rules and styles; `sound` values ending in `.wav`/`.mp3`/`.flac`, every
   `icon.iconName`; matched case-insensitively against `utils/bundledAssets.ts` and written under the bundled file's
   own name, so a rule's `gemp` puts `icons/gemP.sprite` in the zip); the archive from `utils/zip.ts`, a
   dependency-free stored-only ZIP writer (UTF-8 names, CRC-32). A failed fetch shows a toast "Could not download the
   sounds and icons" and saves nothing.
+
+### Sully's template: live file, bundled fallback
+
+Owner decision (2026-11-10): the app always uses Sully's latest filter, as the ESR launcher does (it pulls the same
+file every 10 minutes and keeps the last good one), with the copy in `public/loot-filters/` as the fallback.
+
+- **Loading** (`utils/templateSource.ts`, `loadTemplate(id)`): a template with a `liveUrl` (Sully's:
+  `https://raw.githubusercontent.com/Thisisnotsully/QoL-Filter/refs/heads/main/Sullys-QoL-Filter.json`) is fetched with
+  a plain GET (`fetch(liveUrl, { signal: AbortSignal.timeout(5000), referrerPolicy: 'no-referrer' })`): no custom
+  headers, because GitHub answers a CORS preflight with 403, and the default cache mode, so the browser's HTTP cache
+  revalidates it (`max-age=300`, about 109 KB gzip on the wire). jsDelivr (12 h branch cache) and api.github.com (60
+  requests an hour, base64) do not fit. A valid live text always wins, even when its version is lower than the bundled
+  copy's. Any failure (network, timeout, HTTP status, an invalid text) loads the bundled copy instead, with the reason
+  in `liveError` and a `console.warn`. A template without a `liveUrl` (the example) loads its bundled copy only.
+- **Validation** (`checkTemplateText(id, text)`): at most 5 MB (characters); `parseLootFilter` does not throw and
+  reports no error diagnostic (warnings are fine: v0.9.2 has one); at least one rule; its title or author names this
+  template (`templateOfFile` in `utils/basedOn.ts`); its `version` reads as a template version (`templateVersionOf`).
+  The result carries the version and rule count.
+- **Cache**: one promise per id, so the card, the start button, the sandbox and the update banner share one request.
+  The next call after 10 minutes re-checks the live file; a failed re-check keeps the previous source (a live one stays
+  live, with a fresh `loadedAt`); a load that fails outright (live and bundled) is forgotten so the next call retries.
+  Nothing is written to localStorage (the text is 0.5 MB). `peekTemplateSource(id)` returns the last settled source
+  without a request, so a page that opens after another loaded it shows no loading state.
+- **Hooks**: `useTemplateSource(id | null)` gives `idle` (null: nothing is fetched) / `loading` / `ready` with the
+  `TemplateSource` (`text`, `version`, `origin: 'live' | 'bundled'`, `liveError`, `loadedAt`) / `error`;
+  `useTemplateVersions(ids)` the versions for the My filters badges. Only pages that need a template load it: the
+  Shared tab's pinned cards, the sandbox route, a start, the update banner of a template-based filter, the AI page's
+  template starter, and My filters only when a saved filter is template-based.
+- **What the user sees**: the pinned card "v0.9.2 · latest from Sully's GitHub", or "v0.9.2 · the copy bundled with
+  this site" plus "Could not load the latest from github.com/Thisisnotsully/QoL-Filter: <reason>." (reasons: "HTTP
+  404", "timed out after 5 s", the browser's network error such as "Failed to fetch", or the validation reason such as
+  "the file has no rules"); the sandbox banner "You are viewing Sully's QoL Filter v0.9.2, the latest from Sully's
+  GitHub — changes are not saved. …" (or ", the copy bundled with this site" with the reason on a line below); the
+  update banner "Sully's QoL Filter v<new> is out; this filter started from v<old>." The version always comes from
+  the text, so `basedOn`, "Update available" and the AI starter label follow Sully's bumps without a code change.
+  "Update available" compares version numbers only: a content change without a version bump (common for Sully) shows
+  none, and a live file with a lower version than a draft's shows none either.
+- **Assets**: only the JSON is live. Icons and sounds always come from the site; a file the site does not bundle is
+  named in the download menu with links to Sully's folders (see Download above) and plays or draws nothing in the
+  editor.
+- **Refreshing the bundled copy**: `npm run loot-filter:template` (`scripts/update-sully-template.ts`) fetches the live
+  file, runs `checkTemplateText` (refuses to write an invalid one), writes it verbatim to
+  `public/loot-filters/sullys-qol-filter.json`, and prints the old → new version, size, rules, styles, the parser's and
+  the validator's (committed game data) error/warning counts, the files the new text references that the site does not
+  bundle, and (one call to `api.github.com/repos/Thisisnotsully/QoL-Filter/git/trees/main?recursive=1`, generic
+  User-Agent) his icons and sounds the site does not bundle. `-- --check` writes nothing and exits 1 when upstream
+  differs (or cannot be fetched or checked). A bump needs no constant, test or agent pack edit; a new icon or sound
+  needs bundling (icons shrunk to 128 px, the `bundledAssets.ts` registry), which the bundled-file invariant in
+  `referencedAssets.test.ts` enforces. The pure parts live in `scripts/lib/sullyTemplate.ts` (tested); the
+  `/esr-update` review (`esr:review`) still diffs upstream against the bundled copy.
+- **Privacy**: `raw.githubusercontent.com` was already contacted for the ESR version check; the privacy policy's GitHub
+  row names Sully's live filter as a second purpose.
 
 ## Editor screen
 
@@ -587,8 +632,8 @@ Spec and owner decisions: [FEATURE-LOOT-FILTER-SHARING.md](../../builds-feature-
 store at that moment so a target that already matches (the same filter after Save or Copy moved the route) is left
 alone: the draft route dispatches `open(id)`; the saved route redirects a local draft id to `/loot-filters/draft/:id`,
 else clears the sharing detail and dispatches `fetchSharedFilterRequested(id)` (without Supabase it only shows "not
-found"); a template route (`/loot-filters/sully`, `/loot-filters/example`) fetches that bundled file and dispatches
-`openSandbox` with `templateBasedOn(id)` (a failed fetch shows "Could not load <name>" with Try again, only on that
+found"); a template route (`/loot-filters/sully`, `/loot-filters/example`) loads that template (`loadTemplate`: live or
+bundled) and dispatches `openSandbox` with `templateBasedOn(id, version)` (a failed load, live and bundled shows "Could not load <name>" with Try again, only on that
 template's route). A sandbox without a saved filter matches the template route its `basedOn.template` names (Sully's
 when it names none). A second
 effect waits for the auth state and the fetched row, then dispatches `openSaved({ row, viewerId, authorLabel })`
@@ -646,7 +691,8 @@ writes name / description / is_private at once (no revision bump) and dispatches
 `fetchSourceFilterRequested(id)` loads a copy's source with its file into `sourceFilter`.
 
 **Sandbox** (someone else's filter, a signed-out visitor, or a bundled template, which reads "You are viewing <name>
-v<version>"): a banner "You are viewing X by Name#1234 — changes
+v<version>", for Sully's followed by ", the latest from Sully's GitHub" or ", the copy bundled with this site" and the
+reason on a line below, from `peekTemplateSource` when its version is the sandbox's): a banner "You are viewing X by Name#1234 — changes
 are not saved. Copy to my filters to keep them." with **Copy to my filters** (signed out with Supabase: the sign-in
 dialog; without Supabase it copies directly), **Like** (shared filters; signed out: sign-in), **Undo my changes** when
 edited, the author's profile link, the description, "Based on …" and the latest change note. Copy dispatches
@@ -660,12 +706,14 @@ revision shows the source's name and change note, prefetches its file (`fetchSou
 **Replace with the latest** (`takeUpdate` replace, as unsaved changes with the new `basedOn`; asks first when there are
 unsaved changes, which a draft always has; Discard changes then goes back to the saved version) and **Add as a new
 filter** (`takeUpdate` new, then the new draft's route). A never-saved draft is the only copy of its filter, so it gets
-only Add as a new filter (the banner says why, and the reducer refuses `replace` there). Either action applies only
-while the filter it was clicked on is still open (the template is fetched first). A missing source, or a saved copy
-that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A template `basedOn` older than
-that template's bundled version (or of unknown version) reads "<name> v<version> is bundled now; this filter started
-from v…" and offers the same two actions with that template's bundled file (`{ kind: 'template', template,
-fromVersion }`); a `basedOn.template` the registry does not know shows nothing.
+only Add as a new filter (the banner says why, and the reducer refuses `replace` there). A missing source, or a saved copy
+that lost its `based_on_id` but keeps a label, reads "The original … is no longer shared" (dismissable, no action). A
+template `basedOn` older than the version of that template's text in use (`useTemplateSource`, live or bundled; a
+`basedOn` of unknown version counts as older) reads "<name> v<new> is out; this filter started from v<old>." (or
+"from an older version") and offers the same two actions with the very text and version the banner announced (`{ kind:
+'template', template, fromVersion, toVersion }`; the actions are synchronous, nothing is fetched on click). Nothing
+shows while the template loads or when its version is unknown, and a `basedOn.template` the registry does not know
+shows nothing.
 
 | Tab      | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1745,8 +1793,9 @@ Nothing is sent anywhere: the page only builds files (the page says so). Owner d
   Download would save, so drafts, saved filters and sandboxes all work. Leaving the editor flushes as usual.
 - **The page** (a 1-2-3 explanation on top): (1) the request textarea (placeholder example; kept in `sessionStorage`
   `loot-filters/ai-request` so it survives a trip to the editor; storage errors are ignored) and **Start from**
-  (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, fetched with
-  `loadTemplateText`), a draft of this browser (`selectVisibleDrafts`, newest first), **My saved filters** when signed in
+  (`AiStarterPicker`): nothing, the filter from the editor, a bundled template (`BUNDLED_TEMPLATE_LIST`, listed by
+  name; the pick loads it with `useTemplateSource`, live or bundled, and the starter is labelled "<name> v<version>"),
+  a draft of this browser (`selectVisibleDrafts`, newest first), **My saved filters** when signed in
   (the sharing slice's My filters list, `fetchMyFiltersRequested` on mount and on an account switch; loading, failed and
   empty rows are disabled items; a filter with a local draft says "saved version; a draft has changes"; the list has no
   files, so a pick dispatches the sharing saga's detail fetch `fetchSharedFilterRequested` unless that filter's detail is
@@ -1820,8 +1869,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   per unique and set row with base, level and coupon/disabled notes, and every skill. Neither size lists the sounds.txt
   names (they were 263k, about half of Full, until 2026-11): the prompt and assets.md say game sounds exist and that the
   LLM asks the user for the exact name (the editor's Sound picker lists them; the validator warns on an unknown one), and
-  the page says so under the downloads. Sully's template (v0.9.2, 472k
-  characters; 184k up to v0.7.0) as the starter adds about 473k characters (Full with Sully's: about 835k).
+  the page says so under the downloads. Sully's template (472k
+  characters at v0.9.2; 184k up to v0.7.0) as the starter adds about 473k characters (Full with Sully's: about 835k).
 - **Import AI answer** (`ImportAiAnswerDialog`, `extractFilterFromAnswer`): paste the whole reply; the fenced code
   blocks (backticks or tildes, any length, an unclosed last block included) that look like JSON (info `json`, `jsonc`,
   `json5`, `js`, none, or content starting with `{` or `//`) are tried last first and the first complete filter wins (a
@@ -1857,7 +1906,8 @@ example rules: of the request), else of the request's first line, else "ai-filte
   or have the person paste Copy problems for the AI back), the PROMPT.md rules for writing filters without the chat
   parts (request, starter, language, attached files, import reminder), the Section comments ruleset in full with an
   example (the test parses and validates it), every file with a one-line summary and its URL, the ESR version, the
-  plugin version and the bundled templates' URLs. Then `referenceFiles` at the **full** size under the AI page's
+  plugin version and the templates' URLs (for Sully's the live raw URL as the latest and the site copy as the
+  fallback; no template version, so his bumps do not change the pack). Then `referenceFiles` at the **full** size under the AI page's
   names: `FORMAT.md`, `examples.md`, `assets.md`, `item-types.csv`, `items.csv`, `stats.csv`, `uniques-sets.csv`,
   `areas.csv`, `skills.csv`, `skill-tabs.csv`, `classes.csv` (about 360 KB in all on ESR 3.3.03). The generator loads
   `lootfilter.json`, `types.json` and the manifest's `esrVersion` from `public/game-data/` as the page does (through
