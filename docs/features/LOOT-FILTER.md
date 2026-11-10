@@ -258,20 +258,23 @@ then run `lootfilter` in the game console and read
 A filter author can group rules with ordinary `//` lines. The plugin skips comments, so this needs no format change and
 the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
 
-| Line in the file                 | Shown as                                |
-| -------------------------------- | --------------------------------------- |
-| `// ==== Title`                  | A part: a heading in the Rules list     |
-| `// ---- Title`                  | A section inside a part                 |
-| Other `//` right under a heading | That heading's description              |
-| Other `//` between rules         | A note row, in place                    |
-| `// ===========` (markers only)  | Nothing: a visual separator in the file |
+| Line in the file                                          | Shown as                                |
+| --------------------------------------------------------- | --------------------------------------- |
+| `// ==== Title`                                           | A part: a heading in the Rules list     |
+| `// ---- Title`                                           | A section inside a part                 |
+| Other `//` right under a heading, up to a blank line      | That heading's description              |
+| Other `//` between rules (consecutive lines, up to blank) | A note row, in place                    |
+| `// ===========` (markers only)                           | Nothing: a visual separator in the file |
 
 - A marker is four or more `=` or `-` after `//`; a run of three or more of them after the title is decoration.
+- **A blank line ends a description and a note**: Sully writes the heading, its one-line description, a blank line, then
+  the first rule's own comment, which then shows as a note row above that rule (in v0.9.2 every one of the 50 headings is
+  written that way). `//` alone is an empty comment line, not a blank line: it does not end a description.
 - A section runs to the next heading of the same or a higher level; a heading folds what it runs over.
 - The comment lines above the opening `{` show as "About this filter", and the ones above `"styles"` on the Styles tab.
 - **Opt-in:** a file with no heading shows no comment rows, so older files (Sully's QoL template had 242 per-rule comment
   lines up to v0.7.0) look as before. Their comments are still kept. Since v0.9.0 Sully's template is grouped for the
-  editor itself: 6 parts, 44 sections, a description under each heading and 78 per-rule notes (see "Start from Sully's
+  editor itself: 6 parts, 44 sections, a one-line description under each heading and 102 per-rule notes (see "Start from Sully's
   QoL filter").
 - **Kept:** whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
   **Dropped on the first edit, with a warning:** a comment on the same line as a rule, inside a rule object, and every
@@ -280,6 +283,12 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   its comments to the next one, duplicating does not copy them.
 - Model: editor-only `commentsBefore` on rules and styles, `keyComments` and `rulesEndComments` on the filter (never keys
   in the file). `parseJsonc` places the comments (`placedComments`), the serializer writes them back after a blank line.
+  One or more blank lines between two comment lines of the same block (and of the header above `{`) are kept as an
+  empty string (`engine/commentLines.ts`) and written back as one empty line; blank lines at the start or end of a block
+  are not kept (the serializer writes the blank line before each block itself), and the section edits drop the ones an
+  edit leaves at a block's ends. Deleting a rule or style hands its comments to the next one a blank line apart
+  (`joinCommentBlocks`), so they stay that item's notes. A file without blank lines between comments reads and writes
+  as before.
 - A disabled rule's comments are written above its `disabledRules` entry, so they come back with the rule.
 - **The same in the Styles list**: comments above a style inside `"styles"` group and fold the style list by the same
   ruleset. There is nowhere to keep a comment after the last style, so the editor adds headings above a style only.
