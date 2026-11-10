@@ -4,6 +4,8 @@ import {
   applySectionEdit,
   buildSectionRows,
   commentLinesText,
+  enclosingHeadingKeys,
+  headingKeyChanges,
   headingKeys,
   noteLines,
   readCommentLine,
@@ -96,8 +98,8 @@ describe('buildSectionRows', () => {
   });
 
   it('folds nested sections with a part and stops at the next part', () => {
-    expect(shape(buildSectionRows(entries, commentsOf, [], { collapsed: new Set(['1:A']) }))).toEqual(['A (4)', 'B (2)', 4, 5]);
-    expect(shape(buildSectionRows(entries, commentsOf, [], { collapsed: new Set(['2:A.1']) }))).toEqual([
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(['2:A.1', '1:B']) }))).toEqual(['A (4)', 'B (2)', 4, 5]);
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(['1:A', '1:B']) }))).toEqual([
       'A (4)',
       0,
       'A.1 (3)',
@@ -107,8 +109,47 @@ describe('buildSectionRows', () => {
     ]);
   });
 
-  it('still lists the kept item of a folded section', () => {
-    expect(shape(buildSectionRows(entries, commentsOf, [], { collapsed: new Set(['1:A']), keep: 2 }))).toEqual(['A (4)', 2, 'B (2)', 4, 5]);
+  it('folds every heading not in the open set: fully folded shows the parts only', () => {
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set() }))).toEqual(['A (4)', 'B (2)']);
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(['1:A']) }))).toEqual(['A (4)', 0, 'A.1 (3)', 'B (2)']);
+    const rows = buildSectionRows(entries, commentsOf, [], { open: new Set(['1:A', 'unknown']) });
+    expect(rows.filter((row) => row.kind === 'heading').map((row) => [row.key, row.collapsed])).toEqual([
+      ['1:A', false],
+      ['2:A.1', true],
+      ['1:B', true],
+    ]);
+  });
+
+  it('keeps items outside any heading and folds sections outside any part', () => {
+    const loose = [entry(0), entry(1, '// ---- X'), entry(2, '// ==== P'), entry(3, '// ---- Y'), entry(4)];
+    expect(shape(buildSectionRows(loose, commentsOf, [], { open: new Set() }))).toEqual([0, 'X (1)', 'P (3)']);
+  });
+
+  it('still lists the kept item of a folded section, under its own headings', () => {
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(['1:B']), keep: 2 }))).toEqual([
+      'A (4)',
+      'A.1 (3)',
+      2,
+      'B (2)',
+      4,
+      5,
+    ]);
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(['1:A']), keep: 2 }))).toEqual([
+      'A (4)',
+      0,
+      'A.1 (3)',
+      2,
+      'B (2)',
+    ]);
+    expect(shape(buildSectionRows(entries, commentsOf, [], { open: new Set(), keep: 5 }))).toEqual(['A (4)', 'B (2)', 5]);
+  });
+
+  it('knows the headings an item sits in', () => {
+    expect(enclosingHeadingKeys(entries, commentsOf, [], 2)).toEqual(['1:A', '2:A.1']);
+    expect(enclosingHeadingKeys(entries, commentsOf, [], 0)).toEqual(['1:A']);
+    expect(enclosingHeadingKeys(entries, commentsOf, [], 5)).toEqual(['1:B']);
+    expect(enclosingHeadingKeys([entry(0), entry(1, '// ---- X')], commentsOf, [], 0)).toEqual([]);
+    expect(enclosingHeadingKeys(entries, commentsOf, [], 9)).toEqual([]);
   });
 
   it('shows no comment rows for a list without headings', () => {
@@ -122,10 +163,7 @@ describe('buildSectionRows', () => {
     });
     expect(shape(buildSectionRows(entries, commentsOf, [], { search: search([2]) }))).toEqual(['A (4)', 'A.1 (3)', 2]);
     expect(shape(buildSectionRows(entries, commentsOf, [], { search: search([], 'A.1') }))).toEqual(['A (4)', 'A.1 (3)', 1, 2, 3]);
-    expect(shape(buildSectionRows(entries, commentsOf, [], { search: search([5], ''), collapsed: new Set(['1:B']) }))).toEqual([
-      'B (2)',
-      5,
-    ]);
+    expect(shape(buildSectionRows(entries, commentsOf, [], { search: search([5], ''), open: new Set() }))).toEqual(['B (2)', 5]);
     expect(shape(buildSectionRows([entry(0, '// note'), entry(1)], commentsOf, [], { search: search([1]) }))).toEqual([1]);
   });
 
@@ -223,6 +261,53 @@ describe('applySectionEdit', () => {
     const result = run({ kind: 'insert', at: 5, lines: ['// x'] }) as SectionEditResult<Item>;
     expect(result.items[0]).toBe(list.items[0]);
     expect(result.items[5]).toEqual(item('f', '// x'));
+  });
+});
+
+describe('headingKeyChanges', () => {
+  const list: SectionList<Item> = {
+    items: [item('a', '// ==== P'), item('b', '// ---- Misc'), item('c', '// ---- S'), item('d', '// ==== Q', '// ---- Misc'), item('e')],
+    end: [],
+  };
+  const changes = (edit: Parameters<typeof headingKeyChanges<Item>>[2]) => {
+    const result = headingKeyChanges(list, access, edit);
+    return result === undefined ? undefined : { kept: Object.fromEntries(result.kept), added: result.added };
+  };
+
+  it('follows a renamed heading and a level change', () => {
+    expect(changes({ kind: 'heading', address: { at: 2, line: 0 }, level: 2, title: 'Gold', description: '' })?.kept).toMatchObject({
+      '2:S': '2:Gold',
+      '1:P': '1:P',
+    });
+    expect(changes({ kind: 'heading', address: { at: 2, line: 0 }, level: 1, title: 'S', description: '' })?.kept).toMatchObject({
+      '2:S': '1:S',
+    });
+  });
+
+  it('follows repeated titles renumbered by a move or an insert', () => {
+    // Moving part Q above part P makes its Misc the first one.
+    expect(changes({ kind: 'move', address: { at: 3, line: 0 }, direction: -1 })?.kept).toEqual({
+      '1:P': '1:P',
+      '2:Misc': '2:Misc#1',
+      '2:S': '2:S',
+      '1:Q': '1:Q',
+      '2:Misc#1': '2:Misc',
+    });
+    expect(changes({ kind: 'insert', at: 0, lines: ['// ---- Misc'] })).toEqual({
+      kept: { '1:P': '1:P', '2:Misc': '2:Misc#1', '2:S': '2:S', '1:Q': '1:Q', '2:Misc#1': '2:Misc#2' },
+      added: ['2:Misc'],
+    });
+  });
+
+  it('drops a removed heading, adds none for a note, and is undefined for an edit that changes nothing', () => {
+    expect(changes({ kind: 'removeHeading', address: { at: 1, line: 0 } })?.kept).toEqual({
+      '1:P': '1:P',
+      '2:S': '2:S',
+      '1:Q': '1:Q',
+      '2:Misc#1': '2:Misc',
+    });
+    expect(changes({ kind: 'insert', at: 1, lines: ['// a note'] })?.added).toEqual([]);
+    expect(changes({ kind: 'move', address: { at: 0, line: 0 }, direction: -1 })).toBeUndefined();
   });
 });
 

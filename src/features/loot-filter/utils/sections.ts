@@ -94,7 +94,7 @@ export interface CommentAddress {
 
 type Token<T> = { readonly kind: 'line'; readonly text: string } | { readonly kind: 'item'; readonly item: T; readonly from: number };
 
-function toTokens<T>(list: SectionList<T>, access: CommentAccess<T>): Token<T>[] {
+function toTokens<T>(list: SectionList<T>, access: Pick<CommentAccess<T>, 'get'>): Token<T>[] {
   const tokens: Token<T>[] = [];
   list.items.forEach((item, from) => {
     for (const text of access.get(item) ?? []) tokens.push({ kind: 'line', text });
@@ -190,56 +190,121 @@ export type SectionEdit =
   /** A heading's section (the heading, its items and its subsections) swapped with the previous or next section of its level. */
   | { readonly kind: 'move'; readonly address: CommentAddress; readonly direction: -1 | 1 };
 
-/** Applies one edit; undefined when it changes nothing (an address that is gone, a section that cannot move). */
-export function applySectionEdit<T>(list: SectionList<T>, access: CommentAccess<T>, edit: SectionEdit): SectionEditResult<T> | undefined {
-  const tokens = toTokens(list, access);
+/**
+ * Applies one edit to the stream in place; false when it changes nothing (an address that is gone, a section that cannot
+ * move). A heading set anew reports its old and new line token, so its fold can follow it (`headingKeyChanges`).
+ */
+function editTokens<T>(
+  tokens: Token<T>[],
+  itemCount: number,
+  edit: SectionEdit
+): { readonly renamed?: { readonly from: Token<T>; readonly to: Token<T> } } | false {
   const lines = (texts: readonly string[]): Token<T>[] => texts.map((text) => ({ kind: 'line', text }));
   switch (edit.kind) {
     case 'insert': {
-      if (edit.lines.length === 0 || edit.at < 0 || edit.at > list.items.length) return undefined;
-      const at = edit.at === list.items.length ? tokens.length : position(tokens, { at: edit.at, line: -1 });
-      if (at === undefined) return undefined;
+      if (edit.lines.length === 0 || edit.at < 0 || edit.at > itemCount) return false;
+      const at = edit.at === itemCount ? tokens.length : position(tokens, { at: edit.at, line: -1 });
+      if (at === undefined) return false;
       tokens.splice(at, 0, ...lines(edit.lines));
-      break;
+      return {};
     }
     case 'replace': {
       const at = position(tokens, edit.address);
-      if (at === undefined || edit.count < 1) return undefined;
+      if (at === undefined || edit.count < 1) return false;
       // Only comment lines go: the count stops at the next item.
       let count = 0;
       while (count < edit.count && tokens[at + count]?.kind === 'line') count++;
       tokens.splice(at, count, ...lines(edit.lines));
-      break;
+      return {};
     }
     case 'heading':
     case 'removeHeading': {
       const at = position(tokens, edit.address);
       const token = at === undefined ? undefined : tokens[at];
-      if (at === undefined || token?.kind !== 'line' || headingLevel(token) === undefined) return undefined;
+      if (at === undefined || token?.kind !== 'line' || headingLevel(token) === undefined) return false;
       const replacement =
-        edit.kind === 'heading' ? [renameHeadingLine(token.text, edit.level, edit.title), ...noteLines(edit.description)] : [];
-      tokens.splice(at, descriptionEnd(tokens, at) - at, ...lines(replacement));
-      break;
+        edit.kind === 'heading' ? lines([renameHeadingLine(token.text, edit.level, edit.title), ...noteLines(edit.description)]) : [];
+      tokens.splice(at, descriptionEnd(tokens, at) - at, ...replacement);
+      return edit.kind === 'heading' ? { renamed: { from: token, to: replacement[0] } } : {};
     }
     case 'move': {
       const at = position(tokens, edit.address);
       const level = at === undefined ? undefined : headingLevel(tokens[at]);
-      if (at === undefined || level === undefined) return undefined;
+      if (at === undefined || level === undefined) return false;
       const end = sectionEnd(tokens, at, level);
       if (edit.direction === -1) {
         let start = at - 1;
         while (start >= 0 && (headingLevel(tokens[start]) ?? 3) > level) start--;
-        if (start < 0 || headingLevel(tokens[start]) !== level) return undefined;
+        if (start < 0 || headingLevel(tokens[start]) !== level) return false;
         tokens.splice(start, end - start, ...tokens.slice(at, end), ...tokens.slice(start, at));
       } else {
-        if (headingLevel(tokens[end]) !== level) return undefined;
+        if (headingLevel(tokens[end]) !== level) return false;
         const next = sectionEnd(tokens, end, level);
         tokens.splice(at, next - at, ...tokens.slice(end, next), ...tokens.slice(at, end));
       }
-      break;
+      return {};
     }
   }
-  return fromTokens(tokens, access);
+}
+
+/** Applies one edit; undefined when it changes nothing (an address that is gone, a section that cannot move). */
+export function applySectionEdit<T>(list: SectionList<T>, access: CommentAccess<T>, edit: SectionEdit): SectionEditResult<T> | undefined {
+  const tokens = toTokens(list, access);
+  return editTokens(tokens, list.items.length, edit) === false ? undefined : fromTokens(tokens, access);
+}
+
+/** The key of a heading: its level and title, and which repeat of that level and title it is (`2:Gold`, `2:Gold#1`). */
+function headingKey(level: HeadingLevel, title: string, repeat: number): string {
+  const base = `${String(level)}:${title}`;
+  return repeat === 0 ? base : `${base}#${String(repeat)}`;
+}
+
+/** The key of every heading line token, as `buildSectionRows` gives them. */
+function tokenHeadingKeys<T>(tokens: readonly Token<T>[]): Map<Token<T>, string> {
+  const keys = new Map<Token<T>, string>();
+  const seen = new Map<string, number>();
+  for (const token of tokens) {
+    if (token.kind !== 'line') continue;
+    const read = readCommentLine(token.text);
+    if (read.kind !== 'heading') continue;
+    const base = `${String(read.level)}:${read.title}`;
+    const repeat = seen.get(base) ?? 0;
+    seen.set(base, repeat + 1);
+    keys.set(token, headingKey(read.level, read.title, repeat));
+  }
+  return keys;
+}
+
+/** How an edit changes the heading keys: old key → new key for every heading it keeps, and the keys of new headings. */
+export interface HeadingKeyChanges {
+  /** Every heading of the list after the edit that was there before (renamed, moved or renumbered included), by its old key. */
+  readonly kept: ReadonlyMap<string, string>;
+  /** The headings the edit adds (an insert), by their new key. */
+  readonly added: readonly string[];
+}
+
+/**
+ * The heading keys before and after `edit`, matched line by line: a rename or a level change keeps its heading, and a
+ * repeated title renumbered by the edit (`2:Gold#1` becoming `2:Gold`) is followed. Undefined when the edit changes
+ * nothing.
+ */
+export function headingKeyChanges<T>(
+  list: SectionList<T>,
+  access: Pick<CommentAccess<T>, 'get'>,
+  edit: SectionEdit
+): HeadingKeyChanges | undefined {
+  const tokens = toTokens(list, access);
+  const before = tokenHeadingKeys(tokens);
+  const result = editTokens(tokens, list.items.length, edit);
+  if (result === false) return undefined;
+  const kept = new Map<string, string>();
+  const added: string[] = [];
+  for (const [token, key] of tokenHeadingKeys(tokens)) {
+    const old = token === result.renamed?.to ? before.get(result.renamed.from) : before.get(token);
+    if (old !== undefined) kept.set(old, key);
+    else if (edit.kind === 'insert') added.push(key);
+  }
+  return { kept, added };
 }
 
 /** Adds `item` as the last item of the section whose heading is at `address`; undefined when the address is gone. */
@@ -317,7 +382,7 @@ function collect<Entry>(entries: readonly Entry[], commentsOf: (entry: Entry) =>
         seen.set(base, repeat + 1);
         open = {
           kind: 'heading',
-          key: repeat === 0 ? base : `${base}#${String(repeat)}`,
+          key: headingKey(read.level, read.title, repeat),
           level: read.level,
           title: read.title,
           notes: [],
@@ -366,10 +431,35 @@ export function headingKeys<Entry>(
   return collect(entries, commentsOf, end).flatMap((draft) => (draft.kind === 'heading' ? [draft.key] : []));
 }
 
+/** The keys of the headings an item sits in, outermost first (its part, then its section); none outside any heading. */
+export function enclosingHeadingKeys<Entry>(
+  entries: readonly Entry[],
+  commentsOf: (entry: Entry) => readonly string[] | undefined,
+  end: readonly string[],
+  index: number
+): string[] {
+  const stack: { readonly level: HeadingLevel; readonly key: string }[] = [];
+  for (const draft of collect(entries, commentsOf, end)) {
+    if (draft.kind === 'heading') {
+      while (stack.length > 0 && (stack.at(-1)?.level ?? 0) >= draft.level) stack.pop();
+      stack.push({ level: draft.level, key: draft.key });
+    } else if (draft.kind === 'item' && draft.index === index) {
+      return stack.map((heading) => heading.key);
+    }
+  }
+  return [];
+}
+
 export interface SectionRowOptions {
-  /** Folded heading keys (ignored while searching). */
-  readonly collapsed?: ReadonlySet<string>;
-  /** An item listed even inside a folded section (the selection, so a selection made elsewhere stays in view). */
+  /**
+   * The unfolded heading keys; every other heading is folded (a heading not seen before starts folded). Without it
+   * every heading is open. Ignored while searching.
+   */
+  readonly open?: ReadonlySet<string>;
+  /**
+   * An item listed even inside a folded section, under its headings (shown folded): the selection after an edit moved
+   * it into a folded section, so it stays in view.
+   */
   readonly keep?: number | null;
   /**
    * A search: the items it matches, and the headings whose title it matches (their whole section is listed). The rows
@@ -383,7 +473,7 @@ export function buildSectionRows<Entry>(
   entries: readonly Entry[],
   commentsOf: (entry: Entry) => readonly string[] | undefined,
   end: readonly string[],
-  { collapsed = new Set(), keep = null, search }: SectionRowOptions = {}
+  { open, keep = null, search }: SectionRowOptions = {}
 ): SectionRow<Entry>[] {
   const drafts = collect(entries, commentsOf, end);
   const item = (draft: Draft<Entry> & { kind: 'item' }): ItemRow<Entry> => ({ kind: 'item', entry: draft.entry });
@@ -413,7 +503,7 @@ export function buildSectionRows<Entry>(
     return {
       ...draft,
       itemCount,
-      collapsed: search === undefined && collapsed.has(draft.key),
+      collapsed: search === undefined && open !== undefined && !open.has(draft.key),
       canMoveUp: previous?.kind === 'heading' && previous.level === draft.level,
       canMoveDown: next?.kind === 'heading' && next.level === draft.level,
     };
@@ -447,17 +537,32 @@ export function buildSectionRows<Entry>(
   }
 
   const rows: SectionRow<Entry>[] = [];
+  // The headings above the current draft (innermost last), with whether their row is listed.
+  const stack: { readonly row: HeadingRow; listed: boolean }[] = [];
   let hiddenBelow: HeadingLevel | null = null;
   drafts.forEach((draft, position) => {
     if (draft.kind === 'heading') {
-      if (hiddenBelow !== null && draft.level > hiddenBelow) return;
+      while (stack.length > 0 && (stack.at(-1)?.row.level ?? 0) >= draft.level) stack.pop();
+      if (hiddenBelow !== null && draft.level <= hiddenBelow) hiddenBelow = null;
       const row = headingRow(draft, position);
-      hiddenBelow = row.collapsed ? row.level : null;
+      const listed = hiddenBelow === null;
+      stack.push({ row, listed });
+      if (!listed) return;
+      if (row.collapsed) hiddenBelow = row.level;
       rows.push(row);
       return;
     }
-    if (draft.kind === 'item' && draft.index === keep) rows.push(item(draft));
-    else if (hiddenBelow === null) rows.push(draft.kind === 'item' ? item(draft) : draft);
+    if (hiddenBelow === null) {
+      rows.push(draft.kind === 'item' ? item(draft) : draft);
+    } else if (draft.kind === 'item' && draft.index === keep) {
+      // The kept item shows under its own headings, so it does not read as part of the folded one above it.
+      for (const heading of stack) {
+        if (heading.listed) continue;
+        heading.listed = true;
+        rows.push(heading.row);
+      }
+      rows.push(item(draft));
+    }
   });
   return rows;
 }

@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { ListPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import type { RootState } from '@/core/store';
 import { effectiveActions } from '../engine/actions';
 import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
@@ -19,9 +20,11 @@ import {
   selectRule,
   setRuleDisabled,
 } from '../store/lootFilterSlice';
+import { selectEditor } from '../store/selectors';
 import { ruleMatchesSearch, ruleSearchText, ruleSummary } from '../utils/ruleSummary';
 import { readRuleListWidth, writeRuleListWidth } from '../utils/ruleListWidth';
-import { buildSectionRows, commentLinesText, hasHeadings, headingKeys, type SectionEdit } from '../utils/sections';
+import { openAfterEdit, ruleHeadingKeys, toggleOpen, withOpened } from '../utils/sectionFolds';
+import { buildSectionRows, commentLinesText, hasHeadings, headingKeyChanges, headingKeys, type SectionEdit } from '../utils/sections';
 import { readsExceptions } from '../utils/statChecks';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
@@ -40,15 +43,23 @@ interface RulesTabProps {
   readonly selectedRule: number | null;
   /** Every diagnostic of the open filter (the screen computes them once for all tabs). */
   readonly diagnostics: readonly Diagnostic[];
+  /** The unfolded headings (`useSectionFolds`, remembered per filter); every other heading is folded. */
+  readonly open: ReadonlySet<string>;
+  readonly onOpenChange: (change: (open: ReadonlySet<string>) => ReadonlySet<string>) => void;
+  /**
+   * The selected rule as it was when its headings were folded by hand (or by Collapse all): not listed under them. Any
+   * other selection inside folded headings (a rule moved into a folded section) is still listed.
+   */
+  readonly foldedSelection: number | null;
+  readonly onFoldSelection: (index: number | null) => void;
 }
 
 /** The rule list (search, add, reorder, duplicate, delete) next to the selected rule's editor. */
-export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
+export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, foldedSelection, onFoldSelection }: RulesTabProps) {
   const dispatch = useDispatch();
+  const store = useStore<RootState>();
   const data = useLootFilterData();
   const [query, setQuery] = useState('');
-  // Folds last while the tab is open (owner decision: no memory across tab switches or reloads).
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
   const [sectionDialog, setSectionDialog] = useState<SectionDialogState | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -78,8 +89,8 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const commentsOf = (entry: RuleListEntry) => entry.rule.commentsBefore;
   // A search lists the matching rules under their headings; a heading whose title matches lists its whole section.
   const rows = buildSectionRows(all, commentsOf, endComments, {
-    collapsed,
-    keep: selectedRule,
+    open,
+    keep: selectedRule === foldedSelection ? null : selectedRule,
     search: searching ? { matches, headingMatches: (title) => ruleMatchesSearch(title.toLowerCase(), query) } : undefined,
   });
   const shownRules = rows.filter((row) => row.kind === 'item').length;
@@ -92,16 +103,27 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const usesSections = hasHeadings(all, commentsOf, endComments);
   const fileNotes = usesSections ? commentLinesText(filter.leadingComments) : '';
 
+  // A renamed, moved or re-levelled heading keeps its fold; a heading added here starts open.
   const editComments = (edit: SectionEdit) => {
+    const changes = headingKeyChanges({ items: filter.rules, end: endComments }, { get: (rule) => rule.commentsBefore }, edit);
     dispatch(editRuleComments(edit));
+    if (changes !== undefined) {
+      onOpenChange((current) => openAfterEdit(current, changes));
+    }
+  };
+  // A rule selected by an action (not a click on its row, which is in view) shows among its neighbours: its part and
+  // section open, the others stay as they are. Read from the store, which the action has already updated.
+  const revealSelected = () => {
+    const { filter: current, selectedRule: index } = selectEditor(store.getState());
+    if (current === null || index === null) return;
+    const keys = ruleHeadingKeys(current, index);
+    onOpenChange((now) => withOpened(now, keys));
   };
   const sections: RuleListSectionHandlers = {
     onToggle: (key) => {
-      setCollapsed((current) => {
-        const next = new Set(current);
-        if (!next.delete(key)) next.add(key);
-        return next;
-      });
+      // Folding by hand folds the selected rule away too, when it is under that heading.
+      if (open.has(key) && selectedRule !== null && ruleHeadingKeys(filter, selectedRule).includes(key)) onFoldSelection(selectedRule);
+      onOpenChange((current) => toggleOpen(current, key, headingKeys(all, commentsOf, endComments)));
     },
     onEditHeading: (row) => {
       setSectionDialog({ kind: 'heading', row });
@@ -115,6 +137,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
     onAddRule: (address) => {
       setQuery('');
       dispatch(addRuleToSection(address));
+      revealSelected();
     },
     onEditNote: (row) => {
       setSectionDialog({ kind: 'note', row });
@@ -145,6 +168,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
   const handleAdd = (rule?: LootFilterRule) => {
     setQuery('');
     dispatch(addRule({ rule, at: selectedRule === null ? undefined : selectedRule + 1 }));
+    revealSelected();
   };
 
   return (
@@ -180,6 +204,8 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
+                  // Clearing a search: the rule picked from the results shows in its section.
+                  if (searching && event.target.value.trim() === '') revealSelected();
                 }}
               />
             </div>
@@ -211,14 +237,15 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
               onCollapseAll={
                 usesSections
                   ? () => {
-                      setCollapsed(new Set(headingKeys(all, commentsOf, endComments)));
+                      onFoldSelection(selectedRule);
+                      onOpenChange(() => new Set());
                     }
                   : undefined
               }
               onExpandAll={
                 usesSections
                   ? () => {
-                      setCollapsed(new Set());
+                      onOpenChange(() => new Set(headingKeys(all, commentsOf, endComments)));
                     }
                   : undefined
               }
@@ -235,6 +262,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             insertAt={selectedRule === null ? undefined : selectedRule + 1}
             onAdded={() => {
               setQuery('');
+              revealSelected();
             }}
           />
         </div>
@@ -255,6 +283,7 @@ export function RulesTab({ filter, selectedRule, diagnostics }: RulesTabProps) {
             rows={rows}
             ruleCount={all.length}
             canMove={!searching}
+            canFold={!searching}
             selectedRule={selectedRule}
             onSelect={handleSelect}
             onMove={(from, to) => dispatch(moveRule({ from, to }))}

@@ -1,0 +1,156 @@
+/**
+ * Which section headings are unfolded, remembered per filter in this browser (docs/features/LOOT-FILTER.md "Section
+ * comments"). The Rules and Styles lists keep their own sets of OPEN heading keys (`utils/sections.ts`, `2:Gold#1`), so a
+ * heading this browser has not seen for the filter (a filter opened for the first time, a new section in a newer version
+ * of the file) starts folded.
+ */
+import type { LootFilter } from '../engine/types';
+import type { EditorTarget } from '../store/types';
+import { enclosingHeadingKeys, type HeadingKeyChanges } from './sections';
+import { SULLYS_QOL_TEMPLATE } from './template';
+
+/** localStorage key of the remembered folds. */
+export const SECTION_FOLDS_STORAGE_KEY = 'loot-filters/section-folds';
+/** The folds of this many filters are kept, the most recently changed first; older ones start folded again. */
+export const MAX_REMEMBERED_FILTERS = 30;
+/** At most this many open headings per list are kept (Sully's filter has 50 headings). */
+export const MAX_OPEN_HEADINGS = 500;
+/** A longer heading key is not kept (a heading title is one comment line). */
+const MAX_KEY_LENGTH = 300;
+const MAX_ID_LENGTH = 200;
+
+/** The open headings of one filter's lists. */
+export interface FilterFolds {
+  readonly rules: ReadonlySet<string>;
+  readonly styles: ReadonlySet<string>;
+}
+
+export type FoldList = keyof FilterFolds;
+
+/** Nothing open: how a filter starts. */
+export const NO_FOLDS: FilterFolds = { rules: new Set(), styles: new Set() };
+
+/** One remembered filter, as stored. */
+interface StoredFilterFolds {
+  readonly id: string;
+  readonly rules: readonly string[];
+  readonly styles: readonly string[];
+}
+
+/** The stored value: `{ "v": 1, "filters": [{ "id": "draft:…", "rules": ["1:PART 1"], "styles": [] }] }`, newest first. */
+interface StoredFolds {
+  readonly v: 1;
+  readonly filters: readonly StoredFilterFolds[];
+}
+
+/**
+ * Which filter the folds belong to: a draft by its library entry, a saved or shared filter by its id (the owner's
+ * editor and the sandbox of the same filter share them), a bundled template's sandbox by the template.
+ */
+export function foldsIdOf(target: EditorTarget): string {
+  if (target.kind === 'draft') return `draft:${target.entryId}`;
+  if (target.kind === 'saved' || target.savedId !== null) return `saved:${target.savedId ?? ''}`;
+  return `template:${target.basedOn?.template ?? SULLYS_QOL_TEMPLATE.id}`;
+}
+
+/** The headings rule `index` of the filter sits in (its part, then its section). */
+export function ruleHeadingKeys(filter: LootFilter, index: number): string[] {
+  return enclosingHeadingKeys(filter.rules, (rule) => rule.commentsBefore, filter.rulesEndComments ?? [], index);
+}
+
+/** The headings the style `name` sits in, in the filter's Styles list. */
+export function styleHeadingKeys(filter: LootFilter, name: string): string[] {
+  const entries = Object.entries(filter.styles ?? {});
+  const index = entries.findIndex(([key]) => key === name);
+  return index === -1 ? [] : enclosingHeadingKeys(entries, ([, style]) => style.commentsBefore, [], index);
+}
+
+function keyList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const keys = value.filter((key): key is string => typeof key === 'string' && key !== '' && key.length <= MAX_KEY_LENGTH);
+  return [...new Set(keys)].slice(0, MAX_OPEN_HEADINGS);
+}
+
+/** The remembered filters, newest first; anything unusable (not JSON, another shape, junk entries) is left out. */
+export function parseStoredFolds(raw: string | null): StoredFilterFolds[] {
+  if (raw === null) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (typeof parsed !== 'object' || parsed === null || !('v' in parsed) || parsed.v !== 1 || !('filters' in parsed)) return [];
+  if (!Array.isArray(parsed.filters)) return [];
+  const filters: StoredFilterFolds[] = [];
+  for (const entry of parsed.filters as unknown[]) {
+    if (typeof entry !== 'object' || entry === null || !('id' in entry)) continue;
+    const { id } = entry;
+    if (typeof id !== 'string' || id === '' || id.length > MAX_ID_LENGTH || filters.some((known) => known.id === id)) continue;
+    filters.push({ id, rules: keyList('rules' in entry ? entry.rules : []), styles: keyList('styles' in entry ? entry.styles : []) });
+    if (filters.length === MAX_REMEMBERED_FILTERS) break;
+  }
+  return filters;
+}
+
+/** The folds of filter `id` (nothing open when it is not remembered). */
+export function foldsOf(filters: readonly StoredFilterFolds[], id: string): FilterFolds {
+  const stored = filters.find((entry) => entry.id === id);
+  return stored === undefined ? NO_FOLDS : { rules: new Set(stored.rules), styles: new Set(stored.styles) };
+}
+
+/** The stored value with filter `id`'s folds first (the most recently changed), bounded. */
+export function withFilterFolds(filters: readonly StoredFilterFolds[], id: string, folds: FilterFolds): string {
+  const entry: StoredFilterFolds = { id, rules: keyList([...folds.rules]), styles: keyList([...folds.styles]) };
+  const others = filters.filter((known) => known.id !== id);
+  const value: StoredFolds = { v: 1, filters: [entry, ...others].slice(0, MAX_REMEMBERED_FILTERS) };
+  return JSON.stringify(value);
+}
+
+/** The remembered folds of filter `id`; nothing open without storage (private windows, blocked site data). */
+export function readFilterFolds(id: string): FilterFolds {
+  try {
+    return foldsOf(parseStoredFolds(window.localStorage.getItem(SECTION_FOLDS_STORAGE_KEY)), id);
+  } catch {
+    return NO_FOLDS;
+  }
+}
+
+/** Remembers filter `id`'s folds. Ignores storage errors (the folds still apply until the page is left). */
+export function writeFilterFolds(id: string, folds: FilterFolds): void {
+  try {
+    const filters = parseStoredFolds(window.localStorage.getItem(SECTION_FOLDS_STORAGE_KEY));
+    window.localStorage.setItem(SECTION_FOLDS_STORAGE_KEY, withFilterFolds(filters, id, folds));
+  } catch {
+    // Not remembered.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Changes to an open set (`keys`: the headings the list has now, so keys of headings that are gone are dropped)
+// ---------------------------------------------------------------------------
+
+/** A heading clicked: open when it was folded, folded when it was open. */
+export function toggleOpen(open: ReadonlySet<string>, key: string, keys: readonly string[]): Set<string> {
+  const next = new Set(keys.filter((known) => open.has(known)));
+  if (!next.delete(key)) next.add(key);
+  return next;
+}
+
+/** `open` with these headings opened too (the headings around a selected rule or style); `open` itself when it has them. */
+export function withOpened(open: ReadonlySet<string>, keys: readonly string[]): ReadonlySet<string> {
+  if (keys.every((key) => open.has(key))) return open;
+  return new Set([...open, ...keys]);
+}
+
+/**
+ * The open set after a section edit (`headingKeyChanges`): a kept heading stays open or folded under its new key, a new
+ * heading (Add section) starts open, a removed one is gone.
+ */
+export function openAfterEdit(open: ReadonlySet<string>, changes: HeadingKeyChanges): Set<string> {
+  const next = new Set(changes.added);
+  for (const [before, after] of changes.kept) {
+    if (open.has(before)) next.add(after);
+  }
+  return next;
+}

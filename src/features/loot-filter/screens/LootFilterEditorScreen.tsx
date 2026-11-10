@@ -43,6 +43,7 @@ import { SandboxBanner } from '../components/editor/SandboxBanner';
 import { SaveDialog } from '../components/editor/SaveDialog';
 import { UpdateBanner } from '../components/editor/UpdateBanner';
 import { EDITOR_TABS, useEditorTab, type EditorTab } from '../hooks/useEditorTab';
+import { useSectionFolds } from '../hooks/useSectionFolds';
 import { useLootFilterReference } from '../hooks/useLootFilterReference';
 import { useSandboxLeavePrompt } from '../hooks/useSandboxLeavePrompt';
 import {
@@ -106,6 +107,7 @@ import {
   targetMatchesRoute,
 } from '../utils/editorRoute';
 import { collectReferencedAssets, referencedAssetsOfText } from '../utils/referencedAssets';
+import { foldsIdOf, ruleHeadingKeys, withOpened } from '../utils/sectionFolds';
 import { BUNDLED_TEMPLATES, fetchTemplateText, type BundledTemplateId } from '../utils/template';
 import { defaultTestItem } from '../utils/testItemForm';
 
@@ -251,6 +253,14 @@ export function LootFilterEditorScreen() {
     setSession({ key: sessionKey, filterKey });
   }
   const jsonDraft = jsonState !== null && jsonState.session === sessionKey ? jsonState.draft : null;
+
+  // The Rules and Styles tabs' folds, remembered per filter; a saved draft or a copied sandbox keeps them.
+  const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target), switching);
+  // The rule list's selected rule that a fold by hand hid (RulesTab `foldedSelection`), for this filter only.
+  const [foldedRule, setFoldedRule] = useState<{ readonly filterKey: string | null; readonly index: number | null }>({
+    filterKey,
+    index: null,
+  });
 
   // Leaving the screen: write pending edits back and forget a finished save.
   useEffect(
@@ -583,8 +593,14 @@ export function LootFilterEditorScreen() {
     showDiagnostics();
   };
 
+  // A rule shown from elsewhere (a problem, the Test tab, the JSON tab): its part and section open.
   const showRule = (index: number) => {
     dispatch(selectRule(index));
+    const { filter: current, selectedRule } = selectEditor(store.getState());
+    if (current !== null && selectedRule !== null) {
+      const keys = ruleHeadingKeys(current, selectedRule);
+      sectionFolds.update('rules', (open) => withOpened(open, keys));
+    }
     setTab('rules');
     window.scrollTo({ top: 0 });
   };
@@ -636,9 +652,32 @@ export function LootFilterEditorScreen() {
     }
     switch (active) {
       case 'rules':
-        return <RulesTab filter={filter} selectedRule={editor.selectedRule} diagnostics={diagnostics} />;
+        return (
+          <RulesTab
+            filter={filter}
+            selectedRule={editor.selectedRule}
+            diagnostics={diagnostics}
+            open={sectionFolds.folds.rules}
+            onOpenChange={(change) => {
+              sectionFolds.update('rules', change);
+            }}
+            foldedSelection={foldedRule.filterKey === filterKey ? foldedRule.index : null}
+            onFoldSelection={(index) => {
+              setFoldedRule({ filterKey, index });
+            }}
+          />
+        );
       case 'styles':
-        return <StylesTab filter={filter} diagnostics={diagnostics} />;
+        return (
+          <StylesTab
+            filter={filter}
+            diagnostics={diagnostics}
+            open={sectionFolds.folds.styles}
+            onOpenChange={(change) => {
+              sectionFolds.update('styles', change);
+            }}
+          />
+        );
       case 'settings':
         return <SettingsTab filter={filter} />;
       case 'test':

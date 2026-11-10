@@ -17,6 +17,8 @@ interface RuleListProps {
   readonly ruleCount: number;
   /** False while a search filters the list: moving next to a hidden rule would be confusing. */
   readonly canMove: boolean;
+  /** False while a search filters the list: folds do not apply to it. */
+  readonly canFold: boolean;
   readonly selectedRule: number | null;
   readonly onSelect: (index: number) => void;
   readonly onMove: (from: number, to: number) => void;
@@ -45,6 +47,7 @@ export function RuleList({
   rows,
   ruleCount,
   canMove,
+  canFold,
   selectedRule,
   onSelect,
   onMove,
@@ -81,6 +84,7 @@ export function RuleList({
               row={row}
               noun="rules"
               canMove={canMove}
+              canFold={canFold}
               onToggle={sections.onToggle}
               onEdit={sections.onEditHeading}
               onMove={sections.onMove}
