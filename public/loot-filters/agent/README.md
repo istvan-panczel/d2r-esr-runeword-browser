@@ -38,13 +38,14 @@ Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comm
 | --- | --- |
 | `// ==== Title` | A part (level 1 heading) |
 | `// ---- Title` | A section inside a part (level 2 heading) |
-| Any other `//` line right under a heading | That heading's description |
+| Any other `//` line right under a heading, up to a blank line | That heading's description |
 | Any other `//` line between rules | A note, shown in place |
 | `// =========` (markers only) | A visual separator |
 
 - A marker is four or more `=` or `-` right after `//`. A run of three or more of them after the title is decoration: `// ==== Runes ====` is the part "Runes".
 - A section runs to the next heading of the same or a higher level: a part ends at the next part, a section at the next section or part.
 - The same works between styles inside `"styles"`.
+- A blank line ends a description or a note: put the first rule's own comment after one. `//` alone is an empty comment line, not a blank line; blank lines between comment lines are kept.
 - Comment lines above the opening `{` are the filter's header (the app shows them as "About this filter"). Comments above a top-level key (e.g. above `"styles"`) are kept.
 - Kept on every edit in the app: whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
 - Dropped on the app's first edit (with a warning): a comment on the same line as a rule, a comment inside a rule or style object, and every `/* */` block. Do not write those.
