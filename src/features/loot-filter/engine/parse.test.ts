@@ -5,7 +5,7 @@ import { parseJsonc } from './jsonc.ts';
 import { parseLootFilter, readLootFilter } from './parse.ts';
 import { serializeLootFilter, toPlainJson } from './serialize.ts';
 
-const SULLY = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+const SULLY = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
 
 const parse = (value: unknown) => parseLootFilter(JSON.stringify(value));
 const errors = (value: unknown) => parse(value).diagnostics.filter((d) => d.severity === 'error');

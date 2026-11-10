@@ -29,7 +29,9 @@ function readJson(path: string): unknown {
 const bundle = readJson('public/game-data/lootfilter.json') as LootFilterDataBundle;
 const types = readJson('public/game-data/types.json') as TypesBundle;
 const lookup = buildLookup(bundle, types);
-const sully = parseLootFilter(readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8')).filter;
+const sully = parseLootFilter(
+  readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8')
+).filter;
 
 function preset(id: string): TestPreset {
   const found = TEST_PRESETS.find((candidate) => candidate.id === id);

@@ -504,7 +504,7 @@ describe('expandPlaceholders', () => {
 describe("Sully's QoL filter", () => {
   // Read through the parser, as the app does: v0.6.9's Ancient Scroll hide rule writes `"activeInLevels": 4`, which the
   // parser reads as [4] (with a warning) instead of handing a number to the evaluator.
-  const source = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
+  const source = readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8');
   const sully = parseLootFilter(source).filter;
   // v0.9.0 names the gold stat (`"stat": "gold"`), which the app resolves through the game data's stat ids.
   const hell = makeContext({

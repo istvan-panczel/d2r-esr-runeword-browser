@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { JsoncSyntaxError } from '../engine/jsonc';
 import { filterMetadata } from './filterMetadata';
 
-const SULLY = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+const SULLY = readFileSync(resolve(__dirname, '../engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
 
 describe('filterMetadata', () => {
   it("reads the bundled Sully's QoL filter (comments included)", () => {

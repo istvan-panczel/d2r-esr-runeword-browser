@@ -69,7 +69,7 @@ function messages(rule: LootFilterRule, ref: LootFilterReference | null = refere
 
 describe('validateLootFilter', () => {
   it('finds no errors in Sully’s filter', () => {
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
     const diagnostics = validateLootFilter(parseLootFilter(source).filter);
     expect(diagnostics.filter((d) => d.severity === 'error')).toEqual([]);
     // It has no warnings either without a reference (stat 188 is written by id).
@@ -79,7 +79,7 @@ describe('validateLootFilter', () => {
   it('finds nothing in Sully’s filter against the real game data', () => {
     const json = (file: string) => JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data', file), 'utf-8')) as unknown;
     const real = buildLootFilterReference(json('lootfilter.json') as LootFilterDataBundle, json('types.json') as TypesBundle);
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
     // Up to v0.7.0 the +3/4/5 skill tab rules checked stat 188 with params 1 to 21, the properties.txt tab numbers (6
     // warnings); since v0.9.0 they read every tab with `statMax('item_addskill_tab')`, and every name, code, type and
     // area of the 689 rules is known to the game data.
@@ -726,7 +726,7 @@ describe('hide rules on unidentified items', () => {
 
   it('flags nothing in Sully’s filter', () => {
     // Rule 99 (rule 73 up to v0.7.0) hides weapons and armour `{ "max": "superior" }` without All Skills: never unidentified.
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
     expect(validate(parseLootFilter(source).filter)).toEqual([]);
   });
 });

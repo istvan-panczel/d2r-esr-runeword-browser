@@ -8,6 +8,8 @@ src/features/modifiers/data/
 
 # Loot filter templates kept byte-identical to their source (Sully's template is diffed against upstream)
 public/loot-filters/
+# A frozen copy of Sully's template that the loot filter tests pin facts to (byte-identical to his v0.9.2)
+src/features/loot-filter/engine/__fixtures__/
 # The loot filter agent pack (generated; loot-filter:agent-pack --check and lootFilterAgentPack.test.ts compare it)
 public/loot-filters/agent/
 

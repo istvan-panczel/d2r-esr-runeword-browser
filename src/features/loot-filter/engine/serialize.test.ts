@@ -108,7 +108,7 @@ describe('serializeLootFilter', () => {
   });
 
   it('lays Sully’s filter out like the source, apart from key order and wrapped stat lists', () => {
-    const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
+    const source = readFileSync(resolve(__dirname, '__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf-8');
     const text = serializeLootFilter(parseLootFilter(source).filter);
     const oneLineRules = (s: string) => s.split('\n').filter((line) => line.startsWith('    {"'));
     const commentLines = (s: string) => s.split('\n').flatMap((line) => (line.trim().startsWith('//') ? [line.trim()] : []));

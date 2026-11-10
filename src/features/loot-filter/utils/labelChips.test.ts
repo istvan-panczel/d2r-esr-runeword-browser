@@ -102,7 +102,7 @@ describe('computeLabelChips', () => {
   });
 
   describe("Sully's template", () => {
-    const text = readFileSync(resolve(process.cwd(), 'public/loot-filters/sullys-qol-filter.json'), 'utf8');
+    const text = readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8');
     const { filter } = parseLootFilter(text);
 
     it('marks every Jackpot rule with a white background and a red 2 px border, on the rule line', () => {
