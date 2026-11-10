@@ -761,6 +761,9 @@ const ALWAYS_IDENTIFIED_QUALITIES: ReadonlySet<NamedValue<(typeof QUALITIES)[num
   3,
 ]);
 
+/** The number of `superior`, the highest quality that is never unidentified. */
+const SUPERIOR_QUALITY = QUALITIES.indexOf('superior') + 1;
+
 /**
  * The game skips a rule that reads an item stat on an unidentified item, so a hide on such a rule does not reach those
  * items (the guide: "none of its actions run and it cannot hide it"). Basic's "Except items with…" is exactly this rule.
@@ -772,6 +775,11 @@ function checkHideOfUnidentified(report: Report, rule: LootFilterRule, filter: L
   const { quality } = rule;
   if (quality !== undefined && isNamedList(quality) && quality.every((entry) => ALWAYS_IDENTIFIED_QUALITIES.has(entry))) return;
   if (typeof quality === 'string' || typeof quality === 'number') if (ALWAYS_IDENTIFIED_QUALITIES.has(quality)) return;
+  // A range up to superior (`{ "max": "superior" }`, Sully's level 4 hide of weapons and armour) holds only those qualities.
+  if (quality !== undefined && !isNamedList(quality) && typeof quality === 'object' && quality.max !== undefined) {
+    const max = namedToNumber(quality.max, QUALITIES, 1);
+    if (max !== undefined && max <= SUPERIOR_QUALITY) return;
+  }
   const key = rule.itemStats !== undefined ? 'itemStats' : rule.itemStatsAnyOf !== undefined ? 'itemStatsAnyOf' : 'formula';
   report('warning', key, 'Does not hide unidentified items: the game skips a rule that checks an item stat until the item is identified');
 }

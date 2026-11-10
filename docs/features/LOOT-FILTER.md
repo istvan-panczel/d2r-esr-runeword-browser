@@ -233,8 +233,10 @@ then run `lootfilter` in the game console and read
     Skills, which is param 56"). Sully's template up to v0.7.0 got 6 of these against the ESR 3.3 data: its three +3/4/5
     skill tab rules (rules 31 to 33) each checked stat 188 without param (one warning) and with params 1 to 21 (the list
     warning; 13 of them, 3–7, 11–15 and 19–21, name no tab). Since v0.9.0 they read every tab with
-    `statMax('item_addskill_tab')`, and v0.9.2 gets no skill tab warning; it keeps one warning, on the stat-based hide at
-    `rules/99` (see the Test tab's unidentified items; `rules/73` up to v0.7.0). A test pins this against the real bundles.
+    `statMax('item_addskill_tab')`, and v0.9.2 gets no validator warning at all (the one on its stat-based hide at
+    `rules/99`, `rules/73` up to v0.7.0, was the validator missing a `{ "max": "superior" }` range, see the Test tab's
+    unidentified items); the parser's single-number `activeInLevels` warning at `rules/77` stays. A test pins this
+    against the real bundles.
 - `at` is the rule's index in the full list (enabled and disabled rules together), entries in ascending `at`, written
   after `rules`. A filter without disabled rules has no `disabledRules` key, so existing files serialize as before. To
   enable a rule by hand, cut the inner object back into `rules`.
@@ -1643,7 +1645,9 @@ tab switches; it is not saved.
   (`STATS_WHILE_UNIDENTIFIED`) skips an unidentified item entirely (no actions, cannot hide it); the trace row says so
   ("Skipped: the item is unidentified and the rule checks an item stat…") and is shown without "Show skipped rules".
   A hide or `hideIfOtherConditionsFail` rule of this kind gets a validator warning (`checkHideOfUnidentified`), unless it
-  sets `isIdentified` or only matches inferior, normal or superior items: 1 rule of Sully's 225. An identified test item of
+  sets `isIdentified` or only matches inferior, normal or superior items (a name or number, a list of them, or a range
+  whose `max` is at most superior, like `{ "max": "superior" }`): none of Sully's 689 (up to v0.7.0 the validator missed
+  the range form and flagged his `{ "max": "superior" }` hide, rule 73, now rule 99). An identified test item of
   magic quality or above is also evaluated unidentified, and a note above the result says when the filter would then
   hide or show it the other way.
 - **Context**: difficulty, character level (sent as player stat 12), area (with an "in town" hint for 1/40/75/103/109),

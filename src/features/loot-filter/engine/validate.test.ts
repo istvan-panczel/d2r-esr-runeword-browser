@@ -711,12 +711,23 @@ describe('hide rules on unidentified items', () => {
     expect(said({ ...armour, isIdentified: true, itemStats: [check], hide: true })).toEqual([]);
     expect(said({ itemTypes: ['armo'], quality: ['normal', 'superior'], itemStats: [check], hide: true })).toEqual([]);
     expect(said({ itemTypes: ['armo'], quality: 'normal', itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ itemTypes: ['armo'], quality: { max: 'superior' }, itemStats: [check], hide: true })).toEqual([]);
+    expect(said({ itemTypes: ['armo'], quality: { min: 2, max: 3 }, itemStats: [check], hide: true })).toEqual([]);
     expect(said({ ...armour, itemStats: [check], namePrefix: 'x' })).toEqual([]);
   });
 
-  it('flags only rule 99 of Sully’s filter', () => {
+  it('warns on a quality range that reaches magic or above', () => {
+    const range = (quality: LootFilterRule['quality']) => said({ itemTypes: ['armo'], quality, itemStats: [check], hide: true });
+    expect(range({ max: 'magic' })).toEqual([['warning', 'rules/0/itemStats']]);
+    expect(range({ min: 'superior' })).toEqual([['warning', 'rules/0/itemStats']]);
+    // An unknown quality name is an error of its own, and the hide is not taken as limited.
+    expect(range({ max: 'nope' as 'magic' })).toContainEqual(['warning', 'rules/0/itemStats']);
+  });
+
+  it('flags nothing in Sully’s filter', () => {
+    // Rule 99 (rule 73 up to v0.7.0) hides weapons and armour `{ "max": "superior" }` without All Skills: never unidentified.
     const source = readFileSync(resolve(__dirname, '../../../../public/loot-filters/sullys-qol-filter.json'), 'utf-8');
-    expect(validate(parseLootFilter(source).filter).map((d) => d.path)).toEqual(['rules/99/itemStats']);
+    expect(validate(parseLootFilter(source).filter)).toEqual([]);
   });
 });
 

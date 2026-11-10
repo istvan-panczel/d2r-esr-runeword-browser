@@ -156,7 +156,7 @@ rows with output `useitem` adding the hidden `item-upgraded` (`std` plus a uniqu
 about another reagent or a row no longer gated on `item_upgraded` (`op 17`) is a finding; so is a new charm upgrade
 outside that shape (Tyrael's Might's four-input rows set the same marker on purpose and are not listed).
 
-Known genuine data, not findings: Sully's template (v0.9.2) validates with 1 warning at 3.3, for the stat-based hide at `rules/99`, which cannot reach unidentified items (`docs/features/LOOT-FILTER.md`; up to v0.7.0 also 6 for `item_addskill_tab` on rules 31–33, gone since its `statMax` formulas), plus the parser's single-number `activeInLevels` warning at `rules/77`; the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
+Known genuine data, not findings: Sully's template (v0.9.2) validates with no warning at 3.3 (`docs/features/LOOT-FILTER.md`; up to v0.7.0 6 for `item_addskill_tab` on rules 31–33, gone since its `statMax` formulas, and 1 unidentified-hide warning the validator now knows to be wrong), only the parser's single-number `activeInLevels` warning at `rules/77`; the official `changelogs.html` stopped at 3.2.02 (patch notes live in the
 repo's `patchnotes/`); `modinfo.json` in the clone is stale upstream (3.2.09), ignore it.
 
 ### Hand-kept data (SKILL step 5.8)
