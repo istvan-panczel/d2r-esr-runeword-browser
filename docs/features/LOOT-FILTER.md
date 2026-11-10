@@ -329,9 +329,11 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
     click on a rule row needs none. The Styles list does the same for a style added, renamed, duplicated or picked from
     the presets. Nothing restores a selection when the editor opens (`open` and `close` reset it), so that case does
     not occur.
-  - Folding the selected rule's heading by hand (or Collapse all) folds the rule away with its section. When a rule
-    edit puts the selected rule inside folded headings (moving it into a folded section), it stays listed under its own
-    headings, shown folded, so it can be moved on.
+  - Folding the selected rule's heading by hand (or Collapse all) folds the rule away with its section. The editor
+    state's `selectionFolded` holds that: it belongs to the selection, so it follows the rule when a rule above it is
+    deleted or moved, and ends when another rule is selected, a rule is added or copied, or the selection ends. When a
+    rule edit puts the selected rule inside folded headings (moving it into a folded section), it stays listed under its
+    own headings, shown folded, so it can be moved on.
 - **Search**: matching rules are listed under the headings they sit in (notes left out); a query that matches a
   heading's title lists its whole section. Folds do not apply while searching: the heading rows cannot be folded then,
   and a search never changes the remembered folds.

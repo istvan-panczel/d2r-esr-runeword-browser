@@ -19,6 +19,7 @@ import reducer, {
   editRuleComments,
   editStyleComments,
   editorFlushed,
+  foldSelection,
   hydrate,
   importText,
   initialState,
@@ -716,5 +717,37 @@ describe('section comment reducers', () => {
       styles: { A: { hide: true, commentsBefore: ['// ---- Looks'] }, B: { hide: true } },
     });
     expect(reducer(withStyles, removeStyle('A')).editor.filter?.styles).toEqual({ B: { hide: true, commentsBefore: ['// ---- Looks'] } });
+  });
+});
+
+describe('a selection folded away by hand', () => {
+  const rules = Array.from({ length: 12 }, (_, n): LootFilterRule => ({ comment: String(n), hide: true }));
+  const opened = (selected: number) =>
+    reducer(reducer(openState({ formatVersion: 1, rules, leadingComments: [] }), selectRule(selected)), foldSelection());
+
+  it('marks the selection, and nothing without one', () => {
+    expect(opened(5).editor.selectionFolded).toBe(true);
+    const none = reducer(openState({ formatVersion: 1, rules, leadingComments: [] }), foldSelection());
+    expect(none.editor.selectionFolded).toBe(false);
+  });
+
+  it('ends when another rule is selected, so that rule moved into the folded section stays listed', () => {
+    // Rule 5 folded away; rule 6 selected and moved up into its place: the mark is not on it.
+    const moved = reducer(reducer(opened(5), selectRule(6)), moveRule({ from: 6, to: 5 }));
+    expect(moved.editor).toMatchObject({ selectedRule: 5, selectionFolded: false });
+  });
+
+  it('follows its rule when a rule above it is deleted or moved', () => {
+    const deleted = reducer(opened(10), removeRule(3));
+    expect(deleted.editor).toMatchObject({ selectedRule: 9, selectionFolded: true });
+    const movedAbove = reducer(opened(10), moveRule({ from: 2, to: 11 }));
+    expect(movedAbove.editor).toMatchObject({ selectedRule: 9, selectionFolded: true });
+  });
+
+  it('ends when a rule is added, copied or the selection is deleted', () => {
+    expect(reducer(opened(5), addRule({ at: 6 })).editor.selectionFolded).toBe(false);
+    expect(reducer(opened(5), duplicateRule(5)).editor.selectionFolded).toBe(false);
+    expect(reducer(opened(5), addRules({ rules: [{ hide: true }] })).editor.selectionFolded).toBe(false);
+    expect(reducer(opened(5), removeRule(5)).editor).toMatchObject({ selectedRule: null, selectionFolded: false });
   });
 });

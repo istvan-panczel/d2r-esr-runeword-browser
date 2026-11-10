@@ -15,6 +15,7 @@ import {
   addRuleToSection,
   duplicateRule,
   editRuleComments,
+  foldSelection,
   moveRule,
   removeRule,
   selectRule,
@@ -47,15 +48,14 @@ interface RulesTabProps {
   readonly open: ReadonlySet<string>;
   readonly onOpenChange: (change: (open: ReadonlySet<string>) => ReadonlySet<string>) => void;
   /**
-   * The selected rule as it was when its headings were folded by hand (or by Collapse all): not listed under them. Any
-   * other selection inside folded headings (a rule moved into a folded section) is still listed.
+   * The selected rule was folded away by hand (or by Collapse all): not listed under its folded headings. Otherwise a
+   * selection inside folded headings (a rule moved into a folded section) is still listed.
    */
-  readonly foldedSelection: number | null;
-  readonly onFoldSelection: (index: number | null) => void;
+  readonly selectionFolded: boolean;
 }
 
 /** The rule list (search, add, reorder, duplicate, delete) next to the selected rule's editor. */
-export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, foldedSelection, onFoldSelection }: RulesTabProps) {
+export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, selectionFolded }: RulesTabProps) {
   const dispatch = useDispatch();
   const store = useStore<RootState>();
   const data = useLootFilterData();
@@ -90,7 +90,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
   // A search lists the matching rules under their headings; a heading whose title matches lists its whole section.
   const rows = buildSectionRows(all, commentsOf, endComments, {
     open,
-    keep: selectedRule === foldedSelection ? null : selectedRule,
+    keep: selectionFolded ? null : selectedRule,
     search: searching ? { matches, headingMatches: (title) => ruleMatchesSearch(title.toLowerCase(), query) } : undefined,
   });
   const shownRules = rows.filter((row) => row.kind === 'item').length;
@@ -122,7 +122,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
   const sections: RuleListSectionHandlers = {
     onToggle: (key) => {
       // Folding by hand folds the selected rule away too, when it is under that heading.
-      if (open.has(key) && selectedRule !== null && ruleHeadingKeys(filter, selectedRule).includes(key)) onFoldSelection(selectedRule);
+      if (open.has(key) && selectedRule !== null && ruleHeadingKeys(filter, selectedRule).includes(key)) dispatch(foldSelection());
       onOpenChange((current) => toggleOpen(current, key, headingKeys(all, commentsOf, endComments)));
     },
     onEditHeading: (row) => {
@@ -237,7 +237,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
               onCollapseAll={
                 usesSections
                   ? () => {
-                      onFoldSelection(selectedRule);
+                      dispatch(foldSelection());
                       onOpenChange(() => new Set());
                     }
                   : undefined

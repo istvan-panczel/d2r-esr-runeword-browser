@@ -42,6 +42,7 @@ export const EMPTY_EDITOR: LootFilterEditorState = {
   parseDiagnostics: [],
   textNotes: [],
   selectedRule: null,
+  selectionFolded: false,
   dirty: false,
 };
 
@@ -192,7 +193,17 @@ function editRules(
   if (result === undefined) return state;
   const selectedRule = result.selectedRule === undefined ? state.editor.selectedRule : result.selectedRule;
   const edited = { ...filter, rules: result.rules, ...(result.endComments === undefined ? {} : { rulesEndComments: result.endComments }) };
-  return withEditor(state, { filter: edited, dirty: true, selectedRule });
+  return withEditor(state, {
+    filter: edited,
+    dirty: true,
+    selectedRule,
+    selectionFolded: selectedRule !== null && state.editor.selectionFolded,
+  });
+}
+
+/** A rule just added or copied is selected: it is not folded away (`selectionFolded`). */
+function selectedNew(state: State): State {
+  return state.editor.selectionFolded ? withEditor(state, { selectionFolded: false }) : state;
 }
 
 /** `item` (a rule or a style) with exactly these comments above it (none: the key is gone). */
@@ -696,13 +707,15 @@ const lootFilterSlice = createSlice({
 
     /** Inserts a rule (default: an empty one) at `at` (default: the end) and selects it. */
     addRule(state, action: PayloadAction<{ readonly rule?: LootFilterRule; readonly at?: number } | undefined>): State {
-      return editRules(state, (rules) => {
-        const at = action.payload?.at;
-        const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
-        const next = [...rules];
-        next.splice(index, 0, action.payload?.rule ?? {});
-        return { rules: next, selectedRule: index };
-      });
+      return selectedNew(
+        editRules(state, (rules) => {
+          const at = action.payload?.at;
+          const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
+          const next = [...rules];
+          next.splice(index, 0, action.payload?.rule ?? {});
+          return { rules: next, selectedRule: index };
+        })
+      );
     },
 
     /**
@@ -732,7 +745,7 @@ const lootFilterSlice = createSlice({
           ...(missing.length === 0 ? {} : { styles: { ...existing, ...Object.fromEntries(missing) } }),
         };
       });
-      return edited === state ? state : withEditor(edited, { selectedRule: index });
+      return edited === state ? state : withEditor(edited, { selectedRule: index, selectionFolded: false });
     },
 
     /** Replaces a whole rule. */
@@ -841,12 +854,14 @@ const lootFilterSlice = createSlice({
     /** Inserts a copy right after the rule and selects the copy (a disabled rule's copy is disabled too). */
     duplicateRule(state, action: PayloadAction<number>): State {
       const index = action.payload;
-      return editRules(state, (rules) => {
-        if (!isIndex(index, rules.length)) return undefined;
-        const next = [...rules];
-        next.splice(index + 1, 0, withCommentsBefore(rules[index], undefined));
-        return { rules: next, selectedRule: index + 1 };
-      });
+      return selectedNew(
+        editRules(state, (rules) => {
+          if (!isIndex(index, rules.length)) return undefined;
+          const next = [...rules];
+          next.splice(index + 1, 0, withCommentsBefore(rules[index], undefined));
+          return { rules: next, selectedRule: index + 1 };
+        })
+      );
     },
 
     /**
@@ -871,7 +886,7 @@ const lootFilterSlice = createSlice({
       if (filter === null) return state;
       const result = addToSection({ items: filter.rules, end: filter.rulesEndComments ?? [] }, RULE_COMMENTS, action.payload, {});
       if (result === undefined) return state;
-      return editRules(state, () => ({ rules: result.items, endComments: result.end, selectedRule: result.index }));
+      return selectedNew(editRules(state, () => ({ rules: result.items, endComments: result.end, selectedRule: result.index })));
     },
 
     /** A section comment edit in the style list (no comments after the last style: an insert there is a no-op). */
@@ -891,7 +906,13 @@ const lootFilterSlice = createSlice({
       const index = action.payload;
       const count = state.editor.filter?.rules.length ?? 0;
       const selectedRule = index !== null && isIndex(index, count) ? index : null;
-      return selectedRule === state.editor.selectedRule ? state : withEditor(state, { selectedRule });
+      return selectedRule === state.editor.selectedRule ? state : withEditor(state, { selectedRule, selectionFolded: false });
+    },
+
+    /** The selected rule was folded away by hand (`selectionFolded`); no-op without a selection. */
+    foldSelection(state): State {
+      if (state.editor.selectedRule === null || state.editor.selectionFolded) return state;
+      return withEditor(state, { selectionFolded: true });
     },
 
     // ----- editor: styles -----
@@ -987,6 +1008,7 @@ export const {
   editStyleComments,
   duplicateRule,
   selectRule,
+  foldSelection,
   setStyle,
   renameStyle,
   removeStyle,

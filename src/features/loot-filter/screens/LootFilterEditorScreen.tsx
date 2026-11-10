@@ -257,11 +257,6 @@ export function LootFilterEditorScreen() {
 
   // The Rules and Styles tabs' folds, remembered per filter; a saved draft or a copied sandbox keeps them.
   const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target), switching);
-  // The rule list's selected rule that a fold by hand hid (RulesTab `foldedSelection`), for this filter only.
-  const [foldedRule, setFoldedRule] = useState<{ readonly filterKey: string | null; readonly index: number | null }>({
-    filterKey,
-    index: null,
-  });
 
   // Leaving the screen: write pending edits back and forget a finished save.
   useEffect(
@@ -662,10 +657,7 @@ export function LootFilterEditorScreen() {
             onOpenChange={(change) => {
               sectionFolds.update('rules', change);
             }}
-            foldedSelection={foldedRule.filterKey === filterKey ? foldedRule.index : null}
-            onFoldSelection={(index) => {
-              setFoldedRule({ filterKey, index });
-            }}
+            selectionFolded={editor.selectionFolded}
           />
         );
       case 'styles':
