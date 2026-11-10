@@ -167,6 +167,12 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
     },
   };
 
+  // Where Add section puts its heading or note: the tooltip and the dialog say the same.
+  const addSection =
+    selectedRule === null
+      ? { at: all.length, where: 'after the last rule' }
+      : { at: selectedRule, where: `above rule ${String(selectedRule + 1)}` };
+
   const pendingEntry = pendingDelete === null ? undefined : all.at(pendingDelete);
 
   const rule = selectedRule === null ? undefined : filter.rules.at(selectedRule);
@@ -243,13 +249,9 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
           </p>
           {!searching && (
             <SectionToolbar
-              addWhere={selectedRule === null ? 'after the last rule' : 'above the selected rule'}
+              addWhere={addSection.where}
               onAdd={() => {
-                setSectionDialog(
-                  selectedRule === null
-                    ? { kind: 'add', at: all.length, where: 'after the last rule' }
-                    : { kind: 'add', at: selectedRule, where: `above rule ${String(selectedRule + 1)}` }
-                );
+                setSectionDialog({ kind: 'add', ...addSection });
               }}
               onCollapseAll={
                 usesSections

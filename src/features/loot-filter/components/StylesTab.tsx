@@ -199,7 +199,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
           {names.length === 0 && <p className="text-sm text-muted-foreground">No styles yet.</p>}
           {entries.length > 0 && current !== null && (
             <SectionToolbar
-              addWhere="above the selected style"
+              addWhere={`above the style ${current}`}
               onAdd={() => {
                 setSectionDialog({ kind: 'add', at: names.indexOf(current), where: `above the style ${current}` });
               }}
