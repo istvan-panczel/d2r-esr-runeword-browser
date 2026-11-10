@@ -639,6 +639,25 @@ describe('comments above rules belong to their place', () => {
   const openRules = (...rules: LootFilterRule[]) => openState({ formatVersion: 1, rules, leadingComments: [] });
   const view = (state: LootFilterState) => state.editor.filter?.rules.map((entry) => [entry.comment, entry.commentsBefore]);
 
+  it('adds a rule above another one inside its section with belowComments (Check in game)', () => {
+    const start = openRules(rule('a'), rule('b', ['// ---- Section', '// about']));
+    const below = reducer(start, addRule({ rule: rule('check'), at: 1, belowComments: true }));
+    expect(view(below)).toEqual([
+      ['a', undefined],
+      ['check', ['// ---- Section', '// about']],
+      ['b', undefined],
+    ]);
+    expect(below.editor.selectedRule).toBe(1);
+    // Without it the comments stay at their place, so the new rule ends the previous section.
+    expect(view(reducer(start, addRule({ rule: rule('new'), at: 1 })))?.[1]).toEqual(['new', undefined]);
+    // A rule without comments above it: a plain insert.
+    expect(view(reducer(start, addRule({ rule: rule('check'), at: 0, belowComments: true })))?.map(([name]) => name)).toEqual([
+      'check',
+      'a',
+      'b',
+    ]);
+  });
+
   it('hands the comments of a deleted rule to the next one, a blank line apart', () => {
     // The blank line keeps "note" the next rule's own comment, not the part's description.
     const state = reducer(openRules(rule('a', heading), rule('b', ['// note'])), removeRule(0));

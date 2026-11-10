@@ -328,8 +328,8 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
     title and repeat number only, so adding a heading of the same title above another one shifts the folds of the
     later ones by one.
   - **A rule selected from elsewhere opens its part and section**, the others stay as they are: a problem's rule link
-    (header, JSON tab), the Test tab's rule link, Add rule, a heading's Add rule, example rules added, and clearing a
-    search while a rule is selected. Each of these opens the headings in its handler, after the action (no effect); a
+    (header, JSON tab), the Test tab's rule link, Add rule, a heading's Add rule, example rules added, Check in game,
+    and clearing a search while a rule is selected. Each of these opens the headings in its handler, after the action (no effect); a
     click on a rule row needs none. The Styles list does the same for a style added, renamed, duplicated or picked from
     the presets. Nothing restores a selection when the editor opens (`open` and `close` reset it), so that case does
     not occur.
@@ -971,7 +971,9 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
 - **Check in game** (`utils/inGameCheck.ts`, the button at the top right of the rule editor). One way to verify
   what the plugin reads is to print it in the name (`"namePrefix": "[ED {stat:17} | Def {stat:16} | …] "`); that is
   how Enhanced Damage on weapons was found to read 0. The button inserts such a test rule right before the selected
-  rule (so the rule becomes N + 1) and selects it; a toast says so, and keyboard focus moves to the new editor's title
+  rule (so the rule becomes N + 1), below the comments above it (`addRule` with `belowComments`: the test rule takes
+  them, so it sits in the rule's section, not at the end of the previous one), selects it and opens its headings in the
+  rule list; a toast says so, and keyboard focus moves to the new editor's title
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
   index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
   test rule (`inGameCheckRule`):

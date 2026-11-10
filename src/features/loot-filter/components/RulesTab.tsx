@@ -320,6 +320,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             rule={rule}
             diagnostics={ruleDiagnostics}
             data={data}
+            onRuleAdded={revealSelected}
           />
         ) : (
           <Card>

@@ -705,14 +705,24 @@ const lootFilterSlice = createSlice({
 
     // ----- editor: rules -----
 
-    /** Inserts a rule (default: an empty one) at `at` (default: the end) and selects it. */
-    addRule(state, action: PayloadAction<{ readonly rule?: LootFilterRule; readonly at?: number } | undefined>): State {
+    /**
+     * Inserts a rule (default: an empty one) at `at` (default: the end) and selects it. The comments above rule `at`
+     * stay at their place, above the new rule's position only with `belowComments`: then the new rule goes right above
+     * rule `at` but below its comments (a section heading among them), so it is in that rule's section.
+     */
+    addRule(
+      state,
+      action: PayloadAction<{ readonly rule?: LootFilterRule; readonly at?: number; readonly belowComments?: boolean } | undefined>
+    ): State {
       return selectedNew(
         editRules(state, (rules) => {
           const at = action.payload?.at;
           const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
           const next = [...rules];
-          next.splice(index, 0, action.payload?.rule ?? {});
+          const rule = action.payload?.rule ?? {};
+          const below = action.payload?.belowComments === true ? rules.at(index) : undefined;
+          if (below?.commentsBefore === undefined) next.splice(index, 0, rule);
+          else next.splice(index, 1, withCommentsBefore(rule, below.commentsBefore), withCommentsBefore(below, undefined));
           return { rules: next, selectedRule: index };
         })
       );
