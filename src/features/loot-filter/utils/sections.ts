@@ -12,7 +12,7 @@
  * stream of comment lines and items, so a section moves with its rules and a heading stays where it is put.
  */
 
-import { tidyCommentBlock } from '../engine/commentLines';
+import { BLANK_COMMENT_LINE, tidyCommentBlock } from '../engine/commentLines';
 
 export type HeadingLevel = 1 | 2;
 
@@ -217,7 +217,12 @@ function editTokens<T>(
       if (edit.lines.length === 0 || edit.at < 0 || edit.at > itemCount) return false;
       const at = edit.at === itemCount ? tokens.length : position(tokens, { at: edit.at, line: -1 });
       if (at === undefined) return false;
-      tokens.splice(at, 0, ...lines(edit.lines));
+      // A note goes in as a note of its own: right under a heading, its description or another note it would join
+      // them, so a blank line goes first.
+      const previous = tokens[at - 1] as Token<T> | undefined;
+      const previousKind = previous?.kind === 'line' ? readCommentLine(previous.text).kind : undefined;
+      const joins = (previousKind === 'heading' || previousKind === 'note') && readCommentLine(edit.lines[0]).kind === 'note';
+      tokens.splice(at, 0, ...lines(joins ? [BLANK_COMMENT_LINE, ...edit.lines] : edit.lines));
       return {};
     }
     case 'replace': {

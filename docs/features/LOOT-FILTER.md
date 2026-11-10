@@ -299,9 +299,10 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   Edit (title, level and description), Add rule (an empty rule as the last rule of the section; Rules list only), Move
   up and Move down (the section with its rules and subsections, past the neighbouring section of the same level inside
   its part; off while searching) and Remove (the heading and its description; the rules stay). A note row has Edit
-  (empty removes it) and Remove. The dialog shows the comment lines the file gets. Renaming keeps the file's markers
-  and decoration (`// ---- Styles ----------`); a note line that would read as a heading or separator is written
-  `// Note: …`. Collapse all folds every heading (only the parts show), Expand all opens every one.
+  (empty removes it) and Remove. The dialog shows the comment lines the file gets. A note added right under a heading,
+  its description or another note gets a blank line above it, so it stays a note of its own (a heading needs none).
+  Renaming keeps the file's markers and decoration (`// ---- Styles ----------`); a note line that would read as a
+  heading or separator is written `// Note: …`. Collapse all folds every heading (only the parts show), Expand all opens every one.
 - **Folds** (owner decisions 2026-11-10): a filter opened for the first time in a browser starts fully folded: the part
   rows only, each with its rule count (Sully's v0.9.2: 6 rows); a section outside any part shows as a folded section row,
   and rules and notes above the first heading stay visible. Opening a part shows its sections folded. The browser then

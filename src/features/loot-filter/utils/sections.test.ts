@@ -190,7 +190,8 @@ describe('applySectionEdit', () => {
 
   it('inserts lines right above an item, or after the last one', () => {
     expect(stream(run({ kind: 'insert', at: 1, lines: ['// ---- New'] }))?.slice(2, 5)).toEqual(['[a]', '// ---- S1', '// ---- New']);
-    expect(stream(run({ kind: 'insert', at: 6, lines: ['// last'] }))?.slice(-2)).toEqual(['// the end', '// last']);
+    // A note after a note: a blank line keeps it a note of its own.
+    expect(stream(run({ kind: 'insert', at: 6, lines: ['// last'] }))?.slice(-3)).toEqual(['// the end', '', '// last']);
     expect(run({ kind: 'insert', at: 7, lines: ['// x'] })).toBeUndefined();
     expect(run({ kind: 'insert', at: 0, lines: [] })).toBeUndefined();
   });
@@ -399,6 +400,45 @@ describe('blank lines between comments', () => {
       description: '',
     });
     expect(changes?.kept).toEqual(new Map([['2:Gold', '1:Gold']]));
+  });
+
+  it('adds a note above a rule as a note of its own, not as part of a description or another note', () => {
+    const headed: SectionList<Item> = { items: [item('a', '// ---- A', '// desc'), item('b', '// one')], end: [] };
+    const under = applySectionEdit(headed, access, { kind: 'insert', at: 0, lines: ['// a note'] });
+    expect(under?.items[0].commentsBefore).toEqual(['// ---- A', '// desc', '', '// a note']);
+    const rows = buildSectionRows(under?.items ?? [], commentsOfItem, []);
+    expect(rows[0]).toMatchObject({ kind: 'heading', notes: ['desc'] });
+    expect(rows[1]).toMatchObject({ kind: 'note', text: 'a note' });
+    expect(applySectionEdit(headed, access, { kind: 'insert', at: 1, lines: ['// two'] })?.items[1].commentsBefore).toEqual([
+      '// one',
+      '',
+      '// two',
+    ]);
+    // A heading needs no blank line, and neither does a note with nothing above it.
+    expect(applySectionEdit(headed, access, { kind: 'insert', at: 1, lines: ['// ---- B'] })?.items[1].commentsBefore).toEqual([
+      '// one',
+      '// ---- B',
+    ]);
+    expect(applySectionEdit(list, access, { kind: 'insert', at: 1, lines: ['// x'] })?.items[1].commentsBefore).toEqual([
+      '// Next rule.',
+      '',
+      '// x',
+    ]);
+    expect(
+      applySectionEdit({ items: [item('a')], end: [] }, access, { kind: 'insert', at: 0, lines: ['// x'] })?.items[0].commentsBefore
+    ).toEqual(['// x']);
+  });
+
+  it('keeps an edited note apart from the description above it', () => {
+    const edited = applySectionEdit(list, access, {
+      kind: 'replace',
+      address: { at: 0, line: 3 },
+      count: 1,
+      lines: ['// changed', '// two lines'],
+    });
+    const rows = buildSectionRows(edited?.items ?? [], commentsOfItem, []);
+    expect(rows[0]).toMatchObject({ kind: 'heading', notes: ['Small piles are hidden.'] });
+    expect(rows[1]).toMatchObject({ kind: 'note', text: 'changed\ntwo lines' });
   });
 
   it('reads blank lines as paragraph breaks in the file notes', () => {
