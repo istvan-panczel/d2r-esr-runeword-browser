@@ -90,9 +90,17 @@ describe('checkTemplateText', () => {
     });
   });
 
-  it('refuses a version that is not a version number', () => {
-    expect(checkTemplateText('sullys-qol', sully('.5'))).toEqual({ ok: false, reason: 'its version ".5" is not a version number' });
-    expect(checkTemplateText('sullys-qol', sully('latest'))).toMatchObject({ ok: false });
+  it('takes the numeric start of a pre-release version, so the live file stays in use', () => {
+    expect(checkTemplateText('sullys-qol', sully('0.9.3-beta'))).toEqual({ ok: true, version: '0.9.3', ruleCount: 1 });
+    expect(checkTemplateText('sullys-qol', sully('1.0.0-rc1'))).toEqual({ ok: true, version: '1.0.0', ruleCount: 1 });
+    // Sully's early versions were written ".5".
+    expect(checkTemplateText('sullys-qol', sully('.5'))).toEqual({ ok: true, version: '0.5', ruleCount: 1 });
+  });
+
+  it('refuses a version without a numeric start', () => {
+    expect(checkTemplateText('sullys-qol', sully('latest'))).toEqual({ ok: false, reason: 'its version "latest" is not a version number' });
+    expect(checkTemplateText('sullys-qol', sully('beta 2'))).toMatchObject({ ok: false });
+    expect(checkTemplateText('sullys-qol', sully('1.2.3.4.5'))).toMatchObject({ ok: false });
   });
 
   it('refuses a file over 5 MB', () => {
@@ -106,6 +114,7 @@ describe('checkTemplateText', () => {
 describe('loadTemplate', () => {
   beforeEach(() => {
     resetTemplateSources();
+    sessionStorage.clear();
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
   afterEach(() => {
@@ -199,7 +208,95 @@ describe('loadTemplate', () => {
     const net = fakeFetch({ [LIVE]: [new TypeError('Failed to fetch'), sully('0.9.3')], [BUNDLED]: [404, sully('0.9.2')] });
     await expect(loadTemplate('sullys-qol', { fetch: net.fetch })).rejects.toThrow('HTTP 404');
     expect(peekTemplateSource('sullys-qol')).toBeNull();
-    expect(await loadTemplate('sullys-qol', { fetch: net.fetch })).toMatchObject({ origin: 'live', version: '0.9.3' });
+    // The retry loads the bundled copy again; the live file waits out the remembered failure (see below).
+    expect(await loadTemplate('sullys-qol', { fetch: net.fetch })).toMatchObject({
+      origin: 'bundled',
+      version: '0.9.2',
+      liveError: 'Failed to fetch (tried under a minute ago)',
+    });
+    expect(net.count(LIVE)).toBe(1);
+    // Without a session store the retry asks the live file again.
+    resetTemplateSources();
+    expect(await loadTemplate('sullys-qol', { fetch: net.fetch, storage: null })).toMatchObject({ origin: 'live', version: '0.9.3' });
+  });
+});
+
+describe('loadTemplate: a failed live attempt is remembered for the session', () => {
+  /** An in-memory session store. */
+  function memoryStore() {
+    const items = new Map<string, string>();
+    return {
+      getItem: (key: string) => items.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        items.set(key, value);
+      },
+      removeItem: (key: string) => {
+        items.delete(key);
+      },
+      items,
+    };
+  }
+
+  beforeEach(() => {
+    resetTemplateSources();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('skips the live request on the next page load for 10 minutes, then tries again; a success forgets the failure', async () => {
+    const time = clock();
+    const storage = memoryStore();
+    const net = fakeFetch({ [LIVE]: [new DOMException('signal timed out', 'TimeoutError'), sully('0.9.3')], [BUNDLED]: [sully('0.9.2')] });
+    const deps = { fetch: net.fetch, now: time.now, storage };
+    expect(await loadTemplate('sullys-qol', deps)).toMatchObject({ origin: 'bundled', liveError: 'timed out after 5 s' });
+    expect(net.count(LIVE)).toBe(1);
+
+    // A reload 3 minutes later: straight to the bundled copy, with the reason and its age.
+    resetTemplateSources();
+    time.advance(3 * 60_000);
+    expect(await loadTemplate('sullys-qol', deps)).toMatchObject({ origin: 'bundled', liveError: 'timed out after 5 s (tried 3 min ago)' });
+    expect(net.count(LIVE)).toBe(1);
+
+    // Ten minutes after the failure: the live file again, and the failure is forgotten.
+    resetTemplateSources();
+    time.advance(7 * 60_000);
+    expect(await loadTemplate('sullys-qol', deps)).toMatchObject({ origin: 'live', version: '0.9.3' });
+    expect(net.count(LIVE)).toBe(2);
+    expect(storage.items.size).toBe(0);
+  });
+
+  it('says "under a minute" for a fresh failure, and ignores a broken or blocked store', async () => {
+    const time = clock();
+    const storage = memoryStore();
+    const net = fakeFetch({ [LIVE]: [503], [BUNDLED]: [sully('0.9.2')] });
+    await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage });
+    resetTemplateSources();
+    time.advance(20_000);
+    expect(await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage })).toMatchObject({
+      liveError: 'HTTP 503 (tried under a minute ago)',
+    });
+
+    resetTemplateSources();
+    storage.items.set('loot-filters/live-template-failed/sullys-qol', '{ not json');
+    await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage });
+    expect(net.count(LIVE)).toBe(2);
+
+    resetTemplateSources();
+    const blocked = {
+      getItem: () => {
+        throw new Error('SecurityError');
+      },
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+      removeItem: () => undefined,
+    };
+    expect(await loadTemplate('sullys-qol', { fetch: net.fetch, now: time.now, storage: blocked })).toMatchObject({
+      origin: 'bundled',
+      liveError: 'HTTP 503',
+    });
   });
 });
 

@@ -13,8 +13,11 @@ type BasedOnColumns = Pick<
 export const BASED_ON_VERSION_MAX_LENGTH = 50;
 export const BASED_ON_LABEL_MAX_LENGTH = 200;
 
-/** A template version as the bundled files write it ("0.6.11", optionally "v0.6.11"): one to four numeric parts. */
-const TEMPLATE_VERSION_PATTERN = /^v?\d{1,10}(\.\d{1,10}){0,3}$/i;
+/**
+ * The numeric start of a template version: optional "v", one to four numeric parts (or a leading-dot decimal such as
+ * Sully's early ".5"), then the end or anything that is not another part ("-beta", "-rc1", " (test)").
+ */
+const TEMPLATE_VERSION_PATTERN = /^v?(\d{1,10}(?:\.\d{1,10}){0,3}|\.\d{1,10})(?![\d.]*\d)/i;
 
 /** `text` cut to `max` characters (code points, so a surrogate pair is never split). */
 function clip(text: string, max: number): string {
@@ -29,13 +32,15 @@ export function templateBasedOn(id: BundledTemplateId, version: string | null): 
 }
 
 /**
- * A file's `version` as a template version ("v0.6.3" → "0.6.3"), or null when it does not look like one (a file can
- * hold any text there; only a dotted number is compared with the bundled version and saved as `based_on_version`).
+ * A file's `version` as a template version: its numeric start ("v0.6.3" → "0.6.3", "0.9.3-beta" → "0.9.3", "1.0.0-rc1"
+ * → "1.0.0", ".5" → "0.5"), or null when it has none ("latest", "beta 2", five parts). A file can hold any text there;
+ * only this number is compared with the current template version and saved as `based_on_version` (at most 43
+ * characters, within its 50). A pre-release reads as its release: "0.9.3-beta" and "0.9.3" compare equal.
  */
 export function templateVersionOf(version: string | undefined): string | null {
-  const trimmed = version?.trim() ?? '';
-  if (trimmed.length > BASED_ON_VERSION_MAX_LENGTH || !TEMPLATE_VERSION_PATTERN.test(trimmed)) return null;
-  return trimmed.replace(/^v/i, '');
+  const match = TEMPLATE_VERSION_PATTERN.exec(version?.trim() ?? '');
+  if (match === null) return null;
+  return match[1].startsWith('.') ? `0${match[1]}` : match[1];
 }
 
 /** Folds case and outer spaces for comparing a file's title or author. */

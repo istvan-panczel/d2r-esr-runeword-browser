@@ -68,6 +68,13 @@ describe('template basedOn', () => {
     expect(inferTemplateBasedOn(sullyFile(`0.${'1'.repeat(60)}`))).toEqual(unknown);
     expect(inferTemplateBasedOn(sullyFile('1.2.3.4.5'))).toEqual(unknown);
     expect(templateVersionOf('0.6.11')).toBe('0.6.11');
+    // The numeric start of a pre-release, and a leading-dot decimal.
+    expect(templateVersionOf('0.9.3-beta')).toBe('0.9.3');
+    expect(templateVersionOf('1.0.0-rc1')).toBe('1.0.0');
+    expect(templateVersionOf('1.2 (test)')).toBe('1.2');
+    expect(templateVersionOf('.5')).toBe('0.5');
+    expect(inferTemplateBasedOn(sullyFile('0.9.3-beta'))).toEqual(templateBasedOn('sullys-qol', '0.9.3'));
+    expect(templateVersionOf('latest')).toBeNull();
     expect(templateVersionOf(undefined)).toBeNull();
     expect(templateVersionOf('')).toBeNull();
   });

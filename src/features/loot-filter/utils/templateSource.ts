@@ -101,26 +101,87 @@ async function fetchLive(id: BundledTemplateId, url: string, fetchImpl: typeof f
   return verdict.ok ? { ok: true, text, version: verdict.version } : { ok: false, reason: verdict.reason };
 }
 
+/** Where a failed live attempt is remembered for the browser session (`sessionStorage`; injectable for tests). */
+export type LiveFailureStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+
 interface LoadDeps {
   readonly fetch?: typeof fetch;
   readonly now?: () => number;
+  /** null: remember nothing. Default: `sessionStorage` when the browser allows it. */
+  readonly storage?: LiveFailureStore | null;
+}
+
+const liveFailureKey = (id: BundledTemplateId) => `loot-filters/live-template-failed/${id}`;
+
+function sessionStore(): LiveFailureStore | null {
+  try {
+    return typeof sessionStorage === 'undefined' ? null : sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+interface LiveFailure {
+  readonly at: number;
+  readonly reason: string;
+}
+
+/** A live attempt that failed less than `TEMPLATE_RECHECK_MS` ago in this browser session, or null. */
+function recentLiveFailure(store: LiveFailureStore | null, id: BundledTemplateId, now: number): LiveFailure | null {
+  try {
+    const raw = store?.getItem(liveFailureKey(id)) ?? null;
+    if (raw === null) return null;
+    const value = JSON.parse(raw) as Partial<LiveFailure>;
+    if (typeof value.at !== 'number' || typeof value.reason !== 'string') return null;
+    const age = now - value.at;
+    return age >= 0 && age < TEMPLATE_RECHECK_MS ? { at: value.at, reason: value.reason } : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLiveFailure(store: LiveFailureStore | null, id: BundledTemplateId, failure: LiveFailure | null): void {
+  try {
+    if (failure === null) store?.removeItem(liveFailureKey(id));
+    else store?.setItem(liveFailureKey(id), JSON.stringify(failure));
+  } catch {
+    // Storage full or blocked: the next page load simply tries the live file again.
+  }
+}
+
+/** "HTTP 503 (tried 3 min ago)": the reason of a remembered failure, with its age. */
+function rememberedReason(failure: LiveFailure, now: number): string {
+  const minutes = Math.floor((now - failure.at) / 60_000);
+  return `${failure.reason} (tried ${minutes < 1 ? 'under a minute' : `${String(minutes)} min`} ago)`;
 }
 
 /**
  * Settles a source: the live file when it is valid; else, on a re-check, the previous source (a live one is kept, a
  * bundled one gets the new reason); else the bundled copy. Rejects only when there is no previous source and the
- * bundled copy cannot be fetched either.
+ * bundled copy cannot be fetched either. A failed live attempt is remembered for the browser session: for the next
+ * `TEMPLATE_RECHECK_MS` page loads skip the live request (a host that hangs would cost every load the full timeout) and
+ * go straight to the bundled copy; a live load that works forgets it.
  */
 async function settle(id: BundledTemplateId, deps: LoadDeps, previous: TemplateSource | null): Promise<TemplateSource> {
   const template = BUNDLED_TEMPLATES[id];
   const fetchImpl = deps.fetch ?? fetch;
   const now = deps.now ?? Date.now;
+  const store = deps.storage === undefined ? sessionStore() : deps.storage;
   let liveError: string | null = null;
   if (template.liveUrl !== undefined) {
-    const live = await fetchLive(id, template.liveUrl, fetchImpl);
-    if (live.ok) return { id, text: live.text, version: live.version, origin: 'live', liveError: null, loadedAt: now() };
-    liveError = live.reason;
-    console.warn(`[Loot filters] Not using the live ${template.name} (${template.liveUrl}): ${live.reason}`);
+    const remembered = recentLiveFailure(store, id, now());
+    if (remembered !== null) {
+      liveError = rememberedReason(remembered, now());
+    } else {
+      const live = await fetchLive(id, template.liveUrl, fetchImpl);
+      if (live.ok) {
+        rememberLiveFailure(store, id, null);
+        return { id, text: live.text, version: live.version, origin: 'live', liveError: null, loadedAt: now() };
+      }
+      liveError = live.reason;
+      rememberLiveFailure(store, id, { at: now(), reason: live.reason });
+      console.warn(`[Loot filters] Not using the live ${template.name} (${template.liveUrl}): ${live.reason}`);
+    }
     if (previous !== null) return { ...previous, liveError: previous.origin === 'live' ? null : liveError, loadedAt: now() };
   }
   const text = await fetchBundledTemplateText(id, fetchImpl);
