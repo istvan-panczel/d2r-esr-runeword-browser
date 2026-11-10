@@ -289,12 +289,13 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
   description belong to their place, never to a rule, and a note a blank line away from the rule stays where it is. One
   step passes exactly one neighbour:
   - the rule next to it: they swap, each with its own notes;
-  - a heading run (a heading with its description, or several headings in a row such as a part and its first section,
-    with separators and blank lines among them): the rule hops over the whole run and becomes the last rule of the
-    section before it (up) or the first rule of the section after it (down, placed after the description with a blank
-    line before its notes); no other rule moves. The first rule can so leave the first section and stand above the
-    first heading, and the last rule can go below headings written after it (`rulesEndComments`); a section can end up
-    empty;
+  - a heading run (part headings and at most one section heading, the last of them, each with its description, and the
+    separators and blank lines among them; so a part and its first section are one run): the rule hops over the whole
+    run and becomes the last rule of the section before it (up) or the first rule of the section after it (down, placed
+    after the description with a blank line before its notes); no other rule moves. An empty section is a section of
+    its own, so a rule stops in it either way (that keeps a step and the step back exact). The first rule can so leave
+    the first section and stand above the first heading, and the last rule can go below headings written after it
+    (`rulesEndComments`); a section can end up empty;
   - a free-standing note (a note that is not a rule's own, a blank line away from the next rule): the rule passes it and
     the note stays a note row.
   - The step back undoes a step exactly (a move and its inverse give back the same file; the blank lines are tidied by

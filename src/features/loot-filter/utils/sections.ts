@@ -351,7 +351,10 @@ function lineRoles<T>(tokens: readonly Token<T>[]): (LineRole | undefined)[] {
   });
 }
 
-/** Lines a step hops over as one: headings with their descriptions, separators and the blank lines among them. */
+/**
+ * Lines a step hops over as one: headings with their descriptions, separators and the blank lines among them. A run
+ * holds any number of parts and at most one section, the last heading in reading order (`stepItem`).
+ */
 const HEADING_RUN: readonly (LineRole | undefined)[] = ['heading', 'description', 'separator', 'blank'];
 
 /**
@@ -359,9 +362,10 @@ const HEADING_RUN: readonly (LineRole | undefined)[] = ['heading', 'description'
  * line, a heading's description or anything else (a heading and its description belong to their place, never to an
  * item). The neighbour it passes is
  * - another item: they swap, each with its own notes;
- * - a heading run (headings with their descriptions, separators, blank lines between): the item hops over the whole
- *   run, so it becomes the last item of the section before it (up) or the first of the section after it (down), and no
- *   other item moves;
+ * - a heading run (part headings and at most one section heading, the last of them, with their descriptions,
+ *   separators and blank lines between): the item hops over the whole run, so it becomes the last item of the section
+ *   before it (up) or the first of the section after it (down), and no other item moves. An empty section is a section
+ *   of its own: the item stops in it;
  * - a free-standing note (one that is not an item's own): the item passes it, and the note stays a note.
  * Blank lines go where the new neighbours would otherwise join (a note under a description); the blocks are tidied.
  * Undefined when nothing is there to pass (the first item with nothing above its notes, the last with nothing after it).
@@ -405,8 +409,22 @@ export function stepItem<T>(
       from = notesFrom(above);
       passed = [blank, ...tokens.slice(from, above + 1), blank];
     } else {
-      from = above;
-      while (from > 0 && HEADING_RUN.includes(roles[from - 1])) from--;
+      // Back over parts and at most one section, the one nearest the item (an empty section above it is the section
+      // the item joins); a heading that ends the run keeps its description.
+      let at = above;
+      let sawHeading = false;
+      from = 0;
+      while (at >= 0 && HEADING_RUN.includes(roles[at])) {
+        if (roles[at] === 'heading') {
+          if (headingLevel(tokens[at]) === 2 && sawHeading) {
+            from = descriptionEnd(tokens, at);
+            break;
+          }
+          sawHeading = true;
+        }
+        from = at;
+        at--;
+      }
       passed = [blank, ...tokens.slice(from, above + 1), blank];
     }
     tokens.splice(from, at + 1 - from, blank, ...unit, ...passed);
@@ -424,9 +442,16 @@ export function stepItem<T>(
       tokens.splice(start, to + 1 - start, blank, ...passed, ...gap, ...unit);
     } else {
       if (roles[below] !== 'note') {
+        // Over parts and at most one section with its description: the item becomes that section's first item.
         to = below;
-        while (to + 1 < tokens.length && HEADING_RUN.includes(roles[to + 1])) to++;
-        to++;
+        let sawSection = false;
+        while (to < tokens.length && HEADING_RUN.includes(roles[to])) {
+          if (roles[to] === 'heading') {
+            if (sawSection) break;
+            if (headingLevel(tokens[to]) === 2) sawSection = true;
+          }
+          to++;
+        }
       }
       passed = tokens.slice(below, to);
       // A heading run needs no blank line above it; a free note does (it must not join a description or note above).

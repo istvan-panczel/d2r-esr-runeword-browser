@@ -563,6 +563,31 @@ describe('stepItem', () => {
     expect(stepEdges({ items: [item('a', '// own note'), item('b')], end: [] }, access)).toEqual({ firstUp: false, lastDown: false });
   });
 
+  it('stops in an empty section, both ways', () => {
+    const list: SectionList<Item> = {
+      items: [item('a', '// ---- S1'), item('b', '// ---- S2', '// d2', '', '// ---- S3', '// d3', '', '// nb')],
+      end: [],
+    };
+    // b (first of S3) up: into the empty S2, not past it.
+    const up = step(list, 1, -1);
+    expect(stream(up)).toEqual(['// ---- S1', '[a]', '// ---- S2', '// d2', '', '// nb', '[b]', '// ---- S3', '// d3']);
+    expect(stream(up && step(up, 1, 1))).toEqual(stream(list));
+    // a down: into the empty S2 as well.
+    const down = step(list, 0, 1);
+    expect(stream(down)?.slice(0, 4)).toEqual(['// ---- S1', '// ---- S2', '// d2', '[a]']);
+    expect(stream(down && step(down, 0, -1))).toEqual(stream(list));
+  });
+
+  it('moves the first rule of a part’s first section above the part, and back, leaving the section empty', () => {
+    const list: SectionList<Item> = {
+      items: [item('a', '// ==== P', '// dp', '', '// ---- S', '// ds'), item('b', '// ---- T', '// dt')],
+      end: [],
+    };
+    const up = step(list, 0, -1);
+    expect(stream(up)).toEqual(['[a]', '// ==== P', '// dp', '', '// ---- S', '// ds', '', '// ---- T', '// dt', '[b]']);
+    expect(stream(up && step(up, 0, 1))).toEqual(stream(list));
+  });
+
   it('passes a free-standing note, which stays a note', () => {
     const list: SectionList<Item> = { items: [item('a'), item('b', '// free', '', '// nb')], end: [] };
     const up = step(list, 1, -1);
