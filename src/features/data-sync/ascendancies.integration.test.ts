@@ -7,7 +7,7 @@ import { resolve } from 'path';
 import Dexie from 'dexie';
 import 'fake-indexeddb/auto';
 import { parseAscendanciesPage } from './parsers/ascendanciesParser';
-import type { Ascendancy, AscendancyChallenge } from '@/core/db';
+import type { Ascendancy, AscendancyChallenge, AscendancySection } from '@/core/db';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -18,12 +18,14 @@ const ascendanciesHtml = readFileSync(resolve(__dirname, '../../../test-fixtures
 class TestDb extends Dexie {
   ascendancies!: Dexie.Table<Ascendancy, string>;
   ascendancyChallenges!: Dexie.Table<AscendancyChallenge, number>;
+  ascendancySections!: Dexie.Table<AscendancySection, string>;
 
   constructor() {
     super('test-ascendancies');
     this.version(1).stores({
       ascendancies: 'name',
       ascendancyChallenges: 'tier',
+      ascendancySections: 'title',
     });
   }
 }
@@ -31,18 +33,21 @@ class TestDb extends Dexie {
 let testDb: TestDb;
 let allParsedItems: Ascendancy[];
 let allParsedChallenges: AscendancyChallenge[];
+let allParsedSections: AscendancySection[];
 
 beforeAll(async () => {
   testDb = new TestDb();
 
-  // Parse ascendancies and their challenges
+  // Parse ascendancies, their challenges and the other sections
   const page = parseAscendanciesPage(ascendanciesHtml);
   allParsedItems = page.ascendancies;
   allParsedChallenges = page.challenges;
+  allParsedSections = page.sections;
 
   // Store in IndexedDB
   await testDb.ascendancies.bulkPut(allParsedItems);
   await testDb.ascendancyChallenges.bulkPut(allParsedChallenges);
+  await testDb.ascendancySections.bulkPut(allParsedSections);
 });
 
 afterAll(async () => {
@@ -82,16 +87,24 @@ describe('Known item verification from DB', () => {
     expect(item!.tiers[0].bonuses).toContain('+1 to Class Skill Levels');
     expect(item!.footnotes.length).toBe(1);
     expect(item!.footnotes[0]).toContain('Total Defense Bonus');
-    expect(item!.unlockInputs).toEqual(['Orb of Creation', '2 Blemished Sapphire', '2 Blemished Obsidian']);
   });
 
   it('should store the five challenges keyed by tier', async () => {
     const tiers = await testDb.ascendancyChallenges.toArray();
     expect(tiers.map((c) => c.tier)).toEqual([1, 2, 3, 4, 5]);
-    expect(tiers[0].recipes.length).toBe(15);
+    expect(tiers[0].description.join(' ')).toContain('consumed to unlock the ascendancy panel');
     const tier4 = await testDb.ascendancyChallenges.get(4);
-    expect(tier4?.recipes[0].inputs).toContain('Primordial Soulstones Captured: 10/10');
     expect(tier4?.description[0]).toContain('Primordial Soulstones');
+    expect(tier4?.description[0]).toContain('unlocked automatically');
+  });
+
+  it('should store the Lich King Bonus section keyed by its title', async () => {
+    const lichKing = await testDb.ascendancySections.get('Lich King Bonus');
+    expect(lichKing?.order).toBe(0);
+    expect(lichKing?.description).toEqual([
+      'Killing the Lich King on /players 8 difficulty unlocks an additional bonus that increases the tier 3 and 4 stat scaling bonuses by 10%.',
+    ]);
+    expect(await testDb.ascendancySections.count()).toBe(1);
   });
 
   it('should retrieve Worldshaper from DB with footnotes', async () => {

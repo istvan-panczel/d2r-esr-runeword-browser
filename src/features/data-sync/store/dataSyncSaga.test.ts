@@ -39,6 +39,7 @@ const EMPTY_PARSED_DATA: ParsedData = {
   mythicalUniques: [],
   ascendancies: [],
   ascendancyChallenges: [],
+  ascendancySections: [],
 };
 
 const EMPTY_FETCHED_HTML: FetchedHtmlData = {
@@ -76,7 +77,7 @@ function fakeRows(prefix: string, count: number): never[] {
 
 function fullParsedData(count = 10): ParsedData {
   const datasets = Object.fromEntries(DATASETS.map((dataset) => [dataset, fakeRows('fresh', count)])) as unknown as ParsedData;
-  return { ...datasets, ascendancyChallenges: [] };
+  return { ...datasets, ascendancyChallenges: [], ascendancySections: [] };
 }
 
 /** Populates every dataset table with `count` rows and stamps an old ESR version. */
@@ -137,25 +138,26 @@ describe('dataSyncSaga store step', () => {
     expect(toast.warning).not.toHaveBeenCalled();
   });
 
-  it('stores the ascendancy challenges in their own table', async () => {
+  it('stores the ascendancy challenges and sections in their own tables', async () => {
     const store = createTestStore();
-    const challenge = {
-      tier: 2,
-      description: ['Kill Nihlathak.'],
-      recipes: [{ inputs: ['Ascendancy Stone'], outputs: ['Upgraded to Tier 2'] }],
-    };
+    const challenge = { tier: 2, description: ['Kill Nihlathak.'] };
+    const section = { title: 'Lich King Bonus', order: 0, description: ['Kill the Lich King on players 8.'] };
 
-    store.dispatch(parseDataSuccess({ ...fullParsedData(), ascendancyChallenges: [challenge], esrVersion: '9.9.9' }));
+    store.dispatch(
+      parseDataSuccess({ ...fullParsedData(), ascendancyChallenges: [challenge], ascendancySections: [section], esrVersion: '9.9.9' })
+    );
 
     await vi.waitFor(async () => {
       expect((await db.metadata.get('esrVersion'))?.value).toBe('9.9.9');
     });
     expect(await db.ascendancyChallenges.toArray()).toEqual([challenge]);
+    expect(await db.ascendancySections.toArray()).toEqual([section]);
   });
 
   it('stores the other data when the page had no challenge section', async () => {
     const store = createTestStore();
-    await db.ascendancyChallenges.put({ tier: 1, description: ['Old'], recipes: [] });
+    await db.ascendancyChallenges.put({ tier: 1, description: ['Old'] });
+    await db.ascendancySections.put({ title: 'Old', order: 0, description: ['Old'] });
 
     store.dispatch(parseDataSuccess({ ...fullParsedData(), esrVersion: '9.9.9' }));
 
@@ -164,6 +166,7 @@ describe('dataSyncSaga store step', () => {
     });
     expect(await db.ascendancies.count()).toBe(10);
     expect(await db.ascendancyChallenges.count()).toBe(0);
+    expect(await db.ascendancySections.count()).toBe(0);
     expect(toast.warning).not.toHaveBeenCalled();
   });
 

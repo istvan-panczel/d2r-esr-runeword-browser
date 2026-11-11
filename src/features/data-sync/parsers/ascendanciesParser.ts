@@ -1,4 +1,4 @@
-import type { Ascendancy, AscendancyChallenge, AscendancyRecipe, AscendancyTier } from '@/core/db';
+import type { Ascendancy, AscendancyChallenge, AscendancySection, AscendancyTier } from '@/core/db';
 import { stripHtmlTags } from '@/lib/html';
 import { decodeHtmlEntities, extractCellLines, mergeWrappedLines } from './shared/parserUtils';
 
@@ -96,38 +96,21 @@ function identifyDivs(flexContainer: Element): { imageDiv: Element; textDiv: Ele
 /** The heading of a challenge section: `<h3>Tier 1 Challenge</h3>` */
 const CHALLENGE_HEADING = /^Tier\s+(\d+)\s+Challenge$/i;
 
+/** A heading that looks like a challenge but is not a readable one ("Tier X Challenge"): never an extra section */
+const CHALLENGE_LIKE_HEADING = /\bchallenge\b/i;
+
 /** Elements that end a challenge section: the next heading */
 const SECTION_END_TAGS: ReadonlySet<string> = new Set(['H1', 'H2', 'H3']);
 
-/** The non-empty visual lines of a cell (split on <br>, whitespace normalised) */
-function cellLines(cell: Element): string[] {
-  return extractCellLines(cell)
-    .map((line) => line.text)
-    .filter((text) => text.length > 0);
-}
-
-function rowCells(row: Element): Element[] {
-  return Array.from(row.children).filter((el) => el.tagName === 'TD' || el.tagName === 'TH');
-}
-
-/** The "Input | Output" header row of a recipe table */
-function isInputOutputHeader(row: Element): boolean {
-  const texts = rowCells(row).map((cell) => cleanText(cell.textContent));
-  return texts.length >= 2 && /^inputs?$/i.test(texts[0]) && /^outputs?$/i.test(texts[1]);
-}
-
-/** The tables between a challenge heading and the next heading (also inside wrapper elements without a heading) */
-function sectionTables(heading: Element): Element[] {
-  const tables: Element[] = [];
+/** The first table between a heading and the next heading (also inside a wrapper element without a heading) */
+function sectionTable(heading: Element): Element | null {
   for (let el = heading.nextElementSibling; el && !SECTION_END_TAGS.has(el.tagName); el = el.nextElementSibling) {
-    if (el.tagName === 'TABLE') {
-      tables.push(el);
-    } else {
-      if (el.querySelector('h1, h2, h3')) break;
-      tables.push(...Array.from(el.querySelectorAll('table')));
-    }
+    if (el.tagName === 'TABLE') return el;
+    if (el.querySelector('h1, h2, h3')) return null;
+    const table = el.querySelector('table');
+    if (table) return table;
   }
-  return tables;
+  return null;
 }
 
 /** Paragraphs of a description table: one per <br>-separated line, hard-wrapped lines re-joined */
@@ -137,64 +120,43 @@ function extractDescription(table: Element): string[] {
   return mergeWrappedLines(extractCellLines(cell).map((line) => line.text));
 }
 
-function extractRecipes(table: Element): AscendancyRecipe[] | null {
-  const rows = Array.from(table.querySelectorAll('tr'));
-  const headerIndex = rows.findIndex(isInputOutputHeader);
-  if (headerIndex === -1) return null;
-  const recipes: AscendancyRecipe[] = [];
-  for (const row of rows.slice(headerIndex + 1)) {
-    const cells = rowCells(row);
-    if (cells.length < 2) continue;
-    const inputs = cellLines(cells[0]);
-    const outputs = cellLines(cells[1]);
-    if (inputs.length > 0 && outputs.length > 0) recipes.push({ inputs, outputs });
-  }
-  return recipes;
+/** The paragraphs of the description table under a heading; empty when there is none */
+function headingDescription(heading: Element): string[] {
+  const table = sectionTable(heading);
+  return table ? extractDescription(table) : [];
+}
+
+interface ParsedSections {
+  readonly challenges: AscendancyChallenge[];
+  readonly sections: AscendancySection[];
 }
 
 /**
- * The "Tier N Challenge" sections: each `<h3>` heading is followed by a description table (one cell of prose) and an
- * Input/Output recipe table. Any section that is missing or changed shape is skipped (the cards do not depend on it).
+ * The `<h3>` sections with a one-cell description table: "Tier N Challenge" ones become challenges, any other one (the
+ * "Lich King Bonus", ESR 3.3.04) an extra section in page order. A heading with nothing readable under it is skipped,
+ * as is the cards' "Ascendancies" heading (no table follows it). Since ESR 3.3.04 the page has no recipe tables; an
+ * older page's Input/Output tables after the description are ignored.
  */
-function extractChallenges(doc: Document): AscendancyChallenge[] {
+function extractSections(doc: Document): ParsedSections {
   const challenges = new Map<number, AscendancyChallenge>();
+  const sections = new Map<string, AscendancySection>();
   for (const heading of Array.from(doc.querySelectorAll('h3'))) {
-    const match = CHALLENGE_HEADING.exec(cleanText(heading.textContent));
-    if (!match) continue;
-    const tier = parseInt(match[1], 10);
-    if (challenges.has(tier)) continue;
-
-    let description: string[] = [];
-    const recipes: AscendancyRecipe[] = [];
-    for (const table of sectionTables(heading)) {
-      const tableRecipes = extractRecipes(table);
-      if (tableRecipes) {
-        recipes.push(...tableRecipes);
-      } else if (description.length === 0) {
-        description = extractDescription(table);
-      }
+    const title = cleanText(heading.textContent);
+    const match = CHALLENGE_HEADING.exec(title);
+    if (match) {
+      const tier = parseInt(match[1], 10);
+      if (challenges.has(tier)) continue;
+      const description = headingDescription(heading);
+      if (description.length > 0) challenges.set(tier, { tier, description });
+    } else if (title.length > 0 && !CHALLENGE_LIKE_HEADING.test(title) && !sections.has(title)) {
+      const description = headingDescription(heading);
+      if (description.length > 0) sections.set(title, { title, order: sections.size, description });
     }
-    if (description.length === 0 && recipes.length === 0) continue;
-    challenges.set(tier, { tier, description, recipes });
   }
-  return Array.from(challenges.values()).sort((a, b) => a.tier - b.tier);
-}
-
-/** The ascendancy a recipe unlocks: its only output line is "<Name> Ascendancy Stone" */
-function unlockedAscendancy(recipe: AscendancyRecipe): string | null {
-  if (recipe.outputs.length !== 1) return null;
-  const match = /^(.+?)\s+Ascendancy\s+Stone$/i.exec(recipe.outputs[0]);
-  return match ? match[1].toLowerCase() : null;
-}
-
-/** Ascendancy name (lower case) → the inputs of the recipe that makes its stone (first recipe wins) */
-function unlockInputsByName(challenges: readonly AscendancyChallenge[]): Map<string, readonly string[]> {
-  const byName = new Map<string, readonly string[]>();
-  for (const recipe of challenges.flatMap((challenge) => challenge.recipes)) {
-    const name = unlockedAscendancy(recipe);
-    if (name !== null && !byName.has(name)) byName.set(name, recipe.inputs);
-  }
-  return byName;
+  return {
+    challenges: Array.from(challenges.values()).sort((a, b) => a.tier - b.tier),
+    sections: Array.from(sections.values()),
+  };
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -203,12 +165,14 @@ export interface ParsedAscendanciesPage {
   readonly ascendancies: Ascendancy[];
   /** Empty when the page has no recognisable challenge section */
   readonly challenges: AscendancyChallenge[];
+  /** The other sections of the challenge part (the Lich King Bonus); empty when there are none */
+  readonly sections: AscendancySection[];
 }
 
 /**
  * Parses the ascendancy cards and footnotes of a parsed page.
  */
-function extractAscendancies(doc: Document, unlockInputs: ReadonlyMap<string, readonly string[]>): Ascendancy[] {
+function extractAscendancies(doc: Document): Ascendancy[] {
   // Find all top-level flex containers (one per ascendancy)
   const flexDivs = Array.from(doc.querySelectorAll('div[style*="justify-content: space-around"]'));
 
@@ -257,29 +221,29 @@ function extractAscendancies(doc: Document, unlockInputs: ReadonlyMap<string, re
     const tiers = extractTiers(divs.textDiv);
     const footnotes = footnoteMap.get(i) ?? [];
 
-    ascendancies.push({ name, imageUrl, tiers, footnotes, unlockInputs: unlockInputs.get(name.toLowerCase()) ?? [] });
+    ascendancies.push({ name, imageUrl, tiers, footnotes });
   }
 
   return ascendancies;
 }
 
 /**
- * Parses ascendancies.htm: the ascendancy cards (with each one's unlock recipe from the Tier 1 Challenge table) and the
- * Tier 1–5 challenges.
+ * Parses ascendancies.htm: the ascendancy cards, the Tier 1–5 challenges and the other sections of the challenge part
+ * (the Lich King Bonus).
  */
 export function parseAscendanciesPage(html: string): ParsedAscendanciesPage {
-  if (!html) return { ascendancies: [], challenges: [] };
+  if (!html) return { ascendancies: [], challenges: [], sections: [] };
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
-  let challenges: AscendancyChallenge[] = [];
+  let parsed: ParsedSections = { challenges: [], sections: [] };
   try {
-    challenges = extractChallenges(doc);
+    parsed = extractSections(doc);
   } catch (error) {
     // The challenges are an extra: a page whose challenge section breaks the parser still yields the cards
     console.warn('[HTML] Could not parse the ascendancy challenges:', error);
   }
-  return { ascendancies: extractAscendancies(doc, unlockInputsByName(challenges)), challenges };
+  return { ascendancies: extractAscendancies(doc), ...parsed };
 }
 
 /**
