@@ -58,6 +58,8 @@ export const KNOWN_COUNT_PREFIXES: readonly string[] = [
   'elixir',
   // combatAreas, combatMapZones, combatPools, combatBosses, combatExcluded…
   'combat',
+  // charSheetSkills, charSheetSets, charSheetHirelings, charSheetAscendancies … (My Character)
+  'charSheet',
   'itemIcons',
   'uniqueIcons',
   'setIcons',
@@ -101,6 +103,7 @@ export const KNOWN_WARNING_CLASSES: readonly string[] = [
   'killledger',
   'elixirs',
   'combat',
+  'charsheet',
 ];
 
 /** `lootfilter skills: …` → `lootfilter skills`; null when the text has no lower-case class prefix. */

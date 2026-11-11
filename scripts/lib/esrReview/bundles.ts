@@ -62,6 +62,26 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     superiorRows: byField('row', (entry) => `row ${field(entry, 'row')} (${field(entry, 'text')})`),
     superiorPools: byField('label'),
   },
+  // My Character: a changed stat, class constant, skill row, set, hireling, rule or ascendancy tier changes the computed
+  // sheet; the ascendancies follow celestialrayone.ascendancies.toml in window order (= the saved index, never reorder)
+  'charsheet.json': {
+    statNames: VALUES,
+    valShift: MAP,
+    ops: byField('id'),
+    classes: byField('code'),
+    experience: VALUE,
+    weaponSpeed: MAP,
+    quivers: VALUES,
+    armor: MAP,
+    skills: byField('row', (entry) => `row ${field(entry, 'row')} (${field(entry, 'n')})`),
+    setItems: VALUE,
+    sets: byField('key'),
+    hirelings: byField('id', named('id')),
+    specializations: byField('slug', named('slug')),
+    rules: VALUE,
+    ascendancies: byField('index', named('index')),
+    ascendancyRules: VALUE,
+  },
   // the My Character Combat tab: a changed pool spread, boss value or bonus moves its hit chances
   'combat.json': {
     curve: VALUE,
