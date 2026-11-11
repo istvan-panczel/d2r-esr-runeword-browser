@@ -1,5 +1,6 @@
 import type {
   AffixesBundle,
+  CharSheetBundle,
   AreasBundle,
   BasesBundle,
   CraftingBundle,
@@ -50,6 +51,7 @@ import { buildSetsBundle } from './bundleSets.ts';
 import { buildSuperiorAffixes } from './bundleSuperior.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
 import { buildCharacterSaveData } from './bundleCharacterSave.ts';
+import { buildCharSheetBundle, itemSkillUses } from './bundleCharSheet.ts';
 import { buildStashBundle } from './bundleStash.ts';
 import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
@@ -62,6 +64,7 @@ import { buildTiersBundle } from './bundleTiers.ts';
 import { buildTypesBundle } from './bundleTypes.ts';
 import type { EsrSources } from './esrSources.ts';
 import { itemRowName, readUniqueOrSetRows, resolveName } from './itemNames.ts';
+import { savedStatsReader } from './itemTextBases.ts';
 import { readAffixes, readCharStats, readItems, readItemTypes, readRuneRecipes, type ItemRow } from './model.ts';
 import type { ModsRenderer } from './bundleRunewords.ts';
 import type { EnhanceContext } from './bundleEnhance.ts';
@@ -110,6 +113,8 @@ export interface GeneratedBundles {
   killledger: KillLedgerBundle;
   // elixirs.json
   elixirs: ElixirsBundle;
+  // charsheet.json
+  charsheet: CharSheetBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -549,6 +554,42 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   );
   // --- end itemtext.json ---
 
+  // --- charsheet.json ---
+  const charSheetStatIds = new Map<string, number>();
+  rowTable('itemstatcost').rows.forEach((row, id) => {
+    if (row.str('Stat') !== '' && !charSheetStatIds.has(row.str('Stat'))) charSheetStatIds.set(row.str('Stat'), id);
+  });
+  const charSheetWarnings: string[] = [];
+  const charSheet = buildCharSheetBundle({
+    itemstatcost: rowTable('itemstatcost'),
+    skills: rowTable('skills'),
+    skilldesc: table('skilldesc'),
+    charstats: table('charstats'),
+    experience: table('experience'),
+    weapons: table('weapons'),
+    armor: table('armor'),
+    sets: table('sets'),
+    setitems: rowTable('setitems'),
+    hireling: table('hireling'),
+    difficultylevels: table('difficultylevels'),
+    itemSkills: itemSkillUses(
+      modSources.flatMap((source) => source.mods),
+      statTables.properties,
+      (param) => skillLookup.skillId(param)
+    ),
+    groups: statTables.groups,
+    savedStats: savedStatsReader(charSheetStatIds, { properties: statTables.properties, strings, skills: skillLookup }, (warning) =>
+      charSheetWarnings.push(`charsheet: ${warning}`)
+    ),
+    specializations: specializations.bundle.trees,
+    configs: {
+      ...sources.charSheet,
+      dodgeCap: sources.modifierConfigs['dodge-avoid-evade-cap'],
+      resistFloor: sources.modifierPatches['esr-resistance-floor-minus-1000'],
+    },
+  });
+  // --- end charsheet.json ---
+
   // --- terrorzones.json ---
   const terrorZones = buildTerrorZonesBundle({
     esrVersion: sources.esrVersion,
@@ -651,6 +692,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     mercenaries: mercenaries.bundle,
     killledger: killledger.bundle,
     elixirs: elixirs.bundle,
+    charsheet: charSheet.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -801,6 +843,9 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       elixirPerks: elixirs.bundle.perks.length,
       elixirDropSources: elixirs.bundle.drops.sources.length,
       elixirRecipes: elixirs.bundle.recipes.length,
+      charSheetSkills: charSheet.bundle.skills.length,
+      charSheetSets: charSheet.bundle.sets.length,
+      charSheetHirelings: charSheet.bundle.hirelings.length,
     },
     warnings: [
       ...types.warnings,
@@ -833,6 +878,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...mercenaries.warnings,
       ...killledger.warnings,
       ...elixirs.warnings,
+      ...charSheetWarnings,
+      ...charSheet.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

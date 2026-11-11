@@ -10,6 +10,7 @@ import {
   type AffixesBundle,
   type AreasBundle,
   type BasesBundle,
+  type CharSheetBundle,
   type CraftingBundle,
   type CubeBundle,
   type ElixirsBundle,
@@ -65,6 +66,7 @@ export interface GameDataBundles {
   mercenaries: MercenariesBundle;
   killledger: KillLedgerBundle;
   elixirs: ElixirsBundle;
+  charsheet: CharSheetBundle;
   icons: IconsBundle;
 }
 

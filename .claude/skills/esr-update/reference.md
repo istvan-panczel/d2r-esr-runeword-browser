@@ -225,6 +225,12 @@ the owner's OK.
   needs a look; "the suspect dexterity … is gone" → ESR fixed it, drop the `SUSPECT_DEXTERITY` entry.
   `bundleIntegrity.test.ts` pins the 16 variants, hirelings, acts and types, and no warnings. Slugs (`desert-mercenary`,
   `combat`) are linked from the skill cards and the guide.
+- **Character sheet** (`celestialrayone.archaeology.toml`, `celestialrayone.charm-dedup.toml`, `charm-inv.toml`, the
+  resistance floor display patch): charsheet.json (`build/bundleCharSheet.ts`) reads them and throws when the Runic
+  Insight perk stat is no longer `archaeology_3`, the patch no longer says `min(75+maxresist, 95)`,
+  `allow_inventory_charms` is gone or a class passive gets a `passiveitype`: follow the change in
+  `src/features/character/engine/sheet/`. Hand-kept engine constants there: resist cap 75 / ceiling 95, physical cap 50,
+  Anya +10. With fresh ground-truth saves, re-run `sheet.fixture.integration.test.ts`.
 - **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
   `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
   (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact

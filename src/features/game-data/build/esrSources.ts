@@ -47,6 +47,13 @@ export type EsrModifierConfig = (typeof ESR_MODIFIER_CONFIGS)[number];
 /** D2RLoader memory patches the modifiers bundle reads (resistance floor, no run penalties, pet damage vs prime evils) */
 export const ESR_MODIFIER_PATCHES = ['esr-resistance-floor-minus-1000', 'no-run-penalties', 'pet-damage-vs-prime-evil'] as const;
 export type EsrModifierPatch = (typeof ESR_MODIFIER_PATCHES)[number];
+/** Loader configs / patches charsheet.json reads (besides the modifier ones: dodge-avoid-evade-cap, the resistance floor) */
+export const CHAR_SHEET_FILES = {
+  archaeology: 'd2rloader/config/celestialrayone.archaeology.toml',
+  charmDedup: 'd2rloader/config/celestialrayone.charm-dedup.toml',
+  charmInventory: 'd2rloader/config/charm-inv.toml',
+  resistFloorDisplay: 'd2rloader/patches/esr-resistance-floor-minus-1000-player-display.json',
+} as const;
 export const modifierConfigFile = (name: EsrModifierConfig) => `d2rloader/config/celestialrayone.${name}.toml`;
 export const modifierPatchFile = (name: EsrModifierPatch) => `d2rloader/patches/${name}.json`;
 
@@ -121,6 +128,8 @@ export interface EsrSources {
   specializations: SpecializationsSources;
   /** Raw docs/kill_ledger.htm (killledger.json `pageDiffs`); null when the file is missing */
   killLedgerPage: string | null;
+  /** charsheet.json: the loader plugin configs / patches it reads (raw text; null when the file is missing) */
+  charSheet: { archaeology: string | null; charmDedup: string | null; charmInventory: string | null; resistFloorDisplay: string | null };
 }
 
 /** Launcher config path of a specialisation plugin config file name */
@@ -189,5 +198,11 @@ export function readEsrSources(esrDir: string): EsrSources {
     masteryPage: optional(MASTERY_PAGE_FILE),
     specializations,
     killLedgerPage: optional(KILL_LEDGER_PAGE_FILE),
+    charSheet: {
+      archaeology: optional(CHAR_SHEET_FILES.archaeology),
+      charmDedup: optional(CHAR_SHEET_FILES.charmDedup),
+      charmInventory: optional(CHAR_SHEET_FILES.charmInventory),
+      resistFloorDisplay: optional(CHAR_SHEET_FILES.resistFloorDisplay),
+    },
   };
 }

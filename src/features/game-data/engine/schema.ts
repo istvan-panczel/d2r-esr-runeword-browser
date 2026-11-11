@@ -40,6 +40,7 @@ export type GameDataFile =
   | 'mercenaries'
   | 'killledger'
   | 'elixirs'
+  | 'charsheet'
   | 'icons';
 
 export interface GameDataManifest {
@@ -2373,4 +2374,138 @@ export interface SpecializationPageDiff {
   /** The tree and perk slugs when the difference is about one perk */
   tree?: string;
   perk?: string;
+}
+
+// --- charsheet.json -----------------------------------------------------------------------------------------------
+
+/**
+ * charsheet.json: what the computed character sheet (src/features/character/engine/sheet/) needs on top of
+ * itemtext.json: stat names and ops, class constants, the skills.txt passive / aura / to-hit columns and every column
+ * their formulas read, structured set bonuses, item speeds and block, experience, hirelings and the ESR loader rules.
+ * Loaded lazily, only on the character page (build/bundleCharSheet.ts, docs/features/CHARACTER-SAVE.md).
+ */
+export interface CharSheetBundle {
+  /** itemstatcost.txt `Stat` by id (row, Expansion rows counted); '' for an empty row */
+  statNames: string[];
+  /** ValShift by stat id, only the non-zero ones (an item stores the unshifted value, a stat list the shifted one) */
+  valShift: Record<string, number>;
+  /** Every stat with an op (`op`, `op param`, `op base`, `op stat1-3` as stat ids), by id ascending */
+  ops: CharSheetStatOp[];
+  /** charstats.txt by class id (the save's class byte) */
+  classes: CharSheetClass[];
+  /** experience.txt: total experience at which level `i + 1` starts, by level `i` (index 0 = 0); the last is the cap */
+  experience: number[];
+  /** weapons.txt `speed` by code (every weapon code, 0 included: also tells weapons apart) */
+  weaponSpeed: Record<string, number>;
+  /** armor.txt `speed` and `block` by code, only codes with a non-zero value */
+  armor: Record<string, CharSheetArmor>;
+  /** skills.txt rows: class skills, skills an item property names that carry passive / aura stats, and every row their formulas read */
+  skills: CharSheetSkill[];
+  /** setitems.txt id (the save's set id) → index into `sets`; -1 for a row without a set */
+  setItems: number[];
+  /** sets.txt bonuses as saved stats */
+  sets: CharSheetSet[];
+  /** hireling.txt Version 100, one entry per `Id` (the save header's hireling id) */
+  hirelings: CharSheetHireling[];
+  /** Specialisation trees: the stat of each perk (a perk is learned while the character's own value is above 0) */
+  specializations: { slug: string; name: string; stats: number[] }[];
+  rules: CharSheetRules;
+}
+
+export interface CharSheetStatOp {
+  id: number;
+  op: number;
+  param: number;
+  /** `op base` stat id (op 2/4/5: `level`); null when blank */
+  base: number | null;
+  /** `op stat1-3` stat ids */
+  targets: number[];
+}
+
+export interface CharSheetClass {
+  code: ClassCode;
+  /** In fourths, as charstats.txt has them */
+  lifePerVitality: number;
+  staminaPerVitality: number;
+  manaPerEnergy: number;
+  toHitFactor: number;
+  blockFactor: number;
+}
+
+export interface CharSheetArmor {
+  speed?: number;
+  block?: number;
+}
+
+export interface CharSheetSkill {
+  /** skills.txt row (the id a save and a stat param store) */
+  n: number;
+  /** Class id of a class skill */
+  cls?: number;
+  /** Skill tab 1-3 (skilldesc SkillPage) of a class skill */
+  tab?: number;
+  /**
+   * The row as the formula evaluator reads it: `id` = the `skill` name formulas use, then only the columns the sheet and
+   * its formulas read (passive / aura stat and calc columns, `passive`, `passivestate`, `aura`, `aurafilter`, `summon`,
+   * the to-hit columns, and whatever those formulas reach). Numbers are numbers, formulas text as in the file.
+   */
+  row: SkillCalcRow;
+}
+
+export interface CharSheetSet {
+  /** sets.txt `index` */
+  key: string;
+  /** Set items of the set (setitems.txt rows naming it) */
+  items: number;
+  /** Partial bonuses (PCode2a … 5b): active with at least `pieces` items of the set worn */
+  partial: { pieces: number; stats: ItemTextSavedStat[] }[];
+  /** Full set bonuses (FCode1-8): active with every item of the set worn */
+  full: ItemTextSavedStat[];
+}
+
+export interface CharSheetHireling {
+  id: number;
+  /** `Hireling` ("Rogue Scout") */
+  name: string;
+  /** `*SubType` without the difficulty ("Elemental", "Comb", "Fire") */
+  subtype: string;
+  act: number;
+  /** 0 Normal, 1 Nightmare, 2 Hell */
+  difficulty: number;
+  /** `Exp/Lvl` */
+  expPerLevel: number;
+}
+
+export interface CharSheetRules {
+  /** difficultylevels.txt `ResistPenalty` by difficulty (Normal, Nightmare, Hell) */
+  resistPenalty: number[];
+  /** Resist cap before max resist, and the hard ceiling (engine; asserted against ESR's resistance floor patch text) */
+  resistCap: number;
+  resistCeiling: number;
+  /** Lowest resist (ESR's resistance floor patch; -100 without it) */
+  resistFloor: number;
+  /** Physical resist cap of a player (engine constant) */
+  physicalResistCap: number;
+  /** Anya's Scroll of Resistance: all resists per difficulty read (engine constant) */
+  anyaResist: number;
+  /** dodge-avoid-evade-cap plugin: cap per kind, null when the plugin is off */
+  dodgeCap: { dodge: number; avoid: number; evade: number } | null;
+  /** Runic Insight (archaeology plugin `socketed_runes`); null when the plugin or the perk is off */
+  runicInsight: CharSheetRunicInsight | null;
+  /** charm-dedup plugin groups (item codes): one charm per group counts */
+  charmDedup: string[][];
+  /** charm-inv `allow_inventory_charms`: charms in the inventory count too */
+  inventoryCharms: boolean;
+}
+
+export interface CharSheetRunicInsight {
+  /** The perk stat (a gf stat > 0 while learned) */
+  stat: number;
+  percent: number;
+  /** Rune codes that count */
+  runes: string[];
+  /** Stats raised (ids) */
+  stats: number[];
+  /** Stats pooled per host item only (op 13) */
+  perItemStats: number[];
 }
