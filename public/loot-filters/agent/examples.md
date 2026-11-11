@@ -420,7 +420,7 @@ One item type (gem5) covers every perfect gem, Amethyst to Obsidian; Perfect gem
 
 ### Blemished gems
 
-ESR’s grade between Flawless and Perfect (gem4): it rerolls rares and picks an Ascendancy.
+ESR’s grade between Flawless and Perfect (gem4): rare rerolls, Pandemonium keys and the Vessel of Souls take it.
 
 ```json
 {
@@ -905,17 +905,17 @@ Lilith’s Crystallized Tear, Tyrael’s Eternal Feather, Lucion’s Essence and
 }
 ```
 
-### Ascendancy Stones and orbs
+### Ascendancy orbs and soulstones
 
-The Ascendancy Stone, the five elemental orbs, the Orb of Creation and the Primordial Soulstone.
+The five elemental orbs, the Orb of Creation that unlocks the ascendancy panel and the Primordial Soulstone.
 
 ```json
 {
-  "itemCodes": ["ast","u11","u12","u13","u14","u15","u16","u19"],
+  "itemCodes": ["u11","u12","u13","u14","u15","u16","u19"],
   "chatMessage": "ÿc8Ascendancy: ÿc0{name}",
   "sound": "tink.mp3",
   "useStyle": "ValuableDrop",
-  "comment": "Ascendancy Stones and orbs"
+  "comment": "Ascendancy orbs and soulstones"
 }
 ```
 
