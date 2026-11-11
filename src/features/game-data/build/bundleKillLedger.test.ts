@@ -154,6 +154,41 @@ const MONPROP = tsv(
 
 const MISC = tsv('misc', ['code', 'spelldescstr'], [['led', 'leddesc']]);
 
+/** Row index = hcIdx, as the ascendancies config counts them */
+const MONSTATS = tsv('monstats', ['Id'], [['skeleton1'], ['lucionwhisper'], ['talic'], ['madawc'], ['rathma'], ['kornac']]);
+
+/** The ascendancies plugin's kill credit (ESR 3.3.04): the same values as the monprop death skills above */
+const ASCENDANCIES = `[ascendancies]
+# Kill credit ([[kill_credit]]): kill_check_stat on a timed state, for this many frames
+kill_check_stat = 508
+kill_credit_frames = 1500
+
+[[kill_credit]]
+name = "Lucion's Whisper"
+monsters = [1]
+value = 50
+
+[[kill_credit]]
+name = "Eternal Ancients"
+monsters = [3, 2]
+value = 60
+
+[[kill_credit]]
+name = "Rathma"
+monsters = [4]
+value = 99
+value_above = 100
+maxhp_above = 2000000000
+
+[[kill_credit]]
+name = "Kor'nac the Hollow Apostle"
+monsters = [5]
+value = 109
+value_above = 110
+`;
+
+const NO_DEATH_SKILLS = tsv('monprop', ['Id', 'prop1', 'par1', 'max1'], []);
+
 const bossEntry = (id: string, name: string, arenas: number[], tier: number): MapBoss => ({
   id,
   name,
@@ -200,6 +235,8 @@ function input(overrides: Partial<KillLedgerInput> = {}): KillLedgerInput {
     cubeRows: SPECS.map(row),
     renderMods: (mods) => mods.map((entry) => `${entry.mod} +${String(entry.min)}`),
     monprop: MONPROP,
+    monstats: MONSTATS,
+    ascendanciesConfig: null,
     skills: SKILLS,
     misc: MISC,
     strings: new Map([['leddesc', '+1%% to Magic per 50 Energy Points\nTracks the amount of enemies you have slain']]),
@@ -311,6 +348,31 @@ describe('buildKillLedgerBundle', () => {
     expect(buildKillLedgerBundle(input({ page: null })).warnings).toEqual([
       'killledger: docs/kill_ledger.htm missing in the ESR clone: no page comparison',
     ]);
+  });
+});
+
+describe('buildKillLedgerBundle with the ascendancies plugin kill credit (ESR 3.3.04)', () => {
+  const fromConfig = buildKillLedgerBundle(input({ monprop: NO_DEATH_SKILLS, ascendanciesConfig: ASCENDANCIES }));
+
+  it('finds the same bosses, values and window as the old death skills', () => {
+    const fromMonprop = buildKillLedgerBundle(input());
+    expect(fromConfig.warnings).toEqual([]);
+    expect(fromConfig.bundle.windowSeconds).toBe(60);
+    expect(fromConfig.bundle.bosses.map((boss) => [boss.id, boss.monsters.map((monster) => monster.id).sort(), boss.killValues])).toEqual(
+      fromMonprop.bundle.bosses.map((boss) => [boss.id, boss.monsters.map((monster) => monster.id).sort(), boss.killValues])
+    );
+  });
+
+  it('uses the config before the death skills and the death skills without the config', () => {
+    expect(buildKillLedgerBundle(input({ monprop: NO_DEATH_SKILLS })).bundle.bosses).toEqual([]);
+    expect(buildKillLedgerBundle(input({ ascendanciesConfig: ASCENDANCIES })).bundle.bosses).toEqual(fromConfig.bundle.bosses);
+  });
+
+  it('warns about a monster index that is not in monstats.txt', () => {
+    const broken = ASCENDANCIES.replace('monsters = [1]', 'monsters = [99]');
+    expect(buildKillLedgerBundle(input({ monprop: NO_DEATH_SKILLS, ascendanciesConfig: broken })).warnings).toContain(
+      'killledger: ascendancies.toml kill credit "Lucion\'s Whisper": monsters [99] not all in monstats.txt'
+    );
   });
 });
 

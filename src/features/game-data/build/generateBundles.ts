@@ -500,6 +500,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     cubeRows: cubeTables.cube,
     renderMods: cubeTables.renderMods,
     monprop: table('monprop'),
+    monstats: table('monstats'),
+    ascendanciesConfig: sources.plugins.ascendancies,
     skills: table('skills'),
     misc: table('misc'),
     strings,

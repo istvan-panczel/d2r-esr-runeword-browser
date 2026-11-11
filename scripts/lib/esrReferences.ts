@@ -9,6 +9,7 @@
  */
 import {
   CHAR_SHEET_FILES,
+  ESR_ASCENDANCIES_FILE,
   ESR_BOSS_SET_UNIQUE_DROP_FILE,
   ESR_DESECRATED_ZONES_FILE,
   ESR_MODIFIER_CONFIGS,
@@ -104,6 +105,12 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     path: KILL_LEDGER_PAGE_FILE,
     kind: 'generated',
     follows: 'killledger.json pageDiffs (the page compared with the files; build/killLedgerPage.ts); the Kill Ledger page shows them',
+  },
+  {
+    path: ESR_ASCENDANCIES_FILE,
+    kind: 'generated',
+    follows:
+      'killledger.json bosses and window (`[[kill_credit]]` / `kill_credit_frames`, build/bundleKillLedger.ts); the Kill Ledger page and the map boss panel',
   },
   ...[SPECIALIZATIONS_CONFIG_FILE, ...PERK_CONFIG_FILES].map((file): EsrReference => ({
     path: specializationConfigPath(file),
