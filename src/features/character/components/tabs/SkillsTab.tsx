@@ -14,7 +14,7 @@ import { useCharacterItemNames } from '../../hooks/useCharacterItems';
 import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
 import { BuffedBadge } from '../overview/BuffedBadge';
-import { StatList } from '../overview/SheetParts';
+import { StatList, StatusMark } from '../overview/SheetParts';
 import { CharacterSkillTrees } from '../skills/CharacterSkillTrees';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
 
@@ -107,7 +107,12 @@ function HardPointsTable({ rows, levelOf }: { readonly rows: readonly PointsRow[
                 {levelOf !== null && (
                   <>
                     <td className="py-1 pr-3 text-right align-top tabular-nums">+{level?.bonus ?? 0}</td>
-                    <td className="py-1 text-right align-top font-medium tabular-nums">{level?.level ?? row.points}</td>
+                    <td className="py-1 text-right align-top font-medium tabular-nums">
+                      <span className="inline-flex items-center justify-end gap-1">
+                        {level?.level ?? row.points}
+                        {level !== undefined && <StatusMark status={level.status} />}
+                      </span>
+                    </td>
                   </>
                 )}
               </tr>
@@ -140,7 +145,10 @@ function GrantedSkills({
           return (
             <li key={skill.skillId} className="flex items-center justify-between gap-3">
               <SkillName detail={id === undefined || id === '' ? undefined : view.byId.get(id)} name={skill.name} />
-              <span className="font-medium tabular-nums">Level {NUMBER_FORMAT.format(skill.level)}</span>
+              <span className="inline-flex items-center gap-1 font-medium tabular-nums">
+                Level {NUMBER_FORMAT.format(skill.level)}
+                <StatusMark status={skill.status ?? 'verified'} />
+              </span>
             </li>
           );
         })}
@@ -209,10 +217,12 @@ export function SkillsTab({ character }: SkillsTabProps) {
             <p className="text-xs text-muted-foreground">
               {totals.total} hard {totals.total === 1 ? 'point' : 'points'} put in by hand.{' '}
               {sheet === null
-                ? sheetState.status === 'error'
-                  ? 'The skill bonuses could not be loaded: the badges show hard points.'
+                ? sheetState.status === 'error' || sheetState.status === 'failed'
+                  ? 'The skill bonuses could not be worked out: the badges show hard points.'
                   : 'Loading the skill bonuses…'
-                : 'The badges show each skill’s level with every bonus counted.'}{' '}
+                : sheet.buffs.length > 0
+                  ? 'The badges show each skill’s level with every bonus and the buffs switched on counted; a level a buff changed has the ? mark (not yet checked in game) in the table below.'
+                  : 'The badges show each skill’s level with every bonus counted.'}{' '}
               Pick a skill for its details.
             </p>
           </div>

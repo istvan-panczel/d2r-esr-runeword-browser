@@ -83,6 +83,10 @@ export interface StatsDraft {
   readonly character?: string;
   readonly savedAt?: number;
   readonly esrVersion?: string;
+  /** Save-derived: the skill whose attack rating `values.ar` is (kept as loaded) */
+  readonly arSkill?: string;
+  /** Save-derived: whether the character's name is stored with the stats (the author can leave it out) */
+  readonly showCharacter: boolean;
   /** Raw input text per stat; blank or absent = not stated */
   readonly values: Readonly<Partial<Record<StatKey, string>>>;
 }

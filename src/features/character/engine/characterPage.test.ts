@@ -8,7 +8,7 @@ import type { ItemSection } from './characterItems';
 import { filterStorageSections } from './characterStorage';
 import { selectedCharacterEntry, sortCharacterEntries, upsertCharacterEntries } from './characterList';
 import { PROGRESS_STATS, progressCounters, specializationProgress, statValue } from './characterProgress';
-import { CHARACTER_TABS, characterTabUrl, readCharacterTab, withCharacterTab } from './characterTabs';
+import { CHARACTER_TABS, characterTabUrl, readCharacterTab, tabAfterKey, withCharacterTab } from './characterTabs';
 
 describe('character tabs', () => {
   it('reads ?tab= with the Overview as the default, ignoring case and unknown values', () => {
@@ -120,5 +120,17 @@ describe('storage filter', () => {
     expect(filterStorageSections(sections, '  ', null).map((entry) => entry.rows.length)).toEqual([2, 1]);
     const shown = filterStorageSections(sections, 'shako', null);
     expect(shown.map((entry) => [entry.section.key, entry.rows.map((r) => r.key)])).toEqual([['inventory', ['a']]]);
+  });
+});
+
+describe('tabAfterKey', () => {
+  it('moves with the arrow keys (wrapping) and Home / End; other keys do nothing', () => {
+    expect(tabAfterKey(0, 'ArrowRight', 6)).toBe(1);
+    expect(tabAfterKey(5, 'ArrowRight', 6)).toBe(0);
+    expect(tabAfterKey(0, 'ArrowLeft', 6)).toBe(5);
+    expect(tabAfterKey(3, 'Home', 6)).toBe(0);
+    expect(tabAfterKey(3, 'End', 6)).toBe(5);
+    expect(tabAfterKey(3, 'Enter', 6)).toBeNull();
+    expect(tabAfterKey(0, 'ArrowRight', 0)).toBeNull();
   });
 });

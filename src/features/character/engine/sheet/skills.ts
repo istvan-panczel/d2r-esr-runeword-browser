@@ -16,7 +16,7 @@
 import type { CharacterFile } from '../../parser/types';
 import { BASE_SKILLS, CalcRun } from '@/features/game-data/engine/skillCalc/evaluate';
 import type { CharSheetSkill } from '@/features/game-data/engine/schema';
-import { addStat, getStat, sumStat, type StatMap } from './statMap';
+import { addStat, getStat, mergeInto, sumStat, type StatMap } from './statMap';
 import type { SheetData } from './sheetData';
 
 export interface SkillState {
@@ -139,6 +139,13 @@ export function auraStats(data: SheetData, skill: CharSheetSkill, level: number,
     if (id !== null) addStat(out, id, 0, evaluateColumn(data, skill, `aurastatcalc${String(k)}`, level, hard, ctx));
   }
   return out;
+}
+
+/** A selected buff's stats at a level: its aurastat columns, plus the passivestat columns of a non-passive skill */
+export function buffStats(data: SheetData, skill: CharSheetSkill, level: number, hard: number, ctx: EvalContext): StatMap {
+  const stats = auraStats(data, skill, level, hard, ctx);
+  if (skill.row.passive !== 1) mergeInto(stats, passiveStats(data, skill, level, hard, ctx));
+  return stats;
 }
 
 /** The stat names a skill's aura / passive columns name */

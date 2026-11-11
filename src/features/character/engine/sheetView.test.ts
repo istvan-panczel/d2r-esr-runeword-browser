@@ -16,6 +16,16 @@ import {
   resistScrollsText,
   overviewRows,
   parseBuffMemory,
+  rememberedBuffs,
+  serializeBuffMemory,
+  updateBuffMemory,
+  buffMemorySave,
+  splitExclusive,
+  chooseInGroup,
+  chosenInGroup,
+  usableSelections,
+  groupWarnings,
+  offHandText,
   poolRows,
   resistReadout,
   resistReadouts,
@@ -209,14 +219,38 @@ describe('buffs', () => {
   });
 
   it('reads the session memory, dropping malformed entries', () => {
-    expect(parseBuffMemory(null)).toEqual({});
-    expect(parseBuffMemory('not json')).toEqual({});
-    expect(parseBuffMemory('[1]')).toEqual({});
+    expect(parseBuffMemory(null)).toEqual(new Map());
+    expect(parseBuffMemory('not json')).toEqual(new Map());
+    expect(parseBuffMemory('[1]')).toEqual(new Map());
+    const selections = [{ skillId: 570 }, { skillId: 'x' }, { skillId: 563, level: 4 }, { skillId: 1, level: -1 }];
     expect(
-      parseBuffMemory(
-        JSON.stringify({ SpinToWin: [{ skillId: 570 }, { skillId: 'x' }, { skillId: 563, level: 4 }, { skillId: 1, level: -1 }], Bad: 3 })
-      )
-    ).toEqual({ SpinToWin: [{ skillId: 570 }, { skillId: 563, level: 4 }, { skillId: 1 }] });
+      parseBuffMemory(JSON.stringify({ SpinToWin: { save: '1:2', selections }, Bad: 3, Old: [{ skillId: 570 }], NoSave: { selections } }))
+    ).toEqual(new Map([['SpinToWin', { save: '1:2', selections: [{ skillId: 570 }, { skillId: 563, level: 4 }, { skillId: 1 }] }]]));
+  });
+
+  it('keeps characters named like Object.prototype members apart from it (no crash, no leaking functions)', () => {
+    const names = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', 'toLocaleString', '__proto__'];
+    const empty = parseBuffMemory('{}');
+    for (const name of names) expect(rememberedBuffs(empty, name, '1:2')).toBeNull();
+    let memory = empty;
+    for (const name of names) memory = updateBuffMemory(memory, name, { save: '1:2', selections: [{ skillId: 570 }] }, () => true);
+    const back = parseBuffMemory(serializeBuffMemory(memory));
+    for (const name of names) expect(rememberedBuffs(back, name, '1:2')).toEqual([{ skillId: 570 }]);
+    expect(buffsKey(rememberedBuffs(back, 'constructor', '1:2') ?? [])).toBe('570');
+  });
+
+  it('remembers buffs only for the save they were chosen for, and only for stored characters', () => {
+    const save = buffMemorySave({ lastSavedAt: 100 }, 5);
+    const memory = updateBuffMemory(new Map(), 'Hero', { save, selections: [{ skillId: 570, level: 20 }] }, () => true);
+    expect(rememberedBuffs(memory, 'Hero', save)).toEqual([{ skillId: 570, level: 20 }]);
+    // A newer save of the character, or the same file removed and uploaded again: nothing remembered
+    expect(rememberedBuffs(memory, 'Hero', buffMemorySave({ lastSavedAt: 101 }, 5))).toBeNull();
+    expect(rememberedBuffs(memory, 'Hero', buffMemorySave({ lastSavedAt: 100 }, 6))).toBeNull();
+    // A change for another character drops the ones no longer stored
+    const next = updateBuffMemory(memory, 'Other', { save, selections: [{ skillId: 1 }] }, (name) => name !== 'Hero');
+    expect([...next.keys()]).toEqual(['Other']);
+    // Switching everything off forgets the character
+    expect(updateBuffMemory(next, 'Other', { save, selections: [] }, () => true).size).toBe(0);
   });
 });
 
@@ -226,7 +260,7 @@ describe('skillBonusById', () => {
     const sheet = computeCharacterSheet(character, data);
     const ids: string[] = [];
     ids[FRENZY] = 'frenzy';
-    expect(skillBonusById(sheet, ids).get('frenzy')).toEqual({ level: 5, hard: 3, bonus: 2, parts: { all: 2 } });
+    expect(skillBonusById(sheet, ids).get('frenzy')).toEqual({ level: 5, hard: 3, bonus: 2, parts: { all: 2 }, status: 'verified' });
     expect(bonusPartsText({ all: 10, cls: 2, oskill: 0 })).toBe('all skills +10, class skills +2');
     expect(bonusPartsText({})).toBe('');
   });
@@ -240,6 +274,10 @@ describe('sheetText', () => {
     expect(lines[0]).toBe(`${character.name}, level 50 Barbarian (ESR, Hell resists, unbuffed)`);
     expect(lines[1]).toBe('Str 60, Dex 57, Vit 0, Ene 0');
     expect(plain).toContain('MF 25%');
+    // Shared labels; zero bonuses left out
+    expect(plain).not.toContain('Extra gold');
+    expect(plain).not.toContain('DS 0%');
+    expect(plain).toMatch(/Frenzy AR [\d,]+,/);
     expect(plain).not.toContain('Buffs:');
     const buffed = sheetText(computeCharacterSheet(character, data, { buffs: [{ skillId: SHOUT }] }), { className: 'Barbarian' });
     expect(buffed.split('\n')[0]).toContain('Normal resists, with buffs');
@@ -290,5 +328,57 @@ describe('facts', () => {
     expect(ledgerBossName('herald_of_doom')).toBe('Herald of Doom');
     expect(resistScrollsText([true, true, false])).toBe('Normal, Nightmare');
     expect(resistScrollsText([false, false, false])).toBeNull();
+  });
+});
+
+describe('buff choices', () => {
+  const buff = (skillId: number, exclusiveGroup?: string): AvailableBuff => ({
+    skillId,
+    name: `Skill ${String(skillId)}`,
+    kind: exclusiveGroup === 'aura' ? 'aura' : 'cast',
+    level: 5,
+    stats: ['x'],
+    ...(exclusiveGroup === undefined ? {} : { exclusiveGroup }),
+  });
+  const available = [buff(1), buff(2, 'shapeshift'), buff(3, 'shapeshift'), buff(4, 'aura'), buff(5, 'aura')];
+
+  it('splits a list into switches and single-choice groups', () => {
+    const { singles, choices } = splitExclusive(available);
+    expect(singles.map((entry) => entry.skillId)).toEqual([1]);
+    expect(choices.map((choice) => [choice.group, choice.title, choice.buffs.map((entry) => entry.skillId)])).toEqual([
+      ['shapeshift', 'One form at a time', [2, 3]],
+      ['aura', 'One aura at a time', [4, 5]],
+    ]);
+  });
+
+  it('chooses one member of a group, switching the others off; None switches all off', () => {
+    const [forms] = splitExclusive(available).choices;
+    const one = chooseInGroup([{ skillId: 1 }, { skillId: 2 }], forms, buff(3, 'shapeshift'));
+    expect(one).toEqual([{ skillId: 1 }, { skillId: 3 }]);
+    expect(chosenInGroup(one, forms)?.skillId).toBe(3);
+    expect(chooseInGroup(one, forms, null)).toEqual([{ skillId: 1 }]);
+    expect(chosenInGroup([{ skillId: 1 }], forms)).toBeNull();
+  });
+
+  it('counts only selections the character can use, one per group (the last)', () => {
+    const remembered = [{ skillId: 99, level: 20 }, { skillId: 2 }, { skillId: 3 }, { skillId: 1 }, { skillId: 4 }];
+    expect(usableSelections(remembered, available)).toEqual([{ skillId: 3 }, { skillId: 1 }, { skillId: 4 }]);
+    expect(usableSelections(remembered, [])).toEqual([]);
+  });
+});
+
+describe('notes and the off-hand line', () => {
+  it('folds repeated notes with a count', () => {
+    expect(groupWarnings(['a', 'b', 'a', 'a'])).toEqual([
+      { text: 'a', count: 3 },
+      { text: 'b', count: 1 },
+    ]);
+  });
+
+  it('says the off-hand weapon’s own numbers, only the ones it has', () => {
+    const sheet = computeCharacterSheet(barbarian(), data);
+    expect(offHandText({ ...sheet, offense: { ...sheet.offense, offHand: null } })).toBeNull();
+    const off = { item: 1, attackSpeed: 100, deadlyStrike: 0, crushingBlow: 5, targetDefense: 0, status: 'verified' as const };
+    expect(offHandText({ ...sheet, offense: { ...sheet.offense, offHand: off } })).toBe('IAS 100%, crushing blow 5%');
   });
 });

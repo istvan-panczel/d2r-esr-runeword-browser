@@ -155,7 +155,7 @@ describe('computeCharacterSheet: which items count', () => {
     });
     const sheet = computeCharacterSheet(character, data);
     expect(sheet.find.magic.value).toBe(5 + 11);
-    expect(sheet.warnings.some((warning) => warning.includes('c12') && warning.includes('inactive'))).toBe(true);
+    expect(sheet.warnings.some((warning) => warning.includes('charm at 2,0') && warning.includes('not counted'))).toBe(true);
   });
 
   it('gives a socket filler its column for the host (runes in a helm: helm column) and a jewel its own stats', () => {

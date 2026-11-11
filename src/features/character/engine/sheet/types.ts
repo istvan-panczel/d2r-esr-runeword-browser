@@ -334,8 +334,13 @@ export interface CharacterStatsSnapshot {
   fcr: number;
   /** +all skills */
   sk: number;
-  /** Base attack rating (main hand, no skill) and attack rating % */
+  /**
+   * Attack rating as the character screen shows it: the left mouse button skill's main-hand line, else the right
+   * button's, else the base attack rating without a skill. `ars` names the skill (absent for the base value)
+   */
   ar: number;
+  ars?: string;
+  /** Attack rating % */
   arp: number;
   ds: number;
   cb: number;

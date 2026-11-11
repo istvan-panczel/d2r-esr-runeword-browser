@@ -7,6 +7,7 @@ import { attackChoices } from '../../engine/sheetView';
 import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
 import { BuffedBadge, UnbuffedBadge } from '../overview/BuffedBadge';
+import { SheetFailedPanel } from '../SheetFailedPanel';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
 
 /**
@@ -19,6 +20,7 @@ export function CombatTab({ character }: { readonly character: CharacterFile }) 
   const [choiceKey, setChoiceKey] = useState<string | null>(null);
   if (state.status === 'loading') return <GameDataLoading />;
   if (state.status === 'error') return <GameDataError error={state.error} onRetry={state.retry} />;
+  if (state.status === 'failed') return <SheetFailedPanel message={state.message} />;
   const { sheet } = state;
   const choices = attackChoices(sheet, NUMBER_FORMAT);
   const choice = choices.find((entry) => entry.key === choiceKey) ?? choices[0];

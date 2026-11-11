@@ -10,7 +10,7 @@ import { SPECIALIZATIONS_ROUTE, specializationsParams } from '@/features/special
 import { cn } from '@/lib/utils';
 import type { PlacedItemRow } from '../../engine/characterItems';
 import { progressCounters, specializationProgress } from '../../engine/characterProgress';
-import { DIFFICULTY_NAMES } from '../../engine/sheet/statLabels';
+import { DIFFICULTY_NAMES } from '@/features/builds/utils/statLabels';
 import type { SheetFacts } from '../../engine/sheet/types';
 import { ledgerBossName, resistScrollsText } from '../../engine/sheetView';
 import { useCharacterItems } from '../../hooks/useCharacterItems';

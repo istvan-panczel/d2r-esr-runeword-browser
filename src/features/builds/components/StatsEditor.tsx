@@ -21,6 +21,8 @@ const STATS_FILES = ['stash', 'charsheet', 'itemtext'] as const;
 
 interface PickedSave {
   readonly file: File;
+  /** The variant the file was picked for */
+  readonly variantKey: string;
 }
 
 /** Reads a picked .d2s once the bundles are ready and hands back only its stats. */
@@ -53,10 +55,10 @@ function StatsSaveReader({ picked, onResult }: { readonly picked: PickedSave; re
 
 interface StatsEditorProps {
   readonly stats: StatsDraft | null;
-  /** The variant's position, which every dispatched action targets */
+  /** The variant's position, which the edits target */
   readonly index: number;
-  /** Offer "Fill from a save file" (not on a form that was started from a save: its card above does that) */
-  readonly allowFillFromSave: boolean;
+  /** The variant draft's stable key: a save file read asynchronously lands on this variant, wherever it is by then */
+  readonly variantKey: string;
   readonly disabled: boolean;
   readonly dispatch: (action: VariantDraftAction) => void;
 }
@@ -109,27 +111,28 @@ function StatGroupFields({
       </legend>
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 lg:grid-cols-4">
         {group.stats.map(({ key, label, unit }) => {
+          const hint = key === 'ar' && stats.arSkill !== undefined ? `With ${stats.arSkill}, main hand (from the save)` : null;
           const id = `build-stat-${key}`;
           const bad = invalid.has(key);
           return (
             <div key={key} className="flex min-w-0 flex-col gap-1">
               <Label htmlFor={id} className="text-xs text-muted-foreground">
                 {label}
-                {unit === '%' ? ' (%)' : ''}
+                {unit === 'percent' ? ' (%)' : ''}
               </Label>
+              {/* Text, not type="number": a pasted "73,276" must not turn into an empty field (parseStatText reads it) */}
               <Input
                 id={id}
-                type="number"
-                inputMode={STAT_RANGES[key].min < 0 ? undefined : 'numeric'}
-                step={1}
-                min={STAT_RANGES[key].min}
-                max={STAT_RANGES[key].max}
+                type="text"
+                inputMode={STAT_RANGES[key].min < 0 ? 'text' : 'numeric'}
+                autoComplete="off"
+                spellCheck={false}
                 value={stats.values[key] ?? ''}
                 placeholder="—"
                 className="h-8"
                 disabled={disabled}
                 aria-invalid={bad}
-                aria-describedby={bad ? `${id}-hint` : undefined}
+                aria-describedby={bad ? `${id}-hint` : hint === null ? undefined : `${id}-note`}
                 onChange={(event) => {
                   dispatch({ type: 'setStatValue', variant: index, key, text: event.target.value });
                 }}
@@ -137,6 +140,11 @@ function StatGroupFields({
               {bad && (
                 <p id={`${id}-hint`} className="text-xs text-destructive">
                   {statRangeHint(key)}
+                </p>
+              )}
+              {!bad && hint !== null && (
+                <p id={`${id}-note`} className="text-xs text-muted-foreground">
+                  {hint}
                 </p>
               )}
             </div>
@@ -151,7 +159,7 @@ function StatGroupFields({
  * The "Character stats" card of a variant: empty, it offers "Add stats" and "Fill from a save file"; filled, grouped
  * number inputs, the difficulty of the resistances, a buffs flag, where the numbers came from, and Clear.
  */
-export function StatsEditor({ stats, index, allowFillFromSave, disabled, dispatch }: StatsEditorProps) {
+export function StatsEditor({ stats, index, variantKey, disabled, dispatch }: StatsEditorProps) {
   const [open, setOpen] = useState(true);
   const [picked, setPicked] = useState<PickedSave | null>(null);
   const [error, setError] = useState<{ readonly title: string; readonly message: string } | null>(null);
@@ -167,7 +175,7 @@ export function StatsEditor({ stats, index, allowFillFromSave, disabled, dispatc
       return;
     }
     setError(null);
-    setPicked({ file });
+    setPicked({ file, variantKey });
   };
 
   const handleResult = (result: SaveStatsResult) => {
@@ -176,7 +184,9 @@ export function StatsEditor({ stats, index, allowFillFromSave, disabled, dispatc
       setError(result.error);
       return;
     }
-    dispatch({ type: 'setStats', variant: index, stats: toStatsDraft(result.stats) });
+    const draft = toStatsDraft(result.stats);
+    // By key: the variant the file was picked for, even if it moved meanwhile (nothing happens if it is gone)
+    if (draft !== null && picked !== null) dispatch({ type: 'setStatsFromSave', variantKey: picked.variantKey, stats: draft });
     setOpen(true);
   };
 
@@ -226,42 +236,36 @@ export function StatsEditor({ stats, index, allowFillFromSave, disabled, dispatc
               <Plus className="size-4" />
               Add stats
             </Button>
-            {allowFillFromSave && (
-              <>
-                <input
-                  ref={input}
-                  type="file"
-                  accept=".d2s"
-                  className="sr-only"
-                  tabIndex={-1}
-                  aria-hidden="true"
-                  onChange={(event) => {
-                    const file = event.target.files?.item(0) ?? null;
-                    event.target.value = '';
-                    if (file !== null) handleFile(file);
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={disabled || reading}
-                  onClick={() => {
-                    input.current?.click();
-                  }}
-                >
-                  {reading ? <Spinner className="size-4" /> : <FileUp className="size-4" />}
-                  Fill from a save file
-                </Button>
-              </>
-            )}
+            <input
+              ref={input}
+              type="file"
+              accept=".d2s"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={(event) => {
+                const file = event.target.files?.item(0) ?? null;
+                event.target.value = '';
+                if (file !== null) handleFile(file);
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={disabled || reading}
+              onClick={() => {
+                input.current?.click();
+              }}
+            >
+              {reading ? <Spinner className="size-4" /> : <FileUp className="size-4" />}
+              Fill from a save file
+            </Button>
           </div>
-          {allowFillFromSave && (
-            <p className="text-xs text-muted-foreground">
-              Fill from a save file reads a .d2s in your browser and fills only these stats (computed for the difficulty the character is
-              in, without buffs); nothing else in the form changes, and the file is never uploaded.
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Fill from a save file reads a .d2s in your browser and fills only these stats (computed for the difficulty the character is in,
+            without buffs); nothing else in the form changes, and the file is never uploaded.
+          </p>
           {picked !== null && <StatsSaveReader picked={picked} onResult={handleResult} />}
           {error !== null && (
             <div role="alert" className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
@@ -276,7 +280,19 @@ export function StatsEditor({ stats, index, allowFillFromSave, disabled, dispatc
       ) : (
         <div id="build-stats-body" hidden={!open} className="space-y-4">
           <div className="space-y-1 text-sm">
-            <p className="font-medium">{statsProvenance(stats)}</p>
+            <p className="font-medium">{statsProvenance(stats.showCharacter ? stats : { ...stats, character: undefined })}</p>
+            {stats.source === 'save' && stats.character !== undefined && (
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox
+                  checked={stats.showCharacter}
+                  disabled={disabled}
+                  onCheckedChange={(checked) => {
+                    dispatch({ type: 'setStatsShowCharacter', variant: index, show: checked === true });
+                  }}
+                />
+                Show the character&apos;s name ({stats.character})
+              </label>
+            )}
             <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <Eye className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               <span>Shown publicly with the build, as entered here. Leave a field empty to not state it; Clear removes the block.</span>

@@ -350,12 +350,13 @@ describe.skipIf(!REVIEW.every((name) => existsSync(resolve(FIXTURES, `${name}.d2
       ]);
     });
 
-    it('Dudu: Call of the Wild’s item_armor_percent is a warning, not a silent no-op; the forms are one group', () => {
+    it('Dudu: a skill it does not have is refused even with a level; the forms are one group', () => {
       const character = load('Dudu');
       const plain = computeCharacterSheet(character, data);
       const buffed = computeCharacterSheet(character, data, { buffs: [{ skillId: 625, level: 10 }] });
       expect(buffed.defense.value).toBe(plain.defense.value);
-      expect(buffed.warnings.some((warning) => warning.includes('Call of the Wild') && warning.includes('item_armor_percent'))).toBe(true);
+      expect(buffed.buffs).toEqual([]);
+      expect(buffed.warnings.some((warning) => warning.includes('Call of the Wild') && warning.includes('does not have it'))).toBe(true);
       const groups = listAvailableBuffs(character, data).filter((buff) => buff.exclusiveGroup === 'shapeshift');
       expect(groups.map((buff) => buff.skillId).sort()).toEqual([595, 596]);
     });

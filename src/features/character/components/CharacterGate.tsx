@@ -7,6 +7,7 @@ import type { CharacterFileMeta } from '../db/characterDb';
 import { useCharacter } from '../hooks/useCharacter';
 import type { CharacterFile } from '../parser/types';
 import { CharacterLoadErrorPanel } from './CharacterLoadErrorPanel';
+import { CharacterPageBoundary } from './CharacterPageBoundary';
 import { CharacterSwitcher } from './CharacterSwitcher';
 import { CharacterUpload } from './CharacterUpload';
 
@@ -67,7 +68,10 @@ export function CharacterGate({ children }: CharacterGateProps) {
         <>
           <CharacterSwitcher current={selected} />
           {selected.result.ok ? (
-            children(selected.result.character, selected.file, selected.bytes)
+            // Keyed by the stored save: an error in one character's page never hides the switcher, and another starts afresh
+            <CharacterPageBoundary key={`${selected.key}:${String(selected.file.uploadedAt)}`}>
+              {children(selected.result.character, selected.file, selected.bytes)}
+            </CharacterPageBoundary>
           ) : (
             <CharacterLoadErrorPanel
               error={selected.result.error}

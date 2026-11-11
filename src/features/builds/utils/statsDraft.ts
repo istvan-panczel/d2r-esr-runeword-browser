@@ -18,7 +18,7 @@ export const DEFAULT_STATS_DIFFICULTY: StatsDifficulty = 2;
 
 /** A hand-made block with nothing stated yet. */
 export function emptyStatsDraft(): StatsDraft {
-  return { source: 'manual', edited: false, difficulty: DEFAULT_STATS_DIFFICULTY, buffed: false, values: {} };
+  return { source: 'manual', edited: false, difficulty: DEFAULT_STATS_DIFFICULTY, buffed: false, showCharacter: true, values: {} };
 }
 
 /** The editable form of a stored block (or of one computed from a save); null without one. */
@@ -37,16 +37,29 @@ export function toStatsDraft(stats: BuildStats | undefined): StatsDraft | null {
     ...(stats.character !== undefined ? { character: stats.character } : {}),
     ...(stats.savedAt !== undefined ? { savedAt: stats.savedAt } : {}),
     ...(stats.esrVersion !== undefined ? { esrVersion: stats.esrVersion } : {}),
+    ...(stats.arSkill !== undefined ? { arSkill: stats.arSkill } : {}),
+    showCharacter: true,
     values,
   };
+}
+
+/**
+ * A typed number, leniently: spaces and thousands separators (",", "'", "_", thin and no-break spaces) are dropped and a
+ * typographic minus is a minus, so a pasted "73,276" or "1 234" reads as a number. null for anything else (a decimal
+ * point included: every stat is a whole number).
+ */
+export function parseNumberText(text: string): number | null {
+  const cleaned = text.replace(/[\s,'_\u00a0\u202f]/g, '').replace(/^[\u2212\u2013]/, '-');
+  if (!/^[+-]?\d+$/.test(cleaned)) return null;
+  return Number(cleaned);
 }
 
 /** A stat's input text parsed: undefined when blank (not stated), null when not an integer in the stat's range. */
 export function parseStatText(key: StatKey, text: string | undefined): number | undefined | null {
   const trimmed = (text ?? '').trim();
   if (trimmed === '') return undefined;
-  const value = Number(trimmed);
-  return isStatValue(key, value) ? value : null;
+  const value = parseNumberText(trimmed);
+  return value !== null && isStatValue(key, value) ? value : null;
 }
 
 /** The keys whose text is not a valid number for the stat. */
@@ -80,9 +93,11 @@ export function fromStatsDraft(draft: StatsDraft | null): BuildStats | undefined
     ...(fromSave && draft.edited ? { edited: true as const } : {}),
     difficulty: draft.difficulty,
     ...(draft.buffed ? { buffed: true as const } : {}),
-    ...(fromSave && draft.character !== undefined ? { character: draft.character } : {}),
+    ...(fromSave && draft.showCharacter && draft.character !== undefined ? { character: draft.character } : {}),
+    // As loaded: a save import already stores the UTC day only (buildDraftStats.ts), and a stored block round-trips
     ...(fromSave && draft.savedAt !== undefined ? { savedAt: draft.savedAt } : {}),
     ...(fromSave && draft.esrVersion !== undefined ? { esrVersion: draft.esrVersion } : {}),
+    ...(fromSave && draft.arSkill !== undefined ? { arSkill: draft.arSkill } : {}),
     values,
   };
 }

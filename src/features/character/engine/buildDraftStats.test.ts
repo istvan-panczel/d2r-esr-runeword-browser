@@ -58,7 +58,9 @@ describe('character stats from a save', () => {
     const stats = computeBuildStats(file, sheetData, '3.3.03');
     const sheet = computeCharacterSheet(file, sheetData);
     expect(stats).not.toBeNull();
-    expect(stats).toMatchObject({ source: 'save', difficulty: 2, character: file.name, savedAt: file.lastSavedAt, esrVersion: '3.3.03' });
+    expect(stats).toMatchObject({ source: 'save', difficulty: 2, character: file.name, esrVersion: '3.3.03' });
+    // The UTC day of the save only
+    expect(stats?.savedAt).toBe(file.lastSavedAt - (file.lastSavedAt % 86_400));
     expect(stats?.buffed).toBeUndefined();
     expect(stats?.edited).toBeUndefined();
     expect(stats?.values).toMatchObject({
@@ -97,6 +99,24 @@ describe('character stats from a save', () => {
   it('never throws: a sheet failure gives null', () => {
     const broken = { ...hellBarbarian(), attributes: null } as unknown as Parameters<typeof computeBuildStats>[0];
     expect(computeBuildStats(broken, sheetData, null)).toBeNull();
+  });
+
+  it('stores the attack rating of the left button skill, named; the base value only without a hand skill', () => {
+    const snapshot = toStatsSnapshot(computeCharacterSheet(hellBarbarian(), sheetData), { savedAt: 1_794_387_009 });
+    const withSkill = buildStatsFromSnapshot({ ...snapshot, ar: 61_474, ars: 'Frenzy' }, 'Tester');
+    expect(withSkill?.values.ar).toBe(61_474);
+    expect(withSkill?.arSkill).toBe('Frenzy');
+    const base = buildStatsFromSnapshot({ ...snapshot, ars: undefined }, 'Tester');
+    expect(base).not.toHaveProperty('arSkill');
+  });
+
+  it('stores a max resist only above 75 (the magic cap too) and rounds the save time to its UTC day', () => {
+    const snapshot = toStatsSnapshot(computeCharacterSheet(hellBarbarian(), sheetData), { savedAt: 1_794_387_009 });
+    const stats = buildStatsFromSnapshot({ ...snapshot, frm: 75, crm: 79, mrm: 80 }, 'Tester');
+    expect(stats?.values).not.toHaveProperty('frm');
+    expect(stats?.values.crm).toBe(79);
+    expect(stats?.values.mrm).toBe(80);
+    expect(stats?.savedAt).toBe(1_794_355_200);
   });
 
   it('keeps a snapshot buffed flag and drops numbers outside the stored ranges', () => {
