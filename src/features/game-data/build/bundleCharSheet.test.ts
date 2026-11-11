@@ -27,6 +27,7 @@ soulstone_cap = 10
 soulstone_tier = 4
 class_skill_properties = ["ama", "sor", "nec", "pal", "bar", "dru", "ass", "war"]
 lich_king = ["lich-king-bonus=1"]
+lich_king_tip = "@d2r:LichTip"
 legacy_stone_item = "ast"
 legacy_tier_stats = [676, 677, 678, 680]
 legacy_soulstone_stat = 919
@@ -40,6 +41,9 @@ tier2 = ["class-skills=1"]
 tier3 = ["aura-hidden[787]=1"]
 tier4 = ["dmg-norm=40..50"]
 tier5 = ["class-skills=3", "dodge-group=1"]
+text1 = ["@d2r:BattlemageTier1"]
+text3 = ["^@d2r:battlemagetierone", "Plain line **"]
+text4 = ["@d2r:NoSuchString"]
 
 [[ascendancy]]
 name = "Blademaster"
@@ -247,6 +251,11 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
       return [[code === 'str' ? 0 : 8, 0, max]];
     },
     specializations: [],
+    strings: new Map([
+      ['BattlemageTier1', '+1 to Class Skill Levels\n+60 to Strength'],
+      ['battlemagetierone', 'second line\nÿc@first lineÿc0'],
+      ['LichTip', 'Lich King bonus: +10%'],
+    ]),
     configs: {
       archaeology: ARCHAEOLOGY,
       charmDedup: 'enabled = true\ngroups = [\n  ["c11", "c12"],\n]\n',
@@ -361,13 +370,14 @@ describe('buildCharSheetBundle: ascendancies', () => {
 
   it('reads the saved stats, the class skill stats, the Lich King bonus and each tier as saved stats, in window order', () => {
     const { bundle, warnings } = buildCharSheetBundle(withToml(ASCENDANCIES));
-    expect(warnings).toEqual([]);
+    expect(warnings).toEqual(['charsheet: ascendancies Battlemage tier 4: string NoSuchString not found']);
     expect(bundle.ascendancyRules).toEqual({
       stats: { ascendancy: 10, progress: 11, soulstones: 12, orb: 13 },
       soulstoneCap: 10,
       soulstoneTier: 4,
       classSkills: CLASS_PROPERTIES.map((_, cls) => [14, cls]),
       lichKing: [[8, 0, 1]],
+      lichKingText: 'Lich King bonus: +10%',
       legacy: { item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 },
     });
     expect(bundle.ascendancies).toEqual([
@@ -376,12 +386,13 @@ describe('buildCharSheetBundle: ascendancies', () => {
         name: 'Battlemage',
         legacyUnique: 1100,
         tiers: [
-          { classSkills: 1, stats: [[0, 0, 60]] },
-          { classSkills: 1, stats: [] },
-          { classSkills: 0, stats: [[9, 787, 1]] },
-          { classSkills: 0, stats: [[8, 0, 50]] },
+          // the panel text: a string's lines; ^ = a tooltip string stored bottom-up, colour codes and note markers dropped
+          { classSkills: 1, stats: [[0, 0, 60]], lines: ['+1 to Class Skill Levels', '+60 to Strength'] },
+          { classSkills: 1, stats: [], lines: [] },
+          { classSkills: 0, stats: [[9, 787, 1]], lines: ['first line', 'second line', 'Plain line'] },
+          { classSkills: 0, stats: [[8, 0, 50]], lines: [] },
           // a property group is expanded (dodge-group → dodge 3)
-          { classSkills: 3, stats: [[8, 0, 3]] },
+          { classSkills: 3, stats: [[8, 0, 3]], lines: [] },
         ],
       },
       {
@@ -389,11 +400,11 @@ describe('buildCharSheetBundle: ascendancies', () => {
         name: 'Blademaster',
         legacyUnique: 1102,
         tiers: [
-          { classSkills: 0, stats: [] },
-          { classSkills: 0, stats: [] },
-          { classSkills: 0, stats: [[9, 789, 1]] },
-          { classSkills: 0, stats: [] },
-          { classSkills: 0, stats: [] },
+          { classSkills: 0, stats: [], lines: [] },
+          { classSkills: 0, stats: [], lines: [] },
+          { classSkills: 0, stats: [[9, 789, 1]], lines: [] },
+          { classSkills: 0, stats: [], lines: [] },
+          { classSkills: 0, stats: [], lines: [] },
         ],
       },
     ]);

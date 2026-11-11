@@ -12,6 +12,40 @@ function ascendanciesUrl(name: string | null): string {
 
 const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
+/** What each tier gives, as the game's ascendancy panel words it; locked tiers dimmed */
+function TierBonuses({ ascendancy }: { readonly ascendancy: SheetAscendancy }) {
+  if (ascendancy.tierLines.length === 0) return null;
+  return (
+    <ul className="space-y-1.5 text-sm">
+      {ascendancy.tierLines.map((lines, i) => {
+        const tier = i + 1;
+        const unlocked = ascendancy.tiers.includes(tier);
+        return (
+          <li key={tier} className={unlocked ? undefined : 'text-muted-foreground/70'}>
+            <span className="mr-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Tier {tier}
+              {!unlocked && ' · locked'}
+            </span>
+            {lines.map((line) => (
+              <span key={line} className="block pl-3">
+                {line}
+              </span>
+            ))}
+          </li>
+        );
+      })}
+      {ascendancy.lichKingText !== null && (
+        <li className={ascendancy.lichKing ? undefined : 'text-muted-foreground/70'}>
+          <span className="mr-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Lich King{!ascendancy.lichKing && ' · not earned'}
+          </span>
+          <span className="block pl-3">{ascendancy.lichKingText}</span>
+        </li>
+      )}
+    </ul>
+  );
+}
+
 /**
  * What the save says about the ascendancy panel (ESR 3.3.04+): the ascendancy, its unlocked tiers, the Lich King bonus,
  * the Primordial Soulstones and the orb; an old stone's reading is labelled as such. `undefined`: the sheet data is not
@@ -37,7 +71,7 @@ export function AscendancySummary({ ascendancy }: { readonly ascendancy: SheetAs
       </p>
     );
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <p className="flex flex-wrap items-center gap-2 text-sm">
         <span className="font-medium">{ascendancy.name}</span>
         <ToneBadge label={upperFirst(tiersText(ascendancy.tiers))} tone="info" />
@@ -47,6 +81,7 @@ export function AscendancySummary({ ascendancy }: { readonly ascendancy: SheetAs
           tone={ascendancy.soulstones >= ascendancy.soulstoneCap ? 'success' : 'neutral'}
         />
       </p>
+      <TierBonuses ascendancy={ascendancy} />
       {ascendancy.source === 'stone' && (
         <p className="text-xs text-muted-foreground">
           Read from the old Ascendancy Stone: since ESR 3.3.04 the game turns it into the ascendancy panel on the next login (same
@@ -57,7 +92,7 @@ export function AscendancySummary({ ascendancy }: { readonly ascendancy: SheetAs
         The game applies the unlocked tiers&apos; bonuses every game (the save holds only the ascendancy and its tiers); the computed stats
         count them.{' '}
         <Link to={ascendanciesUrl(ascendancy.name)} className={LINK_CLASS}>
-          Its tier bonuses
+          Its tier challenges
         </Link>
       </p>
     </div>

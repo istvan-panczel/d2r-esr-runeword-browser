@@ -291,6 +291,20 @@ describe.skipIf(!existsSync(SAVE_3304))('computed sheet: an ESR 3.3.04 save (the
       soulstoneCap: 10,
       soulstoneTier: 4,
       orbConsumed: true,
+      // the panel's words for each tier (toml text1–text5)
+      tierLines: [
+        ['+1 to Class Skill Levels', '+60 to Strength', '+60 to Dexterity'],
+        ['+1 to Class Skill Levels', '25% Bonus to Strength', '25% Bonus to Dexterity'],
+        ['Gain 10% enhanced damage for every 1% Physical Resist', '20% Physical Resist'],
+        [
+          'Gain 1% Physical Damage Leeched as Life for every 1% Physical Resist',
+          '+40 to Minimum Damage to Attacks',
+          '+50 to Maximum Damage to Attacks',
+        ],
+        ['+3 to Class Skill Levels', '15% Chance to Cast Level 20 Thrown Axe on Striking'],
+      ],
+      lichKingText:
+        'Lich King bonus: slay the Lich King on Hell difficulty at /players 8 to increase your Tier 3 and Tier 4 aura effects by 10%',
     });
     expect(sheet.facts.ascendancyTier).toBe(4);
     expect(sheet.warnings).toEqual([]);
