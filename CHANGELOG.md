@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.68.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.67.1...v1.68.0) (2026-11-11)
+
+### Features
+
+* **builds:** add an optional character stats block per variant ([208902e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/208902eeeb2b9475b46f944770f17bd823a0e15b))
+* **builds:** edit and show the character stats of a variant ([49165aa](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/49165aa0b6166c37a9863f3809c4a10becbb9ca8))
+* **builds:** start a build from a stored My Character save ([df05a0f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/df05a0f41a19c0f10f0d98ee8a29daad1487b19f))
+* **character:** buffs on weapon set II, What if, Players and form rules ([9a6ebb5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9a6ebb5732cdc734986ef00359945a0c3e438936))
+* **character:** carry the computed character stats into a build started from a save ([575f632](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/575f632aabb7d417598b415a10019f025c76ea51))
+* **character:** combat.json bundle and hit chance calculations ([affefdd](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/affefdd52581a38364561ce19ea6cc346cf4ef9d))
+* **character:** compute the character sheet from a save ([e951da0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e951da07ffc4d4d5452f800a58c9c36659ad2c41))
+* **character:** count selected buffs in the computed sheet ([e32cd92](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e32cd92b4517df3592dd3c5136e4c4a9ddd4bac6))
+* **character:** HitChanceView for the Combat tab ([ae7b8a9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ae7b8a9a32582e1c1e88ec3abb9854bee3668ca2))
+* **character:** leave zero bonuses out of the stats imported from a save ([b48c73f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b48c73f354a4862dba3cbc9ddf781cd689005d32))
+* **character:** My Character as its own page with tabs and several stored characters ([fc1429d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fc1429d57cca0a892e24359c2a322a4a9e3d9d88))
+* **character:** read Ignore Target's Defense into the computed sheet ([cee0370](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/cee0370136f09765c115a95a7d56f7f2801dcec7))
+* **character:** wire the computed sheet into the My Character tabs ([22c89c8](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/22c89c80369fd148e47aa6264091009fe95acca9))
+* **game-data:** add the charsheet.json bundle for the computed character sheet ([1205db1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1205db1afa2605947feb7df1ab52888c23a9b942))
+* **navigation:** put My Character in a My Data menu group with the stash pages ([489ebdf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/489ebdf4b6b38d96fa484ae4d114cf69de78f9c9))
+
+### Bug Fixes
+
+* **character:** polish the My Character page and build stats seams ([407afb6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/407afb65011a86e1b199d9adfdda6f115646c663))
+* **character:** quivers, one aura instance, buff groups and structural unverified flags ([19509a4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/19509a448d4f42372dea192fe29459e049fae4a2))
+* **character:** say "not yet compared with the game" instead of "Inferred" ([49bd35a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/49bd35aca400ba74ddd2b4b53d8267ed9405662b))
+* **game-data:** emit quivers, shape-shifts and weapsel in charsheet.json ([e0f085c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e0f085c018b1b147133cd0e923ab900a2c9ccbdb))
+
+### Documentation
+
+* **builds:** document the character stats block and its import from a save ([1c6cb8f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1c6cb8f091139404f803633d0ca0ebb8ea32c328))
+* **character:** bring the My Character and build stats docs in line ([f59bbf6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f59bbf6f8ff25aff18e429c48733e0b9de21472a))
+* **character:** document the computed sheet and charsheet.json ([89de15d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/89de15d86cb693d8dca78b6918b2515f23b43888))
+* **character:** document the wired tabs, the buff switches and the sheet provider ([48346ca](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/48346caf26469c4dbaafc02c8420abf5813a336f))
+* Combat tab and combat.json ([f2d4ef3](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f2d4ef36e39d487c4e97f295f8239d0b9adccd90))
+
 ## [1.67.1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.67.0...v1.67.1) (2026-11-10)
 
 ### Bug Fixes
