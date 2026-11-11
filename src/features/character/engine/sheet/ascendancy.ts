@@ -39,6 +39,10 @@ export interface SheetAscendancy {
   orbConsumed: boolean;
   /** Index into `character.items.player` of the stone it was read from (source `stone`) */
   stoneItem?: number;
+  /** The panel's lines of tiers 1–5 (unlocked or not); empty when the ascendancy is unknown */
+  tierLines: string[][];
+  /** The panel's Lich King line; null when the data has none */
+  lichKingText: string | null;
 }
 
 /** The toml entry of an ascendancy that the sheet applies; null for none or an unknown index */
@@ -80,12 +84,14 @@ export function readAscendancy(
   const progress = savedValue(character, data.stats.progress);
   const soulstones = savedValue(character, data.stats.soulstones);
   const orb = savedValue(character, data.stats.orb);
-  const base = { soulstoneCap: data.soulstoneCap, soulstoneTier: data.soulstoneTier };
+  const linesOf = (index: number) => data.list.at(index - 1)?.tiers.map((tier) => tier.lines) ?? [];
+  const base = { soulstoneCap: data.soulstoneCap, soulstoneTier: data.soulstoneTier, lichKingText: data.lichKingText };
   if (index > 0)
     return {
       source: 'save',
       index,
       name: data.list.at(index - 1)?.name ?? null,
+      tierLines: linesOf(index),
       tiers: Array.from({ length: TIER_BITS }, (_, bit) => bit).flatMap((bit) => ((progress >> bit) & 1 ? [bit + 1] : [])),
       lichKing: ((progress >> LICH_KING_BIT) & 1) === 1,
       ascendedOnce: ((progress >> ASCENDED_BIT) & 1) === 1,
@@ -102,6 +108,7 @@ export function readAscendancy(
       source: 'stone',
       index: stone.entry.index,
       name: stone.entry.name,
+      tierLines: linesOf(stone.entry.index),
       tiers: [...tiers].sort((a, b) => a - b),
       lichKing: itemValue(stone.item, data.legacy.lichKingStat) > 0,
       ascendedOnce: true,
@@ -118,6 +125,7 @@ export function readAscendancy(
       source: 'save',
       index: 0,
       name: null,
+      tierLines: [],
       tiers: [],
       lichKing: ((progress >> LICH_KING_BIT) & 1) === 1,
       ascendedOnce: ((progress >> ASCENDED_BIT) & 1) === 1,

@@ -591,6 +591,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       charSheetWarnings.push(`charsheet: ${warning}`)
     ),
     specializations: specializations.bundle.trees,
+    strings,
     configs: {
       ...sources.charSheet,
       dodgeCap: sources.modifierConfigs['dodge-avoid-evade-cap'],

@@ -2527,6 +2527,8 @@ export interface CharSheetAscendancyRules {
   classSkills: [number, number][];
   /** The Lich King bonus properties as saved stats */
   lichKing: ItemTextSavedStat[];
+  /** The panel's Lich King line (`lich_king_tip`); null when the config shows none */
+  lichKingText: string | null;
   /** Old Ascendancy Stones, converted by the plugin on login: the item, the stone's stats for tiers 2–5, soulstones, Lich King */
   legacy: { item: string; tierStats: number[]; soulstoneStat: number; lichKingStat: number };
 }
@@ -2542,8 +2544,11 @@ export interface CharSheetAscendancy {
   name: string;
   /** uniqueitems.txt row of its old Ascendancy Stone */
   legacyUnique: number;
-  /** Tiers 1–5: `classSkills` = the class skill property's value, `stats` = every other property as saved stats */
-  tiers: { classSkills: number; stats: ItemTextSavedStat[] }[];
+  /**
+   * Tiers 1–5: `classSkills` = the class skill property's value, `stats` = every other property as saved stats, `lines` =
+   * the tier's text in the ascendancy panel (the toml's `text1`…`text5`, strings resolved, in reading order)
+   */
+  tiers: { classSkills: number; stats: ItemTextSavedStat[]; lines: string[] }[];
 }
 
 export interface CharSheetStatOp {

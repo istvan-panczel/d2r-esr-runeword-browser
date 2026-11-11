@@ -16,19 +16,20 @@ const SYNTHETIC: CharSheetAscendancies = {
   soulstoneTier: 4,
   classSkills: [0, 1, 2, 3, 4, 5, 6, 7].map((cls) => [83, cls]),
   lichKing: [[826, 0, 1]],
+  lichKingText: null,
   legacy: { item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 },
   list: [
     {
       index: 1,
       name: 'First',
       legacyUnique: 1100,
-      tiers: [1, 2, 3, 4, 5].map((tier) => ({ classSkills: tier === 5 ? 3 : 0, stats: [[0, 0, tier]] })),
+      tiers: [1, 2, 3, 4, 5].map((tier) => ({ classSkills: tier === 5 ? 3 : 0, stats: [[0, 0, tier]], lines: [] })),
     },
     {
       index: 2,
       name: 'Second',
       legacyUnique: 1102,
-      tiers: [1, 2, 3, 4, 5].map((tier) => ({ classSkills: tier <= 2 ? 1 : 0, stats: [[2, 0, tier * 10]] })),
+      tiers: [1, 2, 3, 4, 5].map((tier) => ({ classSkills: tier <= 2 ? 1 : 0, stats: [[2, 0, tier * 10]], lines: [] })),
     },
   ],
 };
@@ -51,6 +52,8 @@ describe('readAscendancy: the saved stats (ESR 3.3.04+)', () => {
       soulstoneCap: 10,
       soulstoneTier: 4,
       orbConsumed: true,
+      tierLines: [[], [], [], [], []],
+      lichKingText: null,
     });
     const all = readAscendancy(saved({ ascendancy: 1, ascendancy_progress: 0b1111111, ascendancy_orb: 1 }), SYNTHETIC);
     expect(all).toMatchObject({ name: 'First', tiers: [1, 2, 3, 4, 5], lichKing: true });
@@ -97,6 +100,8 @@ describe('readAscendancy: an old Ascendancy Stone (the plugin converts it on log
       soulstoneTier: 4,
       orbConsumed: true,
       stoneItem: 0,
+      tierLines: [[], [], [], [], []],
+      lichKingText: null,
     });
   });
 

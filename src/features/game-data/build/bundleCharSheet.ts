@@ -96,6 +96,8 @@ export interface CharSheetInput {
   /** One property → saved stats (itemTextBases.ts `savedStatsReader`) */
   savedStats: SavedStatsReader;
   specializations: readonly SpecializationTree[];
+  /** The mod's strings (enUS), for the ascendancy panel texts */
+  strings: ReadonlyMap<string, string>;
   configs: CharSheetConfigs;
 }
 
@@ -322,6 +324,33 @@ function readAscendancies(
       input.savedStats(mod.code, mod.param ?? '', mod.min, mod.max, `ascendancies ${where} ${mod.code}`)
     );
   };
+  /** A text setting is one entry or a list of them */
+  const textEntries = (value: TomlValue | undefined): string[] => (typeof value === 'string' ? [value] : strings(value));
+  /**
+   * The panel's text entries as display lines: "@d2r:Key" is a string (any string file), plain text shows as written, a
+   * leading ^ marks an item tooltip string stored bottom-up, trailing note markers (*, **) are dropped
+   */
+  const textLines = (entries: readonly string[], where: string): string[] =>
+    entries.flatMap((entry) => {
+      const tooltip = entry.startsWith('^');
+      const ref = tooltip ? entry.slice(1) : entry;
+      const key = ref.startsWith('@d2r:') ? ref.slice('@d2r:'.length) : null;
+      const text = key === null ? ref : input.strings.get(key);
+      if (text === undefined) {
+        warnings.push(`charsheet: ascendancies ${where}: string ${String(key)} not found`);
+        return [];
+      }
+      const lines = text
+        .split('\n')
+        .map((line) =>
+          line
+            .replace(/ÿc./g, '')
+            .replace(/\s*\*+$/, '')
+            .trim()
+        )
+        .filter((line) => line !== '');
+      return tooltip ? lines.reverse() : lines;
+    });
   const list = ascendancyBlocks(values).map((i): CharSheetAscendancy => {
     const at = (key: string) => `ascendancy[${String(i)}].${key}`;
     const name = values.get(at('name'));
@@ -342,6 +371,7 @@ function readAscendancies(
           mods.filter((mod) => mod.code !== CLASS_SKILLS),
           where
         ),
+        lines: textLines(textEntries(values.get(at(`text${String(tier)}`))), where),
       };
     });
     return { index: i + 1, name, legacyUnique: num(at('legacy_unique')), tiers };
@@ -363,6 +393,7 @@ function readAscendancies(
     soulstoneTier: num('ascendancies.soulstone_tier'),
     classSkills,
     lichKing: savedOf(lichKingMods, 'lich_king'),
+    lichKingText: textLines(textEntries(values.get('ascendancies.lich_king_tip')), 'lich_king_tip').join(' ') || null,
     legacy: {
       item,
       tierStats,
