@@ -24,7 +24,7 @@
   --container-10xl: 150rem; /* 2400 px: 6 cards */
   --container-11xl: 180rem; /* 2880 px: 7 cards */
   /* The frame width from which the header's main row holds the whole desktop nav, see src/core/components/Header.tsx. */
-  --container-desktop-nav: 86rem;
+  --container-desktop-nav: 79.5rem;
 }
 
 @theme inline {

@@ -143,7 +143,7 @@ same-width renumbered row; none happened from 3.2.10 to 3.3.02 (and the loader w
 ## My Character page
 
 `/character` (`src/features/character/`: `screens/CharacterScreen.tsx`, `components/` (`tabs/`, `gear/`), `engine/`, `hooks/`, `db/`),
-a top-level menu entry right after the My Stash group (until 2026-11 it was the My Stash page `/stash/character`, which now
+the first page of the My Data menu group, above the stash pages (until 2026-11 it was the My Stash page `/stash/character`, which now
 redirects here). Parsed in the browser only, never sent anywhere; no computed totals yet (no final resists or life, no Tier 1
 check, no monster data), so base values are labelled as base.
 

@@ -31,8 +31,8 @@ Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/
 | `/stash/items`     | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md))                         |
 | `/stash/character` | (redirect)           | To `/character`, My Character's own page ([CHARACTER-SAVE.md](./CHARACTER-SAVE.md#my-character-page)) |
 
-Header: the **My Stash** group (`navConfig.ts`): Overview (`/stash`, `exact`, so it is not highlighted on its
-sub-pages), Ancient Coupons and All Items; My Character is a top-level entry right after the group. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without
+Header: the **My Data** group (`navConfig.ts`): My Character (`/character`), then Stash Overview (`/stash`, `exact`, so it is
+not highlighted on its sub-pages), Ancient Coupons and All Items. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without
 waiting for the HTM data sync.
 
 ## Upload
@@ -87,7 +87,7 @@ then the file bar and `children(stash, file)`.
    `components/shared/` and the hooks `useStashTypes` / `useUrlState`; test helpers in `testing/` (`makeItem`,
    `makeStash`, `makeBundle`, `describeWithFixture`). See [STASH-ITEMS.md → Engine](./STASH-ITEMS.md#engine-shared-srcfeaturesstashengine).
 2. A route child of `stash` in `src/core/router/index.tsx`, an entry in `screens/stashPages.ts` (overview
-   card) and in the My Stash nav group.
+   card) and in the My Data nav group.
 
 ## Ancient Coupons page
 

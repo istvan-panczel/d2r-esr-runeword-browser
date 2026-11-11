@@ -325,14 +325,20 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
   },
   {
     kind: 'group',
-    key: 'stash',
-    label: 'My Stash',
-    description: 'Upload your shared stash (it stays in your browser) and see what is in it',
+    key: 'my-data',
+    label: 'My Data',
+    description: 'Your own characters and shared stash, read from the save files in your browser only',
     items: [
+      {
+        key: 'my-character',
+        to: '/character',
+        label: 'My Character',
+        description: 'Your characters from their save files: gear, skills, storage and progress; read in your browser only',
+      },
       {
         key: 'stash-overview',
         to: '/stash',
-        label: 'Overview',
+        label: 'Stash Overview',
         description: 'Upload your shared stash; it is read in your browser only',
         exact: true,
       },
@@ -349,15 +355,6 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         description: 'Every item on your stash pages: search names and stats, filter and sort',
       },
     ],
-  },
-  {
-    kind: 'link',
-    item: {
-      key: 'my-character',
-      to: '/character',
-      label: 'My Character',
-      description: 'Your characters from their save files: gear, skills, storage and progress; read in your browser only',
-    },
   },
   {
     kind: 'link',
