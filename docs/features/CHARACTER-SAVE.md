@@ -299,7 +299,7 @@ monster type. Checked in headless Chrome (light, dark, 375 px and 1400 px) on a 
 ## Start a build from a save
 
 `/builds/new` has a "Start from a save file" card: pick or drop a `.d2s` and the normal build form opens pre-filled as an
-**editable draft**. The file is parsed in the browser and not stored; nothing is saved until the user saves the form. No schema
+**editable draft**, character stats included. The file is parsed in the browser and not stored; nothing is saved until the user saves the form. No schema
 or database change. A parse failure shows the failure point (no item data) and leaves the form usable.
 
 Code: `src/features/character/engine/buildDraft.ts` (`createBuildDraft`, pure), `buildDraftItems.ts` (the item bridge),
@@ -315,6 +315,7 @@ a file is picked (`lootfilter.json` `skillNames` maps a saved skill row to its `
 | Runeword base, socket fillers         | The item's own code and name; fillers are all sockets on uniques, mythicals and sets, jewels only on runewords, none on gemwords                                                              |
 | Charms                                | Charm inventory only, one text line with the name and stats at the character's level; only identical rolls merge ("2x …"); Kill Ledger skipped, charms anywhere else are inactive and skipped |
 | Ascendancy                            | The Ascendancy Stone in the charm inventory; not a charm line                                                                                                                                 |
+| Character stats                       | The [computed sheet](#computed-sheet) for the save's own difficulty, unbuffed, as the variant's `stats` block (`engine/buildDraftStats.ts`); see FEATURE-BUILD-SHARING.md "Character stats"   |
 
 **The bridge** branches on quality first, then matches name + the txt row's base code (never a save id across tables: all 270 set
 ids are also unique ids, and a ref's `id` is the local table's). Rares, crafted and tempered items become custom items labelled with
@@ -330,9 +331,18 @@ only, never saved), plus Go to slot, Keep as custom and Clear. A row resolves it
 saving is never blocked. Banners, not blocks: a save from before the current ESR release (`assessSaveAge`), `incomplete` naming what
 stayed empty, and a corpse being present (equipped gear may be on it; INFERRED, no real sample).
 
+**Character stats.** `createBuildDraft` takes the sheet data (`charsheet.json` + `itemtext.json`; `useSaveDraftData` loads
+`charsheet.json` apart from the other bundles, still only once a file is picked) and puts `toStatsSnapshot` of the unbuffed sheet
+on the draft's variant, with the character's name, the save time and the sidecar's ESR version when the My Character hand-off
+knows it. The stats are the author's to edit or clear before saving (the form marks changed save-derived numbers as edited).
+A missing or broken `charsheet.json`, a failing computation or a parse that stopped inside the player items gives a draft
+without stats: the import goes on and the panel says the stats could not be computed. The form's "Fill from a save file"
+(`statsFromSaveBytes`) uses the same path for the stats alone. The ground-truth SpinToWin save pre-fills every number of its
+in-game screen (`buildDraft.fixture.integration.test.ts`).
+
 Measured over the 11 real saves (`buildDraft.fixture.integration.test.ts`): 79 of 99 equipped items match a named item; every unique,
-set, runeword and gemword matched, and the 20 others are rares and magics. Not imported: exact rolls, attributes, mercenary type and
-inventory; there is no field for them.
+set, runeword and gemword matched, and the 20 others are rares and magics. Not imported: exact rolls, mercenary type and inventory;
+there is no field for them.
 
 ## Computed sheet
 
