@@ -573,7 +573,7 @@ describe('computeCharacterSheet: facts', () => {
             ['ascendancy_tier_2', 1],
             ['ascendancy_tier_3', 1],
           ],
-          { uniqueId: 1102, quality: 7 }
+          { uniqueId: 1102, quality: 'unique' }
         ),
       ],
     });

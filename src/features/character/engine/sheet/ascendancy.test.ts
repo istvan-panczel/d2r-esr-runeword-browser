@@ -35,7 +35,7 @@ const SYNTHETIC: CharSheetAscendancies = {
 
 const saved = (attributes: Record<string, number>) => testCharacter({ classId: BARBARIAN, attributes });
 const stone = (uniqueId: number, specs: Parameters<typeof item>[2] = [], location = charmAt(4, 6)) =>
-  item('ast', location, specs, { uniqueId, quality: 7 });
+  item('ast', location, specs, { uniqueId, quality: 'unique' });
 
 describe('readAscendancy: the saved stats (ESR 3.3.04+)', () => {
   it('decodes the 1-based index, the tier bits, the Lich King and ascended bits, soulstones and the orb', () => {
@@ -146,11 +146,10 @@ describe('ascendancyStats', () => {
 });
 
 describe('computeCharacterSheet: the ascendancy (committed charsheet.json)', () => {
-  const blademaster = (progress: number, items: Parameters<typeof testCharacter>[0]['items'] = []) =>
+  const blademaster = (progress: number) =>
     testCharacter({
       classId: BARBARIAN,
       attributes: { strength: 100, dexterity: 100, ascendancy: 2, ascendancy_progress: progress, ascendancy_orb: 1 },
-      items,
     });
 
   it('applies the saved Blademaster tiers 1–4: attributes, class skills, physical resist and the tier 4 aura’s life leech', () => {
@@ -196,7 +195,7 @@ describe('computeCharacterSheet: the ascendancy (committed charsheet.json)', () 
         ['ascendancy_tier_3', 1],
         ['ascendancy_tier_4', 1],
       ],
-      { uniqueId: 1102, quality: 7 }
+      { uniqueId: 1102, quality: 'unique' }
     );
     const fromStone = computeCharacterSheet(
       testCharacter({ classId: BARBARIAN, attributes: { strength: 100, dexterity: 100 }, items: [blademasterStone] }),

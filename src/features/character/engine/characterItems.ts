@@ -1,10 +1,9 @@
 /**
  * The items of a character as the My Character tabs show them: the worn slots and both weapon sets (Gear), the
- * mercenary's slots, the Charm Inventory, the stored item lists (Storage) and the Kill Ledger and Ascendancy Stone
+ * mercenary's slots, the Charm Inventory, the stored item lists (Storage) and the Kill Ledger and an old Ascendancy Stone
  * (Progress), each item as a stash item row with the tooltip text of the All Items page. Player items are rendered at
  * the character's level; the mercenary's and the golem's stay at the per-level rate (the save holds no merc level).
  */
-import { normalizeName } from '@/features/game-data/engine/matchRunewords';
 import { buildItemRow, type ItemRow, type ItemTextEngine } from '@/features/stash/engine/items/allItems';
 import { renderItemText, type ItemTextContext } from '@/features/stash/engine/items/itemText';
 import type { StashCatalog } from '@/features/stash/engine/catalog';
@@ -65,7 +64,7 @@ export interface CharacterItemsView {
   readonly storage: readonly ItemSection[];
   /** Kill Ledgers anywhere on the character (it counts only in the Charm Inventory) */
   readonly ledgers: readonly PlacedItemRow[];
-  /** Ascendancy Stones anywhere on the character (one works only in the Charm Inventory) */
+  /** Old Ascendancy Stones anywhere on the character (before ESR 3.3.04; the game turns a held one into the ascendancy panel) */
   readonly ascendancyStones: readonly PlacedItemRow[];
 }
 
@@ -242,17 +241,4 @@ export function buildCharacterItems(character: CharacterFile, catalog: StashCata
     ledgers: withCode(KILL_LEDGER_CODE, 'ledger'),
     ascendancyStones: withCode(ASCENDANCY_STONE_CODE, 'ascendancy'),
   };
-}
-
-const ASCENDANCY_STONE_SUFFIX = / ascendancy stone$/;
-
-/**
- * The ascendancy a stone names ("Battlemage Ascendancy Stone" → "Battlemage"), as one of `ascendancies` (the names of
- * the Ascendancies page), or null when the stone is not one of them. The same match as the build draft's.
- */
-export function ascendancyOfStone(row: Pick<ItemRow, 'info'>, ascendancies: readonly string[]): string | null {
-  const name = row.info.unique?.name;
-  if (name === undefined) return null;
-  const wanted = normalizeName(name).replace(ASCENDANCY_STONE_SUFFIX, '');
-  return ascendancies.find((candidate) => normalizeName(candidate) === wanted) ?? null;
 }

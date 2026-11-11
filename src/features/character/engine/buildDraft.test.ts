@@ -396,9 +396,9 @@ describe('createBuildDraft: charm inventory', () => {
     expect(variant.charms).toBeUndefined();
   });
 
-  it('ignores a stone that is not in the charm inventory', () => {
+  it('takes a stone held elsewhere too (the game converts a held stone on login since ESR 3.3.04)', () => {
     const stone = character('ast', inventory, { quality: 'unique', uniqueId: 700 });
-    expect(variantOf(save([stone])).ascendancy).toBeUndefined();
+    expect(variantOf(save([stone])).ascendancy).toBe('Blademaster');
   });
 });
 

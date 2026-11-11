@@ -1,7 +1,4 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/core/db';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { AscendancyDisplay } from '@/features/builds/components/AscendancyDisplay';
@@ -10,12 +7,14 @@ import { ToneBadge } from '@/features/stash/components/shared/ToneBadge';
 import type { ItemRow } from '@/features/stash/engine/items/allItems';
 import type { StashItem } from '@/features/stash/parser/types';
 import { cn } from '@/lib/utils';
-import { ascendancyOfStone, type CharacterItemsView, type GearSlot } from '../../engine/characterItems';
+import type { CharacterItemsView, GearSlot } from '../../engine/characterItems';
+import type { SheetAscendancy } from '../../engine/sheet/ascendancy';
 import type { MercenaryFacts } from '../../engine/sheet/types';
 import { mercenaryView } from '../../engine/sheetView';
 import { useCharacterItems } from '../../hooks/useCharacterItems';
 import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
+import { AscendancySummary } from '../AscendancySummary';
 import { GearDoll } from '../gear/GearDoll';
 import { ItemTile } from '../gear/ItemTile';
 import { CARD_CLASS } from './tabClasses';
@@ -119,33 +118,16 @@ function WeaponSetSwitch({ view, shown, onShow }: WeaponSetSwitchProps) {
   );
 }
 
-function AscendancySection({ view }: { readonly view: CharacterItemsView }) {
-  const names = useLiveQuery(async () => (await db.ascendancies.toArray()).map((ascendancy) => ascendancy.name));
-  const working = view.ascendancyStones.find((stone) => stone.inCharmInventory);
-  const name = working === undefined || names === undefined ? null : ascendancyOfStone(working.row, names);
-  const misplaced = view.ascendancyStones.filter((stone) => !stone.inCharmInventory);
+/** The ascendancy from the computed sheet's facts (saved stats, or an old stone), with its tier bonuses card */
+function AscendancySection({ ascendancy }: { readonly ascendancy: SheetAscendancy | null | undefined }) {
+  const name = ascendancy?.name ?? null;
   return (
     <section aria-labelledby="character-ascendancy" className={cn(CARD_CLASS, 'space-y-2')}>
       <h3 id="character-ascendancy" className="font-semibold">
         Ascendancy
       </h3>
-      {working === undefined ? (
-        <p className="text-sm text-muted-foreground">
-          No Ascendancy Stone in the Charm Inventory.{' '}
-          <Link to="/ascendancies" className="text-primary underline underline-offset-2">
-            See the ascendancies
-          </Link>
-        </p>
-      ) : name !== null ? (
-        <AscendancyDisplay name={name} />
-      ) : (
-        <p className="text-sm">{names === undefined ? 'Loading the ascendancies…' : working.row.name}</p>
-      )}
-      {misplaced.map((stone) => (
-        <p key={stone.key} className="text-xs text-muted-foreground">
-          {stone.row.name} in {stone.where}: a stone works only in the Charm Inventory.
-        </p>
-      ))}
+      <AscendancySummary ascendancy={ascendancy} />
+      {name !== null && <AscendancyDisplay name={name} />}
     </section>
   );
 }
@@ -177,11 +159,13 @@ function keyOfItem(items: ReadonlyMap<string, Selectable>, item: StashItem | nul
 interface GearViewProps {
   readonly view: CharacterItemsView;
   readonly merc: MercenaryFacts | null;
+  /** The sheet's ascendancy; undefined while the sheet is not there */
+  readonly ascendancy: SheetAscendancy | null | undefined;
   /** Open on this item (selected, its weapon set shown, scrolled to) */
   readonly focusItem: StashItem | null;
 }
 
-function GearView({ view, merc: mercFacts, focusItem }: GearViewProps) {
+function GearView({ view, merc: mercFacts, ascendancy, focusItem }: GearViewProps) {
   const items = selectables(view);
   const activeSet = view.weaponSets[0].active ? 0 : 1;
   const focusKey = keyOfItem(items, focusItem);
@@ -251,7 +235,7 @@ function GearView({ view, merc: mercFacts, focusItem }: GearViewProps) {
           )}
         </GearSection>
 
-        <AscendancySection view={view} />
+        <AscendancySection ascendancy={ascendancy} />
 
         <GearSection
           id="character-merc"
@@ -294,7 +278,7 @@ function GearView({ view, merc: mercFacts, focusItem }: GearViewProps) {
 /** Gear: the equipped slots with both weapon sets, the Charm Inventory, the Ascendancy and the mercenary; every item opens its full card. */
 export function GearTab({ character, focusItem }: { readonly character: CharacterFile; readonly focusItem: StashItem | null }) {
   const items = useCharacterItems(character);
-  // Only the mercenary facts: the gear shows without them while they load (or when they cannot be loaded)
+  // Only the mercenary and ascendancy facts: the gear shows without them while they load (or when they cannot be loaded)
   const sheet = useCharacterSheet(character);
   if (items.status === 'loading') return <GameDataLoading />;
   if (items.status === 'error') return <GameDataError error={items.error} onRetry={items.retry} />;
@@ -304,6 +288,7 @@ export function GearTab({ character, focusItem }: { readonly character: Characte
       key={`${character.name}:${String(character.lastSavedAt)}`}
       view={items.view}
       merc={sheet.status === 'ready' ? sheet.sheet.facts.mercenary : null}
+      ascendancy={sheet.status === 'ready' ? sheet.sheet.facts.ascendancy : undefined}
       focusItem={focusItem}
     />
   );
