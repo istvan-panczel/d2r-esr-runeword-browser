@@ -1,6 +1,6 @@
 # ESR loot filter format
 
-The JSON file format of ESR's loot filter plugin (1.8.2), as the D2R ESR Runeword Browser reads and checks it. Game data: ESR 3.3.03. A filter is one JSON object: a few settings, optional styles, then the rules.
+The JSON file format of ESR's loot filter plugin (1.8.2), as the D2R ESR Runeword Browser reads and checks it. Game data: ESR 3.3.04. A filter is one JSON object: a few settings, optional styles, then the rules.
 
 ## A complete file
 

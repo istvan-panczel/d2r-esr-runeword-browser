@@ -56,7 +56,7 @@ Sources, all in the ESR clone:
   shards per Tesseract, point levels, the level 63 example, perks per tree / row, maximum points, respec points, Dragon
   Stones per unlearn). The tree summaries ("Specialized in potions.") are the only text taken from the page.
 
-Warnings start with `specializations:`. ESR 3.3.03 has none, pinned in `bundleIntegrity.test.ts`: 3.3.02 fixed the two
+Warnings start with `specializations:`. ESR 3.3.04 has none, pinned in `bundleIntegrity.test.ts`: 3.3.02 fixed the two
 of 3.3 (no cubemain row made the Elixir of Reincarnation; Alien Artefacts dropped without the perk).
 
 Deep Pockets (archaeology_4) is read by no table or config either (the archaeology config's comment says the perk

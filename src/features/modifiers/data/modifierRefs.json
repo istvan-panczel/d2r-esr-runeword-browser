@@ -193,7 +193,6 @@
     ["hit causes monster to flee #%",47,"monster-flee"],
     ["prevent monster heal",47,"prevent-heal"],
     ["# to maximum crossbow bolts",48,"stat-totalcrossbowbolts"],
-    ["#% faster crossbow reload time",48,"stat-crossbowreloadspeed"],
     ["#% total crossbow damage",48,"stat-totalcrossbowdamage"],
     ["crossbow reload speed limit reduced by #%",48,"stat-crossbowreloadspeedlimit"],
     ["# to maximum curses",49],
@@ -374,7 +373,6 @@
     ["Transmute to Anoint Item","stat-item-anointed-dummy"],
     ["You can no longer raise Skeleton Warriors You can Raise More Skeletal Mages","stat-item-skeleton-trade"],
     ["15 additional Physical Damage and 5 Summon Damage per Level Undead Frenzy has 0 Cooldown and Reap Souls now provides but can no longer summon or raise any other minions You can Summon Additional Skeleton Kings with no Cooldown","stat-item-max-skeleton-king"],
-    ["Faster Crossbow Reload Time","stat-crossbowreloadspeed"],
     ["Total Multiplier to Summon Damage Stat","stat-passive-summ-mastery-total"],
     ["Ring Point","stat-junk-11"],
     ["Amulet Point","stat-junk-12"],
@@ -571,6 +569,8 @@
     ["Increased Effect of Runes Socketed in this Item","stat-rune-effect-current-item"],
     ["Increased Effect of Gems Socketed in this Item","stat-gem-effect-current-item"],
     ["Enemy Physical Damage Resist","stat-item-piercedmg-perlevel"],
-    ["Sanctified (Jewelry)","stat-item-sanctification-jewelry"]
+    ["Sanctified (Jewelry)","stat-item-sanctification-jewelry"],
+    ["Enemy Poison Resist","stat-item-piercepois-perlevel"],
+    ["Hatchet Flurry Axes","stat-hatchetflurryaxebonus"]
   ]
 }

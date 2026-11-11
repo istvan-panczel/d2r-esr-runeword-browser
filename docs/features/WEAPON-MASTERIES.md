@@ -44,7 +44,7 @@ Added to `masteries.json` by `build/bundleMasteries.ts`:
 - `baseNames`: code → name for every base the masteries and `noMasteryBases` name, so the page does not need the 364 KB
   `bases.json`. It is why the integrity test's size cap is 24 KB.
 - `otherBases` per mastery: apply-row codes that are not spawnable bases, `kind` from the row's own description (`lod`,
-  `mythical`, `other`). ESR 3.3.03: 6 LoD copies and 6 mythicals, shown in the collapsed list.
+  `mythical`, `other`). ESR 3.3.04: 6 LoD copies and 6 mythicals, shown in the collapsed list.
 - `noMasteryBases`: weapon bases of a class no apply row takes (the 6 knuckles).
 - `noRunewords`: every apply row has the `nru` qualifier on input 1.
 - `pageRules`, `pageNotes`, `pageDiffs`: see below.
@@ -59,7 +59,7 @@ and records where the page differs in `pageDiffs`. Case, curly quotes, full stop
 game files win: a card shows the strings and an "official page reads differently" note. Footnotes the files cannot show go to
 `pageNotes` and are shown marked "Official page only" (the Claw discharge-proc note).
 
-ESR 3.3.03 has 3 differences: Stag Bow ("20% effect" in the string), Fend ("resist" against "resistance") and the Orb skills
+ESR 3.3.04 has 3 differences: Stag Bow ("20% effect" in the string), Fend ("resist" against "resistance") and the Orb skills
 line ("Spells" against "Sorceress Spells").
 
 ## Warnings: text against formulas
