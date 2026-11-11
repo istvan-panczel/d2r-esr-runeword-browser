@@ -1,13 +1,19 @@
 import { ChevronRight } from 'lucide-react';
+import { GameDataError } from '@/features/game-data/components/GameDataError';
+import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { useManifest } from '@/features/game-data/hooks/useManifest';
 import type { CharacterFileMeta } from '../../db/characterDb';
 import { characterGlance, overviewGroups, type SheetGroup } from '../../engine/characterSheet';
 import { characterNotices } from '../../engine/notices';
 import { progressCounters } from '../../engine/characterProgress';
 import type { CharacterTab } from '../../engine/characterTabs';
+import { sheetText, whereText } from '../../engine/sheetView';
+import { useCharacterItemNames } from '../../hooks/useCharacterItems';
+import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
-import { ComputedSheetPanel } from '../ComputedSheetPanel';
 import { CreateBuildAction } from '../CreateBuildAction';
+import { CopySheetButton } from '../overview/CopySheetButton';
+import { OverviewSheet } from '../overview/OverviewSheet';
 import { SaveNotices } from '../SaveNotices';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
 
@@ -20,6 +26,7 @@ interface OverviewTabProps {
   readonly onTab: (tab: CharacterTab) => void;
 }
 
+/** The stored base values: shown while the sheet's data loads or when it cannot be loaded */
 function StatGroupCard({ group }: { readonly group: SheetGroup }) {
   const id = `character-group-${group.key}`;
   return (
@@ -58,41 +65,57 @@ function glanceLinks(character: CharacterFile): GlanceLink[] {
       text: `${plural(glance.equipped, 'item')} equipped, ${plural(glance.charms, 'item')} in the Charm Inventory, ${merc}`,
     },
     { tab: 'skills', label: 'Skills', text: `${plural(glance.hardPoints, 'hard point')} in ${plural(glance.skillsLearned, 'skill')}` },
+    { tab: 'combat', label: 'Combat', text: 'Chance to hit and to be hit across the areas, maps and bosses' },
     { tab: 'storage', label: 'Storage', text: `${plural(glance.stored, 'item')} carried and stored` },
     { tab: 'progress', label: 'Progress', text: `${plural(kills, 'kill')}, specializations, Kill Ledger and Ascendancy` },
   ];
 }
 
-/** Overview: who the character is, the save's banners, the stored base values, the build action and a line per other tab. */
+/**
+ * Overview: who the character is, the save's banners, the computed sheet (unbuffed by default, every number with its
+ * sources), the buff switches, the level and gold, the build action and a line per other tab.
+ */
 export function OverviewTab({ character, file, bytes, onTab }: OverviewTabProps) {
   const manifest = useManifest();
+  const sheet = useCharacterSheet(character);
+  const itemName = useCharacterItemNames(character);
   return (
     <div className="space-y-4">
       <header className={`${CARD_CLASS} flex flex-wrap items-start justify-between gap-4`}>
         <div className="min-w-0">
           <h2 className="text-xl font-semibold break-all">{character.name}</h2>
           <p className="text-sm text-muted-foreground">
-            {character.className} · Level {character.level} · Last saved {LAST_SAVED_FORMAT.format(character.lastSavedAt * 1000)}
+            Level {character.level} {character.className}
+            {sheet.status === 'ready' ? `, ${whereText(sheet.sheet)}` : ''}. Last saved{' '}
+            {LAST_SAVED_FORMAT.format(character.lastSavedAt * 1000)}
           </p>
         </div>
-        <CreateBuildAction file={file} bytes={bytes} />
+        <div className="flex flex-wrap items-start gap-2">
+          {sheet.status === 'ready' && <CopySheetButton text={() => sheetText(sheet.sheet, { className: character.className })} />}
+          <CreateBuildAction file={file} bytes={bytes} />
+        </div>
       </header>
 
       <SaveNotices notices={characterNotices(character, file.sidecar, manifest)} />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {overviewGroups(character).map((group) => (
-          <StatGroupCard key={group.key} group={group} />
-        ))}
-      </div>
-
-      <ComputedSheetPanel character={character} />
+      {sheet.status === 'ready' ? (
+        <OverviewSheet character={character} state={sheet} itemName={itemName} onTab={onTab} />
+      ) : (
+        <>
+          {sheet.status === 'loading' ? <GameDataLoading /> : <GameDataError error={sheet.error} onRetry={sheet.retry} />}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {overviewGroups(character).map((group) => (
+              <StatGroupCard key={group.key} group={group} />
+            ))}
+          </div>
+        </>
+      )}
 
       <section aria-labelledby="character-glance" className="space-y-2">
         <h3 id="character-glance" className="font-semibold">
           At a glance
         </h3>
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {glanceLinks(character).map((link) => (
             <li key={link.tab}>
               <button
