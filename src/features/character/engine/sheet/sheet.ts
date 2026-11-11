@@ -87,6 +87,8 @@ interface Computed {
   converged: boolean;
   unsupported: Set<string>;
   ctx: EvalContext;
+  /** Selected buffs the character has no level in (and none was given), or without data */
+  skippedBuffs: number[];
 }
 
 function statRecord(data: SheetData, total: StatMap, base: StatMap): Record<string, number> {
@@ -199,6 +201,7 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
   let derived = derive(character, data, base, fixed);
   let levels = skillLevels(character, data, derived.total);
   let applied: AppliedBuff[] = [];
+  let skippedBuffs: number[] = [];
   let converged = false;
   let ctx: EvalContext = { charLevel: character.level, stats: {}, hardByName: {}, levelByName: {}, unsupported };
   for (let pass = 0; pass < MAX_PASSES && !converged; pass++) {
@@ -224,12 +227,15 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
       next.push({ kind: 'item-aura', label: `${data.skillName(skill.n)} (${owner.label})`, item: owner.item, skill: skill.n, stats });
     }
     applied = [];
+    skippedBuffs = [];
     for (const selection of buffs) {
       const skill = data.skill(selection.skillId);
-      if (skill === undefined) continue;
       const state = levels.byId.get(selection.skillId);
       const level = selection.level ?? state?.level ?? 0;
-      if (level <= 0) continue;
+      if (skill === undefined || level <= 0) {
+        skippedBuffs.push(selection.skillId);
+        continue;
+      }
       const stats = auraStats(data, skill, level, state?.hard ?? 0, ctx);
       if (skill.row.passive !== 1) mergeInto(stats, passiveStats(data, skill, level, state?.hard ?? 0, ctx));
       next.push({ kind: 'buff', label: data.skillName(skill.n), skill: skill.n, stats });
@@ -243,7 +249,7 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
     dynamic = next;
     derived = nextDerived;
   }
-  return { setup, base, fixed, dynamic, derived, levels, buffs: applied, converged, unsupported, ctx };
+  return { setup, base, fixed, dynamic, derived, levels, buffs: applied, converged, unsupported, ctx, skippedBuffs };
 }
 
 // --- outputs -------------------------------------------------------------------------------------------------------
@@ -549,6 +555,10 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
       );
   }
   if (!c.converged) warnings.push('Passive and aura values did not settle; the numbers are from the last pass');
+  for (const id of c.skippedBuffs)
+    warnings.push(
+      `Buff ${data.skillName(id)} not counted: ${data.skill(id) === undefined ? 'no stat data for the skill' : 'the character does not have it (give a level)'}`
+    );
   for (const what of [...c.unsupported].sort()) warnings.push(`Formula not evaluated: ${what}`);
   const known = new Set(data.text.defs.flatMap((def, id) => (def === undefined ? [] : [id])));
   const unknown = new Set<number>();

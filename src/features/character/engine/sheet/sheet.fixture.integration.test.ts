@@ -300,3 +300,18 @@ describe.skipIf(saves.length === 0)('computed sheet: every real save', () => {
     }
   });
 });
+
+const DUDU = resolve(FIXTURES, 'Dudu.d2s');
+
+describe.skipIf(!existsSync(DUDU))('computed sheet: a buff cross-check (no buffed ground truth yet)', () => {
+  it('Dudu was saved shapeshifted: with Werewolf (+12% life) the maximum life is exactly the saved current life', () => {
+    const characterData = createCharacterData(JSON.parse(readFileSync(STASH, 'utf-8')) as StashBundle);
+    const character = parseCharacter(new Uint8Array(readFileSync(DUDU)), characterData);
+    const current = character.attributes.find((attribute) => attribute.id === data.statId('hitpoints'))?.raw ?? 0;
+    const plain = computeCharacterSheet(character, data);
+    expect(exactPool(plain.life)).toBeLessThan(current);
+    const wolf = computeCharacterSheet(character, data, { buffs: [{ skillId: 595 }] });
+    expect(exactPool(wolf.life)).toBe(current);
+    expect(wolf.life.status).toBe('unverified');
+  });
+});
