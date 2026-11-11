@@ -81,7 +81,7 @@ export const TEST_STRINGS = new Map<string, string>([
   ['strModFireDamageRange', 'Adds %d-%d Fire Damage to Attacks'],
   ['strModColdDamageRange', 'Adds %d-%d Cold Damage to Attacks'],
   ['strModPoisonDamageRange', 'Adds %d-%d Poison Damage to Attacks over %d seconds'],
-  ['strModBleedDamageRange', 'Adds %d%%-%d%% Bleed Damage over %d seconds'],
+  ['strModBleedDamageRange', 'Adds %d%%-%d%% Bleed Damage over %.2f seconds'],
   ['increaseswithplaylevelX', '(Based on Character Level)'],
   ['ModStrfireskill', 'to Fire Skills'],
   ['ModStr3a', '%+d to Amazon Skill Levels'],
