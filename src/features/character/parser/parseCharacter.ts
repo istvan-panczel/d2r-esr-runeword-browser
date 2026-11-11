@@ -16,6 +16,7 @@ import {
   type UnverifiedFeature,
 } from './errors.ts';
 import { equippedGear, toCharacterItem } from './location.ts';
+import { readProgress, readQuests } from './progress.ts';
 import type {
   BaseAttributes,
   CharacterFile,
@@ -542,10 +543,14 @@ export function parseCharacter(bytes: Uint8Array, data: CharacterData): Characte
   }
 
   const swapped = header.activeWeapon === 1;
+  const progress = readProgress(bytes, header.progression);
+  const quests = readQuests(bytes, QUESTS_OFFSET);
   const playerItems = player.items.map((item) => toCharacterItem(item, swapped));
   const merc = tail.merc.map((item) => toCharacterItem(item, false));
   return {
     ...header,
+    progress,
+    quests,
     attributes: stats,
     baseAttributes: baseAttributes(stats),
     skills,

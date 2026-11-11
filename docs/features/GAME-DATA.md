@@ -60,6 +60,7 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `mercenaries.json`     | the hirelings of the official skill information page joined to hireling.txt: act, gold, level bands, stats, skill levels ([MERCENARIES.md](./MERCENARIES.md))                                       |
 | `elixirs.json`         | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                                                  |
 | `combat.json`          | My Character Combat tab: per area and difficulty the monster level, min / median / max regular monster defense and attack rating; bosses (see "Combat")                                             |
+| `charsheet.json`       | the computed character sheet's data (lazy, character page only): stat ops, class constants, skill passive / aura / to-hit columns, set bonuses, item speeds, loader rules (see "Character sheet")   |
 | `icons.json`           | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")                                           |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
@@ -99,6 +100,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `combat.json`          | ESR 3.3.03: 38 KB / 12 KB (areas 30 KB, level ratios 3 KB, bosses 3 KB)                                                            |
+| `charsheet.json`       | ESR 3.3.03: 308 KB / 47 KB (skills 237 KB: 280 class skills + 394 item / referenced rows; sets 25 KB; stat names 20 KB)            |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types
@@ -1046,6 +1048,42 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 
 Counts (ESR 3.3.03): `itemTextStats` 722, `itemTextStrings` 424, `itemTextSkills` 917, `itemTextMonsters` 406,
 `itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
+
+### Character sheet
+
+`charsheet.json` (`CharSheetBundle`, built by `build/bundleCharSheet.ts`) is what the computed character sheet
+(`src/features/character/engine/sheet/`, [CHARACTER-SAVE.md → Computed sheet](./CHARACTER-SAVE.md#computed-sheet))
+needs on top of `itemtext.json`. Only the character page loads it.
+
+- `statNames` (every itemstatcost.txt row: skill formulas and passive stats name any stat), `valShift` (non-zero only),
+  `ops` (every stat with an op: `op`, `op param`, `op base` and `op stat1-3` as stat ids).
+- `classes`: charstats.txt by class id: life / stamina per vitality and mana per energy (in fourths), `ToHitFactor`,
+  `BlockFactor`.
+- `experience`: experience.txt by level (index L = the experience at which level L + 1 starts; all class columns must
+  match, else the build throws). `weaponSpeed` (every weapons.txt code, 0 included, so it also tells weapons apart),
+  `armor` (armor.txt `speed` / `block`, non-zero only).
+- `skills`: `{ n, cls?, tab?, row }`, `row` cut to the columns the sheet reads. Kept: every class skill (`cls`, `tab` =
+  skilldesc SkillPage), Attack / Kick / Throw …, and the skills an item property names (`itemSkillUses`: skill-layer
+  stats such as `item_aura` and oskills; event-layer procs) whose stats reach the owner (`engine/skillEffects.ts`
+  `affectsOwner`: no summon, no aurafilter 0x8000; a cast skill needs `aura` 1 or aurafilter 0). Columns: passive stats
+  and calcs with `passive` / `passivestate` for passives; aura and passive stats with `aura` / `aurafilter` for what
+  reaches the owner; `ToHit` / `LevToHit` / `ToHitCalc`; then every row and column those formulas reach
+  (`collectFormulaRefs`). Formulas stay as written (the engine rewrites `stat('x'.base)` when it loads them).
+- `setItems` (setitems.txt id → set index) and `sets`: sets.txt `PCode2a` … `5b` by pieces and `FCode1-8` as saved stats
+  (`savedStatsReader` from `build/itemTextBases.ts`, property groups resolved).
+- `hirelings`: hireling.txt Version 100, one entry per `Id` (`HireDesc` as a type label).
+- `specializations`: each tree's perk stats (from specializations.json's trees).
+- `rules`: `resistPenalty` (difficultylevels.txt), `runicInsight` (`celestialrayone.archaeology.toml`
+  `socketed_runes`: perk stat, percent, rune codes, raised stats, per-item stats), `charmDedup`
+  (`celestialrayone.charm-dedup.toml`), `inventoryCharms` (`charm-inv.toml`), `dodgeCap`
+  (`celestialrayone.dodge-avoid-evade-cap.toml`), `resistFloor` (-1000 with both resistance floor patches, else -100),
+  and the engine constants `resistCap` 75, `resistCeiling` 95, `physicalResistCap` 50, `anyaResist` 10.
+
+Asserted at generation (the build throws): the Runic Insight perk stat must be `archaeology_3`, the resistance floor
+display patch must still describe the cap as `min(75+maxresist, 95)`, `allow_inventory_charms` must exist, the
+experience columns must match, charstats rows must be the 8 classes in order, and no class passive may have a
+`passiveitype` (the sheet does not gate passives by weapon). Counts: `charSheetSkills` 674, `charSheetSets` 77,
+`charSheetHirelings` 30.
 
 ### Skills
 

@@ -11,6 +11,7 @@ import {
   type AreasBundle,
   type CombatBundle,
   type BasesBundle,
+  type CharSheetBundle,
   type CraftingBundle,
   type CubeBundle,
   type ElixirsBundle,
@@ -67,6 +68,7 @@ export interface GameDataBundles {
   killledger: KillLedgerBundle;
   elixirs: ElixirsBundle;
   combat: CombatBundle;
+  charsheet: CharSheetBundle;
   icons: IconsBundle;
 }
 

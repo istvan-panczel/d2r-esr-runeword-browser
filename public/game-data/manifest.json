@@ -4,7 +4,7 @@
   "esrTag": "3.3.03",
   "esrCommit": "927fdd82daf20bb2b15ca4960f120d9f69d6dbcb",
   "esrDate": "2026-11-09T11:57:22+02:00",
-  "generatedAt": "2026-11-11T08:20:24.519Z",
+  "generatedAt": "2026-11-11T08:58:34.639Z",
   "files": {
     "types": {
       "hash": "8bd6af37e7f78de60cf7fb52378f3ef21d07501769d5e8bb34a338afdc76f0e8",
@@ -113,6 +113,10 @@
     "combat": {
       "hash": "6b05eec67f90a997bef54ed04ee5115d8a15ce7330cec4b74578c7f6dfcc24d5",
       "bytes": 38461
+    },
+    "charsheet": {
+      "hash": "08db1380071368a7f9ae911f393d2160e2d04d461cdaaae3317f5c35d928db04",
+      "bytes": 315282
     },
     "icons": {
       "hash": "682ca31f9fbc0acaddced840ddd617c4f3313a74e8fd43384d3f61291e47ad88",
@@ -330,6 +334,9 @@
     "combatExcludedGoblins": 5,
     "combatExcludedSpecial": 5,
     "combatExcludedBosses": 13,
+    "charSheetSkills": 674,
+    "charSheetSets": 77,
+    "charSheetHirelings": 30,
     "itemIcons": 655,
     "uniqueIcons": 1114,
     "setIcons": 270,
