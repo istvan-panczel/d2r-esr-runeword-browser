@@ -15,7 +15,6 @@ const SEARCH_EXAMPLES = [
   { query: 'spell damage', description: 'ascendancies with "spell damage"' },
   { query: '"class skill"', description: 'exact phrase match' },
   { query: 'resist strength', description: 'both "resist" and "strength"' },
-  { query: '"4 blemished ruby"', description: 'unlocked with 4 Blemished Ruby' },
 ];
 
 export function AscendancyFilters() {

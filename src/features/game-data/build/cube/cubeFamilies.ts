@@ -482,11 +482,6 @@ function outputMod(row: CubeRow, name: string | RegExp): number | null {
   return null;
 }
 
-/** Every option of a random pool, unshortened ("a / b / c / d") */
-function allOptions(ranked: string[]): string {
-  return ranked.join(' / ');
-}
-
 // --- mercenaries -------------------------------------------------------------------------------------------------
 
 const PERFECT_GEM = /^Perfect (?:Amethyst|Topaz|Sapphire|Emerald|Ruby|Diamond|Skull|Obsidian)$/;
@@ -776,44 +771,9 @@ function genericGemMeld(recipe: RecipeVariant, row: CubeRow): RecipeVariant {
   return { inputs, output: levelreq === null ? recipe.output : `The same item (+${String(levelreq)} level requirement)` };
 }
 
-// --- ascendancies, Vessel of Souls -------------------------------------------------------------------------------
+// --- Vessel of Souls ---------------------------------------------------------------------------------------------
 
 const BLEMISHED = /^(?:(\d+)× )?Blemished (\w+)$/;
-/** A stone with its gem colours, as genericAscendancy writes it: "Battlemage (Obsidian, Sapphire)" */
-const STONE_COLOURS = /^[\w ]+ \(\w+(?:, \w+)*\)$/;
-
-/**
- * Ascendancy Stones by gem pattern (the class only changes the stone's mods), each pool listing the stones with
- * their colours; the tier upgrades for any stone.
- */
-function genericAscendancy(recipe: RecipeVariant, row: CubeRow): RecipeVariant {
-  const tier = row.outputs.flatMap((output) => output.mods).find((mod) => /^ascendancy-tier-\d$/.test(mod.mod));
-  if (tier !== undefined) {
-    return {
-      inputs: recipe.inputs.map((input, i) => (i === 0 ? 'Your Ascendancy Stone' : input)),
-      output: `The stone at tier ${tier.mod.replace(/^ascendancy-tier-/, '')}`,
-    };
-  }
-  const gems = recipe.inputs.map((input) => BLEMISHED.exec(input)).filter((match) => match !== null);
-  if (gems.length === 0) return recipe;
-  const colours = gems.map((match) => match[2]);
-  // No count prefix: one gem (Number(undefined) is NaN)
-  const counts = gems.map((match) => Number(match[1]) || 1);
-  const pattern =
-    gems.length === 1
-      ? `${String(counts[0])}× Blemished gems of one colour`
-      : counts.every((count) => count === 1)
-        ? `${String(gems.length)} Blemished gems of different colours`
-        : counts.map((count, i) => `${String(count)}× Blemished gems${i > 0 ? ' of another colour' : ''}`).join(' + ');
-  const stone = recipe.output.replace(/ Ascendancy Stone$/, '');
-  return { inputs: [recipe.inputs[0] ?? '', pattern], output: `${stone} (${colours.join(', ')})` };
-}
-
-/** "Ascendancy Stone: Berserker (Obsidian) / Starborn (Sapphire) / …" (every stone, not shortened) */
-function ascendancyPool(ranked: string[]): string {
-  return ranked.every((option) => STONE_COLOURS.test(option)) ? `Ascendancy Stone: ${allOptions(ranked)}` : allOptions(ranked);
-}
-
 /** Every transformation as one row: the three gems pick the weapon */
 function genericVessel(recipe: RecipeVariant): RecipeVariant {
   const gems = recipe.inputs.filter((input) => BLEMISHED.test(input)).length;
@@ -1055,13 +1015,11 @@ export const CUBE_FAMILIES: readonly CubeFamily[] = [
     rewrite: genericGemMeld,
   },
   {
+    // ESR 3.3.04 removed the Ascendancy Stone with its unlock, tier and trap rows: the Orb of Creation unlocks the
+    // ascendancy panel and the tiers unlock on the kills, so the orb is the family's only row
     id: 'ascendancy',
-    label: 'Ascendancy Stones and tiers',
-    match: /^(?!.*Trap)(?:Orb of Creation: 5 Orb of Elements|[\w ]+ Ascendancy: Orb of Creation \+ .+|[\w ]+ Ascend to Tier \d.*)$/,
-    rewrite: genericAscendancy,
-    pool: ascendancyPool,
-    // A stone's mods depend on the class it was made for (the class rows are merged)
-    outputBonus: 'hide',
+    label: 'Orb of Creation',
+    match: /^Orb of Creation: 5 Orb of Elements$/,
   },
   {
     id: 'vessel-transform',

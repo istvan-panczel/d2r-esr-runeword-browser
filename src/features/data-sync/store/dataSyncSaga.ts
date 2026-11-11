@@ -271,8 +271,15 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
     const mythicalUniques = parseMythicalUniques(mythicalsHtml);
     console.log('[HTML] Parsed mythical uniques:', mythicalUniques.length);
 
-    const { ascendancies, challenges: ascendancyChallenges } = parseAscendanciesPage(ascendanciesHtml);
-    console.log('[HTML] Parsed ascendancies:', ascendancies.length, 'challenges:', ascendancyChallenges.length);
+    const { ascendancies, challenges: ascendancyChallenges, sections: ascendancySections } = parseAscendanciesPage(ascendanciesHtml);
+    console.log(
+      '[HTML] Parsed ascendancies:',
+      ascendancies.length,
+      'challenges:',
+      ascendancyChallenges.length,
+      'sections:',
+      ascendancySections.length
+    );
 
     yield put(
       parseDataSuccess({
@@ -287,6 +294,7 @@ function* handleParseData(action: PayloadAction<FetchedHtmlData>) {
         mythicalUniques,
         ascendancies,
         ascendancyChallenges,
+        ascendancySections,
         esrVersion: action.payload.esrVersion,
         docsLastModified: action.payload.docsLastModified,
       })
@@ -311,6 +319,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       mythicalUniques,
       ascendancies,
       ascendancyChallenges,
+      ascendancySections,
       docsLastModified,
     } = action.payload;
 
@@ -374,6 +383,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
           db.mythicalUniques.bulkPut(mythicalUniques),
           db.ascendancies.bulkPut(ascendancies),
           db.ascendancyChallenges.bulkPut(ascendancyChallenges),
+          db.ascendancySections.bulkPut(ascendancySections),
         ]);
         if (esrVersion !== null) {
           await db.metadata.put({ key: 'esrVersion', value: esrVersion });
@@ -406,6 +416,7 @@ function* handleStoreData(action: PayloadAction<ParsedData>) {
       mythicalUniques: mythicalUniques.length,
       ascendancies: ascendancies.length,
       ascendancyChallenges: ascendancyChallenges.length,
+      ascendancySections: ascendancySections.length,
     });
 
     if (isPartial) {

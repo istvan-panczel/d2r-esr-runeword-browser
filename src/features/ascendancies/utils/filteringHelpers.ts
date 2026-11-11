@@ -5,8 +5,7 @@ export function matchesSearch(item: Ascendancy, searchTerms: readonly string[]):
 
   const tierText = item.tiers.flatMap((t) => t.bonuses).join(' ');
   const footnoteText = item.footnotes.join(' ');
-  const unlockText = item.unlockInputs?.join(' ') ?? '';
-  const searchableText = `${item.name} ${tierText} ${footnoteText} ${unlockText}`.toLowerCase();
+  const searchableText = `${item.name} ${tierText} ${footnoteText}`.toLowerCase();
 
   return searchTerms.every((term) => searchableText.includes(term));
 }

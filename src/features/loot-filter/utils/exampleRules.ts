@@ -291,7 +291,7 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
     id: 'blemished-gems',
     group: 'gems',
     title: 'Blemished gems',
-    description: 'ESR’s grade between Flawless and Perfect (gem4): it rerolls rares and picks an Ascendancy.',
+    description: 'ESR’s grade between Flawless and Perfect (gem4): rare rerolls, Pandemonium keys and the Vessel of Souls take it.',
     rule: { itemTypes: ['gem4'] },
     presentation: { style: 'perfect-gem' },
   },
@@ -612,9 +612,9 @@ export const EXAMPLE_RULES: readonly ExampleRule[] = [
   {
     id: 'ascendancy-items',
     group: 'endgame',
-    title: 'Ascendancy Stones and orbs',
-    description: 'The Ascendancy Stone, the five elemental orbs, the Orb of Creation and the Primordial Soulstone.',
-    rule: { itemCodes: ['ast', 'u11', 'u12', 'u13', 'u14', 'u15', 'u16', 'u19'] },
+    title: 'Ascendancy orbs and soulstones',
+    description: 'The five elemental orbs, the Orb of Creation that unlocks the ascendancy panel and the Primordial Soulstone.',
+    rule: { itemCodes: ['u11', 'u12', 'u13', 'u14', 'u15', 'u16', 'u19'] },
     presentation: { style: 'valuable', sound: 'tink.mp3', chatMessage: 'ÿc8Ascendancy: ÿc0{name}' },
   },
   {

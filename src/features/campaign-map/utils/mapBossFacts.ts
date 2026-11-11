@@ -14,7 +14,7 @@ export interface BossRewardLine {
   readonly chance: string;
   /** The players-8 chance when it differs ("50%") */
   readonly players8: string | null;
-  /** Extra words after the chance ("until your Ascendancy Stone holds 10", "one at random") */
+  /** Extra words after the chance ("tier 4 of an ascendancy needs 10", "one at random") */
   readonly note: string | null;
   /** What the official page says instead, when it differs ("35%", "a whole key set", "Archaeologist perk only …") */
   readonly official: string | null;
@@ -70,13 +70,14 @@ export function chanceText(chance: number): string {
 const percentsDiffer = (files: number, page: number) => Math.abs(files * 100 - page) > 0.5;
 
 /**
- * "stat('ascendancy_tier_4_count_new'.accr)<10" → "until your Ascendancy Stone holds 10": the stat counts the soulstones
- * cubed into the stone, not the ones picked up
+ * "stat('ascendancy_tier_4_count_new'.accr)<10" → "tier 4 of an ascendancy needs 10". Not "stops at 10": the stat is
+ * the old Ascendancy Stone's soulstone count (919), which nothing sets since ESR 3.3.04 (the ascendancy panel counts
+ * stat 1066), so whether the drop still stops in game is unverified
  */
 function conditionNote(condition: string | undefined): string | null {
   if (condition === undefined) return null;
   const limit = /<\s*(\d+)\s*$/.exec(condition)?.[1];
-  return limit === undefined ? 'only while a condition in the files holds' : `until your Ascendancy Stone holds ${limit}`;
+  return limit === undefined ? 'only while a condition in the files holds' : `tier 4 of an ascendancy needs ${limit}`;
 }
 
 function officialFor(reward: MapBossReward, page: OfficialBossRewards, pageItem: string | undefined): string | null {

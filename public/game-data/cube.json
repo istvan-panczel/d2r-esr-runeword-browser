@@ -90,7 +90,7 @@
     {"id":"lucion-essence","label":"Adding sockets with Lucion's Essence","section":"soc","order":58,"rowCount":124,"raw":false},
     {"id":"secret","label":"Secret recipes","section":"sec","order":59,"rowCount":810,"raw":false},
     {"id":"tyrael-boon","label":"Tyrael's Might extra boon","section":"tyrael","order":60,"rowCount":12,"raw":true},
-    {"id":"ascendancy","label":"Ascendancy Stones and tiers","section":"ascendancy","order":61,"rowCount":1,"raw":true},
+    {"id":"ascendancy","label":"Orb of Creation","section":"ascendancy","order":61,"rowCount":1,"raw":true},
     {"id":"kill-ledger-tiers","label":"Kill Ledger kill bonuses","section":"kill-ledger","order":62,"rowCount":7,"raw":true},
     {"id":"kill-ledger-bosses","label":"Kill Ledger boss bonuses","section":"kill-ledger","order":63,"rowCount":21,"raw":true},
     {"id":"weapon-mastery","label":"Weapon mastery","section":"weapon-mastery","order":64,"rowCount":258,"raw":false},

@@ -332,7 +332,7 @@ describe('map-bosses', () => {
     expect(resolve('map-bosses', '1', ctx())).toEqual({
       kind: 'table',
       caption:
-        'Tier 1 map bosses in Hell, players 1 (players 8). Each also drops: Weapon Mastery Token 25%; Primordial Soulstone always (until your Ascendancy Stone holds 10)',
+        'Tier 1 map bosses in Hell, players 1 (players 8). Each also drops: Weapon Mastery Token 25%; Primordial Soulstone always (tier 4 of an ascendancy needs 10)',
       header: ['Boss', 'Orb of Anointment', 'Map', 'Key', 'Shards when terrorized'],
       rows: [
         ['Whisper, Hellhound (each)', '5% (9.8%)', 'Tier 2 25% (50%)', '25% (50%)', '+1'],
