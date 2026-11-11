@@ -84,6 +84,7 @@ const KNOWN_STATS = [
   'item_crushingblow_perlevel',
   'item_openwounds',
   'item_fractionaltargetac',
+  'item_ignoretargetac',
   'lifedrainmindam',
   'manadrainmindam',
   'hpregen',
