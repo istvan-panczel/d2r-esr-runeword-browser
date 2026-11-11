@@ -28,6 +28,7 @@ import { buildItemTypeIndex } from '@/features/stash/engine/itemTypes';
 import { createCharacterData } from '../parser/characterData';
 import { parseCharacter } from '../parser/parseCharacter';
 import { createBuildDraft, type BuildDraft, type BuildDraftData } from './buildDraft';
+import { createSheetData } from './sheet';
 import { draftFromSaveBytes } from './buildDraftRead';
 import { statsFromSaveBytes } from './buildDraftStats';
 
@@ -108,6 +109,25 @@ describe.skipIf(!READY)('build draft from the real saves', () => {
     expect(Object.keys(spinVariant.skillPoints ?? {}).length).toBeGreaterThan(0);
     expect(spin.report.matched).toBe(11);
     expect(spin.report.total).toBe(11);
+  });
+
+  const SAVE_3304 = resolve(CHAR_DIR, 'ground-truth/spintowin-3.3.04/SpinToWin.d2s');
+  it.skipIf(!existsSync(SAVE_3304))('reads the ascendancy of an ESR 3.3.04 save (no stone) from its saved stats', () => {
+    const file = parseCharacter(new Uint8Array(readFileSync(SAVE_3304)), characterData);
+    const sheetData = createSheetData(json<CharSheetBundle>('charsheet'), itemText);
+    expect(createBuildDraft(file, data, 'SpinToWin.d2s', null, sheetData).values.variants[0].ascendancy).toBe('Blademaster');
+    // Without the sheet data only a stone could tell, and the 3.3.04 save has none
+    expect(createBuildDraft(file, data, 'SpinToWin.d2s').values.variants[0].ascendancy).toBeUndefined();
+    // The old save's stone goes through the same data
+    expect(
+      createBuildDraft(
+        parseCharacter(new Uint8Array(readFileSync(resolve(CHAR_DIR, 'SpinToWin.d2s'))), characterData),
+        data,
+        'SpinToWin.d2s',
+        null,
+        sheetData
+      ).values.variants[0].ascendancy
+    ).toBe('Blademaster');
   });
 
   it("puts Death's Grip in the belt slot it is really in, with the review flag and a note", () => {

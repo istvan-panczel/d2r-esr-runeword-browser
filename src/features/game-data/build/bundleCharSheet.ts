@@ -18,8 +18,15 @@
  * - rules: difficultylevels.txt resist penalties, ESR loader plugin settings (Runic Insight, charm dedup, charm
  *   inventory, dodge cap, resistance floor) and engine constants. Constants the files do not hold are asserted against
  *   what the files say about them where they say anything (`assertRules`): a changed source throws here.
+ * - ascendancies: celestialrayone.ascendancies.toml (ESR 3.3.04+, the ascendancy panel plugin): the saved stats, the 15
+ *   ascendancies in window order (the saved index) with each tier's properties as saved stats (`class-skills` kept as a
+ *   value: the class skill property of the character's class, `class_skill_properties`), the Lich King bonus and the old
+ *   stone conversion keys. The skills these properties name join `itemSkills` (generateBundles.ts), so the tier 3 / 4
+ *   auras stay in `skills`
  */
 import type {
+  CharSheetAscendancy,
+  CharSheetAscendancyRules,
   CharSheetArmor,
   CharSheetBundle,
   CharSheetClass,
@@ -58,6 +65,8 @@ export interface CharSheetConfigs {
   resistFloor: string | null;
   /** patches/esr-resistance-floor-minus-1000-player-display.json (character screen floor; names the cap formula) */
   resistFloorDisplay: string | null;
+  /** celestialrayone.ascendancies.toml (the ascendancy panel, ESR 3.3.04+) */
+  ascendancies: string | null;
 }
 
 export interface CharSheetInput {
@@ -80,7 +89,7 @@ export interface CharSheetInput {
   setitems: TsvTable;
   hireling: TsvTable;
   difficultylevels: TsvTable;
-  /** Skill ids item properties name (`itemSkillUses`) */
+  /** Skill ids item properties and the ascendancy tiers name (`itemSkillUses` over both, `ascendancyMods`) */
   itemSkills: { owned: ReadonlySet<number>; events: ReadonlySet<number> };
   /** propertygroups.txt: ESR's full set bonuses name groups */
   groups: ReadonlyMap<string, PropertyGroupDef>;
@@ -213,6 +222,155 @@ function readRules(input: CharSheetInput, statIds: ReadonlyMap<string, number>, 
     charmDedup,
     inventoryCharms: allowInventory,
   };
+}
+
+/** One ascendancy property as the toml writes it: "code=value", "code[param]=value", "code=min..max", "code[param]=min..max" */
+export interface AscendancyMod {
+  code: string;
+  param: string | null;
+  min: number;
+  max: number;
+}
+
+const ASCENDANCY_MOD = /^([^[\]=\s]+)(?:\[([^\]]*)\])?=(-?\d+)(?:\.\.(-?\d+))?$/;
+/** The toml's stand-in for the class skill property of the character's own class */
+const CLASS_SKILLS = 'class-skills';
+const TIERS = range(1, 5);
+
+function parseAscendancyMod(text: string, where: string): AscendancyMod {
+  const match = ASCENDANCY_MOD.exec(text.trim());
+  if (match === null) throw new Error(`charsheet: ascendancies ${where}: "${text}" is not code[param]=min..max`);
+  const min = Number(match[3]);
+  const max = match.at(4);
+  // A RegExp group that did not take part is undefined at run time, whatever the type says
+  return { code: match[1], param: match.at(2) ?? null, min, max: max === undefined ? min : Number(max) };
+}
+
+function ascendancyToml(text: string): Map<string, TomlValue> {
+  const { entries, errors } = parseToml(text);
+  if (errors.length > 0) throw new Error(`charsheet: celestialrayone.ascendancies.toml: ${errors.join('; ')}`);
+  return new Map([...entries.values()].map((entry) => [entry.path, entry.value]));
+}
+
+/** The `[[ascendancy]]` blocks in window order (the saved index − 1) */
+function ascendancyBlocks(values: ReadonlyMap<string, TomlValue>): number[] {
+  const blocks: number[] = [];
+  while (values.has(`ascendancy[${String(blocks.length)}].name`)) blocks.push(blocks.length);
+  return blocks;
+}
+
+/** Every property the ascendancy tiers and the Lich King bonus list (for the skills they name); [] without the file */
+export function ascendancyMods(text: string | null): AscendancyMod[] {
+  if (text === null) return [];
+  const values = ascendancyToml(text);
+  const lists = [
+    strings(values.get('ascendancies.lich_king')),
+    ...ascendancyBlocks(values).flatMap((i) => TIERS.map((tier) => strings(values.get(`ascendancy[${String(i)}].tier${String(tier)}`)))),
+  ];
+  return lists.flat().flatMap((mod) => {
+    const parsed = parseAscendancyMod(mod, 'property');
+    return parsed.code === CLASS_SKILLS ? [] : [parsed];
+  });
+}
+
+function readAscendancies(
+  input: CharSheetInput,
+  statNames: readonly string[],
+  warnings: string[]
+): { rules: CharSheetAscendancyRules; list: CharSheetAscendancy[] } | null {
+  const text = input.configs.ascendancies;
+  if (text === null) {
+    warnings.push('charsheet: celestialrayone.ascendancies.toml missing, no ascendancy bonuses');
+    return null;
+  }
+  const values = ascendancyToml(text);
+  if (values.get('ascendancies.enabled') === false) return null;
+  const num = (key: string): number => {
+    const value = values.get(key);
+    if (!isNumber(value)) throw new Error(`charsheet: ascendancies ${key} is not a number`);
+    return value;
+  };
+  const stat = (key: string, name: string): number => {
+    const id = num(`ascendancies.${key}`);
+    if (statNames[id] !== name) throw new Error(`charsheet: ascendancies ${key} = ${String(id)} is not ${name} in itemstatcost.txt`);
+    return id;
+  };
+  const stats = {
+    ascendancy: stat('ascendancy_stat', 'ascendancy'),
+    progress: stat('progress_stat', 'ascendancy_progress'),
+    soulstones: stat('soulstone_stat', 'ascendancy_soulstones'),
+    orb: stat('orb_stat', 'ascendancy_orb'),
+  };
+
+  // The class skill property per class, charstats.txt order: one stat each, item_addclassskills with the class as param
+  const classProperties = strings(values.get('ascendancies.class_skill_properties'));
+  if (classProperties.length !== CLASS_CODES.length || classProperties.some((code, i) => code !== CLASS_CODES[i]))
+    throw new Error(`charsheet: ascendancies class_skill_properties [${classProperties.join(', ')}] is not the class order`);
+  const classSkills = classProperties.map((code, cls): [number, number] => {
+    const saved = input.savedStats(code, '', 1, 1, `ascendancies class_skill_properties ${code}`);
+    const only = saved.at(0);
+    if (saved.length !== 1 || only === undefined || statNames[only[0]] !== 'item_addclassskills' || only[1] !== cls || only[2] !== 1)
+      throw new Error(`charsheet: ascendancies class skill property ${code} is not one class skill stat`);
+    return [only[0], only[1]];
+  });
+
+  const savedOf = (mods: readonly AscendancyMod[], where: string): ItemTextSavedStat[] => {
+    const resolved = resolveGroups(mods, input.groups);
+    for (const warning of resolved.warnings) warnings.push(`charsheet: ascendancies ${where}: ${warning}`);
+    if (resolved.pools.length > 0) warnings.push(`charsheet: ascendancies ${where}: a random pool is left out`);
+    return resolved.mods.flatMap((mod) =>
+      input.savedStats(mod.code, mod.param ?? '', mod.min, mod.max, `ascendancies ${where} ${mod.code}`)
+    );
+  };
+  const list = ascendancyBlocks(values).map((i): CharSheetAscendancy => {
+    const at = (key: string) => `ascendancy[${String(i)}].${key}`;
+    const name = values.get(at('name'));
+    if (typeof name !== 'string' || name === '') throw new Error(`charsheet: ascendancies block ${String(i + 1)} has no name`);
+    const tiers = TIERS.map((tier) => {
+      const where = `${name} tier ${String(tier)}`;
+      const value = values.get(at(`tier${String(tier)}`));
+      if (!Array.isArray(value)) throw new Error(`charsheet: ascendancies ${where}: no tier${String(tier)} list`);
+      const mods = strings(value).map((mod) => parseAscendancyMod(mod, where));
+      let classSkillValue = 0;
+      for (const mod of mods.filter((entry) => entry.code === CLASS_SKILLS)) {
+        if (mod.param !== null || mod.min !== mod.max) throw new Error(`charsheet: ascendancies ${where}: ${CLASS_SKILLS} takes one value`);
+        classSkillValue += mod.max;
+      }
+      return {
+        classSkills: classSkillValue,
+        stats: savedOf(
+          mods.filter((mod) => mod.code !== CLASS_SKILLS),
+          where
+        ),
+      };
+    });
+    return { index: i + 1, name, legacyUnique: num(at('legacy_unique')), tiers };
+  });
+  if (list.length === 0) throw new Error('charsheet: celestialrayone.ascendancies.toml has no [[ascendancy]] block');
+  const names = new Set(list.map((entry) => entry.name));
+  if (names.size !== list.length) throw new Error('charsheet: ascendancies: two blocks share a name');
+
+  const lichKingMods = strings(values.get('ascendancies.lich_king')).map((mod) => parseAscendancyMod(mod, 'lich_king'));
+  if (lichKingMods.some((mod) => mod.code === CLASS_SKILLS)) throw new Error(`charsheet: ascendancies lich_king lists ${CLASS_SKILLS}`);
+  const tierStats = numbers(values.get('ascendancies.legacy_tier_stats'));
+  if (tierStats.length !== 4) throw new Error('charsheet: ascendancies legacy_tier_stats is not the stone stats of tiers 2–5');
+  const item = values.get('ascendancies.legacy_stone_item');
+  if (typeof item !== 'string' || item === '') throw new Error('charsheet: ascendancies legacy_stone_item missing');
+
+  const rules: CharSheetAscendancyRules = {
+    stats,
+    soulstoneCap: num('ascendancies.soulstone_cap'),
+    soulstoneTier: num('ascendancies.soulstone_tier'),
+    classSkills,
+    lichKing: savedOf(lichKingMods, 'lich_king'),
+    legacy: {
+      item,
+      tierStats,
+      soulstoneStat: num('ascendancies.legacy_soulstone_stat'),
+      lichKingStat: num('ascendancies.legacy_lich_king_stat'),
+    },
+  };
+  return { rules, list };
 }
 
 function readClasses(charstats: TsvTable): CharSheetClass[] {
@@ -486,6 +644,7 @@ export function buildCharSheetBundle(input: CharSheetInput): BuildResult<CharShe
       );
 
   const { setItems, sets } = readSets(input, warnings);
+  const ascendancies = readAscendancies(input, statNames, warnings);
   return {
     bundle: {
       statNames,
@@ -504,6 +663,8 @@ export function buildCharSheetBundle(input: CharSheetInput): BuildResult<CharShe
         stats: tree.perks.map((perk) => perk.stat),
       })),
       rules: readRules(input, statIds, warnings),
+      ascendancies: ascendancies?.list ?? [],
+      ascendancyRules: ascendancies?.rules ?? null,
     },
     warnings,
   };

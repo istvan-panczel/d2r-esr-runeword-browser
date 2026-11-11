@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { FILTER_URL_PARAM_KEYS } from '@/core/utils/filterUrlParams';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { useGameData } from '@/features/game-data/hooks/useGameData';
@@ -16,6 +15,7 @@ import { ledgerBossName, resistScrollsText } from '../../engine/sheetView';
 import { useCharacterItems } from '../../hooks/useCharacterItems';
 import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
+import { AscendancySummary } from '../AscendancySummary';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
 
 const FILES = ['specializations'] as const;
@@ -52,10 +52,12 @@ interface PlacedItemsProps {
   readonly link: (row: PlacedItemRow) => ReactNode;
   /** What the computed sheet reads from the active one (tier, boss flags) */
   readonly summary?: ReactNode;
+  /** Whether it works only in the Charm Inventory (a badge per item says where it is); default true */
+  readonly charmOnly?: boolean;
 }
 
-/** The Kill Ledger or Ascendancy Stone cards, each with where it is and the page about it */
-function PlacedItems({ id, title, rows, empty, link, summary }: PlacedItemsProps) {
+/** The Kill Ledger or old Ascendancy Stone cards, each with where it is and the page about it */
+function PlacedItems({ id, title, rows, empty, link, summary, charmOnly = true }: PlacedItemsProps) {
   return (
     <section aria-labelledby={id} className={cn(CARD_CLASS, 'space-y-3')}>
       <h3 id={id} className="font-semibold">
@@ -69,11 +71,12 @@ function PlacedItems({ id, title, rows, empty, link, summary }: PlacedItemsProps
           {rows.map((entry) => (
             <li key={entry.key} className="flex flex-col gap-2">
               <p className="flex flex-wrap items-center gap-2 text-xs">
-                {entry.inCharmInventory ? (
-                  <ToneBadge label="In the Charm Inventory" tone="success" />
-                ) : (
-                  <ToneBadge label="Not in the Charm Inventory: it does nothing there" tone="warning" />
-                )}
+                {charmOnly &&
+                  (entry.inCharmInventory ? (
+                    <ToneBadge label="In the Charm Inventory" tone="success" />
+                  ) : (
+                    <ToneBadge label="Not in the Charm Inventory: it does nothing there" tone="warning" />
+                  ))}
                 {link(entry)}
               </p>
               <ItemCard row={entry.row} where={entry.where} className="h-auto flex-1" />
@@ -116,7 +119,7 @@ function TierLine({ label, tier, extra }: { readonly label: string; readonly tie
   );
 }
 
-/** Progress: kills, respec points, relics, the specialization perks learned, and the Kill Ledger and Ascendancy Stone. */
+/** Progress: kills, respec points, relics, the specialization perks learned, the Kill Ledger and the ascendancy (with an old stone). */
 export function ProgressTab({ character }: { readonly character: CharacterFile }) {
   const gameData = useGameData(FILES);
   const items = useCharacterItems(character);
@@ -231,28 +234,24 @@ export function ProgressTab({ character }: { readonly character: CharacterFile }
             </Link>
           )}
         />
-        <PlacedItems
-          id="character-ascendancy-stone"
-          title="Ascendancy Stone"
-          rows={ascendancyStones}
-          summary={facts === null ? undefined : <TierLine label="Tier" tier={facts.ascendancyTier} />}
-          empty={
-            <>
-              No Ascendancy Stone on this character.{' '}
-              <Link to="/ascendancies" className={LINK_CLASS}>
-                The ascendancies
-              </Link>
-            </>
-          }
-          link={(entry) => (
-            <Link
-              to={`/ascendancies?${new URLSearchParams({ [FILTER_URL_PARAM_KEYS.SEARCH]: entry.row.name.replace(/ Ascendancy Stone$/i, '') }).toString()}`}
-              className={LINK_CLASS}
-            >
-              Its tier bonuses
-            </Link>
+        <div className="space-y-4">
+          <section aria-labelledby="character-ascendancy" className={cn(CARD_CLASS, 'space-y-3')}>
+            <h3 id="character-ascendancy" className="font-semibold">
+              Ascendancy
+            </h3>
+            <AscendancySummary ascendancy={sheet.status === 'ready' ? facts?.ascendancy : undefined} />
+          </section>
+          {ascendancyStones.length > 0 && (
+            <PlacedItems
+              id="character-ascendancy-stone"
+              title="Old Ascendancy Stone"
+              rows={ascendancyStones}
+              charmOnly={false}
+              empty={null}
+              link={() => <span className="text-muted-foreground">Turned into the ascendancy panel on the next login (ESR 3.3.04)</span>}
+            />
           )}
-        />
+        </div>
       </div>
     </div>
   );

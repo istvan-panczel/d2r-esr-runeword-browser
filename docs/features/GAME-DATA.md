@@ -100,7 +100,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `combat.json`          | ESR 3.3.04: 38 KB / 12 KB (areas 30 KB, level ratios 3 KB, bosses 3 KB)                                                            |
-| `charsheet.json`       | ESR 3.3.04: 311 KB / 47 KB (skills 224 KB: 280 class skills + 368 item / referenced rows; sets 25 KB; stat names 20 KB)            |
+| `charsheet.json`       | ESR 3.3.04: 336 KB / 50 KB (skills 242 KB: 280 class + 399 item / referenced rows; sets 25 KB; ascendancies 6 KB)                  |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types
@@ -1085,13 +1085,28 @@ needs on top of `itemtext.json`. Only the character page loads it.
   (`celestialrayone.charm-dedup.toml`), `inventoryCharms` (`charm-inv.toml`), `dodgeCap`
   (`celestialrayone.dodge-avoid-evade-cap.toml`), `resistFloor` (-1000 with both resistance floor patches, else -100),
   and the engine constants `resistCap` 75, `resistCeiling` 95, `physicalResistCap` 50, `anyaResist` 10.
+- `ascendancies` and `ascendancyRules` (ESR 3.3.04+, `celestialrayone.ascendancies.toml`, the ascendancy panel plugin;
+  `[]` / null without the file, with a warning): the 15 `[[ascendancy]]` blocks in window order (entry i is the saved
+  `ascendancy` stat i + 1; not the old stones' uniqueitems order), each with its name, `legacyUnique` (its old stone's
+  uniqueitems row) and `tiers[0..4]`: `classSkills` (the `class-skills` value) and every other property as saved stats
+  (`savedStatsReader`, property groups resolved; `dmg-norm=40..50` is min / max damage, `hit-skill[127]=15..20` chance /
+  level, not rolls). `ascendancyRules`: the saved stats (`ascendancy_stat` … `orb_stat` = 1064–1067),
+  `soulstoneCap` / `soulstoneTier`, `classSkills` (each class's `class_skill_properties` entry as `[stat, param]`:
+  `item_addclassskills` with the class), `lichKing` (the Lich King bonus properties as saved stats) and `legacy` (the
+  old stone item and its tier 2–5, soulstone and Lich King stats the plugin converts). The skills the tiers name join
+  the `itemSkillUses` input (`ascendancyMods`), so `skills` keeps the tier 3 / 4 auras (787–801, 1508–1519, 1521,
+  1522: Stance Dancer's 1520 is named by no tier since 3.3.04) and 822 / 823; the loot filter and item text bundles do
+  not take them (no item names them).
 
 Asserted at generation (the build throws): the Runic Insight perk stat must be `archaeology_3`, the resistance floor
 display patch must still describe the cap as `min(75+maxresist, 95)`, `allow_inventory_charms` must exist, the
 experience columns must match, charstats rows must be the 8 classes in order, and no class passive may have a
 `passiveitype` (the sheet does not gate passives by weapon), and every weapons.txt row must be a weapon or a quiver by
-its item type (states.txt joined the tables `esrSources.ts` reads, for `shapeshift`). Counts: `charSheetSkills` 674,
-`charSheetSets` 77, `charSheetHirelings` 30.
+its item type (states.txt joined the tables `esrSources.ts` reads, for `shapeshift`). The ascendancy config must name
+the four saved stats by their itemstatcost.txt names, list `class_skill_properties` in the class order (each one
+`item_addclassskills` stat with its class), write every property as `code[param]=min..max`, give `class-skills` one
+value and every block five tier lists. Counts: `charSheetSkills` 679 (ESR 3.3.04; 648 before the ascendancy config
+was read), `charSheetSets` 77, `charSheetHirelings` 30.
 
 ### Skills
 

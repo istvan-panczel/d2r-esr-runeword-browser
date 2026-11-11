@@ -7,8 +7,7 @@ import { buildSave, testData } from '../parser/testCharacter';
 import { parseCharacter } from '../parser/parseCharacter';
 import { equippedGear } from '../parser/location';
 import type { CharacterFile, CharacterItem, ItemLocation } from '../parser/types';
-import type { ItemRow } from '@/features/stash/engine/items/allItems';
-import { ascendancyOfStone, buildCharacterItems } from './characterItems';
+import { buildCharacterItems } from './characterItems';
 
 const catalog = stashCatalog(makeBundle({ bases: [] }));
 const ctx = createItemTextContext(null, catalog);
@@ -88,16 +87,5 @@ describe('character items view', () => {
       ['Inventory, row 3, col 5', false],
     ]);
     expect(ascendancyStones.map((row) => row.inCharmInventory)).toEqual([true]);
-  });
-});
-
-describe('ascendancyOfStone', () => {
-  const row = (name: string | undefined) =>
-    ({ info: { unique: name === undefined ? null : { name } } }) as unknown as Pick<ItemRow, 'info'>;
-
-  it('names the ascendancy of the stone, as the Ascendancies page spells it', () => {
-    expect(ascendancyOfStone(row('Battlemage Ascendancy Stone'), ['Battlemage', 'Warden'])).toBe('Battlemage');
-    expect(ascendancyOfStone(row('Unknown Ascendancy Stone'), ['Battlemage'])).toBeNull();
-    expect(ascendancyOfStone(row(undefined), ['Battlemage'])).toBeNull();
   });
 });

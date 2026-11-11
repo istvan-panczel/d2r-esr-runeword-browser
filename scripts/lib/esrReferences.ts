@@ -106,12 +106,6 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     kind: 'generated',
     follows: 'killledger.json pageDiffs (the page compared with the files; build/killLedgerPage.ts); the Kill Ledger page shows them',
   },
-  {
-    path: ESR_ASCENDANCIES_FILE,
-    kind: 'generated',
-    follows:
-      'killledger.json bosses and window (`[[kill_credit]]` / `kill_credit_frames`, build/bundleKillLedger.ts); the Kill Ledger page and the map boss panel',
-  },
   ...[SPECIALIZATIONS_CONFIG_FILE, ...PERK_CONFIG_FILES].map((file): EsrReference => ({
     path: specializationConfigPath(file),
     kind: 'generated',
@@ -138,6 +132,12 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     follows:
       'charsheet.json rules (build/bundleCharSheet.ts: Runic Insight, charm dedup, inventory charms, the resist cap formula, asserted at generation) and the computed character sheet',
   })),
+  {
+    path: ESR_ASCENDANCIES_FILE,
+    kind: 'generated',
+    follows:
+      'charsheet.json ascendancies (build/bundleCharSheet.ts: the saved stats, the window order the save indexes, each tier as saved stats, class skill properties, the Lich King bonus, the old stone conversion keys; asserted at generation) and the skills it keeps (the tier 3 / 4 auras); My Character applies the unlocked tiers. Also killledger.json bosses and window (`[[kill_credit]]` / `kill_credit_frames`, build/bundleKillLedger.ts): the Kill Ledger page and the map boss panel',
+  },
   // Tested
   {
     path: 'docs/quality_affixes.htm',
