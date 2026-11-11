@@ -71,9 +71,14 @@ describe('character stats from a save', () => {
       ias: 20,
       mf: 35,
     });
-    // Level stays on the variant; no shield, so no block chance
+    // Level stays on the variant; no shield, so no block chance; bonuses at 0 are left out, a 0 resistance is kept
     expect(stats?.values).not.toHaveProperty('lvl');
     expect(stats?.values).not.toHaveProperty('blk');
+    expect(sheet.offense.deadlyStrike.value).toBe(0);
+    expect(stats?.values).not.toHaveProperty('ds');
+    expect(stats?.values).not.toHaveProperty('dod');
+    expect(sheet.resists.magic.value).toBe(0);
+    expect(stats?.values.mr).toBe(0);
     // What it stores reads back unchanged
     expect(asBuildStats(JSON.parse(JSON.stringify(stats)))).toEqual(stats);
   });

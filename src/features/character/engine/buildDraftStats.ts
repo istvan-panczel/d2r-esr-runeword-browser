@@ -3,7 +3,7 @@
  * computed sheet for the save's own difficulty, unbuffed, as its compact snapshot, kept to the stored keys and ranges.
  * Pure and never throws: a failure gives null (the import goes on without stats) or an error to show.
  */
-import { asBuildStats, STAT_KEYS, type BuildStats } from '@/features/builds/buildStats';
+import { asBuildStats, STAT_KEYS, type BuildStats, type StatKey } from '@/features/builds/buildStats';
 import type { CharSheetBundle, ItemTextBundle, StashBundle } from '@/features/game-data/engine/schema';
 import { createCharacterData } from '../parser/characterData';
 import { CharacterParseError, type CharacterSectionName } from '../parser/errors';
@@ -11,9 +11,40 @@ import { parseCharacter } from '../parser/parseCharacter';
 import type { CharacterFile } from '../parser/types';
 import { computeCharacterSheet, createSheetData, toStatsSnapshot, type CharacterStatsSnapshot, type SheetData } from './sheet';
 
+/**
+ * Bonuses that are left out at 0: "no deadly strike" is not worth a line. Attributes, life, mana, resistances, defense
+ * and attack rating are kept at 0 (a 0% resistance says something).
+ */
+const OMIT_WHEN_ZERO: ReadonlySet<StatKey> = new Set<StatKey>([
+  'dr',
+  'mdr',
+  'blk',
+  'dod',
+  'avo',
+  'eva',
+  'ias',
+  'frw',
+  'fhr',
+  'fbr',
+  'fcr',
+  'arp',
+  'ds',
+  'cb',
+  'll',
+  'ml',
+  'mf',
+  'gf',
+  'sk',
+]);
+
 /** The stored stats block of a snapshot: the numbers the block keeps (no level: the variant holds it) and the provenance. */
 export function buildStatsFromSnapshot(snapshot: CharacterStatsSnapshot, character: string): BuildStats | null {
-  const values = Object.fromEntries(STAT_KEYS.flatMap((key) => (snapshot[key] === undefined ? [] : [[key, snapshot[key]] as const])));
+  const values = Object.fromEntries(
+    STAT_KEYS.flatMap((key) => {
+      const value = snapshot[key];
+      return value === undefined || (value === 0 && OMIT_WHEN_ZERO.has(key)) ? [] : [[key, value] as const];
+    })
+  );
   // Through the validator, so a number outside the stored range is dropped exactly as it would be on read
   return (
     asBuildStats({
