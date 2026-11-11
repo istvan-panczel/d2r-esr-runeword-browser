@@ -123,6 +123,7 @@ async function main(): Promise<void> {
     mercenaries: serializeBundle(generated.mercenaries),
     killledger: serializeBundle(generated.killledger),
     elixirs: serializeBundle(generated.elixirs),
+    combat: serializeBundle(generated.combat),
   };
   const icons = readIcons();
   const manifest = buildManifest({

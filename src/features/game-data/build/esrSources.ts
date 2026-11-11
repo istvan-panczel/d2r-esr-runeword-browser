@@ -98,6 +98,9 @@ export const TABLES = [
   'shrines',
   // killledger.json (the death skills that record a boss kill)
   'monprop',
+  // combat.json (monster defense / attack rating by level, champion and unique bonuses)
+  'monlvl',
+  'monumod',
 ] as const;
 export type EsrTableName = (typeof TABLES)[number];
 

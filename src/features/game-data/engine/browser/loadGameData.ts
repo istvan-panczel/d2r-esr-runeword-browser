@@ -9,6 +9,7 @@ import {
   GAME_DATA_SCHEMA,
   type AffixesBundle,
   type AreasBundle,
+  type CombatBundle,
   type BasesBundle,
   type CraftingBundle,
   type CubeBundle,
@@ -65,6 +66,7 @@ export interface GameDataBundles {
   mercenaries: MercenariesBundle;
   killledger: KillLedgerBundle;
   elixirs: ElixirsBundle;
+  combat: CombatBundle;
   icons: IconsBundle;
 }
 

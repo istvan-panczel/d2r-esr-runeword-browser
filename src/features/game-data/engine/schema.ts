@@ -40,6 +40,7 @@ export type GameDataFile =
   | 'mercenaries'
   | 'killledger'
   | 'elixirs'
+  | 'combat'
   | 'icons';
 
 export interface GameDataManifest {
@@ -2373,4 +2374,94 @@ export interface SpecializationPageDiff {
   /** The tree and perk slugs when the difference is about one perk */
   tree?: string;
   perk?: string;
+}
+
+// --- combat.json --------------------------------------------------------------------------------------------------
+
+/**
+ * combat.json: what the My Character Combat tab needs to show the chance to hit monsters and to be hit by them per
+ * area and boss (docs/features/CHARACTER-SAVE.md "Combat tab"). Built by `build/bundleCombat.ts` from monstats.txt,
+ * levels.txt, monlvl.txt, monumod.txt, monprop.txt and attack-rating.toml (through the modifiers.json fact).
+ */
+export interface CombatBundle {
+  /** The modifiers.json `attackRating.curve` fact, copied so the tab loads one small file */
+  curve: ModifierFact;
+  /**
+   * monlvl.txt ratios by monster level (index = level, 0..110): `[L-AC, L-AC(N), L-AC(H), L-TH, L-TH(N), L-TH(H)]`,
+   * defense then attack rating, Normal / Nightmare / Hell
+   */
+  levelRatios: CombatLevelRatios[];
+  /** Champion / unique / minion level offsets (engine rule) and attack rating bonuses (monumod.txt constants) */
+  modifiers: CombatModifiers;
+  /** The usual random spawn bonus of campaign and map monsters (a pool's own in `CombatPoolExtra.bonus`) */
+  randomBonus: CombatRandomBonus;
+  /** Campaign areas (one per levels.txt row with monsters) and endgame map zones (one per zone, Hell only) */
+  areas: CombatArea[];
+  /** Act bosses (every difficulty), the Pandemonium event bosses and the map bosses (Hell) */
+  bosses: CombatBoss[];
+}
+
+export type CombatLevelRatios = [number, number, number, number, number, number];
+
+export type CombatMonsterKind = 'regular' | 'champion' | 'unique' | 'minion';
+
+/** Per non-regular monster kind: levels above the area and +% attack rating */
+export type CombatModifiers = Record<Exclude<CombatMonsterKind, 'regular'>, { level: number; attack: number }>;
+
+export interface CombatArea {
+  /** levels.txt `Id` (a map zone: its first level with monsters) */
+  id: number;
+  /** areas.json name; a map zone: its `group` ("Chasm of Horror") */
+  name: string;
+  /** 0-based act (maps are act 4) */
+  act: number;
+  /** Endgame map tier */
+  tier?: number;
+  /** A map zone: the levels.txt ids it stands for */
+  levels?: number[];
+  /** Normal, Nightmare, Hell; null where the area has no regular monster (maps: Hell only) */
+  pools: PerDifficulty<CombatPool | null>;
+}
+
+/** min, median (lower middle), max */
+export type CombatSpread = [number, number, number];
+
+/**
+ * The regular monsters an area can spawn in one difficulty (levels.txt `mon*` in Normal, `nmon*` in Nightmare and
+ * Hell), goblins, Corrupted Zakarum special spawns and `boss` rows left out, as a tuple to keep the file small:
+ * `[monster level, monster types, defense, attack rating, extra?]`. Defense and attack rating (a monster's best of
+ * `A1TH` / `A2TH` / `S1TH`) are final values (monstats × monlvl / 100) of the monster at the min / median / max of the
+ * pool; attack rating is null when every monster only casts. Monster level: the area's `MonLvlEx(N)` / `MonLvlEx(H)`;
+ * in Normal the median of the monsters' own `Level`.
+ */
+export type CombatPool = [number, number, CombatSpread, CombatSpread | null, CombatPoolExtra?];
+
+export interface CombatPoolExtra {
+  /** Normal: the lowest and highest monster level of the pool */
+  range?: [number, number];
+  /** Monster types without any attack rating (spell casters only) */
+  casters?: number;
+  /** The pool's `monrandombonus` when it differs from the bundle's `randomBonus` default (null: none) */
+  bonus?: [number, number] | null;
+}
+
+/** monprop.txt `monrandombonus` most monsters carry: [chance %, value] (+value % attack rating among others, INFERRED) */
+export interface CombatRandomBonus {
+  campaign: PerDifficulty<[number, number] | null>;
+  maps: [number, number] | null;
+}
+
+export type CombatBossGroup = 'act' | 'uber' | 'map';
+
+export interface CombatBoss {
+  /** monstats `Id` */
+  id: string;
+  name: string;
+  group: CombatBossGroup;
+  /** Act bosses: 0-based act */
+  act?: number;
+  /** Map bosses: the tier of their own arena */
+  tier?: number;
+  /** [monster level, defense, attack rating] per difficulty (own monstats `Level*`); null where it does not appear */
+  stats: PerDifficulty<[number, number, number] | null>;
 }
