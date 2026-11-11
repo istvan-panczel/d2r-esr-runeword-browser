@@ -5,8 +5,12 @@
  *
  * - statNames / valShift / ops: itemstatcost.txt (every row: skill formulas and passive stats name any stat)
  * - classes: charstats.txt life / stamina per vitality, mana per energy (fourths), ToHitFactor, BlockFactor
+ * - weaponSpeed / quivers / armor: weapons.txt speed by code, the weapons.txt codes that are not weapons by their item
+ *   type (ESR's arrow and bolt quivers, itemtypes.txt Equiv tree: no `weap` ancestor, asserted to be `misl`), armor.txt
+ *   speed and block
  * - skills: class skills, every skill an item property names (itemtext.json `skills`) that carries passive or aura
- *   stats, and every row and column their passive / aura / to-hit formulas reach (`collectFormulaRefs`)
+ *   stats, and every row and column their passive / aura / to-hit formulas reach (`collectFormulaRefs`); `shapeshift`
+ *   when the skill's `aurastate` is a states.txt morph state (`transform` 1, `gfxtype` 1: Werewolf, Werebear, Elemental Form)
  * - sets: sets.txt partial (PCode2a … 5b) and full (FCode1-8) bonuses as saved stats; a save holds only each set item's
  *   own bonus lists, never these
  * - rules: difficultylevels.txt resist penalties, ESR loader plugin settings (Runic Insight, charm dedup, charm
@@ -27,6 +31,7 @@ import type {
   SpecializationTree,
 } from '../engine/schema.ts';
 import { CLASS_CODES } from '../engine/schema.ts';
+import { ancestorsOf } from '../engine/itemTypes.ts';
 import { BASE_SKILLS, collectFormulaRefs, createSource, SKILL_FORMULA_COLUMNS, type FormulaRefs } from '../engine/skillCalc/evaluate.ts';
 import { affectsOwner } from '../engine/skillEffects.ts';
 import { statLayerKind } from '../engine/statLayers.ts';
@@ -64,6 +69,10 @@ export interface CharSheetInput {
   experience: TsvTable;
   weapons: TsvTable;
   armor: TsvTable;
+  /** itemtypes.txt: the Equiv tree tells a weapon (`weap` ancestor) from a quiver listed in weapons.txt */
+  itemtypes: TsvTable;
+  /** states.txt: `transform` marks the shape-shift states */
+  states: TsvTable;
   sets: TsvTable;
   /** Parsed with `keepExpansionRows`: the row number is the set id a save stores */
   setitems: TsvTable;
@@ -231,11 +240,24 @@ function readExperience(table: TsvTable): number[] {
   return list;
 }
 
-function readItems(weapons: TsvTable, armor: TsvTable): { weaponSpeed: Record<string, number>; armor: Record<string, CharSheetArmor> } {
+function readItems(
+  weapons: TsvTable,
+  armor: TsvTable,
+  itemtypes: TsvTable
+): { weaponSpeed: Record<string, number>; quivers: string[]; armor: Record<string, CharSheetArmor> } {
+  const parents = new Map(itemtypes.rows.filter((row) => row.str('Code') !== '').map((row) => [row.str('Code'), row.list('Equiv', 2)]));
   const weaponSpeed: Record<string, number> = {};
+  const quivers: string[] = [];
   for (const row of weapons.rows) {
     const code = row.str('code');
-    if (code !== '' && !(code in weaponSpeed)) weaponSpeed[code] = row.num('speed');
+    if (code === '' || code in weaponSpeed) continue;
+    weaponSpeed[code] = row.num('speed');
+    // ESR lists its magic arrow / bolt quivers in weapons.txt; the hands rule (dual wield) must not take them for weapons
+    const ancestors = ancestorsOf([row.str('type'), row.str('type2')], parents);
+    if (ancestors.includes('weap')) continue;
+    if (!ancestors.includes('misl'))
+      throw new Error(`charsheet: weapons.txt ${code} (type ${row.str('type')}) is neither a weapon nor a quiver by itemtypes.txt`);
+    quivers.push(code);
   }
   const armorInfo: Record<string, CharSheetArmor> = {};
   const seen = new Set<string>();
@@ -248,13 +270,18 @@ function readItems(weapons: TsvTable, armor: TsvTable): { weaponSpeed: Record<st
     if (row.num('block') !== 0) info.block = row.num('block');
     if (Object.keys(info).length > 0) armorInfo[code] = info;
   }
-  return { weaponSpeed, armor: armorInfo };
+  return { weaponSpeed, quivers: quivers.sort(), armor: armorInfo };
 }
 
 function readSkills(input: CharSheetInput, warnings: string[]): CharSheetSkill[] {
   const pages = new Map<string, number>();
   for (const row of input.skilldesc.rows) if (!pages.has(row.str('skilldesc'))) pages.set(row.str('skilldesc'), row.num('SkillPage'));
   const classIds = new Map<string, number>(CLASS_CODES.map((code, i) => [code, i]));
+  // A shape-shift state turns the unit into a monster graphic (`transform` 1, `gfxtype` 1: gfxclass is a monstats row);
+  // `transform` alone also marks Holy Armor's glow and the Shadow Warrior / Valkyrie disguises (gfxtype 2 or none)
+  const shapeStates = new Set(
+    input.states.rows.filter((row) => row.num('transform') === 1 && row.num('gfxtype') === 1).map((row) => row.str('state'))
+  );
 
   // Full rows for the formula references (first row of a name wins, as the game's lookup does)
   const full = input.skills.rows.map((row) => readSkillRow(row, input.skills.columns, row.str('skill')));
@@ -266,7 +293,7 @@ function readSkills(input: CharSheetInput, warnings: string[]): CharSheetSkill[]
 
   /** Per kept skill: the columns the sheet reads (before the formula references) */
   const columnsById = new Map<number, Set<string>>();
-  const meta = new Map<number, { cls?: number; tab?: number }>();
+  const meta = new Map<number, { cls?: number; tab?: number; shapeshift?: true }>();
   input.skills.rows.forEach((tsv, id) => {
     const row = full.at(id);
     if (row === undefined || row.id === '') return;
@@ -284,12 +311,15 @@ function readSkills(input: CharSheetInput, warnings: string[]): CharSheetSkill[]
     if (reachesOwner && has(row, [...AURA_COLUMNS, ...PASSIVE_COLUMNS]))
       for (const column of ['passive', 'passivestate', 'aura', 'aurafilter', ...AURA_COLUMNS, ...PASSIVE_COLUMNS]) columns.add(column);
     if ((cls !== undefined || owned || baseSkill) && has(row, TO_HIT_COLUMNS)) for (const column of TO_HIT_COLUMNS) columns.add(column);
+    // Which hand(s) the skill attacks with: the sheet gives an off-hand attack rating line only to one using the off hand
+    if ((cls !== undefined || owned || baseSkill) && row.weapsel !== undefined) columns.add('weapsel');
     if (cls === undefined && !baseSkill && columns.size === 0) return;
     columnsById.set(id, columns);
+    const shapeshift = shapeStates.has(tsv.str('aurastate')) ? { shapeshift: true as const } : {};
     if (cls !== undefined) {
       const page = pages.get(tsv.str('skilldesc')) ?? 0;
-      meta.set(id, page > 0 ? { cls, tab: page } : { cls });
-    }
+      meta.set(id, { ...(page > 0 ? { cls, tab: page } : { cls }), ...shapeshift });
+    } else if ('shapeshift' in shapeshift) meta.set(id, shapeshift);
   });
 
   const refs: FormulaRefs = { skills: new Map(), missiles: new Map() };
@@ -452,7 +482,7 @@ export function buildCharSheetBundle(input: CharSheetInput): BuildResult<CharShe
       ops,
       classes: readClasses(input.charstats),
       experience: readExperience(input.experience),
-      ...readItems(input.weapons, input.armor),
+      ...readItems(input.weapons, input.armor, input.itemtypes),
       skills,
       setItems,
       sets,

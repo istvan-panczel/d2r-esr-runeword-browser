@@ -108,6 +108,8 @@ export const TABLES = [
   // combat.json (monster defense / attack rating by level, champion and unique bonuses)
   'monlvl',
   'monumod',
+  // charsheet.json (states.txt `transform`: the shape-shift skills)
+  'states',
 ] as const;
 export type EsrTableName = (typeof TABLES)[number];
 

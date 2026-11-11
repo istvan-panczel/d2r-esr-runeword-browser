@@ -572,6 +572,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     experience: table('experience'),
     weapons: table('weapons'),
     armor: table('armor'),
+    itemtypes: table('itemtypes'),
+    states: table('states'),
     sets: table('sets'),
     setitems: rowTable('setitems'),
     hireling: table('hireling'),

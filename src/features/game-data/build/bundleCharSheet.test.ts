@@ -27,6 +27,7 @@ const SKILL_COLUMNS = [
   'passiveitype',
   'aura',
   'aurafilter',
+  'aurastate',
   'summon',
   'aurastat1',
   'aurastatcalc1',
@@ -35,6 +36,7 @@ const SKILL_COLUMNS = [
   'ToHit',
   'LevToHit',
   'ToHitCalc',
+  'weapsel',
   'calc1',
   'Param1',
 ];
@@ -87,7 +89,17 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
       skillRow({ skill: 'Summon It', summon: 'golem', aurastat1: 'damageresist', aurastatcalc1: 'lvl' }),
       skillRow({ skill: 'Self Proc', aurastat1: 'damageresist', aurastatcalc1: 'lvl' }),
       skillRow({ skill: 'Curse Proc', aurafilter: '3', aurastat1: 'damageresist', aurastatcalc1: '-lvl' }),
-      skillRow({ skill: 'Bash', charclass: 'bar', skilldesc: 'bash', ToHit: '20', LevToHit: '5' }),
+      skillRow({ skill: 'Bash', charclass: 'bar', skilldesc: 'bash', ToHit: '20', LevToHit: '5', weapsel: '3' }),
+      skillRow({
+        skill: 'Wolf Form',
+        charclass: 'dru',
+        skilldesc: 'wolf',
+        aurastate: 'wolf',
+        aurastat1: 'damageresist',
+        aurastatcalc1: 'lvl',
+      }),
+      skillRow({ skill: 'Battle Cry', charclass: 'bar', aurastate: 'shout', aurastat1: 'damageresist', aurastatcalc1: 'lvl' }),
+      skillRow({ skill: 'Glow', charclass: 'pal', aurastate: 'holyshield', aurastat1: 'damageresist', aurastatcalc1: 'lvl' }),
     ]),
     skilldesc: tsv([
       ['skilldesc', 'SkillPage'],
@@ -113,9 +125,35 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
     ),
     weapons: tsv(
       [
-        ['code', 'speed'],
-        ['hax', '0'],
-        ['lsd', '-10'],
+        ['code', 'type', 'type2', 'speed'],
+        ['hax', 'axe', '', '0'],
+        ['lsd', 'swor', '', '-10'],
+        ['aq2', 'arrm', '', '0'],
+      ],
+      false
+    ),
+    itemtypes: tsv(
+      [
+        ['Code', 'Equiv1', 'Equiv2'],
+        ['weap', '', ''],
+        ['mele', 'weap', ''],
+        ['axe', 'mele', ''],
+        ['swor', 'mele', ''],
+        ['misc', '', ''],
+        ['misl', 'misc', ''],
+        ['seco', '', ''],
+        ['bowq', 'misl', 'seco'],
+        ['arrm', 'bowq', 'seco'],
+        ['ring', 'misc', ''],
+      ],
+      false
+    ),
+    states: tsv(
+      [
+        ['state', 'transform', 'gfxtype'],
+        ['shout', '', ''],
+        ['holyshield', '1', ''],
+        ['wolf', '1', '1'],
       ],
       false
     ),
@@ -192,7 +230,8 @@ describe('buildCharSheetBundle', () => {
       blockFactor: 5,
     });
     expect(bundle.experience).toEqual([0, 500, 1500]);
-    expect(bundle.weaponSpeed).toEqual({ hax: 0, lsd: -10 });
+    expect(bundle.weaponSpeed).toEqual({ hax: 0, lsd: -10, aq2: 0 });
+    expect(bundle.quivers).toEqual(['aq2']);
     expect(bundle.armor).toEqual({ kit: { speed: 5, block: 20 } });
     expect(bundle.hirelings).toEqual([
       { id: 0, name: 'Rogue Scout', subtype: 'Elemental', act: 1, difficulty: 0, expPerLevel: 65 },
@@ -217,8 +256,23 @@ describe('buildCharSheetBundle', () => {
     expect(byName.has('Enemy Aura')).toBe(false);
     expect(byName.has('Summon It')).toBe(false);
     expect(byName.has('Curse Proc')).toBe(false);
-    expect(byName.get('Bash')).toMatchObject({ cls: 4, tab: 1, row: { ToHit: 20, LevToHit: 5 } });
+    expect(byName.get('Bash')).toMatchObject({ cls: 4, tab: 1, row: { ToHit: 20, LevToHit: 5, weapsel: 3 } });
     expect(byName.get('Attack')?.row).toEqual({ id: 'Attack' });
+    // a states.txt morph state (transform + gfxtype 1) marks a shape-shift; transform alone or another state does not
+    expect(byName.get('Wolf Form')).toMatchObject({ cls: 5, shapeshift: true });
+    expect(byName.get('Battle Cry')?.shapeshift).toBeUndefined();
+    expect(byName.get('Glow')?.shapeshift).toBeUndefined();
+  });
+
+  it('throws on a weapons.txt row that is neither a weapon nor a quiver by its item type', () => {
+    const weapons = tsv(
+      [
+        ['code', 'type', 'type2', 'speed'],
+        ['xyz', 'ring', '', '0'],
+      ],
+      false
+    );
+    expect(() => buildCharSheetBundle(input({ weapons }))).toThrow(/xyz .*neither a weapon nor a quiver/);
   });
 
   it('turns sets.txt bonuses into saved stats, groups expanded, and maps set items to their set', () => {
