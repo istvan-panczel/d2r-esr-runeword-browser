@@ -49,7 +49,7 @@ function SaveFileReader({ file, onResult }: SaveFileReaderProps) {
     }
     file.read().then(
       (bytes) => {
-        onResult(draftFromSaveBytes(bytes, file.name, state.stash, state.data, file.sidecarVersion));
+        onResult(draftFromSaveBytes(bytes, file.name, state.stash, state.data, file.sidecarVersion, state.sheetBundles));
       },
       () => {
         onResult({

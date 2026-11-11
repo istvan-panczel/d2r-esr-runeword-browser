@@ -381,9 +381,46 @@ type CraftAnnotation =
 - The free-text `skills` field stays as it is, for explanations; both are shown.
 - `refreshBuildData` spreads `...buildData`, so the snapshot refresh on save leaves both fields untouched; the JSON export includes them as stored. The form omits `level` when blank and `skillPoints` when empty. Builds without them read and render as before; `build_data` is JSONB, so **no migration** is needed.
 
+**Character stats: `stats` (optional, per variant).** The headline numbers of the character screen, computed by the app from a save file (then editable) or typed by the author (owner decision 2026-11-11). Model and validator: `src/features/builds/buildStats.ts`; labels, groups, units and formatting shared by the form and the detail page: `utils/statLabels.ts`.
+
+```json
+{
+  "stats": {
+    "source": "save",
+    "edited": true,
+    "difficulty": 2,
+    "character": "SpinToWin",
+    "savedAt": 1794383409,
+    "esrVersion": "3.3.03",
+    "values": {
+      "str": 986,
+      "dex": 746,
+      "vit": 493,
+      "ene": 118,
+      "life": 6080,
+      "mana": 791,
+      "fr": 79,
+      "mr": 38,
+      "def": 73276,
+      "ias": 205,
+      "mf": 420,
+      "sk": 10
+    }
+  }
+}
+```
+
+- **Provenance.** `source`: `save` (computed from a save) or `manual` (typed); `difficulty`: 0 Normal / 1 Nightmare / 2 Hell, the difficulty the resistances are for; `buffed: true` when the numbers include buffs (the app's own computation never does; the author can tick it). Save-derived only: `edited: true` once the author changed a number, the difficulty or the buffs flag (sticky: changing a number back keeps it), the character's name, the save's last-saved time (Unix seconds) and the ESR version of its `.d2rl` (known only through the My Character hand-off; a file picked on `/builds/new` has none).
+- **Values** (`values`, every key optional, absent = not stated): `str dex vit ene` attributes; `life mana`; resistances `fr cr lr pr mr phr` and the four max-resist caps `frm crm lrm prm` (the shown cap, 75 + bonus); `def dr mdr blk dod avo eva` defense and mitigation; speeds `ias frw fhr fbr fcr`; offence `ar` (base attack rating of the main hand, no skill), `arp ds cb ll ml`; find `mf gf`; `sk` (+all skills). The keys follow the computed sheet's `CharacterStatsSnapshot` minus `lvl` (the variant's `level` holds it). An import leaves bonuses at 0 out (no "Deadly strike 0%" line) and keeps attributes, life, mana, resistances, defense and attack rating at 0.
+- **Limits** (`asBuildStats`, called by `asVariantData`): rebuilt from known keys in a fixed order, so unknown keys never survive and the block stays under 1 KB (about 450 bytes for a full save-derived one). Each value must be an integer within its range (attributes 0..100,000, life / mana / defense 0..10,000,000, resistances −1,000..100, caps and dodge / avoid / evade / block 0..100, speeds −1,000..10,000, …: generous, only to keep nonsense out); a bad value drops just that value. A bad optional field (`character` must look like a D2 name, `savedAt` an integer between 2020 and 2100, `esrVersion` like `3.3.03`, at most 20 characters) drops just that field; `edited`, `character`, `savedAt` and `esrVersion` are dropped on manual stats. A `source` or `difficulty` that is not one of the known values, or no valid value left, drops the whole block; it never throws.
+- **Key order.** `stats` is a variant's last key (`asVariantData`, `fromVariantDraft`), so builds saved without it keep their stored order and round-trip byte for byte (tested).
+- **Form**: the "Character stats" card (see Form Layout); empty inputs are not stored, an empty block is not stored, and an out-of-range number blocks Save ("Invalid stats in <variant>") like an invalid level. **From a save**: a build started from a save gets the block computed for the save's own difficulty, unbuffed (see `docs/features/CHARACTER-SAVE.md`, "Start a build from a save").
+- **Detail page**: a **Stats** card in the Player tab's aside, above Charms (beside the gear on wide screens, under it on narrow ones), for the shown variant (`?variant=N`). Only stated values, grouped, resistances under "Resistances (Hell)", the provenance line ("From SpinToWin's save of 11 Nov 2026, ESR 3.3.03, unbuffed, edited by the author" / "Entered by hand") and a note that the numbers are the author's (save-derived: computed by the app from their save without buffs). Nothing when the variant has none. No stats on list cards or filters.
+- Builds are public, so the block is shown in the form before saving and can be cleared there; the save file itself is never uploaded, only what the form holds is stored. `refreshBuildData` spreads the variant, so the snapshot refresh keeps the block; the JSON export includes it. `build_data` is JSONB, so **no migration**.
+
 #### Variants
 
-A build can hold up to 10 variants (e.g. "Budget", "Endgame", "MF"). Everything except the build name, description and class (the `builds` columns) belongs to a variant: the three gear sections with their notes, crafts and alternatives, charms, ascendancy, skills, level and skill points. `VariantData` in `buildData.ts` is that per-variant shape; `BuildData` adds one key to it:
+A build can hold up to 10 variants (e.g. "Budget", "Endgame", "MF"). Everything except the build name, description and class (the `builds` columns) belongs to a variant: the three gear sections with their notes, crafts and alternatives, charms, ascendancy, skills, level, skill points and character stats. `VariantData` in `buildData.ts` is that per-variant shape; `BuildData` adds one key to it:
 
 ```ts
 interface BuildData extends VariantData {
@@ -787,7 +824,7 @@ The shareable page for a single build. The URL itself (`/build/:buildId`) is the
   - **URL**: the shown variant is `?variant=N` (1-based, `utils/variantParam.ts`), set with `replace` so switching adds no history entries; the first variant has no parameter, and a missing, malformed or out-of-range value shows the first. The copy-link button therefore shares the shown variant.
   - The version diffs are computed for the shown variant only (main items and alternatives); the crafting and skill bundles load when any variant needs them, so a switch never shows them loading.
 - **Tabs** (shadcn `Tabs`, UI state only, default **Player**):
-  - **Player**: Player Gear grid (see layout below), Weapon Swap (secondary weapon and shield), and beside them on wide screens **Charms** (list of charm names) and **Ascendancy** (name with its tier bonuses from the viewer's local parsed data)
+  - **Player**: Player Gear grid (see layout below), Weapon Swap (secondary weapon and shield), and beside them on wide screens **Stats** (the variant's character stats, see "Character stats" above), **Charms** (list of charm names) and **Ascendancy** (name with its tier bonuses from the viewer's local parsed data)
   - **Skills**: "Level N" (when set), the freetext skill description and the skill tree allocation (when `skillPoints` has entries). The tree is read-only and looks like the Skills page (`components/SkillTreeDisplay.tsx` → `BuildSkillTrees`): a "N points spent" header, then the class's three tab cards with the in-game 6 × 3 icon tiles, side by side from `lg` with the selected skill's detail card as a sticky right column; below `lg` one tab at a time behind tab pills, the card under the trees (a tap scrolls to it). Tab titles and pills carry the tab's points ("Demon · 21"). An allocated skill's tile has a corner badge with its points (amber above the skill's max level); skills without points are dimmed like in game. Clicking a tile selects it (ring, amber prerequisites, sky-blue unlocked skills — the Skills page's marks; local state, not the URL) and the detail card shows a "Points: n/20" counter above the skill's description, the combo bonuses ("If both A and B have 20 levels", each with "Active in this build" or "Not active in this build · A 20/20 · B 12/20" from the allocated hard points), synergies, requirements and granting items. Ids outside the class tree are listed under the trees as "Other skills: Name (n), …". The card's values per level (the Skills page calculator, docs/features/SKILLS.md "Page") follow the build: the level is the skill's allocated points + a "+Skills from gear" input (default 0, local state, not saved), the hard points are the allocated points, and each synergy's points default to the build's own points in that skill (editable in the card, "Reset to build" brings them back; "Max synergies" sets every one to its cap). A skill without points shows the free level input with the note "Not learned in this build". `skills.json` + `skilldetails.json` are loaded once per screen (`hooks/useSkillTree.ts`), only when the build has `skillPoints`; if they fail to load (or have no tree for the class) the allocation is shown as a raw "Skill name: n" list so the data is never hidden. Hidden when the build has no skills text, no level and no skill points.
   - **Mercenary**: Mercenary Gear, same equipment grid layout. Hidden when the shown variant has no merc gear, merc alternatives, notes or crafting annotations.
   - The tab bar itself is hidden when Player is the only tab. The chosen tab is not persisted; if it isn't available for the build being shown, Player is used.
@@ -969,6 +1006,8 @@ The sections below are per variant:
    - Below `lg` the detail card sits under the trees and a tap scrolls to it; at phone width each tab keeps its 3 columns of tiles.
    - The detail card's values per level work as on the detail page (allocated points + "+Skills from gear", synergies from the build's points until changed); they follow the point controls live.
 
+   - **Character stats** (`components/StatsEditor.tsx`, a card right after the skill tree): empty, it says the numbers are shown on the public page and offers **Add stats** (by hand) and, on a form not started from a save, **Fill from a save file**: it reads a `.d2s` in the browser (`stash.json`, `charsheet.json`, `itemtext.json` load only then) and fills only this variant's stats, computed for the character's difficulty without buffs; nothing else in the form changes and the file is not uploaded. Filled, it shows the provenance line, "Shown publicly with the build, as entered here", grouped number inputs (Attributes; Life and mana; Resistances with a "Values for" Normal / Nightmare / Hell select; Defense and mitigation; Speeds; Offence; Find; Skills; two columns on a phone, up to four on wide screens), an out-of-range hint under a bad input, "The numbers include buffs", **Clear stats** (asks first when anything is stated) and **Hide stats** / **Show stats**.
+
 4. **Player Gear** — Equipment grid with 10 inline autocomplete slot pickers (same grid layout as the detail page)
 
 5. **Weapon Swap** — 2 slots (weapon2, shield2) with inline pickers
@@ -1034,6 +1073,7 @@ Browser `beforeunload` prompt when navigating away from the create/edit form wit
 | Variants per build       | Yes (at least 1) | 1   | 10                                               |
 | Variant name             | No               | —   | 50 characters (blank → "Default" / "Variant N")  |
 | Variant note             | No               | —   | 500 characters                                   |
+| Character stats          | No               | —   | known keys; integers in a range per stat         |
 | Alternatives per slot    | No               | —   | 10                                               |
 | Item / alternative note  | No               | —   | 500 characters                                   |
 | `build_data` size        | —                | —   | 1 MiB app (`JSON.stringify` bytes), 2 MiB DB     |
@@ -1417,6 +1457,7 @@ These were decided or discovered while building the feature, amending the origin
 - **Write-access hardening (migration 003).** RLS restricts which rows a client may write, but not which columns. `003_harden_write_access.sql` adds column-scoped INSERT/UPDATE grants so clients cannot write trigger-managed/immutable columns (`builds.likes_count`/`created_at`/`id`/`user_id`/`esr_version`; `profiles.avatar_url`/timestamps), and clamps the OAuth-derived `display_name` in `handle_new_user()` to the 1–50 char constraint. GDPR consent stays client-side-enforced by design (the consent gate), not in RLS.
 - **Set items as a sixth item type.** Once the `sets.json` game-data bundle existed (Sets page), set items became pickable (`SetItemRef`, see the item reference types above). Unlike the other types they resolve from a fetched static bundle rather than IndexedDB, so `utils/setItems.ts` wraps the load for Dexie `liveQuery` queriers, and a failed load keeps the stored ref (diff `unchanged`, refresh keeps the snapshot) instead of reporting the item as missing. Rich cards come from `SetItemBuildCard`; the per-section "Set bonuses" block comes from `utils/setBonuses.ts` + `SetBonusesBlock`.
 - **Build variants and alternative items.** A build holds up to 10 variants and each slot up to 10 alternatives (see "Variants" and "Alternative items" above). The stored shape keeps the first variant and the main items where they always were, so old clients render the first variant with its main items and no existing row changes. Migration 006 adds the 2 MiB / JSON-object checks on `build_data` behind the app's 1 MiB save cap. The detail page's alternative swap is view only. The build list cards show no variant count (the list query skips `build_data`, and a badge would need a generated column).
+- **Character stats per variant.** Optional `stats` (see "Character stats" above): computed from a save, then editable, or typed by hand. No migration (owner preference: the jsonb column takes it). A tab opened before the stats deploy ignores the block when viewing; if it edits and saves a build that has stats, its `asVariantData` drops `stats` (it rebuilds from known keys only), so the stats are lost. Same accepted risk as variants below: narrow window, the `vite:preloadError` reload moves a stale tab forward, and the release notes ask to reload open tabs before editing builds.
 - **Accepted stale-client risk.** A tab opened before the variants deploy still runs the old form. If it saves a build that already has variants or alternatives, the old `asBuildData` drops `variants` and the alternative maps: the first variant with its main items, notes and crafts survives, the rest is lost. With ~20 users and manual deploys the window is narrow, and the `vite:preloadError` auto-reload (`src/main.tsx`) moves a stale tab forward once it loads a new chunk, so there is no code mitigation (a DB trigger refusing to drop `variants` would be over-engineering); the release notes ask to reload open tabs before editing builds. Creating a build from a stale tab is unaffected.
 
 ## Out of Scope (For Now)

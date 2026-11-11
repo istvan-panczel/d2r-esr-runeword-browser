@@ -13,13 +13,15 @@ import {
   type VariantData,
   type WeaponSwapSlot,
 } from '../buildData';
+import type { StatKey, StatsDifficulty } from '../buildStats';
 import { ALTERNATIVES_MAX_PER_SLOT, VARIANTS_MAX, type CharacterClass } from '../constants';
-import type { BuildFormValues, DraftAlternative, GearSection, SectionDraft, VariantDraft } from '../components/buildFormModel';
+import type { BuildFormValues, DraftAlternative, GearSection, SectionDraft, StatsDraft, VariantDraft } from '../components/buildFormModel';
 import { compactItems, compactNotes } from './buildSnapshot';
 import { packVariants, unpackVariants, variantLabel } from './buildVariants';
 import { charmTexts, newCharmEntry, toCharmEntries, type CharmEntry } from './charms';
 import { compactCrafts } from './crafts';
 import { hasSkillPoints, parseLevelText, type SkillPoints } from './skillTree';
+import { fromStatsDraft, statsDraftValid, toStatsDraft } from './statsDraft';
 
 let draftKeyCounter = 0;
 
@@ -47,6 +49,7 @@ export function emptyVariantDraft(key: string, name = ''): VariantDraft {
     skills: '',
     levelText: '',
     skillPoints: {},
+    stats: null,
   };
 }
 
@@ -84,6 +87,7 @@ export function toVariantDraft(variant: VariantData): VariantDraft {
     skills: variant.skills ?? '',
     levelText: variant.level !== undefined ? String(variant.level) : '',
     skillPoints: variant.skillPoints ?? {},
+    stats: toStatsDraft(variant.stats),
   };
 }
 
@@ -117,7 +121,8 @@ const nonEmpty = (map: object): boolean => Object.keys(map).length > 0;
 
 /**
  * The stored form of a draft: empty slots, blank notes, empty crafts and blank charms dropped, text trimmed, the
- * level parsed. The first 14 keys keep the order the form saved before variants, so an unchanged build saves the same.
+ * level parsed. The first 14 keys keep the order the form saved before variants, so an unchanged build saves the same;
+ * `stats` comes last for the same reason (a build saved before it existed keeps its key order).
  */
 export function fromVariantDraft(draft: VariantDraft): VariantData {
   const items = compactItems(draft.player.items);
@@ -137,6 +142,7 @@ export function fromVariantDraft(draft: VariantDraft): VariantData {
   const level = parseLevelText(draft.levelText);
   const variantName = draft.name.trim();
   const variantNote = draft.note.trim();
+  const stats = fromStatsDraft(draft.stats);
   return {
     ...(nonEmpty(items) ? { items } : {}),
     ...(nonEmpty(weaponSwap) ? { weaponSwap } : {}),
@@ -157,6 +163,7 @@ export function fromVariantDraft(draft: VariantDraft): VariantData {
     ...(nonEmpty(mercenaryAlternatives) ? { mercenaryAlternatives } : {}),
     ...(variantName.length > 0 ? { variantName } : {}),
     ...(variantNote.length > 0 ? { variantNote } : {}),
+    ...(stats !== undefined ? { stats } : {}),
   };
 }
 
@@ -190,6 +197,11 @@ export function draftLabel(draft: VariantDraft, index: number): string {
 /** Whether the draft's level text is blank or a valid level. */
 export function draftLevelValid(draft: VariantDraft): boolean {
   return draft.levelText.trim() === '' || parseLevelText(draft.levelText) !== undefined;
+}
+
+/** Whether the draft's stats block is absent or holds only valid numbers. */
+export function draftStatsValid(draft: VariantDraft): boolean {
+  return statsDraftValid(draft.stats);
 }
 
 /** The drafts with every blank name set to its current fallback label (the same array when all are named). */
@@ -235,7 +247,12 @@ export type VariantDraftAction =
   | { readonly type: 'setAscendancy'; readonly variant: number; readonly ascendancy: string | null }
   | { readonly type: 'setSkills'; readonly variant: number; readonly skills: string }
   | { readonly type: 'setLevelText'; readonly variant: number; readonly levelText: string }
-  | { readonly type: 'setSkillPoints'; readonly variant: number; readonly skillPoints: SkillPoints };
+  | { readonly type: 'setSkillPoints'; readonly variant: number; readonly skillPoints: SkillPoints }
+  /** Replaces the whole stats block: a hand-made empty one, one computed from a save, or null to clear it */
+  | { readonly type: 'setStats'; readonly variant: number; readonly stats: StatsDraft | null }
+  | { readonly type: 'setStatValue'; readonly variant: number; readonly key: StatKey; readonly text: string }
+  | { readonly type: 'setStatsDifficulty'; readonly variant: number; readonly difficulty: StatsDifficulty }
+  | { readonly type: 'setStatsBuffed'; readonly variant: number; readonly buffed: boolean };
 
 /** An addVariant action with a fresh key (the new variant is appended, so it lands at the old length). */
 export function addVariantAction(name: string, from: number | 'empty'): VariantDraftAction {
@@ -372,6 +389,23 @@ function promote(slot: SlotState, position: number): SlotState | null {
   return { item: alternative.ref, note: alternative.note, crafts: alternative.crafts, alternatives };
 }
 
+/**
+ * Applies a change to a variant's stats block; no block, or a change that changes nothing, leaves the state unchanged.
+ * A change to save-derived stats marks them edited (sticky: changing a number back keeps the mark).
+ */
+function updateStats(
+  state: readonly VariantDraft[],
+  index: number,
+  patch: (stats: StatsDraft) => Partial<Pick<StatsDraft, 'values' | 'difficulty' | 'buffed'>> | null
+): readonly VariantDraft[] {
+  const stats = inRange(index, state.length) ? state[index].stats : null;
+  if (stats === null) return state;
+  const change = patch(stats);
+  if (change === null) return state;
+  const next: StatsDraft = { ...stats, ...change, edited: stats.edited || stats.source === 'save' };
+  return updateVariant(state, index, (draft) => ({ ...draft, stats: next }));
+}
+
 function patchAlternative(alternative: DraftAlternative, patch: AlternativePatch): DraftAlternative {
   // Clearing an alternative's item clears its note and crafts, like the main item.
   if (patch.ref === null) return { ...alternative, ...patch, note: '', crafts: [] };
@@ -446,5 +480,17 @@ export function variantDraftsReducer(state: readonly VariantDraft[], action: Var
       return updateVariant(state, action.variant, (draft) => ({ ...draft, levelText: action.levelText }));
     case 'setSkillPoints':
       return updateVariant(state, action.variant, (draft) => ({ ...draft, skillPoints: action.skillPoints }));
+    case 'setStats':
+      return updateVariant(state, action.variant, (draft) => ({ ...draft, stats: action.stats }));
+    case 'setStatValue':
+      return updateStats(state, action.variant, (stats) =>
+        (stats.values[action.key] ?? '') === action.text ? null : { values: { ...stats.values, [action.key]: action.text } }
+      );
+    case 'setStatsDifficulty':
+      return updateStats(state, action.variant, (stats) =>
+        stats.difficulty === action.difficulty ? null : { difficulty: action.difficulty }
+      );
+    case 'setStatsBuffed':
+      return updateStats(state, action.variant, (stats) => (stats.buffed === action.buffed ? null : { buffed: action.buffed }));
   }
 }

@@ -10,6 +10,7 @@ import { CharmsEditor } from './CharmsEditor';
 import { EquipmentGrid } from './EquipmentGrid';
 import { SkillTreeEditor } from './SkillTreeEditor';
 import { SlotAlternativesEditor } from './SlotAlternativesEditor';
+import { StatsEditor } from './StatsEditor';
 import { WeaponSwapGrid } from './WeaponSwapGrid';
 
 interface VariantEditorProps {
@@ -18,12 +19,14 @@ interface VariantEditorProps {
   readonly index: number;
   readonly characterClass: CharacterClass | '';
   readonly craftData: CraftDataState;
+  /** Offer "Fill from a save file" in the stats card (the form was not started from a save) */
+  readonly allowStatsFromSave: boolean;
   readonly disabled: boolean;
   readonly dispatch: (action: VariantDraftAction) => void;
 }
 
-/** Everything one variant owns: skills, the three gear sections (with alternatives), charms and ascendancy. */
-export function VariantEditor({ draft, index, characterClass, craftData, disabled, dispatch }: VariantEditorProps) {
+/** Everything one variant owns: skills, character stats, the three gear sections (with alternatives), charms and ascendancy. */
+export function VariantEditor({ draft, index, characterClass, craftData, allowStatsFromSave, disabled, dispatch }: VariantEditorProps) {
   const target = (section: GearSection, slot: EquipmentSlot | WeaponSwapSlot): SlotTarget => ({ variant: index, section, slot });
 
   // Props shared by the three grids: main item, note and crafts of a slot, and its alternatives footer.
@@ -92,6 +95,8 @@ export function VariantEditor({ draft, index, characterClass, craftData, disable
           }}
         />
       </section>
+
+      <StatsEditor stats={draft.stats} index={index} allowFillFromSave={allowStatsFromSave} disabled={disabled} dispatch={dispatch} />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Player Gear</h2>
