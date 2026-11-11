@@ -75,7 +75,7 @@ export const STAT_GROUPS: readonly StatGroup[] = [
     id: 'offence',
     title: 'Offence',
     stats: [
-      plain('ar', 'Attack rating'),
+      plain('ar', 'Attack rating (no skill)'),
       percent('arp', 'Attack rating bonus'),
       percent('ds', 'Deadly strike'),
       percent('cb', 'Crushing blow'),

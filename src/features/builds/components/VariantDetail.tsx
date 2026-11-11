@@ -23,6 +23,7 @@ import { EquipmentGrid } from './EquipmentGrid';
 import { SetBonusesBlock } from './SetBonusesBlock';
 import { SkillTreeDisplay } from './SkillTreeDisplay';
 import { SlotAlternativeLabel, SlotAlternativesView } from './SlotAlternativesView';
+import { StatsDisplay } from './StatsDisplay';
 import { WeaponSwapGrid } from './WeaponSwapGrid';
 
 export type DetailTab = 'player' | 'skills' | 'mercenary';
@@ -54,9 +55,9 @@ interface SlotRenderers<K extends string> {
   readonly renderSlotLabelExtra?: (slot: K) => ReactNode;
 }
 
-/** Whether a variant has charms or an ascendancy (the aside beside the player gear). */
+/** Whether a variant has character stats, charms or an ascendancy (the aside beside the player gear). */
 function variantHasPlayerAside(variant: VariantData): boolean {
-  return (variant.charms?.length ?? 0) > 0 || (variant.ascendancy ?? null) !== null;
+  return variant.stats !== undefined || (variant.charms?.length ?? 0) > 0 || (variant.ascendancy ?? null) !== null;
 }
 
 interface VariantDetailProps {
@@ -205,7 +206,7 @@ export function VariantDetail({
   const skillPoints = variant.skillPoints;
   const hasSkillText = hasText(skills);
   const hasSkills = variantHasSkills(variant);
-  // Charms + ascendancy sit beside the player gear on wide screens.
+  // Stats, charms and ascendancy sit beside the player gear on wide screens (below it on narrow ones).
   const hasPlayerAside = variantHasPlayerAside(variant);
   const gearSideBySide = hasPlayerGear && hasSwap;
   const availableTabs: readonly DetailTab[] = [
@@ -286,6 +287,13 @@ export function VariantDetail({
 
           {hasPlayerAside && (
             <aside className="flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start">
+              {variant.stats !== undefined && (
+                <section aria-labelledby="variant-stats-title">
+                  <SectionHeader id="variant-stats-title" title="Stats" />
+                  <StatsDisplay stats={variant.stats} />
+                </section>
+              )}
+
               {charms.length > 0 && (
                 <section>
                   <SectionHeader title="Charms" />
