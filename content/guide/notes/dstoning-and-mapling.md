@@ -31,7 +31,7 @@ Each cap counts only what D-stoning added: 190% fire spell damage from affixes s
 
 ::dstone-caps
 
-On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps, and stops once any of the three is full. The weapon Forging Hammer has no cap check in its recipe, but the game stops enhanced damage at 500%, as the official page says. The page still differs (ESR 3.3.03) on Holy Symbol on body armor, helms and shields (page 150).
+On armor, Blackmoor + Key also fills the separate strength, dexterity and energy caps, and stops once any of the three is full. The weapon Forging Hammer has no cap check in its recipe, but the game stops enhanced damage at 500%, as the official page says. The page still differs (ESR 3.3.04) on Holy Symbol on body armor, helms and shields (page 150).
 
 ### Gem melding
 

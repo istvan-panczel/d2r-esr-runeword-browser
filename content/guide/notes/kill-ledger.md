@@ -11,7 +11,7 @@ mentions: [Kill Ledger, Maple Leaf]
 officialDocs:
   - label: Kill Ledger
     href: docs:kill_ledger.htm
-sources: [official-docs]
+sources: [official-docs, esr-loader, patchnotes]
 ---
 
 The :term[Kill Ledger] comes out of the Starter Pack ([[starter-pack]]). Keep it in your charm inventory at all times: the official page says skills' random effects need it there. It cannot be moved to another character, and each bonus can be taken only once. Every bonus, boss and unlock condition is on the [Kill Ledger page](page:/kill-ledger).
@@ -20,7 +20,7 @@ The :term[Kill Ledger] comes out of the Starter Pack ([[starter-pack]]). Keep it
 
 ::recipes[kill-ledger-tiers]
 
-- **Boss bonuses:** within 60 seconds of killing an endgame boss, cube the ledger with the Flawed crystals that boss asks for (the hardest bosses also want a Perfect Gem or a Maple Leaf) ([[gems-crystals]]). These come in any order ([[maps-keys-ascendancy]]).
+- **Boss bonuses:** within 60 seconds of killing an endgame boss (since 3.3.04 every player in the boss's area gets the kill), cube the ledger with the Flawed crystals that boss asks for (the hardest bosses also want a Perfect Gem or a Maple Leaf) ([[gems-crystals]]). These come in any order ([[maps-keys-ascendancy]]).
 
 ::recipes[kill-ledger-bosses]
 
