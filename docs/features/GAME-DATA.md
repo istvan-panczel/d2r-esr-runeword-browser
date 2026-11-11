@@ -566,7 +566,7 @@ and quiver rerolls for the points of the can's gem). ESR 3.3: 626 rows in 5 fami
 only: every slot's bonuses, one group per class), then 25 cube-only families (`EXTRA_FAMILIES`: the 5 stocker families,
 unique rerolls, set conversions / cycles / rerolls, rune forging on the other
 slots, legacy crafts, base upgrades, normal items, magic/rare rerolls and starter weapons, ring and amulet recipes,
-jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Might boon, Primordial Soulstones, quest
+jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Might boon, quest
 items, Blemished gems / Mi Rune, secret recipes grouped per number), then a fallback `other:<prefix>` per description
 prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.3 additions: `crucible` (section Forging: the 884 "Crucible - …"
 rows and the 4 "[SECRET08/09] Crucible - …" rows of the Blacksmith perk The Secret Crucible, a second forging, worded
@@ -1279,7 +1279,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
 - **Quest items** (by code, for the campaign map): `selectQuestIconCodes` takes the misc / weapons / armor.txt rows
   with a `quest` number (the campaign quest items: Horadric Staff and its parts, Khalim's organs and flails, The Gidbinn,
   Horadric Malus, Hellforge Hammer, Wirt's Leg, Lam Esen's Tome, Malah's potion, the scrolls, …, plus ESR's quest-flagged
-  Ascendancy Stone, Kill Ledger and Primordial Soulstone) or a `QUEST_ICON_TYPES` type (`ques`: the portal keys,
+  Ascendancy Stone (still in misc.txt, gone from the game since 3.3.04), Kill Ledger and Primordial Soulstone) or a `QUEST_ICON_TYPES` type (`ques`: the portal keys,
   organs, essences, Standard of Heroes and ESR's other quest-typed items; `mmap`: the endgame map items, areas.json
   `mapItem`). Each code gets its items.json art (mod first, vanilla fallback, as for bases), keyed by code, with the
   item's display name (`readItemNames`: `namestr`, else `name`, the way stashnames.json `bases` names a code; the

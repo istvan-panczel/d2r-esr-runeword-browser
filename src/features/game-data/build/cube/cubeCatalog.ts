@@ -731,14 +731,6 @@ export const EXTRA_FAMILIES: readonly ExtraFamily[] = [
     section: 'tyrael',
     match: /^Tyrael Might Aura /,
   },
-  {
-    id: 'primordial-soulstone',
-    label: 'Primordial Soulstones and ascendancy boss bonuses',
-    section: 'ascendancy',
-    match: /^(?:[\w ]+ Primordial Soulstone \d+|[\w ]+ Lich King Bonus|Stance Dance Fix)$/,
-    collapse: (row) => (/Lich King|Stance Dance/.test(row.description) ? 'bonus' : 'soulstone'),
-    outputBonus: 'hide',
-  },
   // Small recipe sets without a family of their own until 3.3 (they were "Other recipes" under their cubemain names)
   {
     id: 'introductory-book',
