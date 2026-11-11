@@ -1,4 +1,5 @@
 import type { BuildData, CraftAnnotation, EquipmentSlot, ItemRef, VariantData, WeaponSwapSlot } from '../buildData';
+import type { StatKey, StatsDifficulty, StatsSource } from '../buildStats';
 import type { CharacterClass } from '../constants';
 import type { CharmEntry } from '../utils/charms';
 import type { SkillPoints } from '../utils/skillTree';
@@ -67,4 +68,21 @@ export interface VariantDraft {
   /** The level input's raw text ('' = unset); parsed on submit. */
   readonly levelText: string;
   readonly skillPoints: SkillPoints;
+  /** The character stats block; null = none (see utils/statsDraft for the conversions). */
+  readonly stats: StatsDraft | null;
+}
+
+/** The character stats block while editing: raw input text per stat, parsed on submit. */
+export interface StatsDraft {
+  readonly source: StatsSource;
+  /** Save-derived numbers the author changed (sticky: set by the reducer on the first change). */
+  readonly edited: boolean;
+  readonly difficulty: StatsDifficulty;
+  readonly buffed: boolean;
+  /** Provenance of save-derived stats, kept as loaded (never edited in the form) */
+  readonly character?: string;
+  readonly savedAt?: number;
+  readonly esrVersion?: string;
+  /** Raw input text per stat; blank or absent = not stated */
+  readonly values: Readonly<Partial<Record<StatKey, string>>>;
 }
