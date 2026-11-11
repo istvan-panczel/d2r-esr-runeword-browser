@@ -19,6 +19,8 @@ const STATIC_BUNDLE_ROUTE_PREFIXES: readonly string[] = [
   '/game-data',
   '/campaign-map',
   '/stash',
+  // My Character renders from stash.json and the saves in IndexedDB; its Ascendancy card fills in once the sync has run
+  '/character',
   '/terror-zones',
   '/modifiers',
   '/specializations',

@@ -3,6 +3,7 @@
 // See builds-feature-docs/FEATURE-BUILD-SHARING.md.
 
 import type { ForgingKind } from '@/features/game-data/engine/schema';
+import { asBuildStats, type BuildStats } from './buildStats';
 import {
   ALTERNATIVES_MAX_PER_SLOT,
   LEVEL_MAX,
@@ -228,6 +229,9 @@ export interface VariantData {
   /** Absent → "Default" (first variant) or "Variant N" (see variantLabel). Named so it can't be confused with builds.name. */
   readonly variantName?: string;
   readonly variantNote?: string;
+  // Optional character stats (attributes, life, resistances, speeds …), computed from a save or typed by the author.
+  // Absent on older builds; the last key, so builds saved without it keep their stored key order. See buildStats.ts.
+  readonly stats?: BuildStats;
 }
 
 /**
@@ -478,7 +482,8 @@ export function alternativesSection(value: unknown): Record<string, readonly Ite
  * user-writable (any authenticated owner can PATCH arbitrary JSON through PostgREST), so every field is
  * validated: malformed item refs, notes and charms are dropped rather than crashing the detail/edit screens.
  * A malformed `base` / `socketed` drops just that field, a malformed crafting annotation just that entry,
- * a malformed level or skill point entry just that value, a malformed alternative just that alternative.
+ * a malformed level or skill point entry just that value, a malformed alternative just that alternative, a malformed
+ * stats block or stat number (asBuildStats) just that block or number.
  */
 export function asVariantData(value: unknown): VariantData {
   if (!isRecord(value)) return {};
@@ -502,6 +507,7 @@ export function asVariantData(value: unknown): VariantData {
     mercenaryAlternatives: alternativesSection(value.mercenaryAlternatives),
     variantName: cappedText(value.variantName, VARIANT_NAME_MAX_LENGTH),
     variantNote: cappedText(value.variantNote, VARIANT_NOTE_MAX_LENGTH),
+    stats: asBuildStats(value.stats),
   };
 }
 

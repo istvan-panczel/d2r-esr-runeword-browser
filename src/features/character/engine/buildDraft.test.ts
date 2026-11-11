@@ -451,6 +451,11 @@ describe('createBuildDraft: report', () => {
     const later = { section: 'bound-demon' as const, message: 'x', unverified: 'bound-demon' as const };
     expect(createBuildDraft(save([], [], { incomplete: later }), data(), 'x.d2s').report.incompleteNote).toContain('nothing in this draft');
   });
+
+  it('carries the verified .d2rl version of a save handed over by My Character, null without one', () => {
+    expect(createBuildDraft(save([]), data(), 'x.d2s').report.sidecarVersion).toBeNull();
+    expect(createBuildDraft(save([]), data(), 'x.d2s', '3.3.02').report.sidecarVersion).toBe('3.3.02');
+  });
 });
 
 describe('save upload', () => {

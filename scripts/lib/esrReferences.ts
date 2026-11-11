@@ -8,6 +8,7 @@
  * the bundles with it; `runtime` = the app parses the live page (docs.lag watches those).
  */
 import {
+  CHAR_SHEET_FILES,
   ESR_BOSS_SET_UNIQUE_DROP_FILE,
   ESR_DESECRATED_ZONES_FILE,
   ESR_MODIFIER_CONFIGS,
@@ -124,6 +125,12 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     kind: 'generated',
     follows: 'terrorzones.json (every slot of the schedule; schedule.test.ts holds dated in-game slots)',
   },
+  ...Object.values(CHAR_SHEET_FILES).map((path): EsrReference => ({
+    path,
+    kind: 'generated',
+    follows:
+      'charsheet.json rules (build/bundleCharSheet.ts: Runic Insight, charm dedup, inventory charms, the resist cap formula, asserted at generation) and the computed character sheet',
+  })),
   // Tested
   {
     path: 'docs/quality_affixes.htm',

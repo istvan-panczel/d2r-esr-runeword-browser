@@ -44,10 +44,11 @@ describe.skipIf(!existsSync(SAVE))('SpinToWin against the in-game tooltip', () =
 
   it('gives the page the same lines, on weapon set II', () => {
     const view = buildCharacterItems(character, catalog, ctx);
-    const setTwo = view.gear.find((group) => group.key === 'set2');
-    const row = setTwo?.slots.find((slot) => slot.key === 'rightHand')?.row;
+    const row = view.weaponSets[1].slots.find((slot) => slot.key === 'rightHand')?.row;
     expect(row?.text.base).toContain('One-Hand Damage: 25 to 397');
     expect(row?.name).toBe('Thunder Star');
-    expect(view.sections.find((section) => section.key === 'charm')?.rows).toHaveLength(30);
+    expect(view.charms).toHaveLength(30);
+    expect(view.ledgers.map((entry) => entry.inCharmInventory)).toEqual([true]);
+    expect(view.ascendancyStones.map((entry) => entry.inCharmInventory)).toEqual([true]);
   });
 });

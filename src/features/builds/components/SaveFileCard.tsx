@@ -4,13 +4,34 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import type { BuildDraft } from '@/features/character/engine/buildDraft';
+import type { CharacterSaveHandoff } from '@/features/character/engine/buildHandoff';
 import { checkSaveUpload, draftFromSaveBytes, type SaveDraftError, type SaveDraftResult } from '@/features/character/engine/buildDraftRead';
 import { STASH_FILE_LOCATION } from '@/features/stash/engine/readStash';
 import { useFileDrop } from '@/features/stash/hooks/useFileDrop';
 import { useSaveDraftData } from '../hooks/useSaveDraftData';
 
+/** A save to read: a picked file, or the bytes the My Character page handed over */
+interface PendingSave {
+  readonly name: string;
+  readonly read: () => Promise<Uint8Array>;
+  /** The ESR version of its verified .d2rl, when the My Character page knew it */
+  readonly sidecarVersion: string | null;
+}
+
+const pickedSave = (file: File): PendingSave => ({
+  name: file.name,
+  read: async () => new Uint8Array(await file.arrayBuffer()),
+  sidecarVersion: null,
+});
+
+const handedSave = (handoff: CharacterSaveHandoff): PendingSave => ({
+  name: handoff.fileName,
+  read: () => Promise.resolve(handoff.bytes),
+  sidecarVersion: handoff.sidecarVersion,
+});
+
 interface SaveFileReaderProps {
-  readonly file: File;
+  readonly file: PendingSave;
   readonly onResult: (result: SaveDraftResult) => void;
 }
 
@@ -26,9 +47,9 @@ function SaveFileReader({ file, onResult }: SaveFileReaderProps) {
       onResult({ ok: false, error: { title: 'Item data not available', message: state.message } });
       return;
     }
-    file.arrayBuffer().then(
-      (buffer) => {
-        onResult(draftFromSaveBytes(new Uint8Array(buffer), file.name, state.stash, state.data));
+    file.read().then(
+      (bytes) => {
+        onResult(draftFromSaveBytes(bytes, file.name, state.stash, state.data, file.sidecarVersion, state.sheetBundles));
       },
       () => {
         onResult({
@@ -48,11 +69,13 @@ interface SaveFileCardProps {
   /** Whether a new draft may replace the form as it stands. Asked before reading the file. */
   readonly confirmReplace: () => boolean;
   readonly onDraft: (draft: BuildDraft) => void;
+  /** A save the My Character page handed over: read at once, as if it had been picked */
+  readonly initialSave?: CharacterSaveHandoff | null;
 }
 
 /** Picks or drops a character .d2s and hands back a draft. Parsing happens in the browser; a failure leaves the form alone. */
-export function SaveFileCard({ importedFileName, confirmReplace, onDraft }: SaveFileCardProps) {
-  const [file, setFile] = useState<File | null>(null);
+export function SaveFileCard({ importedFileName, confirmReplace, onDraft, initialSave = null }: SaveFileCardProps) {
+  const [file, setFile] = useState<PendingSave | null>(() => (initialSave === null ? null : handedSave(initialSave)));
   const [error, setError] = useState<SaveDraftError | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const busy = file !== null;
@@ -66,7 +89,7 @@ export function SaveFileCard({ importedFileName, confirmReplace, onDraft }: Save
     }
     if (!confirmReplace()) return;
     setError(null);
-    setFile(picked);
+    setFile(pickedSave(picked));
   };
 
   const handleResult = (result: SaveDraftResult) => {

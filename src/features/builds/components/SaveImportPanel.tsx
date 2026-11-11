@@ -94,7 +94,7 @@ export function SaveImportPanel({ report, draft, disabled, onGoToSlot, onClearSl
       ? null
       : assessSaveAge({
           lastSavedAt: report.lastSavedAt,
-          sidecarVersion: null,
+          sidecarVersion: report.sidecarVersion,
           bundleVersion: manifest.esrVersion,
           bundleDate: manifest.esrDate,
         });
@@ -110,7 +110,16 @@ export function SaveImportPanel({ report, draft, disabled, onGoToSlot, onClearSl
           are the current data, so an older item may read differently.
         </Banner>
       )}
+      {age?.status === 'different-version' && (
+        <Banner>
+          Saved with ESR {age.savedVersion}; names and stats here are the ESR {age.bundleVersion} data, so an older item may read
+          differently.
+        </Banner>
+      )}
       {report.incompleteNote !== null && <Banner>{report.incompleteNote}</Banner>}
+      {report.stats === 'unavailable' && (
+        <Banner>The character stats could not be computed from this save. You can enter them by hand under Character stats.</Banner>
+      )}
       {report.corpses > 0 && (
         <Banner>This character has a corpse. Gear left on it is not in the slots below, so check them against the game.</Banner>
       )}
@@ -134,8 +143,15 @@ export function SaveImportPanel({ report, draft, disabled, onGoToSlot, onClearSl
           ))}
         </ul>
       )}
+      {report.stats === 'computed' && (
+        <p className="text-sm">
+          Character stats were computed from the save for the difficulty the character is in, without buffs. Check or change them under
+          Character stats; they are public once the build is saved.
+        </p>
+      )}
       <p className="text-xs text-muted-foreground">
-        Not imported: attributes, mercenary type, exact rolls and the inventory. Nothing is saved until you save the build.
+        Not imported: mercenary type, exact rolls and the inventory. The file itself is never uploaded; nothing is saved until you save the
+        build.
       </p>
     </section>
   );

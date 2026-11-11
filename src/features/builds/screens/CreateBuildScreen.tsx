@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { PageShell } from '@/components/PageShell';
 import { Spinner } from '@/components/ui/spinner';
@@ -7,6 +7,7 @@ import { RequestState } from '@/core/types';
 import { selectAuthInitialized, selectIsAuthenticated } from '@/features/auth';
 import { createBuildRequested, resetCreateStatus, selectCreateBuildStatus } from '../store';
 import type { BuildDraft, SaveImportReport } from '@/features/character/engine/buildDraft';
+import { readSaveHandoff } from '@/features/character/engine/buildHandoff';
 import { BuildForm } from '../components/BuildForm';
 import { SaveFileCard } from '../components/SaveFileCard';
 import { EMPTY_BUILD_FORM, type BuildFormSubmit, type BuildFormValues } from '../components/buildFormModel';
@@ -21,6 +22,9 @@ interface FormSeed {
 export function CreateBuildScreen() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  // "Create a build from this character" (My Character) hands its save over in the router state; read once
+  const [handoff] = useState(() => readSaveHandoff(location.state));
   const initialized = useSelector(selectAuthInitialized);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const createStatus = useSelector(selectCreateBuildStatus);
@@ -31,6 +35,13 @@ export function CreateBuildScreen() {
   useEffect(() => {
     dispatch(resetCreateStatus());
   }, [dispatch]);
+
+  // Drop the handed-over save from the history entry once the form shows, so a reload or Back does not import it again.
+  // Not while signed out: the redirect to /builds below drops it anyway, and a second navigation would race it.
+  const formShown = initialized && isAuthenticated;
+  useEffect(() => {
+    if (handoff !== null && formShown) void navigate(location.pathname, { replace: true, state: null });
+  }, [handoff, formShown, navigate, location.pathname]);
 
   // Navigate to the listing once the build is created.
   useEffect(() => {
@@ -72,6 +83,7 @@ export function CreateBuildScreen() {
         importedFileName={seed.report?.fileName ?? null}
         confirmReplace={() => !touched || window.confirm('Replace what you have entered with this save file?')}
         onDraft={handleDraft}
+        initialSave={handoff}
       />
       <BuildForm
         key={seed.key}

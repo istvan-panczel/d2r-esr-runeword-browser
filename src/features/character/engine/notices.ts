@@ -2,7 +2,8 @@
 import type { CharacterSidecar } from '../db/characterDb';
 import type { CharacterSectionName } from '../parser/errors';
 import type { CharacterIncomplete } from '../parser/types';
-import type { SaveAge } from '../parser/saveAge';
+import { assessSaveAge, type SaveAge } from '../parser/saveAge';
+import type { CharacterFile } from '../parser/types';
 
 export type NoticeTone = 'info' | 'warning';
 
@@ -109,4 +110,29 @@ export function corpseNotice(corpses: number): SaveNotice | null {
     title: corpses === 1 ? 'This character has a corpse.' : `This character has ${String(corpses)} corpses.`,
     text: 'The equipped gear may be on the corpse, so the slots below can be empty (a best guess: no real save with a corpse has been seen).',
   };
+}
+
+/** Every banner of a loaded character, in page order: save age (once the manifest is known), unused .d2rl, partial read, corpses. */
+export function characterNotices(
+  character: Pick<CharacterFile, 'lastSavedAt' | 'incomplete' | 'items'>,
+  sidecar: CharacterSidecar,
+  manifest: { readonly esrVersion: string; readonly esrDate?: string | null } | null
+): SaveNotice[] {
+  const age =
+    manifest === null
+      ? null
+      : saveAgeNotice(
+          assessSaveAge({
+            lastSavedAt: character.lastSavedAt,
+            sidecarVersion: sidecar.status === 'matched' ? sidecar.esrVersion : null,
+            bundleVersion: manifest.esrVersion,
+            bundleDate: manifest.esrDate,
+          })
+        );
+  return [
+    age,
+    sidecarNotice(sidecar),
+    character.incomplete === null ? null : incompleteNotice(character.incomplete),
+    corpseNotice(character.items.corpses.length),
+  ].filter((notice) => notice !== null);
 }

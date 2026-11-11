@@ -59,6 +59,8 @@ lazily (`src/features/game-data/engine/browser/loadGameData.ts`).
 | `killledger.json`      | Kill Ledger bonuses and how each unlocks: kill and boss rows from cubemain, the bosses from monprop death skills, map tiers from areas.json, the page compared ([KILL-LEDGER.md](./KILL-LEDGER.md)) |
 | `mercenaries.json`     | the hirelings of the official skill information page joined to hireling.txt: act, gold, level bands, stats, skill levels ([MERCENARIES.md](./MERCENARIES.md))                                       |
 | `elixirs.json`         | the ESR 3.3 utility elixirs: effect lines and formulas, drop sources and per-perk odds, Alchemist perk facts, recipes ([ELIXIRS.md](./ELIXIRS.md))                                                  |
+| `combat.json`          | My Character Combat tab: per area and difficulty the monster level, min / median / max regular monster defense and attack rating; bosses (see "Combat")                                             |
+| `charsheet.json`       | the computed character sheet's data (lazy, character page only): stat ops, class constants, skill passive / aura / to-hit columns, set bonuses, item speeds, loader rules (see "Character sheet")   |
 | `icons.json`           | item icon index (base / quest / item code, unique / set item / socketable name, item type → WebP file under `icons/`, size); own generator ("Item icons")                                           |
 
 Arrays are written one element per line so diffs stay readable. Bundle URLs carry the manifest hash (`?v=<sha256>`);
@@ -97,6 +99,8 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `mercenaries.json`     | ESR 3.3.03: 17 KB                                                                                                                  |
 | `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
+| `combat.json`          | ESR 3.3.03: 38 KB / 12 KB (areas 30 KB, level ratios 3 KB, bosses 3 KB)                                                            |
+| `charsheet.json`       | ESR 3.3.03: 308 KB / 47 KB (skills 237 KB: 280 class skills + 394 item / referenced rows; sets 25 KB; stat names 20 KB)            |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types
@@ -892,6 +896,35 @@ Counts (ESR 3.3, as 3.2.24): `areas` 193, `areasMaps` 55 (tier 1: 7, 2: 9, 3: 15
 `areasWithMapItem` 21, `areasUniquesMinsThenMaxes` 59, `areasMapBosses` 19, `areasMapBossArenas` 18. levels.txt is also read by bundleLootFilter.ts (lootfilter
 areas, every row) and generateBundles.ts (the cube's level names); those reads were left as they were.
 
+### Combat
+
+`combat.json` (`CombatBundle`, built by `build/bundleCombat.ts` after areas.json and modifiers.json; the shared monster value rules
+are `src/features/character/combat/monsterStats.ts`) feeds the My Character Combat tab, the chance to hit and to be hit
+([CHARACTER-SAVE.md](./CHARACTER-SAVE.md) "Combat tab", which has the derivation and what is VERIFIED or INFERRED). Only that tab
+loads it. monlvl.txt and monumod.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
+
+- `curve`: the modifiers.json `attackRating.curve` fact (attack-rating.toml), copied so the tab loads one small file.
+- `levelRatios`: monlvl.txt by level 0..110, `[L-AC, L-AC(N), L-AC(H), L-TH, L-TH(N), L-TH(H)]` (champion / unique re-scaling).
+- `modifiers`: champion / unique / minion `{ level, attack }`: the engine level offsets (+2 / +3 / +3) and the monumod.txt attack
+  rating constants, found by their `*constant desc` text (75 / 100 / 50; vanilla values with a warning when a row is missing).
+- `randomBonus`: the monprop.txt `monrandombonus` most pools carry, `[chance %, value]` per campaign difficulty and for the maps.
+- `areas`: one entry per areas.json area with monsters (`id`, `name`, `act`), the map levels merged per zone (`name` = the zone,
+  `tier`, `levels`, Hell only). `pools` per difficulty is null or the tuple `[monster level, monster types, defense [min, median,
+max], attack rating [min, median, max] | null, extra?]`; values are final (monstats × monlvl / 100), the attack rating a
+  monster's best of `A1TH` / `A2TH` / `S1TH`, null when every type only casts; `extra` holds `range` (Normal: the pool's monster
+  levels; the tuple's level is then their median), `casters` and `bonus` (a pool's own random bonus). Left out of a pool: treasure
+  goblins, `corruptedzakarum*` special spawns and `boss` rows; the goblin-only Goblin Realm is dropped (`combatMapZonesDropped`).
+- `bosses`: the five act bosses (every difficulty), the six Pandemonium bosses and every areas.json map boss (Hell), each
+  `stats` per difficulty `[level, defense, attack rating]` at its own monstats level.
+
+Warnings (`combat:`): a curated boss missing from monstats.txt, a pool monster missing, a map zone mixing monster levels, a missing
+monumod constant, and a worked example (`WORKED_EXAMPLES`: Death Knight in Worldstone Keep 2, a Tier 1 regular, the Lich King, a
+Tier 1 map boss, Baal) that no longer reproduces: a warning rather than a failure so an ESR rebalance does not block the update;
+`bundleIntegrity.test.ts` fails on any `combat:` warning and pins the committed numbers. A missing curve fact throws.
+
+Counts (ESR 3.3.03): `combatAreas` 126, `combatMapZones` 20, `combatMapZonesDropped` 1, `combatPools` 398,
+`combatPoolsWithCasters` 110, `combatBosses` 30, `combatExcludedGoblins` 5, `combatExcludedSpecial` 5, `combatExcludedBosses` 13.
+
 ### Terror zones
 
 `terrorzones.json` (`TerrorZonesBundle`, built by `build/bundleTerrorZones.ts`) is the only bundle not read from
@@ -1015,6 +1048,47 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 
 Counts (ESR 3.3.03): `itemTextStats` 722, `itemTextStrings` 424, `itemTextSkills` 917, `itemTextMonsters` 406,
 `itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
+
+### Character sheet
+
+`charsheet.json` (`CharSheetBundle`, built by `build/bundleCharSheet.ts`) is what the computed character sheet
+(`src/features/character/engine/sheet/`, [CHARACTER-SAVE.md → Computed sheet](./CHARACTER-SAVE.md#computed-sheet))
+needs on top of `itemtext.json`. Only the character page loads it.
+
+- `statNames` (every itemstatcost.txt row: skill formulas and passive stats name any stat), `valShift` (non-zero only),
+  `ops` (every stat with an op: `op`, `op param`, `op base` and `op stat1-3` as stat ids).
+- `classes`: charstats.txt by class id: life / stamina per vitality and mana per energy (in fourths), `ToHitFactor`,
+  `BlockFactor`.
+- `experience`: experience.txt by level (index L = the experience at which level L + 1 starts; all class columns must
+  match, else the build throws). `weaponSpeed` (every weapons.txt code, 0 included), `quivers` (the weapons.txt
+  codes whose itemtypes.txt Equiv tree has no `weap`: ESR's magic arrows / bolts; the build throws unless they descend
+  from `misl`), `armor` (armor.txt `speed` / `block`, non-zero only).
+- `skills`: `{ n, cls?, tab?, shapeshift?, row }`, `row` cut to the columns the sheet reads; `shapeshift` when the
+  skill's `aurastate` is a states.txt morph state (`transform` 1 and `gfxtype` 1; `transform` alone also marks Holy
+  Armor's glow and the Shadow Warrior disguise). Kept: every class skill (`cls`, `tab` =
+  skilldesc SkillPage), Attack / Kick / Throw …, and the skills an item property names (`itemSkillUses`: skill-layer
+  stats such as `item_aura` and oskills; event-layer procs) whose stats reach the owner (`engine/skillEffects.ts`
+  `affectsOwner`: no summon, no aurafilter 0x8000; a cast skill needs `aura` 1 or aurafilter 0). Columns: passive stats
+  and calcs with `passive` / `passivestate` for passives; aura and passive stats with `aura` / `aurafilter` for what
+  reaches the owner; `ToHit` / `LevToHit` / `ToHitCalc`; `weapsel` (the hand(s) a skill attacks with: the off-hand
+  attack rating line); then every row and column those formulas reach
+  (`collectFormulaRefs`). Formulas stay as written (the engine rewrites `stat('x'.base)` when it loads them).
+- `setItems` (setitems.txt id → set index) and `sets`: sets.txt `PCode2a` … `5b` by pieces and `FCode1-8` as saved stats
+  (`savedStatsReader` from `build/itemTextBases.ts`, property groups resolved).
+- `hirelings`: hireling.txt Version 100, one entry per `Id` (`HireDesc` as a type label).
+- `specializations`: each tree's perk stats (from specializations.json's trees).
+- `rules`: `resistPenalty` (difficultylevels.txt), `runicInsight` (`celestialrayone.archaeology.toml`
+  `socketed_runes`: perk stat, percent, rune codes, raised stats, per-item stats), `charmDedup`
+  (`celestialrayone.charm-dedup.toml`), `inventoryCharms` (`charm-inv.toml`), `dodgeCap`
+  (`celestialrayone.dodge-avoid-evade-cap.toml`), `resistFloor` (-1000 with both resistance floor patches, else -100),
+  and the engine constants `resistCap` 75, `resistCeiling` 95, `physicalResistCap` 50, `anyaResist` 10.
+
+Asserted at generation (the build throws): the Runic Insight perk stat must be `archaeology_3`, the resistance floor
+display patch must still describe the cap as `min(75+maxresist, 95)`, `allow_inventory_charms` must exist, the
+experience columns must match, charstats rows must be the 8 classes in order, and no class passive may have a
+`passiveitype` (the sheet does not gate passives by weapon), and every weapons.txt row must be a weapon or a quiver by
+its item type (states.txt joined the tables `esrSources.ts` reads, for `shapeshift`). Counts: `charSheetSkills` 674,
+`charSheetSets` 77, `charSheetHirelings` 30.
 
 ### Skills
 

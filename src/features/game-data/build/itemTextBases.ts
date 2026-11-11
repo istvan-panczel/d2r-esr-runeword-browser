@@ -87,41 +87,32 @@ function baseOf(row: TsvRow, kind: 'weapon' | 'armor' | 'misc', throwable: Reado
   return base;
 }
 
-export function buildItemTextBases(input: ItemTextBasesInput): ItemTextBasesResult {
-  const warnings = new Set<string>();
-
-  const throwable = throwableTypes(input.itemtypes);
-  const bases: Record<string, ItemTextBase> = {};
-  for (const [table, kind] of [
-    [input.weapons, 'weapon'],
-    [input.armor, 'armor'],
-    [input.misc, 'misc'],
-  ] as const) {
-    for (const row of table.rows) {
-      const code = row.str('code');
-      if (code === '' || code in bases) continue;
-      const base = baseOf(row, kind, throwable);
-      if (Object.keys(base).length > 0) bases[code] = base;
-    }
-  }
-
+/**
+ * One property (`code`, `param`, `min`, `max`) → the stats a save would store for it (`[stat id, param, value]`, the
+ * layered params encoded as a save stores them; a roll range keeps the max). Problems go to `warn` as "<where>: …".
+ * Also used by the character sheet bundle (bundleCharSheet.ts) for the set bonuses.
+ */
+export function savedStatsReader(
+  statIds: ReadonlyMap<string, number>,
+  expand: ExpandContext,
+  warn: (warning: string) => void
+): (code: string, param: string, min: number, max: number, where: string) => ItemTextSavedStat[] {
   const skillId = (param: string, where: string): number | null => {
-    const id = input.expand.skills.skillId(param);
-    if (id === null) warnings.add(`itemtext: ${where}: unknown skill "${param}"`);
+    const id = expand.skills.skillId(param);
+    if (id === null) warn(`${where}: unknown skill "${param}"`);
     return id;
   };
-  /** One property → the stats a save would store for it */
-  const savedStats = (code: string, param: string, min: number, max: number, where: string): ItemTextSavedStat[] => {
-    const { entries, warnings: expandWarnings } = expandProperty({ code, param: param === '' ? null : param, min, max }, input.expand);
-    for (const warning of expandWarnings) warnings.add(`itemtext: ${where}: ${warning}`);
+  return (code, param, min, max, where) => {
+    const { entries, warnings: expandWarnings } = expandProperty({ code, param: param === '' ? null : param, min, max }, expand);
+    for (const warning of expandWarnings) warn(`${where}: ${warning}`);
     return entries.flatMap((entry): ItemTextSavedStat[] => {
       if (entry.text !== undefined) {
-        warnings.add(`itemtext: ${where}: "${code}" is not a saved stat ("${entry.text}"), left out`);
+        warn(`${where}: "${code}" is not a saved stat ("${entry.text}"), left out`);
         return [];
       }
-      const id = input.statIds.get(entry.stat);
+      const id = statIds.get(entry.stat);
       if (id === undefined) {
-        warnings.add(`itemtext: ${where}: unknown stat "${entry.stat}"`);
+        warn(`${where}: unknown stat "${entry.stat}"`);
         return [];
       }
       switch (statLayerKind(entry.stat)) {
@@ -140,12 +131,32 @@ export function buildItemTextBases(input: ItemTextBasesInput): ItemTextBasesResu
           return skill === null ? [] : [[id, skill, entry.max]];
         }
         default:
-          if (entry.min !== entry.max)
-            warnings.add(`itemtext: ${where}: "${code}" rolls ${String(entry.min)}-${String(entry.max)}, kept the max`);
+          if (entry.min !== entry.max) warn(`${where}: "${code}" rolls ${String(entry.min)}-${String(entry.max)}, kept the max`);
           return [[id, /^\d+$/.test(entry.param) ? Number(entry.param) : 0, entry.max]];
       }
     });
   };
+}
+
+export function buildItemTextBases(input: ItemTextBasesInput): ItemTextBasesResult {
+  const warnings = new Set<string>();
+
+  const throwable = throwableTypes(input.itemtypes);
+  const bases: Record<string, ItemTextBase> = {};
+  for (const [table, kind] of [
+    [input.weapons, 'weapon'],
+    [input.armor, 'armor'],
+    [input.misc, 'misc'],
+  ] as const) {
+    for (const row of table.rows) {
+      const code = row.str('code');
+      if (code === '' || code in bases) continue;
+      const base = baseOf(row, kind, throwable);
+      if (Object.keys(base).length > 0) bases[code] = base;
+    }
+  }
+
+  const savedStats = savedStatsReader(input.statIds, input.expand, (warning) => warnings.add(`itemtext: ${warning}`));
 
   const socketables: ItemTextBundle['socketables'] = {};
   for (const row of input.gems.rows) {

@@ -22,7 +22,7 @@ function pageNames(entries: readonly NavEntry[]): PageName[] {
 
 /**
  * The menu pages matching `query`, at most `limit`: those whose own label matches, ranked like the item results (`rankNames`),
- * then the pages of the menu groups whose label matches, in menu order ("stash" lists the My Stash pages).
+ * then the pages of the menu groups whose label matches, in menu order ("my data" lists My Character and the stash pages).
  */
 export function searchPages(query: string, entries: readonly NavEntry[], limit = HOME_SEARCH_GROUP_LIMIT): PageSearchResult[] {
   const pages = pageNames(entries);

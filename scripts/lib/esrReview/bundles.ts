@@ -62,6 +62,18 @@ export const BUNDLE_SPECS: Readonly<Record<string, Readonly<Record<string, Secti
     superiorRows: byField('row', (entry) => `row ${field(entry, 'row')} (${field(entry, 'text')})`),
     superiorPools: byField('label'),
   },
+  // the My Character Combat tab: a changed pool spread, boss value or bonus moves its hit chances
+  'combat.json': {
+    curve: VALUE,
+    levelRatios: list((_entry, index) => `level ${String(index)}`),
+    modifiers: VALUE,
+    randomBonus: VALUE,
+    areas: list(
+      (entry) => `${field(entry, 'tier')}:${field(entry, 'id')}`,
+      (entry) => `${field(entry, 'id')} (${field(entry, 'name')})`
+    ),
+    bosses: byField('id', named('id')),
+  },
   'crafting.json': {
     forgings: list(
       (entry) => `${field(entry, 'kind')}:${field(entry, 'key')}`,

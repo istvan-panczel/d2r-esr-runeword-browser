@@ -1,13 +1,19 @@
 /**
- * The items of a character as the page shows them: gear by slot (weapon sets apart), the mercenary's gear and the stored
- * item lists, each item as a stash item row with the tooltip text of the All Items page. Player items are rendered at
+ * The items of a character as the My Character tabs show them: the worn slots and both weapon sets (Gear), the
+ * mercenary's slots, the Charm Inventory, the stored item lists (Storage) and the Kill Ledger and Ascendancy Stone
+ * (Progress), each item as a stash item row with the tooltip text of the All Items page. Player items are rendered at
  * the character's level; the mercenary's and the golem's stay at the per-level rate (the save holds no merc level).
  */
+import { normalizeName } from '@/features/game-data/engine/matchRunewords';
 import { buildItemRow, type ItemRow, type ItemTextEngine } from '@/features/stash/engine/items/allItems';
 import { renderItemText, type ItemTextContext } from '@/features/stash/engine/items/itemText';
 import type { StashCatalog } from '@/features/stash/engine/catalog';
 import type { StashLocation } from '@/features/stash/engine/locations';
-import type { CharacterFile, CharacterItem, EquippedGear } from '../parser/types';
+import type { CharacterFile, CharacterItem, EquippedGear, EquipSlot } from '../parser/types';
+
+/** Charm-inventory items that are not charms */
+export const KILL_LEDGER_CODE = 'led';
+export const ASCENDANCY_STONE_CODE = 'ast';
 
 export interface CharacterItemRow {
   readonly key: string;
@@ -16,19 +22,27 @@ export interface CharacterItemRow {
   readonly row: ItemRow;
 }
 
+/** An item that only works in the Charm Inventory, with whether it is there */
+export interface PlacedItemRow extends CharacterItemRow {
+  readonly inCharmInventory: boolean;
+}
+
 export interface GearSlot {
-  readonly key: string;
+  /** The slot; with `weaponSet` (hands only) unique within a character's or a mercenary's gear */
+  readonly key: EquipSlot;
   readonly label: string;
   /** null: nothing in the slot */
   readonly row: ItemRow | null;
 }
 
-export interface GearGroup {
-  readonly key: string;
+export interface WeaponSetView {
+  /** 1 or 2, as the game numbers the sets (I and II) */
+  readonly number: 1 | 2;
   readonly title: string;
   /** The active weapon set in the save */
   readonly active: boolean;
-  readonly slots: readonly GearSlot[];
+  /** Right hand, then left hand */
+  readonly slots: readonly [GearSlot, GearSlot];
 }
 
 export interface ItemSection {
@@ -39,11 +53,20 @@ export interface ItemSection {
 }
 
 export interface CharacterItemsView {
-  readonly gear: readonly GearGroup[];
-  /** null: no mercenary was hired */
-  readonly mercenary: { readonly dead: boolean; readonly gear: readonly GearGroup[] } | null;
-  /** Charm Inventory, inventory, belt, cube, personal stash; then what no other list holds (only when it has items) */
-  readonly sections: readonly ItemSection[];
+  /** Head, amulet, body armor, gloves, belt, boots, right ring, left ring */
+  readonly worn: readonly GearSlot[];
+  /** Set I, set II */
+  readonly weaponSets: readonly [WeaponSetView, WeaponSetView];
+  /** null: no mercenary was hired. Every slot (empty ones too); the merc has one set of hands */
+  readonly mercenary: { readonly dead: boolean; readonly slots: readonly GearSlot[] } | null;
+  /** The Charm Inventory, grid order (charms, the Kill Ledger, the Ascendancy Stone) */
+  readonly charms: readonly CharacterItemRow[];
+  /** Inventory, belt, cube, personal stash; then what no other list holds. Only lists with items */
+  readonly storage: readonly ItemSection[];
+  /** Kill Ledgers anywhere on the character (it counts only in the Charm Inventory) */
+  readonly ledgers: readonly PlacedItemRow[];
+  /** Ascendancy Stones anywhere on the character (one works only in the Charm Inventory) */
+  readonly ascendancyStones: readonly PlacedItemRow[];
 }
 
 /** Item rows need a stash location; the card's footer shows `where` instead */
@@ -55,36 +78,48 @@ const engineAt = (characterLevel: number | undefined): ItemTextEngine => ({
   stats: () => [],
 });
 
-const WORN_SLOTS: readonly (readonly [Exclude<keyof EquippedGear, 'weaponSets'>, string])[] = [
-  ['head', 'Head'],
-  ['neck', 'Amulet'],
-  ['torso', 'Body armor'],
-  ['gloves', 'Gloves'],
-  ['belt', 'Belt'],
-  ['feet', 'Boots'],
-  ['rightRing', 'Right ring'],
-  ['leftRing', 'Left ring'],
+export const SLOT_LABELS: Readonly<Record<EquipSlot, string>> = {
+  head: 'Head',
+  neck: 'Amulet',
+  torso: 'Body armor',
+  gloves: 'Gloves',
+  belt: 'Belt',
+  feet: 'Boots',
+  rightRing: 'Right ring',
+  leftRing: 'Left ring',
+  rightHand: 'Right hand',
+  leftHand: 'Left hand',
+};
+
+const WORN_SLOTS: readonly Exclude<EquipSlot, 'rightHand' | 'leftHand'>[] = [
+  'head',
+  'neck',
+  'torso',
+  'gloves',
+  'belt',
+  'feet',
+  'rightRing',
+  'leftRing',
 ];
 
 interface Build {
   readonly toRow: (item: CharacterItem) => ItemRow;
 }
 
-function slot(key: string, label: string, item: CharacterItem | null, build: Build): GearSlot {
-  return { key, label, row: item === null ? null : build.toRow(item) };
+function slot(key: EquipSlot, item: CharacterItem | null, build: Build): GearSlot {
+  return { key, label: SLOT_LABELS[key], row: item === null ? null : build.toRow(item) };
 }
 
 function wornSlots(gear: EquippedGear, build: Build): GearSlot[] {
-  return WORN_SLOTS.map(([key, label]) => slot(key, label, gear[key], build));
+  return WORN_SLOTS.map((key) => slot(key, gear[key], build));
 }
 
-function handSlots(gear: EquippedGear, index: 0 | 1, build: Build): GearSlot[] {
+function handSlots(gear: EquippedGear, index: 0 | 1, build: Build): [GearSlot, GearSlot] {
   const set = gear.weaponSets[index];
-  return [slot('rightHand', 'Right hand', set.rightHand, build), slot('leftHand', 'Left hand', set.leftHand, build)];
+  return [slot('rightHand', set.rightHand, build), slot('leftHand', set.leftHand, build)];
 }
 
 const storedPlaces: readonly (readonly [string, string, CharacterItem['location']['kind']])[] = [
-  ['charm', 'Charm Inventory', 'charm'],
   ['inventory', 'Inventory', 'inventory'],
   ['belt', 'Belt', 'belt'],
   ['cube', 'Horadric Cube', 'cube'],
@@ -102,7 +137,7 @@ function whereText(item: CharacterItem): string {
     case 'charm':
       return `Row ${String(location.y + 1)}, col ${String(location.x + 1)}`;
     case 'equipped':
-      return 'Equipped';
+      return SLOT_LABELS[location.slot];
     case 'socketed':
       return 'In a socket';
     case 'ground':
@@ -114,6 +149,14 @@ function whereText(item: CharacterItem): string {
     case 'unknown':
       return 'Place not known';
   }
+}
+
+/** Where an item is, with the list it is in ("Charm Inventory, row 2, col 3") */
+function placeText(item: CharacterItem): string {
+  const { kind } = item.location;
+  const list = kind === 'charm' ? 'Charm Inventory' : (storedPlaces.find(([, , place]) => place === kind)?.[1] ?? null);
+  const where = whereText(item);
+  return list === null ? where : `${list}, ${where.charAt(0).toLowerCase()}${where.slice(1)}`;
 }
 
 const gridOrder = (item: CharacterItem): [number, number] => {
@@ -133,7 +176,7 @@ function byGridOrder(a: CharacterItem, b: CharacterItem): number {
 const toRows = (items: readonly CharacterItem[], build: Build, key: string): CharacterItemRow[] =>
   items.map((item, index) => ({ key: `${key}:${String(index)}`, where: whereText(item), row: build.toRow(item) }));
 
-/** Everything the page shows of the items, built once per render of the page */
+/** Everything the tabs show of the items, built once per render of the page */
 export function buildCharacterItems(character: CharacterFile, catalog: StashCatalog, ctx: ItemTextContext): CharacterItemsView {
   const builder = (level: number | undefined): Build => {
     const engine = engineAt(level);
@@ -142,39 +185,23 @@ export function buildCharacterItems(character: CharacterFile, catalog: StashCata
   const build = builder(character.level);
   const mercBuild = builder(undefined);
   const activeSet = character.activeWeapon === 0 ? 0 : 1;
+  const player = character.items.player;
 
-  const gear: GearGroup[] = [
-    { key: 'worn', title: 'Equipped', active: false, slots: wornSlots(character.gear, build) },
-    { key: 'set1', title: 'Weapon set I', active: activeSet === 0, slots: handSlots(character.gear, 0, build) },
-    { key: 'set2', title: 'Weapon set II', active: activeSet === 1, slots: handSlots(character.gear, 1, build) },
-  ];
-
-  // The merc has one set of hands: its gear stays on set I
   const mercenary =
     character.mercenary === null
       ? null
       : {
           dead: character.mercenary.dead,
-          gear: [
-            {
-              key: 'merc',
-              title: 'Mercenary gear',
-              active: false,
-              // Only what it wears: a merc has few slots, and rows of "Empty" would only be noise
-              slots: [...handSlots(character.mercGear, 0, mercBuild), ...wornSlots(character.mercGear, mercBuild)].filter(
-                (entry) => entry.row !== null
-              ),
-            },
-          ],
+          slots: [...handSlots(character.mercGear, 0, mercBuild), ...wornSlots(character.mercGear, mercBuild)],
         };
 
   const stored: ItemSection[] = storedPlaces.map(([key, title, kind]) => ({
     key,
     title,
-    rows: toRows(character.items.player.filter((item) => item.location.kind === kind).sort(byGridOrder), build, key),
+    rows: toRows(player.filter((item) => item.location.kind === kind).sort(byGridOrder), build, key),
   }));
-  const shownKinds = new Set<string>(['equipped', 'socketed', ...storedPlaces.map(([, , kind]) => kind)]);
-  const elsewhere = character.items.player.filter((item) => !shownKinds.has(item.location.kind));
+  const shownKinds = new Set<string>(['equipped', 'socketed', 'charm', ...storedPlaces.map(([, , kind]) => kind)]);
+  const elsewhere = player.filter((item) => !shownKinds.has(item.location.kind));
   const extra: ItemSection[] = [
     { key: 'elsewhere', title: 'Other items', rows: toRows(elsewhere, build, 'elsewhere') },
     {
@@ -192,5 +219,40 @@ export function buildCharacterItems(character: CharacterFile, catalog: StashCata
       rows: toRows(character.items.golem === null ? [] : [character.items.golem], mercBuild, 'golem'),
     },
   ];
-  return { gear, mercenary, sections: [...stored, ...extra].filter((section) => section.rows.length > 0) };
+
+  const withCode = (code: string, key: string): PlacedItemRow[] =>
+    player
+      .filter((item) => item.code === code)
+      .sort(byGridOrder)
+      .map((item, index) => ({
+        key: `${key}:${String(index)}`,
+        where: placeText(item),
+        row: build.toRow(item),
+        inCharmInventory: item.location.kind === 'charm',
+      }));
+  return {
+    worn: wornSlots(character.gear, build),
+    weaponSets: [
+      { number: 1, title: 'Weapon set I', active: activeSet === 0, slots: handSlots(character.gear, 0, build) },
+      { number: 2, title: 'Weapon set II', active: activeSet === 1, slots: handSlots(character.gear, 1, build) },
+    ],
+    mercenary,
+    charms: toRows(player.filter((item) => item.location.kind === 'charm').sort(byGridOrder), build, 'charm'),
+    storage: [...stored, ...extra].filter((section) => section.rows.length > 0),
+    ledgers: withCode(KILL_LEDGER_CODE, 'ledger'),
+    ascendancyStones: withCode(ASCENDANCY_STONE_CODE, 'ascendancy'),
+  };
+}
+
+const ASCENDANCY_STONE_SUFFIX = / ascendancy stone$/;
+
+/**
+ * The ascendancy a stone names ("Battlemage Ascendancy Stone" → "Battlemage"), as one of `ascendancies` (the names of
+ * the Ascendancies page), or null when the stone is not one of them. The same match as the build draft's.
+ */
+export function ascendancyOfStone(row: Pick<ItemRow, 'info'>, ascendancies: readonly string[]): string | null {
+  const name = row.info.unique?.name;
+  if (name === undefined) return null;
+  const wanted = normalizeName(name).replace(ASCENDANCY_STONE_SUFFIX, '');
+  return ascendancies.find((candidate) => normalizeName(candidate) === wanted) ?? null;
 }

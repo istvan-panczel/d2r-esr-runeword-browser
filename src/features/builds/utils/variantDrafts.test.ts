@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { BuildData, CraftAnnotation, ItemRef, VariantData } from '../buildData';
+import { asBuildData, type BuildData, type CraftAnnotation, type ItemRef, type VariantData } from '../buildData';
+import type { BuildStats } from '../buildStats';
 import { ALTERNATIVES_MAX_PER_SLOT, VARIANTS_MAX } from '../constants';
 import type { VariantDraft } from '../components/buildFormModel';
 import {
@@ -8,6 +9,7 @@ import {
   buildFormValuesFromBuild,
   draftLabel,
   draftLevelValid,
+  draftStatsValid,
   draftsToBuildData,
   emptyVariantDraft,
   fromVariantDraft,
@@ -18,6 +20,7 @@ import {
   type SlotTarget,
   type VariantDraftAction,
 } from './variantDrafts';
+import { emptyStatsDraft, toStatsDraft } from './statsDraft';
 
 const item = (name: string): ItemRef => ({ type: 'freetext', name });
 const forge: CraftAnnotation = { kind: 'forge', forge: 'rune', key: 'r19' };
@@ -479,5 +482,135 @@ describe('alternative actions', () => {
     const data: VariantData = fromVariantDraft(state[0]);
     expect(data.weaponSwapAlternatives).toEqual({ weapon2: [{ ref: item('Spirit') }] });
     expect(data.mercenaryAlternatives).toEqual({ armor: [{ ref: item('Treachery'), note: 'cheap' }] });
+  });
+});
+
+describe('character stats in the drafts', () => {
+  const STATS: BuildStats = {
+    source: 'save',
+    difficulty: 2,
+    character: 'SpinToWin',
+    savedAt: 1_794_387_009,
+    esrVersion: '3.3.03',
+    values: { str: 986, life: 6080, fr: 79, sk: 10 },
+  };
+  const withStats: BuildData = {
+    ...OLD_BUILD,
+    variantName: 'Endgame',
+    stats: STATS,
+    variants: [{ skills: 'MF', variantName: 'MF', stats: { ...STATS, source: 'manual' } }],
+  };
+  const load = (build: BuildData) =>
+    initialVariantDrafts(buildFormValuesFromBuild({ name: 'x', description: '', class: 'Barbarian', build_data: build }).variants);
+
+  it('a build with stats on every variant round-trips byte for byte', () => {
+    const stored = asBuildData(JSON.parse(JSON.stringify(withStats)));
+    expect(JSON.stringify(draftsToBuildData(load(stored)))).toBe(JSON.stringify(asBuildData(withStats)));
+    expect(draftsToBuildData(load(withStats)).variants?.[0].stats).toEqual({ source: 'manual', difficulty: 2, values: STATS.values });
+  });
+
+  it('stats are stored last, after the keys of older builds', () => {
+    const saved = draftsToBuildData(load({ ...OLD_BUILD, variantNote: 'n', stats: STATS }));
+    expect(Object.keys(saved).slice(-2)).toEqual(['variantNote', 'stats']);
+  });
+
+  it('an empty block (nothing stated) and a cleared block save nothing', () => {
+    const [draft] = run([emptyVariantDraft('a')], { type: 'setStats', variant: 0, stats: emptyStatsDraft() });
+    expect(draft.stats).not.toBeNull();
+    expect(fromVariantDraft(draft)).toEqual({});
+    const typed = run(
+      [draft],
+      { type: 'setStatValue', variant: 0, key: 'fr', text: ' 75 ' },
+      { type: 'setStatValue', variant: 0, key: 'cr', text: '' }
+    );
+    expect(fromVariantDraft(typed[0])).toEqual({ stats: { source: 'manual', difficulty: 2, values: { fr: 75 } } });
+    const cleared = run(typed, { type: 'setStats', variant: 0, stats: null });
+    expect(fromVariantDraft(cleared[0])).toEqual({});
+  });
+
+  it('editing save-derived stats marks them edited (also through the difficulty or the buffs flag); a no-op does not', () => {
+    const start = load({ stats: STATS });
+    expect(run(start, { type: 'setStatValue', variant: 0, key: 'str', text: '986' })).toBe(start);
+    expect(run(start, { type: 'setStatsDifficulty', variant: 0, difficulty: 2 })).toBe(start);
+    expect(run(start, { type: 'setStatsBuffed', variant: 0, buffed: false })).toBe(start);
+    const edited = run(start, { type: 'setStatValue', variant: 0, key: 'str', text: '1000' });
+    expect(draftsToBuildData(edited).stats).toEqual({ ...STATS, edited: true, values: { ...STATS.values, str: 1000 } });
+    // Sticky: changing it back keeps the mark
+    const back = run(edited, { type: 'setStatValue', variant: 0, key: 'str', text: '986' });
+    expect(draftsToBuildData(back).stats?.edited).toBe(true);
+    expect(draftsToBuildData(run(start, { type: 'setStatsDifficulty', variant: 0, difficulty: 1 })).stats).toEqual({
+      ...STATS,
+      edited: true,
+      difficulty: 1,
+    });
+    expect(draftsToBuildData(run(start, { type: 'setStatsBuffed', variant: 0, buffed: true })).stats).toEqual({
+      ...STATS,
+      edited: true,
+      buffed: true,
+    });
+  });
+
+  it('hand-made stats never get the edited mark', () => {
+    const start = run([emptyVariantDraft('a')], { type: 'setStats', variant: 0, stats: emptyStatsDraft() });
+    const typed = run(
+      start,
+      { type: 'setStatValue', variant: 0, key: 'mf', text: '300' },
+      { type: 'setStatsBuffed', variant: 0, buffed: true }
+    );
+    expect(draftsToBuildData(typed).stats).toEqual({ source: 'manual', difficulty: 2, buffed: true, values: { mf: 300 } });
+  });
+
+  it('stat actions on a variant without a block or out of range leave the state alone', () => {
+    const start = [emptyVariantDraft('a')];
+    expect(run(start, { type: 'setStatValue', variant: 0, key: 'str', text: '5' })).toBe(start);
+    expect(run(start, { type: 'setStatsDifficulty', variant: 0, difficulty: 1 })).toBe(start);
+    expect(run(start, { type: 'setStats', variant: 3, stats: emptyStatsDraft() })).toBe(start);
+  });
+
+  it('replacing from a save sets the block of that variant only', () => {
+    const start = [toVariantDraft(OLD_BUILD), toVariantDraft({ skills: 'other' })];
+    const next = run(start, { type: 'setStats', variant: 1, stats: toStatsDraft(STATS) });
+    expect(next[0]).toBe(start[0]);
+    expect(fromVariantDraft(next[1])).toEqual({ skills: 'other', stats: STATS });
+  });
+
+  it('stats read from a save land on the variant they were read for, by key, even after a move; never on another', () => {
+    const start = run([emptyVariantDraft('a'), emptyVariantDraft('b')], { type: 'moveVariant', from: 1, to: 0 });
+    const read = toStatsDraft(STATS);
+    if (read === null) throw new Error('draft');
+    const landed = run(start, { type: 'setStatsFromSave', variantKey: 'a', stats: read });
+    expect(landed[1].key).toBe('a');
+    expect(landed[1].stats).toEqual(read);
+    expect(landed[0].stats).toBeNull();
+    // Deleted meanwhile: nothing happens
+    const deleted = run(start, { type: 'deleteVariant', variant: 1 });
+    expect(run(deleted, { type: 'setStatsFromSave', variantKey: 'a', stats: read })).toBe(deleted);
+    // Stats added by hand meanwhile are not replaced
+    const typed = run(start, { type: 'setStats', variant: 1, stats: emptyStatsDraft() });
+    expect(run(typed, { type: 'setStatsFromSave', variantKey: 'a', stats: read })).toBe(typed);
+  });
+
+  it('turning the character name off keeps the numbers and the edited mark as they were', () => {
+    const start = load({ stats: STATS });
+    const hidden = run(start, { type: 'setStatsShowCharacter', variant: 0, show: false });
+    expect(draftsToBuildData(hidden).stats).toEqual({ ...STATS, character: undefined });
+    expect(draftsToBuildData(hidden).stats?.edited).toBeUndefined();
+  });
+
+  it('copying a variant copies its stats deeply', () => {
+    const state = run(load({ stats: STATS }), addVariantAction('Copy', 0));
+    const [source, copy] = state;
+    expect(copy.stats).toEqual(source.stats);
+    expect(copy.stats).not.toBe(source.stats);
+    const edited = run(state, { type: 'setStatValue', variant: 1, key: 'str', text: '1' });
+    expect(fromVariantDraft(edited[0]).stats).toEqual(STATS);
+    expect(fromVariantDraft(edited[1]).stats?.values.str).toBe(1);
+  });
+
+  it('invalid numbers make the draft invalid until fixed', () => {
+    const [draft] = run(load({ stats: STATS }), { type: 'setStatValue', variant: 0, key: 'fr', text: '120' });
+    expect(draftStatsValid(draft)).toBe(false);
+    expect(draftStatsValid(run([draft], { type: 'setStatValue', variant: 0, key: 'fr', text: '' })[0])).toBe(true);
+    expect(draftStatsValid(emptyVariantDraft('a'))).toBe(true);
   });
 });

@@ -13,6 +13,7 @@ import type { DraftReviewRow, SaveImportReport } from '@/features/character/engi
 import {
   draftLabel,
   draftLevelValid,
+  draftStatsValid,
   draftsToBuildData,
   initialVariantDrafts,
   variantDraftsReducer,
@@ -82,7 +83,8 @@ export function BuildForm({
   const trimmedName = name.trim();
   const nameValid = trimmedName.length > 0 && trimmedName.length <= BUILD_NAME_MAX_LENGTH;
   const invalidLabels = drafts.flatMap((draft, index) => (draftLevelValid(draft) ? [] : [draftLabel(draft, index)]));
-  const canSave = nameValid && invalidLabels.length === 0 && characterClass !== '' && !saving;
+  const invalidStatsLabels = drafts.flatMap((draft, index) => (draftStatsValid(draft) ? [] : [draftLabel(draft, index)]));
+  const canSave = nameValid && invalidLabels.length === 0 && invalidStatsLabels.length === 0 && characterClass !== '' && !saving;
 
   useUnsavedChangesPrompt(touched && !saved);
 
@@ -223,6 +225,9 @@ export function BuildForm({
             Cancel
           </Button>
           {invalidLabels.length > 0 && <p className="self-center text-xs text-destructive">Invalid level in {invalidLabels.join(', ')}</p>}
+          {invalidStatsLabels.length > 0 && (
+            <p className="self-center text-xs text-destructive">Invalid stats in {invalidStatsLabels.join(', ')}</p>
+          )}
         </div>
       </form>
     </EquipmentPickerDataContext>

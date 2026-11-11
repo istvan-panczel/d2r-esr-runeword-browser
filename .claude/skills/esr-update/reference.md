@@ -225,6 +225,22 @@ the owner's OK.
   needs a look; "the suspect dexterity … is gone" → ESR fixed it, drop the `SUSPECT_DEXTERITY` entry.
   `bundleIntegrity.test.ts` pins the 16 variants, hirelings, acts and types, and no warnings. Slugs (`desert-mercenary`,
   `combat`) are linked from the skill cards and the guide.
+- **Character sheet** (`celestialrayone.archaeology.toml`, `celestialrayone.charm-dedup.toml`, `charm-inv.toml`, the
+  resistance floor display patch): charsheet.json (`build/bundleCharSheet.ts`) reads them and throws when the Runic
+  Insight perk stat is no longer `archaeology_3`, the patch no longer says `min(75+maxresist, 95)`,
+  `allow_inventory_charms` is gone or a class passive gets a `passiveitype`: follow the change in
+  `src/features/character/engine/sheet/`. It also throws when the experience.txt class columns differ, charstats.txt is not
+  the 8 classes in order, or a weapons.txt row is neither a weapon nor a quiver (a `misl` descendant) by its item type: read
+  the change (a new class, a new quiver type) before touching the engine. `skills.txt` `weapsel` drives the off-hand attack
+  rating line and states.txt `transform` / `gfxtype` the shape-shift group: a changed value there changes the page. Hand-kept
+  engine constants: resist cap 75 / ceiling 95, physical cap 50, Anya +10. With fresh ground-truth saves, re-run
+  `sheet.fixture.integration.test.ts` (and `buildDraft.fixture.integration.test.ts`: the build stats from the same save).
+- **Combat tab** (`combat.json`, `build/bundleCombat.ts`, after areas.json and modifiers.json): monster defense and attack
+  rating per area, map and boss from levels.txt / monstats.txt / monlvl.txt / monumod.txt and the attack-rating curve of
+  `celestialrayone.attack-rating.toml`. A missing curve fact throws; `combat:` warnings (a curated boss or pool monster
+  missing from monstats.txt, a map zone mixing levels, a missing monumod constant, a worked example that no longer
+  reproduces) fail `bundleIntegrity.test.ts`. A rebalance shows as changed pinned numbers: re-derive the worked examples in
+  docs/features/CHARACTER-SAVE.md "Combat tab" and update `WORKED_EXAMPLES` rather than silencing the warning.
 - **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
   `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
   (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact

@@ -25,7 +25,7 @@ export type StashLoadError =
 /** The wrong-type error of a file that should not be read at all, or null when it may be a stash. */
 export function checkStashUpload(name: string, size: number): StashLoadError | null {
   if (!name.toLowerCase().endsWith(STASH_EXTENSION)) {
-    const what = name.toLowerCase().endsWith('.d2s') ? 'a character save (.d2s)' : `"${name}"`;
+    const what = name.toLowerCase().endsWith('.d2s') ? 'a character save (.d2s, it goes on the My Character page)' : `"${name}"`;
     return { kind: 'wrong-type', message: `That is ${what}, not a shared stash. Pick the ${STASH_EXTENSION} file (${STASH_FILE_NAME}).` };
   }
   if (size > MAX_STASH_BYTES) {

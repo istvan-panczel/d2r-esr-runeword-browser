@@ -27,6 +27,8 @@ import {
   type DraftItemKind,
   type DraftItemOutcome,
 } from './buildDraftItems';
+import { computeBuildStats } from './buildDraftStats';
+import type { SheetData } from './sheet';
 
 export type { BuildDraftData, DraftItemKind, DraftItemOutcome } from './buildDraftItems';
 
@@ -93,6 +95,10 @@ export interface SaveImportReport {
   /** Set when the parse stopped early: the parts that stayed empty */
   readonly incompleteNote: string | null;
   readonly corpses: number;
+  /** The ESR version of the save's verified .d2rl (handed over by the My Character page); null without one */
+  readonly sidecarVersion: string | null;
+  /** Whether the variant got the computed character stats; `unavailable` when the sheet data or the computation failed */
+  readonly stats: 'computed' | 'unavailable';
 }
 
 export interface BuildDraft {
@@ -261,7 +267,17 @@ function incompleteNote(file: CharacterFile): string | null {
   return `This save could only be read up to the ${file.incomplete.section} part; what stayed empty: ${EMPTY_AFTER[file.incomplete.section] ?? 'the rest of the file'}.`;
 }
 
-export function createBuildDraft(file: CharacterFile, data: BuildDraftData, fileName: string): BuildDraft {
+/**
+ * `sheetData` (charsheet.json + itemtext.json) adds the character stats block, computed for the save's own difficulty
+ * without buffs; without it, or when the computation fails, the draft comes without stats and the report says so.
+ */
+export function createBuildDraft(
+  file: CharacterFile,
+  data: BuildDraftData,
+  fileName: string,
+  sidecarVersion: string | null = null,
+  sheetData: SheetData | null = null
+): BuildDraft {
   const index = createDraftItemIndex(data);
   const player = mapSection('player', mainSlots(file.gear), index, data);
   const swap = mapSection('swap', swapSlots(file.gear), index, data);
@@ -271,6 +287,7 @@ export function createBuildDraft(file: CharacterFile, data: BuildDraftData, file
   const skillPoints = skillPointsOf(file, data);
   const skills = skillsInUseLine(file, data.skillNames);
   const level = asLevel(file.level);
+  const stats = sheetData === null ? null : computeBuildStats(file, sheetData, sidecarVersion);
 
   const variant: VariantData = {
     items: player.items,
@@ -284,6 +301,7 @@ export function createBuildDraft(file: CharacterFile, data: BuildDraftData, file
     ...(skills !== '' ? { skills } : {}),
     ...(level !== undefined ? { level } : {}),
     ...(skillPoints !== undefined ? { skillPoints } : {}),
+    ...(stats !== null ? { stats } : {}),
   };
 
   const items = [...player.results, ...swap.results, ...merc.results];
@@ -303,6 +321,8 @@ export function createBuildDraft(file: CharacterFile, data: BuildDraftData, file
       lastSavedAt: file.lastSavedAt,
       incompleteNote: incompleteNote(file),
       corpses: file.items.corpses.length,
+      sidecarVersion,
+      stats: stats === null ? 'unavailable' : 'computed',
     },
   };
 }

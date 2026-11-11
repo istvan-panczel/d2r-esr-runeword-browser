@@ -75,7 +75,7 @@ describe('navConfig', () => {
       ['Items', ['Uniques', 'Mythicals', 'Sets', 'Bases', 'Item Types', 'Affixes', 'Modifiers', 'Elixirs']],
       ['Character', ['Skills', 'Ascendancies', 'Specializations', 'Weapon Masteries', 'Mercenaries', 'Kill Ledger']],
       ['Areas', ['Campaign Map', 'Area Levels', 'Terror Zones']],
-      ['My Stash', ['Overview', 'Ancient Coupons', 'All Items', 'My Character']],
+      ['My Data', ['My Character', 'Stash Overview', 'Ancient Coupons', 'All Items']],
       'Guide',
       'Builds',
       'Loot Filters',
@@ -85,7 +85,8 @@ describe('navConfig', () => {
   describe('getActiveNavGroup', () => {
     it('finds the group of a page and of a sub-page', () => {
       expect(getActiveNavGroup('/bases')?.key).toBe('items');
-      expect(getActiveNavGroup('/stash/coupons')?.key).toBe('stash');
+      expect(getActiveNavGroup('/stash/coupons')?.key).toBe('my-data');
+      expect(getActiveNavGroup('/character')?.key).toBe('my-data');
       expect(getActiveNavGroup('/area-levels')?.key).toBe('areas');
     });
 
@@ -103,31 +104,40 @@ describe('navConfig', () => {
       expect(getActiveNavItem('/cube-recipes')?.label).toBe('Cube Recipes');
       expect(getActiveNavItem('/area-levels')?.label).toBe('Area Levels');
       expect(getActiveNavItem('/loot-filters/abc')?.label).toBe('Loot Filters');
+      expect(getActiveNavItem('/character')?.label).toBe('My Character');
     });
 
     it('prefers the sub-page over the stash overview and finds nothing off the menu', () => {
       expect(getActiveNavItem('/stash/coupons')?.label).toBe('Ancient Coupons');
-      expect(getActiveNavItem('/stash')?.label).toBe('Overview');
+      expect(getActiveNavItem('/stash')?.label).toBe('Stash Overview');
       expect(getActiveNavItem('/')).toBeUndefined();
       expect(getActiveNavItem('/nope')).toBeUndefined();
     });
   });
 
   it('keeps an exact item (the stash overview) inactive on its sibling pages below it', () => {
-    const stash = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'stash');
+    const stash = NAV_ENTRIES.find((e): e is NavGroup => e.kind === 'group' && e.key === 'my-data');
     if (!stash) throw new Error('missing group');
-    const [overview, coupons] = stash.items;
+    const [character, overview, coupons] = stash.items;
+    expect(isNavItemActive('/stash', character)).toBe(false);
+    expect(isNavItemActive('/character', character)).toBe(true);
     expect(isNavItemActive('/stash', overview)).toBe(true);
     expect(isNavItemActive('/stash/', overview)).toBe(true);
     expect(isNavItemActive('/stash//', overview)).toBe(true);
     expect(isNavItemActive('/stash/coupons/', coupons)).toBe(true);
-    expect(getActiveNavGroup('/stash/')?.key).toBe('stash');
+    expect(getActiveNavGroup('/stash/')?.key).toBe('my-data');
     expect(getActiveNavGroup('/')).toBeUndefined();
     expect(isNavItemActive('/stash/coupons', overview)).toBe(false);
     expect(isNavItemActive('/stash/coupons', coupons)).toBe(true);
     expect(isNavGroupActive('/stash/coupons', stash)).toBe(true);
-    expect(stash.items.map((item) => item.to)).toEqual(['/stash', '/stash/coupons', '/stash/items', '/stash/character']);
+    expect(stash.items.map((item) => item.to)).toEqual(['/character', '/stash', '/stash/coupons', '/stash/items']);
     expect(isNavItemActive('/stash/items', overview)).toBe(false);
+  });
+
+  it('redirects the old My Stash character page to My Character', () => {
+    const element = matchRoutes(router.routes, '/stash/character')?.at(-1)?.route.element;
+    expect(isValidElement<{ to: string }>(element) && element.type === Navigate && element.props.to).toBe('/character');
+    expect(matchRoutes(router.routes, '/character')?.at(-1)?.route.path).toBe('character');
   });
 
   it('redirects the old guide note map to the guide overview', () => {

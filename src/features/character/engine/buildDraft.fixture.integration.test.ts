@@ -8,6 +8,7 @@ import { resolve } from 'path';
 import type { RunewordItemRef, SetItemRef, UniqueItemRef } from '@/features/builds/buildData';
 import { CHARM_MAX_LENGTH } from '@/features/builds/constants';
 import type {
+  CharSheetBundle,
   ItemTextBundle,
   LootFilterDataBundle,
   SetsBundle,
@@ -27,6 +28,8 @@ import { buildItemTypeIndex } from '@/features/stash/engine/itemTypes';
 import { createCharacterData } from '../parser/characterData';
 import { parseCharacter } from '../parser/parseCharacter';
 import { createBuildDraft, type BuildDraft, type BuildDraftData } from './buildDraft';
+import { draftFromSaveBytes } from './buildDraftRead';
+import { statsFromSaveBytes } from './buildDraftStats';
 
 const ROOT = resolve(__dirname, '../../../..');
 const CHAR_DIR = resolve(ROOT, 'test-fixtures/character');
@@ -167,5 +170,97 @@ describe.skipIf(!READY)('build draft from the real saves', () => {
     const variant = (drafts.get(save) as BuildDraft).values.variants[0];
     expect((variant.skills ?? '').length).toBeLessThanOrEqual(2000);
     for (const charm of variant.charms ?? []) expect(charm.length).toBeLessThanOrEqual(CHARM_MAX_LENGTH);
+  });
+});
+
+const GROUND_TRUTH_SAVE = resolve(CHAR_DIR, 'ground-truth/spintowin-2026-11-11/SpinToWin.d2s');
+
+// The character stats a draft carries, against the in-game screen of 2026-11-11 (GROUND-TRUTH.md in that folder)
+describe.skipIf(!READY || !existsSync(GROUND_TRUTH_SAVE))('build draft stats from the ground-truth save', () => {
+  const stash = json<StashBundle>('stash');
+  const types = json<TypesBundle>('types');
+  const itemText = json<ItemTextBundle>('itemtext');
+  const charsheet = json<CharSheetBundle>('charsheet');
+  const catalog = stashCatalog(withNames(stash, json<StashNamesBundle>('stashnames')), buildItemTypeIndex(types.types));
+  const data = {
+    catalog,
+    text: createItemTextContext(itemText, catalog),
+    sets: json<SetsBundle>('sets'),
+    txtRunewords: json<TxtRunewordsBundle>('runewords'),
+    typeNames: new Map(types.types.map((type) => [type.code, type.name])),
+    uniques: [],
+    mythicals: [],
+    runewords: [],
+    gemwords: [],
+    ascendancies: [],
+    skillIds: [],
+    skillNames: new Map(),
+  } as unknown as BuildDraftData;
+  const bytes = new Uint8Array(readFileSync(GROUND_TRUTH_SAVE));
+  const SCREEN = {
+    str: 986,
+    dex: 746,
+    vit: 493,
+    ene: 118,
+    life: 6080,
+    mana: 791,
+    fr: 79,
+    cr: 79,
+    lr: 79,
+    pr: 79,
+    mr: 38,
+    phr: 50,
+    frm: 79,
+    crm: 79,
+    lrm: 79,
+    prm: 79,
+    def: 73276,
+    dr: 84,
+    mdr: 60,
+    ias: 205,
+    // Frenzy on the left mouse button, main hand: the character screen's number
+    ar: 61474,
+    frw: 85,
+    fhr: 10,
+    fbr: 10,
+    fcr: 100,
+    arp: 505,
+    ds: 100,
+    cb: 82,
+    ll: 158,
+    ml: 20,
+    mf: 417,
+    gf: 302,
+    sk: 10,
+  };
+
+  it('pre-fills the screen numbers for Hell, unbuffed, with the provenance', () => {
+    const result = draftFromSaveBytes(bytes, 'SpinToWin.d2s', stash, data, '3.3.03', { charsheet, itemtext: itemText });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.draft.report.stats).toBe('computed');
+    const { stats } = result.draft.values.variants[0];
+    expect(stats).toMatchObject({ source: 'save', difficulty: 2, character: 'SpinToWin', esrVersion: '3.3.03', values: SCREEN });
+    expect(stats?.buffed).toBeUndefined();
+    expect(stats?.arSkill).toBe('Frenzy');
+    // Every cap is 79 (+4 max all resistances), the magic one too: stored, as it is above 75
+    expect(stats?.values.mrm).toBe(79);
+    expect(new TextEncoder().encode(JSON.stringify(stats)).length).toBeLessThan(1024);
+  });
+
+  it('Fill from a save file gives the same block', () => {
+    const result = statsFromSaveBytes(bytes, 'SpinToWin.d2s', { stash, charsheet, itemtext: itemText });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.stats).toMatchObject({ source: 'save', difficulty: 2, character: 'SpinToWin', values: SCREEN });
+    if (result.ok) expect(result.stats).not.toHaveProperty('esrVersion');
+  });
+
+  it.each(SAVES)('%s gets stats from its save', (save) => {
+    const result = statsFromSaveBytes(new Uint8Array(readFileSync(resolve(CHAR_DIR, `${save}.d2s`))), `${save}.d2s`, {
+      stash,
+      charsheet,
+      itemtext: itemText,
+    });
+    expect(result.ok).toBe(true);
   });
 });

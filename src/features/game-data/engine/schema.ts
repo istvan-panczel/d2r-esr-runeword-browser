@@ -40,6 +40,8 @@ export type GameDataFile =
   | 'mercenaries'
   | 'killledger'
   | 'elixirs'
+  | 'combat'
+  | 'charsheet'
   | 'icons';
 
 export interface GameDataManifest {
@@ -2373,4 +2375,236 @@ export interface SpecializationPageDiff {
   /** The tree and perk slugs when the difference is about one perk */
   tree?: string;
   perk?: string;
+}
+
+// --- combat.json --------------------------------------------------------------------------------------------------
+
+/**
+ * combat.json: what the My Character Combat tab needs to show the chance to hit monsters and to be hit by them per
+ * area and boss (docs/features/CHARACTER-SAVE.md "Combat tab"). Built by `build/bundleCombat.ts` from monstats.txt,
+ * levels.txt, monlvl.txt, monumod.txt, monprop.txt and attack-rating.toml (through the modifiers.json fact).
+ */
+export interface CombatBundle {
+  /** The modifiers.json `attackRating.curve` fact, copied so the tab loads one small file */
+  curve: ModifierFact;
+  /**
+   * monlvl.txt ratios by monster level (index = level, 0..110): `[L-AC, L-AC(N), L-AC(H), L-TH, L-TH(N), L-TH(H)]`,
+   * defense then attack rating, Normal / Nightmare / Hell
+   */
+  levelRatios: CombatLevelRatios[];
+  /** Champion / unique / minion level offsets (engine rule) and attack rating bonuses (monumod.txt constants) */
+  modifiers: CombatModifiers;
+  /** The usual random spawn bonus of campaign and map monsters (a pool's own in `CombatPoolExtra.bonus`) */
+  randomBonus: CombatRandomBonus;
+  /** Campaign areas (one per levels.txt row with monsters) and endgame map zones (one per zone, Hell only) */
+  areas: CombatArea[];
+  /** Act bosses (every difficulty), the Pandemonium event bosses and the map bosses (Hell) */
+  bosses: CombatBoss[];
+}
+
+export type CombatLevelRatios = [number, number, number, number, number, number];
+
+export type CombatMonsterKind = 'regular' | 'champion' | 'unique' | 'minion';
+
+/** Per non-regular monster kind: levels above the area and +% attack rating */
+export type CombatModifiers = Record<Exclude<CombatMonsterKind, 'regular'>, { level: number; attack: number }>;
+
+export interface CombatArea {
+  /** levels.txt `Id` (a map zone: its first level with monsters) */
+  id: number;
+  /** areas.json name; a map zone: its `group` ("Chasm of Horror") */
+  name: string;
+  /** 0-based act (maps are act 4) */
+  act: number;
+  /** Endgame map tier */
+  tier?: number;
+  /** A map zone: the levels.txt ids it stands for */
+  levels?: number[];
+  /** Normal, Nightmare, Hell; null where the area has no regular monster (maps: Hell only) */
+  pools: PerDifficulty<CombatPool | null>;
+}
+
+/** min, median (lower middle), max */
+export type CombatSpread = [number, number, number];
+
+/**
+ * The regular monsters an area can spawn in one difficulty (levels.txt `mon*` in Normal, `nmon*` in Nightmare and
+ * Hell), goblins, Corrupted Zakarum special spawns and `boss` rows left out, as a tuple to keep the file small:
+ * `[monster level, monster types, defense, attack rating, extra?]`. Defense and attack rating (a monster's best of
+ * `A1TH` / `A2TH` / `S1TH`) are final values (monstats × monlvl / 100) of the monster at the min / median / max of the
+ * pool; attack rating is null when every monster only casts. Monster level: the area's `MonLvlEx(N)` / `MonLvlEx(H)`;
+ * in Normal the median of the monsters' own `Level`.
+ */
+export type CombatPool = [number, number, CombatSpread, CombatSpread | null, CombatPoolExtra?];
+
+export interface CombatPoolExtra {
+  /** Normal: the lowest and highest monster level of the pool */
+  range?: [number, number];
+  /** Monster types without any attack rating (spell casters only) */
+  casters?: number;
+  /** The pool's `monrandombonus` when it differs from the bundle's `randomBonus` default (null: none) */
+  bonus?: [number, number] | null;
+}
+
+/** monprop.txt `monrandombonus` most monsters carry: [chance %, value] (+value % attack rating among others, INFERRED) */
+export interface CombatRandomBonus {
+  campaign: PerDifficulty<[number, number] | null>;
+  maps: [number, number] | null;
+}
+
+export type CombatBossGroup = 'act' | 'uber' | 'map';
+
+export interface CombatBoss {
+  /** monstats `Id` */
+  id: string;
+  name: string;
+  group: CombatBossGroup;
+  /** Act bosses: 0-based act */
+  act?: number;
+  /** Map bosses: the tier of their own arena */
+  tier?: number;
+  /** [monster level, defense, attack rating] per difficulty (own monstats `Level*`); null where it does not appear */
+  stats: PerDifficulty<[number, number, number] | null>;
+}
+
+// --- charsheet.json -----------------------------------------------------------------------------------------------
+
+/**
+ * charsheet.json: what the computed character sheet (src/features/character/engine/sheet/) needs on top of
+ * itemtext.json: stat names and ops, class constants, the skills.txt passive / aura / to-hit columns and every column
+ * their formulas read, structured set bonuses, item speeds and block, experience, hirelings and the ESR loader rules.
+ * Loaded lazily, only on the character page (build/bundleCharSheet.ts, docs/features/CHARACTER-SAVE.md).
+ */
+export interface CharSheetBundle {
+  /** itemstatcost.txt `Stat` by id (row, Expansion rows counted); '' for an empty row */
+  statNames: string[];
+  /** ValShift by stat id, only the non-zero ones (an item stores the unshifted value, a stat list the shifted one) */
+  valShift: Record<string, number>;
+  /** Every stat with an op (`op`, `op param`, `op base`, `op stat1-3` as stat ids), by id ascending */
+  ops: CharSheetStatOp[];
+  /** charstats.txt by class id (the save's class byte) */
+  classes: CharSheetClass[];
+  /** experience.txt: total experience at which level `i + 1` starts, by level `i` (index 0 = 0); the last is the cap */
+  experience: number[];
+  /** weapons.txt `speed` by code (every weapon code, 0 included: also tells weapons apart) */
+  weaponSpeed: Record<string, number>;
+  /**
+   * weapons.txt codes that are not weapons by their item type (no `weap` ancestor in the itemtypes.txt Equiv tree; the
+   * build asserts they are missiles): ESR's arrow and bolt quivers. Not a hand weapon: a bow and a quiver is no dual wield
+   */
+  quivers: string[];
+  /** armor.txt `speed` and `block` by code, only codes with a non-zero value */
+  armor: Record<string, CharSheetArmor>;
+  /** skills.txt rows: class skills, skills an item property names that carry passive / aura stats, and every row their formulas read */
+  skills: CharSheetSkill[];
+  /** setitems.txt id (the save's set id) → index into `sets`; -1 for a row without a set */
+  setItems: number[];
+  /** sets.txt bonuses as saved stats */
+  sets: CharSheetSet[];
+  /** hireling.txt Version 100, one entry per `Id` (the save header's hireling id) */
+  hirelings: CharSheetHireling[];
+  /** Specialisation trees: the stat of each perk (a perk is learned while the character's own value is above 0) */
+  specializations: { slug: string; name: string; stats: number[] }[];
+  rules: CharSheetRules;
+}
+
+export interface CharSheetStatOp {
+  id: number;
+  op: number;
+  param: number;
+  /** `op base` stat id (op 2/4/5: `level`); null when blank */
+  base: number | null;
+  /** `op stat1-3` stat ids */
+  targets: number[];
+}
+
+export interface CharSheetClass {
+  code: ClassCode;
+  /** In fourths, as charstats.txt has them */
+  lifePerVitality: number;
+  staminaPerVitality: number;
+  manaPerEnergy: number;
+  toHitFactor: number;
+  blockFactor: number;
+}
+
+export interface CharSheetArmor {
+  speed?: number;
+  block?: number;
+}
+
+export interface CharSheetSkill {
+  /** skills.txt row (the id a save and a stat param store) */
+  n: number;
+  /** Class id of a class skill */
+  cls?: number;
+  /** Skill tab 1-3 (skilldesc SkillPage) of a class skill */
+  tab?: number;
+  /** The skill's `aurastate` is a states.txt `transform` state: a shape-shift (one form at a time) */
+  shapeshift?: true;
+  /**
+   * The row as the formula evaluator reads it: `id` = the `skill` name formulas use, then only the columns the sheet and
+   * its formulas read (passive / aura stat and calc columns, `passive`, `passivestate`, `aura`, `aurafilter`, `summon`,
+   * the to-hit columns, `weapsel` (the hand(s) it attacks with: 1 left, 2 both at once, 3 alternating, 4 none), and
+   * whatever those formulas reach). Numbers are numbers, formulas text as in the file.
+   */
+  row: SkillCalcRow;
+}
+
+export interface CharSheetSet {
+  /** sets.txt `index` */
+  key: string;
+  /** Set items of the set (setitems.txt rows naming it) */
+  items: number;
+  /** Partial bonuses (PCode2a … 5b): active with at least `pieces` items of the set worn */
+  partial: { pieces: number; stats: ItemTextSavedStat[] }[];
+  /** Full set bonuses (FCode1-8): active with every item of the set worn */
+  full: ItemTextSavedStat[];
+}
+
+export interface CharSheetHireling {
+  id: number;
+  /** `Hireling` ("Rogue Scout") */
+  name: string;
+  /** `*SubType` without the difficulty ("Elemental", "Comb", "Fire") */
+  subtype: string;
+  act: number;
+  /** 0 Normal, 1 Nightmare, 2 Hell */
+  difficulty: number;
+  /** `Exp/Lvl` */
+  expPerLevel: number;
+}
+
+export interface CharSheetRules {
+  /** difficultylevels.txt `ResistPenalty` by difficulty (Normal, Nightmare, Hell) */
+  resistPenalty: number[];
+  /** Resist cap before max resist, and the hard ceiling (engine; asserted against ESR's resistance floor patch text) */
+  resistCap: number;
+  resistCeiling: number;
+  /** Lowest resist (ESR's resistance floor patch; -100 without it) */
+  resistFloor: number;
+  /** Physical resist cap of a player (engine constant) */
+  physicalResistCap: number;
+  /** Anya's Scroll of Resistance: all resists per difficulty read (engine constant) */
+  anyaResist: number;
+  /** dodge-avoid-evade-cap plugin: cap per kind, null when the plugin is off */
+  dodgeCap: { dodge: number; avoid: number; evade: number } | null;
+  /** Runic Insight (archaeology plugin `socketed_runes`); null when the plugin or the perk is off */
+  runicInsight: CharSheetRunicInsight | null;
+  /** charm-dedup plugin groups (item codes): one charm per group counts */
+  charmDedup: string[][];
+  /** charm-inv `allow_inventory_charms`: charms in the inventory count too */
+  inventoryCharms: boolean;
+}
+
+export interface CharSheetRunicInsight {
+  /** The perk stat (a gf stat > 0 while learned) */
+  stat: number;
+  percent: number;
+  /** Rune codes that count */
+  runes: string[];
+  /** Stats raised (ids) */
+  stats: number[];
+  /** Stats pooled per host item only (op 13) */
+  perItemStats: number[];
 }
