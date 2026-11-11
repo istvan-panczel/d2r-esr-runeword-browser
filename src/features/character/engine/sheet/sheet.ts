@@ -23,7 +23,8 @@
  * - Buffs (INFERRED, no buffed ground truth): one instance of a skill counts, the highest level of its selections and of
  *   an item aura of the same skill; one buff per exclusive group (an own aura, a shape-shift), the last selected. A buff
  *   stat no sheet value applies (consumed.ts) is a warning. Every object with a `status` whose numbers differ from the
- *   unbuffed sheet is `unverified` (a structural diff, so a new field cannot be missed).
+ *   unbuffed sheet is `unverified` (a structural diff, so a new field cannot be missed). A level-less cast skill counts at
+ *   the higher of its levels on the two weapon sets (cast on the other one, then swap back: otherSet.ts, computeBuffed).
  */
 import type { CharacterFile, DifficultyIndex } from '../../parser/types';
 import type { CharSheetSkill } from '@/features/game-data/engine/schema';
@@ -33,11 +34,15 @@ import { statLines } from '@/features/stash/engine/items/itemText';
 import { skillLevel as eventSkill } from '@/features/stash/engine/items/textData';
 import { itemRequirements, setupItems, type ItemSetup } from './activeItems';
 import { consumedStats, unappliedOps } from './consumed';
+import { formOf, formProblem, handFormProblem, type Form } from './forms';
+import { castOnSwap, otherWeaponSet, weaponSetName, weaponSetOf } from './otherSet';
 import { BASE_SUFFIX, type SheetData } from './sheetData';
 import { auraStats, buffStats, passiveStats, skillLevels, skillToHit, type EvalContext, type SkillLevels } from './skills';
 import { addStat, entryOf, getStat, mergeInto, sameStats, sumStat, type Contribution, type StatMap } from './statMap';
+import { hasWhatIf, NO_WHAT_IF, whatIfContribution, withWhatIfAuras, type AuraGrant } from './whatIf';
 import type {
   AppliedBuff,
+  AppliedWhatIf,
   AttributeValue,
   BuffSelection,
   CharacterSheet,
@@ -50,9 +55,12 @@ import type {
   SheetStatus,
   SheetValue,
   SkillLevel,
+  WhatIfEntries,
 } from './types';
 
 const MAX_PASSES = 12;
+/** Rounds of the two weapon sets resolving each other's cast levels (buffs cast on the other set) */
+const MAX_SWAP_ROUNDS = 6;
 const ATTRIBUTES = ['strength', 'dexterity', 'vitality', 'energy'] as const;
 type Attribute = (typeof ATTRIBUTES)[number];
 const ATTRIBUTE_PERCENT: Readonly<Record<Attribute, 'strengthpercent' | 'dexteritypercent' | 'vitalitypercent' | 'energypercent'>> = {
@@ -97,10 +105,28 @@ interface Computed {
   ctx: EvalContext;
   /** Selected buffs the character has no level in (and none was given), or without data */
   skippedBuffs: number[];
+  /** Selected buffs the form does not allow (forms.ts) */
+  blockedBuffs: { skillId: number; reason: string }[];
+  /** The form the character is in: the selected shape-shift, or an item's / what-if entry's; null unshifted */
+  form: Form | null;
   /** What the buff rules did (duplicates, groups, item auras of the same skill, stats not applied) */
   buffNotes: string[];
   /** Item auras whose skill the bundles do not know (a save from a newer ESR) */
   unknownAuras: { skill: number; label: string }[];
+  /** The what-if entries counted; null without any (whatIf.ts) */
+  whatIf: AppliedWhatIf | null;
+}
+
+/**
+ * Cast levels on the other weapon set (otherSet.ts): a level-less selection of a skill cast there counts at the higher
+ * of the two sets' levels (a tie: the set in hand), its columns evaluated as cast there
+ */
+interface SwapCasts {
+  set: 1 | 2;
+  /** Effective level per selected skill on that set (with the selected buffs), only skills castOnSwap allows and above 0 */
+  levels: ReadonlyMap<number, number>;
+  /** That set's formula context */
+  ctx: EvalContext;
 }
 
 /** The exclusive group of a buff: an own aura (skills.txt `aura` 1) or a shape-shift (charsheet.json `shapeshift`) */
@@ -240,11 +266,7 @@ function derive(character: CharacterFile, data: SheetData, base: StatMap, contri
  * aura whose skill the bundles do not know at all goes to `unknown`; one charsheet.json leaves out because it gives its
  * owner nothing (an enemy-only aura) is dropped silently.
  */
-function itemAuras(
-  data: SheetData,
-  fixed: readonly Contribution[],
-  unknown: { skill: number; label: string }[]
-): { owner: Contribution; skill: CharSheetSkill; level: number }[] {
+function itemAuras(data: SheetData, fixed: readonly Contribution[], unknown: { skill: number; label: string }[]): AuraGrant[] {
   const byKey = new Map<string, { owner: Contribution; skill: number; level: number }>();
   for (const contribution of fixed) {
     for (const [skill, level] of contribution.stats.get(data.stat.item_aura) ?? []) {
@@ -266,7 +288,13 @@ function itemAuras(
   return [...best.values()];
 }
 
-function compute(character: CharacterFile, data: SheetData, buffs: readonly BuffSelection[]): Computed {
+function compute(
+  character: CharacterFile,
+  data: SheetData,
+  buffs: readonly BuffSelection[],
+  swap?: SwapCasts,
+  whatIf: WhatIfEntries = NO_WHAT_IF
+): Computed {
   const { stat } = data;
   const base: StatMap = new Map();
   for (const attribute of character.attributes) addStat(base, attribute.id, 0, attribute.raw);
@@ -279,9 +307,15 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
       addStat(stats, stat[name], 0, scrolls * data.bundle.rules.anyaResist);
     fixed.push({ kind: 'quest', label: `Anya's Scroll of Resistance (${String(scrolls)}×)`, stats });
   }
-  const unknownAuras: { skill: number; label: string }[] = [];
-  const auras = itemAuras(data, fixed, unknownAuras);
+  // What if: the stats as one charm-like contribution, the skills as item auras (whatIf.ts)
   const groupNotes: string[] = [];
+  const extra = whatIfContribution(data, whatIf, groupNotes);
+  if (extra.contribution !== null) fixed.push(extra.contribution);
+  const unknownAuras: { skill: number; label: string }[] = [];
+  const whatIfSkipped: AppliedWhatIf['skipped'] = [];
+  const auras = withWhatIfAuras(data, itemAuras(data, fixed, unknownAuras), whatIf, groupNotes, whatIfSkipped);
+  // What-if skills a buff of the same skill beat (the last pass's)
+  let beaten: AppliedWhatIf['skipped'] = [];
   const selections = normalizeBuffs(data, buffs, groupNotes);
   const consumed = consumedStats(data);
   const procSkills = procSkillsOf(data, setup);
@@ -294,6 +328,8 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
   let levels = skillLevels(character, data, derived.total);
   let applied: AppliedBuff[] = [];
   let skippedBuffs: number[] = [];
+  let blockedBuffs: Computed['blockedBuffs'] = [];
+  let form: Form | null = null;
   let buffNotes: string[] = [];
   let converged = false;
   let ctx: EvalContext = { charLevel: character.level, stats: {}, hardByName: {}, levelByName: {}, unsupported };
@@ -316,36 +352,69 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
     // Buffs first: a buff at a higher level than an item aura of the same skill replaces it (one instance counts)
     applied = [];
     skippedBuffs = [];
+    blockedBuffs = [];
     buffNotes = [...groupNotes];
+    beaten = [];
     const unshown: string[] = [];
     const auraLevels = new Map(auras.map((aura) => [aura.skill.n, aura.level]));
+    // Only what the character can use: its own skill (a level from points, +skills or oskills, on either weapon set)
+    // or an item's proc. A remembered selection of another character's skill must not change the numbers
+    const usableSkill = (skillId: number) =>
+      (levels.byId.get(skillId)?.level ?? 0) > 0 ||
+      (swap?.levels.get(skillId) ?? 0) > 0 ||
+      procSkills.has(skillId) ||
+      auraLevels.has(skillId);
+    // The form: the selected shape-shift, else one an item or a what-if entry gives as an aura
+    const shifted =
+      selections.find((selection) => usableSkill(selection.skillId) && formOf(data, selection.skillId) !== null)?.skillId ??
+      auras.find((aura) => formOf(data, aura.skill.n) !== null)?.skill.n;
+    form = shifted === undefined ? null : formOf(data, shifted);
+    // Who gives the aura, for the notes: an item, or a what-if entry (whatIf.ts)
+    const fromWhatIf = new Set(auras.filter((aura) => aura.owner.kind === 'what-if').map((aura) => aura.skill.n));
     const replaced = new Set<number>();
     const buffContributions: Contribution[] = [];
     for (const selection of selections) {
       const skill = data.skill(selection.skillId);
       const state = levels.byId.get(selection.skillId);
-      const level = Math.max(selection.effective ? (state?.level ?? 0) : 0, ...selection.levels);
-      // Only what the character can use: its own skill (a level from points, +skills or oskills) or an item's proc. A
-      // remembered selection of another character's skill must not change the numbers
-      const usable = (state?.level ?? 0) > 0 || procSkills.has(selection.skillId) || auraLevels.has(selection.skillId);
-      if (skill === undefined || level <= 0 || !usable) {
+      const own = selection.effective ? (state?.level ?? 0) : 0;
+      // Cast on the other weapon set when that set gives a higher level (a given level wins; a tie stays on this set)
+      const swapped = swap?.levels.get(selection.skillId) ?? 0;
+      const swapLevel = selection.effective ? swapped : 0;
+      const level = Math.max(own, swapLevel, ...selection.levels);
+      const castSet = swap !== undefined && swapLevel > Math.max(own, ...selection.levels) ? swap.set : undefined;
+      if (skill === undefined || level <= 0 || !usableSkill(selection.skillId)) {
         skippedBuffs.push(selection.skillId);
         continue;
       }
       const name = data.skillName(skill.n);
+      // The form decides what the character can use itself (forms.ts); an item's proc is not the character's cast
+      const formReason = procSkills.has(skill.n) ? null : formProblem(data, skill.n, form);
+      if (formReason !== null) {
+        blockedBuffs.push({ skillId: skill.n, reason: formReason });
+        buffNotes.push(`${name} is not counted: ${formReason}`);
+        continue;
+      }
+      const label = castSet === undefined ? name : `${name} (cast on weapon set ${weaponSetName(castSet)})`;
       const auraLevel = auraLevels.get(skill.n);
       if (auraLevel !== undefined) {
+        const whatIfAura = fromWhatIf.has(skill.n);
         if (auraLevel >= level) {
+          const giver = whatIfAura ? 'a what-if entry' : 'an item';
           buffNotes.push(
-            `${name} (level ${String(level)}) is not counted: an item already gives it at level ${String(auraLevel)}, and only one counts`
+            `${name} (level ${String(level)}) is not counted: ${giver} already gives it at level ${String(auraLevel)}, and only one counts`
           );
           continue;
         }
         replaced.add(skill.n);
-        buffNotes.push(`${name} (level ${String(level)}) is counted instead of the item's (level ${String(auraLevel)}): only one counts`);
+        if (whatIfAura)
+          beaten.push({ skillId: skill.n, level: auraLevel, reason: `your buff counts at level ${String(level)}, and only one counts` });
+        const other = whatIfAura ? "the what-if entry's" : "the item's";
+        buffNotes.push(`${name} (level ${String(level)}) is counted instead of ${other} (level ${String(auraLevel)}): only one counts`);
       }
-      const stats = buffStats(data, skill, level, state?.hard ?? 0, ctx);
-      buffContributions.push({ kind: 'buff', label: name, skill: skill.n, stats });
+      // A buff cast on the other set: its columns read that set's stats and levels at the time of the cast
+      const castCtx = castSet === undefined || swap === undefined ? ctx : { ...swap.ctx, unsupported };
+      const stats = buffStats(data, skill, level, state?.hard ?? 0, castCtx);
+      buffContributions.push({ kind: 'buff', label, skill: skill.n, stats });
       const record: Record<string, number> = {};
       const dropped: string[] = [];
       for (const [id, inner] of stats) {
@@ -355,7 +424,9 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
         if (text !== null) dropped.push(text);
       }
       if (dropped.length > 0) unshown.push(`${name} (level ${String(level)}): ${dropped.join(', ')}`);
-      applied.push({ skillId: skill.n, name, level, stats: record });
+      applied.push(
+        castSet === undefined ? { skillId: skill.n, name, level, stats: record } : { skillId: skill.n, name, level, stats: record, castSet }
+      );
     }
     // One note for every buff: damage and the like are effects the sheet has no number for
     if (unshown.length > 0) buffNotes.push(`Buff effects this sheet has no number for: ${unshown.join('; ')}`);
@@ -364,7 +435,8 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
       if (replaced.has(skill.n)) continue;
       const stats = auraStats(data, skill, level, 0, ctx);
       mergeInto(stats, passiveStats(data, skill, level, 0, hardCtx));
-      next.push({ kind: 'item-aura', label: `${data.skillName(skill.n)} (${owner.label})`, item: owner.item, skill: skill.n, stats });
+      const kind = owner.kind === 'what-if' ? 'what-if' : 'item-aura';
+      next.push({ kind, label: `${data.skillName(skill.n)} (${owner.label})`, item: owner.item, skill: skill.n, stats });
     }
     next.push(...buffContributions);
     const nextDerived = derive(character, data, base, [...fixed, ...next]);
@@ -384,9 +456,98 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
     unsupported,
     ctx,
     skippedBuffs,
+    blockedBuffs,
+    form,
     buffNotes,
     unknownAuras,
+    whatIf: hasWhatIf(whatIf)
+      ? { stats: extra.counted, skills: appliedWhatIfSkills(data, auras, dynamic, consumed), skipped: [...whatIfSkipped, ...beaten] }
+      : null,
   };
+}
+
+/** The what-if skills counted (from the final pass's aura contributions of kind `what-if`) and what they add off the sheet */
+function appliedWhatIfSkills(
+  data: SheetData,
+  auras: readonly AuraGrant[],
+  dynamic: readonly Contribution[],
+  consumed: ReadonlySet<number>
+): AppliedWhatIf['skills'] {
+  return auras.flatMap(({ owner, skill, level }) => {
+    // A what-if aura a buff of the same skill replaced has no contribution: not counted
+    const counted = dynamic.some((contribution) => contribution.kind === 'what-if' && contribution.skill === skill.n);
+    if (owner.kind !== 'what-if' || !counted) return [];
+    const stats: Record<string, number> = {};
+    const unshown: string[] = [];
+    for (const contribution of dynamic) {
+      if (contribution.kind !== 'what-if' || contribution.skill !== skill.n) continue;
+      for (const [id, inner] of contribution.stats) {
+        const amount = [...inner.values()].reduce((sum, value) => sum + value, 0);
+        stats[data.statName(id)] = (stats[data.statName(id)] ?? 0) + amount;
+        const text = consumed.has(id) || amount === 0 ? null : statText(data, id, amount);
+        if (text !== null) unshown.push(text);
+      }
+    }
+    return [{ skillId: skill.n, name: data.skillName(skill.n), level, stats, unshown }];
+  });
+}
+
+/**
+ * The levels of the selections a weapon set can cast and keep after a swap (castOnSwap), on that set's sheet. A selection
+ * with a level counts at that level, but the skill is usable when only the other set gives it
+ */
+function swapCastsOf(data: SheetData, c: Computed, set: 1 | 2, buffs: readonly BuffSelection[]): SwapCasts {
+  const levels = new Map<number, number>();
+  for (const selection of buffs) {
+    if (!castOnSwap(data, selection.skillId)) continue;
+    const level = c.levels.byId.get(selection.skillId)?.level ?? 0;
+    if (level > 0) levels.set(selection.skillId, level);
+  }
+  return { set, levels, ctx: c.ctx };
+}
+
+function sameSwapCasts(a: SwapCasts, b: SwapCasts): boolean {
+  const same = (x: Readonly<Record<string, number>>, y: Readonly<Record<string, number>>) =>
+    Object.keys(x).length === Object.keys(y).length && Object.entries(x).every(([key, amount]) => y[key] === amount);
+  return (
+    a.levels.size === b.levels.size &&
+    [...a.levels].every(([id, level]) => b.levels.get(id) === level) &&
+    same(a.ctx.stats, b.ctx.stats) &&
+    same(a.ctx.levelByName, b.ctx.levelByName)
+  );
+}
+
+/**
+ * The buffed computation with buffs cast on the other weapon set (otherSet.ts). The two sets resolve each other: the
+ * other set's sheet with the same selections gives each cast its level there (Battle Command cast there raises Battle
+ * Orders cast there; a Battle Command cast in hand at a higher level counts there too), the set in hand counts a
+ * level-less cast at the higher of the two (and uses a skill only the other set gives at a chosen level). Repeated until
+ * the other set's levels are stable. Without anything on the other set, or without a selection that could be cast there,
+ * it is the plain computation (bit for bit). What-if entries (whatIf.ts) count on both sets, like a charm and body gear:
+ * a what-if +skills or Battle Command raises a cast's level on the other set too.
+ */
+function computeBuffed(
+  character: CharacterFile,
+  data: SheetData,
+  buffs: readonly BuffSelection[],
+  whatIf: WhatIfEntries = NO_WHAT_IF
+): Computed {
+  const other = otherWeaponSet(character);
+  const swappable = buffs.some((selection) => castOnSwap(data, selection.skillId));
+  if (other === null || !swappable) return compute(character, data, buffs, undefined, whatIf);
+  const inHand = weaponSetOf(character);
+  const otherSet = weaponSetOf(other);
+  let otherCasts = swapCastsOf(data, compute(other, data, buffs, undefined, whatIf), otherSet, buffs);
+  let result = compute(character, data, buffs, otherCasts, whatIf);
+  for (let round = 1; round < MAX_SWAP_ROUNDS; round++) {
+    const back = swapCastsOf(data, result, inHand, buffs);
+    const next = swapCastsOf(data, compute(other, data, buffs, back, whatIf), otherSet, buffs);
+    if (sameSwapCasts(next, otherCasts)) return result;
+    otherCasts = next;
+    result = compute(character, data, buffs, otherCasts, whatIf);
+  }
+  result.buffNotes.push('Buffs cast on the other weapon set did not settle; their levels are from the last pass');
+  return result;
 }
 
 // --- outputs -------------------------------------------------------------------------------------------------------
@@ -555,6 +716,8 @@ function attackRatings(character: CharacterFile, data: SheetData, c: Computed, d
     const state = c.levels.byId.get(binding.skillId);
     if (skill === undefined || state === undefined || state.level <= 0) continue;
     const skillPercent = skillToHit(data, skill, state.level, state.hard, c.ctx);
+    // A hand skill the form does not allow keeps its line (the save has it on that button) with the reason
+    const formReason = handFormProblem(data, binding.skillId, c.form);
     hands.push({
       hand,
       skillId: binding.skillId,
@@ -563,6 +726,7 @@ function attackRatings(character: CharacterFile, data: SheetData, c: Computed, d
       skillPercent,
       mainHand: Math.floor((main * (100 + percent + skillPercent)) / 100),
       offHand: off === null || !usesOffHand(skill) ? null : Math.floor((offBase * (100 + offPercent + skillPercent)) / 100),
+      ...(formReason === null ? {} : { formProblem: formReason }),
       status: 'verified',
     });
   }
@@ -713,6 +877,11 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
       `The aura ${data.skillName(skill)} (skill ${String(skill)}) on the ${label} item is not counted: this app's game data does not know it (a save from a newer ESR?)`
     );
   warnings.push(...c.buffNotes);
+  const offSheet = (c.whatIf?.skills ?? []).filter((skill) => skill.unshown.length > 0);
+  if (offSheet.length > 0)
+    warnings.push(
+      `What-if effects this sheet has no number for: ${offSheet.map((skill) => `${skill.name} (level ${String(skill.level)}): ${skill.unshown.join(', ')}`).join('; ')}`
+    );
   for (const what of [...c.unsupported].sort()) warnings.push(`A skill formula could not be worked out and counts as 0: ${what}`);
   const known = new Set(data.text.defs.flatMap((def, id) => (def === undefined ? [] : [id])));
   const unknown = new Set<number>();
@@ -721,7 +890,9 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
   if (unknown.size > 0) warnings.push(`Stats this app's game data does not know (ids ${[...unknown].join(', ')}) are not counted`);
   // Op stats onto a sheet stat that the engine does not apply where they sit (op 11 totals, op 9 vitality_hidden2, an
   // item defense stat outside an item); a buff's are in its own note above
-  const sources = [...c.fixed, ...c.dynamic].filter((contribution) => contribution.kind !== 'buff');
+  const sources = [...c.fixed, ...c.dynamic].filter(
+    (contribution) => contribution.kind !== 'buff' && !(contribution.kind === 'what-if' && contribution.skill !== undefined)
+  );
   const unapplied = [...unappliedOps(data, sources, consumedStats(data))].map(
     ([op, amount]) =>
       statText(data, op.id, amount) ??
@@ -863,6 +1034,8 @@ function sheetOf(character: CharacterFile, data: SheetData, c: Computed, difficu
     block: block(character, data, c, dexterity),
     facts: facts(character, data, c),
     buffs: c.buffs,
+    ...(c.blockedBuffs.length === 0 ? {} : { blockedBuffs: c.blockedBuffs }),
+    ...(c.whatIf === null ? {} : { whatIf: c.whatIf }),
     warnings: warningsOf(data, c, attributes),
   };
 }
@@ -905,20 +1078,28 @@ function markBuffed(buffed: unknown, unbuffed: unknown): void {
   const other = isRecord(unbuffed) ? unbuffed : undefined;
   if (typeof buffed.status === 'string' && !sameData(buffed, other)) buffed.status = 'unverified';
   for (const [key, entry] of Object.entries(buffed))
-    if (key !== 'facts' && key !== 'buffs' && key !== 'warnings') markBuffed(entry, other?.[key]);
+    if (key !== 'facts' && key !== 'buffs' && key !== 'blockedBuffs' && key !== 'whatIf' && key !== 'warnings')
+      markBuffed(entry, other?.[key]);
 }
 
 /**
  * The character's computed sheet for its active weapon set. Without `options.buffs` it is the unbuffed sheet (cast
- * buffs, shrines, elixirs and conditional states are not counted); with buffs, every object with a status in which they
- * change anything is `unverified`. One instance of a skill counts (the highest level of its selections and an item aura
- * of the same skill) and one buff per exclusive group (exclusiveGroupOf: the last selected); warnings say what was left.
+ * buffs, shrines, elixirs and conditional states are not counted); with buffs or what-if entries (`options.whatIf`,
+ * whatIf.ts), every object with a status in which they change anything is `unverified`. One instance of a skill counts
+ * (the highest level of its selections, an item aura and a what-if entry of the same skill) and one buff per exclusive
+ * group (exclusiveGroupOf: the last selected); warnings say what was left.
  */
 export function computeCharacterSheet(character: CharacterFile, data: SheetData, options: SheetOptions = {}): CharacterSheet {
   const difficulty = options.difficulty ?? character.progress.difficulty;
   const buffs = options.buffs ?? [];
-  const sheet = sheetOf(character, data, compute(character, data, buffs), difficulty);
-  if (buffs.length > 0) markBuffed(sheet, sheetOf(character, data, compute(character, data, []), difficulty));
+  const whatIf = options.whatIf ?? NO_WHAT_IF;
+  const sheet = sheetOf(
+    character,
+    data,
+    buffs.length === 0 ? compute(character, data, [], undefined, whatIf) : computeBuffed(character, data, buffs, whatIf),
+    difficulty
+  );
+  if (buffs.length > 0 || hasWhatIf(whatIf)) markBuffed(sheet, sheetOf(character, data, compute(character, data, []), difficulty));
   return sheet;
 }
 

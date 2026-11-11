@@ -37,6 +37,7 @@ const SKILL_COLUMNS = [
   'LevToHit',
   'ToHitCalc',
   'weapsel',
+  'range',
   'calc1',
   'Param1',
 ];
@@ -87,9 +88,9 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
       skillRow({ skill: 'Enemy Aura', aura: '1', aurafilter: String(0x8000 | 3), aurastat1: 'fireresist', aurastatcalc1: '-lvl' }),
       skillRow({ skill: 'Own Aura', aura: '1', aurafilter: '73731', aurastat1: 'fireresist', aurastatcalc1: 'lvl' }),
       skillRow({ skill: 'Summon It', summon: 'golem', aurastat1: 'damageresist', aurastatcalc1: 'lvl' }),
-      skillRow({ skill: 'Self Proc', aurastat1: 'damageresist', aurastatcalc1: 'lvl' }),
+      skillRow({ skill: 'Self Proc', aurastat1: 'damageresist', aurastatcalc1: 'lvl', range: 'none' }),
       skillRow({ skill: 'Curse Proc', aurafilter: '3', aurastat1: 'damageresist', aurastatcalc1: '-lvl' }),
-      skillRow({ skill: 'Bash', charclass: 'bar', skilldesc: 'bash', ToHit: '20', LevToHit: '5', weapsel: '3' }),
+      skillRow({ skill: 'Bash', charclass: 'bar', skilldesc: 'bash', ToHit: '20', LevToHit: '5', weapsel: '3', range: 'h2h' }),
       skillRow({
         skill: 'Wolf Form',
         charclass: 'dru',
@@ -251,7 +252,9 @@ describe('buildCharSheetBundle', () => {
     // read by Dodge's formula: only the column it reaches (and the Param it reads)
     expect(byName.get('Helper')?.row).toEqual({ id: 'Helper', calc1: 'par1*2', Param1: 7 });
     expect(byName.get('Own Aura')?.row).toMatchObject({ aurastat1: 'fireresist', aurafilter: 73731 });
-    expect(byName.get('Self Proc')?.row).toMatchObject({ aurastat1: 'damageresist' });
+    // `range` (attack or cast) only for a skill whose stats reach its owner
+    expect(byName.get('Self Proc')?.row).toMatchObject({ aurastat1: 'damageresist', range: 'none' });
+    expect(byName.get('Bash')?.row.range).toBeUndefined();
     // enemy-only aura, summon and curse proc: nothing reaches the owner, nothing kept
     expect(byName.has('Enemy Aura')).toBe(false);
     expect(byName.has('Summon It')).toBe(false);

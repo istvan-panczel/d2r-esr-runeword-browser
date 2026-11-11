@@ -178,10 +178,12 @@ upload as a whole; stored characters never change on a failure. The switcher lis
 last saved, upload date), and has Upload saves, Remove (the shown one) and Clear all (with two or more), both confirmed.
 
 **Overview** (`components/tabs/OverviewTab.tsx`, `components/overview/`, view model `engine/sheetView.ts`): header (name, level,
-class, difficulty and act, last saved) with **Copy as text** and **Create a build from this character**; the banners
+class, difficulty and act, last saved with its age, e.g. "(3 days ago)", from `savedAgoText`: a stored save shows the
+character as it was then; the switcher's button says the same) with **Copy as text** and **Create a build from this character**; the banners
 (`engine/notices.ts` `characterNotices`); then the sheet (`OverviewSheet`):
 
-- **What is counted** (`SheetIntro`): an _Unbuffed_ label (or the amber _Includes buffs: not yet checked in game_ badge), the
+- **What is counted** (`SheetIntro`): an _Unbuffed_ label (or the amber _Includes buffs: not yet checked in game_ badge; with
+  what-if entries also the violet _Includes what-if entries: not your real numbers_ badge, `SheetStateBadges`), the
   weapon set and the difficulty of the resists; a plain sentence: idle at full life, active weapon set, Charm Inventory, set
   bonuses, passives and item auras; not counted until switched on under Buffs: cast skills, own auras, what an attack gives while
   it is used (Frenzy's charges, Whirlwind's dodge) and item procs; never shrines, elixirs, potions or mercenary auras; the two
@@ -218,7 +220,25 @@ class, difficulty and act, last saved) with **Copy as text** and **Create a buil
   time, arrow keys move the choice), so the page can never show two as on. A cast skill or aura switched on gets a level stepper
   (default: the character's level of it, re-evaluated with the other buffs; "Your level" goes back), a proc keeps its item's
   level and shows its chance and every item that casts it (`items`; an own skill an item also casts says "also cast by"). A
+  cast skill whose level comes from the other weapon set says so after its level ("level 25, cast on weapon set II",
+  `castSetText`: the applied buff's set once it counts, so a chosen level drops it), and the card then has one note
+  (`swapCastNote`: "Cast on weapon set II, then swap back: the level comes from that set's gear. …"). A
   changed number shows the unbuffed value struck through before it and the `?` marker; "Switch all off".
+- **What if** (`WhatIfPanel`, after Buffs; [rules](#what-if)): "Add a stat or an aura to see what an upgrade would change.
+  Nothing is written to your character." Stat rows (a searchable `ComboPicker` of `listWhatIfStats`, a whole-number input
+  that may be negative, named by the stat, the item tooltip's wording of the entry, remove; a typed value outside ±100,000 or
+  a fraction is marked invalid with the value the sheet still uses and goes back to it on leaving the field; a yes / no stat,
+  Ignore Target's Defense, has no number: "Yes", always 1) and aura / skill rows (`listWhatIfSkills`, a level stepper 1–99,
+  remove; a row that does not count says why under it, `whatIfSkillProblem`: a higher row of the same skill, a buff or an
+  item aura of it at a higher level, a passive or a curse); "Add a stat", "Add an aura or skill", "Clear". Under them **What
+  changes** (`whatIfChanges`, `engine/whatIfView.ts`): every headline number that differs from the same sheet without the
+  entries (same difficulty, same buffs), "Strength 986 → 1,217 (+231)", the changed skill levels folded apart ("No number on
+  the cards changes, only skill levels" when only those do), what a skill adds that the sheet has no number for
+  ("Concentration level 6: +125% Enhanced Damage") and a note on an unknown stat; "Nothing added yet" without rows, "These
+  entries change nothing: every value is 0" with rows that are all 0. The cards above
+  follow the entries: a changed number has the `?` mark and the character's own value struck through (the `unverified` diff
+  against the plain sheet, reused: one marker for "not the in-game screen"). The Skills and Combat tabs read the same state
+  and show the badge.
 - The stored base groups (`engine/characterSheet.ts` `overviewGroups`) show only while the sheet's data loads or fails to
   load. Then an "at a glance" line per other tab (`characterGlance`).
 
@@ -227,7 +247,9 @@ class, difficulty and act, last saved) with **Copy as text** and **Create a buil
 class, the difficulty of the resists and "unbuffed" / "with buffs"; attributes; pools; resists with the max when it is not 75;
 defense, DR, MDR, block ("not yet compared with the game"), dodge / avoid / evade when any; speeds; attack rating per hand skill
 ("main / off hand" only for a skill that uses both), AR bonus, DS, CB, LL, ML (zeros left out), target defense; MF, extra gold,
-+all skills; with buffs, the buffs and "buffed numbers not yet checked in game".
++all skills; with buffs, the buffs (with "cast on weapon set II" for one cast on the other set) and "buffed numbers not yet
+checked in game"; with what-if entries, "with what-if entries" in the first line and a last line listing them ("What if: +100
+to Strength, Concentration 6 (not the character's real numbers)").
 
 **The sheet on the page** (`hooks/CharacterSheetProvider.tsx`, `hooks/useSheetView.ts`, `hooks/useCharacterSheet.ts`,
 `engine/sheetCache.ts`): `CharacterSheetProvider` (in `CharacterScreen`'s page, around the tabs) holds the view state per
@@ -235,13 +257,19 @@ character name, in Maps (a character may be called `constructor` or `toString`; 
 chosen difficulty (default: the save's; kept across tab and character switches while the page is open) and the selected buffs
 (also in sessionStorage `myCharacter.buffs`: this browser tab only, never the URL), each with the save they were chosen for
 (`buffMemorySave`: last-saved time and upload time), so a replaced, respecced or removed and uploaded again character starts
-unbuffed; characters no longer stored are dropped on the next change. `useCharacterSheet(character)` loads `charsheet.json` +
-`itemtext.json` (only on the tabs that call it) and returns `{ status, sheet, unbuffed, availableBuffs, data, difficulty,
-setDifficulty, buffs, setBuffs }`; `unbuffed` is the same sheet without buffs when any are on, for the struck-through values.
+unbuffed; characters no longer stored are dropped on the next change. The what-if entries are kept the same way
+(sessionStorage `myCharacter.whatIf`, a Map per name, tied to `buffMemorySave`, malformed rows dropped:
+`parseWhatIfMemory` / `updateWhatIfMemory` in `engine/whatIfView.ts`; a stored stat name must be letters, digits, `_` or
+`-`; the cache key `whatIfKey` is JSON of the sorted entries, so no name can make two lists alike). `useCharacterSheet(character)` loads `charsheet.json` +
+`itemtext.json` (only on the tabs that call it) and returns `{ status, sheet, unbuffed, withoutWhatIf, availableBuffs, data,
+difficulty, setDifficulty, buffs, setBuffs, whatIf, setWhatIf }`; `unbuffed` is the same sheet without buffs and what-if
+entries when any are on, for the struck-through values; `withoutWhatIf` the sheet with the buffs but without the entries, the
+base of What changes.
 Its pure part `computeSheetView` (`engine/sheetViewState.ts`) counts only the remembered selections the character can use
 (`usableSelections`: skills of its buff list, one per exclusive group) and never throws: an engine error is
 `{ status: 'failed', message }`, which the tabs show as a calm panel (`SheetFailedPanel`) with the stored base values. `sheetCache` computes a SheetData once per bundle pair, a sheet
-once per (character, difficulty, buff set; order-free key `buffsKey`, 24 per character) and the buff list once per character:
+once per (character, difficulty, buff set, what-if entries; order-free keys `buffsKey` and `whatIfKey`, 24 per character) and the
+buff list once per character:
 explicit memoisation, because React Compiler memoises per component and each tab would compute again.
 
 **Create a build from this character** (`components/CreateBuildAction.tsx`, `engine/buildHandoff.ts`): navigates to `/builds/new`
@@ -273,7 +301,9 @@ hard points.
 defense, Ignore Target's Defense, the character level and the attack rating of a chosen line (`attackChoices`: each mouse-button
 skill's main hand, and its off hand only when the engine returns one: dual wielding and a skill that uses the off hand, so no
 "Whirlwind, off hand" and nothing for a bow; none: the base attack rating). A failed sheet shows the calm panel. It follows the page's difficulty (and
-changing it there changes the Overview's resists) and buffs, with the Unbuffed / _Includes buffs_ label.
+changing it there changes the Overview's resists), buffs and what-if entries, with the Unbuffed / _Includes buffs_ label and the
+what-if badge. The off-hand line of a dual-wielding character adds that weapon's own −% target defense (`attackChoices`:
+`targetDefense`, `offHandTargetDefense`; INFERRED, D2's rule that an off-hand weapon's own stats count for its hits only), capped at 100 in the input.
 
 **Storage** (`components/tabs/StorageTab.tsx`, `engine/characterStorage.ts`): inventory, belt, Horadric Cube, personal stash, then
 other / corpse / golem items when present, each a collapsible `<details>` of item cards, with the All Items search
@@ -331,6 +361,15 @@ r = attack rating / defense; up to r = 5 it is 100·r⁵ / (r⁵ + 5⁵), above 
 already had it (`modifiers/utils/modifierMath.ts` `hitChance`); combat.json carries the same `attackRating.curve` fact. The
 character level is shown only to say it does not matter.
 
+**Players** (the original game's rule, kept by ESR; not compared with the game screen): a Players choice of 1 to 8 (the game's player count; `/players 8` sets it in
+single player), kept by the view. In Nightmare and Hell a monster's attack rating grows by 8 × (players − 1) / 128 of itself
+(`monsterStats.ts` `withPlayerCount`: +6.25 % per player above one, +43.75 % at 8), so the chance to be hit and the defense
+goals change; monster defense and level do not, so the chance to hit stays. This is the original game's rule (the D2MOO
+decompilation of the 1.10 / 1.14 server: one player count, real or `/players`, feeds life, experience, damage, attack rating
+and drops, fixed when the monster spawns). ESR keeps it: the mod's author confirmed (2026-11-11) that player scaling is fully
+vanilla except the drops, where every player counts fully (vanilla halves the players outside the party's area), and no ESR
+table has a player-count column nor a d2rloader config a player term. Normal is not scaled.
+
 **Monster numbers** (derivation):
 
 1. Pool: levels.txt `mon1..25` in Normal, `nmon1..25` in Nightmare and Hell (VERIFIED columns; that Nightmare and Hell share `nmon`
@@ -351,7 +390,8 @@ character level is shown only to say it does not matter.
    (exact in Nightmare / Hell up to a point of rounding; approximate in Normal, where each monster has its own level).
 
 **Modifiers**: −% Target Defense lowers the monster's defense, halved against uniques and superuniques (VERIFIED: attack-rating.toml
-`live_monster_defense` comment); the tab also halves it against bosses (INFERRED). Ignore Target's Defense makes every chance to hit
+`live_monster_defense` comment) and against act and map bosses (the original game's rule; the owner confirmed it holds in ESR,
+2026-11-11). Ignore Target's Defense makes every chance to hit
 100 %; whether it fails on bosses as in the original game is unknown, so boss rows say "boss: unsure". monprop.txt `monrandombonus`
 (Normal 20 % of spawns +20, Nightmare 30 % +40, Hell 40 % +60, maps 20 % +100) also sets `item_tohit_percent`; the panel shows the
 chance to be hit by such a spawn (INFERRED that monster "+% attack rating" applies).
@@ -433,6 +473,8 @@ up from. Data: `createSheetData(charsheet.json, itemtext.json)` ([GAME-DATA.md �
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `computeCharacterSheet(character, data, opts)`     | `CharacterSheet`: every value a `SheetValue` (`value`, `sources`, `status`, `notes?`), plus `facts`, `warnings`        |
 | `listAvailableBuffs(character, data)`              | `AvailableBuff[]`: own cast skills and auras, self-buff procs of active items, that would change the sheet (see Buffs) |
+| `listWhatIfStats(data, classId)`                   | `WhatIfStatOption[]`: the stats the What if section offers, grouped, worded as an item tooltip ("+N to Strength")      |
+| `listWhatIfSkills(data)`                           | `WhatIfSkillOption[]`: the skills it offers (name, class or item aura, aura, whether it changes a sheet number)        |
 | `toStatsSnapshot(sheet, { savedAt, esrVersion? })` | `CharacterStatsSnapshot`: flat numbers with short keys (`v: 1`), about 400 bytes as JSON, for a shared build           |
 | `createSheetData(charsheet, itemtext)`             | The lookups (build once per loaded bundle pair)                                                                        |
 
@@ -444,8 +486,11 @@ skill. Optional keys: `ars`, `blk` (block, with a shield), `buf` (1 with buffs),
 since 2026-11-11) and `ws` (2 on weapon set 2, else absent).
 
 `options.difficulty` picks the difficulty of the resist penalty (default: the one the save is in); `options.buffs`
-(`{ skillId, level? }[]`) counts buffs. A `SheetSource` has a `kind` (`base`, `item`, `set`, `runic`, `quest`, `passive`,
-`item-aura`, `buff`, `per-level`, `percent`, `attribute`, `class`, `difficulty`, `cap`), a label, a value, and `item`
+(`{ skillId, level? }[]`) counts buffs. `AvailableBuff.castSet` and `AppliedBuff.castSet` (1 or 2) mark a cast skill whose
+level comes from the other weapon set (see Buffs). `options.whatIf` (`{ stats?: { stat, param?, value }[], skills?: { skillId,
+level }[] }`) counts [what-if entries](#what-if) and puts them on `sheet.whatIf`. A `SheetSource` has a `kind` (`base`,
+`item`, `set`, `runic`, `quest`, `passive`, `item-aura`, `buff`, `what-if`, `per-level`, `percent`, `attribute`, `class`,
+`difficulty`, `cap`), a label, a value, and `item`
 (index into `items.player`) or `skill` (skills.txt row) where one applies; the UI names items from the index. Life, mana
 and stamina sources are in points with fractions (the pools are 1/256 fixed point), so they add up before the floor.
 
@@ -480,6 +525,7 @@ VERIFIED = reproduces the three pairs; INFERRED = follows from the data or D2's 
 | Attack rating: ((dex − 7) × 5 + ToHitFactor + to-hit) × (100 + AR% + the skill's ToHitCalc or ToHit + (level − 1) × LevToHit) / 100. The off-hand line uses the whole to-hit with per-level to-hit pooled over every list (SpinToWin 68,978), only for a skill with skills.txt `weapsel` 3 (alternating: Frenzy, claw skills) or 1; Whirlwind (2) shows one line, a skill without weapsel (Attack) none (INFERRED) | VERIFIED                                                  |
 | Speeds: totals; base attack speed 100 − main-hand weapon `speed` + attackrate; base run/walk 100 − worn armour `speed` + velocitypercent                                                                                                                                                                                                                                                                           | VERIFIED                                                  |
 | Dodge / avoid / evade capped by the dodge-avoid-evade-cap plugin (75)                                                                                                                                                                                                                                                                                                                                              | cap INFERRED (no character reached it)                    |
+| Buffs cast on the other weapon set (swap, cast, swap back): a level-less cast skill counts at the higher of its levels on the two sets, a tie on the set in hand; the other set counts with the same body gear and charms, the same selections, and resolves Battle Command cast there first. Auras, procs, attacks (`range` h2h / rng / both, `weapsel`), weapon hexes, shape-shifts stay in hand                 | INFERRED, not on any screenshot                           |
 | Block (only with a shield): (shield block + `toblock` + charstats BlockFactor) × (dex − 15) / (level × 2), at most 75; weapon block not computed                                                                                                                                                                                                                                                                   | INFERRED, not on any screenshot                           |
 | Op stats the engine does not apply where they sit are a warning when a target is on the sheet (`consumed.ts`): other op 11 stats (`total_fire_resist`, `totalmaxhp`, `totalattackspeed` …), op 9 `vitality_hidden2` → hpregen, an item defense stat (`item_armor_percent` …) outside an item                                                                                                                       | gap                                                       |
 
@@ -539,14 +585,111 @@ The selection rules (INFERRED from D2's one-state-per-skill rule, no buffed grou
   levels, the off-hand stats) that differs anywhere from the unbuffed sheet (values, sources, caps, levels), or has no
   counterpart there (array entries matched by skill and hand), is `unverified`. A test walks every number of the sheet.
 
+Shape-shifted forms (`engine/sheet/forms.ts`; the rule is the owner's, 2026-11-11: a shape-shifted character can use only the
+skills made for that form and the ones every form allows, also when an item gives the form). skills.txt says which:
+`restrict` blank = usable unshifted only (Frenzy, Zeal, Holy Armor), 1 = in any form (Battle Orders, the paladin auras, Attack),
+2 = only in the forms of `State1-3` (Feral Rage: wolf; Maul: bear; Primal Savagery, Fire Claws: wolf or bear; Firestorm:
+elementalform); a shape-shift's own state is its `aurastate`. charsheet.json carries `restrict`, `State1-3` and the
+shape-shifts' `aurastate`.
+
+- The form (`Computed.form`): the selected shape-shift, else one an item aura or a what-if entry gives.
+- A buff of a form (`AvailableBuff.needsForm`: "Werewolf or Werebear") counts only while one of its forms is on; otherwise it
+  is left out with a warning and listed in `sheet.blockedBuffs` (the Buffs card says "Not counted: it needs Werewolf form.").
+- A buff for the unshifted character that works while attacking with it (`unshiftedOnly`: `restrict` blank and an attack by
+  `range` / `weapsel`: Frenzy's charges, Whirlwind) does not count while a form is on. A cast one (Holy Armor) still counts:
+  INFERRED, it was cast before changing form and the form does not end it. A proc is the item's cast: no form rule.
+- Mouse-button skills (`HandAttackRating.formProblem`, `handFormProblem`): the attack rating line stays (the save has the
+  skill on that button) with "Not usable now: needs Werewolf form" / "cannot be used in Werewolf form", on the Overview
+  and in the Combat tab's attack choice. Here every `restrict`-blank skill is unusable in a form.
+
+Buffs cast on the other weapon set (`engine/sheet/otherSet.ts`, INFERRED, no in-game check yet): the classic pre-buff is
+to swap to weapon set II (a Call to Arms, a shield with +skills), cast Battle Command and Battle Orders, and swap back; the
+buff keeps the level it was cast at.
+
+- `listAvailableBuffs` also evaluates the character with the other weapon set in hand (`otherWeaponSet`: the same body gear
+  and charms, the other set's hands; only when something is equipped there). A cast skill that set gives alone or at a higher
+  level is listed at that level with `castSet` (1 or 2); a tie stays with the set in hand (no `castSet`).
+- Which skills (`castOnSwap`): own cast skills only. Not an aura or a passive (an aura needs its gear in hand), not a proc
+  (the item must be in hand), and no skill that attacks with the weapon in hand: skills.txt `range` `h2h` / `rng` / `both`
+  (charsheet.json carries `range` for every skill whose stats reach its owner: Frenzy, Zeal, Smite, Feral Rage, Berserk,
+  Lightning Fury) or a `weapsel` (Whirlwind and Fire Whirlwind are range `none` but swing the weapon): their effects are up
+  while attacking, at the fighting set's level. Cast skills are range `none` (or `loc`): Battle Orders, Battle Command,
+  Shout, Enchant, Cold Enchant, Fade, Venom, Burst of Speed, Energy Shield, the armors, Eagle Eye. Not a skill whose
+  stats belong to the weapon in hand (`passiveitype`: the Warlock's Hex: Bane / Purge / Siphon "hex your weapon").
+- Shape-shifts (Werewolf, Werebear, Elemental Form) are cast skills like the others: a form the other set gives at a
+  higher level (its +skills, or an item there that gives the form) is listed "cast on weapon set II" and kept after
+  swapping back. INFERRED from D2 (a form is a timed state and the character can swap weapons in it); not checked in game.
+- `options.buffs`: a selection without a `level` counts at the higher of the two sets' levels. The two sets resolve each
+  other until stable (`computeBuffed`): the other set's computation with the same selections gives each cast its level
+  there (Battle Command cast there raises itself and Battle Orders cast there; a Battle Command cast in hand at a higher
+  level counts there too), and the set in hand counts the cast at that level, its columns evaluated with the other set's
+  stats and levels (as at the time of the cast). `AppliedBuff.castSet` and the buff's source label ("Battle Command (cast
+  on weapon set II)") say it. A given `level` wins (no `castSet`), and a skill only the other set gives is usable at it.
+  Nothing else of the sheet changes: its skill levels, hands and items are the set in hand's.
+- No change when the other set is empty or gives nothing higher: the sheet is the set-in-hand-only one, bit for bit
+  (`sheet.fixture.integration.test.ts` compares every real save with its other set stowed).
+- Real saves (2026-11-11): only Javazon has gear on the other set that raises a cast skill: Call to Arms on set II
+  (+3 all skills, +25 Battle Orders, +20 Battle Command) gives Battle Orders 25 and Battle Command 20 (set I has neither)
+  and Eagle Eye 12 (9 on set I). With Battle Orders and Battle Command: life 1,550 → 2,893, mana 234 → 462, stamina
+  813 → 1,578, +all skills 8 → 11 (predictions for the in-game check).
+
+### What if
+
+`options.whatIf` (`engine/sheet/whatIf.ts`) adds stats and skills the character does not have, to see what an upgrade would
+change. Nothing is written anywhere but this browser tab's session. All INFERRED (no ground truth; they are the engine's own
+rules applied to made-up inputs):
+
+- **Stats** count as if a charm in the Charm Inventory carried them: one contribution (kind `what-if`, label "What if")
+  through the item path, so attribute and life percents, per-level stats, caps and the off-hand split behave as for an item
+  stat (a test compares with a real charm). Values are item units (life in points), whole, ±100,000, may be negative; 0 is
+  left out. Three groups expand like an item tooltip folds them: `all-resists`, `all-max-resists`, `all-attributes`.
+  `item_addclassskills` takes the class as `param`. An unknown stat is a note, never a throw. Ignore Target's Defense is a
+  yes / no stat: the panel always gives 1; a stored 0 or less reads "No Ignore Target's Defense (taken away)".
+- **Skills** count like an aura an equipped item grants (`item_aura` at that level): aurastat columns on the current totals,
+  passivestat columns on the base values, the source kind `what-if`. Allowed for a non-passive skill whose stats reach the
+  owner (`affectsOwner(…, 'cast')`, the buff list's test), whether or not the character has it (a buff of a skill the
+  character cannot use is skipped; a what-if skill is not). Apart from the own-aura and shape-shift groups, like item auras.
+  One instance per skill: the highest level of the what-if entries, an item aura of the skill and a buff of it (notes say
+  which counted, naming the what-if entry or the item). A passive, a curse or an unknown skill is a note. A skill not
+  counted is left out of `sheet.whatIf.skills` (and so of Copy as text) and listed in `sheet.whatIf.skipped` with the reason
+  ("your buff counts at level 30, and only one counts").
+- **Buffs cast on the other weapon set**: `computeBuffed` passes the entries to every computation of both sets, as a
+  charm and body gear count on both: a what-if +all skills, +class skills or Battle Command aura raises a swap cast's level
+  on the other set too, when it raises the skill there at all (the character's own skill; an oskill of another class gets
+  no +all skills: Javazon's Battle Orders 25 and Battle Command 20 from Call to Arms stay, while her own skills rise and
+  her life goes 2,893 → 2,897). A stat that does not touch skill levels leaves the casts as they are, so What changes then
+  lists only that stat's effect (Javazon, +50 dexterity: dexterity, defense, block, attack rating). Tests: a synthetic
+  Barbarian with +3 all skills on set II (`whatIf.test.ts`) and Javazon (`whatIf.fixture.integration.test.ts`).
+- What a skill adds that the sheet has no number for is on `sheet.whatIf.skills[].unshown` and in a warning ("What-if
+  effects this sheet has no number for: Concentration (level 6): +125% Enhanced Damage").
+- Every number the entries change is `unverified`, by the same structural diff as buffs (against the sheet with neither).
+- Pickers: `listWhatIfStats` offers the sheet stats (`consumed.ts`) that make sense to type, in eight groups (attributes,
+  life and mana, defense, resistances, speed, attack, skills, other), not the per-level, single-skill, skill-tab or oskill
+  stats. `listWhatIfSkills` offers every class's skills above that add something an item tooltip can name at level 20 (a
+  control stat alone, Fire Bolt's, does not count), damage-only ones marked "no number on this sheet" (Concentration, Might),
+  and the item-only auras (no class) that change a sheet number: 94 in ESR 3.3.03 (worked out once per data). Both pickers
+  show every option without typing (`ComboPicker` `maxResults` set to the list's length; the list scrolls).
+- The build hand-off and `toStatsSnapshot` never see the entries: `computeBuildStats` computes its own plain sheet (a test).
+
+Sanity case (`whatIf.fixture.integration.test.ts`, SpinToWin 2026-11-11): a level 6 Concentration aura changes no sheet number
+(+125% Enhanced Damage, off the sheet); +100 Strength gives Strength 986 → 1,217 (× 2.31 from 131% strength bonus) and +1 to
+every max resist (79 → 80) through the Wooden Skin item aura (max resists = strength / 1000); Battle Orders level 20 gives life
+6,080 → 8,363, mana 791 → 1,397, stamina 884 → 1,679 and replenish life 2,459 → 3,159.
+
+Skills group of the stat picker (`listWhatIfStats` → `classSkillStats`): after "+N to All Skills" and "+N to <Class> Skill
+Levels" come the class's three skill tabs (`item_addskill_tab`, param `class << 3 | (tab − 1)`: "+N to Combat Skills (Barbarian
+Only)") and every skill of the class by name (`item_singleskill`, param = the skill row: "+N to Frenzy (Barbarian Only)"); the
+option id carries the param (`item_singleskill:574`). As on an item, a single-skill bonus counts only for a skill the character
+has a point in. Another class's skill is added in "Auras and skills" at a level instead (an oskill would need its own buff
+switch).
+
 ### Open in-game checks
 
-- Block chance with a shield (no ground truth shows it) and weapon block.
-- A buffed screen: Battle Orders + Battle Command + Shout cast in that order, the screenshots and the save, for the
-  recast rule and the buff % on life / mana / defense.
-- A mercenary's level on its screen (the experience formula), and a character above the dodge cap.
-- A single-skill bonus on a skill without hard points; the same aura from two items, and from an item and the skill.
-- A bow + magic quiver (PhysMagicBowazo: IAS 88 with the quiver's 29; EleBowazon: attack rating with the quiver's +39,
-  no off-hand line); the off-hand weapon's per-level IAS / DS / CB.
-- Call of the Wild's defense: whether its Enhanced Defense % reaches the character's defense.
-- A dual-wielding character's plain Attack (no `weapsel`): one attack rating line or two.
+Not yet compared with the game: buffed screens (warcries, auras, shape-shifts, buffs cast on the other weapon set), a
+bow with a magic quiver, a Nightmare character, block chance with a shield, a mercenary's level, an item with an unmet
+requirement, hit chance in a map (with `/players`), and the rare save contents no save has shown yet.
+
+Engine questions without a planned check: the same aura from two items, and from an item and the
+skill; the off-hand weapon's per-level IAS / DS / CB; Call of the Wild's defense (whether its Enhanced Defense % reaches
+the character's defense); a dual-wielding character's plain Attack (no `weapsel`): one attack rating line or two; a
+character above the dodge cap.

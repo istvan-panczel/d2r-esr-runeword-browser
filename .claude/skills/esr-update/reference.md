@@ -235,12 +235,37 @@ the owner's OK.
   rating line and states.txt `transform` / `gfxtype` the shape-shift group: a changed value there changes the page. Hand-kept
   engine constants: resist cap 75 / ceiling 95, physical cap 50, Anya +10. With fresh ground-truth saves, re-run
   `sheet.fixture.integration.test.ts` (and `buildDraft.fixture.integration.test.ts`: the build stats from the same save).
+- **Character buffs, forms and What if** (same bundle, docs/features/CHARACTER-SAVE.md "Buffs", "Shape-shifted forms",
+  "What if"): three more skills.txt columns decide what the Buffs card offers, so a changed value changes the page without
+  any warning. `range` (`h2h` / `rng` / `both` = an attack, `none` / `loc` = cast) with `weapsel` and `passiveitype`:
+  which buffs can be "cast on weapon set II" (`engine/sheet/otherSet.ts` `castOnSwap`). `restrict` (blank = unshifted
+  only, 1 = any form, 2 = only the `State1-3` forms) and a shape-shift's `aurastate`: which skills a form allows
+  (`engine/sheet/forms.ts`). After a release that touches skills.txt, diff those columns for the class skills
+  (`git diff` of charsheet.json, or the txt diff) and read a new shape-shift, a new form state or a skill that moved
+  between cast and attack against the docs' lists. The sheet tests name skills by skills.txt row (`BATTLE_ORDERS = 570`,
+  `FRENZY = 574`, `WEREWOLF = 595`, `FERAL_RAGE = 608` … at the top of `buffs.test.ts`, `whatIf.test.ts`,
+  `sheetView.test.ts`) and by name (`castOnSwap`'s cast / attack lists): inserted or renamed skill rows fail there; fix
+  the constants, not the engine. What if: the stat picker's `STAT_OPTIONS` in `engine/sheet/whatIf.ts` is a hand-kept
+  list of itemstatcost names (a renamed or removed stat drops out of the picker silently; `whatIf.test.ts` "offers only
+  stats the sheet applies" and the label checks catch most), the skill tabs and single skills are derived from the
+  class skills' `tab`, and the skill list from every skill's formulas (`listWhatIfSkills`). The docs quote numbers from
+  the owner's saves (SpinToWin: Battle Orders level 20 → life 8,363; Javazon: Battle Orders 25 cast on set II → life
+  2,893), pinned by `whatIf.fixture.integration.test.ts` and `sheet.fixture.integration.test.ts`, which are skipped
+  without the gitignored saves in `test-fixtures/character/`: a rebalanced warcry or aura changes them, so run those two
+  files locally and update the docs with the new numbers. Buffed and what-if numbers have no in-game ground truth yet.
 - **Combat tab** (`combat.json`, `build/bundleCombat.ts`, after areas.json and modifiers.json): monster defense and attack
   rating per area, map and boss from levels.txt / monstats.txt / monlvl.txt / monumod.txt and the attack-rating curve of
   `celestialrayone.attack-rating.toml`. A missing curve fact throws; `combat:` warnings (a curated boss or pool monster
   missing from monstats.txt, a map zone mixing levels, a missing monumod constant, a worked example that no longer
   reproduces) fail `bundleIntegrity.test.ts`. A rebalance shows as changed pinned numbers: re-derive the worked examples in
   docs/features/CHARACTER-SAVE.md "Combat tab" and update `WORKED_EXAMPLES` rather than silencing the warning.
+  Hand-kept rules no file holds (`combat/monsterStats.ts`, `combat/combatRows.ts`): the Players setting (`withPlayerCount`:
+  +8/128 of the monster's attack rating per extra player in Nightmare and Hell, nothing in Normal, nothing on monster
+  defense; the original game's rule, which CelestialRay confirmed for ESR 3.3.03 "except the loot"), −% Target Defense
+  at half strength on uniques and superuniques (the attack-rating.toml `live_monster_defense` comment) and on act and map
+  bosses (owner-confirmed), and Ignore Target's Defense on bosses (unknown, flagged on the page). A patch note or a
+  loader plugin about `/players`, monster scaling per player or target defense → re-read these and the Combat notes in
+  `HitChanceView.tsx`.
 - **Elixirs** (`docs/specializations.htm` Alchemist perks): elixirs.json comes from misc.txt type `upot`, the
   `Utility Elixir` treasure classes, the Gem Infusion cube rows and `celestialrayone.alchemy.toml`
   (`build/bundleElixirs.ts`; `ESR_ALCHEMY_FILE`, `shrines` in `TABLES`). A changed formula, drop chance or perk fact

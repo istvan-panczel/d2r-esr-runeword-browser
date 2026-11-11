@@ -2545,8 +2545,11 @@ export interface CharSheetSkill {
   /**
    * The row as the formula evaluator reads it: `id` = the `skill` name formulas use, then only the columns the sheet and
    * its formulas read (passive / aura stat and calc columns, `passive`, `passivestate`, `aura`, `aurafilter`, `summon`,
-   * the to-hit columns, `weapsel` (the hand(s) it attacks with: 1 left, 2 both at once, 3 alternating, 4 none), and
-   * whatever those formulas reach). Numbers are numbers, formulas text as in the file.
+   * the to-hit columns, `weapsel` (the hand(s) it attacks with: 1 left, 2 both at once, 3 alternating, 4 none), `range`
+   * of a skill with stats that reach its owner (`h2h` / `rng` / `both`: attacks with the weapon in hand; `none` / `loc`:
+   * cast), `restrict` (absent: usable unshifted only, 1: in any form, 2: only in the `State1-3` forms) with `State1-3`,
+   * `aurastate` of a shape-shift (the state its form is), and whatever those formulas reach). Numbers are numbers,
+   * formulas text as in the file.
    */
   row: SkillCalcRow;
 }

@@ -14,8 +14,8 @@ const MARK: Readonly<Record<Exclude<SheetStatus, 'verified'>, { readonly glyph: 
 };
 
 /**
- * The small marker of a number that is not backed by the in-game screen: ≈ inferred, ? changed by a buff (not yet
- * checked in game). The glyph is decorative; the status is spoken as text.
+ * The small marker of a number that is not backed by the in-game screen: ≈ inferred, ? changed by a buff or a what-if
+ * entry (not yet checked in game). The glyph is decorative; the status is spoken as text.
  */
 export function StatusMark({ status, className }: { readonly status: SheetStatus; readonly className?: string }) {
   if (status === 'verified') return null;
@@ -36,7 +36,7 @@ export function StatusMark({ status, className }: { readonly status: SheetStatus
   );
 }
 
-/** A number, with the unbuffed value struck through before it when a buff changed it */
+/** A number, with the character's own value struck through before it when a buff or a what-if entry changed it */
 export function ValueText({
   text,
   unbuffedText,
@@ -50,11 +50,11 @@ export function ValueText({
     <span className={cn('inline-flex items-baseline gap-1.5 tabular-nums', className)}>
       {unbuffedText !== null && (
         <span className="text-xs font-normal text-muted-foreground line-through decoration-muted-foreground/60">
-          <span className="sr-only">unbuffed </span>
+          <span className="sr-only">your own value </span>
           {unbuffedText}
         </span>
       )}
-      {unbuffedText !== null && <span className="sr-only">, with buffs </span>}
+      {unbuffedText !== null && <span className="sr-only">, now </span>}
       <span>{text}</span>
     </span>
   );
@@ -136,14 +136,14 @@ interface SourcesPopoverProps extends SourcesBodyProps {
 }
 
 /**
- * "Life 8,169: where it comes from (not yet checked in game, unbuffed 6,080)": the number, what the row says beside it
- * (a resist's state), its status and the unbuffed value
+ * "Life 8,169: where it comes from (not yet checked in game, your own value 6,080)": the number, what the row says beside
+ * it (a resist's state), its status and the value without buffs and what-if entries
  */
 function triggerLabel(title: string, text: string, status: SheetStatus, unbuffedText: string | null, spoken?: string): string {
   const extra = [
     spoken ?? null,
     status === 'verified' ? null : STATUS_TEXT[status].short.toLowerCase(),
-    unbuffedText === null ? null : `unbuffed ${unbuffedText}`,
+    unbuffedText === null ? null : `your own value ${unbuffedText}`,
   ];
   const note = extra.filter((part) => part !== null).join(', ');
   return `${title} ${text}: where it comes from${note === '' ? '' : ` (${note})`}`;

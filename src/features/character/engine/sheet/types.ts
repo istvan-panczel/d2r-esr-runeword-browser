@@ -8,8 +8,9 @@ import type { DifficultyIndex } from '../../parser/types';
  * How far a number is backed by in-game ground truth:
  * - `verified`: the rule reproduced the in-game character screen of the ground-truth characters
  * - `inferred`: follows from the data or the D2 rules, not compared with the game (or the inputs never occurred there)
- * - `unverified`: depends on selected buffs, for which no ground truth exists yet. computeCharacterSheet sets it on every
- *   object with a `status` in which any number (sources and caps included) differs from the unbuffed sheet
+ * - `unverified`: depends on selected buffs or "what if" entries, for which no ground truth exists yet.
+ *   computeCharacterSheet sets it on every object with a `status` in which any number (sources and caps included)
+ *   differs from the plain sheet (no buffs, no what-if entries)
  */
 export type SheetStatus = 'verified' | 'inferred' | 'unverified';
 
@@ -30,6 +31,8 @@ export type SheetSourceKind =
   | 'item-aura'
   /** A selected buff */
   | 'buff'
+  /** A "what if" entry the user added: a stat (as if a charm carried it) or a skill (as if an item gave it as an aura) */
+  | 'what-if'
   /** Per-character-level stats, resolved at the character's level */
   | 'per-level'
   /** A percent bonus (strength %, life %, defense %, attack rating %) */
@@ -89,6 +92,8 @@ export interface HandAttackRating {
   mainHand: number;
   /** Second weapon line when dual wielding, else null */
   offHand: number | null;
+  /** Why the skill cannot be used in the character's current form ("it needs Werewolf form"); absent when it can */
+  formProblem?: string;
   status: SheetStatus;
 }
 
@@ -230,11 +235,18 @@ export interface CharacterSheet {
   facts: SheetFacts;
   /** Buffs counted in this sheet (empty for the unbuffed sheet) */
   buffs: AppliedBuff[];
+  /** Selected buffs the character's form does not allow (forms.ts), with why; absent when there is none */
+  blockedBuffs?: { skillId: number; reason: string }[];
+  /** The "what if" entries counted; absent when none were given (the character's own numbers) */
+  whatIf?: AppliedWhatIf;
   /** Things the engine could not do or doubts (unknown stats, unsupported formula reads, unmet requirements) */
   warnings: string[];
 }
 
-/** A buff to count: the skill, at its effective level unless `level` is given */
+/**
+ * A buff to count: the skill, at its effective level unless `level` is given. A level-less cast skill counts at the
+ * higher of its levels on the two weapon sets (AppliedBuff.castSet says when it is the other one)
+ */
 export interface BuffSelection {
   skillId: number;
   level?: number;
@@ -253,8 +265,13 @@ export interface AvailableBuff {
   name: string;
   /** Each skill is listed once: an own skill (cast / aura) unless a proc gives a higher level */
   kind: BuffKind;
-  /** The level it would be counted at (the highest of the own skill and its procs) */
+  /** The level it would be counted at (the highest of the own skill on either weapon set and its procs) */
   level: number;
+  /**
+   * A cast skill (not an aura or proc, not an attack) whose level comes from the other weapon set: only
+   * that set gives it, or at a higher level (cast there, then swap back). Absent when the set in hand is as good
+   */
+  castSet?: 1 | 2;
   /** Item index for a proc (the item of the listed level) */
   item?: number;
   /** Proc chance in % */
@@ -263,6 +280,10 @@ export interface AvailableBuff {
   items?: number[];
   /** The sheet stats it changes (itemstatcost names) */
   stats: string[];
+  /** A skill of a shape-shifted form: the forms it needs one of ("Werewolf or Werebear"); it counts only in one (forms.ts) */
+  needsForm?: string;
+  /** A skill that works while attacking with it and only unshifted: it does not count while a form is on (forms.ts) */
+  unshiftedOnly?: true;
   /**
    * Buffs of one group are mutually exclusive: `aura` (an own aura: skills.txt `aura` 1, one at a time; item auras are
    * apart) and `shapeshift` (a states.txt morph state: one form at a time). Render a group as single choice;
@@ -278,6 +299,48 @@ export interface AppliedBuff {
   level: number;
   /** Stat name → value added (stat-list units: life / mana × 256) */
   stats: Record<string, number>;
+  /** Cast on the other weapon set (its level and stats from that set's gear); absent: the set in hand (`weaponSet`) */
+  castSet?: 1 | 2;
+}
+
+/**
+ * A stat added by hand: an itemstatcost name (or one of whatIf.ts's groups: `all-resists`, `all-max-resists`,
+ * `all-attributes`) with the value as an item stores it (life in points, not × 256). May be negative
+ */
+export interface WhatIfStat {
+  stat: string;
+  /** The stat's param (`item_addclassskills`: the class id); 0 when omitted */
+  param?: number;
+  value: number;
+}
+
+/** A skill added by hand at a level, counted like an aura an equipped item grants */
+export interface WhatIfSkill {
+  skillId: number;
+  level: number;
+}
+
+/** What the user adds on top of the sheet to see what an upgrade would change (nothing is written to the save) */
+export interface WhatIfEntries {
+  stats?: readonly WhatIfStat[];
+  skills?: readonly WhatIfSkill[];
+}
+
+export interface AppliedWhatIf {
+  /** The stat entries counted (zero values and unknown stats left out), with the item tooltip's wording */
+  stats: (WhatIfStat & { text: string })[];
+  /** The skills counted (one per skill, the highest level; an item aura of the same skill at a higher level wins) */
+  skills: {
+    skillId: number;
+    name: string;
+    level: number;
+    /** Stat name → value added (stat-list units) */
+    stats: Record<string, number>;
+    /** What it adds that the sheet has no number for, as the item tooltip words it ("+45% Enhanced Damage") */
+    unshown: string[];
+  }[];
+  /** The skills not counted (after one per skill, the highest level) and why ("an item already gives it at level 12") */
+  skipped: { skillId: number; level: number; reason: string }[];
 }
 
 export interface SheetOptions {
@@ -288,6 +351,11 @@ export interface SheetOptions {
    * selections and an item aura of the same skill), and one buff per exclusive group (the last selected)
    */
   buffs?: readonly BuffSelection[];
+  /**
+   * Stats and skills to add on top (whatIf.ts): stats as if a charm carried them, skills as if an equipped item gave them
+   * as an aura. Every number they change is marked `unverified`
+   */
+  whatIf?: WhatIfEntries;
 }
 
 /**

@@ -29,6 +29,7 @@ import type {
   SheetValue,
   SkillLevel,
 } from './sheet/types';
+import { weaponSetName } from './sheet/otherSet';
 
 /** How a row's number reads: the stat units, a yes/no flag, or a reduction ("−28%") */
 export type RowUnit = StatUnit | 'flag' | 'reduction';
@@ -48,7 +49,7 @@ export const STATUS_TEXT: Readonly<Record<Exclude<SheetStatus, 'verified'>, { re
   },
   unverified: {
     short: 'Not yet checked in game',
-    long: 'Changed by a buff you switched on. Buffed numbers have not been checked against the game yet.',
+    long: 'Changed by a buff you switched on or a what-if entry you added. Such numbers have not been checked against the game yet.',
   },
 };
 
@@ -69,7 +70,7 @@ export interface StatRow {
   readonly unbuffedText: string | null;
 }
 
-interface RowSpec {
+export interface RowSpec {
   readonly key: string;
   readonly label: string;
   readonly unit: RowUnit;
@@ -162,6 +163,16 @@ const FIND_SPECS: readonly RowSpec[] = [
 const RECOVERY_SPECS: readonly RowSpec[] = [
   spec('rl', 'Replenish life', 'number', (s) => s.regen.life),
   spec('rm', 'Mana regeneration', 'percent', (s) => s.regen.mana),
+];
+
+/** Every row of the Overview's defense, speed, offense, find and recovery lists, in card order (whatIfView.ts diffs them) */
+export const OVERVIEW_ROW_SPECS: readonly RowSpec[] = [
+  ...DEFENSE_SPECS,
+  ...ABSORB_SPECS,
+  ...SPEED_SPECS,
+  ...OFFENSE_SPECS,
+  ...FIND_SPECS,
+  ...RECOVERY_SPECS,
 ];
 
 export interface OverviewRows {
@@ -358,10 +369,15 @@ export interface HandRow {
   /** "61,474" or "61,474 / 68,978" */
   readonly text: string;
   readonly unbuffedText: string | null;
+  /** "needs Werewolf form": why the skill cannot be used in the character's current form; null when it can */
+  readonly formProblem: string | null;
   readonly status: SheetStatus;
   /** Where the main-hand number comes from: the base attack rating's parts with the skill's % */
   readonly value: SheetValue;
 }
+
+/** "it needs Werewolf form" → "needs Werewolf form" (the engine's reason reads after "is not counted:") */
+const withoutIt = (reason: string) => reason.replace(/^it /, '');
 
 export function handRows(sheet: CharacterSheet, unbuffed: CharacterSheet | null, format: Intl.NumberFormat = EN_NUMBERS): HandRow[] {
   const { base, percent } = sheet.attackRating;
@@ -384,6 +400,8 @@ export function handRows(sheet: CharacterSheet, unbuffed: CharacterSheet | null,
     ];
     const notes = [`(${format.format(flatSum)}) × (100 + ${String(total)})%, rounded down`];
     if (hand.offHand !== null) notes.push("Second number: the other weapon's line, with its own attack rating bonuses");
+    const formProblem = hand.formProblem === undefined ? null : withoutIt(hand.formProblem);
+    if (formProblem !== null) notes.push(`You cannot use ${hand.name} right now: it ${formProblem}`);
     return {
       key: `${hand.hand}:${String(hand.skillId)}`,
       label: hand.name,
@@ -393,6 +411,7 @@ export function handRows(sheet: CharacterSheet, unbuffed: CharacterSheet | null,
       offHand: hand.offHand,
       text,
       unbuffedText: beforeText !== null && beforeText !== text ? beforeText : null,
+      formProblem,
       status: hand.status,
       value: { value: hand.mainHand, sources, status: hand.status, notes },
     };
@@ -403,25 +422,46 @@ export interface AttackChoice {
   readonly key: string;
   readonly label: string;
   readonly attackRating: number;
+  /** "−x% Target Defense" of that attack: the sheet's, plus the off-hand weapon's own on its line (INFERRED, D2's rule) */
+  readonly targetDefense: number;
+  /** The off-hand weapon's own share of `targetDefense` (0 on every other line) */
+  readonly offHandTargetDefense: number;
 }
 
-/** The Combat tab's attack rating choices: each hand skill's main-hand line and, dual wielding, its other weapon's line */
+/**
+ * The Combat tab's attack rating choices: each hand skill's main-hand line and, dual wielding, its other weapon's line.
+ * The off-hand line adds that weapon's own −% target defense, which the sheet keeps apart (it counts for its hits only).
+ */
 export function attackChoices(sheet: CharacterSheet, format: Intl.NumberFormat = EN_NUMBERS): AttackChoice[] {
+  const targetDefense = sheet.offense.targetDefense.value;
+  const offHandTargetDefense = sheet.offense.offHand?.targetDefense ?? 0;
   const choices = sheet.attackRating.hands.flatMap((hand): AttackChoice[] => {
     const button = hand.hand === 'left' ? 'left' : 'right';
-    const main = { key: `${hand.hand}:${String(hand.skillId)}:main`, attackRating: hand.mainHand };
-    if (hand.offHand === null) return [{ ...main, label: `${hand.name} (${button}), ${format.format(hand.mainHand)}` }];
+    // A skill the current form does not allow stays listed (the save has it on that button), with the reason
+    const form = hand.formProblem === undefined ? '' : ` (${withoutIt(hand.formProblem)})`;
+    const main = { key: `${hand.hand}:${String(hand.skillId)}:main`, attackRating: hand.mainHand, targetDefense, offHandTargetDefense: 0 };
+    if (hand.offHand === null) return [{ ...main, label: `${hand.name} (${button}), ${format.format(hand.mainHand)}${form}` }];
     return [
-      { ...main, label: `${hand.name} (${button}), main hand ${format.format(hand.mainHand)}` },
+      { ...main, label: `${hand.name} (${button}), main hand ${format.format(hand.mainHand)}${form}` },
       {
         key: `${hand.hand}:${String(hand.skillId)}:off`,
-        label: `${hand.name} (${button}), off hand ${format.format(hand.offHand)}`,
+        label: `${hand.name} (${button}), off hand ${format.format(hand.offHand)}${form}`,
         attackRating: hand.offHand,
+        targetDefense: targetDefense + offHandTargetDefense,
+        offHandTargetDefense,
       },
     ];
   });
   if (choices.length > 0) return choices;
-  return [{ key: 'base', label: `No skill, ${format.format(sheet.attackRating.base.value)}`, attackRating: sheet.attackRating.base.value }];
+  return [
+    {
+      key: 'base',
+      label: `No skill, ${format.format(sheet.attackRating.base.value)}`,
+      attackRating: sheet.attackRating.base.value,
+      targetDefense,
+      offHandTargetDefense: 0,
+    },
+  ];
 }
 
 /**
@@ -451,6 +491,7 @@ const KIND_LABELS: Readonly<Record<SheetSourceKind, string>> = {
   passive: 'Passive skill',
   'item-aura': 'Item aura',
   buff: 'Buff',
+  'what-if': 'What if',
   'per-level': 'Per level',
   percent: 'Percent',
   attribute: 'Attribute',
@@ -575,6 +616,40 @@ export function buffGroups(available: readonly AvailableBuff[]): BuffGroup[] {
     const buffs = available.filter((buff) => buff.kind === group.kind);
     return buffs.length === 0 ? [] : [{ ...group, buffs }];
   });
+}
+
+/** Whether the character has a shape-shift among its buffs (only then "not while shape-shifted" is worth saying) */
+export const canShapeShift = (available: readonly AvailableBuff[]) => available.some((buff) => buff.exclusiveGroup === 'shapeshift');
+
+/**
+ * "needs Werewolf or Werebear form" / "not while shape-shifted": what a listed buff asks of the character's form, else
+ * null. The second only for a character that can shape-shift (`shifter`): every melee skill of the others has it
+ */
+export function buffFormText(buff: Pick<AvailableBuff, 'needsForm' | 'unshiftedOnly'>, shifter: boolean): string | null {
+  if (buff.needsForm !== undefined) return `needs ${buff.needsForm} form`;
+  return shifter && buff.unshiftedOnly === true ? 'not while shape-shifted' : null;
+}
+
+/** "Not counted: it needs Werewolf form.": why a switched-on buff does not count in the character's form, else null */
+export function blockedBuffText(sheet: Pick<CharacterSheet, 'blockedBuffs'>, skillId: number): string | null {
+  const reason = sheet.blockedBuffs?.find((entry) => entry.skillId === skillId)?.reason;
+  return reason === undefined ? null : `Not counted: ${reason}.`;
+}
+
+/** "cast on weapon set II" for a buff whose level comes from the other weapon set, else null */
+export function castSetText(castSet: 1 | 2 | undefined): string | null {
+  return castSet === undefined ? null : `cast on weapon set ${weaponSetName(castSet)}`;
+}
+
+/**
+ * The Buffs card's one note when a listed buff comes from the other weapon set: cast there, then swap back. Null when
+ * every buff is cast with the set in hand
+ */
+export function swapCastNote(available: readonly AvailableBuff[]): string | null {
+  const set = available.find((buff) => buff.castSet !== undefined)?.castSet;
+  return set === undefined
+    ? null
+    : `Cast on weapon set ${weaponSetName(set)}, then swap back: the level comes from that set’s gear. The rest of the sheet is for the set in hand.`;
 }
 
 export const isBuffOn = (selections: readonly BuffSelection[], skillId: number) => selections.some((entry) => entry.skillId === skillId);
@@ -811,8 +886,9 @@ export function sheetText(sheet: CharacterSheet, { className }: CopyInput): stri
   const buffed = sheet.buffs.length > 0;
   const { attributes: a, resists: r, speed, offense, leech, find } = sheet;
   const lines: string[] = [];
+  const whatIf = sheet.whatIf === undefined ? '' : ', with what-if entries';
   lines.push(
-    `${sheet.name}, level ${String(sheet.level)} ${className} (ESR, ${DIFFICULTY_NAMES[sheet.difficulty]} resists, ${buffed ? 'with buffs' : 'unbuffed'})`
+    `${sheet.name}, level ${String(sheet.level)} ${className} (ESR, ${DIFFICULTY_NAMES[sheet.difficulty]} resists, ${buffed ? 'with buffs' : 'unbuffed'}${whatIf})`
   );
   lines.push(
     listed([
@@ -884,7 +960,19 @@ export function sheetText(sheet: CharacterSheet, { className }: CopyInput): stri
   if (findLine.length + skills.length > 0) lines.push([...findLine, ...skills].join(', '));
   if (buffed)
     lines.push(
-      `Buffs: ${sheet.buffs.map((buff) => `${buff.name} ${String(buff.level)}`).join(', ')} (buffed numbers not yet checked in game)`
+      `Buffs: ${sheet.buffs
+        .map((buff) => {
+          const where = castSetText(buff.castSet);
+          return `${buff.name} ${String(buff.level)}${where === null ? '' : ` (${where})`}`;
+        })
+        .join(', ')} (buffed numbers not yet checked in game)`
     );
+  if (sheet.whatIf !== undefined) {
+    const entries = [
+      ...sheet.whatIf.stats.map((entry) => entry.text),
+      ...sheet.whatIf.skills.map((skill) => `${skill.name} ${String(skill.level)}`),
+    ];
+    lines.push(`What if: ${entries.length === 0 ? 'nothing counted' : entries.join(', ')} (not the character's real numbers)`);
+  }
   return lines.join('\n');
 }

@@ -22,7 +22,7 @@ import {
   type CombatSection,
   type InputEdit as Edit,
 } from './combatRows';
-import type { CombatDifficulty } from './monsterStats';
+import { MAX_PLAYERS, type CombatDifficulty } from './monsterStats';
 
 export interface HitChanceViewProps {
   /** The character's attack rating against monsters (the inputs start from it and can be changed) */
@@ -45,6 +45,7 @@ const SERIES_COLORS = '[--combat-hit:#2a78d6] [--combat-behit:#eb6834] dark:[--c
 const CARD_CLASS = 'rounded-xl border bg-card p-4 shadow-sm';
 const DIFFICULTY_OPTIONS = DIFFICULTY_NAMES.map((label, value) => ({ value: String(value), label }));
 const KIND_OPTIONS = COMBAT_KINDS.map(({ kind, label }) => ({ value: kind, label }));
+const PLAYER_OPTIONS = Array.from({ length: MAX_PLAYERS }, (_, index) => ({ value: String(index + 1), label: String(index + 1) }));
 
 /**
  * Chance to hit and to be hit across the areas, endgame maps and bosses for an attack rating and a defense: a table of
@@ -100,6 +101,7 @@ function HitChanceContent({ bundle, ...props }: HitChanceViewProps & { readonly 
     props.onDifficultyChange?.(value);
   };
   const [kind, setKind] = useState<CombatKind>('regular');
+  const [players, setPlayers] = useState(1);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
@@ -116,11 +118,11 @@ function HitChanceContent({ bundle, ...props }: HitChanceViewProps & { readonly 
   const edited = arText !== null || defText !== null || reductionText !== null || ignoreDefense !== null;
   const hasCharacter = props.attackRating !== undefined || props.defense !== undefined;
 
-  const sections = buildCombatSections(data, player, { difficulty, kind });
+  const sections = buildCombatSections(data, player, { difficulty, kind, players });
   const rows = rowsByKey(sections);
   // Champion / unique medians under each regular row
-  const champions = kind === 'regular' ? rowsByKey(buildCombatSections(data, player, { difficulty, kind: 'champion' })) : null;
-  const uniques = kind === 'regular' ? rowsByKey(buildCombatSections(data, player, { difficulty, kind: 'unique' })) : null;
+  const champions = kind === 'regular' ? rowsByKey(buildCombatSections(data, player, { difficulty, kind: 'champion', players })) : null;
+  const uniques = kind === 'regular' ? rowsByKey(buildCombatSections(data, player, { difficulty, kind: 'unique', players })) : null;
   const fallbackRow: CombatRow | undefined =
     sections.find((section) => section.key === 'maps')?.groups[0]?.rows[0] ?? rows.values().next().value;
   const selected = (selectedKey === null ? undefined : rows.get(selectedKey)) ?? fallbackRow;
@@ -173,6 +175,19 @@ function HitChanceContent({ bundle, ...props }: HitChanceViewProps & { readonly 
               setKind(value as CombatKind);
             }}
           />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground" aria-hidden>
+              Players
+            </span>
+            <Pills
+              label="Players"
+              options={PLAYER_OPTIONS}
+              value={String(players)}
+              onChange={(value) => {
+                setPlayers(Number(value));
+              }}
+            />
+          </div>
           {hasCharacter && edited && (
             <Button type="button" variant="outline" size="sm" onClick={reset}>
               Use the character&apos;s values
@@ -182,6 +197,13 @@ function HitChanceContent({ bundle, ...props }: HitChanceViewProps & { readonly 
         {props.characterLevel !== undefined && (
           <p className="text-xs text-muted-foreground">
             Level {props.characterLevel}: your level does not change these chances, ESR&apos;s hit formula has no level term.
+          </p>
+        )}
+        {players > 1 && (
+          <p className="text-xs text-muted-foreground">
+            {difficulty === 0
+              ? `Players ${String(players)}: in Normal the player count does not change these chances.`
+              : `Players ${String(players)}: monsters have +${String((players - 1) * 6.25)}% attack rating, so they hit you more often. Your chance to hit them stays the same.`}
           </p>
         )}
         <p className="text-xs text-muted-foreground">
@@ -269,9 +291,9 @@ function CombatNotes() {
           and skills that always hit do not roll at all; areas whose monsters only cast show no chance to be hit.
         </li>
         <li>
-          −% Target Defense lowers the monster&apos;s defense, halved against uniques and superuniques (the attack rating plugin&apos;s
-          rule); it is also halved against bosses here, which is an assumption. Ignore Target&apos;s Defense makes every attack hit; whether
-          it fails on bosses, as it did in the original game, is unknown.
+          −% Target Defense lowers the monster&apos;s defense, at half strength against uniques, superuniques and act and map bosses, as in
+          the original game. Ignore Target&apos;s Defense makes every attack hit; whether it fails on bosses, as it did in the original
+          game, is unknown.
         </li>
         <li>
           Monster levels: Nightmare and Hell use the area level, Normal the monster&apos;s own level. Champions are 2 levels higher with
@@ -282,6 +304,12 @@ function CombatNotes() {
           Each row is the area&apos;s median regular monster type, with the range of its types beside it. Treasure goblins, the Corrupted
           Zakarum special spawns and bosses are left out of the areas; bosses have their own rows. Terror zones raise monster levels and are
           not shown.
+        </li>
+        <li>
+          Players is the game&apos;s player count, which <code>/players 8</code> sets in single player. In Nightmare and Hell each player
+          above one gives monsters +6.25% attack rating (and damage), so +43.75% at 8; their defense and level stay the same. It also gives
+          them +50% life and experience per player and better drops, and it counts for monsters that appear after you change it. ESR keeps
+          the original game&apos;s rules here (confirmed by the mod&apos;s author), except that every player counts fully for drops.
         </li>
       </ul>
     </section>

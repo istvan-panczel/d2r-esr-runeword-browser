@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useFilesDrop } from '@/features/stash/hooks/useFileDrop';
+import { useClockValue } from '@/features/terror-zones/store/clock';
 import type { CharacterEntry } from '../engine/characterList';
+import { savedAgoText } from '../engine/notices';
 import { useCharacter } from '../hooks/useCharacter';
 import { CharacterFileButton } from './CharacterFileButton';
 
@@ -51,6 +53,8 @@ export function CharacterSwitcher({ current }: { readonly current: CharacterEntr
     void upload(files);
   });
   const { file } = current;
+  const lastSavedAt = current.result.ok ? current.result.character.lastSavedAt : null;
+  const savedAgo = useClockValue((now) => (lastSavedAt === null ? '' : savedAgoText(lastSavedAt, now)));
 
   return (
     <div
@@ -77,7 +81,10 @@ export function CharacterSwitcher({ current }: { readonly current: CharacterEntr
                 )}
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate font-semibold">{current.key}</span>
-                  <span className="truncate text-xs font-normal text-muted-foreground">{entrySummary(current)}</span>
+                  <span className="truncate text-xs font-normal text-muted-foreground">
+                    {entrySummary(current)}
+                    {savedAgo !== '' && ` · saved ${savedAgo}`}
+                  </span>
                 </span>
               </span>
               <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />

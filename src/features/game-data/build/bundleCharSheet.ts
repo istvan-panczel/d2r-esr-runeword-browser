@@ -9,8 +9,10 @@
  *   type (ESR's arrow and bolt quivers, itemtypes.txt Equiv tree: no `weap` ancestor, asserted to be `misl`), armor.txt
  *   speed and block
  * - skills: class skills, every skill an item property names (itemtext.json `skills`) that carries passive or aura
- *   stats, and every row and column their passive / aura / to-hit formulas reach (`collectFormulaRefs`); `shapeshift`
- *   when the skill's `aurastate` is a states.txt morph state (`transform` 1, `gfxtype` 1: Werewolf, Werebear, Elemental Form)
+ *   stats (with `range`: attack or cast), and every row and column their passive / aura / to-hit formulas reach
+ *   (`collectFormulaRefs`); `shapeshift` when the skill's `aurastate` is a states.txt morph state (`transform` 1,
+ *   `gfxtype` 1: Werewolf, Werebear, Elemental Form), with that `aurastate`; `restrict` and `State1-3` (the forms a
+ *   skill works in)
  * - sets: sets.txt partial (PCode2a … 5b) and full (FCode1-8) bonuses as saved stats; a save holds only each set item's
  *   own bonus lists, never these
  * - rules: difficultylevels.txt resist penalties, ESR loader plugin settings (Runic Insight, charm dedup, charm
@@ -95,6 +97,7 @@ const AURA_SLOTS = range(1, 6);
 const PASSIVE_COLUMNS = [...PASSIVE_SLOTS.flatMap((n) => [`passivestat${String(n)}`, `passivecalc${String(n)}`]), 'passiveitype'];
 const AURA_COLUMNS = AURA_SLOTS.flatMap((n) => [`aurastat${String(n)}`, `aurastatcalc${String(n)}`]);
 const TO_HIT_COLUMNS = ['ToHit', 'LevToHit', 'ToHitCalc'];
+const FORM_COLUMNS = ['restrict', 'State1', 'State2', 'State3'];
 
 /** hireling.txt `HireDesc` → type label (the page labels of build/bundleMercenaries.ts HIRE_DESC, inverted) */
 const HIRE_DESC_LABELS: Readonly<Partial<Record<string, string>>> = {
@@ -308,14 +311,22 @@ function readSkills(input: CharSheetInput, warnings: string[]): CharSheetSkill[]
     if (isPassive && has(row, PASSIVE_COLUMNS)) for (const column of ['passive', 'passivestate', ...PASSIVE_COLUMNS]) columns.add(column);
     // Aura and passive stats of a skill that reaches its owner: item auras, own auras and buffs, oskills, self-buff procs
     const reachesOwner = affectsOwner(row, 'cast') || (owned && affectsOwner(row, 'item-aura'));
-    if (reachesOwner && has(row, [...AURA_COLUMNS, ...PASSIVE_COLUMNS]))
+    if (reachesOwner && has(row, [...AURA_COLUMNS, ...PASSIVE_COLUMNS])) {
       for (const column of ['passive', 'passivestate', 'aura', 'aurafilter', ...AURA_COLUMNS, ...PASSIVE_COLUMNS]) columns.add(column);
+      // Whether it attacks with the weapon in hand (`h2h`, `rng`, `both`) or is cast (`none`, `loc`): a buff cast on the
+      // other weapon set is kept after swapping back only when it is cast (character/engine/sheet/otherSet.ts)
+      if (row.range !== undefined) columns.add('range');
+    }
     if ((cls !== undefined || owned || baseSkill) && has(row, TO_HIT_COLUMNS)) for (const column of TO_HIT_COLUMNS) columns.add(column);
     // Which hand(s) the skill attacks with: the sheet gives an off-hand attack rating line only to one using the off hand
     if ((cls !== undefined || owned || baseSkill) && row.weapsel !== undefined) columns.add('weapsel');
     if (cls === undefined && !baseSkill && columns.size === 0) return;
-    columnsById.set(id, columns);
     const shapeshift = shapeStates.has(tsv.str('aurastate')) ? { shapeshift: true as const } : {};
+    // Which form the skill works in (character/engine/sheet/forms.ts): `restrict` blank = unshifted only, 1 = any form,
+    // 2 = only in the State1-3 forms; a shape-shift's own state names its form
+    for (const column of FORM_COLUMNS) if (row[column] !== undefined) columns.add(column);
+    if ('shapeshift' in shapeshift) columns.add('aurastate');
+    columnsById.set(id, columns);
     if (cls !== undefined) {
       const page = pages.get(tsv.str('skilldesc')) ?? 0;
       meta.set(id, { ...(page > 0 ? { cls, tab: page } : { cls }), ...shapeshift });

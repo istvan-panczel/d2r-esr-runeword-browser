@@ -9,6 +9,7 @@ import {
   attributeRows,
   experienceToNext,
   groupWarnings,
+  blockedBuffText,
   handRows,
   offHandText,
   overviewRows,
@@ -22,10 +23,11 @@ import {
 import type { CharacterSheetState } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
 import { NUMBER_FORMAT } from '../tabs/tabClasses';
-import { BuffedBadge, UnbuffedBadge } from './BuffedBadge';
+import { SheetStateBadges } from './BuffedBadge';
 import { BuffsPanel } from './BuffsPanel';
 import { ResistMeters } from './ResistMeters';
 import { ShowItemContext } from './showItemContext';
+import { WhatIfPanel } from './WhatIfPanel';
 import { SheetCard, SourcesPopover, StatList, StatusMark, ValueText, type ItemNamer } from './SheetParts';
 
 type ReadySheet = Extract<CharacterSheetState, { status: 'ready' }>;
@@ -43,10 +45,11 @@ const POOL_EDGE: Readonly<Record<string, string>> = {
 /** What the sheet counts and leaves out, the markers' meaning and the engine's warnings */
 function SheetIntro({ sheet, buffed }: { readonly sheet: CharacterSheet; readonly buffed: boolean }) {
   const warnings = groupWarnings(sheet.warnings);
+  const whatIf = sheet.whatIf !== undefined;
   return (
     <section aria-label="What these numbers count" className="space-y-2 rounded-xl border bg-card p-3 text-sm shadow-sm sm:p-4">
       <p className="flex flex-wrap items-center gap-2">
-        {buffed ? <BuffedBadge /> : <UnbuffedBadge />}
+        <SheetStateBadges buffed={buffed} whatIf={whatIf} />
         <span className="text-muted-foreground">
           Weapon set {sheet.weaponSet === 1 ? 'I' : 'II'}, resists for {DIFFICULTY_NAMES[sheet.difficulty]}
           {sheet.difficulty === sheet.facts.saveDifficulty ? ' (where the save is)' : ''}
@@ -58,6 +61,7 @@ function SheetIntro({ sheet, buffed }: { readonly sheet: CharacterSheet; readonl
         {buffed
           ? 'Plus the buffs switched on below. '
           : 'Not counted until you switch them on under Buffs: skills you cast, your auras, what an attack gives while you use it (Frenzy’s charges, Whirlwind) and skills your items cast on you. '}
+        {whatIf && 'Plus the stats and auras added under What if: not your character’s real numbers. '}
         Never counted: shrines, elixirs, potions and your mercenary&apos;s auras.
       </p>
       <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -66,7 +70,7 @@ function SheetIntro({ sheet, buffed }: { readonly sheet: CharacterSheet; readonl
           <StatusMark status="inferred" /> {STATUS_TEXT.inferred.short}
         </span>
         <span className="inline-flex items-center gap-1">
-          <StatusMark status="unverified" /> {STATUS_TEXT.unverified.short}: changed by a buff
+          <StatusMark status="unverified" /> {STATUS_TEXT.unverified.short}: changed by a buff or a what-if entry
         </span>
       </p>
       {warnings.length > 0 && (
@@ -188,6 +192,9 @@ function HandList({ rows, itemName }: { readonly rows: readonly HandRow[]; reado
                   {row.hand}, level {row.level}
                   {row.offHand !== null && ', main / off hand'}
                 </span>
+                {row.formProblem !== null && (
+                  <span className="block text-xs text-amber-700 dark:text-amber-400">Not usable now: {row.formProblem}</span>
+                )}
               </span>
               <span className="flex items-baseline gap-1.5 font-semibold whitespace-nowrap">
                 <ValueText
@@ -349,8 +356,18 @@ export function OverviewSheet({ character, state, itemName, onTab, onShowItem }:
           available={state.availableBuffs}
           selections={state.buffs}
           applied={sheet.buffs}
+          blocked={(skillId) => blockedBuffText(sheet, skillId)}
           itemName={itemName}
           onChange={state.setBuffs}
+        />
+
+        <WhatIfPanel
+          classId={character.classId}
+          data={state.data}
+          entries={state.whatIf}
+          sheet={sheet}
+          withoutWhatIf={state.withoutWhatIf}
+          onChange={state.setWhatIf}
         />
       </div>
     </ShowItemContext>

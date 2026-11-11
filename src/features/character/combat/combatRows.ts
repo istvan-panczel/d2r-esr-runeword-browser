@@ -6,8 +6,11 @@
  *   defender, no level term).
  * - Champions / uniques / minions: the regular monster re-scaled to their level (+2 / +3) and given the monumod.txt
  *   attack rating bonus. Bosses have their own row and no kinds.
- * - "−% Target Defense" lowers the monster's defense, halved against uniques, superuniques (attack-rating.toml) and,
- *   INFERRED, bosses; "Ignore Target's Defense" makes the chance to hit 100 % (on bosses: unknown, flagged).
+ * - "−% Target Defense" lowers the monster's defense, halved against uniques, superuniques (attack-rating.toml) and
+ *   bosses (the original game's rule; the owner confirmed it for ESR's act and map bosses, 2026-11-11); "Ignore Target's
+ *   Defense" makes the chance to hit 100 % (on bosses: unknown, flagged).
+ * - Players: the player count raises the monsters' attack rating in Nightmare and Hell (monsterStats.ts
+ *   `withPlayerCount`), so only the chance to be hit and the defense goals change.
  */
 import type { CombatArea, CombatBoss, CombatBundle, CombatPool, CombatSpread, ModifierFact } from '@/features/game-data/engine/schema';
 import { attackRatingFor } from '@/features/modifiers/utils/calculatorViews';
@@ -18,6 +21,7 @@ import {
   rescaleLevel,
   unpackLevelRatios,
   withAttackBonus,
+  withPlayerCount,
   type CombatDifficulty,
   type LevelRatioTables,
 } from './monsterStats';
@@ -77,7 +81,8 @@ export function poolTarget(
   pool: CombatPool,
   difficulty: CombatDifficulty,
   kind: CombatKind,
-  randomBonus: readonly [number, number] | null
+  randomBonus: readonly [number, number] | null,
+  players = 1
 ): CombatTarget {
   const [level, monsters, defense, attack, extra] = pool;
   const levelBonus = kindLevelBonus(kind, data.bundle.modifiers);
@@ -92,7 +97,14 @@ export function poolTarget(
       attack === null
         ? null
         : mapSpread(attack, (value) =>
-            withAttackBonus(levelBonus === 0 ? value : rescaleLevel(value, level, to, data.ratios.attack[difficulty]), attackBonus)
+            withAttackBonus(
+              withPlayerCount(
+                levelBonus === 0 ? value : rescaleLevel(value, level, to, data.ratios.attack[difficulty]),
+                players,
+                difficulty
+              ),
+              attackBonus
+            )
           ),
     casters: extra?.casters ?? 0,
     monsters,
@@ -156,13 +168,15 @@ export interface CombatSection {
 export interface CombatRowsOptions {
   readonly difficulty: CombatDifficulty;
   readonly kind: CombatKind;
+  /** Players in the game (`/players N`), 1 to 8; 1 when omitted */
+  readonly players?: number;
 }
 
 function areaRow(data: CombatData, area: CombatArea, player: CombatPlayer, options: CombatRowsOptions): CombatRow | null {
   const pool = area.pools[options.difficulty];
   if (pool === null) return null;
   const fallbackBonus = area.tier === undefined ? data.bundle.randomBonus.campaign[options.difficulty] : data.bundle.randomBonus.maps;
-  const target = poolTarget(data, pool, options.difficulty, options.kind, fallbackBonus);
+  const target = poolTarget(data, pool, options.difficulty, options.kind, fallbackBonus, options.players);
   return {
     key: `area:${String(area.id)}`,
     name: area.name,
@@ -174,10 +188,11 @@ function areaRow(data: CombatData, area: CombatArea, player: CombatPlayer, optio
 }
 
 /** A boss as a target in a difficulty; null where it does not appear */
-export function bossTarget(boss: CombatBoss, difficulty: CombatDifficulty): CombatTarget | null {
+export function bossTarget(boss: CombatBoss, difficulty: CombatDifficulty, players = 1): CombatTarget | null {
   const stats = boss.stats[difficulty];
   if (stats === null) return null;
-  const [level, defense, attack] = stats;
+  const [level, defense, baseAttack] = stats;
+  const attack = withPlayerCount(baseAttack, players, difficulty);
   return {
     level,
     defense: [defense, defense, defense],
@@ -189,8 +204,14 @@ export function bossTarget(boss: CombatBoss, difficulty: CombatDifficulty): Comb
   };
 }
 
-function bossRow(data: CombatData, boss: CombatBoss, player: CombatPlayer, difficulty: CombatDifficulty): CombatRow | null {
-  const target = bossTarget(boss, difficulty);
+function bossRow(
+  data: CombatData,
+  boss: CombatBoss,
+  player: CombatPlayer,
+  difficulty: CombatDifficulty,
+  players: number | undefined
+): CombatRow | null {
+  const target = bossTarget(boss, difficulty, players);
   if (target === null) return null;
   return {
     key: `boss:${boss.id}`,
@@ -236,7 +257,7 @@ export function buildCombatSections(data: CombatData, player: CombatPlayer, opti
   const bossGroup = (key: string, title: string, list: readonly CombatBoss[]) => ({
     key,
     title,
-    rows: list.map((boss) => bossRow(data, boss, player, difficulty)).filter(present),
+    rows: list.map((boss) => bossRow(data, boss, player, difficulty, options.players)).filter(present),
   });
   const mapTiers = [...new Set(bosses.flatMap((boss) => (boss.tier === undefined ? [] : [boss.tier])))].sort((a, b) => a - b);
   sections.push({

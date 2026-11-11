@@ -18,6 +18,7 @@ import {
   type CombatPlayer,
   type CombatRow,
 } from './combatRows';
+import { withPlayerCount } from './monsterStats';
 
 // The committed bundle (ESR 3.3.03); bundleIntegrity.test.ts checks it matches the generator
 const bundle = JSON.parse(readFileSync(resolve(__dirname, '../../../../public/game-data/combat.json'), 'utf-8')) as CombatBundle;
@@ -230,5 +231,45 @@ describe('editedFor', () => {
     expect(editedFor({ value: '5000', over: 100 }, 100)).toBe('5000');
     expect(editedFor({ value: '5000', over: 100 }, 200)).toBeNull();
     expect(editedFor({ value: true, over: undefined }, undefined)).toBe(true);
+  });
+});
+
+describe('players', () => {
+  const t1 = hellPool(areaNamed('Chasm of Horrors', 1));
+
+  it('adds 6.25% attack rating per player above one in Nightmare and Hell, nothing in Normal', () => {
+    expect(withPlayerCount(620_520, 1, 2)).toBe(620_520);
+    expect(withPlayerCount(620_520, 2, 2)).toBe(659_302);
+    expect(withPlayerCount(620_520, 8, 2)).toBe(891_997);
+    expect(withPlayerCount(1000, 8, 1)).toBe(1437);
+    expect(withPlayerCount(1000, 8, 0)).toBe(1000);
+    expect(withPlayerCount(1000, 99, 2)).toBe(1437);
+    expect(withPlayerCount(1000, 0, 2)).toBe(1000);
+  });
+
+  it('raises the chance to be hit and leaves the defense, the level and the chance to hit alone', () => {
+    const one = poolTarget(data, t1, 2, 'regular', null);
+    const eight = poolTarget(data, t1, 2, 'regular', null, 8);
+    expect(eight.attack).toEqual([891_997, 891_997, 891_997]);
+    expect(eight.defense).toEqual(one.defense);
+    expect(eight.level).toBe(one.level);
+    expect(chanceToHit(data, eight, STRONG, 'regular')).toEqual(chanceToHit(data, one, STRONG, 'regular'));
+    expect(chanceToBeHit(data, one, STRONG)?.median).toBe(76);
+    expect(chanceToBeHit(data, eight, STRONG)?.median).toBe(85);
+  });
+
+  it('scales a boss and the rows of the table, and asks for more defense', () => {
+    const lich = bossTarget(bossNamed('thelichking'), 2);
+    const lich8 = bossTarget(bossNamed('thelichking'), 2, 8);
+    expect(lich8?.attack?.[1]).toBe(withPlayerCount(lich?.attack?.[1] ?? 0, 8, 2));
+    const find = (players: number) =>
+      buildCombatSections(data, STRONG, { difficulty: 2, kind: 'regular', players })
+        .flatMap((section) => section.groups.flatMap((group) => group.rows))
+        .find((row) => row.name === 'Chasm of Horrors');
+    expect(find(8)?.beHit?.median).toBe(85);
+    expect(find(1)?.beHit?.median).toBe(76);
+    const need = (players: number) =>
+      neededValues(data, poolTarget(data, t1, 2, 'regular', null, players), STRONG, 'regular').defense[0]?.typical ?? 0;
+    expect(need(8)).toBeGreaterThan(need(1));
   });
 });

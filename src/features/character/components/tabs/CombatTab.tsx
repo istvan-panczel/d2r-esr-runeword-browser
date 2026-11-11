@@ -6,13 +6,13 @@ import { HitChanceView } from '../../combat';
 import { attackChoices } from '../../engine/sheetView';
 import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
-import { BuffedBadge, UnbuffedBadge } from '../overview/BuffedBadge';
+import { SheetStateBadges } from '../overview/BuffedBadge';
 import { SheetFailedPanel } from '../SheetFailedPanel';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
 
 /**
  * Combat: the hit-chance view seeded with the computed sheet (defense, −% target defense, Ignore Target's Defense and
- * the attack rating of a chosen hand skill), following the page's difficulty and buffs. The inputs stay editable for a
+ * the attack rating of a chosen hand skill), following the page's difficulty, buffs and what-if entries. The inputs stay editable for a
  * "what if"; the view's "Use the character's values" goes back.
  */
 export function CombatTab({ character }: { readonly character: CharacterFile }) {
@@ -33,7 +33,7 @@ export function CombatTab({ character }: { readonly character: CharacterFile }) 
           <h3 id="character-combat" className="font-semibold">
             {character.name}&apos;s numbers
           </h3>
-          {buffed ? <BuffedBadge /> : <UnbuffedBadge />}
+          <SheetStateBadges buffed={buffed} whatIf={sheet.whatIf !== undefined} />
         </div>
         {choices.length > 1 && (
           <div className="space-y-1">
@@ -48,7 +48,10 @@ export function CombatTab({ character }: { readonly character: CharacterFile }) 
         )}
         <p className="text-xs text-muted-foreground">
           From the computed sheet: the attack rating of the skill on that mouse button, defense {NUMBER_FORMAT.format(sheet.defense.value)}
-          {sheet.offense.targetDefense.value === 0 ? '' : `, −${String(sheet.offense.targetDefense.value)}% target defense`}
+          {choice.targetDefense === 0 ? '' : `, −${String(choice.targetDefense)}% target defense`}
+          {choice.offHandTargetDefense === 0
+            ? ''
+            : ` (${String(choice.offHandTargetDefense)}% of it from the off-hand weapon, for its hits only)`}
           {sheet.offense.ignoreTargetDefense.value > 0 ? ", Ignore Target's Defense" : ''}. Change the inputs below to try other values; the
           difficulty is the one the Overview&apos;s resistances use.
         </p>
@@ -58,7 +61,7 @@ export function CombatTab({ character }: { readonly character: CharacterFile }) 
         defense={sheet.defense.value}
         characterLevel={sheet.level}
         ignoreTargetDefense={sheet.offense.ignoreTargetDefense.value > 0}
-        targetDefenseReductionPercent={sheet.offense.targetDefense.value}
+        targetDefenseReductionPercent={Math.min(100, choice.targetDefense)}
         difficulty={state.difficulty}
         onDifficultyChange={state.setDifficulty}
       />

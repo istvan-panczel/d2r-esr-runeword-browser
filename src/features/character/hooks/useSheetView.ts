@@ -1,5 +1,5 @@
 import { createContext, use } from 'react';
-import type { BuffSelection } from '../engine/sheet/types';
+import type { BuffSelection, WhatIfEntries } from '../engine/sheet/types';
 import type { CharacterFile, DifficultyIndex } from '../parser/types';
 
 export interface SheetViewContextValue {
@@ -8,6 +8,8 @@ export interface SheetViewContextValue {
   readonly setDifficulty: (character: CharacterFile, difficulty: DifficultyIndex) => void;
   readonly buffsOf: (character: CharacterFile) => readonly BuffSelection[];
   readonly setBuffs: (character: CharacterFile, buffs: readonly BuffSelection[]) => void;
+  readonly whatIfOf: (character: CharacterFile) => WhatIfEntries;
+  readonly setWhatIf: (character: CharacterFile, entries: WhatIfEntries) => void;
 }
 
 export const SheetViewContext = createContext<SheetViewContextValue | null>(null);

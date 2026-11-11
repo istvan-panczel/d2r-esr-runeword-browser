@@ -1,6 +1,6 @@
 import { useGameData } from '@/features/game-data/hooks/useGameData';
 import type { SheetData } from '../engine/sheet';
-import type { AvailableBuff, BuffSelection } from '../engine/sheet/types';
+import type { AvailableBuff, BuffSelection, WhatIfEntries } from '../engine/sheet/types';
 import { sheetCache } from '../engine/sheetCache';
 import { computeSheetView, type SheetViewResult } from '../engine/sheetViewState';
 import type { CharacterFile, DifficultyIndex } from '../parser/types';
@@ -26,11 +26,12 @@ export type CharacterSheetState =
       /** The selections that count: the remembered ones this character can use */
       readonly buffs: readonly BuffSelection[];
       readonly setBuffs: (buffs: readonly BuffSelection[]) => void;
+      readonly setWhatIf: (entries: WhatIfEntries) => void;
     });
 
 /**
- * The computed sheet of `character`, shared by the tabs: computed once per (character, difficulty, buffs) in the page's
- * sheet cache, with the view state (difficulty, buffs) from CharacterSheetProvider. Never throws: a failing calculation
+ * The computed sheet of `character`, shared by the tabs: computed once per (character, difficulty, buffs, what-if
+ * entries) in the page's sheet cache, with the view state (difficulty, buffs, what-if) from CharacterSheetProvider. Never throws: a failing calculation
  * is the `failed` state.
  */
 export function useCharacterSheet(character: CharacterFile): CharacterSheetState {
@@ -39,7 +40,7 @@ export function useCharacterSheet(character: CharacterFile): CharacterSheetState
   if (gameData.status === 'loading') return { status: 'loading' };
   if (gameData.status === 'error') return { status: 'error', error: gameData.error, retry: gameData.retry };
   const difficulty = view.difficultyOf(character);
-  const result = computeSheetView(sheetCache, gameData.data, character, difficulty, view.buffsOf(character));
+  const result = computeSheetView(sheetCache, gameData.data, character, difficulty, view.buffsOf(character), view.whatIfOf(character));
   if (result.status === 'failed') return result;
   return {
     ...result,
@@ -50,6 +51,9 @@ export function useCharacterSheet(character: CharacterFile): CharacterSheetState
     },
     setBuffs: (next) => {
       view.setBuffs(character, next);
+    },
+    setWhatIf: (next) => {
+      view.setWhatIf(character, next);
     },
   };
 }

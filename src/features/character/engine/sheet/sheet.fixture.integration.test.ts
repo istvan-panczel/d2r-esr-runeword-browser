@@ -387,3 +387,95 @@ describe.skipIf(!present)('computed sheet: every listed buff on the ground-truth
     expect(new Set(buffs.map((buff) => buff.skillId)).size).toBe(buffs.length);
   });
 });
+
+/** Every real save, the swap and owner-check copies included */
+const allSaves = existsSync(FIXTURES)
+  ? [
+      ...saves,
+      ...['swap', 'owner-check-2026-11-11/all-current'].flatMap((dir) =>
+        existsSync(resolve(FIXTURES, dir))
+          ? readdirSync(resolve(FIXTURES, dir))
+              .filter((file) => file.endsWith('.d2s'))
+              .map((file) => `${dir}/${file}`)
+          : []
+      ),
+    ]
+  : [];
+
+describe.skipIf(allSaves.length === 0)('computed sheet: buffs cast on the other weapon set (INFERRED, no in-game check yet)', () => {
+  const characterData = createCharacterData(JSON.parse(readFileSync(STASH, 'utf-8')) as StashBundle);
+  const load = (save: string) => parseCharacter(new Uint8Array(readFileSync(resolve(FIXTURES, save))), characterData);
+  /** The character with its other weapon set's items in the inventory (not counted; item indices kept) */
+  const stowed = (character: CharacterFile): CharacterFile => {
+    const inHand = character.activeWeapon === 1 ? 2 : 1;
+    return {
+      ...character,
+      items: {
+        ...character.items,
+        player: character.items.player.map((entry) =>
+          entry.location.kind === 'equipped' && entry.location.weaponSet !== null && entry.location.weaponSet !== inHand
+            ? { ...entry, location: { kind: 'inventory', x: 0, y: 0 } }
+            : entry
+        ),
+      },
+    };
+  };
+
+  it.each(allSaves)('%s: the other set changes only the casts it gives higher (else bit for bit)', (save) => {
+    const character = load(save);
+    const available = listAvailableBuffs(character, data);
+    const alone = listAvailableBuffs(stowed(character), data);
+    const buffs = available.map((buff) =>
+      buff.kind === 'proc' ? { skillId: buff.skillId, level: buff.level } : { skillId: buff.skillId }
+    );
+    const swapped = available.filter((buff) => buff.castSet !== undefined);
+    if (swapped.length === 0) {
+      expect(available).toEqual(alone);
+      expect(computeCharacterSheet(character, data, { buffs })).toEqual(computeCharacterSheet(stowed(character), data, { buffs }));
+      return;
+    }
+    // A cast on the other set: listed higher there than the set in hand alone gives it (or only there), on the other set
+    const inHand = character.activeWeapon === 1 ? 2 : 1;
+    for (const buff of swapped) {
+      expect(buff.castSet).toBe(inHand === 1 ? 2 : 1);
+      expect(buff.level).toBeGreaterThan(alone.find((entry) => entry.skillId === buff.skillId)?.level ?? 0);
+    }
+    // Every other buff is listed as the set in hand alone lists it
+    for (const buff of available.filter((entry) => entry.castSet === undefined))
+      expect(alone).toContainEqual(expect.objectContaining({ skillId: buff.skillId, kind: buff.kind, level: buff.level }));
+    expect(alone.every((buff) => buff.castSet === undefined)).toBe(true);
+    // Counted with every buff on: each cast on the other set at least at its listed level, labelled with that set
+    const sheet = computeCharacterSheet(character, data, { buffs });
+    for (const buff of swapped) {
+      const applied = sheet.buffs.find((entry) => entry.skillId === buff.skillId);
+      if (applied?.castSet === undefined) continue; // a group choice or an item aura of the skill counted instead
+      expect(applied.level).toBeGreaterThanOrEqual(buff.level);
+    }
+    expect(sheet.buffs.some((entry) => entry.castSet !== undefined)).toBe(true);
+  });
+
+  it.skipIf(!present)('Javazon: Call to Arms on set II gives Battle Orders 25 and Battle Command 20 (the set in hand has neither)', () => {
+    const character = load(`ground-truth/${PAIRS.Javazon}/Javazon.d2s`);
+    const swapped = listAvailableBuffs(character, data)
+      .filter((buff) => buff.castSet !== undefined)
+      .map((buff) => [buff.name, buff.level, buff.castSet]);
+    expect(swapped).toEqual([
+      ['Battle Command', 20, 2],
+      ['Battle Orders', 25, 2],
+      ['Eagle Eye', 12, 2],
+    ]);
+    const plain = computeCharacterSheet(character, data);
+    const sheet = computeCharacterSheet(character, data, { buffs: [{ skillId: 570 }, { skillId: 582 }] });
+    expect(sheet.buffs.map((buff) => [buff.name, buff.level, buff.castSet])).toEqual([
+      ['Battle Orders', 25, 2],
+      ['Battle Command', 20, 2],
+    ]);
+    // Battle Command’s +3 skills (skill-based vitality and the Kill Ledger aura add a little), Battle Orders’ 107% life, mana and stamina: the predictions
+    // for the in-game check
+    expect(sheet.skills.all.value).toBe(plain.skills.all.value + 3);
+    expect([plain.life.value, plain.mana.value, plain.stamina.value]).toEqual([1550, 234, 813]);
+    expect([sheet.life.value, sheet.mana.value, sheet.stamina.value]).toEqual([2893, 462, 1578]);
+    expect(sheet.life.status).toBe('unverified');
+    expect(unflaggedChanges(plain, sheet)).toEqual([]);
+  });
+});

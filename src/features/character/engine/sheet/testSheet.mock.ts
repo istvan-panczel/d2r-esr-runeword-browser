@@ -137,7 +137,7 @@ function leaves(value: unknown, path: string, out: Map<string, { value: number; 
   const record = value as Record<string, unknown>;
   const own = typeof record.status === 'string' ? [...statuses, record.status] : statuses;
   for (const [key, entry] of Object.entries(record))
-    if (!['facts', 'buffs', 'warnings', 'status'].includes(key)) leaves(entry, `${path}.${key}`, out, own);
+    if (!['facts', 'buffs', 'whatIf', 'warnings', 'status'].includes(key)) leaves(entry, `${path}.${key}`, out, own);
 }
 
 const IDENTITY = new Set(['.v', '.classId', '.level', '.difficulty', '.weaponSet']);

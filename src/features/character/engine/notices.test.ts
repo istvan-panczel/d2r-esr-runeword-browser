@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { corpseNotice, incompleteNotice, saveAgeNotice, sidecarNotice } from './notices';
+import { corpseNotice, incompleteNotice, saveAgeNotice, savedAgoText, sidecarNotice } from './notices';
 import type { CharacterSectionName } from '../parser/errors';
 
 const incomplete = (section: CharacterSectionName) => incompleteNotice({ section, message: 'x', unverified: 'bound-demon' });
@@ -57,5 +57,20 @@ describe('corpse notice', () => {
   it('says the gear may be on the corpse, and is silent without one', () => {
     expect(corpseNotice(0)).toBeNull();
     expect(corpseNotice(1)?.text).toContain('may be on the corpse');
+  });
+});
+
+describe('saved ago text', () => {
+  const saved = 1_800_000_000;
+  it('counts hours, then whole days', () => {
+    expect(savedAgoText(saved, saved + 59 * 60)).toBe('less than an hour ago');
+    expect(savedAgoText(saved, saved + 3600)).toBe('1 hour ago');
+    expect(savedAgoText(saved, saved + 23 * 3600 + 3599)).toBe('23 hours ago');
+    expect(savedAgoText(saved, saved + 24 * 3600)).toBe('1 day ago');
+    expect(savedAgoText(saved, saved + 3 * 24 * 3600 + 5)).toBe('3 days ago');
+  });
+
+  it('says nothing for a save from the future (a wrong clock)', () => {
+    expect(savedAgoText(saved, saved - 1)).toBe('');
   });
 });

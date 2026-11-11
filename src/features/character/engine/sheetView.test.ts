@@ -5,10 +5,14 @@ import type { AvailableBuff, ResistValue } from './sheet/types';
 import { createSheetCache } from './sheetCache';
 import {
   attackChoices,
+  blockedBuffText,
+  buffFormText,
+  canShapeShift,
   attributeRows,
   bonusPartsText,
   buffGroups,
   buffsKey,
+  castSetText,
   formatValue,
   handRows,
   ledgerBossName,
@@ -33,6 +37,7 @@ import {
   sheetText,
   skillBonusById,
   sourceLines,
+  swapCastNote,
   toggleBuff,
   weakestStatus,
 } from './sheetView';
@@ -159,12 +164,52 @@ describe('overview rows', () => {
         key: `left:${String(FRENZY)}:main`,
         label: `${data.skillName(FRENZY)} (left), ${String(frenzy?.mainHand)}`,
         attackRating: frenzy?.mainHand,
+        targetDefense: 0,
+        offHandTargetDefense: 0,
       },
     ]);
     const bare = computeCharacterSheet(testCharacter({}), data);
     expect(attackChoices(bare)).toEqual([
-      { key: 'base', label: `No skill, ${String(bare.attackRating.base.value)}`, attackRating: bare.attackRating.base.value },
+      {
+        key: 'base',
+        label: `No skill, ${String(bare.attackRating.base.value)}`,
+        attackRating: bare.attackRating.base.value,
+        targetDefense: 0,
+        offHandTargetDefense: 0,
+      },
     ]);
+  });
+
+  it('says when the form does not allow a mouse-button skill, on its row and its Combat choice', () => {
+    const FERAL_RAGE = 608;
+    const WEREWOLF = 595;
+    const druid = testCharacter({
+      classId: 5,
+      attributes: { dexterity: 50 },
+      skills: { [WEREWOLF]: 5, [FERAL_RAGE]: 5 },
+      handSkills: { left: FERAL_RAGE },
+    });
+    const unshifted = computeCharacterSheet(druid, data);
+    const [row] = handRows(unshifted, null);
+    expect(row?.formProblem).toBe('needs Werewolf form');
+    expect(row?.value.notes).toContain('You cannot use Feral Rage right now: it needs Werewolf form');
+    expect(attackChoices(unshifted).map((choice) => choice.label)).toEqual([
+      `Feral Rage (left), ${String(row?.mainHand)} (needs Werewolf form)`,
+    ]);
+    const wolf = computeCharacterSheet(druid, data, { buffs: [{ skillId: WEREWOLF }] });
+    expect(handRows(wolf, unshifted)[0]?.formProblem).toBeNull();
+    expect(attackChoices(wolf)[0]?.label).not.toContain('needs');
+    // The Buffs card: what a buff asks of the form, and why a switched-on one is not counted
+    const feralRage = listAvailableBuffs(druid, data).find((buff) => buff.skillId === FERAL_RAGE);
+    expect(feralRage === undefined ? null : buffFormText(feralRage, true)).toBe('needs Werewolf form');
+    expect(buffFormText({ unshiftedOnly: true }, true)).toBe('not while shape-shifted');
+    expect(buffFormText({ unshiftedOnly: true }, false)).toBeNull();
+    expect(canShapeShift(listAvailableBuffs(druid, data))).toBe(true);
+    expect(canShapeShift(listAvailableBuffs(barbarian(), data))).toBe(false);
+    const blocked = computeCharacterSheet(druid, data, { buffs: [{ skillId: FERAL_RAGE }] });
+    expect(blockedBuffText(blocked, FERAL_RAGE)).toBe('Not counted: it needs Werewolf form.');
+    expect(blockedBuffText(blocked, WEREWOLF)).toBeNull();
+    expect(blockedBuffText(wolf, FERAL_RAGE)).toBeNull();
   });
 
   it('names item sources by the item and keeps the slot beside it', () => {
@@ -285,6 +330,32 @@ describe('sheetText', () => {
   });
 });
 
+describe('buffs cast on the other weapon set', () => {
+  it('says the set in the buff row, the Buffs card note and the copied text', () => {
+    expect(castSetText(2)).toBe('cast on weapon set II');
+    expect(castSetText(1)).toBe('cast on weapon set I');
+    expect(castSetText(undefined)).toBeNull();
+    const buff = (castSet?: 1 | 2): AvailableBuff => ({
+      skillId: BATTLE_ORDERS,
+      name: 'Battle Orders',
+      kind: 'cast',
+      level: 5,
+      stats: ['item_maxhp_percent'],
+      ...(castSet === undefined ? {} : { castSet }),
+    });
+    expect(swapCastNote([buff()])).toBeNull();
+    expect(swapCastNote([buff(), buff(2)])).toMatch(/^Cast on weapon set II, then swap back: the level comes from that set’s gear/);
+
+    const character = testCharacter({
+      classId: 1,
+      attributes: { maxhp: 100 * L },
+      items: [item('hax', equipped('rightHand', 2), [['item_nonclassskill', BATTLE_ORDERS, 5]])],
+    });
+    const text = sheetText(computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS }] }), { className: 'Sorceress' });
+    expect(text).toContain('Buffs: Battle Orders 5 (cast on weapon set II) (buffed numbers not yet checked in game)');
+  });
+});
+
 describe('createSheetCache', () => {
   it('computes once per character, difficulty and buff set, whatever the buff order', () => {
     const compute = vi.fn(computeCharacterSheet);
@@ -380,5 +451,30 @@ describe('notes and the off-hand line', () => {
     expect(offHandText({ ...sheet, offense: { ...sheet.offense, offHand: null } })).toBeNull();
     const off = { item: 1, attackSpeed: 100, deadlyStrike: 0, crushingBlow: 5, targetDefense: 0, status: 'verified' as const };
     expect(offHandText({ ...sheet, offense: { ...sheet.offense, offHand: off } })).toBe('IAS 100%, crushing blow 5%');
+  });
+
+  it('adds the off-hand weapon’s own target defense to its attack line only', () => {
+    const sheet = computeCharacterSheet(barbarian(), data);
+    const hand = sheet.attackRating.hands[0];
+    if (hand === undefined) throw new Error('the mock barbarian has a hand skill');
+    const dual = {
+      ...sheet,
+      attackRating: { ...sheet.attackRating, hands: [{ ...hand, offHand: 123 }] },
+      offense: {
+        ...sheet.offense,
+        targetDefense: { ...sheet.offense.targetDefense, value: 28 },
+        offHand: { item: 1, attackSpeed: 0, deadlyStrike: 0, crushingBlow: 0, targetDefense: 101, status: 'verified' as const },
+      },
+    };
+    expect(
+      attackChoices(dual).map(({ attackRating, targetDefense, offHandTargetDefense }) => [
+        attackRating,
+        targetDefense,
+        offHandTargetDefense,
+      ])
+    ).toEqual([
+      [hand.mainHand, 28, 0],
+      [123, 129, 101],
+    ]);
   });
 });

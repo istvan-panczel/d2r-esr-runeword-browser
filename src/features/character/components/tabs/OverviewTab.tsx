@@ -2,9 +2,10 @@ import { ChevronRight } from 'lucide-react';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
 import { useManifest } from '@/features/game-data/hooks/useManifest';
+import { useClockValue } from '@/features/terror-zones/store/clock';
 import type { CharacterFileMeta } from '../../db/characterDb';
 import { characterGlance, overviewGroups, type SheetGroup } from '../../engine/characterSheet';
-import { characterNotices } from '../../engine/notices';
+import { characterNotices, savedAgoText } from '../../engine/notices';
 import { progressCounters } from '../../engine/characterProgress';
 import type { CharacterTab } from '../../engine/characterTabs';
 import { sheetText, whereText } from '../../engine/sheetView';
@@ -82,6 +83,7 @@ export function OverviewTab({ character, file, bytes, onTab, onShowItem }: Overv
   const manifest = useManifest();
   const sheet = useCharacterSheet(character);
   const itemName = useCharacterItemNames(character);
+  const savedAgo = useClockValue((now) => savedAgoText(character.lastSavedAt, now));
   return (
     <div className="space-y-4">
       <header className={`${CARD_CLASS} flex flex-wrap items-start justify-between gap-4`}>
@@ -91,6 +93,7 @@ export function OverviewTab({ character, file, bytes, onTab, onShowItem }: Overv
             Level {character.level} {character.className}
             {sheet.status === 'ready' ? `, ${whereText(sheet.sheet)}` : ''}. Last saved{' '}
             {LAST_SAVED_FORMAT.format(character.lastSavedAt * 1000)}
+            {savedAgo !== '' && ` (${savedAgo})`}
           </p>
         </div>
         <div className="flex flex-wrap items-start gap-2">

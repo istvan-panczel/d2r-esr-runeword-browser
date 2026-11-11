@@ -24,15 +24,26 @@ interface ComboPickerProps {
   readonly searchPlaceholder: string;
   readonly onSelect: (id: string) => void;
   readonly className?: string;
+  /** The most options shown at once (default 100); a short list that must stay whole without typing passes its length */
+  readonly maxResults?: number;
 }
 
 /** cmdk combobox in a popover; every whitespace-separated query term must appear in `search`. */
-export function ComboPicker({ id, options, selectedId, placeholder, searchPlaceholder, onSelect, className }: ComboPickerProps) {
+export function ComboPicker({
+  id,
+  options,
+  selectedId,
+  placeholder,
+  searchPlaceholder,
+  onSelect,
+  className,
+  maxResults = MAX_RESULTS,
+}: ComboPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const matches = options.filter((option) => terms.every((term) => option.search.includes(term))).slice(0, MAX_RESULTS);
+  const matches = options.filter((option) => terms.every((term) => option.search.includes(term))).slice(0, maxResults);
   const selected = options.find((option) => option.id === selectedId);
 
   return (

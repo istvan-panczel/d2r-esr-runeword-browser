@@ -7,6 +7,9 @@
  *   of the monster level (`L-AC*` / `L-TH*`), / 100, rounded down. monlvl.txt ends at level 110: higher levels read row 110.
  * - Champions are 2 levels above the area, uniques and their minions 3 (vanilla engine rule, INFERRED), and add the
  *   monumod.txt attack rating bonus (+75 % / +100 % / +50 % in ESR 3.3). No monumod constant touches defense.
+ * - Players (`/players N`, 1 to 8): in Nightmare and Hell a monster's attack rating grows by 8 × (N − 1) / 128 of itself
+ *   (+6.25 % per player above one). The original game's rule; ESR keeps it (the mod's author: player scaling is
+ *   fully vanilla except the drops). Defense and level do not depend on the player count.
  */
 import type { CombatLevelRatios, CombatModifiers, CombatMonsterKind, PerDifficulty } from '../../game-data/engine/schema.ts';
 
@@ -15,6 +18,9 @@ export type CombatDifficulty = 0 | 1 | 2;
 
 /** monlvl.txt ends at this level; a higher monster level reads this row */
 export const MAX_MONSTER_LEVEL = 110;
+
+/** The highest player count `/players` accepts */
+export const MAX_PLAYERS = 8;
 
 /** monlvl.txt ratios as columns: `defense[difficulty][level]`, `attack[difficulty][level]` */
 export interface LevelRatioTables {
@@ -82,4 +88,14 @@ export function rescaleLevel(value: number, from: number, to: number, table: rea
   const fromRatio = levelRatio(table, from);
   if (fromRatio <= 0) return value;
   return Math.floor((value * levelRatio(table, to)) / fromRatio);
+}
+
+/**
+ * A monster's attack rating with `players` in the game: + 8 × (players − 1) × value / 128, rounded down, in Nightmare
+ * and Hell only (Normal is not scaled). Players outside 1..8 are clamped.
+ */
+export function withPlayerCount(attackRating: number, players: number, difficulty: CombatDifficulty): number {
+  if (difficulty === 0) return attackRating;
+  const count = Math.max(1, Math.min(MAX_PLAYERS, Math.floor(players)));
+  return attackRating + Math.floor((8 * (count - 1) * attackRating) / 128);
 }

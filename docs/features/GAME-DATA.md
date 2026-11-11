@@ -100,7 +100,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
 | `combat.json`          | ESR 3.3.03: 38 KB / 12 KB (areas 30 KB, level ratios 3 KB, bosses 3 KB)                                                            |
-| `charsheet.json`       | ESR 3.3.03: 308 KB / 47 KB (skills 237 KB: 280 class skills + 394 item / referenced rows; sets 25 KB; stat names 20 KB)            |
+| `charsheet.json`       | ESR 3.3.03: 327 KB / 49 KB (skills 240 KB: 280 class skills + 394 item / referenced rows; sets 25 KB; stat names 20 KB)            |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types
@@ -1070,8 +1070,11 @@ needs on top of `itemtext.json`. Only the character page loads it.
   stats such as `item_aura` and oskills; event-layer procs) whose stats reach the owner (`engine/skillEffects.ts`
   `affectsOwner`: no summon, no aurafilter 0x8000; a cast skill needs `aura` 1 or aurafilter 0). Columns: passive stats
   and calcs with `passive` / `passivestate` for passives; aura and passive stats with `aura` / `aurafilter` for what
-  reaches the owner; `ToHit` / `LevToHit` / `ToHitCalc`; `weapsel` (the hand(s) a skill attacks with: the off-hand
-  attack rating line); then every row and column those formulas reach
+  reaches the owner, with `range` (`h2h` / `rng` / `both` attack with the weapon in hand, `none` / `loc` are cast: a buff
+  cast on the other weapon set, CHARACTER-SAVE.md "Buffs"); `ToHit` / `LevToHit` / `ToHitCalc`; `weapsel` (the hand(s) a
+  skill attacks with: the off-hand attack rating line); `restrict` (absent: usable unshifted only, 1: in any form, 2: only
+  in the `State1-3` forms) with `State1-3`, and `aurastate` of a shape-shift (its form: CHARACTER-SAVE.md "Shape-shifted
+  forms"); then every row and column those formulas reach
   (`collectFormulaRefs`). Formulas stay as written (the engine rewrites `stat('x'.base)` when it loads them).
 - `setItems` (setitems.txt id → set index) and `sets`: sets.txt `PCode2a` … `5b` by pieces and `FCode1-8` as saved stats
   (`savedStatsReader` from `build/itemTextBases.ts`, property groups resolved).

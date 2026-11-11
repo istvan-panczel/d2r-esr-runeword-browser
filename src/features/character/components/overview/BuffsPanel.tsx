@@ -4,12 +4,16 @@ import { Label } from '@/components/ui/label';
 import { LevelStepper } from '@/features/skills/components/LevelInput';
 import type { AppliedBuff, AvailableBuff, BuffSelection } from '../../engine/sheet/types';
 import {
+  buffFormText,
   buffGroups,
+  canShapeShift,
+  castSetText,
   chooseInGroup,
   chosenInGroup,
   isBuffOn,
   setBuffLevel,
   splitExclusive,
+  swapCastNote,
   toggleBuff,
   type BuffChoice,
 } from '../../engine/sheetView';
@@ -23,6 +27,10 @@ interface BuffRowProps {
   readonly buff: AvailableBuff;
   readonly selections: readonly BuffSelection[];
   readonly applied: AppliedBuff | undefined;
+  /** "Not counted: it needs Werewolf form.": why the switched-on buff does not count in the character's form */
+  readonly blocked: string | null;
+  /** The character has a shape-shift among its buffs */
+  readonly shifter: boolean;
   readonly itemName: ItemNamer;
   readonly onChange: (selections: readonly BuffSelection[]) => void;
 }
@@ -36,21 +44,40 @@ function itemsText(buff: AvailableBuff, itemName: ItemNamer): string | null {
   return buff.kind === 'proc' ? `from ${list}` : `also cast by ${list}`;
 }
 
-/** The name, level, chance and items of a buff (the label of its switch) */
-function BuffText({ buff, level, itemName }: { readonly buff: AvailableBuff; readonly level: number; readonly itemName: ItemNamer }) {
+interface BuffTextProps {
+  readonly buff: AvailableBuff;
+  readonly level: number;
+  /** The weapon set the level comes from when it is the other one (the applied buff's once it counts) */
+  readonly castSet: 1 | 2 | undefined;
+  readonly shifter: boolean;
+  readonly itemName: ItemNamer;
+}
+
+/** The name, level, weapon set, chance and items of a buff (the label of its switch) */
+function BuffText({ buff, level, castSet, shifter, itemName }: BuffTextProps) {
   const items = itemsText(buff, itemName);
   const chance = buff.kind === 'proc' && buff.chance !== undefined ? `${String(buff.chance)}% chance` : null;
-  const detail = [chance, items].filter((part) => part !== null).join(', ');
+  const detail = [chance, items, buffFormText(buff, shifter)].filter((part) => part !== null).join(', ');
+  const where = castSetText(castSet);
   return (
     <span>
-      <span className="font-medium">{buff.name}</span> <span className="text-muted-foreground tabular-nums">level {level}</span>
+      <span className="font-medium">{buff.name}</span>{' '}
+      <span className="text-muted-foreground tabular-nums">
+        level {level}
+        {where !== null && `, ${where}`}
+      </span>
       {detail !== '' && <span className="block text-xs text-muted-foreground">{detail}</span>}
     </span>
   );
 }
 
 /** The level stepper of a switched-on cast skill or aura (a proc keeps its item's level) and "Your level" */
-function LevelControls({ buff, selections, level, onChange }: Omit<BuffRowProps, 'applied' | 'itemName'> & { readonly level: number }) {
+function LevelControls({
+  buff,
+  selections,
+  level,
+  onChange,
+}: Pick<BuffRowProps, 'buff' | 'selections' | 'onChange'> & { readonly level: number }) {
   const chosen = selections.find((entry) => entry.skillId === buff.skillId)?.level;
   if (buff.kind === 'proc') return null;
   return (
@@ -82,7 +109,12 @@ function LevelControls({ buff, selections, level, onChange }: Omit<BuffRowProps,
 const levelOf = (buff: AvailableBuff, selections: readonly BuffSelection[], applied: AppliedBuff | undefined) =>
   applied?.level ?? selections.find((entry) => entry.skillId === buff.skillId)?.level ?? buff.level;
 
-function BuffSwitch({ buff, selections, applied, itemName, onChange }: BuffRowProps) {
+/** Where the level comes from: the counted buff's set once it is on (a chosen level has none), else the listed one */
+const castSetOf = (buff: AvailableBuff, applied: AppliedBuff | undefined) => (applied === undefined ? buff.castSet : applied.castSet);
+
+const BLOCKED_CLASS = 'basis-full text-xs text-amber-700 dark:text-amber-400';
+
+function BuffSwitch({ buff, selections, applied, blocked, shifter, itemName, onChange }: BuffRowProps) {
   const id = useId();
   const on = isBuffOn(selections, buff.skillId);
   const level = levelOf(buff, selections, applied);
@@ -97,9 +129,10 @@ function BuffSwitch({ buff, selections, applied, itemName, onChange }: BuffRowPr
             onChange(toggleBuff(selections, buff, checked === true));
           }}
         />
-        <BuffText buff={buff} level={level} itemName={itemName} />
+        <BuffText buff={buff} level={level} castSet={castSetOf(buff, applied)} shifter={shifter} itemName={itemName} />
       </Label>
       {on && <LevelControls buff={buff} selections={selections} level={level} onChange={onChange} />}
+      {on && blocked !== null && <span className={BLOCKED_CLASS}>{blocked}</span>}
     </li>
   );
 }
@@ -140,11 +173,8 @@ function BuffChoiceGroup({ choice, selections, applied, itemName, onChange }: Bu
         </li>
         {choice.buffs.map((buff) => {
           const on = chosen?.skillId === buff.skillId;
-          const level = levelOf(
-            buff,
-            selections,
-            applied.find((entry) => entry.skillId === buff.skillId)
-          );
+          const counted = applied.find((entry) => entry.skillId === buff.skillId);
+          const level = levelOf(buff, selections, counted);
           return (
             <li key={buff.skillId} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-1">
               <label className="flex min-w-0 cursor-pointer items-start gap-2 text-sm">
@@ -157,7 +187,7 @@ function BuffChoiceGroup({ choice, selections, applied, itemName, onChange }: Bu
                     onChange(chooseInGroup(selections, choice, buff));
                   }}
                 />
-                <BuffText buff={buff} level={level} itemName={itemName} />
+                <BuffText buff={buff} level={level} castSet={castSetOf(buff, counted)} shifter itemName={itemName} />
               </label>
               {on && <LevelControls buff={buff} selections={selections} level={level} onChange={onChange} />}
             </li>
@@ -172,6 +202,8 @@ interface BuffsPanelProps {
   readonly available: readonly AvailableBuff[];
   readonly selections: readonly BuffSelection[];
   readonly applied: readonly AppliedBuff[];
+  /** Why a switched-on buff does not count in the character's form ("Not counted: …"), else null */
+  readonly blocked: (skillId: number) => string | null;
   readonly itemName: ItemNamer;
   readonly onChange: (selections: readonly BuffSelection[]) => void;
 }
@@ -181,8 +213,10 @@ interface BuffsPanelProps {
  * number. Off by default (the sheet is the unbuffed character); a switched-on buff recomputes every tab. Own auras and
  * shape-shifts are single choice (the engine counts one of each).
  */
-export function BuffsPanel({ available, selections, applied, itemName, onChange }: BuffsPanelProps) {
+export function BuffsPanel({ available, selections, applied, blocked, itemName, onChange }: BuffsPanelProps) {
   const groups = buffGroups(available);
+  const swapNote = swapCastNote(available);
+  const shifter = canShapeShift(available);
   return (
     <SheetCard
       id="character-buffs"
@@ -211,8 +245,10 @@ export function BuffsPanel({ available, selections, applied, itemName, onChange 
           <p className="mb-2 max-w-prose text-xs text-muted-foreground">
             Switch on what you would have up in a fight. Only buffs that change a number shown here are listed. Changed numbers show the
             unbuffed value struck through and the ? mark: buffed numbers are worked out from the skill data and have not been checked in
-            game yet. Remembered for this browser tab.
+            game yet.{shifter && ' A shape-shifted form allows only its own skills and the ones every form can use.'} Remembered for this
+            browser tab.
           </p>
+          {swapNote !== null && <p className="mb-2 max-w-prose text-xs text-muted-foreground">{swapNote}</p>}
           <div className="grid gap-x-6 gap-y-3 @3xl/page:grid-cols-3">
             {groups.map((group) => {
               const { singles, choices } = splitExclusive(group.buffs);
@@ -228,6 +264,8 @@ export function BuffsPanel({ available, selections, applied, itemName, onChange 
                           buff={buff}
                           selections={selections}
                           applied={applied.find((entry) => entry.skillId === buff.skillId)}
+                          blocked={blocked(buff.skillId)}
+                          shifter={shifter}
                           itemName={itemName}
                           onChange={onChange}
                         />

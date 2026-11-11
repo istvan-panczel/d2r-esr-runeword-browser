@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { listAvailableBuffs } from './buffs';
+import { usableSelections } from '../sheetView';
 import { computeCharacterSheet } from './sheet';
-import { charmAt, equipped, item, sheetData as data, testCharacter, unflaggedChanges } from './testSheet.mock';
+import { castOnSwap } from './otherSet';
+import { charSheetBundle, charmAt, equipped, item, sheetData as data, testCharacter, unflaggedChanges } from './testSheet.mock';
 import type { CharacterSheet } from './types';
 
 const L = 256;
@@ -274,5 +276,317 @@ describe('listAvailableBuffs: one entry per skill, exclusive groups (review 2026
     expect(druid.find((buff) => buff.skillId === WEREWOLF)?.exclusiveGroup).toBe('shapeshift');
     expect(druid.find((buff) => buff.skillId === WEREBEAR)?.exclusiveGroup).toBe('shapeshift');
     expect(druid.find((buff) => buff.skillId === CALL_OF_THE_WILD)?.exclusiveGroup).toBeUndefined();
+  });
+});
+
+describe('buffs cast on the other weapon set (swap, cast, swap back)', () => {
+  const SORCERESS = 1;
+  const SALVATION_AURA = SALVATION;
+  const FRENZY = 574;
+  const WHIRLWIND = 590;
+  const SMITE = 525;
+  const cap = item('cap', equipped('head'), [], { defense: 100 });
+  /** A Call to Arms-like weapon: oskills of Battle Orders / Battle Command, +all skills */
+  const swapWeapon = (set: 1 | 2, specs: [string, number, number][] | [string, number][]) => item('hax', equipped('rightHand', set), specs);
+  const sorceress = (items = [cap, swapWeapon(2, [['item_nonclassskill', BATTLE_ORDERS, 5]])]) =>
+    testCharacter({ classId: SORCERESS, attributes: { maxhp: 100 * L, maxmana: 50 * L }, items });
+  const levelOf = (sheet: CharacterSheet, id: number) => sheet.buffs.find((buff) => buff.skillId === id);
+
+  it('lists a cast skill only the other set gives, at that set’s level, and counts it there', () => {
+    const character = sorceress();
+    const listed = listAvailableBuffs(character, data).find((buff) => buff.skillId === BATTLE_ORDERS);
+    expect(listed).toMatchObject({ kind: 'cast', level: 5, castSet: 2 });
+    const sheet = computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS }] });
+    // 35% + 3% × 4
+    expect(sheet.life.value).toBe(147);
+    expect(levelOf(sheet, BATTLE_ORDERS)).toMatchObject({ level: 5, castSet: 2 });
+    expect(sheet.warnings.some((warning) => warning.includes('does not have it'))).toBe(false);
+    expect(sheet.life.status).toBe('unverified');
+  });
+
+  it('lists a cast skill at the other set’s higher level; a tie or a better set in hand stays with the set in hand', () => {
+    const allSkills = (set: 1 | 2, amount: number) => swapWeapon(set, [['item_allskills', amount]]);
+    const higher = barbarian({ [BATTLE_ORDERS]: 1 }, [cap, allSkills(1, 1), allSkills(2, 3)]);
+    expect(listAvailableBuffs(higher, data).find((buff) => buff.skillId === BATTLE_ORDERS)).toMatchObject({ level: 4, castSet: 2 });
+    const sheet = computeCharacterSheet(higher, data, { buffs: [{ skillId: BATTLE_ORDERS }] });
+    expect(levelOf(sheet, BATTLE_ORDERS)).toMatchObject({ level: 4, castSet: 2 });
+    expect(sheet.life.value).toBe(100 + 35 + 9);
+    // The rest of the sheet is the set in hand: its skill levels stay
+    expect(sheet.skills.levels.find((skill) => skill.skillId === BATTLE_ORDERS)?.level).toBe(2);
+
+    for (const [inHand, swapped] of [
+      [2, 2],
+      [3, 2],
+    ]) {
+      const character = barbarian({ [BATTLE_ORDERS]: 1 }, [cap, allSkills(1, inHand), allSkills(2, swapped)]);
+      const buff = listAvailableBuffs(character, data).find((entry) => entry.skillId === BATTLE_ORDERS);
+      expect(buff?.level).toBe(1 + inHand);
+      expect(buff?.castSet).toBeUndefined();
+      const applied = levelOf(computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS }] }), BATTLE_ORDERS);
+      expect(applied?.level).toBe(1 + inHand);
+      expect(applied?.castSet).toBeUndefined();
+    }
+  });
+
+  it('names the set from a save written on set II: the other set is I', () => {
+    const character = testCharacter({
+      classId: SORCERESS,
+      attributes: { maxhp: 100 * L },
+      activeWeapon: 1,
+      items: [cap, swapWeapon(1, [['item_nonclassskill', BATTLE_ORDERS, 5]])],
+    });
+    expect(listAvailableBuffs(character, data).find((buff) => buff.skillId === BATTLE_ORDERS)?.castSet).toBe(1);
+    expect(levelOf(computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS }] }), BATTLE_ORDERS)?.castSet).toBe(1);
+  });
+
+  it('casts Battle Orders on the other set with Battle Command up there (the recast rule across the swap)', () => {
+    const character = sorceress([
+      cap,
+      swapWeapon(2, [
+        ['item_nonclassskill', BATTLE_ORDERS, 5],
+        ['item_nonclassskill', BATTLE_COMMAND, 5],
+      ]),
+    ]);
+    // A Sorceress with oskills only: Battle Command's +all skills does not raise an oskill of another class
+    const sorc = computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS }, { skillId: BATTLE_COMMAND }] });
+    expect(levelOf(sorc, BATTLE_ORDERS)).toMatchObject({ level: 5, castSet: 2 });
+    expect(levelOf(sorc, BATTLE_COMMAND)).toMatchObject({ level: 5, castSet: 2 });
+    expect(sorc.skills.all.value).toBeGreaterThan(0);
+
+    // A Barbarian with points: on set II Battle Command raises itself and Battle Orders, and the set in hand gets both
+    const barb = barbarian({ [BATTLE_ORDERS]: 1, [BATTLE_COMMAND]: 1 }, [cap, swapWeapon(2, [['item_allskills', 3]])]);
+    const buffs = [{ skillId: BATTLE_ORDERS }, { skillId: BATTLE_COMMAND }];
+    const sheet = computeCharacterSheet(barb, data, { buffs });
+    // The same buffs computed with set II in hand give the levels the casts have there
+    const onSetII = computeCharacterSheet({ ...barb, activeWeapon: 1 }, data, { buffs });
+    const bc = levelOf(sheet, BATTLE_COMMAND);
+    const bo = levelOf(sheet, BATTLE_ORDERS);
+    expect(bc).toMatchObject({ level: levelOf(onSetII, BATTLE_COMMAND)?.level, castSet: 2 });
+    expect(bo).toMatchObject({ level: levelOf(onSetII, BATTLE_ORDERS)?.level, castSet: 2 });
+    expect(bo?.level).toBeGreaterThan(4);
+    // Battle Command's +skills count on the set in hand at its set II level
+    expect(sheet.skills.all.value).toBe(onSetII.skills.all.value - 3);
+    expect(sheet.life.value).toBe(onSetII.life.value);
+    // The source says where it was cast
+    expect(sheet.skills.all.sources.find((source) => source.kind === 'buff')?.label).toBe(
+      `${data.skillName(BATTLE_COMMAND)} (cast on weapon set II)`
+    );
+  });
+
+  it('keeps a chosen level: it wins over the other set’s', () => {
+    const sheet = computeCharacterSheet(sorceress(), data, { buffs: [{ skillId: BATTLE_ORDERS, level: 2 }] });
+    expect(levelOf(sheet, BATTLE_ORDERS)).toEqual(expect.objectContaining({ level: 2 }));
+    expect(levelOf(sheet, BATTLE_ORDERS)?.castSet).toBeUndefined();
+    expect(sheet.life.value).toBe(100 + 38);
+  });
+
+  it('tells cast skills from attacks by skills.txt range (and weapsel, and weapon-bound hexes)', () => {
+    const idOf = (name: string) => {
+      const skill = charSheetBundle.skills.find((entry) => entry.row.id === name);
+      if (skill === undefined) throw new Error(name);
+      return skill.n;
+    };
+    const cast = [
+      'Battle Orders',
+      'Battle Command',
+      'Shout',
+      'Fade',
+      'Venom',
+      'Burst of Speed',
+      'Energy Shield',
+      'Enchant',
+      'Cold Enchant',
+      'Shiver Armor',
+      'Holy Armor',
+      'Bone Armor',
+      'Shade Armor',
+    ];
+    const attacks = ['Frenzy', 'Zeal', 'Whirlwind', 'Smite', 'Feral Rage', 'Berserk', 'Lightning Fury', 'Hex Bane'];
+    expect(cast.filter((name) => !castOnSwap(data, idOf(name)))).toEqual([]);
+    expect(attacks.filter((name) => castOnSwap(data, idOf(name)))).toEqual([]);
+    // Not an aura or a passive; a shape-shift is a cast skill like the others
+    expect([SALVATION, 580].filter((id) => castOnSwap(data, id))).toEqual([]);
+    expect([WEREWOLF, WEREBEAR].filter((id) => !castOnSwap(data, id))).toEqual([]);
+  });
+
+  it('offers Enchant from the other set (a classic pre-buff on a +skills swap)', () => {
+    const ENCHANT = 471;
+    const character = testCharacter({
+      classId: SORCERESS,
+      attributes: { maxhp: 100 * L },
+      skills: { [ENCHANT]: 1 },
+      items: [cap, swapWeapon(2, [['item_allskills', 3]])],
+    });
+    expect(listAvailableBuffs(character, data).find((buff) => buff.skillId === ENCHANT)).toMatchObject({
+      kind: 'cast',
+      level: 4,
+      castSet: 2,
+    });
+    const plain = computeCharacterSheet(character, data);
+    const sheet = computeCharacterSheet(character, data, { buffs: [{ skillId: ENCHANT }] });
+    expect(levelOf(sheet, ENCHANT)).toMatchObject({ level: 4, castSet: 2 });
+    expect(sheet.attackRating.percent.value).toBeGreaterThan(plain.attackRating.percent.value);
+  });
+
+  it('does not offer auras, procs or attacks of the other set, but a shape-shift an item there gives', () => {
+    const paladin = testCharacter({
+      classId: PALADIN,
+      attributes: { maxhp: 100 * L },
+      items: [
+        cap,
+        swapWeapon(2, [
+          ['item_nonclassskill', SALVATION_AURA, 10],
+          ['item_aura', RESIST_FIRE, 10],
+          ['item_skillonhit', (FADE << 6) | 7, 10],
+          ['item_nonclassskill', FRENZY, 10],
+          ['item_nonclassskill', WHIRLWIND, 10],
+          ['item_nonclassskill', WEREWOLF, 10],
+          ['item_singleskill', ZEAL, 10],
+          ['item_singleskill', SMITE, 10],
+        ]),
+      ],
+    });
+    const listed = listAvailableBuffs(paladin, data);
+    for (const id of [SALVATION_AURA, RESIST_FIRE, FADE, FRENZY, WHIRLWIND, ZEAL, SMITE])
+      expect(listed.some((buff) => buff.skillId === id)).toBe(false);
+    // The form an item on the other set gives: taken there, kept after swapping back
+    expect(listed.find((buff) => buff.skillId === WEREWOLF)).toMatchObject({ level: 10, castSet: 2, exclusiveGroup: 'shapeshift' });
+    const shifted = computeCharacterSheet(paladin, data, { buffs: [{ skillId: WEREWOLF }] });
+    expect(shifted.buffs).toMatchObject([{ skillId: WEREWOLF, level: 10, castSet: 2 }]);
+    // With set II in hand these are offered (they change the sheet here), so the check above is not empty; Whirlwind and
+    // Smite give this paladin no sheet number, the castOnSwap test above covers them
+    const inHand = listAvailableBuffs({ ...paladin, activeWeapon: 1 }, data).map((buff) => buff.skillId);
+    expect(inHand).toEqual(expect.arrayContaining([SALVATION_AURA, FADE, FRENZY, ZEAL, WEREWOLF]));
+    const sheet = computeCharacterSheet(paladin, data, { buffs: [{ skillId: SALVATION_AURA }, { skillId: FRENZY }] });
+    expect(sheet.buffs).toEqual([]);
+    expect(sheet.warnings.filter((warning) => warning.includes('does not have it'))).toHaveLength(2);
+  });
+
+  it('changes nothing when the other set is empty or gives nothing better (the sheet equals the set-in-hand-only one)', () => {
+    const empty = barbarian({ [BATTLE_ORDERS]: 1, [BATTLE_COMMAND]: 1, [SHOUT]: 1 });
+    const buffs = [{ skillId: BATTLE_ORDERS }, { skillId: BATTLE_COMMAND }, { skillId: SHOUT }];
+    expect(listAvailableBuffs(empty, data).some((buff) => buff.castSet !== undefined)).toBe(false);
+    expect(computeCharacterSheet(empty, data, { buffs }).buffs.some((buff) => buff.castSet !== undefined)).toBe(false);
+
+    const worse = barbarian({ [BATTLE_ORDERS]: 1, [BATTLE_COMMAND]: 1, [SHOUT]: 1 }, [
+      cap,
+      swapWeapon(1, [['item_allskills', 2]]),
+      swapWeapon(2, [
+        ['item_allskills', 1],
+        ['fireresist', 50],
+      ]),
+    ]);
+    // The same character with the set II weapon in the inventory (not counted, same item indices)
+    const stowed = {
+      ...worse,
+      items: {
+        ...worse.items,
+        player: worse.items.player.map((entry, index) =>
+          index === 2 ? { ...entry, location: { kind: 'inventory' as const, x: 0, y: 0 } } : entry
+        ),
+      },
+    };
+    expect(computeCharacterSheet(worse, data, { buffs })).toEqual(computeCharacterSheet(stowed, data, { buffs }));
+    expect(listAvailableBuffs(worse, data)).toEqual(listAvailableBuffs(stowed, data));
+  });
+
+  it('keeps the structural unverified rule for buffs cast on the other set', () => {
+    const character = barbarian({ [BATTLE_ORDERS]: 1, [BATTLE_COMMAND]: 1 }, [cap, swapWeapon(2, [['item_allskills', 3]])]);
+    const plain = computeCharacterSheet(character, data);
+    const buffs = listAvailableBuffs(character, data).map((buff) => ({ skillId: buff.skillId }));
+    expect(unflaggedChanges(plain, computeCharacterSheet(character, data, { buffs }))).toEqual([]);
+  });
+
+  it('keeps a remembered selection of a skill only the other set gives (usableSelections)', () => {
+    const available = listAvailableBuffs(sorceress(), data);
+    expect(usableSelections([{ skillId: BATTLE_ORDERS }, { skillId: 9999 }], available)).toEqual([{ skillId: BATTLE_ORDERS }]);
+  });
+});
+
+describe('shape-shifted forms (skills.txt restrict / State1-3)', () => {
+  const FERAL_RAGE = 608;
+  const PRIMAL_SAVAGERY = 610;
+  const FRENZY = 574;
+  const HOLY_ARMOR = 546;
+  /** A druid with both forms, their skills, and Frenzy and Holy Armor from an item (skills for the unshifted character) */
+  const druid = testCharacter({
+    classId: DRUID,
+    attributes: { dexterity: 50, maxhp: 100 * L },
+    skills: { [WEREWOLF]: 5, [WEREBEAR]: 5, [FERAL_RAGE]: 5, [PRIMAL_SAVAGERY]: 5 },
+    items: [
+      item(
+        'cap',
+        equipped('head'),
+        [
+          ['item_nonclassskill', FRENZY, 10],
+          ['item_nonclassskill', HOLY_ARMOR, 10],
+        ],
+        { defense: 100 }
+      ),
+    ],
+    handSkills: { left: FERAL_RAGE, right: FRENZY },
+  });
+  const sheetWith = (...skillIds: number[]) => computeCharacterSheet(druid, data, { buffs: skillIds.map((skillId) => ({ skillId })) });
+  const counted = (sheet: CharacterSheet) => sheet.buffs.map((buff) => buff.skillId);
+
+  it('lists what each buff asks of the form', () => {
+    const listed = new Map(listAvailableBuffs(druid, data).map((buff) => [buff.skillId, buff]));
+    expect(listed.get(FERAL_RAGE)?.needsForm).toBe('Werewolf');
+    expect(listed.get(PRIMAL_SAVAGERY)?.needsForm).toBe('Werewolf or Werebear');
+    expect(listed.get(FRENZY)).toMatchObject({ unshiftedOnly: true });
+    for (const id of [WEREWOLF, WEREBEAR, HOLY_ARMOR]) {
+      expect(listed.get(id)?.needsForm).toBeUndefined();
+      expect(listed.get(id)?.unshiftedOnly).toBeUndefined();
+    }
+  });
+
+  it('counts a skill of a form only in that form', () => {
+    const unshifted = sheetWith(FERAL_RAGE, PRIMAL_SAVAGERY);
+    expect(counted(unshifted)).toEqual([]);
+    expect(unshifted.blockedBuffs).toEqual([
+      { skillId: FERAL_RAGE, reason: 'it needs Werewolf form' },
+      { skillId: PRIMAL_SAVAGERY, reason: 'it needs Werewolf or Werebear form' },
+    ]);
+    expect(unshifted.warnings).toContain('Feral Rage is not counted: it needs Werewolf form');
+    // Nothing counted: the numbers are the plain sheet's
+    expect(unshifted.resists.physical.value).toBe(computeCharacterSheet(druid, data).resists.physical.value);
+
+    const wolf = sheetWith(WEREWOLF, FERAL_RAGE, PRIMAL_SAVAGERY);
+    expect(counted(wolf)).toEqual([WEREWOLF, FERAL_RAGE, PRIMAL_SAVAGERY]);
+    expect(wolf.blockedBuffs).toBeUndefined();
+    expect(wolf.resists.physical.value).toBeGreaterThan(unshifted.resists.physical.value);
+
+    const bear = sheetWith(WEREBEAR, FERAL_RAGE, PRIMAL_SAVAGERY);
+    expect(counted(bear)).toEqual([WEREBEAR, PRIMAL_SAVAGERY]);
+    expect(bear.blockedBuffs).toEqual([{ skillId: FERAL_RAGE, reason: 'it needs Werewolf form' }]);
+  });
+
+  it('drops an attack for the unshifted character while a form is on, but keeps a cast one', () => {
+    expect(counted(sheetWith(FRENZY, HOLY_ARMOR))).toEqual([FRENZY, HOLY_ARMOR]);
+    const wolf = sheetWith(WEREWOLF, FRENZY, HOLY_ARMOR);
+    expect(counted(wolf)).toEqual([WEREWOLF, HOLY_ARMOR]);
+    expect(wolf.blockedBuffs).toEqual([{ skillId: FRENZY, reason: 'it cannot be used in Werewolf form' }]);
+  });
+
+  it('says on a mouse-button skill when the form does not allow it', () => {
+    const problems = (sheet: CharacterSheet) => sheet.attackRating.hands.map((hand) => hand.formProblem);
+    expect(problems(sheetWith())).toEqual(['it needs Werewolf form', undefined]);
+    expect(problems(sheetWith(WEREWOLF))).toEqual([undefined, 'it cannot be used in Werewolf form']);
+    expect(problems(sheetWith(WEREBEAR))).toEqual(['it needs Werewolf form', 'it cannot be used in Werebear form']);
+  });
+
+  it('takes the form from a what-if entry too, and leaves an item proc alone', () => {
+    const whatIf = { skills: [{ skillId: WEREWOLF, level: 3 }] };
+    const sheet = computeCharacterSheet(druid, data, { buffs: [{ skillId: FERAL_RAGE }, { skillId: FRENZY }], whatIf });
+    expect(counted(sheet)).toEqual([FERAL_RAGE]);
+    // A proc is the item's cast: Frenzy from a "chance to cast" counts in a form
+    const procced = testCharacter({
+      classId: DRUID,
+      attributes: { maxhp: 100 * L },
+      skills: { [WEREWOLF]: 5 },
+      items: [item('cap', equipped('head'), [['item_skillonhit', (FRENZY << 6) | 7, 10]], { defense: 100 })],
+    });
+    const withProc = computeCharacterSheet(procced, data, { buffs: [{ skillId: WEREWOLF }, { skillId: FRENZY, level: 7 }] });
+    expect(counted(withProc)).toEqual([WEREWOLF, FRENZY]);
   });
 });

@@ -55,6 +55,20 @@ export function saveAgeNotice(age: SaveAge): SaveNotice {
   }
 }
 
+/**
+ * How long ago the game wrote the save ("3 days ago"), next to the last-saved date: a stored save stays until it is
+ * replaced, so an old one shows the character as it was then (other gear, other numbers). Empty for a time in the future.
+ */
+export function savedAgoText(lastSavedAt: number, nowSeconds: number): string {
+  const seconds = nowSeconds - lastSavedAt;
+  if (seconds < 0) return '';
+  const hours = Math.floor(seconds / 3600);
+  if (hours < 1) return 'less than an hour ago';
+  if (hours < 24) return hours === 1 ? '1 hour ago' : `${String(hours)} hours ago`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? '1 day ago' : `${String(days)} days ago`;
+}
+
 /** The banner of a .d2rl that was uploaded but not used; null otherwise. */
 export function sidecarNotice(sidecar: CharacterSidecar): SaveNotice | null {
   if (sidecar.status !== 'rejected') return null;

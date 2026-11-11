@@ -13,7 +13,7 @@ import { bonusPartsText, overviewRows, skillBonusById, type SkillBonus } from '.
 import { useCharacterItemNames } from '../../hooks/useCharacterItems';
 import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
-import { BuffedBadge } from '../overview/BuffedBadge';
+import { BuffedBadge, WhatIfBadge } from '../overview/BuffedBadge';
 import { StatList, StatusMark } from '../overview/SheetParts';
 import { CharacterSkillTrees } from '../skills/CharacterSkillTrees';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
@@ -220,13 +220,18 @@ export function SkillsTab({ character }: SkillsTabProps) {
                 ? sheetState.status === 'error' || sheetState.status === 'failed'
                   ? 'The skill bonuses could not be worked out: the badges show hard points.'
                   : 'Loading the skill bonuses…'
-                : sheet.buffs.length > 0
-                  ? 'The badges show each skill’s level with every bonus and the buffs switched on counted; a level a buff changed has the ? mark (not yet checked in game) in the table below.'
+                : sheet.buffs.length > 0 || sheet.whatIf !== undefined
+                  ? `The badges show each skill’s level with every bonus and the ${sheet.whatIf === undefined ? 'buffs switched on' : sheet.buffs.length > 0 ? 'buffs and what-if entries' : 'what-if entries'} counted; a level they changed has the ? mark (not yet checked in game) in the table below.`
                   : 'The badges show each skill’s level with every bonus counted.'}{' '}
               Pick a skill for its details.
             </p>
           </div>
-          {sheet !== null && sheet.buffs.length > 0 && <BuffedBadge />}
+          {sheet !== null && (sheet.buffs.length > 0 || sheet.whatIf !== undefined) && (
+            <span className="flex flex-wrap gap-2">
+              {sheet.buffs.length > 0 && <BuffedBadge />}
+              {sheet.whatIf !== undefined && <WhatIfBadge />}
+            </span>
+          )}
         </div>
         {cls === undefined ? (
           <p className="text-sm text-muted-foreground">No skill tree for {character.className} in the current data.</p>
