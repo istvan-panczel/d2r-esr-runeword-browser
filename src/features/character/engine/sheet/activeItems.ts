@@ -12,8 +12,13 @@
  * - Runic Insight (archaeology_3 > 0 in gf): the runes' own modifiers pooled per stat and param over the active hosts,
  *   the percent taken once (toward zero) and split back by host (each its own truncated share, the pooling gain to the
  *   host that lost most); per-item stats (op 13) pool per host only. VERIFIED on SpinToWin.
- * - Dual wield: the off-hand weapon's own attack speed, deadly strike, crushing blow, target defense and to-hit stay on
- *   that weapon (VERIFIED: SpinToWin's IAS 205 leaves out the off-hand sword's 100).
+ * - Dual wield: a weapon in each hand. A weapon is a weapons.txt code that is not a quiver (charsheet.json `quivers`:
+ *   ESR lists its magic arrows / bolts in weapons.txt, but by item type they are missiles), so a bow or crossbow with a
+ *   quiver, a two-handed weapon, and a weapon with a shield are one weapon. The off-hand weapon's own attack speed,
+ *   deadly strike, crushing blow, target defense and to-hit (and their per-level stats) stay on that weapon (VERIFIED:
+ *   SpinToWin's IAS 205 leaves out the off-hand sword's 100; the per-level attack speed INFERRED alike).
+ * - Set pieces worn count distinct set items: two copies of one set ring are one piece (INFERRED: D2 counts set items
+ *   by their set item id).
  */
 import type { CharacterFile, CharacterItem } from '../../parser/types';
 import { requiredLevel, socketStats, REQ_PERCENT } from '@/features/stash/engine/items/baseLines';
@@ -67,6 +72,7 @@ const SLOT_LABELS: Readonly<Record<string, string>> = {
 /** Off-hand weapon stats that belong to that weapon's own attack (itemstatcost names) */
 const WEAPON_LOCAL = [
   'item_fasterattackrate',
+  'item_fasterattackrate_perlevel',
   'tohit',
   'item_tohit_percent',
   'item_tohit_perlevel',
@@ -77,8 +83,9 @@ const WEAPON_LOCAL = [
   'item_fractionaltargetac',
 ];
 
+/** A hand weapon: a weapons.txt code that is not a quiver (bow + quiver is one weapon, not dual wield) */
 export function isWeapon(data: SheetData, item: CharacterItem | null): boolean {
-  return item !== null && Object.hasOwn(data.bundle.weaponSpeed, item.code);
+  return item !== null && Object.hasOwn(data.bundle.weaponSpeed, item.code) && !data.bundle.quivers.includes(item.code);
 }
 
 function whereOf(item: CharacterItem): string {
@@ -140,11 +147,15 @@ export function setupItems(character: CharacterFile, data: SheetData): ItemSetup
   const layered = new Set([data.stat.item_singleskill, data.stat.item_nonclassskill, data.stat.item_aura]);
   const runes = new Set(data.bundle.rules.runicInsight?.runes ?? []);
 
-  // Set pieces worn (equipped items only)
+  // Set pieces worn (equipped items only): distinct set items, two copies of one set ring are one piece
   const setIndex = (item: CharacterItem) => (item.setId === null ? -1 : (data.bundle.setItems.at(item.setId) ?? -1));
-  const pieces = new Map<number, number>();
-  for (const { item } of listed)
-    if (item.location.kind === 'equipped' && setIndex(item) >= 0) pieces.set(setIndex(item), (pieces.get(setIndex(item)) ?? 0) + 1);
+  const worn = new Map<number, Set<number>>();
+  for (const { item } of listed) {
+    const set = setIndex(item);
+    if (item.location.kind !== 'equipped' || item.setId === null || set < 0) continue;
+    worn.set(set, (worn.get(set) ?? new Set<number>()).add(item.setId));
+  }
+  const pieces = new Map([...worn].map(([set, ids]) => [set, ids.size]));
 
   const active: ActiveItem[] = listed.map(({ index, item }) => {
     const lists: StashStat[] = [...foldSecondary(item.stats), ...foldSecondary(item.runewordStats)];

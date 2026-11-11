@@ -20,11 +20,16 @@
  * - Per-level stats (op 2, base level): floor(Σ stat × level / 2^op param) over all lists pooled.
  * - Speeds: totals of IAS / FRW / FHR / FBR / FCR; base attack speed = 100 − main-hand weapon speed + attackrate; base
  *   run/walk = 100 − Σ worn armour speed + velocitypercent. VERIFIED.
+ * - Buffs (INFERRED, no buffed ground truth): one instance of a skill counts, the highest level of its selections and of
+ *   an item aura of the same skill; one buff per exclusive group (an own aura, a shape-shift), the last selected. A buff
+ *   stat no sheet value applies (consumed.ts) is a warning. Every object with a `status` whose numbers differ from the
+ *   unbuffed sheet is `unverified` (a structural diff, so a new field cannot be missed).
  */
 import type { CharacterFile, DifficultyIndex } from '../../parser/types';
 import type { CharSheetSkill } from '@/features/game-data/engine/schema';
 import { affectsOwner } from '@/features/game-data/engine/skillEffects';
 import { itemRequirements, setupItems, type ItemSetup } from './activeItems';
+import { consumedStats, unappliedOps } from './consumed';
 import { BASE_SUFFIX, type SheetData } from './sheetData';
 import { auraStats, passiveStats, skillLevels, skillToHit, type EvalContext, type SkillLevels } from './skills';
 import { addStat, entryOf, getStat, mergeInto, sameStats, sumStat, type Contribution, type StatMap } from './statMap';
@@ -89,6 +94,55 @@ interface Computed {
   ctx: EvalContext;
   /** Selected buffs the character has no level in (and none was given), or without data */
   skippedBuffs: number[];
+  /** What the buff rules did (duplicates, groups, item auras of the same skill, stats not applied) */
+  buffNotes: string[];
+  /** Item auras whose skill the bundles do not know (a save from a newer ESR) */
+  unknownAuras: { skill: number; label: string }[];
+}
+
+/** The exclusive group of a buff: an own aura (skills.txt `aura` 1) or a shape-shift (charsheet.json `shapeshift`) */
+export function exclusiveGroupOf(data: SheetData, skillId: number): 'aura' | 'shapeshift' | undefined {
+  const skill = data.skill(skillId);
+  if (skill?.shapeshift === true) return 'shapeshift';
+  return skill?.row.aura === 1 ? 'aura' : undefined;
+}
+
+const GROUP_LABELS = { aura: 'own aura', shapeshift: 'shape-shift' } as const;
+
+/** A buff selection after the one-instance rules: per skill the given levels, and whether its own level counts too */
+interface NormalizedBuff {
+  skillId: number;
+  levels: number[];
+  /** A selection without a level: the effective level counts */
+  effective: boolean;
+}
+
+/** One selection per skill (the highest level), then one per exclusive group (the last selected), in selection order */
+function normalizeBuffs(data: SheetData, buffs: readonly BuffSelection[], notes: string[]): NormalizedBuff[] {
+  const bySkill = new Map<number, NormalizedBuff & { order: number }>();
+  buffs.forEach((selection, order) => {
+    const seen = bySkill.get(selection.skillId) ?? { skillId: selection.skillId, levels: [], effective: false, order };
+    if (selection.level === undefined) seen.effective = true;
+    else seen.levels.push(selection.level);
+    seen.order = order;
+    bySkill.set(selection.skillId, seen);
+  });
+  const ordered = [...bySkill.values()].sort((a, b) => a.order - b.order);
+  const kept: typeof ordered = [];
+  for (const group of ['aura', 'shapeshift'] as const) {
+    const members = ordered.filter((entry) => exclusiveGroupOf(data, entry.skillId) === group);
+    const last = members.at(-1);
+    if (last === undefined || members.length < 2) continue;
+    notes.push(
+      `Only one ${GROUP_LABELS[group]} counts at a time: ${members.map((entry) => data.skillName(entry.skillId)).join(', ')} selected, ${data.skillName(last.skillId)} counted`
+    );
+  }
+  for (const entry of ordered) {
+    const group = exclusiveGroupOf(data, entry.skillId);
+    const last = group === undefined ? entry : ordered.filter((other) => exclusiveGroupOf(data, other.skillId) === group).at(-1);
+    if (last === entry) kept.push(entry);
+  }
+  return kept.map(({ skillId, levels, effective }) => ({ skillId, levels, effective }));
 }
 
 function statRecord(data: SheetData, total: StatMap, base: StatMap): Record<string, number> {
@@ -158,8 +212,16 @@ function derive(character: CharacterFile, data: SheetData, base: StatMap, contri
   return { total, perLevel, attributePercent, poolPercent, fromAttributes, vitalityAbove, energyAbove };
 }
 
-/** Item auras of the fixed contributions: per owner (item / set) and skill, the highest level when several give it */
-function itemAuras(data: SheetData, fixed: readonly Contribution[]): { owner: Contribution; skill: CharSheetSkill; level: number }[] {
+/**
+ * Item auras of the fixed contributions: per owner (item / set) and skill, the highest level when several give it. An
+ * aura whose skill the bundles do not know at all goes to `unknown`; one charsheet.json leaves out because it gives its
+ * owner nothing (an enemy-only aura) is dropped silently.
+ */
+function itemAuras(
+  data: SheetData,
+  fixed: readonly Contribution[],
+  unknown: { skill: number; label: string }[]
+): { owner: Contribution; skill: CharSheetSkill; level: number }[] {
   const byKey = new Map<string, { owner: Contribution; skill: number; level: number }>();
   for (const contribution of fixed) {
     for (const [skill, level] of contribution.stats.get(data.stat.item_aura) ?? []) {
@@ -172,6 +234,8 @@ function itemAuras(data: SheetData, fixed: readonly Contribution[]): { owner: Co
   const best = new Map<number, { owner: Contribution; skill: CharSheetSkill; level: number }>();
   for (const entry of byKey.values()) {
     const skill = data.skill(entry.skill);
+    if (skill === undefined && entry.level > 0 && !data.knownSkill(entry.skill))
+      unknown.push({ skill: entry.skill, label: entry.owner.label });
     if (skill === undefined || entry.level <= 0 || !affectsOwner(skill.row, 'item-aura')) continue;
     const seen = best.get(entry.skill);
     if (seen === undefined || seen.level < entry.level) best.set(entry.skill, { owner: entry.owner, skill, level: entry.level });
@@ -192,7 +256,11 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
       addStat(stats, stat[name], 0, scrolls * data.bundle.rules.anyaResist);
     fixed.push({ kind: 'quest', label: `Anya's Scroll of Resistance (${String(scrolls)}×)`, stats });
   }
-  const auras = itemAuras(data, fixed);
+  const unknownAuras: { skill: number; label: string }[] = [];
+  const auras = itemAuras(data, fixed, unknownAuras);
+  const groupNotes: string[] = [];
+  const selections = normalizeBuffs(data, buffs, groupNotes);
+  const consumed = consumedStats(data);
   // The base (gf) values under their own names and as `x__base`: what an item aura's passive columns read
   const baseRecord = statRecord(data, base, base);
 
@@ -202,6 +270,7 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
   let levels = skillLevels(character, data, derived.total);
   let applied: AppliedBuff[] = [];
   let skippedBuffs: number[] = [];
+  let buffNotes: string[] = [];
   let converged = false;
   let ctx: EvalContext = { charLevel: character.level, stats: {}, hardByName: {}, levelByName: {}, unsupported };
   for (let pass = 0; pass < MAX_PASSES && !converged; pass++) {
@@ -220,36 +289,75 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
         stats: passiveStats(data, skill, state.level, state.hard, ctx),
       });
     }
-    const hardCtx: EvalContext = { ...ctx, stats: baseRecord, levelByName: levels.hardByName };
-    for (const { owner, skill, level } of auras) {
-      const stats = auraStats(data, skill, level, 0, ctx);
-      mergeInto(stats, passiveStats(data, skill, level, 0, hardCtx));
-      next.push({ kind: 'item-aura', label: `${data.skillName(skill.n)} (${owner.label})`, item: owner.item, skill: skill.n, stats });
-    }
+    // Buffs first: a buff at a higher level than an item aura of the same skill replaces it (one instance counts)
     applied = [];
     skippedBuffs = [];
-    for (const selection of buffs) {
+    buffNotes = [...groupNotes];
+    const auraLevels = new Map(auras.map((aura) => [aura.skill.n, aura.level]));
+    const replaced = new Set<number>();
+    const buffContributions: Contribution[] = [];
+    for (const selection of selections) {
       const skill = data.skill(selection.skillId);
       const state = levels.byId.get(selection.skillId);
-      const level = selection.level ?? state?.level ?? 0;
+      const level = Math.max(selection.effective ? (state?.level ?? 0) : 0, ...selection.levels);
       if (skill === undefined || level <= 0) {
         skippedBuffs.push(selection.skillId);
         continue;
       }
+      const name = data.skillName(skill.n);
+      const auraLevel = auraLevels.get(skill.n);
+      if (auraLevel !== undefined) {
+        if (auraLevel >= level) {
+          buffNotes.push(
+            `Buff ${name} (level ${String(level)}) not counted: an item gives it at level ${String(auraLevel)} (one instance counts)`
+          );
+          continue;
+        }
+        replaced.add(skill.n);
+        buffNotes.push(`Buff ${name} (level ${String(level)}) replaces the item aura (level ${String(auraLevel)}): one instance counts`);
+      }
       const stats = auraStats(data, skill, level, state?.hard ?? 0, ctx);
       if (skill.row.passive !== 1) mergeInto(stats, passiveStats(data, skill, level, state?.hard ?? 0, ctx));
-      next.push({ kind: 'buff', label: data.skillName(skill.n), skill: skill.n, stats });
+      buffContributions.push({ kind: 'buff', label: name, skill: skill.n, stats });
       const record: Record<string, number> = {};
+      const dropped: string[] = [];
       for (const [id, inner] of stats)
-        for (const value of inner.values()) record[data.statName(id)] = (record[data.statName(id)] ?? 0) + value;
-      applied.push({ skillId: skill.n, name: data.skillName(skill.n), level, stats: record });
+        for (const value of inner.values()) {
+          record[data.statName(id)] = (record[data.statName(id)] ?? 0) + value;
+          if (!consumed.has(id) && value !== 0) dropped.push(`${data.statName(id)} ${value > 0 ? '+' : ''}${String(value)}`);
+        }
+      if (dropped.length > 0)
+        buffNotes.push(`Buff ${name} (level ${String(level)}): ${dropped.join(', ')} not on the sheet (no rule applies it)`);
+      applied.push({ skillId: skill.n, name, level, stats: record });
     }
+    const hardCtx: EvalContext = { ...ctx, stats: baseRecord, levelByName: levels.hardByName };
+    for (const { owner, skill, level } of auras) {
+      if (replaced.has(skill.n)) continue;
+      const stats = auraStats(data, skill, level, 0, ctx);
+      mergeInto(stats, passiveStats(data, skill, level, 0, hardCtx));
+      next.push({ kind: 'item-aura', label: `${data.skillName(skill.n)} (${owner.label})`, item: owner.item, skill: skill.n, stats });
+    }
+    next.push(...buffContributions);
     const nextDerived = derive(character, data, base, [...fixed, ...next]);
     converged = sameStats(nextDerived.total, derived.total) && dynamic.length === next.length;
     dynamic = next;
     derived = nextDerived;
   }
-  return { setup, base, fixed, dynamic, derived, levels, buffs: applied, converged, unsupported, ctx, skippedBuffs };
+  return {
+    setup,
+    base,
+    fixed,
+    dynamic,
+    derived,
+    levels,
+    buffs: applied,
+    converged,
+    unsupported,
+    ctx,
+    skippedBuffs,
+    buffNotes,
+    unknownAuras,
+  };
 }
 
 // --- outputs -------------------------------------------------------------------------------------------------------
@@ -425,7 +533,7 @@ function attackRatings(character: CharacterFile, data: SheetData, c: Computed, d
       level: state.level,
       skillPercent,
       mainHand: Math.floor((main * (100 + percent + skillPercent)) / 100),
-      offHand: off === null ? null : Math.floor((offBase * (100 + offPercent + skillPercent)) / 100),
+      offHand: off === null || !usesOffHand(skill) ? null : Math.floor((offBase * (100 + offPercent + skillPercent)) / 100),
       status: 'verified',
     });
   }
@@ -434,6 +542,15 @@ function attackRatings(character: CharacterFile, data: SheetData, c: Computed, d
     base: value(base, sources, 'inferred', ['The character screen shows attack rating per skill only; this is the line without a skill']),
     hands,
   };
+}
+
+/**
+ * A skill that attacks with the off hand when dual wielding: skills.txt `weapsel` 3 (alternating: Frenzy, the claw
+ * skills; VERIFIED, SpinToWin's Frenzy shows 61,474 / 68,978) or 1 (left hand). Whirlwind (2, both at once) shows one
+ * line (VERIFIED); a skill without weapsel (Attack, Zeal) none (INFERRED: weapsel 0 is the primary hand)
+ */
+function usesOffHand(skill: CharSheetSkill): boolean {
+  return skill.row.weapsel === 1 || skill.row.weapsel === 3;
 }
 
 function block(character: CharacterFile, data: SheetData, c: Computed, dexterity: number): SheetValue | null {
@@ -540,6 +657,7 @@ function skillLevelList(data: SheetData, c: Computed): SkillLevel[] {
           hard: state.hard,
           level: state.level,
           bonus: state.bonus,
+          status: 'verified' as const,
         };
       })
   );
@@ -549,7 +667,8 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
   const warnings = [...c.setup.warnings];
   for (const entry of c.setup.active) {
     const need = itemRequirements(entry.item, data);
-    if (need.str > attributes.strength.value || need.dex > attributes.dexterity.value)
+    // A requirement of 0 is met whatever the attribute (a negative strength from items included)
+    if ((need.str > 0 && need.str > attributes.strength.value) || (need.dex > 0 && need.dex > attributes.dexterity.value))
       warnings.push(
         `${entry.item.code} (${entry.where}) needs ${String(need.str)} strength / ${String(need.dex)} dexterity: the game may not count it`
       );
@@ -559,37 +678,26 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
     warnings.push(
       `Buff ${data.skillName(id)} not counted: ${data.skill(id) === undefined ? 'no stat data for the skill' : 'the character does not have it (give a level)'}`
     );
+  for (const { skill, label } of c.unknownAuras)
+    warnings.push(
+      `Item aura ${data.skillName(skill)} (skill ${String(skill)}, ${label}) not counted: no data for the skill (a newer ESR?)`
+    );
+  warnings.push(...c.buffNotes);
   for (const what of [...c.unsupported].sort()) warnings.push(`Formula not evaluated: ${what}`);
   const known = new Set(data.text.defs.flatMap((def, id) => (def === undefined ? [] : [id])));
   const unknown = new Set<number>();
   for (const contribution of c.fixed)
     for (const id of contribution.stats.keys()) if (!known.has(id) && data.bundle.statNames.at(id) === undefined) unknown.add(id);
   if (unknown.size > 0) warnings.push(`Unknown stat ids: ${[...unknown].join(', ')}`);
-  // op 11 stats whose targets the sheet does not apply
-  const applied = new Set(
-    [...ATTRIBUTES.map((name) => ATTRIBUTE_PERCENT[name]), ...POOLS.map((entry) => entry.percent)].map((name) => data.stat[name])
-  );
-  for (const op of data.bundle.ops) {
-    if (op.op !== 11 || applied.has(op.id) || total(c, op.id) === 0) continue;
+  // Op stats onto a sheet stat that the engine does not apply where they sit (op 11 totals, op 9 vitality_hidden2, an
+  // item defense stat outside an item); a buff's are in its own note above
+  const sources = [...c.fixed, ...c.dynamic].filter((contribution) => contribution.kind !== 'buff');
+  for (const [op, amount] of unappliedOps(data, sources, consumedStats(data))) {
     const targets = op.targets.map((id) => data.statName(id));
-    if (targets.some((name) => SHEET_TARGETS.has(name)))
-      warnings.push(`${data.statName(op.id)} (${String(total(c, op.id))}%) on ${targets.join(', ')} is not applied`);
+    warnings.push(`${data.statName(op.id)} (${String(amount)}${op.op === 11 ? '%' : ''}) on ${targets.join(', ')} is not applied`);
   }
   return warnings;
 }
-
-/** Stats a percent op could change on the sheet (an op 11 onto anything else, e.g. damage, is not on the sheet) */
-const SHEET_TARGETS = new Set([
-  'fireresist',
-  'coldresist',
-  'lightresist',
-  'poisonresist',
-  'magicresist',
-  'damageresist',
-  'item_fasterattackrate',
-  'maxhp',
-  'maxmana',
-]);
 
 function sheetOf(character: CharacterFile, data: SheetData, c: Computed, difficulty: DifficultyIndex): CharacterSheet {
   const { stat } = data;
@@ -620,6 +728,15 @@ function sheetOf(character: CharacterFile, data: SheetData, c: Computed, difficu
   };
   const off = c.setup.offHand;
   const local = c.setup.offHandLocal;
+  // The off-hand weapon's own per-level stats, pooled with the character's like its to-hit (INFERRED alike)
+  const offPerLevel = (name: string): number => {
+    const id = data.statId(name);
+    if (id === undefined) return 0;
+    const shift = data.op(id)?.param ?? 3;
+    const at = (amount: number) => Math.floor((amount * character.level) / 2 ** shift);
+    const main = sumStat(c.derived.total, id);
+    return at(main + sumStat(local, id)) - at(main);
+  };
   return {
     v: 1,
     name: character.name,
@@ -700,10 +817,11 @@ function sheetOf(character: CharacterFile, data: SheetData, c: Computed, difficu
           ? null
           : {
               item: off.index,
-              attackSpeed: sumStat(local, stat.item_fasterattackrate),
-              deadlyStrike: sumStat(local, stat.item_deadlystrike),
-              crushingBlow: sumStat(local, stat.item_crushingblow),
+              attackSpeed: sumStat(local, stat.item_fasterattackrate) + offPerLevel('item_fasterattackrate_perlevel'),
+              deadlyStrike: sumStat(local, stat.item_deadlystrike) + offPerLevel('item_deadlystrike_perlevel'),
+              crushingBlow: sumStat(local, stat.item_crushingblow) + offPerLevel('item_crushingblow_perlevel'),
               targetDefense: sumStat(local, stat.item_fractionaltargetac),
+              status: 'verified',
             },
     },
     leech: { life: plain(data, c, 'lifedrainmindam'), mana: plain(data, c, 'manadrainmindam') },
@@ -716,34 +834,52 @@ function sheetOf(character: CharacterFile, data: SheetData, c: Computed, difficu
   };
 }
 
-/** Marks every SheetValue of `buffed` whose value differs from `plainSheet`'s as unverified (walks the same shape) */
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** An array entry's identity: its skill (and hand) when it has one (skill levels, hand lines), else its position */
+function entryKey(entry: unknown, index: number): string {
+  if (!isRecord(entry) || typeof entry.skillId !== 'number') return `#${String(index)}`;
+  return `${String(entry.skillId)}:${typeof entry.hand === 'string' ? entry.hand : ''}`;
+}
+
+/** Deep equality of two sheet parts, `status` left out (every number, source and label compared) */
+function sameData(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a)) return Array.isArray(b) && a.length === b.length && a.every((entry, i) => sameData(entry, b[i]));
+  if (isRecord(a)) {
+    if (!isRecord(b)) return false;
+    const keys = (record: Record<string, unknown>) => Object.keys(record).filter((key) => key !== 'status');
+    const own = keys(a);
+    return own.length === keys(b).length && own.every((key) => Object.hasOwn(b, key) && sameData(a[key], b[key]));
+  }
+  return Object.is(a, b);
+}
+
+/**
+ * Sets `status` to unverified on every object of `buffed` that has a status and differs anywhere (values, sources, caps,
+ * levels …) from the same object of the unbuffed sheet, or has no counterpart there. Array entries are matched by skill
+ * (and hand), so a line that exists only when buffed is flagged. Facts, buffs and warnings are not compared.
+ */
 function markBuffed(buffed: unknown, unbuffed: unknown): void {
-  if (typeof buffed !== 'object' || buffed === null || typeof unbuffed !== 'object' || unbuffed === null) return;
-  const b = buffed as Record<string, unknown>;
-  const u = unbuffed as Record<string, unknown>;
-  if (typeof b.value === 'number' && typeof b.status === 'string' && Array.isArray(b.sources)) {
-    if (b.value !== u.value) b.status = 'unverified';
+  if (Array.isArray(buffed)) {
+    const others = Array.isArray(unbuffed) ? unbuffed : [];
+    const byKey = new Map(others.map((entry: unknown, i) => [entryKey(entry, i), entry]));
+    buffed.forEach((entry: unknown, i) => {
+      markBuffed(entry, byKey.get(entryKey(entry, i)));
+    });
     return;
   }
-  if ('mainHand' in b && typeof b.mainHand === 'number') {
-    if (b.mainHand !== u.mainHand || b.offHand !== u.offHand) b.status = 'unverified';
-    return;
-  }
-  for (const key of Object.keys(b)) {
-    if (key === 'facts' || key === 'buffs' || key === 'warnings') continue;
-    if (Array.isArray(b[key]) && Array.isArray(u[key])) {
-      const list = b[key] as unknown[];
-      const other = u[key] as unknown[];
-      list.forEach((entry, i) => {
-        markBuffed(entry, other[i]);
-      });
-    } else markBuffed(b[key], u[key]);
-  }
+  if (!isRecord(buffed)) return;
+  const other = isRecord(unbuffed) ? unbuffed : undefined;
+  if (typeof buffed.status === 'string' && !sameData(buffed, other)) buffed.status = 'unverified';
+  for (const [key, entry] of Object.entries(buffed))
+    if (key !== 'facts' && key !== 'buffs' && key !== 'warnings') markBuffed(entry, other?.[key]);
 }
 
 /**
  * The character's computed sheet for its active weapon set. Without `options.buffs` it is the unbuffed sheet (cast
- * buffs, shrines, elixirs and conditional states are not counted); with buffs, every number they change is `unverified`.
+ * buffs, shrines, elixirs and conditional states are not counted); with buffs, every object with a status in which they
+ * change anything is `unverified`. One instance of a skill counts (the highest level of its selections and an item aura
+ * of the same skill) and one buff per exclusive group (exclusiveGroupOf: the last selected); warnings say what was left.
  */
 export function computeCharacterSheet(character: CharacterFile, data: SheetData, options: SheetOptions = {}): CharacterSheet {
   const difficulty = options.difficulty ?? character.progress.difficulty;

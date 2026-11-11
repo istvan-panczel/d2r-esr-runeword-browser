@@ -12,7 +12,7 @@ import { parseCharacter } from '../../parser/parseCharacter';
 import { buildSave, testData } from '../../parser/testCharacter';
 import type { CharacterFile, CharacterItem, EquipSlot, ItemLocation } from '../../parser/types';
 import { createSheetData, type SheetData } from './sheetData';
-import type { SheetValue } from './types';
+import type { CharacterSheet, SheetValue } from './types';
 
 const read = <T>(file: string): T => JSON.parse(readFileSync(resolve(__dirname, '../../../../../public/game-data', file), 'utf-8')) as T;
 
@@ -117,4 +117,46 @@ export const exactPool = (value: SheetValue): number => Math.round(value.sources
 export function setItemIds(key: string): number[] {
   const index = charSheetBundle.sets.findIndex((set) => set.key === key);
   return charSheetBundle.setItems.flatMap((set, id) => (set === index ? [id] : []));
+}
+
+/** Every numeric leaf of a sheet by path (array entries keyed by skill id and hand when they have one) */
+function leaves(value: unknown, path: string, out: Map<string, { value: number; statuses: string[] }>, statuses: string[] = []): void {
+  if (typeof value === 'number') {
+    out.set(path, { value, statuses });
+    return;
+  }
+  if (typeof value !== 'object' || value === null) return;
+  if (Array.isArray(value)) {
+    value.forEach((entry: unknown, i) => {
+      const record = typeof entry === 'object' && entry !== null ? (entry as Record<string, unknown>) : {};
+      const key = typeof record.skillId === 'number' ? `${String(record.skillId)}${typeof record.hand === 'string' ? record.hand : ''}` : i;
+      leaves(entry, `${path}[${String(key)}]`, out, statuses);
+    });
+    return;
+  }
+  const record = value as Record<string, unknown>;
+  const own = typeof record.status === 'string' ? [...statuses, record.status] : statuses;
+  for (const [key, entry] of Object.entries(record))
+    if (!['facts', 'buffs', 'warnings', 'status'].includes(key)) leaves(entry, `${path}.${key}`, out, own);
+}
+
+const IDENTITY = new Set(['.v', '.classId', '.level', '.difficulty', '.weaponSet']);
+
+/**
+ * The numbers of a buffed sheet that break the structural rule: one outside any object with a status (a field the rule
+ * cannot see), or one that differs from the unbuffed sheet under a status other than `unverified`. Empty when sound.
+ */
+export function unflaggedChanges(plain: CharacterSheet, buffed: CharacterSheet): string[] {
+  const before = new Map<string, { value: number; statuses: string[] }>();
+  const after = new Map<string, { value: number; statuses: string[] }>();
+  leaves(plain, '', before);
+  leaves(buffed, '', after);
+  const problems: string[] = [];
+  for (const [path, leaf] of after) {
+    if (IDENTITY.has(path)) continue;
+    if (leaf.statuses.length === 0) problems.push(`${path}: no status`);
+    else if (before.get(path)?.value !== leaf.value && leaf.statuses.at(-1) !== 'unverified')
+      problems.push(`${path}: ${String(before.get(path)?.value)} → ${String(leaf.value)} still ${String(leaf.statuses.at(-1))}`);
+  }
+  return problems;
 }

@@ -8,7 +8,8 @@ import type { DifficultyIndex } from '../../parser/types';
  * How far a number is backed by in-game ground truth:
  * - `verified`: the rule reproduced the in-game character screen of the ground-truth characters
  * - `inferred`: follows from the data or the D2 rules, not compared with the game (or the inputs never occurred there)
- * - `unverified`: depends on selected buffs, for which no ground truth exists yet
+ * - `unverified`: depends on selected buffs, for which no ground truth exists yet. computeCharacterSheet sets it on every
+ *   object with a `status` in which any number (sources and caps included) differs from the unbuffed sheet
  */
 export type SheetStatus = 'verified' | 'inferred' | 'unverified';
 
@@ -100,6 +101,8 @@ export interface SkillLevel {
   level: number;
   /** The bonus parts (only the non-zero ones) */
   bonus: { all?: number; cls?: number; tab?: number; single?: number; oskill?: number; buff?: number };
+  /** `unverified` when selected buffs change the level (Battle Command) or the skill shows only with them */
+  status?: SheetStatus;
 }
 
 export interface OffHandStats {
@@ -109,6 +112,7 @@ export interface OffHandStats {
   deadlyStrike: number;
   crushingBlow: number;
   targetDefense: number;
+  status?: SheetStatus;
 }
 
 export interface MercenaryFacts {
@@ -245,15 +249,24 @@ export type BuffKind =
 export interface AvailableBuff {
   skillId: number;
   name: string;
+  /** Each skill is listed once: an own skill (cast / aura) unless a proc gives a higher level */
   kind: BuffKind;
-  /** The level it would be counted at */
+  /** The level it would be counted at (the highest of the own skill and its procs) */
   level: number;
-  /** Item index for a proc */
+  /** Item index for a proc (the item of the listed level) */
   item?: number;
   /** Proc chance in % */
   chance?: number;
+  /** Every active item with a proc of the skill (item indices, save order) */
+  items?: number[];
   /** The sheet stats it changes (itemstatcost names) */
   stats: string[];
+  /**
+   * Buffs of one group are mutually exclusive: `aura` (an own aura: skills.txt `aura` 1, one at a time; item auras are
+   * apart) and `shapeshift` (a states.txt morph state: one form at a time). Render a group as single choice;
+   * computeCharacterSheet keeps only the last selected buff of a group
+   */
+  exclusiveGroup?: string;
 }
 
 export interface AppliedBuff {
@@ -268,7 +281,10 @@ export interface AppliedBuff {
 export interface SheetOptions {
   /** The difficulty to compute resists for; the save's difficulty when omitted */
   difficulty?: DifficultyIndex;
-  /** Buffs to count; every number they change is marked `unverified` */
+  /**
+   * Buffs to count; every number they change is marked `unverified`. One skill counts once (the highest level of its
+   * selections and an item aura of the same skill), and one buff per exclusive group (the last selected)
+   */
   buffs?: readonly BuffSelection[];
 }
 
@@ -300,11 +316,12 @@ export interface CharacterStatsSnapshot {
   pr: number;
   mr: number;
   phr: number;
-  /** Max resist caps (fire, cold, lightning, poison) */
+  /** Max resist caps (fire, cold, lightning, poison; magic optional: added later) */
   frm: number;
   crm: number;
   lrm: number;
   prm: number;
+  mrm?: number;
   /** Damage reduced, magic damage reduced */
   dr: number;
   mdr: number;
@@ -332,4 +349,6 @@ export interface CharacterStatsSnapshot {
   blk?: number;
   /** 1 when the numbers include selected buffs */
   buf?: 1;
+  /** The weapon set the numbers are for; absent for set 1 */
+  ws?: 2;
 }
