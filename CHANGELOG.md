@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.69.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.68.0...v1.69.0) (2026-11-11)
+
+### Features
+
+* **ascendancies:** ascendancy panel how-to and Lich King Bonus for ESR 3.3.04 ([e9bd0fc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e9bd0fca54e4038e9099fc7ca1200f537fcdabc8))
+* **character:** apply the ascendancy from the saved stats (ESR 3.3.04) ([e6181ef](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e6181ef9e18ae368f3861e8208369821c3053c21))
+* **character:** show the ascendancy panel state on Gear and Progress, read it for builds ([f094e27](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f094e278275107c1b6110f9b8de67a96295726dd))
+* **character:** show what each ascendancy tier gives ([d389642](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d38964232c793c8f77fb443718cd25f30412908b))
+* **game-data:** charsheet.json ascendancies from the ESR 3.3.04 ascendancy plugin config ([e02443d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e02443de8f6fb3910b2cf6c6c714729ccd18a8ad))
+
+### Bug Fixes
+
+* **campaign-map:** soulstone caption and Lich King bonus without the Ascendancy Stone ([c5a63b7](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c5a63b716e4691f002acf46c3249bffc34bfecf5))
+* **kill-ledger:** read the boss kill credit from the ascendancies plugin config ([590cf45](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/590cf457797f2214ce4847f33b7b57a7564aa084))
+* **loot-filter:** ascendancy example rules without the Ascendancy Stone ([f73c9bc](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f73c9bccadedefa80f16f616181b2410a6404b3b))
+* **loot-filter:** scale the new per-level poison pierce stat 1059 ([b8aa9d5](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b8aa9d504e7685479e40afcb7ecbc81f6bf6b0be))
+* **modifiers:** drop the crossbow reload kind no item carries since ESR 3.3.04 ([ddd55e0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/ddd55e00c795a4e308ff3d9e81e8a20e24245f78))
+* **stats:** show bleed durations without trailing zeros ([95596d6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/95596d6fab8447f0684792f8fdf2e22980a3c599))
+
+### Documentation
+
+* **character:** how the sheet reads the ESR 3.3.04 ascendancy panel ([bbabf52](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/bbabf52bb271c84820371791ab7f94addc83277c))
+* **guide:** ascendancy panel, Lich King bonus and kill credit for ESR 3.3.04 ([48baba4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/48baba49471747de1a39e1d995cd04ed889a953b))
+
+### Styles
+
+* **game-data:** format bundleCharSheet.ts ([daa5e9d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/daa5e9d36dfc365d4a6d36e21e5ed3a142a49df1))
+
+### Chores
+
+* **esr-update:** cover charsheet.json and the ascendancies config ([c4fb92a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c4fb92a0fb0a552513259df7b8875172b163bb86))
+* **game-data:** regenerate bundles, guide and loot filter agent pack ([480a9a4](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/480a9a48eceadf5828572dcfb6ccd5a047b03cb8))
+* **game-data:** regenerate charsheet.json with the ascendancy section ([5f56eab](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5f56eabfcb6690af1156c39489d403df9c440f11))
+* **game-data:** update to ESR 3.3.04 ([4012688](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/40126884e45f25ddf916ddc6633eb6607beccd6c))
+
+### Refactoring
+
+* **cube:** ascendancy family is the Orb of Creation row since ESR 3.3.04 ([d0fbefe](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/d0fbefecdca24407d7218c888c8a4d162e5cec42))
+* **game-data:** charsheet ascendancies as an array with separate rules ([b96434b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b96434bf873be3eb85637306e0c64a59b55ccfd5))
+
+### Tests
+
+* **guide:** the ascendancy cube family is the Orb of Creation only ([e3a55cf](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e3a55cf8e9306a8b6e35cd843ef3340022761b1a))
+
 ## [1.68.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.67.1...v1.68.0) (2026-11-11)
 
 ### Features
