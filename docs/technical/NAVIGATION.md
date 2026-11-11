@@ -181,8 +181,9 @@ match every path), the others are prefixes (a path matches its prefix exactly or
   [CAMPAIGN-MAP.md](../features/CAMPAIGN-MAP.md).
 - `/stash`: the My Stash pages read `stash.json` and the uploaded file (IndexedDB `d2r-esr-stash`), see
   [STASH.md](../features/STASH.md).
-- `/character`: My Character reads `stash.json` (and per tab stashnames, types, itemtext, skills, skilldetails, lootfilter,
-  specializations) and the stored saves (IndexedDB `d2r-esr-character`); its Ascendancy card fills in once the sync has run, see
+- `/character`: My Character reads `stash.json` (and per tab stashnames, types, itemtext, charsheet (the computed sheet), combat
+  (the Combat tab), skills, skilldetails, lootfilter, specializations); an item source on the Overview opens the Gear tab on
+  that item (page state, not in the URL) and the stored saves (IndexedDB `d2r-esr-character`); its Ascendancy card fills in once the sync has run, see
   [CHARACTER-SAVE.md](../features/CHARACTER-SAVE.md#my-character-page).
 - `/specializations`: `specializations.json`, see [SPECIALIZATIONS.md](../features/SPECIALIZATIONS.md).
 - `/weapon-masteries`: `masteries.json`, see [WEAPON-MASTERIES.md](../features/WEAPON-MASTERIES.md).
