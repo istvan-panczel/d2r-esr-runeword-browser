@@ -136,7 +136,7 @@ export function chanceToBeHit(data: CombatData, target: CombatTarget, player: Co
 // --- rows ---------------------------------------------------------------------------------------------------------------
 
 export interface CombatRow {
-  /** Unique per row: `area:<id>:<difficulty>` / `boss:<id>:<difficulty>` */
+  /** Unique per row within a difficulty, the same across difficulties: `area:<id>` / `boss:<id>` */
   readonly key: string;
   readonly name: string;
   readonly target: CombatTarget;
@@ -164,7 +164,7 @@ function areaRow(data: CombatData, area: CombatArea, player: CombatPlayer, optio
   const fallbackBonus = area.tier === undefined ? data.bundle.randomBonus.campaign[options.difficulty] : data.bundle.randomBonus.maps;
   const target = poolTarget(data, pool, options.difficulty, options.kind, fallbackBonus);
   return {
-    key: `area:${String(area.id)}:${String(options.difficulty)}`,
+    key: `area:${String(area.id)}`,
     name: area.name,
     target,
     hit: chanceToHit(data, target, player, options.kind),
@@ -193,7 +193,7 @@ function bossRow(data: CombatData, boss: CombatBoss, player: CombatPlayer, diffi
   const target = bossTarget(boss, difficulty);
   if (target === null) return null;
   return {
-    key: `boss:${boss.id}:${String(difficulty)}`,
+    key: `boss:${boss.id}`,
     name: boss.name,
     target,
     hit: chanceToHit(data, target, player, 'regular'),
