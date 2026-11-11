@@ -2488,6 +2488,11 @@ export interface CharSheetBundle {
   experience: number[];
   /** weapons.txt `speed` by code (every weapon code, 0 included: also tells weapons apart) */
   weaponSpeed: Record<string, number>;
+  /**
+   * weapons.txt codes that are not weapons by their item type (no `weap` ancestor in the itemtypes.txt Equiv tree; the
+   * build asserts they are missiles): ESR's arrow and bolt quivers. Not a hand weapon: a bow and a quiver is no dual wield
+   */
+  quivers: string[];
   /** armor.txt `speed` and `block` by code, only codes with a non-zero value */
   armor: Record<string, CharSheetArmor>;
   /** skills.txt rows: class skills, skills an item property names that carry passive / aura stats, and every row their formulas read */
@@ -2535,10 +2540,13 @@ export interface CharSheetSkill {
   cls?: number;
   /** Skill tab 1-3 (skilldesc SkillPage) of a class skill */
   tab?: number;
+  /** The skill's `aurastate` is a states.txt `transform` state: a shape-shift (one form at a time) */
+  shapeshift?: true;
   /**
    * The row as the formula evaluator reads it: `id` = the `skill` name formulas use, then only the columns the sheet and
    * its formulas read (passive / aura stat and calc columns, `passive`, `passivestate`, `aura`, `aurafilter`, `summon`,
-   * the to-hit columns, and whatever those formulas reach). Numbers are numbers, formulas text as in the file.
+   * the to-hit columns, `weapsel` (the hand(s) it attacks with: 1 left, 2 both at once, 3 alternating, 4 none), and
+   * whatever those formulas reach). Numbers are numbers, formulas text as in the file.
    */
   row: SkillCalcRow;
 }

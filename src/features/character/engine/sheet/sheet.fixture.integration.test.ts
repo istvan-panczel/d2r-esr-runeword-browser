@@ -15,8 +15,9 @@ import type { StashBundle } from '@/features/game-data/engine/schema';
 import { createCharacterData } from '../../parser/characterData';
 import { parseCharacter } from '../../parser/parseCharacter';
 import type { CharacterFile } from '../../parser/types';
+import { listAvailableBuffs } from './buffs';
 import { computeCharacterSheet } from './sheet';
-import { exactPool, sheetData as data } from './testSheet.mock';
+import { exactPool, sheetData as data, unflaggedChanges } from './testSheet.mock';
 import type { CharacterSheet } from './types';
 
 const FIXTURES = resolve(__dirname, '../../../../../test-fixtures/character');
@@ -190,8 +191,8 @@ describe.skipIf(!present)('computed sheet vs in-game ground truth (2026-11-11)',
     const frenzy = sheet.attackRating.hands.find((hand) => hand.name === 'Frenzy');
     const whirlwind = sheet.attackRating.hands.find((hand) => hand.name === 'Whirlwind');
     expect(frenzy).toMatchObject({ mainHand: 61474, offHand: 68978 });
-    // The screen shows one line for Whirlwind: the main hand's
-    expect(whirlwind?.mainHand).toBe(61474);
+    // The screen shows one line for Whirlwind (skills.txt weapsel 2): the main hand's
+    expect(whirlwind).toMatchObject({ mainHand: 61474, offHand: null });
     expect(sheet.facts).toMatchObject({
       saveDifficulty: 2,
       act: 5,
@@ -317,5 +318,71 @@ describe.skipIf(!existsSync(DUDU))('computed sheet: a buff cross-check (no buffe
     const wolf = computeCharacterSheet(character, data, { buffs: [{ skillId: 595 }] });
     expect(exactPool(wolf.life)).toBe(current);
     expect(wolf.life.status).toBe('unverified');
+  });
+});
+
+const REVIEW = ['PhysMagicBowazo', 'EleBowazon', 'Dudu', 'ZealoProcadin'] as const;
+
+describe.skipIf(!REVIEW.every((name) => existsSync(resolve(FIXTURES, `${name}.d2s`))))(
+  'computed sheet: review findings on real saves',
+  () => {
+    const characterData = createCharacterData(JSON.parse(readFileSync(STASH, 'utf-8')) as StashBundle);
+    const load = (name: (typeof REVIEW)[number]) =>
+      parseCharacter(new Uint8Array(readFileSync(resolve(FIXTURES, `${name}.d2s`))), characterData);
+
+    it('PhysMagicBowazo (bow + magic quiver): the quiver’s 29 IAS counts, no off-hand line', () => {
+      const sheet = computeCharacterSheet(load('PhysMagicBowazo'), data);
+      expect(sheet.speed.attack.value).toBe(88);
+      expect(sheet.offense.offHand).toBeNull();
+      expect(sheet.attackRating.hands.map((hand) => [hand.name, hand.mainHand, hand.offHand])).toEqual([
+        ['Strafe', 3669, null],
+        ['Multiple Shot', 1417, null],
+      ]);
+    });
+
+    it('EleBowazon (bow + magic quiver): the quiver’s +39 attack rating counts, no off-hand line', () => {
+      const sheet = computeCharacterSheet(load('EleBowazon'), data);
+      expect(sheet.attackRating.base.sources).toContainEqual(expect.objectContaining({ kind: 'item', label: 'left hand', value: 39 }));
+      expect(sheet.attackRating.base.value).toBe(2456);
+      expect(sheet.attackRating.hands.map((hand) => [hand.name, hand.mainHand, hand.offHand])).toEqual([
+        ['Magic Arrow', 3039, null],
+        ['Exploding Arrow', 5078, null],
+      ]);
+    });
+
+    it('Dudu: Call of the Wild’s item_armor_percent is a warning, not a silent no-op; the forms are one group', () => {
+      const character = load('Dudu');
+      const plain = computeCharacterSheet(character, data);
+      const buffed = computeCharacterSheet(character, data, { buffs: [{ skillId: 625, level: 10 }] });
+      expect(buffed.defense.value).toBe(plain.defense.value);
+      expect(buffed.warnings.some((warning) => warning.includes('Call of the Wild') && warning.includes('item_armor_percent'))).toBe(true);
+      const groups = listAvailableBuffs(character, data).filter((buff) => buff.exclusiveGroup === 'shapeshift');
+      expect(groups.map((buff) => buff.skillId).sort()).toEqual([595, 596]);
+    });
+
+    it('ZealoProcadin (Hell): Salvation raises the fire cap, flagged; one own aura counts', () => {
+      const character = load('ZealoProcadin');
+      const plain = computeCharacterSheet(character, data, { difficulty: 2 });
+      const salvation = computeCharacterSheet(character, data, { difficulty: 2, buffs: [{ skillId: 557 }] });
+      expect(salvation.resists.fire.cap).toBeGreaterThan(plain.resists.fire.cap);
+      expect(salvation.resists.fire.status).toBe('unverified');
+      expect(unflaggedChanges(plain, salvation)).toEqual([]);
+      const auras = listAvailableBuffs(character, data).filter((buff) => buff.exclusiveGroup === 'aura');
+      expect(auras.length).toBeGreaterThan(1);
+      const all = computeCharacterSheet(character, data, { difficulty: 2, buffs: auras.map((buff) => ({ skillId: buff.skillId })) });
+      expect(all.buffs).toHaveLength(1);
+    });
+  }
+);
+
+describe.skipIf(!present)('computed sheet: every listed buff on the ground-truth saves is flagged structurally', () => {
+  const characterData = createCharacterData(JSON.parse(readFileSync(STASH, 'utf-8')) as StashBundle);
+  it.each(Object.keys(PAIRS) as Pair[])('%s', (name) => {
+    const character = parseCharacter(new Uint8Array(readFileSync(resolve(GROUND_TRUTH, PAIRS[name], `${name}.d2s`))), characterData);
+    const plain = computeCharacterSheet(character, data);
+    const buffs = listAvailableBuffs(character, data).map((buff) => ({ skillId: buff.skillId, level: buff.level }));
+    const buffed = computeCharacterSheet(character, data, { buffs });
+    expect(unflaggedChanges(plain, buffed)).toEqual([]);
+    expect(new Set(buffs.map((buff) => buff.skillId)).size).toBe(buffs.length);
   });
 });

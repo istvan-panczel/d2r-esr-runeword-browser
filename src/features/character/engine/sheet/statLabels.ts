@@ -12,7 +12,7 @@ export const EN_NUMBERS = new Intl.NumberFormat('en-US');
 export const DIFFICULTY_NAMES: Readonly<Record<DifficultyIndex, string>> = { 0: 'Normal', 1: 'Nightmare', 2: 'Hell' };
 
 /** The numeric snapshot fields (everything but the version, difficulty, dates and flags) */
-export type SnapshotStatKey = Exclude<keyof CharacterStatsSnapshot, 'v' | 'difficulty' | 'savedAt' | 'esrVersion' | 'buf'>;
+export type SnapshotStatKey = Exclude<keyof CharacterStatsSnapshot, 'v' | 'difficulty' | 'savedAt' | 'esrVersion' | 'buf' | 'ws'>;
 
 export type StatUnit =
   /** A count or amount: 6,080 */
@@ -45,6 +45,7 @@ export const SHEET_STAT_LABELS: Readonly<Record<SnapshotStatKey, StatLabel>> = {
   pr: { label: 'Poison resistance', short: 'Poison', unit: 'percent' },
   mr: { label: 'Magic resistance', short: 'Magic', unit: 'percent' },
   phr: { label: 'Physical resistance', short: 'Phys', unit: 'percent' },
+  mrm: { label: 'Maximum magic resistance', short: 'Max magic', unit: 'percent' },
   frm: { label: 'Maximum fire resistance', short: 'Max fire', unit: 'percent' },
   crm: { label: 'Maximum cold resistance', short: 'Max cold', unit: 'percent' },
   lrm: { label: 'Maximum lightning resistance', short: 'Max light', unit: 'percent' },

@@ -32,6 +32,7 @@ export function toStatsSnapshot(sheet: CharacterSheet, meta: SnapshotMeta): Char
     crm: r.cold.cap,
     lrm: r.lightning.cap,
     prm: r.poison.cap,
+    mrm: r.magic.cap,
     dr: sheet.damageReduction.value,
     mdr: sheet.magicDamageReduction.value,
     ias: speed.attack.value,
@@ -54,5 +55,6 @@ export function toStatsSnapshot(sheet: CharacterSheet, meta: SnapshotMeta): Char
   };
   if (sheet.block !== null) snapshot.blk = sheet.block.value;
   if (sheet.buffs.length > 0) snapshot.buf = 1;
+  if (sheet.weaponSet === 2) snapshot.ws = 2;
   return snapshot;
 }

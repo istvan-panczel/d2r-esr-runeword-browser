@@ -112,6 +112,11 @@ export interface SheetData {
   skill(id: number): CharSheetSkill | undefined;
   /** Display name (itemtext.json), else the skills.txt name, else "Skill <id>" */
   skillName(id: number): string;
+  /**
+   * The bundles know the skill: charsheet.json has its row or itemtext.json its name (a skill an item names that gives
+   * its owner nothing, e.g. an enemy-only aura, is in itemtext.json only). False for a skill of a newer ESR
+   */
+  knownSkill(id: number): boolean;
   /** The class skills of a class, by skills.txt row */
   classSkills(cls: number): readonly CharSheetSkill[];
 }
@@ -164,6 +169,7 @@ export function createSheetData(bundle: CharSheetBundle, itemText: ItemTextBundl
     perLevelOps: bundle.ops.filter((op) => (op.op === 2 || op.op === 4 || op.op === 5) && op.base === levelId),
     skill: (id) => skills.get(id),
     skillName: (id) => names.get(id) ?? skills.get(id)?.row.id ?? `Skill ${String(id)}`,
+    knownSkill: (id) => skills.has(id) || names.has(id),
     classSkills: (cls) => byClass.get(cls) ?? [],
   };
 }

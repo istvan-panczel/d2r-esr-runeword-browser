@@ -213,7 +213,8 @@ describe('computeCharacterSheet: which items count', () => {
         ]),
         item('cm1', charmAt(0, 0), [['item_tohit_perlevel', 26]]),
       ],
-      handSkills: { right: 0 },
+      skills: { 574: 1 },
+      handSkills: { right: 574 },
     });
     const sheet = computeCharacterSheet(character, data);
     expect(sheet.speed.attack.value).toBe(20);
@@ -223,7 +224,159 @@ describe('computeCharacterSheet: which items count', () => {
     const main = (100 - 7) * 5 + factor + 100 + Math.floor((26 * 102) / 8);
     // the off-hand line pools the per-level to-hit of every list: (26 + 42) × 102 / 8 = 867, not 331 + 535
     const off = (100 - 7) * 5 + factor + 100 + Math.floor((68 * 102) / 8);
-    expect(sheet.attackRating.hands[0]).toMatchObject({ mainHand: main, offHand: off });
+    // Frenzy (weapsel 3) alternates hands: both lines, with its to-hit %
+    const frenzy = sheet.attackRating.hands[0]?.skillPercent ?? 0;
+    expect(sheet.attackRating.hands[0]).toMatchObject({
+      mainHand: Math.floor((main * (100 + frenzy)) / 100),
+      offHand: Math.floor((off * (100 + frenzy)) / 100),
+    });
+  });
+});
+
+describe('computeCharacterSheet: hands (review 2026-11-11)', () => {
+  const quiverStats: [string, number][] = [
+    ['item_fasterattackrate', 29],
+    ['tohit', 39],
+    ['item_deadlystrike', 10],
+    ['item_crushingblow', 5],
+    ['item_fractionaltargetac', 20],
+  ];
+
+  it('treats a quiver as no weapon: its IAS, to-hit, DS, CB and target defense count, no off-hand line', () => {
+    const bowFirst = testCharacter({
+      classId: AMAZON,
+      attributes: { dexterity: 100 },
+      items: [item('cbw', equipped('rightHand', 1), [['item_fasterattackrate', 10]]), item('aq2', equipped('leftHand', 1), quiverStats)],
+      handSkills: { right: 0 },
+    });
+    // a quiver in the right hand and the bow in the left: the bow is still the weapon
+    const quiverFirst = testCharacter({
+      classId: AMAZON,
+      attributes: { dexterity: 100 },
+      items: [item('aq2', equipped('rightHand', 1), quiverStats), item('cbw', equipped('leftHand', 1), [['item_fasterattackrate', 10]])],
+      handSkills: { right: 0 },
+    });
+    const factor = charSheetBundle.classes[AMAZON]?.toHitFactor ?? 0;
+    for (const character of [bowFirst, quiverFirst]) {
+      const sheet = computeCharacterSheet(character, data);
+      expect(sheet.speed.attack.value).toBe(39);
+      expect(sheet.offense).toMatchObject({
+        deadlyStrike: { value: 10 },
+        crushingBlow: { value: 5 },
+        targetDefense: { value: 20 },
+        offHand: null,
+      });
+      expect(sheet.attackRating.base.value).toBe((100 - 7) * 5 + factor + 39);
+      expect(sheet.attackRating.hands[0]?.offHand).toBeNull();
+      // the composite bow's speed (-10) is the base attack speed
+      expect(sheet.speed.baseAttack.value).toBe(110);
+    }
+  });
+
+  it('gives no off-hand line to a two-handed weapon, a crossbow + bolts, a throwing weapon + shield, a weapon + shield', () => {
+    const cases = [
+      [item('2hs', equipped('rightHand', 1))],
+      [item('lxb', equipped('rightHand', 1)), item('cq2', equipped('leftHand', 1))],
+      [item('lbw', equipped('rightHand', 1)), item('aqv', equipped('leftHand', 1))],
+      [item('tax', equipped('rightHand', 1)), item('kit', equipped('leftHand', 1), [], { defense: 10 })],
+      [item('kit', equipped('rightHand', 1), [], { defense: 10 }), item('hax', equipped('leftHand', 1))],
+    ];
+    for (const items of cases) {
+      const sheet = computeCharacterSheet(testCharacter({ items, handSkills: { right: 0 } }), data);
+      expect(sheet.offense.offHand).toBeNull();
+      expect(sheet.attackRating.hands[0]?.offHand).toBeNull();
+    }
+  });
+
+  it('still dual wields two weapons: two swords (Barbarian), two claws (Assassin)', () => {
+    for (const [classId, code] of [
+      [BARBARIAN, 'lsd'],
+      [6, 'ktr'],
+    ] as const) {
+      const sheet = computeCharacterSheet(
+        testCharacter({
+          classId,
+          items: [item(code, equipped('rightHand', 1)), item(code, equipped('leftHand', 1), [['item_fasterattackrate', 30]])],
+          // Frenzy / Fists of Fire: weapsel 3, the off hand attacks too
+          skills: { [classId === BARBARIAN ? 574 : 639]: 1 },
+          handSkills: { right: classId === BARBARIAN ? 574 : 639 },
+        }),
+        data
+      );
+      expect(sheet.offense.offHand).toMatchObject({ item: 1, attackSpeed: 30 });
+      expect(sheet.speed.attack.value).toBe(0);
+      expect(sheet.attackRating.hands[0]?.offHand).not.toBeNull();
+    }
+  });
+
+  it('gives an off-hand line only to a skill that alternates hands (skills.txt weapsel 3: Frenzy), not Whirlwind (2)', () => {
+    const sheet = computeCharacterSheet(
+      testCharacter({
+        skills: { 574: 1, 590: 1 },
+        items: [item('hax', equipped('rightHand', 1)), item('hax', equipped('leftHand', 1), [['tohit', 50]])],
+        handSkills: { left: 574, right: 590 },
+      }),
+      data
+    );
+    const hand = (id: number) => sheet.attackRating.hands.find((entry) => entry.skillId === id);
+    expect(hand(574)?.offHand).toBeGreaterThan(hand(574)?.mainHand ?? 0);
+    expect(hand(590)?.offHand).toBeNull();
+  });
+
+  it('keeps the off-hand weapon’s per-level IAS, DS and CB on that weapon (pooled with the character’s)', () => {
+    const sheet = computeCharacterSheet(
+      testCharacter({
+        level: 80,
+        items: [
+          item('hax', equipped('rightHand', 1), [['item_deadlystrike_perlevel', 4]]),
+          item('hax', equipped('leftHand', 1), [
+            ['item_fasterattackrate_perlevel', 8],
+            ['item_deadlystrike_perlevel', 4],
+            ['item_crushingblow_perlevel', 2],
+          ]),
+        ],
+      }),
+      data
+    );
+    // main hand: 4 × 80 / 8 = 40 DS; the off-hand's: (4 + 4) × 80 / 8 − 40 = 40, 8 × 80 / 8 = 80 IAS, 2 × 80 / 8 = 20 CB
+    expect(sheet.speed.attack.value).toBe(0);
+    expect(sheet.offense.deadlyStrike.value).toBe(40);
+    expect(sheet.offense.crushingBlow.value).toBe(0);
+    expect(sheet.offense.offHand).toMatchObject({ attackSpeed: 80, deadlyStrike: 40, crushingBlow: 20 });
+  });
+});
+
+describe('computeCharacterSheet: sets and warnings (review 2026-11-11)', () => {
+  it('counts two copies of one set item as one piece', () => {
+    // Tasselhoff's Traveling Gear, 2 pieces: +25 vitality, +25 energy (sets.txt)
+    const [first, second] = setItemIds("Tasselhoff's Traveling Gear");
+    const ring = (slot: 'rightRing' | 'leftRing', setId: number | undefined) =>
+      item('rin', equipped(slot), [], { quality: 'set', setId: setId ?? null });
+    const twice = computeCharacterSheet(testCharacter({ items: [ring('rightRing', first), ring('leftRing', first)] }), data);
+    expect(twice.attributes.vitality.value).toBe(0);
+    const two = computeCharacterSheet(testCharacter({ items: [ring('rightRing', first), ring('leftRing', second)] }), data);
+    expect(two.attributes.vitality.sources).toContainEqual(expect.objectContaining({ kind: 'set', value: 25 }));
+  });
+
+  it('does not warn about a strength requirement of 0 when strength is negative', () => {
+    const sheet = computeCharacterSheet(testCharacter({ items: [item('rin', equipped('rightRing'), [['strength', -10]])] }), data);
+    expect(sheet.attributes.strength.value).toBe(-10);
+    expect(sheet.warnings.filter((warning) => warning.includes('strength'))).toEqual([]);
+  });
+
+  it('warns about an item aura whose skill the data does not know (a newer ESR), not about an enemy-only one', () => {
+    const unknown = computeCharacterSheet(testCharacter({ items: [item('cap', equipped('head'), [['item_aura', 4000, 5]])] }), data);
+    expect(unknown.warnings.some((warning) => warning.includes('4000') && warning.includes('aura'))).toBe(true);
+    const conviction = computeCharacterSheet(
+      testCharacter({ items: [item('hax', equipped('rightHand', 1), [['item_aura', 555, 30]])] }),
+      data
+    );
+    expect(conviction.warnings).toEqual([]);
+  });
+
+  it('warns about an op stat it does not apply (vitality_hidden2 → hpregen)', () => {
+    const sheet = computeCharacterSheet(testCharacter({ items: [item('cap', equipped('head'), [['vitality_hidden2', 50]])] }), data);
+    expect(sheet.warnings.some((warning) => warning.includes('vitality_hidden2') && warning.includes('hpregen'))).toBe(true);
   });
 });
 
@@ -434,9 +587,15 @@ describe('toStatsSnapshot', () => {
       data
     );
     const snapshot = toStatsSnapshot(sheet, { savedAt: 1_794_169_893, esrVersion: '3.3.03' });
-    expect(snapshot).toMatchObject({ v: 1, difficulty: 0, savedAt: 1_794_169_893, esrVersion: '3.3.03', str: 40 });
+    expect(snapshot).toMatchObject({ v: 1, difficulty: 0, savedAt: 1_794_169_893, esrVersion: '3.3.03', str: 40, mrm: 75 });
+    expect(snapshot.ws).toBeUndefined();
     expect(typeof snapshot.blk).toBe('number');
     for (const [key, entry] of Object.entries(snapshot)) if (key !== 'esrVersion') expect(typeof entry).toBe('number');
     expect(JSON.stringify(snapshot).length).toBeLessThan(700);
+  });
+
+  it('names weapon set 2 (ws) and only then', () => {
+    const sheet = computeCharacterSheet(testCharacter({ activeWeapon: 1 }), data);
+    expect(toStatsSnapshot(sheet, { savedAt: 0 }).ws).toBe(2);
   });
 });
