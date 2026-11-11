@@ -3,12 +3,14 @@ import { ExternalLink } from '@/components/ExternalLink';
 import { FRAME_TABLE_URL } from '@/core/navigation/navConfig';
 import { cn } from '@/lib/utils';
 import type { CharacterTab } from '../../engine/characterTabs';
-import { DIFFICULTY_NAMES } from '../../engine/sheet/statLabels';
+import { DIFFICULTY_NAMES } from '@/features/builds/utils/statLabels';
 import type { CharacterSheet } from '../../engine/sheet/types';
 import {
   attributeRows,
   experienceToNext,
+  groupWarnings,
   handRows,
+  offHandText,
   overviewRows,
   poolRows,
   resistReadouts,
@@ -23,6 +25,7 @@ import { NUMBER_FORMAT } from '../tabs/tabClasses';
 import { BuffedBadge, UnbuffedBadge } from './BuffedBadge';
 import { BuffsPanel } from './BuffsPanel';
 import { ResistMeters } from './ResistMeters';
+import { ShowItemContext } from './showItemContext';
 import { SheetCard, SourcesPopover, StatList, StatusMark, ValueText, type ItemNamer } from './SheetParts';
 
 type ReadySheet = Extract<CharacterSheetState, { status: 'ready' }>;
@@ -39,6 +42,7 @@ const POOL_EDGE: Readonly<Record<string, string>> = {
 
 /** What the sheet counts and leaves out, the markers' meaning and the engine's warnings */
 function SheetIntro({ sheet, buffed }: { readonly sheet: CharacterSheet; readonly buffed: boolean }) {
+  const warnings = groupWarnings(sheet.warnings);
   return (
     <section aria-label="What these numbers count" className="space-y-2 rounded-xl border bg-card p-3 text-sm shadow-sm sm:p-4">
       <p className="flex flex-wrap items-center gap-2">
@@ -51,26 +55,31 @@ function SheetIntro({ sheet, buffed }: { readonly sheet: CharacterSheet; readonl
       <p className="max-w-prose text-muted-foreground">
         Worked out from the save as the character screen shows it standing idle at full life: the gear of the active weapon set, the charms
         in the Charm Inventory, set bonuses, passive skills and item auras.{' '}
-        {buffed ? 'Plus the buffs switched on below. ' : 'Buffs you cast are not counted: switch them on under Buffs. '}
-        Never counted: shrines, elixirs, potions, charges, states like Whirlwind, and your mercenary&apos;s auras.
+        {buffed
+          ? 'Plus the buffs switched on below. '
+          : 'Not counted until you switch them on under Buffs: skills you cast, your auras, what an attack gives while you use it (Frenzy’s charges, Whirlwind) and skills your items cast on you. '}
+        Never counted: shrines, elixirs, potions and your mercenary&apos;s auras.
       </p>
       <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span>Select any number to see where it comes from.</span>
         <span className="inline-flex items-center gap-1">
-          <StatusMark status="inferred" /> {STATUS_TEXT.inferred.short}: not yet compared with the game
+          <StatusMark status="inferred" /> {STATUS_TEXT.inferred.short}
         </span>
         <span className="inline-flex items-center gap-1">
           <StatusMark status="unverified" /> {STATUS_TEXT.unverified.short}: changed by a buff
         </span>
       </p>
-      {sheet.warnings.length > 0 && (
+      {warnings.length > 0 && (
         <details className="text-xs text-muted-foreground">
           <summary className="cursor-pointer font-medium text-foreground">
-            {sheet.warnings.length} {sheet.warnings.length === 1 ? 'note' : 'notes'} from the calculation
+            {warnings.length} {warnings.length === 1 ? 'note' : 'notes'} from the calculation
           </summary>
-          <ul className="mt-1 list-disc space-y-0.5 pl-5">
-            {sheet.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
+          <ul className="mt-1 max-w-prose list-disc space-y-0.5 pl-5">
+            {warnings.map((warning) => (
+              <li key={warning.text}>
+                {warning.text}
+                {warning.count > 1 && <span className="tabular-nums"> ({warning.count}×)</span>}
+              </li>
             ))}
           </ul>
         </details>
@@ -177,9 +186,10 @@ function HandList({ rows, itemName }: { readonly rows: readonly HandRow[]; reado
                 <span className="text-foreground">{row.label}</span>{' '}
                 <span className="text-xs text-muted-foreground">
                   {row.hand}, level {row.level}
+                  {row.offHand !== null && ', main / off hand'}
                 </span>
               </span>
-              <span className="flex items-baseline gap-1.5 font-semibold">
+              <span className="flex items-baseline gap-1.5 font-semibold whitespace-nowrap">
                 <ValueText
                   text={row.text}
                   unbuffedText={row.unbuffedText}
@@ -226,90 +236,123 @@ interface OverviewSheetProps {
   readonly state: ReadySheet;
   readonly itemName: ItemNamer;
   readonly onTab: (tab: CharacterTab) => void;
+  /** Opens the Gear tab on an item (a source in a number's popover) */
+  readonly onShowItem: (index: number) => void;
 }
 
+/** One card of the column flow: whole, never split between columns (padding, not margin: a column break keeps it) */
+const FLOW_ITEM = 'break-inside-avoid pb-4';
+
 /** The Overview's computed sheet: what is counted, life / mana / stamina, then the cards, the buffs and the level */
-export function OverviewSheet({ character, state, itemName, onTab }: OverviewSheetProps) {
+export function OverviewSheet({ character, state, itemName, onTab, onShowItem }: OverviewSheetProps) {
   const { sheet, unbuffed } = state;
   const buffed = sheet.buffs.length > 0;
   const rows = overviewRows(sheet, unbuffed, NUMBER_FORMAT);
   const pools = poolRows(sheet, unbuffed, character.baseAttributes, NUMBER_FORMAT);
+  const offHand = offHandText(sheet, NUMBER_FORMAT);
   return (
-    <div className="space-y-4">
-      <SheetIntro sheet={sheet} buffed={buffed} />
+    <ShowItemContext value={onShowItem}>
+      <div className="space-y-4">
+        <SheetIntro sheet={sheet} buffed={buffed} />
 
-      <ul aria-label="Life, mana and stamina" className="grid gap-3 @2xl/page:grid-cols-3">
-        {pools.map((row) => (
-          <PoolTile key={row.key} row={row} itemName={itemName} />
-        ))}
-      </ul>
+        <ul aria-label="Life, mana and stamina" className="grid gap-3 @2xl/page:grid-cols-3">
+          {pools.map((row) => (
+            <PoolTile key={row.key} row={row} itemName={itemName} />
+          ))}
+        </ul>
 
-      <div className="grid items-start gap-4 @3xl/page:grid-cols-2 @6xl/page:grid-cols-3">
-        <AttributesCard sheet={sheet} unbuffed={unbuffed} itemName={itemName} />
-        <ResistMeters
-          readouts={resistReadouts(sheet, unbuffed, NUMBER_FORMAT)}
-          difficulty={state.difficulty}
-          saveDifficulty={sheet.facts.saveDifficulty}
-          onDifficulty={state.setDifficulty}
-          itemName={itemName}
-        />
-        <SheetCard id="character-defense" title="Defense">
-          <StatList rows={rows.defense} itemName={itemName} />
-          {rows.absorb.length > 0 && (
-            <>
-              <h4 className="mt-2 text-xs font-medium text-muted-foreground">Absorb</h4>
-              <StatList rows={rows.absorb} itemName={itemName} />
-            </>
-          )}
-          {sheet.block === null && (
-            <p className="mt-2 text-xs text-muted-foreground">No shield in the active weapon set: no block chance.</p>
-          )}
-        </SheetCard>
-        <SheetCard id="character-offense" title="Offense">
-          <h4 className="text-xs font-medium text-muted-foreground">Attack rating per skill</h4>
-          <HandList rows={handRows(sheet, unbuffed, NUMBER_FORMAT)} itemName={itemName} />
-          <div className="mt-2">
-            <StatList rows={rows.offense} itemName={itemName} />
+        {/* A column flow (CSS columns): the cards stack top to bottom and the columns balance, so a short card leaves
+            no hole beside a tall one at any width; one column on phones. The order balances three columns: attributes,
+            level, speed | resistances, find | defense, offense */}
+        <div className="-mb-4 gap-4 @3xl/page:columns-2 @6xl/page:columns-3">
+          <div className={FLOW_ITEM}>
+            <AttributesCard sheet={sheet} unbuffed={unbuffed} itemName={itemName} />
           </div>
-        </SheetCard>
-        <SheetCard
-          id="character-speed"
-          title="Speed"
-          actions={
-            <ExternalLink href={FRAME_TABLE_URL} className={LINK_CLASS} iconClassName="size-3">
-              Breakpoints: Frame Table
-            </ExternalLink>
-          }
-        >
-          <StatList rows={rows.speed} itemName={itemName} />
-        </SheetCard>
-        <SheetCard
-          id="character-find"
-          title="Find, skills and recovery"
-          actions={
-            <button
-              type="button"
-              className={LINK_CLASS}
-              onClick={() => {
-                onTab('skills');
-              }}
+          <div className={FLOW_ITEM}>
+            <LevelCard sheet={sheet} />
+          </div>
+          <div className={FLOW_ITEM}>
+            <SheetCard
+              id="character-speed"
+              title="Speed"
+              actions={
+                <ExternalLink href={FRAME_TABLE_URL} className={LINK_CLASS} iconClassName="size-3">
+                  Breakpoints: Frame Table
+                </ExternalLink>
+              }
             >
-              Skill levels <ChevronRight className="size-3" aria-hidden />
-            </button>
-          }
-        >
-          <StatList rows={[...rows.find, ...rows.recovery]} itemName={itemName} />
-        </SheetCard>
-        <LevelCard sheet={sheet} />
-      </div>
+              <StatList rows={rows.speed} itemName={itemName} />
+            </SheetCard>
+          </div>
+          <div className={FLOW_ITEM}>
+            <ResistMeters
+              readouts={resistReadouts(sheet, unbuffed, NUMBER_FORMAT)}
+              difficulty={state.difficulty}
+              saveDifficulty={sheet.facts.saveDifficulty}
+              onDifficulty={state.setDifficulty}
+              itemName={itemName}
+            />
+          </div>
+          <div className={FLOW_ITEM}>
+            <SheetCard
+              id="character-find"
+              title="Find, skills and recovery"
+              actions={
+                <button
+                  type="button"
+                  className={LINK_CLASS}
+                  onClick={() => {
+                    onTab('skills');
+                  }}
+                >
+                  Skill levels <ChevronRight className="size-3" aria-hidden />
+                </button>
+              }
+            >
+              <StatList rows={[...rows.find, ...rows.recovery]} itemName={itemName} />
+            </SheetCard>
+          </div>
+          <div className={FLOW_ITEM}>
+            <SheetCard id="character-defense" title="Defense">
+              <StatList rows={rows.defense} itemName={itemName} />
+              {rows.absorb.length > 0 && (
+                <>
+                  <h4 className="mt-2 text-xs font-medium text-muted-foreground">Absorb</h4>
+                  <StatList rows={rows.absorb} itemName={itemName} />
+                </>
+              )}
+              {sheet.block === null && (
+                <p className="mt-2 text-xs text-muted-foreground">No shield in the active weapon set: no block chance.</p>
+              )}
+            </SheetCard>
+          </div>
+          <div className={FLOW_ITEM}>
+            <SheetCard id="character-offense" title="Offense">
+              <h4 className="text-xs font-medium text-muted-foreground">Attack rating per skill</h4>
+              <HandList rows={handRows(sheet, unbuffed, NUMBER_FORMAT)} itemName={itemName} />
+              <div className="mt-2">
+                <StatList rows={rows.offense} itemName={itemName} />
+              </div>
+              {offHand !== null && sheet.offense.offHand !== null && (
+                <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <span>
+                    Off-hand weapon ({itemName(sheet.offense.offHand.item) ?? 'second weapon'}), its own attacks only: {offHand}
+                  </span>
+                  <StatusMark status={sheet.offense.offHand.status ?? 'verified'} className="mt-px" />
+                </p>
+              )}
+            </SheetCard>
+          </div>
+        </div>
 
-      <BuffsPanel
-        available={state.availableBuffs}
-        selections={state.buffs}
-        applied={sheet.buffs}
-        itemName={itemName}
-        onChange={state.setBuffs}
-      />
-    </div>
+        <BuffsPanel
+          available={state.availableBuffs}
+          selections={state.buffs}
+          applied={sheet.buffs}
+          itemName={itemName}
+          onChange={state.setBuffs}
+        />
+      </div>
+    </ShowItemContext>
   );
 }

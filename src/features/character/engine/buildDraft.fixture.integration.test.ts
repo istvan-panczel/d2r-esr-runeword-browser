@@ -218,6 +218,8 @@ describe.skipIf(!READY || !existsSync(GROUND_TRUTH_SAVE))('build draft stats fro
     dr: 84,
     mdr: 60,
     ias: 205,
+    // Frenzy on the left mouse button, main hand: the character screen's number
+    ar: 61474,
     frw: 85,
     fhr: 10,
     fbr: 10,
@@ -240,6 +242,9 @@ describe.skipIf(!READY || !existsSync(GROUND_TRUTH_SAVE))('build draft stats fro
     const { stats } = result.draft.values.variants[0];
     expect(stats).toMatchObject({ source: 'save', difficulty: 2, character: 'SpinToWin', esrVersion: '3.3.03', values: SCREEN });
     expect(stats?.buffed).toBeUndefined();
+    expect(stats?.arSkill).toBe('Frenzy');
+    // Every cap is 79 (+4 max all resistances), the magic one too: stored, as it is above 75
+    expect(stats?.values.mrm).toBe(79);
     expect(new TextEncoder().encode(JSON.stringify(stats)).length).toBeLessThan(1024);
   });
 

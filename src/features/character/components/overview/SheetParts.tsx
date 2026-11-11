@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { SheetStatus, SheetValue } from '../../engine/sheet/types';
 import { STATUS_TEXT, sourceLines, type StatRow } from '../../engine/sheetView';
+import { ShowItemContext } from './showItemContext';
 
 /** Names a player item by its index (the sheet's item sources); null while the names load */
 export type ItemNamer = (index: number) => string | null;
@@ -67,11 +68,14 @@ interface SourcesBodyProps {
   readonly itemName: ItemNamer;
   /** Extra lines under the sources (a resist's cap and penalty) */
   readonly extra?: ReactNode;
+  /** Visible text beside the number the accessible name must carry too ("Over the cap by 57, cap 79") */
+  readonly spoken?: string;
 }
 
 /** What the source popover shows: the number, its status, its sources adding up to it, the notes */
-function SourcesBody({ title, text, value, unbuffedText, itemName, extra }: SourcesBodyProps) {
+function SourcesBody({ title, text, value, unbuffedText, itemName, extra }: Omit<SourcesBodyProps, 'spoken'>) {
   const lines = sourceLines(value, itemName);
+  const showItem = use(ShowItemContext);
   return (
     <div className="space-y-2">
       <p className="flex items-baseline justify-between gap-3">
@@ -91,7 +95,20 @@ function SourcesBody({ title, text, value, unbuffedText, itemName, extra }: Sour
           {lines.map((line) => (
             <li key={line.key} className="flex items-baseline justify-between gap-3">
               <span className="min-w-0">
-                <span className="text-foreground">{line.label}</span>
+                {showItem !== null && line.item !== null && line.where !== null ? (
+                  <button
+                    type="button"
+                    className="rounded text-left text-foreground underline decoration-muted-foreground/50 underline-offset-2 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`${line.label}: show on the Gear tab`}
+                    onClick={() => {
+                      if (line.item !== null) showItem(line.item);
+                    }}
+                  >
+                    {line.label}
+                  </button>
+                ) : (
+                  <span className="text-foreground">{line.label}</span>
+                )}
                 {line.where !== null && <span className="text-muted-foreground"> ({line.where})</span>}
                 {line.where === null && <span className="block text-[0.6875rem] text-muted-foreground">{line.kind}</span>}
               </span>
@@ -118,9 +135,13 @@ interface SourcesPopoverProps extends SourcesBodyProps {
   readonly className?: string;
 }
 
-/** "Life 8,169: where it comes from (not yet checked in game, unbuffed 6,080)": the number, its status and the unbuffed value */
-function triggerLabel(title: string, text: string, status: SheetStatus, unbuffedText: string | null): string {
+/**
+ * "Life 8,169: where it comes from (not yet checked in game, unbuffed 6,080)": the number, what the row says beside it
+ * (a resist's state), its status and the unbuffed value
+ */
+function triggerLabel(title: string, text: string, status: SheetStatus, unbuffedText: string | null, spoken?: string): string {
   const extra = [
+    spoken ?? null,
     status === 'verified' ? null : STATUS_TEXT[status].short.toLowerCase(),
     unbuffedText === null ? null : `unbuffed ${unbuffedText}`,
   ];
@@ -132,13 +153,13 @@ function triggerLabel(title: string, text: string, status: SheetStatus, unbuffed
  * A number that opens where it comes from: a button (Enter / Space / tap) with a popover of its sources. Escape and an
  * outside click close it; focus returns to the button.
  */
-export function SourcesPopover({ children, className, ...body }: SourcesPopoverProps) {
+export function SourcesPopover({ children, className, spoken, ...body }: SourcesPopoverProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={triggerLabel(body.title, body.text, body.value.status, body.unbuffedText)}
+          aria-label={triggerLabel(body.title, body.text, body.value.status, body.unbuffedText, spoken)}
           className={cn(
             'group w-full rounded-md text-left transition-colors outline-none hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-accent/60',
             className

@@ -50,6 +50,7 @@ export const STAT_RANGES = {
   crm: CAP,
   lrm: CAP,
   prm: CAP,
+  mrm: CAP,
   def: POOL,
   dr: FLAT,
   mdr: FLAT,
@@ -91,15 +92,26 @@ export interface BuildStats {
   readonly character?: string;
   readonly savedAt?: number;
   readonly esrVersion?: string;
+  /** Save-derived only: the skill whose attack rating `values.ar` is (the left mouse button's, else the right's). */
+  readonly arSkill?: string;
   readonly values: StatValues;
 }
 
 /** Longest stored ESR version text ("3.3.03"). */
 export const STATS_ESR_VERSION_MAX_LENGTH = 20;
-/** D2R character names are 2–15 characters: letters, one dash or underscore. */
+/** D2R character names: 2–15 characters, a letter first, then letters, dashes and underscores (kept loose on purpose). */
 const CHARACTER_NAME = /^[A-Za-z][A-Za-z_-]{1,14}$/;
+/** Longest stored skill name of the attack rating ("Lucion's Whisper", "Hex: Bane"). */
+export const STATS_SKILL_NAME_MAX_LENGTH = 40;
+const SKILL_NAME = /^[A-Za-z][A-Za-z' :-]*$/;
 const ESR_VERSION = /^\d{1,3}(\.\d{1,3}){1,3}[a-z]?$/;
-/** Accepted last-saved times: 2020-01-01 up to 2100-01-01 (Unix seconds). */
+/** Seconds in a day: the stored last-saved time is the UTC day's start (the page shows only the date). */
+const DAY = 86_400;
+
+/** A last-saved time as stored: the start of its UTC day, so the public block says no more than the date it shows. */
+export const toSavedDay = (unixSeconds: number): number => unixSeconds - (((unixSeconds % DAY) + DAY) % DAY);
+
+/** Accepted last-saved times: 2020-01-01 up to 2100-01-01 (Unix seconds; exact times are still accepted on read). */
 const SAVED_AT_MIN = 1_577_836_800;
 const SAVED_AT_MAX = 4_102_444_800;
 
@@ -128,8 +140,8 @@ export const hasStatValues = (values: StatValues): boolean => STAT_KEYS.some((ke
 /**
  * Defensive read of a stored stats block, rebuilt from known keys in a fixed order. Undefined when it is not an object,
  * its `source` or `difficulty` is not one of the known values, or no valid number is left. A bad number drops just that
- * number; a bad optional provenance field (`character`, `savedAt`, `esrVersion`) just that field, and those three plus
- * `edited` are only kept on save-derived stats. Never throws; the result is a few hundred bytes at most.
+ * number; a bad optional provenance field (`character`, `savedAt`, `esrVersion`, `arSkill`) just that field, and those
+ * four plus `edited` are only kept on save-derived stats. Never throws; the result is a few hundred bytes at most.
  */
 export function asBuildStats(value: unknown): BuildStats | undefined {
   if (!isRecord(value)) return undefined;
@@ -138,7 +150,7 @@ export function asBuildStats(value: unknown): BuildStats | undefined {
   const values = asStatValues(value.values);
   if (!hasStatValues(values)) return undefined;
   const fromSave = source === 'save';
-  const { character, savedAt, esrVersion } = value;
+  const { character, savedAt, esrVersion, arSkill } = value;
   return {
     source,
     ...(fromSave && value.edited === true ? { edited: true as const } : {}),
@@ -150,6 +162,9 @@ export function asBuildStats(value: unknown): BuildStats | undefined {
       : {}),
     ...(fromSave && typeof esrVersion === 'string' && esrVersion.length <= STATS_ESR_VERSION_MAX_LENGTH && ESR_VERSION.test(esrVersion)
       ? { esrVersion }
+      : {}),
+    ...(fromSave && typeof arSkill === 'string' && arSkill.length <= STATS_SKILL_NAME_MAX_LENGTH && SKILL_NAME.test(arSkill)
+      ? { arSkill }
       : {}),
     values,
   };

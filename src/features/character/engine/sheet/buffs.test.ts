@@ -60,13 +60,25 @@ describe('computeCharacterSheet with buffs', () => {
     expect(sheet.life.value).toBe(138);
   });
 
-  it('takes a given level (a proc, an oskill the save does not show) and reports a buff it cannot count', () => {
-    const character = barbarian({});
-    const given = computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS, level: 11 }] });
+  it('takes a given level of a skill the character has and reports a buff it cannot count', () => {
+    const given = computeCharacterSheet(barbarian({ [BATTLE_ORDERS]: 1 }), data, { buffs: [{ skillId: BATTLE_ORDERS, level: 11 }] });
     expect(given.life.value).toBe(100 + 35 + 30);
-    const missing = computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS }] });
+    const missing = computeCharacterSheet(barbarian({}), data, { buffs: [{ skillId: BATTLE_ORDERS }] });
     expect(missing.life.value).toBe(100);
     expect(missing.warnings.some((warning) => warning.includes('does not have it'))).toBe(true);
+  });
+
+  it('refuses a skill the character cannot use, even with a level (a remembered selection of another character)', () => {
+    const character = barbarian({});
+    const sheet = computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_ORDERS, level: 11 }] });
+    expect(sheet.life.value).toBe(100);
+    expect(sheet.buffs).toEqual([]);
+    expect(sheet.warnings.some((warning) => warning.includes(data.skillName(BATTLE_ORDERS)) && warning.includes('does not have it'))).toBe(
+      true
+    );
+    // A proc of an active item is usable at its level without points
+    const proc = barbarian({}, [item('cap', equipped('head'), [['item_skillonhit', (BATTLE_ORDERS << 6) | 11, 10]], { defense: 10 })]);
+    expect(computeCharacterSheet(proc, data, { buffs: [{ skillId: BATTLE_ORDERS, level: 11 }] }).life.value).toBe(100 + 35 + 30);
   });
 });
 
@@ -94,6 +106,14 @@ describe('listAvailableBuffs', () => {
     const necromancer = listAvailableBuffs(testCharacter({ classId: 2, skills: { 495: 5, 493: 5, 488: 5 } }), data);
     // Amplify Damage is a curse, Raise Skeleton a summon; Bone Armor reaches the caster
     expect(necromancer.map((buff) => buff.skillId)).toEqual([488]);
+  });
+
+  it('leaves out a skill whose sheet stats are 0 at its level (Maul’s run speed and leech need Shared Savagery)', () => {
+    const druid = testCharacter({ classId: DRUID, skills: { 609: 3 } });
+    expect(listAvailableBuffs(druid, data).some((buff) => buff.skillId === 609)).toBe(false);
+    // Feral Rage gives run speed from its own level: listed, with only the stats that are not 0
+    const feral = listAvailableBuffs(testCharacter({ classId: DRUID, skills: { 608: 3 } }), data).find((buff) => buff.skillId === 608);
+    expect(feral?.stats).toEqual(['velocitypercent', 'lifedrainmindam']);
   });
 
   it('lists self-buff procs of active items with their level and chance', () => {
@@ -128,7 +148,7 @@ describe('computeCharacterSheet with buffs: one instance, groups, dropped stats 
     const twice = computeCharacterSheet(character, data, { buffs: [{ skillId: BATTLE_COMMAND }, { skillId: BATTLE_COMMAND }] });
     expect(twice.skills.all.value).toBe(once.skills.all.value);
     expect(twice.buffs).toHaveLength(1);
-    const levels = computeCharacterSheet(barbarian({}), data, {
+    const levels = computeCharacterSheet(barbarian({ [BATTLE_ORDERS]: 1 }), data, {
       buffs: [
         { skillId: BATTLE_ORDERS, level: 11 },
         { skillId: BATTLE_ORDERS, level: 1 },
@@ -161,7 +181,7 @@ describe('computeCharacterSheet with buffs: one instance, groups, dropped stats 
     const plain = computeCharacterSheet(druid, data);
     const buffed = computeCharacterSheet(druid, data, { buffs: [{ skillId: CALL_OF_THE_WILD }] });
     expect(buffed.defense.value).toBe(plain.defense.value);
-    expect(buffed.warnings.some((warning) => warning.includes('Call of the Wild') && warning.includes('item_armor_percent'))).toBe(true);
+    expect(buffed.warnings.some((warning) => warning.includes('Call of the Wild') && warning.includes('Enhanced Defense'))).toBe(true);
     const listed = listAvailableBuffs(druid, data).find((buff) => buff.skillId === CALL_OF_THE_WILD);
     expect(listed?.stats).toEqual(['velocitypercent', 'hpregen']);
   });
@@ -199,7 +219,11 @@ describe('computeCharacterSheet with buffs: the unverified flag is structural (r
     const character = testCharacter({
       classId: PALADIN,
       skills: { [ZEAL]: 1 },
-      items: [item('hax', equipped('rightHand', 1)), item('hax', equipped('leftHand', 1))],
+      // Battle Command reaches the paladin through a proc of the main-hand axe
+      items: [
+        item('hax', equipped('rightHand', 1), [['item_skillonhit', (BATTLE_COMMAND << 6) | 5, 10]]),
+        item('hax', equipped('leftHand', 1)),
+      ],
       handSkills: { left: ZEAL, right: 0 },
     });
     const plain = computeCharacterSheet(character, data);

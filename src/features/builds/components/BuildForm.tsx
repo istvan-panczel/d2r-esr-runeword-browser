@@ -211,7 +211,6 @@ export function BuildForm({
               index={active}
               characterClass={characterClass}
               craftData={craftData}
-              allowStatsFromSave={importReport === null}
               disabled={saving}
               dispatch={update}
             />

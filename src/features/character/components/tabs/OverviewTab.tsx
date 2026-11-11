@@ -15,6 +15,7 @@ import { CreateBuildAction } from '../CreateBuildAction';
 import { CopySheetButton } from '../overview/CopySheetButton';
 import { OverviewSheet } from '../overview/OverviewSheet';
 import { SaveNotices } from '../SaveNotices';
+import { SheetFailedPanel } from '../SheetFailedPanel';
 import { CARD_CLASS, NUMBER_FORMAT } from './tabClasses';
 
 const LAST_SAVED_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
@@ -24,6 +25,8 @@ interface OverviewTabProps {
   readonly file: CharacterFileMeta;
   readonly bytes: Uint8Array;
   readonly onTab: (tab: CharacterTab) => void;
+  /** Opens the Gear tab on an item (from a number's sources) */
+  readonly onShowItem: (index: number) => void;
 }
 
 /** The stored base values: shown while the sheet's data loads or when it cannot be loaded */
@@ -75,7 +78,7 @@ function glanceLinks(character: CharacterFile): GlanceLink[] {
  * Overview: who the character is, the save's banners, the computed sheet (unbuffed by default, every number with its
  * sources), the buff switches, the level and gold, the build action and a line per other tab.
  */
-export function OverviewTab({ character, file, bytes, onTab }: OverviewTabProps) {
+export function OverviewTab({ character, file, bytes, onTab, onShowItem }: OverviewTabProps) {
   const manifest = useManifest();
   const sheet = useCharacterSheet(character);
   const itemName = useCharacterItemNames(character);
@@ -99,10 +102,12 @@ export function OverviewTab({ character, file, bytes, onTab }: OverviewTabProps)
       <SaveNotices notices={characterNotices(character, file.sidecar, manifest)} />
 
       {sheet.status === 'ready' ? (
-        <OverviewSheet character={character} state={sheet} itemName={itemName} onTab={onTab} />
+        <OverviewSheet character={character} state={sheet} itemName={itemName} onTab={onTab} onShowItem={onShowItem} />
       ) : (
         <>
-          {sheet.status === 'loading' ? <GameDataLoading /> : <GameDataError error={sheet.error} onRetry={sheet.retry} />}
+          {sheet.status === 'loading' && <GameDataLoading />}
+          {sheet.status === 'error' && <GameDataError error={sheet.error} onRetry={sheet.retry} />}
+          {sheet.status === 'failed' && <SheetFailedPanel message={sheet.message} />}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {overviewGroups(character).map((group) => (
               <StatGroupCard key={group.key} group={group} />

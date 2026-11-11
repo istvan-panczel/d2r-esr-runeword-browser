@@ -4,7 +4,16 @@
  * and the "Copy as text" summary. Pure: the components stay thin over these.
  */
 import type { CharacterFile, DifficultyIndex } from '../parser/types';
-import { DIFFICULTY_NAMES, EN_NUMBERS, SHEET_STAT_LABELS, formatStat, type StatUnit } from './sheet/statLabels';
+import type { StatKey } from '@/features/builds/buildStats';
+import {
+  BASE_RESIST_CAP,
+  DIFFICULTY_NAMES,
+  EN_NUMBERS,
+  OMIT_WHEN_ZERO,
+  formatStat,
+  statLabel,
+  type StatUnit,
+} from '@/features/builds/utils/statLabels';
 import type {
   AvailableBuff,
   AttributeValue,
@@ -34,7 +43,7 @@ export function formatValue(value: number, unit: RowUnit, format: Intl.NumberFor
 
 export const STATUS_TEXT: Readonly<Record<Exclude<SheetStatus, 'verified'>, { readonly short: string; readonly long: string }>> = {
   inferred: {
-    short: 'Inferred',
+    short: 'Not yet compared with the game',
     long: 'Worked out from the game files and the game rules, not yet compared with the in-game screen.',
   },
   unverified: {
@@ -94,17 +103,21 @@ function rowsOf(
   });
 }
 
-const L = SHEET_STAT_LABELS;
 const spec = (key: string, label: string, unit: RowUnit, get: RowSpec['get']): RowSpec => ({ key, label, unit, get });
+/** A row of a stat a build's stats block also has: its label and unit come from the one shared table */
+const shared = (key: StatKey, get: RowSpec['get']): RowSpec => spec(key, statLabel(key).label, statLabel(key).unit, get);
+/** The same with the short form: "Increased attack speed (IAS)" */
+const sharedShort = (key: StatKey, get: RowSpec['get']): RowSpec =>
+  spec(key, `${statLabel(key).label} (${statLabel(key).short})`, statLabel(key).unit, get);
 
 const DEFENSE_SPECS: readonly RowSpec[] = [
-  spec('def', L.def.label, 'number', (s) => s.defense),
-  spec('dr', 'Damage reduced by', 'number', (s) => s.damageReduction),
-  spec('mdr', 'Magic damage reduced by', 'number', (s) => s.magicDamageReduction),
-  spec('dod', 'Dodge chance', 'percent', (s) => s.defenseChances.dodge),
-  spec('avo', 'Avoid chance', 'percent', (s) => s.defenseChances.avoid),
-  spec('eva', 'Evade chance', 'percent', (s) => s.defenseChances.evade),
-  spec('blk', L.blk.label, 'percent', (s) => s.block),
+  shared('def', (s) => s.defense),
+  shared('dr', (s) => s.damageReduction),
+  shared('mdr', (s) => s.magicDamageReduction),
+  shared('dod', (s) => s.defenseChances.dodge),
+  shared('avo', (s) => s.defenseChances.avoid),
+  shared('eva', (s) => s.defenseChances.evade),
+  shared('blk', (s) => s.block),
 ];
 
 const ABSORB_SPECS: readonly RowSpec[] = [
@@ -119,30 +132,30 @@ const ABSORB_SPECS: readonly RowSpec[] = [
 ];
 
 const SPEED_SPECS: readonly RowSpec[] = [
-  spec('ias', `${L.ias.label} (${L.ias.short})`, 'percent', (s) => s.speed.attack),
-  spec('frw', `${L.frw.label} (${L.frw.short})`, 'percent', (s) => s.speed.run),
-  spec('fhr', `${L.fhr.label} (${L.fhr.short})`, 'percent', (s) => s.speed.hitRecovery),
-  spec('fbr', `${L.fbr.label} (${L.fbr.short})`, 'percent', (s) => s.speed.block),
-  spec('fcr', `${L.fcr.label} (${L.fcr.short})`, 'percent', (s) => s.speed.cast),
+  sharedShort('ias', (s) => s.speed.attack),
+  sharedShort('frw', (s) => s.speed.run),
+  sharedShort('fhr', (s) => s.speed.hitRecovery),
+  sharedShort('fbr', (s) => s.speed.block),
+  sharedShort('fcr', (s) => s.speed.cast),
   spec('bas', 'Base attack speed', 'percent', (s) => s.speed.baseAttack),
   spec('brw', 'Base run/walk speed', 'percent', (s) => s.speed.baseRunWalk),
 ];
 
 const OFFENSE_SPECS: readonly RowSpec[] = [
-  spec('arp', L.arp.label, 'percent', (s) => s.attackRating.percent),
-  spec('ds', L.ds.label, 'percent', (s) => s.offense.deadlyStrike),
-  spec('cb', L.cb.label, 'percent', (s) => s.offense.crushingBlow),
+  shared('arp', (s) => s.attackRating.percent),
+  shared('ds', (s) => s.offense.deadlyStrike),
+  shared('cb', (s) => s.offense.crushingBlow),
   spec('ow', 'Open wounds', 'percent', (s) => s.offense.openWounds),
-  spec('ll', 'Life stolen per hit', 'percent', (s) => s.leech.life),
-  spec('ml', 'Mana stolen per hit', 'percent', (s) => s.leech.mana),
+  shared('ll', (s) => s.leech.life),
+  shared('ml', (s) => s.leech.mana),
   spec('td', 'Target defense', 'reduction', (s) => s.offense.targetDefense),
   spec('itd', "Ignore target's defense", 'flag', (s) => s.offense.ignoreTargetDefense),
 ];
 
 const FIND_SPECS: readonly RowSpec[] = [
-  spec('mf', 'Magic find', 'percent', (s) => s.find.magic),
-  spec('gf', 'Extra gold', 'percent', (s) => s.find.gold),
-  spec('sk', 'All skills', 'bonus', (s) => s.skills.all),
+  shared('mf', (s) => s.find.magic),
+  shared('gf', (s) => s.find.gold),
+  shared('sk', (s) => s.skills.all),
   spec('cls', 'Class skills', 'bonus', (s) => s.skills.cls),
 ];
 
@@ -163,7 +176,14 @@ export interface OverviewRows {
 
 export function overviewRows(sheet: CharacterSheet, unbuffed: CharacterSheet | null, format: Intl.NumberFormat = EN_NUMBERS): OverviewRows {
   return {
-    defense: rowsOf(DEFENSE_SPECS, sheet, unbuffed, format),
+    // Dodge, avoid and evade only when the character has any (or a buff changed them): "0%" three times is noise
+    defense: rowsOf(
+      DEFENSE_SPECS,
+      sheet,
+      unbuffed,
+      format,
+      (row) => !['dod', 'avo', 'eva'].includes(row.key) || row.value.value !== 0 || row.unbuffedText !== null
+    ),
     absorb: rowsOf(ABSORB_SPECS, sheet, unbuffed, format, (row) => row.value.value !== 0 || row.unbuffedText !== null),
     speed: rowsOf(SPEED_SPECS, sheet, unbuffed, format),
     offense: rowsOf(OFFENSE_SPECS, sheet, unbuffed, format),
@@ -270,12 +290,12 @@ export interface ResistReadout {
 }
 
 const RESISTS = [
-  ['fire', 'Fire'],
-  ['cold', 'Cold'],
-  ['lightning', 'Lightning'],
-  ['poison', 'Poison'],
-  ['magic', 'Magic'],
-  ['physical', 'Physical'],
+  ['fire', statLabel('fr').label],
+  ['cold', statLabel('cr').label],
+  ['lightning', statLabel('lr').label],
+  ['poison', statLabel('pr').label],
+  ['magic', statLabel('mr').label],
+  ['physical', statLabel('phr').label],
 ] as const;
 
 export function resistReadout(
@@ -404,6 +424,22 @@ export function attackChoices(sheet: CharacterSheet, format: Intl.NumberFormat =
   return [{ key: 'base', label: `No skill, ${format.format(sheet.attackRating.base.value)}`, attackRating: sheet.attackRating.base.value }];
 }
 
+/**
+ * The off-hand weapon's own attack speed, deadly strike, crushing blow and target defense (not in the sheet's totals:
+ * they belong to that weapon's attacks), as one line; null without a second weapon or when it has none of them
+ */
+export function offHandText(sheet: CharacterSheet, format: Intl.NumberFormat = EN_NUMBERS): string | null {
+  const off = sheet.offense.offHand;
+  if (off === null) return null;
+  const parts = [
+    off.attackSpeed === 0 ? null : `${statLabel('ias').short} ${format.format(off.attackSpeed)}%`,
+    off.deadlyStrike === 0 ? null : `${statLabel('ds').label.toLowerCase()} ${format.format(off.deadlyStrike)}%`,
+    off.crushingBlow === 0 ? null : `${statLabel('cb').label.toLowerCase()} ${format.format(off.crushingBlow)}%`,
+    off.targetDefense === 0 ? null : `−${format.format(off.targetDefense)}% target defense`,
+  ].filter((part) => part !== null);
+  return parts.length === 0 ? null : parts.join(', ');
+}
+
 // --- sources -----------------------------------------------------------------------------------------------------
 
 const KIND_LABELS: Readonly<Record<SheetSourceKind, string>> = {
@@ -474,10 +510,65 @@ export interface BuffGroup {
 }
 
 const BUFF_GROUPS: readonly Omit<BuffGroup, 'buffs'>[] = [
-  { kind: 'cast', title: 'Skills you cast', hint: 'Warcries, armors, shapes and other self buffs, at the level you have' },
+  {
+    kind: 'cast',
+    title: 'Skills you use',
+    hint: 'Warcries, armors and shape-shifts, and what some attacks give you while you use them (Frenzy’s charges, Whirlwind’s dodge), at the level you have',
+  },
   { kind: 'aura', title: 'Auras', hint: 'Auras you can switch on yourself' },
   { kind: 'proc', title: 'From your items', hint: 'Skills your items cast on you on an event (on striking, when struck …)' },
 ];
+
+const CHOICE_TITLES: Readonly<Record<string, string>> = { aura: 'One aura at a time', shapeshift: 'One form at a time' };
+
+/** A single-choice group of buffs (AvailableBuff.exclusiveGroup): the engine counts only one of them */
+export interface BuffChoice {
+  readonly group: string;
+  readonly title: string;
+  readonly buffs: readonly AvailableBuff[];
+}
+
+/** A buff group's list split into plain switches and single-choice groups (in the order their first member comes) */
+export function splitExclusive(buffs: readonly AvailableBuff[]): { singles: AvailableBuff[]; choices: BuffChoice[] } {
+  const singles: AvailableBuff[] = [];
+  const choices = new Map<string, AvailableBuff[]>();
+  for (const buff of buffs) {
+    if (buff.exclusiveGroup === undefined) singles.push(buff);
+    else choices.set(buff.exclusiveGroup, [...(choices.get(buff.exclusiveGroup) ?? []), buff]);
+  }
+  return {
+    singles,
+    choices: [...choices].map(([group, members]) => ({ group, title: CHOICE_TITLES[group] ?? 'One at a time', buffs: members })),
+  };
+}
+
+/** The selected member of a single-choice group (the last one selected, as the engine counts it), or null */
+export function chosenInGroup(selections: readonly BuffSelection[], choice: BuffChoice): AvailableBuff | null {
+  const ids = new Set(choice.buffs.map((buff) => buff.skillId));
+  const last = selections.filter((entry) => ids.has(entry.skillId)).at(-1);
+  return last === undefined ? null : (choice.buffs.find((buff) => buff.skillId === last.skillId) ?? null);
+}
+
+/** Chooses one member of a single-choice group (null: none), switching every other member off */
+export function chooseInGroup(selections: readonly BuffSelection[], choice: BuffChoice, buff: AvailableBuff | null): BuffSelection[] {
+  const ids = new Set(choice.buffs.map((member) => member.skillId));
+  const rest = selections.filter((entry) => !ids.has(entry.skillId));
+  return buff === null ? rest : toggleBuff(rest, buff, true);
+}
+
+/**
+ * Selections the character can use: only skills of its buff list (a remembered selection of a replaced or respecced
+ * character, or of another one with the same name, never changes the numbers), one per single-choice group (the last)
+ */
+export function usableSelections(selections: readonly BuffSelection[], available: readonly AvailableBuff[]): BuffSelection[] {
+  const byId = new Map(available.map((buff) => [buff.skillId, buff]));
+  const known = selections.filter((entry) => byId.has(entry.skillId));
+  return known.filter((entry, index) => {
+    const group = byId.get(entry.skillId)?.exclusiveGroup;
+    if (group === undefined) return true;
+    return !known.slice(index + 1).some((later) => byId.get(later.skillId)?.exclusiveGroup === group);
+  });
+}
 
 export function buffGroups(available: readonly AvailableBuff[]): BuffGroup[] {
   return BUFF_GROUPS.flatMap((group) => {
@@ -516,28 +607,81 @@ export function buffsKey(selections: readonly BuffSelection[]): string {
     .join(',');
 }
 
-/** Buff choices per character name, as kept in sessionStorage; anything malformed is dropped */
-export function parseBuffMemory(text: string | null): Record<string, BuffSelection[]> {
-  if (text === null) return {};
+/** One character's remembered buffs, with the save they were chosen for (`buffMemorySave`) */
+export interface BuffMemoryEntry {
+  readonly save: string;
+  readonly selections: readonly BuffSelection[];
+}
+
+/**
+ * Which save a remembered buff choice belongs to: the save's time and when it was uploaded, so a replaced save (a new
+ * game save, a respec) or a removed and uploaded again character starts with no buffs
+ */
+export function buffMemorySave(character: Pick<CharacterFile, 'lastSavedAt'>, uploadedAt: number | null): string {
+  return `${String(character.lastSavedAt)}:${String(uploadedAt ?? 0)}`;
+}
+
+/**
+ * Buff choices per character name, as kept in sessionStorage; anything malformed is dropped. A Map: a character may be
+ * called "constructor" or "toString", which a plain object would answer with Object.prototype's function
+ */
+export function parseBuffMemory(text: string | null): Map<string, BuffMemoryEntry> {
+  const memory = new Map<string, BuffMemoryEntry>();
+  if (text === null) return memory;
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return {};
+    return memory;
   }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
-  const memory: Record<string, BuffSelection[]> = {};
-  for (const [name, list] of Object.entries(parsed as Record<string, unknown>)) {
-    if (!Array.isArray(list)) continue;
-    const selections = list.flatMap((entry: unknown): BuffSelection[] => {
-      if (typeof entry !== 'object' || entry === null) return [];
-      const { skillId, level } = entry as { skillId?: unknown; level?: unknown };
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return memory;
+  for (const [name, entry] of Object.entries(parsed as Record<string, unknown>)) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const { save, selections: list } = entry as { save?: unknown; selections?: unknown };
+    if (typeof save !== 'string' || !Array.isArray(list)) continue;
+    const selections = list.flatMap((item: unknown): BuffSelection[] => {
+      if (typeof item !== 'object' || item === null) return [];
+      const { skillId, level } = item as { skillId?: unknown; level?: unknown };
       if (typeof skillId !== 'number' || !Number.isInteger(skillId)) return [];
       return typeof level === 'number' && Number.isInteger(level) && level > 0 ? [{ skillId, level }] : [{ skillId }];
     });
-    if (selections.length > 0) memory[name] = selections;
+    if (selections.length > 0) memory.set(name, { save, selections });
   }
   return memory;
+}
+
+/** The buff memory as sessionStorage keeps it (characters without a selection left out) */
+export function serializeBuffMemory(memory: ReadonlyMap<string, BuffMemoryEntry>): string {
+  const record: Record<string, BuffMemoryEntry> = Object.create(null) as Record<string, BuffMemoryEntry>;
+  for (const [name, entry] of memory) if (entry.selections.length > 0) record[name] = entry;
+  return JSON.stringify(record);
+}
+
+/** The remembered buffs of a character, only for the save they were chosen for */
+export function rememberedBuffs(memory: ReadonlyMap<string, BuffMemoryEntry>, name: string, save: string): readonly BuffSelection[] | null {
+  const entry = memory.get(name);
+  return entry !== undefined && entry.save === save ? entry.selections : null;
+}
+
+/** The memory after a change for one character, keeping only the characters still stored */
+export function updateBuffMemory(
+  memory: ReadonlyMap<string, BuffMemoryEntry>,
+  name: string,
+  entry: BuffMemoryEntry,
+  stored: (name: string) => boolean
+): Map<string, BuffMemoryEntry> {
+  const next = new Map([...memory].filter(([other]) => other !== name && stored(other)));
+  if (entry.selections.length > 0) next.set(name, entry);
+  return next;
+}
+
+// --- warnings ----------------------------------------------------------------------------------------------------
+
+/** The engine's warnings with repeats folded into one line and a count, in first-seen order */
+export function groupWarnings(warnings: readonly string[]): { readonly text: string; readonly count: number }[] {
+  const counts = new Map<string, number>();
+  for (const warning of warnings) counts.set(warning, (counts.get(warning) ?? 0) + 1);
+  return [...counts].map(([text, count]) => ({ text, count }));
 }
 
 // --- skills ------------------------------------------------------------------------------------------------------
@@ -550,6 +694,8 @@ export interface SkillBonus {
   readonly bonus: number;
   /** The bonus parts (only the non-zero ones) */
   readonly parts: SkillLevel['bonus'];
+  /** `unverified` when a selected buff changes the level */
+  readonly status: SheetStatus;
 }
 
 const BONUS_PART_LABELS: Readonly<Record<keyof SkillLevel['bonus'], string>> = {
@@ -580,7 +726,13 @@ export function skillBonusById(sheet: CharacterSheet, skillIds: readonly string[
   for (const skill of sheet.skills.levels) {
     const id = skillIds.at(skill.skillId);
     if (id === undefined || id === '') continue;
-    byId.set(id, { level: skill.level, hard: skill.hard, bonus: skill.level - skill.hard, parts: skill.bonus });
+    byId.set(id, {
+      level: skill.level,
+      hard: skill.hard,
+      bonus: skill.level - skill.hard,
+      parts: skill.bonus,
+      status: skill.status ?? 'verified',
+    });
   }
   return byId;
 }
@@ -648,51 +800,88 @@ interface CopyInput {
 
 /**
  * A tidy plain-text summary for pasting into a chat: the headline numbers, which difficulty the resists are for and
- * whether buffs are counted. Whole lines, no markup; zero values that rarely matter (absorbs, dodge) are left out.
+ * whether buffs are counted. Whole lines, no markup; the labels and short forms are the shared ones (statLabels.ts);
+ * zero bonuses (deadly strike 0%, absorbs, dodge) are left out.
  */
 export function sheetText(sheet: CharacterSheet, { className }: CopyInput): string {
   const f = (value: number) => EN_NUMBERS.format(value);
-  const p = (value: number) => `${f(value)}%`;
+  const short = (key: StatKey, value: number) => `${statLabel(key).short} ${formatStat(value, statLabel(key).unit)}`;
+  const listed = (entries: readonly (readonly [StatKey, number])[]) =>
+    entries.filter(([key, value]) => value !== 0 || !OMIT_WHEN_ZERO.has(key)).map(([key, value]) => short(key, value));
   const buffed = sheet.buffs.length > 0;
   const { attributes: a, resists: r, speed, offense, leech, find } = sheet;
   const lines: string[] = [];
   lines.push(
     `${sheet.name}, level ${String(sheet.level)} ${className} (ESR, ${DIFFICULTY_NAMES[sheet.difficulty]} resists, ${buffed ? 'with buffs' : 'unbuffed'})`
   );
-  lines.push(`Str ${f(a.strength.value)}, Dex ${f(a.dexterity.value)}, Vit ${f(a.vitality.value)}, Ene ${f(a.energy.value)}`);
-  lines.push(`Life ${f(sheet.life.value)}, Mana ${f(sheet.mana.value)}, Stamina ${f(sheet.stamina.value)}`);
-  const capNote = (value: ResistValue) => (value.cap === 75 ? '' : ` (max ${f(value.cap)})`);
   lines.push(
-    `Resists: Fire ${p(r.fire.value)}${capNote(r.fire)}, Cold ${p(r.cold.value)}${capNote(r.cold)}, Lightning ${p(r.lightning.value)}${capNote(r.lightning)}, Poison ${p(r.poison.value)}${capNote(r.poison)}, Magic ${p(r.magic.value)}, Physical ${p(r.physical.value)}`
+    listed([
+      ['str', a.strength.value],
+      ['dex', a.dexterity.value],
+      ['vit', a.vitality.value],
+      ['ene', a.energy.value],
+    ]).join(', ')
   );
-  const defense = [
-    `Defense ${f(sheet.defense.value)}`,
-    `DR ${f(sheet.damageReduction.value)}`,
-    `MDR ${f(sheet.magicDamageReduction.value)}`,
-  ];
-  if (sheet.block !== null) defense.push(`Block ${p(sheet.block.value)} (inferred)`);
+  lines.push(`Life ${f(sheet.life.value)}, Mana ${f(sheet.mana.value)}, Stamina ${f(sheet.stamina.value)}`);
+  const resistText = (key: StatKey, value: ResistValue, capped = true) =>
+    `${statLabel(key).label} ${f(value.value)}%${capped && value.cap !== BASE_RESIST_CAP ? ` (max ${f(value.cap)})` : ''}`;
+  lines.push(
+    `Resists: ${[
+      resistText('fr', r.fire),
+      resistText('cr', r.cold),
+      resistText('lr', r.lightning),
+      resistText('pr', r.poison),
+      resistText('mr', r.magic),
+      resistText('phr', r.physical, false),
+    ].join(', ')}`
+  );
   const { dodge, avoid, evade } = sheet.defenseChances;
-  if (dodge.value + avoid.value + evade.value > 0)
-    defense.push(`Dodge ${p(dodge.value)}, Avoid ${p(avoid.value)}, Evade ${p(evade.value)}`);
+  const defense = [
+    short('def', sheet.defense.value),
+    ...listed([
+      ['dr', sheet.damageReduction.value],
+      ['mdr', sheet.magicDamageReduction.value],
+    ]),
+    ...(sheet.block === null ? [] : [`${short('blk', sheet.block.value)} (not yet compared with the game)`]),
+    ...listed([
+      ['dod', dodge.value],
+      ['avo', avoid.value],
+      ['eva', evade.value],
+    ]),
+  ];
   lines.push(defense.join(', '));
   lines.push(
-    `IAS ${p(speed.attack.value)}, FRW ${p(speed.run.value)}, FHR ${p(speed.hitRecovery.value)}, FBR ${p(speed.block.value)}, FCR ${p(speed.cast.value)}`
+    [
+      short('ias', speed.attack.value),
+      short('frw', speed.run.value),
+      short('fhr', speed.hitRecovery.value),
+      short('fbr', speed.block.value),
+      short('fcr', speed.cast.value),
+    ].join(', ')
   );
+  // Each hand skill's line as the character screen shows it: "main / off hand" only for a skill that uses both
   const hands = sheet.attackRating.hands.map(
-    (hand) => `${hand.name} AR ${f(hand.mainHand)}${hand.offHand === null ? '' : ` / ${f(hand.offHand)}`}`
+    (hand) => `${hand.name} AR ${f(hand.mainHand)}${hand.offHand === null ? '' : ` / ${f(hand.offHand)} (main / off hand)`}`
   );
   const offence = [
-    ...hands,
-    `AR ${p(sheet.attackRating.percent.value)}`,
-    `DS ${p(offense.deadlyStrike.value)}`,
-    `CB ${p(offense.crushingBlow.value)}`,
-    `LL ${p(leech.life.value)}`,
-    `ML ${p(leech.mana.value)}`,
+    ...(hands.length > 0 ? hands : [`AR ${f(sheet.attackRating.base.value)} (no skill)`]),
+    ...listed([
+      ['arp', sheet.attackRating.percent.value],
+      ['ds', offense.deadlyStrike.value],
+      ['cb', offense.crushingBlow.value],
+      ['ll', leech.life.value],
+      ['ml', leech.mana.value],
+    ]),
   ];
-  if (offense.targetDefense.value !== 0) offence.push(`-${p(offense.targetDefense.value)} target defense`);
+  if (offense.targetDefense.value !== 0) offence.push(`-${f(offense.targetDefense.value)}% target defense`);
   if (offense.ignoreTargetDefense.value > 0) offence.push("ignores target's defense");
   lines.push(offence.join(', '));
-  lines.push(`MF ${p(find.magic.value)}, GF ${p(find.gold.value)}, +${f(sheet.skills.all.value)} all skills`);
+  const findLine = listed([
+    ['mf', find.magic.value],
+    ['gf', find.gold.value],
+  ]);
+  const skills = sheet.skills.all.value === 0 ? [] : [`${formatStat(sheet.skills.all.value, 'bonus')} ${statLabel('sk').short}`];
+  if (findLine.length + skills.length > 0) lines.push([...findLine, ...skills].join(', '));
   if (buffed)
     lines.push(
       `Buffs: ${sheet.buffs.map((buff) => `${buff.name} ${String(buff.level)}`).join(', ')} (buffed numbers not yet checked in game)`

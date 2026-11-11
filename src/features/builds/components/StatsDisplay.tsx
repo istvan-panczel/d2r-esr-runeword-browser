@@ -1,5 +1,5 @@
 import type { BuildStats } from '../buildStats';
-import { formatStatValue, statedGroups, statGroupTitle, statsProvenance } from '../utils/statLabels';
+import { statedGroups, statGroupTitle, statsNote, statsProvenance } from '../utils/statLabels';
 
 /** The read-only character stats of a variant: only the stated numbers, grouped, with where they came from. */
 export function StatsDisplay({ stats }: { readonly stats: BuildStats }) {
@@ -13,10 +13,15 @@ export function StatsDisplay({ stats }: { readonly stats: BuildStats }) {
               {statGroupTitle(group, stats.difficulty)}
             </h3>
             <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 text-sm">
-              {rows.map(({ stat, value }) => (
+              {rows.map(({ stat, text }) => (
                 <div key={stat.key} className="contents">
-                  <dt className="min-w-0 truncate text-muted-foreground">{stat.label}</dt>
-                  <dd className="text-right font-medium tabular-nums">{formatStatValue(stat.key, value)}</dd>
+                  <dt className="min-w-0 text-muted-foreground">
+                    <span className="block truncate">{stat.label}</span>
+                    {stat.key === 'ar' && stats.arSkill !== undefined && (
+                      <span className="block truncate text-xs">with {stats.arSkill}, main hand</span>
+                    )}
+                  </dt>
+                  <dd className="text-right font-medium tabular-nums">{text}</dd>
                 </div>
               ))}
             </dl>
@@ -25,11 +30,7 @@ export function StatsDisplay({ stats }: { readonly stats: BuildStats }) {
       </div>
       <div className="space-y-1 border-t pt-2 text-xs text-muted-foreground">
         <p className="font-medium text-foreground">{statsProvenance(stats)}</p>
-        <p>
-          {stats.source === 'manual'
-            ? 'The author’s numbers, entered by hand.'
-            : `The author’s numbers, computed by this app from their save file without buffs${stats.edited === true ? ', then changed by the author' : ''}.`}
-        </p>
+        <p>{statsNote(stats)}</p>
       </div>
     </div>
   );

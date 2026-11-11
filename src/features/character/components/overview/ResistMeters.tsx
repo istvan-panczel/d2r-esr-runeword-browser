@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowDown, Check, ChevronsUp, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DIFFICULTY_NAMES } from '../../engine/sheet/statLabels';
+import { DIFFICULTY_NAMES } from '@/features/builds/utils/statLabels';
 import type { DifficultyIndex } from '../../parser/types';
 import { RESIST_SCALE, type ResistReadout, type ResistState } from '../../engine/sheetView';
 import { SheetCard, SourcesPopover, StatusMark, ValueText, type ItemNamer } from './SheetParts';
@@ -60,6 +60,7 @@ function ResistRow({
       unbuffedText={readout.unbuffedText}
       itemName={itemName}
       extra={<p className="border-t pt-2 text-xs text-muted-foreground">{readout.detailText}.</p>}
+      spoken={`${readout.stateText.charAt(0).toLowerCase()}${readout.stateText.slice(1)}, cap ${String(readout.cap)}`}
       className="px-1.5 py-1"
     >
       <span className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 @md:grid-cols-[5.5rem_minmax(0,1fr)_auto]">

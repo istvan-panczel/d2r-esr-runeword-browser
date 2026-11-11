@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { STAT_KEYS } from '../buildStats';
-import { formatSavedDate, formatStatValue, STAT_GROUPS, statedGroups, statGroupTitle, statLabel, statsProvenance } from './statLabels';
+import {
+  formatSavedDate,
+  formatStatValue,
+  STAT_GROUPS,
+  statedGroups,
+  statGroupTitle,
+  statLabel,
+  statsNote,
+  statsProvenance,
+} from './statLabels';
 
 describe('stat labels', () => {
   it('labels every stored key exactly once, in stored order', () => {
@@ -37,11 +46,34 @@ describe('stat labels', () => {
     expect(statGroupTitle(attributes, 2)).toBe('Attributes');
   });
 
-  it('statedGroups keeps only stated values and groups that have any', () => {
-    const groups = statedGroups({ sk: 10, str: 5, fr: 75, mf: 0 });
-    expect(groups.map(({ group }) => group.id)).toEqual(['attributes', 'resists', 'find', 'skills']);
-    expect(groups[1].stats.map(({ stat, value }) => [stat.key, value])).toEqual([['fr', 75]]);
+  it('statedGroups keeps only stated values and groups that have any; a 0 bonus says nothing, a 0 resist does', () => {
+    const groups = statedGroups({ sk: 10, str: 5, fr: 75, mf: 0, avo: 0, cr: 0, life: 0 });
+    expect(groups.map(({ group }) => group.id)).toEqual(['attributes', 'pools', 'resists', 'skills']);
+    expect(groups[2].stats.map(({ stat, text }) => [stat.key, text])).toEqual([
+      ['fr', '75%'],
+      ['cr', '0%'],
+    ]);
     expect(statedGroups({})).toEqual([]);
+  });
+
+  it('folds a max resist into its resist row, and shows it alone only without the resist', () => {
+    const [resists] = statedGroups({ fr: 79, frm: 79, cr: 75, lrm: 80, mr: 38, mrm: 82 }).map(({ stats }) => stats);
+    expect(resists.map(({ stat, text }) => [stat.label, text])).toEqual([
+      ['Fire', '79% · max 79'],
+      ['Cold', '75%'],
+      ['Magic', '38% · max 82'],
+      ['Max lightning', '80%'],
+    ]);
+  });
+
+  it('writes the note under the stats from the flags (never "without buffs" on a buffed block)', () => {
+    expect(statsNote({ source: 'save' })).toContain('without buffs');
+    expect(statsNote({ source: 'save', buffed: true })).not.toContain('without buffs');
+    expect(statsNote({ source: 'save', buffed: true })).toContain('include buffs');
+    expect(statsNote({ source: 'save', edited: true })).toContain('then changed by the author');
+    expect(statsNote({ source: 'manual', buffed: true })).toBe(
+      'The author’s numbers, entered by hand. The author says they include buffs.'
+    );
   });
 
   it('writes the provenance line', () => {

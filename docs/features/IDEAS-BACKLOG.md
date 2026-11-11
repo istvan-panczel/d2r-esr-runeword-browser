@@ -75,6 +75,22 @@ so each screen can set its own.
 Touches: the screens under `src/features/*/screens/`, `index.html` (the fallback title), and
 [NAVIGATION.md](../technical/NAVIGATION.md).
 
+### My Character and build stats: left out on purpose (2026-11-11)
+
+What the computed sheet ([CHARACTER-SAVE.md](./CHARACTER-SAVE.md#computed-sheet)) and the build stats deliberately do not do
+yet, each waiting on evidence or a decision:
+
+- **Buffed numbers stay "not yet checked in game"** until the owner sends a buffed screen with its save (Battle Orders +
+  Battle Command + Shout, cast in that order): the recast rule and the buff % on life / mana / defense are INFERRED.
+- **Weapon block** (block chance without a shield) and a shield's block on any screenshot: not computed / not verified.
+- **The `total_*` multipliers** (op 11 `total_fire_resist`, `totalmaxhp`, `totalattackspeed` …) are a warning, not applied.
+- **Mercenary auras** on the character (and the mercenary's own sheet): out of scope; only its type, act and level are shown.
+- **Damage**: no damage numbers at all (buff damage is named in a note only).
+- **Quest and waypoint lists** from the save (`Woo!` beyond the words the sheet reads, `WS`): not interpreted.
+- **Stats on build list cards and as build filters** (S/M): the stats block shows only on the detail page.
+- **A bow character's ground truth**: PhysMagicBowazo (IAS 88 with the quiver's 29) and EleBowazon (attack rating with the
+  quiver's +39, no off-hand line) are consistent but not compared with an in-game screen.
+
 ## Open checks
 
 - **Guide notes are all draft.** None of the 34 notes has a `verified:` stamp and `content/guide/.verify-lock.json`

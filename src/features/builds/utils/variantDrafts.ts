@@ -252,7 +252,14 @@ export type VariantDraftAction =
   | { readonly type: 'setStats'; readonly variant: number; readonly stats: StatsDraft | null }
   | { readonly type: 'setStatValue'; readonly variant: number; readonly key: StatKey; readonly text: string }
   | { readonly type: 'setStatsDifficulty'; readonly variant: number; readonly difficulty: StatsDifficulty }
-  | { readonly type: 'setStatsBuffed'; readonly variant: number; readonly buffed: boolean };
+  | { readonly type: 'setStatsBuffed'; readonly variant: number; readonly buffed: boolean }
+  /**
+   * Stats read from a save file for the variant with this draft key: by key, because the file is read asynchronously and
+   * the variant may have moved or been deleted meanwhile (then, or when it has stats by now, nothing happens)
+   */
+  | { readonly type: 'setStatsFromSave'; readonly variantKey: string; readonly stats: StatsDraft }
+  /** Whether the character's name is stored with save-derived stats (not a change of the numbers) */
+  | { readonly type: 'setStatsShowCharacter'; readonly variant: number; readonly show: boolean };
 
 /** An addVariant action with a fresh key (the new variant is appended, so it lands at the old length). */
 export function addVariantAction(name: string, from: number | 'empty'): VariantDraftAction {
@@ -492,5 +499,15 @@ export function variantDraftsReducer(state: readonly VariantDraft[], action: Var
       );
     case 'setStatsBuffed':
       return updateStats(state, action.variant, (stats) => (stats.buffed === action.buffed ? null : { buffed: action.buffed }));
+    case 'setStatsFromSave': {
+      const index = state.findIndex((draft) => draft.key === action.variantKey);
+      if (index < 0 || state[index].stats !== null) return state;
+      return updateVariant(state, index, (draft) => ({ ...draft, stats: action.stats }));
+    }
+    case 'setStatsShowCharacter': {
+      const stats = inRange(action.variant, state.length) ? state[action.variant].stats : null;
+      if (stats === null || stats.showCharacter === action.show) return state;
+      return updateVariant(state, action.variant, (draft) => ({ ...draft, stats: { ...stats, showCharacter: action.show } }));
+    }
   }
 }

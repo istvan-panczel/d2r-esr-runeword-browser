@@ -574,6 +574,29 @@ describe('character stats in the drafts', () => {
     expect(fromVariantDraft(next[1])).toEqual({ skills: 'other', stats: STATS });
   });
 
+  it('stats read from a save land on the variant they were read for, by key, even after a move; never on another', () => {
+    const start = run([emptyVariantDraft('a'), emptyVariantDraft('b')], { type: 'moveVariant', from: 1, to: 0 });
+    const read = toStatsDraft(STATS);
+    if (read === null) throw new Error('draft');
+    const landed = run(start, { type: 'setStatsFromSave', variantKey: 'a', stats: read });
+    expect(landed[1].key).toBe('a');
+    expect(landed[1].stats).toEqual(read);
+    expect(landed[0].stats).toBeNull();
+    // Deleted meanwhile: nothing happens
+    const deleted = run(start, { type: 'deleteVariant', variant: 1 });
+    expect(run(deleted, { type: 'setStatsFromSave', variantKey: 'a', stats: read })).toBe(deleted);
+    // Stats added by hand meanwhile are not replaced
+    const typed = run(start, { type: 'setStats', variant: 1, stats: emptyStatsDraft() });
+    expect(run(typed, { type: 'setStatsFromSave', variantKey: 'a', stats: read })).toBe(typed);
+  });
+
+  it('turning the character name off keeps the numbers and the edited mark as they were', () => {
+    const start = load({ stats: STATS });
+    const hidden = run(start, { type: 'setStatsShowCharacter', variant: 0, show: false });
+    expect(draftsToBuildData(hidden).stats).toEqual({ ...STATS, character: undefined });
+    expect(draftsToBuildData(hidden).stats?.edited).toBeUndefined();
+  });
+
   it('copying a variant copies its stats deeply', () => {
     const state = run(load({ stats: STATS }), addVariantAction('Copy', 0));
     const [source, copy] = state;

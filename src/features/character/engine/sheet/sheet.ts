@@ -28,10 +28,13 @@
 import type { CharacterFile, DifficultyIndex } from '../../parser/types';
 import type { CharSheetSkill } from '@/features/game-data/engine/schema';
 import { affectsOwner } from '@/features/game-data/engine/skillEffects';
+import { statLayerKind } from '@/features/game-data/engine/statLayers';
+import { statLines } from '@/features/stash/engine/items/itemText';
+import { skillLevel as eventSkill } from '@/features/stash/engine/items/textData';
 import { itemRequirements, setupItems, type ItemSetup } from './activeItems';
 import { consumedStats, unappliedOps } from './consumed';
 import { BASE_SUFFIX, type SheetData } from './sheetData';
-import { auraStats, passiveStats, skillLevels, skillToHit, type EvalContext, type SkillLevels } from './skills';
+import { auraStats, buffStats, passiveStats, skillLevels, skillToHit, type EvalContext, type SkillLevels } from './skills';
 import { addStat, entryOf, getStat, mergeInto, sameStats, sumStat, type Contribution, type StatMap } from './statMap';
 import type {
   AppliedBuff,
@@ -107,7 +110,16 @@ export function exclusiveGroupOf(data: SheetData, skillId: number): 'aura' | 'sh
   return skill?.row.aura === 1 ? 'aura' : undefined;
 }
 
-const GROUP_LABELS = { aura: 'own aura', shapeshift: 'shape-shift' } as const;
+const GROUP_LABELS = { aura: 'of your own auras', shapeshift: 'shape-shift' } as const;
+
+/**
+ * A stat as an item tooltip reads it ("+416% Enhanced Damage"), for the warnings; null for a control stat the game never
+ * describes (skillcontrol, fade …)
+ */
+function statText(data: SheetData, id: number, value: number): string | null {
+  const line = statLines([{ id, param: 0, value }], data.text).at(0);
+  return line === undefined || line.startsWith('Unknown stat') ? null : line;
+}
 
 /** A buff selection after the one-instance rules: per skill the given levels, and whether its own level counts too */
 interface NormalizedBuff {
@@ -115,6 +127,17 @@ interface NormalizedBuff {
   levels: number[];
   /** A selection without a level: the effective level counts */
   effective: boolean;
+}
+
+/** The skills the active items cast on an event (procs), which a character can select as buffs without a level of its own */
+function procSkillsOf(data: SheetData, setup: ItemSetup): Set<number> {
+  const skills = new Set<number>();
+  for (const entry of setup.active)
+    for (const [id, inner] of entry.stats) {
+      if (statLayerKind(data.statName(id)) !== 'event') continue;
+      for (const param of inner.keys()) skills.add(eventSkill(param).skill);
+    }
+  return skills;
 }
 
 /** One selection per skill (the highest level), then one per exclusive group (the last selected), in selection order */
@@ -134,7 +157,7 @@ function normalizeBuffs(data: SheetData, buffs: readonly BuffSelection[], notes:
     const last = members.at(-1);
     if (last === undefined || members.length < 2) continue;
     notes.push(
-      `Only one ${GROUP_LABELS[group]} counts at a time: ${members.map((entry) => data.skillName(entry.skillId)).join(', ')} selected, ${data.skillName(last.skillId)} counted`
+      `Only one ${GROUP_LABELS[group]} counts at a time: ${members.map((entry) => data.skillName(entry.skillId)).join(', ')} selected; ${data.skillName(last.skillId)} is counted`
     );
   }
   for (const entry of ordered) {
@@ -261,6 +284,7 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
   const groupNotes: string[] = [];
   const selections = normalizeBuffs(data, buffs, groupNotes);
   const consumed = consumedStats(data);
+  const procSkills = procSkillsOf(data, setup);
   // The base (gf) values under their own names and as `x__base`: what an item aura's passive columns read
   const baseRecord = statRecord(data, base, base);
 
@@ -293,6 +317,7 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
     applied = [];
     skippedBuffs = [];
     buffNotes = [...groupNotes];
+    const unshown: string[] = [];
     const auraLevels = new Map(auras.map((aura) => [aura.skill.n, aura.level]));
     const replaced = new Set<number>();
     const buffContributions: Contribution[] = [];
@@ -300,7 +325,10 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
       const skill = data.skill(selection.skillId);
       const state = levels.byId.get(selection.skillId);
       const level = Math.max(selection.effective ? (state?.level ?? 0) : 0, ...selection.levels);
-      if (skill === undefined || level <= 0) {
+      // Only what the character can use: its own skill (a level from points, +skills or oskills) or an item's proc. A
+      // remembered selection of another character's skill must not change the numbers
+      const usable = (state?.level ?? 0) > 0 || procSkills.has(selection.skillId) || auraLevels.has(selection.skillId);
+      if (skill === undefined || level <= 0 || !usable) {
         skippedBuffs.push(selection.skillId);
         continue;
       }
@@ -309,27 +337,28 @@ function compute(character: CharacterFile, data: SheetData, buffs: readonly Buff
       if (auraLevel !== undefined) {
         if (auraLevel >= level) {
           buffNotes.push(
-            `Buff ${name} (level ${String(level)}) not counted: an item gives it at level ${String(auraLevel)} (one instance counts)`
+            `${name} (level ${String(level)}) is not counted: an item already gives it at level ${String(auraLevel)}, and only one counts`
           );
           continue;
         }
         replaced.add(skill.n);
-        buffNotes.push(`Buff ${name} (level ${String(level)}) replaces the item aura (level ${String(auraLevel)}): one instance counts`);
+        buffNotes.push(`${name} (level ${String(level)}) is counted instead of the item's (level ${String(auraLevel)}): only one counts`);
       }
-      const stats = auraStats(data, skill, level, state?.hard ?? 0, ctx);
-      if (skill.row.passive !== 1) mergeInto(stats, passiveStats(data, skill, level, state?.hard ?? 0, ctx));
+      const stats = buffStats(data, skill, level, state?.hard ?? 0, ctx);
       buffContributions.push({ kind: 'buff', label: name, skill: skill.n, stats });
       const record: Record<string, number> = {};
       const dropped: string[] = [];
-      for (const [id, inner] of stats)
-        for (const value of inner.values()) {
-          record[data.statName(id)] = (record[data.statName(id)] ?? 0) + value;
-          if (!consumed.has(id) && value !== 0) dropped.push(`${data.statName(id)} ${value > 0 ? '+' : ''}${String(value)}`);
-        }
-      if (dropped.length > 0)
-        buffNotes.push(`Buff ${name} (level ${String(level)}): ${dropped.join(', ')} not on the sheet (no rule applies it)`);
+      for (const [id, inner] of stats) {
+        const amount = [...inner.values()].reduce((sum, value) => sum + value, 0);
+        record[data.statName(id)] = (record[data.statName(id)] ?? 0) + amount;
+        const text = consumed.has(id) || amount === 0 ? null : statText(data, id, amount);
+        if (text !== null) dropped.push(text);
+      }
+      if (dropped.length > 0) unshown.push(`${name} (level ${String(level)}): ${dropped.join(', ')}`);
       applied.push({ skillId: skill.n, name, level, stats: record });
     }
+    // One note for every buff: damage and the like are effects the sheet has no number for
+    if (unshown.length > 0) buffNotes.push(`Buff effects this sheet has no number for: ${unshown.join('; ')}`);
     const hardCtx: EvalContext = { ...ctx, stats: baseRecord, levelByName: levels.hardByName };
     for (const { owner, skill, level } of auras) {
       if (replaced.has(skill.n)) continue;
@@ -668,34 +697,37 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
   for (const entry of c.setup.active) {
     const need = itemRequirements(entry.item, data);
     // A requirement of 0 is met whatever the attribute (a negative strength from items included)
-    if ((need.str > 0 && need.str > attributes.strength.value) || (need.dex > 0 && need.dex > attributes.dexterity.value))
-      warnings.push(
-        `${entry.item.code} (${entry.where}) needs ${String(need.str)} strength / ${String(need.dex)} dexterity: the game may not count it`
-      );
+    const unmet = [
+      ...(need.str > 0 && need.str > attributes.strength.value ? [`${String(need.str)} strength`] : []),
+      ...(need.dex > 0 && need.dex > attributes.dexterity.value ? [`${String(need.dex)} dexterity`] : []),
+    ];
+    if (unmet.length > 0) warnings.push(`The ${entry.where} item needs ${unmet.join(' and ')}: the game may not count it; this sheet does`);
   }
   if (!c.converged) warnings.push('Passive and aura values did not settle; the numbers are from the last pass');
   for (const id of c.skippedBuffs)
     warnings.push(
-      `Buff ${data.skillName(id)} not counted: ${data.skill(id) === undefined ? 'no stat data for the skill' : 'the character does not have it (give a level)'}`
+      `${data.skillName(id)} is not counted: ${data.skill(id) === undefined ? 'the game data has no stats for the skill' : 'the character does not have it and no active item casts it'}`
     );
   for (const { skill, label } of c.unknownAuras)
     warnings.push(
-      `Item aura ${data.skillName(skill)} (skill ${String(skill)}, ${label}) not counted: no data for the skill (a newer ESR?)`
+      `The aura ${data.skillName(skill)} (skill ${String(skill)}) on the ${label} item is not counted: this app's game data does not know it (a save from a newer ESR?)`
     );
   warnings.push(...c.buffNotes);
-  for (const what of [...c.unsupported].sort()) warnings.push(`Formula not evaluated: ${what}`);
+  for (const what of [...c.unsupported].sort()) warnings.push(`A skill formula could not be worked out and counts as 0: ${what}`);
   const known = new Set(data.text.defs.flatMap((def, id) => (def === undefined ? [] : [id])));
   const unknown = new Set<number>();
   for (const contribution of c.fixed)
     for (const id of contribution.stats.keys()) if (!known.has(id) && data.bundle.statNames.at(id) === undefined) unknown.add(id);
-  if (unknown.size > 0) warnings.push(`Unknown stat ids: ${[...unknown].join(', ')}`);
+  if (unknown.size > 0) warnings.push(`Stats this app's game data does not know (ids ${[...unknown].join(', ')}) are not counted`);
   // Op stats onto a sheet stat that the engine does not apply where they sit (op 11 totals, op 9 vitality_hidden2, an
   // item defense stat outside an item); a buff's are in its own note above
   const sources = [...c.fixed, ...c.dynamic].filter((contribution) => contribution.kind !== 'buff');
-  for (const [op, amount] of unappliedOps(data, sources, consumedStats(data))) {
-    const targets = op.targets.map((id) => data.statName(id));
-    warnings.push(`${data.statName(op.id)} (${String(amount)}${op.op === 11 ? '%' : ''}) on ${targets.join(', ')} is not applied`);
-  }
+  const unapplied = [...unappliedOps(data, sources, consumedStats(data))].map(
+    ([op, amount]) =>
+      statText(data, op.id, amount) ??
+      `${data.statName(op.id)} ${String(amount)}${op.op === 11 ? '%' : ''} (onto ${op.targets.map((id) => data.statName(id)).join(', ')})`
+  );
+  if (unapplied.length > 0) warnings.push(`Item stats this sheet does not count yet: ${unapplied.join(', ')}`);
   return warnings;
 }
 
@@ -890,8 +922,8 @@ export function computeCharacterSheet(character: CharacterFile, data: SheetData,
   return sheet;
 }
 
-/** Internal access for listAvailableBuffs (buffs.ts) */
-export function computeForBuffs(character: CharacterFile, data: SheetData): { levels: SkillLevels; setup: ItemSetup } {
+/** Internal access for listAvailableBuffs (buffs.ts): the unbuffed skill levels, items and formula context */
+export function computeForBuffs(character: CharacterFile, data: SheetData): { levels: SkillLevels; setup: ItemSetup; ctx: EvalContext } {
   const c = compute(character, data, []);
-  return { levels: c.levels, setup: c.setup };
+  return { levels: c.levels, setup: c.setup, ctx: c.ctx };
 }

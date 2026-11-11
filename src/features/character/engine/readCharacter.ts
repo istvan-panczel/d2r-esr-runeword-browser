@@ -53,7 +53,8 @@ export function pickCharacterFiles<F extends { readonly name: string; readonly s
     if (sidecars.length > 0) return wrongType('A .d2rl file alone is not a save. Pick the .d2s together with it.');
     const first = files.at(0);
     if (first === undefined) return wrongType('No file was picked.');
-    if (hasExtension(first.name, '.d2i')) return wrongType('That is a shared stash (.d2i): it goes on the My Stash Overview page.');
+    if (hasExtension(first.name, '.d2i'))
+      return wrongType('That is a shared stash (.d2i): it goes on the Stash Overview page (My Data menu).');
     return wrongType(`"${first.name}" is not a character save. Pick a ${SAVE_EXTENSION} file.`);
   }
   const saves = allSaves.filter((save) => save.size <= MAX_CHARACTER_BYTES);

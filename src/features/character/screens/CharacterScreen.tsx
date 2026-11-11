@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PageShell } from '@/components/PageShell';
 import { GameDataError } from '@/features/game-data/components/GameDataError';
 import { GameDataLoading } from '@/features/game-data/components/GameDataLoading';
@@ -28,14 +29,17 @@ interface CharacterPageProps {
 interface TabBodyProps extends CharacterPageProps {
   readonly tab: CharacterTab;
   readonly onTab: (tab: CharacterTab) => void;
+  /** The player item (index) the Gear tab opens on, when the Overview asked for it */
+  readonly focusItem: number | null;
+  readonly onShowItem: (index: number) => void;
 }
 
-function TabBody({ tab, character, file, bytes, onTab }: TabBodyProps) {
+function TabBody({ tab, character, file, bytes, onTab, focusItem, onShowItem }: TabBodyProps) {
   switch (tab) {
     case 'overview':
-      return <OverviewTab character={character} file={file} bytes={bytes} onTab={onTab} />;
+      return <OverviewTab character={character} file={file} bytes={bytes} onTab={onTab} onShowItem={onShowItem} />;
     case 'gear':
-      return <GearTab character={character} />;
+      return <GearTab character={character} focusItem={focusItem === null ? null : (character.items.player.at(focusItem) ?? null)} />;
     case 'skills':
       return <SkillsTab character={character} />;
     case 'combat':
@@ -49,13 +53,31 @@ function TabBody({ tab, character, file, bytes, onTab }: TabBodyProps) {
 
 function CharacterPage({ character, file, bytes }: CharacterPageProps) {
   const [tab, setTab] = useCharacterTab();
+  // An item source on the Overview opens the Gear tab on that item; any other tab change forgets it
+  const [focusItem, setFocusItem] = useState<number | null>(null);
+  const changeTab = (next: CharacterTab) => {
+    setFocusItem(null);
+    setTab(next);
+  };
+  const showItem = (index: number) => {
+    setFocusItem(index);
+    setTab('gear');
+  };
   // The sheet's difficulty and buffs outlive a tab switch and a character switch (kept per character)
   return (
     <CharacterSheetProvider>
       <div className="space-y-4">
-        <CharacterTabBar tab={tab} onChange={setTab} />
+        <CharacterTabBar tab={tab} onChange={changeTab} />
         <div id={CHARACTER_TAB_PANEL_ID} role="tabpanel" aria-labelledby={characterTabId(tab)}>
-          <TabBody tab={tab} character={character} file={file} bytes={bytes} onTab={setTab} />
+          <TabBody
+            tab={tab}
+            character={character}
+            file={file}
+            bytes={bytes}
+            onTab={changeTab}
+            focusItem={focusItem}
+            onShowItem={showItem}
+          />
         </div>
       </div>
     </CharacterSheetProvider>

@@ -150,19 +150,24 @@ redirects here). Parsed in the browser only, never sent anywhere. The tabs show 
 one provider (see "The sheet on the page" below); the stored base values are labelled as base.
 
 **Tabs** (`engine/characterTabs.ts`, `hooks/useCharacterTab.ts`, `components/CharacterTabBar.tsx`): Overview, Gear, Skills, Combat,
-Storage, Progress, a `role="tablist"` of `SUBTAB_*` buttons in a `ToolbarCard`. The tab is `?tab=` (`gear`, `skills`, `combat`,
+Storage, Progress, a `role="tablist"` of `SUBTAB_*` buttons in a `ToolbarCard`; one Tab stop (roving tabindex), the arrow keys
+and Home / End move to and open another tab (`tabAfterKey`). The tab is `?tab=` (`gear`, `skills`, `combat`,
 `storage`, `progress`; none or an unknown value is the Overview), so a tab can be linked and survives a reload; switching
 pushes a history entry. The selected character is **not** in the URL (a link must not name someone's character).
 
 **Several characters** (`db/characterDb.ts`, `engine/characterList.ts`, `hooks/CharacterProvider.tsx`): Dexie database
 `d2r-esr-character`, table `characters`, one record per **character name** (the key, from the parse) with the raw `.d2s`
 bytes and the file meta (file name, size, last modified, uploaded at, the sidecar outcome). Uploading a save of a stored
-character replaces it. Every stored save is re-parsed on each visit; one the current parser rejects stays listed with its
+character replaces it. Every write (save, remove, clear) goes through one queue in the order asked for (`db/storageQueue.ts`), so a
+Clear all or Remove clicked while an upload is still writing waits for those writes and then wins (before 2026-11-11 the saves could
+come back). Every stored save is re-parsed on each visit; one the current parser rejects stays listed with its
 error and a "Forget this save" button. Migration: version 1 kept one record (`files`, key `'last'`); version 2 copies it into
 `characters` keyed by the name read from the save header at 0x12B (`saveNameOf`; the file name stem when the header has none),
 version 3 drops `files` (`characterDb.test.ts` opens a real version 1 database). The shown character is remembered in
 localStorage (`myCharacter.selected`, `db/characterSelection.ts`); without it, or once it is removed, the most recently
-uploaded one is shown. The provider lives in `CharacterScreen` (the My Stash layout no longer has it).
+uploaded one is shown. The provider lives in `CharacterScreen` (the My Stash layout no longer has it). The shown character's tabs sit
+in an error boundary keyed by the stored save (`CharacterPageBoundary`): an unexpected error in one character's page shows a notice
+there, and the switcher with Remove stays usable.
 
 **Upload** (`CharacterUpload` is the empty state; `CharacterSwitcher` the toolbar once a character is stored): file picker and
 drag and drop take any number of `.d2s` at once, each optionally with its `.d2rl` (`pickCharacterFiles`). A sidecar is matched to
@@ -178,53 +183,66 @@ class, difficulty and act, last saved) with **Copy as text** and **Create a buil
 
 - **What is counted** (`SheetIntro`): an _Unbuffed_ label (or the amber _Includes buffs: not yet checked in game_ badge), the
   weapon set and the difficulty of the resists; a plain sentence: idle at full life, active weapon set, Charm Inventory, set
-  bonuses, passives and item auras; never shrines, elixirs, potions, charges, states like Whirlwind or mercenary auras; the two
-  markers explained; the engine's `warnings` in a collapsed "notes from the calculation".
+  bonuses, passives and item auras; not counted until switched on under Buffs: cast skills, own auras, what an attack gives while
+  it is used (Frenzy's charges, Whirlwind's dodge) and item procs; never shrines, elixirs, potions or mercenary auras; the two
+  markers explained; the engine's `warnings` in a collapsed "notes from the calculation", repeats folded with a count
+  (`groupWarnings`).
 - **Life, mana, stamina** tiles (`poolRows`): the computed maximum, and "When saved" (the save's current value) as a cross-check;
   a saved value above the computed (unbuffed) maximum says a buff or a shape-shift was likely active when the game saved.
+- **The cards** flow in CSS columns (`columns-2` from `@3xl/page`, `columns-3` from `@6xl/page`, one column on phones), each
+  whole (`break-inside-avoid`), in the order Attributes, Level, Speed | Resistances, Find | Defense, Offense, which balances three
+  columns (checked at 1280, 1400 and 1920 px: column bottoms within 70 px; the old grid left a hole under Attributes).
 - **Attributes**: base (the save), bonus and total.
 - **Resistances** (`ResistMeters`, `resistReadouts`): a Normal / Nightmare / Hell switch (default and `*`: the save's
   difficulty); per resist the shown value, a bar from 0 to 95 with a tick at the cap, the gap to the cap dashed, and the state in
   words with an icon (over the cap by N, at the cap, N below the cap; below zero adds a warning icon). Colours are the dataviz
   status palette (good / warning / critical), never the only signal. "Show sum, penalty and cap" adds the raw read-out to
   every row; each row's popover has it too. Magic and physical included.
-- **Defense** (defense, damage and magic damage reduced, dodge / avoid / evade, block only when the engine returns one, absorbs
-  above 0), **Offense** (attack rating per mouse-button skill, main / off hand when dual wielding; AR %, deadly strike,
-  crushing blow, open wounds, life and mana stolen, −% target defense, Ignore Target's Defense), **Speed** (IAS, FRW, FHR, FBR,
+- **Defense** (defense, damage and magic damage reduced, dodge / avoid / evade above 0, block only when the engine returns one,
+  absorbs above 0), **Offense** (attack rating per mouse-button skill, "main / off hand" only for a skill that uses the off hand
+  (the engine's `weapsel` rule: Frenzy two numbers, Whirlwind one, a bow one); AR %, deadly strike, crushing blow, open wounds,
+  life and mana stolen, −% target defense, Ignore Target's Defense; when dual wielding, a line with the off-hand weapon's own
+  IAS / deadly strike / crushing blow / target defense (`offHandText`, its status mark), **Speed** (IAS, FRW, FHR, FBR,
   FCR, base attack and run/walk speed, with a link to the official Frame Table: no breakpoint calculator here), **Find, skills
   and recovery** (magic find, extra gold, +all and +class skills with a link to the Skills tab, replenish life, mana
   regeneration), and **Level** (where, experience, experience to the next level, unspent points, gold).
 - **Where a number comes from**: every number is a button (`SourcesPopover`, Radix popover: Enter / Space / tap opens it,
   Escape closes it and returns focus) listing `SheetValue.sources` (items by name with the engine's slot label, from
-  `useCharacterItemNames`; set bonuses, passives, auras, per-level, percent, caps), the notes and the status. Its accessible
-  name carries the value, the status and the unbuffed value. Markers (`StatusMark`): `≈` inferred, `?` changed by a buff (not
+  `useCharacterItemNames`; set bonuses, passives, auras, per-level, percent, caps), the notes and the status. An item source is a
+  button that opens the Gear tab with that item selected and its weapon set shown (`ShowItemContext`, the page's `focusItem`,
+  matched by item object; any other tab change forgets it). Its accessible name carries the value, a resist's state text ("over
+  the cap by 57, cap 79"), the status and the unbuffed value. Markers (`StatusMark`): `≈` inferred, `?` changed by a buff (not
   yet checked in game), each with the explanation as text.
-- **Buffs** (`BuffsPanel`): `listAvailableBuffs` grouped as Skills you cast / Auras / From your items, each a checkbox; a cast
-  skill or aura switched on gets a level stepper (default: the character's level of it, re-evaluated with the other buffs;
-  "Your level" goes back), a proc keeps its item's level and shows its chance and item. A changed number shows the unbuffed
-  value struck through before it and the `?` marker; "Switch all off".
+- **Buffs** (`BuffsPanel`): `listAvailableBuffs` grouped as Skills you use / Auras / From your items, each a checkbox; an
+  `exclusiveGroup` (own auras, shape-shifts) is a native radio group with "None" (`splitExclusive`, `chooseInGroup`: one on at a
+  time, arrow keys move the choice), so the page can never show two as on. A cast skill or aura switched on gets a level stepper
+  (default: the character's level of it, re-evaluated with the other buffs; "Your level" goes back), a proc keeps its item's
+  level and shows its chance and every item that casts it (`items`; an own skill an item also casts says "also cast by"). A
+  changed number shows the unbuffed value struck through before it and the `?` marker; "Switch all off".
 - The stored base groups (`engine/characterSheet.ts` `overviewGroups`) show only while the sheet's data loads or fails to
   load. Then an "at a glance" line per other tab (`characterGlance`).
 
-**Copy as text** (`sheetText`): a few plain lines for a chat: name, level, class, the difficulty of the resists and
-"unbuffed" / "with buffs"; attributes; pools; resists with the max when it is not 75; defense, DR, MDR, block (marked
-inferred), dodge / avoid / evade when any; speeds; attack rating per hand skill, AR %, DS, CB, leech, target defense; MF, GF,
+**Copy as text** (`sheetText`): a few plain lines for a chat, with the shared labels and short forms
+(`src/features/builds/utils/statLabels.ts`, the one label table, also read by the build form and detail page): name, level,
+class, the difficulty of the resists and "unbuffed" / "with buffs"; attributes; pools; resists with the max when it is not 75;
+defense, DR, MDR, block ("not yet compared with the game"), dodge / avoid / evade when any; speeds; attack rating per hand skill
+("main / off hand" only for a skill that uses both), AR bonus, DS, CB, LL, ML (zeros left out), target defense; MF, extra gold,
 +all skills; with buffs, the buffs and "buffed numbers not yet checked in game".
 
 **The sheet on the page** (`hooks/CharacterSheetProvider.tsx`, `hooks/useSheetView.ts`, `hooks/useCharacterSheet.ts`,
 `engine/sheetCache.ts`): `CharacterSheetProvider` (in `CharacterScreen`'s page, around the tabs) holds the view state per
-character name: the chosen difficulty (default: the save's; kept across tab and character switches while the page is open)
-and the selected buffs (also in sessionStorage `myCharacter.buffs`: this browser tab only, never the URL).
-`useCharacterSheet(character)` loads `charsheet.json` + `itemtext.json` (only on the tabs that call it) and returns
-`{ status, sheet, unbuffed, availableBuffs, data, difficulty, setDifficulty, buffs, setBuffs }`; `unbuffed` is the same sheet
-without buffs when any are on, for the struck-through values. `sheetCache` computes a SheetData once per bundle pair, a sheet
+character name, in Maps (a character may be called `constructor` or `toString`; a plain object once crashed every sheet tab): the
+chosen difficulty (default: the save's; kept across tab and character switches while the page is open) and the selected buffs
+(also in sessionStorage `myCharacter.buffs`: this browser tab only, never the URL), each with the save they were chosen for
+(`buffMemorySave`: last-saved time and upload time), so a replaced, respecced or removed and uploaded again character starts
+unbuffed; characters no longer stored are dropped on the next change. `useCharacterSheet(character)` loads `charsheet.json` +
+`itemtext.json` (only on the tabs that call it) and returns `{ status, sheet, unbuffed, availableBuffs, data, difficulty,
+setDifficulty, buffs, setBuffs }`; `unbuffed` is the same sheet without buffs when any are on, for the struck-through values.
+Its pure part `computeSheetView` (`engine/sheetViewState.ts`) counts only the remembered selections the character can use
+(`usableSelections`: skills of its buff list, one per exclusive group) and never throws: an engine error is
+`{ status: 'failed', message }`, which the tabs show as a calm panel (`SheetFailedPanel`) with the stored base values. `sheetCache` computes a SheetData once per bundle pair, a sheet
 once per (character, difficulty, buff set; order-free key `buffsKey`, 24 per character) and the buff list once per character:
 explicit memoisation, because React Compiler memoises per component and each tab would compute again.
-
-**Create a build from this character**; the banners (`engine/notices.ts` `characterNotices`); base attributes; base life, mana
-and stamina next to the values **when saved** (the current values the game wrote, gear and buffs included: SpinToWin 10,219 life
-on 1,189 base); level, experience, unspent stat and skill points; gold on the character and in the stash; the computed totals
-placeholder (`ComputedSheetPanel`, prop `totals`); an "at a glance" line per other tab (`characterGlance`).
 
 **Create a build from this character** (`components/CreateBuildAction.tsx`, `engine/buildHandoff.ts`): navigates to `/builds/new`
 with `{ characterSave: { bytes, fileName, sidecarVersion } }` as router state; `CreateBuildScreen` reads it once
@@ -244,7 +262,8 @@ when filled) with a Dead badge.
 **Skills** (`components/tabs/SkillsTab.tsx`, `components/skills/CharacterSkillTrees.tsx`): the class tree with icons (the
 Skills page parts, read-only); a tile's badge is the skill's level from the sheet (hard points + all, class, tab, single-skill
 bonuses and oskills, + selected buffs such as Battle Command), dimmed without one; the detail card opens at that level with the
-character's level and its hard points in the synergies, and a stepper for a "what if". The **Skill levels** table: hard points,
+character's level and its hard points in the synergies, and a stepper for a "what if". A level a selected buff changed carries the `?` mark (`SkillBonus.status`) in the table and the
+granted-skills list. The **Skill levels** table: hard points,
 bonus (with its parts: "all skills +10, class skills +3") and level (`skillBonusById`, sheet rows mapped to `skills.json` ids
 through `lootfilter.json` `skillNames`, as before); skills granted by items without hard points under it. **Skill bonuses**: +all
 and +class skills, each opening its sources. Then the mouse-button skills and hotkeys. Without the sheet's data the badges show
@@ -252,7 +271,8 @@ hard points.
 
 **Combat** (`components/tabs/CombatTab.tsx`): the [Combat tab](#combat-tab) view seeded from the sheet: defense, −% target
 defense, Ignore Target's Defense, the character level and the attack rating of a chosen line (`attackChoices`: each mouse-button
-skill's main hand, and its off hand when dual wielding; none: the base attack rating). It follows the page's difficulty (and
+skill's main hand, and its off hand only when the engine returns one: dual wielding and a skill that uses the off hand, so no
+"Whirlwind, off hand" and nothing for a bow; none: the base attack rating). A failed sheet shows the calm panel. It follows the page's difficulty (and
 changing it there changes the Overview's resists) and buffs, with the Unbuffed / _Includes buffs_ label.
 
 **Storage** (`components/tabs/StorageTab.tsx`, `engine/characterStorage.ts`): inventory, belt, Horadric Cube, personal stash, then
@@ -391,11 +411,12 @@ stayed empty, and a corpse being present (equipped gear may be on it; INFERRED, 
 
 **Character stats.** `createBuildDraft` takes the sheet data (`charsheet.json` + `itemtext.json`; `useSaveDraftData` loads
 `charsheet.json` apart from the other bundles, still only once a file is picked) and puts `toStatsSnapshot` of the unbuffed sheet
-on the draft's variant, with the character's name, the save time and the sidecar's ESR version when the My Character hand-off
-knows it. The stats are the author's to edit or clear before saving (the form marks changed save-derived numbers as edited).
+on the draft's variant, with the character's name, the save's UTC day (the page shows only the date) and the sidecar's ESR
+version when the My Character hand-off knows it; the attack rating of the left button skill with its name (`arSkill`), the max
+resists only above 75, zero bonuses left out. The stats are the author's to edit or clear before saving (the form marks changed save-derived numbers as edited).
 A missing or broken `charsheet.json`, a failing computation or a parse that stopped inside the player items gives a draft
 without stats: the import goes on and the panel says the stats could not be computed. The form's "Fill from a save file"
-(`statsFromSaveBytes`) uses the same path for the stats alone. The ground-truth SpinToWin save pre-fills every number of its
+(`statsFromSaveBytes`, on every variant without stats) uses the same path for the stats alone. The ground-truth SpinToWin save pre-fills every number of its
 in-game screen (`buildDraft.fixture.integration.test.ts`).
 
 Measured over the 11 real saves (`buildDraft.fixture.integration.test.ts`): 79 of 99 equipped items match a named item; every unique,
@@ -408,16 +429,19 @@ there is no field for them.
 turns a parsed save into the numbers of the in-game character screen and Advanced Stats, each with the sources it adds
 up from. Data: `createSheetData(charsheet.json, itemtext.json)` ([GAME-DATA.md → Character sheet](./GAME-DATA.md#character-sheet)).
 
-| Export                                                | Purpose                                                                                                                |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `computeCharacterSheet(character, data, opts)`        | `CharacterSheet`: every value a `SheetValue` (`value`, `sources`, `status`, `notes?`), plus `facts`, `warnings`        |
-| `listAvailableBuffs(character, data)`                 | `AvailableBuff[]`: own cast skills and auras, self-buff procs of active items, that would change the sheet (see Buffs) |
-| `toStatsSnapshot(sheet, { savedAt, esrVersion? })`    | `CharacterStatsSnapshot`: flat numbers with short keys (`v: 1`), about 400 bytes as JSON, for a shared build           |
-| `createSheetData(charsheet, itemtext)`                | The lookups (build once per loaded bundle pair)                                                                        |
-| `SHEET_STAT_LABELS`, `formatStat`, `DIFFICULTY_NAMES` | `statLabels.ts`: labels, short forms and units of the snapshot keys, shared by every view of a sheet                   |
+| Export                                             | Purpose                                                                                                                |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `computeCharacterSheet(character, data, opts)`     | `CharacterSheet`: every value a `SheetValue` (`value`, `sources`, `status`, `notes?`), plus `facts`, `warnings`        |
+| `listAvailableBuffs(character, data)`              | `AvailableBuff[]`: own cast skills and auras, self-buff procs of active items, that would change the sheet (see Buffs) |
+| `toStatsSnapshot(sheet, { savedAt, esrVersion? })` | `CharacterStatsSnapshot`: flat numbers with short keys (`v: 1`), about 400 bytes as JSON, for a shared build           |
+| `createSheetData(charsheet, itemtext)`             | The lookups (build once per loaded bundle pair)                                                                        |
 
-The snapshot's optional keys: `blk` (block, with a shield), `buf` (1 with buffs), `mrm` (the magic resist cap, always
-written since 2026-11-11) and `ws` (2 on weapon set 2, else absent).
+The labels, short forms and units of the numbers are not here: one table serves the sheet's views and the build stats,
+`src/features/builds/utils/statLabels.ts` (`statLabel`, `formatStat`, `DIFFICULTY_NAMES`; it imports only the builds model, so
+the builds route never pulls in the character feature for it). The snapshot's `ar` is the attack rating the character screen
+shows: the left mouse button skill's main-hand line, else the right's, else the base value without a skill; `ars` names that
+skill. Optional keys: `ars`, `blk` (block, with a shield), `buf` (1 with buffs), `mrm` (the magic resist cap, always written
+since 2026-11-11) and `ws` (2 on weapon set 2, else absent).
 
 `options.difficulty` picks the difficulty of the resist penalty (default: the one the save is in); `options.buffs`
 (`{ skillId, level? }[]`) counts buffs. A `SheetSource` has a `kind` (`base`, `item`, `set`, `runic`, `quest`, `passive`,
@@ -480,7 +504,9 @@ INFERRED D2 formula, no in-game check), dead flag.
 Not in the unbuffed sheet: cast buffs and auras, shrines, elixirs and potions, conditional states (charges, a
 whirlwinding Barbarian), mercenary auras. `listAvailableBuffs` lists the character's own non-passive skills with a
 level (hard points, +skills, oskills) whose aura or passive stats reach it (`affectsOwner`: an aura, or a skill without a
-target filter; not a curse, not a summon) and change a number on the sheet, and the self-buff procs of its active items
+target filter; not a curse, not a summon) and change a number on the sheet, evaluated at the level it would count at (a column
+that gives 0 there does not count: Maul's run speed and leech need Shared Savagery, so a Druid without it is not offered Maul),
+and the self-buff procs of its active items
 (`kind: 'proc'`, with the item, level and chance). Each skill is listed once: the own skill unless a proc gives a
 higher level, with `items` (every active item that procs it); `exclusiveGroup` marks single-choice groups (below).
 Shrines are out of scope.
@@ -489,7 +515,8 @@ Shrines are out of scope.
 effective level, or the given `level` (needed for a proc), on the current totals. The whole sheet is re-evaluated until
 it is stable, so Battle Command's +skills raise Battle Orders and itself (the recast rule). A charge skill counts as its
 state at that level (INFERRED). A buff the character has no level in and no `level` was given for is skipped with a
-warning. Cross-check, not ground truth: Dudu's save was written shapeshifted, and with Werewolf (+12% life) the computed
+warning, and so is a selection of a skill the character cannot use (no level of its own, no active item that procs it or
+gives it as an aura: a remembered selection of another character must not change the numbers). Cross-check, not ground truth: Dudu's save was written shapeshifted, and with Werewolf (+12% life) the computed
 maximum life equals the saved current life exactly. A Battle Orders save (the old SpinToWin fixture) is consistent
 (current ≤ computed maximum) but not full, so not exact.
 
@@ -502,8 +529,10 @@ The selection rules (INFERRED from D2's one-state-per-skill rule, no buffed grou
   Werewolf, Werebear, Elemental Form; charsheet.json `shapeshift`), one form at a time. Item auras are apart. Only the
   last selected buff of a group counts, with a warning. Not used: states.txt `group` (Fade / Burst of Speed share 2, but
   so do Werewolf and Maul's state 3) and skills sharing one `aurastate` (Power Overwhelming / Omnipotence).
-- Stats: a buff stat no sheet value applies (outside `consumed.ts`: damage, `item_armor_percent` from Call of the Wild,
-  control stats) is a warning naming the buff and the stat, and `listAvailableBuffs` lists only applied stats. Call of
+- Stats: a buff stat no sheet value applies (outside `consumed.ts`: damage, `item_armor_percent` from Call of the Wild) is
+  named in one note for all buffs, as the item tooltip words it ("Buff effects this sheet has no number for: Frenzy (level 21):
+  +416% Enhanced Damage; …"; control stats without a description are left out), and `listAvailableBuffs` lists only applied
+  stats that are not 0. Call of
   the Wild's `item_armor_percent` is op 13 (a percent of an item's own base defense; ESR's enhanced-damage-fix keeps the
   game's decision for defense), so how it reaches a character is not established: not applied.
 - `unverified` is structural: every object with a `status` (sheet values, resists with `raw` / `cap`, hand lines, skill

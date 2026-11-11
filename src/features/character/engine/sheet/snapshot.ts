@@ -9,6 +9,9 @@ export interface SnapshotMeta {
 
 export function toStatsSnapshot(sheet: CharacterSheet, meta: SnapshotMeta): CharacterStatsSnapshot {
   const { attributes: a, resists: r, speed, offense, defenseChances: d } = sheet;
+  // The game's screen shows attack rating per skill: the left button's, else the right's
+  const { hands } = sheet.attackRating;
+  const hand = hands.find((entry) => entry.hand === 'left') ?? hands.find((entry) => entry.hand === 'right');
   const snapshot: CharacterStatsSnapshot = {
     v: 1,
     difficulty: sheet.difficulty,
@@ -41,7 +44,8 @@ export function toStatsSnapshot(sheet: CharacterSheet, meta: SnapshotMeta): Char
     fbr: speed.block.value,
     fcr: speed.cast.value,
     sk: sheet.skills.all.value,
-    ar: sheet.attackRating.base.value,
+    ar: hand?.mainHand ?? sheet.attackRating.base.value,
+    ...(hand === undefined ? {} : { ars: hand.name }),
     arp: sheet.attackRating.percent.value,
     ds: offense.deadlyStrike.value,
     cb: offense.crushingBlow.value,

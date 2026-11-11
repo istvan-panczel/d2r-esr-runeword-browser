@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/core/db';
@@ -8,6 +8,7 @@ import { AscendancyDisplay } from '@/features/builds/components/AscendancyDispla
 import { ItemCard } from '@/features/stash/components/items/ItemCards';
 import { ToneBadge } from '@/features/stash/components/shared/ToneBadge';
 import type { ItemRow } from '@/features/stash/engine/items/allItems';
+import type { StashItem } from '@/features/stash/parser/types';
 import { cn } from '@/lib/utils';
 import { ascendancyOfStone, type CharacterItemsView, type GearSlot } from '../../engine/characterItems';
 import type { MercenaryFacts } from '../../engine/sheet/types';
@@ -166,11 +167,35 @@ function MercenaryFactsLine({ merc }: { readonly merc: MercenaryFacts }) {
   );
 }
 
-function GearView({ view, merc: mercFacts }: { readonly view: CharacterItemsView; readonly merc: MercenaryFacts | null }) {
+/** The selection key of an item object (the Overview's "show on the Gear tab"), or null when the tab does not show it */
+function keyOfItem(items: ReadonlyMap<string, Selectable>, item: StashItem | null): string | null {
+  if (item === null) return null;
+  for (const [key, entry] of items) if (entry.row.item === item) return key;
+  return null;
+}
+
+interface GearViewProps {
+  readonly view: CharacterItemsView;
+  readonly merc: MercenaryFacts | null;
+  /** Open on this item (selected, its weapon set shown, scrolled to) */
+  readonly focusItem: StashItem | null;
+}
+
+function GearView({ view, merc: mercFacts, focusItem }: GearViewProps) {
   const items = selectables(view);
   const activeSet = view.weaponSets[0].active ? 0 : 1;
-  const [shownSet, setShownSet] = useState<0 | 1>(activeSet);
-  const [picked, setPicked] = useState<string | null>(() => firstSelection(view, items));
+  const focusKey = keyOfItem(items, focusItem);
+  const [shownSet, setShownSet] = useState<0 | 1>(() =>
+    focusKey?.startsWith('p2:') === true ? 1 : focusKey?.startsWith('p1:') === true ? 0 : activeSet
+  );
+  const [picked, setPicked] = useState<string | null>(() => focusKey ?? firstSelection(view, items));
+  const focusedSection = focusKey === null ? null : (items.get(focusKey)?.section ?? null);
+  // Once, on opening from the Overview: bring the item's section into view (the card shows beside or under it)
+  useEffect(() => {
+    if (focusedSection === null) return;
+    const id = { player: 'character-gear', charms: 'character-charms', merc: 'character-merc' }[focusedSection];
+    document.getElementById(id)?.scrollIntoView({ block: 'start' });
+  }, [focusedSection]);
   const selectedKey = picked !== null && items.has(picked) ? picked : null;
   const selected = selectedKey === null ? undefined : items.get(selectedKey);
   const cardIn = (section: Selectable['section']) => (selected?.section === section ? <SelectedCard entry={selected} /> : undefined);
@@ -267,7 +292,7 @@ function GearView({ view, merc: mercFacts }: { readonly view: CharacterItemsView
 }
 
 /** Gear: the equipped slots with both weapon sets, the Charm Inventory, the Ascendancy and the mercenary; every item opens its full card. */
-export function GearTab({ character }: { readonly character: CharacterFile }) {
+export function GearTab({ character, focusItem }: { readonly character: CharacterFile; readonly focusItem: StashItem | null }) {
   const items = useCharacterItems(character);
   // Only the mercenary facts: the gear shows without them while they load (or when they cannot be loaded)
   const sheet = useCharacterSheet(character);
@@ -279,6 +304,7 @@ export function GearTab({ character }: { readonly character: CharacterFile }) {
       key={`${character.name}:${String(character.lastSavedAt)}`}
       view={items.view}
       merc={sheet.status === 'ready' ? sheet.sheet.facts.mercenary : null}
+      focusItem={focusItem}
     />
   );
 }

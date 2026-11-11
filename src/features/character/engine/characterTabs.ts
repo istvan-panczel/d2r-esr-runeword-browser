@@ -41,3 +41,23 @@ export function characterTabUrl(tab: CharacterTab): string {
 /** DOM ids of the tab row and its panel */
 export const CHARACTER_TAB_PANEL_ID = 'character-tab-panel';
 export const characterTabId = (tab: CharacterTab) => `character-tab-${tab}`;
+
+/**
+ * The tab a key moves to in the tab bar (the WAI-ARIA tabs pattern): Left / Right wrap around, Home / End go to the first
+ * / last; null for any other key
+ */
+export function tabAfterKey(current: number, key: string, count: number): number | null {
+  if (count <= 0) return null;
+  switch (key) {
+    case 'ArrowRight':
+      return (current + 1) % count;
+    case 'ArrowLeft':
+      return (current - 1 + count) % count;
+    case 'Home':
+      return 0;
+    case 'End':
+      return count - 1;
+    default:
+      return null;
+  }
+}

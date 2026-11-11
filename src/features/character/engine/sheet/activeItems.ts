@@ -111,7 +111,9 @@ function activeItems(character: CharacterFile, data: SheetData, warnings: string
     const group = groups.findIndex((codes) => codes.includes(item.code));
     if (group >= 0) {
       if (usedGroups.has(group)) {
-        warnings.push(`Charm ${item.code} at ${whereOf(item)} is inactive: only one charm of ${groups[group]?.join(' / ') ?? ''} counts`);
+        warnings.push(
+          `The charm at ${String(location.x)},${String(location.y)} in the Charm Inventory is not counted: only one charm of its kind counts`
+        );
         return;
       }
       usedGroups.add(group);
@@ -119,14 +121,14 @@ function activeItems(character: CharacterFile, data: SheetData, warnings: string
     result.push({ index, item });
   });
   if (data.bundle.rules.inventoryCharms)
-    warnings.push('ESR counts charms in the inventory too (charm-inv allow_inventory_charms): the sheet counts only the Charm Inventory');
+    warnings.push('This ESR version counts charms in the inventory too; the sheet counts only the Charm Inventory');
   return result;
 }
 
 function requirementWarnings(entry: ActiveItem, character: CharacterFile, data: SheetData, warnings: string[]): void {
   const level = requiredLevel(entry.item, data.text);
   if (level > character.level)
-    warnings.push(`${entry.item.code} (${entry.where}) needs level ${String(level)}: the game may not count it, the sheet does`);
+    warnings.push(`The ${entry.where} item needs level ${String(level)}: the game may not count it; this sheet does`);
   // Strength / dexterity requirements are checked against the final attributes later (sheet.ts)
 }
 

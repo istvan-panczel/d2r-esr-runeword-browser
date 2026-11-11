@@ -8,6 +8,7 @@ import {
   type CharacterFileMeta,
 } from '../db/characterDb';
 import { loadSelectedCharacter, saveSelectedCharacter } from '../db/characterSelection';
+import { createStorageQueue } from '../db/storageQueue';
 import { selectedCharacterEntry, sortCharacterEntries, upsertCharacterEntries, type CharacterEntry } from '../engine/characterList';
 import {
   pickCharacterFiles,
@@ -26,11 +27,19 @@ interface CharacterProviderProps {
 
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
+/** Every IndexedDB write of the page in the order asked for: a Clear or Remove waits for an upload's writes, then wins */
+const storage = createStorageQueue<CharacterFileMeta>({
+  save: saveStoredCharacter,
+  remove: removeStoredCharacter,
+  clear: clearStoredCharacters,
+});
+
 /**
  * Holds the stored characters of the My Character page: reads every remembered save from IndexedDB on mount and parses
  * it, parses new uploads in the browser (any number of saves at once, each with its .d2rl) and remembers the ones that
  * parse, one per character name. Nothing leaves the browser. Clear supersedes a load or an upload still running: it
- * bumps `generation`, and their results are then dropped.
+ * bumps `generation`, and their results are then dropped; writes already queued run first (`storage`), so a Clear or
+ * Remove during an upload's writes can never be undone by them.
  */
 export function CharacterProvider({ bundle, children }: CharacterProviderProps) {
   const [list, setList] = useState<CharacterListState>({ status: 'loading' });
@@ -81,16 +90,11 @@ export function CharacterProvider({ bundle, children }: CharacterProviderProps) 
     saveSelectedCharacter(key);
   };
 
-  const remember = async (added: readonly CharacterEntry[]) => {
-    const failures: string[] = [];
-    for (const entry of added) {
-      try {
-        await saveStoredCharacter(entry.key, entry.file, entry.bytes);
-      } catch (error) {
-        console.error('[Character] Could not remember the save:', error);
-        failures.push(errorMessage(error));
-      }
-    }
+  const remember = async (added: readonly CharacterEntry[], started: number) => {
+    const failures = await storage.saveAll(added.map((entry) => ({ name: entry.key, meta: entry.file, bytes: entry.bytes })));
+    for (const failure of failures) console.error('[Character] Could not remember the save:', failure);
+    // Cleared meanwhile: the writes ran before the clear, and the warning no longer applies
+    if (generation.current !== started) return;
     setStorageWarning(
       failures.length === 0
         ? null
@@ -147,7 +151,8 @@ export function CharacterProvider({ bundle, children }: CharacterProviderProps) 
         entries: upsertCharacterEntries(previous.status === 'ready' ? previous.entries : [], added),
       }));
       select(first.key);
-      await remember(added);
+      // Queued at once, before any later Clear or Remove (no await between the check above and here)
+      await remember(added, started);
     } catch (error) {
       if (generation.current === started)
         setUploadErrors([{ fileName: null, error: { kind: 'unexpected', message: errorMessage(error) } }]);
@@ -165,7 +170,7 @@ export function CharacterProvider({ bundle, children }: CharacterProviderProps) 
       saveSelectedCharacter(null);
     }
     try {
-      await removeStoredCharacter(key);
+      await storage.remove(key);
     } catch (error) {
       console.error('[Character] Could not forget the save:', error);
     }
@@ -180,7 +185,7 @@ export function CharacterProvider({ bundle, children }: CharacterProviderProps) 
     setSelectedKey(null);
     saveSelectedCharacter(null);
     try {
-      await clearStoredCharacters();
+      await storage.clear();
     } catch (error) {
       console.error('[Character] Could not forget the saves:', error);
     }
