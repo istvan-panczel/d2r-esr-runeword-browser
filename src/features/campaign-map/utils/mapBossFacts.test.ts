@@ -118,7 +118,7 @@ describe('zoneBossSummary', () => {
       ['Tier 3 map', '25%', '50%', null, 'tier 4 map, 25%'],
       ['Pandemonium key', '25%', '50%', 'one of the three, at random', '50%'],
       ['Weapon Mastery Token', '25%', null, 'players setting does not raise it', null],
-      ['Primordial Soulstone', 'always', null, 'until your Ascendancy Stone holds 10', null],
+      ['Primordial Soulstone', 'always', null, 'tier 4 of an ascendancy needs 10', null],
     ]);
     expect(card?.sameTableAs).toEqual(['Avatar Of The Night']);
     // The page's "always a shard" is not a count: no comparison

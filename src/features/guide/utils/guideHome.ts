@@ -90,7 +90,7 @@ export const OFFICIAL_REFERENCES: readonly OfficialReference[] = [
   {
     label: 'Ascendancies',
     file: 'ascendancies.htm',
-    description: 'Ascendancy Stones: how to unlock them and the challenges that upgrade them.',
+    description: 'The ascendancy panel: the Orb of Creation unlocks it, the five tier challenges and the Lich King bonus.',
   },
   {
     label: 'Specializations',
