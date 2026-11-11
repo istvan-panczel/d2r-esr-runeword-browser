@@ -75,7 +75,8 @@ describe('navConfig', () => {
       ['Items', ['Uniques', 'Mythicals', 'Sets', 'Bases', 'Item Types', 'Affixes', 'Modifiers', 'Elixirs']],
       ['Character', ['Skills', 'Ascendancies', 'Specializations', 'Weapon Masteries', 'Mercenaries', 'Kill Ledger']],
       ['Areas', ['Campaign Map', 'Area Levels', 'Terror Zones']],
-      ['My Stash', ['Overview', 'Ancient Coupons', 'All Items', 'My Character']],
+      ['My Stash', ['Overview', 'Ancient Coupons', 'All Items']],
+      'My Character',
       'Guide',
       'Builds',
       'Loot Filters',
@@ -89,12 +90,19 @@ describe('navConfig', () => {
       expect(getActiveNavGroup('/area-levels')?.key).toBe('areas');
     });
 
-    it.each(['/', '/guide', '/guide/some-note', '/builds', '/build/abc', '/loot-filters', '/loot-filters/abc', '/no-such-page'])(
-      'has no group on %s',
-      (path) => {
-        expect(getActiveNavGroup(path)).toBeUndefined();
-      }
-    );
+    it.each([
+      '/',
+      '/guide',
+      '/guide/some-note',
+      '/builds',
+      '/build/abc',
+      '/loot-filters',
+      '/loot-filters/abc',
+      '/character',
+      '/no-such-page',
+    ])('has no group on %s', (path) => {
+      expect(getActiveNavGroup(path)).toBeUndefined();
+    });
   });
 
   describe('getActiveNavItem', () => {
@@ -103,6 +111,7 @@ describe('navConfig', () => {
       expect(getActiveNavItem('/cube-recipes')?.label).toBe('Cube Recipes');
       expect(getActiveNavItem('/area-levels')?.label).toBe('Area Levels');
       expect(getActiveNavItem('/loot-filters/abc')?.label).toBe('Loot Filters');
+      expect(getActiveNavItem('/character')?.label).toBe('My Character');
     });
 
     it('prefers the sub-page over the stash overview and finds nothing off the menu', () => {
@@ -126,8 +135,14 @@ describe('navConfig', () => {
     expect(isNavItemActive('/stash/coupons', overview)).toBe(false);
     expect(isNavItemActive('/stash/coupons', coupons)).toBe(true);
     expect(isNavGroupActive('/stash/coupons', stash)).toBe(true);
-    expect(stash.items.map((item) => item.to)).toEqual(['/stash', '/stash/coupons', '/stash/items', '/stash/character']);
+    expect(stash.items.map((item) => item.to)).toEqual(['/stash', '/stash/coupons', '/stash/items']);
     expect(isNavItemActive('/stash/items', overview)).toBe(false);
+  });
+
+  it('redirects the old My Stash character page to My Character', () => {
+    const element = matchRoutes(router.routes, '/stash/character')?.at(-1)?.route.element;
+    expect(isValidElement<{ to: string }>(element) && element.type === Navigate && element.props.to).toBe('/character');
+    expect(matchRoutes(router.routes, '/character')?.at(-1)?.route.path).toBe('character');
   });
 
   it('redirects the old guide note map to the guide overview', () => {

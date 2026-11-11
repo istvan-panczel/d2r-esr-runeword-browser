@@ -16,6 +16,7 @@ const routeScreenImports = [
   '@/features/guide',
   '@/features/loot-filter',
   '@/features/stash',
+  '@/features/character',
   '@/features/terror-zones',
 ] as const;
 

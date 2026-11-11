@@ -3,14 +3,12 @@ import { Link } from 'react-router-dom';
 import { collectCoupons } from '../engine/coupons';
 import { itemsSummary } from '../engine/items/allItems';
 import { StashGate } from '../components/StashGate';
-import { useCharacter } from '@/features/character/hooks/useCharacter';
 import { useStash } from '../hooks/useStash';
 import { STASH_PAGES } from './stashPages';
 
 /** /stash: the upload (or the loaded file) and the stash features with a one-line summary each. */
 export function StashHomeScreen() {
   const { state, bundle } = useStash();
-  const { state: characterState } = useCharacter();
   const coupons = state.status === 'ready' ? collectCoupons(state.stash, bundle).summary : null;
   const items = state.status === 'ready' ? itemsSummary(state.stash, bundle) : null;
   const summaryOf = (to: string): string | null => {
@@ -19,10 +17,6 @@ export function StashHomeScreen() {
     }
     if (to === '/stash/items' && items !== null) {
       return `${String(items.total)} items: ${String(items.uniques)} uniques, ${String(items.sets)} set items, ${String(items.runewords)} runewords, ${String(items.gemwords)} gemwords`;
-    }
-    if (to === '/stash/character' && characterState.status === 'ready') {
-      const { character } = characterState;
-      return `${character.name}: ${character.className}, level ${String(character.level)}`;
     }
     return null;
   };
@@ -54,6 +48,13 @@ export function StashHomeScreen() {
             );
           })}
         </ul>
+        <p className="text-sm text-muted-foreground">
+          Character saves (<code className="rounded bg-muted px-1">.d2s</code>) have a page of their own:{' '}
+          <Link to="/character" className="font-medium text-primary underline underline-offset-2">
+            My Character
+          </Link>
+          .
+        </p>
       </section>
     </div>
   );

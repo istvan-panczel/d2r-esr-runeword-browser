@@ -10,7 +10,7 @@ interface CharacterFileButtonProps {
   readonly size?: 'default' | 'sm';
 }
 
-/** A button opening the file picker for a .d2s, optionally together with its .d2rl */
+/** A button opening the file picker for any number of .d2s, optionally together with their .d2rl */
 export function CharacterFileButton({ children, variant = 'default', size = 'default' }: CharacterFileButtonProps) {
   const { upload, busy } = useCharacter();
   const input = useRef<HTMLInputElement>(null);

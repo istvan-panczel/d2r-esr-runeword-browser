@@ -324,9 +324,11 @@ export const router = createBrowserRouter(
             { index: true, element: routeElement(StashHomeScreen) },
             { path: 'coupons', element: routeElement(StashCouponsScreen) },
             { path: 'items', element: routeElement(StashItemsScreen) },
-            { path: 'character', element: routeElement(CharacterScreen) },
           ],
         },
+        // My Character was a My Stash page; old links and bookmarks land on its own page.
+        { path: 'stash/character', element: <Navigate to="/character" replace /> },
+        { path: 'character', element: routeElement(CharacterScreen) },
         { path: 'builds', element: routeElement(BuildsScreen) },
         { path: 'builds/new', element: routeElement(CreateBuildScreen) },
         { path: 'builds/:buildId/edit', element: routeElement(EditBuildScreen) },

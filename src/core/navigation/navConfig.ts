@@ -348,13 +348,16 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         label: 'All Items',
         description: 'Every item on your stash pages: search names and stats, filter and sort',
       },
-      {
-        key: 'stash-character',
-        to: '/stash/character',
-        label: 'My Character',
-        description: 'Upload a character save: base stats, skills, gear and items; read in your browser only',
-      },
     ],
+  },
+  {
+    kind: 'link',
+    item: {
+      key: 'my-character',
+      to: '/character',
+      label: 'My Character',
+      description: 'Your characters from their save files: gear, skills, storage and progress; read in your browser only',
+    },
   },
   {
     kind: 'link',

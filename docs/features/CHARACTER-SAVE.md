@@ -1,7 +1,7 @@
 # Character save parser
 
 Reads the ESR character save (`.d2s`) and its optional `.d2rl` sidecar in the browser. The **My Character** page
-(`/stash/character`, see below) shows what a save holds, and [Start a build from a save](#start-a-build-from-a-save) on
+(`/character`, see below) shows what the stored saves hold, and [Start a build from a save](#start-a-build-from-a-save) on
 `/builds/new` turns one into a build draft; the parser's exports are listed first.
 
 Code: `src/features/character/parser/`. Data: `stash.json` `characterStats` / `characterClasses`
@@ -142,27 +142,75 @@ same-width renumbered row; none happened from 3.2.10 to 3.3.02 (and the loader w
 
 ## My Character page
 
-`/stash/character` (`src/features/character/`: `screens/CharacterScreen.tsx`, `components/`, `engine/`, `hooks/`, `db/`), a tab of
-My Stash ([STASH.md](./STASH.md)). Parsed in the browser only, never sent anywhere; no computed totals (no final resists or life, no
-defensive sheet, no Tier 1 check, no monster data), so base attributes are labelled as base.
+`/character` (`src/features/character/`: `screens/CharacterScreen.tsx`, `components/` (`tabs/`, `gear/`), `engine/`, `hooks/`, `db/`),
+a top-level menu entry right after the My Stash group (until 2026-11 it was the My Stash page `/stash/character`, which now
+redirects here). Parsed in the browser only, never sent anywhere; no computed totals yet (no final resists or life, no Tier 1
+check, no monster data), so base values are labelled as base.
 
-**Upload** (`CharacterUpload`, `CharacterFileButton`, `CharacterFileBar`): file picker and drag and drop take one `.d2s`, optionally
-with `.d2rl` files (multi-select, `pickCharacterFiles`). The `.d2rl` whose recorded hash is the save's gives the exact ESR version
-(`resolveSidecar`); one that does not match or cannot be read is ignored with a notice, never blocking the save. A `.d2rl` alone,
-two saves, or a stash file get an error panel, and a failed upload never replaces the loaded character.
+**Tabs** (`engine/characterTabs.ts`, `hooks/useCharacterTab.ts`, `components/CharacterTabBar.tsx`): Overview, Gear, Skills, Combat,
+Storage, Progress, a `role="tablist"` of `SUBTAB_*` buttons in a `ToolbarCard`. The tab is `?tab=` (`gear`, `skills`, `combat`,
+`storage`, `progress`; none or an unknown value is the Overview), so a tab can be linked and survives a reload; switching
+pushes a history entry. The selected character is **not** in the URL (a link must not name someone's character).
 
-**Storage** (`db/characterDb.ts`): Dexie database `d2r-esr-character` of its own, one record `key: 'last'` with the raw `.d2s` bytes
-(re-parsed on every visit, as the stash does) and the file meta. Of the sidecar only the outcome is kept (`sidecar`: the verified ESR
-version or why it was not used). **Clear** deletes the record. `CharacterProvider` sits in `StashLayout` under `StashProvider`, so the
-character survives moving between the My Stash tabs (`useCharacter()`, the shape of `useStash()`).
+**Several characters** (`db/characterDb.ts`, `engine/characterList.ts`, `hooks/CharacterProvider.tsx`): Dexie database
+`d2r-esr-character`, table `characters`, one record per **character name** (the key, from the parse) with the raw `.d2s`
+bytes and the file meta (file name, size, last modified, uploaded at, the sidecar outcome). Uploading a save of a stored
+character replaces it. Every stored save is re-parsed on each visit; one the current parser rejects stays listed with its
+error and a "Forget this save" button. Migration: version 1 kept one record (`files`, key `'last'`); version 2 copies it into
+`characters` keyed by the name read from the save header at 0x12B (`saveNameOf`; the file name stem when the header has none),
+version 3 drops `files` (`characterDb.test.ts` opens a real version 1 database). The shown character is remembered in
+localStorage (`myCharacter.selected`, `db/characterSelection.ts`); without it, or once it is removed, the most recently
+uploaded one is shown. The provider lives in `CharacterScreen` (the My Stash layout no longer has it).
 
-**What it shows** (`engine/characterSheet.ts`, `engine/characterItems.ts`): header (name, class, level, last saved from the save
-header); base attributes (`baseAttributes`, floored: life, mana and stamina are fixed-point); hard skill points grouped by the class
-tree's tabs (`skills.json`, matched by name; names from `itemtext.json` `skills`; all 11 real saves resolve) and the assigned hotkeys;
-gear by slot, weapon set I and II apart with the active set marked; the mercenary's gear (only worn slots); then Charm Inventory,
-inventory, belt, Horadric Cube and personal stash, sorted by the grid. Items no list holds (cursor, unknown place), corpse items and the
-golem item get sections of their own only when present. Every item is the All Items tooltip card (`ItemCard`, built with
-`buildItemRow`), with `where` in the footer instead of a stash page.
+**Upload** (`CharacterUpload` is the empty state; `CharacterSwitcher` the toolbar once a character is stored): file picker and
+drag and drop take any number of `.d2s` at once, each optionally with its `.d2rl` (`pickCharacterFiles`). A sidecar is matched to
+its save by the recorded hash among all picked `.d2rl` (`resolveSidecar`); a rejection is reported only for the `.d2rl` named like
+the save when several saves came together (`relatedSidecars`; with one save, any `.d2rl` as before). A file that fails gets its own
+error panel; the others are still stored, and the first good one is shown. A `.d2rl` alone or a stash file is an error for the
+upload as a whole; stored characters never change on a failure. The switcher lists every stored character (name, class, level,
+last saved, upload date), and has Upload saves, Remove (the shown one) and Clear all (with two or more), both confirmed.
+
+**Overview** (`components/tabs/OverviewTab.tsx`, `engine/characterSheet.ts` `overviewGroups`): header (name, class, level, last saved)
+with **Create a build from this character**; the banners (`engine/notices.ts` `characterNotices`); base attributes; base life, mana
+and stamina next to the values **when saved** (the current values the game wrote, gear and buffs included: SpinToWin 10,219 life
+on 1,189 base); level, experience, unspent stat and skill points; gold on the character and in the stash; the computed totals
+placeholder (`ComputedSheetPanel`, prop `totals`); an "at a glance" line per other tab (`characterGlance`).
+
+**Create a build from this character** (`components/CreateBuildAction.tsx`, `engine/buildHandoff.ts`): navigates to `/builds/new`
+with `{ characterSave: { bytes, fileName, sidecarVersion } }` as router state; `CreateBuildScreen` reads it once
+(`readSaveHandoff`), hands it to `SaveFileCard` (`initialSave`), which runs the normal "Start from a save file" flow as if the file
+had been picked, and clears the history state once the form shows (a reload does not import again). The verified `.d2rl` version
+reaches the import panel (`SaveImportReport.sidecarVersion`), which then warns about a different ESR version instead of guessing
+from the date. Hidden without the Supabase backend; signed out, it opens the sign-in dialog. `/builds/new` alone is unchanged.
+
+**Gear** (`components/tabs/GearTab.tsx`, `components/gear/`): a paperdoll (`GearDoll`, the in-game arrangement as CSS grid areas) of
+`ItemTile`s (icon, name in its quality colour, slot); a Set I / Set II switch (the active set marked and shown first). A tile is a
+button: the full All Items tooltip card (`ItemCard`: name links, skill and modifier peeks) shows in a sticky side column on wide
+pages and under the section on narrow ones; the active weapon is selected first. Then the Charm Inventory as tiles, the
+Ascendancy (the stone in the Charm Inventory, matched to the Ascendancies page by `ascendancyOfStone`, shown with the builds'
+`AscendancyDisplay`; a stone elsewhere is named as doing nothing), and the mercenary's doll (head, body armor and hands, other slots
+when filled) with a Dead badge.
+
+**Skills** (`components/tabs/SkillsTab.tsx`): the class tree with icons and hard-point badges (the builds' read-only
+`BuildSkillTrees`), the hard points as a table, and the mouse-button skills and hotkeys with icons and Skills page links. Saved
+`skills.txt` rows map to `skills.json` ids through `lootfilter.json` `skillNames` (`hardSkillPoints`, `hotkeyRows`,
+`handSkillRows`), the build draft's table, so no matching by name; lootfilter.json is fetched only on this tab.
+
+**Combat** (`components/tabs/CombatTab.tsx`): an empty state until the monster hit-chance chart arrives.
+
+**Storage** (`components/tabs/StorageTab.tsx`, `engine/characterStorage.ts`): inventory, belt, Horadric Cube, personal stash, then
+other / corpse / golem items when present, each a collapsible `<details>` of item cards, with the All Items search
+(`parseItemSearch` / `matchesItemSearch`: words, item type words, "phrases") over names and stat text.
+
+**Progress** (`components/tabs/ProgressTab.tsx`, `engine/characterProgress.ts`): counters from the `gf` stats (163 `kill_base`
+kills, 237 respec points, 235 Relics of Knowledge used, 926 unspent specialization points), the learned perks of each
+specialization tree (stats 927-990 via `specializations.json` `perks[].stat`, linked to `/specializations?tree=&perk=`; unlocked when
+a perk is learned or 942 `specializationtokencap` is set, INFERRED from one save), and the Kill Ledger (`led`) and Ascendancy
+Stone (`ast`) cards with where they are and links to `/kill-ledger` and `/ascendancies?search=`.
+
+**Seams for the later passes**: `ComputedSheetPanel` `totals?: ReactNode` (Overview, `components/ComputedSheetPanel.tsx`);
+`SkillsTab` `itemSkillBonus?: (skillId) => number` (adds From items and Level columns); `CombatTab({ character })` whose body the
+chart replaces.
 
 **Banners, never blocks** (`engine/notices.ts`): save age from `assessSaveAge` (the exact version with a matching `.d2rl`, otherwise
 "may be older than ESR x" from the date); an unused `.d2rl`; `incomplete !== null` names the part that could not be read and what stays
@@ -185,7 +233,7 @@ merc level.
 
 Known gaps: the game's "+50% Damage to Undead" line on blunt weapons is not shown (the type data has `blun`, but itemtext.json has no
 string for it and how it merges with the item's own undead damage stat is unverified); per-level defense is not confirmed in game the way
-Thunder Star's damage is; stat filter values (`statValues`) are not levelled, the page has no filters.
+Thunder Star's damage is; stat filter values (`statValues`) are not levelled; the page has no stat filters.
 
 ## Start a build from a save
 

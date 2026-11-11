@@ -2,8 +2,9 @@
 
 The player uploads their ESR shared stash file and the app reads it in the browser. The first page is **Ancient
 Coupons**: the coupons the stash holds, the unique each makes, how many are needed, the Wild Card alternative and where
-every coupon lies. **All Items** ([STASH-ITEMS.md](./STASH-ITEMS.md)) lists every item on the stash pages. **My Character**
-([CHARACTER-SAVE.md](./CHARACTER-SAVE.md#my-character-page)) reads a character save (`.d2s`).
+every coupon lies. **All Items** ([STASH-ITEMS.md](./STASH-ITEMS.md)) lists every item on the stash pages. Character saves
+(`.d2s`) have a page of their own since 2026-11, **My Character** at `/character` ([CHARACTER-SAVE.md](./CHARACTER-SAVE.md#my-character-page));
+the overview links it and `/stash/character` redirects there.
 More stash pages can be added on the same upload (see "Adding a stash page").
 
 Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/`, `screens/`). Data: `stash.json`
@@ -15,23 +16,23 @@ Code: `src/features/stash/` (`parser/`, `db/`, `engine/`, `hooks/`, `components/
   and the parser needs only the static `stash.json`.
 - The last file that parsed is remembered in this browser only (IndexedDB `d2r-esr-stash`, see "Storage"), so the page
   works on the next visit without a new upload. **Clear** deletes it; the upload card and the file bar say so.
-- The My Character save is handled the same way, in its own database (`d2r-esr-character`, last character only, with its own
-  **Clear**).
+- My Character's saves are handled the same way, in their own database (`d2r-esr-character`, one record per character, with
+  their own Remove and Clear all).
 - The parse error details shown to the user (section, item index, item code, bit offsets) contain no item data, so they
   can be pasted into a bug report.
 
 ## Routes
 
-| Route              | Screen               | Contents                                                                                                            |
-| ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `/stash`           | `StashLayout`        | Title, loads `stash.json`, shared upload state (the header's page row links the pages)                              |
-| `/stash` (index)   | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each                         |
-| `/stash/coupons`   | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded                                      |
-| `/stash/items`     | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md))                                       |
-| `/stash/character` | `CharacterScreen`    | My Character: a character save's sheet, gear and items ([CHARACTER-SAVE.md](./CHARACTER-SAVE.md#my-character-page)) |
+| Route              | Screen               | Contents                                                                                              |
+| ------------------ | -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `/stash`           | `StashLayout`        | Title, loads `stash.json`, shared upload state (the header's page row links the pages)                |
+| `/stash` (index)   | `StashHomeScreen`    | The upload card (or the loaded file bar), then the stash pages with a one-line summary each           |
+| `/stash/coupons`   | `StashCouponsScreen` | The Ancient Coupons table; the upload card in its place until a file is loaded                        |
+| `/stash/items`     | `StashItemsScreen`   | All Items: every item on the stash pages ([STASH-ITEMS.md](./STASH-ITEMS.md))                         |
+| `/stash/character` | (redirect)           | To `/character`, My Character's own page ([CHARACTER-SAVE.md](./CHARACTER-SAVE.md#my-character-page)) |
 
 Header: the **My Stash** group (`navConfig.ts`): Overview (`/stash`, `exact`, so it is not highlighted on its
-sub-pages), Ancient Coupons, All Items and My Character. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without
+sub-pages), Ancient Coupons and All Items; My Character is a top-level entry right after the group. `/stash` is a static-bundle route (`staticBundleRoutes.ts`): it renders without
 waiting for the HTM data sync.
 
 ## Upload
@@ -67,7 +68,7 @@ bytes (`ArrayBuffer`), `name`, `size`, `lastModified` and `uploadedAt`.
 
 ## Shared state (for every stash page)
 
-`StashLayout` loads `stash.json` (`useGameData`) and renders `StashProvider` (and `CharacterProvider`, for the My Character page) around the child routes, so the upload
+`StashLayout` loads `stash.json` (`useGameData`) and renders `StashProvider` around the child routes, so the upload
 survives moving between the pages. `useStash()` (`hooks/useStash.ts`) gives:
 
 - `state`: `loading` (reading IndexedDB) / `empty` / `ready` (`file` meta + parsed `stash: StashFile`) / `error`

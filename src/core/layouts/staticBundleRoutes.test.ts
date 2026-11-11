@@ -32,6 +32,7 @@ describe('isStaticBundlePath', () => {
     '/stash/coupons',
     '/stash/items',
     '/stash/character',
+    '/character',
     '/terror-zones',
     '/modifiers',
     '/elixirs',
@@ -43,6 +44,7 @@ describe('isStaticBundlePath', () => {
     expect(isStaticBundlePath('/guides')).toBe(false);
     expect(isStaticBundlePath('/loot-filtersx')).toBe(false);
     expect(isStaticBundlePath('/setsx')).toBe(false);
+    expect(isStaticBundlePath('/characters')).toBe(false);
     expect(isStaticBundlePath('/skills')).toBe(false);
     expect(isStaticBundlePath('/enhanced')).toBe(false);
   });
