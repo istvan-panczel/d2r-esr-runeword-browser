@@ -89,7 +89,7 @@ export const CONTENT_KINDS: Readonly<Partial<Record<string, ContentKinds>>> = {
   crossbows: {
     kinds: [
       'stat-item-crossbowpassive',
-      'stat-crossbowreloadspeed',
+      // crossbowreloadspeed (299): no item carries it since ESR 3.3.04, only the Ironbolt ascendancy (plugin config)
       'stat-totalcrossbowbolts',
       'stat-totalcrossbowdamage',
       'stat-crossbowreloadspeedlimit',
