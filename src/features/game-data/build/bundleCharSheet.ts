@@ -25,8 +25,8 @@
  *   auras stay in `skills`
  */
 import type {
-  CharSheetAscendancies,
   CharSheetAscendancy,
+  CharSheetAscendancyRules,
   CharSheetArmor,
   CharSheetBundle,
   CharSheetClass,
@@ -273,7 +273,7 @@ export function ascendancyMods(text: string | null): AscendancyMod[] {
   });
 }
 
-function readAscendancies(input: CharSheetInput, statNames: readonly string[], warnings: string[]): CharSheetAscendancies | null {
+function readAscendancies(input: CharSheetInput, statNames: readonly string[], warnings: string[]): { rules: CharSheetAscendancyRules; list: CharSheetAscendancy[] } | null {
   const text = input.configs.ascendancies;
   if (text === null) {
     warnings.push('charsheet: celestialrayone.ascendancies.toml missing, no ascendancy bonuses');
@@ -353,7 +353,7 @@ function readAscendancies(input: CharSheetInput, statNames: readonly string[], w
   const item = values.get('ascendancies.legacy_stone_item');
   if (typeof item !== 'string' || item === '') throw new Error('charsheet: ascendancies legacy_stone_item missing');
 
-  return {
+  const rules: CharSheetAscendancyRules = {
     stats,
     soulstoneCap: num('ascendancies.soulstone_cap'),
     soulstoneTier: num('ascendancies.soulstone_tier'),
@@ -365,8 +365,8 @@ function readAscendancies(input: CharSheetInput, statNames: readonly string[], w
       soulstoneStat: num('ascendancies.legacy_soulstone_stat'),
       lichKingStat: num('ascendancies.legacy_lich_king_stat'),
     },
-    list,
   };
+  return { rules, list };
 }
 
 function readClasses(charstats: TsvTable): CharSheetClass[] {
@@ -640,6 +640,7 @@ export function buildCharSheetBundle(input: CharSheetInput): BuildResult<CharShe
       );
 
   const { setItems, sets } = readSets(input, warnings);
+  const ascendancies = readAscendancies(input, statNames, warnings);
   return {
     bundle: {
       statNames,
@@ -658,7 +659,8 @@ export function buildCharSheetBundle(input: CharSheetInput): BuildResult<CharShe
         stats: tree.perks.map((perk) => perk.stat),
       })),
       rules: readRules(input, statIds, warnings),
-      ascendancies: readAscendancies(input, statNames, warnings),
+      ascendancies: ascendancies?.list ?? [],
+      ascendancyRules: ascendancies?.rules ?? null,
     },
     warnings,
   };

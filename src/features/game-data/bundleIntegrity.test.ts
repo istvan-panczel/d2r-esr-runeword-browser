@@ -2318,11 +2318,11 @@ describe('committed combat bundle (ESR 3.3.03)', () => {
 // --- charsheet.json ascendancies ----------------------------------------------------------------------------------
 
 describe('committed charsheet bundle: ascendancies (ESR 3.3.04, celestialrayone.ascendancies.toml)', () => {
-  const { ascendancies, skills: sheetSkills, statNames } = JSON.parse(charSheetText) as CharSheetBundle;
+  const { ascendancies, ascendancyRules: rules, skills: sheetSkills, statNames } = JSON.parse(charSheetText) as CharSheetBundle;
 
   it('reads 15 ascendancies with 5 tiers each, in window order (the saved index), with no charsheet warning', () => {
     expect(manifest.warnings.filter((warning) => warning.startsWith('charsheet:'))).toEqual([]);
-    expect(ascendancies?.list.map((entry) => [entry.index, entry.name, entry.legacyUnique])).toEqual([
+    expect(ascendancies.map((entry) => [entry.index, entry.name, entry.legacyUnique])).toEqual([
       [1, 'Battlemage', 1100],
       [2, 'Blademaster', 1102],
       [3, 'Arcanist', 1105],
@@ -2339,23 +2339,22 @@ describe('committed charsheet bundle: ascendancies (ESR 3.3.04, celestialrayone.
       [14, 'Mana Warden', 1113],
       [15, 'Berserker', 1114],
     ]);
-    for (const entry of ascendancies?.list ?? []) {
+    for (const entry of ascendancies) {
       expect(entry.tiers).toHaveLength(5);
       // class-skills: +1 at tiers 1 and 2, +3 at tier 5
       expect(entry.tiers.map((tier) => tier.classSkills)).toEqual([1, 1, 0, 0, 3]);
     }
-    expect(ascendancies?.stats).toEqual({ ascendancy: 1064, progress: 1065, soulstones: 1066, orb: 1067 });
-    expect([ascendancies?.soulstoneCap, ascendancies?.soulstoneTier]).toEqual([10, 4]);
-    expect(ascendancies?.classSkills.map(([id, cls]) => [statNames[id], cls])).toEqual(
+    expect(rules?.stats).toEqual({ ascendancy: 1064, progress: 1065, soulstones: 1066, orb: 1067 });
+    expect([rules?.soulstoneCap, rules?.soulstoneTier]).toEqual([10, 4]);
+    expect(rules?.classSkills.map(([id, cls]) => [statNames[id], cls])).toEqual(
       [0, 1, 2, 3, 4, 5, 6, 7].map((cls) => ['item_addclassskills', cls])
     );
-    expect(ascendancies?.lichKing.map(([id, param, value]) => [statNames[id], param, value])).toEqual([['lichkingbonus', 0, 1]]);
-    expect(ascendancies?.legacy).toEqual({ item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 });
+    expect(rules?.lichKing.map(([id, param, value]) => [statNames[id], param, value])).toEqual([['lichkingbonus', 0, 1]]);
+    expect(rules?.legacy).toEqual({ item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 });
   });
 
   it('expands Blademaster to the stats its old stone carried (tier 4: 40-50 damage and the life leech aura 1510)', () => {
-    const named = (index: number) =>
-      ascendancies?.list[1]?.tiers[index]?.stats.map(([id, param, value]) => [statNames[id], param, value]) ?? [];
+    const named = (index: number) => ascendancies[1]?.tiers[index]?.stats.map(([id, param, value]) => [statNames[id], param, value]) ?? [];
     expect(named(0)).toEqual([
       ['strength', 0, 60],
       ['dexterity', 0, 60],
@@ -2378,7 +2377,7 @@ describe('committed charsheet bundle: ascendancies (ESR 3.3.04, celestialrayone.
     const auras = [...Array.from({ length: 15 }, (_, i) => 787 + i), ...Array.from({ length: 15 }, (_, i) => 1508 + i)];
     expect(auras.filter((id) => !kept.has(id))).toEqual([1520]);
     const named = new Set(
-      (ascendancies?.list ?? []).flatMap((entry) =>
+      ascendancies.flatMap((entry) =>
         entry.tiers.flatMap((tier) => tier.stats.filter(([id]) => statNames[id] === 'item_aura').map(([, skill]) => skill))
       )
     );

@@ -362,48 +362,49 @@ describe('buildCharSheetBundle: ascendancies', () => {
   it('reads the saved stats, the class skill stats, the Lich King bonus and each tier as saved stats, in window order', () => {
     const { bundle, warnings } = buildCharSheetBundle(withToml(ASCENDANCIES));
     expect(warnings).toEqual([]);
-    expect(bundle.ascendancies).toEqual({
+    expect(bundle.ascendancyRules).toEqual({
       stats: { ascendancy: 10, progress: 11, soulstones: 12, orb: 13 },
       soulstoneCap: 10,
       soulstoneTier: 4,
       classSkills: CLASS_PROPERTIES.map((_, cls) => [14, cls]),
       lichKing: [[8, 0, 1]],
       legacy: { item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 },
-      list: [
-        {
-          index: 1,
-          name: 'Battlemage',
-          legacyUnique: 1100,
-          tiers: [
-            { classSkills: 1, stats: [[0, 0, 60]] },
-            { classSkills: 1, stats: [] },
-            { classSkills: 0, stats: [[9, 787, 1]] },
-            { classSkills: 0, stats: [[8, 0, 50]] },
-            // a property group is expanded (dodge-group → dodge 3)
-            { classSkills: 3, stats: [[8, 0, 3]] },
-          ],
-        },
-        {
-          index: 2,
-          name: 'Blademaster',
-          legacyUnique: 1102,
-          tiers: [
-            { classSkills: 0, stats: [] },
-            { classSkills: 0, stats: [] },
-            { classSkills: 0, stats: [[9, 789, 1]] },
-            { classSkills: 0, stats: [] },
-            { classSkills: 0, stats: [] },
-          ],
-        },
-      ],
     });
+    expect(bundle.ascendancies).toEqual([
+      {
+        index: 1,
+        name: 'Battlemage',
+        legacyUnique: 1100,
+        tiers: [
+          { classSkills: 1, stats: [[0, 0, 60]] },
+          { classSkills: 1, stats: [] },
+          { classSkills: 0, stats: [[9, 787, 1]] },
+          { classSkills: 0, stats: [[8, 0, 50]] },
+          // a property group is expanded (dodge-group → dodge 3)
+          { classSkills: 3, stats: [[8, 0, 3]] },
+        ],
+      },
+      {
+        index: 2,
+        name: 'Blademaster',
+        legacyUnique: 1102,
+        tiers: [
+          { classSkills: 0, stats: [] },
+          { classSkills: 0, stats: [] },
+          { classSkills: 0, stats: [[9, 789, 1]] },
+          { classSkills: 0, stats: [] },
+          { classSkills: 0, stats: [] },
+        ],
+      },
+    ]);
   });
 
-  it('is null with a warning without the file, null when switched off, and throws on a shape it does not know', () => {
+  it('has none, with a warning, without the file, none when switched off, and throws on a shape it does not know', () => {
     const missing = buildCharSheetBundle(withToml(null));
-    expect(missing.bundle.ascendancies).toBeNull();
+    expect(missing.bundle.ascendancyRules).toBeNull();
+    expect(missing.bundle.ascendancies).toEqual([]);
     expect(missing.warnings).toContain('charsheet: celestialrayone.ascendancies.toml missing, no ascendancy bonuses');
-    expect(buildCharSheetBundle(withToml(ASCENDANCIES.replace('enabled = true', 'enabled = false'))).bundle.ascendancies).toBeNull();
+    expect(buildCharSheetBundle(withToml(ASCENDANCIES.replace('enabled = true', 'enabled = false'))).bundle.ascendancyRules).toBeNull();
     expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.replace('ascendancy_stat = 10', 'ascendancy_stat = 11')))).toThrow(
       /ascendancy_stat = 11 is not ascendancy/
     );

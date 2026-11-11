@@ -212,7 +212,7 @@ function ascendancyOf(file: CharacterFile, data: BuildDraftData, sheetData: Shee
   let saved: SheetAscendancy | null = null;
   // Like the stats block, a problem here never blocks the import: the stone's name is the fallback
   try {
-    saved = sheetData === null ? null : readAscendancy(file, sheetData.bundle.ascendancies);
+    saved = sheetData === null ? null : readAscendancy(file, sheetData.ascendancies);
   } catch (error) {
     console.error('Could not read the ascendancy from the save:', error);
   }

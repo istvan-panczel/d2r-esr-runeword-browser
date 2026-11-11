@@ -158,7 +158,7 @@ export function itemRequirements(item: CharacterItem, data: SheetData): { str: n
 export function setupItems(character: CharacterFile, data: SheetData): ItemSetup {
   const warnings: string[] = [];
   const weaponSet: 1 | 2 = character.activeWeapon === 1 ? 2 : 1;
-  const ascendancy = readAscendancy(character, data.bundle.ascendancies);
+  const ascendancy = readAscendancy(character, data.ascendancies);
   const listed = activeItems(character, data, warnings, ascendancy?.stoneItem);
   const valShift = (id: number) => data.valShift(id);
   const layered = new Set([data.stat.item_singleskill, data.stat.item_nonclassskill, data.stat.item_aura]);
@@ -279,8 +279,8 @@ export function setupItems(character: CharacterFile, data: SheetData): ItemSetup
   }
 
   // The ascendancy plugin's bonuses (rebuilt on the host every game, never saved)
-  if (ascendancy !== null && data.bundle.ascendancies !== null) {
-    const saved = ascendancyStats(ascendancy, character.classId, data.bundle.ascendancies);
+  if (ascendancy !== null && data.ascendancies !== null) {
+    const saved = ascendancyStats(ascendancy, character.classId, data.ascendancies);
     if (saved.length > 0)
       contributions.push({ kind: 'ascendancy', label: ascendancyLabel(ascendancy), stats: fromSaved(saved, valShift, layered) });
     else if (ascendancy.index > 0 && ascendancy.name === null)

@@ -2506,16 +2506,18 @@ export interface CharSheetBundle {
   /** Specialisation trees: the stat of each perk (a perk is learned while the character's own value is above 0) */
   specializations: { slug: string; name: string; stats: number[] }[];
   rules: CharSheetRules;
-  /** The ascendancy panel (celestialrayone.ascendancies.toml, ESR 3.3.04+); null when the plugin config is missing or off */
-  ascendancies: CharSheetAscendancies | null;
+  /** The ascendancy panel's ascendancies in window order (entry i is saved as i + 1); [] without the plugin config */
+  ascendancies: CharSheetAscendancy[];
+  /** The ascendancy panel's rules (celestialrayone.ascendancies.toml, ESR 3.3.04+); null when the config is missing or off */
+  ascendancyRules: CharSheetAscendancyRules | null;
 }
 
 /**
- * The ascendancy plugin's data. A save holds only four character stats (`stats`): the ascendancy (1-based index into
- * `list`, 0 = none), the progress bits (0–4 = tiers 1–5, 5 = the Lich King bonus, 6 = ascended once), the soulstones
- * and the orb. The plugin applies the unlocked tiers' properties on the host every game; nothing of them is saved.
+ * The ascendancy plugin's rules. A save holds only four character stats (`stats`): the ascendancy (1-based index into
+ * `ascendancies`, 0 = none), the progress bits (0–4 = tiers 1–5, 5 = the Lich King bonus, 6 = ascended once), the
+ * soulstones and the orb. The plugin applies the unlocked tiers' properties on the host every game; nothing is saved.
  */
-export interface CharSheetAscendancies {
+export interface CharSheetAscendancyRules {
   /** itemstatcost.txt ids of the saved character stats */
   stats: { ascendancy: number; progress: number; soulstones: number; orb: number };
   /** Primordial Soulstones that grant `soulstoneTier` */
@@ -2527,7 +2529,10 @@ export interface CharSheetAscendancies {
   lichKing: ItemTextSavedStat[];
   /** Old Ascendancy Stones, converted by the plugin on login: the item, the stone's stats for tiers 2–5, soulstones, Lich King */
   legacy: { item: string; tierStats: number[]; soulstoneStat: number; lichKingStat: number };
-  /** In window order: entry i is saved as i + 1 */
+}
+
+/** The rules with the ascendancies (`list` = `CharSheetBundle.ascendancies`): what the sheet engine reads */
+export interface CharSheetAscendancies extends CharSheetAscendancyRules {
   list: CharSheetAscendancy[];
 }
 

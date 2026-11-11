@@ -219,7 +219,7 @@ describe('computeCharacterSheet: the ascendancy (committed charsheet.json)', () 
   });
 
   it('uses the stat ids the committed bundle names', () => {
-    expect(charSheetBundle.ascendancies?.stats).toEqual({
+    expect(charSheetBundle.ascendancyRules?.stats).toEqual({
       ascendancy: statId('ascendancy'),
       progress: statId('ascendancy_progress'),
       soulstones: statId('ascendancy_soulstones'),
