@@ -558,7 +558,7 @@ describe('computeCharacterSheet: facts', () => {
     expect(facts.mercenary).toMatchObject({ name: 'Rogue Scout', subtype: 'Physical', level: 15, dead: true });
   });
 
-  it('reads the Kill Ledger and Ascendancy tiers from active items', () => {
+  it('reads the Kill Ledger tiers from active items and the ascendancy tiers from an old stone (ascendancy.test.ts: the saved stats)', () => {
     const character = testCharacter({
       items: [
         item('led', charmAt(0, 0), [
@@ -566,10 +566,15 @@ describe('computeCharacterSheet: facts', () => {
           ['kill_ledger_tier_2', 1],
           ['kill_ledger_harbinger', 1],
         ]),
-        item('ast', charmAt(1, 0), [
-          ['ascendancy_tier_2', 1],
-          ['ascendancy_tier_3', 1],
-        ]),
+        item(
+          'ast',
+          charmAt(1, 0),
+          [
+            ['ascendancy_tier_2', 1],
+            ['ascendancy_tier_3', 1],
+          ],
+          { uniqueId: 1102, quality: 7 }
+        ),
       ],
     });
     expect(computeCharacterSheet(character, data).facts).toMatchObject({

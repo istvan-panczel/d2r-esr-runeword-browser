@@ -19,11 +19,14 @@
  *   SpinToWin's IAS 205 leaves out the off-hand sword's 100; the per-level attack speed INFERRED alike).
  * - Set pieces worn count distinct set items: two copies of one set ring are one piece (INFERRED: D2 counts set items
  *   by their set item id).
+ * - The ascendancy (ascendancy.ts): the unlocked tiers' properties from charsheet.json `ascendancies`, read from the
+ *   saved stats or converted from an old Ascendancy Stone; the converted stone's own stats do not count.
  */
 import type { CharacterFile, CharacterItem } from '../../parser/types';
 import { requiredLevel, socketStats, REQ_PERCENT } from '@/features/stash/engine/items/baseLines';
 import { foldSecondary } from '@/features/stash/engine/items/textData';
 import type { StashStat } from '@/features/stash/parser/types';
+import { ascendancyStats, readAscendancy, tiersText, type SheetAscendancy } from './ascendancy';
 import type { SheetData } from './sheetData';
 import { addStat, entryOf, fromSaved, type Contribution, type StatMap } from './statMap';
 
@@ -49,8 +52,10 @@ export interface ItemSetup {
   offHand: ActiveItem | null;
   /** A hand item with a block value (armor.txt `block`) */
   shield: ActiveItem | null;
-  /** Item contributions (own stats, runic shares) and set bonus contributions */
+  /** Item contributions (own stats, runic shares), set bonus contributions and the ascendancy's */
   contributions: Contribution[];
+  /** The ascendancy (saved stats or an old stone); null without one */
+  ascendancy: SheetAscendancy | null;
   /** The off-hand weapon's own attack stats, kept out of the totals */
   offHandLocal: StatMap;
   warnings: string[];
@@ -95,14 +100,23 @@ function whereOf(item: CharacterItem): string {
   return location.kind;
 }
 
-/** The items that count, in save order: active equipped items, then charm inventory charms (after dedup) */
-function activeItems(character: CharacterFile, data: SheetData, warnings: string[]): { index: number; item: CharacterItem }[] {
+/**
+ * The items that count, in save order: active equipped items, then charm inventory charms (after dedup); `skip` = the
+ * Ascendancy Stone the game turns into the ascendancy
+ */
+function activeItems(
+  character: CharacterFile,
+  data: SheetData,
+  warnings: string[],
+  skip: number | undefined
+): { index: number; item: CharacterItem }[] {
   const weaponSet = character.activeWeapon === 1 ? 2 : 1;
   const groups = data.bundle.rules.charmDedup;
   const usedGroups = new Set<number>();
   const result: { index: number; item: CharacterItem }[] = [];
   character.items.player.forEach((item, index) => {
     const location = item.location;
+    if (index === skip) return;
     if (location.kind === 'equipped') {
       if (location.weaponSet === null || location.weaponSet === weaponSet) result.push({ index, item });
       return;
@@ -144,7 +158,8 @@ export function itemRequirements(item: CharacterItem, data: SheetData): { str: n
 export function setupItems(character: CharacterFile, data: SheetData): ItemSetup {
   const warnings: string[] = [];
   const weaponSet: 1 | 2 = character.activeWeapon === 1 ? 2 : 1;
-  const listed = activeItems(character, data, warnings);
+  const ascendancy = readAscendancy(character, data.bundle.ascendancies);
+  const listed = activeItems(character, data, warnings, ascendancy?.stoneItem);
   const valShift = (id: number) => data.valShift(id);
   const layered = new Set([data.stat.item_singleskill, data.stat.item_nonclassskill, data.stat.item_aura]);
   const runes = new Set(data.bundle.rules.runicInsight?.runes ?? []);
@@ -263,5 +278,24 @@ export function setupItems(character: CharacterFile, data: SheetData): ItemSetup
       });
   }
 
-  return { weaponSet, active, mainHand, offHand, shield, contributions, offHandLocal, warnings };
+  // The ascendancy plugin's bonuses (rebuilt on the host every game, never saved)
+  if (ascendancy !== null && data.bundle.ascendancies !== null) {
+    const saved = ascendancyStats(ascendancy, character.classId, data.bundle.ascendancies);
+    if (saved.length > 0)
+      contributions.push({ kind: 'ascendancy', label: ascendancyLabel(ascendancy), stats: fromSaved(saved, valShift, layered) });
+    else if (ascendancy.index > 0 && ascendancy.name === null)
+      warnings.push(
+        `The save's ascendancy ${String(ascendancy.index)} is not one this app's game data knows (a save from a newer ESR?): its bonuses are not counted`
+      );
+  }
+
+  return { weaponSet, active, mainHand, offHand, shield, contributions, ascendancy, offHandLocal, warnings };
+}
+
+/** "Blademaster ascendancy, tiers 1–4", "+ Lich King", "(from the old stone)" */
+export function ascendancyLabel(ascendancy: SheetAscendancy): string {
+  const name = ascendancy.name ?? `Ascendancy ${String(ascendancy.index)}`;
+  const lichKing = ascendancy.lichKing ? ' + Lich King' : '';
+  const stone = ascendancy.source === 'stone' ? ' (from the old stone)' : '';
+  return `${name} ascendancy, ${tiersText(ascendancy.tiers)}${lichKing}${stone}`;
 }

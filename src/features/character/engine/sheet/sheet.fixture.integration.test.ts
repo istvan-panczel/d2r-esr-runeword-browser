@@ -270,6 +270,55 @@ describe.skipIf(!present)('computed sheet vs in-game ground truth (2026-11-11)',
   });
 });
 
+const SAVE_3304 = resolve(GROUND_TRUTH, 'spintowin-3.3.04', 'SpinToWin.d2s');
+
+describe.skipIf(!existsSync(SAVE_3304))('computed sheet: an ESR 3.3.04 save (the ascendancy panel, no stone)', () => {
+  const characterData = createCharacterData(JSON.parse(readFileSync(STASH, 'utf-8')) as StashBundle);
+  const character = parseCharacter(new Uint8Array(readFileSync(SAVE_3304)), characterData);
+  const sheet = computeCharacterSheet(character, data);
+
+  it('decodes Blademaster, tiers 1–4, no Lich King, 10 soulstones, the orb used, from the saved stats (the stone is gone)', () => {
+    expect(character.incomplete).toBeNull();
+    expect(character.items.player.some((entry) => entry.code === 'ast')).toBe(false);
+    expect(sheet.facts.ascendancy).toEqual({
+      source: 'save',
+      index: 2,
+      name: 'Blademaster',
+      tiers: [1, 2, 3, 4],
+      lichKing: false,
+      ascendedOnce: true,
+      soulstones: 10,
+      soulstoneCap: 10,
+      soulstoneTier: 4,
+      orbConsumed: true,
+    });
+    expect(sheet.facts.ascendancyTier).toBe(4);
+    expect(sheet.warnings).toEqual([]);
+  });
+
+  it('gets the Blademaster tier bonuses: +2 class skills, 60 str / dex and 25%, 20 physical resist, the tier 4 life leech = physical resist', () => {
+    const fromAscendancy = (value: { sources: { kind: string; value: number; skill?: number }[] }) =>
+      value.sources.filter((source) => source.kind === 'ascendancy');
+    const label = 'Blademaster ascendancy, tiers 1–4';
+    expect(fromAscendancy(sheet.attributes.strength)).toEqual([{ kind: 'ascendancy', label, value: 60 }]);
+    expect(fromAscendancy(sheet.attributes.dexterity)).toEqual([{ kind: 'ascendancy', label, value: 60 }]);
+    // The same save without the four ascendancy stats: 2 class skills fewer
+    const ascendancyStats = new Set([1064, 1065, 1066, 1067]);
+    const without = computeCharacterSheet(
+      { ...character, attributes: character.attributes.filter((attribute) => !ascendancyStats.has(attribute.id)) },
+      data
+    );
+    expect(without.facts.ascendancy).toBeNull();
+    expect(sheet.skills.cls.value - without.skills.cls.value).toBe(2);
+    expect(fromAscendancy(without.leech.life)).toEqual([]);
+    expect(fromAscendancy(sheet.resists.physical)).toEqual([{ kind: 'ascendancy', label, value: 20 }]);
+    // Skill 1510 (Blademaster Ascendancy Tier 4): life leech = the uncapped physical resist, as on the old stone
+    const leech = fromAscendancy(sheet.leech.life).find((source) => source.skill === 1510);
+    expect(leech?.value).toBe(sheet.resists.physical.raw);
+    expect(leech?.value).toBeGreaterThan(50);
+  });
+});
+
 const saves = existsSync(FIXTURES)
   ? [
       ...readdirSync(FIXTURES).filter((file) => file.endsWith('.d2s')),

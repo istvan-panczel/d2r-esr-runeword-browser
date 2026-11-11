@@ -486,6 +486,7 @@ const KIND_LABELS: Readonly<Record<SheetSourceKind, string>> = {
   base: 'Save',
   item: 'Item',
   set: 'Set bonus',
+  ascendancy: 'Ascendancy',
   runic: 'Runic Insight',
   quest: 'Quest',
   passive: 'Passive skill',
