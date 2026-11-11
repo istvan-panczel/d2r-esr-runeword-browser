@@ -695,6 +695,7 @@ function sheetOf(character: CharacterFile, data: SheetData, c: Computed, difficu
       crushingBlow: plain(data, c, 'item_crushingblow'),
       openWounds: plain(data, c, 'item_openwounds', 'inferred'),
       targetDefense: plain(data, c, 'item_fractionaltargetac'),
+      ignoreTargetDefense: plain(data, c, 'item_ignoretargetac'),
       offHand:
         off === null
           ? null

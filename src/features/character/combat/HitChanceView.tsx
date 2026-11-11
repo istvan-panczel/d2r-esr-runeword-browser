@@ -14,11 +14,13 @@ import {
   COMBAT_KINDS,
   DIFFICULTY_NAMES,
   buildCombatSections,
+  editedFor,
   prepareCombatData,
   type CombatKind,
   type CombatPlayer,
   type CombatRow,
   type CombatSection,
+  type InputEdit as Edit,
 } from './combatRows';
 import type { CombatDifficulty } from './monsterStats';
 
@@ -31,6 +33,9 @@ export interface HitChanceViewProps {
   readonly ignoreTargetDefense?: boolean;
   /** "−x% Target Defense" as a positive number */
   readonly targetDefenseReductionPercent?: number;
+  /** The difficulty shown, when the page owns it (the My Character page's chosen difficulty); default Hell, local */
+  readonly difficulty?: CombatDifficulty;
+  readonly onDifficultyChange?: (difficulty: CombatDifficulty) => void;
 }
 
 const COMBAT_FILES = ['combat'] as const;
@@ -62,16 +67,38 @@ function parseInput(text: string, max: number): number | undefined {
 }
 
 const inputText = (value: number | undefined) => (value === undefined ? '' : String(value));
+
 const rowsByKey = (sections: readonly CombatSection[]) =>
   new Map(sections.flatMap((section) => section.groups.flatMap((group) => group.rows.map((row) => [row.key, row] as const))));
 
 function HitChanceContent({ bundle, ...props }: HitChanceViewProps & { readonly bundle: CombatBundle }) {
-  // Edited inputs; null = follow the prop (the character's value)
-  const [arText, setArText] = useState<string | null>(null);
-  const [defText, setDefText] = useState<string | null>(null);
-  const [reductionText, setReductionText] = useState<string | null>(null);
-  const [ignoreDefense, setIgnoreDefense] = useState<boolean | null>(null);
-  const [difficulty, setDifficulty] = useState<CombatDifficulty>(2);
+  // Edited inputs; null = follow the prop (the character's value). An edit lasts while its prop stays the same.
+  const [arEdit, setArEdit] = useState<Edit<string> | null>(null);
+  const [defEdit, setDefEdit] = useState<Edit<string> | null>(null);
+  const [reductionEdit, setReductionEdit] = useState<Edit<string> | null>(null);
+  const [ignoreEdit, setIgnoreEdit] = useState<Edit<boolean> | null>(null);
+  const arText = editedFor(arEdit, props.attackRating);
+  const defText = editedFor(defEdit, props.defense);
+  const reductionText = editedFor(reductionEdit, props.targetDefenseReductionPercent);
+  const ignoreDefense = editedFor(ignoreEdit, props.ignoreTargetDefense);
+  const setArText = (value: string) => {
+    setArEdit({ value, over: props.attackRating });
+  };
+  const setDefText = (value: string) => {
+    setDefEdit({ value, over: props.defense });
+  };
+  const setReductionText = (value: string) => {
+    setReductionEdit({ value, over: props.targetDefenseReductionPercent });
+  };
+  const setIgnoreDefense = (value: boolean) => {
+    setIgnoreEdit({ value, over: props.ignoreTargetDefense });
+  };
+  const [ownDifficulty, setOwnDifficulty] = useState<CombatDifficulty>(2);
+  const difficulty = props.difficulty ?? ownDifficulty;
+  const setDifficulty = (value: CombatDifficulty) => {
+    setOwnDifficulty(value);
+    props.onDifficultyChange?.(value);
+  };
   const [kind, setKind] = useState<CombatKind>('regular');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -105,10 +132,10 @@ function HitChanceContent({ bundle, ...props }: HitChanceViewProps & { readonly 
       detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const reset = () => {
-    setArText(null);
-    setDefText(null);
-    setReductionText(null);
-    setIgnoreDefense(null);
+    setArEdit(null);
+    setDefEdit(null);
+    setReductionEdit(null);
+    setIgnoreEdit(null);
   };
 
   return (

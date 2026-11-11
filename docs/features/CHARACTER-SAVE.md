@@ -146,8 +146,8 @@ same-width renumbered row; none happened from 3.2.10 to 3.3.02 (and the loader w
 
 `/character` (`src/features/character/`: `screens/CharacterScreen.tsx`, `components/` (`tabs/`, `gear/`), `engine/`, `hooks/`, `db/`),
 the first page of the My Data menu group, above the stash pages (until 2026-11 it was the My Stash page `/stash/character`, which now
-redirects here). Parsed in the browser only, never sent anywhere; no computed totals yet (no final resists or life, no Tier 1
-check, no monster data), so base values are labelled as base.
+redirects here). Parsed in the browser only, never sent anywhere. The tabs show the [computed sheet](#computed-sheet) through
+one provider (see "The sheet on the page" below); the stored base values are labelled as base.
 
 **Tabs** (`engine/characterTabs.ts`, `hooks/useCharacterTab.ts`, `components/CharacterTabBar.tsx`): Overview, Gear, Skills, Combat,
 Storage, Progress, a `role="tablist"` of `SUBTAB_*` buttons in a `ToolbarCard`. The tab is `?tab=` (`gear`, `skills`, `combat`,
@@ -172,8 +172,56 @@ error panel; the others are still stored, and the first good one is shown. A `.d
 upload as a whole; stored characters never change on a failure. The switcher lists every stored character (name, class, level,
 last saved, upload date), and has Upload saves, Remove (the shown one) and Clear all (with two or more), both confirmed.
 
-**Overview** (`components/tabs/OverviewTab.tsx`, `engine/characterSheet.ts` `overviewGroups`): header (name, class, level, last saved)
-with **Create a build from this character**; the banners (`engine/notices.ts` `characterNotices`); base attributes; base life, mana
+**Overview** (`components/tabs/OverviewTab.tsx`, `components/overview/`, view model `engine/sheetView.ts`): header (name, level,
+class, difficulty and act, last saved) with **Copy as text** and **Create a build from this character**; the banners
+(`engine/notices.ts` `characterNotices`); then the sheet (`OverviewSheet`):
+
+- **What is counted** (`SheetIntro`): an _Unbuffed_ label (or the amber _Includes buffs: not yet checked in game_ badge), the
+  weapon set and the difficulty of the resists; a plain sentence: idle at full life, active weapon set, Charm Inventory, set
+  bonuses, passives and item auras; never shrines, elixirs, potions, charges, states like Whirlwind or mercenary auras; the two
+  markers explained; the engine's `warnings` in a collapsed "notes from the calculation".
+- **Life, mana, stamina** tiles (`poolRows`): the computed maximum, and "When saved" (the save's current value) as a cross-check;
+  a saved value above the computed (unbuffed) maximum says a buff or a shape-shift was likely active when the game saved.
+- **Attributes**: base (the save), bonus and total.
+- **Resistances** (`ResistMeters`, `resistReadouts`): a Normal / Nightmare / Hell switch (default and `*`: the save's
+  difficulty); per resist the shown value, a bar from 0 to 95 with a tick at the cap, the gap to the cap dashed, and the state in
+  words with an icon (over the cap by N, at the cap, N below the cap; below zero adds a warning icon). Colours are the dataviz
+  status palette (good / warning / critical), never the only signal. "Show sum, penalty and cap" adds the raw read-out to
+  every row; each row's popover has it too. Magic and physical included.
+- **Defense** (defense, damage and magic damage reduced, dodge / avoid / evade, block only when the engine returns one, absorbs
+  above 0), **Offense** (attack rating per mouse-button skill, main / off hand when dual wielding; AR %, deadly strike,
+  crushing blow, open wounds, life and mana stolen, −% target defense, Ignore Target's Defense), **Speed** (IAS, FRW, FHR, FBR,
+  FCR, base attack and run/walk speed, with a link to the official Frame Table: no breakpoint calculator here), **Find, skills
+  and recovery** (magic find, extra gold, +all and +class skills with a link to the Skills tab, replenish life, mana
+  regeneration), and **Level** (where, experience, experience to the next level, unspent points, gold).
+- **Where a number comes from**: every number is a button (`SourcesPopover`, Radix popover: Enter / Space / tap opens it,
+  Escape closes it and returns focus) listing `SheetValue.sources` (items by name with the engine's slot label, from
+  `useCharacterItemNames`; set bonuses, passives, auras, per-level, percent, caps), the notes and the status. Its accessible
+  name carries the value, the status and the unbuffed value. Markers (`StatusMark`): `≈` inferred, `?` changed by a buff (not
+  yet checked in game), each with the explanation as text.
+- **Buffs** (`BuffsPanel`): `listAvailableBuffs` grouped as Skills you cast / Auras / From your items, each a checkbox; a cast
+  skill or aura switched on gets a level stepper (default: the character's level of it, re-evaluated with the other buffs;
+  "Your level" goes back), a proc keeps its item's level and shows its chance and item. A changed number shows the unbuffed
+  value struck through before it and the `?` marker; "Switch all off".
+- The stored base groups (`engine/characterSheet.ts` `overviewGroups`) show only while the sheet's data loads or fails to
+  load. Then an "at a glance" line per other tab (`characterGlance`).
+
+**Copy as text** (`sheetText`): a few plain lines for a chat: name, level, class, the difficulty of the resists and
+"unbuffed" / "with buffs"; attributes; pools; resists with the max when it is not 75; defense, DR, MDR, block (marked
+inferred), dodge / avoid / evade when any; speeds; attack rating per hand skill, AR %, DS, CB, leech, target defense; MF, GF,
++all skills; with buffs, the buffs and "buffed numbers not yet checked in game".
+
+**The sheet on the page** (`hooks/CharacterSheetProvider.tsx`, `hooks/useSheetView.ts`, `hooks/useCharacterSheet.ts`,
+`engine/sheetCache.ts`): `CharacterSheetProvider` (in `CharacterScreen`'s page, around the tabs) holds the view state per
+character name: the chosen difficulty (default: the save's; kept across tab and character switches while the page is open)
+and the selected buffs (also in sessionStorage `myCharacter.buffs`: this browser tab only, never the URL).
+`useCharacterSheet(character)` loads `charsheet.json` + `itemtext.json` (only on the tabs that call it) and returns
+`{ status, sheet, unbuffed, availableBuffs, data, difficulty, setDifficulty, buffs, setBuffs }`; `unbuffed` is the same sheet
+without buffs when any are on, for the struck-through values. `sheetCache` computes a SheetData once per bundle pair, a sheet
+once per (character, difficulty, buff set; order-free key `buffsKey`, 24 per character) and the buff list once per character:
+explicit memoisation, because React Compiler memoises per component and each tab would compute again.
+
+**Create a build from this character**; the banners (`engine/notices.ts` `characterNotices`); base attributes; base life, mana
 and stamina next to the values **when saved** (the current values the game wrote, gear and buffs included: SpinToWin 10,219 life
 on 1,189 base); level, experience, unspent stat and skill points; gold on the character and in the stash; the computed totals
 placeholder (`ComputedSheetPanel`, prop `totals`); an "at a glance" line per other tab (`characterGlance`).
@@ -193,12 +241,19 @@ Ascendancy (the stone in the Charm Inventory, matched to the Ascendancies page b
 `AscendancyDisplay`; a stone elsewhere is named as doing nothing), and the mercenary's doll (head, body armor and hands, other slots
 when filled) with a Dead badge.
 
-**Skills** (`components/tabs/SkillsTab.tsx`): the class tree with icons and hard-point badges (the builds' read-only
-`BuildSkillTrees`), the hard points as a table, and the mouse-button skills and hotkeys with icons and Skills page links. Saved
-`skills.txt` rows map to `skills.json` ids through `lootfilter.json` `skillNames` (`hardSkillPoints`, `hotkeyRows`,
-`handSkillRows`), the build draft's table, so no matching by name; lootfilter.json is fetched only on this tab.
+**Skills** (`components/tabs/SkillsTab.tsx`, `components/skills/CharacterSkillTrees.tsx`): the class tree with icons (the
+Skills page parts, read-only); a tile's badge is the skill's level from the sheet (hard points + all, class, tab, single-skill
+bonuses and oskills, + selected buffs such as Battle Command), dimmed without one; the detail card opens at that level with the
+character's level and its hard points in the synergies, and a stepper for a "what if". The **Skill levels** table: hard points,
+bonus (with its parts: "all skills +10, class skills +3") and level (`skillBonusById`, sheet rows mapped to `skills.json` ids
+through `lootfilter.json` `skillNames`, as before); skills granted by items without hard points under it. **Skill bonuses**: +all
+and +class skills, each opening its sources. Then the mouse-button skills and hotkeys. Without the sheet's data the badges show
+hard points.
 
-**Combat** (`components/tabs/CombatTab.tsx`): an empty state until the monster hit-chance chart arrives.
+**Combat** (`components/tabs/CombatTab.tsx`): the [Combat tab](#combat-tab) view seeded from the sheet: defense, −% target
+defense, Ignore Target's Defense, the character level and the attack rating of a chosen line (`attackChoices`: each mouse-button
+skill's main hand, and its off hand when dual wielding; none: the base attack rating). It follows the page's difficulty (and
+changing it there changes the Overview's resists) and buffs, with the Unbuffed / _Includes buffs_ label.
 
 **Storage** (`components/tabs/StorageTab.tsx`, `engine/characterStorage.ts`): inventory, belt, Horadric Cube, personal stash, then
 other / corpse / golem items when present, each a collapsible `<details>` of item cards, with the All Items search
@@ -208,11 +263,12 @@ other / corpse / golem items when present, each a collapsible `<details>` of ite
 kills, 237 respec points, 235 Relics of Knowledge used, 926 unspent specialization points), the learned perks of each
 specialization tree (stats 927-990 via `specializations.json` `perks[].stat`, linked to `/specializations?tree=&perk=`; unlocked when
 a perk is learned or 942 `specializationtokencap` is set, INFERRED from one save), and the Kill Ledger (`led`) and Ascendancy
-Stone (`ast`) cards with where they are and links to `/kill-ledger` and `/ascendancies?search=`.
+Stone (`ast`) cards with where they are and links to `/kill-ledger` and `/ascendancies?search=`. From the sheet's `facts` (when its
+data has loaded): "Where the character is" (difficulty and act, difficulties completed, Anya's scrolls read), the Kill Ledger tier
+and boss flags (`ledgerBossName`) and the Ascendancy tier of the active items.
 
-**Seams for the later passes**: `ComputedSheetPanel` `totals?: ReactNode` (Overview, `components/ComputedSheetPanel.tsx`);
-`SkillsTab` `itemSkillBonus?: (skillId) => number` (adds From items and Level columns); `CombatTab({ character })` whose body the
-chart replaces.
+**Gear** also shows the mercenary's type, act, hiring difficulty and level from `facts.mercenary` (`mercenaryView`); the level
+is labelled as worked out from the experience, not checked in game.
 
 **Banners, never blocks** (`engine/notices.ts`): save age from `assessSaveAge` (the exact version with a matching `.d2rl`, otherwise
 "may be older than ESR x" from the date); an unused `.d2rl`; `incomplete !== null` names the part that could not be read and what stays
@@ -240,10 +296,12 @@ Thunder Star's damage is; stat filter values (`statValues`) are not levelled; th
 ## Combat tab
 
 `src/features/character/combat/` (`HitChanceView`, props `{ attackRating?, defense?, characterLevel?, ignoreTargetDefense?,
-targetDefenseReductionPercent? }`): the chance to hit monsters and the chance to be hit by them across the areas, endgame maps and
+targetDefenseReductionPercent?, difficulty?, onDifficultyChange? }`): the chance to hit monsters and the chance to be hit by them across the areas, endgame maps and
 bosses. The game shows these only after you hit a monster type; here they come from the game files (`combat.json`, see
 [GAME-DATA.md](./GAME-DATA.md) "Combat"). The view loads the bundle itself; the props only seed its number inputs (attack rating,
-defense, −% Target Defense, Ignore Target's Defense), so it works without a character. Pure logic: `combatRows.ts` (rows, the
+defense, −% Target Defense, Ignore Target's Defense), so it works without a character. An edited input lasts while the prop it
+was typed over stays the same (`editedFor`): choosing another hand skill or switching a buff on makes it follow the character
+again. With `difficulty` the page owns the difficulty (My Character); without it the view keeps its own (default Hell). Pure logic: `combatRows.ts` (rows, the
 inverse helpers), `monsterStats.ts` (shared with the generator), `curveChart.ts` (chart geometry); tests in the same folder,
 `build/bundleCombat.test.ts` and `bundleIntegrity.test.ts`.
 
@@ -340,12 +398,13 @@ inventory; there is no field for them.
 turns a parsed save into the numbers of the in-game character screen and Advanced Stats, each with the sources it adds
 up from. Data: `createSheetData(charsheet.json, itemtext.json)` ([GAME-DATA.md → Character sheet](./GAME-DATA.md#character-sheet)).
 
-| Export                                             | Purpose                                                                                                         |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `computeCharacterSheet(character, data, opts)`     | `CharacterSheet`: every value a `SheetValue` (`value`, `sources`, `status`, `notes?`), plus `facts`, `warnings` |
-| `listAvailableBuffs(character, data)`              | `AvailableBuff[]`: own cast skills and auras, self-buff procs of active items, that would change the sheet      |
-| `toStatsSnapshot(sheet, { savedAt, esrVersion? })` | `CharacterStatsSnapshot`: flat numbers with short keys (`v: 1`), about 400 bytes as JSON, for a shared build    |
-| `createSheetData(charsheet, itemtext)`             | The lookups (build once per loaded bundle pair)                                                                 |
+| Export                                                | Purpose                                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `computeCharacterSheet(character, data, opts)`        | `CharacterSheet`: every value a `SheetValue` (`value`, `sources`, `status`, `notes?`), plus `facts`, `warnings` |
+| `listAvailableBuffs(character, data)`                 | `AvailableBuff[]`: own cast skills and auras, self-buff procs of active items, that would change the sheet      |
+| `toStatsSnapshot(sheet, { savedAt, esrVersion? })`    | `CharacterStatsSnapshot`: flat numbers with short keys (`v: 1`), about 400 bytes as JSON, for a shared build    |
+| `createSheetData(charsheet, itemtext)`                | The lookups (build once per loaded bundle pair)                                                                 |
+| `SHEET_STAT_LABELS`, `formatStat`, `DIFFICULTY_NAMES` | `statLabels.ts`: labels, short forms and units of the snapshot keys, shared by every view of a sheet            |
 
 `options.difficulty` picks the difficulty of the resist penalty (default: the one the save is in); `options.buffs`
 (`{ skillId, level? }[]`) counts buffs. A `SheetSource` has a `kind` (`base`, `item`, `set`, `runic`, `quest`, `passive`,
@@ -370,6 +429,7 @@ VERIFIED = reproduces the three pairs; INFERRED = follows from the data or D2's 
 | What counts: equipped items of the active weapon set, charms in the Charm Inventory (store page 7). A charm-dedup group (`c11` / `c12`) counts its first charm in save order                                                                                                                                                                                                           | VERIFIED (order INFERRED)                                 |
 | An item gives its own, runeword and socketed stats (a filler's gems.txt column for the host's gem apply type, a jewel's own) and the set bonus lists it carries by pieces worn; sets.txt partial and full bonuses come from the bundle (the save has none)                                                                                                                             | VERIFIED                                                  |
 | Runic Insight (gf `archaeology_3`): the runes' own modifiers pooled per stat and param, 5% once toward zero, split back by host (the pooling gain to the host that lost most); op 13 stats per host                                                                                                                                                                                    | VERIFIED                                                  |
+| Ignore Target's Defense: `item_ignoretargetac` summed like any stat (`offense.ignoreTargetDefense`, above 0 = yes; SpinToWin has it)                                                                                                                                                                                                                                                   | VERIFIED                                                  |
 | Dual wield: the off-hand weapon's own IAS, deadly strike, crushing blow, target defense and to-hit stay off the sheet (`offense.offHand`)                                                                                                                                                                                                                                              | VERIFIED                                                  |
 | Per-level stats (op 2, base level): floor(Σ value × level / 2^op param), all lists pooled                                                                                                                                                                                                                                                                                              | VERIFIED                                                  |
 | Attributes: (gf + flat) × (100 + attribute %) / 100, then + per-level; the % does not multiply per-level attributes                                                                                                                                                                                                                                                                    | VERIFIED                                                  |

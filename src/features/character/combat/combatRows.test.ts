@@ -10,6 +10,7 @@ import {
   chanceToBeHit,
   chanceToHit,
   defenseNeeded,
+  editedFor,
   neededValues,
   poolTarget,
   prepareCombatData,
@@ -220,5 +221,14 @@ describe('needed values', () => {
     expect(reduced.attackRating[0]?.typical).toBe(attackRatingNeeded(75, 7875, data));
     expect(plain.defense.map((entry) => entry.chance)).toEqual([25, 5]);
     expect(plain.defense[0]?.typical).toBe(defenseNeeded(25, 2_743_440, data));
+  });
+});
+
+describe('editedFor', () => {
+  it('keeps an edit while the character value it was typed over stays the same', () => {
+    expect(editedFor(null, 100)).toBeNull();
+    expect(editedFor({ value: '5000', over: 100 }, 100)).toBe('5000');
+    expect(editedFor({ value: '5000', over: 100 }, 200)).toBeNull();
+    expect(editedFor({ value: true, over: undefined }, undefined)).toBe(true);
   });
 });

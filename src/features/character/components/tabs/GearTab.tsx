@@ -10,7 +10,10 @@ import { ToneBadge } from '@/features/stash/components/shared/ToneBadge';
 import type { ItemRow } from '@/features/stash/engine/items/allItems';
 import { cn } from '@/lib/utils';
 import { ascendancyOfStone, type CharacterItemsView, type GearSlot } from '../../engine/characterItems';
+import type { MercenaryFacts } from '../../engine/sheet/types';
+import { mercenaryView } from '../../engine/sheetView';
 import { useCharacterItems } from '../../hooks/useCharacterItems';
+import { useCharacterSheet } from '../../hooks/useCharacterSheet';
 import type { CharacterFile } from '../../parser/types';
 import { GearDoll } from '../gear/GearDoll';
 import { ItemTile } from '../gear/ItemTile';
@@ -146,7 +149,24 @@ function AscendancySection({ view }: { readonly view: CharacterItemsView }) {
   );
 }
 
-function GearView({ view }: { readonly view: CharacterItemsView }) {
+/** The mercenary's type, act and level from the computed sheet's facts (the level derived from its experience) */
+function MercenaryFactsLine({ merc }: { readonly merc: MercenaryFacts }) {
+  const facts = mercenaryView(merc);
+  return (
+    <div className="text-sm">
+      <p>
+        <span className="font-medium">{facts.title}</span>
+        {facts.hired !== null && <span className="text-muted-foreground">, {facts.hired}</span>}
+      </p>
+      <p className="text-xs text-muted-foreground">
+        {facts.level === null ? 'Level unknown' : facts.level} ({facts.experience} experience; the level is worked out from the experience
+        and not yet checked in game)
+      </p>
+    </div>
+  );
+}
+
+function GearView({ view, merc: mercFacts }: { readonly view: CharacterItemsView; readonly merc: MercenaryFacts | null }) {
   const items = selectables(view);
   const activeSet = view.weaponSets[0].active ? 0 : 1;
   const [shownSet, setShownSet] = useState<0 | 1>(activeSet);
@@ -222,6 +242,7 @@ function GearView({ view }: { readonly view: CharacterItemsView }) {
             <p className="text-sm text-muted-foreground">No mercenary hired on this character.</p>
           ) : (
             <>
+              {mercFacts !== null && <MercenaryFactsLine merc={mercFacts} />}
               <GearDoll
                 slots={merc.slots.filter((slot) => slot.row !== null || MERC_CORE_SLOTS.has(slot.key))}
                 keyOf={mercKey}
@@ -229,7 +250,7 @@ function GearView({ view }: { readonly view: CharacterItemsView }) {
                 onSelect={select}
               />
               <p className="text-xs text-muted-foreground">
-                Per-level stats on the mercenary&apos;s gear read as the rate per level: the save does not hold its level.
+                Per-level stats on the mercenary&apos;s gear read as the rate per level: the save holds only its experience.
               </p>
             </>
           )}
@@ -248,8 +269,16 @@ function GearView({ view }: { readonly view: CharacterItemsView }) {
 /** Gear: the equipped slots with both weapon sets, the Charm Inventory, the Ascendancy and the mercenary; every item opens its full card. */
 export function GearTab({ character }: { readonly character: CharacterFile }) {
   const items = useCharacterItems(character);
+  // Only the mercenary facts: the gear shows without them while they load (or when they cannot be loaded)
+  const sheet = useCharacterSheet(character);
   if (items.status === 'loading') return <GameDataLoading />;
   if (items.status === 'error') return <GameDataError error={items.error} onRetry={items.retry} />;
   // Remounts per character: the selection and the shown weapon set belong to one character
-  return <GearView key={`${character.name}:${String(character.lastSavedAt)}`} view={items.view} />;
+  return (
+    <GearView
+      key={`${character.name}:${String(character.lastSavedAt)}`}
+      view={items.view}
+      merc={sheet.status === 'ready' ? sheet.sheet.facts.mercenary : null}
+    />
+  );
 }

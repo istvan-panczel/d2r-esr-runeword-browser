@@ -368,6 +368,14 @@ describe('computeCharacterSheet: defense, speeds, attack rating, block', () => {
     expect(sheet.attackRating.base.value).toBe(Math.floor((base * 150) / 100));
   });
 
+  it("reads Ignore Target's Defense from the active items (0 without it)", () => {
+    expect(computeCharacterSheet(testCharacter({}), data).offense.ignoreTargetDefense.value).toBe(0);
+    const character = testCharacter({ items: [item('lsd', equipped('rightHand', 1), [['item_ignoretargetac', 1]])] });
+    const { ignoreTargetDefense } = computeCharacterSheet(character, data).offense;
+    expect(ignoreTargetDefense).toMatchObject({ value: 1, status: 'verified' });
+    expect(ignoreTargetDefense.sources.map((source) => source.kind)).toEqual(['item']);
+  });
+
   it('shows block only with a shield, flagged inferred', () => {
     expect(computeCharacterSheet(testCharacter({}), data).block).toBeNull();
     const shield = computeCharacterSheet(

@@ -213,6 +213,8 @@ export interface CharacterSheet {
     openWounds: SheetValue;
     /** Target defense reduced, % (item_fractionaltargetac) */
     targetDefense: SheetValue;
+    /** Ignore Target's Defense (item_ignoretargetac): above 0 when an active item has it */
+    ignoreTargetDefense: SheetValue;
     /** Off-hand weapon's own stats when dual wielding (not in the values above) */
     offHand: OffHandStats | null;
   };

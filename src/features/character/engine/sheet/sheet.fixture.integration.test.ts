@@ -201,6 +201,10 @@ describe.skipIf(!present)('computed sheet vs in-game ground truth (2026-11-11)',
       statPoints: 0,
     });
     expect(sheet.facts.relicsLearned).toBe(1);
+    // Advanced Stats list "Ignore Target's Defense"; Javazon's and Soso's do not
+    expect(sheet.offense.ignoreTargetDefense.value).toBeGreaterThan(0);
+    expect(get('Javazon').sheet.offense.ignoreTargetDefense.value).toBe(0);
+    expect(get('Soso').sheet.offense.ignoreTargetDefense.value).toBe(0);
   });
 
   it('Soso (Normal, act 1): every number', () => {

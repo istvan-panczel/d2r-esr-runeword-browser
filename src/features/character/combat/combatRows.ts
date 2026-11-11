@@ -324,3 +324,17 @@ export function neededValues(data: CombatData, target: CombatTarget, player: Com
 export function ratio(attackRating: number, defense: number): number | null {
   return defense > 0 ? attackRating / defense : null;
 }
+
+/**
+ * An edited "what if" input and the character's value it was typed over. The edit stands while that value stays the
+ * same; when it changes (another hand skill, a buff switched on), the input follows the character again.
+ */
+export interface InputEdit<T> {
+  readonly value: T;
+  readonly over: number | boolean | undefined;
+}
+
+/** The edited value, or null when there is none or the character's value has changed since */
+export function editedFor<T>(edit: InputEdit<T> | null, current: number | boolean | undefined): T | null {
+  return edit !== null && edit.over === current ? edit.value : null;
+}

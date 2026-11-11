@@ -13,6 +13,7 @@ import { StorageTab } from '../components/tabs/StorageTab';
 import type { CharacterFileMeta } from '../db/characterDb';
 import { CHARACTER_TAB_PANEL_ID, characterTabId, type CharacterTab } from '../engine/characterTabs';
 import { CharacterProvider } from '../hooks/CharacterProvider';
+import { CharacterSheetProvider } from '../hooks/CharacterSheetProvider';
 import { useCharacterTab } from '../hooks/useCharacterTab';
 import type { CharacterFile } from '../parser/types';
 
@@ -48,13 +49,16 @@ function TabBody({ tab, character, file, bytes, onTab }: TabBodyProps) {
 
 function CharacterPage({ character, file, bytes }: CharacterPageProps) {
   const [tab, setTab] = useCharacterTab();
+  // The sheet's difficulty and buffs outlive a tab switch and a character switch (kept per character)
   return (
-    <div className="space-y-4">
-      <CharacterTabBar tab={tab} onChange={setTab} />
-      <div id={CHARACTER_TAB_PANEL_ID} role="tabpanel" aria-labelledby={characterTabId(tab)}>
-        <TabBody tab={tab} character={character} file={file} bytes={bytes} onTab={setTab} />
+    <CharacterSheetProvider>
+      <div className="space-y-4">
+        <CharacterTabBar tab={tab} onChange={setTab} />
+        <div id={CHARACTER_TAB_PANEL_ID} role="tabpanel" aria-labelledby={characterTabId(tab)}>
+          <TabBody tab={tab} character={character} file={file} bytes={bytes} onTab={setTab} />
+        </div>
       </div>
-    </div>
+    </CharacterSheetProvider>
   );
 }
 
