@@ -28,10 +28,17 @@ export function checkSaveUpload(name: string, size: number): SaveDraftError | nu
   return null;
 }
 
-export function draftFromSaveBytes(bytes: Uint8Array, fileName: string, stash: StashBundle, data: BuildDraftData): SaveDraftResult {
+/** `sidecarVersion`: the ESR version of a .d2rl already verified against these bytes (the My Character page's handoff) */
+export function draftFromSaveBytes(
+  bytes: Uint8Array,
+  fileName: string,
+  stash: StashBundle,
+  data: BuildDraftData,
+  sidecarVersion: string | null = null
+): SaveDraftResult {
   try {
     const file = parseCharacter(bytes, createCharacterData(stash));
-    return { ok: true, draft: createBuildDraft(file, data, fileName) };
+    return { ok: true, draft: createBuildDraft(file, data, fileName, sidecarVersion) };
   } catch (error) {
     if (error instanceof CharacterParseError) return { ok: false, error: { title: 'Could not read this save', message: error.message } };
     console.error('Could not build a draft from the save:', error);

@@ -47,7 +47,8 @@ share a pathless layout route (see [Nested sections](#nested-sections)).
 | `/stash` (index)        | StashHomeScreen         | Upload (or the loaded file) and the stash pages with a one-line summary each                                                                                                                      |                                                                                                        |
 | `/stash/coupons`        | StashCouponsScreen      | Ancient Coupons in the uploaded stash: unique, have / need, Wild Card recipe, where                                                                                                               | `search`, `status`, `tier`, `page`, `sort`, `dir` (kept in the URL)                                    |
 | `/stash/items`          | StashItemsScreen        | All Items: every item on the stash pages ([STASH-ITEMS](../features/STASH-ITEMS.md))                                                                                                              |                                                                                                        |
-| `/stash/character`      | CharacterScreen         | My Character: upload a character save ([CHARACTER-SAVE](../features/CHARACTER-SAVE.md#my-character-page))                                                                                         |                                                                                                        |
+| `/stash/character`      | (redirect)              | Redirects to `/character` (My Character was a My Stash page until 2026-11)                                                                                                                        |                                                                                                        |
+| `/character`            | CharacterScreen         | My Character: stored character saves with a switcher, in tabs ([CHARACTER-SAVE](../features/CHARACTER-SAVE.md#my-character-page))                                                                 | `tab` (`gear`, `skills`, `combat`, `storage`, `progress`; none = Overview)                             |
 | `/builds`               | BuildsScreen            | Shared builds list (Supabase only)                                                                                                                                                                |                                                                                                        |
 | `/builds/new`           | CreateBuildScreen       | Create a build (sign-in required)                                                                                                                                                                 |                                                                                                        |
 | `/builds/:buildId/edit` | EditBuildScreen         | Edit an own build                                                                                                                                                                                 |                                                                                                        |
@@ -143,7 +144,7 @@ The page skips the startup loading gate (exact match on `/`, see below), so it r
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│ D2R ESR Recipes▾ Items▾ Character▾ Areas▾ My Stash▾ Guide Builds Loot Filters ⌕ …│
+│ D2R ESR Recipes▾ Items▾ Character▾ Areas▾ My Stash▾ My Character Guide Builds …  ⌕ │
 │ Uniques  Mythicals  Sets  [Bases]  Item Types  Affixes  Modifiers  Elixirs       │  <- page row of the current menu group
 ├──────────────────────────────────────────────────────────────────────────────────┤     (none on Home, Guide, Builds, Loot Filters)
 │                                                                                  │
@@ -180,6 +181,9 @@ match every path), the others are prefixes (a path matches its prefix exactly or
   [CAMPAIGN-MAP.md](../features/CAMPAIGN-MAP.md).
 - `/stash`: the My Stash pages read `stash.json` and the uploaded file (IndexedDB `d2r-esr-stash`), see
   [STASH.md](../features/STASH.md).
+- `/character`: My Character reads `stash.json` (and per tab stashnames, types, itemtext, skills, skilldetails, lootfilter,
+  specializations) and the stored saves (IndexedDB `d2r-esr-character`); its Ascendancy card fills in once the sync has run, see
+  [CHARACTER-SAVE.md](../features/CHARACTER-SAVE.md#my-character-page).
 - `/specializations`: `specializations.json`, see [SPECIALIZATIONS.md](../features/SPECIALIZATIONS.md).
 - `/weapon-masteries`: `masteries.json`, see [WEAPON-MASTERIES.md](../features/WEAPON-MASTERIES.md).
 - `/mercenaries`: `mercenaries.json`, see [MERCENARIES.md](../features/MERCENARIES.md).
@@ -208,19 +212,20 @@ cards render from the same config (group `description`, link `homeLinks`):
 | Items ▾      | group | Uniques (`/uniques`), Mythicals (`/mythicals`), Sets (`/sets`), Bases (`/bases`), Item Types (`/item-types`), Affixes (`/affixes`), Modifiers (`/modifiers`), Elixirs (`/elixirs`)           |
 | Character ▾  | group | Skills (`/skills`), Ascendancies (`/ascendancies`), Specializations (`/specializations`), Weapon Masteries (`/weapon-masteries`), Mercenaries (`/mercenaries`), Kill Ledger (`/kill-ledger`) |
 | Areas ▾      | group | Campaign Map (`/campaign-map`), Area Levels (`/area-levels`), Terror Zones (`/terror-zones`)                                                                                                 |
-| My Stash ▾   | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`), My Character (`/stash/character`)                                 |
+| My Stash ▾   | group | Overview (`/stash`, `exact`: not active on its sub-pages), Ancient Coupons (`/stash/coupons`), All Items (`/stash/items`)                                                                    |
+| My Character | link  | `/character` (its tabs are `?tab=`; no page row)                                                                                                                                             |
 | Guide        | link  | `/guide`                                                                                                                                                                                     |
 | Builds       | link  | `/builds`, only when Supabase is configured (`requiresSupabase`, filtered by `getNavEntries`)                                                                                                |
 | Loot Filters | link  | `/loot-filters` (prefix-matched, so it stays active on the editor pages)                                                                                                                     |
 
 - **Brand**: "D2R ESR", a link to `/` (the home page).
 - **Desktop and hamburger switch**: the header frame is the `header` size container, and the `@desktop-nav/header:` classes
-  (`--container-desktop-nav: 79.5rem` in `src/index.css`) swap the hamburger for the desktop nav, the book and page-width
+  (`--container-desktop-nav: 86rem` in `src/index.css`) swap the hamburger for the desktop nav, the book and page-width
   icons when the row has the room. A container query in `rem` follows the Text size setting and the Page width setting's
   actual frame, which a viewport breakpoint cannot: a media query's `rem` ignores the `<html>` font size, and Standard's
-  `container` frame steps from 1024 px to 1280 px at a 1280 px window. 79.5rem holds the brand, the eight entries, the icon cluster with the search icon, and the widest account control, a 14-character signed-in tag (needs 78.5rem at 16 px; the Diablo font's wider
-  tag is capped at 12 characters in `UserMenu`). At the default 16 px text size Standard shows the desktop nav from a 1280 px window (1272 px in Wide and Full); at 20 px from 1590 px.
-  Below that the hamburger shows. Item, group and link labels do not wrap (`whitespace-nowrap`).
+  `container` frame steps from 1024 px to 1280 px at a 1280 px window. 86rem holds the brand, the nine entries, the icon cluster with the search icon, and the widest account control, a 14-character signed-in tag (needs 85.8rem at 16 px, measured 2026-11-11 after the My Character entry was added: 1274 px signed out, the tag about 99 px wider than Sign In; the Diablo font's wider
+  tag is capped at 12 characters in `UserMenu`). At the default 16 px text size Standard shows the desktop nav from a 1536 px window (its `container` frame is 1280 px below that), Wide and Full from about 1384 px; below that the hamburger shows. Before My Character had its own entry the threshold was 79.5rem (Standard from a 1280 px window).
+  Item, group and link labels do not wrap (`whitespace-nowrap`).
 - **Desktop nav**: a shadcn `NavigationMenu` (`src/components/ui/navigation-menu.tsx`, `viewport={false}` so
   each dropdown opens under its own trigger). Each group trigger opens a panel of label + description links: one column
   (`w-72`) for up to 4 pages, two equal columns (`w-[36rem]`, filled downwards, the same order the keyboard moves in) for more. The two-column
@@ -240,11 +245,11 @@ cards render from the same config (group `description`, link `homeLinks`):
   Sign In pushed the cog off a 390 px row).
 - **Page row** (`GroupPagesBar.tsx`, inside `<header>` under the main row, same frame): the pages of the current menu group
   (`getActiveNavGroup`) as a `<nav aria-label="{group} pages">`, active page `aria-current="page"` and a `PAGE_ROW_LINK_*` underline
-  (`navTabClasses.ts`). None on Home, Guide, Builds, Loot Filters or a build page; not sticky, like the header. It is one sideways-scrolling
+  (`navTabClasses.ts`). None on Home, Guide, Builds, Loot Filters, My Character or a build page; not sticky, like the header. It is one sideways-scrolling
   strip at every width; on a route change the strip centres the active link by setting its own `scrollLeft` (`centeredScrollLeft`), because `scrollIntoView`
   would move the window too.
 - **Hamburger (below the switch)**: opens a left `Sheet` with a shadcn `Accordion` (`type="multiple"`) of the same groups;
-  the group of the current route starts open, Guide, Builds and Loot Filters are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
+  the group of the current route starts open, My Character, Guide, Builds and Loot Filters are top-level links, then the official ESR links (`OFFICIAL_LINKS`), a small "Community tools" label with the
   community links, "Source on GitHub", and the auth control. Choosing a page closes the sheet.
 
 `navConfig.test.ts` checks that every config path resolves to a real route of the router (not the `*` catch-all), that
@@ -311,10 +316,10 @@ row across groups would fight the menu).
 Guide and Loot Filters are prefix-matched, so they stay active on every child page.
 
 The header triggers and links use `TAB_BASE` / `TAB_INACTIVE` / `TAB_ACTIVE` (`src/core/components/navTabClasses.ts`), the page row `PAGE_ROW_LINK_*`. The
-in-page mode tabs (Enhance sections, campaign map sections, the loot filter editor's tabs) use
+in-page mode tabs (Enhance sections, campaign map sections, the loot filter editor's tabs, the My Character tabs) use
 `SUBTAB_BASE` / `SUBTAB_INACTIVE` / `SUBTAB_ACTIVE` (a filled `bg-primary` active pill) and sit in a `ToolbarCard` (see
-[UI-COMPONENTS.md](./UI-COMPONENTS.md#toolbarcard-and-sub-tabs)). The editor's tabs are not routes but
-buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=`. The amber notices of `GuideLayout` and
+[UI-COMPONENTS.md](./UI-COMPONENTS.md#toolbarcard-and-sub-tabs)). The editor's tabs and My Character's are not routes but
+buttons in a `role="tablist"` (`role="tab"`, `aria-selected`) that set `?tab=` (the editor replaces the history entry, My Character pushes one). The amber notices of `GuideLayout` and
 `LootFilterLayout` are both `DevNotice` (`src/core/components/DevNotice.tsx`).
 
 ### Navigation Style

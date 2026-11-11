@@ -26,6 +26,7 @@ describe('searchPages', () => {
 
   it('includes the plain links, without a section', () => {
     expect(searchPages('guide', NAV_ENTRIES)).toEqual([{ name: 'Guide', href: '/guide', section: null }]);
+    expect(searchPages('my character', NAV_ENTRIES).at(0)).toEqual({ name: 'My Character', href: '/character', section: null });
   });
 
   it('leaves Builds out without Supabase', () => {
@@ -34,12 +35,7 @@ describe('searchPages', () => {
   });
 
   it('finds the pages of a menu group by the group name, in menu order', () => {
-    expect(searchPages('stash', NAV_ENTRIES).map((page) => page.href)).toEqual([
-      '/stash',
-      '/stash/coupons',
-      '/stash/items',
-      '/stash/character',
-    ]);
+    expect(searchPages('stash', NAV_ENTRIES).map((page) => page.href)).toEqual(['/stash', '/stash/coupons', '/stash/items']);
   });
 
   it('ranks group matches below direct label matches and stays within the limit', () => {

@@ -93,6 +93,8 @@ export interface SaveImportReport {
   /** Set when the parse stopped early: the parts that stayed empty */
   readonly incompleteNote: string | null;
   readonly corpses: number;
+  /** The ESR version of the save's verified .d2rl (handed over by the My Character page); null without one */
+  readonly sidecarVersion: string | null;
 }
 
 export interface BuildDraft {
@@ -261,7 +263,12 @@ function incompleteNote(file: CharacterFile): string | null {
   return `This save could only be read up to the ${file.incomplete.section} part; what stayed empty: ${EMPTY_AFTER[file.incomplete.section] ?? 'the rest of the file'}.`;
 }
 
-export function createBuildDraft(file: CharacterFile, data: BuildDraftData, fileName: string): BuildDraft {
+export function createBuildDraft(
+  file: CharacterFile,
+  data: BuildDraftData,
+  fileName: string,
+  sidecarVersion: string | null = null
+): BuildDraft {
   const index = createDraftItemIndex(data);
   const player = mapSection('player', mainSlots(file.gear), index, data);
   const swap = mapSection('swap', swapSlots(file.gear), index, data);
@@ -303,6 +310,7 @@ export function createBuildDraft(file: CharacterFile, data: BuildDraftData, file
       lastSavedAt: file.lastSavedAt,
       incompleteNote: incompleteNote(file),
       corpses: file.items.corpses.length,
+      sidecarVersion,
     },
   };
 }
