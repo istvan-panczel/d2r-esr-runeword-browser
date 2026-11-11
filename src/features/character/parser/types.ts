@@ -1,5 +1,8 @@
 import type { StashItem } from '../../stash/parser/types.ts';
 import type { CharacterSectionName, UnverifiedFeature } from './errors.ts';
+import type { CharacterProgress, CharacterQuests } from './progress.ts';
+
+export type { CharacterProgress, CharacterQuests, DifficultyIndex, QuestDifficulty } from './progress.ts';
 
 /** An equipment slot, weapon sets folded into the two hand slots (see `weaponSet` on the location). */
 export type EquipSlot = 'head' | 'neck' | 'torso' | 'rightHand' | 'leftHand' | 'rightRing' | 'leftRing' | 'belt' | 'feet' | 'gloves';
@@ -166,6 +169,10 @@ export interface CharacterFile {
   progression: number;
   /** Game version byte (3 = Reign of the Warlock; ESR saves always carry it) */
   gameVersion: number;
+  /** The difficulty and act the character is in (header 0x98), with the progression byte (see progress.ts) */
+  progress: CharacterProgress;
+  /** The quest words per difficulty with the flags the sheet reads; null when the quest section is too short for them */
+  quests: CharacterQuests | null;
 
   /** Every `gf` entry, in file order */
   attributes: CharacterStat[];
