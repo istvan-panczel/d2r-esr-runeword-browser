@@ -2,6 +2,7 @@ import type {
   AffixesBundle,
   AreasBundle,
   BasesBundle,
+  CombatBundle,
   CraftingBundle,
   CubeBundle,
   ElixirsBundle,
@@ -29,6 +30,7 @@ import type {
 import { readStatIndex } from './affixStats.ts';
 import { buildAffixesBundle } from './bundleAffixes.ts';
 import { buildAreasBundle } from './bundleAreas.ts';
+import { buildCombatBundle } from './bundleCombat.ts';
 import { buildMapBosses } from './bundleMapBosses.ts';
 import { readBossSetRules } from './pluginUniques.ts';
 import { attachAutomods, buildBasesBundle, readStaffMods } from './bundleBases.ts';
@@ -110,6 +112,8 @@ export interface GeneratedBundles {
   killledger: KillLedgerBundle;
   // elixirs.json
   elixirs: ElixirsBundle;
+  // combat.json
+  combat: CombatBundle;
   counts: Record<string, number>;
   /** Build warnings stored in the manifest */
   warnings: string[];
@@ -623,6 +627,20 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
   });
   // --- end modifiers.json ---
 
+  // --- combat.json ---
+  const combat = buildCombatBundle({
+    levels: table('levels'),
+    monstats: table('monstats'),
+    monprop: table('monprop'),
+    monlvl: table('monlvl'),
+    monumodText: sources.tables.monumod,
+    areas: areas.bundle.areas,
+    mapBosses: areas.bundle.mapBosses,
+    curve: modifiers.bundle.facts.find((fact) => fact.key === 'attackRating.curve'),
+    strings,
+  });
+  // --- end combat.json ---
+
   const countKind = (kind: string) => bases.bundle.bases.filter((base) => base.kind === kind).length;
   return {
     types: types.bundle,
@@ -651,6 +669,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     mercenaries: mercenaries.bundle,
     killledger: killledger.bundle,
     elixirs: elixirs.bundle,
+    combat: combat.bundle,
     counts: {
       types: types.bundle.types.length,
       classes: types.bundle.classes.length,
@@ -801,6 +820,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       elixirPerks: elixirs.bundle.perks.length,
       elixirDropSources: elixirs.bundle.drops.sources.length,
       elixirRecipes: elixirs.bundle.recipes.length,
+      ...combat.counts,
     },
     warnings: [
       ...types.warnings,
@@ -833,6 +853,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...mercenaries.warnings,
       ...killledger.warnings,
       ...elixirs.warnings,
+      ...combat.warnings,
     ],
     stringWarnings: [...stringWarnings],
   };

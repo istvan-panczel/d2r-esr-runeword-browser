@@ -187,6 +187,65 @@ Known gaps: the game's "+50% Damage to Undead" line on blunt weapons is not show
 string for it and how it merges with the item's own undead damage stat is unverified); per-level defense is not confirmed in game the way
 Thunder Star's damage is; stat filter values (`statValues`) are not levelled, the page has no filters.
 
+## Combat tab
+
+`src/features/character/combat/` (`HitChanceView`, props `{ attackRating?, defense?, characterLevel?, ignoreTargetDefense?,
+targetDefenseReductionPercent? }`): the chance to hit monsters and the chance to be hit by them across the areas, endgame maps and
+bosses. The game shows these only after you hit a monster type; here they come from the game files (`combat.json`, see
+[GAME-DATA.md](./GAME-DATA.md) "Combat"). The view loads the bundle itself; the props only seed its number inputs (attack rating,
+defense, −% Target Defense, Ignore Target's Defense), so it works without a character. Pure logic: `combatRows.ts` (rows, the
+inverse helpers), `monsterStats.ts` (shared with the generator), `curveChart.ts` (chart geometry); tests in the same folder,
+`build/bundleCombat.test.ts` and `bundleIntegrity.test.ts`.
+
+**The formula** (VERIFIED, `d2rloader/config/celestialrayone.attack-rating.toml`): one curve for every attacker and defender,
+r = attack rating / defense; up to r = 5 it is 100·r⁵ / (r⁵ + 5⁵), above it 50 + 50·d / (d + 3) with d = r − 5, a late tail
+(d + 1) blended in by smoothstep between r = 30 and 100; whole percents, 100 from 99.5, limits 0 and 100, no level term. The app
+already had it (`modifiers/utils/modifierMath.ts` `hitChance`); combat.json carries the same `attackRating.curve` fact. The
+character level is shown only to say it does not matter.
+
+**Monster numbers** (derivation):
+
+1. Pool: levels.txt `mon1..25` in Normal, `nmon1..25` in Nightmare and Hell (VERIFIED columns; that Nightmare and Hell share `nmon`
+   is the vanilla engine rule). Left out: treasure goblins (`MonType` treasuregoblin; the Goblin Realm holds nothing else and is
+   not listed), ESR's Corrupted Zakarum special spawns (`corruptedzakarum*`, added to every campaign pool like the goblins; their
+   archer would otherwise be the strongest attacker of most Hell areas) and `boss` rows (the "clone" bosses some pools list, e.g.
+   Factory Director in the Endgame Zones; the real bosses have their own rows). Endgame map levels are merged per zone.
+2. Monster level: Nightmare / Hell the area's `MonLvlEx(N)` / `MonLvlEx(H)`; Normal the monster's own monstats `Level`; bosses their
+   own `Level` / `Level(N)` / `Level(H)` (INFERRED: vanilla engine rules). Champions +2, uniques and minions +3 (INFERRED, vanilla).
+3. Defense = monstats `AC*` × monlvl `L-AC*`[level] / 100; attack rating = the best of `A1TH*` / `A2TH*` / `S1TH*` × `L-TH*`[level]
+   / 100, rounded down (VERIFIED tables; that the game uses the `L-` expansion columns is the vanilla rule). monlvl.txt ends at 110.
+   `noRatio` rows would use the raw columns (none in a pool or the boss list).
+4. Champion / unique attack rating bonus: monumod.txt constants "Champion Attack Rating % Bonus" 75, "Unique …" 100, "Minion of
+   Unique …" 50 (VERIFIED values; that they multiply the attack rating after the level scaling is INFERRED, it moves results by
+   under 1 point). No monumod constant changes defense.
+5. A row is the area's median regular monster type (lower middle) with the min–max of its types; chance to hit uses the defense
+   spread, chance to be hit the attack rating spread. Champion / unique rows re-scale the stored values to the higher level
+   (exact in Nightmare / Hell up to a point of rounding; approximate in Normal, where each monster has its own level).
+
+**Modifiers**: −% Target Defense lowers the monster's defense, halved against uniques and superuniques (VERIFIED: attack-rating.toml
+`live_monster_defense` comment); the tab also halves it against bosses (INFERRED). Ignore Target's Defense makes every chance to hit
+100 %; whether it fails on bosses as in the original game is unknown, so boss rows say "boss: unsure". monprop.txt `monrandombonus`
+(Normal 20 % of spawns +20, Nightmare 30 % +40, Hell 40 % +60, maps 20 % +100) also sets `item_tohit_percent`; the panel shows the
+chance to be hit by such a spawn (INFERRED that monster "+% attack rating" applies).
+
+**Not counted**: block and Dodge / Avoid / Evade come after the hit roll (the tab says chance to be hit is the roll only); spells and
+skills that always hit do not roll (casters-only pools show "spells only"); terror zones raise monster levels in campaign areas
+(bounds in `desecratedzones.json`) and are not modelled; auras and curses on monsters are not modelled.
+
+**Worked examples** (test-fixtures ground truth `_hit-chance/`, recomputed by the generator, pinned by the tests): Death Knight
+(`blackknight5`) at Worldstone Keep Level 2 Hell, level 88: defense 3,226, attack rating 52,189; Harbinger of Pestilence, Tier 1
+map, level 100: 4,685 / 620,520; The Lich King, 110: 10,500 / 2,743,440; Tier 1 map bosses 4,200 / 1,567,680; Baal (Hell) 6,293 /
+153,660. Sanity: attack rating 61,474 and defense 73,276 hit a Tier 1 regular 86 % and are hit by it 76 % (champions / uniques
+88–90 %), are hit 0 % by the median Hell Act 5 regular (Nosliwyaj's Reign's strongest type 12 %), 95 % by the Lich King; defense
+2,430 is hit at least 92 % by the median monster of every Hell Act 5 area and map.
+
+**View**: inputs and the difficulty (default Hell) and Regular / Champion / Unique switches in one row; a table per section
+(campaign by act, endgame maps by tier in Hell, bosses: act, Pandemonium, map bosses by tier) with monster level, chance to hit and
+chance to be hit as text plus a thin meter (colour is never the only signal), champion / unique medians beside a regular row on
+wide screens; selecting a row shows its numbers, the curve with your two positions (dataviz palette slots 1 / 2, validated in both
+themes) and the attack rating for 75 / 95 % to hit and the defense for 25 / 5 % to be hit against the typical and toughest
+monster type. Checked in headless Chrome (light, dark, 375 px and 1400 px) on a scratch route that is not committed.
+
 ## Start a build from a save
 
 `/builds/new` has a "Start from a save file" card: pick or drop a `.d2s` and the normal build form opens pre-filled as an

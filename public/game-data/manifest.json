@@ -4,7 +4,7 @@
   "esrTag": "3.3.03",
   "esrCommit": "927fdd82daf20bb2b15ca4960f120d9f69d6dbcb",
   "esrDate": "2026-11-09T11:57:22+02:00",
-  "generatedAt": "2026-11-09T18:02:55.332Z",
+  "generatedAt": "2026-11-11T08:20:24.519Z",
   "files": {
     "types": {
       "hash": "8bd6af37e7f78de60cf7fb52378f3ef21d07501769d5e8bb34a338afdc76f0e8",
@@ -109,6 +109,10 @@
     "elixirs": {
       "hash": "89cd38396f1f898ee156f0a732175f7761b520ed00ed76d0420647b29a7d74cd",
       "bytes": 34884
+    },
+    "combat": {
+      "hash": "6b05eec67f90a997bef54ed04ee5115d8a15ce7330cec4b74578c7f6dfcc24d5",
+      "bytes": 38461
     },
     "icons": {
       "hash": "682ca31f9fbc0acaddced840ddd617c4f3313a74e8fd43384d3f61291e47ad88",
@@ -317,6 +321,15 @@
     "elixirPerks": 10,
     "elixirDropSources": 10,
     "elixirRecipes": 4,
+    "combatAreas": 126,
+    "combatMapZones": 20,
+    "combatMapZonesDropped": 1,
+    "combatPools": 398,
+    "combatPoolsWithCasters": 110,
+    "combatBosses": 30,
+    "combatExcludedGoblins": 5,
+    "combatExcludedSpecial": 5,
+    "combatExcludedBosses": 13,
     "itemIcons": 655,
     "uniqueIcons": 1114,
     "setIcons": 270,

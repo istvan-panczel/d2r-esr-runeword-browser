@@ -20,6 +20,7 @@ import {
   type AreasBundle,
   type BaseItem,
   type BasesBundle,
+  type CombatBundle,
   type CraftingBundle,
   type CraftingSlot,
   type CubeBundle,
@@ -82,6 +83,7 @@ const specializationsText = readText('specializations');
 const mercenariesText = readText('mercenaries');
 const killLedgerText = readText('killledger');
 const elixirsText = readText('elixirs');
+const combatText = readText('combat');
 const { types, classes: typeClasses } = JSON.parse(typesText) as TypesBundle;
 const classCodes = typeClasses.map((cls) => cls.code);
 const basesBundle = JSON.parse(basesText) as BasesBundle;
@@ -143,6 +145,7 @@ describe('committed game-data bundles', () => {
       ['mercenaries', mercenariesText],
       ['killledger', killLedgerText],
       ['elixirs', elixirsText],
+      ['combat', combatText],
     ] as const) {
       expect(manifest.files[name]?.hash).toBe(createHash('sha256').update(text, 'utf8').digest('hex'));
       expect(manifest.files[name]?.bytes).toBe(Buffer.byteLength(text, 'utf8'));
@@ -1506,6 +1509,7 @@ describe.skipIf(!existsSync(ESR_DIR))('game data generated from the ESR clone', 
     expect(serializeBundle(generated.specializations)).toBe(specializationsText);
     expect(serializeBundle(generated.mercenaries)).toBe(mercenariesText);
     expect(serializeBundle(generated.killledger)).toBe(killLedgerText);
+    expect(serializeBundle(generated.combat)).toBe(combatText);
   });
 
   // ESR 3.3: the page's Rarity column is stale. It still prints the 3.2.24 superior-affixes.toml weights by row
@@ -2277,5 +2281,33 @@ describe('committed mercenaries bundle (ESR 3.3.02)', () => {
     expect(flagged).toEqual(['Desert Mercenary Off - Nightmare 50 98', 'Desert Mercenary Off - Nightmare 85 97']);
     expect(manifest.warnings.filter((warning) => warning.startsWith('mercenaries:'))).toEqual([]);
     expect(manifest.files.mercenaries?.bytes).toBeLessThan(40_000);
+  });
+});
+
+// --- combat.json --------------------------------------------------------------------------------------------------
+
+describe('committed combat bundle (ESR 3.3.03)', () => {
+  const combat = JSON.parse(combatText) as CombatBundle;
+
+  it('reproduces the worked examples (no combat: worked example warning in the manifest)', () => {
+    expect(manifest.warnings.filter((warning) => warning.startsWith('combat:'))).toEqual([]);
+  });
+
+  it('copies the hit curve fact of modifiers.json and covers monster levels 0..110', () => {
+    expect(combat.curve).toEqual(modifiers.facts.find((fact) => fact.key === 'attackRating.curve'));
+    expect(combat.levelRatios).toHaveLength(111);
+  });
+
+  it('has every areas.json map boss once, plus the five act bosses and six Pandemonium bosses', () => {
+    const { mapBosses } = JSON.parse(areasText) as AreasBundle;
+    expect(combat.bosses.filter((boss) => boss.group === 'map').map((boss) => boss.id)).toEqual(mapBosses.map((boss) => boss.id));
+    expect(combat.bosses.filter((boss) => boss.group === 'act')).toHaveLength(5);
+    expect(combat.bosses.filter((boss) => boss.group === 'uber')).toHaveLength(6);
+  });
+
+  it('lists every areas.json map zone but the goblin-only Goblin Realm, and every campaign area with monsters', () => {
+    const zones = new Set(areas.flatMap((area) => (area.tier === undefined ? [] : [area.group])));
+    expect(new Set(combat.areas.filter((area) => area.tier !== undefined).map((area) => area.name))).toEqual(zones);
+    expect(combat.areas.filter((area) => area.tier === undefined)).toHaveLength(manifest.counts.combatAreas ?? -1);
   });
 });
