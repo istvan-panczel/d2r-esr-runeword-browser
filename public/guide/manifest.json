@@ -1,19 +1,19 @@
 {
   "schema": 1,
-  "esrVersion": "3.3.03",
-  "esrTag": "3.3.03",
-  "esrCommit": "927fdd82daf20bb2b15ca4960f120d9f69d6dbcb",
-  "generatedAt": "2026-11-09T18:50:51.724Z",
+  "esrVersion": "3.3.04",
+  "esrTag": "3.3.04",
+  "esrCommit": "89271182598b40fcbc674f0688d70c436a31f746",
+  "generatedAt": "2026-11-11T17:20:51.422Z",
   "files": {
     "guide": {
-      "hash": "45aaea06811cfab38c8a1bf1aacfa99f0de04baaad68bbdc0e54ec2aa3e7bd05",
-      "bytes": 252721
+      "hash": "6d64d0017ecdb36acfdde4d4b8a030e9723269c18dc8252d7ea5df79c494e2ab",
+      "bytes": 252220
     }
   },
   "counts": {
     "notes": 34,
     "drafts": 34,
-    "words": 9319,
+    "words": 9402,
     "dataBlocks": 67,
     "spineSteps": 5,
     "questions": 6,
@@ -21,6 +21,6 @@
     "sourceRefs": 7
   },
   "warnings": [
-    "notes/endgame-bosses.md: 885 words (target 150–250, warning above 400)"
+    "notes/endgame-bosses.md: 902 words (target 150–250, warning above 400)"
   ]
 }

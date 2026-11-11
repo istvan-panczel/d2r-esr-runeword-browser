@@ -1,46 +1,46 @@
 {
   "schema": 2,
-  "esrVersion": "3.3.03",
-  "esrTag": "3.3.03",
-  "esrCommit": "927fdd82daf20bb2b15ca4960f120d9f69d6dbcb",
-  "esrDate": "2026-11-09T11:57:22+02:00",
-  "generatedAt": "2026-11-11T15:15:07.713Z",
+  "esrVersion": "3.3.04",
+  "esrTag": "3.3.04",
+  "esrCommit": "89271182598b40fcbc674f0688d70c436a31f746",
+  "esrDate": "2026-11-11T17:17:43+02:00",
+  "generatedAt": "2026-11-11T17:36:31.485Z",
   "files": {
     "types": {
       "hash": "8bd6af37e7f78de60cf7fb52378f3ef21d07501769d5e8bb34a338afdc76f0e8",
       "bytes": 45724
     },
     "bases": {
-      "hash": "cb1738470e8e3886b5d2f1838393174111608635e5f4148a7e28d73bc4e1345e",
-      "bytes": 363593
+      "hash": "da4be7db576f5b069c4763dd250ae88b6a48debec461fbcb70a147c245e93309",
+      "bytes": 363587
     },
     "runewords": {
-      "hash": "ace460d5d760a23fde191969408f1f75853792a83cf4ad4ce13a7f32582922a8",
-      "bytes": 234724
+      "hash": "fa52ecac23a982cbfc010c847ffcadd3ddaff300c4a0bfd878eac53e1cf032cf",
+      "bytes": 234575
     },
     "affixes": {
-      "hash": "0d46b13f2a94887764967b10910b4354f2ff94e586c0b0a459eba127aad9533f",
-      "bytes": 921572
+      "hash": "091d92119f75f9c0837c56059ea7a4fc7f96dc1121a54e177b23d3addcbb1121",
+      "bytes": 921875
     },
     "sources": {
-      "hash": "666795cdc4fa9dc9bffc6d15b7659ab0e5d674a2b0e56fe0a04a6f13ca7e5ad4",
-      "bytes": 310275
+      "hash": "4f94986c2bdc2141552579e6e783769ba9d63fb9f0a6ac713f39e749e9cca65f",
+      "bytes": 310365
     },
     "lootfilter": {
-      "hash": "c68b5e17f46421ccab5211ab8346ff9dd78a45e186a2b3630c1566d321c0f8e6",
-      "bytes": 900688
+      "hash": "2de58e8442626169dc0d053d97392d0a7a4694684e547d75b876ddf33fd33c74",
+      "bytes": 899738
     },
     "enhance": {
-      "hash": "1d86395f9e0d1eaff4fc1ab352b619503615702c9505946de6b4d4bfdf3163c5",
-      "bytes": 1184880
+      "hash": "481468701a78950d521829d2e62fb55714a029826f0f21e796a18c681282aaf0",
+      "bytes": 1184876
     },
     "cube": {
-      "hash": "06f982e1cb66d0b5634a682e991554042cffab46639563dda1252ddb0b40692a",
-      "bytes": 798484
+      "hash": "50ea1f0b5ad2d79499ce156a0aa6ab9a59b0d96951b1184342dd6a06be2dcdff",
+      "bytes": 793645
     },
     "materials": {
-      "hash": "b27624b11a599fbcca68e87615e4f7c6cd26d82053418b5e2931d37128be4966",
-      "bytes": 186596
+      "hash": "725a9badf2b3d8ef98f14bd70e9d71ef12bc8fd5f655d1022a603238211ae3e0",
+      "bytes": 185950
     },
     "sets": {
       "hash": "27c09f0ac7a20409b32f7f7189d5590a855953e058e0b82a49e4a26f2a5cf250",
@@ -51,12 +51,12 @@
       "bytes": 32008
     },
     "skilldetails": {
-      "hash": "c8d6ebabf0b02be7edf860c089dbab09243359487d4992e49e746e1d212f068b",
-      "bytes": 429341
+      "hash": "10c74cf61fa6de44342ec0671572bfe4b706d5abd1c2b18366c1ca04cc55256e",
+      "bytes": 430397
     },
     "skillcalc": {
-      "hash": "ada8895fa056c4d20834a6793828211e1fb0b73f646abf917f003dbfa49b8b6e",
-      "bytes": 396995
+      "hash": "d3e418d476ec4a075c4d157bf6ed54c7f4848f90ecd788da03d5f5b819590323",
+      "bytes": 397893
     },
     "crafting": {
       "hash": "1529acb4ff871f73df52abbd842d3f1e9dc840aff5c399c789f3b622321a1f7f",
@@ -71,32 +71,32 @@
       "bytes": 53747
     },
     "stash": {
-      "hash": "b96fdc745287e33fccedbf254bf1f4d986221a47776729aea9c182dcf88acc5e",
-      "bytes": 149813
+      "hash": "7d604efe2bd3d7fcd029eb50d8568d1731e4166a2e82f62c0afd57e9aac34b0e",
+      "bytes": 149993
     },
     "stashnames": {
       "hash": "943b26d2a6e688e096ba732665413a230be7b4417b7ca12c958a9c1979e1ecc1",
       "bytes": 303761
     },
     "itemtext": {
-      "hash": "b6d2ccb6a5f7142939df7b7c86d36bd38ee5a632649f6d807b1073cb0995329d",
-      "bytes": 507486
+      "hash": "b5de7f9d1350925e5d295077a84348fab9267cad8233ac0aad202093835fb66e",
+      "bytes": 504434
     },
     "terrorzones": {
-      "hash": "b27c9405f768fd0e80b23b92b36cbb4a95d95f860a443d063d1dfb1fb644b159",
+      "hash": "53e55a87cc7d7bde4721987a1e28ee119589f88c8ca6f467a9a641e2f2d04d7b",
       "bytes": 11932
     },
     "modifiers": {
-      "hash": "79f1ca36da0570765aaf5965dd95695548d68443341aef086334af37080e80f0",
-      "bytes": 342604
+      "hash": "908bb797af5cfa3179b25498f2b69423787e320bc2cb1e653fcddb266488e1c9",
+      "bytes": 337560
     },
     "masteries": {
       "hash": "4a2e944fda0c5c35309de14dc1cfcbe9b5fd1f0ec6b2c6962394c66d224fe0ad",
       "bytes": 20528
     },
     "specializations": {
-      "hash": "b7feec4f80fd3cd6e08b2e7c652d1dd302659bccb44a9dadf8a82eefa0b3a27e",
-      "bytes": 29932
+      "hash": "dfd041cd4cbdee803e272f90eb48e9f25de1ed2b10e891c6886fd7490fdfae3e",
+      "bytes": 29939
     },
     "mercenaries": {
       "hash": "7d0542c32a9d9e2c0b2150426b3c658d12d8f11cc84f652c353fe0556e2f83ee",
@@ -107,19 +107,19 @@
       "bytes": 8447
     },
     "elixirs": {
-      "hash": "89cd38396f1f898ee156f0a732175f7761b520ed00ed76d0420647b29a7d74cd",
-      "bytes": 34884
+      "hash": "f000ed402ed1570adf1832cce47ec33738359b7c6f6b4eff081cd342d14ac8e6",
+      "bytes": 34826
     },
     "combat": {
       "hash": "6b05eec67f90a997bef54ed04ee5115d8a15ce7330cec4b74578c7f6dfcc24d5",
       "bytes": 38461
     },
     "charsheet": {
-      "hash": "b895df60c5e083f4f1fe2209bda9cd729e1d3444c0519ce635ad1913d8952564",
-      "bytes": 326758
+      "hash": "52b186e95ca5f773c78e8e1e4363402b151c4bdf53781cad5f887016c2184c0d",
+      "bytes": 335513
     },
     "icons": {
-      "hash": "682ca31f9fbc0acaddced840ddd617c4f3313a74e8fd43384d3f61291e47ad88",
+      "hash": "309d5fe359b29d945038a540650b9288ad58516675225f458f7d74792d5ddd90",
       "bytes": 464271
     }
   },
@@ -130,7 +130,7 @@
     "weapons": 369,
     "armors": 255,
     "misc": 31,
-    "strings": 15009,
+    "strings": 15129,
     "stringConflicts": 85,
     "duplicateBases": 1,
     "baseAutomods": 86,
@@ -141,9 +141,9 @@
     "superiorWeightedRows": 150,
     "runewords": 391,
     "runewordRows": 521,
-    "affixes": 2564,
+    "affixes": 2565,
     "affixesPrefix": 896,
-    "affixesSuffix": 1526,
+    "affixesSuffix": 1527,
     "affixesAutomagic": 142,
     "affixesDropped": 95,
     "affixesPlaceholdersDropped": 1,
@@ -151,17 +151,17 @@
     "sourcesSet": 270,
     "sourcesMisc": 833,
     "sourcesMerged": 521,
-    "sourcesUnknown": 12,
+    "sourcesUnknown": 27,
     "lootFilterItems": 2334,
-    "lootFilterStats": 1059,
+    "lootFilterStats": 1069,
     "lootFilterAreas": 215,
     "lootFilterSounds": 12103,
     "lootFilterUniques": 1390,
     "lootFilterSets": 270,
     "lootFilterCouponUniques": 382,
-    "lootFilterSkills": 768,
-    "lootFilterKnownLayers": 2840,
-    "lootFilterSkillNames": 1630,
+    "lootFilterSkills": 739,
+    "lootFilterKnownLayers": 2816,
+    "lootFilterSkillNames": 1638,
     "enhanceCorruptionSlots": 11,
     "enhanceCorruptionOutcomes": 272,
     "enhanceAnointmentOutcomes": 4793,
@@ -171,27 +171,27 @@
     "enhanceStandardOfHeroesOutcomes": 12,
     "enhanceVesselRecipes": 382,
     "enhanceVesselTransforms": 29,
-    "cubeRecipes": 11572,
-    "cubeFamilies": 67,
+    "cubeRecipes": 9817,
+    "cubeFamilies": 66,
     "cubeFallbackFamilies": 0,
     "cubeFallbackRows": 0,
-    "cubeMergedRows": 1646,
-    "cubeRawRecipes": 471,
+    "cubeMergedRows": 1635,
+    "cubeRawRecipes": 472,
     "cubeHiddenEnhance": 6327,
-    "cubeHiddenTraps": 616,
+    "cubeHiddenTraps": 512,
     "cubeHiddenOld": 80,
     "cubeHiddenStockers": 3554,
     "cubeHiddenDummy": 0,
-    "materialsItems": 416,
+    "materialsItems": 415,
     "materialsGroups": 16,
     "materialsCollapsed": 658,
-    "materialsUsedInCube": 370,
+    "materialsUsedInCube": 368,
     "materialsMadeByCube": 335,
     "materialsUnknownSource": 20,
     "materialsExcludedBases": 37,
     "materialsExcludedGold": 1,
     "materialsExcludedUnlisted": 111,
-    "materialsExcludedQuest": 15,
+    "materialsExcludedQuest": 16,
     "materialsExcludedUnused": 8,
     "sets": 76,
     "setItems": 266,
@@ -200,9 +200,9 @@
     "skillClasses": 8,
     "skills": 280,
     "skillsSkipped": 0,
-    "skillDetails": 465,
-    "skillDetailsItemSkills": 185,
-    "skillDetailsWithGrants": 446,
+    "skillDetails": 468,
+    "skillDetailsItemSkills": 188,
+    "skillDetailsWithGrants": 449,
     "skillDetailsWithSynergies": 231,
     "skillComboBonuses": 63,
     "skillDetailsWithoutDescription": 96,
@@ -214,31 +214,31 @@
     "skillInfoMercenarySkills": 44,
     "skillInfoMercenaryLinks": 70,
     "skillInfoUnmatched": 0,
-    "skillGrantItems": 1195,
-    "skillGrants": 3169,
+    "skillGrantItems": 1194,
+    "skillGrants": 3170,
     "skillGrantsUndescribed": 1,
-    "skillCalcSkills": 465,
-    "skillCalcSkillsWithLevelLines": 370,
-    "skillCalcLines": 2705,
-    "skillCalcLevelLines": 1247,
-    "skillCalcFixedLines": 485,
+    "skillCalcSkills": 468,
+    "skillCalcSkillsWithLevelLines": 373,
+    "skillCalcLines": 2714,
+    "skillCalcLevelLines": 1253,
+    "skillCalcFixedLines": 488,
     "skillCalcSynergyLines": 973,
     "skillCalcHiddenStat": 10,
     "skillCalcHiddenEngine": 22,
-    "skillCalcHiddenUnsupported": 13,
+    "skillCalcHiddenUnsupported": 14,
     "skillCalcHiddenParse": 0,
     "skillCalcHiddenRandom": 0,
-    "skillCalcHiddenGated": 80,
+    "skillCalcHiddenGated": 81,
     "skillCalcHiddenType": 0,
     "skillCalcHiddenString": 3,
     "skillCalcHiddenFormat": 0,
     "skillCalcCharLevelSkills": 3,
     "skillCalcHardPointSkills": 28,
     "skillCalcSynergyInputs": 611,
-    "skillCalcItemEffect": 331,
-    "skillCalcRows": 524,
+    "skillCalcItemEffect": 333,
+    "skillCalcRows": 527,
     "skillCalcMissiles": 31,
-    "skillIcons": 325,
+    "skillIcons": 326,
     "craftingForgings": 84,
     "craftingStacking": 32,
     "craftingRowsUsed": 756,
@@ -263,8 +263,8 @@
     "areasMapBosses": 19,
     "areasMapBossArenas": 18,
     "stashItemCodes": 2334,
-    "stashSavedStats": 722,
-    "stashCharacterStats": 81,
+    "stashSavedStats": 725,
+    "stashCharacterStats": 85,
     "stashCoupons": 385,
     "stashCouponRecipes": 382,
     "stashCouponWildCardRecipes": 382,
@@ -272,27 +272,27 @@
     "stashSetItems": 270,
     "stashRunewords": 391,
     "stashGemwords": 9,
-    "itemTextStats": 722,
-    "itemTextStrings": 424,
-    "itemTextSkills": 917,
-    "itemTextMonsters": 406,
+    "itemTextStats": 725,
+    "itemTextStrings": 426,
+    "itemTextSkills": 891,
+    "itemTextMonsters": 367,
     "itemTextMagicPrefixes": 920,
-    "itemTextMagicSuffixes": 1597,
+    "itemTextMagicSuffixes": 1598,
     "itemTextAutoAffixes": 126,
     "itemTextRareNames": 201,
     "terrorZoneGroups": 20,
     "terrorZoneAreas": 181,
     "terrorZoneUnlistedLevels": 21,
     "terrorZoneBoosts": 6,
-    "modifierStats": 538,
-    "modifierStatsUsed": 524,
-    "modifierStatsEsrOnly": 361,
+    "modifierStats": 532,
+    "modifierStatsUsed": 518,
+    "modifierStatsEsrOnly": 355,
     "modifierStatsChanged": 11,
-    "modifierKinds": 441,
+    "modifierKinds": 435,
     "modifierKeyKinds": 60,
     "modifierFacts": 80,
     "modifierConfigFacts": 40,
-    "modifierSources": 22503,
+    "modifierSources": 20749,
     "masteries": 20,
     "masteryBases": 93,
     "masteryEffects": 30,
@@ -334,7 +334,7 @@
     "combatExcludedGoblins": 5,
     "combatExcludedSpecial": 5,
     "combatExcludedBosses": 13,
-    "charSheetSkills": 674,
+    "charSheetSkills": 679,
     "charSheetSets": 77,
     "charSheetHirelings": 30,
     "itemIcons": 655,
@@ -394,6 +394,7 @@
     "skillcalc: descmissile:m1ex in 1 line (Plague Javelin desc5)",
     "skillcalc: mastery:mael in 1 line (Meteor Sentry desc3)",
     "skillcalc: missile code:rad in 1 line (Miasma Chains dsc2-3)",
+    "skillcalc: skill:Lumberjack Passive in 1 line (Hatchet Flurry desc2)",
     "stash: unique \"Azurewrath_old\" (row 728) has no string; named \"Azurewrath\" after coupon 24f",
     "stash: cpn3 coupons whose base is not elite: 44e (exceptional)",
     "itemtext: string \"ModStr3kSum\" (stat description) not found",

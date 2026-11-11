@@ -27,6 +27,11 @@ export interface DamagePair {
   perFrame?: boolean;
   /** Appended when the range string has no duration (cold) */
   durationSuffix?: boolean;
+  /**
+   * The duration's `%.Nf` drops trailing zeros ("over 3 seconds", "over 0.4 seconds"): ESR 3.3.04's bleed plugin
+   * formats it so, and the docs pages print it so
+   */
+  trimDecimals?: boolean;
 }
 
 /** The fixed-value damage pairs merged into one line ("Adds 10-20 Fire Damage") */
@@ -35,7 +40,7 @@ export const DAMAGE_PAIRS: readonly DamagePair[] = [
   { min: 'lightmindam', max: 'lightmaxdam', rangeKey: 'strModLightningDamageRange' },
   { min: 'coldmindam', max: 'coldmaxdam', length: 'coldlength', rangeKey: 'strModColdDamageRange', durationSuffix: true },
   { min: 'poisonmindam', max: 'poisonmaxdam', length: 'poisonlength', rangeKey: 'strModPoisonDamageRange', perFrame: true },
-  { min: 'bleedmindam', max: 'bleedmaxdam', length: 'bleedlength', rangeKey: 'strModBleedDamageRange' },
+  { min: 'bleedmindam', max: 'bleedmaxdam', length: 'bleedlength', rangeKey: 'strModBleedDamageRange', trimDecimals: true },
 ];
 
 /** The string-table keys renderLines reads itself (besides the stat descriptions) */
@@ -65,8 +70,10 @@ export function damageLine(pair: DamagePair, min: number, max: number, length: n
   const lo = total(min);
   const hi = total(max);
   const seconds = length === null ? 0 : Math.round((length / 25) * 100) / 100;
+  // a string argument is printed as it is, so `%.2f` gets "3" rather than "3.00"
+  const duration = pair.trimDecimals === true ? String(seconds) : seconds;
   let line =
-    format.includes('%d-%d') && lo === hi ? sprintf(format.replace('%d-%d', '%d'), [lo, seconds]) : sprintf(format, [lo, hi, seconds]);
+    format.includes('%d-%d') && lo === hi ? sprintf(format.replace('%d-%d', '%d'), [lo, duration]) : sprintf(format, [lo, hi, duration]);
   if (pair.durationSuffix === true && length !== null) line += ` over ${String(seconds)} Seconds`;
   return line;
 }

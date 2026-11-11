@@ -294,7 +294,7 @@ const CUBEMAIN = tsv([
   cubeWith('P-Obs + Any Wand + 3 ddd', ['wand', 'gbk', '"ddd,qty=3"'], ['useitem'], { mod: ['levelreq', 2] }),
   cubeWith('P-Eme + Any Weapon + 3 ddd', ['weap', 'ggb', '"ddd,qty=3"'], ['useitem'], { mod: ['levelreq', 2] }),
   cubeWith('P-Eme + Any Helm + 3 ddd', ['helm', 'ggb', '"ddd,qty=3"'], ['useitem'], { mod: ['levelreq', 3] }),
-  // Ascendancies: the stones of one gem pattern pooled with their colours, the class rows merged, the tiers generic
+  // Ascendancies: the Orb of Creation only; the stone rows below are the pre-3.3.04 shape and match no family row
   cube('Orb of Creation: 5 Orb of Elements', ['u11', 'u12'], ['u16']),
   cube(
     'Battlemage Ascendancy: Orb of Creation + 2 Blemished Sapphire + 2 Blemished Obsidian',
@@ -713,17 +713,9 @@ describe('cube families', () => {
     ]);
   });
 
-  it('pools the Ascendancy Stones of one gem pattern with their colours and shows the tiers for any stone', () => {
+  it('keeps only the Orb of Creation in the ascendancy family (no stone rows since ESR 3.3.04)', () => {
     expect(collectFamily(family('ascendancy'), esr())).toEqual([
       { inputs: ['Orb of Storms', 'Orb of Earth'], output: 'Orb of Creation', note: null },
-      {
-        inputs: ['Orb of Creation', '2× Blemished gems + 2× Blemished gems of another colour'],
-        output: 'Ascendancy Stone: Battlemage (Obsidian, Sapphire) / Nomad (Sapphire, Obsidian)',
-        note: null,
-      },
-      { inputs: ['Orb of Creation', '4× Blemished gems of one colour'], output: 'Ascendancy Stone: Berserker (Obsidian)', note: null },
-      { inputs: ['Your Ascendancy Stone'], output: 'The stone at tier 2', note: null },
-      { inputs: ['Your Ascendancy Stone', 'Maple Leaf'], output: 'The stone at tier 3', note: null },
     ]);
   });
 

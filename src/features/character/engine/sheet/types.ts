@@ -3,6 +3,7 @@
  * strings, arrays and objects, no class instances and no Maps. See docs/features/CHARACTER-SAVE.md ("Computed sheet").
  */
 import type { DifficultyIndex } from '../../parser/types';
+import type { SheetAscendancy } from './ascendancy';
 
 /**
  * How far a number is backed by in-game ground truth:
@@ -21,6 +22,8 @@ export type SheetSourceKind =
   | 'item'
   /** A sets.txt bonus (partial or full set); the save does not hold these */
   | 'set'
+  /** The ascendancy's unlocked tiers (and the Lich King bonus): the plugin applies them every game, the save holds none */
+  | 'ascendancy'
   /** The Runic Insight perk's share on a host item */
   | 'runic'
   /** Anya's Scroll of Resistance */
@@ -157,8 +160,10 @@ export interface SheetFacts {
   killLedgerTier: number | null;
   /** The other `kill_ledger_*` flags set (boss kills), stat names without the prefix */
   killLedgerBosses: string[];
-  /** Highest `ascendancy_tier_N` on an active item; null when none */
+  /** Highest unlocked ascendancy tier (saved stats, or an old stone); null when none */
   ascendancyTier: number | null;
+  /** The ascendancy: saved stats (ESR 3.3.04+) or an old Ascendancy Stone the game converts; null when neither */
+  ascendancy: SheetAscendancy | null;
   /** Anya's Scroll of Resistance per difficulty */
   resistScrolls: [boolean, boolean, boolean];
   mercenary: MercenaryFacts | null;

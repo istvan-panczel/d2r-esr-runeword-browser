@@ -2506,6 +2506,44 @@ export interface CharSheetBundle {
   /** Specialisation trees: the stat of each perk (a perk is learned while the character's own value is above 0) */
   specializations: { slug: string; name: string; stats: number[] }[];
   rules: CharSheetRules;
+  /** The ascendancy panel's ascendancies in window order (entry i is saved as i + 1); [] without the plugin config */
+  ascendancies: CharSheetAscendancy[];
+  /** The ascendancy panel's rules (celestialrayone.ascendancies.toml, ESR 3.3.04+); null when the config is missing or off */
+  ascendancyRules: CharSheetAscendancyRules | null;
+}
+
+/**
+ * The ascendancy plugin's rules. A save holds only four character stats (`stats`): the ascendancy (1-based index into
+ * `ascendancies`, 0 = none), the progress bits (0–4 = tiers 1–5, 5 = the Lich King bonus, 6 = ascended once), the
+ * soulstones and the orb. The plugin applies the unlocked tiers' properties on the host every game; nothing is saved.
+ */
+export interface CharSheetAscendancyRules {
+  /** itemstatcost.txt ids of the saved character stats */
+  stats: { ascendancy: number; progress: number; soulstones: number; orb: number };
+  /** Primordial Soulstones that grant `soulstoneTier` */
+  soulstoneCap: number;
+  soulstoneTier: number;
+  /** Per class (charstats.txt order): the stat of its class skill property (`class_skill_properties`), [stat id, param] */
+  classSkills: [number, number][];
+  /** The Lich King bonus properties as saved stats */
+  lichKing: ItemTextSavedStat[];
+  /** Old Ascendancy Stones, converted by the plugin on login: the item, the stone's stats for tiers 2–5, soulstones, Lich King */
+  legacy: { item: string; tierStats: number[]; soulstoneStat: number; lichKingStat: number };
+}
+
+/** The rules with the ascendancies (`list` = `CharSheetBundle.ascendancies`): what the sheet engine reads */
+export interface CharSheetAscendancies extends CharSheetAscendancyRules {
+  list: CharSheetAscendancy[];
+}
+
+export interface CharSheetAscendancy {
+  /** 1-based, as the save stores it */
+  index: number;
+  name: string;
+  /** uniqueitems.txt row of its old Ascendancy Stone */
+  legacyUnique: number;
+  /** Tiers 1–5: `classSkills` = the class skill property's value, `stats` = every other property as saved stats */
+  tiers: { classSkills: number; stats: ItemTextSavedStat[] }[];
 }
 
 export interface CharSheetStatOp {

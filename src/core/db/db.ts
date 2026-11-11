@@ -11,6 +11,7 @@ import type {
   MythicalUnique,
   Ascendancy,
   AscendancyChallenge,
+  AscendancySection,
   Metadata,
 } from './models';
 
@@ -26,6 +27,7 @@ class AppDatabase extends Dexie {
   mythicalUniques!: EntityTable<MythicalUnique, 'id'>;
   ascendancies!: EntityTable<Ascendancy, 'name'>;
   ascendancyChallenges!: EntityTable<AscendancyChallenge, 'tier'>;
+  ascendancySections!: EntityTable<AscendancySection, 'title'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
@@ -77,6 +79,28 @@ class AppDatabase extends Dexie {
         mythicalUniques: '++id, name, category, reqLevel',
         ascendancies: 'name',
         ascendancyChallenges: 'tier',
+        metadata: 'key',
+      })
+      .upgrade(async (tx) => {
+        await tx.table('metadata').delete('appVersion');
+      });
+
+    // v16: the other sections of the ascendancies.htm challenge part (the Lich King Bonus, ESR 3.3.04). Same refetch
+    // as v15, so existing caches drop the stone recipes of the old page and fill the new table
+    this.version(16)
+      .stores({
+        gems: 'name, type, quality, color',
+        esrRunes: 'name, order, tier, color',
+        lodRunes: 'name, order',
+        kanjiRunes: 'name',
+        crystals: 'name, type, quality, color',
+        runewords: '[name+variant], name, sockets, reqLevel, sortKey',
+        gemwords: '[name+variant], name, sockets, reqLevel, sortKey',
+        htmUniqueItems: '++id, name, page, category, reqLevel',
+        mythicalUniques: '++id, name, category, reqLevel',
+        ascendancies: 'name',
+        ascendancyChallenges: 'tier',
+        ascendancySections: 'title',
         metadata: 'key',
       })
       .upgrade(async (tx) => {

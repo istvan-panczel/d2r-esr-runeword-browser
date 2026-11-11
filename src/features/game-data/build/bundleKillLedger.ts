@@ -3,12 +3,15 @@
  *
  * - Bonuses: the cube families `kill-ledger-tiers` and `kill-ledger-bosses`. A boss row is grouped by its
  *   `kill-ledger-*` marker mod, so a boss with harder forms (Lich King, Rathma) is one entry.
- * - Which boss a row means: the monsters whose `death-skill` (monprop.txt) sets `kill_check` to the row's value. A
- *   skill's value is its level for `Just Killed Boss` (`aurastatcalc1` = `lvl`) and `clc1?a:b` for the others. The dev
- *   label only picks a row's name when several monsters share it. A row labelled `A + B` needs both kills: its value is
- *   the sum of their two values, and the entry stays one boss.
- * - Map tier and area: areas.json `mapBosses` (the monprop ids match).
- * - The transmute window: the `auralencalc` of those skills, in frames.
+ * - Which boss a row means: since ESR 3.3.04 the ascendancies plugin credits the kills, so its config's
+ *   `[[kill_credit]]` tables say which monsters (monstats.txt `*hcIdx`) give which `value` (`value_above` for the
+ *   stronger form, by maximum life). Before, and as a fallback without the config: the monsters whose `death-skill`
+ *   (monprop.txt) sets `kill_check` to the row's value; a skill's value is its level for `Just Killed Boss`
+ *   (`aurastatcalc1` = `lvl`) and `clc1?a:b` for the others. The dev label only picks a row's name when several
+ *   monsters share it. A row labelled `A + B` needs both kills: its value is the sum of their two values, and the
+ *   entry stays one boss.
+ * - Map tier and area: areas.json `mapBosses` (the monstats ids match).
+ * - The transmute window: the config's `kill_credit_frames`, else the `auralencalc` of the Just Killed skills, in frames.
  * - The source: the Starter Pack's cube rows. The tooltip: the item's `spelldescstr` string.
  * - The official page is parsed (`killLedgerPage.ts`) and compared; differences go to `pageDiffs`, the files win.
  */
@@ -28,6 +31,7 @@ import type {
 import { withoutCount } from '../engine/cubeIcons.ts';
 import type { CubeMod, CubeRow, ModRenderer } from './cube/cubeRows.ts';
 import { parseKillLedgerPage, type KillLedgerPage } from './killLedgerPage.ts';
+import { parseToml } from './toml.ts';
 import type { TsvTable } from './tsv.ts';
 
 const LEDGER_CODE = 'led';
@@ -50,6 +54,10 @@ export interface KillLedgerInput {
   cubeRows: readonly CubeRow[];
   renderMods: ModRenderer;
   monprop: TsvTable;
+  /** monstats.txt without its Expansion rows (row index = hcIdx) */
+  monstats: TsvTable;
+  /** Raw d2rloader/config/celestialrayone.ascendancies.toml (the plugin's kill credit, ESR 3.3.04+); null when missing */
+  ascendanciesConfig: string | null;
   /** skills.txt in row order (row n = skill id n) */
   skills: TsvTable;
   misc: TsvTable;
@@ -138,6 +146,43 @@ export function readKillValues(monprop: TsvTable, skills: TsvTable, warn: (messa
   return values;
 }
 
+export interface KillCredit {
+  /** Kill value → monster ids (monstats.txt `Id`) */
+  values: Map<number, string[]>;
+  /** How long a kill counts, in frames; null when the config has no number */
+  frames: number | null;
+}
+
+/**
+ * The plugin's kill credit (`[[kill_credit]]` of the ascendancies config): each entry's `monsters` (hcIdx) give `value`,
+ * and `value_above` too when set (the uber form). Null when the config is missing or has no entry.
+ */
+export function readKillCredit(config: string | null, monstats: TsvTable, warn: (message: string) => void): KillCredit | null {
+  if (config === null) return null;
+  const { entries, errors } = parseToml(config);
+  for (const error of errors) warn(`ascendancies.toml ${error}`);
+  const values = new Map<number, string[]>();
+  for (let i = 0; entries.has(`kill_credit[${String(i)}].name`); i++) {
+    const at = (key: string) => entries.get(`kill_credit[${String(i)}].${key}`)?.value;
+    const name = String(at('name'));
+    const monsters = at('monsters');
+    const ids = (Array.isArray(monsters) ? monsters : []).map((index) => monstats.rows.at(Number(index))?.str('Id') ?? '');
+    if (ids.length === 0 || ids.includes('')) {
+      warn(`ascendancies.toml kill credit "${name}": monsters ${JSON.stringify(monsters)} not all in monstats.txt`);
+      continue;
+    }
+    for (const value of [at('value'), at('value_above')]) {
+      if (typeof value !== 'number') continue;
+      const list = values.get(value) ?? [];
+      for (const id of ids) if (!list.includes(id)) list.push(id);
+      values.set(value, list);
+    }
+  }
+  if (values.size === 0) return null;
+  const frames = entries.get('ascendancies.kill_credit_frames')?.value;
+  return { values, frames: typeof frames === 'number' && frames > 0 ? frames : null };
+}
+
 /** Seconds from the `Just Killed` aura length; null when the skills disagree or have no number */
 function readWindow(skills: TsvTable): number | null {
   const lengths = new Set(
@@ -217,7 +262,8 @@ export function buildKillLedgerBundle(input: KillLedgerInput): KillLedgerResult 
   tiers.sort((a, b) => a.kills - b.kills);
 
   // --- boss bonuses ---
-  const killValues = readKillValues(input.monprop, input.skills, warn);
+  const credit = readKillCredit(input.ascendanciesConfig, input.monstats, warn);
+  const killValues = credit?.values ?? readKillValues(input.monprop, input.skills, warn);
   const mapBosses = new Map(input.mapBosses.map((boss) => [boss.id, boss]));
   const areaById = new Map(input.areas.map((area) => [area.id, area]));
   const areaOf = (id: number): KillLedgerBossArea | undefined => {
@@ -285,8 +331,8 @@ export function buildKillLedgerBundle(input: KillLedgerInput): KillLedgerResult 
     });
   }
 
-  const windowSeconds = readWindow(input.skills);
-  if (windowSeconds === null) warn('the Just Killed skills give no transmute window');
+  const windowSeconds = credit?.frames != null ? credit.frames / FRAMES_PER_SECOND : readWindow(input.skills);
+  if (windowSeconds === null) warn('neither the kill credit config nor the Just Killed skills give a transmute window');
   const seconds = windowSeconds ?? 0;
 
   // --- official page ---

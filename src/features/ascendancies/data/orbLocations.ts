@@ -1,6 +1,6 @@
 /**
- * Where the five elemental orbs drop. Hand-maintained: the official ascendancies.htm only hints "Act 1, 2, 3 each have
- * a superunique, Act 5 has 2". The superuniques come from the game files (superuniques.txt TC(H) → treasureclassex.txt
+ * Where the five elemental orbs drop. Hand-maintained: the official ascendancies.htm does not say where (its hint "Act 1,
+ * 2, 3 each have a superunique, Act 5 has 2" went in ESR 3.3.04). The superuniques come from the game files (superuniques.txt TC(H) → treasureclassex.txt
  * → misc.txt u11–u15, names from monsters.json; sources.json says the same, see orbLocations.test.ts), the areas and
  * spots were checked in game by the owner (also in content/guide/notes/ascendancies.md). Re-check after an ESR release.
  */
@@ -51,5 +51,5 @@ export const ORB_LOCATIONS: readonly OrbLocation[] = [
 /** What the five orbs cube into (cubemain "Orb of Creation: 5 Orb of Elements") */
 export const ORB_OF_CREATION = 'Orb of Creation';
 
-/** The Cube page family with the Orb of Creation, unlock and tier recipes */
+/** The Cube page family with the Orb of Creation recipe (since ESR 3.3.04 its only row) */
 export const ASCENDANCY_CUBE_FAMILY = 'ascendancy';

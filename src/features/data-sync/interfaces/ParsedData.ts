@@ -10,6 +10,7 @@ import type {
   MythicalUnique,
   Ascendancy,
   AscendancyChallenge,
+  AscendancySection,
 } from '@/core/db';
 
 export interface ParsedData {
@@ -25,6 +26,8 @@ export interface ParsedData {
   readonly ascendancies: Ascendancy[];
   /** Not sanity-checked: empty when the page has no recognisable challenge section (the page then hides that part) */
   readonly ascendancyChallenges: AscendancyChallenge[];
+  /** Not sanity-checked either: the other sections of the page's challenge part (the Lich King Bonus) */
+  readonly ascendancySections: AscendancySection[];
   /** Remote ESR version fetched during the startup check; absent on force refresh. */
   readonly esrVersion?: string;
   /** ISO `Last-Modified` of the docs site's runewords.htm; absent when the header is missing. */

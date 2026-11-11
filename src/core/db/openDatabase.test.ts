@@ -22,7 +22,7 @@ describe('openDatabase', () => {
     await openDatabase();
 
     expect(db.isOpen()).toBe(true);
-    expect(db.verno).toBe(15);
+    expect(db.verno).toBe(16);
     expect(await db.runewords.count()).toBe(0);
     expect(db.tables.map((table) => table.name)).not.toContain('affixes');
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -40,7 +40,7 @@ describe('openDatabase', () => {
     expect((await db.metadata.get('esrVersion'))?.value).toBe('1.0.0');
   });
 
-  it('upgrades a version 14 cache to 15 and drops the stored app version so the next startup re-parses', async () => {
+  it('upgrades a version 14 cache to the latest version and drops the stored app version so the next startup re-parses', async () => {
     db.close();
     await Dexie.delete(db.name);
 
@@ -55,10 +55,29 @@ describe('openDatabase', () => {
 
     await openDatabase();
 
-    expect(db.verno).toBe(15);
+    expect(db.verno).toBe(16);
     expect(await db.ascendancies.count()).toBe(1);
     expect(await db.ascendancyChallenges.count()).toBe(0);
+    expect(await db.ascendancySections.count()).toBe(0);
     expect((await db.metadata.get('esrVersion'))?.value).toBe('3.2.24');
+    expect(await db.metadata.get('appVersion')).toBeUndefined();
+  });
+
+  it('upgrades a version 15 cache to 16 and drops the stored app version so the stone recipes get re-parsed away', async () => {
+    db.close();
+    await Dexie.delete(db.name);
+
+    const v15 = new Dexie(db.name);
+    v15.version(15).stores({ ascendancies: 'name', ascendancyChallenges: 'tier', metadata: 'key' });
+    await v15.table('ascendancyChallenges').put({ tier: 2, description: ['Old'], recipes: [] });
+    await v15.table('metadata').put({ key: 'appVersion', value: '1.68.0' });
+    v15.close();
+
+    await openDatabase();
+
+    expect(db.verno).toBe(16);
+    expect(await db.ascendancyChallenges.count()).toBe(1);
+    expect(await db.ascendancySections.count()).toBe(0);
     expect(await db.metadata.get('appVersion')).toBeUndefined();
   });
 });

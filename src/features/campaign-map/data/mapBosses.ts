@@ -245,8 +245,10 @@ export const MAP_BOSS_FACTS: Readonly<Record<string, MapBossFacts>> = {
         source: 'endgame',
       },
       {
-        text: 'Kill him on players 8, then within 60 seconds cube your Ascendancy Stone with a Null Rune: +1 to all skills, once per stone.',
-        source: 'tables',
+        // ESR 3.3.04: no cube step any more (celestialrayone.ascendancies.toml `lich_king` trigger, monster 980 above
+        // 2,000,000,000 max life, credited to every living player in the level; skills.txt reads lichkingbonus × 10%)
+        text: 'Kill him on players 8: your ascendancy’s tier 3 and 4 scaling bonuses grow by 10%, once. Since 3.3.04 the kill gives it by itself to everyone in the level, with no cube recipe.',
+        source: 'endgame',
       },
     ],
     page: T5_FINAL_PAGE(),

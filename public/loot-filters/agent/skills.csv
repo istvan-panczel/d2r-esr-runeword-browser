@@ -391,26 +391,7 @@ id,name,class,formulaName
 783,Super Teleport,,Super Teleport
 784,Death Sentry,,Death Sentry Physical
 786,Spell Mastery,,Spell Mastery
-787,Battlemage Ascendancy,,Battlemage Ascendancy
-788,Awakened Ascendancy,,Awakened Ascendancy
-789,Blademaster Ascendancy,,Blademaster Ascendancy
-790,Nomad Ascendancy,,Nomad Ascendancy
-791,Ironbolt Ascendancy,,Ironbolt Ascendancy
-792,Arcanist Ascendancy,,Arcanist Ascendancy
-793,Soul Warden Ascendancy,,Soul Warden Ascendancy
-794,Sharpshooter Ascendancy,,Sharpshooter Ascendancy
-795,Starborn Ascendancy,,Starborn Ascendancy
-796,Bloodmage Ascendancy,,Bloodmage Ascendancy
-797,Lifebreaker Ascendancy,,Lifebreaker Ascendancy
-798,Worldshaper Ascendancy,,Worldshaper Ascendancy
-799,Stance Dancer Ascendancy,,Stance Dancer Ascendancy
-800,Mana Warden Ascendancy,,Mana Warden Ascendancy
-801,Berserker Ascendancy,,Berserker Ascendancy
-815,Annihilation,,Annihilation
-822,Scurry,,Scurry
-823,Life Pact,,Life Pact
 824,Fury of Creation,,Fury of Creation
-825,Ravage,,Ravage
 827,DamageAugment New,,DamageAugment New
 829,Mana Shards,,Mana Shards
 832,Plasma Swarm,,Plasma Swarm
@@ -724,21 +705,6 @@ id,name,class,formulaName
 1505,Wraithstep,,Wraithstep Damage
 1506,Bloodpact Shard Aura,,Bloodpact Shard Aura
 1507,Town Portal,,Townportal Oskill
-1508,Battlemage Ascendancy Tier 4,,Battlemage Ascendancy Tier 4
-1509,Awakened Ascendancy Tier 4,,Awakened Ascendancy Tier 4
-1510,Blademaster Ascendancy Tier 4,,Blademaster Ascendancy Tier 4
-1511,Nomad Ascendancy Tier 4,,Nomad Ascendancy Tier 4
-1512,Ironbolt Ascendancy Tier 4,,Ironbolt Ascendancy Tier 4
-1513,Arcanist Ascendancy Tier 4,,Arcanist Ascendancy Tier 4
-1514,Soul Warden Ascendancy Tier 4,,Soul Warden Ascendancy Tier 4
-1515,Sharpshooter Ascendancy Tier 4,,Sharpshooter Ascendancy Tier 4
-1516,Starborn Ascendancy Tier 4,,Starborn Ascendancy Tier 4
-1517,Bloodmage Ascendancy Tier 4,,Bloodmage Ascendancy Tier 4
-1518,Lifebreaker Ascendancy Tier 4,,Lifebreaker Ascendancy Tier 4
-1519,Worldshaper Ascendancy Tier 4,,Worldshaper Ascendancy Tier 4
-1520,Stance Dancer Ascendancy Tier 4,,Stance Dancer Ascendancy Tier 4
-1521,Mana Warden Ascendancy Tier 4,,Mana Warden Ascendancy Tier 4
-1522,Berserker Ascendancy Tier 4,,Berserker Ascendancy Tier 4
 1523,Opalvein Aura Enhanced Damage,,Opalvein Aura Enhanced Damage
 1524,Opalvein Aura Spell Damage,,Opalvein Aura Spell Damage
 1525,Entropy Locket Aura,,Entropy Locket Aura
@@ -767,3 +733,8 @@ id,name,class,formulaName
 1625,Agent of the Light Aura,,Agent of the Light Aura
 1626,Lightning Enhanced Leap Attack,,Lightning Enhanced Leap Attack
 1628,Horn of Balor Aura,,Horn of Balor Aura
+1631,Warshrike,,Warshrike
+1633,Dark Knight Dread Passive,,Dark Knight Dread Passive
+1635,Pounce,,Pounce
+1636,Stormseeker Lightning,,Stormseeker Lightning
+1637,Stormseeker,,Stormseeker

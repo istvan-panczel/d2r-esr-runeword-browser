@@ -39,7 +39,7 @@ do not fit between the bands, which is why the page has no level slider and no i
 
 ### Warnings
 
-Warnings start with `mercenaries:`. ESR 3.3.03 has none, pinned in `bundleIntegrity.test.ts`:
+Warnings start with `mercenaries:`. ESR 3.3.04 has none, pinned in `bundleIntegrity.test.ts`:
 
 - "only on the page / only in hireling.txt": the page's skill list and the file's differ (compared by resolved id, in
   any order).

@@ -22,6 +22,8 @@ export const ESR_BOSS_SET_UNIQUE_DROP_FILE = 'd2rloader/config/celestialrayone.b
 export const ESR_SUPERIOR_AFFIXES_FILE = 'd2rloader/config/celestialrayone.superior-affixes.toml';
 /** D2RLoader plugin config of the Alchemist perks that need engine code (elixirs.json); optional */
 export const ESR_ALCHEMY_FILE = 'd2rloader/config/celestialrayone.alchemy.toml';
+/** D2RLoader plugin config of the ascendancy panel and the boss kill credit (killledger.json, charsheet.json); optional */
+export const ESR_ASCENDANCIES_FILE = 'd2rloader/config/celestialrayone.ascendancies.toml';
 /** The offline terror zone rotation (terrorzones.json) */
 export const ESR_DESECRATED_ZONES_FILE = 'Eastern_Sun_Resurrected.mpq/data/hd/global/excel/desecratedzones.json';
 /** D2RLoader plugin configs the modifiers bundle reads its ESR facts from (crushing blow per target, caps, curves …) */
@@ -119,7 +121,7 @@ export interface EsrSources {
   tables: Record<EsrTableName, string>;
   strings: StringsFile[];
   /** Launcher plugin configs (raw text; null when the file is missing) */
-  plugins: { bossSetUniqueDrop: string | null; superiorAffixes: string | null; alchemy: string | null };
+  plugins: { bossSetUniqueDrop: string | null; superiorAffixes: string | null; alchemy: string | null; ascendancies: string | null };
   /** Plugin configs and memory patches of modifiers.json by name (raw text; null when the file is missing) */
   modifierConfigs: Record<EsrModifierConfig, string | null>;
   modifierPatches: Record<EsrModifierPatch, string | null>;
@@ -195,7 +197,12 @@ export function readEsrSources(esrDir: string): EsrSources {
     esrVersion: readModVersion(esrDir),
     tables,
     strings,
-    plugins: { bossSetUniqueDrop, superiorAffixes: optional(ESR_SUPERIOR_AFFIXES_FILE), alchemy: optional(ESR_ALCHEMY_FILE) },
+    plugins: {
+      bossSetUniqueDrop,
+      superiorAffixes: optional(ESR_SUPERIOR_AFFIXES_FILE),
+      alchemy: optional(ESR_ALCHEMY_FILE),
+      ascendancies: optional(ESR_ASCENDANCIES_FILE),
+    },
     modifierConfigs,
     modifierPatches,
     desecratedZones,

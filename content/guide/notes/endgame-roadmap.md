@@ -20,7 +20,7 @@ There is no fixed order after Hell Baal. A path many players follow:
 
 1. **Hell special areas** such as the Secret Cow Level and Harpie's Nest, for experience and materials. Raise the players setting as you get stronger.
 2. **Naraku and Nihlathak's Domain**, below Act 5's Ancients' Way. The official Maps page calls these the hardest special areas. Their superuniques and Nihlathak can drop tier 1 Endgame Maps, and killing Nihlathak on Hell is an Ascendancy challenge.
-3. **The first Ascendancy:** five special superuniques on Hell drop the pieces of your Ascendancy Stone ([[ascendancies]]).
+3. **The first Ascendancy:** five special superuniques on Hell drop the five orbs that make the Orb of Creation, which unlocks the ascendancy panel ([[ascendancies]]).
 4. **Diablo Clone and Uber Tristram** for [Annihilus](dropfinder:Annihilus) and the Hellfire Torch ([[unique-charms]]); selling Devil's Food spawns Diablo Clone, and the Pandemonium keys lead to Uber Tristram ([[maps-keys-ascendancy]]).
 5. **:term[Endgame map]s:** five tiers of mostly boss zones, the main loop of the endgame and the only source of mythical uniques ([[maps-keys-ascendancy]], [[endgame-bosses]]). The official page recommends roughly 5k life, [maximum resistances](page:/modifiers?kind=resist-fire) and some [physical resistance](page:/modifiers?kind=physical-resist) before you start.
 

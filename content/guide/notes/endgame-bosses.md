@@ -39,13 +39,11 @@ mentions:
     Lucion's Relic of Sanctification,
     Lucion's Essence,
     Eternal Hourglass of the Timeless Sands,
-    Null Rune,
-    Ascendancy Stone,
   ]
 officialDocs:
   - label: Endgame Maps
     href: docs:endgame_maps.htm
-sources: [official-docs, esr-txt, esr-loader]
+sources: [official-docs, esr-txt, esr-loader, patchnotes]
 ---
 
 Each of the five map tiers has four maps, and 14 of the 20 have a boss; the other six are horde maps whose loot comes from their many unique packs. The [Campaign Map](page:/campaign-map?tab=maps) shows every zone with its boss, rewards and fight notes. The fight descriptions below come from the official Endgame Maps page, in our words; the drop chances come from the game files, so they can differ from the page.
@@ -64,7 +62,7 @@ Every boss rolls an Orb of Anointment ([[corruption-anointment]]), a map of the 
 
 ::map-bosses[5]
 
-Where the official page lists other drop chances, the tables above follow the files: the page promises a key every time from tier 4 bosses and the Guardians of Time, and a whole key set from the other tier 5 bosses (the files drop one random key). Shards are different: the files give terrorized tier 5 bosses shards too. The official page used to say they drop none because of an engine limit, which the files cannot show, and in 3.3.03 it dropped that paragraph, so check in game before counting on them. The Eye of the Storm bosses drop Diablo's Demonic Horn, Mephisto's Demonic Brain and Baal's Demonic Eye, used to anoint unique charms. The Alien Artefact in every table is new in 3.3; since ESR 3.3.02 only Archaeologists with the [Alien Artefacts](page:/specializations?tree=archaeologist&perk=alien-artefacts) perk get it, and since 3.3.03 they all go in the stash's currency tab.
+Where the official page lists other drop chances, the tables above follow the files: the page promises a key every time from tier 4 bosses and the Guardians of Time, and a whole key set from the other tier 5 bosses (the files drop one random key). Shards are different: the files give terrorized tier 5 bosses shards too. The official page used to say they drop none because of an engine limit, which the files cannot show, and in 3.3.03 it dropped that paragraph, so check in game before counting on them. The Eye of the Storm bosses drop Diablo's Demonic Horn, Mephisto's Demonic Brain and Baal's Demonic Eye, used to anoint unique charms. The Alien Artefact in every table is new in 3.3; since ESR 3.3.02 only Archaeologists with the [Alien Artefacts](page:/specializations?tree=archaeologist&perk=alien-artefacts) perk get it, and they go in the stash's currency tab (3.3.03; depositing them works since 3.3.04).
 
 ### Tiers 1 to 4
 
@@ -93,10 +91,10 @@ Tier 5 bosses cannot be damaged until you pick up an empowerment, often two at o
 
 On players 8 the last three tier 5 fights get harder (more and stronger adds; Rathma enrages at a quarter of his life; Lucion's aura grows without limit) and give something extra:
 
-- **Lich King**: within 60 seconds of the kill, cube your Ascendancy Stone with a Null Rune for +1 to all skills, once per stone.
+- **Lich King**: the kill adds +10% to your ascendancy's tier 3 and 4 scaling bonuses, by itself since 3.3.04; it used to give +1 to all skills ([[ascendancies]]).
 - **Rathma**: kill him and Kor'nac within a minute of each other, then cube Rathma's Eternal Skull by itself in that minute for magic resist, maximum poison resist and Raise Kor'nac.
 - **Lucion**: he also drops Lucion's Essence, a stronger socketing consumable.
 
 ::source[Lucion's Essence]
 
-After any of these kills you also have 60 seconds for the [[kill-ledger]], and dying in a map boss area costs no experience ([[death-and-respec]]).
+After any of these kills you also have 60 seconds for the [[kill-ledger]]; since 3.3.04 every player in the boss's area gets the kill. Dying in a map boss area costs no experience ([[death-and-respec]]).

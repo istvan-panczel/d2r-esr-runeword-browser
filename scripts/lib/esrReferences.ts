@@ -9,6 +9,7 @@
  */
 import {
   CHAR_SHEET_FILES,
+  ESR_ASCENDANCIES_FILE,
   ESR_BOSS_SET_UNIQUE_DROP_FILE,
   ESR_DESECRATED_ZONES_FILE,
   ESR_MODIFIER_CONFIGS,
@@ -131,6 +132,12 @@ export const ESR_REFERENCES: readonly EsrReference[] = [
     follows:
       'charsheet.json rules (build/bundleCharSheet.ts: Runic Insight, charm dedup, inventory charms, the resist cap formula, asserted at generation) and the computed character sheet',
   })),
+  {
+    path: ESR_ASCENDANCIES_FILE,
+    kind: 'generated',
+    follows:
+      'charsheet.json ascendancies (build/bundleCharSheet.ts: the saved stats, the window order the save indexes, each tier as saved stats, class skill properties, the Lich King bonus, the old stone conversion keys; asserted at generation) and the skills it keeps (the tier 3 / 4 auras); My Character applies the unlocked tiers. Also killledger.json bosses and window (`[[kill_credit]]` / `kill_credit_frames`, build/bundleKillLedger.ts): the Kill Ledger page and the map boss panel',
+  },
   // Tested
   {
     path: 'docs/quality_affixes.htm',

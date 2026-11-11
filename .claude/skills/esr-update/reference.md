@@ -75,7 +75,7 @@ Skills page's per-level values, `docs/features/SKILLS.md` "Skill levels"). Expla
 `skillCalcHidden*` going up means lines the calculator now refuses. A `skillcalc: <token> in N lines` warning names a
 formula code, function, skill or missile it cannot evaluate (ESR 3.3: `clc0` in 4 lines (Tornado Shot and Legendary
 Arrow joined Frenzy and Mirrored Blades), `ln43`, `ps10` / `ps11` (Bind Demon), `m1nm`/`m1xm`, `rad`, the ambiguous
-`m2eo`/`m2ey`/`me3o`/`me3y` codes, the mastery code `mael`, Plague Javelin's missing descmissile `m1en`/`m1ex`; plus the
+`m2eo`/`m2ey`/`me3o`/`me3y` codes, the mastery code `mael`, Plague Javelin's missing descmissile `m1en`/`m1ex`, since 3.3.04 `skill:Lumberjack Passive` (Hatchet Flurry reads a skill that does not exist; a question for the mod author); plus the
 missing strings `shurikennumber`, `StrSkillManaCostPerSecond`, `physicaldamagewhilewwdesc`): a new one is a follow-up
 for the owner, never a code mapped by guess. `skillcalc: the cut rows change …` means the row cutting lost a column: a generator bug, report it.
 The integrity test pins Fire Ball, Blizzard, Fanaticism, Might, Raise Skeleton, Whirlwind, Hellfire Lance, Rift Shot,
@@ -171,7 +171,7 @@ the owner's OK.
   `celestialrayone.boss-set-unique-drop.toml`. Hand-written in `src/features/campaign-map/data/mapBosses.ts`: fight,
   damage and uber notes and the page's `page` figures. A new or renamed boss fails `campaignMapIntegrity.test.ts`; an
   `areas:` map boss warning (no monstats row, no generic loot roll, a set-drop unique not in uniqueitems.txt) is a
-  finding. ESR 3.3.03: 30 known differences (3.3: 49; 3.2.24: 32, owner-checks questions 24–28; 3.3 added the 19 "Alien Artefact
+  finding. ESR 3.3.03 and 3.3.04: 30 known differences (3.3: 49; 3.2.24: 32, owner-checks questions 24–28; 3.3 added the 19 "Alien Artefact
   2% in the files, page: Archaeologist perk only" lines and fixed Herald of Doom's orb and map and Lucion's missing
   terrorized table; 3.3.03 moved the Tier 2–4 key chances and Rathma's and Lucion's map chance in the files). The page's terror
   paragraph is gone since 3.3.03, so the app no longer quotes it: tier 5 shows the files' shards and `terrorUnconfirmed`
@@ -185,7 +185,7 @@ the owner's OK.
   (propose); "takes <code>, which cannot get this mastery", "no awaken / remove row takes", a description naming other
   weapons or ingredients → genuine data, a question for the mod author. `bundleIntegrity.test.ts` pins the 20
   specialisations of the page (ESR 3.3 lists the Warlock Void Blade too), the Orb "Spells" skills (the skills whose
-  formulas read `weapon_mastery_orb_1`), the 17 families, the knuckle gap and the 6 warnings of 3.3.03. The
+  formulas read `weapon_mastery_orb_1`), the 17 families, the knuckle gap and the 6 warnings of 3.3.03 (unchanged in 3.3.04). The
   `/weapon-masteries` page reads the same bundle; `build/masteryPage.ts` parses the official page into `pageRules`
   (drop odds), `pageNotes` (footnotes) and `pageDiffs` (the files win; 3 in 3.3.02: Stag Bow, Fend, Orb heading), so a
   reworded page shows in the bundle diff and on the cards: re-read each new difference. Warnings "the formulas of …
@@ -193,12 +193,17 @@ the owner's OK.
   skills.txt formulas disagreeing with its text (the page shows the text): a question for the mod author, not a fix here.
   A new page row or heading the parser cannot pair is a `Row "…"` difference. New class weapons without apply rows land
   in `noMasteryBases` (the page's knuckle note).
-- **Kill Ledger** (`docs/kill_ledger.htm`): killledger.json comes from cubemain (tiers, the boss rows by `kill-ledger-*`
-  marker), monprop `death-skill` rows and the `Just Killed …` skills (which monster sets which `kill_check` value, the
-  60 second `auralencalc`), areas.json `mapBosses` and the `leddesc` string (`build/bundleKillLedger.ts`). The page is
-  parsed and compared: `pageDiffs` lists every difference (a question for the mod author; the files win).
-  `killledger:` warnings: "matches no monster", "unknown boss label", "not in the areas.json map bosses", a page row
-  with no boss → a renamed, moved or new boss; check the rows and add it to `bundleIntegrity.test.ts`.
+- **Kill Ledger** (`docs/kill_ledger.htm`, `celestialrayone.ascendancies.toml`): killledger.json comes from cubemain
+  (tiers, the boss rows by `kill-ledger-*` marker), which monster sets which `kill_check` value and the 60 second window,
+  areas.json `mapBosses` and the `leddesc` string (`build/bundleKillLedger.ts`). Since ESR 3.3.04 the ascendancies plugin
+  credits boss kills: the toml's `[[kill_credit]]` tables (`monsters` = monstats.txt row index, `value`, `value_above`)
+  and `kill_credit_frames`; without the toml the generator falls back to the monprop `death-skill` rows and the
+  `Just Killed …` skills (3.3.03 and older; 3.3.04 removed those death skills, which emptied the bundle until the
+  generator read the toml). The page is parsed and compared: `pageDiffs` lists every difference (a question for the mod
+  author; the files win). `killledger:` warnings: "matches no monster" for every boss at once → the crediting moved
+  again (read the toml / monprop diff); one boss: "unknown boss label", "not in the areas.json map bosses", an
+  `ascendancies.toml kill credit` index not in monstats.txt, a page row with no boss → a renamed, moved or new boss;
+  check the rows and add it to `bundleIntegrity.test.ts`.
 - **Specializations** (`docs/specializations.htm`): specializations.json comes from
   `celestialrayone.specializations.toml` (rules, perk stats and string keys per tree), the strings, misc.txt / cubemain
   (Tesseract, Token of Absolution), the treasure classes (shard drops, perk-gated drops) and the perk plugin configs
@@ -225,8 +230,16 @@ the owner's OK.
   needs a look; "the suspect dexterity … is gone" → ESR fixed it, drop the `SUSPECT_DEXTERITY` entry.
   `bundleIntegrity.test.ts` pins the 16 variants, hirelings, acts and types, and no warnings. Slugs (`desert-mercenary`,
   `combat`) are linked from the skill cards and the guide.
-- **Character sheet** (`celestialrayone.archaeology.toml`, `celestialrayone.charm-dedup.toml`, `charm-inv.toml`, the
-  resistance floor display patch): charsheet.json (`build/bundleCharSheet.ts`) reads them and throws when the Runic
+- **Character sheet** (`celestialrayone.archaeology.toml`, `celestialrayone.charm-dedup.toml`, `charm-inv.toml`,
+  `celestialrayone.ascendancies.toml`, the resistance floor display patch): charsheet.json (`build/bundleCharSheet.ts`)
+  reads them. Ascendancies (ESR 3.3.04+: no stone, the plugin applies the tiers and the save keeps only stats 1064–1067):
+  charsheet.json `ascendancies` (the toml's `[[ascendancy]]` in window order, which is the saved 1-based index: a
+  reordered toml changes every save's ascendancy) and `ascendancyRules` (saved stats, class skill properties, Lich King
+  properties, the old stone conversion keys); the generator throws on other saved-stat names, another
+  `class_skill_properties` order, a property it cannot read, a `class-skills` range or a missing tier list. New tier
+  properties or skills show in the `bundle.charsheet` diff (`ascendancies`, `skills`); compare the toml tiers with the
+  Ascendancies page text and report differences to the mod author (3.3.04: Soul Warden T4, Stance Dancer T4, Mana Warden
+  T5). It throws when the Runic
   Insight perk stat is no longer `archaeology_3`, the patch no longer says `min(75+maxresist, 95)`,
   `allow_inventory_charms` is gone or a class passive gets a `passiveitype`: follow the change in
   `src/features/character/engine/sheet/`. It also throws when the experience.txt class columns differ, charstats.txt is not
@@ -234,7 +247,9 @@ the owner's OK.
   the change (a new class, a new quiver type) before touching the engine. `skills.txt` `weapsel` drives the off-hand attack
   rating line and states.txt `transform` / `gfxtype` the shape-shift group: a changed value there changes the page. Hand-kept
   engine constants: resist cap 75 / ceiling 95, physical cap 50, Anya +10. With fresh ground-truth saves, re-run
-  `sheet.fixture.integration.test.ts` (and `buildDraft.fixture.integration.test.ts`: the build stats from the same save).
+  `sheet.fixture.integration.test.ts` (and `buildDraft.fixture.integration.test.ts`: the build stats from the same save);
+  it also reads the owner's 3.3.04 save (`test-fixtures/character/ground-truth/spintowin-3.3.04/`, Blademaster tiers 1–4)
+  to check the saved-stat ascendancy, and the 3.3.03 pair to check the old stone conversion.
 - **Character buffs, forms and What if** (same bundle, docs/features/CHARACTER-SAVE.md "Buffs", "Shape-shifted forms",
   "What if"): three more skills.txt columns decide what the Buffs card offers, so a changed value changes the page without
   any warning. `range` (`h2h` / `rng` / `both` = an attack, `none` / `loc` = cast) with `weapsel` and `passiveitype`:
@@ -279,7 +294,11 @@ the owner's OK.
 - **Modifiers**: `ESR_MODIFIER_CONFIGS` / `ESR_MODIFIER_PATCHES` are `hand-kept` (the prose quotes them); configs that
   `content/modifiers/modifiers.md` cites without the generator reading them (damage-overflow-fix, immunity-dot-clear,
   summon-resist-cap, skill-line-merge, …) show up through the citations.
-- **Campaign Maps page, ascendancies**: SKILL steps 5.6 and 5.7.
+- **Campaign Maps page, ascendancies**: SKILL steps 5.6 and 5.7. Since ESR 3.3.04 `docs/ascendancies.htm` has no recipe
+  tables: the parser keeps the tier challenges and every other `<h3>` with a description table as a section (the Lich
+  King Bonus); the how-to panel's summary (orb → panel → tiers on the kills) is hand-written in
+  `AscendancyHowToPanel.tsx`, and the cube family `ascendancy` is the one Orb of Creation row. A page that brings
+  recipes back, or a section the parser drops, shows in `ascendanciesParser.test.ts`.
 
 A new feature that follows an official page or launcher config adds it to `ESR_REFERENCES` (SKILL step 8).
 

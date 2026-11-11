@@ -20,14 +20,15 @@ class AppDatabase extends Dexie {
   mythicalUniques!: EntityTable<MythicalUnique, 'id'>;
   ascendancies!: EntityTable<Ascendancy, 'name'>;
   ascendancyChallenges!: EntityTable<AscendancyChallenge, 'tier'>;
+  ascendancySections!: EntityTable<AscendancySection, 'title'>;
   metadata!: EntityTable<Metadata, 'key'>;
 
   constructor() {
     super('d2r-esr-runeword-browser');
 
-    // version(13) (with affixes) and version(14) (affixes: null, the unused table dropped) are still declared
-    // before this so existing databases upgrade
-    this.version(15)
+    // version(13) (with affixes), version(14) (affixes: null, the unused table dropped) and version(15)
+    // (ascendancyChallenges) are still declared before this so existing databases upgrade
+    this.version(16)
       .stores({
         gems: 'name, type, quality, color',
         esrRunes: 'name, order, tier, color',
@@ -40,9 +41,10 @@ class AppDatabase extends Dexie {
         mythicalUniques: '++id, name, category, reqLevel',
         ascendancies: 'name',
         ascendancyChallenges: 'tier', // v15
+        ascendancySections: 'title', // v16
         metadata: 'key',
       })
-      // v15: forget the app version that wrote the cache, so the next online startup re-parses
+      // v15 and v16: forget the app version that wrote the cache, so the next online startup re-parses
       .upgrade(async (tx) => {
         await tx.table('metadata').delete('appVersion');
       });
@@ -185,24 +187,36 @@ Stores unique items parsed from HTM pages.
 
 Stores the ascendancies parsed from `ascendancies.htm` (15 at ESR 3.3).
 
-| Column       | Type             | Index   | Description                                                                                                                                      |
-| ------------ | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| name         | string           | Primary | "Battlemage", "Soul Warden"                                                                                                                      |
-| imageUrl     | string           | No      | Relative URL on the docs site, e.g. "./images/ascendancies/battlemage.png"                                                                       |
-| tiers        | AscendancyTier[] | No      | `{ tier, bonuses }` for tiers 1–5                                                                                                                |
-| footnotes    | string[]         | No      | The `*` notes under the card                                                                                                                     |
-| unlockInputs | string[]?        | No      | The Tier 1 Challenge recipe for this stone: ["Orb of Creation", "2 Blemished Sapphire", …]; `[]` when the page has none; undefined in older data |
+| Column    | Type             | Index   | Description                                                                |
+| --------- | ---------------- | ------- | -------------------------------------------------------------------------- |
+| name      | string           | Primary | "Battlemage", "Soul Warden"                                                |
+| imageUrl  | string           | No      | Relative URL on the docs site, e.g. "./images/ascendancies/battlemage.png" |
+| tiers     | AscendancyTier[] | No      | `{ tier, bonuses }` for tiers 1–5                                          |
+| footnotes | string[]         | No      | The `*` notes under the card                                               |
+
+Caches written before version 16 of the database also hold `unlockInputs` (the stone recipe gems, gone in ESR
+3.3.04); the v16 upgrade makes the next online startup re-parse them away.
 
 ### ascendancyChallenges
 
-Stores the "Tier N Challenge" sections of `ascendancies.htm` (5 at ESR 3.3). Not sanity-checked: empty when the
+Stores the "Tier N Challenge" sections of `ascendancies.htm` (5 at ESR 3.3.04). Not sanity-checked: empty when the
 page has no readable challenge section (the Ascendancies page then hides its tier steps).
 
-| Column      | Type               | Index   | Description                                                                                                                                                                                      |
-| ----------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| tier        | number             | Primary | 1–5                                                                                                                                                                                              |
-| description | string[]           | No      | Plain-text paragraphs (emphasis dropped, hard-wrapped lines re-joined)                                                                                                                           |
-| recipes     | AscendancyRecipe[] | No      | `{ inputs, outputs }`, one entry per cell line; Tier 1 has one per ascendancy (15), the later tiers one each (e.g. "Ascendancy Stone" + "Maple Leaf" → "Ascendancy Stone", "Upgraded to Tier 3") |
+| Column      | Type     | Index   | Description                                                            |
+| ----------- | -------- | ------- | ---------------------------------------------------------------------- |
+| tier        | number   | Primary | 1–5                                                                    |
+| description | string[] | No      | Plain-text paragraphs (emphasis dropped, hard-wrapped lines re-joined) |
+
+### ascendancySections
+
+Stores the other sections of the challenge part of `ascendancies.htm` (1 at ESR 3.3.04: "Lich King Bonus"). Not
+sanity-checked: empty when the page has none.
+
+| Column      | Type     | Index   | Description                                   |
+| ----------- | -------- | ------- | --------------------------------------------- |
+| title       | string   | Primary | The `<h3>` heading, e.g. "Lich King Bonus"    |
+| order       | number   | No      | Position on the page (0-based), display order |
+| description | string[] | No      | Plain-text paragraphs, as for the challenges  |
 
 ### metadata
 

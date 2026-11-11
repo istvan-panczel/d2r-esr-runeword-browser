@@ -29,6 +29,7 @@ import {
 } from './buildDraftItems';
 import { computeBuildStats } from './buildDraftStats';
 import type { SheetData } from './sheet';
+import { readAscendancy, type SheetAscendancy } from './sheet/ascendancy';
 
 export type { BuildDraftData, DraftItemKind, DraftItemOutcome } from './buildDraftItems';
 
@@ -194,14 +195,30 @@ function charmLines(items: readonly CharacterItem[], level: number, data: BuildD
   return [...counts].map(([line, count]) => (count > 1 ? `${String(count)}x ${line}` : line));
 }
 
-/** The ascendancy of the stone in the charm inventory (a stone anywhere else does nothing). */
-function ascendancyOf(items: readonly CharacterItem[], data: BuildDraftData): string | null {
-  const stone = items.find((item) => isCharmInventory(item) && item.code === ASCENDANCY_STONE_CODE);
+/** The ascendancy an old Ascendancy Stone names: the one in the charm inventory first, else one anywhere (the game converts a held stone) */
+function stoneAscendancy(items: readonly CharacterItem[], data: BuildDraftData): string | null {
+  const stones = items.filter((item) => item.code === ASCENDANCY_STONE_CODE);
+  const stone = stones.find(isCharmInventory) ?? stones.at(0);
   if (stone === undefined) return null;
   const name = describeStashItem(stone, data.catalog).unique?.name;
-  if (name === undefined) return null;
-  const wanted = normalizeName(name).replace(ASCENDANCY_STONE_SUFFIX, '');
-  return data.ascendancies.find((candidate) => normalizeName(candidate) === wanted) ?? null;
+  return name === undefined ? null : normalizeName(name).replace(ASCENDANCY_STONE_SUFFIX, '');
+}
+
+/**
+ * The character's ascendancy as one of the Ascendancies page's names: from the saved ascendancy stats (ESR 3.3.04+,
+ * through charsheet.json; an old stone converted the same way), else, without the sheet data, from the stone's name
+ */
+function ascendancyOf(file: CharacterFile, data: BuildDraftData, sheetData: SheetData | null): string | null {
+  let saved: SheetAscendancy | null = null;
+  // Like the stats block, a problem here never blocks the import: the stone's name is the fallback
+  try {
+    saved = sheetData === null ? null : readAscendancy(file, sheetData.ascendancies);
+  } catch (error) {
+    console.error('Could not read the ascendancy from the save:', error);
+  }
+  const wanted = saved === null ? stoneAscendancy(file.items.player, data) : saved.name;
+  if (wanted === null) return null;
+  return data.ascendancies.find((candidate) => normalizeName(candidate) === normalizeName(wanted)) ?? null;
 }
 
 /** Hard points by skills.json id, zero entries dropped. */
@@ -283,7 +300,7 @@ export function createBuildDraft(
   const swap = mapSection('swap', swapSlots(file.gear), index, data);
   const merc = mapSection('merc', mainSlots(file.mercGear), index, data);
   const charms = charmLines(file.items.player, file.level, data);
-  const ascendancy = ascendancyOf(file.items.player, data);
+  const ascendancy = ascendancyOf(file, data, sheetData);
   const skillPoints = skillPointsOf(file, data);
   const skills = skillsInUseLine(file, data.skillNames);
   const level = asLevel(file.level);

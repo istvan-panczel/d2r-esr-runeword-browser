@@ -280,7 +280,10 @@ function itemAuras(data: SheetData, fixed: readonly Contribution[], unknown: { s
   for (const entry of byKey.values()) {
     const skill = data.skill(entry.skill);
     if (skill === undefined && entry.level > 0 && !data.knownSkill(entry.skill))
-      unknown.push({ skill: entry.skill, label: entry.owner.label });
+      unknown.push({
+        skill: entry.skill,
+        label: entry.owner.kind === 'ascendancy' ? `of the ${entry.owner.label}` : `on the ${entry.owner.label} item`,
+      });
     if (skill === undefined || entry.level <= 0 || !affectsOwner(skill.row, 'item-aura')) continue;
     const seen = best.get(entry.skill);
     if (seen === undefined || seen.level < entry.level) best.set(entry.skill, { owner: entry.owner, skill, level: entry.level });
@@ -435,7 +438,7 @@ function compute(
       if (replaced.has(skill.n)) continue;
       const stats = auraStats(data, skill, level, 0, ctx);
       mergeInto(stats, passiveStats(data, skill, level, 0, hardCtx));
-      const kind = owner.kind === 'what-if' ? 'what-if' : 'item-aura';
+      const kind = owner.kind === 'what-if' || owner.kind === 'ascendancy' ? owner.kind : 'item-aura';
       next.push({ kind, label: `${data.skillName(skill.n)} (${owner.label})`, item: owner.item, skill: skill.n, stats });
     }
     next.push(...buffContributions);
@@ -829,7 +832,8 @@ function facts(character: CharacterFile, data: SheetData, c: Computed): SheetFac
     })),
     killLedgerTier: tiers(/^kill_ledger_tier_(\d+)$/),
     killLedgerBosses,
-    ascendancyTier: tiers(/^ascendancy_tier_(\d+)$/),
+    ascendancyTier: c.setup.ascendancy === null ? null : (c.setup.ascendancy.tiers.at(-1) ?? null),
+    ascendancy: c.setup.ascendancy,
     resistScrolls: [quests?.[0]?.resistScroll ?? false, quests?.[1]?.resistScroll ?? false, quests?.[2]?.resistScroll ?? false],
     mercenary: mercenaryFacts(character, data),
   };
@@ -874,7 +878,7 @@ function warningsOf(data: SheetData, c: Computed, attributes: CharacterSheet['at
     );
   for (const { skill, label } of c.unknownAuras)
     warnings.push(
-      `The aura ${data.skillName(skill)} (skill ${String(skill)}) on the ${label} item is not counted: this app's game data does not know it (a save from a newer ESR?)`
+      `The aura ${data.skillName(skill)} (skill ${String(skill)}) ${label} is not counted: this app's game data does not know it (a save from a newer ESR?)`
     );
   warnings.push(...c.buffNotes);
   const offSheet = (c.whatIf?.skills ?? []).filter((skill) => skill.unshown.length > 0);

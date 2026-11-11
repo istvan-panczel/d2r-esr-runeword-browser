@@ -26,7 +26,7 @@ Since 3.2.04 a gem can also be split into three of the grade below: Alt + click 
 Why you want them:
 
 - **Perfect gems** pay for most rerolls (uniques, jewels, charms), Anvil Stones and gem melding. Since 3.2.13 Akara, Drognan, Alkor, Larzuk and Jamella sell **Perfect gem 6 Packs**; the stash downgrade (Alt + click) splits one into six Perfect gems.
-- **Blemished gems** reroll rares, add sockets to elite white bases and to exceptional items that are not white, and unlock Ascendancy Stones.
+- **Blemished gems** reroll rares and add sockets to elite white bases and to exceptional items that are not white.
 - **Chipped gems** pick the bonus in Forging recipes ([[forging]]).
 
 ### Crystals and ores

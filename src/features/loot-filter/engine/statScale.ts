@@ -82,6 +82,7 @@ export const STAT_SCALES: readonly StatScale[] = [
   perLevel(1052, 'item_piercedmg_perlevel', 'Pierce Damage'),
   perLevel(1055, 'rune_effect_current_item_perlevel', 'Socketed Effect'),
   perLevel(1056, 'item_maxhp_percent_perlevel', 'Maximum Life %'),
+  perLevel(1059, 'item_piercepois_perlevel', 'Poison Pierce'),
 ];
 
 /** The scale of a check's stat (an itemstatcost name or id), if the game stores it scaled. */

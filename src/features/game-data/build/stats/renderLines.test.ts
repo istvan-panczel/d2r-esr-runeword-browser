@@ -27,6 +27,9 @@ describe('renderLines', () => {
 
   it('keeps bleed min = max as a range (no %d-%d in its string) and physical/magic min/max as two lines', () => {
     expect(lines(mod('dmg-bleed', 1250, 1250, '125'))).toEqual(['Adds 1250%-1250% Bleed Damage over 5 seconds']);
+    // the bleed plugin drops trailing zeros (ESR 3.3.04 docs pages: "over 0.12 seconds", "over 2.4 seconds")
+    expect(lines(mod('dmg-bleed', 30, 40, '3'))).toEqual(['Adds 30%-40% Bleed Damage over 0.12 seconds']);
+    expect(lines(mod('dmg-bleed', 30, 40, '60'))).toEqual(['Adds 30%-40% Bleed Damage over 2.4 seconds']);
     expect(lines(mod('dmg-norm', 40, 50))).toEqual(['+40 to Minimum Damage to Attacks', '+50 to Maximum Damage to Attacks']);
   });
 

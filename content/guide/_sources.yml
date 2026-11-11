@@ -25,4 +25,4 @@
 - id: esr-loader
   title: ESR launcher plugins and memory patches
   url: https://github.com/CelestialRayOne/Eastern_Sun_Resurrected/tree/main/d2rloader
-  note: ESR launcher plugins and memory patches shipped with the mod (d2rloader/ config and patches); engine rules the excel tables cannot show, such as the corpse-free death.
+  note: ESR launcher plugins and memory patches shipped with the mod (d2rloader/ config and patches); engine rules the excel tables cannot show, such as the corpse-free death, and since 3.3.04 the ascendancy panel and boss kill credit (config/celestialrayone.ascendancies.toml).

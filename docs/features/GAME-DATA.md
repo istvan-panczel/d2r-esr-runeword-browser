@@ -96,11 +96,11 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `modifiers.json`       | ESR 3.3: 329 KB / 54 KB (stats 254 KB, of which example items 116 KB; kinds 51 KB; facts 20 KB)                                    |
 | `masteries.json`       | ESR 3.3: 15 KB / 4 KB                                                                                                              |
 | `specializations.json` | ESR 3.3: 29 KB (+ `icons/specializations/`: 60 WebP, 138 KB)                                                                       |
-| `mercenaries.json`     | ESR 3.3.03: 17 KB                                                                                                                  |
+| `mercenaries.json`     | ESR 3.3.04: 17 KB                                                                                                                  |
 | `killledger.json`      | ESR 3.3: 8 KB                                                                                                                      |
 | `elixirs.json`         | ESR 3.3: 35 KB / 5 KB                                                                                                              |
-| `combat.json`          | ESR 3.3.03: 38 KB / 12 KB (areas 30 KB, level ratios 3 KB, bosses 3 KB)                                                            |
-| `charsheet.json`       | ESR 3.3.03: 327 KB / 49 KB (skills 240 KB: 280 class skills + 394 item / referenced rows; sets 25 KB; stat names 20 KB)            |
+| `combat.json`          | ESR 3.3.04: 38 KB / 12 KB (areas 30 KB, level ratios 3 KB, bosses 3 KB)                                                            |
+| `charsheet.json`       | ESR 3.3.04: 336 KB / 50 KB (skills 242 KB: 280 class + 399 item / referenced rows; sets 25 KB; ascendancies 6 KB)                  |
 | `icons.json`           | ESR 3.3: 453 KB / 52 KB (+ `icons/`: 1,867 WebP, 7.1 MB; 3.2.24: 451 / 52, 1,842, 7.0 MB; before `items`: 318 / 39, 1,434, 5.6 MB) |
 
 ### Bases and types
@@ -566,7 +566,7 @@ and quiver rerolls for the points of the can's gem). ESR 3.3: 626 rows in 5 fami
 only: every slot's bonuses, one group per class), then 25 cube-only families (`EXTRA_FAMILIES`: the 5 stocker families,
 unique rerolls, set conversions / cycles / rerolls, rune forging on the other
 slots, legacy crafts, base upgrades, normal items, magic/rare rerolls and starter weapons, ring and amulet recipes,
-jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Might boon, Primordial Soulstones, quest
+jewels, quivers, materials, potions, repair, map portals, D-stoning, Tyrael's Might boon, quest
 items, Blemished gems / Mi Rune, secret recipes grouped per number), then a fallback `other:<prefix>` per description
 prefix (numbers as `#`, cut at `:`, `-` or `(`). ESR 3.3 additions: `crucible` (section Forging: the 884 "Crucible - …"
 rows and the 4 "[SECRET08/09] Crucible - …" rows of the Blacksmith perk The Secret Crucible, a second forging, worded
@@ -664,7 +664,7 @@ qualifier: "Item level 99" (fixed), "Item level 60% of character level" (`plvl`)
 level" (`ilvl`), both added: "Item level 60% of character level + 60% of input item level". It is a separate field so
 it does not split the merged rows (they cluster on the output text; `clusterVariantsCounted` returns the indices of the
 variants each merged row stands for). A merged row lists the distinct levels of its variants joined with " / "
-(variants without one do not count). ESR 3.3.03: 641 of 1,646 merged rows have a level, none disagree. The guide's
+(variants without one do not count). ESR 3.3.04: 637 of 1,635 merged rows have a level, none disagree. The guide's
 `::recipes` blocks do not show it (their rows are built by `collectFamily`, a separate path without this field).
 
 **Qualities** (`qualities`, the page's quality filter, order unique / set / rare / magic / crafted): from the outputs a
@@ -746,7 +746,7 @@ anointment` (the charm reagents, slot `charm`), `Sanctification reagent` (`sanct
   would be a cycle (`game-data:update` regenerates game data first). The page joins guide.json's `itemNotes` and
   `familyNotes` in the browser (GUIDE.md "Bundle shape"). For the same reason cube.json families carry no guide notes.
 
-Counts: `materialsItems` 416, `materialsGroups` 16, `materialsUsedInCube` 370, `materialsMadeByCube` 335,
+Counts: `materialsItems` 415, `materialsGroups` 16, `materialsUsedInCube` 368, `materialsMadeByCube` 335,
 `materialsUnknownSource` 20 (ESR 3.3.03; 177 socket fillers, 55 potions, 52 Ancient Scrolls, 48 cube materials, 24 quest
 items, 21 maps, 14 organs, 7 containers, 5 coupon rows and a few small groups; 3.2.24: 395 items). Adding the file did not bump
 `GAME_DATA_SCHEMA`.
@@ -922,7 +922,7 @@ monumod constant, and a worked example (`WORKED_EXAMPLES`: Death Knight in World
 Tier 1 map boss, Baal) that no longer reproduces: a warning rather than a failure so an ESR rebalance does not block the update;
 `bundleIntegrity.test.ts` fails on any `combat:` warning and pins the committed numbers. A missing curve fact throws.
 
-Counts (ESR 3.3.03): `combatAreas` 126, `combatMapZones` 20, `combatMapZonesDropped` 1, `combatPools` 398,
+Counts (ESR 3.3.04): `combatAreas` 126, `combatMapZones` 20, `combatMapZonesDropped` 1, `combatPools` 398,
 `combatPoolsWithCasters` 110, `combatBosses` 30, `combatExcludedGoblins` 5, `combatExcludedSpecial` 5, `combatExcludedBosses` 13.
 
 ### Terror zones
@@ -967,7 +967,7 @@ without length prefixes, so the parser needs every width:
 - `gemwords`: the runeword field values of the charm gemwords (the counts of the home card need no names).
 - `characterStats`, `characterClasses` (`build/bundleCharacterSave.ts`, read by the character save parser,
   [CHARACTER-SAVE.md](./CHARACTER-SAVE.md)): the `gf` stats as `[stat id, CSvBits, ValShift]` for every
-  itemstatcost.txt row with CSvBits > 0 (81 in ESR 3.3.03), and `[class name, first skills.txt row, skill count]`
+  itemstatcost.txt row with CSvBits > 0 (85 in ESR 3.3.04), and `[class name, first skills.txt row, skill count]`
   per class, in the save's class byte order.
 
 `stashnames.json` (`StashNamesBundle`, the same generator) holds the names, loaded by the All items page only, so the
@@ -999,7 +999,7 @@ starting with `*` or `+` reads as the misc.txt `name` column ("Minor Healing Pot
 (`cube/cubeRows.ts`). 17 codes in ESR 3.3 (hp1–hp5, mp1–mp5, vps, yps, rvs, rvl, wms, tsc, isc; `hp5` keeps ESR's
 "Supeer Healing Potion"). lootfilter.json keeps the in-game abbreviations (what a filter author sees on the ground).
 
-Counts (ESR 3.3.03): `stashItemCodes` 2334, `stashSavedStats` 722, `stashCoupons` 385, `stashCouponRecipes` 382,
+Counts (ESR 3.3.04): `stashItemCodes` 2334, `stashSavedStats` 725, `stashCoupons` 385, `stashCouponRecipes` 382,
 `stashCouponWildCardRecipes` 382, `stashUniques` 1390, `stashSetItems` 270, `stashRunewords` 391, `stashGemwords` 9. Wild Card costs per recipe: Normal 1, Exceptional 2, Elite 4 (one Elite coupon,
 `44e` Measured Wrath, takes 2).
 
@@ -1046,8 +1046,8 @@ own text renderer (`engine/stats`: descfunc, renderLines, sprintf).
 - `levels`: required levels by the ids a save stores: uniqueitems / setitems `lvl req`, magicprefix / magicsuffix /
   automagic `levelreq` (1-based like the names).
 
-Counts (ESR 3.3.03): `itemTextStats` 722, `itemTextStrings` 424, `itemTextSkills` 917, `itemTextMonsters` 406,
-`itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1597, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
+Counts (ESR 3.3.04): `itemTextStats` 725, `itemTextStrings` 426, `itemTextSkills` 891, `itemTextMonsters` 367,
+`itemTextMagicPrefixes` 920, `itemTextMagicSuffixes` 1598, `itemTextAutoAffixes` 126, `itemTextRareNames` 201.
 
 ### Character sheet
 
@@ -1085,13 +1085,28 @@ needs on top of `itemtext.json`. Only the character page loads it.
   (`celestialrayone.charm-dedup.toml`), `inventoryCharms` (`charm-inv.toml`), `dodgeCap`
   (`celestialrayone.dodge-avoid-evade-cap.toml`), `resistFloor` (-1000 with both resistance floor patches, else -100),
   and the engine constants `resistCap` 75, `resistCeiling` 95, `physicalResistCap` 50, `anyaResist` 10.
+- `ascendancies` and `ascendancyRules` (ESR 3.3.04+, `celestialrayone.ascendancies.toml`, the ascendancy panel plugin;
+  `[]` / null without the file, with a warning): the 15 `[[ascendancy]]` blocks in window order (entry i is the saved
+  `ascendancy` stat i + 1; not the old stones' uniqueitems order), each with its name, `legacyUnique` (its old stone's
+  uniqueitems row) and `tiers[0..4]`: `classSkills` (the `class-skills` value) and every other property as saved stats
+  (`savedStatsReader`, property groups resolved; `dmg-norm=40..50` is min / max damage, `hit-skill[127]=15..20` chance /
+  level, not rolls). `ascendancyRules`: the saved stats (`ascendancy_stat` … `orb_stat` = 1064–1067),
+  `soulstoneCap` / `soulstoneTier`, `classSkills` (each class's `class_skill_properties` entry as `[stat, param]`:
+  `item_addclassskills` with the class), `lichKing` (the Lich King bonus properties as saved stats) and `legacy` (the
+  old stone item and its tier 2–5, soulstone and Lich King stats the plugin converts). The skills the tiers name join
+  the `itemSkillUses` input (`ascendancyMods`), so `skills` keeps the tier 3 / 4 auras (787–801, 1508–1519, 1521,
+  1522: Stance Dancer's 1520 is named by no tier since 3.3.04) and 822 / 823; the loot filter and item text bundles do
+  not take them (no item names them).
 
 Asserted at generation (the build throws): the Runic Insight perk stat must be `archaeology_3`, the resistance floor
 display patch must still describe the cap as `min(75+maxresist, 95)`, `allow_inventory_charms` must exist, the
 experience columns must match, charstats rows must be the 8 classes in order, and no class passive may have a
 `passiveitype` (the sheet does not gate passives by weapon), and every weapons.txt row must be a weapon or a quiver by
-its item type (states.txt joined the tables `esrSources.ts` reads, for `shapeshift`). Counts: `charSheetSkills` 674,
-`charSheetSets` 77, `charSheetHirelings` 30.
+its item type (states.txt joined the tables `esrSources.ts` reads, for `shapeshift`). The ascendancy config must name
+the four saved stats by their itemstatcost.txt names, list `class_skill_properties` in the class order (each one
+`item_addclassskills` stat with its class), write every property as `code[param]=min..max`, give `class-skills` one
+value and every block five tier lists. Counts: `charSheetSkills` 679 (ESR 3.3.04; 648 before the ascendancy config
+was read), `charSheetSets` 77, `charSheetHirelings` 30.
 
 ### Skills
 
@@ -1145,8 +1160,8 @@ paths); `build/toml.ts` reads the TOML. Vanilla reference values: `build/data/va
 and qualityitems.txt joined the tables `esrSources.ts` reads; the file is a new sibling, so `GAME_DATA_SCHEMA` stays.
 Details, facts and open questions: [MODIFIERS.md](./MODIFIERS.md).
 
-Counts (ESR 3.3.03): `modifierStats` 538, `modifierStatsUsed` 524, `modifierStatsEsrOnly` 361, `modifierStatsChanged` 11,
-`modifierKinds` 441, `modifierKeyKinds` 60, `modifierFacts` 80, `modifierConfigFacts` 40, `modifierSources` 22503.
+Counts (ESR 3.3.04): `modifierStats` 532, `modifierStatsUsed` 518, `modifierStatsEsrOnly` 355, `modifierStatsChanged` 11,
+`modifierKinds` 435, `modifierKeyKinds` 60, `modifierFacts` 80, `modifierConfigFacts` 40, `modifierSources` 20749.
 Warnings start with `modifiers:`.
 
 ### Crafting options
@@ -1209,7 +1224,7 @@ picker and the guide's `::dstone-caps` table read it.
   and the Kanji runes Moon … God, r84–r97). Switch item labels are the misc.txt names: `vps` reads "Stamina Potion"
   (the descriptions say "+ vps"), `yps` "Antidote Potion".
 
-Counts (ESR 3.3.03): `craftingForgings` 84 (8 skill, 1 all, 7 stat, 60 rune, 8 aura), `craftingStacking` 32 (24
+Counts (ESR 3.3.04): `craftingForgings` 84 (8 skill, 1 all, 7 stat, 60 rune, 8 aura), `craftingStacking` 32 (24
 D-stoning, 8 gem meld), `craftingRowsUsed` 756, `craftingRowsSkipped` 414. Through 3.3 the "VS + Any Weapon + vps" rows
 named the Forging Hammer (`hh2`) and were shadowed by the earlier "FH + Any Weapon + vps" rows; ESR 3.3.02 made them take
 the Void Shard. Adding the file did not bump `GAME_DATA_SCHEMA`.
@@ -1279,7 +1294,7 @@ in `build/itemIcons.ts`, sprite decoding by the loot filter's `src/features/loot
 - **Quest items** (by code, for the campaign map): `selectQuestIconCodes` takes the misc / weapons / armor.txt rows
   with a `quest` number (the campaign quest items: Horadric Staff and its parts, Khalim's organs and flails, The Gidbinn,
   Horadric Malus, Hellforge Hammer, Wirt's Leg, Lam Esen's Tome, Malah's potion, the scrolls, …, plus ESR's quest-flagged
-  Ascendancy Stone, Kill Ledger and Primordial Soulstone) or a `QUEST_ICON_TYPES` type (`ques`: the portal keys,
+  Ascendancy Stone (still in misc.txt, gone from the game since 3.3.04), Kill Ledger and Primordial Soulstone) or a `QUEST_ICON_TYPES` type (`ques`: the portal keys,
   organs, essences, Standard of Heroes and ESR's other quest-typed items; `mmap`: the endgame map items, areas.json
   `mapItem`). Each code gets its items.json art (mod first, vanilla fallback, as for bases), keyed by code, with the
   item's display name (`readItemNames`: `namestr`, else `name`, the way stashnames.json `bases` names a code; the

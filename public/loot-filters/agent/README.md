@@ -1,12 +1,12 @@
 # ESR loot filter agent pack
 
-For an AI agent that writes or edits loot filters for Diablo II: Resurrected with the Eastern Sun Resurrected (ESR) mod. The D2R ESR Runeword Browser (https://istvan-panczel.github.io/d2r-esr-runeword-browser/) generates these files from the same code as its loot filter editor and its "Create a filter with AI help" page, so they describe what the editor reads and checks. The game data is from ESR 3.3.03. Loot filter plugin 1.8.2.
+For an AI agent that writes or edits loot filters for Diablo II: Resurrected with the Eastern Sun Resurrected (ESR) mod. The D2R ESR Runeword Browser (https://istvan-panczel.github.io/d2r-esr-runeword-browser/) generates these files from the same code as its loot filter editor and its "Create a filter with AI help" page, so they describe what the editor reads and checks. The game data is from ESR 3.3.04. Loot filter plugin 1.8.2.
 
 Read this file, then FORMAT.md, before you write a rule.
 
 ## What ESR loot filters are
 
-Eastern Sun Resurrected (ESR 3.3.03) is a mod for Diablo II: Resurrected. Its loot filter plugin (version 1.8.2) reads one JSON file per filter: a few settings, filter levels the player steps through with a key in game, optional named styles, then the rules, applied top to bottom to every item. A rule's conditions (item codes and types, quality, sockets, stats, areas, levels, a formula) pick items; its actions show, hide, rename or highlight them (label colours and borders, minimap icons, droplights, chat lines, sounds).
+Eastern Sun Resurrected (ESR 3.3.04) is a mod for Diablo II: Resurrected. Its loot filter plugin (version 1.8.2) reads one JSON file per filter: a few settings, filter levels the player steps through with a key in game, optional named styles, then the rules, applied top to bottom to every item. A rule's conditions (item codes and types, quality, sockets, stats, areas, levels, a formula) pick items; its actions show, hide, rename or highlight them (label colours and borders, minimap icons, droplights, chat lines, sounds).
 
 Players import a filter in the ESR launcher (Loot Filter tab, Import). Own filters live in `<Saved Games>\Diablo II Resurrected\mods\<mod>\LootFilters\`, with sound files in a `sounds` folder and minimap icons in an `icons` folder next to the filter. A rule with an error is switched off by the game and logged with its number; the rest of the filter works.
 

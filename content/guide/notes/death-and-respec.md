@@ -6,7 +6,7 @@ tags: [basics]
 aliases: [respec, death penalty, token of absolution, re-equip]
 knowFirst: [starter-pack]
 related: [socketing, ascendancies]
-mentions: [Token of Absolution, Dragon Stone, Ascendancy Stone, Key, Thawing Potion]
+mentions: [Token of Absolution, Dragon Stone, Key, Thawing Potion]
 officialDocs:
   - label: Cube Recipes – Misc
     href: 'docs:Eastern Sun Resurrected Cube Recipes.html#mis'
@@ -27,7 +27,7 @@ Since 3.3.03 cubing more Dragon Stones at once makes two or three Tokens. Akara'
 
 - You lose some experience and gold, but no corpse is left behind: you respawn in town with all your gear.
 - Dying in an Endgame Map boss area costs no experience (gold is still lost).
-- After a death, check your Ascendancy Stone: older official pages said its bonuses stay off until you re-equip it, and the page has not said so since 3.2.24 ([[ascendancies]]).
+- Your ascendancy needs nothing after a death: since 3.3.04 it is no longer a charm, and a launcher plugin rebuilds its bonuses after you resurrect ([[ascendancies]]).
 
 ### Undoing gear choices
 

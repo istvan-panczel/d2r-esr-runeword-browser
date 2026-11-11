@@ -24,7 +24,9 @@ const cell = (rewards: readonly MapBossReward[], text: (reward: MapBossReward) =
 
 function sharedText(reward: MapBossReward): string {
   const limit = reward.condition === undefined ? undefined : /<\s*(\d+)\s*$/.exec(reward.condition)?.[1];
-  return `${reward.label} ${chances(reward)}${limit === undefined ? '' : ` (until your Ascendancy Stone holds ${limit})`}`;
+  // The condition reads the old stone's soulstone count (stat 919), which nothing sets since ESR 3.3.04: say what the
+  // limit means, not that the drop stops (see conditionNote in campaign-map/utils/mapBossFacts.ts)
+  return `${reward.label} ${chances(reward)}${limit === undefined ? '' : ` (tier 4 of an ascendancy needs ${limit})`}`;
 }
 
 export const resolveMapBosses: DirectiveResolver = (arg, ctx) => {

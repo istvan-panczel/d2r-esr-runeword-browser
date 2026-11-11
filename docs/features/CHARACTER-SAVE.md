@@ -283,8 +283,9 @@ from the date. Hidden without the Supabase backend; signed out, it opens the sig
 `ItemTile`s (icon, name in its quality colour, slot); a Set I / Set II switch (the active set marked and shown first). A tile is a
 button: the full All Items tooltip card (`ItemCard`: name links, skill and modifier peeks) shows in a sticky side column on wide
 pages and under the section on narrow ones; the active weapon is selected first. Then the Charm Inventory as tiles, the
-Ascendancy (the stone in the Charm Inventory, matched to the Ascendancies page by `ascendancyOfStone`, shown with the builds'
-`AscendancyDisplay`; a stone elsewhere is named as doing nothing), and the mercenary's doll (head, body armor and hands, other slots
+Ascendancy (the sheet's `facts.ascendancy`, see [Ascendancy](#ascendancy): name, unlocked tiers, Lich King bonus,
+Primordial Soulstones, an old stone's reading labelled as such, with the builds' `AscendancyDisplay` card;
+`components/AscendancySummary.tsx`), and the mercenary's doll (head, body armor and hands, other slots
 when filled) with a Dead badge.
 
 **Skills** (`components/tabs/SkillsTab.tsx`, `components/skills/CharacterSkillTrees.tsx`): the class tree with icons (the
@@ -312,10 +313,11 @@ other / corpse / golem items when present, each a collapsible `<details>` of ite
 **Progress** (`components/tabs/ProgressTab.tsx`, `engine/characterProgress.ts`): counters from the `gf` stats (163 `kill_base`
 kills, 237 respec points, 235 Relics of Knowledge used, 926 unspent specialization points), the learned perks of each
 specialization tree (stats 927-990 via `specializations.json` `perks[].stat`, linked to `/specializations?tree=&perk=`; unlocked when
-a perk is learned or 942 `specializationtokencap` is set, INFERRED from one save), and the Kill Ledger (`led`) and Ascendancy
-Stone (`ast`) cards with where they are and links to `/kill-ledger` and `/ascendancies?search=`. From the sheet's `facts` (when its
+a perk is learned or 942 `specializationtokencap` is set, INFERRED from one save), the Kill Ledger (`led`) cards with where they
+are and a link to `/kill-ledger`, and the Ascendancy (the same summary as on Gear, linked to `/ascendancies?search=`), with an old
+Ascendancy Stone (`ast`, before ESR 3.3.04) listed under it when the save still holds one. From the sheet's `facts` (when its
 data has loaded): "Where the character is" (difficulty and act, difficulties completed, Anya's scrolls read), the Kill Ledger tier
-and boss flags (`ledgerBossName`) and the Ascendancy tier of the active items.
+and boss flags (`ledgerBossName`) and the ascendancy.
 
 **Gear** also shows the mercenary's type, act, hiring difficulty and level from `facts.mercenary` (`mercenaryView`); the level
 is labelled as worked out from the experience, not checked in game.
@@ -432,7 +434,7 @@ a file is picked (`lootfilter.json` `skillNames` maps a saved skill row to its `
 | Player, Weapon Swap, Mercenary gear   | `gear` (`weaponSets[1]` = swap) and `mercGear`, all included by default. The slot is always the slot the item is in                                                                           |
 | Runeword base, socket fillers         | The item's own code and name; fillers are all sockets on uniques, mythicals and sets, jewels only on runewords, none on gemwords                                                              |
 | Charms                                | Charm inventory only, one text line with the name and stats at the character's level; only identical rolls merge ("2x …"); Kill Ledger skipped, charms anywhere else are inactive and skipped |
-| Ascendancy                            | The Ascendancy Stone in the charm inventory; not a charm line                                                                                                                                 |
+| Ascendancy                            | The saved ascendancy stats through charsheet.json (an old stone the same way), else the stone's name without the sheet data; matched to the Ascendancies page                                 |
 | Character stats                       | The [computed sheet](#computed-sheet) for the save's own difficulty, unbuffed, as the variant's `stats` block (`engine/buildDraftStats.ts`); see FEATURE-BUILD-SHARING.md "Character stats"   |
 
 **The bridge** branches on quality first, then matches name + the txt row's base code (never a save id across tables: all 270 set
@@ -514,6 +516,7 @@ VERIFIED = reproduces the three pairs; INFERRED = follows from the data or D2's 
 | Ignore Target's Defense: `item_ignoretargetac` summed like any stat (`offense.ignoreTargetDefense`, above 0 = yes; SpinToWin has it)                                                                                                                                                                                                                                                                               | VERIFIED                                                  |
 | Dual wield: a weapon in each hand. A quiver (charsheet.json `quivers`: ESR lists its magic arrows and bolts in weapons.txt) is no weapon: bow + quiver is one weapon and the quiver counts like any item. The off-hand weapon's own IAS, DS, CB, target defense and to-hit (per-level IAS / DS / CB pooled like to-hit) stay off the sheet (`offense.offHand`)                                                     | VERIFIED (quivers, per-level: INFERRED)                   |
 | Set pieces: distinct set items worn; two copies of one set ring are one piece                                                                                                                                                                                                                                                                                                                                      | INFERRED                                                  |
+| Ascendancy (ESR 3.3.04+, [below](#ascendancy)): the unlocked tiers of the saved `ascendancy` / `ascendancy_progress` stats (charsheet.json `ascendancies`; `class-skills` = the class's own stat) and the Lich King bonus count as one `ascendancy` source. An old Ascendancy Stone is converted as the plugin does (same ascendancy and tiers), its own stats left out                                            | INFERRED; stone: VERIFIED                                 |
 | Per-level stats (op 2, base level): floor(Σ value × level / 2^op param), all lists pooled                                                                                                                                                                                                                                                                                                                          | VERIFIED                                                  |
 | Attributes: (gf + flat) × (100 + attribute %) / 100, then + per-level; the % does not multiply per-level attributes                                                                                                                                                                                                                                                                                                | VERIFIED                                                  |
 | Life: (gf + flat) + trunc(that × life % / 100) + per-level + trunc(per-level × life % / 100) + (vitality above gf) × LifePerVitality / 4. The two truncations are apart: op 11 names both (`maxhp`, `item_hp_perlevel`). Soft-vitality life is not multiplied, except through the Kill Ledger aura's maxhp term (row 852). Mana alike with energy, stamina with `skill_staminapercent`                             | VERIFIED                                                  |
@@ -540,10 +543,43 @@ passives that did not settle, and what the buff rules below did.
 agrees with the progression byte on every save), level, experience and the experience of the next level (experience.txt;
 null at the cap), gold and stash gold, unspent stat and skill points, kills (gf `kill_base`, INFERRED meaning), respec
 points, relics learned (`relic_of_knowledge`), learned perks per specialisation tree, the Kill Ledger tier and boss
-flags (`kill_ledger_tier_N` / `kill_ledger_<boss>` on an active item), the Ascendancy tier (`ascendancy_tier_N`), Anya's
+flags (`kill_ledger_tier_N` / `kill_ledger_<boss>` on an active item), the ascendancy (`ascendancy`: below) and its
+highest tier (`ascendancyTier`), Anya's
 scroll per difficulty (quest word 37 bit 7: INFERRED bit, the +10s VERIFIED) and the mercenary: hireling.txt type, act
 and difficulty from the header's id, level from the experience (the highest L with Exp/Lvl × L² × (L + 1) ≤ experience:
 INFERRED D2 formula, no in-game check), dead flag.
+
+### Ascendancy
+
+Since ESR 3.3.04 the ascendancy is a plugin panel (`d2rloader/config/celestialrayone.ascendancies.toml`): the Ascendancy
+Stone is gone and a save holds four character stats, nothing else: 1064 `ascendancy` (1-based index in the toml's
+`[[ascendancy]]` window order, 0 = none; not the old stones' uniqueitems order), 1065 `ascendancy_progress` (bits 0–4 =
+tiers 1–5, bit 5 = the Lich King bonus, bit 6 = ascended once), 1066 `ascendancy_soulstones` (10 unlock tier 4) and
+1067 `ascendancy_orb` (the Orb of Creation consumed). The plugin applies the unlocked tiers' properties on the host in
+every game and saves none of them. `engine/sheet/ascendancy.ts` `readAscendancy` decodes the stats into
+`facts.ascendancy` (`source: 'save'`); `activeItems.ts` adds the unlocked tiers' stats from charsheet.json (each tier's
+properties as saved stats, `class-skills` as `item_addclassskills` of the character's class, the `lich_king` properties
+with bit 5) as one contribution of kind `ascendancy` ("Blademaster ascendancy, tiers 1–4"). Its auras (the tier 3 / 4
+`aura-hidden` skills) are item auras of that source; with the Lich King bonus their formulas read `lichkingbonus` 1
+(`*(100+stat('lichkingbonus'.accr)*10)/100`: +10% to the tier 3 / 4 scaling), so the bonus is applied, not only shown.
+An index this app's data does not know is a warning and counts nothing; the orb consumed without a choice shows as such.
+
+A save from before 3.3.04 still holds the stone. The plugin turns it into the saved stats when a character with no
+ascendancy enters a game holding one: the stone's uniqueitems row (`legacy_unique`) picks the ascendancy, its stats
+676 / 677 / 678 / 680 the tiers 2–5 (tier 1 always), 919 the soulstones (10 also give tier 4) and 826 the Lich King
+bonus; then it removes the stone. The sheet does the same with the same data (`source: 'stone'`): the stone in the
+Charm Inventory first, else one anywhere on the character (the toml says "holding"; INFERRED), and that stone's own
+stats no longer count. The old SpinToWin ground truth (a Blademaster tier 4 stone) keeps every number: the toml's
+Blademaster tiers are the stone's stats (the toml equals the 3.3.03 cube rows for 72 of the 75 tiers: Soul Warden 4,
+Stance Dancer 4 and Mana Warden 5 differ). The owner's 3.3.04 SpinToWin save
+(`test-fixtures/character/ground-truth/spintowin-3.3.04/`, gitignored) decodes as Blademaster tiers 1–4, no Lich King,
+10 soulstones, the orb used, no stone and no warning; no in-game screenshots of it yet, so the 3.3.04 path is INFERRED.
+
+Ranges: the toml writes some properties as `min..max`. None is a random roll: `dmg-norm` / `dmg-bleed` set the min and
+the max stat, the procs (`hit-skill`, `gethit-skill`, `att-skill`) take chance and level. A real roll would keep the max,
+as the set bonuses do (`savedStatsReader`, with a generation warning). The procs are not offered as buffs (the buff list
+reads procs from items only). Note: the toml's `dmg-norm` expands to `mindamage` / `maxdamage` only, where the old stone
+also carried the secondary and throw damage stats; the sheet shows no weapon damage, so no number changes.
 
 ### Buffs
 

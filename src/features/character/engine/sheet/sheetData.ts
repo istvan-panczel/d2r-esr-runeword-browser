@@ -2,7 +2,14 @@
  * The game data of the computed sheet: charsheet.json plus itemtext.json (saved stat definitions, socket fillers, base
  * requirements, skill display names), with the lookups the engine needs. Build it once per loaded bundle pair.
  */
-import type { CharSheetBundle, CharSheetSkill, CharSheetStatOp, ItemTextBundle, SkillCalcRow } from '@/features/game-data/engine/schema';
+import type {
+  CharSheetAscendancies,
+  CharSheetBundle,
+  CharSheetSkill,
+  CharSheetStatOp,
+  ItemTextBundle,
+  SkillCalcRow,
+} from '@/features/game-data/engine/schema';
 import { createSource, type SkillCalcSource } from '@/features/game-data/engine/skillCalc/evaluate';
 import { createTextData, type TextData } from '@/features/stash/engine/items/textData';
 
@@ -119,6 +126,8 @@ export interface SheetData {
   knownSkill(id: number): boolean;
   /** The class skills of a class, by skills.txt row */
   classSkills(cls: number): readonly CharSheetSkill[];
+  /** The ascendancy panel's rules with its ascendancies (charsheet.json); null without the plugin config */
+  readonly ascendancies: CharSheetAscendancies | null;
 }
 
 /** `stat('x'.base)` → `stat('x__base'.accr)` (the evaluator reads `.base` like `.accr`) */
@@ -171,5 +180,6 @@ export function createSheetData(bundle: CharSheetBundle, itemText: ItemTextBundl
     skillName: (id) => names.get(id) ?? skills.get(id)?.row.id ?? `Skill ${String(id)}`,
     knownSkill: (id) => skills.has(id) || names.has(id),
     classSkills: (cls) => byClass.get(cls) ?? [],
+    ascendancies: bundle.ascendancyRules === null ? null : { ...bundle.ascendancyRules, list: bundle.ascendancies },
   };
 }

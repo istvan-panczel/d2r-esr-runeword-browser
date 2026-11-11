@@ -1058,3 +1058,13 @@ id,name,label,param,notes
 1056,item_maxhp_percent_perlevel,,,"reads the value at the character's level, as the tooltip (0.5 per level: 0 at level 1, 49 at level 99)"
 1057,item_sanctification_jewelry,,,
 1058,faminedagger,,,
+1059,item_piercepois_perlevel,,,"reads the value at the character's level, as the tooltip (0.5 per level: 0 at level 1, 49 at level 99)"
+1060,morgue,,,
+1061,hatchetflurryaxebonus,,,
+1062,total_pierce_bonus,,,
+1063,battlehymn,,,
+1064,ascendancy,,,
+1065,ascendancy_progress,,,
+1066,ascendancy_soulstones,,,
+1067,ascendancy_orb,,,
+1068,thescalper,,,

@@ -10,7 +10,7 @@ const ascendanciesHtml = readFileSync(resolve(__dirname, '../../../../test-fixtu
 // ─── Parse all items ─────────────────────────────────────────────────────────
 
 const items = parseAscendancies(ascendanciesHtml);
-const { challenges } = parseAscendanciesPage(ascendanciesHtml);
+const { challenges, sections } = parseAscendanciesPage(ascendanciesHtml);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SECTION 1: Parse count assertions
@@ -323,7 +323,7 @@ describe('Edge cases', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 10: Challenges and unlock recipes
+// SECTION 10: Challenges and the Lich King Bonus (ESR 3.3.04: no recipe tables)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Challenges', () => {
@@ -331,64 +331,53 @@ describe('Challenges', () => {
     expect(challenges.map((c) => c.tier)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it('every challenge should have a plain-text description and at least one recipe', () => {
+  it('every challenge should have a plain-text description', () => {
     for (const challenge of challenges) {
       expect(challenge.description.length, `Tier ${String(challenge.tier)}`).toBeGreaterThan(0);
-      expect(challenge.recipes.length, `Tier ${String(challenge.tier)}`).toBeGreaterThan(0);
-      for (const text of [...challenge.description, ...challenge.recipes.flatMap((r) => [...r.inputs, ...r.outputs])]) {
+      for (const text of challenge.description) {
         expect(text).not.toMatch(/<[^>]*>|&[a-z]+;|\s{2}/);
         expect(text).toBe(text.trim());
       }
     }
   });
 
-  it('should re-join the hard-wrapped Tier 1 description and keep its paragraphs', () => {
-    expect(challenges[0].description).toEqual([
-      'In order to get an Ascendancy Stone, you need to kill 5 special superuniques on hell difficulty scattered around Sanctuary and transmute the elemental orbs each of them drop to obtain the Orb of Creation.',
-      'The orb can then be transmuted with specific colored gems to unlock the ascendancy of your choice. Clue: Act 1, 2, 3 each have a superunique. Act 5 has 2, while act 4 has none.',
-    ]);
-  });
-
-  it('should list one Tier 1 recipe per ascendancy', () => {
-    expect(challenges[0].recipes.length).toBe(15);
-    for (const recipe of challenges[0].recipes) {
-      expect(recipe.inputs[0]).toBe('Orb of Creation');
-      expect(recipe.outputs).toHaveLength(1);
-      expect(recipe.outputs[0]).toMatch(/ Ascendancy Stone$/);
+  it('should keep no recipe or stone fields (the page lost its recipe tables in ESR 3.3.04)', () => {
+    for (const challenge of challenges) {
+      expect(Object.keys(challenge).sort()).toEqual(['description', 'tier']);
     }
-  });
-
-  it('should parse the upgrade recipes of tiers 2-5', () => {
-    expect(challenges.slice(1).map((c) => c.recipes)).toEqual([
-      [{ inputs: ['Ascendancy Stone'], outputs: ['Ascendancy Stone', 'Upgraded to Tier 2'] }],
-      [{ inputs: ['Ascendancy Stone', 'Maple Leaf'], outputs: ['Ascendancy Stone', 'Upgraded to Tier 3'] }],
-      [
-        {
-          inputs: ['Ascendancy Stone', 'Primordial Soulstones Captured: 10/10', '2 Maple Leaves'],
-          outputs: ['Ascendancy Stone', 'Upgraded to Tier 4'],
-        },
-      ],
-      [{ inputs: ['Ascendancy Stone', '3 Maple Leaves'], outputs: ['Ascendancy Stone', 'Upgraded to Tier 5'] }],
-    ]);
-  });
-
-  it('every ascendancy should have its unlock recipe', () => {
     for (const item of items) {
-      expect(item.unlockInputs?.[0], item.name).toBe('Orb of Creation');
-      expect(
-        item.unlockInputs?.slice(1).every((input) => /^\d+ Blemished \w+$/.test(input)),
-        item.name
-      ).toBe(true);
+      expect(Object.keys(item).sort()).toEqual(['footnotes', 'imageUrl', 'name', 'tiers']);
     }
-    expect(items.find((i) => i.name === 'Battlemage')?.unlockInputs).toEqual([
-      'Orb of Creation',
-      '2 Blemished Sapphire',
-      '2 Blemished Obsidian',
+  });
+
+  it('should re-join the hard-wrapped Tier 1 description: the Orb of Creation unlocks the ascendancy panel', () => {
+    expect(challenges[0].description).toEqual([
+      'In order to get an Ascendancy, you need to kill 5 special superuniques on hell difficulty scattered around Sanctuary and transmute the elemental orbs each of them drop to obtain the Orb of Creation.',
+      'The orb can then be consumed to unlock the ascendancy panel, where you can choose an ascendancy of your liking.',
     ]);
-    expect(items.find((i) => i.name === 'Soul Warden')?.unlockInputs).toEqual([
-      'Orb of Creation',
-      '2 Blemished Ruby',
-      '2 Blemished Sapphire',
+  });
+
+  it('should read the kill challenges of tiers 2, 3 and 5 and the soulstone count of tier 4', () => {
+    expect(challenges[1].description).toEqual(['The second tier is achieved by killing Nihalthak in his domain on hell difficulty.']);
+    expect(challenges[2].description).toEqual([
+      'The third tier is achieved by killing all of Uber Tristram bosses within one minute of each other without dying.',
+    ]);
+    expect(challenges[3].description.join(' ')).toContain(
+      'Once you have captured 10 Primordial Soulstones, the tier 4 will be unlocked automatically.'
+    );
+    expect(challenges[3].description.join(' ')).toContain('You can check your progress in the ascendancy panel.');
+    expect(challenges[4].description).toEqual(['The fifth tier is achieved by killing any tier 5 map boss.']);
+  });
+
+  it('should parse the Lich King Bonus as the only extra section', () => {
+    expect(sections).toEqual([
+      {
+        title: 'Lich King Bonus',
+        order: 0,
+        description: [
+          'Killing the Lich King on /players 8 difficulty unlocks an additional bonus that increases the tier 3 and 4 stat scaling bonuses by 10%.',
+        ],
+      },
     ]);
   });
 });
@@ -400,51 +389,45 @@ describe('Challenges: degraded pages (synthetic HTML)', () => {
       <div style="display: flex; flex-direction: column; width: 50%;"><font color="orange" size="4">${name} Ascendancy</font><br><img src="./images/x.png" /></div>
     </div>`;
   const description = (text: string) => `<table><tbody><tr><td colspan="2"><font size="-1">${text}</font></td></tr></tbody></table>`;
-  const recipeTable = (rows: string) =>
-    `<table><tbody><tr><td><font> Input</font></td><td><font> Output</font></td></tr>${rows}</tbody></table>`;
 
   it('should keep the cards when the challenge section is missing', () => {
     const page = parseAscendanciesPage(`<html><body>${card('Battlemage')}</body></html>`);
     expect(page.challenges).toEqual([]);
-    expect(page.ascendancies.map((a) => [a.name, a.unlockInputs])).toEqual([['Battlemage', []]]);
+    expect(page.sections).toEqual([]);
+    expect(page.ascendancies.map((a) => a.name)).toEqual(['Battlemage']);
   });
 
-  it('should keep a challenge without a recipe table and one without a description', () => {
+  it('should split a description into its paragraphs and ignore the cards heading', () => {
     const page = parseAscendanciesPage(`<html><body>
-      <h3>Tier 2 Challenge</h3>${description('Kill him<br>and cube it.<br>Second paragraph.')}
-      <h3>Tier 3 Challenge</h3>${recipeTable('<tr><td>Ascendancy Stone<br>Maple Leaf</td><td>Ascendancy Stone<br>Upgraded to Tier 3</td></tr>')}
+      <h3>Tier 2 Challenge</h3>${description('Kill him<br>on hell.<br>Second paragraph.')}
       <h3>Ascendancies</h3>${card('Nomad')}
     </body></html>`);
-    expect(page.challenges).toEqual([
-      { tier: 2, description: ['Kill him and cube it.', 'Second paragraph.'], recipes: [] },
-      {
-        tier: 3,
-        description: [],
-        recipes: [{ inputs: ['Ascendancy Stone', 'Maple Leaf'], outputs: ['Ascendancy Stone', 'Upgraded to Tier 3'] }],
-      },
-    ]);
-    expect(page.ascendancies[0].unlockInputs).toEqual([]);
+    expect(page.challenges).toEqual([{ tier: 2, description: ['Kill him on hell.', 'Second paragraph.'] }]);
+    expect(page.sections).toEqual([]);
+    expect(page.ascendancies.map((a) => a.name)).toEqual(['Nomad']);
   });
 
-  it('should skip a challenge heading with nothing under it and other headings', () => {
+  it('should skip a challenge heading with nothing under it and a malformed one', () => {
     const page = parseAscendanciesPage(`<html><body>
       <h3>Tier 1 Challenge</h3><p>Coming soon</p>
       <h3>Tier X Challenge</h3>${description('Not a tier')}
       <h3>Tier 4 Challenge</h3><div>${description('Wrapped in a div.')}</div>
     </body></html>`);
-    expect(page.challenges).toEqual([{ tier: 4, description: ['Wrapped in a div.'], recipes: [] }]);
+    expect(page.challenges).toEqual([{ tier: 4, description: ['Wrapped in a div.'] }]);
+    expect(page.sections).toEqual([]);
   });
 
-  it('should map a Tier 1 recipe to its card by the stone name', () => {
+  it('should keep other sections in page order, the first of a repeated title only', () => {
     const page = parseAscendanciesPage(`<html><body>
-      <h3>Tier 1 Challenge</h3>${recipeTable(
-        '<tr><td><font color="orange">Orb of Creation</font><br>4 Blemished Emerald</td><td>Nomad Ascendancy Stone<br></td></tr>'
-      )}
-      <h3>Ascendancies</h3>${card('Nomad')}${card('Berserker')}
+      <h3>Tier 5 Challenge</h3>${description('Kill a tier 5 boss.')}
+      <h3>Lich King Bonus</h3>${description('Kill him on players 8.')}
+      <h3>Renounce</h3>${description('Start over.')}
+      <h3>Lich King Bonus</h3>${description('Duplicate.')}
+      <h3>Empty</h3><p>No table</p>
     </body></html>`);
-    expect(page.ascendancies.map((a) => [a.name, a.unlockInputs])).toEqual([
-      ['Nomad', ['Orb of Creation', '4 Blemished Emerald']],
-      ['Berserker', []],
+    expect(page.sections).toEqual([
+      { title: 'Lich King Bonus', order: 0, description: ['Kill him on players 8.'] },
+      { title: 'Renounce', order: 1, description: ['Start over.'] },
     ]);
   });
 });

@@ -68,7 +68,7 @@
   definition: A modifier on the copy that Inarius' Everburning Halo makes of an item (the original comes back unchanged); a Branded item can no longer be changed by any recipe.
   note: enhancement-order
 - term: Blemished gem
-  definition: An ESR gem grade between Flawless and Perfect, used for rare rerolls, sockets on elite white bases and on exceptional items that are not white, and Ascendancy Stones.
+  definition: An ESR gem grade between Flawless and Perfect, used for rare rerolls and sockets on elite white bases and on exceptional items that are not white.
   note: gems-crystals
 - term: Crystal
   definition: One of twelve ESR socketable minerals (such as Frozen Soul or Pulsing Opal) in Chipped, Flawed and normal grades.
@@ -113,7 +113,7 @@
   definition: A consumable item that, transmuted alone in Act 5 Hell, opens a high-level zone, most of them with a boss; maps come in five tiers.
   note: maps-keys-ascendancy
 - term: Ascendancy
-  definition: A subclass specialisation granted by an Ascendancy Stone, upgraded through five tiers of challenges.
+  definition: A subclass specialisation picked in its own character-sheet panel after using an Orb of Creation, upgraded through five tiers of challenges.
   note: ascendancies
 - term: Vessel of Souls
   definition: A mythical amulet that you feed organs in the cube to build up bonuses, then turn into a mythical weapon; it is not meant to be worn.
