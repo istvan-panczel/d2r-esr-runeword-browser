@@ -17,6 +17,7 @@ Code: `src/features/character/parser/`. Data: `stash.json` `characterStats` / `c
 | `locationOf`, `toCharacterItem`, `equippedGear`, `NO_UNIQUE_ROW` | `location.ts`       | Item locations, the weapon-swap normalisation, the slot view                                                                                                         |
 | `parseD2rl(bytes)`, `d2rlMatchesSave(sidecar, saveBytes)`        | `d2rl.ts`           | The sidecar's ESR version, and a WebCrypto SHA-256 check against a given `.d2s`                                                                                      |
 | `assessSaveAge(input)`                                           | `saveAge.ts`        | What the UI needs for an old-save warning                                                                                                                            |
+| `readProgress`, `readQuests`                                     | `progress.ts`       | The difficulty / act the character is in and the quest flags the computed sheet reads (`CharacterFile.progress`, `.quests`)                                          |
 | `CharacterParseError`, `D2rlParseError`                          | `errors.ts`         | Typed errors with the failure point                                                                                                                                  |
 
 `CharacterFile` holds the name, class id and name (Warlock = 7), level, last-saved time (Unix seconds), active weapon, the raw
@@ -43,11 +44,12 @@ file itself does not say which ESR version wrote it. Verified on 11 characters +
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0x00 / 0x04 / 0x08 / 0x0C | magic `55 AA 55 AA`, version, file size, checksum (rotate-left-1 + byte, bytes 0x0C-0x0F read as 0)                                            |
 | 0x10                      | active weapon (0 or 1, see "Weapon swap")                                                                                                      |
-| 0x14 / 0x15               | status byte / progression byte                                                                                                                 |
+| 0x14 / 0x15               | status byte / progression byte (5 per completed difficulty + acts done in the current one; INFERRED, agrees with the quest words on all saves) |
 | 0x18 / 0x19 / 0x1A / 0x1B | class / stat count / **skill count** / level                                                                                                   |
 | 0x20                      | last saved (Unix seconds)                                                                                                                      |
 | 0x28                      | 16 hotkeys (u32): low 15 bits are the `skills.txt` row, low 16 bits all ones means unassigned, bit 15 is the left hand (INFERRED from vanilla) |
 | 0x68                      | left, right, swap left, swap right skills, same encoding                                                                                       |
+| 0x98 / 0x99 / 0x9A        | one byte per difficulty: bit 7 marks the difficulty the character is in, the low bits are the act (0-4); VERIFIED on the 3 ground-truth saves  |
 | 0x9F                      | merc flags (bit 16 dead), 0xA3 seed (merc present iff ≠ 0), 0xA7 name index, 0xA9 hireling id, 0xAB experience                                 |
 | 0xF8                      | game version byte                                                                                                                              |
 | 0x12B                     | name, UTF-8, up to 96 bytes                                                                                                                    |
@@ -56,7 +58,7 @@ file itself does not say which ESR version wrote it. Verified on 11 characters +
 
 | Section                                                  | Layout                                                                                                                           |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `Woo!` quests, `WS` waypoints, NPC (`01 77`)             | Declared sizes; contents not interpreted                                                                                         |
+| `Woo!` quests, `WS` waypoints, NPC (`01 77`)             | Declared sizes; quests: 48 u16 words per difficulty after a 10-byte header (`progress.ts`), the rest not interpreted             |
 | `gf` attributes                                          | Bit-packed: 16-bit stat id, the stat's CSvBits value, repeated, then `0xFFFF` and byte padding. Zero-value stats are not written |
 | `if` skills                                              | One byte per skill of the class (`header skill count`, 35 for every class), in `skills.txt` row order                            |
 | `JM` + count player items                                | Each item via the stash `readItem`                                                                                               |
@@ -88,7 +90,7 @@ they swap with the active weapon is UNKNOWN.
 
 Quest items with quality unique carry unique id 65535 ("no row", INFERRED; seen on `hdm`, `hst`); `toCharacterItem` turns it into
 `uniqueId: null`, keeping the base and the quality. No final totals exist in a save: `maxhp` etc. are base values and
-`hitpoints` are current values, so final life, resists etc. need a rules engine.
+`hitpoints` are current values, so final life, resists etc. need a rules engine: [Computed sheet](#computed-sheet).
 
 ### Sidecar (`.d2rl`)
 
@@ -224,3 +226,92 @@ stayed empty, and a corpse being present (equipped gear may be on it; INFERRED, 
 Measured over the 11 real saves (`buildDraft.fixture.integration.test.ts`): 79 of 99 equipped items match a named item; every unique,
 set, runeword and gemword matched, and the 20 others are rares and magics. Not imported: exact rolls, attributes, mercenary type and
 inventory; there is no field for them.
+
+## Computed sheet
+
+`computeCharacterSheet(character, data, options?)` (`src/features/character/engine/sheet/`, pure: no React, no fetch)
+turns a parsed save into the numbers of the in-game character screen and Advanced Stats, each with the sources it adds
+up from. Data: `createSheetData(charsheet.json, itemtext.json)` ([GAME-DATA.md → Character sheet](./GAME-DATA.md#character-sheet)).
+
+| Export                                             | Purpose                                                                                                         |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `computeCharacterSheet(character, data, opts)`     | `CharacterSheet`: every value a `SheetValue` (`value`, `sources`, `status`, `notes?`), plus `facts`, `warnings` |
+| `listAvailableBuffs(character, data)`              | `AvailableBuff[]`: own cast skills and auras, self-buff procs of active items, that would change the sheet      |
+| `toStatsSnapshot(sheet, { savedAt, esrVersion? })` | `CharacterStatsSnapshot`: flat numbers with short keys (`v: 1`), about 400 bytes as JSON, for a shared build    |
+| `createSheetData(charsheet, itemtext)`             | The lookups (build once per loaded bundle pair)                                                                 |
+
+`options.difficulty` picks the difficulty of the resist penalty (default: the one the save is in); `options.buffs`
+(`{ skillId, level? }[]`) counts buffs. A `SheetSource` has a `kind` (`base`, `item`, `set`, `runic`, `quest`, `passive`,
+`item-aura`, `buff`, `per-level`, `percent`, `attribute`, `class`, `difficulty`, `cap`), a label, a value, and `item`
+(index into `items.player`) or `skill` (skills.txt row) where one applies; the UI names items from the index. Life, mana
+and stamina sources are in points with fractions (the pools are 1/256 fixed point), so they add up before the floor.
+
+### Ground truth
+
+Three pairs of in-game screenshots and the save written seconds later, 2026-11-11, ESR 3.3.03
+(`test-fixtures/character/ground-truth/*/GROUND-TRUTH.md`, gitignored): Javazon (Amazon 80, Hell act 3), SpinToWin
+(Barbarian 102, Hell act 5, dual wield) and Soso (Sorceress 18, Normal act 1, a full set). `sheet.fixture.integration.test.ts`
+asserts every number of the character screen and the Advanced Stats the sheet covers: all three match exactly, and on
+each the saved current life and mana are at most the computed maximum (less than one point below it; stamina equal).
+
+### Rules
+
+VERIFIED = reproduces the three pairs; INFERRED = follows from the data or D2's rules, not compared with the game.
+
+| Rule                                                                                                                                                                                                                                                                                                                                                                                   | Status                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| What counts: equipped items of the active weapon set, charms in the Charm Inventory (store page 7). A charm-dedup group (`c11` / `c12`) counts its first charm in save order                                                                                                                                                                                                           | VERIFIED (order INFERRED)                                 |
+| An item gives its own, runeword and socketed stats (a filler's gems.txt column for the host's gem apply type, a jewel's own) and the set bonus lists it carries by pieces worn; sets.txt partial and full bonuses come from the bundle (the save has none)                                                                                                                             | VERIFIED                                                  |
+| Runic Insight (gf `archaeology_3`): the runes' own modifiers pooled per stat and param, 5% once toward zero, split back by host (the pooling gain to the host that lost most); op 13 stats per host                                                                                                                                                                                    | VERIFIED                                                  |
+| Dual wield: the off-hand weapon's own IAS, deadly strike, crushing blow, target defense and to-hit stay off the sheet (`offense.offHand`)                                                                                                                                                                                                                                              | VERIFIED                                                  |
+| Per-level stats (op 2, base level): floor(Σ value × level / 2^op param), all lists pooled                                                                                                                                                                                                                                                                                              | VERIFIED                                                  |
+| Attributes: (gf + flat) × (100 + attribute %) / 100, then + per-level; the % does not multiply per-level attributes                                                                                                                                                                                                                                                                    | VERIFIED                                                  |
+| Life: (gf + flat) + trunc(that × life % / 100) + per-level + trunc(per-level × life % / 100) + (vitality above gf) × LifePerVitality / 4. The two truncations are apart: op 11 names both (`maxhp`, `item_hp_perlevel`). Soft-vitality life is not multiplied, except through the Kill Ledger aura's maxhp term (row 852). Mana alike with energy, stamina with `skill_staminapercent` | VERIFIED                                                  |
+| Passive skills: `passivestat` columns at the effective level, only with a `passivestate` (Wisdom of Athulua has none: nothing)                                                                                                                                                                                                                                                         | VERIFIED                                                  |
+| Item auras (`item_aura`, level = value): `aurastat` columns on the current totals; their `passivestat` columns on the base (gf) attributes and hard skill points (the Kill Ledger's row 827). aurafilter 0x8000 = enemy only (Conviction): nothing for the owner. The same aura on two items: the higher level only                                                                    | numbers VERIFIED, mechanism INFERRED; duplicates INFERRED |
+| Skill levels: hard + all + class + tab + single, + oskills; a skill without hard points gets only oskills (a single-skill bonus alone counts as known: INFERRED)                                                                                                                                                                                                                       | VERIFIED                                                  |
+| Defense: Σ armour pieces' floor(defense × (100 + own ED% + own per-level ED%) / 100) + flat defense + per-item per-level defense + dexterity / 4, × (100 + `skill_armor_percent` + `armor_override_percent`) / 100                                                                                                                                                                     | VERIFIED                                                  |
+| Resists: sum + Anya (+10 per difficulty read) + difficulty penalty (difficultylevels.txt: 0 / −80 / −150), shown capped at min(75 + max resist, 95), floor −1000; no penalty on magic; physical capped at 50                                                                                                                                                                           | VERIFIED                                                  |
+| Attack rating: ((dex − 7) × 5 + ToHitFactor + to-hit) × (100 + AR% + the skill's ToHitCalc or ToHit + (level − 1) × LevToHit) / 100. The off-hand line uses the whole to-hit with per-level to-hit pooled over every list (SpinToWin 68,978)                                                                                                                                           | VERIFIED                                                  |
+| Speeds: totals; base attack speed 100 − main-hand weapon `speed` + attackrate; base run/walk 100 − worn armour `speed` + velocitypercent                                                                                                                                                                                                                                               | VERIFIED                                                  |
+| Dodge / avoid / evade capped by the dodge-avoid-evade-cap plugin (75)                                                                                                                                                                                                                                                                                                                  | cap INFERRED (no character reached it)                    |
+| Block (only with a shield): (shield block + `toblock` + charstats BlockFactor) × (dex − 15) / (level × 2), at most 75; weapon block not computed                                                                                                                                                                                                                                       | INFERRED, not on any screenshot                           |
+| Other op 11 stats (`total_fire_resist`, `totalmaxhp`, `totalattackspeed` …) are not applied; a sheet whose totals hold one says so in `warnings`                                                                                                                                                                                                                                       | gap                                                       |
+
+`warnings` also lists items whose level, strength or dexterity requirement looks unmet (the sheet still counts them),
+charms switched off by the dedup, formula reads the evaluator could not do, and passives that did not settle.
+
+### Facts
+
+`facts`: the difficulty and act the save is in (header), difficulties completed (Eve of Destruction per difficulty;
+agrees with the progression byte on every save), level, experience and the experience of the next level (experience.txt;
+null at the cap), gold and stash gold, unspent stat and skill points, kills (gf `kill_base`, INFERRED meaning), respec
+points, relics learned (`relic_of_knowledge`), learned perks per specialisation tree, the Kill Ledger tier and boss
+flags (`kill_ledger_tier_N` / `kill_ledger_<boss>` on an active item), the Ascendancy tier (`ascendancy_tier_N`), Anya's
+scroll per difficulty (quest word 37 bit 7: INFERRED bit, the +10s VERIFIED) and the mercenary: hireling.txt type, act
+and difficulty from the header's id, level from the experience (the highest L with Exp/Lvl × L² × (L + 1) ≤ experience:
+INFERRED D2 formula, no in-game check), dead flag.
+
+### Buffs
+
+Not in the unbuffed sheet: cast buffs and auras, shrines, elixirs and potions, conditional states (charges, a
+whirlwinding Barbarian), mercenary auras. `listAvailableBuffs` lists the character's own non-passive skills with a
+level (hard points, +skills, oskills) whose aura or passive stats reach it (`affectsOwner`: an aura, or a skill without a
+target filter; not a curse, not a summon) and change a number on the sheet, and the self-buff procs of its active items
+(`kind: 'proc'`, with the item, level and chance). Shrines are out of scope.
+
+`options.buffs` counts a buff's `aurastat` columns (and the `passivestat` columns of a non-passive skill) at its
+effective level, or the given `level` (needed for a proc), on the current totals. The whole sheet is re-evaluated until
+it is stable, so Battle Command's +skills raise Battle Orders and itself (the recast rule). A charge skill counts as its
+state at that level (INFERRED). Every number a buff changes is `unverified`; a buff the character has no level in and no
+`level` was given for is skipped with a warning. Cross-check, not ground truth: Dudu's save was written shapeshifted, and
+with Werewolf (+12% life) the computed maximum life equals the saved current life exactly. A Battle Orders save (the old
+SpinToWin fixture) is consistent (current ≤ computed maximum) but not full, so not exact.
+
+### Open in-game checks
+
+- Block chance with a shield (no ground truth shows it) and weapon block.
+- A buffed screen: Battle Orders + Battle Command + Shout cast in that order, the screenshots and the save, for the
+  recast rule and the buff % on life / mana / defense.
+- A mercenary's level on its screen (the experience formula), and a character above the dodge cap.
+- A single-skill bonus on a skill without hard points; the same aura from two items.
