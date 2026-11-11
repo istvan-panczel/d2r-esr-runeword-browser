@@ -53,7 +53,7 @@ import { buildSetsBundle } from './bundleSets.ts';
 import { buildSuperiorAffixes } from './bundleSuperior.ts';
 import { buildSkillsBundle } from './bundleSkills.ts';
 import { buildCharacterSaveData } from './bundleCharacterSave.ts';
-import { buildCharSheetBundle, itemSkillUses } from './bundleCharSheet.ts';
+import { ascendancyMods, buildCharSheetBundle, itemSkillUses } from './bundleCharSheet.ts';
 import { buildStashBundle } from './bundleStash.ts';
 import { buildItemTextBundle } from './bundleItemText.ts';
 import { buildSkillDetailsBundle, readGrantSources } from './bundleSkillDetails.ts';
@@ -578,8 +578,9 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     setitems: rowTable('setitems'),
     hireling: table('hireling'),
     difficultylevels: table('difficultylevels'),
+    // The ascendancy tiers' auras and procs are named by the plugin config only (ESR 3.3.04 moved them off the stones)
     itemSkills: itemSkillUses(
-      modSources.flatMap((source) => source.mods),
+      [...modSources.flatMap((source) => source.mods), ...ascendancyMods(sources.plugins.ascendancies)],
       statTables.properties,
       (param) => skillLookup.skillId(param)
     ),
@@ -592,6 +593,7 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
       ...sources.charSheet,
       dodgeCap: sources.modifierConfigs['dodge-avoid-evade-cap'],
       resistFloor: sources.modifierPatches['esr-resistance-floor-minus-1000'],
+      ascendancies: sources.plugins.ascendancies,
     },
   });
   // --- end charsheet.json ---

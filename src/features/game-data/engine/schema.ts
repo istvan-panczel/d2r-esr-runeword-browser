@@ -2506,6 +2506,39 @@ export interface CharSheetBundle {
   /** Specialisation trees: the stat of each perk (a perk is learned while the character's own value is above 0) */
   specializations: { slug: string; name: string; stats: number[] }[];
   rules: CharSheetRules;
+  /** The ascendancy panel (celestialrayone.ascendancies.toml, ESR 3.3.04+); null when the plugin config is missing or off */
+  ascendancies: CharSheetAscendancies | null;
+}
+
+/**
+ * The ascendancy plugin's data. A save holds only four character stats (`stats`): the ascendancy (1-based index into
+ * `list`, 0 = none), the progress bits (0–4 = tiers 1–5, 5 = the Lich King bonus, 6 = ascended once), the soulstones
+ * and the orb. The plugin applies the unlocked tiers' properties on the host every game; nothing of them is saved.
+ */
+export interface CharSheetAscendancies {
+  /** itemstatcost.txt ids of the saved character stats */
+  stats: { ascendancy: number; progress: number; soulstones: number; orb: number };
+  /** Primordial Soulstones that grant `soulstoneTier` */
+  soulstoneCap: number;
+  soulstoneTier: number;
+  /** Per class (charstats.txt order): the stat of its class skill property (`class_skill_properties`), [stat id, param] */
+  classSkills: [number, number][];
+  /** The Lich King bonus properties as saved stats */
+  lichKing: ItemTextSavedStat[];
+  /** Old Ascendancy Stones, converted by the plugin on login: the item, the stone's stats for tiers 2–5, soulstones, Lich King */
+  legacy: { item: string; tierStats: number[]; soulstoneStat: number; lichKingStat: number };
+  /** In window order: entry i is saved as i + 1 */
+  list: CharSheetAscendancy[];
+}
+
+export interface CharSheetAscendancy {
+  /** 1-based, as the save stores it */
+  index: number;
+  name: string;
+  /** uniqueitems.txt row of its old Ascendancy Stone */
+  legacyUnique: number;
+  /** Tiers 1–5: `classSkills` = the class skill property's value, `stats` = every other property as saved stats */
+  tiers: { classSkills: number; stats: ItemTextSavedStat[] }[];
 }
 
 export interface CharSheetStatOp {

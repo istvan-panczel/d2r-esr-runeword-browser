@@ -20,6 +20,7 @@ import {
   type AreasBundle,
   type BaseItem,
   type BasesBundle,
+  type CharSheetBundle,
   type CombatBundle,
   type CraftingBundle,
   type CraftingSlot,
@@ -2311,5 +2312,76 @@ describe('committed combat bundle (ESR 3.3.03)', () => {
     const zones = new Set(areas.flatMap((area) => (area.tier === undefined ? [] : [area.group])));
     expect(new Set(combat.areas.filter((area) => area.tier !== undefined).map((area) => area.name))).toEqual(zones);
     expect(combat.areas.filter((area) => area.tier === undefined)).toHaveLength(manifest.counts.combatAreas ?? -1);
+  });
+});
+
+// --- charsheet.json ascendancies ----------------------------------------------------------------------------------
+
+describe('committed charsheet bundle: ascendancies (ESR 3.3.04, celestialrayone.ascendancies.toml)', () => {
+  const { ascendancies, skills: sheetSkills, statNames } = JSON.parse(charSheetText) as CharSheetBundle;
+
+  it('reads 15 ascendancies with 5 tiers each, in window order (the saved index), with no charsheet warning', () => {
+    expect(manifest.warnings.filter((warning) => warning.startsWith('charsheet:'))).toEqual([]);
+    expect(ascendancies?.list.map((entry) => [entry.index, entry.name, entry.legacyUnique])).toEqual([
+      [1, 'Battlemage', 1100],
+      [2, 'Blademaster', 1102],
+      [3, 'Arcanist', 1105],
+      [4, 'Bloodmage', 1109],
+      [5, 'Awakened', 1101],
+      [6, 'Ironbolt', 1104],
+      [7, 'Starborn', 1108],
+      [8, 'Lifebreaker', 1110],
+      [9, 'Worldshaper', 1111],
+      [10, 'Soul Warden', 1106],
+      [11, 'Stance Dancer', 1112],
+      [12, 'Nomad', 1103],
+      [13, 'Sharpshooter', 1107],
+      [14, 'Mana Warden', 1113],
+      [15, 'Berserker', 1114],
+    ]);
+    for (const entry of ascendancies?.list ?? []) {
+      expect(entry.tiers).toHaveLength(5);
+      // class-skills: +1 at tiers 1 and 2, +3 at tier 5
+      expect(entry.tiers.map((tier) => tier.classSkills)).toEqual([1, 1, 0, 0, 3]);
+    }
+    expect(ascendancies?.stats).toEqual({ ascendancy: 1064, progress: 1065, soulstones: 1066, orb: 1067 });
+    expect([ascendancies?.soulstoneCap, ascendancies?.soulstoneTier]).toEqual([10, 4]);
+    expect(ascendancies?.classSkills.map(([id, cls]) => [statNames[id], cls])).toEqual(
+      [0, 1, 2, 3, 4, 5, 6, 7].map((cls) => ['item_addclassskills', cls])
+    );
+    expect(ascendancies?.lichKing.map(([id, param, value]) => [statNames[id], param, value])).toEqual([['lichkingbonus', 0, 1]]);
+    expect(ascendancies?.legacy).toEqual({ item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 });
+  });
+
+  it('expands Blademaster to the stats its old stone carried (tier 4: 40-50 damage and the life leech aura 1510)', () => {
+    const named = (index: number) =>
+      ascendancies?.list[1]?.tiers[index]?.stats.map(([id, param, value]) => [statNames[id], param, value]) ?? [];
+    expect(named(0)).toEqual([
+      ['strength', 0, 60],
+      ['dexterity', 0, 60],
+    ]);
+    expect(named(2)).toEqual([
+      ['item_aura', 789, 1],
+      ['damageresist', 0, 20],
+      ['ascendancy_tier_3', 0, 1],
+    ]);
+    expect(named(3)).toEqual([
+      ['ascendancy_tier_4', 0, 1],
+      ['mindamage', 0, 40],
+      ['maxdamage', 0, 50],
+      ['item_aura', 1510, 1],
+    ]);
+  });
+
+  it('keeps the tier 3 and 4 auras the tiers name (787–801, 1508–1522 but Stance Dancer’s 1520, which no tier lists)', () => {
+    const kept = new Set(sheetSkills.map((skill) => skill.n));
+    const auras = [...Array.from({ length: 15 }, (_, i) => 787 + i), ...Array.from({ length: 15 }, (_, i) => 1508 + i)];
+    expect(auras.filter((id) => !kept.has(id))).toEqual([1520]);
+    const named = new Set(
+      (ascendancies?.list ?? []).flatMap((entry) =>
+        entry.tiers.flatMap((tier) => tier.stats.filter(([id]) => statNames[id] === 'item_aura').map(([, skill]) => skill))
+      )
+    );
+    expect([...named].sort((a, b) => a - b)).toEqual(auras.filter((id) => id !== 1520));
   });
 });

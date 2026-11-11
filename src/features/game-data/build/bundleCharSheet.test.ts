@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCharSheetBundle, itemSkillUses, type CharSheetInput } from './bundleCharSheet.ts';
+import { ascendancyMods, buildCharSheetBundle, itemSkillUses, type CharSheetInput } from './bundleCharSheet.ts';
 import { parseTsv } from './tsv.ts';
 
 const tsv = (rows: string[][], keepExpansionRows = true) =>
@@ -15,6 +15,40 @@ bonus_percent = 5
 item_codes = ["r01", "r02"]
 per_item_stats = [16]
 stats = [0, 16]
+`;
+const CLASS_PROPERTIES = ['ama', 'sor', 'nec', 'pal', 'bar', 'dru', 'ass', 'war'];
+const ASCENDANCIES = `[ascendancies]
+enabled = true
+ascendancy_stat = 10
+progress_stat = 11
+soulstone_stat = 12
+orb_stat = 13
+soulstone_cap = 10
+soulstone_tier = 4
+class_skill_properties = ["ama", "sor", "nec", "pal", "bar", "dru", "ass", "war"]
+lich_king = ["lich-king-bonus=1"]
+legacy_stone_item = "ast"
+legacy_tier_stats = [676, 677, 678, 680]
+legacy_soulstone_stat = 919
+legacy_lich_king_stat = 826
+
+[[ascendancy]]
+name = "Battlemage"
+legacy_unique = 1100
+tier1 = ["class-skills=1", "str=60"]
+tier2 = ["class-skills=1"]
+tier3 = ["aura-hidden[787]=1"]
+tier4 = ["dmg-norm=40..50"]
+tier5 = ["class-skills=3", "dodge-group=1"]
+
+[[ascendancy]]
+name = "Blademaster"
+legacy_unique = 1102
+tier1 = []
+tier2 = []
+tier3 = ["aura-hidden[789]=1"]
+tier4 = []
+tier5 = []
 `;
 const DISPLAY_PATCH = '{"patches":[{"description":"Upper bound (min(75+maxresist, 95), …"}]}';
 
@@ -71,6 +105,11 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
       ['damageresist', '', '', '', '', '', '', ''],
       ['passive_dodge', '', '', '', '', '', '', ''],
       ['fireresist', '', '', '', '', '', '', ''],
+      ['ascendancy', '', '', '', '', '', '', ''],
+      ['ascendancy_progress', '', '', '', '', '', '', ''],
+      ['ascendancy_soulstones', '', '', '', '', '', '', ''],
+      ['ascendancy_orb', '', '', '', '', '', '', ''],
+      ['item_addclassskills', '', '', '', '', '', '', ''],
     ]),
     skills: tsv([
       SKILL_COLUMNS,
@@ -199,7 +238,14 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
         { code: 'dodge-group', pickMode: 0, entries: [{ prop: 'dodge', parMin: '', parMax: '', modMin: 3, modMax: 3, chance: 0 }] },
       ],
     ]),
-    savedStats: (code, _param, _min, max) => [[code === 'str' ? 0 : 8, 0, max]],
+    // str → strength (0), a class skill property → item_addclassskills (14) with the class, aura-hidden → stat 9 with the skill
+    savedStats: (code, param, _min, max) => {
+      const cls = CLASS_PROPERTIES.indexOf(code);
+      if (cls >= 0) return [[14, cls, max]];
+      if (code === 'aura-hidden') return [[9, Number(param), max]];
+      if (code === 'dmg-norm') return [[8, 0, max]];
+      return [[code === 'str' ? 0 : 8, 0, max]];
+    },
     specializations: [],
     configs: {
       archaeology: ARCHAEOLOGY,
@@ -208,6 +254,7 @@ function input(overrides: Partial<CharSheetInput> = {}): CharSheetInput {
       dodgeCap: '[dodge_avoid_evade_cap]\nenabled = true\ncap_percent = 75\ndodge_cap_percent = 60\navoid_cap_percent = -1\n',
       resistFloor: '{}',
       resistFloorDisplay: DISPLAY_PATCH,
+      ascendancies: null,
     },
     ...overrides,
   };
@@ -306,6 +353,79 @@ describe('buildCharSheetBundle', () => {
     ).toThrow(/archaeology_3/);
     expect(() => buildCharSheetBundle(input({ configs: { ...input().configs, charmInventory: '' } }))).toThrow(/allow_inventory_charms/);
     expect(buildCharSheetBundle(input({ configs: { ...input().configs, resistFloorDisplay: null } })).bundle.rules.resistFloor).toBe(-100);
+  });
+});
+
+describe('buildCharSheetBundle: ascendancies', () => {
+  const withToml = (text: string | null) => input({ configs: { ...input().configs, ascendancies: text } });
+
+  it('reads the saved stats, the class skill stats, the Lich King bonus and each tier as saved stats, in window order', () => {
+    const { bundle, warnings } = buildCharSheetBundle(withToml(ASCENDANCIES));
+    expect(warnings).toEqual([]);
+    expect(bundle.ascendancies).toEqual({
+      stats: { ascendancy: 10, progress: 11, soulstones: 12, orb: 13 },
+      soulstoneCap: 10,
+      soulstoneTier: 4,
+      classSkills: CLASS_PROPERTIES.map((_, cls) => [14, cls]),
+      lichKing: [[8, 0, 1]],
+      legacy: { item: 'ast', tierStats: [676, 677, 678, 680], soulstoneStat: 919, lichKingStat: 826 },
+      list: [
+        {
+          index: 1,
+          name: 'Battlemage',
+          legacyUnique: 1100,
+          tiers: [
+            { classSkills: 1, stats: [[0, 0, 60]] },
+            { classSkills: 1, stats: [] },
+            { classSkills: 0, stats: [[9, 787, 1]] },
+            { classSkills: 0, stats: [[8, 0, 50]] },
+            // a property group is expanded (dodge-group → dodge 3)
+            { classSkills: 3, stats: [[8, 0, 3]] },
+          ],
+        },
+        {
+          index: 2,
+          name: 'Blademaster',
+          legacyUnique: 1102,
+          tiers: [
+            { classSkills: 0, stats: [] },
+            { classSkills: 0, stats: [] },
+            { classSkills: 0, stats: [[9, 789, 1]] },
+            { classSkills: 0, stats: [] },
+            { classSkills: 0, stats: [] },
+          ],
+        },
+      ],
+    });
+  });
+
+  it('is null with a warning without the file, null when switched off, and throws on a shape it does not know', () => {
+    const missing = buildCharSheetBundle(withToml(null));
+    expect(missing.bundle.ascendancies).toBeNull();
+    expect(missing.warnings).toContain('charsheet: celestialrayone.ascendancies.toml missing, no ascendancy bonuses');
+    expect(buildCharSheetBundle(withToml(ASCENDANCIES.replace('enabled = true', 'enabled = false'))).bundle.ascendancies).toBeNull();
+    expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.replace('ascendancy_stat = 10', 'ascendancy_stat = 11')))).toThrow(
+      /ascendancy_stat = 11 is not ascendancy/
+    );
+    expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.replace('"ama", "sor"', '"sor", "ama"')))).toThrow(/class order/);
+    expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.replace('"str=60"', '"str 60"')))).toThrow(/Battlemage tier 1: "str 60"/);
+    expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.replace('"class-skills=3"', '"class-skills=1..3"')))).toThrow(
+      /class-skills takes one value/
+    );
+    expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.replace('tier4 = []', '')))).toThrow(/Blademaster tier 4: no tier4 list/);
+    expect(() => buildCharSheetBundle(withToml(ASCENDANCIES.split('[[ascendancy]]')[0]))).toThrow(/no \[\[ascendancy\]\] block/);
+  });
+
+  it('lists every property the tiers and the Lich King bonus name (not class-skills), for the skills they keep', () => {
+    expect(ascendancyMods(null)).toEqual([]);
+    expect(ascendancyMods(ASCENDANCIES)).toEqual([
+      { code: 'lich-king-bonus', param: null, min: 1, max: 1 },
+      { code: 'str', param: null, min: 60, max: 60 },
+      { code: 'aura-hidden', param: '787', min: 1, max: 1 },
+      { code: 'dmg-norm', param: null, min: 40, max: 50 },
+      { code: 'dodge-group', param: null, min: 1, max: 1 },
+      { code: 'aura-hidden', param: '789', min: 1, max: 1 },
+    ]);
   });
 });
 
