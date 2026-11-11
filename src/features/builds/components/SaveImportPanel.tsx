@@ -94,7 +94,7 @@ export function SaveImportPanel({ report, draft, disabled, onGoToSlot, onClearSl
       ? null
       : assessSaveAge({
           lastSavedAt: report.lastSavedAt,
-          sidecarVersion: null,
+          sidecarVersion: report.sidecarVersion,
           bundleVersion: manifest.esrVersion,
           bundleDate: manifest.esrDate,
         });
@@ -108,6 +108,12 @@ export function SaveImportPanel({ report, draft, disabled, onGoToSlot, onClearSl
         <Banner>
           Saved on {new Date(report.lastSavedAt * 1000).toLocaleDateString()}, before ESR {age.bundleVersion} came out. Names and stats here
           are the current data, so an older item may read differently.
+        </Banner>
+      )}
+      {age?.status === 'different-version' && (
+        <Banner>
+          Saved with ESR {age.savedVersion}; names and stats here are the ESR {age.bundleVersion} data, so an older item may read
+          differently.
         </Banner>
       )}
       {report.incompleteNote !== null && <Banner>{report.incompleteNote}</Banner>}
