@@ -273,7 +273,11 @@ export function ascendancyMods(text: string | null): AscendancyMod[] {
   });
 }
 
-function readAscendancies(input: CharSheetInput, statNames: readonly string[], warnings: string[]): { rules: CharSheetAscendancyRules; list: CharSheetAscendancy[] } | null {
+function readAscendancies(
+  input: CharSheetInput,
+  statNames: readonly string[],
+  warnings: string[]
+): { rules: CharSheetAscendancyRules; list: CharSheetAscendancy[] } | null {
   const text = input.configs.ascendancies;
   if (text === null) {
     warnings.push('charsheet: celestialrayone.ascendancies.toml missing, no ascendancy bonuses');
