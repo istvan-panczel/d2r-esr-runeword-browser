@@ -63,7 +63,7 @@ function SheetIntro({ sheet, buffed }: { readonly sheet: CharacterSheet; readonl
       <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span>Select any number to see where it comes from.</span>
         <span className="inline-flex items-center gap-1">
-          <StatusMark status="inferred" /> {STATUS_TEXT.inferred.short}: not yet compared with the game
+          <StatusMark status="inferred" /> {STATUS_TEXT.inferred.short}
         </span>
         <span className="inline-flex items-center gap-1">
           <StatusMark status="unverified" /> {STATUS_TEXT.unverified.short}: changed by a buff

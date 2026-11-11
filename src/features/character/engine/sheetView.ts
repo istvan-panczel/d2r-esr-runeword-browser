@@ -43,7 +43,7 @@ export function formatValue(value: number, unit: RowUnit, format: Intl.NumberFor
 
 export const STATUS_TEXT: Readonly<Record<Exclude<SheetStatus, 'verified'>, { readonly short: string; readonly long: string }>> = {
   inferred: {
-    short: 'Inferred',
+    short: 'Not yet compared with the game',
     long: 'Worked out from the game files and the game rules, not yet compared with the in-game screen.',
   },
   unverified: {
