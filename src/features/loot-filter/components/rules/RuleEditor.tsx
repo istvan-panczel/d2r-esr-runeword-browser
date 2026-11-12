@@ -489,7 +489,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
                     setRevealed(true);
                     // The button goes away: the focus moves to the next group's header.
                     requestAnimationFrame(() => {
-                      document.getElementById(groupId('properties'))?.querySelector<HTMLElement>(':scope > summary')?.focus();
+                      document.getElementById(groupId('properties'))?.querySelector<HTMLElement>(':scope > h3 > button')?.focus();
                     });
                   }}
                 >

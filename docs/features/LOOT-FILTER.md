@@ -1017,8 +1017,11 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   passthrough" block.
 - **Foldable groups** (`components/FoldSection.tsx`, `utils/editorGroups.ts`, `hooks/useGroupFolds.ts`): every
   condition group (Which items, Item properties, Stats, Where and when) and every action group (Style, Visibility,
-  Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a native `<details>` whose header
-  (the `summary`, at least 40 px high, an `h3` in the same look on both cards, ruled off above) shows the title and, while folded, a one-line
+  Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a disclosure: an `h3` holding a
+  `<button aria-expanded aria-controls>` over the panel (`hidden` while folded), not a `<details>`, since a screen
+  reader flattens a heading inside `<summary>` into its button and heading navigation loses the groups. The header
+  (at least 40 px high, the same look on both cards, ruled off above, chevron turned while open; Enter and Space
+  toggle it) shows the title and, while folded, a one-line
   summary of what the group sets: conditions in the rule list's words (`ruleConditionSummary` of the group's keys,
   `every item` / `none` when empty), actions without colour codes (`“Pul” gold`, `yellow name`, `other.mp3, 15%`,
   `rune, 35 px`, colour swatches for the label background and border, the icon tint and the droplight; `from style
