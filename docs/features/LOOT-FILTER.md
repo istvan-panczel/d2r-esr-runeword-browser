@@ -392,6 +392,11 @@ the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the
   or a `// ---- Protection` section, which is not a part) Add rule works as before: an empty rule after the selected one,
   else at the end. Disabled rules keep their place either way (`disabledRules` indexes are written from the model).
   The rule is selected, its part and section open and it is scrolled into view (on the stacked layout the editor too).
+  A section it creates renumbers a later `// ---- Custom rules` (in another part) from `2:Custom rules` to
+  `2:Custom rules#1`; `partSectionKeyChanges` reports that like `headingKeyChanges` does for a section edit, and
+  RulesTab passes it through `openAfterEdit` first, so the later section keeps its own remembered fold.
+  A new `{ "show": true }` rule without items protects every item until it gets them: the validator's "Shows every
+  item" warning and the items-first hint say so.
   A heading's Add rule, Duplicate, Example rules, Check in game and the AI import / JSON Apply keep their own placement
   and defaults.
   - **Shown in the UI** (`utils/addRuleTarget.ts`: `addRuleTarget(filter)` is `{ kind: 'custom', section: 'existing' |

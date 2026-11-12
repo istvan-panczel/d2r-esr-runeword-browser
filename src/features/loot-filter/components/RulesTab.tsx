@@ -32,6 +32,7 @@ import {
   hasHeadings,
   headingKeyChanges,
   headingKeys,
+  partSectionKeyChanges,
   stepEdges,
   stepItem,
   type CommentAccess,
@@ -42,6 +43,7 @@ import {
   ADD_CUSTOM_RULE_TITLE,
   CUSTOM_RULES_BADGE,
   CUSTOM_RULES_BADGE_DESCRIPTION,
+  CUSTOM_RULES_PLACE,
   addRuleTarget,
   addedRuleToast,
 } from '../utils/addRuleTarget';
@@ -216,7 +218,15 @@ export function RulesTab({
   const addTarget = addRuleTarget(filter);
   const handleAdd = () => {
     setQuery('');
+    // A Custom rules section created in Protection renumbers a later one of that title: its fold follows it.
+    const changes =
+      addTarget.kind === 'custom' && addTarget.section === 'created'
+        ? partSectionKeyChanges({ items: filter.rules, end: endComments }, { get: (rule) => rule.commentsBefore }, CUSTOM_RULES_PLACE)
+        : undefined;
     dispatch(addCustomRule({ at: selectedRule === null ? undefined : selectedRule + 1 }));
+    if (changes !== undefined) {
+      onOpenChange((current) => openAfterEdit(current, changes));
+    }
     revealSelected();
     scrollToEditor();
     const added = addedRuleToast(addTarget);

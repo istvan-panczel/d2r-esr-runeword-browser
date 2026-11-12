@@ -15,6 +15,7 @@ import {
   headingKeyChanges,
   headingKeys,
   noteLines,
+  partSectionKeyChanges,
   readCommentLine,
   renameHeadingLine,
   stepEdges,
@@ -440,6 +441,40 @@ describe('addToPartSection', () => {
     expect(add({ items: [item('a'), item('b')], end: [] })).toBeUndefined();
     expect(add({ items: [], end: [] })).toBeUndefined();
     expect(add({ items: [item('a', '// ---- Protection'), item('b', '// ---- Custom rules')], end: [] })).toBeUndefined();
+  });
+
+  it('reports the heading keys it changes: a later section of that title keeps its own fold', () => {
+    const list: SectionList<Item> = {
+      items: [item('p', '// ==== Protection'), item('h', '// ==== Hiding'), item('c', '// ---- Custom rules')],
+      end: [],
+    };
+    const changes = partSectionKeyChanges(list, access, place);
+    expect(changes?.added).toEqual(['2:Custom rules']);
+    expect(changes?.kept).toEqual(
+      new Map([
+        ['1:Protection', '1:Protection'],
+        ['1:Hiding', '1:Hiding'],
+        ['2:Custom rules', '2:Custom rules#1'],
+      ])
+    );
+    // The keys match what the list shows after the add.
+    const result = add(list);
+    expect(result && headingKeys(result.items, (entry) => entry.commentsBefore, result.end)).toEqual([
+      '1:Protection',
+      '2:Custom rules',
+      '1:Hiding',
+      '2:Custom rules#1',
+    ]);
+    // Into an existing section: nothing added, every key kept as it was.
+    const existing = partSectionKeyChanges({ items: [item('p', '// ==== Protection', '// ---- Custom rules')], end: [] }, access, place);
+    expect(existing).toEqual({
+      kept: new Map([
+        ['1:Protection', '1:Protection'],
+        ['2:Custom rules', '2:Custom rules'],
+      ]),
+      added: [],
+    });
+    expect(partSectionKeyChanges({ items: [item('a')], end: [] }, access, place)).toBeUndefined();
   });
 
   it('puts a new rule in Sully’s v0.9.2 as rule 10, the end of Protection, and serializes the heading there', () => {
