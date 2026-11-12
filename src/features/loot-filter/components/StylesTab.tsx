@@ -12,7 +12,7 @@ import { CONDITION_KEYS } from '../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
 import { editStyleComments, removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
 import { selectEditorFilter } from '../store/selectors';
-import { countActions, countStyleUsers } from '../utils/effectiveActions';
+import { countActions, countStyleUsers, styleNameColor } from '../utils/effectiveActions';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
 import { openAfterEdit, styleHeadingKeys, toggleHeading, withOpened } from '../utils/sectionFolds';
 import {
@@ -275,7 +275,13 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
                     <span className="text-xs text-muted-foreground">
                       {count === 1 ? '1 action' : `${String(count)} actions`} · {usedBy(countStyleUsers(filter, name))}
                     </span>
-                    <StylePreview style={style} sample="Item Name" maxIconSize={LIST_ICON_MAX} className="mt-1.5 w-full px-1.5 py-1" />
+                    <StylePreview
+                      style={style}
+                      sample="Item Name"
+                      maxIconSize={LIST_ICON_MAX}
+                      defaultColor={styleNameColor(filter, name)}
+                      className="mt-1.5 w-full px-1.5 py-1"
+                    />
                   </button>
                 </li>
               );
@@ -378,6 +384,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
               filter={filter}
               owner="style"
               styleName={current}
+              nameColor={styleNameColor(filter, current)}
               gate={gate}
               usage={actionGroupUsage({ actions: currentStyle, diagnostics: styleDiagnostics, owner: 'style' })}
               onChange={(patch) => {

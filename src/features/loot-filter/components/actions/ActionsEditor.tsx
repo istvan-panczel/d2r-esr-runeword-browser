@@ -39,6 +39,11 @@ export interface ActionsEditorProps {
   /** Name of the style being edited (for the preview heading); unused for rules. */
   readonly styleName?: string;
   /**
+   * The colour code the label preview draws text without one in: a rule's quality colour (`qualityNameColor`), a
+   * style's usual name colour from its rules (`styleNameColor`). Undefined: plain white.
+   */
+  readonly nameColor?: string;
+  /**
    * The Basic / Advanced gate (`ruleFieldGate` for a rule, `actionFieldGate` for a style): Basic shows the common
    * actions, an Advanced one only when it holds a value (tagged), and a Name colour select. Undefined: every action.
    */
@@ -81,7 +86,7 @@ const GROUP_TITLES = Object.fromEntries(ACTION_GROUPS.map((group) => [group.id, 
  *
  * Every group but the label preview folds; the header of a folded one sums up what it sets (`utils/editorGroups.ts`).
  */
-export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner, styleName, gate, usage }: ActionsEditorProps) {
+export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner, styleName, nameColor, gate, usage }: ActionsEditorProps) {
   const idPrefix = owner === 'style' ? `loot-filter-style-${(styleName ?? '').replace(/[^A-Za-z0-9_-]/g, '_')}` : 'loot-filter-rule';
   const id = (key: string) => `${idPrefix}-${key}`;
   const shows = (field: ActionField) => (gate?.action(field) ?? 'shown') !== 'hidden';
@@ -120,6 +125,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
           text={effective.hide === true ? '' : previewLabelText(effective)}
           background={effective.labelBackground}
           border={effective.labelBorder}
+          defaultColor={nameColor}
           className="min-h-16"
           trailing={
             effective.icon === undefined || effective.hide === true ? undefined : (
@@ -130,7 +136,9 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
         <p className="text-xs text-muted-foreground">
           {effective.hide === true
             ? 'Hidden: the item shows no label.'
-            : `{name} shows as "Item Name"; other placeholders as written. Without a colour code the game colours the name by quality.${effective.icon === undefined ? '' : ' Beside it the minimap icon at its size.'}`}
+            : `{name} shows as "Item Name"; other placeholders as written. Without a colour code the game colours the name by quality${
+                owner === 'style' ? ': the preview uses the colour most of the rules with this style give it' : ''
+              }.${effective.icon === undefined ? '' : ' Beside it the minimap icon at its size.'}`}
         </p>
       </div>
 

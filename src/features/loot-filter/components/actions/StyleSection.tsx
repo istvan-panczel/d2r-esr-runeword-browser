@@ -5,7 +5,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { LootFilter, RuleActions } from '../../engine/types';
-import { findStyle } from '../../utils/effectiveActions';
+import { findStyle, styleNameColor } from '../../utils/effectiveActions';
 import type { StyleTarget } from '../../utils/styleChoice';
 import { STYLE_PRESETS } from '../../utils/stylePresets';
 import { Field } from '../Field';
@@ -73,7 +73,13 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
             >
               <span className="flex min-w-0 items-center gap-2">
                 {style !== undefined && (
-                  <StylePreview style={style} sample={STYLE_SAMPLE} maxIconSize={ROW_ICON_MAX} className="w-40 shrink-0 px-1.5 py-1" />
+                  <StylePreview
+                    style={style}
+                    sample={STYLE_SAMPLE}
+                    maxIconSize={ROW_ICON_MAX}
+                    defaultColor={actions.useStyle === undefined ? undefined : styleNameColor(filter, actions.useStyle)}
+                    className="w-40 shrink-0 px-1.5 py-1"
+                  />
                 )}
                 <span className={cn('truncate', actions.useStyle === undefined && 'text-muted-foreground')}>
                   {actions.useStyle === undefined ? 'None' : actions.useStyle}
@@ -118,7 +124,13 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
                         }}
                       >
                         <Check className={cn('size-4 shrink-0', actions.useStyle === name ? 'opacity-100' : 'opacity-0')} aria-hidden />
-                        <StylePreview style={entry} sample={STYLE_SAMPLE} maxIconSize={ROW_ICON_MAX} className="w-40 shrink-0" />
+                        <StylePreview
+                          style={entry}
+                          sample={STYLE_SAMPLE}
+                          maxIconSize={ROW_ICON_MAX}
+                          defaultColor={styleNameColor(filter, name)}
+                          className="w-40 shrink-0"
+                        />
                         <span className="min-w-0 truncate">{name}</span>
                       </CommandItem>
                     ))}
