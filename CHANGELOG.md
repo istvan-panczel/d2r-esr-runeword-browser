@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.70.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.69.0...v1.70.0) (2026-11-12)
+
+### Features
+
+* **loot-filter:** add new rules to Protection > Custom rules with show ([9274a6c](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/9274a6c01ee11a02d2fc8a7fecacea71585d082a))
+* **loot-filter:** editor group keys, in-use checks and fold summaries ([e7e700b](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/e7e700b75c62fdc51867e5d5207c6f7bbaffe906))
+* **loot-filter:** fold the rule editor groups and start blank rules on their items ([5b0766f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/5b0766f55ba7411459e188d67627cb8866822339))
+* **loot-filter:** show where Add rule puts new rules ([1483952](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/1483952d091959e0ba0c376d0602fc37ff40ea28))
+
+### Bug Fixes
+
+* **loot-filter:** fold style-only groups, one fold header look, quieter items-first step ([eede280](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/eede280b0026176a2f77d599549740bb5a835373))
+* **loot-filter:** keep a later Custom rules section's fold when Add rule creates one ([4937b7e](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/4937b7ed19ac371466a5a5a27e5df7b55707bf8f)), references [rules#1](https://github.com/istvan-panczel/d2r-esr-runeword-browser/issues/1)
+* **loot-filter:** make the editor's fold headers heading-wrapped disclosure buttons ([c38dc07](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/c38dc0744d1c0b86071a92e5752e5faf8267f2e7))
+* **loot-filter:** remount the rule editor when the content is replaced in place ([8e440c0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8e440c0b1eaed68505bc551fd44e1715256c0d23))
+* **loot-filter:** shorter Add rule toast, at the top on the stacked layout ([fb9c7ea](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/fb9c7ea9eaa44feddbccd772f3caa6df3eb68670))
+* **loot-filter:** start new {} rules on their items and fold nested details on their own ([8d1b7b0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/8d1b7b0941568c100c64ec9d4798a9e3b37801e5))
+* **loot-filter:** two-line fold summaries, open passthrough fold, quieter items-first header ([2a4e332](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/2a4e3329421331d61727412c3c84a11c3dbc38cc))
+* **loot-filter:** warn when a show rule without items protects every item ([40141d9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/40141d927822416edf28dd77e9c0a78a63ecbc86))
+
+### Documentation
+
+* **loot-filter:** foldable rule editor groups and the items-first start ([abcb48a](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/abcb48a68f9f5bd25b63e4e6db43d64fc7d9fd42))
+* **loot-filter:** stop recommending numbered rule titles ([928f59f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/928f59fb4cf308652a4509afdd43c2afb3f32800))
+
 ## [1.69.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.68.0...v1.69.0) (2026-11-11)
 
 ### Features
