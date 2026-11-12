@@ -2,7 +2,8 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { parseLootFilter } from './parse.ts';
 import type { Diagnostic, LootFilter, LootFilterReference, LootFilterRule, StatCheck } from './types.ts';
-import { validateLootFilter as validate } from './validate.ts';
+import { SHOWS_EVERY_ITEM_MESSAGE, validateLootFilter as validate } from './validate.ts';
+import { diagnosticKeys } from '../utils/ruleView.ts';
 import { buildLootFilterReference } from './reference.ts';
 import type { LootFilterDataBundle, TypesBundle } from '../../game-data/engine/schema.ts';
 
@@ -503,6 +504,35 @@ describe('validateLootFilter', () => {
       expect(check([{ hide: true, activeInLevels: [2] }, later])).toEqual([]);
       expect(check([{ hide: true, location: ['stored'] }, later])).toEqual([]);
       expect(check([{ hide: true, quality: 'normal' }, later])).toEqual([]);
+    });
+
+    it('warns about a show rule without conditions above a hide rule', () => {
+      const check = (filter: Partial<LootFilter>) => validateLootFilter({ ...base, ...filter }).map((d) => `${d.path}: ${d.message}`);
+      const hideRunes: LootFilterRule = { itemTypes: ['rune'], hide: true };
+      const warning = `rules/0: ${SHOWS_EVERY_ITEM_MESSAGE}`;
+      expect(check({ rules: [{ show: true }, hideRunes] })).toEqual([warning]);
+      expect(check({ rules: [{ show: true, location: ['onGround'] }, { itemTypes: ['rune'], namePrefix: 'y' }, hideRunes] })).toEqual([
+        warning,
+      ]);
+      // Hide-if-fail hides too; a style's show counts, and so does a style's hide below.
+      expect(check({ rules: [{ show: true }, { itemTypes: ['rune'], sockets: 2, hideIfOtherConditionsFail: true }] })).toEqual([warning]);
+      expect(check({ styles: { Keep: { show: true } }, rules: [{ useStyle: 'Keep' }, hideRunes] })).toEqual([warning]);
+      expect(check({ styles: { Gone: { hide: true } }, rules: [{ show: true }, { itemTypes: ['rune'], useStyle: 'Gone' }] })).toEqual([
+        warning,
+      ]);
+      // No (enabled) hide below it: nothing to warn about.
+      expect(check({ rules: [hideRunes, { show: true }] })).toEqual([]);
+      expect(check({ rules: [{ show: true }, { itemTypes: ['rune'], namePrefix: 'x' }] })).toEqual([]);
+      expect(check({ rules: [{ show: true }, { ...hideRunes, disabled: true }] })).toEqual([]);
+      // Any condition, a location without onGround or a passthrough key: the rule picks its items.
+      expect(check({ rules: [{ show: true, quality: 'unique' }, hideRunes] })).toEqual([]);
+      expect(check({ rules: [{ show: true, activeInLevels: [2] }, hideRunes] })).toEqual([]);
+      expect(check({ rules: [{ show: true, location: ['stored'] }, hideRunes] })).toEqual([]);
+      expect(check({ rules: [{ show: true, passthrough: { itemCodes: 'r01' } }, hideRunes] })).toEqual([]);
+      // About the whole rule (no key), so a new `{ "show": true }` rule keeps its items-first step.
+      const [diagnostic] = validateLootFilter({ ...base, rules: [{ show: true }, hideRunes] });
+      expect(diagnostic).toMatchObject({ severity: 'warning', rule: 0 });
+      expect(diagnosticKeys([diagnostic])).toEqual(new Set());
     });
   });
 });

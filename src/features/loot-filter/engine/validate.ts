@@ -692,6 +692,21 @@ function hidesEveryGroundItem(rule: LootFilterRule, filter: LootFilter): boolean
   return CONDITION_KEYS.every((key) => key === 'location' || rule[key] === undefined);
 }
 
+/**
+ * True when a showing rule (its own `show` or its style's) has no condition but (at most) a location that includes
+ * onGround: it protects every ground item from every later hide, so the filter hides nothing below it. A new
+ * `{ "show": true }` rule is this until it gets its items. Passthrough keys leave the rule alone, as above.
+ */
+function showsEveryGroundItem(rule: LootFilterRule, filter: LootFilter): boolean {
+  if (effectiveActions(rule, filter).show !== true) return false;
+  if (rule.location !== undefined && !rule.location.includes('onGround')) return false;
+  if (hasPassthrough(rule)) return false;
+  return CONDITION_KEYS.every((key) => key === 'location' || rule[key] === undefined);
+}
+
+/** The warning of a showing rule without conditions above a hide rule; about the whole rule, so the items-first step keeps it. */
+export const SHOWS_EVERY_ITEM_MESSAGE = 'Shows every item: no hide rule below it can hide anything. Pick the items this rule is for';
+
 /** The warning of a rule with neither conditions nor actions (every new `{}` rule; the editor's items-first step hides it). */
 export const EMPTY_RULE_MESSAGE = 'The rule has neither conditions nor actions';
 
@@ -825,6 +840,15 @@ export function validateLootFilter(filter: LootFilter, reference?: LootFilterRef
   const disabledCount = filter.rules.filter((rule) => rule.disabled === true).length;
   const paths = ruleFilePaths(filter.rules);
   let enabledAfter = filter.rules.length - disabledCount;
+  // Enabled rules that hide (by hide or hide-if-fail, their own or their style's), counted from the end.
+  const hidesAfter: number[] = [];
+  let hiding = 0;
+  for (let index = filter.rules.length - 1; index >= 0; index -= 1) {
+    hidesAfter[index] = hiding;
+    const rule = filter.rules[index];
+    const actions = effectiveActions(rule, filter);
+    if (rule.disabled !== true && (actions.hide === true || actions.hideIfOtherConditionsFail === true)) hiding += 1;
+  }
   filter.rules.forEach((rule, index) => {
     const report = reporter(diagnostics, { path: paths[index], rule: index });
     checkRule(report, rule, filter, levelIds, reference);
@@ -834,6 +858,7 @@ export function validateLootFilter(filter: LootFilter, reference?: LootFilterRef
       const later = enabledAfter === 1 ? 'the rule after it never runs' : `the ${String(enabledAfter)} rules after it never run`;
       report('warning', 'hide', `Hides every ground item; ${later} for ground items`);
     }
+    if (hidesAfter[index] > 0 && showsEveryGroundItem(rule, filter)) report('warning', '', SHOWS_EVERY_ITEM_MESSAGE);
   });
   return diagnostics;
 }

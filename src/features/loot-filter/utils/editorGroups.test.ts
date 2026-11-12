@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readLootFilter } from '../engine/parse';
-import { EMPTY_RULE_MESSAGE } from '../engine/validate';
+import { EMPTY_RULE_MESSAGE, SHOWS_EVERY_ITEM_MESSAGE } from '../engine/validate';
 import type { Diagnostic, LootFilterRule, LootFilterStyle, RuleActions, RuleConditions } from '../engine/types';
 import { createBlankFilter } from './blankFilter';
 import {
@@ -109,8 +109,9 @@ describe('isBlankRule (items-first start)', () => {
     expect(isBlankRule({}, [warning('rules/0/sound')])).toBe(false);
   });
 
-  it('stays blank with the whole-rule warning every new {} rule gets', () => {
+  it('stays blank with the whole-rule warnings a new rule gets', () => {
     expect(isBlankRule({}, [{ ...warning('rules/4'), message: EMPTY_RULE_MESSAGE, rule: 4 }])).toBe(true);
+    expect(isBlankRule({ show: true }, [{ ...warning('rules/4'), message: SHOWS_EVERY_ITEM_MESSAGE, rule: 4 }])).toBe(true);
     expect(isBlankRule({ disabled: true }, [warning('disabledRules/0/rule')])).toBe(true);
   });
 

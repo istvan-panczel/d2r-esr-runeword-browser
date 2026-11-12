@@ -487,6 +487,11 @@ export const MISTAKE_SAMPLES: readonly MistakeSample[] = [
     rules: [{ hide: true }, { itemCodes: ['r83'], labelBorder: BORDER }],
     fix: 'give every hide rule conditions',
   },
+  {
+    what: 'a show rule without conditions',
+    rules: [{ show: true }, { itemTypes: ['hpot'], hide: true }],
+    fix: 'give every show rule the items it keeps',
+  },
   { what: 'a colour out of range', rules: [{ itemCodes: ['r83'], labelBackground: [300, 0, 0] }], fix: 'whole numbers 0 to 255' },
   { what: 'a key the format does not have', rules: [{ itemCodes: ['r83'], highlight: true }], fix: 'use only the keys above; remove it' },
   {

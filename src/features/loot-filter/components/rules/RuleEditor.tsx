@@ -461,7 +461,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
             </div>
           </div>
 
-          {/* A new rule's "neither conditions nor actions" is what the items-first step is about: not shown there. */}
+          {/* A new rule's "neither conditions nor actions" is what the items-first step is about: not shown there. A new
+              { show: true } rule's "Shows every item" is, since a show without items keeps every item from being hidden. */}
           <RuleDiagnostics
             diagnostics={itemsFirst ? diagnostics.filter((diagnostic) => diagnostic.message !== EMPTY_RULE_MESSAGE) : diagnostics}
           />
@@ -474,6 +475,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
             <div className="flex flex-col items-start gap-2">
               <p id={ITEMS_FIRST_HINT_ID} className="text-sm text-muted-foreground">
                 Pick the items this rule is for; the rest of the rule appears next.
+                {actions.show === true && ' Until you pick items, this rule keeps every item from being hidden.'}
               </p>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <Button

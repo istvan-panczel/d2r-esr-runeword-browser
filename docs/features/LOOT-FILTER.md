@@ -189,6 +189,13 @@ then run `lootfilter` in the game console and read
   that allows neither set nor unique; a hiding rule (own `hide` or its style's) with no condition but a `location`
   that includes onGround, when rules follow it ("Hides every ground item; the N rules after it never run for ground
   items"). Unknown codes and types are skipped, so without game data only the except-list checks run.
+- "Shows every item" (`showsEveryGroundItem`, `SHOWS_EVERY_ITEM_MESSAGE`): a showing rule (own `show` or its style's)
+  with no condition but a `location` that includes onGround, when an enabled rule below it hides (own or style `hide`
+  or `hideIfOtherConditionsFail`): show protects every item from those hides, so the filter hides nothing ("Shows
+  every item: no hide rule below it can hide anything. Pick the items this rule is for"). Add rule's new `{ "show":
+true }` is exactly this until it gets its items. The warning is about the whole rule (path `''`, like "neither
+  conditions nor actions"), so `isBlankRule` keeps the items-first step; unlike that one, the editor shows it there,
+  and the rule list's problem chip marks the rule.
 - Other rule warnings: `hideIfOtherConditionsFail` without `itemCodes`/`itemTypes` ("hides every ground item that fails
   …" the listed other conditions, as the plugin warns; without other conditions the older "needs itemCodes or
   itemTypes" message), and with `quality` ("also hides every other quality of these items (uniques included)"); both
@@ -215,7 +222,7 @@ then run `lootfilter` in the game console and read
   presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) gets none, so Sully's template
   (rules 29 and 30, stats 218 and 219 `>= 1`) stays clean. Up to ESR 3.2.24 (plugin 1.5.3) the editor warned about
   the stored ×256 and eighths values, which nobody had checked in game. Disabled rules are validated like the
-  others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
+  others but do not count for "hides every ground item" or as a hide below "shows every item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
   `STAT_LAYER_KINDS` in `game-data/engine/statLayers.ts`, see GAME-DATA.md "Stat layers"): an error for a `param` that
@@ -1015,8 +1022,9 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   summary of what the group sets: conditions in the rule list's words (`ruleConditionSummary` of the group's keys,
   `every item` / `none` when empty), actions without colour codes (`“Pul” gold`, `yellow name`, `other.mp3, 15%`,
   `rune, 35 px`, colour swatches for the label background and border, the icon tint and the droplight; `from style
-X` when only the style sets the group; `none`). The group → keys maps (`CONDITION_GROUP_OF`, `ACTION_GROUP_OF`,
-  checked against `BASIC_CONDITIONS` / `BASIC_ACTIONS` by `satisfies`) and the in-use checks are pure and tested.
+X` when only the style sets the group; `none`). The group → keys maps (`CONDITION_GROUP_OF`, `ACTION_GROUP_OF`;
+  `satisfies Record<keyof RuleConditions / RuleActions, …>` makes a new key pick a group, and `editorGroups.test.ts`
+  compares their keys with `BASIC_CONDITIONS` / `BASIC_ACTIONS`) and the in-use checks are pure and tested.
   A group is **in use** when one of its keys is set by the rule (or style) itself, sits in passthrough or carries a
   diagnostic. A group only the rule's style fills is not: it starts folded with "from style X" in its summary (the
   Style group lists the style's values), so a rule with a style stays short; overriding one of its keys opens it on
@@ -1031,10 +1039,12 @@ X` when only the style sets the group; `none`). The group → keys maps (`CONDIT
   keys of a third-party file) and no diagnostic on one of its keys (the whole-rule "neither conditions nor actions"
   warning of a new `{}` rule does not count); its actions may be `show: true` (the Protection section's new rules) or
   a comment, any other action means it already does something. Such a rule shows only Which items (open), under it a hint
-  ("Pick the items this rule is for; the rest of the rule appears next.") and a **Show all options** button (outline,
+  ("Pick the items this rule is for; the rest of the rule appears next.", plus "Until you pick items, this rule keeps
+  every item from being hidden." when it carries `show`) and a **Show all options** button (outline,
   small) for a rule by quality, stats or area; the "neither conditions nor actions" warning (`EMPTY_RULE_MESSAGE`) is
   left out of the editor's problem list during the step (the validator, the list's problem chips and the JSON tab keep
-  it); the other condition groups, the "more in Advanced" line and the Actions card are
+  it), while "Shows every item" (a `{ "show": true }` rule above a hide, see the validator's warnings) stays in it,
+  since that is what the step is about; the other condition groups, the "more in Advanced" line and the Actions card are
   left out (on @10xl pages a dashed note keeps the actions' column). The first patch that sets a condition
   (`setsCondition`), or Show all options (focus moves to Item properties' header), shows every group for the rest of
   the mount, even if the items are cleared again. A disabled blank rule starts the same way.
@@ -1977,7 +1987,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   `MISTAKE_SAMPLES` (unknown code, a type name for a code, a stat label for a name, an unknown quality, Enhanced Damage
   on weapons, a skill tab without param or with a properties.txt number, a Life value, a missing level or style,
   `between` with one number, an empty list, unique ids with a non-unique quality, codes of other types,
-  `hideIfOtherConditionsFail` with quality, a hide rule without conditions, a colour out of range, an unknown key) run
+  `hideIfOtherConditionsFail` with quality, a hide or show rule without conditions, a colour out of range, an unknown key) run
   through `readLootFilter` + `validateLootFilter` against the game data, so the LLM sees the app's own messages. Prose
   covers only semantics (how rules combine, hide rules and exceptions, ids, writing the file for the app).
   `examples.md` (`buildExamples`): first the style presets (`DEFAULT_PROMPT_STYLE_PRESETS` from `STYLE_PRESETS`, each
