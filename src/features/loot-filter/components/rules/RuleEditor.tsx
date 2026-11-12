@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { effectiveActions, findStyle } from '../../engine/actions';
+import { qualityNameColor } from '../../utils/effectiveActions';
 import { ACTION_KEYS } from '../../engine/parse';
 import { EMPTY_RULE_MESSAGE } from '../../engine/validate';
 import type { Diagnostic, LootFilter, LootFilterRule, RuleActions, StatCheck } from '../../engine/types';
@@ -727,6 +728,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
               onChooseStyle={chooseStyle}
               filter={filter}
               owner="rule"
+              nameColor={qualityNameColor(rule.quality)}
               gate={gate}
               usage={actionGroupUsage({ actions: rule, diagnostics, owner: 'rule' })}
             />
