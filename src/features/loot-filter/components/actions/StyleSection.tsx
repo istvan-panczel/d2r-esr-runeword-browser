@@ -5,7 +5,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { LootFilter, RuleActions } from '../../engine/types';
-import { findStyle, styleNameColor } from '../../utils/effectiveActions';
+import { findStyle } from '../../utils/effectiveActions';
 import type { StyleTarget } from '../../utils/styleChoice';
 import { STYLE_PRESETS } from '../../utils/stylePresets';
 import { Field } from '../Field';
@@ -24,6 +24,8 @@ interface StyleSectionProps {
   readonly onChoose: (target: StyleTarget) => void;
   /** Shown after the field's label (the Basic view's "advanced" tag). */
   readonly badge?: React.ReactNode;
+  /** What each style's rules draw the name in (`styleNameColors`), for the previews' text without a colour code. */
+  readonly styleColors?: ReadonlyMap<string, string>;
 }
 
 /** The sample name a filter style's preview shows (the presets show their own, e.g. "Ber Rune"). */
@@ -37,7 +39,7 @@ const ROW_ICON_MAX = 40;
  * label preview, then a collapsed summary of the chosen style's actions. Picking clears the rule's own values for the
  * keys the style sets (the caller does it, with an Undo toast).
  */
-export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: StyleSectionProps) {
+export function StyleSection({ idPrefix, actions, filter, onChoose, badge, styleColors }: StyleSectionProps) {
   const [open, setOpen] = useState(false);
   const selectId = `${idPrefix}-use-style`;
   const style = findStyle(actions, filter);
@@ -77,7 +79,7 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
                     style={style}
                     sample={STYLE_SAMPLE}
                     maxIconSize={ROW_ICON_MAX}
-                    defaultColor={actions.useStyle === undefined ? undefined : styleNameColor(filter, actions.useStyle)}
+                    defaultColor={actions.useStyle === undefined ? undefined : styleColors?.get(actions.useStyle)}
                     className="w-40 shrink-0 px-1.5 py-1"
                   />
                 )}
@@ -128,7 +130,7 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
                           style={entry}
                           sample={STYLE_SAMPLE}
                           maxIconSize={ROW_ICON_MAX}
-                          defaultColor={styleNameColor(filter, name)}
+                          defaultColor={styleColors?.get(name)}
                           className="w-40 shrink-0"
                         />
                         <span className="min-w-0 truncate">{name}</span>

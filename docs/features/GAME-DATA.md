@@ -78,7 +78,7 @@ misread. Schema 2 came with ESR 3.3 (`WeaponMastery.property` replaced `value`; 
 | `runewords.json`       | ESR 3.3: 229 KB / 29 KB (3.2.12: 197 / 28)                                                                                         |
 | `affixes.json`         | ESR 3.3: 900 KB / 72 KB (3.2.12: 795 / 61; 3.2.24 with `stats`: 852 / 67, + `layers`: 894 / 72)                                    |
 | `sources.json`         | ESR 3.3: 303 KB / 30 KB (3.2.12: 298 / 29)                                                                                         |
-| `lootfilter.json`      | ESR 3.3: 879 KB / 130 KB (3.2.24: 829 / 118; 825 / 117 before labels, 771 / 103 before skills)                                     |
+| `lootfilter.json`      | ESR 3.3.04: 892 KB / 131 KB (3.3: 879 / 130; 3.2.24: 829 / 118; 825 / 117 before labels, 771 / 103 before skills)                  |
 | `enhance.json`         | ESR 3.3: 1,186 KB / 70 KB, per-item-type anointment pools (3.2.24: 416 / 35; 357 / 32 before sanctification)                       |
 | `cube.json`            | ESR 3.3: 760 KB / 79 KB (3.2.24: 742 / 77; before the audit fixes: 647 / 68 + `icons` 46 / 10)                                     |
 | `materials.json`       | ESR 3.3: 180 KB / 12 KB                                                                                                            |
@@ -357,6 +357,14 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   "Hu Rune", whose namestr makes it a second "Fu Rune". Misc items only drop through treasure classes (no auto-TCs), but
   332 other spawnable misc rows are named by none (cube results, engine drops such as the essences), so spawnable
   stays enough for those.
+  `nameColor` is the colour code (the character after `ÿc`) the name's string starts in: the code in effect at the first
+  visible character of its last non-blank line, the name line (`nameColorCode` in `build/strings.ts`; the string table
+  strips the codes from `name`, `StringTable.colors` keeps them). ESR colours many names in its string tables
+  (`ÿc4No Rune`, `ÿc;Chipped Amethyst`, `ÿcNMoon Rune`, `(I -> El)\nÿc4Ancient Decal`; `ÿc1*ÿc0HP1` gives `1`); omitted
+  for names without one (the 33 vanilla runes El–Zod) and for names taken from the `name` column. ESR 3.3.04: 795 items,
+  all misc rows. `quest: true` is the `quest` column above 0 (32 rows, not the same as type `ques`: Key of Terror `pk1`
+  is type `ques` without it, the Horadric Staff `hst` and its top `vip` have it on other types). The loot filter's label
+  previews draw text without a colour code in the item's colour (`engine/nameColor.ts`).
 - `stats`: every `itemstatcost.txt` row, `id` = 0-based row number (equal to the `*ID` comment column in ESR 3.2.12),
   `name` = `Stat`, and `label` = the affixes.json label ("Bonus to Strength %") for the 144 stats an affix writes whose
   label is not just the name. Other stats get none: many ESR rows have descriptions unrelated to the stat (placeholder
@@ -376,7 +384,8 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   `set` column (a `sets.txt` `index`) through the string table, so the three difficulty variants of a hireling set
   share one name, and `disabled: true` when the `disabled` column is 1 (omitted otherwise; ESR 3.3 (as 3.2.24): 7 uniques,
   The Perfect Cello #0 and the six Rupture charms #690–695, and no set item). Adding these fields did not bump
-  `GAME_DATA_SCHEMA`.
+  `GAME_DATA_SCHEMA`. `nameColor` as on `items` (ESR 3.3.04: 33 uniques, the Ores `7`, the ascendancy stones and the
+  Character Augmenter `@`; no set item).
 - `coupon: true` on a unique (omitted otherwise) marks a coupon unique: the row an enabled cubemain recipe with an
   Ancient Coupon input (`build/coupons.ts`: a misc row named `Coupon …` but not the Wild Card, shared with the sources
   bundle) outputs. The output names the unique by `index`, resolved per row to the first row with that index (a
