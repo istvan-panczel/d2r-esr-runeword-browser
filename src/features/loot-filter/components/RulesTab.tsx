@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useDispatch, useStore } from 'react-redux';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { ListPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { effectiveActions } from '../engine/actions';
 import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
 import {
-  addRule,
+  addCustomRule,
   addRuleToSection,
   duplicateRule,
   editRuleComments,
@@ -31,12 +32,21 @@ import {
   hasHeadings,
   headingKeyChanges,
   headingKeys,
+  partSectionKeyChanges,
   stepEdges,
   stepItem,
   type CommentAccess,
   type SectionEdit,
 } from '../utils/sections';
 import { readsExceptions } from '../utils/statChecks';
+import {
+  ADD_CUSTOM_RULE_TITLE,
+  CUSTOM_RULES_BADGE,
+  CUSTOM_RULES_BADGE_DESCRIPTION,
+  CUSTOM_RULES_PLACE,
+  addRuleTarget,
+  addedRuleToast,
+} from '../utils/addRuleTarget';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
 import { ExampleRulesButton } from './rules/ExampleRulesButton';
@@ -68,10 +78,22 @@ interface RulesTabProps {
   /** Bumped whenever a rule is revealed by an action; the list then scrolls the selected rule into view. */
   readonly revealCount: number;
   readonly onReveal: () => void;
+  /** The editor's `reloads`: bumped when the content is replaced in place (part of the rule editor's key). */
+  readonly reloads: number;
 }
 
 /** The rule list (search, add, reorder, duplicate, delete) next to the selected rule's editor. */
-export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, selectionFolded, revealCount, onReveal }: RulesTabProps) {
+export function RulesTab({
+  filter,
+  selectedRule,
+  diagnostics,
+  open,
+  onOpenChange,
+  selectionFolded,
+  revealCount,
+  onReveal,
+  reloads,
+}: RulesTabProps) {
   const dispatch = useDispatch();
   const store = useStore<RootState>();
   const data = useLootFilterData();
@@ -136,6 +158,14 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
     onOpenChange((now) => withOpened(now, keys));
     onReveal();
   };
+  // Stacked layout: the editor is below the list, so bring it into view (after a click on a rule or an added rule).
+  const scrollToEditor = () => {
+    if (window.matchMedia(TWO_PANE_QUERY).matches) return;
+    requestAnimationFrame(() => {
+      document.getElementById(RULE_EDITOR_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
   const sections: RuleListSectionHandlers = {
     onToggle: (row) => {
       // Folding by hand folds the selected rule away too, when it is under that heading.
@@ -155,6 +185,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
       setQuery('');
       dispatch(addRuleToSection(address));
       revealSelected();
+      scrollToEditor();
     },
     onEditNote: (row) => {
       setSectionDialog({ kind: 'note', row });
@@ -180,18 +211,28 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
 
   const handleSelect = (index: number) => {
     dispatch(selectRule(index));
-    // Stacked layout: the editor is below the list, so bring it into view.
-    if (!window.matchMedia(TWO_PANE_QUERY).matches) {
-      requestAnimationFrame(() => {
-        document.getElementById(RULE_EDITOR_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
+    scrollToEditor();
   };
 
-  const handleAdd = (rule?: LootFilterRule) => {
+  // A filter with a Protection part gets the rule in its Custom rules section, with Show (`addCustomRule`).
+  const addTarget = addRuleTarget(filter);
+  const handleAdd = () => {
     setQuery('');
-    dispatch(addRule({ rule, at: selectedRule === null ? undefined : selectedRule + 1 }));
+    // A Custom rules section created in Protection renumbers a later one of that title: its fold follows it.
+    const changes =
+      addTarget.kind === 'custom' && addTarget.section === 'created'
+        ? partSectionKeyChanges({ items: filter.rules, end: endComments }, { get: (rule) => rule.commentsBefore }, CUSTOM_RULES_PLACE)
+        : undefined;
+    dispatch(addCustomRule({ at: selectedRule === null ? undefined : selectedRule + 1 }));
+    if (changes !== undefined) {
+      onOpenChange((current) => openAfterEdit(current, changes));
+    }
     revealSelected();
+    scrollToEditor();
+    const added = addedRuleToast(addTarget);
+    // On the stacked layout the new rule's editor fills the screen, its items-first step low down: the toast goes to the top.
+    const stacked = !window.matchMedia(TWO_PANE_QUERY).matches;
+    if (added !== undefined) toast.success(added.message, { description: added.description, position: stacked ? 'top-center' : undefined });
   };
 
   return (
@@ -235,6 +276,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             <Button
               type="button"
               size="sm"
+              title={addTarget.kind === 'custom' ? ADD_CUSTOM_RULE_TITLE : undefined}
               onClick={() => {
                 handleAdd();
               }}
@@ -282,6 +324,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             onAdded={() => {
               setQuery('');
               revealSelected();
+              scrollToEditor();
             }}
           />
         </div>
@@ -321,6 +364,11 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
               setDeleteOpen(true);
             }}
             sections={sections}
+            addTarget={
+              addTarget.kind === 'custom'
+                ? { address: addTarget.part, label: CUSTOM_RULES_BADGE, description: CUSTOM_RULES_BADGE_DESCRIPTION }
+                : undefined
+            }
           />
         )}
         {/* Last in the pane, so the tab order runs list, splitter, editor. */}
@@ -338,10 +386,11 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
       <div className="min-w-0">
         {selectedRule !== null && rule !== undefined ? (
           <RuleEditor
-            // A new editor per rule: local field state (half-typed numbers) must not leak into the next rule. Rules have
-            // no ids, so the rule count joins the index: a rule added or removed above (Check in game puts its test rule
-            // at the selected index) changes which rule sits there.
-            key={`${String(selectedRule)}/${String(filter.rules.length)}`}
+            // A new editor per rule: local field state (half-typed numbers, folds, the items-first step) must not leak
+            // into the next rule. Rules have no ids, so the rule count joins the index (a rule added or removed above:
+            // Check in game puts its test rule at the selected index), and so does `reloads` (the whole content
+            // replaced: a source update, Discard, JSON Apply, an AI import), which a plain edit leaves alone.
+            key={`${String(selectedRule)}/${String(filter.rules.length)}/${String(reloads)}`}
             filter={filter}
             index={selectedRule}
             rule={rule}

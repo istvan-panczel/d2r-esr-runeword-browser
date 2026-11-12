@@ -5,7 +5,9 @@ import { parseLootFilter } from '../engine/parse';
 import { serializeLootFilter } from '../engine/serialize';
 import type { LootFilterRule } from '../engine/types';
 import {
+  addToPartSection,
   addToSection,
+  findPartSection,
   applySectionEdit,
   buildSectionRows,
   commentLinesText,
@@ -13,6 +15,7 @@ import {
   headingKeyChanges,
   headingKeys,
   noteLines,
+  partSectionKeyChanges,
   readCommentLine,
   renameHeadingLine,
   stepEdges,
@@ -344,6 +347,185 @@ describe('addToSection', () => {
   it('adds to a section at the end of the list, before its trailing comments', () => {
     const list: SectionList<Item> = { items: [item('a')], end: ['// ---- Later'] };
     expect(stream(addToSection(list, access, { at: 1, line: 0 }, { name: 'new' }))).toEqual(['[a]', '// ---- Later', '[new]']);
+  });
+});
+
+describe('addToPartSection', () => {
+  const place = { part: 'Protection', section: 'Custom rules', description: 'Yours.' };
+  const add = (list: SectionList<Item>) => addToPartSection(list, access, place, { name: 'new' });
+
+  it('adds the item at the end of the section inside the part', () => {
+    const list: SectionList<Item> = {
+      items: [item('p', '// ==== Protection'), item('c', '// ---- Custom rules'), item('d'), item('h', '// ==== Hiding')],
+      end: [],
+    };
+    const result = add(list);
+    expect(stream(result)).toEqual(['// ==== Protection', '[p]', '// ---- Custom rules', '[c]', '[d]', '[new]', '// ==== Hiding', '[h]']);
+    expect(result?.index).toBe(3);
+    // The other items keep their identity.
+    expect(result?.items[3 + 1]).toBe(list.items[3]);
+  });
+
+  it('matches the titles ignoring case and spaces, and only a section inside the part', () => {
+    const list: SectionList<Item> = {
+      items: [
+        item('x', '// ---- Custom rules'),
+        item('p', '// ====   PROTECTION  '),
+        item('c', '// ---- custom RULES ----'),
+        item('h', '// ==== Hiding'),
+      ],
+      end: [],
+    };
+    const result = add(list);
+    expect(result?.index).toBe(3);
+    expect(result?.items[3]).toEqual({ name: 'new' });
+  });
+
+  it('creates the section at the end of the part, after its last section, before the next part', () => {
+    const list: SectionList<Item> = {
+      items: [item('p', '// ==== Protection', '// Never hidden.'), item('m', '// ---- Mythicals'), item('h', '', '// ==== Hiding')],
+      end: [],
+    };
+    const result = add(list);
+    expect(stream(result)).toEqual([
+      '// ==== Protection',
+      '// Never hidden.',
+      '[p]',
+      '// ---- Mythicals',
+      '[m]',
+      '// ---- Custom rules',
+      '// Yours.',
+      '[new]',
+      '// ==== Hiding',
+      '[h]',
+    ]);
+    expect(result?.index).toBe(2);
+  });
+
+  it('leaves blank lines and separators above the next part with it', () => {
+    const list: SectionList<Item> = {
+      items: [item('p', '// ==== Protection'), item('h', '// ==========', '// ==== Hiding')],
+      end: [],
+    };
+    expect(stream(add(list))).toEqual([
+      '// ==== Protection',
+      '[p]',
+      '// ---- Custom rules',
+      '// Yours.',
+      '[new]',
+      '// ==========',
+      '// ==== Hiding',
+      '[h]',
+    ]);
+  });
+
+  it('creates the section in a part with no items, at the end of the list', () => {
+    const list: SectionList<Item> = { items: [item('a')], end: ['// ==== Protection', '// Never hidden.'] };
+    const result = add(list);
+    expect(result?.items[1]).toEqual({
+      name: 'new',
+      commentsBefore: ['// ==== Protection', '// Never hidden.', '', '// ---- Custom rules', '// Yours.'],
+    });
+    expect(result?.end).toEqual([]);
+    expect(result?.index).toBe(1);
+  });
+
+  it('adds after the last item when the part runs to the end of the list', () => {
+    const list: SectionList<Item> = { items: [item('p', '// ==== Protection'), item('q')], end: ['// =========='] };
+    const result = add(list);
+    expect(stream(result)).toEqual(['// ==== Protection', '[p]', '[q]', '// ---- Custom rules', '// Yours.', '[new]', '// ==========']);
+    expect(result?.index).toBe(2);
+  });
+
+  it('is undefined without the part (no headings, or Protection only as a section)', () => {
+    expect(add({ items: [item('a'), item('b')], end: [] })).toBeUndefined();
+    expect(add({ items: [], end: [] })).toBeUndefined();
+    expect(add({ items: [item('a', '// ---- Protection'), item('b', '// ---- Custom rules')], end: [] })).toBeUndefined();
+  });
+
+  it('reports the heading keys it changes: a later section of that title keeps its own fold', () => {
+    const list: SectionList<Item> = {
+      items: [item('p', '// ==== Protection'), item('h', '// ==== Hiding'), item('c', '// ---- Custom rules')],
+      end: [],
+    };
+    const changes = partSectionKeyChanges(list, access, place);
+    expect(changes?.added).toEqual(['2:Custom rules']);
+    expect(changes?.kept).toEqual(
+      new Map([
+        ['1:Protection', '1:Protection'],
+        ['1:Hiding', '1:Hiding'],
+        ['2:Custom rules', '2:Custom rules#1'],
+      ])
+    );
+    // The keys match what the list shows after the add.
+    const result = add(list);
+    expect(result && headingKeys(result.items, (entry) => entry.commentsBefore, result.end)).toEqual([
+      '1:Protection',
+      '2:Custom rules',
+      '1:Hiding',
+      '2:Custom rules#1',
+    ]);
+    // Into an existing section: nothing added, every key kept as it was.
+    const existing = partSectionKeyChanges({ items: [item('p', '// ==== Protection', '// ---- Custom rules')], end: [] }, access, place);
+    expect(existing).toEqual({
+      kept: new Map([
+        ['1:Protection', '1:Protection'],
+        ['2:Custom rules', '2:Custom rules'],
+      ]),
+      added: [],
+    });
+    expect(partSectionKeyChanges({ items: [item('a')], end: [] }, access, place)).toBeUndefined();
+  });
+
+  it('puts a new rule in Sully’s v0.9.2 as rule 10, the end of Protection, and serializes the heading there', () => {
+    const text = readFileSync(resolve(process.cwd(), 'src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'), 'utf8');
+    const { filter } = parseLootFilter(text);
+    const ruleAccess: CommentAccess<LootFilterRule> = {
+      get: (rule) => rule.commentsBefore,
+      set: (rule, comments) => {
+        const { commentsBefore: _old, ...rest } = rule;
+        return comments.length === 0 ? rest : { ...rest, commentsBefore: comments };
+      },
+    };
+    const result = addToPartSection({ items: filter.rules, end: filter.rulesEndComments ?? [] }, ruleAccess, place, { show: true });
+    expect(result?.index).toBe(9);
+    const rules = result?.items ?? [];
+    expect(rules[8].comment?.startsWith('R009')).toBe(true);
+    expect(rules[9]).toEqual({ show: true, commentsBefore: ['// ---- Custom rules', '// Yours.'] });
+    expect(rules[10]).toBe(filter.rules[9]);
+    expect(rules[10].commentsBefore?.[0]).toBe('// ==== Drop Announcements');
+    const serialized = serializeLootFilter({ ...filter, rules, rulesEndComments: result?.end });
+    const lines = serialized.split('\n').map((line) => line.trim());
+    const heading = lines.indexOf('// ---- Custom rules');
+    expect(lines.findIndex((line) => line.includes('R009'))).toBeLessThan(heading);
+    expect(lines.slice(heading, heading + 2)).toEqual(['// ---- Custom rules', '// Yours.']);
+    expect(lines.indexOf('// ==== Drop Announcements')).toBeGreaterThan(heading + 2);
+    expect(parseLootFilter(serialized).filter.rules[9]).toEqual(rules[9]);
+  });
+});
+
+describe('findPartSection', () => {
+  const place = { part: 'Protection', section: 'Custom rules' };
+
+  it('gives the addresses of the part and its section, as their heading rows have them', () => {
+    const list: SectionList<Item> = {
+      items: [item('a'), item('p', '', '// ==== Protection', '// Never hidden.'), item('c', '// ---- custom rules')],
+      end: [],
+    };
+    expect(findPartSection(list, access, place)).toEqual({ part: { at: 1, line: 1 }, section: { at: 2, line: 0 } });
+    const rows = buildSectionRows(list.items, (entry) => entry.commentsBefore, list.end);
+    expect(rows.flatMap((row) => (row.kind === 'heading' ? [row.address] : []))).toEqual([
+      { at: 1, line: 1 },
+      { at: 2, line: 0 },
+    ]);
+  });
+
+  it('has no section address when the section would be created, and nothing without the part', () => {
+    expect(findPartSection({ items: [item('a')], end: ['// ==== Protection'] }, access, place)).toEqual({
+      part: { at: 1, line: 0 },
+      section: undefined,
+    });
+    expect(findPartSection({ items: [item('a', '// ---- Protection')], end: [] }, access, place)).toBeUndefined();
   });
 });
 

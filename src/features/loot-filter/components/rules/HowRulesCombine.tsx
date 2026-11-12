@@ -28,6 +28,11 @@ export function HowRulesCombine() {
           the show rules for what you never want hidden first, then the broad hide rules. A rule cannot both show and hide.
         </li>
         <li>
+          Add rule: in a filter with a <span className="font-medium text-foreground">Protection</span> part (Sully&apos;s filter has one),
+          new rules go to the end of Protection › Custom rules with Show, so the hide rules below can&apos;t hide them; the part&apos;s
+          heading says &quot;New rules go here&quot;. Without that part a new rule is empty and goes after the selected rule.
+        </li>
+        <li>
           <span className="font-medium text-foreground">Tip:</span> anything a hide rule matches (and no show rule above protects) loses its
           ground label for good. Prefer several narrow hide rules (one item type and quality each) over one broad rule, and try the broad
           ones on a few items in the Test tab.

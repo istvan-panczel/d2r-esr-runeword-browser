@@ -2,11 +2,14 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { resolveText } from '../../engine/text';
 import type { LootFilter, RuleActions } from '../../engine/types';
+import { useGroupFolds } from '../../hooks/useGroupFolds';
+import { ACTION_GROUPS, actionGroupSummary, type ActionGroup, type GroupUsage } from '../../utils/editorGroups';
 import { effectiveActions, findStyle, previewLabelText } from '../../utils/effectiveActions';
 import type { ShallowPatch } from '../../utils/patch';
 import type { ActionField, ActionFieldGate } from '../../utils/ruleView';
 import type { StyleKey, StyleTarget } from '../../utils/styleChoice';
 import { CheckField, Field } from '../Field';
+import { FoldSection } from '../FoldSection';
 import { LabelPreview } from '../LabelPreview';
 import { MinimapIconPreview } from '../MinimapIconPreview';
 import { AdvancedBadge } from '../rules/AdvancedBadge';
@@ -15,7 +18,6 @@ import { ColorTextField } from './ColorTextField';
 import { IconField } from './IconField';
 import { LabelSection } from './LabelSection';
 import { NameColorField } from './NameColorField';
-import { Section } from './Section';
 import { SoundField } from './SoundField';
 import { StyleSection } from './StyleSection';
 import { styleValues } from './styleValues';
@@ -41,6 +43,11 @@ export interface ActionsEditorProps {
    * actions, an Advanced one only when it holds a value (tagged), and a Name colour select. Undefined: every action.
    */
   readonly gate?: ActionFieldGate;
+  /**
+   * The groups the rule or style uses (`actionGroupUsage`): they start open, the others folded; a group with a
+   * diagnostic is open until folded.
+   */
+  readonly usage: GroupUsage<ActionGroup>;
 }
 
 const DEFAULT_DROP_FORMAT = '{qualityColor}{name}';
@@ -62,6 +69,8 @@ const TILE_COLUMNS = {
   style: '@8xl/page:grid-cols-2 @9xl/page:grid-cols-3 @10xl/page:grid-cols-4 @11xl/page:grid-cols-5',
 } as const;
 
+const GROUP_TITLES = Object.fromEntries(ACTION_GROUPS.map((group) => [group.id, group.title])) as Readonly<Record<ActionGroup, string>>;
+
 /**
  * Form for every action key of the guide (names, label colours, chat, notify, sound, icon, droplight,
  * useStyle, hide…), shared by the rule editor and the Styles tab. Each control sends a shallow patch;
@@ -69,8 +78,10 @@ const TILE_COLUMNS = {
  *
  * On a rule with a style, every field the style sets shows the style's value ("from style X"); editing it writes the
  * rule's own override ("changed from style X", Reset to style). One helper (`styleValues`) does it for every field.
+ *
+ * Every group but the label preview folds; the header of a folded one sums up what it sets (`utils/editorGroups.ts`).
  */
-export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner, styleName, gate }: ActionsEditorProps) {
+export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner, styleName, gate, usage }: ActionsEditorProps) {
   const idPrefix = owner === 'style' ? `loot-filter-style-${(styleName ?? '').replace(/[^A-Za-z0-9_-]/g, '_')}` : 'loot-filter-rule';
   const id = (key: string) => `${idPrefix}-${key}`;
   const shows = (field: ActionField) => (gate?.action(field) ?? 'shown') !== 'hidden';
@@ -85,10 +96,21 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
   const badge = (key: StyleKey) => values.badge(key, advanced(key));
   const dropFormat = resolveText(filter.notifications?.dropFormat) ?? DEFAULT_DROP_FORMAT;
   const droplight = value('droplight');
+  const folds = useGroupFolds(() => usage.inUse, usage.flagged);
+  /** A group's fold: its title, the summary of what it sets, its open state. */
+  const fold = (group: ActionGroup) => ({
+    variant: 'action' as const,
+    title: GROUP_TITLES[group],
+    summary: actionGroupSummary(group, { own: actions, style }),
+    open: folds.isOpen(group),
+    onOpenChange: (open: boolean) => {
+      folds.setOpen(group, open);
+    },
+  });
 
   return (
-    <div className={cn('flex flex-col gap-4 @8xl/page:grid', TILE_COLUMNS[owner])}>
-      <div className="flex flex-col gap-1.5 @8xl/page:rounded-lg @8xl/page:border @8xl/page:p-4">
+    <div className={cn('flex flex-col gap-2 @8xl/page:grid @8xl/page:items-start @8xl/page:gap-4', TILE_COLUMNS[owner])}>
+      <div className="flex flex-col gap-1.5 pb-2 @8xl/page:rounded-lg @8xl/page:border @8xl/page:p-4">
         <span className="text-sm font-medium">
           Label preview
           {owner === 'style' && styleName !== undefined ? ` · ${styleName}` : ''}
@@ -113,19 +135,21 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
       </div>
 
       {owner === 'rule' && shows('useStyle') && (
-        <StyleSection
-          idPrefix={idPrefix}
-          actions={actions}
-          filter={filter}
-          onChoose={(target) => {
-            if (onChooseStyle) onChooseStyle(target);
-            else onChange({ useStyle: target.kind === 'none' ? undefined : target.kind === 'style' ? target.name : target.preset.name });
-          }}
-          badge={advanced('useStyle')}
-        />
+        <FoldSection {...fold('style')}>
+          <StyleSection
+            idPrefix={idPrefix}
+            actions={actions}
+            filter={filter}
+            onChoose={(target) => {
+              if (onChooseStyle) onChooseStyle(target);
+              else onChange({ useStyle: target.kind === 'none' ? undefined : target.kind === 'style' ? target.name : target.preset.name });
+            }}
+            badge={advanced('useStyle')}
+          />
+        </FoldSection>
       )}
 
-      <Section title="Visibility">
+      <FoldSection {...fold('visibility')}>
         <div className="grid gap-4 sm:grid-cols-2">
           <CheckField
             id={id('hide')}
@@ -177,9 +201,9 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
             }}
           />
         )}
-      </Section>
+      </FoldSection>
 
-      <Section title="Name">
+      <FoldSection {...fold('name')}>
         {/* Basic only: the common case of replaceName (the game's name in a colour) as a select. */}
         {basic && (
           <NameColorField
@@ -237,16 +261,18 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
             )}
           </div>
         )}
-      </Section>
+      </FoldSection>
 
-      <LabelSection
-        idPrefix={idPrefix}
-        background={{ value: value('labelBackground'), badge: badge('labelBackground'), fromStyle: values.fromStyle('labelBackground') }}
-        border={{ value: value('labelBorder'), badge: badge('labelBorder'), fromStyle: values.fromStyle('labelBorder') }}
-        onChange={change}
-      />
+      <FoldSection {...fold('label')}>
+        <LabelSection
+          idPrefix={idPrefix}
+          background={{ value: value('labelBackground'), badge: badge('labelBackground'), fromStyle: values.fromStyle('labelBackground') }}
+          border={{ value: value('labelBorder'), badge: badge('labelBorder'), fromStyle: values.fromStyle('labelBorder') }}
+          onChange={change}
+        />
+      </FoldSection>
 
-      <Section title="Chat">
+      <FoldSection {...fold('chat')}>
         <ColorTextField
           id={id('chat-message')}
           label="Chat line"
@@ -277,9 +303,9 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
             }}
           />
         )}
-      </Section>
+      </FoldSection>
 
-      <Section title="Sound">
+      <FoldSection {...fold('sound')}>
         <SoundField
           idPrefix={idPrefix}
           sound={value('sound')}
@@ -295,9 +321,9 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
             change({ soundVolume });
           }}
         />
-      </Section>
+      </FoldSection>
 
-      <Section title="Minimap icon">
+      <FoldSection {...fold('icon')}>
         <IconField
           idPrefix={idPrefix}
           icon={value('icon')}
@@ -307,10 +333,10 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
             change({ icon });
           }}
         />
-      </Section>
+      </FoldSection>
 
       {shows('droplight') && (
-        <Section title="Droplight">
+        <FoldSection {...fold('droplight')}>
           <CheckField
             id={id('droplight')}
             label="Droplight"
@@ -339,11 +365,11 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
               />
             </Field>
           )}
-        </Section>
+        </FoldSection>
       )}
 
       {owner === 'style' && (
-        <Section title="Notes">
+        <FoldSection {...fold('notes')}>
           <Field id={id('comment')} label="Comment" hint="A note for yourself; the plugin ignores it.">
             <Input
               id={id('comment')}
@@ -354,7 +380,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
               }}
             />
           </Field>
-        </Section>
+        </FoldSection>
       )}
     </div>
   );

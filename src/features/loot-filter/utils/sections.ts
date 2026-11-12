@@ -494,6 +494,125 @@ export function addToSection<T>(
   return { ...fromTokens(tokens, access), index };
 }
 
+/** A section inside a part, by title (`addToPartSection`). */
+export interface PartSection {
+  /** The part's title (a level-1 heading). */
+  readonly part: string;
+  /** The section's title (a level-2 heading inside the part). */
+  readonly section: string;
+  /** The description written under the section's heading when it is created. */
+  readonly description?: string;
+}
+
+/** The token positions of the part `place.part` (the first of that title) and of its section `place.section` (-1: none). */
+function locatePartSection<T>(
+  tokens: readonly Token<T>[],
+  place: PartSection
+): { readonly part: number; readonly section: number } | undefined {
+  const titled = (token: Token<T>, level: HeadingLevel, title: string): boolean => {
+    if (token.kind !== 'line') return false;
+    const read = readCommentLine(token.text);
+    return read.kind === 'heading' && read.level === level && read.title.toLowerCase() === title.trim().toLowerCase();
+  };
+  const part = tokens.findIndex((token) => titled(token, 1, place.part));
+  if (part === -1) return undefined;
+  const inPart = tokens.slice(part + 1, sectionEnd(tokens, part, 1)).findIndex((token) => titled(token, 2, place.section));
+  return { part, section: inPart === -1 ? -1 : part + 1 + inPart };
+}
+
+/** The address of the comment line at token position `at` (`CommentAddress`, as the list rows have it). */
+function addressAt<T>(tokens: readonly Token<T>[], at: number): CommentAddress {
+  let item = 0;
+  let line = 0;
+  for (const token of tokens.slice(0, at)) {
+    if (token.kind === 'item') {
+      item++;
+      line = 0;
+    } else {
+      line++;
+    }
+  }
+  return { at: item, line };
+}
+
+/**
+ * Where `addToPartSection` puts an item: the address of the part's heading line (as its heading row has it) and of the
+ * section's, undefined when the section is not there yet (it would be created). Undefined without the part. Titles
+ * match ignoring case and the spaces around them.
+ */
+export function findPartSection<T>(
+  list: SectionList<T>,
+  access: Pick<CommentAccess<T>, 'get'>,
+  place: PartSection
+): { readonly part: CommentAddress; readonly section: CommentAddress | undefined } | undefined {
+  const tokens = toTokens(list, access);
+  const found = locatePartSection(tokens, place);
+  if (found === undefined) return undefined;
+  return { part: addressAt(tokens, found.part), section: found.section === -1 ? undefined : addressAt(tokens, found.section) };
+}
+
+/** Inserts `item` into the token stream as `addToPartSection` does; its item index, undefined without the part. */
+function insertInPartSection<T>(tokens: Token<T>[], place: PartSection, item: T): number | undefined {
+  const found = locatePartSection(tokens, place);
+  if (found === undefined) return undefined;
+  const { part, section } = found;
+  const end = section === -1 ? sectionEnd(tokens, part, 1) : sectionEnd(tokens, section, 2);
+  let at = end;
+  while (at > 0) {
+    const previous = tokens[at - 1];
+    const kind = previous.kind === 'line' ? readCommentLine(previous.text).kind : undefined;
+    if (kind !== 'blank' && kind !== 'separator') break;
+    at--;
+  }
+  const heading =
+    section === -1
+      ? [BLANK_COMMENT_LINE, headingLine(2, place.section), ...(place.description === undefined ? [] : noteLines(place.description))]
+      : [];
+  tokens.splice(at, 0, ...heading.map((text): Token<T> => ({ kind: 'line', text })), { kind: 'item', item, from: -1 });
+  return tokens.slice(0, at).filter((token) => token.kind === 'item').length;
+}
+
+/**
+ * Adds `item` as the last item of the section `place.section` inside the part `place.part` (`findPartSection`).
+ * Without that section, the section is created at the end of the part (after its last section) with the heading and
+ * description above `item`. Blank lines and separators right above the next heading stay with it. Undefined when the
+ * list has no such part.
+ */
+export function addToPartSection<T>(
+  list: SectionList<T>,
+  access: CommentAccess<T>,
+  place: PartSection,
+  item: T
+): (SectionEditResult<T> & { readonly index: number }) | undefined {
+  const tokens = toTokens(list, access);
+  const index = insertInPartSection(tokens, place, item);
+  return index === undefined ? undefined : { ...fromTokens(tokens, access), index };
+}
+
+/**
+ * How `addToPartSection` changes the heading keys (as `headingKeyChanges` for a section edit): a section it creates is
+ * `added`, and a later section of the same title renumbered by it (`2:Custom rules` becoming `2:Custom rules#1`) is
+ * followed in `kept`, so its fold stays its own. Undefined without the part.
+ */
+export function partSectionKeyChanges<T>(
+  list: SectionList<T>,
+  access: Pick<CommentAccess<T>, 'get'>,
+  place: PartSection
+): HeadingKeyChanges | undefined {
+  const tokens = toTokens(list, access);
+  const before = tokenHeadingKeys(tokens);
+  // The item is a placeholder: only the comment lines' keys are read.
+  if (insertInPartSection(tokens, place, undefined as T) === undefined) return undefined;
+  const kept = new Map<string, string>();
+  const added: string[] = [];
+  for (const [token, key] of tokenHeadingKeys(tokens)) {
+    const old = before.get(token);
+    if (old !== undefined) kept.set(old, key);
+    else added.push(key);
+  }
+  return { kept, added };
+}
+
 // ---------------------------------------------------------------------------
 // Rows of a list
 // ---------------------------------------------------------------------------
