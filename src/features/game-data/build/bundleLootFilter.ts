@@ -5,7 +5,7 @@ import { readUniqueOrSetRows, resolveName } from './itemNames.ts';
 import { optStr } from './model.ts';
 import { distinctFamilyTier } from './tiers.ts';
 import { refOf } from './treasureClasses.ts';
-import type { TsvTable } from './tsv.ts';
+import type { TsvRow, TsvTable } from './tsv.ts';
 
 /**
  * Tables read by the loot-filter bundle. `itemstatcost`, `sounds`, `uniqueitems` and `setitems` are addressed by row
@@ -67,7 +67,25 @@ function isUnusedRune(type: string, code: string, gemCodes: ReadonlySet<string>)
   return type === 'rune' && !gemCodes.has(code);
 }
 
-function readItemRows(tables: LootFilterTables, warnings: string[], strings: ReadonlyMap<string, string>): LootFilterItem[] {
+/**
+ * The colour code a string-table name starts in (`StringTable.colors`), when the key resolves to a name; a name taken
+ * from the row's own `name` column (no string) has none.
+ */
+function nameColorOf(strings: ReadonlyMap<string, string>, colors: ReadonlyMap<string, string>, key: string): string | undefined {
+  return resolveName(strings, key, '') === '' ? undefined : colors.get(key);
+}
+
+/** misc.txt / weapons.txt `quest` above 0: a quest item (not the `ques` item type: Key of Terror is one without the flag). */
+function isQuestRow(row: TsvRow): boolean {
+  return row.has('quest') && row.num('quest') > 0;
+}
+
+function readItemRows(
+  tables: LootFilterTables,
+  warnings: string[],
+  strings: ReadonlyMap<string, string>,
+  colors: ReadonlyMap<string, string>
+): LootFilterItem[] {
   const dropCodes = treasureClassCodes(tables);
   const gemCodes = new Set(tables.gems.rows.map((row) => row.str('code')).filter((code) => code !== ''));
   const items: LootFilterItem[] = [];
@@ -91,6 +109,7 @@ function readItemRows(tables: LootFilterTables, warnings: string[], strings: Rea
       // misc.txt has no tier families; neither do weapons/armor rows whose family points at themselves
       const tier =
         kind === 'misc' ? undefined : distinctFamilyTier(code, optStr(row, 'normcode'), optStr(row, 'ubercode'), optStr(row, 'ultracode'));
+      const nameColor = nameColorOf(strings, colors, row.str('namestr'));
       items.push({
         code,
         name: resolveName(strings, row.str('namestr'), name),
@@ -100,6 +119,8 @@ function readItemRows(tables: LootFilterTables, warnings: string[], strings: Rea
         ...(tier === undefined ? {} : { tier }),
         spawnable,
         drops: dropCodes.has(code) || (spawnable && !isUnusedRune(row.str('type'), code, gemCodes)),
+        ...(nameColor === undefined ? {} : { nameColor }),
+        ...(isQuestRow(row) ? { quest: true as const } : {}),
       });
     }
   }
@@ -115,11 +136,13 @@ function lootFilterRows(
   table: TsvTable,
   codeColumn: 'code' | 'item',
   strings: ReadonlyMap<string, string>,
+  colors: ReadonlyMap<string, string>,
   couponIds: ReadonlySet<number> = new Set()
 ): LootFilterUniqueOrSet[] {
-  return readUniqueOrSetRows(table, codeColumn, strings).map(({ id, name, code, disabled }) => {
+  return readUniqueOrSetRows(table, codeColumn, strings).map(({ id, index, name, code, disabled }) => {
     const row = table.rows.at(id);
     const setId = codeColumn === 'item' && row?.has('set') === true ? row.str('set') : '';
+    const nameColor = nameColorOf(strings, colors, index);
     return {
       id,
       name,
@@ -128,6 +151,7 @@ function lootFilterRows(
       ...(setId === '' ? {} : { set: resolveName(strings, setId, setId) }),
       ...(disabled ? { disabled: true as const } : {}),
       ...(couponIds.has(id) ? { coupon: true as const } : {}),
+      ...(nameColor === undefined ? {} : { nameColor }),
     };
   });
 }
@@ -183,10 +207,12 @@ export function buildLootFilterBundle(
   /** The skill pickers' data (build/bundleLootFilterSkills.ts), appended to the bundle */
   skillData: Pick<LootFilterDataBundle, 'skills' | 'knownLayers' | 'skillNames'> = {},
   /** The stats affixes write, with the affix browser's labels (affixes.json `stats`), for the stat labels */
-  affixStats: readonly AffixStat[] = []
+  affixStats: readonly AffixStat[] = [],
+  /** The colour code each string starts its display line in (`StringTable.colors`), for the names' `nameColor` */
+  colors: ReadonlyMap<string, string> = new Map()
 ): BuildResult<LootFilterDataBundle> {
   const warnings: string[] = [];
-  const items = readItemRows(tables, warnings, strings);
+  const items = readItemRows(tables, warnings, strings, colors);
 
   const stats = lootFilterStats(tables.itemstatcost, affixStats);
 
@@ -203,8 +229,8 @@ export function buildLootFilterBundle(
 
   const sounds = tables.sounds.rows.map((row) => row.str('Sound'));
 
-  const uniques = lootFilterRows(tables.uniqueitems, 'code', strings, couponUniqueIds(tables, warnings));
-  const sets = lootFilterRows(tables.setitems, 'item', strings);
+  const uniques = lootFilterRows(tables.uniqueitems, 'code', strings, colors, couponUniqueIds(tables, warnings));
+  const sets = lootFilterRows(tables.setitems, 'item', strings, colors);
   const codes = new Set(items.map((item) => item.code));
   for (const [label, entries] of [
     ['unique', uniques],

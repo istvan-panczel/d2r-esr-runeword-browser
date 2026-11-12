@@ -304,3 +304,71 @@ describe('buildLootFilterBundle coupon uniques', () => {
     ]);
   });
 });
+
+describe('buildLootFilterBundle name colours and quest items', () => {
+  const columns = ['name', 'code', 'namestr', 'type', 'type2', 'spawnable', 'quest'];
+  const names = new Map([
+    ['r36', 'No Rune'],
+    ['r51', 'El Rune'],
+    ['vip', 'Top of the Horadric Staff'],
+    ['pk1', 'Key of Terror'],
+    ['Uni Ore 0', 'Ore'],
+  ]);
+  const colors = new Map([
+    ['r36', '4'],
+    ['Uni Ore 0', '7'],
+    ['unused', '1'],
+  ]);
+  const { bundle: coloured } = buildLootFilterBundle(
+    {
+      weapons: table([columns, ['Horadric Staff', 'hst', 'nostring', 'staf', '', '0', '10']]),
+      armor: table([columns]),
+      misc: table([
+        columns,
+        ['No Rune', 'r36', 'r36', 'rune', '', '1', ''],
+        ['El Rune', 'r51', 'r51', 'rune', '', '1', '0'],
+        ['Top', 'vip', 'vip', 'vamu', '', '0', '10'],
+        ['Key', 'pk1', 'pk1', 'ques', '', '1', ''],
+        ['Raw', 'raw', 'unused', 'misc', '', '1', ''],
+      ]),
+      itemstatcost: rowTable([['Stat']]),
+      levels: table([['Name', 'Id', 'Act', 'LevelName']]),
+      sounds: rowTable([['Sound']]),
+      uniqueitems: rowTable([
+        ['index', 'code'],
+        ['Uni Ore 0', 'r36'],
+      ]),
+      setitems: rowTable([['index', 'set', 'item']]),
+      treasureclassex: table([['Treasure Class', 'Item1']]),
+      gems: table([
+        ['name', 'code'],
+        ['No', 'r36'],
+        ['El', 'r51'],
+      ]),
+      cubemain: table([['enabled', 'input 1', 'output']]),
+    },
+    names,
+    {},
+    [],
+    colors
+  );
+  const item = (code: string) => coloured.items.find((entry) => entry.code === code);
+
+  it("keeps the colour code the name's string starts in", () => {
+    expect(item('r36')?.nameColor).toBe('4');
+    expect(item('r51')).not.toHaveProperty('nameColor');
+    expect(coloured.uniques[0]?.nameColor).toBe('7');
+  });
+
+  it('gives no colour to a name taken from the name column (its string key is missing)', () => {
+    expect(item('raw')).not.toHaveProperty('nameColor');
+    expect(item('hst')?.name).toBe('Horadric Staff');
+  });
+
+  it('flags the rows with a quest column above 0, whatever their type', () => {
+    expect(item('hst')?.quest).toBe(true);
+    expect(item('vip')?.quest).toBe(true);
+    expect(item('pk1')).not.toHaveProperty('quest');
+    expect(item('r51')).not.toHaveProperty('quest');
+  });
+});
