@@ -7,6 +7,7 @@ import type { LootFilterRule } from '../engine/types';
 import {
   addToPartSection,
   addToSection,
+  findPartSection,
   applySectionEdit,
   buildSectionRows,
   commentLinesText,
@@ -465,6 +466,31 @@ describe('addToPartSection', () => {
     expect(lines.slice(heading, heading + 2)).toEqual(['// ---- Custom rules', '// Yours.']);
     expect(lines.indexOf('// ==== Drop Announcements')).toBeGreaterThan(heading + 2);
     expect(parseLootFilter(serialized).filter.rules[9]).toEqual(rules[9]);
+  });
+});
+
+describe('findPartSection', () => {
+  const place = { part: 'Protection', section: 'Custom rules' };
+
+  it('gives the addresses of the part and its section, as their heading rows have them', () => {
+    const list: SectionList<Item> = {
+      items: [item('a'), item('p', '', '// ==== Protection', '// Never hidden.'), item('c', '// ---- custom rules')],
+      end: [],
+    };
+    expect(findPartSection(list, access, place)).toEqual({ part: { at: 1, line: 1 }, section: { at: 2, line: 0 } });
+    const rows = buildSectionRows(list.items, (entry) => entry.commentsBefore, list.end);
+    expect(rows.flatMap((row) => (row.kind === 'heading' ? [row.address] : []))).toEqual([
+      { at: 1, line: 1 },
+      { at: 2, line: 0 },
+    ]);
+  });
+
+  it('has no section address when the section would be created, and nothing without the part', () => {
+    expect(findPartSection({ items: [item('a')], end: ['// ==== Protection'] }, access, place)).toEqual({
+      part: { at: 1, line: 0 },
+      section: undefined,
+    });
+    expect(findPartSection({ items: [item('a', '// ---- Protection')], end: [] }, access, place)).toBeUndefined();
   });
 });
 

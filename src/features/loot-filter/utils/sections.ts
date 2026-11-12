@@ -504,11 +504,58 @@ export interface PartSection {
   readonly description?: string;
 }
 
+/** The token positions of the part `place.part` (the first of that title) and of its section `place.section` (-1: none). */
+function locatePartSection<T>(
+  tokens: readonly Token<T>[],
+  place: PartSection
+): { readonly part: number; readonly section: number } | undefined {
+  const titled = (token: Token<T>, level: HeadingLevel, title: string): boolean => {
+    if (token.kind !== 'line') return false;
+    const read = readCommentLine(token.text);
+    return read.kind === 'heading' && read.level === level && read.title.toLowerCase() === title.trim().toLowerCase();
+  };
+  const part = tokens.findIndex((token) => titled(token, 1, place.part));
+  if (part === -1) return undefined;
+  const inPart = tokens.slice(part + 1, sectionEnd(tokens, part, 1)).findIndex((token) => titled(token, 2, place.section));
+  return { part, section: inPart === -1 ? -1 : part + 1 + inPart };
+}
+
+/** The address of the comment line at token position `at` (`CommentAddress`, as the list rows have it). */
+function addressAt<T>(tokens: readonly Token<T>[], at: number): CommentAddress {
+  let item = 0;
+  let line = 0;
+  for (const token of tokens.slice(0, at)) {
+    if (token.kind === 'item') {
+      item++;
+      line = 0;
+    } else {
+      line++;
+    }
+  }
+  return { at: item, line };
+}
+
 /**
- * Adds `item` as the last item of the section `place.section` inside the part `place.part` (the first part of that
- * title; titles match ignoring case and the spaces around them). Without that section, the section is created at the
- * end of the part (after its last section) with the heading and description above `item`. Blank lines and separators
- * right above the next heading stay with it. Undefined when the list has no such part.
+ * Where `addToPartSection` puts an item: the address of the part's heading line (as its heading row has it) and of the
+ * section's, undefined when the section is not there yet (it would be created). Undefined without the part. Titles
+ * match ignoring case and the spaces around them.
+ */
+export function findPartSection<T>(
+  list: SectionList<T>,
+  access: Pick<CommentAccess<T>, 'get'>,
+  place: PartSection
+): { readonly part: CommentAddress; readonly section: CommentAddress | undefined } | undefined {
+  const tokens = toTokens(list, access);
+  const found = locatePartSection(tokens, place);
+  if (found === undefined) return undefined;
+  return { part: addressAt(tokens, found.part), section: found.section === -1 ? undefined : addressAt(tokens, found.section) };
+}
+
+/**
+ * Adds `item` as the last item of the section `place.section` inside the part `place.part` (`findPartSection`).
+ * Without that section, the section is created at the end of the part (after its last section) with the heading and
+ * description above `item`. Blank lines and separators right above the next heading stay with it. Undefined when the
+ * list has no such part.
  */
 export function addToPartSection<T>(
   list: SectionList<T>,
@@ -517,16 +564,10 @@ export function addToPartSection<T>(
   item: T
 ): (SectionEditResult<T> & { readonly index: number }) | undefined {
   const tokens = toTokens(list, access);
-  const titled = (token: Token<T>, level: HeadingLevel, title: string): boolean => {
-    if (token.kind !== 'line') return false;
-    const read = readCommentLine(token.text);
-    return read.kind === 'heading' && read.level === level && read.title.toLowerCase() === title.trim().toLowerCase();
-  };
-  const part = tokens.findIndex((token) => titled(token, 1, place.part));
-  if (part === -1) return undefined;
-  const partEnd = sectionEnd(tokens, part, 1);
-  const section = tokens.slice(part + 1, partEnd).findIndex((token) => titled(token, 2, place.section));
-  const end = section === -1 ? partEnd : sectionEnd(tokens, part + 1 + section, 2);
+  const found = locatePartSection(tokens, place);
+  if (found === undefined) return undefined;
+  const { part, section } = found;
+  const end = section === -1 ? sectionEnd(tokens, part, 1) : sectionEnd(tokens, section, 2);
   let at = end;
   while (at > 0) {
     const previous = tokens[at - 1];

@@ -36,6 +36,8 @@ interface RuleListProps {
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
   readonly sections: RuleListSectionHandlers;
+  /** The heading row (by its address) where Add rule puts new rules, with the badge it shows (`addRuleTarget`). */
+  readonly addTarget?: { readonly address: CommentAddress; readonly label: string; readonly description: string };
   readonly className?: string;
 }
 
@@ -68,6 +70,7 @@ export function RuleList({
   onDuplicate,
   onDelete,
   sections,
+  addTarget,
   className,
 }: RuleListProps) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -106,6 +109,11 @@ export function RuleList({
               onMove={sections.onMove}
               onRemove={sections.onRemoveHeading}
               onAddItem={sections.onAddRule}
+              badge={
+                addTarget !== undefined && addTarget.address.at === row.address.at && addTarget.address.line === row.address.line
+                  ? addTarget
+                  : undefined
+              }
             />
           );
         }

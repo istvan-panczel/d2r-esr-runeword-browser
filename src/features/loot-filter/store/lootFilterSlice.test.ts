@@ -8,8 +8,8 @@ import type { LootFilter, LootFilterRule } from '../engine/types';
 import { createBlankFilter } from '../utils/blankFilter';
 import { planStyleChoice } from '../utils/styleChoice';
 import { stylePreset } from '../utils/stylePresets';
+import { CUSTOM_RULES_PLACE } from '../utils/addRuleTarget';
 import reducer, {
-  CUSTOM_RULES_PLACE,
   EMPTY_EDITOR,
   addCustomRule,
   addRule,
