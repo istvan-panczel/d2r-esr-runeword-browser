@@ -1032,8 +1032,8 @@ X` when only the style sets the group; `none`). The group → keys maps (`CONDIT
   diagnostic. A group only the rule's style fills is not: it starts folded with "from style X" in its summary (the
   Style group lists the style's values), so a rule with a style stays short; overriding one of its keys opens it on
   the next visit. Groups in use at mount start open, the others folded; a group with a
-  diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule, the
-  Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
+  diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule and when the content is replaced in
+  place, the Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
   while folded stays folded. The Label preview stays pinned at the top of the Actions card; the header bits,
   Enabled, Comment, the diagnostics and How rules combine stay above the folds. Basic / Advanced works inside the
   folds as before (a group whose fields are all hidden is left out; the "N more … in the Advanced view" lines stay at
@@ -1098,7 +1098,10 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
   them, so it sits in the rule's section, not at the end of the previous one), selects it and opens its headings in the
   rule list; a toast says so, and keyboard focus moves to the new editor's title
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
-  index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
+  index, the rule count (rules have no ids) and the editor's `reloads` counter (bumped by `reloadText`, i.e. a source
+  update and Discard changes, and by `replaceFilter`, i.e. JSON Apply and an imported AI answer; never by an edit, so
+  typing keeps the folds), so it remounts although the test rule takes the source's index, and a replaced content
+  with the same rule count does not inherit the old rule's folds and items-first step. The
   test rule (`inGameCheckRule`):
   - copies every condition of the rule except the four stat lists and the `formula` (codes, types, quality, tier,
     flags, ids, location, difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not,

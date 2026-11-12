@@ -110,6 +110,12 @@ export interface LootFilterEditorState {
    * sandbox never writes, so there it means "edited since it was opened".
    */
   readonly dirty: boolean;
+  /**
+   * Bumped when the open filter's content is replaced in place with the selection kept (a source update, Discard
+   * changes, the JSON tab's Apply, an AI answer imported): the rule editor's key, so the rule now at the selected index
+   * gets a fresh editor (folds, items-first step) even when the rule count stayed the same.
+   */
+  readonly reloads: number;
 }
 
 export interface LootFilterState {

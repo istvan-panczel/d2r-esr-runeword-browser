@@ -54,6 +54,7 @@ export const EMPTY_EDITOR: LootFilterEditorState = {
   selectedRule: null,
   selectionFolded: false,
   dirty: false,
+  reloads: 0,
 };
 
 export const initialState: State = {
@@ -170,7 +171,10 @@ function reloadText(state: State, target: EditorTarget, text: string, template: 
   const reopened = openText(state, target, text, template);
   const selected = state.editor.selectedRule;
   const count = reopened.editor.filter?.rules.length ?? 0;
-  return withEditor(reopened, { selectedRule: selected !== null && isIndex(selected, count) ? selected : null });
+  return withEditor(reopened, {
+    selectedRule: selected !== null && isIndex(selected, count) ? selected : null,
+    reloads: state.editor.reloads + 1,
+  });
 }
 
 /** The name shown for the open filter (the draft's library name, or the saved / shared filter's name). */
@@ -1050,7 +1054,14 @@ const lootFilterSlice = createSlice({
       const { filter, diagnostics, notes = [] } = action.payload;
       const selected = state.editor.selectedRule;
       const selectedRule = selected !== null && isIndex(selected, filter.rules.length) ? selected : null;
-      return withEditor(state, { filter, parseDiagnostics: diagnostics, textNotes: notes, selectedRule, dirty: true });
+      return withEditor(state, {
+        filter,
+        parseDiagnostics: diagnostics,
+        textNotes: notes,
+        selectedRule,
+        dirty: true,
+        reloads: state.editor.reloads + 1,
+      });
     },
   },
 });

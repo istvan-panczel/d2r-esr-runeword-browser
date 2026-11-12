@@ -76,10 +76,22 @@ interface RulesTabProps {
   /** Bumped whenever a rule is revealed by an action; the list then scrolls the selected rule into view. */
   readonly revealCount: number;
   readonly onReveal: () => void;
+  /** The editor's `reloads`: bumped when the content is replaced in place (part of the rule editor's key). */
+  readonly reloads: number;
 }
 
 /** The rule list (search, add, reorder, duplicate, delete) next to the selected rule's editor. */
-export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange, selectionFolded, revealCount, onReveal }: RulesTabProps) {
+export function RulesTab({
+  filter,
+  selectedRule,
+  diagnostics,
+  open,
+  onOpenChange,
+  selectionFolded,
+  revealCount,
+  onReveal,
+  reloads,
+}: RulesTabProps) {
   const dispatch = useDispatch();
   const store = useStore<RootState>();
   const data = useLootFilterData();
@@ -362,10 +374,11 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
       <div className="min-w-0">
         {selectedRule !== null && rule !== undefined ? (
           <RuleEditor
-            // A new editor per rule: local field state (half-typed numbers) must not leak into the next rule. Rules have
-            // no ids, so the rule count joins the index: a rule added or removed above (Check in game puts its test rule
-            // at the selected index) changes which rule sits there.
-            key={`${String(selectedRule)}/${String(filter.rules.length)}`}
+            // A new editor per rule: local field state (half-typed numbers, folds, the items-first step) must not leak
+            // into the next rule. Rules have no ids, so the rule count joins the index (a rule added or removed above:
+            // Check in game puts its test rule at the selected index), and so does `reloads` (the whole content
+            // replaced: a source update, Discard, JSON Apply, an AI import), which a plain edit leaves alone.
+            key={`${String(selectedRule)}/${String(filter.rules.length)}/${String(reloads)}`}
             filter={filter}
             index={selectedRule}
             rule={rule}
