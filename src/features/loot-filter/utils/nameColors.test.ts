@@ -44,7 +44,8 @@ describe('ruleItemColor', () => {
     expect(itemColor({ itemCodes: ['01a'] })).toBe('4'); // ÿc4Ancient Scroll 1
     expect(itemColor({ itemCodes: ['r51', 'r83'] })).toBe('J'); // El, Zod: no code
     expect(itemColor({ itemCodes: ['vip', 'hst', 'box'] })).toBe('>'); // quest column, whatever the type
-    expect(itemColor({ itemCodes: ['pk1'] })).toBe('='); // type ques without the quest flag: a white key
+    // Inferred: only the quest column makes a name gold, so Key of Terror (type ques without it) is a plain white name
+    expect(itemColor({ itemCodes: ['pk1'] })).toBe('=');
     expect(itemColor({ itemCodes: ['gld'] })).toBe('H');
   });
 
@@ -59,6 +60,28 @@ describe('ruleItemColor', () => {
     expect(itemColor({ quality: 'magic' })).toBe('B');
     expect(itemColor({ quality: 'unique' }, { ...empty, qualityColors: { unique: 'ÿc;' } })).toBe(';');
     expect(itemColor({})).toBeUndefined();
+  });
+
+  it("names a base's uniques and sets in their rows' shared colour", () => {
+    expect(itemColor({ itemCodes: ['ore'], quality: 'unique' })).toBe('7'); // the Uni Ore rows: ÿc7Ore
+    expect(itemColor({ itemCodes: ['ore'] })).toBe('7'); // a shadow base: only its unique rows drop
+    expect(itemColor({ itemCodes: ['ast'], quality: 'unique' })).toBe('@'); // ÿc@… Ascendancy Stone, over quest gold
+    expect(itemColor({ itemCodes: ['ast'] })).toBeUndefined(); // quest gold unless unique
+    expect(itemColor({ itemCodes: ['ast'], quality: 'normal' })).toBe('>');
+    expect(itemColor({ itemCodes: ['hax'], quality: 'unique' })).toBe('D'); // its uniques have no colour code
+  });
+
+  it('reads uniqueOrSetIds against both tables, the quality telling which', () => {
+    expect(itemColor({ uniqueOrSetIds: [674] })).toBe('7'); // Ore
+    expect(itemColor({ uniqueOrSetIds: [1100, 1101] })).toBe('@');
+    expect(itemColor({ uniqueOrSetIds: [674], quality: 'set' })).toBe('C'); // no set row 674: no vote, the quality tells
+    const shared = lookup.sets.find((set) => lookup.uniqueOrSet(set.id, 'unique') !== undefined);
+    if (shared === undefined) throw new Error('no id in both tables');
+    expect(itemColor({ uniqueOrSetIds: [shared.id], quality: 'set' })).toBe('C');
+    expect(itemColor({ uniqueOrSetIds: [shared.id], quality: 'unique' })).toBe('D');
+    expect(itemColor({ uniqueOrSetIds: [shared.id] })).toBeUndefined(); // the unique gold or the set green
+    expect(itemColor({ uniqueOrSetIds: [999999], itemCodes: ['r84'] })).toBe('N'); // no row: the codes tell
+    expect(ruleItemColor({ uniqueOrSetIds: [674] }, empty, EMPTY_LOOKUP)).toBeUndefined();
   });
 
   it('takes the colour most of the codes have, ties to the first listed; undefined when most have none', () => {
@@ -134,6 +157,17 @@ describe('styleNameColors', () => {
 
   it('skips rules that hide the label, and breaks ties for the earlier rule', () => {
     expect(colors.get('Loud')).toBe('C'); // set before unique; the two hidden magic rules do not count
+  });
+
+  it('skips disabled rules (they never reach the game)', () => {
+    const withDisabled: LootFilter = {
+      ...scratch,
+      rules: [...scratch.rules, ...[1, 2, 3].map(() => ({ itemCodes: ['r84'], useStyle: 'Runes', disabled: true as const }))],
+    };
+    expect(styleNameColors(withDisabled, lookup).get('Runes')).toBe('J');
+    expect(styleNameColors({ ...scratch, rules: [{ quality: 'unique', useStyle: 'Unused', disabled: true }] }, lookup).has('Unused')).toBe(
+      false
+    );
   });
 
   it('draws the name segment in the item colour, not the colour a suffix sets', () => {

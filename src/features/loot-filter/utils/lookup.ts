@@ -14,6 +14,9 @@ import { buildStatParamData, statParamKind, statParamLabel, type StatParamData }
 export interface LootFilterLookup {
   /** Every item of the game data in bundle order (empty without the data). */
   readonly items: readonly LootFilterItem[];
+  /** Every uniqueitems.txt / setitems.txt row with a base (empty without the data). */
+  readonly uniques: readonly LootFilterUniqueOrSet[];
+  readonly sets: readonly LootFilterUniqueOrSet[];
   readonly item: (code: string) => LootFilterItem | undefined;
   readonly itemName: (code: string) => string | undefined;
   readonly itemType: (code: string) => ItemTypeInfo | undefined;
@@ -41,6 +44,8 @@ const none = (): undefined => undefined;
 
 export const EMPTY_LOOKUP: LootFilterLookup = {
   items: [],
+  uniques: [],
+  sets: [],
   item: none,
   itemName: none,
   itemType: none,
@@ -70,6 +75,8 @@ export function buildLookup(
   const sets = new Map(data.sets.map((entry) => [entry.id, entry]));
   return {
     items: data.items,
+    uniques: data.uniques,
+    sets: data.sets,
     item: (code) => items.get(code),
     itemName: (code) => items.get(code)?.name,
     itemType: (code) => itemTypes.get(code),

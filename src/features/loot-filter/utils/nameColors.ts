@@ -2,11 +2,13 @@
  * The colour label previews draw text without a colour code in: the game's colour for the name of the items a rule
  * matches (`engine/nameColor.ts`), and for a style the colour most of its rules give the name.
  *
- * A rule names no single item, so its conditions are read as far as they go: the item codes (or, without them, the
- * items of its item types) through the game data, its `quality`, `isEthereal` and a `sockets` range without 0. When the
- * rule leaves something open that changes the colour (a weapon of any quality), its items have no one colour.
+ * A rule names no single item, so its conditions are read as far as they go: its `uniqueOrSetIds`, else the item codes
+ * (or, without them, the items of its item types) through the game data, its `quality`, `isEthereal` and a `sockets`
+ * range without 0. A base's unique and set rows give the name colour at those qualities when they share one (the Ores
+ * `ÿc7Ore`, the ascendancy stones `ÿc@…`). When the rule leaves something open that changes the colour (a weapon of any
+ * quality), its items have no one colour.
  */
-import type { LootFilterItem } from '@/features/game-data/engine/schema';
+import type { LootFilterItem, LootFilterUniqueOrSet } from '@/features/game-data/engine/schema';
 import { isNamedList, isNumberList, namedToNumber } from '../engine/match';
 import { itemNameColor, qualityColorCode, sameLabelColor } from '../engine/nameColor';
 import { splitColorRuns } from '../engine/text';
@@ -94,18 +96,34 @@ function ruleLook(rule: LootFilterRule): RuleLook {
   };
 }
 
+/**
+ * The name colour of the unique (or set) rows on a base: their shared colour code, `''` when they share having none,
+ * `MIXED` when they differ; undefined when the base has no such row.
+ */
+type RowsColor = string | typeof MIXED | undefined;
+const MIXED = Symbol('mixed');
+
 /** What decides an item's name colour beside the rule's look; items alike share a `key`. */
 interface ItemProfile {
   readonly key: string;
   readonly typeAncestors: readonly string[];
   readonly baseNameColor?: string;
   readonly isQuest: boolean;
-  /** The item is always normal quality: a type of it says so (itemtypes.txt `Normal`), or none of its types rolls magic or rare. */
-  readonly normalOnly: boolean;
+  /**
+   * The qualities the item comes in when the rule does not say: normal only when a type of it says so (itemtypes.txt
+   * `Normal`) or none of its types rolls magic or rare; unique and/or set only for a base that is not spawnable and
+   * has such rows (a shadow base); undefined: any.
+   */
+  readonly qualities?: readonly number[];
+  /** The name colour of the base's unique rows (quality 7) and set rows (quality 5). */
+  readonly uniqueColor?: RowsColor;
+  readonly setColor?: RowsColor;
 }
 
 /** An item the rule tells nothing about (no codes, unknown codes, no game data). */
-const ANY_ITEM: ItemProfile = { key: '', typeAncestors: [], isQuest: false, normalOnly: false };
+const ANY_ITEM: ItemProfile = { key: '', typeAncestors: [], isQuest: false };
+const UNIQUE = 7;
+const SET = 5;
 
 /** Per game data: each item's type ancestors and profile, and the type-expansion counts already made. */
 interface LookupCache {
@@ -120,9 +138,24 @@ function typeAncestorsOfItem(item: LootFilterItem, lookup: LootFilterLookup): re
   return [...new Set(codes.flatMap((code) => lookup.itemType(code)?.ancestors ?? [code]))];
 }
 
+/** Per base code, the name colour its rows share (`RowsColor`). */
+function rowsColors(rows: readonly LootFilterUniqueOrSet[]): Map<string, RowsColor> {
+  const colors = new Map<string, RowsColor>();
+  for (const row of rows) {
+    const color = row.nameColor ?? '';
+    const known = colors.get(row.code);
+    colors.set(row.code, known === undefined || known === color ? color : MIXED);
+  }
+  return colors;
+}
+
+const rowsKey = (color: RowsColor) => (color === undefined ? '-' : color === MIXED ? '*' : color);
+
 function lookupCache(lookup: LootFilterLookup): LookupCache {
   const cached = caches.get(lookup);
   if (cached !== undefined) return cached;
+  const uniqueColors = rowsColors(lookup.uniques);
+  const setColors = rowsColors(lookup.sets);
   const byKey = new Map<string, ItemProfile>();
   const profiles = new Map<string, ItemProfile>();
   for (const item of lookup.items) {
@@ -132,12 +165,26 @@ function lookupCache(lookup: LootFilterLookup): LookupCache {
     const known = info.length > 0 && info.every((type) => type !== undefined);
     const normalOnly = info.some((type) => type?.normal === true) || (known && !info.some((type) => type.magic || type.rare));
     const isQuest = item.quest === true;
+    const uniqueColor = uniqueColors.get(item.code);
+    const setColor = setColors.get(item.code);
+    const named = [...(setColor === undefined ? [] : [SET]), ...(uniqueColor === undefined ? [] : [UNIQUE])];
+    const qualities = !item.spawnable && named.length > 0 ? named : normalOnly ? [NORMAL] : undefined;
     // Items alike name in the same colour: the colour only reads these fields and the rune/potion/gold types
     const special = ['rune', 'rpot', 'hpot', 'mpot', 'gold'].filter((code) => typeAncestors.includes(code)).join(',');
-    const key = `${item.nameColor ?? ''}|${String(isQuest)}|${special}|${String(normalOnly)}`;
+    const key = [item.nameColor ?? '', String(isQuest), special, qualities?.join(',') ?? '', rowsKey(uniqueColor), rowsKey(setColor)].join(
+      '|'
+    );
     let profile = byKey.get(key);
     if (profile === undefined) {
-      profile = { key, typeAncestors, ...(item.nameColor === undefined ? {} : { baseNameColor: item.nameColor }), isQuest, normalOnly };
+      profile = {
+        key,
+        typeAncestors,
+        ...(item.nameColor === undefined ? {} : { baseNameColor: item.nameColor }),
+        isQuest,
+        ...(qualities === undefined ? {} : { qualities }),
+        ...(uniqueColor === undefined ? {} : { uniqueColor }),
+        ...(setColor === undefined ? {} : { setColor }),
+      };
       byKey.set(key, profile);
     }
     profiles.set(item.code, profile);
@@ -167,29 +214,75 @@ function typeProfileCounts(rule: LootFilterRule, lookup: LootFilterLookup, cache
   return counts;
 }
 
+/** The colour an item of the profile has at one quality; undefined when its unique (or set) rows differ in colour. */
+function qualityColor(
+  profile: ItemProfile,
+  quality: number,
+  look: RuleLook,
+  qualityColors: QualityColors | undefined,
+  named: RowsColor = quality === UNIQUE ? profile.uniqueColor : quality === SET ? profile.setColor : undefined
+): string | undefined {
+  if (named === MIXED) return undefined;
+  return itemNameColor(
+    {
+      quality,
+      typeAncestors: profile.typeAncestors,
+      isEthereal: look.ethereal,
+      sockets: look.socketed ? 1 : 0,
+      ...(profile.baseNameColor === undefined ? {} : { baseNameColor: profile.baseNameColor }),
+      ...(named === undefined || named === '' ? {} : { uniqueNameColor: named }),
+      isQuest: profile.isQuest,
+    },
+    qualityColors
+  );
+}
+
+/** The one colour of a list of colours (codes drawn alike count as one), else undefined. */
+function single(codes: readonly (string | undefined)[]): string | undefined {
+  const first = codes.at(0);
+  return first !== undefined && codes.every((code) => code !== undefined && sameLabelColor(first, code)) ? first : undefined;
+}
+
 /** The one colour the profile's items have under the rule's look, else undefined (it depends on the quality). */
 function profileColor(profile: ItemProfile, look: RuleLook, qualityColors: QualityColors | undefined): string | undefined {
-  const qualities = look.qualities ?? (profile.normalOnly ? [NORMAL] : ALL_QUALITIES);
-  const codes = qualities.map((quality) =>
-    itemNameColor(
-      {
-        quality,
-        typeAncestors: profile.typeAncestors,
-        isEthereal: look.ethereal,
-        sockets: look.socketed ? 1 : 0,
-        ...(profile.baseNameColor === undefined ? {} : { baseNameColor: profile.baseNameColor }),
-        isQuest: profile.isQuest,
-      },
-      qualityColors
-    )
-  );
-  const first = codes.at(0);
-  return first !== undefined && codes.every((code) => sameLabelColor(first, code)) ? first : undefined;
+  const qualities = look.qualities ?? profile.qualities ?? ALL_QUALITIES;
+  return single(qualities.map((quality) => qualityColor(profile, quality, look, qualityColors)));
 }
 
 /**
- * The colour code the game names the rule's items in (`itemNameColor`), as far as its conditions tell: item codes
- * through the game data, else the items of its item types, with its quality, ethereal and sockets conditions. When the
+ * The votes of a rule's `uniqueOrSetIds`: per id the colour of its unique row (quality unique) and its set row
+ * (quality set), the qualities the rule allows; the evaluator matches the id against either table (the item's quality
+ * tells which), so an id both tables have counts both rows. An id without a row casts no vote.
+ */
+function uniqueOrSetVotes(
+  rule: LootFilterRule,
+  look: RuleLook,
+  lookup: LootFilterLookup,
+  cache: LookupCache,
+  qualityColors: QualityColors | undefined
+): (string | undefined)[] {
+  const allows = (quality: number) => look.qualities === undefined || look.qualities.includes(quality);
+  const votes: (string | undefined)[] = [];
+  for (const id of rule.uniqueOrSetIds ?? []) {
+    const colors: (string | undefined)[] = [];
+    for (const [kind, quality] of [
+      ['unique', UNIQUE],
+      ['set', SET],
+    ] as const) {
+      const row = lookup.uniqueOrSet(id, kind);
+      if (row === undefined || !allows(quality)) continue;
+      const profile = cache.profiles.get(row.code) ?? ANY_ITEM;
+      colors.push(qualityColor(profile, quality, look, qualityColors, row.nameColor ?? ''));
+    }
+    if (colors.length > 0) votes.push(single(colors));
+  }
+  return votes;
+}
+
+/**
+ * The colour code the game names the rule's items in (`itemNameColor`), as far as its conditions tell: its unique and
+ * set ids, else its item codes through the game data, else the items of its item types, with its quality, ethereal and
+ * sockets conditions. When the
  * items differ, the colour most of them have (ties to the first listed); undefined when most have no one colour (a
  * weapon of any quality) or nothing is known. Without the game data the codes tell nothing; the quality still does.
  */
@@ -203,7 +296,10 @@ export function ruleItemColor(rule: LootFilterRule, filter: LootFilter, lookup: 
     return colors.get(profile);
   };
   const codes = rule.itemCodes ?? [];
-  if (codes.length > 0) {
+  const idVotes = uniqueOrSetVotes(rule, look, lookup, cache, filter.qualityColors);
+  if (idVotes.length > 0) {
+    for (const vote of idVotes) tally.add(vote);
+  } else if (codes.length > 0) {
     for (const code of codes) tally.add(colorOf(cache.profiles.get(code) ?? ANY_ITEM));
   } else if ((rule.itemTypes ?? []).length > 0 && lookup.items.length > 0) {
     const counts = typeProfileCounts(rule, lookup, cache);
@@ -241,7 +337,8 @@ export function ruleLabelNameColor(rule: LootFilterRule, filter: LootFilter, loo
 export function styleNameColors(filter: LootFilter, lookup: LootFilterLookup = EMPTY_LOOKUP): ReadonlyMap<string, string> {
   const tallies = new Map<string, ColorTally>();
   for (const rule of filter.rules) {
-    if (rule.useStyle === undefined) continue;
+    // A disabled rule (the editor's `disabled`, written to `disabledRules`) never reaches the game
+    if (rule.useStyle === undefined || rule.disabled === true) continue;
     const color = ruleLabelNameColor(rule, filter, lookup);
     if (color === undefined) continue;
     let tally = tallies.get(rule.useStyle);
