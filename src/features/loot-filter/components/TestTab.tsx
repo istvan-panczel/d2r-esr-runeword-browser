@@ -58,8 +58,6 @@ export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showR
       : hiddenWhenUnidentified(result)
     : (manualRun?.hiddenWhileUnidentified ?? null);
   const stale = !live && manualRun !== null && (manualRun.form !== form || manualRun.filter !== filter);
-  // The label colour follows the quality of the item that was evaluated.
-  const resultQuality = live ? form.quality : (manualRun?.form.quality ?? form.quality);
 
   return (
     <div className="flex flex-col gap-4">
@@ -157,13 +155,7 @@ export function TestTab({ filter, form, onFormChange: setForm, onShowRule: showR
               </p>
             ) : (
               <>
-                <TestResult
-                  data={data}
-                  result={result}
-                  quality={resultQuality}
-                  hiddenWhileUnidentified={hiddenWhileUnidentified}
-                  onShowRule={showRule}
-                />
+                <TestResult data={data} result={result} hiddenWhileUnidentified={hiddenWhileUnidentified} onShowRule={showRule} />
                 <RuleTrace filter={live ? filter : (manualRun?.filter ?? filter)} result={result} lookup={lookup} onShowRule={showRule} />
               </>
             )}

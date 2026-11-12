@@ -1,8 +1,7 @@
 import { EyeOff, Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DEFAULT_QUALITY_COLORS } from '../../engine/colors';
 import type { EvaluationResult } from '../../engine/evaluate';
-import { QUALITIES, type LabelColor } from '../../engine/types';
+import type { LabelColor } from '../../engine/types';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
 import { useSoundPreview } from '../../hooks/useSoundPreview';
 import { bundledSoundUrl, findBundledSound, soundLabel } from '../../utils/bundledAssets';
@@ -11,9 +10,8 @@ import { Section } from '../actions/Section';
 
 interface TestResultProps {
   readonly data: LootFilterData;
+  /** Its `nameColor` (the game's colour for the item's name) draws the label text without a colour code. */
   readonly result: EvaluationResult;
-  /** 1 to 9: the game colours a label by quality before any `ÿc` code. */
-  readonly quality: number;
   /** Whether the same item would be hidden while unidentified, when that differs from this result; null otherwise. */
   readonly hiddenWhileUnidentified: boolean | null;
   /** Shows "Rule N" for the hiding rule. */
@@ -31,10 +29,8 @@ function Swatch({ color }: { readonly color: LabelColor }) {
 }
 
 /** What the filter does to the item: the ground label, chat lines, sounds, minimap icon and droplight. */
-export function TestResult({ data, result, quality, hiddenWhileUnidentified, onShowRule }: TestResultProps) {
+export function TestResult({ data, result, hiddenWhileUnidentified, onShowRule }: TestResultProps) {
   const preview = useSoundPreview();
-  const qualityName = quality >= 1 ? QUALITIES.at(quality - 1) : undefined;
-  const defaultColor = qualityName === undefined ? '=' : DEFAULT_QUALITY_COLORS[qualityName].slice(2);
   const soundNames = data.data?.sounds ?? [];
   const { hiddenBy } = result;
 
@@ -75,7 +71,12 @@ export function TestResult({ data, result, quality, hiddenWhileUnidentified, onS
         </div>
       ) : (
         <Section dense title="Ground label">
-          <LabelPreview text={result.name} background={result.labelBackground} border={result.labelBorder} defaultColor={defaultColor} />
+          <LabelPreview
+            text={result.name}
+            background={result.labelBackground}
+            border={result.labelBorder}
+            defaultColor={result.nameColor}
+          />
           {!result.matched && <p className="text-xs text-muted-foreground">No rule applied: the game&apos;s own label.</p>}
           {result.shownBy !== null && (
             <p className="text-xs text-muted-foreground">

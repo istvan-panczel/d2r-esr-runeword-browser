@@ -12,7 +12,9 @@ import { CONDITION_KEYS } from '../engine/parse';
 import type { Diagnostic, LootFilter, LootFilterStyle, RuleActions } from '../engine/types';
 import { editStyleComments, removeStyle, renameStyle, setStyle } from '../store/lootFilterSlice';
 import { selectEditorFilter } from '../store/selectors';
-import { countActions, countStyleUsers, styleNameColor } from '../utils/effectiveActions';
+import { countActions, countStyleUsers } from '../utils/effectiveActions';
+import { styleNameColors } from '../utils/nameColors';
+import { useLootFilterData } from '../hooks/useLootFilterData';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
 import { openAfterEdit, styleHeadingKeys, toggleHeading, withOpened } from '../utils/sectionFolds';
 import {
@@ -78,6 +80,9 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
   const entries = Object.entries(styles);
   const names = entries.map(([name]) => name);
   const stylesNotes = commentLinesText(filter.keyComments?.styles ?? []);
+  const { lookup } = useLootFilterData();
+  /** What each style's rules draw the name in, for the previews' text without a colour code. */
+  const nameColors = styleNameColors(filter, lookup);
   // The same section comments as the rule list (utils/sections.ts), with their own remembered folds.
   const [sectionDialog, setSectionDialog] = useState<SectionDialogState | null>(null);
   const commentsOf = ([, style]: readonly [string, LootFilterStyle]) => style.commentsBefore;
@@ -279,7 +284,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
                       style={style}
                       sample="Item Name"
                       maxIconSize={LIST_ICON_MAX}
-                      defaultColor={styleNameColor(filter, name)}
+                      defaultColor={nameColors.get(name)}
                       className="mt-1.5 w-full px-1.5 py-1"
                     />
                   </button>
@@ -384,7 +389,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
               filter={filter}
               owner="style"
               styleName={current}
-              nameColor={styleNameColor(filter, current)}
+              nameColor={nameColors.get(current)}
               gate={gate}
               usage={actionGroupUsage({ actions: currentStyle, diagnostics: styleDiagnostics, owner: 'style' })}
               onChange={(patch) => {

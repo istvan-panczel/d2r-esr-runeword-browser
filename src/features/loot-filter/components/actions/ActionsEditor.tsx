@@ -39,10 +39,13 @@ export interface ActionsEditorProps {
   /** Name of the style being edited (for the preview heading); unused for rules. */
   readonly styleName?: string;
   /**
-   * The colour code the label preview draws text without one in: a rule's quality colour (`qualityNameColor`), a
-   * style's usual name colour from its rules (`styleNameColor`). Undefined: plain white.
+   * The colour code the label previews (the label and the name fields) draw text without one in: the game's colour for
+   * the rule's items, else its style's (`rulePreviewColor`); for a style, the colour its rules give the name
+   * (`styleNameColors`). Undefined: plain white.
    */
   readonly nameColor?: string;
+  /** What each style's rules draw the name in (`styleNameColors`), for the rule's style picker. */
+  readonly styleColors?: ReadonlyMap<string, string>;
   /**
    * The Basic / Advanced gate (`ruleFieldGate` for a rule, `actionFieldGate` for a style): Basic shows the common
    * actions, an Advanced one only when it holds a value (tagged), and a Name colour select. Undefined: every action.
@@ -86,7 +89,18 @@ const GROUP_TITLES = Object.fromEntries(ACTION_GROUPS.map((group) => [group.id, 
  *
  * Every group but the label preview folds; the header of a folded one sums up what it sets (`utils/editorGroups.ts`).
  */
-export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner, styleName, nameColor, gate, usage }: ActionsEditorProps) {
+export function ActionsEditor({
+  actions,
+  onChange,
+  onChooseStyle,
+  filter,
+  owner,
+  styleName,
+  nameColor,
+  styleColors,
+  gate,
+  usage,
+}: ActionsEditorProps) {
   const idPrefix = owner === 'style' ? `loot-filter-style-${(styleName ?? '').replace(/[^A-Za-z0-9_-]/g, '_')}` : 'loot-filter-rule';
   const id = (key: string) => `${idPrefix}-${key}`;
   const shows = (field: ActionField) => (gate?.action(field) ?? 'shown') !== 'hidden';
@@ -136,8 +150,12 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
         <p className="text-xs text-muted-foreground">
           {effective.hide === true
             ? 'Hidden: the item shows no label.'
-            : `{name} shows as "Item Name"; other placeholders as written. Without a colour code the game colours the name by quality${
-                owner === 'style' ? ': the preview uses the colour most of the rules with this style give it' : ''
+            : `{name} shows as "Item Name"; other placeholders as written. Text without a colour code takes the item's own colour (quality, runes orange, quest items gold, socketed or ethereal gray, ESR names in their own colour)${
+                owner === 'style'
+                  ? ': the preview uses the colour most of the rules with this style give the name'
+                  : style === undefined
+                    ? ''
+                    : ', else the colour the rules with its style give the name'
               }.${effective.icon === undefined ? '' : ' Beside it the minimap icon at its size.'}`}
         </p>
       </div>
@@ -153,6 +171,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
               else onChange({ useStyle: target.kind === 'none' ? undefined : target.kind === 'style' ? target.name : target.preset.name });
             }}
             badge={advanced('useStyle')}
+            styleColors={styleColors}
           />
         </FoldSection>
       )}
@@ -230,6 +249,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
             id={id('replace-name')}
             label="Replace name"
             context="names"
+            defaultColor={nameColor}
             value={value('replaceName')}
             placeholder="{name}"
             hint={<>A new name; {'{name}'} is the game&apos;s own. A later rule&apos;s replaceName overrides it.</>}
@@ -246,6 +266,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
                 id={id('name-prefix')}
                 label="Prefix"
                 context="names"
+                defaultColor={nameColor}
                 value={value('namePrefix')}
                 placeholder="ÿc1* "
                 badge={badge('namePrefix')}
@@ -259,6 +280,7 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
                 id={id('name-suffix')}
                 label="Suffix"
                 context="names"
+                defaultColor={nameColor}
                 value={value('nameSuffix')}
                 placeholder=" ({sockets})"
                 badge={badge('nameSuffix')}

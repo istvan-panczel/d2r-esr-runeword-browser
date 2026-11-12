@@ -128,7 +128,7 @@ export interface GeneratedBundles {
 
 /** Builds all bundles from the raw clone sources (no I/O). */
 export function generateBundles(sources: EsrSources): GeneratedBundles {
-  const { strings, ids: stringIds, warnings: stringWarnings } = buildStringTable(sources.strings);
+  const { strings, ids: stringIds, colors: stringColors, warnings: stringWarnings } = buildStringTable(sources.strings);
   const table = (name: keyof EsrSources['tables']) => parseTsv(sources.tables[name], `${name}.txt`);
 
   const typeRows = readItemTypes(table('itemtypes'));
@@ -248,7 +248,8 @@ export function generateBundles(sources: EsrSources): GeneratedBundles {
     },
     strings,
     lootFilterSkills.bundle,
-    affixes.bundle.stats
+    affixes.bundle.stats,
+    stringColors
   );
 
   const enhance = buildEnhanceBundle(

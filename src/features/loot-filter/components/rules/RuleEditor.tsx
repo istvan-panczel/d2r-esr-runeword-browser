@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { effectiveActions, findStyle } from '../../engine/actions';
-import { qualityNameColor } from '../../utils/effectiveActions';
+import { rulePreviewColor, styleNameColors } from '../../utils/nameColors';
 import { ACTION_KEYS } from '../../engine/parse';
 import { EMPTY_RULE_MESSAGE } from '../../engine/validate';
 import type { Diagnostic, LootFilter, LootFilterRule, RuleActions, StatCheck } from '../../engine/types';
@@ -255,6 +255,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
   const hides = actions.hide === true;
   const invalid = (key: string) => passthroughKeys.includes(key);
   const check = inGameCheckRule(filter, index, data.lookup);
+  /** What each style's rules draw the name in: the style picker's previews, and this rule's when it tells nothing. */
+  const styleColors = styleNameColors(filter, data.lookup);
   const isCheck = isInGameCheckRule(rule);
   // Basic / Advanced: which fields show (a set Advanced field always shows in Basic, tagged).
   const view = useSelector(selectRuleView);
@@ -728,7 +730,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
               onChooseStyle={chooseStyle}
               filter={filter}
               owner="rule"
-              nameColor={qualityNameColor(rule.quality)}
+              nameColor={rulePreviewColor(rule, filter, data.lookup, styleColors)}
+              styleColors={styleColors}
               gate={gate}
               usage={actionGroupUsage({ actions: rule, diagnostics, owner: 'rule' })}
             />

@@ -454,6 +454,36 @@ describe('actions', () => {
   });
 });
 
+describe('name colour', () => {
+  const evaluate = (item: TestItem, extra: Partial<LootFilter> = {}) => evaluateFilter(makeFilter([], extra), item, makeContext());
+
+  it("gives the game's colour for the item's name, the filter's quality colours included", () => {
+    expect(evaluate(makeItem()).nameColor).toBe('J');
+    expect(evaluate(makeItem({ baseNameColor: 'N', name: 'Moon Rune' })).nameColor).toBe('N');
+    const axe = makeItem({ code: 'hax', typeAncestors: ['axe', 'weap'], name: 'Hand Axe' });
+    expect(evaluate({ ...axe, quality: 7 }).nameColor).toBe('D');
+    expect(evaluate({ ...axe, quality: 7 }, { qualityColors: { unique: 'ÿc;' } }).nameColor).toBe(';');
+    expect(evaluate({ ...axe, sockets: 2 }, { qualityColors: { normal: 'ÿc1' } }).nameColor).toBe('K');
+    expect(evaluate({ ...axe, quality: 7, uniqueNameColor: '7' }).nameColor).toBe('7');
+    expect(evaluate({ ...axe, isQuest: true }).nameColor).toBe('>');
+  });
+
+  it('reads a broken item from its durability stats', () => {
+    const axe = makeItem({ code: 'hax', typeAncestors: ['axe', 'weap'], quality: 7 });
+    const stats = [
+      { stat: 72, value: 0 },
+      { stat: 73, value: 20 },
+    ];
+    expect(evaluate({ ...axe, stats }).nameColor).toBe('1');
+  });
+
+  it('is there for a hidden item too', () => {
+    const result = evaluateFilter(makeFilter([{ hide: true }]), makeItem(), makeContext());
+    expect(result.hidden).toBe(true);
+    expect(result.nameColor).toBe('J');
+  });
+});
+
 describe('expandPlaceholders', () => {
   const filter = makeFilter([], { qualityColors: { unique: 'ÿc;' } });
   const item = makeItem({

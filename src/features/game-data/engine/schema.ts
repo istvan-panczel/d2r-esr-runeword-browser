@@ -372,6 +372,14 @@ export interface LootFilterItem {
    * for a spawnable rune without a gems.txt row (an unused row: `r48`).
    */
   drops: boolean;
+  /**
+   * The colour code (the character after `ÿc`) the name's string ends in, when it sets one: ESR colours many names in
+   * the string tables (`ÿc4No Rune` → `4`, `ÿc;Chipped Amethyst` → `;`), and the game draws the name in it, not in the
+   * quality's colour. `name` is the text without the codes. Omitted for names without one (the 33 vanilla runes).
+   */
+  nameColor?: string;
+  /** misc.txt / weapons.txt `quest` above 0: the game draws the name in the quest colour. Omitted otherwise. */
+  quest?: true;
 }
 
 /** A unique (uniqueitems.txt) or set item (setitems.txt) */
@@ -392,6 +400,8 @@ export interface LootFilterUniqueOrSet {
    * (`rarity` 0); omitted otherwise. ESR 3.2.24: 382 rows (#699–1069 without Annihilus #1059, #1377–1388).
    */
   coupon?: true;
+  /** The colour code the name's string ends in (as `LootFilterItem.nameColor`: the Ores `7`); omitted for none */
+  nameColor?: string;
 }
 
 export interface LootFilterDataBundle {

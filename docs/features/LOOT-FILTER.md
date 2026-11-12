@@ -1469,7 +1469,10 @@ removes the key); `passthrough` is never patched. Sections (every one but the la
 - **Label preview** (top): `LabelPreview` of prefix + (`replaceName` or `{name}`) + suffix in enUS, with `{name}` shown
   as "Item Name" and other placeholders as written; background and border from the effective actions, and the
   effective minimap icon beside it (`MinimapIconPreview`, at its size up to 64 px; none while the rule hides). For a rule with
-  `useStyle`, the style's actions are underneath and the rule's own win, per key (`utils/effectiveActions.ts`).
+  `useStyle`, the style's actions are underneath and the rule's own win, per key (`utils/effectiveActions.ts`). Text
+  without a colour code (in the preview and in the Replace name / Prefix / Suffix field previews) is drawn in the
+  item's own colour, see [Name colours](#name-colours): for a rule `rulePreviewColor`, for a style the colour its
+  rules give the name (`styleNameColors`).
 - **Style** (rules only, `StyleSection`): `useStyle` as a searchable picker (a button with the style's `StylePreview`
   and name, opening a cmdk list): None, **In this filter** (the filter's styles, each drawn with `StylePreview`:
   "Item Name" in its label look and its minimap icon beside it; a `<Name>NoIcon` copy the example picker added shows
@@ -1657,6 +1660,40 @@ celestialrayone.loot-filter/icons/<name>-<w>x<h>-<hash>` as both `.sprite` and `
 - Residual risk: none of the 25 has been seen in the game. What the game itself does with the plugin's copy is the same
   as for Sully's icons, whose header ours copies field for field.
 
+### Name colours
+
+The game draws label text without a colour code in the colour it names the item in. `engine/nameColor.ts`
+`itemNameColor(item, qualityColors)` gives it for a concrete item (the Test tab's `TestItem`; `evaluateFilter` returns
+it as `nameColor`): the name's own colour code (lootfilter.json `nameColor`, ESR's coloured names: the base name's on
+white items, the unique's on unique and set items), quest gold `>` (lootfilter.json `quest`), rune orange `J`, the
+potion and gold colours (`E`/`F`/`G`/`H`), broken red `1` (durability 0 of a maximum above 0 in the item's stats),
+socketed gray `K` and ethereal gray `I` (white items only), else the quality colour (`qualityColors`, when one colour
+code, else the game's `DEFAULT_QUALITY_COLORS`). Verified: the guide (p. 10: "Only a quality's plain color changes.
+Runes, quest items, socketed or ethereal gray and broken red keep their own colors") and `TooltipStyle`; the order,
+white-only gray and the base name colour on white items only are inferred, and so is that only the `quest` column
+makes a name gold (Key of Terror `pk1`, the organs and the mastery tokens are white names).
+
+Approximations (a preview has one default colour per label): text without a code _before_ `{name}` is drawn in the
+name's colour too, where the game probably uses the type or quality colour and only the name its own code; the name's
+colour is the code in effect at its end (lootfilter.json `nameColor`), carried across the line break of a multi-line
+name (`ÿc4(I -> El)\nAncient Decal`), which is not checked in game.
+
+`utils/nameColors.ts` reads a rule: `ruleItemColor(rule, filter, lookup)` takes its `uniqueOrSetIds` (each id's
+unique row at quality unique and set row at quality set, as far as the rule's quality allows: the evaluator matches the
+id against either table), else its item codes (else the items of its item types, `excludeItemCodes` /
+`excludeItemTypes` left out) through the game data, with its `quality` (unset: any; always-normal types, itemtypes.txt
+`Normal` or no type that rolls magic or rare, are normal; a shadow base, not spawnable with unique or set rows, only
+comes as those), `isEthereal` and a `sockets` condition without 0. A base's unique (set) rows give the name colour at
+quality unique (set) when they share one (the Ores `7`, the ascendancy stones `@`; rows that differ: no one colour).
+The colour most items have wins (ties to the first), undefined when most have none (a weapon of any quality). Without the game data the codes tell nothing; the types and the quality still do.
+`ruleLabelNameColor` is the colour the label draws the name in (the colour code where `{name}` stands, else the first
+visible text; uncoloured text takes `ruleItemColor`), and `styleNameColors(filter, lookup)` gives each style the one
+most of its rules (hiding and disabled ones skipped) draw the name in, ties to the earlier rule, computed once per filter for the
+Styles list, the style editor and the rule's style picker. A rule's preview uses `rulePreviewColor`: `ruleItemColor`,
+else its quality's, and only when the rule tells nothing its style's colour (a new rule with just a style looks like
+the style). Sully's MidRune rule draws green: 7 of its 13 codes are ESR's green runes (`ÿc2Ni Rune`…), 3 are vanilla
+orange and 3 gold decals.
+
 ### Style presets (`utils/stylePresets.ts`, `components/StylePresetMenu.tsx`, `components/PresetPreview.tsx`)
 
 `STYLE_PRESETS`: 18 ready-made styles in the spirit of Sully's PoE-like labels, each `{ id, name, label, description,
@@ -1698,12 +1735,13 @@ against the bundled copy, `npm run loot-filter:template` prints any clash, and t
 `MidTierRune` when his v0.9.0 added a `MidRune` of his own. Filters that already hold a `MidRune` style keep it. The Styles tab's **Add preset** menu shows
 each with a `PresetPreview` and its description; the menu says the preset is copied "minimap icon included".
 
-**Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, maxIconSize?, className? })`
+**Previews** (reusable, pure presentation): `StylePreview({ style, sample, icon?, maxIconSize?, defaultColor?, className? })`
 (`components/StylePreview.tsx`) draws a ground label with the style's text (`stylePreviewText`: prefix + `replaceName`
 or `{name}` + suffix in enUS with the sample in place of `{name}`, the label text the actions editor shows; empty, so
 "(empty label)", for a style that hides), background and border, and the minimap icon beside it on the same dark ground
 at its `iconSize` as on the minimap; `icon` overrides the style's (a rule's own), `null` draws none; `maxIconSize` caps
-the drawn icon in a list row. `PresetPreview({ preset, icon?,
+the drawn icon in a list row; `defaultColor` draws text without a colour code (a filter style: `styleNameColors`, see
+[Name colours](#name-colours); presets keep white). `PresetPreview({ preset, icon?,
 className? })` is it for a preset and its sample. The icon is `MinimapIconPreview({ icon })`
 (`components/MinimapIconPreview.tsx`): a bundled icon decoded once per name (`useBundledSprite`, cached for the page's
 life), the first frame on a canvas at `iconSize` (longer side, 4 to 256; absent = the file's size) with the tint
@@ -1906,8 +1944,8 @@ tab switches; it is not saved.
   lookup, `typeAncestorsOf`: the union of the item type's ancestors and, while the type is the base's own, its `type2`'s;
   without the data only the typed type), `toTestContext(form, filter, lookup)` (stat ids by name from the lookup), `applyPreset`, `withItem`, `withUniqueOrSet`. The unique/set picker uses the option keys
   (`Unique:12`, `Set:12`) as values because the two tables share ids.
-- **Result**: the ground label (`LabelPreview` with the rules' background and border; text before the first colour
-  code in the game's quality colour) or "Hidden: no ground label" with a link to the hiding rule; chat lines (each a
+- **Result**: the ground label (`LabelPreview` with the rules' background and border; text without a colour code in
+  the item's name colour, `EvaluationResult.nameColor`, see [Name colours](#name-colours)) or "Hidden: no ground label" with a link to the hiding rule; chat lines (each a
   `LabelPreview` with default colour `ÿc0`); sounds with volume (play button for the bundled files); minimap icon and
   droplight. The evaluation runs on every change; above 1500 rules a Run button runs it instead.
 - **Rule trace**: one row per rule that ran, in order: number, outcome badge (applied green, hidden and "hidden: other

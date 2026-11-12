@@ -60,6 +60,27 @@ describe('toTestItem', () => {
     expect(toTestItem({ ...axe, type: 'club' }, lookup).typeAncestors).not.toContain('1hsw');
   });
 
+  it("takes the name colours and the quest flag from the game data, and the result's name colour follows", () => {
+    const moon = toTestItem(withItem(form(), 'r84', lookup), lookup);
+    expect(moon.baseNameColor).toBe('N');
+    expect(evaluateFilter(bareFilter, moon, toTestContext(form(), bareFilter, lookup)).nameColor).toBe('N');
+    expect(toTestItem(withItem(form(), 'r51', lookup), lookup)).not.toHaveProperty('baseNameColor');
+    expect(toTestItem(withItem(form(), 'vip', lookup), lookup).isQuest).toBe(true);
+    expect(toTestItem(withItem(form(), 'pk1', lookup), lookup)).not.toHaveProperty('isQuest');
+    const ore = bundle.uniques.find((entry) => entry.name === 'Ore');
+    if (ore === undefined) throw new Error('no Ore unique');
+    const picked = withUniqueOrSet(form(), { id: ore.id, kind: 'unique' }, bundle, lookup);
+    expect(toTestItem(picked, lookup).uniqueNameColor).toBe('7');
+    expect(toTestItem({ ...picked, uniqueOrSet: { id: ore.id, kind: null } }, lookup).uniqueNameColor).toBe('7');
+  });
+
+  it('names a manual item (no game data) by its quality and typed type', () => {
+    const manual = toTestItem(form({ code: 'xyz9', name: 'Thing', type: 'rune' }), EMPTY_LOOKUP);
+    expect(evaluateFilter(bareFilter, manual, toTestContext(form(), bareFilter, EMPTY_LOOKUP)).nameColor).toBe('J');
+    const unique = toTestItem(form({ code: 'xyz9', name: 'Thing', quality: 7 }), EMPTY_LOOKUP);
+    expect(evaluateFilter(bareFilter, unique, toTestContext(form(), bareFilter, EMPTY_LOOKUP)).nameColor).toBe('D');
+  });
+
   it('falls back to the typed type alone without game data', () => {
     expect(toTestItem(form({ code: 'r83', type: 'rune' }), EMPTY_LOOKUP).typeAncestors).toEqual(['rune']);
     expect(toTestItem(form({ code: 'r83' }), EMPTY_LOOKUP).typeAncestors).toEqual([]);
