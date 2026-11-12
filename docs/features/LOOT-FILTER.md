@@ -189,6 +189,13 @@ then run `lootfilter` in the game console and read
   that allows neither set nor unique; a hiding rule (own `hide` or its style's) with no condition but a `location`
   that includes onGround, when rules follow it ("Hides every ground item; the N rules after it never run for ground
   items"). Unknown codes and types are skipped, so without game data only the except-list checks run.
+- "Shows every item" (`showsEveryGroundItem`, `SHOWS_EVERY_ITEM_MESSAGE`): a showing rule (own `show` or its style's)
+  with no condition but a `location` that includes onGround, when an enabled rule below it hides (own or style `hide`
+  or `hideIfOtherConditionsFail`): show protects every item from those hides, so the filter hides nothing ("Shows
+  every item: no hide rule below it can hide anything. Pick the items this rule is for"). Add rule's new `{ "show":
+true }` is exactly this until it gets its items. The warning is about the whole rule (path `''`, like "neither
+  conditions nor actions"), so `isBlankRule` keeps the items-first step; unlike that one, the editor shows it there,
+  and the rule list's problem chip marks the rule.
 - Other rule warnings: `hideIfOtherConditionsFail` without `itemCodes`/`itemTypes` ("hides every ground item that fails
   …" the listed other conditions, as the plugin warns; without other conditions the older "needs itemCodes or
   itemTypes" message), and with `quality` ("also hides every other quality of these items (uniques included)"); both
@@ -215,7 +222,7 @@ then run `lootfilter` in the game console and read
   presence check (`>= 1`, `> 0`, `!= 0`, or their exceptions `< 1`, `<= 0`, `== 0`) gets none, so Sully's template
   (rules 29 and 30, stats 218 and 219 `>= 1`) stays clean. Up to ESR 3.2.24 (plugin 1.5.3) the editor warned about
   the stored ×256 and eighths values, which nobody had checked in game. Disabled rules are validated like the
-  others but do not count for "hides every ground item"; there is no filter-wide note about `disabledRules` (the
+  others but do not count for "hides every ground item" or as a hide below "shows every item"; there is no filter-wide note about `disabledRules` (the
   Enabled checkbox's hint says the game ignores the key).
 - Stat params (`checkStatParam`, every stat list, by name or, with the reference, by id; the layer kinds are
   `STAT_LAYER_KINDS` in `game-data/engine/statLayers.ts`, see GAME-DATA.md "Stat layers"): an error for a `param` that
@@ -385,6 +392,11 @@ the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the
   or a `// ---- Protection` section, which is not a part) Add rule works as before: an empty rule after the selected one,
   else at the end. Disabled rules keep their place either way (`disabledRules` indexes are written from the model).
   The rule is selected, its part and section open and it is scrolled into view (on the stacked layout the editor too).
+  A section it creates renumbers a later `// ---- Custom rules` (in another part) from `2:Custom rules` to
+  `2:Custom rules#1`; `partSectionKeyChanges` reports that like `headingKeyChanges` does for a section edit, and
+  RulesTab passes it through `openAfterEdit` first, so the later section keeps its own remembered fold.
+  A new `{ "show": true }` rule without items protects every item until it gets them: the validator's "Shows every
+  item" warning and the items-first hint say so.
   A heading's Add rule, Duplicate, Example rules, Check in game and the AI import / JSON Apply keep their own placement
   and defaults.
   - **Shown in the UI** (`utils/addRuleTarget.ts`: `addRuleTarget(filter)` is `{ kind: 'custom', section: 'existing' |
@@ -394,9 +406,10 @@ the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the
       description: "Add rule puts new rules here, in Custom rules, with Show: the hide rules below can't hide them.";
     - the Add rule button's tooltip: "Adds a rule at the end of Protection › Custom rules, with Show: the hide rules
       below can't hide it.";
-    - after such an Add rule a toast: "Added to Protection › Custom rules with Show: the hide rules below can't hide
-      it.", with "Custom rules is a new section at the end of Protection." when the section was just created. No toast
-      without Protection;
+    - after such an Add rule a toast: "Added to Protection › Custom rules with Show: hide rules can't hide it.", with
+      "New section at the end of Protection." when the section was just created; kept short, and at the top centre on
+      the stacked layout (below 1024 px; the app's toaster stays bottom-right), where the new rule's editor fills the
+      screen and a bottom toast covered its items-first hint and Show all options. No toast without Protection;
     - when an edit of the open filter changes the kind (JSON Apply, a heading renamed or removed in the section dialog,
       an AI import, Replace with the latest), an info toast: "New rules now go to Protection › Custom rules,
       with Show." or "This filter has no Protection part any more: Add rule puts new rules after the selected rule,
@@ -1006,23 +1019,30 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   then the conditions in sections (Which items, Item properties, Stats, Where and when) and an Actions card
   with `ActionsEditor owner="rule"`. Every change dispatches `patchRule`; an emptied list removes its key. A condition
   whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
-  rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
-  passthrough" block.
+  rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a **Passthrough (N)** fold after
+  the condition groups (the same `FoldSection` look; the folded summary lists the keys), open at first: such keys are
+  rare and the reason the plugin may switch the rule off.
 - **Foldable groups** (`components/FoldSection.tsx`, `utils/editorGroups.ts`, `hooks/useGroupFolds.ts`): every
   condition group (Which items, Item properties, Stats, Where and when) and every action group (Style, Visibility,
-  Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a native `<details>` whose header
-  (the `summary`, at least 40 px high, an `h3` in the same look on both cards, ruled off above) shows the title and, while folded, a one-line
+  Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a disclosure: an `h3` holding a
+  `<button aria-expanded aria-controls>` over the panel (`hidden` while folded), not a `<details>`, since a screen
+  reader flattens a heading inside `<summary>` into its button and heading navigation loses the groups. The header
+  (at least 40 px high, the same look on both cards, ruled off above, chevron turned while open; Enter and Space
+  toggle it) shows the title and, while folded, a summary (up to two lines, then cut, so phones show more than a few
+  words)
   summary of what the group sets: conditions in the rule list's words (`ruleConditionSummary` of the group's keys,
   `every item` / `none` when empty), actions without colour codes (`“Pul” gold`, `yellow name`, `other.mp3, 15%`,
   `rune, 35 px`, colour swatches for the label background and border, the icon tint and the droplight; `from style
-X` when only the style sets the group; `none`). The group → keys maps (`CONDITION_GROUP_OF`, `ACTION_GROUP_OF`,
-  checked against `BASIC_CONDITIONS` / `BASIC_ACTIONS` by `satisfies`) and the in-use checks are pure and tested.
+X` when only the style sets the group; `none`). The group → keys maps (`CONDITION_GROUP_OF`, `ACTION_GROUP_OF`;
+  `satisfies Record<keyof RuleConditions / RuleActions, …>` makes a new key pick a group, and `editorGroups.test.ts`
+  compares their keys with `BASIC_CONDITIONS` / `BASIC_ACTIONS`) and the in-use checks are pure and tested.
   A group is **in use** when one of its keys is set by the rule (or style) itself, sits in passthrough or carries a
   diagnostic. A group only the rule's style fills is not: it starts folded with "from style X" in its summary (the
   Style group lists the style's values), so a rule with a style stays short; overriding one of its keys opens it on
-  the next visit. Groups in use at mount start open, the others folded; a group with a
-  diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule, the
-  Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
+  the next visit. Groups in use at mount start open, the others folded (a rule using no condition group, which
+  matches every item, such as one with only unknown keys or a bare hide, starts with Which items open); a group with a
+  diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule and when the content is replaced in
+  place, the Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
   while folded stays folded. The Label preview stays pinned at the top of the Actions card; the header bits,
   Enabled, Comment, the diagnostics and How rules combine stay above the folds. Basic / Advanced works inside the
   folds as before (a group whose fields are all hidden is left out; the "N more … in the Advanced view" lines stay at
@@ -1031,11 +1051,14 @@ X` when only the style sets the group; `none`). The group → keys maps (`CONDIT
   keys of a third-party file) and no diagnostic on one of its keys (the whole-rule "neither conditions nor actions"
   warning of a new `{}` rule does not count); its actions may be `show: true` (the Protection section's new rules) or
   a comment, any other action means it already does something. Such a rule shows only Which items (open), under it a hint
-  ("Pick the items this rule is for; the rest of the rule appears next.") and a **Show all options** button (outline,
+  ("Pick the items this rule is for; the rest of the rule appears next.", plus "Until you pick items, this rule keeps
+  every item from being hidden." when it carries `show`) and a **Show all options** button (outline,
   small) for a rule by quality, stats or area; the "neither conditions nor actions" warning (`EMPTY_RULE_MESSAGE`) is
   left out of the editor's problem list during the step (the validator, the list's problem chips and the JSON tab keep
-  it); the other condition groups, the "more in Advanced" line and the Actions card are
-  left out (on @10xl pages a dashed note keeps the actions' column). The first patch that sets a condition
+  it), while "Shows every item" (a `{ "show": true }` rule above a hide, see the validator's warnings) stays in it,
+  since that is what the step is about; the other condition groups, the "more in Advanced" line and the Actions card are
+  left out (on @10xl pages a dashed note keeps the actions' column), and so is the Check in game hint under the
+  title (its "checks no stats" reason is noise there; the button stays, disabled). The first patch that sets a condition
   (`setsCondition`), or Show all options (focus moves to Item properties' header), shows every group for the rest of
   the mount, even if the items are cleared again. A disabled blank rule starts the same way.
 - **Basic / Advanced view** (`utils/ruleView.ts`, the segmented toggle `ViewToggle` in `components/rules/ViewToggle.tsx`
@@ -1085,7 +1108,10 @@ diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a s
   them, so it sits in the rule's section, not at the end of the previous one), selects it and opens its headings in the
   rule list; a toast says so, and keyboard focus moves to the new editor's title
   ("Rule N", `tabIndex=-1`), since the test rule's editor has no Check button. The editor is keyed by the selected
-  index and the rule count (rules have no ids), so it remounts although the test rule takes the source's index. The
+  index, the rule count (rules have no ids) and the editor's `reloads` counter (bumped by `reloadText`, i.e. a source
+  update and Discard changes, and by `replaceFilter`, i.e. JSON Apply and an imported AI answer; never by an edit, so
+  typing keeps the folds), so it remounts although the test rule takes the source's index, and a replaced content
+  with the same rule count does not inherit the old rule's folds and items-first step. The
   test rule (`inGameCheckRule`):
   - copies every condition of the rule except the four stat lists and the `formula` (codes, types, quality, tier,
     flags, ids, location, difficulty, areas, `activeInLevels`), so it shows the values whether the checks pass or not,
@@ -1977,7 +2003,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
   `MISTAKE_SAMPLES` (unknown code, a type name for a code, a stat label for a name, an unknown quality, Enhanced Damage
   on weapons, a skill tab without param or with a properties.txt number, a Life value, a missing level or style,
   `between` with one number, an empty list, unique ids with a non-unique quality, codes of other types,
-  `hideIfOtherConditionsFail` with quality, a hide rule without conditions, a colour out of range, an unknown key) run
+  `hideIfOtherConditionsFail` with quality, a hide or show rule without conditions, a colour out of range, an unknown key) run
   through `readLootFilter` + `validateLootFilter` against the game data, so the LLM sees the app's own messages. Prose
   covers only semantics (how rules combine, hide rules and exceptions, ids, writing the file for the app).
   `examples.md` (`buildExamples`): first the style presets (`DEFAULT_PROMPT_STYLE_PRESETS` from `STYLE_PRESETS`, each

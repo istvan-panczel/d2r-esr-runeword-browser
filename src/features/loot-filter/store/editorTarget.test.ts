@@ -371,6 +371,8 @@ describe('discardChanges', () => {
     expect(state.editor.dirty).toBe(false);
     expect(state.editor.filter?.title).toBe('Shared');
     expect(state.editor.selectedRule).toBe(1);
+    // The content was replaced in place: the rule editor remounts.
+    expect(state.editor.reloads).toBe(edited.editor.reloads + 1);
     // A late flush has nothing to write.
     expect(reducer(state, at(editorFlushed()))).toBe(state);
   });

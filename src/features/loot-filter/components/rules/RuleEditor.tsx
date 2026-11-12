@@ -259,9 +259,15 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
   const view = useSelector(selectRuleView);
   const style = findStyle(rule, filter);
   const gate = ruleFieldGate({ view, rule, hides, diagnostics, style });
-  // Groups the rule uses start open, the others folded; a blank rule starts on Which items.
+  // Groups the rule uses start open, the others folded; a blank rule, or one using no condition group (it matches every
+  // item: a third-party rule with only unknown keys, a bare hide), starts on Which items.
   const conditionUsage = conditionGroupUsage(rule, diagnostics);
-  const folds = useGroupFolds<ConditionGroup>(() => (itemsFirst ? new Set(['items']) : conditionUsage.inUse), conditionUsage.flagged);
+  const folds = useGroupFolds<ConditionGroup>(
+    () => (itemsFirst || conditionUsage.inUse.size === 0 ? new Set(['items']) : conditionUsage.inUse),
+    conditionUsage.flagged
+  );
+  // The unknown or wrong-shaped keys: few, and the reason the plugin may switch the rule off, so open at first.
+  const [passthroughOpen, setPassthroughOpen] = useState(true);
   const exceptionsRead = readsExceptions(actions);
   /** A condition group's fold: title, summary, open state. */
   const fold = (group: ConditionGroup) => ({
@@ -394,31 +400,41 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
               </Badge>
             )}
           </CardTitle>
-          <CardDescription id={CHECK_HINT_ID} className="text-xs @8xl/page:max-w-4xl">
-            {isCheck ? (
-              "An in-game check: it prints what the plugin reads for the next rule's stats in front of the item name. Compare the numbers with the tooltip, then delete this rule."
-            ) : check.ok ? (
-              <>
-                Check in game adds a rule above this one that prints what the plugin reads for this rule&apos;s stats in front of the item
-                name. If a number differs from the tooltip, the plugin reads that stat differently;{' '}
-                <a
-                  href={REPORT_STAT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-2 hover:text-foreground"
-                >
-                  tell us
-                </a>
-                .
-              </>
-            ) : (
-              check.reason
-            )}
-          </CardDescription>
+          {/* The items-first step is about the items: the disabled check's "checks no stats" reason is noise there. */}
+          {!itemsFirst && (
+            <CardDescription id={CHECK_HINT_ID} className="text-xs @8xl/page:max-w-4xl">
+              {isCheck ? (
+                "An in-game check: it prints what the plugin reads for the next rule's stats in front of the item name. Compare the numbers with the tooltip, then delete this rule."
+              ) : check.ok ? (
+                <>
+                  Check in game adds a rule above this one that prints what the plugin reads for this rule&apos;s stats in front of the item
+                  name. If a number differs from the tooltip, the plugin reads that stat differently;{' '}
+                  <a
+                    href={REPORT_STAT_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    tell us
+                  </a>
+                  .
+                </>
+              ) : (
+                check.reason
+              )}
+            </CardDescription>
+          )}
           <CardAction className="flex flex-wrap items-center justify-end gap-2 @max-xl/page:col-start-1 @max-xl/page:row-span-1 @max-xl/page:row-start-auto @max-xl/page:justify-self-start @max-xl/page:justify-start">
             <ViewToggle id={VIEW_TOGGLE_ID} owner="rule" />
             {!isCheck && (
-              <Button type="button" variant="outline" size="sm" disabled={!check.ok} aria-describedby={CHECK_HINT_ID} onClick={addCheck}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!check.ok}
+                aria-describedby={itemsFirst ? undefined : CHECK_HINT_ID}
+                onClick={addCheck}
+              >
                 <ScanSearch />
                 Check in game
               </Button>
@@ -461,7 +477,8 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
             </div>
           </div>
 
-          {/* A new rule's "neither conditions nor actions" is what the items-first step is about: not shown there. */}
+          {/* A new rule's "neither conditions nor actions" is what the items-first step is about: not shown there. A new
+              { show: true } rule's "Shows every item" is, since a show without items keeps every item from being hidden. */}
           <RuleDiagnostics
             diagnostics={itemsFirst ? diagnostics.filter((diagnostic) => diagnostic.message !== EMPTY_RULE_MESSAGE) : diagnostics}
           />
@@ -474,6 +491,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
             <div className="flex flex-col items-start gap-2">
               <p id={ITEMS_FIRST_HINT_ID} className="text-sm text-muted-foreground">
                 Pick the items this rule is for; the rest of the rule appears next.
+                {actions.show === true && ' Until you pick items, this rule keeps every item from being hidden.'}
               </p>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <Button
@@ -487,7 +505,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
                     setRevealed(true);
                     // The button goes away: the focus moves to the next group's header.
                     requestAnimationFrame(() => {
-                      document.getElementById(groupId('properties'))?.querySelector<HTMLElement>(':scope > summary')?.focus();
+                      document.getElementById(groupId('properties'))?.querySelector<HTMLElement>(':scope > h3 > button')?.focus();
                     });
                   }}
                 >
@@ -665,9 +683,16 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
               <MoreInAdvanced count={gate.hiddenConditions} noun="condition" toggleId={VIEW_TOGGLE_ID} />
 
               {passthroughKeys.length > 0 && (
-                <details className="rounded-md border px-3 py-2 text-sm">
-                  <summary className="cursor-pointer font-medium">Advanced / passthrough ({passthroughKeys.length})</summary>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                <FoldSection
+                  variant="condition"
+                  // One column: the body is a note and a list, not fields.
+                  className="block text-sm sm:grid-cols-1"
+                  title={`Passthrough (${String(passthroughKeys.length)})`}
+                  summary={passthroughKeys.join(', ')}
+                  open={passthroughOpen}
+                  onOpenChange={setPassthroughOpen}
+                >
+                  <p className="text-xs text-muted-foreground">
                     Unknown or wrong-shaped keys: not editable here, see the JSON tab. They are kept as they are.
                   </p>
                   <dl className="mt-2 space-y-1">
@@ -678,7 +703,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
                       </div>
                     ))}
                   </dl>
-                </details>
+                </FoldSection>
               )}
             </>
           )}

@@ -346,6 +346,9 @@ The app checks every filter against the ESR game data. These are its own message
 - a hide rule without conditions: `{"hide":true}`
   - app: warning: Hides every ground item; the rule after it never runs for ground items
   - instead: give every hide rule conditions
+- a show rule without conditions: `{"show":true}`
+  - app: warning: Shows every item: no hide rule below it can hide anything. Pick the items this rule is for
+  - instead: give every show rule the items it keeps
 - a colour out of range: `{"itemCodes":["r83"],"labelBackground":[300,0,0]}`
   - app: error: Colour component 300 is not a whole number from 0 to 255
   - instead: whole numbers 0 to 255

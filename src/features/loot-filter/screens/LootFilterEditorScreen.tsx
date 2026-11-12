@@ -669,6 +669,7 @@ export function LootFilterEditorScreen() {
             onReveal={() => {
               setRevealCount((count) => count + 1);
             }}
+            reloads={editor.reloads}
           />
         );
       case 'styles':

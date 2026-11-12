@@ -597,6 +597,17 @@ describe('replaceFilter', () => {
     const { filter, diagnostics } = parseLootFilter('{"formatVersion": 1, "rules": []}');
     expect(reducer(initialState, replaceFilter({ filter, diagnostics }))).toBe(initialState);
   });
+
+  it('bumps reloads (the rule editor remounts on the same index and rule count); edits leave it alone', () => {
+    const selected = reducer(openState(filterWith({ rules: [{ show: true }, { hide: true }] })), selectRule(0));
+    expect(selected.editor.reloads).toBe(0);
+    const edited = run(selected, patchRule({ index: 0, patch: { itemCodes: ['r01'] } }), addRule({ rule: {} }), selectRule(0));
+    expect(edited.editor.reloads).toBe(0);
+    const { filter, diagnostics } = parseLootFilter('{"formatVersion": 1, "rules": [{"hide": true}, {}, {"show": true}]}');
+    const applied = reducer(edited, replaceFilter({ filter, diagnostics }));
+    expect(applied.editor).toMatchObject({ selectedRule: 0, reloads: 1 });
+    expect(reducer(applied, replaceFilter({ filter, diagnostics })).editor.reloads).toBe(2);
+  });
 });
 
 describe('text notes', () => {
