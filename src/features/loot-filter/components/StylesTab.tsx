@@ -24,6 +24,7 @@ import {
   type HeadingRow,
   type SectionEdit,
 } from '../utils/sections';
+import { actionGroupUsage } from '../utils/editorGroups';
 import { actionFieldGate } from '../utils/ruleView';
 import { presetStyleStatus, type StylePreset } from '../utils/stylePresets';
 import { ActionsEditor } from './actions/ActionsEditor';
@@ -181,10 +182,8 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
 
   const deletingUsers = deleting === null ? 0 : countStyleUsers(filter, deleting);
   const stray = currentStyle === undefined ? [] : strayConditions(currentStyle);
-  const gate =
-    current === null
-      ? undefined
-      : actionFieldGate({ view, actions: currentStyle, diagnostics: diagnostics.filter((diagnostic) => diagnostic.style === current) });
+  const styleDiagnostics = current === null ? [] : diagnostics.filter((diagnostic) => diagnostic.style === current);
+  const gate = current === null ? undefined : actionFieldGate({ view, actions: currentStyle, diagnostics: styleDiagnostics });
 
   return (
     // Wide pages: a little more room for the style names; the editor's sections become tiles (ActionsEditor).
@@ -380,6 +379,7 @@ export function StylesTab({ filter, diagnostics, open, onOpenChange }: StylesTab
               owner="style"
               styleName={current}
               gate={gate}
+              usage={actionGroupUsage({ actions: currentStyle, diagnostics: styleDiagnostics, owner: 'style' })}
               onChange={(patch) => {
                 handleChange(current, currentStyle, patch);
               }}

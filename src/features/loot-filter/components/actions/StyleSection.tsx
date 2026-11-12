@@ -11,7 +11,6 @@ import { STYLE_PRESETS } from '../../utils/stylePresets';
 import { Field } from '../Field';
 import { PresetPreview } from '../PresetPreview';
 import { StylePreview } from '../StylePreview';
-import { Section } from './Section';
 import { StyleSummary } from './StyleSummary';
 
 interface StyleSectionProps {
@@ -34,7 +33,7 @@ const STYLE_SAMPLE = 'Item Name';
 const ROW_ICON_MAX = 40;
 
 /**
- * A rule's `useStyle`: a searchable picker with the filter's styles and the presets the filter lacks, each with its
+ * The Style group's fields, a rule's `useStyle`: a searchable picker with the filter's styles and the presets the filter lacks, each with its
  * label preview, then a collapsed summary of the chosen style's actions. Picking clears the rule's own values for the
  * keys the style sets (the caller does it, with an Undo toast).
  */
@@ -60,7 +59,7 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
   };
 
   return (
-    <Section title="Style">
+    <>
       <Field id={selectId} label="Use style" hint={hint} badge={badge}>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -155,6 +154,6 @@ export function StyleSection({ idPrefix, actions, filter, onChoose, badge }: Sty
         </Popover>
       </Field>
       {style !== undefined && actions.useStyle !== undefined && <StyleSummary name={actions.useStyle} style={style} />}
-    </Section>
+    </>
   );
 }

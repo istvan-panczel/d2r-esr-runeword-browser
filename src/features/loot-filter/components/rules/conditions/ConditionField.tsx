@@ -55,19 +55,3 @@ export function ConditionField({ id, label, hint, invalid = false, className, ba
     </div>
   );
 }
-
-interface ConditionSectionProps {
-  readonly title: string;
-  readonly children: React.ReactNode;
-  readonly className?: string;
-}
-
-/** A small heading over a group of fields. */
-export function ConditionSection({ title, children, className }: ConditionSectionProps) {
-  return (
-    <section className="space-y-3">
-      <h3 className="border-b pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
-      <div className={cn('grid gap-4 sm:grid-cols-2', className)}>{children}</div>
-    </section>
-  );
-}
