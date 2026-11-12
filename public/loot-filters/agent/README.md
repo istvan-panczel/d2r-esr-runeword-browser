@@ -32,7 +32,7 @@ Players import a filter in the ESR launcher (Loot Filter tab, Import). Own filte
 
 ## Section comments
 
-Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comments anywhere, so sections need no format change and the rule numbers (the `R###` numbers the plugin log reports) stay the same. The app shows them as foldable headings and notes in its Rules and Styles lists, where a person can also add, rename, move and remove them, so keep to these lines when you write them.
+Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comments anywhere, so sections need no format change and the rule numbers (the `R###` the plugin log reports: the place of a rule in the list) stay the same. The app shows them as foldable headings and notes in its Rules and Styles lists, where a person can also add, rename, move and remove them, so keep to these lines when you write them.
 
 | Line in the file | What it is |
 | --- | --- |
@@ -50,7 +50,9 @@ Group the rules of a filter with ordinary `//` lines. The plugin skips `//` comm
 - Kept on every edit in the app: whole-line `//` comments above a top-level key, a rule, a disabled rule or a style, and after the last rule.
 - Dropped on the app's first edit (with a warning): a comment on the same line as a rule, a comment inside a rule or style object, and every `/* */` block. Do not write those.
 - A file with no heading shows no comment rows in the app's lists (older files look as before); its comments are still kept.
-- Every rule still gets a `"comment"`: a short title the app lists, e.g. `"R012 | Gold < 1000 | hide at L3"`. Section comments group rules; they do not replace it.
+- Every rule still gets a `"comment"`: a short title the app lists, e.g. `"Gold < 1000 | hide at L3"`. Section comments group rules; they do not replace it.
+- Do not number rules in the `"comment"`: the editor and the plugin log number rules by their place in the list, and a number in the comment goes stale when rules move.
+- The editor's Add rule button puts a new rule at the end of a `// ---- Custom rules` section inside the `// ==== Protection` part (created when missing) with `show: true`; filters without a Protection part get it after the selected rule.
 - To switch a rule off, do not comment it out: the app's rule toggle moves it to a top-level `disabledRules` list (`{ "at": <index>, "rule": {…} }`) that the plugin ignores. A commented-out rule is just a note.
 
 Example:
@@ -66,11 +68,11 @@ Example:
     // ==== Show ====
     // Label rules first: later rules change the looks of earlier ones.
     // ---- Runes
-    { "comment": "R001 | High runes | border", "itemCodes": ["r76", "r77", "r78", "r79", "r80", "r81", "r82", "r83"], "labelBorder": { "color": [255, 0, 0], "width": 2 } },
+    { "comment": "High runes | border", "itemCodes": ["r76", "r77", "r78", "r79", "r80", "r81", "r82", "r83"], "labelBorder": { "color": [255, 0, 0], "width": 2 } },
 
     // ==== Hide ====
     // Narrow hide rules last, each with its own exceptions.
-    { "comment": "R002 | Potions | hide at L2", "itemTypes": ["hpot", "mpot"], "activeInLevels": [2], "hide": true }
+    { "comment": "Potions | hide at L2", "itemTypes": ["hpot", "mpot"], "activeInLevels": [2], "hide": true }
   ]
 }
 ```

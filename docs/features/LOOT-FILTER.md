@@ -261,7 +261,7 @@ then run `lootfilter` in the game console and read
 ### Section comments
 
 A filter author can group rules with ordinary `//` lines. The plugin skips comments, so this needs no format change and
-the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
+the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the same. The ruleset:
 
 | Line in the file                                          | Shown as                                |
 | --------------------------------------------------------- | --------------------------------------- |
@@ -480,7 +480,9 @@ rules; the Example rules button on the Rules tab offers a starter set to tick. â
   3.3) localised names, chat lines and level names (the parser learned per-language level names for it); v0.9.0 to
   v0.9.2 (2026-11-10, "Added compatibility for Mefi's editor") regrouped it into 6 `// ====` parts and 44 `// ----`
   sections with an "R### | what | action" title per rule (689 rules, 22 styles, the same twelve icons and nine sounds).
-  Its Ancient Scroll hide rule (rule 77 "R078" in v0.9.2) writes `"activeInLevels": 4`, a number where the format wants
+  The app needs no number in a rule's `"comment"`: it numbers rules by their place in the list, as the plugin log does,
+  and nothing renumbers the prefixes, so they drift after an insert, move or delete. Its Ancient Scroll hide rule (rule
+  78, "R078" in v0.9.2) writes `"activeInLevels": 4`, a number where the format wants
   a list. Verified in game: the rule works, so the editor reads it as `[4]` with one warning ("A single number works in
   game; [4] is the documented form.", see "A single-number level" above), writes the `4` back unchanged, and the Test
   tab hides Ancient Scrolls at level 4 only. Whether the plugin really reads it as `[4]` (and not as "every level") is
@@ -1955,7 +1957,7 @@ example rules: of the request), else of the request's first line, else "ai-filte
 - **Section comments in the prompt**: FORMAT.md "Writing the file for the app" teaches the short form of the ruleset
   (see "Section comments": whole-line `//` comments above a top-level key, rule, disabled rule or style and after the
   last rule are kept; same-line, inside-object and `/* */` comments are dropped on the first edit; `// ====` parts and
-  `// ----` sections; every rule still gets its `"comment"`; switch a rule off with `disabledRules`, not by commenting
+  `// ----` sections; every rule still gets its `"comment"`, a title without a number; switch a rule off with `disabledRules`, not by commenting
   it out), PROMPT.md's "Rules for the filter" points there, and `SKELETON_FILTER` shows two parts and a section.
 - **Agent pack** (`utils/aiPrompt/agentPack.ts`, `scripts/generate-loot-filter-agent-pack.ts`,
   `scripts/lib/lootFilterAgentPack.ts`): static files for AI agents (e.g. a filter author working with Claude agents)
