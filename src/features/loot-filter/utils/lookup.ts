@@ -1,11 +1,19 @@
 /** Name lookups and picker options built from the `lootfilter` and `types` game-data bundles. */
-import type { ItemTypeInfo, LootFilterDataBundle, LootFilterItem, TypesBundle } from '@/features/game-data/engine/schema';
+import type {
+  ItemTypeInfo,
+  LootFilterDataBundle,
+  LootFilterItem,
+  LootFilterUniqueOrSet,
+  TypesBundle,
+} from '@/features/game-data/engine/schema';
 import { buildSkillIds } from '../engine/reference';
 import { searchText, type PickerOption } from './pickerSearch';
 import { buildStatParamData, statParamKind, statParamLabel, type StatParamData } from './statParams';
 
 /** Game-data names for codes and ids; every lookup returns `undefined` when the data is missing or the key unknown. */
 export interface LootFilterLookup {
+  /** Every item of the game data in bundle order (empty without the data). */
+  readonly items: readonly LootFilterItem[];
   readonly item: (code: string) => LootFilterItem | undefined;
   readonly itemName: (code: string) => string | undefined;
   readonly itemType: (code: string) => ItemTypeInfo | undefined;
@@ -25,11 +33,14 @@ export interface LootFilterLookup {
   readonly areaName: (id: number) => string | undefined;
   /** The unique's and/or the set item's name for the row id ("Unique / Set" when both tables have that row). */
   readonly uniqueOrSetName: (id: number) => string | undefined;
+  /** The uniqueitems.txt (`unique`) or setitems.txt (`set`) row with that id. */
+  readonly uniqueOrSet: (id: number, kind: 'unique' | 'set') => LootFilterUniqueOrSet | undefined;
 }
 
 const none = (): undefined => undefined;
 
 export const EMPTY_LOOKUP: LootFilterLookup = {
+  items: [],
   item: none,
   itemName: none,
   itemType: none,
@@ -42,6 +53,7 @@ export const EMPTY_LOOKUP: LootFilterLookup = {
   statParamLabel: none,
   areaName: none,
   uniqueOrSetName: none,
+  uniqueOrSet: none,
 };
 
 export function buildLookup(
@@ -54,9 +66,10 @@ export function buildLookup(
   const statById = new Map(data.stats.map((stat) => [stat.id, stat.name]));
   const statByName = new Map(data.stats.filter((stat) => stat.name !== '').map((stat) => [stat.name, stat.id]));
   const areas = new Map(data.areas.map((area) => [area.id, area.name]));
-  const uniques = new Map(data.uniques.map((entry) => [entry.id, entry.name]));
-  const sets = new Map(data.sets.map((entry) => [entry.id, entry.name]));
+  const uniques = new Map(data.uniques.map((entry) => [entry.id, entry]));
+  const sets = new Map(data.sets.map((entry) => [entry.id, entry]));
   return {
+    items: data.items,
     item: (code) => items.get(code),
     itemName: (code) => items.get(code)?.name,
     itemType: (code) => itemTypes.get(code),
@@ -78,9 +91,10 @@ export function buildLookup(
     },
     areaName: (id) => areas.get(id),
     uniqueOrSetName: (id) => {
-      const names = [uniques.get(id), sets.get(id)].filter((name) => name !== undefined && name !== '');
+      const names = [uniques.get(id)?.name, sets.get(id)?.name].filter((name) => name !== undefined && name !== '');
       return names.length === 0 ? undefined : names.join(' / ');
     },
+    uniqueOrSet: (id, kind) => (kind === 'unique' ? uniques : sets).get(id),
   };
 }
 

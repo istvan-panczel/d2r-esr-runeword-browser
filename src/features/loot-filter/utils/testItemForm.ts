@@ -208,9 +208,16 @@ export function typeAncestorsOf(form: TestItemForm, lookup: LootFilterLookup): r
   return [...new Set(codes.flatMap((code) => lookup.itemType(code)?.ancestors ?? [code]))];
 }
 
-/** The evaluator's item. Type ancestors come from the game data; without it only the item's own type is known. */
+/**
+ * The evaluator's item. Type ancestors, the quest flag and the names' own colours come from the game data; without it
+ * only the item's own type is known. The picked unique or set row gives the unique's name colour (a typed id without its
+ * table: the set's for set quality, else the unique's).
+ */
 export function toTestItem(form: TestItemForm, lookup: LootFilterLookup): TestItem {
   const ancestors = typeAncestorsOf(form, lookup);
+  const base = lookup.item(form.code.trim());
+  const pick = form.uniqueOrSet;
+  const named = pick === null ? undefined : lookup.uniqueOrSet(pick.id, pick.kind ?? (form.quality === 5 ? 'set' : 'unique'));
   return {
     code: form.code.trim(),
     typeAncestors: ancestors,
@@ -227,6 +234,9 @@ export function toTestItem(form: TestItemForm, lookup: LootFilterLookup): TestIt
     stats: statEntries(form.stats, (name) => lookup.statId(name)),
     name: form.name,
     location: form.location,
+    ...(base?.nameColor === undefined ? {} : { baseNameColor: base.nameColor }),
+    ...(named?.nameColor === undefined ? {} : { uniqueNameColor: named.nameColor }),
+    ...(base?.quest === true ? { isQuest: true } : {}),
   };
 }
 

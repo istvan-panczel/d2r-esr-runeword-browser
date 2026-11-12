@@ -75,6 +75,7 @@ import { effectiveActions } from './actions.ts';
 import { ACTION_KEYS, CONDITION_KEYS } from './parse.ts';
 import { evaluateFormula, formulaReferences, formulaSkillKey, parseFormula, type FormulaContext, type FormulaNode } from './formula.ts';
 import { DEFAULT_QUALITY_COLORS } from './colors.ts';
+import { isBrokenItem, itemNameColor } from './nameColor.ts';
 import { isNamedList, isNumberList, namedToNumber } from './match.ts';
 import { resolveText } from './text.ts';
 
@@ -104,6 +105,12 @@ export interface TestItem {
   /** The game's own name. */
   readonly name: string;
   readonly location: ItemLocation;
+  /** The colour code the base item's name starts in (lootfilter.json `items[].nameColor`), for `nameColor`. */
+  readonly baseNameColor?: string;
+  /** The colour code the unique's or set item's name starts in (lootfilter.json `uniques[].nameColor`). */
+  readonly uniqueNameColor?: string;
+  /** A quest item (misc.txt / weapons.txt `quest`): the game names it in the quest colour. */
+  readonly isQuest?: boolean;
 }
 
 export interface TestContext {
@@ -171,6 +178,11 @@ export interface EvaluationResult {
   readonly shownBy: number | null;
   /** Final label text with raw ÿc codes, placeholders expanded. */
   readonly name: string;
+  /**
+   * The colour code the game names the item in (`itemNameColor`, with the filter's `qualityColors`): label text
+   * without a colour code is drawn in it.
+   */
+  readonly nameColor: string;
   readonly replaceName: string | undefined;
   readonly namePrefix: string | undefined;
   readonly nameSuffix: string | undefined;
@@ -608,6 +620,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
   const resolvedPrefix = namePrefix === undefined ? undefined : text(namePrefix);
   const resolvedSuffix = nameSuffix === undefined ? undefined : text(nameSuffix);
   const name = `${resolvedPrefix ?? ''}${resolvedReplace ?? item.name}${resolvedSuffix ?? ''}`;
+  const nameColor = itemNameColor({ ...item, isBroken: isBrokenItem(item.stats) }, filter.qualityColors);
 
   const hiddenUnmatched =
     !matched && hiddenBy === null && shownBy === null && filter.hideUnmatchedItems === true && item.location === 'onGround';
@@ -621,6 +634,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
       hiddenBy,
       shownBy,
       name,
+      nameColor,
       replaceName: resolvedReplace,
       namePrefix: resolvedPrefix,
       nameSuffix: resolvedSuffix,
@@ -641,6 +655,7 @@ export function evaluateFilter(filter: LootFilter, item: TestItem, context: Test
     hiddenBy,
     shownBy,
     name,
+    nameColor,
     replaceName: resolvedReplace,
     namePrefix: resolvedPrefix,
     nameSuffix: resolvedSuffix,
