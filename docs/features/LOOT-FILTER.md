@@ -1670,16 +1670,25 @@ potion and gold colours (`E`/`F`/`G`/`H`), broken red `1` (durability 0 of a max
 socketed gray `K` and ethereal gray `I` (white items only), else the quality colour (`qualityColors`, when one colour
 code, else the game's `DEFAULT_QUALITY_COLORS`). Verified: the guide (p. 10: "Only a quality's plain color changes.
 Runes, quest items, socketed or ethereal gray and broken red keep their own colors") and `TooltipStyle`; the order,
-white-only gray and the base name colour on white items only are inferred.
+white-only gray and the base name colour on white items only are inferred, and so is that only the `quest` column
+makes a name gold (Key of Terror `pk1`, the organs and the mastery tokens are white names).
 
-`utils/nameColors.ts` reads a rule: `ruleItemColor(rule, filter, lookup)` takes its item codes (else the items of its
-item types, `excludeItemCodes` / `excludeItemTypes` left out) through the game data, with its `quality` (unset: any;
-always-normal types, itemtypes.txt `Normal` or no type that rolls magic or rare, are normal), `isEthereal` and a
-`sockets` condition without 0; the colour most items have (ties to the first), undefined when most have none (a weapon
-of any quality). Without the game data the codes tell nothing; the types and the quality still do.
+Approximations (a preview has one default colour per label): text without a code _before_ `{name}` is drawn in the
+name's colour too, where the game probably uses the type or quality colour and only the name its own code; the name's
+colour is the code in effect at its end (lootfilter.json `nameColor`), carried across the line break of a multi-line
+name (`ÿc4(I -> El)\nAncient Decal`), which is not checked in game.
+
+`utils/nameColors.ts` reads a rule: `ruleItemColor(rule, filter, lookup)` takes its `uniqueOrSetIds` (each id's
+unique row at quality unique and set row at quality set, as far as the rule's quality allows: the evaluator matches the
+id against either table), else its item codes (else the items of its item types, `excludeItemCodes` /
+`excludeItemTypes` left out) through the game data, with its `quality` (unset: any; always-normal types, itemtypes.txt
+`Normal` or no type that rolls magic or rare, are normal; a shadow base, not spawnable with unique or set rows, only
+comes as those), `isEthereal` and a `sockets` condition without 0. A base's unique (set) rows give the name colour at
+quality unique (set) when they share one (the Ores `7`, the ascendancy stones `@`; rows that differ: no one colour).
+The colour most items have wins (ties to the first), undefined when most have none (a weapon of any quality). Without the game data the codes tell nothing; the types and the quality still do.
 `ruleLabelNameColor` is the colour the label draws the name in (the colour code where `{name}` stands, else the first
 visible text; uncoloured text takes `ruleItemColor`), and `styleNameColors(filter, lookup)` gives each style the one
-most of its rules (hiding ones skipped) draw the name in, ties to the earlier rule, computed once per filter for the
+most of its rules (hiding and disabled ones skipped) draw the name in, ties to the earlier rule, computed once per filter for the
 Styles list, the style editor and the rule's style picker. A rule's preview uses `rulePreviewColor`: `ruleItemColor`,
 else its quality's, and only when the rule tells nothing its style's colour (a new rule with just a style looks like
 the style). Sully's MidRune rule draws green: 7 of its 13 codes are ESR's green runes (`ÿc2Ni Rune`…), 3 are vanilla

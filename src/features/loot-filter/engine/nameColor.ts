@@ -14,6 +14,14 @@
  *   named by its affixes first, a unique or set item by its own name (which may have a code: the Ores `ÿc7Ore`).
  * - Socketed and ethereal gray apply to white items only; an ethereal unique stays gold.
  * - Broken (durability 0 of a maximum above 0, not indestructible) is red whatever the quality.
+ * - Only the `quest` column makes a name quest gold: Key of Terror `pk1`, the organs and the mastery tokens (type `ques`
+ *   or others, without the flag and without a colour code) are plain white names.
+ *
+ * Approximations of the previews (one default colour per label):
+ * - Text without a code BEFORE `{name}` is drawn in the name's colour too; the game probably draws it in the
+ *   type or quality colour and only the name in its own code.
+ * - The name's colour is the code in effect at its end (`nameColorCode`), carried across the line break of a
+ *   multi-line name (`ÿc4(I -> El)\nAncient Decal`); whether the game carries a code across lines is not checked.
  */
 import { colorCodeRgb, DEFAULT_QUALITY_COLORS } from './colors.ts';
 import { QUALITIES, type QualityColors, type QualityName } from './types.ts';
