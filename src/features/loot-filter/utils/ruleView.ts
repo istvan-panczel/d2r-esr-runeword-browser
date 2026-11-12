@@ -46,8 +46,8 @@ export const BASIC_ACTIONS = {
   useStyle: true,
   hide: true,
   hideIfOtherConditionsFail: false,
-  // Protects an item from later hides (plugin 1.8.2); Advanced until the owner decides otherwise.
-  show: false,
+  // Protects an item from later hides (plugin 1.8.2); Basic, as the main Add rule button's rules in Protection carry it.
+  show: true,
   chatMessageWhenHidden: false,
   replaceName: false,
   namePrefix: false,
@@ -85,8 +85,8 @@ export function conditionFields(hides: boolean): readonly ConditionField[] {
 export const ACTION_EDITOR_FIELDS: readonly ActionField[] = [
   'useStyle',
   'hide',
-  'hideIfOtherConditionsFail',
   'show',
+  'hideIfOtherConditionsFail',
   'chatMessageWhenHidden',
   'replaceName',
   'namePrefix',

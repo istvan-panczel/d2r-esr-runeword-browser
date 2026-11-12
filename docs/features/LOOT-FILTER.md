@@ -118,8 +118,9 @@ then run `lootfilter` in the game console and read
   the Update available banner compares), `selectVisibleDrafts(viewerId)`.
 - `editor`: `{ target, filter, parseDiagnostics, textNotes, selectedRule, dirty }`. Reducers: `open(id)` (a `draft`
   target; parses the text; a JSONC syntax error leaves `filter: null` and one error diagnostic), `close()`, `setHeader(patch)`, `setFilterLevels(levels)`,
-  `setNotifications(patch)`, `setQualityColors(patch)`, `addRule({ rule?, at? })`, `updateRule({ index, rule })`,
-  `patchRule({ index, patch })`, `chooseRuleStyle({ index, patch, addStyle?, removeStyleIfUnused?, ifUseStyle? })` (the
+  `setNotifications(patch)`, `setQualityColors(patch)`, `addRule({ rule?, at? })`, `addCustomRule({ at? })` (the main Add rule button, see
+  "Custom rules in Protection"), `updateRule({ index, rule })`, `patchRule({ index, patch })` (setting the rule's own
+  `hide` drops its own `show` and the other way round, see "Show action"), `chooseRuleStyle({ index, patch, addStyle?, removeStyleIfUnused?, ifUseStyle? })` (the
   rule's Style dropdown, see [Style first, then tweak](#style-first-then-tweak)), `setRuleDisabled({ index, disabled })`
   (see "Disabled rules"), `removeRule(index)`,
   `stepRule({ index, direction })` (one step with the rule's own notes, see "Section comments"), `moveRule({ from, to })`
@@ -370,10 +371,26 @@ the rule numbers (`R###` in the plugin log) stay the same. The ruleset:
 - **Our files**: the example filter (v2.2.0) has a `// ---- <group>` heading per example group and one for the hide
   rules; the Example rules dialog writes the same headings above the rules it adds, unless the filter already has a
   heading of that title (`withGroupHeadings`, `headingTitles` in `utils/examplePicker.ts`).
+- **Custom rules in Protection** (Sully's request, owner decisions 2026-11-12): the main **Add rule** button
+  (`addCustomRule` → `addToPartSection` in `utils/sections.ts`, `CUSTOM_RULES_PLACE` in the slice) looks for a part
+  (level 1, `// ==== Protection`; the first one, title matched ignoring case and the spaces around it). When the filter
+  has one, the new rule is `{ "show": true }` at the end of the section `// ---- Custom rules` inside that part (title
+  matched the same way). Without that section, the section is created at the end of the part, after its last section
+  and before the next part, with Sully's layout: the heading and one description line, "Your own rules. Show keeps them
+  from being hidden by the hide rules below.", written above the new rule (blank lines and separators right above the
+  next part stay with it; a Protection part that runs to the end of the list takes the comments after the last rule
+  along, so they end up above the new rule). Protection runs before every hide rule, so `show` keeps the user's rule
+  from being hidden by a later hide rule; it protects only from hiding, later rules still change its looks, chat lines
+  and sounds. Without a Protection part (a blank filter, the example filter's `----` sections, a file without headings,
+  or a `// ---- Protection` section, which is not a part) Add rule works as before: an empty rule after the selected one,
+  else at the end. Disabled rules keep their place either way (`disabledRules` indexes are written from the model).
+  The rule is selected, its part and section open and it is scrolled into view (on the stacked layout the editor too).
+  A heading's Add rule, Duplicate, Example rules, Check in game and the AI import / JSON Apply keep their own placement
+  and defaults.
 - A commented-out rule shows as a note: the rule toggle (`disabledRules`) is the way to switch one off.
 - Code: `utils/sections.ts` reads the lines (`readCommentLine`), builds the list rows (`buildSectionRows`) and applies
-  every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`); the reducers
-  `editRuleComments`, `addRuleToSection` and `editStyleComments` wrap it, and `removeStyle` hands a deleted style's
+  every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`,
+  `addToPartSection`); the reducers `editRuleComments`, `addRuleToSection`, `addCustomRule` and `editStyleComments` wrap it, and `removeStyle` hands a deleted style's
   comments to the next style as `removeRule` does. The rows are `components/sections/SectionRows.tsx`, the dialog
   `SectionDialog.tsx`. The folds: `utils/sectionFolds.ts` (storage, the filter id, open-set changes),
   `hooks/useSectionFolds.ts` (held by the editor screen, so they outlive a tab switch), `enclosingHeadingKeys` and
@@ -806,8 +823,10 @@ rule scrolls the editor into view). Wide and Full pages widen the list and give 
 
 - **Toolbar**: search box (every term must appear in `ruleSearchText`: summary, codes and their names, types, unique/set
   and area names, stat names and the names of their params (skill, tab, class), comment, the whole formula, style, name
-  changes and chat lines), **Add rule** (an empty rule after the
-  selected one, else at the end; clears the search and selects it), and "N rules (M disabled, K hidden by search)".
+  changes and chat lines), **Add rule** (in a filter with a `// ==== Protection` part, a `show` rule at the end of its
+  Custom rules section, created when missing, see "Custom rules in Protection"; otherwise an empty rule after the
+  selected one, else at the end; clears the search, selects the rule and, on the stacked layout, scrolls the editor into
+  view, as a click on a rule, a heading's Add rule and example rules added do), and "N rules (M disabled, K hidden by search)".
   The search text includes `disabled` for a disabled rule, so searching "disabled" lists them. An empty rule list says
   "No rules yet. …" and points to the example rules and to Sully's QoL filter (a link to the library).
 - **Example rules** (`rules/ExampleRulesButton.tsx`, `ExampleRulesDialog.tsx`, `ExampleRulesPicker.tsx`,
@@ -977,7 +996,8 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   try/catch), default **Basic**, existing users included. Advanced is the full editor described here. Basic shows:
   Enabled, Comment, the diagnostics, How rules combine (collapsed), Item codes, Item types, Unique or set items,
   Quality, Sockets, Ethereal, Item stats (all of) and, on a hide rule, Except items with…; in the actions the label
-  preview, **Use style** (every example rule uses one, so it is chosen like the sound or icon), Hide, a **Name
+  preview, **Use style** (every example rule uses one, so it is chosen like the sound or icon), Hide, Show (since
+  2026-11-12: the main Add rule button's rules in Protection carry it), a **Name
   colour** select (Basic only: "None (no name colour from this rule)" or a colour code, written as
   `replaceName: "ÿc<code>{name}"`, a whole new name that a later rule's replaceName overrides, as the hint says;
   disabled with a pointer to Replace name when replaceName holds other text), label background and border, chat
@@ -1001,7 +1021,7 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   it on either tab switches both). The toggle (`aria-label` "Style view") sits at the top right of the style editor,
   before Rename / Duplicate / Delete (on a phone the row wraps under the description). In Basic a style shows the
   same Basic actions as a rule (`BASIC_ACTIONS`; a style has no Use style, it cannot use another): label preview,
-  Hide, Name colour (wording "from this style"), label background and border, chat line, sound with its volume,
+  Hide, Show, Name colour (wording "from this style"), label background and border, chat line, sound with its volume,
   minimap icon and the style's Notes comment. The rule's action gate is `actionFieldGate({ view, actions,
 diagnostics })`, which `ruleFieldGate` builds on (its conditions on top), so a set Advanced field (a value, a
   passthrough key or a diagnostic) shows with the "advanced" badge (its title says "this style sets it"), e.g.
@@ -1385,7 +1405,7 @@ removes the key); `passthrough` is never patched. Sections:
   `comment` belongs to the rule editor; a style's is a one-line field under **Notes** ("A note for yourself; the plugin
   ignores it.").
 - **Visibility**: `hide` (hint: the item cannot be picked up; no later rule runs; a Show rule above protects the item),
-  `show` (Advanced; plugin 1.8.2: "no later rule can hide it; later rules still change its looks, chat lines and
+  `show` (Basic since the main Add rule button's rules in Protection carry it; plugin 1.8.2: "no later rule can hide it; later rules still change its looks, chat lines and
   sounds. Not with Hide."), `hideIfOtherConditionsFail` (checkboxes; unchecked removes the key), `chatMessageWhenHidden`.
 - **Name**: `replaceName`, `namePrefix`, `nameSuffix`. **Chat**: `chatMessage`, `notify` (the hint shows the filter's
   effective drop line).
@@ -1685,7 +1705,11 @@ cannot both show and hide." Up to ESR 3.2.24 (plugin 1.5.3) the key did not exis
   hide. A rule that both shows and hides is `switchedOff` (`SHOW_AND_HIDE`). Where the guide is silent: whether the rules
   after a blocked `hide` still run (assumed yes) and whether its `chatMessageWhenHidden` prints (assumed no; the item is
   not hidden).
-- **Editor**: a Show checkbox next to Hide (Advanced view; Basic shows it when set, tagged), a green "show" badge in the
+- **Show and Hide exclude each other in the editor** (`patchRule` → `patchedRule` in the slice): ticking the rule's own
+  Hide drops its own Show, ticking Show drops its own Hide (a patch that sets both keys itself is left alone). Only the
+  rule's own keys change: a style that shows or hides is not touched (its conflict stays a validator error), and a rule
+  with neither key stays as it is.
+- **Editor**: a Show checkbox next to Hide (Basic and Advanced; Basic until 2026-11-12 showed it only when set), a green "show" badge in the
   rule list, `show` in the rule summary, How rules combine and the AI format reference ("show protects").
 - **Test tab**: "Shown by rule N: no later rule can hide it." under the label; trace rows "Would hide the item, but rule
   N shows it" and "switched off: error".

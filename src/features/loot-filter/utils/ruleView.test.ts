@@ -34,9 +34,9 @@ describe('ruleFieldGate, Basic view', () => {
       'isEthereal',
       'itemStats',
     ]);
-    expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
+    expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'show', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
     expect(gate.hiddenConditions).toBe(18);
-    expect(gate.hiddenActions).toBe(8);
+    expect(gate.hiddenActions).toBe(7);
   });
 
   it('shows an Advanced field that holds a value, tagged, and counts only the hidden ones', () => {
@@ -49,7 +49,7 @@ describe('ruleFieldGate, Basic view', () => {
     expect(gate.action('droplight')).toBe('advanced');
     expect(gate.action('useStyle')).toBe('shown');
     expect(gate.hiddenConditions).toBe(16);
-    expect(gate.hiddenActions).toBe(7);
+    expect(gate.hiddenActions).toBe(6);
   });
 
   it('counts a wrong-shaped value and a diagnostic as set', () => {
@@ -104,8 +104,8 @@ describe('ruleFieldGate, Advanced view', () => {
 describe('actionFieldGate (a style)', () => {
   it('shows the Basic actions of an empty style, as for a rule', () => {
     const gate = actionFieldGate({ view: 'basic', actions: {} });
-    expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
-    expect(gate.hiddenActions).toBe(8);
+    expect(shownActions(gate)).toEqual(['useStyle', 'hide', 'show', 'labelBackground', 'labelBorder', 'chatMessage', 'sound', 'icon']);
+    expect(gate.hiddenActions).toBe(7);
     expect(gate.view).toBe('basic');
   });
 
@@ -116,7 +116,7 @@ describe('actionFieldGate (a style)', () => {
     expect(gate.action('namePrefix')).toBe('advanced');
     expect(gate.action('replaceName')).toBe('hidden');
     expect(gate.action('labelBackground')).toBe('shown');
-    expect(gate.hiddenActions).toBe(6);
+    expect(gate.hiddenActions).toBe(5);
   });
 
   it('counts a wrong-shaped value and a diagnostic on the style as set', () => {
@@ -177,6 +177,7 @@ describe('the field tables', () => {
     expect(basicActions).toEqual([
       'useStyle',
       'hide',
+      'show',
       'labelBackground',
       'labelBorder',
       'chatMessage',
