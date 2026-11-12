@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.71.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.70.0...v1.71.0) (2026-11-12)
+
+### Features
+
+* **game-data:** keep item name colours and quest flags in the loot filter bundle ([f83f2a9](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f83f2a9881c720e4ae13602ef44867a1ee15087d))
+
+### Bug Fixes
+
+* **game-data:** a name's colour is the code in effect at its end ([69f7b5f](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/69f7b5fe0a4201fa5a8a0f3afd9de81e21f6f9af))
+* **loot-filter:** rule and style previews draw the name in the game's colour for their items ([3d1eb57](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3d1eb57f24600e8f5396c8d7fa0bb80b81393fe7))
+* **loot-filter:** rule label preview falls back to its style's name colour ([b074edb](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/b074edb229823c49234bd6f87d91b1c3e735a9d1))
+* **loot-filter:** rule previews read unique and set name colours, skip disabled rules for styles ([f572893](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/f572893ef38544bd11a2c43f4e2a673b1aef36dd))
+* **loot-filter:** style previews draw the name in the colour their rules give it ([3f47d43](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3f47d435f944de0602973c3cbad2e16d5a198dd6))
+* **loot-filter:** the Test tab draws the label in the item's own name colour ([7298b7d](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/7298b7d4732dbf3e30cc9a2b66b78e818f1a110e))
+
+### Documentation
+
+* **loot-filter:** name colour approximations and inferred quest-colour rule ([3671cf6](https://github.com/istvan-panczel/d2r-esr-runeword-browser/commit/3671cf6d55aff90d4a2627a039afca0d2c44ef20))
+
 ## [1.70.0](https://github.com/istvan-panczel/d2r-esr-runeword-browser/compare/v1.69.0...v1.70.0) (2026-11-12)
 
 ### Features
