@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useDispatch, useStore } from 'react-redux';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { ListPlus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,13 @@ import {
   type SectionEdit,
 } from '../utils/sections';
 import { readsExceptions } from '../utils/statChecks';
+import {
+  ADD_CUSTOM_RULE_TITLE,
+  CUSTOM_RULES_BADGE,
+  CUSTOM_RULES_BADGE_DESCRIPTION,
+  addRuleTarget,
+  addedRuleToast,
+} from '../utils/addRuleTarget';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { RULE_EDITOR_ID, RuleEditor } from './rules/RuleEditor';
 import { ExampleRulesButton } from './rules/ExampleRulesButton';
@@ -193,11 +201,14 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
   };
 
   // A filter with a Protection part gets the rule in its Custom rules section, with Show (`addCustomRule`).
+  const addTarget = addRuleTarget(filter);
   const handleAdd = () => {
     setQuery('');
     dispatch(addCustomRule({ at: selectedRule === null ? undefined : selectedRule + 1 }));
     revealSelected();
     scrollToEditor();
+    const added = addedRuleToast(addTarget);
+    if (added !== undefined) toast.success(added.message, { description: added.description });
   };
 
   return (
@@ -241,6 +252,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             <Button
               type="button"
               size="sm"
+              title={addTarget.kind === 'custom' ? ADD_CUSTOM_RULE_TITLE : undefined}
               onClick={() => {
                 handleAdd();
               }}
@@ -328,6 +340,11 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
               setDeleteOpen(true);
             }}
             sections={sections}
+            addTarget={
+              addTarget.kind === 'custom'
+                ? { address: addTarget.part, label: CUSTOM_RULES_BADGE, description: CUSTOM_RULES_BADGE_DESCRIPTION }
+                : undefined
+            }
           />
         )}
         {/* Last in the pane, so the tab order runs list, splitter, editor. */}

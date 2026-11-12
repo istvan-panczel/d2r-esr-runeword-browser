@@ -372,7 +372,7 @@ the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the
   rules; the Example rules dialog writes the same headings above the rules it adds, unless the filter already has a
   heading of that title (`withGroupHeadings`, `headingTitles` in `utils/examplePicker.ts`).
 - **Custom rules in Protection** (Sully's request, owner decisions 2026-11-12): the main **Add rule** button
-  (`addCustomRule` → `addToPartSection` in `utils/sections.ts`, `CUSTOM_RULES_PLACE` in the slice) looks for a part
+  (`addCustomRule` → `addToPartSection` in `utils/sections.ts`, `CUSTOM_RULES_PLACE` in `utils/addRuleTarget.ts`) looks for a part
   (level 1, `// ==== Protection`; the first one, title matched ignoring case and the spaces around it). When the filter
   has one, the new rule is `{ "show": true }` at the end of the section `// ---- Custom rules` inside that part (title
   matched the same way). Without that section, the section is created at the end of the part, after its last section
@@ -387,6 +387,23 @@ the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the
   The rule is selected, its part and section open and it is scrolled into view (on the stacked layout the editor too).
   A heading's Add rule, Duplicate, Example rules, Check in game and the AI import / JSON Apply keep their own placement
   and defaults.
+  - **Shown in the UI** (`utils/addRuleTarget.ts`: `addRuleTarget(filter)` is `{ kind: 'custom', section: 'existing' |
+'created', part }` or `{ kind: 'selected' }`, found by `findPartSection` with the same title matching):
+    - the Protection part's heading row has a green **New rules go here** badge after its title, folded or open (not
+      at the row's end, where the hover toolbar covers the count); its tooltip and the heading button's accessible
+      description: "Add rule puts new rules here, in Custom rules, with Show: the hide rules below can't hide them.";
+    - the Add rule button's tooltip: "Adds a rule at the end of Protection › Custom rules, with Show: the hide rules
+      below can't hide it.";
+    - after such an Add rule a toast: "Added to Protection › Custom rules with Show: the hide rules below can't hide
+      it.", with "Custom rules is a new section at the end of Protection." when the section was just created. No toast
+      without Protection;
+    - when an edit of the open filter changes the kind (JSON Apply, a heading renamed or removed in the section dialog,
+      an AI import, Replace with the latest), an info toast: "New rules now go to Protection › Custom rules,
+      with Show." or "This filter has no Protection part any more: Add rule puts new rules after the selected rule,
+      without Show." (`hooks/useAddRuleTargetNotice.ts`, held by the editor screen, keyed on the open filter: opening
+      or switching filters, the first load and Add rule creating Custom rules say nothing; `addRuleTargetNotice` is the
+      pure comparison);
+    - How rules combine has a line on it.
 - A commented-out rule shows as a note: the rule toggle (`disabledRules`) is the way to switch one off.
 - Code: `utils/sections.ts` reads the lines (`readCommentLine`), builds the list rows (`buildSectionRows`) and applies
   every edit on the list as one stream of comment lines and items (`applySectionEdit`, `addToSection`,

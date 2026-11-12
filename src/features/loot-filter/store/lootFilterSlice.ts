@@ -28,10 +28,10 @@ import {
   stepItem,
   type CommentAccess,
   type CommentAddress,
-  type PartSection,
   type SectionEdit,
   type SectionList,
 } from '../utils/sections';
+import { CUSTOM_RULES_PLACE } from '../utils/addRuleTarget';
 import { applyPatch, type ShallowPatch } from '../utils/patch';
 import type { StyleChoiceEdit } from '../utils/styleChoice';
 import type { EditorTarget, LootFilterBasedOn, LootFilterEditorState, LootFilterEntry, LootFilterSource, LootFilterState } from './types';
@@ -243,16 +243,6 @@ function followSelection(selected: number | null, from: readonly number[]): numb
 function isIndex(index: number, length: number): boolean {
   return Number.isInteger(index) && index >= 0 && index < length;
 }
-
-/**
- * Where the main Add rule button puts a new rule (Sully's request): the section "Custom rules" of the part "Protection",
- * created at the end of the part when missing. Protection runs before every hide rule, so the new rule shows (`show`).
- */
-export const CUSTOM_RULES_PLACE: PartSection = {
-  part: 'Protection',
-  section: 'Custom rules',
-  description: 'Your own rules. Show keeps them from being hidden by the hide rules below.',
-};
 
 interface AddRulePayload {
   readonly rule?: LootFilterRule;

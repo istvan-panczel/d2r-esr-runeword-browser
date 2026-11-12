@@ -1,4 +1,6 @@
+import { useId } from 'react';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, ListPlus, Pencil, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { CommentAddress, HeadingRow, NoteRow } from '../../utils/sections';
@@ -24,6 +26,11 @@ interface HeadingRowViewProps {
   readonly onRemove: (address: CommentAddress) => void;
   /** Adds an item at the end of the section (the rule list only). */
   readonly onAddItem?: (address: CommentAddress) => void;
+  /**
+   * A marker after the title, shown folded or open (the Protection part: where Add rule puts new rules). `label` must
+   * read on its own (touch has no tooltip); `description` is its tooltip and the row's accessible description.
+   */
+  readonly badge?: { readonly label: string; readonly description: string };
   readonly className?: string;
 }
 
@@ -38,8 +45,10 @@ export function HeadingRowView({
   onMove,
   onRemove,
   onAddItem,
+  badge,
   className,
 }: HeadingRowViewProps) {
+  const badgeId = useId();
   const Chevron = row.collapsed ? ChevronRight : ChevronDown;
   const part = row.level === 1;
   const kind = part ? 'part' : 'section';
@@ -49,6 +58,7 @@ export function HeadingRowView({
         type="button"
         disabled={!canFold}
         aria-expanded={canFold ? !row.collapsed : undefined}
+        aria-describedby={badge === undefined ? undefined : badgeId}
         title={!canFold ? `Folds do not apply while searching` : row.collapsed ? `Show the ${noun} of this ${kind}` : `Fold this ${kind}`}
         className={cn(
           'flex min-w-0 flex-1 basis-full items-center gap-1.5 py-1.5 pr-3 text-left enabled:hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset',
@@ -59,7 +69,19 @@ export function HeadingRowView({
         }}
       >
         <Chevron className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-        <span className="min-w-0 flex-1 break-words">{row.title}</span>
+        {/* The badge follows the title (not the row's end, where the hover toolbar floats over the count). */}
+        <span className="min-w-0 flex-1 break-words">
+          {row.title}
+          {badge !== undefined && (
+            <Badge
+              variant="outline"
+              className="ml-2 border-emerald-600/50 px-1.5 py-0 align-middle text-[0.7rem] font-medium text-emerald-700 dark:text-emerald-300"
+              title={badge.description}
+            >
+              {badge.label}
+            </Badge>
+          )}
+        </span>
         <span
           className="shrink-0 font-mono text-xs font-normal text-muted-foreground tabular-nums"
           title={`${String(row.itemCount)} ${noun}`}
@@ -67,6 +89,11 @@ export function HeadingRowView({
           {row.itemCount}
         </span>
       </button>
+      {badge !== undefined && (
+        <span id={badgeId} className="sr-only">
+          {badge.description}
+        </span>
+      )}
       {row.notes.length > 0 && !row.collapsed && (
         <p
           className={cn(

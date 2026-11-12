@@ -44,6 +44,7 @@ import { SaveDialog } from '../components/editor/SaveDialog';
 import { UpdateBanner } from '../components/editor/UpdateBanner';
 import { EDITOR_TABS, useEditorTab, type EditorTab } from '../hooks/useEditorTab';
 import { useSectionFolds } from '../hooks/useSectionFolds';
+import { useAddRuleTargetNotice } from '../hooks/useAddRuleTargetNotice';
 import { useLootFilterReference } from '../hooks/useLootFilterReference';
 import { useSandboxLeavePrompt } from '../hooks/useSandboxLeavePrompt';
 import {
@@ -260,6 +261,8 @@ export function LootFilterEditorScreen() {
   // view once the opened headings are rendered.
   const [revealCount, setRevealCount] = useState(0);
   const sectionFolds = useSectionFolds(target === null ? null : foldsIdOf(target, draftEntry?.savedId), switching);
+  // An edit that adds, renames or removes the Protection part changes where Add rule puts new rules: say so.
+  useAddRuleTargetNotice(filterKey, editor.filter);
 
   // Leaving the screen: write pending edits back and forget a finished save.
   useEffect(
