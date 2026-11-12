@@ -970,6 +970,32 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
   rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
   passthrough" block.
+- **Foldable groups** (`components/FoldSection.tsx`, `utils/editorGroups.ts`, `hooks/useGroupFolds.ts`): every
+  condition group (Which items, Item properties, Stats, Where and when) and every action group (Style, Visibility,
+  Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a native `<details>` whose header
+  (the `summary`, at least 40 px high, the heading keeping its level) shows the title and, while folded, a one-line
+  summary of what the group sets: conditions in the rule list's words (`ruleConditionSummary` of the group's keys,
+  `every item` / `none` when empty), actions without colour codes (`“Pul” gold`, `yellow name`, `other.mp3, 15%`,
+  `rune, 35 px`, colour swatches for the label background and border, the icon tint and the droplight; `from style
+X` when only the style sets the group; `none`). The group → keys maps (`CONDITION_GROUP_OF`, `ACTION_GROUP_OF`,
+  checked against `BASIC_CONDITIONS` / `BASIC_ACTIONS` by `satisfies`) and the in-use checks are pure and tested.
+  A group is **in use** when one of its keys is set by the rule itself, by its style (actions; `findStyle`), sits in
+  passthrough or carries a diagnostic. Groups in use at mount start open, the others folded; a group with a
+  diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule, the
+  Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
+  while folded stays folded. The Label preview stays pinned at the top of the Actions card; the header bits,
+  Enabled, Comment, the diagnostics and How rules combine stay above the folds. Basic / Advanced works inside the
+  folds as before (a group whose fields are all hidden is left out; the "N more … in the Advanced view" lines stay at
+  the card ends).
+- **Items first** for a blank rule (`isBlankRule`): no condition key, nothing in passthrough (unknown or wrong-shaped
+  keys of a third-party file) and no diagnostic on one of its keys (the whole-rule "neither conditions nor actions"
+  warning of a new `{}` rule does not count); its actions may be `show: true` (the Protection section's new rules) or
+  a comment, any other action means it already does something. Such a rule shows only Which items (open), a hint
+  ("Pick the items this rule is for; the rest of the rule appears next.") and a **Show all options** link-button for
+  a rule by quality, stats or area; the other condition groups, the "more in Advanced" line and the Actions card are
+  left out (on @10xl pages a dashed note keeps the actions' column). The first patch that sets a condition
+  (`setsCondition`), or Show all options (focus moves to Item properties' header), shows every group for the rest of
+  the mount, even if the items are cleared again. A disabled blank rule starts the same way.
 - **Basic / Advanced view** (`utils/ruleView.ts`, the segmented toggle `ViewToggle` in `components/rules/ViewToggle.tsx`
   at the top right of the rule editor, before Check in game; on a page narrower than 36rem both drop under the
   description). The Styles tab's style editor has the same toggle and split (see below). A per-browser setting in the settings
@@ -1365,9 +1391,11 @@ focus returns to the button).
 ## Actions editor (`components/actions/`)
 
 `ActionsEditor` (`actions`, `onChange(patch)`, `filter`, `owner: 'rule' | 'style'`, `styleName?`, `gate?`: the Basic /
-Advanced `ActionFieldGate`, every action when undefined) is the form for every
+Advanced `ActionFieldGate`, every action when undefined; `usage`: the groups the rule or style uses,
+`actionGroupUsage`) is the form for every
 action key; the rule editor and the Styles tab both render it. Every control sends a shallow patch (`{ key: undefined }`
-removes the key); `passthrough` is never patched. Sections:
+removes the key); `passthrough` is never patched. Sections (every one but the label preview folds, see
+**Foldable groups** in the Rules tab section; a style's in-use groups are its own keys):
 
 - **Label preview** (top): `LabelPreview` of prefix + (`replaceName` or `{name}`) + suffix in enUS, with `{name}` shown
   as "Item Name" and other placeholders as written; background and border from the effective actions, and the
