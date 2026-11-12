@@ -357,10 +357,12 @@ and validator (`src/features/loot-filter/engine/reference.ts` turns it plus `typ
   "Hu Rune", whose namestr makes it a second "Fu Rune". Misc items only drop through treasure classes (no auto-TCs), but
   332 other spawnable misc rows are named by none (cube results, engine drops such as the essences), so spawnable
   stays enough for those.
-  `nameColor` is the colour code (the character after `ÿc`) the name's string starts in: the code in effect at the first
-  visible character of its last non-blank line, the name line (`nameColorCode` in `build/strings.ts`; the string table
-  strips the codes from `name`, `StringTable.colors` keeps them). ESR colours many names in its string tables
-  (`ÿc4No Rune`, `ÿc;Chipped Amethyst`, `ÿcNMoon Rune`, `(I -> El)\nÿc4Ancient Decal`; `ÿc1*ÿc0HP1` gives `1`); omitted
+  `nameColor` is the colour code (the character after `ÿc`) the name's string ends in: the code in effect at its last
+  visible character, the end of the name line (the last; `nameColorCode` in `build/strings.ts`; the string table
+  strips the codes from `name`, `StringTable.colors` keeps them), what text without a code after the name continues
+  in. ESR colours many names in its string tables (`ÿc4No Rune`, `ÿc;Chipped Amethyst`, `ÿcNMoon Rune`,
+  `(I -> El)\nÿc4Ancient Decal`; a trailing code does not count, `ÿc4Elixir of Skillÿc0` gives `4`; the belt names
+  `ÿc1*ÿc0HP1`, `ÿc3+ÿc0TP` give `0`, white after the coloured marker); omitted
   for names without one (the 33 vanilla runes El–Zod) and for names taken from the `name` column. ESR 3.3.04: 795 items,
   all misc rows. `quest: true` is the `quest` column above 0 (32 rows, not the same as type `ques`: Key of Terror `pk1`
   is type `ques` without it, the Horadric Staff `hst` and its top `vip` have it on other types). The loot filter's label

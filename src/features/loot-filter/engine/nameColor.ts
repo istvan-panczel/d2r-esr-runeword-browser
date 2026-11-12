@@ -40,9 +40,9 @@ export interface NameColorItem {
   readonly typeAncestors: readonly string[];
   readonly isEthereal: boolean;
   readonly sockets: number;
-  /** The colour code the base item's name starts in (lootfilter.json `items[].nameColor`). */
+  /** The colour code the base item's name ends in (lootfilter.json `items[].nameColor`). */
   readonly baseNameColor?: string;
-  /** The colour code the unique's or set item's name starts in (lootfilter.json `uniques[].nameColor`). */
+  /** The colour code the unique's or set item's name ends in (lootfilter.json `uniques[].nameColor`). */
   readonly uniqueNameColor?: string;
   /** misc.txt / weapons.txt `quest` (lootfilter.json `items[].quest`). */
   readonly isQuest?: boolean;

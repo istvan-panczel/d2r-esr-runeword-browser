@@ -12,25 +12,30 @@ describe('stripColorCodes', () => {
 });
 
 describe('nameColorCode', () => {
-  it('gives the code in effect at the first visible character of the display line', () => {
+  it('gives the code in effect at the last visible character (what text after the name continues in)', () => {
     expect(nameColorCode('ÿc4Ancient Scroll 1')).toBe('4');
     expect(nameColorCode('ÿc;Chipped Amethyst')).toBe(';');
-    expect(nameColorCode('ÿc4Elixir of Skillÿc0')).toBe('4');
-    expect(nameColorCode('ÿc1*ÿc0HP1')).toBe('1');
+    expect(nameColorCode('ÿc4Elixir of Skillÿc0')).toBe('4'); // a code after the last visible character does not count
     expect(nameColorCode('ÿc0ÿcNMoon Rune')).toBe('N');
   });
 
-  it('reads the last non-blank line (the name; the lines above are descriptors), a code above carrying over', () => {
+  it("gives ESR's belt names (a coloured marker, then the name after ÿc0) white", () => {
+    expect(nameColorCode('ÿc1*ÿc0HP1')).toBe('0');
+    expect(nameColorCode('ÿc3+ÿc0TP')).toBe('0');
+    expect(nameColorCode('ÿc;*ÿc025%')).toBe('0');
+  });
+
+  it('reads multi-line names to their end (the name line is the last), a code above carrying over', () => {
     expect(nameColorCode('(I -> El)\nÿc4Ancient Decal')).toBe('4');
     expect(nameColorCode('ÿc4(I -> El)\nAncient Decal')).toBe('4');
     expect(nameColorCode('ÿc2Top\nÿc;Name\n  ')).toBe(';');
   });
 
-  it('is undefined without a code before the name', () => {
+  it('is undefined without a code before the end of the name', () => {
     expect(nameColorCode('El Rune')).toBeUndefined();
-    expect(nameColorCode('Hand Axe ÿc4of Doom')).toBeUndefined();
     expect(nameColorCode('')).toBeUndefined();
     expect(nameColorCode('ÿc4')).toBeUndefined();
+    expect(nameColorCode('El Runeÿc4')).toBeUndefined();
   });
 });
 
@@ -44,7 +49,7 @@ describe('buildStringTable', () => {
     expect(strings.get('k2')).toBe('Two');
   });
 
-  it('strips colour codes from values and keeps the colour the display line starts in', () => {
+  it('strips colour codes from values and keeps the colour the display line ends in', () => {
     const { strings, colors } = buildStringTable([
       file('item-names.json', [
         { Key: 'hax', enUS: 'ÿc3Hand Axe' },

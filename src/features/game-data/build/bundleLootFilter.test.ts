@@ -354,7 +354,7 @@ describe('buildLootFilterBundle name colours and quest items', () => {
   );
   const item = (code: string) => coloured.items.find((entry) => entry.code === code);
 
-  it("keeps the colour code the name's string starts in", () => {
+  it("keeps the colour code the name's string ends in", () => {
     expect(item('r36')?.nameColor).toBe('4');
     expect(item('r51')).not.toHaveProperty('nameColor');
     expect(coloured.uniques[0]?.nameColor).toBe('7');

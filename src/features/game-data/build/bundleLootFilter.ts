@@ -68,7 +68,7 @@ function isUnusedRune(type: string, code: string, gemCodes: ReadonlySet<string>)
 }
 
 /**
- * The colour code a string-table name starts in (`StringTable.colors`), when the key resolves to a name; a name taken
+ * The colour code a string-table name ends in (`StringTable.colors`), when the key resolves to a name; a name taken
  * from the row's own `name` column (no string) has none.
  */
 function nameColorOf(strings: ReadonlyMap<string, string>, colors: ReadonlyMap<string, string>, key: string): string | undefined {

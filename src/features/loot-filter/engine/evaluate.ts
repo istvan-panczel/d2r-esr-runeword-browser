@@ -105,9 +105,9 @@ export interface TestItem {
   /** The game's own name. */
   readonly name: string;
   readonly location: ItemLocation;
-  /** The colour code the base item's name starts in (lootfilter.json `items[].nameColor`), for `nameColor`. */
+  /** The colour code the base item's name ends in (lootfilter.json `items[].nameColor`), for `nameColor`. */
   readonly baseNameColor?: string;
-  /** The colour code the unique's or set item's name starts in (lootfilter.json `uniques[].nameColor`). */
+  /** The colour code the unique's or set item's name ends in (lootfilter.json `uniques[].nameColor`). */
   readonly uniqueNameColor?: string;
   /** A quest item (misc.txt / weapons.txt `quest`): the game names it in the quest colour. */
   readonly isQuest?: boolean;

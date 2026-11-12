@@ -19,7 +19,7 @@ export interface StringTable {
    */
   readonly ids: ReadonlyMap<string, number>;
   /**
-   * The colour code (the character after `ÿc`) the entry's display line starts in (`nameColorCode`), for the keys whose
+   * The colour code (the character after `ÿc`) the entry's display line ends in (`nameColorCode`), for the keys whose
    * text sets one: ESR names many items in colour (`ÿc4No Rune`, `ÿc;Chipped Amethyst`), which `strings` strips.
    */
   readonly colors: ReadonlyMap<string, string>;
@@ -42,30 +42,25 @@ export function stripColorCodes(text: string): string {
 }
 
 /**
- * The colour code (the character after `ÿc`) in effect at the first visible character of a text's display line, the
- * last non-blank line (the game draws a multi-line name bottom-up, so the last line is the name, see `displayName` in
- * itemNames.ts): a code earlier in the text carries over the line breaks. Undefined when no code comes before it.
- * `ÿc4Ancient Scroll 1` → `4`; `(I -> El)\nÿc4Ancient Decal` → `4`; `ÿc1*ÿc0HP1` → `1`.
+ * The colour code (the character after `ÿc`) in effect at the last visible character of a text: the end of its display
+ * line (the last non-blank line; the game draws a multi-line name bottom-up, so the last line is the name, see
+ * `displayName` in itemNames.ts), what text without a code after the name continues in. A code earlier in the text
+ * carries over the line breaks; a code after the last visible character does not count. Undefined when no code comes
+ * before it. `ÿc4Ancient Scroll 1` → `4`; `ÿc4Elixir of Skillÿc0` → `4`; `ÿc4(I -> El)\nAncient Decal` → `4`;
+ * `ÿc1*ÿc0HP1` → `0` (ESR's belt names: a coloured marker, then the name in white).
  */
 export function nameColorCode(text: string): string | undefined {
-  const lines = text.split('\n');
-  let last = -1;
-  lines.forEach((line, index) => {
-    if (stripColorCodes(line).trim() !== '') last = index;
-  });
-  if (last < 0) return undefined;
   let color: string | undefined;
-  for (const [index, line] of lines.entries()) {
-    for (let at = 0; at < line.length; at++) {
-      if (line.startsWith('ÿc', at) && at + 2 < line.length) {
-        color = line.charAt(at + 2);
-        at += 2;
-      } else if (index === last && line.charAt(at).trim() !== '') {
-        return color;
-      }
+  let atLastVisible: string | undefined;
+  for (let at = 0; at < text.length; at++) {
+    if (text.startsWith('ÿc', at) && at + 2 < text.length) {
+      color = text.charAt(at + 2);
+      at += 2;
+    } else if (text.charAt(at).trim() !== '') {
+      atLastVisible = color;
     }
   }
-  return color;
+  return atLastVisible;
 }
 
 function baseName(fileName: string): string {
