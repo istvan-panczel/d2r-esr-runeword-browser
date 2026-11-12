@@ -100,3 +100,12 @@ export function styleNameColor(filter: LootFilter, name: string): string | undef
   }
   return best;
 }
+
+/**
+ * The colour a rule's label preview draws text without a colour code in: the quality colour of the rule
+ * (`qualityNameColor`), else the colour its style's rules usually give the name (`styleNameColor`), so the preview
+ * matches the style picker. Undefined: plain white.
+ */
+export function rulePreviewColor(rule: LootFilterRule, filter: LootFilter): string | undefined {
+  return qualityNameColor(rule.quality) ?? (rule.useStyle === undefined ? undefined : styleNameColor(filter, rule.useStyle));
+}

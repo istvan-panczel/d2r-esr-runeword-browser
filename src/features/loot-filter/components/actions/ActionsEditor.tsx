@@ -39,8 +39,8 @@ export interface ActionsEditorProps {
   /** Name of the style being edited (for the preview heading); unused for rules. */
   readonly styleName?: string;
   /**
-   * The colour code the label preview draws text without one in: a rule's quality colour (`qualityNameColor`), a
-   * style's usual name colour from its rules (`styleNameColor`). Undefined: plain white.
+   * The colour code the label preview draws text without one in: a rule's quality colour, else its style's
+   * (`rulePreviewColor`); a style's usual name colour from its rules (`styleNameColor`). Undefined: plain white.
    */
   readonly nameColor?: string;
   /**
@@ -137,7 +137,11 @@ export function ActionsEditor({ actions, onChange, onChooseStyle, filter, owner,
           {effective.hide === true
             ? 'Hidden: the item shows no label.'
             : `{name} shows as "Item Name"; other placeholders as written. Without a colour code the game colours the name by quality${
-                owner === 'style' ? ': the preview uses the colour most of the rules with this style give it' : ''
+                owner === 'style'
+                  ? ': the preview uses the colour most of the rules with this style give it'
+                  : style === undefined
+                    ? ''
+                    : ': without a quality here, the preview uses the colour most of the rules with its style give it'
               }.${effective.icon === undefined ? '' : ' Beside it the minimap icon at its size.'}`}
         </p>
       </div>

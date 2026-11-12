@@ -9,6 +9,7 @@ import {
   mergeActions,
   previewLabelText,
   qualityNameColor,
+  rulePreviewColor,
   ruleNameColor,
   styleNameColor,
 } from './effectiveActions';
@@ -98,6 +99,19 @@ describe('name colours', () => {
     expect(styleNameColor(voting, 'S')).toBe('1');
     expect(styleNameColor(voting, 'T')).toBe('2');
     expect(styleNameColor(voting, 'Nope')).toBeUndefined();
+  });
+
+  it("draws a rule's preview in its quality colour, else its style's", () => {
+    const voting: LootFilter = {
+      formatVersion: 1,
+      leadingComments: [],
+      styles: { S: {} },
+      rules: [{ useStyle: 'S', replaceName: 'ÿc;Su Rune' }],
+    };
+    expect(rulePreviewColor({ useStyle: 'S' }, voting)).toBe(';');
+    expect(rulePreviewColor({ useStyle: 'S', quality: 'unique' }, voting)).toBe('D');
+    expect(rulePreviewColor({ useStyle: 'Nope' }, voting)).toBeUndefined();
+    expect(rulePreviewColor({}, voting)).toBeUndefined();
   });
 
   // Sully's report: his style previews all drew white text. His styles set no name colour; his rules do.
