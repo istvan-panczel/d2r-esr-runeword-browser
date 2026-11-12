@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { UnknownAction } from '@reduxjs/toolkit';
 import { parseLootFilter } from '../engine/parse';
@@ -7,7 +9,9 @@ import { createBlankFilter } from '../utils/blankFilter';
 import { planStyleChoice } from '../utils/styleChoice';
 import { stylePreset } from '../utils/stylePresets';
 import reducer, {
+  CUSTOM_RULES_PLACE,
   EMPTY_EDITOR,
+  addCustomRule,
   addRule,
   addRules,
   chooseRuleStyle,
@@ -798,5 +802,182 @@ describe('a selection folded away by hand', () => {
     expect(reducer(opened(5), duplicateRule(5)).editor.selectionFolded).toBe(false);
     expect(reducer(opened(5), addRules({ rules: [{ hide: true }] })).editor.selectionFolded).toBe(false);
     expect(reducer(opened(5), removeRule(5)).editor).toMatchObject({ selectedRule: null, selectionFolded: false });
+  });
+});
+
+describe('addCustomRule (the main Add rule button)', () => {
+  const DESCRIPTION = '// Your own rules. Show keeps them from being hidden by the hide rules below.';
+  const fromText = (text: string) =>
+    run(initialState, hydrate([{ ...entry('x'), text }]), { type: open.type, payload: { id: 'x', now: NOW } });
+  const readFile = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
+  const rules = (state: LootFilterState) => state.editor.filter?.rules ?? [];
+
+  it('describes the place it uses', () => {
+    expect(CUSTOM_RULES_PLACE).toEqual({ part: 'Protection', section: 'Custom rules', description: DESCRIPTION.slice(3) });
+  });
+
+  it('adds a show rule at the end of an existing Custom rules section in Protection, selected', () => {
+    const filter = filterWith({
+      rules: [
+        { comment: 'p', show: true, commentsBefore: ['// ==== Protection'] },
+        { comment: 'c', show: true, commentsBefore: ['// ---- Custom Rules'] },
+        { comment: 'h', hide: true, commentsBefore: ['// ==== Hiding'] },
+      ],
+    });
+    const state = reducer(openState(filter), addCustomRule({ at: 3 }));
+    expect(comments(state)).toEqual(['p', 'c', undefined, 'h']);
+    expect(rules(state)[2]).toEqual({ show: true });
+    expect(state.editor).toMatchObject({ selectedRule: 2, selectionFolded: false, dirty: true });
+  });
+
+  it('creates Custom rules at the end of Protection, before the next part, ignoring the selection', () => {
+    const filter = filterWith({
+      rules: [
+        { comment: 'p', show: true, commentsBefore: ['// ==== protection '] },
+        { comment: 'm', show: true, commentsBefore: ['// ---- Mythicals'] },
+        { comment: 'h', hide: true, commentsBefore: ['// ==== Hiding'] },
+        { comment: 'z' },
+      ],
+    });
+    const state = reducer(reducer(openState(filter), selectRule(3)), addCustomRule({ at: 4 }));
+    expect(comments(state)).toEqual(['p', 'm', undefined, 'h', 'z']);
+    expect(rules(state)[2]).toEqual({ show: true, commentsBefore: ['// ---- Custom rules', DESCRIPTION] });
+    expect(rules(state)[3]).toEqual(filter.rules[2]);
+    expect(state.editor.selectedRule).toBe(2);
+    // The second one joins the section made by the first.
+    const again = reducer(state, addCustomRule());
+    expect(comments(again)).toEqual(['p', 'm', undefined, undefined, 'h', 'z']);
+    expect(rules(again)[3]).toEqual({ show: true });
+    expect(again.editor.selectedRule).toBe(3);
+  });
+
+  it('creates the section when Protection is the last part with no rules (the comments after the last rule)', () => {
+    const filter = filterWith({ rules: [{ comment: 'a' }], rulesEndComments: ['// ==== Protection'] });
+    const state = reducer(openState(filter), addCustomRule());
+    expect(rules(state)[1]).toEqual({ show: true, commentsBefore: ['// ==== Protection', '', '// ---- Custom rules', DESCRIPTION] });
+    expect(state.editor.filter?.rulesEndComments).toEqual([]);
+    expect(state.editor.selectedRule).toBe(1);
+  });
+
+  it('keeps a filter of only Protection with comments after the last rule in order', () => {
+    const filter = filterWith({
+      rules: [{ comment: 'p', show: true, commentsBefore: ['// ==== Protection'] }],
+      rulesEndComments: ['// ---- Later'],
+    });
+    // "Later" is the part's last section: Custom rules goes after it, at the end of the list.
+    const state = reducer(openState(filter), addCustomRule());
+    expect(rules(state)[1]).toEqual({ show: true, commentsBefore: ['// ---- Later', '', '// ---- Custom rules', DESCRIPTION] });
+    expect(state.editor.filter?.rulesEndComments).toEqual([]);
+  });
+
+  it('puts the rule in Sully’s v0.9.2 as rule 10, before Drop Announcements, and writes the heading there', () => {
+    const state = fromText(readFile('src/features/loot-filter/engine/__fixtures__/sullys-qol-filter-0.9.2.json'));
+    const before = rules(state);
+    const added = reducer(state, addCustomRule({ at: 40 }));
+    expect(added.editor.selectedRule).toBe(9);
+    expect(rules(added)[8].comment?.startsWith('R009')).toBe(true);
+    expect(rules(added)[9]).toEqual({ show: true, commentsBefore: ['// ---- Custom rules', DESCRIPTION] });
+    expect(rules(added)[10]).toBe(before[9]);
+    expect(rules(added).length).toBe(before.length + 1);
+    const text = serializeLootFilter(added.editor.filter ?? filterWith());
+    const lines = text.split('\n').map((line) => line.trim());
+    const heading = lines.indexOf('// ---- Custom rules');
+    expect(heading).toBeGreaterThan(lines.findIndex((line) => line.includes('R009')));
+    expect(lines.slice(heading + 1, heading + 3)).toEqual([DESCRIPTION, '{"show": true},']);
+    expect(lines.indexOf('// ==== Drop Announcements')).toBeGreaterThan(heading);
+  });
+
+  it('adds an empty rule to a blank filter at index 0', () => {
+    const state = reducer(openState(createBlankFilter('Blank')), addCustomRule());
+    expect(rules(state)).toEqual([{}]);
+    expect(state.editor.selectedRule).toBe(0);
+  });
+
+  it('places as before in the bundled example filter (sections, no parts): no show, no heading', () => {
+    const state = fromText(readFile('public/loot-filters/example-filter.json'));
+    const before = rules(state);
+    const atEnd = reducer(state, addCustomRule());
+    expect(rules(atEnd).at(-1)).toEqual({});
+    expect(atEnd.editor.selectedRule).toBe(before.length);
+    const afterSelected = reducer(reducer(state, selectRule(2)), addCustomRule({ at: 3 }));
+    expect(rules(afterSelected)[3]).toEqual({});
+    expect(rules(afterSelected)[4]).toEqual(before[3]);
+    expect(afterSelected.editor.selectedRule).toBe(3);
+    expect(atEnd.editor.filter?.rulesEndComments).toEqual(state.editor.filter?.rulesEndComments);
+  });
+
+  it('places as before in a file without headings and with Protection only as a section', () => {
+    expect(comments(reducer(openState(), addCustomRule({ at: 1 })))).toEqual(['a', undefined, 'b', 'c', 'd']);
+    expect(rules(reducer(openState(), addCustomRule({ at: 1 })))[1]).toEqual({});
+    const sectionOnly = filterWith({ rules: [{ comment: 'a', commentsBefore: ['// ---- Protection'] }, { comment: 'b' }] });
+    const state = reducer(openState(sectionOnly), addCustomRule());
+    expect(rules(state)[2]).toEqual({});
+    expect(state.editor.selectedRule).toBe(2);
+  });
+
+  it('keeps disabled rules at their place: their index in disabledRules follows the insert', () => {
+    const text = `{
+  "formatVersion": 1,
+  "rules": [
+    // ==== Protection
+    { "comment": "p", "show": true },
+    // ==== Hiding
+    { "comment": "h", "hide": true },
+    { "comment": "z" }
+  ],
+  "disabledRules": [{ "at": 2, "rule": { "comment": "off" } }]
+}`;
+    const state = fromText(text);
+    expect(comments(state)).toEqual(['p', 'h', 'off', 'z']);
+    const added = reducer(state, addCustomRule());
+    expect(comments(added)).toEqual(['p', undefined, 'h', 'off', 'z']);
+    const reparsed = parseLootFilter(serializeLootFilter(added.editor.filter ?? filterWith())).filter;
+    expect(reparsed.rules.map((rule) => [rule.comment, rule.disabled])).toEqual([
+      ['p', undefined],
+      [undefined, undefined],
+      ['h', undefined],
+      ['off', true],
+      ['z', undefined],
+    ]);
+    expect(serializeLootFilter(added.editor.filter ?? filterWith())).toContain('"at": 3');
+    // The old placement in the middle shifts them the same way.
+    const middle = reducer(
+      openState(parseLootFilter(text.replace('// ==== Protection', '// ==== Other')).filter),
+      addCustomRule({ at: 1 })
+    );
+    expect(serializeLootFilter(middle.editor.filter ?? filterWith())).toContain('"at": 3');
+  });
+
+  it('does nothing without an open filter', () => {
+    expect(reducer(initialState, addCustomRule())).toBe(initialState);
+  });
+});
+
+describe('patchRule: Show and Hide exclude each other', () => {
+  const patched = (rule: LootFilterRule, patch: Parameters<typeof patchRule>[0]['patch']) =>
+    reducer(openState(filterWith({ rules: [rule] })), patchRule({ index: 0, patch })).editor.filter?.rules[0];
+
+  it('drops the own show when the patch sets hide, and the own hide when it sets show', () => {
+    expect(patched({ comment: 'x', show: true }, { hide: true })).toEqual({ comment: 'x', hide: true });
+    expect(patched({ comment: 'x', hide: true }, { show: true })).toEqual({ comment: 'x', show: true });
+  });
+
+  it('leaves a rule with neither, other patches and a patch that sets both alone', () => {
+    expect(patched({ comment: 'x' }, { hide: true })).toEqual({ comment: 'x', hide: true });
+    expect(patched({ comment: 'x' }, { show: true })).toEqual({ comment: 'x', show: true });
+    expect(patched({ comment: 'x', show: true }, { comment: 'y' })).toEqual({ comment: 'y', show: true });
+    expect(patched({ show: true }, { hide: false })).toEqual({ show: true, hide: false });
+    expect(patched({ show: true }, { hide: undefined })).toEqual({ show: true });
+    expect(patched({}, { hide: true, show: true })).toEqual({ hide: true, show: true });
+  });
+
+  it('touches only the rule’s own keys, never its style', () => {
+    const styles = { Shown: { show: true }, Hidden: { hide: true } };
+    const state = openState(filterWith({ styles, rules: [{ useStyle: 'Shown' }, { useStyle: 'Hidden' }] }));
+    const hidden = reducer(state, patchRule({ index: 0, patch: { hide: true } }));
+    expect(hidden.editor.filter?.rules[0]).toEqual({ useStyle: 'Shown', hide: true });
+    const shown = reducer(state, patchRule({ index: 1, patch: { show: true } }));
+    expect(shown.editor.filter?.rules[1]).toEqual({ useStyle: 'Hidden', show: true });
+    expect(shown.editor.filter?.styles).toBe(state.editor.filter?.styles);
   });
 });

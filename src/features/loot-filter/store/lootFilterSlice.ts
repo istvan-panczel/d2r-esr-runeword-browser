@@ -22,11 +22,13 @@ import { basedOnFromRow, sharedBasedOn } from '../utils/basedOn';
 import { createBlankFilter } from '../utils/blankFilter';
 import { newEntryId } from '../utils/ids';
 import {
+  addToPartSection,
   addToSection,
   applySectionEdit,
   stepItem,
   type CommentAccess,
   type CommentAddress,
+  type PartSection,
   type SectionEdit,
   type SectionList,
 } from '../utils/sections';
@@ -240,6 +242,50 @@ function followSelection(selected: number | null, from: readonly number[]): numb
 
 function isIndex(index: number, length: number): boolean {
   return Number.isInteger(index) && index >= 0 && index < length;
+}
+
+/**
+ * Where the main Add rule button puts a new rule (Sully's request): the section "Custom rules" of the part "Protection",
+ * created at the end of the part when missing. Protection runs before every hide rule, so the new rule shows (`show`).
+ */
+export const CUSTOM_RULES_PLACE: PartSection = {
+  part: 'Protection',
+  section: 'Custom rules',
+  description: 'Your own rules. Show keeps them from being hidden by the hide rules below.',
+};
+
+interface AddRulePayload {
+  readonly rule?: LootFilterRule;
+  readonly at?: number;
+  readonly belowComments?: boolean;
+}
+
+/** `addRule`: the rule (default: an empty one) at `at` (default: the end), selected. */
+function insertRule(state: State, payload: AddRulePayload | undefined): State {
+  return selectedNew(
+    editRules(state, (rules) => {
+      const at = payload?.at;
+      const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
+      const next = [...rules];
+      const rule = payload?.rule ?? {};
+      const below = payload?.belowComments === true ? rules.at(index) : undefined;
+      if (below?.commentsBefore === undefined) next.splice(index, 0, rule);
+      else next.splice(index, 1, withCommentsBefore(rule, below.commentsBefore), withCommentsBefore(below, undefined));
+      return { rules: next, selectedRule: index };
+    })
+  );
+}
+
+/**
+ * A rule patched: Show and Hide exclude each other (a rule with both is a validator error), so a patch that sets the
+ * rule's own `hide` to true drops its own `show`, and the other way round, unless the patch sets that key itself.
+ * Styles are not touched; a rule with neither is left as it is.
+ */
+function patchedRule(rule: LootFilterRule, patch: ShallowPatch<LootFilterRule>): LootFilterRule {
+  const patched = applyPatch(rule, patch);
+  if (patch.hide === true && patched.show === true && !Object.hasOwn(patch, 'show')) return applyPatch(patched, { show: undefined });
+  if (patch.show === true && patched.hide === true && !Object.hasOwn(patch, 'hide')) return applyPatch(patched, { hide: undefined });
+  return patched;
 }
 
 /** `value` without its empty-object form: `{}` becomes undefined so the key is dropped from the file. */
@@ -718,22 +764,22 @@ const lootFilterSlice = createSlice({
      * stay at their place, above the new rule's position only with `belowComments`: then the new rule goes right above
      * rule `at` but below its comments (a section heading among them), so it is in that rule's section.
      */
-    addRule(
-      state,
-      action: PayloadAction<{ readonly rule?: LootFilterRule; readonly at?: number; readonly belowComments?: boolean } | undefined>
-    ): State {
-      return selectedNew(
-        editRules(state, (rules) => {
-          const at = action.payload?.at;
-          const index = at === undefined || !Number.isInteger(at) ? rules.length : Math.min(Math.max(at, 0), rules.length);
-          const next = [...rules];
-          const rule = action.payload?.rule ?? {};
-          const below = action.payload?.belowComments === true ? rules.at(index) : undefined;
-          if (below?.commentsBefore === undefined) next.splice(index, 0, rule);
-          else next.splice(index, 1, withCommentsBefore(rule, below.commentsBefore), withCommentsBefore(below, undefined));
-          return { rules: next, selectedRule: index };
-        })
-      );
+    addRule(state, action: PayloadAction<AddRulePayload | undefined>): State {
+      return insertRule(state, action.payload);
+    },
+
+    /**
+     * The main Add rule button: in a filter with a "Protection" part, a new `{ show: true }` rule at the end of its
+     * "Custom rules" section, which is created at the end of the part when missing (`CUSTOM_RULES_PLACE`). Without
+     * that part, an empty rule at `at` (default: the end), as `addRule`. The new rule is selected.
+     */
+    addCustomRule(state, action: PayloadAction<{ readonly at?: number } | undefined>): State {
+      const filter = state.editor.filter;
+      if (filter === null) return state;
+      const list = { items: filter.rules, end: filter.rulesEndComments ?? [] };
+      const placed = addToPartSection(list, RULE_COMMENTS, CUSTOM_RULES_PLACE, { show: true });
+      if (placed === undefined) return insertRule(state, { at: action.payload?.at });
+      return selectedNew(editRules(state, () => ({ rules: placed.items, endComments: placed.end, selectedRule: placed.index })));
     },
 
     /**
@@ -777,13 +823,16 @@ const lootFilterSlice = createSlice({
       });
     },
 
-    /** Shallow-merges into a rule; an `undefined` value removes the key (and a same-named passthrough key). */
+    /**
+     * Shallow-merges into a rule; an `undefined` value removes the key (and a same-named passthrough key). Setting the
+     * rule's own `hide` drops its own `show` and the other way round (`patchedRule`).
+     */
     patchRule(state, action: PayloadAction<{ readonly index: number; readonly patch: ShallowPatch<LootFilterRule> }>): State {
       const { index, patch } = action.payload;
       return editRules(state, (rules) => {
         if (!isIndex(index, rules.length)) return undefined;
         const next = [...rules];
-        next[index] = applyPatch(rules[index], patch);
+        next[index] = patchedRule(rules[index], patch);
         return { rules: next };
       });
     },
@@ -1040,6 +1089,7 @@ export const {
   setNotifications,
   setQualityColors,
   addRule,
+  addCustomRule,
   addRules,
   updateRule,
   patchRule,

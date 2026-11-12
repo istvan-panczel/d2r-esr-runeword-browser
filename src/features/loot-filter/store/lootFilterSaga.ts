@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import type { PersistentStorage } from '@/core/hooks/usePersistentState';
 import { readLibrary, writeLibrary } from './libraryStorage';
 import {
+  addCustomRule,
   addRule,
   addRules,
   chooseRuleStyle,
@@ -70,6 +71,7 @@ export const isEditorMutation = isAnyOf(
   setNotifications,
   setQualityColors,
   addRule,
+  addCustomRule,
   addRules,
   updateRule,
   patchRule,

@@ -11,7 +11,7 @@ import { effectiveActions } from '../engine/actions';
 import type { Diagnostic, DiagnosticSeverity, LootFilter, LootFilterRule } from '../engine/types';
 import { useLootFilterData } from '../hooks/useLootFilterData';
 import {
-  addRule,
+  addCustomRule,
   addRuleToSection,
   duplicateRule,
   editRuleComments,
@@ -136,6 +136,14 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
     onOpenChange((now) => withOpened(now, keys));
     onReveal();
   };
+  // Stacked layout: the editor is below the list, so bring it into view (after a click on a rule or an added rule).
+  const scrollToEditor = () => {
+    if (window.matchMedia(TWO_PANE_QUERY).matches) return;
+    requestAnimationFrame(() => {
+      document.getElementById(RULE_EDITOR_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
   const sections: RuleListSectionHandlers = {
     onToggle: (row) => {
       // Folding by hand folds the selected rule away too, when it is under that heading.
@@ -155,6 +163,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
       setQuery('');
       dispatch(addRuleToSection(address));
       revealSelected();
+      scrollToEditor();
     },
     onEditNote: (row) => {
       setSectionDialog({ kind: 'note', row });
@@ -180,18 +189,15 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
 
   const handleSelect = (index: number) => {
     dispatch(selectRule(index));
-    // Stacked layout: the editor is below the list, so bring it into view.
-    if (!window.matchMedia(TWO_PANE_QUERY).matches) {
-      requestAnimationFrame(() => {
-        document.getElementById(RULE_EDITOR_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
+    scrollToEditor();
   };
 
-  const handleAdd = (rule?: LootFilterRule) => {
+  // A filter with a Protection part gets the rule in its Custom rules section, with Show (`addCustomRule`).
+  const handleAdd = () => {
     setQuery('');
-    dispatch(addRule({ rule, at: selectedRule === null ? undefined : selectedRule + 1 }));
+    dispatch(addCustomRule({ at: selectedRule === null ? undefined : selectedRule + 1 }));
     revealSelected();
+    scrollToEditor();
   };
 
   return (
@@ -282,6 +288,7 @@ export function RulesTab({ filter, selectedRule, diagnostics, open, onOpenChange
             onAdded={() => {
               setQuery('');
               revealSelected();
+              scrollToEditor();
             }}
           />
         </div>

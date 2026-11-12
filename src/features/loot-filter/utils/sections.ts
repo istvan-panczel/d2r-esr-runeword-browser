@@ -494,6 +494,55 @@ export function addToSection<T>(
   return { ...fromTokens(tokens, access), index };
 }
 
+/** A section inside a part, by title (`addToPartSection`). */
+export interface PartSection {
+  /** The part's title (a level-1 heading). */
+  readonly part: string;
+  /** The section's title (a level-2 heading inside the part). */
+  readonly section: string;
+  /** The description written under the section's heading when it is created. */
+  readonly description?: string;
+}
+
+/**
+ * Adds `item` as the last item of the section `place.section` inside the part `place.part` (the first part of that
+ * title; titles match ignoring case and the spaces around them). Without that section, the section is created at the
+ * end of the part (after its last section) with the heading and description above `item`. Blank lines and separators
+ * right above the next heading stay with it. Undefined when the list has no such part.
+ */
+export function addToPartSection<T>(
+  list: SectionList<T>,
+  access: CommentAccess<T>,
+  place: PartSection,
+  item: T
+): (SectionEditResult<T> & { readonly index: number }) | undefined {
+  const tokens = toTokens(list, access);
+  const titled = (token: Token<T>, level: HeadingLevel, title: string): boolean => {
+    if (token.kind !== 'line') return false;
+    const read = readCommentLine(token.text);
+    return read.kind === 'heading' && read.level === level && read.title.toLowerCase() === title.trim().toLowerCase();
+  };
+  const part = tokens.findIndex((token) => titled(token, 1, place.part));
+  if (part === -1) return undefined;
+  const partEnd = sectionEnd(tokens, part, 1);
+  const section = tokens.slice(part + 1, partEnd).findIndex((token) => titled(token, 2, place.section));
+  const end = section === -1 ? partEnd : sectionEnd(tokens, part + 1 + section, 2);
+  let at = end;
+  while (at > 0) {
+    const previous = tokens[at - 1];
+    const kind = previous.kind === 'line' ? readCommentLine(previous.text).kind : undefined;
+    if (kind !== 'blank' && kind !== 'separator') break;
+    at--;
+  }
+  const heading =
+    section === -1
+      ? [BLANK_COMMENT_LINE, headingLine(2, place.section), ...(place.description === undefined ? [] : noteLines(place.description))]
+      : [];
+  tokens.splice(at, 0, ...heading.map((text): Token<T> => ({ kind: 'line', text })), { kind: 'item', item, from: -1 });
+  const index = tokens.slice(0, at).filter((token) => token.kind === 'item').length;
+  return { ...fromTokens(tokens, access), index };
+}
+
 // ---------------------------------------------------------------------------
 // Rows of a list
 // ---------------------------------------------------------------------------
