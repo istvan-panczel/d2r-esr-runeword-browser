@@ -406,9 +406,10 @@ the rule numbers (`R###` in the plugin log, a rule's place in the list) stay the
       description: "Add rule puts new rules here, in Custom rules, with Show: the hide rules below can't hide them.";
     - the Add rule button's tooltip: "Adds a rule at the end of Protection › Custom rules, with Show: the hide rules
       below can't hide it.";
-    - after such an Add rule a toast: "Added to Protection › Custom rules with Show: the hide rules below can't hide
-      it.", with "Custom rules is a new section at the end of Protection." when the section was just created. No toast
-      without Protection;
+    - after such an Add rule a toast: "Added to Protection › Custom rules with Show: hide rules can't hide it.", with
+      "New section at the end of Protection." when the section was just created; kept short, and at the top centre on
+      the stacked layout (below 1024 px; the app's toaster stays bottom-right), where the new rule's editor fills the
+      screen and a bottom toast covered its items-first hint and Show all options. No toast without Protection;
     - when an edit of the open filter changes the kind (JSON Apply, a heading renamed or removed in the section dialog,
       an AI import, Replace with the latest), an info toast: "New rules now go to Protection › Custom rules,
       with Show." or "This filter has no Protection part any more: Add rule puts new rules after the selected rule,
@@ -1018,15 +1019,17 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
   then the conditions in sections (Which items, Item properties, Stats, Where and when) and an Actions card
   with `ActionsEditor owner="rule"`. Every change dispatches `patchRule`; an emptied list removes its key. A condition
   whose file value had the wrong shape (kept in `passthrough`) gets a note (the plugin most likely switches the whole
-  rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a collapsed "Advanced /
-  passthrough" block.
+  rule off, not verified; the Test tab skips it); every passthrough key is listed read-only in a **Passthrough (N)** fold after
+  the condition groups (the same `FoldSection` look; the folded summary lists the keys), open at first: such keys are
+  rare and the reason the plugin may switch the rule off.
 - **Foldable groups** (`components/FoldSection.tsx`, `utils/editorGroups.ts`, `hooks/useGroupFolds.ts`): every
   condition group (Which items, Item properties, Stats, Where and when) and every action group (Style, Visibility,
   Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a disclosure: an `h3` holding a
   `<button aria-expanded aria-controls>` over the panel (`hidden` while folded), not a `<details>`, since a screen
   reader flattens a heading inside `<summary>` into its button and heading navigation loses the groups. The header
   (at least 40 px high, the same look on both cards, ruled off above, chevron turned while open; Enter and Space
-  toggle it) shows the title and, while folded, a one-line
+  toggle it) shows the title and, while folded, a summary (up to two lines, then cut, so phones show more than a few
+  words)
   summary of what the group sets: conditions in the rule list's words (`ruleConditionSummary` of the group's keys,
   `every item` / `none` when empty), actions without colour codes (`“Pul” gold`, `yellow name`, `other.mp3, 15%`,
   `rune, 35 px`, colour swatches for the label background and border, the icon tint and the droplight; `from style
@@ -1036,7 +1039,8 @@ X` when only the style sets the group; `none`). The group → keys maps (`CONDIT
   A group is **in use** when one of its keys is set by the rule (or style) itself, sits in passthrough or carries a
   diagnostic. A group only the rule's style fills is not: it starts folded with "from style X" in its summary (the
   Style group lists the style's values), so a rule with a style stays short; overriding one of its keys opens it on
-  the next visit. Groups in use at mount start open, the others folded; a group with a
+  the next visit. Groups in use at mount start open, the others folded (a rule using no condition group, which
+  matches every item, such as one with only unknown keys or a bare hide, starts with Which items open); a group with a
   diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule and when the content is replaced in
   place, the Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
   while folded stays folded. The Label preview stays pinned at the top of the Actions card; the header bits,
@@ -1053,7 +1057,8 @@ X` when only the style sets the group; `none`). The group → keys maps (`CONDIT
   left out of the editor's problem list during the step (the validator, the list's problem chips and the JSON tab keep
   it), while "Shows every item" (a `{ "show": true }` rule above a hide, see the validator's warnings) stays in it,
   since that is what the step is about; the other condition groups, the "more in Advanced" line and the Actions card are
-  left out (on @10xl pages a dashed note keeps the actions' column). The first patch that sets a condition
+  left out (on @10xl pages a dashed note keeps the actions' column), and so is the Check in game hint under the
+  title (its "checks no stats" reason is noise there; the button stays, disabled). The first patch that sets a condition
   (`setsCondition`), or Show all options (focus moves to Item properties' header), shows every group for the rest of
   the mount, even if the items are cleared again. A disabled blank rule starts the same way.
 - **Basic / Advanced view** (`utils/ruleView.ts`, the segmented toggle `ViewToggle` in `components/rules/ViewToggle.tsx`

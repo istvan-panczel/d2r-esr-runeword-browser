@@ -44,7 +44,7 @@ function Summary({ summary }: { readonly summary: string | readonly SummaryPart[
  * (`aria-expanded`, `aria-controls` the panel), so screen readers keep the heading and announce a button (a heading
  * inside a `<summary>` is flattened into the summary's button). The open state is held by the caller
  * (`hooks/useGroupFolds.ts`). While folded, a one-line summary of what the group sets follows the title, inside the
- * button, so it is read with its name. At least 40 px high, for fingers.
+ * button, so it is read with its name (up to two lines, then cut). At least 40 px high, for fingers.
  */
 export function FoldSection({ id, title, summary, open, onOpenChange, variant, className, children }: FoldSectionProps) {
   const action = variant === 'action';
@@ -74,7 +74,8 @@ export function FoldSection({ id, title, summary, open, onOpenChange, variant, c
           />
           <span className="shrink-0">{title}</span>
           {!open && (
-            <span className="min-w-0 truncate text-xs font-normal text-muted-foreground">
+            // Up to two lines: a phone's narrow header would cut most summaries after a few words.
+            <span className="line-clamp-2 min-w-0 py-1 text-xs font-normal text-muted-foreground">
               <span className="sr-only">: </span>
               <Summary summary={summary} />
             </span>
