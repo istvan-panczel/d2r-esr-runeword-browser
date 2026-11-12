@@ -164,11 +164,13 @@ export function actionGroupUsage({ actions, style, diagnostics = [], owner }: Ac
 
 /**
  * A blank rule starts with "Which items" only: no condition key, nothing in passthrough (unknown or wrong-shaped keys
- * of a third-party file) and no diagnostic. Its actions may be the new rule's `{ show: true }` or a comment; any other
+ * of a third-party file) and no diagnostic on one of its keys. Its actions may be the new rule's `{ show: true }` or a comment; any other
  * action (a hide, a style, a label…) means the rule already does something, so every group shows.
  */
 export function isBlankRule(rule: LootFilterRule, diagnostics: readonly Diagnostic[] = []): boolean {
-  if (diagnostics.length > 0) return false;
+  // A problem with one of its keys skips the step; one about the whole rule ("neither conditions nor actions", which
+  // every new `{}` rule gets) does not.
+  if (diagnosticKeys(diagnostics).size > 0) return false;
   if (Object.keys(rule.passthrough ?? {}).length > 0) return false;
   if (CONDITION_KEYS.some((key) => rule[key] !== undefined)) return false;
   return ACTION_KEYS.every((key) => key === 'show' || key === 'comment' || rule[key] === undefined);

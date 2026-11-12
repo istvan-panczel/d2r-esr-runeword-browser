@@ -50,7 +50,7 @@ export function FoldSection({ id, title, summary, open, onOpenChange, variant, c
     <details
       id={id}
       className={cn(
-        'group min-w-0',
+        'group/fold min-w-0',
         action && 'border-t pt-1 first:border-t-0 first:pt-0 @8xl/page:rounded-lg @8xl/page:border @8xl/page:px-4 @8xl/page:py-1'
       )}
       open={open}
@@ -64,7 +64,7 @@ export function FoldSection({ id, title, summary, open, onOpenChange, variant, c
           !action && 'border-b'
         )}
       >
-        <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" aria-hidden />
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open/fold:rotate-90" aria-hidden />
         <h3
           className={cn(
             'shrink-0',
@@ -73,7 +73,7 @@ export function FoldSection({ id, title, summary, open, onOpenChange, variant, c
         >
           {title}
         </h3>
-        <span className="min-w-0 truncate text-xs text-muted-foreground group-open:hidden">
+        <span className="min-w-0 truncate text-xs text-muted-foreground group-open/fold:hidden">
           <span className="sr-only">: </span>
           <Summary summary={summary} />
         </span>

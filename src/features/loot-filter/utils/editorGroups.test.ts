@@ -100,7 +100,12 @@ describe('isBlankRule (items-first start)', () => {
   it('skips the items-first step for a third-party rule with unknown or wrong-shaped keys, or with a diagnostic', () => {
     expect(isBlankRule({ passthrough: { minLevel: 5 } })).toBe(false);
     expect(isBlankRule({ passthrough: { itemCodes: 'r33' } })).toBe(false);
-    expect(isBlankRule({}, [warning('rules/0')])).toBe(false);
+    expect(isBlankRule({}, [warning('rules/0/sound')])).toBe(false);
+  });
+
+  it('stays blank with the whole-rule warning every new {} rule gets', () => {
+    expect(isBlankRule({}, [{ ...warning('rules/4'), message: 'The rule has neither conditions nor actions', rule: 4 }])).toBe(true);
+    expect(isBlankRule({ disabled: true }, [warning('disabledRules/0/rule')])).toBe(true);
   });
 
   it('reads an uploaded rule with only unknown keys as not blank', () => {
