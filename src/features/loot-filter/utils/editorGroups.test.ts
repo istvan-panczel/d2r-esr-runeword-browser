@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readLootFilter } from '../engine/parse';
+import { EMPTY_RULE_MESSAGE } from '../engine/validate';
 import type { Diagnostic, LootFilterRule, LootFilterStyle, RuleActions, RuleConditions } from '../engine/types';
 import { createBlankFilter } from './blankFilter';
 import {
@@ -54,13 +55,18 @@ describe('conditionGroupUsage', () => {
 });
 
 describe('actionGroupUsage', () => {
-  const style: RuleActions = { sound: 'other.mp3', icon: { iconName: 'rune' } };
-
-  it("counts a rule's own keys, its style's keys, passthrough and diagnostics", () => {
+  it("counts a rule's own keys, passthrough and diagnostics", () => {
     const rule: LootFilterRule = { itemCodes: ['r33'], useStyle: 'MidRune', replaceName: 'ÿc4Pul', passthrough: { droplight: 3 } };
-    const usage = actionGroupUsage({ actions: rule, style, diagnostics: [warning('rules/2/chatMessage')], owner: 'rule' });
-    expect([...usage.inUse].sort()).toEqual(['chat', 'droplight', 'icon', 'name', 'sound', 'style']);
+    const usage = actionGroupUsage({ actions: rule, diagnostics: [warning('rules/2/chatMessage')], owner: 'rule' });
+    expect([...usage.inUse].sort()).toEqual(['chat', 'droplight', 'name', 'style']);
     expect([...usage.flagged]).toEqual(['chat']);
+  });
+
+  it('leaves the groups only the style fills folded, and opens the ones the rule overrides', () => {
+    // Sully's R259 with MidRune (sound, volume, label, icon, droplight): only Style is the rule's own.
+    expect([...actionGroupUsage({ actions: { itemCodes: ['r71'], useStyle: 'MidRune' }, owner: 'rule' }).inUse]).toEqual(['style']);
+    const overrides: LootFilterRule = { useStyle: 'MidRune', soundVolume: 50 };
+    expect([...actionGroupUsage({ actions: overrides, owner: 'rule' }).inUse].sort()).toEqual(['sound', 'style']);
   });
 
   it("leaves a rule's comment out (it is edited above the conditions) and a style's in, under Notes", () => {
@@ -104,7 +110,7 @@ describe('isBlankRule (items-first start)', () => {
   });
 
   it('stays blank with the whole-rule warning every new {} rule gets', () => {
-    expect(isBlankRule({}, [{ ...warning('rules/4'), message: 'The rule has neither conditions nor actions', rule: 4 }])).toBe(true);
+    expect(isBlankRule({}, [{ ...warning('rules/4'), message: EMPTY_RULE_MESSAGE, rule: 4 }])).toBe(true);
     expect(isBlankRule({ disabled: true }, [warning('disabledRules/0/rule')])).toBe(true);
   });
 

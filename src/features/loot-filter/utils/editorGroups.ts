@@ -139,27 +139,21 @@ export function conditionGroupUsage(rule: LootFilterRule, diagnostics: readonly 
 interface ActionUsageInput {
   /** The rule or style whose actions are edited (its `passthrough` holds wrong-shaped values). */
   readonly actions: LootFilterRule | LootFilterStyle;
-  /** A rule's style (`findStyle`): a key it sets puts its group in use (its value shows in the field). */
-  readonly style?: RuleActions;
   /** The rule's or style's own diagnostics. */
   readonly diagnostics?: readonly Diagnostic[];
   /** `style`: the Styles tab, whose comment is a Notes field; a rule's comment is not an action group. */
   readonly owner: 'rule' | 'style';
 }
 
-/** The action groups a rule or style uses: its own keys, its style's, wrong-shaped values and diagnostics. */
-export function actionGroupUsage({ actions, style, diagnostics = [], owner }: ActionUsageInput): GroupUsage<ActionGroup> {
+/**
+ * The action groups a rule or style sets itself: its own keys, wrong-shaped values and diagnostics. A group only the
+ * rule's style fills is not in use, so it starts folded (its summary says "from style X"; the Style group lists the
+ * style's values): a rule with a style stays short.
+ */
+export function actionGroupUsage({ actions, diagnostics = [], owner }: ActionUsageInput): GroupUsage<ActionGroup> {
   const passthrough = actions.passthrough ?? {};
   const keys = owner === 'rule' ? ACTION_KEYS.filter((key) => key !== 'comment') : ACTION_KEYS.filter((key) => key !== 'useStyle');
-  return usage(
-    keys,
-    ACTION_GROUP_OF,
-    (key) =>
-      ownValue(actions, key) !== undefined ||
-      key in passthrough ||
-      (owner === 'rule' && key !== 'useStyle' && style !== undefined && ownValue(style, key) !== undefined),
-    diagnosticKeys(diagnostics)
-  );
+  return usage(keys, ACTION_GROUP_OF, (key) => ownValue(actions, key) !== undefined || key in passthrough, diagnosticKeys(diagnostics));
 }
 
 /**

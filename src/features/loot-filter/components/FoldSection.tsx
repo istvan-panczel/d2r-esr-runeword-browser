@@ -50,35 +50,23 @@ export function FoldSection({ id, title, summary, open, onOpenChange, variant, c
     <details
       id={id}
       className={cn(
-        'group/fold min-w-0',
-        action && 'border-t pt-1 first:border-t-0 first:pt-0 @8xl/page:rounded-lg @8xl/page:border @8xl/page:px-4 @8xl/page:py-1'
+        'group/fold min-w-0 border-t pt-1',
+        action && 'first:border-t-0 first:pt-0 @8xl/page:rounded-lg @8xl/page:border @8xl/page:px-4 @8xl/page:py-1'
       )}
       open={open}
       onToggle={(event) => {
         onOpenChange(event.currentTarget.open);
       }}
     >
-      <summary
-        className={cn(
-          'flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden',
-          !action && 'border-b'
-        )}
-      >
+      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-open/fold:rotate-90" aria-hidden />
-        <h3
-          className={cn(
-            'shrink-0',
-            action ? 'text-sm font-semibold' : 'text-xs font-semibold tracking-wide text-muted-foreground uppercase'
-          )}
-        >
-          {title}
-        </h3>
+        <h3 className="shrink-0 text-sm font-semibold">{title}</h3>
         <span className="min-w-0 truncate text-xs text-muted-foreground group-open/fold:hidden">
           <span className="sr-only">: </span>
           <Summary summary={summary} />
         </span>
       </summary>
-      <div className={cn(action ? 'flex flex-col gap-3 pt-1 pb-3' : 'grid gap-4 pt-3 sm:grid-cols-2', className)}>{children}</div>
+      <div className={cn(action ? 'flex flex-col gap-3 pt-1 pb-3' : 'grid gap-4 pt-1 pb-3 sm:grid-cols-2', className)}>{children}</div>
     </details>
   );
 }

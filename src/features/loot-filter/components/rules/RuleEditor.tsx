@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { effectiveActions, findStyle } from '../../engine/actions';
 import { ACTION_KEYS } from '../../engine/parse';
+import { EMPTY_RULE_MESSAGE } from '../../engine/validate';
 import type { Diagnostic, LootFilter, LootFilterRule, RuleActions, StatCheck } from '../../engine/types';
 import { useGroupFolds } from '../../hooks/useGroupFolds';
 import type { LootFilterData } from '../../hooks/useLootFilterData';
@@ -460,32 +461,41 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
             </div>
           </div>
 
-          <RuleDiagnostics diagnostics={diagnostics} />
+          {/* A new rule's "neither conditions nor actions" is what the items-first step is about: not shown there. */}
+          <RuleDiagnostics
+            diagnostics={itemsFirst ? diagnostics.filter((diagnostic) => diagnostic.message !== EMPTY_RULE_MESSAGE) : diagnostics}
+          />
 
           <HowRulesCombine />
 
           {itemListFields.length > 0 && <FoldSection {...fold('items')}>{itemListFields.map(listField)}</FoldSection>}
 
           {itemsFirst && (
-            <p id={ITEMS_FIRST_HINT_ID} className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-              <span>Pick the items this rule is for; the rest of the rule appears next.</span>
-              <Button
-                type="button"
-                variant="link"
-                className="h-10 px-0"
-                aria-describedby={ITEMS_FIRST_HINT_ID}
-                onClick={() => {
-                  setRevealed(true);
-                  // The button goes away: the focus moves to the next group's header.
-                  requestAnimationFrame(() => {
-                    document.getElementById(groupId('properties'))?.querySelector<HTMLElement>(':scope > summary')?.focus();
-                  });
-                }}
-              >
-                Show all options
-              </Button>
-              <span className="text-xs">(for a rule by quality, stats or area instead of items)</span>
-            </p>
+            <div className="flex flex-col items-start gap-2">
+              <p id={ITEMS_FIRST_HINT_ID} className="text-sm text-muted-foreground">
+                Pick the items this rule is for; the rest of the rule appears next.
+              </p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  // At least 40 px high on phones.
+                  className="max-sm:h-10"
+                  aria-describedby={ITEMS_FIRST_HINT_ID}
+                  onClick={() => {
+                    setRevealed(true);
+                    // The button goes away: the focus moves to the next group's header.
+                    requestAnimationFrame(() => {
+                      document.getElementById(groupId('properties'))?.querySelector<HTMLElement>(':scope > summary')?.focus();
+                    });
+                  }}
+                >
+                  Show all options
+                </Button>
+                <span className="text-xs text-muted-foreground">for a rule by quality, stats or area instead of items</span>
+              </div>
+            </div>
           )}
 
           {!itemsFirst && (
@@ -693,7 +703,7 @@ export function RuleEditor({ filter, index, rule, diagnostics, data, onRuleAdded
               filter={filter}
               owner="rule"
               gate={gate}
-              usage={actionGroupUsage({ actions: rule, style, diagnostics, owner: 'rule' })}
+              usage={actionGroupUsage({ actions: rule, diagnostics, owner: 'rule' })}
             />
             <MoreInAdvanced count={gate.hiddenActions} noun="action" toggleId={VIEW_TOGGLE_ID} />
           </CardContent>

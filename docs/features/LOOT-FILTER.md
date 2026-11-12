@@ -973,14 +973,16 @@ Mythical`: items/types/uniques by name when the bundles are in, codes otherwise,
 - **Foldable groups** (`components/FoldSection.tsx`, `utils/editorGroups.ts`, `hooks/useGroupFolds.ts`): every
   condition group (Which items, Item properties, Stats, Where and when) and every action group (Style, Visibility,
   Name, Label, Chat, Sound, Minimap icon, Droplight; Notes on the Styles tab) is a native `<details>` whose header
-  (the `summary`, at least 40 px high, the heading keeping its level) shows the title and, while folded, a one-line
+  (the `summary`, at least 40 px high, an `h3` in the same look on both cards, ruled off above) shows the title and, while folded, a one-line
   summary of what the group sets: conditions in the rule list's words (`ruleConditionSummary` of the group's keys,
   `every item` / `none` when empty), actions without colour codes (`“Pul” gold`, `yellow name`, `other.mp3, 15%`,
   `rune, 35 px`, colour swatches for the label background and border, the icon tint and the droplight; `from style
 X` when only the style sets the group; `none`). The group → keys maps (`CONDITION_GROUP_OF`, `ACTION_GROUP_OF`,
   checked against `BASIC_CONDITIONS` / `BASIC_ACTIONS` by `satisfies`) and the in-use checks are pure and tested.
-  A group is **in use** when one of its keys is set by the rule itself, by its style (actions; `findStyle`), sits in
-  passthrough or carries a diagnostic. Groups in use at mount start open, the others folded; a group with a
+  A group is **in use** when one of its keys is set by the rule (or style) itself, sits in passthrough or carries a
+  diagnostic. A group only the rule's style fills is not: it starts folded with "from style X" in its summary (the
+  Style group lists the style's values), so a rule with a style stays short; overriding one of its keys opens it on
+  the next visit. Groups in use at mount start open, the others folded; a group with a
   diagnostic is open until folded. The fold state is local to the editor mount (the editor remounts per rule, the
   Styles tab's per style): the user opens and folds groups, editing never folds one and a group that comes into use
   while folded stays folded. The Label preview stays pinned at the top of the Actions card; the header bits,
@@ -990,9 +992,11 @@ X` when only the style sets the group; `none`). The group → keys maps (`CONDIT
 - **Items first** for a blank rule (`isBlankRule`): no condition key, nothing in passthrough (unknown or wrong-shaped
   keys of a third-party file) and no diagnostic on one of its keys (the whole-rule "neither conditions nor actions"
   warning of a new `{}` rule does not count); its actions may be `show: true` (the Protection section's new rules) or
-  a comment, any other action means it already does something. Such a rule shows only Which items (open), a hint
-  ("Pick the items this rule is for; the rest of the rule appears next.") and a **Show all options** link-button for
-  a rule by quality, stats or area; the other condition groups, the "more in Advanced" line and the Actions card are
+  a comment, any other action means it already does something. Such a rule shows only Which items (open), under it a hint
+  ("Pick the items this rule is for; the rest of the rule appears next.") and a **Show all options** button (outline,
+  small) for a rule by quality, stats or area; the "neither conditions nor actions" warning (`EMPTY_RULE_MESSAGE`) is
+  left out of the editor's problem list during the step (the validator, the list's problem chips and the JSON tab keep
+  it); the other condition groups, the "more in Advanced" line and the Actions card are
   left out (on @10xl pages a dashed note keeps the actions' column). The first patch that sets a condition
   (`setsCondition`), or Show all options (focus moves to Item properties' header), shows every group for the rest of
   the mount, even if the items are cleared again. A disabled blank rule starts the same way.

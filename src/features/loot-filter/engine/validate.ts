@@ -692,6 +692,9 @@ function hidesEveryGroundItem(rule: LootFilterRule, filter: LootFilter): boolean
   return CONDITION_KEYS.every((key) => key === 'location' || rule[key] === undefined);
 }
 
+/** The warning of a rule with neither conditions nor actions (every new `{}` rule; the editor's items-first step hides it). */
+export const EMPTY_RULE_MESSAGE = 'The rule has neither conditions nor actions';
+
 function checkRule(
   report: Report,
   rule: LootFilterRule,
@@ -701,7 +704,7 @@ function checkRule(
 ): void {
   const hasConditions = CONDITION_KEYS.some((key) => rule[key] !== undefined);
   const hasEffects = EFFECT_KEYS.some((key) => rule[key] !== undefined);
-  if (!hasConditions && !hasEffects) report('warning', '', 'The rule has neither conditions nor actions');
+  if (!hasConditions && !hasEffects) report('warning', '', EMPTY_RULE_MESSAGE);
   else if (!hasEffects) report('warning', '', 'The rule has conditions but no actions, so it does nothing');
 
   if (rule.useStyle !== undefined && (filter.styles === undefined || !Object.hasOwn(filter.styles, rule.useStyle))) {
