@@ -63,12 +63,10 @@ describe('addedRuleToast', () => {
   it('says where the rule went, and that the section is new when it was created', () => {
     const part = { at: 0, line: 0 };
     expect(addedRuleToast({ kind: 'custom', section: 'existing', part })).toEqual({
-      message: "Added to Protection › Custom rules with Show: the hide rules below can't hide it.",
+      message: "Added to Protection › Custom rules with Show: hide rules can't hide it.",
       description: undefined,
     });
-    expect(addedRuleToast({ kind: 'custom', section: 'created', part })?.description).toBe(
-      'Custom rules is a new section at the end of Protection.'
-    );
+    expect(addedRuleToast({ kind: 'custom', section: 'created', part })?.description).toBe('New section at the end of Protection.');
   });
 
   it('says nothing without Protection', () => {

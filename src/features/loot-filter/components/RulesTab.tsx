@@ -230,7 +230,9 @@ export function RulesTab({
     revealSelected();
     scrollToEditor();
     const added = addedRuleToast(addTarget);
-    if (added !== undefined) toast.success(added.message, { description: added.description });
+    // On the stacked layout the new rule's editor fills the screen, its items-first step low down: the toast goes to the top.
+    const stacked = !window.matchMedia(TWO_PANE_QUERY).matches;
+    if (added !== undefined) toast.success(added.message, { description: added.description, position: stacked ? 'top-center' : undefined });
   };
 
   return (

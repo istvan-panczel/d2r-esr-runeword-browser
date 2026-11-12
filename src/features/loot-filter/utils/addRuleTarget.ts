@@ -51,13 +51,15 @@ export const CUSTOM_RULES_BADGE_DESCRIPTION = `Add rule puts new rules here, in 
 /** The main Add rule button's tooltip when the target is custom. */
 export const ADD_CUSTOM_RULE_TITLE = `Adds a rule at the end of ${PLACE}, with Show: the hide rules below can't hide it.`;
 
-/** The toast after an Add rule that landed in Protection (`target` as it was before the add); none otherwise. */
+/**
+ * The toast after an Add rule that landed in Protection (`target` as it was before the add); none otherwise. Short: on
+ * a phone it sits over the new rule's editor.
+ */
 export function addedRuleToast(target: AddRuleTarget): { readonly message: string; readonly description?: string } | undefined {
   if (target.kind !== 'custom') return undefined;
   return {
-    message: `Added to ${PLACE} with Show: the hide rules below can't hide it.`,
-    description:
-      target.section === 'created' ? `${CUSTOM_RULES_PLACE.section} is a new section at the end of ${CUSTOM_RULES_PLACE.part}.` : undefined,
+    message: `Added to ${PLACE} with Show: hide rules can't hide it.`,
+    description: target.section === 'created' ? `New section at the end of ${CUSTOM_RULES_PLACE.part}.` : undefined,
   };
 }
 
