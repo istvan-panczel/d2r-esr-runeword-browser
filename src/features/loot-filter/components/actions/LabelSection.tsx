@@ -7,7 +7,6 @@ import type { ShallowPatch } from '../../utils/patch';
 import { Field } from '../Field';
 import { NumberInput } from '../NumberInput';
 import { ColorControl } from './ColorControl';
-import { Section } from './Section';
 
 /** One of the two label keys as the section shows it. */
 interface LabelValue<T> {
@@ -27,7 +26,7 @@ interface LabelSectionProps {
   readonly onChange: (patch: ShallowPatch<RuleActions>) => void;
 }
 
-/** The ground label's background colour and border (colour and width). */
+/** The Label group's fields: the ground label's background colour and border (colour and width). */
 export function LabelSection({ idPrefix, background, border, onChange }: LabelSectionProps) {
   const backgroundId = `${idPrefix}-label-background`;
   const borderId = `${idPrefix}-label-border`;
@@ -35,90 +34,88 @@ export function LabelSection({ idPrefix, background, border, onChange }: LabelSe
   const shownBorder = border.value;
 
   return (
-    <Section title="Label">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field
+        id={backgroundId}
+        label="Background"
+        badge={background.badge}
+        hint={`Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`}
+      >
+        <ColorControl
           id={backgroundId}
-          label="Background"
-          badge={background.badge}
-          hint={`Fills the ground label; alpha defaults to ${String(DEFAULT_LABEL_BACKGROUND_ALPHA)}.`}
-        >
-          <ColorControl
-            id={backgroundId}
-            label="label background"
-            value={background.value}
-            withAlpha
-            clearable={background.fromStyle !== true}
-            defaultAlpha={DEFAULT_LABEL_BACKGROUND_ALPHA}
-            initialColor={[0, 0, 0]}
-            onChange={(labelBackground) => {
-              onChange({ labelBackground });
-            }}
-          />
-        </Field>
-        <Field id={borderId} label="Border" badge={border.badge} hint="Outlines the ground label.">
-          {shownBorder === undefined ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">none</span>
-              <Button
+          label="label background"
+          value={background.value}
+          withAlpha
+          clearable={background.fromStyle !== true}
+          defaultAlpha={DEFAULT_LABEL_BACKGROUND_ALPHA}
+          initialColor={[0, 0, 0]}
+          onChange={(labelBackground) => {
+            onChange({ labelBackground });
+          }}
+        />
+      </Field>
+      <Field id={borderId} label="Border" badge={border.badge} hint="Outlines the ground label.">
+        {shownBorder === undefined ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">none</span>
+            <Button
+              id={borderId}
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onChange({ labelBorder: { color: [255, 255, 255], width: 1 } });
+              }}
+            >
+              <Plus />
+              Add border
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start gap-2">
+              <ColorControl
                 id={borderId}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onChange({ labelBorder: { color: [255, 255, 255], width: 1 } });
+                label="border colour"
+                value={shownBorder.color}
+                withAlpha
+                clearable={false}
+                onChange={(color) => {
+                  if (color) onChange({ labelBorder: { ...shownBorder, color } });
                 }}
-              >
-                <Plus />
-                Add border
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-start gap-2">
-                <ColorControl
-                  id={borderId}
-                  label="border colour"
-                  value={shownBorder.color}
-                  withAlpha
-                  clearable={false}
-                  onChange={(color) => {
-                    if (color) onChange({ labelBorder: { ...shownBorder, color } });
+              />
+              {border.fromStyle !== true && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Remove the border"
+                  onClick={() => {
+                    onChange({ labelBorder: undefined });
                   }}
-                />
-                {border.fromStyle !== true && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Remove the border"
-                    onClick={() => {
-                      onChange({ labelBorder: undefined });
-                    }}
-                  >
-                    <X />
-                  </Button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor={widthId} className="text-xs font-normal text-muted-foreground">
-                  Width
-                </Label>
-                <NumberInput
-                  id={widthId}
-                  className="w-20"
-                  integer
-                  value={shownBorder.width}
-                  onCommit={(width) => {
-                    // The plugin takes a whole number from 1 to 8; emptying the field keeps the current width
-                    if (width !== undefined) onChange({ labelBorder: { ...shownBorder, width: Math.min(8, Math.max(1, width)) } });
-                  }}
-                />
-              </div>
+                >
+                  <X />
+                </Button>
+              )}
             </div>
-          )}
-        </Field>
-      </div>
-    </Section>
+            <div className="flex items-center gap-2">
+              <Label htmlFor={widthId} className="text-xs font-normal text-muted-foreground">
+                Width
+              </Label>
+              <NumberInput
+                id={widthId}
+                className="w-20"
+                integer
+                value={shownBorder.width}
+                onCommit={(width) => {
+                  // The plugin takes a whole number from 1 to 8; emptying the field keeps the current width
+                  if (width !== undefined) onChange({ labelBorder: { ...shownBorder, width: Math.min(8, Math.max(1, width)) } });
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </Field>
+    </div>
   );
 }
