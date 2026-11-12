@@ -60,10 +60,8 @@ describe('parseLootFilter on Sully’s filter', () => {
     expect(filter.leadingComments[3]).toMatch(/^\/\/ volume can be adjusted/);
     // v0.7.0 names its levels in 11 languages, v0.9.0 in 13.
     expect(filter.filterLevels?.[0]?.name).toMatchObject({ enUS: 'Leveling', deDE: 'Leveln', jaJP: 'レベリング', ptBR: 'Nivelamento' });
-    // Every rule is titled "R### | what it does | action", numbered by its place in the list.
-    expect(filter.rules.filter((rule, index) => rule.comment?.startsWith(`R${String(index + 1).padStart(3, '0')} | `) !== true)).toEqual(
-      []
-    );
+    // Every rule keeps its "comment" title (Sully's "R### | what | action"; the number is his, not something the app relies on).
+    expect(filter.rules.filter((rule) => typeof rule.comment !== 'string' || rule.comment.trim() === '')).toEqual([]);
     expect(filter.rules.at(-1)).toMatchObject({
       comment: 'R689 | Decal 22l label: Um | name',
       itemCodes: ['22l'],

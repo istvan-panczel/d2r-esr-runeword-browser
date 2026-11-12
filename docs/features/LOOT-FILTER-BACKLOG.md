@@ -21,7 +21,7 @@ condition ("empty list: the game logs 'the list is empty'…", done) and the UI 
 ### A single-number level (`"activeInLevels": 4` in Sully's template)
 
 Open question: **with Sully's template v0.9.2, are Ancient Scrolls (`01b`–`50b`) still shown at filter levels 1 to
-3?** Rule 77 ("R078", rule 98 up to v0.7.0) hides them with `"activeInLevels": 4` instead of `[4]`. Verified in game: the rule works (the scrolls are
+3?** Rule 78 ("R078"; rule 99 up to v0.7.0) hides them with `"activeInLevels": 4` instead of `[4]`. Verified in game: the rule works (the scrolls are
 hidden at level 4), so the editor now reads a single number as a one-level list with a warning ("A single
 number works in game; [4] is the documented form.") and the Test tab hides them at level 4 only. What is left: if the
 plugin read `4` as `[4]`, the scrolls show (gong highlight) at levels 1 to 3; if they are hidden there too, the plugin
