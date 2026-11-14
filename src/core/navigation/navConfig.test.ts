@@ -72,7 +72,7 @@ describe('navConfig', () => {
     const summary = NAV_ENTRIES.map((e) => (e.kind === 'group' ? [e.label, e.items.map((i) => i.label)] : e.item.label));
     expect(summary).toEqual([
       ['Recipes', ['Runewords', 'Gemwords', 'Socketables', 'Best Base', 'Cube Recipes', 'Enhance', 'Materials']],
-      ['Items', ['Uniques', 'Mythicals', 'Sets', 'Bases', 'Item Types', 'Affixes', 'Modifiers', 'Elixirs']],
+      ['Items', ['Uniques', 'Mythicals', 'Sets', 'Bases', 'Item Types', 'Affixes', 'Modifiers', 'Elixirs', 'Patch Notes']],
       ['Character', ['Skills', 'Ascendancies', 'Specializations', 'Weapon Masteries', 'Mercenaries', 'Kill Ledger']],
       ['Areas', ['Campaign Map', 'Area Levels', 'Terror Zones']],
       ['My Data', ['My Character', 'Stash Overview', 'Ancient Coupons', 'All Items']],

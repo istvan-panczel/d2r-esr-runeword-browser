@@ -43,6 +43,7 @@ npm run loot-filter:icons -- --check  # Exit 1 if a generated icon is stale, mis
 npm run loot-filter:template  # Refresh the bundled fallback copy of Sully's QoL filter from his GitHub (validates it, reports new icons/sounds to bundle; the app itself loads his latest file live); -- --check exits 1 if upstream differs
 npm run game-data:check     # Exit 1 if the committed bundles, modifierRefs.json, item icons or skill icons are stale (without ../d2r-vanilla-art: vanilla-derived icons skipped with a warning)
 npm run game-data:update    # After an ESR release: clone/pull ESR, generate, fetch fixtures, check, guide, full test suite
+npm run patch-notes:generate  # public/patch-notes/: ESR patch notes + our reports copied from owner-notes/ (also run by game-data:generate; --check)
 npm run esr:diff            # What changed in ESR since the committed game data (patch notes, tables, strings, docs, launcher, loot filters); --json, --from/--to <rev>, --out
 npm run esr:review          # Read-only review of a regenerated update vs HEAD, the clone and the live sites; --out x.md, --offline
 npm run esr:user-data       # Read-only scan of PROD's public builds/favourites/loot filters against the current data

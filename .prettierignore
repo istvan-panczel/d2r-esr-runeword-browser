@@ -3,6 +3,8 @@
 # Generated bundles: game-data:check and guide:check compare them with a fresh build byte for byte
 public/game-data/
 public/guide/
+# The Patch Notes page's data: index.json (game-data:check compares it) and our reports, published byte for byte
+public/patch-notes/
 # The modifier peek's data (modifiers:refs --check and modifierRefs.test.ts compare it with a fresh build)
 src/features/modifiers/data/
 

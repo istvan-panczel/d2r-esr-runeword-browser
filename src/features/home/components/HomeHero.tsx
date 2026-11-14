@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom';
 import { useDocsDataLine } from '@/core/hooks/useDocsDataLine';
 import { useManifest } from '@/features/game-data/hooks/useManifest';
+import { releasePath } from '@/features/patch-notes/utils/patchNotesView';
 import { HomeSearch } from './HomeSearch';
 
-/** Pitch header: title, one-line pitch, the data versions, and the cross-section search. */
+/** Pitch header: title, one-line pitch, the data versions (with the game files' patch notes), and the cross-section search. */
 export function HomeHero() {
   const manifest = useManifest();
   const docs = useDocsDataLine();
@@ -18,7 +20,17 @@ export function HomeHero() {
           Browse Eastern Sun Resurrected data, plan builds and build loot filters.
         </p>
         {/* Fixed height so the line appearing after the manifest/sync loads does not shift the search below. */}
-        <p className="min-h-4 text-xs text-muted-foreground">{versions.join(' · ')}</p>
+        <p className="min-h-4 text-xs text-muted-foreground">
+          {versions.join(' · ')}
+          {manifest !== null && (
+            <>
+              {' · '}
+              <Link to={releasePath(manifest.esrVersion)} className="underline underline-offset-2 hover:text-foreground">
+                What changed in {manifest.esrVersion}
+              </Link>
+            </>
+          )}
+        </p>
       </div>
       <HomeSearch />
     </section>

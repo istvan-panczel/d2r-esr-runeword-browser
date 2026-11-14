@@ -79,6 +79,11 @@ const MercenariesScreen = lazy(async () => {
   return { default: module.MercenariesScreen };
 });
 
+const PatchNotesScreen = lazy(async () => {
+  const module = await import('@/features/patch-notes');
+  return { default: module.PatchNotesScreen };
+});
+
 const KillLedgerScreen = lazy(async () => {
   const module = await import('@/features/kill-ledger');
   return { default: module.KillLedgerScreen };
@@ -282,6 +287,8 @@ export const router = createBrowserRouter(
         { path: 'weapon-masteries', element: routeElement(WeaponMasteriesScreen) },
         { path: 'mercenaries', element: routeElement(MercenariesScreen) },
         { path: 'kill-ledger', element: routeElement(KillLedgerScreen) },
+        { path: 'patch-notes', element: routeElement(PatchNotesScreen) },
+        { path: 'patch-notes/:version', element: routeElement(PatchNotesScreen) },
         { path: 'elixirs', element: routeElement(ElixirsScreen) },
         { path: 'campaign-map', element: routeElement(CampaignMapScreen) },
         { path: 'terror-zones', element: routeElement(TerrorZonesScreen) },

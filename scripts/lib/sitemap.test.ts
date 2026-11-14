@@ -11,6 +11,7 @@ describe('buildSitemap', () => {
     expect(paths.slice(0, 4)).toEqual(['/', '/guide', '/guide/glossary', '/guide/start-here']);
     expect(paths).not.toContain('/guide/map');
     expect(paths).toContain('/runewords');
+    expect(paths).toContain('/patch-notes');
     expect(paths).toContain('/loot-filters');
     expect(paths).toContain('/bases');
   });

@@ -23,6 +23,7 @@ const ROUTES_BEFORE_NOTES: readonly SitemapEntry[] = [
 const NOTE_ENTRY: Omit<SitemapEntry, 'path'> = { changefreq: 'weekly', priority: '0.7' };
 
 const ROUTES_AFTER_NOTES: readonly SitemapEntry[] = [
+  { path: 'patch-notes', changefreq: 'weekly', priority: '0.8' },
   { path: 'runewords', changefreq: 'weekly', priority: '0.9' },
   { path: 'gemwords', changefreq: 'weekly', priority: '0.9' },
   { path: 'socketables', changefreq: 'weekly', priority: '0.8' },
