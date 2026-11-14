@@ -135,6 +135,11 @@ commit; follow reference.md "Patch-note check".
 3. `npm run esr:changelog -- --in "$S/changelog-check.json" --diff "$S/diff.json" --out owner-notes/esr-<new>-changelog-check.pdf`
    (refuses a file with a line left out; also writes the `.html`). `owner-notes/` is gitignored. Look at the result
    before reporting it.
+4. Publish it on the Patch Notes page: `npm run patch-notes:generate` copies `owner-notes/esr-<new>-changelog-check.*`
+   (and an `ESR-<new>-unique-runeword-changes.html/.pdf` item report, when one was made) to `public/patch-notes/reports/`
+   and lists them under `/patch-notes/<new>` (docs/features/PATCH-NOTES.md). Read the HTML for anything that should not
+   be public (personal names, questions for the mod author) first; commit `public/patch-notes/` with the update when
+   question 1 said to commit, else leave it uncommitted and say so.
 
 ## 10. Final report
 

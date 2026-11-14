@@ -241,7 +241,7 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
     kind: 'group',
     key: 'items',
     label: 'Items',
-    description: 'Uniques, mythicals, sets and bases, the affixes and modifiers on them, and elixirs',
+    description: 'Uniques, mythicals, sets and bases, the affixes and modifiers on them, elixirs and what each release changed',
     items: [
       { key: 'uniques', to: '/uniques', label: 'Uniques', description: 'Unique items by category and coupon' },
       { key: 'mythicals', to: '/mythicals', label: 'Mythicals', description: 'Mythical unique items' },
@@ -260,6 +260,13 @@ export const NAV_ENTRIES: readonly NavEntry[] = [
         to: '/elixirs',
         label: 'Elixirs',
         description: 'Utility elixirs: effects at your level, drop chances and the Alchemist perks',
+      },
+      // Here, not a top-level link: a ninth top-level entry does not fit the header (docs/technical/NAVIGATION.md)
+      {
+        key: 'patch-notes',
+        to: '/patch-notes',
+        label: 'Patch Notes',
+        description: "What changed in each ESR release: the author's notes and our item change reports",
       },
     ],
   },
